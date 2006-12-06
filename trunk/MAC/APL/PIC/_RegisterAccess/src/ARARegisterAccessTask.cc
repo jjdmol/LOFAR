@@ -27,12 +27,13 @@
 
 // this include needs to be first!
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "ARARegisterAccessTask.h"
 #include "ARAConstants.h"
 
 #include <Common/lofar_iostream.h>
-#include <Common/lofar_strstream.h>
+#include <Common/lofar_sstream.h>
 #include <time.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -57,6 +58,7 @@ using namespace LOFAR::ACC::APS;
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::EPA_Protocol;
 
 using namespace std;
 using namespace boost::posix_time;
@@ -126,6 +128,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
   m_status_update_interval = globalParameterSet()->getInt32(PARAM_STATUS_UPDATE_INTERVAL);
   m_stats_update_interval  = globalParameterSet()->getInt32(PARAM_STATISTICS_UPDATE_INTERVAL);
   m_centralized_stats      = (0!=globalParameterSet()->getInt32(PARAM_STATISTICS_CENTRALIZED));
+
 }
 
 RegisterAccessTask::~RegisterAccessTask()
@@ -134,6 +137,9 @@ RegisterAccessTask::~RegisterAccessTask()
   
 }
 
+//
+//
+//
 void RegisterAccessTask::addMyPropertySet(const char* scope,
     const char* type, 
     TPSCategory category, 
@@ -146,65 +152,61 @@ void RegisterAccessTask::addMyPropertySet(const char* scope,
   propsPtr->initProperties(propconfig);
 }
 
+//
+//
+//
 bool RegisterAccessTask::isConnected()
 {
   return m_RSPclient.isConnected();
 }
 
+//
+//
+//
 GCFEvent::TResult RegisterAccessTask::initial_state(GCFEvent& e, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
-  switch(e.signal)
-  {
-    case F_INIT:
-    {
+  switch(e.signal) {
+    case F_INIT: {
       break;
     }
 
-    case F_ENTRY:
-    {
-      if (!m_RSPclient.isConnected()) 
-      {
+    case F_ENTRY: {
+      if (!m_RSPclient.isConnected()) {
         bool res=m_RSPclient.open(); // need this otherwise GTM_Sockethandler is not called
         LOG_DEBUG(formatString("m_RSPclient.open() returned %s",(res?"true":"false")));
-        if(!res)
-        {
+        if(!res) {
           m_RSPclient.setTimer((long)3);
         }  
       } 
       break;
     }
 
-    case F_CONNECTED:
-    {
+    case F_CONNECTED: {
       LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
-      if (isConnected())
-      {
+      if (isConnected()) {
         TRAN(RegisterAccessTask::connected_state);
       }
       break;
     }
 
-    case F_DISCONNECTED:
-    {
+    case F_DISCONNECTED: {
       port.setTimer((long)3); // try again in 3 seconds
       LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
       port.close();
       break;
     }
 
-    case F_TIMER:
-    {
+    case F_TIMER: {
       LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
       port.open();
       break;
     }
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       // cancel timers
       break;
     }
@@ -217,20 +219,21 @@ GCFEvent::TResult RegisterAccessTask::initial_state(GCFEvent& e, GCFPortInterfac
   return status;
 }
 
+//
+//
+//
 GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterface& port)
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
 
     case F_INIT:
       break;
       
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       // get config
       RSPGetconfigEvent getconfig;
       m_RSPclient.send(getconfig);
@@ -243,8 +246,7 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
       break;
     }
     
-    case RSP_GETCONFIGACK:
-    {
+    case RSP_GETCONFIGACK: {
       LOG_INFO("RSP_GETCONFIGACK received");
       RSPGetconfigackEvent ack(e);
       LOG_INFO(formatString("n_rcus        =%d",ack.n_rcus));
@@ -267,16 +269,15 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
                      m_n_aps_per_board*
                      m_n_boards_per_subrack*
                      m_n_subracks_per_rack*
-                     m_n_racks)
-      {
+                     m_n_racks) {
         LOG_ERROR(formatString("Number of rcus (%d) differs from calculated number",m_n_rcus));
       }
+
       // fill MyPropertySets map
       addMyPropertySet(SCOPE_PIC, TYPE_LCU_PIC, PSCAT_LCU_PIC, PROPS_Station, GCFMyPropertySet::USE_DB_DEFAULTS);
       addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
       addMyPropertySet(SCOPE_PIC_Command, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
-      for(rack=0;rack<m_n_racks;rack++)
-      {
+      for(rack=0;rack<m_n_racks;rack++) {
         sprintf(scopeString,SCOPE_PIC_RackN,rack);
         addMyPropertySet(scopeString,TYPE_LCU_PIC_Rack, PSCAT_LCU_PIC_Rack, PROPS_Rack);
         sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
@@ -284,8 +285,7 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
         sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
         addMyPropertySet(scopeString,TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
     
-        for(subrack=0;subrack<m_n_subracks_per_rack;subrack++)
-        {
+        for(subrack=0;subrack<m_n_subracks_per_rack;subrack++) {
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
           addMyPropertySet(scopeString, TYPE_LCU_PIC_SubRack, PSCAT_LCU_PIC_SubRack, PROPS_SubRack);
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
@@ -295,8 +295,7 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Command,rack,subrack);
           addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
           
-          for(board=0;board<m_n_boards_per_subrack;board++)
-          {
+          for(board=0;board<m_n_boards_per_subrack;board++) {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
             addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PSCAT_LCU_PIC_Board, PROPS_Board);
 /*
@@ -377,75 +376,74 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
 
   return status;
 }
+
+//
+//
+//
 GCFEvent::TResult RegisterAccessTask::enablingMyPropsets_state(GCFEvent& e, GCFPortInterface& port)
 {
+	static	TMyPropertySetMap::iterator propIter;
+
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
-  switch(e.signal)
-  {
-    case F_INIT:
-    {
+  switch(e.signal) {
+    case F_INIT: {
       break;
     }
 
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       LOG_INFO("Enabling MyPropertySets...");
       m_myPropsLoadCounter=0;
-      TMyPropertySetMap::iterator it;
-      for(it=m_myPropertySetMap.begin();it!=m_myPropertySetMap.end();++it)
-      {
-        it->second->enable();
+	  propIter = m_myPropertySetMap.begin();
+	  if (propIter != m_myPropertySetMap.end()) {
+        propIter->second->enable();
       }
       break;
     }
 
-    case F_MYPS_ENABLED:
-    {
+    case F_MYPS_ENABLED: {
       GCFPropSetAnswerEvent* pPropAnswer = static_cast<GCFPropSetAnswerEvent*>(&e);
       assert(pPropAnswer);
-      if(pPropAnswer->result != 0)
-      {
+      if (pPropAnswer->result != 0) {
         LOG_WARN(formatString("MyPropset %s could not be enabled: %d",pPropAnswer->pScope,pPropAnswer->result));
       }
       m_myPropsLoadCounter++;
       LOG_INFO(formatString("MyPropset %d enabled", m_myPropsLoadCounter));
-      if(m_myPropsLoadCounter == m_myPropertySetMap.size())
-      {
+      if(m_myPropsLoadCounter == m_myPropertySetMap.size()) {
         m_myPropsLoaded=true;
         TRAN(RegisterAccessTask::getVersion_state);
+      }
+	  else {
+		propIter++;
+		if (propIter != m_myPropertySetMap.end()) {
+          propIter->second->enable();
+		}
       }
       break;
     }
     
-    case F_VGETRESP:
-    {
+    case F_VGETRESP: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
       }
       break;
     }
-    case F_VCHANGEMSG:
-    {
+    case F_VCHANGEMSG: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
@@ -453,8 +451,7 @@ GCFEvent::TResult RegisterAccessTask::enablingMyPropsets_state(GCFEvent& e, GCFP
       break;
     }
 
-    case F_DISCONNECTED:
-    {
+    case F_DISCONNECTED: {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
@@ -462,8 +459,7 @@ GCFEvent::TResult RegisterAccessTask::enablingMyPropsets_state(GCFEvent& e, GCFP
       break;
     }
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       break;
     }
 
@@ -481,14 +477,12 @@ GCFEvent::TResult RegisterAccessTask::getVersion_state(GCFEvent& e, GCFPortInter
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
 
     case F_INIT:
       break;
       
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       // get versions
       RSPGetversionEvent getversion;
       getversion.timestamp.setNow();
@@ -497,79 +491,68 @@ GCFEvent::TResult RegisterAccessTask::getVersion_state(GCFEvent& e, GCFPortInter
       break;
     }
 
-    case F_TIMER:
-    {
+    case F_TIMER: {
       break;
     }
     
-    case RSP_GETVERSIONACK:
-    {
+    case RSP_GETVERSIONACK: {
       LOG_INFO("RSP_GETVERSIONACK received");
       RSPGetversionackEvent ack(e);
 
-      if(ack.status != SUCCESS)
-      {
+      if(ack.status != SUCCESS) {
         LOG_ERROR("RSP_GETVERSION failure");
       }
-      else
-      {
+      else {
         char scopeString[300];
         char version[20];
         int board = 0;
-	int rackNr;
-	int subRackNr;
-	int relativeBoardNr;
-	getBoardRelativeNumbers(board,rackNr,subRackNr,relativeBoardNr);
-	sprintf(version,"%d.%d",ack.versions.bp()(board).rsp_version >> 4,ack.versions.bp()(board).rsp_version & 0xF);
-	LOG_INFO(formatString("board[%d].version = 0x%x",board,ack.versions.bp()(board).rsp_version));
-	sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
-	updateVersion(scopeString,string(version),double(ack.timestamp));
+		int rackNr;
+		int subRackNr;
+		int relativeBoardNr;
+		getBoardRelativeNumbers(board,rackNr,subRackNr,relativeBoardNr);
+		sprintf(version,"%d.%d",ack.versions.bp()(board).rsp_version >> 4,ack.versions.bp()(board).rsp_version & 0xF);
+		LOG_INFO(formatString("board[%d].version = 0x%x",board,ack.versions.bp()(board).rsp_version));
+		sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
+		updateVersion(scopeString,string(version),double(ack.timestamp));
 
-	sprintf(version,"%d.%d",ack.versions.bp()(board).fpga_maj,ack.versions.bp()(board).fpga_min);
-	LOG_INFO(formatString("bp.version = %s",version));
-	sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
-	updateVersion(scopeString,string(version),double(ack.timestamp));
+		sprintf(version,"%d.%d",ack.versions.bp()(board).fpga_maj,ack.versions.bp()(board).fpga_min);
+		LOG_INFO(formatString("bp.version = %s",version));
+		sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
+		updateVersion(scopeString,string(version),double(ack.timestamp));
 
-	for (int ap = 0; ap < EPA_Protocol::N_AP; ap++)
-	{
-	  sprintf(version,"%d.%d",ack.versions.ap()(board * EPA_Protocol::N_AP + ap).fpga_maj,
-				  ack.versions.ap()(board * EPA_Protocol::N_AP + ap).fpga_min);
-	  LOG_INFO(formatString("ap[%d][%d].version = %s",board,ap,version));
-	  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,ap);
-	  updateVersion(scopeString,string(version),double(ack.timestamp));
-	}
+		for (int ap = 0; ap < MEPHeader::N_AP; ap++) {
+		  sprintf(version,"%d.%d",ack.versions.ap()(board * MEPHeader::N_AP + ap).fpga_maj,
+				  ack.versions.ap()(board * MEPHeader::N_AP + ap).fpga_min);
+		  LOG_INFO(formatString("ap[%d][%d].version = %s",board,ap,version));
+		  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,ap);
+		  updateVersion(scopeString,string(version),double(ack.timestamp));
+		}
       }
       
       TRAN(RegisterAccessTask::subscribingStatus_state);
       break;
     }      
     
-    case F_VGETRESP:
-    {
+    case F_VGETRESP: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
       }
       break;
     }
-    case F_VCHANGEMSG:
-    {
+    case F_VCHANGEMSG: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
@@ -577,8 +560,7 @@ GCFEvent::TResult RegisterAccessTask::getVersion_state(GCFEvent& e, GCFPortInter
       break;
     }
 
-    case F_DISCONNECTED:
-    {
+    case F_DISCONNECTED: {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
@@ -586,8 +568,7 @@ GCFEvent::TResult RegisterAccessTask::getVersion_state(GCFEvent& e, GCFPortInter
       break;
     }
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       break;
     }
 
@@ -605,13 +586,11 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPo
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
     case F_INIT:
       break;
       
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       // subscribe to status updates
       RSPSubstatusEvent substatus;
       substatus.timestamp.setNow();
@@ -622,17 +601,14 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPo
       break;
     }
     
-    case RSP_SUBSTATUSACK:
-    {
+    case RSP_SUBSTATUSACK: {
       LOG_INFO("RSP_SUBSTATUSACK received");
       RSPSubstatusackEvent ack(e);
 
-      if(ack.status != SUCCESS)
-      {
+      if(ack.status != SUCCESS) {
         LOG_ERROR("RSP_SUBSTATUS failure");
       }
-      else
-      {
+      else {
         m_subStatusHandle = ack.handle;
       }
       
@@ -651,32 +627,26 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPo
       break;
     }
 
-    case F_VGETRESP:
-    {
+    case F_VGETRESP: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
       }
       break;
     }
-    case F_VCHANGEMSG:
-    {
+    case F_VCHANGEMSG: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
@@ -684,8 +654,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPo
       break;
     }
 
-    case F_DISCONNECTED:
-    {
+    case F_DISCONNECTED: {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
@@ -693,8 +662,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPo
       break;
     }
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       break;
     }
 
@@ -713,18 +681,16 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower_state(GCFEven
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
 
     case F_INIT:
       break;
       
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       // subscribe to status updates
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
+      substats.rcumask = std::bitset<MEPHeader::MAX_N_RCUS>((1<<m_n_rcus)-1);
       substats.period = m_stats_update_interval;
       substats.type = RSP_Protocol::Statistics::SUBBAND_POWER;
       substats.reduction = RSP_Protocol::REPLACE;
@@ -733,17 +699,14 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower_state(GCFEven
       break;
     }
 
-    case RSP_SUBSTATSACK:
-    {
+    case RSP_SUBSTATSACK: {
       LOG_INFO("RSP_SUBSTATSACK received");
       RSPSubstatsackEvent ack(e);
 
-      if(ack.status != SUCCESS)
-      {
+      if(ack.status != SUCCESS) {
         LOG_ERROR("RSP_SUBSTATS failure");
       }
-      else
-      {
+      else {
         m_subStatsHandleSubbandPower = ack.handle;
       }
       
@@ -751,32 +714,26 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower_state(GCFEven
       break;
     }
     
-    case F_VGETRESP:
-    {
+    case F_VGETRESP: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
       }
       break;
     }
-    case F_VCHANGEMSG:
-    {
+    case F_VCHANGEMSG: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
@@ -784,8 +741,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower_state(GCFEven
       break;
     }
 
-    case F_DISCONNECTED:
-    {
+    case F_DISCONNECTED: {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
@@ -793,8 +749,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower_state(GCFEven
       break;
     }
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       break;
     }
 
@@ -812,18 +767,16 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower_state(GCFEven
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
 
     case F_INIT:
       break;
       
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       // subscribe to status updates
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
+      substats.rcumask = std::bitset<MEPHeader::MAX_N_RCUS>((1<<m_n_rcus)-1);
       substats.period = m_stats_update_interval;
       substats.type = RSP_Protocol::Statistics::BEAMLET_POWER;
       substats.reduction = RSP_Protocol::REPLACE;
@@ -832,17 +785,14 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower_state(GCFEven
       break;
     }
 
-    case RSP_SUBSTATSACK:
-    {
+    case RSP_SUBSTATSACK: {
       LOG_INFO("RSP_SUBSTATSACK received");
       RSPSubstatsackEvent ack(e);
 
-      if(ack.status != SUCCESS)
-      {
+      if(ack.status != SUCCESS) {
         LOG_ERROR("RSP_SUBSTATS failure");
       }
-      else
-      {
+      else {
         m_subStatsHandleBeamletPower = ack.handle;
       }
       
@@ -850,32 +800,26 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower_state(GCFEven
       break;
     }
     
-    case F_VGETRESP:
-    {
+    case F_VGETRESP: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
       }
       break;
     }
-    case F_VCHANGEMSG:
-    {
+    case F_VCHANGEMSG: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
@@ -883,8 +827,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower_state(GCFEven
       break;
     }
 
-    case F_DISCONNECTED:
-    {
+    case F_DISCONNECTED: {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
@@ -892,8 +835,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower_state(GCFEven
       break;
     }
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       break;
     }
 
@@ -911,35 +853,30 @@ GCFEvent::TResult RegisterAccessTask::subscribingXcStats_state(GCFEvent& e, GCFP
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
 
     case F_INIT:
       break;
       
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       // subscribe to xc stats updates
       RSPSubxcstatsEvent substats;
       substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
+//      substats.rcumask = std::bitset<MEPHeader::MAX_N_RCUS>((1<<m_n_rcus)-1);
       substats.period = m_stats_update_interval;
       m_RSPclient.send(substats);
       
       break;
     }
 
-    case RSP_SUBXCSTATSACK:
-    {
+    case RSP_SUBXCSTATSACK: {
       LOG_INFO("RSP_SUBXCSTATSACK received");
       RSPSubxcstatsackEvent ack(e);
 
-      if(ack.status != SUCCESS)
-      {
+      if(ack.status != SUCCESS) {
         LOG_ERROR("RSP_SUBXCSTATS failure");
       }
-      else
-      {
+      else {
         m_subXcStatsHandle = ack.handle;
       }
       
@@ -947,32 +884,26 @@ GCFEvent::TResult RegisterAccessTask::subscribingXcStats_state(GCFEvent& e, GCFP
       break;
     }
     
-    case F_VGETRESP:
-    {
+    case F_VGETRESP: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
       }
       break;
     }
-    case F_VCHANGEMSG:
-    {
+    case F_VCHANGEMSG: {
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
       
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
         LOG_DEBUG("status property changed");
         
         _refreshFunctionality();
@@ -980,8 +911,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingXcStats_state(GCFEvent& e, GCFP
       break;
     }
 
-    case F_DISCONNECTED:
-    {
+    case F_DISCONNECTED: {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
@@ -989,8 +919,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingXcStats_state(GCFEvent& e, GCFP
       break;
     }
 
-    case F_EXIT:
-    {
+    case F_EXIT: {
       break;
     }
 
@@ -1008,29 +937,23 @@ GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInte
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
 
     case F_INIT:
       break;
       
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       TMyPropertySetMap::iterator propsetIt = m_myPropertySetMap.find(SCOPE_PIC);
-      if(propsetIt != m_myPropertySetMap.end())
-      {
+      if(propsetIt != m_myPropertySetMap.end()) {
         boost::shared_ptr<GCFPVInteger> pvIntegrationTime(static_cast<GCFPVInteger*>(propsetIt->second->getValue(PROPNAME_INTEGRATIONTIME)));
-        if(pvIntegrationTime != 0)
-        {
+        if(pvIntegrationTime != 0) {
           m_integrationTime = pvIntegrationTime->getValue();
-          if(m_integrationTime > 0)
-          {
+          if(m_integrationTime > 0) {
             m_integrationTimerID = m_RSPclient.setTimer(static_cast<double>(m_integrationTime));
           }
         }
         boost::shared_ptr<GCFPVInteger> pvIntegrationMethod(static_cast<GCFPVInteger*>(propsetIt->second->getValue(PROPNAME_INTEGRATIONMETHOD)));
-        if(pvIntegrationMethod != 0)
-        {
+        if(pvIntegrationMethod != 0) {
           m_integrationMethod = pvIntegrationMethod->getValue();
         }
       }
@@ -1038,29 +961,25 @@ GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInte
       break;
     }
 
-    case RSP_UPDSTATUS:
-    {
+    case RSP_UPDSTATUS: {
       LOG_INFO("RSP_UPDSTATUS received");
       status = handleUpdStatus(e,port);
       break;
     }
     
-    case RSP_UPDSTATS:
-    {
+    case RSP_UPDSTATS: {
       LOG_INFO("RSP_UPDSTATS received");
       status = handleUpdStats(e,port);
       break;
     }
     
-    case RSP_UPDXCSTATS:
-    {
+    case RSP_UPDXCSTATS: {
       LOG_INFO("RSP_UPDXCSTATS received");
       status = handleUpdXcStats(e,port);
       break;
     }
     
-    case RSP_SETRCUACK:
-    {
+    case RSP_SETRCUACK: {
       LOG_INFO("RSP_SETRCUACK received");
       break;
     }
@@ -1072,8 +991,7 @@ GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInte
 //TODO      break;
 //TODO    }
     
-    case F_DISCONNECTED:
-    {
+    case F_DISCONNECTED: {
       LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
       port.close();
 
@@ -1081,58 +999,45 @@ GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInte
       break;
     }
 
-    case F_VCHANGEMSG:
-    {
+    case F_VCHANGEMSG: {
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&e);
       assert(pPropAnswer);
 
-      if(strstr(pPropAnswer->pPropName,"Maintenance."PROPNAME_STATUS) != 0)
-      {
+      if(strstr(pPropAnswer->pPropName,"Maintenance."PROPNAME_STATUS) != 0) {
         handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,"Command."PROPNAME_COMMAND) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,"Command."PROPNAME_COMMAND) != 0) {
         handleCommand(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName, PROPNAME_STATUS) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName, PROPNAME_STATUS) != 0) {
         _refreshFunctionality();
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_LBAENABLE) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_LBAENABLE) != 0) {
         handleRCUSettings(string(pPropAnswer->pPropName),BIT_LBAENABLE,*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_HBAENABLE) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_HBAENABLE) != 0) {
         handleRCUSettings(string(pPropAnswer->pPropName),BIT_HBAENABLE,*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_BANDSEL) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_BANDSEL) != 0) {
         handleRCUSettings(string(pPropAnswer->pPropName),BIT_BANDSEL,*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_FILSEL0) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_FILSEL0) != 0) {
         handleRCUSettings(string(pPropAnswer->pPropName),BIT_FILSEL0,*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_FILSEL1) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_FILSEL1) != 0) {
         handleRCUSettings(string(pPropAnswer->pPropName),BIT_FILSEL1,*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_VLENABLE) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_VLENABLE) != 0) {
         handleRCUSettings(string(pPropAnswer->pPropName),BIT_VLENABLE,*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_VHENABLE) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_VHENABLE) != 0) {
         handleRCUSettings(string(pPropAnswer->pPropName),BIT_VHENABLE,*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_VDDVCCEN) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_VDDVCCEN) != 0) {
         handleRCUSettings(string(pPropAnswer->pPropName),BIT_VDDVCCEN,*pPropAnswer->pValue);
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_INTEGRATIONTIME) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_INTEGRATIONTIME) != 0) {
         GCFPVInteger pvInt;
         pvInt.copy(*pPropAnswer->pValue);
         m_integrationTime = pvInt.getValue();
@@ -1140,15 +1045,13 @@ GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInte
 
         m_RSPclient.cancelTimer(m_integrationTimerID);
         
-        if(m_integrationTime == 0)
-        {
+        if(m_integrationTime == 0) {
           m_integratingStatisticsSubband.free();
           m_numStatisticsSubband=0;
           m_integratingStatisticsBeamlet.free();
           m_numStatisticsBeamlet=0;
         }
-        else
-        {
+        else {
           m_integratingStatisticsSubband.free();
           m_numStatisticsSubband=0;
           m_integratingStatisticsBeamlet.free();
@@ -1156,8 +1059,7 @@ GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInte
           m_integrationTimerID = m_RSPclient.setTimer(static_cast<double>(m_integrationTime));
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPNAME_INTEGRATIONMETHOD) != 0)
-      {
+      else if(strstr(pPropAnswer->pPropName,PROPNAME_INTEGRATIONMETHOD) != 0) {
         GCFPVInteger pvInt;
         pvInt.copy(*pPropAnswer->pValue);
         m_integrationMethod = pvInt.getValue();
@@ -1166,19 +1068,16 @@ GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInte
       break;
     }
     
-    case F_TIMER:
-    {
+    case F_TIMER: {
       GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(e);
-      if(timerEvent.id == m_integrationTimerID)
-      {
+      if(timerEvent.id == m_integrationTimerID) {
         _integrateStatistics();
         m_integrationTimerID = m_RSPclient.setTimer(static_cast<double>(m_integrationTime));
       }
       break;
     }
     
-    case F_EXIT:
-    {
+    case F_EXIT: {
       m_RSPclient.cancelTimer(m_integrationTimerID);
       
       // unsubscribe from status updates
@@ -1229,8 +1128,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
     double timestamp = double(updStatusEvent.timestamp);
 
     int boardNr;
-    for(boardNr=boardStatus.lbound(blitz::firstDim); boardNr <= boardStatus.ubound(blitz::firstDim); ++boardNr)
-    {
+    for(boardNr=boardStatus.lbound(blitz::firstDim); boardNr <= boardStatus.ubound(blitz::firstDim); ++boardNr) {
       getBoardRelativeNumbers(boardNr,rackNr,subRackNr,relativeBoardNr);
       LOG_INFO(formatString("UpdStatus:Rack:%d:SubRack:%d:Board::%d\n",rackNr,subRackNr,relativeBoardNr));
       
@@ -1420,12 +1318,10 @@ void RegisterAccessTask::updateBoardProperties(string scope,
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     double v12 = static_cast<double>(voltage_1_2) * (2.5/192.0);
     GCFPVDouble pvDouble12(v12);
     it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VOLTAGE12),pvDouble12,timestamp);
@@ -1457,12 +1353,10 @@ void RegisterAccessTask::updateETHproperties(string scope,
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     GCFPVUnsigned pvTemp(frames);
     it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FRAMESRECEIVED),pvTemp, timestamp);
     
@@ -1496,12 +1390,10 @@ void RegisterAccessTask::updateMEPStatusProperties(string scope,uint32 seqnr,
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     GCFPVUnsigned pvTemp(seqnr);
     it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_SEQNR),pvTemp, timestamp);
     
@@ -1523,12 +1415,10 @@ void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 sample_c
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     GCFPVUnsigned pvTemp(sample_count);
     it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_SAMPLECOUNT),pvTemp, timestamp);
     
@@ -1547,12 +1437,8 @@ void RegisterAccessTask::updateFPGAboardProperties(string scope, double /*timest
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
-  }
-  else
-  {
   }
 }
 
@@ -1564,12 +1450,10 @@ void RegisterAccessTask::updateFPGAproperties(string scope, uint8 temp,
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     GCFPVDouble pvDouble(static_cast<double>(temp));
     it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_TEMPERATURE),pvDouble, timestamp);
   }
@@ -1584,12 +1468,10 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  ffi0,
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     GCFPVUnsigned pvUns(ffi0);
     it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FFI0),pvUns, timestamp);
     pvUns.setValue(ffi1);
@@ -1608,65 +1490,55 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status, double t
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     unsigned int tempStatus = (status >> 7 ) & 0x01;
     GCFPVBool pvBoolVddVccEn(tempStatus);
-    if(pvBoolVddVccEn.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VDDVCCEN)))->getValue())
-    {
+    if(pvBoolVddVccEn.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VDDVCCEN)))->getValue()) {
       it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VDDVCCEN),pvBoolVddVccEn, timestamp);
     }
     
     tempStatus = (status >> 6) & 0x01;
     GCFPVBool pvBoolVhEnable(tempStatus);
-    if(pvBoolVhEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VHENABLE)))->getValue())
-    {
+    if(pvBoolVhEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VHENABLE)))->getValue()) {
       it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VHENABLE),pvBoolVhEnable, timestamp);
     }
     
     tempStatus = (status >> 5) & 0x01;
     GCFPVBool pvBoolVlEnable(tempStatus);
-    if(pvBoolVlEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VLENABLE)))->getValue())
-    {
+    if(pvBoolVlEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_VLENABLE)))->getValue()) {
       it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VLENABLE),pvBoolVlEnable, timestamp);
     }
     
     tempStatus = (status >> 4) & 0x01;
     GCFPVBool pvBoolFilSel1(tempStatus);
-    if(pvBoolFilSel1.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSEL1)))->getValue())
-    {
+    if(pvBoolFilSel1.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSEL1)))->getValue()) {
       it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FILSEL1),pvBoolFilSel1, timestamp);
     }
     
     tempStatus = (status >> 3) & 0x01;
     GCFPVBool pvBoolFilSel0(tempStatus);
-    if(pvBoolFilSel0.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSEL0)))->getValue())
-    {
+    if(pvBoolFilSel0.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_FILSEL0)))->getValue()) {
       it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_FILSEL0),pvBoolFilSel0, timestamp);
     }
     
     tempStatus = (status >> 2) & 0x01;
     GCFPVBool pvBoolBandSel(tempStatus);
-    if(pvBoolBandSel.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_BANDSEL)))->getValue())
-    {
+    if(pvBoolBandSel.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_BANDSEL)))->getValue()) {
       it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_BANDSEL),pvBoolBandSel, timestamp);
     }
     
     tempStatus = (status >> 1) & 0x01;
     GCFPVBool pvBoolHBAEnable(tempStatus);
-    if(pvBoolHBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_HBAENABLE)))->getValue())
-    {
+    if(pvBoolHBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_HBAENABLE)))->getValue()) {
       it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_HBAENABLE),pvBoolHBAEnable, timestamp);
     }
     
     tempStatus = (status >> 0) & 0x01;
     GCFPVBool pvBoolLBAEnable(tempStatus);
-    if(pvBoolLBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_LBAENABLE)))->getValue())
-    {
+    if(pvBoolLBAEnable.getValue() != boost::shared_ptr<GCFPVBool>(static_cast<GCFPVBool*>(it->second->getOldValue(PROPNAME_LBAENABLE)))->getValue()) {
       it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_LBAENABLE),pvBoolLBAEnable, timestamp);
     }
   }
@@ -1679,12 +1551,10 @@ void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8 /*status*/,
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     LOG_WARN("ignoring status field in BoardRCUStatus");
     GCFPVUnsigned pvUns(nof_overflow);
     it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_NOFOVERFLOW),pvUns, timestamp);
@@ -1698,12 +1568,10 @@ void RegisterAccessTask::updateVersion(string scope, string version, double time
   string datapoint,datapointElement;
   _splitScope(scope,datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     GCFPVString pvString(version);
     it->second->setValueTimed(_getElementPrefix(datapointElement)+string(PROPNAME_VERSION),pvString,timestamp);
   }    
@@ -1728,12 +1596,10 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
   TMyPropertySetMap::iterator propsetIt = getPropertySetFromScope(propName);
-  if(propsetIt == m_myPropertySetMap.end())
-  {
+  if(propsetIt == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",propName.c_str()));
   }
-  else
-  {
+  else {
     GCFPVString pvString;
     pvString.copy(value);
     string command(pvString.getValue());
@@ -1744,11 +1610,9 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
     string result("Command not supported");
     TCommandResultCode resultCode(COMMAND_RESULT_ERROR);
     
-    if(commandGetID == command.substr(0,commandGetID.length()))
-    {
+    if(commandGetID == command.substr(0,commandGetID.length())) {
       // determine the property
-      if(resource.find("HFA") != string::npos)
-      {
+      if(resource.find("HFA") != string::npos) {
         //TODO int rcuNr = getRCUHardwareNr(resource);
         //TODO RSPTestGetHBAIDEvent commandEvent;
         //TODO commandEvent.timestamp.setNow();
@@ -1762,8 +1626,7 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
         resultCode = COMMAND_RESULT_ERROR;
         result="Not implemented";
       }
-      else if(resource.find("RCU") != string::npos)
-      {
+      else if(resource.find("RCU") != string::npos) {
         //TODO int rcuNr = getRCUHardwareNr(resource);
         //TODO RSPTestGetRCUIDEvent commandEvent;
         //TODO commandEvent.timestamp.setNow();
@@ -1777,8 +1640,7 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
         resultCode = COMMAND_RESULT_ERROR;
         result="Not implemented";
       }
-      else if(resource.find("Board") != string::npos)
-      {
+      else if(resource.find("Board") != string::npos) {
         //TODO RSPTestGetRSPIDEvent commandEvent;
         //TODO commandEvent.timestamp.setNow();
         //TODO commandEvent.handle = m_commandHandle;
@@ -1790,8 +1652,7 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
         resultCode = COMMAND_RESULT_ERROR;
         result="Not implemented";
       }
-      else if(resource.find("SubRack") != string::npos)
-      {
+      else if(resource.find("SubRack") != string::npos) {
         //TODO RSPTestGetTDSIDEvent commandEvent;
         //TODO commandEvent.timestamp.setNow();
         //TODO commandEvent.handle = m_commandHandle;
@@ -1803,8 +1664,7 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
         resultCode = COMMAND_RESULT_ERROR;
         result="Not implemented";
       }
-      else if(resource.find("TBB") != string::npos)
-      {
+      else if(resource.find("TBB") != string::npos) {
         //TODO RSPTestGetTBBIDEvent commandEvent;
         //TODO commandEvent.timestamp.setNow();
         //TODO commandEvent.handle = m_commandHandle;
@@ -1816,8 +1676,7 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
         resultCode = COMMAND_RESULT_ERROR;
         result="Not implemented";
       }
-      else if(resource.find("PIC") != string::npos)
-      {
+      else if(resource.find("PIC") != string::npos) {
         //TODO RSPTestGetGPSIDEvent commandEvent;
         //TODO commandEvent.timestamp.setNow();
         //TODO commandEvent.handle = m_commandHandle;
@@ -1829,209 +1688,182 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
         resultCode = COMMAND_RESULT_ERROR;
         result="Not implemented";
       }
-      else
-      {
+      else {
         resultCode = COMMAND_RESULT_ERROR;
         result="Command not supported for the selected resource";
       }
     }
-    else if(commandTestRegisterReadWrite == command.substr(0,commandTestRegisterReadWrite.length()))
-    {
+    else if(commandTestRegisterReadWrite == command.substr(0,commandTestRegisterReadWrite.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestPPS == command.substr(0,commandTestPPS.length()))
-    {
+    else if(commandTestPPS == command.substr(0,commandTestPPS.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandReadSattelitePositions == command.substr(0,commandReadSattelitePositions.length()))
-    {
+    else if(commandReadSattelitePositions == command.substr(0,commandReadSattelitePositions.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandReadTimeConstant == command.substr(0,commandReadTimeConstant.length()))
-    {
+    else if(commandReadTimeConstant == command.substr(0,commandReadTimeConstant.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandReadConfiguration == command.substr(0,commandReadConfiguration.length()))
-    {
+    else if(commandReadConfiguration == command.substr(0,commandReadConfiguration.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandReadStatistics == command.substr(0,commandReadStatistics.length()))
-    {
+    else if(commandReadStatistics == command.substr(0,commandReadStatistics.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandReadPPSlockStatus == command.substr(0,commandReadPPSlockStatus.length()))
-    {
+    else if(commandReadPPSlockStatus == command.substr(0,commandReadPPSlockStatus.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandReadPLLlockStatus == command.substr(0,commandReadPLLlockStatus.length()))
-    {
+    else if(commandReadPLLlockStatus == command.substr(0,commandReadPLLlockStatus.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandReadCurrent == command.substr(0,commandReadCurrent.length()))
-    {
+    else if(commandReadCurrent == command.substr(0,commandReadCurrent.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestRSPlinkSpeed == command.substr(0,commandTestRSPlinkSpeed.length()))
-    {
+    else if(commandTestRSPlinkSpeed == command.substr(0,commandTestRSPlinkSpeed.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestRCUlinkSpeed == command.substr(0,commandTestRCUlinkSpeed.length()))
-    {
+    else if(commandTestRCUlinkSpeed == command.substr(0,commandTestRCUlinkSpeed.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestSerdesSpeed == command.substr(0,commandTestSerdesSpeed.length()))
-    {
+    else if(commandTestSerdesSpeed == command.substr(0,commandTestSerdesSpeed.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestTBBlinkSpeed == command.substr(0,commandTestTBBlinkSpeed.length()))
-    {
+    else if(commandTestTBBlinkSpeed == command.substr(0,commandTestTBBlinkSpeed.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestBoundaryScan == command.substr(0,commandTestBoundaryScan.length()))
-    {
+    else if(commandTestBoundaryScan == command.substr(0,commandTestBoundaryScan.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestWaveform == command.substr(0,commandTestWaveform.length()))
-    {
+    else if(commandTestWaveform == command.substr(0,commandTestWaveform.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestTransient == command.substr(0,commandTestTransient.length()))
-    {
+    else if(commandTestTransient == command.substr(0,commandTestTransient.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestClock == command.substr(0,commandTestClock.length()))
-    {
+    else if(commandTestClock == command.substr(0,commandTestClock.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestFPGAlinkSpeed == command.substr(0,commandTestFPGAlinkSpeed.length()))
-    {
+    else if(commandTestFPGAlinkSpeed == command.substr(0,commandTestFPGAlinkSpeed.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestEthernetLoopBack == command.substr(0,commandTestEthernetLoopBack.length()))
-    {
+    else if(commandTestEthernetLoopBack == command.substr(0,commandTestEthernetLoopBack.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestSerdesLoopBack == command.substr(0,commandTestSerdesLoopBack.length()))
-    {
+    else if(commandTestSerdesLoopBack == command.substr(0,commandTestSerdesLoopBack.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestFPGAmemoryRandom == command.substr(0,commandTestFPGAmemoryRandom.length()))
-    {
+    else if(commandTestFPGAmemoryRandom == command.substr(0,commandTestFPGAmemoryRandom.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestFPGAmemory == command.substr(0,commandTestFPGAmemory.length()))
-    {
+    else if(commandTestFPGAmemory == command.substr(0,commandTestFPGAmemory.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestDataReception == command.substr(0,commandTestDataReception.length()))
-    {
+    else if(commandTestDataReception == command.substr(0,commandTestDataReception.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandTestRoundTripSpeed == command.substr(0,commandTestRoundTripSpeed.length()))
-    {
+    else if(commandTestRoundTripSpeed == command.substr(0,commandTestRoundTripSpeed.length())) {
       //TODO resultCode = COMMAND_RESULT_EXECUTING;
       //TODO result="Executing...";
       LOG_FATAL("TODO: send operational test event messages to RSP Driver");
       resultCode = COMMAND_RESULT_ERROR;
       result="Not implemented";
     }
-    else if(commandReset == command.substr(0,commandReset.length()))
-    {
+    else if(commandReset == command.substr(0,commandReset.length())) {
       // determine the property
-      if(resource.find("RCU") != string::npos)
-      {
+      if(resource.find("RCU") != string::npos) {
         //TODO int rcuNr = getRCUHardwareNr(resource);
         //TODO RSPResetRCUEvent commandEvent;
         //TODO commandEvent.timestamp.setNow();
@@ -2045,8 +1877,7 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
         resultCode = COMMAND_RESULT_ERROR;
         result="Not implemented";
       }
-      else if(resource.find("Board") != string::npos)
-      {
+      else if(resource.find("Board") != string::npos) {
         //TODO int rcuNr = getRCUHardwareNr(resource);
         //TODO int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
         //TODO getRCURelativeNumbers(rcuNr,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
@@ -2064,8 +1895,7 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
         resultCode = COMMAND_RESULT_ERROR;
         result="Not implemented";
       }
-      else if(resource.find("TBB") != string::npos)
-      {
+      else if(resource.find("TBB") != string::npos) {
         //TODO RSPResetTBBEvent commandEvent;
         //TODO commandEvent.timestamp.setNow();
         //TODO commandEvent.handle = m_commandHandle;
@@ -2077,8 +1907,7 @@ void RegisterAccessTask::handleCommand(string propName, const GCFPValue& value)
         resultCode = COMMAND_RESULT_ERROR;
         result="Not implemented";
       }
-      else
-      {
+      else {
         resultCode = COMMAND_RESULT_ERROR;
         result="Command not supported for the selected resource";
       }
@@ -2145,8 +1974,7 @@ void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, con
   boost::shared_ptr<GCFPVBool> pvVddVccEn;
   
   TMyPropertySetMap::iterator propsetIt = getPropertySetFromScope(propName);
-  if(propsetIt != m_myPropertySetMap.end())
-  {
+  if(propsetIt != m_myPropertySetMap.end()) {
     // get old register values
     pvLBAEnable.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_LBAENABLE))); // bit 0
     pvHBAEnable.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_HBAENABLE))); // bit 1
@@ -2158,8 +1986,7 @@ void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, con
     pvVddVccEn.reset(static_cast<GCFPVBool*>(propsetIt->second->getValue(PROPNAME_VDDVCCEN)));  // bit 7
     
     // modify the new value
-    switch(bitnr)
-    {
+    switch(bitnr) {
       case BIT_LBAENABLE:
         pvLBAEnable->copy(value);
         break;
@@ -2207,8 +2034,7 @@ void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, con
       rcucontrol |= 0x80;
     
     int rcu = getRCUHardwareNr(propName);
-    if(rcu>=0)
-    {
+    if(rcu>=0) {
       RSPSetrcuEvent setrcu;
       setrcu.timestamp = RTC::Timestamp(0,0);
       setrcu.rcumask = 0;
@@ -2221,13 +2047,11 @@ void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, con
        */
       LOG_FATAL("TODO: RCU Settings");
     }
-    else
-    {
+    else {
       LOG_FATAL(formatString("rcu for property %s not found in local administration",propName.c_str()));
     }
   }
-  else
-  {
+  else {
     LOG_FATAL(formatString("property %s not found in local administration",propName.c_str()));
   }
 }
@@ -2264,15 +2088,12 @@ int RegisterAccessTask::getRCUHardwareNr(const string& property)
   
   bool rcuFound=false;
   map<string,int>::iterator it = m_propertySet2RCUMap.begin();
-  while(!rcuFound && it != m_propertySet2RCUMap.end())
-  {
-    if(propertySetName == it->first)
-    {
+  while(!rcuFound && it != m_propertySet2RCUMap.end()) {
+    if(propertySetName == it->first) {
       rcuFound=true;
       rcu = it->second;
     }
-    else
-    {
+    else {
       ++it;
     }
   }
@@ -2290,14 +2111,11 @@ RegisterAccessTask::TMyPropertySetMap::iterator RegisterAccessTask::getPropertyS
   
   bool rcuFound=false;
   TMyPropertySetMap::iterator it = m_myPropertySetMap.begin();
-  while(!rcuFound && it != m_myPropertySetMap.end())
-  {
-    if(propertySetName == it->first)
-    {
+  while(!rcuFound && it != m_myPropertySetMap.end()) {
+    if(propertySetName == it->first) {
       rcuFound=true;
     }
-    else
-    {
+    else {
       ++it;
     }
   }
@@ -2310,16 +2128,12 @@ void RegisterAccessTask::_addStatistics(TStatistics& statistics, uint32 statsHan
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  if(statsHandle == m_subStatsHandleSubbandPower)
-  {
-    if(m_integrationTime == 0)
-    {
+  if(statsHandle == m_subStatsHandleSubbandPower) {
+    if(m_integrationTime == 0) {
       _writeStatistics(statistics, statsHandle);
     }
-    else
-    {
-      if(m_integratingStatisticsSubband.size() == 0)
-      {
+    else {
+      if(m_integratingStatisticsSubband.size() == 0) {
         m_integratingStatisticsSubband.resize(statistics.shape());
         m_integratingStatisticsSubband = 0;
       }
@@ -2332,16 +2146,12 @@ void RegisterAccessTask::_addStatistics(TStatistics& statistics, uint32 statsHan
       LOG_DEBUG(formatString("subband: n_stats:%d; statistics:%s",m_numStatisticsSubband, statisticsStream.str().c_str()));
     }
   }
-  else if(statsHandle == m_subStatsHandleBeamletPower)
-  {
-    if(m_integrationTime == 0)
-    {
+  else if(statsHandle == m_subStatsHandleBeamletPower) {
+    if(m_integrationTime == 0) {
       _writeStatistics(statistics, statsHandle);
     }
-    else
-    {
-      if(m_integratingStatisticsBeamlet.size() == 0)
-      {
+    else {
+      if(m_integratingStatisticsBeamlet.size() == 0) {
         m_integratingStatisticsBeamlet.resize(statistics.shape());
         m_integratingStatisticsBeamlet = 0;
       }
@@ -2364,13 +2174,11 @@ void RegisterAccessTask::_integrateStatistics()
   TStatistics statisticsBeamlet;
   TXcStatistics xcstatistics;
   
-  if(m_numStatisticsSubband != 0)
-  {
+  if(m_numStatisticsSubband != 0) {
     statisticsSubband.resize(m_integratingStatisticsSubband.shape());
     statisticsSubband = 0;
     
-    switch(m_integrationMethod)
-    {
+    switch(m_integrationMethod) {
       case 0: // average
       default:
         statisticsSubband = m_integratingStatisticsSubband/static_cast<double>(m_numStatisticsSubband);
@@ -2388,13 +2196,11 @@ void RegisterAccessTask::_integrateStatistics()
 
     _writeStatistics(statisticsSubband, m_subStatsHandleSubbandPower);
   }
-  if(m_numStatisticsBeamlet != 0)
-  {
+  if(m_numStatisticsBeamlet != 0) {
     statisticsBeamlet.resize(m_integratingStatisticsBeamlet.shape());
     statisticsBeamlet = 0;
     
-    switch(m_integrationMethod)
-    {
+    switch(m_integrationMethod) {
       case 0: // average
       default:
         statisticsBeamlet = m_integratingStatisticsBeamlet/static_cast<double>(m_numStatisticsBeamlet);
@@ -2411,13 +2217,11 @@ void RegisterAccessTask::_integrateStatistics()
     m_numStatisticsBeamlet=0;
     _writeStatistics(statisticsBeamlet, m_subStatsHandleBeamletPower);
   }
-  if(m_numXcStatistics != 0)
-  {
+  if(m_numXcStatistics != 0) {
     xcstatistics.resize(m_integratingXcStatistics.shape());
     xcstatistics = 0;
     
-    switch(m_integrationMethod)
-    {
+    switch(m_integrationMethod) {
       case 0: // average
       default:
         xcstatistics = m_integratingXcStatistics/static_cast<double>(m_numXcStatistics);
@@ -2446,8 +2250,7 @@ void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsH
   int maxSubbands = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
   LOG_DEBUG(formatString("maxRCUs:%d maxSubbands:%d",maxRCUs,maxSubbands));
     
-  if(m_centralized_stats)
-  {
+  if(m_centralized_stats) {
     LOG_DEBUG("Writing statistics to a dynamic array of doubles");
     // build a vector of doubles that will be stored in one datapoint
     GCFPValueArray valuePointerVector;
@@ -2458,10 +2261,8 @@ void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsH
   
     // then for each rcu, the statistics of the beamlets or subbands
     int rcu,subband;
-    for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
-    {
-      for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
-      {
+    for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++) {
+      for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++) {
         double stat = statistics(rcu,subband);
         valuePointerVector.push_back(new GCFPVDouble(stat));
       }
@@ -2472,41 +2273,34 @@ void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsH
     
     // set the property
     TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
-    if(propSetIt != m_myPropertySetMap.end())
-    {
-      if(statsHandle == m_subStatsHandleSubbandPower)
-      {
+    if(propSetIt != m_myPropertySetMap.end()) {
+      if(statsHandle == m_subStatsHandleSubbandPower) {
         propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),dynamicArray);
       }
-      else if(statsHandle == m_subStatsHandleBeamletPower)
-      {
+      else if(statsHandle == m_subStatsHandleBeamletPower) {
         propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),dynamicArray);
       }
     }
   
     // cleanup
     GCFPValueArray::iterator it=valuePointerVector.begin();
-    while(it!=valuePointerVector.end())
-    {
+    while(it!=valuePointerVector.end()) {
       delete *it;
       valuePointerVector.erase(it);
       it=valuePointerVector.begin();
     }
   }
-  else
-  {
+  else {
     LOG_DEBUG("Writing statistics to one string");
     // statistics will be stored as a string in an element of each rcu
     // then for each rcu, the statistics of the beamlets or subbands
     int rcu,subband;
-    for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++)
-    {
+    for(rcu=statistics.lbound(blitz::firstDim);rcu<=statistics.ubound(blitz::firstDim);rcu++) {
       LOG_DEBUG(formatString("rcu:%d",rcu));
       
       stringstream statisticsStream;
       statisticsStream.setf(ios_base::fixed);
-      for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++)
-      {
+      for(subband=statistics.lbound(blitz::secondDim);subband<=statistics.ubound(blitz::secondDim);subband++) {
         double stat = statistics(rcu,subband);
         statisticsStream << subband << " ";
         statisticsStream << stat << endl;
@@ -2522,15 +2316,12 @@ void RegisterAccessTask::_writeStatistics(TStatistics& statistics, uint32 statsH
       string datapoint,datapointElement;
       _splitScope(string(scopeString),datapoint,datapointElement);
       TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(datapoint);
-      if(propSetIt != m_myPropertySetMap.end())
-      {
-        if(statsHandle == m_subStatsHandleSubbandPower)
-        {
+      if(propSetIt != m_myPropertySetMap.end()) {
+        if(statsHandle == m_subStatsHandleSubbandPower) {
           TGCFResult res = propSetIt->second->setValue(_getElementPrefix(datapointElement)+string(PROPNAME_STATISTICSSUBBANDPOWER),statisticsString);
           LOG_DEBUG(formatString("Writing subband statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
         }
-        else if(statsHandle == m_subStatsHandleBeamletPower)
-        {
+        else if(statsHandle == m_subStatsHandleBeamletPower) {
           TGCFResult res = propSetIt->second->setValue(_getElementPrefix(datapointElement)+string(PROPNAME_STATISTICSBEAMLETPOWER),statisticsString);
           LOG_DEBUG(formatString("Writing beamlet statistics to %s returned %d",propSetIt->second->getScope().c_str(),res));
         }
@@ -2543,16 +2334,12 @@ void RegisterAccessTask::_addXcStatistics(TXcStatistics& statistics, uint32 stat
 {
   LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   
-  if(statsHandle == m_subXcStatsHandle)
-  {
-    if(m_integrationTime == 0)
-    {
+  if(statsHandle == m_subXcStatsHandle) {
+    if(m_integrationTime == 0) {
       _writeXcStatistics(statistics, statsHandle);
     }
-    else
-    {
-      if(m_integratingXcStatistics.size() == 0)
-      {
+    else {
+      if(m_integratingXcStatistics.size() == 0) {
         m_integratingXcStatistics.resize(statistics.shape());
         m_integratingXcStatistics = 0;
       }
@@ -2578,8 +2365,7 @@ void RegisterAccessTask::_writeXcStatistics(TXcStatistics& statistics, uint32 st
   int dim4 = statistics.ubound(blitz::fourthDim) - statistics.lbound(blitz::fourthDim) + 1;
   LOG_DEBUG(formatString("dimensions: %d x %d x %d x %d",dim1,dim2,dim3,dim4));
     
-  if(!m_centralized_stats)
-  {
+  if(!m_centralized_stats) {
     LOG_FATAL("NOT Writing XC statistics to one string because the string would be far too big");
   }
   
@@ -2594,14 +2380,10 @@ void RegisterAccessTask::_writeXcStatistics(TXcStatistics& statistics, uint32 st
   valuePointerVector.push_back(new GCFPVDouble(dim4));
 
   // then add all stats
-  for(dim1=statistics.lbound(blitz::firstDim);dim1<=statistics.ubound(blitz::firstDim);dim1++)
-  {
-    for(dim2=statistics.lbound(blitz::firstDim);dim2<=statistics.ubound(blitz::firstDim);dim2++)
-    {
-      for(dim3=statistics.lbound(blitz::firstDim);dim3<=statistics.ubound(blitz::firstDim);dim3++)
-      {
-        for(dim4=statistics.lbound(blitz::firstDim);dim4<=statistics.ubound(blitz::firstDim);dim4++)
-        {
+  for(dim1=statistics.lbound(blitz::firstDim);dim1<=statistics.ubound(blitz::firstDim);dim1++) {
+    for(dim2=statistics.lbound(blitz::firstDim);dim2<=statistics.ubound(blitz::firstDim);dim2++) {
+      for(dim3=statistics.lbound(blitz::firstDim);dim3<=statistics.ubound(blitz::firstDim);dim3++) {
+        for(dim4=statistics.lbound(blitz::firstDim);dim4<=statistics.ubound(blitz::firstDim);dim4++) {
           complex<double> stat = statistics(dim1,dim2,dim3,dim4);
           valuePointerVector.push_back(new GCFPVDouble(stat.real()));
           valuePointerVector.push_back(new GCFPVDouble(stat.imag()));
@@ -2615,18 +2397,15 @@ void RegisterAccessTask::_writeXcStatistics(TXcStatistics& statistics, uint32 st
   
   // set the property
   TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
-  if(propSetIt != m_myPropertySetMap.end())
-  {
-    if(statsHandle == m_subXcStatsHandle)
-    {
+  if(propSetIt != m_myPropertySetMap.end()) {
+    if(statsHandle == m_subXcStatsHandle) {
       propSetIt->second->setValue(string(PROPNAME_XCSTATISTICS),dynamicArray);
     }
   }
 
   // cleanup
   GCFPValueArray::iterator it=valuePointerVector.begin();
-  while(it!=valuePointerVector.end())
-  {
+  while(it!=valuePointerVector.end()) {
     delete *it;
     valuePointerVector.erase(it);
     it=valuePointerVector.begin();
@@ -2641,22 +2420,17 @@ void RegisterAccessTask::_refreshFunctionality()
   char scopeString[300];
   
   int racksDefect(0);
-  for(rack=0;rack<m_n_racks;rack++)
-  {
+  for(rack=0;rack<m_n_racks;rack++) {
     int subracksDefect(0);
-    for(subrack=0;subrack<m_n_subracks_per_rack;subrack++)
-    {
+    for(subrack=0;subrack<m_n_subracks_per_rack;subrack++) {
       int boardsDefect(0);
-      for(board=0;board<m_n_boards_per_subrack;board++)
-      {
+      for(board=0;board<m_n_boards_per_subrack;board++) {
         int apsDefect(0);
         int ethDefect(0);
         int bpDefect(0);
-        for(ap=0;ap<m_n_aps_per_board;ap++)
-        {
+        for(ap=0;ap<m_n_aps_per_board;ap++) {
           int rcusDefect(0);
-          for(rcu=0;rcu<m_n_rcus_per_ap;rcu++)
-          {
+          for(rcu=0;rcu<m_n_rcus_per_ap;rcu++) {
             int lfasDefect(0);
             int hfasDefect(0);
             
@@ -2671,26 +2445,22 @@ void RegisterAccessTask::_refreshFunctionality()
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
             int isDefect = _isDefect(scopeString);
             
-            if(isDefect==1 || (lfasDefect>0&&hfasDefect>0))
-            {
+            if(isDefect==1 || (lfasDefect>0&&hfasDefect>0)) {
               rcusDefect++;
               _setFunctionalityRCU(rack,subrack,board,ap,rcu, false);
             }
-            else
-            {
+            else {
               _setFunctionality(scopeString, true);
             }
           }
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
           int isDefect = _isDefect(scopeString);
           
-          if(isDefect==1 || rcusDefect >= m_n_rcus_per_ap)
-          {
+          if(isDefect==1 || rcusDefect >= m_n_rcus_per_ap) {
             apsDefect++;
             _setFunctionalityAP(rack,subrack,board,ap, false);
           }
-          else
-          {
+          else {
             _setFunctionality(scopeString, true);
           }
         }
@@ -2706,51 +2476,43 @@ void RegisterAccessTask::_refreshFunctionality()
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
         int isDefect = _isDefect(scopeString);
         
-        if(isDefect==1 || bpDefect>0 || ethDefect>0 || apsDefect >= m_n_aps_per_board)
-        {
+        if(isDefect==1 || bpDefect>0 || ethDefect>0 || apsDefect >= m_n_aps_per_board) {
           boardsDefect++;
           _setFunctionalityBoard(rack,subrack,board,false);
         }
-        else
-        {
+        else {
           _setFunctionality(scopeString, true);
         }
       }
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
       int isDefect = _isDefect(scopeString);
       
-      if(isDefect==1 || boardsDefect >= m_n_boards_per_subrack)
-      {
+      if(isDefect==1 || boardsDefect >= m_n_boards_per_subrack) {
         subracksDefect++;
         _setFunctionalitySubRack(rack,subrack,false);
       }
-      else
-      {
+      else {
         _setFunctionality(scopeString, true);
       }
     }  
     sprintf(scopeString,SCOPE_PIC_RackN,rack);
     int isDefect = _isDefect(scopeString);
     
-    if(isDefect==1 || subracksDefect >= m_n_subracks_per_rack)
-    {
+    if(isDefect==1 || subracksDefect >= m_n_subracks_per_rack) {
       racksDefect++;
       _setFunctionalityRack(rack,false);
     }
-    else
-    {
+    else {
       _setFunctionality(scopeString, true);
     }
   }
   sprintf(scopeString,SCOPE_PIC);
   int isDefect = _isDefect(scopeString);
   
-  if(isDefect==1 || racksDefect >= m_n_racks)
-  {
+  if(isDefect==1 || racksDefect >= m_n_racks) {
     _setFunctionalityStation(false);
   }
-  else
-  {
+  else {
     _setFunctionality(scopeString, true);
   }
 }
@@ -2763,25 +2525,19 @@ int RegisterAccessTask::_isDefect(char* scopeString)
   string datapoint,datapointElement;
   _splitScope(string(scopeString),datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     boost::shared_ptr<GCFPVInteger> pvStatus(static_cast<GCFPVInteger*>(it->second->getValue(_getElementPrefix(datapointElement)+string(PROPNAME_STATUS))));
-    if(!pvStatus)
-    {
+    if(!pvStatus) {
       LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
     }
-    else
-    {
-      if(pvStatus->getValue()==-3/*APLCommon::RS_DEFECT*/)
-      {
+    else {
+      if(pvStatus->getValue()==-3/*APLCommon::RS_DEFECT*/) {
         isDefect=1;
       }
-      else
-      {
+      else {
         isDefect=0;
       }
     }
@@ -2796,12 +2552,10 @@ void RegisterAccessTask::_setFunctionality(char* scopeString, bool functional)
   string datapoint,datapointElement;
   _splitScope(string(scopeString),datapoint,datapointElement);
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(datapoint);
-  if(it == m_myPropertySetMap.end())
-  {
+  if(it == m_myPropertySetMap.end()) {
     LOG_FATAL(formatString("PropertySet not found: %s",datapoint.c_str()));
   }
-  else
-  {
+  else {
     GCFPVBool pvBool(functional);
     it->second->setValue(_getElementPrefix(datapointElement)+string(PROPNAME_FUNCTIONALITY),pvBool);
   }
@@ -2831,8 +2585,7 @@ void RegisterAccessTask::_setFunctionalityAP(int rack,int subrack,int board,int 
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
   _setFunctionality(scopeString, functional);
   // also set functionality of underlying resources to false
-  for(int r=0;r<m_n_rcus_per_ap;r++)
-  {
+  for(int r=0;r<m_n_rcus_per_ap;r++) {
     _setFunctionalityRCU(rack,subrack,board,ap,r, false);
   }
 }
@@ -2850,8 +2603,7 @@ void RegisterAccessTask::_setFunctionalityBoard(int rack,int subrack,int board,b
   _setFunctionality(scopeString, functional);
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
   _setFunctionality(scopeString, functional);
-  for(int a=0;a<m_n_aps_per_board;a++)
-  {
+  for(int a=0;a<m_n_aps_per_board;a++) {
     _setFunctionalityAP(rack,subrack,board,a,false);
   }
 }
@@ -2865,8 +2617,7 @@ void RegisterAccessTask::_setFunctionalitySubRack(int rack,int subrack,bool func
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
   _setFunctionality(scopeString, functional);
   // also set functionality of underlying resources to false
-  for(int b=0;b<m_n_boards_per_subrack;b++)
-  {
+  for(int b=0;b<m_n_boards_per_subrack;b++) {
     _setFunctionalityBoard(rack,subrack,b,false);
   }
 }
@@ -2880,8 +2631,7 @@ void RegisterAccessTask::_setFunctionalityRack(int rack,bool functional)
   sprintf(scopeString,SCOPE_PIC_RackN,rack);
   _setFunctionality(scopeString, functional);
   // also set functionality of underlying resources to false
-  for(int s=0;s<m_n_subracks_per_rack;s++)
-  {
+  for(int s=0;s<m_n_subracks_per_rack;s++) {
     _setFunctionalitySubRack(rack,s,false);
   }
 }
@@ -2895,8 +2645,7 @@ void RegisterAccessTask::_setFunctionalityStation(bool functional)
   sprintf(scopeString,SCOPE_PIC);
   _setFunctionality(scopeString, functional);
   // also set functionality of underlying resources to false
-  for(int r=0;r<m_n_racks;r++)
-  {
+  for(int r=0;r<m_n_racks;r++) {
     _setFunctionalityRack(r,false);
   }
 }
@@ -2907,8 +2656,7 @@ void RegisterAccessTask::_splitScope(const string& scope,string& datapoint,strin
   datapoint = scope;
   datapointElement = "";
   
-  if(splitPoint != string::npos)
-  {
+  if(splitPoint != string::npos) {
     datapoint = scope.substr(0,splitPoint);
     datapointElement = scope.substr(splitPoint+1);
   }
@@ -2917,8 +2665,7 @@ void RegisterAccessTask::_splitScope(const string& scope,string& datapoint,strin
 string RegisterAccessTask::_getElementPrefix(const string& datapointElement)
 {
   string elPrefix = "";
-  if(datapointElement.length() > 0)
-  {
+  if(datapointElement.length() > 0) {
     elPrefix = datapointElement + string(".");
   }
   return elPrefix;
