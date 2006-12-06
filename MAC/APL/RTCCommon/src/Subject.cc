@@ -22,6 +22,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 #include <APL/RTCCommon/Subject.h>
 
 #include <algorithm>

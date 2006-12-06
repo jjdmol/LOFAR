@@ -22,6 +22,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 #include <APL/RTCCommon/RegisterState.h>
 
 using namespace std;
