@@ -78,6 +78,7 @@ public:
 	uint16		value  (const string&	aStateName) const;
 	uint16		value  (CTstateNr		aStateNr)   const;
 	CTstateNr	stateNr(uint16			someNr)     const;
+	uint16		signal (CTstateNr		aStateNr)   const;
 
 private:
 	// Copying is not allowed
@@ -85,7 +86,6 @@ private:
 	CTState& operator=(const CTState& that);
 
 	//# --- Datamembers ---
-	vector<string>		itsStates;
 };
 
 // @}
