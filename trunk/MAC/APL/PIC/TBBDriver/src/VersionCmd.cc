@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a VersionCmd object.--------------------------------------
 VersionCmd::VersionCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsBoardsMask(0)
 {
 	itsTPE 			= new TPVersionEvent();
 	itsTPackE 	= 0;
@@ -75,11 +75,10 @@ void VersionCmd::saveTbbEvent(GCFEvent& event)
 			itsTBBackE->status[boardnr] |= NO_BOARD;
 		
 		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
 	}
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
 	
 	// fill TP command, to send
@@ -101,7 +100,7 @@ bool VersionCmd::sendTpEvent(int32 boardnr, int32)
 		sending = true;
 	}
 	else
-		itsErrorMask |= (1 << boardnr);
+		itsTBBackE->status[boardnr] |= CMD_ERROR;
 	
 	return(sending);
 }

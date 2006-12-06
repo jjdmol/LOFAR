@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a RecordCmd object.----------------------------------------
 RecordCmd::RecordCmd():
-		itsBoardMask(0), itsErrorMask(0), itsBoardsMask(0),itsChannel(0)
+		itsBoardMask(0), itsBoardsMask(0),itsChannel(0)
 {
 	itsTPE 			= new TPRecordEvent();
 	itsTPackE 	= 0;
@@ -81,14 +81,13 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 			itsBoardMask |= (1 << boardnr);
 			
 		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & CHANNEL_SEL_ERROR);
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR | CHANNEL_SEL_ERROR);
 				
 		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
 	}
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
 	
 	// initialize TP send frame
@@ -107,13 +106,16 @@ bool RecordCmd::sendTpEvent(int32 boardnr, int32 channelnr)
 	itsTPE->channel = DriverSettings::instance()->getChInputNr(channelnr);
 	itsChannel = channelnr;
 	
-	if (ds->boardPort(boardnr).isConnected() && (itsTBBackE->status[boardnr] == 0)) {
+	if 	(ds->boardPort(boardnr).isConnected() && 
+			(itsTBBackE->status[boardnr] == 0) &&
+			(DriverSettings::instance()->getChStatus(channelnr) == 'A')) {
+		
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
 		sending = true;
 	}
 	else
-		itsErrorMask |= (1 << boardnr);
+		itsTBBackE->status[boardnr] |= CMD_ERROR;
 	
 	return(sending);
 }
@@ -123,7 +125,7 @@ void RecordCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsErrorMask |= (1 << boardnr);
+		itsTBBackE->status[boardnr] |= COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPRecordackEvent(event);
@@ -132,7 +134,7 @@ void RecordCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));
 		
 		if (itsTPackE->status == 0)
-			DriverSettings::instance()->setChActive((itsChannel + (boardnr * 16)), true);	
+			DriverSettings::instance()->setChStatus((itsChannel + (boardnr * 16)), 'R');	
 		
 		LOG_DEBUG_STR(formatString("Received RecordAck from boardnr[%d]", boardnr));
 		delete itsTPackE;

@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a FreeCmd object.----------------------------------------
 FreeCmd::FreeCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsChannel(0)
+		itsBoardMask(0),itsBoardsMask(0),itsChannel(0)
 {
 	itsTPE 			= new TPFreeEvent();
 	itsTPackE 	= 0;
@@ -75,21 +75,20 @@ void FreeCmd::saveTbbEvent(GCFEvent& event)
 		if (!(itsBoardsMask & (1 << boardnr))) 
 			itsTBBackE->status[boardnr] |= NO_BOARD;
 		
-		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr]; 		
+		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr];
 		
 		if (itsChannelMask[boardnr] != 0)
 			itsBoardMask |= (1 << boardnr);
 			
 		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & CHANNEL_SEL_ERROR);
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR | CHANNEL_SEL_ERROR);
 				
 		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
 		LOG_DEBUG_STR(formatString("FreeCmd savetbb status board[%d]= 0x%08X",boardnr,itsTBBackE->status[boardnr]));
 	}
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
 	
 	// initialize TP send frame
@@ -109,15 +108,15 @@ bool FreeCmd::sendTpEvent(int32 boardnr, int32 channelnr)
 	itsChannel = channelnr;
 	
 	if 	(ds->boardPort(boardnr).isConnected() && 
-			(itsTBBackE->status[boardnr] == 0) &&
-			ds->getChAllocated(channelnr)) {
+			(itsTBBackE->status[boardnr] == 0)) {
+		
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
 		sending = true;
 		LOG_DEBUG_STR(formatString("Sending FreeCmd to boardnr[%d], channel[%d]", boardnr, channelnr));
 	}
 	else
-		itsErrorMask |= (1 << boardnr);
+		itsTBBackE->status[boardnr] |= CMD_ERROR;
 	
 	return(sending);
 }
@@ -137,7 +136,7 @@ void FreeCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 		
 		if (itsTPackE->status == 0) {
 			DriverSettings::instance()->setChSelected(itsChannel, false); 	
-			DriverSettings::instance()->setChAllocated(itsChannel, false);
+			DriverSettings::instance()->setChStatus(itsChannel, 'F'); 	
 			DriverSettings::instance()->setChStartAddr(itsChannel, 0);
 			DriverSettings::instance()->setChPageSize(itsChannel, 0); 	
 		}

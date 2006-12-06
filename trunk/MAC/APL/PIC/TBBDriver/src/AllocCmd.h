@@ -70,11 +70,9 @@ namespace LOFAR {
 				bool devideChannels(int32 boardnr);
 				
 				uint32	itsBoardMask;  // mask indicates the boards to communicate with
-				uint32  itsErrorMask;  // mask indicates the not responding boards
 				uint32	itsBoardsMask;	// Installed boards mask
 				int32		itsChannel;
 				uint32	itsChannelMask[MAX_N_TBBBOARDS];
-				
 								
 				TPAllocEvent			*itsTPE;
 				TPAllocackEvent		*itsTPackE;

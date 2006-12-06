@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a ResetCmd object.----------------------------------------
 ResetCmd::ResetCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsBoardsMask(0)
 {
 	itsTPE 			= new TPResetEvent();
 	itsTPackE 	= 0;
@@ -64,28 +64,27 @@ bool ResetCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ResetCmd::saveTbbEvent(GCFEvent& event)
 {
+	DriverSettings*		ds = DriverSettings::instance();
 	itsTBBE 			= new TBBResetEvent(event);
+	itsTPE->opcode			= TPRESET;
+	itsTPE->status			=	0;
 		
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	itsBoardMask = itsTBBE->boardmask;
 	
 	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
-		
-		if (!(itsBoardsMask & (1 << boardnr))) 
-			itsTBBackE->status[boardnr] |= NO_BOARD;
-		
-		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+		if (itsBoardMask & (1 << boardnr)) {
+			if (ds->boardPort(boardnr).isConnected())
+				ds->boardPort(boardnr).send(*itsTPE);
+			
+			// reset channel information for selected board	
+			for (int channelnr = (boardnr * 16); channelnr < ((boardnr * 16) + 16); channelnr++) {
+				DriverSettings::instance()->setChSelected(channelnr, false);
+				DriverSettings::instance()->setChStatus(channelnr, 'F');
+				DriverSettings::instance()->setChStartAddr(channelnr, 0);
+				DriverSettings::instance()->setChPageSize(channelnr, 0);				
+			}
+		} 
 	}
-	
-	// Send only commands to boards installed
-	itsErrorMask = itsBoardMask & ~itsBoardsMask;
-	itsBoardMask = itsBoardMask & itsBoardsMask;
-	
-	// initialize TP send frame
-	itsTPE->opcode			= TPRESET;
-	itsTPE->status			=	0;
 	
 	delete itsTBBE;	
 }
@@ -94,16 +93,8 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 bool ResetCmd::sendTpEvent(int32 boardnr, int32)
 {
 	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	if (ds->boardPort(boardnr).isConnected() && (itsTBBackE->status[boardnr] == 0)) {
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-	}
-	else
-		itsErrorMask |= (1 << boardnr);
-	
+	// sending reset is done in saveTbbEvent()
+	// because sendTpEvent() is only posible for active boards
 	return(sending);
 }
 
@@ -112,7 +103,7 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsErrorMask |= (1 << boardnr);
+		;
 	}
 	else {
 		itsTPackE = new TPResetackEvent(event);

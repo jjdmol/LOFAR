@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a ReadwCmd object.----------------------------------------
 ReadwCmd::ReadwCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0),itsBoardStatus(0)
+		itsBoardMask(0),itsBoardsMask(0),itsBoardStatus(0)
 		//itsMp(0),itsAddr(0),itsWordLo(0),itsWordHi(0)
 {
 	itsTPE 			= new TPReadwEvent();
@@ -69,7 +69,6 @@ void ReadwCmd::saveTbbEvent(GCFEvent& event)
 	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
 	
 	itsTBBackE->status = 0;
@@ -95,8 +94,8 @@ bool ReadwCmd::sendTpEvent(int32 boardnr, int32)
 		ds->boardPort(boardnr).setTimer(ds->timeout());
 		sending = true;
 	}
-	else
-		itsErrorMask |= (1 << boardnr);
+	else 
+		itsTBBackE->status |= CMD_ERROR;
 
 	return(sending);
 }
@@ -106,7 +105,7 @@ void ReadwCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsErrorMask |= (1 << boardnr);
+		itsTBBackE->status |= COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPReadwackEvent(event);
@@ -123,13 +122,8 @@ void ReadwCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ReadwCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	itsTBBackE->status = 0;
-	if (itsErrorMask != 0) {
-		itsTBBackE->status |= COMM_ERROR;
-		itsTBBackE->status |= (itsErrorMask << 16);
-	}
-	if (itsBoardMask == 0) itsTBBackE->status |= SELECT_ERROR; 
-	if (itsTBBackE->status == 0) itsTBBackE->status = SUCCESS;	
+	if (itsTBBackE->status == 0)
+			itsTBBackE->status = SUCCESS;	
 	
 	clientport->send(*itsTBBackE);
 }

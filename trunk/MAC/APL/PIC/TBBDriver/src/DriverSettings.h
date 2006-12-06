@@ -34,8 +34,7 @@ namespace LOFAR {
 struct ChannelInfo
 {
 	bool		Selected;
-	bool		Allocated;
-	bool		Active;
+	char		Status;
 	int32		BoardNr;
 	int32		InputNr;
 	int32		MpNr;
@@ -69,18 +68,16 @@ public:
 	
 	//void setChannelMask(int32 boardnr, uint32 channelmask);
 
+	char getChStatus(int32 channelnr);
 	bool getChSelected(int32 channelnr);
-	bool getChAllocated(int32 channelnr);
-	bool getChActive(int32 channelnr);
 	int32 getChBoardNr(int32 channelnr);
 	int32 getChInputNr(int32 channelnr);
 	int32 getChMpNr(int32 channelnr);
 	uint32 getChStartAddr(int32 channelnr);
 	uint32 getChPageSize(int32 channelnr);
 
-	void setChSelected(int32 channelnr, bool select);
-	void setChAllocated(int32 channelnr, bool allocated);
-	void setChActive(int32 channelnr, bool active);
+	void setChSelected(int32 channelnr, bool selected);
+	void setChStatus(int32 channelnr, char state);
 	void setChStartAddr(int32 channelnr, uint32 startaddr);
 	void setChPageSize(int32 channelnr, uint32 pagesize);
 	
@@ -130,18 +127,16 @@ inline	double DriverSettings::timeout()	{ return (itsTimeOut);   }
 inline	GCFPortInterface& DriverSettings::boardPort(int32 boardnr)	{ return (itsBoardPorts[boardnr]); }
 
 //---- inline functions for channel information ------------
+inline	char DriverSettings::getChStatus(int32 channelnr) { return (itsChannel[channelnr].Status); }
 inline	bool DriverSettings::getChSelected(int32 channelnr) { return (itsChannel[channelnr].Selected); }
-inline	bool DriverSettings::getChAllocated(int32 channelnr) { return (itsChannel[channelnr].Allocated); }
-inline	bool DriverSettings::getChActive(int32 channelnr) { return (itsChannel[channelnr].Active); };
 inline	int32 DriverSettings::getChBoardNr(int32 channelnr) { return (itsChannel[channelnr].BoardNr); }
 inline	int32 DriverSettings::getChInputNr(int32 channelnr) { return (itsChannel[channelnr].InputNr); }
 inline	int32 DriverSettings::getChMpNr(int32 channelnr) { return (itsChannel[channelnr].MpNr); }
 inline	uint32 DriverSettings::getChStartAddr(int32 channelnr) { return (itsChannel[channelnr].StartAddr); }
 inline	uint32 DriverSettings::getChPageSize(int32 channelnr) { return (itsChannel[channelnr].PageSize); }
 
-inline	void DriverSettings::setChSelected(int32 channelnr, bool select) { itsChannel[channelnr].Selected = select; }
-inline	void DriverSettings::setChAllocated(int32 channelnr, bool allocated) { itsChannel[channelnr].Allocated = allocated; }
-inline	void DriverSettings::setChActive(int32 channelnr, bool active){ itsChannel[channelnr].Active = active; }
+inline	void DriverSettings::setChSelected(int32 channelnr, bool selected) { itsChannel[channelnr].Selected = selected; }
+inline	void DriverSettings::setChStatus(int32 channelnr, char state){ itsChannel[channelnr].Status = state; }
 inline	void DriverSettings::setChStartAddr(int32 channelnr, uint32 startaddr){ itsChannel[channelnr].StartAddr = startaddr; }
 inline	void DriverSettings::setChPageSize(int32 channelnr, uint32 pagesize){ itsChannel[channelnr].PageSize = pagesize; }
 

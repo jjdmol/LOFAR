@@ -33,7 +33,7 @@ namespace LOFAR {
 
 //--Constructors for a ClearCmd object.----------------------------------------
 ClearCmd::ClearCmd():
-		itsBoardMask(0),itsErrorMask(0),itsBoardsMask(0)
+		itsBoardMask(0),itsBoardsMask(0)
 {
 	itsTPE 			= new TPClearEvent();
 	itsTPackE 	= 0;
@@ -76,11 +76,10 @@ void ClearCmd::saveTbbEvent(GCFEvent& event)
 			itsTBBackE->status[boardnr] |= NO_BOARD;
 		
 		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR & BOARD_SEL_ERROR);
+			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
 	}
 	
 	// Send only commands to boards installed
-	itsErrorMask = itsBoardMask & ~itsBoardsMask;
 	itsBoardMask = itsBoardMask & itsBoardsMask;
 	
 	// initialize TP send frame
@@ -100,9 +99,15 @@ bool ClearCmd::sendTpEvent(int32 boardnr, int32)
 		ds->boardPort(boardnr).send(*itsTPE);
 		ds->boardPort(boardnr).setTimer(ds->timeout());
 		sending = true;
+		
+		// reset channel information for selected board	
+		for (int channelnr = (boardnr * 16); channelnr < ((boardnr * 16) + 16); channelnr++) {
+			DriverSettings::instance()->setChSelected(channelnr, false);
+			DriverSettings::instance()->setChStatus(channelnr, 'F');
+			DriverSettings::instance()->setChStartAddr(channelnr, 0);
+			DriverSettings::instance()->setChPageSize(channelnr, 0);				
+		}
 	}
-	else
-		itsErrorMask |= (1 << boardnr);
 	
 	return(sending);
 }
@@ -112,7 +117,7 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsErrorMask |= (1 << boardnr);
+		;
 	}
 	else {
 		itsTPackE = new TPClearackEvent(event);
