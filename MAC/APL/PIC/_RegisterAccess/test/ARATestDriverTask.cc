@@ -26,6 +26,7 @@
 #include <Common/LofarLocators.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/MEPHeader.h>
 
 #include "../src/ARAConstants.h"
 #include "../src/ARAPropertyDefines.h"
@@ -44,6 +45,7 @@ using namespace LOFAR::ACC::APS;
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::EPA_Protocol;
 using namespace std;
 
 namespace LOFAR
@@ -1136,11 +1138,11 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
         versions.bp()(board).fpga_min = (board+1)*8;
         versions.bp()(board).fpga_maj = (board+1)*8;
         LOG_INFO(formatString("bp[%d].version = 0x%x",board,versions.bp()(board)));
-        for(int ap=0;ap<EPA_Protocol::N_AP; ap++)
+        for(int ap=0;ap<MEPHeader::N_AP; ap++)
         {
-          versions.ap()(board * EPA_Protocol::N_AP + ap).fpga_min = ((board+1)<<4)+ap;
-          versions.ap()(board * EPA_Protocol::N_AP + ap).fpga_maj = ((board+1)<<4)+ap;
-          LOG_INFO(formatString("ap[%d][%d].version = 0x%x",board,ap,versions.ap()(board * EPA_Protocol::N_AP + ap)));
+          versions.ap()(board * MEPHeader::N_AP + ap).fpga_min = ((board+1)<<4)+ap;
+          versions.ap()(board * MEPHeader::N_AP + ap).fpga_maj = ((board+1)<<4)+ap;
+          LOG_INFO(formatString("ap[%d][%d].version = 0x%x",board,ap,versions.ap()(board * MEPHeader::N_AP + ap)));
         }
       }
       
