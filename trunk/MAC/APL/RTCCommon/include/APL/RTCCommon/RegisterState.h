@@ -25,6 +25,7 @@
 #ifndef REGISTERSTATE_H_
 #define REGISTERSTATE_H_
 
+#include <lofar_config.h>
 #include <blitz/array.h>
 #include <Common/LofarLogger.h>
 #include <APL/RTCCommon/Marshalling.h>

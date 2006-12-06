@@ -25,6 +25,7 @@
                                 Includes
  ---------------------------------------------------------------------------*/
 
+#include <lofar_config.h>
 #include <APL/RTCCommon/gnuplot_i.h>
 #include <unistd.h>
 
