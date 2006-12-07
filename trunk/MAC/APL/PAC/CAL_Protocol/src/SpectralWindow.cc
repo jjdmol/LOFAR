@@ -38,9 +38,6 @@ using namespace blitz;
 using namespace LOFAR;
 using namespace CAL;
 
-#define SPW_DIMS    2
-#define SPW_NPARAMS 3 /* sampling_freq, nyquist_zone, numsubbands */
-
 SpectralWindow::SpectralWindow() :
   m_name("undefined"), m_sampling_freq(0), m_nyquist_zone(0), m_numsubbands(0), m_rcucontrol(0)
 {
