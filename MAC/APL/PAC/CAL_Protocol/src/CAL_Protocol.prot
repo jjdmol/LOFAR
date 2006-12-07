@@ -74,12 +74,6 @@ event = {
 	    name = "subset";
 	    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
       };
-      param = { // nyquist_zone
-	    name = "nyquist_zone";
-	    type = "int";
-      };
-      // sampling_frequency and nyquist_zone determine the spectral window
-
       param = {
 	    // RCU control byte controls the setting of all
 	    // RCU's for this subarray
@@ -87,6 +81,8 @@ event = {
 	    type = "RSP_Protocol::RCUSettings";
 	    userdefined;
       };
+      // nyquist_zone is deducted from RCUSettings
+      // sampling_frequency and nyquist_zone determine the spectral window
 };
 
 event = {

@@ -158,7 +158,6 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 	start.name   = BEAMCTL_ARRAY + formatString("_%d", getpid());
 	start.parent = m_parent;
 	start.subset = getRCUMask();
-	start.nyquist_zone = m_rcumode()(0).getNyquistZone();
 	start.rcumode().resize(1);
 	start.rcumode()(0) = m_rcumode()(0);
 	

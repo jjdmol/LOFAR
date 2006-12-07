@@ -572,13 +572,13 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		else {
 			// create subarray to calibrate
 			SubArray* subarray = new SubArray(start.name,
-												parent->getGeoLoc(),
-												positions.copy(),
-												select,
-												m_sampling_frequency,
-												start.nyquist_zone,
-												GET_CONFIG("CalServer.N_SUBBANDS", i),
-												start.rcumode()(0).getRaw());
+							  parent->getGeoLoc(),
+							  positions.copy(),
+							  select,
+							  m_sampling_frequency,
+							  start.rcumode()(0).getNyquistZone(),
+							  GET_CONFIG("CalServer.N_SUBBANDS", i),
+							  start.rcumode()(0).getRaw());
 
 			m_subarrays.schedule_add(subarray);
 
