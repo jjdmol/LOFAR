@@ -225,6 +225,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 	ci.retryTime	  = 0;
 	ci.nrRetries	  = 0;
 	ci.result		  = CT_RESULT_NO_ERROR;
+	ci.inResync		  = false;
 	ci.startTime	  = 0;					// only used for reschedule
 	ci.stopTime		  = 0;					// only used for reschedule
 
@@ -583,11 +584,26 @@ void ChildControl::_processActionList()
 			continue;
 		}
 
+		// is there a connection with this controller?
 		if (action->requestedState > CTState::CONNECTED && !controller->port) {
 			LOG_DEBUG_STR("parking:" << action->cntlrName << "->" << 
 					cts.name(action->requestedState) << " until connection is made");
 			itsActionList.push_back(*action);	// add at back
 			action++;							// hop to next
+			itsActionList.pop_front();			// remove at front.
+			nrActions--;						// one less to handle.
+			continue;
+		}
+
+		// in resync mode? don't bother child with unnec. msgs.
+		if (controller->inResync) {
+			LOG_DEBUG_STR("bounching:" << action->cntlrName << "->" << 
+						  cts.name(action->requestedState) << " because of resync");
+			CTState		cts;
+			_setEstablishedState(controller->cntlrName, 
+								 cts.stateAck(action->requestedState), 
+								 time(0), CT_RESULT_NO_ERROR);
+			action++;							// move to next action.
 			itsActionList.pop_front();			// remove at front.
 			nrActions--;						// one less to handle.
 			continue;
@@ -772,6 +788,11 @@ void ChildControl::_setEstablishedState(const string&		aName,
 	}
 	controller->establishTime = atTime;
 
+	// clear resync flag
+	if (newState >= controller->requestedState) {
+		controller->inResync = false;
+	}
+
 	// Don't report 'ANYSTATE = lost connection' to the maintask yet.
 	if (newState == CTState::ANYSTATE) {
 		return;
@@ -856,6 +877,7 @@ void ChildControl::_setEstablishedState(const string&		aName,
 		// do nothing
 		break;
 	}
+
 }
 
 //
@@ -1097,6 +1119,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				ci.retryTime	  = 0;
 				ci.nrRetries	  = 0;
 				ci.result		  = CT_RESULT_NO_ERROR;
+				ci.inResync		  = true;
 
 				// Update our administration.
 				itsCntlrList->push_back(ci);
@@ -1104,11 +1127,12 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 														" to the controllerList");
 			}
 			else {
-				// Resync of known controller (strange case!)
+				// Resync of known controller
 				controller->requestedState = cts.stateNr(msg.curState);
 				controller->currentState   = cts.stateNr(msg.curState);
 				controller->hostname	   = msg.hostname;
 				controller->port 		   = &port;
+				controller->inResync	   = true;
 				LOG_DEBUG_STR("Updated info of reconnected controller " << msg.cntlrName);
 			}
 

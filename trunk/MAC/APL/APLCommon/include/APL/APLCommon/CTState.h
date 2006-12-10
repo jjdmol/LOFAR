@@ -74,11 +74,12 @@ public:
 	} CTstateNr;
 
 	// conversion routines
-	string		name   (uint16			aStateNr)   const;
-	uint16		value  (const string&	aStateName) const;
-	uint16		value  (CTstateNr		aStateNr)   const;
-	CTstateNr	stateNr(uint16			someNr)     const;
-	uint16		signal (CTstateNr		aStateNr)   const;
+	string		name    (uint16			aStateNr)   const;
+	uint16		value   (const string&	aStateName) const;
+	uint16		value   (CTstateNr		aStateNr)   const;
+	CTstateNr	stateNr (uint16			someNr)     const;
+	uint16		signal  (CTstateNr		aStateNr)   const;
+	CTstateNr	stateAck(CTstateNr		aStateNr)	const;
 
 private:
 	// Copying is not allowed
