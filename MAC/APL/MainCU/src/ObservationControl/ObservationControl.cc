@@ -140,7 +140,7 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 	itsState = newState;
 
 	CTState		cts;
-	LOG_DEBUG_STR(getName() << " now in state " << cts.name(newState));
+	LOG_INFO_STR(getName() << " now in state " << cts.name(newState));
 
 	if (itsPropertySet) {
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),
@@ -425,6 +425,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsClaimTimer = 0;
 			LOG_DEBUG("Requesting all childs to execute the CLAIM state");
 			itsChildControl->requestState(CTState::CLAIMED, "");
+			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		else if (timerEvent.id == itsPrepareTimer) {
 			setState(CTState::PREPARE);
@@ -432,6 +433,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsPrepareTimer = 0;
 			LOG_DEBUG("Requesting all childs to execute the PREPARE state");
 			itsChildControl->requestState(CTState::PREPARED, "");
+			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		else if (timerEvent.id == itsStartTimer) {
 			setState(CTState::RESUME);
@@ -439,6 +441,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsStartTimer = 0;
 			LOG_DEBUG("Requesting all childs to go operation state");
 			itsChildControl->requestState(CTState::RESUMED, "");
+			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		else if (timerEvent.id == itsStopTimer) {
 			setState(CTState::FINISH);
@@ -446,6 +449,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsStopTimer = 0;
 			LOG_DEBUG("Requesting all childs to quit");
 			itsChildControl->requestState(CTState::FINISHED, "");
+			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		// some other timer?
 
@@ -495,6 +499,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		CONTROLClaimedEvent		msg(event);
 		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << ")");
 		itsChildResult |= msg.result;
+		doHeartBeatTask();
 		break;
 	}
 
@@ -502,6 +507,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		CONTROLPreparedEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << ")");
 		itsChildResult |= msg.result;
+		doHeartBeatTask();
 		break;
 	}
 
@@ -509,6 +515,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		CONTROLResumedEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << ")");
 		itsChildResult |= msg.result;
+		doHeartBeatTask();
 		break;
 	}
 
@@ -516,6 +523,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		CONTROLSuspendedEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << ")");
 		itsChildResult |= msg.result;
+		doHeartBeatTask();
 		break;
 	}
 
@@ -523,6 +531,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		CONTROLReleasedEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
 		itsChildResult |= msg.result;
+		doHeartBeatTask();
 		break;
 	}
 
@@ -685,6 +694,8 @@ void  ObservationControl::doHeartBeatTask()
 	vector<ChildControl::StateInfo>		lateCntlrs = 
 						itsChildControl->getPendingRequest("", 0, CNTLRTYPE_NO_TYPE);
 
+	LOG_TRACE_FLOW_STR("itsBusyControllers=" << itsBusyControllers);
+
 	// all controllers up to date?
 	if (lateCntlrs.empty()) {
 		LOG_DEBUG_STR("All (" << nrChilds << ") controllers are up to date");
@@ -693,18 +704,12 @@ void  ObservationControl::doHeartBeatTask()
 			TRAN(ObservationControl::finishing_state);
 			return;
 		}
-// TODO: ParentControl asserts with:
-// _doRequestedAction:MCU001:ObservationControl[0]{13} : Claimed-->Connected [ParentControl.cc:342]
-// Assertion: parent->currentState == CTState::CONNECT; Unexpected state:9 [ParentControl.cc:374]
-// 
-//		if (itsBusyControllers) {	// last time not all cntrls ready?
-//			CTState		cts;
-//			sendControlResult(*itsParentPort, cts.signal(itsState), getName(), 
-//							  itsChildResult);
-// TODO
-//	DO NOT SEND RESULT TO MACSCHEDULER BUT CALL setState with right state(curstate+1)...
-//			itsBusyControllers = 0;
-//		}
+ 
+		if (itsBusyControllers) {	// last time not all cntrls ready?
+			CTState		cts;
+			setState(cts.stateAck(itsState));
+			itsBusyControllers = 0;
+		}
 		return;
 	}
 
