@@ -83,6 +83,7 @@ private:
 	CTState::CTstateNr	currentState;	// the state the controller has
 	time_t				establishTime;	// time the current state was reached
 	uint16				result;			// error nr of last action
+	bool				inResync;		// controller in resync-cycle.
 	time_t				startTime;		// time the controller must be active
 	time_t				stopTime;		// time the controller must be stopped
 	// --- for use in action list ---

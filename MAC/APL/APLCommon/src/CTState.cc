@@ -134,6 +134,31 @@ uint16	CTState::signal(CTstateNr	aStateNr) const
 	return (stateSignalTable[aStateNr].signal);
 }
 
+//
+// stateAck(state)
+//
+// Return the 'ack' state of the given state.
+//
+CTState::CTstateNr	CTState::stateAck(CTstateNr		aStateNr) const
+{
+	ASSERTSTR((aStateNr >= NOSTATE) && (aStateNr < LAST_STATE), 
+								aStateNr << " is not a valid CTState");
+
+	switch (aStateNr) {
+	case CONNECT:
+	case RESYNC:
+	case SCHEDULE:
+	case CLAIM:
+	case PREPARE:
+	case RESUME:
+	case SUSPEND:
+	case RELEASE:
+	case FINISH:
+		return (stateNr(value(aStateNr)+1));
+	default:
+		return (aStateNr);
+	}
+}
 
   } // namespace APL
 } // namespace LOFAR
