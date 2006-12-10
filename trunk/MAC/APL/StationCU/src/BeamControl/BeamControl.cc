@@ -598,19 +598,15 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 //
 void BeamControl::doPrepare()
 {
-	string	subbandList(globalParameterSet()->getString("Observation.subbandList"));
-	string	beamletList(globalParameterSet()->getString("Observation.beamletList"));
-	LOG_DEBUG_STR("subbandlist:" << subbandList);
-	LOG_DEBUG_STR("beamletList:" << beamletList);
-
-	vector<int> subbandsVector;
-	vector<int> beamletsVector;
-	APLUtilities::string2Vector(subbandList,subbandsVector);
-	APLUtilities::string2Vector(beamletList,beamletsVector);
+	vector<int32> subbandsVector(globalParameterSet()->getInt32Vector("Observation.subbandList"));
+	vector<int32> beamletsVector(globalParameterSet()->getInt32Vector("Observation.beamletList"));
 	ASSERTSTR (subbandsVector.size() == beamletsVector.size(),
 			"size of subbandList " << subbandsVector.size() << " != " <<
 			" size of beamletList" << beamletsVector.size());
+	LOG_TRACE_VAR_STR("nr Subbands:" << subbandsVector.size());
+	LOG_TRACE_VAR_STR("nr Beamlets:" << beamletsVector.size());
 
+	// contruct allocation event.
 	BSBeamallocEvent beamAllocEvent;
 	beamAllocEvent.name 		= getName();
 	beamAllocEvent.subarrayname = formatString("observation[%d]{%d}", getInstanceNr(getName()),
@@ -620,6 +616,7 @@ void BeamControl::doPrepare()
 	vector<int>::iterator beamletIt = beamletsVector.begin();
 	vector<int>::iterator subbandIt = subbandsVector.begin();
 	while (beamletIt != beamletsVector.end() && subbandIt != subbandsVector.end()) {
+		LOG_TRACE_VAR_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
 		beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
 	}
 
