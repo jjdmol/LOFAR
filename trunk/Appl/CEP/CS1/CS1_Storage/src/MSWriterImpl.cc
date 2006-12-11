@@ -88,7 +88,7 @@ namespace LOFAR
         itsMS       (0),
         itsMSCol    (0)
     {
-	      AlwaysAssert (nantennas >= 0, AipsError);
+      AlwaysAssert (nantennas >= 0, AipsError);
 
       // Convert the startTime from seconds since 1 Jan 1970 (UTC) to Modified Julian Day.
       AMC::Epoch epoch;
@@ -105,17 +105,14 @@ namespace LOFAR
 
       // Keep the antenna positions in WGS84 coordinates.
       try {
-      for (int i=0; i<nantennas; i++) {
-        //cout << "antPos[" << 3*i+2 << "] = " << antPos[3*i+2] << " m" << endl;
-	//cout << "antPos[" << 3*i <<   "] = " << antPos[3*i]   << " rad" << endl;
-	//cout << "antPos[" << 3*i+1 << "] = " << antPos[3*i+1] << " rad" << endl;
+        for (int i=0; i<nantennas; i++) {
 
-        MPosition mpos(MPosition(MVPosition(Quantity(antPos[3*i+2], "m"), 
-	      	                            Quantity(antPos[3*i], "rad"), 
-			                    Quantity(antPos[3*i+1], "rad")),
-	                                    MPosition::WGS84));
-        antMPos[i] = MPosition::Convert (mpos, MPosition::ITRF) (); 					  
-      }
+          MPosition mpos(MPosition(MVPosition(Quantity(antPos[3*i+2], "m"), 
+	      	                              Quantity(antPos[3*i], "rad"), 
+			                      Quantity(antPos[3*i+1], "rad")),
+	                                      MPosition::ITRF));
+	  antMPos[i] = mpos;
+        }
       } catch (AipsError& e) {
         cout << "AipsError: " << e.what() << endl;
       }
@@ -173,6 +170,8 @@ namespace LOFAR
       MS::addColumnToDesc(td, MS::DATA, 2);
       td.rwColumnDesc(MS::columnName(MS::DATA)).rwKeywordSet().
         define("UNIT","Jy");
+      td.rwColumnDesc(MS::columnName(MS::UVW)).rwKeywordSet().
+        define("UNIT","APP");
       MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 1);
 
       //   // Store the data and flags using the TiledStMan.
@@ -611,7 +610,6 @@ namespace LOFAR
       //   Array<Float> weight(IPosition(1, shape(0)));
       //   weight = 1;
       
-      //Double time = itsStartTime + timeCounter*itsTimeStep;
       // Calculate the apparent HA and DEC for the array center.
       // First store time in frame.
       Quantity qtime(time, "s");
