@@ -4,7 +4,7 @@ PROJ_PATH=`grep '^proj_path' ${PVSS_II} | sed 's/^.*proj_path *= * "//' | sed 's
 echo PropertyAgent: Current running PVSS project has been found in $PROJ_PATH
 cp -Rf ../share/pvss/* $PROJ_PATH >> /dev/null
 
-runningPVSS00ctrl=`ps -x | grep PVSS00ctrl | grep gcfpa-cwd.ctl | awk '{ print $1 }'`
+runningPVSS00ctrl=`ps -ef | grep PVSS00ctrl | grep gcfpa-cwd.ctl | awk '{ print $1 }'`
 if [ "a$runningPVSS00ctrl" != "a" ]; then
   echo "PropertyAgent: An old PA watchdog is still running. Will be stopped first!!!"
   kill -9 $runningPVSS00ctrl
@@ -15,9 +15,9 @@ fi
 echo PropertyAgent: Start watch-dog in the background
 PVSS00ctrl -script libs/gcfpa-cwd.ctl -currentproj &
 
-#if [ -r customPrepPVSSDB.ctl ]; then
-#	echo PropertyAgent: Start custom prepare DB
-#	cp *.ctl $PROJ_PATH/scripts
-#	PVSS00ctrl -script customPrepPVSSDB.ctl -currentproj
+if [ -r customPrepPVSSDB.ctl ]; then
+	echo PropertyAgent: Start custom prepare DB
+	cp *.ctl $PROJ_PATH/scripts
+	PVSS00ctrl -script customPrepPVSSDB.ctl -currentproj
 #	rm -f $PROJ_PATH/scripts/customPrepPVSSDB.ctl
-#fi
+fi
