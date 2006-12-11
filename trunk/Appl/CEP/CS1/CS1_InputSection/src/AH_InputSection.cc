@@ -37,6 +37,8 @@
 #include <Transport/TH_Socket.h>
 #include <Transport/TH_File.h>
 
+#define MPICH_WORKING_ON_INFINI_BAND 1
+
 #define IS_MULTIPLE(number, bignumber) (floor(bignumber / number) == (1.0 * bignumber / number))
 
 namespace LOFAR {
@@ -117,12 +119,12 @@ namespace LOFAR {
 				   station);
 	  RSPSteps.push_back(new Step(lastWH, nameBuffer, false));
 #ifdef HAVE_MPI
-	  RSPSteps.back()->runOnNode(lowestFreeNode++);   
+	  RSPSteps.back()->runOnNode(lowestFreeNode++);  
 #endif
 	  comp.addBlock(RSPSteps.back());
     
 	  // Connect the Delay Controller
-	  //itsInputStub->connect(ic * nStations + station, (RSPSteps.back())->getInDataManager(0), 0);
+	  itsInputStub->connect(ic * nStations + station, (RSPSteps.back())->getInDataManager(0), 0);
 	}
 
 	LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
@@ -151,7 +153,6 @@ namespace LOFAR {
 #else
 	  vector<string> transposeHosts = itsParamSet.getStringVector("TransposeHosts");
 	  vector<string> transposePorts = itsParamSet.getStringVector("TransposePorts");
-
 	  for (int station = 0; station < nStations; station++) {
 	    // We need to find out if we are on the client or the server
 	    // because TH_Socket doesn't find it out itself.
