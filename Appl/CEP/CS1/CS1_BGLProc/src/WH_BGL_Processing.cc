@@ -1385,6 +1385,10 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 #endif
 
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
+#if 0 && defined DELAY_COMPENSATION
+    std::clog << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << (*delays)[stat].delayAtBegin << " to " << (*delays)[stat].delayAfterEnd << " sec" << std::endl;
+#endif
+
 #if defined C_IMPLEMENTATION
     fcomplex fftOutData[NR_SUBBAND_CHANNELS];
     static fcomplex fftInData[NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS];
