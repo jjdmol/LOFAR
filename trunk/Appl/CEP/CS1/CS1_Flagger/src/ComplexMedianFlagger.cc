@@ -319,7 +319,8 @@ bool ComplexMedianFlagger::FlagBaselineBand(Matrix<Bool>* Flags,
     for (int j = NumPolarizations-1; j >= 0; j--)
     {  
       (*rms)[j] = sqrt( RMS[j] / RMSCounter[j] );
-      if (PolarizationsToCheck[j] && ((*rms)[j] > 1.5 || (*rms)[j] <= 0.5 * NoiseLevel)) //we think this RMS value is non-physical
+//      if (PolarizationsToCheck[j] && ((*rms)[j] > 1.5 || (*rms)[j] <= 0.5 * NoiseLevel)) //we think this RMS value is non-physical
+      if (PolarizationsToCheck[j] && ((*rms)[j] > 25 || (*rms)[j] <= 0.5 * NoiseLevel)) //we think this RMS value is non-physical
       { 
         FlagCompleteRow = true;
         (*Flags)        = true;
@@ -361,7 +362,7 @@ void ComplexMedianFlagger::FlagTimeslot(TableIterator* flag_iter,
       FlagCompleteRow[index] = FlagBaselineBand(&flags, 
                                                 &(TimeslotData[index]), 
                                                 &rms, &(stats[index]),
-                                                30 * NoiseLevel,
+                                                3000 * NoiseLevel,
                                                 Position, flagRMS);
       for(int k = 0; k < NumPolarizations; k++)
       { AutoCorrRMS[k][j] = rms[k];
@@ -475,7 +476,7 @@ bool ComplexMedianFlagger::UpdateTimeslotData(vector<int>* OldFields,
   ROTableVector<Int>     bandnr  ((*TimeslotTable), "DATA_DESC_ID");
   ROTableVector<Int>     fieldid ((*TimeslotTable), "FIELD_ID");
   ROTableVector<Double>  time    ((*TimeslotTable), "TIME_CENTROID");//for testing purposes
-  ROArrayColumn<Complex> data    ((*TimeslotTable), "CORRECTED_DATA");
+  ROArrayColumn<Complex> data    ((*TimeslotTable), "DATA");
   Cube<Complex>          Data(NumPolarizations, NumChannels, rowcount);
 
   data.getColumn(Data); //We're not checking Data.nrow() Data.ncolumn(), assuming all data is the same size.

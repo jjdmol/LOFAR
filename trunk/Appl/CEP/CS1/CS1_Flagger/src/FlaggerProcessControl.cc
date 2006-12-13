@@ -71,16 +71,24 @@ namespace LOFAR
     //===============>>> FlaggerProcessControl::run  <<<=================================
     tribool FlaggerProcessControl::run()
     { 
+      try{
       std::cout << "Runnning flagger please wait..." << std::endl;
       itsFlagger->FlagDataOrBaselines(itsFlagData, 
                                       itsFlagRMS,
                                       itsExisting);
+      }
+      catch(casa::AipsError& err)
+      {
+        std::cerr << "Aips++ error detected: " << err.getMesg() << std::endl;
+        return false;
+      }
       return true;
     }
 
     //===============>>> FlaggerProcessControl::init  <<<================================
     tribool FlaggerProcessControl::init()
     {
+      try {
       using std::cout;
       using std::cerr;
       using std::endl;
@@ -111,6 +119,12 @@ namespace LOFAR
                                                   itsCrosspol, 
                                                   itsMin,
                                                   itsMax);
+      }
+      catch(casa::AipsError& err)
+      {
+        std::cerr << "Aips++ error detected: " << err.getMesg() << std::endl;
+        return false;
+      }
       return true;
     }
 
