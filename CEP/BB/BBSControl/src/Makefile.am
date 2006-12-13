@@ -13,7 +13,10 @@ libbbscontrol_la_SOURCES= \
 	BBSStep.cc \
 	BBSStrategy.cc \
 	BBSStructs.cc \
-	BBSSubtractStep.cc
+	BBSSubtractStep.cc \
+	CommandQueue.cc \
+	CommandQueueTransactors.cc \
+	util.cc
 
 bin_PROGRAMS		= BBSControl BBSKernel
 
