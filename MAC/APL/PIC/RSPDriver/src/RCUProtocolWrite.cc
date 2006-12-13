@@ -39,13 +39,14 @@ using namespace EPA_Protocol;
 
 namespace LOFAR {
   namespace RSP {
+
     uint8 RCUProtocolWrite::i2c_protocol[RCUProtocolWrite::PROTOCOL_SIZE] 
     = { 0x0F, // PROTOCOL_C_SEND_BLOCK
 	0x01, // I2C address for RCU
 	0x03, // size
-	0xFF, // <<< replace with data >>>
-	0xFF, // <<< replace with data >>>
-	0xFF, // <<< replace with data >>>
+	0xAA, // <<< replace with data >>>
+	0xAA, // <<< replace with data >>>
+	0xAA, // <<< replace with data >>>
 	0x10, // PROTOCOL_C_RECEIVE_BLOCK
 	0x01, // I2C adress for RCU
 	0x03, // requested size
@@ -54,9 +55,9 @@ namespace LOFAR {
 
     uint8 RCUProtocolWrite::i2c_result[RCUProtocolWrite::RESULT_SIZE] 
     = { 0x00, // PROTOCOL_C_SEND_BLOCK OK
-	0xFF, // <<< replace with expected data >>>
-	0xFF, // <<< replace with expected data >>>
-	0xFF, // <<< replace with expected data >>>
+	0xAA, // <<< replace with expected data >>>
+	0xAA, // <<< replace with expected data >>>
+	0xAA, // <<< replace with expected data >>>
 	0x00, // PROTOCOL_C_RECEIVE_BLOCK OK
 	0x00, // PROTOCOL_C_END OK
     };
@@ -128,7 +129,7 @@ void RCUProtocolWrite::sendrequest()
       rcuresultwrite.hdr.set(MEPHeader::WRITE, 1 << (getCurrentIndex() / (MEPHeader::N_POL * N_WRITES)),
 			     MEPHeader::RCU, regid, sizeof(i2c_result), 0);
       uint8 clear[RESULT_SIZE];
-      memset(clear, 0xFF, RESULT_SIZE); // clear result
+      memset(clear, 0xAA, RESULT_SIZE); // clear result
       rcuresultwrite.payload.setBuffer(clear, RESULT_SIZE);
 
       m_hdr = rcuresultwrite.hdr; // remember header to match with ack

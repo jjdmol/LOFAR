@@ -1709,6 +1709,9 @@ void RSPDriver::rsp_sethba(GCFEvent& event, GCFPortInterface& port)
   if (Timestamp(0,0) == command->getTimestamp())
   {
     LOG_INFO("applying HBA control immediately");
+
+    HBAProtocolWrite::m_on_off ^= 1; // switch on->off or off->on
+
     command->apply(Cache::getInstance().getFront(), true);
     command->apply(Cache::getInstance().getBack(), false);
   }
