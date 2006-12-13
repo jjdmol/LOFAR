@@ -1,6 +1,6 @@
 //#  BBSSubtractStep.cc: 
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
