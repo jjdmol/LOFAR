@@ -12,8 +12,11 @@ pkginclude_HEADERS = \
 	BBSStrategy.h \
 	BBSStructs.h \
 	BBSSubtractStep.h \
+	CommandQueue.h \
+	CommandQueueTransactors.h \
 	Exceptions.h
 
-noinst_HEADERS =
+noinst_HEADERS = \
+	util.h
 
 include $(top_srcdir)/Makefile.common
