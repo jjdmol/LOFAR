@@ -42,131 +42,181 @@ namespace LOFAR {
   namespace RSP {
 
     //
-    // The byte sequences originate from the LOFAR-ASTRON-MEM-175 Document
+    // The byte sequences originate from the LOFAR-ASTRON-MEM-175 (revision 1.3) Document
     // "HBA Control Design Description"
     //
 
-    uint8 HBAProtocolWrite::i2c_protocol[HBAProtocolWrite::PROTOCOL_SIZE] 
+#ifndef HBA_WRITE_DELAYS
+
+    uint8 HBAProtocolWrite::i2c_protocol[HBAProtocolWrite::PROTOCOL_SIZE]
     = {
-      // Instruct client to do a broadcast access to the 16 HBA delay servers (43 bytes)
+      // Switch LED on/off
+      6,      // PROTOCOL_WRITE_BYTE
+      4 >> 1, // Client i2c slave address (shifted right by 1)
+      2,      // LED register access command
+      0xBB,   // Set LED on/off
+
+      18, // PROTOCOL_C_WAIT (5 bytes)
+      0xA0, 0x86, 0x01, 0x00, // .5 ms wait
+
+      7,      // PROTOCOL_READ_BYTE
+      4>>1,   // Client i2c slave address (shifted right by 1)
+      2,      // LED register access command
+
+      19,    // PROTOCOL_C_END
+    };
+
+     uint8 HBAProtocolWrite::i2c_result[HBAProtocolWrite::RESULT_SIZE] 
+     = {
+       // Expected protocol result (4 bytes)
+       0,    // PROTOCOL_WRITE_BYTE went OK
+       0,    // PROTOCOL_C_WAIT     went OK
+       0xBB, // Read LED value
+       0,    // PROTOCOL_READ_BYTE  went OK
+       0,    // PROTOCOL_C_END      went OK
+     };
+
+#else
+
+    uint8 HBAProtocolWrite::i2c_protocol[HBAProtocolWrite::PROTOCOL_SIZE/* 42 + 5 + 16 * 17 + 1 = 320 bytes*/] 
+    = {
+      // Table 32 t/m 37 from LOFAR-ASTRON-MEM-175 (Revision 1.3)
+
+      // Table 32
+      // Instruct client to do a broadcast access to the 16 HBA delay servers (42 bytes)
       13,   // PROTOCOL_C_WRITE_BLOCK_NO_CNT
-       2,   // I2C address for RCU
-       0,   // Request register access command
-      39,   // Count of number of data bytes to write
-       0,   // Cast type is broadcast
-      32,   // Length of the request data for one server
-       0,   // Expected length of the response from one server
-       1,   // First server address participating in the cast
-      16,   // Laster server address participating in the cast
-       4,   // Function set word
-       0,   // Server X-delay register ID
-      0xFF, // X-delay data for server 1 (offset = PROTOCOL_DELAY_OFFSET)
-      0xFF, // Y-delay data for server 1
-      0xFF, // X-delay data for server 2
-      0xFF, // Y-delay data for server 2
-      0xFF, // X-delay data for server 3
-      0xFF, // Y-delay data for server 3
-      0xFF, // X-delay data for server 4
-      0xFF, // Y-delay data for server 4
-      0xFF, // X-delay data for server 5
-      0xFF, // Y-delay data for server 5
-      0xFF, // X-delay data for server 6
-      0xFF, // Y-delay data for server 6
-      0xFF, // X-delay data for server 7
-      0xFF, // Y-delay data for server 7
-      0xFF, // X-delay data for server 8
-      0xFF, // Y-delay data for server 8
-      0xFF, // X-delay data for server 9
-      0xFF, // Y-delay data for server 9
-      0xFF, // X-delay data for server 10
-      0xFF, // Y-delay data for server 10
-      0xFF, // X-delay data for server 11
-      0xFF, // Y-delay data for server 11
-      0xFF, // X-delay data for server 12
-      0xFF, // Y-delay data for server 12
-      0xFF, // X-delay data for server 13
-      0xFF, // Y-delay data for server 13
-      0xFF, // X-delay data for server 14
-      0xFF, // Y-delay data for server 14
-      0xFF, // X-delay data for server 15
-      0xFF, // Y-delay data for server 15
-      0xFF, // X-delay data for server 16
-      0xFF, // Y-delay data for server 16
+      4>>1, // Client i2c slave address (shifted right by 1)
+      0,    // Request register access command
+      38,   // Count of number of data bytes to write
+      0,    // Broadcast server address
+      37,   // Payload length icluding this octet
+      4,    // Function: set word
+      0,    // Server X-delay register ID
+      1,    // First server
+      16,   // Last server
+      0xBB, // X-delay data for server 1 (offset = PROTOCOL_DELAY_OFFSET)
+      0xBB, // Y-delay data for server 1
+      0xBB, // X-delay data for server 2
+      0xBB, // Y-delay data for server 2
+      0xBB, // X-delay data for server 3
+      0xBB, // Y-delay data for server 3
+      0xBB, // X-delay data for server 4
+      0xBB, // Y-delay data for server 4
+      0xBB, // X-delay data for server 5
+      0xBB, // Y-delay data for server 5
+      0xBB, // X-delay data for server 6
+      0xBB, // Y-delay data for server 6
+      0xBB, // X-delay data for server 7
+      0xBB, // Y-delay data for server 7
+      0xBB, // X-delay data for server 8
+      0xBB, // Y-delay data for server 8
+      0xBB, // X-delay data for server 9
+      0xBB, // Y-delay data for server 9
+      0xBB, // X-delay data for server 10
+      0xBB, // Y-delay data for server 10
+      0xBB, // X-delay data for server 11
+      0xBB, // Y-delay data for server 11
+      0xBB, // X-delay data for server 12
+      0xBB, // Y-delay data for server 12
+      0xBB, // X-delay data for server 13
+      0xBB, // Y-delay data for server 13
+      0xBB, // X-delay data for server 14
+      0xBB, // Y-delay data for server 14
+      0xBB, // X-delay data for server 15
+      0xBB, // Y-delay data for server 15
+      0xBB, // X-delay data for server 16
+      0xBB, // Y-delay data for server 16
       
+      // Table 33
       // Wait to allow for the broadcast to finish (5 bytes)
       18, // PROTOCOL_C_WAIT
-      0, 0, 0, 0, // Timeout value least significant - most significant
+      //0x40, 0x0D, 0x03, 0x00, // 0x0300D40 = 200000 * 5ns = 1ms
+      0x80, 0x84, 0x1E, 0x00, //  0x1E8480 = 2000000 * 5ns = 10ms
 
-      // Instruct the client to do a read back multicast access to the 16 HBA delay servers (11 bytes)
-      13, // PROTOCOL_C_WRITE_BLOCK_NO_CNT
-       2, // Client i2c slave address
-       0, // Request register access command
-       7, // Count of number of data bytes to write
-       1, // Cast type is multicast
-       0, // Length of the request data for one server
-       2, // Expected length of the response from one server
-       1, // First server address participating in the cast
-      16, // Last server address participating in the cast
-       5, // Function get word
-       0, // Server X-delay register ID
-
+      // Table 34
+      // Instruct the client to do a unicast read request to server 1 (8 bytes)
+      13,   // PROTOCOL_C_WRITE_BLOCK_NO_CNT
+      4>>1, // Client i2c slave address
+      0,    // Request register access command
+      4,    // Count of number of data bytes to write
+      1,    // Server address 1
+      3,    // Payload length, including this octet
+      5,    // Function: get word (document LOFAR-ASTRON-MEM-175 Revision 1.3 has an error here (value 2))
+      0,    // Server X-delay register ID
+      
+      // Table 35
       // Wait to allow for the multicast to finish
       18, // PROTOCOL_C_WAIT (5 bytes)
-      0, 0, 0, 0, // Timeout value least significant - most significant
 
+      //0x40, 0x0D, 0x03, 0x00, // Timeout value least significant - most significant (1ms)
+      0x80, 0x84, 0x1E, 0x00, // Timeout value least significant - most significant (10 ms)
+
+      // Table 36
       // Read back the response results from the client (4 bytes)
-      14, // PROTOCOL_C_READ_BLOCK_NO_CNT
-       2, // Client i2c slave address
-       1, // Response register access command
-      33, // Count of number of data bytes to read
+      14,   // PROTOCOL_C_READ_BLOCK_NO_CNT
+      4>>1, // Client i2c slave address
+      1,    // Response register access command
+      4,    // Count of number of data bytes to read (document LOFAR-ASTRON-MEM-175 has an error here (value 3))
+
+      // Repeat tables 34,35,36 fo servers 2 to 16
+      13, 4>>1, 0, 4,  2, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 2
+      13, 4>>1, 0, 4,  3, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 3
+      13, 4>>1, 0, 4,  4, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 4
+      13, 4>>1, 0, 4,  5, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 5
+      13, 4>>1, 0, 4,  6, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 6
+      13, 4>>1, 0, 4,  7, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 7
+      13, 4>>1, 0, 4,  8, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 8
+      13, 4>>1, 0, 4,  9, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 9
+      13, 4>>1, 0, 4, 10, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 10
+      13, 4>>1, 0, 4, 11, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 11
+      13, 4>>1, 0, 4, 12, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 12
+      13, 4>>1, 0, 4, 13, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 13
+      13, 4>>1, 0, 4, 14, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 14
+      13, 4>>1, 0, 4, 15, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 15
+      13, 4>>1, 0, 4, 16, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 16
 
       // Mark the end of the protocol list (1 byte)
       19, // PROTOCOL_C_END
     };
 
-    uint8 HBAProtocolWrite::i2c_result[HBAProtocolWrite::RESULT_SIZE] 
+    uint8 HBAProtocolWrite::i2c_result[HBAProtocolWrite::RESULT_SIZE/* 2 + 7*16 + 1 = 115 bytes*/] 
     = {
-      // Expected protocol result (39 bytes)
-      0,    // Table 15 PROTOCOL_C_WRITE_BLOCK_NO_CNT went OK
-      0,    // Table 16 PROCOCOL_C_WAIT went OK
-      0,    // Table 17 PROTOCOL_C_WRITE_BLOCK_NO_CNT went OK
-      0,    // Table 18 PROTOCOL_C_WAIT went OK
-      0,    // Expected response status
-      0xFF, // X-delay data from server 1 (offset = RESULT_DELAY_OFFSET)
-      0xFF, // Y-delay data from server 1
-      0xFF, // X-delay data from server 2
-      0xFF, // Y-delay data from server 2
-      0xFF, // X-delay data from server 3
-      0xFF, // Y-delay data from server 3
-      0xFF, // X-delay data from server 4
-      0xFF, // Y-delay data from server 4
-      0xFF, // X-delay data from server 5
-      0xFF, // Y-delay data from server 5
-      0xFF, // X-delay data from server 6
-      0xFF, // Y-delay data from server 6
-      0xFF, // X-delay data from server 7
-      0xFF, // Y-delay data from server 7
-      0xFF, // X-delay data from server 8
-      0xFF, // Y-delay data from server 8
-      0xFF, // X-delay data from server 9
-      0xFF, // Y-delay data from server 9
-      0xFF, // X-delay data from server 10
-      0xFF, // Y-delay data from server 10
-      0xFF, // X-delay data from server 11
-      0xFF, // Y-delay data from server 11
-      0xFF, // X-delay data from server 12
-      0xFF, // Y-delay data from server 12
-      0xFF, // X-delay data from server 13
-      0xFF, // Y-delay data from server 13
-      0xFF, // X-delay data from server 14
-      0xFF, // Y-delay data from server 14
-      0xFF, // X-delay data from server 15
-      0xFF, // Y-delay data from server 15
-      0xFF, // X-delay data from server 16
-      0xFF, // Y-delay data from server 16
-      0,    // Table 19 PROTOCOL_C_READ_BLOCK_NO_CNT went OK
-      0,    // Table 20 PROTOCOL_C_END went OK
+      0, // PROTOCOL_C_WRITE_BLOCK_NO_CNT went OK
+      0, // PROTOCOL_C_WAIT went OK
+
+      // Expected protocol result (7 bytes)
+      0,    // PROTOCOL_C_WRITE_BLOCK_NO_CNT went OK
+      0,    // PROTOCOL_C_WAIT_WENT_OK
+      1,    // Server response address (> 0, indicating OK)
+      3,    // Nof bytes (including this byte)
+      0xBB, // X-delay data from server X (offset = RESULT_DELAY_OFFSET)
+      0xBB, // Y-delay data from server X
+      0,    // PROTOCOL_C_READ_BLOCK_NO_CNT went OK
+
+      0, 0,  2, 3, 0xBB, 0xBB, 0, // server  2 result
+      0, 0,  3, 3, 0xBB, 0xBB, 0, // server  3 result
+      0, 0,  4, 3, 0xBB, 0xBB, 0, // server  4 result
+      0, 0,  5, 3, 0xBB, 0xBB, 0, // server  5 result
+      0, 0,  6, 3, 0xBB, 0xBB, 0, // server  6 result
+      0, 0,  7, 3, 0xBB, 0xBB, 0, // server  7 result
+      0, 0,  8, 3, 0xBB, 0xBB, 0, // server  8 result
+      0, 0,  9, 3, 0xBB, 0xBB, 0, // server  9 result
+      0, 0, 10, 3, 0xBB, 0xBB, 0, // server 10 result
+      0, 0, 11, 3, 0xBB, 0xBB, 0, // server 11 result
+      0, 0, 12, 3, 0xBB, 0xBB, 0, // server 12 result
+      0, 0, 13, 3, 0xBB, 0xBB, 0, // server 13 result
+      0, 0, 14, 3, 0xBB, 0xBB, 0, // server 14 result
+      0, 0, 15, 3, 0xBB, 0xBB, 0, // server 15 result
+      0, 0, 16, 3, 0xBB, 0xBB, 0, // server 16 result
+
+      // Marks the end of the protocol list (1 byte)
+      0,    // PROTOCOL_C_END went OK
     };
+
+#endif
+
+    int HBAProtocolWrite::m_on_off = 0; // default LED is on
+
   };
 };
 
@@ -189,6 +239,7 @@ void HBAProtocolWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
 
+#if 0
   // only update if rcuprotocol is not being updated and one of hbaprotocol needs updating
   if (RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL)
       || RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL + 1))
@@ -196,6 +247,7 @@ void HBAProtocolWrite::sendrequest()
     setContinue(true);
     return;
   }
+#endif
    
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL)
       && RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL + 1))
@@ -212,13 +264,25 @@ void HBAProtocolWrite::sendrequest()
     
   case 0:
     {
-      // reverse and copy control bytes into i2c_protocol
+#ifdef HBA_WRITE_DELAYS
       Array<uint8, 2> delays(i2c_protocol + PROTOCOL_DELAY_OFFSET,
 			     shape(MEPHeader::N_HBA_DELAYS, 2),
 			     neverDeleteData);
 
       delays(Range::all(), 0) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL, Range::all());
       delays(Range::all(), 1) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL + 1, Range::all());
+
+      // copy set delays to i2c_result which is the expected result
+      uint8* cur = i2c_result + RESULT_DELAY_OFFSET;
+      for (int elem = 0; elem < MEPHeader::N_HBA_DELAYS; elem++){
+	*(cur+0) = delays(elem, 0); // X
+	*(cur+1) = delays(elem, 1); // Y
+	cur += RESULT_DELAY_STRIDE;
+      }
+#else
+      i2c_protocol[3] = (m_on_off ? 0xf : 0x0);
+      LOG_INFO(formatString("Switch LED (HBA_blp=%d) %s", global_blp, m_on_off ? "on" : "off"));
+#endif
 
       // create the event
       EPARcuProtocolEvent rcuprotocol;
@@ -234,11 +298,11 @@ void HBAProtocolWrite::sendrequest()
     {
       EPAWriteEvent rcuresultwrite;
 
-      // set the result register to 0xFF's
+      // set the result register to 0xBB's
       rcuresultwrite.hdr.set(MEPHeader::WRITE, 1 << (getCurrentIndex() / N_WRITES),
 			     MEPHeader::RCU, MEPHeader::RCU_RESULTY, sizeof(i2c_result), 0);
       uint8 clear[RESULT_SIZE];
-      memset(clear, 0xFF, RESULT_SIZE); // clear result
+      memset(clear, 0xBB, RESULT_SIZE); // clear result
       rcuresultwrite.payload.setBuffer(clear, RESULT_SIZE);
 
       m_hdr = rcuresultwrite.hdr; // remember header to match with ack

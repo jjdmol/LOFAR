@@ -273,8 +273,8 @@ Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
   // print time, ugly
   char timestr[32];
   time_t sec = scheduled_time.sec();
-  strftime(timestr, 32, "%T", localtime(&sec));
-  LOG_DEBUG(formatString("Scheduler::enter scheduled_time=%s.%d", timestr, scheduled_time.usec()));
+  strftime(timestr, 32, "%T", gmtime(&sec));
+  LOG_DEBUG(formatString("Scheduler::enter scheduled_time=%s.%d UTC", timestr, scheduled_time.usec()));
 
   // push the command on the appropriate queue
   switch (queue)

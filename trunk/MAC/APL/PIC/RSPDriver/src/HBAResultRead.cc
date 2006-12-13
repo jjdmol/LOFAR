@@ -37,6 +37,7 @@
 using namespace LOFAR;
 using namespace RSP;
 using namespace EPA_Protocol;
+using namespace blitz;
 
 HBAResultRead::HBAResultRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, StationSettings::instance()->nrBlpsPerBoard())
@@ -51,24 +52,19 @@ HBAResultRead::~HBAResultRead()
 
 void HBAResultRead::sendrequest()
 {
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
   // skip update if the RCU settings have not been applied yet
-  if (RTC::RegisterState::READ != Cache::getInstance().getState().hbaprotocol().get(global_rcu)) {
+  if (RTC::RegisterState::READ != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL)
+      && RTC::RegisterState::READ != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL + 1)) {
     setContinue(true);
     return;
   }
 
   // set appropriate header
-  MEPHeader::FieldsType hdr;
-  if (0 == global_rcu % MEPHeader::N_POL) {
-    hdr = MEPHeader::RCU_RESULTX_HDR;
-  } else {
-    hdr = MEPHeader::RCU_RESULTY_HDR;
-  }
-
   EPAReadEvent rcuresult;
-  rcuresult.hdr.set(hdr, 1 << (getCurrentIndex() / MEPHeader::N_POL), MEPHeader::READ, sizeof(HBAProtocolWrite::i2c_result));
+  rcuresult.hdr.set(MEPHeader::RCU_RESULTY_HDR, 1 << getCurrentIndex(),
+		    MEPHeader::READ, sizeof(HBAProtocolWrite::i2c_result));
   
   m_hdr = rcuresult.hdr; // remember header to match with ack
   getBoardPort().send(rcuresult);
@@ -89,26 +85,47 @@ GCFEvent::TResult HBAResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
   
   EPARcuResultEvent ack(event);
 
-  uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
+  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + getCurrentIndex();
 
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("HBAResultRead::handleack: invalid ack");
-    Cache::getInstance().getState().hbaprotocol().read_error(global_rcu);
+    Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL);
+    Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL + 1);
     return GCFEvent::HANDLED;
   }
 
-  // reverse and copy control bytes into i2c_result
-  RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
-  uint32 control = htonl(rcucontrol.getRaw());
-  memcpy(HBAProtocolWrite::i2c_result + 1, &control, 3);
+  // compare result with expected result
+#ifdef HBA_WRITE_DELAYS
+  Array<uint8, 1> cacheXdelays = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL, Range::all());
+  Array<uint8, 1> cacheYdelays = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL + 1, Range::all());
 
+  //  Array<uint8, 2> resultXdelays(
+
+  // assume success for now
   if (0 == memcmp(HBAProtocolWrite::i2c_result, ack.result, sizeof(HBAProtocolWrite::i2c_result))) {
-    Cache::getInstance().getState().hbaprotocol().read_ack(global_rcu);
+    Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * MEPHeader::N_POL);
+    Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * MEPHeader::N_POL + 1);
   } else {
     LOG_WARN("HBAResultRead::handleack: unexpected I2C result response");
-    Cache::getInstance().getState().hbaprotocol().read_error(global_rcu);
+    Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL);
+    Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL + 1);
   }
+#else
+  uint8 led_status = ack.result[1];
+  ack.result[1] = 0xBB; // set to reference value for check
+
+  // assume success for now
+  if (0 == memcmp(HBAProtocolWrite::i2c_result, ack.result, sizeof(HBAProtocolWrite::i2c_result))) {
+    LOG_INFO(formatString("LED (HBA_blp=%d) reports: %s", global_blp, led_status ? "on" : "off"));
+    Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * MEPHeader::N_POL);
+    Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * MEPHeader::N_POL + 1);
+  } else {
+    LOG_WARN("HBAResultRead::handleack: unexpected I2C result response");
+    Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL);
+    Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL + 1);
+  }
+#endif
 
   return GCFEvent::HANDLED;
 }
