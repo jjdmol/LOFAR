@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQSTATUVW_H)
+#ifndef MNS_MEQSTATUVW_H
 #define MNS_MEQSTATUVW_H
 
 // \file
@@ -31,7 +31,11 @@
 #include <BBSKernel/MNS/MeqRequest.h>
 #include <BBSKernel/MNS/MeqStation.h>
 #include <Common/lofar_map.h>
-#include <measures/Measures/MeasFrame.h>
+#include <Common/lofar_vector.h>
+#include <utility>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
+
 
 namespace LOFAR
 {
@@ -44,8 +48,6 @@ namespace BBS
 
 //# Forward declarations
 class MeqStation;
-class MeqPhaseRef;
-
 
 class MeqStatUVW
 {
@@ -53,7 +55,8 @@ public:
   // The default constructor.
   MeqStatUVW() {};
 
-  MeqStatUVW (MeqStation*, const MeqPhaseRef*);
+//#   MeqStatUVW (MeqStation*, const MeqPhaseRef*);
+  MeqStatUVW(MeqStation* station, const pair<double, double> &phaseCenter, const vector<double> &arrayPosition);
 
   void calculate (const MeqRequest&);
 
@@ -65,25 +68,17 @@ public:
   const MeqResult& getW (const MeqRequest& request)
     { if (request.getId() != itsLastReqId) calculate(request); return itsW; }
 
-  // Clear the map of UVW coordinates and reset the last request id.
-  void clear();
-
   // Set the UVW coordinate for the given time.
   void set (double time, double u, double v, double w);
-
-  const MeqStation *getStation() const
-  {
-      return itsStation;
-  }
 
 private:
   struct MeqTime
   {
     MeqTime (double time) :itsTime(time) {}
     bool operator< (const MeqTime& other) const
-      { return itsTime < other.itsTime-0.000001; }
-    //operator== (const MeqTime& other)
-    //    { return itsTime > other.itsTime-0.001 && itsTime < other.itsTime+0.001; }
+        { return itsTime < other.itsTime-0.000001; }
+    //# operator== (const MeqTime& other)
+    //#    { return itsTime > other.itsTime-0.001 && itsTime < other.itsTime+0.001; }
     double itsTime;
   };
 
@@ -96,14 +91,17 @@ private:
     double itsW;
   };
 
-  MeqStation*  itsStation;
-  const MeqPhaseRef* itsPhaseRef;
-  MeqResult    itsU;
-  MeqResult    itsV;
-  MeqResult    itsW;
-  MeqRequestId itsLastReqId;
-  casa::MeasFrame    itsFrame;
-  map<MeqTime,MeqUVW> itsUVW;    // association of time and UVW coordinates
+  MeqStation            *itsStation;
+  casa::MDirection      itsPhaseCenter;
+  casa::MPosition       itsArrayPosition;
+  MeqResult             itsU;
+  MeqResult             itsV;
+  MeqResult             itsW;
+  MeqRequestId          itsLastReqId;
+  map<MeqTime,MeqUVW>   itsUVW;    // association of time and UVW coordinates
+
+//#  const MeqPhaseRef* itsPhaseRef;
+//#  casa::MeasFrame    itsFrame;
 };
 
 // @}
