@@ -68,8 +68,10 @@ namespace LOFAR
             << string("Documentation can be found at: http://www.astron.nl/aips++/docs/aips++.html") << std::endl;
       itsMS            = ParamSet->getString("ms");
       itsCompress      = ParamSet->getBool("compress"); 
-      itsMode          = ParamSet->getString("mode");
+      itsDataMode      = ParamSet->getString("datamode");
+      itsImageMode     = ParamSet->getString("imagemode");
       itsNChannel      = ParamSet->getInt32("nchan");
+      itsSpectralWindows = ParamSet->getInt32Vector("spwid");
       itsStart         = ParamSet->getInt32("start");
       itsStep          = ParamSet->getInt32("step");
       itsNX            = ParamSet->getInt32("nx");
@@ -91,9 +93,14 @@ namespace LOFAR
     tribool ImagerProcessControl::run(void)
     { 
       std::cout << "Runnning imager please wait..." << std::endl;
-      myImager->makeimage(itsImageType, itsImageName);
-      std::cout << "Runnning imager finished." << std::endl;
-      return true;
+      if ( myImager->makeimage(itsImageType, itsImageName))
+      {
+        std::cout << "Runnning imager finished." << std::endl;
+        return true;
+      }
+      else
+      { return false;      
+      }
     }
 
     //===============>>> ImagerProcessControl::init  <<<================================
@@ -105,13 +112,14 @@ namespace LOFAR
       const casa::Vector<casa::Int> myNChannel(1, itsNChannel);
       const casa::Vector<casa::Int> myStart(1, itsStart);
       const casa::Vector<casa::Int> myStep(1, itsStep);
-      const casa::String            myMode(itsMode);
+      const casa::String            myDataMode(itsDataMode);
+      const casa::String            myImageMode(itsImageMode);
       const casa::MRadialVelocity   itsMStart(casa::Quantity(0, "km/s"), casa::MRadialVelocity::DEFAULT); //? unknown what the default should be, AR
       const casa::MRadialVelocity   itsMStep(casa::Quantity(0, "km/s"), casa::MRadialVelocity::DEFAULT); //? unknown what the default should be, AR
-      const casa::Vector<casa::Int> itsSpectralWindowIDs(1, 0); //It's 1 in Glish, but propably 0 in C++
+      const casa::Vector<casa::Int> mySpectralWindowIDs(itsSpectralWindows); //It's 1 in Glish, but propably 0 in C++
       int                           itsFieldID(0); //It's 1 in Glish, but propably 0 in C++
       const casa::Vector<casa::Int> myFieldID(1, itsFieldID);
-      myImager->setdata(myMode, myNChannel, myStart, myStep, itsMStart, itsMStep, itsSpectralWindowIDs, myFieldID);
+      myImager->setdata(myDataMode, myNChannel, myStart, myStep, itsMStart, itsMStep, mySpectralWindowIDs, myFieldID);
       
       const casa::Quantity          myCellX(itsCellX, "arcsec");
       const casa::Quantity          myCellY(itsCellY, "arcsec");
@@ -125,7 +133,7 @@ namespace LOFAR
       const casa::Float             itsPaStep(5.0); //? unknown what the default should be, AR
       const casa::Float             itsPbLimit(0.05); //? unknown what the default should be, AR
       myImager->setimage(itsNX, itsNY, myCellX, myCellY, myStokes, itsDoShift, itsPhaseCenter, itsShiftX, itsShiftY,
-                         myMode, itsNChannel, itsStart, itsStep, itsMStart, itsMStep, itsSpectralWindowIDs,
+                         myImageMode, itsNChannel, itsStart, itsStep, itsMStart, itsMStep, mySpectralWindowIDs,
                          itsFieldID, itsFacets, itsDistance, itsPaStep, itsPbLimit);
 
       const casa::String   itsWeightAlgorithm(itsWeightType);
