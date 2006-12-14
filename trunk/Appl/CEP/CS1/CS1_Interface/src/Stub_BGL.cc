@@ -22,7 +22,7 @@
 
 #include <CS1_Interface/Stub_BGL.h>
 #include <Transport/TH_Socket.h>
-#include <Transport/Connection.h>
+#include <Transport/BGLConnection.h>
 
 
 namespace LOFAR { 
@@ -84,10 +84,10 @@ void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, un
   itsTHs[index] = itsIAmOnBGL ? newClientTH(cellNr, nodeNr) : newServerTH(cellNr, nodeNr);
 
   if (itsIsInput) {
-    itsConnections[index] = new Connection("output", 0, dm.getGeneralInHolder(channel), itsTHs[index], true);
+    itsConnections[index] = new BGLConnection("output", 0, dm.getGeneralInHolder(channel), itsTHs[index]);
     dm.setInConnection(channel, itsConnections[index]);
   } else {
-    itsConnections[index] = new Connection("input", dm.getGeneralOutHolder(channel), 0, itsTHs[index], true);
+    itsConnections[index] = new BGLConnection("input", dm.getGeneralOutHolder(channel), 0, itsTHs[index]);
     dm.setOutConnection(channel, itsConnections[index]);
   }
 };
