@@ -2335,7 +2335,7 @@ void Prediffer::fillUVW()
     // Do it only if the station is actually used.
     if (itsStations[i] != 0) {
       // Expression to calculate UVW per station
-      uvw = new MeqStatUVW (itsStations[i], &itsPhaseRef);
+      uvw = new MeqStatUVW(itsStations[i], pair<double, double>(itsMSDesc.ra, itsMSDesc.dec), itsMSDesc.arrayPos);
     }
     itsStatUVW.push_back (uvw);
   }
