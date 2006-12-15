@@ -35,10 +35,9 @@
 namespace LOFAR
 {
 
-  // This class contains useful string manipulation methods.
-  class StringUtil
+  // Useful string manipulation methods and classes.
+  namespace StringUtil
   {
-  public:
     // Split a string into substrings using \c c as the separator character.
     // The result may contain empty strings, e.g. when \c str contains two or
     // more consecutive occurrences of the separations character.
@@ -56,8 +55,45 @@ namespace LOFAR
     //   res[3] = "dd"
     //   res[4] = ""
     // \endverbatim
-    static vector<string> split(const string& str, char c);
-  };
+    vector<string> split(const string& str, char c);
+
+
+    // Functor to compare two strings. Strings can be compared case sensitive
+    // (\c NORMAL) and case insensitive (\c NOCASE).
+    // \attention This class does not handle locales properly. It does string
+    // comparison the way \c strcmp and \c strcasecmp (or \c stricmp for that
+    // matter) do it.
+    class Compare
+    { 
+    public:
+      // String comparison mode.
+      enum Mode {NORMAL, NOCASE};
+
+      // Constructor. Initialize the comparison criterion. Default is "normal"
+      // case sensitive comparison.
+      Compare(Mode mode=NORMAL) : itsMode(mode) {}
+
+      // The comparison operator
+      bool operator()(const string& s1, const string& s2) const 
+      {
+	if (itsMode == NORMAL) return s1 < s2;
+	else return lexicographical_compare(s1.begin(), s1.end(),
+					    s2.begin(), s2.end(),
+					    nocaseCompare);
+      }
+
+    private:
+      // Helper function to do case insensitive comparison of two chars.
+      static bool nocaseCompare(char c1, char c2)
+      {
+	return toupper(c1) < toupper(c2);
+      }
+
+      // The current comparison mode.
+      Mode itsMode;
+    };
+
+  } // namespace StringUtil
 
 //
 // formatString(format, ...) --> string
