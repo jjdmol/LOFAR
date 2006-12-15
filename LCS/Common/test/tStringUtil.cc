@@ -25,24 +25,14 @@
 
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_set.h>
+#include <Common/lofar_iostream.h>
 #include <cmath>
-#include <iostream>
 #include <limits>
 
 using namespace LOFAR;
 using namespace std;
 
-#if 0
-#define TOSTRING_TEST(type) \
-{ \
-  type min(numeric_limits<type>::min()); \
-  type max(numeric_limits<type>::max()); \
-  ASSERT(min == numeric_limits<type>::min() && \
-         max == numeric_limits<type>::max()); \
-  cout << "min(" #type ") = " << toString(min) \
-       << "\t max(" #type ") = " << toString(max) << endl; \
-}
-#endif
 
 #define TOSTRING_TEST(type,min,max) \
 { \
@@ -57,9 +47,9 @@ using namespace std;
        << toString(x, format) << endl; \
 }
 
-int main()
+
+bool testSplit()
 {
-  INIT_LOGGER("tStringUtil");
   string s(",aa,bb,,dd,");
   vector<string> vs = StringUtil::split(s,',');
   cout << "Splitting string \"" << s << "\" using \',\' as seperator ..." 
@@ -67,7 +57,33 @@ int main()
   for (string::size_type i = 0; i < vs.size(); i++) {
     cout << "vs[" << i << "] = \"" << vs[i] << "\"" << endl;
   }
+  cout << endl;
+  return true;
+}
 
+
+bool testCompare(bool nocase)
+{
+  set<string, StringUtil::Compare> 
+    s(nocase ? StringUtil::Compare::NOCASE : StringUtil::Compare::NORMAL);
+  s.insert("Alfons");
+  s.insert("aap");
+  s.insert("Bertus");
+  s.insert("bakker");
+  s.insert("Chris");
+  s.insert("chocolade");
+  if (nocase) cout << "=== Strings sorted NOCASE ===" << endl;
+  else cout << "=== Strings sorted NORMAL ===" << endl;
+  for (set<string>::const_iterator it = s.begin(); it != s.end(); ++it) {
+    cout << *it << endl;
+  }
+  cout << endl;
+  return true;
+}
+
+
+bool testTrim()
+{
   string r1(" 	 	 a String with leading and trailing whitespace	 ");
   string r2("a String without leading and trailing whitespace");
   string r3("1) String with(out) itemnr and arrayindex[123]");
@@ -102,12 +118,23 @@ int main()
   cout << ">" << p2 << "< , len=" << len2 << endl;
   cout << ">" << p3 << "< , len=" << len3 << endl;
 
+  return true;
+}
+
+
+bool testCase()
+{
   cout << "Lowercase and uppercase a string:" << endl;
-  s = "The zip code of Hondelage in Germany is 38108";
+  string s("The zip code of Hondelage in Germany is 38108");
   cout << "orginal: " << s << endl;
   cout << "lowered: " << toLower(s) << endl;
   cout << "uppered: " << toUpper(s) << endl;
+  return true;
+}
 
+
+bool testToString()
+{
   //## Conversion of fundamental arithmetic types to string ##//
 
   cout << "\n*** Conversion of fundamental arithmetic types to string ***\n";
@@ -139,7 +166,23 @@ int main()
     TOSTRING_TEST2(double, M_PI*1e12, "%+08.12g");
   } catch (Exception& e) {
     LOG_ERROR_STR(e);
+    return false;
   }
+  return true;
+}
 
-  return 0;
+
+int main()
+{
+  INIT_LOGGER("tStringUtil");
+
+  bool result = 
+    testSplit()        &&
+    testCompare(false) &&
+    testCompare(true)  &&
+    testTrim()         &&
+    testCase()         &&
+    testToString();
+
+  return (result ? 0 : 1);
 }

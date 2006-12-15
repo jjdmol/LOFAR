@@ -5,6 +5,23 @@ vs[2] = "bb"
 vs[3] = ""
 vs[4] = "dd"
 vs[5] = ""
+
+=== Strings sorted NORMAL ===
+Alfons
+Bertus
+Chris
+aap
+bakker
+chocolade
+
+=== Strings sorted NOCASE ===
+aap
+Alfons
+bakker
+Bertus
+chocolade
+Chris
+
 Trimmed C++ strings:
 >a String with leading and trailing whitespace<
 >a String without leading and trailing whitespace<
