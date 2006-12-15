@@ -25,8 +25,8 @@
 
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/StringUtil.h>
 
-using namespace std;
 using namespace LOFAR;
 
 
