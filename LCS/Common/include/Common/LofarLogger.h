@@ -26,11 +26,8 @@
 // \file
 // Macro interface to the lofar logging package.
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
-#include <Common/StringUtil.h>
-
-//# Dependent of the availability of the log4Cplus package one set of macro's
-//# or the other set of macro's is included.
+//# Depending of the availability of the log4Cplus package one set of macros
+//# or the other set of macros is included.
 #ifdef HAVE_LOG4CPLUS
 # include <Common/LofarLog4Cplus.h>
 #else

@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <Common/LofarTypes.h>
 #include <Common/LofarLogger.h>
 #include <Common/FileLocator.h>
 #include <stdlib.h>
