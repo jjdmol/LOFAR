@@ -32,18 +32,26 @@
 namespace LOFAR
 {
   
-  vector<string> StringUtil::split(const string& s, char c)
-  {
-    vector<string> v;
-    string::size_type i, j;
-    i = j = 0;
-    while (j != string::npos) {
-      j = s.find(c,i);
-      if (j == string::npos) v.push_back(s.substr(i));
-      else v.push_back(s.substr(i,j-i));
-      i = j+1;
+vector<string> StringUtil::split(const string& s, char c)
+{
+	vector<string> 		v;
+	string::size_type 	i, j;
+	string				substring;
+	i = j = 0;
+	while (j != string::npos) {
+		j = s.find(c,i);
+		if (j == string::npos) {
+			substring = s.substr(i);
+		} 
+		else {
+			substring = s.substr(i,j-i);
+		}
+		ltrim(substring);
+		rtrim(substring);
+		v.push_back(substring);
+		i = j + 1;
     }
-    return v;
+    return (v);
   }
 
 //
