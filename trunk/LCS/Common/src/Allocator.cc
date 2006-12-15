@@ -23,6 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#include <Common/LofarTypes.h>
 #include <Common/Allocator.h>
 #include <Common/LofarLogger.h>
 
