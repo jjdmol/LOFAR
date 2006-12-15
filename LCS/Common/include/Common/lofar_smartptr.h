@@ -25,6 +25,10 @@
 
 // \file
 
+#if !defined(HAVE_BOOST)
+#error Boost Smart Pointer classes are required.
+#endif
+
 #if defined(USE_THREADS)
 # define BOOST_AC_USE_PTHREADS
 #else
