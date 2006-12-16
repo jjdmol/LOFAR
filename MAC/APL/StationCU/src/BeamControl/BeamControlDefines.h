@@ -31,6 +31,13 @@ namespace LOFAR {
 #define PSN_BEAM_CTRL   			"LOFAR_ObsSW_@observation@_BeamCtrl"
 #define PST_BEAM_CTRL   			"BeamCtrl"
 #define PN_BC_CONNECTED 			"connected"
+#define PN_BC_SUBBANDLIST 			"subbandList"
+#define PN_BC_BEAMLETLIST 			"beamletList"
+#define PN_BC_SUBARRAY 				"subArray"
+#define PN_BC_ANGLE1 				"angle1"
+#define PN_BC_ANGLE2	 			"angle2"
+#define PN_BC_ANGLETIMES 			"angleTimes"
+#define PN_BC_BEAMID 				"beamID"
 
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_STATE			"state"
