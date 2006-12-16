@@ -30,6 +30,7 @@
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
+#include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
@@ -345,13 +346,44 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 	case F_TIMER: {		// must be timer that PropSet has set.
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString   ("initial"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString   (""));
-		itsPropertySet->setValue(PN_OC_CLAIM_PERIOD,GCFPVInteger  (itsClaimPeriod));
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE,  GCFPVString("initial"));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,  GCFPVString(""));
+		itsPropertySet->setValue(PN_OC_CLAIM_PERIOD,  GCFPVInteger(itsClaimPeriod));
 		itsPropertySet->setValue(PN_OC_PREPARE_PERIOD,GCFPVInteger(itsPreparePeriod));
-		itsPropertySet->setValue(PN_OC_START_TIME,GCFPVString(to_simple_string(itsStartTime)));
-		itsPropertySet->setValue(PN_OC_STOP_TIME, GCFPVString(to_simple_string(itsStopTime)));
-      
+		itsPropertySet->setValue(PN_OC_START_TIME,    GCFPVString(to_simple_string(itsStartTime)));
+		itsPropertySet->setValue(PN_OC_STOP_TIME,     GCFPVString(to_simple_string(itsStopTime)));
+		itsPropertySet->setValue(PN_OC_SUBBAND_LIST,  GCFPVString(
+						APLUtilities::compactedArrayString(globalParameterSet()->
+						getString("Observation.subbandList"))));
+		itsPropertySet->setValue(PN_OC_BEAMLET_LIST, GCFPVString(
+						APLUtilities::compactedArrayString(globalParameterSet()->
+						getString("Observation.beamletList"))));
+		itsPropertySet->setValue(PN_OC_BAND_FILTER, GCFPVString(
+						globalParameterSet()->getString("Observation.bandFilter")));
+		itsPropertySet->setValue(PN_OC_NYQUISTZONE, GCFPVInteger(
+						globalParameterSet()->getInt32("Observation.nyquistzone")));
+		itsPropertySet->setValue(PN_OC_ANTENNA_ARRAY, GCFPVString(
+						globalParameterSet()->getString("Observation.antennaArray")));
+		itsPropertySet->setValue(PN_OC_RECEIVER_LIST, GCFPVString(
+						APLUtilities::compactedArrayString(globalParameterSet()->
+						getString("Observation.receiverList"))));
+		itsPropertySet->setValue(PN_OC_SAMPLE_CLOCK, GCFPVInteger(
+						globalParameterSet()->getUint32("Observation.sampleClock")));
+		itsPropertySet->setValue(PN_OC_MEASUREMENT_SET, GCFPVString(
+						globalParameterSet()->getString("Observation.measurementSet")));
+		itsPropertySet->setValue(PN_OC_STATION_LIST, GCFPVString(
+						APLUtilities::compactedArrayString(globalParameterSet()->
+						getString("Observation.stationList"))));
+		itsPropertySet->setValue(PN_OC_INPUT_NODE_LIST, GCFPVString(
+						APLUtilities::compactedArrayString(globalParameterSet()->
+						getString("Observation.inputNodeList"))));
+		itsPropertySet->setValue(PN_OC_BGL_NODE_LIST, GCFPVString(
+						APLUtilities::compactedArrayString(globalParameterSet()->
+						getString("Observation.BGLNodeList"))));
+		itsPropertySet->setValue(PN_OC_STORAGE_NODE_LIST, GCFPVString(
+						APLUtilities::compactedArrayString(globalParameterSet()->
+						getString("Observation.storageNodeList"))));
+
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControl task");
 		itsChildControl->openService(MAC_SVCMASK_OBSERVATIONCTRL, itsInstanceNr);
