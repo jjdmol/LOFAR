@@ -31,7 +31,7 @@
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Protocols/PA_Protocol.ph>
 //#include <APL/APLCommon/APL_Defines.h>
-//#include <APL/APLCommon/APLUtilities.h>
+#include <APL/APLCommon/APLUtilities.h>
 //#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
@@ -108,7 +108,7 @@ CalibrationControl::~CalibrationControl()
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
 	if (itsPropertySet) {
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("down"));
 		itsPropertySet->disable();
 	}
 
@@ -231,9 +231,14 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("initial"));
-			itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
-			itsPropertySet->setValue(string(PN_CC_CONNECTED),GCFPVBool(false));
+			itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString ("initial"));
+			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString (""));
+			itsPropertySet->setValue(PN_CC_CONNECTED,	GCFPVBool   (false));
+			itsPropertySet->setValue(PN_CC_OBSNAME,		GCFPVString (""));
+			itsPropertySet->setValue(PN_CC_ANTENNAARRAY,GCFPVString (""));
+			itsPropertySet->setValue(PN_CC_FILTER,		GCFPVString (""));
+			itsPropertySet->setValue(PN_CC_NYQUISTZONE,	GCFPVInteger(0));
+			itsPropertySet->setValue(PN_CC_RCUS,		GCFPVString (""));
 		  
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
@@ -290,14 +295,15 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 
 	case F_ENTRY:
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsPropertySet->setValue(PN_CC_CONNECTED,GCFPVBool(false));
 		break;
 
 	case F_CONNECTED: // CONNECT must be from Calserver.
 		ASSERTSTR (&port == itsCalServer, 
 									"F_CONNECTED event from port " << port.getName());
 		itsTimerPort->cancelAllTimers();
-		itsPropertySet->setValue(string(PN_CC_CONNECTED),GCFPVBool(true));
+		itsPropertySet->setValue(PN_CC_CONNECTED,GCFPVBool(true));
 		LOG_INFO ("Connected with CalServer, going to claimed state");
 		setState(CTState::CLAIMED);
 		sendControlResult(*itsParentPort, CONTROL_CLAIMED, getName(), CT_RESULT_NO_ERROR);
@@ -308,7 +314,7 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 		port.close();
 		ASSERTSTR (&port == itsCalServer, 
 								"F_DISCONNECTED event from port " << port.getName());
-		itsPropertySet->setValue(string(PN_CC_CONNECTED),GCFPVBool(false));
+		itsPropertySet->setValue(PN_CC_CONNECTED,GCFPVBool(false));
 		LOG_WARN("Connection with CalServer failed, retry in 2 seconds");
 		itsTimerPort->setTimer(2.0);
 		break;
@@ -363,7 +369,12 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString (""));
+		itsPropertySet->setValue(PN_CC_OBSNAME,		 GCFPVString (""));
+		itsPropertySet->setValue(PN_CC_ANTENNAARRAY, GCFPVString (""));
+		itsPropertySet->setValue(PN_CC_FILTER,		 GCFPVString (""));
+		itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 GCFPVInteger(0));
+		itsPropertySet->setValue(PN_CC_RCUS,		 GCFPVString (""));
 		break;
 	}
 
@@ -441,7 +452,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		break;
 	}
 
@@ -536,7 +547,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		itsCalServer->close();
 		break;
 	}
@@ -587,7 +598,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 //
 bool	CalibrationControl::startCalibration() 
 {
-	// send CALStartEvent
+	// construct and send CALStartEvent
 	string		obsName(formatString("observation[%d]{%d}", getInstanceNr(getName()), 
 															getObservationNr(getName())));
 	CALStartEvent calStartEvent;
@@ -596,13 +607,23 @@ bool	CalibrationControl::startCalibration()
 	calStartEvent.rcumode().resize(1);
 	calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
 										convertFilterSelection(itsObsPar.filter));
-	calStartEvent.nyquist_zone = calStartEvent.rcumode()(0).getNyquistZone();
+	calStartEvent.nyquist_zone = itsObsPar.nyquistZone;
 	calStartEvent.subset 	   = itsObsPar.RCUset;
 	LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%d,%08X)", 
 							obsName.c_str(), calStartEvent.parent.c_str(),
 							calStartEvent.nyquist_zone, calStartEvent.rcumode()(0).getRaw()));
 
 	itsCalServer->send(calStartEvent);
+
+	// inform operator about these values.
+	itsPropertySet->setValue(PN_CC_OBSNAME,		GCFPVString("obsname"));
+	itsPropertySet->setValue(PN_CC_ANTENNAARRAY,GCFPVString(itsObsPar.antennaArray));
+	itsPropertySet->setValue(PN_CC_FILTER,		GCFPVString(itsObsPar.filter));
+	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	GCFPVInteger(itsObsPar.nyquistZone));
+	itsPropertySet->setValue(PN_CC_RCUS,		GCFPVString(
+		APLUtilities::compactedArrayString(globalParameterSet()->
+		getString("Observation.receiverList"))));
+
 	return (true);
 }
 
