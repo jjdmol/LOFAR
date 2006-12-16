@@ -240,6 +240,13 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
 			itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
 			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool  (false));
+			itsPropertySet->setValue(PN_BC_SUBBANDLIST,	GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_BEAMLETLIST,	GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_ANGLE1,		GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
 		  
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
@@ -294,6 +301,7 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 		// update PVSS
 //		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("started"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool  (false));
 		break;
 	}
 
@@ -306,6 +314,7 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 											<< port.getName());
 		itsTimerPort->cancelAllTimers();
 		LOG_INFO ("Connected with BeamServer, going to claimed state");
+		itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool(true));
 		setState(CTState::CLAIMED);
 		sendControlResult(*itsParentPort, CONTROL_CLAIMED, getName(), CT_RESULT_NO_ERROR);
 		TRAN(BeamControl::claimed_state);				// go to next state.
@@ -622,6 +631,20 @@ void BeamControl::doPrepare()
 
 	LOG_DEBUG_STR("Sending Alloc event to BeamServer");
 	itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
+
+	// store values in PVSS for operator
+	itsPropertySet->setValue(PN_BC_SUBBANDLIST,	
+				GCFPVString(APLUtilities::compactedArrayString(globalParameterSet()->
+				getString("Observation.subbandList"))));
+	itsPropertySet->setValue(PN_BC_BEAMLETLIST,	
+				GCFPVString(APLUtilities::compactedArrayString(globalParameterSet()->
+				getString("Observation.beamletList"))));
+	itsPropertySet->setValue(PN_BC_ANGLE1,		
+				GCFPVString(globalParameterSet()->getString("Observation.Beam.angle1")));
+	itsPropertySet->setValue(PN_BC_ANGLE2,		
+				GCFPVString(globalParameterSet()->getString("Observation.Beam.angle2")));
+	itsPropertySet->setValue(PN_BC_ANGLETIMES,	
+				GCFPVString(globalParameterSet()->getString("Observation.Beam.angleTimes")));
 }
 
 //
@@ -636,6 +659,7 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 		return (CT_RESULT_BEAMALLOC_FAILED);
 	}
 	itsBeamID = ackEvent.handle;
+	itsPropertySet->setValue(PN_BC_BEAMID, GCFPVInteger(itsBeamID));
 
 	// read new angles from parameterfile.
 	vector<string>	sourceTimes;
@@ -698,11 +722,21 @@ void BeamControl::doRelease()
 //
 bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 {
-//TODO	BSBeamfreeackEvent	ack(event);
-//TODO	if (ack.status != 0 || ack.handle != ...beamID...) {
-//TODO		errorCode = CT_RESULT_BEAMFREE_ERROR;
-//TODO		LOG_ERROR_STR("Beamlet de-allocation failed with errorcode: " << ack.status);
-//TODO	}
+	BSBeamfreeackEvent	ack(event);
+	if (ack.status != 0 || ack.handle != itsBeamID) {
+		LOG_ERROR_STR("Beamlet de-allocation failed with errorcode: " << ack.status);
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("De-allocation of the beamlet failed."));
+		return (false);	
+	}
+
+	// clear beam in PVSS
+	itsPropertySet->setValue(PN_BC_SUBBANDLIST,	GCFPVString(""));
+	itsPropertySet->setValue(PN_BC_BEAMLETLIST,	GCFPVString(""));
+	itsPropertySet->setValue(PN_BC_ANGLE1,		GCFPVString(""));
+	itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
+	itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
+	itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
+
 	return (true);
 }
 
@@ -720,7 +754,7 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 	switch (event.signal) {
 		case CONTROL_CONNECT:
 		case CONTROL_RESYNC:
-		case CONTROL_SCHEDULE:	// we should do something with this
+		case CONTROL_SCHEDULE:	// TODO: we should do something with this
 		case CONTROL_CLAIM:
 		case CONTROL_PREPARE:
 		case CONTROL_RESUME:
