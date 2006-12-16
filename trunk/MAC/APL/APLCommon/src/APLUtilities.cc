@@ -61,18 +61,14 @@ void APLUtilities::string2Vector(const string& parametersString, vector<string>&
   unsigned int parametersStringLen=parametersString.length();
   unsigned int delim(0);
   unsigned int nextDelim;
-  do
-  {
+  do {
     nextDelim=parametersString.find(delimiter,delim);
-    if(nextDelim==string::npos)
-    {
+    if(nextDelim==string::npos) {
       nextDelim=parametersStringLen; // no delim found
     }
-    if(nextDelim>delim)
-    {
+    if(nextDelim>delim) {
       string param(parametersString.substr(delim,nextDelim-delim));
-      if(param.length()>0)
-      {
+      if(param.length()>0) {
         parameters.push_back(param);
       }
       delim=nextDelim+1;
@@ -304,5 +300,85 @@ string APLUtilities::getTempFileName(const string&	format)
 	mkstemp(tempFileName);							// let OS invent the name
 
 	return string(tempFileName);
+}
+
+//
+// compactedArrayString(string)
+//
+// Given een array string ( '[ xx, xx, xx ]' ) this utility compacts the string
+// by replacing series with range.
+// Eg. [ lii001, lii002, lii003, lii005 ] --> [ lii001..lii003, lii005 ]
+//
+string APLUtilities::compactedArrayString(const string&	orgStr)
+{
+	string	baseString(orgStr);			// destroyable copy
+	ltrim(baseString, " 	[");		// strip of brackets
+	rtrim(baseString, " 	]");
+
+	// and split into a vector
+	vector<string>	strVector = StringUtil::split(baseString, ',');
+	if (strVector.size() < 2) {
+		return (orgStr);
+	}
+
+	// note: we assume that the format of each element is [xxxx]9999
+	string::size_type	firstDigit(strVector[0].find_first_of("0123456789"));
+	if (firstDigit == string::npos) {	// no digits? then return org string
+		return (orgStr);
+	}
+	string	elemName(strVector[0].substr(0,firstDigit));
+	string	scanMask(elemName+"%ld");
+	string	outMask (formatString("%s%%0%dld", elemName.c_str(), 
+											strVector[0].length() - elemName.length()));
+
+	string 	result("[");
+	long 	prevValue(-2);
+	bool	firstElem(true);
+	bool	endOfArray(false);
+	int		elemsInRange(0);
+	int		nrElems(strVector.size());
+	for (int idx = 0; idx < nrElems; idx++) {
+		long	value;
+		if (sscanf(strVector[idx].c_str(), scanMask.c_str(), &value) != 1) {
+			LOG_DEBUG_STR("Element " << strVector[idx] << "does not match mask " 
+						<< scanMask << ". Returning orignal string");
+			return (orgStr);
+		}
+
+		if (value == prevValue+1) {		// contiquous numbering?
+			elemsInRange++;
+			prevValue = value;
+			if (idx < nrElems-1) {		// when elements left
+				continue;
+			}
+			endOfArray = true;
+		}
+
+		// broken range
+		if (firstElem) {
+			result += formatString(outMask.c_str(), value);
+			firstElem = false;
+		}
+		else {
+			if (elemsInRange == 1) {
+				result += "," + formatString(outMask.c_str(), value);
+			}
+			else {
+				if (elemsInRange == 2) {
+					result += "," + formatString(outMask.c_str(), prevValue);
+				}
+				else {
+					result += ".." + formatString(outMask.c_str(), prevValue);
+				}
+				if (!endOfArray) {
+					result += "," + formatString(outMask.c_str(), value);
+				}
+			}
+		}
+		elemsInRange = 1;
+		prevValue    = value;
+	}
+
+	return (result+"]");
 }
 
