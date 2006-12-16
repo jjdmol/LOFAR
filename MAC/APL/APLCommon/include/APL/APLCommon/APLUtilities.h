@@ -81,6 +81,8 @@ public:
 								   const string& localFile);
     static string	getTempFileName(const string&	format="");
 
+	static string 	compactedArrayString(const string&	orgStr);
+
 protected:
     // protected copy constructor
     APLUtilities(const APLUtilities&);
