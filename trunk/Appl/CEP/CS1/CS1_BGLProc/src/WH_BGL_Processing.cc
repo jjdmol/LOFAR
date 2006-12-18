@@ -1180,6 +1180,8 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, co
   itsCurrentSubband   = itsFirstSubband + coreNumber % nrNodesPerPset % nrSubbandsPerPset;
   itsSubbandIncrement = nrNodesPerPset % nrSubbandsPerPset;
 
+  itsInputConnected   = ps.getBool("Connections.InputToBGLProc");
+
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
 //getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
   getDataManager().addOutDataHolder(VISIBILITIES_CHANNEL, new DH_Visibilities("output", ps));
@@ -1787,7 +1789,8 @@ void WH_BGL_Processing::process()
   readTimer.start();
   getDataManager().readyWithInHolder(SUBBAND_CHANNEL);
 #if defined SPARSE_FLAGS
-  get_DH_Subband()->getExtraData();
+  if (itsInputConnected)
+    get_DH_Subband()->getExtraData();
 #endif
   readTimer.stop();
 
