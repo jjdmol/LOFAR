@@ -2,6 +2,9 @@ EXTRA_DIST = \
 	mac-spid.spec
 
 SUBDIRS = \
+
+pkgextdir     = $(prefix)/config/$(PACKAGE)
+pkgext_DATA   = pkgext pkgextcppflags pkgextcxxflags pkgextldflags
 	src \
 	aclocal \
 	tools

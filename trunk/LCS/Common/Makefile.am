@@ -1,5 +1,8 @@
 SUBDIRS=include src test
 
+pkgextdir     = $(prefix)/config/$(PACKAGE)
+pkgext_DATA   = pkgext pkgextcppflags pkgextcxxflags pkgextldflags
+
 EXTRA_DIST = \
       Makefile.common \
       Common.spec \
