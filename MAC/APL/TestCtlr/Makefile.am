@@ -1,5 +1,8 @@
 SUBDIRS=src
 
+pkgextdir     = $(prefix)/config/$(PACKAGE)
+pkgext_DATA   = pkgext pkgextcppflags pkgextcxxflags pkgextldflags
+
 EXTRA_DIST = \
       Makefile.common \
       MainCU.spec \

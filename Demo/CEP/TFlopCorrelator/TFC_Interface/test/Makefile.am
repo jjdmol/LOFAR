@@ -14,5 +14,6 @@ tRectMatrix.sh
 LDADD = ../src/libtfc_interface.la
 DEPENDENCIES = ../src/libtfc_interface.la $(LOFAR_DEPEND)
 
+EXTRA_DIST = $(TESTS)
 
 include $(top_srcdir)/Makefile.common

@@ -1,5 +1,8 @@
 SUBDIRS=src test bin include
 
+pkgextdir     = $(prefix)/config/$(PACKAGE)
+pkgext_DATA   = pkgext pkgextcppflags pkgextcxxflags pkgextldflags
+
 DISTCHECK_CONFIGURE_FLAGS=\
       --with-common=$(prefix) \
       --with-aps=$(prefix)
