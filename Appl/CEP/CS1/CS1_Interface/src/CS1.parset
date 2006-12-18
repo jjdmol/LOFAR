@@ -19,6 +19,9 @@ Connections.Input_BGLProc.Ports  =[8000,8001,8002,8003,8004,8005,8006,8007,8008,
 Connections.BGLProc_Storage.Ports=[8200,8201,8202,8203,8204,8205,8206,8207,8208,8209,8210,8211,8212,8213,8214,8215]
 Connections.AMC.Port             =31337
 
+Connections.InputToBGLProc	= T
+Connections.BGLProcToStorage	= T
+
 # The format of the data
 Observation.NSubbands=4
 Observation.NChannels = 256

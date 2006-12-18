@@ -139,6 +139,7 @@ class WH_BGL_Processing: public WorkHolder {
     const ACC::APS::ParameterSet &itsPS;
     const unsigned  itsCoreNumber;
     unsigned        itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
+    bool	    itsInputConnected;
 
     static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 

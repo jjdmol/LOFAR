@@ -32,15 +32,14 @@
 #include <CS1_Interface/Stub_BGL_Subband.h>
 //#include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
 #include <CS1_Interface/Stub_BGL_Visibilities.h>
-// tinyCEP
+#include <Transport/BGLConnection.h>
 
-// Transporters
 #if defined HAVE_MPI
 #include <Transport/TH_MPI.h>
 #endif
 
 #if defined USE_ZOID
-#include <CS1_Interface/TH_ZoidClient.h>
+#include <CS1_BGLProc/TH_ZoidClient.h>
 #endif
 
 #include <Blob/KeyValueMap.h>
@@ -135,6 +134,8 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   unsigned psetsPerCell	     = itsParamSet.getInt32("BGLProc.PsetsPerCell");
   unsigned usedNodesPerPset  = itsParamSet.getInt32("BGLProc.NodesPerPset");
   unsigned nrSubbandsPerPset = itsParamSet.getInt32("General.SubbandsPerPset");
+  bool	   connectInput	     = itsParamSet.getBool("Connections.InputToBGLProc");
+  bool	   connectOutput     = itsParamSet.getBool("Connections.BGLProcToStorage");
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
@@ -184,12 +185,27 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 
 #if defined USE_ZOID
       TH_ZoidClient *th = new TH_ZoidClient();
-      Connection    *conn = new Connection("zoid", 0, dm.getGeneralInHolder(WH_BGL_Processing::SUBBAND_CHANNEL), th, true);
-      dm.setInConnection(WH_BGL_Processing::SUBBAND_CHANNEL, conn);
+
+      if (connectInput) {
+	Connection *in = new BGLConnection("zoid", 0, dm.getGeneralInHolder(WH_BGL_Processing::SUBBAND_CHANNEL), th);
+	dm.setInConnection(WH_BGL_Processing::SUBBAND_CHANNEL, in);
+      }
+
+      if (connectOutput) {
+#if 1
+	Connection *out = new BGLConnection("zoid", dm.getGeneralOutHolder(WH_BGL_Processing::VISIBILITIES_CHANNEL), 0, th);
+	dm.setOutConnection(WH_BGL_Processing::VISIBILITIES_CHANNEL, out);
 #else
-      itsSubbandStub->connect(cell, cellCore, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
+	itsVisibilitiesStub->connect(cell, cellCore, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+#endif
+      }
+#else
+      if (connectInput)
+	itsSubbandStub->connect(cell, cellCore, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
 //    itsRFI_MitigationStub->connect(cell, cellCore, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
-      itsVisibilitiesStub->connect(cell, cellCore, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+
+      if (connectOutput)
+	itsVisibilitiesStub->connect(cell, cellCore, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 #endif
 
 #if defined HAVE_BGL
