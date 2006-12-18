@@ -19,13 +19,8 @@ clean-generic:
 #CLEANFILES += tca.* .inslog* *.cc *.h $(top_builddir)/pure_cache docxxhtml/* *.log docxx_hdrs.names
 
 DISTCLEANFILES=\
-      pkgext\
-      pkgextcppflags\
-      pkgextcxxflags\
-      pkgextobjs\
-      lofar_config.old-h\
-      lofar_config.h-pkg\
-      lofar_config.h\
+      pkgext*\
+      lofar_config.*\
       .doxygenrc \
       *.spec \
       *.err
