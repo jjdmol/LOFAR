@@ -38,40 +38,34 @@
 filnm=$1
 libdir=$2
 
-\rm -f lfr_tmp1
-# Only execute the script if the other package has the file defined.
-touch ${filnm}_diff
-if [ -f $libdir/$filnm ]; then
-  touch lfr_tmp1
-  nms=`cat $libdir/$filnm $filnm`
-  # Use echo to remove the possible newlines.
-  nms=`echo $nms`
-  # Make sure that each entry is on a single line.
-  for nme in $nms
+\rm -f lfr_tmp1 ${filnm}_diff
+touch lfr_tmp1 ${filnm}_diff
+nms=`cat $libdir/$filnm $filnm 2>/dev/null`
+# Use echo to remove the possible newlines.
+nms=`echo $nms`
+# Make sure that each entry is on a single line.
+for nme in $nms
+do
+  echo "$nme" >> lfr_tmp1
+done
+# Remove duplicate entries.
+sort lfr_tmp1 | uniq > lfr_tmp2
+# Determine the new entries.
+# Diff is considered to be too platform dependent, so explicit loop is used.
+for newl in `cat lfr_tmp2`
+do
+  fnd=0;
+  for oldl in `cat $filnm`
   do
-    echo "$nme" >> lfr_tmp1
-  done
-  # Remove duplicate entries.
-  sort lfr_tmp1 | uniq > lfr_tmp2
-  # Determine the new entries.
-  # Use diff and remove lines like 2a3 and remove the leading > .
-  # Diff is considered to be too platform dependent, so explicit loop is used.
-  ##  diff $filnm lfr_tmp2 | egrep -v '^[0-9]+a[0-9]+$' | sed "s/^> //" > ${filnm}_diff
-  for newl in `cat lfr_tmp2`
-  do
-    fnd=0;
-    for oldl in `cat $filnm`
-    do
-      if [ "$newl" = "$oldl" ]; then
-        fnd=1;
-        break;
-      fi
-    done
-    if [ $fnd = 0 ]; then
-      echo "$newl" >> ${filnm}_diff;
+    if [ "$newl" = "$oldl" ]; then
+      fnd=1;
+      break;
     fi
   done
-  # Make it the new file.
-  mv lfr_tmp2 $filnm
-  \rm -f lfr_tmp1
-fi
+  if [ $fnd = 0 ]; then
+    echo "$newl" >> ${filnm}_diff;
+  fi
+done
+# Make it the new file.
+mv lfr_tmp2 $filnm
+\rm -f lfr_tmp1
