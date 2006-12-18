@@ -76,6 +76,7 @@
 AC_DEFUN([lofar_EXTERNAL],dnl
 [dnl
 AC_PREREQ(2.13)dnl
+lfr_pkgnam=$1
 define(LOFAR_EXT_SYM,m4_toupper(patsubst([$1], [.*/])))
 define(LOFAR_EXT_LIB,m4_tolower(patsubst([$1], [.*/])))
 ifelse($2, [], [lfr_option=0], [lfr_option=$2])
@@ -299,6 +300,7 @@ else
 ## Now fo the actual search.
 ## Stop if a file is found.
   lfr_ext_dir=
+  lfr_pkg_rootdir=
   for bdir in $lfr_slist
   do
     for bfil in $lfr_searchfil
@@ -323,6 +325,7 @@ else
       fi
     done
     if test "$lfr_ext_dir" != "no" ; then
+      lfr_pkg_rootdir=$bdir
       break
     fi
   done
@@ -377,10 +380,51 @@ else
     echo ]LOFAR_EXT_SYM[ >> pkgext
     echo "$EXTERNAL_CPPFLAGS" >> pkgextcppflags
     echo "$EXTERNAL_CXXFLAGS" >> pkgextcxxflags
+    echo "$EXTERNAL_LDFLAGS" >> pkgextldflags
 
-    CPPFLAGS="$CPPFLAGS $EXTERNAL_CPPFLAGS"
-    CXXFLAGS="$CXXFLAGS $EXTERNAL_CXXFLAGS"
-    LDFLAGS="$LDFLAGS $EXTERNAL_LDFLAGS"
+    # Get all new external packages used by this package and their flags.
+    lfr_pkgcfgdir=$lfr_pkg_rootdir/config/$lfr_pkgnam
+    $lofar_sharedir/makeext pkgext $lfr_pkgcfgdir
+    $lofar_sharedir/makeext pkgextcppflags $lfr_pkgcfgdir
+    $lofar_sharedir/makeext pkgextldflags $lfr_pkgcfgdir
+
+    # Define which external packages are used by this package.
+    for pkg in `cat pkgext_diff`
+    do
+      echo "" >> lofar_config.h-pkg;
+      echo "#if !defined(HAVE_$pkg)" >> lofar_config.h-pkg
+      echo "# define HAVE_$pkg 1" >> lofar_config.h-pkg;
+      echo "#endif" >> lofar_config.h-pkg;
+    done
+
+    # Do the finalization
+    cp lofar_config.h-pkg lofar_config.h
+    echo "" >> lofar_config.h
+    echo "#endif" >> lofar_config.h
+
+    # If the current lofar_config.h is the same as the old one, move the
+    # old one back and create it again.
+    diff lofar_config.h lofar_config.old-h > /dev/null 2>&1
+    if [ $? = 0 ]; then
+      mv lofar_config.old-h lofar_config.h
+      touch lofar_config.old-h
+    fi
+
+    # Update EXTERNAL_CPPFLAGS and EXTERNAL_LDFLAGS. Do not update
+    # EXTERNAL_CXXFLAGS, since we do not want to propagate C++ compiler flags.
+    # Use tr to translate any newline into a space.
+    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr $'\n' " "`
+    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr $'\n' " "`
+
+    # Finally, update the flags that will be exported. Remove any remaining
+    # duplicate tokens. Note that this will sort the flags.
+    # Do not sort LIBS since the order is usually important.
+    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " $'\n' | \
+              sort | uniq | tr $'\n' " "`
+    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " $'\n' | \
+              sort | uniq | tr $'\n' " "`
+    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " $'\n' | \
+             sort | uniq | tr $'\n' " "`
     LIBS="$LIBS $EXTERNAL_LIBS"
     LOFAR_DEPEND="$LOFAR_DEPEND $lfr_depend"
 
