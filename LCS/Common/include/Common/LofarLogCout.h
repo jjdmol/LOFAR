@@ -32,10 +32,8 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <Common/Exception.h>
-
 #ifdef ENABLE_LATENCY_STATS
-# include <Common/StringUtil.h>
-# include <sys/time.h>
+#include <sys/time.h>
 #endif
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

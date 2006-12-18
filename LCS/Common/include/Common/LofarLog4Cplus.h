@@ -26,17 +26,15 @@
 // \file
 // Interface to the log4cplus logging package.
 
-//# Includes
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
 #include <Common/Exception.h>
+
+//# Includes
 #include <log4cplus/logger.h>
 #include <log4cplus/configurator.h>
 #include <log4cplus/global-init.h>
-
-#ifdef ENABLE_TRACER
-# include <Common/StringUtil.h>
-#endif
 
 namespace LOFAR {
 
