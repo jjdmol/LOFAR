@@ -71,8 +71,7 @@ fi
 # load (default) fixed datapoints for a MainCU  and an observation
 # (Observation_10) in the database
 #
-PVSS00ascii -in ../LOFAR/MAC/Navigator/MainPermDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in ../LOFAR/MAC/Navigator/MainObsDatapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/MainDatapointtypes.dpl -currentproj; echo "(done)"
 PVSS00ascii -in ../LOFAR/MAC/Navigator/MainPermDatapoints.dpl -currentproj; echo "(done)"
 PVSS00ascii -in ../LOFAR/MAC/Navigator/MainObsDatapoints.dpl -currentproj; echo "(done)"
 cd $curPath
