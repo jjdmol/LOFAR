@@ -62,8 +62,7 @@ fi
 # load (default) fixed datapoints for a Station (CS010) and an observation
 # (Observation_10) in the database
 #
-PVSS00ascii -in ../LOFAR/MAC/Navigator/CS010PermDatapointtypes.dpl -currentproj; echo "(done)"
-PVSS00ascii -in ../LOFAR/MAC/Navigator/CS010ObsDatapointtypes.dpl -currentproj; echo "(done)"
+PVSS00ascii -in ../LOFAR/MAC/Navigator/CS010Datapointtypes.dpl -currentproj; echo "(done)"
 PVSS00ascii -in ../LOFAR/MAC/Navigator/CS010PermDatapoints.dpl -currentproj; echo "(done)"
 PVSS00ascii -in ../LOFAR/MAC/Navigator/CS010ObsDatapoints.dpl -currentproj; echo "(done)"
 cd $curPath
