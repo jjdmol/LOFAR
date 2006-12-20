@@ -82,6 +82,7 @@ global int g_path_pictureconverter_index  = 3;
 ///////////////////////////////////////////////////////////////////////////////////
 void convertOriginal2ReferenceDP(string datapointOriginal, string &datapointPathRef)
 {
+  LOG_DEBUG("convertOriginal2ReferenceDP: ", datapointOriginal, datapointPathRef);
   if (mappingHasKey(g_datapoint2itemID, datapointOriginal))
   {
     datapointPathRef = datapointOriginal;
@@ -99,10 +100,10 @@ void convertOriginal2ReferenceDP(string datapointOriginal, string &datapointPath
 ///////////////////////////////////////////////////////////////////////////
 void changeSelectedPosition(string newDatapoint)
 {
+  LOG_DEBUG("changeSelectedPostion> changing selection to :",newDatapoint);
   int i;
   long nodeID;
   dyn_string datapointPath = splitDatapointPath(newDatapoint);
-  LOG_DEBUG("changeSelectedPostion> changing selection to :",newDatapoint);
   string systemName = strrtrim(dpSubStr(newDatapoint, DPSUB_SYS), ":");
 //  if (g_datapoint == systemName)
 //  {
@@ -263,6 +264,7 @@ shape getTabCtrl()
 ///////////////////////////////////////////////////////////////////////////
 long getSelectedNode()
 {
+  LOG_DEBUG("getSelectedNode");
   long selectedNode = 0;
   shape treeCtrl = getTreeCtrl(); 
   if (ActiveXSupported())
@@ -294,6 +296,7 @@ long getSelectedNode()
 ///////////////////////////////////////////////////////////////////////////
 void refreshNavigator()
 {
+  LOG_DEBUG("refreshNavigator");
   if (!g_initializing)
   {
     LOG_TRACE("refreshNavigator  ", g_curSelNode);
@@ -490,6 +493,7 @@ long treeAddNode(long parentId, int level, string text)
 ///////////////////////////////////////////////////////////////////////////
 void treeAddDatapoints(dyn_string names)
 {
+  LOG_DEBUG("treeAddDatapoints: ", LOG_DYN(names));
   int namesIndex;
   dyn_string addedDatapoints;
   string systemName;
@@ -725,6 +729,7 @@ string referenceSign(string reference)
 ///////////////////////////////////////////////////////////////////////////
 insertInternalNodeMapping(dyn_int internalNodeMapping, dyn_string fullDPname)
 {
+  LOG_DEBUG("insertInternalNodeMapping: ", internalNodeMapping, fullDPname);
   int length = mappinglen(g_datapoint2itemID);
   int teller = 0;
   int fullDPNameLength = dynlen(internalNodeMapping);
@@ -765,6 +770,7 @@ insertInternalNodeMapping(dyn_int internalNodeMapping, dyn_string fullDPname)
 ///////////////////////////////////////////////////////////////////////////
 string buildPathFromNode(long Node)
 {
+  LOG_DEBUG("buildPathFromNode: ", Node);
   string datapointPath = "";
   if (Node >= 1 && dynlen(g_itemID2datapoint) >= Node)
   {
@@ -781,6 +787,7 @@ string buildPathFromNode(long Node)
 ///////////////////////////////////////////////////////////////////////////
 long getNodeFromDatapoint(string dpe)
 {
+  LOG_DEBUG("getNodeFromDatapoint: ", dpe);
   long nodeId = 0;
   
   string datapointName = dpSubStr(dpe, DPSUB_SYS_DP_EL); // Origiganel 
@@ -810,6 +817,7 @@ long getNodeFromDatapoint(string dpe)
 ///////////////////////////////////////////////////////////////////////////
 void insertDatapointNodeMapping(int node, string dp)
 {
+  LOG_DEBUG("insertDatapointNodeMapping: ", node, dp);
   for (int i = dynlen(g_itemID2datapoint); i >= node && i >= 1; i--)
   {
     g_itemID2datapoint[i + 1] = g_itemID2datapoint[i];
@@ -834,6 +842,7 @@ void insertDatapointNodeMapping(int node, string dp)
 ///////////////////////////////////////////////////////////////////////////
 void AlertStatusHandler(string dpe, long status)
 {
+  LOG_DEBUG("AlertStatusHandler: ", dpe, status);
   if (!g_initializing)
   {
     LOG_TRACE("AlertStatusHandler()", dpe, status);
@@ -946,7 +955,7 @@ string stripColorTags(string text)
 ///////////////////////////////////////////////////////////////////////////
 void Navigator_HandleEventInitialize()
 {
-  LOG_TRACE("Navigator_HandleEventInitialize()", "");
+  LOG_DEBUG("Navigator_HandleEventInitialize()");
   
   // before the first thing, we check the sanity of the configuration
   string sanityMessage;
@@ -1050,6 +1059,7 @@ void Navigator_HandleEventClose()
 ///////////////////////////////////////////////////////////////////////////
 void Navigator_HandleUpdateTrigger(string dpe, int trigger)
 {
+  LOG_DEBUG("Navigator_HandleUpdateTrigger: ", dpe, trigger);
   string newDatapoint;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, newDatapoint);
   if (newDatapoint != "")
@@ -1201,6 +1211,7 @@ void InitializeTree()
 ///////////////////////////////////////////////////////////////////////////
 void TreeCtrl_HandleEventOnSelChange(long Node)
 {
+  LOG_DEBUG("TreeCtrl_HandleEventOnSelChange: ", Node);
   if (g_curSelNode != Node)
   {
     g_curSelNode = Node;
@@ -1259,6 +1270,7 @@ TreeView_OnCollapse(unsigned pos)
 ///////////////////////////////////////////////////////////////////////////
 void TreeCtrl_HandleEventOnCollapse(unsigned Node)
 {
+  LOG_DEBUG("reeCtrl_HandleEventOnCollapse: ", Node);
   int collapsedNodes = 1;
   dyn_string datapoint;
   int k = 1;
@@ -1317,6 +1329,7 @@ void TreeCtrl_HandleEventOnCollapse(unsigned Node)
 ///////////////////////////////////////////////////////////////////////////
 void checkForReferenceRemoveFromList(string datapointPath)
 {
+  LOG_DEBUG("checkForReferenceRemoveFromList: ", datapointPath);
   dyn_string refOut;
   
   for (int i = dynlen(g_referenceList); i >= 1; i--)
@@ -1338,6 +1351,7 @@ void TreeCtrl_HandleEventOnDrawCell(long Col, long Row, float Left, float Top, f
 {
   if (!g_initializing)
   {
+    LOG_DEBUG("TreeCtrl_HandleEventOnDrawCell: ", Col, Row, Left, Top, Right, Bottom);
     if (ActiveXSupported())
     {
       shape treeCtrl = getTreeCtrl();
@@ -1559,6 +1573,7 @@ TreeView_OnExpand(unsigned pos)
 ///////////////////////////////////////////////////////////////////////////
 dyn_string splitDatapointPath(string newDatapoint)
 {
+  LOG_DEBUG("splitDatapointPath: ", newDatapoint);
   int i;
   dyn_string datapointElement;
   dyn_string datapointPath= strsplit(newDatapoint, "_");
@@ -1593,6 +1608,7 @@ dyn_string splitDatapointPath(string newDatapoint)
 ///////////////////////////////////////////////////////////////////////////////////
 void progressBar(float Maximum, float value)
 {
+  LOG_DEBUG("progressBar: ", Maximum, value);
   float Minimum = 0;
   int waarde;
   float positie;
@@ -1635,6 +1651,7 @@ bool dpIsDistributed(string dpName)
 ///////////////////////////////////////////////////////////////////////////
 bool checkDpPermit(string datapointPath)
 {
+  LOG_DEBUG("checkDpPermit: ",datapointPath);
   dyn_string treeAccess;
   dyn_string treeAccessPermit;
   bool permit = FALSE, dpIsReference;
@@ -1672,6 +1689,7 @@ bool checkDpPermit(string datapointPath)
 
 dyn_string queryDatabaseForDpElements(string datapointPath)
 {
+  LOG_DEBUG("queryDatabaseForDpElements: ", datapointPath);
   dyn_string output;
   int outputCounter = 1;
   dyn_string dpes = dpNames(dpSubStr(datapointPath, DPSUB_SYS_DP) + ".**;");
@@ -1698,6 +1716,7 @@ dyn_string queryDatabaseForDpElements(string datapointPath)
 ///////////////////////////////////////////////////////////////////////////
 dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool useProgressBar)
 {
+  LOG_DEBUG("queryDatabaseForDP: ", attribute, datapointPath, useProgressBar);
   string tempDP;
   dyn_string output;
   dyn_dyn_anytype tab;
@@ -1760,6 +1779,7 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
 ///////////////////////////////////////////////////////////////////////////
 dyn_string queryDatabase(string attribute, string datapointPath, int first, int searchDepth, bool useProgressBar)
 {
+  LOG_DEBUG("queryDatabase: ", attribute, datapointPath, first, searchDepth, useProgressBar);
   dyn_string output;
   dyn_dyn_anytype tab;
   string fullDpName;
@@ -1851,6 +1871,7 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
 ///////////////////////////////////////////////////////////////////////////
 dyn_string getDpTypeStructure(string dp)
 {
+  LOG_DEBUG("getDpTypeStructure: ", dp);
   dyn_string typeStructure = makeDynString();
   if (dpAccessable(dp))
   {
@@ -1901,6 +1922,7 @@ dyn_string getDpTypeStructure(string dp)
 ///////////////////////////////////////////////////////////////////////////
 string getDpTypeFromEnabled(string dp)
 {
+  LOG_DEBUG("getDpTypeFromEnabled: ", dp);
   string retDpType;
   if (dpAccessable(dp))
   {
@@ -1947,6 +1969,7 @@ void navConfigMessageWarning(string message)
 
 void navConfigCheckResourceRoots()
 {
+  LOG_DEBUG("navConfigCheckResourceRoots");
   dyn_string roots;
   dpGet("__navigator.resourceRoots", roots);
   string aSystemName = getSystemName();
