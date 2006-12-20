@@ -1,8 +1,9 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,565 219 950 740 N "_3DFace" 1
+PANEL,280 106 950 740 N "_3DFace" 2
 "$datapoint"
+"$port"
 "main()
 {
   dyn_anytype da, daa;
@@ -103,7 +104,7 @@ LANG:1 29  Average port daterate [Mbps]
 6 201
 "Border1"
 ""
-1 470 150 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 470 142 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 62 0 0 0 0 0
 EE E
@@ -112,7 +113,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 470 60 930 150
+E E 0 1 1 0 1 E U  0 E 470 60 927 142
 30 220
 "Frame2"
 ""
@@ -130,245 +131,197 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-130-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 30 Average daterate port 1 [Mbps]
-1 245 31 "" 0
+1 221 31 "" 0
 0
-1 246 31 "" 1
+1 222 31 "" 1
 0
-1 247 31 "" 2
+1 223 31 "" 2
 0
-1 248 31 "" 4
+1 224 31 "" 3
 0
-1 249 31 "" 5
+1 225 34 "" 0
 0
-1 263 34 "" 0
+1 226 34 "" 1
 0
-1 264 34 "" 1
+1 227 34 "" 2
 0
-1 265 34 "" 2
+1 228 34 "" 3
 0
-1 266 34 "" 4
+1 229 35 "" 0
 0
-1 267 34 "" 5
+1 230 35 "" 1
 0
-1 267 35 "" 0
+1 231 35 "" 2
 0
-1 268 35 "" 1
+1 232 35 "" 3
 0
-1 269 35 "" 2
+1 233 36 "" 0
 0
-1 270 35 "" 4
+1 234 36 "" 1
 0
-1 271 35 "" 5
+1 235 36 "" 2
 0
-1 271 36 "" 0
+1 236 36 "" 3
 0
-1 272 36 "" 1
+1 237 37 "" 0
 0
-1 273 36 "" 2
+1 238 37 "" 1
 0
-1 274 36 "" 4
+1 239 37 "" 2
 0
-1 275 36 "" 5
+1 240 37 "" 3
 0
-1 275 37 "" 0
+1 241 38 "" 0
 0
-1 276 37 "" 1
+1 242 38 "" 1
 0
-1 277 37 "" 2
+1 243 38 "" 2
 0
-1 278 37 "" 4
+1 244 38 "" 3
 0
-1 279 37 "" 5
+1 245 46 "" 0
 0
-1 279 38 "" 0
+1 246 46 "" 1
 0
-1 280 38 "" 1
+1 247 46 "" 2
 0
-1 281 38 "" 2
+1 248 46 "" 3
 0
-1 282 38 "" 4
+1 249 47 "" 0
 0
-1 283 38 "" 5
+1 250 47 "" 1
 0
-1 312 46 "" 0
+1 251 47 "" 2
 0
-1 313 46 "" 1
+1 252 47 "" 3
 0
-1 314 46 "" 2
+1 253 48 "" 0
 0
-1 315 46 "" 4
+1 254 48 "" 1
 0
-1 316 46 "" 5
+1 255 48 "" 2
 0
-1 317 47 "" 0
+1 256 48 "" 3
 0
-1 318 47 "" 1
+1 257 49 "" 0
 0
-1 319 47 "" 2
+1 258 49 "" 1
 0
-1 320 47 "" 4
+1 259 49 "" 2
 0
-1 321 47 "" 5
+1 260 49 "" 3
 0
-1 322 48 "" 0
+1 261 50 "" 0
 0
-1 323 48 "" 1
+1 262 50 "" 1
 0
-1 324 48 "" 2
+1 263 50 "" 2
 0
-1 325 48 "" 4
+1 264 50 "" 3
 0
-1 326 48 "" 5
+1 265 51 "" 0
 0
-1 327 49 "" 0
+1 266 51 "" 1
 0
-1 328 49 "" 1
+1 267 51 "" 2
 0
-1 329 49 "" 2
+1 268 51 "" 3
 0
-1 330 49 "" 4
+1 269 52 "" 0
 0
-1 331 49 "" 5
+1 270 52 "" 1
 0
-1 332 50 "" 0
+1 271 52 "" 2
 0
-1 333 50 "" 1
+1 272 52 "" 3
 0
-1 334 50 "" 2
+1 273 53 "" 0
 0
-1 335 50 "" 4
+1 274 53 "" 1
 0
-1 336 50 "" 5
+1 275 53 "" 2
 0
-1 337 51 "" 0
+1 276 53 "" 3
 0
-1 338 51 "" 1
+1 277 54 "" 0
 0
-1 339 51 "" 2
+1 278 54 "" 1
 0
-1 340 51 "" 4
+1 279 54 "" 2
 0
-1 341 51 "" 5
+1 280 54 "" 3
 0
-1 342 52 "" 0
+1 281 55 "" 0
 0
-1 343 52 "" 1
+1 282 55 "" 1
 0
-1 344 52 "" 2
+1 283 55 "" 2
 0
-1 345 52 "" 4
+1 284 55 "" 3
 0
-1 346 52 "" 5
+1 285 56 "" 0
 0
-1 347 53 "" 0
+1 286 56 "" 1
 0
-1 348 53 "" 1
+1 287 56 "" 2
 0
-1 349 53 "" 2
+1 288 56 "" 3
 0
-1 350 53 "" 4
+1 289 57 "" 0
 0
-1 351 53 "" 5
+1 290 57 "" 1
 0
-1 352 54 "" 0
+1 291 57 "" 2
 0
-1 353 54 "" 1
+1 292 57 "" 3
 0
-1 354 54 "" 2
+1 293 58 "" 0
 0
-1 355 54 "" 4
+1 294 58 "" 1
 0
-1 356 54 "" 5
+1 295 58 "" 2
 0
-1 357 55 "" 0
+1 296 58 "" 3
 0
-1 358 55 "" 1
+1 297 59 "" 0
 0
-1 359 55 "" 2
+1 298 59 "" 1
 0
-1 360 55 "" 4
+1 299 59 "" 2
 0
-1 361 55 "" 5
+1 300 59 "" 3
 0
-1 362 56 "" 0
+1 301 60 "" 0
 0
-1 363 56 "" 1
+1 302 60 "" 1
 0
-1 364 56 "" 2
+1 303 60 "" 2
 0
-1 365 56 "" 4
+1 304 60 "" 3
 0
-1 366 56 "" 5
+1 305 61 "" 0
 0
-1 367 57 "" 0
+1 306 61 "" 1
 0
-1 368 57 "" 1
+1 307 61 "" 2
 0
-1 369 57 "" 2
+1 308 61 "" 3
 0
-1 370 57 "" 4
+1 309 62 "" 0
 0
-1 371 57 "" 5
+1 310 62 "" 1
 0
-1 372 58 "" 0
+1 311 62 "" 2
 0
-1 373 58 "" 1
+1 312 62 "" 3
 0
-1 374 58 "" 2
+1 313 63 "" 0
 0
-1 375 58 "" 4
+1 314 63 "" 1
 0
-1 376 58 "" 5
+1 315 63 "" 2
 0
-1 377 59 "" 0
-0
-1 378 59 "" 1
-0
-1 379 59 "" 2
-0
-1 380 59 "" 4
-0
-1 381 59 "" 5
-0
-1 382 60 "" 0
-0
-1 383 60 "" 1
-0
-1 384 60 "" 2
-0
-1 385 60 "" 4
-0
-1 386 60 "" 5
-0
-1 387 61 "" 0
-0
-1 388 61 "" 1
-0
-1 389 61 "" 2
-0
-1 390 61 "" 4
-0
-1 391 61 "" 5
-0
-1 392 62 "" 0
-0
-1 393 62 "" 1
-0
-1 394 62 "" 2
-0
-1 395 62 "" 4
-0
-1 396 62 "" 5
-0
-1 397 63 "" 0
-0
-1 398 63 "" 1
-0
-1 399 63 "" 2
-0
-1 400 63 "" 4
-0
-1 401 63 "" 5
+1 316 63 "" 3
 0
 6 402
 "Border22"
@@ -867,123 +820,123 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 31 ""
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 85 78 T 98 1 0 1  395 2  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 85 78 T 98 1 0 1  500 57  
 2
-"$PortNr""01"
 "$datapoint""$datapoint"
+"$port""$port"
 3 34 "Group31"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 270 80 T 101 1 0 1  245 0  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 270 80 T 101 1 0 1  350 55  
 2
-"$PortNr""02"
 "$datapoint""$datapoint"
+"$port""$port"
 3 35 "Group33"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 310 80 T 102 1 0 1  240 0  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 310 80 T 102 1 0 1  345 55  
 2
-"$PortNr""03"
 "$datapoint""$datapoint"
+"$port""$port"
 3 36 "Group35"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 350 80 T 103 1 0 1  235 0  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 350 80 T 103 1 0 1  340 55  
 2
-"$PortNr""04"
 "$datapoint""$datapoint"
+"$port""$port"
 3 37 "Group37"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 390 80 T 104 1 0 1  230 0  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 390 80 T 104 1 0 1  335 55  
 2
-"$PortNr""05"
 "$datapoint""$datapoint"
+"$port""$port"
 3 38 "Group39"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 430 80 T 105 1 0 1  225 0  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 430 80 T 105 1 0 1  330 55  
 2
-"$PortNr""06"
 "$datapoint""$datapoint"
+"$port""$port"
 3 46 "Group21"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 270 80 T 112 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 270 80 T 112 1 0 1  315 95  
 2
-"$PortNr""13"
 "$datapoint""$datapoint"
+"$port""$port"
 3 47 "Group22"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 305 80 T 113 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 305 80 T 113 1 0 1  315 95  
 2
-"$PortNr""14"
 "$datapoint""$datapoint"
+"$port""$port"
 3 48 "Group23"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 340 80 T 114 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 340 80 T 114 1 0 1  315 95  
 2
-"$PortNr""15"
 "$datapoint""$datapoint"
+"$port""$port"
 3 49 "Group24"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 375 80 T 115 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 375 80 T 115 1 0 1  315 95  
 2
-"$PortNr""16"
 "$datapoint""$datapoint"
+"$port""$port"
 3 50 "Group25"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 410 80 T 116 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 410 80 T 116 1 0 1  315 95  
 2
-"$PortNr""17"
 "$datapoint""$datapoint"
+"$port""$port"
 3 51 "Group26"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 445 80 T 117 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 445 80 T 117 1 0 1  315 95  
 2
-"$PortNr""18"
 "$datapoint""$datapoint"
+"$port""$port"
 3 52 "Group33"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 270 120 T 118 1 0 1  440 -40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 270 120 T 118 1 0 1  545 15  
 2
-"$PortNr""07"
 "$datapoint""$datapoint"
+"$port""$port"
 3 53 "Group34"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 305 120 T 119 1 0 1  440 -40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 305 120 T 119 1 0 1  545 15  
 2
-"$PortNr""08"
 "$datapoint""$datapoint"
+"$port""$port"
 3 54 "Group35"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 340 120 T 120 1 0 1  440 -40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 340 120 T 120 1 0 1  545 15  
 2
-"$PortNr""09"
 "$datapoint""$datapoint"
+"$port""$port"
 3 55 "Group36"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 375 120 T 121 1 0 1  440 -40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 375 120 T 121 1 0 1  545 15  
 2
-"$PortNr""10"
 "$datapoint""$datapoint"
+"$port""$port"
 3 56 "Group37"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 410 120 T 122 1 0 1  440 -40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 410 120 T 122 1 0 1  545 15  
 2
-"$PortNr""11"
 "$datapoint""$datapoint"
+"$port""$port"
 3 57 "Group38"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 445 120 T 123 1 0 1  440 -40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 445 120 T 123 1 0 1  545 15  
 2
-"$PortNr""12"
 "$datapoint""$datapoint"
+"$port""$port"
 3 58 "Group45"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 500 80 T 124 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 500 80 T 124 1 0 1  315 95  
 2
-"$PortNr""19"
 "$datapoint""$datapoint"
+"$port""$port"
 3 59 "Group46"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 535 80 T 125 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 535 80 T 125 1 0 1  315 95  
 2
-"$PortNr""20"
 "$datapoint""$datapoint"
+"$port""$port"
 3 60 "Group47"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 570 80 T 126 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 570 80 T 126 1 0 1  315 95  
 2
-"$PortNr""21"
 "$datapoint""$datapoint"
+"$port""$port"
 3 61 "Group48"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 605 80 T 127 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 605 80 T 127 1 0 1  315 95  
 2
-"$PortNr""22"
 "$datapoint""$datapoint"
+"$port""$port"
 3 62 "Group49"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 640 80 T 128 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 640 80 T 128 1 0 1  315 95  
 2
-"$PortNr""23"
 "$datapoint""$datapoint"
+"$port""$port"
 3 63 "Group50"
-"objects\\nav_usr\\WAN\\Port_ref.pnl" 675 80 T 129 1 0 1  210 40  
+"objects\\nav_usr\\WAN\\Port_ref.pnl" 675 80 T 129 1 0 1  315 95  
 2
-"$PortNr""24"
 "$datapoint""$datapoint"
+"$port""$port"
 0

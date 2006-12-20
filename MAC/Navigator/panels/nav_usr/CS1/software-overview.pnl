@@ -1,23 +1,54 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,295 123 1026 741 N "_3DFace" 0
+PANEL,265 108 1026 741 N "_3DFace" 0
 "main()
 {
-	dpConnect(\"updateObservationsTable\",\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\");
-	
-	string query = \"SELECT '_online.._value' FROM 'LOFAR_ObsSW_*.state' WHERE _DPT = \\\"BeamCtrl\\\"\"; // OR _DPT = \\\"CentralStationCtrl\\\"\";
-	dpQueryConnectAll(
-		\"updateControllersTable\",
-		true, 
-		\"ControllerStateQuery\",
-		query);
+  observationsDP = \"LOFAR_PermSW_MACScheduler\";	
+  OTDBDP = observationsDP+\".OTDB\";
+  if (dpAccessable(observationsDP + \".activeObservations\")) {
+	  dpConnect(\"updateObservationsTable\",observationsDP+\".activeObservations:_online.._value\",
+	                                      observationsDP+\".state:_online.._value\",
+	                                      observationsDP+\".error:_online.._value\",
+	                                      observationsDP+\".state:_online.._invalid\");
+  } else {
+    setValue(\"Scheduler_Frame\", \"foreCol\", \"_dpdoesnotexist\");
+  }
+  
+  if (dpAccessable(OTDBDP + \".connected\")) {
+	  dpConnect(\"updateOTDB\",OTDBDP+\".connected:_online.._value\",
+	                         OTDBDP+\".lastPoll:_online.._value\",
+	                         OTDBDP+\".pollinterval:_online.._value\",
+	                         OTDBDP+\".connected:_online.._invalid\");
+  } else {
+    setValue(\"OTDB_Frame\", \"foreCol\", \"_dpdoesnotexist\");
+  }
+  
+  
+  
+  
 }
 " 0
 EE E E 1 0 0 0  10 10
 "" 0 1
-E"updateObservationsTable(string dpe, dyn_string dpv)
+E"string observationsDP=\"\";
+string OTDBDP=\"\";
+string connected=\"\";
+updateObservationsTable(string dpe, dyn_string dpv,
+                        string dp1, string state,
+							          string dp2, string error,
+							          string dp3, bool invalid)
 {
+
+	string SymbolCol;
+	if (invalid) 
+	{
+		SymbolCol=\"Lofar_device_invalid\";
+  } else {
+		SymbolCol=\"Lofar_device_active\";	  
+  }
+	setValue(\"Scheduler_Frame\", \"foreCol\", SymbolCol);
+
   for(int i=0; i < TableObservations.lineCount; i++)
   {
     navPMLunloadPropertySet(\"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") + \"_ObsCtrl\");
@@ -35,78 +66,78 @@ E"updateObservationsTable(string dpe, dyn_string dpv)
       delay(0,250);
     }
 
-    dpConnect(\"updateObservationsTableState\",dpPrefix + \".state:_online.._value\");
-    dpConnect(\"updateObservationsTableController\",dpPrefix + \".claimPeriod:_online.._value\",
-						  dpPrefix + \".preparePeriod:_online.._value\",
-						  dpPrefix + \".startTime:_online.._value\",
-						  dpPrefix + \".stopTime:_online.._value\");
+    dpConnect(\"updateObservationsTableValues\",dpPrefix + \".state:_online.._value\",
+                                              dpPrefix + \".claimPeriod:_online.._value\",
+                                              dpPrefix + \".preparePeriod:_online.._value\",
+                                              dpPrefix + \".startTime:_online.._value\",
+                                              dpPrefix + \".stopTime:_online.._value\");
   }
 }
 
-updateObservationsTableState(string dpe, string dpv)
+updateOTDB(string dp1, bool connected ,
+           string dp2, string lastPoll,
+					 string dp3, int pollinterval,
+					 string dp4, bool invalid)
 {
-  string dp = dpSubStr(dpe,DPSUB_DP);
-  for(int i=0; i < TableObservations.lineCount; i++)
-  {
-    if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\"))
-    {
-      TableObservations.cellValueRC(i,\"Status\",dpv);
-    }
-  }
-}
 
-updateObservationsTableController(string dpe1, string claimPeriod, 
-    				  string dpe2, string preparePeriod, 
-				  string dpe3, string startTime, 
-				  string dpe4, string stopTime)
+	string SymbolCol;
+	if (invalid) 
+	{
+		SymbolCol=\"Lofar_device_invalid\";
+  } else {
+		SymbolCol=\"Lofar_device_active\";	  
+  }
+	setValue(\"OTDB_Frame\", \"foreCol\", SymbolCol);
+	
+	setValue(\"txt_OTDBconnected\", \"text\", dpValToString(dp1, connected, TRUE) );
+	setValue(\"txt_OTDBlastPoll\", \"text\", lastPoll);
+	setValue(\"txt_OTDBpollinterval\", \"text\", dpValToString(dp3, pollinterval, TRUE) );
+
+}
+updateObservationsTableValues(string dp1, string state,
+                              string dp2, int claimPeriod,
+                              string dp3, int preparePeriod,
+                              string dp4, string startTime,
+                              string dp5, string stopTime)                              
 {
-  string dp = dpSubStr(dpe1,DPSUB_DP);
+  string dp = dpSubStr(dp1,DPSUB_DP);
+  //DebugTN(\"DP: \" + dp);
+  
   for(int i=0; i < TableObservations.lineCount; i++)
   {
-    if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") + \"_ObsCtrl\")
+    //DebugTN(\"check for: \" + \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") );
+    if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\")+\"_ObsCtrl\")
     {
-      TableObservations.cellValueRC(i,\"ClaimPeriod\",claimPeriod);
-      TableObservations.cellValueRC(i,\"PreparePeriod\",preparePeriod);
+      //DebugTN(\"Bingo, set values\");
+      TableObservations.cellValueRC(i,\"Status\",state);
+      TableObservations.cellValueRC(i,\"ClaimPeriod\",dpValToString(dp2,claimPeriod,TRUE));
+      TableObservations.cellValueRC(i,\"PreparePeriod\",dpValToString(dp3,preparePeriod,TRUE) );
       TableObservations.cellValueRC(i,\"StartTime\",startTime);
       TableObservations.cellValueRC(i,\"StopTime\",stopTime);
     }
   }
 }
-updateControllersTable(string identifier, dyn_dyn_anytype result)
-{
-	if(identifier == \"ControllerStateQuery\")
-	{
-		TableControllers.deleteAllLines();
-	  for(int i=2; i<=dynlen(result);i++)
-	  {
-	  	string tempName = dpSubStr(result[i][1],DPSUB_DP);
-	  	string ctrlName = substr(tempName,strlen(\"LOFAR_ObsSW_\"));
-			TableControllers.appendLine(\"Controller\",ctrlName);
-			TableControllers.updateLine(1,\"Controller\",ctrlName,\"Status\",result[i][2]);
-		}
-	}
-}
 
 showLogging()
 {
 	string dpLog;
-	if(radio_logging.number == 1)
-		dpLog = \"LOFAR_PermSW_CQN.logmsg\";
-	else if(radio_logging.number == 2)
-		dpLog = \"LOFAR_PermSW_SHM.logmsg\";
-	else
-		dpLog = \"LOFAR_PermSW_MACScheduler.logmsg\";
-	
+  if(radio_logging.number == 1) {
+	  dpLog = \"LOFAR_PermSW_CQN.logmsg\";
+	} else if(radio_logging.number == 2) {
+	  dpLog = \"LOFAR_PermSW_SHM.logmsg\";
+	} else {
+	  dpLog = \"LOFAR_PermSW_MACScheduler.logmsg\";
+	}	
 	// disconnect from logging
-	if(dpExists(\"LOFAR_PermSW_CQN\"))
+	if(dpExists(\"LOFAR_PermSW_CQN\") && connected == \"CQN\")
 	{
 		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_CQN.logmsg\");
 	}
-	if(dpExists(\"LOFAR_PermSW_SHM\"))
+	if(dpExists(\"LOFAR_PermSW_SHM\") && connected == \"SHM\")
 	{
 		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_SHM.logmsg\");
 	}
-	if(dpExists(\"LOFAR_PermSW_MACScheduler\"))
+	if(dpExists(\"LOFAR_PermSW_MACScheduler\") && connected == \"MAC\")
 	{
 		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_MACScheduler.logmsg\");
 	}
@@ -125,6 +156,7 @@ showLogging()
 		string query = \"SELECT ALL '_original.._value' FROM '\" + dpLog + \"' TIMERANGE(\\\"\" +
 			formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
 			formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
+		//DebugTN(\"Query: \",query);
 		dpQuery(query, tab);
 	 
 		for(z=2;z<dynlen(tab);z++)
@@ -133,21 +165,32 @@ showLogging()
 		}
 	
 		// connect to logging
+  	if(radio_logging.number == 1) {
+		  connected = \"CQN\";
+	  } else if(radio_logging.number == 2) {
+		  connected = \"SHM\";
+	  } else {
+		  connected = \"MAC\";
+		}
+		//DebugTN(\"Connected to: \", connected);
 		dpConnect(\"updateLogging\",dpLog);
 	}
 }
 	
 updateLogging(string dpe, string dpv)
 {
+  //DebugTN(\"Logmsg: \", dpv);
 	addLogMessage(dpv);
 }
 
 addLogMessage(string msg)
 {
 	dyn_string msgParts = strsplit(msg,\"|\");
-	
-	table_logging.appendLine(\"time\",msgParts[1],\"level\",msgParts[2],\"source\",msgParts[3],\"message\",msgParts[4]);
-	table_logging.lineVisible(-1);
+
+  if ( dynlen(msgParts) > 0 ) {
+ 	  table_logging.appendLine(\"time\",msgParts[1],\"level\",msgParts[2],\"source\",msgParts[3],\"message\",msgParts[4]);
+	  table_logging.lineVisible(-1);
+	}
 }
 
 " 0
@@ -187,26 +230,6 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-240-100-100-*-*-iso8859-1|
 0 ""
 1
 LANG:1 17 Software overview
-2 3
-"Text3"
-""
-1 10 250 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-4 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 252 122 270
-0 2 0 "s" 0 0 0 192 0 0  12 252
- 1
-1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 13 MAC Scheduler
 2 4
 "Text4"
 ""
@@ -247,26 +270,6 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|
 0 ""
 1
 LANG:1 3 SHM
-2 10
-"Text6"
-""
-1 10 570 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-11 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 572 92 590
-0 2 0 "s" 0 0 0 192 0 0  12 572
- 1
-1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 11 Controllers
 2 11
 "Text7"
 ""
@@ -301,9 +304,9 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 3 2 0 1 E  940 50 10 50
 30 15
-"Frame1"
+"OTDB_Frame"
 ""
-1 10 450 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+1 10 464 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
  E E
 16 0 0 0 0 0
 EE E
@@ -311,7 +314,7 @@ EE E
 1
 LANG:1 0 
 0
-E E 0 1 1 0 1 E U  0 E 10 340 310 450
+E E 0 1 1 0 1 E U  0 E 10 354 310 464
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
@@ -320,7 +323,7 @@ LANG:1 4 OTDB
 2 16
 "Text9"
 ""
-1 20 361 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 20 375 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 17 0 0 0 0 0
 EE E
@@ -329,8 +332,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 363 88 379
-0 2 0 "s" 0 0 0 192 0 0  22 363
+E E 0 1 1 0 1 E U  0 E 22 377 88 393
+0 2 0 "s" 0 0 0 192 0 0  22 377
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -340,7 +343,7 @@ LANG:1 10 Connected:
 2 17
 "Text10"
 ""
-1 25 691 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 25 705 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 18 0 0 0 0 0
 EE E
@@ -349,8 +352,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 393 92 409
-0 2 0 "s" 0 0 0 192 0 0  22 393
+E E 0 1 1 0 1 E U  0 E 22 407 92 423
+0 2 0 "s" 0 0 0 192 0 0  22 407
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -360,7 +363,7 @@ LANG:1 14 Poll interval:
 2 18
 "Text11"
 ""
-1 44 1041 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 44 1055 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 19 0 0 0 0 0
 EE E
@@ -369,8 +372,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 423 75 439
-0 2 0 "s" 0 0 0 192 0 0  22 423
+E E 0 1 1 0 1 E U  0 E 22 437 75 453
+0 2 0 "s" 0 0 0 192 0 0  22 437
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -380,7 +383,7 @@ LANG:1 10 Last poll:
 2 22
 "Text12"
 ""
-1 20 282 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 20 296 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 23 0 0 0 0 0
 EE E
@@ -389,8 +392,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 284 57 300
-0 2 0 "s" 0 0 0 192 0 0  22 284
+E E 0 1 1 0 1 E U  0 E 22 298 57 314
+0 2 0 "s" 0 0 0 192 0 0  22 298
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -400,7 +403,7 @@ LANG:1 6 State:
 2 23
 "Text13"
 ""
-1 21 612 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 21 626 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -409,8 +412,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 314 54 330
-0 2 0 "s" 0 0 0 192 0 0  22 314
+E E 0 1 1 0 1 E U  0 E 22 328 54 344
+0 2 0 "s" 0 0 0 192 0 0  22 328
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -420,7 +423,7 @@ LANG:1 6 Error:
 2 28
 "Text2"
 ""
-1 20 460 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 494 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 28 0 0 0 0 0
 EE E
@@ -429,14 +432,31 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 462 103 478
-0 2 0 "s" 0 0 0 192 0 0  22 462
+E E 0 1 1 0 1 E U  0 E 12 496 93 512
+0 2 0 "s" 0 0 0 192 0 0  12 496
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 13 Show logging:
+30 30
+"Scheduler_Frame"
+""
+1 10 354 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+29 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 10 274 310 354
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 13 MAC Scheduler
 25 2
 "TableObservations"
 ""
@@ -454,12 +474,12 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 8 98 942 235
 E "main(int row, string column, string value)
 {
-  DebugTN(\"ColumnCommand\",row,column,value);
-	string dp = \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(row,\"Observation\");
+//  DebugTN(\"ColumnCommand\",row,column,value);
+	string dp = \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(row,\"Observation\")+\"_ObsCtrl\";
 	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0
- 1 0 1 6 4 "Observation" 0 1 0 "s" 1
+ 1 0 1 6 1 "Observation" 0 1 0 "s" 1
 LANG:1 11 Observation
 E1
 LANG:1 0 
@@ -483,14 +503,8 @@ LANG:1 0
 LANG:1 6 Status
 E1
 LANG:1 0 
- 180 26 26 "" 1 1
+ 187 16 16 "" 1 1
 LANG:1 2 #1
-"" 1 1
-LANG:1 2 #2
-"" 1 1
-LANG:1 2 #3
-"" 1 1
-LANG:1 2 #4
 8 30 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -510,7 +524,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-323 278 622 452
+323 278 622 462
 0
 E
 E
@@ -531,68 +545,17 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-638 278 942 452
+638 278 942 462
 0
 E
 E
 E
 
 3 1
-25 9
-"TableControllers"
-""
-1 0 300 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-10 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
-0 ""
-8 598 942 735
-E "main(int row, string column, string value)
-{
-  DebugTN(\"ColumnCommand\",row,column,value);
-	string dp = \"CCU1:LOFAR_ObsSW_\" + TableControllers.cellValueRC(row,\"Controller\");
-	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
-	navConfigTriggerNavigatorRefreshWithDP(dp);
-}" 0
- 1 0 1 4 4 "Controller" 0 1 0 "s" 1
-LANG:1 10 Controller
-E1
-LANG:1 0 
- 225 "Start" 0 1 0 "s" 1
-LANG:1 5 Start
-E1
-LANG:1 0 
- 225 "End" 0 1 0 "s" 1
-LANG:1 3 End
-E1
-LANG:1 0 
- 225 "Status" 0 1 0 "s" 1
-LANG:1 6 Status
-E1
-LANG:1 0 
- 225 26 26 "" 1 1
-LANG:1 2 #1
-"" 1 1
-LANG:1 2 #2
-"" 1 1
-LANG:1 2 #3
-"" 1 1
-LANG:1 2 #4
-8 30 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
-0 ""
-0 2 1 3 0
-1 0
 14 19
 "txt_OTDBconnected"
 ""
-1 100 360 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 100 374 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 20 0 0 0 0 0
 EE E
@@ -603,52 +566,15 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-98 358 302 385
+98 372 302 399
 2 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_textFieldIn();
-}
-
-EP_textFieldIn()
-{
-dyn_errClass err;
-
-  if( !dpExists( \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.connected:_online.._value\"))
-  {
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-    return;
-  }
-
-  dpConnect(\"EP_textFieldInCB\",
-            \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.connected:_online.._value\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-
-}
-
-EP_textFieldInCB(string dp, bool boNewValue)
-{
-  setValue(\"\", \"text\", dpValToString(dp, boNewValue, TRUE) );
-}
-
-// SimpleCtrlScript {EP_textFieldIn}
-// DP {CCU1:LOFAR_PermSW_MACScheduler.OTDB.connected}
-// DPConfig {:_online.._value}
-// DPType {bool}
-// UseDPUnit {TRUE}
-// UseDPFormat {TRUE}
-// SimpleCtrlScriptEnd {EP_textFieldIn}
-" 0
-
+E
 E
 14 20
-"txt_OTDBpollInterval"
+"txt_OTDBpollinterval"
 ""
-1 300 690 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 300 704 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -659,52 +585,15 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-98 388 302 415
+98 402 302 429
 2 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_textFieldIn();
-}
-
-EP_textFieldIn()
-{
-dyn_errClass err;
-
-  if( !dpExists( \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.pollinterval:_online.._value\"))
-  {
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-    return;
-  }
-
-  dpConnect(\"EP_textFieldInCB\",
-            \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.pollinterval:_online.._value\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-
-}
-
-EP_textFieldInCB(string dp, int iNewValue)
-{
-  setValue(\"\", \"text\", dpValToString(dp, iNewValue, TRUE) );
-}
-
-// SimpleCtrlScript {EP_textFieldIn}
-// DP {CCU1:LOFAR_PermSW_MACScheduler.OTDB.pollinterval}
-// DPConfig {:_online.._value}
-// DPType {int}
-// UseDPUnit {TRUE}
-// UseDPFormat {TRUE}
-// SimpleCtrlScriptEnd {EP_textFieldIn}
-" 0
-
+E
 E
 14 21
 "txt_OTDBlastPoll"
 ""
-1 500 1050 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 500 1064 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 22 0 0 0 0 0
 EE E
@@ -715,52 +604,15 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-98 418 302 445
+98 432 302 459
 2 "s" 0 0 0 0 0 0 
 E
-"// SimpleCtrlScriptStart {invalid}
-main()
-{
-  EP_textFieldIn();
-}
-
-EP_textFieldIn()
-{
-dyn_errClass err;
-
-  if( !dpExists( \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.lastPoll:_online.._value\"))
-  {
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-    return;
-  }
-
-  dpConnect(\"EP_textFieldInCB\",
-            \"MCU001:LOFAR_PermSW_MACScheduler.OTDB.lastPoll:_online.._value\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
-
-}
-
-EP_textFieldInCB(string dp, string sNewValue)
-{
-  setValue(\"\", \"text\", dpValToString(dp, sNewValue, TRUE) );
-}
-
-// SimpleCtrlScript {EP_textFieldIn}
-// DP {CCU1:LOFAR_PermSW_MACScheduler.OTDB.lastPoll}
-// DPConfig {:_online.._value}
-// DPType {string}
-// UseDPUnit {TRUE}
-// UseDPFormat {TRUE}
-// SimpleCtrlScriptEnd {EP_textFieldIn}
-" 0
-
+E
 E
 14 24
 "txt_state"
 ""
-1 100 280 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 100 294 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 25 0 0 0 0 0
 EE E
@@ -771,7 +623,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-98 278 302 305
+98 292 302 319
 2 "s" 0 0 0 0 0 0 
 E
 "// SimpleCtrlScriptStart {invalid}
@@ -816,7 +668,7 @@ E
 14 25
 "txt_error"
 ""
-1 300 610 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 300 624 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 26 0 0 0 0 0
 EE E
@@ -827,7 +679,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-98 308 302 335
+98 322 302 349
 2 "s" 0 0 0 0 0 0 
 E
 "// SimpleCtrlScriptStart {invalid}
@@ -872,7 +724,7 @@ E
 19 26
 "radio_logging"
 ""
-1 30 483 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 102 480 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 26 0 0 0 0 0
 EE E
@@ -883,12 +735,12 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-28 481 146 535
+100 478 234 532
 3
 T 
 1
 LANG:1 13 MAC Scheduler
- 0
+ 1
 1
 LANG:1 0 
  E  E  0 0 0 0 0
@@ -907,7 +759,11 @@ LANG:1 3 SHM
 LANG:1 0 
  E  E  0 0 0 0 0
  1
-E
+"main()
+{
+  showLogging();
+}" 0
+
 "main(int button)
 {
 	showLogging();
@@ -916,7 +772,7 @@ E
 25 29
 "table_logging"
 ""
-1 150 460 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 10 540 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 29 0 0 0 0 0
 EE E
@@ -927,8 +783,8 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-148 458 942 582
-E E 0 0 1 4 1 "time" 0 1 0 "s" 1
+8 538 942 662
+E E 1 0 1 4 1 "time" 0 1 0 "s" 1
 LANG:1 4 time
 E1
 LANG:1 0 
@@ -944,12 +800,12 @@ LANG:1 0
 LANG:1 7 message
 E1
 LANG:1 0 
- 1000 26 26 "" 1 1
+ 1000 16 16 "" 1 1
 LANG:1 2 #1
 8 30 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 1 1 3 0
+0 2 1 3 0
 1 0
 0
 LAYER, 1 
