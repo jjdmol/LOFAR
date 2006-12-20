@@ -1,25 +1,28 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,474 319 950 741 N "_3DFace" 1
+PANEL,273 233 950 741 N "_3DFace" 1
 "$referenceDatapoint"
 "main()
 {
 	// select all states from Observations online (ObsCtrl) && offline(OfflineCtrl)
-	string onlineQuery  = \"SELECT '_online.._value' FROM '{LOFAR_ObsSW_Observation*_ObsCtrl.state,LOFAR_ObsSW_Observation*_ObsCtrl.error}'\";
+	
 	string offlineQuery = \"SELECT '_online.._value' FROM '{LOFAR_ObsSW_Observation*_OfflineCtrl.state,LOFAR_ObsSW_Observation*_OfflineCtrl.error}'\";
 	
-	
-	dpQueryConnectAll(\"updateObservationTable\",true,observationID,onlineQuery);
+	// connect to MACScheduler.activeObservations, this contains a list with all active observations.
+	// The same will be done for online and offline observation later. For now we will get the offline 
+	// observations by scanning the ones avaliable in the tree.
+	dpConnect(\"updateObservationsTable\",\"LOFAR_PermSW_MACScheduler.activeObservations:_online.._value\");
 	dpQueryConnectAll(\"updateOfflineTable\",true,offlineID,offlineQuery);
 }
 
 " 0
 "main()
 {
-//	dpQueryDisconnect(\"updateObservationTable\",observationID);
-//	dpQueryDisconnect(\"updateOfflineTable\",offlineID);
-	
+  for(int i=0; i < Observation_table.lineCount; i++)
+  {
+    navPMLunloadPropertySet(\"LOFAR_ObsSW_\" + Observation_table.cellValueRC(i,\"Observation\") + \"_ObsCtrl\");
+  }
 }" 0
 E E E 1 0 0 0  10 10
 "" 0 1
@@ -42,36 +45,49 @@ string getResultType(string aString) {
 }
 
 string getResultValue(string aString) {
-	DebugTN(\"Getting value from \" + aString);
-	return strsplit(aString,\"|\")[2];
+		return strsplit(aString,\"|\")[2];
 }
 
-updateObservationTable(string ident, dyn_dyn_anytype tab)
+updateObservationsTable(string dpe, dyn_string dpv)
 {
-	//empty table
-	Observation_table.deleteAllLines();
+  for(int i=0; i < Observation_table.lineCount; i++)
+  {
+    navPMLunloadPropertySet(\"LOFAR_ObsSW_\" + Observation_table.cellValueRC(i,\"Observation\") + \"_ObsCtrl\");
+  }
+  Observation_table.deleteAllLines();
+  for(int i=1; i<=dynlen(dpv);i++)
+  {
+    Observation_table.appendLine(\"Observation\",dpv[i]);
+    string dpPrefix = \"LOFAR_ObsSW_\" + dpv[i] + \"_ObsCtrl\";
+	
+    navPMLloadPropertySet(dpPrefix);
+		
+    for(int i=0; i<10 && !dpAccessable(dpPrefix);i++)
+    {
+      delay(0,250);
+    }
 
-  if (dynlen(tab) > 1) {
-	 	for (int z = 2; z <= dynlen(tab); z++)
-		{
-			string obsName = getObsName(tab[z]);
-		  string state=\"\";
-  		string error=\"\";
-			// Determine if state or error callback
-			// update the table , if obsname is available it will be updated, 
-			//otherwise a new line will be appended
-			if (getResultType(tab[z]) == \"state\" ) { 	
-				state = getResultValue(tab[z]); 
-				Observation_table.updateLine(1,\"Observation\",obsName,\"Status\",state);
-			} else if (getResultType(tab[z]) == \"error\") {
-				error = getResultValue(tab[z]);
-				Observation_table.updateLine(1,\"Observation\",obsName,\"Error\",error);
-			} else {
-				DebugTN(\"Error in getType: \" + getResultType(tab[z]));
-			}
-		}	
-	}
+    dpConnect(\"updateObservationsTableValues\",dpPrefix + \".state:_online.._value\",
+                                              dpPrefix + \".error:_online.._value\");
+  }
 }
+
+updateObservationsTableValues(string dp1, string state,
+                              string dp2, string error)                              
+{
+  string dp = dpSubStr(dp1,DPSUB_DP);
+  
+  for(int i=0; i < Observation_table.lineCount; i++)
+  {
+    if(dp == \"LOFAR_ObsSW_\" + Observation_table.cellValueRC(i,\"Observation\")+\"_ObsCtrl\")
+    {
+      Observation_table.cellValueRC(i,\"Status\",state);
+      Observation_table.cellValueRC(i,\"Error\",error);
+    }
+  }
+}
+
+
 updateOfflineTable(string ident, dyn_dyn_anytype tab)
 {
 	//empty table

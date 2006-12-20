@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,335 253 203 231 N "_3DFace" 2
+PANEL,480 261 203 231 N "_3DFace" 2
 "$Station"
 "$referenceDatapoint"
 "main()
@@ -43,7 +43,7 @@ E"string baseDP=\"\";
 
 click()
 {
-  aplViewNavigateTo(\"\", $referenceDatapoint, $Station + \":LOFAR_PIC\", \"Station-CS1.pnl\");
+  aplViewNavigateTo(\"\", $referenceDatapoint, $Station + \":LOFAR\", \"\");
 }" 0
  2
 "CBRef""1"

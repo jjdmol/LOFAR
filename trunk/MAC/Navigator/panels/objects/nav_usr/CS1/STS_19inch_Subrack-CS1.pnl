@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,530 245 182 113 N "_3DFace" 6
+PANEL,743 132 182 113 N "_3DFace" 6
 "$RSPBoardNr"
 "$RackNr"
 "$SubrackNr"
@@ -55,11 +55,12 @@ EP_setBackColor()
             dpPrefix + \".AP1.status:_online.._value\",
             dpPrefix + \".AP2.status:_online.._value\",
             dpPrefix + \".AP3.status:_online.._value\",
-            dpPrefix + \".BP.status:_online.._value\");
+            dpPrefix + \".BP.status:_online.._value\",
+            dpPrefix + \".state:_online.._invalid\");
   err = getLastError();
   if (dynlen(err) > 0)
   {
-    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    setValue(\"rect_Subrack\", \"backCol\", \"_dpdoesnotexist\");
   }
 
 }
@@ -96,8 +97,20 @@ EP_setBackColorCB(string dpSource1,  unsigned AP0_RCU0_stat,
 									string dpSource18, unsigned AP1_stat,
 									string dpSource19, unsigned AP2_stat,
 									string dpSource20, unsigned AP3_stat,
-									string dpSource21, unsigned BP_stat)
+									string dpSource21, unsigned BP_stat,
+									string dpInvalid, bool invalid)
 {
+  // check if device still is valid
+	string SymbolCol;
+	if (invalid) 
+	{
+		SymbolCol=\"Lofar_device_invalid\";
+  } else {
+		SymbolCol=\"_3DFace\";	  
+  }
+
+  setValue(\"\", \"color\", SymbolCol);
+  
 	//Declaration of temporary variables
 	int AP0_RCU0_health, AP0_RCU1_health, AP1_RCU0_health, AP1_RCU1_health;
 	int AP2_RCU0_health, AP2_RCU1_health, AP3_RCU0_health, AP3_RCU1_health;
@@ -352,7 +365,7 @@ LANG:1 6 Layer1
 6 0
 "rect_Subrack"
 ""
-1 31 63 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
+1 31 63 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  "main()
 {
   stsSubRackHandleContextMenu();

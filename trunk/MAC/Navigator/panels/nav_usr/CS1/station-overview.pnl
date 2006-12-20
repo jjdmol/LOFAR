@@ -1,12 +1,16 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,275 931 950 741 N "_3DFace" 1
+PANEL,349 115 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-	string ring;
   dyn_string dpElements = splitDatapointPath($datapoint);
+  if(dynlen(dpElements) >= 2)
+  {
+  	callerNode = dpElements[2];
+	}
+
   if(dynlen(dpElements) >= 3)
   {
   	ring = dpElements[3];
@@ -14,6 +18,7 @@ PANEL,275 931 950 741 N "_3DFace" 1
 	}
 
 	string query = \"SELECT '_online.._value' FROM '\" + $datapoint + \"*.state' WHERE _DPT = \\\"Station\\\"\";
+	DebugTN(\"Query: \" + query);
 	dpQueryConnectAll(
 		\"updateStationsTable\",
 		true, 
@@ -23,8 +28,16 @@ PANEL,275 931 950 741 N "_3DFace" 1
 }" 0
 EE E E 1 0 0 0  10 10
 "" 0 1
-E"updateStationsTable(string identifier, dyn_dyn_anytype result)
+E"//keep ringdetails
+string ring=\"\";
+
+// keep callernode
+string callerNode=\"\";
+
+
+updateStationsTable(string identifier, dyn_dyn_anytype result)
 {
+
 	if(identifier == \"StationsStateQuery\")
 	{
 		TableStations.deleteAllLines();
@@ -196,9 +209,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 8 138 482 722
 E "main(int row, string column, string value)
 {
-  DebugTN(\"ColumnCommand\",row,column,value);
-	string dp = TableStations.cellValueRC(row,\"Station\") + \":LOFAR_PermSW\";
-	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
+	string dp = TableStations.cellValueRC(row,\"Station\") + \":LOFAR_\"+callerNode;
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0
  1 0 1 2 10 "Station" 0 1 0 "s" 1

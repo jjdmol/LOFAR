@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,345 108 950 741 N "_3DFace" 1
+PANEL,286 109 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -14,8 +14,7 @@ PANEL,345 108 950 741 N "_3DFace" 1
   
   	fillStationsList(observation);
   }
-  rect.toolTipText = nodeDP;
-}
+ }
 
 fillStationsList(string observation)
 {

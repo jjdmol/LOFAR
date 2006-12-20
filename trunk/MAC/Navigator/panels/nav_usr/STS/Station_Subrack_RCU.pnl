@@ -1,11 +1,11 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,266 113 923 749 N "_3DFace" 1
+PANEL,280 106 923 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-  navViewCheckDpType($datapoint,\"PicRCU\");
+  navViewCheckDpType($datapoint,\"RSPBoard\");
   navPMLloadPropertySet($datapoint);
   string RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
   if (dpAccessable($datapoint + \".VddVccEn:_online.._value\") &&
@@ -66,14 +66,12 @@ navViewCheckDpType(string aDp, string aCheckType){
 " 0
 "main()
 {
-DebugN(\"about to terminate: \"+$datapoint);
-navPMLunloadPropertySet($datapoint);
-DebugN(\"after unload: \"+$datapoint);
+  navPMLunloadPropertySet($datapoint);
 }" 0
 E E E 1 -1 -1 0  130 290
 "" 0 1
-E"#uses \"nav_usr/STS/STS-functions.ctl\"
-#uses \"nav_fw/gcfnav_view.ctl\"" 0
+E"//#uses \"nav_usr/STS/STS-functions.ctl\"
+//#uses \"nav_fw/gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E

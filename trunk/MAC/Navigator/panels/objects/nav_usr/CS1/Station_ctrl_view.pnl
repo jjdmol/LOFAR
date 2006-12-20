@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 StationCtrlViewPanel
-PANEL,294 508 484 325 N "_3DFace" 2
+PANEL,292 131 484 325 N "_3DFace" 2
 "$Station"
 "$datapoint"
 "main()
@@ -11,7 +11,7 @@ PANEL,294 508 484 325 N "_3DFace" 2
 	obsName          = getPathComponent($datapoint,3);
 	baseDP           = $Station+\":LOFAR\";
 	BeamCtrlDP       = baseDP+\"_ObsSW_\"+obsName+\"_BeamCtrl\";
-	CalCtrlDP        = baseDP+\"_PermSW_CalCtrl\";
+	CalCtrlDP        = baseDP+\"_ObsSW_\"+obsName+\"_CalCtrl\";
 	DigBoardCtrlDP   = baseDP+\"_PermSW_DigBoardCtrl\";
 	StationCtrlDP    = baseDP+\"_PermSW_StationCtrl\";	
 	
@@ -200,7 +200,7 @@ showLogging()
 		tStop = getCurrentTime();
 		tStart = tStop - 48*3600; // 2 days of history
 	
-		string query = \"SELECT ALL '_original.._value' FROM '\" + selectedDP + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
+		string query = \"SELECT ALL '_original.._value' FROM '\" + bareDP + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
 			formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
 			formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
 			
