@@ -35,6 +35,7 @@ global dyn_dyn_string gPSList;	// 1 == scope; 2 == ID
 
 unsigned gcfInit(string callBackFuncName)
 {
+  LOG_DEBUG("gcfInit: ", callBackFuncName);
 	dyn_string callBackFuncNames, IDlist;
 	callBackFuncNames = getDynString(gCallBackList, 1);
 	IDlist = getDynString(gCallBackList, 2);
@@ -61,7 +62,7 @@ unsigned gcfInit(string callBackFuncName)
 
 void gcfLeave(unsigned ID, bool inTerminate = false)
 {
-	LOG_INFO("GCF: ID " + ID + " will be freed.");
+	LOG_DEBUG("GCF: ID " + ID + " will be freed.");
 	
 	for (int i = 1; i <= dynlen(gCallBackList); i++)
 	{
@@ -103,6 +104,7 @@ void gcfLeave(unsigned ID, bool inTerminate = false)
 
 void gcfLoadPS(unsigned ID, string psScope)
 {
+  LOG_DEBUG("gcfLoadPS: ", ID, psScope);
 	correctScope(psScope);
 	LOG_TRACE("GCF: Request to load property set " + psScope);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS)))
@@ -117,6 +119,7 @@ void gcfLoadPS(unsigned ID, string psScope)
 
 void gcfUnloadPS(unsigned ID, string psScope)
 {
+  LOG_DEBUG("gcfUnloadPS: ", ID, psScope);
 	correctScope(psScope);
 	LOG_TRACE("GCF: Request to unload property set " + psScope);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS)))
@@ -132,6 +135,7 @@ void gcfUnloadPS(unsigned ID, string psScope)
 
 void gcfConfigurePS(unsigned ID, string psScope, string psApcName)
 {
+  LOG_DEBUG("gcfConfigurePS: ", ID, psScope, psApcName);
 	correctScope(psScope);
 	LOG_TRACE("GCF: Request to configure property set " + psScope + " with APC " + psApcName);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS)))
@@ -150,6 +154,7 @@ void gcfConfigurePS(unsigned ID, string psScope, string psApcName)
 
 void gcfMainCallBack(string callBackDP, blob value)
 {
+  LOG_DEBUG("gcfMainCallBack: ", callBackDP, value);
 	dyn_string splittedDP = strsplit(dpSubStr(callBackDP, DPSUB_DP), "_");
 	unsigned lastElement = dynlen(splittedDP);
 	unsigned ID = splittedDP[lastElement - 1];
@@ -209,6 +214,7 @@ void gcfMainCallBack(string callBackDP, blob value)
 
 unsigned registerAction(unsigned ID, string& psScope)
 {
+  LOG_DEBUG("registerAction: ", ID, psScope);
 	dyn_string seqNrlist = getDynString(gSeqList, 1);
 	unsigned seqNr = 0;
 	do
@@ -223,6 +229,7 @@ unsigned registerAction(unsigned ID, string& psScope)
 
 string getPropSet(unsigned seqNr)
 {
+  LOG_DEBUG("getPropSet: ", seqNr);
 	for (int i = 1; i <= dynlen(gSeqList); i++)
 	{
 		if (gSeqList[i][1] == seqNr)
@@ -235,6 +242,7 @@ string getPropSet(unsigned seqNr)
 
 void unregisterAction(unsigned seqNr)
 {
+  LOG_DEBUG("unregisterAction: ", seqNr);
 	for (int i = 1; i <= dynlen(gSeqList); i++)
 	{
 		if (gSeqList[i][1] == seqNr)
@@ -247,6 +255,7 @@ void unregisterAction(unsigned seqNr)
 
 string findCallBackFunc(unsigned ID)
 {
+  LOG_DEBUG("findCallBackFunc: ", ID);
 	for (int i = 1; i <= dynlen(gCallBackList); i++)
 	{
 		if (gCallBackList[i][2] == ID)
@@ -259,6 +268,7 @@ string findCallBackFunc(unsigned ID)
 
 bool idExists(unsigned ID)
 {
+  LOG_DEBUG("idExists: ", ID);
 	dyn_string IDlist;
 	IDlist = getDynString(gCallBackList, 2);
 	return (dynContains(IDlist, ID) > 0); 
@@ -266,17 +276,20 @@ bool idExists(unsigned ID)
 
 string buildPortId(unsigned ID)
 {
+  LOG_DEBUG("buildPortId: ", ID);
 	string systemId = (string) getSystemId();
 	return systemId + ":Ui:" + myManNum() + ":" + ID + ":";
 }
 
 string buildCallBackDP(unsigned ID)
 {
+  LOG_DEBUG("buildCallBackDP: ", ID);
 	return getSystemName() + "__gcfportUIM" + myManNum() +"_" + ID + "_DPAclient";		
 }
 
 void callUserDefinedFunction(string& callBackFunc, dyn_string& response)
 {
+  LOG_DEBUG("callUserDefinedFunction: ", callBackFunc, response);
 	if (isFunctionDefined(callBackFunc))
 	{
 		startThread(callBackFunc, response);
@@ -289,6 +302,7 @@ void callUserDefinedFunction(string& callBackFunc, dyn_string& response)
 
 void deletePropSet(string& psScope, unsigned ID)
 {
+  LOG_DEBUG("deletePropSet: ", psScope, ID);
 	for (int i = 1; i <= dynlen(gPSList); i++)
 	{
 		if (gPSList[i][2] == ID && gPSList[i][1] == psScope)
@@ -300,6 +314,7 @@ void deletePropSet(string& psScope, unsigned ID)
 
 void correctScope(string& psScope)
 {
+  LOG_DEBUG("correctScope: ", psScope);
 	if (dpExists(psScope))
 	{
 		psScope = dpSubStr(psScope, DPSUB_SYS) + dpSubStr(psScope, DPSUB_DP);
@@ -315,6 +330,7 @@ void correctScope(string& psScope)
 
 string getDPNameOnly(string& psScope)
 {
+  LOG_DEBUG("getDPNameOnly: ", psScope);
 	if (dpExists(psScope))
 	{
 		return dpSubStr(psScope, DPSUB_DP);
@@ -334,6 +350,7 @@ string getDPNameOnly(string& psScope)
 
 bool isPAOnline(string sysName)
 {
+  LOG_DEBUG("isPAOnline: ", sysName);
 	bool paOnline = dpExists(sysName + "__gcfportAPI_DPAserver");
 	
 	if (!paOnline) LOG_ERROR("GCF ERROR: PA on system " + sysName + " not reachable!");
@@ -342,6 +359,7 @@ bool isPAOnline(string sysName)
 
 void gcfWatchDog(string dp, string wdMsg)
 {
+  LOG_DEBUG("gcfWatchDog: ", dp, wdMsg);
 	unsigned sysNr = substr(wdMsg, 1, strlen(wdMsg) - 2);
 	if (wdMsg[0] == 'd')
 	{

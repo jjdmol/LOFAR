@@ -123,7 +123,12 @@ void LOG_DEBUG(string prefix, ...) // the prefix is necessary, otherwise PVSS wo
   dynAppend(message,prefix);
   len = va_start(parameters); // returns the number of parameters
   for(i=1;i<=len;i++)
-    dynAppend(message,va_arg(parameters));
+  {
+    string blubs=va_arg(parameters);
+    if(strlen(blubs)>0)
+      dynAppend(message,blubs);
+//    dynAppend(message,va_arg(parameters));
+  }
   va_end(parameters);
   LOG_MESSAGE(LOGLEVEL_DEBUG,LOGMESSAGE_DEBUG,message);
 }

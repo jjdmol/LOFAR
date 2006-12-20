@@ -56,6 +56,7 @@ const unsigned treeView_INDENT  = 4;
 
 void treeView_Init()
 {
+  LOG_DEBUG("treeView_Init");
   if (addGlobal("gNodeTable", DYN_DYN_ANYTYPE_VAR) == 0)
   {
     
@@ -69,6 +70,7 @@ void treeView_Init()
 
 int treeView_addNode(string nodeName, unsigned parentId, string nodeInfo)
 {
+  LOG_DEBUG("treeView_addNode: ", nodeName, parentId, nodeInfo);
   int newNodeID = 0;
   dyn_anytype parentNode = makeDynAnytype();
   if (parentId > 0 && parentId <= dynlen(gNodeTable))
@@ -134,6 +136,7 @@ int treeView_addNode(string nodeName, unsigned parentId, string nodeInfo)
 
 bool treeView_deleteNode(unsigned nodeId)
 {
+  LOG_DEBUG("treeView_deleteNode: ", nodeId);
   dyn_unsigned allParentIds;
   unsigned nodeTableIdxOfChildToRemove;
   // first delete all childs too
@@ -166,6 +169,7 @@ bool treeView_updateNode(unsigned nodeId, string nodeName, anytype nodeInfo)
 
 dyn_anytype treeView_getNode(unsigned nodeId)
 {
+  LOG_DEBUG("treeView_getNode: ", nodeId);
   dyn_anytype node = makeDynAnytype();
   if (dynlen(gNodeTable) >= nodeId && nodeId > 0)
   {
@@ -176,6 +180,7 @@ dyn_anytype treeView_getNode(unsigned nodeId)
 
 unsigned treeView_convTreeIdx2NodeId(unsigned treeViewIdx)
 {
+  LOG_DEBUG("treeView_convTreeIdx2NodeId: ", treeViewIdx);
   unsigned nodeId = 0;
   if (dynlen(gTreeViewItem2NodeTable) >= treeViewIdx && treeViewIdx > 0)
   {
@@ -186,6 +191,7 @@ unsigned treeView_convTreeIdx2NodeId(unsigned treeViewIdx)
 
 dyn_unsigned treeView_findNodes(string nodePattern)
 {
+  LOG_DEBUG("treeView_findNodes: ", nodePattern);
   dyn_unsigned foundNodeIds;
   strreplace(nodePattern, "_", ".");
   strreplace(nodePattern, ":", ".");
@@ -204,6 +210,7 @@ dyn_unsigned treeView_findNodes(string nodePattern)
 
 dyn_unsigned treeView_findNodesByInfo(string nodeInfoPattern)
 {
+  LOG_DEBUG("treeView_findNodesByInfo: ", nodeInfoPattern);
   dyn_unsigned foundNodeIds;
   
   dyn_string allNodeInfos = getDynString(gNodeTable, treeView_INFO);
@@ -220,6 +227,7 @@ dyn_unsigned treeView_findNodesByInfo(string nodeInfoPattern)
 
 treeView_defaultOnCollapseNode(unsigned selNodeIdx)
 {
+  LOG_DEBUG("treeView_defaultOnCollapseNode: ", selNodeIdx);
   dyn_string listItems = list.items;
   
   if (selNodeIdx > 0 && selNodeIdx <= dynlen(gTreeViewItem2NodeTable))
@@ -249,6 +257,7 @@ treeView_defaultOnCollapseNode(unsigned selNodeIdx)
 
 treeView_defaultOnExpandNode(unsigned selNodeIdx)
 {
+  LOG_DEBUG("treeView_defaultOnExpandNode: ", selNodeIdx);
   dyn_string listItems = list.items;
   dyn_anytype expandNode;
   dyn_unsigned allParentIds = getDynUInt(gNodeTable, treeView_PARENTID);

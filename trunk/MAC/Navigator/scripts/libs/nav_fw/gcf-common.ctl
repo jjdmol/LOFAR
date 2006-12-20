@@ -31,12 +31,14 @@ global int g_distSysVarSem = 0;
 
 void gcfStartFollowDistSystems()
 {
+  LOG_DEBUG("gcfStartFollowDistSystems.");
   g_distSysVarSem = 0;
   dpConnect("followDistributedSystems", "_DistManager.State.SystemNums");
 }
 
 void followDistributedSystems(string dp, dyn_int value)
 {
+  LOG_DEBUG("followDistributedSystems: ",value);
   while (g_distSysVarSem > 0) delay(0, 10); // wait until the "semaphore" is freed by the dpAccessable method
   g_distributedSystems = value;
 }
@@ -51,6 +53,7 @@ void followDistributedSystems(string dp, dyn_int value)
 ///////////////////////////////////////////////////////////////////////////
 bool dpAccessable(string dpName)
 {
+  LOG_DEBUG("dpAccessable: ",dpName);
   if (dpExists(dpName))
   {
     string dpSystemName = strrtrim(dpSubStr(dpName, DPSUB_SYS), ":");

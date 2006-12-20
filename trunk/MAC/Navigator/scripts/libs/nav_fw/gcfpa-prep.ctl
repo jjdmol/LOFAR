@@ -57,6 +57,7 @@ main()
 
 deleteDPs(string type)
 {
+  LOG_DEBUG("deleteDPs: ", type);
   string dpName;
   dyn_string names = dpNames("*",type);  
   int i, len;
@@ -78,6 +79,7 @@ deleteDPs(string type)
 
 void handleType(dyn_string types, string type, int dpelType)
 {
+  LOG_DEBUG("handleType: ", types, type, dpelType);
 	if (dynContains(types, type))
 	{
 		deleteDPs(type);

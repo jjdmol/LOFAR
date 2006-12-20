@@ -57,6 +57,7 @@ main()
 ///////////////////////////////////////////////////////////////////////////
 navViewPlotRecordMain(string dp1, string commandInput)
 {
+  LOG_DEBUG("navViewPlotRecordMain: ",dp1, commandInput);
   dyn_string commandInputSplit;
   string cmd_command = "";
   string cmd_configDatapoint = "";
@@ -167,6 +168,7 @@ navViewPlotRecordMain(string dp1, string commandInput)
 ///////////////////////////////////////////////////////////////////////////
 dyn_string navViewPlotRecordListAddItems(dyn_string dpNamesToAdd)
 {
+  LOG_DEBUG("navViewPlotRecordListAddItems: ", dpNamesToAdd);
   dyn_string matchedDPs;
   for(int i=1; i<=dynlen(dpNamesToAdd); i++)
   {
@@ -190,6 +192,7 @@ dyn_string navViewPlotRecordListAddItems(dyn_string dpNamesToAdd)
 ///////////////////////////////////////////////////////////////////////////
 dyn_string navViewPlotRecordGetDpNamesToRecord(string configDatapoint)
 {
+  LOG_DEBUG("navViewPlotRecordGetDpNamesToRecord: ",configDatapoint);
   bool plotActive;
   string plotDpName;
   string currentDatapoint;
@@ -242,6 +245,7 @@ dyn_string navViewPlotRecordGetDpNamesToRecord(string configDatapoint)
 ///////////////////////////////////////////////////////////////////////////
 navViewPlotRecordControl(bool start, dyn_string newDatapoints)
 {
+  LOG_DEBUG("navViewPlotRecordControl: ",start, newDatapoints);
   if(start)
   {
     for(int i=1; i<=dynlen(newDatapoints); i++)
@@ -272,6 +276,7 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints)
 ///////////////////////////////////////////////////////////////////////////
 navViewPlotWriteRecordDesciptionFile(string datapoint, bool startRecord)
 {
+  LOG_DEBUG("navViewPlotWriteRecordDesciptionFile: ",datapoint, startRecord);
   dyn_string searchMatch = dynPatternMatch("*" + datapoint + "*", recordList);
   int position = dynContains(recordList, searchMatch[1]);
   string configDpName = navViewPlotGetSplitPart(searchMatch[1],1);
@@ -340,6 +345,7 @@ navViewPlotWriteRecordDesciptionFile(string datapoint, bool startRecord)
 ///////////////////////////////////////////////////////////////////////////
 string navViewPlotGetSplitPart(string datapoint, int splitNr)
 {
+  LOG_DEBUG("navViewPlotGetSplitPart: ",datapoint,splitNr);
   dyn_string dpSplit = strsplit(datapoint, "|");
   return dpSplit[splitNr];
 }
@@ -353,6 +359,7 @@ string navViewPlotGetSplitPart(string datapoint, int splitNr)
 ///////////////////////////////////////////////////////////////////////////
 void RecordSpectrum(string dp1, string spectrum)
 {
+  LOG_DEBUG("RecordSpectrum: ",dp1, spectrum);
   ///////////////////////////////////////////////////////////////////////////////
   //Get all information from the recordList for this specific datapoint to record
   ////////////////////////////////////////////////////////////////////////////////
@@ -393,6 +400,7 @@ void RecordSpectrum(string dp1, string spectrum)
 ///////////////////////////////////////////////////////////////////////////
 string navViewGetTimeString()
 {
+  LOG_DEBUG("navViewGetTimeString");
   time t = getCurrentTime();
   string txtYear   = year(t);
   string txtMonth  = month(t);
@@ -413,6 +421,7 @@ string navViewGetTimeString()
 ///////////////////////////////////////////////////////////////////////////
 RecordFunction(string dp1, bool triggerRecord)
 {
+  LOG_DEBUG("RecordFunction: ",dp1,triggerRecord);
   string dpName;
   dpGet(DPNAME_NAVIGATOR + g_navigatorID + ".dpRecord", dpName);
   if(triggerRecord)

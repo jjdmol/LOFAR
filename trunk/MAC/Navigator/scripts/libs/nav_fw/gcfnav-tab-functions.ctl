@@ -48,10 +48,10 @@ global string  g_selectedViewName;
 ///////////////////////////////////////////////////////////////////////////
 void mappingClear(mapping &map)
 {
-  LOG_TRACE("mappingClear begin",map);
+  LOG_DEBUG("mappingClear begin",map);
   while(mappinglen(map)>0)
     mappingRemove(map,mappingGetKey(map,1));
-  LOG_TRACE("mappingClear end",map);
+  LOG_DEBUG("mappingClear end",map);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -155,7 +155,7 @@ void NavTabInitialize(string datapoint)
 ///////////////////////////////////////////////////////////////////////////
 void ComboBoxViewsSelectionChanged()
 {
-  LOG_TRACE("ComboBoxViewsSelectionChanged()");
+  LOG_DEBUG("ComboBoxViewsSelectionChanged()");
   
   shape viewsComboBoxCtrl = getShape(VIEW_COMBOBOX_CTRL);  
   shape viewTabsCtrl      = getShape(VIEW_TABS_CTRL);  
@@ -289,6 +289,7 @@ void ComboBoxViewsSelectionChanged()
 ///////////////////////////////////////////////////////////////////////////
 bool ConfigTabAddSubViewClicked(string viewName, int selectedView, string selectedElementDpType, string configDatapoint, int &nrOfSubViews)
 {
+  LOG_DEBUG("ConfigTabAddSubViewClicked: ", viewName, selectedView, selectedElementDpType, configDatapoint, nrOfSubViews);
   bool success;
   dyn_float resultFloat;
   dyn_string resultString;
@@ -322,6 +323,7 @@ bool ConfigTabAddSubViewClicked(string viewName, int selectedView, string select
 ///////////////////////////////////////////////////////////////////////////
 bool ConfigTabRemoveSubViewClicked(string viewName, int selectedView, string selectedElementDpType, string configDatapoint, int &nrOfSubViews)
 {
+  LOG_DEBUG("ConfigTabRemoveSubViewClicked: ", viewName, selectedView, selectedElementDpType, configDatapoint, nrOfSubViews);
   bool success;
   dyn_float resultFloat;
   dyn_string resultString;

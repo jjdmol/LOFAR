@@ -44,6 +44,7 @@ global dyn_string g_ContectMenuDpAccessableErrorText = "PUSH_BUTTON, No actions 
 ///////////////////////////////////////////////////////////////////////////
 string navViewPlotGetRecordStatus(string configDatapoint, string datapoint)
 {
+ LOG_DEBUG("navViewPlotGetRecordStatus: ",configDatapoint,datapoint);
  string recordStatus, messageRCV;
  dyn_string messageRCVsplit;
  bool messageReceived = FALSE;
@@ -80,6 +81,7 @@ string navViewPlotGetRecordStatus(string configDatapoint, string datapoint)
 ///////////////////////////////////////////////////////////////////////////
 void TrendConfigApplyTraceSettings()
 {
+  LOG_DEBUG("TrendConfigApplyTraceSettings");
   int ScaleMin, ScaleMax;
   bool AutoScale;
   string dpName, dpeName, legendName;
@@ -120,6 +122,7 @@ void TrendConfigApplyTraceSettings()
 ///////////////////////////////////////////////////////////////////////////
 string navViewGetDpFromDpSelectionList(string dollarDatapoint)
 {
+  LOG_DEBUG("navViewGetDpFromDpSelectionList: ",dollarDatapoint);
   string datapoint;
   if(list_system.selectedText==getSystemName())
   {
@@ -151,6 +154,7 @@ string navViewGetDpFromDpSelectionList(string dollarDatapoint)
 ///////////////////////////////////////////////////////////////////////////
 void navViewPlotChangeState()
 {
+  LOG_DEBUG("navViewPlotChangeState");
   if("PLAY"==PLOT_STATE || "STEP"==PLOT_STATE)
   {
     setValue("icon_play",   "visible", TRUE);
@@ -191,6 +195,7 @@ void navViewPlotChangeState()
 navViewPlotWhenActive(string dp1, int active,
                       string dp2, string dpName)
 {
+  LOG_DEBUG("navViewPlotWhenActive: ",dp1, active, dp2, dpName);
   dyn_string dp1Split = strsplit(dp1, ".");
   if(1==active)
   {
@@ -219,6 +224,7 @@ navViewPlotWhenActive(string dp1, int active,
 ///////////////////////////////////////////////////////////////////////////
 string navViewRetrieveDpName(string dollarDatapoint, string dpName)
 {
+  LOG_DEBUG("navViewRetrieveDpName: ",dollarDatapoint, dpName);
   string systemName = dpSubStr(dpName, DPSUB_SYS);
   string dpToConnect;
   if(""!=systemName)
@@ -244,6 +250,7 @@ string navViewRetrieveDpName(string dollarDatapoint, string dpName)
 ///////////////////////////////////////////////////////////////////////////
 void navViewPlotApplyChanges()
 {
+  LOG_DEBUG("navViewPlotApplyChanges");
   dyn_string returnValues;
   returnValues[1] = setting_xrangeMin.text;
   returnValues[2] = setting_xrangeMax.text;
@@ -264,6 +271,7 @@ void navViewPlotApplyChanges()
 ///////////////////////////////////////////////////////////////////////////
 int navViewPlotConvertGnuplotOutput(int plotNumber)
 {
+  LOG_DEBUG("navViewPlotConvertGnuplotOutput: ",plotNumber);
 
   if ((access(navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".png", R_OK)==0) &&
       (access(navConfigGetPathName(g_path_pictureconverter) + navConfigGetPathName("/") + "i_view32.exe", F_OK)==0))
@@ -292,6 +300,8 @@ int navViewPlotGenerateGnuPlotScriptFile(int plotNumber, string plotTitle,
                                          int xRangeMin, int xRangeMax,
                                          int yRangeMin, int yRangeMax)
 {
+  LOG_DEBUG("navViewPlotGenerateGnuPlotScriptFile: ",plotNumber, plotTitle, xRangeMin, xRangeMax, yRangeMin, yRangeMax);
+
   int blue=2, green=4, yellow=6, red=8, timeslot_size=1;
   time t=getCurrentTime();
   int subbandLength = 511; //starting from zero (0-511)
@@ -374,6 +384,7 @@ int navViewPlotGenerateGnuPlotScriptFile(int plotNumber, string plotTitle,
 ///////////////////////////////////////////////////////////////////////////
 int navViewPlotGenerateGnuplotOutput(int plotNumber)
 {
+    LOG_DEBUG("navViewPlotGenerateGnuplotOutput: ",plotNumber);
     string wgnuplotPath   = navConfigGetPathName(g_path_gnuplot) + navConfigGetPathName("/") + "wgnuplot.exe";
     string plotConfigPath = navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".dem";
     string plotPath       = navConfigGetPathName(g_path_temp) + navConfigGetPathName("/") + "gnuplot" + plotNumber+ ".png";
@@ -410,6 +421,7 @@ int navViewPlotGenerateGnuplotOutput(int plotNumber)
 
 navViewAlertApplyCellSettings(string RowNumber, string Column)
 {
+  LOG_DEBUG("navViewAlertApplyCellSettings: ",RowNumber, Column);
   dyn_string ColumndpNames, ColumnTitles;
  
   dpGet($configDatapoint + "." + $AreaNr + ".Column" + $Column + "dpNames", ColumndpNames); 
@@ -431,6 +443,7 @@ navViewAlertApplyCellSettings(string RowNumber, string Column)
 ///////////////////////////////////////////////////////////////////////////
 navViewControlDisplayText(string dp1, string textToDisplay)
 {
+  LOG_DEBUG("navViewControlDisplayText: ", dp1, textToDisplay);
   string timeToDisplay = getCurrentTime();
   string elementName = dpGetElementName(dp1);
   strreplace(elementName, ".", "");
@@ -447,6 +460,7 @@ navViewControlDisplayText(string dp1, string textToDisplay)
 ///////////////////////////////////////////////////////////////////////////
 navViewControlDisplayStatus(string dp1, int statusNumber)
 {
+  LOG_DEBUG("navViewControlDisplayStatus: ", dp1, statusNumber);
   string timeToDisplay = getCurrentTime();
   string elementName = dpGetElementName(dp1);
   string textToDisplay;
@@ -498,6 +512,7 @@ navViewControlDisplayStatus(string dp1, int statusNumber)
 ///////////////////////////////////////////////////////////////////////////
 navViewControlDisplayTime(string dp1, int serialTime)
 {
+  LOG_DEBUG("navViewControlDisplayTime: ", dp1, serialTime);
   dyn_string dpPlit = strsplit(dp1, ".");
   string timeToDisplay = getCurrentTime();
   string elementName = dpGetElementName(dp1);
@@ -521,7 +536,7 @@ navViewControlDisplayTime(string dp1, int serialTime)
 ///////////////////////////////////////////////////////////////////////////
 string navViewAlertGetDpFromColumn(int Row,int Column)
 {
-
+  LOG_DEBUG("navViewAlertGetDpFromColumn: ", Row, Column);
   dyn_string ColumndpNames;
   string connectDatapoint;
 
@@ -549,6 +564,7 @@ string navViewAlertGetDpFromColumn(int Row,int Column)
 ///////////////////////////////////////////////////////////////////////////////////
 getPropertyNames(string newSelectionQuery, int newSelectionAmount, dyn_string &propNames)
 {
+  LOG_DEBUG("etPropertyNames: ", newSelectionQuery, newSelectionAmount, propNames);
   dyn_dyn_anytype tab;
 
   dpQuery("SELECT '_online.._value' FROM '" + newSelectionQuery + "' FIRST " + newSelectionAmount, tab);
@@ -577,6 +593,7 @@ getPropertyNames(string newSelectionQuery, int newSelectionAmount, dyn_string &p
 ///////////////////////////////////////////////////////////////////////////////////
 void clearListTable()
 {
+  LOG_DEBUG("clearListTable");
   dyn_string propNames;
   dpGet($configDatapoint + ".queryResult", propNames);
   for (int i = 1; i <= dynlen(propNames); i++)
@@ -595,6 +612,7 @@ void clearListTable()
 ///////////////////////////////////////////////////////////////////////////////////
 connectTable(dyn_string propNames)
 {
+  LOG_DEBUG("connectTable: ", propNames);
   dpSet($configDatapoint + ".queryResult", propNames);
   for(int i = 1; i <= dynlen(propNames); i++)
   {
@@ -611,6 +629,7 @@ connectTable(dyn_string propNames)
 ///////////////////////////////////////////////////////////////////////////////////
 connectActualValue(string dp1, anytype actualValue)
 {
+  LOG_DEBUG("connectActualValue: ", dp1, actualValue);
   dyn_string queryResult; 
   anytype valueString;
   dpGet($configDatapoint + ".queryResult", queryResult);
@@ -649,6 +668,7 @@ connectActualValue(string dp1, anytype actualValue)
 ///////////////////////////////////////////////////////////////////////////////////
 bool elementTypeValid(string element)
 {
+  LOG_DEBUG("elementTypeValid: ", element);
   if ((DPEL_CHAR == dpElementType(element)) || (DPEL_UINT   == dpElementType(element)) ||
       (DPEL_INT  == dpElementType(element)) || (DPEL_FLOAT  == dpElementType(element)) ||
       (DPEL_BOOL == dpElementType(element)) || (DPEL_STRING == dpElementType(element)))
@@ -681,6 +701,7 @@ bool elementTypeValid(string element)
 ///////////////////////////////////////////////////////////////////////////////////
 void setColumnConfig(int TableNumber, int TableNumberToDisplay, int nrOfColumns, int MaximumColumns, string Addition)
 {
+  LOG_DEBUG("etColumnConfig: ", TableNumber, TableNumberToDisplay, nrOfColumns, MaximumColumns, Addition);
 
   int k, table_x, table_y;
 
@@ -718,6 +739,7 @@ int ConvIndex(int i)
 ///////////////////////////////////////////////////////////////////////////////////
 void getTableNumber(string dpName, int &TableNumber)
 {
+  LOG_DEBUG("getTableNumber: ", dpName, TableNumber);
   dyn_string resultaat;
   resultaat = strsplit(dpName, ".");
   TableNumber = resultaat[2];
@@ -732,6 +754,7 @@ void getTableNumber(string dpName, int &TableNumber)
 ///////////////////////////////////////////////////////////////////////////////////
 void getColumnTitle(string dpName, string &ColumnTitle)
 {
+  LOG_DEBUG("getColumnTitle: ", dpName, ColumnTitle);
   dyn_string resultaat;
   resultaat = strsplit(dpName, ".");
   ColumnTitle = strrtrim(resultaat[3], "dpNames:_online");
@@ -745,6 +768,7 @@ void getColumnTitle(string dpName, string &ColumnTitle)
 /////////////////////////////////////////////////////////////////////
 string dpGetElementName(string DPName)
 {
+  LOG_DEBUG("dpGetElementName: ", DPName);
   return strltrim(dpSubStr(DPName, DPSUB_DP_EL), dpSubStr(DPName, DPSUB_DP));
 }
 
@@ -755,6 +779,7 @@ string dpGetElementName(string DPName)
 /////////////////////////////////////////////////////////////////////
 int dpGetElementValueInt(string DPName, string ViewType, string SubElement, int &Value)
 {
+  LOG_DEBUG("dpGetElementValueInt: ", DPName, ViewType, SubElement, Value);
   return dpGet("__navigator_" +
                dpTypeName(DPName)  +
                "_" +
@@ -771,6 +796,7 @@ int dpGetElementValueInt(string DPName, string ViewType, string SubElement, int 
 /////////////////////////////////////////////////////////////////////
 int dpSetElementValueInt(string DPName, string ViewType, string SubElement, int Value)
 {
+  LOG_DEBUG("dpSetElementValueInt: ", DPName, ViewType, SubElement, Value);
   return dpSet("__navigator_" +
                dpTypeName(DPName)  +
                "_" +
@@ -787,6 +813,7 @@ int dpSetElementValueInt(string DPName, string ViewType, string SubElement, int 
 /////////////////////////////////////////////////////////////////////
 int dpGetElementValueString(string DPName, string ViewType, string SubElement, string &Value)
 {
+  LOG_DEBUG("dpGetElementValueString: ", DPName, ViewType, SubElement, Value);
   return dpGet("__navigator_" +
                dpTypeName(DPName)  +
                "_" +
@@ -802,7 +829,8 @@ int dpGetElementValueString(string DPName, string ViewType, string SubElement, s
 /////////////////////////////////////////////////////////////////////
 int dpGetElementValueFloat(string DPName, string ViewType, string SubElement, float &Value)
 {
-return dpGet("__navigator_" +
+  LOG_DEBUG("dpGetElementValueFloat: ", DPName, ViewType, SubElement, Value);
+  return dpGet("__navigator_" +
                dpTypeName(DPName)  +
                "_" +
                ViewType +
@@ -818,6 +846,7 @@ return dpGet("__navigator_" +
 /////////////////////////////////////////////////////////////////////
 void getTraceNumber(string dpName, string &TraceNumber)
 {
+  LOG_DEBUG("getTraceNumber: ", dpName, TraceNumber);
   string HulpString;
   dyn_string split;
   dyn_string HulpSplit;
@@ -835,6 +864,7 @@ void getTraceNumber(string dpName, string &TraceNumber)
 /////////////////////////////////////////////////////////////////////
 void getTrendNumber(string dp1, int &TrendNumber)
 {
+  LOG_DEBUG("getTrendNumber: ", dp1, TrendNumber);
   dyn_string split, split2, split3;
   dyn_string HulpSplit;
   
@@ -850,6 +880,7 @@ void getTrendNumber(string dp1, int &TrendNumber)
 /////////////////////////////////////////////////////////////////////
 void ConnectTrace(int TraceNumber)
 {
+  LOG_DEBUG("ConnectTrace: ", TraceNumber);
   dpConnect("TracePlot", "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".dpName",
                          "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".AutoScale",
                          "__nav_SingleElement_Trend.1.Trace" + TraceNumber + ".ScaleMin",
@@ -866,6 +897,7 @@ void ConnectTrace(int TraceNumber)
 /////////////////////////////////////////////////////////////////////
 void getSubviewName(string &subViewName)
 {
+  LOG_DEBUG("getSubviewName: ", subViewName);
   string text ="";
   string bestandsnaam;
   dyn_string split;
@@ -890,6 +922,7 @@ void getSubviewName(string &subViewName)
 ///////////////////////////////////////////////////////////////////////////////////
 void NavConfigTrendFillDpeSelection(string datapoint)
 {
+  LOG_DEBUG("NavConfigTrendFillDpeSelection: ",datapoint);
   string selectedDP = list_dp.selectedText;
   list_dpe.deleteAllItems; 
   if (selectedDP != "")
