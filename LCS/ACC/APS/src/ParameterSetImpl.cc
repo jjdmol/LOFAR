@@ -93,28 +93,26 @@ ParameterSetImpl*
 ParameterSetImpl::makeSubset(const string& baseKey, 
 			     const string& prefix) const
 {
-  const_iterator    scanner    = begin();
-  uint	            baseKeyLen = baseKey.size();
-  ParameterSetImpl* subSet     = new ParameterSetImpl(itsKeyNoCase);
+  // Convert \a baseKey to lowercase, if we need to do case insensitve compare.
+  string            base   = itsKeyNoCase ? toLower(baseKey) : baseKey;
+  ParameterSetImpl* subSet = new ParameterSetImpl(itsKeyNoCase);
 
   LOG_TRACE_CALC_STR("makeSubSet(" << baseKey << "," << prefix << ")");
 
-  // Scan through whole ParameterSetImpl
-  while (scanner != end()) {
-    // starts with basekey?
-    bool match;
-    if (itsKeyNoCase) {
-      match = !toLower(scanner->first).compare(0,baseKeyLen,toLower(baseKey));
-    } else {
-      match = !scanner->first.compare(0,baseKeyLen,baseKey);
-    }
-    if (match) {
-      LOG_TRACE_VAR_STR(baseKey << " matches with " << scanner->first);
-      // cut off baseString and copy to subset
-      subSet->insert(make_pair(prefix+scanner->first.substr(baseKeyLen),
-			       scanner->second));
-    }
-    scanner++;
+  // Start scanning at the point where \a base might first occur.
+  for (const_iterator it = lower_bound(base); it != end(); ++it) {
+
+    bool match = itsKeyNoCase ?
+      match = toLower(it->first).compare(0, base.size(), base) == 0 :
+      match = it->first.compare(0, base.size(), base) == 0;
+
+    // We can stop scanning once \a match becomes false, since keys are sorted.
+    if (!match) break;
+
+    LOG_TRACE_VAR_STR(base << " matches with " << it->first);
+    // cut off baseString and copy to subset
+    subSet->insert(make_pair(prefix + it->first.substr(base.size()),
+			     it->second));
   }
   
   return (subSet);
