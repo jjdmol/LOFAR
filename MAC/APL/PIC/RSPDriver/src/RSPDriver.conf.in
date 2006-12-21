@@ -312,3 +312,8 @@ RSPDriver.XC_FILL=1
 # Disable initialization to enable testing on a system without hardware
 #
 RSPDriver.DISABLE_INIT=0
+
+#
+# Ignore result of HBA i2c sequence
+#
+RSPDriver.HBA_RESULT_IGNORE=1
