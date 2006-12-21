@@ -128,6 +128,7 @@
 #endif
 
 #define ETHERTYPE_EPA 0x10FA
+#define PPS_FETCH_TIMEOUT { 3, 0 }
 
 using namespace blitz;
 using namespace std;
@@ -713,7 +714,8 @@ int RSPDriver::fetchPPS()
   int result = 0;
 #ifdef HAVE_SYS_TIMEPPS_H
   do {
-    result = time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, NULL);
+    struct timespec timeout = PPS_FETCH_TIMEOUT; // prevent permanent lock
+    result = time_pps_fetch(m_ppshandle, PPS_TSFMT_TSPEC, &m_ppsinfo, &timeout);
   } while ((result < 0) && (EINTR == errno || EAGAIN == errno));
 #else
   LOG_FATAL("fetchPPS should not be called when HAVE_SYS_TIMEPPS_H is not defined");
