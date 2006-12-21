@@ -66,19 +66,8 @@ uint32 CDOWrite::string2ip(const char* ipstring)
   return result;
 }
 
-void CDOWrite::setup_udpip_header()
+void CDOWrite::setup_udpip_header(uint32 l_srcip, uint32 l_dstip)
 {
-  uint32 l_srcip;
-  uint32 l_dstip;
-
-  char dstip[64];
-  char srcip[64];
-  snprintf(srcip,  64, "RSPDriver.SRC_IP_ADDR_%d", getBoardId());
-  snprintf(dstip,  64, "RSPDriver.DST_IP_ADDR_%d", getBoardId());
-
-  l_srcip = string2ip(GET_CONFIG_STRING(srcip));
-  l_dstip = string2ip(GET_CONFIG_STRING(dstip));
-
   uint32 payload_size = EPA_CEP_OUTPUT_HEADER_SIZE
     + (GET_CONFIG("RSPDriver.CDO_N_BLOCKS", i) 
        * (MEPHeader::N_PHASEPOL * GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i)) 
@@ -151,11 +140,11 @@ void CDOWrite::sendrequest()
 {
   // skip update if the CDO settings have not been modified
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().cdo().get(getBoardId() * getNumIndices() + getCurrentIndex()))
-  {
-    Cache::getInstance().getState().cdo().unmodified(getBoardId() * getNumIndices() + getCurrentIndex());
-    setContinue(true);
-    return;
-  }
+    {
+      Cache::getInstance().getState().cdo().unmodified(getBoardId() * getNumIndices() + getCurrentIndex());
+      setContinue(true);
+      return;
+    }
 
   switch (getCurrentIndex()) {
 
@@ -186,19 +175,32 @@ void CDOWrite::sendrequest()
       cdo.nof_beamlets     = GET_CONFIG("RSPDriver.CDO_N_BEAMLETS", i);
 
       if (output_lane >= 0) {
-	cdo.control.enable   = 1;
-	cdo.control.lane     = output_lane;
-	char srcmac[64]; snprintf(srcmac, 64, GET_CONFIG_STRING("RSPDriver.CDO_SRCMAC_FORMAT"),
-				  GET_CONFIG("RS.STATION_ID", i), getBoardId());
-	char dstmac[64]; snprintf(dstmac, 64, "RSPDriver.DST_MAC_ADDR_%d", getBoardId());
+
+	// parse source and destination MAC- and IP-addresses
+	char srcmacfmt[64], srcmac[64], dstmac[64], dstip[64], srcip[64];
+	uint32 l_srcip, l_dstip;
+
+	snprintf(srcmacfmt, 64, "RSPDriver.LANE_%d_SRCMAC", output_lane);
+	snprintf(srcmac,    64, srcmacfmt, GET_CONFIG("RS.STATION_ID", i));
+	snprintf(dstmac, 64, "RSPDriver.LANE_%d_DSTMAC", output_lane);
+	snprintf(srcip,  64, "RSPDriver.LANE_%d_SRCIP", output_lane);
+	snprintf(dstip,  64, "RSPDriver.LANE_%d_DSTIP", output_lane);
+	l_srcip = string2ip(GET_CONFIG_STRING(srcip));
+	l_dstip = string2ip(GET_CONFIG_STRING(dstip));
+
+	LOG_INFO(formatString("CDO: lane=%d, src=[%s,%s], dst=[%d,%d]",
+			      output_lane, srcmac, srcip, dstmac, dstip));
+
+	// settings
+	cdo.control.enable = 1;
+	cdo.control.lane   = output_lane;
+
+	// set source and destination MAC address
 	string2mac(srcmac, cdo.src_mac);
 	string2mac(GET_CONFIG_STRING(dstmac), cdo.dst_mac);
 
-	LOG_INFO_STR("SRC_MAC lane=" << output_lane << " rspboard=" << getBoardId()
-		     << " srcmac=" << srcmac << " dstmac=" << GET_CONFIG_STRING(dstmac));
-
 	// setup UDP/IP header
-	setup_udpip_header();
+	setup_udpip_header(l_srcip, l_dstip);
 
       } else {
 	cdo.control.enable = 0;
