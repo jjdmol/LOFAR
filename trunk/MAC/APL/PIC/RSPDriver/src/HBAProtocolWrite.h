@@ -63,19 +63,21 @@ namespace LOFAR {
 
       friend class HBAResultRead;
 
-#define HBA_WRITE_DELAYS
+      //#define HBA_WRITE_DELAYS
 
 #ifdef HBA_WRITE_DELAYS
       static const int PROTOCOL_SIZE         = 320;
       static const int RESULT_SIZE           = 115;
-#else
-      static const int PROTOCOL_SIZE         = 8+5;
-      static const int RESULT_SIZE           = 4+1;
-#endif
 
       static const int PROTOCOL_DELAY_OFFSET = 10; // offset of delay settings in i2c_protocol
       static const int RESULT_DELAY_OFFSET   = 6;  // offset of delay settings in i2c_result
       static const int RESULT_DELAY_STRIDE   = 7;  // nof bytes to next pair of X,Y delays
+#else
+      static const int PROTOCOL_SIZE         = 8;
+      static const int RESULT_SIZE           = 4;
+      static const int PROTOCOL_LED_OFFSET   = 3;
+      static const int RESULT_LED_OFFSET     = 1;
+#endif
 
       // construct i2c sequence
       static uint8 i2c_protocol[PROTOCOL_SIZE];
