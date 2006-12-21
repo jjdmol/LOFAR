@@ -51,33 +51,41 @@ const char PC_QUAL_DEVELOP[]  =	{ "development"   };
 const char PC_KEY_VERSIONNR[] = { "versionnr"     };
 const char PC_KEY_QUAL[]      =	{ "qualification" };
 
+// A key/value map is defined as a map of strings. The third template
+// parameter, \c StringUtil::Compare, is the string comparison functor that
+// will be used to compare keys.
+typedef map <string, string, StringUtil::Compare>	KeyValueMap;
+
 //# Description of class.
 // The ParameterSetImpl class is a key-value implementation of the type
-// map<string, string>. 
+// map<string, string, StringUtil::Compare>. 
 // This means that values are stored as a string which allows easy merging and
 // splitting of ParameterSetImpls because no conversions have to be done.
 // A couple of getXxx routines are provided to convert the strings to the 
 // desired type.
 //
-class ParameterSetImpl : public map <string, string>
+	class ParameterSetImpl : public KeyValueMap
 {
 public:
-	typedef map<string, string>::iterator			iterator;
-	typedef map<string, string>::const_iterator		const_iterator;
+	typedef KeyValueMap::iterator		iterator;
+	typedef KeyValueMap::const_iterator	const_iterator;
 
 	// \name Construction and Destruction
 	// A ParameterSetImpl can be constructed as empty collection, can be
 	// read from a file or copied from another collection. 
 	// @{
 
-	// Create an empty collection.
-	ParameterSetImpl();
+	// Create an empty collection. If a keyNoCase is \c true, then key
+	// comparison is case insensitive.
+	explicit ParameterSetImpl(bool keyNoCase);
 
 	// Destroy the contents.
 	~ParameterSetImpl();
 
 	// The ParameterSetImpl may be construction by reading a param. file.
-	explicit ParameterSetImpl(const string&	theFilename);
+	// If a keyNoCase is \c true, then key comparison is case insensitive.
+	explicit ParameterSetImpl(const char*	theFilename,
+				  bool keyNoCase);
 	// @}
 
 	// Deal with the reference count.
@@ -109,7 +117,7 @@ public:
 	// @{
 
 	// Writes the Key-Values pair from the current ParCollection to the file.
-	void	writeFile   (const string& theFilename, bool append = false) const;
+	void	writeFile   (const char* theFilename, bool append = false) const;
 
 	// Writes the Key-Values pair from the current ParCollection to the 
 	// string buffer.
@@ -223,15 +231,18 @@ private:
 	// methods do some preprocessing so the 'adopt' method can use the
 	// \c addStream method.
 	// @{
-	void	readFile   (const string& theFile, const	bool merge);
+	void	readFile   (const char*   theFile, const	bool merge);
 	void	readBuffer (const string& theFile, const	bool merge);
 	void	addStream  (istream&	inputStream, const	bool merge);
 	// @}
 
 	const_iterator	findKV(const string& aKey) const;
 
-	//# Reference count.
+	// Reference count.
 	int itsCount;
+
+	// Indicates whether case should be ignored when comparing keys.
+	bool itsKeyNoCase;
 };
 
 //# -------------------- Global functions --------------------

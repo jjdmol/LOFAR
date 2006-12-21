@@ -57,14 +57,23 @@ public:
 	// read from a file or copied from another collection. 
 	// @{
 
-	// Create an empty collection.
-	ParameterSet();
+	// Create an empty collection. The optional argument \a keyNoCase
+	// determines whether keys should be compared case insensitive.
+	explicit ParameterSet(bool keyNoCase = false);
 
 	// Destroy the contents.
 	~ParameterSet();
 
-	// The ParameterSet may be construction by reading a param. file.
-	explicit ParameterSet(const string&	theFilename);
+	// The ParameterSet may be construction by reading a param. file. The
+	// optional argument \a keyNoCase determines whether keys should be
+	// compared case insensitive.
+	// @{
+	explicit ParameterSet(const string&	theFilename,
+			      bool keyNoCase = false);
+
+	explicit ParameterSet(const char*	theFilename,
+			      bool keyNoCase = false);
+	// @}
 
 	// Copying is allowed.
 	ParameterSet(const ParameterSet& that);
@@ -258,7 +267,7 @@ inline void	ParameterSet::adoptCollection(const ParameterSet&	theCollection)
 
 inline void	ParameterSet::writeFile   (const string& theFilename, bool append) const
 {
-	itsSet->writeFile (theFilename, append);
+	itsSet->writeFile (theFilename.c_str(), append);
 }
 
 inline void	ParameterSet::writeBuffer (      string& theBuffer) const
