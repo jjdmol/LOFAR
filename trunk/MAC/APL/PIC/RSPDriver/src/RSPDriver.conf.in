@@ -38,7 +38,7 @@ RSPDriver.PPS_DELAY=0
 RSPDriver.PPS_TRIGGER=1
 
 #
-# Specify MAC addresses of the RSP boards explicitly
+# Specify the MAC addresses of the control port (MAC) of RSP boards
 #
 RSPDriver.MAC_ADDR_0=10:FA:00:00:11:00
 RSPDriver.MAC_ADDR_1=10:FA:00:00:12:00
@@ -66,39 +66,80 @@ RSPDriver.MAC_ADDR_22=10:FA:00:00:16:00
 RSPDriver.MAC_ADDR_23=10:FA:00:00:17:00
 
 #
-# Serdes lane settings.
+# CEP Output settings (CDO) for the four lanes
 #
-# Define the end of the four SERDES rings. The boards
-# not defined as end of the lane will pass on their
-# cross-correlation or beamlet data to the neighbour board.
+# Each station has up to four output lanes, corresponding
+# to the four (logical) SERDES lanes that connect all the
+# RSP boards in a station in a ring.
 #
-# This also defines which RSP board will output data from which
-# lane on its CDO port (CDO = CEP Data Output).
+# LANE_x_BLET_OUT, LANE_x_XLET_OUT
+# --------------------------------
+# These settings determine which RSP board outputs beamlets (BLET)
+# and crosslets (XLET) of lane x on the CEP output port. Currently
+# (and this probably won't be changed) the BLET and XLET setting must
+# be identical per lane, e.g. if LANE_0_BLET_OUT is X, then
+# LANE_0_XLET_OUT must also be X. This setting controls the setting
+# of the RAD register. The RSP board immediately following
+# the output board will ignore input data thus creating a route from
+# first to last board the latter being the output board.
 #
 # Complete beamforming and cross-correlation data and statistics
-# will be available on the last RSP board in a ring.
-# All other boards in the ring will produce partial 
-# data and statistics.
-#
-# Assuming the index of the last RSP board is N, then
-# the ring starts at RSP board (N - 1) % N_RSPBOARDS
+# will be available only on the last RSP board in a ring (the output board).
+# All other boards in the ring will produce partial data and statistics.
 #
 # Note: the specified RSP board index will be taken
 # modulo N_RSPBOARDS to prevent out of range indices.
 #
+# LANE_x_SRCMAC, LANE_x_SRCIP, LANE_x_DSTMAC, LANE_x_DSTIP
+# --------------------------------------------------------
+# Output of RSP boards is packaged in UDP/IP packets. These
+# packets need a source MAC- and IP-address and a destination
+# MAC- and IP-address.
+#
+# The RSP board that outputs lane x will use the MAC- and IP-
+# addresses specified here. Note that changing the output
+# lane of beamlet LANE_x_BLET_OUT to a different
+# RSP board will move these addresses to the new RSP board.
+# Only RSP boards that are assigned output of one of the four
+# lanes will produce ethernet packets and use these MAC- and
+# IP-addresses.
+#
+RSPDriver.LANE_0_BLET_OUT=0
+RSPDriver.LANE_0_XLET_OUT=0
+RSPDriver.LANE_0_SRCMAC=10:fa:00:%02x:00:01
+RSPDriver.LANE_0_SRCIP=10.10.0.1
+RSPDriver.LANE_0_DSTMAC=00:E0:81:34:93:3B
+RSPDriver.LANE_0_DSTIP=10.170.0.1
+
+RSPDriver.LANE_1_BLET_OUT=1
+RSPDriver.LANE_1_XLET_OUT=1
+RSPDriver.LANE_1_SRCMAC=10:fa:00:%02x:00:02
+RSPDriver.LANE_1_SRCIP=10.10.0.2
+RSPDriver.LANE_1_DSTMAC=00:E0:81:34:93:3B
+RSPDriver.LANE_1_DSTIP=10.170.0.2
+
+RSPDriver.LANE_2_BLET_OUT=2
+RSPDriver.LANE_2_XLET_OUT=2
+RSPDriver.LANE_2_SRCMAC=10:fa:00:%02x:00:03
+RSPDriver.LANE_2_SRCIP=10.10.0.3
+RSPDriver.LANE_2_DSTMAC=00:E0:81:31:B0:E1
+RSPDriver.LANE_2_DSTIP=10.170.0.3
+
+RSPDriver.LANE_3_BLET_OUT=3
+RSPDriver.LANE_3_XLET_OUT=3
+RSPDriver.LANE_3_SRCMAC=10:fa:00:%02x:00:04
+RSPDriver.LANE_3_SRCIP=10.10.0.4
+RSPDriver.LANE_3_DSTMAC=00:E0:81:31:B2:F5
+RSPDriver.LANE_3_DSTIP=10.170.0.4
+
+#
+# IGNORE_REMOTE_DATA
+# ------------------
 # Setting IGNORE_REMOTE_DATA to 1 will force all boards
 # to ignore remote data. This can be used to check
 # for difference between operation with data from SERDES
 # ring and without.
 #
-RSPDriver.LANE_0_BLET_OUT=0
-RSPDriver.LANE_1_BLET_OUT=1
-RSPDriver.LANE_2_BLET_OUT=2
-RSPDriver.LANE_3_BLET_OUT=3
-RSPDriver.LANE_0_XLET_OUT=0
-RSPDriver.LANE_1_XLET_OUT=1
-RSPDriver.LANE_2_XLET_OUT=2
-RSPDriver.LANE_3_XLET_OUT=3
 RSPDriver.IGNORE_REMOTE_DATA=0
 
 #
@@ -109,87 +150,10 @@ RSPDriver.IGNORE_REMOTE_DATA=0
 # CDO_ENABLE=(0|1)   : when 0 disable output on all RSP boards
 # CDO_N_BLOCKS=(N)   : Set number of blocks of N_BEAMLETS beamlets per output Ethernet frame
 # CDO_N_BEAMLETS=(N) : Set number of beamlets to output in each block
-# CDO_SRCMAC_FORMAT  : Template for the src mac address of the boards that output data to CEP
-#   First %02x will be replaced by station id, second by RSP board index,
-#   e.g. Station 14, RSP board 3 will be: 10:FA:00:0E:03:01
 #
 RSPDriver.CDO_ENABLE=1
 RSPDriver.CDO_N_BLOCKS=16
 RSPDriver.CDO_N_BEAMLETS=40
-RSPDriver.CDO_SRCMAC_FORMAT=10:FA:00:%02x:01:%02x
-
-#
-# Destination MAC addresses configuration
-# for output RSP boards
-# Must match with MAC addresses of CEP input nodes
-#
-# Uncomment only the lines for the specific station
-# on which the configuration file is used.
-#
-
-# FTS-1
-#RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8A
-#RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D4
-
-# CS01:
-#RSPDriver.DST_MAC_ADDR_0=00:E0:81:34:8C:D1
-#RSPDriver.DST_MAC_ADDR_1=00:E0:81:34:8C:D1
-#RSPDriver.DST_MAC_ADDR_2=00:E0:81:34:9B:87
-#RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:B3:27
-
-# CS08:
-#RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DE:8B
-#RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DE:8B
-#RSPDriver.DST_MAC_ADDR_2=00:E0:81:29:20:37
-#RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:DE:9B
-
-# CS16:
-#RSPDriver.DST_MAC_ADDR_0=00:E0:81:31:DF:D5
-#RSPDriver.DST_MAC_ADDR_1=00:E0:81:31:DF:D5
-#RSPDriver.DST_MAC_ADDR_2=00:E0:81:34:92:11
-#RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:B2:15
-
-# CS10:
-RSPDriver.DST_MAC_ADDR_0=00:E0:81:34:93:3B
-RSPDriver.DST_MAC_ADDR_1=00:E0:81:34:93:3B
-RSPDriver.DST_MAC_ADDR_2=00:E0:81:31:B0:E1
-RSPDriver.DST_MAC_ADDR_3=00:E0:81:31:B2:F5
-
-#
-# EOF Destination MAC address configuration
-#
-
-#
-# Source IP address in UDP header for each RSP board
-#
-RSPDriver.SRC_IP_ADDR_0=10.10.0.1
-RSPDriver.SRC_IP_ADDR_1=10.10.0.2
-RSPDriver.SRC_IP_ADDR_2=10.10.0.3
-RSPDriver.SRC_IP_ADDR_3=10.10.0.4
-RSPDriver.SRC_IP_ADDR_4=10.10.0.5
-RSPDriver.SRC_IP_ADDR_5=10.10.0.6
-RSPDriver.SRC_IP_ADDR_6=10.10.0.7
-RSPDriver.SRC_IP_ADDR_7=10.10.0.8
-RSPDriver.SRC_IP_ADDR_8=10.10.0.9
-RSPDriver.SRC_IP_ADDR_9=10.10.0.10
-RSPDriver.SRC_IP_ADDR_10=10.10.0.11
-RSPDriver.SRC_IP_ADDR_11=10.10.0.12
-
-#
-# Destination IP adress in UDP header for each RSP board
-#
-RSPDriver.DST_IP_ADDR_0=10.170.0.1
-RSPDriver.DST_IP_ADDR_1=10.170.0.2
-RSPDriver.DST_IP_ADDR_2=10.170.0.3
-RSPDriver.DST_IP_ADDR_3=10.170.0.4
-RSPDriver.DST_IP_ADDR_4=10.170.0.5
-RSPDriver.DST_IP_ADDR_5=10.170.0.6
-RSPDriver.DST_IP_ADDR_6=10.170.0.7
-RSPDriver.DST_IP_ADDR_7=10.170.0.8
-RSPDriver.DST_IP_ADDR_8=10.170.0.9
-RSPDriver.DST_IP_ADDR_9=10.170.0.10
-RSPDriver.DST_IP_ADDR_10=10.170.0.11
-RSPDriver.DST_IP_ADDR_11=10.170.0.12
 
 #
 # Specify the absolute backplane index of the first
