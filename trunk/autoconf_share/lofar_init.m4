@@ -278,7 +278,7 @@ AC_ARG_WITH(lofar-libdir,
   \rm -f pkgbldinc/$lfr_pkg;
   ln -s $lfr_curwd/src pkgbldinc/$lfr_pkg;
   \rm -f pkgext*
-  touch pkgext pkgextcppflags pkgextcxxflags pkgextobjs
+  touch pkgext pkgextcppflags pkgextcxxflags pkgextldflags pkgextobjs
 
   # We have to deal with creating a file lofar_config.h which is the
   # common include file to be used in LOFAR software.
