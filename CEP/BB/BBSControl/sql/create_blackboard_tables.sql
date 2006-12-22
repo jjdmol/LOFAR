@@ -1,17 +1,18 @@
 CREATE TABLE blackboard.strategy
 (
-    data_set                TEXT                NOT NULL,
+    "DataSet"               TEXT                NOT NULL,
     
-    local_sky_parmdb        TEXT                NOT NULL,
-    instrument_parmdb       TEXT                NOT NULL,
-    history_parmdb          TEXT                NOT NULL,
+    "ParmDB.LocalSky"       TEXT                NOT NULL,
+    "ParmDB.Instrument"     TEXT                NOT NULL,
+    "ParmDB.History"        TEXT                NOT NULL,
 
-    stations                TEXT[]              DEFAULT '{}',
-    input_column            TEXT                DEFAULT 'DATA',
-    work_domain_size        DOUBLE PRECISION[2] NOT NULL,
+    "Stations"              TEXT[]              DEFAULT '{}',
+    "InputData"             TEXT                DEFAULT 'DATA',
+    "WorkDomainSize.Freq"   DOUBLE PRECISION    NOT NULL,
+    "WorkDomainSize.Time"   DOUBLE PRECISION    NOT NULL,
       
-    correlation_selection   TEXT                DEFAULT 'CROSS',
-    correlation_type        TEXT[]              DEFAULT '{"XX","XY","YX","YY"}'
+    "Correlation.Selection" TEXT                DEFAULT 'CROSS',
+    "Correlation.Type"      TEXT[]              DEFAULT '{"XX","XY","YX","YY"}'
 );
 
 
@@ -22,8 +23,7 @@ CREATE TABLE blackboard.strategy
 CREATE SEQUENCE blackboard.work_order_id_seq;
 CREATE TABLE blackboard.work_order
 (
-    id              INTEGER                     PRIMARY KEY,
-    timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now()
+    id              INTEGER                     PRIMARY KEY
 );
 
 
@@ -33,58 +33,61 @@ CREATE TABLE blackboard.step
     id                      INTEGER             PRIMARY KEY,
     work_order_id           INTEGER             UNIQUE NOT NULL REFERENCES blackboard.work_order (id) ON DELETE CASCADE,
     
-    name                    TEXT                NOT NULL,
-    operation               TEXT                NOT NULL,
+    "Name"                  TEXT                NOT NULL,
+    "Operation"             TEXT                NOT NULL,
     
-    station1                TEXT[]              DEFAULT '{}',
-    station2                TEXT[]              DEFAULT '{}',
+    "Baselines.Station1"    TEXT[]              DEFAULT '{}',
+    "Baselines.Station2"    TEXT[]              DEFAULT '{}',
     
-    correlation_selection   TEXT                DEFAULT 'CROSS',
-    correlation_type        TEXT[]              DEFAULT '{"XX","XY","YX","YY"}',
+    "Correlation.Selection" TEXT                DEFAULT 'CROSS',
+    "Correlation.Type"      TEXT[]              DEFAULT '{"XX","XY","YX","YY"}',
     
-    sources                 TEXT[]              DEFAULT '{}',
-    instrument_model        TEXT[]              DEFAULT '{}',
+    "Sources"               TEXT[]              DEFAULT '{}',
+    "InstrumentModel"       TEXT[]              DEFAULT '{}',
 
-    output_column           TEXT                DEFAULT 'CORRECTED_DATA'
+    "OutputData"            TEXT                DEFAULT 'CORRECTED_DATA'
 );
 
 
 CREATE TABLE blackboard.solve_arguments
 (
     step_id                 INTEGER             UNIQUE NOT NULL REFERENCES blackboard.step (id) ON DELETE CASCADE,
-    max_iter                INTEGER             DEFAULT 1,
-    epsilon                 DOUBLE PRECISION    DEFAULT 1e-6,
-    min_converged           DOUBLE PRECISION    DEFAULT 100.0,
-    parms                   TEXT[]              DEFAULT '{}',
-    excl_parms              TEXT[]              DEFAULT '{}',
-    solve_domain_size       DOUBLE PRECISION[2] NOT NULL
+
+    "MaxIter"               INTEGER             DEFAULT 1,
+    "Epsilon"               DOUBLE PRECISION    DEFAULT 1e-6,
+    "MinConverged"          DOUBLE PRECISION    DEFAULT 100.0,
+    "Parms"                 TEXT[]              DEFAULT '{}',
+    "ExclParms"             TEXT[]              DEFAULT '{}',
+    "DomainSize.Freq"       DOUBLE PRECISION    NOT NULL,
+    "DomainSize.Time"       DOUBLE PRECISION    NOT NULL
 );
 
 
 --CREATE TABLE blackboard.predict_arguments
 --(
 --    step_id                 INTEGER             UNIQUE NOT NULL REFERENCES blackboard.step (id) ON DELETE CASCADE,
---    output_column           TEXT                DEFAULT 'MODEL_DATA'
+--    "OutputData"            TEXT                DEFAULT 'CORRECTED_DATA'
 --);
 
 
 --CREATE TABLE blackboard.subtract_arguments
 --(
 --    step_id                 INTEGER             UNIQUE NOT NULL REFERENCES blackboard.step (id) ON DELETE CASCADE,
---    output_column           TEXT                DEFAULT 'CORRECTED_DATA'
+--    "OutputData"            TEXT                DEFAULT 'CORRECTED_DATA'
 --);
 
 
 --CREATE TABLE blackboard.correct_arguments
 --(
 --    step_id                 INTEGER             UNIQUE NOT NULL REFERENCES blackboard.step (id) ON DELETE CASCADE,
---    output_column           TEXT                DEFAULT 'CORRECTED_DATA'
+--    "OutputData"            TEXT                DEFAULT 'CORRECTED_DATA'
 --);
 
 
 CREATE TABLE blackboard.status
 (
     work_order_id   INTEGER                     NOT NULL REFERENCES blackboard.work_order (id) ON DELETE CASCADE,
+
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node            INET                        DEFAULT inet_client_addr(),
     status_code     INTEGER                     DEFAULT 0,
@@ -95,6 +98,7 @@ CREATE TABLE blackboard.status
 CREATE TABLE blackboard.log
 (
     work_order_id           INTEGER                     DEFAULT NULL REFERENCES blackboard.work_order (id) ON DELETE CASCADE,
+
     timestamp               TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node                    INET                        DEFAULT inet_client_addr(),
     level                   INTEGER                     DEFAULT 7,
