@@ -1180,7 +1180,7 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, co
   itsCurrentSubband   = itsFirstSubband + coreNumber % nrNodesPerPset % nrSubbandsPerPset;
   itsSubbandIncrement = nrNodesPerPset % nrSubbandsPerPset;
 
-  itsInputConnected   = ps.getBool("Connections.InputToBGLProc");
+  itsInputConnected   = ps.getString("Connections.Input_BGLProc.TransportHolder") != "NULL";
 
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
 //getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
@@ -1387,7 +1387,7 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 #endif
 
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
-#if 0 && defined DELAY_COMPENSATION
+#if 1 && defined DELAY_COMPENSATION
     std::clog << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << (*delays)[stat].delayAtBegin << " to " << (*delays)[stat].delayAfterEnd << " sec" << std::endl;
 #endif
 

@@ -29,9 +29,7 @@
 #include <CS1_BGLProc/AH_BGL_Processing.h>
 #include <CS1_BGLProc/WH_BGL_Processing.h>
 #include <CS1_Interface/CS1_Config.h>
-#include <CS1_Interface/Stub_BGL_Subband.h>
-//#include <CS1_Interface/Stub_BGL_RFI_Mitigation.h>
-#include <CS1_Interface/Stub_BGL_Visibilities.h>
+#include <CS1_Interface/Stub_BGL.h>
 #include <Transport/BGLConnection.h>
 
 #if defined HAVE_MPI
@@ -134,14 +132,12 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   unsigned psetsPerCell	     = itsParamSet.getInt32("BGLProc.PsetsPerCell");
   unsigned usedNodesPerPset  = itsParamSet.getInt32("BGLProc.NodesPerPset");
   unsigned nrSubbandsPerPset = itsParamSet.getInt32("General.SubbandsPerPset");
-  bool	   connectInput	     = itsParamSet.getBool("Connections.InputToBGLProc");
-  bool	   connectOutput     = itsParamSet.getBool("Connections.BGLProcToStorage");
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
-  itsSubbandStub	= new Stub_BGL_Subband(true, itsParamSet);
+  itsSubbandStub	= new Stub_BGL(true, true, "Input_BGLProc", itsParamSet);
 //itsRFI_MitigationStub	= new Stub_BGL_RFI_Mitigation(true, itsParamSet);
-  itsVisibilitiesStub	= new Stub_BGL_Visibilities(true, itsParamSet);
+  itsVisibilitiesStub	= new Stub_BGL(true, false, "BGLProc_Storage", itsParamSet);
 
 #if defined HAVE_BGL
   struct BGLPersonality personality;
@@ -186,12 +182,12 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 #if defined USE_ZOID
       TH_ZoidClient *th = new TH_ZoidClient();
 
-      if (connectInput) {
+      if (1) {
 	Connection *in = new BGLConnection("zoid", 0, dm.getGeneralInHolder(WH_BGL_Processing::SUBBAND_CHANNEL), th);
 	dm.setInConnection(WH_BGL_Processing::SUBBAND_CHANNEL, in);
       }
 
-      if (connectOutput) {
+      if (1) {
 #if 1
 	Connection *out = new BGLConnection("zoid", dm.getGeneralOutHolder(WH_BGL_Processing::VISIBILITIES_CHANNEL), 0, th);
 	dm.setOutConnection(WH_BGL_Processing::VISIBILITIES_CHANNEL, out);
@@ -200,12 +196,9 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 #endif
       }
 #else
-      if (connectInput)
-	itsSubbandStub->connect(cell, cellCore, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
+      itsSubbandStub->connect(cell, cellCore, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
 //    itsRFI_MitigationStub->connect(cell, cellCore, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
-
-      if (connectOutput)
-	itsVisibilitiesStub->connect(cell, cellCore, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+      itsVisibilitiesStub->connect(cell, cellCore, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 #endif
 
 #if defined HAVE_BGL

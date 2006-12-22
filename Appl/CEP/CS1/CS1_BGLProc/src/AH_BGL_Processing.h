@@ -22,6 +22,7 @@
 #define LOFAR_CS1_BGL_PROC_AH_BGL_PROCESSING_H
 
 #include <tinyCEP/TinyApplicationHolder.h>
+#include <CS1_Interface/Stub_BGL.h>
 
 #if defined HAVE_BGL
 #include <rts.h>
@@ -32,9 +33,6 @@ namespace CS1 {
 
     //# Forward declarations
 class WH_BGL_Processing;
-class Stub_BGL_Subband;
-//class Stub_BGL_RFI_Mitigation;
-class Stub_BGL_Visibilities;
 
     // Description of class.
 class AH_BGL_Processing : public TinyApplicationHolder
@@ -56,10 +54,7 @@ class AH_BGL_Processing : public TinyApplicationHolder
 #endif
 
     vector<WH_BGL_Processing *> itsWHs;
-
-    Stub_BGL_Subband		*itsSubbandStub;
-//  Stub_BGL_RFI_Mitigation     *itsRFI_MitigationStub;
-    Stub_BGL_Visibilities	*itsVisibilitiesStub;
+    Stub_BGL			*itsSubbandStub, *itsVisibilitiesStub;
 };
 
 } // namespace CS1

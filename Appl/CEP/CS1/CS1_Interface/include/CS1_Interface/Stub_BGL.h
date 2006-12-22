@@ -28,38 +28,33 @@
 #include <Transport/Connection.h>
 #include <Transport/TransportHolder.h>
 
-namespace LOFAR
+#include <string>
+
+namespace LOFAR {
+namespace CS1 {
+
+class Stub_BGL
 {
-  namespace CS1
-  {
+  // This is a base class that can be used to make connections from the BGL
+  // application to the outside world.  Details are filled in by derived
+  // classes that must provide the necessary TransportHolders.
 
-    class Stub_BGL
-    {
-      // This is a base class that can be used to make connections from the BGL
-      // application to the outside world.  Details are filled in by derived
-      // classes that must provide the necessary TransportHolders.
+  public:
+    Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const ACC::APS::ParameterSet &pSet);
+    virtual ~Stub_BGL();
 
-    public:
-      Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet);
-      virtual ~Stub_BGL();
+    void connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel);
 
-      void connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm,
-                   unsigned channel);
+    const ACC::APS::ParameterSet &itsPS;
+    bool			 itsIAmOnBGL, itsIsInput;
+    std::string			 itsPrefix;
+    unsigned			 itsNrCells, itsNrNodesPerCell;
+    TransportHolder		 **itsTHs;
+    Connection			 **itsConnections;
 
-    protected:
-      virtual TransportHolder *newClientTH(unsigned cellNr, unsigned nodeNr) = 0;
-      virtual TransportHolder *newServerTH(unsigned cellNr, unsigned nodeNr) = 0;
+};
 
-      bool		  itsIAmOnBGL, itsIsInput;
-      TransportHolder **itsTHs;
-      Connection	  **itsConnections;
-
-      static unsigned theirNrCells;
-      static unsigned theirNrNodesPerCell;
-    };
-
-  } // namespace CS1
-
+} // namespace CS1
 } // namespace LOFAR
 
 #endif
