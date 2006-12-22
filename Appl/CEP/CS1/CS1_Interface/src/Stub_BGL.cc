@@ -26,6 +26,8 @@
 #include <Transport/TH_Null.h>
 #include <Transport/TH_Socket.h>
 
+#include <cstring>
+
 
 namespace LOFAR { 
 namespace CS1 {
@@ -84,7 +86,10 @@ void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, un
     string service = itsPS.getStringVector(itsPrefix + ".Ports")[nodeNr];
     th = itsIAmOnBGL ? new TH_Socket(server, service, false, Socket::TCP, false) : new TH_Socket(service, false, Socket::TCP, 5, false);
   } else if (transportType == "FILE") {
-    th = new TH_File(itsPS.getString(itsPrefix + ".BaseFileName"), itsIsInput ? TH_File::Read : TH_File::Write);
+    string baseFileName = itsPS.getString(itsPrefix + ".BaseFileName");
+    char fileName[baseFileName.size() + 32];
+    sprintf(fileName, "%s.%u.%u", baseFileName.c_str(), cellNr, nodeNr);
+    th = new TH_File(string(fileName), itsIsInput ? TH_File::Read : TH_File::Write);
 #if 0
   } else if (transportType == "ZOID") {
     th = itsIAmOnBGL ? TH_ZoidClient() : TH_ZoidServer(nodeNr);
