@@ -101,6 +101,9 @@ AC_ARG_WITH(cxxflags,
 AC_ARG_WITH(ldflags,
 	[  --with-ldflags=LDFLAGS    enable extra LDFLAGS],
 	[with_ldflags="$withval"])dnl
+AC_ARG_WITH(libs,
+	[  --with-libs=LIBS          enable extra LIBS],
+	[with_libs="$withval"])dnl
 AC_ARG_ENABLE(tracer,
 	[  --disable-tracer        en/disable TRACER macros (default is debug/opt)],
 	[enable_tracer="$enableval"],
@@ -218,11 +221,13 @@ AC_DEFINE(LOFAR_DEBUG,dnl
   CFLAGS="$lfr_cflags $with_cflags"
   CXXFLAGS="$lfr_cxxflags $with_cxxflags"
   LDFLAGS="$LDFLAGS $lfr_ldflags $with_ldflags"
+  LIBS="$LIBS $with_libs"
 ]
 AC_SUBST(CFLAGS)dnl
 AC_SUBST(CXXFLAGS)dnl
 AC_SUBST(CPPFLAGS)dnl
 AC_SUBST(LDFLAGS)dnl
+AC_SUBST(LIBS)dnl
 [
   if test "$enable_tracer" != "no"; then]
     AC_DEFINE(ENABLE_TRACER,dnl
