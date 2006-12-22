@@ -21,31 +21,29 @@
 #include <lofar_config.h>
 
 #include <CS1_Interface/Stub_BGL.h>
-#include <Transport/TH_Socket.h>
 #include <Transport/BGLConnection.h>
+#include <Transport/TH_File.h>
+#include <Transport/TH_Null.h>
+#include <Transport/TH_Socket.h>
 
 
 namespace LOFAR { 
 namespace CS1 {
 
-unsigned Stub_BGL::theirNrCells;
-unsigned Stub_BGL::theirNrNodesPerCell;
-
-
-Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pSet)
+Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const ACC::APS::ParameterSet &pSet)
 :
-  itsIAmOnBGL(iAmOnBGL),
-  itsIsInput(isInput),
-  itsTHs(0),
-  itsConnections(0)
+  itsPS(pSet)
 {
-  if (theirNrCells == 0) { // first time
-    int psetsPerCell	= pSet.getInt32("BGLProc.PsetsPerCell");
-    theirNrCells	= pSet.getInt32("Observation.NSubbands") / (pSet.getInt32("General.SubbandsPerPset") * psetsPerCell);
-    theirNrNodesPerCell = pSet.getInt32("BGLProc.NodesPerPset") * psetsPerCell;
-  }
+  itsIAmOnBGL	    = iAmOnBGL;
+  itsIsInput	    = isInput;
+  itsPrefix	    = string("Connections.") + connectionName;
+  itsTHs	    = 0;
+  itsConnections    = 0;
+  int psetsPerCell  = pSet.getInt32("BGLProc.PsetsPerCell");
+  itsNrCells	    = pSet.getInt32("Observation.NSubbands") / (pSet.getInt32("General.SubbandsPerPset") * psetsPerCell);
+  itsNrNodesPerCell = pSet.getInt32("BGLProc.NodesPerPset") * psetsPerCell;
 
-  size_t size = theirNrCells * theirNrNodesPerCell;
+  size_t size = itsNrCells * itsNrNodesPerCell;
 
   itsTHs = new TransportHolder * [size];
   memset(itsTHs, 0, sizeof(TransportHolder * [size]));
@@ -58,7 +56,7 @@ Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const ACC::APS::ParameterSet &pS
 Stub_BGL::~Stub_BGL()
 {
   if (itsTHs != 0 && itsConnections != 0) {
-    size_t size = theirNrCells * theirNrNodesPerCell;
+    size_t size = itsNrCells * itsNrNodesPerCell;
     for (uint i = 0; i < size; i ++) {
       delete itsTHs[i];
       delete itsConnections[i];
@@ -72,22 +70,38 @@ Stub_BGL::~Stub_BGL()
 
 void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel)
 {
-  size_t index = cellNr * theirNrNodesPerCell + nodeNr;
+  size_t index = cellNr * itsNrNodesPerCell + nodeNr;
 
-  ASSERTSTR(cellNr < theirNrCells, "cellNr argument out of bounds; "
-	    << cellNr << " / " << theirNrCells);
-  ASSERTSTR(nodeNr < theirNrNodesPerCell, "nodeNr argument out of bounds; "
-	    << nodeNr << " / " << theirNrNodesPerCell);
-  ASSERTSTR(itsTHs[index] == 0, "already connected: cellNr = "
-	    << cellNr << ", nodeNr = " << nodeNr);
+  ASSERTSTR(cellNr < itsNrCells, "cellNr argument out of bounds; " << cellNr << " / " << itsNrCells);
+  ASSERTSTR(nodeNr < itsNrNodesPerCell, "nodeNr argument out of bounds; " << nodeNr << " / " << itsNrNodesPerCell);
+  ASSERTSTR(itsTHs[index] == 0, "already connected: cellNr = " << cellNr << ", nodeNr = " << nodeNr);
 
-  itsTHs[index] = itsIAmOnBGL ? newClientTH(cellNr, nodeNr) : newServerTH(cellNr, nodeNr);
+  TransportHolder *th;
+  string transportType = itsPS.getString(itsPrefix + ".TransportHolder");
+
+  if (transportType == "SOCKET") {
+    string server  = itsPS.getStringVector(itsPrefix + ".ServerHosts")[cellNr];
+    string service = itsPS.getStringVector(itsPrefix + ".Ports")[nodeNr];
+    th = itsIAmOnBGL ? new TH_Socket(server, service, false, Socket::TCP, false) : new TH_Socket(service, false, Socket::TCP, 5, false);
+  } else if (transportType == "FILE") {
+    th = new TH_File(itsPS.getString(itsPrefix + ".BaseFileName"), itsIsInput ? TH_File::Read : TH_File::Write);
+#if 0
+  } else if (transportType == "ZOID") {
+    th = itsIAmOnBGL ? TH_ZoidClient() : TH_ZoidServer(nodeNr);
+#endif
+  } else if (transportType == "NULL") {
+    th = new TH_Null();
+  } else {
+    ASSERTSTR(false, transportType << ": unknown connector");
+  }
+
+  itsTHs[index] = th;
 
   if (itsIsInput) {
-    itsConnections[index] = new BGLConnection("output", 0, dm.getGeneralInHolder(channel), itsTHs[index]);
+    itsConnections[index] = new BGLConnection("output", 0, dm.getGeneralInHolder(channel), th);
     dm.setInConnection(channel, itsConnections[index]);
   } else {
-    itsConnections[index] = new BGLConnection("input", dm.getGeneralOutHolder(channel), 0, itsTHs[index]);
+    itsConnections[index] = new BGLConnection("input", dm.getGeneralOutHolder(channel), 0, th);
     dm.setOutConnection(channel, itsConnections[index]);
   }
 };

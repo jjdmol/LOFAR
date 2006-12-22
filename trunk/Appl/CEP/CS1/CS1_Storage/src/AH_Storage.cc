@@ -15,7 +15,6 @@
 #include <APS/ParameterSet.h>
 #include <CS1_Storage/AH_Storage.h>
 #include <Transport/TH_MPI.h>
-#include <CS1_Interface/Stub_BGL_Visibilities.h>
 #include <CS1_Storage/WH_SubbandWriter.h>
 #include <CEPFrame/Step.h>
 
@@ -45,7 +44,7 @@ namespace LOFAR
       // tell the ApplicationHolder this is the top-level composite
       setComposite(comp);
 
-      itsStub = new Stub_BGL_Visibilities(false, itsParamSet);
+      itsStub = new Stub_BGL(false, true, "BGLProc_Storage", itsParamSet);
 
       uint nrPsetsPerCell = itsParamSet.getUint32("BGLProc.PsetsPerCell");
       ASSERT(nrPsetsPerCell > 0);

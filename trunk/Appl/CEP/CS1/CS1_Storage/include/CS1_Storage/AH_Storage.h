@@ -12,13 +12,12 @@
 #define CS1_STORAGE_AH_STORAGE_H
 
 #include <CEPFrame/ApplicationHolder.h>
+#include <CS1_Interface/Stub_BGL.h>
 
 namespace LOFAR
 {
   namespace CS1
   {
-
-    class Stub_BGL_Visibilities;
 
     // This is the ApplicationHolder for the storage section of the CS1 application
     // This applicationholder uses the CEPFrame library and is supposed to
@@ -37,7 +36,7 @@ namespace LOFAR
       virtual void quit    ();
     private:
 
-      Stub_BGL_Visibilities* itsStub;
+      Stub_BGL *itsStub;
 
     };
 

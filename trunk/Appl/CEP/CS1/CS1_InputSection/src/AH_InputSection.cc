@@ -45,8 +45,8 @@ namespace LOFAR {
   namespace CS1 {
 
     AH_InputSection::AH_InputSection() :
-      itsOutputStub(0),
-      itsInputStub(0)
+      itsInputStub(0),
+      itsOutputStub(0)
     {}
 
     AH_InputSection::~AH_InputSection()
@@ -67,7 +67,9 @@ namespace LOFAR {
       LOG_TRACE_FLOW_STR("Start of AH_InputSection::define()");
       undefine();
 
+#if defined HAVE_MPI
       int lowestFreeNode = 0;
+#endif
       
       TimeStamp::setMaxBlockId(itsParamSet.getDouble("Observation.SampleRate"));
 
@@ -91,19 +93,8 @@ namespace LOFAR {
       int nameBufferSize = 40;
       char nameBuffer[nameBufferSize];
 
-      vector<string> outputFileNames;
-      bool writeRawDataToFile = itsParamSet.getBool("Input.WriteRawDataToFile");
-      if (!writeRawDataToFile)
-      {
-        itsOutputStub = new Stub_BGL_Subband(false, itsParamSet);
-      }
-      else
-      {
-        outputFileNames = itsParamSet.getStringVector("Input.OutputRawDataFiles");
-        nNodesPerCell = (itsParamSet.getInt32("General.SubbandsPerPset") * psetsPerCell);
-      }
-       
-      itsInputStub = new Stub_Delay(true, itsParamSet);
+      itsInputStub  = new Stub_Delay(true, itsParamSet);
+      itsOutputStub = new Stub_BGL(false, false, "Input_BGLProc", itsParamSet);
 
       for (int ic = 0; ic < inputCells; ic ++) {
 	WorkHolder* lastWH;
@@ -186,32 +177,16 @@ namespace LOFAR {
 #endif
 	  // connect outputs to Subband stub
 	  vector<int> channels;
-	  bool makeConnections = itsParamSet.getBool("Connect");
-	  if (makeConnections) {
-	    for (int core = 0; core < nNodesPerCell; core++) {
-	      collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 3);
-	      if (writeRawDataToFile)
-              {
-	        TransportHolder *theTH = 0;
-		
-	        theTH = new TH_File(outputFileNames[core], TH_File::Write);
-	        collectSteps.back()->connectOut("output", theTH, core, true);
-	      }
-	      else
-	      { 
-	        itsOutputStub->connect(cell + ic * nCells / inputCells,
-				       core,
-				       (collectSteps.back())->getOutDataManager(0), 
-				       core);
-		
-		channels.push_back(core);
-              } 
-	    }
-	    if (!writeRawDataToFile)
-	    {
-	      collectSteps.back()->getOutDataManager(0).setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
-	    }  
+	  for (int core = 0; core < nNodesPerCell; core++) {
+	    collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 3);
+	    itsOutputStub->connect(cell + ic * nCells / inputCells,
+				   core,
+				   (collectSteps.back())->getOutDataManager(0), 
+				   core);
+	    
+	    channels.push_back(core);
 	  }
+	  collectSteps.back()->getOutDataManager(0).setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
 	}
       }
       

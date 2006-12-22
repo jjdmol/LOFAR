@@ -13,9 +13,6 @@ pkginclude_HEADERS = \
 	SparseSet.h \
 	Stub_BGL.h \
 	Stub_Delay.h \
-	Stub_BGL_RFI_Mitigation.h \
-	Stub_BGL_Subband.h \
-	Stub_BGL_Visibilities.h \
 	Stub_RSP.h
 
 include $(top_srcdir)/Makefile.common
