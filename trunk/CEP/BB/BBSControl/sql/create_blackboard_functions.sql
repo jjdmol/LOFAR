@@ -1,123 +1,156 @@
 -- -------- --
 -- STRATEGY --
 -- -------- --
-CREATE OR REPLACE FUNCTION blackboard.set_strategy(data_set TEXT, local_sky_parmdb TEXT, instrument_parmdb TEXT, history_parmdb TEXT, stations TEXT[], input_column TEXT, work_domain_size DOUBLE PRECISION[2], correlation_selection TEXT, correlation_type TEXT[]) RETURNS VOID AS
+-- Function: blackboard.set_strategy
+-- Full signature:
+-- blackboard.set_strategy("DataSet" TEXT, "ParmDB.LocalSky" TEXT, "ParmDB.Instrument" TEXT, "ParmDB.History" TEXT, "Stations" TEXT[], "InputData" TEXT, "WorkDomainSize.Freq" DOUBLE PRECISION, "WorkDomainSize.Time" DOUBLE PRECISION, "Correlation.Selection" TEXT, "Correlation.Type" TEXT[])
+CREATE OR REPLACE FUNCTION blackboard.set_strategy(TEXT, TEXT, TEXT, TEXT, TEXT[], TEXT, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT[])
+RETURNS VOID AS
 $$
-    INSERT INTO blackboard.strategy(data_set, local_sky_parmdb, instrument_parmdb, history_parmdb, stations, input_column, work_domain_size, correlation_selection, correlation_type) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);
+    INSERT INTO blackboard.strategy("DataSet", "ParmDB.LocalSky", "ParmDB.Instrument", "ParmDB.History", "Stations", "InputData", "WorkDomainSize.Freq", "WorkDomainSize.Time", "Correlation.Selection", "Correlation.Type")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
 $$
 LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION blackboard.get_strategy() RETURNS blackboard.strategy AS
+CREATE OR REPLACE FUNCTION blackboard.get_strategy()
+RETURNS blackboard.strategy AS
 $$
-    SELECT * FROM blackboard.strategy LIMIT 1;
+    SELECT *
+        FROM blackboard.strategy
+        LIMIT 1;
 $$
 LANGUAGE SQL;
+
 
 -- ---------- --
 -- WORK ORDER --
 -- ---------- --
-CREATE OR REPLACE FUNCTION blackboard.add_work_order() RETURNS INTEGER AS
+CREATE OR REPLACE FUNCTION blackboard.add_work_order()
+RETURNS INTEGER AS
 $$
     DECLARE
         _id INTEGER;
     BEGIN
         _id := nextval('blackboard.work_order_id_seq');
-        INSERT INTO blackboard.work_order(id) VALUES (_id);
+        INSERT INTO blackboard.work_order(id)
+            VALUES (_id);
+
         RETURN _id;
     END;
 $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION blackboard.get_next_work_order(current_work_order_id INTEGER) RETURNS blackboard.work_order AS
+CREATE OR REPLACE FUNCTION blackboard.get_next_work_order(current_work_order_id INTEGER)
+RETURNS blackboard.work_order AS
 $$
-    SELECT * FROM blackboard.work_order WHERE id > $1 ORDER BY id LIMIT 1;
+    SELECT *
+        FROM blackboard.work_order
+        WHERE id > $1
+        ORDER BY id LIMIT 1;
 $$
 LANGUAGE SQL;
+
 
 -- ---- --
 -- STEP --
 -- ---- --
-CREATE OR REPLACE FUNCTION blackboard.add_step(_name TEXT, _operation TEXT, _station1 TEXT[], _station2 TEXT[], _correlation_selection TEXT, _correlation_type TEXT[], _sources TEXT[], _instrument_model TEXT[], _output_column TEXT) RETURNS INTEGER AS
+-- Function: blackboard.get_step
+-- Full signature:
+-- blackboard.get_step(_work_order_id INTEGER)
+CREATE OR REPLACE FUNCTION blackboard.get_step(INTEGER)
+RETURNS blackboard.step AS
+$$
+    
+    SELECT *
+        FROM blackboard.step
+        WHERE blackboard.step.work_order_id = $1;
+$$
+LANGUAGE SQL;
+
+
+-- Function: blackboard.add_step
+-- Full signature:
+-- blackboard.add_step("Name" TEXT, "Operation" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData" TEXT)
+CREATE OR REPLACE FUNCTION blackboard.add_step(TEXT, TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT)
+RETURNS INTEGER AS
 $$
     DECLARE
         _id INTEGER;
         _work_order_id INTEGER;
     BEGIN
-        _work_order_id := add_work_order();
+        _work_order_id := blackboard.add_work_order();
         _id := nextval('blackboard.step_id_seq');
-        INSERT INTO blackboard.step(id, work_order_id, name, operation, station1, station2, correlation_selection, correlation_type, sources, instrument_model, output_column) VALUES (_id, _work_order_id, _name, _operation, _station1, _station2, _correlation_selection, _correlation_type, _sources, _instrument_model, _output_column);
+        INSERT INTO blackboard.step(id, work_order_id, "Name", "Operation", "Baselines.Station1", "Baselines.Station2", "Correlation.Selection", "Correlation.Type", "Sources", "InstrumentModel", "OutputData")
+            VALUES (_id, _work_order_id, $1, $2, $3, $4, $5, $6, $7, $8, $9);
+
         RETURN _id;
     END;
 $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION blackboard.add_solve_step(_name TEXT, _station1 TEXT[], _station2 TEXT[], _correlation_selection TEXT, _correlation_type TEXT[], _sources TEXT[], _instrument_model TEXT[], _output_column TEXT, _max_iter INTEGER, _epsilon DOUBLE PRECISION, _min_converged DOUBLE PRECISION, _parms TEXT[], _excl_parms TEXT[], _solve_domain_size DOUBLE PRECISION[2]) RETURNS VOID AS
+-- Function: blackboard.get_solve_arguments
+-- Full signature:
+-- blackboard.add_solve_arguments(_step_id INTEGER)
+CREATE OR REPLACE FUNCTION blackboard.get_solve_arguments(INTEGER)
+RETURNS blackboard.solve_arguments AS
 $$
     DECLARE
-        _step_id INTEGER;
+        step blackboard.step%ROWTYPE;
+        arguments blackboard.solve_arguments%ROWTYPE;
     BEGIN
-        _step_id := add_step(_name, 'SOLVE', _station1, _station2, _correlation_selection, _correlation_type, _sources, _instrument_model, _output_column);
-        INSERT INTO blackboard.solve_arguments(step_id, max_iter, epsilon, min_converged, parms, excl_parms, solve_domain_size) VALUES (_step_id, _max_iter, _epsilon, _min_converged, _parms, _excl_parms, _solve_domain_size);
+        SELECT * INTO step
+            FROM blackboard.step
+            WHERE id = $1;
+
+        IF NOT FOUND OR step."Operation" != 'SOLVE' THEN
+            RAISE EXCEPTION 'Step % either does not exist or is not a solve step.', $1;
+        END IF;
+
+        SELECT * INTO arguments
+            FROM blackboard.solve_arguments
+            WHERE step_id = $1;
+
+        RETURN arguments;
     END;
 $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION blackboard.add_predict_step(_name TEXT, _station1 TEXT[], _station2 TEXT[], _correlation_selection TEXT, _correlation_type TEXT[], _sources TEXT[], _instrument_model TEXT[], _output_column TEXT) RETURNS VOID AS
+-- Function: blackboard.add_solve_arguments
+-- Full signature:
+-- blackboard.add_solve_arguments(step_id INTEGER, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT[], "ExclParms" TEXT[], "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
+CREATE OR REPLACE FUNCTION blackboard.add_solve_arguments(INTEGER, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT[], TEXT[], DOUBLE PRECISION, DOUBLE PRECISION)
+RETURNS VOID AS
 $$
---    DECLARE
---        _step_id INTEGER;
-    BEGIN
---        _step_id := add_step(_name, 'PREDICT', _station1, _station2, _correlation_selection, _correlation_type, _sources, _instrument_model);
---        INSERT INTO blackboard.predict_arguments(step_id, output_column) VALUES (_step_id, _output_column);
-        PERFORM add_step(_name, 'PREDICT', _station1, _station2, _correlation_selection, _correlation_type, _sources, _instrument_model, _output_column);
-    END;
+    INSERT INTO blackboard.solve_arguments(step_id, "MaxIter", "Epsilon", "MinConverged", "Parms", "ExclParms", "DomainSize.Freq", "DomainSize.Time")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
 $$
-LANGUAGE plpgsql;
+LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION blackboard.add_subtract_step(_name TEXT, _station1 TEXT[], _station2 TEXT[], _correlation_selection TEXT, _correlation_type TEXT[], _sources TEXT[], _instrument_model TEXT[], _output_column TEXT) RETURNS VOID AS
-$$
---    DECLARE
---        _step_id INTEGER;
-    BEGIN
---        _step_id := add_step(_name, 'SUBTRACT', _station1, _station2, _correlation_selection, _correlation_type, _sources, _instrument_model);
---        INSERT INTO blackboard.subtract_arguments(step_id, output_column) VALUES (_step_id, _output_column);
-        PERFORM add_step(_name, 'SUBTRACT', _station1, _station2, _correlation_selection, _correlation_type, _sources, _instrument_model, _output_column);
-    END;
-$$
-LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_correct_step(_name TEXT, _station1 TEXT[], _station2 TEXT[], _correlation_selection TEXT, _correlation_type TEXT[], _sources TEXT[], _instrument_model TEXT[], _output_column TEXT) RETURNS VOID AS
-$$
---    DECLARE
---        _step_id INTEGER;
-    BEGIN
---        _step_id := add_step(_name, 'CORRECT', _station1, _station2, _correlation_selection, _correlation_type, _sources, _instrument_model);
---        INSERT INTO blackboard.correct_arguments(step_id, output_column) VALUES (_step_id, _output_column);
-        PERFORM add_step(_name, 'CORRECT', _station1, _station2, _correlation_selection, _correlation_type, _sources, _instrument_model, _output_column);
-    END;
-$$
-LANGUAGE plpgsql;
 
 -- ----------------- --
 -- WORK ORDER STATUS --
 -- ----------------- --
-CREATE OR REPLACE FUNCTION blackboard.set_status(work_order_id INTEGER, status_code INTEGER, message TEXT) RETURNS VOID AS
+CREATE OR REPLACE FUNCTION blackboard.set_status(work_order_id INTEGER, status_code INTEGER, message TEXT)
+RETURNS VOID AS
 $$
-    INSERT INTO blackboard.status(work_order_id, status_code, status_message) VALUES ($1, $2, $3);
+    INSERT INTO blackboard.status(work_order_id, status_code, status_message)
+        VALUES ($1, $2, $3);
 $$
 LANGUAGE SQL;
+
 
 -- --- --
 -- LOG --
 -- --- --
-CREATE OR REPLACE FUNCTION blackboard.log(work_order_id INTEGER, level INTEGER, pid INTEGER, scope TEXT, line_no INTEGER, message TEXT) RETURNS VOID AS
+CREATE OR REPLACE FUNCTION blackboard.log(work_order_id INTEGER, level INTEGER, pid INTEGER, scope TEXT, line_no INTEGER, message TEXT)
+RETURNS VOID AS
 $$
-    INSERT INTO blackboard.log(work_order_id, level, pid, scope, line_no, message) VALUES ($1, $2, $3, $4, $5, $6);
+    INSERT INTO blackboard.log(work_order_id, level, pid, scope, line_no, message)
+        VALUES ($1, $2, $3, $4, $5, $6);
 $$
 LANGUAGE SQL;
