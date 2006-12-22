@@ -62,7 +62,6 @@ LANGUAGE SQL;
 CREATE OR REPLACE FUNCTION blackboard.get_step(INTEGER)
 RETURNS blackboard.step AS
 $$
-    
     SELECT *
         FROM blackboard.step
         WHERE blackboard.step.work_order_id = $1;
@@ -70,7 +69,35 @@ $$
 LANGUAGE SQL;
 
 
--- Function: blackboard.add_step
+-- Function: blackboard.get_solve_arguments
+-- Full signature:
+-- blackboard.get_solve_arguments(_work_order_id INTEGER)
+CREATE OR REPLACE FUNCTION blackboard.get_solve_arguments(INTEGER)
+RETURNS blackboard.solve_arguments AS
+$$
+    DECLARE
+        step blackboard.step%ROWTYPE;
+        arguments blackboard.solve_arguments%ROWTYPE;
+    BEGIN
+        SELECT * INTO step
+            FROM blackboard.step
+            WHERE work_order_id = $1;
+
+        IF NOT FOUND OR step."Operation" != 'SOLVE' THEN
+            RAISE EXCEPTION 'Work order % either does not exist or has no associated solve arguments.', $1;
+        END IF;
+
+        SELECT * INTO arguments
+            FROM blackboard.solve_arguments
+            WHERE step_id = step.id;
+
+        RETURN arguments;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
+-- Function: blackboard.add_step (PRIVATE FUNCTION, DO NOT CALL FROM C++)
 -- Full signature:
 -- blackboard.add_step("Name" TEXT, "Operation" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData" TEXT)
 CREATE OR REPLACE FUNCTION blackboard.add_step(TEXT, TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT)
@@ -91,32 +118,37 @@ $$
 LANGUAGE plpgsql;
 
 
--- Function: blackboard.get_solve_arguments
+-- Function: blackboard.add_predict_step
 -- Full signature:
--- blackboard.add_solve_arguments(_step_id INTEGER)
-CREATE OR REPLACE FUNCTION blackboard.get_solve_arguments(INTEGER)
-RETURNS blackboard.solve_arguments AS
+-- blackboard.add_predict_step("Name" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData")
+CREATE OR REPLACE FUNCTION blackboard.add_predict_step(TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT)
+RETURNS INTEGER AS
 $$
-    DECLARE
-        step blackboard.step%ROWTYPE;
-        arguments blackboard.solve_arguments%ROWTYPE;
-    BEGIN
-        SELECT * INTO step
-            FROM blackboard.step
-            WHERE id = $1;
-
-        IF NOT FOUND OR step."Operation" != 'SOLVE' THEN
-            RAISE EXCEPTION 'Step % either does not exist or is not a solve step.', $1;
-        END IF;
-
-        SELECT * INTO arguments
-            FROM blackboard.solve_arguments
-            WHERE step_id = $1;
-
-        RETURN arguments;
-    END;
+    SELECT blackboard.add_step($1, 'PREDICT', $2, $3, $4, $5, $6, $7, $8);
 $$
-LANGUAGE plpgsql;
+LANGUAGE SQL;
+
+
+-- Function: blackboard.add_subtract_step
+-- Full signature:
+-- blackboard.add_subtract_step("Name" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData")
+CREATE OR REPLACE FUNCTION blackboard.add_subtract_step(TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT)
+RETURNS INTEGER AS
+$$
+    SELECT blackboard.add_step($1, 'SUBTRACT', $2, $3, $4, $5, $6, $7, $8);
+$$
+LANGUAGE SQL;
+
+
+-- Function: blackboard.add_correct_step
+-- Full signature:
+-- blackboard.add_correct_step("Name" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData")
+CREATE OR REPLACE FUNCTION blackboard.add_correct_step(TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT)
+RETURNS INTEGER AS
+$$
+    SELECT blackboard.add_step($1, 'CORRECT', $2, $3, $4, $5, $6, $7, $8);
+$$
+LANGUAGE SQL;
 
 
 -- Function: blackboard.add_solve_step
