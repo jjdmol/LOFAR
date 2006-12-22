@@ -119,17 +119,33 @@ $$
 LANGUAGE plpgsql;
 
 
--- Function: blackboard.add_solve_arguments
+-- Function: blackboard.add_solve_step
 -- Full signature:
--- blackboard.add_solve_arguments(step_id INTEGER, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT[], "ExclParms" TEXT[], "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
-CREATE OR REPLACE FUNCTION blackboard.add_solve_arguments(INTEGER, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT[], TEXT[], DOUBLE PRECISION, DOUBLE PRECISION)
+-- blackboard.add_solve_step("Name" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData" TEXT, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT[], "ExclParms" TEXT[], "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
+CREATE OR REPLACE FUNCTION blackboard.add_solve_step(TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT[], TEXT[], DOUBLE PRECISION, DOUBLE PRECISION)
 RETURNS VOID AS
 $$
-    INSERT INTO blackboard.solve_arguments(step_id, "MaxIter", "Epsilon", "MinConverged", "Parms", "ExclParms", "DomainSize.Freq", "DomainSize.Time")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+    DECLARE
+        _step_id INTEGER;
+    BEGIN
+        _step_id := blackboard.add_step($1, 'SOLVE', $2, $3, $4, $5, $6, $7, $8);
+        INSERT INTO blackboard.solve_arguments(step_id, "MaxIter", "Epsilon", "MinConverged", "Parms", "ExclParms", "DomainSize.Freq", "DomainSize.Time")
+            VALUES (_step_id, $9, $10, $11, $12, $13, $14, $15);
+    END;
 $$
-LANGUAGE SQL;
+LANGUAGE plpgsql;
 
+
+-- Function: blackboard.add_solve_arguments
+-- Full signature:
+-- blackboard.add_solve_arguments(_step_id INTEGER, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT[], "ExclParms" TEXT[], "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
+--CREATE OR REPLACE FUNCTION blackboard.add_solve_arguments(INTEGER, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT[], TEXT[], DOUBLE PRECISION, DOUBLE PRECISION)
+--RETURNS VOID AS
+--$$
+--    INSERT INTO blackboard.solve_arguments(step_id, "MaxIter", "Epsilon", "MinConverged", "Parms", "ExclParms", "DomainSize.Freq", "DomainSize.Time")
+--        VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+--$$
+--LANGUAGE SQL;
 
 
 -- ----------------- --
