@@ -56,13 +56,39 @@ LANGUAGE SQL;
 -- ---- --
 -- STEP --
 -- ---- --
+CREATE TYPE blackboard.iface_step AS
+(
+    "Name"                  TEXT,
+    "Operation"             TEXT,
+    "Baselines.Station1"    TEXT[],
+    "Baselines.Station2"    TEXT[],
+    "Correlation.Selection" TEXT,
+    "Correlation.Type"      TEXT[],
+    "Sources"               TEXT[],
+    "InstrumentModel"       TEXT[],
+    "OutputData"            TEXT
+);
+
+
+CREATE TYPE blackboard.iface_solve_arguments AS
+(
+    "MaxIter"               INTEGER,
+    "Epsilon"               DOUBLE PRECISION,
+    "MinConverged"          DOUBLE PRECISION,
+    "Parms"                 TEXT[],
+    "ExclParms"             TEXT[],
+    "DomainSize.Freq"       DOUBLE PRECISION,
+    "DomainSize.Time"       DOUBLE PRECISION
+);
+
+
 -- Function: blackboard.get_step
 -- Full signature:
 -- blackboard.get_step(_work_order_id INTEGER)
 CREATE OR REPLACE FUNCTION blackboard.get_step(INTEGER)
-RETURNS blackboard.step AS
+RETURNS blackboard.iface_step AS
 $$
-    SELECT *
+    SELECT "Name", "Operation", "Baselines.Station1", "Baselines.Station2", "Correlation.Selection", "Correlation.Type", "Sources", "InstrumentModel", "OutputData"
         FROM blackboard.step
         WHERE blackboard.step.work_order_id = $1;
 $$
@@ -73,21 +99,24 @@ LANGUAGE SQL;
 -- Full signature:
 -- blackboard.get_solve_arguments(_work_order_id INTEGER)
 CREATE OR REPLACE FUNCTION blackboard.get_solve_arguments(INTEGER)
-RETURNS blackboard.solve_arguments AS
+RETURNS blackboard.iface_solve_arguments AS
 $$
     DECLARE
         step blackboard.step%ROWTYPE;
-        arguments blackboard.solve_arguments%ROWTYPE;
+        arguments blackboard.iface_solve_arguments;
     BEGIN
-        SELECT * INTO step
+        SELECT *
+            INTO step
             FROM blackboard.step
             WHERE work_order_id = $1;
 
         IF NOT FOUND OR step."Operation" != 'SOLVE' THEN
-            RAISE EXCEPTION 'Work order % either does not exist or has no associated solve arguments.', $1;
+            RAISE EXCEPTION 'Work order % either is not a solve step or it is not a step at all.', $1;
         END IF;
 
-        SELECT * INTO arguments
+
+        SELECT "MaxIter", "Epsilon", "MinConverged", "Parms", "ExclParms", "DomainSize.Freq", "DomainSize.Time"
+            INTO arguments
             FROM blackboard.solve_arguments
             WHERE step_id = step.id;
 
