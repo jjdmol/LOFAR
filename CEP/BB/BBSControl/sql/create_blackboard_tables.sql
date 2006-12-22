@@ -23,7 +23,8 @@ CREATE TABLE blackboard.strategy
 CREATE SEQUENCE blackboard.work_order_id_seq;
 CREATE TABLE blackboard.work_order
 (
-    id              INTEGER                     PRIMARY KEY
+    id              INTEGER                     PRIMARY KEY,
+    timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now()
 );
 
 
