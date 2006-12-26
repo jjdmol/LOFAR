@@ -94,6 +94,10 @@ public:
    	GCFEvent::TResult finishing_state(GCFEvent& e, 
 									  GCFPortInterface& p);
 
+	// Interrupt handler for switching to finishing_state when exiting program.
+	static void sigintHandler (int signum);
+	void finish ();
+
 private:
 	// avoid defaultconstruction and copying
 	ObservationControl();
@@ -107,27 +111,13 @@ private:
 
    	void 	_connectedHandler(GCFPortInterface& port);
    	void	_disconnectedHandler(GCFPortInterface& port);
-   	boost::shared_ptr<ACC::APS::ParameterSet> 
-		 readObservationParameters (APLCommon::OTDBtreeIDType	ObsTreeID);
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
+//   	typedef GCF::PAL::GCFMyPropertySet* GCFMyPropertySetPtr;
 
    	APLCommon::PropertySetAnswer	itsPropertySetAnswer;
    	GCFMyPropertySetPtr				itsPropertySet;
 	GCFMyPropertySetPtr				itsBootPS;
-
-#if 0
-	// Administration of the ObservationControllers
-	typedef struct {
-		OTDB::treeIDType	treeID;		// tree in the OTDB
-		GCFTCPPort*			port;		// TCP connection with controller
-		uint16				state;		// state the controller has
-	} ObsCntlr_t;
-
-	// Map with all active ObservationControllers.
-	map<GCFTCPPort*, ObsCntlr_t>	itsObsCntlrMap;
-	vector<GCFTCPPort*>				itsObsCntlrPorts;
-#endif
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;

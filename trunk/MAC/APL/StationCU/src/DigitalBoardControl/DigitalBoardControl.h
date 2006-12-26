@@ -72,6 +72,10 @@ public:
 	explicit DigitalBoardControl(const string& cntlrName);
 	~DigitalBoardControl();
 
+	// Interrupthandler for switching to finishingstate when exiting the program.
+	static void sigintHandler (int signum);
+	void finish();
+
 private:
    	// PropertySetAnswerHandlerInterface method
    	virtual void handlePropertySetAnswer(GCFEvent& answer);
@@ -84,6 +88,7 @@ private:
    	GCFEvent::TResult setClock_state  		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult active_state    		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult defaultMessageHandling (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult finishing_state  		 (GCFEvent& e, GCFPortInterface& p);
 
 	// avoid defaultconstruction and copying
 	DigitalBoardControl();

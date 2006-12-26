@@ -34,6 +34,7 @@
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
+#include <signal.h>
 
 #include "ObservationControl.h"
 #include "ObservationControlDefines.h"
@@ -47,6 +48,9 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace ACC::APS;
 	namespace MainCU {
+
+// static pointer used for signal handler.
+static ObservationControl*	thisObservationControl = 0;
 	
 //
 // ObservationControl()
@@ -125,12 +129,32 @@ ObservationControl::~ObservationControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	if (itsPropertySet) {
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
-		itsPropertySet->disable();
-	}
+//	if (itsPropertySet) {
+//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
+//		itsPropertySet->disable();
+//	}
 
-	// ...
+}
+
+//
+// sigintHandler(signum)
+//
+void ObservationControl::sigintHandler(int signum)
+{
+	LOG_DEBUG (formatString("SIGINT signal detected (%d)",signum));
+
+	// Note we can't call TRAN here because the siginthandler does not know our object.
+	if (thisObservationControl) {
+		thisObservationControl->finish();
+	}
+}
+
+//
+// finish
+//
+void ObservationControl::finish()
+{
+	TRAN(ObservationControl::finishing_state);
 }
 
 //
@@ -280,7 +304,7 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
    		break;
 
 	case F_ENTRY: {
-		// Get access to my own propertyset.
+		// Create 'Observationxxx' datapoint as top of the observation tree
 		string	propSetName(createPropertySetName(PSN_OBSERVATION, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
 		itsBootPS = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
@@ -344,6 +368,12 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		break;
 	  
 	case F_TIMER: {		// must be timer that PropSet has set.
+		// first redirect signalhandler to finishing state to leave PVSS in the
+		// right state when we are going down.
+		thisObservationControl = this;
+		signal (SIGINT,  ObservationControl::sigintHandler);	// ctrl-c
+		signal (SIGTERM, ObservationControl::sigintHandler);	// kill
+
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
 		itsPropertySet->setValue(PVSSNAME_FSM_STATE,  GCFPVString("initial"));
@@ -361,7 +391,7 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		itsPropertySet->setValue(PN_OC_BAND_FILTER, GCFPVString(
 						globalParameterSet()->getString("Observation.bandFilter")));
 		itsPropertySet->setValue(PN_OC_NYQUISTZONE, GCFPVInteger(
-						globalParameterSet()->getInt32("Observation.nyquistzone")));
+						globalParameterSet()->getInt32("Observation.nyquistZone")));
 		itsPropertySet->setValue(PN_OC_ANTENNA_ARRAY, GCFPVString(
 						globalParameterSet()->getString("Observation.antennaArray")));
 		itsPropertySet->setValue(PN_OC_RECEIVER_LIST, GCFPVString(
@@ -370,19 +400,19 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		itsPropertySet->setValue(PN_OC_SAMPLE_CLOCK, GCFPVInteger(
 						globalParameterSet()->getUint32("Observation.sampleClock")));
 		itsPropertySet->setValue(PN_OC_MEASUREMENT_SET, GCFPVString(
-						globalParameterSet()->getString("Observation.measurementSet")));
+						globalParameterSet()->getString("Observation.MSNameMask")));
 		itsPropertySet->setValue(PN_OC_STATION_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
-						getString("Observation.stationList"))));
+						getString("Observation.VirtualInstrument.stationList"))));
 		itsPropertySet->setValue(PN_OC_INPUT_NODE_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
-						getString("Observation.inputNodeList"))));
+						getString("Observation.VirtualInstrument.inputNodeList"))));
 		itsPropertySet->setValue(PN_OC_BGL_NODE_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
-						getString("Observation.BGLNodeList"))));
+						getString("Observation.VirtualInstrument.BGLNodeList"))));
 		itsPropertySet->setValue(PN_OC_STORAGE_NODE_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
-						getString("Observation.storageNodeList"))));
+						getString("Observation.VirtualInstrument.storageNodeList"))));
 
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControl task");

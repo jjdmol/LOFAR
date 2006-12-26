@@ -72,6 +72,11 @@ public:
 	explicit BeamControl(const string& cntlrName);
 	~BeamControl();
 
+	// Interrupthandler for switching to finishingstate when exiting the program.
+	static void sigintHandler (int signum);
+	void finish();
+
+private:
    	// PropertySetAnswerHandlerInterface method
    	void handlePropertySetAnswer(GCFEvent& answer);
 
@@ -85,8 +90,9 @@ public:
    	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 	// Quiting, shutdown connections, send FINISH and quit
    	GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
+	// closing down PVSS neatly.
+   	GCFEvent::TResult finishing_state (GCFEvent& e, GCFPortInterface& p);
 
-private:
 	// avoid defaultconstruction and copying
 	BeamControl();
 	BeamControl(const BeamControl&);

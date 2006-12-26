@@ -35,6 +35,7 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
+#include <signal.h>
 
 #include "DigitalBoardControl.h"
 #include "DigitalBoardControlDefines.h"
@@ -49,6 +50,9 @@ namespace LOFAR {
 	using namespace ACC::APS;
 	namespace StationCU {
 	
+// static pointer to this object for signal handler
+static DigitalBoardControl*	thisDigitalBoardControl = 0;
+
 //
 // DigitalBoardControl()
 //
@@ -108,15 +112,32 @@ DigitalBoardControl::~DigitalBoardControl()
 
 	cancelSubscription();	// tell RSPdriver to stop sending updates.
 
-	if (itsOwnPropertySet) {
-		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
-	}
-
 	if (itsRSPDriver) {
 		itsRSPDriver->close();
 	}
 
 	// ...
+}
+
+
+//
+// sigintHandler(signum)
+//
+void DigitalBoardControl::sigintHandler(int signum)
+{
+	LOG_DEBUG (formatString("SIGINT signal detected (%d)",signum));
+
+	if (thisDigitalBoardControl) {
+		thisDigitalBoardControl->finish();
+	}
+}
+
+//
+// finish
+//
+void DigitalBoardControl::finish()
+{
+	TRAN(DigitalBoardControl::finishing_state);
 }
 
 
@@ -247,6 +268,12 @@ myPropSetName=myPropSetName.substr(8);
 		if (!itsOwnPSinitialized) {
 			itsOwnPSinitialized = true;
 
+			// first redirect signalHandler to our finishing state to leave PVSS
+			// in the right state when we are going down
+			thisDigitalBoardControl = this;
+			signal (SIGINT,  DigitalBoardControl::sigintHandler);	// ctrl-c
+			signal (SIGTERM, DigitalBoardControl::sigintHandler);	// kill
+
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
 			itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
@@ -290,6 +317,7 @@ extPropSetName= extPropSetName.substr(8);
 		// fourth timer event is from retrieving the required clock.
 		if (itsClock) {
 			LOG_DEBUG ("Attached to external propertySet, going to connect state");
+			itsOwnPropertySet->setValue(PN_DBC_CLOCK,GCFPVInteger(itsClock));
 			itsParentPort = itsParentControl->registerTask(this);
 			TRAN(DigitalBoardControl::connect_state);			// go to next state.
 		}
@@ -338,6 +366,7 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 		if (&port == itsRSPDriver) {
 			LOG_DEBUG ("Connected with RSPDriver, going to subscription state");
 			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+			itsOwnPropertySet->setValue(PN_DBC_CONNECTED,  GCFPVBool(true));
 			TRAN(DigitalBoardControl::subscribe_state);		// go to next state.
 		}
 		break;
@@ -510,6 +539,7 @@ GCFEvent::TResult DigitalBoardControl::setClock_state(GCFEvent& event,
 		}
 		LOG_INFO_STR ("StationClock is set to " << itsClock << ", going to operational state");
 		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsOwnPropertySet->setValue(PN_DBC_CLOCK,GCFPVInteger(itsClock));
 		TRAN(DigitalBoardControl::active_state);				// go to next state.
 		break;
 	}
@@ -753,6 +783,43 @@ GCFEvent::TResult DigitalBoardControl::defaultMessageHandling(GCFEvent& 		event,
 	}
 
 	return (GCFEvent::HANDLED);
+}
+
+//
+// finishing_state(event, port)
+//
+// Write controller state to PVSS, wait for 1 second (using a timer) to let 
+// GCF handle the property change and close the controller
+//
+GCFEvent::TResult DigitalBoardControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_INIT:
+		break;
+
+	case F_ENTRY: {
+		// update PVSS
+		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+
+		itsTimerPort->setTimer(1L);
+		break;
+	}
+  
+    case F_TIMER:
+      GCFTask::stop();
+      break;
+    
+	default:
+		LOG_DEBUG("finishing_state, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
 }
 
 
