@@ -3,6 +3,12 @@ SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 
+%.conf: %.conf.in
+	cp $< $@
+
+%: %.sh.in
+	cp $< $@
+
 lib_LTLIBRARIES = libaplcommon.la
 
 libaplcommon_la_CPPFLAGS =  -DBOOST_DISABLE_THREADS \
@@ -24,17 +30,13 @@ libaplcommon_la_SOURCES  =  $(DOCHDRS) \
 							Observation.cc
 
 
-NOINSTHDRS 				=
+BUILT_SOURCES 			= $(ph_HEADERS) swlevel swlevel.conf
 
-INSTHDRS 				= 
+EXTRA_DIST 				= $(BUILT_SOURCES) $(BUILT_SOURCES)
 
-pkginclude_HEADERS 		= $(NOINSTHDRS) $(INSTHDRS)
+sysconf_DATA			= swlevel.conf
 
-DOCHDRS 				= $(pkginclude_HEADERS) $(BUILT_SOURCES)
-
-BUILT_SOURCES 			= $(ph_HEADERS)
-
-EXTRA_DIST 				= 
+bin_SCRIPTS				= swlevel
 
 phdir					=$(includedir)/APL/APLCommon
 
