@@ -35,6 +35,7 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
+#include <signal.h>
 
 #include "BeamControl.h"
 #include "BeamControlDefines.h"
@@ -49,6 +50,9 @@ namespace LOFAR {
 	using namespace ACC::APS;
 	namespace StationCU {
 	
+// static pointer to this object for signal handler
+static BeamControl*	thisBeamControl = 0;
+
 //
 // BeamControl()
 //
@@ -106,13 +110,28 @@ BeamControl::~BeamControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	if (itsPropertySet) {
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("down"));
-		itsPropertySet->disable();
-	}
-
-	// ...
 }
+
+//
+// sigintHandler(signum)
+//
+void BeamControl::sigintHandler(int signum)
+{
+	LOG_DEBUG (formatString("SIGINT signal detected (%d)",signum));
+
+	if (thisBeamControl) {
+		thisBeamControl->finish();
+	}
+}
+
+//
+// finish
+//
+void BeamControl::finish()
+{
+	TRAN(BeamControl::finishing_state);
+}
+
 
 //
 // setState(CTstateNr)
@@ -236,6 +255,12 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 			uint32	treeID = getObservationNr(getName());
 			LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".BeamCtrl");
 
+			// first redirect signalHandler to our finishing state to leave PVSS
+			// in the right state when we are going down
+			thisBeamControl = this;
+			signal (SIGINT,  BeamControl::sigintHandler);	// ctrl-c
+			signal (SIGTERM, BeamControl::sigintHandler);	// kill
+
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
 			itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
@@ -246,6 +271,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 			itsPropertySet->setValue(PN_BC_ANGLE1,		GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_SUBARRAY,	GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
 		  
 			// Start ParentControl task
@@ -579,7 +605,7 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 	case F_TIMER:
 		LOG_DEBUG("Timeout on reception of FINISHED event, too bad.");
 		setState(CTState::FINISHED);
-		stop();
+		TRAN(BeamControl::finishing_state);
 		break;
 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
@@ -589,7 +615,7 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 		LOG_DEBUG_STR("Received FINISHED(" << msg.cntlrName << ")");
 		LOG_INFO_STR("Normal shutdown of " << getName());
 		setState(CTState::FINISHED);
-		stop();
+		TRAN(BeamControl::finishing_state);
 		break;
 	}
 
@@ -645,6 +671,7 @@ void BeamControl::doPrepare()
 				GCFPVString(globalParameterSet()->getString("Observation.Beam.angle2")));
 	itsPropertySet->setValue(PN_BC_ANGLETIMES,	
 				GCFPVString(globalParameterSet()->getString("Observation.Beam.angleTimes")));
+	itsPropertySet->setValue(PN_BC_SUBARRAY, GCFPVString(beamAllocEvent.subarrayname));
 }
 
 //
@@ -785,6 +812,43 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 	}
 
 	return (result);
+}
+
+//
+// finishing_state(event, port)
+//
+// Write controller state to PVSS, wait for 1 second (using a timer) to let 
+// GCF handle the property change and close the controller
+//
+GCFEvent::TResult BeamControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_INIT:
+		break;
+
+	case F_ENTRY: {
+		// update PVSS
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+
+		itsTimerPort->setTimer(1L);
+		break;
+	}
+  
+    case F_TIMER:
+      GCFTask::stop();
+      break;
+    
+	default:
+		LOG_DEBUG("finishing_state, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
 }
 
 

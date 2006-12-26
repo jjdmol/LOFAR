@@ -75,6 +75,10 @@ public:
 	explicit StationControl(const string& cntlrName);
 	~StationControl();
 
+	// Interrupthandler for switching to finishingstate when exiting the program.
+	static void sigintHandler (int signum);
+	void finish();
+
 private:
    	// PropertySetAnswerHandlerInterface method
    	virtual void handlePropertySetAnswer(GCFEvent& answer);
@@ -83,6 +87,7 @@ private:
    	GCFEvent::TResult initial_state     (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult connect_state     (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult operational_state (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult finishing_state   (GCFEvent& e, GCFPortInterface& p);
 
 	// avoid defaultconstruction and copying
 	StationControl();

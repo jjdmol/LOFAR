@@ -23,19 +23,14 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
 
-//#include <boost/shared_array.hpp>
-//#include <APS/ParameterSet.h>
 #include <GCF/GCF_PVTypes.h>
-//#include <GCF/PAL/GCF_PVSSInfo.h>
-//#include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Protocols/PA_Protocol.ph>
-//#include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
-//#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
+#include <signal.h>
 
 #include "CalibrationControl.h"
 #include "CalibrationControlDefines.h"
@@ -49,6 +44,9 @@ namespace LOFAR {
 	using namespace ACC::APS;
 	namespace StationCU {
 	
+// static pointer to this object for signal handler
+static CalibrationControl*	thisCalibrationControl = 0;
+
 //
 // CalibrationControl()
 //
@@ -106,14 +104,28 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 CalibrationControl::~CalibrationControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
-
-	if (itsPropertySet) {
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("down"));
-		itsPropertySet->disable();
-	}
-
-	// ...
 }
+
+//
+// sigintHandler(signum)
+//
+void CalibrationControl::sigintHandler(int signum)
+{
+	LOG_DEBUG (formatString("SIGINT signal detected (%d)",signum));
+
+	if (thisCalibrationControl) {
+		thisCalibrationControl->finish();
+	}
+}
+
+//
+// finish
+//
+void CalibrationControl::finish()
+{
+	TRAN(CalibrationControl::finishing_state);
+}
+
 
 //
 // setState(CTstateNr)
@@ -228,6 +240,12 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 			// TODO
 			uint32	treeID = getObservationNr(getName());
 			LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".CalCtrl");
+
+			// first redirect signalHandler to our finishing state to leave PVSS
+			// in the right state when we are going down
+			thisCalibrationControl = this;
+			signal (SIGINT,  CalibrationControl::sigintHandler);	// ctrl-c
+			signal (SIGTERM, CalibrationControl::sigintHandler);	// kill
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
@@ -570,7 +588,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 	case F_TIMER:
 		LOG_DEBUG("Timeout on reception of FINISHED event, too bad.");
 		setState(CTState::FINISHED);
-		stop();
+		TRAN(CalibrationControl::finishing_state);
 		break;
 
 	// -------------------- EVENT RECEIVED FROM PARENT CONTROL --------------------
@@ -580,7 +598,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 		LOG_DEBUG_STR("Received FINISHED(" << msg.cntlrName << ")");
 		LOG_INFO_STR("Normal shutdown of " << getName());
 		setState(CTState::FINISHED);
-		stop();
+		TRAN(CalibrationControl::finishing_state);
 		break;
 	}
 
@@ -616,7 +634,7 @@ bool	CalibrationControl::startCalibration()
 	itsCalServer->send(calStartEvent);
 
 	// inform operator about these values.
-	itsPropertySet->setValue(PN_CC_OBSNAME,		GCFPVString("obsname"));
+	itsPropertySet->setValue(PN_CC_OBSNAME,		GCFPVString(obsName));
 	itsPropertySet->setValue(PN_CC_ANTENNAARRAY,GCFPVString(itsObsPar.antennaArray));
 	itsPropertySet->setValue(PN_CC_FILTER,		GCFPVString(itsObsPar.filter));
 	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	GCFPVInteger(itsObsPar.nyquistZone));
@@ -689,6 +707,43 @@ GCFEvent::TResult CalibrationControl::_defaultEventHandler(GCFEvent&		 event,
 	}
 
 	return (result);
+}
+
+//
+// finishing_state(event, port)
+//
+// Write controller state to PVSS, wait for 1 second (using a timer) to let 
+// GCF handle the property change and close the controller
+//
+GCFEvent::TResult CalibrationControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_INIT:
+		break;
+
+	case F_ENTRY: {
+		// update PVSS
+		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+
+		itsTimerPort->setTimer(1L);
+		break;
+	}
+  
+    case F_TIMER:
+      GCFTask::stop();
+      break;
+    
+	default:
+		LOG_DEBUG("finishing_state, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
 }
 
 

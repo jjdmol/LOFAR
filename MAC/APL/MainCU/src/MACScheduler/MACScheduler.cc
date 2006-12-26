@@ -108,11 +108,10 @@ MACScheduler::~MACScheduler()
 {
 	LOG_TRACE_OBJ ("~MACscheduler");
 
-	if (itsPropertySet) {
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
+//	if (itsPropertySet) {
 		// Note: disable is not neccesary because this is always done in destructor
 		//		 of propertyset.
-	}
+//	}
 
 	if (itsOTDBconnection) {
 		delete itsOTDBconnection;

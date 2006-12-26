@@ -69,6 +69,11 @@ public:
 	explicit CalibrationControl(const string& cntlrName);
 	~CalibrationControl();
 
+	// Interrupthandler for switching to finishingstate when exiting the program.
+	static void sigintHandler (int signum);
+	void finish();
+
+private:
    	// PropertySetAnswerHandlerInterface method
    	virtual void handlePropertySetAnswer(GCFEvent& answer);
 
@@ -80,8 +85,9 @@ public:
    	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 	// Quiting, shutdown connections, send FINISH and quit
    	GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
+	// closing PVSS database in a neat way
+   	GCFEvent::TResult finishing_state (GCFEvent& e, GCFPortInterface& p);
 
-private:
 	// avoid defaultconstruction and copying
 	CalibrationControl();
 	CalibrationControl(const CalibrationControl&);

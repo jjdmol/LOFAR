@@ -40,6 +40,7 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
+#include <signal.h>
 
 #include "ActiveObs.h"
 #include "StationControl.h"
@@ -54,6 +55,9 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace ACC::APS;
 	namespace StationCU {
+
+// static pointer to this object for signalhandler
+static StationControl*	thisStationControl = 0;
 	
 //
 // StationControl()
@@ -112,11 +116,27 @@ StationControl::~StationControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-	if (itsOwnPropSet) {
-		itsOwnPropSet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
-	}
-
 	// ...
+}
+
+//
+// sigintHandler(signum)
+//
+void StationControl::sigintHandler(int signum)
+{
+	LOG_DEBUG (formatString("SIGINT signal detected (%d)",signum));
+
+	if (thisStationControl) {
+		thisStationControl->finish();
+	}
+}
+
+//
+// finish
+//
+void StationControl::finish()
+{
+	TRAN(StationControl::finishing_state);
 }
 
 
@@ -232,6 +252,12 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 		// first timer event is from own propertyset
 		if (!itsOwnPSinitialized) {
 			itsOwnPSinitialized = true;
+
+			// first redirect signalHandler to our finishing state to leave PVSS
+			// in the right state when we are going down
+			thisStationControl = this;
+			signal (SIGINT,  StationControl::sigintHandler);	// ctrl-c
+			signal (SIGTERM, StationControl::sigintHandler);	// kill
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
@@ -502,6 +528,43 @@ LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 	break;
 	} // switch
 
+	return (status);
+}
+
+//
+// finishing_state(event, port)
+//
+// Write controller state to PVSS, wait for 1 second (using a timer) to let 
+// GCF handle the property change and close the controller
+//
+GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_INIT:
+		break;
+
+	case F_ENTRY: {
+		// update PVSS
+		itsOwnPropSet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsOwnPropSet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+
+		itsTimerPort->setTimer(1L);
+		break;
+	}
+  
+    case F_TIMER:
+      GCFTask::stop();
+      break;
+    
+	default:
+		LOG_DEBUG("finishing_state, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
 	return (status);
 }
 
