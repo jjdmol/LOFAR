@@ -22,67 +22,68 @@
 
 #include <APS/ParameterSet.h>
 #include <CS1_Interface/DH_Visibilities.h>
+#include <Common/Timer.h>
 
-namespace LOFAR
+namespace LOFAR {
+namespace CS1 {
+
+DH_Visibilities::DH_Visibilities(const string &name, const ACC::APS::ParameterSet &pSet)
+: DataHolder(name, "DH_Visibilities"),
+  itsVisibilities(0),
+  itsNrValidSamples(0)
 {
-  namespace CS1
-  {
-
-    DH_Visibilities::DH_Visibilities (const string &name, const ACC::APS::ParameterSet &pSet)
-      : DataHolder     (name, "DH_Visibilities"),
-        //itsPS         (pSet),
-        itsVisibilities(0),
-        itsNrValidSamples(0)
-    {
-#if 0
-      //todo: support for multiple freq channels
-      itsNPols = itsPS.getInt32("Observation.NPolarisations");
-      itsNCorrs = itsNPols*itsNPols;
-#endif
-      itsNrChannels       = pSet.getUint32("Observation.NChannels");
-      unsigned nrStations = pSet.getUint32("Observation.NStations");
-      itsNrBaselines      = nrStations * (nrStations + 1) / 2;
-    }   
+  itsNrChannels       = pSet.getUint32("Observation.NChannels");
+  unsigned nrStations = pSet.getUint32("Observation.NStations");
+  itsNrBaselines      = nrStations * (nrStations + 1) / 2;
+}   
 
 
-    DH_Visibilities::DH_Visibilities(const DH_Visibilities &that)
-      : DataHolder    (that),
-        //itsPS         (that.itsPS),
+DH_Visibilities::DH_Visibilities(const DH_Visibilities &that)
+: DataHolder(that),
+  itsNrBaselines(that.itsNrBaselines),
+  itsNrChannels(that.itsNrChannels),
+  itsVisibilities(0),
+  itsNrValidSamples(0)
+{
+}
 
-        itsNrBaselines(that.itsNrBaselines),
-        itsNrChannels(that.itsNrChannels),
-        itsVisibilities(0),
-        itsNrValidSamples(0)
-#if 0
-      itsNStations  (that.itsNStations),
-      itsNBaselines (that.itsNBaselines),
-      itsNPols      (that.itsNPols),
-      itsNCorrs     (that.itsNCorrs)
-#endif
-    {}
+DH_Visibilities::~DH_Visibilities()
+{
+}
 
-    DH_Visibilities::~DH_Visibilities()
-    {}
+DataHolder* DH_Visibilities::clone() const
+{
+  return new DH_Visibilities(*this);
+}
 
-    DataHolder* DH_Visibilities::clone() const
-    {
-      return new DH_Visibilities(*this);
-    }
+void DH_Visibilities::init()
+{
+  addField("Visibilities",   BlobField<fcomplex>(1, getNrVisibilities()), 32);
+  addField("NrValidSamples", BlobField<NrValidSamplesType>(1, itsNrBaselines * itsNrChannels));
 
-    void DH_Visibilities::init()
-    {
-      addField("Visibilities",   BlobField<fcomplex>(1, getNrVisibilities()), 32);
-      addField("NrValidSamples", BlobField<NrValidSamplesType>(1, itsNrBaselines * itsNrChannels));
+  createDataBlock();  // calls fillDataPointers
+}
 
-      createDataBlock();  // calls fillDataPointers
-    }
+DH_Visibilities &DH_Visibilities::operator += (const DH_Visibilities &dh)
+{
+  NSTimer timer("DH_Vis add", true);
+  timer.start();
 
-    void DH_Visibilities::fillDataPointers() 
-    {
-      itsVisibilities   = (VisibilityType *)     getData<fcomplex>("Visibilities");
-      itsNrValidSamples = (NrValidSamplesType *) getData<NrValidSamplesType>("NrValidSamples");
-    }
+  for (unsigned i = 0; i < getNrVisibilities(); i ++)
+    itsVisibilities[i] += dh.itsVisibilities[i];
 
-  } // namespace CS1
-  
+  for (unsigned i = 0; i < itsNrBaselines * itsNrChannels; i ++)
+    itsNrValidSamples[i] += dh.itsNrValidSamples[i];
+
+  timer.stop();
+  return *this;
+}
+
+void DH_Visibilities::fillDataPointers() 
+{
+  itsVisibilities   = (VisibilityType *)     getData<fcomplex>("Visibilities");
+  itsNrValidSamples = (NrValidSamplesType *) getData<NrValidSamplesType>("NrValidSamples");
+}
+
+} // namespace CS1
 } // namespace LOFAR
