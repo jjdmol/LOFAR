@@ -35,14 +35,10 @@
 #include <CEPFrame/DataManager.h>
 
 
+#undef OLAP_CS1_TIMINGS
+
 #ifdef OLAP_CS1_TIMINGS
-// This is used to plot the times that each thread starts writing/reading
-#ifdef HAVE_MPI
-#include <mpi.h>
-#define MPITIMEROUTPUT MPI_Wtime() << ": "
-#else
-#define MPITIMEROUTPUT ""
-#endif
+#include <sys/time.h>
 #endif
 
 namespace LOFAR
@@ -205,6 +201,28 @@ static bool stopThread(thread_data *data)
   return stopThread;
 }
 
+#if defined OLAP_CS1_TIMINGS
+
+static double getTime()
+{ 
+  struct timeval tv;
+  static double  first_time = 0.0;
+    
+  if (gettimeofday(&tv, 0) != 0) {
+    perror("gettimeofday");
+    tv.tv_sec = tv.tv_usec = 0;
+  }
+
+  double time = tv.tv_sec + tv.tv_usec / 1.0e6;
+    
+  if (first_time == 0)
+    first_time = time;
+
+  return time - first_time;
+}
+
+#endif
+
 void* SynchronisityManager::startReaderThread(void* thread_arg)
 {
   thread_data* data = (thread_data*)thread_arg;
@@ -221,18 +239,21 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
     pConn->getTransportHolder()->reset();  // Reset TransportHolder
 
 #ifdef OLAP_CS1_TIMINGS
-    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " waits for read right\n";
+    cerr << getTime() << ": thread " << data->threadnumber << " waits for read right\n";
 #endif
+
     data->commAllowed.down();
+
 #ifdef OLAP_CS1_TIMINGS
-    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " received read right\n";
+    cerr << getTime() << ": thread " << data->threadnumber << " received read right\n";
 #endif
 
     Connection::State result = pConn->read();
 
 #ifdef OLAP_CS1_TIMINGS
-    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " releases read right\n";
+    cerr << getTime() << ": thread " << data->threadnumber << " releases read right\n";
 #endif
+
     data->nextThread->commAllowed.up();
 
     ASSERTSTR(result != Connection::Error,
@@ -260,18 +281,23 @@ void* SynchronisityManager::startWriterThread(void* thread_arg)
     pConn->getTransportHolder()->reset(); // Reset TransportHolder
 
 #ifdef OLAP_CS1_TIMINGS
-    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " waits for write right\n";
+    cerr << getTime() << ": thread " << data->threadnumber << " waits for write right\n";
 #endif
+
     data->commAllowed.down();
+
 #ifdef OLAP_CS1_TIMINGS
-    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " received write right\n";
+    cerr << getTime() << ": thread " << data->threadnumber << " received write right\n";
 #endif
+
     Connection::State result = pConn->write();
     ASSERTSTR(result != Connection::Error,
 	      "Writer thread encountered error in writing");
+
 #ifdef OLAP_CS1_TIMINGS
-    cerr << MPITIMEROUTPUT << "thread " << data->threadnumber << " releases write right\n";
+    cerr << getTime() << ": thread " << data->threadnumber << " releases write right\n";
 #endif
+
     data->nextThread->commAllowed.up();
     manager->readUnlock(id);
   }
