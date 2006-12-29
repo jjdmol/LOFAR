@@ -256,8 +256,9 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
 
     data->nextThread->commAllowed.up();
 
-    ASSERTSTR(result != Connection::Error,
-	      "Reader thread encountered error in reading");
+    if (result == Connection::Error)
+      break;
+
     manager->writeUnlock(id);
   }
 
@@ -291,14 +292,16 @@ void* SynchronisityManager::startWriterThread(void* thread_arg)
 #endif
 
     Connection::State result = pConn->write();
-    ASSERTSTR(result != Connection::Error,
-	      "Writer thread encountered error in writing");
 
 #ifdef OLAP_CS1_TIMINGS
     cerr << getTime() << ": thread " << data->threadnumber << " releases write right\n";
 #endif
 
     data->nextThread->commAllowed.up();
+
+    if (result == Connection::Error)
+      break;
+
     manager->readUnlock(id);
   }
 
