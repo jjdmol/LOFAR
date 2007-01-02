@@ -1,4 +1,9 @@
-bin_PROGRAMS 		= tmEcho tmPing tGCFPort
+AUTOGEN = autogen
+SUFFIXES = .ph
+%.ph: %.prot
+	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
+
+check_PROGRAMS 		= tmEcho tmPing tGCFPort tProtocol
 
 tmEcho_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc Echo.cc Echo.h 
 tmEcho_LDADD		= ../src/libgcftm.la
@@ -13,19 +18,19 @@ tGCFPort_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc \
 tGCFPort_LDADD			= ../src/libgcftm.la
 tGCFPort_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
 
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
+tProtocol_SOURCES 		= testprotocol.ph testprotocol.cc \
+						  Echo_Protocol.ph Echo_Protocol.cc \
+						  tProtocol.cc 
+tProtocol_LDADD			= ../src/libgcftm.la
+tProtocol_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
 
-BUILT_SOURCES = Echo_Protocol.ph
+BUILT_SOURCES = Echo_Protocol.ph testprotocol.ph
 
-EXTRA_DIST = $(sysconf_DATA)
-
-sysconf_DATA=\
+EXTRA_DIST = \
 	tmEcho.conf \
 	tmPing.conf \
-	tGCFPort.conf
+	tGCFPort.conf \
+	tProtocol.log_prop
 	
 %.conf:	tm-test.conf.in
 	ln -sf $< $@

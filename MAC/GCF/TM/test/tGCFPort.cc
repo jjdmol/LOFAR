@@ -77,7 +77,7 @@ void tClient::finishTest(uint32	testnr)
 // The client tries to resolve the label CLIENT:1stTest into the right
 // service name of the server using the config files and serviceBroker.
 //
-GCFEvent::TResult tServer::test1(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult tServer::test1(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	LOG_DEBUG_STR ("Server@test1: " << evtstr(event.signal));
@@ -245,7 +245,7 @@ GCFEvent::TResult tClient::test1(GCFEvent& event, GCFPortInterface& port)
 // the configuration file.
 // The client tries to open the port "SERVER:test2" without the configfiles.
 //
-GCFEvent::TResult tServer::test2(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult tServer::test2(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	LOG_DEBUG_STR ("Server@test2: " << evtstr(event.signal));
@@ -416,7 +416,7 @@ GCFEvent::TResult tClient::test2(GCFEvent& event, GCFPortInterface& port)
 // service name of the server using the config files and serviceBroker.
 //
 //
-GCFEvent::TResult tServer::test3(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult tServer::test3(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	LOG_DEBUG_STR ("Server@test3: " << evtstr(event.signal));
@@ -582,7 +582,7 @@ GCFEvent::TResult tClient::test3(GCFEvent& event, GCFPortInterface& port)
 // The server opens a TCP port with name "SERVER:test4" without using the 
 // configuration files, the client also.
 //
-GCFEvent::TResult tServer::test4(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult tServer::test4(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	LOG_DEBUG_STR ("Server@test4: " << evtstr(event.signal));
@@ -749,7 +749,7 @@ GCFEvent::TResult tClient::test4(GCFEvent& event, GCFPortInterface& port)
 // configuration files, using instancenr 5.
 // The client does the same.
 //
-GCFEvent::TResult tServer::test5(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult tServer::test5(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	LOG_DEBUG_STR ("Server@test5: " << evtstr(event.signal));
