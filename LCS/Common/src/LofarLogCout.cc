@@ -33,6 +33,17 @@ namespace LOFAR {
 
 namespace LFDebug 
 {
+#if defined HAVE_BGL
+  static class BlueGeneL_FixClog {
+    public:
+      BlueGeneL_FixClog() {
+	// make std::clog line buffered
+	static char buffer[4096];
+	setvbuf(stderr, buffer, _IOLBF, sizeof buffer);
+       }
+  } BlueGeneL_FixClog;
+#endif
+
   // -----------------------------------------------------------------------
   // various globals
   // -----------------------------------------------------------------------
