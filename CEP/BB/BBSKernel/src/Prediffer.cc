@@ -1350,18 +1350,21 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
         const Array<String> columns = dm.asArrayString("COLUMNS");
         
         /*
-            BBS requires TiledColumnStMan (or another StorageManager that stores data
-            linearly on disk) and one column per DataManager. This is because mmap is
-            used to access the data.
+            BBS requires TiledColumnStMan/TiledShapeStMan (or another StorageManager that
+            stores data linearly on disk) and one column per DataManager. This is because
+            mmap is used to access the data.
         */
-        if(dm.asString("TYPE") == "TiledColumnStMan" && columns.size() == 1)
+        if((dm.asString("TYPE") == "TiledColumnStMan" ||
+           dm.asString("TYPE") == "TiledShapeStMan") &&
+           columns.size() == 1)
         {
             /*
-                The data bound to a TiledColumnStMan is stored in a file called table.f<seqnr>_TSM0 where
-                <seqnr> is SPEC.SEQNR stored in the DataManager info record. (In glish use getdminfo() on
-                an MS). However, this is only a heuristic, because if there are several different TiledStMan
-                used in one MS it might also be _TSM1 for instance. The mapping created here is guaranteed to
-                work with Storage.
+                The data bound to a TiledStMan is stored in a file called table.f<seqnr>_TSM<stman> where
+                <seqnr> is SPEC.SEQNR stored in the DataManager info record and <stman> indicates the
+                specific tiled storage manager. If several TiledStMan are used in one MS, they are numbered
+                sequentially. Because there is no easy way to determine which number belongs to which
+                TiledStMan, the mapping created here will not always be correct. However, it is guaranteed
+                to be correct for MSs created by Storage.
             */
             unsigned int idx = i;
             
@@ -1372,14 +1375,17 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
             }
             catch(AipsError &_ex)
             {
-                LOG_WARN_STR("DataManager " << i + 1 << " has no SPEC.SEQNR. Please verify (e.g. with glish) that the columns bound to this DataManager are stored in " << fileName << "/table.f" << i << "_TSM0.");
+                LOG_WARN_STR("DataManager " << i + 1 << " has no SPEC.SEQNR. Please verify (e.g. with glish) that the columns bound to this DataManager are stored in " << fileName << "/table.f" << i << "_TSM" << (dm.asString("TYPE") == "TiledColumnStMan" ? "0" : "1") << ".");
             }
         
             /*
                 Update the column map.
             */
             ostringstream os;
-            os << itsMSName << "/table.f" << idx << "_TSM0";
+            if(dm.asString("TYPE") == "TiledColumnStMan")
+                os << itsMSName << "/table.f" << idx << "_TSM0";
+            else
+                os << itsMSName << "/table.f" << idx << "_TSM1";
             
             for(Array<String>::const_iterator it = columns.begin(); it != columns.end(); ++it)
             {
