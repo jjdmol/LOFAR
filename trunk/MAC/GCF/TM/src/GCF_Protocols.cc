@@ -20,20 +20,22 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
-
+#include <Common/lofar_map.h>
+#include <Common/StringUtil.h>
 #include <GCF/TM/GCF_Protocols.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+	namespace GCF {
+		namespace TM {
 
-/**
- * F_FSM_PROTOCOL signal names
- */
+typedef map<unsigned short, const struct protocolStrings*> protStringsMap;
+static protStringsMap 	_protNameTable;
+
+//
+// F_FSM_PROTOCOL signal names
+//
 const char* F_FSM_PROTOCOL_names[] =
 {
   "F_FSM_PROTOCOL: invalid signal",
@@ -42,9 +44,9 @@ const char* F_FSM_PROTOCOL_names[] =
   "F_INIT",
 };
 
-/**
- * F_PORT_PROTOCOL signal names
- */
+//
+// F_PORT_PROTOCOL signal names
+//
 const char* F_PORT_PROTOCOL_names[] =
 {
   "F_PORT_PROTOCOL: invalid signal",
@@ -58,6 +60,51 @@ const char* F_PORT_PROTOCOL_names[] =
   "F_RAW_DATA",
   "F_ACCEPT_REQ",
 };
+
+struct protocolStrings F_FSM_PROTOCOL_STRINGS = {
+	4, 0, F_FSM_PROTOCOL_names, 0
+};
+
+struct protocolStrings F_PORT_PROTOCOL_STRINGS = {
+	10, 0, F_PORT_PROTOCOL_names, 0
+};
+
+//
+// registerProtocol(protID, protocolStrings)
+//
+void registerProtocol (unsigned short	protID, struct protocolStrings&		protDef)
+{
+	_protNameTable[protID] = &protDef;
+}
+
+//
+// signalName(event&)
+//
+string signalName(const GCFEvent& e)
+{
+	protStringsMap::const_iterator iter = _protNameTable.find(F_EVT_PROTOCOL(e));
+	if ((iter != _protNameTable.end()) && (F_EVT_SIGNAL(e) <= iter->second->nrSignals)) {
+		return ((iter->second->signalNames)[F_EVT_SIGNAL(e)]);
+	}
+
+	return (formatString("unknown signal(protocol=%d, signal=%d)", 
+							F_EVT_PROTOCOL(e), F_EVT_SIGNAL(e)));
+}
+
+//
+// errorName(errorNr)
+//
+string errorName(unsigned short	errorID)
+{
+	protStringsMap::const_iterator iter = _protNameTable.find(F_ERR_PROTOCOL(errorID));
+	if ((iter != _protNameTable.end()) && (F_ERR_NR(errorID) <= iter->second->nrErrors)) {
+		return ((iter->second->errorNames)[F_ERR_NR(errorID)]);
+	}
+
+	return (formatString("unknown error(protocol=%d, error=%d)", 
+							F_ERR_PROTOCOL(errorID), F_ERR_NR(errorID)));
+}
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

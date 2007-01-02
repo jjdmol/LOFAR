@@ -40,6 +40,11 @@ namespace LOFAR
 				     | ((unsigned short)(sig) & 0xff)          \
 				   )
 
+// Macros for encoding and decoding errornumbers
+#define F_ERROR(prot, num) ( (((unsigned short)(prot) & 0x3f) * 100) + (num) )
+#define F_ERR_PROTOCOL(errID) ( ((unsigned short)(errID) / 100) & 0x3f )
+#define F_ERR_NR(errID) ( (unsigned short)(errID) % 100 )
+
 /**
  * Define different types of signals
  */
@@ -123,6 +128,18 @@ struct GCFTimerEvent : public GCFEvent
   unsigned long id;
   void* arg;
 };
+
+struct protocolStrings {
+	unsigned short		nrSignals;
+	unsigned short		nrErrors;
+	const char**		signalNames;
+	const char**		errorNames;
+};
+
+void registerProtocol (unsigned short	protID, struct protocolStrings&		protDef);
+string signalName(const GCFEvent& e);
+string errorName (unsigned short	errorID);
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

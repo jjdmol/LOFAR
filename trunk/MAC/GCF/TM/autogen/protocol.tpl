@@ -35,6 +35,17 @@ const char* LOFAR::[+ (base-name) +]::[+ protocol_name +]_signalnames[] =
   "[+ protocol_name +]: invalid signal",[+ FOR event "," +]
   "[+ signal_name +]"[+ ENDFOR +]
 };
+
+const char* [+ protocol_name +]_errornames[] = 
+{ [+ FOR error "," +]
+	"[+ (get "msg") +]"[+ ENDFOR error +]
+};
+
+struct protocolStrings		LOFAR::[+ (base-name) +]::[+ protocol-name +]_STRINGS = {
+	[+ (count "event") +]+1, [+ (count "error") +], 
+	LOFAR::[+ (base-name) +]::[+ protocol_name +]_signalnames,
+	[+ protocol_name +]_errornames
+};
 [+ ELSE +]
 #ifndef [+ protocol_name +]_H
 #define [+ protocol_name +]_H
@@ -60,6 +71,14 @@ enum
 };
 
 //
+// Define error numbers and names
+//
+enum
+{ [+ FOR error "," +]
+	[+ prefix_ucase +]_[+ (get "id") +]_ERR[+ IF (= 0 (for-index)) +] = F_ERROR([+ protocol_name +], [+ (for-index) +])[+ ENDIF +][+ ENDFOR error +]
+};
+
+//
 // Define protocol message types
 //
 enum 
@@ -70,7 +89,8 @@ enum
 [+ FOR event "" +] 
 #define [+ prefix_ucase +]_[+ (get "signal") +] F_SIGNAL([+ protocol_name +], [+ prefix_ucase +]_[+ (get "signal") +]_ID, F_[+ (get "dir")+])[+ ENDFOR event +]
 
-extern const char* [+ protocol_name +]_signalnames[];
+extern const char* [+ protocol_name +]_signalnames[];  // for backwards compatibility 
+extern struct LOFAR::GCF::TM::protocolStrings [+ protocol-name +]_STRINGS;
 
 [+ ENDIF +]
 [+ FOR event "" +][+ IF (= (suffix) "ph") +][+ FOR param "" +]
