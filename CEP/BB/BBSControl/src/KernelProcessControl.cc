@@ -275,10 +275,12 @@ namespace BBS
                                          0,
                                          false);
 
-            // Set data selection and work domain.
-            DomainSize workDomainSize = strategy->domainSize();
-            return (itsPrediffer->setSelection(strategy->stations(), strategy->correlation())
-                    && itsPrediffer->setWorkDomainSize(workDomainSize.bandWidth, workDomainSize.timeInterval));
+            // Store work domain size.
+            itsWorkDomainSize = strategy->domainSize();
+
+            // Select stations and correlations.
+            return itsPrediffer->setSelection(strategy->stations(), strategy->correlation());
+//                    && itsPrediffer->setWorkDomainSize(workDomainSize.bandWidth, workDomainSize.timeInterval));
 //                    && itsPrediffer->setWorkDomain(-1, -1, 0, 1e12));
 //                    && itsPrediffer->setWorkDomain(4, 59, 0, 1e12));
         }
@@ -293,40 +295,75 @@ namespace BBS
     bool BBSKernelProcessControl::handle(const BBSStep* bs)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        
+        ASSERT(itsPrediffer);
+
+        const MSDesc &descriptor = itsPrediffer->getMSDescriptor();
+
+        LOG_DEBUG_STR("MS descriptor:" << endl << descriptor);
+
+        double startFreq = descriptor.startFreq[0];
+        double endFreq = descriptor.endFreq[0];
+
+        /*
+            (Some?) Westerbork measurement sets store the channels
+            in reverse order. In this case, start and end frequency
+            need to be exchanged.
+        */
+        if(startFreq > endFreq)
         {
-            const BBSPredictStep* step = dynamic_cast<const BBSPredictStep*>(bs);
-            if(step)
-            {
-                return doHandle(step);
-            }
+            double tmp;
+            tmp = startFreq;
+            startFreq = endFreq;
+            endFreq = tmp;
         }
-                
+
+        double startTime = descriptor.startTime;
+        double endTime = descriptor.endTime;
+        double time = startTime;
+
+        bool result = true;
+        while(result && (time < endTime))
         {
-            const BBSSubtractStep* step = dynamic_cast<const BBSSubtractStep*>(bs);
-            if(step)
+            ASSERT(itsPrediffer->setWorkDomain(startFreq, endFreq, time, time + itsWorkDomainSize.timeInterval));
+
+            result = false;
+
             {
-                return doHandle(step);
+                const BBSPredictStep* step = dynamic_cast<const BBSPredictStep*>(bs);
+                if(step)
+                {
+                    result = doHandle(step);
+                }
             }
+                    
+            {
+                const BBSSubtractStep* step = dynamic_cast<const BBSSubtractStep*>(bs);
+                if(step)
+                {
+                    result = doHandle(step);
+                }
+            }
+            
+            {
+                const BBSCorrectStep* step = dynamic_cast<const BBSCorrectStep*>(bs);
+                if(step)
+                {
+                    result = doHandle(step);
+                }
+            }
+            
+            {
+                const BBSSolveStep* step = dynamic_cast<const BBSSolveStep*>(bs);
+                if(step)
+                {
+                    result = doHandle(step);
+                }
+            }
+
+            time += itsWorkDomainSize.timeInterval;
         }
         
-        {
-            const BBSCorrectStep* step = dynamic_cast<const BBSCorrectStep*>(bs);
-            if(step)
-            {
-                return doHandle(step);
-            }
-        }
-        
-        {
-            const BBSSolveStep* step = dynamic_cast<const BBSSolveStep*>(bs);
-            if(step)
-            {
-                return doHandle(step);
-            }
-        }
-        
-        return false;
+        return result;
     }
 
 
@@ -351,7 +388,8 @@ namespace BBS
         context.sources = step->sources();        
         context.instrumentModel = step->instrumentModels();
     }
-    
+
+
     bool BBSKernelProcessControl::sendObject(const BlobStreamable& bs)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
