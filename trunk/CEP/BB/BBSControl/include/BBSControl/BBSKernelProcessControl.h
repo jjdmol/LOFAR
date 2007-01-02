@@ -30,6 +30,7 @@
 //# Includes
 #include <PLC/ProcessControl.h>
 #include <APS/ParameterSet.h>
+#include <BBSControl/BBSStructs.h>
 
 namespace LOFAR
 {
@@ -99,12 +100,14 @@ namespace LOFAR
       // Receive a BlobStreamable object, e.g., a BBSStatus.
       BlobStreamable* recvObject();
 
-
       // Parameter set for this process controller.
       ACC::APS::ParameterSet itsParameterSet;
 
       // Prediffer
       Prediffer* itsPrediffer;
+
+      // Work domain size
+      DomainSize itsWorkDomainSize;
 
       // History database.
       LOFAR::ParmDB::ParmDB* itsHistory;
