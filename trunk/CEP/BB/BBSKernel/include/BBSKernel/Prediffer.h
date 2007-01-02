@@ -138,6 +138,12 @@ public:
   const MeqDomain& getWorkDomain() const
     { return itsWorkDomain; }
 
+  // Get the measurement set descriptor
+  const MSDesc &getMSDescriptor() const
+  {
+    return itsMSDesc;
+  }
+
   // Return the solvable parms.
   // The parms are in ascending order of spidnr.
   const ParmDataInfo& getSolvableParmData() const
