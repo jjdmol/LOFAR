@@ -82,6 +82,7 @@ CREATE TABLE param_type (
 	CONSTRAINT param_name_uniq		UNIQUE (name)
 ) WITHOUT OIDS;
 INSERT INTO param_type VALUES (  0, 'node');
+INSERT INTO param_type VALUES (  1, 'popup');
 INSERT INTO param_type VALUES (101, 'bool');
 INSERT INTO param_type VALUES (102, 'int');
 INSERT INTO param_type VALUES (103, 'uint');
