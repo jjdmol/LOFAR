@@ -19,4 +19,3 @@ par storageNodeList          I    text   -      10    0    [list005,list006]    
 par imageNodeList            I    text   -      10    0    [lioff005,lioff002,lioff003]        -   'list of all used ImageNodes'
 par storageCapacity          I    int    DISK   10    0    760                           -   'total available StorageCapacity'
 
-uses  Connection		 1.0.0  development '1'		       "Connections between nodes"
