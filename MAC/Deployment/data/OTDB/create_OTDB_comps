@@ -161,7 +161,7 @@ expand_connection()
 		(
 		echo ""
 		echo "#"
-		cleanlist $1.base 
+		cleanlist ConnectionNode.base 
 		) | sed -e "s/@sourceNode@/${sourceNode}/g" -e "s/@destNode@/${destNode}/g" \
 				-e "s/@connection@/${connectionName}/g"
 	done
@@ -245,10 +245,27 @@ do
 		substitute_marker "../PVSS/Rings" "@ring@" >${outputname}
 	fi
 
-	grep @connection@ $file >/dev/null 2>&1
+	grep @Station-Input@ $file >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
 		cleanlist $file | \
-		expand_connection "ConnectionNode" "@connection@" >${outputname}
+		expand_connection "Station-Input" "@Station-Input@" >>${outputname}
+	fi
+
+	grep @BGL-Storage@ $file >/dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		cleanlist $file | \
+		expand_connection "BGL-Storage" "@BGL-Storage@" >>${outputname}
+	fi
+
+	grep @Input-BGL@ $file >/dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		cleanlist $file | \
+		expand_connection "Input-BGL" "@Input-BGL@" >>${outputname}
+		cleanlist $file | \
+		substitute_marker "Station-Input" "@Station-Input@" | \
+		substitute_marker "Input-BGL" "@Input-BGL@" | \
+		substitute_marker "BGL-Storage" "@BGL-Storage@" >>${outputname}
+
 	fi
 
 done
