@@ -21,6 +21,6 @@ par  destIP                  I    text   -      10    0    '>>@destNode@.IPAddre
 par  IPPort                  I    uint   -      10    0    10000                       -  'normally a number >1024'
 # Ethernet
 par  interface               I    text   -      10    0    'eth1'                      -  'network card to use for raw ethernet'
-par  sourceMac               I    text   -      10    0    '>>@sourceNode@.MACAddress' -  'MAC address of data source'
-par  destMac                 I    text   -      10    0    '>>@destNode@.MACAddress'   -  'MAC address of data destination'
+par  sourceMac               I    text   -      10    0    '12:34:56:78:90:12'         -  'MAC address of data source'
+par  destMac                 I    text   -      10    0    '12:34:56:78:90:12'         -  'MAC address of data destination'
 
