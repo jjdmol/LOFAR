@@ -874,9 +874,7 @@ sub main
 
 	chkpage($opt_p);
 	report(reconfig($sock, $pcap, $opt_p));
-	if ($opt_p < 8) {
-	    print STDERR "=== waiting $TO seconds after BP reconfig\n"; sleep $TO;
-	}
+	print STDERR "=== waiting $TO seconds after reconfig\n"; sleep $TO;
 	report(clearctl($sock, $pcap, $CMD_CLEAR));
 	report($error) if $error;
 	print STDERR "=== waiting $TO seconds after clear\n"; sleep $TO;
