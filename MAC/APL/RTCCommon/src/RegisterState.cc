@@ -95,9 +95,7 @@ void RegisterState::tran(State source, State target, int i)
     if (source == m_state(j)) {
       m_state(j) = target;
     } else if (target != m_state(j)) {
-      LOG_ERROR_STR("tran(" << source << ", " << target << ") failed, current state = " << m_state(j));
-      // for some reason the LOG_ERROR doesn't work in this file so cerr is sometimes used like below
-      //cerr << "tran(" << source << ", " << target << ") failed, current state = " << m_state(j) << endl;
+      LOG_DEBUG_STR("tran(" << source << ", " << target << ") failed, current state = " << m_state(j));
     }
   }
 }
@@ -118,14 +116,14 @@ void RegisterState::clear(int i)
   }
    
   for (int j = lb; j < ub; j++) {
-    if (DONE == m_state(j)) {
+    if (DONE == m_state(j) || IDLE == m_state(j)) {
       m_state(j) = IDLE;
     } else if (READ_ERROR == m_state(j)) {
       m_state(j) = READ;
     } else if (WRITE_ERROR == m_state(j)) {
       m_state(j) = WRITE;
     } else {
-      LOG_ERROR_STR("clear tran from " << m_state(j) << " failed");
+      LOG_DEBUG_STR("clear tran from " << m_state(j) << " failed");
     }
   }
 }
@@ -151,7 +149,7 @@ void RegisterState::write(int i)
     } else if (WRITE == m_state(j)) {
       // already in write state
     } else {
-      LOG_ERROR_STR("tran to " << WRITE << " from " << m_state(j) << " failed");
+      LOG_DEBUG_STR("tran to " << WRITE << " from " << m_state(j) << " failed");
       // for some reason the LOG_ERROR doesn't work in this file so cerr is sometimes used like below
       //cerr << "tran to " << WRITE << " from " << m_state(j) << " failed" << endl;
     }
