@@ -73,7 +73,7 @@ echo *** indicate the path to the rpm program using  --with-rpm-prog=PROG
 
       RPM_DIR=${rpmdir}
       RPM_TARGET=$rpmfilename
-      RPM_ARGS="-ta $rpm_extra_args"
+      RPM_ARGS="-ts $rpm_extra_args"
       RPM_TARBALL=${PACKAGE}-${VERSION}.tar.gz
     fi
   fi
