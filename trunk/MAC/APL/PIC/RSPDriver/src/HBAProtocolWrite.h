@@ -63,7 +63,12 @@ namespace LOFAR {
 
       friend class HBAResultRead;
 
-      //#define HBA_WRITE_DELAYS
+      //
+      // Uncomment next line to actually write HBA delays
+      // If commented out, the code will only switch the LED on/off
+      // to test the i2c interface from the EPA firmware to the HBA piggy back board
+      //
+#define HBA_WRITE_DELAYS
 
 #ifdef HBA_WRITE_DELAYS
       static const int PROTOCOL_SIZE         = 320;

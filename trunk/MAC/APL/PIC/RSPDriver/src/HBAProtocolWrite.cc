@@ -128,7 +128,11 @@ namespace LOFAR {
       // Table 33
       // Wait to allow for the broadcast to finish (5 bytes)
       18, // PROTOCOL_C_WAIT
+#ifdef _SHORT_WAIT
       0x80, 0x96, 0x98, 0x00, // 0x00989680 = 10e6 * 5ns = 50ms
+#else
+      0x00, 0x2D, 0x31, 0x01, // 0x01312D00 = 20e6 * 5ns = 100ms
+#endif
 
       // Table 34
       // Instruct the client to do a unicast read request to server 1 (8 bytes)
@@ -144,7 +148,11 @@ namespace LOFAR {
       // Table 35
       // Wait to allow for the multicast to finish
       18, // PROTOCOL_C_WAIT (5 bytes)
+#ifdef _SHORT_WAIT
       0xC0, 0x5C, 0x15, 0x00, // 0x00155CC0 = 7ms = pause between write request register and read response register
+#else
+      0x80, 0x84, 0x1E, 0x00, // 0x001E8480 = 10ms = pause between write request register and read response register
+#endif
 
       // Table 36
       // Read back the response results from the client (4 bytes)
@@ -154,21 +162,21 @@ namespace LOFAR {
       4,    // Count of number of data bytes to read (document LOFAR-ASTRON-MEM-175 has an error here (value 3))
 
       // Repeat tables 34,35,36 fo servers 2 to 16
-      13, 4>>1, 0, 4,  2, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 2
-      13, 4>>1, 0, 4,  3, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 3
-      13, 4>>1, 0, 4,  4, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 4
-      13, 4>>1, 0, 4,  5, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 5
-      13, 4>>1, 0, 4,  6, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 6
-      13, 4>>1, 0, 4,  7, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 7
-      13, 4>>1, 0, 4,  8, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 8
-      13, 4>>1, 0, 4,  9, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 9
-      13, 4>>1, 0, 4, 10, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 10
-      13, 4>>1, 0, 4, 11, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 11
-      13, 4>>1, 0, 4, 12, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 12
-      13, 4>>1, 0, 4, 13, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 13
-      13, 4>>1, 0, 4, 14, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 14
-      13, 4>>1, 0, 4, 15, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 15
-      13, 4>>1, 0, 4, 16, 3, 5, 0, 18, 0xC0, 0x5C, 0x15, 0x00, 14, 4>>1, 1, 4, // server 16
+      13, 4>>1, 0, 4,  2, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 2
+      13, 4>>1, 0, 4,  3, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 3
+      13, 4>>1, 0, 4,  4, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 4
+      13, 4>>1, 0, 4,  5, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 5
+      13, 4>>1, 0, 4,  6, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 6
+      13, 4>>1, 0, 4,  7, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 7
+      13, 4>>1, 0, 4,  8, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 8
+      13, 4>>1, 0, 4,  9, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 9
+      13, 4>>1, 0, 4, 10, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 10
+      13, 4>>1, 0, 4, 11, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 11
+      13, 4>>1, 0, 4, 12, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 12
+      13, 4>>1, 0, 4, 13, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 13
+      13, 4>>1, 0, 4, 14, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 14
+      13, 4>>1, 0, 4, 15, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 15
+      13, 4>>1, 0, 4, 16, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 16
 
       // Mark the end of the protocol list (1 byte)
       19, // PROTOCOL_C_END
