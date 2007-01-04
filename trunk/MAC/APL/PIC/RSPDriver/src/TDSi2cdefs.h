@@ -357,15 +357,26 @@
 #define TDS_C_WAIT_RESULT      0x00
 #define TDS_C_WAIT_RESULT_SIZE 1
 
+//
+// Uncommand next line to prevent programming of PLL
+// 
+//#define DISABLE_PROGRAMPLL
+
 namespace LOFAR {
   namespace RSP {
 
-    extern uint8 tds_160MHz_result[  TDS_INIT_RESULT_SIZE
+    extern uint8 tds_160MHz_result[
+#ifndef DISABLE_PROGRAMPLL
+				     TDS_INIT_RESULT_SIZE
 				   + TDS_PROGRAMPLLS_RESULT_SIZE
+#endif
 				   + TDS_160MHZ_RESULT_SIZE
 				   + TDS_C_END_RESULT_SIZE];
-    extern uint8 tds_200MHz_result[  TDS_INIT_RESULT_SIZE
+    extern uint8 tds_200MHz_result[ 
+#ifndef DISABLE_PROGRAMPLL
+				     TDS_INIT_RESULT_SIZE
 				   + TDS_PROGRAMPLLS_RESULT_SIZE
+#endif
 				   + TDS_200MHZ_RESULT_SIZE
 				   + TDS_C_END_RESULT_SIZE];
     extern uint8 tds_off_result[  TDS_VCXO_OFF_RESULT_SIZE
