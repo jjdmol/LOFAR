@@ -181,15 +181,17 @@ void CDOWrite::sendrequest()
 	uint32 l_srcip, l_dstip;
 
 	snprintf(srcmacfmt, 64, "RSPDriver.LANE_%d_SRCMAC", output_lane);
-	snprintf(srcmac,    64, srcmacfmt, GET_CONFIG("RS.STATION_ID", i));
+	snprintf(srcmac,    64, GET_CONFIG_STRING(srcmacfmt), GET_CONFIG("RS.STATION_ID", i));
 	snprintf(dstmac, 64, "RSPDriver.LANE_%d_DSTMAC", output_lane);
 	snprintf(srcip,  64, "RSPDriver.LANE_%d_SRCIP", output_lane);
 	snprintf(dstip,  64, "RSPDriver.LANE_%d_DSTIP", output_lane);
 	l_srcip = string2ip(GET_CONFIG_STRING(srcip));
 	l_dstip = string2ip(GET_CONFIG_STRING(dstip));
 
-	LOG_INFO(formatString("CDO: lane=%d, src=[%s,%s], dst=[%d,%d]",
-			      output_lane, srcmac, srcip, dstmac, dstip));
+	LOG_INFO(formatString("CDO: lane=%d, src=[%s,%s], dst=[%s,%s]",
+			      output_lane,
+			      srcmac, GET_CONFIG_STRING(srcip),
+			      GET_CONFIG_STRING(dstmac), GET_CONFIG_STRING(dstip)));
 
 	// settings
 	cdo.control.enable = 1;
