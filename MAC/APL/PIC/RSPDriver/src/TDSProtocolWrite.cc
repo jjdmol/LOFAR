@@ -46,52 +46,72 @@ using namespace EPA_Protocol;
 namespace LOFAR {
   namespace RSP {
 
-    static uint8 tds_160MHz[  TDS_INIT_SIZE 
+    static uint8 tds_160MHz[
+#ifndef DISABLE_PROGRAMPLL
+			      TDS_INIT_SIZE 
 			    + TDS_PROGRAMPLLS_SIZE
+#endif
 			    + TDS_160MHZ_SIZE
 			    + TDS_C_END_SIZE] = {
 
 			      // switch to 160MHz to backplane (using 10MHz reference at the front)
+#ifndef DISABLE_PROGRAMPLL
 			      TDS_INIT,
 			      TDS_PROGRAMPLLS,
+#endif
 			      TDS_160MHZ,
 			      TDS_C_END,
 
 			    };
       
 
-    uint8 tds_160MHz_result[  TDS_INIT_RESULT_SIZE
+    uint8 tds_160MHz_result[
+#ifndef DISABLE_PROGRAMPLL
+			      TDS_INIT_RESULT_SIZE
 			    + TDS_PROGRAMPLLS_RESULT_SIZE
+#endif
 			    + TDS_160MHZ_RESULT_SIZE
 			    + TDS_C_END_RESULT_SIZE] = {
 
+#ifndef DISABLE_PROGRAMPLL
 			      TDS_INIT_RESULT,
 			      TDS_PROGRAMPLLS_RESULT,
+#endif
 			      TDS_160MHZ_RESULT,
 			      TDS_C_END_RESULT,
 
 			    };
 
-    static uint8 tds_200MHz[  TDS_INIT_SIZE
+    static uint8 tds_200MHz[ 
+#ifndef DISABLE_PROGRAMPLL
+			      TDS_INIT_SIZE
 			    + TDS_PROGRAMPLLS_SIZE
+#endif
 			    + TDS_200MHZ_SIZE
 			    + TDS_C_END_SIZE] = {
 
 			      // switch to 200MHz to backplane (using 10MHz reference at the front)
+#ifndef DISABLE_PROGRAMPLL
 			      TDS_INIT,
 			      TDS_PROGRAMPLLS,
+#endif
 			      TDS_200MHZ,
 			      TDS_C_END,
 
 			    };
 
-    uint8 tds_200MHz_result[  TDS_INIT_RESULT_SIZE
+    uint8 tds_200MHz_result[
+#ifndef DISABLE_PROGRAMPLL
+			      TDS_INIT_RESULT_SIZE
 			    + TDS_PROGRAMPLLS_RESULT_SIZE
+#endif
 			    + TDS_200MHZ_RESULT_SIZE
 			    + TDS_C_END_RESULT_SIZE] = {
 
+#ifndef DISABLE_PROGRAMPLL
 			      TDS_INIT_RESULT,
 			      TDS_PROGRAMPLLS_RESULT,
+#endif
 			      TDS_200MHZ_RESULT,
 			      TDS_C_END_RESULT,
 
