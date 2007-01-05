@@ -49,6 +49,7 @@ Observation.NBeams = 1              # number of beams used
 Observation.DirectionType = J2000   # direction type
 Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
 0, 0.92]
+Observation.DelayCompensation = T
 
 # General Variables
 General.SubbandsPerPset = 4

@@ -93,6 +93,8 @@ namespace LOFAR
       // ACC parameters interface
       ACC::APS::ParameterSet &itsPS;
       
+      bool itsDelayCompensation;
+
       // Sync Master or slave
       bool itsSyncMaster;
 

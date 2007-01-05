@@ -1264,6 +1264,8 @@ void WH_BGL_Processing::preprocess()
 #if defined HAVE_BGL && !defined C_IMPLEMENTATION
   mutex = rts_allocate_mutex();
 #endif
+
+  itsDelayCompensation = itsPS.getBool("Observation.DelayCompensation");
 }
 
 
@@ -1331,7 +1333,6 @@ void WH_BGL_Processing::computeFlags()
 }
 
 
-#if defined DELAY_COMPENSATION
 #if defined C_IMPLEMENTATION
 
 fcomplex WH_BGL_Processing::phaseShift(int time, int chan, double baseFrequency, const DH_Subband::DelayIntervalType &delay) const
@@ -1363,7 +1364,6 @@ void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAM
 }
 
 #endif
-#endif
 
 
 void WH_BGL_Processing::doPPF(double baseFrequency)
@@ -1381,13 +1381,10 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
   typedef DH_Subband::SampleType inputType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS];
 
   inputType *input = (inputType *) get_DH_Subband()->getSamples();   
-
-#if defined DELAY_COMPENSATION
   DH_Subband::AllDelaysType *delays = get_DH_Subband()->getDelays();
-#endif
 
   for (int stat = 0; stat < NR_STATIONS; stat ++) {
-#if 1 && defined DELAY_COMPENSATION
+#if 1
     std::clog << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << (*delays)[stat].delayAtBegin << " to " << (*delays)[stat].delayAfterEnd << " sec" << std::endl;
 #endif
 
@@ -1429,9 +1426,10 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 #endif
 
 	  for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
-#if defined DELAY_COMPENSATION
-	    fftOutData[chan] *= phaseShift(time, chan, baseFrequency, (*delays)[stat]);
-#endif
+	    if (itsDelayCompensation) {
+	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, (*delays)[stat]);
+	    }
+
 	    samples[chan][stat][time][pol] = fftOutData[chan];
 	  }
 	}
@@ -1467,11 +1465,11 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
       }
     }
 
-#if defined DELAY_COMPENSATION
     struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION];
 
-    computePhaseShifts(phaseShifts, (*delays)[stat], baseFrequency);
-#endif
+    if (itsDelayCompensation) {
+      computePhaseShifts(phaseShifts, (*delays)[stat], baseFrequency);
+    }
 
 #if defined SPARSE_FLAGS
     const std::vector<SparseSet::range> &ranges = flags[stat].getRanges();
@@ -1507,17 +1505,17 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 	FFTtimer.stop();
 
 	if (time & 1) {
-#if defined DELAY_COMPENSATION
-	  _phase_shift_and_transpose(&samples[0][stat][time - 1][0],
-				     &fftOutData[0][0][0],
-				     &phaseShifts[time - 1]);
-#else
-	  _transpose_4x8(&samples[0][stat][time - 1][0],
-			 &fftOutData[0][0][0],
-			 NR_SUBBAND_CHANNELS,
-			 sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
-			 sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
-#endif
+	  if (itsDelayCompensation) {
+	    _phase_shift_and_transpose(&samples[0][stat][time - 1][0],
+				       &fftOutData[0][0][0],
+				       &phaseShifts[time - 1]);
+	  } else {
+	    _transpose_4x8(&samples[0][stat][time - 1][0],
+			   &fftOutData[0][0][0],
+			   NR_SUBBAND_CHANNELS,
+			   sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
+			   sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
+	  }
 	}
       }
 
@@ -1525,17 +1523,17 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 	_memzero(fftOutData[time & 1], sizeof(fftOutData[time & 1]));
 
 	if (time & 1) {
-#if defined DELAY_COMPENSATION
-	  _phase_shift_and_transpose(&samples[0][stat][time - 1][0],
-				     &fftOutData[0][0][0],
-				     &phaseShifts[time - 1]);
-#else
-	  _transpose_4x8(&samples[0][stat][time - 1][0],
-			 &fftOutData[0][0][0],
-			 NR_SUBBAND_CHANNELS,
-			 sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
+	  if (itsDelayCompensation) {
+	    _phase_shift_and_transpose(&samples[0][stat][time - 1][0],
+				       &fftOutData[0][0][0],
+				       &phaseShifts[time - 1]);
+	  } else {
+	    _transpose_4x8(&samples[0][stat][time - 1][0],
+			   &fftOutData[0][0][0],
+			   NR_SUBBAND_CHANNELS,
+			   sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
 			 sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
-#endif
+	  }
 	}
       }
     }
@@ -1563,17 +1561,17 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
       }
       FFTtimer.stop();
 
-#if defined DELAY_COMPENSATION
-      _phase_shift_and_transpose(&samples[0][stat][time][0],
-				 &fftOutData[0][0][0],
-				 &phaseShifts[time]);
-#else
-      _transpose_4x8(&samples[0][stat][time][0],
-		     &fftOutData[0][0][0],
-		     NR_SUBBAND_CHANNELS,
-		     sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
-		     sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
-#endif
+      if (itsDelayCompensation) {
+	_phase_shift_and_transpose(&samples[0][stat][time][0],
+				   &fftOutData[0][0][0],
+				   &phaseShifts[time]);
+      } else {
+	_transpose_4x8(&samples[0][stat][time][0],
+		       &fftOutData[0][0][0],
+		       NR_SUBBAND_CHANNELS,
+		       sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
+		       sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
+      }
     }
 #endif // SPARSE_FLAGS
 #endif // C_IMPLEMENTATION

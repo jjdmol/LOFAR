@@ -25,8 +25,6 @@
 #define C_IMPLEMENTATION
 #endif
 
-#define DELAY_COMPENSATION
-
 #if defined HAVE_FFTW3
 #include <fftw3.h>
 #elif defined HAVE_FFTW2
@@ -118,12 +116,10 @@ class WH_BGL_Processing: public WorkHolder {
     void computeFlags();
     void doCorrelate();
 
-#if defined DELAY_COMPENSATION
 #if defined C_IMPLEMENTATION
     fcomplex phaseShift(int time, int chan, double baseFrequency, const DH_Subband::DelayIntervalType &delay) const;
 #else
     void computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay, double baseFrequency) const;
-#endif
 #endif
 
     /// FIR Filter variables
@@ -140,6 +136,7 @@ class WH_BGL_Processing: public WorkHolder {
     const unsigned  itsCoreNumber;
     unsigned        itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool	    itsInputConnected;
+    bool	    itsDelayCompensation;
 
     static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
 
