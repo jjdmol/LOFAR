@@ -1339,7 +1339,7 @@ fcomplex WH_BGL_Processing::phaseShift(int time, int chan, double baseFrequency,
   double timeInterpolatedDelay = delay.delayAtBegin + ((double) time / NR_SAMPLES_PER_INTEGRATION) * (delay.delayAfterEnd - delay.delayAtBegin);
   double frequency	       = baseFrequency + chan * itsChannelBandwidth;
   double phaseShift	       = timeInterpolatedDelay * frequency;
-  double phi		       = 2.0 * M_PI * phaseShift;
+  double phi		       = -2 * M_PI * phaseShift;
 
   return makefcomplex(std::cos(phi), std::sin(phi));
 }
@@ -1348,8 +1348,8 @@ fcomplex WH_BGL_Processing::phaseShift(int time, int chan, double baseFrequency,
 
 void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay, double baseFrequency) const
 {
-  double   phiBegin = 2 * M_PI * delay.delayAtBegin;
-  double   phiEnd   = 2 * M_PI * delay.delayAfterEnd;
+  double   phiBegin = -2 * M_PI * delay.delayAtBegin;
+  double   phiEnd   = -2 * M_PI * delay.delayAfterEnd;
   double   deltaPhi = (phiEnd - phiBegin) / NR_SAMPLES_PER_INTEGRATION;
   dcomplex v	    = cosisin(phiBegin * baseFrequency);
   dcomplex dv       = cosisin(phiBegin * itsChannelBandwidth);

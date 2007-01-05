@@ -92,7 +92,7 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency, double
 
 #if NR_STATIONS >= 2 && NR_POLARIZATIONS == 2
     (*samples)[1][time][1]    = toComplex(phi + phaseShift);
-    (*delays)[1].delayAtBegin = (*delays)[1].delayAfterEnd = -distance / signalFrequency;
+    (*delays)[1].delayAtBegin = (*delays)[1].delayAfterEnd = distance / signalFrequency;
 #endif
   }
   
