@@ -152,6 +152,8 @@ namespace LOFAR {
       itsTimers.push_back(itsGetElemTimer);
       itsPrePostTimer->start();
 
+      itsDelayCompensation = itsPS.getBool("Observation.DelayCompensation");
+
       // determine starttime
       double startTime = itsPS.getDouble("Observation.StartTime");
       double utc = 0;
@@ -212,7 +214,11 @@ namespace LOFAR {
       // delay control
       delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
       // Get delay from the delay controller
-      delayedstamp = itsSyncedStamp + (*delayDHp)[itsStationNr].coarseDelay;
+      delayedstamp = itsSyncedStamp;
+
+      if (itsDelayCompensation) {
+	delayedstamp += (*delayDHp)[itsStationNr].coarseDelay;
+      }
 
       /* startstamp is the synced and delay-controlled timestamp to 
 	 start from in cyclic buffer */

@@ -43,6 +43,7 @@ Observation.NBeams = 4              # number of beams used
 Observation.DirectionType = J2000   # direction type
 Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
 1, 0.3, -1, -0.3, 2, 0.1, 1.5, -0.3]  # four arbitrary directions
+Observation.DelayCompensation = T
 Observation.StartTime = 53328.6407291667 # UTC seconds since 1970
 Observation.StopTime  = 53328.6823958333 # 
 Observation.RefFreqs = [1.0e5, 3.0e5, 5.0e5, 7.0e5, 9.0e5, 11.0e5, 13.0e5, 15.0e5]  # the reference frequency for each stored(!) subband (Hz)
