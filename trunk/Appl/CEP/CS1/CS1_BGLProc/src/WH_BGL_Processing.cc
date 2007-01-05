@@ -1803,7 +1803,7 @@ void WH_BGL_Processing::process()
   computeFlags();
 
 #if NR_SUBBAND_CHANNELS > 1
-  doPPF(itsCenterFrequencies[itsCurrentSubband] - (NR_SUBBAND_CHANNELS / 2) * itsChannelBandwidth);
+  doPPF(itsCenterFrequencies[itsCurrentSubband] - (NR_SUBBAND_CHANNELS / 2 - .5) * itsChannelBandwidth);
 #else
   bypassPPF();
 #endif
