@@ -38,8 +38,8 @@ node  Beam	      1.0.0  development  'node constraint'  "Beam specification"
 #--------------------------------------------------------------------------------------------------------
 #    name                dir. type   unit   prun. vm   value                   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  angle1			     I	  vdbl	 -	10    0	   0   -	        'Declination(s) of the source(s)'
-par  angle2				 I	  vdbl	 -	10    0	   0   -	        'rightAscention(s) of the source(s)'
-par  directionTypes	     I	  vtext	 -	10    0	   0   J2000	    'Coord.system used for the sources'
-par  angleTimes		     I	  vuint	 -	10    0	   0   -	        'Relative time (to starttime) when to activate the angles'
+par  angle1			     I	  vdbl	 -	10    0	   0   -	        		'Declination(s) of the source(s)'
+par  angle2				 I	  vdbl	 -	10    0	   0   -	        		'rightAscention(s) of the source(s)'
+par  directionTypes	     I	  popup	 -	10    0	   0   'J2000|AZEL|LMN'	    'Coord.system used for the sources'
+par  angleTimes		     I	  vuint	 -	10    0	   0   -	        		'Relative time (to starttime) when to activate the angles'
 

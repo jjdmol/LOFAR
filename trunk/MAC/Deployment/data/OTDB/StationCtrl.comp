@@ -6,7 +6,7 @@
 #--------------------------------------------------------------------------------------------------------
 node  StationCtrl   1.0.0  development 'node constraint'  "Main controller for a station"
 
-#    name                    dir. type   unit   prun. vm   value                     constr.  descr.
+#    name          dir. type   unit   prun. vm   value                     			constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _hostname               I    text   -      10    0    >>VirtualInstrument.stationList    -        "Machine(s) the program should run on"
+par  _hostname     I    text   -      10    0    >>VirtualInstrument.stationList    -        "Machine(s) the program should run on, eg. [CS010C,CS016C]"
 
