@@ -118,7 +118,7 @@ namespace LOFAR {
 	  } else {
 	    seqid   = ((int*)&recvframe[8])[0];
 	    blockid = ((int*)&recvframe[12])[0];
-	    validTimeStampReceived = (seqid != 0xffff); //if the second counter has 0xffff, the data cannot be trusted.
+	    validTimeStampReceived = (seqid != 0xFFFFFFFF); //if the second counter has 0xffffffff, the data cannot be trusted.
 	    //cerr<<"InputThread received valid? :"<<validTimeStampReceived<<endl;
 #ifdef PACKET_STATISTICS	    
 	    if (!validTimeStampReceived) invalidStamps.push_back(PacketStats(actualstamp, expectedstamp));
