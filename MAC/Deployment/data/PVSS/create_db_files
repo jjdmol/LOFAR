@@ -254,7 +254,7 @@ substitute_Cabinet()
 	{
 		hasCabinet=index($1,"@cabinet@");
 		if (hasCabinet > 0) {
-			for (cabinet=0; cabinet<int(nrBoards/8); cabinet++) {
+			for (cabinet=0; cabinet<int((nrBoards+7)/8); cabinet++) {
 				dpname=$1;
 				sub("@cabinet@", "Cabinet"cabinet, dpname)
 				print dpname"	"$2;
