@@ -48,21 +48,16 @@ ParameterSet* globalParameterSet()
 //
 // Default constructor
 //
-ParameterSet::ParameterSet(bool keyNoCase)
-  : itsSet (new ParameterSetImpl(keyNoCase))
+ParameterSet::ParameterSet(KeyCompare::Mode	mode)
+	: itsSet (new ParameterSetImpl(mode))
 {}
 
 //
 // Construction by reading a parameter file.
 //
-ParameterSet::ParameterSet(const string& theFilename,
-			   bool keyNoCase)
-  : itsSet (new ParameterSetImpl(theFilename.c_str(), keyNoCase))
-{}
-
-ParameterSet::ParameterSet(const char* theFilename,
-			   bool keyNoCase)
-  : itsSet (new ParameterSetImpl(theFilename, keyNoCase))
+ParameterSet::ParameterSet(const string&	theFilename,
+			   KeyCompare::Mode	mode)
+	: itsSet (new ParameterSetImpl(theFilename, mode))
 {}
 
 //

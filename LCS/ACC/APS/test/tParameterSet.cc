@@ -33,20 +33,20 @@ using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::ACC::APS;
 
-int doIt(bool noCase)
+int doIt(KeyCompare::Mode mode)
 {
-  string paramFile ("tParameterSet.in_param_");
-  string mergeFile ("tParameterSet.in_merge_");
-  string newsetFile("tParameterSet_tmp.newset.");
-  paramFile  += (noCase ? "nocase" : "normal");
-  mergeFile  += (noCase ? "nocase" : "normal");
-  newsetFile += (noCase ? "nocase" : "normal");
+  string cmpMode   (mode == KeyCompare::NOCASE ? "nocase" : "normal");
+  string paramFile ("tParameterSet.in_param_"   + cmpMode);
+  string mergeFile ("tParameterSet.in_merge_"   + cmpMode);
+  string newsetFile("tParameterSet_tmp.newset." + cmpMode);
 
   try
   {
     cout << "\n>>>";
     cout << "\nReading in parameterfile '" << paramFile << "'\n";
-    ParameterSet		myPS(paramFile, noCase);
+    ParameterSet		myPS(paramFile, mode);
+    cout << "This ParameterSet does " << toUpper(cmpMode) 
+	 << " key comparison.\n";
     cout << "<<<\n";
 
     ParameterSet		mySecondSet(myPS);
@@ -149,8 +149,8 @@ int main()
 {
   INIT_LOGGER("tParameterSet");
   uint fails(0);
-  fails += doIt(false);
-  fails += doIt(true);
+  fails += doIt(KeyCompare::NORMAL);
+  fails += doIt(KeyCompare::NOCASE);
   if (fails > 0) {
     LOG_ERROR_STR(fails << " test(s) failed");
     return 1;
