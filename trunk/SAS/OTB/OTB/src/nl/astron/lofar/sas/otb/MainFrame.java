@@ -402,14 +402,17 @@ public class MainFrame extends javax.swing.JFrame {
                     accessAllowed = true;
                     itsMACInteraction.setCurrentUser(userName,password);
                     
-                    statusPanelMainFrame.setText(StatusPanel.MIDDLE,userName);
-                    
+                    statusPanelMainFrame.setText(StatusPanel.MIDDLE,"User: "+userName);
+                    String aC = "NO Main DB connection";
                     // Start the actual RMI connection
                     if (! itsSharedVars.getOTDBrmi().isConnected()) {
                         if (! itsSharedVars.getOTDBrmi().openConnections()) {
                             logger.debug("Error: failed to open RMI Connections");
+                        } else {
+                            aC = "DB connection to: "+itsSharedVars.getOTDBrmi().RMIServerName+" Port: "+itsSharedVars.getOTDBrmi().RMIServerPort;
                         }
                     }
+                    statusPanelMainFrame.setText(StatusPanel.LEFT,aC);
                     registerDefaultPlugins();
                     registerUserPlugins();
                 }
