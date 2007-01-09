@@ -126,6 +126,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 campaignLabel.setVisible(false);
                 campaignInput.setVisible(false);        
             }            
+            startTimeLabel.setVisible(true);
+            startTimeInput.setVisible(true);
+            stopTimeLabel.setVisible(true);
+            stopTimeInput.setVisible(true);
         }
         if (isAdministrator) {
             classificationInput.setEnabled(true);
