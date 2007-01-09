@@ -37,24 +37,20 @@ namespace LOFAR {
 //
 // Default constructor
 //
-ParameterSetImpl::ParameterSetImpl(bool keyNoCase)
-  : KeyValueMap(keyNoCase ? 
-		StringUtil::Compare::NOCASE : 
-		StringUtil::Compare::NORMAL), 
-    itsCount (1),
-    itsKeyNoCase(keyNoCase)
+ParameterSetImpl::ParameterSetImpl(KeyCompare::Mode	mode)
+	: KeyValueMap(mode),
+	  itsCount (1),
+	  itsMode(mode)
 {}
 
 //
 // Construction by reading a parameter file.
 //
-ParameterSetImpl::ParameterSetImpl(const char* theFilename,
-				   bool keyNoCase)
-  : KeyValueMap(keyNoCase ? 
-		StringUtil::Compare::NOCASE : 
-		StringUtil::Compare::NORMAL), 
-    itsCount (1),
-    itsKeyNoCase(keyNoCase)
+ParameterSetImpl::ParameterSetImpl(const string&	theFilename,
+				   KeyCompare::Mode	mode)
+	: KeyValueMap(mode), 
+	  itsCount (1),
+	  itsMode(mode)
 {
 	readFile(theFilename, false);
 }
@@ -94,17 +90,17 @@ ParameterSetImpl::makeSubset(const string& baseKey,
 			     const string& prefix) const
 {
   // Convert \a baseKey to lowercase, if we need to do case insensitve compare.
-  string            base   = itsKeyNoCase ? toLower(baseKey) : baseKey;
-  ParameterSetImpl* subSet = new ParameterSetImpl(itsKeyNoCase);
+  string            base   = (itsMode == KeyCompare::NOCASE) ? toLower(baseKey) : baseKey;
+  ParameterSetImpl* subSet = new ParameterSetImpl(itsMode);
 
   LOG_TRACE_CALC_STR("makeSubSet(" << baseKey << "," << prefix << ")");
 
   // Start scanning at the point where \a base might first occur.
   for (const_iterator it = lower_bound(base); it != end(); ++it) {
 
-    bool match = itsKeyNoCase ?
-      match = toLower(it->first).compare(0, base.size(), base) == 0 :
-      match = it->first.compare(0, base.size(), base) == 0;
+    bool match = (itsMode == KeyCompare::NOCASE) ?
+      toLower(it->first).compare(0, base.size(), base) == 0 :
+      it->first.compare(0, base.size(), base) == 0;
 
     // We can stop scanning once \a match becomes false, since keys are sorted.
     if (!match) break;
@@ -125,7 +121,7 @@ ParameterSetImpl::makeSubset(const string& baseKey,
 //
 void ParameterSetImpl::adoptFile(const string&	theFilename)
 {
-	readFile(theFilename.c_str(), true);
+	readFile(theFilename, true);
 }
 
 //
@@ -159,16 +155,16 @@ void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection)
 //
 // Disentangles the file and adds the Key-Values pair to the current ParameterSetImpl.
 //
-void ParameterSetImpl::readFile(const	char*	theFilename,
+void ParameterSetImpl::readFile(const	string&	theFilename,
 								   const	bool	merge)
 {
 	ifstream		paramFile;
 
 	// Try to pen the file
-	paramFile.open(theFilename, ifstream::in);
+	paramFile.open(theFilename.c_str(), ifstream::in);
 	if (!paramFile) {
 		THROW (APSException, 
-			   formatString("Unable to open file %s", theFilename));
+		       formatString("Unable to open file %s", theFilename.c_str()));
 	}
 
 	addStream(paramFile, merge);
@@ -692,17 +688,17 @@ vector<time_t> ParameterSetImpl::getTimeVector(const string& theKey) const
 // Writes the Key-Values pair from the current ParameterSetImpl to the given file
 // thereby overwritting any file contents.
 //
-void ParameterSetImpl::writeFile(const char*	theFilename,
+void ParameterSetImpl::writeFile(const string&	theFilename,
 								    bool			append) const
 {
 	ofstream		paramFile;
 
 	// Try to open the file
 	LOG_TRACE_STAT_STR("Writing parameter file `" << theFilename << "'");
-	paramFile.open(theFilename, 
+	paramFile.open(theFilename.c_str(), 
 				   ofstream::out | (append ? ofstream::app : ofstream::trunc));
 	if (!paramFile) {
-		THROW (APSException, formatString("Unable to open file %s", theFilename));
+		THROW (APSException, formatString("Unable to open file %s", theFilename.c_str()));
 	}
 
 	// Write all the pairs to the file

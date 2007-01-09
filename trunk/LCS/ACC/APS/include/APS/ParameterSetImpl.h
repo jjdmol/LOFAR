@@ -51,20 +51,23 @@ const char PC_QUAL_DEVELOP[]  =	{ "development"   };
 const char PC_KEY_VERSIONNR[] = { "versionnr"     };
 const char PC_KEY_QUAL[]      =	{ "qualification" };
 
+// The StringUtil::Compare functor will be used for key comparison.
+typedef StringUtil::Compare			KeyCompare;
+
 // A key/value map is defined as a map of strings. The third template
-// parameter, \c StringUtil::Compare, is the string comparison functor that
-// will be used to compare keys.
-typedef map <string, string, StringUtil::Compare>	KeyValueMap;
+// parameter, \c KeyCompare, is the string comparison functor that will be
+// used to compare keys.
+typedef map <string, string, KeyCompare>	KeyValueMap;
 
 //# Description of class.
 // The ParameterSetImpl class is a key-value implementation of the type
-// map<string, string, StringUtil::Compare>. 
+// map<string, string, KeyCompare>. 
 // This means that values are stored as a string which allows easy merging and
 // splitting of ParameterSetImpls because no conversions have to be done.
 // A couple of getXxx routines are provided to convert the strings to the 
 // desired type.
 //
-	class ParameterSetImpl : public KeyValueMap
+class ParameterSetImpl : public KeyValueMap
 {
 public:
 	typedef KeyValueMap::iterator		iterator;
@@ -75,17 +78,17 @@ public:
 	// read from a file or copied from another collection. 
 	// @{
 
-	// Create an empty collection. If a keyNoCase is \c true, then key
-	// comparison is case insensitive.
-	explicit ParameterSetImpl(bool keyNoCase);
+	// Create an empty collection. The argument \a mode determines how
+	// keys should be compared.
+	 explicit ParameterSetImpl(KeyCompare::Mode	mode);
 
 	// Destroy the contents.
 	~ParameterSetImpl();
 
-	// The ParameterSetImpl may be construction by reading a param. file.
-	// If a keyNoCase is \c true, then key comparison is case insensitive.
-	explicit ParameterSetImpl(const char*	theFilename,
-				  bool keyNoCase);
+	// Construct a ParameterSet from the contents of \a theFilename. The
+	// argument \a mode determines how keys should be compared.
+	explicit ParameterSetImpl(const string&		theFilename,
+				  KeyCompare::Mode	mode);
 	// @}
 
 	// Deal with the reference count.
@@ -95,6 +98,9 @@ public:
 	int decrCount()
 	  { return --itsCount; }
 	// @}
+
+	// Return the key comparison mode.
+	KeyCompare::Mode keyCompareMode() const { return itsMode; }
 
 	// \name Merging or appending collections
 	// An existing collection can be extended/merged with another collection.
@@ -117,7 +123,7 @@ public:
 	// @{
 
 	// Writes the Key-Values pair from the current ParCollection to the file.
-	void	writeFile   (const char* theFilename, bool append = false) const;
+	void	writeFile   (const string& theFilename, bool append = false) const;
 
 	// Writes the Key-Values pair from the current ParCollection to the 
 	// string buffer.
@@ -231,7 +237,7 @@ private:
 	// methods do some preprocessing so the 'adopt' method can use the
 	// \c addStream method.
 	// @{
-	void	readFile   (const char*   theFile, const	bool merge);
+	void	readFile   (const string& theFile, const	bool merge);
 	void	readBuffer (const string& theFile, const	bool merge);
 	void	addStream  (istream&	inputStream, const	bool merge);
 	// @}
@@ -241,8 +247,8 @@ private:
 	// Reference count.
 	int itsCount;
 
-	// Indicates whether case should be ignored when comparing keys.
-	bool itsKeyNoCase;
+	// Key comparison mode.
+	const KeyCompare::Mode itsMode;
 };
 
 //# -------------------- Global functions --------------------

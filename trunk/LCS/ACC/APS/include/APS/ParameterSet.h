@@ -57,23 +57,18 @@ public:
 	// read from a file or copied from another collection. 
 	// @{
 
-	// Create an empty collection. The optional argument \a keyNoCase
-	// determines whether keys should be compared case insensitive.
-	explicit ParameterSet(bool keyNoCase = false);
+	// Create an empty collection. The optional argument \a mode
+	// determines how keys should be compared.
+	explicit ParameterSet(KeyCompare::Mode	mode = KeyCompare::NORMAL);
 
 	// Destroy the contents.
 	~ParameterSet();
 
-	// The ParameterSet may be construction by reading a param. file. The
-	// optional argument \a keyNoCase determines whether keys should be
-	// compared case insensitive.
-	// @{
-	explicit ParameterSet(const string&	theFilename,
-			      bool keyNoCase = false);
+	// Construct a ParameterSet from the contents of \a theFilename. The
+	// optional argument \a mode determines how keys should be compared.
+ 	explicit ParameterSet(const string&		theFilename,
+			      KeyCompare::Mode	mode = KeyCompare::NORMAL);
 
-	explicit ParameterSet(const char*	theFilename,
-			      bool keyNoCase = false);
-	// @}
 
 	// Copying is allowed.
 	ParameterSet(const ParameterSet& that);
@@ -90,6 +85,9 @@ public:
 	const_iterator end() const;
 	//@}
 
+
+	// Key comparison mode.
+	KeyCompare::Mode keyCompareMode() const;
 
 	// Clear the set.
 	void clear();
@@ -245,6 +243,11 @@ inline ParameterSet::const_iterator	ParameterSet::end      () const
 	return itsSet->end();
 }
 
+inline KeyCompare::Mode	ParameterSet::keyCompareMode	() const
+{
+	return itsSet->keyCompareMode();
+}
+
 inline void	ParameterSet::clear      ()
 {
 	itsSet->clear();
@@ -267,7 +270,7 @@ inline void	ParameterSet::adoptCollection(const ParameterSet&	theCollection)
 
 inline void	ParameterSet::writeFile   (const string& theFilename, bool append) const
 {
-	itsSet->writeFile (theFilename.c_str(), append);
+	itsSet->writeFile (theFilename, append);
 }
 
 inline void	ParameterSet::writeBuffer (      string& theBuffer) const
