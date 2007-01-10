@@ -340,7 +340,7 @@ string APLUtilities::compactedArrayString(const string&	orgStr)
 	for (int idx = 0; idx < nrElems; idx++) {
 		long	value;
 		if (sscanf(strVector[idx].c_str(), scanMask.c_str(), &value) != 1) {
-			LOG_DEBUG_STR("Element " << strVector[idx] << "does not match mask " 
+			LOG_DEBUG_STR("Element " << strVector[idx] << " does not match mask " 
 						<< scanMask << ". Returning orignal string");
 			return (orgStr);
 		}
@@ -382,3 +382,90 @@ string APLUtilities::compactedArrayString(const string&	orgStr)
 	return (result+"]");
 }
 
+//
+// expandedArrayString(string)
+//
+// Given een array string ( '[ xx..xx, xx ]' ) this utility expands the string
+// by replacing ranges with the fill series.
+// Eg. [ lii001..lii003, lii005 ] --> [ lii001, lii002, lii003, lii005 ]
+//
+string APLUtilities::expandedArrayString(const string&	orgStr)
+{
+	// any ranges in the string?
+	if (orgStr.find("..",0) == string::npos) {
+		return (orgStr);						// no, just return original
+	}
+
+	string	baseString(orgStr);					// destroyable copy
+	ltrim(baseString, " 	[");				// strip of brackets
+	rtrim(baseString, " 	]");
+
+	// and split into a vector
+	vector<string>	strVector = StringUtil::split(baseString, ',');
+
+	// note: we assume that the format of each element is [xxxx]9999
+	string::size_type	firstDigit(strVector[0].find_first_of("0123456789"));
+	if (firstDigit == string::npos) {	// no digits? then return org string
+		return (orgStr);
+	}
+
+	// construct scanmask and outputmask.
+	string	elemName(strVector[0].substr(0,firstDigit));
+	string	scanMask(elemName+"%ld");
+	int		nrDigits;
+	if (strVector[0].find("..",0) != string::npos) {	// range element?
+		nrDigits = ((strVector[0].length() - 2)/2) - elemName.length();
+	}
+	else {
+		nrDigits = strVector[0].length() - elemName.length();
+	}
+	string	outMask (formatString("%s%%0%dld", elemName.c_str(), nrDigits));
+
+	// handle all elements
+	string 	result("[");
+	bool	firstElem(true);
+	int		nrElems(strVector.size());
+	for (int idx = 0; idx < nrElems; idx++) {
+		long	firstVal;
+		long	lastVal;
+		// should match scanmask.
+		if (sscanf(strVector[idx].c_str(), scanMask.c_str(), &firstVal) != 1) {
+			LOG_DEBUG_STR("Element " << strVector[idx] << " does not match mask " 
+						<< scanMask << ". Returning orignal string");
+			return (orgStr);
+		}
+
+		// range element?
+		string::size_type	rangePos(strVector[idx].find("..",0));
+		if (rangePos == string::npos) {
+			lastVal = firstVal;
+		}
+		else {	// yes, try to get second element.
+			if (sscanf(strVector[idx].data()+rangePos+2, scanMask.c_str(), &lastVal) != 1) {
+				LOG_DEBUG_STR("Second part of element " << strVector[idx]
+							<< " does not match mask " << scanMask 
+							<< ". Returning orignal string");
+				return (orgStr);
+			}
+			// check range
+			if (lastVal < firstVal) {
+				LOG_DEBUG_STR("Illegal range specified in " << strVector[idx] <<
+								". Returning orignal string");
+				return (orgStr);
+			}
+		}
+
+		// finally construct one or more elements
+		for	(long val = firstVal ; val <= lastVal; val++) {
+			if (firstElem) {
+				result += formatString(outMask.c_str(), val);
+				firstElem = false;
+			}
+			else {
+				result += "," + formatString(outMask.c_str(), val);
+			}
+		}
+	}
+
+	return (result+"]");
+}
