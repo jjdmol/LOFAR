@@ -44,12 +44,12 @@ class Section(object):
                                  executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                                  noProcesses = self.noProcesses,
                                  workingDir = self.workingDir)
-        else:            
+        else:   
             self.runJob = Job(self.package.split('/')[-1], \
                               self.host, \
                               executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable,
                               workingDir = self.workingDir)
-
+        
         parsetfile = '/tmp/' + self.executable + '.parset'
         self.parset.writeToFile(parsetfile)
         # For now set the timeout on 100 times the number of seconds to process
@@ -94,12 +94,12 @@ class InputSection(Section):
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_InputSection', \
                          host = host, \
-                         buildvar = 'gnu64_openmpi-opt')
+                         buildvar = 'gnu64_mpich-opt')
 
         myslaves = self.host.getSlaves()[self.nrsp : self.nrsp + self.nCells]
         transposeIPs = [s.getIntName() for s in myslaves]
         bglprocIPs = [s.getExtIP() for s in myslaves]
-        self.parset['TransposeHosts'] = '[' + ','.join(transposeIPs) + ']'
+        #self.parset['TransposeHosts'] = '[' + ','.join(transposeIPs) + ']'
         self.parset['Connections.Input_BGLProc.ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
 
     def run(self, runlog, noRuns, runCmd = None):
@@ -170,7 +170,7 @@ class DelayCompensationSection(Section):
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_DelayCompensation', \
                          host = host, \
-                         buildvar = 'gnu_opt')
+                         buildvar = 'gnu_debug')
 
 class Flagger(Section):
     def __init__(self, parset, host):
