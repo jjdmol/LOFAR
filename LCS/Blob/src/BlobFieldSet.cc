@@ -87,7 +87,7 @@ namespace LOFAR {
     NameMap::iterator iter = itsNameMap.find (name);
     if (iter != itsNameMap.end()) {
       THROW (BlobException,
-	     "BlobFieldBase::add - field" + name + " already exists");
+	     "BlobFieldBase::add - field " + name + " already exists");
     }
     int inx = add (field, alignment);
     itsNameMap[name] = inx;
