@@ -30,7 +30,8 @@
 #include <APS/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
-#include <APL/APLCommon/Controller_Protocol.ph>
+//#include <APL/APLCommon/Controller_Protocol.ph>
+#include "Controller_Protocol.ph"
 
 #include <boost/config.hpp>
 #include <boost/lexical_cast.hpp>
