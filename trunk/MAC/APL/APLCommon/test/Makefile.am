@@ -1,4 +1,4 @@
-check_PROGRAMS				= tControllerDefines tAPLUtilities tOutOfBand
+check_PROGRAMS				= tControllerDefines tAPLUtilities tOutOfBand tObservation
 
 tControllerDefines_SOURCES	= tControllerDefines.cc
 tControllerDefines_LDADD	= ../src/libaplcommon.la
@@ -12,6 +12,10 @@ tOutOfBand_SOURCES			= tOutOfBand.cc
 tOutOfBand_LDADD			= ../src/libaplcommon.la
 tOutOfBand_DEPENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
 
+tObservation_SOURCES		= tObservation.cc
+tObservation_LDADD			= ../src/libaplcommon.la
+tObservation_DEPENCIES		= ../src/libaplcommon.la $(LOFAR_DEPEND)
+
 TESTSCRIPTS					= tControllerDefines_test.sh
 
 
@@ -19,6 +23,7 @@ TESTS						= $(TESTSCRIPTS)
 
 EXTRA_DIST					= tControllerDefines.log_prop \
 							  tAPLUtilities.log_prop \
+							  tObservation.log_prop \
 							  tOutOfBand.log_prop \
 							  ResourceAllocatorTest.log_prop \
 							  $(TESTSCRIPTS)
