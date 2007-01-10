@@ -21,7 +21,7 @@ def doObservation(obsID, parset):
     
 
     sections = [\
-        #DelayCompensationSection(parset, listfen),
+        DelayCompensationSection(parset, list012),
         InputSection(parset, liifen),
         BGLProcSection(parset, bglfen3, 'R000_128_0', '/bglhome2/lofarsystem/'),
         StorageSection(parset, listfen)
@@ -29,7 +29,7 @@ def doObservation(obsID, parset):
         ]
 
 
-    noRuns = int(parset['Observation.StopTime']) - int(parset['Observation.StartTime'])
+    noRuns = int(parset['Observation.StopTime']) - int(parset['Observation.StartTime']) - 10
     #print int(parset['Observation.StopTime']), int(parset['Observation.StartTime']), noRuns
 
     logdir = '/log/'
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     parser.add_option('--clock'          , dest='clock'          , default='160MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
     parser.add_option('--subbands'       , dest='subbands'       , default='60MHz,8'   , type='string', help='freq of first subband and number of subbands to use [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
-    parser.add_option('--starttime'     , dest='starttime', default=int(time.time() + 100), type='int', help='start of measurement in UTC seconds [now + 100s]')
+    parser.add_option('--starttime'     , dest='starttime', default=int(time.time() + 150), type='int', help='start of measurement in UTC seconds [now + 100s]')
     parser.add_option('--integrationtime', dest='integrationtime', default='60'        , type='int'   , help='length of integration interval in seconds [%default]')
     parser.add_option('--msname'         , dest='msname'                               , type='string', help='name of the measurement set')
     parser.add_option('--stationlist'    , dest='stationlist' , default='CS10_4dipoles', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
@@ -99,7 +99,10 @@ if __name__ == '__main__':
     parset.setSubbands(first, nsb)
 
     # read the runtime (optional start in utc and the length of the measurement)
-    parset.setInterval(options.starttime, options.runtime)
+    parset.setInterval(options.starttime, options.runtime+10)
+    
+    # convert beamdirections from RA and Dec to Radians
+    #parset.setBeamdir()
 
     # read the stations from CS1_Stations.py
     # todo: WARNING this is very dangerous, because there could be any code in the station string
@@ -115,7 +118,7 @@ if __name__ == '__main__':
 
     # see if we are using fake input
     if options.fakeinput > 0:
-        parset.setInterval(1, options.runtime)
+        parset.setInterval(1, options.runtime+10)
         parset.setInputToMem()
 
     # if the msname wasn't given, read the next number from the file
@@ -145,6 +148,8 @@ if __name__ == '__main__':
             dbfile.close()
         except:
             MSName = '/data/Test.MS'
+	    print 'Error: please start CS1_Run.py from host: LISTFEN'
+	    sys.exit(1)
         parset['Storage.MSName'] = MSName
             
 

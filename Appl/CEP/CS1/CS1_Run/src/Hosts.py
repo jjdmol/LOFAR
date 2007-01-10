@@ -12,7 +12,10 @@ class Host(object):
         
     def getCVSHost(self):
         return self.CVSHost
-       
+
+    def getSSHCommand(self):
+        return self.sshCommand
+	
     def executeAsync(self, commandstr, logfile = '/dev/null', timeout = None):
         return AsyncThreadCommand(self.sshCommand + ' "' + commandstr + '" >> ' + logfile, timeout)
 

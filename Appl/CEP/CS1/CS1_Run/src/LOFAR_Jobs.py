@@ -61,8 +61,12 @@ class MPIJob(Job):
         self.createMachinefile()
         if runCmd == None:
             runCmd = self.executable
-        Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun --byslot -np ' + str(self.noProcesses) + \
-                ' -machinefile ~/' + self.name + '.machinefile ' + runCmd)
+        if self.name == 'CS1_InputSection':
+            Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun_rsh -np ' + str(self.noProcesses) + \
+                    ' -hostfile ~/' + self.name + '.machinefile ' + runCmd)
+        else:
+            Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -nolocal -np ' + str(self.noProcesses) + \
+                    ' -machinefile ~/' + self.name + '.machinefile ' + runCmd)
     def abort(self):
         print('Aborting ' + self.name)
         self.host.executeAsync('killall ' + self.name).waitForDone()
@@ -94,8 +98,9 @@ class BGLJob(Job):
         self.jobID = '0'
 
     def run(self, runlog, parsetfile, timeOut, noRuns, runCmd):
-        self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
-        self.host.sput(parsetfile, self.workingDir)
+        print 'NOT executing: Immediately executing ' + self.host.getSSHCommand() + ' "cp ' + self.executable + ' ' + self.workingDir + '"'
+        #self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
+	self.host.sput(parsetfile, self.workingDir)
         Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
 
 

@@ -5,28 +5,25 @@
 # - Some general variables (like number of runs)
 # - Variables per application. The idea is that these variables are only read by that specific application (if they must be read by more applications, put them in General...)
 
-Connect = true
-
-TransposePorts = [9000, 9001, 9002, 9003, 9004, 9005, 9006, 9007, 9008, 9009, 9010, 9011]
-
 # The hosts for all (socket)connections
 # Do not change these hosts without changing the machinefile(s). Host on which TFC_DelayCompensation runs.
-Connections.Input_Delay.ServerHost     =10.20.1.10
+Connections.Input_Delay.ServerHost     =10.20.170.12
 Connections.AMC.ServerHost             =127.0.0.1    # where AMC server runs
 
 # The ports for all (socket)connections
-Connections.Input_Delay.Ports    =[7200,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7201,7202,7203,7204,7201,7202,7203,7204,7201,7202,7203,7204,7201,7202,7203]
-Connections.Input_BGLProc.Ports  =[8000, 8001, 8002, 8003, 8004, 8005, 8006, 8007, 8008, 8009, 8010, 8011, 8012, 8013, 8014, 8015, 8016, 8017, 8018, 8019, 8020, 8021, 8022, 8023, 8024, 8025, 8026, 8027, 8028, 8029, 8030, 8031, 8032, 8033, 8034, 8035, 8036, 8037, 8038, 8039, 8040, 8041, 8042, 8043, 8044, 8045, 8046, 8047, 8048, 8049, 8050, 8051, 8052, 8053, 8054, 8055, 8056, 8057, 8058, 8059, 8060, 8061, 8062, 8063]
-Connections.BGLProc_Storage.Ports=[8200, 8201, 8202, 8203, 8204, 8205, 8206, 8207, 8208, 8209, 8210, 8211, 8212, 8213, 8214, 8215, 8216, 8217, 8218, 8219, 8220, 8221, 8222, 8223, 8224, 8225, 8226, 8227, 8228, 8229, 8230, 8231, 8232, 8233, 8234, 8235, 8236, 8237, 8238, 8239, 8240, 8241, 8242, 8243, 8244, 8245, 8246, 8247, 8248, 8249, 8250, 8251, 8252, 8253, 8254, 8255, 8256, 8257, 8258, 8259, 8260, 8261, 8262, 8263]
+Connections.Input_BGLProc.Ports  =[8100, 8101, 8102, 8103, 8104, 8105, 8106, 8107, 8108, 8109, 8110, 8111, 8112, 8113, 8114, 8115, 8116, 8117, 8118, 8119, 8120, 8121, 8122, 8123, 8124, 8125, 8126, 8127, 8128, 8129, 8130, 8131, 8132, 8133, 8134, 8135, 8136, 8137, 8138, 8139, 8140, 8141, 8142, 8143, 8144, 8145, 8146, 8147, 8148, 8149, 8150, 8151, 8152, 8153, 8154, 8155, 8156, 8157, 8158, 8159, 8160, 8161, 8162, 8163]
+Connections.BGLProc_Storage.Ports=[8300, 8301, 8302, 8303, 8304, 8305, 8306, 8307, 8308, 8309, 8310, 8311, 8312, 8313, 8314, 8315, 8316, 8317, 8318, 8319, 8320, 8321, 8322, 8323, 8324, 8325, 8326, 8327, 8328, 8329, 8330, 8331, 8332, 8333, 8334, 8335, 8336, 8337, 8338, 8339, 8340, 8341, 8342, 8343, 8344, 8345, 8346, 8347, 8348, 8349, 8350, 8351, 8352, 8353, 8354, 8355, 8356, 8357, 8358, 8359, 8360, 8361, 8362, 8363]
 Connections.AMC.Port             =31337
+Connections.Input_Delay.Ports = [7200,7201,7202,7203,7204,7205,7206,7207,7208,7209,7210,7211,7212,7213,7214,7215,7216,7217,7218,7219,7220]
 
 Connections.Input_BGLProc.TransportHolder   = SOCKET # one of SOCKET, FILE, NULL
-Connections.Input_BGLProc.BaseFileName      = "/data/Input"
+Connections.Input_BGLProc.BaseFileName	    = "/data/real-sin-1h"
 
 Connections.BGLProc_Storage.TransportHolder = SOCKET # one of SOCKET, FILE, NULL
 Connections.BGLProc_Storage.BaseFileName    = "Correlations"
 
 # The format of the data
+Observation.NSubbands = 1
 Observation.NChannels = 256
 Observation.NPolarisations=2
 Observation.PositionType = ITRF     # should be ITRF
@@ -48,23 +45,23 @@ Observation.StationPositions = [\   # long, lat, alt
 Observation.NBeams = 1              # number of beams used
 Observation.DirectionType = J2000   # direction type
 Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
-0, 0.92]
+6.1234876806221052, 1.0265153995604648]
 Observation.DelayCompensation = T
 
 # General Variables
-General.SubbandsPerPset = 4
+General.SubbandsPerPset = 1
 
 # Variables for the DelayCompensation
 DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
 
 # Variables for the InputSection
 Input.NTimesInFrame=16
-Input.NSubbandsPerFrame=40
+Input.NSubbandsPerFrame=8
 Input.SzEPAheader=16
 Input.IPHeaderSize=32
-Input.NSamplesToBuffer=4000000
+Input.NSamplesToBuffer=120000000
 Input.WriteRawDataToFile = F
-Input.OutputRawDataFiles = []
+Input.OutputRawDataFiles = ["/dev/null", "/dev/null"]
 Input.Transport.Station0.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
 Input.Transport.Station0.Rsp0.inputFile = "/tmp/Generator1.out"
 Input.Transport.Station0.Rsp0.interface = eth1
@@ -128,9 +125,5 @@ BGLProc.MaxConcurrentCommunications = 2
 
 # Variables for Storage
 Storage.WriteToMAC = F
-Storage.StorageStationNames = ["CS10_dipole0", "CS10_dipole4",
-"CS10_dipole8", "CS10_dipole12", \
-"CS8_dipole0", "CS8_dipole4", "CS8_dipole8",  "CS8_dipole12", \
-"CS1_dipole0", "CS1_dipole4", "CS1_dipole8", "CS1_dipole12", \
-"CS16_dipole0", "CS16_dipole4", "CS16_dipole8", "CS16_dipole12"]
+Storage.StorageStationNames = ["CS10_dipole0", "CS10_dipole4","CS10_dipole8", "CS10_dipole12", "CS8_dipole0", "CS8_dipole4", "CS8_dipole8",  "CS8_dipole12","CS1_dipole0", "CS1_dipole4", "CS1_dipole8", "CS1_dipole12","CS16_dipole0", "CS16_dipole4", "CS16_dipole8", "CS16_dipole12"]
 
