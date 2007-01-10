@@ -26,10 +26,12 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
+#include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Observation.h>
 
 namespace LOFAR {
-  namespace APLCommon {
+	using namespace ACC::APS;
+	namespace APLCommon {
 
 Observation::Observation() :
 	name(),
@@ -42,7 +44,7 @@ Observation::Observation() :
 {
 }
 
-Observation::Observation(ACC::APS::ParameterSet*		aParSet) :
+Observation::Observation(ParameterSet*		aParSet) :
 	name(),
 	treeID(0),
 	startTime(0),
@@ -70,7 +72,11 @@ Observation::Observation(ACC::APS::ParameterSet*		aParSet) :
 		nyquistZone = aParSet->getInt16(prefix+"nyquistZone");
 	}
 	if (aParSet->isDefined(prefix+"subbandList")) {
-		subbands = aParSet->getInt16Vector(prefix+"subbandList");
+		string sbString("x=" + APLUtilities::expandedArrayString(
+											aParSet->getString(prefix+"subbandList")));
+		ParameterSet	sbParset;
+		sbParset.adoptBuffer(sbString);
+		subbands = sbParset.getInt16Vector("x");
 	}
 	if (aParSet->isDefined(prefix+"bandFilter")) {
 		filter = aParSet->getString(prefix+"bandFilter");
@@ -80,7 +86,11 @@ Observation::Observation(ACC::APS::ParameterSet*		aParSet) :
 	}
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
-		vector<uint16> RCUnumbers(aParSet->getUint16Vector(prefix+"receiverList"));
+		string	rcuString("x=" + APLUtilities::expandedArrayString(
+											aParSet->getString(prefix+"receiverList")));
+		ParameterSet	rcuParset;
+		rcuParset.adoptBuffer(rcuString);
+		vector<uint16> RCUnumbers(rcuParset.getUint16Vector("x"));
 		if (RCUnumbers.empty()) {			// No receivers in the list?
 			RCUset.set();					// assume all receivers.
 		}
