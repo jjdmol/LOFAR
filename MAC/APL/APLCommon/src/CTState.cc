@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <APL/APLCommon/CTState.h>
-#include <APL/APLCommon/Controller_Protocol.ph>
+#include "Controller_Protocol.ph"
 
 namespace LOFAR {
   namespace APLCommon {
