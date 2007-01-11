@@ -1,3 +1,4 @@
+
 //#  WH_SubbandWriter.cc: Writes visibilities in an AIPS++ measurement set
 //#
 //#  Copyright (C) 2002-2005
@@ -215,6 +216,10 @@ namespace LOFAR
 
     void WH_SubbandWriter::process() 
     {
+      static int counter = 0;
+      
+      cout << "count = " << counter++ << endl;
+      
       if (itsTimeCounter % itsTimesToIntegrate == 0) {
 	clearAllSums();
       }
