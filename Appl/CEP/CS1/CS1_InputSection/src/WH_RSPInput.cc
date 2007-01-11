@@ -140,7 +140,7 @@ namespace LOFAR {
       // create the buffer controller.
       int cyclicBufferSize = itsPS.getInt32("Input.NSamplesToBuffer");
       int subbandsToReadFromFrame = itsNSubbands * itsPS.getInt32("Observation.NStations") / itsPS.getInt32("Input.NRSPBoards");
-      ASSERTSTR(subbandsToReadFromFrame < itsPS.getInt32("Input.NSubbandsPerFrame"), subbandsToReadFromFrame << " < " << itsPS.getInt32("Input.NSubbandsPerFrame"));
+      ASSERTSTR(subbandsToReadFromFrame <= itsPS.getInt32("Input.NSubbandsPerFrame"), subbandsToReadFromFrame << " < " << itsPS.getInt32("Input.NSubbandsPerFrame"));
 
       itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, cyclicBufferSize/6, cyclicBufferSize/6);
       startThread();
@@ -254,7 +254,7 @@ namespace LOFAR {
  	rspDHp->setFineDelayAtBegin((*delayDHp)[itsStationNr].fineDelayAtBegin);
  	rspDHp->setFineDelayAfterEnd((*delayDHp)[itsStationNr].fineDelayAfterEnd);
 	
-#if 0
+#if 1
 	// print flags
 	cout<<"WH_RSP out "<<itsStationNr<<" "<<delayedstamp<<" output " << output << " flags: "<< flags <<endl;
 	// printsamples
