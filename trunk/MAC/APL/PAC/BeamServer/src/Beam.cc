@@ -47,10 +47,16 @@ using namespace BS_Protocol;
 using namespace std;
 using namespace RTC;
 
+//
+// Beam(name, subarray, nrSubbands)
+//
 Beam::Beam(string name, string subarrayname, int nsubbands) :
   m_name(name), m_subarrayname(subarrayname), m_nsubbands(nsubbands)
 {}
 
+//
+// ~Beam
+//
 Beam::~Beam()
 {
   deallocate();
@@ -58,6 +64,9 @@ Beam::~Beam()
   // TODO: free beamlets
 }
 
+//
+// allocate(beamletAllocation, beamlets, nrSubbands)
+//
 bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubbands)
 {
   if (   0 == allocation().size()
@@ -91,6 +100,9 @@ bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubb
   return false;
 }
 
+//
+// modify(BeamletAllocation)
+//
 bool Beam::modify(BS_Protocol::Beamlet2SubbandMap allocation)
 {
   // check for equal size
@@ -110,11 +122,17 @@ bool Beam::modify(BS_Protocol::Beamlet2SubbandMap allocation)
   return true;
 }
 
+//
+// getAllocation()
+//
 Beamlet2SubbandMap Beam::getAllocation() const
 {
   return m_allocation;
 }
 
+//
+// deallocate()
+//
 void Beam::deallocate()
 {
   // release beamlets
@@ -135,21 +153,33 @@ void Beam::deallocate()
   m_allocation().clear();
 }
 
+//
+// addPointing(pointing)
+//
 void Beam::addPointing(const Pointing& pointing)
 {
   m_pointing_queue.push(pointing);
 }
 
+//
+// setSubarray(array)
+//
 void Beam::setSubarray(const CAL::SubArray& array)
 {
   m_array = array;
 }
 
+//
+// setCalibration(gains)
+//
 void Beam::setCalibration(const CAL::AntennaGains& gains)
 {
   m_gains = gains;
 }
 
+//
+// getCalibration()
+//
 const CAL::AntennaGains& Beam::getCalibration() const
 {
   return m_gains;
@@ -173,6 +203,9 @@ static int setNonblocking(int fd)
 #endif
 }     
 
+//
+// logPointing(pointing)
+//
 void Beam::logPointing(Pointing pointing)
 {
   double hh, mm, ss, deg, degmm, degss;
@@ -234,132 +267,146 @@ void Beam::logPointing(Pointing pointing)
 }
 #endif
 
-int Beam::convertPointings(RTC::Timestamp begintime, int compute_interval, AMC::Converter* conv)
+//
+// convertPointings(begintime, interval, amcConverter)
+//
+int Beam::convertPointings(RTC::Timestamp begintime, 
+						   int compute_interval, 
+						   AMC::Converter* conv)
 {
-  // remember last pointing from previous call
-  Pointing current_pointing = m_pointing;
+	// remember last pointing from previous call
+	Pointing current_pointing = m_pointing;
 
-  Pointing track[compute_interval];
-  bool     pset[compute_interval];
-  for (int i = 0; i < compute_interval; i++) pset[i] = false;
+	Pointing	track[compute_interval];
+	bool		pset [compute_interval];
+	for (int i = 0; i < compute_interval; i++) {
+		pset[i] = false;
+	}
 
-  // reset lmns array
-  m_lmns.resize(compute_interval, 3);
-  m_lmns = 0.0;
+	// reset lmns array
+	m_lmns.resize(compute_interval, 3);
+	m_lmns = 0.0;
 
-  LOG_INFO_STR("computing weights for interval [" << begintime 
-	       << " : " << begintime + (long)(compute_interval - 1) << "]");
+	LOG_INFO_STR("computing weights for interval [" << begintime 
+					<< " : " << begintime + (long)(compute_interval - 1) << "]");
 
-  while (!m_pointing_queue.empty()) {
+	// for all pointing in the queue
+	while (!m_pointing_queue.empty()) {
+		Pointing pointing = m_pointing_queue.top();
 
-    Pointing pointing = m_pointing_queue.top();
+		LOG_INFO_STR("Process pointing for time " << pointing.time());
 
-    LOG_INFO_STR("Process pointing for time " << pointing.time());
+		// Deadline missed?
+		if (pointing.time() < begintime) {
+			// print warning but execute the command anyway as soon as possible.
+			LOG_WARN_STR("Deadline missed by " << (begintime.sec()-pointing.time().sec())
+				<< " seconds (" << pointing.angle0() << "," << pointing.angle1() << ") "
+				<< "@ " << pointing.time());
 
-    if (pointing.time() < begintime) {
+			pointing.setTime(begintime);
+		}
 
-      //
-      // Deadline missed, print warning but execute the command anyway
-      // as soon as possible.
-      //
-      LOG_WARN_STR("Deadline missed by " << (begintime.sec() - pointing.time().sec())
-		   << " seconds (" << pointing.angle0() << "," << pointing.angle1() << ") "
-		   << "@ " << pointing.time());
+		// within this period?
+		if (pointing.time() < begintime + (long)compute_interval) {
+			m_pointing_queue.pop(); // remove from queue
 
-      pointing.setTime(begintime);
-    }
+			// insert converted LM coordinate at correct 
+			// position in the m_lmns array
+			register int tsec = pointing.time().sec() - begintime.sec();
 
-    if (pointing.time() < begintime + (long)compute_interval) {
+			if ( (tsec < 0) || (tsec >= compute_interval) ) {
+				LOG_ERROR_STR("\ninvalid pointing time" << pointing.time());
+				continue;
+			}
 
-      m_pointing_queue.pop(); // remove from queue
+			track[tsec] = pointing;
+			pset[tsec] = true;
 
-      //
-      // insert converted LM coordinate at correct 
-      // position in the m_lmns array
-      //
-      register int tsec = pointing.time().sec() - begintime.sec();
+			m_pointing = pointing; // remember current pointing
+		} else {
+			// done with this period
+			break;
+		}
+	}
 
-      if ( (tsec < 0) || (tsec >= compute_interval) ) {
+	//
+	// track array will have unset values because
+	// there are not necessarily pointings at each second
+	// these holes are fixed up in this loop
+	// and each pointing is converted to LMN coordinates
+	//
+	for (int t=0; t < compute_interval; ++t) {
+		if (!pset[t]) {
+			track[t] = current_pointing;
+		} else {
+			current_pointing = track[t];
+		}
 
-	LOG_ERROR_STR("\ninvalid pointing time" << pointing.time());
-	continue;
-      }
+		/* set time and convert to LMN */
+		track[t].setTime(begintime + (long)t);
+		blitz::Array<double, 1> loc = getSubarray().getGeoLoc();
+		// location must be in WGS84 radians/meters
+		Position location((loc(0) * M_PI) / 180.0, 
+						  (loc(1) * M_PI) / 180.0,
+						   loc(2), Position::WGS84);
+		LOG_DEBUG_STR("Geographical location " << loc);
+		Pointing lmn = track[t].convertToLMN(conv, &location);
 
-      track[tsec] = pointing;
-      pset[tsec] = true;
-
-      m_pointing = pointing; // remember current pointing
-
-    } else {
-      // done with this period
-      break;
-    }
-  }
-
-  //
-  // track array will have unset values because
-  // there are not necessarily pointings at each second
-  // these holes are fixed up in this loop
-  // and each pointing is converted to LMN coordinates
-  //
-  for (int t=0; t < compute_interval; ++t) {
-
-    if (!pset[t]) {
-      track[t] = current_pointing;
-    } else {
-      current_pointing = track[t];
-    }
-
-    /* set time and convert to LMN */
-    track[t].setTime(begintime + (long)t);
-    blitz::Array<double, 1> loc = getSubarray().getGeoLoc();
-    Position location((loc(0) * M_PI) / 180.0, // location must be in WGS84 radians/meters
-		      (loc(1) * M_PI) / 180.0,
-		      loc(2), Position::WGS84);
-    LOG_DEBUG_STR("Geographical location " << loc);
-    Pointing lmn = track[t].convertToLMN(conv, &location);
-
-    /* store in m_lmns and calculate normalized n-coordinate */
-    m_lmns(t,0) = lmn.angle0();
-    m_lmns(t,1) = lmn.angle1();
-    m_lmns(t,2) = ::sqrt(1.0 - ((m_lmns(t,0) * m_lmns(t,0))
-				+ (m_lmns(t,1) * m_lmns(t,1))));
+		/* store in m_lmns and calculate normalized n-coordinate */
+		m_lmns(t,0) = lmn.angle0();
+		m_lmns(t,1) = lmn.angle1();
+		m_lmns(t,2) = ::sqrt(1.0 - ((m_lmns(t,0) * m_lmns(t,0)) + 
+									(m_lmns(t,1) * m_lmns(t,1))));
 
 #if 0
-    if ((fabs(m_lmns(t,0)) > 1.0 + eps) || (fabs(m_lmns(t,1)) > 1.0 + eps)) {
+		if ((fabs(m_lmns(t,0)) > 1.0 + eps) || (fabs(m_lmns(t,1)) > 1.0 + eps)) {
 
-      LOG_WARN("\nl or m coordinate out of range -1.0 < l < 1.0, setting to (l,m) to (0.0, 0.0)\n");
-      m_lmns(t,0) = 0.0;
-      m_lmns(t,1) = 0.0;
-      m_lmns(t,2) = 1.0;
-    }
+			LOG_WARN("\nl or m coordinate out of range -1.0 < l < 1.0, setting to (l,m) to (0.0, 0.0)\n");
+			m_lmns(t,0) = 0.0;
+			m_lmns(t,1) = 0.0;
+			m_lmns(t,2) = 1.0;
+		}
 #endif
 
-    LOG_INFO_STR(formatString("direction=(%f,%f,%f) @ ",
-			      m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)) << track[t].time());
-  }
+		LOG_INFO_STR(formatString("direction=(%f,%f,%f) @ ",
+						m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)) << track[t].time());
+	}
 
-  LOG_DEBUG_STR("Current pointing (" << current_pointing.angle0() << ", " << current_pointing.angle1() <<
-		") @ time " << current_pointing.time());
-  //logPointing(current_pointing);
+	LOG_DEBUG_STR("Current pointing (" << current_pointing.angle0() << ", " 
+									   << current_pointing.angle1() <<
+										") @ time " << current_pointing.time());
+	//logPointing(current_pointing);
 
-  return 0;
+	return 0;
 }
 
+//
+// getLMNCoordinates()
+//
 const Array<double,2>& Beam::getLMNCoordinates() const
 {
   return m_lmns;
 }
 
+//
+// getSPW()
+//
 const CAL::SpectralWindow& Beam::getSPW() const
 {
   return m_array.getSPW();
 }
 
+// -------------------- Beams --------------------
+//
+// Beams(nrBeamlets, nrSubbands)
+//
 Beams::Beams(int nbeamlets, int nsubbands) : m_beamlets(nbeamlets), m_nsubbands(nsubbands)
 {
 }
 
+//
+// ~Beams()
+//
 Beams::~Beams()
 {
   for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
@@ -369,6 +416,9 @@ Beams::~Beams()
   m_beams.clear();
 }
 
+//
+// get(nodeid, subarrayname, beamletAllocation)
+//
 Beam* Beams::get(string nodeid, string subarrayname, Beamlet2SubbandMap allocation)
 {
   Beam* beam = new Beam(nodeid, subarrayname, m_nsubbands);
@@ -387,12 +437,18 @@ Beam* Beams::get(string nodeid, string subarrayname, Beamlet2SubbandMap allocati
   return beam;
 }
 
+//
+// setCalibrationHandle(beam, handle)
+//
 void Beams::setCalibrationHandle(Beam* beam, uint32 handle)
 {
   m_handle2beam[handle] = beam;
   m_beams[beam]         = handle;
 }
 
+//
+// findCalibrationHandle(beam)
+//
 uint32 Beams::findCalibrationHandle(Beam* beam) const
 {
   map<Beam*,uint32>::const_iterator it = m_beams.find(beam);
@@ -404,6 +460,9 @@ uint32 Beams::findCalibrationHandle(Beam* beam) const
   return 0;
 }
 
+//
+// updateCalibration(handle, gains)
+//
 bool Beams::updateCalibration(uint32 handle, CAL::AntennaGains& gains)
 {
   map<uint32,Beam*>::iterator it = m_handle2beam.find(handle);
@@ -415,6 +474,9 @@ bool Beams::updateCalibration(uint32 handle, CAL::AntennaGains& gains)
   return true;
 }
 
+//
+// exists(beam)
+//
 bool Beams::exists(Beam *beam)
 {
   // if beam not found, return 0
@@ -425,6 +487,9 @@ bool Beams::exists(Beam *beam)
   return true;
 }
 
+//
+// destroy(beam)
+//
 bool Beams::destroy(Beam* beam)
 {
   // remove from handle2beam map
@@ -445,6 +510,9 @@ bool Beams::destroy(Beam* beam)
   return false;
 }
 
+//
+// calculate_weigths(time, interval, weights, AMCConverter)
+//
 void Beams::calculate_weights(Timestamp timestamp,
 			      int compute_interval,
 			      blitz::Array<std::complex<double>, 3>& weights,
@@ -462,6 +530,9 @@ void Beams::calculate_weights(Timestamp timestamp,
   m_beamlets.calculate_weights(weights);
 }
 
+//
+// getSubbandSelection()
+//
 Beamlet2SubbandMap Beams::getSubbandSelection()
 {
   Beamlet2SubbandMap selection;

@@ -107,6 +107,9 @@ void BeamServer::parseOptions(int	argc,
   } // for loop
 }
 
+//
+// BeamServer(name, argc, argv)
+//
 BeamServer::BeamServer(string name, int argc, char** argv)
     : GCFTask((State)&BeamServer::initial, name),
       m_beams_modified(false),
@@ -132,14 +135,23 @@ BeamServer::BeamServer(string name, int argc, char** argv)
   m_calserver.init(*this, MAC_SVCMASK_CALSERVER + instanceID, GCFPortInterface::SAP, CAL_PROTOCOL);
 }
 
+//
+// ~BeamServer
+//
 BeamServer::~BeamServer()
 {}
 
+//
+// isEnabled()
+//
 bool BeamServer::isEnabled()
 {
   return m_rspdriver.isConnected() && m_calserver.isConnected();
 }
 
+//
+// initial(event, port)
+//
 GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -165,8 +177,7 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
     case F_CONNECTED:
       {
 	LOG_INFO(formatString("CONNECTED: port '%s' connected", port.getName().c_str()));
-	if (isEnabled())
-	  {
+	if (isEnabled()) {
 	    RSPGetconfigEvent getconfig;
 	    m_rspdriver.send(getconfig);
 	  }
@@ -224,6 +235,9 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
+//
+// undertaker()
+//
 void BeamServer::undertaker()
 {
   for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin();
@@ -236,14 +250,16 @@ void BeamServer::undertaker()
   m_dead_clients.clear();
 }
 
+//
+// destroyAllBeams(port)
+//
 void BeamServer::destroyAllBeams(GCFPortInterface* port)
 {
   ASSERT(port);
 
   // deallocate all beams for this client
   for (set<Beam*>::iterator beamit = m_client_beams[port].begin();
-       beamit != m_client_beams[port].end(); ++beamit)
-    {
+       beamit != m_client_beams[port].end(); ++beamit) {
       if (!m_beams.destroy(*beamit)) {
 	LOG_WARN("Beam not found...");
       }
@@ -251,6 +267,9 @@ void BeamServer::destroyAllBeams(GCFPortInterface* port)
   m_client_beams.erase(port);
 }
 
+//
+// newBeam(beamTransaction, port , name, subarray, beamletAllocation)
+//
 Beam* BeamServer::newBeam(BeamTransaction& bt, GCFPortInterface* port,
 			  std::string name, std::string subarrayname, BS_Protocol::Beamlet2SubbandMap allocation)
 {
@@ -282,6 +301,9 @@ Beam* BeamServer::newBeam(BeamTransaction& bt, GCFPortInterface* port,
 	return (beam);
 }
 
+//
+// deleteBeam(beamTransaction)
+//
 void BeamServer::deleteBeam(BeamTransaction& bt)
 {
   ASSERT(bt.getPort() && bt.getBeam());
@@ -301,6 +323,9 @@ void BeamServer::deleteBeam(BeamTransaction& bt)
   m_beams_modified = true;
 }
 
+//
+// enabled(event, port)
+//
 GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -464,6 +489,9 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
+//
+// cleanup(event, port)
+//
 GCFEvent::TResult BeamServer::cleanup(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -536,6 +564,9 @@ GCFEvent::TResult BeamServer::cleanup(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
+//
+// beamalloc_state(event, port)
+//
 GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -620,6 +651,9 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& e, GCFPortInterface& por
   return status;
 }
 
+//
+// beamfree_state(event, port)
+//
 GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -692,6 +726,9 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& e, GCFPortInterface& port
   return status;
 }
 
+//
+// beamalloc_start(AllocEvent, port)
+//
 bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
 				 GCFPortInterface& port)
 {
@@ -713,6 +750,9 @@ bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
   return true;
 }
 
+//
+// beamfree_start(freeEvent, port)
+//
 bool BeamServer::beamfree_start(BSBeamfreeEvent&  bf,
 				GCFPortInterface& port)
 {
@@ -737,33 +777,37 @@ bool BeamServer::beamfree_start(BSBeamfreeEvent&  bf,
   return true;
 }
 
+//
+// beampointto_action(pointEvent, port)
+//
 bool BeamServer::beampointto_action(BSBeampointtoEvent& pt,
-				    GCFPortInterface& /*port*/)
+									GCFPortInterface& /*port*/)
 {
-  bool status = true;
+	Beam*	beam   = (Beam*)pt.handle;
 
-  Beam* beam = (Beam*)pt.handle;
+	// check if beam exists.
+	if (!m_beams.exists(beam))  {
+		LOG_ERROR(formatString("BEAMPOINTTO: invalid beam handle (%d)", pt.handle));
+		return (false);
+	}
 
-  if (m_beams.exists(beam))  {
-    LOG_INFO_STR("new coordinates for " << beam->getName()
-		 << ": " << pt.pointing.angle0() << ", "
-		 << pt.pointing.angle1() << ", time=" << pt.pointing.time());
+	LOG_INFO_STR("new coordinates for " << beam->getName()
+				 << ": " << pt.pointing.angle0() << ", "
+				 << pt.pointing.angle1() << ", time=" << pt.pointing.time());
 
-    //
-    // If the time is not set, then activate the command
-    // 2 * COMPUTE_INTERVAL seconds from now, because that's how
-    // long it takes the command to flow through the pipeline.
-    //
-    Timestamp actualtime;
-    actualtime.setNow(2 * COMPUTE_INTERVAL);
-    if (Timestamp(0,0) == pt.pointing.time()) pt.pointing.setTime(actualtime);
-    beam->addPointing(pt.pointing);
-  } else {
-    LOG_ERROR(formatString("BEAMPOINTTO: invalid beam handle (%d)", pt.handle));
-    status = false;
-  }
+	//
+	// If the time is not set, then activate the command
+	// 2 * COMPUTE_INTERVAL seconds from now, because that's how
+	// long it takes the command to flow through the pipeline.
+	//
+	Timestamp actualtime;
+	actualtime.setNow(2 * COMPUTE_INTERVAL);
+	if (Timestamp(0,0) == pt.pointing.time()) {
+		pt.pointing.setTime(actualtime);
+	}
+	beam->addPointing(pt.pointing);
 
-  return status;
+	return (true);
 }
 
 BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
@@ -777,11 +821,12 @@ inline complex<int16_t> convert2complex_int16_t(complex<double> cd)
 			  (int16_t)(round(cd.imag() * g_bf_gain)));
 }
 
-/**
- * This method is called once every period
- * of COMPUTE_INTERVAL seconds
- * to calculate the weights for all beamlets.
- */
+//
+// compute_weights(time)
+//
+// This method is called once every period of COMPUTE_INTERVAL seconds
+// to calculate the weights for all beamlets.
+//
 void BeamServer::compute_weights(Timestamp time)
 {
   // calculate weights for all beamlets
@@ -793,6 +838,9 @@ void BeamServer::compute_weights(Timestamp time)
   LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
 }
 
+//
+// send_weights(time)
+//
 void BeamServer::send_weights(Timestamp time)
 {
 
@@ -816,6 +864,9 @@ void BeamServer::send_weights(Timestamp time)
   }
 }
 
+//
+// send_sbselection()
+//
 void BeamServer::send_sbselection()
 {
   if (!GET_CONFIG("BeamServer.DISABLE_SETSUBBANDS", i)) {
@@ -866,6 +917,9 @@ void BeamServer::send_sbselection()
   }
 }
 
+//
+// defer(event, port)
+//
 void BeamServer::defer(GCFEvent& e, GCFPortInterface& p)
 {
   char* event = new char[sizeof(e) + e.length];
@@ -874,6 +928,9 @@ void BeamServer::defer(GCFEvent& e, GCFPortInterface& p)
   LOG_DEBUG_STR(">>> deferring event " << m_deferred_queue.size() << " <<<");
 }
 
+//
+// recall(port)
+//
 GCFEvent::TResult BeamServer::recall(GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
@@ -889,6 +946,9 @@ GCFEvent::TResult BeamServer::recall(GCFPortInterface& /*p*/)
   return status;
 }
 
+//
+// main
+//
 int main(int argc, char** argv)
 {
   /* daemonize if required */

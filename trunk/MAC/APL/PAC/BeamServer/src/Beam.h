@@ -251,6 +251,8 @@ namespace LOFAR {
       static const int N_TIMESTEPS = 20; // number of timesteps to calculate ahead
     };
 
+	// ------------------------------ Class Beams ------------------------------
+
     /**
      * Factory class for Beam. This class manages the collection of Beams
      * that are active in the BeamServer at a particular point in time.
