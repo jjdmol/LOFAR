@@ -28,6 +28,10 @@
 #include <CS1_Interface/CS1_Config.h>
 #include <APS/ParameterSet.h>
 
+#if defined HAVE_BOOST
+#include <boost/multi_array.hpp>
+#endif
+
 namespace LOFAR {
 namespace CS1 {
 
@@ -55,35 +59,20 @@ class DH_Visibilities: public DataHolder
       return station2 * (station2 + 1) / 2 + station1;
     }
 
-#if 0
-    fcomplex (*getChannels(int station1, int station2)) [NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS]
-    {
-      return &(*itsVisibilities)[baseline(station1, station2)];
-    }
-#endif
+#if defined HAVE_BOOST
+    typedef boost::multi_array_ref<VisibilityType, 4>	  VisibilitiesType;
+    typedef boost::multi_array_ref<NrValidSamplesType, 2> AllNrValidSamplesType;
 
-#if defined BGL_PROCESSING
-    typedef VisibilityType AllVisibilitiesType[NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];
-    typedef NrValidSamplesType AllNrValidSamplesType[NR_BASELINES][NR_SUBBAND_CHANNELS];
-
-    AllVisibilitiesType* getVisibilities()
+    VisibilitiesType getVisibilities() const
     {
-      return (AllVisibilitiesType *) itsVisibilities;
+      static boost::detail::multi_array::extent_gen<4u> extents = boost::extents[itsNrBaselines][itsNrChannels][NR_POLARIZATIONS][NR_POLARIZATIONS];
+      return VisibilitiesType(itsVisibilities, extents);
     }
 
-    const AllVisibilitiesType* getVisibilities() const
+    AllNrValidSamplesType getNrValidSamples() const
     {
-      return (const AllVisibilitiesType *) itsVisibilities;
-    }
-
-    AllNrValidSamplesType *getNrValidSamples()
-    {
-      return (AllNrValidSamplesType *) itsNrValidSamples;
-    }
-
-    const AllNrValidSamplesType *getNrValidSamples() const
-    {
-      return (const AllNrValidSamplesType *) itsNrValidSamples;
+      static boost::detail::multi_array::extent_gen<2u> extents = boost::extents[itsNrBaselines][itsNrChannels];
+      return AllNrValidSamplesType(itsNrValidSamples, extents);
     }
 #endif
 

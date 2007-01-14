@@ -22,10 +22,10 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <CS1_BGLProc/WH_BGL_Processing.h>
-#include <CS1_BGLProc/Correlator.h>
-#include <CS1_BGLProc/FFT.h>
-#include <CS1_BGLProc/FIR.h>
+#include <WH_BGL_Processing.h>
+#include <Correlator.h>
+#include <FFT.h>
+#include <FIR.h>
 
 #include <Common/Timer.h>
 #include <Transport/TH_MPI.h>
@@ -53,16 +53,6 @@ inline static dcomplex cosisin(double x)
 
 #endif
 
-vector<double> WH_BGL_Processing::itsCenterFrequencies;
-FIR WH_BGL_Processing::itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
-fcomplex WH_BGL_Processing::samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION | 2][NR_POLARIZATIONS] CACHE_ALIGNED;
-#if defined SPARSE_FLAGS
-SparseSet WH_BGL_Processing::flags[NR_STATIONS];
-#else
-bitset<NR_SAMPLES_PER_INTEGRATION> WH_BGL_Processing::flags[NR_STATIONS] CACHE_ALIGNED;
-#endif
-unsigned WH_BGL_Processing::itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
-float WH_BGL_Processing::correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
 
 #if defined HAVE_BGL && !defined C_IMPLEMENTATION
 static BGL_Mutex *mutex;
@@ -1146,31 +1136,29 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, co
   itsCoreNumber(coreNumber)
 {
   ASSERT(ps.getInt32("BGLProc.NPPFTaps")	    == NR_TAPS);
-  ASSERT(ps.getInt32("Observation.NStations")	    == NR_STATIONS);
   ASSERT(ps.getInt32("Observation.NPolarisations")  == NR_POLARIZATIONS);
-  ASSERT(ps.getInt32("Observation.NSubbandSamples") == NR_SUBBAND_SAMPLES);
   ASSERT(ps.getInt32("Observation.NChannels")	    == NR_SUBBAND_CHANNELS);
 
 #if !defined C_IMPLEMENTATION
-  ASSERT(NR_SAMPLES_PER_INTEGRATION % 16 == 0);
-
   ASSERT(_FIR_constants_used.input_type			== INPUT_TYPE);
-  ASSERT(_FIR_constants_used.nr_stations		== NR_STATIONS);
-  ASSERT(_FIR_constants_used.nr_samples_per_integration	== NR_SAMPLES_PER_INTEGRATION);
   ASSERT(_FIR_constants_used.nr_subband_channels	== NR_SUBBAND_CHANNELS);
   ASSERT(_FIR_constants_used.nr_taps			== NR_TAPS);
   ASSERT(_FIR_constants_used.nr_polarizations		== NR_POLARIZATIONS);
 
-  ASSERT(_correlator_constants_used.nr_stations			== NR_STATIONS);
-  ASSERT(_correlator_constants_used.nr_samples_per_integration	== NR_SAMPLES_PER_INTEGRATION);
-  ASSERT(_correlator_constants_used.nr_subband_channels		== NR_SUBBAND_CHANNELS);
-  ASSERT(_correlator_constants_used.nr_polarizations		== NR_POLARIZATIONS);
+  ASSERT(_correlator_constants_used.nr_subband_channels	== NR_SUBBAND_CHANNELS);
+  ASSERT(_correlator_constants_used.nr_polarizations	== NR_POLARIZATIONS);
 #endif
 
-  if (itsCenterFrequencies.size() == 0)
-    itsCenterFrequencies = ps.getDoubleVector("Observation.RefFreqs");
+  itsNrStations	       = ps.getUint32("Observation.NStations");
+  itsNrBaselines       = itsNrStations * (itsNrStations + 1) / 2;
+  itsNrSamplesPerIntegration = ps.getUint32("Observation.NSubbandSamples") / NR_SUBBAND_CHANNELS;
 
-  itsChannelBandwidth = ps.getDouble("Observation.SampleRate") / NR_SUBBAND_CHANNELS;
+#if !defined C_IMPLEMENTATION
+  ASSERT(itsNrSamplesPerIntegration % 16 == 0);
+#endif
+
+  itsCenterFrequencies = ps.getDoubleVector("Observation.RefFreqs");
+  itsChannelBandwidth  = ps.getDouble("Observation.SampleRate") / NR_SUBBAND_CHANNELS;
 
   unsigned nrSubbandsPerPset = ps.getUint32("General.SubbandsPerPset");
   unsigned nrNodesPerPset    = ps.getUint32("BGLProc.NodesPerPset");
@@ -1215,14 +1203,14 @@ void FFTtest()
 
   fcomplex in[256], fout[256], sout[256];
 
-  for (int i = 0; i < 256; i ++)
+  for (unsigned i = 0; i < 256; i ++)
     in[i] = makefcomplex(2 * i, 2 * i + 1);
 
   fftw_one(plan, (fftw_complex *) in, (fftw_complex *) fout);
 
   _fft256(in, sout);
 
-  for (int i = 0; i < 256; i ++) {
+  for (unsigned i = 0; i < 256; i ++) {
     fcomplex diff = fout[i] / sout[i];
     std::cout << i << " (" << real(fout[i]) << ',' << imag(fout[i]) << ") / (" << real(sout[i]) << ',' << imag(sout[i]) << ") = (" << real(diff) << ',' << imag(diff) << ")\n";
   }
@@ -1253,11 +1241,29 @@ void WH_BGL_Processing::preprocess()
 
   //FFTtest();
 
-  for (int i = 1; i <= NR_SAMPLES_PER_INTEGRATION; i ++) {
-#if INPUT_TYPE == I4COMPLEX_TYPE
-    correlationWeights[i] = 1.0 / i;
+#if defined C_IMPLEMENTATION
+  itsFIRs		= new itsFIRsType(boost::extents[itsNrStations][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]);
+  itsFFTinData		= new itsFFTdataType(boost::extents[NR_TAPS - 1 + itsNrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]);
 #else
-    correlationWeights[i] = 1.0e-6 / i;
+  itsTmp		= new itsTmpType(boost::extents[4][itsNrSamplesPerIntegration]);
+  itsFFTinData		= new itsFFTdataType(boost::extents[itsNrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS + 4]);
+  itsFFToutData		= new itsFFTdataType(boost::extents[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]);
+#endif
+
+  itsSamples		= new itsSamplesType(boost::extents[NR_SUBBAND_CHANNELS][itsNrStations][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS]);
+  itsFlags		= new SparseSet[itsNrStations];
+  itsNrValidSamples	= new unsigned[itsNrBaselines];
+  itsCorrelationWeights = new float[itsNrSamplesPerIntegration + 1];
+  itsRFIflags		= new bitset<NR_SUBBAND_CHANNELS>[itsNrStations];
+  memset(itsRFIflags, 0, itsNrStations * sizeof(bitset<NR_SUBBAND_CHANNELS>));
+
+  itsCorrelationWeights[0] = 0.0;
+
+  for (unsigned i = 1; i <= itsNrSamplesPerIntegration; i ++) {
+#if INPUT_TYPE == I4COMPLEX_TYPE
+    itsCorrelationWeights[i] = 1.0 / i;
+#else
+    itsCorrelationWeights[i] = 1.0e-6 / i;
 #endif
   }
 
@@ -1274,58 +1280,26 @@ void WH_BGL_Processing::computeFlags()
   computeFlagsTimer.start();
 
 #if NR_SUBBAND_CHANNELS == 1
-#if defined SPARSE_FLAGS
 #error Not implementated
 #else
-  DH_Subband::AllFlagsType *input = get_DH_Subband()->getFlags();
+  DH_Subband::FlagsType flags = get_DH_Subband()->getFlags();
 
-  bitset<NR_INPUT_SAMPLES> (&flags)[NR_STATIONS] = *input;
-#endif
-#else
-#if defined SPARSE_FLAGS
-  for (int stat = 0; stat < NR_STATIONS; stat ++) {
-    flags[stat].reset();
-    const std::vector<SparseSet::range> &ranges = get_DH_Subband()->getFlags(stat).getRanges();
+  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+    itsFlags[stat].reset();
+    const std::vector<SparseSet::range> &ranges = flags[stat].getRanges();
 
     for (std::vector<SparseSet::range>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
-      int begin = std::max(0, (int) it->begin / NR_SUBBAND_CHANNELS - NR_TAPS + 1);
-      int end   = std::min(NR_SAMPLES_PER_INTEGRATION, (int) (it->end - 1) / NR_SUBBAND_CHANNELS + 1);
+      unsigned begin = std::max(0, (signed) it->begin / NR_SUBBAND_CHANNELS - NR_TAPS + 1);
+      unsigned end   = std::min(itsNrSamplesPerIntegration, (it->end - 1) / NR_SUBBAND_CHANNELS + 1);
 
-      flags[stat].include(begin, end);
-    }
-  }
-#else
-  typedef bitset<NR_SUBBAND_CHANNELS> inputType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION];
-
-  inputType *input = (inputType *) get_DH_Subband()->getFlags();
-
-  memset(flags, 0, sizeof flags);
-
-  for (int stat = 0; stat < NR_STATIONS; stat ++) {
-    int invalid_count = 0;
-
-    for (int time = 0; time < NR_TAPS - 1; time ++, invalid_count --) {
-      if ((*input)[stat][time].any()) {
-	invalid_count = NR_TAPS;
-      }
-    }
-
-    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++, invalid_count --) {
-      if ((*input)[stat][NR_TAPS - 1 + time].any()) {
-	invalid_count = NR_TAPS;
-      }
-
-      if (invalid_count > 0) {
-	flags[stat][time] = true;
-      }
+      itsFlags[stat].include(begin, end);
     }
   }
 #endif
-#endif
 
-  for (int stat2 = 0; stat2 < NR_STATIONS; stat2 ++) {
-    for (int stat1 = 0; stat1 <= stat2; stat1 ++) {
-      itsNrValidSamples[DH_Visibilities::baseline(stat1, stat2)] = NR_SAMPLES_PER_INTEGRATION - (flags[stat1] | flags[stat2]).count();
+  for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
+    for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) {
+      itsNrValidSamples[DH_Visibilities::baseline(stat1, stat2)] = itsNrSamplesPerIntegration - (itsFlags[stat1] | itsFlags[stat2]).count();
     }
   }
 
@@ -1335,9 +1309,9 @@ void WH_BGL_Processing::computeFlags()
 
 #if defined C_IMPLEMENTATION
 
-fcomplex WH_BGL_Processing::phaseShift(int time, int chan, double baseFrequency, const DH_Subband::DelayIntervalType &delay) const
+fcomplex WH_BGL_Processing::phaseShift(unsigned time, unsigned chan, double baseFrequency, const DH_Subband::DelayIntervalType &delay) const
 {
-  double timeInterpolatedDelay = delay.delayAtBegin + ((double) time / NR_SAMPLES_PER_INTEGRATION) * (delay.delayAfterEnd - delay.delayAtBegin);
+  double timeInterpolatedDelay = delay.delayAtBegin + ((double) time / itsNrSamplesPerIntegration) * (delay.delayAfterEnd - delay.delayAtBegin);
   double frequency	       = baseFrequency + chan * itsChannelBandwidth;
   double phaseShift	       = timeInterpolatedDelay * frequency;
   double phi		       = -2 * M_PI * phaseShift;
@@ -1347,17 +1321,17 @@ fcomplex WH_BGL_Processing::phaseShift(int time, int chan, double baseFrequency,
 
 #else
 
-void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay, double baseFrequency) const
+void WH_BGL_Processing::computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], const DH_Subband::DelayIntervalType &delay, double baseFrequency) const
 {
   double   phiBegin = -2 * M_PI * delay.delayAtBegin;
   double   phiEnd   = -2 * M_PI * delay.delayAfterEnd;
-  double   deltaPhi = (phiEnd - phiBegin) / NR_SAMPLES_PER_INTEGRATION;
+  double   deltaPhi = (phiEnd - phiBegin) / itsNrSamplesPerIntegration;
   dcomplex v	    = cosisin(phiBegin * baseFrequency);
   dcomplex dv       = cosisin(phiBegin * itsChannelBandwidth);
   dcomplex vf       = cosisin(deltaPhi * baseFrequency);
   dcomplex dvf      = cosisin(deltaPhi * itsChannelBandwidth);
 
-  for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
+  for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
     phaseShifts[time].v0 =  v;  v *=  vf;
     phaseShifts[time].dv = dv; dv *= dvf;
   }
@@ -1378,202 +1352,135 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
   get_DH_Subband()->swapBytes();
 #endif
 
-  typedef DH_Subband::SampleType inputType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS];
+  DH_Subband::Samples4Dtype input  = get_DH_Subband()->getSamples4D();
+  DH_Subband::DelaysType    delays = get_DH_Subband()->getDelays();
 
-  inputType *input = (inputType *) get_DH_Subband()->getSamples();   
-  DH_Subband::AllDelaysType *delays = get_DH_Subband()->getDelays();
-
-  for (int stat = 0; stat < NR_STATIONS; stat ++) {
-#if 1
-    std::clog << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << (*delays)[stat].delayAtBegin << " to " << (*delays)[stat].delayAfterEnd << " sec" << std::endl;
+  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+#if 0
+    std::clog << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec" << std::endl;
 #endif
 
 #if defined C_IMPLEMENTATION
     fcomplex fftOutData[NR_SUBBAND_CHANNELS];
-    static fcomplex fftInData[NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS];
 
     FIRtimer.start();
-    for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-      for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
-	for (int time = 0; time < NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION; time ++) {
-	  fcomplex sample = makefcomplex((*input)[stat][time][chan][pol]);
-	  fftInData[time][pol][chan] = itsFIRs[stat][pol][chan].processNextSample(sample, FIR::weights[chan]);
+    for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+      for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
+	for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
+	  fcomplex sample = makefcomplex(input[stat][time][chan][pol]);
+	  (*itsFFTinData)[time][pol][chan] = (*itsFIRs)[stat][pol][chan].processNextSample(sample, FIR::weights[chan]);
 	}
       }
     }
     FIRtimer.stop();
 
     FFTtimer.start();
-    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
-      for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-#if defined SPARSE_FLAGS
-	if (flags[stat].test(time)) {
-#else
-	if (flags[stat][time]) {
-#endif
-	  for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
-	    samples[chan][stat][time][pol] = makefcomplex(0, 0);
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	if (itsFlags[stat].test(time)) {
+	  for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
+	    (*itsSamples)[chan][stat][time][pol] = makefcomplex(0, 0);
 	  }
 	} else {
 #if defined HAVE_FFTW3
 	  fftwf_execute_dft(itsFFTWPlan,
-			    (fftwf_complex *) fftInData[NR_TAPS - 1 + time][pol],
+			    (fftwf_complex *) (*itsFFTinData)[NR_TAPS - 1 + time][pol].origin(),
 			    (fftwf_complex *) fftOutData);
 #else
 	  fftw_one(itsFFTWPlan,
-		   (fftw_complex *) fftInData[NR_TAPS - 1 + time][pol],
+		   (fftw_complex *) (*itsFFTinData)[NR_TAPS - 1 + time][pol].origin(),
 		   (fftw_complex *) fftOutData);
 #endif
 
-	  for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
+	  for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
 	    if (itsDelayCompensation) {
-	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, (*delays)[stat]);
+	      fftOutData[chan] *= phaseShift(time, chan, baseFrequency, delays[stat]);
 	    }
 
-	    samples[chan][stat][time][pol] = fftOutData[chan];
+	    (*itsSamples)[chan][stat][time][pol] = fftOutData[chan];
 	  }
 	}
       }
     }
     FFTtimer.stop();
 #else // assembly implementation
-    static fcomplex tmp1[4][NR_SAMPLES_PER_INTEGRATION] CACHE_ALIGNED;
-    static fcomplex fftInData[NR_SAMPLES_PER_INTEGRATION][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS + 4] CACHE_ALIGNED;
-    static fcomplex fftOutData[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
+    int transpose_stride = sizeof(fcomplex) * (NR_POLARIZATIONS * (itsNrSamplesPerIntegration | 2) * itsNrStations - (itsDelayCompensation ? 3 : 0));
 
-    for (int chan = 0; chan < NR_SUBBAND_CHANNELS; chan += 4) {
-      for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+    for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan += 4) {
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 #if defined __GNUC__	// work around bug ???
-	for (register int ch asm ("r28") = 0; ch < 4; ch ++) {
+	for (register unsigned ch asm ("r28") = 0; ch < 4; ch ++) {
 #else
-	for (int ch = 0; ch < 4; ch ++) {
+	for (unsigned ch = 0; ch < 4; ch ++) {
 #endif
 	  FIRtimer.start();
 	  _filter(0, // itsFIRs[stat][pol][chan + ch].itsDelayLine,
 		  FIR::weights[chan + ch],
-		  &(*input)[stat][0][chan + ch][pol],
-		  tmp1[ch],
-		  NR_SAMPLES_PER_INTEGRATION / NR_TAPS);
+		  &input[stat][0][chan + ch][pol],
+		  (*itsTmp)[ch].origin(),
+		  itsNrSamplesPerIntegration / NR_TAPS);
 	  FIRtimer.stop();
 	}
 
-	_transpose_4x8(&fftInData[0][pol][chan],
-		       &tmp1[0][0],
-		       NR_SAMPLES_PER_INTEGRATION,
-		       sizeof(fcomplex) * NR_SAMPLES_PER_INTEGRATION,
+	_transpose_4x8(&(*itsFFTinData)[0][pol][chan],
+		       itsTmp->origin(),
+		       itsNrSamplesPerIntegration,
+		       sizeof(fcomplex) * itsNrSamplesPerIntegration,
 		       sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SUBBAND_CHANNELS + 4));
       }
     }
 
-    struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION];
+    struct phase_shift phaseShifts[itsNrSamplesPerIntegration];
 
     if (itsDelayCompensation) {
-      computePhaseShifts(phaseShifts, (*delays)[stat], baseFrequency);
+      computePhaseShifts(phaseShifts, delays[stat], baseFrequency);
     }
 
-#if defined SPARSE_FLAGS
-    const std::vector<SparseSet::range> &ranges = flags[stat].getRanges();
+    const std::vector<SparseSet::range> &ranges = itsFlags[stat].getRanges();
     std::vector<SparseSet::range>::const_iterator it = ranges.begin();
 
-    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; it ++) {
-      int firstBad, firstGood;
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+      bool good = it == ranges.end() || time < it->begin || (time == it->end && (++ it, true));
 
-      if (it != ranges.end()) {
-	firstBad  = it->begin;
-	firstGood = it->end;
-      } else {
-	firstBad  = firstGood = NR_SAMPLES_PER_INTEGRATION;
-      }
-
-      for (; time < firstBad; time ++) {
+      if (good) {
 	FFTtimer.start();
 #if 0
-	_prefetch(fftInData[time],
+	_prefetch((*itsFFTinData)[time].origin(),
 		  sizeof(fcomplex[NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]) / CACHE_LINE_SIZE,
 		  CACHE_LINE_SIZE);
 #endif
 
-	for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
 #if 0
 	  fftw_one(itsFFTWPlan,
-		   (fftw_complex *) fftInData[time][pol],
-		   (fftw_complex *) fftOutData[time & 1][pol]);
+		   (fftw_complex *) (*itsFFTinData)[time][pol].origin(),
+		   (fftw_complex *) (*itsFFToutData)[time & 1][pol].origin());
 #else
-	  _fft256(fftInData[time][pol], fftOutData[time & 1][pol]);
+	  _fft256((*itsFFTinData)[time][pol].origin(),
+		  (*itsFFToutData)[time & 1][pol].origin());
 #endif
 	}
 	FFTtimer.stop();
-
-	if (time & 1) {
-	  if (itsDelayCompensation) {
-	    _phase_shift_and_transpose(&samples[0][stat][time - 1][0],
-				       &fftOutData[0][0][0],
-				       &phaseShifts[time - 1]);
-	  } else {
-	    _transpose_4x8(&samples[0][stat][time - 1][0],
-			   &fftOutData[0][0][0],
-			   NR_SUBBAND_CHANNELS,
-			   sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
-			   sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
-	  }
-	}
-      }
-
-      for (; time < firstGood; time ++) {
-	_memzero(fftOutData[time & 1], sizeof(fftOutData[time & 1]));
-
-	if (time & 1) {
-	  if (itsDelayCompensation) {
-	    _phase_shift_and_transpose(&samples[0][stat][time - 1][0],
-				       &fftOutData[0][0][0],
-				       &phaseShifts[time - 1]);
-	  } else {
-	    _transpose_4x8(&samples[0][stat][time - 1][0],
-			   &fftOutData[0][0][0],
-			   NR_SUBBAND_CHANNELS,
-			   sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
-			 sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
-	  }
-	}
-      }
-    }
-#else // !SPARSE_FLAGS
-    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time += 2) {
-      FFTtimer.start();
-      for (int t = 0; t < 2; t ++) {
-	if (flags[stat][time + t]) {
-	  _memzero(fftOutData[t], sizeof(fftOutData[t]));
-	} else {
-	  _prefetch(fftInData[time + t],
-		    sizeof(fcomplex[NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]) / CACHE_LINE_SIZE,
-		    CACHE_LINE_SIZE);
-
-	  for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-#if 0
-	    fftw_one(itsFFTWPlan,
-		     (fftw_complex *) fftInData[time + t][pol],
-		     (fftw_complex *) fftOutData[t][pol]);
-#else
-	    _fft256(fftInData[time + t][pol], fftOutData[t][pol]);
-#endif
-	  }
-	}
-      }
-      FFTtimer.stop();
-
-      if (itsDelayCompensation) {
-	_phase_shift_and_transpose(&samples[0][stat][time][0],
-				   &fftOutData[0][0][0],
-				   &phaseShifts[time]);
       } else {
-	_transpose_4x8(&samples[0][stat][time][0],
-		       &fftOutData[0][0][0],
-		       NR_SUBBAND_CHANNELS,
-		       sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
-		       sizeof(fcomplex) * NR_POLARIZATIONS * (NR_SAMPLES_PER_INTEGRATION | 2) * NR_STATIONS);
+	  _memzero((*itsFFToutData)[time & 1].origin(),
+		   (*itsFFToutData)[time & 1].num_elements() * sizeof(fcomplex));
+      }
+
+      if (time & 1) {
+	if (itsDelayCompensation) {
+	  _phase_shift_and_transpose(&(*itsSamples)[0][stat][time - 1][0],
+				     itsFFToutData->origin(),
+				     &phaseShifts[time - 1],
+				     transpose_stride);
+	} else {
+	  _transpose_4x8(&(*itsSamples)[0][stat][time - 1][0],
+			 itsFFToutData->origin(),
+			 NR_SUBBAND_CHANNELS,
+			 sizeof(fcomplex) * NR_SUBBAND_CHANNELS,
+			 transpose_stride);
+	}
       }
     }
-#endif // SPARSE_FLAGS
 #endif // C_IMPLEMENTATION
   }
 
@@ -1587,12 +1494,12 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 
 void WH_BGL_Processing::bypassPPF()
 {
-  DH_Subband::AllSamplesType *input = get_DH_Subband()->getSamples();
+  DH_Subband *input = get_DH_Subband();
 
-  for (int stat = 0; stat < NR_STATIONS; stat ++) {
-    for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
-      for (int pol = 0; pol < NR_POLARIZATIONS; pol ++) {
-	samples[0][stat][time][pol] = makefcomplex((*input)[stat][time][pol]);
+  for (unsigned stat = 0; stat < itsNrStations; stat ++) {
+    for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+      for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
+	(*itsSamples)[0][stat][time][pol] = makefcomplex(input->getSample(stat, time, pol));
       }
     }
   }
@@ -1603,67 +1510,63 @@ void WH_BGL_Processing::doCorrelate()
 {
   doCorrelateTimer.start();
 
-  // Use zeroed space for RFI_Flags since they are currently not in a dataholder
-  static bitset<NR_SUBBAND_CHANNELS> Scratch_RFI_Flags[NR_STATIONS];
-  bitset<NR_SUBBAND_CHANNELS> (*RFI_Flags)[NR_STATIONS] = &Scratch_RFI_Flags;
-
-//DH_RFI_Mitigation::ChannelFlagsType	 *RFI_Flags	 = get_DH_RFI_Mitigation()->getChannelFlags();
-  DH_Visibilities::AllVisibilitiesType	 *visibilities	 = get_DH_Visibilities()->getVisibilities();
-  DH_Visibilities::AllNrValidSamplesType *nrValidSamples = get_DH_Visibilities()->getNrValidSamples();
+  DH_Visibilities::VisibilitiesType	 visibilities	= get_DH_Visibilities()->getVisibilities();
+  DH_Visibilities::AllNrValidSamplesType nrValidSamples = get_DH_Visibilities()->getNrValidSamples();
 
 #if defined C_IMPLEMENTATION
-  for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-    for (int stat2 = 0; stat2 < NR_STATIONS; stat2 ++) {
-      for (int stat1 = 0; stat1 <= stat2; stat1 ++) { 
-	int bl = DH_Visibilities::baseline(stat1, stat2), nrValid = 0;
+  for (unsigned ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+    for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
+      for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) { 
+	unsigned bl = DH_Visibilities::baseline(stat1, stat2), nrValid = 0;
 
-	if (!(*RFI_Flags)[stat1][ch] && !(*RFI_Flags)[stat2][ch]) {
-	  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
-	    for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
+	if (!itsRFIflags[stat1][ch] && !itsRFIflags[stat2][ch]) {
+	  for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
+	    for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	      dcomplex sum = makedcomplex(0, 0);
-	      for (int time = 0; time < NR_SAMPLES_PER_INTEGRATION; time ++) {
-		sum += samples[ch][stat1][time][pol1] * conj(samples[ch][stat2][time][pol2]);
+	      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
+		sum += (*itsSamples)[ch][stat1][time][pol1] * conj((*itsSamples)[ch][stat2][time][pol2]);
 	      }
-	      sum *= correlationWeights[itsNrValidSamples[bl]];
-	      (*visibilities)[bl][ch][pol1][pol2] = sum;
+	      sum *= itsCorrelationWeights[itsNrValidSamples[bl]];
+	      visibilities[bl][ch][pol1][pol2] = sum;
 	    }
 	  }
 	  nrValid = itsNrValidSamples[bl];
 	}
     
 	if (nrValid == 0) {
-	  for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
-	    for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
-	      (*visibilities)[bl][ch][pol1][pol2] = makefcomplex(0, 0);
+	  for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
+	    for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
+	      visibilities[bl][ch][pol1][pol2] = makefcomplex(0, 0);
 	    }
 	  }
 	}
-	(*nrValidSamples)[bl][ch] = nrValid;
+
+	nrValidSamples[bl][ch] = nrValid;
       }
     }
   }
 #else
   // Blue Gene/L assembler version. 
 
-  for (int bl = 0; bl < NR_BASELINES; bl ++) {
-    for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-      (*nrValidSamples)[bl][ch] = itsNrValidSamples[bl];
+  for (unsigned bl = 0; bl < itsNrBaselines; bl ++) {
+    for (unsigned ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+      nrValidSamples[bl][ch] = itsNrValidSamples[bl];
     }
   }
 
-  for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+  for (unsigned ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
     // build a map of valid stations
-    int nrValidStations = 0, map[NR_STATIONS];
+    unsigned nrValidStations = 0, map[itsNrStations];
 
-    for (int stat2 = 0; stat2 < NR_STATIONS; stat2 ++) {
-      if (!(*RFI_Flags)[stat2][ch]) {
+    for (unsigned stat2 = 0; stat2 < itsNrStations; stat2 ++) {
+      if (!itsRFIflags[stat2][ch]) {
 	map[nrValidStations ++] = stat2;
       } else { // clear correlations that involve invalided stations
-	for (int stat1 = 0; stat1 < NR_STATIONS; stat1 ++) {
-	  int bl = stat1 < stat2 ? DH_Visibilities::baseline(stat1, stat2) :
+	for (unsigned stat1 = 0; stat1 < itsNrStations; stat1 ++) {
+	  unsigned bl = stat1 < stat2 ? DH_Visibilities::baseline(stat1, stat2) :
 	    DH_Visibilities::baseline(stat2, stat1);
-	  //_clear_correlation(&(*visibilities)[bl][ch]);
-	  (*nrValidSamples)[bl][ch] = 0;
+	  //_clear_correlation(&visibilities[bl][ch]);
+	  nrValidSamples[bl][ch] = 0;
 	}
       }
     }
@@ -1677,94 +1580,100 @@ void WH_BGL_Processing::doCorrelate()
     // do the first (auto)correlation(s) (these are the "left"most 1 or 3
     // squares in the corner of the triangle)
     if (nrValidStations % 2 == 0) {
-      int stat10 = map[0], stat11 = map[1];
+      unsigned stat10 = map[0], stat11 = map[1];
 
-      _auto_correlate_2(&samples[ch][stat10],
-			&samples[ch][stat11],
-			&(*visibilities)[DH_Visibilities::baseline(stat10, stat10)][ch],
-			&(*visibilities)[DH_Visibilities::baseline(stat10, stat11)][ch],
-			&(*visibilities)[DH_Visibilities::baseline(stat11, stat11)][ch]);
+      _auto_correlate_2((*itsSamples)[ch][stat10].origin(),
+			(*itsSamples)[ch][stat11].origin(),
+			visibilities[DH_Visibilities::baseline(stat10, stat10)][ch].origin(),
+			visibilities[DH_Visibilities::baseline(stat10, stat11)][ch].origin(),
+			visibilities[DH_Visibilities::baseline(stat11, stat11)][ch].origin(),
+			itsNrSamplesPerIntegration);
     } else {
-      int stat10 = map[0];
+      unsigned stat10 = map[0];
 
-      _auto_correlate_1(&samples[ch][stat10],
-			&(*visibilities)[DH_Visibilities::baseline(stat10, stat10)][ch]);
+      _auto_correlate_1((*itsSamples)[ch][stat10].origin(),
+			visibilities[DH_Visibilities::baseline(stat10, stat10)][ch].origin(),
+			itsNrSamplesPerIntegration);
     }
 
-    for (int stat2 = nrValidStations % 2 ? 1 : 2; stat2 < nrValidStations; stat2 += 2) {
-      int stat1 = 0;
+    for (unsigned stat2 = nrValidStations % 2 ? 1 : 2; stat2 < nrValidStations; stat2 += 2) {
+      unsigned stat1 = 0;
 
       // do as many 3x2 blocks as possible
       for (; stat1 + 3 <= stat2; stat1 += 3) { 
-	int stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
-	int stat20 = map[stat2], stat21 = map[stat2+1];
+	unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
+	unsigned stat20 = map[stat2], stat21 = map[stat2+1];
 
-	_correlate_3x2(&samples[ch][stat10],
-		       &samples[ch][stat11],
-		       &samples[ch][stat12],
-		       &samples[ch][stat20],
-		       &samples[ch][stat21],
-		       &(*visibilities)[DH_Visibilities::baseline(stat10, stat20)][ch],
-		       &(*visibilities)[DH_Visibilities::baseline(stat10, stat21)][ch],
-		       &(*visibilities)[DH_Visibilities::baseline(stat11, stat20)][ch],
-		       &(*visibilities)[DH_Visibilities::baseline(stat11, stat21)][ch],
-		       &(*visibilities)[DH_Visibilities::baseline(stat12, stat20)][ch],
-		       &(*visibilities)[DH_Visibilities::baseline(stat12, stat21)][ch]);
+	_correlate_3x2((*itsSamples)[ch][stat10].origin(),
+		       (*itsSamples)[ch][stat11].origin(),
+		       (*itsSamples)[ch][stat12].origin(),
+		       (*itsSamples)[ch][stat20].origin(),
+		       (*itsSamples)[ch][stat21].origin(),
+		       visibilities[DH_Visibilities::baseline(stat10, stat20)][ch].origin(),
+		       visibilities[DH_Visibilities::baseline(stat10, stat21)][ch].origin(),
+		       visibilities[DH_Visibilities::baseline(stat11, stat20)][ch].origin(),
+		       visibilities[DH_Visibilities::baseline(stat11, stat21)][ch].origin(),
+		       visibilities[DH_Visibilities::baseline(stat12, stat20)][ch].origin(),
+		       visibilities[DH_Visibilities::baseline(stat12, stat21)][ch].origin(),
+		       itsNrSamplesPerIntegration);
       }
 
       // see if a 2x2 block is necessary
       if (stat1 + 2 <= stat2) {
-	int stat10 = map[stat1], stat11 = map[stat1+1];
-	int stat20 = map[stat2], stat21 = map[stat2+1];
+	unsigned stat10 = map[stat1], stat11 = map[stat1+1];
+	unsigned stat20 = map[stat2], stat21 = map[stat2+1];
 
-	_correlate_2x2(&samples[ch][stat10],
-		       &samples[ch][stat11],
-		       &samples[ch][stat20],
-		       &samples[ch][stat21],
-		       &(*visibilities)[DH_Visibilities::baseline(stat10, stat20)][ch],
-		       &(*visibilities)[DH_Visibilities::baseline(stat10, stat21)][ch],
-		       &(*visibilities)[DH_Visibilities::baseline(stat11, stat20)][ch],
-		       &(*visibilities)[DH_Visibilities::baseline(stat11, stat21)][ch]);
+	_correlate_2x2((*itsSamples)[ch][stat10].origin(),
+		       (*itsSamples)[ch][stat11].origin(),
+		       (*itsSamples)[ch][stat20].origin(),
+		       (*itsSamples)[ch][stat21].origin(),
+		       visibilities[DH_Visibilities::baseline(stat10, stat20)][ch].origin(),
+		       visibilities[DH_Visibilities::baseline(stat10, stat21)][ch].origin(),
+		       visibilities[DH_Visibilities::baseline(stat11, stat20)][ch].origin(),
+		       visibilities[DH_Visibilities::baseline(stat11, stat21)][ch].origin(),
+		       itsNrSamplesPerIntegration);
 	stat1 += 2;
       }
 
       // do the remaining (auto)correlations near the diagonal
       if (stat1 == stat2) {
-	int stat10 = map[stat1], stat11 = map[stat1+1];
+	unsigned stat10 = map[stat1], stat11 = map[stat1+1];
 
-	_auto_correlate_2(&samples[ch][stat10],
-			  &samples[ch][stat11],
-			  &(*visibilities)[DH_Visibilities::baseline(stat10,stat10)][ch],
-			  &(*visibilities)[DH_Visibilities::baseline(stat10,stat11)][ch],
-			  &(*visibilities)[DH_Visibilities::baseline(stat11,stat11)][ch]);
+	_auto_correlate_2((*itsSamples)[ch][stat10].origin(),
+			  (*itsSamples)[ch][stat11].origin(),
+			  visibilities[DH_Visibilities::baseline(stat10,stat10)][ch].origin(),
+			  visibilities[DH_Visibilities::baseline(stat10,stat11)][ch].origin(),
+			  visibilities[DH_Visibilities::baseline(stat11,stat11)][ch].origin(),
+			  itsNrSamplesPerIntegration);
       } else {
-	int stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
+	unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
 
-	_auto_correlate_3(&samples[ch][stat10],
-			  &samples[ch][stat11],
-			  &samples[ch][stat12],
-			  &(*visibilities)[DH_Visibilities::baseline(stat10,stat11)][ch],
-			  &(*visibilities)[DH_Visibilities::baseline(stat10,stat12)][ch],
-			  &(*visibilities)[DH_Visibilities::baseline(stat11,stat11)][ch],
-			  &(*visibilities)[DH_Visibilities::baseline(stat11,stat12)][ch],
-			  &(*visibilities)[DH_Visibilities::baseline(stat12,stat12)][ch]);
+	_auto_correlate_3((*itsSamples)[ch][stat10].origin(),
+			  (*itsSamples)[ch][stat11].origin(),
+			  (*itsSamples)[ch][stat12].origin(),
+			  visibilities[DH_Visibilities::baseline(stat10,stat11)][ch].origin(),
+			  visibilities[DH_Visibilities::baseline(stat10,stat12)][ch].origin(),
+			  visibilities[DH_Visibilities::baseline(stat11,stat11)][ch].origin(),
+			  visibilities[DH_Visibilities::baseline(stat11,stat12)][ch].origin(),
+			  visibilities[DH_Visibilities::baseline(stat12,stat12)][ch].origin(),
+			  itsNrSamplesPerIntegration);
       }
     }
   }
 
   weightTimer.start();
 #if 0
-  for (int bl = 0; bl < NR_BASELINES; bl ++) {
-    for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-      for (int pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
-	for (int pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
-	  (*visibilities)[bl][ch][pol1][pol2] *= correlationWeights[(*nrValidSamples)[bl][ch]];
+  for (unsigned bl = 0; bl < itsNrBaselines; bl ++) {
+    for (unsigned ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+      for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
+	for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
+	  visibilities[bl][ch][pol1][pol2] *= itsCorrelationWeights[(*nrValidSamples)[bl][ch]];
 	}
       }
     }
   }
 #else
-  _weigh_visibilities(visibilities, nrValidSamples, correlationWeights);
+  _weigh_visibilities(visibilities.origin(), nrValidSamples.origin(), itsCorrelationWeights, itsNrBaselines * NR_SUBBAND_CHANNELS);
 #endif
   weightTimer.stop();
 #endif  
@@ -1786,10 +1695,10 @@ void WH_BGL_Processing::process()
   static NSTimer readTimer("receive timer", true);
   readTimer.start();
   getDataManager().readyWithInHolder(SUBBAND_CHANNEL);
-#if defined SPARSE_FLAGS
+
   if (itsInputConnected)
     get_DH_Subband()->getExtraData();
-#endif
+
   readTimer.stop();
 
 #if defined HAVE_MPI
@@ -1827,7 +1736,7 @@ void WH_BGL_Processing::process()
 #endif
 
 #if 0
-  static int count = 0;
+  static unsigned count = 0;
 
   if (TH_MPI::getCurrentRank() == 5 && ++ count == 9)
     for (double time = MPI_Wtime() + 4.0; MPI_Wtime() < time;)
@@ -1840,6 +1749,20 @@ void WH_BGL_Processing::process()
 
 void WH_BGL_Processing::postprocess()
 {
+#if defined C_IMPLEMENTATION
+  delete itsFIRs;
+#else
+  delete itsTmp;
+  delete itsFFToutData;
+#endif
+  delete itsFFTinData;
+  delete itsSamples;
+
+  delete [] itsFlags;
+  delete [] itsNrValidSamples;
+  delete [] itsCorrelationWeights;
+  delete [] itsRFIflags;
+
 #if defined HAVE_FFTW3
   fftwf_destroy_plan(itsFFTWPlan);
 #elif defined HAVE_FFTW2

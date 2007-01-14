@@ -29,8 +29,6 @@
 .global	_FIR_constants_used
 _FIR_constants_used:
 	.long	INPUT_TYPE
-	.long	NR_STATIONS
-	.long	NR_SAMPLES_PER_INTEGRATION
 	.long	NR_SUBBAND_CHANNELS
 	.long	NR_TAPS
 	.long	NR_POLARIZATIONS
@@ -119,6 +117,7 @@ _phase_shift_and_transpose:
 #	r3 :	fcomplex *out
 #	r4 :	const fcomplex *in
 #	r5 :	const dcomplex phases[2][2]: v0, delta_v0, v1, delta_v1
+#	r6 :	stride
 
 #	f8 :	v0;
 #	f9 :	delta_v0
@@ -138,19 +137,17 @@ _phase_shift_and_transpose:
 	lfpdux	11,5,9
 
 	li	0,NR_SUBBAND_CHANNELS/2
-	li	6,FCOMPLEX_SIZE*NR_SUBBAND_CHANNELS
-	lis	7,FCOMPLEX_SIZE*(NR_POLARIZATIONS*(NR_SAMPLES_PER_INTEGRATION|2)*NR_STATIONS-3) / 65536
-	ori	7,7,FCOMPLEX_SIZE*(NR_POLARIZATIONS*(NR_SAMPLES_PER_INTEGRATION|2)*NR_STATIONS-3) % 65536
+	li	7,FCOMPLEX_SIZE*NR_SUBBAND_CHANNELS
 	li	8,FCOMPLEX_SIZE*(1-3*NR_SUBBAND_CHANNELS)
 	li	10,FCOMPLEX_SIZE
 	mtctr	0
 
 	lfpsx	0,0,4
-	lfpsux	1,4,6
-	lfpsux	2,4,6
-	lfpsux	3,4,6
+	lfpsux	1,4,7
+	lfpsux	2,4,7
+	lfpsux	3,4,7
 
-	sub	3,3,7
+	sub	3,3,6
 
 	fxpmul	12,0,8	
 	fxpmul	13,1,8 	
@@ -162,14 +159,14 @@ L5:
 	fxpmul  17,10,11
 
 	fxcxnpma 0,0,8,12	; lfpsux	4,4,8
-	fxcxnpma 1,1,8,13	; lfpsux	5,4,6
-	fxcxnpma 2,2,10,14	; lfpsux	6,4,6
-	fxcxnpma 3,3,10,15	; lfpsux	7,4,6
+	fxcxnpma 1,1,8,13	; lfpsux	5,4,7
+	fxcxnpma 2,2,10,14	; lfpsux	6,4,7
+	fxcxnpma 3,3,10,15	; lfpsux	7,4,7
 
 	fxcxnpma 8,8,9,16
-	fxcxnpma 10,10,11,17	; dcbz	3,7
+	fxcxnpma 10,10,11,17	; dcbz		3,6
  
-	fxpmul	12,4,8		; stfpsux	0,3,7
+	fxpmul	12,4,8		; stfpsux	0,3,6
 	fxpmul	13,5,8		; stfpsux	1,3,10
 	fxpmul	14,6,10		; stfpsux	2,3,10
 	fxpmul	15,7,10		; stfpsux	3,3,10
@@ -178,14 +175,14 @@ L5:
 	fxpmul  17,10,11
 
 	fxcxnpma 4,4,8,12	; lfpsux	0,4,8
-	fxcxnpma 5,5,8,13	; lfpsux	1,4,6
-	fxcxnpma 6,6,10,14	; lfpsux	2,4,6
-	fxcxnpma 7,7,10,15	; lfpsux	3,4,6
+	fxcxnpma 5,5,8,13	; lfpsux	1,4,7
+	fxcxnpma 6,6,10,14	; lfpsux	2,4,7
+	fxcxnpma 7,7,10,15	; lfpsux	3,4,7
 
 	fxcxnpma 8,8,9,16
-	fxcxnpma 10,10,11,17	; dcbz	3,7
+	fxcxnpma 10,10,11,17	; dcbz		3,6
  
-	fxpmul	12,0,8		; stfpsux	4,3,7
+	fxpmul	12,0,8		; stfpsux	4,3,6
 	fxpmul	13,1,8 		; stfpsux	5,3,10
 	fxpmul	14,2,10		; stfpsux	6,3,10
 	fxpmul	15,3,10		; stfpsux	7,3,10

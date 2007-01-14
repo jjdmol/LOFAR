@@ -23,18 +23,16 @@
 #ifndef LOFAR_CS1_INTERFACE_DH_SUBBAND_H
 #define LOFAR_CS1_INTERFACE_DH_SUBBAND_H
 
-#define SPARSE_FLAGS
-
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/RectMatrix.h>
-#if defined SPARSE_FLAGS
 #include <CS1_Interface/SparseSet.h>
-#else
-#include <CS1_Interface/bitset.h>
-#endif
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <APS/ParameterSet.h>
+
+#if defined HAVE_BOOST
+#include <boost/multi_array.hpp>
+#endif
 
 namespace LOFAR {
 namespace CS1 {
@@ -77,12 +75,16 @@ class DH_Subband: public DataHolder
       return itsNrStations * itsNrInputSamples * NR_POLARIZATIONS;
     }
 
+    size_t nrInputSamples() const
+    {
+      return itsNrInputSamples;
+    }
+
     DelayIntervalType &getDelay(unsigned station)
     {
       return itsDelays[station];
     }
 
-#if defined SPARSE_FLAGS
     SparseSet &getFlags(unsigned station)
     {
       return itsFlags[station];
@@ -92,51 +94,45 @@ class DH_Subband: public DataHolder
     {
       return itsFlags[station];
     }
-#else
-    size_t nrFlags() const
-    {
-      return itsNrStations * ((itsNrInputSamples + 31) & ~31);
-    }
-#endif
 
     size_t nrDelays() const
     {
       return itsNrStations;
     }
 
-#if defined BGL_PROCESSING
-    // Samples
-    typedef SampleType AllSamplesType[NR_STATIONS][NR_INPUT_SAMPLES][NR_POLARIZATIONS];
+#if defined HAVE_BOOST
+    typedef boost::multi_array_ref<SampleType, 3>	 Samples3Dtype;
+    typedef boost::multi_array_ref<SampleType, 4>	 Samples4Dtype;
+    typedef boost::multi_array_ref<DelayIntervalType, 1> DelaysType;
+    typedef boost::multi_array_ref<SparseSet, 1>	 FlagsType;
 
-    // Fine-grained delays
-    typedef DelayIntervalType AllDelaysType[NR_STATIONS];
-
-    AllSamplesType *getSamples()
+    Samples3Dtype getSamples3D() const
     {
-      return (AllSamplesType *) itsSamples;
+      static boost::detail::multi_array::extent_gen<3u> extents = boost::extents[itsNrStations][itsNrInputSamples][NR_POLARIZATIONS];
+      return Samples3Dtype(itsSamples, extents);
     }
 
-    const AllSamplesType *getSamples() const
+    Samples4Dtype getSamples4D() const
     {
-      return (const AllSamplesType *) itsSamples;
+      static boost::detail::multi_array::extent_gen<4u> extents = boost::extents[itsNrStations][itsNrInputSamples / NR_SUBBAND_CHANNELS][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS];
+      return Samples4Dtype(itsSamples, extents);
     }
 
-    AllDelaysType *getDelays()
+    DelaysType getDelays() const
     {
-      return (AllDelaysType *) itsDelays;
+      static boost::detail::multi_array::extent_gen<1u> extents = boost::extents[itsNrStations];
+      return DelaysType(itsDelays, extents);
     }
 
-    const AllDelaysType *getDelays() const
+    FlagsType getFlags()
     {
-      return (const AllDelaysType *) itsDelays;
+      static boost::detail::multi_array::extent_gen<1u> extents = boost::extents[itsNrStations];
+      return FlagsType(itsFlags, extents);
     }
 #endif
 
-    void swapBytes();
-
-#if defined SPARSE_FLAGS
+    void		   swapBytes();
     void		   getExtraData(), fillExtraData();
-#endif
 
   private:
     /// Forbid assignment.
@@ -145,13 +141,8 @@ class DH_Subband: public DataHolder
     unsigned		   itsNrStations, itsNrInputSamples;
 
     SampleType		   *itsSamples;
-    // RectMatrix cannot be used for bitsets, thus not for flags
     RectMatrix<SampleType> *itsSamplesMatrix;
-#if defined SPARSE_FLAGS
     SparseSet		   *itsFlags;
-#else
-    uint32		   *itsFlags;
-#endif
     DelayIntervalType	   *itsDelays;
 
     void fillDataPointers();

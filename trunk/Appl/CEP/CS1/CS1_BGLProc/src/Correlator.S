@@ -31,8 +31,6 @@
 
 .global _correlator_constants_used
 _correlator_constants_used:
-	.long	NR_STATIONS
-	.long	NR_SAMPLES_PER_INTEGRATION
 	.long	NR_SUBBAND_CHANNELS
 	.long	NR_POLARIZATIONS
 
@@ -54,6 +52,7 @@ _correlate_2x2:
 #	r8 :	pointer to S0*~S3 output
 #	r9 :	pointer to S1*~S2 output
 #	r10:	pointer to S1*~S3 output
+#	8(r1):	nr_samples_to_integrate
 
 #	local variables:
 #	r11:	temporary
@@ -82,17 +81,8 @@ _correlate_2x2:
 #	f22,f30:S3_X
 #	f23,f31:S3_Y
 
-	lis	 12,zero@ha
-#if NR_SAMPLES_PER_INTEGRATION/2 >= 32768
-	lis	 0,NR_SAMPLES_PER_INTEGRATION/2 / 65536
-#if NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
-	ori	 0,0,NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
-#endif
-#else
-	li	 0,NR_SAMPLES_PER_INTEGRATION/2
-#endif
+	lis	 12,zero@ha	; lwz		 0,8(1)
 	addi	 12,12,zero@l
-	mtctr	 0
 				; lfpsx	 0,0,12
 
 
@@ -106,10 +96,9 @@ _correlate_2x2:
 				; stfpdux	 19,1,12
 				; stfpdux	 20,1,12
 
-	li	 11,8	
-				; lfpsx		 16,0,3	
-				; lfpsux	 17,3,11
-				; lfpsx		 18,0,4	
+	li	 11,8		; lfpsx		 16,0,3	
+	srwi	 0,0,1		; lfpsux	 17,3,11
+	mtctr	 0		; lfpsx		 18,0,4	
 				; lfpsux	 19,4,11
 	fpmr	 1,0		; lfpsx		 20,0,5	
 	fpmr	 2,0		; stfpdux	 21,1,12
@@ -292,22 +281,14 @@ _correlate_3x2:
 #	8(r1):	pointer to S1*~S4 output
 #	12(r1):	pointer to S2*~S3 output
 #	16(r1):	pointer to S2*~S4 output
+#	20(r1): nr_samples_to_integrate
 
-	lis	 11,zero@ha	; li	 12,-16	# push call-saved registers
-	addi	 11,11,zero@l	; stfpdux	 14,1,12
+	li	 12,-16		; lwz		 0,20(1)
+	lis	 11,zero@ha	; stfpdux	 14,1,12
+	addi	 11,11,zero@l	; stfpdux	 15,1,12
 				; lfpsx	 0,0,11
-				; stfpdux	 15,1,12
 
-#if NR_SAMPLES_PER_INTEGRATION/2 >= 32768
-	lis	 0,NR_SAMPLES_PER_INTEGRATION/2 / 65536
-#if NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
-	ori	 0,0,NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
-#endif
-#else
-	li	 0,NR_SAMPLES_PER_INTEGRATION/2
-#endif
-
-				; stfpdux	 16,1,12
+	srwi	 0,0,1		; stfpdux	 16,1,12
 	mtctr	 0		; stfpdux	 17,1,12
 	fpmr	 1,0		; stfpdux	 18,1,12
 	fpmr	 2,0		; stfpdux	 19,1,12
@@ -554,18 +535,11 @@ _auto_correlate_1:
 #	computes auto correlations of S0*~S0
 #	r3 :	pointer to S0 data
 #	r4 :	pointer to 4 results
+#	r5 :	nr_samples_to_integrate
 
-#if NR_SAMPLES_PER_INTEGRATION/4 >= 32768
-	lis	 5,NR_SAMPLES_PER_INTEGRATION/4 / 65536
-#if NR_SAMPLES_PER_INTEGRATION/4 & 0xFFFF
-	ori	 5,5,NR_SAMPLES_PER_INTEGRATION/4 & 0xFFFF
-#endif
-#else
-	li	 5,NR_SAMPLES_PER_INTEGRATION/4
-#endif
-	mtctr	 5
-
+	srwi	 5,5,2
 	lis	 12,zero@ha
+	mtctr	 5
 	addi	 12,12,zero@l
 	lfpsx	 0,0,12		# f0r = 0, f0i = 0
 
@@ -640,6 +614,7 @@ _auto_correlate_2:
 #	r5 :	pointer to S0*~S0 output
 #	r6 :	pointer to S0*~S1 output
 #	r7 :	pointer to S1*~S1 output
+#	r8 :	nr_samples_to_integrate
 
 #	local variables:
 #	r11:	temporary
@@ -658,17 +633,9 @@ _auto_correlate_2:
 #	f14,f18:S1_X
 #	f15,f19:S1_Y
 
-#if NR_SAMPLES_PER_INTEGRATION/2 >= 32768
-	lis	 11,NR_SAMPLES_PER_INTEGRATION/2@ha
-#if NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
-	ori	 11,11,NR_SAMPLES_PER_INTEGRATION/2@l
-#endif
-#else
-	li	 11,NR_SAMPLES_PER_INTEGRATION/2
-#endif
-	mtctr	 11
-
+	srwi	 8,8,1
 	lis	 12,zero@ha
+	mtctr	 8
 	addi	 12,12,zero@l
 	lfpsx	 0,0,12
 
@@ -810,6 +777,7 @@ _auto_correlate_3:
 #	r8 :	pointer to S1*~S1 output
 #	r9 :	pointer to S1*~S2 output
 #	r10 :	pointer to S2*~S2 output
+#	8(r1):	nr_samples_to_integrate
 
 #	local variables:
 #	r11:	temporary
@@ -838,17 +806,9 @@ _auto_correlate_3:
 #	f22,f28:S2_X
 #	f22,f29:S2_Y
 
-#if NR_SAMPLES_PER_INTEGRATION/2 >= 32768
-	lis	 11,NR_SAMPLES_PER_INTEGRATION/2@ha
-#if NR_SAMPLES_PER_INTEGRATION/2 & 0xFFFF
-	ori	 11,11,NR_SAMPLES_PER_INTEGRATION/2@l
-#endif
-#else
-	li	 11,NR_SAMPLES_PER_INTEGRATION/2
-#endif
-	mtctr	 11
 
 	lis	 12,zero@ha
+	lwz	 0,8(1)
 	addi	 12,12,zero@l
 	lfpsx	 0,0,12
 
@@ -856,7 +816,9 @@ _auto_correlate_3:
 	stfpdux	 14,1,11
 	stfpdux	 15,1,11
 	stfpdux	 16,1,11
+	srwi	 0,0,1
 	stfpdux	 17,1,11
+	mtctr	 0
 	stfpdux	 18,1,11	; fpmr	 1,0
 	stfpdux	 19,1,11
 	fpmr	 2,0
@@ -1190,11 +1152,9 @@ _clear_correlation:
 .global	_weigh_visibilities
 _weigh_visibilities:
 
-	lis	6,(NR_BASELINES*NR_SUBBAND_CHANNELS/2)/65536
-	ori	6,6,(NR_BASELINES*NR_SUBBAND_CHANNELS/2)%65536
-	mtctr	6
-
+	srwi	6,6,1
 	li	8,8
+	mtctr	6
 	li	7,SIZEOF_NR_VALID_SAMPLES
 	sub	3,3,8
 	sub	4,4,7

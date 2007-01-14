@@ -20,14 +20,11 @@
 
 #include <lofar_config.h>
 
-#include <CS1_Interface/DH_Subband.h>
-#include <Common/DataConvert.h>
-#include <Common/Timer.h>
-
-#if defined SPARSE_FLAGS
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>
-#endif
+#include <Common/DataConvert.h>
+#include <Common/Timer.h>
+#include <CS1_Interface/DH_Subband.h>
 
 
 namespace LOFAR {
@@ -42,9 +39,9 @@ DH_Subband::DH_Subband(const string &name, const ACC::APS::ParameterSet &pSet)
     itsFlags(0),
     itsDelays(0)
 {
-#if defined SPARSE_FLAGS
   setExtraBlob("Flags", 0);
-#endif
+
+  ASSERT(pSet.getUint32("Observation.NSubbandSamples") % (pSet.getUint32("BGLProc.NPPFTaps") * pSet.getUint32("Observation.NChannels")) == 0);
 }
 
 DH_Subband::DH_Subband(const DH_Subband &that)
@@ -56,16 +53,12 @@ DH_Subband::DH_Subband(const DH_Subband &that)
     itsFlags(0),
     itsDelays(0)
 {
-#if defined SPARSE_FLAGS
   setExtraBlob("Flags", 0);
-#endif
 }
 
 DH_Subband::~DH_Subband()
 {
-#if defined SPARSE_FLAGS
   delete [] itsFlags;
-#endif
   delete itsSamplesMatrix;
 }
 
@@ -78,9 +71,6 @@ void DH_Subband::init()
 {
   addField("Samples", BlobField<uint8>(1, nrSamples() * sizeof(SampleType)), 32);
   addField("Delays",  BlobField<float>(1, nrDelays() * sizeof(DelayIntervalType) / sizeof(float)));
-#if !defined SPARSE_FLAGS
-  addField("Flags",   BlobField<uint32>(1, nrFlags() / sizeof(uint32)));
-#endif
 
   vector<DimDef> vdd;
   vdd.push_back(DimDef("Station",      itsNrStations));
@@ -88,10 +78,7 @@ void DH_Subband::init()
   vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
 
   itsSamplesMatrix = new RectMatrix<SampleType> (vdd);
-
-#if defined SPARSE_FLAGS
-  itsFlags = new SparseSet[itsNrStations];
-#endif
+  itsFlags	   = new SparseSet[itsNrStations];
 
   createDataBlock();
 }
@@ -100,15 +87,10 @@ void DH_Subband::fillDataPointers()
 {
   itsSamples = (SampleType *)	     getData<uint8> ("Samples");
   itsDelays  = (DelayIntervalType *) getData<float> ("Delays");
-#if !defined SPARSE_FLAGS
-  itsFlags   = (uint32 *)	     getData<uint32>("Flags");
-#endif
 
   itsSamplesMatrix->setBuffer(itsSamples, nrSamples());
 }
 
-
-#if defined SPARSE_FLAGS
 
 void DH_Subband::fillExtraData()
 {
@@ -126,8 +108,6 @@ void DH_Subband::getExtraData()
   for (unsigned stat = 0; stat < itsNrStations; stat ++)
     itsFlags[stat].read(bis);
 }
-
-#endif
 
 
 void DH_Subband::swapBytes()
