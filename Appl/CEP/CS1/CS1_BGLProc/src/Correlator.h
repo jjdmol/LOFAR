@@ -28,8 +28,9 @@
 namespace LOFAR {
 namespace CS1 {
 
-typedef fcomplex stationInputType[NR_SAMPLES_PER_INTEGRATION | 2][NR_POLARIZATIONS];
-typedef fcomplex CorrelatedOutputType[NR_POLARIZATIONS][NR_POLARIZATIONS];
+//typedef fcomplex stationInputType[NR_SAMPLES_PER_INTEGRATION | 2][NR_POLARIZATIONS];
+//typedef fcomplex CorrelatedOutputType[NR_POLARIZATIONS][NR_POLARIZATIONS];
+typedef fcomplex stationInputType, CorrelatedOutputType;
 
 extern "C" {
   void _correlate_2x2(const stationInputType *S0,
@@ -39,7 +40,8 @@ extern "C" {
 		      CorrelatedOutputType *S0_S2,
 		      CorrelatedOutputType *S0_S3,
 		      CorrelatedOutputType *S1_S2,
-		      CorrelatedOutputType *S1_S3);
+		      CorrelatedOutputType *S1_S3,
+		      unsigned nrSamplesToIntegrate);
   
   void _correlate_3x2(const stationInputType *S0,
 		      const stationInputType *S1,
@@ -51,16 +53,19 @@ extern "C" {
 		      CorrelatedOutputType *S1_S3,
 		      CorrelatedOutputType *S1_S4,
 		      CorrelatedOutputType *S2_S3,
-		      CorrelatedOutputType *S2_S4);
+		      CorrelatedOutputType *S2_S4,
+		      unsigned nrSamplesToIntegrate);
 
   void _auto_correlate_1(const stationInputType *S0,
-			 CorrelatedOutputType *S0_S0);
+			 CorrelatedOutputType *S0_S0,
+			 unsigned nrSamplesToIntegrate);
 
   void _auto_correlate_2(const stationInputType *S0,
 			 const stationInputType *S1,
 			 CorrelatedOutputType *S0_S0,
 			 CorrelatedOutputType *S0_S1,
-			 CorrelatedOutputType *S1_S1);
+			 CorrelatedOutputType *S1_S1,
+			 unsigned nrSamplesToIntegrate);
 
   void _auto_correlate_3(const stationInputType *S0,
 			 const stationInputType *S1,
@@ -69,7 +74,8 @@ extern "C" {
 			 CorrelatedOutputType *S0_S2,
 			 CorrelatedOutputType *S1_S1,
 			 CorrelatedOutputType *S1_S2,
-			 CorrelatedOutputType *S2_S2);
+			 CorrelatedOutputType *S2_S2,
+			 unsigned nrSamplesToIntegrate);
 
 #if 0
   void _add_correlations(DH_Visibilities::AllVisibilitiesType *dstVis,
@@ -82,13 +88,12 @@ extern "C" {
   void _clear_correlation(CorrelatedOutputType *S0_S0);
 
   void _weigh_visibilities(
-	DH_Visibilities::AllVisibilitiesType *visibilities,
-	DH_Visibilities::AllNrValidSamplesType *nrValidSamplesCounted,
-	const float correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1]);
+	DH_Visibilities::VisibilityType *visibilities,
+	DH_Visibilities::NrValidSamplesType *nrValidSamplesCounted,
+	const float correlationWeights[/*nrSamplesToIntegrate + 1*/],
+	unsigned nrBaselinesTimesNrChannels);
 
   extern struct {
-    unsigned nr_stations;
-    unsigned nr_samples_per_integration;
     unsigned nr_subband_channels;
     unsigned nr_polarizations;
   } _correlator_constants_used;

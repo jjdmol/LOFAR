@@ -38,17 +38,12 @@ struct phase_shift {
 };
 
 
-typedef bitset<NR_SUBBAND_CHANNELS> inputFlagsType[NR_STATIONS][NR_TAPS - 1 + NR_SAMPLES_PER_INTEGRATION];
-typedef bitset<NR_SAMPLES_PER_INTEGRATION> flagsType[NR_STATIONS];
-
 extern "C" {
   void _filter(fcomplex delayLine[NR_TAPS],
 	       const float weights[NR_TAPS],
 	       const DH_Subband::SampleType samples[],
 	       fcomplex out[],
 	       int nr_samples_div_16);
-
-  // void _compute_flags(const inputFlagsType *input, flagsType *flags);
 
   void _transpose_4x8(fcomplex *out,
 		      const fcomplex *in,
@@ -58,7 +53,8 @@ extern "C" {
 
   void _phase_shift_and_transpose(fcomplex *out,
 				  const fcomplex *in,
-				  const struct phase_shift *);
+				  const struct phase_shift *,
+				  int stride);
 
   void _fast_memcpy(void *dst, const void *src, size_t bytes);
   void _memzero(void *dst, size_t bytes); // bytes must be multiple of 128
@@ -66,8 +62,6 @@ extern "C" {
 
   extern struct {
     unsigned input_type;
-    unsigned nr_stations;
-    unsigned nr_samples_per_integration;
     unsigned nr_subband_channels;
     unsigned nr_taps;
     unsigned nr_polarizations;

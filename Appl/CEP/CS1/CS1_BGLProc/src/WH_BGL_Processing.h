@@ -35,25 +35,45 @@
 
 #include <tinyCEP/WorkHolder.h>
 #include <CS1_Interface/bitset.h>
-
-#define BGL_PROCESSING	// enable #define of NR_STATIONS etc.
 #include <CS1_Interface/CS1_Config.h>
-
 #include <CS1_Interface/DH_Subband.h>
 //#include <CS1_Interface/DH_RFI_Mitigation.h>
 #include <CS1_Interface/DH_Visibilities.h>
+
+#include <boost/multi_array.hpp>
+#include <malloc.h>
 
 
 #if defined HAVE_BGL
 #define CACHE_LINE_SIZE	32
 #define CACHE_ALIGNED	__attribute__ ((aligned(CACHE_LINE_SIZE)))
 #else
+#define CACHE_LINE_SIZE	16
 #define CACHE_ALIGNED
 #endif
 
 
 namespace LOFAR {
 namespace CS1 {
+
+template <typename T> class CacheAlignedAllocator : public std::allocator<T>
+{
+  public:
+    typedef typename std::allocator<T>::size_type size_type;
+    typedef typename std::allocator<T>::pointer pointer;
+    typedef typename std::allocator<T>::const_pointer const_pointer;
+
+    pointer allocate(size_type size, const_pointer /*hint*/ = 0)
+    {
+      return static_cast<pointer>(memalign(CACHE_LINE_SIZE, size * sizeof(T)));
+    }
+
+    void deallocate(pointer ptr, size_type /*size*/)
+    {
+      free(ptr);
+    }
+};
+
 
 class FIR {
   public:
@@ -64,6 +84,7 @@ class FIR {
 
     fcomplex itsDelayLine[NR_TAPS];
 #endif
+
     static const float weights[NR_SUBBAND_CHANNELS][NR_TAPS];
 };
 
@@ -117,9 +138,9 @@ class WH_BGL_Processing: public WorkHolder {
     void doCorrelate();
 
 #if defined C_IMPLEMENTATION
-    fcomplex phaseShift(int time, int chan, double baseFrequency, const DH_Subband::DelayIntervalType &delay) const;
+    fcomplex phaseShift(unsigned time, unsigned chan, double baseFrequency, const DH_Subband::DelayIntervalType &delay) const;
 #else
-    void computePhaseShifts(struct phase_shift phaseShifts[NR_SAMPLES_PER_INTEGRATION], const DH_Subband::DelayIntervalType &delay, double baseFrequency) const;
+    void computePhaseShifts(struct phase_shift phaseShifts[/*itsNrSamplesPerIntegration*/], const DH_Subband::DelayIntervalType &delay, double baseFrequency) const;
 #endif
 
     /// FIR Filter variables
@@ -129,8 +150,11 @@ class WH_BGL_Processing: public WorkHolder {
     fftw_plan	    itsFFTWPlan;
 #endif
 
-    static vector<double>  itsCenterFrequencies;
+    vector<double>  itsCenterFrequencies;
     double	    itsChannelBandwidth;
+
+    unsigned	    itsNrStations, itsNrBaselines;
+    unsigned	    itsNrSamplesPerIntegration;
 
     const ACC::APS::ParameterSet &itsPS;
     const unsigned  itsCoreNumber;
@@ -138,20 +162,37 @@ class WH_BGL_Processing: public WorkHolder {
     bool	    itsInputConnected;
     bool	    itsDelayCompensation;
 
-    static FIR	    itsFIRs[NR_STATIONS][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS] CACHE_ALIGNED;
+#if defined C_IMPLEMENTATION
+    typedef boost::multi_array<FIR, 3> itsFIRsType;
+    itsFIRsType     *itsFIRs;
+    //[itsNrStations][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
+
+    typedef boost::multi_array<fcomplex, 3> itsFFTdataType;
+    itsFFTdataType  *itsFFTinData;
+    //[NR_TAPS - 1 + itsNrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
+#else
+    typedef boost::multi_array<fcomplex, 2, CacheAlignedAllocator<fcomplex> > itsTmpType;
+    itsTmpType	    *itsTmp; //[4][itsNrSamplesPerIntegration]
+
+    typedef boost::multi_array<fcomplex, 3, CacheAlignedAllocator<fcomplex> > itsFFTdataType;
+    itsFFTdataType  *itsFFTinData;
+    //[itsNrSamplesPerIntegration][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS + 4]
+
+    itsFFTdataType  *itsFFToutData;
+    //[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS]
+#endif
 
     // The "| 2" significantly improves transpose speeds for particular numbers
     // of stations due to cache conflict effects.  The extra memory is not used.
-    static fcomplex samples[NR_SUBBAND_CHANNELS][NR_STATIONS][NR_SAMPLES_PER_INTEGRATION | 2][NR_POLARIZATIONS] CACHE_ALIGNED;
+    typedef boost::multi_array<fcomplex, 4, CacheAlignedAllocator<fcomplex> > itsSamplesType;
+    itsSamplesType  *itsSamples;
+    //[NR_SUBBAND_CHANNELS][itsNrStations][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS] CACHE_ALIGNED
 
-#if defined SPARSE_FLAGS
-    static SparseSet flags[NR_STATIONS];
-#else
-    static bitset<NR_SAMPLES_PER_INTEGRATION> flags[NR_STATIONS] CACHE_ALIGNED;
-#endif
-    static unsigned itsNrValidSamples[NR_BASELINES] CACHE_ALIGNED;
-    static float    correlationWeights[NR_SAMPLES_PER_INTEGRATION + 1] CACHE_ALIGNED;
-    static float    thresholds[NR_BASELINES][NR_SUBBAND_CHANNELS];
+    SparseSet	    *itsFlags; //[itsNrStations]
+    unsigned	    *itsNrValidSamples; //[itsNrBaselines]
+    float	    *itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
+
+    bitset<NR_SUBBAND_CHANNELS> *itsRFIflags; //[itsNrStations]
 };
 
 } // namespace CS1

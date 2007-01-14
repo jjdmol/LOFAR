@@ -35,7 +35,7 @@
 #endif
 
 #include <Common/Timer.h>
-#include <CS1_BGLProc/WH_BGL_Processing.h>
+#include <WH_BGL_Processing.h>
 #include <cmath>
 #include <cstring>
 #include <exception>
@@ -59,69 +59,59 @@ inline DH_Subband::SampleType toComplex(double phi)
 }
 
 
-void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency, double sampleRate)
+void setSubbandTestPattern(WH_BGL_Processing &wh, unsigned nrStations, double signalFrequency, double sampleRate)
 {
   // Simulate a monochrome complex signal into the PPF, with station 1 at a
   // distance of .25 labda to introduce a delay.  Also, a few samples can be
   // flagged.
 
-  std::cerr << "setSubbandTestPattern::setTestPattern() ... ";
+  std::clog << "setSubbandTestPattern::setTestPattern() ... ";
 
   static NSTimer timer("setTestPattern", true);
   timer.start();
 
-  DH_Subband		     *dh	= wh.get_DH_Subband();
-  DH_Subband::AllSamplesType *samples	= dh->getSamples();
-#if !defined SPARSE_FLAGS
-  DH_Subband::AllFlagsType   *flags	= dh->getFlags();
-#endif
-  DH_Subband::AllDelaysType  *delays	= dh->getDelays();
+  DH_Subband		    *dh        = wh.get_DH_Subband();
+  DH_Subband::Samples3Dtype samples    = dh->getSamples3D();
+  DH_Subband::DelaysType    delays     = dh->getDelays();
+  DH_Subband::FlagsType     flags      = dh->getFlags();
 
-  const double		     distance	= .25; // labda
-  const double		     phaseShift = 2 * M_PI * distance;
+  const double		    distance   = .25; // labda
+  const double		    phaseShift = 2 * M_PI * distance;
 
-  memset(delays, 0, sizeof(DH_Subband::AllDelaysType));
+  for (unsigned stat = 0; stat < nrStations; stat ++) {
+    delays[0].delayAtBegin = delays[0].delayAfterEnd = 0;
+  }
 
-  for (int time = 0; time < NR_INPUT_SAMPLES; time ++) {
+  for (unsigned time = 0; time < samples[0].size(); time ++) {
     double phi = 2 * M_PI * signalFrequency * time / sampleRate;
     DH_Subband::SampleType sample = toComplex(phi);
 
-    for (int stat = 0; stat < NR_STATIONS; stat ++) {
-      (*samples)[stat][time][0] = (*samples)[stat][time][1] = sample;
+    for (unsigned stat = 0; stat < nrStations; stat ++) {
+      samples[stat][time][0] = samples[stat][time][1] = sample;
     }
 
-#if NR_STATIONS >= 2 && NR_POLARIZATIONS == 2
-    (*samples)[1][time][1]    = toComplex(phi + phaseShift);
-    (*delays)[1].delayAtBegin = (*delays)[1].delayAfterEnd = distance / signalFrequency;
-#endif
+    if (NR_POLARIZATIONS >= 2 && nrStations > 2) {
+      samples[1][time][1]    = toComplex(phi + phaseShift);
+      delays[1].delayAtBegin = delays[1].delayAfterEnd = distance / signalFrequency;
+    }
   }
   
-#if defined SPARSE_FLAGS
-  for (int stat = 0; stat < NR_STATIONS; stat ++) {
-    dh->getFlags(stat).reset();
+  for (unsigned stat = 0; stat < nrStations; stat ++) {
+    flags[stat].reset();
   }
-#else
-  memset(flags, 0, sizeof(DH_Subband::AllFlagsType));
+
+#if 1
+  if (dh->nrInputSamples() > 17000 && nrStations >= 6) {
+    flags[4].include(14000);
+    flags[5].include(17000);
+  }
 #endif
 
-#if 1 && NR_INPUT_SAMPLES >= 17000 && NR_STATIONS > 5
-#if defined SPARSE_FLAGS
-  dh->getFlags(4).include(14000);
-  dh->getFlags(5).include(17000);
-#else
-  (*flags)[4][14000] = true;
-  (*flags)[5][17000] = true;
-#endif
-#endif
-
-#if defined SPARSE_FLAGS
   dh->fillExtraData();
-#endif
-
-  std::cerr << "done.\n";
+  std::clog << "done." << std::endl;;
 
 #if defined WORDS_BIGENDIAN
-  std::cerr << "swapBytes()\n";
+  std::clog << "swapBytes()" << std::endl;
   dh->swapBytes();
 #endif
 
@@ -130,29 +120,29 @@ void setSubbandTestPattern(WH_BGL_Processing &wh, double signalFrequency, double
 
 
 #if 0
-void setRFItestPattern(WH_BGL_Processing &wh)
+void setRFItestPattern(WH_BGL_Processing &wh, unsigned nrStations)
 {
   DH_RFI_Mitigation::ChannelFlagsType *flags = wh.get_DH_RFI_Mitigation()->getChannelFlags();
 
   memset(flags, 0, sizeof(DH_RFI_Mitigation::ChannelFlagsType));
 
-#if 0 && NR_STATIONS >= 3 && NR_SUBBAND_CHANNELS >= 256
-  (*flags)[2][255] = true;
+#if 0 && NR_SUBBAND_CHANNELS >= 256
+  if (nrStations >= 3)
+    (*flags)[2][255] = true;
 #endif
 }
 #endif
 
 
-void checkCorrelatorTestPattern(WH_BGL_Processing &wh)
+void checkCorrelatorTestPattern(WH_BGL_Processing &wh, unsigned nrStations)
 {
-  DH_Visibilities			 *dh	       = wh.get_DH_Visibilities();
-  DH_Visibilities::AllVisibilitiesType   *visibilities = dh->getVisibilities();
-  DH_Visibilities::AllNrValidSamplesType *validSamples = dh->getNrValidSamples();
+  DH_Visibilities::VisibilitiesType	 visibilities	= wh.get_DH_Visibilities()->getVisibilities();
+  DH_Visibilities::AllNrValidSamplesType nrValidSamples = wh.get_DH_Visibilities()->getNrValidSamples();
 
-  static const int			 channels[]    = { 0, 73, 255 };
+  static const int			 channels[]	= { 0, 73, 255 };
 
-  for (int stat1 = 0; stat1 < std::min(NR_STATIONS, 8); stat1 ++) {
-    for (int stat2 = stat1; stat2 < std::min(NR_STATIONS, 8); stat2 ++) {
+  for (unsigned stat1 = 0; stat1 < std::min(nrStations, 8U); stat1 ++) {
+    for (unsigned stat2 = stat1; stat2 < std::min(nrStations, 8U); stat2 ++) {
       int bl = DH_Visibilities::baseline(stat1, stat2);
 
       std::cout << "S(" << stat1 << ") * ~S(" << stat2 << ") :\n";
@@ -165,7 +155,7 @@ void checkCorrelatorTestPattern(WH_BGL_Processing &wh)
 	    int ch = channels[chidx];
 
 	    if (ch < NR_SUBBAND_CHANNELS) {
-	      std::cout << ' ' << (*visibilities)[bl][ch][pol1][pol2] << '/' << (*validSamples)[bl][ch];
+	      std::cout << ' ' << visibilities[bl][ch][pol1][pol2] << '/' << nrValidSamples[bl][ch];
 	    }
 	  }
 
@@ -179,13 +169,13 @@ void checkCorrelatorTestPattern(WH_BGL_Processing &wh)
   float max = 0.0;
 
   for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-    if (abs((*visibilities)[0][ch][1][1]) > max) {
-      max = abs((*visibilities)[0][ch][1][1]);
+    if (abs(visibilities[0][ch][1][1]) > max) {
+      max = abs(visibilities[0][ch][1][1]);
     }
   }
 
   for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
-    std::cout << ch << ' ' << (10 * std::log10(abs((*visibilities)[0][ch][1][1]) / max)) << '\n';
+    std::cout << ch << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
   }
 }
 
@@ -206,42 +196,27 @@ void doWork()
 
   ACC::APS::ParameterSet pset("CS1.parset");
 
-  unsigned nrSubbands	= pset.getUint32("Observation.NSubbands");
-  double   sampleRate	= pset.getDouble("Observation.SampleRate");
-  unsigned nrChannels	= pset.getUint32("Observation.NChannels");
-  double   subbandWidth = sampleRate;
-  double   channelWidth = sampleRate / nrChannels;
-
-  double     baseFrequency   = 254 * sampleRate; // 254th Nyquist zone
+  unsigned   nrStations	     = pset.getUint32("Observation.NStations");
+  double     sampleRate	     = pset.getDouble("Observation.SampleRate");
+  unsigned   nrChannels	     = pset.getUint32("Observation.NChannels");
+  double     baseFrequency   = pset.getDoubleVector("Observation.RefFreqs")[0];
+  double     channelWidth    = sampleRate / nrChannels;
   double     signalFrequency = baseFrequency + 73 * channelWidth; // channel 73
   int	     nRuns	     = 1;
   const char *env;
 
-
   if ((env = getenv("NRUNS")) != 0) {
     nRuns = atoi(env);
-    std::clog << "setting nRuns to " << env << '\n';
+    std::clog << "setting nRuns to " << env << std::endl;
   }
 
   if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
     signalFrequency = atof(env);
-    std::clog << "setting signal frequency to " << env << '\n';
   }
 
-  if ((env = getenv("BASE_FREQUENCY")) != 0) {
-    baseFrequency = atof(env);
-    std::clog << "setting base frequency to " << env << '\n';
-  }
-
-  std::ostringstream baseFrequencyStr;
-  baseFrequencyStr << '[';
-
-  for (unsigned sb = 0; sb < nrSubbands; sb ++) {
-    baseFrequencyStr << (baseFrequency + sb * subbandWidth)
-		     << ((sb == nrSubbands - 1) ? ']' : ',');
-  }
-
-  pset.replace(string("Observation.RefFreqs"), baseFrequencyStr.str());
+  std::clog << "base frequency = " << baseFrequency << std::endl;
+  std::clog << "channel bandwidth = " << channelWidth << std::endl;
+  std::clog << "signal frequency = " << signalFrequency << std::endl;
   WH_BGL_Processing wh("WH_BGL_Processing", 0, pset);
 
 #if defined HAVE_MPI
@@ -249,14 +224,14 @@ void doWork()
 #endif
 
   wh.basePreprocess();
-  setSubbandTestPattern(wh, signalFrequency, sampleRate);
+  setSubbandTestPattern(wh, nrStations, signalFrequency, sampleRate);
 //setRFItestPattern(wh);
 
   for (int i = 0; i < nRuns; i ++) {
     wh.baseProcess();
   }
 
-  checkCorrelatorTestPattern(wh);
+  checkCorrelatorTestPattern(wh, nrStations);
   wh.basePostprocess();
 }
 
@@ -280,13 +255,13 @@ int main (int argc, char **argv)
   try {
     doWork();
   } catch (Exception& e) {
-    cerr << "Caught exception: " << e.what() << endl;
+    std::cerr << "Caught exception: " << e.what() << std::endl;
     retval = 1;
   } catch (std::exception& e) {
-    cerr << "Caught exception: " << e.what() << endl;
+    std::cerr << "Caught exception: " << e.what() << std::endl;
     retval = 1;
   } catch (...) {
-    cerr << "Caught exception " << endl;
+    std::cerr << "Caught exception " << std::endl;
     retval = 1;
   }
 
