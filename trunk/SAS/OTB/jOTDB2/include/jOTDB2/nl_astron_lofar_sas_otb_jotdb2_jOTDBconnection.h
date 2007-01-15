@@ -71,6 +71,14 @@ JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection_er
 JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection_getAuthToken
   (JNIEnv *, jobject);
 
+/*
+ * Class:     nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection
+ * Method:    getDBName
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection_getDBName
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

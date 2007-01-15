@@ -190,5 +190,16 @@ JNIEXPORT jint JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection_getAu
   return token;
 }
 
+JNIEXPORT jstring JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection_getDBName(JNIEnv *env, jobject) {
+  jstring jstr;
+  try {
+    jstr = env->NewStringUTF(theirConn->getDBName().c_str());
+  } catch (exception &ex) {
+    cout << "Exception during OTDBconnection::getDBName " << ex.what() << endl;
+    
+    env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
+  }
+  return jstr;
+}
 
 

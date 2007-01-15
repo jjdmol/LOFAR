@@ -62,6 +62,7 @@ public:
 	// To connect or reconnect in case the connection was lost
 	bool connect();
 
+
 	// get OTDBtree of one specific tree
 	OTDBtree	getTreeInfo (treeIDType		atreeID,
 							 const bool		isMomID = false);
@@ -88,6 +89,7 @@ public:
 	inline string errorMsg() const;
 	inline uint32 getAuthToken() const;
 	inline connection* getConn() const;
+	inline string getDBName() const;
 
 private:
 	// Copying is not allowed
@@ -149,6 +151,14 @@ inline ostream& operator<< (ostream& 				os,
 inline string OTDBconnection::errorMsg() const
 {
 	return (itsError);
+}
+
+//#
+//# getDBName()
+//#
+inline string OTDBconnection::getDBName() const
+{
+  return (itsDatabase);
 }
 
 // @}

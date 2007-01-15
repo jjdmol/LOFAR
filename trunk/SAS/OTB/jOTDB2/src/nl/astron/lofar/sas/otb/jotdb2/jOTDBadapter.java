@@ -124,5 +124,17 @@ public class jOTDBadapter extends UnicastRemoteObject implements jOTDBinterface 
         return anI;              
      }
    	
+    public String getDBName () throws RemoteException {
+        String aS=null;
+        try {
+            aS = adaptee.getDBName ();
+        } catch (Exception ex) {
+            RemoteException anEx=new RemoteException("JNI getDBName error");
+            anEx.initCause(ex);
+            throw anEx;            
+        }
+        return aS;             
+    }
+   
    protected jOTDBconnection adaptee;   
 }
