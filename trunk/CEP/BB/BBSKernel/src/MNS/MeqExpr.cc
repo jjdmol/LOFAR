@@ -49,32 +49,34 @@ MeqExprRep::MeqExprRep()
 
 MeqExprRep::~MeqExprRep()
 {
-  for(std::vector<MeqExprRep*>::iterator it = itsChildren.begin(); it != itsChildren.end(); ++it)
+  for(std::vector<MeqExpr>::iterator it = itsChildren.begin(); it != itsChildren.end(); ++it)
   {
-    (*it)->decrNParents();
+      MeqExprRep childRep = (*it).itsRep;
+      ASSERT(childRep);
+      childRep->decrNParents();
   }
   
   delete itsResult;
   delete itsResVec;
 }
 
-void MeqExprRep::addChild (MeqExpr& child)
+void MeqExprRep::addChild (MeqExpr child)
 {
   MeqExprRep* childRep = child.itsRep;
-  ASSERT (childRep != 0);
-  itsChildren.push_back (childRep);
+  ASSERT(childRep);
   childRep->incrNParents();
+  itsChildren.push_back(child);
 }
 
-void MeqExprRep::removeChild(MeqExpr &child)
+void MeqExprRep::removeChild(MeqExpr child)
 {
-    ASSERT(child.itsRep != NULL);
-    
-    std::vector<MeqExprRep*>::iterator it = std::find(itsChildren.begin(), itsChildren.end(), child.itsRep);
-    
+    std::vector<MeqExpr>::iterator it = std::find(itsChildren.begin(), itsChildren.end(), child);
     ASSERT(it != itsChildren.end());
     
-    (*it)->decrNParents();
+    MeqExprRep childRep = child.itsRep;
+    ASSERT(childRep);
+    
+    childRep->decrNParents();
     itsChildren.erase(it);
 }
 
@@ -86,7 +88,7 @@ int MeqExprRep::setLevel (int level)
     nrLev = level;
     itsMaxLevel = level;
     for (uint i=0; i<itsChildren.size(); ++i) {
-      nrLev = std::max(nrLev, itsChildren[i]->setLevel (level+1));
+      nrLev = std::max(nrLev, itsChildren[i].setLevel (level+1));
     }
   }
   return nrLev;
@@ -99,8 +101,8 @@ void MeqExprRep::clearDone()
   itsMinLevel  = 100000000;
   for (uint i=0; i<itsChildren.size(); ++i) {
     // Avoid that a child is cleared multiple times.
-    if (itsChildren[i]->levelDone() >= 0) {
-      itsChildren[i]->clearDone();
+    if (itsChildren[i].levelDone() >= 0) {
+      itsChildren[i].clearDone();
     }
   }
 }
@@ -117,8 +119,8 @@ void MeqExprRep::getCachingNodes (std::vector<MeqExprRep*>& nodes,
     } else if (itsMaxLevel < level) {
       // Handling the children is needed.
       for (uint i=0; i<itsChildren.size(); ++i) {
-    if (itsChildren[i]->levelDone() != level) {
-      itsChildren[i]->getCachingNodes (nodes, level, all);
+    if (itsChildren[i].levelDone() != level) {
+      itsChildren[i].getCachingNodes (nodes, level, all);
     }
       }
     }
@@ -184,7 +186,7 @@ MeqResult MeqExprRep::getResult (const MeqRequest& request)
   vector<MeqResult> res(nrchild);
   vector<const MeqMatrix*> mat(nrchild);
   for (int i=0; i<nrchild; ++i) {
-    res[i] = itsChildren[i]->getResultSynced (request, res[i]);
+    res[i] = itsChildren[i].getResultSynced (request, res[i]);
     mat[i] = &res[i].getValue();
   }
   // Calculate the resulting main value.
