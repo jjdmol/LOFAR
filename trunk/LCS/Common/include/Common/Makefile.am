@@ -41,6 +41,7 @@ pkginclude_HEADERS = \
 	lofar_stack.h \
 	lofar_string.h \
 	lofar_thread.h \
+	lofar_typeinfo.h \
 	LofarTypedefs.h \
 	LofarTypes.h \
 	lofar_vector.h \
