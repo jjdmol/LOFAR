@@ -58,15 +58,16 @@ namespace LOFAR
     // stream \a bos.
     void serialize(BlobOStream& bos) const;
 
+  protected:
+    // Return the class type of \c *this as a string.
+    virtual const string& classType() const = 0;
+
   private:
     // Read the contents from the blob input stream \a bis into \c *this.
     virtual void read(BlobIStream& bis) = 0;
 
     // Write the contents of \c *this into the blob output stream \a bos.
     virtual void write(BlobOStream& bos) const = 0;
-
-    // Return the class type of \c *this as a string.
-    virtual const string& classType() const = 0;
 
     // The private methods must be accessible for DH_BlobStreamable. 
     friend class DH_BlobStreamable;
