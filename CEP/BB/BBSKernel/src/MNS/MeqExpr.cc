@@ -51,7 +51,7 @@ MeqExprRep::~MeqExprRep()
 {
   for(std::vector<MeqExpr>::iterator it = itsChildren.begin(); it != itsChildren.end(); ++it)
   {
-      MeqExprRep childRep = (*it).itsRep;
+      MeqExprRep *childRep = (*it).itsRep;
       ASSERT(childRep);
       childRep->decrNParents();
   }
@@ -62,7 +62,7 @@ MeqExprRep::~MeqExprRep()
 
 void MeqExprRep::addChild (MeqExpr child)
 {
-  MeqExprRep* childRep = child.itsRep;
+  MeqExprRep *childRep = child.itsRep;
   ASSERT(childRep);
   childRep->incrNParents();
   itsChildren.push_back(child);
@@ -73,7 +73,7 @@ void MeqExprRep::removeChild(MeqExpr child)
     std::vector<MeqExpr>::iterator it = std::find(itsChildren.begin(), itsChildren.end(), child);
     ASSERT(it != itsChildren.end());
     
-    MeqExprRep childRep = child.itsRep;
+    MeqExprRep *childRep = child.itsRep;
     ASSERT(childRep);
     
     childRep->decrNParents();
