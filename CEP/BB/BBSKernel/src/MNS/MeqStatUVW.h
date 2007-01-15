@@ -71,6 +71,13 @@ public:
   // Set the UVW coordinate for the given time.
   void set (double time, double u, double v, double w);
 
+#ifdef EXPR_GRAPH
+  const MeqStation *getStation() const
+  {
+      return itsStation;
+  }
+#endif
+  
 private:
   struct MeqTime
   {
