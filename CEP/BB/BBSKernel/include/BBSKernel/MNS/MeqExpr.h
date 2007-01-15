@@ -70,15 +70,22 @@ public:
   static void unlink (MeqExprRep* rep)
     { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
 
-  // Increment nr of parents.
+  // Increment number of parents.
   void incrNParents()
   {
       itsNParents++;
   }
 
+  // Decrement the number of parents.
   void decrNParents()
   {
       itsNParents--;
+  }
+
+  // Get the current number of parents
+  const int getParentCount() const
+  {
+      return itsNParents;
   }
 
   // Recursively set the lowest and highest level of the node as used
@@ -120,6 +127,7 @@ public:
                       MeqResultVec& result)
     { return itsReqId == request.getId()  ?
     *itsResVec : calcResultVec(request,result); }
+  
   virtual MeqResultVec getResultVec (const MeqRequest&);
   // </group>
 
@@ -134,8 +142,8 @@ public:
 protected:
   // Add a child to this node.
   // It also increases NParents in the child.
-  void addChild(MeqExpr&);
-  void removeChild(MeqExpr &child);
+  void addChild(MeqExpr child);
+  void removeChild(MeqExpr child);
 
 private:
   // Forbid copy and assignment.
@@ -159,7 +167,7 @@ private:
   int           itsLevelDone;  //# Level the node is handled by some parent.
   MeqResult*    itsResult;     //# Possibly cached result
   MeqResultVec* itsResVec;     //# Possibly cached result vector
-  std::vector<MeqExprRep*> itsChildren;   //# All children
+  std::vector<MeqExpr> itsChildren;   //# All children
 
 protected:
   int           itsNParents;   //# Nr of parents
@@ -188,20 +196,40 @@ public:
   // Assignment (reference semantics).
   MeqExpr& operator= (const MeqExpr&);
 
+  // Is the node empty?
+  bool isNull() const
+    { return itsRep == 0; }
+
+  // A MeqExpr is essentially a reference counted shared
+  // pointer. Two MeqExpr's can be considered equal if both
+  // reference the same underlying MeqExprRep.
+  bool operator ==(const MeqExpr &other)
+  {
+    return (itsRep == other.itsRep);
+  }
+
+  
+  //# -- DELEGATED METHODS --
+  // Get the current number of parents
+  const int getParentCount() const
+  {
+      return itsRep->getParentCount();
+  }
+
   // Recursively set the lowest and highest level of the node as used
   // in the tree.
   // Return the number of levels used so far.
   int setLevel (int level)
     { return itsRep->setLevel (level); }
 
-  // Is the node empty?
-  bool isNull() const
-    { return itsRep == 0; }
-
   // Clear the done flag recursively.
   void clearDone()
     { itsRep->clearDone(); }
 
+  // At which level is the node done?
+  int levelDone() const
+    { return itsRep->levelDone(); }
+  
   // Get the nodes at the given level.
   // By default only nodes with multiple parents are retrieved.
   // It is used to find the nodes with results to be cached.
@@ -236,7 +264,7 @@ public:
   }
 #endif
 
-protected:
+private:
   MeqExprRep* itsRep;
 };
 
