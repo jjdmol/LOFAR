@@ -25,6 +25,7 @@
 package nl.astron.lofar.sas.otb;
 
 import java.awt.Cursor;
+import java.rmi.RemoteException;
 import java.util.*;
 import javax.swing.*;
 import org.apache.log4j.Logger;
@@ -52,6 +53,7 @@ public class MainFrame extends javax.swing.JFrame {
     private MACNavigatorInteraction          itsMACInteraction;
     private SharedVars                       itsSharedVars;
     private static UserAccount               itsUserAccount;
+    private String itsDBName               = "No Database";
     
     
     /** nested class for plugin panel administration */
@@ -413,6 +415,15 @@ public class MainFrame extends javax.swing.JFrame {
                         }
                     }
                     statusPanelMainFrame.setText(StatusPanel.LEFT,aC);
+                    logger.debug("Trying to get DatabaseName");
+                    try {
+                         itsDBName=itsSharedVars.getOTDBrmi().getRemoteOTDB().getDBName();
+                    } catch (RemoteException ex) {
+                        logger.error("Couldn't get DatabaseName"+ ex);
+                    }
+
+                    logger.debug("DatabaseName found: "+ itsDBName);
+                    statusPanelMainFrame.setText(StatusPanel.RIGHT,"Used Database: " +itsDBName);
                     registerDefaultPlugins();
                     registerUserPlugins();
                 }
