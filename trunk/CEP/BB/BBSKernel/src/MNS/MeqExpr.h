@@ -264,7 +264,7 @@ public:
   }
 #endif
 
-private:
+protected:
   MeqExprRep* itsRep;
 };
 
