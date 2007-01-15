@@ -66,4 +66,6 @@ public class jOTDBconnection
     public native String errorMsg() throws Exception;
 
     public native int getAuthToken() throws Exception;
+
+    public native String getDBName() throws Exception;
 }

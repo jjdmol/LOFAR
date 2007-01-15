@@ -49,4 +49,7 @@ public interface jOTDBinterface extends Remote
    public String errorMsg () throws RemoteException;
    
    public  int getAuthToken () throws RemoteException;
+
+   public String getDBName () throws RemoteException;
+
 }
