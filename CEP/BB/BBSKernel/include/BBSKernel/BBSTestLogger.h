@@ -43,7 +43,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup BBS
+// \addtogroup BBSKernel
 // @{
 
   namespace BBSTest 

@@ -36,7 +36,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup BBS
+// \addtogroup BBSKernel
 // @{
 
 class StepProp

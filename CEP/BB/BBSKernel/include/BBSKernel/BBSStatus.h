@@ -38,7 +38,7 @@ namespace LOFAR
   namespace BBS
   {
 
-    // \addtogroup BBS
+    // \addtogroup BBSKernel
     // @{
 
     // Class representing the status that will be returned by the BBS

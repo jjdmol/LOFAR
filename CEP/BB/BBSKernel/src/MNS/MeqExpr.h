@@ -46,7 +46,7 @@ namespace BBS
 //# Forward Declarations.
 class MeqExpr;
 
-// \ingroup BBS
+// \ingroup BBSKernel
 // \addtogroup MNS
 // @{
 
