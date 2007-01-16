@@ -42,7 +42,7 @@ class BlobIStream;
 namespace BBS
 {
 
-// \addtogroup BBS
+// \addtogroup BBSKernel
 // @{
 
 class ParmData

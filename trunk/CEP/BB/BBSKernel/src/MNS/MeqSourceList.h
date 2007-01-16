@@ -40,7 +40,7 @@ namespace BBS
 //# Forward Declarations
 class MeqParmGroup;
 
-// \ingroup BBS
+// \ingroup BBSKernel
 // \addtogroup MNS
 // @{
 

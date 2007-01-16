@@ -62,7 +62,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \ingroup BBS
+// \ingroup BBSKernel
 // \addtogroup MNS
 // @{
 

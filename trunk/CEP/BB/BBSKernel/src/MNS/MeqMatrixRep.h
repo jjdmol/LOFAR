@@ -42,7 +42,7 @@ namespace BBS
 {
 using LOFAR::dcomplex;
 
-// \ingroup BBS
+// \ingroup BBSKernel
 // \addtogroup MNS
 // @{
 

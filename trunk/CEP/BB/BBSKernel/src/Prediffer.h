@@ -69,7 +69,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup BBS
+// \addtogroup BBSKernel
 // @{
 
 //# Forward Declarations

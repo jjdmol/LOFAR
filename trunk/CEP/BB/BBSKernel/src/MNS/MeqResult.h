@@ -44,7 +44,7 @@ namespace BBS
 //# Forward Declarations
 class MeqParmFunklet;
 
-// \ingroup BBS
+// \ingroup BBSKernel
 // \addtogroup MNS
 // @{
 

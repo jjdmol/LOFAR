@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup BBS
+// \addtogroup BBSKernel
 // @{
 
 // Fitter calculates new parameter values from the equations given by the

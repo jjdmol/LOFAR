@@ -40,7 +40,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup BBS
+// \addtogroup BBSKernel
 // @{
 
 // Solver calculates new parameter values from the equations given by the

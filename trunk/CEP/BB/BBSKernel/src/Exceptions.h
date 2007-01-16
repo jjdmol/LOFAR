@@ -35,7 +35,7 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // \addtogroup BBS
+    // \addtogroup BBSKernel
     // @{
 
     // This exception is thrown when an error occurs in the BBS kernel part.

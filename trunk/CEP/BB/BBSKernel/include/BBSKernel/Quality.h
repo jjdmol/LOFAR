@@ -34,7 +34,7 @@ namespace LOFAR
 namespace BBS
 {
 
-// \addtogroup BBS
+// \addtogroup BBSKernel
 // @{
 
 // This struct contains metrics defining the quality of a solution.
