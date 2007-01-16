@@ -309,6 +309,12 @@ string APLUtilities::getTempFileName(const string&	format)
 // by replacing series with range.
 // Eg. [ lii001, lii002, lii003, lii005 ] --> [ lii001..lii003, lii005 ]
 //
+// ----------------------- ATTENTION !!!----------------------------------
+// This routine has been copied to the Navigator software
+// (MAC/Navigator/scripts/libs/nav_usr/CS1/CS1_Common.ctl)
+// if you change anything struktural change the Navigator part also please
+// -----------------------------------------------------------------------
+
 string APLUtilities::compactedArrayString(const string&	orgStr)
 {
 	string	baseString(orgStr);			// destroyable copy
@@ -389,6 +395,12 @@ string APLUtilities::compactedArrayString(const string&	orgStr)
 // by replacing ranges with the fill series.
 // Eg. [ lii001..lii003, lii005 ] --> [ lii001, lii002, lii003, lii005 ]
 //
+// ----------------------- ATTENTION !!!----------------------------------
+// This routine has been copied to the Navigator software
+// (MAC/Navigator/scripts/libs/nav_usr/CS1/CS1_Common.ctl)
+// if you change anything struktural change the Navigator part also please
+// -----------------------------------------------------------------------
+
 string APLUtilities::expandedArrayString(const string&	orgStr)
 {
 	// any ranges in the string?
