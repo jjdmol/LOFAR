@@ -1,4 +1,4 @@
-//#  util.h: Utilities, for internal use only.
+//#  pqutil.h: PostgreSQL related utilities; for internal use only.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,13 +20,13 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBSCONTROL_UTIL_H
-#define LOFAR_BBSCONTROL_UTIL_H
+#ifndef LOFAR_BBSCONTROL_PQUTIL_H
+#define LOFAR_BBSCONTROL_PQUTIL_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 // \file
-// Utilities, for internal use only.
+// PostgreSQL related utilities; for internal use only.
 
 //# Includes
 #include <Common/lofar_string.h>
@@ -35,19 +35,25 @@ namespace LOFAR
 {
   namespace BBS
   {
-
     // \addtogroup BBSControl
     // @{
-
+      
     // \internal
     // Convert a Postgres-generated C-string to a ParameterSet string. For
     // vectors, this means replacing '{' with '[' and '}' with ']'.
-    string toPSstring(const char* str);
-
+    string toPSstring(const char* in);
+      
+    // \internal
+    // Convert a ParameterSet string to a Postgres string:
+    // - single quotes will be escaped by doubling them;
+    // - curly braces and double quotes will be escaped using a backslash.
+    // - vector delimiters \c [ and \c ] will be replaced with \c { and \c }.
+    string toPQstring(const string& in);
+      
     // @}
-
+      
   } // namespace BBS
-
+  
 } // namespace LOFAR
 
 #endif
