@@ -1,26 +1,31 @@
-check_PROGRAMS			= tutil \
+check_PROGRAMS			= tpqxx \
+				  tpqutil \
 				  tBBSStrategy \
 				  tDH_BBSStep \
 				  tDH_BBSStrategy \
 				  tCommandQueue 
 
-check_SCRIPTS			= tutil.sh \
+check_SCRIPTS			= tpqutil.sh \
 				  tBBSStrategy.sh \
 				  tDH_BBSStep.sh \
 				  tDH_BBSStrategy.sh \
 				  tCommandQueue.sh
 
 # programs to run through supplied checktools
-CHECKTOOLPROGS			= tutil \
+CHECKTOOLPROGS			= tpqutil \
 				  tBBSStrategy \
 				  tDH_BBSStep \
 				  tDH_BBSStrategy \
 				  tCommandQueue
 #ENDCHECKTOOLPROGS
 
-tutil_SOURCES			= tutil.cc
-tutil_LDADD			= ../src/libbbscontrol.la
-tutil_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
+tpqxx_SOURCES			= tpqxx.cc
+tpqxx_LDADD			= ../src/libbbscontrol.la
+tpqxx_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
+
+tpqutil_SOURCES			= tpqutil.cc
+tpqutil_LDADD			= ../src/libbbscontrol.la
+tpqutil_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
 
 tBBSStrategy_SOURCES		= tBBSStrategy.cc
 tBBSStrategy_LDADD		= ../src/libbbscontrol.la

@@ -17,6 +17,6 @@ pkginclude_HEADERS = \
 	Exceptions.h
 
 noinst_HEADERS = \
-	util.h
+	pqutil.h
 
 include $(top_srcdir)/Makefile.common

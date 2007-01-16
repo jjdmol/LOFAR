@@ -16,16 +16,16 @@ libbbscontrol_la_SOURCES= \
 	BBSSubtractStep.cc \
 	CommandQueue.cc \
 	CommandQueueTransactors.cc \
-	util.cc
+	pqutil.cc
 
-bin_PROGRAMS		= BBSControl BBSKernel
+#bin_PROGRAMS		= BBSControl BBSKernel
 
-BBSControl_SOURCES	= BBSControl.cc
-BBSControl_LDADD	= libbbscontrol.la
-BBSControl_DEPENDENCIES = libbbscontrol.la $(LOFAR_DEPEND)
+#BBSControl_SOURCES	= BBSControl.cc
+#BBSControl_LDADD	= libbbscontrol.la
+#BBSControl_DEPENDENCIES = libbbscontrol.la $(LOFAR_DEPEND)
 
-BBSKernel_SOURCES 	= BBSKernel.cc
-BBSKernel_LDADD 	= libbbscontrol.la
-BBSKernel_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
+#BBSKernel_SOURCES 	= BBSKernel.cc
+#BBSKernel_LDADD 	= libbbscontrol.la
+#BBSKernel_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
