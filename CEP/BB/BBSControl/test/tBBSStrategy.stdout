@@ -17,7 +17,7 @@ Strategy:
 . . Time interval: 10 (s)
 . Correlation:
 . . Selection: ALL
-. . Type:[XX,YY]
+. . Type: [XX,YY]
 . Integration:
 . . Delta frequency: 1 (Hz)
 . . Delta time: 0.1 (s)
@@ -29,7 +29,7 @@ Strategy:
 . . . Station2: [CS*,RS1*,RS2*,RS1*,RS2*,RS2*]
 . . Correlation:
 . . . Selection: CROSS
-. . . Type:[XX,XY,YX,YY]
+. . . Type: [XX,XY,YX,YY]
 . . Integration:
 . . . Delta frequency: 2 (Hz)
 . . . Delta time: 0.5 (s)
@@ -43,7 +43,7 @@ Strategy:
 . . . . Station2: [RS1*,RS2*]
 . . . Correlation:
 . . . . Selection: CROSS
-. . . . Type:[XX,XY,YX,YY]
+. . . . Type: [XX,XY,YX,YY]
 . . . Integration:
 . . . . Delta frequency: 2 (Hz)
 . . . . Delta time: 0.5 (s)
@@ -67,7 +67,7 @@ Strategy:
 . . . . Station2: [CS*,RS1*,RS2*,RS1*,RS2*,RS2*]
 . . . Correlation:
 . . . . Selection: CROSS
-. . . . Type:[XX,XY,YX,YY]
+. . . . Type: [XX,XY,YX,YY]
 . . . Integration:
 . . . . Delta frequency: 2 (Hz)
 . . . . Delta time: 0.5 (s)
@@ -82,7 +82,7 @@ Strategy:
 . . . Station2: [CS*,RS1*,RS1*]
 . . Correlation:
 . . . Selection: NONE
-. . . Type:[]
+. . . Type: []
 . . Integration:
 . . . Delta frequency: 0 (Hz)
 . . . Delta time: 0 (s)
@@ -96,7 +96,7 @@ Strategy:
 . . . . Station2: [RS1*,RS2*]
 . . . Correlation:
 . . . . Selection: NONE
-. . . . Type:[]
+. . . . Type: []
 . . . Integration:
 . . . . Delta frequency: 0 (Hz)
 . . . . Delta time: 0 (s)
@@ -120,7 +120,7 @@ Strategy:
 . . . . Station2: [CS*,RS1*,RS1*]
 . . . Correlation:
 . . . . Selection: NONE
-. . . . Type:[]
+. . . . Type: []
 . . . Integration:
 . . . . Delta frequency: 0 (Hz)
 . . . . Delta time: 0 (s)
