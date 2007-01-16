@@ -191,9 +191,8 @@ namespace LOFAR
       // type (e.g., ["XX", "XY", "YX", "YY"]
       try {
 	string sel = ps.getString("Correlation.Selection");
-	if      (sel == "ALL")   itsCorrelation.selection = Correlation::ALL;
-	else if (sel == "AUTO")  itsCorrelation.selection = Correlation::AUTO;
-	else if (sel == "CROSS") itsCorrelation.selection = Correlation::CROSS;
+	if (sel == "ALL" || sel == "AUTO" || sel == "CROSS") 
+	  itsCorrelation.selection = sel;
 	else THROW(BBSControlException, 
 		   "Invalid correlation selection " << sel);
 	itsCorrelation.type = ps.getStringVector("Correlation.Type");

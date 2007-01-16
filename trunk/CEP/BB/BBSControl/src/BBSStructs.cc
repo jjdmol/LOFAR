@@ -112,7 +112,7 @@ namespace LOFAR
 
     BlobOStream& operator<<(BlobOStream& bos, const Correlation& obj)
     {
-      bos << static_cast<int32>(obj.selection)
+      bos << obj.selection
 	  << obj.type;
       return bos;
     }
@@ -167,8 +167,7 @@ namespace LOFAR
     BlobIStream& operator>>(BlobIStream& bis, Correlation& obj)
     {
       int32 selection;
-      bis >> selection;
-      obj.selection = static_cast<Correlation::Selection>(selection);
+      bis >> obj.selection;
       bis >> obj.type;
       return bis;
     }
