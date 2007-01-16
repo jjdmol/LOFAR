@@ -333,7 +333,7 @@ bool Prediffer::setSelection(const vector<string> &stations, const Correlation &
     LOG_INFO_STR("Selected station(s): " << debugSelectedStations);
     
     // Select baselines.
-    LOG_INFO_STR("Requested baselines: " << (correlation.selection == Correlation::AUTO ? "AUTO" : (correlation.selection == Correlation::CROSS ? "CROSS" : (correlation.selection == Correlation::ALL ? "ALL" : "UNKNOWN"))));
+    LOG_INFO_STR("Requested baselines: " << correlation.selection);
     
     itsSelectedBaselines.clear();    
     for(int i = 0; i < itsMSDesc.ant1.size(); ++i)
@@ -342,9 +342,9 @@ bool Prediffer::setSelection(const vector<string> &stations, const Correlation &
         
         if(itsSelStations[baseline.first] && itsSelStations[baseline.second])
         {
-            if( correlation.selection == Correlation::ALL
-                || (baseline.first == baseline.second && correlation.selection == Correlation::AUTO)
-                || (baseline.first != baseline.second && correlation.selection == Correlation::CROSS))
+            if( correlation.selection == "ALL"
+                || (baseline.first == baseline.second && correlation.selection == "AUTO")
+                || (baseline.first != baseline.second && correlation.selection == "CROSS"))
             {
                 itsSelectedBaselines[baseline] = i;
             }
@@ -414,9 +414,9 @@ bool Prediffer::setContext(const Context &context)
         {
             const pair<int, int> &baseline = it->first;
             
-            if( context.correlation.selection == Correlation::ALL
-                || (baseline.first == baseline.second && context.correlation.selection == Correlation::AUTO)
-                || (baseline.first != baseline.second && context.correlation.selection == Correlation::CROSS))
+            if( context.correlation.selection == "ALL"
+                || (baseline.first == baseline.second && context.correlation.selection == "AUTO")
+                || (baseline.first != baseline.second && context.correlation.selection == "CROSS"))
             {
                 itsBLInx.push_back(it->second);
             }
@@ -460,9 +460,9 @@ bool Prediffer::setContext(const Context &context)
             {
                 for(vector<int>::const_iterator it2 = stationGroup2.begin(); it2 != stationGroup2.end(); ++it2)
                 {
-                    if( context.correlation.selection == Correlation::ALL
-                        || (*it1 == *it2 && context.correlation.selection == Correlation::AUTO)
-                        || (*it1 != *it2 && context.correlation.selection == Correlation::CROSS))
+                    if( context.correlation.selection == "ALL"
+                        || (*it1 == *it2 && context.correlation.selection == "AUTO")
+                        || (*it1 != *it2 && context.correlation.selection == "CROSS"))
                     {
                         const pair<int, int> baseline(*it1, *it2);
                         

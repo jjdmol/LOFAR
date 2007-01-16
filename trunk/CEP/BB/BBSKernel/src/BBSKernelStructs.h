@@ -37,13 +37,8 @@ namespace LOFAR
     // and which polarizations should be used.
     struct Correlation
     {
-      Correlation() : selection(NONE) {}
-      enum Selection {
-	NONE,               ///< No correlations
-	AUTO,               ///< Auto correlation only.
-	CROSS,              ///< Cross correlation only.
-	ALL                 ///< Both auto- and cross correlation
-      } selection;
+      Correlation() : selection("NONE") {}
+      string selection;     ///< Valid values: "NONE", "AUTO", "CROSS", "ALL"
       vector<string> type;  ///< E.g., ["XX", "XY", "YX", "YY"]
     };
 

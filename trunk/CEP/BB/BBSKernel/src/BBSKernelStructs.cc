@@ -37,15 +37,8 @@ namespace LOFAR
     {
       os << "Correlation:";
       Indent id;
-      os << endl << indent << "Selection: ";
-      switch(obj.selection) {
-      case Correlation::NONE:  os << "NONE";  break;
-      case Correlation::AUTO:  os << "AUTO";  break;
-      case Correlation::CROSS: os << "CROSS"; break;
-      case Correlation::ALL:   os << "ALL";   break;
-      default: os << "*****"; break;
-      }
-      os << endl << indent << "Type:" << obj.type;
+      os << endl << indent << "Selection: " << obj.selection
+	 << endl << indent << "Type: "      << obj.type;
       return os;
     }
 
