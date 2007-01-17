@@ -150,7 +150,11 @@ namespace LOFAR
       msName = ms.first + oss.str() + ms.second;
 #endif
       
+#if defined HAVE_MPI
       LOG_TRACE_VAR_STR("Creating MS-file \"" << msNames[TH_MPI::getCurrentRank()] << "\"");
+#else
+      LOG_TRACE_VAR_STR("Creating MS-file \"" << msNames[0] << "\"");
+#endif
       
       double startTime = itsPS.getDouble("Observation.StartTime");
       LOG_TRACE_VAR_STR("startTime = " << startTime);
@@ -165,7 +169,12 @@ namespace LOFAR
                 antPos.size() << " == " << 3 * itsNStations);
       
       vector<string> storageStationNames = itsPS.getStringVector("Storage.StorageStationNames");
-      itsWriter = new MSWriter(msNames[TH_MPI::getCurrentRank()].c_str(), startTime, timeStep * itsTimesToIntegrate, 
+#if defined HAVE_MPI
+      itsWriter = new MSWriter(msNames[TH_MPI::getCurrentRank()].c_str(),
+#else
+      itsWriter = new MSWriter(msNames[0].c_str(),
+#endif
+			       startTime, timeStep * itsTimesToIntegrate, 
                                itsNChannels, itsNPolSquared, itsNStations, 
                                antPos, storageStationNames, itsTimesToIntegrate, 
 			       itsPS.getUint32("General.SubbandsPerPset"));
@@ -187,9 +196,10 @@ namespace LOFAR
       // subbandIDs.
       itsBandIDs.resize(itsNrSubbandsPerCell);
       for (uint sb = 0; sb < itsNrSubbandsPerCell; ++sb) {
+	// compensate for the half-channel shift introduced by the PPF
+	double refFreq = refFreqs[itsSubbandIDs[sb]] - chanWidth / 2;
         itsBandIDs[sb] = itsWriter->addBand (itsNPolSquared, itsNChannels,
-                                             refFreqs[itsSubbandIDs[sb]], 
-                                             chanWidth);
+                                             refFreq, chanWidth);
       }
       
       //## TODO: add support for more than 1 beam ##//
