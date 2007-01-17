@@ -42,28 +42,28 @@ class Station(object):
 #Keep the antenna positions in ITRF coordinates.
 #Storing a position on earth given as (lon,lat,height)
 
-CS10_dipole0  = [Station('CS10_dipole0' ,  1, (0.119879729,  0.920274996, 6364097.32  ), 0)]
-CS10_dipole4  = [Station('CS10_dipole4' ,  1, (0.119887278,  0.920278013, 6364097.26  ), 1)]
-CS10_dipole8  = [Station('CS10_dipole8' ,  2, (0.119878255,  0.92027461 , 6364097.33  ), 2)]
-CS10_dipole12 = [Station('CS10_dipole12',  3, (0.119884052,  0.920276475, 6364097.29  ), 3)]
+CS10_dipole0  = [Station('CS10_dipole0' ,  1, (0.119881183707,  0.920274058886, 6364096.65549 ), 0)]
+CS10_dipole4  = [Station('CS10_dipole4' ,  1, (0.119888715288,  0.920277077416, 6364096.63359 ), 1)]
+CS10_dipole8  = [Station('CS10_dipole8' ,  2, (0.119879699401,  0.920273668267, 6364096.7055  ), 2)]
+CS10_dipole12 = [Station('CS10_dipole12',  3, (0.119885492973,  0.92027554014 , 6364096.62412 ), 3)]
 CS10_4dipoles = CS10_dipole0 + CS10_dipole4 + CS10_dipole8 + CS10_dipole12
 
-CS08_dipole0  = [Station('CS08_dipole0' ,  4, (0.119868258 , 0.920301868, 6364096.77  ), 0)]
-CS08_dipole4  = [Station('CS08_dipole4' ,  4, (0.119874876 , 0.920305715, 6364096.69  ), 1)]
-CS08_dipole8  = [Station('CS08_dipole8' ,  5, (0.11989796  , 0.920297727, 6364096.85  ), 2)]
-CS08_dipole12 = [Station('CS08_dipole12',  6, (0.119891342 , 0.920293881, 6364096.93  ), 3)]
+CS08_dipole0  = [Station('CS08_dipole0' ,  4, (0.119868257653,  0.920301867601, 6364095.96819 ), 0)]
+CS08_dipole4  = [Station('CS08_dipole4' ,  4, (0.119874875505,  0.920305714116, 6364095.8893  ), 1)]
+CS08_dipole8  = [Station('CS08_dipole8' ,  5, (0.119897959763,  0.92029772671 , 6364096.05311 ), 2)]
+CS08_dipole12 = [Station('CS08_dipole12',  6, (0.119891341863,  0.920293880294, 6364096.13299 ), 3)]
 CS08_4dipoles = CS08_dipole0 + CS08_dipole4 + CS08_dipole8 + CS08_dipole12
 
-CS01_dipole0  = [Station('CS01_dipole0' ,  7, (0.119851103 , 0.920247393, 6364097.89  ), 0)]
-CS01_dipole4  = [Station('CS01_dipole4' ,  7, (0.11985772  , 0.92025124 , 6364097.81  ), 1)]
-CS01_dipole8  = [Station('CS01_dipole8' ,  8, (0.119864071 , 0.920247232, 6364097.9   ), 2)]
-CS01_dipole12 = [Station('CS01_dipole12',  9, (0.119857454 , 0.920243385, 6364097.98  ), 3)]
+CS01_dipole0  = [Station('CS01_dipole0' ,  7, (0.11985110257 ,  0.920247392852, 6364097.49438 ), 0)]
+CS01_dipole4  = [Station('CS01_dipole4' ,  7, (0.119857719888,  0.920251239615, 6364097.81449 ), 1)]
+CS01_dipole8  = [Station('CS01_dipole8' ,  8, (0.119864071239,  0.920247231952, 6364097.89768 ), 2)]
+CS01_dipole12 = [Station('CS01_dipole12',  9, (0.11985745392 ,  0.920243385441, 6364097.97757 ), 3)]
 CS01_4dipoles = CS01_dipole0 + CS01_dipole4 + CS01_dipole8 + CS01_dipole12
 
-CS16_dipole0  = [Station('CS16_dipole0' , 10, (0.119958428 , 0.920274973, 6364097.32  ), 0)]
-CS16_dipole4  = [Station('CS16_dipole4' , 10, (0.119965046 , 0.920278819, 6364097.24  ), 1)]
-CS16_dipole8  = [Station('CS16_dipole8' , 11, (0.119971397 , 0.920274811, 6364097.33  ), 2)]
-CS16_dipole12 = [Station('CS16_dipole12', 12, (0.119964779 , 0.920270965, 6364097.41  ), 3)]
+CS16_dipole0  = [Station('CS16_dipole0' , 10, (0.119958428004,  0.920274972606, 6364096.62375 ), 0)]
+CS16_dipole4  = [Station('CS16_dipole4' , 10, (0.119965046099,  0.920278818828, 6364096.54488 ), 1)]
+CS16_dipole8  = [Station('CS16_dipole8' , 11, (0.11997139711 ,  0.920274810823, 6364096.62707 ), 2)]
+CS16_dipole12 = [Station('CS16_dipole12', 12, (0.119964779015,  0.920270965005, 6364097.40695 ), 3)]
 CS16_4dipoles = CS16_dipole0 + CS16_dipole4 + CS16_dipole8 + CS16_dipole12
 
 Fourstations_4dipoles = CS10_4dipoles + CS01_4dipoles + CS08_4dipoles + CS16_4dipoles

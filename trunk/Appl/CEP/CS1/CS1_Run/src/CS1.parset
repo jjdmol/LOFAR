@@ -17,7 +17,7 @@ Connections.AMC.Port             =31337
 Connections.Input_Delay.Ports = [7200,7201,7202,7203,7204,7205,7206,7207,7208,7209,7210,7211,7212,7213,7214,7215,7216,7217,7218,7219,7220]
 
 Connections.Input_BGLProc.TransportHolder   = SOCKET # one of SOCKET, FILE, NULL
-Connections.Input_BGLProc.BaseFileName	    = "/data/real-sin-1h"
+Connections.Input_BGLProc.BaseFileName	    = "/data/NSubbands-4"
 
 Connections.BGLProc_Storage.TransportHolder = SOCKET # one of SOCKET, FILE, NULL
 Connections.BGLProc_Storage.BaseFileName    = "Correlations"
@@ -47,6 +47,7 @@ Observation.DirectionType = J2000   # direction type
 Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
 6.1234876806221052, 1.0265153995604648]
 Observation.DelayCompensation = T
+Observation.RefFreqs = [ 33281250, 38281250, 44218750, 52187500, 57187500, 60000000, 65156250, 74218750 ]
 
 # General Variables
 General.SubbandsPerPset = 1
@@ -59,7 +60,7 @@ Input.NTimesInFrame=16
 Input.NSubbandsPerFrame=8
 Input.SzEPAheader=16
 Input.IPHeaderSize=32
-Input.NSamplesToBuffer=120000000
+Input.NSamplesToBuffer=12000000
 Input.WriteRawDataToFile = F
 Input.OutputRawDataFiles = ["/dev/null", "/dev/null"]
 Input.Transport.Station0.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
@@ -118,7 +119,7 @@ Input.Transport.Station11.Rsp0.destinationMac = "00:E0:81:34:9B:87"
 # and the number of filters within a cell. 
 # These parameters MUST match the compiled in values in TFC_Config.h
 # Note that some values may differ from values defined in the Input section.
-BGLProc.NodesPerPset = 4
+BGLProc.NodesPerPset = 8
 BGLProc.PsetsPerCell = 1
 BGLProc.NPPFTaps = 16
 BGLProc.MaxConcurrentCommunications = 2

@@ -125,10 +125,10 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self['Storage.IntegrationTime'] = integrationTime
 
     def setMSName(self, msName):
-        self['Storage.MSName'] = msName
+        self['Storage.MSNames'] = msName
 
     def getMSName(self):
-        return self['Storage.MSName']
+        return self['Storage.MSNames']
 
     def getNCells(self):
         subbands = self.getInt32('Observation.NSubbands')
@@ -149,7 +149,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
             sbs.append(self.firstSB + sb * subbandwidth)
 
         # create the frequencies for all subbands
-        self['Observation.RefFreqs'] = '[' + ','.join(str(sb) for sb in sbs) + ']'
+        #self['Observation.RefFreqs'] = '[' + ','.join(str(sb) for sb in sbs) + ']'
         self['Observation.NSubbands'] = self.nSubbands
         
         #the number of subbands should be dividable by the number of subbands per pset

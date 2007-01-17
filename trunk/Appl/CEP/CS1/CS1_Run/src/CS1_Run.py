@@ -35,7 +35,8 @@ def doObservation(obsID, parset):
     logdir = '/log/'
     if not os.access(logdir, os.W_OK):
         logdir = './'
-    parset.writeToFile(logdir + parset.getMSName().split('/')[-1] + '.parset')
+    #parset.writeToFile(logdir + parset.getMSName().split('/')[-1] + '.parset')
+    parset.writeToFile(logdir + obsID + '.parset')
 
     try:
         for section in sections:
@@ -125,7 +126,7 @@ if __name__ == '__main__':
     runningNumberFile = '/log/nextMSNumber'
     MSdatabaseFile = '/log/MSList'
 
-    if not 'Storage.MSName' in parset:
+    if not 'Storage.MSNames' in parset:
         try:
             inf = open(runningNumberFile, 'r')
             measurementnumber = int(inf.readline())
@@ -135,8 +136,17 @@ if __name__ == '__main__':
             # the <mmm> is filled in by the subbandwriter
             year = str(time.gmtime()[0])
             MSNumber = '/data/L' + year + '_' + '%05d' % measurementnumber
-            MSName = MSNumber + '.MS'
-
+	    MSName = MSNumber + '.MS'
+	    if (parset.getInt32('General.SubbandsPerPset') == 1):
+	        MSName = '\'' + MSNumber + '_SB%01d' % 0 + '.MS' + '\''
+	        for i in range(1, parset.getInt32('Observation.NSubbands')):
+                    MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % i + '.MS' + '\''
+	    else:
+		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (parset.getInt32('General.SubbandsPerPset') - 1) +'.MS' + '\''
+		for i in range(1, (parset.getInt32('Observation.NSubbands')/parset.getInt32('General.SubbandsPerPset'))):
+		    first = i * parset.getInt32('General.SubbandsPerPset')
+		    last =  first + (parset.getInt32('General.SubbandsPerPset') -1)
+		    MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % first + '-%01d' % last +'.MS' + '\''
             outf = open(runningNumberFile, 'w')
             outf.write(str(measurementnumber + 1) + '\n')
             outf.close()
@@ -150,12 +160,11 @@ if __name__ == '__main__':
             MSName = '/data/Test.MS'
 	    print 'Error: please start CS1_Run.py from host: LISTFEN'
 	    sys.exit(1)
-        parset['Storage.MSName'] = MSName
-            
-
-    obsID = parset['Storage.MSName'].strip('.MS').split('/')[-1]
-
-
+        parset['Storage.MSNames'] = '[' + MSName + ']'
+    
+    obsID = parset['Storage.MSNames'].strip('.MS').split('/')[-1]
+    obsID = obsID.split('_')
+    obsID = obsID[0] + '_' + obsID[1] 
 
     # start the observation
     doObservation(obsID, parset)
