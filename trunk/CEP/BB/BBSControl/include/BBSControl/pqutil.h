@@ -30,6 +30,7 @@
 
 //# Includes
 #include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
@@ -41,17 +42,30 @@ namespace LOFAR
     // \internal
     // Convert a Postgres-generated C-string to a ParameterSet string. For
     // vectors, this means replacing '{' with '[' and '}' with ']'.
+    // @{
     string toPSstring(const char* in);
-      
+    string toPSstring(const string& in);
+    // @}
+
     // \internal
     // Convert a ParameterSet string to a Postgres string:
     // - single quotes will be escaped by doubling them;
     // - curly braces and double quotes will be escaped using a backslash.
     // - vector delimiters \c [ and \c ] will be replaced with \c { and \c }.
+    // @{
     string toPQstring(const string& in);
-      
+    string toPQstring(const vector<string>& in);
     // @}
-      
+
+    // @}
+
+    //##----   I n l i n e   m e t h o d s   ----##//
+
+    inline string toPSstring(const string& in)
+    {
+      return toPSstring(in.c_str());
+    }
+
   } // namespace BBS
   
 } // namespace LOFAR
