@@ -129,6 +129,9 @@ RegisterAccessTask::RegisterAccessTask(string name)
   m_stats_update_interval  = globalParameterSet()->getInt32(PARAM_STATISTICS_UPDATE_INTERVAL);
   m_centralized_stats      = (0!=globalParameterSet()->getInt32(PARAM_STATISTICS_CENTRALIZED));
 
+	// need port for timers.
+	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
+
 }
 
 RegisterAccessTask::~RegisterAccessTask()
@@ -165,8 +168,8 @@ bool RegisterAccessTask::isConnected()
 //
 GCFEvent::TResult RegisterAccessTask::initial_state(GCFEvent& e, GCFPortInterface& port)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
+	LOG_DEBUG_STR("initial_state:" << evtstr(e) << "@" << port.getName());
+
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch(e.signal) {
@@ -201,7 +204,7 @@ GCFEvent::TResult RegisterAccessTask::initial_state(GCFEvent& e, GCFPortInterfac
     }
 
     case F_TIMER: {
-      LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
+      LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
       port.open();
       break;
     }
@@ -224,8 +227,8 @@ GCFEvent::TResult RegisterAccessTask::initial_state(GCFEvent& e, GCFPortInterfac
 //
 GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterface& port)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
+	LOG_DEBUG_STR("connected_state:" << evtstr(e) << "@" << port.getName());
+
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal) {
@@ -247,32 +250,59 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
     }
     
     case RSP_GETCONFIGACK: {
-      LOG_INFO("RSP_GETCONFIGACK received");
-      RSPGetconfigackEvent ack(e);
-      LOG_INFO(formatString("n_rcus        =%d",ack.n_rcus));
-      LOG_INFO(formatString("n_rspboards   =%d",ack.n_rspboards));
-      LOG_INFO(formatString("max_rspboards =%d",ack.max_rspboards));
+		LOG_DEBUG("RSP_GETCONFIGACK received");
+		RSPGetconfigackEvent ack(e);
+		LOG_DEBUG(formatString("n_rcus        =%d",ack.n_rcus));
+		LOG_DEBUG(formatString("n_rspboards   =%d",ack.n_rspboards));
+		LOG_DEBUG(formatString("max_rspboards =%d",ack.max_rspboards));
 
-      char scopeString[300];
-      int rack;
-      int subrack;
-      int board;
-      
-      m_n_racks               = globalParameterSet()->getInt32(PARAM_N_RACKS);
-      m_n_subracks_per_rack   = globalParameterSet()->getInt32(PARAM_N_SUBRACKS_PER_RACK);
-      m_n_boards_per_subrack  = (m_n_racks * m_n_subracks_per_rack) / ack.n_rspboards;
-      m_n_aps_per_board       = globalParameterSet()->getInt32(PARAM_N_APS_PER_BOARD);
-      m_n_rcus_per_ap         = globalParameterSet()->getInt32(PARAM_N_RCUS_PER_AP);
-      m_n_rcus                = ack.n_rcus;
-      m_n_rspboards           = ack.n_rspboards;
-      if(m_n_rcus != m_n_rcus_per_ap*
-                     m_n_aps_per_board*
-                     m_n_boards_per_subrack*
-                     m_n_subracks_per_rack*
-                     m_n_racks) {
-        LOG_ERROR(formatString("Number of rcus (%d) differs from calculated number",m_n_rcus));
-      }
+		m_n_racks             = globalParameterSet()->getInt32(PARAM_N_RACKS);
+		m_n_subracks_per_rack = globalParameterSet()->getInt32(PARAM_N_SUBRACKS_PER_RACK);
+		m_n_boards_per_subrack= globalParameterSet()->getInt32(PARAM_N_BOARDS_PER_SUBRACK);
+		m_n_aps_per_board     = globalParameterSet()->getInt32(PARAM_N_APS_PER_BOARD);
+		m_n_rcus_per_ap       = globalParameterSet()->getInt32(PARAM_N_RCUS_PER_AP);
+		m_n_rcus              = ack.n_rcus;
+		m_n_rspboards         = ack.n_rspboards;
+		if(m_n_rcus != m_n_rcus_per_ap*
+						m_n_aps_per_board*
+						m_n_boards_per_subrack*
+						m_n_subracks_per_rack*
+						m_n_racks) {
+			LOG_ERROR(formatString("Number of rcus (%d) differs from calculated number",m_n_rcus));
+			LOG_DEBUG_STR("rcus/AP       :" << m_n_rcus_per_ap);
+			LOG_DEBUG_STR("APs/board     :" << m_n_aps_per_board);
+			LOG_DEBUG_STR("boards/subrack:" << m_n_boards_per_subrack);
+			LOG_DEBUG_STR("subrack/rack  :" << m_n_subracks_per_rack);
+			LOG_DEBUG_STR("racks         :" << m_n_racks);
+			LOG_DEBUG_STR("total         :" << m_n_rcus_per_ap * m_n_aps_per_board *
+												m_n_boards_per_subrack * m_n_subracks_per_rack * m_n_racks);
+		}
 
+		char 	scopeString[300];
+		int 	rack(-1);
+		int 	subrack(-1);
+		int 	board(0);
+		for (board = 0; board < m_n_rspboards; board++) {
+			// new rack?
+			if (board % (m_n_boards_per_subrack * m_n_subracks_per_rack) == 0) {
+				rack++;
+				sprintf(scopeString, SCOPE_PIC_RackN, rack);
+				addMyPropertySet(scopeString, TYPE_LCU_PIC_Rack, PSCAT_LCU_PIC_Rack, PROPS_Rack);
+			}
+
+			// new subrack?
+			if (board % m_n_boards_per_subrack == 0) {
+				subrack++;
+				sprintf(scopeString, SCOPE_PIC_RackN_SubRackN, rack, subrack);
+				addMyPropertySet(scopeString, TYPE_LCU_PIC_SubRack, PSCAT_LCU_PIC_SubRack, PROPS_SubRack);
+			}
+	
+			// alloc board
+            sprintf(scopeString, SCOPE_PIC_RackN_SubRackN_BoardN, rack, subrack,board);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PSCAT_LCU_PIC_Board, PROPS_Board);
+		}
+				
+/*
       // fill MyPropertySets map
       addMyPropertySet(SCOPE_PIC, TYPE_LCU_PIC, PSCAT_LCU_PIC, PROPS_Station, GCFMyPropertySet::USE_DB_DEFAULTS);
       addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
@@ -298,7 +328,7 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
           for(board=0;board<m_n_boards_per_subrack;board++) {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
             addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PSCAT_LCU_PIC_Board, PROPS_Board);
-/*
+
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
             addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PSCAT_LCU_PIC_MEPStatus, PROPS_MEPStatus);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
@@ -346,12 +376,12 @@ GCFEvent::TResult RegisterAccessTask::connected_state(GCFEvent& e, GCFPortInterf
                 addMyPropertySet(scopeString, TYPE_LCU_PIC_Command, PSCAT_LCU_PIC_Command, PROPS_Command);
               }
             }
-*/
           }
         }  
+*/
       
         TRAN(RegisterAccessTask::enablingMyPropsets_state);
-      }      
+//      }      
       break;
     }
 
@@ -384,9 +414,9 @@ GCFEvent::TResult RegisterAccessTask::enablingMyPropsets_state(GCFEvent& e, GCFP
 {
 	static	TMyPropertySetMap::iterator propIter;
 
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+	LOG_DEBUG_STR("enablingMyPropsets_state:" << evtstr(e) << "@" << port.getName());
   
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch(e.signal) {
     case F_INIT: {
@@ -394,7 +424,7 @@ GCFEvent::TResult RegisterAccessTask::enablingMyPropsets_state(GCFEvent& e, GCFP
     }
 
     case F_ENTRY: {
-      LOG_INFO("Enabling MyPropertySets...");
+      LOG_DEBUG("Enabling MyPropertySets...");
       m_myPropsLoadCounter=0;
 	  propIter = m_myPropertySetMap.begin();
 	  if (propIter != m_myPropertySetMap.end()) {
@@ -410,7 +440,7 @@ GCFEvent::TResult RegisterAccessTask::enablingMyPropsets_state(GCFEvent& e, GCFP
         LOG_WARN(formatString("MyPropset %s could not be enabled: %d",pPropAnswer->pScope,pPropAnswer->result));
       }
       m_myPropsLoadCounter++;
-      LOG_INFO(formatString("MyPropset %d enabled", m_myPropsLoadCounter));
+      LOG_DEBUG(formatString("MyPropset %d enabled", m_myPropsLoadCounter));
       if(m_myPropsLoadCounter == m_myPropertySetMap.size()) {
         m_myPropsLoaded=true;
         TRAN(RegisterAccessTask::getVersion_state);
@@ -473,116 +503,122 @@ GCFEvent::TResult RegisterAccessTask::enablingMyPropsets_state(GCFEvent& e, GCFP
 
 GCFEvent::TResult RegisterAccessTask::getVersion_state(GCFEvent& e, GCFPortInterface& port)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	LOG_DEBUG_STR("getVersion_state:" << evtstr(e) << "@" << port.getName());
 
-  switch (e.signal) {
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-    case F_INIT:
-      break;
-      
-    case F_ENTRY: {
-      // get versions
-      RSPGetversionEvent getversion;
-      getversion.timestamp.setNow();
-      getversion.cache = true;
-      m_RSPclient.send(getversion);
-      break;
-    }
+	switch (e.signal) {
+	case F_INIT:
+		break;
 
-    case F_TIMER: {
-      break;
-    }
-    
-    case RSP_GETVERSIONACK: {
-      LOG_INFO("RSP_GETVERSIONACK received");
-      RSPGetversionackEvent ack(e);
+//	case F_TIMER: {
+	case F_ENTRY: {
+		LOG_DEBUG_STR("Setting timer to give subscription some time");
+		itsTimerPort->setTimer(10.0);
+		break;
+	}
 
-      if(ack.status != SUCCESS) {
-        LOG_ERROR("RSP_GETVERSION failure");
-      }
-      else {
-        char scopeString[300];
-        char version[20];
-        int board = 0;
-		int rackNr;
-		int subRackNr;
-		int relativeBoardNr;
-		getBoardRelativeNumbers(board,rackNr,subRackNr,relativeBoardNr);
-		sprintf(version,"%d.%d",ack.versions.bp()(board).rsp_version >> 4,ack.versions.bp()(board).rsp_version & 0xF);
-		LOG_INFO(formatString("board[%d].version = 0x%x",board,ack.versions.bp()(board).rsp_version));
-		sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
-		updateVersion(scopeString,string(version),double(ack.timestamp));
+//	case F_ENTRY: {
+	case F_TIMER: {
+		// get versions
+		RSPGetversionEvent getversion;
+		getversion.timestamp.setNow();
+		getversion.cache = true;
+		m_RSPclient.send(getversion);
+		break;
+	}
 
-		sprintf(version,"%d.%d",ack.versions.bp()(board).fpga_maj,ack.versions.bp()(board).fpga_min);
-		LOG_INFO(formatString("bp.version = %s",version));
-		sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
-		updateVersion(scopeString,string(version),double(ack.timestamp));
+	case RSP_GETVERSIONACK: {
+		LOG_DEBUG("RSP_GETVERSIONACK received");
+		RSPGetversionackEvent ack(e);
 
-		for (int ap = 0; ap < MEPHeader::N_AP; ap++) {
-		  sprintf(version,"%d.%d",ack.versions.ap()(board * MEPHeader::N_AP + ap).fpga_maj,
-				  ack.versions.ap()(board * MEPHeader::N_AP + ap).fpga_min);
-		  LOG_INFO(formatString("ap[%d][%d].version = %s",board,ap,version));
-		  sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,ap);
-		  updateVersion(scopeString,string(version),double(ack.timestamp));
+		if(ack.status != SUCCESS) {
+			LOG_ERROR("RSP_GETVERSION failure");
 		}
-      }
-      
-      TRAN(RegisterAccessTask::subscribingStatus_state);
-      break;
-    }      
-    
-    case F_VGETRESP: {
-      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
-      
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
-        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
-      }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
-        LOG_DEBUG("status property changed");
-        
-        _refreshFunctionality();
-      }
-      break;
-    }
-    case F_VCHANGEMSG: {
-      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
-      
-      if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
-        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
-      }
-      else if(strstr(pPropAnswer->pPropName, "status") != 0) {
-        LOG_DEBUG("status property changed");
-        
-        _refreshFunctionality();
-      }
-      break;
-    }
+		else {
+			char scopeString[300];
+			char version[20];
+			int board = 0;
+			int rackNr;
+			int subRackNr;
+			int relativeBoardNr;
+			for (board = 0; board < m_n_rspboards; board++) {
+				getBoardRelativeNumbers(board,rackNr,subRackNr,relativeBoardNr);
+				sprintf(version,"%d.%d",ack.versions.bp()(board).rsp_version >> 4,ack.versions.bp()(board).rsp_version & 0xF);
+				LOG_DEBUG(formatString("board[%d].version = 0x%x",board,ack.versions.bp()(board).rsp_version));
+				sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
+				updateVersion(scopeString,string(version),double(ack.timestamp));
 
-    case F_DISCONNECTED: {
-      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-      port.close();
+				sprintf(version,"%d.%d",ack.versions.bp()(board).fpga_maj,ack.versions.bp()(board).fpga_min);
+				LOG_DEBUG(formatString("bp[%d].version = %s",board, version));
+				sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
+				updateVersion(scopeString,string(version),double(ack.timestamp));
 
-      TRAN(RegisterAccessTask::initial_state);
-      break;
-    }
+				for (int ap = 0; ap < MEPHeader::N_AP; ap++) {
+					sprintf(version,"%d.%d",ack.versions.ap()(board * MEPHeader::N_AP + ap).fpga_maj,
+											ack.versions.ap()(board * MEPHeader::N_AP + ap).fpga_min);
+					LOG_DEBUG(formatString("ap[%d][%d].version = %s",board,ap,version));
+					sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,ap);
+					updateVersion(scopeString,string(version),double(ack.timestamp));
+				}
+			}
+		}
 
-    case F_EXIT: {
-      break;
-    }
+		TRAN(RegisterAccessTask::subscribingStatus_state);
+		break;
+	}      
 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+	case F_VGETRESP: {
+		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
 
-  return status;
+		if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
+			handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+		}
+		else if(strstr(pPropAnswer->pPropName, "status") != 0) {
+			LOG_DEBUG("status property changed");
+
+			_refreshFunctionality();
+		}
+		break;
+	}
+
+	case F_VCHANGEMSG: {
+		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&e);
+
+		if(strstr(pPropAnswer->pPropName,"Maintenance.status") != 0) {
+			handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+		}
+		else if(strstr(pPropAnswer->pPropName, "status") != 0) {
+			LOG_DEBUG("status property changed");
+
+			_refreshFunctionality();
+		}
+		break;
+	}
+
+	case F_DISCONNECTED: {
+		LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+		port.close();
+
+		TRAN(RegisterAccessTask::initial_state);
+		break;
+	}
+
+	case F_EXIT: {
+		break;
+	}
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
 }
 
 GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPortInterface &port)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+	LOG_DEBUG_STR("subscribingStatus_state:" << evtstr(e) << "@" << port.getName());
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -602,7 +638,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPo
     }
     
     case RSP_SUBSTATUSACK: {
-      LOG_INFO("RSP_SUBSTATUSACK received");
+      LOG_DEBUG("RSP_SUBSTATUSACK received");
       RSPSubstatusackEvent ack(e);
 
       if(ack.status != SUCCESS) {
@@ -622,7 +658,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPo
       // handle updstatus events even though we are not subscribed to them yet
       // this is done to relax the requirements for the ARAtest application
       // (or you might call it lazyness)
-      LOG_INFO("RSP_UPDSTATUS received");
+      LOG_DEBUG("RSP_UPDSTATUS received");
       status = handleUpdStatus(e,port);
       break;
     }
@@ -677,7 +713,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatus_state(GCFEvent& e, GCFPo
 
 GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower_state(GCFEvent& e, GCFPortInterface &port)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+	LOG_DEBUG_STR("subscribingStatsSubbandPower_state:" << evtstr(e) << "@" << port.getName());
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -700,7 +736,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower_state(GCFEven
     }
 
     case RSP_SUBSTATSACK: {
-      LOG_INFO("RSP_SUBSTATSACK received");
+      LOG_DEBUG("RSP_SUBSTATSACK received");
       RSPSubstatsackEvent ack(e);
 
       if(ack.status != SUCCESS) {
@@ -763,7 +799,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower_state(GCFEven
 
 GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower_state(GCFEvent& e, GCFPortInterface &port)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+	LOG_DEBUG_STR("subscribingStatsBeamletPower_state:" << evtstr(e) << "@" << port.getName());
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -786,7 +822,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower_state(GCFEven
     }
 
     case RSP_SUBSTATSACK: {
-      LOG_INFO("RSP_SUBSTATSACK received");
+      LOG_DEBUG("RSP_SUBSTATSACK received");
       RSPSubstatsackEvent ack(e);
 
       if(ack.status != SUCCESS) {
@@ -849,7 +885,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower_state(GCFEven
 
 GCFEvent::TResult RegisterAccessTask::subscribingXcStats_state(GCFEvent& e, GCFPortInterface &port)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+	LOG_DEBUG_STR("subscribingXcStats_state:" << evtstr(e) << "@" << port.getName());
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -870,7 +906,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingXcStats_state(GCFEvent& e, GCFP
     }
 
     case RSP_SUBXCSTATSACK: {
-      LOG_INFO("RSP_SUBXCSTATSACK received");
+      LOG_DEBUG("RSP_SUBXCSTATSACK received");
       RSPSubxcstatsackEvent ack(e);
 
       if(ack.status != SUCCESS) {
@@ -933,7 +969,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingXcStats_state(GCFEvent& e, GCFP
 
 GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInterface& port)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+	LOG_DEBUG_STR("operational_state:" << evtstr(e) << "@" << port.getName());
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -962,31 +998,31 @@ GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInte
     }
 
     case RSP_UPDSTATUS: {
-      LOG_INFO("RSP_UPDSTATUS received");
+      LOG_DEBUG("RSP_UPDSTATUS received");
       status = handleUpdStatus(e,port);
       break;
     }
     
     case RSP_UPDSTATS: {
-      LOG_INFO("RSP_UPDSTATS received");
+      LOG_DEBUG("RSP_UPDSTATS received");
       status = handleUpdStats(e,port);
       break;
     }
     
     case RSP_UPDXCSTATS: {
-      LOG_INFO("RSP_UPDXCSTATS received");
+      LOG_DEBUG("RSP_UPDXCSTATS received");
       status = handleUpdXcStats(e,port);
       break;
     }
     
     case RSP_SETRCUACK: {
-      LOG_INFO("RSP_SETRCUACK received");
+      LOG_DEBUG("RSP_SETRCUACK received");
       break;
     }
     
 //TODO    case RSP_COMMANDRESULT:
 //TODO    {
-//TODO      LOG_INFO("RSP_COMMANDRESULT received");
+//TODO      LOG_DEBUG("RSP_COMMANDRESULT received");
 //TODO      handleCommandResult(e);
 //TODO      break;
 //TODO    }
@@ -1107,14 +1143,14 @@ GCFEvent::TResult RegisterAccessTask::operational_state(GCFEvent& e, GCFPortInte
 
 GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+	LOG_DEBUG_STR("handleUpdStatus:" << evtstr(e));
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
   {
     RSPUpdstatusEvent updStatusEvent(e);
 
     time_t curTime=(time_t)updStatusEvent.timestamp.sec();
-    LOG_INFO(formatString("UpdStatus:time:%s:status:%d:handle:%d", 
+    LOG_DEBUG(formatString("UpdStatus:time:%s:status:%d:handle:%d", 
         ctime(&curTime),
         updStatusEvent.status,
         updStatusEvent.handle));
@@ -1130,12 +1166,12 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
     int boardNr;
     for(boardNr=boardStatus.lbound(blitz::firstDim); boardNr <= boardStatus.ubound(blitz::firstDim); ++boardNr) {
       getBoardRelativeNumbers(boardNr,rackNr,subRackNr,relativeBoardNr);
-      LOG_INFO(formatString("UpdStatus:Rack:%d:SubRack:%d:Board::%d\n",rackNr,subRackNr,relativeBoardNr));
+      LOG_DEBUG(formatString("UpdStatus:Rack:%d:SubRack:%d:Board::%d\n",rackNr,subRackNr,relativeBoardNr));
       
       uint8   rspVoltage_1_2 = boardStatus(boardNr).rsp.voltage_1_2;
       uint8   rspVoltage_2_5 = boardStatus(boardNr).rsp.voltage_2_5;
       uint8   rspVoltage_3_3 = boardStatus(boardNr).rsp.voltage_3_3;
-      LOG_INFO(formatString("UpdStatus:RSP voltage_1_2:%d:voltage_2_5:%d:voltage_3_3:%d",rspVoltage_1_2,rspVoltage_2_5,rspVoltage_3_3));
+      LOG_DEBUG(formatString("UpdStatus:RSP voltage_1_2:%d:voltage_2_5:%d:voltage_3_3:%d",rspVoltage_1_2,rspVoltage_2_5,rspVoltage_3_3));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
       updateBoardProperties(scopeString,rspVoltage_1_2,rspVoltage_2_5,rspVoltage_3_3,timestamp);
       
@@ -1146,13 +1182,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8   ap2Temp   = boardStatus(boardNr).rsp.ap2_temp;
       uint8   ap3Temp   = boardStatus(boardNr).rsp.ap3_temp;
       uint8   bpClock   = boardStatus(boardNr).rsp.bp_clock;
-      LOG_INFO(formatString("UpdStatus:PCB temp:%d",pcbTemp));
-      LOG_INFO(formatString("UpdStatus:BP temp:%d",bpTemp));
-      LOG_INFO(formatString("UpdStatus:AP0 temp:%d",ap0Temp));
-      LOG_INFO(formatString("UpdStatus:AP1 temp:%d",ap1Temp));
-      LOG_INFO(formatString("UpdStatus:AP2 temp:%d",ap2Temp));
-      LOG_INFO(formatString("UpdStatus:AP3 temp:%d",ap3Temp));
-      LOG_INFO(formatString("UpdStatus:BP clock:%d",bpClock));
+      LOG_DEBUG(formatString("UpdStatus:PCB temp:%d",pcbTemp));
+      LOG_DEBUG(formatString("UpdStatus:BP temp:%d",bpTemp));
+      LOG_DEBUG(formatString("UpdStatus:AP0 temp:%d",ap0Temp));
+      LOG_DEBUG(formatString("UpdStatus:AP1 temp:%d",ap1Temp));
+      LOG_DEBUG(formatString("UpdStatus:AP2 temp:%d",ap2Temp));
+      LOG_DEBUG(formatString("UpdStatus:AP3 temp:%d",ap3Temp));
+      LOG_DEBUG(formatString("UpdStatus:BP clock:%d",bpClock));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
       updateFPGAboardProperties(scopeString,timestamp);
       
@@ -1173,42 +1209,42 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8     ethFfi0       = boardStatus(boardNr).eth.ffi0;
       uint8     ethFfi1       = boardStatus(boardNr).eth.ffi1;
       uint8     ethFfi2       = boardStatus(boardNr).eth.ffi2;
-      LOG_INFO(formatString("UpdStatus:ETH frames:%d:errors:%d:last_error:%d:ffi0:%d:ffi1:%d:ffi2:%d",ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2));
+      LOG_DEBUG(formatString("UpdStatus:ETH frames:%d:errors:%d:last_error:%d:ffi0:%d:ffi1:%d:ffi2:%d",ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rackNr,subRackNr,relativeBoardNr);
       updateETHproperties(scopeString,ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2,timestamp);  
   
       uint32    mepSeqnr = boardStatus(boardNr).mep.seqnr;
       uint8     mepError = boardStatus(boardNr).mep.error;
       uint8     mepFfi0  = boardStatus(boardNr).mep.ffi0;
-      LOG_INFO(formatString("UpdStatus:MEP seqnr:%d:error:%d:ffi:%d",mepSeqnr,mepError,mepFfi0));
+      LOG_DEBUG(formatString("UpdStatus:MEP seqnr:%d:error:%d:ffi:%d",mepSeqnr,mepError,mepFfi0));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rackNr,subRackNr,relativeBoardNr);
       updateMEPStatusProperties(scopeString,mepSeqnr,mepError,mepFfi0,timestamp);  
       
       uint32    syncSample_offset = boardStatus(boardNr).ap0_sync.sample_offset;
       uint32    syncSync_count    = boardStatus(boardNr).ap0_sync.sync_count;
       uint32    syncSlice_count   = boardStatus(boardNr).ap0_sync.slice_count;
-      LOG_INFO(formatString("SyncStatus ap0:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
+      LOG_DEBUG(formatString("SyncStatus ap0:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,0);
       updateSYNCStatusProperties(scopeString,syncSample_offset,syncSync_count,syncSlice_count,timestamp);
 
       syncSample_offset = boardStatus(boardNr).ap1_sync.sample_offset;
       syncSync_count    = boardStatus(boardNr).ap1_sync.sync_count;
       syncSlice_count   = boardStatus(boardNr).ap1_sync.slice_count;
-      LOG_INFO(formatString("SyncStatus ap1:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
+      LOG_DEBUG(formatString("SyncStatus ap1:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,1);
       updateSYNCStatusProperties(scopeString,syncSample_offset,syncSync_count,syncSlice_count,timestamp);
 
       syncSample_offset = boardStatus(boardNr).ap2_sync.sample_offset;
       syncSync_count    = boardStatus(boardNr).ap2_sync.sync_count;
       syncSlice_count   = boardStatus(boardNr).ap2_sync.slice_count;
-      LOG_INFO(formatString("SyncStatus ap2:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
+      LOG_DEBUG(formatString("SyncStatus ap2:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,2);
       updateSYNCStatusProperties(scopeString,syncSample_offset,syncSync_count,syncSlice_count,timestamp);
 
       syncSample_offset = boardStatus(boardNr).ap3_sync.sample_offset;
       syncSync_count    = boardStatus(boardNr).ap3_sync.sync_count;
       syncSlice_count   = boardStatus(boardNr).ap3_sync.slice_count;
-      LOG_INFO(formatString("SyncStatus ap3:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
+      LOG_DEBUG(formatString("SyncStatus ap3:sample_offset:%d:sync_count:%d:slice_count:%d",syncSample_offset,syncSync_count,syncSlice_count));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,3);
       updateSYNCStatusProperties(scopeString,syncSample_offset,syncSync_count,syncSlice_count,timestamp);
 
@@ -1217,7 +1253,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8     boardRCUstatusStatusY       = boardStatus(boardNr).blp0_rcu.plly;
       uint32    boardRCUstatusNofOverflowX  = boardStatus(boardNr).blp0_rcu.nof_overflowx;
       uint32    boardRCUstatusNofOverflowY  = boardStatus(boardNr).blp0_rcu.nof_overflowy;
-      LOG_INFO(formatString("BoardRCUStatus ap0:statusX:%d:statusY:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      LOG_DEBUG(formatString("BoardRCUStatus ap0:statusX:%d:statusY:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       int rcuNr=0;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
@@ -1230,7 +1266,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusStatusY       = boardStatus(boardNr).blp1_rcu.plly;
       boardRCUstatusNofOverflowX  = boardStatus(boardNr).blp1_rcu.nof_overflowx;
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).blp1_rcu.nof_overflowy;
-      LOG_INFO(formatString("BoardRCUStatus ap0:statusX:%d:statusY:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      LOG_DEBUG(formatString("BoardRCUStatus ap0:statusX:%d:statusY:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       rcuNr=0;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
@@ -1243,7 +1279,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusStatusY       = boardStatus(boardNr).blp2_rcu.plly;
       boardRCUstatusNofOverflowX  = boardStatus(boardNr).blp2_rcu.nof_overflowx;
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).blp2_rcu.nof_overflowy;
-      LOG_INFO(formatString("BoardRCUStatus ap0:statusX:%d:statusY:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      LOG_DEBUG(formatString("BoardRCUStatus ap0:statusX:%d:statusY:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       rcuNr=0;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
@@ -1256,7 +1292,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       boardRCUstatusStatusY       = boardStatus(boardNr).blp3_rcu.plly;
       boardRCUstatusNofOverflowX  = boardStatus(boardNr).blp3_rcu.nof_overflowx;
       boardRCUstatusNofOverflowY  = boardStatus(boardNr).blp3_rcu.nof_overflowy;
-      LOG_INFO(formatString("BoardRCUStatus ap0:statusX:%d:statusY:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      LOG_DEBUG(formatString("BoardRCUStatus ap0:statusX:%d:statusY:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
       rcuNr=0;
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackNr,subRackNr,relativeBoardNr,apNr,rcuNr);
       updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusNofOverflowX,timestamp);
@@ -1271,14 +1307,14 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
 
 GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+	LOG_DEBUG_STR("handleUpdStats:" << evtstr(e));
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
   {
     RSPUpdstatsEvent updStatsEvent(e);
 
     time_t curTime=(time_t)updStatsEvent.timestamp.sec();
-    LOG_INFO(formatString("UpdStats:time:%s:status:%d:handle:%d", 
+    LOG_DEBUG(formatString("UpdStats:time:%s:status:%d:handle:%d", 
         ctime(&curTime),
         updStatsEvent.status,
         updStatsEvent.handle));
@@ -1290,14 +1326,14 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
 
 GCFEvent::TResult RegisterAccessTask::handleUpdXcStats(GCFEvent& e, GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+	LOG_DEBUG_STR("handleUpdXcStats:" << evtstr(e));
   
   GCFEvent::TResult status = GCFEvent::HANDLED;
   {
     RSPUpdxcstatsEvent updXcStatsEvent(e);
 
     time_t curTime=(time_t)updXcStatsEvent.timestamp.sec();
-    LOG_INFO(formatString("UpdXcStats:time:%s:status:%d:handle:%d", 
+    LOG_DEBUG(formatString("UpdXcStats:time:%s:status:%d:handle:%d", 
         ctime(&curTime),
         updXcStatsEvent.status,
         updXcStatsEvent.handle));
@@ -1930,7 +1966,7 @@ GCFEvent::TResult RegisterAccessTask::handleCommandResult(GCFEvent& /*e*/)
   
   double timestamp = double(commandResultEvent.timestamp);
   time_t curTime=(time_t)timestamp;
-  LOG_INFO(formatString("CommandResult:time:%s:status:%d:value:%s:handle:%d", 
+  LOG_DEBUG(formatString("CommandResult:time:%s:status:%d:value:%s:handle:%d", 
       ctime(&curTime),
       commandResultEvent.status,
       commandResultEvent.value.c_str(),
@@ -2058,22 +2094,18 @@ void RegisterAccessTask::handleRCUSettings(string propName, const int bitnr, con
 
 void RegisterAccessTask::getBoardRelativeNumbers(int boardNr,int& rackNr,int& subRackNr,int& relativeBoardNr)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
   rackNr          = boardNr / (m_n_subracks_per_rack*m_n_boards_per_subrack);
   subRackNr       = (boardNr / m_n_boards_per_subrack) % m_n_subracks_per_rack;
-  relativeBoardNr = boardNr % m_n_boards_per_subrack;
+  relativeBoardNr = boardNr;
 }
 
 void RegisterAccessTask::getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr)
 {
-  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
-  
   rackRelativeNr    = rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack*m_n_subracks_per_rack);
   subRackRelativeNr = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack) ) % m_n_subracks_per_rack;
   boardRelativeNr   = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board) ) % m_n_boards_per_subrack;
   apRelativeNr      = ( rcuNr / (m_n_rcus_per_ap) ) % m_n_aps_per_board;
-  rcuRelativeNr     = ( rcuNr % m_n_rcus_per_ap);
+  rcuRelativeNr     = rcuNr;
 }
 
 int RegisterAccessTask::getRCUHardwareNr(const string& property)
