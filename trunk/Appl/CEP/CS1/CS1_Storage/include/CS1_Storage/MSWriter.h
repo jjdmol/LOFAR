@@ -50,7 +50,7 @@ namespace LOFAR
                 int nChan, int nPol, uint nantennas,
                 const vector<double>& antPos,
 		const vector<std::string>& storageStationNames,
-		uint timesToIntegrate);
+		uint timesToIntegrate, uint subbandsPerPset);
 
       // Destructor
       ~MSWriter();

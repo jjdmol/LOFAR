@@ -64,7 +64,7 @@ namespace LOFAR
                     int nfreq, int ncorr,
                     int nantennas, const vector<double>& antPos,
 		    const vector<std::string>& storageStationNames, 
-		    uint timesToIntegrate);
+		    int timesToIntegrate, int subbandsPerPset);
 
       // Destructor
       ~MSWriterImpl();
@@ -155,6 +155,7 @@ namespace LOFAR
       int itsNrFreq;                     ///< Fixed nr of frequencies (channels)
       int itsNrCorr;                     ///< Fixed nr of correlations (polar.)
       int itsNrTimes;                    ///< nr of exposures
+      int itsSubbandsPerPset;            ///< nr of subbands per Pset
       double itsTimeStep;                ///< duration of each exposure (sec)
       uint itsTimesToIntegrate;          ///< Number of timeSteps to integrate (sec)
       double itsStartTime;               ///< start time of observation (sec)

@@ -33,6 +33,7 @@
 #include <CS1_Interface/DH_Visibilities.h>
 #include <CS1_Storage/MSWriter.h>
 #include <tinyCEP/Sel_RoundRobin.h>
+#include <Transport/TH_MPI.h>
 
 #ifdef USE_MAC_PI
 #include <GCF/GCF_PVDouble.h>
@@ -135,7 +136,7 @@ namespace LOFAR
 #endif
 
       // create MSWriter object
-      string msName = itsPS.getString("Storage.MSName");
+      vector<string> msNames = itsPS.getStringVector("Storage.MSNames");
 
 #if 0
       // split name in base part and extension (if any)
@@ -149,7 +150,7 @@ namespace LOFAR
       msName = ms.first + oss.str() + ms.second;
 #endif
       
-      LOG_TRACE_VAR_STR("Creating MS-file \"" << msName << "\"");
+      LOG_TRACE_VAR_STR("Creating MS-file \"" << msNames[TH_MPI::getCurrentRank()] << "\"");
       
       double startTime = itsPS.getDouble("Observation.StartTime");
       LOG_TRACE_VAR_STR("startTime = " << startTime);
@@ -164,9 +165,10 @@ namespace LOFAR
                 antPos.size() << " == " << 3 * itsNStations);
       
       vector<string> storageStationNames = itsPS.getStringVector("Storage.StorageStationNames");
-      itsWriter = new MSWriter(msName.c_str(), startTime, timeStep * itsTimesToIntegrate, 
+      itsWriter = new MSWriter(msNames[TH_MPI::getCurrentRank()].c_str(), startTime, timeStep * itsTimesToIntegrate, 
                                itsNChannels, itsNPolSquared, itsNStations, 
-                               antPos, storageStationNames, itsTimesToIntegrate);
+                               antPos, storageStationNames, itsTimesToIntegrate, 
+			       itsPS.getUint32("General.SubbandsPerPset"));
 
       double chanWidth = itsPS.getDouble("Observation.SampleRate") /
 			 itsPS.getDouble("Observation.NChannels");
