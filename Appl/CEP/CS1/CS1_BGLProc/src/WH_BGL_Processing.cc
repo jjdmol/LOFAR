@@ -1519,7 +1519,7 @@ void WH_BGL_Processing::doCorrelate()
       for (unsigned stat1 = 0; stat1 <= stat2; stat1 ++) { 
 	unsigned bl = DH_Visibilities::baseline(stat1, stat2), nrValid = 0;
 
-	if (!itsRFIflags[stat1][ch] && !itsRFIflags[stat2][ch]) {
+	if (ch > 0 && !itsRFIflags[stat1][ch] && !itsRFIflags[stat2][ch]) {
 	  for (unsigned pol1 = 0; pol1 < NR_POLARIZATIONS; pol1 ++) {
 	    for (unsigned pol2 = 0; pol2 < NR_POLARIZATIONS; pol2 ++) {
 	      dcomplex sum = makedcomplex(0, 0);
@@ -1549,12 +1549,14 @@ void WH_BGL_Processing::doCorrelate()
   // Blue Gene/L assembler version. 
 
   for (unsigned bl = 0; bl < itsNrBaselines; bl ++) {
-    for (unsigned ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+    nrValidSamples[bl][0] = 0; // channel 0 does not contain valid data
+
+    for (unsigned ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++) {
       nrValidSamples[bl][ch] = itsNrValidSamples[bl];
     }
   }
 
-  for (unsigned ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+  for (unsigned ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++) {
     // build a map of valid stations
     unsigned nrValidStations = 0, map[itsNrStations];
 
@@ -1710,7 +1712,7 @@ void WH_BGL_Processing::process()
   computeFlags();
 
 #if NR_SUBBAND_CHANNELS > 1
-  doPPF(itsCenterFrequencies[itsCurrentSubband] - (NR_SUBBAND_CHANNELS / 2 - .5) * itsChannelBandwidth);
+  doPPF(itsCenterFrequencies[itsCurrentSubband] - (NR_SUBBAND_CHANNELS / 2) * itsChannelBandwidth);
 #else
   bypassPPF();
 #endif

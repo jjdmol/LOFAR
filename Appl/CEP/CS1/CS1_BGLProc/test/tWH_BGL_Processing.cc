@@ -139,7 +139,7 @@ void checkCorrelatorTestPattern(WH_BGL_Processing &wh, unsigned nrStations)
   DH_Visibilities::VisibilitiesType	 visibilities	= wh.get_DH_Visibilities()->getVisibilities();
   DH_Visibilities::AllNrValidSamplesType nrValidSamples = wh.get_DH_Visibilities()->getNrValidSamples();
 
-  static const int			 channels[]	= { 0, 73, 255 };
+  static const int			 channels[]	= { 1, 73, 255 };
 
   for (unsigned stat1 = 0; stat1 < std::min(nrStations, 8U); stat1 ++) {
     for (unsigned stat2 = stat1; stat2 < std::min(nrStations, 8U); stat2 ++) {
@@ -168,13 +168,13 @@ void checkCorrelatorTestPattern(WH_BGL_Processing &wh, unsigned nrStations)
   std::cout << "newgraph newcurve linetype solid marktype none pts\n";
   float max = 0.0;
 
-  for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+  for (int ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++) {
     if (abs(visibilities[0][ch][1][1]) > max) {
       max = abs(visibilities[0][ch][1][1]);
     }
   }
 
-  for (int ch = 0; ch < NR_SUBBAND_CHANNELS; ch ++) {
+  for (int ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++) {
     std::cout << ch << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
   }
 }
