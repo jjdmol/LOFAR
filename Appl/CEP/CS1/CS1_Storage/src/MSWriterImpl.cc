@@ -59,6 +59,7 @@
 #include <casa/Arrays/Slicer.h>
 #include <AMCBase/Epoch.h>
 #include <Common/LofarLogger.h>
+#include <Transport/TH_MPI.h>
 
 namespace LOFAR
 {
@@ -70,13 +71,14 @@ namespace LOFAR
                                 int nfreq, int ncorr,
                                 int nantennas, const vector<double>& antPos,
 				const vector<string>& storageStationNames,
-				uint timesToIntegrate)
+				int timesToIntegrate, int subbandsPerPset)
       : itsNrBand   (0),
         itsNrField  (0),
         itsNrAnt    (nantennas),
         itsNrFreq   (nfreq),
         itsNrCorr   (ncorr),
 	itsNrTimes  (0),
+	itsSubbandsPerPset(subbandsPerPset),
         itsTimeStep (timeStep),
 	itsTimesToIntegrate(timesToIntegrate),
 	itsStartTime(0),
@@ -86,7 +88,7 @@ namespace LOFAR
         itsBaselines(0),
         itsFrame    (0),
         itsMS       (0),
-        itsMSCol    (0)
+        itsMSCol    (0)	
     {
       AlwaysAssert (nantennas >= 0, AipsError);
 
@@ -300,7 +302,10 @@ namespace LOFAR
       MSSpWindowColumns msspwCol(msspw);
       msspw.addRow();
       msspwCol.numChan().put (rownr, nchannels);
-      msspwCol.name().put (rownr, "");
+#if defined HAVE_MPI
+      int nrSubband = TH_MPI::getCurrentRank()*itsSubbandsPerPset + (rownr);
+      msspwCol.name().put (rownr, "SB-" + String::toString(nrSubband));
+#endif      
       msspwCol.refFrequency().put (rownr, refFreq);
       msspwCol.chanFreq().put (rownr, chanFreqs);
       msspwCol.chanWidth().put (rownr, chanWidths);
