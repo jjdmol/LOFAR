@@ -50,15 +50,21 @@ namespace LOFAR {
 
 	int myRank = TH_MPI::getCurrentRank();
 
-	// The MPI standard does not demand that the commandline arguments are distributed, so we do it ourselves.
+	// The MPI standard does not demand that the commandline
+	// arguments are distributed, so we do it ourselves. 
 
 	// Broadcast number of arguments
 	MPI_Bcast(&argc, 1, MPI_INT, 0, MPI_COMM_WORLD);
+	// Some MPI implementations block on the Bcast. Synchronize
+	// the nodes to avoid deadlock. 
+ 	MPI_Barrier(MPI_COMM_WORLD);
+
 	if (myRank != 0) {
 	  argv = new char*[argc];
 	} else {
 	  char** argv = orig_argv;
 	}
+
 
 	for (int arg = 0; arg < argc; arg++) {
 	  int arglen = 0;
@@ -74,6 +80,7 @@ namespace LOFAR {
 	  MPI_Bcast(argv[arg], arglen, MPI_BYTE, 0, MPI_COMM_WORLD);	
 	}
 #endif
+	
 
 	string programName = basename(argv[0]);
 
