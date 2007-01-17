@@ -25,6 +25,8 @@
 
 //# Includes
 #include <BBSControl/pqutil.h>
+#include <Common/lofar_sstream.h>
+#include <Common/StreamUtil.h>
 
 namespace LOFAR
 {
@@ -110,7 +112,15 @@ namespace LOFAR
       return out;
     }
     
-    
+
+    string toPQstring(const vector<string>& in)
+    {
+      ostringstream oss;
+      oss << in;
+      return toPQstring(oss.str());
+    }
+
+
   } // namespace BBS
   
 } // namespace LOFAR
