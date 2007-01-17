@@ -45,7 +45,8 @@ namespace LOFAR
     private:
       std::string  itsMS;
       bool         itsCompress; 
-      std::string  itsMode;
+      std::string  itsDataMode;
+      std::string  itsImageMode;
       int          itsNChannel;
       int          itsStart;
       int          itsStep;
@@ -61,6 +62,8 @@ namespace LOFAR
       std::string  itsGridFunction;
       std::string  itsImageType;
       std::string  itsImageName;
+
+      std::vector<int> itsSpectralWindows; 
       
       casa::MeasurementSet* myMS;
       casa::Imager*         myImager;
