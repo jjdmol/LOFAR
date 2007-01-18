@@ -15,7 +15,7 @@ libbbscontrol_la_SOURCES= \
 	BBSStructs.cc \
 	BBSSubtractStep.cc \
 	BBSSolverProcessControl.cc \
-	BlobStreamableConnection.cc
+	BlobStreamableConnection.cc \
 	DomainRegistrationRequest.cc \
 	CommandQueue.cc \
 	CommandQueueTransactors.cc \
