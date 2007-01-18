@@ -82,8 +82,8 @@ void TBBSettingsWrite::sendrequest()
     tbbsettings.nof_samples = MEPHeader::TBB_NTRANSIENTSAMPLES;
   } else {
     // fit as many complete spectra of tbbsettings.nof_bands in each TBB frame
-    tbbsettings.nof_samples = MIN((int)floor( (MEPHeader::TBB_MAXPAYLOADSIZE / MEPHeader::TBB_SPECTRALSAMPLESIZE) /
-					 tbbsettings.nof_bands) * tbbsettings.nof_bands,
+    tbbsettings.nof_samples = MIN((int)std::floor((double)(MEPHeader::TBB_MAXPAYLOADSIZE / MEPHeader::TBB_SPECTRALSAMPLESIZE) /
+						   tbbsettings.nof_bands) * tbbsettings.nof_bands,
 				  MEPHeader::TBB_MAXPAYLOADSIZE / MEPHeader::TBB_SPECTRALSAMPLESIZE);
   }
 
