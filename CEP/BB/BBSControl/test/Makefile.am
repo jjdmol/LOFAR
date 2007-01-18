@@ -1,31 +1,16 @@
-check_PROGRAMS			= tpqxx \
-				  tpqutil \
-				  tBBSStrategy \
+check_PROGRAMS			= tBBSStrategy \
 				  tDH_BBSStep \
-				  tDH_BBSStrategy \
-				  tCommandQueue 
+				  tDH_BBSStrategy
 
-check_SCRIPTS			= tpqutil.sh \
-				  tBBSStrategy.sh \
+check_SCRIPTS			= tBBSStrategy.sh \
 				  tDH_BBSStep.sh \
-				  tDH_BBSStrategy.sh \
-				  tCommandQueue.sh
+				  tDH_BBSStrategy.sh
 
 # programs to run through supplied checktools
-CHECKTOOLPROGS			= tpqutil \
-				  tBBSStrategy \
+CHECKTOOLPROGS			= tBBSStrategy \
 				  tDH_BBSStep \
-				  tDH_BBSStrategy \
-				  tCommandQueue
+				  tDH_BBSStrategy
 #ENDCHECKTOOLPROGS
-
-tpqxx_SOURCES			= tpqxx.cc
-tpqxx_LDADD			= ../src/libbbscontrol.la
-tpqxx_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
-
-tpqutil_SOURCES			= tpqutil.cc
-tpqutil_LDADD			= ../src/libbbscontrol.la
-tpqutil_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
 
 tBBSStrategy_SOURCES		= tBBSStrategy.cc
 tBBSStrategy_LDADD		= ../src/libbbscontrol.la
@@ -41,10 +26,6 @@ tDH_BBSStrategy_SOURCES		= tDH_BBSStrategy.cc
 tDH_BBSStrategy_LDADD		= ../src/libbbscontrol.la
 tDH_BBSStrategy_DEPENDENCIES	= ../src/libbbscontrol.la $(LOFAR_DEPEND)
 EXTRA_tDH_BBSStrategy_DIST	= tDH_BBSStrategy.run
-
-tCommandQueue_SOURCES		= tCommandQueue.cc
-tCommandQueue_LDADD		= ../src/libbbscontrol.la
-tCommandQueue_DEPENDENCIES	= ../src/libbbscontrol.la $(LOFAR_DEPEND)
 
 TESTS				= $(check_SCRIPTS)
 
