@@ -107,7 +107,7 @@
 #include <unistd.h>
 #include <algorithm>
 
-#include <BBSKernel/BBSTestLogger.h>
+//#include <BBSKernel/BBSTestLogger.h>
 
 #if defined _OPENMP
 #include <omp.h>
@@ -123,16 +123,18 @@ namespace BBS
 using LOFAR::operator<<;
 using std::max;
 
-Prediffer::Prediffer(   const string& measurementSet,
-                        const string& inputColumn,
-                        const string& skyParameterDB,
-                        const string& instrumentParameterDB,
+Prediffer::Prediffer(   const string &measurementSet,
+                        const string &inputColumn,
+                        const string &skyParameterDB,
+                        const string &instrumentParameterDB,
+                        const string &historyDB,
                         uint subbandID,
                         bool calcUVW)
     :   itsSubbandID        (subbandID),
         itsCalcUVW          (calcUVW),
         itsMEP              (0),
         itsGSMMEP           (0),
+        itsHistoryDB        (0),
         itsSources          (0),
         itsInDataColumn     (inputColumn),
         itsNrPert           (0),
@@ -145,10 +147,28 @@ Prediffer::Prediffer(   const string& measurementSet,
         itsOutDataMap       (0),
         itsFlagsMap         (0),
         itsWeightMap        (0),
-        itsIsWeightSpec     (false),
-        itsPredTimer        ("P:predict", false),
-        itsEqTimer          ("P:eq|save", false)
+        itsIsWeightSpec     (false)
 {
+    LOG_INFO("Prediffer was compiled with the following options:");
+
+#ifdef _OPENMP
+    LOG_INFO("  _OPENMP: yes");
+#else
+    LOG_INFO("  _OPENMP: no");
+#endif
+
+#ifdef EXPR_GRAPH
+    LOG_INFO("  EXPR_GRAPH: yes");
+#else
+    LOG_INFO("  EXPR_GRAPH: no");
+#endif
+    
+#ifdef COMPUTE_SQUARED_ERROR
+    LOG_INFO("  COMPUTE_SQUARED_ERROR: yes");
+#else
+    LOG_INFO("  COMPUTE_SQUARED_ERROR: no");
+#endif
+    
     // Get path to measurement set.
     itsMSName = Path(measurementSet).absoluteName();
     LOG_INFO_STR("Input: " << itsMSName << "::" << itsInDataColumn);
@@ -195,7 +215,23 @@ Prediffer::Prediffer(   const string& measurementSet,
         THROW(BBSKernelException, "Failed to open instrument parameter db: " << instrumentParameterDB << endl << "(AipsError: " << _ex.what() << ")");
     }
     
-          
+    // Open history db.
+    if(!historyDB.empty())
+    {
+        try
+        {
+            LOFAR::ParmDB::ParmDBMeta historyDBMeta("aips", historyDB);
+            itsHistoryDB = new LOFAR::ParmDB::ParmDB(historyDBMeta);
+            LOG_INFO_STR("History DB: " << historyDBMeta.getTableName());
+        }
+        catch (AipsError &_ex)
+        {
+            THROW(BBSKernelException, "Failed to open history db: " << historyDB << endl << "(AipsError: " << _ex.what() << ")");
+        }
+    }
+    else
+        LOG_INFO_STR("History DB: -");
+
     // Allocate thread private buffers.
 #if defined _OPENMP
     itsNthread = omp_get_max_threads();
@@ -227,6 +263,7 @@ Prediffer::~Prediffer()
 
   delete itsMEP;
   delete itsGSMMEP;
+  delete itsHistoryDB;
   
   delete itsInDataMap;
   delete itsOutDataMap;
@@ -488,14 +525,10 @@ bool Prediffer::setContext(const Context &context)
     
     // Create the measurement equation for each interferometer (baseline).
     if(context.sources.empty())
-    {
         // If no sources are specified, use all available sources.
         makeTree(context.instrumentModel, itsSources->getSourceNames());
-    }
     else
-    {
         makeTree(context.instrumentModel, context.sources);
-    }
 
     // Put funklets in parms which are not filled yet. (?)
     for (MeqParmGroup::iterator it = itsParmGroup.begin();
@@ -509,84 +542,100 @@ bool Prediffer::setContext(const Context &context)
 }
 
 
-bool Prediffer::setWorkDomain(const MeqDomain &domain)
+MeqDomain Prediffer::getLocalDataDomain() const
 {
-  int startChan = int(0.5 + (domain.startX() - itsStartFreq) / itsStepFreq);
-  int endChan   = int(0.5 + (domain.endX() - itsStartFreq) / itsStepFreq) - 1;
-  // Exit if this MS part has no overlap with the freq domain.
-  if (endChan < 0  ||  startChan >= itsNrChan) {
-    return false;
-  }
-  // Determine the first and last channel to process.
-  if (startChan < 0) {
-    itsFirstChan = 0;
-  } else {
-    itsFirstChan = startChan;
-  }
-  if (endChan >= itsNrChan) {
-    itsLastChan = itsNrChan-1;
-  } else {
-    itsLastChan = endChan;
-  }
-  ASSERT (itsFirstChan <= itsLastChan);
-  // Find the times matching the given time interval.
-  double tstart = domain.startY();
-  // Usually the times are processed in sequential order, so we can
-  // continue searching.
-  // Otherwise start the search at the start.
-  itsTimeIndex += itsNrTimes;
-  if (itsTimeIndex >= itsMSDesc.times.size()
-  ||  tstart < itsMSDesc.times[itsTimeIndex]) {
-    itsTimeIndex = 0;
-  }
-  // Find the time matching the start time.
-  while (itsTimeIndex < itsMSDesc.times.size()
-     &&  tstart > itsMSDesc.times[itsTimeIndex]) {
-    ++itsTimeIndex;
-  }
-  // Exit if no more chunks.
-  if (itsTimeIndex >= itsMSDesc.times.size()) {
-    return false;
-  }
-  BBSTest::Logger::log("BeginOfInterval");
-  // Find the end of the interval.
-  uint endIndex = itsTimeIndex;
-  double startTime = itsMSDesc.times[itsTimeIndex] -
-                     itsMSDesc.exposures[itsTimeIndex]/2;
-  double endTime = domain.endY();
-  itsNrTimes     = 0;
-  while (endIndex < itsMSDesc.times.size()
-     && endTime >= itsMSDesc.times[endIndex]) {
-    ///cout << "time find " << itsMSDesc.times[endIndex]-itsMSDesc.times[0] << ' ' << endIndex<<endl;
-    ++endIndex;
-    ++itsNrTimes;
-  }
-  ASSERT (itsNrTimes > 0);
-  endTime = itsMSDesc.times[endIndex-1] + itsMSDesc.exposures[endIndex-1]/2;
-  ///cout << "time-indices " << itsTimeIndex << ' ' << endIndex << ' ' << itsNrTimes << ' ' << itsMSDesc.times[endIndex]-itsMSDesc.times[0]<<' '<<endTime-tstart<<' '<<startTime-itsMSDesc.times[0]<< ' '<<endTime-itsMSDesc.times[0]<<endl;
-
-  BBSTest::ScopedTimer parmTimer("P:readparms");
-  itsWorkDomain = MeqDomain(itsStartFreq + itsFirstChan*itsStepFreq,
-                itsStartFreq + (itsLastChan+1)*itsStepFreq,
-                startTime,
-                endTime);
-  // Read all parameter values which are part of the work domain.
-  readParms();
-  // Show frequency domain.
-  LOG_INFO_STR("Work domain: " << setprecision(10) << itsWorkDomain
-        << " (channel(s) " << itsFirstChan << " - " << itsLastChan
-        << " of " << itsStepFreq / 1000.0 << " kHz, " << itsNrTimes
-        << " samples(s) of " << setprecision(3) << (endTime - startTime) / itsNrTimes
-        << " s on average)");
-
-  return true;
+    return MeqDomain(itsStartFreq,
+        itsEndFreq,
+        itsMSDesc.times.front() - itsMSDesc.exposures.front() / 2,
+        itsMSDesc.times.back() - itsMSDesc.exposures.back() / 2);
 }
 
 
-bool Prediffer::setWorkDomainSize(double freq, double time)
+bool Prediffer::setWorkDomain(const MeqDomain &domain)
 {
-    double startTime = itsMSDesc.times[0] - itsMSDesc.exposures[0] / 2.0;
-    return setWorkDomain(MeqDomain(itsStartFreq, itsStartFreq + freq, startTime, startTime + time));
+    // Determine channel with lower border closest to specified start frequency.
+    int startChan = int(0.5 + (domain.startX() - itsStartFreq) / itsStepFreq);
+    
+    // Determine channel with upper border closest to specified end frequency.
+    int endChan   = int(0.5 + (domain.endX() - itsStartFreq) / itsStepFreq) - 1;
+  
+    // Exit if the MS has no overlap in frequency with the specified work domain.
+    if(endChan < 0 || startChan >= itsNrChan)
+        return false;
+        
+    // Clip start/end channel against the MS domain.
+    if(startChan < 0)
+        itsFirstChan = 0;
+    else
+        itsFirstChan = startChan;
+  
+    if(endChan > itsNrChan - 1)
+        itsLastChan = itsNrChan - 1;
+    else
+        itsLastChan = endChan;
+  
+    ASSERT (itsFirstChan <= itsLastChan);
+  
+    // Find the times matching the given time interval.
+    double startTime = domain.startY();
+  
+    // Usually the work domain is shifted sequentially in time,
+    // so we can start the search for the start of the specified
+    // work domain from the end of the previous work domain.
+    
+    // Compute the end of the previous work domain.
+    itsTimeIndex += itsNrTimes;
+  
+    // If necessary, restart the search at the beginning.
+    if(itsTimeIndex >= itsMSDesc.times.size() || startTime < itsMSDesc.times[itsTimeIndex])
+        itsTimeIndex = 0;
+    
+    // Find the index of the time sample with lower border closest
+    // to the specified start time.
+    while(itsTimeIndex < itsMSDesc.times.size() && startTime > itsMSDesc.times[itsTimeIndex])
+        ++itsTimeIndex;
+  
+    // Exit if the MS has no overlap in time with the specified work domain.
+    if(itsTimeIndex >= itsMSDesc.times.size())
+        return false;
+  
+    // Compute the actual start time (i.e. the lower border of
+    // the selected time sample.
+    startTime = itsMSDesc.times[itsTimeIndex] - itsMSDesc.exposures[itsTimeIndex] / 2;
+    
+    // Find the index of the time sample with the upper bound closest
+    // to the specified end time.
+    itsNrTimes = 0;
+    double endTime = domain.endY();
+    unsigned int endIndex = itsTimeIndex;
+    while(endIndex < itsMSDesc.times.size() && endTime >= itsMSDesc.times[endIndex])
+    {
+        ++endIndex;
+        ++itsNrTimes;
+    }
+    ASSERT(itsNrTimes > 0);
+
+    // Compute the actual end time (i.e. the upper border of
+    // the selected time sample.
+    endTime = itsMSDesc.times[endIndex - 1] + itsMSDesc.exposures[endIndex - 1] / 2;
+  
+    itsWorkDomain = MeqDomain(itsStartFreq + itsFirstChan * itsStepFreq,
+        itsStartFreq + (itsLastChan + 1) * itsStepFreq,
+        startTime,
+        endTime);
+        
+    // Read all parameter values which are part of the work domain.
+    readParms();
+    
+    // Display work domain.
+    LOG_INFO_STR("Work domain: " << setprecision(10) << itsWorkDomain);
+    LOG_INFO_STR("  + Bandwidth: " << setprecision(3) << (itsLastChan + 1 - itsFirstChan) * itsStepFreq / 1000.0
+        << " kHz [Channel " << itsFirstChan << " - " << itsLastChan << ", " << itsStepFreq / 1000.0
+        << " kHz/channel]");
+    LOG_INFO_STR("  + Time: " << (endTime - startTime) / 60.0 << " minutes [Sample " << itsTimeIndex << " - "
+        << endIndex - 1 << ", " << (endTime - startTime) / itsNrTimes << " s/sample on average]");
+    
+    return true;
 }
 
 
@@ -610,34 +659,6 @@ bool Prediffer::setWorkDomain(double startFreq, double endFreq, double startTime
 {
     return setWorkDomain(MeqDomain(startFreq, endFreq, startTime, endTime));
 }
-
-/*
-bool Prediffer::setWorkDomain(int startChannel, int endChannel, double startTime, double endTime)
-{
-    if(startChannel < 0)
-    {
-        startChan = 0;
-    }
-    else if(startChannel >= itsNrChan)
-    {
-        startChannel = itsNrChan - 1;
-    }
-    
-    if(endChannel < startChannel)
-    {
-        endChannel = startChannel;
-    }
-    else if(endChannel >= itsNrChan)
-    {
-        endChannel = itsNrChan - 1;
-    }
-    
-    return setWorkDomain(MeqDomain( itsStartFreq + startChannel * itsStepFreq,
-                                    itsStartFreq + (endChannel + 1) * itsStepFreq,
-                                    startTime,
-                                    endTime));
-}
-*/
 
 bool Prediffer::setContext(const PredictContext &context)
 {
@@ -751,12 +772,13 @@ bool Prediffer::setContext(const GenerateContext &context)
     
     if(unknownCount == 0)
     {
-	LOG_ERROR("No unknowns selected in this context.");
+        LOG_ERROR("No unknowns selected in this context.");
         return false;
     }
                         
     itsSolveDomains = context.solveDomains;
-    initSolvableParms(itsSolveDomains);
+//    initSolvableParms(itsSolveDomains);
+    initializeSolveDomains(context.solveDomains);
     
     return itsNrPert>0;
 }
@@ -1179,7 +1201,9 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
 
     for(int i = 0; i < spectralWindowCount; i++)
     {
+        // _Center_ frequencies for each channel
         Vector<double> channelFrequency = spectralWindowColumns.chanFreq()(i);
+        // Channel width for each channel
         Vector<double> channelWidth = spectralWindowColumns.chanWidth()(i);
 
         // So far, only equal frequency spacings are possible.
@@ -1191,12 +1215,19 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
         double step = abs(channelWidth(0));
         if(channelFrequency(0) > channelFrequency(channelCount - 1))
         {
+            // Channels are in reverse order! NB: startFreq and endFreq are left
+            // in reverse order because they are swapped in processMSDesc().
+            
+            // Upper border of last channel.
             itsMSDesc.startFreq[i] = channelFrequency(0) + step / 2;
+            // Lower border of first channel.
             itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] - channelCount * step;
         }
         else
         {
+            // Lower border of first channel.
             itsMSDesc.startFreq[i] = channelFrequency(0) - step / 2;
+            // Upper border of last channel.
             itsMSDesc.endFreq[i]   = itsMSDesc.startFreq[i] + channelCount * step;
         }
     }
@@ -1216,7 +1247,9 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
 
     for(uInt i = 0; i < timeCount; i++)
     {
+        // _Center_ of integration interval.
         itsMSDesc.times[i] = time[timeIndex[i]];
+        // Effective integration time.
         itsMSDesc.exposures[i] = exposure[timeIndex[i]];
     }
 
@@ -1400,13 +1433,9 @@ string Prediffer::getFileForColumn(const string &column)
     map<string, string>::const_iterator it = itsColumns.find(column);
     
     if(it == itsColumns.end())
-    {
-        return string();    
-    }
+        return string();
     else
-    {
         return it->second;
-    }
 }
 
 void Prediffer::processMSDesc (uint ddid)
@@ -1567,10 +1596,95 @@ void Prediffer::readParms()
   }
 }
 
+
+void Prediffer::initializeSolveDomains(const vector<MeqDomain> &globalSolveDomains)
+{
+    // Need to implement some way to select local solve domains
+    // from global solve domains, see initSolvableParms().    
+    const vector<MeqDomain> solveDomains = globalSolveDomains;
+    itsSolveDomainDescriptors.clear();
+    itsSolveDomainDescriptors.resize(solveDomains.size());
+
+    itsNrPert = 0;
+    itsNrScids.resize(solveDomains.size());
+    fill(itsNrScids.begin(), itsNrScids.end(), 0);
+    for (MeqParmGroup::iterator iter = itsParmGroup.begin();
+         iter != itsParmGroup.end();
+         ++iter)
+    {
+        // Determine maximal number of solvable coefficients over all solve domains
+        // for this parameter.
+        int max = iter->second.initDomain(solveDomains, itsNrPert, itsNrScids);
+        if(max > 0)
+        {
+            const vector<MeqFunklet*>& funklets = iter->second.getFunklets();
+            ASSERT(funklets.size() == solveDomains.size());
+            for(size_t i = 0; i < solveDomains.size(); ++i)
+            {
+                itsSolveDomainDescriptors[i].domain = solveDomains[i];
+                itsSolveDomainDescriptors[i].parameters.push_back(iter->second);
+                itsSolveDomainDescriptors[i].unknownIndex.push_back(itsSolveDomainDescriptors[i].unknowns.size());
+
+                const MeqMatrix &coeff = funklets[i]->getCoeff();
+                const vector<bool> &mask = funklets[i]->getSolvMask();
+                for(unsigned int j = 0; j < coeff.nelements(); j++)
+                {
+                    if(mask[j])
+                        itsSolveDomainDescriptors[i].unknowns.push_back(coeff.doubleStorage()[j]);
+                }
+            }
+        }
+    }
+  
+    // Determine the fitter indices for the frequency and time axis.
+    // First check if the (local) solve domains are ordered and regular.
+    // Start with finding the number of frequency intervals.
+    for (itsFreqNrFit=1; itsFreqNrFit<solveDomains.size(); itsFreqNrFit++) {
+        if (solveDomains[itsFreqNrFit].startX() <
+        solveDomains[itsFreqNrFit-1].endX()) {
+        break;
+        }
+    }
+    // Now check if regular in frequency and time.
+    uint timeNrFit = solveDomains.size() / itsFreqNrFit;
+    ASSERT (timeNrFit*itsFreqNrFit == solveDomains.size());
+    for (uint inxt=0; inxt<timeNrFit; inxt++) {
+        const MeqDomain& first = solveDomains[inxt*itsFreqNrFit];
+        for (uint inxf=1; inxf<itsFreqNrFit; inxf++) {
+        const MeqDomain& cur = solveDomains[inxt*itsFreqNrFit + inxf];
+        ASSERT (cur.startY() == first.startY()  &&  cur.endY() == first.endY());
+        }
+    }
+    for (uint inxf=0; inxf<itsFreqNrFit; inxf++) {
+        const MeqDomain& first = solveDomains[inxf];
+        for (uint inxt=1; inxt<timeNrFit; inxt++) {
+        const MeqDomain& cur = solveDomains[inxt*itsFreqNrFit + inxf];
+        ASSERT (cur.startX() == first.startX()  &&  cur.endX() == first.endX());
+        }
+    }
+    // Determine for each frequency point to which fitter it belongs.
+    // For the time axis it is determined by nextDataChunk.
+    int nrchan = itsLastChan-itsFirstChan+1;
+    itsFreqFitInx.resize (nrchan);
+    double step = itsWorkDomain.sizeX() / nrchan;
+    double freq = itsWorkDomain.startX() + step / 2;
+    int interv = 0;
+    for (int i=0; i<nrchan; i++) {
+        if (freq > solveDomains[interv].endX()) {
+        interv++;
+        }
+        itsFreqFitInx[i] = interv;
+        freq += step;
+    }
+}
+
+
 void Prediffer::initSolvableParms (const vector<MeqDomain>& solveDomains)
 {
   itsParmData.set (solveDomains, itsWorkDomain);
   const vector<MeqDomain>& localSolveDomains = itsParmData.getDomains();
+
+  itsSolveDomains = localSolveDomains;
 
   itsNrPert = 0;
   itsNrScids.resize (localSolveDomains.size());
@@ -1656,7 +1770,7 @@ bool Prediffer::nextDataChunk (bool useFitters)
   int nt = itsNrTimes;
   int st = itsNrTimesDone;
   // Map the part of the file matching the given times.
-  BBSTest::ScopedTimer mapTimer("P:file-mapping");
+//  BBSTest::ScopedTimer mapTimer("P:file-mapping");
 
   int64 nrValues = nt * itsMSMapInfo.timeSize();
   int64 startOffset = itsTimeIndex * itsMSMapInfo.timeSize();
@@ -1686,7 +1800,8 @@ bool Prediffer::nextDataChunk (bool useFitters)
   itsNrTimesDone += nt;
   if (useFitters) {
     // Determine for each time point to which fitter it belongs.
-    const vector<MeqDomain>& localSolveDomains = itsParmData.getDomains();
+//    const vector<MeqDomain>& localSolveDomains = itsParmData.getDomains();
+    const vector<MeqDomain>& localSolveDomains = itsSolveDomains;
     itsTimeFitInx.resize (nt);
     uint interv = 0;
     for (int i=0; i<nt; i++) {
@@ -1797,6 +1912,14 @@ void Prediffer::fillFitters (vector<casa::LSQFit>& fitters)
   // Initialize the fitters.
   int nfitter = itsNrScids.size();
   fitters.resize (nfitter);
+  
+#ifdef COMPUTE_SQUARED_ERROR  
+  itsSquaredErrorReal.resize(nfitter);
+  itsSquaredErrorImag.resize(nfitter);
+  fill(itsSquaredErrorReal.begin(), itsSquaredErrorReal.end(), 0.0);
+  fill(itsSquaredErrorImag.begin(), itsSquaredErrorImag.end(), 0.0);
+#endif
+    
   // Create thread private fitters for parallel execution.
   vector<vector<LSQFit*> > threadPrivateFitters(itsNthread);
   for (int i=0; i<itsNthread; ++i) {
@@ -1827,8 +1950,22 @@ void Prediffer::fillFitters (vector<casa::LSQFit>& fitters)
       delete threadPrivateFitters[j][i];
     }
   }
-  BBSTest::Logger::log(itsPredTimer);
-  BBSTest::Logger::log(itsEqTimer);
+  
+#ifdef COMPUTE_SQUARED_ERROR  
+  for(int i = 0; i < nfitter; ++i)
+  {
+    LOG_DEBUG_STR(
+        "SquaredError: domain: " <<
+        i <<
+        " real: " <<
+        itsSquaredErrorReal[i] <<
+        " imaginary: " <<
+        itsSquaredErrorImag[i]);
+  }
+#endif
+  
+  LOG_DEBUG_STR("Predict: " << itsPredTimer);
+  LOG_DEBUG_STR("Construct equations: " << itsEqTimer);
   itsPredTimer.reset();
   itsEqTimer.reset();
 }
@@ -1842,6 +1979,11 @@ void Prediffer::correctData()
   ///  if (flush) {
     ///    itsOutDataMap->flush();
     ///  }
+    
+  LOG_DEBUG_STR("Read/Correct: " << itsPredTimer);
+  LOG_DEBUG_STR("Write: " << itsEqTimer);
+  itsPredTimer.reset();
+  itsEqTimer.reset();
 }
 
 void Prediffer::subtractData()
@@ -1853,6 +1995,11 @@ void Prediffer::subtractData()
   ///  if (flush) {
     ///    itsOutDataMap->flush();
     ///  }
+  
+  LOG_DEBUG_STR("Predict: " << itsPredTimer);
+  LOG_DEBUG_STR("Read/Subtract/Write: " << itsEqTimer);
+  itsPredTimer.reset();
+  itsEqTimer.reset();
 }
 
 void Prediffer::writePredictedData()
@@ -1861,6 +2008,11 @@ void Prediffer::writePredictedData()
   setPrecalcNodes (itsExpr);
   processData (false, true, false,
            &Prediffer::predictBL, 0);
+
+  LOG_DEBUG_STR("Predict: " << itsPredTimer);
+  LOG_DEBUG_STR("Write: " << itsEqTimer);
+  itsPredTimer.reset();
+  itsEqTimer.reset();
 }
 
 void Prediffer::getData (bool useTree,
@@ -1901,6 +2053,7 @@ void Prediffer::fillEquation (int threadnr, void* arg,
   // Get the fitter objects.
   vector<LSQFit*>& fitters =
     (*static_cast<vector<vector<LSQFit*> >*>(arg))[threadnr];
+  
   // Allocate temporary vectors.
   // If needed, they can be pre-allocated per thread, so there is no
   // malloc needed for each invocation. Currently it is believed that
@@ -1941,6 +2094,7 @@ void Prediffer::fillEquation (int threadnr, void* arg,
   // To avoid having to use large temporary arrays, step through the
   // data by timestep and correlation.
   uint nreq=0;
+  
   for (int corr=0; corr<itsNCorr; corr++, data++, flags++) {
     if (itsCorr[corr]) {
       // Get the results for this correlation.
@@ -1973,6 +2127,7 @@ void Prediffer::fillEquation (int threadnr, void* arg,
     const fcomplex* cdata  = data;
     const bool*     cflags = flags;
     if (fitters.size() == 1) {
+
       // No fitter indexing needed if only one fitter.
       for (int tim=0; tim<nrtime; tim++) {
         // Loop through all channels.
@@ -1986,6 +2141,12 @@ void Prediffer::fillEquation (int threadnr, void* arg,
           if (! cflags[dch]) {
         double diffr = real(cdata[dch]) - *realVals;
         double diffi = imag(cdata[dch]) - *imagVals;
+        
+#ifdef COMPUTE_SQUARED_ERROR  
+        itsSquaredErrorReal[0] += diffr*diffr;
+        itsSquaredErrorImag[0] += diffi*diffi;
+#endif
+        
         for (int scinx=0; scinx<nrParamsFound; ++scinx) {
           // Calculate the derivative for real and imag part.
           double invp = invPert[scinx];
@@ -2045,6 +2206,12 @@ void Prediffer::fillEquation (int threadnr, void* arg,
         int fitInx = fitInxT + itsFreqFitInx[ch];
         double diffr = real(cdata[dch]) - *realVals;
         double diffi = imag(cdata[dch]) - *imagVals;
+        
+#ifdef COMPUTE_SQUARED_ERROR  
+        itsSquaredErrorReal[fitInx] += diffr*diffr;
+        itsSquaredErrorImag[fitInx] += diffi*diffi;
+#endif
+        
         for (int scinx=0; scinx<nrParamsFound; ++scinx) {
           // Calculate the derivative for real and imag part.
           double invp = 1. / tcres.getPerturbation(indices[scinx],
@@ -2093,6 +2260,7 @@ void Prediffer::fillEquation (int threadnr, void* arg,
   }
   //fillEquationTimer.stop();
   itsEqTimer.stop();
+ 
   ///  cout << "nreq="<<nreq<<endl;
 }
 
@@ -2460,6 +2628,18 @@ void Prediffer::updateSolvableParms (const vector<double>& values)
   resetEqLoop();
 }
 
+void Prediffer::updateSolvableParms(size_t solveDomainIndex, const vector<double> unknowns)
+{
+    SolveDomainDescriptor &descriptor =
+        itsSolveDomainDescriptors[solveDomainIndex];
+
+    for(size_t i = 0; i < descriptor.parameters.size(); ++i)
+    {
+        descriptor.parameters[i].update(solveDomainIndex, descriptor.unknownIndex[i], unknowns);
+    }
+}
+
+
 void Prediffer::updateSolvableParms (const ParmDataInfo& parmDataInfo)
 {
   const vector<ParmData>& parmData = parmDataInfo.parms();
@@ -2509,9 +2689,99 @@ void Prediffer::resetEqLoop()
 {
 }
 
+
+// Log the values of the solvable parameters and the quality indicators of the
+// last iteration to a ParmDB. The type of the parameters is set to 'history'
+// to ensure that they cannot accidentily be used as input for BBSkernel. Also,
+// ParmFacade::getHistory() checks on this type.
+void Prediffer::logIteration(
+    const string &stepName,
+    size_t solveDomainIndex,
+    double rank,
+    double chiSquared,
+    double LMFactor)
+{
+    if(!itsHistoryDB)
+        return;
+
+    ostringstream os;
+    os << setfill('0');
+
+    // Default values for the coefficients (every parameters of the history
+    // type has exactly one coefficient, and only solvable parameters are
+    // logged).
+    bool solvable = false;
+    vector<int> shape(2, 1);
+
+    const SolveDomainDescriptor &descriptor =
+        itsSolveDomainDescriptors[solveDomainIndex];
+
+    // For each solve domain, log the solver quality indicators and the values of the
+    // coefficients of each solvable parameter.
+    LOFAR::ParmDB::ParmValue value;
+    LOFAR::ParmDB::ParmValueRep &valueRep = value.rep();
+
+    valueRep.setType("history");
+    valueRep.setDomain(LOFAR::ParmDB::ParmDomain(
+        descriptor.domain.startX(),
+        descriptor.domain.endX(),
+        descriptor.domain.startY(),
+        descriptor.domain.endY()));
+
+    string stepPrefix = stepName + ":";
+    string domainSuffix;
+    if(itsSolveDomains.size() > 1)
+    {
+        os.str("");
+        os << ":domain" << setw(((int) log10(double(itsSolveDomains.size())) + 1)) << solveDomainIndex;
+        domainSuffix = os.str();
+    }
+
+    value.setNewParm();
+    valueRep.setCoeff(&rank, &solvable, shape);
+    itsHistoryDB->putValue(stepPrefix + "solver:rank" + domainSuffix, value);
+
+    value.setNewParm();
+    valueRep.setCoeff(&chiSquared, &solvable, shape);
+    itsHistoryDB->putValue(stepPrefix + "solver:chi_squared" + domainSuffix, value);
+
+    value.setNewParm();
+    valueRep.setCoeff(&LMFactor, &solvable, shape);
+    itsHistoryDB->putValue(stepPrefix + "solver:lm_factor" + domainSuffix, value);
+
+    // Log each solvable parameter. Each combinaton of coefficient
+    // and solve domain is logged separately. Otherwise, one would
+    // currently not be able to view coefficients separately in the
+    // plotter.
+    for(size_t i = 0; i < descriptor.parameters.size(); ++i)
+    {
+        const MeqFunklet *funklet = descriptor.parameters[i].getFunklets()[solveDomainIndex];
+        const vector<bool> &mask = funklet->getSolvMask();
+        const MeqMatrix &coeff = funklet->getCoeff();
+        const double *data = coeff.doubleStorage();
+
+        int indexWidth = ((int) log10(double(mask.size()))) + 1;
+
+        // Log each coefficient of the current parameter.
+        for(size_t j = 0; j < mask.size(); ++j)
+        {
+            // Only log solvable coefficients.
+            if(mask[j])
+            {
+                value.setNewParm();
+                valueRep.setCoeff(&data[j], &solvable, shape);
+                os.str("");
+                os << stepPrefix << descriptor.parameters[i].getName() << ":c" << setw(indexWidth) << j << domainSuffix;
+                itsHistoryDB->putValue(os.str(), value);
+            }
+        }
+    }
+}
+
+
 void Prediffer::writeParms()
 {
-  BBSTest::ScopedTimer saveTimer("P:write-parm");
+//  BBSTest::ScopedTimer saveTimer("P:write-parm");
   //  saveTimer.start();
   for (MeqParmGroup::iterator iter = itsParmGroup.begin();
        iter != itsParmGroup.end();

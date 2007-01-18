@@ -74,6 +74,12 @@ void MeqParm::update (const vector<double>&)
 {
   throw Exception("MeqParm::update vector should not be called");
 }
+
+void MeqParm::update(size_t domainIndex, size_t unknownIndex, const vector<double> &unknowns)
+{
+  throw Exception("MeqParm::update (size_t, size_t, vector) should not be called");
+}
+
 void MeqParm::updateFromTable()
 {
   throw Exception("MeqParm::updateFromTable should not be called");

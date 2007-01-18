@@ -147,6 +147,9 @@ public:
   // Update the solvable coefficients with the new values.
   void update (const MeqMatrix& value);
 
+  void update(size_t unknownIndex, const vector<double>& unknowns);
+
+
 protected:
   bool isCoeffSolvable (int coeffnr) const
     { return itsParmValue.rep().itsSolvMask[coeffnr]; }

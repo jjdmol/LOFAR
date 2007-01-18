@@ -401,5 +401,11 @@ void MeqParmFunklet::save()
   }
 }
 
+void MeqParmFunklet::update(size_t domainIndex, size_t unknownIndex, const vector<double> &unknowns)
+{
+    ASSERT(domainIndex < itsFunklets.size());
+    itsFunklets[domainIndex]->update(unknownIndex, unknowns);
+}
+
 } // namespace BBS
 } // namespace LOFAR

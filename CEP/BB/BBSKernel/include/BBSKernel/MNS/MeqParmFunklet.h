@@ -112,6 +112,8 @@ public:
   // at the spid index of this parameter.
   virtual void update (const vector<double>& value);
 
+  virtual void update(size_t domainIndex, size_t unknownIndex, const vector<double> &unknowns);
+
   // Update the solvable parameter coefficients with the new values
   // in the table.
   // The default implementation throws a "not implemented" exception.
@@ -120,6 +122,7 @@ public:
   // Get the perturbation index.
   int getPertInx() const
     { return itsPertInx; }
+
 
 private:
   bool                itsDefUsed;  //# true = default is used as initial value
