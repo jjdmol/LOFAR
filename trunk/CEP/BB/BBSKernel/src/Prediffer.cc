@@ -263,7 +263,7 @@ Prediffer::~Prediffer()
 
   delete itsMEP;
   delete itsGSMMEP;
-  delete itsHistoryDB;
+//  delete itsHistoryDB;
   
   delete itsInDataMap;
   delete itsOutDataMap;
@@ -2876,6 +2876,7 @@ Prediffer::Prediffer(const string& msName,
 : itsCalcUVW      (calcUVW),
   itsMEPName      (meqPdm.getTableName()),
   itsGSMMEPName   (skyPdm.getTableName()),
+  itsHistoryDB    (0),
   itsSources      (0),
   itsNrPert       (0),
   itsNCorr        (0),
