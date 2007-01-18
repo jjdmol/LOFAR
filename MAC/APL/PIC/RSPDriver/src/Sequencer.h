@@ -37,7 +37,7 @@ namespace LOFAR {
 
 	typedef enum {
 	  NONE = 0,
-	  SETCLOCK,
+	  SETCLOCK, // done at initialization
 	  RSPCLEAR,
 	} Sequence;
 	/*
@@ -64,6 +64,7 @@ namespace LOFAR {
 	 * The states of the statemachine.
 	 */
 	GCFEvent::TResult idle_state(GCFEvent& event, GCFPortInterface& port);
+	GCFEvent::TResult rsupreclear_state(GCFEvent& event, GCFPortInterface& port);
 	GCFEvent::TResult clearclock_state(GCFEvent& event, GCFPortInterface& port);
 	GCFEvent::TResult writeclock_state(GCFEvent& event, GCFPortInterface& port);
 	GCFEvent::TResult readclock_state(GCFEvent& event, GCFPortInterface& port);
