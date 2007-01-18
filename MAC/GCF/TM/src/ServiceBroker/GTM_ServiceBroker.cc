@@ -21,9 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <Common/LofarLocators.h>
 
-#include <APS/ParameterSet.h>
 #include <GCF/Utils.h>
 #include <SB_Protocol.ph>
 #include <GTM_Defines.h>
