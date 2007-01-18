@@ -96,7 +96,7 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
       if (!GET_CONFIG("RSPDriver.DISABLE_INIT", i)) {
 	if (SETCLOCK == m_sequence) {
 	  Cache::getInstance().reset();
-	  TRAN(Sequencer::clearclock_state);
+	  TRAN(Sequencer::rsupreclear_state);
 	} else if (RSPCLEAR == m_sequence) {
 	  TRAN(Sequencer::rsuclear_state);
 	}
@@ -108,6 +108,53 @@ GCFEvent::TResult Sequencer::idle_state(GCFEvent& event, GCFPortInterface& /*por
     {
       LOG_DEBUG("Leaving Sequencer::idle_state");
       m_active = true;
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+GCFEvent::TResult Sequencer::rsupreclear_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_ENTRY:
+    {
+      LOG_DEBUG("Entering Sequencer::rsuclear_state");
+
+      // Change the regsiter to set the clear flag
+      RSUSettings::ResetControl rsumode;
+      rsumode.setClear(true);
+      for (int rsp = 0; rsp < StationSettings::instance()->nrRspBoards(); rsp++) {
+	Cache::getInstance().getBack().getRSUSettings()()(rsp) = rsumode;
+      }
+
+      // signal that the register has changed
+      Cache::getInstance().getState().rsuclear().reset();
+      Cache::getInstance().getState().rsuclear().write();
+
+      m_timer = 0;
+    }
+    break;
+    
+    case F_TIMER:
+    {
+      if (m_timer++ > RSUCLEAR_WAIT && Cache::getInstance().getState().rsuclear().isMatchAll(RegisterState::IDLE)) {
+	TRAN(Sequencer::clearclock_state);
+      }
+    }
+    break;
+
+    case F_EXIT:
+    {
+      LOG_DEBUG("Leaving Sequencer::rsuclear_state");
     }
     break;
 
