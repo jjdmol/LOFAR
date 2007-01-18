@@ -3,7 +3,7 @@ SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
-check_PROGRAMS 		= tmEcho tmPing tGCFPort tProtocol
+check_PROGRAMS 		= tmEcho tmPing tGCFPort tProtocol tEventPort
 
 tmEcho_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc Echo.cc Echo.h 
 tmEcho_LDADD		= ../src/libgcftm.la
@@ -23,6 +23,12 @@ tProtocol_SOURCES 		= testprotocol.ph testprotocol.cc \
 						  tProtocol.cc 
 tProtocol_LDADD			= ../src/libgcftm.la
 tProtocol_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
+
+tEventPort_SOURCES 		= tEventPort.cc
+tEventPort_LDADD		= ../src/ServiceBroker/libeventport.la \
+						  $(libdir)/librsp_protocol.la \
+						  -L$(includedir)/APL/RSP_Protocol
+tEventPort_DEPENDENCIES	= ../src/ServiceBroker/libeventport.la $(LOFAR_DEPEND)
 
 BUILT_SOURCES = Echo_Protocol.ph testprotocol.ph
 
