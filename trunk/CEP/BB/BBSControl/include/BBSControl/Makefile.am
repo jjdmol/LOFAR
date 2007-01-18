@@ -12,9 +12,15 @@ pkginclude_HEADERS = \
 	BBSStrategy.h \
 	BBSStructs.h \
 	BBSSubtractStep.h \
+	BBSSolverProcessControl.h \
+	BlobStreamableConnection.h
+	BlobStreamableVector.h \
 	CommandQueue.h \
 	CommandQueueTransactors.h \
-	Exceptions.h
+	DomainRegistrationRequest.h \
+	Exceptions.h \
+	IterationRequest.h \
+	IterationResult.h \
 
 noinst_HEADERS = \
 	pqutil.h

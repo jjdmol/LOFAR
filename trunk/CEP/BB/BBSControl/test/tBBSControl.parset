@@ -3,6 +3,7 @@ DataSet                 = test.ms           # name of Measurement Set
 Strategy.Steps          = [ xyz1, xyz2 ]    # steps
 Strategy.Stations       = [ CS*, RS1*, RS2*, DE* ]   # names of stations to use
 Strategy.InputData      = INDATA            # MS input data column 
+Strategy.RegionOfInterest = [1175e6, 1176e6, 1000.0, 3000.0] # region of interest to process
 Strategy.Correlation.Selection = ALL        # one of AUTO, CROSS, ALL
 Strategy.Correlation.Type = [ XX, YY ]      # which (cross)correlations to use
 Strategy.WorkDomainSize.Freq = 1e+6         # work domain size: f(Hz) 

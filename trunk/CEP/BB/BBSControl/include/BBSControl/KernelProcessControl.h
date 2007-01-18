@@ -20,7 +20,7 @@
 //#
 //#  Note: This source is read best with tabstop 4.
 //#
-//#  $Id: 
+//#  $Id$
 
 #ifndef LOFAR_BBSCONTROL_BBSKERNELPROCESSCONTROL_H
 #define LOFAR_BBSCONTROL_BBSKERNELPROCESSCONTROL_H
@@ -30,16 +30,15 @@
 //# Includes
 #include <PLC/ProcessControl.h>
 #include <APS/ParameterSet.h>
+#include <Common/lofar_smartptr.h>
+#include <BBSControl/BlobStreamableConnection.h>
+#include <BBSKernel/Prediffer.h>
 #include <BBSControl/BBSStructs.h>
 
 namespace LOFAR
 {
   //# Forward declations
-  namespace ParmDB { class ParmDB; }
   class BlobStreamable;
-  class DH_BlobStreamable;
-  class TH_Socket;
-  class CSConnection;
 
   namespace BBS
   {
@@ -50,7 +49,6 @@ namespace LOFAR
     class BBSSubtractStep;
     class BBSCorrectStep;
     class BBSSolveStep;
-    class Prediffer;
     struct Context;
 
     // \addtogroup BBSControl
@@ -63,9 +61,6 @@ namespace LOFAR
     public:
       // Default constructor.
       BBSKernelProcessControl();
-
-      // Destructor
-      virtual ~BBSKernelProcessControl();
 
       // @name Implementation of PLC interface.
       // @{
@@ -80,53 +75,38 @@ namespace LOFAR
       virtual string  askInfo(const string& keylist);
       // @}
 
-      bool handle(const BBSStrategy *strategy);
-      bool handle(const BBSStep *step);
-
     private:
+      bool dispatch(const BlobStreamable *message);
+      
+      bool handle(const BBSStrategy *strategy);
+      bool handle(const BBSStep *bs);
+      
       // @name Implementation of handle() for the different BBSStep types.
       // @{
-      bool doHandle(const BBSPredictStep *step);
-      bool doHandle(const BBSSubtractStep *step);
-      bool doHandle(const BBSCorrectStep *step);
-      bool doHandle(const BBSSolveStep *step);
+      bool handle(const BBSPredictStep *step);
+      bool handle(const BBSSubtractStep *step);
+      bool handle(const BBSCorrectStep *step);
+      bool handle(const BBSSolveStep *step);
       // @}
-
-      void convertStepToContext(const BBSStep *step, Context &context);
-
-      // Send the strategy or one of the steps across.
-      bool sendObject(const BlobStreamable& bs);
-
-      // Receive a BlobStreamable object, e.g., a BBSStatus.
-      BlobStreamable* recvObject();
 
       // Parameter set for this process controller.
       ACC::APS::ParameterSet itsParameterSet;
 
       // Prediffer
-      Prediffer* itsPrediffer;
-
+      scoped_ptr<Prediffer> itsPrediffer;
+      
+      // Connections
+      scoped_ptr<BlobStreamableConnection> itsControllerConnection;
+      scoped_ptr<BlobStreamableConnection> itsSolverConnection;
+      
+      // Region of interest
+      vector<double> itsRegionOfInterest;
+      
       // Work domain size
       DomainSize itsWorkDomainSize;
-
-      // History database.
-      LOFAR::ParmDB::ParmDB* itsHistory;
-
-      // DataHolder for exchanging data between local (BBSKernel) and global
-      // (BBS) process control.
-      DH_BlobStreamable* itsDataHolder;
-
-      // TransportHolder used to exchange DataHolders. The local controller
-      // will open a client connection to the global controller.
-      TH_Socket* itsTransportHolder;
-
-      // Connection between the local (BBSKernel) process control and the
-      // global (BBS) process control.
-      CSConnection* itsConnection;
     };
 
   } // namespace BBS
-
 } // namespace LOFAR
 
 #endif

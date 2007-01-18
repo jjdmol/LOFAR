@@ -77,14 +77,15 @@ namespace LOFAR
 
       // @name Accessor methods
       // @{
-      string         dataSet()     const { return itsDataSet; }
-      BBDB           bbDB()        const { return itsBBDB; }
-      ParmDB         parmDB()      const { return itsParmDB; }
-      vector<string> stations()    const { return itsStations; }
-      string         inputData()   const { return itsInputData; }
-      DomainSize     domainSize()  const { return itsDomainSize; }
-      Correlation    correlation() const { return itsCorrelation; }
-      Integration    integration() const { return itsIntegration; }
+      string         dataSet()          const { return itsDataSet; }
+      BBDB           bbDB()             const { return itsBBDB; }
+      ParmDB         parmDB()           const { return itsParmDB; }
+      vector<string> stations()         const { return itsStations; }
+      string         inputData()        const { return itsInputData; }
+      vector<double> regionOfInterest() const { return itsRegionOfInterest;}
+      DomainSize     domainSize()       const { return itsDomainSize; }
+      Correlation    correlation()      const { return itsCorrelation; }
+      Integration    integration()      const { return itsIntegration; }
       // @}
 
     private:
@@ -122,6 +123,9 @@ namespace LOFAR
       // Name of the MS input data column
       string                 itsInputData;
 
+      // Region of interest
+      vector<double>         itsRegionOfInterest;
+      
       // The work domain size
       DomainSize             itsDomainSize;
       

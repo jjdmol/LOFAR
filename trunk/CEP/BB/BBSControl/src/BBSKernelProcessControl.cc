@@ -20,7 +20,7 @@
 //#
 //#  Note: This source is read best with tabstop 4.
 //#
-//#  $Id: 
+//#  $Id$
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -33,21 +33,29 @@
 #include <BBSControl/BBSCorrectStep.h>
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/BBSSubtractStep.h>
-#include <BBSKernel/BBSKernelStructs.h>
-#include <BBSKernel/Prediffer.h>
+#include <BBSControl/BlobStreamableVector.h>
+#include <BBSControl/DomainRegistrationRequest.h>
+#include <BBSControl/IterationRequest.h>
+#include <BBSControl/IterationResult.h>
+
 #include <BBSKernel/Solver.h>
 #include <BBSKernel/BBSStatus.h>
-#include <ParmDB/ParmDB.h>
-#include <ParmDB/ParmDBMeta.h>
+
 #include <APS/ParameterSet.h>
-#include <Transport/DH_BlobStreamable.h>
-#include <Transport/TH_Socket.h>
-#include <Transport/CSConnection.h>
+#include <Blob/BlobStreamable.h>
+
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
+#include <Common/Timer.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_smartptr.h>
+
+#include <Transport/DH_BlobStreamable.h>
+#include <Transport/TH_Socket.h>
+#include <Transport/CSConnection.h>
+
+#include <stdlib.h>
 
 using namespace LOFAR::ACC::APS;
 
@@ -58,85 +66,69 @@ namespace BBS
     using LOFAR::operator<<;
 
 
-    //##----   P u b l i c   m e t h o d s   ----##//
+    //# Ensure classes are registered with the ObjectFactory.
+    template class BlobStreamableVector<DomainRegistrationRequest>;
+    template class BlobStreamableVector<IterationRequest>;
+    template class BlobStreamableVector<IterationResult>;
 
+
+    //##----   P u b l i c   m e t h o d s   ----##//
     BBSKernelProcessControl::BBSKernelProcessControl() :
         ProcessControl(),
-        itsPrediffer(0), 
-        itsHistory(0),
-        itsDataHolder(0), 
-        itsTransportHolder(0), 
-        itsConnection(0)
+        itsPrediffer(0)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
 
-
-    BBSKernelProcessControl::~BBSKernelProcessControl()
-    {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        delete itsPrediffer;
-        delete itsHistory;
-        delete itsDataHolder;
-        delete itsTransportHolder;
-        delete itsConnection;
-    }
-
-
+    
     tribool BBSKernelProcessControl::define()
     {
-        LOG_INFO("BBSKernelProcessControl::define()");
+        LOG_DEBUG("BBSKernelProcessControl::define()");
+        
         try {
-            // Create a new data holder.
-            itsDataHolder = new DH_BlobStreamable();
-
-            // Create a new client TH_Socket. Do not connect yet.
-            itsTransportHolder = new TH_Socket(globalParameterSet()->getString("Controller.Host"),
-            globalParameterSet()->getString("Controller.Port"),
-                                            true,         // sync
-                                            Socket::TCP,  // protocol
-                                            false);       // open socket now
+            itsControllerConnection.reset(new BlobStreamableConnection(
+                    globalParameterSet()->getString("Controller.Host"),
+                    globalParameterSet()->getString("Controller.Port")));
+            
+            char *user = getenv("USER");
+            ASSERT(user);
+            string userString(user);
+            itsSolverConnection.reset(new BlobStreamableConnection(
+                "localhost",
+                "=BBSSolver_" + userString,
+                Socket::LOCAL));
         }
         catch(Exception& e)
         {
             LOG_ERROR_STR(e);
             return false;
         }
-        
+
         return true;
     }
 
 
     tribool BBSKernelProcessControl::init()
     {
-        LOG_INFO("BBSKernelProcessControl::init()");
+        LOG_DEBUG("BBSKernelProcessControl::init()");
+        
         try {
-            // DH_BlobStreamable is initialized implicitly by its constructor.
-            ASSERT(itsDataHolder);
-            if(!itsDataHolder->isInitialized())
+            LOG_DEBUG_STR("Trying to connect to controller@" << globalParameterSet()->getString("Controller.Host") << ":" << globalParameterSet()->getString("Controller.Port"   ) << "...");
+
+            if(!itsControllerConnection->connect())
             {
-                LOG_ERROR("Initialization of DataHolder failed");
+                LOG_ERROR("+ could not connect to controller");
                 return false;
             }
-    
-            // Connect the client socket to the server.
-            ASSERT(itsTransportHolder);
-            if(!itsTransportHolder->init())
+            LOG_DEBUG("+ ok");
+
+            LOG_DEBUG("Trying to connect to solver@localhost");
+            if(!itsSolverConnection->connect())
             {
-                LOG_ERROR("Initialization of TransportHolder failed");
+                LOG_ERROR("+ could not connect to solver");
                 return false;
             }
-    
-            // Create a new CSConnection object.
-            itsConnection = new CSConnection("RWConn", 
-                                             itsDataHolder, 
-                                             itsDataHolder, 
-                                             itsTransportHolder);
-            if(!itsConnection || !itsConnection->isConnected())
-            {
-                LOG_ERROR("Creation of Connection failed");
-                return false;
-            }
+            LOG_DEBUG("+ ok");
         }
         catch(Exception& e)
         {
@@ -151,55 +143,23 @@ namespace BBS
 
     tribool BBSKernelProcessControl::run()
     {
-        LOG_INFO("BBSKernelProcessControl::run()");
+        LOG_DEBUG("BBSKernelProcessControl::run()");
 
-      try {
-        // Receive the next message
-        scoped_ptr<BlobStreamable> msg(recvObject());
-	if (!msg) return false;
-
-	// If the message contains a `strategy', handle the `strategy'.
-	BBSStrategy* strategy = dynamic_cast<BBSStrategy*>(msg.get());
-	if (strategy) {
-          if (handle(strategy)) {
-            sendObject(BBSStatus(BBSStatus::OK));
-            return true;
-          }
-          else {
-            sendObject(BBSStatus(BBSStatus::ERROR));
-            return false;
-          }
+        try
+        {
+            // Receive the next message
+            scoped_ptr<BlobStreamable> message(itsControllerConnection->recvObject());
+            if(message)
+                return dispatch(message.get());
+            else
+                return false;
         }
-
-	// If the message contains a `step', handle the `step'.
-	BBSStep* step = dynamic_cast<BBSStep*>(msg.get());
-	if (step) {
-          if (handle(step)) {
-            BBSStatus sts(BBSStatus::OK);
-            LOG_DEBUG_STR("Sending BBSStatus: " << sts);
-            sendObject(BBSStatus(BBSStatus::OK));
-            return true;
-          }
-          else {
-            sendObject(BBSStatus(BBSStatus::ERROR));
+        catch(Exception& e)
+        {
+            LOG_ERROR_STR(e);
+            itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR, e.message()));
             return false;
-          }
         }
-
-	// We received a message we can't handle
-        ostringstream oss;
-        oss << "Received message of unsupported type `" 
-            << itsDataHolder->classType() << "'. Skipped.";
-	LOG_WARN(oss.str());
-        sendObject(BBSStatus(BBSStatus::ERROR, oss.str()));
-	return false;
-
-      }
-      catch (Exception& e) {
-	LOG_ERROR_STR(e);
-        sendObject(BBSStatus(BBSStatus::ERROR, e.message()));
-	return false;
-      }
     }
 
 
@@ -213,7 +173,7 @@ namespace BBS
 
     tribool BBSKernelProcessControl::quit()
     {
-        LOG_INFO("BBSKernelProcessControl::quit()");
+        LOG_DEBUG("BBSKernelProcessControl::quit()");
         return true;
     }
 
@@ -249,6 +209,51 @@ namespace BBS
     }
 
 
+    //##----   P r i v a t e   m e t h o d s   ----##//
+    bool BBSKernelProcessControl::dispatch(const BlobStreamable *message)
+    {
+        // If the message contains a `strategy', handle the `strategy'.
+        const BBSStrategy *strategy = dynamic_cast<const BBSStrategy*>(message);
+        if(strategy)
+        {
+            if(handle(strategy))
+            {
+                itsControllerConnection->sendObject(BBSStatus(BBSStatus::OK));
+                return true;
+            }
+            else
+            {
+                itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR));
+                return false;
+            }
+        }
+
+        // If the message contains a `step', handle the `step'.
+        const BBSStep *step = dynamic_cast<const BBSStep*>(message);
+        if(step)
+        {
+            if(handle(step))
+            {
+                itsControllerConnection->sendObject(BBSStatus(BBSStatus::OK));
+                return true;
+            }
+            else
+            {
+                itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR));
+                return false;
+            }
+        }
+
+        // We received a message we can't handle
+        ostringstream oss;
+        oss << "Received message of unsupported type";
+//            << itsControllerConnection.itsDataHolder->classType() << "'. Skipped.";
+        LOG_WARN(oss.str());
+        itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR, oss.str()));
+        return false;
+    }
+    
+    
     bool BBSKernelProcessControl::handle(const BBSStrategy *strategy)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
@@ -258,31 +263,46 @@ namespace BBS
             // Pre-condition check
             ASSERT(strategy);
 
-            delete itsHistory;
-            itsHistory = 0;
-            if(!strategy->parmDB().history.empty())
+            // Create a new Prediffer.
+            itsPrediffer.reset(new Prediffer(strategy->dataSet(),
+                strategy->inputData(),
+                strategy->parmDB().localSky,
+                strategy->parmDB().instrument,
+                strategy->parmDB().history,
+                0,
+                false));
+
+            // Store work domain size / region of interest.
+            itsWorkDomainSize = strategy->domainSize();            
+            itsRegionOfInterest = strategy->regionOfInterest();
+            
+            // Time is specified as an offset from the start time of
+            // the measurement set.
+            const MeqDomain domain = itsPrediffer->getLocalDataDomain();
+            LOG_DEBUG_STR("Local data domain: " << domain);
+            itsRegionOfInterest[2] += domain.startY();
+            itsRegionOfInterest[3] += domain.startY();
+            
+            if(itsRegionOfInterest[0] > domain.endX()
+                || itsRegionOfInterest[2] > domain.endY())
             {
-                LOFAR::ParmDB::ParmDBMeta historyDBMeta("aips", strategy->parmDB().history);
-                itsHistory = new LOFAR::ParmDB::ParmDB(historyDBMeta);
+                LOG_DEBUG_STR("Region of interest does not intersect the local data domain.");
+                return false;
             }
 
-            // Create a new Prediffer.
-            delete itsPrediffer;
-            itsPrediffer = new Prediffer(strategy->dataSet(),
-                                         strategy->inputData(),
-                                         strategy->parmDB().localSky,
-                                         strategy->parmDB().instrument,
-                                         0,
-                                         false);
+            // Clip region of interest against local data domain.
+            if(itsRegionOfInterest[0] < domain.startX())
+                itsRegionOfInterest[0] = domain.startX(); 
+            if(itsRegionOfInterest[1] < domain.endX())
+                itsRegionOfInterest[1] = domain.endX(); 
 
-            // Store work domain size.
-            itsWorkDomainSize = strategy->domainSize();
-
+            if(itsRegionOfInterest[2] > domain.startY())
+                itsRegionOfInterest[2] = domain.startY(); 
+            if(itsRegionOfInterest[3] > domain.endY())
+                itsRegionOfInterest[3] = domain.endY(); 
+            
             // Select stations and correlations.
             return itsPrediffer->setSelection(strategy->stations(), strategy->correlation());
-//                    && itsPrediffer->setWorkDomainSize(workDomainSize.bandWidth, workDomainSize.timeInterval));
-//                    && itsPrediffer->setWorkDomain(-1, -1, 0, 1e12));
-//                    && itsPrediffer->setWorkDomain(4, 59, 0, 1e12));
         }
         catch(Exception& e)
         {
@@ -292,47 +312,35 @@ namespace BBS
     }
 
 
-    bool BBSKernelProcessControl::handle(const BBSStep* bs)
+    bool BBSKernelProcessControl::handle(const BBSStep *bs)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+        
         ASSERT(itsPrediffer);
 
-        const MSDesc &descriptor = itsPrediffer->getMSDescriptor();
-
-        LOG_DEBUG_STR("MS descriptor:" << endl << descriptor);
-
-        double startFreq = descriptor.startFreq[0];
-        double endFreq = descriptor.endFreq[0];
-
-        /*
-            (Some?) Westerbork measurement sets store the channels
-            in reverse order. In this case, start and end frequency
-            need to be exchanged.
-        */
-        if(startFreq > endFreq)
-        {
-            double tmp;
-            tmp = startFreq;
-            startFreq = endFreq;
-            endFreq = tmp;
-        }
-
-        double startTime = descriptor.startTime;
-        double endTime = descriptor.endTime;
-        double time = startTime;
-
+        // Currently only the size in time of the work domain size is honoured.
+        int timeCount = std::max(1, (int) (0.5 + (itsRegionOfInterest[3] - itsRegionOfInterest[2]) / itsWorkDomainSize.timeInterval));
+        
+        double timeStep = (itsRegionOfInterest[3] - itsRegionOfInterest[2]);
+        if(timeCount > 1)
+            timeStep /= timeCount;
+        
         bool result = true;
-        while(result && (time < endTime))
+        double time = itsRegionOfInterest[2];
+        for(int i = 0; i < timeCount && result; ++i)
         {
-            ASSERT(itsPrediffer->setWorkDomain(startFreq, endFreq, time, time + itsWorkDomainSize.timeInterval));
-
+            ASSERT(itsPrediffer->setWorkDomain(itsRegionOfInterest[0],
+                itsRegionOfInterest[1],
+                time,
+                time + timeStep));
+            
+            time = itsPrediffer->getWorkDomain().endY();
             result = false;
-
             {
                 const BBSPredictStep* step = dynamic_cast<const BBSPredictStep*>(bs);
                 if(step)
                 {
-                    result = doHandle(step);
+                    result = handle(step);
                 }
             }
                     
@@ -340,7 +348,7 @@ namespace BBS
                 const BBSSubtractStep* step = dynamic_cast<const BBSSubtractStep*>(bs);
                 if(step)
                 {
-                    result = doHandle(step);
+                    result = handle(step);
                 }
             }
             
@@ -348,7 +356,7 @@ namespace BBS
                 const BBSCorrectStep* step = dynamic_cast<const BBSCorrectStep*>(bs);
                 if(step)
                 {
-                    result = doHandle(step);
+                    result = handle(step);
                 }
             }
             
@@ -356,98 +364,26 @@ namespace BBS
                 const BBSSolveStep* step = dynamic_cast<const BBSSolveStep*>(bs);
                 if(step)
                 {
-                    result = doHandle(step);
+                    result = handle(step);
                 }
             }
-
-            time += itsWorkDomainSize.timeInterval;
         }
         
         return result;
     }
 
 
-    //##----   P r i v a t e   m e t h o d s   ----##//
-
-    void BBSKernelProcessControl::convertStepToContext(const BBSStep *step, Context &context)
-    {
-        ASSERT(step->baselines().station1.size() == step->baselines().station2.size());
-
-        context.baselines = step->baselines();
-        /*
-        vector<string>::const_iterator it1 = step->itsBaselines.station1.begin();
-        vector<string>::const_iterator it2 = step->itsBaselines.station2.begin();
-        while(it1 != step->itsBaselines.station1.end())
-        {
-        context.baselines.push_back(pair<string, string>(*it1, *it2));
-        ++it1;
-        ++it2;        
-        }
-        */
-        context.correlation = step->correlation();
-        context.sources = step->sources();        
-        context.instrumentModel = step->instrumentModels();
-    }
-
-
-    bool BBSKernelProcessControl::sendObject(const BlobStreamable& bs)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      try {
-	// Serialize the object
-	itsDataHolder->serialize(bs);
-	LOG_DEBUG_STR("Sending a " << itsDataHolder->classType() << " object");
-
-	// Do a blocking send
-	if (itsConnection->write() == CSConnection::Error) {
-	  LOG_ERROR("Connection::write() failed");
-	  return false;
-	}
-      }
-      catch (Exception& e) {
-	LOG_ERROR_STR(e);
-	return false;
-      }
-      // All went well.
-      return true;
-    }
-
-
-    BlobStreamable* BBSKernelProcessControl::recvObject()
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      try {
-	// Do a blocking receive
-	if (itsConnection->read() == CSConnection::Error) {
-	  THROW(IOException, "CSConnection::read() failed");
-	}
-
-	// Deserialize the object
-	BlobStreamable* bs = itsDataHolder->deserialize();
-	if (!bs) {
-	  LOG_ERROR("Error while receiving object");
-	}
-	LOG_DEBUG_STR("Received a " << itsDataHolder->classType() <<
-		      " object");
-
-	// Return the object
-	return bs;
-      }
-      catch (Exception& e) {
-	LOG_ERROR_STR(e);
-	return 0;
-      }
-    }
-
-
-    bool BBSKernelProcessControl::doHandle(const BBSPredictStep *step)
+    bool BBSKernelProcessControl::handle(const BBSPredictStep *step)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         ASSERTSTR(itsPrediffer, "No Prediffer available.");
         ASSERTSTR(step, "Step corrupted.");
 
         PredictContext context;
-        convertStepToContext(step, context);
+        context.baselines = step->baselines();
+        context.correlation = step->correlation();
+        context.sources = step->sources();        
+        context.instrumentModel = step->instrumentModels();
         context.outputColumn = step->outputData();
 
         // Set context.
@@ -462,13 +398,16 @@ namespace BBS
     }
 
 
-    bool BBSKernelProcessControl::doHandle(const BBSSubtractStep *step)
+    bool BBSKernelProcessControl::handle(const BBSSubtractStep *step)
     {
         ASSERTSTR(itsPrediffer, "No Prediffer available.");
         ASSERTSTR(step, "Step corrupted.");
 
         SubtractContext context;
-        convertStepToContext(step, context);
+        context.baselines = step->baselines();
+        context.correlation = step->correlation();
+        context.sources = step->sources();        
+        context.instrumentModel = step->instrumentModels();
         context.outputColumn = step->outputData();
 
         // Set context.
@@ -483,13 +422,16 @@ namespace BBS
     }
 
 
-    bool BBSKernelProcessControl::doHandle(const BBSCorrectStep *step)
+    bool BBSKernelProcessControl::handle(const BBSCorrectStep *step)
     {
         ASSERTSTR(itsPrediffer, "No Prediffer available.");
         ASSERTSTR(step, "Step corrupted.");
 
         CorrectContext context;
-        convertStepToContext(step, context);
+        context.baselines = step->baselines();
+        context.correlation = step->correlation();
+        context.sources = step->sources();        
+        context.instrumentModel = step->instrumentModels();
         context.outputColumn = step->outputData();
 
         // Set context.
@@ -504,14 +446,19 @@ namespace BBS
     }
 
 
-    bool BBSKernelProcessControl::doHandle(const BBSSolveStep *step)
+    bool BBSKernelProcessControl::handle(const BBSSolveStep *step)
     {
+        NSTimer timer;
+        
         ASSERTSTR(itsPrediffer, "No Prediffer available.");
         ASSERTSTR(step, "Step corrupted.");
 
         // Construct context.
         GenerateContext context;
-        convertStepToContext(step, context);
+        context.baselines = step->baselines();
+        context.correlation = step->correlation();
+        context.sources = step->sources();        
+        context.instrumentModel = step->instrumentModels();
         context.unknowns = step->parms();
         context.excludedUnknowns = step->exclParms();
 
@@ -519,8 +466,10 @@ namespace BBS
         // with cells of size step->itsDomainSize. Should become more interesting in the near future.
         const MeqDomain &workDomain = itsPrediffer->getWorkDomain();
 
-        const int freqCount = (int) ceil((workDomain.endX() - workDomain.startX()) / step->domainSize().bandWidth);
-        const int timeCount = (int) ceil((workDomain.endY() - workDomain.startY()) / step->domainSize().timeInterval);
+        const int freqCount = (int) ceil((workDomain.endX() -
+            workDomain.startX()) / step->domainSize().bandWidth);
+        const int timeCount = (int) ceil((workDomain.endY() -
+            workDomain.startY()) / step->domainSize().timeInterval);
 
         double timeOffset = workDomain.startY();
         double timeSize = step->domainSize().timeInterval;
@@ -544,7 +493,10 @@ namespace BBS
                     freqSize = workDomain.endX() - freqOffset;
                 }
 
-                context.solveDomains.push_back(MeqDomain(freqOffset, freqOffset + freqSize, timeOffset, timeOffset + timeSize));
+                context.solveDomains.push_back(MeqDomain(freqOffset,
+                    freqOffset + freqSize,
+                    timeOffset,
+                    timeOffset + timeSize));
 
                 freqOffset += freqSize;
                 freq++;
@@ -560,72 +512,147 @@ namespace BBS
             return false;
         }
 
-        //LOG_INFO_STR("Solve domains:" << endl << itsPrediffer->getSolveDomains());
-
-        // Initialize the solver.
-        Solver solver;
-        solver.initSolvableParmData(1, itsPrediffer->getSolveDomains(), itsPrediffer->getWorkDomain());
-        solver.setSolvableParmData(itsPrediffer->getSolvableParmData(), 0);
-
-        // Optionally log to history.
-        if(itsHistory)
+        // Register all solve domains with the solver.
+        BlobStreamableVector<DomainRegistrationRequest> request;
+        const vector<SolveDomainDescriptor> &descriptors = itsPrediffer->getSolveDomainDescriptors();
+        for(size_t i = 0; i < descriptors.size(); ++i)
         {
-            solver.log(*itsHistory, step->getName());
+            request.getVector().push_back(new DomainRegistrationRequest(
+                i,
+                step->epsilon(),
+                step->maxIter(),
+                descriptors[i].unknowns));
         }
-
-        // Output some settings to stdout
-        itsPrediffer->showSettings();
-
+        itsSolverConnection->sendObject(request);
+        
         // Main iteration loop.
-        unsigned int iteration = 0;
-        bool converged = false;
-        while(iteration < step->maxIter() && !converged)
+        bool finished = false;
+        unsigned int iteration = 1;
+        while(!finished)
         {
-            // Generate normal equations and pass them to the solver.
+            LOG_DEBUG_STR("[START] Iteration: " << iteration);
+            
+            LOG_DEBUG_STR("[START] Generating normal equations...");
+            timer.reset();
+            timer.start();
+            
+            // Generate normal equations.
             vector<casa::LSQFit> equations;
             itsPrediffer->generateEquations(equations);
-            solver.mergeFitters(equations, 0);
 
-            // Do one Levenberg-Maquardt step.
-//            solver.solve(false);
-            solver.solve(true);
-
-            // Optionally log to history.
-            if(itsHistory)
-            {
-                solver.log(*itsHistory, step->getName());
-            }
-
-            LOG_INFO_STR("Iteration " << iteration << ":  " << setprecision(10));
+            timer.stop();
+            LOG_DEBUG_STR("[END  ] Generating normal equations; " << timer);
             
-            // Log convergence info and check for convergence.
-            int convergedSolveDomains = 0;
-            for(unsigned int i = 0; i < context.solveDomains.size(); ++i)
+            LOG_DEBUG_STR("[START] Sending equations to solver and waiting for results...");
+            timer.reset();
+            timer.start();
+            
+            // Send iteration requests to the solver in one go.
+            BlobStreamableVector<IterationRequest> iterationRequests;
+            for(size_t i = 0; i < equations.size(); ++i)
             {
-                Quality quality = solver.getQuality(i);
-                
-                //LOG_DEBUG_STR("domain " << i << ": rank=" << quality.itsRank << " fit=" << quality.itsFit << " chi_sqr=" << quality.itsChi);
-                
-                if(quality.itsFit < 0 && abs(quality.itsFit) <= step->epsilon())
-//                if(quality.itsChi < step->epsilon())
-                {
-                    convergedSolveDomains++;
-                }
+                iterationRequests.getVector().push_back(new IterationRequest(i, equations[i]));
             }
-            converged = (convergedSolveDomains >= (step->minConverged() * context.solveDomains.size()) / 100.0);
+            itsSolverConnection->sendObject(iterationRequests);        
+            
+            BlobStreamableVector<IterationResult> *resultv = dynamic_cast<BlobStreamableVector<IterationResult>*>(itsSolverConnection->recvObject());
+            ASSERT(resultv);
+            
+            timer.stop();
+            LOG_DEBUG_STR("[END ] Sending/waiting; " << timer);
 
-            LOG_INFO_STR("Solve domains converged: " << convergedSolveDomains << "/" << context.solveDomains.size() << " (" << (((double) convergedSolveDomains) / context.solveDomains.size() * 100.0) << "%)");
+            LOG_DEBUG_STR("[START] Processing results...");
+            timer.reset();
+            timer.start();
+            
+            const vector<IterationResult*> &results = resultv->getVector();        
+                        
+            // For each solve domain:
+            //     - wait for result
+            //     - check for convergence
+            //     - update cached values of the unknowns
+            unsigned int converged = 0, stopped = 0;
+            for(size_t i = 0; i < results.size(); ++i)
+            {
+                const IterationResult *result = results[i];
+                
+                // Check for convergence.
+                if(result->getResultCode() != 0)
+                    converged++;
 
-            // Send updates back to the Prediffer.
-            itsPrediffer->updateSolvableParms(solver.getSolvableParmData());
+                /*
+                if(result->getResultCode() != casa::LSQFit::NONREADY)
+                {
+                    if(result->getResultCode() == casa::LSQFit::SOLINCREMENT ||
+                        result->getResultCode() == casa::LSQFit::DERIVLEVEL)
+                    {
+                        converged++;
+                    }
+                    else
+                        stopped++;
+                }
+                */
+
+                /*
+                LOG_DEBUG_STR("+ Domain: " << result->getDomainIndex());
+                //LOG_DEBUG_STR("  + result: " << result->getResultCode() <<
+                //              ", " << result->getResultText());
+                LOG_DEBUG_STR("  + rank: " << result->getRank() <<
+                              ", chi^2: " << result->getChiSquared() <<
+                              ", LM factor: " << result->getLMFactor());
+                LOG_DEBUG_STR("  + unknowns: " << result->getUnknowns());
+                */
+                
+                if(result->getResultCode() != 2)
+                {
+#ifdef LOG_SOLVE_DOMAIN_STATS                
+                    LOG_DEBUG_STR("Domain: " << result->getDomainIndex()
+                        << ", Rank: " << result->getRank()
+                        << ", Chi^2: " << result->getChiSquared()
+                        << ", LM factor: " << result->getLMFactor());
+#endif
+                    // Update cached values of the unknowns.
+                    itsPrediffer->updateSolvableParms(i, result->getUnknowns());
+
+                    // Log the updated unknowns.
+                    itsPrediffer->logIteration(
+                        step->getName(),
+                        i,
+                        result->getRank(),
+                        result->getChiSquared(),
+                        result->getLMFactor());
+                }
+#ifdef LOG_SOLVE_DOMAIN_STATS                
+                else
+                    LOG_DEBUG_STR("Domain: " << result->getDomainIndex()
+                        << " - Already converged");
+#endif                        
+            }
+            timer.stop();
+            LOG_DEBUG_STR("[END  ] Processing results; " << timer);
+            
+            LOG_DEBUG_STR("[END  ] Iteration: " << iteration 
+                << ", Solve domains converged: " << converged << "/" << context.solveDomains.size() 
+                << " (" << (((double) converged) / context.solveDomains.size() * 100.0) << "%)");
+            //LOG_INFO_STR("Solve domains stopped: " << stopped << "/" << context.solveDomains.size() << " (" << (((double) stopped) / context.solveDomains.size() * 100.0) << "%)");
+
+            delete resultv;
+            //finished = (converged + stopped == context.solveDomains.size()) ||
+            //    (converged>= (step->minConverged() * context.solveDomains.size()) / 100.0);
+            finished = (converged == context.solveDomains.size()) || (iteration == step->maxIter());
             iteration++;
         }
 
-        LOG_INFO_STR("Writing solutions into parameter databases...");
+        LOG_DEBUG_STR("[START] Writing solutions into parameter databases...");
+        timer.reset();
+        timer.start();
+        
         itsPrediffer->writeParms();
+        
+        timer.stop();
+        LOG_DEBUG_STR("[END  ] Writing solutions; " << timer);
         return true;
     }
 
 } // namespace BBS
-
 } // namespace LOFAR

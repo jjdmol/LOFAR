@@ -27,6 +27,7 @@
 #include <BBSControl/BBSStructs.h>
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
+#include <APS/Exceptions.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobArray.h>
@@ -36,6 +37,7 @@
 namespace LOFAR
 {
   using ACC::APS::ParameterSet;
+  using ACC::APS::APSException;
 
   namespace BBS
   {
@@ -83,6 +85,27 @@ namespace LOFAR
       // Get the name of the MS input data column
       itsInputData = ps.getString("InputData");
 
+      // Get the region of interest (optional)
+      try
+      {
+          itsRegionOfInterest = ps.getDoubleVector("RegionOfInterest");
+          if(itsRegionOfInterest.size() != 4
+              || itsRegionOfInterest[0] < 0.0
+              || itsRegionOfInterest[2] < 0.0
+              || itsRegionOfInterest[0] > itsRegionOfInterest[1]
+              || itsRegionOfInterest[2] > itsRegionOfInterest[3])
+          {
+              THROW(BBSControlException, "Invalid region of interest specified: "
+                  << itsRegionOfInterest);
+          }
+      }
+      catch(APSException&)
+      {
+          itsRegionOfInterest.resize(4);
+          itsRegionOfInterest[0] = itsRegionOfInterest[2] = 0.0;
+          itsRegionOfInterest[1] = itsRegionOfInterest[3] = 1e50;
+      }
+      
       // Get the work domain size for this strategy
       itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");
       itsDomainSize.timeInterval = ps.getDouble("WorkDomainSize.Time");
@@ -131,6 +154,7 @@ namespace LOFAR
 	 << endl << indent << "Strategy:";
       Indent id;
       os << endl << indent << "Input data: " << itsInputData
+	 << endl << indent << "Region of interest: " << itsRegionOfInterest
 	 << endl << indent << itsDomainSize
 	 << endl << indent << itsCorrelation
 	 << endl << indent << itsIntegration
@@ -163,6 +187,7 @@ namespace LOFAR
 	  >> itsParmDB
 	  >> itsStations
 	  >> itsInputData
+      >> itsRegionOfInterest
 	  >> itsDomainSize
 	  >> itsCorrelation
 	  >> itsIntegration;
@@ -182,6 +207,7 @@ namespace LOFAR
 	  << itsParmDB
 	  << itsStations
 	  << itsInputData
+      << itsRegionOfInterest
 	  << itsDomainSize
 	  << itsCorrelation
 	  << itsIntegration;
