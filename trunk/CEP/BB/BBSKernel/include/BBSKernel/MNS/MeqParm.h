@@ -105,6 +105,7 @@ public:
   // <group>
   virtual void update (const ParmData& values);
   virtual void update (const vector<double>& value);
+  virtual void update(size_t domainIndex, size_t unknownIndex, const vector<double> &unknowns);
   virtual void updateFromTable();
   // </group>
 
@@ -163,6 +164,8 @@ public:
     { itsParmPtr->update (values); }
   void update (const vector<double>& value)
     { itsParmPtr->update (value); }
+  void update(size_t domainIndex, size_t unknownIndex, const vector<double> &unknowns)
+    { itsParmPtr->update (domainIndex, unknownIndex, unknowns); }
   void updateFromTable()
     { itsParmPtr->updateFromTable(); }
   // </group>

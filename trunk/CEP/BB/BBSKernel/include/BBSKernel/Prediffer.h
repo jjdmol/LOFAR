@@ -50,12 +50,14 @@
 #include <BBSKernel/MNS/MeqDFTPS.h>
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmValue.h>
+#include <ParmDB/ParmDomain.h>
 #include <MS/MSDesc.h>
 
 #include <Common/Timer.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_iomanip.h>
 
 #include <map>
 #include <utility>
@@ -83,15 +85,24 @@ class MeqJonesMMap;
 // It subtracts them from each other and calculates the derivatives.
 // These results can be sent to the solver to find better parameter values.
 
+struct SolveDomainDescriptor
+{
+    MeqDomain           domain;
+    vector<MeqPExpr>    parameters;
+    vector<size_t>      unknownIndex;
+    vector<double>      unknowns;
+};
+  
+
 class Prediffer
 {
-
 public:
   // NOTE: new constructor to comply with BBSStep interface.
-  Prediffer(const string& measurementSet,
-            const string& inputColumn,
-            const string& skyParameterDB,
-            const string& instrumentParameterDB,
+  Prediffer(const string &measurementSet,
+            const string &inputColumn,
+            const string &skyParameterDB,
+            const string &instrumentParameterDB,
+            const string &historyDB,
             uint subbandID,
             bool calcUVW);
                           
@@ -117,10 +128,8 @@ public:
   // MS part handled by this Prediffer
   // <group>
   bool setWorkDomain(const MeqDomain& domain);
-  bool setWorkDomainSize(double freq, double time);
   bool setWorkDomain(double startFreq, double endFreq, double startTime, double endTime);
   bool setWorkDomain(int startChan, int endChan, double startTime, double lengthTime);
-//  bool setWorkDomain(int startChannel, int endChannel, double startTime, double endTime);
   // </group>
   
   bool setContext(const PredictContext &context);
@@ -135,14 +144,11 @@ public:
 
   
   // Get the actual work domain for this MS (after a setStrategy).
-  const MeqDomain& getWorkDomain() const
+  const MeqDomain &getWorkDomain() const
     { return itsWorkDomain; }
 
-  // Get the measurement set descriptor
-  const MSDesc &getMSDescriptor() const
-  {
-    return itsMSDesc;
-  }
+  // Get the local data domain.
+  MeqDomain getLocalDataDomain() const;
 
   // Return the solvable parms.
   // The parms are in ascending order of spidnr.
@@ -164,6 +170,17 @@ public:
   // Update the solvable parm values (reread from table).
   void updateSolvableParms();
 
+  void updateSolvableParms(size_t solveDomainIndex,
+    const vector<double> unknowns);
+
+  // Log the updated values of a single solve domain.
+  void logIteration(
+    const string &stepName,
+    size_t solveDomainIndex,
+    double rank,
+    double chiSquared,
+    double LMFactor);
+  
   // Write the solved parms.
   void writeParms();
 
@@ -184,11 +201,11 @@ public:
         casa::Array<casa::Complex>& data,
         casa::Array<casa::Bool>& flags);
 
-  const vector<MeqDomain> &getSolveDomains() const  	 
+  const vector<SolveDomainDescriptor> &getSolveDomainDescriptors() const
   {
-    return itsSolveDomains;
+    return itsSolveDomainDescriptors;
   }
-     
+  
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
   
@@ -358,11 +375,6 @@ private:
   // Make all parameters non-solvable.
   void clearSolvableParms();
 
-  // Initialize all solvable parameters in the MeqExpr tree for the
-  // given solve domains.
-  // It sets the scids of the solvable parms and fills itsParmData.
-  void initSolvableParms (const vector<MeqDomain>& solveDomains);
-
   // Read the polcs for all parameters for the current work domain.
   void readParms();
 
@@ -381,6 +393,11 @@ private:
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
   
+  // Initialize all solvable parameters in the MeqExpr tree for the
+  // given solve domains.
+  // It sets the scids of the solvable parms and fills itsParmData.
+  void initSolvableParms (const vector<MeqDomain>& solveDomains);
+
   // Get measurement set description from file
   // NB. DEPRECATED -- only use for debugging purposes, will
   // be removed in the next release.
@@ -410,6 +427,7 @@ private:
   string                itsMEPName;     //# Common parmtable name
   LOFAR::ParmDB::ParmDB *itsGSMMEP;     //# parmtable for GSM parameters
   string                itsGSMMEPName;  //# GSM parameters parmtable name
+  LOFAR::ParmDB::ParmDB *itsHistoryDB;  //# parmtable for solve history
   MeqParmGroup          itsParmGroup;   //# container for all parms
 
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
@@ -488,14 +506,23 @@ private:
   vector<vector<const double*> >  itsResultVecs;
   vector<vector<double> >         itsDiffVecs;
   vector<vector<uint> >           itsIndexVecs;
-  ///  vector<casa::Block<bool> >     itsOrdFlagVecs;
+  //  vector<casa::Block<bool> >     itsOrdFlagVecs;
 
   //# Timers.
   NSTimer itsPredTimer;
   NSTimer itsEqTimer;
   
   vector<MeqDomain>               itsSolveDomains;
-     
+  
+  vector<SolveDomainDescriptor>   itsSolveDomainDescriptors;
+
+  void initializeSolveDomains(const vector<MeqDomain> &globalSolveDomains);
+
+#ifdef COMPUTE_SQUARED_ERROR  
+  vector<double> itsSquaredErrorReal;
+  vector<double> itsSquaredErrorImag;
+#endif 
+       
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
   // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
   
