@@ -39,6 +39,8 @@ lofar_GENERAL
 lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/ACC/APS, APS, ,1, APS/ParameterSet.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, , 1, GCF/GCF_Defines.h,,)
+dnl for testing EventPort!
+lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 
 dnl
 dnl Output Makefiles
