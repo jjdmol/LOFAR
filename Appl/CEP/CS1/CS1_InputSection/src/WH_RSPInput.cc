@@ -242,6 +242,10 @@ namespace LOFAR {
 			      itsNSamplesPerSec + itsNHistorySamples);
       itsGetElemTimer->stop();
 
+      // print flags
+      cout<<"WH_RSP out "<<itsStationNr<<" "<<delayedstamp<<" flags: "<< flags <<endl;
+      // printsamples
+
       // fill in the outgoing dataholders
       for (int output = 0; output < itsNoutputs; output++) { 
 	rspDHp = (DH_RSP*)getDataManager().getOutHolder(output);
@@ -254,10 +258,6 @@ namespace LOFAR {
  	rspDHp->setFineDelayAtBegin((*delayDHp)[itsStationNr].fineDelayAtBegin);
  	rspDHp->setFineDelayAfterEnd((*delayDHp)[itsStationNr].fineDelayAfterEnd);
 	
-#if 1
-	// print flags
-	cout<<"WH_RSP out "<<itsStationNr<<" "<<delayedstamp<<" output " << output << " flags: "<< flags <<endl;
-	// printsamples
 #if 0
 	RectMatrix<DH_RSP::BufferType>* matrix = &rspDHp->getDataMatrix();
 	dimType timeDim = matrix->getDim("Times");
@@ -267,7 +267,6 @@ namespace LOFAR {
 	  cout << matrix->getValue(cursor);
 	}
 	cout<<endl;
-#endif
 #endif
       }    
 
