@@ -1,6 +1,6 @@
 ..common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tWH_BGL_Processing #tFFT
+check_PROGRAMS = tWH_BGL_Processing transpose
 
 
 AM_CPPFLAGS = $(EXTRA_CPPFLAGS)
@@ -15,9 +15,8 @@ tWH_BGL_Processing.cc				\
 ../src/FIR.S					\
 ../src/FFT.S
 
-#tFFT_SOURCES =					\
-#tFFT.cc						\
-#../src/FFT.S
+transpose_SOURCES =				\
+transpose.cc					
 
 CCAS			= /bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/gcc
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
