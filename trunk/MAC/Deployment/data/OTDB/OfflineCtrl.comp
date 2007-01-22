@@ -8,7 +8,7 @@ node  OfflineCtrl  1.0.0  development 'node constraint'  "Controller for the off
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _hostname               I    text   -      10    0    RS002                     -        "Machine the program should run on"
+par  _hostname               I    text   -      100    0    RS002                     -        "Machine the program should run on"
 
 
 uses  ApplCtrl     1.0.0  development 1                  "The ACC controller"
