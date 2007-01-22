@@ -82,7 +82,6 @@ CREATE TABLE param_type (
 	CONSTRAINT param_name_uniq		UNIQUE (name)
 ) WITHOUT OIDS;
 INSERT INTO param_type VALUES (  0, 'node');
-INSERT INTO param_type VALUES (  1, 'popup');
 INSERT INTO param_type VALUES (101, 'bool');
 INSERT INTO param_type VALUES (102, 'int');
 INSERT INTO param_type VALUES (103, 'uint');
@@ -112,6 +111,20 @@ INSERT INTO param_type VALUES (211, 'vdcpx');
 INSERT INTO param_type VALUES (212, 'vtext');
 INSERT INTO param_type VALUES (214, 'vtime');
 INSERT INTO param_type VALUES (215, 'vdate');
+INSERT INTO param_type VALUES (301, 'pbool');
+INSERT INTO param_type VALUES (302, 'pint');
+INSERT INTO param_type VALUES (303, 'puint');
+INSERT INTO param_type VALUES (304, 'plong');
+INSERT INTO param_type VALUES (305, 'pulng');
+INSERT INTO param_type VALUES (306, 'pflt');
+INSERT INTO param_type VALUES (307, 'pdbl');
+INSERT INTO param_type VALUES (308, 'picpx');
+INSERT INTO param_type VALUES (309, 'plcpx');
+INSERT INTO param_type VALUES (310, 'pfcpx');
+INSERT INTO param_type VALUES (311, 'pdcpx');
+INSERT INTO param_type VALUES (312, 'ptext');
+INSERT INTO param_type VALUES (314, 'ptime');
+INSERT INTO param_type VALUES (315, 'pdate');
 
 --
 -- PVSS type
