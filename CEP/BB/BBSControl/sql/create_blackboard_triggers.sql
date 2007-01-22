@@ -8,4 +8,4 @@ $$
 LANGUAGE plpgsql;
 
 
-CREATE TRIGGER trigger_work_order AFTER INSERT ON blackboard.work_order FOR EACH STATEMENT EXECUTE PROCEDURE blackboard.notify_client();
+CREATE TRIGGER insert_work_order AFTER INSERT ON blackboard.work_order FOR EACH STATEMENT EXECUTE PROCEDURE blackboard.notify_client();
