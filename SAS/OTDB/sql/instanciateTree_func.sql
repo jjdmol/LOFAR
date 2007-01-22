@@ -236,6 +236,7 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 	  vOwnname			VIChierarchy.name%TYPE;
 
 	BEGIN
+--RAISE WARNING \'iVHst(%,%,%,%)\', $1,$2,$3,$4;
 	  -- Append dot to basename if not topnode
 	  vBasename := $4;
 	  IF length(vBasename) != 0 THEN
@@ -247,6 +248,7 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 	  INTO	 vNode
 	  FROM	 VICtemplate
 	  WHERE	 nodeID = $1;
+--RAISE WARNING \'%:[%]\', vNode.name, vNode.instances;
 	  
 	  -- loop through nr of instances
 	  -- check each instance if is was specialized.

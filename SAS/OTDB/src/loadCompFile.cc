@@ -465,6 +465,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			saveComponentNode (topNode);			// private call
 			topNodeID = topNode.itsNodeID;
 
+#if 0
 			// add %instances parameter
 			OTDBparam		baseParam;
 			baseParam.itsNodeID   = topNodeID;
@@ -478,6 +479,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			baseParam.limits	  = "1+";
 			baseParam.description = "Number of instances";
 			saveParam (baseParam);
+#endif
 		}
 		// -- USES --
 		else if (!args[0].compare("uses")) {
@@ -539,7 +541,7 @@ nodeIDType	TreeMaintenance::loadComponentFile (const string&	filename)
 			AttachedChild.type 		  = PTconv.get(args[3]);	
 			AttachedChild.unit 		  =	UTconv.get(args[4]);
 			AttachedChild.pruning 	  = StringToInt16(args[5]);
-			AttachedChild.valMoment   = 0;	// toValMoment(args[6]);
+			AttachedChild.valMoment   = StringToInt16(args[6]);
 			AttachedChild.runtimeMod  = (args[2].find("O",0)) ? true : false;
 			AttachedChild.limits	  = args[7];
 			AttachedChild.description = args[9];
