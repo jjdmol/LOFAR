@@ -16,12 +16,12 @@ CREATE TABLE blackboard.strategy
 );
 
 
--- A work_order contains all the attributes needed for control,
+-- A command contains all the attributes needed for control,
 -- so the structure of 'step' is not polluted. In the future, it may also
 -- be used as a generalisation for different types of commands (i.e. if
 -- we define commands besides executing steps, e.g. explicit data caching).
-CREATE SEQUENCE blackboard.work_order_id_seq;
-CREATE TABLE blackboard.work_order
+CREATE SEQUENCE blackboard.command_id_seq;
+CREATE TABLE blackboard.command
 (
     id              INTEGER                     PRIMARY KEY,
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now()
@@ -32,7 +32,7 @@ CREATE SEQUENCE blackboard.step_id_seq;
 CREATE TABLE blackboard.step
 ( 
     id                      INTEGER             PRIMARY KEY,
-    work_order_id           INTEGER             UNIQUE NOT NULL REFERENCES blackboard.work_order (id) ON DELETE CASCADE,
+    command_id              INTEGER             UNIQUE NOT NULL REFERENCES blackboard.command (id) ON DELETE CASCADE,
     
     "Name"                  TEXT                NOT NULL,
     "Operation"             TEXT                NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE blackboard.solve_arguments
 
 CREATE TABLE blackboard.status
 (
-    work_order_id   INTEGER                     NOT NULL REFERENCES blackboard.work_order (id) ON DELETE CASCADE,
+    command_id      INTEGER                     NOT NULL REFERENCES blackboard.command (id) ON DELETE CASCADE,
 
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node            INET                        DEFAULT inet_client_addr(),
@@ -98,7 +98,7 @@ CREATE TABLE blackboard.status
 
 CREATE TABLE blackboard.log
 (
-    work_order_id           INTEGER                     DEFAULT NULL REFERENCES blackboard.work_order (id) ON DELETE CASCADE,
+    command_id              INTEGER                     DEFAULT NULL REFERENCES blackboard.command (id) ON DELETE CASCADE,
 
     timestamp               TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node                    INET                        DEFAULT inet_client_addr(),
