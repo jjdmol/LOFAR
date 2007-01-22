@@ -16,7 +16,7 @@ CREATE TABLE blackboard.strategy
 );
 
 
--- A work_order contains all the attributes needed for job control,
+-- A work_order contains all the attributes needed for control,
 -- so the structure of 'step' is not polluted. In the future, it may also
 -- be used as a generalisation for different types of commands (i.e. if
 -- we define commands besides executing steps, e.g. explicit data caching).

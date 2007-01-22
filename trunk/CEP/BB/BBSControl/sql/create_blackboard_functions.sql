@@ -1,24 +1,23 @@
 -- -------- --
 -- STRATEGY --
 -- -------- --
--- Function: blackboard.set_strategy
--- Full signature:
--- blackboard.set_strategy("DataSet" TEXT, "ParmDB.LocalSky" TEXT, "ParmDB.Instrument" TEXT, "ParmDB.History" TEXT, "Stations" TEXT[], "InputData" TEXT, "WorkDomainSize.Freq" DOUBLE PRECISION, "WorkDomainSize.Time" DOUBLE PRECISION, "Correlation.Selection" TEXT, "Correlation.Type" TEXT[])
-CREATE OR REPLACE FUNCTION blackboard.set_strategy(TEXT, TEXT, TEXT, TEXT, TEXT[], TEXT, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT[])
+CREATE OR REPLACE FUNCTION blackboard.set_strategy(strategy blackboard.strategy)
 RETURNS VOID AS
 $$
-    INSERT INTO blackboard.strategy("DataSet", "ParmDB.LocalSky", "ParmDB.Instrument", "ParmDB.History", "Stations", "InputData", "WorkDomainSize.Freq", "WorkDomainSize.Time", "Correlation.Selection", "Correlation.Type")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
+    BEGIN
+        INSERT
+            INTO blackboard.strategy
+            VALUES (strategy);
+    END;
 $$
-LANGUAGE SQL;
+LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION blackboard.get_strategy()
 RETURNS blackboard.strategy AS
 $$
     SELECT *
-        FROM blackboard.strategy
-        LIMIT 1;
+        FROM blackboard.strategy;
 $$
 LANGUAGE SQL;
 
@@ -33,7 +32,8 @@ $$
         _id INTEGER;
     BEGIN
         _id := nextval('blackboard.work_order_id_seq');
-        INSERT INTO blackboard.work_order(id)
+        INSERT
+            INTO blackboard.work_order(id)
             VALUES (_id);
 
         RETURN _id;
@@ -48,7 +48,7 @@ $$
     SELECT *
         FROM blackboard.work_order
         WHERE id > $1
-        ORDER BY id LIMIT 1;
+        ORDER BY id;
 $$
 LANGUAGE SQL;
 
@@ -82,13 +82,46 @@ CREATE TYPE blackboard.iface_solve_arguments AS
 );
 
 
+-- Function: blackboard.get_next_step
+-- Full signature:
+-- blackboard.get_next_step(_current_work_order_id INTEGER)
+--
+-- This function is a 'combination' of get_next_work_order and
+-- get_next_step. Therefore, it has to return a combination of
+-- a work_order_id and an iface_step. We could define a separate
+-- iface composite type for this, but then we would have two
+-- interface definitions for a step. Instead, we just return a
+-- row from the step table. Of course, this is not very clean.
+-- Therefore, it is recommended to use get_next_work_order and
+-- get_step sequentially.
+CREATE OR REPLACE FUNCTION blackboard.get_next_step(INTEGER)
+RETURNS blackboard.step AS
+$$
+    SELECT blackboard.step.*
+        FROM blackboard.work_order, blackboard.step
+        WHERE blackboard.work_order.id > $1
+        AND blackboard.work_order.id = blackboard.step.work_order_id
+        ORDER BY blackboard.work_order.id;
+$$
+LANGUAGE SQL;
+
+
 -- Function: blackboard.get_step
 -- Full signature:
 -- blackboard.get_step(_work_order_id INTEGER)
 CREATE OR REPLACE FUNCTION blackboard.get_step(INTEGER)
 RETURNS blackboard.iface_step AS
 $$
-    SELECT "Name", "Operation", "Baselines.Station1", "Baselines.Station2", "Correlation.Selection", "Correlation.Type", "Sources", "InstrumentModel", "OutputData"
+    SELECT
+        "Name",
+        "Operation",
+        "Baselines.Station1",
+        "Baselines.Station2",
+        "Correlation.Selection",
+        "Correlation.Type",
+        "Sources",
+        "InstrumentModel",
+        "OutputData"
         FROM blackboard.step
         WHERE blackboard.step.work_order_id = $1;
 $$
@@ -114,8 +147,14 @@ $$
             RAISE EXCEPTION 'Work order % either is not a solve step or it is not a step at all.', $1;
         END IF;
 
-
-        SELECT "MaxIter", "Epsilon", "MinConverged", "Parms", "ExclParms", "DomainSize.Freq", "DomainSize.Time"
+        SELECT
+            "MaxIter",
+            "Epsilon",
+            "MinConverged",
+            "Parms",
+                "ExclParms",
+            "DomainSize.Freq",
+            "DomainSize.Time"
             INTO arguments
             FROM blackboard.solve_arguments
             WHERE step_id = step.id;
@@ -138,9 +177,22 @@ $$
     BEGIN
         _work_order_id := blackboard.add_work_order();
         _id := nextval('blackboard.step_id_seq');
-        INSERT INTO blackboard.step(id, work_order_id, "Name", "Operation", "Baselines.Station1", "Baselines.Station2", "Correlation.Selection", "Correlation.Type", "Sources", "InstrumentModel", "OutputData")
+        
+         INSERT
+            INTO blackboard.step
+                (id,
+                work_order_id,
+                "Name",
+                "Operation",
+                "Baselines.Station1",
+                "Baselines.Station2",
+                "Correlation.Selection",
+                "Correlation.Type",
+                "Sources",
+                "InstrumentModel",
+                "OutputData")
             VALUES (_id, _work_order_id, $1, $2, $3, $4, $5, $6, $7, $8, $9);
-
+                
         RETURN _id;
     END;
 $$
@@ -190,7 +242,16 @@ $$
         _step_id INTEGER;
     BEGIN
         _step_id := blackboard.add_step($1, 'SOLVE', $2, $3, $4, $5, $6, $7, $8);
-        INSERT INTO blackboard.solve_arguments(step_id, "MaxIter", "Epsilon", "MinConverged", "Parms", "ExclParms", "DomainSize.Freq", "DomainSize.Time")
+        INSERT
+            INTO blackboard.solve_arguments
+                (step_id,
+                "MaxIter",
+                "Epsilon",
+                "MinConverged",
+                "Parms",
+                "ExclParms",
+                "DomainSize.Freq",
+                "DomainSize.Time")
             VALUES (_step_id, $9, $10, $11, $12, $13, $14, $15);
     END;
 $$
