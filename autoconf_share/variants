@@ -32,7 +32,7 @@ mpe.var:		  --with-mpich=/usr/local/mpich-1.2.5/ch_p4 --enable-mpi-profiler
 debug.var:		  --with-debug='-g'
 debugopt.var:		  --with-optimize='-g -O2'
 profopt.var:		  --with-optimize='-pg -O2' --with-ldflags='-lc_p'
-optimize.var:		  --with-optimize='-O2'
+optimize.var:		  --with-optimize='-O2 -g'
 aipspp.var:
 mpich.var:                --with-mpich
 lam.var:		  --with-lam
