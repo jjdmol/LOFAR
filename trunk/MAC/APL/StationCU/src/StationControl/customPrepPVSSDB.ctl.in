@@ -45,9 +45,8 @@ main()
       	    // deleted. After all there might be Navigators looking at it...
       	    setGCFPaPsIndication("d",newString);
       	  }
- 	} else {
-      	  deleteDP(dpName);
-      	}
+ 	}
+        deleteDP(dpName);
       }
     }
   } else {
@@ -61,18 +60,18 @@ bool deleteDP(string aDPName) {
     DebugTN("Error removing datapoint");
     return false;
   } else {
-    DebugTN(dpName + " removed from database");
+    DebugTN(aDPName + " removed from database");
     return true;
   }
 }
 
 void setGCFPaPsIndication(string state,string aDPName) {
-  if (dpExists("GCFPaPsIndication")) {
-    if (dpSet("GCFPaPsIndication",state+"|"+aDPName) == 0 ) {
+  if (dpExists("__pa_PSIndication")) {
+    if (dpSet("__pa_PSIndication",state+"|"+aDPName) == 0 ) {
       return;
     }
   }
-  DebugTN("Error setting GCFPaPsIndication to " + state + "|"+aDPName);
+  DebugTN("Error setting __pa_PSIndication to " + state + "|"+aDPName);
 }
 
 void createInitialPoints() {
