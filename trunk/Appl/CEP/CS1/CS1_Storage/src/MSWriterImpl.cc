@@ -68,7 +68,7 @@ namespace LOFAR
     using namespace casa;
 
     MSWriterImpl::MSWriterImpl (const char* msName, double startTime, double timeStep,
-                                int nfreq, int ncorr,
+                                int nfreq, int ncorr, int nbeams,
                                 int nantennas, const vector<double>& antPos,
 				const vector<string>& storageStationNames,
 				int timesToIntegrate, int subbandsPerPset)
@@ -82,6 +82,7 @@ namespace LOFAR
         itsTimeStep (timeStep),
 	itsTimesToIntegrate(timesToIntegrate),
 	itsStartTime(0),
+	itsField(nbeams),
         itsNrPol    (0),
         itsNrChan   (0),
         itsPolnr    (0),
@@ -366,6 +367,7 @@ namespace LOFAR
       MDirection indir(radec, MDirection::J2000);
       Vector<MDirection> outdir(1);
       outdir(0) = indir;
+      itsField[itsNrField] = indir;
       // Put the direction into the FIELD subtable.
       {
         MSField msfield = itsMS->field();
@@ -620,7 +622,7 @@ namespace LOFAR
       Quantity qtime(time, "s");
       itsFrame->set (MEpoch(qtime, MEpoch::UTC));
       MDirection::Ref outref(MDirection::HADEC, *itsFrame);
-      MDirection outdir = MDirection::Convert (*itsArrayPos, outref) ();
+      MDirection outdir = MDirection::Convert (itsField[fieldId], outref) ();
       Double ha = outdir.getAngle().getValue()(0);
       Double dec = outdir.getAngle().getValue()(1);
       Double sinha = std::sin(ha);

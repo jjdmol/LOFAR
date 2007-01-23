@@ -47,7 +47,7 @@ namespace LOFAR
       // The WSRT is taken as the center of the array.
       // Thus antPos must have shape [2,nantennas].
       MSWriter (const char* msName, double startTime, double timeStep, 
-                int nChan, int nPol, uint nantennas,
+                int nChan, int nPol, uint nBeams, uint nAntennas,
                 const vector<double>& antPos,
 		const vector<std::string>& storageStationNames,
 		uint timesToIntegrate, uint subbandsPerPset);

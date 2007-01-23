@@ -37,17 +37,17 @@ namespace LOFAR
     using namespace casa;
 
     MSWriter::MSWriter (const char* msName, double startTime, double timeStep,
-                        int nChan, int nPol,
-                        uint nantennas, const vector<double>& antPos,
+                        int nChan, int nPol, uint nBeams,
+                        uint nAntennas, const vector<double>& antPos,
 			const vector<string>& storageStationNames,
 			uint timesToIntegrate, uint subbandsPerPset)
       : itsWriter (0)
     {
-      ASSERTSTR(antPos.size() == 3*nantennas, antPos.size() << " == " << 3*nantennas <<
+      ASSERTSTR(antPos.size() == 3*nAntennas, antPos.size() << " == " << 3*nAntennas <<
                 "Antenna position vector does not have the right size!");
       try {
         itsWriter = new MSWriterImpl (msName, startTime, timeStep, nChan, nPol, 
-                                      nantennas, 
+                                      nBeams, nAntennas,
                                       antPos, storageStationNames, timesToIntegrate,
 				      subbandsPerPset);
       } catch (AipsError x) {
