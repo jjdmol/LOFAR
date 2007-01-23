@@ -28,6 +28,7 @@
 //# Includes
 #include <Common/LofarTypes.h>
 #include <casa/aips.h>
+#include <measures/Measures/MDirection.h>
 #include <Common/lofar_vector.h>
 
 //# Forward Declarations
@@ -61,7 +62,7 @@ namespace LOFAR
       // relative to the center (which is set to Westerbork). So antPos
       // must have shape [3,nantennas].
       MSWriterImpl (const char* msName, double startTime, double timeStep,
-                    int nfreq, int ncorr,
+                    int nfreq, int ncorr, int nbeams,
                     int nantennas, const vector<double>& antPos,
 		    const vector<std::string>& storageStationNames, 
 		    int timesToIntegrate, int subbandsPerPset);
@@ -159,6 +160,7 @@ namespace LOFAR
       double itsTimeStep;                ///< duration of each exposure (sec)
       uint itsTimesToIntegrate;          ///< Number of timeSteps to integrate (sec)
       double itsStartTime;               ///< start time of observation (sec)
+      casa::Block<casa::MDirection> itsField;  ///< field (beam) directions
       casa::Block<casa::Int>* itsNrPol;  ///< nr of polarizations for each band
       casa::Block<casa::Int>* itsNrChan; ///< nr of channels for each band
       casa::Block<casa::Int>* itsPolnr;  ///< rownr in POL subtable for each band

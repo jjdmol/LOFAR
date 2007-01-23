@@ -72,13 +72,14 @@ namespace LOFAR
       itsNStations = itsPS.getUint32("Observation.NStations");
       itsNBaselines = itsNStations * (itsNStations +1)/2;
       itsNChannels = itsPS.getUint32("Observation.NChannels");
+      itsNBeams = itsPS.getUint32("Observation.NBeams");
       itsNInputsPerSubband = itsNinputs;
       uint pols = itsPS.getUint32("Observation.NPolarisations");
       itsNPolSquared = pols*pols;
 
       uint nrSamples = itsPS.getUint32("Observation.NSubbandSamples");
       itsWeightFactor = (float)itsNChannels/(float)nrSamples;  // The inverse of maximum number of valid samples
-
+      
       vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
       unsigned nrSubbands = itsPS.getUint32("Observation.NSubbands");
       ASSERTSTR(refFreqs.size() >= nrSubbands, "Wrong number of refFreqs specified!");
@@ -176,9 +177,10 @@ namespace LOFAR
 #endif
 			       startTime, timeStep * itsTimesToIntegrate, 
                                itsNChannels, itsNPolSquared, itsNStations, 
+			       itsNBeams,
                                antPos, storageStationNames, itsTimesToIntegrate, 
 			       itsPS.getUint32("General.SubbandsPerPset"));
-
+			       
       double chanWidth = itsPS.getDouble("Observation.SampleRate") /
 			 itsPS.getDouble("Observation.NChannels");
       LOG_TRACE_VAR_STR("chanWidth = " << chanWidth);
@@ -204,7 +206,7 @@ namespace LOFAR
       
       //## TODO: add support for more than 1 beam ##//
       vector<double> beamDirs = itsPS.getDoubleVector("Observation.BeamDirections");
-      ASSERT(beamDirs.size() == 2 * itsPS.getUint32("Observation.NBeams"));
+      ASSERT(beamDirs.size() == 2 * itsNBeams);
       double RA = beamDirs[0];
       double DEC = beamDirs[1];
       // For nr of beams

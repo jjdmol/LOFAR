@@ -79,6 +79,7 @@ namespace LOFAR
       uint  itsNBaselines;
       uint  itsNInputsPerSubband;
       uint  itsNChannels;
+      uint  itsNBeams;
       uint  itsNPolSquared;
       uint  itsNVisibilities;
 
