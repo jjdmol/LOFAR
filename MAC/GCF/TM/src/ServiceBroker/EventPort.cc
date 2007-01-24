@@ -117,7 +117,7 @@ EventPort::EventPort(const string&		aServiceMask,
 	else {
 		LOG_DEBUG_STR ("Trying to make connection with " << serviceName);
 		itsSocket = new Socket(serviceName, itsHost, toString(itsPort), Socket::TCP);
-		itsSocket->connect(-1);
+		itsSocket->connect(1000);
 		itsSocket->setBlocking(false);		// assume async.
 	}
 
@@ -147,9 +147,14 @@ EventPort::~EventPort()
 //
 // send(Event*)
 //
-void EventPort::send(GCFEvent*	anEvent)
+bool EventPort::send(GCFEvent*	anEvent)
 {
+	if (!itsSocket->isConnected() && !itsSocket->connect()) {
+		return (false);
+	}
+
 	sendEvent(itsSocket, anEvent);
+	return (true);
 }
 
 //

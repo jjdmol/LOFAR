@@ -61,26 +61,27 @@ const char* F_PORT_PROTOCOL_names[] =
   "F_ACCEPT_REQ",
 };
 
-struct protocolStrings F_FSM_PROTOCOL_STRINGS = {
+const struct protocolStrings F_FSM_PROTOCOL_STRINGS = {
 	4, 0, F_FSM_PROTOCOL_names, 0
 };
 
-struct protocolStrings F_PORT_PROTOCOL_STRINGS = {
+const struct protocolStrings F_PORT_PROTOCOL_STRINGS = {
 	10, 0, F_PORT_PROTOCOL_names, 0
 };
 
 //
 // registerProtocol(protID, protocolStrings)
 //
-void registerProtocol (unsigned short	protID, struct protocolStrings&		protDef)
+void registerProtocol (unsigned short					protID, 
+					   const struct protocolStrings&	protDef)
 {
 	_protNameTable[protID] = &protDef;
 }
 
 //
-// signalName(event&)
+// eventName(event&)
 //
-string signalName(const GCFEvent& e)
+string eventName(const GCFEvent& e)
 {
 	protStringsMap::const_iterator iter = _protNameTable.find(F_EVT_PROTOCOL(e));
 	if ((iter != _protNameTable.end()) && (F_EVT_SIGNAL(e) <= iter->second->nrSignals)) {
