@@ -176,8 +176,9 @@ namespace LOFAR
       itsWriter = new MSWriter(msNames[0].c_str(),
 #endif
 			       startTime, timeStep * itsTimesToIntegrate, 
-                               itsNChannels, itsNPolSquared, itsNStations, 
+                               itsNChannels, itsNPolSquared, 
 			       itsNBeams,
+			       itsNStations, 
                                antPos, storageStationNames, itsTimesToIntegrate, 
 			       itsPS.getUint32("General.SubbandsPerPset"));
 			       
