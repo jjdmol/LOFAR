@@ -1,5 +1,4 @@
-//#  GCF_KeyValueLogger.h: singleton class; bridge between controller application 
-//#                    and KeyValueLoggerDaemon
+//#  CEPKeyValueLogger.h: Interface for CEP to use the KeyValueLogger
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,12 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef GCF_KEYVALUELOGGER_H
-#define GCF_KEYVALUELOGGER_H
+#ifndef CEP_KEYVALUELOGGER_H
+#define CEP_KEYVALUELOGGER_H
 
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Port.h>
 #include <GCF/GCF_Defines.h>
+#include <GCF/TM/EventPort.h>
 
 namespace LOFAR {
   namespace GCF {
@@ -37,12 +35,13 @@ namespace LOFAR {
 
 
 //
-// GCFKeyValueLogger
+// CEPKeyValueLogger
 //
-class GCFKeyValueLogger : public TM::GCFTask
+class CEPKeyValueLogger
 {
 public:
-	static GCFKeyValueLogger* instance();
+	CEPKeyValueLogger ();
+	virtual ~CEPKeyValueLogger () {}
 
 	// member functions
 	void logKeyValue(const string& key, const Common::GCFPValue& value, 
@@ -57,17 +56,9 @@ public:
 	void skipUpdatesFrom(uint8 manId);         
 
 private:
-	GCFKeyValueLogger ();
-	virtual ~GCFKeyValueLogger () {}
-
-	// state methods
-	TM::GCFEvent::TResult initial     (TM::GCFEvent& e, TM::GCFPortInterface& p);
-	TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
-
 	// data members        
-	TM::GCFPort 				_kvlClientPort;
+	TM::EventPort*				itsKVLConn;
 	int 						_manIdToSkip;
-	static GCFKeyValueLogger* 	_pInstance;
 
 	// admin members
 	typedef list<TM::GCFEvent*> TMsgQueue;
@@ -78,22 +69,5 @@ private:
 } // namespace GCF
 } // namespace LOFAR
 
-#define LOG_KEYVALUE_TSD(key, value, origin, timestamp, desc) \
-LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->logKeyValue(key, value, origin, timestamp, desc);
-
-#define LOG_KEYVALUE_TS(key, value, origin, timestamp) \
-LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->logKeyValue(key, value, origin, timestamp);
-
-#define LOG_KEYVALUE_D(key, value, origin, desc) \
-LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->logKeyValue(key, value, origin, desc);
-
-#define LOG_KEYVALUE(key, value, origin) \
-LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->logKeyValue(key, value, origin);
-
-#define ADD_ACTION(key, action, origin, timestamp, desc) \
-LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->addAction(key, action, origin, timestamp, desc);
-
-#define SKIP_UPDATES_FROM(manID) \
-LOFAR::GCF::LogSys::GCFKeyValueLogger::instance()->skipUpdatesFrom(manID);
 
 #endif
