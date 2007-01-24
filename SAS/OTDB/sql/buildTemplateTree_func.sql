@@ -40,20 +40,32 @@
 CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
   RETURNS VOID AS '
 	DECLARE
-		vParam	RECORD;
+		vParam		RECORD;
+		dfltValue	VARCHAR(200);
 
 	BEGIN
 --RAISE WARNING \'params:%,%,%\', $1, $2, $3;
 	  FOR vParam IN 
-		SELECT	paramID, name, limits
+		SELECT	paramID, name, limits, par_type
 		FROM 	VICparamDef
 		WHERE	nodeID = $1
 		AND		name NOT like \'#%\'
 	  LOOP
-		INSERT 
-		INTO 	VICtemplate(treeID, parentID, originID, name, instances, limits)
-	    VALUES 	($2, $3, vParam.paramID, vParam.name, 1, vParam.limits);
-		-- note: nodeId, index and leaf are defaulted.
+		IF vParam.par_type >= 300 THEN	-- popup parameter? leave limits fiels empty.
+		  dfltValue := substring(vParam.limits from \'[a-zA-Z0-9_.,]+;([a-zA-Z0-9_.,]+)\');
+		  IF dfltValue IS NULL THEN
+			dfltValue := \'\';
+		  END IF;
+		  INSERT
+		  INTO 	 VICtemplate(treeID, parentID, originID, name, instances, limits)
+		  VALUES ($2, $3, vParam.paramID, vParam.name, 1, dfltValue);
+		  -- note: nodeId, index and leaf are defaulted.
+		ELSE
+		  INSERT
+		  INTO 	 VICtemplate(treeID, parentID, originID, name, instances, limits)
+		  VALUES ($2, $3, vParam.paramID, vParam.name, 1, vParam.limits);
+		  -- note: nodeId, index and leaf are defaulted.
+		END IF;
 	  END LOOP;
 	  RETURN;
 	END;

@@ -48,6 +48,7 @@ CREATE OR REPLACE FUNCTION exportVICSubTree(INT4, INT4, INT4)
 	    WHERE	treeID = $1
 	    AND	 	parentID = $2
 		AND		leaf = true
+		ORDER BY name
 	  LOOP
 		vResult := vResult || substr(vRow.name,$3) || \'=\' 
 													|| vRow.value || chr(10);
@@ -60,6 +61,7 @@ CREATE OR REPLACE FUNCTION exportVICSubTree(INT4, INT4, INT4)
 	    WHERE	treeID = $1
 	    AND	 	parentID = $2
 		AND		leaf = false
+		ORDER BY name
 	  LOOP
 		vResult := vResult || exportVICSubTree($1, vRow.nodeID, $3);
 	  END LOOP;
@@ -94,6 +96,7 @@ CREATE OR REPLACE FUNCTION exportPICSubTree(INT4, INT4, INT4)
 	    WHERE	treeID = $1
 	    AND	 	parentID = $2
 		AND		leaf = true
+		ORDER BY name
 	  LOOP
 		vResult := vResult || substr(vRow.name,$3) || chr(10); 
 --		vResult := vResult || substr(vRow.name,$3) || \'=\' 
@@ -107,6 +110,7 @@ CREATE OR REPLACE FUNCTION exportPICSubTree(INT4, INT4, INT4)
 	    WHERE	treeID = $1
 	    AND	 	parentID = $2
 		AND		leaf = false
+		ORDER BY name
 	  LOOP
 		vResult := vResult || exportPICSubTree($1, vRow.nodeID, $3);
 	  END LOOP;

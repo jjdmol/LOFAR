@@ -160,6 +160,7 @@ CREATE TABLE VIChierarchy (
 -- parametername is set to NULL.
 --
 CREATE TABLE VICkvt (
+	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	paramName	VARCHAR(150)	DEFAULT NULL, -- for shared applications
 	value		TEXT			NOT NULL,
 	time		TIMESTAMP		DEFAULT now()

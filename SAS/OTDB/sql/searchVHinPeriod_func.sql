@@ -89,7 +89,7 @@ CREATE OR REPLACE FUNCTION searchVHinPeriod(INT4, INT4, INT4, TIMESTAMP, TIMESTA
 		FROM   VICkvt k
 			   INNER JOIN VIChierarchy h ON k.paramname = h.name
 	    WHERE  k.paramname \' || vQuery || \'
-		AND	   h.treeID = \' || $1 || \'
+		AND	   k.treeID = \' || $1 || \'
 		ORDER BY h.nodeID, k.time\'
 	  LOOP
 		RETURN NEXT vRecord;
