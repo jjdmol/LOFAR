@@ -547,7 +547,7 @@ MeqDomain Prediffer::getLocalDataDomain() const
     return MeqDomain(itsStartFreq,
         itsEndFreq,
         itsMSDesc.times.front() - itsMSDesc.exposures.front() / 2,
-        itsMSDesc.times.back() - itsMSDesc.exposures.back() / 2);
+        itsMSDesc.times.back() + itsMSDesc.exposures.back() / 2);
 }
 
 
@@ -1265,7 +1265,6 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
       nominal pointing direction.
       ---
 
-      The way this column is used by SelfCal seems to have nothing to do with sources.
       In LOFAR/CEP/BB/MS/src/makemsdesc.cc the following line can be found:
       MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
       which should be equivalent to:
@@ -1365,12 +1364,10 @@ void Prediffer::readMeasurementSetMetaData(const string &fileName)
           Difference between interval and exposure is startup time which
           is taken into account.
         */
-        if(timeCount > 0)
-        {
-            ROScalarColumn<double> interval(ms, "INTERVAL");
-            itsMSDesc.startTime = itsMSDesc.times[0] - itsMSDesc.exposures[0] / 2 + (interval(0) - itsMSDesc.exposures[0]);
-            itsMSDesc.endTime   = itsMSDesc.times[timeCount - 1] + interval(timeCount - 1) / 2;
-        }
+        ASSERT(timeCount >= 2);
+        ROScalarColumn<double> interval(ms, "INTERVAL");
+        itsMSDesc.startTime = itsMSDesc.times[0] - itsMSDesc.exposures[0] / 2 + (interval(0) - itsMSDesc.exposures[0]);
+        itsMSDesc.endTime   = itsMSDesc.times[timeCount - 1] + interval(timeCount - 1) / 2;
     }
 
     /*
