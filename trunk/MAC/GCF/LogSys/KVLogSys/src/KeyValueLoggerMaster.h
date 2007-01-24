@@ -30,52 +30,45 @@
 #include <KVLDefines.h>
 #include <OTDB/OTDBconnection.h>
 
-namespace LOFAR 
-{
- namespace OTDB
- {
-class TreeValue;
+namespace LOFAR {
+ namespace OTDB {
+	class TreeValue;
  }
- namespace GCF 
- {  
-  namespace LogSys 
-  {
+ namespace GCF {  
+  namespace LogSys {
 
 /**
 */
 
 class KeyValueLoggerMaster : public TM::GCFTask
 {
-  public:
-    KeyValueLoggerMaster ();
-    virtual ~KeyValueLoggerMaster ();
-    
-  public: // member functions
-  
-  private: // state methods
-    TM::GCFEvent::TResult initial     (TM::GCFEvent& e, TM::GCFPortInterface& p);
-    TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
-        
-  private: // helper methods
-    
-  private: // data members        
-    TM::GCFTCPPort  _kvlMasterPortProvider;
-    struct TClient
-    {
-      TM::GCFPortInterface* pPort;
-      unsigned long hourTimerID;
-      uint64 curSeqNr;
-    };
-    
-    typedef map<uint8 /*clientID*/, TClient> TRegisteredClients;
-    TRegisteredClients  _clients;
+public:
+	KeyValueLoggerMaster ();
+	virtual ~KeyValueLoggerMaster ();
 
-  private: // admin members
-    typedef list<TM::GCFPortInterface*> TClients;
-    TClients        _clientsGarbage;
-    OTDB::OTDBconnection  _otdb;
-    OTDB::TreeValue*      _pTV;
+private: 
+	// state methods
+	TM::GCFEvent::TResult initial     (TM::GCFEvent& e, TM::GCFPortInterface& p);
+	TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
+
+	// data members        
+	TM::GCFTCPPort  		itsListener;
+
+	struct TClient {
+		TM::GCFPortInterface*	pPort;
+		unsigned long 			hourTimerID;
+		uint64 					curSeqNr;
+	};
+	typedef map<uint8 /*clientID*/, TClient> TRegisteredClients;
+	TRegisteredClients  	_clients;
+
+	// admin members
+	typedef list<TM::GCFPortInterface*> TClients;
+	TClients        		_clientsGarbage;
+	OTDB::OTDBconnection*	itsOTDBconn;
+	OTDB::TreeValue*		itsTreeValue;
 };
+
   } // namespace LogSys
  } // namespace GCF
 } // namespace LOFAR
