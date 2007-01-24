@@ -37,7 +37,7 @@
 --
 -- Types:	none
 --
-CREATE OR REPLACE FUNCTION addKVT (VARCHAR(150), VARCHAR(150), VARCHAR(20))
+CREATE OR REPLACE FUNCTION addKVT (INT, VARCHAR(150), VARCHAR(150), VARCHAR(20))
   RETURNS BOOLEAN AS '
 	DECLARE
 		vParRefID	PICparamref.paramID%TYPE;
@@ -45,8 +45,8 @@ CREATE OR REPLACE FUNCTION addKVT (VARCHAR(150), VARCHAR(150), VARCHAR(20))
 
 	BEGIN
 	  -- convert timestamp
-	  IF LENGTH($3) > 0 THEN
-		  vTime := to_timestamp($3, \'YYYY-Mon-DD HH24:MI:SS.US\');
+	  IF LENGTH($4) > 0 THEN
+		  vTime := to_timestamp($4, \'YYYY-Mon-DD HH24:MI:SS.US\');
 	  END IF;
 	  IF vTime IS NULL THEN
 		vTime := now();
@@ -57,19 +57,19 @@ CREATE OR REPLACE FUNCTION addKVT (VARCHAR(150), VARCHAR(150), VARCHAR(20))
 	  SELECT paramid 
 	  INTO	 vParRefID
 	  FROM   PICparamRef
-	  WHERE  PVSSname = translate($1, \'_\', \'.\')
+	  WHERE  PVSSname = translate($2, \'_\', \'.\')
 	  LIMIT  1;
 
 	  IF FOUND THEN
 		-- its a PIC parameter
 	    INSERT INTO PICkvt(paramID, value, time)
-		VALUES (vParRefID, $2, vTime);
+		VALUES (vParRefID, $3, vTime);
 		RETURN TRUE;
 	  END IF;
 
 	  -- it is probably a VIC parameter, just store on name.
-	  INSERT INTO VICkvt (paramName, value, time)
-	  VALUES ($1, $2, vTime);
+	  INSERT INTO VICkvt (treeid, paramName, value, time)
+	  VALUES ($1, $2, $3, vTime);
 
 	  RETURN TRUE;
 	END;

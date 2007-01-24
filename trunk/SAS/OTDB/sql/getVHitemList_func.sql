@@ -80,7 +80,8 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, INT4, INT4)
  --			   TODO: join depends on leaf; see getNode function
  --			   INNER JOIN VICnodedef n ON n.nodeID = h.paramrefID
 		WHERE  h.treeID = \' || $1 || \'
-	    AND	   h.name \' || vQuery 
+	    AND	   h.name \' || vQuery || \'
+		ORDER BY h.leaf, h.name, h.index \'
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;
@@ -121,6 +122,7 @@ CREATE OR REPLACE FUNCTION getVHitemList(INT4, VARCHAR(120))
  --			   INNER JOIN VICnodedef n ON n.nodeID = h.paramrefID
 		WHERE  h.treeID = $1
 	    AND	   h.name like $2 
+		ORDER BY h.leaf, h.name, h.index
 	  LOOP
 		RETURN NEXT vRecord;
 	  END LOOP;

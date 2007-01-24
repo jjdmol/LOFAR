@@ -69,12 +69,13 @@ bool TreeValue::addKVT (const string&	key,
 		return (false);
 	}
 
-	LOG_TRACE_FLOW_STR("TV:addKVT(" << key << "," << value << "," 
-									<< to_simple_string(time) << ")");
+	LOG_TRACE_FLOW_STR("TV:addKVT(" << itsTree.treeID() << "," << key << "," << value 
+									<< "," << to_simple_string(time) << ")");
 
 	// construct a query that call a stored procedure.
 	work	xAction(*(itsConn->getConn()), "addKVT");
 	string	query("SELECT * from addKVT('" +
+				toString(itsTree.treeID()) + "','" +
 				key + "','" +
 				value+ "','" +
 				to_simple_string(time)+ "')");
