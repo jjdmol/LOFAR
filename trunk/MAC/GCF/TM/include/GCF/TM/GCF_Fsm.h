@@ -59,40 +59,34 @@ class GCFDummyPort : public GCFPortInterface
     bool open () {return false;}
 
     ssize_t send (GCFEvent& /*event*/)
-    {
-      return 0;
-    }
+    {	return (0);	}
     
 
     ssize_t recv (void* /*buf*/, 
                   size_t /*count*/) 
-    {
-      return 0;
-    }
+    {	return (0);	}
 
     long setTimer (long  /*delay_sec*/,
                    long  /*delay_usec*/,
                    long  /*interval_sec*/,
                    long  /*interval_usec*/,
                    void* /*arg*/) 
-    {
-      return 0;
-    }
+    {	return (0);	}
 
     long setTimer (double /*delay_seconds*/, 
                    double /*interval_seconds*/,
                    void*  /*arg*/)
-    {
-      return 0;
-    }
+    {	return (0);	}
 
     int cancelTimer (long /*timerid*/, 
                      void** /*arg*/) 
-    {
-      return 0;
-    }
+    {	return (0);	}
 
-    int cancelAllTimers () {return 0;}
+    int cancelAllTimers ()
+    {	return (0);	}
+
+	double timeLeft(long	timerID)
+    {	return (0);	}
   
   private:
     // not allowed
