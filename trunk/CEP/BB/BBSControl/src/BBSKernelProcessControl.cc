@@ -276,31 +276,59 @@ namespace BBS
             itsWorkDomainSize = strategy->domainSize();            
             itsRegionOfInterest = strategy->regionOfInterest();
             
-            // Time is specified as an offset from the start time of
-            // the measurement set.
             const MeqDomain domain = itsPrediffer->getLocalDataDomain();
-            LOG_DEBUG_STR("Local data domain: " << domain);
-            itsRegionOfInterest[2] += domain.startY();
-            itsRegionOfInterest[3] += domain.startY();
             
-            if(itsRegionOfInterest[0] > domain.endX()
-                || itsRegionOfInterest[2] > domain.endY())
+            if(itsRegionOfInterest.size() == 4)
             {
-                LOG_DEBUG_STR("Region of interest does not intersect the local data domain.");
-                return false;
+                if(itsRegionOfInterest[0] > itsRegionOfInterest[1])
+                {
+                    double tmp = itsRegionOfInterest[0];
+                    itsRegionOfInterest[0] = itsRegionOfInterest[1];
+                    itsRegionOfInterest[1] = tmp;
+                }
+                
+                if(itsRegionOfInterest[2] > itsRegionOfInterest[3])
+                {
+                    double tmp = itsRegionOfInterest[2];
+                    itsRegionOfInterest[2] = itsRegionOfInterest[3];
+                    itsRegionOfInterest[3] = tmp;
+                }
+                
+                // Time is specified as an offset from the start time of
+                // the measurement set.
+                itsRegionOfInterest[2] += domain.startY();
+                itsRegionOfInterest[3] += domain.startY();
+
+                if(itsRegionOfInterest[0] > domain.endX()
+                    || itsRegionOfInterest[1] < domain.startX()
+                    || itsRegionOfInterest[2] > domain.endY()
+                    || itsRegionOfInterest[3] < domain.startY())
+                {
+                    LOG_DEBUG_STR("Region of interest does not intersect the local data domain.");
+                    return false;
+                }
+
+                // Clip region of interest against local data domain.
+                if(itsRegionOfInterest[0] < domain.startX())
+                    itsRegionOfInterest[0] = domain.startX(); 
+                if(itsRegionOfInterest[1] > domain.endX())
+                    itsRegionOfInterest[1] = domain.endX(); 
+
+                if(itsRegionOfInterest[2] < domain.startY())
+                    itsRegionOfInterest[2] = domain.startY(); 
+                if(itsRegionOfInterest[3] > domain.endY())
+                    itsRegionOfInterest[3] = domain.endY(); 
             }
-
-            // Clip region of interest against local data domain.
-            if(itsRegionOfInterest[0] < domain.startX())
-                itsRegionOfInterest[0] = domain.startX(); 
-            if(itsRegionOfInterest[1] < domain.endX())
-                itsRegionOfInterest[1] = domain.endX(); 
-
-            if(itsRegionOfInterest[2] > domain.startY())
-                itsRegionOfInterest[2] = domain.startY(); 
-            if(itsRegionOfInterest[3] > domain.endY())
-                itsRegionOfInterest[3] = domain.endY(); 
-            
+            else
+            {
+                LOG_INFO("Strategy.RegionOfInterest not specified or has incorrect format; will use the local data domain instead.");
+                itsRegionOfInterest.resize(4);
+                itsRegionOfInterest[0] = domain.startX();
+                itsRegionOfInterest[1] = domain.endX();
+                itsRegionOfInterest[2] = domain.startY();
+                itsRegionOfInterest[3] = domain.endY();
+            }
+                    
             // Select stations and correlations.
             return itsPrediffer->setSelection(strategy->stations(), strategy->correlation());
         }
@@ -318,54 +346,41 @@ namespace BBS
         
         ASSERT(itsPrediffer);
 
-        // Currently only the size in time of the work domain size is honoured.
-        int timeCount = std::max(1, (int) (0.5 + (itsRegionOfInterest[3] - itsRegionOfInterest[2]) / itsWorkDomainSize.timeInterval));
-        
-        double timeStep = (itsRegionOfInterest[3] - itsRegionOfInterest[2]);
-        if(timeCount > 1)
-            timeStep /= timeCount;
-        
-        bool result = true;
-        double time = itsRegionOfInterest[2];
-        for(int i = 0; i < timeCount && result; ++i)
+        ASSERT(itsPrediffer->setWorkDomain(itsRegionOfInterest[0],
+            itsRegionOfInterest[1],
+            itsRegionOfInterest[2],
+            itsRegionOfInterest[3]));
+            
+        bool result = false;
         {
-            ASSERT(itsPrediffer->setWorkDomain(itsRegionOfInterest[0],
-                itsRegionOfInterest[1],
-                time,
-                time + timeStep));
-            
-            time = itsPrediffer->getWorkDomain().endY();
-            result = false;
+            const BBSPredictStep* step = dynamic_cast<const BBSPredictStep*>(bs);
+            if(step)
             {
-                const BBSPredictStep* step = dynamic_cast<const BBSPredictStep*>(bs);
-                if(step)
-                {
-                    result = handle(step);
-                }
+                result = handle(step);
             }
-                    
+        }
+
+        {
+            const BBSSubtractStep* step = dynamic_cast<const BBSSubtractStep*>(bs);
+            if(step)
             {
-                const BBSSubtractStep* step = dynamic_cast<const BBSSubtractStep*>(bs);
-                if(step)
-                {
-                    result = handle(step);
-                }
+                result = handle(step);
             }
-            
+        }
+
+        {
+            const BBSCorrectStep* step = dynamic_cast<const BBSCorrectStep*>(bs);
+            if(step)
             {
-                const BBSCorrectStep* step = dynamic_cast<const BBSCorrectStep*>(bs);
-                if(step)
-                {
-                    result = handle(step);
-                }
+                result = handle(step);
             }
-            
+        }
+
+        {
+            const BBSSolveStep* step = dynamic_cast<const BBSSolveStep*>(bs);
+            if(step)
             {
-                const BBSSolveStep* step = dynamic_cast<const BBSSolveStep*>(bs);
-                if(step)
-                {
-                    result = handle(step);
-                }
+                result = handle(step);
             }
         }
         
