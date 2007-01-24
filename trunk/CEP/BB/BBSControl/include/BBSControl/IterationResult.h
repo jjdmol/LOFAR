@@ -51,7 +51,7 @@ namespace BBS
         {
         }
     
-        IterationResult(uint32 domainIndex = 0,
+        IterationResult(uint32 domainIndex,
             uint32 resultCode,
             string resultText,
             const vector<double> &unknowns,

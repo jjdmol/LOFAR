@@ -51,7 +51,7 @@ namespace BBS
         {
         }
     
-        IterationRequest(uint32 domainIndex = 0, const casa::LSQFit &normalEquations)
+        IterationRequest(uint32 domainIndex, const casa::LSQFit &normalEquations)
             :   itsDomainIndex(domainIndex),
                 itsNormalEquations(normalEquations)
         {

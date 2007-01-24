@@ -58,7 +58,7 @@ namespace BBS
         {
         }
     
-        DomainRegistrationRequest(uint32 domainIndex = 0, double epsilon, uint32 maxIter, const vector<double> &unknowns)
+        DomainRegistrationRequest(uint32 domainIndex, double epsilon, uint32 maxIter, const vector<double> &unknowns)
             :   itsDomainIndex(domainIndex),
                 itsEpsilon(epsilon),
                 itsMaxIter(maxIter),
