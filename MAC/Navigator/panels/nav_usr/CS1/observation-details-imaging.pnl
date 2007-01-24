@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,286 109 950 741 N "_3DFace" 1
+PANEL,361 106 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -18,16 +18,30 @@ PANEL,286 109 950 741 N "_3DFace" 1
 
 fillStationsList(string observation)
 {
+	
 	// get a list of stations for this observation
 	dyn_dyn_anytype tab;
-	dpQuery(\"SELECT '_online.._value' FROM 'LOFAR_ObsSW_\" + observation + \"_*_BeamCtrl.state' WHERE _DPT= \\\"BeamCtrl\\\" \", tab);
+	dpQuery(\"SELECT '_online.._value' FROM 'LOFAR_ObsSW_\" + observation + \"_ObsCtrl.stationList' WHERE _DPT= \\\"ObsCtrl\\\" \", tab);
+	if  (dynlen(tab) > 2 ) {
+	  LOG_WARN(\"More entries , where only one should have been found.\");
+	}
+	
+	//DebugTN(\"found query: \",tab);
 	for(int i=2;i<=dynlen(tab);i++)
 	{
-		dyn_string dpElements = splitDatapointPath(tab[i][1]);
-		if(dynlen(dpElements) >=5)
-		{
-			string station = dpElements[4] + \"_\" + dpElements[5];
-			StationList.appendItem(station);
+		string answer = tab[i][2];
+
+		// expand the string in case of #..#
+		string	baseString=expandedArrayString(answer);
+
+    // strip the brackets
+    string copy=strltrim(baseString,\" 	[\");
+    baseString =strrtrim(copy,\" 	]\");
+    
+		dyn_string stationList = strsplit(baseString,\",\");
+		
+		for (int j=1;j<=dynlen(stationList);j++) {
+			StationList.appendItem(stationList[j]);
 		}
 	}
 }
@@ -35,8 +49,7 @@ fillStationsList(string observation)
 " 0
 EE E E 1 0 0 0  10 10
 "" 0 1
-E"#uses \"nav_fw/gcfnav-functions.ctl\"
-" 0
+E"#uses \"nav_usr/CS1/CS1_Common.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -468,7 +481,7 @@ E E 0 5 1 0 1 E  39 581 39 508
 1 10 85 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E "main()
 {
-	string dp = \"MCU001:LOFAR_PIC_\" + StationList.selectedText;
+	string dp = StationList.selectedText+\":LOFAR\";
 	DebugTN(\"StationList_EventDblClick: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,743 132 182 113 N "_3DFace" 6
+PANEL,409 101 182 113 N "_3DFace" 6
 "$RSPBoardNr"
 "$RackNr"
 "$SubrackNr"
@@ -380,6 +380,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
+  LOG_DEBUG(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
   aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
 }
 " 0
@@ -558,6 +559,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
+  LOG_DEBUG(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
   aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
 }" 0
  0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 117 25 157 65
@@ -588,7 +590,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
+  LOG_DEBUG(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $SubrackNr, \"Station_Subrack-CS1.pnl\");
 }" 0
  0 1 1 0 1 E U  0 E 47 33 108 49
 0 2 0 "s" 0 0 0 64 0 0  47 33
