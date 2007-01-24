@@ -42,21 +42,21 @@
 ///////////////////////////////////////////////////////////////////////////////////
 void aplViewNavigateTo(string datapoint, string referenceDatapoint, string addingPart, string panelName)
 {
-  if(dpAccessable(datapoint + addingPart))
+  string dp="";
+
+  //If the datapoint is a reference, use the reference to navigate to!!
+  if(referenceDatapoint=="") {
+    dp=datapoint;
+  } else {
+    dp=referenceDatapoint;
+  }
+
+  if(dpAccessable(dp + addingPart))
   {
     if ("LOFAR Navigator" == myPanelName())
     {
-      //If the datapoint is a reference, use the reference to navigate to!!
-      if(referenceDatapoint=="") 
-      {
-        navConfigTriggerNavigatorRefreshWithDP(datapoint + addingPart);        
-        LOG_TRACE("Navigate to: ",datapoint + addingPart);
-      }
-      else
-      {
-        navConfigTriggerNavigatorRefreshWithDP(referenceDatapoint + addingPart);
-        LOG_TRACE("Navigate to: ",referenceDatapoint + addingPart);
-      }
+      navConfigTriggerNavigatorRefreshWithDP(dp + addingPart);
+      LOG_TRACE("Navigate to: ",dp + addingPart);
     }
     else // Panel is undocked.
     {  
@@ -64,10 +64,12 @@ void aplViewNavigateTo(string datapoint, string referenceDatapoint, string addin
       {
         RootPanelOn("nav_usr/STS/" + panelName,
                     panelName,
-                    makeDynString("$datapoint:" + datapoint + addingPart));
-        LOG_TRACE("Navigate to[undocked]: ",datapoint + addingPart);
+                    makeDynString("$datapoint:" + dp + addingPart));
+        LOG_TRACE("Navigate to[undocked]: ",dp + addingPart);
       }
     }
+  } else {
+    LOG_DEBUG("datapoint not accessable: "+ dp+addingPart);
   }
 }
 
@@ -195,7 +197,7 @@ showVersion(string dp1, string version)
     }
     else
     {
-      setValue("txt_version", "text", "ver: x:x");
+      setValue("txt_version", "text", "ver: ?.?");
     }
 }
 
