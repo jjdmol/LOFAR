@@ -1,6 +1,6 @@
-//#  KVLDMain.cc: 
+//#  tEventPort.cc: Program to test the EventPort class
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,21 +21,25 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
+#include <GCF/GCF_ServiceInfo.h>
+#include <GCF/GCF_Defines.h>
+#include <GCF/GCF_PVTypes.h>
+#include <GCF/LogSys/CEPKeyValueLogger.h>
 
-#include <KeyValueLoggerDaemon.h>
-#include <GCF/TM/GCF_Control.h>
-
+using namespace LOFAR;
 using namespace LOFAR::GCF;
+using namespace LOFAR::GCF::Common;
+using namespace LOFAR::GCF::LogSys;
 
-int main(int argC, char *argV[])
-{
-	TM::GCFTask::init(argC, argV);
+int main (int32	argc, char*argv[]) {
 
-	LogSys::KeyValueLoggerDaemon daemon; 
+	INIT_LOGGER("tKVLlogger");
+	
+	CEPKeyValueLogger	kvlPort;
 
-	daemon.start(); // make initial transition
-
-	TM::GCFTask::run();
+	kvlPort.logKeyValue("Observation.nyquistZone", GCFPVInteger(2), KVL_ORIGIN_MAC);
 
 	return (0);
 }
+

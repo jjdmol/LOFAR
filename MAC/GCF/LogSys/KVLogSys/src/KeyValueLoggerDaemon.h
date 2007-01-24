@@ -30,38 +30,34 @@
 #include <KVLDefines.h>
 #include <PropertyLogger.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {  
-  namespace LogSys 
-  {
+namespace LOFAR {
+ namespace GCF {  
+  namespace LogSys {
 
 /**
 */
 
 class KeyValueLoggerDaemon : public TM::GCFTask
 {
-  public:
-    KeyValueLoggerDaemon ();
-    virtual ~KeyValueLoggerDaemon ();
+public:
+	KeyValueLoggerDaemon ();
+	virtual ~KeyValueLoggerDaemon ();
     
-  public: // member functions
-  
-  private: // state methods
+private: 
+	// state methods
     TM::GCFEvent::TResult initial     (TM::GCFEvent& e, TM::GCFPortInterface& p);
     TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
         
-  private: // helper methods
+	// helper methods
     void sendEventsBuffer();
     void sendOldestCollection();
     
-  private: // data members        
-    TM::GCFTCPPort  _kvlDaemonPortProvider;
+	// data members        
+    TM::GCFTCPPort  itsListener;
     TM::GCFPort     _kvlMasterClientPort;
     typedef list<TM::GCFPortInterface*> TClients;
 
-  private: // admin members
+	// admin members
     typedef map<uint64 /*seqnr */, KVLEventCollectionEvent*> TSequenceList;
     TSequenceList   _seqList;
     TClients        _clientsGarbage;
