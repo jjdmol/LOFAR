@@ -29,12 +29,14 @@
 #include <CS1_InputSection/InputThread.h>
 #include <Common/Timer.h>
 #include <Transport/TransportHolder.h>
+#include <Transport/TH_MPI.h>
 #include <CS1_InputSection/BeamletBuffer.h>
 
 namespace LOFAR {
   namespace CS1 {
 
     bool InputThread::theirShouldStop = false;
+    volatile unsigned InputThread::nrPacketsReceived, InputThread::nrPacketsRejected;
 
     InputThread::InputThread(ThreadArgs args) : itsArgs(args)
     {}
@@ -42,9 +44,32 @@ namespace LOFAR {
     InputThread::~InputThread()
     {}
 
+    void *InputThread::logThread(void *)
+    {
+      while (!theirShouldStop) {
+#if defined HAVE_MPI
+	std::clog << TH_MPI::getCurrentRank() << ": received " << nrPacketsReceived << " packets, rejected " << nrPacketsRejected << " packets" << std::endl;
+#else
+	std::clog << "received " << nrPacketsReceived << " packets, rejected " << nrPacketsRejected << " packets" << std::endl;
+#endif
+	nrPacketsReceived = nrPacketsRejected = 0; // race conditions, but who cares
+	sleep(1);
+      }
+
+      return 0;
+    }
+
     void InputThread::operator()()
     {
       LOG_TRACE_FLOW_STR("WH_RSPInput WriterThread");   
+
+      pthread_t logThreadId;
+
+      if (pthread_create(&logThreadId, 0, logThread, 0) != 0) {
+	std::cerr << "could not create log thread " << std::endl;
+	exit(1);
+      }
+
       int seqid = 0;
       int blockid = 0;
       TimeStamp actualstamp;
@@ -98,6 +123,7 @@ namespace LOFAR {
 	    //cerr<<"InputThread "<<itsArgs.ID << " reading "<<frameSize<<" bytes from TH ("<<(void*)itsArgs.th<<" into "<<(void*)totRecvframe<<endl;
 	    itsArgs.th->recvBlocking( (void*)totRecvframe, frameSize, 0);
 	    receiveTimer.stop();
+	    ++ nrPacketsReceived;
 	  } catch (Exception& e) {
 	    LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder("<<e.what()<<", stopping thread");
 	    break;
@@ -120,6 +146,8 @@ namespace LOFAR {
 	    blockid = ((int*)&recvframe[12])[0];
 	    validTimeStampReceived = (seqid != 0xFFFFFFFF); //if the second counter has 0xffffffff, the data cannot be trusted.
 	    //cerr<<"InputThread received valid? :"<<validTimeStampReceived<<endl;
+	    if (!validTimeStampReceived)
+	      ++ nrPacketsRejected;
 #ifdef PACKET_STATISTICS	    
 	    if (!validTimeStampReceived) invalidStamps.push_back(PacketStats(actualstamp, expectedstamp));
 	    // hack for error in rsp boards where timestamps are not equal on both boards
@@ -185,6 +213,11 @@ namespace LOFAR {
 	LOG_WARN_STR("INV received at time "<< iit->expectedStamp);
       }
 #endif
+
+      if (pthread_join(logThreadId, 0) != 0) {
+	std::cerr << "could not join log thread" << std::endl;
+	exit(1);
+      }
     }
 
     void InputThread::printTimers(vector<NSTimer*>& timers)

@@ -81,10 +81,12 @@ namespace LOFAR
       InputThread& operator= (const InputThread& that);
 
       void printTimers(vector<NSTimer*>& timers);
+      static void *logThread(void *);
     
       //# Datamembers
       // make this static for now, because boost copies the object
       static bool theirShouldStop;
+      static volatile unsigned nrPacketsReceived, nrPacketsRejected;
       ThreadArgs itsArgs;
     };
 
