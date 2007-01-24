@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,299 108 328 89 N "_3DFace" 1
+PANEL,324 149 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -27,8 +27,8 @@ PANEL,299 108 328 89 N "_3DFace" 1
 " 0
 "main()
 {
-  navPMLloadPropertySet($datapoint + \".BP\");
-//  navPMLloadPropertySet($datapoint + \"_Board0_BP_Maintenance\");
+  navPMLunloadPropertySet($datapoint + \".BP\");
+//  navPMLunloadPropertySet($datapoint + \"_Board0_BP_Maintenance\");
 
 }" 0
 E E E 1 -1 -1 0  20 60
