@@ -34,6 +34,7 @@
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
+#include <APL/APLCommon/Observation.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
 #include <signal.h>
 
@@ -633,13 +634,12 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 //
 void BeamControl::doPrepare()
 {
-	vector<int32> subbandsVector(globalParameterSet()->getInt32Vector("Observation.subbandList"));
-	vector<int32> beamletsVector(globalParameterSet()->getInt32Vector("Observation.beamletList"));
-	ASSERTSTR (subbandsVector.size() == beamletsVector.size(),
-			"size of subbandList " << subbandsVector.size() << " != " <<
-			" size of beamletList" << beamletsVector.size());
-	LOG_TRACE_VAR_STR("nr Subbands:" << subbandsVector.size());
-	LOG_TRACE_VAR_STR("nr Beamlets:" << beamletsVector.size());
+	Observation		theObs(globalParameterSet());	// does all nasty conversions
+	ASSERTSTR (theObs.subbands.size() == theObs.beamlets.size(),
+			"size of subbandList " << theObs.subbands.size() << " != " <<
+			" size of beamletList" << theObs.beamlets.size());
+	LOG_TRACE_VAR_STR("nr Subbands:" << theObs.subbands.size());
+	LOG_TRACE_VAR_STR("nr Beamlets:" << theObs.beamlets.size());
 
 	// contruct allocation event.
 	BSBeamallocEvent beamAllocEvent;
@@ -648,9 +648,9 @@ void BeamControl::doPrepare()
 																	getObservationNr(getName()));
 	LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
 
-	vector<int>::iterator beamletIt = beamletsVector.begin();
-	vector<int>::iterator subbandIt = subbandsVector.begin();
-	while (beamletIt != beamletsVector.end() && subbandIt != subbandsVector.end()) {
+	vector<int16>::iterator beamletIt = theObs.beamlets.begin();
+	vector<int16>::iterator subbandIt = theObs.subbands.begin();
+	while (beamletIt != theObs.beamlets.end() && subbandIt != theObs.subbands.end()) {
 		LOG_TRACE_VAR_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
 		beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
 	}

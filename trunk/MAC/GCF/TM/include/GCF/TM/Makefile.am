@@ -15,7 +15,8 @@ pkginclude_HEADERS = \
 	GCF_RawPort.h \
 	GCF_Task.h \
 	GCF_TCPPort.h \
-	GCF_TimerPort.h
+	GCF_TimerPort.h \
+	EventPort.h 
 
 NOINSTHDRS =
 

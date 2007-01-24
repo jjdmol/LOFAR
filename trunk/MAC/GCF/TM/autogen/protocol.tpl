@@ -41,7 +41,7 @@ const char* [+ protocol_name +]_errornames[] =
 	"[+ (get "msg") +]"[+ ENDFOR error +]
 };
 
-struct protocolStrings		LOFAR::[+ (base-name) +]::[+ protocol-name +]_STRINGS = {
+const struct protocolStrings		LOFAR::[+ (base-name) +]::[+ protocol-name +]_STRINGS = {
 	[+ (count "event") +]+1, [+ (count "error") +], 
 	LOFAR::[+ (base-name) +]::[+ protocol_name +]_signalnames,
 	[+ protocol_name +]_errornames
@@ -90,7 +90,7 @@ enum
 #define [+ prefix_ucase +]_[+ (get "signal") +] F_SIGNAL([+ protocol_name +], [+ prefix_ucase +]_[+ (get "signal") +]_ID, F_[+ (get "dir")+])[+ ENDFOR event +]
 
 extern const char* [+ protocol_name +]_signalnames[];  // for backwards compatibility 
-extern struct LOFAR::GCF::TM::protocolStrings [+ protocol-name +]_STRINGS;
+extern const struct LOFAR::GCF::TM::protocolStrings [+ protocol-name +]_STRINGS;
 
 [+ ENDIF +]
 [+ FOR event "" +][+ IF (= (suffix) "ph") +][+ FOR param "" +]

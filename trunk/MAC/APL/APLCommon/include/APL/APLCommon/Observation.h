@@ -61,6 +61,7 @@ public:
 	time_t			stopTime;
 	int16			nyquistZone;
 	vector<int16>	subbands;
+	vector<int16>	beamlets;
 	int32			sampleClock;
 	string			filter;
 	string			antennaArray;

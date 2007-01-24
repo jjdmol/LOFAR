@@ -23,9 +23,9 @@
 
 #include <lofar_config.h>
 
+#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_Defines.h>
-#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_Handler.h>
 
 #include <GCF/TM/GCF_PortInterface.h>
@@ -58,9 +58,13 @@ char** GCFTask::_argv = 0;
 GCFTask::GCFTask(State initial, const string& name) :
   GCFFsm(initial), _name(name)
 {
-  // framework protocols
+  // framework protocols old-style registration
   registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_names);
   registerProtocol(F_PORT_PROTOCOL, F_PORT_PROTOCOL_names);
+
+	// new style registration
+	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	TM::registerProtocol(F_PORT_PROTOCOL,F_PORT_PROTOCOL_STRINGS);
 }
 
 

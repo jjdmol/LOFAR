@@ -57,7 +57,7 @@ public:
 	EventPort::~EventPort();
 
 	// send(Event*)
-	void send(GCFEvent*	anEvent);
+	bool send(GCFEvent*	anEvent);
 
 	// receive() : Event
 	GCFEvent&	receive();

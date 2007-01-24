@@ -59,18 +59,23 @@ Observation::Observation(ParameterSet*		aParSet) :
 	if (aParSet->isDefined(prefix+"name")) {
 		name = aParSet->getString(prefix+"name");
 	}
+
 	if (aParSet->isDefined("_treeID")) {
 		treeID = aParSet->getInt32("_treeID");
 	}
+
 	if (aParSet->isDefined(prefix+"startTime")) {
 		startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
 	}
+
 	if (aParSet->isDefined(prefix+"stopTime")) {
 		stopTime = to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
 	}
+
 	if (aParSet->isDefined(prefix+"nyquistZone")) {
 		nyquistZone = aParSet->getInt16(prefix+"nyquistZone");
 	}
+
 	if (aParSet->isDefined(prefix+"subbandList")) {
 		string sbString("x=" + APLUtilities::expandedArrayString(
 											aParSet->getString(prefix+"subbandList")));
@@ -78,12 +83,23 @@ Observation::Observation(ParameterSet*		aParSet) :
 		sbParset.adoptBuffer(sbString);
 		subbands = sbParset.getInt16Vector("x");
 	}
+
+	if (aParSet->isDefined(prefix+"beamletList")) {
+		string blString("x=" + APLUtilities::expandedArrayString(
+											aParSet->getString(prefix+"beamletList")));
+		ParameterSet	blParset;
+		blParset.adoptBuffer(blString);
+		beamlets = blParset.getInt16Vector("x");
+	}
+
 	if (aParSet->isDefined(prefix+"bandFilter")) {
 		filter = aParSet->getString(prefix+"bandFilter");
 	}
+
 	if (aParSet->isDefined(prefix+"antennaArray")) {
 		antennaArray = aParSet->getString(prefix+"antennaArray");
 	}
+
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
 		string	rcuString("x=" + APLUtilities::expandedArrayString(
@@ -100,6 +116,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 			}
 		}
 	}
+
 	if (aParSet->isDefined(prefix+"sampleClock")) {
 		sampleClock = aParSet->getUint32(prefix+"sampleClock");
 	}

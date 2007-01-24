@@ -25,12 +25,9 @@
 
 #include <GCF/TM/GCF_Event.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 /**
  * Macro to encode an event's signal from the signal id, protocal an in/out direction
@@ -86,7 +83,17 @@ enum {
 #define F_EXIT  F_SIGNAL(F_FSM_PROTOCOL, F_EXIT_ID,  F_IN)
 #define F_INIT  F_SIGNAL(F_FSM_PROTOCOL, F_INIT_ID,  F_IN)
 
-extern const char* F_FSM_PROTOCOL_names[]; // defined in GCF_Protocols.cc
+// structure for administration of signalnames and errornames.
+struct protocolStrings {
+	unsigned short		nrSignals;
+	unsigned short		nrErrors;
+	const char**		signalNames;
+	const char**		errorNames;
+};
+
+// defined in GCF_Protocols.cc
+extern const char* F_FSM_PROTOCOL_names[]; 
+extern const struct protocolStrings F_FSM_PROTOCOL_STRINGS; 
 
 /**
  * F_PORT_PROTOCOL signals
@@ -114,7 +121,9 @@ enum {
 #define F_RAW_DATA      F_SIGNAL(F_PORT_PROTOCOL, F_RAW_DATA_ID,      F_INOUT)
 #define F_ACCEPT_REQ    F_SIGNAL(F_PORT_PROTOCOL, F_ACCEPT_REQ_ID,    F_IN)
 
-extern const char* F_PORT_PROTOCOL_names[]; // defined in GCF_Protocols.cc
+// defined in GCF_Protocols.cc
+extern const char* F_PORT_PROTOCOL_names[];
+extern const struct protocolStrings F_PORT_PROTOCOL_STRINGS; 
 
 struct GCFTimerEvent : public GCFEvent
 {
@@ -129,15 +138,9 @@ struct GCFTimerEvent : public GCFEvent
   void* arg;
 };
 
-struct protocolStrings {
-	unsigned short		nrSignals;
-	unsigned short		nrErrors;
-	const char**		signalNames;
-	const char**		errorNames;
-};
-
-void registerProtocol (unsigned short	protID, struct protocolStrings&		protDef);
-string signalName(const GCFEvent& e);
+void registerProtocol (unsigned short					protID, 
+					   const struct protocolStrings&	protDef);
+string eventName(const GCFEvent& e);
 string errorName (unsigned short	errorID);
 
   } // namespace TM

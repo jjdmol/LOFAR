@@ -62,6 +62,15 @@ prelude = << PRELUDE_END
 
 PRELUDE_END;
 
+error = {
+	id  = OK;
+	msg = "No errors";
+};
+error = {
+	id  = LOST_CONN;
+	msg = "Lost connection";
+};
+
 //
 // An "event" has a "signal" and a "dir" (direction)
 // and zero or more "param"s.

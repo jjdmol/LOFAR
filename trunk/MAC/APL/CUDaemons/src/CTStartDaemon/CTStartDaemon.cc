@@ -386,6 +386,8 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 
 	case STARTDAEMON_CREATE: {
 		STARTDAEMONCreateEvent 	createEvent(event);
+		LOG_DEBUG_STR("STARTDEAMON_CREATE(" << createEvent.cntlrName << "," << 
+											   createEvent.cntlrType << ")");
 		// prepare an answer message
 		STARTDAEMONCreatedEvent createdEvent;
 		createdEvent.cntlrType = createEvent.cntlrType;
