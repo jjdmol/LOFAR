@@ -18,16 +18,16 @@ par  claimPeriod             I    int    -      10    100    600                
 par  preparePeriod           I    int    -      10    100    300                                       - 'periodlength in seconds the PREPARE phases will take'
 
 # measurement information
-par  nyquistZone             I    pint   -      10    0      '1|2|3'                                   - 'nyquistzone of the filter'
+par  nyquistZone             I    pint   -      10    0      '1|2|3;1'                                   - 'nyquistzone of the filter'
 par  subbandList             I    text   -      10    0      [0]                                       - 'list of all used subbands in this observation'
 par  beamletList             I    text   -      10    0      [0]                                       - 'mapping of subbands on beamlets'
-par  bandFilter  	         I	  ptext	 -   	10    0	     'LBL_10_90|LBL_30_80|LBH_10_90|LBH_30_80|HB_100_190|HB_170_230|HB_210_250' - 'one of the seven filters to use'
-par  antennaArray	         I	  ptext	 -   	10    0	     'LBA|CS1-TEST'		                         - 'name of the antenneArray (AntennaArrays.conf)'
+par  bandFilter  	         I	  ptext	 -   	10    0	     'LBL_10_90|LBL_30_80|LBH_10_90|LBH_30_80|HB_100_190|HB_170_230|HB_210_250;LBL_30_80' - 'one of the seven filters to use'
+par  antennaArray	         I	  ptext	 -   	10    0	     'LBA|CS1-TEST;LBA'		                         - 'name of the antenneArray (AntennaArrays.conf)'
 par  receiverList	         I	  text	 -   	10    0	     [0]                                       - 'list of the receivers to use in the observation'
 par  MSNameMask              I    text   -      10    0      '/data2/ObservationA.MS'                  - 'Name for the Measurement set for this Observation'
 par  channelsPerSubband      I    int    -      10    0      256                                       - 'number of channels per subband'
 par  nrBeams                 I    int    -      10    100    1                                         - 'number of simultaneous beams in this observation'
-par  nrPolarisations         I    pint   -      10    100    '1|2'                                     - 'number of polarisations to use in this observation'
+par  nrPolarisations         I    pint   -      10    100    '1|2;2'                                     - 'number of polarisations to use in this observation'
 
 # clock related info
 par  clockMode               I    node   -      10    0      <<Clock160                                - 'Mode in which clock is running'
