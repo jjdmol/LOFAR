@@ -30,8 +30,8 @@
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/PAL/GCF_Answer.h>
-#include <GCF/PAL/GCF_PVSSInfo.h>
-#include <ManagerIdentifier.hxx>
+//#include <GCF/PAL/GCF_PVSSInfo.h>
+//#include <ManagerIdentifier.hxx>
 
 namespace LOFAR {
 using TYPES::uint8;
@@ -51,7 +51,7 @@ KeyValueLoggerDaemon::KeyValueLoggerDaemon() :
 	_registerID				(0),
 	_curSeqNr				(0),
 	_oldestUnanswerdSeqNr	(1),
-	_propertyLogger			(*this),
+//	_propertyLogger			(*this),
 	_waitForAnswer			(false)
 {
 	// register the protocol for debugging purposes
@@ -181,7 +181,7 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& 			event,
 		}            
 		else {
 			_clientsGarbage.push_back(&port);
-			_propertyLogger.clientGone(port);        
+//			_propertyLogger.clientGone(port);        
 		}
 		break;
 
@@ -274,6 +274,7 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& 			event,
 		break;
 	}
 
+#if 0
 	case F_VCHANGEMSG: {
 		if (hourTimerID == -2) {
 			LOG_DEBUG("More than 1 hour no connection with the master, so dump all receiving key value updates.");
@@ -309,6 +310,7 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& 			event,
 		}      
 		break;
 	}
+#endif
 
 	case KVL_ANSWER: {
 		KVLAnswerEvent answer(event);
@@ -329,7 +331,7 @@ GCFEvent::TResult KeyValueLoggerDaemon::operational(GCFEvent& 			event,
 
 	case KVL_SKIP_UPDATES_FROM: {
 		KVLSkipUpdatesFromEvent request(event);
-		_propertyLogger.skipUpdatesFrom(request.man_id, port);
+//		_propertyLogger.skipUpdatesFrom(request.man_id, port);
 		break;
 	}
 

@@ -8,8 +8,8 @@ DOCHDRS								= KVLDefines.h \
 									  KeyValueLoggerDaemon.h \
 									  KeyValueLoggerMaster.h \
 									  KVLUtils.h \
-									  PropertyLogger.h \
 									  $(BUILT_SOURCES)
+#									  PropertyLogger.h
    
 bin_PROGRAMS   						= KeyValueLoggerDaemon KeyValueLoggerMaster 
 lib_LTLIBRARIES 					= libgcfkvlc.la libcepkvlc.la
@@ -29,8 +29,8 @@ libkvlprot_la_SOURCES				= $(DOCHDRS) \
 									  KVLUtils.cc
   
 libkvld_la_SOURCES					= $(DOCHDRS) \
-									  KeyValueLoggerDaemon.cc \
-									  PropertyLogger.cc
+									  KeyValueLoggerDaemon.cc
+#									  PropertyLogger.cc
 libkvld_la_LIBADD					= libkvlprot.la
 libkvld_la_CPPFLAGS					= -DLOFARLOGGER_SUBPACKAGE=\"KVLD\"
 
