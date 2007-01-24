@@ -89,22 +89,7 @@ namespace LOFAR
       try
       {
           itsRegionOfInterest = ps.getDoubleVector("RegionOfInterest");
-          if(itsRegionOfInterest.size() != 4
-              || itsRegionOfInterest[0] < 0.0
-              || itsRegionOfInterest[2] < 0.0
-              || itsRegionOfInterest[0] > itsRegionOfInterest[1]
-              || itsRegionOfInterest[2] > itsRegionOfInterest[3])
-          {
-              THROW(BBSControlException, "Invalid region of interest specified: "
-                  << itsRegionOfInterest);
-          }
-      }
-      catch(APSException&)
-      {
-          itsRegionOfInterest.resize(4);
-          itsRegionOfInterest[0] = itsRegionOfInterest[2] = 0.0;
-          itsRegionOfInterest[1] = itsRegionOfInterest[3] = 1e50;
-      }
+      } catch (APSException&) {}
       
       // Get the work domain size for this strategy
       itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");
