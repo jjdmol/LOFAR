@@ -28,7 +28,7 @@
 #include <GCF/TM/GCF_TCPPort.h>
 #include <KVL_Protocol.ph>
 #include <KVLDefines.h>
-#include <PropertyLogger.h>
+//#include <PropertyLogger.h>
 
 namespace LOFAR {
  namespace GCF {  
@@ -67,7 +67,7 @@ private:
     uint8           _registerID;
     uint64          _curSeqNr;
     uint64          _oldestUnanswerdSeqNr;
-    PropertyLogger  _propertyLogger;
+//    PropertyLogger  _propertyLogger;
     bool            _waitForAnswer;
     
 };
