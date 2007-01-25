@@ -84,6 +84,9 @@ namespace LOFAR {
       static const int RESULT_LED_OFFSET     = 1;
 #endif
 
+      static int i2c_protocol_patch_indices[];
+      static int i2c_result_patch_indices[];
+
       // construct i2c sequence
       static uint8 i2c_protocol[PROTOCOL_SIZE];
 

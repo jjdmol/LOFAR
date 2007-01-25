@@ -46,6 +46,49 @@ namespace LOFAR {
     // "HBA Control Design Description"
     //
 
+    //
+    // The i2c_protocol and i2c_result arrays must be patched to set
+    // the correct server address offsets. This array specifies
+    // the indices that should be patched.
+    //
+    int HBAProtocolWrite::i2c_protocol_patch_indices[] = {
+      8, 9,
+      51, // stride is 17, server 1
+      51 + 17,
+      51 + 17 + 17,
+      51 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
+      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17, // server 16
+    };
+    int HBAProtocolWrite::i2c_result_patch_indices[] = {
+      4, // stride is 7, server 1
+      4 + 7,
+      4 + 7 + 7,
+      4 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
+      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7, // server 16
+    };
+
 #ifndef HBA_WRITE_DELAYS
 
     uint8 HBAProtocolWrite::i2c_protocol[HBAProtocolWrite::PROTOCOL_SIZE]
@@ -90,9 +133,11 @@ namespace LOFAR {
       37,   // Payload length icluding this octet
       4,    // Function: set word
       0,    // Server X-delay register ID
-      1,    // First server
-      16,   // Last server
-      0xBB, // X-delay data for server 1 (offset = PROTOCOL_DELAY_OFFSET)
+      0,    // First server (initialization will add offset)
+      15,   // Last server
+      0xBB, // X-delay data for server 0 (offset = PROTOCOL_DELAY_OFFSET) 
+      0xBB, // Y-delay data for server 0 
+      0xBB, // X-delay data for server 1
       0xBB, // Y-delay data for server 1
       0xBB, // X-delay data for server 2
       0xBB, // Y-delay data for server 2
@@ -122,25 +167,19 @@ namespace LOFAR {
       0xBB, // Y-delay data for server 14
       0xBB, // X-delay data for server 15
       0xBB, // Y-delay data for server 15
-      0xBB, // X-delay data for server 16
-      0xBB, // Y-delay data for server 16
 
       // Table 33
       // Wait to allow for the broadcast to finish (5 bytes)
       18, // PROTOCOL_C_WAIT
-#ifdef _SHORT_WAIT
       0x80, 0x96, 0x98, 0x00, // 0x00989680 = 10e6 * 5ns = 50ms
-#else
-      0x00, 0x2D, 0x31, 0x01, // 0x01312D00 = 20e6 * 5ns = 100ms
-#endif
 
       // Table 34
-      // Instruct the client to do a unicast read request to server 1 (8 bytes)
+      // Instruct the client to do a unicast read request to server 0 (8 bytes)
       13,   // PROTOCOL_C_WRITE_BLOCK_NO_CNT
       4>>1, // Client i2c slave address
       0,    // Request register access command
       4,    // Count of number of data bytes to write
-      1,    // Server address 1
+      0, // Server address 0
       3,    // Payload length, including this octet
       5,    // Function: get word (document LOFAR-ASTRON-MEM-175 Revision 1.3 has an error here (value 2))
       0,    // Server X-delay register ID
@@ -148,11 +187,7 @@ namespace LOFAR {
       // Table 35
       // Wait to allow for the multicast to finish
       18, // PROTOCOL_C_WAIT (5 bytes)
-#ifdef _SHORT_WAIT
-      0xC0, 0x5C, 0x15, 0x00, // 0x00155CC0 = 7ms = pause between write request register and read response register
-#else
-      0x80, 0x84, 0x1E, 0x00, // 0x001E8480 = 10ms = pause between write request register and read response register
-#endif
+      0x00, 0x09, 0x3D, 0x00, // 0x003D0900 = 4e6 * 5ns = 20ms pause between write request register and read response register
 
       // Table 36
       // Read back the response results from the client (4 bytes)
@@ -161,22 +196,22 @@ namespace LOFAR {
       1,    // Response register access command
       4,    // Count of number of data bytes to read (document LOFAR-ASTRON-MEM-175 has an error here (value 3))
 
-      // Repeat tables 34,35,36 fo servers 2 to 16
-      13, 4>>1, 0, 4,  2, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 2
-      13, 4>>1, 0, 4,  3, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 3
-      13, 4>>1, 0, 4,  4, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 4
-      13, 4>>1, 0, 4,  5, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 5
-      13, 4>>1, 0, 4,  6, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 6
-      13, 4>>1, 0, 4,  7, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 7
-      13, 4>>1, 0, 4,  8, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 8
-      13, 4>>1, 0, 4,  9, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 9
-      13, 4>>1, 0, 4, 10, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 10
-      13, 4>>1, 0, 4, 11, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 11
-      13, 4>>1, 0, 4, 12, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 12
-      13, 4>>1, 0, 4, 13, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 13
-      13, 4>>1, 0, 4, 14, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 14
-      13, 4>>1, 0, 4, 15, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 15
-      13, 4>>1, 0, 4, 16, 3, 5, 0, 18, 0x80, 0x84, 0x1E, 0x00, 14, 4>>1, 1, 4, // server 16
+      // Repeat tables 34,35,36 fo servers 1 to 15
+      13, 4>>1, 0, 4,  1, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 1
+      13, 4>>1, 0, 4,  2, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 2
+      13, 4>>1, 0, 4,  3, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 3
+      13, 4>>1, 0, 4,  4, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 4
+      13, 4>>1, 0, 4,  5, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 5
+      13, 4>>1, 0, 4,  6, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 6
+      13, 4>>1, 0, 4,  7, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 7
+      13, 4>>1, 0, 4,  8, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 8
+      13, 4>>1, 0, 4,  9, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 9
+      13, 4>>1, 0, 4, 10, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 10
+      13, 4>>1, 0, 4, 11, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 11
+      13, 4>>1, 0, 4, 12, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 12
+      13, 4>>1, 0, 4, 13, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 13
+      13, 4>>1, 0, 4, 14, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 14
+      13, 4>>1, 0, 4, 15, 3, 5, 0, 18, 0x00, 0x09, 0x3D, 0x00, 14, 4>>1, 1, 4, // server 15
 
       // Mark the end of the protocol list (1 byte)
       19, // PROTOCOL_C_END
@@ -191,12 +226,13 @@ namespace LOFAR {
       // Expected protocol result (7 bytes)
       0,       // PROTOCOL_C_WRITE_BLOCK_NO_CNT went OK
       0,       // PROTOCOL_C_WAIT_WENT_OK
-      1 + 128, // Server response address (> 0, indicating OK)
+      0 + 128, // Server response address (> 0, indicating OK)
       3,       // Nof bytes (including this byte)
       0xBB,    // X-delay data from server X (offset = RESULT_DELAY_OFFSET)
       0xBB,    // Y-delay data from server X
       0,       // PROTOCOL_C_READ_BLOCK_NO_CNT went OK
 
+      0, 0,  1 + 128, 3, 0xBB, 0xBB, 0, // server  1 result
       0, 0,  2 + 128, 3, 0xBB, 0xBB, 0, // server  2 result
       0, 0,  3 + 128, 3, 0xBB, 0xBB, 0, // server  3 result
       0, 0,  4 + 128, 3, 0xBB, 0xBB, 0, // server  4 result
@@ -211,7 +247,6 @@ namespace LOFAR {
       0, 0, 13 + 128, 3, 0xBB, 0xBB, 0, // server 13 result
       0, 0, 14 + 128, 3, 0xBB, 0xBB, 0, // server 14 result
       0, 0, 15 + 128, 3, 0xBB, 0xBB, 0, // server 15 result
-      0, 0, 16 + 128, 3, 0xBB, 0xBB, 0, // server 16 result
 
       // Marks the end of the protocol list (1 byte)
       0,    // PROTOCOL_C_END went OK
@@ -232,6 +267,18 @@ HBAProtocolWrite::HBAProtocolWrite(GCFPortInterface& board_port, int board_id)
   // control both the X and Y delays of HBA
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
+
+#ifdef HBA_WRITE_DELAYS
+  // add the hba server address offset to specified indices
+  for (int i = 0; i < (int)(sizeof(i2c_protocol_patch_indices)/sizeof(int)); i++) {
+    i2c_protocol[i2c_protocol_patch_indices[i]]
+      += GET_CONFIG("RSPDriver.HBA_SERVER_ADDRESS_OFFSET", i);
+  }
+  for (int i = 0; i < (int)(sizeof(i2c_result_patch_indices)/sizeof(int)); i++) {
+    i2c_result[i2c_result_patch_indices[i]]
+      += GET_CONFIG("RSPDriver.HBA_SERVER_ADDRESS_OFFSET", i);
+  }
+#endif
 }
 
 HBAProtocolWrite::~HBAProtocolWrite()
@@ -243,7 +290,6 @@ void HBAProtocolWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
 
-#if 0
   // only update if rcuprotocol is not being updated and one of hbaprotocol needs updating
   if (RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL)
       || RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL + 1))
@@ -251,7 +297,6 @@ void HBAProtocolWrite::sendrequest()
     setContinue(true);
     return;
   }
-#endif
    
   if (RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL)
       && RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL + 1))
@@ -269,19 +314,21 @@ void HBAProtocolWrite::sendrequest()
   case 0:
     {
 #ifdef HBA_WRITE_DELAYS
-      Array<uint8, 2> delays(i2c_protocol + PROTOCOL_DELAY_OFFSET,
-			     shape(MEPHeader::N_HBA_DELAYS, 2),
-			     neverDeleteData);
+      if (PROTOCOL_DELAY_OFFSET > 0) {
+	Array<uint8, 2> delays(i2c_protocol + PROTOCOL_DELAY_OFFSET,
+			       shape(MEPHeader::N_HBA_DELAYS, 2),
+			       neverDeleteData);
 
-      delays(Range::all(), 0) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL, Range::all());
-      delays(Range::all(), 1) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL + 1, Range::all());
-
-      // copy set delays to i2c_result which is the expected result
-      uint8* cur = i2c_result + RESULT_DELAY_OFFSET;
-      for (int elem = 0; elem < MEPHeader::N_HBA_DELAYS; elem++){
-	*(cur+0) = delays(elem, 0); // X
-	*(cur+1) = delays(elem, 1); // Y
-	cur += RESULT_DELAY_STRIDE;
+	delays(Range::all(), 0) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL, Range::all());
+	delays(Range::all(), 1) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL + 1, Range::all());
+	
+	// copy set delays to i2c_result which is the expected result
+	uint8* cur = i2c_result + RESULT_DELAY_OFFSET;
+	for (int elem = 0; elem < MEPHeader::N_HBA_DELAYS; elem++){
+	  *(cur+0) = delays(elem, 0); // X
+	  *(cur+1) = delays(elem, 1); // Y
+	  cur += RESULT_DELAY_STRIDE;
+	}
       }
 
 #else
@@ -340,7 +387,7 @@ GCFEvent::TResult HBAProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("HBAProtocolWrite::handleack: invalid ack");
-    //Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL);
+    Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL);
     Cache::getInstance().getState().hbaprotocol().write_error(global_blp * MEPHeader::N_POL + 1);
     return GCFEvent::NOT_HANDLED;
   }
@@ -348,7 +395,7 @@ GCFEvent::TResult HBAProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
   if (1 == (getCurrentIndex() % N_WRITES)) {
 
     // Mark modification as applied when write of RCU result register has completed
-    //Cache::getInstance().getState().hbaprotocol().read_schedule(global_blp * MEPHeader::N_POL);
+    Cache::getInstance().getState().hbaprotocol().read_schedule(global_blp * MEPHeader::N_POL);
     Cache::getInstance().getState().hbaprotocol().read_schedule(global_blp * MEPHeader::N_POL + 1);
 
   }

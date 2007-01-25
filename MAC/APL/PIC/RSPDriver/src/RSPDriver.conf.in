@@ -40,7 +40,7 @@ RSPDriver.PPS_TRIGGER=1
 #
 # Specify the MAC addresses of the control port (MAC) of RSP boards
 #
-RSPDriver.MAC_ADDR_0=10:FA:00:00:01:00
+RSPDriver.MAC_ADDR_0=10:FA:00:00:00:00
 RSPDriver.MAC_ADDR_1=10:FA:00:00:01:00
 RSPDriver.MAC_ADDR_2=10:FA:00:00:02:00
 RSPDriver.MAC_ADDR_3=10:FA:00:00:03:00
@@ -296,6 +296,11 @@ RSPDriver.XC_FILL=1
 RSPDriver.DISABLE_INIT=0
 
 #
-# Ignore result of HBA i2c sequence
+# The 'server address' is the address of the i2c server in the HBA tile.
+# By default a tile should have addresses 1-16 for the 16 delays.
+# The current HBA tile (connected to FTS-2 setup) has range 3-18
+# The HBA_SERVER_ADDRESS_OFFSET controls the start of the range.
 #
-RSPDriver.HBA_RESULT_IGNORE=1
+# Note: Addresses 0 indicates broadcast so a valid offset will be greater than 0.
+#
+RSPDriver.HBA_SERVER_ADDRESS_OFFSET=3
