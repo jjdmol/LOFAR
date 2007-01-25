@@ -1658,7 +1658,10 @@ void XCStatisticsCommand::send()
     RSPSubxcstatsEvent subxcstats;
 
     subxcstats.timestamp = Timestamp(0,0);
-    subxcstats.period = 4;
+
+    // increase update period when dumping to screen (gnuplot), otherwise gnuplot can't keep up
+    // period != 1 breaks integration, but we accept that for gnuplot output
+    subxcstats.period = (m_duration == 0 ? 4 : 1);
 
     m_rspport.send(subxcstats);
   }
