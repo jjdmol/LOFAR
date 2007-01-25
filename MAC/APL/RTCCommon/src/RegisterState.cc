@@ -128,7 +128,7 @@ void RegisterState::clear(int i)
   }
 }
 
-// transition from IDLE or CHECK -> WRITE
+// transition unconditionally, write must always be noted
 void RegisterState::write(int i)
 {
   int lb = 0, ub = 0;
@@ -142,17 +142,7 @@ void RegisterState::write(int i)
   }
    
   for (int j = lb; j < ub; j++) {
-    if (IDLE == m_state(j)) {
-      m_state(j) = WRITE;
-    } else if (CHECK == m_state(j)) {
-      m_state(j) = WRITE;
-    } else if (WRITE == m_state(j)) {
-      // already in write state
-    } else {
-      LOG_DEBUG_STR("tran to " << WRITE << " from " << m_state(j) << " failed");
-      // for some reason the LOG_ERROR doesn't work in this file so cerr is sometimes used like below
-      //cerr << "tran to " << WRITE << " from " << m_state(j) << " failed" << endl;
-    }
+    m_state(j) = WRITE;
   }
 }
 
