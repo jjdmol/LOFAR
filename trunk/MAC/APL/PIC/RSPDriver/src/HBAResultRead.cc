@@ -101,13 +101,8 @@ GCFEvent::TResult HBAResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
     Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * MEPHeader::N_POL + 1);
   } else {
     LOG_WARN("HBAResultRead::handleack: unexpected I2C result response");
-    if (GET_CONFIG("RSPDriver.HBA_RESULT_IGNORE", i)) {
-      Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * MEPHeader::N_POL);
-      Cache::getInstance().getState().hbaprotocol().read_ack(global_blp * MEPHeader::N_POL + 1);
-    } else {
-      Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL);
-      Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL + 1);
-    }
+    Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL);
+    Cache::getInstance().getState().hbaprotocol().read_error(global_blp * MEPHeader::N_POL + 1);
   }
 
   return GCFEvent::HANDLED;
