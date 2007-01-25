@@ -477,13 +477,29 @@ void Scheduler::completeCommands()
   {
     Ptr<Command> command = m_done_queue.top();
     
-    //command->setTimestamp(getCurrentTime() + (long)SYNC_INTERVAL_INT);
     command->complete(Cache::getInstance().getFront());
     
     // re-timestamp periodic commands for the next period
     if (command->getPeriod())
     {
-      command->setTimestamp(command->getTimestamp() + (long)command->getPeriod());
+      // Set the next time at which the periodic command should be executed.
+      //
+      // This is not as simple as doing command->setTimestamp(command->getTimestamp() + (long)command->getPeriod());
+      // because command->getTimestamp() returns the previous time at which the command
+      // was executed. In some cases (due to missed PPSes) the sum of the previous timestamp
+      // and the period will be in the past causing the periodic command to be logged as
+      // 'late' from that point onwards.
+      //
+      // To correctly compute the next time at which a periodic command should execute, take
+      // the absolute current time and add the period, but make sure the periodic command
+      // continues to be executed on the grid defined by the period. E.g. if a command is 
+      // executed every 4 seconds starting on second 1, so 1,5,9, etc and some PPSes are missed
+      // lets say PPS 10,11,12,13 (and current time is 13) then it should continue at time 17.
+      //
+      Timestamp newtime = getCurrentTime()
+	                     + ((long)command->getPeriod()
+				- ((long)command->getTimestamp() % (long)command->getPeriod()));
+      command->setTimestamp(newtime);
     }
 
     m_done_queue.pop();
