@@ -35,6 +35,7 @@ import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.util.AccessRights;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
@@ -208,7 +209,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             logger.debug("No choices provided for ParamLimits Combobox");
             return;
         }
-        String[] choices = aS.split("[|]");
+        // first strip input on ; because after the ; a default choice has been given.
+        String[] stripped = aS.split("[;]");
+        String[] choices = stripped[0].split("[|]");
         for (int i=0; i< choices.length;i++) {
             if (!choices[i].equals("")) {
                 this.ParamLimitsCombo.addItem(choices[i]);
@@ -257,12 +260,14 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
 
     private void initPanel() {
     
+        if (itsAccessRights==null) {
+            itsAccessRights = new AccessRights();
+        }
+        itsAccessRights.setMainFrame(itsMainFrame);
+
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
         
-        // For now:
-        enableLimits(true);
-        enableDescription(true);
         
         if(userAccount.isAdministrator()) {
             // enable/disable certain controls
@@ -301,6 +306,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                 setLimits(itsNode.limits);
             }            
             setDescription(itsParam.description);
+            
+            // Check if the fields may be changed in this treestate/valmoment
+            setAllEnabled(itsAccessRights.isWritable(itsParam));
         } else {
             logger.debug("ERROR:  no Param given");
         }
@@ -316,6 +324,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     private void enableParamName(boolean enabled) {
         this.ParamNameText.setEnabled(enabled);
+        this.ParamNameText.setEditable(enabled);
     }
 
     private String getIndex() {
@@ -328,6 +337,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     private void enableIndex(boolean enabled) {
         this.ParamIndexText.setEnabled(enabled);
+        this.ParamIndexText.setEditable(enabled);
     }
 
     private String getType() {
@@ -344,6 +354,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     private void enableType(boolean enabled) {
         this.ParamTypeText.setEnabled(enabled);
+        this.ParamTypeText.setEditable(enabled);
     }
     
     private String getUnit() {
@@ -360,6 +371,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     private void enableUnit(boolean enabled) {
         this.ParamUnitText.setEnabled(enabled);
+        this.ParamUnitText.setEditable(enabled);
     }
     
     private String getPruning() {
@@ -372,6 +384,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
 
     private void enablePruning(boolean enabled) {
         this.ParamPruningText.setEnabled(enabled);
+        this.ParamPruningText.setEditable(enabled);
     }
 
     private String getValMoment() {
@@ -384,6 +397,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
 
     private void enableValMoment(boolean enabled) {
         this.ParamValMomentText.setEnabled(enabled);
+        this.ParamValMomentText.setEditable(enabled);
     }
 
     private boolean getRuntimeMod() {
@@ -404,6 +418,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
 
     private void enableRuntimeMod(boolean enabled) {
         this.ParamRuntimeModText.setEnabled(enabled);
+        this.ParamRuntimeModText.setEditable(enabled);
     }
     
     
@@ -421,6 +436,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     private void setLimits(String aS) {
         if (this.getType().substring(0,1).equals("p")) {
+            // The first time limits is set and it is a combochoice, the node will contain the complete list of choices.
+            // If this is the case, we will look if a default value is set in this string , deteremined by a ; at the end of the
+            // choice list. If it is found, the choice will be set accordingly
+            String split[] = aS.split("[;]");
+            if (split.length > 1) {
+                aS=split[1];
+            }
             this.ParamLimitsCombo.setSelectedItem(aS);
         } else {
            this.ParamLimitsText.setText(aS);
@@ -434,6 +456,8 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private void enableLimits(boolean enabled) {
         this.ParamLimitsCombo.setEnabled(enabled);
         this.ParamLimitsText.setEnabled(enabled);
+        this.ParamLimitsCombo.setEditable(enabled);
+        this.ParamLimitsText.setEditable(enabled);
     }
 
     private void enableDeref(boolean enabled) {
@@ -591,17 +615,20 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
 
         ParamLimitsLabel.setText("Value :");
 
+        ParamIndexText.setEditable(false);
         ParamIndexText.setText("None");
         ParamIndexText.setMaximumSize(new java.awt.Dimension(200, 19));
         ParamIndexText.setMinimumSize(new java.awt.Dimension(200, 19));
         ParamIndexText.setPreferredSize(new java.awt.Dimension(200, 19));
 
+        ParamPruningText.setEditable(false);
         ParamPruningText.setText("-1");
         ParamPruningText.setToolTipText("Number of Instances for this Node ");
         ParamPruningText.setMaximumSize(new java.awt.Dimension(200, 19));
         ParamPruningText.setMinimumSize(new java.awt.Dimension(200, 19));
         ParamPruningText.setPreferredSize(new java.awt.Dimension(200, 19));
 
+        ParamNameText.setEditable(false);
         ParamNameText.setText("None");
         ParamNameText.setToolTipText("Name for this Node");
         ParamNameText.setMaximumSize(new java.awt.Dimension(440, 19));
@@ -616,12 +643,14 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         });
 
         ParamApplyButton.setText("Apply");
+        ParamApplyButton.setEnabled(false);
         ParamApplyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ParamApplyButtonActionPerformed(evt);
             }
         });
 
+        ParamDescriptionText.setEditable(false);
         ParamDescriptionText.setRows(3);
         ParamDescriptionText.setBorder(javax.swing.BorderFactory.createTitledBorder(new javax.swing.border.LineBorder(new java.awt.Color(0, 0, 0), 1, true), "Description"));
 
@@ -636,14 +665,15 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Parameter View Panel");
 
-        ParamTypeText.setEditable(true);
+        ParamTypeText.setEnabled(false);
 
-        ParamUnitText.setEditable(true);
+        ParamUnitText.setEnabled(false);
 
+        ParamValMomentText.setEditable(false);
         ParamValMomentText.setText("None");
 
-        ParamRuntimeModText.setEditable(true);
         ParamRuntimeModText.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "false", "true" }));
+        ParamRuntimeModText.setEnabled(false);
 
         derefLabel.setText("Deref Value:");
         derefLabel.setVisible(false);
@@ -653,11 +683,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
 
         CardPanel.setLayout(new java.awt.CardLayout());
 
+        ParamLimitsText.setEditable(false);
         ParamLimitsText.setText("None");
         CardPanel.add(ParamLimitsText, "TextCard");
 
         ParamLimitsCombo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         ParamLimitsCombo.setVerifyInputWhenFocusTarget(false);
+        ParamLimitsCombo.setEnabled(false);
         CardPanel.add(ParamLimitsCombo, "ComboCard");
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(this);
@@ -703,9 +735,8 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                                 .add(ParamCancelButton)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                                .add(ParamApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                        .add(68, 68, 68)))
-                .add(353, 353, 353))
+                                .add(ParamApplyButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
+                .add(421, 421, 421))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -769,6 +800,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     private OtdbRmi    itsOtdbRmi;
     private jOTDBnode  itsNode;
     private jOTDBparam itsParam;
+    private AccessRights itsAccessRights;
 
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -245,14 +245,18 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
               }
             }
         } else if (evt.getActionCommand().equals("Info")) {
+            int answer=JOptionPane.showConfirmDialog(this,"Altering the info wil automaticly close this Maintainance window. Do you want to continue ?","alert",JOptionPane.YES_NO_OPTION);
             if (itsTreeID > 0) {
-                if (viewInfo() ) {
+                if (viewInfo() && JOptionPane.YES_OPTION == answer) {
                     logger.debug("Tree has been changed, reloading table line");
                     // flag has to be set that ppl using this treeid should be able to see that it's info has been changed
                     itsMainFrame.setChanged(this.getFriendlyName(),true);
+                    // if the treeinfo has been changed then it could be into a state where the loaded TemplateMaintenance panel
+                    // is invalid (can not be changed anymore )  So it's better to close down this panel.
+                    itsMainFrame.unregisterPlugin(this.getFriendlyName());
+                    itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
                 }
             }
-
         } else if (evt.getActionCommand().equals("Exit")) {
             itsMainFrame.unregisterPlugin(this.getFriendlyName());
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
