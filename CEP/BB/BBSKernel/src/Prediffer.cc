@@ -488,7 +488,7 @@ bool Prediffer::setContext(const Context &context)
                 }
             }
 
-            ASSERTSTR(!stationGroup1.empty() && !stationGroup2.empty(), "Baseline specification does not match any station in the measurement set.");
+            LOG_WARN_STR("Baseline specification " << *baseline_it1 << ", " << *baseline_it2 << " does not match any baseline in the measurement set.");
 
             // Generate all possible baselines (pairs) from the two groups of station IDs. If a baseline
             // is selected in the current strategy _and_ matches the correlation selection of this context,
