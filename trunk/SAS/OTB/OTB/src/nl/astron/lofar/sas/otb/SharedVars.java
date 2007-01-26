@@ -25,6 +25,7 @@
 package nl.astron.lofar.sas.otb;
 
 import java.rmi.Naming;
+import java.rmi.RemoteException;
 import java.util.HashMap;
 import nl.astron.lofar.java.cep.jparmfacade.jParmFacadeInterface;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
@@ -67,6 +68,8 @@ public class SharedVars {
     private int                              itsCurrentTreeID=0;
     // holds the current component ID
     private int                              itsCurrentComponentID=0;
+    // holds the treeState from the current tree
+    private int                              itsTreeState=-1;
     // holds the OtdbRmi Object (RMI/JNI access for OTDB)
     private static OtdbRmi                   itsOtdbRmi;
     // holds the jParmFacade Object (JNI access for ParmDB)
@@ -83,9 +86,26 @@ public class SharedVars {
     /** sets the Current TreeID */
     public void setTreeID(int aTreeID) {
         itsCurrentTreeID=aTreeID;
+        setTreeState(aTreeID);
+    }
+    
+    /** sets the Current TreeState */
+    public void setTreeState(int aTreeID) {
+        try {
+            itsTreeState=itsOtdbRmi.getRemoteOTDB().getTreeInfo(aTreeID,false).state;
+        } catch (RemoteException ex) {
+            logger.debug("Exception during setTreeState(TreeID: "+aTreeID+")" );
+            ex.printStackTrace();
+        }
+    }
+    
+    /** gets the Current TreeState */
+    public int getTreeState() {
+        return itsTreeState;
     }
     
     /** gets the Current ComponentID */
+
     public int getComponentID() {
         return itsCurrentComponentID;
     }
@@ -142,6 +162,7 @@ public class SharedVars {
         
         itsCurrentTreeID=0;
         itsCurrentComponentID=0;
+        itsTreeState=-1;
         
     }
     
