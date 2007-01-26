@@ -578,20 +578,11 @@ namespace LOFAR
       ASSERT(fieldId >= 0  &&  fieldId < itsNrField);
       ASSERT(data != 0);
 
-      Double time;
+      if (timeCounter >= itsNrTimes)
+        itsNrTimes = timeCounter + 1;
 
-      if (itsNrTimes == 0)
-      {
-        time = itsStartTime + itsTimeStep/2.;
-      }
-      else
-      { 
-        time = itsStartTime + (itsNrTimes/itsTimesToIntegrate)*itsTimeStep+ itsTimeStep/2.; 
-      }
-	
-      if (timeCounter >= itsNrTimes) {
-        itsNrTimes = timeCounter+1;
-      }
+      Double time = itsStartTime + (itsNrTimes/itsTimesToIntegrate - .5) * itsTimeStep;
+      
       // Find the shape of the data array in each table row.
       IPosition shape(2, (*itsNrPol)[bandId], (*itsNrChan)[bandId]);
       Int nrel = shape[0];       // == number of polarisations/correlations
