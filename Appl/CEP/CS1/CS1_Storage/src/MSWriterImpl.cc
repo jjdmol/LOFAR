@@ -131,6 +131,7 @@ namespace LOFAR
       for (int i=0; i<nantennas; i++) {
         const Vector<Double>& pos1 = antMPos[i].getValue().getValue();
         for (int j=0; j<nantennas; j++) {
+	  // Generate a 3-vector of x,y,z in m
           const Vector<Double>& pos2 = antMPos[j].getValue().getValue();
           basel(0,i,j) = pos2(0) - pos1(0);
           basel(1,i,j) = pos2(1) - pos1(1);
@@ -306,6 +307,8 @@ namespace LOFAR
 #if defined HAVE_MPI
       int nrSubband = TH_MPI::getCurrentRank()*itsSubbandsPerPset + (rownr);
       msspwCol.name().put (rownr, "SB-" + String::toString(nrSubband));
+#else
+      msspwCol.name().put (rownr, "SB-0");     
 #endif      
       msspwCol.refFrequency().put (rownr, refFreq);
       msspwCol.chanFreq().put (rownr, chanFreqs);
@@ -576,7 +579,7 @@ namespace LOFAR
       ASSERT(data != 0);
 
       Double time;
-	
+
       if (itsNrTimes == 0)
       {
         time = itsStartTime + itsTimeStep/2.;
@@ -621,28 +624,27 @@ namespace LOFAR
       // First store time in frame.
       Quantity qtime(time, "s");
       itsFrame->set (MEpoch(qtime, MEpoch::UTC));
-      MDirection::Ref outref(MDirection::HADEC, *itsFrame);
-      MDirection outdir = MDirection::Convert (itsField[fieldId], outref) ();
-      Double ha = outdir.getAngle().getValue()(0);
-      Double dec = outdir.getAngle().getValue()(1);
-      Double sinha = std::sin(ha);
-      Double cosha = std::cos(ha);
-      Double sindec = std::sin(dec);
-      Double cosdec = std::cos(dec);
+      itsFrame->set (itsField[fieldId]);
+
+      MVDirection MVd = itsField[fieldId].getValue();
       Vector<Double> uvw(3);
       const Cube<Double>& basel = *itsBaselines;
 
       IPosition dShape(2, shape[0], nrChannels); // Shape of data field
       IPosition wShape(1, nrChannels);           // Shape of weight_spectrum field
 
+      MBaseline  MB_ITRF;
+      MBaseline  MB_J2000;
+      MVBaseline MBV_J2000;
+
       for (int i=0; i<itsNrAnt; i++) {
         for (int j=0; j<=i; j++) {
-          uvw(0) = sinha*basel(0,i,j) + cosha*basel(1,i,j);
-          uvw(1) = -sindec*cosha*basel(0,i,j) + sindec*sinha*basel(1,i,j) +
-            cosdec*basel(2,i,j);
-          uvw(2) = cosdec*cosha*basel(0,i,j) - cosdec*sinha*basel(1,i,j) +
-            sindec*basel(2,i,j);
-      
+	  MB_ITRF = MBaseline(MVBaseline(basel(0,i,j), basel(1,i,j), basel(2,i,j)), 
+	                      MBaseline::ITRF);
+	  MB_J2000 = MBaseline::Convert (MB_ITRF, MBaseline::Ref (MBaseline::J2000, *itsFrame)) ();
+	  MBV_J2000 = MB_J2000.getValue();
+          uvw = MVuvw(MBV_J2000, MVd).getValue();
+	  
           itsMSCol->data().setShape(rowNumber, shape);
 
           itsMSCol->flagRow().put (rowNumber, False);
