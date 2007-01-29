@@ -57,14 +57,6 @@ namespace LOFAR
       int ID;
     };
   
-    class PacketStats {
-    public:
-      PacketStats(const TimeStamp& rStamp, const TimeStamp& eStamp): receivedStamp(rStamp), expectedStamp(eStamp) {};
-      TimeStamp receivedStamp;
-      TimeStamp expectedStamp;
-    };
-
-    // Description of class.
     class InputThread
     {
     public:
@@ -80,7 +72,6 @@ namespace LOFAR
       // Copying is not allowed
       InputThread& operator= (const InputThread& that);
 
-      void printTimers(vector<NSTimer*>& timers);
       static void *logThread(void *);
     
       //# Datamembers
