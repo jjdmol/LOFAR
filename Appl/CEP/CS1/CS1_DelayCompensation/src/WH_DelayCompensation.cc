@@ -90,7 +90,6 @@ namespace LOFAR
     void WH_DelayCompensation::preprocess()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-
       itsLoopCount = 0;
 
       // Create the AMC converter.
@@ -110,15 +109,15 @@ namespace LOFAR
 
     void WH_DelayCompensation::process()
     {
-      // Start by incrementing the loop count
-      itsLoopCount++;
-      
-      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_FLOW, "count = " << itsLoopCount);
 
       // Calculate the delays for the epoch after the end of the current time
       // interval. Put the results in itsDelaysAtBegin and itsDelaysAfterEnd.
       calculateDelays();
-      
+
+      // Incrementing the loop count
+      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_FLOW, "count = " << itsLoopCount);
+      itsLoopCount++;
+            
       // The delays -- split into a coarse (sample) delay and a fine
       // (subsample) delay -- need to be put into a DelayInfo struct.
       vector<DH_Delay::DelayInfo> delayInfo(itsNrDelays);
@@ -163,7 +162,6 @@ namespace LOFAR
     void WH_DelayCompensation::postprocess()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-
       // Delete the AMC converter
       ASSERT(itsConverter);
       delete itsConverter;
