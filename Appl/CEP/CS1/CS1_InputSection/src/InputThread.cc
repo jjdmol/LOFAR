@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>
 #include <CS1_InputSection/InputThread.h>
+#include <Common/DataConvert.h>
 #include <Common/Timer.h>
 #include <Transport/TransportHolder.h>
 #include <Transport/TH_MPI.h>
@@ -111,6 +112,11 @@ retry: // until valid packet received
     if (dataShouldContainValidStamp) {
       unsigned seqid   = * ((unsigned *) &recvframe[8]);
       unsigned blockid = * ((unsigned *) &recvframe[12]);
+
+#if defined WORDS_BIGENDIAN
+      seqid   = byteSwap(seqid);
+      blockid = byteSwap(blockid);
+#endif
 
       //if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
       if (seqid == ~0U) {
