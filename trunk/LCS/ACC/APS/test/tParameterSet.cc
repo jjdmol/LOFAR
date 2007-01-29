@@ -27,6 +27,7 @@
 #include <iterator>
 
 #include <APS/ParameterSet.h>
+#include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
 
 using namespace std;
@@ -49,8 +50,43 @@ int doIt(KeyCompare::Mode mode)
 	 << " key comparison.\n";
     cout << "<<<\n";
 
-    ParameterSet		mySecondSet(myPS);
+    ParameterSet		myPS2(mode);
 
+#if 0
+    /* This does not (yet) work! 
+       Self-adopt currently results in undefined behaviour!
+    */
+    // Try a self-adopt. Should return the same set.
+    myPS.adoptCollection(myPS, "Aap.Noot.");
+#endif
+
+    // Adopt collection myPS in myPS2 using a prefix.
+    myPS2.adoptCollection(myPS, "Foo.Bar.");
+    ASSERT(myPS.getInt32("a.b.c") == myPS2.getInt32("Foo.Bar.a.b.c"));
+    FAILWHEN(myPS2.isDefined("a.b"));
+
+    // Re-init myPS with myPS2 by stripping prefix "Foo.Bar."
+    // Should yield the same collection myPS
+    myPS.adoptCollection(myPS2.makeSubset("Foo.Bar."));
+    ASSERT(myPS.isDefined("a.b.double"));
+    FAILWHEN(myPS.isDefined("Foo.Bar.a.b.double"));
+
+    // Adopt buffered myPS in myPS2 using a different prefix.
+    string buf;
+    myPS.writeBuffer(buf);
+    myPS2.clear();
+    myPS2.adoptBuffer(buf, "Gnat.Gnu.");
+    ASSERT(myPS.getString("a.b.lange_naam") == 
+	   myPS2.getString("Gnat.Gnu.a.b.lange_naam"));
+    FAILWHEN(myPS2.isDefined("a.b.lange_naam"));
+
+    // Re-init myPS with myPS2 once more, stripping off prefix "Gnat.Gnu."
+    // Should yield the same collection myPS again.
+    myPS2.makeSubset("Gnat.Gnu.").writeBuffer(buf);
+    myPS.adoptBuffer(buf);
+    ASSERT(myPS.isDefined("a.b.double"));
+    FAILWHEN(myPS.isDefined("Gnat.Gnu.a.b.double"));
+    
     cout << "\nShowing some values\n";
     cout << "a.b.c=" 			<< myPS.getInt32("a.b.c") << endl;
     cout << "a.b=" 				<< myPS.getInt32("a.b") << endl;
@@ -100,7 +136,7 @@ int doIt(KeyCompare::Mode mode)
     try {
       myPS.getInt32("is.er.niet");
     }
-    catch (LOFAR::Exception& ex) {
+    catch (APSException&) {
       cout << "<<<\n";
       cout << "Told you the key didn't exist." << endl;
     }
@@ -110,7 +146,6 @@ int doIt(KeyCompare::Mode mode)
     cout << "<<<\n";
     myPS.writeFile(newsetFile);
 
-    try {
       cout << "\ntesting getInt32Vector\n";
       vector<int32> intVector = myPS.getInt32Vector("vtest.intVector1Dim");
       cout << intVector.size() << " elements in intVector1Dim\n";
@@ -124,10 +159,6 @@ int doIt(KeyCompare::Mode mode)
       copy (intVector.begin(), intVector.end(), 
 	    std::ostream_iterator<int, char>(cout, ","));
       cout << endl;
-    }
-    catch (LOFAR::Exception& ex) {
-      LOG_DEBUG_STR ("Exception:" << ex.what());
-    }
 
     // Iterate through all keys.
     cout << endl << "Iterate over all keys ..." << endl;
@@ -137,8 +168,13 @@ int doIt(KeyCompare::Mode mode)
       cout << iter->first << endl;
     }
 
-  } catch (std::exception& ex) {
-    cout << "Unexpected exception: " << ex.what() << endl;
+  }
+  catch (LOFAR::Exception& ex) {
+    LOG_DEBUG_STR ("Exception:" << ex.what());
+    return 1;
+  }
+  catch (std::exception& ex) {
+    LOG_DEBUG_STR ("Unexpected exception: " << ex.what());
     return 1;
   }
   return 0;
