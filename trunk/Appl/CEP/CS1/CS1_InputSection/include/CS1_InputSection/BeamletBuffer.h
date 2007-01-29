@@ -79,17 +79,12 @@ namespace LOFAR
       BeamletBuffer& operator= (const BeamletBuffer& that);
 
       // Needed for mapping a timestamp to a place in the buffer
-      TimeStamp time0;
       uint mapTime2Index(TimeStamp time) const { 
-	// TODO: this is very slow because of the if and the %
-	if (time > time0) {
-	  return (time - time0) % itsSize;
-	} else {
-	  return (time - time0) % itsSize + itsSize;
-	};
+	// TODO: this is very slow because of the %
+	return time % itsSize;
       }
 
-      // checked for skippeddata and flag it in chunks
+      // checked for skipped data and flag it in chunks
       void checkForSkippedData(TimeStamp writeBegin);
 
       //# Datamembers
