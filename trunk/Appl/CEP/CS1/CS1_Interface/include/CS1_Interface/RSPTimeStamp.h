@@ -53,7 +53,7 @@ namespace LOFAR {
       TimeStamp	    &operator -= (int64 decrement);
       TimeStamp	     operator ++ (int);
       TimeStamp	    &operator ++ ();
-      TimeStamp	    &operator -- (int);
+      TimeStamp	     operator -- (int);
       TimeStamp	    &operator -- ();
 
       TimeStamp	    operator + (int64 other) const;
@@ -188,10 +188,11 @@ namespace LOFAR {
 	return *this;
       }
 
-    inline TimeStamp &TimeStamp::operator -- (int)
+    inline TimeStamp TimeStamp::operator -- (int)
       { 
+	TimeStamp tmp = *this;
 	-- itsTime;
-	return *this;
+	return tmp;
       }
 
     inline TimeStamp TimeStamp::operator + (int64 increment) const
