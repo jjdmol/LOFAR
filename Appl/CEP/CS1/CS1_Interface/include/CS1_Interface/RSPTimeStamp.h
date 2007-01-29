@@ -47,28 +47,27 @@ namespace LOFAR {
       static double getMaxBlockId();
       static void   setMaxBlockId(double nMBID);
 
-      TimeStamp	    &operator += (const TimeStamp &other);
-      TimeStamp	    &operator += (int64 increment);
-      TimeStamp	    &operator -= (const TimeStamp &other);
-      TimeStamp	    &operator -= (int64 decrement);
-      TimeStamp	     operator ++ (int);
-      TimeStamp	    &operator ++ ();
-      TimeStamp	     operator -- (int);
-      TimeStamp	    &operator -- ();
+      template <typename T> TimeStamp &operator += (T increment);
+      template <typename T> TimeStamp &operator -= (T decrement);
+			    TimeStamp  operator ++ (int); // postfix
+			    TimeStamp &operator ++ ();	  // prefix
+			    TimeStamp  operator -- (int);
+			    TimeStamp &operator -- ();
 
-      TimeStamp	    operator + (int64 other) const;
-      int64	    operator + (const TimeStamp &other) const;
-      TimeStamp	    operator - (int64 other) const;
-      int64	    operator - (const TimeStamp &other) const;
+      template <typename T> TimeStamp  operator +  (T) const;
+      template <typename T> TimeStamp  operator -  (T) const;
+			    int64      operator -  (const TimeStamp &) const;
 
-      bool	    operator >  (const TimeStamp &other) const;
-      bool	    operator <  (const TimeStamp &other) const;
-      bool	    operator >= (const TimeStamp &other) const;
-      bool	    operator <= (const TimeStamp &other) const;
-      bool	    operator == (const TimeStamp &other) const;
-      bool	    operator != (const TimeStamp &other) const;
+			    bool       operator >  (const TimeStamp &) const;
+			    bool       operator <  (const TimeStamp &) const;
+			    bool       operator >= (const TimeStamp &) const;
+			    bool       operator <= (const TimeStamp &) const;
+			    bool       operator == (const TimeStamp &) const;
+			    bool       operator != (const TimeStamp &) const;
 
-      friend ostream  &operator << (ostream &os, const TimeStamp &ss);
+				       operator int64 () const;
+
+      friend ostream &operator << (ostream &os, const TimeStamp &ss);
 
       // This is needed to be able to put the TimeStamp in a Blob
       friend void ::LOFAR::dataConvert(DataFormat fmt, TimeStamp* inout, uint nrval);
@@ -145,25 +144,13 @@ namespace LOFAR {
 	theirInvMaxBlockId = 1 / nMBID;
       }
 
-    inline TimeStamp &TimeStamp::operator += (const TimeStamp &other)
-      { 
-	itsTime += other.itsTime;
-	return *this;
-      }
-
-    inline TimeStamp &TimeStamp::operator += (int64 increment)
+    template <typename T> inline TimeStamp &TimeStamp::operator += (T increment)
       { 
 	itsTime += increment;
 	return *this;
       }
 
-    inline TimeStamp &TimeStamp::operator -= (const TimeStamp &other)
-      { 
-	itsTime -= other.itsTime;
-	return *this;
-      }
-
-    inline TimeStamp &TimeStamp::operator -= (int64 decrement)
+    template <typename T> inline TimeStamp &TimeStamp::operator -= (T decrement)
       { 
 	itsTime -= decrement;
 	return *this;
@@ -195,17 +182,12 @@ namespace LOFAR {
 	return tmp;
       }
 
-    inline TimeStamp TimeStamp::operator + (int64 increment) const
+    template <typename T> inline TimeStamp TimeStamp::operator + (T increment) const
       { 
 	return TimeStamp(itsTime + increment);
       }
 
-    inline int64 TimeStamp::operator + (const TimeStamp &other) const
-      { 
-	return itsTime + other.itsTime;
-      }
-
-    inline TimeStamp TimeStamp::operator - (int64 decrement) const
+    template <typename T> inline TimeStamp TimeStamp::operator - (T decrement) const
       { 
 	return TimeStamp(itsTime - decrement);
       }
@@ -213,6 +195,11 @@ namespace LOFAR {
     inline int64 TimeStamp::operator - (const TimeStamp &other) const
       { 
 	return itsTime - other.itsTime;
+      }
+
+    inline TimeStamp::operator int64 () const
+      {
+	return itsTime;
       }
 
     inline bool TimeStamp::operator > (const TimeStamp &other) const
