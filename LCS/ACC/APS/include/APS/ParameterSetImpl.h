@@ -102,19 +102,28 @@ public:
 	// Return the key comparison mode.
 	KeyCompare::Mode keyCompareMode() const { return itsMode; }
 
+
 	// \name Merging or appending collections
 	// An existing collection can be extended/merged with another collection.
 	// @{
 
-	// Adds the Key-Values pair in the given file to the current collection.
-	void	adoptFile      (const string&               theFilename);
+	// Adds the Key-Values pair in the given file to the current
+	// collection. Each key will be prefixed with the optional argument \a
+	// thePrefix.
+	void	adoptFile      (const string&               theFilename,
+				const string&               thePrefix = "");
 
-	// Adds the Key-Values pair in the given buffer to the current collection.
-	void	adoptBuffer    (const string&               theBuffer);
+	// Adds the Key-Values pair in the given buffer to the current
+	// collection. Each key will be prefixed with the optional argument \a
+	// thePrefix.
+	void	adoptBuffer    (const string&               theBuffer,
+				const string&               thePrefix = "");
 
 	// Adds the Key-Values pair in the given collection to the current 
-	// collection.
-	void	adoptCollection(const ParameterSetImpl&	theCollection);
+	// collection. Each key will be prefixed with the optional argument \a
+	// thePrefix.
+	void	adoptCollection(const ParameterSetImpl&     theCollection,
+				const string&               thePrefix = "");
 	// @}
 
 
@@ -237,9 +246,9 @@ private:
 	// methods do some preprocessing so the 'adopt' method can use the
 	// \c addStream method.
 	// @{
-	void	readFile   (const string& theFile, const	bool merge);
-	void	readBuffer (const string& theFile, const	bool merge);
-	void	addStream  (istream&	inputStream, const	bool merge);
+	void	readFile   (const string& theFile, const string& prefix, const bool merge);
+	void	readBuffer (const string& theFile, const string& prefix, const bool merge);
+	void	addStream  (istream&	inputStream, const string& prefix, const bool merge);
 	// @}
 
 	const_iterator	findKV(const string& aKey) const;

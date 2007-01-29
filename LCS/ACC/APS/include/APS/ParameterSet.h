@@ -96,15 +96,26 @@ public:
 	// An existing collection can be extended/merged with another collection.
 	// @{
 
-	// Adds the Key-Values pair in the given file to the current collection.
-	void	adoptFile      (const string&               theFilename);
+	// Adds the Key-Values pair in the given file to the current
+	// collection. Each key will be prefixed with the optional argument \a
+	// thePrefix.
+	void	adoptFile      (const string&               theFilename,
+				const string&               thePrefix = "");
 
-	// Adds the Key-Values pair in the given buffer to the current collection.
-	void	adoptBuffer    (const string&               theBuffer);
+	// Adds the Key-Values pair in the given buffer to the current
+	// collection. Each key will be prefixed with the optional argument \a
+	// thePrefix.
+	void	adoptBuffer    (const string&               theBuffer,
+				const string&               thePrefix = "");
 
 	// Adds the Key-Values pair in the given collection to the current 
-	// collection.
-	void	adoptCollection(const ParameterSet&	theCollection);
+	// collection. Each key will be prefixed with the optional argument \a
+	// thePrefix.
+	// \attention Do \b not pass \c *this as first argument. This will
+	// result in undefined behaviour and likely cause a segmentation fault
+	// or an infinite loop.
+	void	adoptCollection(const ParameterSet&         theCollection,
+				const string&               thePrefix = "");
 	// @}
 
 
@@ -253,19 +264,19 @@ inline void	ParameterSet::clear      ()
 	itsSet->clear();
 }
 
-inline void	ParameterSet::adoptFile      (const string&               theFilename)
+inline void	ParameterSet::adoptFile	(const string& theFilename, const string& thePrefix)
 {
-	itsSet->adoptFile (theFilename);
+	itsSet->adoptFile (theFilename, thePrefix);
 }
 
-inline void	ParameterSet::adoptBuffer    (const string&               theBuffer)
+inline void	ParameterSet::adoptBuffer	(const string& theBuffer, const string& thePrefix)
 {
-	itsSet->adoptBuffer (theBuffer);
+	itsSet->adoptBuffer (theBuffer, thePrefix);
 }
 
-inline void	ParameterSet::adoptCollection(const ParameterSet&	theCollection)
+inline void	ParameterSet::adoptCollection	(const ParameterSet& theCollection, const string& thePrefix)
 {
-	itsSet->adoptCollection (*theCollection.itsSet);
+	itsSet->adoptCollection (*theCollection.itsSet, thePrefix);
 }
 
 inline void	ParameterSet::writeFile   (const string& theFilename, bool append) const

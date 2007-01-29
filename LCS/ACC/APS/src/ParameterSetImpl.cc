@@ -52,7 +52,7 @@ ParameterSetImpl::ParameterSetImpl(const string&	theFilename,
 	  itsCount (1),
 	  itsMode(mode)
 {
-	readFile(theFilename, false);
+	readFile(theFilename, "", false);
 }
 
 //
@@ -119,9 +119,10 @@ ParameterSetImpl::makeSubset(const string& baseKey,
 //
 // Adds the parameters from the file to the current ParameterSetImpl.
 //
-void ParameterSetImpl::adoptFile(const string&	theFilename)
+void ParameterSetImpl::adoptFile(const string&	theFilename,
+				 const string&	thePrefix)
 {
-	readFile(theFilename, true);
+	readFile(theFilename, thePrefix, true);
 }
 
 //
@@ -129,9 +130,10 @@ void ParameterSetImpl::adoptFile(const string&	theFilename)
 //
 // Adds the parameters from the string to the current ParameterSetImpl.
 //
-void ParameterSetImpl::adoptBuffer(const string&	theBuffer)
+void ParameterSetImpl::adoptBuffer(const string&	theBuffer,
+				   const string&	thePrefix)
 {
-	readBuffer(theBuffer, true);
+	readBuffer(theBuffer, thePrefix, true);
 }
 
 //
@@ -139,12 +141,13 @@ void ParameterSetImpl::adoptBuffer(const string&	theBuffer)
 //
 // Adds the parameters from the ParColl. to the current ParameterSetImpl.
 //
-void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection)
+void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection,
+				       const string&	thePrefix)
 {
 	const_iterator		newItem = theCollection.begin();
 
 	while (newItem != theCollection.end()) {
-		replace(newItem->first, newItem->second);
+		replace(thePrefix+newItem->first, newItem->second);
 		++newItem;
 	}
 }
@@ -155,8 +158,9 @@ void ParameterSetImpl::adoptCollection(const ParameterSetImpl& theCollection)
 //
 // Disentangles the file and adds the Key-Values pair to the current ParameterSetImpl.
 //
-void ParameterSetImpl::readFile(const	string&	theFilename,
-								   const	bool	merge)
+void ParameterSetImpl::readFile(const	string&	theFilename, 
+				const	string&	prefix,
+				const	bool	merge)
 {
 	ifstream		paramFile;
 
@@ -167,7 +171,7 @@ void ParameterSetImpl::readFile(const	string&	theFilename,
 		       formatString("Unable to open file %s", theFilename.c_str()));
 	}
 
-	addStream(paramFile, merge);
+	addStream(paramFile, prefix, merge);
 
 	paramFile.close();
 }
@@ -178,12 +182,13 @@ void ParameterSetImpl::readFile(const	string&	theFilename,
 //
 // Disentangles the file and adds the Key-Values pair to the current ParameterSetImpl.
 //
-void ParameterSetImpl::readBuffer(const	string&	theBuffer,
-									 const	bool	merge)
+void ParameterSetImpl::readBuffer(const	string&	theBuffer, 
+				  const	string&	prefix,
+				  const	bool	merge)
 {
 	istringstream		iss(theBuffer, istringstream::in);
 
-	addStream(iss, merge);
+	addStream(iss, prefix, merge);
 
 }
 
@@ -194,7 +199,9 @@ void ParameterSetImpl::readBuffer(const	string&	theBuffer,
 // Disentangles the stream and adds the Key-Values pair to the current 
 // ParameterSetImpl.
 //
-void ParameterSetImpl::addStream(istream&	inputStream, bool	merge)
+void ParameterSetImpl::addStream(istream&	inputStream, 
+				 const string&	prefix,
+				 bool		merge)
 {
 	char	paramLine[1024];
 	char*	keyStr;
@@ -228,6 +235,12 @@ void ParameterSetImpl::addStream(istream&	inputStream, bool	merge)
 
 			// skip leading and trailing spaces from key (allowing spaces before = sign)
 			rtrim(keyStr = ltrim(paramLine));
+
+			// add prefix if it is not empty
+			// I really hate these const_casts (GML)
+			if (!prefix.empty()) {
+				keyStr = const_cast<char*>(string(prefix + keyStr).c_str());
+			}
 		}
 
 		// skip leading spaces from value (allowing space afer = sign)
