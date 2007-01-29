@@ -40,6 +40,8 @@
 #include <GCF/GCF_PVString.h>
 #endif
 
+#include <time.h>
+
 namespace LOFAR
 {
   namespace CS1
@@ -232,9 +234,17 @@ namespace LOFAR
     void WH_SubbandWriter::process() 
     {
       static int counter = 0;
-      
-      cout << "count = " << counter++ << endl;
-      
+      time_t now = time(0);
+      char buf[26];
+      ctime_r(&now, buf);
+      buf[24] = '\0';
+
+      cout << "time = " << buf <<
+#if defined HAVE_MPI
+	      ", rank = " << TH_MPI::getCurrentRank() <<
+#endif
+	      ", count = " << counter ++ << endl;
+
       if (itsTimeCounter % itsTimesToIntegrate == 0) {
 	clearAllSums();
       }
