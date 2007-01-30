@@ -91,7 +91,7 @@ namespace LOFAR {
 	  }
 #endif
 	  mutex::scoped_lock sl(itsFlagsMutex);
-	  itsFlags.include(0, endI).include(startI, firstChunk);
+	  itsFlags.include(0, endI).include(startI, itsSize);
 	} else {
 #if defined USE_DEBUG
 	  for (uint sb = 0; sb < itsNSubbands; sb++) {
