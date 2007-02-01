@@ -52,10 +52,11 @@ CREATE OR REPLACE FUNCTION instanciateVTparams(INT4, INT4, INT4)
 		AND		name NOT like \'#%\'
 	  LOOP
 		IF vParam.par_type >= 300 THEN	-- popup parameter? leave limits fiels empty.
-		  dfltValue := substring(vParam.limits from \'[a-zA-Z0-9_.,]+;([a-zA-Z0-9_.,]+)\');
+		  dfltValue := substring(vParam.limits from \'[a-zA-Z0-9_.,<>]+;([a-zA-Z0-9_.,<>]+)\');
 		  IF dfltValue IS NULL THEN
 			dfltValue := \'\';
 		  END IF;
+--RAISE WARNING \'X:%,%\', vParam.name, dfltValue;
 		  INSERT
 		  INTO 	 VICtemplate(treeID, parentID, originID, name, instances, limits)
 		  VALUES ($2, $3, vParam.paramID, vParam.name, 1, dfltValue);
@@ -183,9 +184,9 @@ CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
 CREATE OR REPLACE FUNCTION instanciateVTtree(INT4, INT4, INT2)
   RETURNS INT4 AS '
 	DECLARE
-		vFunction  CONSTANT		INT2 := 1;
-		TTtemplate CONSTANT		INT2 := 20;
-		TSidle     CONSTANT		INT2 := 0;
+		vFunction   CONSTANT	INT2 := 1;
+		TTtemplate  CONSTANT	INT2 := 20;
+		TSbeingspec CONSTANT	INT2 := 100;
 		vIsAuth					BOOLEAN;
 	  	vOrgNodeID				VICtemplate.nodeID%TYPE;
 	  	vNewNodeID				VICtemplate.nodeID%TYPE;
@@ -202,7 +203,7 @@ CREATE OR REPLACE FUNCTION instanciateVTtree(INT4, INT4, INT2)
 	  END IF;
 
 	  -- create a new tree(auth, ..., classif, treetype, campaign)
-	  SELECT newTree($1, 0, 0, $3, TTtemplate, TSidle, 0)
+	  SELECT newTree($1, 0, 0, $3, TTtemplate, TSbeingspec, 0)
 	  INTO	 vNewTreeID;
 	  IF vNewTreeID = 0 THEN
 		RAISE EXCEPTION \'Tree can not be created\';
