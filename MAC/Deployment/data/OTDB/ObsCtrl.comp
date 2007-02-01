@@ -15,6 +15,6 @@ uses  StationCtrl  1.0.0  development 1           "All the station Controllers"
 
 #    name                    dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _hostname               I    text   -      10    0    RS002                     -        "Machine the program should run on"
-par  heartbeatInterval       I    int    -      10    0    10                        -        "Interval (in sec) between to 'sanity checks'"
+par  _hostname               I    text   -      10    100  MCU001                    -        "Machine the program should run on"
+par  heartbeatInterval       I    int    -      10    100  10                        -        "Interval (in sec) between to 'sanity checks'"
 

@@ -8,9 +8,6 @@ node  MACScheduler   1.0.0  development 'node constraint'  "Controller that star
 
 #    name              dir. type   unit   prun. vm   value       constr.  descr.
 #----------------------------------------------------------------------------------------------------------------------------------
-par  OTDBdatabasename   I    text   -      10    100    otdbtest     -      "The database to work on"
-par  OTDBusername       I    text   -      10    100    paulus       -      "The database user"
-par  OTDBpassword       I    text   -      10    100    boskabouter  -      "The password"
 par  OTDBpollInterval   I    time   -      10    0      5s           -      "Time between two polls in the database"
 par  QueuePeriod        I    time   -      10    0      15m          -      "The period length between startup of the observation software and the start of the observation"
 par  ClaimPeriod        I    time   -      10    0      2m           -      "The period length between 'going standby moment' of the observation software and the start of the observation"
