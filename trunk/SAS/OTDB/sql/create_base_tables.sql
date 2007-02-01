@@ -111,6 +111,7 @@ INSERT INTO param_type VALUES (211, 'vdcpx');
 INSERT INTO param_type VALUES (212, 'vtext');
 INSERT INTO param_type VALUES (214, 'vtime');
 INSERT INTO param_type VALUES (215, 'vdate');
+INSERT INTO param_type VALUES (300, 'pnode');
 INSERT INTO param_type VALUES (301, 'pbool');
 INSERT INTO param_type VALUES (302, 'pint');
 INSERT INTO param_type VALUES (303, 'puint');
