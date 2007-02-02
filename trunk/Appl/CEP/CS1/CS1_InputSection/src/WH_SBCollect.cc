@@ -124,81 +124,30 @@ namespace LOFAR
 
     void WH_SBCollect::process() 
     {
-     
-      vector<DH_RSP*> inHolders;
-      vector<RectMatrix<DH_RSP::BufferType> *> inMatrices;
-      vector<RectMatrix<DH_RSP::BufferType>::cursorType> inCursors;
-      RectMatrix<DH_Subband::SampleType>::cursorType outCursor;
-
-      // create cursors to incoming data
-      for (unsigned station = 0; station < itsNStations; station++) {
-	inHolders.push_back(dynamic_cast<DH_RSP *>(getDataManager().getInHolder(station)));
-	inHolders.back()->getExtraData();
-	inMatrices.push_back(&(inHolders.back()->getDataMatrix()));
-	dimType inSubbandDim = inMatrices[0]->getDim("Subbands");
-	inCursors.push_back(inHolders.back()->getDataMatrix().getCursor(0*inSubbandDim));
-#if 0
-	// dump the contents of inDH to stdout
-	DH_RSP* inh = inHolders.back();
-	cout << "WH_SBCollect input station "<<inh->getStationID()<<" " << inh->getTimeStamp()
-	// print flags
-	<< inh->getFlags() <<endl;
-	// printsamples
-#if 1
-	RectMatrix<DH_RSP::BufferType>* matrix = &inHolders.back()->getDataMatrix();
-	dimType timeDim = matrix->getDim("Times");
-	RectMatrix<DH_RSP::BufferType>::cursorType scursor = matrix->getCursor(0 * timeDim);
-	RectMatrix<DH_RSP::BufferType>::cursorType tcursor = matrix->getCursor(0 * timeDim);
-	int subband = 0;
-	MATRIX_FOR_LOOP(*matrix, inSubbandDim, scursor) {
-	  bool found = false;
-	  tcursor = scursor;
-	  MATRIX_FOR_LOOP(*matrix, timeDim, tcursor) {
-	    found = found || (matrix->getValue(tcursor) != makei16complex(0,0));
-	  }
-	  if(found) {
-	    cout<<"WH_SBCollect receiving non-zero data in subband "<<subband++<<endl;
-	  } else {
-	    cout<<"WH_SBCollect receiving zeros in subband" <<subband++<<endl;
-	  }
-	}
-
-#endif
-	//cout << "WH_SBCollect input done " << endl;
-#endif
-
-      }
-
-
-
       // Copy every subband to one BG/L core
-      for (unsigned subband = 0; subband < itsNSubbandsPerCell; subband++) {
+      for (unsigned subband = 0; subband < itsNSubbandsPerCell; subband ++) {
 	// ask the round robin selector for the next output
-	DH_Subband *outHolder = (DH_Subband*) getDataManager().getOutHolder(getDataManager().getOutputSelector()->getCurrentSelection());
-	RectMatrix<DH_Subband::SampleType>* outMatrix = &outHolder->getSamplesMatrix();
-	dimType inSubbandDim = inMatrices[0]->getDim("Subbands");
-	dimType outStationDim = outMatrix->getDim("Station");
-	outCursor = outMatrix->getCursor( 0 * outStationDim);
+	DH_Subband *outHolder = static_cast<DH_Subband *>(getDataManager().getOutHolder(getDataManager().getOutputSelector()->getCurrentSelection()));
 
-	// Copy one subbands from every input
-	for (unsigned station = 0; station < itsNStations; station++) {
-	  inMatrices[station]->cpy2Matrix(inCursors[station], inSubbandDim, *outMatrix, outCursor, outStationDim, 1);
-	  inMatrices[station]->moveCursor(&(inCursors[station]), inSubbandDim);
-	  outMatrix->moveCursor(&outCursor, outStationDim);
+	// Copy one subband from every input
+	for (unsigned station = 0; station < itsNStations; station ++) {
+	  DH_RSP *inHolder = static_cast<DH_RSP *>(getDataManager().getInHolder(station));
+
+	  if (subband == 0)
+	    inHolder->getExtraData();
+
+	  memcpy(outHolder->getSamples3D()[station].origin(),
+		 inHolder->getSamples()[subband].origin(),
+		 outHolder->getSamples3D()[station].num_elements() * sizeof(DH_Subband::SampleType));
 
 	  // copy other information (delayInfo, flags etc)
-	  DH_Subband::DelayIntervalType theDelay = {inHolders[station]->getFineDelayAtBegin(), 
-						    inHolders[station]->getFineDelayAfterEnd()};
-	  outHolder->getDelay(station) = theDelay;
-#if 0
-	  if (subband == 0) cout << "WH_SBCollect input station "<<inHolders[station]->getFlags()<<endl;
-#endif
-	  outHolder->getFlags(station) = inHolders[station]->getFlags();
-#if 0
-	  if (subband == 0) cout << "WH_SBCollect output station "<<outHolder->getFlags(station)<<endl;
-#endif
+	  outHolder->getDelays()[station].delayAtBegin	= inHolder->getFineDelayAtBegin();
+	  outHolder->getDelays()[station].delayAfterEnd = inHolder->getFineDelayAfterEnd();
+	  outHolder->getFlags()[station]		= inHolder->getFlags();
 	}
+
 	outHolder->fillExtraData();
+
 	while (theirNoAlarms == 0) 
 	  {
 	    // wait for alarm to go off
@@ -206,45 +155,9 @@ namespace LOFAR
 	  };
 	// we handled one alarm, so decrease it
 	theirNoAlarms--;
-#if 0
-	// dump the contents of outDH to stdout
-	cout << "WH_SBCollect output : " << endl;
-	dimType outTimeDim = outMatrix->getDim("Time");
-	dimType outPolDim = outMatrix->getDim("Polarisation");
-	int matrixSize = itsNinputs * 
-	  outMatrix->getNElemInDim(outTimeDim) * 
-	  outMatrix->getNElemInDim(outPolDim);    
-	
-	hexdump(outMatrix->getBlock(outMatrix->getCursor(0), 
-				    outStationDim, 
-				    itsNinputs,
-				    matrixSize),
-		matrixSize * sizeof(DH_Subband::SampleType));
-	cout << "WH_SBCollect output done " << endl;
-#endif
-
-#if 0
-	outCursor = outMatrix->getCursor( 0 * outStationDim);
-	RectMatrix<DH_Subband::SampleType>::cursorType timeCursor;
-	dimType outTimeDim = outMatrix->getDim("Time");
-	bool found = false;
-	MATRIX_FOR_LOOP(*outMatrix, outStationDim, outCursor) {
-	  timeCursor = outCursor;
-	  MATRIX_FOR_LOOP(*outMatrix, outTimeDim, timeCursor) {
-	    found = found || (outMatrix->getValue(timeCursor) != makei16complex(0,0));
-	  }
-	}
-	if(found) {
-	  cout<<"Sending non-zero data";
-	} else {
-	  cout<<"Sending zeros";
-	}
-	cout<<" to outholder "<<getDataManager().getOutputSelector()->getCurrentSelection()<<" for subband "<<subband<<endl;
-#endif
 	getDataManager().readyWithOutHolder(getDataManager().getOutputSelector()->getCurrentSelection());
 	getDataManager().getOutputSelector()->selectNext();
       }
-
     }
 
     void WH_SBCollect::postprocess() 

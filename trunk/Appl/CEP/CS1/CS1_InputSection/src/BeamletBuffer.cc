@@ -36,6 +36,7 @@ namespace LOFAR {
     BeamletBuffer::BeamletBuffer(int bufferSize, uint nSubbands, uint history, uint readWriteDelay):
       itsNSubbands(nSubbands),
       itsSize(bufferSize),
+      itsSBBuffers(boost::extents[nSubbands][bufferSize][NR_POLARIZATIONS]),
       itsLockedRange(bufferSize, readWriteDelay, bufferSize - history, 0),
       itsDroppedItems(0),
       itsDummyItems(0),
@@ -43,9 +44,11 @@ namespace LOFAR {
       itsWriteTimer("write"),
       itsReadTimer("read")
     {
+#if 0
       for (uint sb = 0; sb < nSubbands; sb ++) {
 	itsSBBuffers.push_back(new Beamlet[bufferSize]);
       }
+#endif
       mutex::scoped_lock sl(itsFlagsMutex);
       itsFlags.include(0, bufferSize);
     }
@@ -57,17 +60,16 @@ namespace LOFAR {
       cout<<itsReadTimer<<endl;
       cout<<itsWriteTimer<<endl;
       cout.flush();
-
+#if 0
       vector<Beamlet*>::iterator bit = itsSBBuffers.begin();
       for (; bit != itsSBBuffers.end(); bit++) {
 	delete [] *bit;
       }
+#endif
     }
 
     void BeamletBuffer::checkForSkippedData(TimeStamp writeBegin) {
       // flag the data from itsHighestWritten to end
-      // in debug mode also put zeros there
-
       while ((writeBegin > itsHighestWritten) and (itsHighestWritten > TimeStamp())) {
 	// take only the first part, so the buffer won't block
 	TimeStamp flagEnd = itsHighestWritten + itsSize/4;
@@ -77,30 +79,17 @@ namespace LOFAR {
 	itsWriteTimer.start();
 	//cerr<<"BeamletBuffer: skipping "<<itsHighestWritten<<" - "<<flagEnd<<" ("<<flagEnd-itsHighestWritten<<")"<<endl;
 	itsSkippedItems += flagEnd - itsHighestWritten;
-	// we skipped a part, so write zeros there
-	uint startI = mapTime2Index(realBegin);
-	uint endI = mapTime2Index(flagEnd);
+	uint startI = mapTime2Index(realBegin), endI = mapTime2Index(flagEnd);
 
-	if (endI < startI) {
-	  // the data wraps around the allocated memory, so do it in two parts
-	  uint firstChunk = itsSize - startI;
-#if defined USE_DEBUG
-	  for (uint sb = 0; sb < itsNSubbands; sb++) {
-	    memset(&(itsSBBuffers[sb])[startI], 0, firstChunk * sizeof(Beamlet));
-	    memset(&(itsSBBuffers[sb])[0], 0, endI * sizeof(Beamlet));
-	  }
-#endif
+	{
 	  mutex::scoped_lock sl(itsFlagsMutex);
-	  itsFlags.include(0, endI).include(startI, itsSize);
-	} else {
-#if defined USE_DEBUG
-	  for (uint sb = 0; sb < itsNSubbands; sb++) {
-	    memset(&(itsSBBuffers[sb])[startI], 0, (endI - startI) * sizeof(Beamlet));	    
+	  if (endI < startI) {
+	    itsFlags.include(0, endI).include(startI, itsSize);
+	  } else {
+	    itsFlags.include(startI, endI);
 	  }
-#endif
-	  mutex::scoped_lock sl(itsFlagsMutex);
-	  itsFlags.include(startI, endI);
-	}
+	} 
+
 	itsWriteTimer.stop();
 	if (itsHighestWritten < flagEnd) itsHighestWritten = flagEnd;
 	itsLockedRange.writeUnlock(flagEnd);
@@ -109,11 +98,6 @@ namespace LOFAR {
 
     uint BeamletBuffer::writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint subbandsPerFrame)
     {
-#define TIMEFASTESTDIM
-      // is the time the fastest running dimension or the subband
-      // (it used to be subband, but in the new firmware, TIME is the fastest
-      // changing dimension (so per subband there is a number of timeslices))
-
       // if this part start beyond itsHighestWritten, there is a gap in the data in the buffer
       // so set that data to zero and invalidate it.
       //cerr<<"BeamletBuffer checking for skipped data"<<endl;
@@ -128,60 +112,31 @@ namespace LOFAR {
       if (realBegin < end) {
 
 	itsDroppedItems += realBegin - begin;
-
-#ifdef TIMEFASTESTDIM
 	data += realBegin - begin;
-#else 
-	data += subbandsPerFrame * (realBegin - begin);
-#endif
-     
 	itsWriteTimer.start();
 
-	uint startI = mapTime2Index(realBegin);
-	uint endI = mapTime2Index(end);
+	uint startI = mapTime2Index(realBegin), endI = mapTime2Index(end);
 
 	//cerr<<"BeamletBuffer: write from "<<realBegin<<" instead of "<<begin<<endl;
 	//cerr<<"BeamletBuffer: Writing from "<<startI<<" to "<<endI<<" timestamp "<<begin<<endl;
 	if (endI < startI) {
 	  // the data wraps around the allocated memory, so do it in two parts
 	  
-#ifdef TIMEFASTESTDIM
 	  uint chunk1 = itsSize - startI;
 	  for (uint sb = 0; sb < itsNSubbands; sb++) {
-	    memcpy(&(itsSBBuffers[sb][startI]), &(data[0])     , chunk1 * sizeof(Beamlet));
-	    memcpy(&(itsSBBuffers[sb][0])     , &(data[chunk1]), endI * sizeof(Beamlet));
+	    memcpy(itsSBBuffers[sb][startI].origin(), &data[0]     , sizeof(SampleType[chunk1][NR_POLARIZATIONS]));
+	    memcpy(itsSBBuffers[sb][0].origin()     , &data[chunk1], sizeof(SampleType[endI][NR_POLARIZATIONS]));
 	    data += nElements;		
 	  }
-#else
-	  for (uint i = startI; i < itsSize; i ++) {
-	    for (uint sb = 0; sb < itsNSubbands; sb++) {
-	      itsSBBuffers[sb][i] = data[sb];
-	    }
-	    data += subbandsPerFrame;
-	  }      
-	  for (uint i = 0; i < endI; i ++) {
-	    for (uint sb = 0; sb < itsNSubbands; sb++) {
-	      itsSBBuffers[sb][i] = data[sb];
-	    }
-	    data += subbandsPerFrame;
-	  }      
-#endif
+
 	  mutex::scoped_lock sl(itsFlagsMutex);
 	  itsFlags.exclude(startI, itsSize).exclude(0, endI);
 	} else {
-#ifdef TIMEFASTESTDIM
 	  for (uint sb = 0; sb < itsNSubbands; sb++) {
-	    memcpy(&(itsSBBuffers[sb][startI]), data, (endI - startI) * sizeof(Beamlet));
+	    memcpy(itsSBBuffers[sb][startI].origin(), data, sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
 	    data += nElements;		
 	  }
-#else
-	  for (uint i = startI; i < endI; i ++) {
-	    for (uint sb = 0; sb < itsNSubbands; sb++) {
-	      itsSBBuffers[sb][i] = data[sb];
-	    }
-	    data += subbandsPerFrame;
-	}      
-#endif
+
 	  mutex::scoped_lock sl(itsFlagsMutex);
 	  itsFlags.exclude(startI, endI);
 	}
@@ -202,46 +157,40 @@ namespace LOFAR {
       itsReadTimer.start();
 
       uint nInvalid = realBegin - begin;
-      // set flags later
       itsDummyItems += nInvalid * itsNSubbands;
-      flags->include(0, nInvalid);
+      flags->include(0, nInvalid); // set flags later
 
       // copy the real data
-      uint startI = mapTime2Index(begin);
-      uint endI = mapTime2Index(end);
+      uint startI = mapTime2Index(begin), endI = mapTime2Index(end);
 
       if (endI < startI) {
 	// the data wraps around the allocated memory, so copy in two parts
 	uint firstChunk = itsSize - startI;
 
 	for (uint sb = 0; sb < itsNSubbands; sb++) {
-	  memcpy(&buffers[sb][0]         , &itsSBBuffers[sb][startI], firstChunk * sizeof(Beamlet));
-	  memcpy(&buffers[sb][firstChunk], &itsSBBuffers[sb][0],      endI       * sizeof(Beamlet));
-
-	  //itsDummyItems += blabla;
+	  memcpy(&buffers[sb][0]         , itsSBBuffers[sb][startI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]));
+	  memcpy(&buffers[sb][firstChunk], itsSBBuffers[sb][0].origin(),      sizeof(SampleType[endI][NR_POLARIZATIONS]));
 	}
 
 	mutex::scoped_lock sl(itsFlagsMutex);
 	*flags |= (itsFlags.subset(0,      endI)    += firstChunk);
 	*flags |= (itsFlags.subset(startI, itsSize) -= startI);
       } else {
-	// copy in one part
 	for (uint sb = 0; sb < itsNSubbands; sb++) {
-	  memcpy(&buffers[sb][0], &itsSBBuffers[sb][startI], (endI - startI) * sizeof(Beamlet));
+	  memcpy(&buffers[sb][0], itsSBBuffers[sb][startI].origin(), sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
 	}	  
 	mutex::scoped_lock sl(itsFlagsMutex);
 	*flags |= (itsFlags.subset(startI, endI) -= startI);
       }
 
-      // copy zeros for the part that was already out of the buffer
-#if defined USE_DEBUG
-      cerr<<"Clearing "<<nInvalid<<" beamlets"<<endl;
-      for (uint sb = 0; sb < itsNSubbands; sb++) {
-	memset(&buffers[sb][0], 0, nInvalid * sizeof(Beamlet));
-      }
-#endif
       //cout<<"BeamletBuffer: getting elements "<<begin<<" - "<<begin+nElements<<": "<<*flags<<endl;
      
+      // limit the size of the sparse set
+      const std::vector<struct SparseSet::range> &ranges = flags->getRanges();
+
+      if (ranges.size() > 16)
+	flags->include(ranges[15].begin, ranges[ranges.size() - 1].end);
+
       itsReadTimer.stop();
       itsLockedRange.readUnlock(end);
       return end - realBegin;

@@ -33,6 +33,7 @@
 #include <boost/thread.hpp>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <APS/ParameterSet.h>
+#include <Common/Timer.h>
 
 namespace LOFAR 
 {
@@ -105,12 +106,9 @@ namespace LOFAR
       int itsNSamplesPerSec;
       int itsNHistorySamples;
      
-      BeamletBuffer* itsBBuffer;
+      BeamletBuffer *itsBBuffer;
 
-      vector<NSTimer*> itsTimers;
-      NSTimer* itsPrePostTimer;
-      NSTimer* itsProcessTimer;
-      NSTimer* itsGetElemTimer;
+      NSTimer itsPrePostTimer, itsProcessTimer, itsGetElemTimer;
       
 
       //handle timer alarm

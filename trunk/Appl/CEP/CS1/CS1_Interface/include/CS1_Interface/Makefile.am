@@ -7,9 +7,7 @@ pkginclude_HEADERS = \
 	DH_RSPSync.h \
 	DH_Subband.h \
 	DH_Visibilities.h \
-	RectMatrix.h \
 	RSPTimeStamp.h \
-	RectMatrix.tcc \
 	SparseSet.h \
 	Stub_BGL.h \
 	Stub_Delay.h \

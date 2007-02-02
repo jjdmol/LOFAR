@@ -30,7 +30,6 @@
 #include <CS1_Interface/DH_RSP.h>
 #include <CS1_Interface/DH_Delay.h>
 #include <Common/hexdump.h>
-#include <Common/Timer.h>
 #include <APS/ParameterSet.h>
 #include <Transport/TransportHolder.h>
 #include <CS1_Interface/RSPTimeStamp.h>
@@ -63,7 +62,10 @@ namespace LOFAR {
 	itsTH(th),
 	itsStationNr(stationNr),
 	itsPS (ps),
-	itsBBuffer(0)
+	itsBBuffer(0),
+	itsPrePostTimer("pre/post"),
+	itsProcessTimer("process"),
+	itsGetElemTimer("getElem")
     {
       LOG_TRACE_FLOW_STR("WH_RSPInput constructor");    
 
@@ -143,13 +145,7 @@ namespace LOFAR {
 
       itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, cyclicBufferSize/6, cyclicBufferSize/6);
       startThread();
-      itsPrePostTimer = new NSTimer("pre/post");
-      itsProcessTimer = new NSTimer("process");
-      itsGetElemTimer = new NSTimer("getElem");
-      itsTimers.push_back(itsPrePostTimer);
-      itsTimers.push_back(itsProcessTimer);
-      itsTimers.push_back(itsGetElemTimer);
-      itsPrePostTimer->start();
+      itsPrePostTimer.start();
 
       itsDelayCompensation = itsPS.getBool("Observation.DelayCompensation");
 
@@ -205,15 +201,12 @@ namespace LOFAR {
     void WH_RSPInput::process() 
     { 
       //cout<<"begin of WH_RSPInput::process"<<endl;cout.flush();
-      itsProcessTimer->start();
-      DH_RSP* rspDHp;
-      DH_Delay* delayDHp;
-      timestamp_t delayedstamp;
+      itsProcessTimer.start();
 
       // delay control
-      delayDHp = (DH_Delay*)getDataManager().getInHolder(0);
+      DH_Delay *delayDHp = static_cast<DH_Delay *>(getDataManager().getInHolder(0));
       // Get delay from the delay controller
-      delayedstamp = itsSyncedStamp;
+      timestamp_t delayedstamp = itsSyncedStamp;
 
       if (itsDelayCompensation) {
 	delayedstamp += (*delayDHp)[itsStationNr].coarseDelay;
@@ -221,25 +214,26 @@ namespace LOFAR {
 
       /* startstamp is the synced and delay-controlled timestamp to 
 	 start from in cyclic buffer */
-      vector<Beamlet *>   subbandbuffer;
+      vector<Beamlet *> subbandbuffer;
       SparseSet flags;
 
       // collect pointers to subbands in output dataholders
       for (int output = 0; output < itsNoutputs; output ++) {
-	rspDHp = (DH_RSP*)getDataManager().getOutHolder(output);
+	DH_RSP *rspDHp = static_cast<DH_RSP *>(getDataManager().getOutHolder(output));
+
 	for (int subband = 0; subband < itsNSubbandsPerCell; subband++) {
-	  subbandbuffer.push_back((Beamlet*)rspDHp->getSubband(subband));
+	  subbandbuffer.push_back(reinterpret_cast<Beamlet *>(rspDHp->getSamples()[subband].origin()));
 	}
       }
 	  
       // get the data from the cyclic buffer
-      itsGetElemTimer->start();
+      itsGetElemTimer.start();
 
       itsBBuffer->getElements(subbandbuffer,
 			      &flags,
 			      delayedstamp - itsNHistorySamples, 
 			      itsNSamplesPerSec + itsNHistorySamples);
-      itsGetElemTimer->stop();
+      itsGetElemTimer.stop();
 
       // print flags
       cout<<"WH_RSP out "<<itsStationNr<<" "<<delayedstamp<<" flags: "<< flags <<endl;
@@ -247,7 +241,7 @@ namespace LOFAR {
 
       // fill in the outgoing dataholders
       for (int output = 0; output < itsNoutputs; output++) { 
-	rspDHp = (DH_RSP*)getDataManager().getOutHolder(output);
+	DH_RSP *rspDHp = static_cast<DH_RSP *>(getDataManager().getOutHolder(output));
     
 	// fill in the data
 	rspDHp->getFlags() = flags;
@@ -256,23 +250,12 @@ namespace LOFAR {
 	rspDHp->fillExtraData();
  	rspDHp->setFineDelayAtBegin((*delayDHp)[itsStationNr].fineDelayAtBegin);
  	rspDHp->setFineDelayAfterEnd((*delayDHp)[itsStationNr].fineDelayAfterEnd);
-	
-#if 0
-	RectMatrix<DH_RSP::BufferType>* matrix = &rspDHp->getDataMatrix();
-	dimType timeDim = matrix->getDim("Times");
-	RectMatrix<DH_RSP::BufferType>::cursorType cursor = matrix->getCursor(0 * timeDim);
-	cout<<"WH_RSP out "<<itsStationNr<<" "<<delayedstamp<<" output " << output << " : ";
-	MATRIX_FOR_LOOP_PART(*matrix, timeDim, cursor, 10) {
-	  cout << matrix->getValue(cursor);
-	}
-	cout<<endl;
-#endif
       }    
 
 
 
       itsSyncedStamp += itsNSamplesPerSec;
-      itsProcessTimer->stop();
+      itsProcessTimer.stop();
       while (theirNoAlarms == 0) 
 	{
 	  // wait for alarm to go off
@@ -304,20 +287,13 @@ namespace LOFAR {
 
 
       sleep(1);
-      itsPrePostTimer->stop();
+      itsPrePostTimer.stop();
 
       cout<<"\nWH_Timers:"<<endl;
-      vector<NSTimer*>::iterator it = itsTimers.begin();
-      for (; it != itsTimers.end(); it++) {
-	(*it)->print(cout);
-      }
 
-      delete itsPrePostTimer;
-      delete itsProcessTimer;
-      delete itsGetElemTimer;
-      itsPrePostTimer = 0;
-      itsProcessTimer = 0;
-      itsGetElemTimer = 0;
+      itsPrePostTimer.print(clog);
+      itsProcessTimer.print(clog);
+      itsGetElemTimer.print(clog);
 
       cout<<"in WH_RSPInput postprocess"<<endl;
       //args.Connection         = 0;
@@ -337,7 +313,7 @@ namespace LOFAR {
     {
     }
 
-    void WH_RSPInput::timerSignal(int sig)
+    void WH_RSPInput::timerSignal(int)
     {
       // set the number of frames that can be sent
       theirNoAlarms += theirNoRunningWHs;

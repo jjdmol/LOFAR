@@ -26,6 +26,8 @@
 #include <Common/lofar_iosfwd.h>
 #include <Common/DataConvert.h>
 
+#undef EVEN_SECOND_HAS_MORE_SAMPLES
+
 namespace LOFAR {
 
   // This is needed to be able to put the TimeStamp in a Blob

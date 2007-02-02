@@ -37,6 +37,7 @@
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/SparseSet.h>
 #include <boost/thread.hpp>
+#include <boost/multi_array.hpp>
 
 namespace LOFAR 
 {
@@ -45,6 +46,8 @@ namespace LOFAR
 
     // \addtogroup CS1_InputSection
     // @{
+
+    typedef DH_RSP::BufferType SampleType;
 
     class Beamlet {
       DH_RSP::BufferType Xpol, Ypol;
@@ -88,11 +91,13 @@ namespace LOFAR
       void checkForSkippedData(TimeStamp writeBegin);
 
       //# Datamembers
-      vector<Beamlet *> itsSBBuffers;
+      //vector<Beamlet *> itsSBBuffers;
       mutex itsFlagsMutex;
       SparseSet itsFlags;
       uint itsNSubbands;
       int itsSize;
+
+      boost::multi_array<SampleType, 3> itsSBBuffers;
 
       TimeStamp itsHighestWritten;
       
