@@ -34,6 +34,9 @@ sysconf_DATA = \
 	RSPDriver.log_prop \
 	rspctl.log_prop
 
+makeTimestamp.c: $(bin_PROGRAMS)
+	$(srcdir)/makeTimestamp.sh
+
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
@@ -65,7 +68,9 @@ bin_PROGRAMS = \
 	rspctl \
 	geni2c
 
-RSPDriver_SOURCES = \
+RSPDriver_SOURCES = $(RSPDriverFiles) makeTimestamp.c 
+
+RSPDriverFiles = \
 	RefCount.h \
 	RSPDriver.h \
 	RSPDriver.cc \

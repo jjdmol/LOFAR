@@ -466,51 +466,78 @@ GCFEvent::TResult Sequencer::radwrite_state(GCFEvent& event, GCFPortInterface& /
   return GCFEvent::HANDLED;
 }
 
+//
+// enableRCUs [private]
+//
+void Sequencer::enableRCUs()
+{
+	RCUSettings::Control control;
+	control.setEnable(1);
+
+	Cache::getInstance().getFront().getRCUSettings()() = control;
+	Cache::getInstance().getBack().getRCUSettings()() = control;
+
+	Cache::getInstance().getState().rcusettings().reset();
+	Cache::getInstance().getState().rcusettings().write();
+}
+
 GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	static bool	waitForEvenSecond(false);
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
-      LOG_DEBUG("Entering Sequencer::rcuenable_state");
+	switch (event.signal) {
+	case F_ENTRY: {
+		LOG_DEBUG("Entering Sequencer::rcuenable_state");
+		m_timer = 0;
 
-      RCUSettings::Control control;
-      control.setEnable(1);
+		// command may only be executed on even seconds for OLAP
+		if (time(0) % 2) {
+			waitForEvenSecond = true;
+			LOG_INFO("Wait for even second before enabling RCUs");
+			break;
+		}
 
-      Cache::getInstance().getFront().getRCUSettings()() = control;
-      Cache::getInstance().getBack().getRCUSettings()() = control;
+		waitForEvenSecond = false;
+		LOG_INFO("Entry at even second, enabling RCUs immediately");
+		enableRCUs();
+	}
+	break;
 
-      Cache::getInstance().getState().rcusettings().reset();
-      Cache::getInstance().getState().rcusettings().write();
-    }
-    break;
-    
-    case F_TIMER:
-    {
-      if (   m_timer++ > WRITE_TIMEOUT
-	  && Cache::getInstance().getState().rcusettings().getMatchCount(RegisterState::WRITE) > 0) {
-	LOG_WARN("Failed to enable receivers. Retrying...");
-	TRAN(Sequencer::rsuclear_state);
-      } else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
-	TRAN(Sequencer::cdoenable_state);
-      }
-    }
-    break;
+	case F_TIMER: {
+		if (waitForEvenSecond) {
+			if (time(0) % 2) {
+				LOG_INFO("Still waiting for even second, missed pps?");
+				break;
+			}
+			waitForEvenSecond = false;
+			LOG_INFO("Enabling RCUs delayed till even second");
+			enableRCUs();
+			break;
+		}
 
-    case F_EXIT:
-    {
-      LOG_DEBUG("Leaving Sequencer::rcuenable_state");
-    }
-    break;
+		// Command are sent, wait for command to complete.
+		if (m_timer++ > WRITE_TIMEOUT && 
+			Cache::getInstance().getState().rcusettings().getMatchCount(RegisterState::WRITE) > 0) {
+			LOG_WARN("Failed to enable receivers. Retrying...");
+			TRAN(Sequencer::rsuclear_state);
+		} else if (Cache::getInstance().getState().rcusettings().isMatchAll(RegisterState::IDLE)) {
+			TRAN(Sequencer::cdoenable_state);
+		}
+	}
+	break;
 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+	case F_EXIT: {
+		LOG_DEBUG("Leaving Sequencer::rcuenable_state");
+	}
+	break;
 
-  return GCFEvent::HANDLED;
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return GCFEvent::HANDLED;
 }
 
 GCFEvent::TResult Sequencer::cdoenable_state(GCFEvent& event, GCFPortInterface& /*port*/)
