@@ -74,15 +74,7 @@ namespace LOFAR
       addField ("Delay", BlobField<float>(1, 2));
       addField ("TimeStamp", BlobField<TimeStamp>(1));
   
-      vector<DimDef> vdd;
-      // there is one station per dataholder
-      vdd.push_back(DimDef("Stations", 1));
-      vdd.push_back(DimDef("Subbands", itsNSubbands));
-      vdd.push_back(DimDef("Times", itsNTimes));
-      vdd.push_back(DimDef("Polarisations", itsNoPolarisations));
-  
-      itsMatrix = new RectMatrix<BufferType> (vdd);
-      itsFlags  = new SparseSet;
+      itsFlags = new SparseSet;
 
       // Create the data blob
       createDataBlock();
@@ -95,7 +87,6 @@ namespace LOFAR
     {
       // Fill in the buffer pointer.
       itsBuffer  = getData<BufferType> ("Buffer");
-      itsMatrix->setBuffer(itsBuffer, itsBufSize);
 
       // Fill in the StationID pointer
       itsStationID = getData<int> ("StationID");

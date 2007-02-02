@@ -52,11 +52,12 @@ InputThread::~InputThread()
 void *InputThread::logThread(void *)
 {
   while (!theirShouldStop) {
+    std::clog <<
 #if defined HAVE_MPI
-    std::clog << TH_MPI::getCurrentRank() << ": received " << nrPacketsReceived << " packets, rejected " << nrPacketsRejected << " packets" << std::endl;
-#else
-    std::clog << "received " << nrPacketsReceived << " packets, rejected " << nrPacketsRejected << " packets" << std::endl;
+	TH_MPI::getCurrentRank() << ": "
 #endif
+	"received " << nrPacketsReceived << " packets, "
+	"rejected " << nrPacketsRejected << " packets" << std::endl;
     nrPacketsReceived = nrPacketsRejected = 0; // race conditions, but who cares
     sleep(1);
   }

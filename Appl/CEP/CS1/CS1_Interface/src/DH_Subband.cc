@@ -35,7 +35,6 @@ DH_Subband::DH_Subband(const string &name, const ACC::APS::ParameterSet &pSet)
     itsNrStations(pSet.getUint32("Observation.NStations")),
     itsNrInputSamples(pSet.getUint32("Observation.NSubbandSamples") + (pSet.getUint32("BGLProc.NPPFTaps") - 1) * pSet.getUint32("Observation.NChannels")),
     itsSamples(0),
-    itsSamplesMatrix(0),
     itsFlags(0),
     itsDelays(0)
 {
@@ -49,7 +48,6 @@ DH_Subband::DH_Subband(const DH_Subband &that)
     itsNrStations(that.itsNrStations),
     itsNrInputSamples(that.itsNrInputSamples),
     itsSamples(0),
-    itsSamplesMatrix(0),
     itsFlags(0),
     itsDelays(0)
 {
@@ -59,7 +57,6 @@ DH_Subband::DH_Subband(const DH_Subband &that)
 DH_Subband::~DH_Subband()
 {
   delete [] itsFlags;
-  delete itsSamplesMatrix;
 }
 
 LOFAR::DataHolder *DH_Subband::clone() const
@@ -72,13 +69,7 @@ void DH_Subband::init()
   addField("Samples", BlobField<uint8>(1, nrSamples() * sizeof(SampleType)), 32);
   addField("Delays",  BlobField<float>(1, nrDelays() * sizeof(DelayIntervalType) / sizeof(float)));
 
-  vector<DimDef> vdd;
-  vdd.push_back(DimDef("Station",      itsNrStations));
-  vdd.push_back(DimDef("Time",	       itsNrInputSamples));
-  vdd.push_back(DimDef("Polarisation", NR_POLARIZATIONS));
-
-  itsSamplesMatrix = new RectMatrix<SampleType> (vdd);
-  itsFlags	   = new SparseSet[itsNrStations];
+  itsFlags = new SparseSet[itsNrStations];
 
   createDataBlock();
 }
@@ -87,8 +78,6 @@ void DH_Subband::fillDataPointers()
 {
   itsSamples = (SampleType *)	     getData<uint8> ("Samples");
   itsDelays  = (DelayIntervalType *) getData<float> ("Delays");
-
-  itsSamplesMatrix->setBuffer(itsSamples, nrSamples());
 }
 
 

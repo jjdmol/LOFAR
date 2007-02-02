@@ -24,7 +24,6 @@
 #define LOFAR_CS1_INTERFACE_DH_SUBBAND_H
 
 #include <CS1_Interface/CS1_Config.h>
-#include <CS1_Interface/RectMatrix.h>
 #include <CS1_Interface/SparseSet.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
@@ -59,11 +58,6 @@ class DH_Subband: public DataHolder
     DataHolder *clone() const;
 
     virtual void init();
-
-    RectMatrix<SampleType> &getSamplesMatrix() const
-    {
-      return *itsSamplesMatrix;
-    }
 
     SampleType &getSample(unsigned station, unsigned time, unsigned pol)
     {
@@ -141,7 +135,6 @@ class DH_Subband: public DataHolder
     unsigned		   itsNrStations, itsNrInputSamples;
 
     SampleType		   *itsSamples;
-    RectMatrix<SampleType> *itsSamplesMatrix;
     SparseSet		   *itsFlags;
     DelayIntervalType	   *itsDelays;
 

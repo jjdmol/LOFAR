@@ -28,8 +28,11 @@
 #include <Transport/DataHolder.h>
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/RSPTimeStamp.h>
-#include <CS1_Interface/RectMatrix.h>
 #include <CS1_Interface/SparseSet.h>
+
+#if defined HAVE_BOOST
+#include <boost/multi_array.hpp>
+#endif
 
 namespace LOFAR
 {
@@ -63,12 +66,18 @@ namespace LOFAR
       float getFineDelayAfterEnd() const;
       void  setFineDelayAfterEnd(float delay);
 
-      BufferType* getSubband(uint subbandNr);
+#if defined HAVE_BOOST
+     typedef boost::multi_array_ref<BufferType, 3> SamplesType;
+
+     SamplesType getSamples() const
+     {
+       static boost::detail::multi_array::extent_gen<3u> extents = boost::extents[itsNSubbands][itsNTimes][NR_POLARIZATIONS];
+       return SamplesType(itsBuffer, extents);
+     }
+#endif
 
       /// Reset the buffer
       void resetBuffer();
-  
-      RectMatrix<BufferType>& getDataMatrix() const;
 
       SparseSet &getFlags();
       const SparseSet &getFlags() const;
@@ -96,16 +105,7 @@ namespace LOFAR
       unsigned int itsBufSize;
 
       const ACC::APS::ParameterSet &itsPSet;
-
-      RectMatrix<BufferType> *itsMatrix;
     };
-
-    inline DH_RSP::BufferType* DH_RSP::getSubband(uint subbandNr)
-    {
-      dimType sbDim = itsMatrix->getDim("Subbands");
-      RectMatrix<DH_RSP::BufferType>::cursorType cursor = itsMatrix->getCursor(subbandNr * sbDim);
-      return itsMatrix->getBlock(cursor, sbDim, 1, itsNTimes * itsNoPolarisations);
-    }
 
     inline const int DH_RSP::getStationID() const
     { return *itsStationID; }
@@ -121,9 +121,6 @@ namespace LOFAR
 
     inline void DH_RSP::resetBuffer()
     { memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); }
-
-    inline RectMatrix<DH_RSP::BufferType> &DH_RSP::getDataMatrix() const 
-    { return *itsMatrix; }
 
     inline SparseSet &DH_RSP::getFlags()
     { return *itsFlags; }
