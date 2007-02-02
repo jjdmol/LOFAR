@@ -70,7 +70,6 @@ namespace LOFAR {
       char str[32];
 
       // get parameters
-      itsNSubbands = ps.getInt32("Observation.NSubbands") * ps.getInt32("Observation.NStations") / ps.getInt32("Input.NRSPBoards");
       itsNSubbandsPerCell = ps.getInt32("General.SubbandsPerPset") * ps.getInt32("BGLProc.PsetsPerCell");
       itsNSamplesPerSec = ps.getInt32("Observation.NSubbandSamples");
       itsNHistorySamples = (ps.getInt32("BGLProc.NPPFTaps") - 1) * ps.getInt32("Observation.NChannels");
@@ -139,7 +138,7 @@ namespace LOFAR {
     {
       // create the buffer controller.
       int cyclicBufferSize = itsPS.getInt32("Input.NSamplesToBuffer");
-      int subbandsToReadFromFrame = itsNSubbands * itsPS.getInt32("Observation.NStations") / itsPS.getInt32("Input.NRSPBoards");
+      int subbandsToReadFromFrame = itsPS.getInt32("Observation.NSubbands") * itsPS.getInt32("Observation.NStations") / itsPS.getInt32("Input.NRSPBoards");
       ASSERTSTR(subbandsToReadFromFrame <= itsPS.getInt32("Input.NSubbandsPerFrame"), subbandsToReadFromFrame << " < " << itsPS.getInt32("Input.NSubbandsPerFrame"));
 
       itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, cyclicBufferSize/6, cyclicBufferSize/6);
