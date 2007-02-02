@@ -42,7 +42,6 @@ namespace LOFAR
 
   namespace CS1 
   {
-
     INIT_TRACER_CONTEXT(WH_DelayCompensation, LOFARLOGGER_PACKAGE);
 
     //##----------------  Public methods  ----------------##//
@@ -109,7 +108,6 @@ namespace LOFAR
 
     void WH_DelayCompensation::process()
     {
-
       // Calculate the delays for the epoch after the end of the current time
       // interval. Put the results in itsDelaysAtBegin and itsDelaysAfterEnd.
       calculateDelays();
@@ -263,7 +261,7 @@ namespace LOFAR
     void WH_DelayCompensation::getObservationEpoch(const ParameterSet& ps)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
+      
       // The observation epoch should be given by a start time and a stop
       // time. Both times must be specified in Modified Julian Date (MJD).
       Epoch startTime;
@@ -276,16 +274,21 @@ namespace LOFAR
       // by the sample rate in seconds. Divide by 86400 to get it in days.
       Epoch stepTime  = ps.getDouble("Observation.NSubbandSamples") / 
         ps.getDouble("Observation.SampleRate") / 86400;
-
+ 
       LOG_TRACE_VAR("Observation:");
       LOG_TRACE_VAR_STR(" startTime = " << startTime);
       LOG_TRACE_VAR_STR(" stopTime  = " << stopTime);
       LOG_TRACE_VAR_STR(" stepTime  = " << stepTime);
       
       ASSERTSTR(startTime <= stopTime, startTime << " <= " << stopTime);
-
+ 
       // Reserve space in \a itsObservationEpoch to avoid reallocations
       uint sz = uint(1 + ceil((stopTime - startTime).mjd() / stepTime.mjd()));
+      
+      // Variable sz must be equal to noRuns. sz and noRuns must be a multiple 
+      // of 16, plus 16. 
+      sz = ((sz+15)&~15) + 16;
+      
       LOG_TRACE_VAR_STR(sz << " epoch(s)");
       itsObservationEpoch.reserve(sz);
       
@@ -372,10 +375,7 @@ namespace LOFAR
 	  (result.direction[i] * itsPositionDiffs[j]) / speedOfLight;
         LOG_TRACE_CALC_STR(" [" << i << "]: " << itsDelaysAfterEnd[i]);
       }
-
     }
-    
-
   } // namespace CS1
 
 } // namespace LOFAR
