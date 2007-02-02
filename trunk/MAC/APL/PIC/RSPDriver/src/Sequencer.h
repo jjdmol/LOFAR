@@ -81,6 +81,7 @@ namespace LOFAR {
 	 * Default construction prohibited (singleton pattern).
 	 */
 	Sequencer();
+	void enableRCUs();
 
 	static Sequencer* m_instance;
 

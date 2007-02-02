@@ -191,7 +191,7 @@ void CacheBuffer::reset(void)
   memset(&boardinit, 0, sizeof(BoardStatus));
   m_systemstatus.board() = boardinit;
 
-  EPA_Protocol::RSRVersion versioninit = { 0, 0, 0 };
+  EPA_Protocol::RSRVersion versioninit = { { 0 }, 0, 0 };
   m_versions.bp().resize(StationSettings::instance()->nrRspBoards());
   m_versions.bp() = versioninit;
   m_versions.ap().resize(StationSettings::instance()->nrBlps());
