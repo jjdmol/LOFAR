@@ -40,9 +40,10 @@ class Parset(object):
         return line.split(',')
 
     def getInt32Vector(self, key):
-        line = self.parameters[key]
-        line.strip('[').strip(']')
-        return [int(lp) for lp in line.split(',')]
+        ln = self.parameters[key]
+	ln_tmp = ln.split('[')
+        line = 	ln_tmp[1].split(']')
+        return [int(lp) for lp in line[0].split(',')]
 
     def getFloatVector(self, key):
         line = self.parameters[key]

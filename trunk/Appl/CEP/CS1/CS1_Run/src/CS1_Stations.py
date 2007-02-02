@@ -66,6 +66,30 @@ CS16_dipole12 = [Station('CS16_dipole12', 12, (0.119964779015,  0.920270965005, 
 CS16_4dipoles = CS16_dipole0 + CS16_dipole4 + CS16_dipole8 + CS16_dipole12
 
 Fourstations_4dipoles = CS10_4dipoles + CS01_4dipoles + CS08_4dipoles + CS16_4dipoles
-Treestations_4dipoles = CS01_4dipoles + CS08_4dipoles + CS16_4dipoles
-Twostations_4dipoles = CS08_4dipoles + CS16_4dipoles
-#Twostations_4dipoles = CS01_4dipoles + CS08_4dipoles + CS16_4dipoles
+
+CS10_centre0  = [Station('CS10_centre0' ,  1, (0.119880687209, 0.920274829586, 6364096.65669), 0, '10:fa:00:0a:01:00')]
+CS10_centre1  = [Station('CS10_centre1' ,  1, (0.119889696308, 0.920277341969, 6364096.62516), 1, '10:fa:00:0a:01:01')]
+CS10_centre2  = [Station('CS10_centre2' ,  2, (0.119878836045, 0.920272809664, 6364096.71911), 2, '10:fa:00:0a:01:02')]
+CS10_centre3 =  [Station('CS10_centre3' ,  3, (0.119884676596, 0.920276007334, 6364096.63253), 3, '10:fa:00:0a:01:03')]
+CS10_4centra = CS10_centre0 + CS10_centre1 + CS10_centre2 + CS10_centre3
+
+CS08_centre0  = [Station('CS08_centre0' ,  4, (0.119869165515, 0.920301856536, 6364096.36841), 0, '10:fa:00:08:01:05')]
+CS08_centre1  = [Station('CS08_centre1' ,  4, (0.119875783416, 0.920305703002, 6364096.28953), 1, '10:fa:00:08:01:07')]
+CS08_centre2  = [Station('CS08_centre2' ,  5, (0.119898867625, 0.920297715596, 6364096.45334), 2, '10:fa:00:08:01:0a')]
+CS08_centre3 =  [Station('CS08_centre3' ,  6, (0.119892249725, 0.920293869179, 6364096.53222), 3, '10:fa:00:08:01:0d')]
+CS08_4centra = CS08_centre0 + CS08_centre1 + CS08_centre2 + CS08_centre3
+
+CS01_centre0  = [Station('CS01_centre0' ,  7, (0.119852010383, 0.920247381584, 6364097.49361), 0, '10:fa:00:01:01:00')]
+CS01_centre1  = [Station('CS01_centre1' ,  7, (0.119858627702, 0.920251228144, 6364097.41472), 1, '10:fa:00:01:01:01')]
+CS01_centre2  = [Station('CS01_centre2' ,  8, (0.119864979052, 0.920247220481, 6364097.49691), 2, '10:fa:00:01:01:02')]
+CS01_centre3 =  [Station('CS01_centre3' ,  9, (0.119858361733, 0.92024337397 , 6364097.5778 ), 3, '10:fa:00:01:01:03')]
+CS01_4centra = CS01_centre0 + CS01_centre1 + CS01_centre2 + CS01_centre3
+
+CS16_centre0  = [Station('CS16_centre0' , 10, (0.119959335866, 0.92027496129 , 6364096.62399), 0, '10:fa:00:10:01:00')]
+CS16_centre1  = [Station('CS16_centre1' , 10, (0.119965953961, 0.920278807463, 6364096.54511), 1, '10:fa:00:10:01:01')]
+CS16_centre2  = [Station('CS16_centre2' , 11, (0.119972304923, 0.920274799507, 6364096.6273 ), 2, '10:fa:00:10:01:02')]
+CS16_centre3 =  [Station('CS16_centre3' , 12, (0.119965686829, 0.920270953334, 6364096.70718), 3, '10:fa:00:10:01:03')]
+CS16_4centra = CS16_centre0 + CS16_centre1 + CS16_centre2 + CS16_centre3
+
+Fourstations_4centra = CS10_4centra + CS01_4centra + CS08_4centra + CS16_4centra
+

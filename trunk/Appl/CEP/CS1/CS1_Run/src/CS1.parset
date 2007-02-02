@@ -23,7 +23,7 @@ Connections.BGLProc_Storage.TransportHolder = SOCKET # one of SOCKET, FILE, NULL
 Connections.BGLProc_Storage.BaseFileName    = "Correlations"
 
 # The format of the data
-Observation.NSubbands = 1
+Observation.NSubbands = 16
 Observation.NChannels = 256
 Observation.NPolarisations=2
 Observation.PositionType = ITRF     # should be ITRF
@@ -46,21 +46,23 @@ Observation.NBeams = 1              # number of beams used
 Observation.DirectionType = J2000   # direction type
 Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
 6.1234876806221052, 1.0265153995604648]
+
 Observation.DelayCompensation = T
-Observation.RefFreqs = [ 33281250, 38281250, 44218750, 52187500, 57187500, 60000000, 65156250, 74218750 ]
+
+Observation.SubbandIDs = [213, 245, 283, 334, 366, 384, 417, 475, 150, 151, 152, 153, 154, 155, 156, 157]
 
 # General Variables
-General.SubbandsPerPset = 1
+General.SubbandsPerPset = 2
 
 # Variables for the DelayCompensation
 DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
 
 # Variables for the InputSection
 Input.NTimesInFrame=16
-Input.NSubbandsPerFrame=8
+Input.NSubbandsPerFrame=32
 Input.SzEPAheader=16
 Input.IPHeaderSize=32
-Input.NSamplesToBuffer=12000000
+Input.NSamplesToBuffer=6000000
 Input.WriteRawDataToFile = F
 Input.OutputRawDataFiles = ["/dev/null", "/dev/null"]
 Input.Transport.Station0.Rsp0.th        = NULL  # should be one of NULL, FILE, SOCKET, NULL
