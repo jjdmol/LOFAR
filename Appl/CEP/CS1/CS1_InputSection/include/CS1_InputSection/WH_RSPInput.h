@@ -101,7 +101,6 @@ namespace LOFAR
       // synced stamp
       TimeStamp itsSyncedStamp;
      
-      int itsNSubbands;
       int itsNSubbandsPerCell;
       int itsNSamplesPerSec;
       int itsNHistorySamples;
