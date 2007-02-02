@@ -148,7 +148,8 @@ class BGLProcSection(Section):
         # todo: We should check here if the executable exists
         nstations = parset.getNStations()
         clock = parset.getClockString()
-        self.executable = 'CS1_BGL_Processing.' + str(nstations) + 'st.' + clock
+        #self.executable = 'CS1_BGL_Processing.' + str(nstations) + 'st.' + clock
+	self.executable = 'CS1_BGL_Processing'
         
     def run(self, runlog, noRuns, runCmd = None):
         nodesPerCell = self.parset.getInt32('BGLProc.NodesPerPset') * self.parset.getInt32('BGLProc.PsetsPerCell')

@@ -144,12 +144,17 @@ class CS1_Parset(LOFAR_Parset.Parset):
         
         if not self.__dict__.has_key('nSubbands'):
             return
-        sbs = list()
-        for sb in range(0, self.nSubbands):
-            sbs.append(self.firstSB + sb * subbandwidth)
+	    
+	subbandIDs = self.getInt32Vector('Observation.SubbandIDs')
+	if len(subbandIDs) != self.nSubbands:
+	    raise Exception('nSubbands(%d) !=  SubbandIDs(%d).' % (self.nSubbands, len(subbandIDs)))
+
+	sbs = list()
+        for sb in range(0, len(subbandIDs)):
+            sbs.append(subbandIDs[sb] * subbandwidth)
 
         # create the frequencies for all subbands
-        #self['Observation.RefFreqs'] = '[' + ','.join(str(sb) for sb in sbs) + ']'
+        self['Observation.RefFreqs'] = '[' + ', '.join(str(sb) for sb in sbs) + ']'
         self['Observation.NSubbands'] = self.nSubbands
         
         #the number of subbands should be dividable by the number of subbands per pset
