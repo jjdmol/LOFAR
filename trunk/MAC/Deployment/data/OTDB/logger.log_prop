@@ -11,6 +11,3 @@ log4cplus.appender.STDOUT.ImmediateFlush=true
 # Define TRC at level INFO
 log4cplus.logger.TRC=INFO
 
-
-
-
