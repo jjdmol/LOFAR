@@ -141,7 +141,7 @@ CREATE OR REPLACE FUNCTION instanciateVTsubTree(INT4, INT4, INT4)
 --RAISE WARNING \'subTree:%,%,%\', $1, $2, $3;
 
 	  -- copy node itself
-	  vNewNodeID := instanciateVTleafnode($1, $2, $3);
+	  vNewNodeID := instanciateVTleafNode($1, $2, $3);
 
 	  -- loop through children
 	  FOR vNode IN
