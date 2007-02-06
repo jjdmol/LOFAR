@@ -1357,7 +1357,7 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
 #if 0
-    std::clog << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec" << std::endl;
+    std::clog << setprecision(15) << "stat " << stat << ", basefreq " << baseFrequency << ": delay from " << delays[stat].delayAtBegin << " to " << delays[stat].delayAfterEnd << " sec" << std::endl;
 #endif
 
 #if defined C_IMPLEMENTATION
@@ -1690,8 +1690,7 @@ void WH_BGL_Processing::process()
   totalTimer.start();
 
 #if defined HAVE_MPI
-  std::clog.precision(15);
-  std::clog << "core " << TH_MPI::getCurrentRank() << ": start reading at " << MPI_Wtime() << '\n';
+  std::clog << setprecision(15) << "core " << TH_MPI::getCurrentRank() << ": start reading at " << MPI_Wtime() << '\n';
 #endif
 
   static NSTimer readTimer("receive timer", true);
