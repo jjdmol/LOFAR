@@ -1385,11 +1385,11 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
 #if defined HAVE_FFTW3
 	  fftwf_execute_dft(itsFFTWPlan,
 			    (fftwf_complex *) (*itsFFTinData)[NR_TAPS - 1 + time][pol].origin(),
-			    (fftwf_complex *) fftOutData);
+			    (fftwf_complex *) (void *) fftOutData);
 #else
 	  fftw_one(itsFFTWPlan,
 		   (fftw_complex *) (*itsFFTinData)[NR_TAPS - 1 + time][pol].origin(),
-		   (fftw_complex *) fftOutData);
+		   (fftw_complex *) (void *) fftOutData);
 #endif
 
 	  for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
