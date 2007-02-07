@@ -20,6 +20,7 @@
 
 #include <lofar_config.h>
 
+#if defined HAVE_MPI
 #include <APS/ParameterSet.h>
 #include <Common/lofar_complex.h>
 #include <Common/Timer.h>
@@ -516,3 +517,12 @@ int main(int argc, char **argv)
 
   return retval;
 }
+
+#else // !defined HAVE_MPI
+
+int main()
+{
+  return 0;
+}
+
+#endif
