@@ -134,13 +134,10 @@ namespace LOFAR {
 	  // Connect splitters to mergers (transpose)
 #ifndef HAVE_MPI
 
-	  vector <int> stations;
 	  for (int station = 0; station < nStations; station++) {
 	    itsConnector.connectSteps(RSPSteps[station], cell, collectSteps.back(), station);
-	    stations.push_back(station);
 	  }
 
-	  RSPSteps.back()->getOutDataManager(0).setOutRoundRobinPolicy(stations, nStations);
 #else
 #if MPICH_WORKING_ON_INFINI_BAND
 	  for (int station = 0; station < nStations; station++) {
