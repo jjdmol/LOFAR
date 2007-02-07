@@ -161,8 +161,7 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 	start.rcumode().resize(1);
 	start.rcumode()(0) = m_rcumode()(0);
 	
-	LOG_INFO_STR("Rcumode=" << start.rcumode()(0).getRaw());
-
+	LOG_INFO(formatString("Rcumode=%06X", start.rcumode()(0).getRaw()));
 	LOG_INFO_STR("Creating subarray: " << start.name);
 
 	m_calserver.send(start);
@@ -540,7 +539,7 @@ int main(int argc, char** argv)
 	  if (nargs < 2) {
 	    cerr << "Error: invalid number of parameters for --direction " << endl;
 	  } else {
-	    LOG_INFO(formatString("longitude=%lf, latitude=%lf, type=%s", longitude, latitude, type));
+	    cout << formatString("longitude=%lf, latitude=%lf, type=%s", longitude, latitude, type);
 
 	    if (string("J2000") == string(type)) {
 	      presence |= DIRECTION_FLAG;
