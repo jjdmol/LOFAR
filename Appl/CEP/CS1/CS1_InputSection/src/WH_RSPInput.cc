@@ -35,6 +35,8 @@
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_InputSection/BeamletBuffer.h>
 #include <CS1_InputSection/InputThread.h>
+#include <tinyCEP/Sel_RoundRobin.h>
+
 
 // for timer
 #include <signal.h>
@@ -80,10 +82,16 @@ namespace LOFAR {
       getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay", ps.getInt32("Input.NRSPBoards")));
  
       // create a outgoing dataholder for each subband
-      for (int s=0; s < itsNoutputs; s++) {
+      vector<int> subbands;
+     for (int s=0; s < itsNoutputs; s++) {
 	snprintf(str, 32, "DH_RSP_out_%d", s);
 	getDataManager().addOutDataHolder(s, new DH_RSP(str, itsPS)); 
+	subbands.push_back(s);
       }
+     // set round-robin output selector, but set start index as well
+     // to optimize P2P transpose
+     getDataManager().setOutputSelector(new Sel_RoundRobin(subbands,itsStationNr));
+
     }
 
 

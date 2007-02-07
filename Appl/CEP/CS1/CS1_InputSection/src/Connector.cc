@@ -65,7 +65,7 @@ namespace LOFAR {
 	}	  
       } else if (transportType=="NULL") {
 	theTH = new TH_Null();
-      } else if (transportType=="SOCKET") {
+      } else if (transportType=="TCP") {
 	string service = ps.getString(key + ".port");
 	if (!isReceiver) {
 	  theTH = new TH_Socket(service, 
@@ -80,6 +80,23 @@ namespace LOFAR {
 				true,
 				Socket::TCP,
 				false);
+	}
+      } else if (transportType == "UDP") {
+	string service = ps.getString(key+".port");
+	if (!isReceiver) {
+	  theTH = new TH_Socket(service,
+				true, 
+				Socket::UDP, 
+				false);
+	} else { 
+	  string host = ps.getString(key+".host");
+	  theTH = new TH_Socket(host, 
+				service, 
+				true, 
+				Socket::UDP, 
+				false);
+	    
+
 	}
       } else {
 	ASSERTSTR(false, "TransportHolder " << transportType << " unknown to Connector");
