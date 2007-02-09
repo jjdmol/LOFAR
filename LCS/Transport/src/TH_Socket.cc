@@ -26,6 +26,11 @@
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
 
+#ifdef __linux__
+#include <sys/sysctl.h>
+#endif
+
+
 namespace LOFAR
 {
 
@@ -38,7 +43,7 @@ TH_Socket::TH_Socket (const string& service,
 		      bool			sync,
 		      int32			protocol,
 		      int32			backlog,
-		      const bool openSocketNow) :
+		      const bool openSocketNow):
     itsIsServer    (true),
     itsServerSocket(0),
     itsDataSocket  (0),
@@ -222,6 +227,7 @@ int32 TH_Socket::recvNonBlocking(void*	buf, int32	nrBytes, int32 /*tag*/,
 		}
 		// It's a total mess, anything could have happend. Bail out.
 		LOG_DEBUG_STR("TH_Socket: serious read-error, result=" << bytesRead);
+		perror("Socket");
 		if (itsIsOwner) {			// are we the owner?
 			shutdown(itsDataSocket);	// completely delete datasocket
 		}
@@ -332,6 +338,57 @@ bool TH_Socket::init()
 	}
 
 	return (connectToServer());
+}
+
+
+bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
+  // set the size of the kernel level socket buffer
+  // use -1 in the constructor (default) to leave it untouched.
+  
+  int socketFD; 
+  if (itsIsServer) socketFD = itsServerSocket->getSid();
+  else socketFD = itsDataSocket->getSid();
+  
+  if (recvBufferSize != -1) {
+#ifdef __linux__
+    int name[] = { CTL_NET, NET_CORE, NET_CORE_RMEM_MAX };
+    int value;
+    size_t valueSize = sizeof(value);
+    // check the max buffer size of the kernel
+    sysctl(name, sizeof(name)/sizeof(int), &value, &valueSize, 0, 0);
+    if (recvBufferSize > value) {
+      // if the max size is not large enough increase it
+      if (sysctl(name, sizeof(name)/sizeof(int), 0, 0, &recvBufferSize, sizeof(recvBufferSize)) < 0){
+	LOG_WARN("TH_Socket: could not increase max socket receive buffer");
+      }
+    }
+#endif
+    // now set the buffer for our socket
+    if (setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &recvBufferSize, sizeof(recvBufferSize)) < 0)
+    {
+      LOG_WARN("TH_Socket: receive buffer size could not be set, default size will be used.");
+    }
+  }    
+  if (sendBufferSize != -1) {
+#ifdef __linux__
+    int name[] = { CTL_NET, NET_CORE, NET_CORE_WMEM_MAX };
+    int value;
+    size_t valueSize = sizeof(value);
+    // check the max buffer size of the kernel
+    sysctl(name, sizeof(name)/sizeof(int), &value, &valueSize, 0, 0);
+    if (sendBufferSize > value) {
+      // if the max size is not large enough increase it
+      if (sysctl(name, sizeof(name)/sizeof(int), 0, 0, &sendBufferSize, sizeof(sendBufferSize)) < 0){ 
+	LOG_WARN("TH_Socket: could not increase max socket send buffer");
+      }
+    }
+#endif
+    if (setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &sendBufferSize, sizeof(sendBufferSize)) < 0)
+    {
+      LOG_WARN("TH_Socket: send buffer size could not be set, default size will be used.");
+    }
+  }    
+  return true;
 }
 
 //
