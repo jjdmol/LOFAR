@@ -94,6 +94,9 @@ public:
 
 	// make the connection
 	bool		init();
+	// init kernel level socket buffer sizes
+	bool initBuffers(int recvBufferSize = -1, int sendBufferSize = -1);
+
 
 private:
 	bool            openSocket();
