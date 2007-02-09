@@ -81,7 +81,7 @@ void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, un
   TransportHolder *th;
   string transportType = itsPS.getString(itsPrefix + ".TransportHolder");
 
-  if (transportType == "SOCKET") {
+  if (transportType == "TCP") {
     string server  = itsPS.getStringVector(itsPrefix + ".ServerHosts")[cellNr];
     string service = itsPS.getStringVector(itsPrefix + ".Ports")[nodeNr];
     th = itsIAmOnBGL ? new TH_Socket(server, service, false, Socket::TCP, false) : new TH_Socket(service, false, Socket::TCP, 5, false);
