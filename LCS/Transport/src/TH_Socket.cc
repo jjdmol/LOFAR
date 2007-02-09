@@ -350,7 +350,7 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
   else socketFD = itsDataSocket->getSid();
   
   if (recvBufferSize != -1) {
-#ifdef __linux__
+#if defined __linux__  && !defined HAVE_BGL
     int name[] = { CTL_NET, NET_CORE, NET_CORE_RMEM_MAX };
     int value;
     size_t valueSize = sizeof(value);
@@ -362,15 +362,16 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
 	LOG_WARN("TH_Socket: could not increase max socket receive buffer");
       }
     }
-#endif
     // now set the buffer for our socket
     if (setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &recvBufferSize, sizeof(recvBufferSize)) < 0)
     {
       LOG_WARN("TH_Socket: receive buffer size could not be set, default size will be used.");
     }
+#endif
+
   }    
   if (sendBufferSize != -1) {
-#ifdef __linux__
+#if defined __linux__ && !defined HAVE_BGL
     int name[] = { CTL_NET, NET_CORE, NET_CORE_WMEM_MAX };
     int value;
     size_t valueSize = sizeof(value);
@@ -382,11 +383,12 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
 	LOG_WARN("TH_Socket: could not increase max socket send buffer");
       }
     }
-#endif
-    if (setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &sendBufferSize, sizeof(sendBufferSize)) < 0)
+    if (setsockopt(socketFD, SOL_SOCKET, SO_SNDBUF, &sendBufferSize, sizeof(sendBufferSize)) < 0)
     {
       LOG_WARN("TH_Socket: send buffer size could not be set, default size will be used.");
     }
+#endif
+
   }    
   return true;
 }
