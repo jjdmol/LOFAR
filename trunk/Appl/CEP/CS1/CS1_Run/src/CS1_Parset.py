@@ -7,6 +7,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
     def __init__(self):
         LOFAR_Parset.Parset.__init__(self)
         self.inputFromMemory = False
+        self.inputFromRaw = False
         self.stationList = list()
 
     def setClock(self, clock):
@@ -45,11 +46,16 @@ class CS1_Parset(LOFAR_Parset.Parset):
             THKey = 'Input.Transport.Station%d.Rsp0' % i
             if self.inputFromMemory == True:
                 self[THKey + '.th'] = 'NULL'
-            else:
+            elif self.inputFromRaw:
                 self[THKey + '.th'] = 'ETHERNET'
+            else:
+                self[THKey + '.th'] = 'UDP'
             self[THKey + '.interface'] = 'eth1'
             self[THKey + '.sourceMac'] = station.getSrcMAC()
             self[THKey + '.destinationMac'] = station.getDstMAC()
+            self[THKey + '.port'] = station.getDstPort()
+            self[THKey + '.host'] = station.getSrcIP()
+            
 
     def setInputToMem(self):
         self.inputFromMemory = True

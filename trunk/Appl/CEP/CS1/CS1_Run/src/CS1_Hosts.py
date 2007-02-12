@@ -9,7 +9,7 @@ liifen.setSlavesByPattern('lii%03d', '10.20.150.%d', range(1, 13))
 
 listfen   = ClusterFEN(name = 'listfen'    ,
                        address = '129.125.99.50')
-listfen.setSlavesByPattern('list%03d', '10.20.170.%d', range(1, 13))
+listfen.setSlavesByPattern('list%03d', '10.20.170.%d', range(1, 7) + range(8, 13))
 
 
 list002   = Host(name = 'list002'  , \
