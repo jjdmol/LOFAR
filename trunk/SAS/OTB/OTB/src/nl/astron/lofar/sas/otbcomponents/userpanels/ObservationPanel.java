@@ -21,7 +21,6 @@
 
 package nl.astron.lofar.sas.otbcomponents.userpanels;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.rmi.RemoteException;
 import java.util.Enumeration;
@@ -38,6 +37,7 @@ import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otbcomponents.OLAPConfigPanel;
 import org.apache.log4j.Logger;
@@ -65,6 +65,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     public ObservationPanel(MainFrame aMainFrame,jOTDBnode aNode) {
         initComponents();
         itsMainFrame = aMainFrame;
+        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         itsNode=aNode;
         initialize();
         initPanel();
@@ -79,6 +80,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
+            itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         } else {
             logger.debug("No Mainframe supplied");
         }
@@ -94,7 +96,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         try {
             
             //we need to get all the childs from this node.    
-            Vector childs = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            Vector childs = itsOtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
             
             // get all the params per child
             Enumeration e = childs.elements();
@@ -106,11 +108,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
-                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
+                    aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aNode);
                     setField(aParam,aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("Beam")) {
                     //we need to get all the childs from this node also.    
-                    Vector beamChilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                    Vector beamChilds = itsOtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
             
                     // get all the params per child
                     Enumeration e1 = beamChilds.elements();
@@ -120,13 +122,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         aParam=null;
                         // We need to keep all the params needed by this panel
                         if (aBeamNode.leaf) {
-                            aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aBeamNode);
+                            aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aBeamNode);
                         }
                         setField(aParam,aBeamNode);
                     }
                 } else if (LofarUtils.keyName(aNode.name).equals("VirtualInstrument")) {
                     //we need to get all the childs from this node also.    
-                    Vector VIChilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                    Vector VIChilds = itsOtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
             
                     // get all the params per child
                     Enumeration e2 = VIChilds.elements();
@@ -136,7 +138,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         aParam=null;
                         // We need to keep all the params needed by this panel
                         if (aVINode.leaf) {
-                            aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aVINode);
+                            aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aVINode);
                         }
                         setField(aParam,aVINode);
                     }
@@ -205,6 +207,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         logger.debug("setField for: "+ aNode.name);
         boolean isRef = LofarUtils.isReference(aNode.limits);
         String aKeyName = LofarUtils.keyName(aNode.name);   
+        try {
+            if (itsOtdbRmi.getRemoteTypes().getParamType(aParam.type).substring(0,1).equals("p")) {
+               // Have to get new param because we need the unresolved limits field.
+               aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
+            }
+        } catch (RemoteException ex) {
+            logger.debug("Error during getParam: "+ ex);
+        }
         
         // Observation Specific parameters
         if (aKeyName.equals("MSNameMask")) {
@@ -407,7 +417,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             return;
         }
         try {
-            itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().saveNode(aNode); 
+            itsOtdbRmi.getRemoteMaintenance().saveNode(aNode); 
         } catch (RemoteException ex) {
             logger.debug("Error: saveNode failed : " + ex);
         } 
@@ -504,7 +514,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             return;
         }
         try {
-            jOTDBparam aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
+            jOTDBparam aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aNode);
             // check if the node changed, and if the description was changed, if so ask if the new description
             // should be saved.
             if (itsOldDescriptionParam == null | itsOldDescriptionParam !=aParam) {
@@ -512,8 +522,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     if (!inputDescription.getText().equals(itsOldDescriptionParam.description) && !inputDescription.getText().equals("")) {
                         int answer=JOptionPane.showConfirmDialog(this,"The old description was altered, do you want to save the old one ?","alert",JOptionPane.YES_NO_OPTION);
                         if (answer == JOptionPane.YES_OPTION) {
-                            if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().saveParam(itsOldDescriptionParam)) {
-                                logger.error("Saving param "+itsOldDescriptionParam.nodeID()+","+itsOldDescriptionParam.paramID()+"failed: "+ itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                            if (!itsOtdbRmi.getRemoteMaintenance().saveParam(itsOldDescriptionParam)) {
+                                logger.error("Saving param "+itsOldDescriptionParam.nodeID()+","+itsOldDescriptionParam.paramID()+"failed: "+ itsOtdbRmi.getRemoteMaintenance().errorMsg());
                             }                          
                         }
                     }
@@ -636,15 +646,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
+                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(labelDirectionTypes)
+                    .add(labelAngleTimes))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
-                        .add(labelAngleTimes)
-                        .add(19, 19, 19)
-                        .add(inputAngleTimes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 159, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel3Layout.createSequentialGroup()
-                        .add(labelDirectionTypes)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(inputDirectionTypes, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, inputAngleTimes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 160, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, inputDirectionTypes, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 34, Short.MAX_VALUE)
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(labelAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 49, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -662,8 +670,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelAngleTimes)
                     .add(inputAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(inputAngleTimes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(labelAngle1))
+                    .add(labelAngle1)
+                    .add(inputAngleTimes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(15, 15, 15)
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelDirectionTypes)
@@ -1078,8 +1086,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         changeDescription(itsAngle1);
     }//GEN-LAST:event_inputAngle1FocusGained
     
-    private jOTDBnode itsNode = null;
+    private jOTDBnode  itsNode = null;
     private MainFrame  itsMainFrame;
+    private OtdbRmi    itsOtdbRmi;
     private Vector<jOTDBparam> itsParamList;
     private jOTDBparam itsOldDescriptionParam;
     
