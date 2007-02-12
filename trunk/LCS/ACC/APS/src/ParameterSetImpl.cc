@@ -842,14 +842,11 @@ uint32	seqNr(const string& aString)
 //
 string keyName(const string& fullKeyName)
 {
-	char*	lastPoint = strrchr(fullKeyName.c_str(), '.');
-
-	if (!lastPoint) {
-		return (fullKeyName);
-	}
-
-	return (fullKeyName.substr(lastPoint + 1 - fullKeyName.c_str()));
-
+	string::size_type lastPoint = fullKeyName.rfind('.');
+	if (lastPoint == string::npos) 
+		return fullKeyName;
+	else 
+		return fullKeyName.substr(lastPoint+1);
 }
 
 
@@ -860,13 +857,11 @@ string keyName(const string& fullKeyName)
 //
 string moduleName(const string& fullKeyName)
 {
-	char*	lastPoint = strrchr(fullKeyName.c_str(), '.');
-
-	if (!lastPoint) {
-		return ("");
-	}
-
-	return (fullKeyName.substr(0, lastPoint - fullKeyName.c_str()));
+	string::size_type lastPoint = fullKeyName.rfind('.');
+	if (lastPoint == string::npos) 
+		return "";
+	else 
+		return fullKeyName.substr(0, lastPoint);
 }
 
 //
@@ -876,25 +871,21 @@ string moduleName(const string& fullKeyName)
 //
 string	keyPart	  (const string& parameterLine)
 {
-	char*	firstEqual = strchr(parameterLine.c_str(), '=');
-
-	if (!firstEqual) {
-		return (parameterLine);
-	}
-
-	return (parameterLine.substr(0, firstEqual - parameterLine.c_str()));
+	string::size_type firstEqual = parameterLine.find('=');
+	if (firstEqual == string::npos)
+		return parameterLine;
+	else
+		return parameterLine.substr(0, firstEqual);
 }
 
 // Returns the value of a parameterline
 string	valuePart   (const string& parameterLine)
 {
-	char*	firstEqual = strchr(parameterLine.c_str(), '=');
-
-	if (!firstEqual) {
-		return ("");
-	}
-
-	return (parameterLine.substr(firstEqual + 1 - parameterLine.c_str()));
+	string::size_type firstEqual = parameterLine.find('=');
+	if (firstEqual == string::npos)
+		return parameterLine;
+	else
+		return parameterLine.substr(firstEqual+1);
 }
 
 // Returns the value of the index if the string contains an index otherwise
