@@ -102,7 +102,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     public JPanel getInstance() {
-        return new NodeViewPanel();
+        return new ParSetViewPanel();
     }
     
     /** create popup menu for this panel
@@ -172,10 +172,10 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                     String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
                     
                     // write the parset
-                    itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
+                    itsOtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
                     
                     //obtain the remote file
-                    byte[] dldata = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().downloadFile(aRemoteFileName);
+                    byte[] dldata = itsOtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
 
                     BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
                     output.write(dldata,0,dldata.length);
@@ -211,10 +211,10 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
          if (itsNode != null) {
             try {
                 //figure out the caller
-                jOTDBtree aTree = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
+                jOTDBtree aTree = itsOtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
                 itsTreeType=itsOtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
-                logger.debug("NodeViewPanel: Error getting treeInfo/treetype" + ex);
+                logger.debug("ParSetViewPanel: Error getting treeInfo/treetype" + ex);
                 itsTreeType="";
             }
 
@@ -250,20 +250,6 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
         enableButtons(enabled);
     }
     
-    private void saveInput() {
-        // Just check all possible fields that CAN change. The enabled method will take care if they COULD be changed.
-        // this way we keep this panel general for multiple use
-        boolean hasChanged = false;
-        if (itsNode != null) {
-//            try {
-//               
-//            } catch (RemoteException ex) {
-//                logger.debug("error in Remote connection");
-//            }
-        } else {
-            logger.debug("ERROR:  no Param given");
-        }
-    }
 
     /** create the parset and get the created file from the server
      *
@@ -276,17 +262,12 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
             String aRemoteFileName="/tmp/"+aTreeID+"_"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
                     
             // write the parset
-            itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
+            itsOtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
                     
             //obtain the remote file
-            byte[] dldata = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().downloadFile(aRemoteFileName);
+            byte[] dldata = itsOtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
              
-//            ByteArrayInputStream aBS = new ByteArrayInputStream(dldata);
-//            Reader reader= new InputStreamReader(aBS);
-            String aParSet="";
-            for (int i=0; i< dldata.length;i++) {
-                aParSet+=(char)dldata[i];
-            }
+            String aParSet=new String(dldata);
             
             // split inputfile in different lines on return.
             String[] lines = aParSet.split("\n");
@@ -297,7 +278,6 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 aModel.addRow(keyval);
             }
             jTable1.setModel(aModel);
-//            jTable1.updateUI();
             
         } catch (RemoteException ex) {
             logger.debug("exportTree failed : " + ex);
