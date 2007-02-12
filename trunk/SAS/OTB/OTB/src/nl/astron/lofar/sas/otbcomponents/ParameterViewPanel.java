@@ -199,27 +199,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         }
     }
     
-    /* Routine to strip all possible choices from a "popup" string like:
-     * "file|socket|ethernet" into it's different choices and make a combobox
-     * from it
-     */ 
-    private void setComboChoices(String aS) {
-        this.ParamLimitsCombo.removeAllItems();
-        if (aS.length() < 1) {
-            logger.debug("No choices provided for ParamLimits Combobox");
-            return;
-        }
-        // first strip input on ; because after the ; a default choice has been given.
-        String[] stripped = aS.split("[;]");
-        String[] choices = stripped[0].split("[|]");
-        for (int i=0; i< choices.length;i++) {
-            if (!choices[i].equals("")) {
-                this.ParamLimitsCombo.addItem(choices[i]);
-            }
-        }
-        this.ParamLimitsCombo.validate();
-    }
-    
+   
     private void getParam(jOTDBnode aNode) {
         itsParam=null;
         if (aNode == null) {
@@ -296,13 +276,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             if (itsParam != null && LofarUtils.isReference(itsNode.limits)) {
                 derefText.setVisible(true);
                 derefLabel.setVisible(true);
-                setComboChoices(itsParam.limits);
+                LofarUtils.setPopupComboChoices(ParamLimitsCombo,itsParam.limits);
                 setLimits(itsNode.limits);
                 setDeref(itsParam.limits);
             } else {
                 derefText.setVisible(false);
                 derefLabel.setVisible(false);
-                setComboChoices(itsParam.limits);
+                LofarUtils.setPopupComboChoices(ParamLimitsCombo,itsParam.limits);
                 setLimits(itsNode.limits);
             }            
             setDescription(itsParam.description);
@@ -546,9 +526,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                     paramHasChanged=true;
                 }                
 
-                if (!itsNode.description.equals(getDescription())) { 
-                    itsNode.description=getDescription();
-                    nodeHasChanged=true;
+                if (!itsParam.description.equals(getDescription())) { 
+                    itsParam.description=getDescription();
+                    paramHasChanged=true;
                 }
                 
                 if (!itsNode.limits.equals(getLimits())) { 

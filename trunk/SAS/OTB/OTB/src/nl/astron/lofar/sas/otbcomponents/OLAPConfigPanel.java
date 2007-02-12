@@ -873,7 +873,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                         .add(org.jdesktop.layout.GroupLayout.LEADING, nrSamplesPerSecondText)
                         .add(org.jdesktop.layout.GroupLayout.LEADING, nrSamplesPerEthFrameText)
                         .add(MSNameText)))
-                .add(1281, 1281, 1281))
+                .add(1286, 1286, 1286))
         );
         OLAPGenericPanelLayout.setVerticalGroup(
             OLAPGenericPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1011,7 +1011,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                             .add(subbandsPerCellText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 347, Short.MAX_VALUE)
                             .add(samplesToIntegrateText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 347, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
                     .add(SpecificRevertButton))
-                .addContainerGap(1343, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(1348, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
         OLAPSpecificPanelLayout.setVerticalGroup(
             OLAPSpecificPanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1071,7 +1071,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jLabel1)
                     .add(jLabel7))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 135, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 140, Short.MAX_VALUE)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(AMCServerHostText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 215, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(AMCServerPortText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 64, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -1112,7 +1112,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                     .add(StellaFENText)
                     .add(partitionText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE))
-                .add(14, 14, 14))
+                .add(19, 19, 19))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1151,7 +1151,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jLabel2)
                     .add(jLabel8))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 134, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 139, Short.MAX_VALUE)
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(DelayPorts)
                     .add(DelayCompensationHostText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 213, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -1203,7 +1203,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                     .add(jLabel3)
                     .add(jLabel4)
                     .add(jLabel9))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 125, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 130, Short.MAX_VALUE)
                 .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(InputHosts)
                     .add(InputClusterFENText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 217, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -1262,7 +1262,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                         .add(jLabel10)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
                     .add(jPanel5Layout.createSequentialGroup()
-                        .add(jLabel11, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 159, Short.MAX_VALUE)
+                        .add(jLabel11, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 164, Short.MAX_VALUE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -1304,7 +1304,7 @@ public class OLAPConfigPanel extends javax.swing.JPanel implements IViewPanel{
                     .add(OLAPHardwarePanelLayout.createSequentialGroup()
                         .add(OLAPHardwarePanelLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
+                            .add(jPanel2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .add(jPanel4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
