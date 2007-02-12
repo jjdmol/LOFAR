@@ -265,6 +265,12 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             setType(itsParam.type);
             CardLayout cl=(CardLayout)CardPanel.getLayout();
             if (this.getType().substring(0,1).equals("p")) {
+                try {
+                    // Have to get new param because we need the unresolved limits field.
+                    itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
+                } catch (RemoteException ex) {
+                     logger.debug("Error during getParam: "+ ex);
+                }
                 cl.show(CardPanel,"ComboCard");
             } else {
                 cl.show(CardPanel,"TextCard");
