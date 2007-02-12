@@ -35,7 +35,9 @@ node  DelayComp    1.0.0  development 'node constraint'  "Setting of the delayco
 
 #    name          		  dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par converterType		  I	  ptext	  -		10	   0	'IMPL|CLIENT;IMPL'		-		'Depends on whether of not AIPS++ is installed'
+par converterType		  I	  ptext	  -		10	   0	'Impl|Client;Impl'		-		'Depends on whether of not AIPS++ is installed'
+par hostname      		  I	  text	  -		10	   0	'list012'		 		-		'Machine the Delay Compensation-program runs on'
+par ports		          I	  vint	  -		10	   0	'[7000]'				-		'The port(2) the Delay Compansation-program listens on'
 
 
 # -- OLAP--
