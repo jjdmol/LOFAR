@@ -77,11 +77,17 @@ public class ConfigPanelHelper {
         itsVector = new Vector<String>();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.bbs.BBSStrategyPanel");
         itsPanelMap.put("Strategy",itsVector);
-        
+  
+        // for now taken out untill new OLAP params are known
         //OLAP
+//        itsVector = new Vector<String>();
+//        itsVector.add("nl.astron.lofar.sas.otbcomponents.OLAPConfigPanel");
+//        itsPanelMap.put("OLAP",itsVector);
+        
+        // Observation
         itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.OLAPConfigPanel");
-        itsPanelMap.put("OLAP",itsVector);
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ObservationPanel");
+        itsPanelMap.put("Observation",itsVector);
         
         
     }

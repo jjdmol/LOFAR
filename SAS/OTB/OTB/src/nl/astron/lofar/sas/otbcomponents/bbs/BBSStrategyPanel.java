@@ -251,13 +251,13 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         integrationTimeText.setBackground(Color.WHITE);
         
         this.correlationSelectionBox.setSelectedItem(StrategyCorrelationSelection.limits);
-        this.fillSelectionListFromString(correlationTypeList,StrategyCorrelationType.limits,true);
+        LofarUtils.fillSelectionListFromString(correlationTypeList,StrategyCorrelationType.limits,true);
         if(StrategyStations.limits == null || StrategyStations.limits.equals("[]")){
             this.stationsUseAllCheckbox.setSelected(true);
             stationsList.setModel(new DefaultListModel());
         }else{
             this.stationsUseAllCheckbox.setSelected(false);
-            this.fillList(stationsList,StrategyStations.limits,true);
+            LofarUtils.fillList(stationsList,StrategyStations.limits,true);
         }
 //        addStationButton.setEnabled(false);
         
@@ -348,10 +348,10 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                     TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
                     if (isRef && aParam != null) {
                         aBorder.setTitle("Station Names (Referenced)");
-                        this.fillList(stationsList,aParam.limits,false);
+                        LofarUtils.fillList(stationsList,aParam.limits,false);
                     } else {
                         aBorder.setTitle("Station Names");
-                        this.fillList(stationsList,aNode.limits,true);
+                        LofarUtils.fillList(stationsList,aNode.limits,true);
                     }
                 }
             }
@@ -405,9 +405,9 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
                 this.correlationTypeList.setToolTipText(aParam.description);
                 this.StrategyCorrelationType=aNode;
                 if (isRef && aParam != null) {
-                    this.fillSelectionListFromString(correlationTypeList,aParam.limits,false);
+                    LofarUtils.fillSelectionListFromString(correlationTypeList,aParam.limits,false);
                 } else {
-                    this.fillSelectionListFromString(correlationTypeList,aNode.limits,true);
+                    LofarUtils.fillSelectionListFromString(correlationTypeList,aNode.limits,true);
                 }
             }
         }
@@ -481,8 +481,8 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
             logger.trace("Variable BBS Strategy ("+StrategyCorrelationSelection.name+"//"+StrategyCorrelationSelection.treeID()+"//"+StrategyCorrelationSelection.nodeID()+"//"+StrategyCorrelationSelection.parentID()+"//"+StrategyCorrelationSelection.paramDefID()+") updating to :"+StrategyCorrelationSelection.limits);
             saveNode(StrategyCorrelationSelection);
         }
-        if (this.StrategyCorrelationType != null && !this.createStringFromSelectionList(correlationTypeList,true).equals(StrategyCorrelationType.limits)) {
-            StrategyCorrelationType.limits = createStringFromSelectionList(correlationTypeList,true);
+        if (this.StrategyCorrelationType != null && !LofarUtils.createStringFromSelectionList(correlationTypeList,true).equals(StrategyCorrelationType.limits)) {
+            StrategyCorrelationType.limits = LofarUtils.createStringFromSelectionList(correlationTypeList,true);
             logger.trace("Variable BBS Strategy ("+StrategyCorrelationType.name+"//"+StrategyCorrelationType.treeID()+"//"+StrategyCorrelationType.nodeID()+"//"+StrategyCorrelationType.parentID()+"//"+StrategyCorrelationType.paramDefID()+") updating to :"+StrategyCorrelationType.limits);
             saveNode(StrategyCorrelationType);
         }
@@ -490,153 +490,14 @@ public class BBSStrategyPanel extends javax.swing.JPanel implements IViewPanel{
         if(this.stationsUseAllCheckbox.isSelected()){
             stationsList.setModel(new DefaultListModel());
         }
-        if (this.StrategyStations != null && !this.createList(stationsList,true).equals(StrategyStations.limits)) {
-            StrategyStations.limits = createList(stationsList,true);
+        if (this.StrategyStations != null && !LofarUtils.createList(stationsList,true).equals(StrategyStations.limits)) {
+            StrategyStations.limits = LofarUtils.createList(stationsList,true);
             logger.trace("Variable BBS Strategy ("+StrategyStations.name+"//"+StrategyStations.treeID()+"//"+StrategyStations.nodeID()+"//"+StrategyStations.parentID()+"//"+StrategyStations.paramDefID()+") updating to :"+StrategyStations.limits);
             saveNode(StrategyStations);
         }
     }
-    /**
-     * Creates a String representation of the contents of a JList component<br><br>
-     * Example of output with createQuotes : ["123","456","789"]<br>
-     * Example of output with !createQuotes: [123,456,789]<br>
-     * Returns '[]' when no items were detected in the JList.
-     *
-     * @param aListComponent the JList component of which the data has to be converted
-     * @param createQuotes add/do not add quotes to each individual value in the string output
-     * @return String representation of aListComponent
-     */
-    private String createList(JList aListComponent,boolean createQuotes) {
-        String aList="[";
-        if (aListComponent.getModel().getSize() > 0) {
-            if(createQuotes){
-                aList += "\"";
-            }
-            aList += (String)aListComponent.getModel().getElementAt(0);
-            if(createQuotes){
-                aList += "\"";
-            }
-            for (int i=1; i < aListComponent.getModel().getSize();i++) {
-                aList+= ",";
-                if(createQuotes){
-                    aList += "\"";
-                }
-                aList += aListComponent.getModel().getElementAt(i);
-                if(createQuotes){
-                    aList += "\"";
-                }
-            }
+        
             
-        }
-        aList+="]";
-        return aList;
-    }
-    /**
-     * Fills a JList component with a String representation of the to-be contents<br><br>
-     * Example of input argument theList with removeQuotes : ["123","456","789"]<br>
-     * Example of input argument theList with !removeQuotes: [123,456,789]
-     *
-     * @param aListComponent the JList component where the data has to be inserted in.
-     * @param theList the String representation of a JList component
-     * @param removeQuotes removes/does not remove quotes from each individual value in the theList input
-     */
-    private void fillList(JList aListComponent,String theList,boolean removeQuotes) {
-        DefaultListModel itsModel = new DefaultListModel();
-        aListComponent.setModel(itsModel);
-        String aList = theList;
-        if (aList.startsWith("[")) {
-            aList = aList.substring(1,aList.length());
-        }
-        if (aList.endsWith("]")) {
-            aList = aList.substring(0,aList.length()-1);
-        }
-        if(!aList.equals("")){
-            String[] aS=aList.split(",");
-            for (int i=0; i< aS.length;i++) {
-                if(removeQuotes){
-                    itsModel.addElement(aS[i].substring(1,aS[i].length()-1));
-                }else{
-                    itsModel.addElement(aS[i]);
-                }
-            }
-            aListComponent.setModel(itsModel);
-        }
-    }
-    /**
-     * Creates a String representation of the <b><i>selected</i></b> items in a JList component<br><br>
-     * Example of output with createQuotes : ["123","456","789"]<br>
-     * Example of output with !createQuotes: [123,456,789]<br>
-     * Returns '[]' when no selected items were detected in the JList.
-     * 
-     * @param aListComponent the JList component of which the selected items have to be in a String
-     * @param createQuotes add/do not add quotes to each individual value in the string output
-     * @return String representation of the selected items in a aListComponent
-     */
-    private String createStringFromSelectionList(JList aListComponent,boolean createQuotes) {
-        String aList="[";
-        if (aListComponent.getModel().getSize() > 0) {
-            int[] selectedIndices = aListComponent.getSelectedIndices();
-            for (int i=0; i < selectedIndices.length;i++) {
-                if(i>0) aList+= ",";
-                if(createQuotes){
-                    aList += "\"";
-                }
-                aList += aListComponent.getModel().getElementAt(selectedIndices[i]);
-                if(createQuotes){
-                    aList += "\"";
-                }
-            }
-        }
-        aList+="]";
-        return aList;
-    }
-     /**
-     * Selects items in a JList component using a String representation of the to-be selected contents<br><br>
-     * Example of input argument theList with removeQuotes : ["123","456","789"]<br>
-     * Example of input argument theList with !removeQuotes: [123,456,789]
-     *
-     * @param aListComponent the JList component where the data has to be inserted in.
-     * @param theList the String representation of the selected items in a JList component
-     * @param removeQuotes removes/does not remove quotes from each individual value in the theList input
-     */
-    private void fillSelectionListFromString(JList aListComponent,String theList,boolean removeQuotes) {
-        String aList = theList;
-        if (aList.startsWith("[")) {
-            aList = aList.substring(1,aList.length());
-        }
-        if (aList.endsWith("]")) {
-            aList = aList.substring(0,aList.length()-1);
-        }
-        if(!aList.equals("")){
-            String[] aS=aList.split(",");
-            String[] toBeSelectedValues = new String[aS.length];
-            for (int i=0; i< aS.length;i++) {
-                if(removeQuotes){
-                    toBeSelectedValues[i] = aS[i].substring(1,aS[i].length()-1);
-                }else{
-                    toBeSelectedValues[i] = aS[i];
-                }
-            }
-            int[] toBeSelectedIndices = new int[toBeSelectedValues.length];
-            int aValueIndex = 0;
-            if(toBeSelectedValues.length>0){
-                for(String aValue : toBeSelectedValues){
-                    
-                    for(int in = 0; in < aListComponent.getModel().getSize();in++){
-                        String aCorrType = (String)aListComponent.getModel().getElementAt(in);
-                        if(aValue.equals(aCorrType)){
-                            toBeSelectedIndices[aValueIndex] = in;
-                        }
-                    }
-                    aValueIndex++;
-                }
-                aListComponent.setSelectedIndices(toBeSelectedIndices);
-                
-            }else{
-                aListComponent.clearSelection();
-            }
-        }
-    }
     /**
      * This helper method builds up the Step Tree that contains steps associated with the BBS Strategy
      *
