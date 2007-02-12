@@ -3,8 +3,9 @@
 # Do the first part in a shell script so the startup delay is
 # less unpredictable
 DATAFILE='/tmp/CURINPUT'
-tcpdump -c 10 -i eth1 -X -s 62 -e 2> /dev/null > $DATAFILE
+tcpdump -c 10 -i eth1 -X -s 62 -e -n 2> /dev/null > $DATAFILE
 ifconfig | grep HW | awk '{print $1, $5;}' > $DATAFILE.MACS
+ifconfig |grep inet\ addr|awk '{print $2;}'|cut -b 1-5 --complement > $DATAFILE.IPS
 
 python <<EOF
 
@@ -16,7 +17,7 @@ class Packet(object):
   Represents a packet of RSP data.
   This class can extract information about a RSP packet.
   It is written specifically to accept the output of the following command:
-  tcpdump -c 1 -i <interface> -X -s <greater than or equal to 62> -e
+  tcpdump -n -c 1 -i <interface> -X -s <greater than or equal to 62> -e
   The first line of the tcpdump output should be given to the constructor, 
   the following lines can be added by using appendLine().
   """
@@ -25,12 +26,12 @@ class Packet(object):
   #index of the sourceMac in tcpdump output
   srcMacIndex = 1
   #index of the destinationMac in tcpdump output
-  dstMacIndex = 5
+  dstMacIndex = 3
   #index of the UDPlength in tcpdump output
   udpLengthIndex = -1
 
   #the start of all LOFAR RSP MAC addresses
-  lofarMacStart = '00:00:00:'
+  lofarMacStart = '10:fa:00:'
   #index of station in the sourceMac 
   stationIndex = 3
   #index of board in the sourceMac 
@@ -42,6 +43,8 @@ class Packet(object):
   secondIndex = 5
   # size of the EPA header
   headerSize = 16
+  # index of the destination IP 
+  dstIPindex = 11
 
   bytesPerBeamlet = 8
 
@@ -94,6 +97,12 @@ class Packet(object):
       return int(hexcode, 16)
     except IndexError:
       return 0
+  def getDestIP(self):
+   try:
+    words = self.header.split()
+    return (words[self.dstIPindex])
+   except IndexError:
+    return 0
 
 def parsefile(inputfile):
   inputlines = open(inputfile).readlines()
@@ -120,6 +129,7 @@ for packet in reversed(packets):
   streams[ml] = packet
 
 mymacs = open('$DATAFILE.MACS').readlines()
+myips = open('$DATAFILE.IPS').readlines()
 
 # analyze each packet for each data stream
 print
@@ -140,6 +150,7 @@ for (srcMac, dstMac), packet in streams.iteritems():
   packetLength = packet.getLength()
   expectedLength = packet.getExpectedLength()
   stationName = packet.getSrcStation()
+  destIPs = packet.getDestIP()
   
   # check the source MAC
   info = srcMac + ' -> ' + packet.getSrcStation()
@@ -149,11 +160,18 @@ for (srcMac, dstMac), packet in streams.iteritems():
     printnok(info)
 
   # check the destination MAC
-  interfaces = [line.split()[0] for line in mymacs if dstMac.lower() in line.lower()]
+  interfaces = [line.split()[0] for line in mymacs if dstMac.lower().rstrip(',') in line.lower()]
   if not len(interfaces) == 0:
-    printok(dstMac + ' -> this computer has this MAC address on ' + str(interfaces))
+    printok(dstMac.lower().rstrip(',') + ' -> this computer has this MAC address on ' + str(interfaces))
   else:
     printnok(dstMac + ' -> not my MAC address, this station seems to be broadcasting')
+
+  # check the destination IP address and port number
+  ips = [line.split()[0] for line in myips if destIPs.lower()[0:10] in line.lower()]
+  if not len(ips) == 0:
+    printok('Stream found to ' + str(ips) + ':' + destIPs.lower()[11:16].rstrip(':').lstrip('.') + ' and this machine has an interface configured with this IP.')
+  else:
+    printnok(destIPs.lower()[0:10]+':'+ destIPs.lower()[11:15] + ' not found on this machine. Station misconfigured or broadcasting' )
 
   # check the packet format
   info = str(beamlets) + ' beamlets and ' + str(times) + ' times and packet length is ' + str(packetLength)
@@ -163,7 +181,8 @@ for (srcMac, dstMac), packet in streams.iteritems():
     printnok(info + ' but should be ' + str(expectedLength))
 
   # check the station time
-  info = 'Current UTC time: ' + str(utcTime) + ' (' + str(time.ctime(utcTime)) + ')'
+  # info = 'Current UTC time: ' + str(utcTime) + ' (' + str(time.ctime(utcTime)) + ')'
+  info = 'Current UTC time: ' + str(utcTime) + ' (' + str(time.asctime(time.gmtime(utcTime))) + ')'
   if utcTime == -1:
     printnok('UTC time is not updated by RSPDriver')
   elif time.time() - utcTime > 600 or utcTime > time.time():
