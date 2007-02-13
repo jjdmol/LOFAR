@@ -49,14 +49,18 @@ public:
 	       const bool		sync = true,
 	       int32			protocol = Socket::TCP,
 	       int32			backlog = 5,
-	       const bool openSocketNow = true);
+	       const bool openSocketNow = true,
+	       const int recvBufferSize = -1,
+	       const int serdBufferSize = -1);
 
 	// Create a TH_Socket with a client socket.
     TH_Socket (const string&	hostName,
 	       const string& 	service,
 	       const bool		sync = true,
 	       int32			protocol = Socket::TCP,
-	       const bool openSocketNow = true);
+	       const bool openSocketNow = true,
+	       const int recvBufferSize = -1,   
+	       const int sendBufferSize = -1);
 
     // Create a TH_Socket based on an existing data socket.
     TH_Socket (Socket*		aDataSocket);
@@ -127,6 +131,13 @@ private:
 	// Administration for non-blocking receiving. In the recv-call
 	// these fields are filled so that waitForRecv knows what to do.
 	int16		itsLastCmd;
+
+	/// when set, the Socket transport holder will adjust the
+	/// kernel level buffer size to the value provided when the
+	/// socket is initialised.
+	int itsRecvBufferSize;
+	int itsSendBufferSize;
+
 };
 
 inline bool TH_Socket::isClonable() const
