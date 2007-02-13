@@ -43,7 +43,9 @@ TH_Socket::TH_Socket (const string& service,
 		      bool			sync,
 		      int32			protocol,
 		      int32			backlog,
-		      const bool openSocketNow):
+		      const bool openSocketNow,
+		      const int recvBufferSize, 
+		      const int sendBufferSize):
     itsIsServer    (true),
     itsServerSocket(0),
     itsDataSocket  (0),
@@ -54,10 +56,12 @@ TH_Socket::TH_Socket (const string& service,
     itsProtocol    (protocol),
     itsBacklog     (backlog),
     itsIsBlocking  (sync),
-    itsLastCmd     (CmdNone)
+    itsLastCmd     (CmdNone),
+    itsRecvBufferSize(recvBufferSize),
+    itsSendBufferSize(sendBufferSize)
 {
-	LOG_TRACE_FLOW("TH_Socket<server>");
-
+        LOG_TRACE_FLOW("TH_Socket<server>");
+  
 	if (openSocketNow) {
 	  ASSERTSTR(openSocket(), "Could not open server socket");
 	}
@@ -71,7 +75,9 @@ TH_Socket::TH_Socket (const string&	hostName,
 		      const string& service,
 		      bool			sync,
 		      int32			protocol,
-		      const bool openSocketNow) :
+		      const bool openSocketNow,
+		      const int recvBufferSize,
+		      const int sendBufferSize) :
     itsIsServer    (false),
     itsServerSocket(0),
     itsDataSocket  (0),
@@ -82,7 +88,9 @@ TH_Socket::TH_Socket (const string&	hostName,
     itsProtocol    (protocol),
     itsBacklog     (0),
     itsIsBlocking  (sync),
-    itsLastCmd     (CmdNone)
+    itsLastCmd     (CmdNone),
+    itsRecvBufferSize(recvBufferSize),
+    itsSendBufferSize(sendBufferSize)
 {
 	LOG_TRACE_FLOW("TH_Socket<client>");
 
@@ -320,6 +328,8 @@ void TH_Socket::waitForSent(void*, int, int)
 //
 bool TH_Socket::init()
 {
+        bool result;
+
 	LOG_TRACE_RTTI("TH_Socket::init()");
 
 	if (!openSocket()) {
@@ -334,10 +344,12 @@ bool TH_Socket::init()
 	itsLastCmd    = CmdNone;
 	
 	if (itsIsServer) {
-		return(connectToClient());
+		result = connectToClient();
+	} else {
+	        result = connectToServer();
 	}
-
-	return (connectToServer());
+	initBuffers(itsRecvBufferSize, itsSendBufferSize);
+	return result;
 }
 
 
@@ -345,12 +357,13 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
   // set the size of the kernel level socket buffer
   // use -1 in the constructor (default) to leave it untouched.
   
+#ifndef HAVE_BGL    // BG/L doesn't implement setsockopt
   int socketFD; 
-  if (itsIsServer) socketFD = itsServerSocket->getSid();
+  if (itsIsServer && itsServerSocket != NULL) socketFD = itsServerSocket->getSid();
   else socketFD = itsDataSocket->getSid();
   
   if (recvBufferSize != -1) {
-#if defined __linux__  && !defined HAVE_BGL
+#if defined __linux__
     int name[] = { CTL_NET, NET_CORE, NET_CORE_RMEM_MAX };
     int value;
     size_t valueSize = sizeof(value);
@@ -362,16 +375,16 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
 	LOG_WARN("TH_Socket: could not increase max socket receive buffer");
       }
     }
+#endif
     // now set the buffer for our socket
     if (setsockopt(socketFD, SOL_SOCKET, SO_RCVBUF, &recvBufferSize, sizeof(recvBufferSize)) < 0)
     {
       LOG_WARN("TH_Socket: receive buffer size could not be set, default size will be used.");
     }
-#endif
 
   }    
   if (sendBufferSize != -1) {
-#if defined __linux__ && !defined HAVE_BGL
+#if defined __linux__
     int name[] = { CTL_NET, NET_CORE, NET_CORE_WMEM_MAX };
     int value;
     size_t valueSize = sizeof(value);
@@ -383,13 +396,14 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
 	LOG_WARN("TH_Socket: could not increase max socket send buffer");
       }
     }
+#endif
     if (setsockopt(socketFD, SOL_SOCKET, SO_SNDBUF, &sendBufferSize, sizeof(sendBufferSize)) < 0)
     {
       LOG_WARN("TH_Socket: send buffer size could not be set, default size will be used.");
     }
-#endif
 
   }    
+#endif /* HAVE_BGL */
   return true;
 }
 
