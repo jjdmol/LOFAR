@@ -26,7 +26,7 @@
 #include <Common/lofar_iosfwd.h>
 #include <Common/DataConvert.h>
 
-#undef EVEN_SECOND_HAS_MORE_SAMPLES
+#define EVEN_SECOND_HAS_MORE_SAMPLES
 
 namespace LOFAR {
 
