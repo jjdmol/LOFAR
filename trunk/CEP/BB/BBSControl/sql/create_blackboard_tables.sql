@@ -6,13 +6,13 @@ CREATE TABLE blackboard.strategy
     "ParmDB.Instrument"     TEXT                NOT NULL,
     "ParmDB.History"        TEXT                NOT NULL,
 
-    "Stations"              TEXT[]              DEFAULT '{}',
+    "Stations"              TEXT                DEFAULT '[]',
     "InputData"             TEXT                DEFAULT 'DATA',
     "WorkDomainSize.Freq"   DOUBLE PRECISION    NOT NULL,
     "WorkDomainSize.Time"   DOUBLE PRECISION    NOT NULL,
       
     "Correlation.Selection" TEXT                DEFAULT 'CROSS',
-    "Correlation.Type"      TEXT[]              DEFAULT '{"XX","XY","YX","YY"}'
+    "Correlation.Type"      TEXT                DEFAULT '["XX","XY","YX","YY"]'
 );
 
 
@@ -37,14 +37,14 @@ CREATE TABLE blackboard.step
     "Name"                  TEXT                NOT NULL,
     "Operation"             TEXT                NOT NULL,
     
-    "Baselines.Station1"    TEXT[]              DEFAULT '{}',
-    "Baselines.Station2"    TEXT[]              DEFAULT '{}',
+    "Baselines.Station1"    TEXT                DEFAULT '[]',
+    "Baselines.Station2"    TEXT                DEFAULT '[]',
     
     "Correlation.Selection" TEXT                DEFAULT 'CROSS',
-    "Correlation.Type"      TEXT[]              DEFAULT '{"XX","XY","YX","YY"}',
+    "Correlation.Type"      TEXT                DEFAULT '["XX","XY","YX","YY"]',
     
-    "Sources"               TEXT[]              DEFAULT '{}',
-    "InstrumentModel"       TEXT[]              DEFAULT '{}',
+    "Sources"               TEXT                DEFAULT '[]',
+    "InstrumentModel"       TEXT                DEFAULT '[]',
 
     "OutputData"            TEXT                DEFAULT 'CORRECTED_DATA'
 );
@@ -57,8 +57,8 @@ CREATE TABLE blackboard.solve_arguments
     "MaxIter"               INTEGER             DEFAULT 1,
     "Epsilon"               DOUBLE PRECISION    DEFAULT 1e-6,
     "MinConverged"          DOUBLE PRECISION    DEFAULT 100.0,
-    "Parms"                 TEXT[]              DEFAULT '{}',
-    "ExclParms"             TEXT[]              DEFAULT '{}',
+    "Parms"                 TEXT                DEFAULT '[]',
+    "ExclParms"             TEXT                DEFAULT '[]',
     "DomainSize.Freq"       DOUBLE PRECISION    NOT NULL,
     "DomainSize.Time"       DOUBLE PRECISION    NOT NULL
 );
