@@ -105,6 +105,21 @@ namespace LOFAR
     }
 
 
+    const string& BBSSolveStep::operation() const 
+    {
+      static string theOperation("Solve");
+      return theOperation;
+    }
+  
+
+    const string& BBSSolveStep::classType() const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      static const string theType("BBSSolveStep");
+      return theType;
+    }
+
+
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
     void BBSSolveStep::write(BlobOStream& bos) const
@@ -130,14 +145,6 @@ namespace LOFAR
 	  >> itsParms
 	  >> itsExclParms
 	  >> itsDomainSize;
-    }
-
-
-    const string& BBSSolveStep::classType() const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
-      static const string theType("BBSSolveStep");
-      return theType;
     }
 
 

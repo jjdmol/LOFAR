@@ -37,6 +37,12 @@ namespace LOFAR
     }
 
 
+    const string& BBSCorrectStep::operation() const 
+    {
+      static string theOperation("Correct");
+      return theOperation;
+    }
+  
     const string& BBSCorrectStep::classType() const 
     {
       static string theType("BBSCorrectStep");

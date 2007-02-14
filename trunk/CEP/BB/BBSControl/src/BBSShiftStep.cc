@@ -36,7 +36,12 @@ namespace LOFAR
 	registerClass<BBSShiftStep>("BBSShiftStep");
     }
 
-
+    const string& BBSShiftStep::operation() const 
+    {
+      static string theOperation("Shift");
+      return theOperation;
+    }
+  
     const string& BBSShiftStep::classType() const 
     {
       static string theType("BBSShiftStep");
