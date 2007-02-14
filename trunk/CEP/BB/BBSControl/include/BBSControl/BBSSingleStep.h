@@ -50,6 +50,9 @@ namespace LOFAR
       // stream \a os.
       virtual void print(ostream& os) const;
 
+      // Return the operation type of \c *this as a string.
+      virtual const string& operation() const = 0;
+
       // Return the name of the data column to write data to.
       string outputData() const { return itsOutputData; }
 

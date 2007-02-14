@@ -71,15 +71,18 @@ namespace LOFAR
       DomainSize domainSize()    const { return itsDomainSize; }
       // @}
 
+      // Return the operation type of \c *this as a string.
+      virtual const string& operation() const;
+
     private:
+      // Return the class type of \c *this as a string.
+      virtual const string& classType() const;
+
       // Write the contents of \c *this into the blob output stream \a bos.
       virtual void write(BlobOStream& bos) const;
 
       // Read the contents from the blob input stream \a bis into \c *this.
       virtual void read(BlobIStream& bis);
-
-      // Return the type of \c *this as a string.
-      virtual const string& classType() const;
 
       uint32 itsMaxIter;            ///< Maximum number of iterations
       double itsEpsilon;            ///< Convergence threshold

@@ -51,8 +51,11 @@ namespace LOFAR
 		      const BBSStep* parent) :
 	BBSSingleStep(name, parSet, parent) {}
 
+      // Return the operation type of \c *this as a string.
+      virtual const string& operation() const;
+
     private:
-      // Return the type of \c *this as a string.
+      // Return the class type of \c *this as a string.
       virtual const string& classType() const;
     };
 
