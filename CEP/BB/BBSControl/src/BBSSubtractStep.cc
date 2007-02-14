@@ -36,7 +36,12 @@ namespace LOFAR
 	registerClass<BBSSubtractStep>("BBSSubtractStep");
     }
 
-
+    const string& BBSSubtractStep::operation() const 
+    {
+      static string theOperation("Subtract");
+      return theOperation;
+    }
+  
     const string& BBSSubtractStep::classType() const 
     {
       static string theType("BBSSubtractStep");

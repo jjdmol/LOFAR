@@ -86,8 +86,7 @@ namespace LOFAR
       itsInputData = ps.getString("InputData");
 
       // Get the region of interest (optional)
-      try
-      {
+      try {
           itsRegionOfInterest = ps.getDoubleVector("RegionOfInterest");
       } catch (APSException&) {}
       
@@ -96,12 +95,7 @@ namespace LOFAR
       itsDomainSize.timeInterval = ps.getDouble("WorkDomainSize.Time");
 
       // Get the correlation product selection (ALL, AUTO, or CROSS)
-      string sel = ps.getString("Correlation.Selection");
-      if (sel == "ALL" || sel == "AUTO" || sel == "CROSS")
-	itsCorrelation.selection = sel;
-      else
-      	THROW(BBSControlException, 
-		 "Invalid correlation selection " << sel);
+      itsCorrelation.selection = ps.getString("Correlation.Selection");
       itsCorrelation.type = ps.getStringVector("Correlation.Type");
 
       // Get the integration intervals in frequency (Hz) and time (s).

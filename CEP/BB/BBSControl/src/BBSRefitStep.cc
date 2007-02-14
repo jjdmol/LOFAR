@@ -36,7 +36,12 @@ namespace LOFAR
 	registerClass<BBSRefitStep>("BBSRefitStep");
     }
 
-
+    const string& BBSRefitStep::operation() const 
+    {
+      static string theOperation("Refit");
+      return theOperation;
+    }
+  
     const string& BBSRefitStep::classType() const 
     {
       static string theType("BBSRefitStep");

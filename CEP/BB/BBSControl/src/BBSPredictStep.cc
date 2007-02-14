@@ -36,7 +36,12 @@ namespace LOFAR
 	registerClass<BBSPredictStep>("BBSPredictStep");
     }
 
-
+    const string& BBSPredictStep::operation() const 
+    {
+      static string theOperation("Predict");
+      return theOperation;
+    }
+  
     const string& BBSPredictStep::classType() const 
     {
       static string theType("BBSPredictStep");

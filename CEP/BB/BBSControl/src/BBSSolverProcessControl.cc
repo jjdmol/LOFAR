@@ -259,7 +259,7 @@ namespace BBS
         Domain &domain = itsRegisteredDomains[request->getDomainIndex()];
         domain.index = request->getDomainIndex();
         domain.unknowns = request->getUnknowns();
-        domain.solver.set(domain.unknowns.size());
+        domain.solver.set(casa::uInt(domain.unknowns.size()));
         domain.epsilon = request->getEpsilon();
         // Set new value solution test
         //domain.solver.setEpsValue(request->getEpsilon());
