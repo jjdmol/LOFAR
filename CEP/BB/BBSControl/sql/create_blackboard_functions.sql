@@ -1,16 +1,26 @@
 -- -------- --
 -- STRATEGY --
 -- -------- --
-CREATE OR REPLACE FUNCTION blackboard.set_strategy(strategy blackboard.strategy)
+-- Function: blackboard.set_strategy
+-- Full signature:
+-- blackboard.set_strategy("DataSet" TEXT, "ParmDB.LocalSky" TEXT, "ParmDB.Instrument" TEXT, "ParmDB.History" TEXT, "Stations" TEXT, "InputData" TEXT, "WorkDomainSize.Freq" DOUBLE PRECISION, "WorkDomainSize.Time" DOUBLE PRECISION, "Correlation.Selection" TEXT, "Correlation.Type" TEXT)
+CREATE OR REPLACE FUNCTION blackboard.set_strategy(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT)
 RETURNS VOID AS
 $$
-    BEGIN
-        INSERT
-            INTO blackboard.strategy
-            VALUES (strategy);
-    END;
+    INSERT INTO blackboard.strategy(
+        "DataSet", 
+        "ParmDB.LocalSky", 
+        "ParmDB.Instrument", 
+        "ParmDB.History", 
+        "Stations", 
+        "InputData", 
+        "WorkDomainSize.Freq", 
+        "WorkDomainSize.Time", 
+        "Correlation.Selection", 
+        "Correlation.Type")
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
 $$
-LANGUAGE plpgsql;
+LANGUAGE SQL;
 
 
 CREATE OR REPLACE FUNCTION blackboard.get_strategy()
@@ -60,12 +70,12 @@ CREATE TYPE blackboard.iface_step AS
 (
     "Name"                  TEXT,
     "Operation"             TEXT,
-    "Baselines.Station1"    TEXT[],
-    "Baselines.Station2"    TEXT[],
+    "Baselines.Station1"    TEXT,
+    "Baselines.Station2"    TEXT,
     "Correlation.Selection" TEXT,
-    "Correlation.Type"      TEXT[],
-    "Sources"               TEXT[],
-    "InstrumentModel"       TEXT[],
+    "Correlation.Type"      TEXT,
+    "Sources"               TEXT,
+    "InstrumentModel"       TEXT,
     "OutputData"            TEXT
 );
 
@@ -75,8 +85,8 @@ CREATE TYPE blackboard.iface_solve_arguments AS
     "MaxIter"               INTEGER,
     "Epsilon"               DOUBLE PRECISION,
     "MinConverged"          DOUBLE PRECISION,
-    "Parms"                 TEXT[],
-    "ExclParms"             TEXT[],
+    "Parms"                 TEXT,
+    "ExclParms"             TEXT,
     "DomainSize.Freq"       DOUBLE PRECISION,
     "DomainSize.Time"       DOUBLE PRECISION
 );
@@ -167,8 +177,8 @@ LANGUAGE plpgsql;
 
 -- Function: blackboard.add_step (PRIVATE FUNCTION, DO NOT CALL FROM C++)
 -- Full signature:
--- blackboard.add_step("Name" TEXT, "Operation" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData" TEXT)
-CREATE OR REPLACE FUNCTION blackboard.add_step(TEXT, TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT)
+-- blackboard.add_step("Name" TEXT, "Operation" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData" TEXT)
+CREATE OR REPLACE FUNCTION blackboard.add_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
 RETURNS INTEGER AS
 $$
     DECLARE
@@ -201,8 +211,8 @@ LANGUAGE plpgsql;
 
 -- Function: blackboard.add_predict_step
 -- Full signature:
--- blackboard.add_predict_step("Name" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData")
-CREATE OR REPLACE FUNCTION blackboard.add_predict_step(TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT)
+-- blackboard.add_predict_step("Name" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData")
+CREATE OR REPLACE FUNCTION blackboard.add_predict_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
 RETURNS INTEGER AS
 $$
     SELECT blackboard.add_step($1, 'PREDICT', $2, $3, $4, $5, $6, $7, $8);
@@ -212,8 +222,8 @@ LANGUAGE SQL;
 
 -- Function: blackboard.add_subtract_step
 -- Full signature:
--- blackboard.add_subtract_step("Name" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData")
-CREATE OR REPLACE FUNCTION blackboard.add_subtract_step(TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT)
+-- blackboard.add_subtract_step("Name" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData")
+CREATE OR REPLACE FUNCTION blackboard.add_subtract_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
 RETURNS INTEGER AS
 $$
     SELECT blackboard.add_step($1, 'SUBTRACT', $2, $3, $4, $5, $6, $7, $8);
@@ -223,8 +233,8 @@ LANGUAGE SQL;
 
 -- Function: blackboard.add_correct_step
 -- Full signature:
--- blackboard.add_correct_step("Name" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData")
-CREATE OR REPLACE FUNCTION blackboard.add_correct_step(TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT)
+-- blackboard.add_correct_step("Name" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData")
+CREATE OR REPLACE FUNCTION blackboard.add_correct_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
 RETURNS INTEGER AS
 $$
     SELECT blackboard.add_step($1, 'CORRECT', $2, $3, $4, $5, $6, $7, $8);
@@ -234,8 +244,8 @@ LANGUAGE SQL;
 
 -- Function: blackboard.add_solve_step
 -- Full signature:
--- blackboard.add_solve_step("Name" TEXT, "Baselines.Station1" TEXT[], "Baselines.Station2" TEXT[], "Correlation.Selection" TEXT, "Correlation.Type" TEXT[], "Sources" TEXT[], "InstrumentModel" TEXT[], "OutputData" TEXT, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT[], "ExclParms" TEXT[], "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
-CREATE OR REPLACE FUNCTION blackboard.add_solve_step(TEXT, TEXT[], TEXT[], TEXT, TEXT[], TEXT[], TEXT[], TEXT, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT[], TEXT[], DOUBLE PRECISION, DOUBLE PRECISION)
+-- blackboard.add_solve_step("Name" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData" TEXT, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT, "ExclParms" TEXT, "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
+CREATE OR REPLACE FUNCTION blackboard.add_solve_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT, DOUBLE PRECISION, DOUBLE PRECISION)
 RETURNS VOID AS
 $$
     DECLARE
@@ -260,8 +270,8 @@ LANGUAGE plpgsql;
 
 -- Function: blackboard.add_solve_arguments
 -- Full signature:
--- blackboard.add_solve_arguments(_step_id INTEGER, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT[], "ExclParms" TEXT[], "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
---CREATE OR REPLACE FUNCTION blackboard.add_solve_arguments(INTEGER, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT[], TEXT[], DOUBLE PRECISION, DOUBLE PRECISION)
+-- blackboard.add_solve_arguments(_step_id INTEGER, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT, "ExclParms" TEXT, "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
+--CREATE OR REPLACE FUNCTION blackboard.add_solve_arguments(INTEGER, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT, DOUBLE PRECISION, DOUBLE PRECISION)
 --RETURNS VOID AS
 --$$
 --    INSERT INTO blackboard.solve_arguments(step_id, "MaxIter", "Epsilon", "MinConverged", "Parms", "ExclParms", "DomainSize.Freq", "DomainSize.Time")
