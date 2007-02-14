@@ -38,6 +38,9 @@
 
 namespace LOFAR
 {
+  //# Forward Declarations
+  namespace ACC { namespace APS { class ParameterSet; } }
+
   namespace BBS
   {
     //# Forward Declarations
@@ -67,7 +70,15 @@ namespace LOFAR
       // Get the next BBSSingleStep from the command queue. When this step is
       // retrieved from the database, its status will be set to "active"
       // ([TBD]). This method is typically used by the local controller.
-      const BBSSingleStep& getNextStep();
+      //
+      // \attention Currently, a BBSSingleStep object is reconstructed using
+      // one \e or \e more queries. Although each query is executed as a
+      // transaction, multiple queries are \e not executed as one
+      // transaction. So beware!
+      //
+      // \todo Execute multiple queries (needed for, e.g., reconstructing a
+      // BBSSolveStep) as one transaction.
+      const BBSSingleStep* getNextStep();
 
       // Set the BBSStrategy in the command queue. All information, \e except
       // the BBSStep objects within the BBSStrategy are stored in the
@@ -79,9 +90,12 @@ namespace LOFAR
       // database consists of the "meta data" of a BBSStrategy object
       // (i.e. all information \e except the BBSStep objects). This method is
       // typically called by the local controller.
-      const BBSStrategy& getStrategy();
+      const BBSStrategy* getStrategy();
 
     private:
+      // Execute \a query. The result will be returned as a ParameterSet.
+      ACC::APS::ParameterSet execQuery(const string& query);
+
       // Connection to the PostgreSQL database. The pqxx::connection object
       // will be destroyed when \c *this goes out of scope.
       //
@@ -90,6 +104,9 @@ namespace LOFAR
       // configuration of the pqxx::connection until after \c *this has been
       // constructed, we need to wrap it into a managed pointer class.
       scoped_ptr<pqxx::connection> itsConnection;
+
+      // Keep track of the ID of the current command.
+      uint itsCurrentId;
     };
 
     // @}
