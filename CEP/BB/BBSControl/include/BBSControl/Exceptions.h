@@ -29,7 +29,7 @@
 // Definition of the BBSControl specific exception classes
 
 //# Includes
-#include <Common/Exception.h>
+#include <Common/Exceptions.h>
 
 namespace LOFAR
 {
