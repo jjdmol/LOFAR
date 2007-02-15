@@ -26,7 +26,7 @@
 #include <tables/Tables.h>
 #include <tables/Tables/TableIter.h>
 
-namespace LOFAR 
+namespace LOFAR
 {
   namespace CS1
   {
@@ -35,7 +35,7 @@ namespace LOFAR
     public:
       MS_File(const std::string& msname);
       ~MS_File();
-  
+
       int                     itsNumSamples;
       int                     itsNumAntennae;
       int                     itsNumFields;
@@ -47,18 +47,17 @@ namespace LOFAR
       double                  itsNoiseLevel;
       std::vector<casa::String> itsAntennaNames;
       casa::Vector<casa::Int>   itsPolarizations;
-      
+
       casa::TableIterator TimeslotIterator();
-      casa::TableIterator TimeAntennaIterator();
       casa::MSAntenna     antennas();
-    
+
     protected:
       string                MSName;
       casa::MeasurementSet* MS;
       void init();
     private:
     }; // MS_File
-  } //namespace CS1
+  }; //namespace CS1
 }; //namespace LOFAR
 
 #endif // __IMAGER_MS_FILE_H__

@@ -63,7 +63,8 @@ am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_CS1_DFTImager_OBJECTS = Imager.$(OBJEXT) DFTImager.$(OBJEXT) \
-	MS_File.$(OBJEXT) ImagerProcessControl.$(OBJEXT)
+	MS_File.$(OBJEXT) Image_File.$(OBJEXT) \
+	ImagerProcessControl.$(OBJEXT)
 CS1_DFTImager_OBJECTS = $(am_CS1_DFTImager_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -231,6 +232,8 @@ CS1_DFTImager_SOURCES = Imager.cc \
 				  DFTImager.h \
 				  MS_File.cc \
 				  MS_File.h \
+				  Image_File.cc \
+				  Image_File.h \
 				  ImagerProcessControl.cc
 
 CS1_DFTImager_LDADD = 
@@ -339,6 +342,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DFTImager.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Image_File.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Imager.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ImagerProcessControl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MS_File.Po@am__quote@
