@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2007 by ASTRON, Adriaan Renting                         *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef __FLAGGER_COMPLEXMEDIANFLAGGER_H__
-#define __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+#ifndef __IMAGER_DFTIMAGER_H__
+#define __IMAGER_DFTIMAGER_H__
 
 #include <casa/Arrays.h>
 #include <utility>
@@ -41,31 +41,50 @@ namespace LOFAR
     using casa::Table;
     using std::list;
     using std::vector;
-    
+
     typedef pair<int, int> pairii;
-    
+
     class DFTImager
     {
       public:
-        DFTImager(MS_File* MSfile, 
-                  PagedImage Imagefile,
-                  int Resolution);
+        DFTImager(MS_File* MSfile,
+                  Image_File* Imagefile);
         ~DFTImager();
-  
-        void MakeImage();
-    
+
+        void MakeImage(int Resolution);
+
       protected:
+        int                     NumAntennae;
+        int                     NumPairs;
+        int                     NumBands;
         int                     NumChannels;
-        MS_File* MSfile;
-        
+        int                     NumPolarizations;
+        int                     WindowSize;
+        int                     NumTimeslots;
+        double                  MinThreshold;
+        double                  MaxThreshold;
+        double                  MaxBaselineLength;
+        vector<double>          BaselineLengths;
+        vector<pairii>          PairsIndex;
+        map<pairii, int>        BaselineIndex;
+        vector< Cube<Complex> > TimeslotData;
+        vector<casa::String>    AntennaNames;
+        Cube< int >             Statistics;
+        int                     Resolution;
+
+        MS_File*    MSfile;
+        Image_File* Imagefile;
+
+      private:
+        void ComputeBaselineLengths();
         bool UpdateTimeslotData(vector<int>* OldFields,
                                 vector<int>* OldBands,
                                 int* TimeCounter,
                                 Table* TimeslotTable,
                                 double* Time);
-      private:
-    }; // ComplexMedianFlagger
+        void ImageTimeslot(void);
+    }; // DFTImager
   }; // namespace CS1
 }; // namespace LOFAR
 
-#endif //  __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+#endif //  __IMAGER_DFTIMAGER_H__

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by Adriaan Renting                                 *
+ *   Copyright (C) 2007 by Adriaan Renting                                 *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef LOFARFLAGGERPROCESSCONTROL_H
-#define LOFARFLAGGERPROCESSCONTROL_H
+#ifndef IMAGER_PROCESSCONTROL_H
+#define IMAGER_PROCESSCONTROL_H
 
 #include <PLC/ProcessControl.h>
 #include <APS/ParameterSet.h>
@@ -27,7 +27,7 @@
 @author Adriaan Renting
 */
 
-namespace LOFAR 
+namespace LOFAR
 {
   namespace CS1
   {
@@ -40,13 +40,13 @@ namespace LOFAR
       std::string itsMSName;
       std::string itsImageName;
       int         itsResolution;
-      MS_File*    intMS;
-      Image_File* intImage;
+      MS_File*    itsMS;
+      Image_File* itsImage;
       DFTImager*  itsImager;
     public:
-      FlaggerProcessControl(void);
+      ImagerProcessControl(void);
 
-      ~FlaggerProcessControl(void);
+      ~ImagerProcessControl(void);
       // \name Command to control the processes.
       // There are a dozen commands that can be sent to a application process
       // to control its flow. The return values for these command are:<br>
@@ -78,7 +78,7 @@ namespace LOFAR
       tribool snapshot(const std::string&);
       std::string askInfo(const std::string&);
 
-    }; //class FlaggerProcessControl
+    }; //class ImagerProcessControl
   } //namespace CS1
 }; //namespace LOFAR
 
