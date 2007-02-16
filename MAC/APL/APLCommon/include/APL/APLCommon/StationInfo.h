@@ -57,6 +57,7 @@ uint16	stationArmNr();			// 0..5	; 0 = error
 int16	stationTypeValue();		//-1..2 : for resp. error, CS, RS, ES
 string	stationTypeStr();		// "", CS, RS, ES
 string	PVSSDatabaseName();		// hostname w/o CUtype
+string	realHostname(const string&	someName);	// adds 'C' when it is missing.
 
 
 // @}
