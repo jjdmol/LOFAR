@@ -48,6 +48,9 @@ static	char*	stationTypeTable[] = { "CS", "RS", "ES" };
 //
 uint16	stationRingNr()
 {
+	if (!isdigit(myHostname(false).substr(2,1)[0])) {
+		return(0);
+	}
 	return (lexical_cast<uint16>(myHostname(false).substr(3,2)));
 }
 
@@ -61,6 +64,9 @@ uint16	stationRingNr()
 //
 uint16	stationArmNr()
 {
+	if (!isdigit(myHostname(false).substr(2,1)[0])) {
+		return(0);
+	}
 	return (lexical_cast<uint16>(myHostname(false).substr(2,1)));
 }
 
@@ -119,6 +125,31 @@ string	PVSSDatabaseName()
 
 	return (hostname);
 }
+
+//
+// realHostname
+//
+// In SAS the stationnames are used as hostnames so the last 'C' is missing.
+// This routine tries to find out if it has to add the C to the given hostname.
+//
+string	realHostname(const string&	someName)
+{
+	// first figure out in which letter our machinename ends.
+	string	hostname(myHostname(false));
+	char	lastChar(*(--toUpper(hostname).end()));
+	if (lastChar != 'C' && lastChar != 'T') {
+		lastChar = '\0';
+	}
+
+	// if name ends in same char assume the name is correct.
+	string::const_iterator	riter = someName.end();
+	if (*(--riter) == lastChar) {
+		return (someName);
+	}
+
+	return (string(someName+lastChar));
+}
+
 
 
   } // namespace Deployment

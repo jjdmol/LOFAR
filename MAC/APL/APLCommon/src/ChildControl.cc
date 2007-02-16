@@ -94,6 +94,7 @@ ChildControl::ChildControl() :
 	}
 
 	itsCntlrList = &(ControllerAdmin::instance()->itsList);
+
 }
 
 //
@@ -151,8 +152,9 @@ void ChildControl::openService(const string&	aServiceName,
 bool ChildControl::startChild (uint16				aCntlrType, 
 							   OTDBtreeIDType		anObsID, 
 							   uint32				instanceNr,
-							   const string&		hostname)
+							   const string&		aHostname)
 {
+	string	hostname(realHostname(aHostname));
 	LOG_DEBUG_STR("startChild(" << aCntlrType <<","<< anObsID <<","<< instanceNr 
 											  <<","<< hostname << ")");
 
@@ -270,7 +272,8 @@ void ChildControl::startChildControllers()
 				uint32	treeID         = globalParameterSet()->getUint32("_treeID");
 				uint16	instanceNr	   = 0;		// TODO
 				string	childCntlrName = 
-						controllerName(childCntlrType, instanceNr, treeID, hostnames[i]);
+						controllerName(childCntlrType, instanceNr, 
+												treeID, realHostname(hostnames[i]));
 
 				// child already running???
 				CTState::CTstateNr	requestedState = getRequestedState(childCntlrName);
@@ -887,7 +890,7 @@ void ChildControl::_setEstablishedState(const string&		aName,
 //
 void ChildControl::_doGarbageCollection()
 {
-	LOG_DEBUG ("Garbage collection");
+	LOG_DEBUG_STR ("Garbage collection(" << itsGarbageInterval << ")");
 
 	CIiter			iter  = itsCntlrList->begin();
 	const_CIiter	end   = itsCntlrList->end();
@@ -1042,6 +1045,16 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 					_setEstablishedState(controller->cntlrName, CTState::ANYSTATE, 
 													time(0), CT_RESULT_LOST_CONNECTION);
 					controller->port = 0;
+
+#if 0					// Try to restart the controller over 5 seconds
+					// Add it to the action list.
+					controller->retryTime = time(0) + 300 ;
+					itsListener->cancelTimer(itsActionTimer);
+					itsActionTimer = itsListener->setTimer(1.0);
+					itsActionList.push_back(*controller);
+
+					// And schedule cleanup when everthing fails
+#endif
 					if (itsGarbageTimer) {
 						itsTimerPort.cancelTimer(itsGarbageTimer);
 					}
@@ -1052,8 +1065,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		}
 		break;
 
-	case F_TIMER:
-		{
+	case F_TIMER: {
 			GCFTimerEvent&      timerEvent = static_cast<GCFTimerEvent&>(event);
 			LOG_DEBUG_STR("TIMERID=" << timerEvent.id);
 			if (timerEvent.id == itsGarbageTimer) {
@@ -1066,18 +1078,16 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		}
 		break;
 
-	case STARTDAEMON_CREATED:	// startDaemon reports startup of program
-		{
-		STARTDAEMONCreatedEvent		result(event);
-		LOG_DEBUG_STR("Startup of " << result.cntlrName << " ready, result=" 	
-														<< result.result);
-		_setEstablishedState(result.cntlrName, CTState::CREATED, time(0),
-							 result.result);
+	case STARTDAEMON_CREATED: {	// startDaemon reports startup of program
+			STARTDAEMONCreatedEvent		result(event);
+			LOG_DEBUG_STR("Startup of " << result.cntlrName << " ready, result=" 	
+															<< result.result);
+			_setEstablishedState(result.cntlrName, CTState::CREATED, time(0),
+								 result.result);
 		}
 		break;
 
-	case CONTROL_CONNECT:		// received from just started controller
-		{
+	case CONTROL_CONNECT: {		// received from just started controller
 			CONTROLConnectEvent		msg(event);
 			CONTROLConnectedEvent		answer;
 
