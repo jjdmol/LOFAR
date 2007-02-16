@@ -761,13 +761,13 @@ GCFEvent::TResult DigitalBoardControl::defaultMessageHandling(GCFEvent& 		event,
 			answer.result = 0;
 			itsParentPort->send(answer);
 
-			CONTROLFinishEvent		fEvent;
-			fEvent.cntlrName = msg.cntlrName;
-			fEvent.treeID    = getObservationNr(msg.cntlrName);
-			fEvent.errorMsg  = "Normal Termination";
-			fEvent.result    = 0;
-			LOG_DEBUG_STR("Sending FINISH event");
-			itsParentPort->send(fEvent);
+			CONTROLQuitedEvent		qEvent;
+			qEvent.cntlrName = msg.cntlrName;
+			qEvent.treeID    = getObservationNr(msg.cntlrName);
+			qEvent.errorMsg  = "Normal Termination";
+			qEvent.result    = 0;
+			LOG_DEBUG_STR("Sending QUITED event");
+			itsParentPort->send(qEvent);
 		}
 		break;
 

@@ -130,7 +130,7 @@ void BeamControl::sigintHandler(int signum)
 //
 void BeamControl::finish()
 {
-	TRAN(BeamControl::finishing_state);
+	TRAN(BeamControl::quiting_state);
 }
 
 
@@ -256,7 +256,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 			uint32	treeID = getObservationNr(getName());
 			LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".BeamCtrl");
 
-			// first redirect signalHandler to our finishing state to leave PVSS
+			// first redirect signalHandler to our quiting state to leave PVSS
 			// in the right state when we are going down
 			thisBeamControl = this;
 			signal (SIGINT,  BeamControl::sigintHandler);	// ctrl-c
@@ -566,7 +566,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 //
 // quiting_state(event, port)
 //
-// Quiting: send FINISH, wait for answer max 5 seconds, stop
+// Quiting: send QUITED, wait for answer max 5 seconds, stop
 //
 GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& port)
 {
@@ -577,9 +577,10 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		setState(CTState::FINISH);
+		setState(CTState::QUIT);
 //		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("quiting"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+		// disconnect from BeamServer
 		itsBeamServer->close();
 		break;
 	}
@@ -588,37 +589,24 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 	case F_EXIT:
 		break;
 
-	case F_DISCONNECTED:
+	case F_DISCONNECTED:		// propably from beamserver
 		port.close();
 		// fall through!!! 
 	case F_CLOSED: {
 		ASSERTSTR (&port == itsBeamServer, 
 								"F_DISCONNECTED event from port " << port.getName());
-		LOG_INFO("Connection with BeamServer down, sending FINISH");
-		CONTROLFinishEvent		request;
+		LOG_INFO("Connection with BeamServer down, sending QUITED to parent");
+		CONTROLQuitedEvent		request;
 		request.cntlrName = getName();
 		request.result	  = CT_RESULT_NO_ERROR;
 		itsParentPort->send(request);
-		itsTimerPort->setTimer(5.0);		// wait max 5 seconds for response
+		itsTimerPort->setTimer(1.0);		// wait 1 second to let message go away
 		break;
 	}
 	
 	case F_TIMER:
-		LOG_DEBUG("Timeout on reception of FINISHED event, too bad.");
-		setState(CTState::FINISHED);
-		TRAN(BeamControl::finishing_state);
+		GCFTask::stop();
 		break;
-
-	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
-
-	case CONTROL_FINISHED: {
-		CONTROLFinishedEvent		msg(event);
-		LOG_DEBUG_STR("Received FINISHED(" << msg.cntlrName << ")");
-		LOG_INFO_STR("Normal shutdown of " << getName());
-		setState(CTState::FINISHED);
-		TRAN(BeamControl::finishing_state);
-		break;
-	}
 
 	default:
 		status = _defaultEventHandler(event, port);
@@ -787,7 +775,7 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 		case CONTROL_RESUME:
 		case CONTROL_SUSPEND:
 		case CONTROL_RELEASE:
-		case CONTROL_FINISH:
+		case CONTROL_QUIT:
 			 if (sendControlResult(port, event.signal, getName(), CT_RESULT_NO_ERROR)) {
 				result = GCFEvent::HANDLED;
 			}
@@ -801,7 +789,7 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 		case CONTROL_RESUMED:
 		case CONTROL_SUSPENDED:
 		case CONTROL_RELEASED:
-		case CONTROL_FINISHED:
+		case CONTROL_QUITED:
 			result = GCFEvent::HANDLED;
 			break;
 	}
@@ -813,44 +801,6 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 
 	return (result);
 }
-
-//
-// finishing_state(event, port)
-//
-// Write controller state to PVSS, wait for 1 second (using a timer) to let 
-// GCF handle the property change and close the controller
-//
-GCFEvent::TResult BeamControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
-{
-	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	switch (event.signal) {
-	case F_INIT:
-		break;
-
-	case F_ENTRY: {
-		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
-
-		itsTimerPort->setTimer(1L);
-		break;
-	}
-  
-    case F_TIMER:
-      GCFTask::stop();
-      break;
-    
-	default:
-		LOG_DEBUG("finishing_state, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
-}
-
 
 // _connectedHandler(port)
 //

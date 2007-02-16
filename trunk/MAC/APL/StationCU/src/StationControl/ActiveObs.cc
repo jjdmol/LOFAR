@@ -512,20 +512,20 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 		// release beam at the BeamController
 		LOG_DEBUG_STR("Asking " << itsBeamCntlrName << " to quit");
 		ChildControl::instance()->
-				requestState(CTState::FINISHED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
-		// will result in CONTROL_FINISHED
+				requestState(CTState::QUITED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		// will result in CONTROL_QUITED
 
 		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to quit");
 		ChildControl::instance()->
-				requestState(CTState::FINISHED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
-		// will result in CONTROL_FINISHED
+				requestState(CTState::QUITED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		// will result in CONTROL_QUITED
 
 		LOG_DEBUG_STR(itsName << ": in 'stopping-mode' until controllers are down");
 	}
 	break;
 
-	case CONTROL_FINISH: {
-		CONTROLFinishedEvent		msg(event);
+	case CONTROL_QUITED: {
+		CONTROLQuitedEvent		msg(event);
 		if (msg.cntlrName == itsCalCntlrName) {
 			itsCalCntlrReady = true;
 			LOG_DEBUG_STR("CalibrationController " << itsCalCntlrName << " is down");

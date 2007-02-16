@@ -90,8 +90,6 @@ private:
    	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 	// Quiting, shutdown connections, send FINISH and quit
    	GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
-	// closing down PVSS neatly.
-   	GCFEvent::TResult finishing_state (GCFEvent& e, GCFPortInterface& p);
 
 	// avoid defaultconstruction and copying
 	BeamControl();
