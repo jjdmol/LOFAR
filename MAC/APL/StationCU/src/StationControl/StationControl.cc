@@ -447,7 +447,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	case CONTROL_RESUMED:
 	case CONTROL_SUSPENDED:
 	case CONTROL_RELEASED:
-	case CONTROL_FINISH:
+	case CONTROL_QUITED:
 	case CONTROL_CLAIM:			// from ParentITCport
 	case CONTROL_SCHEDULE:
 	case CONTROL_PREPARE:
@@ -483,7 +483,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		theObs->second->dispatch(event, port);
 
 		// end of FSM?
-		if (event.signal == CONTROL_FINISH && theObs->second->isReady()) {
+		if (event.signal == CONTROL_QUITED && theObs->second->isReady()) {
 			LOG_DEBUG_STR("Removing " <<ObsEvent.cntlrName<< " from the administration");
 			delete theObs->second;
 			itsObsMap.erase(theObs);
@@ -495,13 +495,13 @@ LOG_TRACE_FLOW("Counting busy controllers...");
 									itsChildControl->getPendingRequest("", treeID);
 LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 		if (cntlrStates.empty()) {	// no pending requests? Ready.
-			if (event.signal != CONTROL_FINISH) {
+			if (event.signal != CONTROL_QUITED) {
 				sendControlResult(*itsParentPort, event.signal, cntlrName, 
 																CT_RESULT_NO_ERROR);
 			}
 			else {
 				// we are done, pass finish request to parent
-				CONTROLFinishEvent		request;
+				CONTROLQuitedEvent		request;
 				request.cntlrName = cntlrName;
 				request.result	  = CT_RESULT_NO_ERROR;
 				itsParentPort->send(request);
@@ -544,10 +544,15 @@ GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterf
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_INIT:
-		break;
-
 	case F_ENTRY: {
+		// Inform parent process we are going down.
+		CONTROLQuitedEvent		msg;
+		msg.cntlrName = getName();
+		msg.result	  = CT_RESULT_NO_ERROR;
+		msg.treeID    = 0;
+		msg.errorMsg  = "";
+		itsParentPort->send(msg);
+
 		// update PVSS
 		itsOwnPropSet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
 		itsOwnPropSet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));

@@ -123,7 +123,7 @@ void CalibrationControl::sigintHandler(int signum)
 //
 void CalibrationControl::finish()
 {
-	TRAN(CalibrationControl::finishing_state);
+	TRAN(CalibrationControl::quiting_state);
 }
 
 
@@ -549,7 +549,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 //
 // quiting_state(event, port)
 //
-// Quiting: send FINISH, wait for answer max 5 seconds, stop
+// Quiting: send QUITED, wait 1 second and stop
 //
 GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event, 
 													GCFPortInterface& port)
@@ -577,30 +577,17 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 		ASSERTSTR (&port == itsCalServer,
 						"F_DISCONNECTED event from port " << port.getName());
 		LOG_DEBUG("Connection with CalServer down, sending FINISH");
-		CONTROLFinishEvent		request;
+		CONTROLQuitedEvent		request;
 		request.cntlrName = getName();
 		request.result	  = CT_RESULT_NO_ERROR;
 		itsParentPort->send(request);
-		itsTimerPort->setTimer(5.0);		// wait max 5 seconds for response
+		itsTimerPort->setTimer(1.0);		// let message go away
 	}
 	break;
 
 	case F_TIMER:
-		LOG_DEBUG("Timeout on reception of FINISHED event, too bad.");
-		setState(CTState::FINISHED);
-		TRAN(CalibrationControl::finishing_state);
+		GCFTask::stop();
 		break;
-
-	// -------------------- EVENT RECEIVED FROM PARENT CONTROL --------------------
-	
-	case CONTROL_FINISHED: {
-		CONTROLFinishedEvent	msg(event);
-		LOG_DEBUG_STR("Received FINISHED(" << msg.cntlrName << ")");
-		LOG_INFO_STR("Normal shutdown of " << getName());
-		setState(CTState::FINISHED);
-		TRAN(CalibrationControl::finishing_state);
-		break;
-	}
 
 	default:
 		status = _defaultEventHandler(event, port);
@@ -682,7 +669,7 @@ GCFEvent::TResult CalibrationControl::_defaultEventHandler(GCFEvent&		 event,
 		case CONTROL_RESUME:
 		case CONTROL_SUSPEND:
 		case CONTROL_RELEASE:
-		case CONTROL_FINISH:
+		case CONTROL_QUIT:
 			if (sendControlResult(port, event.signal, getName(), CT_RESULT_NO_ERROR)) {
 				result = GCFEvent::HANDLED;
 			}
@@ -696,7 +683,7 @@ GCFEvent::TResult CalibrationControl::_defaultEventHandler(GCFEvent&		 event,
 		case CONTROL_RESUMED:
 		case CONTROL_SUSPENDED:
 		case CONTROL_RELEASED:
-		case CONTROL_FINISHED:
+		case CONTROL_QUITED:
 			result = GCFEvent::HANDLED;
 			break;
 	}
@@ -708,44 +695,6 @@ GCFEvent::TResult CalibrationControl::_defaultEventHandler(GCFEvent&		 event,
 
 	return (result);
 }
-
-//
-// finishing_state(event, port)
-//
-// Write controller state to PVSS, wait for 1 second (using a timer) to let 
-// GCF handle the property change and close the controller
-//
-GCFEvent::TResult CalibrationControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
-{
-	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
-
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-
-	switch (event.signal) {
-	case F_INIT:
-		break;
-
-	case F_ENTRY: {
-		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
-
-		itsTimerPort->setTimer(1L);
-		break;
-	}
-  
-    case F_TIMER:
-      GCFTask::stop();
-      break;
-    
-	default:
-		LOG_DEBUG("finishing_state, default");
-		status = GCFEvent::NOT_HANDLED;
-		break;
-	}    
-	return (status);
-}
-
 
 //
 // _connectedHandler(port)
