@@ -109,6 +109,7 @@ private:
 	MACScheduler(const MACScheduler&);
    	MACScheduler& operator=(const MACScheduler&);
 
+	Observation* _findActiveObservation(const string&	name);
 	void _addActiveObservation(const Observation&	newObs);
 	void _removeActiveObservation(const string& name);
    	void _connectedHandler(GCFPortInterface& port);

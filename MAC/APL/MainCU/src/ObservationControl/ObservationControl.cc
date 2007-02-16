@@ -172,6 +172,7 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 									 GCFPVString(cts.name(newState)));
 	}
 
+	itsParentControl->nowInState(getName(), newState);
 }
 
 //
@@ -483,34 +484,34 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		}
 		else if (timerEvent.id == itsClaimTimer) {
 			setState(CTState::CLAIM);
-			itsChildResult = CT_RESULT_NO_ERROR;
-			itsClaimTimer = 0;
+			itsChildResult   = CT_RESULT_NO_ERROR;
+			itsClaimTimer    = 0;
 			LOG_DEBUG("Requesting all childs to execute the CLAIM state");
 			itsChildControl->requestState(CTState::CLAIMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		else if (timerEvent.id == itsPrepareTimer) {
 			setState(CTState::PREPARE);
-			itsChildResult = CT_RESULT_NO_ERROR;
-			itsPrepareTimer = 0;
+			itsChildResult   = CT_RESULT_NO_ERROR;
+			itsPrepareTimer  = 0;
 			LOG_DEBUG("Requesting all childs to execute the PREPARE state");
 			itsChildControl->requestState(CTState::PREPARED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		else if (timerEvent.id == itsStartTimer) {
 			setState(CTState::RESUME);
-			itsChildResult = CT_RESULT_NO_ERROR;
-			itsStartTimer = 0;
+			itsChildResult   = CT_RESULT_NO_ERROR;
+			itsStartTimer    = 0;
 			LOG_DEBUG("Requesting all childs to go operation state");
 			itsChildControl->requestState(CTState::RESUMED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		else if (timerEvent.id == itsStopTimer) {
-			setState(CTState::FINISH);
-			itsChildResult = CT_RESULT_NO_ERROR;
-			itsStopTimer = 0;
+			setState(CTState::QUIT);
+			itsChildResult   = CT_RESULT_NO_ERROR;
+			itsStopTimer     = 0;
 			LOG_DEBUG("Requesting all childs to quit");
-			itsChildControl->requestState(CTState::FINISHED, "");
+			itsChildControl->requestState(CTState::QUITED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		}
 		// some other timer?
@@ -597,9 +598,11 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		break;
 	}
 
-	case CONTROL_FINISH: {		// Note: request iso answer
-		CONTROLFinishEvent		msg(event);
-		LOG_DEBUG_STR("Received FINISH(" << msg.cntlrName << ")");
+	case CONTROL_QUITED: {
+		CONTROLQuitedEvent		msg(event);
+		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << ")");
+		itsChildResult |= msg.result;
+		doHeartBeatTask();
 		break;
 	}
 
@@ -630,6 +633,12 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		break;
 
 	case F_ENTRY: {
+		// inform MACScheduler we are going down
+		CONTROLQuitedEvent	msg;
+		msg.cntlrName = getName();
+		msg.result 	  = CT_RESULT_NO_ERROR;
+		itsParentPort->send(msg);
+
 		// update PVSS
 		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
@@ -761,7 +770,7 @@ void  ObservationControl::doHeartBeatTask()
 	// all controllers up to date?
 	if (lateCntlrs.empty()) {
 		LOG_DEBUG_STR("All (" << nrChilds << ") controllers are up to date");
-		if (itsState == CTState::FINISH) {
+		if (itsState == CTState::QUIT) {
 			LOG_DEBUG_STR("Time for me to shutdown");
 			TRAN(ObservationControl::finishing_state);
 			return;
@@ -771,6 +780,9 @@ void  ObservationControl::doHeartBeatTask()
 			CTState		cts;
 			setState(cts.stateAck(itsState));
 			itsBusyControllers = 0;
+			// inform Parent (ignore funtion-result)
+			sendControlResult(*itsParentPort, cts.signal(itsState), getName(), 
+							  itsChildResult);
 		}
 		return;
 	}

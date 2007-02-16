@@ -406,14 +406,41 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
-	case CONTROL_FINISH: {
+	case CONTROL_QUITED: {
 		// The observationController is going down.
-		CONTROLFinishEvent finishEvent(event);
-		LOG_DEBUG_STR("Received FINISH(" << finishEvent.cntlrName << ")");
-		LOG_DEBUG_STR("Removing observation " << finishEvent.cntlrName << 
+		CONTROLQuitedEvent quitedEvent(event);
+		LOG_DEBUG_STR("Received QUITED(" << quitedEvent.cntlrName << ")");
+
+		// update SAS database.
+		Observation*	theObs(_findActiveObservation(quitedEvent.cntlrName));
+		if (!theObs) {
+			LOG_WARN_STR("Cannot find controller " << quitedEvent.cntlrName << 	
+						  ". Can't update the SAS database");
+			break;
+		}
+		OTDB::TreeMaintenance	tm(itsOTDBconnection);
+		TreeStateConv			tsc(itsOTDBconnection);
+		tm.setTreeState(theObs->treeID, tsc.get("finished"));
+
+		// update our administration
+		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << 
 						" from activeList");
-		_removeActiveObservation(finishEvent.cntlrName);
+		_removeActiveObservation(quitedEvent.cntlrName);
 		break;
+	}
+
+	case CONTROL_RESUMED: {
+		// update SAS database.
+		CONTROLResumedEvent		msg(event);
+		Observation*			theObs(_findActiveObservation(msg.cntlrName));
+		if (!theObs) {
+			LOG_WARN_STR("Cannot find controller " << msg.cntlrName << 	
+						  ". Can't update the SAS database");
+			break;
+		}
+		OTDB::TreeMaintenance	tm(itsOTDBconnection);
+		TreeStateConv			tsc(itsOTDBconnection);
+		tm.setTreeState(theObs->treeID, tsc.get("active"));
 	}
 
 	// NOTE: ignore all other CONTROL events, we are not interested in the
@@ -571,6 +598,23 @@ void MACScheduler::_doOTDBcheck()
 		idx++;	
 	}
 
+}
+
+//
+// _findActiveObservation(name)
+//
+Observation*	MACScheduler::_findActiveObservation(const string&	name)
+{
+	vector<Observation>::iterator	end  = itsObservations.end();
+	vector<Observation>::iterator	iter = itsObservations.begin();
+	while (iter != end) {
+		if (iter->name == name) {
+			return (&(*iter));
+		}
+		iter++;
+	}
+
+	return ((Observation*) 0);
 }
 
 //
