@@ -34,6 +34,7 @@
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <OTDB/TreeStateConv.h>
 #include <signal.h>
 
 #include "MACSchedulerDefines.h"
@@ -481,7 +482,7 @@ void MACScheduler::finish()
 //
 void MACScheduler::_doOTDBcheck()
 {
-	// REO: test pvss appl
+	// update PVSS database
 	ptime	currentTime = from_time_t(time(0));
 	itsPropertySet->setValue(string(PN_MS_OTDB_LAST_POLL),
 										GCFPVString(to_simple_string(currentTime)));
@@ -543,6 +544,10 @@ void MACScheduler::_doOTDBcheck()
 				newObs.treeID = treeID;
 				_addActiveObservation(newObs);
 				LOG_DEBUG_STR("Observation " << cntlrName << " added to active Observations");
+
+				TreeStateConv	tsc(itsOTDBconnection);
+				tm.setTreeState(treeID, tsc.get("queued"));
+
 			}
 			idx++;
 			continue;
