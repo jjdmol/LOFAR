@@ -366,6 +366,14 @@ int GCFPort::cancelAllTimers()
 	return (_pSlave->cancelAllTimers());
 }
 
+//
+// timeLeft(timerid)
+//
+double GCFPort::timeLeft(long timerID)
+{
+	return (_pSlave ? _pSlave->timeLeft(timerID) : 0);
+}
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

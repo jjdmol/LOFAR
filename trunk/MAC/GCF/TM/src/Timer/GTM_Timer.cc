@@ -52,70 +52,64 @@ GTMTimer::GTMTimer(GCFRawPort& port,
  
 void GTMTimer::decreaseTime()
 {
-  int64 uSec = getElapsedTime();
-  
-  if (uSec < 0 || _timeLeft > (uint64) uSec)
-  {
-    _timeLeft -= uSec;
-  }
-  else
-  {
-    struct timeval now;
-    (void)gettimeofday(&now, NULL);
+	int64 uSec = getElapsedTime();
 
-    GCFTimerEvent te;
-    te.sec = now.tv_sec;
-    te.usec = now.tv_usec;
-    te.id = _id;
-    te.arg = _arg;
-    
-    _port.dispatch(te);
-    if (_intervalTime > 0)
-    {
-      uint64 timeoverflow = uSec - _timeLeft;
-      
-      if (_intervalTime < timeoverflow)
-      {
-        LOG_ERROR(formatString(
-            "Timerinterval %fsec of timer %d is to small for performance reasons (tdelta: %lld, tleft: %llu).",
-            ((double) _intervalTime) / 1000000.0,
-            _id,
-            uSec,
-            _timeLeft));
-        do 
-        {
-          timeoverflow -= _intervalTime;
-        } while (_intervalTime < timeoverflow);        
-      }
-      _timeLeft = _intervalTime - timeoverflow;
-    }
-    else
-    {
-      _elapsed = true;
-    }
-  } 
+	// REO: uSec < 0 ??? 
+	if ((uint64) uSec < _timeLeft || uSec < 0) {
+		_timeLeft -= uSec;
+		return;
+	}
+
+	// timer expired
+	struct timeval now;
+	(void)gettimeofday(&now, NULL);
+
+	GCFTimerEvent te;
+	te.sec  = now.tv_sec;
+	te.usec = now.tv_usec;
+	te.id   = _id;
+	te.arg  = _arg;
+	_port.dispatch(te);
+
+	if (_intervalTime == 0) {
+		_elapsed = true;
+		return;
+	}
+
+	uint64 timeoverflow = uSec - _timeLeft;
+	if (_intervalTime < timeoverflow) {
+		LOG_ERROR(formatString(
+		"Timerinterval %fsec of timer %d is to small for performance reasons (tdelta: %lld, tleft: %llu).",
+		((double) _intervalTime) / 1000000.0, _id, uSec, _timeLeft));
+		do {
+		  timeoverflow -= _intervalTime;
+		} while (_intervalTime < timeoverflow);        
+	}
+
+	_timeLeft = _intervalTime - timeoverflow;
 }
 
 void GTMTimer::saveTime()
 {
-  struct timezone timeZone;
-  gettimeofday(&_savedTime, &timeZone);
+	struct timezone timeZone;
+	gettimeofday(&_savedTime, &timeZone);
 }
 
 int64 GTMTimer::getElapsedTime()
 {
-  timeval oldTime(_savedTime);
-  int64 uSecDiff(0);
-  
-  saveTime();
+	timeval oldTime(_savedTime);
+	int64 	uSecDiff(0);
 
-  uSecDiff = ((uint64) (_savedTime.tv_usec) + 
-              (uint64) (_savedTime.tv_sec) * 1000000) - 
-             ((uint64) (oldTime.tv_usec) +
-              (uint64) (oldTime.tv_sec) * 1000000);
+	saveTime();
 
-  return uSecDiff;
+	uSecDiff = ((uint64) (_savedTime.tv_usec) + 
+				(uint64) (_savedTime.tv_sec) * 1000000) - 
+			   ((uint64) (oldTime.tv_usec) +
+				(uint64) (oldTime.tv_sec) * 1000000);
+
+	return (uSecDiff);
 }
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

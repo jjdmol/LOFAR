@@ -92,6 +92,8 @@ public:
   
     virtual int  cancelAllTimers ();
 
+	virtual double	timeLeft(long	timerID);
+
 protected: 
 	// constructors && destructors
     /// params see constructor of GCFPortInterface

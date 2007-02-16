@@ -111,6 +111,8 @@ class GCFPort : public GCFPortInterface
                               void** arg = 0);
     
     virtual int  cancelAllTimers ();
+
+	virtual double timeLeft(long	timerID);
     
   public: // GCFPort specific interface methods
     /// sets the remote address of a port 

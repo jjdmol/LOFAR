@@ -97,6 +97,8 @@ public:
     
     virtual int  cancelAllTimers() = 0;
         
+	virtual double	timeLeft(long	timerID) = 0;
+
     /**
     * Attribute access functions
     */

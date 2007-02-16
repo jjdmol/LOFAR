@@ -38,7 +38,7 @@ int main (int32	argc, char*argv[]) {
 	
 	CEPKeyValueLogger	kvlPort;
 
-	kvlPort.logKeyValue("Observation.nyquistZone", GCFPVInteger(2), KVL_ORIGIN_MAC);
+	kvlPort.logKeyValue("LOFAR.ObsSW.Observation.nyquistZone", GCFPVInteger(2), KVL_ORIGIN_MAC);
 
 	return (0);
 }
