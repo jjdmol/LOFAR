@@ -54,8 +54,7 @@ prelude = << PRELUDE_END
 // RELEASE   (string cntlrName)
 // RELEASED  (string cntlrName, uint16 result)
 // QUIT      (string cntlrName)
-// FINISH    (string cntlrName, uint32 treeID, uint16 result, string errorMsg)
-// FINISHED  (string cntlrName, uint16 result)
+// QUITED    (string cntlrName, uint32 treeID, uint16 result, string errorMsg)
 //
 // COMMON	 (string cntlrName)	// not a real signal, the common part of all signals
 //
@@ -348,10 +347,10 @@ event = {
 };
 
 //
-// FINISH - sent by a child to tell its parent it is dying.
+// QUITED - sent by a child to tell its parent it is dying.
 //
 event = {
-	signal = FINISH;
+	signal = QUITED;
 	dir = IN; // from child to parent
 	param = {
 		name = "cntlrName";
@@ -368,22 +367,6 @@ event = {
 	param = {
 		name = "errorMsg";
 		type = "string";
-	};
-};
-
-//
-// FINISHED - result of the FINISH request
-//
-event = {
-	signal = FINISHED;
-	dir = OUT; // from parent to child
-	param = {
-		name = "cntlrName";
-		type = "string";
-	};
-	param = {
-	  name = "result";
-	  type = "uint16";
 	};
 };
 

@@ -30,7 +30,6 @@
 #include <APS/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
-//#include <APL/APLCommon/Controller_Protocol.ph>
 #include "Controller_Protocol.ph"
 
 #include <boost/config.hpp>
@@ -306,9 +305,9 @@ bool sendControlResult(GCF::TM::GCFPortInterface&	port,
 			return (port.send(answer) > 0);
 		}
 		break;
-	case CONTROL_FINISH:
-	case CONTROL_FINISHED: {
-			CONTROLFinishedEvent	answer;
+	case CONTROL_QUIT:
+	case CONTROL_QUITED: {
+			CONTROLQuitedEvent	answer;
 			answer.cntlrName = cntlrName;
 			answer.result	 = result;
 			return (port.send(answer) > 0);

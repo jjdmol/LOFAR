@@ -72,10 +72,20 @@ public:
 	GCFITCPort* registerTask (GCFTask*			mainTask);
 
 	// Let ParentControlTask watch for start- and stop-time of observation.
-	// When the given time is reached the ParentControlTask generates a RESUME / QUIT event.
-	bool 		activateObservationTimers(const string&		cntlrName,
-										  ptime				startTime, 
-										  ptime				stopTime);
+	// When the given time is reached the ParentControlTask generates a 
+	// RESUME / QUIT event.
+	bool 	activateObservationTimers(const string&		cntlrName,
+									  ptime				startTime, 
+									  ptime				stopTime);
+
+	// The main task can inform the ParentControl-task what state it is in now.
+	// When the commands to change state come from the parent executable this is
+	// not neccesary because the ParentControl-task knows in what state the main-task
+	// should be. But when the main-task decides on his own that he needs to be in
+	// another state than he has to inform the ParentControl-task about it, otherwise
+	// these two tasks become out of sync.
+	bool	nowInState(const string&		cntlrName,
+					   CTState::CTstateNr	newState);
 private:
 	// Copying and default construction is not allowed
 	ParentControl();

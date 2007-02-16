@@ -716,7 +716,7 @@ void ChildControl::_processActionList()
 			}
 			break;
 
-		case CTState::FINISHED:
+		case CTState::QUITED:
 			{
 				CONTROLQuitEvent		request;
 				request.cntlrName = controller->cntlrName;
@@ -868,11 +868,12 @@ void ChildControl::_setEstablishedState(const string&		aName,
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
-	case CTState::FINISH: {
-			CONTROLFinishEvent	msg;
+	case CTState::QUITED: {
+			CONTROLQuitedEvent	msg;
 			msg.cntlrName = controller->cntlrName;
 			msg.treeID	  = controller->obsID;
 			msg.result    = result;
+			// TODO: errormsg
 			itsCompletionPort->sendBack(msg);
 		}
 		break;
@@ -902,7 +903,7 @@ void ChildControl::_doGarbageCollection()
 		if (!iter->port) {
 			LOG_DEBUG_STR ("Controller " << iter->cntlrName << 
 							" is still unreachable, informing main task");
-			_setEstablishedState(iter->cntlrName, CTState::FINISH, time(0), 
+			_setEstablishedState(iter->cntlrName, CTState::QUITED, time(0), 
 													CT_RESULT_LOST_CONNECTION);
 			iter->port = (GCFPortInterface*) -1;
 			// start timer for second stage.
@@ -1032,7 +1033,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				}
 
 				// found controller, close port
-				if (controller->currentState >= CTState::FINISH) {// expected disconnect?
+				if (controller->currentState >= CTState::QUIT) {// expected disconnect?
 					LOG_DEBUG_STR("Removing " << controller->cntlrName << 
 															" from the controllerList");
 					itsCntlrList->erase(controller);			// just remove
@@ -1040,7 +1041,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				else {	// unexpected disconnect give child some time to reconnect(?)
 					LOG_WARN_STR ("Lost connection with controller " << 
 						controller->cntlrName << 
-						" while not in FINISHED state, waiting 5 minutes for reconnect");
+						" while not in QUITING state, waiting 5 minutes for reconnect");
 
 					_setEstablishedState(controller->cntlrName, CTState::ANYSTATE, 
 													time(0), CT_RESULT_LOST_CONNECTION);
@@ -1193,17 +1194,17 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		// do nothing, is not a state change.
 		break;
 	
-	case CONTROL_FINISH: {
-			CONTROLFinishEvent		msg(event);
-			_setEstablishedState(msg.cntlrName, CTState::FINISH, time(0),
+	case CONTROL_QUITED: {
+			CONTROLQuitedEvent		msg(event);
+			_setEstablishedState(msg.cntlrName, CTState::QUITED, time(0),
 								 msg.result);
 
 			// inform child its shutdown is registered
-			CONTROLFinishedEvent	reply;
-			reply.cntlrName = msg.cntlrName;
-			port.send(reply);
-			_setEstablishedState(msg.cntlrName, CTState::FINISHED, time(0),
-								 msg.result);
+//			CONTROLFinishedEvent	reply;
+//			reply.cntlrName = msg.cntlrName;
+//			port.send(reply);
+//			_setEstablishedState(msg.cntlrName, CTState::FINISHED, time(0),
+//								 msg.result);
 		}
 		break;
 	
