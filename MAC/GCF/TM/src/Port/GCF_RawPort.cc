@@ -228,6 +228,15 @@ int GCFRawPort::cancelAllTimers()
 }
 
 //
+// timeLeft(timerid)
+//
+double GCFRawPort::timeLeft(long timerID)
+{
+	ASSERT(_pTimerHandler);
+	return (_pTimerHandler->timeLeft(timerID));
+}
+
+//
 // findAddr(addr)
 //
 bool GCFRawPort::findAddr(TPeerAddr& addr)

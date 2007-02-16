@@ -44,7 +44,7 @@ class GTMTimerHandler;
  */
 class GTMTimer
 {
-  public:
+public:
     GTMTimer (GCFRawPort& port,
   	          unsigned long id,
               uint64 timeVal, 
@@ -52,36 +52,38 @@ class GTMTimer
               void* arg = 0);
     virtual ~GTMTimer () {};
     
-    inline void* getTimerArg () const {return _arg;}
-    inline GCFRawPort& getPort () const {return _port;}
-    inline bool isElapsed () const {return _elapsed;}
-    inline bool isCanceled () const {return _canceled;}
-    inline void cancel () {_canceled = true;}
+	inline void*	   getTimerArg() const	{ return (_arg);		}
+	inline GCFRawPort& getPort    () const	{ return (_port);		}
+	inline bool		   isElapsed  () const 	{ return (_elapsed);	}
+	inline bool		   isCanceled () const 	{ return (_canceled);	}
+	inline void		   cancel     () 		{ _canceled = true;		}
+	inline double	   getTimeLeft() const	{ return ((double)_timeLeft / 1000000.0); }
     
-    /**
-     * Decreases the time of this timer 
-     * It will be called by workProc method of the GTMTimerHandler, which 
-     * determines the elapsed time to the previous workProc invocation for all 
-     * registered timers once.
-     */
-    void decreaseTime ();
+	/**
+	 * Decreases the time of this timer 
+	 * It will be called by workProc method of the GTMTimerHandler, which 
+	 * determines the elapsed time to the previous workProc invocation for all 
+	 * registered timers once.
+	 */
+	void decreaseTime ();
 
-  private: // helper methods
-    void saveTime ();
-    int64 getElapsedTime();
+private: 
+	// helper methods
+	void	saveTime ();
+	int64	getElapsedTime();
 
-  private: // attributes
-    GCFRawPort&     _port;
-    unsigned long   _id;
-    uint64          _time;
-    uint64          _timeLeft;
-    uint64          _intervalTime;
-    void*           _arg; // this pointer should NEVER be modified by the GTMTimer class!!
+	// attributes
+	GCFRawPort&     _port;
+	unsigned long   _id;
+	uint64          _time;				// in uSec
+	uint64          _timeLeft;			// in uSec
+	uint64          _intervalTime;		// in uSec
+	void*           _arg; // this pointer should NEVER be modified by the GTMTimer class!!
 
-  private: // helper attribs.
-    bool            _elapsed;
-    bool            _canceled;
-    timeval         _savedTime;
+	// helper attribs.
+	bool            _elapsed;
+	bool            _canceled;
+	timeval         _savedTime;
 };
   } // namespace TM
  } // namespace GCF

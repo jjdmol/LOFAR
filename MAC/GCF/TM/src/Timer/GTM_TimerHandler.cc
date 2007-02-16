@@ -170,6 +170,21 @@ int GTMTimerHandler::cancelAllTimers(GCFRawPort& port)
   }
   return result;
 }
+
+double GTMTimerHandler::timeLeft(unsigned long timerID)
+{
+	GTMTimer* 			pCurTimer(0);
+	TTimers::iterator 	iter(_timers.find(timerID));
+	if (iter == _timers.end()) {
+		return (0.0);
+	}
+
+	pCurTimer = iter->second;
+	ASSERT(pCurTimer);
+
+	return (pCurTimer->getTimeLeft());
+}
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR
