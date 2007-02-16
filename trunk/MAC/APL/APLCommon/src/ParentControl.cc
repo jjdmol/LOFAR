@@ -905,7 +905,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			PIiter		parent = findParent(msg.cntlrName);
 			if (isParent(parent)) {
 				// note do not register this state, it is not a real state
-				LOG_DEBUG_STR("Passing SCHEDULED event to parent ocntroller");
+				LOG_DEBUG_STR("Passing SCHEDULED event to parent controller");
 				parent->port->send(msg);
 			}
 		}
