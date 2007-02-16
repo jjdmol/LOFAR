@@ -63,13 +63,14 @@ static	stateFlow	stateFlowTable[] = {
 	{	CONTROL_SUSPENDED,		CTState::SUSPEND,		CTState::SUSPENDED	},
 	{	CONTROL_RELEASE,		CTState::ANYSTATE,		CTState::RELEASED	},
 	{	CONTROL_RELEASED,		CTState::RELEASE,		CTState::RELEASED	},
-	{	CONTROL_FINISH,			CTState::RELEASED,		CTState::FINISHED	},
-	{	CONTROL_FINISHED,		CTState::RELEASED,		CTState::FINISHED	},
-//	{	CONTROL_FINISH,			CTState::ANYSTATE,		CTState::FINISHED	},
-	{	CONTROL_FINISHED,		CTState::FINISH,		CTState::FINISHED	},
+	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::QUITED		},
+	{	CONTROL_QUITED,			CTState::QUIT,			CTState::QUITED		},
+//	{	CONTROL_FINISH,			CTState::RELEASED,		CTState::FINISHED	},
+//	{	CONTROL_FINISHED,		CTState::RELEASED,		CTState::FINISHED	},
+//	{	CONTROL_FINISHED,		CTState::FINISH,		CTState::FINISHED	},
 	{	CONTROL_RESYNCED,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	CONTROL_SCHEDULE,		CTState::ANYSTATE,		CTState::ANYSTATE	},
-	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::FINISH		},
+//	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::FINISH		},
 	{	0x00,					CTState::NOSTATE,		CTState::NOSTATE	}
 };
 
@@ -194,7 +195,7 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 	//		<0			<0		obs is over!
 	if (stopDiff.seconds() < 0) {
 		LOG_ERROR("Stoptime is already past! Shutting down controller.");
-		parent->requestedState = CTState::FINISH;
+		parent->requestedState = CTState::QUITED;
 		parent->requestTime	   = time(0);
 		_doRequestedAction(parent);
 		return (false);
@@ -224,6 +225,34 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 		parent->stopTimer = 0;
 	}
 
+	return (true);
+}
+
+//
+// nowInState(name, newstate)
+//
+// The main task can inform the ParentControl-task what state it is in now.
+// When the commands to change state come from the parent executable this is
+// not neccesary because the ParentControl-task knows in what state the main-task
+// should be. But when the main-task decides on his own that he needs to be in
+// another state than he has to inform the ParentControl-task about it, otherwise
+// these two tasks become out of sync.
+//
+bool ParentControl::nowInState(const string&		cntlrName,
+							   CTState::CTstateNr	newState)
+{
+	CTState		cts;
+	LOG_DEBUG_STR("nowInState(" << cntlrName <<","<< cts.name(newState) << ")");
+
+	PIiter		parent = findParent(cntlrName);
+	if (!isParent(parent)) {
+		LOG_ERROR_STR("Unknown controllername " << cntlrName << 
+					  ", can not register new state: " << cts.name(newState));
+		return (false);
+	}
+
+	parent->currentState   = newState;
+	parent->requestedState = requestedState(cts.signal(newState));
 	return (true);
 }
 
@@ -346,9 +375,6 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 		parent->nrRetries = -1;
 		itsTimerPort.cancelTimer(parent->timerID);
 		parent->timerID = 0;
-		if (parent->requestedState != CTState::FINISHED) {
-			return;
-		}
 	}
 
 //	switch (parent->requestedState) {
@@ -422,20 +448,11 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 			itsMainTaskPort->sendBack(request);
 		}
 		break;
-	case CTState::FINISH: {
-			CONTROLQuitEvent		request;
-			request.cntlrName = parent->name;
-			itsMainTaskPort->sendBack(request);
-		}
-		break;
-	case CTState::FINISHED: {
+	case CTState::QUITED: {
 			// pass to maintask
-			CONTROLFinishedEvent	request;
+			CONTROLQuitEvent	request;
 			request.cntlrName = parent->name;
 			itsMainTaskPort->sendBack(request);
-			// close port and cleanup admin
-			parent->port->close();
-			itsParentList.erase(parent);
 		}
 		break;
 	default:
@@ -761,7 +778,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		}
 		break;
 
-	// -------------------- signals from Parent process --------------------
+	// -------------------- commands from parent executable --------------------
 	case CONTROL_RESYNC:
 	case CONTROL_SCHEDULE:
 	case CONTROL_CLAIM:
@@ -770,7 +787,6 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 	case CONTROL_SUSPEND:
 	case CONTROL_RELEASE:
 	case CONTROL_QUIT:
-	case CONTROL_FINISHED:		// NB: is an answer!
 		{
 			// do we know this parent?
 			PIiter		parent = findParent(&port);
@@ -911,15 +927,18 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		}
 		break;
 
-	case CONTROL_FINISH:
+	case CONTROL_QUITED:
 		{
-			CONTROLFinishEvent	msg(event);
+			CONTROLQuitedEvent	msg(event);
 			// do we know this parent?
 			PIiter		parent = findParent(msg.cntlrName);
 			if (isParent(parent)) {
 				_confirmState(event.signal, msg.cntlrName, msg.result);
 				parent->port->send(msg);
 			}
+			// close port and cleanup admin
+			parent->port->close();
+			itsParentList.erase(parent);
 		}
 		break;
 

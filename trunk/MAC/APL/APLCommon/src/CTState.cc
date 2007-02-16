@@ -56,8 +56,8 @@ stateSignal_t	stateSignalTable[] = {
 	{	CTState::SUSPENDED,	CONTROL_SUSPENDED,	"Suspended"	},
 	{	CTState::RELEASE,	CONTROL_RELEASE,	"Releasing"	},
 	{	CTState::RELEASED,	CONTROL_RELEASED,	"Released"	},
-	{	CTState::FINISH,	CONTROL_FINISH,		"Finishing"	},
-	{	CTState::FINISHED,	CONTROL_FINISHED,	"Finished"	}
+	{	CTState::QUIT,		CONTROL_QUIT,		"Quiting"	},
+	{	CTState::QUITED,	CONTROL_QUITED,		"Quited"	}
 };
 
 //
@@ -153,7 +153,7 @@ CTState::CTstateNr	CTState::stateAck(CTstateNr		aStateNr) const
 	case RESUME:
 	case SUSPEND:
 	case RELEASE:
-	case FINISH:
+	case QUIT:
 		return (stateNr(value(aStateNr)+1));
 	default:
 		return (aStateNr);

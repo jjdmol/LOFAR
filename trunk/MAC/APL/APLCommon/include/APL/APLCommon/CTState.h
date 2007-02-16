@@ -68,8 +68,8 @@ public:
 		SUSPENDED,
 		RELEASE,
 		RELEASED,
-		FINISH,			// child to parent
-		FINISHED,
+		QUIT,
+		QUITED,
 		LAST_STATE
 	} CTstateNr;
 
