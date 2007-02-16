@@ -87,10 +87,14 @@ int main (int	argc, char* argv[])
 	LOG_INFO_STR("Sharedname of shared name   = " << sharedControllerName(sharedName));
 
 
-	LOG_INFO_STR("myHostname = " << GCF::Common::myHostname(false));
+	LOG_INFO_STR("myHostname(short) = " << GCF::Common::myHostname(false));
+	LOG_INFO_STR("myHostname(long)  = " << GCF::Common::myHostname(true));
 	LOG_INFO_STR("ringNumber = " << stationRingNr());
 	LOG_INFO_STR("armNumber  = " << stationArmNr());
 	LOG_INFO_STR("PVSSDBname = " << PVSSDatabaseName());
+	LOG_INFO_STR("hostname of CS010  = " << realHostname("CS010"));
+	LOG_INFO_STR("hostname of CS010C = " << realHostname("CS010C"));
+	LOG_INFO_STR("hostname of CS010T = " << realHostname("CS010T"));
 	LOG_INFO_STR("PropSetName(LOFAR_PermSW_@ring@_@station@_DigBoardCtrl@instance@) = " << createPropertySetName("LOFAR_PermSW_@ring@_@station@_DigBoardCtrl@instance@", "DigitalBoardControl"));
 
 
