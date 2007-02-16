@@ -625,11 +625,11 @@ bool	CalibrationControl::startCalibration()
 	calStartEvent.rcumode().resize(1);
 	calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
 										convertFilterSelection(itsObsPar.filter));
-	calStartEvent.nyquist_zone = itsObsPar.nyquistZone;
+//	calStartEvent.nyquist_zone = itsObsPar.nyquistZone;
 	calStartEvent.subset 	   = itsObsPar.RCUset;
-	LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%d,%08X)", 
+	LOG_DEBUG(formatString("Sending CALSTART(%s,%s,08X)", 
 							obsName.c_str(), calStartEvent.parent.c_str(),
-							calStartEvent.nyquist_zone, calStartEvent.rcumode()(0).getRaw()));
+							calStartEvent.rcumode()(0).getRaw()));
 
 	itsCalServer->send(calStartEvent);
 
