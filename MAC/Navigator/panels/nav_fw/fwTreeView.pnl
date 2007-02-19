@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 tree/tree.pnl v1.1
-PANEL,417 201 280 560 N "FwBackground" 5
+PANEL,504 346 280 560 N "FwBackground" 5
 "$sOnCollapse"
 "$sOnExpand"
 "$sOnInit"
@@ -110,7 +110,6 @@ main()
 			if(fwTreeView_getNode(index)[fwTreeView_STATE] & fwTreeView_BRANCH)
 			{
 				// the folder is a branch => to expand
-				//DebugN(\"sOnExpand\");
 				id = startThread($sOnExpand == \"\" ? \"fwTreeView_defaultExpand\": $sOnExpand, index);
 				while(id != -1)
 					delay(0,100);
