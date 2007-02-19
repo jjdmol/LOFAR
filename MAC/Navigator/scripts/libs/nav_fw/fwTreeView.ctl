@@ -45,7 +45,6 @@
 
 /** @name "constants"
  */
-
 // indexes to access node object
 const int fwTreeView_HANDLE = 1;
 const int fwTreeView_LEVEL 	= 2;
@@ -406,6 +405,8 @@ fwTreeView_defaultSelect(unsigned pos)
  */
 fwTreeView_draw(string referenceName = "")
 {
+
+  //DebugTN("List B4: ", list.items);
   unsigned branchMarkLen = strlen(fwTreeView_BRANCH_MARK_COLLAPSED); //==strlen(expandeBranchMark)
   int spaceCnt, i, imax;
   string item;
@@ -413,7 +414,7 @@ fwTreeView_draw(string referenceName = "")
   int visibleNodes=0;
 
   // erase list:
-//	setValue(referenceName + "list", "deleteAllItems");
+  //setValue(referenceName + "list", "deleteAllItems");
 
   getValue(referenceName + "list","itemCount",existingNodes);
 
@@ -460,6 +461,7 @@ fwTreeView_draw(string referenceName = "")
     setValue(referenceName + "list","deletePos",deletePos);
     getValue(referenceName + "list","itemCount",existingNodes);
   }
+  //DebugTN("List After draw: ", list.items);
 }
 
 
