@@ -132,10 +132,16 @@ namespace LOFAR
       const casa::Quantity          itsDistance(0, "m");
       const casa::Float             itsPaStep(5.0); //? unknown what the default should be, AR
       const casa::Float             itsPbLimit(0.05); //? unknown what the default should be, AR
-      myImager->setimage(itsNX, itsNY, myCellX, myCellY, myStokes, itsDoShift, itsPhaseCenter, itsShiftX, itsShiftY,
-                         myImageMode, itsNChannel, itsStart, itsStep, itsMStart, itsMStep, mySpectralWindowIDs,
-                         itsFieldID, itsFacets, itsDistance, itsPaStep, itsPbLimit);
-
+      if (myImageMode == "mfs")
+      { myImager->setimage(itsNX, itsNY, myCellX, myCellY, myStokes, itsDoShift, itsPhaseCenter, itsShiftX, itsShiftY,
+                           myImageMode, 1, itsStart, itsStep, itsMStart, itsMStep, mySpectralWindowIDs,
+                           itsFieldID, itsFacets, itsDistance, itsPaStep, itsPbLimit);
+      }
+      else
+      { myImager->setimage(itsNX, itsNY, myCellX, myCellY, myStokes, itsDoShift, itsPhaseCenter, itsShiftX, itsShiftY,
+                           myImageMode, itsNChannel, itsStart, itsStep, itsMStart, itsMStep, mySpectralWindowIDs,
+                           itsFieldID, itsFacets, itsDistance, itsPaStep, itsPbLimit);
+      }
       const casa::String   itsWeightAlgorithm(itsWeightType);
       const casa::String   itsRmode("none");      
       const casa::Quantity itsNoise(0.0, "Jy");
