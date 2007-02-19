@@ -93,6 +93,37 @@ void createInitialPoints() {
 
     dpCreate("LOFAR_PIC__enabled", "GCFPaPsEnabled");
     dpSet("LOFAR_PIC__enabled.","autoloaded|PIC");
+
+    dpCreate("LOFAR_PIC_Core__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PIC_Core__enabled.","autoloaded|Core");
+
+    dpCreate("LOFAR_PermSW_Core__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PermSW_Core__enabled.","autoloaded|Core");
+
+    dpCreate("LOFAR_PIC_Core_CS001__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PIC_Core_CS001__enabled.","autoloaded|CS001");
+
+    dpCreate("LOFAR_PIC_Core_CS008__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PIC_Core_CS008__enabled.","autoloaded|CS008");
+
+    dpCreate("LOFAR_PIC_Core_CS010__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PIC_Core_CS010__enabled.","autoloaded|CS010");
+
+    dpCreate("LOFAR_PIC_Core_CS016__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PIC_Core_CS016__enabled.","autoloaded|CS016");
+
+    dpCreate("LOFAR_PermSW_Core_CS001__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PermSW_Core_CS001__enabled.","autoloaded|CS001");
+
+    dpCreate("LOFAR_PermSW_Core_CS008__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PermSW_Core_CS008__enabled.","autoloaded|CS008");
+
+    dpCreate("LOFAR_PermSW_Core_CS010__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PermSW_Core_CS010__enabled.","autoloaded|CS010");
+
+    dpCreate("LOFAR_PermSW_Core_CS016__enabled", "GCFPaPsEnabled");
+    dpSet("LOFAR_PermSW_Core_CS016__enabled.","autoloaded|CS016");
+
   } else {				        		// Station
     dpCreate("LOFAR__enabled", "GCFPaPsEnabled");
     dpSet("LOFAR__enabled.","autoloaded|StnLOFAR");
