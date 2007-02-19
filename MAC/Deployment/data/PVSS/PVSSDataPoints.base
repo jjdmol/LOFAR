@@ -38,6 +38,7 @@ StnPIC			-			S	P	LOFAR_PIC
 Cabinet			-			S	P	LOFAR_PIC_@cabinet@
 SubRack			-			S	P	LOFAR_PIC_@cabinet@_@subrack@
 RSPBoard		RSP			S	P	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
+RCU				RCU			S	P	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
 StationClock	SCK			S	P	LOFAR_PIC_StationClock
 StnPermSW		-			S	P	LOFAR_PermSW
 DigBoardCtrl	DBC			S	P	LOFAR_PermSW_DigBoardCtrl
