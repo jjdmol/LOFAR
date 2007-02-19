@@ -168,6 +168,7 @@ void changeSelectedPosition(string newDatapoint)
     }
   }
 
+   
   fwTreeView_draw(); 
   g_curSelNode = nodeID; //update global info
   fwTreeView_setSelectedPosition(fwTreeView_Tree2ViewIndex(nodeID));
@@ -493,7 +494,7 @@ long treeAddNode(long parentId, int level, string text)
 ///////////////////////////////////////////////////////////////////////////
 void treeAddDatapoints(dyn_string names)
 {
-  LOG_DEBUG("treeAddDatapoints: ", LOG_DYN(names));
+  LOG_DEBUG("treeAddDatapoints: ",names);
   int namesIndex;
   dyn_string addedDatapoints;
   string systemName;
@@ -562,10 +563,18 @@ void treeAddDatapoints(dyn_string names)
       string addingDPpart = systemName;
       for (pathIndex = 0; pathIndex <= dynlen(dpPathElements); pathIndex++)
       {
-        // Check if the item already exists
+        // Check if the item already exists as normal dpe or as a reference 
         if (mappingHasKey(g_datapoint2itemID, addingDPpart))
         {
           addedNode = g_datapoint2itemID[addingDPpart];
+        }
+	else if (mappingHasKey(g_datapoint2itemID, addingDPpart+" ->"))
+        {
+          addedNode = g_datapoint2itemID[addingDPpart+" ->"];        
+        }
+	else if (mappingHasKey(g_datapoint2itemID, addingDPpart+" ->>"))
+        {
+          addedNode = g_datapoint2itemID[addingDPpart+" ->>"];        
         }
         else
         {
@@ -621,18 +630,49 @@ void treeAddDatapoints(dyn_string names)
               // special case: __childDp
               if (strpos(elementName,"__childDp") >= 0)
               {
-                string referenceContent;
-                if (dpAccessable(addingDPpart + "." + elementName))
+                if (strpos(addingDPpart, " ->") < 0)
                 {
-                  dpGet(addingDPpart + "." + elementName, referenceContent);
-                  // add the reference to the global list. This list is inspected on several occasions, e.g. when
-                  // the user changes the selected item in the tree
-                  dynAppend(g_referenceList, addingDPpart + "=" + referenceContent);
-                  LOG_TRACE("Add reference: ", addingDPpart + "=" + referenceContent);
-                }
-                else
-                {
-                  LOG_WARN("Unable to get reference info for datapoint",addingDPpart + "." + elementName);
+                  dyn_string referenceContent;
+                  if (dpAccessable(addingDPpart + "." + elementName))
+                  {
+                    dpGet(addingDPpart + "." + elementName, referenceContent);
+                  }
+                  else
+                  {
+                    LOG_WARN("Unable to get reference info for datapoint",addingDPpart + "." + elementName);
+                  }
+                  for (int k = 1; k <= dynlen(referenceContent); k++)
+                  {
+                    dyn_string referenceSplit = strsplit(referenceContent[k], "=");
+                    if (dynlen(referenceSplit) >= 2) {
+                      string referenceText = addingDPpart + referenceSign(referenceSplit[2]);
+
+  		      //only add reference if not allready present...
+                      if (! dynContains(g_referenceList,referenceText + "=" + referenceSplit[2])) {
+                        dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
+	              }
+
+
+		      // Change internalNodeMapping Name to reference name
+                      int index = dynContains(internalFullDPName,addingDPpart);
+                      dynRemove(internalFullDPName,index);
+                      dynInsertAt(internalFullDPName, referenceText,index);
+
+		      // Remove the old datapoint
+		      int index = dynContains(names,addingDPpart);
+		      dynRemove(names,index);
+                      dynInsertAt(names, referenceText,index);
+        
+
+                      LOG_TRACE("Add reference: ", referenceText);
+		   
+
+                      // Because this is a reference, the DP's of the branche must be retrieved and
+                      // add to the dyn_string names, for correct build-up of the tree.
+                      dyn_string refResources = navConfigGetResources(referenceText, 2);
+                      dynAppend(names, refResources);
+		    }
+                  }
                 }
               }
               else
@@ -651,15 +691,23 @@ void treeAddDatapoints(dyn_string names)
                   }
                   for (int k = 1; k <= dynlen(referenceContent); k++)
                   {
+		    LOG_TRACE("ref. content to split: " + referenceContent[k]);
                     dyn_string referenceSplit = strsplit(referenceContent[k], "=");
-                    string referenceText = addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
-                    dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
-                    dynAppend(names, referenceText);
-                    LOG_TRACE("Add reference: ", referenceText);
-                    // Because this is a reference, the DP's of the branche must be retrieved and
-                    // add to the dyn_string names, for correct build-up of the tree.
-                    dyn_string refResources = navConfigGetResources(referenceText, 2);
-                    dynAppend(names, refResources);
+		    if (dynlen(referenceSplit) >=2) {
+                      string referenceText = addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
+
+		      //only add reference if not allready present...
+                      if (! dynContains(g_referenceList,referenceText + "=" + referenceSplit[2])) {
+                        dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
+	              } 
+                      dynAppend(names, referenceText);
+                      // Because this is a reference, the DP's of the branche must be retrieved and
+                      // add to the dyn_string names, for correct build-up of the tree.
+                      dyn_string refResources = navConfigGetResources(referenceText, 2);
+                      dynAppend(names, refResources);
+		    } else {
+		      LOG_DEBUG("No reference info found");
+                    }
                   }
                 }
               }
@@ -695,6 +743,8 @@ void treeAddDatapoints(dyn_string names)
       }
     }
   }
+  LOG_DEBUG("g_itemID2datapoint : "+g_itemID2datapoint);
+  LOG_DEBUG("g_datapoint2itemID : "+g_datapoint2itemID);
 }
 
 
@@ -976,6 +1026,7 @@ void Navigator_HandleEventInitialize()
   navConfigSetNavigatorID(navID);
   navConfigIncreaseUseCount();
   navConfigSubscribeUpdateTrigger("Navigator_HandleUpdateTrigger");
+  navConfigSubscribePSIndicationChange();
   
   navPMLinitialize();
   
@@ -1498,16 +1549,7 @@ TreeView_OnSelect(unsigned pos)
     }
     if (!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath + "__enabled")))
     {
-      // set the tree selection to the referenced item
-      if(parentDatapointIsReference)
-      {
-        LOG_INFO("Navigating to referenced datapoint:",datapointPath);
-        navConfigTriggerNavigatorRefreshWithDP(datapointPath);
-      }
-      else
-      {
-        TreeCtrl_HandleEventOnSelChange(pos);
-      }
+      TreeCtrl_HandleEventOnSelChange(pos);
     }
     else
     {
