@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,324 149 220 60 N "_3DFace" 1
+PANEL,602 165 220 60 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -10,7 +10,7 @@ PANEL,324 149 220 60 N "_3DFace" 1
 	
 	//DebugTN(\"original datapoint: \", orgDP);
 
-	aDP = systemName + \":LOFAR_PIC_StationClock\";
+	aDP = systemName + \"LOFAR_PIC_StationClock\";
 
   //Load the property set for this datapoint
 	//DebugTN(\"set datapoint: \", orgDP);
