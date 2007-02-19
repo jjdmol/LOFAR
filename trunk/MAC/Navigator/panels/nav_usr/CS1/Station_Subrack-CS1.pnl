@@ -1,9 +1,8 @@
 V 10
 1
 LANG:1 7 Subrack
-PANEL,516 124 986 776 N "_3DFace" 3
+PANEL,529 258 986 776 N "_3DFace" 2
 "$datapoint"
-"$refDatapoint"
 "$referenceDatapoint"
 E"//main()
 //{
@@ -460,7 +459,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  setValue(\"\", \"text\", \"View: \" + $datapoint);
+  setValue(\"\", \"text\", \"View: \" + $datapoint) ;
 }" 0
  E 0 1 1 0 1 E U  0 E 2 2 34 17
 0 2 0 "s" 0 0 0 192 0 0  2 2
@@ -937,13 +936,13 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  110 219 110 193
-1 694 39 "" 0
+1 690 39 "" 0
 0
-1 695 39 "" 1
+1 691 39 "" 1
 0
-1 696 39 "" 2
+1 692 39 "" 2
 0
-1 697 39 "" 3
+1 693 39 "" 3
 0
 1 289 11 "" 12
 0
@@ -1102,7 +1101,6 @@ LANG:1 6 Layer8
 "$datapoint""$datapoint"
 3 39 ""
 "objects\\nav_usr\\STS\\STS_Clock.pnl" 80 665 T 350 1 0 1  -50 -600  
-2
+1
 "$datapoint""$datapoint"
-"$refDatapoint""$refDatapoint"
 0
