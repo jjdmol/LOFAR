@@ -1374,11 +1374,11 @@ void navConfigPSIndicationTriggered(string identifier, dyn_dyn_anytype result) {
 //  DebugTN("Node found from datapoint : ", nodeID);
 
   //Check if action is enable and if point is allready in tree or not
-  if (nodeID > 0  && action = d) {
+  if (nodeID > 0  && action == "d" ) {
 
 
   // check if action = delete and if point is still available in the tree.
-  } else if (nodeID <= 0  && action = e){
+  } else if (nodeID <= 0  && action == "e"){
 
 
   } else {
