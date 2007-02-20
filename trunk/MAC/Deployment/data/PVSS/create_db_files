@@ -210,7 +210,7 @@ substitute_Cabinet_SubRack_RSPBoard_RCU()
 				board=int(rcu/8)
 				cabinet=int(board/8)
 				subrack=int(board/4)
-				sub("@cabinet@_@subrack@_@RSPBoard@_@rcu@", "Cabinet"cabinet"_Subrack"subrack"_RSPBoard"board"_rcu"rcu, dpname)
+				sub("@cabinet@_@subrack@_@RSPBoard@_@rcu@", "Cabinet"cabinet"_Subrack"subrack"_RSPBoard"board"_RCU"rcu, dpname)
 				print dpname"	"$2;
 			}
 		}

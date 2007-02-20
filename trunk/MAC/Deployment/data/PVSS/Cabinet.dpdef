@@ -1,0 +1,6 @@
+front.door			bool
+front.fan			bool
+front.temperature	float
+back.door			bool
+back.fan			bool
+back.temperature	float

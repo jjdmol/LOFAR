@@ -1,0 +1,11 @@
+SPU.Vhba			float
+SPU.Vlba			float
+SPU.Vdig			float
+SPU.temperature		float
+clock.Vfsp			float
+clock.Vclock		float
+clock.version		string
+clock.freq			int
+clock.lock160		bool
+clock.lock200		bool
+clock.temperature	float
