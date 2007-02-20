@@ -39,7 +39,6 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otbcomponents.OLAPConfigPanel;
 import org.apache.log4j.Logger;
 
 /**
@@ -53,8 +52,8 @@ import org.apache.log4j.Logger;
  */
 public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     
-    static Logger logger = Logger.getLogger(OLAPConfigPanel.class);    
-    static String name = "OLAPConfig";
+    static Logger logger = Logger.getLogger(ObservationPanel.class);    
+    static String name = "ObservationPanel";
     
    
      /** Creates new form BeanForm based upon aNode
