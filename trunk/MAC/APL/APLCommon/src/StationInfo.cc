@@ -129,25 +129,31 @@ string	PVSSDatabaseName()
 //
 // realHostname
 //
-// In SAS the stationnames are used as hostnames so the last 'C' is missing.
-// This routine tries to find out if it has to add the C to the given hostname.
+// In SAS the stationnames are used as hostnames so the last 'C' or 'T' is missing.
+// This routine tries to find out if it has to add the C or T to the given hostname.
 //
 string	realHostname(const string&	someName)
 {
-	// first figure out in which letter our machinename ends.
-	string	hostname(myHostname(false));
-	char	lastChar(*(--toUpper(hostname).end()));
-	if (lastChar != 'C' && lastChar != 'T') {
-		lastChar = '\0';
-	}
-
-	// if name ends in same char assume the name is correct.
-	string::const_iterator	riter = someName.end();
-	if (*(--riter) == lastChar) {
+	// if given name ends in a char assume the name is correct.
+	char	someLastChar(*(--(someName.end())));
+	if (someLastChar == 'C' || someLastChar == 'T') {
 		return (someName);
 	}
 
-	return (string(someName+lastChar));
+	// leaves us with ABC999 and XY999 formats
+	// when 3rd character is not a digit the name refers to a CEP machine
+	if (!isdigit(someName[2])) {
+		return (someName);
+	}
+
+	// given name must be a stationname. When myhostname ends in a T
+	// add the T else assume production and add the C
+	string	hostname(toUpper(myHostname(false)));
+	char	myLastChar(*(--(hostname.end())));
+	if (myLastChar == 'T') {
+		return (string(someName+'T'));
+	}
+	return (someName+'C');
 }
 
 
