@@ -1,0 +1,105 @@
+#!/usr/bin/env python
+#
+# $Id$
+#
+# Create fictive MAC addresses for RSP boards on the Lofar CS1 stations.
+# This script needs cepmaster0:/etc/eth1.nodes to find the MAC addresses 
+# of the input nodes. The file is created every day in a (root) cronjob
+# on liifen. This script will run on liifen only!
+#
+# The general principle is this:
+#   The lowest 3 bits of the source and destination MAC addresses in a
+#   IP header are used in a formula to decide which fiberline of the 
+#   MLT trunk is assigned. The formula is
+#
+#     trunkNumber= varA xor varB & nTrunk  (nTrunk starts at zero)
+#        where varA= lowest 3 bits of source address
+#        where varB= lowest 3 bits of destination address
+#
+import os
+from operator import *
+
+fileName  = "/etc/eth1.nodes"
+cslist    = ["CS10","CS08","CS01","CS16"]
+hostorder = [1,1,2,3]
+nTrunk    = 3       # number of lines in a trunk
+nRSP      = 4       # number of RSP boards on a station
+nNodes    = 3       # number of nodes per station
+liiDict = {}        # will hold the lii nodes and their MAC addresses
+
+#
+# Read the file with eth1 MAC addresses of input nodes
+#
+print '\n'        
+print "Script makeMACaddresses using",fileName
+print '\nFormula: trunkline= A xor B & nTrunk\n'        
+print '  where A= lowest 3 bits of source address'
+print '  where B= lowest 3 bits of destination address\n'
+myHost=os.getenv("HOST")
+if myHost != "liifen":
+  print '\nThis script will only run on liifen.\n'
+  os.abort()
+#
+#
+#
+curFile = open(fileName)
+FileLines = curFile.readlines()
+curFile.close()
+
+
+#
+# Pick up lii nodes and their MAC addresss
+#
+isLiiEntry   = False
+hostName     = None
+MACaddr      = None
+for l in FileLines :
+
+  if "lii0" in l :
+    isLiiEntry = True
+    hostName   = l.split()[1][0:6]
+    liiDict[hostName] = {}
+
+  if isLiiEntry :
+
+    if "HWaddr" in l :
+      MACaddr = l.split()[4]
+      liiDict[hostName]["HWaddr"] = MACaddr
+      varB = int(MACaddr[-2:],16) & 7
+      liiDict[hostName]["varB"] = varB
+#     print hostName, MACaddr, liiDict[hostName]["varB"],'\n'      
+
+#
+# Now we have the MAC addresses of the destination lii nodes.
+# The format of the RSP MAC addresses is
+#   10:FA:00:%02x:01:%02x  where,
+#      1st "%02x": station, 2nd = RSP board nr(0..11)
+#
+
+# loop over the CS1 stations      
+print "CSnr  node    node-MAC-addr    RSP A B trunk   RSP-MAC-address"
+print "---- ------ -----------------   -- - -    -   -----------------"
+nStation=len(cslist)
+next= 0
+for cs_id in range(0,nStation) :
+  curTrunk = 0
+  for rsp_id in range(0,nRSP) :
+    hostNr = ( (cs_id)*nNodes ) + hostorder[rsp_id]
+    hostNrStr = '%02d'%hostNr
+    inp_node = "lii0"+ hostNrStr
+    varB = liiDict[inp_node]["varB"]
+    for i in range(next,256):
+      varA= i & 7
+      if (xor(varA, varB) % nTrunk) == curTrunk:
+        station='%02x'%int(cslist[cs_id][-2:])
+        rspStr='%02x'%i
+        rspmac="10-FA-00-"+station+"-01-"+rspStr
+        next=i+1
+        print cslist[cs_id], inp_node ,\
+          liiDict[inp_node]["HWaddr"] ,\
+          "  ",rsp_id ,varA,varB, "  ",curTrunk+1, " ",rspmac
+        if curTrunk < 2 : curTrunk+=1
+        break
+  print '\n'
+print "Created at "
+os.system('date')    
