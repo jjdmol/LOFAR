@@ -53,13 +53,14 @@ static	stateFlow	stateFlowTable[] = {
 	{	CONTROL_SUSPENDED,		CTState::SUSPEND,		CTState::SUSPENDED	},
 	{	CONTROL_RELEASE,		CTState::ANYSTATE,		CTState::RELEASED	},
 	{	CONTROL_RELEASED,		CTState::RELEASE,		CTState::RELEASED	},
-	{	CONTROL_FINISH,			CTState::RELEASED,		CTState::FINISHED	},
-	{	CONTROL_FINISHED,		CTState::RELEASED,		CTState::FINISHED	},
-//	{	CONTROL_FINISH,			CTState::ANYSTATE,		CTState::FINISHED	},
-//	{	CONTROL_FINISHED,		CTState::ANYSTATE,		CTState::FINISHED	},
+	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::QUITED		},
+	{	CONTROL_QUITED,			CTState::QUIT,			CTState::QUITED		},
+//	{	CONTROL_FINISH,			CTState::RELEASED,		CTState::FINISHED	},
+//	{	CONTROL_FINISHED,		CTState::RELEASED,		CTState::FINISHED	},
+//	{	CONTROL_FINISHED,		CTState::FINISH,		CTState::FINISHED	},
 	{	CONTROL_RESYNCED,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	CONTROL_SCHEDULE,		CTState::ANYSTATE,		CTState::ANYSTATE	},
-	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::FINISH		},
+//	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::FINISH		},
 	{	0x00,					CTState::NOSTATE,		CTState::NOSTATE	}
 };
 
@@ -167,7 +168,7 @@ int main (int	argc, char*		argv[]) {
 	LOG_DEBUG_STR("resumed  -> released : " << cts.name(getNextState(CTState::RESUMED, 
 																   CTState::RELEASED)));
 	LOG_DEBUG_STR("resumed  -> finished : " << cts.name(getNextState(CTState::RESUMED, 
-																   CTState::FINISHED)));
+																   CTState::QUITED)));
 
 
 	return (0);
