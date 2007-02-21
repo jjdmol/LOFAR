@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,409 101 182 113 N "_3DFace" 6
+PANEL,605 352 182 113 N "_3DFace" 6
 "$RSPBoardNr"
 "$RackNr"
 "$SubrackNr"
@@ -365,7 +365,7 @@ LANG:1 6 Layer1
 6 0
 "rect_Subrack"
 ""
-1 31 63 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 30 68 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  "main()
 {
   stsSubRackHandleContextMenu();
@@ -380,11 +380,11 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  LOG_DEBUG(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
+  DebugTN(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
   aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
 }
 " 0
- 0 1 1 0 1 E U  1 E 31 25 159 67
+ 0 1 1 0 1 E U  1 E 30 30 158 72
 7 2
 "Ellipse56"
 ""
@@ -544,7 +544,7 @@ E E 0 1 1 0 1 E U  0 E 46 52 111 59
 6 55
 "icon_maintenance"
 ""
-1 117 64 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
+1 117 70 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
  "main()
 {
   stsSubRackHandleContextMenu();
@@ -559,10 +559,10 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  LOG_DEBUG(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
+  Debug_TN(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
   aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $RSPBoardNr, \"Station_Subrack-CS1.pnl\");
 }" 0
- 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 117 25 157 65
+ 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 117 31 157 71
 7 1
 "Ellipse55"
 ""
@@ -590,7 +590,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  LOG_DEBUG(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
+  DebugTN(\"Navigate to: \"+$datapoint,$referenceDatapoint,$RackNr,$SubrackNr,$SubrackNr);
   aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\" + $RackNr + \"_Subrack\" + $SubrackNr + \"_RSPBoard\" + $SubrackNr, \"Station_Subrack-CS1.pnl\");
 }" 0
  0 1 1 0 1 E U  0 E 47 33 108 49
