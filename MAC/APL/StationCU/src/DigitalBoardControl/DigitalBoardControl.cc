@@ -191,9 +191,12 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 		}
 
 		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
-			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
-			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
-			sendClockSetting();
+			int		newClock = (static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
+			if (newClock != itsClock) {
+				itsClock = newClock;
+				LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
+				sendClockSetting();
+			}
 			break;
 		}
 		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << 
