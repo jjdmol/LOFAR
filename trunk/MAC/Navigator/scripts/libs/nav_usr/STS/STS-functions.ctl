@@ -42,16 +42,14 @@
 ///////////////////////////////////////////////////////////////////////////////////
 void aplViewNavigateTo(string datapoint, string referenceDatapoint, string addingPart, string panelName)
 {
-  string dp="";
+  string dp=datapoint;
 
   //If the datapoint is a reference, use the reference to navigate to!!
-  if(referenceDatapoint=="") {
-    dp=datapoint;
-  } else {
+  if(referenceDatapoint!="") {
     dp=referenceDatapoint;
   }
 
-  if(dpAccessable(dp + addingPart))
+  if(dpAccessable(datapoint + addingPart))
   {
     if ("LOFAR Navigator" == myPanelName())
     {
