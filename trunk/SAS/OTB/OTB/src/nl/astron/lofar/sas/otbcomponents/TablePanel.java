@@ -49,6 +49,17 @@ public class TablePanel extends javax.swing.JPanel {
         return jTable1.getSelectedRow();
     }
     
+    /** set the selected Row
+     *
+     * @param aRow the seledcted Row
+     */
+    public void setSelectedRow(int aRow) {
+        if (jTable1.getModel().getRowCount() >= aRow) {
+            jTable1.getSelectionModel().setSelectionInterval(aRow,aRow);
+        }
+    }
+    
+    
     /** set the selectionmode for this table
      *
      *For available selectionmodes see ListSelectionModel.
