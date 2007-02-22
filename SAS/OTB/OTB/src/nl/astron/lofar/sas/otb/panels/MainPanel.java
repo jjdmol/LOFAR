@@ -75,12 +75,14 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("New");
             buttonPanel1.addButton("Delete");
+            buttonPanel1.addButton("Refresh");
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.addButton("View");
             buttonPanel1.setButtonEnabled("View",false);
         } else if (itsTabFocus.equals("VIC")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("Delete");
+            buttonPanel1.addButton("Refresh");
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.addButton("View");
             buttonPanel1.setButtonEnabled("View",false);
@@ -90,6 +92,7 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Duplicate",false);
             buttonPanel1.addButton("Modify");
             buttonPanel1.addButton("Delete");            
+            buttonPanel1.addButton("Refresh");
             buttonPanel1.addButton("Build VIC tree");
             buttonPanel1.setButtonEnabled("Modify",false);
             buttonPanel1.setButtonEnabled("Delete",false);
@@ -99,6 +102,7 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.addButton("New");
             buttonPanel1.addButton("Modify");
             buttonPanel1.addButton("Delete");
+            buttonPanel1.addButton("Refresh");
             buttonPanel1.addButton("Build TemplateTree");
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("Modify",false);
@@ -187,6 +191,9 @@ public class MainPanel extends javax.swing.JPanel
     public void checkChanged() {
         logger.debug("Check Changed status");
         if (this.hasChanged()) {
+            // keep selected tree
+            int aSavedID=itsMainFrame.getSharedVars().getTreeID();
+            int aSavedRow=this.getSelectedRow();
             itsMainFrame.setHourglassCursor();
             if (itsTabFocus.equals("PIC")) {
                 if (!((PICtableModel)PICPanel.getTableModel()).fillTable()) {
@@ -212,6 +219,10 @@ public class MainPanel extends javax.swing.JPanel
                 if (!((TemplatetableModel)TemplatesPanel.getTableModel()).fillTable()) {
                     logger.debug("error filling templateTable");
                 }
+            }
+            if (aSavedID > 0) {
+                itsMainFrame.getSharedVars().setTreeID(aSavedID);
+                this.setSelectedRow(aSavedRow);
             }   
             this.setChanged(false);
             this.validate();
@@ -351,13 +362,41 @@ public class MainPanel extends javax.swing.JPanel
         buttonPanelAction(evt.getActionCommand());
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
-    
-    /** Returns the id of the selected Tree */
-    private int getSelectedTreeID() {
-        int treeID=0;
+    /** Returns the selected row in the present tree */
+    private int getSelectedRow() {
         int aRow=-1;
         if (itsTabFocus.equals("PIC")) {
             aRow = PICPanel.getSelectedRow();
+        } else if (itsTabFocus.equals("VIC")) {
+            aRow = VICPanel.getSelectedRow();
+        } else if (itsTabFocus.equals("Templates")) {
+            aRow = TemplatesPanel.getSelectedRow();
+        } else if (itsTabFocus.equals("Components")) {
+            aRow = ComponentsPanel.getSelectedRow();
+        }
+        return aRow;
+    }
+
+    /** Sets the selected row in the present tree */
+    private void setSelectedRow(int aRow) {
+        if (aRow > -1) {
+            if (itsTabFocus.equals("PIC")) {
+                PICPanel.setSelectedRow(aRow);
+            } else if (itsTabFocus.equals("VIC")) {
+                VICPanel.setSelectedRow(aRow);
+            } else if (itsTabFocus.equals("Templates")) {
+                TemplatesPanel.setSelectedRow(aRow);
+            } else if (itsTabFocus.equals("Components")) {
+                ComponentsPanel.setSelectedRow(aRow);
+            }
+        }
+    }
+
+    /** Returns the id of the selected Tree */
+    private int getSelectedTreeID() {
+        int treeID=0;
+        int aRow=this.getSelectedRow();
+        if (itsTabFocus.equals("PIC")) {
             if ( aRow > -1) {
                 treeID = ((Integer)PICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
                 if (treeID > 0) {
@@ -367,7 +406,6 @@ public class MainPanel extends javax.swing.JPanel
                 }
             }
         } else if (itsTabFocus.equals("VIC")) {
-            aRow = VICPanel.getSelectedRow();
             if ( aRow > -1) {
                 treeID = ((Integer)VICPanel.getTableModel().getValueAt(aRow, 0)).intValue();
                 if (treeID > 0) {
@@ -377,7 +415,6 @@ public class MainPanel extends javax.swing.JPanel
                 }
             }
         } else if (itsTabFocus.equals("Templates")) {
-            aRow = TemplatesPanel.getSelectedRow();
             if ( aRow > -1) {
                 treeID = ((Integer)TemplatesPanel.getTableModel().getValueAt(aRow, 0)).intValue();
                 if (treeID > 0) {
@@ -387,7 +424,6 @@ public class MainPanel extends javax.swing.JPanel
                 }
             }
         } else if (itsTabFocus.equals("Components")) {
-            aRow = ComponentsPanel.getSelectedRow();
             if ( aRow > -1) {
                 // is the node ID in the case of Components
                 treeID = ((Integer)ComponentsPanel.getTableModel().getValueAt(aRow, 0)).intValue();
@@ -493,7 +529,8 @@ public class MainPanel extends javax.swing.JPanel
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
                     if (viewInfo(itsMainFrame.getSharedVars().getTreeID())) {
                         logger.debug("Tree has been changed, reloading tableline");
-                        ((PICtableModel)PICPanel.getTableModel()).refreshRow(PICPanel.getSelectedRow());
+                          itsMainFrame.setChanged(this.getFriendlyName(),true);
+                          checkChanged();
                     }
                 }
             }
@@ -532,7 +569,8 @@ public class MainPanel extends javax.swing.JPanel
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
                     if (viewInfo(itsMainFrame.getSharedVars().getTreeID()) ) {
                         logger.debug("Tree has been changed, reloading tableline");
-                        ((VICtableModel)VICPanel.getTableModel()).refreshRow(VICPanel.getSelectedRow());
+                          itsMainFrame.setChanged(this.getFriendlyName(),true);
+                          checkChanged();
                     }
                 }
             }
@@ -638,7 +676,8 @@ public class MainPanel extends javax.swing.JPanel
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
                     if (viewInfo(itsMainFrame.getSharedVars().getTreeID()) ) {
                         logger.debug("Tree has been changed, reloading table line");
-                        ((TemplatetableModel)TemplatesPanel.getTableModel()).refreshRow(TemplatesPanel.getSelectedRow());
+                          itsMainFrame.setChanged(this.getFriendlyName(),true);
+                          checkChanged();
                     }
                 }
             }
@@ -732,6 +771,10 @@ public class MainPanel extends javax.swing.JPanel
             }
         } else if (itsTabFocus.equals("Query Results")) {
             itsMainFrame.ToDo();
+        } else if (aButton.equals("Refresh")) {
+            //set changed flag, we want to refresh the tree
+            itsMainFrame.setChanged(this.getFriendlyName(),true);
+            checkChanged();
         } else {
             logger.debug("Other command found: "+aButton);
         }
