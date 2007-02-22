@@ -89,7 +89,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 
 	// My own parameters
 	itsTreePrefix   = globalParameterSet()->getString("prefix");
-	itsInstanceNr   = globalParameterSet()->getUint32("_instanceNr");
+	itsInstanceNr   = globalParameterSet()->getUint32("_treeID");	// !!!
 	itsHeartBeatItv = globalParameterSet()->getUint32("heartbeatInterval");
 
 	// Inform Logging manager who we are
