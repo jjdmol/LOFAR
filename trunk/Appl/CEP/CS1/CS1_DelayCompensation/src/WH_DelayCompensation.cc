@@ -65,7 +65,7 @@ namespace LOFAR
       // Initialize our private data structures.
       getConverterConfig(itsParamSet);
       getBeamDirections(itsParamSet);
-      getStationPositions(itsParamSet);
+      getPhaseCentres(itsParamSet);
       getObservationEpoch(itsParamSet);
       setPositionDiffs();
 
@@ -225,7 +225,7 @@ namespace LOFAR
     }
 
 
-    void WH_DelayCompensation::getStationPositions(const ParameterSet& ps)
+    void WH_DelayCompensation::getPhaseCentres(const ParameterSet& ps)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -242,18 +242,19 @@ namespace LOFAR
       // Get the antenna positions from the parameter set. The antenna
       // positions are stored as one large vector of doubles.
       vector<double> pos;
-      pos = ps.getDoubleVector("Observation.StationPositions");
+      pos = ps.getDoubleVector("Observation.PhaseCentres");
+      //pos = ps.getDoubleVector("Observation.StationPositions");
       ASSERTSTR(pos.size() == 3 * itsNrStations,
                 pos.size() << " == " << 3 * itsNrStations);
 
-      // Reserve space in \a itsStationPositions to avoid reallocations.
-      itsStationPositions.reserve(itsNrStations);
+      // Reserve space in \a itsPhaseCentres to avoid reallocations.
+      itsPhaseCentres.reserve(itsNrStations);
 
       // Split the \a pos vector into separate Position objects.
       for (uint i = 0; i < itsNrStations; ++i) {
-        itsStationPositions.
+        itsPhaseCentres.
           push_back(Position(pos[3*i], pos[3*i+1], pos[3*i+2], posType));
-	LOG_TRACE_VAR_STR(" [" << i << "] = " << itsStationPositions[i]);
+	LOG_TRACE_VAR_STR(" [" << i << "] = " << itsPhaseCentres[i]);
       }
     }
 
@@ -306,16 +307,16 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-      // Reserve space in \a itsPositionDiffs to avoid reallocations.
-      itsPositionDiffs.reserve(itsStationPositions.size());
+      // Reserve space in \a itsPhasePositionDiffs to avoid reallocations.
+      itsPhasePositionDiffs.reserve(itsPhaseCentres.size());
 
       // Calculate the station to reference station position difference vector
       // all stations.
       LOG_TRACE_VAR("Position difference vectors:");
-      const Position& p0 = itsStationPositions[0];
-      for (uint i = 0; i < itsStationPositions.size(); ++i) {
-        itsPositionDiffs.push_back(itsStationPositions[i] - p0);
-        LOG_TRACE_VAR_STR(" [" << i << "] = " << itsPositionDiffs[i]);
+      const Position& p0 = itsPhaseCentres[0];
+      for (uint i = 0; i < itsPhaseCentres.size(); ++i) {
+        itsPhasePositionDiffs.push_back(itsPhaseCentres[i] - p0);
+        LOG_TRACE_VAR_STR(" [" << i << "] = " << itsPhasePositionDiffs[i]);
       }
     }
 
@@ -343,7 +344,7 @@ namespace LOFAR
 
       // Convert the source coordinates to ITRF, for all beams and all
       // stations for the epoch "after-end" of the current time interval.
-      RequestData request (itsBeamDirections, itsStationPositions, 
+      RequestData request (itsBeamDirections, itsPhaseCentres, 
                            itsObservationEpoch[itsLoopCount]);
       ResultData result;
       itsConverter->j2000ToItrf(result, request);
@@ -366,13 +367,13 @@ namespace LOFAR
       // delays. Please remember that the vector result.direction stores the
       // directions per epoch, per position, per direction. I.e. the first
       // itsBeamDirections.size() elements contain the converted directions
-      // for itsStationPositions[0], the second for itsStationPositions[1],
+      // for itsPhaseCentres[0], the second for itsPhaseCentres[1],
       // etc.
       LOG_TRACE_CALC("Beamlet geometrical delays:");
       for (uint i = 0; i < itsNrDelays; ++i) {
         uint j = i / itsBeamDirections.size();
         itsDelaysAfterEnd[i] = 
-	  (result.direction[i] * itsPositionDiffs[j]) / speedOfLight;
+	  (result.direction[i] * itsPhasePositionDiffs[j]) / speedOfLight;
         LOG_TRACE_CALC_STR(" [" << i << "]: " << itsDelaysAfterEnd[i]);
       }
     }
