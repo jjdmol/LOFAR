@@ -126,12 +126,12 @@ namespace LOFAR
       // AZEL.
       void getBeamDirections(const ACC::APS::ParameterSet& ps);
 
-      // Get the station positions from the parameter file and initialize \c
-      // itsStationPositions. Station positions must be specified as
-      // <tt>(longitude, latitude, height, position-type)</tt>. The position
-      // angles are in radians; height is in meters; the position type must be
-      // ITRF.
-      void getStationPositions(const ACC::APS::ParameterSet& ps);
+      // Get the station phase centres from the parameter file and
+      // initialize \c itsStationPositions. Station phase centres must
+      // be specified as <tt>(longitude, latitude, height,
+      // position-type)</tt>. The position angles are in radians;
+      // height is in meters; the position type must be ITRF.
+      void getPhaseCentres(const ACC::APS::ParameterSet& ps);
 
       // Get the observation epoch from the parameter file and initialize \c
       // itsObservationEpoch. The epoch is a series of times, with an
@@ -197,14 +197,14 @@ namespace LOFAR
       // Beam directions.
       vector<AMC::Direction>        itsBeamDirections;
 
-      // Station positions. 
-      vector<AMC::Position>         itsStationPositions;
+      // Station phase centres. 
+      vector<AMC::Position>         itsPhaseCentres;
 
       // Observation epoch.
       vector<AMC::Epoch>            itsObservationEpoch;
 
       // Station to reference station position difference vectors.
-      vector<AMC::Position>         itsPositionDiffs;
+      vector<AMC::Position>         itsPhasePositionDiffs;
 
       // Delays for all stations for the epoch at the begin of the current
       // time interval.
