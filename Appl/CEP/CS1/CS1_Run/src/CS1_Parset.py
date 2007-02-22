@@ -34,12 +34,19 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self['Input.NRSPBoards'] = len(stationList)
         self['Storage.StorageStationNames'] = [s.getName() for s in stationList]
         positionlist = list()
+        phaseslist = list()
         for s in stationList:
             (x,y,z) = s.getPosition()
+            (xp, yp, zp) = s.getPhaseCentre()
             positionlist.append(x)
             positionlist.append(y)
             positionlist.append(z)
+            phaseslist.append(xp)
+            phaseslist.append(yp)
+            phaseslist.append(zp)
         self['Observation.StationPositions'] = positionlist
+        self['Observation.PhaseCentres'] = phaseslist
+
         for i in range(0, len(stationList)):
             station = stationList[i]
             # todo: this doesn't work yet with multiple rspboards per station
