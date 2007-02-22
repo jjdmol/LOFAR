@@ -1,5 +1,5 @@
 /*
- * LoadFileDialog.java
+ * SetServerDialog.java
  *
  *  Copyright (C) 2002-2007
  *  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -72,7 +72,7 @@ public class SetServerDialog extends javax.swing.JDialog {
         jTextField2 = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("LOFAR Load File");
+        setTitle("LOFAR set server");
         setAlwaysOnTop(true);
         setModal(true);
         setName("loadFileDialog");
@@ -112,7 +112,7 @@ public class SetServerDialog extends javax.swing.JDialog {
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                                 .add(layout.createSequentialGroup()
-                                    .add(cancelButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .add(cancelButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 75, Short.MAX_VALUE)
                                     .add(17, 17, 17))
                                 .add(layout.createSequentialGroup()
                                     .add(jLabel1)
