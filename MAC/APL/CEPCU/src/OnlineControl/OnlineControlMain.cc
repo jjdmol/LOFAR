@@ -31,22 +31,22 @@ using namespace LOFAR::CEPCU;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname
-    if(argc < 2)
-	{
-	  printf("Unexpected number of arguments: %d\n",argc);
-	  printf("%s usage: %s <controller name>\n",argv[0],argv[0]);
-	  exit(-1);
+	if(argc < 2) {
+		printf("Unexpected number of arguments: %d\n",argc);
+		printf("%s usage: %s <controller name>\n",argv[0],argv[0]);
+		return(-1);
 	}
+
 	GCFTask::init(argc, argv);
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
 
-	OnlineControl	ofc(argv[1]);
-	ofc.start(); 	// make initial transition
+	OnlineControl	olc(argv[1]);
+	olc.start(); 	// make initial transition
 
 	GCFTask::run();
 
-	return 0;
+	return (0);
 }
 
