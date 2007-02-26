@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <unistd.h>
+#include <sys/socket.h>
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
 
