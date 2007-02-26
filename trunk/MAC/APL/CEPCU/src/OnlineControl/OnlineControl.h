@@ -42,7 +42,7 @@
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
 
-#include <CEPApplicationManager.h>
+#include <CEPApplMgr.h>
 
 //# Common Includes
 #include <Common/lofar_string.h>
@@ -69,7 +69,7 @@ using	APLCommon::ParentControl;
 
 class OnlineControl : public GCFTask,
                       public APLCommon::PropertySetAnswerHandlerInterface,
-                      public CEPApplicationManagerInterface
+                      public CEPApplMgrInterface
 {
 public:
 	explicit OnlineControl(const string& cntlrName);
@@ -81,28 +81,30 @@ public:
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state (GCFEvent& e, 
 									 GCFPortInterface& p);
-	
 	// Normal control mode. 
    	GCFEvent::TResult active_state  (GCFEvent& e, 
 									 GCFPortInterface& p);
-
 	// Finishing mode. 
-	GCFEvent::TResult finished_state(GCFEvent& event, 
-									 GCFPortInterface& port);
+	GCFEvent::TResult finishing_state(GCFEvent& event, 
+									  GCFPortInterface& port);
+	
+	// Interrupthandler for switching to finisingstate when exiting the program
+	static void sigintHandler (int	signum);
+	void	    finish();
 
-protected: // implemenation of abstract CEPApplicationManagerInterface methods
-    void    appBooted(const string& procName, uint16 result);
-    void    appDefined(const string& procName, uint16 result);
-    void    appInitialized(const string& procName, uint16 result);
-    void    appRunDone(const string& procName, uint16 result);
-    void    appPaused(const string& procName, uint16 result);
-    void    appQuitDone(const string& procName, uint16 result);
-    void    appSnapshotDone(const string& procName, uint16 result);
-    void    appRecovered(const string& procName, uint16 result);
-    void    appReinitialized(const string& procName, uint16 result);
-    void    appReplaced(const string& procName, uint16 result);
-    string  appSupplyInfo(const string& procName, const string& keyList);
-    void    appSupplyInfoAnswer(const string& procName, const string& answer);
+protected: // implemenation of abstract CEPApplMgrInterface methods
+    void    appBooted			(const string& procName, uint16 result);
+    void    appDefined			(const string& procName, uint16 result);
+    void    appInitialized		(const string& procName, uint16 result);
+    void    appRunDone			(const string& procName, uint16 result);
+    void    appPaused			(const string& procName, uint16 result);
+    void    appQuitDone			(const string& procName, uint16 result);
+    void    appSnapshotDone		(const string& procName, uint16 result);
+    void    appRecovered		(const string& procName, uint16 result);
+    void    appReinitialized	(const string& procName, uint16 result);
+    void    appReplaced			(const string& procName, uint16 result);
+    string  appSupplyInfo		(const string& procName, const string& keyList);
+    void    appSupplyInfoAnswer (const string& procName, const string& answer);
   
 private:
 	// avoid defaultconstruction and copying
@@ -119,7 +121,7 @@ private:
 	void	 setState(CTState::CTstateNr     newState);
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
-	typedef boost::shared_ptr<CEPApplicationManager> CEPApplicationManagerPtr;
+	typedef boost::shared_ptr<CEPApplMgr> CEPApplMgrPtr;
 
    	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
    	GCFMyPropertySetPtr           itsPropertySet;
@@ -131,7 +133,7 @@ private:
 
 	GCFTimerPort*			itsTimerPort;
 
-    map<string, CEPApplicationManagerPtr>  itsCepApplications;
+    map<string, CEPApplMgrPtr>  itsCepApplications;
     vector<ACC::APS::ParameterSet> itsCepAppParams;
     ACC::APS::ParameterSet  itsResultParams;
 
@@ -142,8 +144,6 @@ private:
 	uint32					itsInstanceNr;
 	ptime					itsStartTime;
 	ptime					itsStopTime;
-	uint32					itsClaimPeriod;
-	uint32					itsPreparePeriod;
 };
 
   };//CEPCU

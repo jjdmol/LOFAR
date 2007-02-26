@@ -4,14 +4,14 @@ OnlineControl_CPPFLAGS		= -Wno-deprecated \
 								  -fmessage-length=0 \
 								  -fdiagnostics-show-location=once
 
-OnlineControl_SOURCES		= CEPApplicationManager.cc \
+OnlineControl_SOURCES		= CEPApplMgr.cc \
 								OnlineControl.cc \
 								OnlineControlMain.cc 
 
 OnlineControl_LDADD		= $(LOFAR_DEPEND)
 OnlineControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
-NOINSTHDRS 					= CEPApplicationManager.h \
+NOINSTHDRS 					= CEPApplMgr.h \
 								OnlineControl.h \
 							  	OnlineControlDefines.h
 

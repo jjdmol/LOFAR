@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <signal.h>
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
@@ -29,6 +30,7 @@
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
+#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
@@ -51,6 +53,9 @@ namespace LOFAR {
     using namespace ACC::ALC;
 	namespace CEPCU {
 	
+// static pointer to this object for signal handler
+static OnlineControl*	thisOnlineControl = 0;
+
 //
 // OnlineControl()
 //
@@ -70,9 +75,7 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsTreePrefix       (""),
 	itsInstanceNr       (0),
 	itsStartTime        (),
-	itsStopTime         (),
-	itsClaimPeriod      (),
-	itsPreparePeriod    ()
+	itsStopTime         ()
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -80,18 +83,16 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
 	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
 
-
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");
 	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
 
 	// get Observation based information
+// REO do we need those????
 	itsStartTime     = time_from_string(globalParameterSet()->
 											 getString("Observation.startTime"));
 	itsStopTime      = time_from_string(globalParameterSet()->
 											 getString("Observation.stopTime"));
-	itsClaimPeriod   = globalParameterSet()->getTime  ("Observation.claimPeriod");
-	itsPreparePeriod = globalParameterSet()->getTime  ("Observation.preparePeriod");
 
 	// attach to parent control task
 	itsParentControl = ParentControl::instance();
@@ -104,8 +105,8 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
 	// for debugging purposes
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
-	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_STRINGS);
 
 	setState(CTState::CREATED);
 }
@@ -117,13 +118,26 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 OnlineControl::~OnlineControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
+}
 
-	if (itsPropertySet) {
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
-		itsPropertySet->disable();
+//
+// sigintHandler(signum)
+//
+void OnlineControl::sigintHandler(int	signum)
+{
+	LOG_DEBUG (formatString("SIGINT signal detected(%d)", signum));
+
+	if (thisOnlineControl) {
+		thisOnlineControl->finish();
 	}
+}
 
-	// ...
+//
+// finish()
+//
+void OnlineControl::finish()
+{
+	TRAN(OnlineControl::finishing_state);
 }
 
 //
@@ -135,8 +149,7 @@ void    OnlineControl::setState(CTState::CTstateNr     newState)
 
 	if (itsPropertySet) {
 		CTState		cts;
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),
-								 GCFPVString(cts.name(newState)));
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString(cts.name(newState)));
 	}
 }   
 
@@ -208,7 +221,7 @@ void OnlineControl::handlePropertySetAnswer(GCFEvent& answer)
 GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -218,8 +231,8 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 
     case F_INIT: {
 		// Get access to my own propertyset.
-		LOG_DEBUG ("Activating PropertySet");
 		string	propSetName = formatString(ONC_PROPSET_NAME, itsInstanceNr);
+		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
 		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
 																  ONC_PROPSET_TYPE,
 																  PS_CAT_TEMPORARY,
@@ -232,6 +245,12 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 	case F_TIMER:
 		if (!itsPropertySetInitialized) {
 			itsPropertySetInitialized = true;
+	
+			// First redirect signalHandler to our finishing state to leave PVSS
+			// in the right state when we are going down
+			thisOnlineControl = this;
+			signal (SIGINT,  OnlineControl::sigintHandler);	// ctrl-c
+			signal (SIGTERM, OnlineControl::sigintHandler);	// kill
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
@@ -241,6 +260,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task");
 			itsParentPort = itsParentControl->registerTask(this);
+			// results in CONTROL_CONNECT
 
 			LOG_DEBUG ("Going to operational state");
 			TRAN(OnlineControl::active_state);				// go to next state.
@@ -271,7 +291,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 //
 GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -325,13 +345,11 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		CONTROLClaimEvent		msg(event);
 		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
 		setState(CTState::CLAIM);
-		setState(CTState::CLAIMED);
 		CONTROLClaimedEvent             answer;
 		answer.cntlrName = getName();
 		answer.result    = doClaim(msg.cntlrName);
-		if(answer.result == CT_RESULT_NO_ERROR) 
-		{
-		  setState(CTState::CLAIMED);
+		if (answer.result == CT_RESULT_NO_ERROR) {
+			setState(CTState::CLAIMED);
 		}
 		port.send(answer);
 		
@@ -345,9 +363,8 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		CONTROLPreparedEvent    answer;
 		answer.cntlrName = getName();
 		answer.result    = doPrepare(msg.cntlrName);
-		if(answer.result == CT_RESULT_NO_ERROR) 
-		{
-		  setState(CTState::PREPARED);
+		if (answer.result == CT_RESULT_NO_ERROR) {
+			setState(CTState::PREPARED);
 		}
 		port.send(answer);
 		break;
@@ -356,7 +373,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	case CONTROL_RESUME: {
 		CONTROLResumeEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
-		setState(CTState::ACTIVE);
+		setState(CTState::RESUME);
 		// TODO: implement something useful
 		CONTROLResumedEvent		answer;
 		answer.cntlrName = msg.cntlrName;
@@ -397,23 +414,31 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 }
 
 //
-// finished_state(event, port)
+// finishing_state(event, port)
 //
-// Finishing state. 
 //
-GCFEvent::TResult OnlineControl::finished_state(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("finishing:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
 	case F_ENTRY: {
-      GCFTask::stop();
-      break;
+		// update PVSS
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("finished"));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+
+		itsTimerPort->setTimer(1.0);
+		break;
 	}
+
+	case F_TIMER:
+		GCFTask::stop();
+		break;
+
 	default:
-		LOG_DEBUG("active_state, default");
+		LOG_DEBUG("finishing_state, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}
@@ -422,80 +447,79 @@ GCFEvent::TResult OnlineControl::finished_state(GCFEvent& event, GCFPortInterfac
 }
 
 
-
-
 //
 // doClaim(cntlrName)
 //
+// Create ParameterSets for all Applications the controller has to manage.
+//
 uint16_t OnlineControl::doClaim(const string& cntlrName)
 {
-  uint16_t result = CT_RESULT_NO_ERROR;
-  try
-  {
-	string processScope("AC.process");
-	string onlineCtrlPrefix(globalParameterSet()->locateModule("OnlineCtrl") + "OnlineCtrl.");
-  
-	vector<string> procNames, nodes;
-	string executable, hostName, startstoptype;
-	string ldName(getName().c_str());
-	
-	procNames = globalParameterSet()->getStringVector(onlineCtrlPrefix+"ApplCtrl.application");
+	uint16_t 		result = CT_RESULT_NO_ERROR;
+	ParameterSet*	thePS  = globalParameterSet();
+	try {
+		// get prefix of my stuff.
+		// string myPrefix(thePS->locateModule("OnlineCtrl") + "OnlineCtrl.");
+		string 	myPrefix;
 
-	for(size_t i=0;i<procNames.size();i++)
-	{
-	  string procName = procNames[i];
+		// Get list of all application that should be managed
+		// Note: each application = 1 ACC
+		vector<string> applList = thePS->getStringVector(myPrefix+"applications");
 
-	  startstoptype = globalParameterSet()->getString(formatString("%s%s._startstopType",
-																   onlineCtrlPrefix.c_str(),
-																   procName.c_str()));
-	  executable    = globalParameterSet()->getString(formatString("%s%s._executable",
-																   onlineCtrlPrefix.c_str(),
-																   procName.c_str()));
-	  hostName      = globalParameterSet()->getString(formatString("%s%s._hostname",
-																   onlineCtrlPrefix.c_str(),
-																   procName.c_str()));
-	  nodes   = globalParameterSet()->getStringVector(formatString("%s%s._nodes",
-																   onlineCtrlPrefix.c_str(),
-																   procName.c_str()));
+		for (size_t a = 0; a < applList.size(); a++) {
+			// Allocate an CEPApplManager for each application
+			string 			applName(applList[a]);
+			string			applPrefix(myPrefix+applName+".");
+			CEPApplMgrPtr	accClient(new CEPApplMgr(*this, applName));
+			itsCepApplications[applName] = accClient;
 
-	  CEPApplicationManagerPtr accClient(new CEPApplicationManager(*this, procName));
-	  itsCepApplications[procName] = accClient;
-	  
-	  ACC::APS::ParameterSet params;
-	  params.clear();
-	  params.replace("AC.application", cntlrName);
-	  // import the ApplCtrl section
-	  params.adoptCollection(globalParameterSet()->makeSubset(onlineCtrlPrefix+"ApplCtrl", "AC"));
-	  // import the <procname> section
-	  params.adoptCollection(globalParameterSet()->makeSubset(onlineCtrlPrefix+procName, procName));
-	  // import the OLAP section
-	  params.adoptCollection(globalParameterSet()->makeSubset(onlineCtrlPrefix+"OLAP", "OLAP"));
-	  
-	  // add some keys to cope with the differences between the OTDB and ACC
-	  params.replace("AC.resultfile", formatString("./ACC-%s_%s_result.param", cntlrName.c_str(),procName.c_str()));
-	  params.replace("AC.process[0].count","1");
-	  params.replace("AC.application",procName);
-	  params.replace("AC.process[1].ID",procName);
-	  params.replace("AC.hostname",hostName);
-	  params.replace(formatString("%s.%s[0].startstoptype",procName.c_str(),procName.c_str()),startstoptype);
-	  params.replace(formatString("%s.%s[0].executable",procName.c_str(),procName.c_str()),executable);
+			// Create a parameterSet for this AC.
+			ParameterSet params;
+			params.clear();
+			// import and extend the ApplCtrl section
+			params.adoptCollection(thePS->makeSubset(myPrefix+"ApplCtrl","ApplCtrl"));
+			params.replace("ApplCtrl.application", applName);
+			params.replace("ApplCtrl.processes", thePS->getString(applPrefix+"processes"));
+			params.replace("ApplCtrl.resultfile", formatString(
+										"./ACC-%s_result.param", applName.c_str()));
 
-	  // create nodelist
-	  int nodeIndex=1;
-	  for(vector<string>::iterator it=nodes.begin();it!=nodes.end();++it)
-	  {
-		params.replace(formatString("AC.%s[%d].node",procName.c_str(),nodeIndex++),*it);
-	  }
-	  itsCepAppParams.push_back(params);
+			// add application info
+			params.adoptCollection(thePS->makeSubset(applPrefix,applName+"."));
+
+			// import extra tree part if necc.
+			vector<string>	extraParts=thePS->getStringVector(applPrefix+"extraInfo");
+			for (size_t e = 0; e < extraParts.size(); e++) {
+				if (extraParts[e][0] == '.') {	// relative part?
+					string	partName = extraParts[e].substr(1);
+					params.adoptCollection(thePS->makeSubset(myPrefix+partName, 
+														 	 partName));
+				}
+				else {
+					params.adoptCollection(thePS->makeSubset(extraParts[e],
+															 extraParts[e]));
+				}
+			}
+
+			// always add Observation
+			string	obsPrefix(thePS->locateModule("Observation"));
+			params.adoptCollection(thePS->makeSubset(obsPrefix+"Observation", "Observation"));
+//			params.substractSubset(myPrefix);
+
+			// create nodelist
+//			int nodeIndex(1);
+//			for (vector<string>::iterator it = nodes.begin();it != nodes.end(); ++it) {
+//				params.replace(formatString("ApplCtrl.%s[%d].node",procName.c_str(),nodeIndex++),*it);
+//			}
+
+			itsCepAppParams.push_back(params);
+
+		} // for applications
 	}
-  }
-  catch(APSException &e)
-  {
-	// key not found. skip
-	LOG_FATAL(e.text());
-	result = CT_RESULT_UNSPECIFIED;
-  }
-  return result;
+	catch(APSException &e) {
+		// key not found. skip
+		LOG_FATAL(e.text());
+		result = CT_RESULT_UNSPECIFIED;
+	}
+	return result;
 }
 
 //
@@ -503,76 +527,69 @@ uint16_t OnlineControl::doClaim(const string& cntlrName)
 //
 uint16_t OnlineControl::doPrepare(const string&	cntlrName)
 {
-  uint16_t result = CT_RESULT_NO_ERROR;
+	uint16_t result = CT_RESULT_NO_ERROR;
 
-  try
-  {
-	// TODO use parameterset of 'cntlrname' when being shared controller
+	try {
+		// TODO use parameterset of 'cntlrname' when being shared controller
+		for (size_t i = 0; i < itsCepAppParams.size(); i++) {
+			string applName = itsCepAppParams[i].getString("ApplCtrl.application");
+			string paramFileName(formatString("ACC-%s.param", applName.c_str()));
+			itsCepAppParams[i].writeFile(paramFileName);
 
-	for(size_t i = 0;i < itsCepAppParams.size();i++)
-	{
-	  string procName = itsCepAppParams[i].getString("AC.process[1].ID");
-	  string hostName = itsCepAppParams[i].getString("AC.hostname");
-	  string paramFileName(formatString("ACC-%s_%s.param", cntlrName.c_str(),procName.c_str()));
-	  itsCepAppParams[i].writeFile(paramFileName);
-  
-	  // schedule all ACC commands
-	  time_t startTime  = to_time_t(itsStartTime);
-	  time_t initTime   = startTime  - itsCepAppParams[i].getTime("AC.timeout_init");
-	  time_t defineTime = initTime   - itsCepAppParams[i].getTime("AC.timeout_define") - 
-		                               itsCepAppParams[i].getTime("AC.timeout_startup");
-	  time_t bootTime   = defineTime - itsCepAppParams[i].getTime("AC.timeout_createsubsets");
-	  time_t now = time(0);
-	  time_t stopTime = to_time_t(itsStopTime);
-	  LOG_DEBUG(formatString("%d now %s time %d", now,        ctime(&now), time(0)));
-	  LOG_DEBUG(formatString("%d boot %s",        bootTime,   ctime(&bootTime)));
-	  LOG_DEBUG(formatString("%d define %s",      defineTime, ctime(&defineTime)));
-	  LOG_DEBUG(formatString("%d init %s",        initTime,   ctime(&initTime)));
-	  LOG_DEBUG(formatString("%d start %s",       startTime,  ctime(&startTime)));
-	  LOG_DEBUG(formatString("%d stop %s",        stopTime,   ctime(&stopTime)));
-	
-	  if (now > bootTime)
-	  {
-		APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
-		LOG_WARN("Cannot guarantee all CEP processes are started in time.");
-	  }
-	  else
-      {
-		CEPApplicationManagerPtr cepAppPtr = itsCepApplications[procName];
-		if(NULL != cepAppPtr)
-		{
-		  switch (cepAppPtr->getLastOkCmd())
-		  {
-	      case ACCmdNone:
-			cepAppPtr->boot(bootTime, paramFileName);
-			break;
-        
-          case ACCmdBoot:
-			cepAppPtr->define(defineTime);
-			break;
-        
-          case ACCmdDefine:
-          case ACCmdInit:
-          case ACCmdRun:
-			cepAppPtr->recover(0, "snapshot-DB");
-			break;
-              
-          default:
-			assert(0);
-			break;
-		  }   
-		} 
-		APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
-	  }
+			// REO where do we need all these times for????
+			// schedule all ACC commands
+			time_t startTime  = to_time_t(itsStartTime);
+			time_t initTime   = startTime  - itsCepAppParams[i].getTime("ApplCtrl.timeout_init");
+			time_t defineTime = initTime   - itsCepAppParams[i].getTime("ApplCtrl.timeout_define") - 
+			itsCepAppParams[i].getTime("ApplCtrl.timeout_startup");
+			time_t bootTime   = defineTime - itsCepAppParams[i].getTime("ApplCtrl.timeout_createsubsets");
+			time_t now = time(0);
+			time_t stopTime = to_time_t(itsStopTime);
+			LOG_DEBUG(formatString("%d now %s time %d", now,        ctime(&now), time(0)));
+			LOG_DEBUG(formatString("%d boot %s",        bootTime,   ctime(&bootTime)));
+			LOG_DEBUG(formatString("%d define %s",      defineTime, ctime(&defineTime)));
+			LOG_DEBUG(formatString("%d init %s",        initTime,   ctime(&initTime)));
+			LOG_DEBUG(formatString("%d start %s",       startTime,  ctime(&startTime)));
+			LOG_DEBUG(formatString("%d stop %s",        stopTime,   ctime(&stopTime)));
+
+			if (now > bootTime) {
+//				APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
+				LOG_WARN("Cannot guarantee all CEP processes are started in time.");
+			}
+			else {
+				CEPApplMgrPtr cepAppPtr = itsCepApplications[applName];
+				if(cepAppPtr) {
+					switch (cepAppPtr->getLastOkCmd()) {
+					case ACCmdNone:
+						cepAppPtr->boot(bootTime, paramFileName);
+						break;
+
+					case ACCmdBoot:
+						cepAppPtr->define(defineTime);
+						break;
+
+					case ACCmdDefine:
+					case ACCmdInit:
+					case ACCmdRun:
+						cepAppPtr->recover(0, "snapshot-DB");
+						break;
+
+					default:
+						assert(0);
+						break;
+					}   
+				} 
+//				APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
+			}
+		}
 	}
-  }
-  catch(APSException &e)
-  {
-	// key not found. skip
-	LOG_FATAL(e.text());
-	result = CT_RESULT_UNSPECIFIED;
-  }
-  return result;
+	catch(APSException &e) {
+		// key not found. skip
+		LOG_FATAL(e.text());
+		result = CT_RESULT_UNSPECIFIED;
+	}
+
+	return (result);
 }
 
 //
@@ -580,33 +597,27 @@ uint16_t OnlineControl::doPrepare(const string&	cntlrName)
 //
 void OnlineControl::doRelease(void)
 {
-  try
-  {
-	for(size_t i = 0;i < itsCepAppParams.size();i++)
-	{
-	  string hostName, remoteFile, resultFile, procName;
-	  hostName = itsCepAppParams[i].getString("AC.hostname");
-	  procName = itsCepAppParams[i].getString("AC.process[1].ID");
-	  resultFile = formatString("ACC-%s_%s_result.param", getName().c_str(),procName.c_str());
-	  remoteFile = string(LOFAR_SHARE_LOCATION) + string("/") + resultFile;
-	  APLCommon::APLUtilities::copyFromRemote(hostName,remoteFile,resultFile);
-	  itsResultParams.adoptFile(resultFile);
-	  //  itsResultParams.replace(KVpair(formatString("%s.quality", getName().c_str()), (int) _qualityGuard.getQuality()));
-	  if (!itsResultParams.isDefined(formatString("%s.faultyNodes", getName().c_str())))
-	  {
-		itsResultParams.add(formatString("%s.faultyNodes", getName().c_str()), "");
-	  }
-	  itsResultParams.writeFile(formatString("%s_result.param", getName().c_str()));
+	try {
+		for(size_t i = 0;i < itsCepAppParams.size();i++) {
+			string remoteFile, resultFile, applName;
+			applName = itsCepAppParams[i].getString("ApplCtrl.application");
+			resultFile = formatString("ACC-%s_result.param", applName.c_str());
+			remoteFile = string(LOFAR_SHARE_LOCATION) + string("/") + resultFile;
+//			APLCommon::APLUtilities::copyFromRemote(hostName,remoteFile,resultFile);
+			itsResultParams.adoptFile(resultFile);
+			//  itsResultParams.replace(KVpair(formatString("%s.quality", getName().c_str()), (int) _qualityGuard.getQuality()));
+			if (!itsResultParams.isDefined(formatString("%s.faultyNodes", getName().c_str()))) {
+				itsResultParams.add(formatString("%s.faultyNodes", getName().c_str()), "");
+			}
+			itsResultParams.writeFile(formatString("%s_result.param", getName().c_str()));
+		}
 	}
-  }
-  catch(...)
-  {
-  }
-  map<string, CEPApplicationManagerPtr>::iterator it;
-  for(it = itsCepApplications.begin();it != itsCepApplications.end();++it)
-  {
-	it->second->quit(0);
-  }
+	catch(...) {
+	}
+	map<string, CEPApplMgrPtr>::iterator it;
+	for(it = itsCepApplications.begin();it != itsCepApplications.end();++it) {
+		it->second->quit(0);
+	}
 }
 
 //
@@ -614,11 +625,12 @@ void OnlineControl::doRelease(void)
 //
 void OnlineControl::finishController(uint16_t /*result*/)
 {
-  setState(CTState::RELEASE);
-  doRelease();
-  setState(CTState::RELEASED);
-  LOG_DEBUG ("Going to finished state");
-  TRAN(OnlineControl::finished_state); // go to next state.
+	setState(CTState::RELEASE);
+	doRelease();
+	setState(CTState::RELEASED);
+
+	LOG_DEBUG ("Going to finishing state");
+	TRAN(OnlineControl::finishing_state); // go to next state.
 }
 
 //
@@ -636,171 +648,187 @@ void OnlineControl::_disconnectedHandler(GCFPortInterface& port)
 	port.close();
 }
 
+//
+// appBooted(procName, result)
+//
 void OnlineControl::appBooted(const string& procName, uint16 result)
 {
-  LOG_INFO_STR("appBooted from " << procName);
-  if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  
-  {
-    time_t startTime  = to_time_t(itsStartTime);
-    time_t initTime   = startTime  - itsCepAppParams[0].getTime("AC.timeout_init");
-    time_t defineTime = initTime   - itsCepAppParams[0].getTime("AC.timeout_define") - 
-                                     itsCepAppParams[0].getTime("AC.timeout_startup");
-	map<string,CEPApplicationManagerPtr>::iterator it = itsCepApplications.find(procName);
-	if(it != itsCepApplications.end())
-	{
-	  it->second->define(defineTime);
+	LOG_INFO_STR("appBooted from " << procName);
+	if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  {
+		time_t startTime  = to_time_t(itsStartTime);
+		time_t initTime   = startTime  - itsCepAppParams[0].getTime("ApplCtrl.timeout_init");
+		time_t defineTime = initTime   - itsCepAppParams[0].getTime("ApplCtrl.timeout_define") - 
+										 itsCepAppParams[0].getTime("ApplCtrl.timeout_startup");
+		map<string,CEPApplMgrPtr>::iterator it = itsCepApplications.find(procName);
+		if(it != itsCepApplications.end()) {
+			it->second->define(defineTime);
+		}
 	}
-  }
-  else if (result == 0) // Error
-  {
-    LOG_ERROR("Error in ACC. Stops CEP application and releases Online Control.");
-	finishController(CT_RESULT_UNSPECIFIED);
-  }
+	else if (result == 0) { // Error
+		LOG_ERROR("Error in ACC. Stops CEP application and releases Online Control.");
+		finishController(CT_RESULT_UNSPECIFIED);
+	}
 }
 
+//
+// appDefined(procName, result)
+//
 void OnlineControl::appDefined(const string& procName, uint16 result)
 {
-  LOG_INFO_STR("appDefined from " << procName);
-  if (result == (AcCmdMaskOk | AcCmdMaskScheduled))
-  {
-    time_t startTime  = to_time_t(itsStartTime);
-    time_t initTime   = startTime  - itsCepAppParams[0].getTime("AC.timeout_init");
-  
-	map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-	if(it != itsCepApplications.end())
-	{
-	  it->second->init(initTime);
+	LOG_INFO_STR("appDefined from " << procName);
+	if (result == (AcCmdMaskOk | AcCmdMaskScheduled)) {
+		time_t startTime  = to_time_t(itsStartTime);
+		time_t initTime   = startTime  - itsCepAppParams[0].getTime("ApplCtrl.timeout_init");
+
+		map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
+		if(it != itsCepApplications.end()) {
+			it->second->init(initTime);
+		}
 	}
-  }
-  else if (result == 0) // Error
-  {
-    LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
-	finishController(CT_RESULT_UNSPECIFIED);
-  }
+	else if (result == 0) { // Error
+		LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
+		finishController(CT_RESULT_UNSPECIFIED);
+	}
 }
 
+//
+// appInitialized(procName, result)
+//
 void OnlineControl::appInitialized(const string& procName, uint16 result)
 {
-  LOG_INFO_STR("appInitialized from " << procName);
-  if (result == AcCmdMaskOk)
-  {    
-	//    _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED);
-  }
-  else if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  
-  {
-	map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-	if(it != itsCepApplications.end())
-	{
-	  it->second->run(to_time_t(itsStartTime));
+	LOG_INFO_STR("appInitialized from " << procName);
+	if (result == AcCmdMaskOk) {    
+		//    _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED);
 	}
-  }
-  else if (result == 0) // Error
-  {
-    LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
-	finishController(CT_RESULT_UNSPECIFIED);
-  }
+	else if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  {
+		map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
+		if(it != itsCepApplications.end()) {
+			it->second->run(to_time_t(itsStartTime));
+		}
+	}
+	else if (result == 0) { // Error
+		LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
+		finishController(CT_RESULT_UNSPECIFIED);
+	}
 }
 
+//
+// appRunDone(procName, result)
+//
 void OnlineControl::appRunDone(const string& procName, uint16 result)
 {
-  LOG_INFO_STR("appRunDone from " << procName);
-  if (result == (AcCmdMaskOk | AcCmdMaskScheduled))
-  {      
-	map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-	if(it != itsCepApplications.end())
-	{
-	  it->second->quit(to_time_t(itsStopTime));
+	LOG_INFO_STR("appRunDone from " << procName);
+	if (result == (AcCmdMaskOk | AcCmdMaskScheduled)) {      
+		map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
+		if(it != itsCepApplications.end()) {
+			it->second->quit(to_time_t(itsStopTime));
+		}
 	}
-  }
-  else if (result == 0) // Error
-  {
-    LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
-	finishController(CT_RESULT_UNSPECIFIED);
-  }
+	else if (result == 0) { // Error
+		LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
+		finishController(CT_RESULT_UNSPECIFIED);
+	}
 }
 
+//
+// appPaused(procname, result)
+//
 void OnlineControl::appPaused(const string& procName, uint16 /*result*/)
 {
-  LOG_INFO_STR("appPaused from " << procName);
+	LOG_INFO_STR("appPaused from " << procName);
 }
 
+//
+// appQuitDone(procName, result)
+//
 void OnlineControl::appQuitDone(const string& procName, uint16 result)
 {
-  LOG_INFO_STR("appQuitDone from " << procName);
-  if (result == (AcCmdMaskOk | AcCmdMaskScheduled))
-  {  
-    //_qualityGuard.stopMonitoring(); // not in this increment
-  }
-  else
-  {
-	finishController(CT_RESULT_NO_ERROR);
-  }
+	LOG_INFO_STR("appQuitDone from " << procName);
+	if (result == (AcCmdMaskOk | AcCmdMaskScheduled)) {  
+		//_qualityGuard.stopMonitoring(); // not in this increment
+	}
+	else {
+		finishController(CT_RESULT_NO_ERROR);
+	}
 }
 
+//
+// appSnapshotDone(procName, result)
+//
 void OnlineControl::appSnapshotDone(const string& procName, uint16 /*result*/)
 {
-  LOG_INFO_STR("appSnapshotDone from " << procName);
-  time_t rsto(0);
-  try 
-  {
-    rsto = globalParameterSet()->getTime("rescheduleTimeOut");
-  }
-  catch (...) {}
-  map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-  if(it != itsCepApplications.end())
-  {
-	it->second->pause(0, rsto, "condition");
-  }
+	LOG_INFO_STR("appSnapshotDone from " << procName);
+	time_t rsto(0);
+	try {
+		rsto = globalParameterSet()->getTime("rescheduleTimeOut");
+	}
+	catch (...) {}
+
+	map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
+	if(it != itsCepApplications.end()) {
+		it->second->pause(0, rsto, "condition");
+	}
 }
 
+//
+// appRecovered(procName, result)
+//
 void OnlineControl::appRecovered(const string& procName, uint16 /*result*/)
 {
-  LOG_INFO_STR("appRecovered from " << procName);
-  
-  time_t startTime  = to_time_t(itsStartTime);
-  time_t reinitTime = startTime  - itsCepAppParams[0].getTime("AC.timeout_reinit");
-  
-  string paramFileName(formatString("ACC-%s.param", getName().c_str()));
-  
-  map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-  if(it != itsCepApplications.end())
-  {
-	it->second->reinit(reinitTime, paramFileName);
-  }
+	LOG_INFO_STR("appRecovered from " << procName);
+
+	time_t startTime  = to_time_t(itsStartTime);
+	time_t reinitTime = startTime  - itsCepAppParams[0].getTime("ApplCtrl.timeout_reinit");
+
+	string paramFileName(formatString("ACC-%s.param", getName().c_str()));
+
+	map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
+	if(it != itsCepApplications.end()) {
+		it->second->reinit(reinitTime, paramFileName);
+	}
 }
 
+//
+// appReinitialized(procName, result)
+//
 void OnlineControl::appReinitialized(const string& procName, uint16 result)
 { 
-  LOG_INFO_STR("appReinitialized from " << procName);
-  if (result == AcCmdMaskOk)
-  {    
-	//    _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED);
-  }
-  else if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  
-  {  
-	map<string,CEPApplicationManagerPtr>::iterator it =  itsCepApplications.find(procName);
-	if(it != itsCepApplications.end())
-    {
-	  it->second->run(to_time_t(itsStartTime));
+	LOG_INFO_STR("appReinitialized from " << procName);
+	if (result == AcCmdMaskOk) {    
+		//    _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED);
 	}
-  }
+	else if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  {  
+		map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
+		if(it != itsCepApplications.end()) {
+			it->second->run(to_time_t(itsStartTime));
+		}
+	}
 }
 
+//
+// appReplaced(procNAme, result)
+//
 void OnlineControl::appReplaced(const string& procName, uint16 /*result*/)
 {
-  LOG_INFO_STR("appReplaced from " << procName);
+	LOG_INFO_STR("appReplaced from " << procName);
 }
 
+//
+// appSupplyInfo(procName, keyList)
+//
 string OnlineControl::appSupplyInfo(const string& procName, const string& keyList)
 {
-  LOG_INFO_STR("appSupplyInfo from " << procName);
-  string ret(keyList);
-  return ret;
+	LOG_INFO_STR("appSupplyInfo from " << procName);
+	string ret(keyList);
+	return ret;
 }
 
+//
+// appSupplyInfoAnswer(procName, answer)
+//
 void OnlineControl::appSupplyInfoAnswer(const string& procName, const string& answer)
 {
-  LOG_INFO_STR("Answer from " << procName << ": " << answer);
+	LOG_INFO_STR("Answer from " << procName << ": " << answer);
 }
 
 
