@@ -51,7 +51,7 @@ namespace LOFAR
     public:
       Image_File(const std::string& imagename);
       ~Image_File();
-      void WriteImage(vector< casa::Cube<float> >* image);
+      void WriteImage(vector< casa::Cube<float> > image);
 
     protected:
       std::string              ImageName;

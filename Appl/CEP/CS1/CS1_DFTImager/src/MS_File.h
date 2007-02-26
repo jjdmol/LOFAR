@@ -25,6 +25,7 @@
 #include <string>
 #include <tables/Tables.h>
 #include <tables/Tables/TableIter.h>
+#include <casa/Arrays.h>
 
 namespace LOFAR
 {
