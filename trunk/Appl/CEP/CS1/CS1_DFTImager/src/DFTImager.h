@@ -33,13 +33,9 @@ namespace LOFAR
   namespace CS1
   {
     using casa::Cube;
-    using casa::Matrix;
     using casa::Complex;
-    using casa::Int;
-    using casa::Double;
-    using casa::Bool;
-    using casa::Table;
-    using std::list;
+    using casa::Matrix;
+    using casa::Vector;
     using std::vector;
 
     typedef pair<int, int> pairii;
@@ -51,7 +47,7 @@ namespace LOFAR
                   Image_File* Imagefile);
         ~DFTImager();
 
-        void MakeImage(int Resolution);
+        void MakeImage(int resolution);
 
       protected:
         int                     NumAntennae;
@@ -59,7 +55,6 @@ namespace LOFAR
         int                     NumBands;
         int                     NumChannels;
         int                     NumPolarizations;
-        int                     WindowSize;
         int                     NumTimeslots;
         double                  MinThreshold;
         double                  MaxThreshold;
@@ -67,9 +62,7 @@ namespace LOFAR
         vector<double>          BaselineLengths;
         vector<pairii>          PairsIndex;
         map<pairii, int>        BaselineIndex;
-        vector< Cube<Complex> > TimeslotData;
         vector<casa::String>    AntennaNames;
-        Cube< int >             Statistics;
         int                     Resolution;
 
         MS_File*    MSfile;
@@ -77,12 +70,19 @@ namespace LOFAR
 
       private:
         void ComputeBaselineLengths();
-        bool UpdateTimeslotData(vector<int>* OldFields,
-                                vector<int>* OldBands,
+        void ImageBaseline(Matrix<casa::Complex>& TimeslotData,
+                           Vector<casa::Double>& UVWData,
+                           Cube<float>& Image);
+        void ImageTimeslot(Cube<casa::Complex>& TimeslotData,
+                           Matrix<casa::Double>& UVWData,
+                           vector<Cube<float> >& Image);
+        bool UpdateTimeslotData(vector<int>& OldFields,
+                                vector<int>& OldBands,
                                 int* TimeCounter,
-                                Table* TimeslotTable,
+                                casa::Table* TimeslotTable,
+                                casa::Cube<casa::Complex>& TimeslotData,
+                                casa::Matrix<casa::Double>& UVWData,
                                 double* Time);
-        void ImageTimeslot(void);
     }; // DFTImager
   }; // namespace CS1
 }; // namespace LOFAR

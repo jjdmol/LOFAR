@@ -73,11 +73,6 @@ namespace LOFAR
     //  PolarizationsToCheck.resize(NumPolarizations);
     //  DeterminePolarizationsToCheck(UseOnlyXpolarizations);
 
-      TimeslotData.resize(NumPairs*NumBands);
-      for (int i = 0; i < NumPairs*NumBands; i++)
-      { TimeslotData[i].resize(NumPolarizations, NumChannels, WindowSize);
-      }
-
       int index = 0;
       for (int i = 0; i < NumAntennae; i++)
       { for(int j = i; j < NumAntennae; j++)
@@ -164,66 +159,104 @@ namespace LOFAR
       }
     }
 
-    //===============>>> DFTImager::ImageTimeslot  <<<===============
-    /* This function iterates over baseline and band and uses FlagBaselineBand() to determine
-      for each one if it needs to be flagged. It treats the autocorrelations separately,
-      to detect entire malfunctioning telescopes. Finally it writes the flags.
+    //===============>>> DFTImager::ImageBaseline  <<<===============
+    /*
+      Cube<Complex>         TimeslotData(NumBands*NumPairs, NumPolarizations, NumChannels);
+      Matrix<Double>        UVWData(NumBands*NumPairs, 3);
+      vector< Cube<float> > Image(NumBands, Cube<float> (Resolution, Resolution, NumChannels));
     */
-    void DFTImager::ImageTimeslot()
+    void DFTImager::ImageBaseline(Matrix<Complex>& TimeslotData,
+                                  Vector<Double>& UVWData,
+                                  Cube<float>& Image)
     {
-/*      Cube<bool>     Image(NumPolarizations, NumChannels, NumPairs*NumBands, false);
-      vector<bool>   test(NumPairs*NumBands);
-      for (int i = 0; i < NumBands; i++)
+      vector<double> arrayLM(Resolution+1);
+      const double pi   = 3.14;
+      const double Freq = 60000000.0; // needs to be parameter
+      const double c    = 299792458.0;
+      for (int i=0; i <= Resolution; i++)
+      { arrayLM[i] = -1 + i*2/Resolution;
+      }
+      for (int k = 0; k < NumChannels; k++)
       {
-        vector< vector<double> > CrossCorrRMS(NumPolarizations, NumPairs - NumAntennae);
-        for(int j = 0; j < NumAntennae; j++)
+        Matrix<float> skymap(Resolution, Resolution);
+        for (int l = 0; l < Resolution; l++)
         {
-          for(int k = j+1; k < NumAntennae; k++)
+          //cout << l << ":";
+          for (int m = 0; m < Resolution; m++)
           {
-            int index = i*NumPairs + BaselineIndex[pairii(j, k)];
-            Matrix<Bool> image = Image.xyPlane(index);
-            if ((BaselineLengths[BaselineIndex[pairii(j, k)]] < 3000000))//radius of the Earth in meters? WSRT sometimes has fake telescopes at 3854243 m
-            { //we skip the non-existent telescopes
-              test = ImageBaselineBand(&image,
-                                        &(TimeslotData[index]),
-                                        Position);
+            //cout << m << ";";
+            double temp = (arrayLM[l]*arrayLM[l] + arrayLM[m]*arrayLM[m]);
+            if (temp < 1.0)
+            {
+              double n = std::sqrt(1 - temp);
+              Complex I = TimeslotData(k, 0) + TimeslotData(k, NumPolarizations-1);
+              Complex X = UVWData(0)*arrayLM[l] + UVWData(1)*arrayLM[m]+ UVWData(2) * (n - 1.0);
+              Complex z = Complex(n, 0)*I*exp(Complex(2,0)*Complex(pi, 0)*Complex(0,1)*Complex(Freq, 0)*X/Complex(c, 0));
+              skymap(l, m) += 2 * z.real();
             }
           }
         }
-        //this code could be separated in to different functions
-        for(int j = 0; j < NumAntennae; j++) //write the data
+        Image.xyPlane(k) = Image.xyPlane(k) + skymap;
+      }
+    }
+    //===============>>> DFTImager::ImageTimeslot  <<<===============
+    /*
+      Cube<Complex>         TimeslotData(NumBands*NumPairs, NumPolarizations, NumChannels);
+      Matrix<Double>        UVWData(NumBands*NumPairs, 3);
+      vector< Cube<float> > Image(NumBands, Cube<float> (Resolution, Resolution, NumChannels));
+    */
+    void DFTImager::ImageTimeslot(Cube<Complex>& TimeslotData,
+                                  Matrix<Double>& UVWData,
+                                  vector<Cube<float> >& Image)
+    {
+      for (int k = 0; k < NumBands; k++)
+      {
+        for(int l = 0; l < NumAntennae; l++)
         {
-          for(int k = j; k < NumAntennae; k++)
+          for(int m = l+1; m < NumAntennae; m++)
           {
-            int index = i*NumPairs + BaselineIndex[pairii(j, k)];
-            Matrix<bool> image = Image.xyPlane(index);
-            (*Imagefile).WriteImageData(&image);
+            int index = k*NumPairs + BaselineIndex[pairii(l, m)];
+            if ((BaselineLengths[BaselineIndex[pairii(l, m)]] < 3000000))//radius of the Earth in meters? WSRT sometimes has fake telescopes at 3854243 m
+            { //we skip the non-existent telescopes
+              if (UVWData(0, index)*UVWData(0, index) + UVWData(1, index)*UVWData(1, index) + UVWData(2, index)*UVWData(2, index) > 0.1)
+              {
+                Matrix<Complex> TD = TimeslotData.xyPlane(index);
+                Vector<Double> UD  = UVWData.column(index);
+                ImageBaseline(TD, UD, Image[k]);
+              }
+            }
           }
         }
-      }*/
+      }
     }
-
     //===============>>> DFTImager::UpdateTimeslotData  <<<===============
     /* This function reads the visibility data for one timeslot and checks if
       a mosaicing mode is active*/
     /* The datastructure Timeslotdata is rather complex because it flattens
        half-filled antenna x antenna x bands matrix into a vector of NumPairs X bands length. */
-    bool DFTImager::UpdateTimeslotData(vector<int>* OldFields,
-                                                  vector<int>* OldBands,
-                                                  int* TimeCounter,
-                                                  Table* TimeslotTable,
-                                                  double* Time)
+    bool DFTImager::UpdateTimeslotData(vector<int>& OldFields,
+                                       vector<int>& OldBands,
+                                       int* TimeCounter,
+                                       Table* TimeslotTable,
+                                       Cube<Complex>& TimeslotData,
+                                       Matrix<Double>& UVWData,
+                                       double* Time)
     {
       int           rowcount = (*TimeslotTable).nrow();
+
       ROTableVector<Int>     antenna1((*TimeslotTable), "ANTENNA1");
       ROTableVector<Int>     antenna2((*TimeslotTable), "ANTENNA2");
       ROTableVector<Int>     bandnr  ((*TimeslotTable), "DATA_DESC_ID");
       ROTableVector<Int>     fieldid ((*TimeslotTable), "FIELD_ID");
       ROTableVector<Double>  time    ((*TimeslotTable), "TIME_CENTROID");//for testing purposes
       ROArrayColumn<Complex> data    ((*TimeslotTable), "DATA");
+      ROArrayColumn<Double>  uvw     ((*TimeslotTable), "UVW");
+
+      Matrix<Double>         uvwdata(3, rowcount);
       Cube<Complex>          Data(NumPolarizations, NumChannels, rowcount);
 
       data.getColumn(Data); //We're not checking Data.nrow() Data.ncolumn(), assuming all data is the same size.
+      uvw.getColumn(uvwdata);
       (*Time) = time(0);//for testing purposes, might be useful in the future
 
       bool NewField_or_Frequency = false;
@@ -234,19 +267,21 @@ namespace LOFAR
         int field = fieldid(i);
         int band  = bandnr(i);
         int index = (band % NumBands) * NumPairs + bi;
-        if ((*TimeCounter) > WindowSize - 1)
+        if ((*TimeCounter) > 1)
         {
-          if (field != (*OldFields)[bi]) //pointing mosaicing
-          { NewField_or_Frequency = true;
+          if (field != OldFields[bi]) //pointing mosaicing
+          { //NewField_or_Frequency = true;
+            cout << "OldField:" << OldFields[bi] << " NewField:" << field << endl;
           }
-          if (band  != (*OldBands)[index]) //frequency mosaicing
-          { NewField_or_Frequency = true;
+          if (band  != OldBands[index]) //frequency mosaicing
+          { //NewField_or_Frequency = true;
+            cout << "OldBand:" << OldBands[bi] << " NewBand:" << band << endl;
           }
         }
-        (*OldFields)[bi]   = field;
-        (*OldBands)[index] = band;
-
-        TimeslotData[index].xyPlane((*TimeCounter) % WindowSize) = Data.xyPlane(i); //TimeslotData is only WindowSize size!
+        OldFields[bi]   = field;
+        OldBands[index] = band;
+        TimeslotData.xyPlane(index) = Data.xyPlane(i);
+        UVWData.column(index)       = uvwdata.column(i);
       }
       (*TimeCounter)++; //we want to reset if we detect a gap in DATA_DESC_ID or FIELD. Maybe TIME too???
       return NewField_or_Frequency; //assuming everybody is changing field or frequency at the same time!
@@ -255,14 +290,17 @@ namespace LOFAR
     //===============>>> DFTImager::FlagDataOrBaselines  <<<===============
     /* This function iterates over the data per timeslot and uses Flagtimeslot()
       to actually flag datapoints (if flagDatapoints), and entire baselines (if flagRMS)*/
-    void DFTImager::MakeImage(int Resolution)
+    void DFTImager::MakeImage(int resolution)
     {
-      TableIterator timeslot_iter = (*MSfile).TimeslotIterator();
-      int           TimeCounter   = 0;
-      double        Time          = 0.0;//for testing purposes
-      vector<int>   OldFields(NumPairs);         //to check on multipointing and mosaicing
-      vector<int>   OldBands(NumPairs*NumBands); //to check on multifrequency and freq mosaicing
-      vector< Cube<float> > Image(NumBands);
+      Resolution = resolution;
+      TableIterator         timeslot_iter = (*MSfile).TimeslotIterator();
+      int                   TimeCounter   = 0;
+      double                Time          = 0.0;//for testing purposes
+      vector<int>           OldFields(NumPairs);         //to check on multipointing and mosaicing
+      vector<int>           OldBands(NumPairs*NumBands); //to check on multifrequency and freq mosaicing
+      Cube<Complex>         TimeslotData(NumPolarizations, NumChannels, NumBands*NumPairs);
+      Matrix<Double>        UVWData(3, NumBands*NumPairs);
+      vector< Cube<float> > Image(NumBands, Cube<float> (Resolution, Resolution, NumChannels, 0.0));
 
       int           step          = NumTimeslots / 10 + 1; //not exact but it'll do
       int           row           = 0;
@@ -270,10 +308,12 @@ namespace LOFAR
       while (!timeslot_iter.pastEnd())
       {
         Table TimeslotTable  = timeslot_iter.table();
-        bool  NewFieldorFreq = UpdateTimeslotData(&OldFields,
-                                                  &OldBands,
+        bool  NewFieldorFreq = UpdateTimeslotData(OldFields,
+                                                  OldBands,
                                                   &TimeCounter,
                                                   &TimeslotTable,
+                                                  TimeslotData,
+                                                  UVWData,
                                                   &Time);
         if (NewFieldorFreq)
         {
@@ -282,13 +322,15 @@ namespace LOFAR
         }
         cout << "Processing: " << MVTime(Time/(24*3600)).string(MVTime::YMD) << endl; //for testing purposes
 
-        ImageTimeslot();
+        ImageTimeslot(TimeslotData,
+                      UVWData,
+                      Image);
         timeslot_iter++;
         if (row++ % step == 0) // to tell the user how much % we have processed,
         { cout << 10*(row/step) << "%" << endl; //not very accurate for low numbers of timeslots, but it'll do for now
         }
       }
-      Imagefile->WriteImage(&Image);
+      Imagefile->WriteImage(Image);
     }
     //===============>>> DFTImager  <<<===============
   } //namespace CS1

@@ -77,10 +77,10 @@ namespace LOFAR
 
     //===============>>>  Image_file::~WriteImage  <<<===============
 
-    void Image_File::WriteImage(std::vector< casa::Cube<float> >* image)
+    void Image_File::WriteImage(std::vector< casa::Cube<float> > image)
     {
-      casa::Cube<float> Bal = (*image)[0];
-      init(Bal.shape(), image->size());
+      casa::Cube<float> Bal = image[0];
+      init(Bal.shape(), image.size());
       Image->putSlice(Bal, casa::IPosition(3, 0, 0, 0), casa::IPosition(3, 0, 0, 0));
     }
 
