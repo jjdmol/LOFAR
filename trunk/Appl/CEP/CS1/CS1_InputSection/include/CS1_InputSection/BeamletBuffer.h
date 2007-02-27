@@ -61,13 +61,11 @@ namespace LOFAR
     class BeamletBuffer
     {
     public:
-      BeamletBuffer(int bufferSize, uint nSubbands, uint history, uint readWriteDelay);
+      BeamletBuffer(int bufferSize, unsigned nSubbands, unsigned history, unsigned readWriteDelay);
       ~BeamletBuffer();
 
-      // write elements in the buffer, return value is number of succesfully written elements
-      uint writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint nSubbandsPerBlock);
-      // get elements out of the buffer, return value is number of valid elements
-      uint getElements(vector<Beamlet *> buffers, SparseSet* flags, TimeStamp begin, uint nElements);
+      void writeElements(Beamlet* data, TimeStamp begin, unsigned nElements);
+      void getElements(boost::multi_array_ref<SampleType, 3> &buffers, SparseSet &flags, TimeStamp begin, unsigned nElements);
 
       TimeStamp startBufferRead();
       TimeStamp startBufferRead(TimeStamp);
@@ -82,7 +80,7 @@ namespace LOFAR
       BeamletBuffer& operator= (const BeamletBuffer& that);
 
       // Needed for mapping a timestamp to a place in the buffer
-      uint mapTime2Index(TimeStamp time) const { 
+      unsigned mapTime2Index(TimeStamp time) const { 
 	// TODO: this is very slow because of the %
 	return time % itsSize;
       }
@@ -94,7 +92,7 @@ namespace LOFAR
       //vector<Beamlet *> itsSBBuffers;
       mutex itsFlagsMutex;
       SparseSet itsFlags;
-      uint itsNSubbands;
+      unsigned itsNSubbands;
       int itsSize;
 
       boost::multi_array<SampleType, 3> itsSBBuffers;
@@ -104,9 +102,9 @@ namespace LOFAR
       LockedRange<TimeStamp, int> itsLockedRange;
 
       // These are for statistics
-      uint itsDroppedItems;
-      uint itsDummyItems;
-      uint itsSkippedItems;
+      unsigned itsDroppedItems;
+      unsigned itsDummyItems;
+      unsigned itsSkippedItems;
 
       NSTimer itsWriteTimer;
       NSTimer itsReadTimer;

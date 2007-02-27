@@ -26,198 +26,136 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <CS1_InputSection/AH_InputSection.h>
+#include <CS1_InputSection/WH_InputSection.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 
 //# Workholders
-#include <CS1_InputSection/WH_RSPInput.h>
-#include <CS1_InputSection/WH_SBCollect.h>
 
 #include <Transport/TransportHolder.h>
 #include <Transport/TH_MPI.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/TH_File.h>
 
+#include <algorithm>
+
+
 #define MPICH_WORKING_ON_INFINI_BAND 1
 
 #define IS_MULTIPLE(number, bignumber) (floor(bignumber / number) == (1.0 * bignumber / number))
 
 namespace LOFAR {
-  namespace CS1 {
+namespace CS1 {
 
-    AH_InputSection::AH_InputSection() :
-      itsInputStub(0),
-      itsOutputStub(0)
-    {}
+AH_InputSection::AH_InputSection() :
+  itsDelayStub(0),
+  itsOutputStub(0)
+{}
 
-    AH_InputSection::~AH_InputSection()
-    {
-      undefine();
-    }
+AH_InputSection::~AH_InputSection()
+{
+  undefine();
+}
 
-    void AH_InputSection::undefine()
-    {
-      delete itsOutputStub;
-      delete itsInputStub;
-      itsInputStub = 0;
-      itsOutputStub = 0;
-    }
+void AH_InputSection::undefine()
+{
+  delete itsOutputStub;
+  delete itsDelayStub;
+  itsDelayStub = 0;
+  itsOutputStub = 0;
+}
 
-    void AH_InputSection::define(const LOFAR::KeyValueMap&) 
-    {
-      LOG_TRACE_FLOW_STR("Start of AH_InputSection::define()");
-      undefine();
+void AH_InputSection::define(const LOFAR::KeyValueMap&) 
+{
+  LOG_TRACE_FLOW_STR("Start of AH_InputSection::define()");
+
+  itsParamSet.getDouble("Observation.SampleRate");
+  TimeStamp::setMaxBlockId(itsParamSet.getDouble("Observation.SampleRate"));
+
+  LOG_TRACE_FLOW_STR("Create the top-level composite");
+  Composite comp(0, 0, "topComposite");
+  setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
+
+  LOG_TRACE_FLOW_STR("Create the input side delay stub");
+  LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
+
+  itsDelayStub  = new Stub_Delay(true, itsParamSet);
+  itsOutputStub = new Stub_BGL(false, false, "Input_BGLProc", itsParamSet);
+
+  // TODO: support multiple RSPs per station
+  itsInputNodes  = itsParamSet.getUint32Vector("Input.InputNodes");
+  itsOutputNodes = itsParamSet.getUint32Vector("Input.OutputNodes");
+  unsigned nrBGLnodesPerCell = itsParamSet.getUint32("BGLProc.NodesPerPset") * itsParamSet.getInt32("BGLProc.PsetsPerCell");
 
 #if defined HAVE_MPI
-      int lowestFreeNode = 0;
+  unsigned nrNodes = TH_MPI::getNumberOfNodes();
+#else
+  unsigned nrNodes = 1;
 #endif
-      
-      TimeStamp::setMaxBlockId(itsParamSet.getDouble("Observation.SampleRate"));
 
-      int psetsPerCell = itsParamSet.getInt32("BGLProc.PsetsPerCell");
-      int nCells  = itsParamSet.getInt32("Observation.NSubbands") / (itsParamSet.getInt32("General.SubbandsPerPset") * psetsPerCell);  // number of SubBand filters in the application
-      int nNodesPerCell = itsParamSet.getInt32("BGLProc.NodesPerPset") * psetsPerCell;
-    
-      LOG_TRACE_FLOW_STR("Create the top-level composite");
-      Composite comp(0, 0, "topComposite");
-      setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
+  itsWHs.resize(nrNodes);
 
-      LOG_TRACE_FLOW_STR("Create the input side delay stub");
-      // TODO create connector class
+  for (unsigned node = 0, cell = 0, station = 0; node < nrNodes; node ++) {
+    bool isInput  = std::find(itsInputNodes.begin(), itsInputNodes.end(), node) != itsInputNodes.end();
+    bool isOutput = std::find(itsOutputNodes.begin(), itsOutputNodes.end(), node) != itsOutputNodes.end();
+    TransportHolder *th = 0;
+    char nameBuffer[40];
 
-      LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
+    if (isInput) {
+      snprintf(nameBuffer, sizeof nameBuffer, "Input.Transport.Station%d.Rsp%d", station, 0); // FIXME last arg is RSP number
+      th = Connector::readTH(itsParamSet, nameBuffer, true); 
+    }
+
+    itsWHs[node] = new WH_InputSection("InputSection", itsParamSet, th, isInput ? station : 0, isInput ? 1 : 0, isOutput ? nrBGLnodesPerCell : 0, itsInputNodes, itsOutputNodes);
+    Step *step = new Step(itsWHs[node], "Step", false);
+    step->runOnNode(node); 
+    comp.addBlock(step);
+
+    if (isInput) {
+      itsDelayStub->connect(station, step->getInDataManager(0), 0);
+      station ++;
+    }
+
+    if (isOutput) {
+      DataManager      &dm = step->getOutDataManager(0);
+      std::vector<int> channels(nrBGLnodesPerCell);
+
+      for (unsigned core = 0; core < nrBGLnodesPerCell; core ++) {
+	dm.setOutBuffer(core, false, 3);
+	itsOutputStub->connect(cell, core, dm, core);
+	channels[core] = core;
+      }
+	
+      dm.setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
+      cell ++;
+    }
+  }
   
+  LOG_TRACE_FLOW_STR("Finished define()");
+}
 
-      int nRSP = itsParamSet.getInt32("Input.NRSPBoards");
-      int nStations = itsParamSet.getInt32("Observation.NStations");
-      int inputCells = nRSP/nStations;
-      int nameBufferSize = 40;
-      char nameBuffer[nameBufferSize];
+void AH_InputSection::prerun()
+{
+  getComposite().preprocess();
+}
 
-      itsInputStub  = new Stub_Delay(true, itsParamSet);
-      itsOutputStub = new Stub_BGL(false, false, "Input_BGLProc", itsParamSet);
+void AH_InputSection::run(int steps)
+{
+  LOG_TRACE_FLOW_STR("Start AH_InputSection::run() "  );
+  for (int i = 0; i < steps; i++) {
+    LOG_TRACE_LOOP_STR("processing run " << i );
+    getComposite().process();
+  }
+  LOG_TRACE_FLOW_STR("Finished AH_InputSection::run() "  );
+}
 
-      for (int ic = 0; ic < inputCells; ic ++) {
-	WorkHolder* lastWH;
-	vector<Step*>        RSPSteps;
-	for (int station = 0; station < nStations; station ++) {
-	  snprintf(nameBuffer, nameBufferSize, "Input.Transport.Station%d.Rsp%d", station, ic);
-	  TransportHolder* lastTH = Connector::readTH(itsParamSet, nameBuffer, true); 
-    
-	  snprintf(nameBuffer, nameBufferSize, "RSP_Input_node_station%d_cell%d", station, ic);
-	  lastWH = new WH_RSPInput(nameBuffer,
-				   itsParamSet,
-				   *lastTH,
-				   station);
-	  RSPSteps.push_back(new Step(lastWH, nameBuffer, false));
-#ifdef HAVE_MPI
-	  RSPSteps.back()->runOnNode(lowestFreeNode++);  
-#endif
-	  comp.addBlock(RSPSteps.back());
-    
-	  // Connect the Delay Controller
-	  itsInputStub->connect(ic * nStations + station, (RSPSteps.back())->getInDataManager(0), 0);
-	}
+void AH_InputSection::dump() const
+{
+  LOG_TRACE_FLOW_STR("AH_InputSection::dump() not implemented"  );
+}
 
-	LOG_TRACE_FLOW_STR("Create the Subband merger workholders");
-	vector<Step*> collectSteps;
-	for (int cell = 0; cell < nCells / inputCells; cell++) {
-	  sprintf(nameBuffer, "Collect_node_%d_%d", cell, ic);
-	  lastWH = new WH_SBCollect(nameBuffer,      // name
-				    itsParamSet,
-				    nNodesPerCell);
-	  collectSteps.push_back(new Step(lastWH, nameBuffer, false));
-#ifdef HAVE_MPI
-	  collectSteps.back()->runOnNode(lowestFreeNode++); 
-#endif
-	  comp.addBlock(collectSteps.back());
+void AH_InputSection::quit()
+{
+}
 
-	  // Connect splitters to mergers (transpose)
-#ifndef HAVE_MPI
-
-	  for (int station = 0; station < nStations; station++) {
-	    itsConnector.connectSteps(RSPSteps[station], cell, collectSteps.back(), station);
-	  }
-
-#else
-#if MPICH_WORKING_ON_INFINI_BAND
-	  for (int station = 0; station < nStations; station++) {
-	    itsConnector.connectSteps(RSPSteps[station], cell, collectSteps.back(), station);
-	  }
-#else
-	  vector<string> transposeHosts = itsParamSet.getStringVector("TransposeHosts");
-	  vector<string> transposePorts = itsParamSet.getStringVector("TransposePorts");
-	  for (int station = 0; station < nStations; station++) {
-	    // We need to find out if we are on the client or the server
-	    // because TH_Socket doesn't find it out itself.
-	    if (collectSteps.back()->getNode() == TH_MPI::getCurrentRank()) {
-	      // create server socket
-	      collectSteps.back()->connect(station,
-					   RSPSteps[station],
-					   cell,
-					   1,
-					   new TH_Socket(transposePorts[station],
-							 true,
-							 Socket::TCP,
-							 5,
-							 false),
-					   false);
-	    } else {
-	      // create client socket
-	      collectSteps.back()->connect(station,
-					   RSPSteps[station],
-					   cell,
-					   1,
-					   new TH_Socket(transposeHosts[cell],
-							 transposePorts[station],
-							 true,
-							 Socket::TCP,
-							 false),
-					   false);	      
-	    }
-	  }
-#endif
-#endif
-	  // connect outputs to Subband stub
-	  vector<int> channels;
-	  for (int core = 0; core < nNodesPerCell; core++) {
-	    collectSteps.back()->getOutDataManager(0).setOutBuffer(core, false, 3);
-	    itsOutputStub->connect(cell + ic * nCells / inputCells,
-				   core,
-				   (collectSteps.back())->getOutDataManager(0), 
-				   core);
-	    
-	    channels.push_back(core);
-	  }
-	  collectSteps.back()->getOutDataManager(0).setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
-	}
-      }
-      
-      LOG_TRACE_FLOW_STR("Finished define()");
-
-#ifdef HAVE_MPI
-      ASSERTSTR (lowestFreeNode == TH_MPI::getNumberOfNodes(), "CS1_InputSection needs "<< lowestFreeNode << " nodes, "<<TH_MPI::getNumberOfNodes()<<" available");
-#endif
-    }
-
-    void AH_InputSection::prerun() {
-      getComposite().preprocess();
-    }
-    
-    void AH_InputSection::run(int steps) {
-      LOG_TRACE_FLOW_STR("Start AH_InputSection::run() "  );
-      for (int i = 0; i < steps; i++) {
-	LOG_TRACE_LOOP_STR("processing run " << i );
-	getComposite().process();
-      }
-      LOG_TRACE_FLOW_STR("Finished AH_InputSection::run() "  );
-    }
-
-    void AH_InputSection::dump() const {
-      LOG_TRACE_FLOW_STR("AH_InputSection::dump() not implemented"  );
-    }
-
-    void AH_InputSection::quit() {
-    }
-
-  } // namespace CS1
+} // namespace CS1
 } // namespace LOFAR

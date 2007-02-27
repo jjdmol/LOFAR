@@ -62,6 +62,9 @@ class SparseSet {
     void write(BlobOStream &) const;
     void read(BlobIStream &);
 
+    ssize_t marshall(void *ptr, size_t maxSize) const;
+    void    unmarshall(const void *ptr);
+
   private:
     std::vector<struct range> ranges;
 };

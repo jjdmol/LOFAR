@@ -8,8 +8,7 @@ libcs1_inputsection_la_SOURCES        = Connector.cc \
 		 InputThread.cc \
 		 BeamletBuffer.cc \
 		 AH_InputSection.cc \
-		 WH_SBCollect.cc \
-		 WH_RSPInput.cc
+		 WH_InputSection.cc
 
 # AM_YFLAGS               = -d -p KeyParse
 # AM_LFLAGS               = -PKeyTokenize

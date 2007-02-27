@@ -1,4 +1,4 @@
-//#  WH_RSPInput.h: Catch RSP ethernet frames and synchronize RSP inputs 
+//#  WH_InputSection.h: Catch RSP ethernet frames and synchronize RSP inputs 
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_CS1_INPUTSECTION_WH_RSPINPUT_H
-#define LOFAR_CS1_INPUTSECTION_WH_RSPINPUT_H
+#ifndef LOFAR_CS1_INPUTSECTION_WH_INPUTSECTION_H
+#define LOFAR_CS1_INPUTSECTION_WH_INPUTSECTION_H
 
 // \file
 // Catch RSP ethernet frames and synchronize RSP inputs 
@@ -30,10 +30,14 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
-#include <boost/thread.hpp>
 #include <CS1_Interface/RSPTimeStamp.h>
+#include <CS1_Interface/DH_Subband.h>
 #include <APS/ParameterSet.h>
 #include <Common/Timer.h>
+
+#include <boost/thread.hpp>
+#include <boost/multi_array.hpp>
+
 
 namespace LOFAR 
 {
@@ -52,72 +56,77 @@ namespace LOFAR
 
     // This class is the workholder that receives data from the RSP boards
     // and distributes it per subband to several other input nodes
-    class WH_RSPInput: public WorkHolder {
+    class WH_InputSection: public WorkHolder {
     public:
-      explicit WH_RSPInput(const string& name, 
-                           ACC::APS::ParameterSet& ps,
-                           TransportHolder& th,
-			   uint stationNr);
-      virtual ~WH_RSPInput();
-    
-      static WorkHolder* construct(const string& name, 
-                                   ACC::APS::ParameterSet& ps,
-                                   TransportHolder& th,
-				   uint stationNr);
-	
-      virtual WH_RSPInput* make(const string& name);
-     
-      virtual void startThread();
-    
-      virtual void preprocess();
+      typedef DH_Subband::SampleType SampleType;
 
+      explicit WH_InputSection(const string &name, 
+                           ACC::APS::ParameterSet &ps,
+                           TransportHolder *inputTH,
+			   unsigned stationNr,
+			   unsigned nrInputChannels,
+			   unsigned nrOutputChannels,
+			   const std::vector<unsigned> &inputNodes,
+			   const std::vector<unsigned> &outputNodes);
+      virtual ~WH_InputSection();
+    
+      virtual WH_InputSection *make(const string &name);
+     
+      virtual void preprocess();
       virtual void process();
-      
       virtual void postprocess();
       
-      // Show the work holder on stdout.
-      virtual void dump() const;
-
     private:
       // Copying is not allowed
-      WH_RSPInput (const WH_RSPInput& that);
-      WH_RSPInput& operator= (const WH_RSPInput& that);
+      WH_InputSection (const WH_InputSection &that);
+      WH_InputSection& operator= (const WH_InputSection &that);
+
+      void doInput(SparseSet &flags);
+      void doOutput();
+
+      void limitFlagsLength(SparseSet &flags);
+
+      void transposeData();
+      void transposeMetaData(const SparseSet &flags);
       
       //# Datamembers
-      // writer thread
-      InputThread* itsInputThreadObject;
-      boost::thread* itsInputThread;
+      bool itsDelayCompensation;
+      bool itsIsInput, itsIsOutput;
+      const std::vector<unsigned> &itsInputNodes, &itsOutputNodes;
 
-      TransportHolder& itsTH;
+      boost::multi_array<SampleType, 4> *itsInputData, *itsOutputData;
+
+      struct metaData {
+	float fineDelayAtBegin, fineDelayAfterEnd;
+	char  flagsBuffer[132]; // enough for 16 flag ranges
+      } *itsInputMetaData, *itsOutputMetaData;
+
+      // writer thread
+      InputThread *itsInputThreadObject;
+      boost::thread *itsInputThread;
+
+      TransportHolder *itsInputTH;
       uint itsStationNr;
       
       // ACC parameters interface
       ACC::APS::ParameterSet &itsPS;
       
-      bool itsDelayCompensation;
-
-      // Sync Master or slave
-      bool itsSyncMaster;
-
       // synced stamp
       TimeStamp itsSyncedStamp;
      
-      int itsNSubbandsPerCell;
-      int itsNSamplesPerSec;
-      int itsNHistorySamples;
+      unsigned itsNSubbandsPerCell;
+      unsigned itsNSamplesPerSec;
+      unsigned itsNHistorySamples;
      
       BeamletBuffer *itsBBuffer;
 
       NSTimer itsPrePostTimer, itsProcessTimer, itsGetElemTimer;
       
-
+      void	  startThread();
+    
       //handle timer alarm
       static void timerSignal(int signal);    
-      double itsFrequency;
-      static int theirNoRunningWHs;
-      static int theirNoAlarms;
-      static bool theirTimerSet;
-
+      static bool signalReceived;
     };
     
     // @}
