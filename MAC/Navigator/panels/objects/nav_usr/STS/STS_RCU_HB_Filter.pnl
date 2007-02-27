@@ -1,9 +1,12 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,269 267 142 95 N "_3DFace" 1
+PANEL,441 221 142 95 N "_3DFace" 1
 "$datapoint"
-"main()
+"//
+//RCU_HB_Filter (JjS)
+
+main()
 {
 
   if(dpAccessable($datapoint + \".filSel0\") && 
@@ -11,48 +14,61 @@ PANEL,269 267 142 95 N "_3DFace" 1
 	{
     dpConnect(\"ControlHBFilter\", $datapoint + \".filSel0:_online.._value\",
                                  $datapoint + \".filSel1:_online.._value\",
-                                 $datapoint + \".filSel1:_online.._invalid\");
+                                 $datapoint + \".filSel1:_online.._invalid\",
+	  														 $datapoint + \".bandSelLBA_HBA:_online.._value\",
+	                               $datapoint + \".bandSelLBA_HBA:_online.._invalid\");
   }
   else
   {
-    setValue(\"rect_filter\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"rect_filterHB\", \"backCol\", \"_dpdoesnotexist\");
   }
 }
 
 
 ControlHBFilter(string dp1, bool filSel0,
                 string dp2, bool filSel1,
-                string dp3, bool invalid)
+                string dp3, bool invalid,
+                string dp4, bool notLBL,
+                string dp5, bool bandSel_invalid)
 {
 
-  if(!invalid)
+  if(!invalid && !bandSel_invalid)
   {
-    ComboBox1.enabled = TRUE;
-    if (!filSel1 && !filSel0)
-    {
-      ComboBox1.selectedPos=1;    //110-190MHz
-      setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
+  	if(notLBL)
+  	{
+			ComboBoxHB.enabled = TRUE;
+    	rect_filterHB.enabled = TRUE;
+    	if (!filSel1 && !filSel0)
+    	{
+      	ComboBoxHB.selectedPos=1;    //110-190MHz
+      	setValue(\"rect_filterHB\", \"backCol\", \"Lofar_device_active\");
+    	}
+    	else if (!filSel1 && filSel0)
+    	{
+      	ComboBoxHB.selectedPos=2;    //170-230MHz
+      	setValue(\"rect_filterHB\", \"backCol\", \"Lofar_device_active\");
+    	}
+    	else if (filSel1 && !filSel0)
+    	{
+      	ComboBoxHB.selectedPos=3;    //210-240MHz
+      	setValue(\"rect_filterHB\", \"backCol\", \"Lofar_device_active\");
+    	}
+    	else if (filSel1 && filSel0)
+    	{
+      	ComboBoxHB.selectedPos=4;    //Filter OFF
+      	setValue(\"rect_filterHB\", \"backCol\", \"grey\");
+    	}
     }
-    else if (!filSel1 && filSel0)
+    else
     {
-      ComboBox1.selectedPos=2;    //170-230MHz
-      setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
-    }
-    else if (filSel1 && !filSel0)
-    {
-      ComboBox1.selectedPos=3;    //210-250MHz
-      setValue(\"rect_filter\", \"backCol\", \"Lofar_device_active\");
-    }
-    else if (filSel1 && filSel0)
-    {
-      ComboBox1.selectedPos=4;    //Filter OFF
-      setValue(\"rect_filter\", \"backCol\", \"grey\");
-    }
+    	setValue(\"rect_filterHB\", \"backCol\", \"grey\");
+    }    
   }
   else
   {
-    ComboBox1.enabled = FALSE;
-    setValue(\"rect_filter\", \"backCol\", \"_dpdoesnotexist\");
+		ComboBoxHB.enabled = FALSE;
+    rect_filterHB.enabled = FALSE;
+    setValue(\"rect_filterHB\", \"backCol\", \"_dpdoesnotexist\");
   }
 }" 0
 EE E E 1 -1 -1 0  10 70
@@ -66,7 +82,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"rect_filter"
+"rect_filterHB"
 ""
 1 10 70 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
  E E
@@ -77,7 +93,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 10 130 70
+"main()
+{
+
+}" 0
+ E 0 1 1 0 1 E U  1 E 10 10 130 70
 2 1
 "Text2"
 ""
@@ -99,7 +119,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 1
 LANG:1 15 Highband filter
 22 2
-"ComboBox1"
+"ComboBoxHB"
 ""
 1 15 40 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
  E E
@@ -115,13 +135,13 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 13 38 127 65
 4
 1
-LANG:1 11 110-190 Mhz
+LANG:1 11 110-190 MHz
  1
 1
 LANG:1 11 170-230 MHz
  0
 1
-LANG:1 11 210-250 MHz
+LANG:1 11 210-240 MHz
  0
 1
 LANG:1 10 Filter off
@@ -133,27 +153,27 @@ E
   ////////////////////////////////////////////////////////
   //FILSEL_0   FILSEL_1   Filter     [Date: July 27  2005]
   //   0          0       110-190MHz
-  //   0          1       210-250MHz
-  //   1          0       170-230MHz
+  //   0          1       170-230MHz
+  //   1          0       210-240MHz
   //   1          1       filter off
   ////////////////////////////////////////////////////////
-  DebugN(\"ComboBox1.selectedPos:\"+ComboBox1.selectedPos);
-  if (ComboBox1.selectedPos==1)          //110-190MHz
+  //DebugN(\"ComboBoxHB.selectedPos:\"+ComboBoxHB.selectedPos);
+  if (ComboBoxHB.selectedPos==1)          //110-190MHz
   {
     dpSet($datapoint + \".filSel1\", FALSE);
     dpSet($datapoint + \".filSel0\", FALSE);
   }
-  else if (ComboBox1.selectedPos==2)     //170-230MHz
+  else if (ComboBoxHB.selectedPos==2)     //170-230MHz
   {
     dpSet($datapoint + \".filSel1\", FALSE);
     dpSet($datapoint + \".filSel0\", TRUE);
   }
-  else if (ComboBox1.selectedPos==3)     //210-250MHz
+  else if (ComboBoxHB.selectedPos==3)     //210-240MHz
   {
     dpSet($datapoint + \".filSel1\", TRUE);
     dpSet($datapoint + \".filSel0\", FALSE);
   }
-  else if (ComboBox1.selectedPos==4)     //Filter OFF
+  else if (ComboBoxHB.selectedPos==4)     //Filter OFF
   {
     dpSet($datapoint + \".filSel1\", TRUE);
     dpSet($datapoint + \".filSel0\", TRUE);
