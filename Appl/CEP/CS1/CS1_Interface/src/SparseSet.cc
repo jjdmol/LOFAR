@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 #include <iostream>
 
 
@@ -201,6 +202,27 @@ void SparseSet::read(BlobIStream &bis)
     it->begin = begin;
     it->end   = end;
   }
+}
+
+
+ssize_t SparseSet::marshall(void *ptr, size_t maxSize) const
+{
+  size_t size = sizeof(uint32) + ranges.size() * sizeof(range) > maxSize;
+
+  if (size > maxSize)
+    return -1;
+
+  * (uint32 *) ptr = ranges.size();
+  memcpy((uint32 *) ptr + 1, &ranges[0], ranges.size() * sizeof(range));
+
+  return size;
+}
+
+
+void SparseSet::unmarshall(const void *ptr)
+{
+  ranges.resize(* (uint32 *) ptr);
+  memcpy(&ranges[0], (uint32 *) ptr + 1, ranges.size() * sizeof(range));
 }
 
 

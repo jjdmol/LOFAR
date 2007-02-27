@@ -8,8 +8,7 @@ INSTHDRS        = Connector.h \
 	 LockedRange.tcc \
 	 BeamletBuffer.h \
 	 AH_InputSection.h \
-	 WH_SBCollect.h \
-	 WH_RSPInput.h
+	 WH_InputSection.h
 
 NOINSTHDRS =
 

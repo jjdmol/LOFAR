@@ -3,6 +3,7 @@ from LOFAR_Jobs import *
 import time
 import os
 import copy
+import sys
 
 class Section(object):
     """
@@ -79,28 +80,31 @@ class InputSection(Section):
         if not nSubbands % nSubbandsPerCell == 0:
             raise Exception('Not a integer number of compute cells (nSubbands = %d and nSubbandsPerCell = %d)' % (nSubbands, nSubbandsPerCell))
         self.nCells = int(nCells)
-        self.noProcesses = self.nrsp + self.nCells
 
         host = copy.deepcopy(myhost)
-
         slaves = host.getSlaves()
-        inputNodes = parset.getInputNodes() + [2, 3, 5, 6, 8, 9, 11, 12]
-        # for sbCollect use only the nodes that are used less than 2 times
-        sbcollectNodes = [node for node in range(1, 13) if inputNodes.count(node) < 2]
-        newslaves = [slaves[ind - 1] for ind in inputNodes + sbcollectNodes]
-        
-        host.setSlaves(newslaves)
 
-        Section.__init__(self, parset, \
-                         'Appl/CEP/CS1/CS1_InputSection', \
-                         host = host, \
-                         buildvar = 'gnu64_mpich-opt')
+	inputNodes = parset.getInputNodes()
+	outputNodes = range(1, self.nCells + 1)
+	allNodes = inputNodes + [node for node in outputNodes if not node in inputNodes]
 
-        myslaves = self.host.getSlaves()[self.nrsp : self.nrsp + self.nCells]
-        transposeIPs = [s.getIntName() for s in myslaves]
-        bglprocIPs = [s.getExtIP() for s in myslaves]
-        #self.parset['TransposeHosts'] = '[' + ','.join(transposeIPs) + ']'
-        self.parset['Connections.Input_BGLProc.ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
+	inputIndices = range(len(inputNodes))
+	outputIndices = [allNodes.index(node) for node in outputNodes]
+
+	newslaves = [slaves[ind - 1] for ind in allNodes]
+	host.setSlaves(newslaves)
+	self.noProcesses = len(newslaves)
+
+	Section.__init__(self, parset, \
+			 'Appl/CEP/CS1/CS1_InputSection', \
+			 host = host, \
+			 buildvar = 'gnu64_mpich-opt')
+
+	self.parset['Input.InputNodes'] = inputIndices
+	self.parset['Input.OutputNodes'] = outputIndices
+
+	bglprocIPs = [newslaves[j].getExtIP() for j in outputIndices]
+	self.parset['Connections.Input_BGLProc.ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
 
     def run(self, runlog, noRuns, runCmd = None):
         Section.run(self, runlog, noRuns, runCmd)

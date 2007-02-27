@@ -31,192 +31,180 @@
 #include <CS1_Interface/RSPTimeStamp.h>
 
 namespace LOFAR {
-  namespace CS1 {
+namespace CS1 {
 
-    BeamletBuffer::BeamletBuffer(int bufferSize, uint nSubbands, uint history, uint readWriteDelay):
-      itsNSubbands(nSubbands),
-      itsSize(bufferSize),
-      itsSBBuffers(boost::extents[nSubbands][bufferSize][NR_POLARIZATIONS]),
-      itsLockedRange(bufferSize, readWriteDelay, bufferSize - history, 0),
-      itsDroppedItems(0),
-      itsDummyItems(0),
-      itsSkippedItems(0),
-      itsWriteTimer("write"),
-      itsReadTimer("read")
+BeamletBuffer::BeamletBuffer(int bufferSize, unsigned nSubbands, unsigned history, unsigned readWriteDelay):
+  itsNSubbands(nSubbands),
+  itsSize(bufferSize),
+  itsSBBuffers(boost::extents[nSubbands][bufferSize][NR_POLARIZATIONS]),
+  itsLockedRange(bufferSize, readWriteDelay, bufferSize - history, 0),
+  itsDroppedItems(0),
+  itsDummyItems(0),
+  itsSkippedItems(0),
+  itsWriteTimer("write"),
+  itsReadTimer("read")
+{
+  mutex::scoped_lock sl(itsFlagsMutex);
+  itsFlags.include(0, bufferSize);
+}
+
+BeamletBuffer::~BeamletBuffer()
+{      
+  clog<<"BeamletBuffer did not receive "<<itsDummyItems<<" stamps and received "<<itsDroppedItems<<" items too late. "<<itsSkippedItems<<" items were skipped (but may be received later)."<<endl;
+  clog<<"BeamletBufferTimers:"<<endl;
+  clog<<itsReadTimer<<endl;
+  clog<<itsWriteTimer<<endl;
+}
+
+void BeamletBuffer::checkForSkippedData(TimeStamp writeBegin) {
+  // flag the data from itsHighestWritten to end
+  while ((writeBegin > itsHighestWritten) and (itsHighestWritten > TimeStamp())) {
+    // take only the first part, so the buffer won't block
+    TimeStamp flagEnd = itsHighestWritten + itsSize/4;
+
+    if (flagEnd > writeBegin)
+      flagEnd = writeBegin;
+
+    TimeStamp realBegin = itsLockedRange.writeLock(itsHighestWritten, flagEnd);
+
+    itsWriteTimer.start();
+    //cerr<<"BeamletBuffer: skipping "<<itsHighestWritten<<" - "<<flagEnd<<" ("<<flagEnd-itsHighestWritten<<")"<<endl;
+    itsSkippedItems += flagEnd - itsHighestWritten;
+    unsigned startI = mapTime2Index(realBegin), endI = mapTime2Index(flagEnd);
+
     {
-#if 0
-      for (uint sb = 0; sb < nSubbands; sb ++) {
-	itsSBBuffers.push_back(new Beamlet[bufferSize]);
-      }
-#endif
       mutex::scoped_lock sl(itsFlagsMutex);
-      itsFlags.include(0, bufferSize);
-    }
-
-    BeamletBuffer::~BeamletBuffer()
-    {      
-      cout<<"BeamletBuffer did not receive "<<itsDummyItems<<" stamps and received "<<itsDroppedItems<<" items too late. "<<itsSkippedItems<<" items were skipped (but may be received later)."<<endl;
-      cout<<"BeamletBufferTimers:"<<endl;
-      cout<<itsReadTimer<<endl;
-      cout<<itsWriteTimer<<endl;
-      cout.flush();
-#if 0
-      vector<Beamlet*>::iterator bit = itsSBBuffers.begin();
-      for (; bit != itsSBBuffers.end(); bit++) {
-	delete [] *bit;
-      }
-#endif
-    }
-
-    void BeamletBuffer::checkForSkippedData(TimeStamp writeBegin) {
-      // flag the data from itsHighestWritten to end
-      while ((writeBegin > itsHighestWritten) and (itsHighestWritten > TimeStamp())) {
-	// take only the first part, so the buffer won't block
-	TimeStamp flagEnd = itsHighestWritten + itsSize/4;
-	if (flagEnd > writeBegin) flagEnd = writeBegin;
-	TimeStamp realBegin = itsLockedRange.writeLock(itsHighestWritten, flagEnd);
-
-	itsWriteTimer.start();
-	//cerr<<"BeamletBuffer: skipping "<<itsHighestWritten<<" - "<<flagEnd<<" ("<<flagEnd-itsHighestWritten<<")"<<endl;
-	itsSkippedItems += flagEnd - itsHighestWritten;
-	uint startI = mapTime2Index(realBegin), endI = mapTime2Index(flagEnd);
-
-	{
-	  mutex::scoped_lock sl(itsFlagsMutex);
-	  if (endI < startI) {
-	    itsFlags.include(0, endI).include(startI, itsSize);
-	  } else {
-	    itsFlags.include(startI, endI);
-	  }
-	} 
-
-	itsWriteTimer.stop();
-	if (itsHighestWritten < flagEnd) itsHighestWritten = flagEnd;
-	itsLockedRange.writeUnlock(flagEnd);
-      }
-    }
-
-    uint BeamletBuffer::writeElements(Beamlet* data, TimeStamp begin, uint nElements, uint subbandsPerFrame)
-    {
-      // if this part start beyond itsHighestWritten, there is a gap in the data in the buffer
-      // so set that data to zero and invalidate it.
-      //cerr<<"BeamletBuffer checking for skipped data"<<endl;
-      checkForSkippedData(begin);	
-
-      // Now write the normal data
-      //cerr<<"BeamletBuffer writing normal data"<<endl;
-      TimeStamp end = begin + nElements;
-      TimeStamp realBegin = itsLockedRange.writeLock(begin, end);
-      //cerr<<"BeamletBuffer writelock received"<<endl;
-
-      if (realBegin < end) {
-
-	itsDroppedItems += realBegin - begin;
-	data += realBegin - begin;
-	itsWriteTimer.start();
-
-	uint startI = mapTime2Index(realBegin), endI = mapTime2Index(end);
-
-	//cerr<<"BeamletBuffer: write from "<<realBegin<<" instead of "<<begin<<endl;
-	//cerr<<"BeamletBuffer: Writing from "<<startI<<" to "<<endI<<" timestamp "<<begin<<endl;
-	if (endI < startI) {
-	  // the data wraps around the allocated memory, so do it in two parts
-	  
-	  uint chunk1 = itsSize - startI;
-	  for (uint sb = 0; sb < itsNSubbands; sb++) {
-	    memcpy(itsSBBuffers[sb][startI].origin(), &data[0]     , sizeof(SampleType[chunk1][NR_POLARIZATIONS]));
-	    memcpy(itsSBBuffers[sb][0].origin()     , &data[chunk1], sizeof(SampleType[endI][NR_POLARIZATIONS]));
-	    data += nElements;		
-	  }
-
-	  mutex::scoped_lock sl(itsFlagsMutex);
-	  itsFlags.exclude(startI, itsSize).exclude(0, endI);
-	} else {
-	  for (uint sb = 0; sb < itsNSubbands; sb++) {
-	    memcpy(itsSBBuffers[sb][startI].origin(), data, sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
-	    data += nElements;		
-	  }
-
-	  mutex::scoped_lock sl(itsFlagsMutex);
-	  itsFlags.exclude(startI, endI);
-	}
-
-	itsWriteTimer.stop();
-	if (itsHighestWritten < end) itsHighestWritten = end;
-      }
-      itsLockedRange.writeUnlock(end);
-      return end - realBegin;
-    }
-
-    uint BeamletBuffer::getElements(vector<Beamlet *> buffers, SparseSet *flags, TimeStamp begin, uint nElements)
-    {
-      ASSERTSTR(buffers.size() == itsNSubbands, "BeamletBuffer received wrong number of buffers to write to (in getElements).");
-      TimeStamp end = begin + nElements;
-      TimeStamp realBegin = itsLockedRange.readLock(begin, end);
-      
-      itsReadTimer.start();
-
-      uint nInvalid = realBegin - begin;
-      itsDummyItems += nInvalid * itsNSubbands;
-      flags->include(0, nInvalid); // set flags later
-
-      // copy the real data
-      uint startI = mapTime2Index(begin), endI = mapTime2Index(end);
-
       if (endI < startI) {
-	// the data wraps around the allocated memory, so copy in two parts
-	uint firstChunk = itsSize - startI;
-
-	for (uint sb = 0; sb < itsNSubbands; sb++) {
-	  memcpy(&buffers[sb][0]         , itsSBBuffers[sb][startI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]));
-	  memcpy(&buffers[sb][firstChunk], itsSBBuffers[sb][0].origin(),      sizeof(SampleType[endI][NR_POLARIZATIONS]));
-	}
-
-	mutex::scoped_lock sl(itsFlagsMutex);
-	*flags |= (itsFlags.subset(0,      endI)    += firstChunk);
-	*flags |= (itsFlags.subset(startI, itsSize) -= startI);
+	itsFlags.include(0, endI).include(startI, itsSize);
       } else {
-	for (uint sb = 0; sb < itsNSubbands; sb++) {
-	  memcpy(&buffers[sb][0], itsSBBuffers[sb][startI].origin(), sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
-	}	  
-	mutex::scoped_lock sl(itsFlagsMutex);
-	*flags |= (itsFlags.subset(startI, endI) -= startI);
+	itsFlags.include(startI, endI);
+      }
+    } 
+
+    itsWriteTimer.stop();
+
+    if (itsHighestWritten < flagEnd)
+      itsHighestWritten = flagEnd;
+
+    itsLockedRange.writeUnlock(flagEnd);
+  }
+}
+
+void BeamletBuffer::writeElements(Beamlet *data, TimeStamp begin, unsigned nElements)
+{
+  // if this part start beyond itsHighestWritten, there is a gap in the data in the buffer
+  // so set that data to zero and invalidate it.
+  //cerr<<"BeamletBuffer checking for skipped data"<<endl;
+  checkForSkippedData(begin);	
+
+  // Now write the normal data
+  //cerr<<"BeamletBuffer writing normal data"<<endl;
+  TimeStamp end = begin + nElements;
+  TimeStamp realBegin = itsLockedRange.writeLock(begin, end);
+  //cerr<<"BeamletBuffer writelock received"<<endl;
+
+  if (realBegin < end) {
+    itsDroppedItems += realBegin - begin;
+    data += realBegin - begin;
+    itsWriteTimer.start();
+
+    unsigned startI = mapTime2Index(realBegin), endI = mapTime2Index(end);
+
+    //cerr<<"BeamletBuffer: write from "<<realBegin<<" instead of "<<begin<<endl;
+    //cerr<<"BeamletBuffer: Writing from "<<startI<<" to "<<endI<<" timestamp "<<begin<<endl;
+    if (endI < startI) {
+      // the data wraps around the allocated memory, so do it in two parts
+      
+      unsigned chunk1 = itsSize - startI;
+      for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
+	memcpy(itsSBBuffers[sb][startI].origin(), &data[0]     , sizeof(SampleType[chunk1][NR_POLARIZATIONS]));
+	memcpy(itsSBBuffers[sb][0].origin()     , &data[chunk1], sizeof(SampleType[endI][NR_POLARIZATIONS]));
+	data += nElements;		
       }
 
-      //cout<<"BeamletBuffer: getting elements "<<begin<<" - "<<begin+nElements<<": "<<*flags<<endl;
-     
-      // limit the size of the sparse set
-      const std::vector<struct SparseSet::range> &ranges = flags->getRanges();
+      mutex::scoped_lock sl(itsFlagsMutex);
+      itsFlags.exclude(startI, itsSize).exclude(0, endI);
+    } else {
+      for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
+	memcpy(itsSBBuffers[sb][startI].origin(), data, sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
+	data += nElements;		
+      }
 
-      if (ranges.size() > 16)
-	flags->include(ranges[15].begin, ranges[ranges.size() - 1].end);
-
-      itsReadTimer.stop();
-      itsLockedRange.readUnlock(end);
-      return end - realBegin;
+      mutex::scoped_lock sl(itsFlagsMutex);
+      itsFlags.exclude(startI, endI);
     }
 
-    TimeStamp BeamletBuffer::startBufferRead() {
-      TimeStamp oldest = itsLockedRange.getReadStart();
-      TimeStamp fixPoint(oldest.getSeqId() + 1, 0); 
-     
-      TimeStamp realBegin = itsLockedRange.readLock(fixPoint, fixPoint);
-      ASSERTSTR(realBegin == fixPoint, "Error in starting up buffer");
-      itsLockedRange.readUnlock(fixPoint);
-      return fixPoint;
+    itsWriteTimer.stop();
+
+    if (itsHighestWritten < end)
+      itsHighestWritten = end;
+  }
+
+  itsLockedRange.writeUnlock(end);
+}
+
+void BeamletBuffer::getElements(boost::multi_array_ref<SampleType, 3> &buffers, SparseSet &flags, TimeStamp begin, unsigned nElements)
+{
+  //ASSERTSTR(buffers.size() == itsNSubbands, "BeamletBuffer received wrong number of buffers to write to (in getElements).");
+  TimeStamp end = begin + nElements;
+  TimeStamp realBegin = itsLockedRange.readLock(begin, end);
+  
+  itsReadTimer.start();
+
+  unsigned nInvalid = realBegin - begin;
+  itsDummyItems += nInvalid * itsNSubbands;
+  flags.include(0, nInvalid); // set flags later
+
+  // copy the real data
+  unsigned startI = mapTime2Index(begin), endI = mapTime2Index(end);
+
+  if (endI < startI) {
+    // the data wraps around the allocated memory, so copy in two parts
+    unsigned firstChunk = itsSize - startI;
+
+    for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
+      memcpy(buffers[sb].origin()	     , itsSBBuffers[sb][startI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]));
+      memcpy(buffers[sb][firstChunk].origin(), itsSBBuffers[sb][0].origin(),      sizeof(SampleType[endI][NR_POLARIZATIONS]));
     }
 
-    TimeStamp BeamletBuffer::startBufferRead(TimeStamp begin) {
-      TimeStamp oldest = itsLockedRange.getReadStart();
-      TimeStamp realBegin = itsLockedRange.readLock(begin, begin);
-      ASSERTSTR(realBegin == begin, "Error in starting up buffer");
+    mutex::scoped_lock sl(itsFlagsMutex);
+    flags |= (itsFlags.subset(0,      endI)    += firstChunk);
+    flags |= (itsFlags.subset(startI, itsSize) -= startI);
+  } else {
+    for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
+      memcpy(buffers[sb].origin(), itsSBBuffers[sb][startI].origin(), sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
+    }	  
+    mutex::scoped_lock sl(itsFlagsMutex);
+    flags |= (itsFlags.subset(startI, endI) -= startI);
+  }
 
-      // if begin is no longer in the buffer the oldest possible beginning is returned
-      // if begin is not yet in the buffer readLock waits for it
+  //cout<<"BeamletBuffer: getting elements "<<begin<<" - "<<begin+nElements<<": "<<flags<<endl;
+ 
+  itsReadTimer.stop();
+  itsLockedRange.readUnlock(end);
+}
 
-      itsLockedRange.readUnlock(realBegin);
-      return realBegin;
-    }
+TimeStamp BeamletBuffer::startBufferRead() {
+  TimeStamp oldest = itsLockedRange.getReadStart();
+  TimeStamp fixPoint(oldest.getSeqId() + 1, 0); 
+ 
+  TimeStamp realBegin = itsLockedRange.readLock(fixPoint, fixPoint);
+  ASSERTSTR(realBegin == fixPoint, "Error in starting up buffer");
+  itsLockedRange.readUnlock(fixPoint);
+  return fixPoint;
+}
 
-  } // namespace CS1
+TimeStamp BeamletBuffer::startBufferRead(TimeStamp begin) {
+  TimeStamp oldest = itsLockedRange.getReadStart();
+  TimeStamp realBegin = itsLockedRange.readLock(begin, begin);
+  ASSERTSTR(realBegin == begin, "Error in starting up buffer");
+
+  // if begin is no longer in the buffer the oldest possible beginning is returned
+  // if begin is not yet in the buffer readLock waits for it
+
+  itsLockedRange.readUnlock(realBegin);
+  return realBegin;
+}
+
+} // namespace CS1
 } // namespace LOFAR

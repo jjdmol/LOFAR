@@ -71,8 +71,11 @@ namespace LOFAR
       //# Datamembers
       vector<Step *> itsSteps;
       Connector      itsConnector;
-      Stub_Delay     *itsInputStub;
+      Stub_Delay     *itsDelayStub;
       Stub_BGL	     *itsOutputStub;
+
+      std::vector<unsigned>	itsInputNodes, itsOutputNodes;
+      std::vector<WorkHolder *> itsWHs;
     };
 
     // @}
