@@ -1,11 +1,11 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,379 133 923 749 N "_3DFace" 1
+PANEL,441 221 794 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-  navViewCheckDpType($datapoint,\"RSPBoard\");
+  navViewCheckDpType($datapoint,\"RCU\");
   navPMLloadPropertySet($datapoint);
   string RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
   if (dpAccessable($datapoint + \".VddVccEn:_online.._value\") &&
@@ -14,14 +14,11 @@ PANEL,379 133 923 749 N "_3DFace" 1
 	  dpConnect(\"ShownofOverflows\", $datapoint + \".VddVccEn:_online.._value\",
 	                                $datapoint + \".nofOverflow:_online.._value\",
 	                                $datapoint + \".nofOverflow:_online.._invalid\");
-	  setValue(\"copy_scope\",\"enabled\",TRUE);
   }
   else
   {
     setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"txt_overflow\" , \"visible\", FALSE);
-    setValue(\"rect_lowBandFilter\", \"backCol\", \"_dpdoesnotexist\");
-    
+    setValue(\"txt_overflow\" , \"visible\", FALSE);    
   }
 }
 
@@ -33,7 +30,6 @@ ShownofOverflows(string dp1, bool Status,
   {
     setValue(\"txt_overflow\", \"text\", nofOverflow );
     setValue(\"txt_overflow\" , \"visible\", TRUE);
-    setValue(\"rect_lowBandFilter\", \"backCol\", \"Lofar_device_active\");
     if(Status)
     {
       setValue(\"rect_overflow\", \"backCol\", \"Lofar_device_active\");
@@ -47,7 +43,6 @@ ShownofOverflows(string dp1, bool Status,
   {
     setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"txt_overflow\" , \"visible\", FALSE);
-    setValue(\"rect_lowBandFilter\", \"backCol\", \"_dpdoesnotexist\");
   }
 }
 
@@ -70,12 +65,13 @@ navViewCheckDpType(string aDp, string aCheckType){
 }" 0
 E E E 1 -1 -1 0  130 290
 "" 0 1
-E"//#uses \"nav_usr/STS/STS-functions.ctl\"
+E"#uses \"nav_usr/STS/STS-functions.ctl\"
 //#uses \"nav_fw/gcfnav_view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
 ""
+1
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
@@ -83,7 +79,7 @@ LANG:1 6 Layer1
 6 129
 "Border31"
 ""
-1 220 665 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 70 663 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 48 0 0 0 0 0
 EE E
@@ -92,7 +88,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 220 160 660 665
+E E 0 1 1 0 1 E U  1 E 70 100 660 665
 4 36
 "Line1"
 ""
@@ -122,7 +118,7 @@ E E 0 1 1 0 1 E  430 720 430 621
 4 39
 "Line3"
 ""
-1 520 395 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 520 303 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 8 0 0 0 0 0
 EE E
@@ -131,57 +127,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  520 485 520 395
-6 44
-"rect_lowBandFilter"
-""
-1 280 325 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
- E E
-13 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 280 265 400 325
-2 45
-"Text3"
-""
-1 300 271 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-14 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 302 273 385 289
-0 2 0 "s" 0 0 0 192 0 0  302 273
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 15 Low band filter
-4 53
-"Line5"
-""
-1 340 395 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-22 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  340 485 340 395
+E E 0 1 1 0 1 E  520 435 520 303
 4 54
 "Line6"
 ""
-1 460 485 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 460 435 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 23 0 0 0 0 0
 EE E
@@ -190,90 +140,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  520 485 460 485
-4 55
-"Line7"
-""
-1 340 325 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-24 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  340 365 340 325
-4 57
-"Line9"
-""
-1 430 589 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-26 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  430 589 430 560
-2 60
-"Text6"
-""
-1 527 469 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-29 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 529 471 587 487
-0 2 0 "s" 0 0 0 192 0 0  529 471
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 High-band
-2 61
-"Text7"
-""
-1 270 468 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-30 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 272 470 327 486
-0 2 0 "s" 0 0 0 192 0 0  272 470
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 8 Low-band
-4 65
-"Line15"
-""
-1 340 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-34 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  340 265 340 120
+E E 0 1 1 0 1 E  520 435 460 435
 4 122
 "Line18"
 ""
-1 520 120 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 520 90 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 41 0 0 0 0 0
 EE E
@@ -282,11 +153,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  520 265 520 120
+E E 0 1 1 0 1 E  520 340 520 90
 2 183
-"txt_polarization_HFA"
+"txt_polarization_HBA"
 ""
-1 526 139 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 526 106 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 86 0 0 0 0 0
 EE E
@@ -297,73 +168,66 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  string RcuNumber;
-//  setValue(\"\", \"text\", substr($datapoint, strlen($datapoint)-1, strlen($datapoint)));
-  RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
-  if (RcuNumber==\"1\")
-    setValue(\"\", \"text\", \"x\");
-  else if (RcuNumber==\"2\")
-    setValue(\"\", \"text\", \"y\");
-  else 
-    setValue(\"\", \"text\", \"?\");
-
+  string theRCU;
+  string theRCUNumber_asStr;
+  int    theRCUNumber_asInt;
+  bool   isOdd = false;
+  
+  // Split datapoint into vector
+  // example of datapoint : LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_rcu0
+  dyn_string dp_strVector  = strsplit(dpSubStr($datapoint,DPSUB_DP),'_');
+  int        nrElems       = dynlen(dp_strVector);
+ 	//for (int idx=1; idx < nrElems+1; idx++) {
+  //	DebugN(idx + \" : \" + dp_strVector[idx]);
+	//}
+	// The latest element in the array is the value we need
+  theRCU             = strtoupper(dp_strVector[nrElems]);
+  // Isolate the number of the RCU
+  theRCUNumber_asStr = substr(theRCU, 3 , strlen(theRCU));
+	// Define the anInteger of the isolated number  
+ 	sscanf(theRCUNumber_asStr, \"%d\", theRCUNumber_asInt); // Read from string as int
+ 	// Define of the integer is odd or even
+ 	if ( fmod(theRCUNumber_asInt,2) == 1)
+ 		isOdd = true;
+ 	else
+ 		isOdd = false; 
+	// Set the textvalue in the panel
+	// If the RCUNumber_asInt is odd it is an X-polarization
+	// If the RCUNumber_asInt is even it is an Y-polarization
+  if (!isOdd)
+    setValue(\"\", \"text\", \"X\");
+  else
+    setValue(\"\", \"text\", \"Y\");
 }
 " 0
- E 0 1 1 0 1 E U  0 E 528 141 536 157
-0 2 0 "s" 0 0 0 192 0 0  528 141
+ E 0 1 1 0 1 E U  0 E 528 108 536 124
+0 2 0 "s" 0 0 0 192 0 0  528 108
  1
 1
 LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 1 x
-1 184 10 "" 0
+1 184 13 "" 0
 0
-1 185 10 "" 1
+1 185 13 "" 4
 0
-4 201
-"Line8"
-""
-1 520 325 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-99 0 0 0 0 0
-EE E
+1 186 13 "" 5
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  520 365 520 325
-1 202 13 "" 0
+1 187 13 "" 6
 0
-1 203 13 "" 4
+1 189 15 "" 0
 0
-1 204 13 "" 5
+1 190 15 "" 2
 0
-1 206 14 "" 0
+1 192 16 "" 0
 0
-1 207 14 "" 2
-0
-1 209 15 "" 0
-0
-1 210 15 "" 2
-0
-1 212 16 "" 0
-0
-1 213 16 "" 2
-0
-1 215 17 "" 0
-0
-1 216 17 "" 2
-0
-1 218 18 "" 0
-0
-1 219 18 "" 2
+1 193 16 "" 2
 0
 4 229
 "Line11"
 ""
-1 340 485 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 251 435 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 109 0 0 0 0 0
 EE E
@@ -372,7 +236,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  400 485 340 485
+E E 0 1 1 0 1 E  400 435 251 435
 2 230
 "Text1"
 ""
@@ -397,120 +261,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 1 .
-2 231
-"Text2"
-""
-1 303 75 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-110 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 341 77 413 93
-0 2 0 "s" 0 0 0 193 0 0  341 77
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 12 Low-frequent
-2 234
-"Text8"
-""
-1 315 95 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-113 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 341 97 389 113
-0 2 0 "s" 0 0 0 193 0 0  341 97
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 7 Antenna
-2 235
-"Text9"
-""
-1 480 75 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-114 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 520 77 596 93
-0 2 0 "s" 0 0 0 193 0 0  520 77
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 13 High-frequent
-2 236
-"Text10"
-""
-1 495 95 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-115 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 521 97 569 113
-0 2 0 "s" 0 0 0 193 0 0  521 97
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 7 Antenna
-2 239
-"txt_polarization_LFA"
-""
-1 346 140 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-118 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-"main()
-{
-  string RcuNumber;
-//  setValue(\"\", \"text\", substr($datapoint, strlen($datapoint)-1, strlen($datapoint)));
-  RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
-  if (RcuNumber==\"1\")
-    setValue(\"\", \"text\", \"x\");
-  else if (RcuNumber==\"2\")
-    setValue(\"\", \"text\", \"y\");
-  else 
-    setValue(\"\", \"text\", \"?\");
-
-}
-" 0
- E 0 1 1 0 1 E U  0 E 348 142 356 158
-0 2 0 "s" 0 0 0 192 0 0  348 142
- 1
-1
-LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 1 x
 2 240
 "Text12"
 ""
@@ -534,7 +284,7 @@ LANG:1 9 Backplane
 6 242
 "rect_overflow"
 ""
-1 479 620 E E E 1 E 1 E N "_Transparent" E N "Lofar_device_active" E E
+1 480 630 E E E 1 E 1 E N "_Transparent" E N "Lofar_device_active" E E
  E E
 120 0 0 0 0 0
 EE E
@@ -543,11 +293,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 479 590 619 620
+E E 0 1 1 0 1 E U  1 E 480 600 620 630
 2 244
 "Text5"
 ""
-1 562 602 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 562 612 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 122 0 0 0 0 0
 EE E
@@ -556,8 +306,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 590 604 642 620
-0 2 0 "s" 0 0 0 193 0 0  590 604
+E E 0 1 1 0 1 E U  0 E 590 614 642 630
+0 2 0 "s" 0 0 0 193 0 0  590 614
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -567,7 +317,7 @@ LANG:1 9 overflows
 4 254
 "Line10"
 ""
-1 479 590 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 479 600 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 129 0 0 0 0 0
 EE E
@@ -576,11 +326,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  479 590 619 590
+E E 0 1 1 0 1 E  479 600 619 600
 4 255
 "Line12"
 ""
-1 480 620 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 480 630 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 130 0 0 0 0 0
 EE E
@@ -589,11 +339,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  480 620 620 620
+E E 0 1 1 0 1 E  480 630 620 630
 4 256
 "Line13"
 ""
-1 619 590 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 619 600 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 131 0 0 0 0 0
 EE E
@@ -602,11 +352,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  619 621 619 590
+E E 0 1 1 0 1 E  619 631 619 600
 2 243
 "Text4"
 ""
-1 576 587 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 576 597 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 121 0 0 0 0 0
 EE E
@@ -615,55 +365,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 590 589 614 605
-0 2 0 "s" 0 0 0 193 0 0  590 589
+E E 0 1 1 0 1 E U  0 E 590 599 614 615
+0 2 0 "s" 0 0 0 193 0 0  590 599
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 5 nr of
-6 258
-"Border2"
-""
-1 287 319 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-133 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 287 296 394 319
-2 259
-"Text11"
-""
-1 340 298 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-134 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-"main()
-{
-  setValue(\"\", \"text\", \"10-90 MHz\");
-}" 0
- E 0 1 1 0 1 E U  0 E 342 300 344 316
-0 2 0 "s" 0 0 0 193 0 0  342 300
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 0 
 6 260
 "Border4"
 ""
-1 473 615 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 473 625 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
  E E
 135 0 0 0 0 0
 EE E
@@ -672,11 +385,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 473 595 556 615
+E E 0 1 1 0 1 E U  1 E 473 605 556 625
 2 261
 "txt_overflow"
 ""
-1 543 595 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 543 605 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 136 0 0 0 0 0
 EE E
@@ -685,209 +398,333 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 552 597 559 613
-0 2 0 "s" 0 0 0 194 0 0  552 597
+E E 0 1 1 0 1 E U  0 E 552 607 559 623
+0 2 0 "s" 0 0 0 194 0 0  552 607
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 1 0
-6 264
-"progressBar_border"
+2 278
+"txt_polarization_LBL"
 ""
-1 20 270 E E E 1 E 0 E N {0,0,0} E N "Weiss" E E
+1 166 107 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
-138 0 0 0 0 0
+147 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 240 200 270
-6 265
-"progressBar"
-""
-1 20 260 E E E 1 E 0 E N "Lofar_maintenance" E N "Lofar_maintenance" E E
- E E
-139 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 240 200 260
-1 186 10 "" 2
-0
-1 205 13 "" 1
-0
-1 208 14 "" 1
-0
-1 211 15 "" 1
-0
-1 214 16 "" 1
-0
-1 217 17 "" 1
-0
-1 220 18 "" 1
-0
-19 262
-"copy_scope"
-""
-1 60 100 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-136 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-58 98 162 192
-5
-T 
-1
-LANG:1 7 Station
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
-T 
-1
-LANG:1 4 Rack
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
-T 
-1
-LANG:1 7 SubRack
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
-T 
-1
-LANG:1 2 AP
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
-T 
-1
-LANG:1 4 None
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
- 1
-E
-"main(int button)
-{
-  if (button==4) {
-    setValue(\"CopyButton\",\"enabled\",FALSE);
-  } else {
-    setValue(\"CopyButton\",\"enabled\",TRUE);
-  }
-}" 0
-
-13 263
-"CopyButton"
-""
-1 60 210 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-137 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-58 208 182 235
-T 
-1
-LANG:1 4 copy
 "main()
 {
-  dyn_string scopeName=makeDynString(\"PIC\",\"Rack\",\"SubRack\",\"AP\",\"None\");
-  int scopeNr;
-  getValue(\"copy_scope\",\"number\",scopeNr);
-  string attribute = \"_online.._value\";
+  string theRCU;
+  string theRCUNumber_asStr;
+  int    theRCUNumber_asInt;
+  bool   isOdd = false;
   
-  dyn_string dpSysSplit=strsplit($datapoint,\":\");
-  string aSystem=dpSysSplit[1]; 
-  dyn_string dpSplit=strsplit(dpSysSplit[2],\"_\");
-  
-  
-  dyn_string aTmp=dynPatternMatch(scopeName[ConvIndex(scopeNr)]+\"*\",dpSplit);
- 
-
-  if (dynlen(aTmp) >1) {
-    DebugN(\"Too many matches in PatternMatch found\");
-  } else {
-    setValue(\"progressBar_border\",\"visible\",TRUE);
-    
-    int index=dynContains(dpSplit,aTmp[1]);
-
-    string localDp=dpSplit[1];
-    for (int i=2; i<=index; i++){
-      localDp=localDp+\"_\"+dpSplit[i];
-    }
-    dyn_string outputTemp = queryDatabaseForDP(attribute, aSystem+\":\"+localDp, FALSE);
-    
-    // liftout the elements with the right type;
-    string aTypeName=dpTypeName($datapoint);
-    
-    dyn_string aMatch;
-    for (int i=1; i<= dynlen(outputTemp);i++) {
-       if (i==1) {
-       }
-      if (dpTypeName(outputTemp[i]) == aTypeName) {
-        aMatch[dynlen(aMatch) + 1] = outputTemp[i];
-      }
-    }
-    
-    // get the present datapoint settings to be copied
-    bool VddVccEn;
-    bool VhEnable;
-    bool VlEnable;
-    bool filSelA;
-    bool filSelB;
-    bool bandSel;
-    bool HBAEnable;
-    bool LBAEnable;
-    dpGet($datapoint+\".VddVccEn\",VddVccEn);
-    dpGet($datapoint+\".VhEnable\",VhEnable);
-    dpGet($datapoint+\".VlEnable\",VlEnable);
-    dpGet($datapoint+\".filSelA\",filSelA);
-    dpGet($datapoint+\".filSelB\",filSelB);
-    dpGet($datapoint+\".bandSel\",bandSel);
-    dpGet($datapoint+\".HBAEnable\",HBAEnable);
-    dpGet($datapoint+\".LBAEnable\",LBAEnable);
-    
-     
-    // copy the settings to all found datapoints
-    for (int i=1; i<= dynlen(aMatch);i++) {
-      progressBar(dynlen(aMatch),i);
-      dpSet(aMatch[i]+\".VddVccEn\",VddVccEn);
-      dpSet(aMatch[i]+\".VhEnable\",VhEnable);
-      dpSet(aMatch[i]+\".VlEnable\",VlEnable);
-      dpSet(aMatch[i]+\".filSelA\",filSelA);
-      dpSet(aMatch[i]+\".filSelB\",filSelB);
-      dpSet(aMatch[i]+\".bandSel\",bandSel);
-      dpSet(aMatch[i]+\".HBAEnable\",HBAEnable);
-      dpSet(aMatch[i]+\".LBAEnable\",LBAEnable);
-    }
-  }
+  // Split datapoint into vector
+  // example of datapoint : LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_rcu0
+  dyn_string dp_strVector  = strsplit(dpSubStr($datapoint,DPSUB_DP),'_');
+  int        nrElems       = dynlen(dp_strVector);
+ 	//for (int idx=1; idx < nrElems+1; idx++) {
+  //	DebugN(idx + \" : \" + dp_strVector[idx]);
+	//}
+	// The latest element in the array is the value we need
+  theRCU             = strtoupper(dp_strVector[nrElems]);
+  // Isolate the number of the RCU
+  theRCUNumber_asStr = substr(theRCU, 3 , strlen(theRCU));
+	// Define the anInteger of the isolated number  
+ 	sscanf(theRCUNumber_asStr, \"%d\", theRCUNumber_asInt); // Read from string as int
+ 	// Define of the integer is odd or even
+ 	if ( fmod(theRCUNumber_asInt,2) == 1)
+ 		isOdd = true;
+ 	else
+ 		isOdd = false; 
+	// Set the textvalue in the panel
+	// If the RCUNumber_asInt is odd it is an X-polarization
+	// If the RCUNumber_asInt is even it is an Y-polarization
+  if (!isOdd)
+    setValue(\"\", \"text\", \"X\");
+  else
+    setValue(\"\", \"text\", \"Y\");
 }
 " 0
- E E E
+ E 0 1 1 0 1 E U  0 E 168 109 176 125
+0 2 0 "s" 0 0 0 192 0 0  168 109
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 x
+1 279 21 "" 0
+0
+1 280 21 "" 4
+0
+1 281 21 "" 5
+0
+1 282 21 "" 6
+0
+4 289
+"Line17"
+""
+1 160 198 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+155 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  220 198 160 198
+4 290
+"Line19"
+""
+1 342 90 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+156 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  342 198 342 90
+4 292
+"Line21"
+""
+1 283 198 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+158 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  342 198 283 198
+4 293
+"Line22"
+""
+1 160 90 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+159 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  160 198 160 90
+2 297
+"txt_polarization_LBH"
+""
+1 348 106 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+159 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  string theRCU;
+  string theRCUNumber_asStr;
+  int    theRCUNumber_asInt;
+  bool   isOdd = false;
+  
+  // Split datapoint into vector
+  // example of datapoint : LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_rcu0
+  dyn_string dp_strVector  = strsplit(dpSubStr($datapoint,DPSUB_DP),'_');
+  int        nrElems       = dynlen(dp_strVector);
+ 	//for (int idx=1; idx < nrElems+1; idx++) {
+  //	DebugN(idx + \" : \" + dp_strVector[idx]);
+	//}
+	// The latest element in the array is the value we need
+  theRCU             = strtoupper(dp_strVector[nrElems]);
+  // Isolate the number of the RCU
+  theRCUNumber_asStr = substr(theRCU, 3 , strlen(theRCU));
+	// Define the anInteger of the isolated number  
+ 	sscanf(theRCUNumber_asStr, \"%d\", theRCUNumber_asInt); // Read from string as int
+ 	// Define of the integer is odd or even
+ 	if ( fmod(theRCUNumber_asInt,2) == 1)
+ 		isOdd = true;
+ 	else
+ 		isOdd = false; 
+	// Set the textvalue in the panel
+	// If the RCUNumber_asInt is odd it is an X-polarization
+	// If the RCUNumber_asInt is even it is an Y-polarization
+  if (!isOdd)
+    setValue(\"\", \"text\", \"X\");
+  else
+    setValue(\"\", \"text\", \"Y\");
+}
+" 0
+ E 0 1 1 0 1 E U  0 E 350 108 358 124
+0 2 0 "s" 0 0 0 192 0 0  350 108
+ 1
+1
+LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 x
+1 298 17 "" 0
+0
+1 299 17 "" 2
+0
+2 308
+"Text3"
+""
+1 148 66 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+162 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 161 68 183 84
+0 2 0 "s" 0 0 0 193 0 0  161 68
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 LBL
+2 310
+"Text9"
+""
+1 329 66 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+164 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 343 68 367 84
+0 2 0 "s" 0 0 0 193 0 0  343 68
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 LBH
+2 311
+"Text11"
+""
+1 506 66 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+165 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 521 68 547 84
+0 2 0 "s" 0 0 0 193 0 0  521 68
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 HBA
+1 312 18 "" 0
+0
+1 313 18 "" 2
+0
+1 315 10 "" 0
+0
+1 316 10 "" 1
+0
+4 337
+"Line14"
+""
+1 251 304 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+169 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  251 435 251 304
+1 338 22 "" 0
+0
+1 339 22 "" 1
+0
+1 341 14 "" 0
+0
+1 342 14 "" 2
+0
+1 344 23 "" 0
+0
+1 345 23 "" 2
+0
+4 501
+"Line5"
+""
+1 430 582 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+184 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  430 600 430 582
+4 576
+"Line4"
+""
+1 430 495 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+185 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  430 520 430 495
+1 577 41 "" 224
+0
+1 578 41 "" 72
+0
+1 579 41 "" 225
+0
+1 188 13 "" 1
+0
+1 191 15 "" 1
+0
+1 194 16 "" 1
+0
+1 283 21 "" 1
+0
+1 300 17 "" 1
+0
+1 314 18 "" 1
+0
+1 317 10 "" 2
+0
+1 340 22 "" 2
+0
+1 343 14 "" 1
+0
+1 346 23 "" 1
+0
+1 580 41 "" 223
+0
 0
 LAYER, 1 
 1
@@ -917,42 +754,62 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 10 ""
-"objects\\nav_usr\\STS\\STS_RCU_HB_Filter.pnl" 314 200 T 96 1 0 1  147 125  
-1
-"$datapoint""$datapoint"
 3 13 ""
-"objects\\nav_usr\\STS\\STS_RCU_bandSelection.pnl" 475 403 T 102 1 0 1  -45 112  
-1
-"$datapoint""$datapoint"
-3 14 ""
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 81 654 T 103 1 0 1  209 -259  
-3
-"$Caption""LFA-Receiver"
-"$Component""VlEnable"
+"objects\\nav_usr\\STS\\STS_RCU_bandSelection.pnl" 475 403 T 102 1 0 1  -45 62  
+2
+"$Component""bandSelLBA_HBA"
 "$datapoint""$datapoint"
 3 15 "Group11"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 350 T 104 1 0 1  411 45  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 350 T 104 1 0 1  411 46  
 3
-"$Caption""HFA-Receiver"
+"$Caption""HBAReceiver"
 "$Component""VhEnable"
 "$datapoint""$datapoint"
 3 16 "Group13"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 330 350 T 105 1 0 1  50 270  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 330 350 T 105 1 0 1  50 280  
 3
 "$Caption""AD-Convertor"
 "$Component""VddVccEn"
 "$datapoint""$datapoint"
+3 21 "Group13"
+"objects\\nav_usr\\STS\\STS_RCU_bandSelection.pnl" 400 485 T 153 1 0 1  -149 -257  
+2
+"$Component""bandSelLBL_LBH"
+"$datapoint""$datapoint"
 3 17 "Group15"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 285 T 106 1 0 1  231 -75  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 285 T 106 1 0 1  51 -124  
 3
-"$Caption""LFA-Amplifier"
-"$Component""LBAEnable"
+"$Caption""LBLAmplifier"
+"$Component""LBLEnable"
 "$datapoint""$datapoint"
 3 18 "Group17"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 100 T 107 1 0 1  411 110  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 100 T 107 1 0 1  411 61  
 3
-"$Caption""HFA-Amplifier"
+"$Caption""HBAAmplifier"
 "$Component""HBAEnable"
+"$datapoint""$datapoint"
+3 10 "HighBandFilter"
+"objects\\nav_usr\\STS\\STS_RCU_HB_Filter.pnl" 314 200 T 96 1 0 1  147 140  
+1
+"$datapoint""$datapoint"
+3 22 "LowBandFilter"
+"objects\\nav_usr\\STS\\STS_RCU_LB_Filter.pnl" 190 350 T 161 1 0 1  3 -10  
+1
+"$datapoint""$datapoint"
+3 14 ""
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 81 654 T 103 1 0 1  121 -260  
+3
+"$Caption""LBAReceiver"
+"$Component""VlEnable"
+"$datapoint""$datapoint"
+3 23 "Group11"
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 203 247 T 169 1 0 1  90 -86  
+3
+"$Caption""LBHAmplifier"
+"$Component""LBHEnable"
+"$datapoint""$datapoint"
+3 41 ""
+"objects\\nav_usr\\STS\\STS_Subrack_RCU_Attenuating.pnl" 224 553 T 188 1 0 1  223 14  
+1
 "$datapoint""$datapoint"
 0
