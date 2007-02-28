@@ -22,8 +22,7 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 
-import java.io.File;
-import javax.swing.JFileChooser;
+import nl.astron.lofar.sas.otb.MainFrame;
 
 /**
  * @created 24-04-2006, 11:33
@@ -40,8 +39,10 @@ public class SetServerDialog extends javax.swing.JDialog {
      * @param   modal       Should the Dialog be modal or not
      * @param   aType       PIC-tree or VIC-component
      */
-    public SetServerDialog(java.awt.Frame parent, boolean modal) {
+    public SetServerDialog(MainFrame parent, boolean modal) {
         super(parent, modal);
+        itsServer=parent.getServer();
+        itsPort=parent.getPort();
         initComponents();
         setTopLabel();
         getRootPane().setDefaultButton(applyButton);

@@ -45,6 +45,7 @@ import org.apache.log4j.Logger;
  * @version $Id$
  *
  * @updated coolen 16-06-2006,  added support for remotefiletransfer
+ * @updated coolen 27-02-2007,  added support for server/port setting
  */
 public class OtdbRmi {
     
@@ -93,6 +94,8 @@ public class OtdbRmi {
         if(serverDialog.isOk()) {
             RMIServerName = serverDialog.getServer();
             RMIServerPort = serverDialog.getPort();
+            itsMainFrame.setServer(RMIServerName);
+            itsMainFrame.setPort(RMIServerPort);
         }
     }
     

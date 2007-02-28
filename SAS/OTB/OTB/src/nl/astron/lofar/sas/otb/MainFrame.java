@@ -53,6 +53,8 @@ public class MainFrame extends javax.swing.JFrame {
     private MACNavigatorInteraction          itsMACInteraction;
     private SharedVars                       itsSharedVars;
     private static UserAccount               itsUserAccount;
+    private String itsServer               = "";
+    private String itsPort                 = "";
     private String itsDBName               = "No Database";
     
     
@@ -94,7 +96,9 @@ public class MainFrame extends javax.swing.JFrame {
     }
     
     /** Creates new form MainFrame */
-    public MainFrame() {
+    public MainFrame(String server, String port) {
+        itsServer=server;
+        itsPort=port;
         itsPlugins = new HashMap<String,PluginPanelInfo>();
         itsSharedVars = new SharedVars(this);
         itsStorageLocation = new StorageLocation(getSharedVars().getOTDBrmi());
@@ -107,7 +111,28 @@ public class MainFrame extends javax.swing.JFrame {
         showPanel(MainPanel.getFriendlyNameStatic());
     }
     
+    /** sets the serverName */
+    public void setServer(String aServer) {
+        itsServer=aServer;
+    }
+    
+    /** gets the serverName */
 
+    public String getServer() {
+        return itsServer;
+    }
+    
+    /** sets the portNr */
+    public void setPort(String aPort) {
+        itsPort=aPort;
+    }
+    
+    /** gets the Port */
+
+    public String getPort() {
+        return itsPort;
+    }
+    
     /** returns the SharedVars Object that holds shared variables
      *
      */
@@ -483,7 +508,7 @@ public class MainFrame extends javax.swing.JFrame {
     public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainFrame().setVisible(true);
+                new MainFrame("","").setVisible(true);
             }
         });
     }
