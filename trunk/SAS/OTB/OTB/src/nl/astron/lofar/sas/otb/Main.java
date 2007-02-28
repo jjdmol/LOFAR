@@ -23,8 +23,13 @@
 
 package nl.astron.lofar.sas.otb;
 
+
+import com.darwinsys.lang.GetOpt;
+import com.darwinsys.lang.GetOptDesc;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
+import java.util.Iterator;
+import java.util.Map;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -32,9 +37,9 @@ import org.apache.log4j.PropertyConfigurator;
  * This is the Main class for the OTB framework.
  *
  * @created 11-01-2006, 9:11
- * @author blaakmeer
+ * @author coolen
  * @version $Id$
- * @updated
+ * @updated 
  */
 public class Main {
     
@@ -44,17 +49,55 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] argv) {
         try {
             String logConfig = "OTB.log_prop";
-            if(args.length > 0) {
-                logConfig = args[0];
+            String server    = "lofar17.astron.nl";
+            String port      = "10199";
+            boolean errs     = false;
+            
+            GetOptDesc options[] = {
+                new GetOptDesc('s', "server", true),
+                new GetOptDesc('p', "port", true),
+                new GetOptDesc('l', "logfile", true),
+                new GetOptDesc('h', "help", false)
+            };
+            
+            GetOpt parser = new GetOpt(options);
+            Map optionsFound = parser.parseArguments(argv);
+            Iterator it = optionsFound.keySet().iterator();
+            while (it.hasNext()) {
+                String key = (String)it.next();
+                char c = key.charAt(0);
+                switch (c) {
+                    case 's':
+                        server = (String)optionsFound.get(key);
+                        break;
+                    case 'p':
+                        port = (String)optionsFound.get(key);
+                        break;
+                    case 'l':
+                        logConfig = (String)optionsFound.get(key);
+                        break;
+                    case 'h':
+                        errs = true;
+                        break;
+                    case '?':
+                        errs = true;
+                        break;
+                    default:
+                        throw new IllegalStateException(
+                                "Unexpected option character: "+ c);
+                }
             }
+            if (errs) {
+                System.err.println("Usage: OTB.jar [-s server] [-p port] [-l logFile] [-h]");
+            }         
                 
             PropertyConfigurator.configure(logConfig);
             logger.info("OTB started");
 
-            MainFrame aMainFrame = new MainFrame();
+            MainFrame aMainFrame = new MainFrame(server,port);
 
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             Rectangle screenRect = ge.getMaximumWindowBounds();
@@ -64,6 +107,7 @@ public class Main {
         catch(Exception e) {
             // catch all exceptions and create a fatal error message, including 
             // a stack trace.
+            System.out.println("Error: "+ e);
             logger.fatal("Fatal exception, OTB halted",e);
         }
     }

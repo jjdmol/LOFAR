@@ -36,6 +36,7 @@ import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
+import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
@@ -93,6 +94,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         itsNode=(jOTDBnode)anObject;
         jOTDBparam aParam=null;
         try {
+            // get old tree description
+            itsOldTreeDescription = this.itsOtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false).description;
+            inputTreeDescription.setText(itsOldTreeDescription);   
             
             //we need to get all the childs from this node.    
             Vector childs = itsOtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
@@ -348,6 +352,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
       inputReceiverList.setText(itsReceiverList.limits);
       inputSubbandList.setText(itsSubbandList.limits);
       inputDescription.setText("");
+      inputTreeDescription.setText(itsOldTreeDescription);
     
       // Observation Beam parameters
       inputAngle1.setText(itsAngle1.limits);
@@ -372,6 +377,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         buttonPanel1.addButton("Restore");
         buttonPanel1.addButton("Save");
         this.stationsList.setModel(new DefaultListModel());
+
         
         // hardcoded for now. In a later stage they MUST be taken out of
         // the param, or from a special class that contains all possible stations
@@ -399,8 +405,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             // enable/disable certain controls
         }
         
-        
-        
+
          if (itsNode != null) {
             // [TODO]
             // Fill from existing cfg needed ????
@@ -504,6 +509,18 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsNyquistZone.limits = inputNyquistZone.getSelectedItem().toString();
             saveNode(itsNyquistZone);
         }
+        
+        // treeDescription
+        if (itsOldTreeDescription != null && !inputTreeDescription.getText().equals(itsOldTreeDescription)) {
+            try {
+                if (!itsOtdbRmi.getRemoteMaintenance().setDescription(itsNode.treeID(), inputTreeDescription.getText())) {
+                    logger.debug("Error during setDescription: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                } 
+            } catch (RemoteException ex) {
+                logger.debug("Error: saveNode failed : " + ex);
+            } 
+            itsOldTreeDescription = inputTreeDescription.getText();
+        }
 
         
     }
@@ -582,6 +599,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         inputReceiverList = new javax.swing.JTextField();
         labelSubbandList = new javax.swing.JLabel();
         inputSubbandList = new javax.swing.JTextField();
+        treeDescriptionScrollPane = new javax.swing.JScrollPane();
+        inputTreeDescription = new javax.swing.JTextArea();
         descriptionScrollPane = new javax.swing.JScrollPane();
         inputDescription = new javax.swing.JTextArea();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
@@ -598,8 +617,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel1.add(jLabel1, java.awt.BorderLayout.CENTER);
 
         add(jPanel1, java.awt.BorderLayout.NORTH);
-
-        jPanel2.setLayout(new java.awt.BorderLayout());
 
         jPanel2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Beam Input"));
@@ -660,7 +677,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
                     .add(inputAngle1)
                     .add(inputAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE))
-                .addContainerGap(22, Short.MAX_VALUE))
+                .addContainerGap(28, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -761,13 +778,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             .add(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(stationsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(43, Short.MAX_VALUE))
+                .addContainerGap(68, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel5Layout.createSequentialGroup()
-                .add(stationsPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 278, Short.MAX_VALUE)
-                .addContainerGap())
+                .add(stationsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(20, Short.MAX_VALUE))
         );
 
         jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder("Generic Observation Input"));
@@ -842,7 +859,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                         .add(labelMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 331, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .add(29, 29, 29))
+                .add(36, 36, 36))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -850,7 +867,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelMSNameMask)
                     .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 34, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelAntennaArray)
                     .add(inputAntennaArray, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
@@ -870,24 +887,21 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel7Layout.setHorizontalGroup(
             jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel7Layout.createSequentialGroup()
-                .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(jPanel10, 0, 551, Short.MAX_VALUE)
-                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 551, Short.MAX_VALUE))
+                .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 561, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel10, 0, 561, Short.MAX_VALUE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel7Layout.createSequentialGroup()
-                .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(jPanel7Layout.createSequentialGroup()
-                        .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 125, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jPanel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addContainerGap())
+            .add(jPanel7Layout.createSequentialGroup()
+                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 125, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 128, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+            .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
-        jPanel2.add(jPanel7, java.awt.BorderLayout.NORTH);
 
         labelStationList.setBorder(javax.swing.BorderFactory.createTitledBorder("Generic Observation Lists"));
         labelBeamletList.setText("Beamlets :");
@@ -914,8 +928,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        descriptionScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder("Description"));
+        treeDescriptionScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder("Observation Tree Description"));
+        inputTreeDescription.setColumns(20);
+        inputTreeDescription.setRows(5);
+        inputTreeDescription.setToolTipText("The description set here will go to the Tree Description");
+        treeDescriptionScrollPane.setViewportView(inputTreeDescription);
+
+        descriptionScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder("Field Descriptions."));
         inputDescription.setColumns(20);
+        inputDescription.setEditable(false);
         inputDescription.setRows(5);
         descriptionScrollPane.setViewportView(inputDescription);
 
@@ -923,33 +944,32 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         labelStationList.setLayout(labelStationListLayout);
         labelStationListLayout.setHorizontalGroup(
             labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(labelStationListLayout.createSequentialGroup()
-                .addContainerGap()
-                .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, labelStationListLayout.createSequentialGroup()
+                .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(org.jdesktop.layout.GroupLayout.LEADING, descriptionScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 842, Short.MAX_VALUE)
+                    .add(treeDescriptionScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 842, Short.MAX_VALUE)
                     .add(labelStationListLayout.createSequentialGroup()
-                        .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 790, Short.MAX_VALUE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, labelStationListLayout.createSequentialGroup()
+                        .addContainerGap()
                         .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                             .add(labelStationListLayout.createSequentialGroup()
-                                .add(labelSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 67, Short.MAX_VALUE)
+                                .add(labelSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 90, Short.MAX_VALUE)
                                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
                             .add(labelStationListLayout.createSequentialGroup()
-                                .add(labelReceiverList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 64, Short.MAX_VALUE)
+                                .add(labelReceiverList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 87, Short.MAX_VALUE)
                                 .add(7, 7, 7))
                             .add(labelStationListLayout.createSequentialGroup()
-                                .add(labelBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 62, Short.MAX_VALUE)
+                                .add(labelBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE)
                                 .add(9, 9, 9)))
                         .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 719, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputReceiverList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 719, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 719, Short.MAX_VALUE))))
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputReceiverList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE)
+                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 738, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         labelStationListLayout.setVerticalGroup(
             labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(labelStationListLayout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(34, Short.MAX_VALUE)
                 .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelReceiverList)
                     .add(inputReceiverList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -961,24 +981,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelBeamletList)
                     .add(inputBeamletList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(54, 54, 54)
-                .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(167, Short.MAX_VALUE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(treeDescriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 54, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
-
-        org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(labelStationList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel4Layout.createSequentialGroup()
-                .add(labelStationList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-        jPanel2.add(jPanel4, java.awt.BorderLayout.CENTER);
 
         buttonPanel1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -986,8 +993,43 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        jPanel2.add(buttonPanel1, java.awt.BorderLayout.SOUTH);
+        org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel4Layout.createSequentialGroup()
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(buttonPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 822, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(labelStationList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel4Layout.createSequentialGroup()
+                .add(labelStationList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(buttonPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(26, 26, 26))
+        );
 
+        org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel2Layout.createSequentialGroup()
+                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel7, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel2Layout.createSequentialGroup()
+                .add(jPanel7, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(15, 15, 15)
+                .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(16, Short.MAX_VALUE))
+        );
         add(jPanel2, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
@@ -1087,6 +1129,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private OtdbRmi    itsOtdbRmi;
     private Vector<jOTDBparam> itsParamList;
     private jOTDBparam itsOldDescriptionParam;
+    private String     itsOldTreeDescription;
     
     // Observation Specific parameters
     private jOTDBnode itsMSNameMask;
@@ -1128,6 +1171,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JComboBox inputNyquistZone;
     private javax.swing.JTextField inputReceiverList;
     private javax.swing.JTextField inputSubbandList;
+    private javax.swing.JTextArea inputTreeDescription;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
@@ -1155,6 +1199,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel stationsModPanel;
     private javax.swing.JPanel stationsPanel;
     private javax.swing.JScrollPane stationsScrollPane;
+    private javax.swing.JScrollPane treeDescriptionScrollPane;
     // End of variables declaration//GEN-END:variables
     
     

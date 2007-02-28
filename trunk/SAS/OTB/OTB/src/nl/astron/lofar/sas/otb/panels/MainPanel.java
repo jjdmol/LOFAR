@@ -446,6 +446,11 @@ public class MainPanel extends javax.swing.JPanel
         if (aButton.equals("Quit")) {
             itsMainFrame.exit();
             return;
+        } else if (aButton.equals("Refresh")) {
+            //set changed flag, we want to refresh the tree
+            itsMainFrame.setChanged(this.getFriendlyName(),true);
+            checkChanged();
+            return;
         }
         if (itsTabFocus.equals("PIC")) {
             if (treeID > 0) {
@@ -771,10 +776,6 @@ public class MainPanel extends javax.swing.JPanel
             }
         } else if (itsTabFocus.equals("Query Results")) {
             itsMainFrame.ToDo();
-        } else if (aButton.equals("Refresh")) {
-            //set changed flag, we want to refresh the tree
-            itsMainFrame.setChanged(this.getFriendlyName(),true);
-            checkChanged();
         } else {
             logger.debug("Other command found: "+aButton);
         }
