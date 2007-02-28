@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
  */
 public class VICtableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"TreeID","OriginalTree","Status","Campaign","MoMID","StartTime","StopTime","Description"};
+    private String headers[] = {"ID","OriginalTree","Status","Campaign","MoMID","StartTime","StopTime","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
 

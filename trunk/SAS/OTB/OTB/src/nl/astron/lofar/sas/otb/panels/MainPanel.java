@@ -193,7 +193,6 @@ public class MainPanel extends javax.swing.JPanel
         if (this.hasChanged()) {
             // keep selected tree
             int aSavedID=itsMainFrame.getSharedVars().getTreeID();
-            int aSavedRow=this.getSelectedRow();
             itsMainFrame.setHourglassCursor();
             if (itsTabFocus.equals("PIC")) {
                 if (!((PICtableModel)PICPanel.getTableModel()).fillTable()) {
@@ -222,7 +221,7 @@ public class MainPanel extends javax.swing.JPanel
             }
             if (aSavedID > 0) {
                 itsMainFrame.getSharedVars().setTreeID(aSavedID);
-                this.setSelectedRow(aSavedRow);
+                this.setSelectedID(aSavedID);
             }   
             this.setChanged(false);
             this.validate();
@@ -378,16 +377,16 @@ public class MainPanel extends javax.swing.JPanel
     }
 
     /** Sets the selected row in the present tree */
-    private void setSelectedRow(int aRow) {
-        if (aRow > -1) {
+    private void setSelectedID(int aTreeID) {
+        if (aTreeID > -1) {
             if (itsTabFocus.equals("PIC")) {
-                PICPanel.setSelectedRow(aRow);
+                PICPanel.setSelectedID(aTreeID);
             } else if (itsTabFocus.equals("VIC")) {
-                VICPanel.setSelectedRow(aRow);
+                VICPanel.setSelectedID(aTreeID);
             } else if (itsTabFocus.equals("Templates")) {
-                TemplatesPanel.setSelectedRow(aRow);
+                TemplatesPanel.setSelectedID(aTreeID);
             } else if (itsTabFocus.equals("Components")) {
-                ComponentsPanel.setSelectedRow(aRow);
+                ComponentsPanel.setSelectedID(aTreeID);
             }
         }
     }

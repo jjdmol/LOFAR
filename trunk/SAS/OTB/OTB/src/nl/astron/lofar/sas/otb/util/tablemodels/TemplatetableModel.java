@@ -40,7 +40,7 @@ import org.apache.log4j.Logger;
  */
 public class TemplatetableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"TreeID","OriginalTree","Status","Classification","Campaign","MoMID","Description"};
+    private String headers[] = {"ID","OriginalTree","Status","Classification","Campaign","MoMID","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
 

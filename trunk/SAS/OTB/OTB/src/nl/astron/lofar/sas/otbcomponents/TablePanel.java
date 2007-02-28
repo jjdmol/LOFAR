@@ -53,10 +53,30 @@ public class TablePanel extends javax.swing.JPanel {
      *
      * @param aRow the seledcted Row
      */
-    public void setSelectedRow(int aRow) {
-        if (jTable1.getModel().getRowCount() >= aRow) {
-            jTable1.getSelectionModel().setSelectionInterval(aRow,aRow);
+    public void setSelectedID(int anID) {
+        int IDcol=-1;
+        int IDrow=-1;
+        for (int j=0 ; j< jTable1.getModel().getColumnCount(); j++) {
+            if (jTable1.getColumnName(j).equals("ID")) {
+                IDcol=j;
+                break;
+            }
         }
+        if (IDcol <= -1) {
+            return;
+        }
+        
+        for (int i =0; i <jTable1.getModel().getRowCount(); i++ ) {
+            if(jTable1.getValueAt(i,IDcol).equals(anID)) {
+                IDrow=i;
+                break;
+            }
+        }
+        
+        if (IDrow <= -1) {
+            return;
+        }
+        jTable1.getSelectionModel().setSelectionInterval(IDrow,IDrow);
     }
     
     

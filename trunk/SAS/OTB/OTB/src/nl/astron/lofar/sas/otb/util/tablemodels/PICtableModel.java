@@ -40,7 +40,7 @@ import org.apache.log4j.Logger;
  */
 public class PICtableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"TreeID","Status","Classification","Creator","CreationTime","ObsoleteTime","Description"};
+    private String headers[] = {"ID","Status","Classification","Creator","CreationTime","ObsoleteTime","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
     

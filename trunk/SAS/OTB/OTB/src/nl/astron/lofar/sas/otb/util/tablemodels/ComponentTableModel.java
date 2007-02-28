@@ -37,7 +37,7 @@ import org.apache.log4j.Logger;
  */
 public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
     
-    private String headers[] = {"nodeID","Name","Version","Classification","Constraints","Description"};
+    private String headers[] = {"ID","Name","Version","Classification","Constraints","Description"};
     private OtdbRmi otdbRmi;
     private Object data[][];
     
