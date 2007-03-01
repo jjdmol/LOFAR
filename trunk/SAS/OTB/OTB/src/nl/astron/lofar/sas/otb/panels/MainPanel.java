@@ -154,19 +154,31 @@ public class MainPanel extends javax.swing.JPanel
         PICtableModel PICmodel = new PICtableModel(itsMainFrame.getSharedVars().getOTDBrmi());
         PICPanel.setTableModel(PICmodel);
         PICPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
+        PICPanel.setColumnSize("ID",35);
+        PICPanel.setColumnSize("Description",700);
+        
 
         VICtableModel VICmodel = new VICtableModel(itsMainFrame.getSharedVars().getOTDBrmi());
         VICPanel.setTableModel(VICmodel);
         VICPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        VICPanel.setColumnSize("ID",35);
+        VICPanel.setColumnSize("OriginalTree",75);
+        VICPanel.setColumnSize("MoMID",50);
+        VICPanel.setColumnSize("Description",700);
         
         TemplatetableModel Templatemodel = new TemplatetableModel(itsMainFrame.getSharedVars().getOTDBrmi());
         TemplatesPanel.setTableModel(Templatemodel);
         TemplatesPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        TemplatesPanel.setColumnSize("ID",35);
+        TemplatesPanel.setColumnSize("OriginalTree",75);
+        TemplatesPanel.setColumnSize("MoMID",50);
+        TemplatesPanel.setColumnSize("Description",700);
         
         ComponentTableModel Componentmodel = new ComponentTableModel(itsMainFrame.getSharedVars().getOTDBrmi());
         ComponentsPanel.setTableModel(Componentmodel);
         ComponentsPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        ComponentsPanel.setColumnSize("ID",35);
+        ComponentsPanel.setColumnSize("Description",700);
         
         //TODO: do the same for the other tabs
     }
