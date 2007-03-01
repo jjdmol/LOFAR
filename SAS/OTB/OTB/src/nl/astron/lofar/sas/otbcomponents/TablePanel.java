@@ -5,8 +5,8 @@
  */
 
 package nl.astron.lofar.sas.otbcomponents;
-import javax.swing.ListSelectionModel;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
 import org.apache.log4j.Logger;
 
 /**
@@ -39,6 +39,11 @@ public class TablePanel extends javax.swing.JPanel {
      */
     public AbstractTableModel getTableModel() {
         return (AbstractTableModel)jTable1.getModel();
+    }
+    
+    public void setColumnSize(String colName, int size) {
+        TableColumn column = jTable1.getColumn(colName);
+        column.setPreferredWidth(size);
     }
     
     /** get the selected Row
