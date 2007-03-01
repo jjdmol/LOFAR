@@ -441,6 +441,11 @@ public class MainFrame extends javax.swing.JFrame {
                     }
                     statusPanelMainFrame.setText(StatusPanel.LEFT,aC);
                     logger.debug("Trying to get DatabaseName");
+                    if (itsSharedVars == null || itsSharedVars.getOTDBrmi() == null || 
+                            itsSharedVars.getOTDBrmi().getRemoteOTDB() == null) {
+                        logger.info("Can't connect to Server. Session cancelled");
+                        System.exit(0);
+                    }
                     try {
                          itsDBName=itsSharedVars.getOTDBrmi().getRemoteOTDB().getDBName();
                     } catch (RemoteException ex) {
