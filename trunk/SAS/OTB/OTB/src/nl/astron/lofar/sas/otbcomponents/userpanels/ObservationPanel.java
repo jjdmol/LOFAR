@@ -520,6 +520,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 logger.debug("Error: saveNode failed : " + ex);
             } 
             itsOldTreeDescription = inputTreeDescription.getText();
+            itsMainFrame.setChanged("Home",true);
         }
 
         
