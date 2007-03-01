@@ -164,6 +164,8 @@ public class MainPanel extends javax.swing.JPanel
         VICPanel.setColumnSize("ID",35);
         VICPanel.setColumnSize("OriginalTree",75);
         VICPanel.setColumnSize("MoMID",50);
+        VICPanel.setColumnSize("StartTime",140);
+        VICPanel.setColumnSize("StopTime",140);
         VICPanel.setColumnSize("Description",700);
         
         TemplatetableModel Templatemodel = new TemplatetableModel(itsMainFrame.getSharedVars().getOTDBrmi());
