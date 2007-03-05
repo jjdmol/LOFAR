@@ -26,6 +26,7 @@
 //# Includes
 #include <ALC/ACAsyncClient.h>
 #include <GCF/TM/GCF_Handler.h>
+#include <APL/APLCommon/CTState.h>
 
 //# local includes
 //# Common Includes
@@ -33,26 +34,23 @@
 // forward declaration
 
 namespace LOFAR {  
+  using APLCommon::CTState;
   namespace CEPCU {
 
+// The CEPApplMgrInterface is an abstract baseclass to define the interface
+// the CEPApplMgr will call for passing the results of ACC back to the controller.
 class CEPApplMgrInterface
 {
 public:
 	virtual ~CEPApplMgrInterface() {}
 
-	virtual void    appBooted			(const string& procName, uint16 result) = 0;
-	virtual void    appDefined			(const string& procName, uint16 result) = 0;
-	virtual void    appInitialized		(const string& procName, uint16 result) = 0;
-	virtual void    appRunDone			(const string& procName, uint16 result) = 0;
-	virtual void    appPaused			(const string& procName, uint16 result) = 0;
-	virtual void    appQuitDone			(const string& procName, uint16 result) = 0;
-	virtual void    appSnapshotDone		(const string& procName, uint16 result) = 0;
-	virtual void    appRecovered		(const string& procName, uint16 result) = 0;
-	virtual void    appReinitialized	(const string& procName, uint16 result) = 0;
-	virtual void    appReplaced			(const string& procName, uint16 result) = 0;
-	virtual string  appSupplyInfo		(const string& procName, const string& keyList) = 0;
-	virtual void    appSupplyInfoAnswer (const string& procName, const string& answer) = 0;    
-
+	virtual void	appSetStateResult  (const string&			procName, 
+									    CTState::CTstateNr     	newState, 
+									    uint16					result) = 0;
+	virtual string  appSupplyInfo	   (const string&			procName, 
+										const string&			keyList) = 0;
+	virtual void    appSupplyInfoAnswer(const string&			procName, 
+										const string&			answer) = 0;    
 protected:
 	CEPApplMgrInterface() {}
 
@@ -65,12 +63,18 @@ private:
 
 
 
+// The CEPApplMgr class acts as an ACClient for the OnlineController but it
+// also an active component because is is also inherited from GCFHandler.
+// The GCFHandler-workproc will poll the ACC connection for incomming msgs.
 class CEPApplMgr : public ACC::ALC::ACClientFunctions,
-                                     GCF::TM::GCFHandler
+						  GCF::TM::GCFHandler
 {
 public:
 	CEPApplMgr(CEPApplMgrInterface& interface, const string& appName);
 	virtual ~CEPApplMgr();
+
+	// method used by the OnlineController to initiate a new command
+	void sendCommand (CTState::CTstateNr	newState, const string&		options);
 
 	// methods may be called from specialized CEPApplMgrInterface
 	bool  boot     (const time_t    scheduleTime,
@@ -94,8 +98,10 @@ public:
 					const string&   nodeList,
 					const string&   configID)      const;
 	string  askInfo (const string&  keylist)       const;    
+
 	bool  cancelCmdQueue ()                        const;    
-	ACC::ALC::ACCmd getLastOkCmd()                 const;
+
+	const string&	getName()					   const;
 
 protected:
 	// protected copy constructor
@@ -117,76 +123,84 @@ private:
 	void  handleAnswerMsg   (const string& answer);
 	string  supplyInfoFunc  (const string& keyList);
 
-	CEPApplMgrInterface& 			itsCAMInterface;
-	ACC::ALC::ACAsyncClient         itsACclient;
-	bool                            itsContinuePoll;
-	ACC::ALC::ACCmd                 itsLastOkCmd;
-	string                          itsProcName;
+	// --- datamembers ---
+	string                          itsProcName;		// my name
+	CEPApplMgrInterface& 			itsCAMInterface;	// link to OnlineController
+	ACC::ALC::ACAsyncClient         itsACclient;		// link to ACC controller
+	uint16							itsReqState;		// requested state
+	uint16							itsCurState;		// reached state
+	bool                            itsContinuePoll;	// for workProc
+//	ACC::ALC::ACCmd                 itsLastOkCmd;
 };
 
-inline bool  CEPApplMgr::boot     (const time_t    scheduleTime,
-                                              const string&   configID)      
+inline const string&	CEPApplMgr::getName() const
+{
+	return (itsProcName);
+}
+
+inline bool  CEPApplMgr::boot(const time_t    scheduleTime,
+							  const string&   configID)      
 {
 	itsContinuePoll = true;  
-	return itsACclient.boot(scheduleTime, configID);
+	return (itsACclient.boot(scheduleTime, configID));
 }
                                               
-inline bool  CEPApplMgr::define   (const time_t    scheduleTime)  const
+inline bool  CEPApplMgr::define(const time_t    scheduleTime)  const
 {
-	return itsACclient.define(scheduleTime);
+	return (itsACclient.define(scheduleTime));
 }
  
-inline bool  CEPApplMgr::init     (const time_t    scheduleTime)  const
+inline bool  CEPApplMgr::init(const time_t    scheduleTime)  const
 {
-	return itsACclient.init(scheduleTime);  
+	return (itsACclient.init(scheduleTime));
 }
  
-inline bool  CEPApplMgr::run      (const time_t    scheduleTime)  const
+inline bool  CEPApplMgr::run(const time_t    scheduleTime)  const
 {
-	return itsACclient.run(scheduleTime);  
+	return (itsACclient.run(scheduleTime));
 }
  
-inline bool  CEPApplMgr::pause    (const time_t    scheduleTime,
-                                              const time_t    maxWaitTime,
-                                              const string&   condition)     const
+inline bool  CEPApplMgr::pause (const time_t    scheduleTime,
+								const time_t    maxWaitTime,
+								const string&   condition)     const
 {
-	return itsACclient.pause(scheduleTime, maxWaitTime, condition);  
+	return (itsACclient.pause(scheduleTime, maxWaitTime, condition));
 }
  
-inline bool  CEPApplMgr::quit     (const time_t    scheduleTime)  const
+inline bool  CEPApplMgr::quit (const time_t    scheduleTime)  const
 {
-	return itsACclient.quit(scheduleTime);
+	return (itsACclient.quit(scheduleTime));
 }
  
 inline bool  CEPApplMgr::shutdown (const time_t    scheduleTime)  const
 {
-	return itsACclient.shutdown(scheduleTime);
+	return (itsACclient.shutdown(scheduleTime));
 }
  
 inline bool  CEPApplMgr::snapshot (const time_t    scheduleTime,
-                                              const string&   destination)   const
+								   const string&   destination)   const
 {
-	return itsACclient.snapshot(scheduleTime, destination);
+	return (itsACclient.snapshot(scheduleTime, destination));
 }
  
 inline bool  CEPApplMgr::recover  (const time_t    scheduleTime,
-                                              const string&   source)        const
+								   const string&   source)        const
 {
-	return itsACclient.recover(scheduleTime, source);
+	return (itsACclient.recover(scheduleTime, source));
 }
  
 inline bool  CEPApplMgr::reinit   (const time_t    scheduleTime,
-                                              const string&   configID)      const
+								   const string&   configID)      const
 {
-	return itsACclient.reinit(scheduleTime, configID);
+	return (itsACclient.reinit(scheduleTime, configID));
 }
  
 inline bool  CEPApplMgr::replace  (const time_t    scheduleTime,
-                                              const string&   processList,
-                                              const string&   nodeList,
-                                              const string&   configID)      const
+								   const string&   processList,
+								   const string&   nodeList,
+								   const string&   configID)      const
 {
-	return itsACclient.replace(scheduleTime, processList, nodeList, configID);
+	return (itsACclient.replace(scheduleTime, processList, nodeList, configID));
 }
  
 inline bool  CEPApplMgr::cancelCmdQueue ()                       const
@@ -194,11 +208,6 @@ inline bool  CEPApplMgr::cancelCmdQueue ()                       const
 	return itsACclient.cancelCmdQueue();
 }
  
-inline ACC::ALC::ACCmd CEPApplMgr::getLastOkCmd() const 
-{
-	return itsLastOkCmd;
-}
-
 inline void CEPApplMgr::stop()
 { }
 

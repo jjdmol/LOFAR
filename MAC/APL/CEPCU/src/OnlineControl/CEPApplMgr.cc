@@ -21,10 +21,12 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <APL/APLCommon/Controller_Protocol.ph>
 #include "CEPApplMgr.h"
 
 namespace LOFAR {
   using namespace ACC::ALC;
+  using namespace APLCommon;
   namespace CEPCU {
 
      
@@ -32,12 +34,13 @@ namespace LOFAR {
 // CEPApplMgr(interface, appl)
 //
 CEPApplMgr::CEPApplMgr(CEPApplMgrInterface& interface, 
-											 const string& appName) :
+					   const string& 		appName) :
+	itsProcName	   (appName),
 	itsCAMInterface(interface),
 	itsACclient	   (this, appName, 10, 100, 1, 0),
-	itsContinuePoll(false),
-	itsLastOkCmd   (ACC::ALC::ACCmdNone),
-	itsProcName	   (appName)
+	itsReqState	   (CTState::NOSTATE),
+	itsCurState	   (CTState::NOSTATE),
+	itsContinuePoll(true)
 { 
 	use(); // to avoid that this object will be deleted in GCFTask::stop;
 }
@@ -63,74 +66,102 @@ void CEPApplMgr::workProc()
 //
 // handleAckMsg(cmd, result, info)
 //
+// Translate ACC ack into MAC state.
+//
 void  CEPApplMgr::handleAckMsg(ACCmd         cmd, 
-                                          uint16        result,
-                                          const string& info)
+                               uint16        ACCresult,
+                               const string& info)
 {
-	LOG_INFO(formatString("command: %d, result: %d, info: %s", cmd, result, info.c_str()));
+	LOG_INFO(formatString("command: %d, result: %d, info: %s", cmd, ACCresult, info.c_str()));
+
+	uint16	MACresult = (ACCresult & AcCmdMaskOk) ? 
+											CT_RESULT_NO_ERROR : CT_RESULT_UNSPECIFIED;
 
 	switch (cmd) {
 	case ACCmdBoot:
-		if (result == AcCmdMaskOk) {
-			itsLastOkCmd = cmd;
+		if (ACCresult == AcCmdMaskOk) {
+			itsCurState = CTState::CONNECTED;
 		}
-		itsCAMInterface.appBooted(itsProcName, result);
-	break;
-
-	case ACCmdQuit:
-		if (result == AcCmdMaskOk && result == 0) {
-			itsContinuePoll = false;
-		}
-		itsCAMInterface.appQuitDone(itsProcName, result);
+		itsCAMInterface.appSetStateResult(itsProcName, CTState::CONNECT, MACresult);
 	break;
 
 	case ACCmdDefine:
-		if (result == AcCmdMaskOk) {
-			itsLastOkCmd = cmd;
+		if (ACCresult == AcCmdMaskOk) {
+			itsCurState = CTState::CLAIMED;
 		}
-		itsCAMInterface.appDefined(itsProcName, result);
+		itsCAMInterface.appSetStateResult(itsProcName, CTState::CLAIM, MACresult);
 	break;
 
 	case ACCmdInit:
-		if (result == AcCmdMaskOk) {
-			itsLastOkCmd = cmd;
+		if (ACCresult == AcCmdMaskOk) {
+			itsCurState = CTState::PREPARED;
 		}
-		itsCAMInterface.appInitialized(itsProcName, result);
-	break;
-
-	case ACCmdPause:
-		itsCAMInterface.appPaused(itsProcName, result);
+		itsCAMInterface.appSetStateResult(itsProcName, CTState::PREPARE, MACresult);
 	break;
 
 	case ACCmdRun:
-		if (result == AcCmdMaskOk) {
-			itsLastOkCmd = cmd;
+		if (ACCresult == AcCmdMaskOk) {
+			itsCurState = CTState::RESUMED;
 		}
-		itsCAMInterface.appRunDone(itsProcName, result);
+		itsCAMInterface.appSetStateResult(itsProcName, CTState::RESUME, MACresult);
 	break;
 
-	case ACCmdSnapshot:
-		itsCAMInterface.appSnapshotDone(itsProcName, result);
+	case ACCmdPause:
+		if (ACCresult == AcCmdMaskOk) {
+			itsCurState = CTState::SUSPENDED;
+		}
+		itsCAMInterface.appSetStateResult(itsProcName, CTState::SUSPEND, MACresult);
 	break;
 
-	case ACCmdRecover:
-		itsCAMInterface.appRecovered(itsProcName, result);
-	break;
-
-	case ACCmdReinit:
-		itsCAMInterface.appReinitialized(itsProcName, result);
-	break;
-
-	case ACCmdReplace:
-		itsCAMInterface.appReplaced(itsProcName, result);
+	case ACCmdQuit:
+		if (ACCresult == AcCmdMaskOk) {
+			itsContinuePoll = false;
+			itsCurState = CTState::QUITED;
+		}
+		itsCAMInterface.appSetStateResult(itsProcName, CTState::QUIT, MACresult);
 	break;
 
 	default:
-		LOG_WARN_STR("Received command = " << cmd << ", result = " << result
+		LOG_WARN_STR("Received command = " << cmd << ", result = " << ACCresult
 						<< ", info = " << info << " not handled!");
 		break;
 	}
 }                                                
+
+//
+// sendCommand (newState, options)
+//
+// Translate MAC commands into ACC commands.
+//
+void CEPApplMgr::sendCommand (CTState::CTstateNr	newState, const string&		options)
+{
+	switch (newState) {
+	case CTState::CONNECT:
+		itsACclient.boot(0, options);
+		break;
+	case CTState::CLAIM:
+		itsACclient.define(0);
+		break;
+	case CTState::PREPARE:
+		itsACclient.init(0);
+		break;
+	case CTState::RESUME:
+		itsACclient.run(0);
+		break;
+	case CTState::SUSPEND:
+		itsACclient.pause(0, 0, options);
+		break;
+	case CTState::RELEASE:			// no ACC equivalent.
+		ASSERTSTR(false, "RELEASE has no ACC equivalent, programming error");
+		break;
+	case CTState::QUIT:
+		itsACclient.quit(0);
+		break;
+	default:
+		break;
+	}
+}
+
 
 //
 // handleAnswerMsg(answer)
