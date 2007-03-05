@@ -55,7 +55,7 @@ namespace LOFAR
     class InputThread;
 
     // This class is the workholder that receives data from the RSP boards
-    // and distributes it per subband to several other input nodes
+    // and distributes it per subband to the Blue Gene/L
     class WH_InputSection: public WorkHolder {
     public:
       typedef DH_Subband::SampleType SampleType;
