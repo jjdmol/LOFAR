@@ -102,9 +102,8 @@ int64 BlobOBufChar::setPos (int64 pos)
       THROW(BlobException,
 	    "BlobOBufChar::setPos - buffer cannot be expanded");
     }
-    for (; itsSize<pos; itsSize++) {
-      itsBuffer[itsSize] = 0;
-    }
+    memset(itsBuffer + itsSize, 0, pos - itsSize);
+    itsSize = pos;
   }
   itsPos = pos;
   return pos;
