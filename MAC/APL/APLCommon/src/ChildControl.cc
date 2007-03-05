@@ -191,7 +191,15 @@ bool ChildControl::startChild (uint16				aCntlrType,
 					  ", position=" << position);
 		ParameterSet	cntlrSet = wholeSet.makeSubset(position+nodeName+".");
 		// always add Observation and all its children to the Parset.
-		cntlrSet.adoptCollection(wholeSet.makeSubset(wholeSet.locateModule("Observation")));
+		cntlrSet.adoptCollection(wholeSet.makeSubset(
+				wholeSet.locateModule("Observation")+"Observation","Observation"));
+		cntlrSet.adoptCollection(wholeSet.makeSubset(
+				wholeSet.locateModule("PIC")+"PIC","PIC"));
+
+		// is there a duplicate of the controller info?
+		string	nodePos(cntlrSet.locateModule(nodeName));
+		cntlrSet.substractSubset(nodePos+nodeName);
+
 		// Add some comment lines and some extra fields to the file
 		cntlrSet.add("prefix", prefix+position+nodeName+".");
 		cntlrSet.add("_instanceNr", lexical_cast<string>(instanceNr));
