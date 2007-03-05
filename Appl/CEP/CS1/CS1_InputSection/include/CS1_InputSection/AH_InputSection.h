@@ -30,8 +30,6 @@
 
 //# Includes
 #include <CEPFrame/ApplicationHolder.h>
-#include <CEPFrame/Step.h>
-#include <CS1_InputSection/Connector.h>
 #include <CS1_Interface/Stub_BGL.h>
 #include <CS1_Interface/Stub_Delay.h>
 
@@ -64,8 +62,6 @@ namespace LOFAR
       AH_InputSection& operator= (const AH_InputSection& that);
 
       //# Datamembers
-      vector<Step *> itsSteps;
-      Connector      itsConnector;
       Stub_Delay     *itsDelayStub;
       Stub_BGL	     *itsOutputStub;
 

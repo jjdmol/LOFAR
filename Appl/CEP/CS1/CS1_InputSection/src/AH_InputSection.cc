@@ -27,21 +27,16 @@
 #include <Common/LofarLogger.h>
 #include <CS1_InputSection/AH_InputSection.h>
 #include <CS1_InputSection/WH_InputSection.h>
+#include <CS1_InputSection/Connector.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 
 //# Workholders
 
 #include <Transport/TransportHolder.h>
 #include <Transport/TH_MPI.h>
-#include <Transport/TH_Socket.h>
-#include <Transport/TH_File.h>
 
 #include <algorithm>
 
-
-#define MPICH_WORKING_ON_INFINI_BAND 1
-
-#define IS_MULTIPLE(number, bignumber) (floor(bignumber / number) == (1.0 * bignumber / number))
 
 namespace LOFAR {
 namespace CS1 {
@@ -58,6 +53,11 @@ AH_InputSection::~AH_InputSection()
 
 void AH_InputSection::undefine()
 {
+  for (unsigned i = 0; i < itsWHs.size(); i ++)
+    delete itsWHs[i];
+
+  itsWHs.resize(0);
+
   delete itsOutputStub;
   delete itsDelayStub;
   itsDelayStub = 0;
