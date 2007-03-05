@@ -54,12 +54,9 @@ namespace LOFAR
     public:
       AH_InputSection();
       virtual ~AH_InputSection();
+      virtual void define(const LOFAR::KeyValueMap&);
       virtual void undefine();
-      virtual void define  (const LOFAR::KeyValueMap&);
-      virtual void prerun  ();
-      virtual void run     (int nsteps);
-      virtual void dump    () const;
-      virtual void quit    ();
+      virtual void run(int nsteps);
 
     private:
       // Copying is not allowed
