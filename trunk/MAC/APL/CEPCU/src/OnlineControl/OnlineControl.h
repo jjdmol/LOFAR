@@ -89,22 +89,18 @@ public:
 									  GCFPortInterface& port);
 	
 	// Interrupthandler for switching to finisingstate when exiting the program
-	static void sigintHandler (int	signum);
+	static void signalHandler (int	signum);
 	void	    finish();
 
 protected: // implemenation of abstract CEPApplMgrInterface methods
-    void    appBooted			(const string& procName, uint16 result);
-    void    appDefined			(const string& procName, uint16 result);
-    void    appInitialized		(const string& procName, uint16 result);
-    void    appRunDone			(const string& procName, uint16 result);
-    void    appPaused			(const string& procName, uint16 result);
-    void    appQuitDone			(const string& procName, uint16 result);
-    void    appSnapshotDone		(const string& procName, uint16 result);
-    void    appRecovered		(const string& procName, uint16 result);
-    void    appReinitialized	(const string& procName, uint16 result);
-    void    appReplaced			(const string& procName, uint16 result);
     string  appSupplyInfo		(const string& procName, const string& keyList);
     void    appSupplyInfoAnswer (const string& procName, const string& answer);
+	// A result of one of the applications was received, update the administration
+	// off the controller and send the result to the parentcontroller if appropriate.
+	void	appSetStateResult	 (const string&			procName, 
+								  CTState::CTstateNr   	newState, 
+								  uint16				result);
+
   
 private:
 	// avoid defaultconstruction and copying
@@ -112,17 +108,32 @@ private:
 	OnlineControl(const OnlineControl&);
    	OnlineControl& operator=(const OnlineControl&);
 
-	uint16_t doClaim(const string& cntlrName);
-	uint16_t doPrepare(const string& cntlrName);
-	void	 doRelease();
-	void     finishController(uint16_t result);
-   	void	 _connectedHandler(GCFPortInterface& port);
-   	void	 _disconnectedHandler(GCFPortInterface& port);
-	void	 setState(CTState::CTstateNr     newState);
+	void	_doBoot();
+	void	_doQuit();
+	void   	_finishController	(uint16_t result);
+   	void	_connectedHandler	(GCFPortInterface& port);
+   	void	_disconnectedHandler(GCFPortInterface& port);
+	void	_setState	  (CTState::CTstateNr		newState);
+
+	// Send a command to all (or the first) applications.
+	void	startNewState (CTState::CTstateNr		newState,
+						   const string&			options);
+
+	// typedefs for the internal adminsitration of all the Applications we control
+	typedef boost::shared_ptr<CEPApplMgr> CEPApplMgrPtr;
+    typedef	map<string, CEPApplMgrPtr>  			CAMmap;
+	typedef map<string, CEPApplMgrPtr>::iterator	CAMiter;
+
+	// Internal bookkeeping-finctions for the dependancy-order of the applications. 
+	void	setApplOrder	(vector<string>&	anApplOrder);
+	CAMiter	firstApplication(CTState::CTstateNr		aState);
+	CAMiter	nextApplication();
+	bool	hasNextApplication();
+	void	noApplication();
 
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
-	typedef boost::shared_ptr<CEPApplMgr> CEPApplMgrPtr;
 
+	// ----- datamembers -----
    	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
    	GCFMyPropertySetPtr           itsPropertySet;
 	bool						  itsPropertySetInitialized;
@@ -133,11 +144,18 @@ private:
 
 	GCFTimerPort*			itsTimerPort;
 
-    map<string, CEPApplMgrPtr>  itsCepApplications;
-    vector<ACC::APS::ParameterSet> itsCepAppParams;
+	CAMmap					itsCEPapplications;
     ACC::APS::ParameterSet  itsResultParams;
 
 	CTState::CTstateNr		itsState;
+
+	bool					itsUseApplOrder;	// Applications depend?
+	vector<string>			itsApplOrder;		// startOrder of the applications.
+	string					itsCurrentAppl;		// current application we are handling.
+	CTState::CTstateNr		itsApplState;		// state currently handled by apps.
+
+	uint16					itsOverallResult;
+	int16					itsNrOfAcks2Recv;
 
 	// ParameterSet variables
 	string					itsTreePrefix;

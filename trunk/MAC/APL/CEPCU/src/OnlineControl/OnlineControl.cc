@@ -24,6 +24,9 @@
 
 #include <signal.h>
 #include <boost/shared_array.hpp>
+#include <Common/StreamUtil.h>
+//#include <Common/lofar_vector.h>
+//#include <Common/lofar_string.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
 #include <GCF/GCF_PVTypes.h>
@@ -38,6 +41,7 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/APLUtilities.h>
+#include <APL/APLCommon/CTState.h>
 
 #include "OnlineControl.h"
 #include "OnlineControlDefines.h"
@@ -68,10 +72,15 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsParentControl	(0),
 	itsParentPort		(0),
 	itsTimerPort		(0),
-    itsCepApplications  (),
-	itsCepAppParams     (),
+    itsCEPapplications  (),
 	itsResultParams     (),
 	itsState			(CTState::NOSTATE),
+	itsUseApplOrder		(false),
+	itsApplOrder		(),
+	itsCurrentAppl		(),
+	itsApplState		(CTState::NOSTATE),
+	itsOverallResult	(0),
+	itsNrOfAcks2Recv	(0),
 	itsTreePrefix       (""),
 	itsInstanceNr       (0),
 	itsStartTime        (),
@@ -106,9 +115,9 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 
 	// for debugging purposes
 	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (PA_PROTOCOL, 		PA_PROTOCOL_STRINGS);
 
-	setState(CTState::CREATED);
+	_setState(CTState::CREATED);
 }
 
 
@@ -121,11 +130,11 @@ OnlineControl::~OnlineControl()
 }
 
 //
-// sigintHandler(signum)
+// signalHandler(signum)
 //
-void OnlineControl::sigintHandler(int	signum)
+void OnlineControl::signalHandler(int	signum)
 {
-	LOG_DEBUG (formatString("SIGINT signal detected(%d)", signum));
+	LOG_DEBUG (formatString("SIGNAL %d detected", signum));
 
 	if (thisOnlineControl) {
 		thisOnlineControl->finish();
@@ -140,18 +149,127 @@ void OnlineControl::finish()
 	TRAN(OnlineControl::finishing_state);
 }
 
+
 //
-// setState(CTstateNr)
+// _setState(CTstateNr)
 //
-void    OnlineControl::setState(CTState::CTstateNr     newState)
+void    OnlineControl::_setState(CTState::CTstateNr     newState)
 {
+	CTState		cts;
+	LOG_DEBUG_STR ("Going from state " << cts.name(itsState) << " to " 
+										<< cts.name(newState));
 	itsState = newState;
 
+	// Update PVSS to inform operator.
 	if (itsPropertySet) {
 		CTState		cts;
 		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString(cts.name(newState)));
 	}
 }   
+
+
+//
+// startNewState(newState)
+//
+void	OnlineControl::startNewState(CTState::CTstateNr		newState,
+									 const string&			options)
+{
+	// TODO: check if previous state has ended?
+
+	_setState (newState);
+
+	if (!itsUseApplOrder) { 		// no depencies between applications?
+		for (CAMiter iter = itsCEPapplications.begin(); 
+										iter != itsCEPapplications.end(); ++iter) {
+			iter->second->sendCommand(newState, options);
+		}
+		itsOverallResult = 0;
+		itsNrOfAcks2Recv = itsCEPapplications.size();
+	}
+	else {
+		// The applications depend on each other send command to first application.
+		CAMiter	iter = firstApplication(newState);
+		iter->second->sendCommand(newState, options);
+		itsOverallResult = 0;
+		itsNrOfAcks2Recv = 1;
+	}
+
+	// TODO: start timer???
+}
+
+
+//
+// appSetStateResult(procName, newState, result)
+//
+// A result of a new state was received. Update our admin with this result and
+// inform parentController is all Applications have reached the newState now.
+// When the applications are dependant of each order send the same command to 
+// the next application.
+//
+// note: function is called by CEPApplMgr
+//
+void	OnlineControl::appSetStateResult(const string&			procName, 
+										 CTState::CTstateNr		aState,
+										 uint16					result)
+{
+	CTState		cts;
+	LOG_DEBUG_STR("setStateResult(" << procName <<","<< cts.name(aState) 
+												<<","<< result <<")");
+
+	// is the result in sync?
+	if (aState != itsState) {
+		LOG_ERROR_STR("Application " << procName << " reports result " << result
+			<< " for state " << cts.name(aState) << " while the current state is "
+			<< cts.name(itsState) << ". Ignoring result!");
+		return;
+	}
+
+	if (itsNrOfAcks2Recv <= 0) {
+		LOG_INFO_STR("Application " << procName << " reports result " << result
+			<< " for state " << cts.name(aState)
+			<< " after parentController was informed. Result will be unknown to Parent.");
+		return;
+	}
+
+	// result	useOrder	action
+	//  OK		 J			if nextAppl sendCmd else inform parent. [A]
+	//	ERROR	 J			send Error to Parent, reset sequence.   [B]
+	//	OK		 N			decr nrOfAcks2Recv if 0 inform parent.  [C]
+	//	ERROR	 N			decr nrOfAcks2Recv if 0 inform parent.	[D]
+
+	if (!itsUseApplOrder) {		// [C],[D]
+		itsOverallResult |= result;
+		if (--itsNrOfAcks2Recv <= 0) {
+			LOG_DEBUG("All results received, informing parent");
+			sendControlResult(*itsParentPort, cts.signal(itsState), 
+															getName(), itsOverallResult);
+		}
+		if (aState == CTState::QUIT) {
+			finish();
+		}
+		return;
+	}
+			
+	if (result == CT_RESULT_NO_ERROR) {	// [B]
+		if (hasNextApplication()) { // [A]
+			CAMiter		nextApp = nextApplication();
+			LOG_DEBUG_STR("Sending " << cts.name(itsState) << " to next application: "
+							<< nextApp->second->getName());
+			nextApp->second->sendCommand(itsState, "" /*options*/);
+			return;
+		}
+	}
+
+	// [A],[B]
+	itsOverallResult = result;
+	sendControlResult(*itsParentPort, cts.signal(itsState), getName(), itsOverallResult);
+	itsNrOfAcks2Recv = 0;
+	noApplication();		// reset order-sequence
+
+	if (aState == CTState::QUIT) {
+		finish();
+	}
+}
 
 
 //
@@ -249,8 +367,8 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 			// First redirect signalHandler to our finishing state to leave PVSS
 			// in the right state when we are going down
 			thisOnlineControl = this;
-			signal (SIGINT,  OnlineControl::sigintHandler);	// ctrl-c
-			signal (SIGTERM, OnlineControl::sigintHandler);	// kill
+			signal (SIGINT,  OnlineControl::signalHandler);	// ctrl-c
+			signal (SIGTERM, OnlineControl::signalHandler);	// kill
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
@@ -327,10 +445,8 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
 		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
-		setState(CTState::CONNECTED);
-		CONTROLConnectedEvent	answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
+		_setState(CTState::CONNECT);
+		_doBoot();			// start ACC's and boot them
 		break;
 	}
 
@@ -344,63 +460,44 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	case CONTROL_CLAIM: {
 		CONTROLClaimEvent		msg(event);
 		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
-		setState(CTState::CLAIM);
-		CONTROLClaimedEvent             answer;
-		answer.cntlrName = getName();
-		answer.result    = doClaim(msg.cntlrName);
-		if (answer.result == CT_RESULT_NO_ERROR) {
-			setState(CTState::CLAIMED);
-		}
-		port.send(answer);
-		
+		startNewState(CTState::CLAIM, ""/*options*/);
 		break;
 	}
 
 	case CONTROL_PREPARE: {
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
-		setState(CTState::PREPARE);
-		CONTROLPreparedEvent    answer;
-		answer.cntlrName = getName();
-		answer.result    = doPrepare(msg.cntlrName);
-		if (answer.result == CT_RESULT_NO_ERROR) {
-			setState(CTState::PREPARED);
-		}
-		port.send(answer);
+		startNewState(CTState::PREPARE, ""/*options*/);
 		break;
 	}
 
 	case CONTROL_RESUME: {
 		CONTROLResumeEvent		msg(event);
 		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
-		setState(CTState::RESUME);
-		// TODO: implement something useful
-		CONTROLResumedEvent		answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
+		startNewState(CTState::RESUME, ""/*options*/);
 		break;
 	}
 
 	case CONTROL_SUSPEND: {
 		CONTROLSuspendEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
-		setState(CTState::SUSPENDED);
-		// TODO: implement something useful
-		CONTROLSuspendedEvent		answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
+		startNewState(CTState::SUSPEND, ""/*options*/);
 		break;
 	}
 
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASE(" << msg.cntlrName << ")");
-		setState(CTState::RELEASE);
-		doRelease();
-		setState(CTState::RELEASED);
-		CONTROLReleasedEvent	answer;
-		answer.cntlrName = msg.cntlrName;
-		port.send(answer);
+		_setState(CTState::RELEASE);
+		sendControlResult(*itsParentPort, event.signal, getName(), 0);
+		_setState(CTState::RELEASED);
+		break;
+	}
+
+	case CONTROL_QUIT: {
+		CONTROLQuitEvent		msg(event);
+		LOG_DEBUG_STR("Received QUIT(" << msg.cntlrName << ")");
+		startNewState(CTState::QUIT, ""/*options*/);
 		break;
 	}
 
@@ -448,49 +545,49 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 
 
 //
-// doClaim(cntlrName)
+// _doBoot()
 //
-// Create ParameterSets for all Applications the controller has to manage.
+// Create ParameterSets for all Applications the we have to manage, start all
+// ACC's and give them the boot command.
 //
-uint16_t OnlineControl::doClaim(const string& cntlrName)
+void OnlineControl::_doBoot()
 {
-	uint16_t 		result = CT_RESULT_NO_ERROR;
-	ParameterSet*	thePS  = globalParameterSet();
-	try {
-		// get prefix of my stuff.
-		// string myPrefix(thePS->locateModule("OnlineCtrl") + "OnlineCtrl.");
-		string 	myPrefix;
+	ParameterSet*	thePS  = globalParameterSet();		// shortcut to global PS.
+	// Get list of all application that should be managed
+	// Note: each application = 1 ACC
+	vector<string> applList = thePS->getStringVector("applications");
+	string 	paramFileName;
 
-		// Get list of all application that should be managed
-		// Note: each application = 1 ACC
-		vector<string> applList = thePS->getStringVector(myPrefix+"applications");
+	for (size_t a = 0; a < applList.size(); a++) {
+		// Start an CEPApplManager for this application
+		uint16			result    (CT_RESULT_NO_ERROR);
+		string 			applName  (applList[a]);
+		string			applPrefix(applName+".");
+		LOG_INFO_STR("Starting controller for " << applName);
+		CEPApplMgrPtr	accClient (new CEPApplMgr(*this, applName));
+		itsCEPapplications[applName] = accClient;
 
-		for (size_t a = 0; a < applList.size(); a++) {
-			// Allocate an CEPApplManager for each application
-			string 			applName(applList[a]);
-			string			applPrefix(myPrefix+applName+".");
-			CEPApplMgrPtr	accClient(new CEPApplMgr(*this, applName));
-			itsCepApplications[applName] = accClient;
-
+		try {
 			// Create a parameterSet for this AC.
 			ParameterSet params;
 			params.clear();
 			// import and extend the ApplCtrl section
-			params.adoptCollection(thePS->makeSubset(myPrefix+"ApplCtrl","ApplCtrl"));
+			params.adoptCollection(thePS->makeSubset("ApplCtrl","ApplCtrl"));
 			params.replace("ApplCtrl.application", applName);
 			params.replace("ApplCtrl.processes", thePS->getString(applPrefix+"processes"));
 			params.replace("ApplCtrl.resultfile", formatString(
-										"./ACC-%s_result.param", applName.c_str()));
+							"%s/ACC_%s_%s_result.param", LOFAR_SHARE_LOCATION, 
+							getName().c_str(), applName.c_str()));
 
 			// add application info
 			params.adoptCollection(thePS->makeSubset(applPrefix,applName+"."));
 
-			// import extra tree part if necc.
+			// import extra tree-parts if necc.
 			vector<string>	extraParts=thePS->getStringVector(applPrefix+"extraInfo");
 			for (size_t e = 0; e < extraParts.size(); e++) {
 				if (extraParts[e][0] == '.') {	// relative part?
 					string	partName = extraParts[e].substr(1);
-					params.adoptCollection(thePS->makeSubset(myPrefix+partName, 
+					params.adoptCollection(thePS->makeSubset(partName, 
 														 	 partName));
 				}
 				else {
@@ -502,102 +599,35 @@ uint16_t OnlineControl::doClaim(const string& cntlrName)
 			// always add Observation
 			string	obsPrefix(thePS->locateModule("Observation"));
 			params.adoptCollection(thePS->makeSubset(obsPrefix+"Observation", "Observation"));
-//			params.substractSubset(myPrefix);
-
-			// create nodelist
-//			int nodeIndex(1);
-//			for (vector<string>::iterator it = nodes.begin();it != nodes.end(); ++it) {
-//				params.replace(formatString("ApplCtrl.%s[%d].node",procName.c_str(),nodeIndex++),*it);
-//			}
-
-			itsCepAppParams.push_back(params);
-
-		} // for applications
-	}
-	catch(APSException &e) {
-		// key not found. skip
-		LOG_FATAL(e.text());
-		result = CT_RESULT_UNSPECIFIED;
-	}
-	return result;
-}
-
-//
-// doPrepare(cntlrName)
-//
-uint16_t OnlineControl::doPrepare(const string&	cntlrName)
-{
-	uint16_t result = CT_RESULT_NO_ERROR;
-
-	try {
-		// TODO use parameterset of 'cntlrname' when being shared controller
-		for (size_t i = 0; i < itsCepAppParams.size(); i++) {
-			string applName = itsCepAppParams[i].getString("ApplCtrl.application");
-			string paramFileName(formatString("ACC-%s.param", applName.c_str()));
-			itsCepAppParams[i].writeFile(paramFileName);
-
-			// REO where do we need all these times for????
-			// schedule all ACC commands
-			time_t startTime  = to_time_t(itsStartTime);
-			time_t initTime   = startTime  - itsCepAppParams[i].getTime("ApplCtrl.timeout_init");
-			time_t defineTime = initTime   - itsCepAppParams[i].getTime("ApplCtrl.timeout_define") - 
-			itsCepAppParams[i].getTime("ApplCtrl.timeout_startup");
-			time_t bootTime   = defineTime - itsCepAppParams[i].getTime("ApplCtrl.timeout_createsubsets");
-			time_t now = time(0);
-			time_t stopTime = to_time_t(itsStopTime);
-			LOG_DEBUG(formatString("%d now %s time %d", now,        ctime(&now), time(0)));
-			LOG_DEBUG(formatString("%d boot %s",        bootTime,   ctime(&bootTime)));
-			LOG_DEBUG(formatString("%d define %s",      defineTime, ctime(&defineTime)));
-			LOG_DEBUG(formatString("%d init %s",        initTime,   ctime(&initTime)));
-			LOG_DEBUG(formatString("%d start %s",       startTime,  ctime(&startTime)));
-			LOG_DEBUG(formatString("%d stop %s",        stopTime,   ctime(&stopTime)));
-
-			if (now > bootTime) {
-//				APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
-				LOG_WARN("Cannot guarantee all CEP processes are started in time.");
-			}
-			else {
-				CEPApplMgrPtr cepAppPtr = itsCepApplications[applName];
-				if(cepAppPtr) {
-					switch (cepAppPtr->getLastOkCmd()) {
-					case ACCmdNone:
-						cepAppPtr->boot(bootTime, paramFileName);
-						break;
-
-					case ACCmdBoot:
-						cepAppPtr->define(defineTime);
-						break;
-
-					case ACCmdDefine:
-					case ACCmdInit:
-					case ACCmdRun:
-						cepAppPtr->recover(0, "snapshot-DB");
-						break;
-
-					default:
-						assert(0);
-						break;
-					}   
-				} 
-//				APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
-			}
+			// write parset to file.
+			paramFileName = formatString("%s/ACC_%s_%s.param", LOFAR_SHARE_LOCATION,
+											  getName().c_str(), applName.c_str());
+			params.writeFile(paramFileName);
+			// TODO: waar komt de hostname vandaan???
+//			string hostname(thePS->getString(xxx+"_hostname"));
+//			APLCommon::APLUtilities::remoteCopy(paramFileName,hostName,LOFAR_SHARE_LOCATION);
+		} 
+		catch (APSException &e) {
+			// key not found. skip
+			LOG_FATAL(e.text());
+			result = CT_RESULT_UNSPECIFIED;
+			appSetStateResult(applList[a], CTState::CONNECT, result);
 		}
-	}
-	catch(APSException &e) {
-		// key not found. skip
-		LOG_FATAL(e.text());
-		result = CT_RESULT_UNSPECIFIED;
-	}
+	} // for
 
-	return (result);
+	// Finally send the boot command.
+	startNewState(CTState::CONNECT, paramFileName);
+
 }
 
+
 //
-// doRelease()
+// _doQuit()
 //
-void OnlineControl::doRelease(void)
+void OnlineControl::_doQuit(void)
 {
 	try {
+#if 0
 		for(size_t i = 0;i < itsCepAppParams.size();i++) {
 			string remoteFile, resultFile, applName;
 			applName = itsCepAppParams[i].getString("ApplCtrl.application");
@@ -611,26 +641,161 @@ void OnlineControl::doRelease(void)
 			}
 			itsResultParams.writeFile(formatString("%s_result.param", getName().c_str()));
 		}
+#endif
 	}
 	catch(...) {
 	}
 	map<string, CEPApplMgrPtr>::iterator it;
-	for(it = itsCepApplications.begin();it != itsCepApplications.end();++it) {
+	for(it = itsCEPapplications.begin();it != itsCEPapplications.end();++it) {
 		it->second->quit(0);
 	}
 }
 
-//
-// finishController
-//
-void OnlineControl::finishController(uint16_t /*result*/)
-{
-	setState(CTState::RELEASE);
-	doRelease();
-	setState(CTState::RELEASED);
+// -------------------- Application-order administration --------------------
 
-	LOG_DEBUG ("Going to finishing state");
-	TRAN(OnlineControl::finishing_state); // go to next state.
+//
+// setApplOrder(appl-vector)
+//
+void OnlineControl::setApplOrder(vector<string>&	anApplOrder)
+{
+	itsUseApplOrder = true;			// assume everything is right.
+	itsApplOrder	= anApplOrder;
+
+	// every application must be in the order list.
+	ASSERTSTR(itsApplOrder.size() == itsCEPapplications.size(), 
+				"Application orderlist conflicts with length of applicationlist");
+
+	// check that all application exist 
+	CAMiter						applEnd   = itsCEPapplications.end();
+	vector<string>::iterator	orderIter = itsApplOrder.begin();
+	while (orderIter != itsApplOrder.end()) {
+		CAMiter		applIter = itsCEPapplications.begin();
+		while (applIter != applEnd) {
+			if (applIter->second->getName() == *orderIter) {
+				break;
+			}
+			applIter++;
+		}
+		ASSERTSTR(applIter != applEnd,  *orderIter << 
+							" is not a registered application, orderlist is illegal");
+		orderIter++;
+	}
+	LOG_INFO_STR ("Using application order: " << itsApplOrder);
+}
+
+
+//
+// firstApplication(newState)
+//
+OnlineControl::CAMiter OnlineControl::firstApplication(CTState::CTstateNr	newState)
+{
+	if (itsCurrentAppl !=  "") {
+		LOG_ERROR_STR("Starting new command-chain while previous command-chain was still at appplication " 
+			<< itsCurrentAppl << ". Results are unpredictable!");
+	}
+
+	itsApplState = newState;
+	switch (newState) {
+	case CTState::CONNECT:
+	case CTState::CLAIM:
+	case CTState::PREPARE:
+	case CTState::RESUME:
+		itsCurrentAppl = itsCEPapplications.begin()->second->getName();
+		break;
+
+	case CTState::SUSPEND:
+	case CTState::RELEASE:
+	case CTState::QUIT:
+		itsCurrentAppl = itsCEPapplications.end()->second->getName();
+		break;
+
+	default:		// satisfy compiler
+		break;
+	}
+	CTState		cts;
+	ASSERTSTR(false, "Illegal new state in firstApplication(): " 
+														<< cts.name(newState));	
+}
+
+
+//
+// nextApplication()
+//
+OnlineControl::CAMiter OnlineControl::nextApplication()
+{
+	ASSERTSTR (hasNextApplication(), "Programming error, must have next application");
+
+	// search current application in the list.
+	CAMiter		iter = itsCEPapplications.begin();
+	while (iter != itsCEPapplications.end()) {
+		if (iter->second->getName() == itsCurrentAppl) {
+			break;
+		}
+		iter++;
+	}
+	ASSERTSTR (iter != itsCEPapplications.end(), "Application " << itsCurrentAppl 
+												<< "not found in applicationList");
+
+	switch (itsApplState) {
+	case CTState::CLAIM:
+	case CTState::PREPARE:
+	case CTState::RESUME:
+		iter++;
+		break;
+
+	case CTState::SUSPEND:
+	case CTState::RELEASE:
+	case CTState::QUIT:
+		iter--;
+		break;
+
+	default:
+		ASSERT("Satisfy compiler");
+	}
+
+	itsCurrentAppl = iter->second->getName();
+	return (iter);
+}
+
+
+//
+// noApplication()
+//
+void OnlineControl::noApplication()
+{
+	itsCurrentAppl = "";
+}
+
+
+//
+// hasNextApplication()
+//
+bool OnlineControl::hasNextApplication()
+{
+	if (!itsUseApplOrder) {
+		return (false);
+	}
+
+	switch (itsApplState) {
+	case CTState::CLAIM:
+	case CTState::PREPARE:
+	case CTState::RESUME:
+		return (itsCurrentAppl != itsCEPapplications.rbegin()->second->getName());
+		break;
+
+	case CTState::SUSPEND:
+	case CTState::RELEASE:
+	case CTState::QUIT:
+		return (itsCurrentAppl != itsCEPapplications.begin()->second->getName());
+		break;
+
+	default: {
+		CTState		cts;
+		ASSERTSTR(false, "Illegal state in hasNextApplication(): " 
+															<< cts.name(itsApplState));
+		}
+	}
+
 }
 
 //
@@ -649,172 +814,9 @@ void OnlineControl::_disconnectedHandler(GCFPortInterface& port)
 }
 
 //
-// appBooted(procName, result)
-//
-void OnlineControl::appBooted(const string& procName, uint16 result)
-{
-	LOG_INFO_STR("appBooted from " << procName);
-	if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  {
-		time_t startTime  = to_time_t(itsStartTime);
-		time_t initTime   = startTime  - itsCepAppParams[0].getTime("ApplCtrl.timeout_init");
-		time_t defineTime = initTime   - itsCepAppParams[0].getTime("ApplCtrl.timeout_define") - 
-										 itsCepAppParams[0].getTime("ApplCtrl.timeout_startup");
-		map<string,CEPApplMgrPtr>::iterator it = itsCepApplications.find(procName);
-		if(it != itsCepApplications.end()) {
-			it->second->define(defineTime);
-		}
-	}
-	else if (result == 0) { // Error
-		LOG_ERROR("Error in ACC. Stops CEP application and releases Online Control.");
-		finishController(CT_RESULT_UNSPECIFIED);
-	}
-}
-
-//
-// appDefined(procName, result)
-//
-void OnlineControl::appDefined(const string& procName, uint16 result)
-{
-	LOG_INFO_STR("appDefined from " << procName);
-	if (result == (AcCmdMaskOk | AcCmdMaskScheduled)) {
-		time_t startTime  = to_time_t(itsStartTime);
-		time_t initTime   = startTime  - itsCepAppParams[0].getTime("ApplCtrl.timeout_init");
-
-		map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
-		if(it != itsCepApplications.end()) {
-			it->second->init(initTime);
-		}
-	}
-	else if (result == 0) { // Error
-		LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
-		finishController(CT_RESULT_UNSPECIFIED);
-	}
-}
-
-//
-// appInitialized(procName, result)
-//
-void OnlineControl::appInitialized(const string& procName, uint16 result)
-{
-	LOG_INFO_STR("appInitialized from " << procName);
-	if (result == AcCmdMaskOk) {    
-		//    _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED);
-	}
-	else if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  {
-		map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
-		if(it != itsCepApplications.end()) {
-			it->second->run(to_time_t(itsStartTime));
-		}
-	}
-	else if (result == 0) { // Error
-		LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
-		finishController(CT_RESULT_UNSPECIFIED);
-	}
-}
-
-//
-// appRunDone(procName, result)
-//
-void OnlineControl::appRunDone(const string& procName, uint16 result)
-{
-	LOG_INFO_STR("appRunDone from " << procName);
-	if (result == (AcCmdMaskOk | AcCmdMaskScheduled)) {      
-		map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
-		if(it != itsCepApplications.end()) {
-			it->second->quit(to_time_t(itsStopTime));
-		}
-	}
-	else if (result == 0) { // Error
-		LOG_ERROR("Error in ACC. Stops CEP application and releases VB.");
-		finishController(CT_RESULT_UNSPECIFIED);
-	}
-}
-
-//
-// appPaused(procname, result)
-//
-void OnlineControl::appPaused(const string& procName, uint16 /*result*/)
-{
-	LOG_INFO_STR("appPaused from " << procName);
-}
-
-//
-// appQuitDone(procName, result)
-//
-void OnlineControl::appQuitDone(const string& procName, uint16 result)
-{
-	LOG_INFO_STR("appQuitDone from " << procName);
-	if (result == (AcCmdMaskOk | AcCmdMaskScheduled)) {  
-		//_qualityGuard.stopMonitoring(); // not in this increment
-	}
-	else {
-		finishController(CT_RESULT_NO_ERROR);
-	}
-}
-
-//
-// appSnapshotDone(procName, result)
-//
-void OnlineControl::appSnapshotDone(const string& procName, uint16 /*result*/)
-{
-	LOG_INFO_STR("appSnapshotDone from " << procName);
-	time_t rsto(0);
-	try {
-		rsto = globalParameterSet()->getTime("rescheduleTimeOut");
-	}
-	catch (...) {}
-
-	map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
-	if(it != itsCepApplications.end()) {
-		it->second->pause(0, rsto, "condition");
-	}
-}
-
-//
-// appRecovered(procName, result)
-//
-void OnlineControl::appRecovered(const string& procName, uint16 /*result*/)
-{
-	LOG_INFO_STR("appRecovered from " << procName);
-
-	time_t startTime  = to_time_t(itsStartTime);
-	time_t reinitTime = startTime  - itsCepAppParams[0].getTime("ApplCtrl.timeout_reinit");
-
-	string paramFileName(formatString("ACC-%s.param", getName().c_str()));
-
-	map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
-	if(it != itsCepApplications.end()) {
-		it->second->reinit(reinitTime, paramFileName);
-	}
-}
-
-//
-// appReinitialized(procName, result)
-//
-void OnlineControl::appReinitialized(const string& procName, uint16 result)
-{ 
-	LOG_INFO_STR("appReinitialized from " << procName);
-	if (result == AcCmdMaskOk) {    
-		//    _doStateTransition(LOGICALDEVICE_STATE_SUSPENDED);
-	}
-	else if (result == (AcCmdMaskOk | AcCmdMaskScheduled))  {  
-		map<string,CEPApplMgrPtr>::iterator it =  itsCepApplications.find(procName);
-		if(it != itsCepApplications.end()) {
-			it->second->run(to_time_t(itsStartTime));
-		}
-	}
-}
-
-//
-// appReplaced(procNAme, result)
-//
-void OnlineControl::appReplaced(const string& procName, uint16 /*result*/)
-{
-	LOG_INFO_STR("appReplaced from " << procName);
-}
-
-//
 // appSupplyInfo(procName, keyList)
+//
+// note: function is called by CEPApplMgr
 //
 string OnlineControl::appSupplyInfo(const string& procName, const string& keyList)
 {
@@ -825,6 +827,8 @@ string OnlineControl::appSupplyInfo(const string& procName, const string& keyLis
 
 //
 // appSupplyInfoAnswer(procName, answer)
+//
+// note: function is called by CEPApplMgr
 //
 void OnlineControl::appSupplyInfoAnswer(const string& procName, const string& answer)
 {
