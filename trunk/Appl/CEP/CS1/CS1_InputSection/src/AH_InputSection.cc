@@ -133,11 +133,6 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&)
   LOG_TRACE_FLOW_STR("Finished define()");
 }
 
-void AH_InputSection::prerun()
-{
-  getComposite().preprocess();
-}
-
 void AH_InputSection::run(int steps)
 {
   LOG_TRACE_FLOW_STR("Start AH_InputSection::run() "  );
@@ -146,15 +141,6 @@ void AH_InputSection::run(int steps)
     getComposite().process();
   }
   LOG_TRACE_FLOW_STR("Finished AH_InputSection::run() "  );
-}
-
-void AH_InputSection::dump() const
-{
-  LOG_TRACE_FLOW_STR("AH_InputSection::dump() not implemented"  );
-}
-
-void AH_InputSection::quit()
-{
 }
 
 } // namespace CS1
