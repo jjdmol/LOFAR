@@ -45,11 +45,9 @@ namespace LOFAR
 
     // Description of class.
     // This is the ApplicationHolder for the input section of the CS1 application
-    // This applicationholder uses the CEPFrame library and is supposed to
-    // connect to the BGLProcessing application Holder (using only tinyCEP). 
-    // The interface between these is defined in  the SB_Stub class.
-    // The InputSection receives data from RSP boards using the WH_RSPInput class.
-    // This class has an internal buffer and sends output to the WH_SBCollect class.
+    // Its main purposes are: 1) buffering the station data in an circular
+    // buffer, and 2) transpose the data over a fast interconnect (using
+    // MPI_Alltoallv, as opposed to CEPframe connections in earlier versions).
 
     class AH_InputSection: public ApplicationHolder
     {
