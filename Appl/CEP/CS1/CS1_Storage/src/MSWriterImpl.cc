@@ -174,10 +174,8 @@ namespace LOFAR
       MS::addColumnToDesc(td, MS::DATA, 2);
       td.rwColumnDesc(MS::columnName(MS::DATA)).rwKeywordSet().
         define("UNIT","Jy");
-      td.rwColumnDesc(MS::columnName(MS::UVW)).rwKeywordSet().
-        define("UNIT","APP");
       MS::addColumnToDesc(td, MS::WEIGHT_SPECTRUM, 1);
-
+	
       //   // Store the data and flags using the TiledStMan.
       //   Vector<String> tsmNames(2);
       //   tsmNames(0) = MS::columnName(MS::DATA);
@@ -231,6 +229,8 @@ namespace LOFAR
       // Get access to its columns.
       itsMS = new MeasurementSet(newTab);
       itsMSCol = new MSMainColumns(*itsMS);
+      itsMSCol->uvwMeas().setDescRefCode (Muvw::J2000);
+      
       // Create all subtables.
       // Do this after the creation of optional subtables,
       // so the MS will know about those optional sutables.
@@ -241,7 +241,7 @@ namespace LOFAR
       fillProcessor();
       fillObservation();
       fillState();
-
+            
       // Add weight_spectrum description
 
     }
@@ -608,8 +608,7 @@ namespace LOFAR
       defFlags = False;
       Array<Float> sigma(IPosition(1, shape(0)));
       sigma = 1;
-      //   Array<Float> weight(IPosition(1, shape(0)));
-      //   weight = 1;
+      Array<Float> weight(IPosition(1, shape(0)));
       
       // Calculate the apparent HA and DEC for the array center.
       // First store time in frame.
@@ -627,7 +626,7 @@ namespace LOFAR
       MBaseline  MB_ITRF;
       MBaseline  MB_J2000;
       MVBaseline MBV_J2000;
-
+      
       for (int i=0; i<itsNrAnt; i++) {
         for (int j=0; j<=i; j++) {
 	  MB_ITRF = MBaseline(MVBaseline(basel(0,i,j), basel(1,i,j), basel(2,i,j)), 
@@ -636,6 +635,8 @@ namespace LOFAR
 	  MBV_J2000 = MB_J2000.getValue();
           uvw = MVuvw(MBV_J2000, MVd).getValue();
 	  
+          weight = ((Float*)weights)[1];
+
           itsMSCol->data().setShape(rowNumber, shape);
 
           itsMSCol->flagRow().put (rowNumber, False);
@@ -655,7 +656,7 @@ namespace LOFAR
           itsMSCol->observationId().put (rowNumber, 0);
           itsMSCol->stateId().put (rowNumber, 0);
           itsMSCol->uvw().put (rowNumber, uvw);
-          //      itsMSCol->weight().put (rowNumber, weight);
+          itsMSCol->weight().put (rowNumber, weight);
           itsMSCol->sigma().put (rowNumber, sigma);
 
           try
@@ -685,11 +686,11 @@ namespace LOFAR
           if (flags != 0) {
             flags += nrel*nrChannels;
           }
-
+#if 0
           // Write weights
           Array<float> weightArray(wShape, (Float*)weights, SHARE);
           itsMSCol->weightSpectrum().put(rowNumber, weightArray);
-
+#endif
           weights += nrChannels;
 
           rowNumber++;
