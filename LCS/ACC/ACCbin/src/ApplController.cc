@@ -236,122 +236,117 @@ void ApplController::createParSubsets()
 	//	   a specific process (procName[i]), these overule the previous set
     // [C] additional info from the AC itself
 
-	// ApplCtrl.application = [ procName ... ]
-	vector<string>	applList = itsObsParamSet->getStringVector("ApplCtrl.application");
-	LOG_TRACE_VAR_STR("Found " << applList.size() << " applications");
-	// applList contains a list of applications. Loop over this list
-	// and make a ProcRuler and ParsetFile for each process of these applications.
-    for (uint applIdx = 0; applIdx < applList.size(); applIdx++) {
-		LOG_TRACE_VAR_STR("Processing application:" << applList[applIdx]);
+	// ApplCtrl.application = applName
+	string			applName = itsObsParamSet->getString("ApplCtrl.application");
 
-		string	applName = applList[applIdx];
-		string			prevProcName;
-		ParameterSet	basePS;
-		// read applName._procs = [ proc(group) ... ]
-		vector<string>	procList = itsObsParamSet->getStringVector(applName+"._procs");
-		for (uint procIdx = 0; procIdx < procList.size(); procIdx++) {
-			LOG_TRACE_VAR_STR("Processing process:" << procList[procIdx]);
+	// ApplCtrl.processes = [ procName ... ]
+	// procList contains a list of processes to control. Loop over this list
+	// and make a ProcRuler and ParsetFile for each process of this application.
+	string			prevProcName;
+	ParameterSet	basePS;
+	vector<string>	procList = itsObsParamSet->getStringVector("ApplCtrl.processes");
+	LOG_TRACE_VAR_STR("Found " << procList.size() << " processes");
+	for (uint procIdx = 0; procIdx < procList.size(); procIdx++) {
+		LOG_TRACE_VAR_STR("Processing process:" << procList[procIdx]);
 
-			// procList[x] = processName(x) | processName
-			// procName  := processName
-			// nrProcs  := x | 0
-			string procName = procList[procIdx];
-			int32  nrProcs  = indexValue(procName, "()");
-			rtrim(procName, "()0123456789");
-			string procPrefix = applName +"." + procName;
+		// procList[x] = processName(x) | processName
+		// procName  := processName
+		// nrProcs  := x | 0
+		string procName = procList[procIdx];
+		int32  nrProcs  = indexValue(procName, "()");
+		rtrim(procName, "()0123456789");
+		string procPrefix = applName +"." + procName;
         
-			// The startstopType determines what information is put in the parsetfiles
-			// for the processes.
-			string startstopType = itsObsParamSet->getString(procPrefix+"._startstopType");
-			string fileName 	 = procName + ".ps";
+		// The startstopType determines what information is put in the parsetfiles
+		// for the processes.
+		string startstopType = itsObsParamSet->getString(procPrefix+"._startstopType");
+		string fileName 	 = procName + ".parset";
 
-			LOG_DEBUG_STR("Creating parameterfile for process " << procName);
+		LOG_DEBUG_STR("Creating parameterfile for process " << procName);
 
-			// [A] Get the default parameters ( procName[0].* ) when procname changes
-			if (procName != prevProcName) {
-				basePS.clear();
-				basePS = itsObsParamSet->makeSubset(procPrefix+"[0].", procPrefix+".");
-				LOG_TRACE_VAR_STR(basePS);
+		// [A] Get the default parameters ( procName[0].* ) when procname changes
+		if (procName != prevProcName) {
+			basePS.clear();
+			basePS = itsObsParamSet->makeSubset(procPrefix, procPrefix);
+			LOG_TRACE_VAR_STR(basePS);
 
-				// [C] additional info from the AC itself
-				basePS.add(procPrefix+"._ACport", 
+			// [C] additional info from the AC itself
+			basePS.add(procPrefix+"._ACport", 
 											itsBootParamSet->getString("AC.processportnr"));
-				basePS.add(procPrefix+"._ACnode", itsBootParamSet->getString("AC.node"));
-				basePS.replace("parsetPrefix", procPrefix+".");
-				prevProcName = procName;
-			}
+			basePS.add(procPrefix+"._ACnode", itsBootParamSet->getString("AC.node"));
+			basePS.replace("_parsetPrefix", procPrefix+".");
+			prevProcName = procName;
+		}
 
-			// --- cmdline ---
-			if (startstopType == "cmdline") {
-				if (nrProcs == 0) {
-					// This processSet is a single commandline process
-					// add procName.* params to parset for process.
-					ParameterSet myPS = itsObsParamSet->makeSubset(procPrefix+".",
+		// --- cmdline ---
+		if (startstopType == "cmdline") {
+			if (nrProcs == 0) {
+				// This processSet is a single commandline process
+				// add procName.* params to parset for process.
+				ParameterSet myPS = itsObsParamSet->makeSubset(procPrefix+".",
 																	procPrefix+".");
-					LOG_TRACE_VAR_STR(myPS);
-					myPS.adoptCollection(basePS);
-					writeParSubset(myPS, procName, fileName);
+				LOG_TRACE_VAR_STR(myPS);
+				myPS.adoptCollection(basePS);
+				writeParSubset(myPS, procName, fileName);
 				
-					// construct ProcesRuler
-					itsProcRuler.add(PR_Shell(myPS.getString(procPrefix + "._node"),
+				// construct ProcesRuler
+				itsProcRuler.add(PR_Shell(myPS.getString(procPrefix + "._node"),
 										  procName,
 										  myPS.getString(procPrefix + "._executable"),
 										  fileName));
 
-				} else {
-					// There are multiple processes of this type
-					for (int32 p = 1; p <= nrProcs; ++p) {
-
-						// [B] construct parameter subset with process specific settings
-						string pName      = formatString("%s%d", procName.c_str(), p);
-						string oldPPrefix = formatString("%s[%d].", procPrefix.c_str(), p);
-						ParameterSet myPS(basePS);
-						myPS.adoptCollection(itsObsParamSet->makeSubset(oldPPrefix, 
+			} else {
+				// There are multiple processes of this type
+				for (int32 p = 1; p <= nrProcs; ++p) {
+					// [B] construct parameter subset with process specific settings
+					string pName      = formatString("%s%d", procName.c_str(), p);
+					string oldPPrefix = formatString("%s[%d].", procPrefix.c_str(), p);
+					ParameterSet myPS(basePS);
+					myPS.adoptCollection(itsObsParamSet->makeSubset(oldPPrefix, 
 																	   procPrefix+"."));
-						LOG_TRACE_VAR_STR(myPS);
+					LOG_TRACE_VAR_STR(myPS);
 
-						// copy the default PS and give it a new prefix
-						myPS.adoptCollection(itsObsParamSet->makeSubset(procPrefix+".",
+					// copy the default PS and give it a new prefix
+					myPS.adoptCollection(itsObsParamSet->makeSubset(procPrefix+".",
 																	procPrefix+"."));
-						string fileName = pName + ".ps";
-						writeParSubset(myPS, pName, fileName);
+					string fileName = pName + ".parsets";
+					writeParSubset(myPS, pName, fileName);
 
-						itsProcRuler.add(PR_Shell(myPS.getString(procPrefix + "._node"),
+					itsProcRuler.add(PR_Shell(myPS.getString(procPrefix + "._node"),
 											  pName,
 											  myPS.getString(procPrefix + "._executable"),
 											  fileName));
-					}
 				}
 			}
+		}
 
-			else if (startstopType == "mpirun") {
-				// This processSet is an MPI program
-				vector<string> nodeNames;
-				for (int32 p = 1; p <= nrProcs; p++) {
-					// construct array of all nodes
-					nodeNames.push_back(itsObsParamSet->getString(
+		else if (startstopType == "mpirun") {
+			// This processSet is an MPI program
+			vector<string> nodeNames;
+			for (int32 p = 1; p <= nrProcs; p++) {
+				// construct array of all nodes
+				nodeNames.push_back(itsObsParamSet->getString(
 									formatString("%s[%d]._node", procPrefix.c_str(), p)));
-				}
-				itsProcRuler.add(PR_MPI(procName,
-										nodeNames,
-										basePS.getString(procPrefix + "._executable"),
-										fileName));
-				writeParSubset(basePS, procName, fileName);
 			}
+			itsProcRuler.add(PR_MPI(procName,
+									nodeNames,
+									basePS.getString(procPrefix + "._executable"),
+									fileName));
+			writeParSubset(basePS, procName, fileName);
+		}
 
-			// --- bgl ---
-			else if (startstopType == "bgl") {
-				// This processSet is a BG/L job
-				itsProcRuler.add(PR_BGL(procName,				    
+		// --- bgl ---
+		else if (startstopType == "bgl") {
+			// This processSet is a BG/L job
+			itsProcRuler.add(PR_BGL(procName,				    
 									basePS.getString(procName + ".partition"),
 									basePS.getString(procName + ".executable"),
 									basePS.getString(procName + ".workingdir"),
 									fileName, 
 									nrProcs));
-				writeParSubset(basePS, procName, fileName);
-			}
-		} // for processes
-    } // for applications
+			writeParSubset(basePS, procName, fileName);
+		}
+	} // for processes
 }
 
 void ApplController::writeParSubset(ParameterSet ps, const string& procName, const string& fileName){
@@ -359,7 +354,7 @@ void ApplController::writeParSubset(ParameterSet ps, const string& procName, con
     // TODO add some more like hostname and others?
 
     // append the new prefix
-    ps.replace("process.name", procName);
+    ps.replace("_processName", procName);
 
     // Remove execute type from processes paramlist
     ps.remove(procName+"._startstopType");
@@ -446,12 +441,14 @@ void ApplController::startCmdState()
 		}
 
 		if (itsCurState == StatePauseCmd) {
-			// overrule default wait time
-			itsStateEngine->setStateLifeTime(itsCurACMsg->getWaitTime());
+			// overrule default wait time if set
+			if (itsCurACMsg->getWaitTime() > 0) {
+				itsStateEngine->setStateLifeTime(itsCurACMsg->getWaitTime());
+			}
 		}
 
 		// All these command must be sent to the AP's and the responses
-		// that com back will finally result in a Nack of the next state.
+		// that come back will finally result in a Nack of the next state.
 		itsServerStub->handleMessage(itsCurACMsg);
 		break;
 	case NR_OF_STATES:		// satisfy compiler
@@ -554,9 +551,9 @@ void ApplController::doEventLoop()
 		}
 
  		// temp debug info
-		LOG_TRACE_STAT_STR(*itsAPAPool);
-		LOG_TRACE_STAT_STR(*itsStateEngine);
-		LOG_TRACE_STAT_STR("Ping at: " << timeString(nextPing));
+		LOG_TRACE_FLOW_STR(*itsAPAPool);
+		LOG_TRACE_FLOW_STR(*itsStateEngine);
+		LOG_TRACE_FLOW_STR("Ping at: " << timeString(nextPing));
 
 		// Only sleep when idle
 		if (itsCurState == StateNone) {

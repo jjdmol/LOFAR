@@ -111,7 +111,6 @@ APAdmin*	APAdminPool::poll(time_t		waitTime)
 }
 
 //
-
 // void writeToAll(command, options)
 //
 void APAdminPool::writeToAll(PCCmd			command,
