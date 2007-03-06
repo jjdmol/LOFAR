@@ -71,15 +71,16 @@ int main (int argc, char *argv[]) {
 
 		// Read in parameterfile and get my name
 		ParameterSet	itsParamSet(argv[2]);			// may throw
-		string			itsProcID = itsParamSet.getString("process.name");
+		string			itsProcID = itsParamSet.getString("_processName");
+		string			itsPrefix = itsParamSet.getString("_parsetPrefix");
 
 		// Create a APCmdImpl object. This object contains the real 
 		// implementation of the commands we should support.
 		APCmdImpl		itsAPCmdImpl;
 
 		// [A] Connect to the Application Controller
-		ProcControlServer  itsPCcomm(itsParamSet.getString(itsProcID+".ACnode"),
-									 itsParamSet.getUint16(itsProcID+".ACport"),
+		ProcControlServer  itsPCcomm(itsParamSet.getString(itsPrefix+"_ACnode"),
+									 itsParamSet.getUint16(itsPrefix+"_ACport"),
 									 &itsAPCmdImpl);
 
 		// IMPLEMENT: do other launch activities like processing the ParamSet
@@ -106,7 +107,7 @@ int main (int argc, char *argv[]) {
 				itsIsRunning = (newMsg->getCommand() != PCCmdQuit);
 
 				// TEST: simulate we are busy
-				sleep (rand()%10);
+				sleep (rand()%4);
 
 				// [D] let PCcomm dispatch and handle the message
 				itsPCcomm.handleMessage(newMsg);

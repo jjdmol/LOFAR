@@ -84,6 +84,7 @@ int main (int argc, char *argv[]) {
 		// IMPLEMENT: do other launch activities like processing the ParamSet
 
 		// [B] Tell AC we are ready for commands
+		LOG_DEBUG_STR("Registering at AC as: " << itsProcID);
 		itsPCcomm.registerAtAC(itsProcID);
 
 		// Main processing loop
@@ -98,6 +99,7 @@ int main (int argc, char *argv[]) {
 				itsIsRunning = (newMsg->getCommand() != PCCmdQuit);
 
 				// [D] let PCcomm dispatch and handle the message
+				LOG_DEBUG_STR("Received messagetype: " << newMsg->getCommand());
 				itsPCcomm.handleMessage(newMsg);
 			}
 
