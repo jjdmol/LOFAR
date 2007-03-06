@@ -28,6 +28,7 @@
 #include <libgen.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <ACCbin/ApplController.h>
 
 using namespace LOFAR;
@@ -44,10 +45,12 @@ int main (int	argc, char*	argv[])
 		close(f);
 	}
 
-	// Always get Logger up first
+	// Always bring up he logger first
+	ConfigLocator	aCL;
 	string		progName = basename(argv[0]);
-	INIT_LOGGER (progName.c_str());
-	LOG_INFO_STR("Initialized logsystem with " << progName << ".log_prop");
+	string		logPropFile(progName + ".log_prop");
+	INIT_LOGGER (aCL.locate(logPropFile).c_str());
+	LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
 	// Check invocation syntax
 	if (argc < 2) {

@@ -208,7 +208,7 @@ bool ACRequestPool::assignNewPort(ACRequest*	anACR)
 	// log assignment
 	in_addr		IPaddr;
 	IPaddr.s_addr = anACR->itsAddr;
-	LOG_DEBUG_STR (inet_ntoa(IPaddr) << ", " << anACR->itsPort <<
+	LOG_DEBUG_STR (inet_ntoa(IPaddr) << ", " << freePort <<
 				   " assigned to " << anACR->itsRequester);
 
 	return (true);
