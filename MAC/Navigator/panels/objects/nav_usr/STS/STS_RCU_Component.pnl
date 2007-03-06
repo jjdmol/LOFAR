@@ -1,12 +1,13 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,419 196 308 296 N "_3DFace" 3
+PANEL,419 341 810 296 N "_3DFace" 3
 "$Caption"
 "$Component"
 "$datapoint"
 "main()
 {
+  LOG_TRACE(\"DP: \" + $datapoint + \"  Component: \"+$Component);
   if (dpAccessable($datapoint + \".\" + $Component))
 	{
 	  setValue(\"txt_component\", \"text\", $Caption);
@@ -15,7 +16,7 @@ PANEL,419 196 308 296 N "_3DFace" 3
   }
   else
   {
-    setValue(\"rect\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"STS_RCU\", \"backCol\", \"_dpdoesnotexist\");
   }
 }
 
@@ -23,25 +24,28 @@ PANEL,419 196 308 296 N "_3DFace" 3
 ControlComponent(string dp1, bool Status,
                  string dp2, bool invalid)
 {
+
+	string SymbolCol;  
   if(!invalid)
   {
     CheckButton1.enabled = TRUE;
     if (Status==TRUE)
     {
-      setValue(\"rect\", \"backCol\", \"Lofar_device_active\");
+      SymbolCol=\"Lofar_device_active\";
       CheckButton1.state(0)=TRUE;
     }
     else 
     {
-      setValue(\"rect\", \"backCol\", \"grey\");
+      SymbolCol=\"grey\";
       CheckButton1.state(0)=FALSE;
     }
   }
   else
   {
     CheckButton1.enabled = FALSE;
-    setValue(\"rect\", \"backCol\", \"_dpdoesnotexist\");
+    SymbolCol=\"Lofar_device_invalid\";
   }
+  setValue(\"STS_RCU\", \"backCol\", SymbolCol);
 }" 0
 EE E E 1 -1 -1 0  10 41
 "" 0 1
@@ -54,7 +58,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"rect"
+"STS_RCU"
 ""
 1 10 41 E E E 1 E 1 E N "_WindowText" E N "grau" E E
  E E
@@ -65,46 +69,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-"main()
-{
-  if (dpAccessable($datapoint + \".\" + $Component))
-	{
-	  setValue(\"txt_component\", \"text\", $Caption);
-	  dpConnect(\"ControlComponent\", $datapoint + \".\" + $Component + \":_online.._value\",
-	                                //$datapoint + \".\" + $Component + \":_original.._invalid\");
-	                                $datapoint + \".\" + $Component + \":_online.._invalid\");
-  }
-  else
-  {
-    setValue(\"rect\", \"backCol\", \"_dpdoesnotexist\");
-  }
-}
-
-
-ControlComponent(string dp1, bool Status,
-                 string dp2, bool invalid)
-{
-  if(!invalid)
-  {
-    CheckButton1.enabled = TRUE;
-    if (Status==TRUE)
-    {
-      setValue(\"rect\", \"backCol\", \"Lofar_device_active\");
-      CheckButton1.state(0)=TRUE;
-    }
-    else 
-    {
-      setValue(\"rect\", \"backCol\", \"grey\");
-      CheckButton1.state(0)=FALSE;
-    }
-  }
-  else
-  {
-    CheckButton1.enabled = FALSE;
-    setValue(\"rect\", \"backCol\", \"_dpdoesnotexist\");
-  }
-}" 0
- E 0 1 1 0 1 E U  1 E 10 11 110 41
+E E 0 1 1 0 1 E U  1 E 10 11 110 41
 2 2
 "txt_component"
 ""

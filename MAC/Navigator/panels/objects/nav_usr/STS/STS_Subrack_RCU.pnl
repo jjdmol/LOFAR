@@ -1,20 +1,24 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,280 106 139 149 N "_3DFace" 4
-"$APNr"
+PANEL,382 115 139 149 N "_3DFace" 3
 "$RCUNr"
 "$datapoint"
 "$referenceDatapoint"
 "main()
 {
   //Function: Set background color of RCU
-  int ap  = 0;
-  int rcu = 0;
-  sscanf($APNr,\"%d\",ap);
+  
+  int rsp=0;
+  int rcu=0;
+  string aDP=dpSubStr($datapoint,DPSUB_DP);
+  string rspboard = substr(aDP,strpos(aDP,\"RSPBoard\"),strlen(aDP));
+  string rspnr = substr(rspboard,8,strlen(rspboard));
+  sscanf(rspnr,\"%d\",rsp);
   sscanf($RCUNr,\"%d\",rcu);
-  setValue(\"text_RCUNr\", \"text\", \"RCU\" + (ap*2+rcu) );
-  string dpRCU = $datapoint + \".AP\"+ $APNr +\".RCU\"+ $RCUNr;
+  RCUNr= (rsp*8)+rcu;
+  setValue(\"text_RCUNr\", \"text\", \"RCU\" + RCUNr );
+  string dpRCU = $datapoint + \"_RCU\"+ RCUNr;
   backGround.toolTipText       = dpRCU;
   icon_maintenance.toolTipText = dpRCU;
   navPMLloadPropertySet(dpRCU);
@@ -34,12 +38,13 @@ PANEL,280 106 139 149 N "_3DFace" 4
 " 0
 "main()
 {
-  navPMLunloadPropertySet($datapoint + \".AP\"+ $APNr +\".RCU\"+ $RCUNr);
+  navPMLunloadPropertySet($datapoint +\"_RCU\"+ RCUNr);
 
 }" 0
 E E E 1 -1 -1 0  20 140
 "" 0 1
-EE 2
+E"int RCUNr = 0;" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -59,7 +64,7 @@ main(int iType)
   dyn_int      diType = makeDynInt();
   dyn_string   dsDps;
 
-  dsDps[1] = $datapoint+\"_Board1_AP\"+$APNr+\"_RCU\"+$RCUNr+\"_status.\" + \":_alert_hdl.._ack\";
+  dsDps[1] = $datapoint+\"_RCU\"+\"RCUNr\"+\"_status.\" + \":_alert_hdl.._ack\";
 
   if ( isFunctionDefined(\"isAckable\") )
   {
@@ -78,7 +83,7 @@ main(int iType)
 }
 // SimpleCtrlScript {EP_confirm}
 // dpCount {1}
-// dp1 {$datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_status.\"}
+// dp1 {$datapoint + \"_RCU\"+ RCUNr +\"_status.\"}
 // SimpleCtrlScriptEnd {EP_confirm}
 " 0
 
@@ -97,8 +102,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  DebugTN(\"Navigate to: Dp: \" + $datapoint + \" RefDp: \" + $referenceDatapoint + \" Point: \" + \".AP\"+ $APNr +\".RCU\"+ $RCUNr);
-  aplViewNavigateTo($datapoint, $referenceDatapoint, \".AP\"+ $APNr +\".RCU\"+ $RCUNr, \"Station_Subrack_RCU.pnl\");
+  DebugTN(\"Navigate to: Dp: \" + $datapoint + \" RefDp: \" + $referenceDatapoint + \" Point: \" + \"_RCU\"+ RCUNr);
+  aplViewNavigateTo($datapoint, $referenceDatapoint, \"_RCU\"+ RCUNr, \"Station_Subrack_RCU.pnl\");
 }" 0
  0 1 1 0 1 E U  1 E 40 40 100 110
 2 5
@@ -113,7 +118,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 49 42 92 58
+"main()
+{
+
+}" 0
+ E 0 1 1 0 1 E U  0 E 49 42 92 58
 0 2 0 "s" 0 0 0 65 0 0  49 42
  1
 1
