@@ -26,6 +26,7 @@
 //# Includes
 #include <unistd.h>                     // gethostname
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <Common/hexdump.h>		// TEMP!!!
 #include <ALC/ACRequest.h>
 #include <ACCbin/ACDaemon.h>
@@ -34,14 +35,17 @@
 namespace LOFAR {
   namespace ACC {
 
-ACDaemon::ACDaemon(string	aParamFile) :
+ACDaemon::ACDaemon(const string&	progName) :
 	itsListener   (0),
 	itsPingSocket (0),
 	itsParamSet   (new ParameterSet),
 	itsACPool     (0)
 {
 	// Read in the parameterfile with network parameters.
-	itsParamSet->adoptFile(aParamFile);		// May throw
+	ConfigLocator	aCL;
+	string			configFile(progName + ".conf");
+	LOG_DEBUG_STR("Using parameterfile: "<< configFile <<"-->"<< aCL.locate(configFile));
+	itsParamSet->adoptFile(aCL.locate(configFile));		// May throw
 
 	// Open listener for AC requests.
 	itsListener = new Socket("ACdaemon",
@@ -213,7 +217,7 @@ void ACDaemon::handleACRequest()
 		constructACFile(&aRequest, "AC.param");
 		string	sysCommand = itsParamSet->getString("ACDaemon.command");
 		int32 result = system(sysCommand.c_str());
-		LOG_DEBUG_STR ("result=" << result << ", errno=" << errno <<
+		LOG_DEBUG_STR ("result="<< result <<", errno="<< errno <<":"<< 
 															strerror(errno));
 	}
 

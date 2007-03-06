@@ -27,6 +27,7 @@
 #include <sys/stat.h>			// umask
 #include <unistd.h>                     // fork, basename
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <ACCbin/ACDaemon.h>
 
 using namespace LOFAR;
@@ -35,21 +36,17 @@ using namespace LOFAR::ACC;
 //
 // MAIN (parameterfile)
 //
-int main (int argc, char* argv[]) {
+int main (int /*argc*/, char* argv[]) {
 
 	// Always bring up he logger first
+	ConfigLocator	aCL;
 	string		progName = basename(argv[0]);
-	INIT_LOGGER (progName.c_str());
-
-	// Check invocation syntax
-	if (argc < 2) {
-		LOG_FATAL_STR ("Invocation error, syntax: " << progName <<
-															" parameterfile");
-		return (-1);
-	}
+	string		logPropFile(progName + ".log_prop");
+	INIT_LOGGER (aCL.locate(logPropFile).c_str());
+	LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
 	// Tell operator we are trying to start up.
-	LOG_INFO_STR("Starting up: " << argv[0] << "(" << argv[1] << ")");
+	LOG_INFO_STR("Starting up: " << argv[0]);
 
 	try {
 //#if REAL_DAEMON
@@ -71,7 +68,7 @@ int main (int argc, char* argv[]) {
 //		chdir("/");		// might be on a mounted file system
 		umask(0);		// no limits
 
-		ACDaemon	theDaemon(argv[1]);
+		ACDaemon	theDaemon(progName);
 
 		theDaemon.doWork();
 
