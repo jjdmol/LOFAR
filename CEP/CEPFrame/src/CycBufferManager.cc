@@ -84,7 +84,6 @@ void CycBufferManager::preprocess()
     dhPtr->init();
     itsBuf.AddBufferElement(dhPtr);
   }
-  itsDataHolder->init(); 
 }
   
 int CycBufferManager::getSize()
