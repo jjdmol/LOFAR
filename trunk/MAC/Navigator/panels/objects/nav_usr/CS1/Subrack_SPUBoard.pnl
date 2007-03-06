@@ -1,0 +1,479 @@
+V 10
+1
+LANG:1 15 SubRackSPUBoard
+PANEL,362 111 745 269 N "_3DFace" 1
+"$datapoint"
+"main()
+{
+  baseDP=$datapoint+\".SPU\";
+	// load propertysets from datapoints
+	navPMLloadPropertySet(baseDP);
+	
+	// check if the requiered datapoint for this view are enabled and accessible
+	if (dpAccessable(baseDP+\".temperature\")) {
+	  dpConnect(\"updateSubrackSPU\",baseDP + \".temperature\",
+ 	                               baseDP + \".temperature:_online.._invalid\");
+ 	} else {
+    setValue(\"SPUBoard\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"detailButton\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_temperature\", \"text\", \"x.x\");
+  }	
+}
+
+
+
+
+updateSubrackSPU(string dp1, float temperature, 
+							   string dp3, bool invalid)
+{
+	string SymbolCol;
+	if (invalid) 
+	{
+		SymbolCol=\"Lofar_device_invalid\";
+    setValue(\"txt_temperature\", \"text\", \"x.x\");
+  } else {
+		SymbolCol=\"Lofar_device_active\";	  
+    setValue(\"txt_temperature\",\"text\",temperature);
+  }
+  setValue(\"SPUBoard\", \"backCol\", SymbolCol);
+  setValue(\"detailButton\", \"backCol\", SymbolCol);
+}" 0
+"main()
+{
+  navPMLunloadPropertySet(baseDP);
+}" 0
+E E E 1 0 0 0  50 250
+"" 0 1
+E"string baseDP=\"\";" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"SPUBoard"
+""
+1 50 140 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 50 70 663 140
+2 1
+"Text1"
+""
+1 56 76 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 58 78 127 94
+0 2 0 "s" 0 0 0 192 0 0  58 78
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 SPU Board
+2 4
+"label_Vhba"
+""
+1 63 117 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 65 119 138 138
+0 2 0 "s" 0 0 0 66 0 0  65 119
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Voltage HBA
+6 5
+"rect_Vhba"
+""
+1 148 135 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 148 115 211 135
+2 6
+"txt_Vhba"
+""
+1 170 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 197 117 222 133
+0 2 0 "2.2f" 5 0 0 194 0 0  197 117
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 10
+"label_Vlba"
+""
+1 255 117 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 257 119 324 133
+0 2 0 "s" 0 0 0 66 0 0  257 119
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Voltage LBA
+6 11
+"rect_Vlba"
+""
+1 334 135 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 334 115 397 135
+2 12
+"txt_Vlba"
+""
+1 356 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 383 117 408 133
+0 2 0 "2.2f" 5 0 0 194 0 0  383 117
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 13
+"label_Vdig"
+""
+1 447 117 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 449 119 516 133
+0 2 0 "s" 0 0 0 66 0 0  449 119
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 11 Voltage DIG
+6 14
+"rect_Vdig"
+""
+1 526 135 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+15 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 526 115 589 135
+2 15
+"txt_Vdig"
+""
+1 548 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 575 117 600 133
+0 2 0 "2.2f" 5 0 0 194 0 0  575 117
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 0.00
+6 17
+"rect_temperature"
+""
+1 148 96 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+18 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 148 76 211 96
+2 18
+"txt_temperature"
+""
+1 163 76 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 190 78 215 94
+0 2 0 "2.2f" 5 0 0 194 0 0  190 78
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 0.00
+2 20
+"txt_unitVhba"
+""
+1 200 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 202 117 211 133
+0 2 0 "s" 0 0 0 192 0 0  202 117
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 V
+2 21
+"txt_unitVlba"
+""
+1 386 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+22 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 388 117 397 133
+0 2 0 "s" 0 0 0 192 0 0  388 117
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 V
+2 22
+"txt_unitVdig"
+""
+1 578 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+ E E
+23 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 580 117 589 133
+0 2 0 "s" 0 0 0 192 0 0  580 117
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 V
+2 23
+"txt_unitTemperature"
+""
+1 194 76 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+24 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 196 78 210 94
+0 2 0 "s" 0 0 0 192 0 0  196 78
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+20 19
+"detailButton"
+""
+1 453 76 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+451 74 522 95
+1
+T 
+1
+LANG:1 6 Detail
+ 0
+1
+LANG:1 0 
+ E  E  0 0 0 0 0
+1
+E E 
+E"main(int button, bool state)
+{
+  if (button == 0)
+  {
+    setValue(\"label_Vhba\", \"visible\", state);
+    setValue(\"label_Vlba\", \"visible\", state);
+    setValue(\"label_Vdig\", \"visible\", state);
+    setValue(\"txt_Vhba\"  , \"visible\", state);
+    setValue(\"txt_Vlba\"  , \"visible\", state);
+    setValue(\"txt_Vdig\"  , \"visible\", state);
+    setValue(\"txt_unitVhba\"  , \"visible\", state);
+    setValue(\"txt_unitVlba\"  , \"visible\", state);
+    setValue(\"txt_unitVdig\"  , \"visible\", state);
+
+    setValue(\"rect_Vhba\"  , \"visible\", state);
+    setValue(\"rect_Vlba\"  , \"visible\", state);
+    setValue(\"rect_Vdig\"  , \"visible\", state);
+
+    if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
+    {
+      if(!dpAccessable(baseDP + \".Vhba:_online.._value\") ||
+		     !dpAccessable(baseDP + \".Vlba:_online.._value\") ||
+		     !dpAccessable(baseDP + \".Vdig:_online.._value\"))
+      {
+        setValue(\"rect_Vhba\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"rect_Vlba\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"rect_Vdig\", \"backCol\", \"_dpdoesnotexist\");
+        setValue(\"txt_Vhba\", \"visible\", FALSE);
+        setValue(\"txt_Vlba\", \"visible\", FALSE);
+        setValue(\"txt_Vdig\", \"visible\", FALSE);
+         return;
+      }
+      else
+      {
+        setValue(\"rect_Vhba\", \"backCol\", \"white\");
+        setValue(\"rect_Vlba\", \"backCol\", \"white\");
+        setValue(\"rect_Vdig\", \"backCol\", \"white\");
+        navPMLloadPropertySet(baseDP);
+        dpConnect(\"SubrackSPUDetails\", baseDP + \".Vhba:_online.._value\",
+																		   baseDP + \".Vlba:_online.._value\",
+                                       baseDP + \".Vdig:_online.._value\",
+                                       baseDP + \".Vhba:_online.._invalid\");
+      }
+    }
+    else   // if checkbox is NOT checked, disconnect datapoints and unload propertyset
+    {
+      dpDisconnect(\"SubrackSPUDetails\", baseDP + \".Vhba:_online.._value\",
+      																  baseDP + \".Vlba:_online.._value\",
+      																  baseDP + \".Vdig:_online.._value\",
+                                        baseDP + \".Vhba:_online.._invalid\");
+      navPMLunloadPropertySet(baseDP);
+    }
+   }
+}
+
+SubrackSPUDetails(string dp1, float Vhba,
+                  string dp2, float Vlba,
+                  string dp3, float Vdig,
+                  string dp5, bool invalid)
+{
+    setValue(\"txt_Vhba\"        , \"text\", Vhba);
+    setValue(\"txt_Vlba\"        , \"text\", Vlba);
+    setValue(\"txt_Vdig\"        , \"text\", Vdig);
+}" 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
