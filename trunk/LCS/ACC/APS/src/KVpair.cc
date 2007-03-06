@@ -34,7 +34,7 @@ namespace LOFAR {
 
 #define	OPTIONAL_TIMESTAMP		\
 	if (genTimestamp) { \
-		second.append(formatString(" {%d}", time(0))); \
+		first.append(formatString("{%d}", time(0))); \
 	}
 
 KVpair::KVpair(const string& aKey, const string&  aValue, bool genTimestamp) :

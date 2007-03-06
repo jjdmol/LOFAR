@@ -131,7 +131,7 @@ public:
 	void	writeBuffer (      string& theBuffer) const;
 	//@}
 
-	// \name Make subsets
+	// \name Handle subsets
 	// A subset from the current collection can be made based on the prefix
 	// of the keys in the collection.
 	// @{
@@ -142,6 +142,11 @@ public:
 	// before all keys in the subset.
 	ParameterSet	makeSubset(const string& baseKey,
 								   const string& prefix = "") const;
+
+	// Substract a subset from the current ParameterSet. Every parameter
+	// whose key starts with the given name will be removed from the
+	// ParameterSet.
+	void	substractSubset(const string& fullPrefix);
 	// @}
 
 	
@@ -293,6 +298,11 @@ inline ParameterSet	ParameterSet::makeSubset(const string& baseKey,
 								   const string& prefix) const
 {
 	return ParameterSet (itsSet->makeSubset(baseKey, prefix));
+}
+
+inline void	ParameterSet::substractSubset(const string& fullPrefix)
+{
+	itsSet->substractSubset(fullPrefix);
 }
 
 inline void	ParameterSet::add    (const string& aKey, const string& aValue)

@@ -87,7 +87,7 @@ std::ostream&	operator<< (std::ostream& os, const ParameterSetImpl &thePS)
 //
 ParameterSetImpl* 
 ParameterSetImpl::makeSubset(const string& baseKey, 
-			     const string& prefix) const
+			     			 const string& prefix) const
 {
   // Convert \a baseKey to lowercase, if we need to do case insensitve compare.
   string            base   = (itsMode == KeyCompare::NOCASE) ? toLower(baseKey) : baseKey;
@@ -112,6 +112,39 @@ ParameterSetImpl::makeSubset(const string& baseKey,
   }
   
   return (subSet);
+}
+
+//
+// substractSubset(fullPrefix)
+//
+// Removes all the keys the start with the given prefix from the parset.
+//
+void ParameterSetImpl::substractSubset(const string& fullPrefix) 
+{
+	LOG_TRACE_CALC_STR("substractSubSet(" << fullPrefix << ")");
+
+	// Convert \a baseKey to lowercase, if we need to do case insensitve compare.
+	string	prefix = (itsMode == KeyCompare::NOCASE) ? toLower(fullPrefix) : fullPrefix;
+	int		length = prefix.size();
+
+	// Loop over parset and delete the matching keys.
+	iterator	endIter  = end();
+	iterator	iter     = lower_bound(prefix);
+	while (iter != endIter) {
+		bool match = (itsMode == KeyCompare::NOCASE) ?
+					toLower(iter->first).compare(0, length, prefix) == 0 :
+					iter->first.compare(0, length, prefix) == 0;
+
+		// We can stop scanning once a match becomes false, since keys are sorted.
+		if (!match) {
+			return;
+		}
+
+		// erase the matching element
+		iterator	old_iter = iter;
+		iter++;
+		erase (old_iter);
+	}
 }
 
 //
@@ -332,6 +365,8 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 ParameterSetImpl::const_iterator
 ParameterSetImpl::findKV(const string& aKey) const
 {
+	LOG_TRACE_CALC_STR("find(" << aKey << ")");
+
 	const_iterator	iter = find(aKey);
 	if (iter == end()) {
 		THROW (APSException, formatString("Key %s unknown", aKey.c_str()));
@@ -499,6 +534,8 @@ vector<char*> splitVector(char*	target)
 //
 vector<bool> ParameterSetImpl::getBoolVector(const string& theKey) const
 {
+	LOG_TRACE_CALC_STR("getBoolVector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -517,6 +554,8 @@ vector<bool> ParameterSetImpl::getBoolVector(const string& theKey) const
 //
 vector<int16> ParameterSetImpl::getInt16Vector(const string& theKey) const
 {
+	LOG_TRACE_CALC_STR("getInt16Vector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -535,6 +574,8 @@ vector<int16> ParameterSetImpl::getInt16Vector(const string& theKey) const
 //
 vector<uint16> ParameterSetImpl::getUint16Vector(const string& theKey) const
 {
+	LOG_TRACE_CALC_STR("getUint16Vector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -553,6 +594,8 @@ vector<uint16> ParameterSetImpl::getUint16Vector(const string& theKey) const
 //
 vector<int32> ParameterSetImpl::getInt32Vector(const string& theKey) const
 {
+	LOG_TRACE_CALC_STR("getInt32Vector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -571,6 +614,8 @@ vector<int32> ParameterSetImpl::getInt32Vector(const string& theKey) const
 //
 vector<uint32> ParameterSetImpl::getUint32Vector(const string& theKey) const
 {
+	LOG_TRACE_CALC_STR("getUint32Vector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -590,6 +635,8 @@ vector<uint32> ParameterSetImpl::getUint32Vector(const string& theKey) const
 //
 vector<int64> ParameterSetImpl::getInt64Vector(const string& theKey) const
 {
+	LOG_TRACE_CALC_STR("getInt64Vector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -608,6 +655,8 @@ vector<int64> ParameterSetImpl::getInt64Vector(const string& theKey) const
 //
 vector<uint64> ParameterSetImpl::getUint64Vector(const string& theKey) const
 {
+	LOG_TRACE_CALC_STR("getUint64Vector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -627,6 +676,8 @@ vector<uint64> ParameterSetImpl::getUint64Vector(const string& theKey) const
 //
 vector<float> ParameterSetImpl::getFloatVector(const string& theKey) const 
 {
+	LOG_TRACE_CALC_STR("getFloatVector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -645,6 +696,8 @@ vector<float> ParameterSetImpl::getFloatVector(const string& theKey) const
 //
 vector<double> ParameterSetImpl::getDoubleVector(const string& theKey) const 
 {
+	LOG_TRACE_CALC_STR("getDoubleVector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -663,6 +716,8 @@ vector<double> ParameterSetImpl::getDoubleVector(const string& theKey) const
 //
 vector<string> ParameterSetImpl::getStringVector(const string& theKey) const 
 {
+	LOG_TRACE_CALC_STR("getStringVector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
@@ -681,6 +736,8 @@ vector<string> ParameterSetImpl::getStringVector(const string& theKey) const
 //
 vector<time_t> ParameterSetImpl::getTimeVector(const string& theKey) const 
 {
+	LOG_TRACE_CALC_STR("getTimeVector(" << theKey << ")");
+
 	// get destoyable copy of value part
 	string		value(findKV(theKey)->second.c_str());	
 
