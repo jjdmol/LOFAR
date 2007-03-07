@@ -329,12 +329,11 @@ AC_ARG_WITH(lofar-libdir,
   cp lofar_config.h-pkg lofar_config.h
   echo "" >> lofar_config.h
   echo "#endif" >> lofar_config.h
-  # If the current lofar_config.h is the same as the old one, move the
-  # old one back and create it again.
+  # If the current lofar_config.h is the same as the old one, copy the
+  # old one back, while preserving creation date and time.
   diff lofar_config.h lofar_config.old-h > /dev/null 2>&1
   if [ $? = 0 ]; then
-    mv lofar_config.old-h lofar_config.h
-    touch lofar_config.old-h
+    cp -p lofar_config.old-h lofar_config.h
   fi
 
   # Use absolute path (make distcheck sets srcdir to ..).
