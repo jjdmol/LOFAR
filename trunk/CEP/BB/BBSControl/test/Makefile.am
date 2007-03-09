@@ -1,4 +1,5 @@
-check_PROGRAMS			= tpqutil \
+check_PROGRAMS			= tpqxx \
+				  tpqutil \
 				  tBBSStrategy \
 				  tDH_BBSStep \
 				  tDH_BBSStrategy \
@@ -17,6 +18,10 @@ CHECKTOOLPROGS			= tpqutil \
 				  tDH_BBSStrategy \
 				  tCommandQueue
 #ENDCHECKTOOLPROGS
+
+tpqxx_SOURCES			= tpqxx.cc
+tpqxx_LDADD			= ../src/libbbscontrol.la
+tpqxx_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
 
 tpqutil_SOURCES			= tpqutil.cc
 tpqutil_LDADD			= ../src/libbbscontrol.la

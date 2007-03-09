@@ -25,10 +25,13 @@
 #include <BBSControl/BBSProcessControl.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
-#include <BBSKernel/BBSStatus.h>
-#include <Transport/DH_BlobStreamable.h>
-#include <Transport/TH_Socket.h>
-#include <Transport/CSConnection.h>
+#if 0
+# include <BBSKernel/BBSStatus.h>
+# include <Transport/DH_BlobStreamable.h>
+# include <Transport/TH_Socket.h>
+# include <Transport/CSConnection.h>
+#endif
+#include <BBSControl/CommandQueue.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
 
@@ -43,9 +46,12 @@ namespace LOFAR
     BBSProcessControl::BBSProcessControl() :
       ProcessControl(),
       itsStrategy(0),
+#if 0
       itsDataHolder(0), 
       itsTransportHolder(0), 
       itsConnection(0),
+#endif
+      itsCommandQueue(0),
       itsStrategySent(false)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
@@ -56,9 +62,12 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       delete itsStrategy;
+#if 0
       delete itsDataHolder;
       delete itsTransportHolder;
       delete itsConnection;
+#endif
+      delete itsCommandQueue;
     }
 
 
@@ -73,8 +82,9 @@ namespace LOFAR
 
 	// Retrieve the steps in the strategy in sequential order.
 	itsSteps = itsStrategy->getAllSteps();
-    LOG_DEBUG_STR("# of steps in strategy: " << itsSteps.size());
+	LOG_DEBUG_STR("# of steps in strategy: " << itsSteps.size());
     
+#if 0
 	// Create a new data holder.
 	itsDataHolder = new DH_BlobStreamable();
 
@@ -84,6 +94,7 @@ namespace LOFAR
 			true,         // sync
 			Socket::TCP,  // protocol
 			false);       // open socket now
+#endif
       }
       catch (Exception& e) {
 	LOG_ERROR_STR("Caught exception in BBSProcessControl::define()\n" 
@@ -100,9 +111,11 @@ namespace LOFAR
       LOG_INFO("BBSProcessControl::init()");
 
       try {
+#if 0
 	// Check pre-conditions
 	ASSERT(itsDataHolder);
 	ASSERT(itsTransportHolder);
+#endif
 
 	// We need to send the strategy first.
 	itsStrategySent = false;
@@ -110,6 +123,7 @@ namespace LOFAR
 	// Set the step iterator at the start of the vector of steps.
 	itsStepsIterator = itsSteps.begin();
 
+#if 0
 	// DH_BlobStreamable is initialized implicitly by its constructor.
 	if (!itsDataHolder->isInitialized()) {
 	  LOG_ERROR("Initialization of DataHolder failed");
@@ -129,6 +143,11 @@ namespace LOFAR
 	  LOG_ERROR("Creation of Connection failed");
 	  return false;
 	}
+#endif
+	// Create a new CommandQueue. This will open a connection to the
+	// blackboard database.
+	itsCommandQueue = 
+	  new CommandQueue(globalParameterSet()->getString("BBDB.DBName"));
       }
       catch (Exception& e) {
 	LOG_ERROR_STR(e);
@@ -146,37 +165,41 @@ namespace LOFAR
 
       try {
 	// Check pre-conditions
+#if 0
 	ASSERT(itsDataHolder);
 	ASSERT(itsConnection);
+#endif
 	ASSERT(itsStrategy);
+	ASSERT(itsCommandQueue);
 
 	// Keep the result of sending data.
 	bool result;
 
-	// If we have not sent the strategy yet. We should do so now.
+	// If we haven't sent the strategy to the command queue yet, we should
+	// do it now.
 	if (!itsStrategySent) {
-	  result = itsStrategySent = sendObject(*itsStrategy);
+	  itsCommandQueue->setStrategy(*itsStrategy);
+	  itsStrategySent = true;
 	}
 	// Else, we should send the next step, unless we're at the end of the
 	// vector of steps.
 	else {
 	  if (itsStepsIterator != itsSteps.end()) {
 	    // Send the next step and increment the iterator.
-	   result = sendObject(**itsStepsIterator++);
+	    itsCommandQueue->addStep(**itsStepsIterator++);
 	  }
 	  else {
 	    LOG_TRACE_COND("Reached end of vector of steps");
 	    result = false;
 	  }
 	}
-	// If something went wrong, return immediately.
-	if (!result) return false;
 
+#if 0
 	// Read back the response from the BBS kernel (probably a BBSStatus).
-	BlobStreamable* bs = recvObject();
+ 	BlobStreamable* bs = recvObject();
 
 	// Something went (terribly) wrong. Return immediately.
-	if (!bs) return false;
+ 	if (!bs) return false;
 
         // Assume we've received a BBSStatus
         BBSStatus* sts = dynamic_cast<BBSStatus*>(bs);
@@ -190,7 +213,7 @@ namespace LOFAR
           LOG_ERROR_STR("Received BBSStatus: " << *sts);
           return false;
         }
-
+#endif
 	// Do some smart things.
 	// ...
 
@@ -254,6 +277,7 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
     
+#if 0
     bool BBSProcessControl::sendObject(const BlobStreamable& bs)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
@@ -304,6 +328,7 @@ namespace LOFAR
       // We should never get here.
       ASSERTSTR(false, "We should never get here.");
     }
+#endif
 
   } // namespace BBS
 

@@ -11,9 +11,9 @@ Strategy.WorkDomainSize.Time = 10           # work domain size: t(s)
 Strategy.Integration.Freq = 1;              # integration interval: f(Hz)
 Strategy.Integration.Time = 0.1;            # integration interval: t(s)
 
-BBDB.Host               = 127.0.0.1         # hostname/ipaddr of BB DBMS
-BBDB.Port               = 12345             # port used by BB DBMS
-BBDB.DBName             = blackboard        # name of the BB database
+BBDB.Host               = dop50.nfra.nl     # hostname/ipaddr of BB DBMS
+BBDB.Port               = 5432              # port used by BB DBMS
+BBDB.DBName             = bbs               # name of the BB database
 BBDB.UserName           = postgres          # username for accessing the DBMS
 BBDB.PassWord           =                   # password for accessing the DBMS
 

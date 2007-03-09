@@ -1,9 +1,9 @@
 
 Measurement Set: test.ms
 Blackboard database:
-. Host: 127.0.0.1
-. Port: 12345
-. DBName: blackboard
+. Host: dop50.nfra.nl
+. Port: 5432
+. DBName: bbs
 . Username: postgres
 . Password: 
 Parameter database:

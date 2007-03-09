@@ -32,16 +32,19 @@
 namespace LOFAR
 {
   //# Forward Declarations.
+#if 0
   class BlobStreamable;
   class DH_BlobStreamable;
   class TH_Socket;
   class CSConnection;
+#endif
 
   namespace BBS
   {
     //# Forward Declarations.
     class BBSStrategy;
     class BBSStep;
+    class CommandQueue;
 
     // \addtogroup BBSControl
     // @{
@@ -71,11 +74,13 @@ namespace LOFAR
       // @}
 
     private:
+#if 0
       // Send the strategy or one of the steps across.
       bool sendObject(const BlobStreamable& bs);
 
       // Receive a BlobStreamable object, e.g., a BBSStatus.
       BlobStreamable* recvObject();
+#endif
 
       // The strategy that will be executed by this controller.
       BBSStrategy*            itsStrategy;
@@ -90,6 +95,7 @@ namespace LOFAR
       // execute one BBSStep.
       vector<const BBSStep*>::const_iterator itsStepsIterator;
 
+#if 0
       // DataHolder for exchanging data between global (BBS) and local
       // (BBSKernel) process control.
       DH_BlobStreamable* itsDataHolder;
@@ -102,6 +108,10 @@ namespace LOFAR
       // Connection between the global (BBS) process control and the local
       // (BBSKernel) process control.
       CSConnection* itsConnection;
+#endif
+
+      // CommandQueue where strategies and steps can be "posted".
+      CommandQueue* itsCommandQueue;
 
       // Flag indicating whether we've sent \c itsStrategy. We only need to
       // send it once, as the very first message.

@@ -44,7 +44,7 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations
-    class BBSSingleStep;
+    class BBSStep;
     class BBSStrategy;
 
     // \addtogroup BBSControl
@@ -62,23 +62,23 @@ namespace LOFAR
 		   const string& host="dop50.nfra.nl",
 		   const string& port="5432");
 
-      // Add a BBSSingleStep to the command queue. Once in the command queue,
+      // Add a BBSStep to the command queue. Once in the command queue,
       // this step represents a "unit of work", a.k.a. \e workorder. This
       // method is typically used by the global controller.
-      void addStep(const BBSSingleStep&);
+      // \pre \a step must a BBSSingleStep.
+      void addStep(const BBSStep& step);
 
-      // Get the next BBSSingleStep from the command queue. When this step is
+      // Get the next BBSStep from the command queue. When this step is
       // retrieved from the database, its status will be set to "active"
       // ([TBD]). This method is typically used by the local controller.
       //
-      // \attention Currently, a BBSSingleStep object is reconstructed using
-      // one \e or \e more queries. Although each query is executed as a
-      // transaction, multiple queries are \e not executed as one
-      // transaction. So beware!
+      // \attention Currently, a BBSStep object is reconstructed using one \e
+      // or \e more queries. Although each query is executed as a transaction,
+      // multiple queries are \e not executed as one transaction. So beware!
       //
-      // \todo Execute multiple queries (needed for, e.g., reconstructing a
-      // BBSSolveStep) as one transaction.
-      const BBSSingleStep* getNextStep();
+      // \todo Wrap multiple queries (needed for, e.g., reconstructing a
+      // BBSSolveStep) in one transaction.
+      const BBSStep* getNextStep();
 
       // Set the BBSStrategy in the command queue. All information, \e except
       // the BBSStep objects within the BBSStrategy are stored in the
@@ -93,6 +93,10 @@ namespace LOFAR
       const BBSStrategy* getStrategy();
 
     private:
+      // HandleTrigger needs to have access to itsConnection, so we make it a
+      // friend.
+      friend class HandleTrigger;
+
       // Execute \a query. The result will be returned as a ParameterSet.
       ACC::APS::ParameterSet execQuery(const string& query);
 
