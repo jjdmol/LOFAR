@@ -85,14 +85,14 @@ CREATE TABLE blackboard.solve_arguments
 --);
 
 
-CREATE TABLE blackboard.status
+CREATE TABLE blackboard.result
 (
     command_id      INTEGER                     NOT NULL REFERENCES blackboard.command (id) ON DELETE CASCADE,
 
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node            INET                        DEFAULT inet_client_addr(),
-    status_code     INTEGER                     DEFAULT 0,
-    status_message  TEXT                        NOT NULL
+    result_code     INTEGER                     DEFAULT 0,
+    result_message  TEXT                        NOT NULL
 );
 
 
