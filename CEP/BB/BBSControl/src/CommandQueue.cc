@@ -89,55 +89,64 @@ namespace LOFAR
     }
 
 
-    void CommandQueue::addStep(const BBSSingleStep& step)
+    void CommandQueue::addStep(const BBSStep& aStep)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       ostringstream query;
 
-      // First build the SELECT part of the query.
-      query << "SELECT * FROM blackboard.add_" 
- 	    << toLower(step.operation()) 
-	    << "_step";
-
-      // The first 8 arguments are the same for all stored procedures.
-      query << "('" << step.getName()               << "'"
-	    << ",'" << step.baselines().station1    << "'"
-	    << ",'" << step.baselines().station2    << "'"
-	    << ",'" << step.correlation().selection << "'"
-	    << ",'" << step.correlation().type      << "'"
-	    << ",'" << step.sources()               << "'"
-	    << ",'" << step.instrumentModels()      << "'"
-	    << ",'" << step.outputData()            << "'";
-
-      // The stored procedure for a BBSSolveStep needs more arguments.
       try {
-	const BBSSolveStep& solveStep = dynamic_cast<const BBSSolveStep&>(step);
-	query << ",'" << solveStep.maxIter()                  << "'"
-	      << ",'" << solveStep.epsilon()                  << "'"
-	      << ",'" << solveStep.minConverged()             << "'"
-	      << ",'" << solveStep.parms()                    << "'"
-	      << ",'" << solveStep.exclParms()                << "'"
-	      << ",'" << solveStep.domainSize().bandWidth     << "'"
-	      << ",'" << solveStep.domainSize().timeInterval  << "'";
-      } catch (bad_cast&) {}
+	// The argument \a aStep must be convertible to a BBSSingleStep
+	const BBSSingleStep& step = dynamic_cast<const BBSSingleStep&>(aStep);
 
-      // Finalize the query.
-      query << ")";
+	// First build the SELECT part of the query.
+	query << "SELECT * FROM blackboard.add_" 
+	      << toLower(step.operation()) 
+	      << "_step";
 
-      // Execute the query. 
-      execQuery(query.str());
-    } 
+	// The first 8 arguments are the same for all stored procedures.
+	query << "('" << step.getName()               << "'"
+	      << ",'" << step.baselines().station1    << "'"
+	      << ",'" << step.baselines().station2    << "'"
+	      << ",'" << step.correlation().selection << "'"
+	      << ",'" << step.correlation().type      << "'"
+	      << ",'" << step.sources()               << "'"
+	      << ",'" << step.instrumentModels()      << "'"
+	      << ",'" << step.outputData()            << "'";
+
+	// The stored procedure for a BBSSolveStep needs more arguments.
+	try {
+	  const BBSSolveStep& solveStep = 
+	    dynamic_cast<const BBSSolveStep&>(step);
+	  query << ",'" << solveStep.maxIter()                  << "'"
+		<< ",'" << solveStep.epsilon()                  << "'"
+		<< ",'" << solveStep.minConverged()             << "'"
+		<< ",'" << solveStep.parms()                    << "'"
+		<< ",'" << solveStep.exclParms()                << "'"
+		<< ",'" << solveStep.domainSize().bandWidth     << "'"
+		<< ",'" << solveStep.domainSize().timeInterval  << "'";
+	} catch (bad_cast&) {}
+	
+	// Finalize the query.
+	query << ")";
+	
+	// Execute the query. 
+	execQuery(query.str());
+
+      } catch (bad_cast&) {
+	THROW (BBSControlException, 
+	       "Step `" << aStep.getName() << "' is not a BBSSingleStep");
+      }
+    }
 
 
-    const BBSSingleStep* CommandQueue::getNextStep()
+    const BBSStep* CommandQueue::getNextStep()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // Compose the query.
       ostringstream query;
-      query << "SELECT * FROM blackboard.get_next_step("
-	    << itsCurrentId
-	    << ")";
+      query << "SELECT * FROM blackboard.get_next_step"
+	    << "(" << itsCurrentId << ")";
 
       // Execute the query. The result will be returned as a ParameterSet.
       ParameterSet ps = execQuery(query.str());
@@ -155,9 +164,8 @@ namespace LOFAR
 
 	// Compose the query
 	query.str("");    // clear the stringstream buffer.
-	query << "SELECT * FROM blackboard.get_solve_arguments("
-	      << itsCurrentId
-	      << ")";
+	query << "SELECT * FROM blackboard.get_solve_arguments"
+	      << "(" << itsCurrentId << ")";
 
 	// Execute the query; add the result to the ParameterSet \a ps.
 	ps.adoptCollection(execQuery(query.str()), "Solve.");
@@ -175,7 +183,8 @@ namespace LOFAR
 
       // Create a BBSStep from the parameter set.
       const BBSStep* step = BBSStep::create(name, ps, 0);
-      return dynamic_cast<const BBSSingleStep*>(step);
+      return step;
+//       return dynamic_cast<const BBSSingleStep*>(step);
     }
 
 
@@ -185,7 +194,7 @@ namespace LOFAR
 
       // Compose the query.
       ostringstream query;
-      query << "SELECT * FROM blackboard.set_strategy(" 
+      query << "SELECT * FROM blackboard.set_strategy" 
 	    << "('" << strategy.dataSet()                 << "'"
 	    << ",'" << strategy.parmDB().localSky         << "'"
 	    << ",'" << strategy.parmDB().instrument       << "'"
