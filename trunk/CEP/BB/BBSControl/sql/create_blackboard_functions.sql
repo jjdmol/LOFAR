@@ -32,6 +32,28 @@ $$
 LANGUAGE SQL;
 
 
+CREATE OR REPLACE FUNCTION blackboard.is_clean_startup(_node INET)
+RETURNS BOOLEAN AS
+$$
+    DECLARE
+        _strategy blackboard.strategy%ROWTYPE;
+    BEGIN
+        SELECT *
+        INTO _strategy
+        FROM blackboard.strategy;
+
+        IF NOT FOUND THEN
+            RETURN TRUE;
+        ELSIF _node IS NULL THEN
+            RETURN FALSE;
+        ELSE
+            RETURN (SELECT COUNT(*) FROM blackboard.result WHERE node = _node) = 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
 -- ---------- --
 -- WORK ORDER --
 -- ---------- --
@@ -162,7 +184,7 @@ $$
             "Epsilon",
             "MinConverged",
             "Parms",
-                "ExclParms",
+            "ExclParms",
             "DomainSize.Freq",
             "DomainSize.Time"
             INTO arguments
@@ -283,10 +305,10 @@ LANGUAGE plpgsql;
 -- ----------------- --
 -- WORK ORDER STATUS --
 -- ----------------- --
-CREATE OR REPLACE FUNCTION blackboard.set_status(command_id INTEGER, status_code INTEGER, message TEXT)
+CREATE OR REPLACE FUNCTION blackboard.set_result(command_id INTEGER, result_code INTEGER, message TEXT)
 RETURNS VOID AS
 $$
-    INSERT INTO blackboard.status(command_id, status_code, status_message)
+    INSERT INTO blackboard.result(command_id, result_code, message)
         VALUES ($1, $2, $3);
 $$
 LANGUAGE SQL;

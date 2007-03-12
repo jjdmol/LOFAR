@@ -1,5 +1,7 @@
 CREATE TABLE blackboard.strategy
 (
+    state                   TEXT                DEFAULT 'PROCESSING',
+
     "DataSet"               TEXT                NOT NULL,
     
     "ParmDB.LocalSky"       TEXT                NOT NULL,
@@ -92,7 +94,7 @@ CREATE TABLE blackboard.result
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node            INET                        DEFAULT inet_client_addr(),
     result_code     INTEGER                     DEFAULT 0,
-    result_message  TEXT                        NOT NULL
+    message         TEXT                        NOT NULL
 );
 
 
