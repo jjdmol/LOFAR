@@ -1,0 +1,10 @@
+This directory contains LaTeX source documents related to the BlackBoard
+Selfcal (BBS) System. 
+
+In order to "compile" these sources you need to add the directory
+LOFAR/doc/tex/inputs to your TEXINPUTS environment variable, using kpathsea
+style. Assuming that you've checked out LOFAR in your home directory, you may
+wish to add the following line to your .bashrc file:
+
+export TEXINPUTS=~/LOFAR/doc/tex/inputs//:
+
