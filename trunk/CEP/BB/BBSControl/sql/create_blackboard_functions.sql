@@ -5,22 +5,30 @@
 -- Full signature:
 -- blackboard.set_strategy("DataSet" TEXT, "ParmDB.LocalSky" TEXT, "ParmDB.Instrument" TEXT, "ParmDB.History" TEXT, "Stations" TEXT, "InputData" TEXT, "WorkDomainSize.Freq" DOUBLE PRECISION, "WorkDomainSize.Time" DOUBLE PRECISION, "Correlation.Selection" TEXT, "Correlation.Type" TEXT)
 CREATE OR REPLACE FUNCTION blackboard.set_strategy(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT)
-RETURNS VOID AS
+RETURNS BOOLEAN AS
 $$
-    INSERT INTO blackboard.strategy(
-        "DataSet", 
-        "ParmDB.LocalSky", 
-        "ParmDB.Instrument", 
-        "ParmDB.History", 
-        "Stations", 
-        "InputData", 
-        "WorkDomainSize.Freq", 
-        "WorkDomainSize.Time", 
-        "Correlation.Selection", 
-        "Correlation.Type")
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
+    BEGIN
+        IF (SELECT COUNT(*) FROM blackboard.strategy) <> 0 THEN
+            RETURN FALSE;
+        END IF;
+
+        INSERT INTO blackboard.strategy(
+            "DataSet", 
+            "ParmDB.LocalSky", 
+            "ParmDB.Instrument", 
+            "ParmDB.History", 
+            "Stations", 
+            "InputData", 
+            "WorkDomainSize.Freq", 
+            "WorkDomainSize.Time", 
+            "Correlation.Selection", 
+            "Correlation.Type")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
+
+        RETURN TRUE;
+    END;
 $$
-LANGUAGE SQL;
+LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION blackboard.get_strategy()
