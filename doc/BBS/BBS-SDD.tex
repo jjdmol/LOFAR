@@ -1,0 +1,382 @@
+\documentclass[10pt]{lofar}
+%
+\usepackage{bookman}
+\usepackage{layout}
+\usepackage{color}
+\usepackage{epsfig}
+%\usepackage[colorlinks=false]{hyperref}
+%
+\include{definitions}
+%
+\begin{document}
+\maketitle
+\newpage
+%
+\theDistributionList
+\vspace{1cm}
+\theDocumentRevision
+\newpage
+%
+\begin{abstract}
+\end{abstract}
+\newpage
+%
+\tableofcontents
+\newpage
+%
+\bibliographystyle{unsrt}
+
+
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{Purpose of This Document}
+\label{subsec:purpose}
+%
+This document provides a detailed description of the architectural and
+software design of the Blackboard Selfcal System (BBS) that will be used for
+the off-line calibration of the LOFAR observations. The primary goal of this
+document is to provide information that is detailed enough to help the reader
+understand the design considerations, choice of software architecture and
+global design. We will not delve into the level of detailed software design,
+since this will likely cause discrepancies between the actual code and this
+document. For this level of detail, the reader is suggested to consult the
+online code documentation.
+
+\subsection{Executive Summary}
+\label{subsec:summary}
+
+\subsection{Abbreviations}
+\label{subsec:abbrev}
+\begin{description}
+\item [BBS] BlackBoard Selfcal System
+\end{description}
+
+\pagebreak
+
+\section{Architectural Design}
+\label{sec:architectural-design}
+
+\subsection{Design Considerations}
+\label{subsec:considerations}
+
+\subsection{Blackboard Pattern}
+\label{subsec:blackboard}
+
+\subsubsection{Controller}
+\label{subsubsec:controller}
+
+\subsubsection{Knowledge Sources}
+\label{subsubsec:ks}
+
+\subsubsection{Blackboard}
+\label{subsubsec:bb}
+
+\subsection{Distributed Processing}
+\label{subsec:distributed}
+
+\pagebreak
+
+\section{System Overview}
+\label{sec:overview}
+
+\subsection{Subsystems}
+\label{subsec:subsystems}
+
+\subsubsection{BBS Control}
+\label{subsubsec:sys-control}
+
+\subsubsection{BBS Kernel}
+\label{subsubsec:sys-kernel}
+
+\subsubsection{BBS Database}
+\label{subsubsec:sys-database}
+
+\subsection{Interfaces}
+\label{subsec:sys-interfaces}
+
+\subsubsection{Context Diagram}
+\label{subsubsec:context}
+
+\subsubsection{BBS Control}
+\label{subsubsec:interf-control}
+
+\subsubsection{BBS Kernel}
+\label{subsubsec:interf-kernel}
+
+\subsubsection{BBS Database}
+\label{subsubsec:interf-database}
+
+\pagebreak
+
+\section{Software Design}
+\label{sec:software-design}
+
+\subsection{BBS Control}
+\label{subsec:design-control}
+
+\subsubsection{BBS Strategy}
+\label{subsubsec:design-strategy}
+
+\subsubsection{BBS Step}
+\label{subsubsec:design-step}
+
+\subsubsection{Global Control}
+\label{subsubsec:design-global-control}
+
+\subsection{BBS Kernel}
+\label{subsec:design-kernel}
+
+\subsubsection{Prediffer}
+\label{subsubsec:design-prediffer}
+
+\subsubsection{Solver}
+\label{subsubsec:design-solver}
+
+\subsubsection{Local Control}
+\label{subsubsec:design-local-control}
+
+\subsection{BBS Database}
+\label{subsec:design-database}
+
+\subsubsection{Data Model}
+\label{subsubsec:design-data-model}
+\begin{figure}
+\epsfig{file=BlackBoardDataModel.eps, angle=-90, width=\textwidth}
+\caption{Data model of the Blackboard database}
+\end{figure}
+
+\subsubsection{Work Orders}
+\label{subsubsec:design-work-orders}
+
+\subsubsection{Parameter Solutions}
+\label{subsubsec:design-parmsolutions}
+
+\pagebreak
+
+% References
+\bibliography{lofar}
+
+\pagebreak
+
+\appendix
+\section{Configuration Syntax}
+
+This appendix describes the syntax of the BBS configuration file (a.k.a. parset). Its goal is to foster a common understanding and terminology. At the moment this page is still under construction. I've added \textcolor{red}{questions in red} to things that were not clear to me while creating this page. Thing to do are \textcolor{green}{stated in green}.
+
+\subsection*{Global Settings}
+\begin{description}
+\item [DataSet] : \emph{string} \\
+    Path to the input measurement set. 
+\item [BBDB] : \emph{BBDB} (see page \pageref{app-bbdb}) \\
+    Information about the black board database. 
+\item [ParmDB] : \emph{ParmDB} (see page \pageref{app-parmdb}) \\
+    Information about the parameter databases (e.g. instrument parameters, local sky model). 
+\end{description}
+
+\subsubsection*{Example}
+{\footnotesize
+\begin{verbatim}
+DataSet                  = "test.ms"    # name of Measurement Set
+
+BBDB.Host                = "127.0.0.1"  # hostname/ipaddr of BB DBMS
+BBDB.Port                = 12345        # port used by BB DBMS
+BBDB.DBName              = "blackboard" # name of the BB database
+BBDB.UserName            = "postgres"   # username for accessing the DBMS
+BBDB.PassWord            = ""           # password for accessing the DBMS
+
+ParmDB.Instrument        = "test.mep"   # instrument parameters (MS table)
+ParmDB.LocalSky          = "test.gsm"   # local sky parameters (MS table)
+\end{verbatim}
+}
+
+\subsection*{Strategy}
+A strategy consists of one or more (multi-)steps with an associated work domain size and optional data integration.
+\begin{description}
+\item [Steps] : \emph{vector$<$string$>$} \\
+    The names of the steps that compose the strategy. It is an error to leave this field empty. 
+\item [Stations] : \emph{vector$<$string$>$} \\
+    Names of the participating stations. All stations will be used if this field is left empty. 
+\item [InputData] : \emph{string} \\
+    Name of the column in the measurement set that contains the input data. 
+\item [Correlation] : \emph{Correlation} (see page \pageref{app-correlation}) \\
+    Specifies which correlations to use. 
+\item [WorkDomainSize] : \emph{DomainSize} (see page \pageref{app-domainsize}) \\
+    Size of the work domain in frequency and time. A work domain represents an amount of input data that is loaded into memory and processed as a single block. A large work domain size should reduce the overhead due to disk access. 
+\item [Integration] : \emph{DomainSize} (see page \pageref{app-domainsize}) \\
+    Cell size for integration. Allows the user to perform operations on a lower resolution, which should be faster in most cases. 
+\end{description}
+
+\subsubsection*{Example}
+{\footnotesize
+\begin{verbatim}
+Strategy.Steps                 = ["MultiStep", "SingleStep2"] \
+                                                # (multi-)steps that compose this strategy
+Strategy.Stations              = [ 0, 1, 2, 3 ] # ID's of stations to use
+Strategy.InputData             = "INDATA"       # MS input data column
+Strategy.Correlation.Selection = ALL            # one of AUTO, CROSS, ALL
+Strategy.Correlation.Type      = ["XX", "YY"]   # which (cross)correlations to use
+Strategy.WorkDomainSize.Freq   = 1e+6           # work domain size: f(Hz)
+Strategy.WorkDomainSize.Time   = 10             # work domain size: t(s)
+Strategy.Integration.Freq      = 1              # integration interval: f(Hz)
+Strategy.Integration.Time      = 0.1            # integration interval: t(s)
+\end{verbatim}
+}
+
+\subsection*{Step}
+A \emph{single-step} describes one unit of work of the strategy. A step that is defined in terms of a number of other steps is known as a multi-step. The attributes of a \emph{multi-step} should be interpreted as default values for the steps that compose the multi-step. These default values can always be overridden.
+\begin{description}
+\item [Steps] : \emph{vector$<$string$>$} \\
+    The names of the steps that compose this step (for multi-steps), or absent (for single steps). 
+\item [Baselines] : \emph{Baselines} (see page \pageref{app-baselines}) \\
+    Baselines to use. 
+\item [Sources] : \emph{vector$<$string$>$} \\
+    Sources to use. All sources will be used if this field is left empty. 
+\item [ExtraSources] : \emph{vector$<$string$>$} \\
+    Additional sources to include when predicting visibilities. If this field is left empty, no extra sources will be included. 
+\item [Correlation] : \emph{Correlation}  (see page \pageref{app-correlation}) \\
+    Specifies which correlations to use. 
+\item [Integration] : \emph{DomainSize}  (see page \pageref{app-domainsize}) \\
+    Cell size for integration. Allows the user to perform operations on a lower resolution, which should be faster in most cases. 
+\item [InstrumentModel] : \emph{vector$<$string$>$} \\
+    The parts of the measurement equation that should be included. \par
+    \textcolor{green}{TODO: add descriptions for the various parts of the ME.}
+\item [Operation] : \emph{string} \\
+    The operation to be performed in this step. One of SOLVE, SUBTRACT, CORRECT, PREDICT, SHIFT, or REFIT. Only relevant for single steps, should be absent for multi-steps. \par
+    SOLVE : Find values for the parameters that minimize the difference between the predicted and the measured (u,v) values. \par
+    \textcolor{green}{TODO: add descriptions for other values.}
+\item [OutputData] : \emph{string} \\
+    Column in the measurement set wherein the output values of this step should be written. If left empty, no data will be written. 
+\end{description}
+
+\emph{Single steps should define one of the following fields, depending on the value of \textbf{Operation}} :
+\begin{description}
+\item [Solve] : \emph{Solve} (see page \pageref{app-solve}) \\
+    Arguments of the SOLVE operation. \par
+    \textcolor{green}{TODO: specify arguments for the other operations.}
+\end{description}
+
+\subsubsection*{Example}
+{\footnotesize
+\begin{verbatim}
+Step.MultiStep.Steps                   = ["SingleStep1", "SingleStep2"] \
+                                                                   # steps that compose this multi-step
+Step.MultiStep.Baselines.Station1      = [0, 0, 0, 1, 1, 2]        # baselines to use
+Step.MultiStep.Baselines.Station2      = [0, 1, 2, 1, 2, 2]        # (all if empty)
+Step.MultiStep.Sources                 = ["3C343"]                 # list of sources
+Step.MultiStep.ExtraSources            = ["M81"]                   # list of sources outside patch
+Step.MultiStep.InstrumentModel         = ["BANDPASS", "TOTALGAIN", "PATCHGAIN"] # instrument model
+Step.MultiStep.Integration.Freq        = 2                         # integration interval: f(Hz)
+Step.MultiStep.Integration.Time        = 0.5                       # integration interval: t(s)
+Step.MultiStep.Correlation.Selection   = CROSS                     # one of AUTO, CROSS, ALL
+Step.MultiStep.Correlation.Type        = ["XX", "XY", "YX", "YY"]  # which (cross) correlations to use
+
+Step.SingleStep1.Baselines.Station1    = [0, 1]                    # baselines to use
+Step.SingleStep1.Baselines.Station2    = [1, 2]                    # (all if empty)
+Step.SingleStep1.Sources               = []                        # list of sources
+Step.SingleStep1.InstrumentModel       = ["BANDPASS", "TOTALGAIN"] # instrument model
+Step.SingleStep1.Operation             = SOLVE                     # one of SOLVE, SUBTRACT, CORRECT, \
+                                                                   # PREDICT, SHIFT, REFIT
+Step.SingleStep1.OutputData            = "OUTDATA1"                # MS output data column
+Step.SingleStep1.Solve.MaxIter         = 10                        # maximum number of iterations
+Step.SingleStep1.Solve.Epsilon         = 1e-7                      # convergence threshold
+Step.SingleStep1.Solve.MinConverged    = 0.95                      # fraction that must have converged
+Step.SingleStep1.Solve.Parms           = ["PHASE:*"]               # names of solvable parameters
+Step.SingleStep1.Solve.ExclParms       = [""]                      # parameters excluded from solve
+Step.SingleStep1.Solve.DomainSize.Freq = 1000                      # f(Hz)
+Step.SingleStep1.Solve.DomainSize.Time = 1                         # t(s)
+
+Step.SingleStep2.Baselines.Station1    = []                        # baselines to use
+Step.SingleStep2.Baselines.Station2    = []                        # (all if empty)
+Step.SingleStep2.Sources               = []                        # list of sources
+Step.SingleStep2.InstrumentModel       = ["DirGain", "Phase"]      # instrument model
+Step.SingleStep2.Operation             = CORRECT                   # one of SOLVE, SUBTRACT, CORRECT, \
+                                                                   # PREDICT, SHIFT, REFIT
+Step.SingleStep2.OutputData            = "OUTDATA2"                # MS output data column
+\end{verbatim}
+}
+
+\subsection*{BBDB}
+\label{app-bbdb}
+This contains information on how the blackboard database and the parameter databases can be reached.
+\begin{description}
+\item [Host] : \emph{string} \\
+    Hostname or IP address of the host on which the black board database and the parameter databases reside. 
+\item [Port] : \emph{int} \\
+    Port number on which the blackboard database server is listening. 
+\item [DBName] : \emph{string} \\
+    Name of the black board database. 
+\item [UserName] : \emph{string} \\
+    Username to access the black board database. 
+\item [PassWord] : \emph{string} \\
+    Password to access the black board database. 
+\end{description}
+
+\subsection*{ParmDB}
+\label{app-parmdb}
+\begin{description}
+\item [Instrument] : \emph{string} \\
+    Path to the AIPS++ table containing the instrument parameters. 
+\item [LocalSky] : \emph{string} \\
+    Path to the AIPS++ table containing the local sky model parameters. 
+\item [History] : \emph{string}
+    Path to the AIPS++ table containing the solve history. 
+\end{description}
+
+\subsection*{Correlation}
+\label{app-correlation}
+\begin{description}
+\item [Selection] : \emph{string} \\
+    Station correlations to use. Should be one of 'AUTO', 'CROSS', or 'ALL'. \par
+        AUTO: Use only correlations of each station with itself (i.e. no base lines). \textcolor{red}{Not yet implemented.} \\
+        CROSS: Use only correlations between stations (i.e. base lines). \\
+        ALL: Use auto and cross correlations both.
+\item [Type] : \emph{string} \\
+    Correlations of which polarizations to use, one or more of 'XX', 'XY', 'YX', 'YY'. As an example, suppose we select 'XX' here and set Selection to 'AUTO', then the X polarization signal of each station is correlated with itself. However, if we set Selection to 'CROSS' then the X polarization of station A is correlated with the X polarization of station B for each base line (A,B)
+\end{description}
+
+\subsection*{DomainSize}
+\label{app-domainsize}
+\begin{description}
+\item [Freq] : \emph{double} \\
+    The size of the domain in frequency (Hz). 
+\item [Time] : \emph{double} \\
+    The size of the domain in time (s). 
+\end{description}
+
+\subsection*{Baselines}
+\label{app-baselines}
+The selected baselines. A baseline is a pair of stations. The first station of the pair is contained in Station1, the second in Station2. For example, suppose we have six baselines: (A, B), (A, C), (A, D), (B, C), (B, D), (C, D). Then Station1 would contain [A, A, A, B, B, C] and Station2 would contain [B, C, D, C, D, D]. The lengths of Station1 and Station2 should always be equal. If both fields are left empty, all baselines are used.
+\begin{description}
+\item [Station1] : \emph{vector$<$string$>$} \\
+    One name for each baseline: the first station in the pair that forms the baseline. 
+\item [Station2] : \emph{vector$<$string$>$} \\
+    One name for each baseline: the second station in the pair that forms the baseline. 
+\end{description}
+
+\subsection*{Solve}
+\label{app-solve}
+\begin{description}
+\item [MaxIter] : \emph{int} \\
+    Maximum number of iterations. 
+\item [Epsilon] : \emph{double} \\
+    Minimal difference between the old and the new parameter values after each iteration. When the difference falls below this threshold, the solver will stop iterating. 
+\item [MinConverged] : \emph{double} \\
+    Minimal fraction of solve domains that must have converged to declare overall convergence. 
+\item [Parms] : \emph{vector$<$string$>$} \\
+    Parameters to solve for. Wildcards are allowed, e.g. BANDPASS:*. 
+\item [ExclParms] : \emph{vector$<$string$>$} \\
+    Subset of the parameters selected by Parms that should not be solved for. For example, if we would like to solve for the gain (amplitude, phase) of each station, but we would also like to fix the phase of the first station (STATION0) this can be specified as follows: 
+{\footnotesize
+\begin{verbatim}
+Solve.Parms = ["gain:*"]
+Solve.ExclParms = ["gain:*:phase:STATION0"]
+\end{verbatim}
+}
+\item [DomainSize] : \emph{DomainSize} \\
+    Size of the solve domain. The work domain is divided in solve domains and a solution is computed for each solve domain independently. 
+\end{description}
+
+
+
+\end{document}
