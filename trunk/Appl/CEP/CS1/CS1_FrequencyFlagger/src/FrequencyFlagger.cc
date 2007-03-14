@@ -174,7 +174,7 @@ namespace LOFAR
       cout << "Bands (flagged %):    ";
       for (int i = 0; i < NumBands; i++)
       {
-        string out = string("IVC") + itoa(i);
+        string out = string("Band") + itoa(i);
         out.resize(namelength+1,' ');
         cout << out;
       }
@@ -231,16 +231,15 @@ namespace LOFAR
         if (RMSCounter[j])
         { RMS[j] = sqrt(MS[j] /RMSCounter[j]);
         }
-//        cout << RMS[j] << ":" <<  MS[j] << ":" << RMSCounter[j] << endl;
       }
       for (int i = NumChannels-1; i >= 0; i--)
       {
         bool FlagAllPolarizations = false;
         for (int j = NumPolarizations-1; j >= 0; j--)
         { //we need to loop twice, once to determine FlagAllCorrelations
-          if (!FlagAllPolarizations && !Flags(j, i))
+          if (!FlagAllPolarizations || !Flags(j, i))
           {
-            FlagAllPolarizations |= RMS[j] * FlagThreshold > abs(Timeslots(j, i));
+            FlagAllPolarizations |= RMS[j] * FlagThreshold < abs(Timeslots(j, i));
           }
         }
         for (int j = NumPolarizations-1; j >= 0; j--)
@@ -280,7 +279,7 @@ namespace LOFAR
       {
         for(int j = 0; j < NumAntennae; j++)
         {
-          for(int k = j+1; k < NumAntennae; k++)
+          for(int k = j; k < NumAntennae; k++)
           {
             int index = i*NumPairs + BaselineIndex[pairii(j, k)];
             if ((BaselineLengths[BaselineIndex[pairii(j, k)]] < 3000000))//radius of the Earth in meters? WSRT sometimes has fake telescopes at 3854243 m
