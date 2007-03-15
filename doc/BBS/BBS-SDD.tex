@@ -1,6 +1,7 @@
 \documentclass[10pt]{lofar}
 %
-\usepackage{bookman}
+%\usepackage{bookman} %% I prefer Bookman over Palatino, but it has no math support (need Kerkis for that)
+\usepackage{mathpazo}      %% Palatino with matching math fonts.
 \usepackage{layout}
 \usepackage{color}
 \usepackage{epsfig}
@@ -25,7 +26,6 @@
 \newpage
 %
 \bibliographystyle{unsrt}
-
 
 \section{Introduction}
 \label{sec:introduction}
@@ -59,10 +59,78 @@ online code documentation.
 
 \subsection{Design Considerations}
 \label{subsec:considerations}
+The BlackBoard SelfCal (BBS) system is designed to do the calibration of LOFAR
+in an efficient way. Although BBS is mainly developed for LOFAR, it can also be
+used to calibrate other instruments as soon as their specific algorithms are
+plugged in.
+
+* data volume
+* distribution
+* scalable architecture
+
+%\subsubsection{Data Volume and Distribution}
+%\label{subsubsec:data-volume}
+The volume of the data coming from the LOFAR correlator is very large. During
+initial operation (mid 2008) 20~stations will be used. This will increase
+to 77 for full operation while the instrument design allows for at least 100
+stations. The integration period can be 1 second resulting in 18000 integration
+periods for a 5 hour observation. In the spectral domain up to 50000 channels
+can be observed. For the initial LOFAR telescope it leads to a data set size of
+up to $\frac{1}{2} \times 20 \times 19\textrm{ baselines} \times 18000\textrm{ time stamps}
+\times 50000\textrm{ channels} \times 4\textrm{ correlations} \times 8\textrm{
+bytes} \approx 5\textrm{ TBytes}$ 
+during initial operation (excluding flags and auxiliary information). It can
+grow to 77~TBytes for 77~stations. It is clear that this amount of data cannot
+be stored and processed on a single machine, so the data have to be distributed
+over many machines and disks.
+
+%\subsection{Distributed Processing}
+%\label{subsec:distributed}
+The Selfcal application will be executed on the off-line and auxiliary
+processing clusters of the central processing facility (see
+\cite{LOFAR-ASTRON-ADD-012}). These clusters consist of Linux PCs in a high
+bandwidth network. The BBS application will typically run on 50 to 500 of these
+nodes. %and utilize the MPI message passing library to communicate between nodes. 
+Data stored in the CEP intermediate storage facility will be distributed over
+multiple disks and will be accessed by multiple nodes concurrently. 
+Reordering tens of terabytes of data takes a lot of time and should be avoided.
+Therefore the data should be distributed such that the various applications
+(e.g., calibration and imaging) can operate well without reordering. The
+distribution should be such that large chunks of data can be
+processed locally and only small amounts of data need to be sent to other
+machines. There are a few axes along which the data may be distributed:
+\begin{description}
+\item [Time] is a bad candidate, because a time slot contains a lot of data (up to
+0.7~GBytes during initial operation). This may lead to problems in the online
+system when all data of a time slot are sent to a single machine and written
+there. Another problem is that parallelization of imaging gets hard because the
+data of all time slots have to be combined.
+\item [Baseline] seems a better candidate, but will lead to imaging problems as
+well. This is because a single image needs data from different machines, so
+large amounts of gridded or FFT-ed data have to be sent around.
+\item [Frequency] seems to be the best candidate. Creating an image is usually
+done per channel or for a few channels, so in principle the whole imaging
+process can be done locally. It will result in an image cube distributed over
+many machines, so the image display and analysis software have to be able to
+handle this. The image cube can be very large (256~GBytes for 1000~channels of
+$4000 \times 4000$ images for the 4~Stokes parameters). \\
+Distribution in frequency means that each subband is held on a separate machine.
+If needed, each subband can be distributed further. Of course, each machine
+should contain about the same amount of data to get good load balancing. \\
+Note that this distribution matches well with the way the correlator and online
+system is designed.
+\end{description}
+The BBS calibration software is not dependent on a specific distribution, so in
+the future other distributions can be used when applicable. However, it has not
+been decided yet if that is also true for the imaging software.
 
 \subsection{Blackboard Pattern}
 \label{subsec:blackboard}
+The idea behind the Blackboard architecture is a collection of independent processes that work cooperatively on a comman data structure. Each program is specialized in handling a particular part of the overall task, and all programs work together on the solution. These specialized programs work independent of each other. They do not call each other, nor is there a predetermined sequence for their activation. Instead, the direction taken by the system is mainly determined by the current state of progress. A central control component evaluates the current state of processing and coordinates the specialized programs. This data-directed control regime makes experimentation with different algorithms possible, and allows experimentally derived heuristics to control processing. This architecture is described in \cite{Buschmann1996} and \cite{LOFAR-ASTRON-SDD-002}.
 
+The Blackboard architecture is ideal for solving problems for which no predetermined algorithm or solve strategy is known. However, for the design of the BBS system, we've come to the conclusion that the operational system will benefit in terms of performance when using a predefined solving strategy. 
+
+In BBS this pattern is used as the common knowledge base of the self-calibration process. The blackboard is implemented as a database holding the values and quality of the solutions. The blackboard database can be used as an external source for various assessments of the solutions. 
 \subsubsection{Controller}
 \label{subsubsec:controller}
 
@@ -72,8 +140,6 @@ online code documentation.
 \subsubsection{Blackboard}
 \label{subsubsec:bb}
 
-\subsection{Distributed Processing}
-\label{subsec:distributed}
 
 \pagebreak
 
@@ -82,6 +148,10 @@ online code documentation.
 
 \subsection{Subsystems}
 \label{subsec:subsystems}
+BBS is split into two parts which are described in detail in other chapters. The
+BBS Control takes care of the distributed processing by means of the BlackBoard
+pattern. The BBS Kernel does the actual processing; it executes a series of
+steps where each step consists of an operation like solve or correct.
 
 \subsubsection{BBS Control}
 \label{subsubsec:sys-control}
@@ -127,6 +197,22 @@ online code documentation.
 \subsection{BBS Kernel}
 \label{subsec:design-kernel}
 
+\subsubsection{Some basic principles and the relation with MeqTrees}
+\label{subsubsec:design-principles}
+BBS and the MeqTree system  are based on the same PSS (Prototype Selfcal System) implementation, but have gone their own way with their own specific goal in mind. MeqTree has grown to a very flexible system making it possible to try out all kinds of calibration algorithms. It is meant as a learning environment to develop new algorithms that will eventually be implemented in BBS. BBS has grown to a system where great attention has been paid to performance at the cost of some flexibility. Distributed and parallel processing have been designed in.
+
+Although BBS and MeqTrees have gone their own way, they still share the same principles:
+\begin{enumerate}
+\item The model (MeasurementEquation) is represented by an expression tree (in fact, a separate tree for each baseline). BBS and MeqTrees differ in the way the trees are defined. In MeqTrees the user has a lot of freedom by the ability to define the trees at the scripting level. In BBS only some predefined, highly tuned trees can be used.
+\item Parameters form the leafs of the expression trees. They are represented by funklets (2-dimensional functions, usually polynomials) that are valid for a given frequency-time domain. A constant value is regarded as a zeroeth-order polynomial. Both instrumental and sky parameters can be used.
+In MeqTrees functions with more than 2 dimensions can be used. For example, beam shapes as a function of frequency, time, l, and m. It is not clear if that is needed in BBS.
+\item The calibration process consists of adapting the model parameters to the observed UV data by improving the values of the solvable model parameters (in fact, the coefficients of the parameter functions). This is done using a solver (least squares fitter). It needs the derivatives of the solvable parameter coefficients which are calculated in a numerical way.
+\item Because the problem is non-linear a non-linear solver is used requiring multiple iterations. The iteration process is stopped when the solution has converged sufficiently or when a maximum number of iterations is done.
+The user can choose to solve for any combination of parameters. The solve is done in frequency-time domains of a given size and resolution. For example, one could solve ionospheric phases for each minute and solve source fluxes for the entire time range.
+Note that another way of iteration is alternating between groups of parameters to solve for.
+\item Peeling and phase shifting the data is a means to reduce the number of calculations needed in the predict of the sources. It makes it possible to predict the sources near the new phase center on a coarser grid.
+\end{enumerate}
+
 \subsubsection{Prediffer}
 \label{subsubsec:design-prediffer}
 
@@ -162,7 +248,11 @@ online code documentation.
 \appendix
 \section{Configuration Syntax}
 
-This appendix describes the syntax of the BBS configuration file (a.k.a. parset). Its goal is to foster a common understanding and terminology. At the moment this page is still under construction. I've added \textcolor{red}{questions in red} to things that were not clear to me while creating this page. Thing to do are \textcolor{green}{stated in green}.
+This appendix describes the syntax of the BBS configuration file (a.k.a.
+parset). Its goal is to foster a common understanding and terminology. At the
+moment this page is still under construction. I've added
+\textcolor{red}{questions in red} to things that were not clear to me while
+creating this page. Thing to do are \textcolor{green}{stated in green}.
 
 \subsection*{Global Settings}
 \begin{description}
@@ -171,7 +261,8 @@ This appendix describes the syntax of the BBS configuration file (a.k.a. parset)
 \item [BBDB] : \emph{BBDB} (see page \pageref{app-bbdb}) \\
     Information about the black board database. 
 \item [ParmDB] : \emph{ParmDB} (see page \pageref{app-parmdb}) \\
-    Information about the parameter databases (e.g. instrument parameters, local sky model). 
+    Information about the parameter databases (e.g. instrument parameters, local
+sky model). 
 \end{description}
 
 \subsubsection*{Example}
@@ -191,31 +282,40 @@ ParmDB.LocalSky          = "test.gsm"   # local sky parameters (MS table)
 }
 
 \subsection*{Strategy}
-A strategy consists of one or more (multi-)steps with an associated work domain size and optional data integration.
+A strategy consists of one or more (multi-)steps with an associated work domain
+size and optional data integration.
 \begin{description}
 \item [Steps] : \emph{vector$<$string$>$} \\
-    The names of the steps that compose the strategy. It is an error to leave this field empty. 
+    The names of the steps that compose the strategy. It is an error to leave
+this field empty. 
 \item [Stations] : \emph{vector$<$string$>$} \\
-    Names of the participating stations. All stations will be used if this field is left empty. 
+    Names of the participating stations. All stations will be used if this field
+is left empty. 
 \item [InputData] : \emph{string} \\
     Name of the column in the measurement set that contains the input data. 
 \item [Correlation] : \emph{Correlation} (see page \pageref{app-correlation}) \\
     Specifies which correlations to use. 
-\item [WorkDomainSize] : \emph{DomainSize} (see page \pageref{app-domainsize}) \\
-    Size of the work domain in frequency and time. A work domain represents an amount of input data that is loaded into memory and processed as a single block. A large work domain size should reduce the overhead due to disk access. 
+\item [WorkDomainSize] : \emph{DomainSize} (see page \pageref{app-domainsize})
+\\
+    Size of the work domain in frequency and time. A work domain represents an
+amount of input data that is loaded into memory and processed as a single block.
+A large work domain size should reduce the overhead due to disk access. 
 \item [Integration] : \emph{DomainSize} (see page \pageref{app-domainsize}) \\
-    Cell size for integration. Allows the user to perform operations on a lower resolution, which should be faster in most cases. 
+    Cell size for integration. Allows the user to perform operations on a lower
+resolution, which should be faster in most cases. 
 \end{description}
 
 \subsubsection*{Example}
 {\footnotesize
 \begin{verbatim}
 Strategy.Steps                 = ["MultiStep", "SingleStep2"] \
-                                                # (multi-)steps that compose this strategy
+                                                # (multi-)steps that compose
+this strategy
 Strategy.Stations              = [ 0, 1, 2, 3 ] # ID's of stations to use
 Strategy.InputData             = "INDATA"       # MS input data column
 Strategy.Correlation.Selection = ALL            # one of AUTO, CROSS, ALL
-Strategy.Correlation.Type      = ["XX", "YY"]   # which (cross)correlations to use
+Strategy.Correlation.Type      = ["XX", "YY"]   # which (cross)correlations to
+use
 Strategy.WorkDomainSize.Freq   = 1e+6           # work domain size: f(Hz)
 Strategy.WorkDomainSize.Time   = 10             # work domain size: t(s)
 Strategy.Integration.Freq      = 1              # integration interval: f(Hz)
@@ -224,32 +324,45 @@ Strategy.Integration.Time      = 0.1            # integration interval: t(s)
 }
 
 \subsection*{Step}
-A \emph{single-step} describes one unit of work of the strategy. A step that is defined in terms of a number of other steps is known as a multi-step. The attributes of a \emph{multi-step} should be interpreted as default values for the steps that compose the multi-step. These default values can always be overridden.
+A \emph{single-step} describes one unit of work of the strategy. A step that is
+defined in terms of a number of other steps is known as a multi-step. The
+attributes of a \emph{multi-step} should be interpreted as default values for
+the steps that compose the multi-step. These default values can always be
+overridden.
 \begin{description}
 \item [Steps] : \emph{vector$<$string$>$} \\
-    The names of the steps that compose this step (for multi-steps), or absent (for single steps). 
+    The names of the steps that compose this step (for multi-steps), or absent
+(for single steps). 
 \item [Baselines] : \emph{Baselines} (see page \pageref{app-baselines}) \\
     Baselines to use. 
 \item [Sources] : \emph{vector$<$string$>$} \\
     Sources to use. All sources will be used if this field is left empty. 
 \item [ExtraSources] : \emph{vector$<$string$>$} \\
-    Additional sources to include when predicting visibilities. If this field is left empty, no extra sources will be included. 
-\item [Correlation] : \emph{Correlation}  (see page \pageref{app-correlation}) \\
+    Additional sources to include when predicting visibilities. If this field is
+left empty, no extra sources will be included. 
+\item [Correlation] : \emph{Correlation}  (see page \pageref{app-correlation})
+\\
     Specifies which correlations to use. 
 \item [Integration] : \emph{DomainSize}  (see page \pageref{app-domainsize}) \\
-    Cell size for integration. Allows the user to perform operations on a lower resolution, which should be faster in most cases. 
+    Cell size for integration. Allows the user to perform operations on a lower
+resolution, which should be faster in most cases. 
 \item [InstrumentModel] : \emph{vector$<$string$>$} \\
     The parts of the measurement equation that should be included. \par
     \textcolor{green}{TODO: add descriptions for the various parts of the ME.}
 \item [Operation] : \emph{string} \\
-    The operation to be performed in this step. One of SOLVE, SUBTRACT, CORRECT, PREDICT, SHIFT, or REFIT. Only relevant for single steps, should be absent for multi-steps. \par
-    SOLVE : Find values for the parameters that minimize the difference between the predicted and the measured (u,v) values. \par
+    The operation to be performed in this step. One of SOLVE, SUBTRACT, CORRECT,
+PREDICT, SHIFT, or REFIT. Only relevant for single steps, should be absent for
+multi-steps. \par
+    SOLVE : Find values for the parameters that minimize the difference between
+the predicted and the measured (u,v) values. \par
     \textcolor{green}{TODO: add descriptions for other values.}
 \item [OutputData] : \emph{string} \\
-    Column in the measurement set wherein the output values of this step should be written. If left empty, no data will be written. 
+    Column in the measurement set wherein the output values of this step should
+be written. If left empty, no data will be written. 
 \end{description}
 
-\emph{Single steps should define one of the following fields, depending on the value of \textbf{Operation}} :
+\emph{Single steps should define one of the following fields, depending on the
+value of \textbf{Operation}} :
 \begin{description}
 \item [Solve] : \emph{Solve} (see page \pageref{app-solve}) \\
     Arguments of the SOLVE operation. \par
@@ -260,48 +373,79 @@ A \emph{single-step} describes one unit of work of the strategy. A step that is 
 {\footnotesize
 \begin{verbatim}
 Step.MultiStep.Steps                   = ["SingleStep1", "SingleStep2"] \
-                                                                   # steps that compose this multi-step
-Step.MultiStep.Baselines.Station1      = [0, 0, 0, 1, 1, 2]        # baselines to use
-Step.MultiStep.Baselines.Station2      = [0, 1, 2, 1, 2, 2]        # (all if empty)
-Step.MultiStep.Sources                 = ["3C343"]                 # list of sources
-Step.MultiStep.ExtraSources            = ["M81"]                   # list of sources outside patch
-Step.MultiStep.InstrumentModel         = ["BANDPASS", "TOTALGAIN", "PATCHGAIN"] # instrument model
-Step.MultiStep.Integration.Freq        = 2                         # integration interval: f(Hz)
-Step.MultiStep.Integration.Time        = 0.5                       # integration interval: t(s)
-Step.MultiStep.Correlation.Selection   = CROSS                     # one of AUTO, CROSS, ALL
-Step.MultiStep.Correlation.Type        = ["XX", "XY", "YX", "YY"]  # which (cross) correlations to use
+                                                                   # steps that
+compose this multi-step
+Step.MultiStep.Baselines.Station1      = [0, 0, 0, 1, 1, 2]        # baselines
+to use
+Step.MultiStep.Baselines.Station2      = [0, 1, 2, 1, 2, 2]        # (all if
+empty)
+Step.MultiStep.Sources                 = ["3C343"]                 # list of
+sources
+Step.MultiStep.ExtraSources            = ["M81"]                   # list of
+sources outside patch
+Step.MultiStep.InstrumentModel         = ["BANDPASS", "TOTALGAIN", "PATCHGAIN"]
+# instrument model
+Step.MultiStep.Integration.Freq        = 2                         # integration
+interval: f(Hz)
+Step.MultiStep.Integration.Time        = 0.5                       # integration
+interval: t(s)
+Step.MultiStep.Correlation.Selection   = CROSS                     # one of
+AUTO, CROSS, ALL
+Step.MultiStep.Correlation.Type        = ["XX", "XY", "YX", "YY"]  # which
+(cross) correlations to use
 
-Step.SingleStep1.Baselines.Station1    = [0, 1]                    # baselines to use
-Step.SingleStep1.Baselines.Station2    = [1, 2]                    # (all if empty)
-Step.SingleStep1.Sources               = []                        # list of sources
-Step.SingleStep1.InstrumentModel       = ["BANDPASS", "TOTALGAIN"] # instrument model
-Step.SingleStep1.Operation             = SOLVE                     # one of SOLVE, SUBTRACT, CORRECT, \
-                                                                   # PREDICT, SHIFT, REFIT
-Step.SingleStep1.OutputData            = "OUTDATA1"                # MS output data column
-Step.SingleStep1.Solve.MaxIter         = 10                        # maximum number of iterations
-Step.SingleStep1.Solve.Epsilon         = 1e-7                      # convergence threshold
-Step.SingleStep1.Solve.MinConverged    = 0.95                      # fraction that must have converged
-Step.SingleStep1.Solve.Parms           = ["PHASE:*"]               # names of solvable parameters
-Step.SingleStep1.Solve.ExclParms       = [""]                      # parameters excluded from solve
+Step.SingleStep1.Baselines.Station1    = [0, 1]                    # baselines
+to use
+Step.SingleStep1.Baselines.Station2    = [1, 2]                    # (all if
+empty)
+Step.SingleStep1.Sources               = []                        # list of
+sources
+Step.SingleStep1.InstrumentModel       = ["BANDPASS", "TOTALGAIN"] # instrument
+model
+Step.SingleStep1.Operation             = SOLVE                     # one of
+SOLVE, SUBTRACT, CORRECT, \
+                                                                   # PREDICT,
+SHIFT, REFIT
+Step.SingleStep1.OutputData            = "OUTDATA1"                # MS output
+data column
+Step.SingleStep1.Solve.MaxIter         = 10                        # maximum
+number of iterations
+Step.SingleStep1.Solve.Epsilon         = 1e-7                      # convergence
+threshold
+Step.SingleStep1.Solve.MinConverged    = 0.95                      # fraction
+that must have converged
+Step.SingleStep1.Solve.Parms           = ["PHASE:*"]               # names of
+solvable parameters
+Step.SingleStep1.Solve.ExclParms       = [""]                      # parameters
+excluded from solve
 Step.SingleStep1.Solve.DomainSize.Freq = 1000                      # f(Hz)
 Step.SingleStep1.Solve.DomainSize.Time = 1                         # t(s)
 
-Step.SingleStep2.Baselines.Station1    = []                        # baselines to use
-Step.SingleStep2.Baselines.Station2    = []                        # (all if empty)
-Step.SingleStep2.Sources               = []                        # list of sources
-Step.SingleStep2.InstrumentModel       = ["DirGain", "Phase"]      # instrument model
-Step.SingleStep2.Operation             = CORRECT                   # one of SOLVE, SUBTRACT, CORRECT, \
-                                                                   # PREDICT, SHIFT, REFIT
-Step.SingleStep2.OutputData            = "OUTDATA2"                # MS output data column
+Step.SingleStep2.Baselines.Station1    = []                        # baselines
+to use
+Step.SingleStep2.Baselines.Station2    = []                        # (all if
+empty)
+Step.SingleStep2.Sources               = []                        # list of
+sources
+Step.SingleStep2.InstrumentModel       = ["DirGain", "Phase"]      # instrument
+model
+Step.SingleStep2.Operation             = CORRECT                   # one of
+SOLVE, SUBTRACT, CORRECT, \
+                                                                   # PREDICT,
+SHIFT, REFIT
+Step.SingleStep2.OutputData            = "OUTDATA2"                # MS output
+data column
 \end{verbatim}
 }
 
 \subsection*{BBDB}
 \label{app-bbdb}
-This contains information on how the blackboard database and the parameter databases can be reached.
+This contains information on how the blackboard database and the parameter
+databases can be reached.
 \begin{description}
 \item [Host] : \emph{string} \\
-    Hostname or IP address of the host on which the black board database and the parameter databases reside. 
+    Hostname or IP address of the host on which the black board database and the
+parameter databases reside. 
 \item [Port] : \emph{int} \\
     Port number on which the blackboard database server is listening. 
 \item [DBName] : \emph{string} \\
@@ -327,12 +471,18 @@ This contains information on how the blackboard database and the parameter datab
 \label{app-correlation}
 \begin{description}
 \item [Selection] : \emph{string} \\
-    Station correlations to use. Should be one of 'AUTO', 'CROSS', or 'ALL'. \par
-        AUTO: Use only correlations of each station with itself (i.e. no base lines). \textcolor{red}{Not yet implemented.} \\
+    Station correlations to use. Should be one of 'AUTO', 'CROSS', or 'ALL'.
+\par
+        AUTO: Use only correlations of each station with itself (i.e. no base
+lines). \textcolor{red}{Not yet implemented.} \\
         CROSS: Use only correlations between stations (i.e. base lines). \\
         ALL: Use auto and cross correlations both.
 \item [Type] : \emph{string} \\
-    Correlations of which polarizations to use, one or more of 'XX', 'XY', 'YX', 'YY'. As an example, suppose we select 'XX' here and set Selection to 'AUTO', then the X polarization signal of each station is correlated with itself. However, if we set Selection to 'CROSS' then the X polarization of station A is correlated with the X polarization of station B for each base line (A,B)
+    Correlations of which polarizations to use, one or more of 'XX', 'XY', 'YX',
+'YY'. As an example, suppose we select 'XX' here and set Selection to 'AUTO',
+then the X polarization signal of each station is correlated with itself.
+However, if we set Selection to 'CROSS' then the X polarization of station A is
+correlated with the X polarization of station B for each base line (A,B)
 \end{description}
 
 \subsection*{DomainSize}
@@ -346,12 +496,19 @@ This contains information on how the blackboard database and the parameter datab
 
 \subsection*{Baselines}
 \label{app-baselines}
-The selected baselines. A baseline is a pair of stations. The first station of the pair is contained in Station1, the second in Station2. For example, suppose we have six baselines: (A, B), (A, C), (A, D), (B, C), (B, D), (C, D). Then Station1 would contain [A, A, A, B, B, C] and Station2 would contain [B, C, D, C, D, D]. The lengths of Station1 and Station2 should always be equal. If both fields are left empty, all baselines are used.
+The selected baselines. A baseline is a pair of stations. The first station of
+the pair is contained in Station1, the second in Station2. For example, suppose
+we have six baselines: (A, B), (A, C), (A, D), (B, C), (B, D), (C, D). Then
+Station1 would contain [A, A, A, B, B, C] and Station2 would contain [B, C, D,
+C, D, D]. The lengths of Station1 and Station2 should always be equal. If both
+fields are left empty, all baselines are used.
 \begin{description}
 \item [Station1] : \emph{vector$<$string$>$} \\
-    One name for each baseline: the first station in the pair that forms the baseline. 
+    One name for each baseline: the first station in the pair that forms the
+baseline. 
 \item [Station2] : \emph{vector$<$string$>$} \\
-    One name for each baseline: the second station in the pair that forms the baseline. 
+    One name for each baseline: the second station in the pair that forms the
+baseline. 
 \end{description}
 
 \subsection*{Solve}
@@ -360,13 +517,19 @@ The selected baselines. A baseline is a pair of stations. The first station of t
 \item [MaxIter] : \emph{int} \\
     Maximum number of iterations. 
 \item [Epsilon] : \emph{double} \\
-    Minimal difference between the old and the new parameter values after each iteration. When the difference falls below this threshold, the solver will stop iterating. 
+    Minimal difference between the old and the new parameter values after each
+iteration. When the difference falls below this threshold, the solver will stop
+iterating. 
 \item [MinConverged] : \emph{double} \\
-    Minimal fraction of solve domains that must have converged to declare overall convergence. 
+    Minimal fraction of solve domains that must have converged to declare
+overall convergence. 
 \item [Parms] : \emph{vector$<$string$>$} \\
     Parameters to solve for. Wildcards are allowed, e.g. BANDPASS:*. 
 \item [ExclParms] : \emph{vector$<$string$>$} \\
-    Subset of the parameters selected by Parms that should not be solved for. For example, if we would like to solve for the gain (amplitude, phase) of each station, but we would also like to fix the phase of the first station (STATION0) this can be specified as follows: 
+    Subset of the parameters selected by Parms that should not be solved for.
+For example, if we would like to solve for the gain (amplitude, phase) of each
+station, but we would also like to fix the phase of the first station (STATION0)
+this can be specified as follows: 
 {\footnotesize
 \begin{verbatim}
 Solve.Parms = ["gain:*"]
@@ -374,7 +537,8 @@ Solve.ExclParms = ["gain:*:phase:STATION0"]
 \end{verbatim}
 }
 \item [DomainSize] : \emph{DomainSize} \\
-    Size of the solve domain. The work domain is divided in solve domains and a solution is computed for each solve domain independently. 
+    Size of the solve domain. The work domain is divided in solve domains and a
+solution is computed for each solve domain independently. 
 \end{description}
 
 
