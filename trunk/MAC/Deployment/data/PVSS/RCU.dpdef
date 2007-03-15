@@ -1,5 +1,3 @@
-status			int
-functionality		bool
 VddVccEn		bool
 VhEnable		bool
 VlEnable		bool
@@ -11,11 +9,8 @@ HBAEnable		bool
 LBLEnable		bool
 LBHEnable		bool
 nofOverflow		uint
-LBL.status		int
-LBL.functionality	bool
-LBH.status		int
-LBH.functionality	bool
-HBA.status		int
-HBA.functionality	bool
+LBL.state		int
+LBH.state		int
+HBA.state		int
 ADCStatistics.overflow	bool
 Attenuating             uint

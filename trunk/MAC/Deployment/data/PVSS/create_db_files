@@ -488,19 +488,23 @@ create_dpt_file()
 		if [ ! -f ${dpt}.dpdef ]; then
 			echo "TypeName"
 			echo "${dpt}.${dpt}	1#1"
-			echo "	state	25#2"
+			echo "	state	21#2"
+			echo "	childState	21#3"
 			if [ ${prefix} != "-" ]; then
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
-				echo "	error	25#3"
-				echo "	logmsg	25#4"
+				echo "	currentAction	25#4"
+				echo "	error	25#5"
+				echo "	logMsg	25#6"
 			fi
 		else
 			echo "TypeName"
 			echo "${dpt}.${dpt}	1#1"
-			echo "	state	25#2"
+			echo "	currentAction	25#2"
 			echo "	error	25#3"
-			echo "	logmsg	25#4"
-			let count=5
+			echo "	logMsg	25#4"
+			echo "	state	21#5"
+			echo "	childState	21#6"
+			let count=7
 			let depth=1
 			oldnode=""
 			cleanlist ${dpt}.dpdef | awk -v elemNr=$count ' 
