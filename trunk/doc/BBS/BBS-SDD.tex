@@ -5,7 +5,27 @@
 \usepackage{layout}
 \usepackage{color}
 \usepackage{epsfig}
+\usepackage{xspace}
 %\usepackage[colorlinks=false]{hyperref}
+%
+\newcounter{decision}
+\newenvironment{decision}[1][Decision]{\begin{trivlist}\item[\hskip \labelsep {\bfseries #1 \refstepcounter{decision}\thedecision}]}{\end{trivlist}}
+%
+\newcommand{\todo}[1]{\begin{center}\fbox{\parbox{0.9\textwidth}{\textbf{!!FIXME!! #1}}}\end{center}}
+\newcommand{\cs}[1]{\textsc{cs}\begin{footnotesize}#1\end{footnotesize}\xspace}
+\newcommand{\bbs}{\textsc{bbs}\xspace}
+\newcommand{\lofar}{\textsc{lofar}\xspace}
+\newcommand{\ms}{\textsc{ms}\xspace}
+\newcommand{\me}{\textsc{me}\xspace}
+\newcommand{\lsm}{\textsc{lsm}\xspace}
+\newcommand{\aips}{\textsc{aips}\begin{footnotesize}++\end{footnotesize}\xspace}
+\newcommand{\olap}{\textsc{olap}\xspace}
+\newcommand{\meqtree}{\textsc{m}\begin{footnotesize}eq\end{footnotesize}\textsc{t}\begin{footnotesize}ree\end{footnotesize}\xspace}
+%\newcommand{\meqtree}{MeqTree\xspace}
+\newcommand{\predict}{\textsc{predict}\xspace}
+\newcommand{\solve}{\textsc{solve}\xspace}
+\newcommand{\subtract}{\textsc{subtract}\xspace}
+\newcommand{\correct}{\textsc{correct}\xspace}
 %
 \include{definitions}
 %
@@ -33,6 +53,9 @@
 \subsection{Purpose of This Document}
 \label{subsec:purpose}
 %
+\textsc{aips++}
+\aips
+\meqtree
 This document provides a detailed description of the architectural and
 software design of the Blackboard Selfcal System (BBS) that will be used for
 the off-line calibration of the LOFAR observations. The primary goal of this
@@ -78,7 +101,7 @@ periods for a 5 hour observation. In the spectral domain up to 50000 channels
 can be observed. For the initial LOFAR telescope it leads to a data set size of
 up to $\frac{1}{2} \times 20 \times 19\textrm{ baselines} \times 18000\textrm{ time stamps}
 \times 50000\textrm{ channels} \times 4\textrm{ correlations} \times 8\textrm{
-bytes} \approx 5\textrm{ TBytes}$ 
+bytes} \approx 5\textrm{ TBytes}$
 during initial operation (excluding flags and auxiliary information). It can
 grow to 77~TBytes for 77~stations. It is clear that this amount of data cannot
 be stored and processed on a single machine, so the data have to be distributed
@@ -90,9 +113,9 @@ The Selfcal application will be executed on the off-line and auxiliary
 processing clusters of the central processing facility (see
 \cite{LOFAR-ASTRON-ADD-012}). These clusters consist of Linux PCs in a high
 bandwidth network. The BBS application will typically run on 50 to 500 of these
-nodes. %and utilize the MPI message passing library to communicate between nodes. 
+nodes. %and utilize the MPI message passing library to communicate between nodes.
 Data stored in the CEP intermediate storage facility will be distributed over
-multiple disks and will be accessed by multiple nodes concurrently. 
+multiple disks and will be accessed by multiple nodes concurrently.
 Reordering tens of terabytes of data takes a lot of time and should be avoided.
 Therefore the data should be distributed such that the various applications
 (e.g., calibration and imaging) can operate well without reordering. The
@@ -128,9 +151,9 @@ been decided yet if that is also true for the imaging software.
 \label{subsec:blackboard}
 The idea behind the Blackboard architecture is a collection of independent processes that work cooperatively on a comman data structure. Each program is specialized in handling a particular part of the overall task, and all programs work together on the solution. These specialized programs work independent of each other. They do not call each other, nor is there a predetermined sequence for their activation. Instead, the direction taken by the system is mainly determined by the current state of progress. A central control component evaluates the current state of processing and coordinates the specialized programs. This data-directed control regime makes experimentation with different algorithms possible, and allows experimentally derived heuristics to control processing. This architecture is described in \cite{Buschmann1996} and \cite{LOFAR-ASTRON-SDD-002}.
 
-The Blackboard architecture is ideal for solving problems for which no predetermined algorithm or solve strategy is known. However, for the design of the BBS system, we've come to the conclusion that the operational system will benefit in terms of performance when using a predefined solving strategy. 
+The Blackboard architecture is ideal for solving problems for which no predetermined algorithm or solve strategy is known. However, for the design of the BBS system, we've come to the conclusion that the operational system will benefit in terms of performance when using a predefined solving strategy.
 
-In BBS this pattern is used as the common knowledge base of the self-calibration process. The blackboard is implemented as a database holding the values and quality of the solutions. The blackboard database can be used as an external source for various assessments of the solutions. 
+In BBS this pattern is used as the common knowledge base of the self-calibration process. The blackboard is implemented as a database holding the values and quality of the solutions. The blackboard database can be used as an external source for various assessments of the solutions.
 \subsubsection{Controller}
 \label{subsubsec:controller}
 
@@ -173,6 +196,11 @@ steps where each step consists of an operation like solve or correct.
 
 \subsubsection{BBS Kernel}
 \label{subsubsec:interf-kernel}
+\begin{itemize}
+\item MS
+\item ParmDB and LSM
+\item ACC
+\end{itemize}
 
 \subsubsection{BBS Database}
 \label{subsubsec:interf-database}
@@ -194,9 +222,12 @@ steps where each step consists of an operation like solve or correct.
 \subsubsection{Global Control}
 \label{subsubsec:design-global-control}
 
+\subsubsection{Local Control}
+\label{subsubsec:design-local-control}
+
+
 \subsection{BBS Kernel}
 \label{subsec:design-kernel}
-
 \subsubsection{Some basic principles and the relation with MeqTrees}
 \label{subsubsec:design-principles}
 BBS and the MeqTree system  are based on the same PSS (Prototype Selfcal System) implementation, but have gone their own way with their own specific goal in mind. MeqTree has grown to a very flexible system making it possible to try out all kinds of calibration algorithms. It is meant as a learning environment to develop new algorithms that will eventually be implemented in BBS. BBS has grown to a system where great attention has been paid to performance at the cost of some flexibility. Distributed and parallel processing have been designed in.
@@ -213,14 +244,135 @@ Note that another way of iteration is alternating between groups of parameters t
 \item Peeling and phase shifting the data is a means to reduce the number of calculations needed in the predict of the sources. It makes it possible to predict the sources near the new phase center on a coarser grid.
 \end{enumerate}
 
-\subsubsection{Prediffer}
-\label{subsubsec:design-prediffer}
+\subsubsection{Measurement Equation Evaluation}
+\label{subsubsec:design-me-evaluation}
+The Measurement Equation (\me) \cite{LOFAR-ASTRON-ADD-015} is a parameterized model of an interferometer in terms of a model of the sky, environmental effects (e.g. ionosphere), and antenna based instrumental effects.
+
+Both \bbs and \meqtree represent the \me as a directed acyclic graph, although it is commonly referred to as \emph{tree}. We will stick with this tradition. The nodes of the tree represent atomic expressions, while the branches represent dependencies between atomic expressions. Compound expression can be build by combining several nodes into a (sub)tree. The leaf nodes represent the parameters of the expression, e.g. source positions and Stokes vectors. As an example, figure \ref{fig:expr_tree} shows a subtree for computing the visibilities produced by two linearly polarized point sources at different positions.
+
+\begin{figure}[htbp]
+\label{fig:expr_tree}
+\centering
+\includegraphics[width=\textwidth]{images/expr_graph_sdd.ps}
+\caption{This figure shows a subtree for computing the visibilities produced by two linearly polarized point sources at different positions. The leaf nodes, i.e. the parameters of the expression, have been colored grey.}
+\end{figure}
+
+\meqtree is very flexible in the expression trees that a user can specify. The flexibility is due to a powerful Python language extension (\textsc{TDL}) that allows easy construction of a tree from an arbitrary expression, and to the high granularity of the nodes. The granularity of the nodes used in \bbs tends to be lower. For example, in \meqtree a typical node implements the sine function, whereas in \bbs a single node might implement a complete beamshape model. Because of the granularity of the nodes used in \bbs, the expression trees are generally small. Therefore, the overhead of traversing the trees is small as well. Note that, if necessary, \bbs could be made more flexible by adding nodes that are less specialized. By the same reasoning, the overhead of tree traversal in \meqtree could be reduced by creating specialized nodes.
+
+Specification by the user is limited to selecting predefined subtrees to include in the \me. Currently implemented subtrees are:
+\begin{itemize}
+\item Prediction of a (possibly polarized) point source
+\item Complex gain per station (G-jones)
+\item Complex gain in the direction of a source, per station (E-jones)
+\item Bandpass (B-jones)
+\end{itemize}
+
+\bbs will automatically generate a complete expression tree based on the selected predefined subtrees. For example, it will instantiate a subtree for each selected source in the local sky model and will include these at the appropriate place in the \me tree for each selected interferometer (baseline).
+
+\todo{ref. Kjeld's document for a description of the various models}
+
+\subsubsection{Model Parameters}
+In order to evaluate an expression tree, the kernel needs to know the values of the model parameters (leaf nodes). Typical examples of model parameters are: source position and Stokes vector, complex station gain, ionospheric phase shift. The total number of parameters in the expression trees of the entire \lofar array will depend on the number of sources that are included in the sky model. Several thousands of parameters seems to be a realistic estimate \cite{LOFAR-ASTRON-SDD-052}.
+
+Of course, most parameters are variable in e.g. frequency, time, and/or direction. Therefore, each parameter is represented by a set of values with an associated support (or validity domain). Figure \ref{fig:parameters} shows an example. The current implementation is limited to 2-D supports (frequency, time). Variability in direction can be achieved by creating a separate parameter for each direction of interest. This is done for the E-jones, where a separate parameter is used for each combination of station and source. True 4-D supports (frequency, time, l, m) may be required in the future to allow modelling of the beam shape.
+
+A parameter value with an associated support is also called a \emph{funklet}. In the current implementation, funklets are 2-D polynomials of arbitrary degree. This allows some variability when solving for the value of a parameter on a large support. For example, station phase typically varies on time scales of a few seconds or less. This suggests solving for constant funklets with small support. Yet station amplitude typically varies on much coarser time scales, so we may try to solve for second degree funklets with a larger support. Of course, it this case we make the implicit assumption that station amplitude can be approximated as a second degree polynomial in time. The quality of the solution will depend on the extent to which this assumption is valid. The use of alternatives to polynomials, such as splines and shapelets is currently being investigated by the \meqtree team.
+
+\todo{insert figure to clearify supports, parameters, funklets}
+
+\paragraph{Naming scheme}
+Because of the large number of parameters, keeping track of them all becomes a challenge. A naming scheme can be used to simplify this task. The naming scheme achieves two goals:
+\begin{enumerate}
+\item Identification of groups of related parameters
+\item Specification of initial values
+\end{enumerate}
+
+Each parameter is assigned a unique name, consisting of several parts separated by colons. For example:
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lp{0.60\textwidth}}
+\hline
+\textbf{Identifier} & \textbf{Referenced parameter(s)} \\
+\hline
+\texttt{ra:3C343} & Right ascention of source 3C343 \\
+\hline
+\texttt{dec:3C343} & Declination of source 3C343 \\
+\hline
+\texttt{gain:11:phase:CS10:3C343.1} & Phase of the x-polarized signal from station CS10 in the direction of source 3C343.1 \\
+\hline
+\texttt{gain:11:phase:*:3C343.1} & Phase of the x-polarized signal of all stations in the direction of source 3C343.1 \\
+\hline
+\texttt{gain:\{11,22\}:phase:*:3C343.1} & Phase of both the x- and the y-polarized signal from station CS10 in the direction of source 3C343.1. \\
+\hline
+\end{tabular}
+\end{table}
+
+
+The current Prediffer implementation can handle parameters as follows:
+At the first iteration it reads the parameters from an NFS-visible Berkeley DB (BDB) database or AIPS++ table.
+The Prediffer can handle the updated parameter values in 3 ways:
+Read from an NFS-visible database or AIPS++ table.
+Read from a replicated BDB database.
+Receive from the Controller.
+Given the amount of parameters and domains, searching parameters and domains in the database can take some time. Optimization of the parameter data structure and evaluation of high-performance distributed embedded databases are ongoing.
+
+The parameters are used in three places:
+Each Prediffer needs parameter values to calculate the model.
+Each Solver calculates new values for solvable parameters.
+The controller writes the new parameter values to the distributed database and on the blackboard.
+
+Before the first solve iteration a Solver receives the current values of the solvable parameters from the Prediffers. After each iteration it sends the newly calculated values to the Controller. So a Solver does not need access to the parameter database itself. In other words, the Prediffer nodes access the parameter database and sent self-contained inputs to the solver(s).
+The AIPS++ LSQFit class that is used in the solver, keeps data from previous solutions within the same iteration series to speed up the convergence process. This is used to minimize the data size that is sent from Prediffer nodes to the solver(s).
+
+At the start of the first iteration in solving a group of parameters, a Prediffer needs the values of all model parameters, not only the solvable ones. It needs them for the domain being solved. There are two approaches to achieve this:
+1.A Prediffer reads the parameters from the database. This requires that the database is visible on the Prediffer machine.
+2.The Controller reads the parameters and sends them to the Prediffers.
+The problem with this approach is that the Controller does not know which parameters are needed by the Prediffers. A possible solution for this is that all Prediffers tell the Controller which parameters they need and get the values back. Because most Prediffers will need the same parameters, the Controller does not need to read too many parameters.
+In the second and later iterations a Prediffer only needs the new values of the solvable parameters. This can be done similarly; either the Controller sends the new values to the Prediffers or the Controller updates the database after which a Prediffer can read the new values.
+
+If a Prediffer reads the parameter values itself, the following database options are possible:
+1.An AIPS++ table or embedded database on an NFS-mounted file system.
+2.An embedded database that is (automatically) replicated on all machines.
+3.A database server that is visible from all machines.
+
+The parameter handling classes have been designed such that they hide the parameter handling from the other code. In this way it is rather easy to choose the parameter handling scheme that suites best. E.g., on Blue Gene/L another scheme might be used than on a Linux cluster.
+
+The parameters form the leafs of the expression trees. They can be 2-dimensional functions of any degree valid for a given frequency-time domain. The domain is scaled to the domain [0,1] to avoid precision errors during the evaluation of the polynomials.
+BBS can solve for any combination of the parameter coefficients used in the algorithms.
+
+Each parameter has a unique name. The name is made up of a few parts separated by dots.
+For example,
+RA.CP1          the RA of point source 1
+gain11.SR1.SG2      the XX gain of station 1 in the direction of source group 2
+This naming scheme is used to make it easily possible to group parameters (using UNIX-like wildcarding) when specifying solvable parameters.
+For example,
+gain11.*.SG2        the XX gain of all stations in the direction of source group 2
+
+%It is hard to say how many parameters the entire LOFAR calibration model will consist of as it depends heavily on the number of sources used. It is estimated to be several thousands.
+
+Filling the parameter database
+To be able to start a calibration run, the parameter database has to be filled with initial values. In principle, a value has to be present each parameter and frequency-time domain. However, it is possible to have default values for all parameters. The naming scheme is used to allow for defaults for groups of parameters.
+E.g. a default value for parameter ‘gain11’ will be used for all parameters starting with gain11 if no more specific value is found.
+Of course, the calibration process will generate specific entries when a solution is found for a specific parameter.
+
+Cross calibration
+Cross calibration can in principle easily be done by copying the parameters found for, say, a calibration observation to the parameter table of the other observation. If a calibration observation before and after the actual observation is used, it is easy to convert the parameters to a polynomial in order to use interpolation when calibrating the actual observation.
+Currently there is no support for these operations; it is all handwork.
+
 
 \subsubsection{Solver}
 \label{subsubsec:design-solver}
+Solvable parameters
+In a BBS run it is possible to do a joint solve for any combination of parameters. There is a limitation that the frequency-time domains of the solvable parameters have to be the same.
+The number of solvable parameters in a run can vary a lot. For two reasons it should be kept as low as possible:
+1.A derivative has to be calculated for each solvable parameter. It means it is better to solve for constant values in small domains than for polynomial coefficients in larger domains. Later it is always possible to fit the constant parameter values to a polynomial (or any other function) on a larger domain.
+2.Inverting the solver matrix is a $O(N^3)$ problem. As the size of the fitter matrix is determined by the number of solvable parameters, it is clear that the number should be kept as low as possible.
+It means that it makes no sense to combine multiple domains in a single solve, because each domain has its own set of parameter values.
 
-\subsubsection{Local Control}
-\label{subsubsec:design-local-control}
+Some examples of parameters to solve are:
+Ionospheric phases for a patch in the sky require 74 parameters per patch (for 37 stations).
+To keep the number of parameters low it is best to solve patch by patch. In  it is argued that this approach is also best in peeling the visibility onion.
+Point source fluxes and/or positions require 1-6 parameters per source assuming that no polynomial or so is used to represent the fluxes.
 
 \subsection{BBS Database}
 \label{subsec:design-database}
@@ -228,7 +380,7 @@ Note that another way of iteration is alternating between groups of parameters t
 \subsubsection{Data Model}
 \label{subsubsec:design-data-model}
 \begin{figure}
-\epsfig{file=BlackBoardDataModel.eps, angle=-90, width=\textwidth}
+\epsfig{file=images/BlackBoardDataModel.eps, angle=-90, width=\textwidth}
 \caption{Data model of the Blackboard database}
 \end{figure}
 
@@ -257,12 +409,12 @@ creating this page. Thing to do are \textcolor{green}{stated in green}.
 \subsection*{Global Settings}
 \begin{description}
 \item [DataSet] : \emph{string} \\
-    Path to the input measurement set. 
+    Path to the input measurement set.
 \item [BBDB] : \emph{BBDB} (see page \pageref{app-bbdb}) \\
-    Information about the black board database. 
+    Information about the black board database.
 \item [ParmDB] : \emph{ParmDB} (see page \pageref{app-parmdb}) \\
     Information about the parameter databases (e.g. instrument parameters, local
-sky model). 
+sky model).
 \end{description}
 
 \subsubsection*{Example}
@@ -287,22 +439,22 @@ size and optional data integration.
 \begin{description}
 \item [Steps] : \emph{vector$<$string$>$} \\
     The names of the steps that compose the strategy. It is an error to leave
-this field empty. 
+this field empty.
 \item [Stations] : \emph{vector$<$string$>$} \\
     Names of the participating stations. All stations will be used if this field
-is left empty. 
+is left empty.
 \item [InputData] : \emph{string} \\
-    Name of the column in the measurement set that contains the input data. 
+    Name of the column in the measurement set that contains the input data.
 \item [Correlation] : \emph{Correlation} (see page \pageref{app-correlation}) \\
-    Specifies which correlations to use. 
+    Specifies which correlations to use.
 \item [WorkDomainSize] : \emph{DomainSize} (see page \pageref{app-domainsize})
 \\
     Size of the work domain in frequency and time. A work domain represents an
 amount of input data that is loaded into memory and processed as a single block.
-A large work domain size should reduce the overhead due to disk access. 
+A large work domain size should reduce the overhead due to disk access.
 \item [Integration] : \emph{DomainSize} (see page \pageref{app-domainsize}) \\
     Cell size for integration. Allows the user to perform operations on a lower
-resolution, which should be faster in most cases. 
+resolution, which should be faster in most cases.
 \end{description}
 
 \subsubsection*{Example}
@@ -332,20 +484,20 @@ overridden.
 \begin{description}
 \item [Steps] : \emph{vector$<$string$>$} \\
     The names of the steps that compose this step (for multi-steps), or absent
-(for single steps). 
+(for single steps).
 \item [Baselines] : \emph{Baselines} (see page \pageref{app-baselines}) \\
-    Baselines to use. 
+    Baselines to use.
 \item [Sources] : \emph{vector$<$string$>$} \\
-    Sources to use. All sources will be used if this field is left empty. 
+    Sources to use. All sources will be used if this field is left empty.
 \item [ExtraSources] : \emph{vector$<$string$>$} \\
     Additional sources to include when predicting visibilities. If this field is
-left empty, no extra sources will be included. 
+left empty, no extra sources will be included.
 \item [Correlation] : \emph{Correlation}  (see page \pageref{app-correlation})
 \\
-    Specifies which correlations to use. 
+    Specifies which correlations to use.
 \item [Integration] : \emph{DomainSize}  (see page \pageref{app-domainsize}) \\
     Cell size for integration. Allows the user to perform operations on a lower
-resolution, which should be faster in most cases. 
+resolution, which should be faster in most cases.
 \item [InstrumentModel] : \emph{vector$<$string$>$} \\
     The parts of the measurement equation that should be included. \par
     \textcolor{green}{TODO: add descriptions for the various parts of the ME.}
@@ -358,7 +510,7 @@ the predicted and the measured (u,v) values. \par
     \textcolor{green}{TODO: add descriptions for other values.}
 \item [OutputData] : \emph{string} \\
     Column in the measurement set wherein the output values of this step should
-be written. If left empty, no data will be written. 
+be written. If left empty, no data will be written.
 \end{description}
 
 \emph{Single steps should define one of the following fields, depending on the
@@ -445,26 +597,26 @@ databases can be reached.
 \begin{description}
 \item [Host] : \emph{string} \\
     Hostname or IP address of the host on which the black board database and the
-parameter databases reside. 
+parameter databases reside.
 \item [Port] : \emph{int} \\
-    Port number on which the blackboard database server is listening. 
+    Port number on which the blackboard database server is listening.
 \item [DBName] : \emph{string} \\
-    Name of the black board database. 
+    Name of the black board database.
 \item [UserName] : \emph{string} \\
-    Username to access the black board database. 
+    Username to access the black board database.
 \item [PassWord] : \emph{string} \\
-    Password to access the black board database. 
+    Password to access the black board database.
 \end{description}
 
 \subsection*{ParmDB}
 \label{app-parmdb}
 \begin{description}
 \item [Instrument] : \emph{string} \\
-    Path to the AIPS++ table containing the instrument parameters. 
+    Path to the AIPS++ table containing the instrument parameters.
 \item [LocalSky] : \emph{string} \\
-    Path to the AIPS++ table containing the local sky model parameters. 
+    Path to the AIPS++ table containing the local sky model parameters.
 \item [History] : \emph{string}
-    Path to the AIPS++ table containing the solve history. 
+    Path to the AIPS++ table containing the solve history.
 \end{description}
 
 \subsection*{Correlation}
@@ -489,9 +641,9 @@ correlated with the X polarization of station B for each base line (A,B)
 \label{app-domainsize}
 \begin{description}
 \item [Freq] : \emph{double} \\
-    The size of the domain in frequency (Hz). 
+    The size of the domain in frequency (Hz).
 \item [Time] : \emph{double} \\
-    The size of the domain in time (s). 
+    The size of the domain in time (s).
 \end{description}
 
 \subsection*{Baselines}
@@ -505,31 +657,31 @@ fields are left empty, all baselines are used.
 \begin{description}
 \item [Station1] : \emph{vector$<$string$>$} \\
     One name for each baseline: the first station in the pair that forms the
-baseline. 
+baseline.
 \item [Station2] : \emph{vector$<$string$>$} \\
     One name for each baseline: the second station in the pair that forms the
-baseline. 
+baseline.
 \end{description}
 
 \subsection*{Solve}
 \label{app-solve}
 \begin{description}
 \item [MaxIter] : \emph{int} \\
-    Maximum number of iterations. 
+    Maximum number of iterations.
 \item [Epsilon] : \emph{double} \\
     Minimal difference between the old and the new parameter values after each
 iteration. When the difference falls below this threshold, the solver will stop
-iterating. 
+iterating.
 \item [MinConverged] : \emph{double} \\
     Minimal fraction of solve domains that must have converged to declare
-overall convergence. 
+overall convergence.
 \item [Parms] : \emph{vector$<$string$>$} \\
-    Parameters to solve for. Wildcards are allowed, e.g. BANDPASS:*. 
+    Parameters to solve for. Wildcards are allowed, e.g. BANDPASS:*.
 \item [ExclParms] : \emph{vector$<$string$>$} \\
     Subset of the parameters selected by Parms that should not be solved for.
 For example, if we would like to solve for the gain (amplitude, phase) of each
 station, but we would also like to fix the phase of the first station (STATION0)
-this can be specified as follows: 
+this can be specified as follows:
 {\footnotesize
 \begin{verbatim}
 Solve.Parms = ["gain:*"]
@@ -538,7 +690,7 @@ Solve.ExclParms = ["gain:*:phase:STATION0"]
 }
 \item [DomainSize] : \emph{DomainSize} \\
     Size of the solve domain. The work domain is divided in solve domains and a
-solution is computed for each solve domain independently. 
+solution is computed for each solve domain independently.
 \end{description}
 
 
