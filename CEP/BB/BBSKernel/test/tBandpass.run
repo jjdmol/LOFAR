@@ -8,8 +8,8 @@ echo "--------------- START $1 ---------------"
 
 # check for input files
 if [[ ! ( -r tBandpass.in_parmdb_$1 && -r tBandpass.in_parset_$1 && -r tBandpass.in_stdout_$1 ) ]]; then
-    echo "$1: FAIL (not all input files found)"
-    return 1
+    echo "$1: not all input files found"
+    return 3
 fi
 
 # construct sky_model ParmDB

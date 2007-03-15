@@ -14,7 +14,10 @@ if [ $? != 0 ]; then
 fi
 
 \rm -rf tCorrect_tmp.MS1
-cp -r /opt/lofar/data/BBS2/demo3.MS_p1 tCorrect_tmp.MS1
+if [ ! -d $LOFARDATAROOT/BBS2/demo3.MS_p1 ]; then
+  exit 3
+fi
+cp -r $LOFARDATAROOT/BBS2/demo3.MS_p1 tCorrect_tmp.MS1
 
 $LOFAR_CHECKTOOL ./tCorrect $USER tCorrect_tmp.MS1 tCorrect_tmp.demo_instr tCorrect_tmp.demo_sky
 status=$?
