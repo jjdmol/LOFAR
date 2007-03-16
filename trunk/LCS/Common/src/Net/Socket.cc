@@ -812,7 +812,11 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 			int32 oldCounter = *sigpipeCounter;
 
 			// try to read something
+#if defined HAVE_BGL
+			bytesRead = ::recv (itsSocketID, (char*)buf, std::min(26000, bytesLeft), 0);
+#else
 			bytesRead = ::recv (itsSocketID, (char*)buf, bytesLeft, 0);
+#endif
 			sigpipe = (oldCounter != *sigpipeCounter); 	// check for SIGPIPE
 			LOG_TRACE_CALC(formatString("Socket(%d):read(%d)=%d%s, errno=%d(%s)", 
 						itsSocketID, bytesLeft, bytesRead, 
@@ -907,7 +911,11 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 		while (bytesLeft > 0 && !itsErrno && !sigpipe) {
 			errno = 0;								// reset system error
 			int32 oldCounter = *sigpipeCounter;
+#if defined HAVE_BGL
+			bytesWritten = ::write (itsSocketID, buf, std::min(26000, bytesLeft));
+#else
 			bytesWritten = ::write (itsSocketID, buf, bytesLeft);
+#endif
 			sigpipe = (oldCounter != *sigpipeCounter); // check for SIGPIPE
 			LOG_TRACE_CALC(formatString("Socket(%d):write(%d)=%d%s, errno=%d(%s)",
 							itsSocketID, bytesLeft, bytesWritten, 
