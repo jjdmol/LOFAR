@@ -1,10 +1,8 @@
-9
-"Lofar_background_dark" N {41,104,235}
-"Lofar_background_light" N {114,164,242}
-"Lofar_device_active" N {51,204,0}
-"Lofar_maintenance" N {102,153,255}
-"Lofar_cep_IO" N {255,158,156}
-"Lofar_cep_Switch" N {198,255,231}
-"Lofar_cep_BG" N {156,158,255}
-"Lofar_device_inactive" N {192,192,192}
-"Lofar_device_invalid" N {255,0,255}
+7
+"Lofar_operational" N {51,204,0}
+"Lofar_maintenance" N {255,255,0}
+"Lofar_invalid" N {255,0,255}
+"Lofar_suspicious" N {255,153,0}
+"Lofar_test" N {0,255,255}
+"Lofar_bad" N {255,0,0}
+"Lofar_off" N {204,204,204}
