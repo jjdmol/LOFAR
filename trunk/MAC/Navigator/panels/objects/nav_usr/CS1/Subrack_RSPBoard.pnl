@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,342 95 511 593 N "_3DFace" 3
+PANEL,252 105 130 549 N "_3DFace" 3
 "$RSP"
 "$datapoint"
 "$referenceDatapoint"
@@ -41,36 +41,17 @@ PANEL,342 95 511 593 N "_3DFace" 3
 	// load propertysets from datapoints
 	navPMLloadPropertySet(baseDP);
 
-	// check if the requiered datapoint for this view are enabled and accessible
-	if (dpAccessable(baseDP+\".state\")) {
-	  dpConnect(\"updateRSPBoard\",baseDP + \".state\",
- 	                             baseDP + \".state:_online.._invalid\");
- 	  dpConnect(\"showVersion\", baseDP + \".version:_online.._value\");
-  } else {
-    setValue(\"RSPBoard\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"detailButton\", \"backCol\", \"_dpdoesnotexist\");
-  }
-  
+ 
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+
   for (int j=0; j< 8; j++) {
     connectRCU(j,rspNr);
   }
 }
 
-updateRSPBoard(string dp1, string state,
- 					     string dp2, bool invalid)
-{
-	string SymbolCol;
-	bool state = FALSE; 
-	
-	if (invalid) 
-	{
-		SymbolCol=\"Lofar_device_invalid\";
-  } else {
-		SymbolCol=\"Lofar_device_active\";	  
-  }
-  setValue(\"RSPBoard\", \"backCol\", SymbolCol);
-  setValue(\"detailButton\", \"backCol\", SymbolCol);
-}
 
 connectRCU(int cnt,int rspNr) {
   int rcuNr= cnt + (rspNr*8);
@@ -78,7 +59,7 @@ connectRCU(int cnt,int rspNr) {
 
   string rcuDP=baseDP+\"_\"+\"RCU\"+rcuNr;
 	navPMLloadPropertySet(rcuDP);
-	DebugTN( \"Loading rcu: \", rcuDP);
+	
 	// check if the required datapoint for this view are enabled and accessible
 	if (dpAccessable(rcuDP+\".state\")) {
 	  dpConnect(\"updateRCU\",rcuDP + \".state\",
@@ -89,11 +70,10 @@ connectRCU(int cnt,int rspNr) {
   }	
 }
 
-updateRCU(string dp1, string state,
+updateRCU(string dp1, int state,
   		    string dp2, bool invalid)
 {
 	string SymbolCol;
-	bool state = FALSE;
 	string rsp=\"\";
 	string rcu=\"\";
 	int rcuNr=-1;
@@ -119,9 +99,9 @@ updateRCU(string dp1, string state,
   
   if (invalid) 
 	{
-		SymbolCol=\"Lofar_device_invalid\";
+		SymbolCol=\"Lofar_invalid\";
   } else {
-		SymbolCol=\"Lofar_device_active\";	  
+		SymbolCol=getStateColor(state);	  
   }
   setValue(anRCU, \"backCol\", SymbolCol);
   setValue(anRCU,\"toolTipText\",toolTip);
@@ -136,11 +116,10 @@ updateRCU(string dp1, string state,
   }
 }
 
-unloadRCU(int cnt,int rcuNr) {
+unloadRCU(int cnt,int rspNr) {
   int rcuNr= cnt + (rspNr*8);
   string rcuDP=baseDP+\"_\"+\"RCU\"+rcuNr;
-  DebugTN( \"Unloading rcu: \", rcuDP);
-	navPMLunloadPropertySet(rcuDP);
+  navPMLunloadPropertySet(rcuDP);
 }" 0
 E E E 1 0 0 0  20 560
 "" 0 1
@@ -158,9 +137,9 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"RSPBoard"
+"childStateBorder"
 ""
-1 20 560 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 10 532 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -173,11 +152,11 @@ E "main()
 {
 		aplViewNavigateTo($datapoint, $referenceDatapoint, \"_\"+RSPBoard, \"Station_RSPBoard-CS1.pnl\");
 }" 0
- 0 1 1 0 1 E U  1 E 20 120 127 560
+ 0 3 1 0 1 E U  1 E 10 102 113 532
 2 10
 "RSPBoard_Txt"
 ""
-1 26 126 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 14 107 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 EE E
@@ -186,8 +165,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 28 128 55 144
-0 2 0 "s" 0 0 0 192 0 0  28 128
+E E 0 1 1 0 1 E U  0 E 16 109 43 125
+0 2 0 "s" 0 0 0 192 0 0  16 109
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -197,7 +176,7 @@ LANG:1 3 RSP
 2 11
 "txt_version"
 ""
-1 81 537 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 67 514 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 12 0 0 0 0 0
 EE E
@@ -206,8 +185,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 120 539 157 553
-0 2 0 "s" 0 0 0 194 0 0  120 539
+E E 0 1 1 0 1 E U  0 E 106 516 143 530
+0 2 0 "s" 0 0 0 194 0 0  106 516
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -217,7 +196,7 @@ LANG:1 8 ver: x.x
 2 13
 "label_voltage25"
 ""
-1 40 258 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 28 239 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 14 0 0 0 0 0
 EE E
@@ -226,8 +205,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 106 260 170 275
-0 2 0 "s" 0 0 0 194 0 0  106 260
+E E 0 1 1 0 1 E U  0 E 94 241 158 256
+0 2 0 "s" 0 0 0 194 0 0  94 241
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -237,7 +216,7 @@ LANG:1 12 Voltage 2.5:
 2 14
 "label_voltage12"
 ""
-1 40 200 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 28 181 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 15 0 0 0 0 0
 EE E
@@ -246,8 +225,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 106 202 170 217
-0 2 0 "s" 0 0 0 194 0 0  106 202
+E E 0 1 1 0 1 E U  0 E 94 183 158 198
+0 2 0 "s" 0 0 0 194 0 0  94 183
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -257,7 +236,7 @@ LANG:1 12 Voltage 1.2:
 6 15
 "rect_voltage12"
 ""
-1 42 238 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 30 219 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 16 0 0 0 0 0
 EE E
@@ -266,11 +245,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 42 218 105 238
+E E 0 1 1 0 1 E U  1 E 30 199 93 219
 2 16
 "txt_voltage12"
 ""
-1 63 219 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 51 200 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 17 0 0 0 0 0
 EE E
@@ -279,8 +258,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 90 221 115 237
-0 2 0 "1.2f" 4 0 0 194 0 0  90 221
+E E 0 1 1 0 1 E U  0 E 78 202 103 218
+0 2 0 "1.2f" 4 0 0 194 0 0  78 202
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -290,7 +269,7 @@ LANG:1 4 0.00
 6 17
 "rect_voltage25"
 ""
-1 41 296 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 29 277 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 18 0 0 0 0 0
 EE E
@@ -299,11 +278,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 41 276 104 296
+E E 0 1 1 0 1 E U  1 E 29 257 92 277
 2 18
 "txt_voltage25"
 ""
-1 62 276 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 50 257 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 19 0 0 0 0 0
 EE E
@@ -312,8 +291,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 89 278 114 294
-0 2 0 "1.2f" 4 0 0 194 0 0  89 278
+E E 0 1 1 0 1 E U  0 E 77 259 102 275
+0 2 0 "1.2f" 4 0 0 194 0 0  77 259
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -323,7 +302,7 @@ LANG:1 4 0.00
 2 19
 "txt_unitVoltage12"
 ""
-1 91 219 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 79 200 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 20 0 0 0 0 0
 EE E
@@ -332,8 +311,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 93 221 102 237
-0 2 0 "s" 0 0 0 192 0 0  93 221
+E E 0 1 1 0 1 E U  0 E 81 202 90 218
+0 2 0 "s" 0 0 0 192 0 0  81 202
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -343,7 +322,7 @@ LANG:1 1 V
 2 20
 "txt_unitVoltage25"
 ""
-1 90 276 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 78 257 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -352,8 +331,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 92 278 101 294
-0 2 0 "s" 0 0 0 192 0 0  92 278
+E E 0 1 1 0 1 E U  0 E 80 259 89 275
+0 2 0 "s" 0 0 0 192 0 0  80 259
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -363,7 +342,7 @@ LANG:1 1 V
 2 21
 "label_voltage33"
 ""
-1 40 315 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 28 296 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 22 0 0 0 0 0
 EE E
@@ -372,8 +351,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 106 317 170 332
-0 2 0 "s" 0 0 0 194 0 0  106 317
+E E 0 1 1 0 1 E U  0 E 94 298 158 313
+0 2 0 "s" 0 0 0 194 0 0  94 298
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -383,7 +362,7 @@ LANG:1 12 Voltage 3.3:
 6 22
 "rect_voltage33"
 ""
-1 41 354 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 29 335 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 23 0 0 0 0 0
 EE E
@@ -392,11 +371,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 41 334 104 354
+E E 0 1 1 0 1 E U  1 E 29 315 92 335
 2 23
 "txt_voltage33"
 ""
-1 62 334 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 50 315 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -405,8 +384,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 89 336 114 352
-0 2 0 "1.2f" 4 0 0 194 0 0  89 336
+E E 0 1 1 0 1 E U  0 E 77 317 102 333
+0 2 0 "1.2f" 4 0 0 194 0 0  77 317
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -416,7 +395,7 @@ LANG:1 4 0.00
 2 24
 "txt_unitVoltage33"
 ""
-1 90 333 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 78 314 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 EE E
@@ -425,8 +404,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 92 335 101 351
-0 2 0 "s" 0 0 0 192 0 0  92 335
+E E 0 1 1 0 1 E U  0 E 80 316 89 332
+0 2 0 "s" 0 0 0 192 0 0  80 316
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -436,7 +415,7 @@ LANG:1 1 V
 6 33
 "RCU0"
 ""
-1 22 118 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 10 98 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 33 0 0 0 0 0
 EE E
@@ -451,11 +430,11 @@ E "main()
     getValue(\"RCU0\",\"toolTipText\",rcu);
 		aplViewNavigateTo($datapoint, $referenceDatapoint, \"_\"+RSPBoard+\"_\"+ rcu, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 1 1 0 1 E U  1 E 22 30 34 118
+ 0 1 1 0 1 E U  1 E 10 10 22 98
 6 34
 "RCU1"
 ""
-1 35 118 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 23 98 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 34 0 0 0 0 0
 EE E
@@ -470,11 +449,11 @@ E "main()
     getValue(\"RCU1\",\"toolTipText\",rcu);
 		aplViewNavigateTo($datapoint, $referenceDatapoint, \"_\"+RSPBoard+\"_\"+ rcu, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 1 1 0 1 E U  1 E 35 30 47 118
+ 0 1 1 0 1 E U  1 E 23 10 35 98
 6 35
 "RCU7"
 ""
-1 113 118 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 101 98 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 35 0 0 0 0 0
 EE E
@@ -489,11 +468,11 @@ E "main()
     getValue(\"RCU7\",\"toolTipText\",rcu);
 		aplViewNavigateTo($datapoint, $referenceDatapoint, \"_\"+RSPBoard+\"_\"+ rcu, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 1 1 0 1 E U  1 E 113 30 125 118
+ 0 1 1 0 1 E U  1 E 101 10 113 98
 6 36
 "RCU2"
 ""
-1 48 118 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 36 98 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 36 0 0 0 0 0
 EE E
@@ -508,11 +487,11 @@ E "main()
     getValue(\"RCU2\",\"toolTipText\",rcu);
 		aplViewNavigateTo($datapoint, $referenceDatapoint, \"_\"+RSPBoard+\"_\"+ rcu, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 1 1 0 1 E U  1 E 48 30 60 118
+ 0 1 1 0 1 E U  1 E 36 10 48 98
 6 37
 "RCU3"
 ""
-1 61 118 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 49 98 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 37 0 0 0 0 0
 EE E
@@ -527,11 +506,11 @@ E "main()
     getValue(\"RCU3\",\"toolTipText\",rcu);
 		aplViewNavigateTo($datapoint, $referenceDatapoint, \"_\"+RSPBoard+\"_\"+ rcu, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 1 1 0 1 E U  1 E 61 30 73 118
+ 0 1 1 0 1 E U  1 E 49 10 61 98
 6 38
 "RCU4"
 ""
-1 74 118 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 62 98 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 38 0 0 0 0 0
 EE E
@@ -546,11 +525,11 @@ E "main()
     getValue(\"RCU4\",\"toolTipText\",rcu);
 		aplViewNavigateTo($datapoint, $referenceDatapoint, \"_\"+RSPBoard+\"_\"+ rcu, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 1 1 0 1 E U  1 E 74 30 86 118
+ 0 1 1 0 1 E U  1 E 62 10 74 98
 6 39
 "RCU5"
 ""
-1 87 118 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 75 98 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 39 0 0 0 0 0
 EE E
@@ -565,11 +544,11 @@ E "main()
     getValue(\"RCU5\",\"toolTipText\",rcu);
 		aplViewNavigateTo($datapoint, $referenceDatapoint, \"_\"+RSPBoard+\"_\"+ rcu, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 1 1 0 1 E U  1 E 87 30 99 118
+ 0 1 1 0 1 E U  1 E 75 10 87 98
 6 40
 "RCU6"
 ""
-1 100 118 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 88 98 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 40 0 0 0 0 0
 EE E
@@ -584,11 +563,13 @@ E "main()
     getValue(\"RCU6\",\"toolTipText\",rcu);
 		aplViewNavigateTo($datapoint, $referenceDatapoint, \"_\"+RSPBoard+\"_\"+ rcu, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 1 1 0 1 E U  1 E 100 30 112 118
+ 0 1 1 0 1 E U  1 E 88 10 100 98
+1 41 0 "" 1
+0
 20 12
 "detailButton"
 ""
-1 26 153 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 14 134 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -599,7 +580,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-24 151 88 175
+12 132 76 156
 1
 T 
 1
@@ -633,9 +614,6 @@ E"main(int button, bool state)
 		     !dpAccessable(baseDP + \".voltage12:_online.._value\") ||
 		     !dpAccessable(baseDP + \".voltage25:_online.._value\"))
       {
-        setValue(\"rect_voltage12\", \"backCol\", \"_dpdoesnotexist\");
-        setValue(\"rect_voltage25\", \"backCol\", \"_dpdoesnotexist\");
-        setValue(\"rect_voltage33\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"txt_voltage12\", \"visible\", FALSE);
         setValue(\"txt_voltage25\", \"visible\", FALSE);
         setValue(\"txt_voltage33\", \"visible\", FALSE);
@@ -643,9 +621,6 @@ E"main(int button, bool state)
       }
       else
       {
-        setValue(\"rect_voltage12\", \"backCol\", \"white\");
-        setValue(\"rect_voltage25\", \"backCol\", \"white\");
-        setValue(\"rect_voltage33\", \"backCol\", \"white\");
         dpConnect(\"BoardETHDetails\", baseDP + \".voltage12:_online.._value\",
 																		 baseDP + \".voltage25:_online.._value\",
                                      baseDP + \".voltage33:_online.._value\",
@@ -702,4 +677,8 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 0 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 72 493 T 40 1 0 1  -55 18  
+1
+"$object""RSPBoard"
 0

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,265 108 950 124 N "_3DFace" 1
+PANEL,422 105 950 124 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -12,41 +12,45 @@ PANEL,265 108 950 124 N "_3DFace" 1
 	// load propertyset from datapoint
 	navPMLloadPropertySet(baseDP);
 	
-	// check if the requiered datapoint for this view are enabled and accessible
-	if (dpAccessable($datapoint+\".state\")) {
-	  dpConnect(\"updateDigBoardCtrl\",baseDP + \".state\",
-	  		                           baseDP + \".error\",
-	  		                           baseDP + \".connected\",
-	  		                           baseDP + \".clock\",
- 	                                 baseDP + \".state:_online.._invalid\");
- 	} else {
-    setValue(\"Station\", \"backCol\", \"_dpdoesnotexist\");
-  }	
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+  
+  // check if the requiered datapoint for this view are enabled and accessible
+	if (dpAccessable($datapoint+\".currentAction\")) {
+	  dpConnect(\"updateInfo\",baseDP + \".currentAction\",
+	  		                   baseDP + \".error\",
+	  		                   baseDP + \".connected\",
+	  		                   baseDP + \".clock\",
+ 	                         baseDP + \".error:_online.._invalid\");
+ 	}	
 }
 
-updateDigBoardCtrl(string dp1, string state,
-                   string dp2, string error,
-                   string dp3, bool connected,
-                   string dp4, int clock,
-							     string dp5, bool invalid)
+updateInfo(string dp1, string action,
+           string dp2, string error,
+           string dp3, bool connected,
+           string dp4, int clock,
+					 string dp5, bool invalid)
 {
-	string SymbolCol;
-	if (invalid) 
-	{
-		SymbolCol=\"Lofar_device_invalid\";
-  } else {
-		SymbolCol=\"_3DFace\";	  
-  }
-  setValue(\"Border1\", \"backCol\", SymbolCol);
-  setValue(\"stateTxt\",\"text\",state);
-  setValue(\"errorTxt\",\"text\",error);
-  setValue(\"clockTxt\",\"text\",clock);
-  if (connected) {
-    setValue(\"connectedTxt\",\"backCol\",\"green\");
-  } else {
-    setValue(\"connectedTxt\",\"backCol\",\"red\");
-    setValue(\"clockTxt\",\"text\",\"00000\");
-  }
+
+  if (!invalid) {
+     setValue(\"txt_action\",\"text\",action);
+     setValue(\"txt_error\",\"text\",error);
+     setValue(\"txt_clock\",\"text\",clock);
+     if (connected) {
+       setValue(\"txt_connected\",\"backCol\",\"green\");
+     } else {
+       setValue(\"txt_connected\",\"backCol\",\"red\");
+       setValue(\"txt_clock\",\"text\",\"\");
+     }
+   } else {
+     setValue(\"txt_action\",\"text\",\"\");
+     setValue(\"txt_error\",\"text\",\"\");
+     setValue(\"txt_clock\",\"text\",\"\");
+     setValue(\"txt_connected\",\"backCol\",\"red\");
+     setValue(\"txt_clock\",\"text\",\"\");
+   }
 }
 " 0
 "main()
@@ -65,22 +69,22 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"Border1"
+"childStateBorder"
 ""
 1 10 100 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 1 0 0 0 0 0
 EE E
-1
+0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E U  1 E 10 10 940 100
+E E 0 3 1 0 1 E U  1 E 10 10 940 100
 2 1
 "Text4"
 ""
-1 17 19 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 47 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
 EE E
@@ -89,18 +93,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 21 255 47
-0 2 0 "s" 0 0 0 64 0 0  19 21
+E E 0 1 1 0 1 E U  0 E 49 43 198 69
+0 2 0 "s" 0 0 0 64 0 0  49 43
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 16 DigBrd Control :
+LANG:1 18 DigBoard Control :
 2 2
 "Text8"
 ""
-1 182 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 221 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -109,18 +113,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 184 20 221 36
-0 2 0 "s" 0 0 0 192 0 0  184 20
+E E 0 1 1 0 1 E U  0 E 223 20 267 36
+0 2 0 "s" 0 0 0 192 0 0  223 20
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 6 State:
+LANG:1 7 Action:
 2 3
 "Text1"
 ""
-1 182 35 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 221 35 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -129,8 +133,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 184 37 280 53
-0 2 0 "s" 0 0 0 64 0 0  184 37
+E E 0 1 1 0 1 E U  0 E 223 37 319 53
+0 2 0 "s" 0 0 0 64 0 0  223 37
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -138,9 +142,9 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|
 1
 LANG:1 6 Error:
 2 4
-"stateTxt"
+"txt_action"
 ""
-1 290 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 299 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -149,8 +153,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 292 20 937 36
-0 2 0 "s" 0 0 0 64 0 0  292 20
+E E 0 1 1 0 1 E U  0 E 301 20 567 38
+0 2 0 "s" 0 0 0 64 0 0  301 20
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -158,9 +162,9 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 1
 LANG:1 0 
 2 8
-"errorTxt"
+"txt_error"
 ""
-1 290 35 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 299 35 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -169,8 +173,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 292 37 937 53
-0 2 0 "s" 0 0 0 64 0 0  292 37
+E E 0 1 1 0 1 E U  0 E 301 37 907 58
+0 2 0 "s" 0 0 0 64 0 0  301 37
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -180,7 +184,7 @@ LANG:1 0
 2 9
 "Text9"
 ""
-1 182 54 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 221 54 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 10 0 0 0 0 0
 EE E
@@ -189,8 +193,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 184 56 280 72
-0 2 0 "s" 0 0 0 64 0 0  184 56
+E E 0 1 1 0 1 E U  0 E 223 56 319 72
+0 2 0 "s" 0 0 0 64 0 0  223 56
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -198,9 +202,9 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|
 1
 LANG:1 10 Connected:
 7 11
-"connectedTxt"
+"txt_connected"
 ""
-1 295 64 E E E 1 E 1 E N "_WindowText" E N "red" E E
+1 334 64 E E E 1 E 1 E N "_WindowText" E N "red" E E
  E E
 12 0 0 0 0 0
 EE E
@@ -209,11 +213,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 295 64 5 5
+E E 0 1 1 0 1 E U  1 E 334 64 5 5
 2 12
 "Text3"
 ""
-1 182 73 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 221 73 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -222,8 +226,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 184 75 223 91
-0 2 0 "s" 0 0 0 192 0 0  184 75
+E E 0 1 1 0 1 E U  0 E 223 75 262 91
+0 2 0 "s" 0 0 0 192 0 0  223 75
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -233,7 +237,7 @@ LANG:1 6 Clock:
 2 14
 "Text5"
 ""
-1 408 72 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 447 72 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 15 0 0 0 0 0
 EE E
@@ -242,8 +246,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 410 74 466 91
-0 2 0 "s" 0 0 0 64 0 0  410 74
+E E 0 1 1 0 1 E U  0 E 449 74 505 91
+0 2 0 "s" 0 0 0 64 0 0  449 74
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -251,9 +255,9 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|
 1
 LANG:1 4 Mhz.
 2 13
-"clockTxt"
+"txt_clock"
 ""
-1 290 73 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 329 73 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 14 0 0 0 0 0
 EE E
@@ -262,14 +266,16 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 292 75 348 91
-0 2 0 "s" 0 0 0 192 0 0  292 75
+E E 0 1 1 0 1 E U  0 E 331 75 387 91
+0 2 0 "s" 0 0 0 192 0 0  331 75
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 8 00000000
+1 15 0 "" 1
+0
 0
 LAYER, 1 
 1
@@ -299,4 +305,8 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 0 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 38 77 T 16 1 0 1  -21 -60  
+1
+"$object""DigBoardCtrl"
 0

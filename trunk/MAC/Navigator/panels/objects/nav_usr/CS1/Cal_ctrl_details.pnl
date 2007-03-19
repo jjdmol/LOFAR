@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,265 108 950 286 N "_3DFace" 1
+PANEL,423 296 950 286 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -10,15 +10,11 @@ PANEL,265 108 950 286 N "_3DFace" 1
   // Set base Datapoint
   baseDP = systemName + \"LOFAR_ObsSW_\";
   
-  //DebugTN(\"SystemName: \", systemName);
-  
+
   string observationsDP = \"MCU001:LOFAR_PermSW_MACScheduler\";	
   if (dpAccessable(observationsDP + \".activeObservations\")) {
-    DebugTN(\"connect to updateObservationsTable\");
-	  dpConnect(\"updateObservationsTable\",observationsDP+\".activeObservations:_online.._value\",
+    dpConnect(\"updateObservationsTable\",observationsDP+\".activeObservations:_online.._value\",
 	                                      observationsDP+\".state:_online.._invalid\");
-  } else {
-    setValue(\"Scheduler_Frame\", \"foreCol\", \"_dpdoesnotexist\");
   }
   
   
@@ -39,7 +35,7 @@ E"string systemName = \"\";
 string baseDP = \"\";
 
 string getObsName(string aString) {
-return strsplit(aString,\"_\")[3];
+  return strsplit(aString,\"_\")[3];
 }
 
 
@@ -89,7 +85,7 @@ updateCalCtrlTable(string dpe, dyn_dyn_anytype tab)
 	}
 }
 	
-updateCalCtrlTableValues(string dp1, string state,
+updateCalCtrlTableValues(string dp1, int state,
                          string dp2, bool connected,
                          string dp3, string obsname,
                          string dp4, string antennaArray,
@@ -128,7 +124,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"Border1"
+"childStateBorder"
 ""
 1 10 280 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
@@ -143,7 +139,7 @@ E E 0 2 1 0 1 E U  1 E 10 10 940 280
 2 1
 "Text4"
 ""
-1 17 19 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 47 19 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
 EE E
@@ -152,8 +148,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 19 21 148 47
-0 2 0 "s" 0 0 0 64 0 0  19 21
+E E 0 1 1 0 1 E U  0 E 49 21 178 47
+0 2 0 "s" 0 0 0 64 0 0  49 21
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -182,7 +178,7 @@ E "main(int row, string column, string value)
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0
  1 0 1 6 1 "Connected" 0 1 0 "s" 1
-LANG:1 0 
+LANG:1 2 #1
 E1
 LANG:1 0 
  16 "Observation" 0 1 0 "s" 1

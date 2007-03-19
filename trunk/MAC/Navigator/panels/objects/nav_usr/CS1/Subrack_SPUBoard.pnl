@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 SubRackSPUBoard
-PANEL,362 111 745 269 N "_3DFace" 1
+PANEL,252 141 745 269 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -9,13 +9,17 @@ PANEL,362 111 745 269 N "_3DFace" 1
 	// load propertysets from datapoints
 	navPMLloadPropertySet(baseDP);
 	
+	// connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+  
 	// check if the requiered datapoint for this view are enabled and accessible
 	if (dpAccessable(baseDP+\".temperature\")) {
+    // connect for SPU value updates
 	  dpConnect(\"updateSubrackSPU\",baseDP + \".temperature\",
  	                               baseDP + \".temperature:_online.._invalid\");
  	} else {
-    setValue(\"SPUBoard\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"detailButton\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"txt_temperature\", \"text\", \"x.x\");
   }	
 }
@@ -26,17 +30,12 @@ PANEL,362 111 745 269 N "_3DFace" 1
 updateSubrackSPU(string dp1, float temperature, 
 							   string dp3, bool invalid)
 {
-	string SymbolCol;
 	if (invalid) 
 	{
-		SymbolCol=\"Lofar_device_invalid\";
     setValue(\"txt_temperature\", \"text\", \"x.x\");
   } else {
-		SymbolCol=\"Lofar_device_active\";	  
     setValue(\"txt_temperature\",\"text\",temperature);
   }
-  setValue(\"SPUBoard\", \"backCol\", SymbolCol);
-  setValue(\"detailButton\", \"backCol\", SymbolCol);
 }" 0
 "main()
 {
@@ -54,7 +53,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"SPUBoard"
+"childStateBorder"
 ""
 1 50 140 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
@@ -65,7 +64,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 50 70 663 140
+E E 0 3 1 0 1 E U  1 E 50 70 663 140
 2 1
 "Text1"
 ""
@@ -89,7 +88,7 @@ LANG:1 9 SPU Board
 2 4
 "label_Vhba"
 ""
-1 63 117 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 63 116 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -98,8 +97,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 65 119 138 138
-0 2 0 "s" 0 0 0 66 0 0  65 119
+E E 0 1 1 0 1 E U  0 E 65 118 138 137
+0 2 0 "s" 0 0 0 66 0 0  65 118
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -109,7 +108,7 @@ LANG:1 11 Voltage HBA
 6 5
 "rect_Vhba"
 ""
-1 148 135 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 148 134 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 6 0 0 0 0 0
 EE E
@@ -118,11 +117,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 148 115 211 135
+E E 0 1 1 0 1 E U  1 E 148 114 211 134
 2 6
 "txt_Vhba"
 ""
-1 170 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 170 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 7 0 0 0 0 0
 EE E
@@ -131,8 +130,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 197 117 222 133
-0 2 0 "2.2f" 5 0 0 194 0 0  197 117
+E E 0 1 1 0 1 E U  0 E 197 116 222 132
+0 2 0 "2.2f" 5 0 0 194 0 0  197 116
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -142,7 +141,7 @@ LANG:1 4 0.00
 2 10
 "label_Vlba"
 ""
-1 255 117 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 255 116 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 EE E
@@ -151,8 +150,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 257 119 324 133
-0 2 0 "s" 0 0 0 66 0 0  257 119
+E E 0 1 1 0 1 E U  0 E 257 118 324 132
+0 2 0 "s" 0 0 0 66 0 0  257 118
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -162,7 +161,7 @@ LANG:1 11 Voltage LBA
 6 11
 "rect_Vlba"
 ""
-1 334 135 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 334 134 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 12 0 0 0 0 0
 EE E
@@ -171,11 +170,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 334 115 397 135
+E E 0 1 1 0 1 E U  1 E 334 114 397 134
 2 12
 "txt_Vlba"
 ""
-1 356 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 356 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -184,8 +183,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 383 117 408 133
-0 2 0 "2.2f" 5 0 0 194 0 0  383 117
+E E 0 1 1 0 1 E U  0 E 383 116 408 132
+0 2 0 "2.2f" 5 0 0 194 0 0  383 116
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -195,7 +194,7 @@ LANG:1 4 0.00
 2 13
 "label_Vdig"
 ""
-1 447 117 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 447 116 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 14 0 0 0 0 0
 EE E
@@ -204,8 +203,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 449 119 516 133
-0 2 0 "s" 0 0 0 66 0 0  449 119
+E E 0 1 1 0 1 E U  0 E 449 118 516 132
+0 2 0 "s" 0 0 0 66 0 0  449 118
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -215,7 +214,7 @@ LANG:1 11 Voltage DIG
 6 14
 "rect_Vdig"
 ""
-1 526 135 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 526 134 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 15 0 0 0 0 0
 EE E
@@ -224,11 +223,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 526 115 589 135
+E E 0 1 1 0 1 E U  1 E 526 114 589 134
 2 15
 "txt_Vdig"
 ""
-1 548 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 548 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 16 0 0 0 0 0
 EE E
@@ -237,8 +236,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 575 117 600 133
-0 2 0 "2.2f" 5 0 0 194 0 0  575 117
+E E 0 1 1 0 1 E U  0 E 575 116 600 132
+0 2 0 "2.2f" 5 0 0 194 0 0  575 116
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -281,7 +280,7 @@ LANG:1 4 0.00
 2 20
 "txt_unitVhba"
 ""
-1 200 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 200 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -290,8 +289,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 202 117 211 133
-0 2 0 "s" 0 0 0 192 0 0  202 117
+E E 0 1 1 0 1 E U  0 E 202 116 211 132
+0 2 0 "s" 0 0 0 192 0 0  202 116
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -301,7 +300,7 @@ LANG:1 1 V
 2 21
 "txt_unitVlba"
 ""
-1 386 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 386 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 22 0 0 0 0 0
 EE E
@@ -310,8 +309,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 388 117 397 133
-0 2 0 "s" 0 0 0 192 0 0  388 117
+E E 0 1 1 0 1 E U  0 E 388 116 397 132
+0 2 0 "s" 0 0 0 192 0 0  388 116
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -321,7 +320,7 @@ LANG:1 1 V
 2 22
 "txt_unitVdig"
 ""
-1 578 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 578 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 23 0 0 0 0 0
 EE E
@@ -330,8 +329,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 580 117 589 133
-0 2 0 "s" 0 0 0 192 0 0  580 117
+E E 0 1 1 0 1 E U  0 E 580 116 589 132
+0 2 0 "s" 0 0 0 192 0 0  580 116
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -358,6 +357,8 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 2 °C
+1 24 0 "" 1
+0
 20 19
 "detailButton"
 ""
@@ -407,9 +408,6 @@ E"main(int button, bool state)
 		     !dpAccessable(baseDP + \".Vlba:_online.._value\") ||
 		     !dpAccessable(baseDP + \".Vdig:_online.._value\"))
       {
-        setValue(\"rect_Vhba\", \"backCol\", \"_dpdoesnotexist\");
-        setValue(\"rect_Vlba\", \"backCol\", \"_dpdoesnotexist\");
-        setValue(\"rect_Vdig\", \"backCol\", \"_dpdoesnotexist\");
         setValue(\"txt_Vhba\", \"visible\", FALSE);
         setValue(\"txt_Vlba\", \"visible\", FALSE);
         setValue(\"txt_Vdig\", \"visible\", FALSE);
@@ -417,9 +415,6 @@ E"main(int button, bool state)
       }
       else
       {
-        setValue(\"rect_Vhba\", \"backCol\", \"white\");
-        setValue(\"rect_Vlba\", \"backCol\", \"white\");
-        setValue(\"rect_Vdig\", \"backCol\", \"white\");
         navPMLloadPropertySet(baseDP);
         dpConnect(\"SubrackSPUDetails\", baseDP + \".Vhba:_online.._value\",
 																		   baseDP + \".Vlba:_online.._value\",
@@ -476,4 +471,8 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 0 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 620 81 T 24 1 0 1  22 -4  
+1
+"$object""SPUBoard"
 0
