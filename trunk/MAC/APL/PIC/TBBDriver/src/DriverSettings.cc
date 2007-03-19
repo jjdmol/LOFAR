@@ -1,4 +1,4 @@
-//#  DriverSettings.cc: Driver settings
+//#  TbbSettings.cc: Driver settings
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,104 +22,266 @@
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
-
-//# Includes
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
+#include <APS/ParameterSet.h>
+#include <GCF/GCF_ServiceInfo.h>
 #include <DriverSettings.h>
 
-namespace LOFAR {
-  namespace TBB {
+using namespace LOFAR;
+	//using namespace GCFCommon;
+using namespace ACC::APS;
+using namespace TBB;
+
 
 //
 // Initialize singleton
 //
-DriverSettings* DriverSettings::theirDriverSettings = 0;
+TbbSettings* TbbSettings::theirTbbSettings = 0;
 
-DriverSettings* DriverSettings::instance()
+TbbSettings* TbbSettings::instance()
 {
-	if (theirDriverSettings == 0) {
-		theirDriverSettings = new DriverSettings();
+	if (theirTbbSettings == 0) {
+		theirTbbSettings = new TbbSettings();
 	}
-	return(theirDriverSettings);
+	return(theirTbbSettings);
 }
 
 //
 // Default constructor
 //
-DriverSettings::DriverSettings() :
-	itsMaxBoards(0),
-	itsMaxChannels(0),
-	itsMpsPerBoard(4),
-	itsChannelsPerMp(4),
-	itsChannelsPerBoard(16),
-	itsTimeOut(0.1),
-	itsActiveBoardsMask(0),
-	itsChannel(0),
-	itsMemorySize(0)
+TbbSettings::TbbSettings() :
+	itsDriverVersion(10),				  // driver version 1.0
+	itsMaxBoards(0),							// max.number of boards on 1 driver 
+	itsMaxChannels(0),						// max.number of channels on 1 driver
+	itsMpsOnBoard(4),							// number of MPs on 1 board
+	itsChannelsOnMp(4),						// number of channels on 1 MP
+	itsChannelsOnBoard(16),				// number of channels on 1 board
+	itsFlashMaxPages(32),					// max.number of pages in flash on 1 board
+	itsFlashSectorsInPage(16),		// number of sectors in 1 page
+	itsFlashBlocksInPage(2048),		// number of blocks in 1 page
+	itsFlashPageSize(2097152),		// size of 1 page in bytes
+	itsFlashPageSectorSize(131072),// size of 1 sector in bytes
+	itsFlashPageBlockSize(1024),	// size of 1 block in bytes
+	itsMaxRetries(5),							// max.number of retries for each command
+	itsTimeOut(0.2),							// response timeout
+	itsActiveBoardsMask(0),				// mask with active boards
+	itsRcu2ChTable(0),						// conversion table Rcu-number to Channnel-number
+	itsCh2RcuTable(0),						// conversion table Channel-number to Rcu-number
+	itsBoardInfo(0),
+	itsChannelInfo(0) 								// Struct with channel info
 {
-
+	itsRcu2ChTable = new int32[itsChannelsOnBoard];
+	itsCh2RcuTable = new int32[itsChannelsOnBoard];
 }
 
-DriverSettings::~DriverSettings()
+TbbSettings::~TbbSettings()
 {
-	if (itsChannel) delete itsChannel;
-	if (itsMemorySize) delete itsMemorySize;			
+	if (itsRcu2ChTable) delete itsRcu2ChTable;
+	if (itsCh2RcuTable) delete itsCh2RcuTable;
+	if (itsBoardInfo) delete itsBoardInfo;
+	if (itsChannelInfo) delete itsChannelInfo;
 }
 
+//---- get Tbb settings loaded from config file ---
+void TbbSettings::getTbbSettings()
+{ 
+  bool configOK = true;
+  
+  // the conversion table must be set 1e
+  char chname[64];
+  for (int32 channelnr = 0; channelnr < itsChannelsOnBoard; channelnr++) {
+  	snprintf(chname, 64, "TBBDriver.TBB_CH_%d", channelnr);	
+  	try { setConversionTable(globalParameterSet()->getInt32(chname), channelnr); }
+  	catch (...) { LOG_INFO_STR(formatString("%s not found",chname)); configOK = false; } 
+  }
+  
+  // setMaxBoards() must be set 2e
+  setMaxBoards(MAX_N_TBBBOARDS);
+  
+  try { itsTimeOut = globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"); }
+  catch (...) { LOG_INFO_STR(formatString("TBBDriver.TP_TIMEOUT not found")); configOK = false;}
+  
+  try { itsMaxRetries = globalParameterSet()->getInt32("TBBDriver.TP_RETRIES"); }
+  catch (...) { LOG_INFO_STR(formatString("TBBDriver.TP_RETRIES not found")); configOK = false; }
+    
+  try { itsIfName = globalParameterSet()->getString("TBBDriver.IF_NAME"); }
+  catch (...) { LOG_INFO_STR(formatString("TBBDriver.IF_NAME not found")); configOK = false; }
+    
+  char dstip[64];
+  char srcip[64];
+  char srcmac[64];
+  char dstmac[64];
+  for (int boardnr = 0; boardnr < itsMaxBoards; boardnr++) {
+  	snprintf(srcip,  64, "TBBDriver.SRC_IP_ADDR_%d", boardnr);
+  	snprintf(dstip,  64, "TBBDriver.DST_IP_ADDR_%d", boardnr);
+		snprintf(srcmac, 64, "TBBDriver.MAC_ADDR_%d", boardnr);
+		snprintf(dstmac, 64, "TBBDriver.DST_MAC_ADDR_%d", boardnr);
+		
+		try { itsBoardInfo[boardnr].srcIp = globalParameterSet()->getString(srcip); }
+  	catch (...) { LOG_INFO_STR(formatString("%s not found",srcip)); configOK = false; }
+		
+		try { itsBoardInfo[boardnr].dstIp = globalParameterSet()->getString(dstip); }
+  	catch (...) {	LOG_INFO_STR(formatString("%s not found",dstip)); configOK = false; }
+		
+		try { itsBoardInfo[boardnr].srcMac = globalParameterSet()->getString(srcmac); }
+  	catch (...) { LOG_INFO_STR(formatString("%s not found",srcmac)); }
+		
+		try { itsBoardInfo[boardnr].dstMac = globalParameterSet()->getString(dstmac); }
+  	catch (...) { LOG_INFO_STR(formatString("%s not found",dstmac)); }
+		
+		LOG_INFO_STR(formatString("Board %d:",boardnr));
+		LOG_INFO_STR(formatString("Control port: Mac = '%s'"
+															,itsBoardInfo[boardnr].srcMac.c_str()));
+		LOG_INFO_STR(formatString("CEP port    : Src Ip = '%s'"
+															,itsBoardInfo[boardnr].srcIp.c_str()));
+		LOG_INFO_STR(formatString("            : Dst Ip = '%s', Dst Mac = '%s'"
+															,itsBoardInfo[boardnr].dstIp.c_str()
+															,itsBoardInfo[boardnr].dstMac.c_str()));		
+  }
+}
+  
+  
 
-void DriverSettings::setBoardPorts(GCFPortInterface* board_ports)
+//---- setBoardPorts ------------------------------
+void TbbSettings::setBoardPorts(int board, GCFPortInterface* board_ports)
 {
-	itsBoardPorts	= board_ports; // save address of boards array		
+	itsBoardInfo[board].port = board_ports;
 }
 
 //---- setMaxBoards ------------------------------
-void DriverSettings::setMaxBoards (int32 maxboards)
+void TbbSettings::setMaxBoards (int32 maxboards)
 {
 	itsMaxBoards = maxboards;
-	itsMaxChannels = itsChannelsPerBoard * maxboards;
-	if (itsChannel) delete itsChannel;
-	itsChannel = new ChannelInfo[itsMaxChannels];
-		
+	itsMaxChannels = itsChannelsOnBoard * maxboards;
+	
+	if (itsChannelInfo) delete itsChannelInfo;
+	itsChannelInfo = new ChannelInfo[itsMaxChannels];
+				
 	int32 boardnr = 0;
 	int32 inputnr = 0;
 	int32 mpnr = 0;
 	
-	for (int nr = 0; nr < itsMaxChannels; nr++) {
-		itsChannel[nr].Status = 'F';
-		itsChannel[nr].Selected = false;
-		itsChannel[nr].BoardNr = boardnr;
-		itsChannel[nr].InputNr = inputnr;
-		itsChannel[nr].MpNr = mpnr;
-		itsChannel[nr].StartAddr = 0;
-		itsChannel[nr].PageSize = 0;
+	for (int32 ch = 0; ch < itsMaxChannels; ch++) {
+		itsChannelInfo[ch].Selected = false;
+		itsChannelInfo[ch].Status = 0;
+		itsChannelInfo[ch].State = 'F';
+		convertCh2Rcu(ch,&itsChannelInfo[ch].RcuNr);
+		itsChannelInfo[ch].BoardNr = boardnr;
+		itsChannelInfo[ch].InputNr = inputnr;
+		itsChannelInfo[ch].MpNr = mpnr;
+		itsChannelInfo[ch].StartAddr = 0;
+		itsChannelInfo[ch].PageSize = 0;
 		inputnr++;
-		if (inputnr == itsChannelsPerBoard) {
+		if (inputnr == itsChannelsOnBoard) {
 			inputnr = 0;
 			boardnr++;
 		}
 		mpnr = (int32)(inputnr / 4);
 	}
 	
-	if (itsMemorySize) delete itsMemorySize;
-	itsMemorySize = new uint32[itsMaxBoards];
+	if (itsBoardInfo) delete itsBoardInfo;
+	itsBoardInfo = new BoardInfo[itsMaxBoards];
 	
 	for (int nr = 0;nr < itsMaxBoards; nr++) {
-		itsMemorySize[nr] = 0;
+		itsBoardInfo[nr].memorySize = 0;
+		itsBoardInfo[nr].srcIp = "";
+		itsBoardInfo[nr].dstIp = "";
+		itsBoardInfo[nr].srcMac = "";
+		itsBoardInfo[nr].dstMac = "";
 	}
 }
 
 //---- setActiveBoards ---------------------------
-void DriverSettings::setActiveBoards (uint32 activeboardsmask)
+void TbbSettings::setActiveBoards (uint32 activeboardsmask)
 {
+	// clear rcu setting for boards not active anymore
+	uint32 mask;
+	mask = (~activeboardsmask) & itsActiveBoardsMask;
+	for (int bn = 0; bn < itsMaxBoards; bn++) {
+		if (mask & (1 << bn)) {
+			clearRcuSettings(bn);	
+		}
+	}
 	itsActiveBoardsMask = activeboardsmask;
 }
+
+//---- set Communication retries ----------------
+void TbbSettings::setMaxRetries(int32 retries)
+{
+	itsMaxRetries = retries;
+}
+
 //---- set Communication time-out ----------------
-void DriverSettings::setTimeOut(double timeout)
+void TbbSettings::setTimeOut(double timeout)
 {
 	itsTimeOut = timeout;
 }
 
+//---- set RCU2CH conversion table ----------------
+void TbbSettings::setConversionTable(int32 rcu, int32 channel)
+{
+	itsRcu2ChTable[rcu] = channel;
+	itsCh2RcuTable[channel] = rcu;
+	//LOG_INFO_STR(formatString("table rcu.%d = chan.%d",rcu, channel));
+}
+
+void TbbSettings::convertRcu2Ch(int32 rcunr, int32 *boardnr, int32 *channelnr)
+{
+	int32 board;
+	int32 channel;
+	
+	board = (int32)(rcunr / itsChannelsOnBoard);
+	channel = itsRcu2ChTable[rcunr - (board * itsChannelsOnBoard)];
+	*boardnr = board;
+	*channelnr = channel;	
+}
+
+void TbbSettings::convertCh2Rcu(int32 channelnr, int32 *rcunr)
+{
+	int32 boardnr;
+	int32 rcu;
+	
+	boardnr = (int32)(channelnr / itsChannelsOnBoard);
+	rcu = itsCh2RcuTable[(channelnr - (boardnr * itsChannelsOnBoard))] + (boardnr * itsChannelsOnBoard);
+	*rcunr = rcu;
+}
+
+bool TbbSettings::isBoardActive(int32 boardnr)
+{
+	if (itsActiveBoardsMask & (1 << boardnr)) return (true);
+	return (false);
+}
+
+bool TbbSettings::isBoardSelected(int32 boardnr)
+{
+	bool active = false;
+	
+	for (int cn = 0; cn < itsChannelsOnBoard; cn++) {
+		if (itsChannelInfo[(boardnr * itsChannelsOnBoard) + cn].Selected) active = true;		
+	}
+	return (active);
+}
 
 
-  } // namespace PACKAGE
-} // namespace LOFAR
+void TbbSettings::clearRcuSettings(int32 boardnr)
+{
+	for (int cn = 0; cn < itsChannelsOnBoard; cn++) {
+		itsChannelInfo[(boardnr * 16) + cn].Selected = false;
+		itsChannelInfo[(boardnr * 16) + cn].Status = 0;
+		itsChannelInfo[(boardnr * 16) + cn].State = 'F';
+		itsChannelInfo[(boardnr * 16) + cn].StartAddr = 0;
+		itsChannelInfo[(boardnr * 16) + cn].PageSize = 0;	
+	}		
+}
+
+void TbbSettings::logChannelInfo(int32 channel)
+{
+		LOG_DEBUG_STR(formatString("Channel %d ,Rcu %d = status[0x%04X] state[%c] addr[%u] pages[%u]"
+					, channel
+					, itsChannelInfo[channel].RcuNr
+					, itsChannelInfo[channel].Status
+					, itsChannelInfo[channel].State
+					, itsChannelInfo[channel].StartAddr
+					, itsChannelInfo[channel].PageSize));
+}

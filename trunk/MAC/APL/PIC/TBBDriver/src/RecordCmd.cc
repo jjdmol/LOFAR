@@ -24,26 +24,27 @@
 #include <Common/LofarLogger.h>
 
 #include "RecordCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
 
 //--Constructors for a RecordCmd object.----------------------------------------
 RecordCmd::RecordCmd():
-		itsBoardMask(0), itsBoardsMask(0),itsChannel(0)
+		itsRcuStatus(0)
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPRecordEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBRecordackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsTBBackE->status[boardnr]	= 0;
+		itsTBBackE->status_mask[boardnr]	= 0;
 		itsChannelMask[boardnr] = 0;
-	}		
+	}
+	setWaitAck(true);		
 }
 	  
 //--Destructor for RecordCmd.---------------------------------------------------
@@ -65,110 +66,117 @@ bool RecordCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void RecordCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBRecordEvent(event);
+	itsTBBE	= new TBBRecordEvent(event);
 		
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
-		
-	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
-		
-		if (!(itsBoardsMask & (1 << boardnr))) 
-			itsTBBackE->status[boardnr] |= NO_BOARD;
-		
-		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr]; 		
-		
-		if (itsChannelMask[boardnr] != 0)
-			itsBoardMask |= (1 << boardnr);
-			
-		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | CHANNEL_SEL_ERROR);
-				
-		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
-	}
+	// convert rcu-bitmask to tbb-channelmask
+	int boardnr;
+	int channelnr;
+	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
+		if(itsTBBE->rcu_mask.test(rcunr)) {
+			TS->convertRcu2Ch(rcunr,&boardnr,&channelnr);	
+			itsChannelMask[boardnr] |= (1 << channelnr);
+		}
+	} 
 	
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
+	uint32 boardmask = 0;		
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr); 
+			
+		if (!TS->isBoardActive(boardnr)) {
+			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		}
+		
+		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) {
+			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_CHANNEL_SEL_ERROR);
+		}		
+		
+		if (!TS->isBoardActive(boardnr) &&  (itsChannelMask[boardnr] != 0)) {
+			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_BOARD_SEL_ERROR);
+		}
+	}
+	setBoardMask(boardmask);
+	
+	// select firt channel to handle
+	nextChannelNr();
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPRECORD;
 	itsTPE->status	=	0;
 	
-	delete itsTBBE;	
+	delete itsTBBE;
 }
 
 // ----------------------------------------------------------------------------
-bool RecordCmd::sendTpEvent(int32 boardnr, int32 channelnr)
+void RecordCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
+	itsRcuStatus = 0;
 	
-	itsTPE->channel = DriverSettings::instance()->getChInputNr(channelnr);
-	itsChannel = channelnr;
+	itsTPE->channel = TS->getChInputNr(getChannelNr());
 	
-	if 	(ds->boardPort(boardnr).isConnected() && 
-			(itsTBBackE->status[boardnr] == 0) &&
-			(DriverSettings::instance()->getChStatus(channelnr) == 'A')) {
-		
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
+	if ((TS->getChState(getChannelNr()) != 'A') && (TS->getChState(getChannelNr()) != 'S'))
+		itsRcuStatus |= TBB_RCU_NOT_ALLOCATED;
+	
+	if (itsTBBackE->status_mask[getBoardNr()] == 0) {
+		if (itsRcuStatus == 0) {
+			TS->boardPort(getBoardNr()).send(*itsTPE);
+			LOG_DEBUG_STR(formatString("Sending RecordCmd to boardnr[%d], channel[%08X]", getBoardNr(), itsTPE->channel));
+		}
 	}
-	else
-		itsTBBackE->status[boardnr] |= CMD_ERROR;
-	
-	return(sending);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void RecordCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void RecordCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status[boardnr] |= COMM_ERROR;
+		itsTBBackE->status_mask[getBoardNr()] |= TBB_RCU_COMM_ERROR;
+		itsRcuStatus |= TBB_TIMEOUT_ETH;
 	}
 	else {
 		itsTPackE = new TPRecordackEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));
+			itsRcuStatus |= (1 << (16 + (itsTPackE->status & 0x0F)));
 		
-		if (itsTPackE->status == 0)
-			DriverSettings::instance()->setChStatus((itsChannel + (boardnr * 16)), 'R');	
-		
-		LOG_DEBUG_STR(formatString("Received RecordAck from boardnr[%d]", boardnr));
+		if ((itsTPackE->status == 0) && (itsRcuStatus == 0))
+			//TS->setChState((getChannelNr() + (getBoardNr() * 16)), 'R');	
+			TS->setChState(getChannelNr(), 'R');	
+		LOG_DEBUG_STR(formatString("Received RecordAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
 	}
+	
+	if (itsRcuStatus) TS->setChState(getChannelNr(), 'E');
+	TS->setChStatus(getChannelNr(),(uint16)(itsRcuStatus >> 16));
+	
+	if (itsRcuStatus || itsTBBackE->status_mask[getBoardNr()]) {
+		int32 rcu;
+		TS->convertCh2Rcu(getChannelNr(),&rcu);
+		LOG_INFO_STR(formatString("ERROR RecordCmd Rcu[%d], DriverStatus[0x%x], RcuStatus[0x%x]",
+			rcu, itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
+	}
+	itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
+	nextChannelNr();
 }
 
 // ----------------------------------------------------------------------------
 void RecordCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status[boardnr] == 0)
-			itsTBBackE->status[boardnr] = SUCCESS;
+	int32 rcunr;
+	
+	itsTBBackE->rcu_mask.reset();
+	for (int32 channelnr = 0; channelnr < TS->maxChannels(); channelnr++) {
+		if (TS->getChStatus(channelnr)) {
+			TS->convertCh2Rcu(channelnr,&rcunr);
+			itsTBBackE->rcu_mask.set(rcunr);
+		}
+	}
+	
+	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status_mask[boardnr] == 0)
+			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 	
 	clientport->send(*itsTBBackE);
 }
 
-// ----------------------------------------------------------------------------
-uint32 RecordCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool RecordCmd::waitAck()
-{
-	return(true);
-}
-
-// ----------------------------------------------------------------------------
-CmdTypes RecordCmd::getCmdType()
-{
-	return(ChannelCmd);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace

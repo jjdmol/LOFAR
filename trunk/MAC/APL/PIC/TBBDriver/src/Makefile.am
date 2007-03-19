@@ -53,9 +53,10 @@ libtp_protocol_la_SOURCES = \
 libtbbdriver_la_SOURCES = \
 	$(noinst_HEADERS) \
 	DriverSettings.cc \
+	Command.cc \
+	AllocCmd.cc \
 	BoardCmdHandler.cc \
 	MsgHandler.cc \
-	AllocCmd.cc \
 	FreeCmd.cc \
 	RecordCmd.cc \
 	StopCmd.cc \
@@ -72,6 +73,7 @@ libtbbdriver_la_SOURCES = \
 	ErasefCmd.cc \
 	ReadfCmd.cc \
 	WritefCmd.cc \
+	ImageInfoCmd.cc \
 	ReadwCmd.cc \
 	WritewCmd.cc \
 	ReadrCmd.cc \
@@ -80,10 +82,10 @@ libtbbdriver_la_SOURCES = \
 
 noinst_HEADERS = \
 	DriverSettings.h \
-	BoardCmdHandler.h \
-	MsgHandler.h \
 	Command.h \
 	AllocCmd.h \
+	BoardCmdHandler.h \
+	MsgHandler.h \
 	FreeCmd.h \
 	RecordCmd.h \
 	StopCmd.h \
@@ -100,6 +102,7 @@ noinst_HEADERS = \
 	ErasefCmd.h \
 	ReadfCmd.h \
 	WritefCmd.h	\
+	ImageInfoCmd.h \
 	ReadwCmd.h \
 	WritewCmd.h	\
 	ReadrCmd.h \

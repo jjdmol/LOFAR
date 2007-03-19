@@ -24,21 +24,38 @@
 #include <Common/LofarLogger.h>
 
 #include "ErasefCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
+
+// information about the flash memory
+static const int FL_SIZE 						= 64 * 1024 *1024; // 64 MB in bytes
+static const int FL_N_PAGES 				= 32; // 32 pages in flash
+static const int FL_N_SECTORS				= 512; // 512 sectors in flash
+static const int FL_N_BLOCKS				= 65536; // 65336 blocks in flash
+
+static const int FL_PAGE_SIZE 			= FL_SIZE / FL_N_PAGES; // 2.097.152 bytes  
+static const int FL_SECTOR_SIZE			= FL_SIZE / FL_N_SECTORS; // 131.072 bytes
+static const int FL_BLOCK_SIZE 			= FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
+
+static const int FL_SECTORS_IN_PAGE	= FL_PAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
+static const int FL_BLOCKS_IN_SECTOR= FL_SECTOR_SIZE / FL_BLOCK_SIZE; // 128 blocks per sector
+static const int FL_BLOCKS_IN_PAGE	= FL_PAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
 
 //--Constructors for a ErasefCmd object.----------------------------------------
 ErasefCmd::ErasefCmd():
-		itsBoardMask(0),itsBoardsMask(0),itsBoardStatus(0)
+		itsImage(0),itsSector(0),itsBoardStatus(0)
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPErasefEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBErasefackEvent();
+	itsTBBackE 	= new TBBEraseImageAckEvent();
+	
+	setWaitAck(true);
 }
 	  
 //--Destructor for ErasefCmd.---------------------------------------------------
@@ -51,7 +68,7 @@ ErasefCmd::~ErasefCmd()
 // ----------------------------------------------------------------------------
 bool ErasefCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_ERASEF)||(event.signal == TP_ERASEFACK)) {
+	if ((event.signal == TBB_ERASE_IMAGE)||(event.signal == TP_ERASEFACK)) {
 		return(true);
 	}
 	return(false);
@@ -60,86 +77,63 @@ bool ErasefCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ErasefCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBErasefEvent(event);
+	itsTBBE = new TBBEraseImageEvent(event);
 		
-	itsBoardMask = (1 << itsTBBE->board);
+	setBoardNr(itsTBBE->board);
 	
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
+	itsTBBackE->status_mask = 0;
 	
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
-	
-	itsTBBackE->status = 0;
+	itsImage = itsTBBE->image;
+	itsSector = (itsImage * FL_SECTORS_IN_PAGE);
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPERASEF;
 	itsTPE->status	=	0;
-	itsTPE->addr		= itsTBBE->addr;
 	
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-bool ErasefCmd::sendTpEvent(int32 boardnr, int32)
+void ErasefCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	if (ds->boardPort(boardnr).isConnected()) {
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-	}
-	else 
-		itsTBBackE->status |= CMD_ERROR;
-	
-	return(sending);
+	itsTPE->addr = static_cast<uint32>(itsSector * FL_SECTOR_SIZE);
+	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TS->boardPort(getBoardNr()).setTimer((long)1); // erase time of sector = 500 mSec
 }
 
 // ----------------------------------------------------------------------------
-void ErasefCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void ErasefCmd::saveTpAckEvent(GCFEvent& event)
 {
+	LOG_DEBUG_STR(formatString("Received ErasefAck from boardnr[%d]", getBoardNr()));
+	
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status |= COMM_ERROR;
-	}
-	else {
+		itsTBBackE->status_mask |= TBB_COMM_ERROR;
+	} else {
 		itsTPackE = new TPErasefackEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
-		
-		LOG_DEBUG_STR(formatString("Received ErasefAck from boardnr[%d]", boardnr));
+		if (itsBoardStatus == 0) {
+			itsSector++; 
+			
+			if (itsSector == ((itsImage + 1) * FL_SECTORS_IN_PAGE)) {
+				setDone(true);
+			}
+		}
 		delete itsTPackE;
+	}
+	
+	if (itsBoardStatus != 0) {
+		LOG_DEBUG_STR("Received status > 0  (ErasefCmd)");
+		setDone(true);
 	}
 }
 
 // ----------------------------------------------------------------------------
 void ErasefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status == 0)
-			itsTBBackE->status = SUCCESS;
-
+	if (itsTBBackE->status_mask == 0) {
+		itsTBBackE->status_mask = TBB_SUCCESS;
+	}
 	clientport->send(*itsTBBackE);
 }
-
-// ----------------------------------------------------------------------------
-CmdTypes ErasefCmd::getCmdType()
-{
-	return(BoardCmd);
-}
-
-// ----------------------------------------------------------------------------
-uint32 ErasefCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool ErasefCmd::waitAck()
-{
-	return(true);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace

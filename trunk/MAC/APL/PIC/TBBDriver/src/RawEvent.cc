@@ -60,7 +60,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   if (size < OPCODE_LEN) return(GCFEvent::NOT_HANDLED);
   
 	
-  LOG_DEBUG(formatString("in RawEvent::F_DATAIN: Opcode=0x%08x",buf.opcode));
+  //LOG_DEBUG(formatString("in RawEvent::F_DATAIN: Opcode=0x%08x",buf.opcode));
  
   //
   // If no error, lookup buf.opcode number, else assign ACK_ERROR buf.event.signal number
@@ -81,7 +81,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   		buf.event.length = 8;
   		break;
 	 case TPSTOP:
-  		buf.event.signal = TP_RECORDACK;
+  		buf.event.signal = TP_STOPACK;
   		buf.event.length = 8;
   		break;
 	 case TPTRIGGER:

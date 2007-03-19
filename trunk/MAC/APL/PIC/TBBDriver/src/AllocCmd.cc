@@ -25,28 +25,27 @@
 #include <Common/LofarLogger.h>
 
 #include "AllocCmd.h"
-#include "DriverSettings.h"
 
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using namespace TBB;
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
-
+	
 //--Constructors for a AllocCmd object.----------------------------------------
-AllocCmd::AllocCmd():
-		itsBoardMask(0),itsBoardsMask(0),itsChannel(0)
+AllocCmd::AllocCmd(): itsStage(0),itsRcuStatus(0)
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPAllocEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE	= new TBBAllocackEvent();
 	
-	for(int boardnr = 0;boardnr < DriverSettings::instance()->maxBoards();boardnr++) { 
-		itsTBBackE->status[boardnr]	= 0;
+	for(int boardnr = 0;boardnr < TS->maxBoards();boardnr++) { 
+		itsTBBackE->status_mask[boardnr]	= 0;
 		itsChannelMask[boardnr]	= 0;
 	}
-	LOG_DEBUG_STR(formatString("AllocCmd construct"));
+	setWaitAck(true);
 }
 	  
 //--Destructor for AllocCmd.---------------------------------------------------
@@ -59,7 +58,9 @@ AllocCmd::~AllocCmd()
 // ----------------------------------------------------------------------------
 bool AllocCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_ALLOC)||(event.signal == TP_ALLOCACK)) {
+	if ((event.signal == TBB_ALLOC)
+		|| (event.signal == TP_ALLOCACK)
+		|| (event.signal == TP_SIZEACK)) {
 		return(true);
 	}
 	return(false);
@@ -68,144 +69,203 @@ bool AllocCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void AllocCmd::saveTbbEvent(GCFEvent& event)
 {
-	LOG_DEBUG_STR(formatString("AllocCmd savetbb"));
 	itsTBBE	= new TBBAllocEvent(event);
 	
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
+	// convert rcu-bitmask to tbb-channelmask
+	int32 board;
+	int32 channel;
+	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
+		if(itsTBBE->rcu_mask.test(rcunr)) {
+			TS->convertRcu2Ch(rcunr,&board,&channel);	
+			itsChannelMask[board] |= (1 << channel);
+		}
+	} 
+	
+	uint32 boardmask = 0;	
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (itsChannelMask[board] != 0) boardmask |= (1 << boardnr); 
 		
-	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
-		//
-		if (!(itsBoardsMask & (1 << boardnr))) 
-			itsTBBackE->status[boardnr] |= NO_BOARD;
-		
-		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr];
-		
-		for (int ch = 0; ch < 16; ch++) {
-			if (itsChannelMask[boardnr] & (1 << ch)) {
-				if (DriverSettings::instance()->getChStatus((ch + (boardnr * 16))) != 'F') {
-					itsTBBackE->status[boardnr] |= ALLOC_ERROR;
-				}		
-				else	
-					DriverSettings::instance()->setChSelected((ch + (boardnr * 16)),true);
-			}
-		} 		
-		
-		if (itsChannelMask[boardnr] != 0)
-			itsBoardMask |= (1 << boardnr);
+		if (TS->isBoardActive(boardnr)) {
 			
-		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | CHANNEL_SEL_ERROR);
-				
-		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
+			if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
+				itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_CHANNEL_SEL_ERROR);	
+			
+			for (int ch = 0; ch < 16; ch++) {
+				if (itsChannelMask[boardnr] & (1 << ch)) {
+					if (TS->getChState((ch + (boardnr * 16))) != 'F') {
+						itsTBBackE->status_mask[boardnr] |= TBB_ALLOC_ERROR;
+					}	else {	
+						TS->setChSelected((ch + (boardnr * 16)),true);
+						LOG_DEBUG_STR(formatString("Ch[%d] is selected",ch + (boardnr * 16)));
+					}
+				}
+			} 		
+		} else {
+			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		}
 		
-		if ((itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0)) {
-			if (!devideChannels(boardnr)) // calculate allocations
-				itsTBBackE->status[boardnr] |= ALLOC_ERROR;
-		}	
-		LOG_DEBUG_STR(formatString("AllocCmd savetbb bnr[%d], status[0x%08X]",boardnr,itsTBBackE->status[boardnr]));
+		if (itsTBBackE->status_mask[boardnr] != 0) {
+			LOG_DEBUG_STR(formatString("AllocCmd savetbb bnr[%d], status[0x%08X], channelmask[%08X]",
+														boardnr, itsTBBackE->status_mask[boardnr], itsChannelMask[boardnr]));
+		}
 	}
+	
+	setBoardMask(boardmask);
 		
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
+	// select first board to handle
+	nextBoardNr();
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPALLOC;
 	itsTPE->status			=	0;
 		
 	delete itsTBBE;	
-	LOG_DEBUG_STR(formatString("AllocCmd savetbb done"));
 }
 
 // ----------------------------------------------------------------------------
-bool AllocCmd::sendTpEvent(int32 boardnr, int32 channelnr)
+void AllocCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
+	if (itsTBBackE->status_mask[getBoardNr()] == 0) {
 	
-	// fill in calculated allocations
-	itsTPE->channel = ds->getChInputNr(channelnr);
-	itsTPE->pageaddr = ds->getChStartAddr(channelnr);
-	itsTPE->pagelength =	ds->getChPageSize(channelnr);
-	itsChannel = channelnr; // set active channel
-	
-	// send cmd if no errors
-	if 	(ds->boardPort(boardnr).isConnected() &&
-			(itsTBBackE->status[boardnr] == 0) && 
-			(ds->getChStatus(channelnr) == 'F')) {
-		
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-		LOG_DEBUG_STR(formatString("Sending Alloc to boardnr[%d], channel[%d]", 
-																boardnr,channelnr));
-	}
-	else 
-		itsTBBackE->status[boardnr] |= CMD_ERROR;
-	
-	return(sending);
-}
-
-// ----------------------------------------------------------------------------
-void AllocCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
-{
-	// in case of a time-out, set error mask
-	if (event.signal == F_TIMER) {
-		itsTBBackE->status[boardnr] |= COMM_ERROR;
-	}
-	else {
-		itsTPackE = new TPAllocackEvent(event);
-		
-		if ((itsTPackE->status > 0x0) && (itsTPackE->status < 0x6)) 
-			itsTBBackE->status[boardnr] |= (1 << (23 + itsTPackE->status));
-		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+		switch (itsStage) {
+			// stage 1, get board memory size
+			case 0: {
+				TPSizeEvent *sizeEvent = new TPSizeEvent();
+				sizeEvent->opcode	= TPSIZE;
+				sizeEvent->status	=	0;
+				TS->boardPort(getBoardNr()).send(*sizeEvent);
+				delete sizeEvent;
+			} break;
 			
-		if(itsTPackE->status == 0) 
-			DriverSettings::instance()->setChStatus(itsChannel, 'A'); 	 
+			// stage 2, allocate memory
+			case 1: {
+				itsRcuStatus = 0;
+				
+				// fill in calculated allocations
+				itsTPE->channel = TS->getChInputNr(getChannelNr());
+				itsTPE->pageaddr = TS->getChStartAddr(getChannelNr());
+				itsTPE->pagelength = TS->getChPageSize(getChannelNr());
 		
-		LOG_DEBUG_STR(formatString("Received AllocAck from boardnr[%d], status[0x%08X]", 
-																boardnr,itsTBBackE->status[boardnr]));
-		delete itsTPackE;
+				if (TS->getChState(getChannelNr()) != 'F')
+					itsRcuStatus |= TBB_RCU_NOT_FREE;
+		
+				// send cmd if no errors
+				if (itsRcuStatus == 0) {
+					TS->boardPort(getBoardNr()).send(*itsTPE);
+					LOG_DEBUG_STR(formatString("Sending Alloc to boardnr[%d], channel[%d]",getBoardNr(),getChannelNr()));
+				}
+			} break;
+			
+			default: {
+			} break;
+		}
+	}	
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+}
+
+// ----------------------------------------------------------------------------
+void AllocCmd::saveTpAckEvent(GCFEvent& event)
+{
+	switch (itsStage) {
+		// stage 1, get board memory size
+		case 0: {
+			// in case of a time-out, set error mask
+			if (event.signal == F_TIMER) {
+				itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
+			}	else {
+				TPSizeackEvent *sizeAckEvent = new TPSizeackEvent(event);
+		
+				if ((sizeAckEvent->status >= 0xF0) && (sizeAckEvent->status <= 0xF6)) 
+					itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (sizeAckEvent->status & 0x0F)));	
+		
+				TS->setMemorySize(getBoardNr(),sizeAckEvent->npages);
+				
+				if (!devideChannels(getBoardNr())) // calculate allocations
+					itsTBBackE->status_mask[getBoardNr()] |= TBB_ALLOC_ERROR;
+				
+				LOG_DEBUG_STR(formatString("Alloc-sizecmd: board[%d] status[0x%08X] pages[%u]", 
+											getBoardNr(), sizeAckEvent->status, sizeAckEvent->npages));
+				delete sizeAckEvent;
+			}
+			nextBoardNr();
+			
+			if (isDone()) {
+				setDone(false);
+				resetChannelNr(); 
+				nextChannelNr();
+				itsStage = 1;
+			}
+		} break;
+		
+		// stage 2, allocate memory
+		case 1: {
+			// in case of a time-out, set status mask
+			if (event.signal == F_TIMER) {
+				itsTBBackE->status_mask[getBoardNr()] |= TBB_RCU_COMM_ERROR;
+				itsRcuStatus |= TBB_TIMEOUT_ETH;
+				LOG_INFO_STR(formatString("F_TIMER AllocCmd DriverStatus[0x%08X], RcuStatus[0x%08X]",
+										 itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
+			}	else {
+				itsTPackE = new TPAllocackEvent(event);
+				
+				if (itsTPackE->status == 0) {
+					TS->setChState(getChannelNr(),'A');
+					//LOG_DEBUG_STR(formatString("channel %d is set to %c(A)",getChannelNr(),TS->getChState(getChannelNr())));
+				} else {
+					if ((itsTPackE->status > 0x0) && (itsTPackE->status < 0x6)) 
+						itsRcuStatus |= (1 << (23 + itsTPackE->status));
+		
+					if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
+						itsRcuStatus |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+				}	
+		
+				LOG_DEBUG_STR(formatString("Received AllocAck from boardnr[%d], status[0x%08X]", 
+											getBoardNr(),itsTPackE->status));
+				
+				delete itsTPackE;
+			}
+	
+			if (itsRcuStatus) TS->setChState(getChannelNr(), 'E');
+			TS->setChStatus(getChannelNr(),(uint16)(itsRcuStatus >> 16));
+	
+			if (itsRcuStatus || itsTBBackE->status_mask[getBoardNr()]) {
+				int32 rcu;
+				TS->convertCh2Rcu(getChannelNr(),&rcu);
+				LOG_INFO_STR(formatString("ERROR AllocCmd Rcu[%d], DriverStatus[0x%x], RcuStatus[0x%x]",
+										 rcu, itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
+			}
+	
+			itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
+			nextChannelNr();
+		} break;
+		
+		default: {
+		} break;
 	}
 }
+	
 
 // ----------------------------------------------------------------------------
 void AllocCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status[boardnr] == 0)
-			itsTBBackE->status[boardnr] = SUCCESS;
-		//LOG_DEBUG_STR(formatString("AllocCmd sendtbb bnr[%d]st[0x%08X]",boardnr,itsTBBackE->status[boardnr]));
+	int32 rcunr;
+	
+	itsTBBackE->rcu_mask.reset();
+	for (int32 channelnr = 0; channelnr < TS->maxChannels(); channelnr++) {
+		if (TS->getChStatus(channelnr)) {
+			TS->convertCh2Rcu(channelnr,&rcunr);
+			itsTBBackE->rcu_mask.set(rcunr);
+		}
+		//LOG_DEBUG_STR(formatString("channel %d is set to %c",channelnr,TS->getChState(channelnr)));
+	}
+	
+	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status_mask[boardnr] == 0)
+			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 	
 	clientport->send(*itsTBBackE);
-}
-
-// ----------------------------------------------------------------------------
-uint32 AllocCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-uint32 AllocCmd::getChannelMask(int32 boardnr)
-{
-	return(itsChannelMask[boardnr]);
-}
-
-// ----------------------------------------------------------------------------
-bool AllocCmd::waitAck()
-{
-	return(true);
-}
-
-// ----------------------------------------------------------------------------
-CmdTypes AllocCmd::getCmdType()
-{
-	return(ChannelCmd);
+	
 }
 
 // ----------------------------------------------------------------------------
@@ -221,154 +281,127 @@ uint32 getNrOfBits(uint32 mask)
 // ----------------------------------------------------------------------------
 bool AllocCmd::devideChannels(int32 boardnr)
 {
-	bool board_free = true;
+	struct sMP {
+		uint32 addr;
+		uint32 channels;
+		uint32 usedSize;
+	};
+	
+	// for 400 MHz mode there is only one ring, for 800 MHz there are 2 rings
+	uint32 rings = 1; // usefull rings for dataflow between MP's
 	bool success = false;
-	uint32 channels;
-	uint32 memorysize;
-	uint32 channelsize;
-	uint32 channeladdr[16];
-	uint32 channelmask;
-	uint32 addr;
-	uint32 mp0ch;
-	uint32 mp1ch;
-	uint32 mp2ch;
-	uint32 mp3ch;
+	uint32 totalChannels;
+	uint32 totalMemorySize;
+	uint32 mpMemorySize;
+	uint32 channelMemorySize;
+	uint32 channelAddr[16];
+	uint32 channelMask;
+	sMP		mp[4];
 		
-	channelmask = itsChannelMask[boardnr];
-	memorysize = DriverSettings::instance()->getMemorySize(boardnr);
-	channels = getNrOfBits(channelmask);
-	channelsize = memorysize / channels;
-	mp0ch = getNrOfBits((itsChannelMask[boardnr] & 0x000F));
-	mp1ch = getNrOfBits((itsChannelMask[boardnr] & 0x00F0));
-	mp2ch = getNrOfBits((itsChannelMask[boardnr] & 0x0F00));
-	mp3ch = getNrOfBits((itsChannelMask[boardnr] & 0xF000));
-	addr = 0;
-	
-	
-	// check if all board inputs are free
-	for (int32 ch = 0; ch < DriverSettings::instance()->nrChannelsPerBoard(); ch++) {
-		if (DriverSettings::instance()->getChStatus(ch + (boardnr * 16)) != 'F')
-			board_free = false;
+	channelMask = itsChannelMask[boardnr];
+	totalMemorySize = TS->getMemorySize(boardnr);
+	mpMemorySize = totalMemorySize / 4;
+	totalChannels = getNrOfBits(channelMask);
+
+	if (totalMemorySize == 0) return (false);
+		
+	// check if all board inputs are free, if not exit
+	for (int32 ch = 0; ch < TS->nrChannelsOnBoard(); ch++) {
+		if (TS->getChState(ch + (boardnr * 16)) != 'F')
+			return (false);
 	}
+
 	
-	if (board_free) {
-	success = true;
-	switch (channels) {
-		case 1: {
-			
-			for (int32 ch = 0; ch < 16; ch++) {
-				if (itsChannelMask[boardnr] & (1 << ch)) {
-					channeladdr[ch] = addr;
-					addr += channelsize;
-				}
-			}			
+	// setup mp struct
+	for (int i = 0; i < 4; i++) {
+		mp[i].addr = i * mpMemorySize;
+		uint32 mpChannelMask = itsChannelMask[boardnr] & (0x000F << (i * 4));
+		mp[i].channels = getNrOfBits(mpChannelMask);
+		mp[i].usedSize = 0;
+	}
+
+	
+	// check if channel request is valid
+	switch (totalChannels) {
+		case 1:
+		case 2:
+		case 16: 
+		{
+			success = true;
 		} break;
 		
+		case 4:
+		case 8:
+		{
+			if ((mp[0].channels <= 2) ||
+					(mp[1].channels <= 2) || 
+					(mp[2].channels <= 2) || 
+					(mp[3].channels <= 2)) {
+				success = true;
+			}
+		} break;
+	
+		default : {
+			success = false;
+		} break;
+	}
+	// if not a valid request exit
+	if (!success) return (false);		
+
+
+	// calculate channelsize
+	switch (totalChannels) {
 		case 2: {
-			for (int32 ch = 0; ch < 16; ch++) {
-				if (itsChannelMask[boardnr] & (1 << ch)) {
-					channeladdr[ch] = addr;
-					addr += channelsize;
-				}
+			
+			if (rings == 2) {
+				channelMemorySize = totalMemorySize / 2;
+			} else {
+				channelMemorySize = totalMemorySize / 4; 
 			}
 		} break;
 		
 		case 4: {
-			//only 2 memory lane's, max 2 channels per Mp
-			if ((mp0ch > 2) || (mp1ch > 2) || (mp2ch > 2) || (mp3ch > 2)) {
-				success = false;
-				break;
-			}
-							
-			if (((mp0ch == 2) && (mp1ch == 2)) || ((mp2ch == 2) && (mp3ch == 2)) ||
-				   (mp0ch == 1) || (mp1ch == 1) || (mp2ch = 1) || (mp3ch == 1)){
-				// divide order mp0;mp1;mp0;mp1 || mp2;mp3;mp2;mp3 enz.
-				while (channelmask) {
-					for (int32 ch = 0; ch < 4; ch++) {
-						if (channelmask & (1 << ch)) {
-							channelmask &= ~(1 << ch);
-							channeladdr[ch] = addr;
-							addr += channelsize;
-							ch = 4; // break;								
-						}
-					}
-					for (int32 ch = 4; ch < 8; ch++) {
-						if (channelmask & (1 << ch)) {
-							channelmask &= ~(1 << ch);
-							channeladdr[ch] = addr;
-							addr += channelsize;
-							ch = 8;	// break;							
-						}
-					}
-					for (int32 ch = 8; ch < 12; ch++) {
-						if (channelmask & (1 << ch)) {
-							channelmask &= ~(1 << ch);
-							channeladdr[ch] = addr;
-							addr += channelsize;
-							ch = 12;	// break;							
-						}
-					}
-					for (int32 ch = 12; ch < 16; ch++) {
-						if (channelmask & (1 << ch)) {
-							channelmask &= ~(1 << ch);
-							channeladdr[ch] = addr;
-							addr += channelsize;
-							ch = 16;	// break;							
-						}
-					}
-				}
-			}
-			else {
-				// divide order firt mp; second mp	
-				for (int32 ch = 0; ch < 16; ch++) {
-					if (itsChannelMask[boardnr] & (1 << ch)) {
-						channeladdr[ch] = addr;
-						addr += channelsize;
-					}
-				}
+			if ((rings == 2) ||
+					(mp[0].channels == 1) || 
+					(mp[1].channels == 1) || 
+					(mp[2].channels == 1) || 
+					(mp[3].channels == 1)) {
+				channelMemorySize = totalMemorySize / 4;
+			} else {
+				channelMemorySize = totalMemorySize / 8; 
 			}
 		} break;
-		
-		case 8: {
-			if ((mp0ch > 2) || (mp1ch > 2) || (mp2ch > 2) || (mp3ch > 2)) {
-				success = false;
-				break;
-			}
-			for (int32 ch = 0; ch < 16; ch++) {
-				if (itsChannelMask[boardnr] & (1 << ch)) {
-					channeladdr[ch] = addr;
-					addr += channelsize;
-				}
-			}
-		} break;
-		
+
+		case 1:
+		case 8:
 		case 16: {
-			for (int32 ch = 0; ch < 16; ch++) {
-				if (itsChannelMask[boardnr] & (1 << ch)) {
-					channeladdr[ch] = addr;
-					addr += channelsize;
-				}
-			}
+			channelMemorySize = totalMemorySize / totalChannels;
 		} break;
 		
 		default: {
-			success = false;
 		}	break;
 	}
 	
-	if (success) {	// save to DriverSettings
-		for (int32 ch = 0; ch < 16; ch++) {
-			if (DriverSettings::instance()->getChSelected(ch + (boardnr * 16))) {
-				DriverSettings::instance()->setChStartAddr((ch + (boardnr * 16)), channeladdr[ch]);
-				DriverSettings::instance()->setChPageSize((ch + (boardnr * 16)), channelsize);		
+	uint32 mpNr;
+	for (int32 ch = 0; ch < 16; ch++) {
+		if (itsChannelMask[boardnr] & (1 << ch)) {
+			mpNr = ch / 4;
+			while (mp[mpNr].usedSize == mpMemorySize) {
+				mpNr += rings;
+				if (mpNr >= 4) mpNr -= 4;
 			}
+			channelAddr[ch] = mp[mpNr].addr + mp[mpNr].usedSize;
+			mp[mpNr].usedSize += channelMemorySize;
 		}
-	}
+	}	
+	    	
+	for (int32 ch = 0; ch < 16; ch++) {
+		if (TS->isChSelected(ch + (boardnr * 16))) {
+			TS->setChStartAddr((ch + (boardnr * 16)), channelAddr[ch]);
+			TS->setChPageSize((ch + (boardnr * 16)), channelMemorySize);		
+		}
+		//LOG_DEBUG_STR(formatString("channel %d = addr[%d] size[%d]",ch,channelAddr[ch],channelMemorySize));
 	}
 	
-	return(success);
+	return(true);
 }
-
-
-	} // end TBB namespace
-} // end LOFAR namespace

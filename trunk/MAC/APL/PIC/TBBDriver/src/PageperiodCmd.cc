@@ -24,21 +24,22 @@
 #include <Common/LofarLogger.h>
 
 #include "PageperiodCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using namespace TBB;
 
 //--Constructors for a PageperiodCmd object.----------------------------------------
 PageperiodCmd::PageperiodCmd():
-		itsBoardMask(0),itsBoardsMask(0),itsBoardStatus(0)
+		itsBoardStatus(0)
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPPageperiodEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBPageperiodackEvent();
+	setWaitAck(true);
 }
 	  
 //--Destructor for PageperiodCmd.---------------------------------------------------
@@ -60,48 +61,37 @@ bool PageperiodCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void PageperiodCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBPageperiodEvent(event);
-		
-	itsBoardMask = (1 << DriverSettings::instance()->getChBoardNr((int32)itsTBBE->channel));
+	itsTBBE = new TBBPageperiodEvent(event);
 	
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
+	int32 boardnr;
+	int32 channelnr;
+	TS->convertRcu2Ch(itsTBBE->channel,&boardnr,&channelnr);
 		
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
-	
-	itsTBBackE->status = 0;
+	setBoardNr(boardnr);
+			
+	itsTBBackE->status_mask = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPPAGEPERIOD;
 	itsTPE->status			=	0;
-	itsTPE->channel 		= itsTBBE->channel; 
+	itsTPE->channel 		= channelnr; 
 	
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-bool PageperiodCmd::sendTpEvent(int32 boardnr, int32)
+void PageperiodCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	if (ds->boardPort(boardnr).isConnected()) {
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-	}
-	else 
-		itsTBBackE->status |= CMD_ERROR;
-	
-	return(sending);
+	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void PageperiodCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void PageperiodCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPPageperiodackEvent(event);
@@ -109,37 +99,17 @@ void PageperiodCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 		itsBoardStatus 					= itsTPackE->status;
 		itsTBBackE->pageperiod	= itsTPackE->pageperiod;
 		
-		LOG_DEBUG_STR(formatString("Received PageperiodAck from boardnr[%d]", boardnr));
+		LOG_DEBUG_STR(formatString("Received PageperiodAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
 	}
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------
 void PageperiodCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status == 0)
-			itsTBBackE->status = SUCCESS;
+	if (itsTBBackE->status_mask == 0)
+			itsTBBackE->status_mask = TBB_SUCCESS;
 	 
 	clientport->send(*itsTBBackE);
 }
-
-// ----------------------------------------------------------------------------
-CmdTypes PageperiodCmd::getCmdType()
-{
-	return(ChannelCmd);
-}
-
-// ----------------------------------------------------------------------------
-uint32 PageperiodCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool PageperiodCmd::waitAck()
-{
-	return(true);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace

@@ -24,22 +24,22 @@
 #include <Common/LofarLogger.h>
 
 #include "WritewCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
 
 //--Constructors for a WritewCmd object.----------------------------------------
 WritewCmd::WritewCmd():
-		itsBoardMask(0),itsBoardsMask(0),itsBoardStatus(0),
-		itsMp(0),itsAddr(0),itsWordLo(0),itsWordHi(0)
+		itsBoardStatus(0)		
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPWritewEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBWritewackEvent();
+	setWaitAck(true);
 }
 	  
 //--Destructor for WritewCmd.---------------------------------------------------
@@ -61,22 +61,16 @@ bool WritewCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void WritewCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBWritewEvent(event);
+	itsTBBE	= new TBBWritewEvent(event);
 		
-	itsBoardMask = (1 << itsTBBE->board);
+	setBoardNr(itsTBBE->board);
 	
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
-	
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
-	
-	itsTBBackE->status = 0;
+	itsTBBackE->status_mask = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPWRITEW;
 	itsTPE->status	= 0;
-	itsTPE->mp			=	itsTBBE->mp;
+	itsTPE->mp			=	static_cast<uint32>(itsTBBE->mp);
 	itsTPE->addr		=	itsTBBE->addr;
 	itsTPE->wordlo	= itsTBBE->wordlo;
 	itsTPE->wordhi	= itsTBBE->wordhi;
@@ -85,65 +79,35 @@ void WritewCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-bool WritewCmd::sendTpEvent(int32 boardnr, int32)
+void WritewCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	if (ds->boardPort(boardnr).isConnected()) {
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-	}
-	else
-		itsTBBackE->status |= CMD_ERROR;
-		
-	return(sending);
+	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void WritewCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void WritewCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPWritewackEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
 				
-		LOG_DEBUG_STR(formatString("Received WritewAck from boardnr[%d]", boardnr));
+		LOG_DEBUG_STR(formatString("Received WritewAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
 	}
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------
 void WritewCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status == 0)
-			itsTBBackE->status = SUCCESS;
+	if (itsTBBackE->status_mask == 0)
+			itsTBBackE->status_mask = TBB_SUCCESS;
 
 	clientport->send(*itsTBBackE);
 }
-
-// ----------------------------------------------------------------------------
-CmdTypes WritewCmd::getCmdType()
-{
-	return(BoardCmd);
-}
-
-// ----------------------------------------------------------------------------
-uint32 WritewCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool WritewCmd::waitAck()
-{
-	return(true);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace

@@ -32,11 +32,14 @@
 #include "TP_Protocol.ph"
 
 #include "Command.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
-
+		
+		enum flashStage {idle, erase_flash, write_flash, verify_flash, write_info, verify_info};
+		
 		class WritefCmd : public Command 
 		{
 			public:
@@ -50,26 +53,35 @@ namespace LOFAR {
 				
 				virtual void saveTbbEvent(GCFEvent& event);
 									
-				virtual bool sendTpEvent(int32 boardnr, int32 channelnr);
+				virtual void sendTpEvent();
 
-				virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr);
+				virtual void saveTpAckEvent(GCFEvent& event);
 
 				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-				
-				virtual uint32 getBoardMask();
-				
-				virtual bool waitAck();
-				
-				virtual CmdTypes getCmdType();
-      
+	
+				void readFiles();
+							
+				uint8 charToHex(int ch);
+				      
 			private:
-				uint32	itsBoardMask;  // mask indicates the boards to communicate with
-				uint32	itsBoardsMask;	// Installed boards mask
+				TbbSettings *TS;
 				
-				TPWritefEvent			*itsTPE;
-				TPWritefackEvent	*itsTPackE;
-				TBBWritefEvent		*itsTBBE;
-				TBBWritefackEvent	*itsTBBackE;
+				flashStage	itsStage;
+				
+				int32		itsImage;
+				int32		itsSector;
+				int32		itsBlock;
+				int32		itsImageSize;
+				char		itsFileNameTp[64];
+				char		itsFileNameMp[64];
+				
+								
+				TPWritefEvent					*itsTPE;
+				TPWritefackEvent			*itsTPackE;
+				TBBWriteImageEvent		*itsTBBE;
+				TBBWriteImageAckEvent	*itsTBBackE;
+				uint8									*itsImageData;
+				
 				
 				// variables holding data from tp cmd
 				uint32	itsBoardStatus;

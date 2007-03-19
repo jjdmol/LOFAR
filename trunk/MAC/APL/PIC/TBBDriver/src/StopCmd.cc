@@ -24,26 +24,27 @@
 #include <Common/LofarLogger.h>
 
 #include "StopCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
 
 //--Constructors for a StopCmd object.----------------------------------------
 StopCmd::StopCmd():
-		itsBoardMask(0),itsBoardsMask(0),itsChannel(0)
+		itsRcuStatus(0)
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPStopEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBStopackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsTBBackE->status[boardnr]	= 0;
+		itsTBBackE->status_mask[boardnr]	= 0;
 		itsChannelMask[boardnr]	= 0;
-	}		
+	}
+	setWaitAck(true);		
 }
 	  
 //--Destructor for StopCmd.---------------------------------------------------
@@ -65,31 +66,40 @@ bool StopCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void StopCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBStopEvent(event);
+	itsTBBE	= new TBBStopEvent(event);
 		
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
-		
-	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
-		
-		if (!(itsBoardsMask & (1 << boardnr))) 
-			itsTBBackE->status[boardnr] |= NO_BOARD;
-		
-		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr]; 		
-		
-		if (itsChannelMask[boardnr] != 0)
-			itsBoardMask |= (1 << boardnr);
-			
-		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | CHANNEL_SEL_ERROR);
-				
-		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
-		LOG_DEBUG_STR(formatString("StopCmd savetbb boardnr[%d], status[0x%x]",boardnr, itsTBBackE->status[boardnr]));
-	}
+	// convert rcu-bitmask to tbb-channelmask
+	int boardnr;
+	int channelnr;
+	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
+		if(itsTBBE->rcu_mask.test(rcunr)) {
+			TS->convertRcu2Ch(rcunr,&boardnr,&channelnr);	
+			itsChannelMask[boardnr] |= (1 << channelnr);
+		}
+	} 
 	
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
+	uint32 boardmask = 0;		
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr); 
+			
+		if (!TS->isBoardActive(boardnr)) { 
+			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		}
+		
+		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) {
+			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_CHANNEL_SEL_ERROR);
+		}
+		
+		if (!TS->isBoardActive(boardnr) &&  (itsChannelMask[boardnr] != 0)) {
+			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_BOARD_SEL_ERROR);
+		}
+		LOG_DEBUG_STR(formatString("StopCmd savetbb boardnr[%d], status[0x%x]",boardnr, itsTBBackE->status_mask[boardnr]));
+	}
+		
+	setBoardMask(boardmask);
+	
+	// select firt channel to handle
+	nextChannelNr();
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPSTOP;
@@ -99,80 +109,77 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-bool StopCmd::sendTpEvent(int32 boardnr, int32 channelnr)
+void StopCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	itsTPE->channel = DriverSettings::instance()->getChInputNr(channelnr);
-	itsChannel = channelnr;
-	
-	if	(ds->boardPort(boardnr).isConnected() &&
-			(itsTBBackE->status[boardnr] == 0) &&
-			(DriverSettings::instance()->getChStatus(channelnr) == 'R')) {
+	itsRcuStatus = 0;
 		
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
+	itsTPE->channel = TS->getChInputNr(getChannelNr());
+	
+	if (TS->getChState(getChannelNr()) != 'R') {
+		itsRcuStatus |= TBB_RCU_NOT_RECORDING;
 	}
-	else
-		itsTBBackE->status[boardnr] |= CMD_ERROR;
-		
-	LOG_DEBUG_STR(formatString("StopCmd sendtp boardnr[%d], status[0x%x]",boardnr, itsTBBackE->status[boardnr]));
-	return(sending);
+	
+	if ((itsTBBackE->status_mask[getBoardNr()] == 0) && (itsRcuStatus == 0)) {
+		TS->boardPort(getBoardNr()).send(*itsTPE);
+		TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+		LOG_DEBUG_STR(formatString("Sending StopCmd to boardnr[%d], channel[%08X]", getBoardNr(), itsTPE->channel));
+	}
 }
 
 // ----------------------------------------------------------------------------
-void StopCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void StopCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status[boardnr] |= COMM_ERROR;
+		itsTBBackE->status_mask[getBoardNr()] |= TBB_RCU_COMM_ERROR;
+		itsRcuStatus |= TBB_TIMEOUT_ETH;
 	}
 	else {
 		itsTPackE = new TPStopackEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));
+			itsRcuStatus |= (1 << (16 + (itsTPackE->status & 0x0F)));
 		
-		if (itsTPackE->status == 0)
-			DriverSettings::instance()->setChStatus(itsChannel, 'S'); 	
+		if ((itsTPackE->status == 0) && (itsRcuStatus == 0))
+			TS->setChState(getChannelNr(), 'S'); 	
 		
-		LOG_DEBUG_STR(formatString("StopCmd savetp boardnr[%d], status[0x%x]",boardnr, itsTBBackE->status[boardnr]));
-		LOG_DEBUG_STR(formatString("Received StopAck from boardnr[%d]", boardnr));
+		LOG_DEBUG_STR(formatString("Received StopCmd savetp boardnr[%d], status[0x%x]",
+			getBoardNr(), itsTBBackE->status_mask[getBoardNr()]));
 		delete itsTPackE;
 	}
+	
+	if (itsRcuStatus) TS->setChState(getChannelNr(), 'E');
+	TS->setChStatus(getChannelNr(),(uint16)(itsRcuStatus >> 16));
+	
+	if (itsRcuStatus || itsTBBackE->status_mask[getBoardNr()]) {
+		int32 rcu;
+		TS->convertCh2Rcu(getChannelNr(),&rcu);
+		LOG_INFO_STR(formatString("ERROR StopCmd Rcu[%d], DriverStatus[0x%x], RcuStatus[0x%x]",
+			rcu, itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
+	}
+	itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
+	nextChannelNr();
 }
 
 // ----------------------------------------------------------------------------
 void StopCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status[boardnr] == 0)
-			itsTBBackE->status[boardnr] = SUCCESS;
-		LOG_DEBUG_STR(formatString("StopCmd sendtbb status[0x%x]", itsTBBackE->status[boardnr]));		
+	int32 rcunr;
+	
+	itsTBBackE->rcu_mask.reset();
+	for (int32 channelnr = 0; channelnr < TS->maxChannels(); channelnr++) {
+		if (TS->getChStatus(channelnr)) {
+			TS->convertCh2Rcu(channelnr,&rcunr);
+			itsTBBackE->rcu_mask.set(rcunr);
+		}
+	}
+	
+	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status_mask[boardnr] == 0)
+			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
+		LOG_DEBUG_STR(formatString("StopCmd sendtbb status[0x%x]", itsTBBackE->status_mask[boardnr]));		
 	}
 	
 	clientport->send(*itsTBBackE);
 }
 
-// ----------------------------------------------------------------------------
-uint32 StopCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-CmdTypes StopCmd::getCmdType()
-{
-	return(ChannelCmd);
-}
-
-// ----------------------------------------------------------------------------
-bool StopCmd::waitAck()
-{
-	return(true);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace
