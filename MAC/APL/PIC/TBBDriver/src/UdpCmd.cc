@@ -22,27 +22,152 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <netinet/in.h>
+#include <net/ethernet.h>
 
 #include "UdpCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using namespace TBB;
+
+static const uint16 BASEUDPPORT = 0x10FA; // (=4346) start numbering src and dst UDP ports at this number (4346)
+static const uint16 TRANSIENT_FRAME_SIZE = 2140; // bytes, header(88) + payload(2048) + CRC(4)
+static const uint16 SUBBANDS_FRAME_SIZE = 2012;  // bytes, header(88) + payload(1920) + CRC(4)
+
+void UdpCmd::string2mac(const char* macstring, uint32 mac[2])
+{
+  unsigned int hx[ETH_ALEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+  sscanf(macstring, "%x:%x:%x:%x:%x:%x", &hx[5], &hx[4], &hx[3], &hx[2], &hx[1], &hx[0]);
+   
+  mac[0]	= ((hx[0] & 0xFF))
+  				+ ((hx[1] & 0xFF) << 8)
+  				+ ((hx[2] & 0xFF) << 16)
+  				+ ((hx[3] & 0xFF) << 24);  
+  
+  mac[1] 	= ((hx[4] & 0xFF)) 
+  				+ ((hx[5] & 0xFF) << 8);
+}
+
+uint32 UdpCmd::string2ip(const char* ipstring)
+{
+  uint32 result;
+  unsigned int hx[sizeof(uint32)] = { 0x00, 0x00, 0x00, 0x00 };
+
+  sscanf(ipstring, "%d.%d.%d.%d", &hx[3], &hx[2], &hx[1], &hx[0]);
+
+  result	= ((hx[0] & 0xFF))
+    			+ ((hx[1] & 0xFF) << 8)
+    			+ ((hx[2] & 0xFF) << 16) 
+    			+ ((hx[3] & 0xFF) << 24);
+
+  return result;
+}
+
+void UdpCmd::setup_udpip_header(uint32 boardnr, uint32 ip_hdr[6], uint32 udp_hdr[2])
+{
+  uint32 iphdr[6];
+  uint32 udphdr[2];
+  
+  uint32 ip_hdr_size = sizeof(iphdr); // bytes
+  uint32 udp_hdr_size = sizeof(udphdr); // bytes
+   
+  uint32 data_size = 0;
+  
+  if (itsMode == TBB_MODE_TRANSIENT) data_size = TRANSIENT_FRAME_SIZE;
+  if (itsMode == TBB_MODE_SUBBANDS) data_size = SUBBANDS_FRAME_SIZE;	
+    
+  // IP header values
+  uint32 version 					= 4; // IPv4
+  uint32 ihl 							= 6; // 6 x uint32
+  uint32 tos							= 0;
+  uint32 total_length			= ip_hdr_size + udp_hdr_size + data_size;
+  uint32 identification		= 0;	
+  uint32 flags_offset			= 0x2 << 13;
+  uint32 ttl							= 128;
+  uint32 protocol					= 0x11;
+  uint32 header_checksum	= 0; // set to zero for checksum calculation
+  uint32 src_ip_address		= string2ip(TS->getSrcIp(boardnr).c_str());
+  uint32 dst_ip_address 	= string2ip(TS->getDstIp(boardnr).c_str());   
+  uint32 options					= 0; // no options
+  // UDP header values  	
+  uint32 src_udp_port			= BASEUDPPORT + boardnr;
+  uint32 dst_udp_port			= BASEUDPPORT + boardnr;
+  uint32 length						= udp_hdr_size + data_size;
+	uint32 checksum					= 0; // disable checksum
+
+	// put all ip settings on the correct place
+	iphdr[0] = ((version & 0xF) << 28)
+						+ ((ihl & 0xF) << 24) 
+						+ ((tos & 0xFF) << 16) 
+						+ (total_length & 0xFFFF);
+	iphdr[1] = ((identification & 0xFFFF) << 16) 
+						+ (flags_offset & 0xFFFF);
+	iphdr[2] = ((ttl & 0xFF) << 24) 
+						+ ((protocol & 0xFF) << 16) 
+						+ (header_checksum & 0xFFFF);
+	iphdr[3] = src_ip_address;
+	iphdr[4] = dst_ip_address;
+	iphdr[5] = options;
+	
+	// compute header checksum
+  header_checksum = compute_ip_checksum(&iphdr, 24); //sizeof(ip_hdr));
+	iphdr[2] += (uint32)(header_checksum & 0xFFFF); // add checksum
+	//LOG_DEBUG_STR(formatString("Checksum = 0x%08X", header_checksum));
+		
+	// put all udp settings on the correct place
+	udphdr[0] 	= ((src_udp_port & 0xFFFF) << 16) 
+							+  (dst_udp_port & 0XFFFF);
+	udphdr[1] 	= ((length & 0xFFFF) << 16) 
+							+  (checksum & 0xFFFF);
+	
+	for (int i = 0; i < 6; i++) { 
+		ip_hdr[i] = iphdr[i];
+	}
+	for (int i = 0; i < 2; i++) { 
+		udp_hdr[i] = udphdr[i];
+	}
+}
+
+uint16 UdpCmd::compute_ip_checksum(void* addr, int count)
+{
+  // Compute Internet Checksum for "count" bytes
+  // beginning at location "addr".
+  
+  register long sum = 0;
+
+  uint16* addr16 = (uint16*)addr;
+  while( count > 1 )  {
+    //  This is the inner loop 
+    sum += *addr16++;
+    count -= 2;
+  }
+
+  //  Add left-over byte, if any 
+  if( count > 0 )
+    sum += * (uint8 *) addr16;
+
+  //  Fold 32-bit sum to 16 bits 
+  while (sum>>16)
+    sum = (sum & 0xffff) + (sum >> 16);
+
+  return ~sum;
+}
 
 //--Constructors for a UdpCmd object.----------------------------------------
 UdpCmd::UdpCmd():
-		itsBoardMask(0),itsBoardsMask(0)
+		itsMode(0)
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPUdpEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBUdpackEvent();
+	itsTBBackE 	= new TBBModeackEvent();
 	
-	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsTBBackE->status[boardnr]	= 0;
-	}		
+	itsTBBackE->status_mask	= 0;
+	setWaitAck(true);	
 }
 	  
 //--Destructor for UdpCmd.---------------------------------------------------
@@ -55,7 +180,7 @@ UdpCmd::~UdpCmd()
 // ----------------------------------------------------------------------------
 bool UdpCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_UDP)||(event.signal == TP_UDPACK)) {
+	if ((event.signal == TBB_MODE)||(event.signal == TP_UDPACK)) {
 		return(true);
 	}
 	return(false);
@@ -64,96 +189,70 @@ bool UdpCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void UdpCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBUdpEvent(event);
+	itsTBBE	= new TBBModeEvent(event);
 	
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
-	itsBoardMask = itsTBBE->boardmask; 
+	setBoardNr(itsTBBE->board);
 		
-	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
-		
-		if (!(itsBoardsMask & (1 << boardnr))) 
-			itsTBBackE->status[boardnr] |= NO_BOARD;
-				
-		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
-	}
+	if (TS->isBoardActive(getBoardNr()) == false)
+		itsTBBackE->status_mask |= TBB_NO_BOARD;
 
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
+	itsMode = itsTBBE->rec_mode;
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPUDP;
 	itsTPE->status	=	0;
-	itsTPE->udp[0]	= itsTBBE->udp[0];
-	itsTPE->udp[1]	= itsTBBE->udp[1];
-	itsTPE->ip[0]		= itsTBBE->ip[0];
-	itsTPE->ip[1]		= itsTBBE->ip[1];
-	itsTPE->ip[2]	 	= itsTBBE->ip[2];
-	itsTPE->ip[3]	 	= itsTBBE->ip[3];
-	itsTPE->ip[4]	 	= itsTBBE->ip[4];
-	itsTPE->mac[0]	= itsTBBE->mac[0];
-	itsTPE->mac[1]	= itsTBBE->mac[1];
-	
+		
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-bool UdpCmd::sendTpEvent(int32 boardnr, int32)
+void UdpCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	if (ds->boardPort(boardnr).isConnected() && (itsTBBackE->status[boardnr] == 0)) {
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
+	// fill in destination mac address
+	string2mac(TS->getDstMac(getBoardNr()).c_str(),itsTPE->mac);
+	for ( int i = 0; i < 2; i++) {
+		LOG_DEBUG_STR(formatString("MAC[%d]= 0x%08X", i, itsTPE->mac[i]));
+	}		
+	// fill in udp-ip header
+	setup_udpip_header(getBoardNr(), itsTPE->ip, itsTPE->udp);
+	for ( int i = 0; i < 6; i++) {
+		LOG_DEBUG_STR(formatString("IP[%d]= 0x%08X", i, itsTPE->ip[i]));
 	}
-	else
-		itsTBBackE->status[boardnr] |= CMD_ERROR;
+	for ( int i = 0; i < 2; i++) {
+		LOG_DEBUG_STR(formatString("UDP[%d]= 0x%08X", i, itsTPE->udp[i]));
+	}
 	
-	return(sending);
+	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void UdpCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void UdpCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status[boardnr] |= COMM_ERROR;
+		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPUdpackEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));
+			itsTBBackE->status_mask |= (1 << (16 + (itsTPackE->status & 0x0F)));
 		
-		LOG_DEBUG_STR(formatString("Received UdpAck from boardnr[%d]", boardnr));
+		LOG_DEBUG_STR(formatString("Received UdpAck from boardnr[%d], status[0x%08X]", 
+									getBoardNr(), itsTPackE->status));
 		delete itsTPackE;
 	}
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------
 void UdpCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status[boardnr] == 0)
-			itsTBBackE->status[boardnr] = SUCCESS;
-	}
+	if (itsTBBackE->status_mask == 0)
+		itsTBBackE->status_mask = TBB_SUCCESS;
 
 	clientport->send(*itsTBBackE);
-}
-
-// ----------------------------------------------------------------------------
-CmdTypes UdpCmd::getCmdType()
-{
-	return(BoardCmd);
-}
-
-// ----------------------------------------------------------------------------
-uint32 UdpCmd::getBoardMask()
-{
-	return(itsBoardMask);
 }
 
 // ----------------------------------------------------------------------------
@@ -161,6 +260,3 @@ bool UdpCmd::waitAck()
 {
 	return(true);
 }
-
-	} // end TBB namespace
-} // end LOFAR namespace

@@ -24,25 +24,25 @@
 #include <Common/LofarLogger.h>
 
 #include "ResetCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
 
 //--Constructors for a ResetCmd object.----------------------------------------
-ResetCmd::ResetCmd():
-		itsBoardMask(0),itsBoardsMask(0)
+ResetCmd::ResetCmd()
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPResetEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBResetackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsTBBackE->status[boardnr]	= 0;
-	}		
+		itsTBBackE->status_mask[boardnr]	= 0;
+	}
+	setWaitAck(false);		
 }
 	  
 //--Destructor for ResetCmd.---------------------------------------------------
@@ -64,42 +64,37 @@ bool ResetCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ResetCmd::saveTbbEvent(GCFEvent& event)
 {
-	DriverSettings*		ds = DriverSettings::instance();
-	itsTBBE 			= new TBBResetEvent(event);
+	itsTBBE	= new TBBResetEvent(event);
 	itsTPE->opcode			= TPRESET;
 	itsTPE->status			=	0;
 		
-	itsBoardMask = itsTBBE->boardmask;
-	
-	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
-		if (itsBoardMask & (1 << boardnr)) {
-			if (ds->boardPort(boardnr).isConnected())
-				ds->boardPort(boardnr).send(*itsTPE);
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (itsTBBE->boardmask & (1 << boardnr)) {
+			if (TS->boardPort(boardnr).isConnected())
+				TS->boardPort(boardnr).send(*itsTPE);
 			
 			// reset channel information for selected board	
 			for (int channelnr = (boardnr * 16); channelnr < ((boardnr * 16) + 16); channelnr++) {
-				DriverSettings::instance()->setChSelected(channelnr, false);
-				DriverSettings::instance()->setChStatus(channelnr, 'F');
-				DriverSettings::instance()->setChStartAddr(channelnr, 0);
-				DriverSettings::instance()->setChPageSize(channelnr, 0);				
+				TS->setChSelected(channelnr, false);
+				TS->setChState(channelnr, 'F');
+				TS->setChStartAddr(channelnr, 0);
+				TS->setChPageSize(channelnr, 0);				
 			}
 		} 
 	}
-	
 	delete itsTBBE;	
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------
-bool ResetCmd::sendTpEvent(int32 boardnr, int32)
+void ResetCmd::sendTpEvent()
 {
-	bool sending = false;
 	// sending reset is done in saveTbbEvent()
 	// because sendTpEvent() is only posible for active boards
-	return(sending);
 }
 
 // ----------------------------------------------------------------------------
-void ResetCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void ResetCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
@@ -108,10 +103,6 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 	else {
 		itsTPackE = new TPResetackEvent(event);
 		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
-		
-		LOG_DEBUG_STR(formatString("Received ResetAck from boardnr[%d]", boardnr));
 		delete itsTPackE;
 	}
 }
@@ -119,31 +110,10 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 // ----------------------------------------------------------------------------
 void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status[boardnr] == 0)
-			itsTBBackE->status[boardnr] = SUCCESS;
+	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status_mask[boardnr] == 0)
+			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 	
 	clientport->send(*itsTBBackE);
 }
-
-// ----------------------------------------------------------------------------
-CmdTypes ResetCmd::getCmdType()
-{
-	return(BoardCmd);
-}
-
-// ----------------------------------------------------------------------------
-uint32 ResetCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool ResetCmd::waitAck()
-{
-	return(false);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace

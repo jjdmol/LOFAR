@@ -34,12 +34,13 @@
 
 #include "BoardCmdHandler.h"
 #include "MsgHandler.h"
+#include "DriverSettings.h"
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 namespace LOFAR{
   namespace TBB{
-	 
+
     // Description of class.
     class TBBDriver : public GCFTask
     {
@@ -90,7 +91,10 @@ namespace LOFAR{
 			
 			void sendMessage(GCFEvent& event);
 			bool CheckAlive(GCFEvent& event, GCFPortInterface& port);
+			bool CheckSize(GCFEvent& event, GCFPortInterface& port);
 			bool SetTbbCommand(unsigned short signal);
+			
+			TbbSettings *TS;
 			
 			// define some variables
 			TPAliveEvent			*itsAlive;
@@ -99,18 +103,19 @@ namespace LOFAR{
 			MsgHandler				*msghandler;
 			Command 					*cmd;
 			bool							itsAliveCheck;
+			bool							itsSizeCheck;
 			uint32						itsActiveBoards;
 			bool							itsActiveBoardsChange;
+			int32 						*itsResetCount;
 			
 			struct TbbEvent{
 				unsigned short		signal;
 				GCFPortInterface	*port;
 			};
 			
-			deque<TbbEvent> *itsTbbQueue;
+			std::deque<TbbEvent> *itsTbbQueue;
 			
 			GCFTCPPort      itsAcceptor;     // listen for clients on this port
-			GCFTCPPort      itsMsgPort;     // send messages to this port
 			GCFETHRawPort   *itsBoard;        // array of ports, one for each TBB board
 			
 			std::list<GCFPortInterface*> itsClientList;  // list of clients

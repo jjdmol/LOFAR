@@ -24,22 +24,22 @@
 #include <Common/LofarLogger.h>
 
 #include "ReadwCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
 
 //--Constructors for a ReadwCmd object.----------------------------------------
 ReadwCmd::ReadwCmd():
-		itsBoardMask(0),itsBoardsMask(0),itsBoardStatus(0)
-		//itsMp(0),itsAddr(0),itsWordLo(0),itsWordHi(0)
+		itsBoardStatus(0)
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPReadwEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBReadwackEvent();
+	setWaitAck(true);
 }
 	  
 //--Destructor for ReadwCmd.---------------------------------------------------
@@ -61,51 +61,33 @@ bool ReadwCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ReadwCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBReadwEvent(event);
-		
-	itsBoardMask = (1 << itsTBBE->board);
-
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
+	itsTBBE	= new TBBReadwEvent(event);
 	
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
+	setBoardNr(itsTBBE->board);	
 	
-	itsTBBackE->status = 0;
+	itsTBBackE->status_mask = 0;
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPREADW;
 	itsTPE->status	= 0;
-	itsTPE->mp			=	itsTBBE->mp;
+	itsTPE->mp			=	static_cast<uint32>(itsTBBE->mp);
 	itsTPE->addr		=	itsTBBE->addr;
-	//itsMp						= itsTBBE->mp;
-	//itsAddr					= itsTBBE->addr;
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-bool ReadwCmd::sendTpEvent(int32 boardnr, int32)
+void ReadwCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	if (ds->boardPort(boardnr).isConnected()) {
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-	}
-	else 
-		itsTBBackE->status |= CMD_ERROR;
-
-	return(sending);
+	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void ReadwCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void ReadwCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPReadwackEvent(event);
@@ -114,37 +96,17 @@ void ReadwCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
 		itsTBBackE->wordlo	= itsTPackE->wordlo;
 		itsTBBackE->wordhi	= itsTPackE->wordhi;
 		
-		LOG_DEBUG_STR(formatString("Received ReadwAck from boardnr[%d]", boardnr));
+		LOG_DEBUG_STR(formatString("Received ReadwAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
 	}
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------
 void ReadwCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status == 0)
-			itsTBBackE->status = SUCCESS;	
+	if (itsTBBackE->status_mask == 0)
+			itsTBBackE->status_mask = TBB_SUCCESS;	
 	
 	clientport->send(*itsTBBackE);
 }
-
-// ----------------------------------------------------------------------------
-CmdTypes ReadwCmd::getCmdType()
-{
-	return(BoardCmd);
-}
-
-// ----------------------------------------------------------------------------
-uint32 ReadwCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool ReadwCmd::waitAck()
-{
-	return(true);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace

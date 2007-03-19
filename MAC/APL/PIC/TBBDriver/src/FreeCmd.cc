@@ -24,26 +24,27 @@
 #include <Common/LofarLogger.h>
 
 #include "FreeCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
 
 //--Constructors for a FreeCmd object.----------------------------------------
 FreeCmd::FreeCmd():
-		itsBoardMask(0),itsBoardsMask(0),itsChannel(0)
+		itsBoardNr(0),itsBoardFreeAll(0),itsRcuStatus(0)
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPFreeEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBFreeackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsTBBackE->status[boardnr]	= 0;
+		itsTBBackE->status_mask[boardnr]	= 0;
 		itsChannelMask[boardnr]	= 0;
 	}
+	setWaitAck(true);
 }
 	  
 //--Destructor for FreeCmd.---------------------------------------------------
@@ -65,115 +66,143 @@ bool FreeCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void FreeCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBFreeEvent(event);
-
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
-		
-	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
-		
-		if (!(itsBoardsMask & (1 << boardnr))) 
-			itsTBBackE->status[boardnr] |= NO_BOARD;
-		
-		itsChannelMask[boardnr] = itsTBBE->channelmask[boardnr];
-		
-		if (itsChannelMask[boardnr] != 0)
-			itsBoardMask |= (1 << boardnr);
+	itsTBBE = new TBBFreeEvent(event);
+	
+	// convert rcu-bitmask to tbb-channelmask
+	int boardnr;
+	int channelnr;
+	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
+		if(itsTBBE->rcu_mask.test(rcunr)) {
+			TS->convertRcu2Ch(rcunr,&boardnr,&channelnr);	
+			itsChannelMask[boardnr] |= (1 << channelnr);
+			TS->setChSelected(((boardnr * 16) + channelnr),true);
+		}
+		//else
+		//	TS->setChSelected(((boardnr * 16) + channelnr),false);
+	} 
+	
+	uint32 boardmask = 0;		
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr); 
 			
+		if (!TS->isBoardActive(boardnr)) 
+			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		
 		if ((itsChannelMask[boardnr] & ~0xFFFF) != 0) 
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | CHANNEL_SEL_ERROR);
+			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_CHANNEL_SEL_ERROR);
 				
-		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsChannelMask[boardnr] != 0))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
-		LOG_DEBUG_STR(formatString("FreeCmd savetbb status board[%d]= 0x%08X",boardnr,itsTBBackE->status[boardnr]));
+		if (!TS->isBoardActive(boardnr) &&  (itsChannelMask[boardnr] != 0))
+			itsTBBackE->status_mask[boardnr] |= (TBB_SELECT_ERROR | TBB_BOARD_SEL_ERROR);
+		LOG_DEBUG_STR(formatString("FreeCmd savetbb status board[%d] = 0x%08X",boardnr,itsTBBackE->status_mask[boardnr]));
 	}
 	
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
+	setBoardMask(boardmask);
+	
+	// select firt channel to handle
+	nextChannelNr();
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPFREE;
 	itsTPE->status			= 0;
-		
+	
+	itsBoardFreeAll = false;	
 	delete itsTBBE;
 }
 
 // ----------------------------------------------------------------------------
-bool FreeCmd::sendTpEvent(int32 boardnr, int32 channelnr)
+void FreeCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-
-	itsTPE->channel = ds->getChInputNr(channelnr); 
-	itsChannel = channelnr;
+	itsRcuStatus = 0;
 	
-	if 	(ds->boardPort(boardnr).isConnected() && 
-			(itsTBBackE->status[boardnr] == 0)) {
+	if (itsBoardNr != getBoardNr()) itsBoardFreeAll = false; // new board
+	itsBoardNr = getBoardNr();
+	
+	if (!itsBoardFreeAll) {
 		
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-		LOG_DEBUG_STR(formatString("Sending FreeCmd to boardnr[%d], channel[%d]", boardnr, channelnr));
+		if ((itsChannelMask[getBoardNr()] == 0xFFFF) && ((getChannelNr()% 16) == 0)) {
+			itsTPE->channel = 0xFFFFFFFF; // uint32 -> -1 to free all
+			itsBoardFreeAll = true;
+		} else {
+			itsTPE->channel = TS->getChInputNr(getChannelNr()); 
+		}
+				
+		if (itsTBBackE->status_mask[getBoardNr()] == 0) {
+			TS->boardPort(getBoardNr()).send(*itsTPE);
+			
+			LOG_DEBUG_STR(formatString("Sending FreeCmd to boardnr[%d], channel[%08X]", getBoardNr(), itsTPE->channel));
+		} 
 	}
-	else
-		itsTBBackE->status[boardnr] |= CMD_ERROR;
-	
-	return(sending);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void FreeCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void FreeCmd::saveTpAckEvent(GCFEvent& event)
 {
+	int32 channels = 1;
+	
+	if (itsBoardFreeAll) channels = 16;
+	
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status[boardnr] |= COMM_ERROR;
+		itsTBBackE->status_mask[getBoardNr()] |= TBB_RCU_COMM_ERROR;
+		itsRcuStatus |= TBB_TIMEOUT_ETH;
 	}
 	else {
 		itsTPackE = new TPFreeackEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));
-		
-		if (itsTPackE->status == 0) {
-			DriverSettings::instance()->setChSelected(itsChannel, false); 	
-			DriverSettings::instance()->setChStatus(itsChannel, 'F'); 	
-			DriverSettings::instance()->setChStartAddr(itsChannel, 0);
-			DriverSettings::instance()->setChPageSize(itsChannel, 0); 	
-		}
+			itsRcuStatus |= (1 << (16 + (itsTPackE->status & 0x0F)));
+				
+		if ((itsTPackE->status == 0) && (itsRcuStatus == 0)) {
+			for (int ch = getChannelNr(); ch < (getChannelNr() + channels); ch++) {
+				TS->setChSelected(ch, false); 	
+				TS->setChState(ch, 'F'); 	
+				TS->setChStartAddr(ch, 0);
+				TS->setChPageSize(ch, 0); 
+			}
+		} 
 			
-		LOG_DEBUG_STR(formatString("Received FreeAck from boardnr[%d]", boardnr));
+		LOG_DEBUG_STR(formatString("Received FreeAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
 	}
+	
+	for (int ch = getChannelNr(); ch < (getChannelNr() + channels); ch++) {
+		if (itsRcuStatus) TS->setChState(ch, 'E');
+		TS->setChStatus(ch,(uint16)(itsRcuStatus >> 16));
+	}
+	
+	if (itsRcuStatus || itsTBBackE->status_mask[getBoardNr()]) {
+		int32 rcu;
+		TS->convertCh2Rcu(getChannelNr(),&rcu);
+		if (channels == 1)
+			LOG_INFO_STR(formatString("ERROR FreeCmd Rcu[%d], DriverStatus[0x%x], RcuStatus[0x%x]",
+				rcu, itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
+		else
+			LOG_INFO_STR(formatString("ERROR FreeCmd Rcu[%d .. %d], DriverStatus[0x%x], RcuStatus[0x%x]",
+				(getBoardNr() * 16),((getBoardNr() + 1) * 16), itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
+	}
+	itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
+	
+	nextChannelNr();
 }
 
 // ----------------------------------------------------------------------------
 void FreeCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status[boardnr] == 0)
-			itsTBBackE->status[boardnr] = SUCCESS;
+	int32 rcunr;
+	
+	itsTBBackE->rcu_mask.reset();
+	for (int32 channelnr = 0; channelnr < TS->maxChannels(); channelnr++) {
+		if (TS->getChStatus(channelnr)) {
+			TS->convertCh2Rcu(channelnr,&rcunr);
+			itsTBBackE->rcu_mask.set(rcunr);
+		}
+	}
+	
+	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status_mask[boardnr] == 0)
+			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
  
 	clientport->send(*itsTBBackE);
 }
-
-// ----------------------------------------------------------------------------
-CmdTypes FreeCmd::getCmdType()
-{
-	return(ChannelCmd);
-}
-
-// ----------------------------------------------------------------------------
-uint32 FreeCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool FreeCmd::waitAck()
-{
-	return(true);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace

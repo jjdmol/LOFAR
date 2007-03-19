@@ -27,11 +27,13 @@
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
+#include <net/ethernet.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "TP_Protocol.ph"
 
 #include "Command.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -50,26 +52,40 @@ namespace LOFAR {
 				
 				virtual void saveTbbEvent(GCFEvent& event);
 									
-				virtual bool sendTpEvent(int32 boardnr, int32 channelnr);
+				virtual void sendTpEvent();
 
-				virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr);
+				virtual void saveTpAckEvent(GCFEvent& event);
 
 				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
 				
-				virtual uint32 getBoardMask();
-				
 				virtual bool waitAck();
-				
-				virtual CmdTypes getCmdType();
       
+      private:
+      //private methods
+
+      // Convert a string containing a Ethernet MAC address
+      // to an array of 6 bytes.
+      void string2mac(const char* macstring, uint32 mac[2]);
+
+      // Convert a string containing an IP address
+      // to an array of 6 bytes.
+      uint32 string2ip(const char* ipstring);
+
+      // Setup an appropriate UDP/IP header
+      void setup_udpip_header(uint32 boardnr, uint32 ip_hdr[6], uint32 udp_hdr[2]);
+
+      // Compute the 16-bit 1-complements checksum for the IP header.
+      uint16 compute_ip_checksum(void* addr, int count);
+			
 			private:
-				uint32	itsBoardMask;  // mask indicates the boards to communicate with
-				uint32	itsBoardsMask;	// Installed boards mask
+				TbbSettings *TS;
+				
+				uint32	itsMode; // Transient or subbands
 				
 				TPUdpEvent			*itsTPE;
 				TPUdpackEvent		*itsTPackE;
-				TBBUdpEvent			*itsTBBE;
-				TBBUdpackEvent	*itsTBBackE;
+				TBBModeEvent		*itsTBBE;
+				TBBModeackEvent	*itsTBBackE;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

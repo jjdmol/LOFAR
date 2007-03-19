@@ -24,23 +24,24 @@
 #include <Common/LofarLogger.h>
 
 #include "TrigclrCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
 
 //--Constructors for a TrigclrCmd object.----------------------------------------
-TrigclrCmd::TrigclrCmd():
-		itsBoardMask(0),itsBoardsMask(0),itsChannel(0)
+TrigclrCmd::TrigclrCmd()
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPTrigclrEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBTrigclrackEvent();
 	
-	itsTBBackE->status = 0;
+	itsTBBackE->status_mask = 0;
+	setWaitAck(true);
 }
 	  
 //--Destructor for TrigclrCmd.---------------------------------------------------
@@ -62,82 +63,50 @@ bool TrigclrCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void TrigclrCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBTrigclrEvent(event);
+	itsTBBE	= new TBBTrigclrEvent(event);
 		
-	itsBoardMask = (1 << DriverSettings::instance()->getChBoardNr((int32)itsTBBE->channel));
+	int32 boardnr;
+	int32 channelnr;
+	TS->convertRcu2Ch(itsTBBE->channel,&boardnr,&channelnr);
 		
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
-	
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
-	
+	setBoardNr(boardnr);
+		
 	// initialize TP send frame
 	itsTPE->opcode	= TPTRIGCLR;
 	itsTPE->status	=	0;
-	itsTPE->channel = itsTBBE->channel;
+	itsTPE->channel = channelnr;
 	
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-bool TrigclrCmd::sendTpEvent(int32 boardnr, int32)
+void TrigclrCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	if (ds->boardPort(boardnr).isConnected()) {
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-	}
-	else
-		itsTBBackE->status |= CMD_ERROR;
-		
-	return(sending);
+		TS->boardPort(getBoardNr()).send(*itsTPE);
+		TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void TrigclrCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void TrigclrCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status |= COMM_ERROR;
+		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPTrigclrackEvent(event);
 		
-		LOG_DEBUG_STR(formatString("Received TrigclrAck from boardnr[%d]", boardnr));
+		LOG_DEBUG_STR(formatString("Received TrigclrAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
 	}
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------
 void TrigclrCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	if (itsTBBackE->status == 0)
-			itsTBBackE->status = SUCCESS;
+	if (itsTBBackE->status_mask == 0)
+			itsTBBackE->status_mask = TBB_SUCCESS;
 		
 	clientport->send(*itsTBBackE);
 }
-
-// ----------------------------------------------------------------------------
-uint32 TrigclrCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool TrigclrCmd::waitAck()
-{
-	return(true);
-}
-
-// ----------------------------------------------------------------------------
-CmdTypes TrigclrCmd::getCmdType()
-{
-	return(ChannelCmd);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace

@@ -24,25 +24,25 @@
 #include <Common/LofarLogger.h>
 
 #include "ClearCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
 
 //--Constructors for a ClearCmd object.----------------------------------------
-ClearCmd::ClearCmd():
-		itsBoardMask(0),itsBoardsMask(0)
+ClearCmd::ClearCmd()
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPClearEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBClearackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsTBBackE->status[boardnr]	= 0;
-	}		
+		itsTBBackE->status_mask[boardnr]	= 0;
+	}
+	setWaitAck(true);		
 }
 	  
 //--Destructor for ClearCmd.---------------------------------------------------
@@ -66,21 +66,15 @@ void ClearCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE 			= new TBBClearEvent(event);
 		
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();
-	itsBoardMask = itsTBBE->boardmask;
+	setBoardMask(itsTBBE->boardmask);
 	
-	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
-		
-		if (!(itsBoardsMask & (1 << boardnr)))
-			itsTBBackE->status[boardnr] |= NO_BOARD;
-		
-		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (TS->isBoardActive(boardnr) == false)
+			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
 	}
 	
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
+	// get first board
+	nextBoardNr();
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPCLEAR;
@@ -90,74 +84,46 @@ void ClearCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-bool ClearCmd::sendTpEvent(int32 boardnr, int32)
+void ClearCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	if (ds->boardPort(boardnr).isConnected() && (itsTBBackE->status[boardnr] == 0)) {
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-		
-		// reset channel information for selected board	
-		for (int channelnr = (boardnr * 16); channelnr < ((boardnr * 16) + 16); channelnr++) {
-			DriverSettings::instance()->setChSelected(channelnr, false);
-			DriverSettings::instance()->setChStatus(channelnr, 'F');
-			DriverSettings::instance()->setChStartAddr(channelnr, 0);
-			DriverSettings::instance()->setChPageSize(channelnr, 0);				
-		}
-	}
-	
-	return(sending);
+	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void ClearCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void ClearCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
 		;
-	}
-	else {
+	}	else {
 		itsTPackE = new TPClearackEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
 		
-		LOG_DEBUG_STR(formatString("Received ClearAck from boardnr[%d]", boardnr));
+		// reset channel-information for selected board	
+		if (itsTPackE->status == 0) {
+			for (int channelnr = (getBoardNr() * 16); channelnr < ((getBoardNr() * 16) + 16); channelnr++) {
+				TS->setChSelected(channelnr, false);
+				TS->setChState(channelnr, 'F');
+				TS->setChStartAddr(channelnr, 0);
+				TS->setChPageSize(channelnr, 0);				
+			}
+		}
+		LOG_DEBUG_STR(formatString("Received ClearAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
 	}
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
 void ClearCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status[boardnr] == 0)
-			itsTBBackE->status[boardnr] = SUCCESS;
+	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status_mask[boardnr] == 0)
+			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 	
 	clientport->send(*itsTBBackE);
 }
-
-// ----------------------------------------------------------------------------
-CmdTypes ClearCmd::getCmdType()
-{
-	return(BoardCmd);
-}
-
-// ----------------------------------------------------------------------------
-uint32 ClearCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool ClearCmd::waitAck()
-{
-	return(false);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace

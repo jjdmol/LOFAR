@@ -32,6 +32,7 @@
 #include "TP_Protocol.ph"
 
 #include "Command.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	using namespace TBB_Protocol;
@@ -50,23 +51,19 @@ namespace LOFAR {
 				
 				virtual void saveTbbEvent(GCFEvent& event);
 									
-				virtual bool sendTpEvent(int32 boardnr, int32 channelnr);
+				virtual void sendTpEvent();
 
-				virtual void saveTpAckEvent(GCFEvent& event, int32 boardnr);
+				virtual void saveTpAckEvent(GCFEvent& event);
 
 				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
 				
-				virtual uint32 getBoardMask();
-				
-				virtual bool waitAck();
-				
-				virtual CmdTypes getCmdType();
-      
 			private:
-				uint32	itsBoardMask;  // mask indicates the boards to communicate with
-				uint32	itsBoardsMask;	// Installed boards mask
+				TbbSettings *TS;
+				
+				int32		itsBoardNr;
 				uint32	itsChannelMask[MAX_N_TBBBOARDS];
-				int32		itsChannel;
+				bool		itsBoardFreeAll;
+				uint32	itsRcuStatus;
 				
 				TPFreeEvent			*itsTPE;
 				TPFreeackEvent	*itsTPackE;

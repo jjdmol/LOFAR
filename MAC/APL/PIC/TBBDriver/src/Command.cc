@@ -25,55 +25,147 @@
 
 #include "Command.h"
 
-namespace LOFAR {
-	namespace TBB {
-
-Command::Command()
+using namespace LOFAR;
+using namespace TBB;
+			
+Command::Command() : 
+	itsWaitAck(false), itsDone(false), itsAllPorts(false), itsBoard(-1), itsChannel(-1), itsBoardMask(0)
 {
+	TS = TbbSettings::instance();
 }
 
 Command::~Command()
 {
 }
-			
-bool Command::isValid(GCFEvent& event)
+
+// ----------------------------------------------------------------------------
+int32 Command::getBoardNr()
 {
-	return false;
-}
-				
-void Command::saveTbbEvent(GCFEvent& event)
-{
-}
-				
-void Command::makeTpEvent()
-{
-}
-						
-void Command::sendTpEvent(GCFPortInterface& port)
-{
+	return(itsBoard);
 }
 
-void Command::saveTpAckEvent(GCFEvent& event, int boardnr)
+// ----------------------------------------------------------------------------
+int32 Command::getChannelNr()
 {
+	return(itsChannel);
+}
+// ----------------------------------------------------------------------------
+void Command::setBoardNr(int32 boardnr)
+{
+	itsBoard = boardnr;
 }
 
-void Command::sendTbbAckEvent(GCFPortInterface* clientport)
+// ----------------------------------------------------------------------------
+void Command::setChannelNr(int32 channelnr)
 {
+	itsChannel = channelnr;
+	itsBoard = TS->getChBoardNr(itsChannel); 
 }
 
-uint32 Command::getSendMask()
+// ----------------------------------------------------------------------------
+void Command::setDone(bool done)
 {
-	return 0;
+	itsDone = done;
+	if (itsDone) {
+		itsWaitAck = true;
+		itsBoard = -1;
+		itsChannel = -1;	
+	}
 }
 
-uint32 Command::getRecvMask()
+// ----------------------------------------------------------------------------
+void Command::resetBoardNr()
 {
-	return 0;
+	itsBoard = -1;
 }
-			
-uint32 Command::done()
+
+// ----------------------------------------------------------------------------
+void Command::resetChannelNr()
 {
-	return 0;
+	itsBoard = -1;
 }
-	} // end TBB namespace
-} // end LOFAR namespace
+
+// ----------------------------------------------------------------------------
+bool Command::isDone()
+{
+	return(itsDone);
+}
+
+// ----------------------------------------------------------------------------
+bool Command::waitAck()
+{
+	return(itsWaitAck);
+}
+
+// ----------------------------------------------------------------------------			
+void Command::setWaitAck(bool waitack)
+{
+	itsWaitAck = waitack;
+}
+
+// ----------------------------------------------------------------------------
+void Command::setBoardMask(uint32 mask)
+{
+	itsBoardMask = mask;
+}
+
+// ----------------------------------------------------------------------------
+void Command::nextBoardNr()
+{
+	bool validNr = false;
+	
+	do {
+		itsBoard++;
+		if (itsBoard < TS->maxBoards()) {
+			// see if board is active
+			if (TS->boardPort(itsBoard).isConnected() 
+						&& TS->isBoardActive(itsBoard) 
+						&& (itsBoardMask & (1 << itsBoard))) 
+			{
+				validNr = true;
+			}
+		} else {
+			break;	
+		}
+	} while (!validNr);
+		
+	// if all nr done send clear all variables
+	if (!validNr) {
+		itsDone = true;
+		itsBoard = -1;
+		itsBoardMask = 0;
+	}
+	LOG_DEBUG_STR(formatString("nextBoardNr() = %d",itsBoard));		
+}
+
+// ----------------------------------------------------------------------------
+void Command::nextChannelNr()
+{
+	bool validNr = false;
+	
+	do {
+		itsChannel++;
+		itsBoard = TS->getChBoardNr(itsChannel);
+		
+		if (itsBoard < TS->maxBoards()) {
+			// see if board is active and channel is selected
+			if (TS->boardPort(itsBoard).isConnected()
+						&& TS->isBoardActive(itsBoard) 
+						&& TS->isChSelected(itsChannel)) 
+			{
+				validNr = true;
+			}
+		} else {
+			break;	
+		}
+	} while (!validNr && (itsChannel < TS->maxChannels()));
+		
+	// if all nr done send clear all variables
+	if (!validNr) {
+		itsDone = true;
+		itsChannel = -1;
+	}
+	LOG_DEBUG_STR(formatString("nextChannelNr() = %d",itsChannel));	
+}
+
+

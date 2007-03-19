@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  VersionCmd.h: Get TBB board versions
+//#  ImageInfoCmd.h: III
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef VERSIONCMD_H_
-#define VERSIONCMD_H_
+#ifndef IMAGEINFOCMD_H_
+#define IMAGEINFOCMD_H_
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
@@ -38,14 +38,14 @@ namespace LOFAR {
 	using namespace TBB_Protocol;
   namespace TBB {
 
-		class VersionCmd : public Command 
+		class ImageInfoCmd : public Command 
 		{
 			public:
-				// Constructors for a GetVersions object.
-				VersionCmd();
+				// Constructors for a ImageInfoCmd object.
+				ImageInfoCmd();
 	  
-				// Destructor for GetVersions.
-				virtual ~VersionCmd();
+				// Destructor for ImageInfoCmd.
+				virtual ~ImageInfoCmd();
 				
 				virtual bool isValid(GCFEvent& event);
 				
@@ -56,16 +56,22 @@ namespace LOFAR {
 				virtual void saveTpAckEvent(GCFEvent& event);
 
 				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-      
+				
 			private:
 				TbbSettings *TS;
 				
-				TPVersionEvent			*itsTPE;
-				TPVersionackEvent		*itsTPackE;
-				TBBVersionEvent			*itsTBBE;
-				TBBVersionackEvent	*itsTBBackE;
+				TPReadfEvent					*itsTPE;
+				TPReadfackEvent				*itsTPackE;
+				TBBImageInfoEvent			*itsTBBE;
+				TBBImageInfoAckEvent	*itsTBBackE;
+				
+				int32				itsImage;
+				int32				itsBlock;
+				
+				// variables holding data from tp cmd
+				uint32	itsBoardStatus;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
 
-#endif /* VERSIONCMD_H_ */
+#endif /* IMAGEINFOCMD_H_ */

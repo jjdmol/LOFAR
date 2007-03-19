@@ -25,59 +25,86 @@
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "BoardCmdHandler.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using	namespace TBB;
 
 BoardCmdHandler::BoardCmdHandler()
-  : GCFFsm((State)&BoardCmdHandler::send_state)
-{
-	itsMaxRetries = 10;
+  : GCFFsm((State)&BoardCmdHandler::idle_state)
+{		
+	TS	= TbbSettings::instance();
+	itsDone = true;
 	itsRetries = 0;
-	itsNrOfBoards	= 0;
-	itsNrOfChannels = 0;
-	itsCmdType = BoardCmd;
-	itsBoardNr = 0;
-	itsChannelNr = 0;
-	itsNextCmd = false;
 	itsClientPort	= 0;
 	itsCmd = 0;		
 }
 
 BoardCmdHandler::~BoardCmdHandler() {  }
 
-GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface& port)
+
+GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-				
   switch (event.signal)	{
   	
   	case F_INIT: {
   	} break;
   	
   	case F_ENTRY: {
-			if (itsCmd) {
-				sendCmd(); 
-				TRAN(BoardCmdHandler::waitack_state);
-			}
+			itsCmd = 0;
 		} break;			
+	  
+	  case F_TIMER: {
+	  } break;
+	  	
+    case F_EXIT: {
+  	} break;
+
+		default: {
+			if (itsCmd && itsCmd->isValid(event)) { // isValid returns true if event is a valid cmd
+				LOG_DEBUG_STR("==== NEW CMD ==================================================");
+				itsClientPort = &port;
+				itsDone = false;
+				itsCmd->saveTbbEvent(event);
+				TRAN(BoardCmdHandler::send_state);
+			}	else {
+				status = GCFEvent::NOT_HANDLED;
+			}
+    } break;
+	}
+	return(status);
+}
+
+GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+	switch (event.signal)	{
+  	
+  	case F_INIT: {
+  	} break;
+  	
+  	case F_ENTRY: {
+			if (itsCmd != 0) {
+				if (itsCmd->isDone()) {
+					itsDone = true;
+					itsCmd->sendTbbAckEvent(itsClientPort);
+					TRAN(BoardCmdHandler::idle_state);
+				} else {
+					itsRetries = 0;
+					itsCmd->sendTpEvent();
+					TRAN(BoardCmdHandler::waitack_state);
+				}
+			}
+		} break;
+		
+		case F_TIMER: {
+	  } break;			
 	  
     case F_EXIT: {
   	} break;
 
 		default: {
-			
-			if (itsCmd && itsCmd->isValid(event)) { // isValid returns true if event is a valid cmd
-				itsClientPort = &port;
-				itsCmd->saveTbbEvent(event);
-				sendCmd();
-				TRAN(BoardCmdHandler::waitack_state);
-			}
-			else {
-				status = GCFEvent::NOT_HANDLED;
-			}
     } break;
 	}
 	return(status);
@@ -87,30 +114,28 @@ GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface&
 GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-	  
 	switch(event.signal) {
   	case F_INIT: {
 		}	break;
   	
   	case F_ENTRY: {
-			// if cmd returns no ack or board/channel is not selected or not responding return to send_stae		
-			if (!itsCmd->waitAck() || itsNextCmd) {
-				nextCmd();
+			// if cmd returns no ack or board/channel is not selected or not responding return to send_state		
+			if (!itsCmd->waitAck()) {
 				TRAN(BoardCmdHandler::send_state);
 			}
 		}	break;
 		    
 		case F_TIMER: {
-			// time-out, retry 
-			if (itsRetries < itsMaxRetries) {
-				sendCmd();
-				LOG_DEBUG_STR(formatString("itsRetries[%d] = %d", itsBoardNr, itsRetries));	
+			// time-out, retry
+			if ((itsRetries < TS->maxRetries()) && !itsCmd->isDone()) {
+				LOG_DEBUG("=TIME-OUT=");
+				itsCmd->sendTpEvent();
+				itsRetries++;
+				LOG_DEBUG_STR(formatString("itsRetries[%d] = %d", itsCmd->getBoardNr(), itsRetries));	
+			}	else {
+				itsCmd->saveTpAckEvent(event); // max retries or done, save zero's
+				TRAN(BoardCmdHandler::send_state);
 			}
-			else {
-				itsCmd->saveTpAckEvent(event,itsBoardNr); // max retries, save zero's
-				nextCmd();
-			}
-			TRAN(BoardCmdHandler::send_state);
 		}	break;
 		
     case F_EXIT: {
@@ -119,61 +144,15 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
     default: {
 			if (itsCmd->isValid(event)) {
 				port.cancelAllTimers();
-				itsCmd->saveTpAckEvent(event,itsBoardNr);
-				nextCmd();
+				itsCmd->saveTpAckEvent(event);
+				
 				TRAN(BoardCmdHandler::send_state);
-			}
-			else {
+			}	else {
 				status = GCFEvent::NOT_HANDLED;
 			}
 		}	break;
 	}
 	return(status);
-}
-
-void BoardCmdHandler::sendCmd()
-{
-	itsNextCmd = true; // if true, go to next board or channel
-	uint32 boardmask = (1 << itsBoardNr);
-	
-	if (boardmask & DriverSettings::instance()->activeBoardsMask()) {
-		if (itsCmd->getCmdType() == BoardCmd) {
-			if (boardmask & itsCmd->getBoardMask()) {
-				if (itsCmd->sendTpEvent(itsBoardNr, itsChannelNr)) {
-					itsRetries++;
-					itsNextCmd = false;
-				}
-			}	
-		}	
-		if (itsCmd->getCmdType() == ChannelCmd) {
-			if (DriverSettings::instance()->getChSelected(itsChannelNr)) {
-				if (itsCmd->sendTpEvent(itsBoardNr, itsChannelNr)) {
-					itsRetries++;
-					itsNextCmd = false;
-				}
-			}
-		}
-	}
-}
-
-void BoardCmdHandler::nextCmd()
-{
-	if (itsCmd->getCmdType() == BoardCmd) {
-		itsBoardNr++;
-	}
-	if (itsCmd->getCmdType() == ChannelCmd) {
-		itsChannelNr++;
-		itsBoardNr = DriverSettings::instance()->getChBoardNr(itsChannelNr);
-	}
-	// if all command done send ack meassage to client and clear all variables
-	if ((itsBoardNr == DriverSettings::instance()->maxBoards()) ||
-		  (itsChannelNr == DriverSettings::instance()->maxChannels())) {
-		itsCmd->sendTbbAckEvent(itsClientPort);
-		itsCmd = 0;
-		itsBoardNr = 0;
-		itsChannelNr = 0;
-		itsRetries = 0;	
-	}	
 }
 	
 void BoardCmdHandler::setTpCmd(Command *cmd)
@@ -181,16 +160,7 @@ void BoardCmdHandler::setTpCmd(Command *cmd)
 	itsCmd = cmd;
 }
 
-void BoardCmdHandler::setTpRetries(int32 Retries)
-{
-	itsMaxRetries = Retries;
-}
-
 bool BoardCmdHandler::tpCmdDone()
 {
-	if (itsCmd == 0) return(true);
-	return(false);
+	return (itsDone);
 }
-
-	} // end namespace TBB
-} // end namespace LOFAR

@@ -1,4 +1,4 @@
-//#  ReadfCmd.cc: implementation of the ReadfCmd class
+//#  ImageInfoCmd.cc: implementation of the ImageInfoCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include "ReadfCmd.h"
+#include "ImageInfoCmd.h"
 
 using namespace LOFAR;
 using namespace TBB_Protocol;
@@ -48,64 +48,63 @@ static const int IMAGE_SIZE					= 977489; // 977489 bytes in 1 image
 static const int IMAGE_BLOCKS				= IMAGE_SIZE / FL_BLOCK_SIZE; // 977489 bytes in 1 image 
 
 
-//--Constructors for a ReadfCmd object.----------------------------------------
-ReadfCmd::ReadfCmd():
-		itsFile(0),itsImage(0),itsBlock(0),itsBoardStatus(0)
+//--Constructors for a ImageInfoCmd object.----------------------------------------
+ImageInfoCmd::ImageInfoCmd():
+		itsImage(0),itsBlock(0),itsBoardStatus(0)
 {
 	TS					= TbbSettings::instance();
 	itsTPE 			= new TPReadfEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBReadImageAckEvent();
+	itsTBBackE 	= new TBBImageInfoAckEvent();
 	setWaitAck(true);
 }
 	  
-//--Destructor for ReadfCmd.---------------------------------------------------
-ReadfCmd::~ReadfCmd()
+//--Destructor for ImageInfoCmd.---------------------------------------------------
+ImageInfoCmd::~ImageInfoCmd()
 {
 	delete itsTPE;
 	delete itsTBBackE;
 }
 
 // ----------------------------------------------------------------------------
-bool ReadfCmd::isValid(GCFEvent& event)
+bool ImageInfoCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_READ_IMAGE)||(event.signal == TP_READFACK)) {
+	if ((event.signal == TBB_IMAGE_INFO)||(event.signal == TP_READFACK)) {
 		return(true);
 	}
 	return(false);
 }
 
 // ----------------------------------------------------------------------------
-void ReadfCmd::saveTbbEvent(GCFEvent& event)
+void ImageInfoCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE = new TBBReadImageEvent(event);
+	itsTBBE = new TBBImageInfoEvent(event);
 	
 	setBoardNr(itsTBBE->board);	
 	
 	itsTBBackE->status_mask = 0;
 	
-	itsImage = itsTBBE->image;
-	itsBlock = (itsImage * FL_BLOCKS_IN_PAGE);
-	
+	itsImage = 0;
+		
 	// initialize TP send frame
 	itsTPE->opcode	= TPREADF;
 	itsTPE->status	=	0;
 	
-	itsFile = fopen("test.hex","wb");
 	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
-void ReadfCmd::sendTpEvent()
+void ImageInfoCmd::sendTpEvent()
 {
+	itsBlock = (itsImage * FL_BLOCKS_IN_PAGE) + (FL_BLOCKS_IN_PAGE - 1);
 	itsTPE->addr		= static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
 	TS->boardPort(getBoardNr()).send(*itsTPE);
-	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+	TS->boardPort(getBoardNr()).setTimer(0.5);
 }
 
 // ----------------------------------------------------------------------------
-void ReadfCmd::saveTpAckEvent(GCFEvent& event)
+void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
@@ -114,50 +113,22 @@ void ReadfCmd::saveTpAckEvent(GCFEvent& event)
 	} else {
 		itsTPackE = new TPReadfackEvent(event);
 		
-		itsBoardStatus	= itsTPackE->status;
-		  
-		int byte_val;
-		int nible_val;
-		if (itsBoardStatus == 0) { 
-			for (int dp = 0; dp < 256; dp++) {	// there are 256 words in 1 message
-				for (int bn = 0; bn < 4; bn++) {
-					byte_val = (itsTPackE->data[dp] >> (bn * 8)) & 0xFF; // take 1 byte
-				
-					nible_val = ((byte_val & 0xF0) >> 4);
-					if (nible_val < 10) {
-						nible_val += 48;
-					}	else {
-						nible_val += 87;	
-					}
-					putc(nible_val,itsFile);
-					
-					nible_val = (byte_val & 0x0F);
-					if (nible_val < 10) {
-						nible_val += 48;
-					}	else {
-						nible_val += 87;	
-					}
-					putc(nible_val,itsFile);
-				}
-			}
-			
-			itsBlock++;
-			if (itsBlock >= ((itsImage + 1) * FL_BLOCKS_IN_PAGE)) {
+		if (itsTPackE->status == 0) {
+			itsTBBackE->image_version[itsImage]= itsTPackE->data[0];	  
+			itsTBBackE->write_date[itsImage] = itsTPackE->data[1];		  		
+		
+			itsImage++;
+			if (itsImage == 32) {
 				setDone(true);
 			}
-		} else {
-			LOG_DEBUG_STR(formatString("Block %d received status = 0x%08X (ReadfCmd)", itsBlock, itsBoardStatus));
-			setDone(true);
 		}
-		
 		delete itsTPackE;
 	}
 }
 
 // ----------------------------------------------------------------------------
-void ReadfCmd::sendTbbAckEvent(GCFPortInterface* clientport)
+void ImageInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	fclose(itsFile);
 	if (itsTBBackE->status_mask == 0)
 			itsTBBackE->status_mask = TBB_SUCCESS;
 	

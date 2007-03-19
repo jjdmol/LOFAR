@@ -37,6 +37,25 @@
 namespace LOFAR {
   namespace TbbCtl {
   	
+// MAX_N_TBBBOARDS and MAX_N_RCUS come from TBB_protocol.ph
+
+static const int BOARDCMD = 1;
+static const int RCUCMD = 2;
+
+// information about the flash memory
+static const int FL_SIZE 						= 64 * 1024 *1024; // 64 MB in bytes
+static const int FL_N_PAGES 				= 32; // 32 pages in flash
+static const int FL_N_SECTORS				= 512; // 512 sectors in flash
+static const int FL_N_BLOCKS				= 65536; // 65336 blocks in flash
+
+static const int FL_PAGE_SIZE 			= FL_SIZE / FL_N_PAGES; // 2.097.152 bytes  
+static const int FL_SECTOR_SIZE			= FL_SIZE / FL_N_SECTORS; // 131.072 bytes
+static const int FL_BLOCK_SIZE 			= FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
+
+static const int FL_SECTORS_IN_PAGE	= FL_PAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
+static const int FL_BLOCKS_IN_PAGE	= FL_PAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
+
+  	
 //-----------------------------------------------------------------------------
 // class Command :base class for control commands towards the TBBDriver.
 //
@@ -62,151 +81,172 @@ public:
 	}
 	
 	//-----------------------------------------------------------------------------
-	virtual string getErrorStr(uint32 status)
+	virtual string getDriverErrorStr(uint32 status)
 	{
 		string str;
 		
 		str.clear();
-		str.append("=ERROR= ");
-		if (status & NO_BOARD)				str.append(";Board not available ");
-		if (status & COMM_ERROR)			str.append(";Comm. time-out ");			
-		if (status & SELECT_ERROR)		str.append(";Not selectable ");
-		if (status & CMD_ERROR)				str.append(";Command failed ");
-		if (status & ALLOC_ERROR)			str.append(";Alloc error ");
-		if (status & CHANNEL_IN_USE)	str.append(";Channel In Use ");
-		if (status & INPUT_IN_USE) 		str.append(";Input In Use ");
-		if (status & BUFFER_TO_LARGE) str.append(";Buffer To Large ");
-		if (status & NO_MP_WRITER)		str.append(";No Mp Writer ");
-		if (status & RING_FULL)				str.append(";Ring Full ");
-		if (status & CRC_ERROR_MP0)		str.append(";CRC error MP0 ");
-		if (status & CRC_ERROR_MP1)		str.append(";CRC error MP1 ");
-		if (status & CRC_ERROR_MP2)		str.append(";CRC error MP2 ");
-		if (status & CRC_ERROR_MP3)		str.append(";CRC error MP3 ");
-		if (status & CRC_ERROR_TP)		str.append(";CRC error TP ");
-		if (status & ACK_ERROR_TP)		str.append(";ACK error TP ");
-		if (status & TIMEOUT_TP_MP)		str.append(";TIMEOUT TP-MP ");
-		return str;
-	}
-	
-	
-	//--------------------------------------------------------
-  void setMax(int max)
-	{
-		itsMax = max;	
-	}
-	
-	//--------------------------------------------------------
-	int getMax(void) const
-	{
-		return itsMax;	
-	}
-	
-	//--------------------------------------------------------	
-	void setSelected(bool select)
-	{
-		itsSelected = select;	
-	}
-	
-	//--------------------------------------------------------
-	bool getSelected(void) const
-	{
-		return itsSelected;	
-	}
-	
-	//--------------------------------------------------------
-	void setSelect(std::list<int> select)
-	{
-		itsSelect = select;
 		
-		int32 boardnr = 0;
-		int32 channelnr = 0;
-		std::list<int>::const_iterator it;
-		for (it = itsSelect.begin(); it != itsSelect.end(); ++it) {
-			channelnr = *it;
-			boardnr = (int32)(channelnr / 16.);
-			channelnr -= boardnr * 16; 
-			itsChannelMask[boardnr] |= (1 << *it);	
-		}
-	}
-	
-	
-	//--------------------------------------------------------
-	bool isSelected(int nr) const
-	{
-		bool inList = false;
+		// all TBB_XXX constants come from TBB_Protocol.ph
 		
-		std::list<int>::const_iterator it;
-		for (it = itsSelect.begin(); it != itsSelect.end(); ++it) {
-			if(*it == nr) {
-				inList = true;	
-				break;
+		if (!(status & TBB_SUCCESS)) {		
+			if (status & TBB_NO_BOARD) {
+				str.append("board not available ");
+				return(str);
 			}
-		}	
-		return inList;	
-	}
-	
-	int32 getChannel()
-	{
-		return itsSelect.front();
-	}
-	
-	int32 getBoard()
-	{
-		return itsSelect.front();
-	}
-	
-	//--------------------------------------------------------
-	uint32 getMask()
-	{
-		uint32 mask = 0;
-		std::list<int>::const_iterator it;
-		for (it = itsSelect.begin(); it != itsSelect.end(); ++it) {
-			mask |= (1 << *it);	
+			
+			if (status & TBB_COMM_ERROR)				str.append(",comm. time-out ");			
+			if (status & TBB_SELECT_ERROR)			str.append(",not selectable ");
+			if (status & TBB_FLASH_ERROR)				str.append(",flash error ");
+			if (status & TBB_ALLOC_ERROR)				str.append(",alloc error ");
+			if (status & TBB_RCU_COMM_ERROR)		str.append(",rcu error ");
+			
+			if (status & TBB_CHANNEL_IN_USE)		str.append(",channel in use ");
+			if (status & TBB_INPUT_IN_USE) 			str.append(",input in use ");
+			if (status & TBB_BUFFER_TO_LARGE) 	str.append(",buffer to large ");
+			if (status & TBB_NO_MP_WRITER)			str.append(",no mp writer ");
+			if (status & TBB_RING_FULL)					str.append(",ring full ");
+			if (status & TBB_RCU_NOT_FREE)			str.append(",rcu not free ");
+			if (status & TBB_RCU_NOT_ALLOCATED)	str.append(",rcu not allocated ");		
+			if (status & TBB_RCU_NOT_RECORDING)	str.append(",rcu not recording ");						
+							
+			if (status & TBB_CRC_ERROR_MP0)			str.append(",crc error mp0 ");
+			if (status & TBB_CRC_ERROR_MP1)			str.append(",crc error mp1 ");
+			if (status & TBB_CRC_ERROR_MP2)			str.append(",crc error mp2 ");
+			if (status & TBB_CRC_ERROR_MP3)			str.append(",crc error mp3 ");
+			if (status & TBB_CRC_ERROR_TP)			str.append(",crc error tp ");
+			if (status & TBB_ACK_ERROR_TP)			str.append(",ack error tp ");
+			if (status & TBB_TIMEOUT_TP_MP)			str.append(",timeout tp-mp ");
+			if (status & TBB_TIMEOUT_ETH)				str.append(",timeout eth ");
+			
+			char statusstr[64];
+			sprintf(statusstr,"unknown ERROR, 0x%08X",status);
+			if (str.empty() && status) str.append(statusstr);
 		}
-		return mask;
+		return(str);
+	}
+	
+	//-----------------------------------------------------------------------------
+	virtual string getBoardErrorStr(uint16 status)
+	{
+		string str;
+		
+		str = getDriverErrorStr(((uint32)status << 16));
+				
+		return(str);
 	}
 		
 	//--------------------------------------------------------
-	uint32 getChannelMask(int32 boardnr)
+  void setCmdType(int type)
 	{
-		return itsChannelMask[boardnr];
+		itsCmdType = type;	
+	}
+	
+	//--------------------------------------------------------
+	int getMaxSelections(void) const
+	{
+		int maxbits = 0;
+		if (itsCmdType == BOARDCMD) maxbits = MAX_N_TBBBOARDS; 
+		if (itsCmdType == RCUCMD)   maxbits = MAX_N_RCUS;
+		return(maxbits);	
 	}
 	
 	//--------------------------------------------------------
 	void setCmdDone(bool done)
 	{
-			itsCmdDone = done;
+		itsCmdDone = done;
 	}
 	
 	//--------------------------------------------------------
-	bool isCmdDone()
+	bool isCmdDone() const
 	{
-			return itsCmdDone;
+		return(itsCmdDone);
 	}
+	
+	//--selection is done-------------------------------------	
+	void setSelected(bool select)
+	{
+		itsSelected = select;	
+	}
+	
+	//--check if selection is done----------------------------
+	bool getSelected(void) const
+	{
+		return itsSelected;	
+	}
+	
+	//--set selection-----------------------------------------
+	void setSelect(std::list<int> select)
+	{
+		itsSelection = select;
+	}
+	
+	//--return true if board or rcu nr is selected------------
+	bool isSelected(int nr) const
+	{
+		bool inList = false;
+		std::list<int>::const_iterator it;
 		
+		for (it = itsSelection.begin(); it != itsSelection.end(); it++) {
+			if (*it == nr) inList = true;
+		}
+		return(inList);	
+	}
+	
+	//--return selected board---------------------------------
+	int getBoard() const
+	{
+		return(itsSelection.front());
+	}
+	
+	//--return selected rcu-------------------------------	
+	int getRcu() const
+	{
+		return(itsSelection.front());
+	}
+	
+	//--return selected boards in a mask----------------------
+	uint32 getBoardMask() const
+	{
+		uint32 boardmask = 0;
+		std::list<int>::const_iterator it;
+		
+		for (it = itsSelection.begin(); it != itsSelection.end(); it++) {
+			boardmask |= (1 << *it);		
+		}
+		return(boardmask);	
+	}
+	
+	//--return selected rcus in a mask----------------------
+	std::bitset<MAX_N_RCUS> getRcuMask() const
+	{
+		std::bitset<MAX_N_RCUS> rcus;
+		std::list<int>::const_iterator it;
+		
+		rcus.reset();
+		for (it = itsSelection.begin(); it != itsSelection.end(); it++) {
+			rcus.set(*it);		
+		}
+		return(rcus);	
+	}	
 	
 protected:
 	explicit Command(GCFPortInterface& port) : 
   	itsPort(port),
-  	itsMax(0),
-		itsSelected(false),
-  	itsSelect(0),
-  	itsCmdDone(false)
+  	itsSelected(false),
+  	itsCmdDone(false),
+		itsCmdType(0)
 	{
-		for(int32 nr = 0; nr < MAX_N_TBBBOARDS;nr++)
-			itsChannelMask[nr] = 0; 
 	}
 	
 	Command(); // no default construction allowed
 
 protected:
-	GCFPortInterface& itsPort;
-	int								itsMax;
-	bool							itsSelected;
-	std::list<int>		itsSelect; 
-	uint32						itsChannelMask[MAX_N_TBBBOARDS];
-	bool							itsCmdDone;
-	
+	GCFPortInterface& 			itsPort;
+	bool		itsSelected;
+	bool		itsCmdDone;
+	int			itsCmdType;
+	std::list<int>	itsSelection;
 		
 private:
 
@@ -291,18 +331,28 @@ class ReadCmd : public Command
 		virtual ~ReadCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setSecondsTime(uint32 secondstime) { itsSecondsTime = secondstime; }
+		void setSampleTime(uint32 sampletime) { itsSampleTime = sampletime; }
+		void setPrePages(uint32 prepages) { itsPrePages = prepages; }
+		void setPostPages(uint32 postpages) { itsPostPages = postpages; }
 	private:
+		uint32 itsSecondsTime;
+		uint32 itsSampleTime;
+		uint32 itsPrePages;
+		uint32 itsPostPages;
 };
 
 //-----------------------------------------------------------------------------
-class UdpCmd : public Command
+class ModeCmd : public Command
 {
 	public:
-		UdpCmd(GCFPortInterface& port);
-		virtual ~UdpCmd() { }
+		ModeCmd(GCFPortInterface& port);
+		virtual ~ModeCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setRecMode(uint32 recmode) { itsRecMode = recmode; }	
 	private:
+		uint32 itsRecMode;
 };
 
 //-----------------------------------------------------------------------------
@@ -381,7 +431,9 @@ class ErasefCmd : public Command
 		virtual ~ErasefCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setPage(int page)  {	itsPage = page;	}
 	private:
+		int itsPage;
 };
 
 //-----------------------------------------------------------------------------
@@ -392,7 +444,9 @@ class ReadfCmd : public Command
 		virtual ~ReadfCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setPage(int page)  {	itsPage = page;	}	
 	private:
+		int		itsPage;
 };
 
 //-----------------------------------------------------------------------------
@@ -401,6 +455,25 @@ class WritefCmd : public Command
 	public:
 		WritefCmd(GCFPortInterface& port);
 		virtual ~WritefCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setPage(int page)  {	itsPage = page;	}	
+		void setVersion(double version)  {	itsVersion = version;	}	
+		void setFileNameTp(char *filename)  {	strcpy(itsFileNameTp,filename);	}
+		void setFileNameMp(char *filename)  {	strcpy(itsFileNameMp,filename);	}
+	private:
+		int itsPage;
+		double itsVersion;
+		char itsFileNameTp[64];
+		char itsFileNameMp[64];
+};
+
+//-----------------------------------------------------------------------------
+class ImageInfoCmd : public Command
+{
+	public:
+		ImageInfoCmd(GCFPortInterface& port);
+		virtual ~ImageInfoCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
 	private:
@@ -473,7 +546,7 @@ class ReadPageCmd : public Command
 		virtual ~ReadPageCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
-		void setMp(uint32 mp)		{	itsMp = mp;	}
+		void setMp(int32 mp)		{	itsMp = mp;	}
 		void setAddr(uint32 addr)  { itsAddr = addr; }
 		void setPages(uint32 pages)  { itsPages = pages; }
 		static const uint32 PID6 = 6;
@@ -485,13 +558,22 @@ class ReadPageCmd : public Command
 		static const uint32 DATA1POS = 0;
 		static const uint32 DATA2POS = 256;
 	private:
-		int32 itsCmdStage;
-		uint32 itsPage;
-		uint32 itsMp;
-		uint32 itsAddr;
-		uint32 itsPages;
+		// values given by user
+		int32		itsRcu;
+		uint32	itsPages;
+		// values used in program
+		int32		itsCmdStage;
+		uint32	itsPage;
+		uint32	itsAddr;
+		// data from channelInfoCmd
+		char		itsState;		
+		uint32	itsStartAddr;
+		uint32	itsSize;
+		int32		itsBoard;
+		int32		itsMp;
+		// data from ReadxCmd
 		uint32 itsData[512];
-		
+		// extracted data from itsData[512]
 		int itsStationId;
 		int itsRspId;
 		int itsRcuId;
@@ -547,7 +629,7 @@ public:
 private:
   // private methods
   Command* parse_options(int argc, char** argv);
-  std::list<int> strtolist(const char* str, int max);
+	std::list<int> strtolist(const char* str, int max);
   void logMessage(ostream& stream, const string& message);
 	
 	void help();
@@ -557,7 +639,6 @@ private:
 
   // the command to execute
   Command* 	itsCommand;
-	
 	
   // dimensions of the connected hardware
 	uint32	itsActiveBoards;	// mask b0 = board0, b1 = board1 ....

@@ -39,6 +39,7 @@
 #include <GCF/TM/GCF_Control.h>
 
 #include "Command.h"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	namespace TBB {
@@ -55,41 +56,23 @@ namespace LOFAR {
 				~BoardCmdHandler();
 
 				// The states of the statemachine.
+				GCFEvent::TResult idle_state(GCFEvent& event, GCFPortInterface& port);
 				GCFEvent::TResult send_state(GCFEvent& event, GCFPortInterface& port);
 				GCFEvent::TResult waitack_state(GCFEvent& event, GCFPortInterface& port);
 								
 				void setTpCmd(Command *cmd);
-				void setTpRetries(int32 Retries);
-				void setNrOfTbbBoards(int32 NrOfBoards);
-				//void setTpTimeOut(double TimeOut);
 				bool tpCmdDone();
 				
 			protected:
 
 			private:
-				// convert port to portnr, used in the port-array
-				//int portToBoardNr(GCFPortInterface& port);
-				void sendCmd();
-				void nextCmd();
-				
-			private:
-				
-				// constants
-				int32		itsMaxRetries;
+				TbbSettings 			*TS;
+				bool							itsDone;
+				bool							itsFlashMode;
 				// variables
-				int32		itsRetries;
-				int32		itsNrOfBoards;
-				int32		itsNrOfChannels;
-				
-				CmdTypes itsCmdType;
-				int32		itsBoardNr;
-				int32		itsChannelNr;
-				bool		itsNextCmd;
-				
-				GCFPortInterface*		itsClientPort; // return port of the actual commmand
-										
-				//int32								itsBoardRetries[MAX_N_TBBBOARDS];
-				Command*						itsCmd; // command to use			
+				int32							 itsRetries;
+				GCFPortInterface  *itsClientPort; // return port of the actual commmand
+				Command						*itsCmd; // command to use			
 				
 		};
 	} // end TBB namespace

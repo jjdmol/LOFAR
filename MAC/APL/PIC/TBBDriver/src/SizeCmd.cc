@@ -24,25 +24,25 @@
 #include <Common/LofarLogger.h>
 
 #include "SizeCmd.h"
-#include "DriverSettings.h"
 
-namespace LOFAR {
-	using namespace TBB_Protocol;
-	using namespace TP_Protocol;
-	namespace TBB {
+using namespace LOFAR;
+using namespace TBB_Protocol;
+using namespace TP_Protocol;
+using	namespace TBB;
 
 //--Constructors for a SizeCmd object.----------------------------------------
-SizeCmd::SizeCmd():
-		itsBoardMask(0),itsBoardsMask(0)
+SizeCmd::SizeCmd()
 {
+	TS					= TbbSettings::instance();
 	itsTPE 			= new TPSizeEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBSizeackEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsTBBackE->status[boardnr]	= 0;
-	}		
+		itsTBBackE->status_mask[boardnr]	= 0;
+	}
+	setWaitAck(true);		
 }
 	  
 //--Destructor for SizeCmd.---------------------------------------------------
@@ -64,23 +64,17 @@ bool SizeCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void SizeCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBSizeEvent(event);
+	itsTBBE	= new TBBSizeEvent(event);
 	
-	// mask for the installed boards
-	itsBoardsMask = DriverSettings::instance()->activeBoardsMask();	
-	itsBoardMask = itsTBBE->boardmask; // for some commands board-id is used ???
+	setBoardMask(itsTBBE->boardmask);
 	
-	for (int boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) {
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (!TS->isBoardActive(boardnr))
+			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+	}						
 		
-		if (!(itsBoardsMask & (1 << boardnr)))
-			itsTBBackE->status[boardnr] |= NO_BOARD;
-						
-		if (!(itsBoardsMask & (1 << boardnr)) &&  (itsBoardMask & (1 << boardnr)))
-			itsTBBackE->status[boardnr] |= (SELECT_ERROR | BOARD_SEL_ERROR);
-	}
-		
-	// Send only commands to boards installed
-	itsBoardMask = itsBoardMask & itsBoardsMask;
+	// get first board
+	nextBoardNr();
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPSIZE;
@@ -90,71 +84,42 @@ void SizeCmd::saveTbbEvent(GCFEvent& event)
 }
 
 // ----------------------------------------------------------------------------
-bool SizeCmd::sendTpEvent(int32 boardnr, int32)
+void SizeCmd::sendTpEvent()
 {
-	bool sending = false;
-	DriverSettings*		ds = DriverSettings::instance();
-	
-	if (ds->boardPort(boardnr).isConnected() && (itsTBBackE->status[boardnr] == 0)) {
-		ds->boardPort(boardnr).send(*itsTPE);
-		ds->boardPort(boardnr).setTimer(ds->timeout());
-		sending = true;
-	}
-	else
-		itsTBBackE->status[boardnr] |= CMD_ERROR;
-		
-	return(sending);
+	TS->boardPort(getBoardNr()).send(*itsTPE);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------
-void SizeCmd::saveTpAckEvent(GCFEvent& event, int32 boardnr)
+void SizeCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status[boardnr] |= COMM_ERROR;
-	}
-	else {
+		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
+	} else {
 		itsTPackE = new TPSizeackEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status[boardnr] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
 		
-		itsTBBackE->npages[boardnr]	= itsTPackE->npages;
+		LOG_DEBUG_STR(formatString("SizeCmd: board[%d] status[0x%08X] pages[%u]", 
+																getBoardNr(), itsTPackE->status, itsTPackE->npages));
+																
+		TS->setMemorySize(getBoardNr(),itsTPackE->npages);
+		itsTBBackE->npages[getBoardNr()]	= itsTPackE->npages;
 		
-		LOG_DEBUG_STR(formatString("SizeCmd: board[%d] %u;%u", 
-																boardnr, itsTPackE->status, itsTPackE->npages));
 		delete itsTPackE;
 	}
+	nextBoardNr();
 }
 
 // ----------------------------------------------------------------------------
 void SizeCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int32 boardnr = 0; boardnr < DriverSettings::instance()->maxBoards(); boardnr++) { 
-		if (itsTBBackE->status[boardnr] == 0)
-			itsTBBackE->status[boardnr] = SUCCESS;
+	for (int32 boardnr = 0; boardnr < TS->maxBoards(); boardnr++) { 
+		if (itsTBBackE->status_mask[boardnr] == 0)
+			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 	
 	clientport->send(*itsTBBackE);
 }
-
-// ----------------------------------------------------------------------------
-CmdTypes SizeCmd::getCmdType()
-{
-	return(BoardCmd);
-}
-
-// ----------------------------------------------------------------------------
-uint32 SizeCmd::getBoardMask()
-{
-	return(itsBoardMask);
-}
-
-// ----------------------------------------------------------------------------
-bool SizeCmd::waitAck()
-{
-	return(true);
-}
-
-	} // end TBB namespace
-} // end LOFAR namespace
