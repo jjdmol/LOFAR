@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 StationCtrlViewPanel
-PANEL,292 131 484 325 N "_3DFace" 2
+PANEL,469 105 484 325 N "_3DFace" 2
 "$Station"
 "$datapoint"
 "main()
@@ -71,61 +71,61 @@ PANEL,292 131 484 325 N "_3DFace" 2
 
 }
 
-updateBeamCtrlTable(string dp1, string state, 
+updateBeamCtrlTable(string dp1, int state, 
                     string dp2, string error,
                     string dp3, bool invalid)
 {
 	string SymbolCol;
 	if (invalid) 
 	{
-		SymbolCol=\"Lofar_device_invalid\";
+		SymbolCol=\"Lofar_invalid\";
   } else {
-		SymbolCol=\"Lofar_device_active\";	  
+		SymbolCol=getStateColor(state);	  
   }
   setValue(\"BeamCtrlLight\", \"backCol\", SymbolCol);
 	StationCtrlTable.updateLine(1,\"Controller\",\"BeamCtrl\",\"Status\",state,\"Error\",error);
 }
 
-updateCalCtrlTable(string dp1, string state, 
+updateCalCtrlTable(string dp1, int state, 
                    string dp2, string error,
                    string dp3, bool invalid)
 {
 	string SymbolCol;
 	if (invalid) 
 	{
-		SymbolCol=\"Lofar_device_invalid\";
+		SymbolCol=\"Lofar_invalid\";
   } else {
-		SymbolCol=\"Lofar_device_active\";	  
+		SymbolCol=getStateColor(state);	  
   }
   setValue(\"CalCtrlLight\", \"backCol\", SymbolCol);
 	StationCtrlTable.updateLine(1,\"Controller\",\"CalCtrl\",\"Status\",state,\"Error\",error);
 }
 
-updateDigBoardCtrlTable(string dp1, string state, 
+updateDigBoardCtrlTable(string dp1, int state, 
 												string dp2, string error,
 												string dp3, bool invalid)
 {
 	string SymbolCol;
 	if (invalid) 
 	{
-		SymbolCol=\"Lofar_device_invalid\";
+		SymbolCol=\"Lofar_invalid\";
   } else {
-		SymbolCol=\"Lofar_device_active\";	  
+		SymbolCol=getStateColor(state);	  
   }
   setValue(\"DigBoardCtrlLight\", \"backCol\", SymbolCol);
 	StationCtrlTable.updateLine(1,\"Controller\",\"DigBoardCtrl\",\"Status\",state,\"Error\",error);
 }
 
-updateStationCtrlTable(string dp1, string state, 
+updateStationCtrlTable(string dp1, int state, 
                        string dp2, string error,
                        string dp3, bool invalid)
 {
 	string SymbolCol;
 	if (invalid) 
 	{
-		SymbolCol=\"Lofar_device_invalid\";
+		SymbolCol=\"Lofar_invalid\";
   } else {
-		SymbolCol=\"Lofar_device_active\";	  
+		SymbolCol=getStateColor(state);	  
   }
   setValue(\"StationCtrlLight\", \"backCol\", SymbolCol);
 	StationCtrlTable.updateLine(1,\"Controller\",\"StationCtrl\",\"Status\",state,\"Error\",error);
@@ -355,7 +355,7 @@ LANG:1 9 <Station>
 7 5
 "StationCtrlLight"
 ""
-1 17 58 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 17 58 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 6 0 0 0 0 0
 EE E
@@ -372,7 +372,7 @@ E "main()
 7 6
 "DigBoardCtrlLight"
 ""
-1 17 74 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 17 74 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 7 0 0 0 0 0
 EE E
@@ -389,7 +389,7 @@ E "main()
 7 7
 "BeamCtrlLight"
 ""
-1 17 90 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 17 90 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 8 0 0 0 0 0
 EE E
@@ -406,7 +406,7 @@ E "main()
 7 8
 "CalCtrlLight"
 ""
-1 17 106 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 17 106 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 9 0 0 0 0 0
 EE E

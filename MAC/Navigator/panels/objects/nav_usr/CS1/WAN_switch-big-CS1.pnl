@@ -1,53 +1,11 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,294 179 182 152 N "_3DFace" 4
+PANEL,469 105 182 152 N "_3DFace" 3
 "$SwitchName"
-"$configDatapoint"
 "$datapoint"
 "$referenceDatapoint"
-"main()
-{
-  EP_setBackColor();	
-	setValue(\"txt_switchName\",\"text\",$SwitchName);
-  $configDatapoint;
-  $referenceDatapoint;
-}
-
-EP_setBackColor()
-{
-  dyn_errClass err;
-  string dpPrefix = \"LOFAR_PIC_WAN_\" + $SwitchName;
-  rect_Switch.toolTipText = dpPrefix;
-  icon_maintenance.toolTipText = dpPrefix;
-  if( !dpAccessable( dpPrefix + \".status:_online.._value\"))
-  {                 
-    setValue(\"rect_Switch\", \"backCol\", \"_dpdoesnotexist\");
-    return;
-  }
-
-  dpConnect(\"EP_setBackColorCB\", 
-            dpPrefix + \".status:_online.._value\");
-  err = getLastError();
-  if (dynlen(err) > 0)
-  {
-    setValue(\"rect_Switch\", \"backCol\", \"_dpdoesnotexist\");
-  }
-
-}
-
-EP_setBackColorCB(string dpSource1,  unsigned status)
-{
-	if (status==0)
-	{
-    setValue(\"rect_Switch\", \"backCol\", \"Lofar_device_active\");
-	}
-	else
-	{
-    setValue(\"rect_Switch\", \"backCol\", \"Red\");
-	}
-}" 0
-EE E E 1 -1 -1 0  25 85
+EEE E E 1 -1 -1 0  25 85
 "" 0 1
 E"
 " 0
@@ -190,7 +148,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 0 1 0 1 E U  2 0 3 "pictures/nav_usr/CS1/snapshot_switch_port12.bmp" 13434828 E 45 88 113 108
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/CS1/snapshot_switch_port12.bmp" 13434828 E 45 88 113 108
 6 58
 "Border2"
 ""
@@ -203,7 +161,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 0 1 0 1 E U  2 0 3 "pictures/nav_usr/CS1/snapshot_switch_port12.bmp" 13434828 E 45 109 113 129
+E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/CS1/snapshot_switch_port12.bmp" 13434828 E 45 109 113 129
 0
 LAYER, 1 
 1
