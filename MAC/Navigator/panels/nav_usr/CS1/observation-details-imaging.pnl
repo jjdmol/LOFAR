@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,361 106 950 741 N "_3DFace" 1
+PANEL,388 83 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -249,7 +249,7 @@ E E 0 5 1 0 1 E  770 270 770 152
 6 160
 "Border1"
 ""
-1 790 464 E E E 1 E 1 E N "_Transparent" E N {255,255,255} E E
+1 790 464 E E E 1 E 1 E N "_Transparent" E N {254,192,128} E E
  E E
 54 0 0 0 0 0
 EE E
@@ -280,7 +280,7 @@ E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/CS1/CEP-db.bmp" 13434828 E 790 310 93
 6 173
 "Border2"
 ""
-1 1390 1064 E E E 1 E 1 E N "_Transparent" E N {255,255,255} E E
+1 1390 1064 E E E 1 E 1 E N "_Transparent" E N {254,192,128} E E
  E E
 58 0 0 0 0 0
 EE E
