@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 13 ObsCtrl_State
-PANEL,231 119 950 741 N "_3DFace" 1
+PANEL,508 105 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -19,29 +19,21 @@ PANEL,231 119 950 741 N "_3DFace" 1
 	showLogging();
 	
 	// check if the requiered datapoint for this view are enabled and accessible
-	if (dpAccessable($datapoint + \".state\") && dpAccessable($datapoint + \".error\")) {
-		dpConnect(\"updateObsCtrl\", $datapoint + \".state:_online.._value\",
-		                           $datapoint + \".error:_online.._value\",
-		                           $datapoint + \".state:_online.._invalid\");
-  } else {
-    setValue(\"ObsCtrl_border\", \"backCol\", \"_dpdoesnotexist\");
-  }  
+	if (dpAccessable($datapoint + \".error\")) {
+		dpConnect(\"updateObsCtrl\", $datapoint + \".error:_online.._value\",
+		                           $datapoint + \".currentAction:_online.._value\");
+  }
+  
+  // connect for childUpdates
+  showChildState($datapoint);
+  // connect for selfUpdates
+  showSelfState($datapoint);  
 }
 
-updateObsCtrl(string dp1, string state,
-							string dp2, string error,
-							string dp3, bool invalid)
+updateObsCtrl(string dp1, string error,
+							string dp2, string action)
 {
-
-	string SymbolCol;
-	if (invalid) 
-	{
-		SymbolCol=\"Lofar_device_invalid\";
-  } else {
-		SymbolCol=\"Lofar_device_active\";	  
-  }
-	setValue(\"ObsCtrl_border\", \"backCol\", SymbolCol);
-  setValue(\"txt_State\", \"text\", state);
+  setValue(\"txt_Action\", \"text\", action);
   setValue(\"txt_Error\", \"text\", substr(error,0,30));	
 }
 
@@ -179,9 +171,9 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 45
-"ObsCtrl_border"
+"childStateBorder"
 ""
-1 10 85 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 10 85 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -190,7 +182,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 10 260 85
+E E 0 3 1 0 1 E U  0 E 10 10 260 85
 1 46 4 "" 0
 0
 1 47 4 "" 1
@@ -316,6 +308,8 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 17 <ObservationName>
+1 91 8 "" 1
+0
 1 55 4 "" 2
 0
 1 56 4 "" 9
@@ -399,7 +393,7 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-160-100-100-*-*-iso8859-1|
 1
 LANG:1 7 ObsCtrl
 2 13
-"ObsCtrl_state"
+"ObsCtrl_action"
 ""
 1 17 35 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
@@ -419,7 +413,7 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|
 1
 LANG:1 7 State :
 2 35
-"txt_State"
+"txt_Action"
 ""
 1 67 35 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
@@ -523,4 +517,8 @@ LANG:1 6 Layer8
 2
 "$Station""CS001"
 "$datapoint""$datapoint"
+3 8 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 202 35 T 32 1 0 1  38 -20  
+1
+"$object""ObsCtrl"
 0

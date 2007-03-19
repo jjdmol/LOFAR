@@ -24,6 +24,18 @@
 //# General util functions:
 //# - Logging facility
 //# - Message box function
+//# - give child border a color
+//# - give Ownlight a color
+//# - get stateName from int
+//# - get stateColor from int
+
+
+const int OFF         = 0;
+const int OPERATIONAL = 1;
+const int MAINTENANCE = 2;
+const int TEST        = 3;
+const int SUSPICIOUS  = 4;
+const int BROKEN      = 5;
 
 const string DPNAME_LOGLEVEL = "__loglevel";
 
@@ -43,6 +55,8 @@ const string LOGMESSAGE_TRACE = "TRACE";
 
 global bool g_logInitialized = false;
 global int  g_loglevel = 0;
+global dyn_string stateColor;
+global dyn_string stateName;
 
 void gcfUtilMessageWarning(string caption, string message)
 {
@@ -189,4 +203,73 @@ void loglevelUpdated(string dp, int newLevel)
 {
   DebugTN("new loglevel:",newLevel);
   g_loglevel = newLevel;
+}
+
+// helper function to return the colorName based on a state
+string getStateColor(int aState) {
+  if (aState < dynlen(stateColor)+1 & aState > 0) {
+    return stateColor[aState];
+  } else { 
+    return "";
+  }
+}
+
+// helper function to return the stateName based on a state
+string getStateName(int aState) {
+  if (aState < dynlen(stateName)+1 & aState > 0) {
+    return stateName[aState];
+  } else { 
+    return "";
+  }
+}
+
+
+// does all the colorsettings based on the DP's state
+void showSelfState(string aDP) {
+  // check if the requiered datapoint for this view are enabled and accessible
+  if (dpAccessable(aDP+".state")) {
+    dpConnect("updateSelfState",aDP + ".state",
+   	                        aDP + ".state:_online.._invalid");
+  } else {
+    setValue("selfState.light","backCol","_dpdoesnotexist");
+  }
+}
+
+void showChildState(string aDP) {
+  // check if the requiered datapoint for this view are enabled and accessible
+  if (dpAccessable(aDP+".childState")) {
+    dpConnect("updateChildState",aDP + ".childState",
+   	                         aDP + ".childState:_online.._invalid");
+  } else {
+    setValue("childStateBorder","foreCol","_dpdoesnotexist");
+  }
+}
+
+
+updateChildState(string dp1, int state,
+ 		 string dp2, bool invalid)
+{
+  string SymbolCol;
+	
+  if (invalid) 
+  {
+    SymbolCol = "Lofar_invalid";
+  } else {
+    SymbolCol = getStateColor(state);
+  }
+  setValue("childStateBorder", "foreCol", SymbolCol);
+}
+
+updateSelfState(string dp1, int state,
+ 		string dp2, bool invalid)
+{
+  string SymbolCol;
+
+  if (invalid) 
+  {
+    SymbolCol = "Lofar_invalid";
+  } else {
+    SymbolCol = getStateColor(state);
+  }
+  setValue("selfState.light", "backCol", SymbolCol);
 }
