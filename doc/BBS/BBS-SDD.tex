@@ -88,6 +88,8 @@ online code documentation.
 \section{Architectural Design}
 \label{sec:architectural-design}
 
+\todo{see SDD-050 section 4.2 for requirements}
+
 \subsection{Design Considerations}
 \label{subsec:considerations}
 The BlackBoard SelfCal (BBS) system is designed to do the calibration of LOFAR
@@ -164,8 +166,6 @@ Computing nodes should communicate through some kind of global shared
 memory. One obvious candidate for such shared memory is a database system. It
 provides locking and notification (trigger) mechanisms, and sometimes even
 command queueing.
-
-\todo{see SDD-050 section 4.2 for requirements}
 
 \subsection{Blackboard Pattern}
 \label{subsec:blackboard}
@@ -355,21 +355,21 @@ architecture and roles of the controller.
 
 \subsubsection{BBS Step}
 \label{subsubsec:design-step}
-\begin{figure}[!ht]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=0.8\textwidth]{images/bbs-step-class-diagram}
 \end{figure}
 
 \subsubsection{Global Control}
 \label{subsubsec:design-global-control}
-\begin{figure}[!ht]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=0.9\textwidth]{images/bbs-global-control-activity-diagram}
 \end{figure}
 
 \subsubsection{Local Control}
 \label{subsubsec:design-local-control}
-\begin{figure}[!ht]
+\begin{figure}[!htb]
 \centering
 \includegraphics[width=0.9\textwidth]{images/bbs-local-control-activity-diagram}
 \end{figure}
@@ -377,7 +377,40 @@ architecture and roles of the controller.
 
 \subsection{BBS Kernel}
 \label{subsec:design-kernel}
-Both \bbs and \meqtree are based on \textsc{pss} (Prototype Selfcal System), but have since gone their own separate ways. \meqtree has become a very flexible system, making it easy to experiment with different calibration algorithms. \bbs development focussed more on performance and robustness at the cost of some flexibility. Distribution and parallel processing are an integral part of the design. Using \meqtree to learn which approaches work and which do not, \bbs will implement the succesful approaches in an operational environment.
+The kernel is the part of \bbs responsible for number crunching. It is
+implemented as a stand-alone library that is used by the local controller
+(BBSKernel executable) and the solver (BBSSolver executable). This simplifies
+reuse of kernel code in projects that require a different control
+implementation.
+
+\todo{create a simple figure in a more general part of the document that
+explains the different packages/libraries/executables/... used in \bbs (see for
+example the \olap document)}
+
+The kernel supports four primitive commands:
+\begin{itemize}
+\item \textsc{predict}\\
+Predict (simulate) visibilities based on a model that describes the sky, the
+environment (e.g. ionosphere), and the instrument.
+\item \textsc{subtract}\\
+Predict visibilities for one or more source(s) and subtract the result from the
+observed visibilities.
+\item \textsc{correct}\\
+Correct visibilities for a given reference (source) direction.
+\item \textsc{generate equations}\\
+Generate condition equations in a form that can be fed to the solver. Condition
+equations relate the model parameters to the difference between the observed
+visibilities and the predicted visibilities (based on the model).
+\end{itemize}
+
+
+Both \bbs and \meqtree are based on \textsc{pss} (Prototype Selfcal System), but
+have since gone their own separate ways. \meqtree has become a very flexible
+system, making it easy to experiment with different calibration algorithms. \bbs
+development focussed more on performance and robustness at the cost of some
+flexibility. Distribution and parallel processing are an integral part of the
+design. Using \meqtree to learn which approaches work and which do not, \bbs
+will implement the succesful approaches in an operational environment.
 
 Although BBS and MeqTrees have gone their own way, they still share the same
 principles:
@@ -414,27 +447,16 @@ predict the sources near the new phase center on a coarser grid.
 
 \todo{Move the above to a more general part of the document}
 
-The kernel is the part of \bbs that is responsible for all the number crunching. It is implemented as a stand-alone library that is used by the local controller (BBSKernel executable) and the solver (BBSSolver executable). This simplifies reuse of kernel code in projects that require a different control implementation.
-
-\todo{create a simple figure in a more general part of the document that explains the different packages/libraries/executables/... used in \bbs (see for example the \olap document)}
-
-The kernel supports four primitive operations:
-\begin{itemize}
-\item \textsc{predict}\\
-Predict (simulate) visibilities based on a model that describes the sky, the environment (e.g. ionosphere), and the instrument.
-\item \textsc{subtract}\\
-Predict visibilities for one or more source(s) and subtract the result from the observed visibilities.
-\item \textsc{correct}\\
-Correct visibilities for a given reference (source) direction.
-\item \textsc{generate equations}\\
-Generate condition equations in a form that can be fed to the solver. Condition equations relate the model parameters to the difference between the observed visibilities and the predicted visibilities (based on the model).
-\end{itemize}
-
 \subsubsection{Terminology}
 \label{subsubsec:terminology}
 
 \paragraph{Domains}
-A central concept in \bbs is the \emph{domain}: A 2-D rectangular region in $frequency$ and $time$. In table \ref{tab:domains} we define seven different domain types that are useful for discussing the design of \bbs. Figure \ref{fig:domains} illustrates the different domain types and how they relate to eachother.
+A central concept in \bbs is the \emph{domain}: A 2-D rectangular region in
+$frequency$ and $time$. In table \ref{tab:domains} we define seven different
+domain types that are useful for discussing the design of \bbs. Figure
+\ref{fig:domains} illustrates the different domain types and how they relate to
+eachother.
+
 \begin{table}[htb!]
 \centering
 \begin{tabular}{lp{0.60\textwidth}}
@@ -443,17 +465,22 @@ A central concept in \bbs is the \emph{domain}: A 2-D rectangular region in $fre
 \hline
 \texttt{data domain} & The domain covered by a single observation\\
 \hline
-\texttt{local data domain} & Part of the data domain that is local to (i.e. stored at) a given compute node\\
+\texttt{local data domain} & Part of the data domain that is local to (i.e.
+stored at) a given compute node\\
 \hline
 \texttt{work domain} & The union of all local work domains\\
 \hline
-\texttt{local work domain} & Part of the local data domain that can be kept in main memory\\
+\texttt{local work domain} & Part of the local data domain that can be kept in
+main memory\\
 \hline
-\texttt{solve domain} & Part of the data domain that is used to solve for a set of unknowns\\
+\texttt{solve domain} & Part of the data domain that is used to solve for a set
+of unknowns\\
 \hline
-\texttt{local solve domain} & A solve domain that \emph{intersects} the local data domain\\
+\texttt{local solve domain} & A solve domain that \emph{intersects} the local
+data domain\\
 \hline
-\texttt{validity domain} & Domain on which a \emph{funklet} is considered valid\\
+\texttt{validity domain} & Domain on which a \emph{funklet} is considered
+valid\\
 \end{tabular}
 \caption{An overview of the domain types used in \bbs.}
 \label{tab:domains}
@@ -462,45 +489,99 @@ A central concept in \bbs is the \emph{domain}: A 2-D rectangular region in $fre
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.5\textwidth]{images/domains.eps}
-\caption{Data distribution during the execution of a typical \textsc{solve} command that shows the domain types described in table \ref{tab:domains}}
+%\parbox{0.75\textwidth}{
+\caption{Data distribution during the execution of a typical \textsc{solve}
+command that shows the domain types described in Table~\ref{tab:domains}}
+%}
 \label{fig:domains}
 \end{figure}
 
 \todo{Fix the labels in figure \ref{fig:domains}.}
 
 
-\paragraph{Models, parameters, funklets, and coefficients}
-Self calibration revolves around fitting a \emph{model} to the observed data by adjusting the parameters of the model. On the coarsest scale a model for the calibration of \lofar describes the instrument, the environment, and the sky. This model can be decomposed into smaller (sub)models, such as a model for the beamshape, the bandpass, or the ionosphere (see also \cite[sec. 2]{LOFAR-ASTRON-SDD-050}).
+\paragraph{Models, parameters, funklets, and coefficients} Self calibration
+revolves around fitting a \emph{model} to the observed data by adjusting the
+parameters of the model. On the coarsest scale a model for the calibration of
+\lofar describes the instrument, the environment, and the sky. This model can be
+decomposed into smaller (sub)models, such as a model for the beamshape, the
+bandpass, or the ionosphere (see also \cite[sec. 2]{LOFAR-ASTRON-SDD-050}).
 
-In general, a \emph{parameter} can be a constant or a continuous function of one or more variables such as $frequency$, $time$, and $direction$. At the moment, \bbs only supports functions of $frequency$ and/or $time$. Variability in direction can be achieved by creating a separate parameter for each direction of interest. This is done for the E-jones, where a separate parameter is used for each combination of station and source. True 4-D supports (frequency, time, l, m) may be required in the future to allow modelling of the beam shape.
+In general, a \emph{parameter} can be a constant or a continuous function of one
+or more variables such as $frequency$, $time$, and $direction$. At the moment,
+\bbs only supports functions of $frequency$ and/or $time$. Variability in
+direction can be achieved by creating a separate parameter for each direction of
+interest. This is done for the E-jones, where a separate parameter is used for
+each combination of station and source. True 4-D supports (frequency, time, l,
+m) may be required in the future to allow modelling of the beam shape.
 
-Both \bbs and \meqtree represent the value of a parameter by a set of \emph{funklets}. A funklet (in \bbs) is a polynomial of arbitrary degree in $frequency$ and/or $time$ with an associated \emph{validity domain}. Figure \ref{fig:funklet} illustrates these concepts.
+Both \bbs and \meqtree represent the value of a parameter by a set of
+\emph{funklets}. A funklet (in \bbs) is a polynomial of arbitrary degree in
+$frequency$ and/or $time$ with an associated \emph{validity domain}. Figure
+\ref{fig:funklet} illustrates these concepts.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.75\textwidth]{images/funklet.eps}
-\caption{This figure shows a set of funklets with associated validity domains that together represent the value of a parameter on a larger domain.}
+\caption{This figure shows a set of funklets with associated validity domains
+that together represent the value of a parameter on a larger domain.}
 \label{fig:funklet}
 \end{figure}
 
-Validity domains and solve domains are related concepts. The validity domains of a set of funklets is equal to the solve domains used to fit the parameter represented by the funklets. For example, suppose we fit station gain as $0^{th}$-degree funklets using solve domains of one channel width times 5 integration periods. Then the validity domains of the funklets that represent station gain will match the solve domains exactly. However, during fitting the values of other parameters will be needed as well. The validity domains of the funklets that represent these parameters will most likely be different, because they were fitted at some earlier time using potentially different solve domains. In summary: The validity domain of a funklet determines in what region the value of the funklet is considered valid; A solve domain determines which part of the observed data is used to fit the coefficients of a funklet.
+Validity domains and solve domains are related concepts. The validity domains of
+a set of funklets is equal to the solve domains used to fit the parameter
+represented by the funklets. For example, suppose we fit station gain as
+$0^{th}$-degree funklets using solve domains of one channel width times 5
+integration periods. Then the validity domains of the funklets that represent
+station gain will match the solve domains exactly. However, during fitting the
+values of other parameters will be needed as well. The validity domains of the
+funklets that represent these parameters will most likely be different, because
+they were fitted at some earlier time using potentially different solve domains.
+In summary: The validity domain of a funklet determines in what region the value
+of the funklet is considered valid; A solve domain determines which part of the
+observed data is used to fit the coefficients of a funklet.
 
-The problem of fitting a single parameter can now be reformulated as fitting the coefficients of a \emph{set} of funklets defined on a set of (non-overlapping) solve domains. Because the solve domains do not overlap, each funklet may be treated as an independent fitting problem. For each $n^{th}$-degree funklet, $n+1$ coefficients need to be determined.
+The problem of fitting a single parameter can now be reformulated as fitting the
+coefficients of a \emph{set} of funklets defined on a set of (non-overlapping)
+solve domains. Because the solve domains do not overlap, each funklet may be
+treated as an independent fitting problem. For each $n^{th}$-degree funklet,
+$n+1$ coefficients need to be determined.
 
 \subsubsection{Measurement Equation Evaluation}
 \label{subsubsec:design-me-evaluation}
-The Measurement Equation (\me) \cite{LOFAR-ASTRON-ADD-015} is a parameterized model of an interferometer in terms of a model of the sky, environmental effects (e.g. ionosphere), and antenna based instrumental effects.
+The Measurement Equation (\me) \cite{LOFAR-ASTRON-ADD-015} is a parameterized
+model of an interferometer in terms of a model of the sky, environmental effects
+(e.g. ionosphere), and antenna based instrumental effects.
 
-Both \bbs and \meqtree represent the \me as a directed acyclic graph, although it is commonly referred to as \emph{tree}. The nodes of the tree represent atomic expressions, while the branches represent dependencies between atomic expressions. Compound expressions can be build by combining several nodes into a (sub)tree. The leaf nodes represent the parameters of the expression, e.g. source positions and Stokes vectors. As an example, figure \ref{fig:expr_tree} shows a subtree for computing the visibilities produced by two linearly polarized point sources at different positions.
+Both \bbs and \meqtree represent the \me as a directed acyclic graph, although
+it is commonly referred to as \emph{tree}. The nodes of the tree represent
+atomic expressions, while the branches represent dependencies between atomic
+expressions. Compound expressions can be build by combining several nodes into a
+(sub)tree. The leaf nodes represent the parameters of the expression, e.g.
+source positions and Stokes vectors. As an example, figure \ref{fig:expr_tree}
+shows a subtree for computing the visibilities produced by two linearly
+polarized point sources at different positions.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{images/expr_graph_sdd.ps}
-\caption{This figure shows a subtree for computing the visibilities produced by two linearly polarized point sources at different positions. The leaf nodes, i.e. the parameters of the expression, have been colored grey.}
+\caption{This figure shows a subtree for computing the visibilities produced by
+two linearly polarized point sources at different positions. The leaf nodes,
+i.e. the parameters of the expression, have been colored grey.}
 \label{fig:expr_tree}
 \end{figure}
 
-\meqtree is very flexible in the expression trees that a user can specify. The flexibility is due to a powerful Python language extension (\textsc{tdl}) that allows easy construction of a tree from an arbitrary expression, and to the high granularity of the nodes. The granularity of the nodes used in \bbs tends to be lower. For example, in \meqtree a typical node implements the sine function, whereas in \bbs a single node may implement a bandpass model. Because of the granularity of the nodes used in \bbs, the expression trees are generally small. Therefore, the overhead of traversing the trees is small as well. Note that, if necessary, \bbs could be made more flexible by adding nodes that are less specialized. By the same reasoning, the overhead of tree traversal in \meqtree could be reduced by creating specialized nodes.
+\meqtree is very flexible in the expression trees that a user can specify. The
+flexibility is due to a powerful Python language extension (\textsc{tdl}) that
+allows easy construction of a tree from an arbitrary expression, and to the high
+granularity of the nodes. The granularity of the nodes used in \bbs tends to be
+lower. For example, in \meqtree a typical node implements the sine function,
+whereas in \bbs a single node may implement a bandpass model. Because of the
+granularity of the nodes used in \bbs, the expression trees are generally small.
+Therefore, the overhead of traversing the trees is small as well. Note that, if
+necessary, \bbs could be made more flexible by adding nodes that are less
+specialized. By the same reasoning, the overhead of tree traversal in \meqtree
+could be reduced by creating specialized nodes.
 
-Specification by the user is limited to selecting predefined subtrees to include in the \me. Currently implemented subtrees are:
+Specification by the user is limited to selecting predefined subtrees to include
+in the \me. Currently implemented subtrees are:
 \begin{itemize}
 \item Prediction of a (possibly polarized) point source
 \item Complex gain per station (G-jones)
@@ -508,21 +589,35 @@ Specification by the user is limited to selecting predefined subtrees to include
 \item Bandpass (B-jones)
 \end{itemize}
 
-\bbs will automatically generate a complete expression tree based on the selected predefined subtrees. For example, it will instantiate a subtree for each selected source in the local sky model and will include these at the appropriate place in the \me tree for each selected interferometer (baseline).
+\bbs will automatically generate a complete expression tree based on the
+selected predefined subtrees. For example, it will instantiate a subtree for
+each selected source in the local sky model and will include these at the
+appropriate place in the \me tree for each selected interferometer (baseline).
 
-In \cite[sec. 2]{LOFAR-ASTRON-SDD-050} a more in depth discussion of the various models, such as beamshape, bandpass, and ionosphere is given. 
+In \cite[sec. 2]{LOFAR-ASTRON-SDD-050} a more in depth discussion of the various
+models, such as beamshape, bandpass, and ionosphere is given. 
 
 \subsubsection{Model Parameters}
-In order to evaluate an expression tree, the kernel needs to know the values of the model parameters (leaf nodes). Typical examples of model parameters are: source position and Stokes vector, complex station gain, ionospheric phase shift. The total number of parameters in the expression trees of the entire \lofar array will depend on the number of sources that are included in the sky model. Several thousands of parameters seems to be a realistic estimate \cite{LOFAR-ASTRON-SDD-052}.
+To evaluate an expression tree, the kernel needs to know the values of
+the model parameters (leaf nodes). Typical examples of model parameters are:
+source position and Stokes vector, complex station gain, ionospheric phase
+shift. The total number of parameters in the expression trees of the entire
+\lofar array will depend on the number of sources that are included in the sky
+model. Several thousands of parameters seems to be a realistic estimate
+\cite{LOFAR-ASTRON-SDD-052}.
 
 \paragraph{Naming scheme}
-Because of the large number of parameters, keeping track of them all becomes a challenge. A naming scheme can be used to simplify this task. The naming scheme achieves two goals:
+Because of the large number of parameters, keeping track of them all becomes a
+challenge. A naming scheme can be used to simplify this task. The naming scheme
+achieves two goals:
 \begin{enumerate}
 \item Identification of groups of related parameters
 \item Specification of default values
 \end{enumerate}
 
-Each parameter is assigned a unique name, which can be made up of several parts separated by colons. Grouping can be achieved with \textsc{unix}-like wildcards (*, \{\}), see table \ref{tab:naming_scheme}.
+Each parameter is assigned a unique name, which can be made up of several parts
+separated by colons. Grouping can be achieved with \textsc{unix}-like wildcards
+(*, \{\}), see table \ref{tab:naming_scheme}.
 \begin{table}[htb!]
 \centering
 \begin{tabular}{lp{0.60\textwidth}}
@@ -533,22 +628,75 @@ Each parameter is assigned a unique name, which can be made up of several parts 
 \hline
 \texttt{dec:3C343} & Declination of source 3C343 \\
 \hline
-\texttt{gain:11:phase:CS10:3C343.1} & Phase of the x-polarized signal from station CS10 in the direction of source 3C343.1 \\
+\texttt{gain:11:phase:CS10:3C343.1} & Phase of the x-polarized signal from
+station CS10 in the direction of source 3C343.1 \\
 \hline
-\texttt{gain:11:phase:*:3C343.1} & Phase of the x-polarized signal of all stations in the direction of source 3C343.1 \\
+\texttt{gain:11:phase:*:3C343.1} & Phase of the x-polarized signal of all
+stations in the direction of source 3C343.1 \\
 \hline
-\texttt{gain:\{11,22\}:phase:*:3C343.1} & Phase of both the x- and y-polarized signal from station CS10 in the direction of source 3C343.1. \\
+\texttt{gain:\{11,22\}:phase:*:3C343.1} & Phase of both the x- and y-polarized
+signal from station CS10 in the direction of source 3C343.1. \\
 \hline
 \end{tabular}
-\caption{Examples of typical parameter names and the use of wildcards to identify a group of related parameters.}
+\caption{Examples of typical parameter names and the use of wildcards to
+identify a group of related parameters.}
 \label{tab:naming_scheme}
 \end{table}
-If the kernel cannot find an exact match when searching for a certain parameter, it will try to find a default value. Default values are specified according to the same naming scheme as parameters. However, if no default value can be found that matches the name of a parameter exactly, the kernel will strip off the last part of the name and retry. This process continues until either a match is found or the name becomes empty. Thus, one can specify for example a default flux for every source by specifying \texttt{StokesI}: If the kernel needs the value of \texttt{StokesI:3C343} but that parameter does not exist as a regular parameter, it will try to find a default value called \texttt{StokesI:3C343}. If that default value also does not exist, it will strip off the last part of the name and search for a default value called \texttt{StokesI}, which does exist in our example.
+If the kernel cannot find an exact match when searching for a certain parameter,
+it will try to find a default value. Default values are specified according to
+the same naming scheme as parameters. However, if no default value can be found
+that matches the name of a parameter exactly, the kernel will strip off the last
+part of the name and retry. This process continues until either a match is found
+or the name becomes empty. Thus, one can specify for example a default flux for
+every source by specifying \texttt{StokesI}: If the kernel needs the value of
+\texttt{StokesI:3C343} but that parameter does not exist as a regular parameter,
+it will try to find a default value called \texttt{StokesI:3C343}. If that
+default value also does not exist, it will strip off the last part of the name
+and search for a default value called \texttt{StokesI}, which does exist in our
+example.
+
+\paragraph{Reusing parameter values}
+It often makes sense to reuse the parameter values determined during
+calibration of an observation $A$ for calibration of an observation $B$. For
+instance, to provide a good initial values for the calibration of $B$ and
+hopefully save a few iterations.
+
+Instead of straightforward copying of parameter values, interpolation could be
+considered. For example, suppose we have already calibrated two observations,
+$A$ and $C$, one taken before and one after the time at which the observation to
+be calibrated, $B$, was recorded.
+
+Reuse of parameter values can also be applied \emph{during} calibration of an
+observation, when moving from one work domain to the next. One could even
+consider something like the following algorithm:
+\begin{enumerate}
+\item Solve a small number of work domains spaced relatively far apart
+\item Determine initial values for the intermediate work domains by
+interpolation
+\item Solve for the intermediate work domains.
+\end{enumerate}
+
+The current implementation does not provide support for this kind of operations
+yet.
 
 \paragraph{Refitting}
-Cross calibration
-Cross calibration can in principle easily be done by copying the parameters found for, say, a calibration observation to the parameter table of the other observation. If a calibration observation before and after the actual observation is used, it is easy to convert the parameters to a polynomial in order to use interpolation when calibrating the actual observation.
-Currently there is no support for these operations; it is all handwork.
+Refitting is useful in a multi-resolution approach. A typical example would be:
+\begin{enumerate}
+\item Solve for a parameter using funklets of a low polynomial degree on
+relatively large solve domains to get the global trend
+\item Refine the solution by using funklets of a higher degree on relatively
+small solve domains, using the values found in 1. as a starting point
+\end{enumerate}
+
+Funklets are defined on a normalized domain. The normalization depends on the
+validity domain. Therefore, the coefficients of funklets defined on a coarse
+scale cannot be copied directly to funklets defined on a fine scale. For
+polynomials the required transformation is easy to derive. In more complicated
+cases, the solver could be used to find the new values.
+
+Refitting is not yet supported in the current implementation.
+
+\todo{Check of bovenstaande juist is.}
 
 \paragraph{Storage}
 The current Prediffer implementation can handle parameters as follows:
@@ -608,10 +756,10 @@ An important consequence of using funklets is that, given a polynomial degree $n
 
 \subsubsection{Data Model}
 \label{subsubsec:design-data-model}
-\begin{figure}[!ht]
-\includegraphics[width=\textwidth]{images/blackboard-datamodel}
-\caption{Data model of the Blackboard database}
-\end{figure}
+%\begin{figure}[!ht]
+%\includegraphics[width=\textwidth]{images/blackboard-datamodel}
+%\caption{Data model of the Blackboard database}
+%\end{figure}
 
 \subsubsection{Work Orders}
 \label{subsubsec:design-work-orders}
