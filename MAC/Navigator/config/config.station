@@ -1,5 +1,5 @@
 [general]
-pvss_path = "C:/ETM/PVSS2/3.0"
+pvss_path = "C:/ETM/PVSS2/3.1"
 proj_path = "C:/Data/CS010"
 proj_version = "3.0"
 userName = "root"

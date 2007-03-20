@@ -206,18 +206,22 @@ void loglevelUpdated(string dp, int newLevel)
 }
 
 // helper function to return the colorName based on a state
+// dyn_arrays start count at 1!!!
+
 string getStateColor(int aState) {
-  if (aState < dynlen(stateColor)+1 & aState > 0) {
-    return stateColor[aState];
+  if (aState < dynlen(stateColor) & aState >= 0) {
+    return stateColor[aState+1];
   } else { 
     return "";
   }
 }
 
 // helper function to return the stateName based on a state
+// dyn_arrays start count at 1!!!
+
 string getStateName(int aState) {
-  if (aState < dynlen(stateName)+1 & aState > 0) {
-    return stateName[aState];
+  if (aState < dynlen(stateName) & aState >= 0) {
+    return stateName[aState+1];
   } else { 
     return "";
   }

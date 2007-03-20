@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 StationCtrlViewPanel
-PANEL,469 105 484 325 N "_3DFace" 2
+PANEL,248 199 484 325 N "_3DFace" 2
 "$Station"
 "$datapoint"
 "main()
@@ -25,55 +25,60 @@ PANEL,469 105 484 325 N "_3DFace" 2
   logThreadID=startThread(\"connectLogDP\");  
   //DebugTN(\"ThreadId: \"+$Station+ \": \"+logThreadID);
 
-	selectedDP=StationCtrlDP+\".logmsg\";
+	selectedDP=StationCtrlDP+\".logMsg\";
 
   	
 	// check if the requiered datapoint for this view are enabled and accessible
 	if (dpAccessable(StationCtrlDP+\".state\") && dpAccessable(StationCtrlDP + \".error\")) {
-	  dpConnect(\"updateStationCtrlTable\",StationCtrlDP + \".state\",
+	  dpConnect(\"updateStationCtrlTable\",StationCtrlDP + \".currentAction\",
  	                             	       StationCtrlDP + \".error\",
- 	                             	       StationCtrlDP + \".state:_online.._invalid\");
+ 	                             	       StationCtrlDP + \".state\",
+ 	                             	       StationCtrlDP + \".currentAction:_online.._invalid\");
  	} else {
     setValue(\"StationCtrlLight\", \"backCol\", \"_dpdoesnotexist\");
-		StationCtrlTable.appendLine(\"Controller\",\"StationCtrl\",\"Status\",\"\",\"Error\",\"\");
+		StationCtrlTable.appendLine(\"Controller\",\"StationCtrl\",\"Action\",\"\",\"Error\",\"\");
   }	
 
 	// check if the requiered datapoint for this view are enabled and accessible
 	if (dpAccessable(DigBoardCtrlDP+\".state\") && dpAccessable(DigBoardCtrlDP + \".error\")) {
-	  dpConnect(\"updateDigBoardCtrlTable\",DigBoardCtrlDP + \".state\",
+	  dpConnect(\"updateDigBoardCtrlTable\",DigBoardCtrlDP + \".currentAction\",
 	                             	        DigBoardCtrlDP + \".error\",
- 	                             	        DigBoardCtrlDP + \".state:_online.._invalid\");
+	                             	        DigBoardCtrlDP + \".state\",
+ 	                             	        DigBoardCtrlDP + \".currentAction:_online.._invalid\");
  	} else {
     setValue(\"DigBoardCtrlLight\", \"backCol\", \"_dpdoesnotexist\");
-		StationCtrlTable.appendLine(\"Controller\",\"DigBoardCtrl\",\"Status\",\"\",\"Error\",\"\");
+		StationCtrlTable.appendLine(\"Controller\",\"DigBoardCtrl\",\"Action\",\"\",\"Error\",\"\");
   }	
 
 	// check if the requiered datapoint for this view are enabled and accessible
 	if (dpAccessable(BeamCtrlDP+\".state\") && dpAccessable(BeamCtrlDP + \".error\")) {
-		dpConnect(\"updateBeamCtrlTable\",BeamCtrlDP + \".state\",
+		dpConnect(\"updateBeamCtrlTable\",BeamCtrlDP + \".currentAction\",
  	                              	  BeamCtrlDP + \".error\",
- 	                              	  BeamCtrlDP + \".state:_online.._invalid\");
+ 	                              	  BeamCtrlDP + \".state\",
+ 	                              	  BeamCtrlDP + \".currentAction:_online.._invalid\");
  	} else {
     setValue(\"BeamCtrlLight\", \"backCol\", \"_dpdoesnotexist\");
-		StationCtrlTable.appendLine(\"Controller\",\"BeamCtrl\",\"Status\",\"\",\"Error\",\"\");
+		StationCtrlTable.appendLine(\"Controller\",\"BeamCtrl\",\"Action\",\"\",\"Error\",\"\");
   }	
 
 	// check if the requiered datapoint for this view are enabled and accessible
 	if (dpAccessable(CalCtrlDP+\".state\") && dpAccessable(CalCtrlDP + \".error\")) {
-		dpConnect(\"updateCalCtrlTable\",CalCtrlDP + \".state\",
+		dpConnect(\"updateCalCtrlTable\",CalCtrlDP + \".currentAction\",
  	                             	   CalCtrlDP + \".error\",
- 	                             	   CalCtrlDP + \".state:_online.._invalid\");
+ 	                             	   CalCtrlDP + \".state\",
+ 	                             	   CalCtrlDP + \".currentAction:_online.._invalid\");
  	} else {
     setValue(\"CalCtrlLight\", \"backCol\", \"_dpdoesnotexist\");
-		StationCtrlTable.appendLine(\"Controller\",\"CalCtrl\",\"Status\",\"\",\"Error\",\"\");
+		StationCtrlTable.appendLine(\"Controller\",\"CalCtrl\",\"Action\",\"\",\"Error\",\"\");
   }	
 
 
 }
 
-updateBeamCtrlTable(string dp1, int state, 
+updateBeamCtrlTable(string dp1, int action, 
                     string dp2, string error,
-                    string dp3, bool invalid)
+                    string dp3, string state,
+                    string dp4, bool invalid)
 {
 	string SymbolCol;
 	if (invalid) 
@@ -83,12 +88,13 @@ updateBeamCtrlTable(string dp1, int state,
 		SymbolCol=getStateColor(state);	  
   }
   setValue(\"BeamCtrlLight\", \"backCol\", SymbolCol);
-	StationCtrlTable.updateLine(1,\"Controller\",\"BeamCtrl\",\"Status\",state,\"Error\",error);
+	StationCtrlTable.updateLine(1,\"Controller\",\"BeamCtrl\",\"Action\",action,\"Error\",error);
 }
 
-updateCalCtrlTable(string dp1, int state, 
+updateCalCtrlTable(string dp1, int action, 
                    string dp2, string error,
-                   string dp3, bool invalid)
+                   string dp3, string state,
+                   string dp4, bool invalid)
 {
 	string SymbolCol;
 	if (invalid) 
@@ -98,12 +104,13 @@ updateCalCtrlTable(string dp1, int state,
 		SymbolCol=getStateColor(state);	  
   }
   setValue(\"CalCtrlLight\", \"backCol\", SymbolCol);
-	StationCtrlTable.updateLine(1,\"Controller\",\"CalCtrl\",\"Status\",state,\"Error\",error);
+	StationCtrlTable.updateLine(1,\"Controller\",\"CalCtrl\",\"Action\",action,\"Error\",error);
 }
 
-updateDigBoardCtrlTable(string dp1, int state, 
-												string dp2, string error,
-												string dp3, bool invalid)
+updateDigBoardCtrlTable(string dp1, int action, 
+                        string dp2, string error,
+                        string dp3, string state,
+                        string dp4, bool invalid)
 {
 	string SymbolCol;
 	if (invalid) 
@@ -113,12 +120,13 @@ updateDigBoardCtrlTable(string dp1, int state,
 		SymbolCol=getStateColor(state);	  
   }
   setValue(\"DigBoardCtrlLight\", \"backCol\", SymbolCol);
-	StationCtrlTable.updateLine(1,\"Controller\",\"DigBoardCtrl\",\"Status\",state,\"Error\",error);
+	StationCtrlTable.updateLine(1,\"Controller\",\"DigBoardCtrl\",\"Action\",action,\"Error\",error);
 }
 
-updateStationCtrlTable(string dp1, int state, 
+updateStationCtrlTable(string dp1, int action, 
                        string dp2, string error,
-                       string dp3, bool invalid)
+                       string dp3, string state,
+                       string dp4, bool invalid)
 {
 	string SymbolCol;
 	if (invalid) 
@@ -128,7 +136,7 @@ updateStationCtrlTable(string dp1, int state,
 		SymbolCol=getStateColor(state);	  
   }
   setValue(\"StationCtrlLight\", \"backCol\", SymbolCol);
-	StationCtrlTable.updateLine(1,\"Controller\",\"StationCtrl\",\"Status\",state,\"Error\",error);
+	StationCtrlTable.updateLine(1,\"Controller\",\"StationCtrl\",\"Action\",action,\"Error\",error);
 }
 " 0
 "main()
@@ -148,7 +156,7 @@ string BeamCtrlDP;
 string CalCtrlDP;
 string DigBoardCtrlDP;
 string StationCtrlDP;
-string selectedDP=StationCtrlDP+\".logmsg\";
+string selectedDP=StationCtrlDP+\".logMsg\";
 string previouslySelectedDP=\"\";
 int logThreadID;
 
@@ -366,7 +374,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  selectedDP=StationCtrlDP+\".logmsg\";
+  selectedDP=StationCtrlDP+\".logMsg\";
 }" 0
  0 1 1 0 1 E U  1 E 17 60 5 5
 7 6
@@ -383,7 +391,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  selectedDP=DigBoardCtrlDP+\".logmsg\";
+  selectedDP=DigBoardCtrlDP+\".logMsg\";
 }" 0
  0 1 1 0 1 E U  1 E 17 76 5 5
 7 7
@@ -400,7 +408,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  selectedDP=BeamCtrlDP+\".logmsg\";
+  selectedDP=BeamCtrlDP+\".logMsg\";
 }" 0
  0 1 1 0 1 E U  1 E 17 92 5 5
 7 8
@@ -417,7 +425,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-  selectedDP=CalCtrlDP+\".logmsg\";
+  selectedDP=CalCtrlDP+\".logMsg\";
 }" 0
  0 1 1 0 1 E U  1 E 17 108 5 5
 2 10

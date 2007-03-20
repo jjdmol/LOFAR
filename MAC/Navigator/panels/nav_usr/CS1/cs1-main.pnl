@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,426 108 950 741 N "_3DFace" 2
+PANEL,319 356 950 741 N "_3DFace" 2
 "$datapoint"
 "$referenceDatapoint"
 "main()
@@ -13,7 +13,7 @@ PANEL,426 108 950 741 N "_3DFace" 2
 	
 	// select all states from Observations online (ObsCtrl) && offline(OfflineCtrl)
 	
-	string offlineQuery = \"SELECT '_online.._value' FROM '{LOFAR_ObsSW_Observation*_OfflineCtrl.state,LOFAR_ObsSW_Observation*_OfflineCtrl.error}'\";
+	string offlineQuery = \"SELECT '_online.._value' FROM '{LOFAR_ObsSW_Observation*_OfflineCtrl.currentAction,LOFAR_ObsSW_Observation*_OfflineCtrl.error}'\";
 	
 	// connect to MACScheduler.activeObservations, this contains a list with all active observations.
 	// The same will be done for online and offline observation later. For now we will get the offline 
@@ -73,12 +73,12 @@ updateObservationsTable(string dpe, dyn_string dpv)
       delay(0,250);
     }
 
-    dpConnect(\"updateObservationsTableValues\",dpPrefix + \".state:_online.._value\",
+    dpConnect(\"updateObservationsTableValues\",dpPrefix + \".currentAction:_online.._value\",
                                               dpPrefix + \".error:_online.._value\");
   }
 }
 
-updateObservationsTableValues(string dp1, string state,
+updateObservationsTableValues(string dp1, string action,
                               string dp2, string error)                              
 {
   string dp = dpSubStr(dp1,DPSUB_DP);
@@ -87,7 +87,7 @@ updateObservationsTableValues(string dp1, string state,
   {
     if(dp == \"LOFAR_ObsSW_\" + Observation_table.cellValueRC(i,\"Observation\")+\"_ObsCtrl\")
     {
-      Observation_table.cellValueRC(i,\"Status\",state);
+      Observation_table.cellValueRC(i,\"Action\",action);
       Observation_table.cellValueRC(i,\"Error\",error);
     }
   }
@@ -103,14 +103,14 @@ updateOfflineTable(string ident, dyn_dyn_anytype tab)
 	 	for (int z = 2; z <= dynlen(tab); z++)
 		{
 			string obsName = getObsName(tab[z]);
-		  string state=\"\";
+		  string action=\"\";
   		string error=\"\";
 			// Determine if state or error callback
 			// update the table , if obsname is available it will be updated, 
 			//otherwise a new line will be appended
-			if (getResultType(tab[z]) == \"state\" ) { 	
-				state = getResultValue(tab[z]); 
-				Offline_table.updateLine(1,\"Offline\",obsName,\"Status\",state);
+			if (getResultType(tab[z]) == \"currentAction\" ) { 	
+				action = getResultValue(tab[z]); 
+				Offline_table.updateLine(1,\"Offline\",obsName,\"Action\",action);
 			} else if (getResultType(tab[z]) == \"error\") {
 				error = getResultValue(tab[z]);
 				Offline_table.updateLine(1,\"Offline\",obsName,\"Error\",error);
@@ -125,6 +125,7 @@ updateOfflineTable(string ident, dyn_dyn_anytype tab)
 "CBRef""1"
 "EClose"E
 ""
+1
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
@@ -421,7 +422,7 @@ E E 0 5 1 0 1 E  450 240 450 114
 0
 1 201 12 "" 12
 0
-1 202 12 "0" 1
+1 202 12 "1" 1
 0
 25 157
 "Observation_table"
@@ -449,8 +450,8 @@ E "main(int row, string column, string value)
 LANG:1 11 Observation
 E1
 LANG:1 0 
- 250 "Status" 0 1 0 "s" 1
-LANG:1 6 Status
+ 250 "Action" 0 1 0 "s" 1
+LANG:1 6 Action
 E1
 LANG:1 0 
  150 "Error" 0 1 0 "s" 1
@@ -483,8 +484,8 @@ E E 1 0 1 3 1 "Offline" 0 1 0 "s" 1
 LANG:1 7 Offline
 E1
 LANG:1 0 
- 250 "Status" 0 1 0 "s" 1
-LANG:1 6 Status
+ 250 "Action" 0 1 0 "s" 1
+LANG:1 6 Action
 E1
 LANG:1 0 
  150 "Error" 0 1 0 "s" 1

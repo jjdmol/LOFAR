@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,422 105 950 164 N "_3DFace" 1
+PANEL,443 109 950 164 N "_3DFace" 1
 "$datapoint"
 "main()
 {

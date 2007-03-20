@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,426 108 280 210 N "_3DFace" 3
+PANEL,443 109 280 210 N "_3DFace" 3
 "$AppName"
 "$CEPnode"
 "$datapoint"
@@ -12,9 +12,9 @@ PANEL,426 108 280 210 N "_3DFace" 3
 	dyn_string dpElements = splitDatapointPath($datapoint);
 	string nodeDP = dpSubStr($datapoint,DPSUB_SYS) + \"LOFAR_CEP_\" + dpElements[dynlen(dpElements)] + \"_\" + $CEPnode;
 	DebugTN(\"monitoring CEP node\",nodeDP);
-  if(dpAccessable(nodeDP + \".state:_online.._value\"))
+  if(dpAccessable(nodeDP + \".currentAction:_online.._value\"))
   {
-    dpConnect(\"fillTextStatus\", nodeDP + \".state\");
+    dpConnect(\"fillTextStatus\", nodeDP + \".currentAction\");
   }
   rect.toolTipText = nodeDP;
 }
