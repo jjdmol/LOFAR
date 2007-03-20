@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 17 SubrackClockBoard
-PANEL,252 141 735 210 N "_3DFace" 1
+PANEL,245 109 735 210 N "_3DFace" 1
 "$datapoint"
 "main()
 {

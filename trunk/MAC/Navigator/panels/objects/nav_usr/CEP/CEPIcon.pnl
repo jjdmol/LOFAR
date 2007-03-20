@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 CepIcon
-PANEL,426 108 433 325 N "_3DFace" 2
+PANEL,248 199 433 325 N "_3DFace" 2
 "$datapoint"
 "$referenceDatapoint"
 "main()
@@ -55,7 +55,7 @@ E "main()
 7 1
 "Ellipse1"
 ""
-1 38.2143 54.0429 E E E 1 E 1 E N "_3DText" E N {0,0,255} E E
+1 38.2143 54.0429 E E E 1 E 1 E N "_3DText" E N {255,255,0} E E
  E E
 2 0 0 0 0 0
 EE E
@@ -72,7 +72,7 @@ E "main()
 6 2
 "Border10"
 ""
-1 45 73 E E E 1 E 1 E N "_3DText" E N {0,0,255} E E
+1 45 73 E E E 1 E 1 E N "_3DText" E N {255,0,0} E E
  E E
 3 0 0 0 0 0
 EE E
@@ -89,7 +89,7 @@ E "main()
 6 3
 "Border11"
 ""
-1 49 73 E E E 1 E 1 E N "_3DText" E N {0,0,255} E E
+1 49 73 E E E 1 E 1 E N "_3DText" E N {153,0,153} E E
  E E
 4 0 0 0 0 0
 EE E
@@ -106,7 +106,7 @@ E "main()
 6 4
 "Border12"
 ""
-1 59 73 E E E 1 E 1 E N "_3DText" E N {0,0,255} E E
+1 59 73 E E E 1 E 1 E N "_3DText" E N {255,0,0} E E
  E E
 5 0 0 0 0 0
 EE E
@@ -225,7 +225,7 @@ E "main()
 6 11
 "Border21"
 ""
-1 77 73 E E E 1 E 1 E N "_3DText" E N {0,0,255} E E
+1 77 73 E E E 1 E 1 E N "_3DText" E N {153,0,153} E E
  E E
 12 0 0 0 0 0
 EE E
@@ -242,7 +242,7 @@ E "main()
 6 12
 "Border22"
 ""
-1 38 81 E E E 1 E 1 E N "_3DText" E N {0,0,255} E E
+1 38 81 E E E 1 E 1 E N "_3DText" E N {255,0,0} E E
  E E
 13 0 0 0 0 0
 EE E
@@ -259,7 +259,7 @@ E "main()
 7 13
 "Ellipse2"
 ""
-1 58.1 27 E E E 1 E 1 E N "_3DText" E N {0,0,255} E E
+1 58.1 27 E E E 1 E 1 E N "_3DText" E N {255,255,0} E E
  E E
 14 0 0 0 0 0
 EE E

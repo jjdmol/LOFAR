@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,422 105 959 765 N "_3DFace" 1
+PANEL,245 109 959 765 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 0 0 0  10 10
 "" 0 1
@@ -25,14 +25,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 12 348 48
+E E 0 1 1 0 1 E U  0 E 12 12 408 38
 0 2 0 "s" 0 0 0 64 0 0  12 12
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-220-100-100-*-*-iso8859-1|-24,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 19 Observation Details
+LANG:1 31 Observation  Controller Details
 1 1 0 "" 0
 0
 1 2 0 "" 1

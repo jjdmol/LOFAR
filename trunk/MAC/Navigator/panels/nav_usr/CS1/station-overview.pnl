@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,438 111 950 741 N "_3DFace" 1
+PANEL,251 109 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -46,10 +46,10 @@ updateStationsTable(string identifier, dyn_dyn_anytype result)
 		TableStations.deleteAllLines();
 	  for(int i=2; i<=dynlen(result);i++)
 	  {
-	  	string tempName = dpSubStr(result[i][1],DPSUB_DP);
+	    string tempName = dpSubStr(result[i][1],DPSUB_DP);
 	  	string stationName = substr(tempName,strlen(dpSubStr($datapoint,DPSUB_DP))+1);
 			TableStations.appendLine(\"Station\",stationName);
-			TableStations.updateLine(1,\"Station\",stationName,\"Status\",result[i][2]);
+			TableStations.updateLine(1,\"Station\",stationName,\"Status\",getStateName(result[i][2]));
 		}
 	}
 }

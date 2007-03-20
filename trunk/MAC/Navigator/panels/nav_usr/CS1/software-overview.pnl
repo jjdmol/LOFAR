@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,438 111 1026 741 N "_3DFace" 1
+PANEL,245 109 1026 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -79,7 +79,7 @@ updateObservationsTableValues(string dp1, string action,
     if(dp == \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\")+\"_ObsCtrl\")
     {
       //DebugTN(\"Bingo, set values\");
-      TableObservations.cellValueRC(i,\"Status\",state);
+      TableObservations.cellValueRC(i,\"Action\",action);
       TableObservations.cellValueRC(i,\"ClaimPeriod\",dpValToString(dp2,claimPeriod,TRUE));
       TableObservations.cellValueRC(i,\"PreparePeriod\",dpValToString(dp3,preparePeriod,TRUE) );
       TableObservations.cellValueRC(i,\"StartTime\",startTime);
@@ -92,24 +92,24 @@ showLogging()
 {
 	string dpLog;
   if(radio_logging.number == 1) {
-	  dpLog = \"LOFAR_PermSW_CQN.logmsg\";
+	  dpLog = \"LOFAR_PermSW_CQN.logMsg\";
 	} else if(radio_logging.number == 2) {
-	  dpLog = \"LOFAR_PermSW_SHM.logmsg\";
+	  dpLog = \"LOFAR_PermSW_SHM.logMsg\";
 	} else {
-	  dpLog = \"LOFAR_PermSW_MACScheduler.logmsg\";
+	  dpLog = \"LOFAR_PermSW_MACScheduler.logMsg\";
 	}	
 	// disconnect from logging
 	if(dpExists(\"LOFAR_PermSW_CQN\") && connected == \"CQN\")
 	{
-		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_CQN.logmsg\");
+		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_CQN.logMsg\");
 	}
 	if(dpExists(\"LOFAR_PermSW_SHM\") && connected == \"SHM\")
 	{
-		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_SHM.logmsg\");
+		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_SHM.logMsg\");
 	}
 	if(dpExists(\"LOFAR_PermSW_MACScheduler\") && connected == \"MAC\")
 	{
-		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_MACScheduler.logmsg\");
+		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_MACScheduler.logMsg\");
 	}
  
 	table_logging.deleteAllLines();
@@ -149,7 +149,7 @@ showLogging()
 	
 updateLogging(string dpe, string dpv)
 {
-  //DebugTN(\"Logmsg: \", dpv);
+  //DebugTN(\"LogMsg: \", dpv);
 	addLogMessage(dpv);
 }
 
@@ -345,8 +345,8 @@ LANG:1 0
 LANG:1 9 Stop time
 E1
 LANG:1 0 
- 150 "Status" 0 1 0 "s" 1
-LANG:1 6 Status
+ 150 "Action" 0 1 0 "s" 1
+LANG:1 6 Action
 E1
 LANG:1 0 
  187 16 16 "" 1 1

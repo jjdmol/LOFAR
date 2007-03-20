@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,423 296 950 286 N "_3DFace" 1
+PANEL,315 109 1145 286 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -80,7 +80,8 @@ updateCalCtrlTable(string dpe, dyn_dyn_anytype tab)
                                            dpPrefix + \".antennaArray:_online.._value\",
                                            dpPrefix + \".filter:_online.._value\",
                                            dpPrefix + \".nyquistzone:_online.._value\",
-                                           dpPrefix + \".rcus:_online.._value\");
+                                           dpPrefix + \".rcus:_online.._value\",
+                                           dpPrefix + \".state:_online.._invalid\");
 		}
 	}
 }
@@ -91,13 +92,22 @@ updateCalCtrlTableValues(string dp1, int state,
                          string dp4, string antennaArray,
                          string dp5, string filter,
                          string dp6, int nyquistzone,
-                         string dp7, string rcus)                              
+                         string dp7, string rcus,
+                         string dp8, bool invalid)                              
 {
+  string stateCol=\"\";
+  if (invalid) 
+	{
+		stateCol=\"Lofar_invalid\";
+  } else {
+		stateCol=getStateColor(state);	  
+  }  
   
   for(int i=0; i < calControlTable.lineCount; i++)
   {
     if(getObsName(dp1) == calControlTable.cellValueRC(i,\"Observation\"))
     {
+      calControlTable.cellBackColRC(i, \"Status\", stateCol);
       calControlTable.cellValueRC(i,\"AntennaArray\",antennaArray);
       calControlTable.cellValueRC(i,\"Filter\",filter);
       calControlTable.cellValueRC(i,\"NyquistZone\",nyquistzone);
@@ -173,15 +183,19 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 17 45 933 272
 E "main(int row, string column, string value)
 {
-	string dp = \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(row,\"Observation\")+\"_ObsCtrl\";
+	string dp = \"LOFAR_ObsSW_\" + calControlTable.cellValueRC(row,\"Observation\")+\"_CalCtrl\";
 	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0
- 1 0 1 6 1 "Connected" 0 1 0 "s" 1
-LANG:1 2 #1
+ 1 0 1 7 1 "Status" 0 1 0 "s" 1
+LANG:1 1 S
 E1
-LANG:1 0 
- 16 "Observation" 0 1 0 "s" 1
+LANG:1 6 Status
+ 20 "Connected" 0 1 0 "s" 1
+LANG:1 1 C
+E1
+LANG:1 9 Connected
+ 20 "Observation" 0 1 0 "s" 1
 LANG:1 11 Observation
 E1
 LANG:1 0 
@@ -194,14 +208,14 @@ LANG:1 6 Filter
 E1
 LANG:1 0 
  100 "NyquistZone" 0 1 0 "s" 1
-LANG:1 11 NyquistZone
+LANG:1 7 Nyquist
 E1
-LANG:1 0 
- 85 "RCUs" 0 1 0 "s" 1
+LANG:1 11 NyquistZone
+ 65 "RCUs" 0 1 0 "s" 1
 LANG:1 4 RCUs
 E1
 LANG:1 0 
- 167 16 16 "" 1 1
+ 165 16 16 "" 1 1
 LANG:1 2 #1
 8 30 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
