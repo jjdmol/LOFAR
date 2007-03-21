@@ -10,6 +10,7 @@
 %% I prefer Bookman over Palatino, but I need Kerkis for math support
 %\usepackage{bookman} 
 \usepackage{mathpazo}      %% Palatino with matching math fonts.
+\usepackage{amssymb}
 \usepackage{layout}
 \usepackage{color}
 \usepackage{xspace}
@@ -19,7 +20,7 @@
 \newcounter{decision}
 \newenvironment{decision}[1][Decision]{\begin{trivlist}\item[\hskip \labelsep {\bfseries #1 \refstepcounter{decision}\thedecision}]}{\end{trivlist}}
 %
-\newcommand{\todo}[1]{\begin{center}\fbox{\parbox{0.9\textwidth}{\textbf{!!FIXME!! #1}}}\end{center}}
+\newcommand{\todo}[1]{\begin{center}\fbox{\parbox{0.9\textwidth}{\textbf{!!TODO!! #1}}}\end{center}}
 \newcommand{\cs}[1]{\textsc{cs}\begin{footnotesize}#1\end{footnotesize}\xspace}
 \newcommand{\bbs}{\textsc{bbs}\xspace}
 \newcommand{\lofar}{\textsc{lofar}\xspace}
@@ -380,6 +381,292 @@ is both read and updated by BBS.}
 \section{Software Design}
 \label{sec:software-design}
 
+\subsection{Terminology}
+\label{subsec:terminology}
+
+\subsubsection{Domains}
+\label{subsubsec:domains}
+A central concept in \bbs is the \emph{domain}: A 2-D rectangular region in
+$frequency$ and $time$. In table \ref{tab:domains} we define seven different
+domain types that are useful for discussing the design of \bbs. Figure
+\ref{fig:domains} illustrates the different domain types and how they relate to
+each other.
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{lp{0.60\textwidth}}
+\hline
+\textbf{Name} & \textbf{Description}\\
+\hline
+\texttt{data domain} & The domain covered by a single observation\\
+\hline
+\texttt{local data domain} & Part of the data domain that is local to (i.e.
+stored at) a given compute node\\
+\hline
+\texttt{work domain} & Part of the data domain which is processed together\\
+\hline
+\texttt{local work domain} & Intersection of the work domain and the local data
+domain (should fit in the node's main memory)\\
+\hline
+\texttt{solve domain} & Part of the data domain that is used to solve for a set
+of unknowns\\
+\hline
+\texttt{local solve domain} & A solve domain that \emph{intersects} the local
+data domain\\
+\hline
+\texttt{validity domain} & Domain on which a \emph{funklet} is considered
+valid\\
+\end{tabular}
+\caption{An overview of the domain types used in \bbs.}
+\label{tab:domains}
+\end{table}
+
+\subsubsection{Models, parameters, funklets, and coefficients} 
+\label{subsubsec:models-parameters-funklets-coefficients}
+Self calibration revolves around fitting a \emph{model} to the observed data by
+adjusting the parameters of the model. On the coarsest scale a model for the
+calibration of \lofar describes the instrument, the environment, and the sky.
+This model can be decomposed into smaller (sub)models, such as a model for the
+beamshape, the bandpass, or the ionosphere (see also \cite[sec.
+2]{LOFAR-ASTRON-SDD-050}).
+
+\todo{ref Hamaker, aips++ note of Jan N.}
+
+In general, a \emph{parameter} can be a constant or a continuous function of one
+or more variables such as $frequency$, $time$, and $direction$.
+
+The value of a parameter is represented by a set of \emph{funklets}. A funklet
+is an approximation of the value of a parameter on a bounded domain, termed
+\emph{validity domain}. Figure \ref{fig:funklet} illustrates the relation
+between parameters and funklets.
+
+A commonly used type of funklet is a polynomial of arbitrary degree in
+$frequency$ and/or $time$. Other posibilities include Fourier series expansions,
+shapelets, and splines.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{images/funklet.eps}
+\caption{This figure shows a set of funklets with associated validity domains
+that together represent the value of a parameter on a larger domain.}
+\label{fig:funklet}
+\end{figure}
+
+Validity domains and solve domains are related concepts. The validity domain of
+a funklet equals the solve domain used to fit the coefficients of the funklet.
+For example, suppose we try to fit a parameter
+\texttt{gain:11:phase:CS10}\footnote{The phase of element $g_{11}$ of the $2
+\times 2$ diagonal G-jones matrix of station CS10.} using $0^{th}$-degree
+polynomials and a solve domain size of a single channel width times 5
+integration periods. The solve domain size defines a grid of solve domains on
+the work domain (see figure~\ref{fig:domains}). For each solve domain a funklet
+exists with a matching validity domain that represents the value of parameter
+\texttt{gain:11:phase:CS10} on that domain. To fit the coefficients of a funklet
+we need the values of other parameters as well. The validity domains of the
+funklets that represent these parameters will most likely be different, because
+they were fitted at some earlier time using potentially different solve domains.
+In summary: The validity domain of a funklet determines in what region the value
+of the funklet is considered valid; A solve domain determines which part of the
+observed data is used to fit the is used to fit the coefficients of a funklet.
+
+The problem of fitting a parameter can now be restated as fitting the
+coefficients of a \emph{set} of funklets defined on a set of non-overlapping
+solve domains.
+
+\subsection{Distribution}
+\label{subsec:distribution}
+
+Figure \ref{fig:domains} shows how the data is typically distributed over the
+compute nodes. The visibility data computed by the correlator is distributed
+according to frequency, as is shown in the figure. Visibility data may be
+unavailable, because the subbands recorded during an observation are not
+required to be consecutive. All \emph{available} data is distributed equally
+over the nodes. 
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[scale=0.5]{images/domains.ps}
+\caption{Data distribution and the domain types defined in
+Table~\ref{tab:domains}}
+\label{fig:domains}
+\end{figure}
+
+The size of the work domain is specified by the user. It should be chosen such
+that each node can read its local work domain into main memory. Thus, all steps
+of the calibration \emph{strategy} can be executed on the work domain without
+having to read data more than once. After the work domain has been processed,
+the global controller instructs the local controllers to continue with the next
+chunk of data.
+
+The unit of work for most operations (i.e. \predict, \subtract, \correct) is a
+single complex visibility. These operations are embarrassingly parallel:
+communication between nodes is not necessary.
+
+The only operation that is not guaranteed to be embarrassingly parallel is the
+\solve operation. The unit of work for this operation is a single solve domain.
+As long as every solve domain is completely contained within the local data
+domain of a node, the \solve operation can be performed locally. However, if a
+solve domain intersects the local data domains of multiple nodes, communication
+between these nodes becomes necessary.
+
+\subsubsection{Distribution of the solve operation}
+\label{subsubsec:distribution-solve}
+
+The work domain is partitioned into solve domains based on a user specified
+solve domain size. Figure~\ref{fig:solve_domains} shows an example where the
+work domain is partitioned into ten separate solve domains. Four solve domains
+are entrirely local: solve domains 0, 1, 4, 5, 8, and 9. The other solve domains
+span multiple nodes.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[scale=0.5]{images/solve_domains.ps}
+\caption{TODO!!}
+\label{fig:solve_domains}
+\end{figure}
+
+\todo{Fix caption}
+
+If the size of the work domain along any dimension is not an integer multiple of
+the specfied solve domain size, the solve domains at the boundaries will get
+truncated. 
+
+There are a number of open questions regarding the \solve operation, which are
+discussed below. All are related to uncertainty regarding user requirements.  It
+is expected that the experiences with \cs{1} observations will provide some
+answers.
+
+\paragraph{Solve domain size}
+
+Because the local work domain is determined by the intersection of the work
+domain and the local data domain, and the visibility data is distributed in
+frequency, the work domain has to span the \emph{entire} frequency axis to keep
+all the nodes busy. This implies that the largest possible size of the local
+work domain \emph{in time} is more limited than necessary.
+
+The largest possible \emph{area} (channels $\times$ integration periods) of the
+local work domain is (assuming 77 stations, 8\textsc{gb} of local memory):
+
+\[
+area=\frac{8\cdot2^{30}\;bytes}{\frac{1}{2}\times(77 \times 76) \; interf.
+\times 4 \; correlations \times 8 \; bytes/correlation} \approx 85441
+\]
+
+However, due to the way the work domain is defined, the largest possible size in
+time is limited to the area divided by the number of channels stored per node.
+Assuming 32000 channels and a cluster of 500 nodes:
+
+\[
+time=\frac{85441}{32000\;channels \div 500\;nodes} \approx 1335\; integration
+periods
+\]
+
+It is currently an open question if this limit is within requirements. This will
+depend on the type of \solve operations the user wants to perform.
+
+\paragraph{Solve domain truncation}
+
+It is currently an open question if solve domain trunction is acceptable or not.
+In principle, the work domain size could be adjusted automatically to avoid
+solve domain truncation. This is not completely trivial, because a strategy can
+contain multiple solve steps each of which can have a different solve domain
+size.
+
+Because \emph{all} steps of a strategy are executed on the work domain, the size
+of the work domain must be an integer multiple of the size of each of the
+specified solve domain sizes to completely avoid truncation. Assuming the
+size of the work domain is specified in, or converted to, integers (or
+fractional numbers), e.g. number of channels times number of integration
+periods, the size of the work domain should be set to a multiple of the least
+common multiple of the different solve domain sizes.
+
+\subsubsection{Parameter access}
+\label{subsubsec:parameter-access}
+
+Table~\ref{tab:parm_access} shows an overview of the tasks that require access
+to the model parameters along with the type(s) of access required. It is not yet
+clear if the operator needs to modify parameter values during calibration, which
+is indicated by a question mark in the table.
+
+\begin{table}[htb!]
+\centering
+\begin{tabular}{lcc}
+\hline
+\textbf{Task} & \textbf{Read access} & \textbf{Write access} \\
+\hline
+Model evaluation & \checkmark & -- \\
+\hline
+Visibility correction & \checkmark & -- \\
+\hline
+Parameter estimation & \checkmark & \checkmark \\
+\hline
+Monitoring and control & \checkmark & ? \\
+\hline
+\end{tabular}
+\caption{An overview of tasks that require access to model parameters.}
+\label{tab:parm_access}
+\end{table}
+
+\todo{Explain that parameters/funklets needed by a BBSKernel process are always
+local, and how this relates to distributed databases}
+
+A process that needs access to the model parameters can either access the
+parameter database directly, or receive the values from another process.
+
+Model evaluation and visibility correction are performed by a BBSKernel process.
+One or more of such processes will run on each node. Because a BBSKernel process
+also constructs the model, it alone knows which model parameters it needs to
+evaluate the model. Therefore, it makes sense that a BBSKernel process accesses
+the parameter database directly. This creates the risk that the parameter
+database becomes a performance bottleneck, because all BBSKernel processes will
+tend to access the database quasi concurrently. If the database indeed proves to
+be a bottleneck, using a distributed database may be a good solution. Especially
+when most solve domains are local to a single node, this may work well.
+Performance tests should be carried out in the near future to decide if a single
+database server will fit the requirements.
+
+\todo{Explain about the solver and kernel co-operation when doing a \solve, and
+remove the text below as it is no longer relevant.}
+
+Before the first solve iteration a Solver receives the current values of the
+solvable parameters from the Prediffers. After each iteration it sends the newly
+calculated values to the Controller. So a Solver does not need access to the
+parameter database itself. In other words, the Prediffer nodes access the
+parameter database and sent self-contained inputs to the solver(s).  The AIPS++
+LSQFit class that is used in the solver, keeps data from previous solutions
+within the same iteration series to speed up the convergence process. This is
+used to minimize the data size that is sent from Prediffer nodes to the
+solver(s).
+
+At the start of the first iteration in solving a group of parameters, a
+Prediffer needs the values of all model parameters, not only the solvable ones.
+It needs them for the domain being solved. There are two approaches to achieve
+this:
+1.A Prediffer reads the parameters from the database. This requires that the
+database is visible on the Prediffer machine.
+2.The Controller reads the parameters and sends them to the Prediffers.
+
+The problem with this approach is that the Controller does not know which
+parameters are needed by the Prediffers. A possible solution for this is that
+all Prediffers tell the Controller which parameters they need and get the values
+back. Because most Prediffers will need the same parameters, the Controller does
+not need to read too many parameters.  In the second and later iterations a
+Prediffer only needs the new values of the solvable parameters. This can be done
+similarly; either the Controller sends the new values to the Prediffers or the
+Controller updates the database after which a Prediffer can read the new values.
+
+If a Prediffer reads the parameter values itself, the following database options
+are possible:
+1.An AIPS++ table or embedded database on an NFS-mounted file system.
+2.An embedded database that is (automatically) replicated on all machines.
+3.A database server that is visible from all machines.
+
+The parameter handling classes have been designed such that they hide the
+parameter handling from the other code. In this way it is rather easy to choose
+the parameter handling scheme that suites best. E.g., on Blue Gene/L another
+scheme might be used than on a Linux cluster.
+
+
 \subsection{BBS Control}
 \label{subsec:design-control}
 
@@ -425,6 +712,8 @@ executed by the BBS Kernel as part of the current self calibration run.}
 \label{fig:bbsstep}
 \end{figure}
 
+\todo{Remove refit step??}
+
 \subsubsection{Global Control}
 \label{subsubsec:design-global-control}
 The BBS Global Control is reponsible for managing the execution of a self
@@ -458,7 +747,7 @@ implementation.
 explains the different packages/libraries/executables/... used in \bbs (see for
 example the \olap document)}
 
-The kernel supports four primitive commands:
+The kernel supports four primitive operations:
 \begin{itemize}
 \item \textsc{predict}\\
 Predict (simulate) visibilities based on a model that describes the sky, the
@@ -474,147 +763,7 @@ equations relate the model parameters to the difference between the observed
 visibilities and the predicted visibilities (based on the model).
 \end{itemize}
 
-
-Both \bbs and \meqtree are based on \textsc{pss} (Prototype Selfcal System), but
-have since gone their own separate ways. \meqtree has become a very flexible
-system, making it easy to experiment with different calibration algorithms. \bbs
-development focussed more on performance and robustness at the cost of some
-flexibility. Distribution and parallel processing are an integral part of the
-design. Using \meqtree to learn which approaches work and which do not, \bbs
-will implement the succesful approaches in an operational environment.
-
-Although BBS and MeqTrees have gone their own way, they still share the same
-principles:
-\begin{enumerate}
-\item The model (MeasurementEquation) is represented by an expression tree (in
-fact, a separate tree for each baseline). BBS and MeqTrees differ in the way
-the trees are defined. In MeqTrees the user has a lot of freedom by the
-ability to define the trees at the scripting level. In BBS only some
-predefined, highly tuned trees can be used.
-\item Parameters form the leafs of the expression trees. They are represented by
-funklets (2-dimensional functions, usually polynomials) that are valid for a
-given frequency-time domain. A constant value is regarded as a zeroeth-order
-polynomial. Both instrumental and sky parameters can be used.  In MeqTrees
-functions with more than 2 dimensions can be used. For example, beam shapes as
-a function of frequency, time, l, and m. It is not clear if that is needed in
-BBS.
-\item The calibration process consists of adapting the model parameters to the
-observed UV data by improving the values of the solvable model parameters (in
-fact, the coefficients of the parameter functions). This is done using a
-solver (least squares fitter). It needs the derivatives of the solvable
-parameter coefficients which are calculated in a numerical way.
-\item Because the problem is non-linear a non-linear solver is used requiring
-multiple iterations. The iteration process is stopped when the solution has
-converged sufficiently or when a maximum number of iterations is done.  The
-user can choose to solve for any combination of parameters. The solve is done
-in frequency-time domains of a given size and resolution. For example, one
-could solve ionospheric phases for each minute and solve source fluxes for the
-entire time range.  Note that another way of iteration is alternating between
-groups of parameters to solve for.
-\item Peeling and phase shifting the data is a means to reduce the number of
-calculations needed in the predict of the sources. It makes it possible to
-predict the sources near the new phase center on a coarser grid.
-\end{enumerate}
-
-\todo{Move the above to a more general part of the document}
-
-\subsubsection{Terminology}
-\label{subsubsec:terminology}
-
-\paragraph{Domains}
-A central concept in \bbs is the \emph{domain}: A 2-D rectangular region in
-$frequency$ and $time$. In table \ref{tab:domains} we define seven different
-domain types that are useful for discussing the design of \bbs. Figure
-\ref{fig:domains} illustrates the different domain types and how they relate to
-eachother.
-
-\begin{table}[htb!]
-\centering
-\begin{tabular}{lp{0.60\textwidth}}
-\hline
-\textbf{Name} & \textbf{Description}\\
-\hline
-\texttt{data domain} & The domain covered by a single observation\\
-\hline
-\texttt{local data domain} & Part of the data domain that is local to (i.e.
-stored at) a given compute node\\
-\hline
-\texttt{work domain} & The union of all local work domains\\
-\hline
-\texttt{local work domain} & Part of the local data domain that can be kept in
-main memory\\
-\hline
-\texttt{solve domain} & Part of the data domain that is used to solve for a set
-of unknowns\\
-\hline
-\texttt{local solve domain} & A solve domain that \emph{intersects} the local
-data domain\\
-\hline
-\texttt{validity domain} & Domain on which a \emph{funklet} is considered
-valid\\
-\end{tabular}
-\caption{An overview of the domain types used in \bbs.}
-\label{tab:domains}
-\end{table}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.5\textwidth]{images/domains.eps}
-%\parbox{0.75\textwidth}{
-\caption{Data distribution during the execution of a typical \textsc{solve}
-command that shows the domain types described in Table~\ref{tab:domains}}
-%}
-\label{fig:domains}
-\end{figure}
-
-\todo{Fix the labels in figure \ref{fig:domains}.}
-
-
-\paragraph{Models, parameters, funklets, and coefficients} Self calibration
-revolves around fitting a \emph{model} to the observed data by adjusting the
-parameters of the model. On the coarsest scale a model for the calibration of
-\lofar describes the instrument, the environment, and the sky. This model can be
-decomposed into smaller (sub)models, such as a model for the beamshape, the
-bandpass, or the ionosphere (see also \cite[sec. 2]{LOFAR-ASTRON-SDD-050}).
-
-In general, a \emph{parameter} can be a constant or a continuous function of one
-or more variables such as $frequency$, $time$, and $direction$. At the moment,
-\bbs only supports functions of $frequency$ and/or $time$. Variability in
-direction can be achieved by creating a separate parameter for each direction of
-interest. This is done for the E-jones, where a separate parameter is used for
-each combination of station and source. True 4-D supports (frequency, time, l,
-m) may be required in the future to allow modelling of the beam shape.
-
-Both \bbs and \meqtree represent the value of a parameter by a set of
-\emph{funklets}. A funklet (in \bbs) is a polynomial of arbitrary degree in
-$frequency$ and/or $time$ with an associated \emph{validity domain}. Figure
-\ref{fig:funklet} illustrates these concepts.
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.75\textwidth]{images/funklet.eps}
-\caption{This figure shows a set of funklets with associated validity domains
-that together represent the value of a parameter on a larger domain.}
-\label{fig:funklet}
-\end{figure}
-
-Validity domains and solve domains are related concepts. The validity domains of
-a set of funklets is equal to the solve domains used to fit the parameter
-represented by the funklets. For example, suppose we fit station gain as
-$0^{th}$-degree funklets using solve domains of one channel width times 5
-integration periods. Then the validity domains of the funklets that represent
-station gain will match the solve domains exactly. However, during fitting the
-values of other parameters will be needed as well. The validity domains of the
-funklets that represent these parameters will most likely be different, because
-they were fitted at some earlier time using potentially different solve domains.
-In summary: The validity domain of a funklet determines in what region the value
-of the funklet is considered valid; A solve domain determines which part of the
-observed data is used to fit the coefficients of a funklet.
-
-The problem of fitting a single parameter can now be reformulated as fitting the
-coefficients of a \emph{set} of funklets defined on a set of (non-overlapping)
-solve domains. Because the solve domains do not overlap, each funklet may be
-treated as an independent fitting problem. For each $n^{th}$-degree funklet,
-$n+1$ coefficients need to be determined.
+\todo{explain that subtract, generate also include a predict}
 
 \subsubsection{Measurement Equation Evaluation}
 \label{subsubsec:design-me-evaluation}
@@ -625,7 +774,7 @@ model of an interferometer in terms of a model of the sky, environmental effects
 Both \bbs and \meqtree represent the \me as a directed acyclic graph, although
 it is commonly referred to as \emph{tree}. The nodes of the tree represent
 atomic expressions, while the branches represent dependencies between atomic
-expressions. Compound expressions can be build by combining several nodes into a
+expressions. Compound expressions can be build by combining multiple nodes into a
 (sub)tree. The leaf nodes represent the parameters of the expression, e.g.
 source positions and Stokes vectors. As an example, figure \ref{fig:expr_tree}
 shows a subtree for computing the visibilities produced by two linearly
@@ -747,11 +896,8 @@ interpolation
 \item Solve for the intermediate work domains.
 \end{enumerate}
 
-The current implementation does not provide support for this kind of operations
-yet.
-
 \paragraph{Refitting}
-Refitting is useful in a multi-resolution approach. A typical example would be:
+Refitting is useful in a multi-resolution approach. A typical scenario would be:
 \begin{enumerate}
 \item Solve for a parameter using funklets of a low polynomial degree on
 relatively large solve domains to get the global trend
@@ -765,42 +911,21 @@ scale cannot be copied directly to funklets defined on a fine scale. For
 polynomials the required transformation is easy to derive. In more complicated
 cases, the solver could be used to find the new values.
 
-Refitting is not yet supported in the current implementation.
-
 \todo{Check of bovenstaande juist is.}
 
-\paragraph{Storage}
-The current Prediffer implementation can handle parameters as follows:
-At the first iteration it reads the parameters from an NFS-visible Berkeley DB (BDB) database or AIPS++ table.
-The Prediffer can handle the updated parameter values in 3 ways:
-Read from an NFS-visible database or AIPS++ table.
-Read from a replicated BDB database.
-Receive from the Controller.
-Given the amount of parameters and domains, searching parameters and domains in the database can take some time. Optimization of the parameter data structure and evaluation of high-performance distributed embedded databases are ongoing.
-
-The parameters are used in three places:
-Each Prediffer needs parameter values to calculate the model.
-Each Solver calculates new values for solvable parameters.
-The controller writes the new parameter values to the distributed database and on the blackboard.
-
-Before the first solve iteration a Solver receives the current values of the solvable parameters from the Prediffers. After each iteration it sends the newly calculated values to the Controller. So a Solver does not need access to the parameter database itself. In other words, the Prediffer nodes access the parameter database and sent self-contained inputs to the solver(s).
-The AIPS++ LSQFit class that is used in the solver, keeps data from previous solutions within the same iteration series to speed up the convergence process. This is used to minimize the data size that is sent from Prediffer nodes to the solver(s).
-
-At the start of the first iteration in solving a group of parameters, a Prediffer needs the values of all model parameters, not only the solvable ones. It needs them for the domain being solved. There are two approaches to achieve this:
-1.A Prediffer reads the parameters from the database. This requires that the database is visible on the Prediffer machine.
-2.The Controller reads the parameters and sends them to the Prediffers.
-The problem with this approach is that the Controller does not know which parameters are needed by the Prediffers. A possible solution for this is that all Prediffers tell the Controller which parameters they need and get the values back. Because most Prediffers will need the same parameters, the Controller does not need to read too many parameters.
-In the second and later iterations a Prediffer only needs the new values of the solvable parameters. This can be done similarly; either the Controller sends the new values to the Prediffers or the Controller updates the database after which a Prediffer can read the new values.
-
-If a Prediffer reads the parameter values itself, the following database options are possible:
-1.An AIPS++ table or embedded database on an NFS-mounted file system.
-2.An embedded database that is (automatically) replicated on all machines.
-3.A database server that is visible from all machines.
-
-The parameter handling classes have been designed such that they hide the parameter handling from the other code. In this way it is rather easy to choose the parameter handling scheme that suites best. E.g., on Blue Gene/L another scheme might be used than on a Linux cluster.
-
-\subsubsection{Solver}
+\subsubsection{Solving}
 \label{subsubsec:design-solver}
+\todo{explain that solution can be discontinuous across solve domain boundaries}
+
+\todo{explain that one could solve for scalars and fit afterwards}
+
+%\todo{explain why one doesn't solve for all parameters simultaneously, for one
+%big solve domain? (avoid data reload)}
+
+Because each solve domain is \emph{independent} of the other solve domains, the
+partitioning of the data domain into solve domains is strongly linked to the
+problem of interest. For instance, solving for station gain every \emph{minute}
+is a different problem than solving for station gain every \emph{hour}.
 BBS can solve for any combination of the parameter coefficients used in the algorithms.
 
 Solvable parameters
@@ -822,8 +947,42 @@ It follows that solving for $0^{th}$-degree funklets using one channel width tim
 
 An important consequence of using funklets is that, given a polynomial degree $n$ and irrespective of the size of the validity domain, it is implicitly assumed that the parameter value is well approximated by a $n^{th}$-degree polynomial on the validity domain. To make this assumption more explicit, it may be useful to interpret the $n^{th}$-degree polynomial as a model, instead of an integral part of parameter handling.
 
+%\subsubsection{Local solver}
+%\label{subsubsec:local-solver}
+In the design of \textsc{bbs}\begin{footnotesize}3\end{footnotesize}, only a
+single global solver was foreseen. This implies the normal equations of all
+solve domains were sent to the global solver, even if some of these solve
+domains were entirely local to a node. Therefore, it was decided to introduce a
+local solver at each node as part of the \cs{1} milestone. Solve domains that
+are entirely local can then be solved by the local solver, avoiding
+communication overhead and unnecessary synchronization.
+
+We intend to use one implementation for both local and global solver. On each
+node a separate solver process will be started. The normal equations for
+entirely local solve domains will be sent to the solver process running on the
+same node. For solve domains that span several nodes, a separate pool of global
+solvers could be used or the solver process at one of the involved nodes could
+be designated to act as global solver.
+
+Each of the nodes will sent its normal equations to the designated solver.
+Communication will be performed via sockets. If performance turns out to be
+poor, we can always re-integrate the local solver and the prediffer. This avoids
+the memory and communication overhead of sending the normal equations for
+entirely local solve domains over a (unix domain) socket.
+
+
 \subsection{BBS Database}
 \label{subsec:design-database}
+
+The current Prediffer implementation can handle parameters as follows:
+At the first iteration it reads the parameters from an NFS-visible Berkeley DB (BDB) database or AIPS++ table.
+The Prediffer can handle the updated parameter values in 3 ways:
+Read from an NFS-visible database or AIPS++ table.
+Read from a replicated BDB database.
+Receive from the Controller.
+Given the amount of parameters and domains, searching parameters and domains in
+the database can take some time. Optimization of the parameter data structure
+and evaluation of high-performance distributed embedded databases are ongoing.
 
 \subsubsection{Data Model}
 \label{subsubsec:design-data-model}
@@ -857,25 +1016,6 @@ Apart from the distributed processing described before, the BBS system also expl
 
 Because most calculations are done for a vector of frequencies, it is possible to use vectorized instructions on modern processors. A special code generator has been developed to assist in using SSE2 instructions for this purpose.
 
-\subsubsection{Co-processors}
-We have analysed the possibilities of off-loading Prediffer calculations from the host node CPUs to additional hardware attached to the local machine or available via the networks. The main problem is that low-latency communication is required to keep up with the processing on the host node itself and integrated evaluated values with the “main” processing flow on the host processor CPUs.
-We have tested with an external “DFT server” available on the network which could make use of the Blue Gene/L. In this case the bottleneck is the relatively high data bandwidth needed. This bottleneck made the use of an external DFTServer not providing any speedup.  The high data bandwidth is not available through network devices, but may be available within the host machine when for example a DSP board would be attached to the PCI bus.
-We have also looked at the use of (cheap!) additional processing power within the local host machine by using the resources available in modern graphics cards for floating point calculations. Current graphics cards provide tens of times more computing power than a general-purpose processor, but the communication over AGP is slow in the backwards direction, although this will considerably improve with the new PCI-express cards. There is still a potential to use such cards in the predict calculations. Drawback is that double precision operations are not supported yet.
-
-
-\subsubsection{Blue Gene/L}
-Since the Blue Gene/L machine contains most processing power available in the central processing facility, it seems appealing to enable the BBS code to run on this machine, although the operational model may reduce the availability of BGL for calibration purposes.
-However, there are some significant problems associated with the BGL in view of the BBS application:
-The run time environment of the BGL is single threaded. By using the second core we can manage to operate in a kind of dual thread mode. Having only one thread available, or two at the cost of quite some extra program complexity, is a serious drawback in the implementation of Selfcal. Multiple threads are needed to overlay disk IO, parameter IO, IO with solver and the calculations themselves. If we can not overlay these tasks by using asynchronous IO, the efficiency of the calculations will be reduced considerably.
-The BGL has no local storage; all disk IO runs over Gigabit Ethernet connections to external storage devices (typically NFS, GPFS etc.) With the large number of nodes used in a BGL application, this will generate extra load on the storage facility.
-Some of the building stones of BBS, such as the AIPS++ components and (distributed) databases are not available on BGL.
-The local RAM per node is relatively small, which reduces the possibility of data caching. In view of the disk-IO limitations mentioned above, this is a considerable performance limitation.
-An advantage of the BGL, however, is that its floating point operations are all done in double precision and it can handle complex numbers efficiently.
-
-In view of the drawbacks of the BGL for this type of applications, we consider it not feasible to execute the complete BBS application on the BGL.
-However, there are possibilities to run parts of the code on BGL in co-operation with BBS code running on a Linux cluster.
-
-
 \subsubsection{Minimisation}
 \begin{itemize}
 \item Joint solving (SDD-052, page 19)
@@ -894,10 +1034,15 @@ Point source fluxes and/or positions require 1-6 parameters per source assuming 
 
 
 \subsubsection{Data handling/caching}
+\todo{Move disussion about this subject to more global document?}
 
 \subsubsection{Parameter database access / central database}
-Prediffers look in the BlackBoard Database for new work orders. The load on the database can be very high if many processes are polling it to look for work orders. It might be better to turn the BlackBoard into a process or to send the work orders directly from the controller to the Solver and Prediffer processes.
-A database can still be used as a logging mechanism and for monitoring by external processes.
+Prediffers look in the BlackBoard Database for new work orders. The load on the
+database can be very high if many processes are polling it to look for work
+orders. It might be better to turn the BlackBoard into a process or to send the
+work orders directly from the controller to the Solver and Prediffer processes.
+A database can still be used as a logging mechanism and for monitoring by
+external processes.
 
 \begin{itemize}
 \item Asynchronous notification
