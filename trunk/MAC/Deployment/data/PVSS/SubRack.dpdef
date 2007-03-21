@@ -1,7 +1,9 @@
+SPU.state			int
 SPU.Vhba			float
 SPU.Vlba			float
 SPU.Vdig			float
 SPU.temperature		float
+clockBoard.state		int
 clockBoard.Vfsp			float
 clockBoard.Vclock		float
 clockBoard.version		string
