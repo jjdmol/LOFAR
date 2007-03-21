@@ -13,6 +13,7 @@
 \usepackage{layout}
 \usepackage{color}
 \usepackage{xspace}
+\usepackage{url}           %% could also use package hyperref.
 %\usepackage[colorlinks=false]{hyperref}
 %
 \newcounter{decision}
@@ -60,19 +61,16 @@
 
 \subsection{Purpose of This Document}
 \label{subsec:purpose}
-%
-\textsc{aips++}
-\aips
-\meqtree
 This document provides a detailed description of the architectural and
 software design of the Blackboard Selfcal System (BBS) that will be used for
-the off-line calibration of the LOFAR observations. The primary goal of this
-document is to provide information that is detailed enough to help the reader
+the calibration of the LOFAR observations. The primary goal of this document
+is to provide information that is detailed enough to help the reader
 understand the design considerations, choice of software architecture and
 global design. We will not delve into the level of detailed software design,
 since this will likely cause discrepancies between the actual code and this
 document. For this level of detail, the reader is suggested to consult the
-online code documentation.
+online code documentation. This document supersedes the previous version of
+the BBS SDD~\cite{LOFAR-ASTRON-SDD-052}.
 
 \subsection{Executive Summary}
 \label{subsec:summary}
@@ -83,7 +81,7 @@ online code documentation.
 \item [BBS] BlackBoard Selfcal System
 \end{description}
 
-\pagebreak
+\cleardoublepage
 
 \section{Architectural Design}
 \label{sec:architectural-design}
@@ -93,9 +91,9 @@ online code documentation.
 \subsection{Design Considerations}
 \label{subsec:considerations}
 The BlackBoard SelfCal (BBS) system is designed to do the calibration of LOFAR
-in an efficient way. Although BBS is mainly developed for LOFAR, it may also be
-used to calibrate other instruments as soon as their specific algorithms are
-plugged in.
+in an efficient way. Although BBS is mainly developed for LOFAR, it may also
+be used to calibrate other instruments as soon as their specific algorithms
+are plugged in.
 
 \subsubsection{Data Volume}
 \label{subsubsec:data-volume}
@@ -115,40 +113,41 @@ computers. Each computer will have to store and manipulate part of the data.
 The Selfcal application will be running on the off-line and auxiliary
 processing clusters of the central processing facility (see
 \cite{LOFAR-ASTRON-ADD-012}). These clusters consist of Linux PCs in a high
-bandwidth network. The BBS application will typically run on 50 to 500 of these
-nodes. Data stored in the CEP intermediate storage facility will be distributed
-over multiple disks and will be accessed by multiple nodes concurrently. 
-Reordering tens of terabytes of data takes a lot of time and should be avoided.
-Therefore the data should be distributed such that the various applications
-(e.g., calibration and imaging) can operate well without reordering. The
-distribution should be such that large chunks of data can be
-processed locally and only small amounts of data need to be sent to other
-machines. There are a few axes along which the data may be distributed:
+bandwidth network. The BBS application will run on a large cluster, typically
+consisting of several hundred nodes. Data stored in the CEP intermediate
+storage facility will be distributed over multiple disks and will be accessed
+by multiple nodes concurrently. Reordering tens of terabytes of data takes too
+much time and should be avoided.  Therefore the data should be distributed
+such that the various applications (e.g., calibration and imaging) can operate
+well without reordering. The distribution should be such that large chunks of
+data can be processed locally and only small amounts of data need to be sent
+to other machines. There are a few axes along which the data may be
+distributed:
 \begin{description}
-\item [Time] is a bad candidate, because a time slot contains a lot of data (up
-to 0.7~GBytes during initial operation). This may lead to problems in the
-online system when all data of a time slot are sent to a single machine and
-written there. Another problem is that parallelization of imaging gets hard
-because the data of all time slots have to be combined.
-\item [Baseline] seems a better candidate, but will lead to imaging problems as
-well. This is because a single image needs data from different machines, so
-large amounts of gridded or FFT-ed data have to be sent around.
+\item [Time] is probably not a good candidate, because a time slot contains a
+lot of data (up to 0.7~GBytes during initial operation). This may lead to
+problems in the online system when all data of a time slot are sent to a
+single machine and written there. Another problem is that parallelization of
+imaging gets hard because the data of all time slots have to be combined.
+\item [Baseline] seems a better candidate, but will lead to imaging problems. 
+This is because a single image needs data from different machines, so large
+amounts of gridded or FFT-ed data have to be sent around.
 \item [Frequency] seems to be the best candidate. Creating an image is usually
 done per channel or for a few channels, so in principle the whole imaging
 process can be done locally. It will result in an image cube distributed over
 many machines, so the image display and analysis software have to be able to
 handle this. The image cube can be very large (e.g., 256~GBytes for
-1000~channels of $4000 \times 4000$ images for the 4~Stokes parameters). \\
-Distribution in frequency means that each subband is stored on a separate
-machine.  If needed, each subband can be distributed further. Of course, each
-machine should contain about the same amount of data to get good load
-balancing. \\ 
-Note that this distribution matches well with the way the correlator and
-online system is designed.
+1000~channels of $4000 \times 4000$ pixels for the 4~Stokes parameters). \\
+Distribution in frequency means that, e.g., each subband is stored on a
+separate machine.  If needed, each subband can be distributed further. Of
+course, each machine should contain about the same amount of data to get good
+load balancing. \\ 
+Note that this distribution matches well with the way the
+correlator and online system is designed.
 \end{description}
 The BBS calibration software is not dependent on a specific distribution, so
 in the future other distributions can be used when applicable. However, it has
-not been decided yet if that is also true for the imaging software.
+not been evaluated yet if that is also true for the imaging software.
 
 \subsubsection{Scalable Architecture}
 \label{subsubsec:scalable-architecture}
@@ -158,14 +157,15 @@ be avoided as much as possible. When distributing data over frequency, we can
 almost completely decouple the computing nodes, as we saw in the previous
 section. Another way to reduce coupling is to make communication indirect as
 well. Computing nodes should communicate through some kind of global shared
-memory. There are several architectural patterns that describe this approach. 
-One of the oldest and best known is the Blackboard pattern, which we will 
-describe briefly below.
+memory. There are several architectural patterns that describe this
+approach. One of the oldest and best known is the Blackboard pattern, which we
+will describe briefly below.
 
 Computing nodes should communicate through some kind of global shared
 memory. One obvious candidate for such shared memory is a database system. It
 provides locking and notification (trigger) mechanisms, and sometimes even
-command queueing.
+command queueing. We have to be careful, though, that the database will not
+become a bottleneck.
 
 \subsection{Blackboard Pattern}
 \label{subsec:blackboard}
@@ -180,8 +180,7 @@ control component evaluates the current state of processing and coordinates
 the specialized programs. This data-directed control regime makes
 experimentation with different algorithms possible, and allows experimentally
 derived heuristics to control processing. This architecture is described in
-\cite{Buschmann1996} and
-\cite{LOFAR-ASTRON-SDD-002}.
+\cite{Buschmann1996} and \cite{LOFAR-ASTRON-SDD-002}.
 
 The Blackboard architecture is ideal for solving problems for which no
 predetermined algorithm or solve strategy is known. However, for the design of
@@ -189,7 +188,12 @@ the BBS system, we've come to the conclusion that the operational system will
 benefit in terms of performance when using a predefined solving strategy. The
 "best" algorithm to perform a self-calibration run can be chosen from a
 relatively short list of calibration strategies in advance (based, e.g., on
-heuristics, or suggested by research done with the \meqtree system).
+heuristics, or suggested by research done with the \meqtree system).  In fact,
+the Shared Respository pattern~\cite{Lalanda1998}, which can be seen as a
+generalization of the Blackboard pattern, is probably a better match for the
+BBS system. It realizes indirect communication using a repository as shared
+memory. Figure~\ref{fig:shared-repository-pattern} show the specialization
+hierarchy of patterns based on the Shared Repository pattern.
 
 \begin{figure}[!ht]
 \centering
@@ -214,12 +218,6 @@ heuristics, or suggested by research done with the \meqtree system).
 \label{fig:shared-repository-pattern}
 \end{figure}
 
-In fact, the Shared Respository pattern~\cite{Lalanda1998}, which can be seen
-as a generalization of the Blackboard pattern, is probably a better match for
-the BBS system. It realizes indirect communication using a repository as
-shared memory. Figure~\ref{fig:shared-repository-pattern} show the
-specialization hierarchy of patterns based on the Shared Repository pattern.
-
 For BBS, we will need a global controller, which could be implemented using
 the Controller pattern; and a notification or trigger mechanism to inform the
 computing nodes of changes to the shared memory, which could be implemented
@@ -235,29 +233,18 @@ will contain the values and quality of the (partial) solutions calculated by
 each computing node. The database can be used as an external source for
 various assessments of the solutions.
 
-%
-%\subsubsection{Controller}
-%\label{subsubsec:controller}
-%
-%\subsubsection{Knowledge Sources}
-%\label{subsubsec:ks}
-%
-%\subsubsection{Blackboard}
-%\label{subsubsec:bb}
-%
-
-\pagebreak
+\cleardoublepage
 
 \section{System Overview}
 \label{sec:overview}
 
 \subsection{Subsystems}
 \label{subsec:subsystems}
-BBS is split into two parts which are described in detail in other
-chapters. The BBS Control takes care of the distributed processing by means of
-the Blackboard pattern. The BBS Kernel does the actual processing; it executes
-a series of steps where each step consists of an operation like solve or
-correct.
+BBS is split into two parts. BBS Control takes care of the distributed
+processing by means of the Blackboard pattern. BBS Kernel does the actual
+processing; it executes a series of steps where each step consists of an
+operation like solve or correct.
+
 
 \subsubsection{BBS Control}
 \label{subsubsec:sys-control}
@@ -266,20 +253,21 @@ The BBS Control subsystem is responsible for controlling the execution of a
 self calibration strategy. A strategy consists of an ordered list of commands,
 which will be executed by the BBS Kernel subsystem.
 
-The key idea is that a subset of the data (the so-called "work domain") is
-kept in memory; as many commands as possible are executed on these data before
-the next data chunk is accessed. A strategy defines the size of the work
-domain (in time and frequency) and optionally which stations and correlations
-are contained in the work domain. It is also possible to define an integration
-interval in time and frequency to achieve that, say, a longer time interval
-can be used. The basic concept is that on each machine the data contained in
-the work domain have to fit in memory. The BBS Kernel iterates over the work
-domains to process all the data.  For each strategy a number of steps can be
-defined. For instance, when peeling 10 Cat I sources, 20 steps can be
-defined. For each source step 1 is solving for the gain in the direction of
-the source and step 2 is subtracting the source. Note that only after the last
-subtraction the residual data need to be written.  In this way the data are
-read and/or written only once per strategy.
+The key idea is that a subset of the data (the so-called \emph{work domain})
+is kept in memory; as many commands as possible are executed on these data
+before the next data chunk is accessed. A strategy defines the size of the
+work domain (in time and frequency) and optionally which stations and
+correlations are contained in the work domain. It is also possible to define
+an integration interval in time and frequency to achieve that, say, a longer
+time interval can be used. The basic concept is that on each machine the data
+contained in the work domain have to fit in memory. The BBS Kernel iterates
+over the work domains to process all the data.  For each strategy a number of
+steps can be defined. For instance, when peeling 10 Cat I sources, at least 30
+steps can be defined. For each source, step~1 is solving for the gain in the
+direction of the source, step~2 is subtracting the source, and step~3 shifts
+to the next source. Note that only after the last subtraction the residual
+data need to be written.  In this way the data are read and/or written only
+once per strategy.
 
 \begin{figure}[!ht]
 \centering
@@ -291,8 +279,8 @@ read and/or written only once per strategy.
 The calibration process is controlled by the BBS Control
 subsystem. Figure~\ref{fig:bbs-control-global-design} depicts the general
 control structure. The BBS Control subsystem consists of one global
-controller, which acts as the main process, and multiple local controller,
-which control the BBS Kernel subsystem. The global controller posts one or
+controller, which acts as the main process, and multiple local controllers,
+each controlling one BBS Kernel subsystem. The global controller posts one or
 more commands (steps) to the Command Queue. Each local controller fetches the
 next command from the Command Queue and forwards the command to the BBS Kernel
 subsystem. The kernel returns parameter solutions and their quality metrics to
@@ -303,7 +291,7 @@ which action should be taken next.
 Since all communication takes places via the Blackboard, there is no need for
 a direct connection between the BBS Control and the BBS Kernel subsystems.
 The Blackboard contains all the relevant information about the current state
-of the self calibration process. This information that can be used by other
+of the self calibration process. This information can be used by other
 (external) processes to monitor the calibration process and to plot results.
 See~\cite{LOFAR-ASTRON-SDD-002} for more details on the Blackboard
 architecture and roles of the controller.
@@ -338,7 +326,7 @@ architecture and roles of the controller.
 \subsubsection{BBS Database}
 \label{subsubsec:interf-database}
 
-\pagebreak
+\cleardoublepage
 
 \section{Software Design}
 \label{sec:software-design}
@@ -348,16 +336,43 @@ architecture and roles of the controller.
 
 \subsubsection{BBS Strategy}
 \label{subsubsec:design-strategy}
+One iteration in the so-called \emph{Major
+Cycle}~\cite[sec.~4.1]{LOFAR-ASTRON-SDD-050} can be described by a BBS
+Strategy. A strategy defines a relationship between the data set of a given
+observation, which is stored in a measurement set, and the parameter database
+holding (intermediate) values of the model parameters that will be estimated
+as part of the self calibration process. At least two models are used in the
+current self calibration setup: the Local Sky Model (LSM) and the Instrument
+Model. The Data Selection associated with a BBS Strategy defines the selection
+of the observed data that will be used for the complete strategy. Here you
+can, for example, specify which frequency bands, time intervals, and baselines
+should be used during this self calibration run. A strategy is defined in
+terms of one or more BBS Steps (see section~\ref{subsubsec:design-step}
+below).
+
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.5\textwidth]{images/bbs-strategy-class-diagram}
+\caption{The BBS Strategy class defines the strategy to be used for the current self calibration run.}
+\label{fig:bbsstrategy}
 \end{figure}
 
 \subsubsection{BBS Step}
 \label{subsubsec:design-step}
-\begin{figure}[!htb]
+A BBS Strategy is defined in terms of one or more BBS Steps. The BBS Step
+class is designed as a Composite pattern~\cite{Gamma1995}, which means that
+each BBS Step can itself be made up of one or more BBS Steps. The Composite
+pattern provides an easy way to define a tree-like structure. Leaf classes,
+like BBS SolveStep cannot be further subdivided; they describe one single
+piece of work that can be handed over to the BBS Kernel. Currently, there is a
+total of six leaf classes, each defining one single piece of work.
+
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.8\textwidth]{images/bbs-step-class-diagram}
+\caption{The BBS Step class family defines single pieces of work that can be
+executed by the BBS Kernel as part of the current self calibration run.}
+\label{fig:bbsstep}
 \end{figure}
 
 \subsubsection{Global Control}
@@ -834,13 +849,13 @@ A database can still be used as a logging mechanism and for monitoring by extern
 \end{itemize}
 
 
-\pagebreak
+\cleardoublepage
 
 % References
 \bibliographystyle{unsrt}
 \bibliography{lofar}
 
-\pagebreak
+\cleardoublepage
 
 \appendix
 \section{Configuration Syntax}
