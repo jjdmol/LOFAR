@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 13 ObsCtrl_State
-PANEL,248 199 950 741 N "_3DFace" 1
+PANEL,451 113 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
