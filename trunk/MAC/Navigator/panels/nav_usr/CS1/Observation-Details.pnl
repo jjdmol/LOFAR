@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,430 119 1007 801 N "_3DFace" 1
+PANEL,451 113 1007 801 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -50,7 +50,7 @@ PANEL,430 119 1007 801 N "_3DFace" 1
   }
 }
 
-updateObservation( string dp1, string state,
+updateObservation( string dp1, int state,
                    string dp2, string action,
                    string dp3, string error,
                    string dp4, string logMsg,
@@ -195,7 +195,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-180-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 0 
-1 19 0 "" 1
+1 2 0 "" 1
 0
 25 17
 "ObservationTable"

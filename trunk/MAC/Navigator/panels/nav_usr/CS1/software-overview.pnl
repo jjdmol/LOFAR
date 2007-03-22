@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,424 108 1026 741 N "_3DFace" 1
+PANEL,451 113 1026 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -31,7 +31,7 @@ E"string observationsDP=\"\";
 string OTDBDP=\"\";
 string connected=\"\";
 updateObservationsTable(string dpe, dyn_string dpv,
-                        string dp1, string state,
+                        string dp1, int state,
 							          string dp2, string error,
 							          string dp3, bool invalid)
 {
