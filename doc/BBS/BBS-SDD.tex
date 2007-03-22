@@ -476,28 +476,6 @@ solve domains.
 \subsection{Distribution}
 \label{subsec:distribution}
 
-Figure \ref{fig:domains} shows how the data is typically distributed over the
-compute nodes. The visibility data computed by the correlator is distributed
-according to frequency, as is shown in the figure. Visibility data may be
-unavailable, because the subbands recorded during an observation are not
-required to be consecutive. All \emph{available} data is distributed equally
-over the nodes. 
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[scale=0.5]{images/domains.ps}
-\caption{Data distribution and the domain types defined in
-Table~\ref{tab:domains}}
-\label{fig:domains}
-\end{figure}
-
-The size of the work domain is specified by the user. It should be chosen such
-that each node can read its local work domain into main memory. Thus, all steps
-of the calibration \emph{strategy} can be executed on the work domain without
-having to read data more than once. After the work domain has been processed,
-the global controller instructs the local controllers to continue with the next
-chunk of data.
-
 The unit of work for most operations (i.e. \predict, \subtract, \correct) is a
 single complex visibility. These operations are embarrassingly parallel:
 communication between nodes is not necessary.
@@ -509,32 +487,46 @@ domain of a node, the \solve operation can be performed locally. However, if a
 solve domain intersects the local data domains of multiple nodes, communication
 between these nodes becomes necessary.
 
-\subsubsection{Distribution of the solve operation}
-\label{subsubsec:distribution-solve}
-
-The work domain is partitioned into solve domains based on a user specified
-solve domain size. Figure~\ref{fig:solve_domains} shows an example where the
-work domain is partitioned into ten separate solve domains. Four solve domains
-are entrirely local: solve domains 0, 1, 4, 5, 8, and 9. The other solve domains
-span multiple nodes.
+\subsubsection{Data distribution}
+\label{subsubsec:distribution-data}
+Figure \ref{fig:domains} shows how the data is typically distributed over the
+compute nodes. The visibility data computed by the correlator is distributed
+according to frequency, as is shown in the figure. Visibility data may be
+unavailable, because the subbands recorded during an observation are not
+required to be consecutive. All \emph{available} data is distributed equally
+over the nodes. 
 
 \begin{figure}[htbp]
 \centering
+%\includegraphics[scale=0.5]{images/domains.ps}
 \includegraphics[scale=0.5]{images/solve_domains.ps}
-\caption{TODO!!}
-\label{fig:solve_domains}
+\caption{Data distribution and partitioning of the work domain into solve
+domains during a \solve operation. See Table~\ref{tab:domains} for the definition
+of the different domain types.}
+\label{fig:domains}
 \end{figure}
 
-\todo{Fix caption}
+The size of the work domain is specified by the user. It should be chosen such
+that each node can read its local work domain into main memory. Thus, all steps
+of the calibration \emph{strategy} can be executed on the work domain without
+having to read data more than once. After the work domain has been processed,
+the global controller instructs the local controllers to continue with the next
+chunk of data.
 
-If the size of the work domain along any dimension is not an integer multiple of
-the specfied solve domain size, the solve domains at the boundaries will get
-truncated. 
+During execution of a \solve operations, the work domain is partitioned into
+solve domains based on a user specified solve domain size.
+Figure~\ref{fig:solve_domains} shows an example where the work domain is
+partitioned into ten separate solve domains. Six solve domains are entrirely
+local: solve domains 0, 1, 4, 5, 8, and 9. The other solve domains span multiple
+nodes.
 
-There are a number of open questions regarding the \solve operation, which are
-discussed below. All are related to uncertainty regarding user requirements.  It
-is expected that the experiences with \cs{1} observations will provide some
-answers.
+%\begin{figure}[htbp]
+%\centering
+%\includegraphics[scale=0.5]{images/solve_domains.ps}
+%\caption{Partitioning of the work domain into solve domains during a \solve
+%operation.}
+%\label{fig:solve_domains}
+%\end{figure}
 
 \paragraph{Solve domain size}
 
@@ -557,7 +549,7 @@ time is limited to the area divided by the number of channels stored per node.
 Assuming 32000 channels and a cluster of 500 nodes:
 
 \[
-time=\frac{85441}{32000\;channels \div 500\;nodes} \approx 1335\; integration
+time=\frac{85441}{32000\;channels \div 500\;nodes} \approx 1335\;integration\;
 periods
 \]
 
@@ -565,6 +557,10 @@ It is currently an open question if this limit is within requirements. This will
 depend on the type of \solve operations the user wants to perform.
 
 \paragraph{Solve domain truncation}
+
+If the size of the work domain along any dimension is not an integer multiple of
+the specfied solve domain size, the solve domains at the boundaries will get
+truncated. 
 
 It is currently an open question if solve domain trunction is acceptable or not.
 In principle, the work domain size could be adjusted automatically to avoid
@@ -580,92 +576,65 @@ fractional numbers), e.g. number of channels times number of integration
 periods, the size of the work domain should be set to a multiple of the least
 common multiple of the different solve domain sizes.
 
-\subsubsection{Parameter access}
-\label{subsubsec:parameter-access}
+\subsubsection{Communication}
+\label{subsubsec:distribution-communication}
 
-Table~\ref{tab:parm_access} shows an overview of the tasks that require access
-to the model parameters along with the type(s) of access required. It is not yet
-clear if the operator needs to modify parameter values during calibration, which
-is indicated by a question mark in the table.
+Figure~\ref{fig:distribution-communication} shows the communication paths used
+in \bbs. The blackboard is essentially used as \emph{shared memory} that retains
+the state of the (distributed) calibration process. Shared memory allows
+decoupling of the global controller and the local controllers, and easy
+monitoring by external tools.
 
-\begin{table}[htb!]
+\begin{figure}[htb!]
 \centering
-\begin{tabular}{lcc}
-\hline
-\textbf{Task} & \textbf{Read access} & \textbf{Write access} \\
-\hline
-Model evaluation & \checkmark & -- \\
-\hline
-Visibility correction & \checkmark & -- \\
-\hline
-Parameter estimation & \checkmark & \checkmark \\
-\hline
-Monitoring and control & \checkmark & ? \\
-\hline
-\end{tabular}
-\caption{An overview of tasks that require access to model parameters.}
-\label{tab:parm_access}
-\end{table}
+\includegraphics[width=0.7\textwidth]{images/communication.ps}
+\caption{Overview of the communication paths used in \bbs.}
+\label{fig:distribution-communication}
+\end{figure}
 
-\todo{Explain that parameters/funklets needed by a BBSKernel process are always
-local, and how this relates to distributed databases}
+A potential risk of this design is that the shared memory becomes a performance
+bottleneck.  All local controllers need to access the shared memory and this
+access will typically be (quasi-) concurrent, because all local controllers
+perform the same operations on approximately equal amounts of data. A related
+concern, raised in \cite[p.19]{LOFAR-ASTRON-SDD-052}, is that local controllers
+may have to poll the shared memory to check for updates. This depends on the
+implementation of the shared memory component. Most modern databases, for
+instance, support asynchronous notification of client processes thus avoiding
+the need for polling. Performance tests should be carried out in the near future
+to asses if the design meets the requirements.
 
-A process that needs access to the model parameters can either access the
-parameter database directly, or receive the values from another process.
+Figure~\ref{fig:distribution-communication} shows that there is a direct link
+between the local controller and the solver. One could wonder why the
+communication is not routed via the shared memory. There are two reasons for
+this. First, exchanging information between local controllers and solvers via
+shared memory imposes unnecessary synchronisation. To fit the funklets defined
+on a given solve domain, information about that solve domains needs only to be
+exchanged between the local controller(s) \emph{that share the solve domain} and
+a solver. Second, the amount of data that needs to be communicated from a local
+controller to a solver is considerable and encoded in a form that is unsuitable
+for monitoring.
 
-Model evaluation and visibility correction are performed by a BBSKernel process.
-One or more of such processes will run on each node. Because a BBSKernel process
-also constructs the model, it alone knows which model parameters it needs to
-evaluate the model. Therefore, it makes sense that a BBSKernel process accesses
-the parameter database directly. This creates the risk that the parameter
-database becomes a performance bottleneck, because all BBSKernel processes will
-tend to access the database quasi concurrently. If the database indeed proves to
-be a bottleneck, using a distributed database may be a good solution. Especially
-when most solve domains are local to a single node, this may work well.
-Performance tests should be carried out in the near future to decide if a single
-database server will fit the requirements.
+The updated coefficients communicated from a solver to the relevant local
+controllers \emph{are} suitable for monitoring. Of course, using direct
+communication between kernel and solver does not prohibit writing the updated
+coefficients to shared memory as well. Assuming monitoring coefficient values
+during iteration is primarily used for debugging purposes, this is probably
+acceptable.
 
-\todo{Explain about the solver and kernel co-operation when doing a \solve, and
-remove the text below as it is no longer relevant.}
+At the start of a \solve operation a solver needs the initial values of the
+funklet coefficients for the solve domains it will process. At the end of the
+\solve operations the updated coefficient values have to be written to shared
+memory. (If monitoring coefficient values during iteration is required, the
+updated coefficients need to be written after each iteration as well.)
 
-Before the first solve iteration a Solver receives the current values of the
-solvable parameters from the Prediffers. After each iteration it sends the newly
-calculated values to the Controller. So a Solver does not need access to the
-parameter database itself. In other words, the Prediffer nodes access the
-parameter database and sent self-contained inputs to the solver(s).  The AIPS++
-LSQFit class that is used in the solver, keeps data from previous solutions
-within the same iteration series to speed up the convergence process. This is
-used to minimize the data size that is sent from Prediffer nodes to the
-solver(s).
-
-At the start of the first iteration in solving a group of parameters, a
-Prediffer needs the values of all model parameters, not only the solvable ones.
-It needs them for the domain being solved. There are two approaches to achieve
-this:
-1.A Prediffer reads the parameters from the database. This requires that the
-database is visible on the Prediffer machine.
-2.The Controller reads the parameters and sends them to the Prediffers.
-
-The problem with this approach is that the Controller does not know which
-parameters are needed by the Prediffers. A possible solution for this is that
-all Prediffers tell the Controller which parameters they need and get the values
-back. Because most Prediffers will need the same parameters, the Controller does
-not need to read too many parameters.  In the second and later iterations a
-Prediffer only needs the new values of the solvable parameters. This can be done
-similarly; either the Controller sends the new values to the Prediffers or the
-Controller updates the database after which a Prediffer can read the new values.
-
-If a Prediffer reads the parameter values itself, the following database options
-are possible:
-1.An AIPS++ table or embedded database on an NFS-mounted file system.
-2.An embedded database that is (automatically) replicated on all machines.
-3.A database server that is visible from all machines.
-
-The parameter handling classes have been designed such that they hide the
-parameter handling from the other code. In this way it is rather easy to choose
-the parameter handling scheme that suites best. E.g., on Blue Gene/L another
-scheme might be used than on a Linux cluster.
-
+In the current design the local controller sends the initial coefficient values
+to the solver and writes the updated coefficients to shared memory. Thus, the
+design of the solver component can be kept simple. Yet it also implies that the
+updated coefficient values of solve domains that are shared between multiple
+nodes will be written multiple times. This is not a problem from a data
+consistency point of view, but may aversely affect performance. Multiple writes
+could be avoided if the solver is made responsible for updating the shared
+memory.
 
 \subsection{BBS Control}
 \label{subsec:design-control}
@@ -764,6 +733,7 @@ visibilities and the predicted visibilities (based on the model).
 \end{itemize}
 
 \todo{explain that subtract, generate also include a predict}
+\todo{add other steps}
 
 \subsubsection{Measurement Equation Evaluation}
 \label{subsubsec:design-me-evaluation}
