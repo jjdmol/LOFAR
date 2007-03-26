@@ -31,6 +31,7 @@ main()
 	dyn_string types;
 
 	types = dpTypes("GCF*");
+	handleType(types, "GCFPaPsState", DPEL_STRING);
 	handleType(types, "GCFPaPsEnabled", DPEL_STRING);
 	handleType(types, "GCFPaPsIndication", DPEL_STRING);
 	handleType(types, "GCFDistPort", DPEL_BLOB);
@@ -53,6 +54,7 @@ main()
 	DebugN("Add type " + type);
 	dpCreate("__gcf_wd", type);
 	dpCreate("__pa_PSIndication", "GCFPaPsIndication");
+	dpCreate("__pa_PSState", "GCFPaPsState");
 }
 
 deleteDPs(string type)
