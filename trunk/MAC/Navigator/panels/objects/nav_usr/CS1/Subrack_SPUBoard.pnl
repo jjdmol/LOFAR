@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 SubRackSPUBoard
-PANEL,252 141 745 269 N "_3DFace" 1
+PANEL,459 137 745 269 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -9,8 +9,6 @@ PANEL,252 141 745 269 N "_3DFace" 1
 	// load propertysets from datapoints
 	navPMLloadPropertySet(baseDP);
 	
-	// connect for childUpdates
-  showChildState(baseDP);
   // connect for selfUpdates
   showSelfState(baseDP);
   
@@ -53,7 +51,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"childStateBorder"
+"border1"
 ""
 1 50 140 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
@@ -64,7 +62,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 50 70 663 140
+E E 0 1 1 0 1 E U  1 E 50 70 663 140
 2 1
 "Text1"
 ""
