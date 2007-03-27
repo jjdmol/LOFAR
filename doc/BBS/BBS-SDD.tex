@@ -246,12 +246,11 @@ database. Using a database system has the advantage that locking, notification
 (trigger) and sometimes even command queueing mechanisms are provided
 out-of-the-box.
 
-The database will be separated into two parts. One part, the Command Queue,
-will contain a list of commands (or work orders) to be sent to each computing
-node. The other part, the Parameter Solutions database, will contain the
-values and quality of the (partial) solutions calculated by each computing
-node. The database can be used as an external source for various assessments
-of the solutions.
+The database will be separated into two parts. One part, the Command Queue, will
+contain a list of commands (or work orders) to be sent to each computing node.
+The other part, the Parameter Database, will contain the values and quality of
+the (intermediate) solutions computed by each node. The database can be used as
+a source for assessments of the solutions with external tools.
 
 \cleardoublepage
 
@@ -262,8 +261,8 @@ of the solutions.
 \label{subsec:subsystems}
 BBS is split into two parts. BBS Control takes care of the distributed
 processing by means of the Blackboard pattern. BBS Kernel does the actual
-processing; it executes a series of steps where each step consists of an
-operation like solve or correct.
+processing; it executes a series of steps, where each step consists of an
+operation like \solve or \correct.
 
 
 \subsubsection{BBS Control}
@@ -292,12 +291,12 @@ once per strategy.
 \begin{figure}[!ht]
 \centering
 \includegraphics[width=0.6\textwidth]{images/bbs-control-global-design}
-\caption{Global design of the BBS Control system. Global Control posts
-commands to the Command Queue. These commands are asynchronously retrieved by
-Local Control and forwarded to the BBS Kernel. After execution of the command,
-BBS Kernel returns the result to Local Control, which in turn posts it to the
-Parameter Solutions database. Global Control checks the quality of these
-solutions and takes appropriate action.}
+\caption{Global design of the BBS Control system. Global Control posts commands
+to the Command Queue. These commands are asynchronously retrieved by Local
+Control and forwarded to the BBS Kernel. After execution of the command, BBS
+Kernel returns the result to Local Control, which in turn posts it to the
+Parameter Database. Global Control checks the quality of these solutions and
+takes appropriate action.}
 \label{fig:bbs-control-global-design}
 \end{figure}
 
@@ -321,7 +320,6 @@ of the self calibration process. This information can be used by other
 See~\cite{LOFAR-ASTRON-SDD-002} for more details on the Blackboard
 architecture and roles of the controller.
 
-
 \subsubsection{BBS Kernel}
 \label{subsubsec:sys-kernel}
 
@@ -332,22 +330,32 @@ the sky, the environment, and the interferometer. Based on the ME it can
 predict visibilities, subtract sources, correct visibilities for a given
 reference position, and solve for model parameters.
 
+The BBS Kernel subsystem can be split up conceptually into two components: the
+\emph{kernel} and the \emph{solver}. The kernel was previously known as the
+Prediffer (from Predict -- Differentiate). However, the Prediffer performs much
+more tasks than predict and differentiate, which is why it has been renamed
+kernel.
+
+The kernel is controlled by the local controller, and ultimately by the global
+controller. The solver runs as a separate process and communicates with the
+local controller/kernel via (unix domain) sockets. The kernel and the solver
+cooperate whenever a \solve operation has to be performed.
+
 \subsubsection{BBS Database}
 \label{subsubsec:sys-database}
 The BBS Database (or blackboard) actually consists of two different databases.
-\begin{description}
 
+\begin{description}
 \item [Command Queue] stores the commands to be executed by the BBS Kernel and
-the status results returned by each kernel. In principle, commands are
-executed in the order they were posted by Global Control. However, in the
-future, we may need a way to send an \emph{out-of-band} command, which could
-be implemented as a high priority command. This has not been fully decided
-yet.
+the status results returned by each kernel. In principle, commands are executed
+in the order they were posted by Global Control. However, in the future, we may
+need a way to send \emph{out-of-band} commands, which could be implemented as a
+high priority command. This has not been fully decided yet.
 \item [Parameter Database] stores (intermediate) solutions of the model
-parameters calcuated by the BBS Kernel. Access to the Parameter database is
-minimized in order to avoid any performance penalties. If partial solutions
-can be kept in memory of a local (kernel) node, they will not be written to
-the database, unless requested explicitly.
+parameters calcuated by the BBS Kernel. Access to the Parameter Database is
+minimized in order to avoid performance penalties. If partial solutions can be
+kept in memory of a local (kernel) node, they will not be written to the
+database, unless requested explicitly.
 \end{description}
 
 \subsection{Interfaces}
@@ -380,19 +388,16 @@ ACC~\cite{LOFAR-ASTRON-SDD-037}, which enables ACC to control these
 applications.
 \item [OLAP] stores the observational data as visibilities into one more
 Measurement Sets. In section~\ref{subsubsec:distributed-processing} we argued
-that the visibility data could probably best be distributed along the
-frequency axis; this also matches with the way the data are produced by the
+that the visibility data could probably best be distributed along the frequency
+axis; this also matches the way the data are produced by the
 correlator~\cite{LOFAR-ASTRON-SDD-036}. So, in the current design, we assume
 that each BBS Kernel will process one or more subbands of data.
-\item [Imager] will be operating on the residual visibilities that are
-produced by BBS. It will convert the UV-data from the updated Measurement Sets
-to the image plane.
-\item [Parameter database] \sloppy will store the parameters---or more
-precisely, the polynomial coefficients describing the parameters---of the
-different models used during the self calibration process. Examples of such
-models are: Local Sky Model, Minimal Ionospheric Model, and Instrument
-Model. These parameters are solved for by the BBS Kernel, during one or more
-self calibration runs.
+\item [Imager] will Fourier transform the residual visibilities produced by BBS
+into an imager of the sky.
+\item [Parameter Database] \sloppy will store the parameters of the various
+(sub)models used in self calibration. Examples of such (sub)models are: local
+sky model, minimal ionospheric model, and instrument model. The values of the
+model parameters are estimated by the BBS Kernel.
 \end{description}
 
 \subsubsection{BBS Control}
@@ -407,13 +412,11 @@ provides commands like \texttt{define}, \texttt{init}, \texttt{run}, and
 \emph{parset} file, which contains important configuration parameters. See
 appendix~\ref{sec:configuration-syntax} for a complete list of all key-value
 pairs that are defined for the BBS applications.
-\item [BBS Strategy] describes the strategy to be used for the current self
-calibration run. Configurable strategy parameters are read from the
-\emph{parset} file that is supplied by ACC. A strategy consists of one or more
-steps.
-\item [BBS Step] describes a (single or multi) step to be executed for the
-current self calibration run. Configurable step parameters are read from the
-\emph{parset} file that is supplied by ACC.
+\item [BBS Strategy] describes the strategy to be used for a self calibration
+run. Configurable strategy parameters are read from the \emph{parset} file that
+is supplied by ACC. A strategy consists of one or more steps.
+\item [BBS Step] describes a (single or multi) step to be executed. Configurable
+step parameters are read from the \emph{parset} file that is supplied by ACC.
 \item [Command Queue] contains the queue of commands to be executed by the BBS
 Kernel. Commands are posted by Global Control and retrieved by each Local
 Control. Commands are usually executed in the order in which they appear in
@@ -432,19 +435,19 @@ are provided or implemented by the BBS Kernel subsystem.
 \begin{description}
 \item [Operations]
 BBS Kernel supports several operations, which are described in
-section~\ref{subsec:design-kernel}. Before an operation is executed, the context of the
-operation can be set. The context determines which part of the input data is to
-be processed, and can contain operation specific options. The local controller
-will request the kernel to perform specific operations based on the commands it
-reads from the command queue.
+section~\ref{subsec:design-kernel}. Before an operation is executed, the context
+of the operation can be set. The context determines which part of the input data
+is to be processed, and can contain operation specific options. The local
+controller will request BBS Kernel to perform operations based on the commands
+it reads from the Command Queue.
 \item [Measurement set]
-Measurement sets are used to exchange visibility data with OLAP, or more
-precisely the flagger, on the input side and the imager on the output side.
-\item [Parameter database]
-BBS Kernel reads the current values of the model parameters from the parameter
-database when required, e.g. to compute the response of an interferometer. After
-fitting the instrument model to the observed visibilities, it writes the updated
-parameters to the parameter database as well.
+Measurement sets are used to exchange visibility data with OLAP on the input
+side and the imager on the output side.
+\item [Parameter Database]
+BBS Kernel reads the current values of the model parameters from the Parameter
+Database when required, e.g. to compute the response of an interferometer. Also,
+after estimation of new model parameter values it writes the updated parameters
+to the Parameter Database.
 \end{description}
 
 \subsubsection{BBS Database}
@@ -458,10 +461,10 @@ a set of stored procedures, that hide the underlying implementation.
 The BBS Database subsystem implements the following interfaces:
 \begin{description}
 \item [Command Queue]
-A set of stored procedures are provided to e.g. place commands in the queue,
+A set of stored procedures is provided to e.g. place commands in the queue,
 retrieve commands from the queue, and to report and inspect results.
-\item [Parameter database]
-A set of stored procedures are provided to retrieve and store the values of
+\item [Parameter Database]
+A set of stored procedures is provided to retrieve and store the values of
 parameters.
 \end{description}
 
@@ -475,7 +478,8 @@ parameters.
 
 \subsubsection{Domains}
 \label{subsubsec:domains}
-A central concept in BBS is the \emph{domain}: A 2-D rectangular region in
+
+A central concept in BBS is that of a \emph{domain}: A 2-D rectangular region in
 $frequency$ and $time$. In table \ref{tab:domains} we define seven different
 domain types that are useful for discussing the design of BBS. Figure
 \ref{fig:domains} illustrates the different domain types and how they relate to
@@ -495,7 +499,7 @@ stored at) a given compute node\\
 \texttt{work domain} & Part of the data domain which is processed together\\
 \hline
 \texttt{local work domain} & Intersection of the work domain and the local data
-domain (should fit in the node's main memory)\\
+domain (should fit in the main memory of a node)\\
 \hline
 \texttt{solve domain} & Part of the data domain that is used to solve for a set
 of unknowns\\
@@ -520,14 +524,14 @@ This model can be decomposed into smaller (sub)models, such as a model for the
 beamshape, the bandpass, or the ionosphere (see also
 \cite[sec.2]{LOFAR-ASTRON-SDD-050}).
 
-In general, a \emph{parameter} can be a constant or a continuous function of one
-or more variables such as $frequency$, $time$, and $direction$. The value of a
-parameter is represented by a set of \emph{funklets}. A funklet is an
+In general, a \emph{model parameter} can be a constant or a continuous function
+of one or more variables such as $frequency$, $time$, and $direction$. The value
+of a parameter is represented by a set of \emph{funklets}. A funklet is an
 approximation of the value of a parameter on a bounded domain, termed
 \emph{validity domain}. Figure \ref{fig:funklet} illustrates the relation
 between parameters and funklets. A commonly used type of funklet is a polynomial
 of arbitrary degree in $frequency$ and/or $time$. Other posibilities include
-Fourier series expansions, shapelets, and splines.
+e.g. Fourier series expansion, shapelets, and splines.
 
 \begin{figure}[htbp]
 \centering
@@ -548,11 +552,12 @@ the work domain (see figure~\ref{fig:domains}). For each solve domain a funklet
 exists with a matching validity domain that represents the value of parameter
 \texttt{gain:11:phase:CS10} on that domain. To fit the coefficients of a funklet
 we need the values of other parameters as well. The validity domains of the
-funklets that represent these parameters will most likely be different, because
-they were fitted at some earlier time using potentially different solve domains.
-In summary: The validity domain of a funklet determines in what region the value
-of the funklet is considered valid; A solve domain determines which part of the
-observed data is used to fit the is used to fit the coefficients of a funklet.
+funklets that represent the additional parameters will most likely be different,
+because they were fitted at some earlier time using a potentially different
+solve domain size. In summary: The validity domain of a funklet determines in
+what region the value of the funklet is considered valid; A solve domain
+determines which part of the observed data is used to fit the is used to fit the
+coefficients of a funklet.
 
 The problem of fitting a parameter can now be restated as fitting the
 coefficients of a \emph{set} of funklets defined on a set of non-overlapping
@@ -602,15 +607,15 @@ of the different domain types.}
 
 The size of the work domain is specified by the user. It should be chosen such
 that each node can read its local work domain into main memory. Thus, all steps
-of the calibration \emph{strategy} can be executed on the work domain without
-having to read data more than once. After the work domain has been processed,
-the global controller instructs the local controllers to continue with the next
-chunk of data.
+of the calibration strategy can be executed on the work domain without having to
+read data more than once. After the work domain has been processed, the global
+controller instructs the local controllers to continue with the next chunk of
+data.
 
-During execution of a \solve operations, the work domain is partitioned into
+During execution of a \solve operation, the work domain is partitioned into
 solve domains based on a user specified solve domain size.
 Figure~\ref{fig:domains} shows an example where the work domain is partitioned
-into ten separate solve domains. Six solve domains are entrirely local: solve
+into ten separate solve domains. Six solve domains are entirely local: solve
 domains 0, 1, 4, 5, 8, and 9. The other solve domains span multiple nodes.
 
 %\begin{figure}[htbp]
@@ -652,18 +657,16 @@ depend on the type of \solve operations the user wants to perform.
 \paragraph{Solve domain truncation}
 
 If the size of the work domain along any dimension is not an integer multiple of
-the specfied solve domain size, the solve domains at the boundaries will get
-truncated. 
+the specfied solve domain size, the solve domains at the work domain boundary
+will get truncated. 
 
 It is currently an open question if solve domain trunction is acceptable or not.
 In principle, the work domain size could be adjusted automatically to avoid
 solve domain truncation. This is not completely trivial, because a strategy can
 contain multiple solve steps each of which can have a different solve domain
-size.
-
-Because \emph{all} steps of a strategy are executed on the work domain, the size
-of the work domain must be an integer multiple of the size of each of the
-specified solve domain sizes to completely avoid truncation. Assuming the
+size. Because \emph{all} steps of a strategy are executed on the work domain,
+the size of the work domain must be an integer multiple of the size of each of
+the specified solve domain sizes to completely avoid truncation. Assuming the
 size of the work domain is specified in, or converted to, integers (or
 fractional numbers), e.g. number of channels times number of integration
 periods, the size of the work domain should be set to a multiple of the least
@@ -698,10 +701,10 @@ to asses if the design meets the requirements.
 
 Figure~\ref{fig:distribution-communication} shows that there is a direct link
 between the local controller and the solver. One could wonder why the
-communication is not routed via the shared memory. There are two reasons for
-this. First, exchanging information between local controllers and solvers via
-shared memory imposes unnecessary synchronisation. To fit the funklets defined
-on a given solve domain, information about that solve domains needs only to be
+communication is not routed via shared memory. There are two reasons for this.
+First, exchanging information between local controllers and solvers via shared
+memory imposes unnecessary synchronisation. To fit the funklets defined on a
+given solve domain, information about that solve domains needs only to be
 exchanged between the local controller(s) \emph{that share the solve domain} and
 a solver. Second, the amount of data that needs to be communicated from a local
 controller to a solver is considerable and encoded in a form that is unsuitable
@@ -738,14 +741,14 @@ One iteration in the so-called \emph{Major
 Cycle}~\cite[sec.~4.1]{LOFAR-ASTRON-SDD-050} can be described by a BBS
 Strategy. A strategy defines a relationship between the data set of a given
 observation, which is stored in a Measurement Set~\cite{aips++note229}, and
-the parameter database holding (intermediate) values of the model parameters
+the Parameter Database holding (intermediate) values of the model parameters
 that will be estimated as part of the self calibration process. At least two
 models are used in the current self calibration setup: the Local Sky Model
 (LSM) and the Instrument Model. The Data Selection associated with a BBS
 Strategy defines the selection of the observed data that will be used for the
-complete strategy. Here you can, for example, specify which frequency bands,
-time intervals, and baselines should be used during this self calibration
-run. A strategy is defined in terms of one or more BBS Steps (see
+complete strategy. It allows one to specify, for example, which frequency bands,
+time intervals, and baselines should be used during this self calibration run. A
+strategy is defined in terms of one or more BBS Steps (see
 section~\ref{subsubsec:design-step} below).
 
 \begin{figure}[!ht]
@@ -790,31 +793,31 @@ figure~\ref{fig:global-control-activity-diagram}).
 At start-up, Global Control reads the \emph{parset} file that was supplied by
 ACC, and initializes itself. Next, it queries the Command Queue database to
 see if it is starting a new run, or recovering from an "aborted" run. If it
-started a new run, it starts by posting the Strategy to the command queue,
+started a new run, it starts by posting the Strategy to the Command Queue,
 followed by an \textit{initialize} command, which is needed to inform the
 Local Controllers that a Strategy is available now. Next, it posts a
 \textit{next chunk} command, indicating that the whole sequence of steps (as
 represented by a strategy) should be repeated for the next chunk of data. The
 size of a data chunk is determined by the work domain size.
 
-Global Control now enters a loop, posting steps to the command queue, until
+Global Control now enters a loop, posting steps to the Command Queue, until
 either there are no more steps left in the strategy, or the step posted last
 is a synchronization point. In the former case, it will send a \textit{next
 chunk} command an re-execute the loop. In the latter case, it will wait until
 all Local Controllers have finshed processing all steps posted up to now,
 before sending the next step. Iteration over a chunk of data ends when there
-are no more steps left in the command queue.
+are no more steps left in the Command Queue.
 
 \paragraph*{Alternative Flows}
 If all Local Controllers return an \texttt{OUT\_OF\_DATA} result to the
-\textit{next chunk} command, then the self calibration run is completed; send
-a \textit{finalize} command to inform all Local Controllers and set the
+\textit{next chunk} command, then the self calibration run is completed; A
+\textit{finalize} command is sent to inform all Local Controllers and set the
 \textit{done} flag for the current strategy.
 
 If Global Control is recovering from an "aborted" run (possibly due to a crash
 of itself), it sends a high priority \textit{recover} command and checks if
 all Local Controllers respond to it. Next, Global Control queries the Command
-Queue database to get the last step in the command queue and resumes
+Queue database to get the last step in the Command Queue and resumes
 operation.
 
 \paragraph*{Reminders} 
@@ -851,7 +854,7 @@ somewhat complicated. Here it is for completeness:
 \begin{quote}
 If a strategy with the (by SAS) given ID is not yet present in the database,
 then this is a new run; else if the strategy is present and its \textit{done}
-flag is set, then we're done; else if the next command in the command queue is
+flag is set, then we're done; else if the next command in the Command Queue is
 \textit{initialize}, or if there are no commands at all, then this is a new
 run; else we're recovering from, e.g., a crash.
 \end{quote}
@@ -862,16 +865,17 @@ command. Currently, three different commands can be handled by the Local
 Controller: \textit{initialize}, \textit{finalize}, and any of the BBS
 SingleSteps. If the command is a BBS SingleStep, it will be forwarded to the
 BBS Kernel, which will process it. The result returned by the kernel will be
-posted to the result table of the command queue. 
+posted to the result table of the Command Queue. 
 
 \paragraph*{Alternative Flows}
 If Local Control is not starting a new run, it might be recovering from a
-crash. Recovery is not yet completely modeled; therefore there is currently no
-control flow from the Recovery action.
+crash. Recovery is not yet completely modeled. However, care has been taken
+to ensure that the information stored in shared memory is sufficient to
+reconstruct the state of a local controller.
 
 If the received command is \textit{initialize}, a Strategy with the given ID
-will be retrieved from the command queue. It is an error if this strategy is
-not present in the Command Queue database.
+will be retrieved from the Command Queue. It is an error if this strategy is not
+present in the Command Queue database.
 
 If the received command is \textit{finalize}, Local Control will clean up and
 exit.
@@ -898,11 +902,11 @@ ME it can predict visibilities, subtract sources, correct visibilities for a
 given reference position, and solve for model parameters.
 
 The BBS Kernel subsystem can conceptually be split into two separate components:
-the \emph{kernel} and the \emph{solver}. The solver is responsible for
-estimating new parameter values. It is discussed separately in
+the \emph{kernel} and the \emph{solver}. The solver is used to estimate new
+parameter values. It is discussed separately in
 section~\ref{subsubsec:design-solver}.
 
-The kernel (component) supports the following external requests:
+The kernel (component) supports the following operations:
 
 \begin{itemize}
 \item \predict\\
@@ -923,18 +927,28 @@ Phase shift the observed visibilities to a different phase center.
 Flag visibilities that have been contaminated by radio frequency interference.
 \end{itemize}
 
-Some of the requests listed above can be subdivided from the kernel's point of
-view. The \subtract request consists of predicting visibilities and subtracting
-them from the observed visibilities. The \generate request consists of
-predicting visibilities and partial derivatives, subtracting the predicted
-visibilities from the observed visibilities, and generating condition equations
-in the parameters based on the computed differences and partials. However, from
-the outside the operations listed above behave as 'atomic' operations.
+Some of the operations listed above can be subdivided from the kernel's point of
+view. The \subtract operation consists of predicting visibilities and
+subtracting them from the observed visibilities. The \generate operation
+consists of predicting visibilities and partial derivatives, subtracting the
+predicted visibilities from the observed visibilities, and generating condition
+equations in the parameters based on the computed differences and partials.
+However, seen from outside the kernel, the operations listed above behave as
+'atomic' operations.
+
+Note that the \solve operation does not appear in the list. Remeber that the
+local controller orchestrates the execution of the commands it retrieves from
+the Command Queue. All commands except \solve can be executed by the kernel
+alone. However, the \solve command involves both the kernel \emph{and the
+solver}. Each iteration, the local controller instruct the kernel to perform the
+\generate operation. The result is sent to the solver, which responds with
+updated parameter values. Basically, the \generate operation constitutes half of
+the \solve command.
 
 Before an operation is executed, the \emph{context} of the operation can be set.
 The context contains information about which data needs to be processed (data
-selection), and operation specific options (e.g. maximum number of iterations in
-case of the \solve request).
+selection), and operation specific options (e.g. the parameters to be fitted in
+case of a \generate request).
 
 \subsubsection{Measurement Equation Evaluation}
 \label{subsubsec:design-me-evaluation}
@@ -994,14 +1008,14 @@ thousands of parameters seems to be a realistic estimate
 Because of the large number of parameters, keeping track of them all becomes a
 challenge. A naming scheme can be used to simplify this task. The naming scheme
 achieves two goals:
-\begin{enumerate}
+\begin{itemize}
 \item Identification of groups of related parameters
 \item Specification of default values
-\end{enumerate}
+\end{itemize}
 
 Each parameter is assigned a unique name, which can be made up of several parts
 separated by colons. Grouping can be achieved with \textsc{unix}-like wildcards
-(*, \{\}), see table \ref{tab:naming_scheme}.
+(*, \{\}), see Table \ref{tab:naming_scheme}.
 \begin{table}[htb!]
 \centering
 \begin{tabular}{lp{0.60\textwidth}}
@@ -1012,14 +1026,14 @@ separated by colons. Grouping can be achieved with \textsc{unix}-like wildcards
 \hline
 \texttt{dec:3C343} & Declination of source 3C343 \\
 \hline
-\texttt{gain:11:phase:CS10:3C343.1} & Phase of the x-polarized signal from
-station CS10 in the direction of source 3C343.1 \\
+\texttt{gain:11:phase:CS10:3C343.1} & Phase of the $g_{11}$ element of the
+G-jones matrix of station CS10 in the direction of source 3C343.1 \\
 \hline
-\texttt{gain:11:phase:*:3C343.1} & Phase of the x-polarized signal of all
-stations in the direction of source 3C343.1 \\
+\texttt{gain:11:phase:*:3C343.1} & Phase of the $g_{11}$ element of the G-jones
+matrix of every station in the direction of source 3C343.1 \\
 \hline
-\texttt{gain:\{11,22\}:phase:*:3C343.1} & Phase of both the x- and y-polarized
-signal from station CS10 in the direction of source 3C343.1. \\
+\texttt{gain:\{11,22\}:phase:*:3C343.1} & Phase of the $g_{11}$ and $g_{22}$
+elements of the G-jones matrix of every station in the direction of source 3C343.1. \\
 \hline
 \end{tabular}
 \caption{Examples of typical parameter names and the use of wildcards to
@@ -1031,8 +1045,8 @@ it will try to find a default value. Default values are specified according to
 the same naming scheme as parameters. However, if no default value can be found
 that matches the name of a parameter exactly, the kernel will strip off the last
 part of the name and retry. This process continues until either a match is found
-or the name becomes empty. Thus, one can specify for example a default flux for
-every source by specifying \texttt{StokesI}: If the kernel needs the value of
+or the name becomes empty. Thus, one can specify, for example, a default flux for
+every source by specifying \texttt{StokesI}. If the kernel needs the value of
 \texttt{StokesI:3C343} but that parameter does not exist as a regular parameter,
 it will try to find a default value called \texttt{StokesI:3C343}. If that
 default value also does not exist, it will strip off the last part of the name
@@ -1127,8 +1141,7 @@ entirely local solve domains over a (unix domain) socket.
 \subsection{BBS Database}
 \label{subsec:design-database}
 The BBS Database actually consists of two databases: a Command Queue database
-and a Parameter Solutions database. However, they will probably reside on the
-same node.
+and a Parameter Database. However, they will probably reside on the same node.
 
 \subsubsection{Command Queue}
 \label{subsubsec:design-command-queue}
@@ -1140,7 +1153,7 @@ The Command Queue is, as the name suggests, a command queue. Commands posted
 by Global Control are stored inside the Command Queue. Each entry in the
 strategy table represents one BBS Strategy, which is associated with one or
 more entries in the step table, representing the BBS SingleSteps in the BBS
-Strategy. The Local Controllers fetch these steps from the command queue, one
+Strategy. The Local Controllers fetch these steps from the Command Queue, one
 by one. When one step is completed, the status result is posted to the result
 table. For each single step, there are as many entries in the result table as
 there are Local Controllers, processing these steps. For example, suppose a
@@ -1148,14 +1161,14 @@ Strategy consists of 10 SingleSteps and there are 20 Local Controllers. Then,
 when the Strategy is done, we will have $10\times20=200$ entries in the result
 table.
 
-\subsubsection{Parameter Solutions}
+\subsubsection{Parameter Database}
 \label{subsubsec:design-parameter-solutions}
-Currently, the Parameter Solutions database is stored as an AIPS++ table, but
-in the near future it will be migrated to a "real" database. A data model has
-not been designed yet. Updated solutions of the parameters are only written at
-the end of a solve operation (not for each iteration), in order to reduce the
-amount of I/O. It remains possible to store the parameter values each iteration
-for debugging purposses.
+Currently, the Parameter Database is stored as an AIPS++ table, but in the near
+future it will be migrated to a "real" database. A data model has not been
+finalized yet. Updated parameter values are only written at the end of a solve
+operation (not for each iteration), in order to reduce the amount of I/O. It
+remains possible to store the parameter values each iteration for debugging
+purposses.
 
 \subsection{Performance Considerations}
 \label{subsec:performance-considerations}
@@ -1172,19 +1185,19 @@ measurement sets that BBS can handle and the sequence of operations it can
 execute.
 
 Avoiding the use of standard access routines makes BBS less robust, because
-(small) deviations from the expected structure may cause it to crash. On the
-other hand, BBS may fail to report an error if an MS with an unsupported
-structure is fed in and just read in the wrong data records.
+(small) deviations from the expected structure may cause it to crash. Also, BBS
+may fail to report an error if an MS with an unsupported structure is fed in and
+just read in the wrong data records.
 
 On the short term, we plan to replace memory mapped I/O with the standard MS
-access routines. This will incur a significant amount of overhead. Therefore,
-alternative (more raw) formats will be considered as well, especially for the
-interface between OLAP and BBS (the input side).
+access routines. This will probably incur a significant amount of overhead.
+Therefore, alternative (more raw) formats will be considered as well, especially
+for the interface between OLAP and BBS (the input side).
 
 \subsubsection{Spatial Queries}
 \label{subsubsec:performance-spatial-queries}
 
-A common query to the parameter database involves finding all the funklets of
+A common query to the Parameter Database involves finding all the funklets of
 which the validity domain intersects a given domain. The performance of such
 queries can be improved dramatically by using some form of spatial indices, e.g.
 kd-trees, quadtrees, or r-trees.
@@ -1219,7 +1232,7 @@ be necessary.
 
 Another technique that can be used in combination with either approach discussed
 above to improve performance is vectorisation. A special code generator has been
-developed to assist in using SSE2 instructions for this purpose.
+developed to assist in using vector instructions for this purpose.
 
 \subsubsection{Caching}
 \label{subsubsec:performance-caching}
@@ -1228,10 +1241,10 @@ More elaborate caching schemes may be implemented to optimally trade memory
 versus time in the evaluation of an expression tree. For instance, when multiple
 evaluations of the same tree are required (e.g. for computing partial
 derivatives, or when executing a \solve operation), the execution time of each
-node in the tree could be measured. Given the amount of memory needed per node
-to cache its value, and the total amount of available memory, an optimisation
-problem could be formulated to determine which nodes should cache their data and
-which should not. 
+node in the tree could be measured during the first evaluation. Given the amount
+of memory needed per node to cache its value, and the total amount of available
+memory, an optimisation problem could be formulated to determine which nodes
+should cache their data and which should not. 
 
 \subsubsection{Parameter Estimation}
 \label{subsubsec:performance-parameter-estimation}
@@ -1259,8 +1272,8 @@ space.
 
 Large solve domains generally require high order funklets to allow for enough
 variability over the domain. In short, there is a trade-off between processing
-time and signal to noise, number of parameters that can be fitted
-simultaneously, and storage space.
+time on the one hand and signal to noise, number of parameters that can be
+fitted simultaneously, and storage space on the other.
 
 \cleardoublepage
 
@@ -1274,11 +1287,7 @@ simultaneously, and storage space.
 \section{Configuration Syntax}
 \label{sec:configuration-syntax}
 
-This appendix describes the syntax of the BBS configuration file (a.k.a.
-parset). Its goal is to foster a common understanding and terminology. At the
-moment this page is still under construction. I've added
-\textcolor{red}{questions in red} to things that were not clear to me while
-creating this page. Thing to do are \textcolor{green}{stated in green}.
+This appendix describes the syntax of the BBS configuration file.
 
 \subsection*{Global Settings}
 \begin{description}
@@ -1287,23 +1296,23 @@ creating this page. Thing to do are \textcolor{green}{stated in green}.
 \item [BBDB] : \emph{BBDB} (see page \pageref{app-bbdb}) \\
     Information about the black board database.
 \item [ParmDB] : \emph{ParmDB} (see page \pageref{app-parmdb}) \\
-    Information about the parameter databases (e.g. instrument parameters,
-    local sky model).
+    Information about the parameter databases (e.g. instrument model parameters,
+    local sky model parameters).
 \end{description}
 
 \subsubsection*{Example}
 {\footnotesize
 \begin{verbatim}
-DataSet                  = "test.ms"    # name of Measurement Set
+DataSet                  = "test.ms"          # name of Measurement Set
 
-BBDB.Host                = "127.0.0.1"  # hostname/ipaddr of BB DBMS
-BBDB.Port                = 12345        # port used by BB DBMS
-BBDB.DBName              = "blackboard" # name of the BB database
-BBDB.UserName            = "postgres"   # username for accessing the DBMS
-BBDB.PassWord            = ""           # password for accessing the DBMS
+BBDB.Host                = "127.0.0.1"        # hostname/ipaddr of BB DBMS
+BBDB.Port                = 12345              # port used by BB DBMS
+BBDB.DBName              = "blackboard"       # name of the BB database
+BBDB.UserName            = "postgres"         # username for accessing the DBMS
+BBDB.PassWord            = ""                 # password for accessing the DBMS
 
-ParmDB.Instrument        = "test.mep"   # instrument parameters (MS table)
-ParmDB.LocalSky          = "test.gsm"   # local sky parameters (MS table)
+ParmDB.Instrument        = "test.instrument"  # instrument parameters (MS table)
+ParmDB.LocalSky          = "test.sky"         # local sky parameters (MS table)
 \end{verbatim}
 }
 
@@ -1324,8 +1333,7 @@ size and optional data integration.
 \item [WorkDomainSize] : \emph{DomainSize} (see page \pageref{app-domainsize}) \\
     Size of the work domain in frequency and time. A work domain represents an
     amount of input data that is loaded into memory and processed as a single
-    block.  A large work domain size should reduce the overhead due to disk
-    access.
+    chunk.
 \item [Integration] : \emph{DomainSize} (see page \pageref{app-domainsize}) \\
     Cell size for integration. Allows the user to perform operations on a
     lower resolution, which should be faster in most cases.
@@ -1348,10 +1356,10 @@ Strategy.Integration.Time      = 0.1            # integration interval: t(s)
 }
 
 \subsection*{Step}
-A \emph{single-step} describes one unit of work of the strategy. A step that
-is defined in terms of a number of other steps is known as a multi-step. The
-attributes of a \emph{multi-step} should be interpreted as default values for
-the steps that compose the multi-step. These default values can always be
+A \emph{single-step} describes a single unit of work of the strategy. A step
+that is defined in terms of a number of other steps is known as a multi-step.
+The attributes of a \emph{multi-step} should be interpreted as default values
+for the steps that compose the multi-step. These default values can always be
 overridden.
 \begin{description}
 \item [Steps] : \emph{vector$<$string$>$} \\
@@ -1371,14 +1379,10 @@ overridden.
     lower resolution, which should be faster in most cases.
 \item [InstrumentModel] : \emph{vector$<$string$>$} \\
     The parts of the measurement equation that should be included. \par
-    \textcolor{green}{TODO: add descriptions for the various parts of the ME.}
 \item [Operation] : \emph{string} \\
-    The operation to be performed in this step. One of SOLVE, SUBTRACT,
-    CORRECT, PREDICT, SHIFT, or REFIT. Only relevant for single steps, should
-    be absent for multi-steps. \par\
-    SOLVE : Find values for the parameters that minimize the difference
-    between the predicted and the measured (u,v) values. \par
-    \textcolor{green}{TODO: add descriptions for other values.}
+    The operation to be performed in this step. One of SOLVE, SUBTRACT, CORRECT,
+    PREDICT, SHIFT, FLAG, or REFIT. Only relevant for single steps, should be
+    absent for multi-steps.
 \item [OutputData] : \emph{string} \\
     Column in the measurement set wherein the output values of this step
     should be written. If left empty, no data will be written.
@@ -1388,8 +1392,7 @@ overridden.
 value of \textbf{Operation}} :
 \begin{description}
 \item [Solve] : \emph{Solve} (see page \pageref{app-solve}) \\
-    Arguments of the SOLVE operation. \par
-    \textcolor{green}{TODO: specify arguments for the other operations.}
+    Arguments of the SOLVE operation.
 \end{description}
 
 \subsubsection*{Example}
@@ -1401,8 +1404,7 @@ Step.MultiStep.Baselines.Station1      = [0, 0, 0, 1, 1, 2]        # baselines t
 Step.MultiStep.Baselines.Station2      = [0, 1, 2, 1, 2, 2]        # (all if empty)
 Step.MultiStep.Sources                 = ["3C343"]                 # list of sources
 Step.MultiStep.ExtraSources            = ["M81"]                   # list of sources outside patch
-Step.MultiStep.InstrumentModel         = ["BANDPASS", "TOTALGAIN", "PATCHGAIN"] \ 
-                                                                   # instrument model
+Step.MultiStep.InstrumentModel         = ["BANDPASS", "TOTALGAIN"] # instrument model
 Step.MultiStep.Integration.Freq        = 2                         # integration interval: f(Hz)
 Step.MultiStep.Integration.Time        = 0.5                       # integration interval: t(s)
 Step.MultiStep.Correlation.Selection   = CROSS                     # one of AUTO, CROSS, ALL
@@ -1412,31 +1414,31 @@ Step.SingleStep1.Baselines.Station1    = [0, 1]                    # baselines t
 Step.SingleStep1.Baselines.Station2    = [1, 2]                    # (all if empty)
 Step.SingleStep1.Sources               = []                        # list of sources
 Step.SingleStep1.InstrumentModel       = ["BANDPASS", "TOTALGAIN"] # instrument model
-Step.SingleStep1.Operation             = SOLVE                     # one of SOLVE, SUBTRACT, CORRECT, \
-                                                                   # PREDICT, SHIFT, REFIT
+Step.SingleStep1.Operation             = SOLVE                     # one of PREDICT, SUBTRACT, CORRECT, \
+                                                                   # SOLVE, SHIFT, FLAG, REFIT
 Step.SingleStep1.OutputData            = "OUTDATA1"                # MS output data column
 Step.SingleStep1.Solve.MaxIter         = 10                        # maximum number of iterations
 Step.SingleStep1.Solve.Epsilon         = 1e-7                      # convergence threshold
 Step.SingleStep1.Solve.MinConverged    = 0.95                      # fraction that must have converged
-Step.SingleStep1.Solve.Parms           = ["PHASE:*"]               # names of solvable parameters
-Step.SingleStep1.Solve.ExclParms       = [""]                      # parameters excluded from solve
+Step.SingleStep1.Solve.Parms           = ["gain:\{11,22\}:*"]      # names of solvable parameters
+Step.SingleStep1.Solve.ExclParms       = []                        # parameters excluded from solve
 Step.SingleStep1.Solve.DomainSize.Freq = 1000                      # f(Hz)
 Step.SingleStep1.Solve.DomainSize.Time = 1                         # t(s)
 
 Step.SingleStep2.Baselines.Station1    = []                        # baselines to use
 Step.SingleStep2.Baselines.Station2    = []                        # (all if empty)
 Step.SingleStep2.Sources               = []                        # list of sources
-Step.SingleStep2.InstrumentModel       = ["DirGain", "Phase"]      # instrument model
-Step.SingleStep2.Operation             = CORRECT                   # one of SOLVE, SUBTRACT, CORRECT, \
-                                                                   # PREDICT, SHIFT, REFIT
+Step.SingleStep2.InstrumentModel       = ["PATCHGAIN"]             # instrument model
+Step.SingleStep2.Operation             = CORRECT                   # one of PREDICT, SUBTRACT, CORRECT, \
+                                                                   # SOLVE, SHIFT, FLAG, REFIT
 Step.SingleStep2.OutputData            = "OUTDATA2"                # MS output data column
 \end{verbatim}
 }
 
 \subsection*{BBDB}
 \label{app-bbdb}
-This contains information on how the blackboard database and the parameter
-databases can be reached.
+Contains information on how the blackboard database and the parameter databases
+can be reached.
 \begin{description}
 \item [Host] : \emph{string} \\
     Hostname or IP address of the host on which the black board database and
@@ -1453,12 +1455,14 @@ databases can be reached.
 
 \subsection*{ParmDB}
 \label{app-parmdb}
+Temporary settings while AIPS++ tables are still being used to store parameter
+values instead of the blackboard.
 \begin{description}
 \item [Instrument] : \emph{string} \\
     Path to the AIPS++ table containing the instrument parameters.
 \item [LocalSky] : \emph{string} \\
     Path to the AIPS++ table containing the local sky model parameters.
-\item [History] : \emph{string}
+\item [History] : \emph{string} \\
     Path to the AIPS++ table containing the solve history.
 \end{description}
 
@@ -1468,17 +1472,16 @@ databases can be reached.
 \item [Selection] : \emph{string} \\
     Station correlations to use. Should be one of 'AUTO', 'CROSS', or 'ALL'.
     \par
-    AUTO: Use only correlations of each station with itself (i.e. no base
-    lines). \textcolor{red}{Not yet implemented.} \\ CROSS: Use only
-    correlations between stations (i.e. base lines). \\ ALL: Use auto and
-    cross correlations both.
+    AUTO: Use only correlations of each station with itself. \\
+    CROSS: Use only correlations between stations. \\
+    ALL: Use auto and cross correlations both.
 \item [Type] : \emph{string} \\
-    Correlations of which polarizations to use, one or more of 'XX', 'XY',
-    'YX', 'YY'. As an example, suppose we select 'XX' here and set Selection
-    to 'AUTO', then the X polarization signal of each station is correlated
-    with itself.  However, if we set Selection to 'CROSS' then the X
-    polarization of station A is correlated with the X polarization of station
-    B for each base line (A,B)
+    Correlations of which polarizations to use, one or more of 'XX', 'XY', 'YX',
+    'YY'. As an example, suppose we select 'XX' here and set Selection to
+    'AUTO', then the correlation of the X-polarized signal of each station with
+    itself will be used. However, if we set Selection to 'CROSS' then the
+    correlation of the X-polarized signal of station A with the X-polarized
+    signal of station B will be used for each base line (A,B)
 \end{description}
 
 \subsection*{DomainSize}
@@ -1525,7 +1528,8 @@ equal. If both fields are left empty, all baselines are used.
     Subset of the parameters selected by Parms that should not be solved for.
     For example, if we would like to solve for the gain (amplitude, phase) of
     each station, but we would also like to fix the phase of the first station
-    (STATION0) this can be specified as follows: {\footnotesize
+    (STATION0) this can be specified as follows:
+{\footnotesize
 \begin{verbatim}
 Solve.Parms = ["gain:*"]
 Solve.ExclParms = ["gain:*:phase:STATION0"]
@@ -1535,7 +1539,5 @@ Solve.ExclParms = ["gain:*:phase:STATION0"]
     Size of the solve domain. The work domain is divided in solve domains and
     a solution is computed for each solve domain independently.
 \end{description}
-
-
 
 \end{document}
