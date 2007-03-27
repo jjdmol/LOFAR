@@ -1,10 +1,17 @@
 -- -------- --
 -- STRATEGY --
 -- -------- --
--- Function: blackboard.set_strategy
--- Full signature:
--- blackboard.set_strategy("DataSet" TEXT, "ParmDB.LocalSky" TEXT, "ParmDB.Instrument" TEXT, "ParmDB.History" TEXT, "Stations" TEXT, "InputData" TEXT, "WorkDomainSize.Freq" DOUBLE PRECISION, "WorkDomainSize.Time" DOUBLE PRECISION, "Correlation.Selection" TEXT, "Correlation.Type" TEXT)
-CREATE OR REPLACE FUNCTION blackboard.set_strategy(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT)
+CREATE OR REPLACE FUNCTION blackboard.set_strategy
+    (data_set TEXT,
+    parmdb_local_sky TEXT,
+    parmdb_instrument TEXT,
+    parmdb_history TEXT,
+    stations TEXT,
+    input_data TEXT,
+    work_domain_size_freq DOUBLE PRECISION,
+    work_domain_size_time DOUBLE PRECISION,
+    correlation_time TEXT,
+    correlation_size TEXT)
 RETURNS BOOLEAN AS
 $$
     BEGIN
@@ -12,18 +19,29 @@ $$
             RETURN FALSE;
         END IF;
 
-        INSERT INTO blackboard.strategy(
-            "DataSet", 
-            "ParmDB.LocalSky", 
-            "ParmDB.Instrument", 
-            "ParmDB.History", 
-            "Stations", 
-            "InputData", 
-            "WorkDomainSize.Freq", 
-            "WorkDomainSize.Time", 
-            "Correlation.Selection", 
-            "Correlation.Type")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);
+        INSERT
+            INTO blackboard.strategy
+                ("DataSet", 
+                "ParmDB.LocalSky", 
+                "ParmDB.Instrument", 
+                "ParmDB.History", 
+                "Stations", 
+                "InputData", 
+                "WorkDomainSize.Freq", 
+                "WorkDomainSize.Time", 
+                "Correlation.Selection", 
+                "Correlation.Type")
+            VALUES
+                (data_set,
+                parmdb_local_sky,
+                parmdb_instrument,
+                parmdb_history,
+                stations,
+                input_data,
+                work_domain_size_freq,
+                work_domain_size_time,
+                correlation_time,
+                correlation_size);
 
         RETURN TRUE;
     END;
@@ -40,31 +58,41 @@ $$
 LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION blackboard.is_clean_startup(_node INET)
+-- Check if the global or a local controller is started cleanly,
+-- or if it is restarted after failure. For the global controller,
+-- startup is considered clean if no strategy has been set yet.
+-- For the local controller, this check does not suffice, because
+-- if the global controller was started before the local controller
+-- a strategy could already have been set. Therefore, it is verified
+-- that the local controller hasn't completed any commands yet by
+-- checking the result table. NOTE: This is also not foolproof, if
+-- the first command modifies data/state (because it can be partly
+-- executed).
+CREATE OR REPLACE FUNCTION blackboard.is_clean_startup(global BOOL)
 RETURNS BOOLEAN AS
 $$
     DECLARE
         _strategy blackboard.strategy%ROWTYPE;
     BEGIN
         SELECT *
-        INTO _strategy
-        FROM blackboard.strategy;
+            INTO _strategy
+            FROM blackboard.strategy;
 
         IF NOT FOUND THEN
             RETURN TRUE;
-        ELSIF _node IS NULL THEN
+        ELSIF global THEN
             RETURN FALSE;
         ELSE
-            RETURN (SELECT COUNT(*) FROM blackboard.result WHERE node = _node) = 0;
+            RETURN (SELECT COUNT(*) FROM blackboard.result WHERE node = inet_client_addr()) = 0;
         END IF;
     END;
 $$
 LANGUAGE plpgsql;
 
 
--- ---------- --
--- WORK ORDER --
--- ---------- --
+-- ------- --
+-- COMMAND --
+-- ------- --
 CREATE OR REPLACE FUNCTION blackboard.add_command()
 RETURNS INTEGER AS
 $$
@@ -82,7 +110,7 @@ $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION blackboard.get_next_command(current_command_id INTEGER)
+CREATE OR REPLACE FUNCTION blackboard.get_next_command(_current_command_id INTEGER)
 RETURNS blackboard.command AS
 $$
     SELECT *
@@ -122,10 +150,6 @@ CREATE TYPE blackboard.iface_solve_arguments AS
 );
 
 
--- Function: blackboard.get_next_step
--- Full signature:
--- blackboard.get_next_step(_current_command_id INTEGER)
---
 -- This function is a 'combination' of get_next_command and
 -- get_next_step. Therefore, it has to return a combination of
 -- a command_id and an iface_step. We could define a separate
@@ -134,7 +158,7 @@ CREATE TYPE blackboard.iface_solve_arguments AS
 -- row from the step table. Of course, this is not very clean.
 -- Therefore, it is recommended to use get_next_command and
 -- get_step sequentially.
-CREATE OR REPLACE FUNCTION blackboard.get_next_step(INTEGER)
+CREATE OR REPLACE FUNCTION blackboard.get_next_step(_current_command_id INTEGER)
 RETURNS blackboard.step AS
 $$
     SELECT blackboard.step.*
@@ -146,10 +170,7 @@ $$
 LANGUAGE SQL;
 
 
--- Function: blackboard.get_step
--- Full signature:
--- blackboard.get_step(_command_id INTEGER)
-CREATE OR REPLACE FUNCTION blackboard.get_step(INTEGER)
+CREATE OR REPLACE FUNCTION blackboard.get_step(_command_id INTEGER)
 RETURNS blackboard.iface_step AS
 $$
     SELECT
@@ -163,15 +184,12 @@ $$
         "InstrumentModel",
         "OutputData"
         FROM blackboard.step
-        WHERE blackboard.step.command_id = $1;
+        WHERE blackboard.step.command_id = $1; 
 $$
 LANGUAGE SQL;
 
 
--- Function: blackboard.get_solve_arguments
--- Full signature:
--- blackboard.get_solve_arguments(_command_id INTEGER)
-CREATE OR REPLACE FUNCTION blackboard.get_solve_arguments(INTEGER)
+CREATE OR REPLACE FUNCTION blackboard.get_solve_arguments(_command_id INTEGER)
 RETURNS blackboard.iface_solve_arguments AS
 $$
     DECLARE
@@ -181,7 +199,7 @@ $$
         SELECT *
             INTO step
             FROM blackboard.step
-            WHERE command_id = $1;
+            WHERE command_id = _command_id;
 
         IF NOT FOUND OR step."Operation" != 'SOLVE' THEN
             RAISE EXCEPTION 'Work order % either is not a solve step or it is not a step at all.', $1;
@@ -205,10 +223,17 @@ $$
 LANGUAGE plpgsql;
 
 
--- Function: blackboard.add_step (PRIVATE FUNCTION, DO NOT CALL FROM C++)
--- Full signature:
--- blackboard.add_step("Name" TEXT, "Operation" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData" TEXT)
-CREATE OR REPLACE FUNCTION blackboard.add_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
+-- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
+CREATE OR REPLACE FUNCTION blackboard.add_step
+    (name TEXT,
+    operation TEXT,
+    baselines_station1 TEXT,
+    baselines_station2 TEXT,
+    correlation_selection TEXT,
+    correlation_type TEXT,
+    sources TEXT,
+    instrument_model TEXT,
+    output_data TEXT)
 RETURNS INTEGER AS
 $$
     DECLARE
@@ -231,7 +256,18 @@ $$
                 "Sources",
                 "InstrumentModel",
                 "OutputData")
-            VALUES (_id, _command_id, $1, $2, $3, $4, $5, $6, $7, $8, $9);
+            VALUES
+                (_id,
+                _command_id,
+                name,
+                operation,
+                baselines_station1,
+                baselines_station2,
+                correlation_selection,
+                correlation_type,
+                sources,
+                instrument_model,
+                output_data);
                 
         RETURN _id;
     END;
@@ -239,10 +275,15 @@ $$
 LANGUAGE plpgsql;
 
 
--- Function: blackboard.add_predict_step
--- Full signature:
--- blackboard.add_predict_step("Name" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData")
-CREATE OR REPLACE FUNCTION blackboard.add_predict_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
+CREATE OR REPLACE FUNCTION blackboard.add_predict_step
+    (name TEXT,
+    baselines_station1 TEXT,
+    baselines_station2 TEXT,
+    correlation_selection TEXT,
+    correlation_type TEXT,
+    sources TEXT,
+    instrument_model TEXT,
+    output_data TEXT)
 RETURNS INTEGER AS
 $$
     SELECT blackboard.add_step($1, 'PREDICT', $2, $3, $4, $5, $6, $7, $8);
@@ -250,10 +291,15 @@ $$
 LANGUAGE SQL;
 
 
--- Function: blackboard.add_subtract_step
--- Full signature:
--- blackboard.add_subtract_step("Name" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData")
-CREATE OR REPLACE FUNCTION blackboard.add_subtract_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
+CREATE OR REPLACE FUNCTION blackboard.add_subtract_step
+    (name TEXT,
+    baselines_station1 TEXT,
+    baselines_station2 TEXT,
+    correlation_selection TEXT,
+    correlation_type TEXT,
+    sources TEXT,
+    instrument_model TEXT,
+    output_data TEXT)
 RETURNS INTEGER AS
 $$
     SELECT blackboard.add_step($1, 'SUBTRACT', $2, $3, $4, $5, $6, $7, $8);
@@ -261,10 +307,15 @@ $$
 LANGUAGE SQL;
 
 
--- Function: blackboard.add_correct_step
--- Full signature:
--- blackboard.add_correct_step("Name" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData")
-CREATE OR REPLACE FUNCTION blackboard.add_correct_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT)
+CREATE OR REPLACE FUNCTION blackboard.add_correct_step
+    (name TEXT,
+    baselines_station1 TEXT,
+    baselines_station2 TEXT,
+    correlation_selection TEXT,
+    correlation_type TEXT,
+    sources TEXT,
+    instrument_model TEXT,
+    output_data TEXT)
 RETURNS INTEGER AS
 $$
     SELECT blackboard.add_step($1, 'CORRECT', $2, $3, $4, $5, $6, $7, $8);
@@ -272,16 +323,38 @@ $$
 LANGUAGE SQL;
 
 
--- Function: blackboard.add_solve_step
--- Full signature:
--- blackboard.add_solve_step("Name" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData" TEXT, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT, "ExclParms" TEXT, "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
-CREATE OR REPLACE FUNCTION blackboard.add_solve_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT, DOUBLE PRECISION, DOUBLE PRECISION)
+CREATE OR REPLACE FUNCTION blackboard.add_solve_step
+    (name TEXT,
+    baselines_station1 TEXT,
+    baselines_station2 TEXT,
+    correlation_selection TEXT,
+    correlation_type TEXT,
+    sources TEXT,
+    instrument_model TEXT,
+    output_data TEXT,
+    max_iter INTEGER,
+    epsilon DOUBLE PRECISION,
+    min_converged DOUBLE PRECISION,
+    parms TEXT,
+    excl_parms TEXT,
+    domain_size_freq DOUBLE PRECISION,
+    domain_size_time DOUBLE PRECISION)
 RETURNS INTEGER AS
 $$
     DECLARE
         _step_id INTEGER;
     BEGIN
-        _step_id := blackboard.add_step($1, 'SOLVE', $2, $3, $4, $5, $6, $7, $8);
+        _step_id := blackboard.add_step
+            (name,
+            'SOLVE',
+            baselines_station1,
+            baselines_station2,
+            correlation_selection,
+            correlation_type,
+            sources,
+            instrument_model,
+            output_data);
+        
         INSERT
             INTO blackboard.solve_arguments
                 (step_id,
@@ -292,28 +365,25 @@ $$
                 "ExclParms",
                 "DomainSize.Freq",
                 "DomainSize.Time")
-            VALUES (_step_id, $9, $10, $11, $12, $13, $14, $15);
+            VALUES
+                (_step_id,
+                max_iter,
+                epsilon,
+                min_converged,
+                parms,
+                excl_parms,
+                domain_size_freq,
+                domain_size_time);
+
         RETURN _step_id;
     END;
 $$
 LANGUAGE plpgsql;
 
 
--- Function: blackboard.add_solve_arguments
--- Full signature:
--- blackboard.add_solve_arguments(_step_id INTEGER, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT, "ExclParms" TEXT, "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
---CREATE OR REPLACE FUNCTION blackboard.add_solve_arguments(INTEGER, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT, DOUBLE PRECISION, DOUBLE PRECISION)
---RETURNS VOID AS
---$$
---    INSERT INTO blackboard.solve_arguments(step_id, "MaxIter", "Epsilon", "MinConverged", "Parms", "ExclParms", "DomainSize.Freq", "DomainSize.Time")
---        VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
---$$
---LANGUAGE SQL;
-
-
--- ----------------- --
--- WORK ORDER STATUS --
--- ----------------- --
+-- -------------- --
+-- COMMAND RESULT --
+-- -------------- --
 CREATE OR REPLACE FUNCTION blackboard.set_result(command_id INTEGER, result_code INTEGER, message TEXT)
 RETURNS VOID AS
 $$
