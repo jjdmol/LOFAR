@@ -276,7 +276,7 @@ LANGUAGE SQL;
 -- Full signature:
 -- blackboard.add_solve_step("Name" TEXT, "Baselines.Station1" TEXT, "Baselines.Station2" TEXT, "Correlation.Selection" TEXT, "Correlation.Type" TEXT, "Sources" TEXT, "InstrumentModel" TEXT, "OutputData" TEXT, "MaxIter" INTEGER, "Epsilon" DOUBLE PRECISION, "MinConverged" DOUBLE PRECISION, "Parms" TEXT, "ExclParms" TEXT, "DomainSize.Freq" DOUBLE PRECISION, "DomainSize.Time" DOUBLE PRECISION)
 CREATE OR REPLACE FUNCTION blackboard.add_solve_step(TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, INTEGER, DOUBLE PRECISION, DOUBLE PRECISION, TEXT, TEXT, DOUBLE PRECISION, DOUBLE PRECISION)
-RETURNS VOID AS
+RETURNS INTEGER AS
 $$
     DECLARE
         _step_id INTEGER;
@@ -293,6 +293,7 @@ $$
                 "DomainSize.Freq",
                 "DomainSize.Time")
             VALUES (_step_id, $9, $10, $11, $12, $13, $14, $15);
+        RETURN _step_id;
     END;
 $$
 LANGUAGE plpgsql;
