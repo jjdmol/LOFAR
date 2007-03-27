@@ -41,13 +41,13 @@ namespace LOFAR
 
     BBSSingleStep::~BBSSingleStep()
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
     void BBSSingleStep::print(ostream& os) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSStep::print(os);
       Indent id;
       os << endl << indent << "Output data: " << itsOutputData;
@@ -59,7 +59,7 @@ namespace LOFAR
     BBSSingleStep::BBSSingleStep(const BBSStep* parent) :
       BBSStep(parent)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
@@ -68,7 +68,7 @@ namespace LOFAR
 				 const BBSStep* parent) :
       BBSStep(name, parset, parent)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Create a subset of \a parset, containing only the relevant keys for
       // the current BBSSingleStep.
@@ -81,7 +81,7 @@ namespace LOFAR
 
     void BBSSingleStep::write(BlobOStream& bos) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSStep::write(bos);
       bos << itsOutputData;
     }
@@ -89,7 +89,7 @@ namespace LOFAR
 
     void BBSSingleStep::read(BlobIStream& bis)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSStep::read(bis);
       bis >> itsOutputData;
     }

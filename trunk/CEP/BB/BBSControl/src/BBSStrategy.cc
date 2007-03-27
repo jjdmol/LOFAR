@@ -58,7 +58,7 @@ namespace LOFAR
     BBSStrategy::BBSStrategy(const ParameterSet& aParSet) :
       itsWriteSteps(false)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Get the name of the Measurement Set.
       itsDataSet = aParSet.getString("DataSet");
@@ -114,7 +114,7 @@ namespace LOFAR
 
     BBSStrategy::~BBSStrategy()
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Clean up all steps.
       for (uint i = 0; i < itsSteps.size(); ++i) {
@@ -126,7 +126,7 @@ namespace LOFAR
 
     void BBSStrategy::print(ostream& os) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       os << endl << indent << "Measurement Set: " << itsDataSet
 	 << endl << indent << itsBBDB
 	 << endl << indent << itsParmDB
@@ -146,7 +146,7 @@ namespace LOFAR
 
     vector<const BBSStep*> BBSStrategy::getAllSteps() const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       vector<const BBSStep*> steps;
       for (uint i = 0; i < itsSteps.size(); ++i) {
 	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
@@ -160,7 +160,7 @@ namespace LOFAR
 
     void BBSStrategy::read(BlobIStream& bis)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bis >> itsDataSet
 	  >> itsBBDB
 	  >> itsParmDB
@@ -180,7 +180,7 @@ namespace LOFAR
     
     void BBSStrategy::write(BlobOStream& bos) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bos << itsDataSet
 	  << itsBBDB
 	  << itsParmDB
@@ -207,7 +207,7 @@ namespace LOFAR
 
     void BBSStrategy::readSteps(BlobIStream& bis)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // How many BBSStep objects does this BBSStrategy contain?
       uint32 sz;
@@ -226,7 +226,7 @@ namespace LOFAR
 
     void BBSStrategy::writeSteps(BlobOStream& bos) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Write the number of BBSStep objects that this BBSStrategy contains.
       bos << static_cast<uint32>(itsSteps.size());
@@ -242,7 +242,7 @@ namespace LOFAR
 
     ostream& operator<<(ostream& os, const BBSStrategy& bs)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bs.print(os); 
       return os;
     }
