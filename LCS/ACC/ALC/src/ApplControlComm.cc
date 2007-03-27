@@ -152,6 +152,9 @@ void	ApplControlComm::sendCmd(const ACCmd		theCmd,
 						     const string&		theProcList,
 						     const string&		theNodeList) const
 {
+	LOG_DEBUG_STR("sendCmd(" << theCmd <<","<< timeString(theTime) <<","<< 
+							theWaitTime <<","<< theOptions <<")");
+
 	itsDataHolder->setCommand 	   (theCmd);
 	itsDataHolder->setScheduleTime (theTime);
 	itsDataHolder->setWaitTime 	   (theWaitTime);

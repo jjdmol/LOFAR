@@ -126,6 +126,8 @@ bool	ProcControlComm::waitForResponse() const
 void	ProcControlComm::sendCmd(const PCCmd		theCmd,
 						     	 const string&		theOptions) const
 {
+	LOG_DEBUG_STR("sendCmd(" << theCmd <<","<< theOptions <<")");
+
 	itsDataHolder->setCommand 	   (theCmd);
 	itsDataHolder->setOptions	   (theOptions);
 

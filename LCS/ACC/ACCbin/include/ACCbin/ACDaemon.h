@@ -53,7 +53,7 @@ class ACDaemon
 public:
 	// Creates an ACDaemon object that start listening on the port mentioned
 	// in the ParameterSet.
-	explicit ACDaemon(string	ParameterFile);
+	explicit ACDaemon(const string&	progName);
 
 	// Destructor.
 	~ACDaemon();
