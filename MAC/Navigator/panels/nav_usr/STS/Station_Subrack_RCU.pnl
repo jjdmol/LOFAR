@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,441 221 794 749 N "_3DFace" 1
+PANEL,289 102 794 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -20,6 +20,13 @@ PANEL,441 221 794 749 N "_3DFace" 1
     setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"txt_overflow\" , \"visible\", FALSE);    
   }
+
+  // connect for childUpdates
+  showChildState($datapoint);
+  // connect for selfUpdates
+  showSelfState($datapoint);
+
+
 }
 
 ShownofOverflows(string dp1, bool Status,
@@ -32,16 +39,16 @@ ShownofOverflows(string dp1, bool Status,
     setValue(\"txt_overflow\" , \"visible\", TRUE);
     if(Status)
     {
-      setValue(\"rect_overflow\", \"backCol\", \"Lofar_device_active\");
+      //setValue(\"rect_overflow\", \"backCol\", \"Lofar_operational\");
     }
     else 
     {
-      setValue(\"rect_overflow\", \"backCol\", \"grey\");
+      //setValue(\"rect_overflow\", \"backCol\", \"Lofar_suspicious\");
     }
   }
   else
   {
-    setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
+    //setValue(\"rect_overflow\", \"backCol\", \"Lofar_invalid\");
     setValue(\"txt_overflow\" , \"visible\", FALSE);
   }
 }
@@ -76,8 +83,21 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
+4 593
+"Line2"
+""
+1 430 665 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+192 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  430 718 430 665
 6 129
-"Border31"
+"childStateBorder"
 ""
 1 70 663 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
@@ -88,7 +108,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 70 100 660 665
+E E 0 2 1 0 1 E U  1 E 70 100 660 665
 4 36
 "Line1"
 ""
@@ -102,49 +122,10 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 0 1 E  590 720 270 720
-4 37
-"Line2"
-""
-1 430 720 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-6 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  430 720 430 621
-4 39
-"Line3"
-""
-1 520 303 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-8 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  520 435 520 303
-4 54
-"Line6"
-""
-1 460 435 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-23 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  520 435 460 435
 4 122
-"Line18"
+"line1_hbapath"
 ""
-1 520 90 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 520 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 41 0 0 0 0 0
 EE E
@@ -153,7 +134,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  520 340 520 90
+E E 0 2 1 0 1 E  520 436 520 100
 2 183
 "txt_polarization_HBA"
 ""
@@ -208,35 +189,22 @@ LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,
 0 ""
 1
 LANG:1 1 x
-1 184 13 "" 0
+1 594 13 "" 0
 0
-1 185 13 "" 4
+1 595 13 "" 4
 0
-1 186 13 "" 5
+1 596 13 "" 5
 0
-1 187 13 "" 6
+1 597 13 "" 6
 0
-1 189 15 "" 0
+1 598 13 "" 7
 0
-1 190 15 "" 2
+1 600 15 "" 0
 0
-1 192 16 "" 0
+1 601 15 "" 2
 0
-1 193 16 "" 2
+1 602 15 "" 3
 0
-4 229
-"Line11"
-""
-1 251 435 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-109 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  400 435 251 435
 2 230
 "Text1"
 ""
@@ -284,7 +252,7 @@ LANG:1 9 Backplane
 6 242
 "rect_overflow"
 ""
-1 480 630 E E E 1 E 1 E N "_Transparent" E N "Lofar_device_active" E E
+1 429 630 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
  E E
 120 0 0 0 0 0
 EE E
@@ -293,11 +261,15 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 480 600 620 630
+"main()
+{
+
+}" 0
+ E 0 1 1 0 1 E U  1 E 429 600 569 630
 2 244
 "Text5"
 ""
-1 562 612 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 510 612 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 122 0 0 0 0 0
 EE E
@@ -306,57 +278,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 590 614 642 630
-0 2 0 "s" 0 0 0 193 0 0  590 614
+E E 0 1 1 0 1 E U  0 E 538 614 590 630
+0 2 0 "s" 0 0 0 193 0 0  538 614
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 9 overflows
-4 254
-"Line10"
-""
-1 479 600 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-129 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  479 600 619 600
-4 255
-"Line12"
-""
-1 480 630 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-130 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  480 630 620 630
-4 256
-"Line13"
-""
-1 619 600 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-131 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  619 631 619 600
 2 243
 "Text4"
 ""
-1 576 597 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 524 597 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 121 0 0 0 0 0
 EE E
@@ -365,47 +298,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 590 599 614 615
-0 2 0 "s" 0 0 0 193 0 0  590 599
+E E 0 1 1 0 1 E U  0 E 538 599 562 615
+0 2 0 "s" 0 0 0 193 0 0  538 599
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 5 nr of
-6 260
-"Border4"
-""
-1 473 625 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
- E E
-135 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 473 605 556 625
-2 261
-"txt_overflow"
-""
-1 543 605 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-136 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 552 607 559 623
-0 2 0 "s" 0 0 0 194 0 0  552 607
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 1 0
 2 278
 "txt_polarization_LBL"
 ""
@@ -460,16 +360,18 @@ LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,
 0 ""
 1
 LANG:1 1 x
-1 279 21 "" 0
+1 604 21 "" 0
 0
-1 280 21 "" 4
+1 605 21 "" 4
 0
-1 281 21 "" 5
+1 606 21 "" 5
 0
-1 282 21 "" 6
+1 607 21 "" 6
+0
+1 608 21 "" 7
 0
 4 289
-"Line17"
+"line2_lblpath"
 ""
 1 160 198 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
@@ -480,11 +382,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  220 198 160 198
+E E 0 2 1 0 1 E  220 198 160 198
 4 290
-"Line19"
+"line1_lbhpath"
 ""
-1 342 90 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 342 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 156 0 0 0 0 0
 EE E
@@ -493,9 +395,9 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  342 198 342 90
+E E 0 2 1 0 1 E  342 198 342 100
 4 292
-"Line21"
+"line2_lbhpath"
 ""
 1 283 198 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
@@ -506,11 +408,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  342 198 283 198
+E E 0 2 1 0 1 E  342 198 283 198
 4 293
-"Line22"
+"line1_lblpath"
 ""
-1 160 90 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 160 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 159 0 0 0 0 0
 EE E
@@ -519,7 +421,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  160 198 160 90
+E E 0 2 1 0 1 E  160 198 160 100
 2 297
 "txt_polarization_LBH"
 ""
@@ -574,9 +476,11 @@ LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,
 0 ""
 1
 LANG:1 1 x
-1 298 17 "" 0
+1 610 17 "" 0
 0
-1 299 17 "" 2
+1 611 17 "" 2
+0
+1 612 17 "" 3
 0
 2 308
 "Text3"
@@ -638,92 +542,209 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 3 HBA
-1 312 18 "" 0
+1 614 18 "" 0
 0
-1 313 18 "" 2
+1 615 18 "" 2
 0
-1 315 10 "" 0
+1 616 18 "" 3
 0
-1 316 10 "" 1
+1 618 10 "" 0
 0
-4 337
-"Line14"
+1 619 10 "" 1
+0
+1 620 10 "" 3
+0
+1 621 10 "" 5
+0
+1 622 10 "" 6
+0
+1 624 23 "" 0
+0
+1 625 23 "" 2
+0
+1 626 23 "" 3
+0
+4 583
+"line1_lbapath"
 ""
-1 251 304 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 251 278 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
-169 0 0 0 0 0
+191 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  251 435 251 304
-1 338 22 "" 0
-0
-1 339 22 "" 1
-0
-1 341 14 "" 0
-0
-1 342 14 "" 2
-0
-1 344 23 "" 0
-0
-1 345 23 "" 2
-0
-4 501
-"Line5"
+E E 0 2 1 0 1 E  251 435 251 278
+4 584
+"line2_lbapath"
 ""
-1 430 582 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 251 435 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
-184 0 0 0 0 0
+192 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  430 600 430 582
-4 576
+E E 0 2 1 0 1 E  400 435 251 435
+1 628 14 "" 0
+0
+1 629 14 "" 2
+0
+1 630 14 "" 3
+0
+1 632 22 "" 0
+0
+1 633 22 "" 1
+0
+1 634 22 "" 3
+0
+1 635 22 "" 5
+0
+1 636 22 "" 6
+0
+4 591
+"line2_hbapath"
+""
+1 460 435 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+192 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  460 435 520 435
+4 37
+"line_bckpl_2_sw"
+""
+1 430 658 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  430 665 430 515
+1 638 41 "" 224
+0
+1 639 41 "" 72
+0
+1 640 41 "" 225
+0
+1 641 41 "" 227
+0
+1 642 41 "" 228
+0
+1 643 41 "" 229
+0
+4 638
+"Line3"
+""
+1 520 90 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+193 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  520 100 520 90
+4 639
 "Line4"
 ""
-1 430 495 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 342 90 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
-185 0 0 0 0 0
+194 0 0 0 0 0
 EE E
 0
 1
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  430 520 430 495
-1 577 41 "" 224
+E E 0 2 1 0 1 E  342 100 342 90
+4 640
+"Line5"
+""
+1 160 89 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+195 0 0 0 0 0
+EE E
 0
-1 578 41 "" 72
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  160 99 160 89
+1 645 16 "" 0
 0
-1 579 41 "" 225
+1 646 16 "" 2
 0
-1 188 13 "" 1
+1 647 16 "" 3
 0
-1 191 15 "" 1
+6 260
+"Border4"
+""
+1 423 625 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+135 0 0 0 0 0
+EE E
 0
-1 194 16 "" 1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 423 605 506 625
+2 261
+"txt_overflow"
+""
+1 493 606 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+136 0 0 0 0 0
+EE E
 0
-1 283 21 "" 1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 502 608 509 624
+0 2 0 "s" 0 0 0 194 0 0  502 608
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 0
+1 649 43 "" 1
 0
-1 300 17 "" 1
+1 599 13 "" 1
 0
-1 314 18 "" 1
+1 603 15 "" 1
 0
-1 317 10 "" 2
+1 609 21 "" 1
 0
-1 340 22 "" 2
+1 613 17 "" 1
 0
-1 343 14 "" 1
+1 617 18 "" 1
 0
-1 346 23 "" 1
+1 623 10 "" 2
 0
-1 580 41 "" 223
+1 627 23 "" 1
+0
+1 631 14 "" 1
+0
+1 637 22 "" 2
+0
+1 644 41 "" 223
+0
+1 648 16 "" 1
 0
 0
 LAYER, 1 
@@ -760,16 +781,10 @@ LANG:1 6 Layer8
 "$Component""bandSelLBA_HBA"
 "$datapoint""$datapoint"
 3 15 "Group11"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 350 T 104 1 0 1  411 46  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 350 T 104 1 0 1  401 46  
 3
 "$Caption""HBAReceiver"
 "$Component""VhEnable"
-"$datapoint""$datapoint"
-3 16 "Group13"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 330 350 T 105 1 0 1  50 280  
-3
-"$Caption""AD-Convertor"
-"$Component""VddVccEn"
 "$datapoint""$datapoint"
 3 21 "Group13"
 "objects\\nav_usr\\STS\\STS_RCU_bandSelection.pnl" 400 485 T 153 1 0 1  -149 -257  
@@ -777,13 +792,13 @@ LANG:1 6 Layer8
 "$Component""bandSelLBL_LBH"
 "$datapoint""$datapoint"
 3 17 "Group15"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 285 T 106 1 0 1  51 -124  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 285 T 106 1 0 1  41 -124  
 3
 "$Caption""LBLAmplifier"
 "$Component""LBLEnable"
 "$datapoint""$datapoint"
 3 18 "Group17"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 100 T 107 1 0 1  411 61  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 100 T 107 1 0 1  401 61  
 3
 "$Caption""HBAAmplifier"
 "$Component""HBAEnable"
@@ -792,24 +807,34 @@ LANG:1 6 Layer8
 "objects\\nav_usr\\STS\\STS_RCU_HB_Filter.pnl" 314 200 T 96 1 0 1  147 140  
 1
 "$datapoint""$datapoint"
-3 22 "LowBandFilter"
-"objects\\nav_usr\\STS\\STS_RCU_LB_Filter.pnl" 190 350 T 161 1 0 1  3 -10  
-1
-"$datapoint""$datapoint"
-3 14 ""
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 81 654 T 103 1 0 1  121 -260  
-3
-"$Caption""LBAReceiver"
-"$Component""VlEnable"
-"$datapoint""$datapoint"
 3 23 "Group11"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 203 247 T 169 1 0 1  90 -86  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 203 247 T 169 1 0 1  80 -86  
 3
 "$Caption""LBHAmplifier"
 "$Component""LBHEnable"
 "$datapoint""$datapoint"
-3 41 ""
-"objects\\nav_usr\\STS\\STS_Subrack_RCU_Attenuating.pnl" 224 553 T 188 1 0 1  223 14  
+3 14 ""
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 81 654 T 103 1 0 1  111 -260  
+3
+"$Caption""LBAReceiver"
+"$Component""VlEnable"
+"$datapoint""$datapoint"
+3 22 "LowBandFilter"
+"objects\\nav_usr\\STS\\STS_RCU_LB_Filter.pnl" 190 350 T 161 1 0 1  3 -10  
 1
 "$datapoint""$datapoint"
+3 41 ""
+"objects\\nav_usr\\STS\\STS_Subrack_RCU_Attenuating.pnl" 224 553 T 188 1 0 1  232 14  
+1
+"$datapoint""$datapoint"
+3 16 "Group13"
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 330 350 T 105 1 0 1  -21 280  
+3
+"$Caption""AD-Convertor"
+"$Component""VddVccEn"
+"$datapoint""$datapoint"
+3 43 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 25 171 T 196 1 0 1  55 469  
+1
+"$object""Subrack"
 0

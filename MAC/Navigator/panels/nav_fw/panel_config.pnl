@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,299 108 950 740 N "_3DFace" 5
+PANEL,367 235 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -246,12 +246,15 @@ LANG:1 4 Load
   string subViewName, pad;
   pad = getPath(PANELS_REL_PATH);
   fileSelector(fileName, pad + \"nav_usr/\", TRUE, \"*.pnl\");
-
  	if (fileName!=\"\")
  	{
     getSubviewName(subViewName);
+    DebugTN(\"fileName: \"+fileName);
+    DebugTN(\"pad: \",pad);
     strreplace(fileName,pad , \"\");
+    DebugTN(\"filename after replace\" + fileName);
     dpSet(getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Panel_\" + subViewName + \".filename\", fileName);
+    DebugTN(\"dpSet(\"+getSystemName() +\"__nav\"+navConfigGetEnvironment(\"\",\"\")+\"_subview_Panel_\" + subViewName + \".filename,\"+ fileName+\")\");
     navConfigTriggerNavigatorRefresh();
   }
 }" 0
