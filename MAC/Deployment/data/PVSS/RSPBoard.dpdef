@@ -12,9 +12,6 @@ MEP.error			uint
 BP.state			int
 BP.temperature			float
 BP.version			string
-BP.SYNC.sampleCount		uint
-BP.SYNC.syncCount		uint
-BP.SYNC.errorCount		uint
 AP0.state			int
 AP0.temperature			float
 AP0.version			string
