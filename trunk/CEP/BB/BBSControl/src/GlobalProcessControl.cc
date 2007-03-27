@@ -1,4 +1,4 @@
-//#  BBSStep.cc: 
+//#  GlobalProcessControl.cc: Implementation of ACC/PLC ProcessControl class.
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/BBSProcessControl.h>
+#include <BBSControl/GlobalProcessControl.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
 #if 0
@@ -43,7 +43,7 @@ namespace LOFAR
   {
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    BBSProcessControl::BBSProcessControl() :
+    GlobalProcessControl::GlobalProcessControl() :
       ProcessControl(),
       itsStrategy(0),
 #if 0
@@ -58,7 +58,7 @@ namespace LOFAR
     }
     
 
-    BBSProcessControl::~BBSProcessControl()
+    GlobalProcessControl::~GlobalProcessControl()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       delete itsStrategy;
@@ -71,10 +71,10 @@ namespace LOFAR
     }
 
 
-    tribool BBSProcessControl::define()
+    tribool GlobalProcessControl::define()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      LOG_INFO("BBSProcessControl::define()");
+      LOG_INFO("GlobalProcessControl::define()");
       
       try {
 	// Retrieve the strategy from the parameter set.
@@ -97,18 +97,18 @@ namespace LOFAR
 #endif
       }
       catch (Exception& e) {
-	LOG_ERROR_STR("Caught exception in BBSProcessControl::define()\n" 
-                      << e);
+	LOG_ERROR_STR("Caught exception in GlobalProcessControl::define()\n"
+		      << e);
 	  return false;
       }
       return true;
     }
 
 
-    tribool BBSProcessControl::init()
+    tribool GlobalProcessControl::init()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      LOG_INFO("BBSProcessControl::init()");
+      LOG_INFO("GlobalProcessControl::init()");
 
       try {
 #if 0
@@ -148,6 +148,11 @@ namespace LOFAR
 	// blackboard database.
 	itsCommandQueue = 
 	  new CommandQueue(globalParameterSet()->getString("BBDB.DBName"));
+
+	// Check if this is a new run. It usually is, but we might be resuming
+	// a paused run, or we might be recovering from a crash.
+// 	itsIsNewRun = itsCommandQueue->isNewRun();
+
       }
       catch (Exception& e) {
 	LOG_ERROR_STR(e);
@@ -158,10 +163,10 @@ namespace LOFAR
     }
 
 
-    tribool BBSProcessControl::run()
+    tribool GlobalProcessControl::run()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      LOG_INFO("BBSProcessControl::run()");
+      LOG_INFO("GlobalProcessControl::run()");
 
       try {
 	// Check pre-conditions
@@ -214,8 +219,10 @@ namespace LOFAR
           return false;
         }
 #endif
-	// Do some smart things.
-	// ...
+
+	// Wait for a trigger from the database to fetch the result
+	
+
 
       }
       catch (Exception& e) {
@@ -228,15 +235,15 @@ namespace LOFAR
     }
     
 
-    tribool BBSProcessControl::quit()
+    tribool GlobalProcessControl::quit()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      LOG_INFO("BBSProcessControl::quit()");
+      LOG_INFO("GlobalProcessControl::quit()");
       return true;
     }
 
 
-    tribool BBSProcessControl::pause(const string& /*condition*/)
+    tribool GlobalProcessControl::pause(const string& /*condition*/)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_WARN("Not supported");
@@ -244,7 +251,7 @@ namespace LOFAR
     }
 
 
-    tribool BBSProcessControl::snapshot(const string& /*destination*/)
+    tribool GlobalProcessControl::snapshot(const string& /*destination*/)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_WARN("Not supported");
@@ -252,7 +259,7 @@ namespace LOFAR
     }
 
 
-    tribool BBSProcessControl::recover(const string& /*source*/)
+    tribool GlobalProcessControl::recover(const string& /*source*/)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_WARN("Not supported");
@@ -260,14 +267,14 @@ namespace LOFAR
     }
 
 
-    tribool BBSProcessControl::reinit(const string& /*configID*/)
+    tribool GlobalProcessControl::reinit(const string& /*configID*/)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_WARN("Not supported");
       return false;
     }
 
-    string BBSProcessControl::askInfo(const string& /*keylist*/)
+    string GlobalProcessControl::askInfo(const string& /*keylist*/)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_WARN("Not supported");
@@ -278,7 +285,7 @@ namespace LOFAR
     //##--------   P r i v a t e   m e t h o d s   --------##//
     
 #if 0
-    bool BBSProcessControl::sendObject(const BlobStreamable& bs)
+    bool GlobalProcessControl::sendObject(const BlobStreamable& bs)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       try {
@@ -301,7 +308,7 @@ namespace LOFAR
     }
 
 
-    BlobStreamable* BBSProcessControl::recvObject()
+    BlobStreamable* GlobalProcessControl::recvObject()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       try {

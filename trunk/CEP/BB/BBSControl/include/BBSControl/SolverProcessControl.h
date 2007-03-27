@@ -1,4 +1,4 @@
-//#  BBSSolverProcessControl.h: Implementation of the ProcessControl
+//#  SolverProcessControl.h: Implementation of the ProcessControl
 //#     interface for the BBS solver component.
 //#
 //#  Copyright (C) 2004
@@ -23,8 +23,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBSCONTROL_BBSSOLVERPROCESSCONTROL_H
-#define LOFAR_BBSCONTROL_BBSSOLVERPROCESSCONTROL_H
+#ifndef LOFAR_BBSCONTROL_SOLVERPROCESSCONTROL_H
+#define LOFAR_BBSCONTROL_SOLVERPROCESSCONTROL_H
 
 // \file
 // Implementation of the ProcessControl interface for the BBS solver component.
@@ -52,11 +52,11 @@ namespace BBS
         // @{
 
         // Implementation of the ProcessControl interface for the BBS solver component.
-        class BBSSolverProcessControl: public ACC::PLC::ProcessControl
+        class SolverProcessControl: public ACC::PLC::ProcessControl
         {
         public:
             // Default constructor.
-            BBSSolverProcessControl();
+            SolverProcessControl();
 
             // @name Implementation of PLC interface.
             // @{

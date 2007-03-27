@@ -38,10 +38,26 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
-    // This exception is thrown when an error occurs in the BBS control part.
+    // Top-level exception class for the BBSControl package.
     EXCEPTION_CLASS(BBSControlException, LOFAR::Exception);
 
-    // @}
+    // Exception class for the global controller.
+    // part.
+    EXCEPTION_CLASS(GlobalControlException, BBSControlException);
+
+    // Exception class for the local controller.
+    // part.
+    EXCEPTION_CLASS(LocalControlException, BBSControlException);
+
+    // Exception class for the database access layer.
+    // part.
+    EXCEPTION_CLASS(DatabaseException, BBSControlException);
+
+    // Exception class for the command queue.
+    // part.
+    EXCEPTION_CLASS(CommandQueueException, BBSControlException);
+
+    //  @}
 
   } // namespace BBS
   

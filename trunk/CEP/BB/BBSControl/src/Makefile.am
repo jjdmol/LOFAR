@@ -1,11 +1,9 @@
-lib_LTLIBRARIES		= libbbscontrol.la
+lib_LTLIBRARIES			= libbbscontrol.la
 
-libbbscontrol_la_SOURCES= \
+libbbscontrol_la_SOURCES	= \
 	BBSCorrectStep.cc \
-	BBSKernelProcessControl.cc \
 	BBSMultiStep.cc \
 	BBSPredictStep.cc \
-	BBSProcessControl.cc \
 	BBSRefitStep.cc \
 	BBSShiftStep.cc \
 	BBSSingleStep.cc \
@@ -14,27 +12,29 @@ libbbscontrol_la_SOURCES= \
 	BBSStrategy.cc \
 	BBSStructs.cc \
 	BBSSubtractStep.cc \
-	BBSSolverProcessControl.cc \
 	BlobStreamableConnection.cc \
 	DomainRegistrationRequest.cc \
 	CommandQueue.cc \
 	CommandQueueTransactors.cc \
+	GlobalProcessControl.cc \
 	IterationRequest.cc \
 	IterationResult.cc \
-	pqutil.cc
+	KernelProcessControl.cc \
+	pqutil.cc \
+	SolverProcessControl.cc
 
-bin_PROGRAMS		= BBSControl BBSKernel BBSSolver
+bin_PROGRAMS			= GlobalControl KernelControl SolverControl
 
-BBSControl_SOURCES	= BBSControl.cc
-BBSControl_LDADD	= libbbscontrol.la
-BBSControl_DEPENDENCIES = libbbscontrol.la $(LOFAR_DEPEND)
+GlobalControl_SOURCES		= GlobalControl.cc
+GlobalControl_LDADD		= libbbscontrol.la
+GlobalControl_DEPENDENCIES	= libbbscontrol.la $(LOFAR_DEPEND)
 
-BBSKernel_SOURCES 	= BBSKernel.cc
-BBSKernel_LDADD 	= libbbscontrol.la
-BBSKernel_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
+KernelControl_SOURCES		= KernelControl.cc
+KernelControl_LDADD		= libbbscontrol.la
+KernelControl_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
 
-BBSSolver_SOURCES 	= BBSSolver.cc
-BBSSolver_LDADD 	= libbbscontrol.la
-BBSSolver_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
+SolverControl_SOURCES		= SolverControl.cc
+SolverControl_LDADD		= libbbscontrol.la
+SolverControl_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

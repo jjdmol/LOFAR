@@ -39,26 +39,26 @@
 //# Now here's an ugly kludge: libpqxx defines four different top-level
 //# exception classes. In order to avoid a lot of code duplication we clumped
 //# together four catch blocks in order to catch all pqxx related exceptions.
-//# A BBSControlException will be thrown, containing the original pqxx
+//# A DatabaseException will be thrown, containing the original pqxx
 //# exception class type and the description.
 #if defined(CATCH_PQXX_AND_RETHROW)
 # error CATCH_PQXX_AND_RETHROW is already defined and should not be redefined
 #else
-# define CATCH_PQXX_AND_RETHROW						\
+# define CATCH_PQXX_AND_RETHROW					\
   catch (pqxx::broken_connection& e) {				\
-    THROW (BBSControlException, "pqxx::broken_connection:\n"	\
+    THROW (DatabaseException, "pqxx::broken_connection:\n"	\
 	   << e.what());					\
   }								\
   catch (pqxx::sql_error& e) {					\
-    THROW (BBSControlException, "pqxx::sql_error:\n"		\
+    THROW (DatabaseException, "pqxx::sql_error:\n"		\
 	   << "Query: " << e.query() << endl << e.what());	\
   }								\
   catch (pqxx::in_doubt_error& e) {				\
-    THROW (BBSControlException, "pqxx::in_doubt_error:\n"	\
+    THROW (DatabaseException, "pqxx::in_doubt_error:\n"		\
 	   << e.what());					\
   }								\
   catch (pqxx::internal_error& e) {				\
-    THROW (BBSControlException, "pqxx::internal_error:\n"	\
+    THROW (DatabaseException, "pqxx::internal_error:\n"		\
 	   << e.what());					\
   }
 #endif
@@ -78,7 +78,7 @@ namespace LOFAR
 			       const string& host, const string& port) :
       itsCurrentId(0)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       string opts("dbname=" + dbname  + " user=" + user + 
 		  " host=" + host + " port=" + port);
@@ -89,9 +89,9 @@ namespace LOFAR
     }
 
 
-    void CommandQueue::addStep(const BBSStep& aStep)
+    int CommandQueue::addStep(const BBSStep& aStep) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       ostringstream query;
 
       try {
@@ -127,13 +127,16 @@ namespace LOFAR
 	} catch (bad_cast&) {}
 	
 	// Finalize the query.
-	query << ")";
+	query << ") AS command_id";
 	
-	// Execute the query. 
-	execQuery(query.str());
+	// Execute the query.
+	ParameterSet ps = execQuery(query.str());
+
+	// Return the ID of the step that we've just inserted.
+	return ps.getInt32("command_id");
 
       } catch (bad_cast&) {
-	THROW (BBSControlException, 
+	THROW (CommandQueueException, 
 	       "Step `" << aStep.getName() << "' is not a BBSSingleStep");
       }
     }
@@ -141,7 +144,7 @@ namespace LOFAR
 
     const BBSStep* CommandQueue::getNextStep()
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Compose the query.
       ostringstream query;
@@ -181,16 +184,14 @@ namespace LOFAR
       ps.clear();
       ps.adoptBuffer(buf, prefix);
 
-      // Create a BBSStep from the parameter set.
-      const BBSStep* step = BBSStep::create(name, ps, 0);
-      return step;
-//       return dynamic_cast<const BBSSingleStep*>(step);
+      // Create a BBSStep from the parameter set and return it.
+      return BBSStep::create(name, ps, 0);
     }
 
 
-    void CommandQueue::setStrategy(const BBSStrategy& strategy)
+    void CommandQueue::setStrategy(const BBSStrategy& strategy) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Compose the query.
       ostringstream query;
@@ -204,16 +205,19 @@ namespace LOFAR
 	    << ",'" << strategy.domainSize().bandWidth    << "'"
 	    << ",'" << strategy.domainSize().timeInterval << "'"
 	    << ",'" << strategy.correlation().selection   << "'"
-	    << ",'" << strategy.correlation().type        << "')";
+	    << ",'" << strategy.correlation().type        << "')"
+	    << " AS result";
 
       // Execute the query.
-      execQuery(query.str());
+      if (!execQuery(query.str()).getBool("result")) {
+	THROW (CommandQueueException, "Strategy can only be set once");
+      }
     }
 
 
-    const BBSStrategy* CommandQueue::getStrategy()
+    const BBSStrategy* CommandQueue::getStrategy() const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Compose the query.
       ostringstream query;
@@ -231,15 +235,31 @@ namespace LOFAR
     }
 
 
+    bool CommandQueue::isNewRun(bool isLocalCtrl) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+      // Compose the query.
+      ostringstream query;
+      query << "SELECT * FROM blackboard.is_clean_startup('"
+	    << (isLocalCtrl ? "TRUE" : "FALSE")
+	    << "') AS result";
+
+      // Execute the query and return the result.
+      return execQuery(query.str()).getBool("result");
+    }
+
+
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    ParameterSet CommandQueue::execQuery(const string& query)
+    ParameterSet CommandQueue::execQuery(const string& query) const
     {
       // Create a transactor object and execute the query. The result will be
       // stored, as a string in \a result.
       string result;
       try {
 	itsConnection->perform(ExecQuery(query, result));
+	LOG_TRACE_VAR_STR("Result of query: " << result);
       } CATCH_PQXX_AND_RETHROW;
 
       // Create an empty parameter set and add the result to it.

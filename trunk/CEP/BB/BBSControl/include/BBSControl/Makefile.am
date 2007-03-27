@@ -1,9 +1,7 @@
 pkginclude_HEADERS = \
 	BBSCorrectStep.h \
-	BBSKernelProcessControl.h \
 	BBSMultiStep.h \
 	BBSPredictStep.h \
-	BBSProcessControl.h \
 	BBSRefitStep.h \
 	BBSShiftStep.h \
 	BBSSingleStep.h \
@@ -12,15 +10,18 @@ pkginclude_HEADERS = \
 	BBSStrategy.h \
 	BBSStructs.h \
 	BBSSubtractStep.h \
-	BBSSolverProcessControl.h \
 	BlobStreamableConnection.h \
 	BlobStreamableVector.h \
 	CommandQueue.h \
 	CommandQueueTransactors.h \
+	CommandQueueTrigger.h \
 	DomainRegistrationRequest.h \
 	Exceptions.h \
+	GlobalProcessControl.h \
 	IterationRequest.h \
-	IterationResult.h
+	IterationResult.h \
+	KernelProcessControl.h \
+	SolverProcessControl.h
 
 noinst_HEADERS = \
 	pqutil.h
