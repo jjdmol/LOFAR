@@ -1,4 +1,4 @@
-//#  BBSSolverProcessControl.h: Implementation of the ProcessControl
+//#  SolverProcessControl.h: Implementation of the ProcessControl
 //#     interface for the BBS solver component.
 //#
 //#  Copyright (C) 2004
@@ -26,7 +26,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <BBSControl/BBSSolverProcessControl.h>
+#include <BBSControl/SolverProcessControl.h>
 #include <BBSControl/BlobStreamableConnection.h>
 
 #include <APS/ParameterSet.h>
@@ -56,16 +56,16 @@ namespace BBS
 
 
     //##----   P u b l i c   m e t h o d s   ----##//
-    BBSSolverProcessControl::BBSSolverProcessControl() :
+    SolverProcessControl::SolverProcessControl() :
         ProcessControl()
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
 
 
-    tribool BBSSolverProcessControl::define()
+    tribool SolverProcessControl::define()
     {
-        LOG_INFO("BBSSolverProcessControl::define()");
+        LOG_INFO("SolverProcessControl::define()");
         
         try
         {
@@ -74,7 +74,7 @@ namespace BBS
             string userString(user);
             
             itsKernelConnection.reset(new BlobStreamableConnection(
-                "=BBSSolver_" + userString,
+                "=Solver_" + userString,
                 Socket::LOCAL));
         }
         catch(Exception& e)
@@ -87,9 +87,9 @@ namespace BBS
     }
 
 
-    tribool BBSSolverProcessControl::init()
+    tribool SolverProcessControl::init()
     {
-        LOG_INFO("BBSSolverProcessControl::init()");
+        LOG_INFO("SolverProcessControl::init()");
         try
         {
             LOG_INFO("Starting to listen at solver@localhost");
@@ -111,9 +111,9 @@ namespace BBS
     }
 
 
-    tribool BBSSolverProcessControl::run()
+    tribool SolverProcessControl::run()
     {
-        LOG_INFO("BBSSolverProcessControl::run()");
+        LOG_INFO("SolverProcessControl::run()");
 
         try
         {
@@ -132,7 +132,7 @@ namespace BBS
     }
 
 
-    tribool BBSSolverProcessControl::pause(const string& /*condition*/)
+    tribool SolverProcessControl::pause(const string& /*condition*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         LOG_WARN("Not supported");
@@ -140,14 +140,14 @@ namespace BBS
     }
 
 
-    tribool BBSSolverProcessControl::quit()
+    tribool SolverProcessControl::quit()
     {
-        LOG_INFO("BBSSolverProcessControl::quit()");
+        LOG_INFO("SolverProcessControl::quit()");
         return true;
     }
 
 
-    tribool BBSSolverProcessControl::snapshot(const string& /*destination*/)
+    tribool SolverProcessControl::snapshot(const string& /*destination*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         LOG_WARN("Not supported");
@@ -155,7 +155,7 @@ namespace BBS
     }
 
 
-    tribool BBSSolverProcessControl::recover(const string& /*source*/)
+    tribool SolverProcessControl::recover(const string& /*source*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         LOG_WARN("Not supported");
@@ -163,7 +163,7 @@ namespace BBS
     }
 
 
-    tribool BBSSolverProcessControl::reinit(const string& /*configID*/)
+    tribool SolverProcessControl::reinit(const string& /*configID*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         LOG_WARN("Not supported");
@@ -171,14 +171,14 @@ namespace BBS
     }
 
 
-    std::string BBSSolverProcessControl::askInfo(const string& /*keylist*/)
+    std::string SolverProcessControl::askInfo(const string& /*keylist*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         return std::string("");
     }
 
 
-    bool BBSSolverProcessControl::dispatch(const BlobStreamable *message)
+    bool SolverProcessControl::dispatch(const BlobStreamable *message)
     {
         {
             const DomainRegistrationRequest *request = dynamic_cast<const DomainRegistrationRequest*>(message);
@@ -210,13 +210,13 @@ namespace BBS
     }
     
     
-    bool BBSSolverProcessControl::handle(const DomainRegistrationRequest *request)
+    bool SolverProcessControl::handle(const DomainRegistrationRequest *request)
     {
         return registerDomain(request);
     }
 
     
-    bool BBSSolverProcessControl::handle(const BlobStreamableVector<DomainRegistrationRequest> *request)
+    bool SolverProcessControl::handle(const BlobStreamableVector<DomainRegistrationRequest> *request)
     {
         bool result = true;
         for(vector<DomainRegistrationRequest*>::const_iterator it = request->getVector().begin();
@@ -229,14 +229,14 @@ namespace BBS
     }
     
     
-    bool BBSSolverProcessControl::handle(const IterationRequest *request)
+    bool SolverProcessControl::handle(const IterationRequest *request)
     {
         scoped_ptr<IterationResult> result(performIteration(request));
         return itsKernelConnection->sendObject(*result.get());
     }
 
 
-    bool BBSSolverProcessControl::handle(const BlobStreamableVector<IterationRequest> *request)
+    bool SolverProcessControl::handle(const BlobStreamableVector<IterationRequest> *request)
     {
         BlobStreamableVector<IterationResult> result;
         
@@ -251,7 +251,7 @@ namespace BBS
     }
     
     
-    bool BBSSolverProcessControl::registerDomain(const DomainRegistrationRequest *request)
+    bool SolverProcessControl::registerDomain(const DomainRegistrationRequest *request)
     {
         LOG_DEBUG_STR("DomainRegistrationRequest: index: " << request->getDomainIndex() << " #unknowns: " << request->getUnknowns().size());
         LOG_DEBUG_STR("+ unknowns: " << request->getUnknowns());
@@ -274,7 +274,7 @@ namespace BBS
     }
 
         
-    IterationResult *BBSSolverProcessControl::performIteration(const IterationRequest *request)
+    IterationResult *SolverProcessControl::performIteration(const IterationRequest *request)
     {
         map<uint32, Domain>::iterator it = itsRegisteredDomains.find(request->getDomainIndex());
         //ASSERT(it != itsRegisteredDomains.end());

@@ -1,4 +1,4 @@
-//# BBSProcessControl.h: Implementation of ACC/PLC ProcessControl class.
+//# GlobalProcessControl.h: Implementation of ACC/PLC ProcessControl class.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_BBSPROCESSCONTROL_H
-#define LOFAR_BBSCONTROL_BBSPROCESSCONTROL_H
+#ifndef LOFAR_BBSCONTROL_GLOBALPROCESSCONTROL_H
+#define LOFAR_BBSCONTROL_GLOBALPROCESSCONTROL_H
 
 // \file
 // Implementation of ACC/PLC ProcessControl class
@@ -51,14 +51,14 @@ namespace LOFAR
 
     // Implementation of the ProcessControl interface for the global BBS
     // controller.
-    class BBSProcessControl : public ACC::PLC::ProcessControl
+    class GlobalProcessControl : public ACC::PLC::ProcessControl
     {
     public:
       // Default constructor.
-      BBSProcessControl();
+      GlobalProcessControl();
 
       // Destructor.
-      virtual ~BBSProcessControl();
+      virtual ~GlobalProcessControl();
 
       // @name Implementation of PLC interface.
       // @{
@@ -97,7 +97,7 @@ namespace LOFAR
 
 #if 0
       // DataHolder for exchanging data between global (BBS) and local
-      // (BBSKernel) process control.
+      // (BBSKernel) global control.
       DH_BlobStreamable* itsDataHolder;
 
       // TransportHolder used to exchange DataHolders. The global controller
@@ -105,8 +105,8 @@ namespace LOFAR
       // connect.
       TH_Socket* itsTransportHolder;
 
-      // Connection between the global (BBS) process control and the local
-      // (BBSKernel) process control.
+      // Connection between the global (BBS) control and the local
+      // (BBSKernel) control.
       CSConnection* itsConnection;
 #endif
 

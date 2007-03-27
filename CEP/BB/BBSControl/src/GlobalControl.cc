@@ -1,4 +1,4 @@
-//#  BBSControl.cc: 
+//#  GlobalControl.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 #include <libgen.h>
-#include <BBSControl/BBSProcessControl.h>
+#include <BBSControl/GlobalProcessControl.h>
 #include <PLC/ACCmain.h>
 
 using namespace LOFAR;
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 
   LOG_INFO_STR(progName << " is starting up ...");
   try {
-    BBSProcessControl myProcess;
+    GlobalProcessControl myProcess;
     int result = ACCmain(argc, argv, &myProcess);
     if (result != 0) {
       LOG_ERROR_STR("ACCmain returned with error status: " << result);

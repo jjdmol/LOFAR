@@ -1,4 +1,4 @@
-//#  BBSKernelProcessControl.cc: 
+//#  KernelProcessControl.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,7 +25,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <BBSControl/BBSKernelProcessControl.h>
+#include <BBSControl/KernelProcessControl.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSPredictStep.h>
@@ -73,7 +73,7 @@ namespace BBS
 
 
     //##----   P u b l i c   m e t h o d s   ----##//
-    BBSKernelProcessControl::BBSKernelProcessControl() :
+    KernelProcessControl::KernelProcessControl() :
         ProcessControl(),
         itsPrediffer(0)
     {
@@ -81,9 +81,9 @@ namespace BBS
     }
 
     
-    tribool BBSKernelProcessControl::define()
+    tribool KernelProcessControl::define()
     {
-        LOG_DEBUG("BBSKernelProcessControl::define()");
+        LOG_DEBUG("KernelProcessControl::define()");
         
         try {
             itsControllerConnection.reset(new BlobStreamableConnection(
@@ -108,9 +108,9 @@ namespace BBS
     }
 
 
-    tribool BBSKernelProcessControl::init()
+    tribool KernelProcessControl::init()
     {
-        LOG_DEBUG("BBSKernelProcessControl::init()");
+        LOG_DEBUG("KernelProcessControl::init()");
         
         try {
             LOG_DEBUG_STR("Trying to connect to controller@" << globalParameterSet()->getString("Controller.Host") << ":" << globalParameterSet()->getString("Controller.Port"   ) << "...");
@@ -141,9 +141,9 @@ namespace BBS
     }
 
 
-    tribool BBSKernelProcessControl::run()
+    tribool KernelProcessControl::run()
     {
-        LOG_DEBUG("BBSKernelProcessControl::run()");
+        LOG_DEBUG("KernelProcessControl::run()");
 
         try
         {
@@ -163,7 +163,7 @@ namespace BBS
     }
 
 
-    tribool BBSKernelProcessControl::pause(const string& /*condition*/)
+    tribool KernelProcessControl::pause(const string& /*condition*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         LOG_WARN("Not supported");
@@ -171,14 +171,14 @@ namespace BBS
     }
 
 
-    tribool BBSKernelProcessControl::quit()
+    tribool KernelProcessControl::quit()
     {
-        LOG_DEBUG("BBSKernelProcessControl::quit()");
+        LOG_DEBUG("KernelProcessControl::quit()");
         return true;
     }
 
 
-    tribool BBSKernelProcessControl::snapshot(const string& /*destination*/)
+    tribool KernelProcessControl::snapshot(const string& /*destination*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         LOG_WARN("Not supported");
@@ -186,7 +186,7 @@ namespace BBS
     }
 
 
-    tribool BBSKernelProcessControl::recover(const string& /*source*/)
+    tribool KernelProcessControl::recover(const string& /*source*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         LOG_WARN("Not supported");
@@ -194,7 +194,7 @@ namespace BBS
     }
 
 
-    tribool BBSKernelProcessControl::reinit(const string& /*configID*/)
+    tribool KernelProcessControl::reinit(const string& /*configID*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         LOG_WARN("Not supported");
@@ -202,7 +202,7 @@ namespace BBS
     }
 
 
-    std::string BBSKernelProcessControl::askInfo(const string& /*keylist*/)
+    std::string KernelProcessControl::askInfo(const string& /*keylist*/)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         return std::string("");
@@ -210,7 +210,7 @@ namespace BBS
 
 
     //##----   P r i v a t e   m e t h o d s   ----##//
-    bool BBSKernelProcessControl::dispatch(const BlobStreamable *message)
+    bool KernelProcessControl::dispatch(const BlobStreamable *message)
     {
         // If the message contains a `strategy', handle the `strategy'.
         const BBSStrategy *strategy = dynamic_cast<const BBSStrategy*>(message);
@@ -254,7 +254,7 @@ namespace BBS
     }
     
     
-    bool BBSKernelProcessControl::handle(const BBSStrategy *strategy)
+    bool KernelProcessControl::handle(const BBSStrategy *strategy)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -340,7 +340,7 @@ namespace BBS
     }
 
 
-    bool BBSKernelProcessControl::handle(const BBSStep *bs)
+    bool KernelProcessControl::handle(const BBSStep *bs)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         
@@ -388,7 +388,7 @@ namespace BBS
     }
 
 
-    bool BBSKernelProcessControl::handle(const BBSPredictStep *step)
+    bool KernelProcessControl::handle(const BBSPredictStep *step)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
         ASSERTSTR(itsPrediffer, "No Prediffer available.");
@@ -413,7 +413,7 @@ namespace BBS
     }
 
 
-    bool BBSKernelProcessControl::handle(const BBSSubtractStep *step)
+    bool KernelProcessControl::handle(const BBSSubtractStep *step)
     {
         ASSERTSTR(itsPrediffer, "No Prediffer available.");
         ASSERTSTR(step, "Step corrupted.");
@@ -437,7 +437,7 @@ namespace BBS
     }
 
 
-    bool BBSKernelProcessControl::handle(const BBSCorrectStep *step)
+    bool KernelProcessControl::handle(const BBSCorrectStep *step)
     {
         ASSERTSTR(itsPrediffer, "No Prediffer available.");
         ASSERTSTR(step, "Step corrupted.");
@@ -461,7 +461,7 @@ namespace BBS
     }
 
 
-    bool BBSKernelProcessControl::handle(const BBSSolveStep *step)
+    bool KernelProcessControl::handle(const BBSSolveStep *step)
     {
         NSTimer timer;
         

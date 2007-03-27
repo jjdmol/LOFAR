@@ -1,4 +1,4 @@
-//#  BBSKernelProcessControl.h: 
+//#  KernelProcessControl.h: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBSCONTROL_BBSKERNELPROCESSCONTROL_H
-#define LOFAR_BBSCONTROL_BBSKERNELPROCESSCONTROL_H
+#ifndef LOFAR_BBSCONTROL_KERNELPROCESSCONTROL_H
+#define LOFAR_BBSCONTROL_KERNELPROCESSCONTROL_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -54,13 +54,13 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
-    // Implementation of the ProcessControl interface for the local BBSKernel
+    // Implementation of the ProcessControl interface for the local Kernel
     // controller.
-    class BBSKernelProcessControl: public ACC::PLC::ProcessControl
+    class KernelProcessControl: public ACC::PLC::ProcessControl
     {
     public:
       // Default constructor.
-      BBSKernelProcessControl();
+      KernelProcessControl();
 
       // @name Implementation of PLC interface.
       // @{

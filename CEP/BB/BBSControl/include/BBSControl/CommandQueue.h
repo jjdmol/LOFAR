@@ -66,7 +66,8 @@ namespace LOFAR
       // this step represents a "unit of work", a.k.a. \e workorder. This
       // method is typically used by the global controller.
       // \pre \a step must a BBSSingleStep.
-      void addStep(const BBSStep& step);
+      // \return The unique command-id associated with \a step.
+      int addStep(const BBSStep& step) const;
 
       // Get the next BBSStep from the command queue. When this step is
       // retrieved from the database, its status will be set to "active"
@@ -84,21 +85,26 @@ namespace LOFAR
       // the BBSStep objects within the BBSStrategy are stored in the
       // database. This "meta data" is needed to (re)start a BBS run. This
       // method is typically used by the global controller.
-      void setStrategy(const BBSStrategy&);
+      void setStrategy(const BBSStrategy&) const;
 
       // Retrieve the BBSStrategy for this BBS run. The information in the
       // database consists of the "meta data" of a BBSStrategy object
       // (i.e. all information \e except the BBSStep objects). This method is
       // typically called by the local controller.
-      const BBSStrategy* getStrategy();
+      const BBSStrategy* getStrategy() const;
+
+      // Check to see if we're starting a new run. The local controller needs
+      // to do a few extra checks; these checks will be done when \a
+      // isLocalCtrl is \c true.
+      bool isNewRun(bool isLocalCtrl) const;
 
     private:
-      // HandleTrigger needs to have access to itsConnection, so we make it a
-      // friend.
-      friend class HandleTrigger;
+      // CommandQueueTrigger needs to have access to itsConnection, so we make
+      // it a friend.
+      friend class CommandQueueTrigger;
 
       // Execute \a query. The result will be returned as a ParameterSet.
-      ACC::APS::ParameterSet execQuery(const string& query);
+      ACC::APS::ParameterSet execQuery(const string& query) const;
 
       // Connection to the PostgreSQL database. The pqxx::connection object
       // will be destroyed when \c *this goes out of scope.
