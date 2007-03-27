@@ -92,15 +92,15 @@ public:
 	inline bool isAsync() const 
 		{ return (true);	}
 
-	inline string	ACAsyncClient::supplyInfo(const string&	keyList) const 
+	inline string	supplyInfo(const string&	keyList) const 
 		{ return (itsClientFuncts->supplyInfoFunc(keyList)); }
 
-	inline void	ACAsyncClient::handleAckMessage(ACCmd			cmd, 
+	inline void	handleAckMessage(ACCmd			cmd, 
 												uint16			result,
 											    const string&	info) const
 		{ itsClientFuncts->handleAckMsg(cmd, result, info); }
 
-	inline void	ACAsyncClient::handleAnswerMessage(const string&	answer) const
+	inline void	handleAnswerMessage(const string&	answer) const
 		{ itsClientFuncts->handleAnswerMsg(answer); }
 
 	bool	processACmsgFromServer()					  const;
