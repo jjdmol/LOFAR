@@ -1,35 +1,31 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,324 149 328 89 N "_3DFace" 1
+PANEL,435 242 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
 	string dpBP = $datapoint + \".BP\";
   //Load the property set for this datapoint
   navPMLloadPropertySet(dpBP);
-//  navPMLloadPropertySet($datapoint + \"_Board0_BP_Maintenance\");
-  backGround.toolTipText = dpBP;
-  if(dpAccessable(dpBP + \".status:_online.._value\"))
+  childStateBorder.toolTipText = dpBP;
+  if(dpAccessable(dpBP + \".state:_online.._value\"))
   {
-    dpConnect(\"setBackGroundColorAEM\", dpBP + \".status:_online.._value\",
-					                             dpBP + \".functionality:_online.._value\");
     dpConnect(\"showVersion\", dpBP + \".version:_online.._value\");
     dpConnect(\"navViewShowTemp\", dpBP + \".temperature:_online.._value\");
   }
   else
   {
-    setValue(\"backGround\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"txt_temperature\", \"text\", \"x\");
   }
+  // connect for selfUpdates
+  showSelfState(dpBP);
 }
 
 " 0
 "main()
 {
   navPMLunloadPropertySet($datapoint + \".BP\");
-//  navPMLunloadPropertySet($datapoint + \"_Board0_BP_Maintenance\");
-
 }" 0
 E E E 1 -1 -1 0  20 60
 "" 0 1
@@ -42,7 +38,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"backGround"
+"childStateBorder"
 ""
 1 20 60 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E "// SimpleCtrlScriptStart {valid}
 main(int iType)
@@ -76,12 +72,7 @@ main(int iType)
 // SimpleCtrlScriptEnd {EP_confirm}
 " 0
 
- "main()
-{
-  BPContextMenu();
-}
-" 0
- E
+ E E
 1 0 0 0 0 0
 EE E
 0
@@ -93,7 +84,7 @@ E E 0 1 1 0 1 E U  1 E 20 20 300 61
 2 3
 "Text1"
 ""
-1 28 31 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 40 31 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -102,31 +93,14 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 30 33 48 49
-0 2 0 "s" 0 0 0 192 0 0  30 33
+E E 0 1 1 0 1 E U  0 E 42 33 60 49
+0 2 0 "s" 0 0 0 192 0 0  42 33
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 2 BP
-6 4
-"icon_maintenance"
-""
-1 140 59 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
- "main()
-{
-  BPContextMenu();
-}" 0
- E
-5 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 140 20 180 60
 2 5
 "txt_version"
 ""
@@ -200,6 +174,8 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 1 x
+1 9 0 "" 1
+0
 0
 LAYER, 1 
 1
@@ -229,4 +205,8 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 0 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 12 32 T 7 1 0 1  11 10  
+1
+"$object""BP"
 0

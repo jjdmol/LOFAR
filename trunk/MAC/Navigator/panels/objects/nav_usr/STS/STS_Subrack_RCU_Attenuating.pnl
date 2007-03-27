@@ -1,10 +1,13 @@
 V 10
 1
 LANG:1 11 Attenuating
-PANEL,419 196 230 100 N "_3DFace" 1
+PANEL,365 241 230 100 N "_3DFace" 1
 "$datapoint"
 "main()
 {
+	// As long as the controller van not control the attSetting
+	// the AttValue can not be set it will be only viewable
+	setValue(\"TextField1\"       , \"visible\", FALSE);
 	string dp = $datapoint;
 
   if(dpAccessable($datapoint + \".Attenuating\"))
@@ -15,26 +18,27 @@ PANEL,419 196 230 100 N "_3DFace" 1
   }
   else
   {
-  	DebugTN($datapoint + \".Attenuating isnot accessable\");
 	  TextField1.enabled = FALSE;
     setValue(\"TextField1\", \"text\", \"-10\");
-    setValue(\"Border1\", \"backCol\", \"_dpdoesnotexist\");
+  	setValue(\"attValue\", \"visible\", FALSE );
   }
 }
 
 ShowAttenuating(string dp1, unsigned attenuating ,
                 string dp2, bool invalid)
 {
-  setValue(\"TextField1\", \"text\", attenuating );
+  // setValue(\"TextField1\", \"text\", attenuating );
+	TextField1.enabled = FALSE;
+  setValue(\"attValue\", \"visible\", TRUE );
 	if (!invalid)
 	{
+    setValue(\"attValue\", \"text\", attenuating );
 	  TextField1.enabled = TRUE;
-    setValue(\"Border1\", \"backCol\", \"Lofar_device_active\");
 	}
 	else
 	{
-	  TextField1.enabled = FALSE;
-    setValue(\"Border1\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"attValue\", \"text\", \"\" );
+    setValue(\"attValue\", \"visible\", FALSE );
 	}
 }
 " 0
@@ -52,7 +56,7 @@ LANG:1 6 Layer1
 6 224
 "Border1"
 ""
-1 20 81 E E E 1 E 1 E N "_WindowText" E N "grau" E E
+1 20 65 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 16 0 0 0 0 0
 EE E
@@ -61,11 +65,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 19 210 81
+E E 0 1 1 0 1 E U  1 E 20 35 190 65
 2 72
-"Text1"
+"dBText"
 ""
-1 175 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 160 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 8 0 0 0 0 0
 EE E
@@ -74,8 +78,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 177 43 193 59
-0 2 0 "s" 0 0 0 192 0 0  177 43
+E E 0 1 1 0 1 E U  0 E 162 43 178 59
+0 2 0 "s" 0 0 0 192 0 0  162 43
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -83,9 +87,9 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 1
 LANG:1 2 dB
 2 225
-"Text2"
+"AttText"
 ""
-1 35 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 50 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 17 0 0 0 0 0
 EE E
@@ -94,18 +98,55 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 37 43 103 59
-0 2 0 "s" 0 0 0 192 0 0  37 43
+E E 0 1 1 0 1 E U  0 E 52 43 118 59
+0 2 0 "s" 0 0 0 192 0 0  52 43
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 11 Attenuating
+6 227
+"borderAttValue"
+""
+1 127 60 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+18 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 127 40 157 60
+2 228
+"attValue"
+""
+1 127 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+19 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+
+}" 0
+ E 0 1 1 0 1 E U  0 E 151 42 173 58
+0 2 0 "s" 0 0 0 194 0 0  151 42
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Null
 14 223
 "TextField1"
 ""
-1 125 38 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 125 39 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 15 0 0 0 0 0
 EE E
@@ -116,7 +157,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-123 36 157 63
+123 37 157 64
 3 "2d" 2 0 0 2 0 0 
 E
 "main()
