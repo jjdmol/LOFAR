@@ -244,6 +244,7 @@ void ApplController::createParSubsets()
 	// and make a ProcRuler and ParsetFile for each process of this application.
 	string			prevProcName;
 	ParameterSet	basePS;
+	vector<string>	nodes;
 	vector<string>	procList = itsObsParamSet->getStringVector("ApplCtrl.processes");
 	LOG_TRACE_VAR_STR("Found " << procList.size() << " processes");
 	for (uint procIdx = 0; procIdx < procList.size(); procIdx++) {
@@ -266,9 +267,11 @@ void ApplController::createParSubsets()
 
 		// [A] Get the default parameters ( procName[0].* ) when procname changes
 		if (procName != prevProcName) {
+			LOG_TRACE_COND_STR("Making basePS for " << procName);
 			basePS.clear();
-			basePS = itsObsParamSet->makeSubset(procPrefix, procPrefix);
-			LOG_TRACE_VAR_STR(basePS);
+			basePS.adoptCollection(*itsObsParamSet);
+//			basePS = itsObsParamSet->makeSubset(procPrefix, procPrefix);
+//			LOG_TRACE_VAR_STR(basePS);
 
 			// [C] additional info from the AC itself
 			basePS.add(procPrefix+"._ACport", 
@@ -281,6 +284,7 @@ void ApplController::createParSubsets()
 		// --- cmdline ---
 		if (startstopType == "cmdline") {
 			if (nrProcs == 0) {
+				LOG_TRACE_COND_STR("Single cmdline process " << procName);
 				// This processSet is a single commandline process
 				// add procName.* params to parset for process.
 				ParameterSet myPS = itsObsParamSet->makeSubset(procPrefix+".",
@@ -290,29 +294,36 @@ void ApplController::createParSubsets()
 				writeParSubset(myPS, procName, fileName);
 				
 				// construct ProcesRuler
-				itsProcRuler.add(PR_Shell(myPS.getString(procPrefix + "._node"),
+				itsProcRuler.add(PR_Shell(myPS.getString(procPrefix + "._hostname"),
 										  procName,
 										  myPS.getString(procPrefix + "._executable"),
 										  fileName));
 
 			} else {
 				// There are multiple processes of this type
+				nodes = basePS.getStringVector(procPrefix+"._nodes");
+				LOG_TRACE_COND_STR("Multiple(" << nrProcs << ") cmdline process " << procName);
 				for (int32 p = 1; p <= nrProcs; ++p) {
 					// [B] construct parameter subset with process specific settings
 					string pName      = formatString("%s%d", procName.c_str(), p);
-					string oldPPrefix = formatString("%s[%d].", procPrefix.c_str(), p);
-					ParameterSet myPS(basePS);
-					myPS.adoptCollection(itsObsParamSet->makeSubset(oldPPrefix, 
-																	   procPrefix+"."));
+//					string oldPPrefix = formatString("%s[%d].", procPrefix.c_str(), p);
+//					ParameterSet myPS(basePS);
+//					myPS.adoptCollection(itsObsParamSet->makeSubset(oldPPrefix, 
+//																	   procPrefix+"."));
+					ParameterSet myPS = itsObsParamSet->makeSubset(procPrefix+".",
+																		procPrefix+".");
 					LOG_TRACE_VAR_STR(myPS);
+					myPS.adoptCollection(basePS);
 
 					// copy the default PS and give it a new prefix
-					myPS.adoptCollection(itsObsParamSet->makeSubset(procPrefix+".",
-																	procPrefix+"."));
+//					myPS.adoptCollection(itsObsParamSet->makeSubset(procPrefix+".",
+//																	procPrefix+"."));
 					string fileName = pName + ".parsets";
 					writeParSubset(myPS, pName, fileName);
 
-					itsProcRuler.add(PR_Shell(myPS.getString(procPrefix + "._node"),
+					// note: nodes[] may be smaller than nrProcs. by taking the remainder
+					// of nodes.size() the nodes[] is made cyclic.
+					itsProcRuler.add(PR_Shell(myPS.getString(nodes[(p-1)%nodes.size()]),
 											  pName,
 											  myPS.getString(procPrefix + "._executable"),
 											  fileName));
@@ -322,14 +333,10 @@ void ApplController::createParSubsets()
 
 		else if (startstopType == "mpirun") {
 			// This processSet is an MPI program
-			vector<string> nodeNames;
-			for (int32 p = 1; p <= nrProcs; p++) {
-				// construct array of all nodes
-				nodeNames.push_back(itsObsParamSet->getString(
-									formatString("%s[%d]._node", procPrefix.c_str(), p)));
-			}
+			LOG_TRACE_COND_STR("mpi process " << procName);
+			nodes = basePS.getStringVector(procPrefix+"._nodes");
 			itsProcRuler.add(PR_MPI(procName,
-									nodeNames,
+									nodes,
 									basePS.getString(procPrefix + "._executable"),
 									fileName));
 			writeParSubset(basePS, procName, fileName);
@@ -338,10 +345,11 @@ void ApplController::createParSubsets()
 		// --- bgl ---
 		else if (startstopType == "bgl") {
 			// This processSet is a BG/L job
+			LOG_TRACE_COND_STR("bgl process " << procName);
 			itsProcRuler.add(PR_BGL(procName,				    
-									basePS.getString(procName + ".partition"),
-									basePS.getString(procName + ".executable"),
-									basePS.getString(procName + ".workingdir"),
+									basePS.getString(procPrefix + ".partition"),
+									basePS.getString(procPrefix + "._executable"),
+									basePS.getString(procPrefix + ".workingdir"),
 									fileName, 
 									nrProcs));
 			writeParSubset(basePS, procName, fileName);
