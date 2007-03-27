@@ -1,8 +1,7 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,416 258 954 746 N "_3DFace" 3
-"$configDatapoint"
+PANEL,289 102 954 746 N "_3DFace" 2
 "$datapoint"
 "$referenceDatapoint"
 EEE E E 1 -1 -1 0  188 128
@@ -12,6 +11,7 @@ E"#uses \"nav_usr/STS/STS-functions.ctl\"" 0
 "CBRef""1"
 "EClose"E
 ""
+1
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
@@ -29,773 +29,23 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/CS1/station-sized.bmp" 13434828 E 0 10 933 543
-1 2033 57 "" 0
+1 2631 86 "" 2188
 0
-1 2034 57 "" 2
+1 2632 86 "86" 1
 0
-1 2035 57 "" 3
+1 2633 86 "" 2187
 0
-1 2036 57 "" 4
+1 2604 83 "" 2188
 0
-1 2037 57 "" 44
+1 2605 83 "86" 1
 0
-1 2038 57 "" 45
+1 2606 83 "" 2187
 0
-1 2039 57 "" 46
+1 2601 82 "" 2188
 0
-1 2040 57 "" 47
+1 2602 82 "86" 1
 0
-1 2041 57 "" 48
-0
-1 2042 57 "" 49
-0
-1 2043 57 "" 50
-0
-1 2044 57 "" 51
-0
-1 2045 57 "" 54
-0
-1 2046 57 "" 55
-0
-1 2047 57 "" 1
-0
-1 2048 57 "" 56
-0
-1 2049 52 "" 0
-0
-1 2050 52 "" 2
-0
-1 2051 52 "" 3
-0
-1 2052 52 "" 4
-0
-1 2053 52 "" 44
-0
-1 2054 52 "" 45
-0
-1 2055 52 "" 46
-0
-1 2056 52 "" 47
-0
-1 2057 52 "" 48
-0
-1 2058 52 "" 49
-0
-1 2059 52 "" 50
-0
-1 2060 52 "" 51
-0
-1 2061 52 "" 54
-0
-1 2062 52 "" 55
-0
-1 2063 52 "" 1
-0
-1 2064 52 "" 56
-0
-1 2065 47 "" 0
-0
-1 2066 47 "" 2
-0
-1 2067 47 "" 3
-0
-1 2068 47 "" 4
-0
-1 2069 47 "" 44
-0
-1 2070 47 "" 45
-0
-1 2071 47 "" 46
-0
-1 2072 47 "" 47
-0
-1 2073 47 "" 48
-0
-1 2074 47 "" 49
-0
-1 2075 47 "" 50
-0
-1 2076 47 "" 51
-0
-1 2077 47 "" 54
-0
-1 2078 47 "" 55
-0
-1 2079 47 "" 1
-0
-1 2080 47 "" 56
-0
-1 2081 42 "" 0
-0
-1 2082 42 "" 2
-0
-1 2083 42 "" 3
-0
-1 2084 42 "" 4
-0
-1 2085 42 "" 44
-0
-1 2086 42 "" 45
-0
-1 2087 42 "" 46
-0
-1 2088 42 "" 47
-0
-1 2089 42 "" 48
-0
-1 2090 42 "" 49
-0
-1 2091 42 "" 50
-0
-1 2092 42 "" 51
-0
-1 2093 42 "" 54
-0
-1 2094 42 "" 55
-0
-1 2095 42 "" 1
-0
-1 2096 42 "" 56
-0
-1 2097 33 "" 0
-0
-1 2098 33 "" 2
-0
-1 2099 33 "" 3
-0
-1 2100 33 "" 4
-0
-1 2101 33 "" 44
-0
-1 2102 33 "" 45
-0
-1 2103 33 "" 46
-0
-1 2104 33 "" 47
-0
-1 2105 33 "" 48
-0
-1 2106 33 "" 49
-0
-1 2107 33 "" 50
-0
-1 2108 33 "" 51
-0
-1 2109 33 "" 54
-0
-1 2110 33 "" 55
-0
-1 2111 33 "" 1
-0
-1 2112 33 "" 56
-0
-1 2113 26 "" 0
-0
-1 2114 26 "" 2
-0
-1 2115 26 "" 3
-0
-1 2116 26 "" 4
-0
-1 2117 26 "" 44
-0
-1 2118 26 "" 45
-0
-1 2119 26 "" 46
-0
-1 2120 26 "" 47
-0
-1 2121 26 "" 48
-0
-1 2122 26 "" 49
-0
-1 2123 26 "" 50
-0
-1 2124 26 "" 51
-0
-1 2125 26 "" 54
-0
-1 2126 26 "" 55
-0
-1 2127 26 "" 1
-0
-1 2128 26 "" 56
-0
-1 2129 27 "" 0
-0
-1 2130 27 "" 2
-0
-1 2131 27 "" 3
-0
-1 2132 27 "" 4
-0
-1 2133 27 "" 44
-0
-1 2134 27 "" 45
-0
-1 2135 27 "" 46
-0
-1 2136 27 "" 47
-0
-1 2137 27 "" 48
-0
-1 2138 27 "" 49
-0
-1 2139 27 "" 50
-0
-1 2140 27 "" 51
-0
-1 2141 27 "" 54
-0
-1 2142 27 "" 55
-0
-1 2143 27 "" 1
-0
-1 2144 27 "" 56
-0
-1 2145 28 "" 0
-0
-1 2146 28 "" 2
-0
-1 2147 28 "" 3
-0
-1 2148 28 "" 4
-0
-1 2149 28 "" 44
-0
-1 2150 28 "" 45
-0
-1 2151 28 "" 46
-0
-1 2152 28 "" 47
-0
-1 2153 28 "" 48
-0
-1 2154 28 "" 49
-0
-1 2155 28 "" 50
-0
-1 2156 28 "" 51
-0
-1 2157 28 "" 54
-0
-1 2158 28 "" 55
-0
-1 2159 28 "" 1
-0
-1 2160 28 "" 56
-0
-1 2161 31 "" 0
-0
-1 2162 31 "" 2
-0
-1 2163 31 "" 3
-0
-1 2164 31 "" 4
-0
-1 2165 31 "" 44
-0
-1 2166 31 "" 45
-0
-1 2167 31 "" 46
-0
-1 2168 31 "" 47
-0
-1 2169 31 "" 48
-0
-1 2170 31 "" 49
-0
-1 2171 31 "" 50
-0
-1 2172 31 "" 51
-0
-1 2173 31 "" 54
-0
-1 2174 31 "" 55
-0
-1 2175 31 "" 1
-0
-1 2176 31 "" 56
-0
-1 2177 34 "" 0
-0
-1 2178 34 "" 2
-0
-1 2179 34 "" 3
-0
-1 2180 34 "" 4
-0
-1 2181 34 "" 44
-0
-1 2182 34 "" 45
-0
-1 2183 34 "" 46
-0
-1 2184 34 "" 47
-0
-1 2185 34 "" 48
-0
-1 2186 34 "" 49
-0
-1 2187 34 "" 50
-0
-1 2188 34 "" 51
-0
-1 2189 34 "" 54
-0
-1 2190 34 "" 55
-0
-1 2191 34 "" 1
-0
-1 2192 34 "" 56
-0
-1 2193 35 "" 0
-0
-1 2194 35 "" 2
-0
-1 2195 35 "" 3
-0
-1 2196 35 "" 4
-0
-1 2197 35 "" 44
-0
-1 2198 35 "" 45
-0
-1 2199 35 "" 46
-0
-1 2200 35 "" 47
-0
-1 2201 35 "" 48
-0
-1 2202 35 "" 49
-0
-1 2203 35 "" 50
-0
-1 2204 35 "" 51
-0
-1 2205 35 "" 54
-0
-1 2206 35 "" 55
-0
-1 2207 35 "" 1
-0
-1 2208 35 "" 56
-0
-1 2209 41 "" 0
-0
-1 2210 41 "" 2
-0
-1 2211 41 "" 3
-0
-1 2212 41 "" 4
-0
-1 2213 41 "" 44
-0
-1 2214 41 "" 45
-0
-1 2215 41 "" 46
-0
-1 2216 41 "" 47
-0
-1 2217 41 "" 48
-0
-1 2218 41 "" 49
-0
-1 2219 41 "" 50
-0
-1 2220 41 "" 51
-0
-1 2221 41 "" 54
-0
-1 2222 41 "" 55
-0
-1 2223 41 "" 1
-0
-1 2224 41 "" 56
-0
-1 2225 43 "" 0
-0
-1 2226 43 "" 2
-0
-1 2227 43 "" 3
-0
-1 2228 43 "" 4
-0
-1 2229 43 "" 44
-0
-1 2230 43 "" 45
-0
-1 2231 43 "" 46
-0
-1 2232 43 "" 47
-0
-1 2233 43 "" 48
-0
-1 2234 43 "" 49
-0
-1 2235 43 "" 50
-0
-1 2236 43 "" 51
-0
-1 2237 43 "" 54
-0
-1 2238 43 "" 55
-0
-1 2239 43 "" 1
-0
-1 2240 43 "" 56
-0
-1 2241 44 "" 0
-0
-1 2242 44 "" 2
-0
-1 2243 44 "" 3
-0
-1 2244 44 "" 4
-0
-1 2245 44 "" 44
-0
-1 2246 44 "" 45
-0
-1 2247 44 "" 46
-0
-1 2248 44 "" 47
-0
-1 2249 44 "" 48
-0
-1 2250 44 "" 49
-0
-1 2251 44 "" 50
-0
-1 2252 44 "" 51
-0
-1 2253 44 "" 54
-0
-1 2254 44 "" 55
-0
-1 2255 44 "" 1
-0
-1 2256 44 "" 56
-0
-1 2257 46 "" 0
-0
-1 2258 46 "" 2
-0
-1 2259 46 "" 3
-0
-1 2260 46 "" 4
-0
-1 2261 46 "" 44
-0
-1 2262 46 "" 45
-0
-1 2263 46 "" 46
-0
-1 2264 46 "" 47
-0
-1 2265 46 "" 48
-0
-1 2266 46 "" 49
-0
-1 2267 46 "" 50
-0
-1 2268 46 "" 51
-0
-1 2269 46 "" 54
-0
-1 2270 46 "" 55
-0
-1 2271 46 "" 1
-0
-1 2272 46 "" 56
-0
-1 2273 48 "" 0
-0
-1 2274 48 "" 2
-0
-1 2275 48 "" 3
-0
-1 2276 48 "" 4
-0
-1 2277 48 "" 44
-0
-1 2278 48 "" 45
-0
-1 2279 48 "" 46
-0
-1 2280 48 "" 47
-0
-1 2281 48 "" 48
-0
-1 2282 48 "" 49
-0
-1 2283 48 "" 50
-0
-1 2284 48 "" 51
-0
-1 2285 48 "" 54
-0
-1 2286 48 "" 55
-0
-1 2287 48 "" 1
-0
-1 2288 48 "" 56
-0
-1 2289 49 "" 0
-0
-1 2290 49 "" 2
-0
-1 2291 49 "" 3
-0
-1 2292 49 "" 4
-0
-1 2293 49 "" 44
-0
-1 2294 49 "" 45
-0
-1 2295 49 "" 46
-0
-1 2296 49 "" 47
-0
-1 2297 49 "" 48
-0
-1 2298 49 "" 49
-0
-1 2299 49 "" 50
-0
-1 2300 49 "" 51
-0
-1 2301 49 "" 54
-0
-1 2302 49 "" 55
-0
-1 2303 49 "" 1
-0
-1 2304 49 "" 56
-0
-1 2305 51 "" 0
-0
-1 2306 51 "" 2
-0
-1 2307 51 "" 3
-0
-1 2308 51 "" 4
-0
-1 2309 51 "" 44
-0
-1 2310 51 "" 45
-0
-1 2311 51 "" 46
-0
-1 2312 51 "" 47
-0
-1 2313 51 "" 48
-0
-1 2314 51 "" 49
-0
-1 2315 51 "" 50
-0
-1 2316 51 "" 51
-0
-1 2317 51 "" 54
-0
-1 2318 51 "" 55
-0
-1 2319 51 "" 1
-0
-1 2320 51 "" 56
-0
-1 2321 53 "" 0
-0
-1 2322 53 "" 2
-0
-1 2323 53 "" 3
-0
-1 2324 53 "" 4
-0
-1 2325 53 "" 44
-0
-1 2326 53 "" 45
-0
-1 2327 53 "" 46
-0
-1 2328 53 "" 47
-0
-1 2329 53 "" 48
-0
-1 2330 53 "" 49
-0
-1 2331 53 "" 50
-0
-1 2332 53 "" 51
-0
-1 2333 53 "" 54
-0
-1 2334 53 "" 55
-0
-1 2335 53 "" 1
-0
-1 2336 53 "" 56
-0
-1 2337 54 "" 0
-0
-1 2338 54 "" 2
-0
-1 2339 54 "" 3
-0
-1 2340 54 "" 4
-0
-1 2341 54 "" 44
-0
-1 2342 54 "" 45
-0
-1 2343 54 "" 46
-0
-1 2344 54 "" 47
-0
-1 2345 54 "" 48
-0
-1 2346 54 "" 49
-0
-1 2347 54 "" 50
-0
-1 2348 54 "" 51
-0
-1 2349 54 "" 54
-0
-1 2350 54 "" 55
-0
-1 2351 54 "" 1
-0
-1 2352 54 "" 56
-0
-1 2353 56 "" 0
-0
-1 2354 56 "" 2
-0
-1 2355 56 "" 3
-0
-1 2356 56 "" 4
-0
-1 2357 56 "" 44
-0
-1 2358 56 "" 45
-0
-1 2359 56 "" 46
-0
-1 2360 56 "" 47
-0
-1 2361 56 "" 48
-0
-1 2362 56 "" 49
-0
-1 2363 56 "" 50
-0
-1 2364 56 "" 51
-0
-1 2365 56 "" 54
-0
-1 2366 56 "" 55
-0
-1 2367 56 "" 1
-0
-1 2368 56 "" 56
-0
-1 2369 58 "" 0
-0
-1 2370 58 "" 2
-0
-1 2371 58 "" 3
-0
-1 2372 58 "" 4
-0
-1 2373 58 "" 44
-0
-1 2374 58 "" 45
-0
-1 2375 58 "" 46
-0
-1 2376 58 "" 47
-0
-1 2377 58 "" 48
-0
-1 2378 58 "" 49
-0
-1 2379 58 "" 50
-0
-1 2380 58 "" 51
-0
-1 2381 58 "" 54
-0
-1 2382 58 "" 55
-0
-1 2383 58 "" 1
-0
-1 2384 58 "" 56
-0
-1 2385 59 "" 0
-0
-1 2386 59 "" 2
-0
-1 2387 59 "" 3
-0
-1 2388 59 "" 4
-0
-1 2389 59 "" 44
-0
-1 2390 59 "" 45
-0
-1 2391 59 "" 46
-0
-1 2392 59 "" 47
-0
-1 2393 59 "" 48
-0
-1 2394 59 "" 49
-0
-1 2395 59 "" 50
-0
-1 2396 59 "" 51
-0
-1 2397 59 "" 54
-0
-1 2398 59 "" 55
-0
-1 2399 59 "" 1
-0
-1 2400 59 "" 56
-0
-1 2401 29 "" 0
-0
-1 2402 29 "" 2
-0
-1 2403 29 "" 3
-0
-1 2404 29 "" 4
-0
-1 2405 29 "" 44
-0
-1 2406 29 "" 45
-0
-1 2407 29 "" 46
-0
-1 2408 29 "" 47
-0
-1 2409 29 "" 48
-0
-1 2410 29 "" 49
-0
-1 2411 29 "" 50
-0
-1 2412 29 "" 51
-0
-1 2413 29 "" 54
-0
-1 2414 29 "" 55
-0
-1 2415 29 "" 1
-0
-1 2416 29 "" 56
+1 2603 82 "" 2187
 0
 2 2007
 "Text11"
@@ -821,186 +71,150 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 6 View: 
-2 2417
-"Text1"
-""
-1 84 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-817 0 0 0 0 0
-EE E
+1 2468 76 "" 901
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 86 62 141 78
-0 2 0 "s" 0 0 0 192 0 0  86 62
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 Cabinet 0
-2 2418
-"Text2"
-""
-1 299 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-818 0 0 0 0 0
-EE E
+1 2469 76 "" 908
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 301 62 356 78
-0 2 0 "s" 0 0 0 192 0 0  301 62
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 Cabinet 1
-2 2419
-"Text3"
-""
-1 511 60 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-819 0 0 0 0 0
-EE E
+1 2470 76 "" 907
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 513 62 568 78
-0 2 0 "s" 0 0 0 192 0 0  513 62
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 Cabinet 2
-2 2420
-"Text4"
-""
-1 127 252 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-820 0 0 0 0 0
-EE E
+1 2471 76 "" 906
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 129 254 188 270
-0 2 0 "s" 0 0 0 192 0 0  129 254
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 Subrack 0
-2 2421
-"Text5"
-""
-1 127 440 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-821 0 0 0 0 0
-EE E
+1 2472 76 "" 905
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 129 442 188 458
-0 2 0 "s" 0 0 0 192 0 0  129 442
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 Subrack 1
-2 2422
-"Text6"
-""
-1 336 252 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-822 0 0 0 0 0
-EE E
+1 2473 76 "" 904
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 338 254 397 270
-0 2 0 "s" 0 0 0 192 0 0  338 254
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 Subrack 2
-2 2423
-"Text7"
-""
-1 336 440 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-823 0 0 0 0 0
-EE E
+1 2474 76 "" 903
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 338 442 397 458
-0 2 0 "s" 0 0 0 192 0 0  338 442
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 Subrack 3
-2 2424
-"Text8"
-""
-1 546 252 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-824 0 0 0 0 0
-EE E
+1 2475 76 "" 902
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 548 254 607 270
-0 2 0 "s" 0 0 0 192 0 0  548 254
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 Subrack 4
-2 2425
-"Text9"
-""
-1 546 440 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-825 0 0 0 0 0
-EE E
+1 2476 76 "" 0
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 548 442 607 458
-0 2 0 "s" 0 0 0 192 0 0  548 442
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 Subrack 5
+1 2477 76 "" 909
+0
+1 2478 76 "1" 1
+0
+1 2479 76 "" 911
+0
+1 2480 77 "" 901
+0
+1 2481 77 "" 908
+0
+1 2482 77 "" 907
+0
+1 2483 77 "" 906
+0
+1 2484 77 "" 905
+0
+1 2485 77 "" 904
+0
+1 2486 77 "" 903
+0
+1 2487 77 "" 902
+0
+1 2488 77 "" 0
+0
+1 2489 77 "" 909
+0
+1 2490 77 "1" 1
+0
+1 2491 77 "" 911
+0
+1 2456 75 "" 901
+0
+1 2457 75 "" 908
+0
+1 2458 75 "" 907
+0
+1 2459 75 "" 906
+0
+1 2460 75 "" 905
+0
+1 2461 75 "" 904
+0
+1 2462 75 "" 903
+0
+1 2463 75 "" 902
+0
+1 2464 75 "" 0
+0
+1 2465 75 "" 909
+0
+1 2466 75 "1" 1
+0
+1 2467 75 "" 911
+0
+1 2420 70 "" 901
+0
+1 2421 70 "" 908
+0
+1 2422 70 "" 907
+0
+1 2423 70 "" 906
+0
+1 2424 70 "" 905
+0
+1 2425 70 "" 904
+0
+1 2426 70 "" 903
+0
+1 2427 70 "" 902
+0
+1 2428 70 "" 0
+0
+1 2429 70 "" 909
+0
+1 2430 70 "1" 1
+0
+1 2431 70 "" 911
+0
+1 2607 84 "" 901
+0
+1 2608 84 "" 908
+0
+1 2609 84 "" 907
+0
+1 2610 84 "" 906
+0
+1 2611 84 "" 905
+0
+1 2612 84 "" 904
+0
+1 2613 84 "" 903
+0
+1 2614 84 "" 902
+0
+1 2615 84 "" 0
+0
+1 2616 84 "" 909
+0
+1 2617 84 "1" 1
+0
+1 2618 84 "" 911
+0
+1 2619 85 "" 901
+0
+1 2620 85 "" 908
+0
+1 2621 85 "" 907
+0
+1 2622 85 "" 906
+0
+1 2623 85 "" 905
+0
+1 2624 85 "" 904
+0
+1 2625 85 "" 903
+0
+1 2626 85 "" 902
+0
+1 2627 85 "" 0
+0
+1 2628 85 "" 909
+0
+1 2629 85 "1" 1
+0
+1 2630 85 "" 911
+0
 0
 LAYER, 1 
 1
@@ -1030,220 +244,64 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 57 "RSPBoard_20"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 701 172 T 727 1 0 1  -226 162  
-6
-"$RSPBoardNr""20"
-"$RackNr""2"
-"$SubrackNr""5"
-"$configDatapoint""$configDatapoint"
+3 86 "Group20"
+"objects\\nav_usr\\STS\\STS_Cabinet.pnl" 248 70 T 850 1 0 1  382 115  
+3
+"$CabinetNr""2"
 "$datapoint""$datapoint"
 "$referenceDatapoint""$referenceDatapoint"
-3 52 "RSPBoard_16"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 567 172 T 722 1 0 1  -92 -26  
-6
-"$RSPBoardNr""16"
-"$RackNr""2"
+3 83 "Group14"
+"objects\\nav_usr\\STS\\STS_Cabinet.pnl" 39 70 T 847 1 0 1  383 115  
+3
+"$CabinetNr""1"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 82 ""
+"objects\\nav_usr\\STS\\STS_Cabinet.pnl" 137 288 T 846 1 0 1  75 -103  
+3
+"$CabinetNr""0"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 76 "Group22"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 265 280 T 840 1 0 1  207 -6  
+4
+"$CabinetNr""2"
 "$SubrackNr""4"
-"$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 "$referenceDatapoint""$referenceDatapoint"
-3 47 "RSPBoard_12"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 299 172 T 717 1 0 1  -34 162  
-6
-"$RSPBoardNr""12"
-"$RackNr""1"
-"$SubrackNr""3"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 42 "RSPBoard_8"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 165 172 T 712 1 0 1  100 -26  
-6
-"$RSPBoardNr""8"
-"$RackNr""1"
-"$SubrackNr""2"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 33 "RSPBoard_4"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 203 166 T 698 1 0 1  -147 168  
-6
-"$RSPBoardNr""4"
-"$RackNr""0"
-"$SubrackNr""1"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 26 "RSPBoard_0"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 198 167 T 692 1 0 1  -142 -21  
-6
-"$RSPBoardNr""0"
-"$RackNr""0"
-"$SubrackNr""0"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 27 "RSPBoard_1"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 179 281 T 693 1 0 1  -123 -93  
-6
-"$RSPBoardNr""1"
-"$RackNr""0"
-"$SubrackNr""0"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 28 "RSPBoard_2"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 218 262 T 694 1 0 1  -162 -32  
-6
-"$RSPBoardNr""2"
-"$RackNr""0"
-"$SubrackNr""0"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 31 "RSPBoard_5"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 234 219 T 696 1 0 1  -178 157  
-6
-"$RSPBoardNr""5"
-"$RackNr""0"
-"$SubrackNr""1"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 34 "RSPBoard_6"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 211 311 T 699 1 0 1  -155 107  
-6
-"$RSPBoardNr""6"
-"$RackNr""0"
-"$SubrackNr""1"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 35 "RSPBoard_7"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 190 340 T 700 1 0 1  -134 120  
-6
-"$RSPBoardNr""7"
-"$RackNr""0"
-"$SubrackNr""1"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 41 "RSPBoard_9"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 165 236 T 711 1 0 1  100 -48  
-6
-"$RSPBoardNr""9"
-"$RackNr""1"
-"$SubrackNr""2"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 43 "RSPBoard_10"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 165 300 T 713 1 0 1  100 -70  
-6
-"$RSPBoardNr""10"
-"$RackNr""1"
-"$SubrackNr""2"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 44 "RSPBoard_11"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 165 364 T 714 1 0 1  100 -92  
-6
-"$RSPBoardNr""11"
-"$RackNr""1"
-"$SubrackNr""2"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 46 "RSPBoard_13"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 299 236 T 716 1 0 1  -34 140  
-6
-"$RSPBoardNr""13"
-"$RackNr""1"
-"$SubrackNr""3"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 48 "RSPBoard_14"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 299 300 T 718 1 0 1  -34 118  
-6
-"$RSPBoardNr""14"
-"$RackNr""1"
-"$SubrackNr""3"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 49 "RSPBoard_15"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 299 364 T 719 1 0 1  -34 96  
-6
-"$RSPBoardNr""15"
-"$RackNr""1"
-"$SubrackNr""3"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 51 "RSPBoard_17"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 567 236 T 721 1 0 1  -92 -48  
-6
-"$RSPBoardNr""17"
-"$RackNr""2"
-"$SubrackNr""4"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 53 "RSPBoard_18"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 567 300 T 723 1 0 1  -92 -70  
-6
-"$RSPBoardNr""18"
-"$RackNr""2"
-"$SubrackNr""4"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 54 "RSPBoard_19"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 567 364 T 724 1 0 1  -92 -92  
-6
-"$RSPBoardNr""19"
-"$RackNr""2"
-"$SubrackNr""4"
-"$configDatapoint""$configDatapoint"
-"$datapoint""$datapoint"
-"$referenceDatapoint""$referenceDatapoint"
-3 56 "RSPBoard_21"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 701 236 T 726 1 0 1  -226 140  
-6
-"$RSPBoardNr""21"
-"$RackNr""2"
+3 77 "Group24"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 473 92 T 841 1 0 1  -1 368  
+4
+"$CabinetNr""2"
 "$SubrackNr""5"
-"$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
 "$referenceDatapoint""$referenceDatapoint"
-3 58 "RSPBoard_22"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 701 300 T 728 1 0 1  -226 118  
-6
-"$RSPBoardNr""22"
-"$RackNr""2"
-"$SubrackNr""5"
-"$configDatapoint""$configDatapoint"
+3 75 "Group20"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 56 90 T 839 1 0 1  210 370  
+4
+"$CabinetNr""1"
+"$SubrackNr""3"
 "$datapoint""$datapoint"
 "$referenceDatapoint""$referenceDatapoint"
-3 59 "RSPBoard_23"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 701 364 T 729 1 0 1  -226 96  
-6
-"$RSPBoardNr""23"
-"$RackNr""2"
-"$SubrackNr""5"
-"$configDatapoint""$configDatapoint"
+3 70 ""
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 332 567 T 835 1 0 1  -67 -293  
+4
+"$CabinetNr""1"
+"$SubrackNr""2"
 "$datapoint""$datapoint"
 "$referenceDatapoint""$referenceDatapoint"
-3 29 "RSPBoard_3"
-"objects\\nav_usr\\CS1\\STS_19inch_Subrack-CS1.pnl" 177 312 T 695 1 0 1  -121 -40  
-6
-"$RSPBoardNr""3"
-"$RackNr""0"
+3 84 "Group16"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 266 100 T 848 1 0 1  -211 174  
+4
+"$CabinetNr""0"
 "$SubrackNr""0"
-"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 85 "Group18"
+"objects\\nav_usr\\STS\\STS_Subrack.pnl" 50 100 T 849 1 0 1  6 360  
+4
+"$CabinetNr""0"
+"$SubrackNr""1"
 "$datapoint""$datapoint"
 "$referenceDatapoint""$referenceDatapoint"
 0
