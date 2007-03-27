@@ -53,7 +53,7 @@ namespace LOFAR
 			       const BBSStep* parent) :
       BBSStep(name, parset, parent)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // This multistep consists of the following steps.
       vector<string> steps(parset.getStringVector("Step." + name + ".Steps"));
@@ -68,7 +68,7 @@ namespace LOFAR
 
     BBSMultiStep::~BBSMultiStep()
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Clean up all steps.
       for(uint i = 0; i < itsSteps.size(); ++i) {
@@ -80,7 +80,7 @@ namespace LOFAR
 
     void BBSMultiStep::print(ostream& os) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSStep::print(os);
       Indent id;
       for (uint i = 0; i < itsSteps.size(); ++i) {
@@ -93,7 +93,7 @@ namespace LOFAR
 
     void BBSMultiStep::write(BlobOStream& bos) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // First write the data members of the base class to the output stream.
       BBSStep::write(bos);
@@ -110,7 +110,7 @@ namespace LOFAR
 
     void BBSMultiStep::read(BlobIStream& bis)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // First read the data members of the base class from the input stream.
       BBSStep::read(bis);
@@ -133,7 +133,7 @@ namespace LOFAR
 
     const string& BBSMultiStep::classType() const 
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       static const string theType("BBSMultiStep");
       return theType;
     }
@@ -141,7 +141,7 @@ namespace LOFAR
 
     void BBSMultiStep::doGetAllSteps(vector<const BBSStep*>& steps) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       for (uint i = 0; i < itsSteps.size(); ++i) {
 	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
 	steps.insert(steps.end(), substeps.begin(), substeps.end());
@@ -151,7 +151,7 @@ namespace LOFAR
 
     void BBSMultiStep::infiniteRecursionCheck(const string& name) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       if (name == getName()) {
 	THROW (BBSControlException, 
 	       "Infinite recursion detected in defintion of BBSStep \""

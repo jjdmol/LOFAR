@@ -52,13 +52,13 @@ namespace LOFAR
 
     BBSStep::~BBSStep()
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
     string BBSStep::fullName() const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       string name;
       if (itsParent) name = itsParent->fullName() + ".";
       name += itsName;
@@ -68,7 +68,7 @@ namespace LOFAR
 
     vector<const BBSStep*> BBSStep::getAllSteps() const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       vector<const BBSStep*> steps;
       doGetAllSteps(steps);
       return steps;
@@ -79,7 +79,7 @@ namespace LOFAR
 			     const ParameterSet& parset,
 			     const BBSStep* parent)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // If \a parset contains a key <tt>Step.<em>name</em>.Steps</tt>, then
       // \a name is a BBSMultiStep, otherwise it is a SingleStep.
@@ -116,7 +116,7 @@ namespace LOFAR
 		     const ParameterSet& parset,
 		     const BBSStep* parent)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Copy the data members from the parent, if present, so that they have
       // sensible default values.
@@ -136,7 +136,7 @@ namespace LOFAR
 
     void BBSStep::read(BlobIStream& bis)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bis >> itsName
 	  >> itsBaselines
 	  >> itsCorrelation
@@ -149,7 +149,7 @@ namespace LOFAR
 
     void BBSStep::write(BlobOStream& bos) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bos << itsName
  	  << itsBaselines
  	  << itsCorrelation
@@ -162,7 +162,7 @@ namespace LOFAR
 
     void BBSStep::print(ostream& os) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       os << "Step: " << itsName;
       Indent id;  // add an extra indentation level
       os << endl << indent << "Full name: " << fullName()
@@ -179,7 +179,7 @@ namespace LOFAR
 
     void BBSStep::setParms(const ParameterSet& ps)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // If defined, get the baseline selection for this step.
       try {
@@ -221,7 +221,7 @@ namespace LOFAR
 
     void BBSStep::doGetAllSteps(vector<const BBSStep*>& steps) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       steps.push_back(this);
     }
     
@@ -230,7 +230,7 @@ namespace LOFAR
 
     ostream& operator<<(ostream& os, const BBSStep& bs)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bs.print(os);
       return os;
     }

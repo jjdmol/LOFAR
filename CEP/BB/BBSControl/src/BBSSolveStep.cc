@@ -54,7 +54,7 @@ namespace LOFAR
       BBSSingleStep(parent),
       itsMaxIter(0), itsEpsilon(0), itsMinConverged(0)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
@@ -63,7 +63,7 @@ namespace LOFAR
 			       const BBSStep* parent) :
       BBSSingleStep(name, parset, parent)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Create a subset of \a parset, containing only the relevant keys for
       // the current BBSSingleStep.
@@ -83,13 +83,13 @@ namespace LOFAR
 
     BBSSolveStep::~BBSSolveStep()
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
     void BBSSolveStep::print(ostream& os) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSSingleStep::print(os);
       Indent id;
       os << endl << indent << "Solve: ";
@@ -114,7 +114,7 @@ namespace LOFAR
 
     const string& BBSSolveStep::classType() const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       static const string theType("BBSSolveStep");
       return theType;
     }
@@ -124,7 +124,7 @@ namespace LOFAR
 
     void BBSSolveStep::write(BlobOStream& bos) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSSingleStep::write(bos);
       bos << itsMaxIter
 	  << itsEpsilon
@@ -137,7 +137,7 @@ namespace LOFAR
 
     void BBSSolveStep::read(BlobIStream& bis)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSSingleStep::read(bis);
       bis >> itsMaxIter
 	  >> itsEpsilon
