@@ -1,35 +1,26 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,341 281 451 213 N "_3DFace" 1
+PANEL,283 76 451 213 N "_3DFace" 1
 "$datapoint"
 "main()
 {
   navPMLloadPropertySet($datapoint);
-//  navPMLloadPropertySet($datapoint + \"_Board0_Maintenance\");
-  backGround.toolTipText = $datapoint;
+  childStateBorder.toolTipText = $datapoint;
   if(dpAccessable($datapoint + \".version:_online.._value\"))
   {
-    dpConnect(\"setBackGroundBorderColor\", $datapoint + \".BP.functionality:_online.._value\");
-    
     dpConnect(\"showVersion\", $datapoint + \".version:_online.._value\");
   }
   else
   {
-    setValue(\"backGround\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"CheckButton1\", \"backCol\", \"_dpdoesnotexist\");
-    setValue(\"CheckButton2\", \"backCol\", \"_dpdoesnotexist\");
   }
-
-
-// dpConnect(\"MaintenanceIcon\", $datapoint + \"_Maintenance.status:_online.._value\");
- 
-}
-
-
-MaintenanceIcon (string dp1, int MaintenanceStatus)
-{
-  setValue(\"icon_maintenance\", \"visible\", (1==MaintenanceStatus));
+  // connect for childUpdates
+  showChildState($datapoint);
+  // connect for selfUpdates
+  showSelfState($datapoint);
+  
+   
 }
 " 0
 EE E E 1 -1 -1 0  10 170
@@ -38,12 +29,13 @@ EE 2
 "CBRef""1"
 "EClose"E
 ""
+1
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
 6 0
-"backGround"
+"childStateBorder"
 ""
 1 10 170 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
  E E
@@ -54,67 +46,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 2 1 1 0 1 E U  1 E 10 10 410 170
-2 1
-"label_lastError"
-""
-1 50 128 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-2 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 52 130 122 145
-0 2 0 "s" 0 0 0 66 0 0  52 130
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 11 Last error:
-2 2
-"label_packetsError"
-""
-1 30 105 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-3 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 32 107 122 124
-0 2 0 "s" 0 0 0 66 0 0  32 107
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 14 Packets error:
-2 3
-"label_packetsReceived"
-""
-1 20 82 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
- E E
-4 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 22 84 122 98
-0 2 0 "s" 0 0 0 66 0 0  22 84
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 17 Packets received:
+E E 0 2 1 0 1 E U  1 E 10 10 420 170
 2 4
 "Text11"
 ""
@@ -138,7 +70,7 @@ LANG:1 9 RSP board
 2 5
 "txt_version"
 ""
-1 361 153 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 373 149 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -147,55 +79,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 400 155 437 169
-0 2 0 "s" 0 0 0 194 0 0  400 155
+E E 0 1 1 0 1 E U  0 E 412 151 449 165
+0 2 0 "s" 0 0 0 194 0 0  412 151
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 8 ver: x.x
-6 6
-"icon_maintenance"
-""
-1 164 56 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
- "main()
-{
-  BPContextMenu();
-}" 0
- E
-7 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/nav_usr/STS/icon_maintenance.gif" 16777215 E 164 17 204 57
-2 11
-"Text2"
-""
-1 34 55 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-11 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 36 57 74 73
-0 2 0 "s" 0 0 0 192 0 0  36 57
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 7 details
 2 12
 "label_voltage25"
 ""
-1 230 105 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 13 94 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 12 0 0 0 0 0
 EE E
@@ -204,8 +99,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 232 107 322 124
-0 2 0 "s" 0 0 0 66 0 0  232 107
+E E 0 1 1 0 1 E U  0 E 15 96 85 113
+0 2 0 "s" 0 0 0 66 0 0  15 96
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -215,7 +110,7 @@ LANG:1 12 Voltage 2.5:
 2 13
 "label_voltage12"
 ""
-1 220 82 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 13 71 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -224,8 +119,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 222 84 322 98
-0 2 0 "s" 0 0 0 66 0 0  222 84
+E E 0 1 1 0 1 E U  0 E 15 73 85 87
+0 2 0 "s" 0 0 0 66 0 0  15 73
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -235,7 +130,7 @@ LANG:1 12 Voltage 1.2:
 6 14
 "rect_voltage12"
 ""
-1 332 100 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 95 89 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 14 0 0 0 0 0
 EE E
@@ -244,11 +139,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 332 80 395 100
+E E 0 1 1 0 1 E U  1 E 95 69 158 89
 2 15
 "txt_voltage12"
 ""
-1 354 80 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 117 69 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 15 0 0 0 0 0
 EE E
@@ -257,8 +152,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 381 82 406 98
-0 2 0 "1.2f" 4 0 0 194 0 0  381 82
+E E 0 1 1 0 1 E U  0 E 144 71 169 87
+0 2 0 "1.2f" 4 0 0 194 0 0  144 71
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -268,7 +163,7 @@ LANG:1 4 0.00
 6 16
 "rect_voltage25"
 ""
-1 333 123 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 96 112 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 16 0 0 0 0 0
 EE E
@@ -277,11 +172,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 333 103 396 123
+E E 0 1 1 0 1 E U  1 E 96 92 159 112
 2 21
 "txt_voltage25"
 ""
-1 354 103 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 117 92 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 20 0 0 0 0 0
 EE E
@@ -290,8 +185,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 381 105 406 121
-0 2 0 "1.2f" 4 0 0 194 0 0  381 105
+E E 0 1 1 0 1 E U  0 E 144 94 169 110
+0 2 0 "1.2f" 4 0 0 194 0 0  144 94
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -301,7 +196,7 @@ LANG:1 4 0.00
 2 22
 "txt_unitVoltage12"
 ""
-1 382 80 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 145 69 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -310,8 +205,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 384 82 393 98
-0 2 0 "s" 0 0 0 192 0 0  384 82
+E E 0 1 1 0 1 E U  0 E 147 71 156 87
+0 2 0 "s" 0 0 0 192 0 0  147 71
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -321,7 +216,7 @@ LANG:1 1 V
 2 23
 "txt_unitVoltage25"
 ""
-1 382 103 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 145 92 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 22 0 0 0 0 0
 EE E
@@ -330,8 +225,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 384 105 393 121
-0 2 0 "s" 0 0 0 192 0 0  384 105
+E E 0 1 1 0 1 E U  0 E 147 94 156 110
+0 2 0 "s" 0 0 0 192 0 0  147 94
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -341,7 +236,7 @@ LANG:1 1 V
 2 26
 "label_voltage33"
 ""
-1 230 128 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 13 117 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 EE E
@@ -350,8 +245,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 232 130 322 147
-0 2 0 "s" 0 0 0 66 0 0  232 130
+E E 0 1 1 0 1 E U  0 E 15 119 85 137
+0 2 0 "s" 0 0 0 66 0 0  15 119
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -361,7 +256,7 @@ LANG:1 12 Voltage 3.3:
 6 27
 "rect_voltage33"
 ""
-1 333 146 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 96 135 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 26 0 0 0 0 0
 EE E
@@ -370,11 +265,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 333 126 396 146
+E E 0 1 1 0 1 E U  1 E 96 115 159 135
 2 28
 "txt_voltage33"
 ""
-1 354 126 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 117 115 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 27 0 0 0 0 0
 EE E
@@ -383,8 +278,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 381 128 406 144
-0 2 0 "1.2f" 4 0 0 194 0 0  381 128
+E E 0 1 1 0 1 E U  0 E 144 117 169 133
+0 2 0 "1.2f" 4 0 0 194 0 0  144 117
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -394,7 +289,7 @@ LANG:1 4 0.00
 2 29
 "txt_unitVoltage33"
 ""
-1 382 125 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 145 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 28 0 0 0 0 0
 EE E
@@ -403,160 +298,30 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 384 127 393 143
-0 2 0 "s" 0 0 0 192 0 0  384 127
+E E 0 1 1 0 1 E U  0 E 147 116 156 132
+0 2 0 "s" 0 0 0 192 0 0  147 116
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 1 V
-14 7
-"output_packetsError"
-""
-1 130 104 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-8 0 0 0 0 0
-EE E
+1 30 0 "" 1
 0
-1
-LANG:1 0 
+1 140 11 "" 0
 0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-128 102 202 127
-3 "s" 0 0 0 2 0 0 
-E
-E
-E
-14 8
-"output_lastError"
-""
-1 130 128 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-9 0 0 0 0 0
-EE E
+1 141 11 "" 1
 0
-1
-LANG:1 0 
+1 142 11 "" 2
 0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-128 126 202 151
-3 "s" 0 0 0 2 0 0 
-E
-E
-E
-14 9
-"output_packetsReceived"
-""
-1 130 80 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
- E E
-10 0 0 0 0 0
-EE E
+1 143 11 "" 3
 0
-1
-LANG:1 0 
+1 144 11 "0" 1
 0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-128 78 202 103
-3 "s" 0 0 0 2 0 0 
-E
-E
-E
-20 10
-"CheckButton2"
-""
-1 17 36 E E E 1 E 1 E N "_3DText" E N {204,204,204} E E
- E E
-11 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-15 34 142 62
-1
-T 
-1
-LANG:1 16 Control ethernet
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
-1
-E E 
-E"main(int button, bool state)
-{
-  if (button == 0)
-  {
-    setValue(\"output_packetsReceived\", \"editable\", FALSE);
-    setValue(\"output_packetsError\"   , \"editable\", FALSE);
-    setValue(\"output_lastError\"      , \"editable\", FALSE);
-    setValue(\"label_packetsReceived\" , \"visible\", state);
-    setValue(\"label_packetsError\"    , \"visible\", state);
-    setValue(\"label_lastError\"       , \"visible\", state);
-    setValue(\"output_packetsReceived\", \"visible\", state);
-    setValue(\"output_packetsError\"   , \"visible\", state);
-    setValue(\"output_lastError\"      , \"visible\", state);
-    
-    if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
-    {
-      if(!dpAccessable($datapoint + \".Ethernet.packetsReceived:_online.._value\") ||
-         !dpAccessable($datapoint + \".Ethernet.packetsError:_online.._value\") ||
-         !dpAccessable($datapoint + \".Ethernet.lastError:_online.._value\"))
-      {
-        setValue(\"output_packetsReceived\", \"backCol\", \"_dpdoesnotexist\");
-        setValue(\"output_packetsError\", \"backCol\", \"_dpdoesnotexist\");
-        setValue(\"output_lastError\", \"backCol\", \"_dpdoesnotexist\");
-        setValue(\"output_packetsReceived\", \"text\", \"error\");
-        setValue(\"output_packetsError\"   , \"text\", \"error\");
-        setValue(\"output_lastError\"      , \"text\", \"error\");
-        DebugN(\"!dpAccessable\");
-        return;
-      }
-      else
-      {
-        setValue(\"output_packetsReceived\", \"backCol\", \"white\");
-        setValue(\"output_packetsError\", \"backCol\", \"white\");
-        setValue(\"output_lastError\", \"backCol\", \"white\");
-        navPMLloadPropertySet($datapoint + \".Ethernet\");
-        dpConnect(\"BoardETHDetails\", $datapoint + \".Ethernet.packetsReceived:_online.._value\",
-                                     $datapoint + \".Ethernet.packetsError:_online.._value\",
-                                     $datapoint + \".Ethernet.lastError:_online.._value\");
-      }
-    }
-    else if (state == FALSE)  // if checkbox is NOT checked, show details and connect textbox to the datapoints
-    {
-      dpDisconnect(\"BoardETHDetails\", $datapoint + \".Ethernet.packetsReceived:_online.._value\",
-                                      $datapoint + \".Ethernet.packetsError:_online.._value\",
-                                      $datapoint + \".Ethernet.lastError:_online.._value\");
-      navPMLunloadPropertySet($datapoint + \".Ethernet\");
-    }
-   }
-}
-
-
-
-BoardETHDetails(string dp1, int packetsReceived,
-                string dp2, int packetsError,
-                string dp3, int lastError)
-{
-    setValue(\"output_packetsReceived\", \"text\", packetsReceived);
-    setValue(\"output_packetsError\"   , \"text\", packetsError);
-    setValue(\"output_lastError\"      , \"text\", lastError);
-}" 0
 20 19
 "CheckButton1"
 ""
-1 260 40 E E E 1 E 1 E N "_3DText" E N {204,204,204} E E
+1 23 40 E E E 1 E 1 E N "_3DText" E N {204,204,204} E E
  E E
 18 0 0 0 0 0
 EE E
@@ -567,7 +332,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-258 38 385 66
+21 38 148 66
 1
 T 
 1
@@ -643,6 +408,14 @@ BoardETHDetails(string dp1, float voltage12,
     setValue(\"txt_voltage25\"   , \"text\", voltage25);
     setValue(\"txt_voltage33\"   , \"text\", voltage33);
 }" 0
+1 145 11 "" 7
+0
+1 146 11 "" 8
+0
+1 147 11 "" 9
+0
+1 148 11 "" 10
+0
 0
 LAYER, 1 
 1
@@ -672,4 +445,12 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 0 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 42 91 T 28 1 0 1  -26 58  
+1
+"$object""RSPBoard"
+3 11 ""
+"objects\\nav_usr\\STS\\STS_Subrack_Board_Ethernet.pnl" 320 208 T 38 1 0 1  -159 -17  
+1
+"$datapoint""$datapoint"
 0

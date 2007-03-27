@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,1086 567 184 193 N "_3DFace" 2
+PANEL,368 177 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
@@ -15,8 +15,7 @@ PANEL,1086 567 184 193 N "_3DFace" 2
   if(dpAccessable(dpAP +\".temperature:_online.._value\"))
   {
     dpConnect(\"ControlGUIAP\", dpAP +\".temperature:_online.._value\",
-                              dpAP +\".status:_online.._value\",
-                              dpAP +\".functionality:_online.._value\");
+                              dpAP +\".state:_online.._value\");
     setValue(\"output_packetsReceived\", \"editable\", FALSE);
     dpConnect(\"showVersion\", dpAP +\".version:_online.._value\");
   }
@@ -26,6 +25,8 @@ PANEL,1086 567 184 193 N "_3DFace" 2
     setValue(\"btn_details\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"txt_temperature\", \"text\", \"x.x\");
   }
+  // connect for selfUpdates
+  showSelfState(dpAP);
 }
 
 
@@ -38,40 +39,12 @@ PANEL,1086 567 184 193 N "_3DFace" 2
 // FunctionName: getSubviewName
 /////////////////////////////////////////////////////////////////////
 ControlGUIAP(string dp1, float temperature,
-             string dp2, int status,
-             string dp4, bool functionality)
+             string dp2, int status)
 {
-	DebugTN(dp1,temperature,dp2,status,dp4,functionality);
-  // 1. Display the temperature with with format xxx
+	DebugTN(dp1,temperature,dp2,status);
+  // 1. Display the temperature with format xxx
   setValue(\"txt_temperature\", \"text\", temperature);
   setValue(\"txt_temperature\", \"visible\", TRUE);
-
-  // 2. Calculate the Backcolor of the AP
-  if (status >= 0)
-  {
-    setValue(\"rect_AP\", \"backCol\", \"Lofar_device_active\");
-    setValue(\"btn_details\", \"backCol\", \"Lofar_device_active\");
-  }
-  else if (status < 0)
-  {
-    setValue(\"rect_AP\", \"backCol\", \"Red\");
-    setValue(\"btn_details\", \"backCol\", \"Red\");
-  }
-  else
-	{
-    setValue(\"rect_AP\", \"backCol\", \"Red\");
-    setValue(\"btn_details\", \"backCol\", \"Red\");
-  }
-  if(functionality)
-  {
-    setValue(\"rect_AP\", \"foreCol\", \"_WindowText\");
-  	setValue(\"rect_AP\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,1]\");
-  }
-  else
-  {
-    setValue(\"rect_AP\", \"foreCol\", \"Red\");
-  	setValue(\"rect_AP\", \"border\", \"[solid,oneColor,JoinMiter,CapNotLast,3]\");
-  }
 }
 " 0
 "main()
@@ -123,12 +96,7 @@ main(int iType)
 // SimpleCtrlScriptEnd {EP_confirm}
 " 0
 
- "main()
-{
-  APContextMenu();
-}
-" 0
- E
+ E E
 1 0 0 0 0 0
 EE E
 0
@@ -290,6 +258,8 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 2 °C
+1 19 0 "" 1
+0
 14 12
 "output_errorCount"
 ""
@@ -460,4 +430,8 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
+3 0 "selfState"
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 25 171 T 17 1 0 1  -2 -8  
+1
+"$object""AP"
 0
