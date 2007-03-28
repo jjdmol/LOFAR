@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,414 333 954 746 N "_3DFace" 3
+PANEL,495 201 954 746 N "_3DFace" 3
 "$CabinetNr"
 "$datapoint"
 "$referenceDatapoint"
@@ -10,13 +10,7 @@ PANEL,414 333 954 746 N "_3DFace" 3
   cNr = $CabinetNr;
   dpPrefix = $datapoint;
   dpPrefix += \"_Cabinet\"+ cNr;
-	DebugTN(\"datapoint , cabinet \", $datapoint, cNr);
-//	dyn_string dpAr= strsplit(dpSubStr($datapoint,DPSUB_DP),\"_\");
-//	for (int i = 1; i <= dynlen(dpAr);i++ ) {
-//  	if (strpos(dpAr[i],\"Cabinet\") > -1) {
-//  	  cNr = substr(dpAr[i],7,strlen(dpAr[i]));
-//  	}
-//  }
+	//DebugTN(\"datapoint , cabinet \", $datapoint, cNr);
 	
 	setValue(\"aCabinetTXT\", \"text\", \"Cabinet: \" + cNr);
   navPMLloadPropertySet(dpPrefix);
@@ -59,17 +53,10 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E "main()
 {
-//  string aCabinetSubRackStr = \"\";
-//  if (!isCabinet) {
-// 	  aCabinetSubRackStr += \"_Cabinet\" + cNr;
-//  }
-//  aCabinetSubRackStr += \"_Subrack\" + sNr;
-//  DebugTN(\"Subrack aCabinetSubRackStr : \" , aCabinetSubRackStr);
   aplViewNavigateTo($datapoint, $referenceDatapoint, \"_Cabinet\"+cNr, \"Station_Cabinet_detailed.pnl\");
-
 }" 0
  0 2 1 0 1 E U  1 E 14 13 186 418
-1 2110 86 "" 1
+1 2189 86 "" 1
 0
 2 2187
 "aCabinetTXT"

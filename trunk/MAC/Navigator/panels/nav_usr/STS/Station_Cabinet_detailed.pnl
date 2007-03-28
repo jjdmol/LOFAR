@@ -1,12 +1,12 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,389 239 954 746 N "_3DFace" 2
+PANEL,495 201 954 746 N "_3DFace" 2
 "$datapoint"
 "$referenceDatapoint"
 "main()
 {
-	DebugTN(\"Cabinet datapoint\", $datapoint);
+	//DebugTN(\"Cabinet datapoint\", $datapoint);
 	string cNr = \"\";
 	dyn_string dpAr= strsplit(dpSubStr($datapoint,DPSUB_DP),\"_\");
 	for (int i = 1; i <= dynlen(dpAr);i++ ) {
