@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,368 177 184 193 N "_3DFace" 2
+PANEL,495 201 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
@@ -9,7 +9,7 @@ PANEL,368 177 184 193 N "_3DFace" 2
   
   setValue(\"text_APNr\", \"text\", \"AP\" + $APNr);
   string dpAP = $datapoint + \".AP\"+ $APNr;
-  DebugTN(\"AP: \", dpAP);
+  //DebugTN(\"AP: \", dpAP);
   navPMLloadPropertySet(dpAP);
   rect_AP.toolTipText = dpAP;
   if(dpAccessable(dpAP +\".temperature:_online.._value\"))
@@ -41,7 +41,7 @@ PANEL,368 177 184 193 N "_3DFace" 2
 ControlGUIAP(string dp1, float temperature,
              string dp2, int status)
 {
-	DebugTN(dp1,temperature,dp2,status);
+	//DebugTN(dp1,temperature,dp2,status);
   // 1. Display the temperature with format xxx
   setValue(\"txt_temperature\", \"text\", temperature);
   setValue(\"txt_temperature\", \"visible\", TRUE);
