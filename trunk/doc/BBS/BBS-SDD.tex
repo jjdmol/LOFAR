@@ -1511,7 +1511,7 @@ equal. If both fields are left empty, all baselines are used.
     Minimal fraction of solve domains that must have converged to declare
     overall convergence.
 \item [Parms] : \emph{vector$<$string$>$} \\
-    Parameters to solve for. Wildcards are allowed, e.g. BANDPASS:*.
+    Parameters to solve for. Wildcards are allowed, e.g. gain:\{11,22\}:*.
 \item [ExclParms] : \emph{vector$<$string$>$} \\
     Subset of the parameters selected by Parms that should not be solved for.
     For example, if we would like to solve for the gain (amplitude, phase) of
@@ -1519,8 +1519,8 @@ equal. If both fields are left empty, all baselines are used.
     (STATION0) this can be specified as follows:
 {\footnotesize
 \begin{verbatim}
-Solve.Parms = ["gain:*"]
-Solve.ExclParms = ["gain:*:phase:STATION0"]
+Solve.Parms = ["gain:{11,22}:*"]
+Solve.ExclParms = ["gain:{11,22}:phase:STATION0"]
 \end{verbatim}
 }
 \item [DomainSize] : \emph{DomainSize} \\
