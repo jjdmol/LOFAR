@@ -71,11 +71,8 @@ understand the design considerations, choice of software architecture and
 global design. We will not delve into the level of detailed software design,
 since this will likely cause discrepancies between the actual code and this
 document. For this level of detail, the reader is suggested to consult the
-online code documentation. This document supersedes the previous version of
+on-line code documentation. This document supersedes the previous version of
 the BBS SDD~\cite{LOFAR-ASTRON-SDD-052}.
-
-\subsection{Executive Summary}
-\label{subsec:summary}
 
 \subsection{Abbreviations}
 \label{subsec:abbrev}
@@ -83,7 +80,7 @@ the BBS SDD~\cite{LOFAR-ASTRON-SDD-052}.
 ACC   & Application Configuration and Control \\
 BBS   & BlackBoard Selfcal system             \\
 OLAP  & On-Line Application Processing        \\
-SAS   & Specification And Scheduling          \\
+SAS   & Specification, Administration, and Scheduling \\
 \end{tabular}
 
 \cleardoublepage
@@ -128,8 +125,8 @@ to other machines. There are a few axes along which the data may be
 distributed:
 \begin{description}
 \item [Time] is probably not a good candidate, because a time slot contains a
-lot of data (up to 0.7~GBytes during initial operation). This may lead to
-problems in the online system when all data of a time slot are sent to a
+lot of data (up to 0.7~Gbytes during initial operation). This may lead to
+problems in the on-line system when all data of a time slot are sent to a
 single machine and written there. Another problem is that parallelization of
 imaging gets hard because the data of all time slots have to be combined.
 \item [Baseline] seems a better candidate, but will lead to imaging problems. 
@@ -139,14 +136,14 @@ amounts of gridded or FFT-ed data have to be sent around.
 done per channel or for a few channels, so in principle the whole imaging
 process can be done locally. It will result in an image cube distributed over
 many machines, so the image display and analysis software have to be able to
-handle this. The image cube can be very large (e.g., 256~GBytes for
+handle this. The image cube can be very large (e.g., 256~Gbytes for
 1000~channels of $4000 \times 4000$ pixels for the 4~Stokes parameters). \\
 Distribution in frequency means that, e.g., each subband is stored on a
 separate machine.  If needed, each subband can be distributed further. Of
 course, each machine should contain about the same amount of data to get good
 load balancing. \\ 
 Note that this distribution matches well with the way the
-correlator and online system is designed.
+correlator and on-line system is designed.
 \end{description}
 The BBS calibration software is not dependent on a specific distribution, so
 in the future other distributions can be used when applicable. However, it has
@@ -167,7 +164,7 @@ will describe briefly below.
 Computing nodes should communicate through some kind of global shared
 memory. One obvious candidate for such shared memory is a database system. It
 provides locking and notification (trigger) mechanisms, and sometimes even
-command queueing. We have to be careful, though, that the database will not
+command queuing. We have to be careful, though, that the database will not
 become a bottleneck.
 
 \subsection{Blackboard Pattern}
@@ -192,7 +189,7 @@ benefit in terms of performance when using a predefined solving strategy. The
 "best" algorithm to perform a self-calibration run can be chosen from a
 relatively short list of calibration strategies in advance (based, e.g., on
 heuristics, or suggested by research done with the MeqTree system).  In fact,
-the Shared Respository pattern~\cite{Lalanda1998}, which can be seen as a
+the Shared Repository pattern~\cite{Lalanda1998}, which can be seen as a
 generalization of the Blackboard pattern, is probably a better match for the
 BBS system. It realizes indirect communication using a repository as shared
 memory. Components put their output into memory that is accessible by other
@@ -230,7 +227,7 @@ rules the system and schedules activation of other components. This pattern
 can be applied to deterministic problems where sequences of components
 activation can be determined off-line and coded in the controller using
 various techniques.
-\item[Repository Manager pattern] is applicabe in a distributed
+\item[Repository Manager pattern] is applicable in a distributed
 environment. It introduces a repository manager which sends notification of
 data creation or modification to the software components.
 \item[Blackboard pattern] refines the Controller pattern to deal with
@@ -243,7 +240,7 @@ computing nodes of changes to the shared memory, which could be implemented
 using the Repository Manager pattern. The shared memory is used as the common
 knowledge base for the self-calibration process, and will be implemented as a
 database. Using a database system has the advantage that locking, notification
-(trigger) and sometimes even command queueing mechanisms are provided
+(trigger) and sometimes even command queuing mechanisms are provided
 out-of-the-box.
 
 The database will be separated into two parts. One part, the Command Queue, will
@@ -259,11 +256,12 @@ a source for assessments of the solutions with external tools.
 
 \subsection{Subsystems}
 \label{subsec:subsystems}
-BBS is split into two parts. BBS Control takes care of the distributed
+BBS is split into three parts. BBS Control takes care of the distributed
 processing by means of the Blackboard pattern. BBS Kernel does the actual
 processing; it executes a series of steps, where each step consists of an
-operation like \solve or \correct.
-
+operation like \solve or \correct. BBS Database consists of two databases: the
+Command Queue and the Parameter Database that together constitute the
+blackboard.
 
 \subsubsection{BBS Control}
 \label{subsubsec:sys-control}
@@ -312,7 +310,7 @@ the local controller, which, in turn, posts the results to the Parameter
 Solutions database. The global controller inspects the results and decides
 which action should be taken next.
 
-Since all communication takes places via the Blackboard, there is no need for
+Since all communication takes place via the Blackboard, there is no need for
 a direct connection between the BBS Control and the BBS Kernel subsystems.
 The Blackboard contains all the relevant information about the current state
 of the self calibration process. This information can be used by other
@@ -324,11 +322,11 @@ architecture and roles of the controller.
 \label{subsubsec:sys-kernel}
 
 The BBS Kernel is responsible for the number crunching inherent in calibration.
-It implements the \emph{measurement equation} \cite{Hamaker1996-1, aips++note185},
-or ME, which models the response of an interferometer given a description of
-the sky, the environment, and the interferometer. Based on the ME it can
-predict visibilities, subtract sources, correct visibilities for a given
-reference position, and solve for model parameters.
+It implements the \emph{measurement equation} \cite{Hamaker1996-1,
+aips++note185}, or ME, which models the response of an interferometer given a
+description of the sky, the environment, and the interferometer. Based on the ME
+the Kernel can predict visibilities, subtract sources, correct visibilities for
+a given reference position, and solve for model parameters.
 
 The BBS Kernel subsystem can be split up conceptually into two components: the
 \emph{kernel} and the \emph{solver}. The kernel was previously known as the
@@ -352,7 +350,7 @@ in the order they were posted by Global Control. However, in the future, we may
 need a way to send \emph{out-of-band} commands, which could be implemented as a
 high priority command. This has not been fully decided yet.
 \item [Parameter Database] stores (intermediate) solutions of the model
-parameters calcuated by the BBS Kernel. Access to the Parameter Database is
+parameters calculated by the BBS Kernel. Access to the Parameter Database is
 minimized in order to avoid performance penalties. If partial solutions can be
 kept in memory of a local (kernel) node, they will not be written to the
 database, unless requested explicitly.
@@ -380,20 +378,20 @@ is both read and updated by BBS.}
 \begin{description}
 \item [ACC] configures and controls BBS. Configuration is done using a
 so-called \emph{parset} file, which is generated by ACC prior to starting the
-BBS appications. Each BBS applications reads, during initiaization, its
+BBS applications. Each BBS application reads, during initialization, its
 \emph{parset} file, containing a number of key-value pairs that set several
 run-time configuration parameters of the applications. All BBS applications
 implement the control interface that is provided by
 ACC~\cite{LOFAR-ASTRON-SDD-037}, which enables ACC to control these
 applications.
-\item [OLAP] stores the observational data as visibilities into one more
+\item [OLAP] stores the observational data as visibilities into one or more
 Measurement Sets. In section~\ref{subsubsec:distributed-processing} we argued
 that the visibility data could probably best be distributed along the frequency
 axis; this also matches the way the data are produced by the
 correlator~\cite{LOFAR-ASTRON-SDD-036}. So, in the current design, we assume
 that each BBS Kernel will process one or more subbands of data.
 \item [Imager] will Fourier transform the residual visibilities produced by BBS
-into an imager of the sky.
+into an image of the sky.
 \item [Parameter Database] \sloppy will store the parameters of the various
 (sub)models used in self calibration. Examples of such (sub)models are: local
 sky model, minimal ionospheric model, and instrument model. The values of the
@@ -441,7 +439,7 @@ is to be processed, and can contain operation specific options. The local
 controller will request BBS Kernel to perform operations based on the commands
 it reads from the Command Queue.
 \item [Measurement set]
-Measurement sets are used to exchange visibility data with OLAP on the input
+Measurement Sets are used to exchange visibility data with OLAP on the input
 side and the imager on the output side.
 \item [Parameter Database]
 BBS Kernel reads the current values of the model parameters from the Parameter
@@ -530,7 +528,7 @@ of a parameter is represented by a set of \emph{funklets}. A funklet is an
 approximation of the value of a parameter on a bounded domain, termed
 \emph{validity domain}. Figure \ref{fig:funklet} illustrates the relation
 between parameters and funklets. A commonly used type of funklet is a polynomial
-of arbitrary degree in $frequency$ and/or $time$. Other posibilities include
+of arbitrary degree in $frequency$ and/or $time$. Other possibilities include
 e.g. Fourier series expansion, shapelets, and splines.
 
 \begin{figure}[htbp]
@@ -556,15 +554,15 @@ funklets that represent the additional parameters will most likely be different,
 because they were fitted at some earlier time using a potentially different
 solve domain size. In summary: The validity domain of a funklet determines in
 what region the value of the funklet is considered valid; A solve domain
-determines which part of the observed data is used to fit the is used to fit the
-coefficients of a funklet.
+determines which part of the observed data is used to fit the coefficients of a
+funklet.
 
 The problem of fitting a parameter can now be restated as fitting the
 coefficients of a \emph{set} of funklets defined on a set of non-overlapping
 solve domains.
 
 An important consequence of using funklets is that one implicitly assumes that
-the 'true' parameter value can be apporximated well by a set of funklets of the
+the 'true' parameter value can be approximated well by a set of funklets of the
 selected type. For example, consider polynomial funklets. Given a polynomial
 degree $n$ and irrespective of the size of the validity domain, one implicitly
 assumes that the parameter value can be approximated well by a $n^{th}$-degree
@@ -598,7 +596,7 @@ over the nodes.
 \begin{figure}[htbp]
 \centering
 %\includegraphics[scale=0.5]{images/domains.ps}
-\includegraphics[scale=0.5]{images/solve_domains.ps}
+\includegraphics[scale=0.5]{images/solve_domains.eps}
 \caption{Data distribution and partitioning of the work domain into solve
 domains during a \solve operation. See Table~\ref{tab:domains} for the definition
 of the different domain types.}
@@ -644,23 +642,25 @@ area=\frac{8\cdot2^{30}\;bytes}{\frac{1}{2}\times(77 \times 76) \; interf.
 
 However, due to the way the work domain is defined, the largest possible size in
 time is limited to the area divided by the number of channels stored per node.
-Assuming 32000 channels and a cluster of 500 nodes:
+Assuming 32000 channels and a cluster of 200 nodes:
 
 \[
-time=\frac{85441}{32000\;channels \div 500\;nodes} \approx 1335\;integration\;
+time=\frac{85441}{32000\;channels \div 500\;nodes} \approx 534\;integration\;
 periods
 \]
 
-It is currently an open question if this limit is within requirements. This will
-depend on the type of \solve operations the user wants to perform.
+Assuming an integration period of 1 second, 534 integration periods correspond
+to approximately 9 minutes. It is currently an open question if this limit is
+within requirements. This will depend on the type of \solve operations the user
+wants to perform.
 
 \paragraph{Solve domain truncation}
 
 If the size of the work domain along any dimension is not an integer multiple of
-the specfied solve domain size, the solve domains at the work domain boundary
+the specified solve domain size, the solve domains at the work domain boundary
 will get truncated. 
 
-It is currently an open question if solve domain trunction is acceptable or not.
+It is currently an open question if solve domain truncation is acceptable or not.
 In principle, the work domain size could be adjusted automatically to avoid
 solve domain truncation. This is not completely trivial, because a strategy can
 contain multiple solve steps each of which can have a different solve domain
@@ -683,7 +683,7 @@ monitoring by external tools.
 
 \begin{figure}[htb!]
 \centering
-\includegraphics[width=0.7\textwidth]{images/communication.ps}
+\includegraphics[width=0.7\textwidth]{images/communication.eps}
 \caption{Overview of the communication paths used in BBS.}
 \label{fig:distribution-communication}
 \end{figure}
@@ -703,7 +703,7 @@ Figure~\ref{fig:distribution-communication} shows that there is a direct link
 between the local controller and the solver. One could wonder why the
 communication is not routed via shared memory. There are two reasons for this.
 First, exchanging information between local controllers and solvers via shared
-memory imposes unnecessary synchronisation. To fit the funklets defined on a
+memory imposes unnecessary synchronization. To fit the funklets defined on a
 given solve domain, information about that solve domains needs only to be
 exchanged between the local controller(s) \emph{that share the solve domain} and
 a solver. Second, the amount of data that needs to be communicated from a local
@@ -804,7 +804,7 @@ Global Control now enters a loop, posting steps to the Command Queue, until
 either there are no more steps left in the strategy, or the step posted last
 is a synchronization point. In the former case, it will send a \textit{next
 chunk} command an re-execute the loop. In the latter case, it will wait until
-all Local Controllers have finshed processing all steps posted up to now,
+all Local Controllers have finished processing all steps posted up to now,
 before sending the next step. Iteration over a chunk of data ends when there
 are no more steps left in the Command Queue.
 
@@ -826,7 +826,7 @@ operation.
 \item Strategy needs a "done" flag, which must be set by the Global Controller.
 \item Strategy needs a unique identifier which must be supplied by SAS.
 \item Step needs a sequence number
-\item Check result code (e.g., \texttt{OUT\_OF\_DATA}) of "next chunck" command
+\item Check result code (e.g., \texttt{OUT\_OF\_DATA}) of "next chuck" command
 \item Once a cluster node is out of data it will respond with
 \texttt{OUT\_OF\_DATA} on all subsequent "next step" or "next chunk" commands.
 \item SAS should provide the number of Local Control nodes.
@@ -835,7 +835,7 @@ operation.
 \subsubsection{Local Control}
 \label{subsubsec:design-local-control}
 BBS Local Control is responsible for managing the processing of one command
-(e.g., a BBS SingleStep) by the BBS Kernel. The program flow is show in the
+(e.g., a BBS SingleStep) by the BBS Kernel. The program flow is shown in the
 activity diagram (see figure~\ref{fig:local-control-activity-diagram}).
 
 \begin{figure}[!ht]
@@ -882,17 +882,6 @@ exit.
 
 \subsection{BBS Kernel}
 \label{subsec:design-kernel}
-%The BBS kernel subsystem is the part responsible for all the number crunching.
-%It is implemented as a stand-alone library that is used by the local controller
-%(BBSKernel executable) and the solver (BBSSolver executable). This simplifies
-%reuse of kernel code in projects that require a different control
-%implementation.
-
-%The subsystem provides two main components: the \emph{kernel} (previously known
-%as prediffer) and the \emph{solver}. The solver is discussed in separately in
-%section~\ref{subsubsec:design-solver}.
-
-%The kernel is a component with many responsibilities.
 
 BBS Kernel subsystem is responsible for the number crunching inherent in
 calibration. It implements the \emph{measurement equation} \cite{Hamaker1996-1,
@@ -924,7 +913,7 @@ visibilities and the predicted visibilities (based on the model).
 \item \shift\\
 Phase shift the observed visibilities to a different phase center.
 \item \flag\\
-Flag visibilities that have been contaminated by radio frequency interference.
+Flag visibilities that have been contaminated by, e.g., radio frequency interference.
 \end{itemize}
 
 Some of the operations listed above can be subdivided from the kernel's point of
@@ -953,10 +942,10 @@ case of a \generate request).
 \subsubsection{Measurement Equation Evaluation}
 \label{subsubsec:design-me-evaluation}
 
-The Measurement Equation (ME) \cite{LOFAR-ASTRON-ADD-015} is a parameterized
-model of an interferometer in terms of a model of the sky, environmental effects
-(e.g. ionosphere), and antenna based instrumental effects \cite{Hamaker1996-1,
-aips++note185}.
+The Measurement Equation (ME) is a parameterized model of an interferometer in
+terms of a model of the sky, environmental effects (e.g. ionosphere), and
+antenna based instrumental effects \cite{Hamaker1996-1, aips++note185,
+LOFAR-ASTRON-ADD-015}.
 
 The measurement equation is represented in BBS as a directed acyclic graph,
 although it is commonly referred to as \emph{tree}. The nodes of the tree
@@ -972,7 +961,7 @@ two linearly polarized point sources at different positions.
 \includegraphics[width=\textwidth]{images/expr_graph_sdd.ps}
 \caption{This figure shows a subtree for computing the visibilities produced by
 two linearly polarized point sources at different positions. The leaf nodes,
-i.e. the parameters of the expression, have been colored grey.}
+i.e. the parameters of the expression, have been colored gray.}
 \label{fig:expr_tree}
 \end{figure}
 
@@ -990,8 +979,8 @@ selected predefined subtrees. For example, it will instantiate a subtree for
 each selected source in the local sky model and will include these at the
 appropriate place in the ME tree for each selected interferometer (baseline).
 
-In \cite[sec. 2]{LOFAR-ASTRON-SDD-050} an overview of the various models, such
-as beamshape, bandpass, and ionosphere is provided. 
+In \cite[sec. 2]{LOFAR-ASTRON-SDD-050}\cite{LOFAR-ASTRON-ADD-015} an overview of
+the various models, such as beamshape, bandpass, and ionosphere is provided. 
 
 \subsubsection{Model Parameter Administration}
 \label{subsubsec:admin-model-parms}
@@ -1013,16 +1002,13 @@ achieves two goals:
 \item Specification of default values
 \end{itemize}
 
-Each parameter is assigned a unique name, which can be made up of several parts
-separated by colons. Grouping can be achieved with \textsc{unix}-like wildcards
-(*, \{\}), see Table \ref{tab:naming_scheme}.
 \begin{table}[htb!]
 \centering
 \begin{tabular}{lp{0.60\textwidth}}
 \hline
 \textbf{Identifier} & \textbf{Referenced parameter(s)} \\
 \hline
-\texttt{ra:3C343} & Right ascention of source 3C343 \\
+\texttt{ra:3C343} & Right ascension of source 3C343 \\
 \hline
 \texttt{dec:3C343} & Declination of source 3C343 \\
 \hline
@@ -1040,13 +1026,17 @@ elements of the G-jones matrix of every station in the direction of source 3C343
 identify a group of related parameters.}
 \label{tab:naming_scheme}
 \end{table}
-If the kernel cannot find an exact match when searching for a certain parameter,
-it will try to find a default value. Default values are specified according to
-the same naming scheme as parameters. However, if no default value can be found
-that matches the name of a parameter exactly, the kernel will strip off the last
-part of the name and retry. This process continues until either a match is found
-or the name becomes empty. Thus, one can specify, for example, a default flux for
-every source by specifying \texttt{StokesI}. If the kernel needs the value of
+
+Each parameter is assigned a unique name, which can be made up of several parts
+separated by colons. Grouping can be achieved with \textsc{unix}-like wildcards
+(*, \{\}), see Table \ref{tab:naming_scheme}. If the kernel cannot find an
+exact match when searching for a certain parameter, it will try to find a
+default value. Default values are specified according to the same naming scheme
+as parameters. However, if no default value can be found that matches the name
+of a parameter exactly, the kernel will strip off the last part of the name and
+retry. This process continues until either a match is found or the name becomes
+empty. Thus, one can specify, for example, a default flux for every source by
+specifying \texttt{StokesI}. If the kernel needs the value of
 \texttt{StokesI:3C343} but that parameter does not exist as a regular parameter,
 it will try to find a default value called \texttt{StokesI:3C343}. If that
 default value also does not exist, it will strip off the last part of the name
@@ -1056,11 +1046,11 @@ example.
 \paragraph{Reusing parameter values}
 It often makes sense to reuse the parameter values determined during
 calibration of an observation $A$ for calibration of an observation $B$. For
-instance, to provide a good initial values for the calibration of $B$ and
+instance, to provide good initial values for the calibration of $B$ and
 hopefully save a few iterations.
 
-Instead of straightforward copying of parameter values, interpolation could be
-considered. For example, suppose we have already calibrated two observations,
+Also, instead of straightforward copying of parameter values interpolation could
+be considered. For example, suppose we have already calibrated two observations,
 $A$ and $C$, one taken before and one after the time at which the observation to
 be calibrated, $B$, was recorded.
 
@@ -1089,16 +1079,14 @@ scale cannot be copied directly to funklets defined on a fine scale. For
 polynomials the required transformation is easy to derive. In more complicated
 cases, the solver could be used to find the new values.
 
-\todo{Check of bovenstaande paragraaf juist is.}
-
 \subsubsection{Solver}
 \label{subsubsec:design-solver}
 
-The solver is responsible for estimating values for the parameters that minimise
+The solver is responsible for estimating values for the parameters that minimize
 the difference between the model and observation. It also takes care of merging
 information of solve domains that are shared between multiple kernels.
 
-The solver minimises the sum of squared differences using an implementation of
+The solver minimizes the sum of squared differences using an implementation of
 the Levenberg-Marquardt algorithm. This algorithm uses partial derivatives with
 respect to the funklet coefficients, which are computed using forward
 differences:
@@ -1113,7 +1101,7 @@ of the model (to compute $M(p + \epsilon)$). Adding alternative algorithms is
 possible, but will involve a revision of the interface between the kernel and
 the solver.
 
-Each solve domain represents an \emph{independent} minimisation problem.
+Each solve domain represents an \emph{independent} minimization problem.
 Therefore, the partitioning of the data domain into solve domains is strongly
 linked to the problem of interest. For instance, fitting station gain every
 \emph{minute} is a different problem than fitting it every \emph{hour}.
@@ -1124,7 +1112,7 @@ possible to fit, for example, station gain \emph{per 10 minutes} and station
 phase \emph{per minute} simultaneously: This would require the solve domain grid
 for gain to be different than that for phase. Such fitting problems could be
 handled by alternating between the different grids every iteration. In the
-example, a single iteration of the simultaneaous fitting problem would consist
+example, a single iteration of the simultaneous fitting problem would consist
 of one iteration for gain, then one iteration for phase.
 
 Each node will run a local solve process that will handle solve domains that are
@@ -1135,7 +1123,7 @@ involved nodes could be designated to act as global solver.
 We intend to use one implementation for both local and global solver.
 Communication will be performed via sockets. If performance turns out to be
 poor, we can always (re)integrate the local solver and the kernel. This avoids
-the memory and communication overhead of serialising and sending equations for
+the memory and communication overhead of serializing and sending equations for
 entirely local solve domains over a (unix domain) socket.
 
 \subsection{BBS Database}
@@ -1231,7 +1219,7 @@ multi-threaded implementation is already available, although some revision may
 be necessary.
 
 Another technique that can be used in combination with either approach discussed
-above to improve performance is vectorisation. A special code generator has been
+above to improve performance is vectorization. A special code generator has been
 developed to assist in using vector instructions for this purpose.
 
 \subsubsection{Caching}
@@ -1243,7 +1231,7 @@ evaluations of the same tree are required (e.g. for computing partial
 derivatives, or when executing a \solve operation), the execution time of each
 node in the tree could be measured during the first evaluation. Given the amount
 of memory needed per node to cache its value, and the total amount of available
-memory, an optimisation problem could be formulated to determine which nodes
+memory, an optimization problem could be formulated to determine which nodes
 should cache their data and which should not. 
 
 \subsubsection{Parameter Estimation}
