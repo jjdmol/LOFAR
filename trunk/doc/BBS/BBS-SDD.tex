@@ -913,7 +913,10 @@ visibilities and the predicted visibilities (based on the model).
 \item \shift\\
 Phase shift the observed visibilities to a different phase center.
 \item \flag\\
-Flag visibilities that have been contaminated by, e.g., radio frequency interference.
+Flag visibilities that have been contaminated by, e.g., radio frequency
+interference.
+\item \refit\\
+Refit funklet coefficients, e.g. in a multi-resolution approach.
 \end{itemize}
 
 Some of the operations listed above can be subdivided from the kernel's point of
@@ -1002,6 +1005,22 @@ achieves two goals:
 \item Specification of default values
 \end{itemize}
 
+Each parameter is assigned a unique name, which can be made up of several parts
+separated by colons. Grouping can be achieved with \textsc{unix}-like wildcards
+(*, \{\}), see Table \ref{tab:naming_scheme}. If the kernel cannot find an
+exact match when searching for a certain parameter, it will try to find a
+default value. Default values are specified according to the same naming scheme
+as parameters. However, if no default value can be found that matches the name
+of a parameter exactly, the kernel will strip off the last part of the name and
+retry. This process continues until either a match is found or the name becomes
+empty. Thus, one can specify, for example, a default flux for every source by
+specifying \texttt{StokesI}. If the kernel needs the value of
+\texttt{StokesI:3C343} but that parameter does not exist as a regular parameter,
+it will try to find a default value called \texttt{StokesI:3C343}. If that
+default value also does not exist, it will strip off the last part of the name
+and search for a default value called \texttt{StokesI}, which does exist in our
+example.
+
 \begin{table}[htb!]
 \centering
 \begin{tabular}{lp{0.60\textwidth}}
@@ -1026,22 +1045,6 @@ elements of the G-jones matrix of every station in the direction of source 3C343
 identify a group of related parameters.}
 \label{tab:naming_scheme}
 \end{table}
-
-Each parameter is assigned a unique name, which can be made up of several parts
-separated by colons. Grouping can be achieved with \textsc{unix}-like wildcards
-(*, \{\}), see Table \ref{tab:naming_scheme}. If the kernel cannot find an
-exact match when searching for a certain parameter, it will try to find a
-default value. Default values are specified according to the same naming scheme
-as parameters. However, if no default value can be found that matches the name
-of a parameter exactly, the kernel will strip off the last part of the name and
-retry. This process continues until either a match is found or the name becomes
-empty. Thus, one can specify, for example, a default flux for every source by
-specifying \texttt{StokesI}. If the kernel needs the value of
-\texttt{StokesI:3C343} but that parameter does not exist as a regular parameter,
-it will try to find a default value called \texttt{StokesI:3C343}. If that
-default value also does not exist, it will strip off the last part of the name
-and search for a default value called \texttt{StokesI}, which does exist in our
-example.
 
 \paragraph{Reusing parameter values}
 It often makes sense to reuse the parameter values determined during
