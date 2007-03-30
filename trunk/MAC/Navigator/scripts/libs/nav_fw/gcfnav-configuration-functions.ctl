@@ -1271,7 +1271,7 @@ navConfigAddRemoveSubView()
 ///////////////////////////////////////////////////////////////////////////
 //Function navConfigSubscribePSIndicationChange
 // 
-// subscribes to the __pa_PPSIndication DP of the datebase to monitor 
+// subscribes to the __pa_PSIndication DP of the datebase to monitor 
 // possible treechanges.
 //
 // Added 6-2-2007 A.Coolen
@@ -1287,6 +1287,7 @@ void navConfigSubscribePSIndicationChange() {
 
   dpQueryConnectAll("navConfigPSIndicationTriggered",false,"MainPSIndicationChange",query);
 }
+
 
 
 bool inRefList(string &datapoint, dyn_string &reference, bool &isReference) {
@@ -1338,9 +1339,11 @@ void navConfigPSIndicationTriggered(string identifier, dyn_dyn_anytype result) {
     database=dpSubStr(result[i][1],DPSUB_SYS);
 	  
     dyn_string vals= strsplit(result[i][2],"|");
-		
-    action = vals[1];
-    datapoint = database+vals[2];
+    
+    if (dynlen(vals) > 1) {		
+      action = vals[1];
+      datapoint = database+vals[2];
+    }
   }
 
 
@@ -1409,3 +1412,4 @@ void navConfigTriggerAllNavigatorRefresh() {
     dpSet(tab[i][1], 1);
   }
 }
+

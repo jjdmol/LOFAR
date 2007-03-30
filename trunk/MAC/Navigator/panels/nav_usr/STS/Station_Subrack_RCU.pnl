@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,289 102 794 749 N "_3DFace" 1
+PANEL,443 122 794 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -108,7 +108,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E U  1 E 70 100 660 665
+E E 0 3 1 0 1 E U  1 E 70 100 660 665
 4 36
 "Line1"
 ""
@@ -634,15 +634,13 @@ LANG:1 0
 E E 0 2 1 0 1 E  430 665 430 515
 1 638 41 "" 224
 0
-1 639 41 "" 72
+1 639 41 "" 227
 0
 1 640 41 "" 225
 0
-1 641 41 "" 227
+1 641 41 "" 72
 0
 1 642 41 "" 228
-0
-1 643 41 "" 229
 0
 4 638
 "Line3"
@@ -683,11 +681,11 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 2 1 0 1 E  160 99 160 89
-1 645 16 "" 0
+1 643 16 "" 0
 0
-1 646 16 "" 2
+1 644 16 "" 2
 0
-1 647 16 "" 3
+1 645 16 "" 3
 0
 6 260
 "Border4"
@@ -722,7 +720,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 1 0
-1 649 43 "" 1
+1 647 43 "" 1
 0
 1 599 13 "" 1
 0
@@ -742,9 +740,7 @@ LANG:1 1 0
 0
 1 637 22 "" 2
 0
-1 644 41 "" 223
-0
-1 648 16 "" 1
+1 646 16 "" 1
 0
 0
 LAYER, 1 
@@ -836,5 +832,5 @@ LANG:1 6 Layer8
 3 43 "selfState"
 "objects\\nav_usr\\CS1\\lofar_self_state.pnl" 25 171 T 196 1 0 1  55 469  
 1
-"$object""Subrack"
+"$object""RCU"
 0

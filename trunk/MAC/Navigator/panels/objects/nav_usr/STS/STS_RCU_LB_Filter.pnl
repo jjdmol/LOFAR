@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,339 152 143 81 N "_3DFace" 1
+PANEL,443 122 143 81 N "_3DFace" 1
 "$datapoint"
 "//
 //RCU_LB_Filter (JjS)
@@ -63,13 +63,13 @@ ControlLBFilter(string dp1, bool filSel0,
     	else if (filSel1 && !filSel0)
     	{
       	ComboBoxLB.selectedPos=3;    //Filter OFF
-      	setValue(\"rect_filterLB\", \"backCol\", \"Lofar_bad\");
+      	setValue(\"rect_filterLB\", \"backCol\", \"Lofar_broken\");
       	setValue(\"filterSettingTxt\" , \"text\" , \"Filter OFF\" );
     	}
     	else if (filSel1 && filSel0)
     	{
       	ComboBoxLB.selectedPos=3;    //Filter OFF
-      	setValue(\"rect_filterLB\", \"backCol\", \"Lofar_bad\");
+      	setValue(\"rect_filterLB\", \"backCol\", \"Lofar_broken\");
       	setValue(\"filterSettingTxt\" , \"text\" , \"Filter OFF\" );
     	}
     }

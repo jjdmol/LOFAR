@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,514 557 451 213 N "_3DFace" 1
+PANEL,443 122 451 213 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -20,10 +20,17 @@ PANEL,514 557 451 213 N "_3DFace" 1
   // connect for selfUpdates
   showSelfState($datapoint);
   
-   
+  for (int i=0; i<6; i++) {
+    DebugTN(\"getStateColor(\",i,\"): \", getStateColor(i));
+    DebugTN(\"getStateName(\",i,\"): \", getStateName(i));
+  }
 }
 " 0
-EE E E 1 -1 -1 0  10 170
+"main()
+{
+   navPMLunloadPropertySet($datapoint);
+}" 0
+E E E 1 -1 -1 0  10 170
 "" 0 1
 EE 2
 "CBRef""1"
