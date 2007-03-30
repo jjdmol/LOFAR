@@ -27,6 +27,10 @@ export PVSS_II=$curPath/config/config
 cp config/progs config/progs.orig
 cp ../LOFAR/MAC/Navigator/config/progs.maincu config/progs
 
+mkdir scripts/libs/nav_fw
+cp ../LOFAR/MAC/Navigator/scripts/libs/nav_fw/gcf_util.ctl scripts/libs/nav_fw
+cp ../LOFAR/MAC/Navigator/scripts/libs/monitorStateChanges.ctl scripts/libs
+
 
 #
 # Start project in background

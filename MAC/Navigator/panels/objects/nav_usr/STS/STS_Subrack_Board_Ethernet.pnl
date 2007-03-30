@@ -1,11 +1,10 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,495 201 560 213 N "_3DFace" 1
+PANEL,443 122 560 213 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-  navPMLloadPropertySet($datapoint);
   childStateBorder.toolTipText = $datapoint;
   if(dpAccessable($datapoint + \".version:_online.._value\"))
   {

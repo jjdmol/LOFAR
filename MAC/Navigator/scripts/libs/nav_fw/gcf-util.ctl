@@ -54,7 +54,7 @@ const string LOGMESSAGE_DEBUG = "DEBUG";
 const string LOGMESSAGE_TRACE = "TRACE";
 
 global bool g_logInitialized = false;
-global int  g_loglevel = 0;
+global int  g_loglevel = 30000;
 global dyn_string stateColor;
 global dyn_string stateName;
 
@@ -227,6 +227,19 @@ string getStateName(int aState) {
   }
 }
 
+// helper function to return the stateNumber based on a stateName
+// dyn_arrays start count at 1!!!
+
+int getStateNumber(string aState) {
+  if (aState != "") {
+    for (int i = 1; i <= dynlen(stateName); i++) {
+      if (aState == stateName[i]) {
+        return (i-1);
+      }
+    }
+  }
+  return (-1);
+}
 
 // does all the colorsettings based on the DP's state
 void showSelfState(string aDP) {
@@ -277,3 +290,4 @@ updateSelfState(string dp1, int state,
   }
   setValue("selfState.light", "backCol", SymbolCol);
 }
+
