@@ -1,5 +1,6 @@
 pkginclude_HEADERS = \
 	Exceptions.h \
+	KeyPrefix.h \
 	KVpair.h \
 	ParameterSet.h \
 	ParameterSetImpl.h

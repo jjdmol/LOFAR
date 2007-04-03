@@ -1,23 +1,23 @@
 
-check_PROGRAMS			= tParameterSet 
+check_PROGRAMS		= tKeyPrefix tParameterSet 
 
+tKeyPrefix_SOURCES	= tKeyPrefix.cc
 tParameterSet_SOURCES	= tParameterSet.cc
 
-LDADD					= ../src/libaps.la
-DEPENDENCIES			= ../src/libaps.la $(LOFAR_DEPEND) 
+LDADD			= ../src/libaps.la
+DEPENDENCIES		= ../src/libaps.la $(LOFAR_DEPEND) 
 
-TESTSCRIPTS 			= \
-						  tParameterSet_test.sh
+TESTSCRIPTS 		= tKeyPrefix.sh \
+			  tParameterSet_test.sh
 
-TESTS					= $(TESTSCRIPTS)
+TESTS			= $(TESTSCRIPTS)
 
 
-EXTRA_DIST				= \
-						  tParameterSet.in_merge \
-						  tParameterSet.in_param \
-						  tParameterSet.log_prop \
-						  tParameterSet.stdout \
-						  $(TESTSCRIPTS)
+EXTRA_DIST		= tParameterSet.in_merge \
+			  tParameterSet.in_param \
+			  tParameterSet.log_prop \
+			  tParameterSet.stdout \
+			  $(TESTSCRIPTS)
 
 include $(top_srcdir)/Makefile.common
 
