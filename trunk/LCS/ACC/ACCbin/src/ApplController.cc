@@ -274,9 +274,9 @@ void ApplController::createParSubsets()
 //			LOG_TRACE_VAR_STR(basePS);
 
 			// [C] additional info from the AC itself
-			basePS.add(procPrefix+"._ACport", 
+			basePS.replace(procPrefix+"._ACport", 
 											itsBootParamSet->getString("AC.processportnr"));
-			basePS.add(procPrefix+"._ACnode", itsBootParamSet->getString("AC.node"));
+			basePS.replace(procPrefix+"._ACnode", itsBootParamSet->getString("AC.node"));
 			basePS.replace("_parsetPrefix", procPrefix+".");
 			prevProcName = procName;
 		}
