@@ -34,6 +34,7 @@
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSKernel/Prediffer.h>
 #include <BBSControl/KernelCommandControl.h>
+#include <BBSControl/CommandQueue.h>
 #include <BBSControl/BBSStructs.h>
 
 namespace LOFAR
@@ -43,6 +44,7 @@ namespace LOFAR
 
   namespace BBS
   {
+    //class CommandQueue;
 /*
     //# Forward declations
     class BBSStep;
@@ -96,6 +98,9 @@ namespace LOFAR
       // Command controller.
       KernelCommandControl itsCommandController;
 
+      // Command Queue
+      scoped_ptr<CommandQueue> itsCommandQueue;
+
       // Parameter set for this process controller.
       ACC::APS::ParameterSet itsParameterSet;
 
@@ -103,7 +108,7 @@ namespace LOFAR
       scoped_ptr<Prediffer> itsPrediffer;
       
       // Connections
-      scoped_ptr<BlobStreamableConnection> itsControllerConnection;
+      //scoped_ptr<BlobStreamableConnection> itsControllerConnection;
       scoped_ptr<BlobStreamableConnection> itsSolverConnection;
       
       // Region of interest

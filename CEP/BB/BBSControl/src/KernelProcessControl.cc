@@ -26,10 +26,10 @@
 #include <lofar_config.h>
 
 #include <BBSControl/KernelProcessControl.h>
-#include <BBSControl/Command.h>
+//#include <BBSControl/Command.h>
+#include <BBSControl/BBSStep.h>
 /*
 #include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSPredictStep.h>
 #include <BBSControl/BBSSubtractStep.h>
 #include <BBSControl/BBSCorrectStep.h>
@@ -89,9 +89,11 @@ namespace BBS
         LOG_DEBUG("KernelProcessControl::define()");
 
         try {
+/*
             itsControllerConnection.reset(new BlobStreamableConnection(
                     globalParameterSet()->getString("Controller.Host"),
                     globalParameterSet()->getString("Controller.Port")));
+*/
 
             char *user = getenv("USER");
             ASSERT(user);
@@ -116,6 +118,7 @@ namespace BBS
         LOG_DEBUG("KernelProcessControl::init()");
 
         try {
+/*
             LOG_DEBUG_STR("Trying to connect to controller@"
                 << globalParameterSet()->getString("Controller.Host") << ":"
                 << globalParameterSet()->getString("Controller.Port"   )
@@ -127,6 +130,9 @@ namespace BBS
                 return false;
             }
             LOG_DEBUG("+ ok");
+*/
+            itsCommandQueue.reset(new
+CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
 
             LOG_DEBUG("Trying to connect to solver@localhost");
             if(!itsSolverConnection->connect())
@@ -154,13 +160,16 @@ namespace BBS
         try
         {
             // Receive the next message
-            scoped_ptr<BlobStreamable> message(itsControllerConnection->recvObject());
-            Command *command = dynamic_cast<
-Command*>(message.get());
+            scoped_ptr<BBSStep>
+step(const_cast<BBSStep*>(itsCommandQueue->getNextStep()));
+            //scoped_ptr<BlobStreamable>
+//message(itsControllerConnection->recvObject());
+            //Command *command = dynamic_cast<
+//Command*>(message.get());
 
-            if(command)
+            if(step)
             {
-                command->accept(itsCommandController);
+                step->accept(itsCommandController);
                 return true;
             }
             else
@@ -169,7 +178,8 @@ Command*>(message.get());
         catch(Exception& e)
         {
             LOG_ERROR_STR(e);
-            itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR, e.message()));
+//            itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR,
+//e.message()));
             return false;
         }
     }
