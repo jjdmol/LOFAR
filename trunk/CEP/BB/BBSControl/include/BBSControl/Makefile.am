@@ -15,6 +15,7 @@ pkginclude_HEADERS = \
 	Command.h \
 	CommandHandler.h \
 	CommandQueue.h \
+	CommandQueueTrigger.h \
 	CommandQueueTransactors.h \
 	DomainRegistrationRequest.h \
 	Exceptions.h \
