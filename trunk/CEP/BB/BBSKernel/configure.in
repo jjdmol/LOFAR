@@ -57,7 +57,7 @@ lofar_MPI
 lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
 lofar_INTERNAL(CEP/BB/MS,MS,,1,MS/MSDesc.h,bbms)
 
-#lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
+lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
 #lofar_INTERNAL(LCS/Transport/,Transport,,1,Transport/TH_Mem.h)
 #lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/DH_ProcControl.h)
 #lofar_INTERNAL(CEP/BB/BBSControl,BBSControl,,1,BBSControl/BBSStep.h)
