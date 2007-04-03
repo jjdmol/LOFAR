@@ -33,6 +33,7 @@
 #include <Common/lofar_smartptr.h>
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSKernel/Prediffer.h>
+#include <BBSControl/KernelCommandControl.h>
 #include <BBSControl/BBSStructs.h>
 
 namespace LOFAR
@@ -42,6 +43,7 @@ namespace LOFAR
 
   namespace BBS
   {
+/*
     //# Forward declations
     class BBSStep;
     class BBSStrategy;
@@ -49,7 +51,8 @@ namespace LOFAR
     class BBSSubtractStep;
     class BBSCorrectStep;
     class BBSSolveStep;
-    struct Context;
+*/
+//    struct Context;
 
     // \addtogroup BBSControl
     // @{
@@ -76,6 +79,7 @@ namespace LOFAR
       // @}
 
     private:
+/*
       bool dispatch(const BlobStreamable *message);
       
       bool handle(const BBSStrategy *strategy);
@@ -88,6 +92,9 @@ namespace LOFAR
       bool handle(const BBSCorrectStep *step);
       bool handle(const BBSSolveStep *step);
       // @}
+*/
+      // Command controller.
+      KernelCommandControl itsCommandController;
 
       // Parameter set for this process controller.
       ACC::APS::ParameterSet itsParameterSet;

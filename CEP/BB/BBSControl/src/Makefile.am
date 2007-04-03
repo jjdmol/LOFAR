@@ -20,6 +20,7 @@ libbbscontrol_la_SOURCES	= \
 	IterationRequest.cc \
 	IterationResult.cc \
 	KernelProcessControl.cc \
+	KernelCommandControl.cc \
 	pqutil.cc \
 	SolverProcessControl.cc
 

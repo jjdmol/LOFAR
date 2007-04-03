@@ -30,6 +30,7 @@
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/BBSSubtractStep.h>
 #include <BBSControl/BBSMultiStep.h>
+#include <BBSControl/CommandHandler.h>
 #include <BBSControl/Exceptions.h>
 #include <Common/StreamUtil.h>
 #include <APS/ParameterSet.h>
@@ -63,6 +64,12 @@ namespace LOFAR
       if (itsParent) name = itsParent->fullName() + ".";
       name += itsName;
       return name;
+    }
+
+
+    void BBSStep::accept(CommandHandler &handler)
+    {
+        handler.handle(*this);
     }
 
 

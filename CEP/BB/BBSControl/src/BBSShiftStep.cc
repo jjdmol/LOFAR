@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <BBSControl/BBSShiftStep.h>
+#include <BBSControl/CommandHandler.h>
 
 namespace LOFAR
 {
@@ -34,6 +35,11 @@ namespace LOFAR
     {
       bool dummy = BlobStreamableFactory::instance().
 	registerClass<BBSShiftStep>("BBSShiftStep");
+    }
+
+    void BBSShiftStep::accept(CommandHandler &handler)
+    {
+        handler.handle(*this);
     }
 
     const string& BBSShiftStep::operation() const 

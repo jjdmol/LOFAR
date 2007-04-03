@@ -52,10 +52,13 @@ namespace LOFAR
       // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
       // is a pointer to the BBSStep object that is the parent of \c *this.
       BBSSolveStep(const string& name,
-		   const ACC::APS::ParameterSet& parset,
-		   const BBSStep* parent);
+        const ACC::APS::ParameterSet& parset,
+        const BBSStep* parent);
 
       virtual ~BBSSolveStep();
+
+      // Accept a CommandHandler that wants to process \c *this.
+      virtual void accept(CommandHandler &handler);
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
@@ -94,7 +97,7 @@ namespace LOFAR
     };
 
     // @}
-    
+
   } // namespace BBS
 
 } // namespace LOFAR

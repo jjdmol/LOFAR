@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <BBSControl/BBSCorrectStep.h>
+#include <BBSControl/CommandHandler.h>
 
 namespace LOFAR
 {
@@ -36,8 +37,12 @@ namespace LOFAR
 	registerClass<BBSCorrectStep>("BBSCorrectStep");
     }
 
+    void BBSCorrectStep::accept(CommandHandler &handler)
+    {
+        handler.handle(*this);
+    }
 
-    const string& BBSCorrectStep::operation() const 
+    const string& BBSCorrectStep::operation() const
     {
       static string theOperation("Correct");
       return theOperation;

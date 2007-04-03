@@ -24,6 +24,7 @@
 
 #include <BBSControl/BBSMultiStep.h>
 #include <BBSControl/Exceptions.h>
+#include <BBSControl/CommandHandler.h>
 #include <APS/ParameterSet.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
@@ -75,6 +76,12 @@ namespace LOFAR
 	delete itsSteps[i];
       }
       itsSteps.clear();
+    }
+
+
+    void BBSMultiStep::accept(CommandHandler &handler)
+    {
+        handler.handle(*this);
     }
 
 

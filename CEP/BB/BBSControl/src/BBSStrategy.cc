@@ -25,6 +25,7 @@
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSStructs.h>
+#include <BBSControl/CommandHandler.h>
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
@@ -74,7 +75,7 @@ namespace LOFAR
       itsParmDB.instrument = aParSet.getString("ParmDB.Instrument");
       itsParmDB.localSky = aParSet.getString("ParmDB.LocalSky");
       itsParmDB.history = aParSet.getString("ParmDB.History");
-      
+
       // Create a subset of \a aParSet, containing only the relevant keys for
       // a Strategy.
       ParameterSet ps(aParSet.makeSubset("Strategy."));
@@ -89,7 +90,7 @@ namespace LOFAR
       try {
           itsRegionOfInterest = ps.getDoubleVector("RegionOfInterest");
       } catch (APSException&) {}
-      
+
       // Get the work domain size for this strategy
       itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");
       itsDomainSize.timeInterval = ps.getDouble("WorkDomainSize.Time");
@@ -107,7 +108,7 @@ namespace LOFAR
 
       // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
-	itsSteps.push_back(BBSStep::create(steps[i], aParSet, 0));
+        itsSteps.push_back(BBSStep::create(steps[i], aParSet, 0));
       }
     }
 
@@ -118,9 +119,15 @@ namespace LOFAR
 
       // Clean up all steps.
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	delete itsSteps[i];
+        delete itsSteps[i];
       }
       itsSteps.clear();
+    }
+
+
+    void BBSStrategy::accept(CommandHandler &handler)
+    {
+        handler.handle(*this);
     }
 
 
@@ -142,7 +149,7 @@ namespace LOFAR
 	os << endl << indent << *itsSteps[i];
       }
     }
-
+ 
 
     vector<const BBSStep*> BBSStrategy::getAllSteps() const
     {

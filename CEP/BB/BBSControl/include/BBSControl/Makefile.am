@@ -12,15 +12,17 @@ pkginclude_HEADERS = \
 	BBSSubtractStep.h \
 	BlobStreamableConnection.h \
 	BlobStreamableVector.h \
+	Command.h \
+	CommandHandler.h \
 	CommandQueue.h \
 	CommandQueueTransactors.h \
-	CommandQueueTrigger.h \
 	DomainRegistrationRequest.h \
 	Exceptions.h \
 	GlobalProcessControl.h \
 	IterationRequest.h \
 	IterationResult.h \
 	KernelProcessControl.h \
+	KernelCommandControl.h \
 	SolverProcessControl.h
 
 noinst_HEADERS = \
