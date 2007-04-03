@@ -110,26 +110,10 @@ namespace LOFAR
     }
 
 
-    BlobOStream& operator<<(BlobOStream& bos, const Correlation& obj)
-    {
-      bos << obj.selection
-	  << obj.type;
-      return bos;
-    }
-
-
     BlobOStream& operator<<(BlobOStream& bos, const Integration& obj)
     {
       bos << obj.deltaFreq
 	  << obj.deltaTime;
-      return bos;
-    }
-
-
-    BlobOStream& operator<<(BlobOStream& bos, const Baselines& obj)
-    {
-      bos << obj.station1
-	  << obj.station2;
       return bos;
     }
 
@@ -164,27 +148,10 @@ namespace LOFAR
     }
 
 
-    BlobIStream& operator>>(BlobIStream& bis, Correlation& obj)
-    {
-      int32 selection;
-      bis >> obj.selection;
-      bis >> obj.type;
-      return bis;
-    }
-
-
     BlobIStream& operator>>(BlobIStream& bis, Integration& obj)
     {
       bis >> obj.deltaFreq
 	  >> obj.deltaTime;
-      return bis;
-    }
-
-
-    BlobIStream& operator>>(BlobIStream& bis, Baselines& obj)
-    {
-      bis >> obj.station1
-	  >> obj.station2;
       return bis;
     }
 
