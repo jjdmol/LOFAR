@@ -15,7 +15,9 @@ libbbscontrol_la_SOURCES	= \
 	BlobStreamableConnection.cc \
 	DomainRegistrationRequest.cc \
 	CommandQueue.cc \
+	CommandQueueTrigger.cc \
 	CommandQueueTransactors.cc \
+	CommandQueueTrigger.cc \
 	GlobalProcessControl.cc \
 	IterationRequest.cc \
 	IterationResult.cc \
