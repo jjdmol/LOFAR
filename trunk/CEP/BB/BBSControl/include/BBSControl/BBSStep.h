@@ -28,7 +28,7 @@
 
 //# Includes
 #include <BBSControl/BBSStructs.h>
-#include <Blob/BlobStreamable.h>
+#include <BBSControl/Command.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
@@ -63,7 +63,7 @@ namespace LOFAR
     // cause the pointer to never be freed. This can happen since a BBSStep
     // stores a pointer to its parent as backreference. Here, we should
     // probably use a boost::weak_ptr. See Bug #906
-    class BBSStep : public BlobStreamable
+    class BBSStep : public Command
     {
     public:
       // Destructor.
@@ -93,6 +93,9 @@ namespace LOFAR
       static BBSStep* create(const string& name,
 			     const ACC::APS::ParameterSet& parSet,
 			     const BBSStep* parent = 0);
+
+      // Accept a CommandHandler that wants to process \c *this.
+      virtual void accept(CommandHandler &handler);
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.

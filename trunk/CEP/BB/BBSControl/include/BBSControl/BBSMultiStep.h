@@ -53,9 +53,15 @@ namespace LOFAR
 
       // Default constructor. Construct an empty BBSMultiStep object and make
       // it a child of the BBSStep object \a parent.
-      BBSMultiStep(const BBSStep* parent = 0) : BBSStep(parent) {}
+      BBSMultiStep(const BBSStep* parent = 0) :
+        BBSStep(parent)
+      {
+      }
 
       virtual ~BBSMultiStep();
+
+      // Accept a CommandHandler that wants to process \c *this.
+      virtual void accept(CommandHandler &handler);
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.

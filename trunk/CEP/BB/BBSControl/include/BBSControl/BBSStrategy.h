@@ -27,8 +27,8 @@
 // The properties for solvable parameters
 
 //# Includes
-#include <Blob/BlobStreamable.h>
 #include <BBSControl/BBSStructs.h>
+#include <BBSControl/Command.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -48,7 +48,7 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
-    class BBSStrategy : public BlobStreamable
+    class BBSStrategy : public Command
     {
     public:
       // Default constructor. Create an empty strategy, which is useful when
@@ -60,6 +60,9 @@ namespace LOFAR
 
       // Destructor.
       ~BBSStrategy();
+
+      // Accept a CommandHandler that wants to process \c *this.
+      virtual void accept(CommandHandler &handler);
 
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
@@ -125,10 +128,10 @@ namespace LOFAR
 
       // Region of interest
       vector<double>         itsRegionOfInterest;
-      
+
       // The work domain size
       DomainSize             itsDomainSize;
-      
+
       // Selection type of the correlation products.
       Correlation            itsCorrelation;
 
@@ -147,7 +150,7 @@ namespace LOFAR
     ostream& operator<<(ostream&, const BBSStrategy&);
 
     // @}
-    
+
   } // namespace BBS
 
 } // namespace LOFAR

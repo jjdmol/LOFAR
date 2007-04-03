@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <BBSControl/BBSPredictStep.h>
+#include <BBSControl/CommandHandler.h>
 
 namespace LOFAR
 {
@@ -36,7 +37,12 @@ namespace LOFAR
 	registerClass<BBSPredictStep>("BBSPredictStep");
     }
 
-    const string& BBSPredictStep::operation() const 
+    void BBSPredictStep::accept(CommandHandler &handler)
+    {
+        handler.handle(*this);
+    }
+
+    const string& BBSPredictStep::operation() const
     {
       static string theOperation("Predict");
       return theOperation;

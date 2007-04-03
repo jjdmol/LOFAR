@@ -44,12 +44,19 @@ namespace LOFAR
     {
     public:
       BBSCorrectStep(const BBSStep* parent = 0) : 
-	BBSSingleStep(parent) {}
+	    BBSSingleStep(parent)
+      {
+      }
 
       BBSCorrectStep(const string& name, 
 		     const ACC::APS::ParameterSet& parSet,
 		     const BBSStep* parent) :
-	BBSSingleStep(name, parSet, parent) {}
+	    BBSSingleStep(name, parSet, parent)
+      {
+      }
+
+      // Accept a CommandHandler that wants to process \c *this.
+      virtual void accept(CommandHandler &handler);
 
       // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
