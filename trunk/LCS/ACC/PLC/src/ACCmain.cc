@@ -165,8 +165,8 @@ namespace LOFAR {
 
 	    // Read in parameterfile and get my name
 	    ParameterSet itsOrigParamSet(argv[2]);
-	    string procID = itsOrigParamSet.getString("process.name");
-            string prefix = itsOrigParamSet.getString("parsetPrefix");
+	    string procID = itsOrigParamSet.getString("_processName");
+            string prefix = itsOrigParamSet.getString("_parsetPrefix");
 	    ParameterSet ParamSet = itsOrigParamSet.makeSubset(prefix);
 
 	    APS::globalParameterSet()->adoptCollection(ParamSet);
