@@ -26,6 +26,9 @@
 #include <BBSKernel/MNS/MeqDomain.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_iostream.h>
+#include <Blob/BlobArray.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
 
 namespace LOFAR
 {
@@ -50,6 +53,43 @@ namespace LOFAR
       os << endl << indent << "Station1: " << obj.station1
 	 << endl << indent << "Station2: " << obj.station2;
       return os;
+    }
+
+
+    //# -------  BlobOStream operators  ------- #//
+
+    BlobOStream& operator<<(BlobOStream& bos, const Correlation& obj)
+    {
+      bos << obj.selection
+	  << obj.type;
+      return bos;
+    }
+
+
+    BlobOStream& operator<<(BlobOStream& bos, const Baselines& obj)
+    {
+      bos << obj.station1
+	  << obj.station2;
+      return bos;
+    }
+
+
+    //# -------  BlobIStream operators  ------- #//
+
+    BlobIStream& operator>>(BlobIStream& bis, Correlation& obj)
+    {
+      int32 selection;
+      bis >> obj.selection;
+      bis >> obj.type;
+      return bis;
+    }
+
+
+    BlobIStream& operator>>(BlobIStream& bis, Baselines& obj)
+    {
+      bis >> obj.station1
+	  >> obj.station2;
+      return bis;
     }
 
 

@@ -29,6 +29,10 @@
 
 namespace LOFAR
 {
+  //# Forward declarations
+  class BlobIStream;
+  class BlobOStream;
+
   namespace BBS
   {
     class MeqDomain;
@@ -104,8 +108,20 @@ namespace LOFAR
       vector<MeqDomain> solveDomains;
     };
 
+    // I/O stream methods
+    // @{
     ostream& operator<<(ostream&, const Correlation&);
     ostream& operator<<(ostream&, const Baselines&);
+    // @}
+
+    // Blob I/O stream methods
+    // @{
+    BlobOStream& operator<<(BlobOStream&, const Correlation&);
+    BlobOStream& operator<<(BlobOStream&, const Baselines&);
+
+    BlobIStream& operator>>(BlobIStream&, Correlation&);
+    BlobIStream& operator>>(BlobIStream&, Baselines&);
+    // @}
 
   } // namespace BBS
 
