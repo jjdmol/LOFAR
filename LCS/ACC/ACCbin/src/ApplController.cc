@@ -261,7 +261,7 @@ void ApplController::createParSubsets()
 		// The startstopType determines what information is put in the parsetfiles
 		// for the processes.
 		string startstopType = itsObsParamSet->getString(procPrefix+"._startstopType");
-		string fileName 	 = procName + ".parset";
+		string fileName 	 = "/opt/lofar/share/" + procName + ".parset";
 
 		LOG_DEBUG_STR("Creating parameterfile for process " << procName);
 
@@ -334,8 +334,15 @@ void ApplController::createParSubsets()
 		else if (startstopType == "mpirun") {
 			// This processSet is an MPI program
 			LOG_TRACE_COND_STR("mpi process " << procName);
-			nodes = basePS.getStringVector(procPrefix+"._nodes");
-			itsProcRuler.add(PR_MPI(procName,
+			// fill 'nodes' with all nodenames of variable _nodes.
+			string	nodeList("x=" + 
+					expandedArrayString(basePS.getString(procPrefix+"._nodes")));
+			ParameterSet	nlPS;
+			nlPS.adoptBuffer(nodeList);
+			nodes = nlPS.getStringVector("x");
+
+			itsProcRuler.add(PR_MPI(basePS.getString(procPrefix + "._hostname"),
+									procName,
 									nodes,
 									basePS.getString(procPrefix + "._executable"),
 									fileName));
@@ -357,6 +364,9 @@ void ApplController::createParSubsets()
 	} // for processes
 }
 
+//
+// writeParSubset(ps, procName, fileName)
+//
 void ApplController::writeParSubset(ParameterSet ps, const string& procName, const string& fileName){
     // [C] Add AC parameters of any interest to process
     // TODO add some more like hostname and others?

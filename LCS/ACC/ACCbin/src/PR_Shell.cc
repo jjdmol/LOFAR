@@ -25,6 +25,7 @@
 
 //# Includes
 #include<Common/LofarLogger.h>
+#include<Common/SystemUtil.h>
 #include<ACCbin/PR_Shell.h>
 
 namespace LOFAR {
@@ -36,15 +37,31 @@ PR_Shell::PR_Shell(const string&  aNodeName,
 				   const string&  aParamFile) :
 	ProcRule(aNodeName, aProcName, aExecName, aParamFile)
 {
-	// TODO: do something with itsNodeName when ruling the process.
-	itsStartCmd = formatString("./startAP.sh %s %s %s %s", 
-								aNodeName.c_str(),
-								aProcName.c_str(),
-								aExecName.c_str(),
-								aParamFile.c_str());
-	itsStopCmd  = formatString("./stopAP.sh %s %s", 
-								aNodeName.c_str(),
-								aProcName.c_str());
+	if (aNodeName != myHostname(false) &&
+		aNodeName != myHostname(true)) {
+		remoteCopy(aParamFile, aNodeName, aParamFile);
+
+		itsStartCmd = formatString("ssh %s \"( cd /opt/lofar/bin ; ./startAP.sh %s %s %s %s )\"", 
+									aNodeName.c_str(),
+									aNodeName.c_str(),
+									aProcName.c_str(),
+									aExecName.c_str(),
+									aParamFile.c_str());
+		itsStopCmd  = formatString("ssh %s \"( cd /opt/lofar/bin ; ./stopAP.sh %s %s )\"", 
+									aNodeName.c_str(),
+									aNodeName.c_str(),
+									aProcName.c_str());
+	}
+	else {	// execute on local machine
+		itsStartCmd = formatString("./startAP.sh %s %s %s %s", 
+									aNodeName.c_str(),
+									aProcName.c_str(),
+									aExecName.c_str(),
+									aParamFile.c_str());
+		itsStopCmd  = formatString("./stopAP.sh %s %s", 
+									aNodeName.c_str(),
+									aProcName.c_str());
+	}
 }
 
 bool PR_Shell::start()

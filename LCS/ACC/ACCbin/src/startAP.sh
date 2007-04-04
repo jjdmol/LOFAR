@@ -11,11 +11,11 @@
 # now all ACC processes expect to be started with "ACC" as first parameter
 
 # start process
-# TODO: in future something like: rsh $1 start_script $2 $3 $4
+echo $3 ACC $4 >../log/$2.startup
 $3 ACC $4 & 
 
 # get its pid
 pid=`echo $!`
 
 # construct pid file for stop shell
-echo "$pid" > $2.pid
+echo "$pid" > /opt/lofar/share/$2.pid
