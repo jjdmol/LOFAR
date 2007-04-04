@@ -54,7 +54,7 @@ const string LOGMESSAGE_DEBUG = "DEBUG";
 const string LOGMESSAGE_TRACE = "TRACE";
 
 global bool g_logInitialized = false;
-global int  g_loglevel = 30000;
+global int  g_loglevel = 0;
 global dyn_string stateColor;
 global dyn_string stateName;
 
@@ -205,9 +205,15 @@ void loglevelUpdated(string dp, int newLevel)
   g_loglevel = newLevel;
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+//Function getStateNumber
+//
 // helper function to return the colorName based on a state
 // dyn_arrays start count at 1!!!
-
+//
+// Added 3-3-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
 string getStateColor(int aState) {
   if (aState < dynlen(stateColor) & aState >= 0) {
     return stateColor[aState+1];
@@ -216,9 +222,15 @@ string getStateColor(int aState) {
   }
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+//Function getStateNumber
+//
 // helper function to return the stateName based on a state
 // dyn_arrays start count at 1!!!
-
+//
+// Added 3-3-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
 string getStateName(int aState) {
   if (aState < dynlen(stateName) & aState >= 0) {
     return stateName[aState+1];
@@ -227,9 +239,14 @@ string getStateName(int aState) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+//Function getStateNumber
+//
 // helper function to return the stateNumber based on a stateName
 // dyn_arrays start count at 1!!!
-
+//
+// Added 20-3-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
 int getStateNumber(string aState) {
   if (aState != "") {
     for (int i = 1; i <= dynlen(stateName); i++) {
@@ -241,7 +258,13 @@ int getStateNumber(string aState) {
   return (-1);
 }
 
-// does all the colorsettings based on the DP's state
+///////////////////////////////////////////////////////////////////////////
+//Function showSelfState
+//
+// Prepare (connect to) the selfState callback for a lofar hardware object 
+//
+// Added 3-3-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
 void showSelfState(string aDP) {
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpAccessable(aDP+".state")) {
@@ -252,6 +275,13 @@ void showSelfState(string aDP) {
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+//Function showChildState
+//
+// Prepare (connect to) the childState callback for a lofar hardware object 
+//
+// Added 3-3-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
 void showChildState(string aDP) {
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpAccessable(aDP+".childState")) {
@@ -263,6 +293,13 @@ void showChildState(string aDP) {
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+//Function updateChildState
+//
+// Callback to update the childState border from a lofar hardware object
+//
+// Added 3-3-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
 updateChildState(string dp1, int state,
  		 string dp2, bool invalid)
 {
@@ -277,6 +314,13 @@ updateChildState(string dp1, int state,
   setValue("childStateBorder", "foreCol", SymbolCol);
 }
 
+///////////////////////////////////////////////////////////////////////////
+//Function updateSelfState
+//
+// Callback to update the selfstate light from a lofar hardware object
+//
+// Added 3-3-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
 updateSelfState(string dp1, int state,
  		string dp2, bool invalid)
 {
@@ -291,3 +335,36 @@ updateSelfState(string dp1, int state,
   setValue("selfState.light", "backCol", SymbolCol);
 }
 
+///////////////////////////////////////////////////////////////////////////
+//Function getArmFromStation
+// 
+// Will return the armName based upon the stationName. 
+// for now (CS1 fase) it will return Core, later something smart has to be
+// done to give the other ringnames correctly.
+// It is needed to get the correct datapoints in constructions like:
+// LOFAR_PermSW_Core_CS010.state when you get a CS010:LOFAR_PermSW.state
+// change.
+//
+// Added 3-4-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
+string getArmFromStation(string stationName) {
+
+  string armName="";
+  if (substr(stationName,0,2) == "CS") {
+    armName="Core";
+  }
+  return armName;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function initLofarColors
+//
+// Initialise the color buffers.
+//
+// Added 4-4-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
+void initLofarColors() {
+  // Set the global statecolors/colornames.
+  stateColor = makeDynString("Lofar_off","Lofar_operational","Lofar_maintenance","Lofar_test","Lofar_suspicious","Lofar_broken");
+  stateName = makeDynString("off","operational","maintenance","test","suspicious","broken");
+}

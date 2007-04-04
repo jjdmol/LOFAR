@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,403 87 950 741 N "_3DFace" 1
+PANEL,431 110 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -26,7 +26,7 @@ fillStationsList(string observation)
 	  LOG_WARN(\"More entries , where only one should have been found.\");
 	}
 	
-	//DebugTN(\"found query: \",tab);
+	LOG_DEBUG(\"found query: \",tab);
 	for(int i=2;i<=dynlen(tab);i++)
 	{
 		string answer = tab[i][2];
@@ -482,7 +482,7 @@ E E 0 5 1 0 1 E  39 581 39 508
  E "main()
 {
 	string dp = StationList.selectedText+\":LOFAR\";
-	DebugTN(\"StationList_EventDblClick: trigger Navigator with datapoint=\",dp);
+	LOG_DEBUG(\"StationList_EventDblClick: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0
 

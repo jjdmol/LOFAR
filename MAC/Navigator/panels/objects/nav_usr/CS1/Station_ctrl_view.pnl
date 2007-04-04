@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 StationCtrlViewPanel
-PANEL,451 113 484 325 N "_3DFace" 2
+PANEL,431 110 484 325 N "_3DFace" 2
 "$Station"
 "$datapoint"
 "main()
@@ -212,9 +212,9 @@ showLogging()
 			formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
 			formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
 			
-		DebugTN(\"Query: \" + query);
+		//DebugTN(\"Query: \" + query);
 		dpQuery(query, tab);
-		DebugTN(\"Found: \" + tab + \" length: \" + dynlen(tab));
+		LOG_DEBUG(\"Found: \" + tab + \" length: \" + dynlen(tab));
 	 	 
 	 	
 		for(z=2;z<dynlen(tab);z++)
