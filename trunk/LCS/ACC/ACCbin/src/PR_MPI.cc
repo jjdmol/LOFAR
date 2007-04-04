@@ -26,80 +26,129 @@
 //# Includes
 #include<Common/LofarLogger.h>
 #include<Common/lofar_fstream.h>
+#include<Common/SystemUtil.h>
 #include<ACCbin/PR_MPI.h>
 
 namespace LOFAR {
   namespace ACC {
 
-    PR_MPI::PR_MPI(const string&  aJobName,
-		   const vector<string>& nodes,
-		   const string&  aExecutable,
-		   const string&  aParamFile)
+//
+// PR_MPI(jobname, nodes, executable, paramfile)
+//
+PR_MPI::PR_MPI(const string&			aHostName,
+			   const string&  			aJobName,
+			   const vector<string>& 	nodes,
+			   const string&  			aExecutable,
+			   const string&  			aParamFile)
 	: ProcRule("MPIjob", aJobName, aExecutable, aParamFile)
-    {
-      LOG_TRACE_OBJ_STR ("PR_MPI: constructor");
-      // create machinefile
-      string machinefileName(aJobName + ".machinefile");
-      ofstream machinefile;
-      machinefile.open(machinefileName.c_str(), ofstream::out);
-      vector<string>::const_iterator node;
-      for (node = nodes.begin(); node != nodes.end(); node++) {
-	  machinefile << *node << endl;
-      }
-      machinefile.close();
+{
+	LOG_TRACE_OBJ_STR ("PR_MPI: constructor");
+	// create machinefile
+	string 		machinefileName(aJobName + ".machinefile");
+	ofstream 	machinefile;
+	machinefile.open(machinefileName.c_str(), ofstream::out);
+	vector<string>::const_iterator node;
+	for (node = nodes.begin(); node != nodes.end(); node++) {
+		machinefile << *node << endl;
+	}
+	machinefile.close();
 
-      itsStartCmd = formatString("./startMPI.sh %s %s %s %s %d", 
-				 aJobName.c_str(),
-				 machinefileName.c_str(),
-				 aExecutable.c_str(),
-				 aParamFile.c_str(),
-				 nodes.size());
-      itsStopCmd  = formatString("./stopBGL.sh %s", 
-				 aJobName.c_str());
-    }
+	// start processes on another node?
+	if (aHostName != myHostname(false) &&
+		aHostName != myHostname(true)) {
+		// copy files to other machine
+		remoteCopy(aParamFile, aHostName, aParamFile);
+		remoteCopy(machinefileName, aHostName, machinefileName);
 
-    PR_MPI::PR_MPI(const PR_MPI& other)
-      : ProcRule(other)
-    {
-      LOG_TRACE_OBJ_STR ("PR_MPI: copy constructor");
-    }
+		itsStartCmd = formatString("ssh %s \"( cd /opt/lofar/bin ; ./startMPI.sh %s %s %s %s %d )\"", 
+									aHostName.c_str(),
+									aJobName.c_str(),
+									machinefileName.c_str(),
+									aExecutable.c_str(),
+									aParamFile.c_str(),
+									nodes.size());
+		itsStopCmd  = formatString("ssh %s \"( cd /opt/lofar/bin ; ./stopBGL.sh %s ) \"", 
+									aHostName.c_str(),
+									aJobName.c_str());
+	}
+	else { // start/stop on local machine
+		itsStartCmd = formatString("./startMPI.sh %s %s %s %s %d", 
+									aJobName.c_str(),
+									machinefileName.c_str(),
+									aExecutable.c_str(),
+									aParamFile.c_str(),
+									nodes.size());
+		itsStopCmd  = formatString("./stopBGL.sh %s", 
+									aJobName.c_str());
+	}
+}
 
-    PR_MPI::~PR_MPI()
-    {
-      LOG_TRACE_OBJ_STR ("PR_MPI: destructor");
-    }
+//
+// PR_MPI(PR_MPI&)
+//
+PR_MPI::PR_MPI(const PR_MPI& other)
+	: ProcRule(other)
+{
+	LOG_TRACE_OBJ_STR ("PR_MPI: copy constructor");
+}
 
-    bool PR_MPI::start()
-    {
-      if (itsIsStarted) {
-	LOG_TRACE_OBJ_STR("PR_MPI:" << itsProcName << " is already started");
-	return (true);
-      }
-	
-      LOG_TRACE_OBJ_STR ("PR_MPI: " << itsStartCmd);
-	
-      if (system (itsStartCmd.c_str()) == 0) {
-        itsIsStarted = true;
-      }
-	
-      return (itsIsStarted);
-    }
+//
+// ~PR_MPI()
+//
+PR_MPI::~PR_MPI()
+{
+	LOG_TRACE_OBJ_STR ("PR_MPI: destructor");
+}
 
-    bool PR_MPI::stop()
-    {
-      LOG_TRACE_OBJ_STR ("PR_MPI: " << itsStopCmd);
+//
+// start()
+//
+bool PR_MPI::start()
+{
+	if (itsIsStarted) {
+		LOG_TRACE_OBJ_STR("PR_MPI:" << itsProcName << " is already started");
+		return (true);
+	}
 
-      if (system (itsStopCmd.c_str()) == 0) {
-	itsIsStarted = false;
-      }
+	LOG_TRACE_OBJ_STR ("PR_MPI: " << itsStartCmd);
 
-      return (!itsIsStarted);
-    }
+	if (system (itsStartCmd.c_str()) == 0) {
+		itsIsStarted = true;
+	}
 
-    string PR_MPI::getType() const
-    { return ("PR_MPI"); }
-    PR_MPI* PR_MPI::clone() const
-    { return (new PR_MPI(*this)); }
+	return (itsIsStarted);
+}
+
+//
+// stop()
+//
+bool PR_MPI::stop()
+{
+	LOG_TRACE_OBJ_STR ("PR_MPI: " << itsStopCmd);
+
+	if (system (itsStopCmd.c_str()) == 0) {
+		itsIsStarted = false;
+	}
+
+	return (!itsIsStarted);
+}
+
+//
+// getType()
+//
+string PR_MPI::getType() const
+{ 
+	return ("PR_MPI");
+}
+
+//
+// clone()
+//
+PR_MPI* PR_MPI::clone() const
+{ 
+	return (new PR_MPI(*this)); 
+}
+
 
   } // namespace ACC
 } // namespace LOFAR

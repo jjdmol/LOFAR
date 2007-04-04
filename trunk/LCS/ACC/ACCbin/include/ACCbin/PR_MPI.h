@@ -36,40 +36,42 @@
 
 namespace LOFAR {
   namespace ACC {
-    // \addtogroup ACCbin
-    // @{
 
-    // The PR_MPI starts and stop an mpi program. One MPI-job is 
-    // controlled by one PR_MPI. This means there are usually multiple
-    // processes on multiple hosts involved.
+// \addtogroup ACCbin
+// @{
 
-    // The PR_MPI class contains all information to (over)rule a process.
-    // Its known how to start and stop a process and knows its current state.
-    class PR_MPI : public ProcRule {
-    public:
-      PR_MPI(const string& aJobName, 
-	     const vector<string>& nodes,
-	     const string& aExecutable,
-	     const string& aParamfile);
-      PR_MPI(const PR_MPI& other);
+// The PR_MPI starts and stop an mpi program. One MPI-job is 
+// controlled by one PR_MPI. This means there are usually multiple
+// processes on multiple hosts involved.
 
-      ~PR_MPI();
-      
-      // Redefine the start and stop commands.
-      virtual bool start();
-      virtual bool stop();
-      virtual string getType() const;
-      virtual PR_MPI* clone() const;
-      
-    private:
-      
-      // Default construction not allowed
-      PR_MPI();
-      
-      //# --- Datamembers ---
-    };
+// The PR_MPI class contains all information to (over)rule a process.
+// Its known how to start and stop a process and knows its current state.
+class PR_MPI : public ProcRule {
+public:
+	PR_MPI (const string&			aHostName,
+			const string& 			aJobName, 
+			const vector<string>& 	nodes,
+			const string& 			aExecutable,
+			const string& 			aParamfile);
 
-    // @} addgroup
+	PR_MPI(const PR_MPI&	other);
+
+	~PR_MPI();
+
+	// Redefine the start and stop commands.
+	virtual bool start();
+	virtual bool stop();
+	virtual string getType() const;
+	virtual PR_MPI* clone() const;
+
+private:
+	// Default construction not allowed
+	PR_MPI();
+
+	//# --- Datamembers ---
+};
+
+	// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 
