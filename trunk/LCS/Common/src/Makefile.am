@@ -19,6 +19,7 @@ libcommon_la_SOURCES 	= \
 	Stopwatch.cc \
 	StreamUtil.cc \
 	StringUtil.cc \
+	SystemUtil.cc \
 	Timer.cc \
 	TypeNames.cc \
 	Net/FdSet.cc \

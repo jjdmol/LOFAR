@@ -616,7 +616,7 @@ Socket* Socket::accept(int32	waitMs)
 	} while ((acceptErrno == EINTR) && (waitMs < 0));
 
 	// Show why we left the accept-call
-	LOG_DEBUG(formatString("Socket(%d):accept() failed: errno=%d(%s)", 
+	LOG_TRACE_COND(formatString("Socket(%d):accept() failed: errno=%d(%s)", 
 							itsSocketID, acceptErrno, strerror(acceptErrno)));
 
 	// In non-blocking mode the errno's:EWOULDBLOCK, EALREADY and EINTR are

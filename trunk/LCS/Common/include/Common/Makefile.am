@@ -53,6 +53,7 @@ pkginclude_HEADERS = \
 	Stopwatch.h \
 	StreamUtil.h \
 	StringUtil.h \
+	SystemUtil.h \
 	Timer.h \
 	TypeNames.h \
 	TypeNames.tcc
