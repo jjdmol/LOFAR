@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,430 119 280 210 N "_3DFace" 3
+PANEL,473 117 280 210 N "_3DFace" 3
 "$AppName"
 "$CEPnode"
 "$datapoint"
@@ -11,7 +11,7 @@ PANEL,430 119 280 210 N "_3DFace" 3
 
 	dyn_string dpElements = splitDatapointPath($datapoint);
 	string nodeDP = dpSubStr($datapoint,DPSUB_SYS) + \"LOFAR_CEP_\" + dpElements[dynlen(dpElements)] + \"_\" + $CEPnode;
-	DebugTN(\"monitoring CEP node\",nodeDP);
+	LOG_DEBUG(\"monitoring CEP node\",nodeDP);
   if(dpAccessable(nodeDP + \".currentAction:_online.._value\"))
   {
     dpConnect(\"fillTextStatus\", nodeDP + \".currentAction\");
@@ -55,7 +55,7 @@ E "main()
 {
 	dyn_string dpElements = splitDatapointPath($datapoint);
 	string dp = dpSubStr($datapoint,DPSUB_SYS) + \"LOFAR_CEP_\" + dpElements[dynlen(dpElements)] + \"_\" + $CEPnode;
-	DebugTN(\"trigger Navigator with datapoint=\",dp);
+	LOG_DEBUG(\"trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0
  0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/CS1/CEP-node-online-begin.bmp" 13434828 E 10 10 251 158

@@ -25,11 +25,15 @@
 // This script needs to run on every CSU, CCU and MainCU
 // it monitors the state changes in the database, and will update the childstates accordingly
 // 
+
+global bool isConnected=false;
+
 main () {
 
   // Set the global statecolors/colornames.
-  stateColor = makeDynString("Lofar_off","Lofar_operational","Lofar_maintenance","Lofar_test","Lofar_suspicious","Lofar_broken");
-  stateName = makeDynString("off","operational","maintenance","test","suspicious","broken");
+  initLofarColors();
+
+  // subscribe to the statechange update mechanism
   subscribePSStateChange();
 }
 
@@ -38,12 +42,14 @@ main () {
 //Function subscribePSStateChange
 // 
 // subscribes to the __pa_PSState DP of the database to monitor 
-// possible stateChanges
+// possible stateChanges, also checks if the scripts runs on a MCU*** 
+// machine and subscribes to the needed statechanges there also.
 //
 // Added 26-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 void subscribePSStateChange() {
 
+  LOG_TRACE("subscribePSStateChange");
   // ROutine to connnect to the __pa_PSState point to trigger statechanges
   // So that chilcState points can bes set/reset accordingly.
 
@@ -56,25 +62,12 @@ void subscribePSStateChange() {
   }
 }
 
+ 
 ///////////////////////////////////////////////////////////////////////////
 //Function connectMainPoints
 // 
 // connect to the mainpoints to set the state's and childstate's to the max
 // of the state's and childstate's of the ones in the stations
-// basicly means that: 
-
-// 
-// 2b discussed.....  what and how to do with rings & stations on MCU...
-// We probably will have to think about something smart with the Station points
-// in the MainCU... (not sure if they can be reached from here...)
-// Maybe an extra point in de stations can be made where the trigger for the maincu will be placed
-// when the mainCU connects to this one only and just sets the state/childstate all should be in control again.
-// And the same subroutines can be used all over.  However, if we connect there we have to know what to do with 
-// vanishing systems, and connecting systems.... In general the MainCU's database will contain all Station Databases
-// that ever connected to it, so dpAccessible could be used to check if a database is online atm when needed.
-// and query will only return values from connected systems.  will dpQueryConnectAll however also still monitors a system that
-// has been offline and came back on again ?
-// Also Observations will be added and removed on a daily basis. all names unique...   what to do there?
 //
 // Msg something like: Station:Dp.state=state
 //                e.g. CS010:LOFAR_ObsSW_Oservation10.state=broken
@@ -88,10 +81,101 @@ void subscribePSStateChange() {
 ///////////////////////////////////////////////////////////////////////////
 void connectMainPoints() {
 
-  // To be defined/discussed
+  // Routine to connect to _DistConnections.ManNums.
+  // This point keeps a dyn_int array with all active distributed connections
+  // and will generate a callback everytime a station goes off-, or on- line
+
+  if (dpExists("_DistConnections.Dist.ManNums")) {
+    dpConnect("distSystemTriggered",true,"_DistConnections.Dist.ManNums");
+  } else {
+    LOG_WARN("_DistConnections point not found, no trigger available for dist System updates.");  
+  }
 
 }
 
+
+///////////////////////////////////////////////////////////////////////////
+//Function distSystemTriggered
+// 
+// Callback function that is triggered by the (dis)appearance of e Distributed system.
+//
+// Added 02-04-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
+void distSystemTriggered(string dp1, dyn_int systemList) {
+
+  LOG_TRACE("distSystemTriggered");
+
+  // Check all states from LOFAR_PermSW.state in all remote stations.
+  // if one of them changes, and the state is not equal to old state, update the MCU one
+  string queryPermSW = "SELECT '_original.._value' FROM '{LOFAR_PermSW.state,LOFAR_PermSW.childState}' REMOTE ALL WHERE _DPT = \"StnPermSW\" SORT BY 1 DESC";
+
+  // Check all states from LOFAR_PIC.state in all remote stations.
+  // if one of them changes, and the state is not equal to old state, update the MCU one
+  string queryPIC = "SELECT '_original.._value' FROM '{LOFAR_PIC.state,LOFAR_PIC.childState}' REMOTE ALL WHERE _DPT = \"StnPIC\" SORT BY 1 DESC";
+
+  // Check all states from LOFAR_ObsSW_Observation*.state in all remote stations.
+  // if one of them changes, and the state is not equal to old state, update the MCU one
+  string queryObservation = "SELECT '_original.._value' FROM '{LOFAR_ObsSW_Observation*.state,LOFAR_ObsSW_Observation*.childState}' REMOTE ALL WHERE _DPT = \"StnObservation\" SORT BY 1 DESC";
+
+
+  if (isConnected) {
+    dpQueryDisconnect("stationStateTriggered","PermSW");
+    dpQueryDisconnect("stationStateTriggered","PIC");
+    dpQueryDisconnect("stationStateTriggered","Observation");
+  }
+  dpQueryConnectSingle("stationStateTriggered",false,"PermSW",queryPermSW);
+  dpQueryConnectSingle("stationStateTriggered",false,"PIC",queryPIC);
+  dpQueryConnectSingle("stationStateTriggered",false,"Observation",queryObservation);
+  isConnected=true;
+    
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function stationStateTriggered
+// 
+// Callback where a trigger of a changed is handled.
+//
+// Added 02-04-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
+void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
+  LOG_TRACE("stationStateTriggered");
+
+  string state    = "";
+  string station = "";
+  string armName = "";
+  string datapoint = "";
+  string element = "";
+
+
+  for(int z=2;z<=dynlen(tab);z++){
+    LOG_DEBUG("Found : ",tab[z]);
+
+    state = tab[z][2];
+    string dp=tab[z][1];
+    station = dpSubStr(dp,DPSUB_SYS);
+    strreplace(station,":","");
+    // strip element name and datapoint
+ 
+    dyn_string aS=strsplit(dp,".");
+    if (dynlen(aS) > 0 ) {	
+      datapoint = dpSubStr(aS[1],DPSUB_DP);
+    }
+    if (dynlen(aS) > 1 ) {	
+      element = aS[2];
+    }
+
+    // get the ArmName
+    armName=getArmFromStation(station);
+
+
+    LOG_DEBUG("station : ",station, " DP: " ,datapoint," element: ",element);
+
+    // if all needed values are available we can start doing the major update.
+    if (state >-1 & datapoint != "" & station != "" & armName != "" & element != ""){
+      setStates(datapoint + "_"+ armName + "_" + station,element,state,true);
+    }
+  }
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //Function PSStateTriggered
@@ -108,7 +192,7 @@ void PSStateTriggered(string dp1, string trigger) {
   // ofcourse we need to monitor if this statechange is allowed.
 
 
-  LOG_INFO("Entered StateChangeTriggered with trigger:", trigger);
+  LOG_TRACE("Entered StateChangeTriggered with trigger:", trigger);
 
   int i,j;
   string state    = "";
@@ -129,56 +213,11 @@ void PSStateTriggered(string dp1, string trigger) {
     }
 
 
-    LOG_INFO("state:  ",state," DP: " ,datapoint, " Element: ",element);
+    LOG_DEBUG("state:  ",state," DP: " ,datapoint, " Element: ",element);
     // if all needed values are available we can start doing the major update.
     if (state != "" != "" & datapoint != "" & element != "" & dpExists(datapoint+"."+element)){
 
-      // If element is state just set the state (might have been done by the callerprocess, 
-      // we still need to discuss this. When this is done we have to strip the last treenode, 
-      // and start updating the childStates for the remaining nodes. If the element is childState,
-      // only the childState updates needs 2b done.
-      if (element == "state") {
-        // set the state value of this dp, to avoid unneed update chains, check the value. If it
-        // is the same don't update it
-        int aVal;
-        dpGet(datapoint+".state",aVal);
-        if (aVal != getStateNumber(state) & getStateNumber(state) > -1) {
-          dpSet(datapoint+".state",getStateNumber(state));
-            
-          //strip the last _xxx from the datapoint
-          dyn_string points=strsplit(datapoint,"_");
-          datapoint="";
-          for (int j=1; j < dynlen(points); j++ ) {
-            if (j>1) datapoint+="_";
-            datapoint+=points[j];
-          }
-        } else {
-          return;
-        }
-
-      } else if (element != "childState") {
-        LOG_ERROR("Error. unknown element in stateChange trigger: ", element);
-        return;
-      }
-
-      //set childState if needed, if succeeded set childState for one level less also
-      if ( setChildState(datapoint,getStateNumber(state))) {
-
-        //strip the last _xxx from the datapoint
-        dyn_string points=strsplit(datapoint,"_");
-        datapoint="";
-        for (int j=1; j < dynlen(points); j++ ) {
-          if (j>1) datapoint+="_";
-          datapoint+=points[j];
-        }
-        if (datapoint != "" & state > -1) {
-          dpSet("__pa_PSState.",datapoint+".childState="+state);
-        }
-          
-      } else {
-        LOG_INFO("SetChildState not done");
-      }
-
+      setStates(datapoint,element,getStateNumber(state),false);
     } else {
       LOG_ERROR("result: not complete command, or database could not be found.");
     }
@@ -186,13 +225,81 @@ void PSStateTriggered(string dp1, string trigger) {
 }
 
 
-bool setChildState(string Dp,int state) {
+///////////////////////////////////////////////////////////////////////////
+//Function setStates
+// 
+// Does the setting of (child)state.
 //
-// set childState to the MAX value of the given state and all the states and childState's of it's direct children.
+// datapoint      = the base datapoint that needs to be set
+// element        = state or childState needs 2b checked 
+// state          = new state
+// stationTrigger = check if the stationTrigger fired this. In that case the state/childState
+//                  is a pure copy from the station to the MCU point, so childState should be 
+//                  treated as state and just be copied, not evaluated.
 //
-  
+// Added 3-4-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
+void setStates(string datapoint,string element,int state,bool stationTrigger) {
 
-  LOG_INFO("setChildState reached with: ",Dp," stateVal: ", state);
+  LOG_TRACE("SetStates reached, datapoint: ", datapoint," element: ", element, " state: ",state);
+
+  // If element is state just set the state (might have been done by the callerprocess, 
+  // When this is done we have to strip the last treenode, 
+  // and start updating the childStates for the remaining nodes. If the element is childState,
+  // only the childState updates needs 2b done, unless stationTrigger = true, then childstate should be
+  // handled the same way as state.
+  if (element == "state" | stationTrigger) {
+    // set the state value of this dp, to avoid unneed update chains, check the value. If it
+    // is the same don't update it
+    
+    int aVal;
+    dpGet(datapoint+"."+element,aVal);
+    if (aVal != state & state > -1) {
+      dpSet(datapoint+"."+element,state);
+           
+      //strip the last _xxx from the datapoint
+      dyn_string points=strsplit(datapoint,"_");
+      datapoint="";
+      for (int j=1; j < dynlen(points); j++ ) {
+        if (j>1) datapoint+="_";
+        datapoint+=points[j];
+      }
+    } else {
+      return;
+    }
+
+  } else if (element != "childState") {
+    LOG_ERROR("Error. unknown element in stateChange trigger: ", element);
+    return;
+  }
+
+  
+  // set childState if needed, if succeeded set childState for one level less also
+  // continue while true
+  while ( setChildState(datapoint,state)) {
+
+    //strip the last _xxx from the datapoint
+    dyn_string points=strsplit(datapoint,"_");
+    datapoint="";
+    for (int j=1; j < dynlen(points); j++ ) {
+      if (j>1) datapoint+="_";
+      datapoint+=points[j];
+    }          
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//Function setChildState
+// 
+// Does the setting of childstate based upon the highest state found in all 
+// the direct children of a given datepoint, merged with the given state
+//
+// Added 26-3-2007 A.Coolen
+///////////////////////////////////////////////////////////////////////////
+bool setChildState(string Dp,int state) {
+
+  LOG_TRACE("setChildState reached with: ",Dp," stateVal: ", state);
 
   if (state < 0 || Dp == "") return false;
 
@@ -202,7 +309,7 @@ bool setChildState(string Dp,int state) {
 
   // take present value for comparing later.
   dpGet(Dp+".childState",aVal);
-  LOG_INFO(Dp+".childState = "+aVal);
+  LOG_DEBUG(Dp+".childState = "+aVal);
 
 
   // Query for all state and childState in the tree from this datapoint down.
@@ -210,12 +317,33 @@ bool setChildState(string Dp,int state) {
   // By sorting descending we can shorten the time needed for evaluation. If the top element's state value = lower or equal
   // to the value we need to set, we can leave the loop and set the new state value. In case it is bigger we can take that value
   // and set it as the new value (if > the original value)
+
+  // at the moment there is a bug in the sql approach from ETM, if the result Select is an empty table then the sort still
+  // is executed. This give an error. So for now we do the query two times.
+  // the 2nd one only if the first one gives a result > 1;
+ 
+  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.childState,"+Dp+"_*.state}'";
+  int err = dpQuery(query, tab);
+
+  if (err < 0 | dynlen(tab)< 2) {
+    return true;
+  }
+
   string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.childState,"+Dp+"_*.state}' SORT BY 1 DESC";
-  dpQuery(query, tab);
+  LOG_DEBUG("Query: ",query);
+  err = dpQuery(query, tab);
+
+
+
+   
+  if (err < 0) {
+    return false;
+  }
  
   dyn_string aS=strsplit(Dp,"_");
   int maxElements= dynlen(aS)+1; 
   int foundElements=0;
+
 
   for(z=2;z<=dynlen(tab);z++) {
     dyn_string aStr=strsplit((string)tab[z][1],"_");
@@ -236,5 +364,7 @@ bool setChildState(string Dp,int state) {
       return false;
     }
   }
+
   return false;
 }
+

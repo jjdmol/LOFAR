@@ -1014,8 +1014,7 @@ void Navigator_HandleEventInitialize()
   NAVIGATOR_TAB_FILENAME = navConfigGetViewsPath() + "navigator_tab.pnl";
 
   // Set the global statecolors/colornames.
-  stateColor = makeDynString("Lofar_off","Lofar_operational","Lofar_maintenance","Lofar_test","Lofar_suspicious","Lofar_broken");
-  stateName = makeDynString("off","operational","maintenance","test","suspicious","broken");
+  initLofarColors();
   
   if (!navConfigSanityCheck(sanityMessage))
   {

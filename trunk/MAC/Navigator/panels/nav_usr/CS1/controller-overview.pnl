@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 13 ObsCtrl_State
-PANEL,451 113 950 741 N "_3DFace" 1
+PANEL,431 110 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -109,7 +109,7 @@ addLogMessage(string msg)
   // into relevant pieces
 
   if (msg != \"\") {
-    DebugTN(\"msg: \" + msg);
+    //DebugTN(\"msg: \" + msg);
 
     dyn_string msgParts;
     string dateTime=\"\";
@@ -150,11 +150,11 @@ addLogMessage(string msg)
    	}
 	
 	
-    DebugTN(\"dateTime: \" + dateTime);
-    DebugTN(\"level: \" + level);
-    DebugTN(\"source: \" + source);
-    DebugTN(\"logMsg: \" + logMsg);
-    DebugTN(\"codeLine: \" + codeLine);
+    LOG_DEBUG(\"dateTime: \" + dateTime);
+    LOG_DEBUG(\"level: \" + level);
+    LOG_DEBUG(\"source: \" + source);
+    LOG_DEBUG(\"logMsg: \" + logMsg);
+    LOG_DEBUG(\"codeLine: \" + codeLine);
 
 		if (!error && logMsg != \"\") {
 	    obs_table_logging.appendLine(\"time\",dateTime,\"level\",level,\"source\",source,\"message\",logMsg,\"code\",codeLine);
