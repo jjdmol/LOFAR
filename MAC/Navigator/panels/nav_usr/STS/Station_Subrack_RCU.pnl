@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,443 122 794 749 N "_3DFace" 1
+PANEL,574 228 794 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -73,7 +73,70 @@ navViewCheckDpType(string aDp, string aCheckType){
 E E E 1 -1 -1 0  130 290
 "" 0 1
 E"#uses \"nav_usr/STS/STS-functions.ctl\"
-//#uses \"nav_fw/gcfnav_view.ctl\"" 0
+//#uses \"nav_fw/gcfnav_view.ctl\"
+
+defineXYpolarization()
+{
+  string theRCU;
+  string theRCUNumber_asStr;
+  int    theRCUNumber_asInt;
+  bool   isOdd = false;
+  
+  // Split datapoint into vector
+  // example of datapoint : LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_rcu0
+  dyn_string dp_strVector  = strsplit(dpSubStr($datapoint,DPSUB_DP),'_');
+  int        nrElems       = dynlen(dp_strVector);
+ 	//for (int idx=1; idx < nrElems+1; idx++) {
+  //	DebugN(idx + \" : \" + dp_strVector[idx]);
+	//}
+	// The latest element in the array is the value we need
+  theRCU             = strtoupper(dp_strVector[nrElems]);
+  // Isolate the number of the RCU
+  theRCUNumber_asStr = substr(theRCU, 3 , strlen(theRCU));
+	// Define the anInteger of the isolated number  
+ 	sscanf(theRCUNumber_asStr, \"%d\", theRCUNumber_asInt); // Read from string as int
+ 	// Define of the integer is odd or even
+ 	if ( fmod(theRCUNumber_asInt,2) == 1)
+ 		isOdd = true;
+ 	else
+ 		isOdd = false; 
+	// Set the textvalue in the panel
+	// If the RCUNumber_asInt is odd it is an X-polarization
+	// If the RCUNumber_asInt is even it is an Y-polarization
+  if (!isOdd)
+    setValue(\"\", \"text\", \"X\");
+  else
+    setValue(\"\", \"text\", \"Y\");
+}
+
+defineStateAntenna(string anAnt)
+{
+	string anAntDp = $datapoint + \".\" + anAnt;
+	
+  if (dpAccessable(anAntDp + \".state\" ))
+	{
+	  dpConnect(\"setStateAntenna\", anAntDp + \".state:_online.._value\",
+	                               anAntDp + \".state:_online.._invalid\");
+  }
+  else
+  {
+    setValue(\"\", \"backCol\", \"_dpdoesnotexist\");
+  }
+	
+}
+
+setStateAntenna(string dp1, int state,
+                string dp2, bool invalid)
+{
+  if(!invalid)
+  {
+  	setValue(\"\", \"backCol\",getStateColor(state));
+  }
+  else
+  {
+    setValue(\"\", \"backCol\", \"Lofar_invalid\");
+  }
+}" 0
  2
 "CBRef""1"
 "EClose"E
@@ -108,7 +171,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 70 100 660 665
+E E 0 2 1 0 1 E U  1 E 70 100 660 665
 4 36
 "Line1"
 ""
@@ -149,38 +212,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  string theRCU;
-  string theRCUNumber_asStr;
-  int    theRCUNumber_asInt;
-  bool   isOdd = false;
-  
-  // Split datapoint into vector
-  // example of datapoint : LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_rcu0
-  dyn_string dp_strVector  = strsplit(dpSubStr($datapoint,DPSUB_DP),'_');
-  int        nrElems       = dynlen(dp_strVector);
- 	//for (int idx=1; idx < nrElems+1; idx++) {
-  //	DebugN(idx + \" : \" + dp_strVector[idx]);
-	//}
-	// The latest element in the array is the value we need
-  theRCU             = strtoupper(dp_strVector[nrElems]);
-  // Isolate the number of the RCU
-  theRCUNumber_asStr = substr(theRCU, 3 , strlen(theRCU));
-	// Define the anInteger of the isolated number  
- 	sscanf(theRCUNumber_asStr, \"%d\", theRCUNumber_asInt); // Read from string as int
- 	// Define of the integer is odd or even
- 	if ( fmod(theRCUNumber_asInt,2) == 1)
- 		isOdd = true;
- 	else
- 		isOdd = false; 
-	// Set the textvalue in the panel
-	// If the RCUNumber_asInt is odd it is an X-polarization
-	// If the RCUNumber_asInt is even it is an Y-polarization
-  if (!isOdd)
-    setValue(\"\", \"text\", \"X\");
-  else
-    setValue(\"\", \"text\", \"Y\");
-}
-" 0
+  defineXYpolarization(); 
+}" 0
  E 0 1 1 0 1 E U  0 E 528 108 536 124
 0 2 0 "s" 0 0 0 192 0 0  528 108
  1
@@ -320,38 +353,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  string theRCU;
-  string theRCUNumber_asStr;
-  int    theRCUNumber_asInt;
-  bool   isOdd = false;
-  
-  // Split datapoint into vector
-  // example of datapoint : LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_rcu0
-  dyn_string dp_strVector  = strsplit(dpSubStr($datapoint,DPSUB_DP),'_');
-  int        nrElems       = dynlen(dp_strVector);
- 	//for (int idx=1; idx < nrElems+1; idx++) {
-  //	DebugN(idx + \" : \" + dp_strVector[idx]);
-	//}
-	// The latest element in the array is the value we need
-  theRCU             = strtoupper(dp_strVector[nrElems]);
-  // Isolate the number of the RCU
-  theRCUNumber_asStr = substr(theRCU, 3 , strlen(theRCU));
-	// Define the anInteger of the isolated number  
- 	sscanf(theRCUNumber_asStr, \"%d\", theRCUNumber_asInt); // Read from string as int
- 	// Define of the integer is odd or even
- 	if ( fmod(theRCUNumber_asInt,2) == 1)
- 		isOdd = true;
- 	else
- 		isOdd = false; 
-	// Set the textvalue in the panel
-	// If the RCUNumber_asInt is odd it is an X-polarization
-	// If the RCUNumber_asInt is even it is an Y-polarization
-  if (!isOdd)
-    setValue(\"\", \"text\", \"X\");
-  else
-    setValue(\"\", \"text\", \"Y\");
-}
-" 0
+  defineXYpolarization(); 
+}" 0
  E 0 1 1 0 1 E U  0 E 168 109 176 125
 0 2 0 "s" 0 0 0 192 0 0  168 109
  1
@@ -436,38 +439,8 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  string theRCU;
-  string theRCUNumber_asStr;
-  int    theRCUNumber_asInt;
-  bool   isOdd = false;
-  
-  // Split datapoint into vector
-  // example of datapoint : LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_rcu0
-  dyn_string dp_strVector  = strsplit(dpSubStr($datapoint,DPSUB_DP),'_');
-  int        nrElems       = dynlen(dp_strVector);
- 	//for (int idx=1; idx < nrElems+1; idx++) {
-  //	DebugN(idx + \" : \" + dp_strVector[idx]);
-	//}
-	// The latest element in the array is the value we need
-  theRCU             = strtoupper(dp_strVector[nrElems]);
-  // Isolate the number of the RCU
-  theRCUNumber_asStr = substr(theRCU, 3 , strlen(theRCU));
-	// Define the anInteger of the isolated number  
- 	sscanf(theRCUNumber_asStr, \"%d\", theRCUNumber_asInt); // Read from string as int
- 	// Define of the integer is odd or even
- 	if ( fmod(theRCUNumber_asInt,2) == 1)
- 		isOdd = true;
- 	else
- 		isOdd = false; 
-	// Set the textvalue in the panel
-	// If the RCUNumber_asInt is odd it is an X-polarization
-	// If the RCUNumber_asInt is even it is an Y-polarization
-  if (!isOdd)
-    setValue(\"\", \"text\", \"X\");
-  else
-    setValue(\"\", \"text\", \"Y\");
-}
-" 0
+  defineXYpolarization(); 
+}" 0
  E 0 1 1 0 1 E U  0 E 350 108 358 124
 0 2 0 "s" 0 0 0 192 0 0  350 108
  1
@@ -722,6 +695,57 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 LANG:1 1 0
 1 647 43 "" 1
 0
+7 648
+"stateLBL"
+""
+1 135 76 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+197 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  defineStateAntenna(\"LBL\");
+}" 0
+ E 0 1 1 0 1 E U  1 E 135 76 7 7
+7 649
+"stateLBH"
+""
+1 316 76 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+198 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  defineStateAntenna(\"LBH\");
+}" 0
+ E 0 1 1 0 1 E U  1 E 316 76 7 7
+7 650
+"stateHBA"
+""
+1 493 76 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+199 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  defineStateAntenna(\"HBA\");
+}" 0
+ E 0 1 1 0 1 E U  1 E 493 76 7 7
 1 599 13 "" 1
 0
 1 603 15 "" 1
@@ -832,5 +856,5 @@ LANG:1 6 Layer8
 3 43 "selfState"
 "objects\\nav_usr\\CS1\\lofar_self_state.pnl" 25 171 T 196 1 0 1  55 469  
 1
-"$object""RCU"
+"$object""Subrack"
 0
