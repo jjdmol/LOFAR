@@ -286,6 +286,26 @@ double StringToDouble(const string& aString,const char* fmt=0) throw(Exception);
 
 // @}
 
+// @name Manupulate strings containing a array specification
+// Array specification are often entered by the user with ranges like 3..32,55..58
+// For converting such a string to a real vector the spec must be expanded so that
+// it contains all elements i.s.o. the ranges. 
+// Likewise, when you present a array to the user you often want to show a spec with
+// the ranges i.s.o. all loose elements. The following functions do the conversions.
+
+// @{
+// Given een array string ( '[ xx, xx, xx ]' ) this utility compacts the string
+// by replacing series with range.
+// Eg. [ lii001, lii002, lii003, lii005 ] --> [ lii001..lii003, lii005 ]
+string compactedArrayString(const string&	orgStr);
+
+// Given een array string ( '[ xx..xx, xx ]' ) this utility expands the string
+// by replacing ranges with the fill series.
+// Eg. [ lii001..lii003, lii005 ] --> [ lii001, lii002, lii003, lii005 ]
+string expandedArrayString(const string&	orgStr);
+
+// @} 
+
 } // namespace LOFAR
 
 #endif
