@@ -257,10 +257,10 @@ namespace LOFAR {
 // Create a TraceLogger object that will output your message during construct
 // and destruction. Your message is preceeded with "ENTER:" or "EXIT:".
 #define LOG_TRACE_LIFETIME_STR(level,stream) \
-	std::ostringstream	oss; \
-	oss << AUTO_FUNCTION_NAME << ": " << stream; \
+	std::ostringstream	lfr_log_oss; \
+	lfr_log_oss << AUTO_FUNCTION_NAME << ": " << stream; \
 	::LOFAR::LifetimeLogger	_tmpLifetimeTraceObj(level, getLogger().logger(), \
-								oss.str(), __FILE__, __LINE__);
+								lfr_log_oss.str(), __FILE__, __LINE__);
 	
 //# ----------- implementation details tracer part -------------
 
@@ -287,9 +287,9 @@ void	initTraceModule(void);
 // Internal macro used by the LOG_TRACE_<level>_STR macros.
 #define LofarLogTraceStr(level,stream) do { \
 	if (getLogger().logger().isEnabledFor(level)) { \
-		std::ostringstream	oss;	\
-		oss << stream;					\
-		getLogger().logger().forcedLog(level, oss.str(), __FILE__, __LINE__); } \
+		std::ostringstream	lfr_log_oss;	\
+		lfr_log_oss << stream;					\
+		getLogger().logger().forcedLog(level, lfr_log_oss.str(), __FILE__, __LINE__); } \
 	} while(0)
 
 // @}
@@ -349,11 +349,11 @@ void	initTraceModule(void);
 // before executing the real throw.
 #undef THROW
 #define THROW(exc,stream) do { \
-	std::ostringstream	oss;	\
-	oss << stream;				\
+	std::ostringstream	lfr_log_oss;	\
+	lfr_log_oss << stream;				\
 	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE ".EXCEPTION").log( \
-					log4cplus::DEBUG_LOG_LEVEL, oss.str(), __FILE__, __LINE__); \
-	throw (exc(oss.str(), __HERE__)); \
+					log4cplus::DEBUG_LOG_LEVEL, lfr_log_oss.str(), __FILE__, __LINE__); \
+	throw (exc(lfr_log_oss.str(), __HERE__)); \
 	} while(0)
 
 // @}
@@ -370,9 +370,9 @@ void	initTraceModule(void);
 
 // \internal
 #define LofarLogStr(level,stream) do {		\
-	std::ostringstream	oss;			\
-	oss << stream;						\
-	LofarLog(level,oss.str());			\
+	std::ostringstream	lfr_log_oss;			\
+	lfr_log_oss << stream;						\
+	LofarLog(level,lfr_log_oss.str());			\
 	} while(0)
 // @}
 #endif // DOXYGEN_SHOULD_SKIP_THIS
