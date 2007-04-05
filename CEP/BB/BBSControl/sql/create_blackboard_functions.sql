@@ -101,8 +101,8 @@ $$
     BEGIN
         _id := nextval('blackboard.command_id_seq');
         INSERT
-            INTO blackboard.command(id)
-            VALUES (_id);
+            INTO blackboard.command(id, "Type")
+            VALUES (_id, 'EXEC_STEP');
 
         RETURN _id;
     END;

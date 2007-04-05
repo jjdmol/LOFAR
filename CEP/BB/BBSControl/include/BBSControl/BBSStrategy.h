@@ -81,7 +81,6 @@ namespace LOFAR
       // @name Accessor methods
       // @{
       string         dataSet()          const { return itsDataSet; }
-      BBDB           bbDB()             const { return itsBBDB; }
       ParmDB         parmDB()           const { return itsParmDB; }
       vector<string> stations()         const { return itsStations; }
       string         inputData()        const { return itsInputData; }
@@ -111,9 +110,6 @@ namespace LOFAR
 
       // Name of the Measurement Set
       string                 itsDataSet;
-
-      // Information about the blackboard database.
-      BBDB                   itsBBDB;
 
       // Information about the parameter database.
       ParmDB                 itsParmDB;

@@ -28,8 +28,9 @@
 #include <BBSControl/KernelProcessControl.h>
 //#include <BBSControl/Command.h>
 #include <BBSControl/BBSStep.h>
-/*
+#include <BBSControl/InitializeCommand.h>
 #include <BBSControl/BBSStrategy.h>
+/*
 #include <BBSControl/BBSPredictStep.h>
 #include <BBSControl/BBSSubtractStep.h>
 #include <BBSControl/BBSCorrectStep.h>
@@ -132,9 +133,10 @@ namespace BBS
             LOG_DEBUG("+ ok");
 */
 
-            itsCommandQueue.reset(new
-CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
+            itsCommandQueue.reset(new CommandQueue(
+                globalParameterSet()->getString("BBDB.DBName")));
 
+            itsCommandControl.reset(new KernelCommandControl(itsCommandQueue));
 /*
             LOG_DEBUG("Trying to connect to solver@localhost");
             if(!itsSolverConnection->connect())
@@ -172,6 +174,24 @@ CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
                 }
 
                 LOG_DEBUG("New run, entering RUN state.");
+                itsState = KernelProcessControl::FIRST_RUN;
+                break;
+                }
+
+            case KernelProcessControl::FIRST_RUN:
+                {
+                scoped_ptr<const BBSStrategy>strategy(
+                    itsCommandQueue->getStrategy());
+
+                if(!strategy)
+                {
+                    sleep(3);
+                    break;
+                }
+
+                LOG_DEBUG("Executing an implicit INITIALIZE command.");
+                InitializeCommand cmd;
+                cmd.accept(*itsCommandControl);
                 itsState = KernelProcessControl::RUN;
                 break;
                 }
@@ -184,7 +204,7 @@ CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
                 {
                     LOG_DEBUG("Received command, remaining in RUN state.");
 
-                    step->accept(itsCommandControl);
+                    step->accept(*itsCommandControl);
                 }
                 else
                 {

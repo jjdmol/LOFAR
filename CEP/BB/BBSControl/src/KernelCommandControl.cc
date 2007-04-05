@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <BBSControl/KernelCommandControl.h>
 
+#include <BBSControl/CommandQueue.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSMultiStep.h>
@@ -41,18 +42,19 @@ namespace LOFAR
 namespace BBS 
 {
 
-void KernelCommandControl::handle(const BBSStrategy &command)
+void KernelCommandControl::handle(const InitializeCommand &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-    LOG_DEBUG("Handling a BBSStrategy");
-    LOG_DEBUG_STR("Command: " << endl << command);
+    LOG_DEBUG("Handling an InitializeCommand");
 
-/*
+    scoped_ptr<const BBSStrategy> strategy(itsCommandQueue->getStrategy());
+    ASSERT(strategy);
+
     try
     {
         // Create a new Prediffer.
-        itsPrediffer.reset(new Prediffer(strategy->dataSet(),
+        itsKernel.reset(new Prediffer(strategy->dataSet(),
             strategy->inputData(),
             strategy->parmDB().localSky,
             strategy->parmDB().instrument,
@@ -60,6 +62,49 @@ void KernelCommandControl::handle(const BBSStrategy &command)
             0,
             false));
 
+        // Select stations and correlations.
+        itsKernel->setSelection(strategy->stations(), strategy->correlation());
+    }
+    catch(Exception& e)
+    {
+        LOG_WARN_STR(e);
+    }
+}
+
+
+void KernelCommandControl::handle(const FinalizeCommand &command)
+{
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+    LOG_DEBUG("Handling a FinalizeCommand");
+}
+
+
+void KernelCommandControl::handle(const NextChunkCommand &command)
+{
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+    LOG_DEBUG("Handling a NextChunkCommand");
+
+/*
+    // Should go to NEXT_CHUNK
+    ASSERT(itsPrediffer->setWorkDomain(itsRegionOfInterest[0],
+        itsRegionOfInterest[1],
+        itsRegionOfInterest[2],
+        itsRegionOfInterest[3]));*/
+}
+
+
+void KernelCommandControl::handle(const BBSStrategy &command)
+{
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+    LOG_DEBUG("Handling a BBSStrategy");
+    LOG_DEBUG_STR("Command: " << endl << command);
+
+    ASSERTSTR(false, "Should not get here...");
+
+/*
         // Store work domain size / region of interest.
         itsWorkDomainSize = strategy->domainSize();
         itsRegionOfInterest = strategy->regionOfInterest();
@@ -118,16 +163,7 @@ incorrect format; will use the local data domain instead.");
             itsRegionOfInterest[2] = domain.startY();
             itsRegionOfInterest[3] = domain.endY();
         }
-
-        // Select stations and correlations.
-        return itsPrediffer->setSelection(strategy->stations(),
-strategy->correlation());
-    }
-    catch(Exception& e)
-    {
-        LOG_WARN_STR(e);
-        return false;
-    }*/
+*/
 }
 
 
@@ -135,12 +171,6 @@ void KernelCommandControl::handle(const BBSStep &command)
 {
     LOG_DEBUG("Handling a BBSStep");
     LOG_DEBUG_STR("Command: " << endl << command);
-/*
-    // Should go to NEXT_CHUNK
-    ASSERT(itsPrediffer->setWorkDomain(itsRegionOfInterest[0],
-        itsRegionOfInterest[1],
-        itsRegionOfInterest[2],
-        itsRegionOfInterest[3]));*/
 }
 
 

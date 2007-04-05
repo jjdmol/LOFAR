@@ -50,6 +50,8 @@ public:
     enum State
     {
         INIT,
+        FIRST_RUN,  // Temporary state (until we can insert command into the
+                    // command queue
         RUN,
         WAIT
     };
@@ -71,15 +73,16 @@ public:
     // @}
 
 private:
-    State                       itsState;
+    State                               itsState;
+
     // Command Queue.
-    scoped_ptr<CommandQueue>    itsCommandQueue;
+    shared_ptr<CommandQueue>            itsCommandQueue;
 
     // Command Controller.
-    KernelCommandControl        itsCommandControl;
+    scoped_ptr<KernelCommandControl>    itsCommandControl;
 
     // Parameter set for this process controller.
-    ACC::APS::ParameterSet      itsParameterSet;
+    ACC::APS::ParameterSet              itsParameterSet;
 };
 //@}
 

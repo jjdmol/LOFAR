@@ -230,8 +230,24 @@ namespace LOFAR
       // result row; return a null pointer.
       if (ps.getString("DataSet").empty()) return 0;
 
+      // Nasty but (currently) unavoidable conversion...
+      // We could move DataSet (and ParmDB.*) to Strategy as well?
+      ParameterSet tmp;
+      for(ParameterSet::const_iterator it = ps.begin(); it != ps.end(); ++it)
+      {
+        if(it->first == "DataSet"
+          || it->first == "ParmDB.Instrument"
+          || it->first == "ParmDB.LocalSky"
+          || it->first == "ParmDB.History")
+        {
+            tmp.add(it->first, it->second);
+        }
+        else
+            tmp.add("Strategy." + it->first, it->second);
+      }
+
       // Create a BBSStrategy object using the parameter set and return it.
-      return new BBSStrategy(ps);
+      return new BBSStrategy(tmp);
     }
 
 

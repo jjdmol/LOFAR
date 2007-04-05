@@ -27,6 +27,9 @@ namespace LOFAR
 {
 namespace BBS
 {
+class InitializeCommand;
+class FinalizeCommand;
+class NextChunkCommand;
 class BBSStrategy;
 class BBSStep;
 class BBSMultiStep;
@@ -43,6 +46,9 @@ class CommandHandler
 public:
     virtual ~CommandHandler() = 0;
 
+    virtual void handle(const InitializeCommand &command) = 0;
+    virtual void handle(const FinalizeCommand &command) = 0;
+    virtual void handle(const NextChunkCommand &command) = 0;
     virtual void handle(const BBSStrategy &command) = 0;
     virtual void handle(const BBSStep &command) = 0;
     virtual void handle(const BBSMultiStep &command) = 0;
