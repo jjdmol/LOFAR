@@ -95,8 +95,8 @@ namespace LOFAR
 
       // Check to see if we're starting a new run. The local controller needs
       // to do a few extra checks; these checks will be done when \a
-      // isLocalCtrl is \c true.
-      bool isNewRun(bool isLocalCtrl) const;
+      // isGlobalCtrl is \c false.
+      bool isNewRun(bool isGlobalCtrl) const;
 
     private:
       // CommandQueueTrigger needs to have access to itsConnection, so we make
