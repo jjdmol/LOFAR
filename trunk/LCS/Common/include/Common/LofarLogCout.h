@@ -141,7 +141,7 @@ public: \
 		::LOFAR::LFDebug::Tracer objname; \
 		constructStream(stream); \
 		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
-                        AUTO_FUNCTION_NAME, oss.str().c_str(), 0); \
+                        AUTO_FUNCTION_NAME, lfr_log_oss.str().c_str(), 0); \
 	}
 
 #define LOG_TRACE_LIFETIME(level,message) \
@@ -197,8 +197,8 @@ public: \
 // possible object debug status. 
 #define THROW(exc,msg) do { \
 	constructStream(msg); \
-	cLog(1, "EXCEPTION", oss.str()); \
-	throw(exc(oss.str(), __HERE__)); \
+	cLog(1, "EXCEPTION", lfr_log_oss.str()); \
+	throw(exc(lfr_log_oss.str(), __HERE__)); \
 	} while(0)
 
 //# ---------- implementation details generic part ----------
@@ -214,8 +214,8 @@ public: \
 		::LOFAR::LFDebug::getDebugStream()
 
 #define	constructStream(stream) \
-	std::ostringstream	oss; \
-	oss << stream
+	std::ostringstream	lfr_log_oss; \
+	lfr_log_oss << stream
 
 #define	cLog(level,levelname,message) \
 	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
@@ -224,7 +224,7 @@ public: \
 
 #define cLogstr(level,levelname,stream) do { \
 		constructStream(stream); \
-		cLog(level,levelname,oss.str()); \
+		cLog(level,levelname,lfr_log_oss.str()); \
 	} while(0)
 
 #define	cDebug(level,levelname,message) \
@@ -234,7 +234,7 @@ public: \
 
 #define cDebugstr(level,levelname,stream) do { \
 		constructStream(stream); \
-		cDebug(level,levelname,oss.str()); \
+		cDebug(level,levelname,lfr_log_oss.str()); \
 	} while(0)
 
 #define cTrace(level,message) \
@@ -245,7 +245,7 @@ public: \
 
 #define cTracestr(level,stream) do { \
 		constructStream(stream); \
-		cTrace(level,oss.str()); \
+		cTrace(level,lfr_log_oss.str()); \
 	} while(0)
 
 
