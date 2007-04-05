@@ -46,7 +46,7 @@ namespace LOFAR
     }
 
 
-    void BBSSingleStep::accept(CommandHandler &handler)
+    void BBSSingleStep::accept(CommandHandler &handler) const
     {
         handler.handle(*this);
     }

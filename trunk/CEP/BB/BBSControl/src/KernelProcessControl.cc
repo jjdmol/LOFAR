@@ -36,6 +36,7 @@
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/BBSSubtractStep.h>
 */
+#include <BBSControl/Exceptions.h>
 #include <BBSControl/BlobStreamableVector.h>
 #include <BBSControl/DomainRegistrationRequest.h>
 #include <BBSControl/IterationRequest.h>
@@ -47,7 +48,6 @@
 #include <APS/ParameterSet.h>
 #include <Blob/BlobStreamable.h>
 
-#include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/Timer.h>
@@ -78,7 +78,7 @@ namespace BBS
     //##----   P u b l i c   m e t h o d s   ----##//
     KernelProcessControl::KernelProcessControl() :
         ProcessControl(),
-        itsPrediffer(0)
+        itsState(KernelProcessControl::INIT)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
@@ -88,19 +88,18 @@ namespace BBS
     {
         LOG_DEBUG("KernelProcessControl::define()");
 
-        try {
 /*
+        try {
             itsControllerConnection.reset(new BlobStreamableConnection(
                     globalParameterSet()->getString("Controller.Host"),
                     globalParameterSet()->getString("Controller.Port")));
-*/
 
             char *user = getenv("USER");
             ASSERT(user);
             string userString(user);
             itsSolverConnection.reset(new BlobStreamableConnection(
                 "localhost",
-                "=BBSSolver_" + userString,
+                "=Solver_" + userString,
                 Socket::LOCAL));
         }
         catch(Exception& e)
@@ -108,6 +107,7 @@ namespace BBS
             LOG_ERROR_STR(e);
             return false;
         }
+*/
 
         return true;
     }
@@ -131,9 +131,11 @@ namespace BBS
             }
             LOG_DEBUG("+ ok");
 */
+
             itsCommandQueue.reset(new
 CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
 
+/*
             LOG_DEBUG("Trying to connect to solver@localhost");
             if(!itsSolverConnection->connect())
             {
@@ -141,6 +143,7 @@ CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
                 return false;
             }
             LOG_DEBUG("+ ok");
+*/
         }
         catch(Exception& e)
         {
@@ -157,31 +160,57 @@ CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
     {
         LOG_DEBUG("KernelProcessControl::run()");
 
-        try
+        switch(itsState)
         {
-            // Receive the next message
-            scoped_ptr<BBSStep>
-step(const_cast<BBSStep*>(itsCommandQueue->getNextStep()));
-            //scoped_ptr<BlobStreamable>
-//message(itsControllerConnection->recvObject());
-            //Command *command = dynamic_cast<
-//Command*>(message.get());
+            case KernelProcessControl::INIT:
+                {
+                if(!itsCommandQueue->isNewRun(true))
+                {
+                    LOG_ERROR("Need to recover from an aborted run, but \
+                        recovery has not yet been implemented.");
+                    return false;
+                }
 
-            if(step)
-            {
-                step->accept(itsCommandController);
-                return true;
-            }
-            else
-                return false;
+                LOG_DEBUG("New run, entering RUN state.");
+                itsState = KernelProcessControl::RUN;
+                break;
+                }
+
+            case KernelProcessControl::RUN:
+                {
+                scoped_ptr<const BBSStep> step(itsCommandQueue->getNextStep());
+
+                if(step)
+                {
+                    LOG_DEBUG("Received command, remaining in RUN state.");
+
+                    step->accept(itsCommandControl);
+                }
+                else
+                {
+                    LOG_DEBUG("Command Queue empty, entering WAIT state.");
+                    itsState = KernelProcessControl::WAIT;
+                }
+                break;
+                }
+
+            case KernelProcessControl::WAIT:
+                {
+                /* await notification here */
+                LOG_DEBUG("WAIT state not yet implemented, returning to \
+                    RUN state.");
+                itsState = KernelProcessControl::RUN;
+                break;
+                }
+
+            default:
+                {
+                THROW(LocalControlException, "Unknown state identifier \
+                    encountered");
+                }
         }
-        catch(Exception& e)
-        {
-            LOG_ERROR_STR(e);
-//            itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR,
-//e.message()));
-            return false;
-        }
+
+        return true;
     }
 
 

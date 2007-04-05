@@ -24,9 +24,16 @@
 #define LOFAR_BBSCONTROL_KERNELCOMMANDCONTROL_H
 
 #include <BBSControl/CommandHandler.h>
+//#include <BBSControl/BlobStreamableConnection.h>
+//#include <BBSControl/BBSStructs.h>
+
+//#include <BBSKernel/Prediffer.h>
 
 namespace LOFAR
 {
+//# Forward declations
+class BlobStreamable;
+
 namespace BBS
 {
 
@@ -37,16 +44,35 @@ public:
     {
     }
 
-    virtual void handle(BBSStrategy &command);
-    virtual void handle(BBSStep &command);
-    virtual void handle(BBSMultiStep &command);
-    virtual void handle(BBSSingleStep &command);
-    virtual void handle(BBSPredictStep &command);
-    virtual void handle(BBSSubtractStep &command);
-    virtual void handle(BBSCorrectStep &command);
-    virtual void handle(BBSSolveStep &command);
-    virtual void handle(BBSShiftStep &command);
-    virtual void handle(BBSRefitStep &command);
+    // @name Implementation of handle() for different commands.
+    // @{
+    virtual void handle(const BBSStrategy &command);
+    virtual void handle(const BBSStep &command);
+    virtual void handle(const BBSMultiStep &command);
+    virtual void handle(const BBSSingleStep &command);
+    virtual void handle(const BBSPredictStep &command);
+    virtual void handle(const BBSSubtractStep &command);
+    virtual void handle(const BBSCorrectStep &command);
+    virtual void handle(const BBSSolveStep &command);
+    virtual void handle(const BBSShiftStep &command);
+    virtual void handle(const BBSRefitStep &command);
+    // @}
+
+/*
+private:
+    // Prediffer
+    scoped_ptr<Prediffer> itsPrediffer;
+
+    // Connections
+    //scoped_ptr<BlobStreamableConnection> itsControllerConnection;
+    scoped_ptr<BlobStreamableConnection> itsSolverConnection;
+
+    // Region of interest
+    vector<double> itsRegionOfInterest;
+
+    // Work domain size
+    DomainSize itsWorkDomainSize;
+*/
 };
 
 } //# namespace BBS

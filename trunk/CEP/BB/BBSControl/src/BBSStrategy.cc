@@ -125,7 +125,7 @@ namespace LOFAR
     }
 
 
-    void BBSStrategy::accept(CommandHandler &handler)
+    void BBSStrategy::accept(CommandHandler &handler) const
     {
         handler.handle(*this);
     }

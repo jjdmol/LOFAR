@@ -28,97 +28,62 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
+#include <BBSControl/CommandQueue.h>
+#include <BBSControl/KernelCommandControl.h>
+
+#include <Common/lofar_smartptr.h>
 #include <PLC/ProcessControl.h>
 #include <APS/ParameterSet.h>
-#include <Common/lofar_smartptr.h>
-#include <BBSControl/BlobStreamableConnection.h>
-#include <BBSKernel/Prediffer.h>
-#include <BBSControl/KernelCommandControl.h>
-#include <BBSControl/CommandQueue.h>
-#include <BBSControl/BBSStructs.h>
 
 namespace LOFAR
 {
-  //# Forward declations
-  class BlobStreamable;
+namespace BBS
+{
+// \addtogroup BBSControl
+// @{
 
-  namespace BBS
-  {
-    //class CommandQueue;
-/*
-    //# Forward declations
-    class BBSStep;
-    class BBSStrategy;
-    class BBSPredictStep;
-    class BBSSubtractStep;
-    class BBSCorrectStep;
-    class BBSSolveStep;
-*/
-//    struct Context;
-
-    // \addtogroup BBSControl
-    // @{
-
-    // Implementation of the ProcessControl interface for the local Kernel
-    // controller.
-    class KernelProcessControl: public ACC::PLC::ProcessControl
+// Implementation of the ProcessControl interface for the local Kernel
+// controller.
+class KernelProcessControl: public ACC::PLC::ProcessControl
+{
+public:
+    enum State
     {
-    public:
-      // Default constructor.
-      KernelProcessControl();
-
-      // @name Implementation of PLC interface.
-      // @{
-      virtual tribool define();
-      virtual tribool init();
-      virtual tribool run();
-      virtual tribool pause(const string& condition);
-      virtual tribool quit();
-      virtual tribool snapshot(const string& destination);
-      virtual tribool recover(const string& source);
-      virtual tribool reinit(const string& configID);
-      virtual string  askInfo(const string& keylist);
-      // @}
-
-    private:
-/*
-      bool dispatch(const BlobStreamable *message);
-      
-      bool handle(const BBSStrategy *strategy);
-      bool handle(const BBSStep *bs);
-      
-      // @name Implementation of handle() for the different BBSStep types.
-      // @{
-      bool handle(const BBSPredictStep *step);
-      bool handle(const BBSSubtractStep *step);
-      bool handle(const BBSCorrectStep *step);
-      bool handle(const BBSSolveStep *step);
-      // @}
-*/
-      // Command controller.
-      KernelCommandControl itsCommandController;
-
-      // Command Queue
-      scoped_ptr<CommandQueue> itsCommandQueue;
-
-      // Parameter set for this process controller.
-      ACC::APS::ParameterSet itsParameterSet;
-
-      // Prediffer
-      scoped_ptr<Prediffer> itsPrediffer;
-      
-      // Connections
-      //scoped_ptr<BlobStreamableConnection> itsControllerConnection;
-      scoped_ptr<BlobStreamableConnection> itsSolverConnection;
-      
-      // Region of interest
-      vector<double> itsRegionOfInterest;
-      
-      // Work domain size
-      DomainSize itsWorkDomainSize;
+        INIT,
+        RUN,
+        WAIT
     };
 
-  } // namespace BBS
+    // Constructor
+    KernelProcessControl();
+
+    // @name Implementation of PLC interface.
+    // @{
+    virtual tribool define();
+    virtual tribool init();
+    virtual tribool run();
+    virtual tribool pause(const string& condition);
+    virtual tribool quit();
+    virtual tribool snapshot(const string& destination);
+    virtual tribool recover(const string& source);
+    virtual tribool reinit(const string& configID);
+    virtual string  askInfo(const string& keylist);
+    // @}
+
+private:
+    State                       itsState;
+    // Command Queue.
+    scoped_ptr<CommandQueue>    itsCommandQueue;
+
+    // Command Controller.
+    KernelCommandControl        itsCommandControl;
+
+    // Parameter set for this process controller.
+    ACC::APS::ParameterSet      itsParameterSet;
+};
+//@}
+
+} // namespace BBS
 } // namespace LOFAR
 
 #endif

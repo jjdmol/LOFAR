@@ -37,7 +37,7 @@ namespace LOFAR
 	registerClass<BBSRefitStep>("BBSRefitStep");
     }
 
-    void BBSRefitStep::accept(CommandHandler &handler)
+    void BBSRefitStep::accept(CommandHandler &handler) const
     {
         handler.handle(*this);
     }
