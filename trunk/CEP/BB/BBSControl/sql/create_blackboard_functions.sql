@@ -68,7 +68,7 @@ LANGUAGE SQL;
 -- checking the result table. NOTE: This is also not foolproof, if
 -- the first command modifies data/state (because it can be partly
 -- executed).
-CREATE OR REPLACE FUNCTION blackboard.is_clean_startup(global BOOL)
+CREATE OR REPLACE FUNCTION blackboard.is_new_run(global BOOL)
 RETURNS BOOLEAN AS
 $$
     DECLARE

@@ -241,7 +241,7 @@ namespace LOFAR
 
       // Compose the query.
       ostringstream query;
-      query << "SELECT * FROM blackboard.is_clean_startup('"
+      query << "SELECT * FROM blackboard.is_new_run('"
         << (isGlobalCtrl ? "TRUE" : "FALSE")
         << "') AS result";
 

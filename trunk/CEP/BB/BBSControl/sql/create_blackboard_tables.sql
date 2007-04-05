@@ -14,7 +14,7 @@ CREATE TABLE blackboard.strategy
     "WorkDomainSize.Time"   DOUBLE PRECISION    NOT NULL,
       
     "Correlation.Selection" TEXT                DEFAULT 'CROSS',
-    "Correlation.Type"      TEXT                DEFAULT '["XX","XY","YX","YY"]'
+    "Correlation.Type"      TEXT                DEFAULT '[]'
 );
 
 
@@ -26,7 +26,9 @@ CREATE SEQUENCE blackboard.command_id_seq;
 CREATE TABLE blackboard.command
 (
     id              INTEGER                     PRIMARY KEY,
-    timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now()
+    timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
+
+    "Type"          TEXT                        NOT NULL
 );
 
 
@@ -43,12 +45,12 @@ CREATE TABLE blackboard.step
     "Baselines.Station2"    TEXT                DEFAULT '[]',
     
     "Correlation.Selection" TEXT                DEFAULT 'CROSS',
-    "Correlation.Type"      TEXT                DEFAULT '["XX","XY","YX","YY"]',
+    "Correlation.Type"      TEXT                DEFAULT '[]',
     
     "Sources"               TEXT                DEFAULT '[]',
     "InstrumentModel"       TEXT                DEFAULT '[]',
 
-    "OutputData"            TEXT                DEFAULT 'CORRECTED_DATA'
+    "OutputData"            TEXT                NOT NULL
 );
 
 
@@ -56,10 +58,10 @@ CREATE TABLE blackboard.solve_arguments
 (
     step_id                 INTEGER             UNIQUE NOT NULL REFERENCES blackboard.step (id) ON DELETE CASCADE,
 
-    "MaxIter"               INTEGER             DEFAULT 1,
-    "Epsilon"               DOUBLE PRECISION    DEFAULT 1e-6,
-    "MinConverged"          DOUBLE PRECISION    DEFAULT 100.0,
-    "Parms"                 TEXT                DEFAULT '[]',
+    "MaxIter"               INTEGER             NOT NULL,
+    "Epsilon"               DOUBLE PRECISION    NOT NULL,
+    "MinConverged"          DOUBLE PRECISION    NOT NULL,
+    "Parms"                 TEXT                NOT NULL,
     "ExclParms"             TEXT                DEFAULT '[]',
     "DomainSize.Freq"       DOUBLE PRECISION    NOT NULL,
     "DomainSize.Time"       DOUBLE PRECISION    NOT NULL
@@ -93,7 +95,7 @@ CREATE TABLE blackboard.result
 
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node            INET                        DEFAULT inet_client_addr(),
-    result_code     INTEGER                     DEFAULT 0,
+    result_code     INTEGER                     NOT NULL,
     message         TEXT                        NOT NULL
 );
 
