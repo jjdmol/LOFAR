@@ -1,7 +1,7 @@
 gnu.compiler.conf: CXX="$CCACHE /usr/bin/g++"
 gnu64.compiler.conf: CXX="$CCACHE /usr/bin/g++"
 
-mpich.var:                --with-mpich=/usr/local/ofed/mpi/gcc/mvapich-0.9.7-mlx2.1.0
+mpich.var:                --with-mpich=/usr/local/ofed/mpi/gcc/mvapich-0.9.7-mlx2.2.0
 openmpi.var:              --with-mpich=/usr/local/ofed/mpi/gcc/openmpi-1.1b1-1
 
 openmpi.variant.conf:	  $(standard) $(openmpi)
