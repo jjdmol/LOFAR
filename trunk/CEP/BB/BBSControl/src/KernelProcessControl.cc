@@ -164,7 +164,7 @@ CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
         {
             case KernelProcessControl::INIT:
                 {
-                if(!itsCommandQueue->isNewRun(true))
+                if(!itsCommandQueue->isNewRun(false))
                 {
                     LOG_ERROR("Need to recover from an aborted run, but \
                         recovery has not yet been implemented.");
@@ -199,6 +199,7 @@ CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
                 /* await notification here */
                 LOG_DEBUG("WAIT state not yet implemented, returning to \
                     RUN state.");
+                sleep(3);
                 itsState = KernelProcessControl::RUN;
                 break;
                 }

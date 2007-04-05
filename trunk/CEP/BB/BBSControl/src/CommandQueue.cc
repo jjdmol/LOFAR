@@ -82,10 +82,10 @@ namespace LOFAR
 
       string opts("dbname=" + dbname  + " user=" + user + 
 		  " host=" + host + " port=" + port);
-      try {
+    try {
 	LOG_DEBUG_STR("Connecting to database using options: " << opts);
 	itsConnection.reset(new pqxx::connection(opts));
-      } CATCH_PQXX_AND_RETHROW;
+    } CATCH_PQXX_AND_RETHROW;
     }
 
 
@@ -235,15 +235,15 @@ namespace LOFAR
     }
 
 
-    bool CommandQueue::isNewRun(bool isLocalCtrl) const
+    bool CommandQueue::isNewRun(bool isGlobalCtrl) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Compose the query.
       ostringstream query;
       query << "SELECT * FROM blackboard.is_clean_startup('"
-	    << (isLocalCtrl ? "TRUE" : "FALSE")
-	    << "') AS result";
+        << (isGlobalCtrl ? "TRUE" : "FALSE")
+        << "') AS result";
 
       // Execute the query and return the result.
       return execQuery(query.str()).getBool("result");
