@@ -19,11 +19,14 @@ pkginclude_HEADERS = \
 	CommandQueueTransactors.h \
 	DomainRegistrationRequest.h \
 	Exceptions.h \
+	FinalizeCommand.h \
 	GlobalProcessControl.h \
+	InitializeCommand.h \
 	IterationRequest.h \
 	IterationResult.h \
 	KernelProcessControl.h \
 	KernelCommandControl.h \
+	NextChunkCommand.h \
 	SolverProcessControl.h
 
 noinst_HEADERS = \

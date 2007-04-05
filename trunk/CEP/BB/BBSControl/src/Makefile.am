@@ -18,11 +18,14 @@ libbbscontrol_la_SOURCES	= \
 	CommandQueueTrigger.cc \
 	CommandQueueTransactors.cc \
 	CommandQueueTrigger.cc \
+	FinalizeCommand.cc \
 	GlobalProcessControl.cc \
+	InitializeCommand.cc \
 	IterationRequest.cc \
 	IterationResult.cc \
 	KernelProcessControl.cc \
 	KernelCommandControl.cc \
+	NextChunkCommand.cc \
 	pqutil.cc \
 	SolverProcessControl.cc
 

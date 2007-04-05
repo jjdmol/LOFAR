@@ -64,13 +64,6 @@ namespace LOFAR
       // Get the name of the Measurement Set.
       itsDataSet = aParSet.getString("DataSet");
 
-      // Retrieve the blackboard related key/value pairs.
-      itsBBDB.host = aParSet.getString("BBDB.Host");
-      itsBBDB.port = aParSet.getUint16("BBDB.Port");
-      itsBBDB.dbName = aParSet.getString("BBDB.DBName");
-      itsBBDB.username = aParSet.getString("BBDB.UserName");
-      itsBBDB.password = aParSet.getString("BBDB.PassWord");
-
       // Retrieve the parameter database related key/value pairs.
       itsParmDB.instrument = aParSet.getString("ParmDB.Instrument");
       itsParmDB.localSky = aParSet.getString("ParmDB.LocalSky");
@@ -100,16 +93,20 @@ namespace LOFAR
       itsCorrelation.type = ps.getStringVector("Correlation.Type");
 
       // Get the integration intervals in frequency (Hz) and time (s).
-      itsIntegration.deltaFreq = ps.getDouble("Integration.Freq");
-      itsIntegration.deltaTime = ps.getDouble("Integration.Time");
+      try {
+        itsIntegration.deltaFreq = ps.getDouble("Integration.Freq");
+        itsIntegration.deltaTime = ps.getDouble("Integration.Time");
+      } catch (APSException&) {}
 
       // This strategy consists of the following steps.
-      vector<string> steps(ps.getStringVector("Steps"));
+      try {
+        vector<string> steps(ps.getStringVector("Steps"));
 
-      // Create a new step for each name in \a steps.
-      for (uint i = 0; i < steps.size(); ++i) {
-        itsSteps.push_back(BBSStep::create(steps[i], aParSet, 0));
-      }
+        // Create a new step for each name in \a steps.
+        for (uint i = 0; i < steps.size(); ++i) {
+          itsSteps.push_back(BBSStep::create(steps[i], aParSet, 0));
+        }
+      } catch (APSException&) {}
     }
 
 
@@ -135,7 +132,6 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       os << endl << indent << "Measurement Set: " << itsDataSet
-	 << endl << indent << itsBBDB
 	 << endl << indent << itsParmDB
 	 << endl << indent << "Strategy:";
       Indent id;
@@ -169,7 +165,6 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bis >> itsDataSet
-	  >> itsBBDB
 	  >> itsParmDB
 	  >> itsStations
 	  >> itsInputData
@@ -189,7 +184,6 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bos << itsDataSet
-	  << itsBBDB
 	  << itsParmDB
 	  << itsStations
 	  << itsInputData

@@ -27,7 +27,10 @@
 //#include <BBSControl/BlobStreamableConnection.h>
 //#include <BBSControl/BBSStructs.h>
 
-//#include <BBSKernel/Prediffer.h>
+#include <BBSKernel/Prediffer.h>
+
+#include <Common/lofar_smartptr.h>
+
 
 namespace LOFAR
 {
@@ -36,16 +39,28 @@ class BlobStreamable;
 
 namespace BBS
 {
+//# Forward declations
+class CommandQueue;
+class Prediffer;
+
 
 class KernelCommandControl: public CommandHandler
 {
 public:
+    KernelCommandControl(shared_ptr<CommandQueue> &queue)
+        : itsCommandQueue(queue)
+    {
+    }
+
     virtual ~KernelCommandControl()
     {
     }
 
     // @name Implementation of handle() for different commands.
     // @{
+    virtual void handle(const InitializeCommand &command);
+    virtual void handle(const FinalizeCommand &command);
+    virtual void handle(const NextChunkCommand &command);
     virtual void handle(const BBSStrategy &command);
     virtual void handle(const BBSStep &command);
     virtual void handle(const BBSMultiStep &command);
@@ -58,11 +73,14 @@ public:
     virtual void handle(const BBSRefitStep &command);
     // @}
 
-/*
 private:
-    // Prediffer
-    scoped_ptr<Prediffer> itsPrediffer;
+    // Kernel
+    scoped_ptr<Prediffer> itsKernel;
 
+    // CommandQueue
+    shared_ptr<CommandQueue> itsCommandQueue;
+
+/*
     // Connections
     //scoped_ptr<BlobStreamableConnection> itsControllerConnection;
     scoped_ptr<BlobStreamableConnection> itsSolverConnection;
