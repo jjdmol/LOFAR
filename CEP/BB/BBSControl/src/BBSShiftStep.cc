@@ -37,7 +37,7 @@ namespace LOFAR
 	registerClass<BBSShiftStep>("BBSShiftStep");
     }
 
-    void BBSShiftStep::accept(CommandHandler &handler)
+    void BBSShiftStep::accept(CommandHandler &handler) const
     {
         handler.handle(*this);
     }

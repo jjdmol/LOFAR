@@ -34,7 +34,7 @@ class CommandHandler;
 class Command: public BlobStreamable
 {
 public:
-    virtual void accept(CommandHandler &handler) = 0;
+    virtual void accept(CommandHandler &handler) const = 0;
 };
 
 } //# namespace BBS

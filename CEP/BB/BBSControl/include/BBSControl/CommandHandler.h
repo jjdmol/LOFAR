@@ -43,18 +43,19 @@ class CommandHandler
 public:
     virtual ~CommandHandler() = 0;
 
-    virtual void handle(BBSStrategy &command) = 0;
-    virtual void handle(BBSStep &command) = 0;
-    virtual void handle(BBSMultiStep &command) = 0;
-    virtual void handle(BBSSingleStep &command) = 0;
-    virtual void handle(BBSPredictStep &command) = 0;
-    virtual void handle(BBSSubtractStep &command) = 0;
-    virtual void handle(BBSCorrectStep &command) = 0;
-    virtual void handle(BBSSolveStep &command) = 0;
-    virtual void handle(BBSShiftStep &command) = 0;
-    virtual void handle(BBSRefitStep &command) = 0;
+    virtual void handle(const BBSStrategy &command) = 0;
+    virtual void handle(const BBSStep &command) = 0;
+    virtual void handle(const BBSMultiStep &command) = 0;
+    virtual void handle(const BBSSingleStep &command) = 0;
+    virtual void handle(const BBSPredictStep &command) = 0;
+    virtual void handle(const BBSSubtractStep &command) = 0;
+    virtual void handle(const BBSCorrectStep &command) = 0;
+    virtual void handle(const BBSSolveStep &command) = 0;
+    virtual void handle(const BBSShiftStep &command) = 0;
+    virtual void handle(const BBSRefitStep &command) = 0;
 };
 
+//# Pure virtual destructor has to be defined...
 inline CommandHandler::~CommandHandler()
 {
 }

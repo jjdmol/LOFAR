@@ -47,7 +47,7 @@ namespace LOFAR
       virtual ~BBSSingleStep();
 
       // Accept a CommandHandler that wants to process \c *this.
-      virtual void accept(CommandHandler &handler);
+      virtual void accept(CommandHandler &handler) const;
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.

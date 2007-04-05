@@ -37,7 +37,7 @@ namespace LOFAR
 	registerClass<BBSCorrectStep>("BBSCorrectStep");
     }
 
-    void BBSCorrectStep::accept(CommandHandler &handler)
+    void BBSCorrectStep::accept(CommandHandler &handler) const
     {
         handler.handle(*this);
     }

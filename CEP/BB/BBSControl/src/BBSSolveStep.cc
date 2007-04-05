@@ -88,7 +88,7 @@ namespace LOFAR
     }
 
 
-    void BBSSolveStep::accept(CommandHandler &handler)
+    void BBSSolveStep::accept(CommandHandler &handler) const
     {
         handler.handle(*this);
     }

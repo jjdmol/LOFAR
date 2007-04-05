@@ -37,7 +37,7 @@ namespace LOFAR
 	registerClass<BBSPredictStep>("BBSPredictStep");
     }
 
-    void BBSPredictStep::accept(CommandHandler &handler)
+    void BBSPredictStep::accept(CommandHandler &handler) const
     {
         handler.handle(*this);
     }

@@ -56,7 +56,7 @@ namespace LOFAR
       }
 
       // Accept a CommandHandler that wants to process \c *this.
-      virtual void accept(CommandHandler &handler);
+      virtual void accept(CommandHandler &handler) const;
 
       // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
