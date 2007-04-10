@@ -123,11 +123,13 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
     dpQueryDisconnect("stationStateTriggered","PIC");
     dpQueryDisconnect("stationStateTriggered","Observation");
   }
-  dpQueryConnectSingle("stationStateTriggered",false,"PermSW",queryPermSW);
-  dpQueryConnectSingle("stationStateTriggered",false,"PIC",queryPIC);
-  dpQueryConnectSingle("stationStateTriggered",false,"Observation",queryObservation);
-  isConnected=true;
-    
+
+  if (dynlen(systemList) > 0 ) {
+    dpQueryConnectSingle("stationStateTriggered",false,"PermSW",queryPermSW);
+    dpQueryConnectSingle("stationStateTriggered",false,"PIC",queryPIC);
+    dpQueryConnectSingle("stationStateTriggered",false,"Observation",queryObservation);
+    isConnected=true;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
