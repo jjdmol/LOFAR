@@ -92,10 +92,8 @@ PVSS00ctrl -script libs/gcfpa-prep.ctl -currentproj; echo "(done)"
 # load some default navigator panels into the project
 #
 echo -n "Importing DPT's which enables a set of default dedicated panelviews..."
-convertedDefaultFile=`sed -e "s/CCU1/$mainSysName/" ../LOFAR/MAC/Navigator/dplist/nav_usr/MAC/MAC_Default_panelviews.dpl`
-echo "$convertedDefaultFile" > MAC_Default_panelviews.dpl
-PVSS00ascii -in MAC_Default_panelviews.dpl -currentproj; echo "(done)"
-rm -f MAC_Default_panelviews.dpl
+cp ../LOFAR/MAC/Navigator/dplist/nav_usr/CS1/CS1_Default_panelviews.dpl dplist/CS1_Default_panelviews.dpl
+PVSS00ascii -in CS1_Default_panelviews.dpl -currentproj; echo "(done)"
 
 #
 #shut down project
