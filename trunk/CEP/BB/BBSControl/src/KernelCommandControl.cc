@@ -24,6 +24,13 @@
 #include <BBSControl/KernelCommandControl.h>
 
 #include <BBSControl/CommandQueue.h>
+#include <BBSControl/BBSStructs.h>
+
+#include <BBSControl/BlobStreamableVector.h>
+#include <BBSControl/DomainRegistrationRequest.h>
+#include <BBSControl/IterationRequest.h>
+#include <BBSControl/IterationResult.h>
+
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSMultiStep.h>
@@ -36,11 +43,37 @@
 #include <BBSControl/BBSRefitStep.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/Timer.h>
+
+#include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/MVTime.h>
 
 namespace LOFAR
 {
 namespace BBS 
 {
+using LOFAR::operator<<;
+
+
+//# Ensure classes are registered with the ObjectFactory.
+template class BlobStreamableVector<DomainRegistrationRequest>;
+template class BlobStreamableVector<IterationRequest>;
+template class BlobStreamableVector<IterationResult>;
+
+
+bool KernelCommandControl::convertTime(string in, double &out)
+{
+    //# TODO: Convert from default epoch to MS epoch (as it may differ from 
+    //# the default!)
+    casa::Quantum<casa::Double> time;
+    
+    if(in.empty() || !casa::MVTime::read(time, in))
+        return false;
+    
+    out = static_cast<double>(time.getValue("s"));
+    return true;
+}
+
 
 void KernelCommandControl::handle(const InitializeCommand &command)
 {
@@ -53,7 +86,7 @@ void KernelCommandControl::handle(const InitializeCommand &command)
 
     try
     {
-        // Create a new Prediffer.
+        //# Create a new kernel.
         itsKernel.reset(new Prediffer(strategy->dataSet(),
             strategy->inputData(),
             strategy->parmDB().localSky,
@@ -61,14 +94,59 @@ void KernelCommandControl::handle(const InitializeCommand &command)
             strategy->parmDB().history,
             0,
             false));
-
-        // Select stations and correlations.
-        itsKernel->setSelection(strategy->stations(), strategy->correlation());
     }
     catch(Exception& e)
     {
         LOG_WARN_STR(e);
     }
+
+    //# Select stations and correlations.
+    itsKernel->setSelection(strategy->stations(), strategy->correlation());
+
+    //# Store chunk size.
+    itsChunkSize = strategy->domainSize().timeInterval;
+    
+    LOG_DEBUG_STR("ChunkSize: " << itsChunkSize);
+
+    //# Get Region Of Interest.
+    RegionOfInterest roi = strategy->regionOfInterest();
+    
+    //# Get Local Data Domain.
+    MeqDomain ldd = itsKernel->getLocalDataDomain();
+
+    //# Parse and validate time selection.
+    bool start = false, end = false;
+
+    start = (roi.time.size() >= 1) && convertTime(roi.time[0], itsROITime[0]);
+    end = (roi.time.size() >= 2) && convertTime(roi.time[1], itsROITime[1]);
+
+    if(start && end && itsROITime[0] > itsROITime[1])
+    {
+        LOG_WARN("Specified start/end times are incorrect; All times will" 
+            " be selected.");
+        start = end = false;
+    }
+
+    if(!start || itsROITime[0] <= ldd.startY())
+        itsROITime[0] = ldd.startY();
+
+    if(!end || itsROITime[1] >= ldd.endY())
+        itsROITime[1] = ldd.endY();
+
+    //# Get frequency (channel) selection.
+    itsROIFrequency[0] = itsROIFrequency[0] = -1;
+    if(roi.frequency.size() >= 1)
+        itsROIFrequency[0] = roi.frequency[0];
+    if(roi.frequency.size() >= 2)
+        itsROIFrequency[1] = roi.frequency[1];
+    
+    //# Reset chunk iteration.
+    itsChunkPosition = itsROITime[0];
+    
+    LOG_DEBUG_STR("Region Of Interest:" << endl
+        << "  + Channels: " << itsROIFrequency[0] << " - " << itsROIFrequency[1]
+        << endl
+        << "  + Time:     " << itsROITime[0] << " - " << itsROITime[1] << endl);
 }
 
 
@@ -86,12 +164,20 @@ void KernelCommandControl::handle(const NextChunkCommand &command)
 
     LOG_DEBUG("Handling a NextChunkCommand");
 
-/*
-    // Should go to NEXT_CHUNK
-    ASSERT(itsPrediffer->setWorkDomain(itsRegionOfInterest[0],
-        itsRegionOfInterest[1],
-        itsRegionOfInterest[2],
-        itsRegionOfInterest[3]));*/
+    //# Iteration should be moved to the kernel code. Ideally, we would only 
+    //# issue an itsKernel->nextChunk() here. However, as this is entangled with 
+    //# the new MS interface, we'll emulate it by setting a new local work 
+    //# domain for now.
+    
+    bool result = itsKernel->setWorkDomain(static_cast<int>(itsROIFrequency[0]),
+        static_cast<int>(itsROIFrequency[1]),
+        itsChunkPosition,
+        itsChunkSize);
+
+    itsChunkPosition += itsChunkSize;
+        
+    if(!result)
+        LOG_DEBUG_STR("NextChunk: OUT_OF_DATA");
 }
 
 
@@ -103,67 +189,6 @@ void KernelCommandControl::handle(const BBSStrategy &command)
     LOG_DEBUG_STR("Command: " << endl << command);
 
     ASSERTSTR(false, "Should not get here...");
-
-/*
-        // Store work domain size / region of interest.
-        itsWorkDomainSize = strategy->domainSize();
-        itsRegionOfInterest = strategy->regionOfInterest();
-
-        const MeqDomain domain = itsPrediffer->getLocalDataDomain();
-
-        if(itsRegionOfInterest.size() == 4)
-        {
-            if(itsRegionOfInterest[0] > itsRegionOfInterest[1])
-            {
-                double tmp = itsRegionOfInterest[0];
-                itsRegionOfInterest[0] = itsRegionOfInterest[1];
-                itsRegionOfInterest[1] = tmp;
-            }
-
-            if(itsRegionOfInterest[2] > itsRegionOfInterest[3])
-            {
-                double tmp = itsRegionOfInterest[2];
-                itsRegionOfInterest[2] = itsRegionOfInterest[3];
-                itsRegionOfInterest[3] = tmp;
-            }
-
-            // Time is specified as an offset from the start time of
-            // the measurement set.
-            itsRegionOfInterest[2] += domain.startY();
-            itsRegionOfInterest[3] += domain.startY();
-
-            if(itsRegionOfInterest[0] > domain.endX()
-                || itsRegionOfInterest[1] < domain.startX()
-                || itsRegionOfInterest[2] > domain.endY()
-                || itsRegionOfInterest[3] < domain.startY())
-            {
-                LOG_DEBUG_STR("Region of interest does not intersect the
-local data domain.");
-                return false;
-            }
-
-            // Clip region of interest against local data domain.
-            if(itsRegionOfInterest[0] < domain.startX())
-                itsRegionOfInterest[0] = domain.startX();
-            if(itsRegionOfInterest[1] > domain.endX())
-                itsRegionOfInterest[1] = domain.endX();
-
-            if(itsRegionOfInterest[2] < domain.startY())
-                itsRegionOfInterest[2] = domain.startY();
-            if(itsRegionOfInterest[3] > domain.endY())
-                itsRegionOfInterest[3] = domain.endY();
-        }
-        else
-        {
-            LOG_INFO("Strategy.RegionOfInterest not specified or has
-incorrect format; will use the local data domain instead.");
-            itsRegionOfInterest.resize(4);
-            itsRegionOfInterest[0] = domain.startX();
-            itsRegionOfInterest[1] = domain.endX();
-            itsRegionOfInterest[2] = domain.startY();
-            itsRegionOfInterest[3] = domain.endY();
-        }
-*/
 }
 
 
@@ -195,22 +220,23 @@ void KernelCommandControl::handle(const BBSPredictStep &command)
     LOG_DEBUG("Handling a BBSPredictStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-    /*ASSERTSTR(itsPrediffer, "No Prediffer available.");
+    ASSERTSTR(itsKernel, "No kernel available.");
 
     PredictContext context;
-    context.baselines = command->baselines();
-    context.correlation = command->correlation();
-    context.sources = command->sources();
-    context.instrumentModel = command->instrumentModels();
-    context.outputColumn = command->outputData();
+    context.baselines = command.baselines();
+    context.correlation = command.correlation();
+    context.sources = command.sources();
+    context.instrumentModel = command.instrumentModels();
+    context.outputColumn = command.outputData();
 
     // Set context.
-    if(!itsPrediffer->setContext(context))
-        return false;
+    if(!itsKernel->setContext(context))
+//        return false;
+        return;
 
     // Execute predict.
-    itsPrediffer->predictVisibilities();
-    return true;*/
+    itsKernel->predictVisibilities();
+//    return true;
 }
 
 
@@ -221,22 +247,23 @@ void KernelCommandControl::handle(const BBSSubtractStep &command)
     LOG_DEBUG("Handling a BBSSubtractStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-    /*ASSERTSTR(itsPrediffer, "No Prediffer available.");
+    ASSERTSTR(itsKernel, "No kernel available.");
 
     SubtractContext context;
-    context.baselines = step->baselines();
-    context.correlation = step->correlation();
-    context.sources = step->sources();
-    context.instrumentModel = step->instrumentModels();
-    context.outputColumn = step->outputData();
+    context.baselines = command.baselines();
+    context.correlation = command.correlation();
+    context.sources = command.sources();
+    context.instrumentModel = command.instrumentModels();
+    context.outputColumn = command.outputData();
 
     // Set context.
-    if(!itsPrediffer->setContext(context))
-        return false;
+    if(!itsKernel->setContext(context))
+//        return false;
+        return;
 
     // Execute subtract.
-    itsPrediffer->subtractVisibilities();
-    return true;*/
+    itsKernel->subtractVisibilities();
+//    return true;
 }
 
 
@@ -247,22 +274,23 @@ void KernelCommandControl::handle(const BBSCorrectStep &command)
     LOG_DEBUG("Handling a BBSCorrectStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-    /*ASSERTSTR(itsPrediffer, "No Prediffer available.");
+    ASSERTSTR(itsKernel, "No kernel available.");
 
     CorrectContext context;
-    context.baselines = step->baselines();
-    context.correlation = step->correlation();
-    context.sources = step->sources();
-    context.instrumentModel = step->instrumentModels();
-    context.outputColumn = step->outputData();
+    context.baselines = command.baselines();
+    context.correlation = command.correlation();
+    context.sources = command.sources();
+    context.instrumentModel = command.instrumentModels();
+    context.outputColumn = command.outputData();
 
     // Set context.
-    if(!itsPrediffer->setContext(context))
-        return false;
+    if(!itsKernel->setContext(context))
+//        return false;
+        return;
 
     // Execute correct.
-    itsPrediffer->correctVisibilities();
-    return true;*/
+    itsKernel->correctVisibilities();
+    //return true;
 }
 
 
@@ -273,37 +301,37 @@ void KernelCommandControl::handle(const BBSSolveStep &command)
     LOG_DEBUG("Handling a BBSSolveStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-    /*NSTimer timer;
+    NSTimer timer;
 
-    ASSERTSTR(itsPrediffer, "No Prediffer available.");
+    ASSERTSTR(itsKernel, "No kernel available.");
 
     // Construct context.
     GenerateContext context;
-    context.baselines = step->baselines();
-    context.correlation = step->correlation();
-    context.sources = step->sources();
-    context.instrumentModel = step->instrumentModels();
-    context.unknowns = step->parms();
-    context.excludedUnknowns = step->exclParms();
+    context.baselines = command.baselines();
+    context.correlation = command.correlation();
+    context.sources = command.sources();
+    context.instrumentModel = command.instrumentModels();
+    context.unknowns = command.parms();
+    context.excludedUnknowns = command.exclParms();
 
     // Create solve domains. For now this just splits the work domain in a
-    // rectangular grid, with cells of size step->itsDomainSize. Should become
-    // more interesting in the near future.
-    const MeqDomain &workDomain = itsPrediffer->getWorkDomain();
+    // rectangular grid, with cells of size command.itsDomainSize. Should 
+    // become more interesting in the near future.
+    const MeqDomain &workDomain = itsKernel->getWorkDomain();
 
     const int freqCount = (int) ceil((workDomain.endX() -
-        workDomain.startX()) / step->domainSize().bandWidth);
+        workDomain.startX()) / command.domainSize().bandWidth);
     const int timeCount = (int) ceil((workDomain.endY() -
-        workDomain.startY()) / step->domainSize().timeInterval);
+        workDomain.startY()) / command.domainSize().timeInterval);
 
     double timeOffset = workDomain.startY();
-    double timeSize = step->domainSize().timeInterval;
+    double timeSize = command.domainSize().timeInterval;
 
     int time = 0;
     while(time < timeCount)
     {
         double freqOffset = workDomain.startX();
-        double freqSize = step->domainSize().bandWidth;
+        double freqSize = command.domainSize().bandWidth;
 
         if(timeOffset + timeSize > workDomain.endY())
         {
@@ -332,21 +360,21 @@ void KernelCommandControl::handle(const BBSSolveStep &command)
     }
 
     // Set context.
-    if(!itsPrediffer->setContext(context))
+    if(!itsKernel->setContext(context))
     {
-        return false;
+        return;
     }
 
     // Register all solve domains with the solver.
     BlobStreamableVector<DomainRegistrationRequest> request;
     const vector<SolveDomainDescriptor> &descriptors =
-        itsPrediffer->getSolveDomainDescriptors();
+        itsKernel->getSolveDomainDescriptors();
     for(size_t i = 0; i < descriptors.size(); ++i)
     {
         request.getVector().push_back(new DomainRegistrationRequest(
             i,
-            step->epsilon(),
-            step->maxIter(),
+            command.epsilon(),
+            command.maxIter(),
             descriptors[i].unknowns));
     }
     itsSolverConnection->sendObject(request);
@@ -364,13 +392,13 @@ void KernelCommandControl::handle(const BBSSolveStep &command)
 
         // Generate normal equations.
         vector<casa::LSQFit> equations;
-        itsPrediffer->generateEquations(equations);
+        itsKernel->generateEquations(equations);
 
         timer.stop();
         LOG_DEBUG_STR("[END  ] Generating normal equations; " << timer);
 
-        LOG_DEBUG_STR("[START] Sending equations to solver and waiting for
-            results...");
+        LOG_DEBUG_STR("[START] Sending equations to solver and waiting for"
+            " results...");
         timer.reset();
         timer.start();
 
@@ -440,11 +468,11 @@ void KernelCommandControl::handle(const BBSSolveStep &command)
                     << ", LM factor: " << result->getLMFactor());
 #endif
                 // Update cached values of the unknowns.
-                itsPrediffer->updateSolvableParms(i, result->getUnknowns());
+                itsKernel->updateSolvableParms(i, result->getUnknowns());
 
                 // Log the updated unknowns.
-                itsPrediffer->logIteration(
-                    step->getName(),
+                itsKernel->logIteration(
+                    command.getName(),
                     i,
                     result->getRank(),
                     result->getChiSquared(),
@@ -470,10 +498,10 @@ void KernelCommandControl::handle(const BBSSolveStep &command)
 
         delete resultv;
         //finished = (converged + stopped == context.solveDomains.size()) ||
-        //    (converged>= (step->minConverged() *
+        //    (converged>= (command.minConverged() *
         //      context.solveDomains.size()) / 100.0);
         finished = (converged == context.solveDomains.size())
-            || (iteration == step->maxIter());
+            || (iteration == command.maxIter());
         iteration++;
     }
 
@@ -481,11 +509,11 @@ void KernelCommandControl::handle(const BBSSolveStep &command)
     timer.reset();
     timer.start();
 
-    itsPrediffer->writeParms();
+    itsKernel->writeParms();
 
     timer.stop();
     LOG_DEBUG_STR("[END  ] Writing solutions; " << timer);
-    return true;*/
+    //return true;
 }
 
 

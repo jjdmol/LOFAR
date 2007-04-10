@@ -24,7 +24,7 @@
 #define LOFAR_BBSCONTROL_KERNELCOMMANDCONTROL_H
 
 #include <BBSControl/CommandHandler.h>
-//#include <BBSControl/BlobStreamableConnection.h>
+#include <BBSControl/BlobStreamableConnection.h>
 //#include <BBSControl/BBSStructs.h>
 
 #include <BBSKernel/Prediffer.h>
@@ -42,13 +42,16 @@ namespace BBS
 //# Forward declations
 class CommandQueue;
 class Prediffer;
+class RegionOfInterest;
 
 
 class KernelCommandControl: public CommandHandler
 {
 public:
-    KernelCommandControl(shared_ptr<CommandQueue> &queue)
-        : itsCommandQueue(queue)
+    KernelCommandControl(shared_ptr<CommandQueue> &queue,
+        shared_ptr<BlobStreamableConnection> &solver)
+        :   itsCommandQueue(queue),
+            itsSolverConnection(solver)
     {
     }
 
@@ -74,23 +77,24 @@ public:
     // @}
 
 private:
-    // Kernel
-    scoped_ptr<Prediffer> itsKernel;
+    bool convertTime(string in, double &out);
+    
+    // Kernel.
+    scoped_ptr<Prediffer>                   itsKernel;
 
-    // CommandQueue
-    shared_ptr<CommandQueue> itsCommandQueue;
+    // CommandQueue.
+    shared_ptr<CommandQueue>                itsCommandQueue;
 
-/*
-    // Connections
-    //scoped_ptr<BlobStreamableConnection> itsControllerConnection;
-    scoped_ptr<BlobStreamableConnection> itsSolverConnection;
+    // Connection to the solver.
+    shared_ptr<BlobStreamableConnection>    itsSolverConnection;
+    
+    // Region of interest.
+    int32                                   itsROIFrequency[2];
+    double                                  itsROITime[2];
 
-    // Region of interest
-    vector<double> itsRegionOfInterest;
-
-    // Work domain size
-    DomainSize itsWorkDomainSize;
-*/
+    // Chunk size and position (in time).
+    double                                  itsChunkSize;
+    double                                  itsChunkPosition;
 };
 
 } //# namespace BBS

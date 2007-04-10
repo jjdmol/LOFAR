@@ -29,6 +29,7 @@
 //#include <BBSControl/Command.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/InitializeCommand.h>
+#include <BBSControl/NextChunkCommand.h>
 #include <BBSControl/BBSStrategy.h>
 /*
 #include <BBSControl/BBSPredictStep.h>
@@ -38,10 +39,6 @@
 #include <BBSControl/BBSSubtractStep.h>
 */
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/BlobStreamableVector.h>
-#include <BBSControl/DomainRegistrationRequest.h>
-#include <BBSControl/IterationRequest.h>
-#include <BBSControl/IterationResult.h>
 
 //#include <BBSKernel/Solver.h>
 #include <BBSKernel/BBSStatus.h>
@@ -67,15 +64,6 @@ namespace LOFAR
 {
 namespace BBS 
 {
-    using LOFAR::operator<<;
-
-
-    //# Ensure classes are registered with the ObjectFactory.
-    template class BlobStreamableVector<DomainRegistrationRequest>;
-    template class BlobStreamableVector<IterationRequest>;
-    template class BlobStreamableVector<IterationResult>;
-
-
     //##----   P u b l i c   m e t h o d s   ----##//
     KernelProcessControl::KernelProcessControl() :
         ProcessControl(),
@@ -89,12 +77,13 @@ namespace BBS
     {
         LOG_DEBUG("KernelProcessControl::define()");
 
-/*
         try {
+/*
             itsControllerConnection.reset(new BlobStreamableConnection(
                     globalParameterSet()->getString("Controller.Host"),
                     globalParameterSet()->getString("Controller.Port")));
-
+*/
+            
             char *user = getenv("USER");
             ASSERT(user);
             string userString(user);
@@ -108,7 +97,6 @@ namespace BBS
             LOG_ERROR_STR(e);
             return false;
         }
-*/
 
         return true;
     }
@@ -136,8 +124,6 @@ namespace BBS
             itsCommandQueue.reset(new CommandQueue(
                 globalParameterSet()->getString("BBDB.DBName")));
 
-            itsCommandControl.reset(new KernelCommandControl(itsCommandQueue));
-/*
             LOG_DEBUG("Trying to connect to solver@localhost");
             if(!itsSolverConnection->connect())
             {
@@ -145,7 +131,9 @@ namespace BBS
                 return false;
             }
             LOG_DEBUG("+ ok");
-*/
+            
+            itsCommandControl.reset(new KernelCommandControl(itsCommandQueue,
+                itsSolverConnection));
         }
         catch(Exception& e)
         {
@@ -189,9 +177,16 @@ namespace BBS
                     break;
                 }
 
-                LOG_DEBUG("Executing an implicit INITIALIZE command.");
-                InitializeCommand cmd;
-                cmd.accept(*itsCommandControl);
+                {
+                    LOG_DEBUG("Executing an implicit INITIALIZE command.");
+                    InitializeCommand cmd;
+                    cmd.accept(*itsCommandControl);
+                }
+                {
+                    LOG_DEBUG("Executing an implicit NEXT_CHUNK command.");
+                    NextChunkCommand cmd;
+                    cmd.accept(*itsCommandControl);
+                }
                 itsState = KernelProcessControl::RUN;
                 break;
                 }
@@ -295,9 +290,9 @@ namespace BBS
             }
             else
             {
-                itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR));
-                return false;
-            }
+                
+itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR));                
+return false;            }
         }
 
         // If the message contains a `step', handle the `step'.
@@ -311,18 +306,18 @@ namespace BBS
             }
             else
             {
-                itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR));
-                return false;
-            }
+                
+itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR));                
+return false;            }
         }
 
         // We received a message we can't handle
         ostringstream oss;
         oss << "Received message of unsupported type";
-//            << itsControllerConnection.itsDataHolder->classType() << "'. Skipped.";
-        LOG_WARN(oss.str());
-        itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR, oss.str()));
-        return false;
+//            << itsControllerConnection.itsDataHolder->classType() << "'. 
+Skipped.";        LOG_WARN(oss.str());
+        itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR, 
+oss.str()));        return false;
     }
 */
 } // namespace BBS

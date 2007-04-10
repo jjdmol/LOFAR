@@ -29,11 +29,11 @@
 
 //# Includes
 #include <BBSControl/CommandQueue.h>
+#include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/KernelCommandControl.h>
 
 #include <Common/lofar_smartptr.h>
 #include <PLC/ProcessControl.h>
-#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -73,16 +73,16 @@ public:
     // @}
 
 private:
-    State                               itsState;
+    State                                   itsState;
 
     // Command Queue.
-    shared_ptr<CommandQueue>            itsCommandQueue;
+    shared_ptr<CommandQueue>                itsCommandQueue;
 
+    // Connection to the solver.
+    shared_ptr<BlobStreamableConnection>    itsSolverConnection;
+    
     // Command Controller.
-    scoped_ptr<KernelCommandControl>    itsCommandControl;
-
-    // Parameter set for this process controller.
-    ACC::APS::ParameterSet              itsParameterSet;
+    scoped_ptr<KernelCommandControl>        itsCommandControl;
 };
 //@}
 

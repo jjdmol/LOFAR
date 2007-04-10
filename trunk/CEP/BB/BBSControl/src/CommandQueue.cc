@@ -196,16 +196,18 @@ namespace LOFAR
       // Compose the query.
       ostringstream query;
       query << "SELECT * FROM blackboard.set_strategy" 
-	    << "('" << strategy.dataSet()                 << "'"
-	    << ",'" << strategy.parmDB().localSky         << "'"
-	    << ",'" << strategy.parmDB().instrument       << "'"
-	    << ",'" << strategy.parmDB().history          << "'"
-	    << ",'" << strategy.stations()                << "'"
-	    << ",'" << strategy.inputData()               << "'"
-	    << ",'" << strategy.domainSize().bandWidth    << "'"
-	    << ",'" << strategy.domainSize().timeInterval << "'"
-	    << ",'" << strategy.correlation().selection   << "'"
-	    << ",'" << strategy.correlation().type        << "')"
+	    << "('" << strategy.dataSet()                    << "'"
+	    << ",'" << strategy.parmDB().localSky            << "'"
+	    << ",'" << strategy.parmDB().instrument          << "'"
+	    << ",'" << strategy.parmDB().history             << "'"
+	    << ",'" << strategy.stations()                   << "'"
+	    << ",'" << strategy.inputData()                  << "'"
+	    << ",'" << strategy.regionOfInterest().frequency << "'"
+	    << ",'" << strategy.regionOfInterest().time      << "'"
+	    << ",'" << strategy.domainSize().bandWidth       << "'"
+	    << ",'" << strategy.domainSize().timeInterval    << "'"
+	    << ",'" << strategy.correlation().selection      << "'"
+	    << ",'" << strategy.correlation().type           << "')"
 	    << " AS result";
 
       // Execute the query.
