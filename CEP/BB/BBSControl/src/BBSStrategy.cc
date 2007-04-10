@@ -81,13 +81,16 @@ namespace LOFAR
 
       // Get the region of interest (optional)
       try {
-          itsRegionOfInterest = ps.getDoubleVector("RegionOfInterest");
+          itsRegionOfInterest.frequency = 
+            ps.getInt32Vector("RegionOfInterest.Freq");          
+          itsRegionOfInterest.time  = 
+            ps.getStringVector("RegionOfInterest.Time");
       } catch (APSException&) {}
-
+      
       // Get the work domain size for this strategy
-      itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");
+      itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");      
       itsDomainSize.timeInterval = ps.getDouble("WorkDomainSize.Time");
-
+      
       // Get the correlation product selection (ALL, AUTO, or CROSS)
       itsCorrelation.selection = ps.getString("Correlation.Selection");
       itsCorrelation.type = ps.getStringVector("Correlation.Type");

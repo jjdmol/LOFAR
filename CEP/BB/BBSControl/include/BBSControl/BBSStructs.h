@@ -66,6 +66,15 @@ namespace LOFAR
       string history;       ///< History (MS table)
     };
 
+    // Selection of the data domain that is to be processed.
+    struct RegionOfInterest
+    {
+        vector<int32>   frequency;
+//        uint                stepChannel;
+        vector<string>  time;
+//        vector<string>      stations;
+    };    
+    
     // Domain size is defined by two parameters: bandwidth f(Hz), and time
     // interval t(s).
     struct DomainSize
@@ -89,6 +98,7 @@ namespace LOFAR
     ostream& operator<<(ostream&, const BBDB&);
     ostream& operator<<(ostream&, const ParmDB&);
     ostream& operator<<(ostream&, const DomainSize&);
+    ostream& operator<<(ostream&, const RegionOfInterest&);
     ostream& operator<<(ostream&, const Integration&);
     // @}
 
@@ -96,11 +106,13 @@ namespace LOFAR
     // @{
     BlobOStream& operator<<(BlobOStream&, const BBDB&);
     BlobOStream& operator<<(BlobOStream&, const ParmDB&);
+    BlobOStream& operator<<(BlobOStream&, const RegionOfInterest&);
     BlobOStream& operator<<(BlobOStream&, const DomainSize&);
     BlobOStream& operator<<(BlobOStream&, const Integration&);
 
     BlobIStream& operator>>(BlobIStream&, BBDB&);
     BlobIStream& operator>>(BlobIStream&, ParmDB&);
+    BlobIStream& operator>>(BlobIStream&, RegionOfInterest&);
     BlobIStream& operator>>(BlobIStream&, DomainSize&);
     BlobIStream& operator>>(BlobIStream&, Integration&);
     // @}

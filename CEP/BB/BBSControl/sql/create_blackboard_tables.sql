@@ -10,6 +10,10 @@ CREATE TABLE blackboard.strategy
 
     "Stations"              TEXT                DEFAULT '[]',
     "InputData"             TEXT                DEFAULT 'DATA',
+
+    "RegionOfInterest.Freq" TEXT                DEFAULT '[]',
+    "RegionOfInterest.Time" TEXT                DEFAULT '[]',
+
     "WorkDomainSize.Freq"   DOUBLE PRECISION    NOT NULL,
     "WorkDomainSize.Time"   DOUBLE PRECISION    NOT NULL,
       

@@ -80,14 +80,14 @@ namespace LOFAR
 
       // @name Accessor methods
       // @{
-      string         dataSet()          const { return itsDataSet; }
-      ParmDB         parmDB()           const { return itsParmDB; }
-      vector<string> stations()         const { return itsStations; }
-      string         inputData()        const { return itsInputData; }
-      vector<double> regionOfInterest() const { return itsRegionOfInterest;}
-      DomainSize     domainSize()       const { return itsDomainSize; }
-      Correlation    correlation()      const { return itsCorrelation; }
-      Integration    integration()      const { return itsIntegration; }
+      string            dataSet()          const { return itsDataSet; }
+      ParmDB            parmDB()           const { return itsParmDB; }
+      vector<string>    stations()         const { return itsStations; }
+      string            inputData()        const { return itsInputData; }
+      RegionOfInterest  regionOfInterest() const { return itsRegionOfInterest;}
+      DomainSize        domainSize()       const { return itsDomainSize; }
+      Correlation       correlation()      const { return itsCorrelation; }
+      Integration       integration()      const { return itsIntegration; }
       // @}
 
     private:
@@ -123,7 +123,7 @@ namespace LOFAR
       string                 itsInputData;
 
       // Region of interest
-      vector<double>         itsRegionOfInterest;
+      RegionOfInterest       itsRegionOfInterest;
 
       // The work domain size
       DomainSize             itsDomainSize;

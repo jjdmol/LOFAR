@@ -60,6 +60,16 @@ namespace LOFAR
     }
 
 
+    ostream& operator<<(ostream& os, const RegionOfInterest& obj)
+    {
+      os << "Region of interest:";
+      Indent id;
+      os << endl << indent << "Frequency: " << obj.frequency
+      << endl << indent << "Time: " << obj.time;
+      return os;
+    }
+    
+    
     ostream& operator<<(ostream& os, const DomainSize& obj)
     {
       os << "Domain size:";
@@ -102,6 +112,14 @@ namespace LOFAR
     }
 
 
+    BlobOStream& operator<<(BlobOStream& bos, const RegionOfInterest& obj)
+    {
+      bos << obj.frequency
+	  << obj.time;
+      return bos;
+    }
+    
+    
     BlobOStream& operator<<(BlobOStream& bos, const DomainSize& obj)
     {
       bos << obj.bandWidth
@@ -140,6 +158,14 @@ namespace LOFAR
     }
 
 
+    BlobIStream& operator>>(BlobIStream& bis, RegionOfInterest& obj)
+    {
+      bis >> obj.frequency
+	  >> obj.time;
+      return bis;
+    }
+    
+    
     BlobIStream& operator>>(BlobIStream& bis, DomainSize& obj)
     {
       bis >> obj.bandWidth
