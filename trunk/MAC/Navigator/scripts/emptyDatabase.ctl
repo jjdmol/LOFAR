@@ -3,10 +3,8 @@ main() {
   dyn_string types = dpTypes("*");
   int i, len, i2, len2;
   len = dynlen(types);
-  if (len > 0)
-  {
-    for (i=1;i<= len; i++)
-    { 
+  if (len > 0) {
+    for (i=1;i<= len; i++) { 
       dpType = types[i];
 
       // skip internal datapoints and GCF stuff        
@@ -38,24 +36,22 @@ main() {
             dpType == "SLIDE_VALVE2" ||
             dpType == "WH_SC_SERVICE" ||
             dpType == "WH_SC_SUB" ||
-            dpType == "WH_SC1") 
-          {
-          } else {
-  	    string dpName;
-            dyn_string names = dpNames("*",dpType);  
-            len2 = dynlen(names);
-  	    if (len2 > 0)
-  	    {
-    	      for (i2 = 1; i2 <= len2; i2++)
-    	      {
-      	        dpName = names[i2];
-	        dpDelete(dpName);
-  	        DebugN(dpName + " deleted");
-    	      }
+            dpType == "WH_SC1") {
+
+            DebugN("Skipped original ETM type: ",dpType);
+        } else {
+  	  string dpName;
+          dyn_string names = dpNames("*",dpType);  
+          len2 = dynlen(names);
+  	  if (len2 > 0) {
+    	    for (i2 = 1; i2 <= len2; i2++) {
+      	      dpName = names[i2];
+	      dpDelete(dpName);
+  	      DebugN(dpName + " deleted");
     	    }
-    	    dpTypeDelete(dpType);
-	    DebugN(dpType + " deleted");
-          }
+    	  }
+    	  dpTypeDelete(dpType);
+	  DebugN(dpType + " deleted");
         }
       }
     }
