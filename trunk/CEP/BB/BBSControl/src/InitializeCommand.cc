@@ -23,31 +23,55 @@
 #include <lofar_config.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/CommandHandler.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
-namespace BBS 
-{
-// Register InitializeCommand with the BBSStreamableFactory. Use an anonymous
-// namespace. This ensures that the variable `dummy' gets its own private
-// storage area and is only visible in this compilation unit.
-namespace
-{
-    bool dummy =
-        BlobStreamableFactory::instance().registerClass<InitializeCommand>(
-        "InitializeCommand");
-}
+  namespace BBS 
+  {
+    using ACC::APS::ParameterSet;
 
-void InitializeCommand::accept(CommandHandler &handler) const
-{
-    handler.handle(*this);
-}
+    // Register InitializeCommand with the CommandFactory. Use an anonymous
+    // namespace. This ensures that the variable `dummy' gets its own private
+    // storage area and is only visible in this compilation unit.
+    namespace
+    {
+      bool dummy = CommandFactory::instance().
+        registerClass<InitializeCommand>("InitializeCommand");
+    }
 
-const string& InitializeCommand::classType() const
-{
-    static const string theType("InitializeCommand");
-    return theType;
-}
 
-} //# namespace BBS
+    //##--------   P u b l i c   m e t h o d s   --------##//
+
+    void InitializeCommand::accept(CommandHandler &handler) const
+    {
+      handler.handle(*this);
+    }
+
+
+    //##--------   P r o t e c t e d   m e t h o d s   --------##//
+
+    const string& InitializeCommand::type() const
+    {
+      static const string theType("InitializeCommand");
+      return theType;
+    }
+
+
+    //##--------   P r i v a t e   m e t h o d s   --------##//
+
+    void InitializeCommand::write(ParameterSet& ps) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+    }
+
+
+    void InitializeCommand::read(const ParameterSet& ps)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+    }
+
+
+  } //# namespace BBS
+
 } //# namespace LOFAR

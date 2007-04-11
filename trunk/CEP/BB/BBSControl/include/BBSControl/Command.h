@@ -23,21 +23,55 @@
 #ifndef LOFAR_BBSCONTROL_COMMAND_H
 #define LOFAR_BBSCONTROL_COMMAND_H
 
+#include <Common/ObjectFactory.h>
+#include <Common/Singleton.h>
+#include <Common/lofar_string.h>
+
 #include <Blob/BlobStreamable.h>
 
 namespace LOFAR
 {
-namespace BBS
-{
-class CommandHandler;
+  //# Forward declarations
+  namespace ACC { namespace APS { class ParameterSet; } }
 
-class Command: public BlobStreamable
-{
-public:
-    virtual void accept(CommandHandler &handler) const = 0;
-};
+  namespace BBS
+  {
+    class CommandHandler;
 
-} //# namespace BBS
+    // Base class for commands that can be sent to or retrieved from the
+    // CommandQueue. This class implements a double-dispatch mechanism using
+    // the Visitor pattern (Gamma, 1995). 
+    class Command
+    {
+    public:
+      // Create a new Command object. The key \c Command.type key in \a ps
+      // must contain the type of Command to be constructed.
+      static Command* create(const ACC::APS::ParameterSet& ps);
+
+      // Destructor.
+      virtual ~Command() {}
+
+      virtual void accept(CommandHandler &handler) const = 0;
+
+    protected:
+      // Return the command type of \c *this as a string.
+      virtual const string& type() const = 0;
+
+    private:
+      // Write the contents of \c *this into the ParameterSet \a ps.
+      virtual void write(ACC::APS::ParameterSet& ps) const = 0;
+
+      // Read the contents from the ParameterSet \a ps into \c *this.
+      virtual void read(const ACC::APS::ParameterSet& ps) = 0;
+
+    };
+
+    // Factory that can be used to generate new Command objects.
+    // The factory is defined as a singleton.
+    typedef Singleton< ObjectFactory< Command(), string > > CommandFactory;
+
+  } //# namespace BBS
+
 } //# namespace LOFAR
 
 #endif

@@ -91,22 +91,38 @@ namespace LOFAR
       // @}
 
     private:
-      // Read the contents from the blob input stream \a bis into \c *this.
-      virtual void read(BlobIStream& bis);
+//       // Read the contents from the blob input stream \a bis into \c *this.
+//       virtual void read(BlobIStream& bis);
 
-      // Write the contents of \c *this into the blob output stream \a bos.
-      virtual void write(BlobOStream& bos) const;
+//       // Write the contents of \c *this into the blob output stream \a bos.
+//       virtual void write(BlobOStream& bos) const;
 
-      // Return the class type of \c *this as a string.
-      virtual const string& classType() const;
+//       // Return the class type of \c *this as a string.
+//       virtual const string& classType() const;
 
-      // Read the BBSStep objects from the blob input stream \a bis and store
-      // them in \a itsSteps.
-      void readSteps(BlobIStream& bis);
+      // Write the contents of \c *this into the ParameterSet \a ps.
+      virtual void write(ACC::APS::ParameterSet& ps) const;
 
-      // Write the BBSStep objects in \a itsSteps to the blob output stream \a
-      // bos.
-      void writeSteps(BlobOStream& bos) const;
+      // Read the contents from the ParameterSet \a ps into \c *this.
+      virtual void read(const ACC::APS::ParameterSet& ps);
+
+      // Return the command type of \c *this as a string.
+      virtual const string& type() const;
+
+//       // Read the BBSStep objects from the blob input stream \a bis and store
+//       // them in \a itsSteps.
+//       void readSteps(BlobIStream& bis);
+
+//       // Write the BBSStep objects in \a itsSteps to the blob output stream \a
+//       // bos.
+//       void writeSteps(BlobOStream& bos) const;
+
+      // Read the BBSStep objects from the parameter set \a ps and store them
+      // in \a itsSteps.
+      bool readSteps(const ACC::APS::ParameterSet& ps);
+
+      // Write the BBSStep objects in \a itsSteps to parameter set \a ps.
+      void writeSteps(ACC::APS::ParameterSet& ps) const;
 
       // Name of the Measurement Set
       string                 itsDataSet;

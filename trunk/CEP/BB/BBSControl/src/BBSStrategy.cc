@@ -44,12 +44,12 @@ namespace LOFAR
   {
     using LOFAR::operator<<;
 
-    // Register BBSStrategy with the BBSStreamableFactory. Use an anonymous
+    // Register BBSStrategy with the CommandFactory. Use an anonymous
     // namespace. This ensures that the variable `dummy' gets its own private
     // storage area and is only visible in this compilation unit.
     namespace
     {
-      bool dummy = BlobStreamableFactory::instance().
+      bool dummy = CommandFactory::instance().
 	registerClass<BBSStrategy>("BBSStrategy");
     }
 
@@ -164,80 +164,190 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    void BBSStrategy::read(BlobIStream& bis)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      bis >> itsDataSet
-	  >> itsParmDB
-	  >> itsStations
-	  >> itsInputData
-      >> itsRegionOfInterest
-	  >> itsDomainSize
-	  >> itsCorrelation
-	  >> itsIntegration;
-      // Do we also need to deserialize the BBSStep objects?
-      bis >> itsWriteSteps;
-      LOG_TRACE_COND_STR("Deserialize the BBSStep objects as well?  " <<
-			 (itsWriteSteps ? "Yes" : "No"));
-      if (itsWriteSteps) readSteps(bis);
-    }
+//     void BBSStrategy::read(BlobIStream& bis)
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//       bis >> itsDataSet
+// 	  >> itsParmDB
+// 	  >> itsStations
+// 	  >> itsInputData
+//       >> itsRegionOfInterest
+// 	  >> itsDomainSize
+// 	  >> itsCorrelation
+// 	  >> itsIntegration;
+//       // Do we also need to deserialize the BBSStep objects?
+//       bis >> itsWriteSteps;
+//       LOG_TRACE_COND_STR("Deserialize the BBSStep objects as well?  " <<
+// 			 (itsWriteSteps ? "Yes" : "No"));
+//       if (itsWriteSteps) readSteps(bis);
+//     }
 
     
-    void BBSStrategy::write(BlobOStream& bos) const
+//     void BBSStrategy::write(BlobOStream& bos) const
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//       bos << itsDataSet
+// 	  << itsParmDB
+// 	  << itsStations
+// 	  << itsInputData
+//       << itsRegionOfInterest
+// 	  << itsDomainSize
+// 	  << itsCorrelation
+// 	  << itsIntegration;
+//       // Do we also need to serialize the BBSStep objects?
+//       bos << itsWriteSteps;
+//       LOG_TRACE_COND_STR("Serialize the BBSStep objects as well?  " <<
+// 		    (itsWriteSteps ? "Yes" : "No"));
+//       if (itsWriteSteps) writeSteps(bos);
+//     }
+
+
+//     const string& BBSStrategy::classType() const
+//     {
+//       static const string theType("BBSStrategy");
+//       return theType;
+//     }
+
+
+    void BBSStrategy::write(ACC::APS::ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      bos << itsDataSet
-	  << itsParmDB
-	  << itsStations
-	  << itsInputData
-      << itsRegionOfInterest
-	  << itsDomainSize
-	  << itsCorrelation
-	  << itsIntegration;
-      // Do we also need to serialize the BBSStep objects?
-      bos << itsWriteSteps;
-      LOG_TRACE_COND_STR("Serialize the BBSStep objects as well?  " <<
-		    (itsWriteSteps ? "Yes" : "No"));
-      if (itsWriteSteps) writeSteps(bos);
+
+      ostringstream oss;
+      oss << endl << "DataSet = " 
+          << itsDataSet 
+          << endl << "ParmDB.Instrument = " 
+          << itsParmDB.instrument
+          << endl << "ParmDB.LocalSky = " 
+          << itsParmDB.localSky
+          << endl << "ParmDB.History = " 
+          << itsParmDB.history
+          << endl << "Strategy.Stations = " 
+          << itsStations
+//           << endl << "Strategy.RegionOfInterest = "
+//           << itsRegionOfInterest
+          << endl << "Strategy.WorkDomainSize.Freq = " 
+          << itsDomainSize.bandWidth
+          << endl << "Strategy.WorkDomainSize.Time = "
+          << itsDomainSize.timeInterval
+          << endl << "Strategy.Correlation.Selection = "
+          << itsCorrelation.selection
+          << endl << "Strategy.Correlation.Type = "
+          << itsCorrelation.type
+          << endl << "Strategy.Integration.Freq = "
+          << itsIntegration.deltaFreq
+          << endl << "Strategy.Integration.Time = "
+          << itsIntegration.deltaTime;
+      ps.adoptBuffer(oss.str());
+
+      LOG_TRACE_COND_STR("Write the BBSStep objects as well?  " <<
+                         (itsWriteSteps ? "Yes" : "No"));
+      if (itsWriteSteps) writeSteps(ps);
     }
 
 
-    const string& BBSStrategy::classType() const
+    void BBSStrategy::read(const ACC::APS::ParameterSet& ps)
     {
-      static const string theType("BBSStrategy");
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+      itsDataSet                 = ps.getString("DataSet");
+      itsParmDB.instrument       = ps.getString("ParmDB.Instrument");
+      itsParmDB.localSky         = ps.getString("ParmDB.LocalSky");
+      itsParmDB.history          = ps.getString("ParmDB.History");
+      itsStations                = ps.getStringVector("Strategy.Stations");
+      itsInputData               = ps.getString("Strategy.InputData");
+//       itsRegionOfInterest        = ps.getXXX();
+      itsDomainSize.bandWidth    = 
+        ps.getDouble("Strategy.WorkDomainSize.Freq");
+      itsDomainSize.timeInterval = 
+        ps.getDouble("Strategy.WorkDomainSize.Time");
+      itsCorrelation.selection   = 
+        ps.getString("Strategy.Correlation.Selection");
+      itsCorrelation.type        = 
+        ps.getStringVector("Strategy.Correlation.Type");
+      itsIntegration.deltaFreq   = ps.getDouble("Strategy.Integration.Freq");
+      itsIntegration.deltaTime   = ps.getDouble("Strategy.Integration.Time");
+
+      // Read back the BBSStep objects? Set \c itsWriteSteps to \c false, if
+      // no steps were specified in the parameter set.
+      itsWriteSteps = readSteps(ps);
+      LOG_TRACE_COND_STR("Read the BBSStep objects as well?  " <<
+                         (itsWriteSteps ? "Yes" : "No"));
+    }
+
+
+    const string& BBSStrategy::type() const
+    {
+      static const string theType("Strategy");
       return theType;
     }
 
 
-    void BBSStrategy::readSteps(BlobIStream& bis)
+//     void BBSStrategy::readSteps(BlobIStream& bis)
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+//       // How many BBSStep objects does this BBSStrategy contain?
+//       uint32 sz;
+//       bis >> sz;
+//       LOG_TRACE_VAR_STR("This BBSStrategy contains " << sz << 
+// 			" BBSStep objects.");
+      
+//       // Create the new BBSSteps by reading the blob input stream.
+//       for (uint i = 0; i < sz; ++i) {
+// 	BBSStep* step;
+// 	ASSERT(step = dynamic_cast<BBSStep*>(BlobStreamable::deserialize(bis)));
+// 	itsSteps.push_back(step);
+//       }
+//     }
+
+
+//     void BBSStrategy::writeSteps(BlobOStream& bos) const
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+//       // Write the number of BBSStep objects that this BBSStrategy contains.
+//       bos << static_cast<uint32>(itsSteps.size());
+
+//       // Write the BBSStep objects, one by one.
+//       for (uint i = 0; i < itsSteps.size(); ++i) {
+// 	itsSteps[i]->serialize(bos);
+//       }
+//     }
+
+
+    bool BBSStrategy::readSteps(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // How many BBSStep objects does this BBSStrategy contain?
-      uint32 sz;
-      bis >> sz;
-      LOG_TRACE_VAR_STR("This BBSStrategy contains " << sz << 
-			" BBSStep objects.");
-      
-      // Create the new BBSSteps by reading the blob input stream.
-      for (uint i = 0; i < sz; ++i) {
-	BBSStep* step;
-	ASSERT(step = dynamic_cast<BBSStep*>(BlobStreamable::deserialize(bis)));
-	itsSteps.push_back(step);
+      try {
+        vector<string> steps = ps.getStringVector("Strategy.Steps");
+        for (uint i = 0; i < steps.size(); ++i) {
+          itsSteps.push_back(BBSStep::create(steps[i], ps, 0));
+        }
+        return true;
+      } catch (APSException&) {
+        return false;
       }
     }
 
 
-    void BBSStrategy::writeSteps(BlobOStream& bos) const
+    void BBSStrategy::writeSteps(ParameterSet& ps) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      ostringstream oss;
 
-      // Write the number of BBSStep objects that this BBSStrategy contains.
-      bos << static_cast<uint32>(itsSteps.size());
+      // Write the "Steps" key/value pair
+      oss << "Strategy.Steps = [ ";
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+        if (i > 0) oss << ", ";
+        oss << itsSteps[i]->getName();
+      }
+      oss << " ]";
+      ps.adoptBuffer(oss.str());
 
       // Write the BBSStep objects, one by one.
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	itsSteps[i]->serialize(bos);
+        itsSteps[i]->write(ps);
       }
     }
 
