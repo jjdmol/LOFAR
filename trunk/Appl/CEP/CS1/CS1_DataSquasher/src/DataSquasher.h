@@ -17,32 +17,42 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#ifndef LOFARDATASQUASHER_H
+#define LOFARDATASQUASHER_H
 
+/**
+@author Adriaan Renting
+*/
+#include <iostream>
+#include <cstdlib>
+#include <string>
+#include <ms/MeasurementSets.h>
+#include <casa/Arrays.h>
+#include <tables/Tables.h>
+#include <tables/Tables/TableIter.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-#include <libgen.h>
-#include <PLC/ACCmain.h>
-#include <casa/Exceptions.h>
-#include <CS1_DataSquasher/SquasherProcessControl.h>
-
-int main(int argc, char *argv[])
+namespace LOFAR
 {
-  try
+  namespace CS1
   {
-    INIT_LOGGER(basename(argv[0]));
-    LOFAR::CS1::SquasherProcessControl myProcess;
-    return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
-  } //try
-  catch(casa::AipsError& err)
-  {
-    std::cerr << "Aips++ error detected: " << err.getMesg() << std::endl;
-    return -2;
-  }
-  catch(...)
-  {
-    std::cerr << "** PROBLEM **: Unhandled exception caught." << std::endl;
-    return -3;
-  }
-}
+    using namespace casa;
+
+    class DataSquasher
+    {
+    private:
+      int itsNumChannels;
+      int itsNumPolarizations;
+
+      TableIterator CreateDataIterator(MeasurementSet& myMS);
+      void GetMSInfo(MeasurementSet& myMS);
+      void SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData, int Start, int Step, int NChan);
+
+    public:
+      DataSquasher(void);
+      ~DataSquasher(void);
+
+      void Squash(MeasurementSet& myMS, std::string OldData, std::string NewData, int Start, int Step, int NChan);
+    };
+  } //namespace CS1_Squasher
+}; //namespace LOFAR
+#endif

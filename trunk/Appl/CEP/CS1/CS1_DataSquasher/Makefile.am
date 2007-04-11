@@ -9,7 +9,7 @@ DISTCHECK_CONFIGURE_FLAGS= \
 
 EXTRA_DIST = \
       Makefile.common \
-      CS1_dataSquasher.spec \
+      CS1_DataSquasher.spec \
       autoconf_share/compiletool
 
 include $(top_srcdir)/Makefile.common

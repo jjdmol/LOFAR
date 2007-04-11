@@ -26,31 +26,31 @@
 /**
 @author Adriaan Renting
 */
+namespace casa
+{
+  class MeasurementSet; //foreward declaration
+}
+
 namespace LOFAR
 {
   namespace CS1
   {
-    class MS_Reader; //foreward declaration
-    class MS_Writer;
-    class DataSquasher;
+    class DataSquasher; //foreward declaration
 
-    class FlaggerProcessControl : public LOFAR::ACC::PLC::ProcessControl
+    class SquasherProcessControl : public LOFAR::ACC::PLC::ProcessControl
     {
     private:
-      std::string  itsMS;
-      bool         itsFlagData;
-      bool         itsFlagRMS;
-      bool         itsExisting;
-      int          itsWindow;
-      bool         itsCrosspol;
-      double       itsMin;
-      double       itsMax;
-      WSRT::MS_File*              myMS;
-      WSRT::DataSquasher* itsFlagger;
+      std::string  itsInMS;
+      std::string  itsOutMS;
+      int          itsStart;
+      int          itsStep;
+      int          itsNChan;
+      casa::MeasurementSet* inMS;
+      DataSquasher*   itsSquasher;
     public:
-      FlaggerProcessControl(void);
+      SquasherProcessControl(void);
 
-      ~FlaggerProcessControl(void);
+      ~SquasherProcessControl(void);
       // \name Command to control the processes.
       // There are a dozen commands that can be sent to a application process
       // to control its flow. The return values for these command are:<br>
@@ -82,8 +82,8 @@ namespace LOFAR
       tribool snapshot(const std::string&);
       std::string askInfo(const std::string&);
 
-    }; //class FlaggerProcessControl
-  } //namespace CS1_Flagger
+    }; //class SquasherProcessControl
+  } //namespace CS1
 }; //namespace LOFAR
 
 #endif
