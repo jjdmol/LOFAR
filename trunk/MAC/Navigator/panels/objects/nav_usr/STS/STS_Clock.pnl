@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,456 199 509 267 N "_3DFace" 1
+PANEL,527 189 509 267 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -15,11 +15,30 @@ PANEL,456 199 509 267 N "_3DFace" 1
   //Load the property set for this datapoint
 	//DebugTN(\"set datapoint: \", orgDP);
   navPMLloadPropertySet(aDP);
+  
+  if(dpAccessable(aDP +\".clock:_online.._value\"))
+  {
+    dpConnect(\"setClock\", aDP +\".clock:_online.._value\",
+                          aDP +\".clock:_online.._invalid\");
+  }
+  else
+  {
+    setValue(\"stationClockTxt\", \"text\", \"xxx\");
+  }
 
   // connect for childUpdates
   showChildState(aDP);
   // connect for selfUpdates
   showSelfState(aDP);
+}
+
+void setClock(string dp1, int clock,
+              string dp2, bool invalid) {
+  if (!invalid){
+  	setValue(\"stationClockTxt\", \"text\", clock);
+  } else {
+  	setValue(\"stationClockTxt\", \"text\", \"xxx\");
+  }
 }" 0
 "main()
 {

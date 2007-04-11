@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,495 201 184 193 N "_3DFace" 2
+PANEL,1016 387 184 193 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
@@ -397,9 +397,9 @@ FPGASyncDetails(string dp1, int sampleCount,
                 string dp2, int syncCount,
                 string dp3, int errorCount)
 {
-  setValue(\"output_errorCount\" , \"text\", sampleCount);
-  setValue(\"output_sampleCount\", \"text\", syncCount);
-  setValue(\"output_syncCount\"  , \"text\", errorCount);
+  setValue(\"output_errorCount\" , \"text\", errorCount);
+  setValue(\"output_sampleCount\", \"text\", sampleCount);
+  setValue(\"output_syncCount\"  , \"text\", syncCount);
 }" 0
 0
 LAYER, 1 
