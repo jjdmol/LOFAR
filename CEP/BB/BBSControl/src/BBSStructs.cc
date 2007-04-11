@@ -24,15 +24,18 @@
 
 #include <BBSControl/BBSStructs.h>
 #include <Common/StreamUtil.h>
+#include <Common/lofar_sstream.h>
 #include <Blob/BlobArray.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
     using LOFAR::operator<<;
+    using ACC::APS::ParameterSet;
 
     //# -------  ostream operators  ------- #//
 
@@ -90,96 +93,162 @@ namespace LOFAR
     }
 
 
-    //# -------  BlobOStream operators  ------- #//
+//     //# -------  BlobOStream operators  ------- #//
 
-    BlobOStream& operator<<(BlobOStream& bos, const BBDB& obj)
-    {
-      bos << obj.host
-	  << obj.port
-	  << obj.dbName
-	  << obj.username
-	  << obj.password;
-      return bos;
-    }
-
-
-    BlobOStream& operator<<(BlobOStream& bos, const ParmDB& obj)
-    {
-      bos << obj.instrument
-	  << obj.localSky
-	  << obj.history;
-      return bos;
-    }
+//     BlobOStream& operator<<(BlobOStream& bos, const BBDB& obj)
+//     {
+//       bos << obj.host
+// 	  << obj.port
+// 	  << obj.dbName
+// 	  << obj.username
+// 	  << obj.password;
+//       return bos;
+//     }
 
 
-    BlobOStream& operator<<(BlobOStream& bos, const RegionOfInterest& obj)
-    {
-      bos << obj.frequency
-	  << obj.time;
-      return bos;
-    }
+//     BlobOStream& operator<<(BlobOStream& bos, const ParmDB& obj)
+//     {
+//       bos << obj.instrument
+// 	  << obj.localSky
+// 	  << obj.history;
+//       return bos;
+//     }
+
+
+//     BlobOStream& operator<<(BlobOStream& bos, const RegionOfInterest& obj)
+//     {
+//       bos << obj.frequency
+// 	  << obj.time;
+//       return bos;
+//     }
     
     
-    BlobOStream& operator<<(BlobOStream& bos, const DomainSize& obj)
-    {
-      bos << obj.bandWidth
-	  << obj.timeInterval;
-      return bos;
-    }
+//     BlobOStream& operator<<(BlobOStream& bos, const DomainSize& obj)
+//     {
+//       bos << obj.bandWidth
+// 	  << obj.timeInterval;
+//       return bos;
+//     }
 
 
-    BlobOStream& operator<<(BlobOStream& bos, const Integration& obj)
-    {
-      bos << obj.deltaFreq
-	  << obj.deltaTime;
-      return bos;
-    }
+//     BlobOStream& operator<<(BlobOStream& bos, const Integration& obj)
+//     {
+//       bos << obj.deltaFreq
+// 	  << obj.deltaTime;
+//       return bos;
+//     }
 
 
-    //# -------  BlobIStream operators  ------- #//
+//     //# -------  ParameterSet operators  -------- #//
 
-    BlobIStream& operator>>(BlobIStream& bis, BBDB& obj)
-    {
-      bis >> obj.host
-	  >> obj.port
-	  >> obj.dbName
-	  >> obj.username
-	  >> obj.password;
-      return bis;
-    }
-
-
-    BlobIStream& operator>>(BlobIStream& bis, ParmDB& obj)
-    {
-      bis >> obj.instrument
-	  >> obj.localSky
-	  >> obj.history;
-      return bis;
-    }
+//     ParameterSet& operator<<(ParameterSet& ps, const BBDB& obj)
+//     {
+//       ostringstream oss;
+//       oss << endl << "BBDB.Host = "     << obj.host
+//           << endl << "BBDB.Port = "     << obj.port
+//           << endl << "BBDB.DBName = "   << obj.dbName
+//           << endl << "BBDB.UserName = " << obj.username
+//           << endl << "BBDB.PassWord = " << obj.password;
+//       ps.adoptBuffer(oss.str());
+//       return ps;
+//     }
 
 
-    BlobIStream& operator>>(BlobIStream& bis, RegionOfInterest& obj)
-    {
-      bis >> obj.frequency
-	  >> obj.time;
-      return bis;
-    }
+//     ParameterSet& operator<<(ParameterSet& ps, const ParmDB& obj)
+//     {
+//       ostringstream oss;
+//       oss << endl << "ParmDB.Instrument = " << obj.instrument
+//           << endl << "ParmDB.LocalSky = "   << obj.localSky
+//           << endl << "ParmDB.History = "    << obj.history;
+//       ps.adoptBuffer(oss.str());
+//       return ps;
+//     }
+
+
+//     ParameterSet& operator<<(ParameterSet& ps, const DomainSize& obj)
+//     {
+//       ostringstream oss;
+//       oss << endl << "DomainSize.Freq = " << obj.bandWidth
+//           << endl << "DomainSize.Time = " << obj.timeInterval;
+//       ps.adoptBuffer(oss.str());
+//       return ps;
+//     }
+
+
+//     ParameterSet& operator<<(ParameterSet& ps, const Correlation& obj)
+//     {
+//       ostringstream oss;
+//       oss << endl << "Correlation.Selection = " << obj.selection
+//           << endl << "Correlation.Type = "      << obj.type;
+//       ps.adoptBuffer(oss.str());
+//       return ps;
+//     }
+
+    
+//     ParameterSet& operator<<(ParameterSet& ps, const Integration& obj)
+//     {
+//       ostringstream oss;
+//       oss << endl << "Integration.Freq = " << obj.deltaFreq
+//           << endl << "Integration.Time = " << obj.deltaTime;
+//       ps.adoptBuffer(oss.str());
+//       return ps;
+//     }
+
+
+//     ParameterSet& operator<<(ParameterSet& ps, const Baselines& obj)
+//     {
+//       ostringstream oss;
+//       oss << endl << "Baselines.Station1 = " << obj.station1
+//           << endl << "Baselines.Station2 = " << obj.station2;
+//       ps.adoptBuffer(oss.str());
+//       return ps;
+//     }
+
+
+//     //# -------  BlobIStream operators  ------- #//
+
+//     BlobIStream& operator>>(BlobIStream& bis, BBDB& obj)
+//     {
+//       bis >> obj.host
+// 	  >> obj.port
+// 	  >> obj.dbName
+// 	  >> obj.username
+// 	  >> obj.password;
+//       return bis;
+//     }
+
+
+//     BlobIStream& operator>>(BlobIStream& bis, ParmDB& obj)
+//     {
+//       bis >> obj.instrument
+// 	  >> obj.localSky
+// 	  >> obj.history;
+//       return bis;
+//     }
+
+
+//     BlobIStream& operator>>(BlobIStream& bis, RegionOfInterest& obj)
+//     {
+//       bis >> obj.frequency
+// 	  >> obj.time;
+//       return bis;
+//     }
     
     
-    BlobIStream& operator>>(BlobIStream& bis, DomainSize& obj)
-    {
-      bis >> obj.bandWidth
-	  >> obj.timeInterval;
-      return bis;
-    }
+//     BlobIStream& operator>>(BlobIStream& bis, DomainSize& obj)
+//     {
+//       bis >> obj.bandWidth
+// 	  >> obj.timeInterval;
+//       return bis;
+//     }
 
 
-    BlobIStream& operator>>(BlobIStream& bis, Integration& obj)
-    {
-      bis >> obj.deltaFreq
-	  >> obj.deltaTime;
-      return bis;
-    }
+//     BlobIStream& operator>>(BlobIStream& bis, Integration& obj)
+//     {
+//       bis >> obj.deltaFreq
+// 	  >> obj.deltaTime;
+//       return bis;
+//     }
 
 
   } // namespace BBS

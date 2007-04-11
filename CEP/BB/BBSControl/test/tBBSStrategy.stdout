@@ -1,11 +1,5 @@
 
 Measurement Set: test.ms
-Blackboard database:
-. Host: dop50.nfra.nl
-. Port: 5432
-. DBName: bbs
-. Username: postgres
-. Password: 
 Parameter database:
 . Instrument table: test.mep
 . Local sky table: test.gsm

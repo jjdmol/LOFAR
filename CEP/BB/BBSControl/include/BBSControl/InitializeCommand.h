@@ -27,30 +27,31 @@
 
 namespace LOFAR
 {
-namespace BBS
-{
-
-class InitializeCommand: public Command
-{
-public:
-    // Accept a CommandHandler that wants to process \c *this.
-    virtual void accept(CommandHandler &handler) const;
-
-    // Return the class type of \c *this as a string.
-    const string &classType() const;
-
-    // Write the contents of \c *this into the blob output stream \a bos.
-    virtual void write(BlobOStream &bos) const
+  namespace BBS
+  {
+    class InitializeCommand: public Command
     {
-    }
+    public:
+      // Destructor.
+      virtual ~InitializeCommand() {}
 
-    // Read the contents from the blob input stream \a bis into \c *this.
-    virtual void read(BlobIStream &bis)
-    {
-    }
-};
+      // Accept a CommandHandler that wants to process \c *this.
+      virtual void accept(CommandHandler &handler) const;
 
-} //# namespace BBS
+    protected:
+      // Return the command type of \c *this as a string.
+      virtual const string& type() const;
+
+    private:
+      // Write the contents of \c *this into the ParameterSet \a ps.
+      virtual void write(ACC::APS::ParameterSet& ps) const;
+
+      // Read the contents from the ParameterSet \a ps into \c *this.
+      virtual void read(const ACC::APS::ParameterSet& ps);
+
+    };
+
+  } //# namespace BBS
 } //# namespace LOFAR
 
 #endif

@@ -27,8 +27,8 @@
 // Base component class of the BBSStep composite pattern.
 
 //# Includes
-#include <BBSControl/BBSStructs.h>
 #include <BBSControl/Command.h>
+#include <BBSControl/BBSStructs.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
@@ -133,6 +133,14 @@ namespace LOFAR
 
       // @}
 
+      // Write the contents of \c *this into the ParameterSet \a ps.
+      virtual void write(ACC::APS::ParameterSet& ps) const;
+
+      // Read the contents from the ParameterSet \a ps into \c *this,
+      // overriding the default values, "inherited" from the parent step
+      // object.
+      virtual void read(const ACC::APS::ParameterSet& ps);
+
     protected:
       // Default constructor. Construct an empty BBSStep object and make it a
       // child of the BBSStep object \a parent.
@@ -146,11 +154,11 @@ namespace LOFAR
 	      const ACC::APS::ParameterSet& parSet,
 	      const BBSStep* parent);
 
-      // Write the contents of \c *this into the blob output stream \a bos.
-      virtual void write(BlobOStream& bos) const;
+//       // Write the contents of \c *this into the blob output stream \a bos.
+//       virtual void write(BlobOStream& bos) const;
 
-      // Read the contents from the blob input stream \a bis into \c *this.
-      virtual void read(BlobIStream& bis);
+//       // Read the contents from the blob input stream \a bis into \c *this.
+//       virtual void read(BlobIStream& bis);
 
     private:
       // Implementation of getAllSteps(). The default implementation adds \c
@@ -158,9 +166,9 @@ namespace LOFAR
       // \note This method must be overridden by BBSMultiStep.
       virtual void doGetAllSteps(vector<const BBSStep*>& steps) const;
 
-      // Override the default values, "inherited" from the parent step object,
-      // for those members that are specified in \a parSet.
-      void setParms(const ACC::APS::ParameterSet& parSet);
+//       // Override the default values, "inherited" from the parent step object,
+//       // for those members that are specified in \a parSet.
+//       void setParms(const ACC::APS::ParameterSet& parSet);
 
       // Name of this step.
       string                 itsName;
@@ -199,6 +207,16 @@ namespace LOFAR
 
     };
 
+    // Factory that can be used to generate new BBSStep objects.
+    // The factory is defined as a singleton.
+    typedef Singleton < 
+      ObjectFactory < BBSStep(const string&, 
+                              const ACC::APS::ParameterSet&, 
+                              const BBSStep*), 
+                      string >
+    > BBSStepFactory;
+
+    
   } // namespace BBS
 
 } // namespace LOFAR

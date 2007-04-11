@@ -28,14 +28,14 @@ namespace LOFAR
 {
   namespace BBS
   {
-    // Register BBSShiftStep with the BBSStreamableFactory. Use an anonymous
-    // namespace. This ensures that the variable `dummy' gets its own private
-    // storage area and is only visible in this compilation unit.
-    namespace
-    {
-      bool dummy = BlobStreamableFactory::instance().
-	registerClass<BBSShiftStep>("BBSShiftStep");
-    }
+//     // Register BBSShiftStep with the BBSStepFactory. Use an anonymous
+//     // namespace. This ensures that the variable `dummy' gets its own private
+//     // storage area and is only visible in this compilation unit.
+//     namespace
+//     {
+//       bool dummy = BBSStepFactory::instance().
+// 	registerClass<BBSShiftStep>("BBSShiftStep");
+//     }
 
     void BBSShiftStep::accept(CommandHandler &handler) const
     {
@@ -48,12 +48,18 @@ namespace LOFAR
       return theOperation;
     }
   
-    const string& BBSShiftStep::classType() const 
+//     const string& BBSShiftStep::classType() const 
+//     {
+//       static string theType("BBSShiftStep");
+//       return theType;
+//     }
+  
+    const string& BBSShiftStep::type() const 
     {
-      static string theType("BBSShiftStep");
+      static const string theType("ShiftStep");
       return theType;
     }
-  
+
   } // namespace BBS
 
 } // namespace LOFAR

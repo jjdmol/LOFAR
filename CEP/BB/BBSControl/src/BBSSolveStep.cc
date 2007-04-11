@@ -39,14 +39,14 @@ namespace LOFAR
     using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
-    // Register BBSSolveStep with the BBSStreamableFactory. Use an anonymous
-    // namespace. This ensures that the variable `dummy' gets its own private
-    // storage area and is only visible in this compilation unit.
-    namespace
-    {
-      bool dummy = BlobStreamableFactory::instance().
-	registerClass<BBSSolveStep>("BBSSolveStep");
-    }
+//     // Register BBSSolveStep with the BBSStepFactory. Use an anonymous
+//     // namespace. This ensures that the variable `dummy' gets its own private
+//     // storage area and is only visible in this compilation unit.
+//     namespace
+//     {
+//       bool dummy = BBSStepFactory::instance().
+// 	registerClass<BBSSolveStep>("BBSSolveStep");
+//     }
 
 
     //##--------   P u b l i c   m e t h o d s   --------##//
@@ -119,39 +119,76 @@ namespace LOFAR
     }
   
 
-    const string& BBSSolveStep::classType() const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      static const string theType("BBSSolveStep");
-      return theType;
-    }
+//     const string& BBSSolveStep::classType() const
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//       static const string theType("BBSSolveStep");
+//       return theType;
+//     }
 
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    void BBSSolveStep::write(BlobOStream& bos) const
+//     void BBSSolveStep::write(BlobOStream& bos) const
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//       BBSSingleStep::write(bos);
+//       bos << itsMaxIter
+// 	  << itsEpsilon
+// 	  << itsMinConverged
+// 	  << itsParms
+//   	  << itsExclParms
+// 	  << itsDomainSize;
+//     }
+
+
+//     void BBSSolveStep::read(BlobIStream& bis)
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//       BBSSingleStep::read(bis);
+//       bis >> itsMaxIter
+// 	  >> itsEpsilon
+// 	  >> itsMinConverged
+// 	  >> itsParms
+// 	  >> itsExclParms
+// 	  >> itsDomainSize;
+//     }
+
+    const string& BBSSolveStep::type() const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      BBSSingleStep::write(bos);
-      bos << itsMaxIter
-	  << itsEpsilon
-	  << itsMinConverged
-	  << itsParms
-  	  << itsExclParms
-	  << itsDomainSize;
+      static const string theType("SolveStep");
+      return theType;
     }
 
 
-    void BBSSolveStep::read(BlobIStream& bis)
+    void BBSSolveStep::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      BBSSingleStep::read(bis);
-      bis >> itsMaxIter
-	  >> itsEpsilon
-	  >> itsMinConverged
-	  >> itsParms
-	  >> itsExclParms
-	  >> itsDomainSize;
+      BBSSingleStep::write(ps);
+      ostringstream oss;
+      oss << endl << "MaxIter = " << itsMaxIter
+          << endl << "Epsilon = " << itsEpsilon
+          << endl << "MinConverged = " << itsMinConverged
+          << endl << "Parms = " << itsParms
+          << endl << "ExclParms = " << itsExclParms
+          << endl << "DomainSize.Freq = " << itsDomainSize.bandWidth
+          << endl << "DomainSize.Time = " << itsDomainSize.timeInterval;
+      ps.adoptBuffer(oss.str(), "Step." + getName() + ".");
+    }
+
+
+    void BBSSolveStep::read(const ParameterSet& ps)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      BBSSingleStep::read(ps);
+      ParameterSet pss(ps.makeSubset("Step." + getName() + "."));
+      itsMaxIter                 = pss.getInt32("MaxIter");
+      itsEpsilon                 = pss.getDouble("Epsilon");
+      itsMinConverged            = pss.getDouble("MinConverged");
+      itsParms                   = pss.getStringVector("Parms");
+      itsExclParms               = pss.getStringVector("ExclParms");
+      itsDomainSize.bandWidth    = pss.getDouble("DomainSize.Freq");
+      itsDomainSize.timeInterval = pss.getDouble("DomainSize.Time");
     }
 
 
