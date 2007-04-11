@@ -20,8 +20,10 @@
 
 #include <iostream>
 #include <cstdlib>
-#include <iostream>
+#include <string>
+#include <tables/Tables.h>
 #include <ms/MeasurementSets.h>
+#include <casa/Exceptions.h>
 
 #include <CS1_DataSquasher/SquasherProcessControl.h>
 #include "DataSquasher.h"
@@ -32,12 +34,12 @@ namespace LOFAR
 {
   namespace CS1
   {
+    using namespace casa;
     //===============>>> SquasherProcessControl::SquasherProcessControl  <<<===============
     SquasherProcessControl::SquasherProcessControl()
     : ProcessControl()
     {
       inMS        = NULL;
-      outMS       = NULL;
       itsSquasher = NULL;
     }
 
@@ -46,9 +48,6 @@ namespace LOFAR
     {
       if (inMS)
       { delete inMS;
-      }
-      if (outMS)
-      { delete outMS;
       }
       if (itsSquasher)
       { delete itsSquasher;
@@ -61,9 +60,9 @@ namespace LOFAR
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
       itsInMS  = ParamSet->getString("inms");
       itsOutMS = ParamSet->getString("outms");
-      itsStart = ParamSet->getBool("start");
-      itsStep  = ParamSet->getBool("step");
-      itsNChan = ParamSet->getBool("nchan");
+      itsStart = ParamSet->getInt32("start");
+      itsStep  = ParamSet->getInt32("step");
+      itsNChan = ParamSet->getInt32("nchan");
       return true;
     }
 
@@ -71,17 +70,30 @@ namespace LOFAR
     tribool SquasherProcessControl::run()
     {
       try{
-        std::cout << "Runnning Data Squasher please wait..." << std::endl;
-        MS_Reader.MS.deepCopy(itsOutMS);
-        renameColumn("DATA", "OLDDATA");
-        addColumn("DATA");
+        std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
+        inMS->deepCopy(itsOutMS, Table::NewNoReplace);
+        MeasurementSet outMS = MeasurementSet(itsOutMS, Table::Update);
+        TableDesc tdesc = outMS.tableDesc();
+        ColumnDesc desc = tdesc.rwColumnDesc("DATA");
+        IPosition pos = desc.shape();
+        Vector<Int> temp = pos.asVector();
+        std::cout << "Old shape: " << temp(0) << ":" <<  temp(1) << std::endl;
+        temp(1) = itsNChan/itsStep;
+        std::cout << "New shape: " << temp(0) << ":" <<  temp(1) << std::endl;
+        outMS.renameColumn("OLDDATA", "DATA");
+        IPosition pos2(temp);
+        desc.setOptions(0);
+        desc.setShape(pos2);
+        desc.setOptions(4);
+        outMS.addColumn(desc);
 
-        itsSquasher->Squash("OLDDATA",
+        itsSquasher->Squash(outMS,
+                            "OLDDATA",
                             "DATA",
                             itsStart,
                             itsStep,
-                            itsNchan);
-        removeColumn("OLDDATA");
+                            itsNChan);
+        //outMS.removeColumn("OLDDATA");
       }
       catch(casa::AipsError& err)
       {
@@ -101,19 +113,15 @@ namespace LOFAR
 
       cout  << string(SQUASHER_VERSION) + string(" data squasher by Adriaan Renting for LOFAR CS1\n") +
               string("This is experimental software, please report errors or requests to renting@astron.nl\n") +
-              string("Documentation can be found at: www.astron.nl/~renting\n");
-      cout << itsMS << endl;
-      if (itsInMS == "")
+              string("Documentation can be found at: www.lofar.org/wiki\n");
+      cout << string("Squashing ") << itsInMS << string(" into ") << itsOutMS << endl;
+      if (itsInMS == "" || itsOutMS == "")
       {
         cerr  << " Error missing input" << endl;
         return false;
       }
-      myMS       = new MS_File(itsMS);
-      itsSquasher = new DataSquasher (myMS,
-                                      itsWindow,
-                                      itsCrosspol,
-                                      itsMin,
-                                      itsMax);
+      inMS        = new MeasurementSet(itsInMS);
+      itsSquasher = new DataSquasher();
       }
       catch(casa::AipsError& err)
       {
@@ -131,10 +139,10 @@ namespace LOFAR
     //===============>>> SquasherProcessControl::quit  <<<================================
     tribool SquasherProcessControl::quit()
     {
-      if (myMS)
+      if (inMS)
       {
-        delete myMS;
-        myMS = NULL;
+        delete inMS;
+        inMS = NULL;
       }
       if (itsSquasher)
       {

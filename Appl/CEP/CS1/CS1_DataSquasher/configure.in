@@ -57,5 +57,5 @@ include/CS1_DataSquasher/Makefile
 src/Makefile
 test/Makefile
 Makefile
-CS1_dataSquasher.spec
+CS1_DataSquasher.spec
 )
