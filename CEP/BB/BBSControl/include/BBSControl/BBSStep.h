@@ -154,21 +154,11 @@ namespace LOFAR
 	      const ACC::APS::ParameterSet& parSet,
 	      const BBSStep* parent);
 
-//       // Write the contents of \c *this into the blob output stream \a bos.
-//       virtual void write(BlobOStream& bos) const;
-
-//       // Read the contents from the blob input stream \a bis into \c *this.
-//       virtual void read(BlobIStream& bis);
-
     private:
       // Implementation of getAllSteps(). The default implementation adds \c
       // this to the vector \a steps.
       // \note This method must be overridden by BBSMultiStep.
       virtual void doGetAllSteps(vector<const BBSStep*>& steps) const;
-
-//       // Override the default values, "inherited" from the parent step object,
-//       // for those members that are specified in \a parSet.
-//       void setParms(const ACC::APS::ParameterSet& parSet);
 
       // Name of this step.
       string                 itsName;

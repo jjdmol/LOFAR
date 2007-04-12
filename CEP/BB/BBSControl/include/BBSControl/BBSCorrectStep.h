@@ -44,14 +44,14 @@ namespace LOFAR
     {
     public:
       BBSCorrectStep(const BBSStep* parent = 0) : 
-	    BBSSingleStep(parent)
+        BBSSingleStep(parent)
       {
       }
 
       BBSCorrectStep(const string& name, 
 		     const ACC::APS::ParameterSet& parSet,
 		     const BBSStep* parent) :
-	    BBSSingleStep(name, parSet, parent)
+        BBSSingleStep(name, parSet, parent)
       {
       }
 
@@ -62,9 +62,6 @@ namespace LOFAR
       virtual const string& operation() const;
 
     private:
-//       // Return the class type of \c *this as a string.
-//       virtual const string& classType() const;
-
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
     };

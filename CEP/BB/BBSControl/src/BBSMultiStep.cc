@@ -33,18 +33,9 @@
 
 namespace LOFAR
 {
-  using ACC::APS::ParameterSet;
-
   namespace BBS
   {
-//     // Register BBSMultiStep with the BBSStepFactory. Use an anonymous
-//     // namespace. This ensures that the variable `dummy' gets its own private
-//     // storage area and is only visible in this compilation unit.
-//     namespace
-//     {
-//       bool dummy = BBSStepFactory::instance().
-//  	registerClass<BBSMultiStep>("BBSMultiStep");
-//     }
+    using ACC::APS::ParameterSet;
 
 
     //##--------   P u b l i c   m e t h o d s   --------##//
@@ -81,7 +72,7 @@ namespace LOFAR
 
     void BBSMultiStep::accept(CommandHandler &handler) const
     {
-        handler.handle(*this);
+      handler.handle(*this);
     }
 
 
@@ -98,83 +89,19 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-//     void BBSMultiStep::write(BlobOStream& bos) const
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-//       // First write the data members of the base class to the output stream.
-//       BBSStep::write(bos);
-
-//       // Write the number of BBSStep objects that this BBSMultiStep contains.
-//       bos << static_cast<uint32>(itsSteps.size());
-
-//       // Write the BBSStep objects, one by one.
-//       for (uint i = 0; i < itsSteps.size(); ++i) {
-// 	itsSteps[i]->serialize(bos);
-//       }
-//     }
-
-
-//     void BBSMultiStep::read(BlobIStream& bis)
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-//       // First read the data members of the base class from the input stream.
-//       BBSStep::read(bis);
-
-//       // How many BBSStep objects does this BBSMultiStep contain?
-//       uint32 sz;
-//       bis >> sz;
-//       LOG_TRACE_VAR_STR("BBSMultiStep \"" << this->getName() << 
-// 			"\" contains " << sz << " children.");
-
-//       // Create the new BBSSteps by reading the blob input stream.
-//       for (uint i = 0; i < sz; ++i) {
-// 	BBSStep* step;
-// 	ASSERT(step = dynamic_cast<BBSStep*>(BlobStreamable::deserialize(bis)));
-// 	step->setParent(this);
-// 	itsSteps.push_back(step);
-//       }
-//     }
-
-
-//     const string& BBSMultiStep::classType() const 
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       static const string theType("BBSMultiStep");
-//       return theType;
-//     }
-
-
     void BBSMultiStep::write(ParameterSet& ps) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      // First write the data members of the base class to the parameter set.
+      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << getName());
       BBSStep::write(ps);
-
-      // Write the BBSStep objects, one by one.
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-	itsSteps[i]->write(ps);
-      }
+      writeSteps(ps);
     }
 
 
     void BBSMultiStep::read(const ParameterSet& ps)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      // First read the data members of the base class from the parameter set.
+      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << getName());
       BBSStep::read(ps);
-
-      // This multistep consists of the following steps.
-      vector<string> steps(ps.getStringVector("Step." + getName() + ".Steps"));
-
-      // Create a new step for each name in \a steps.
-      for (uint i = 0; i < steps.size(); ++i) {
-	infiniteRecursionCheck(steps[i]);
-	itsSteps.push_back(BBSStep::create(steps[i], ps, this));
-      }
+      readSteps(ps);
     }
 
 
@@ -182,6 +109,35 @@ namespace LOFAR
     {
       static const string theType("MultiStep");
       return theType;
+    }
+
+
+    void BBSMultiStep::writeSteps(ParameterSet& ps) const
+    {
+      ostringstream oss;
+
+      // Write the "Steps" key/value pair
+      oss << "Step." << getName() << ".Steps = [ ";
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+        if (i > 0) oss << ", ";
+        oss << itsSteps[i]->getName();
+      }
+      oss << " ]";
+      ps.adoptBuffer(oss.str());
+
+      // Write the BBSStep objects, one by one.
+      for (uint i = 0; i < itsSteps.size(); ++i) {
+        itsSteps[i]->write(ps);
+      }
+    }
+
+
+    void BBSMultiStep::readSteps(const ParameterSet& ps)
+    {
+      vector<string> steps = ps.getStringVector("Strategy.Steps");
+      for (uint i = 0; i < steps.size(); ++i) {
+        itsSteps.push_back(BBSStep::create(steps[i], ps, 0));
+      }
     }
 
 

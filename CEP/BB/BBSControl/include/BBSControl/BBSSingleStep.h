@@ -69,14 +69,8 @@ namespace LOFAR
       // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
       // is a pointer to the BBSStep object that is the parent of \c *this.
       BBSSingleStep(const string& name,
-        const ACC::APS::ParameterSet& parset,
-        const BBSStep* parent);
-
-//       // Write the contents of \c *this into the blob output stream \a bos.
-//       virtual void write(BlobOStream& bos) const;
-
-//       // Read the contents from the blob input stream \a bis into \c *this.
-//       virtual void read(BlobIStream& bis);
+                    const ACC::APS::ParameterSet& parset,
+                    const BBSStep* parent);
 
       // Write the contents of \c *this into the ParameterSet \a ps.
       virtual void write(ACC::APS::ParameterSet& ps) const;

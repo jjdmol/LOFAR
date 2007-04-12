@@ -28,15 +28,6 @@ namespace LOFAR
 {
   namespace BBS
   {
-//     // Register BBSCorrectStep with the BBSStepFactory. Use an anonymous
-//     // namespace. This ensures that the variable `dummy' gets its own private
-//     // storage area and is only visible in this compilation unit.
-//     namespace
-//     {
-//       bool dummy = BBSStepFactory::instance().
-// 	registerClass<BBSCorrectStep>("BBSCorrectStep");
-//     }
-
     void BBSCorrectStep::accept(CommandHandler &handler) const
     {
         handler.handle(*this);
@@ -47,12 +38,6 @@ namespace LOFAR
       static string theOperation("Correct");
       return theOperation;
     }
-  
-//     const string& BBSCorrectStep::classType() const 
-//     {
-//       static string theType("BBSCorrectStep");
-//       return theType;
-//     }
   
     const string& BBSCorrectStep::type() const 
     {

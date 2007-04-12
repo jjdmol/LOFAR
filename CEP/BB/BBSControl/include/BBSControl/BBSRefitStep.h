@@ -62,9 +62,6 @@ namespace LOFAR
       virtual const string& operation() const;
 
     private:
-//       // Return the type of \c *this as a string.
-//       virtual const string& classType() const;
-
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
     };
