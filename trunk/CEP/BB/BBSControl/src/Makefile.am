@@ -13,11 +13,12 @@ libbbscontrol_la_SOURCES	= \
 	BBSStructs.cc \
 	BBSSubtractStep.cc \
 	BlobStreamableConnection.cc \
-	DomainRegistrationRequest.cc \
+	Command.cc \
 	CommandQueue.cc \
 	CommandQueueTrigger.cc \
 	CommandQueueTransactors.cc \
 	CommandQueueTrigger.cc \
+	DomainRegistrationRequest.cc \
 	FinalizeCommand.cc \
 	GlobalProcessControl.cc \
 	InitializeCommand.cc \

@@ -107,13 +107,13 @@ namespace LOFAR
       // Write the BBSStep objects in \a itsSteps to parameter set \a ps.
       void writeSteps(ACC::APS::ParameterSet& ps) const;
 
-      // Write the contents of a BBSStrategy to a ParameterSet.
-      friend ACC::APS::ParameterSet& 
-      operator<<(ACC::APS::ParameterSet&, const BBSStrategy&);
+//       // Write the contents of a BBSStrategy to a ParameterSet.
+//       friend ACC::APS::ParameterSet& 
+//       operator<<(ACC::APS::ParameterSet&, const BBSStrategy&);
 
-      // Read the contents of a ParameterSet into a BBSStrategy.
-      friend ACC::APS::ParameterSet& 
-      operator>>(ACC::APS::ParameterSet&, BBSStrategy&);
+//       // Read the contents of a ParameterSet into a BBSStrategy.
+//       friend ACC::APS::ParameterSet& 
+//       operator>>(ACC::APS::ParameterSet&, BBSStrategy&);
 
       // Name of the Measurement Set
       string                 itsDataSet;

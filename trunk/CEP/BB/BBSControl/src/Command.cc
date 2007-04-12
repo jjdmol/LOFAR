@@ -26,6 +26,7 @@
 
 //# Includes
 #include <BBSControl/Command.h>
+#include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -51,6 +52,23 @@ namespace LOFAR
       // Return the new Command object.
       return obj;
     }
+
+
+    ParameterSet& operator<<(ParameterSet& ps, const Command& cmd)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      cmd.write(ps); 
+      return ps;
+    }
+
+
+    ParameterSet& operator>>(ParameterSet& ps, Command& cmd)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      cmd.read(ps); 
+      return ps;
+    }
+
 
   } // namespace BBS
 

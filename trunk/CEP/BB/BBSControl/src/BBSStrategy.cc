@@ -288,20 +288,20 @@ namespace LOFAR
     }
 
 
-    ParameterSet& operator<<(ParameterSet& ps, const BBSStrategy& bs)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      bs.write(ps); 
-      return ps;
-    }
+//     ParameterSet& operator<<(ParameterSet& ps, const BBSStrategy& bs)
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//       bs.write(ps); 
+//       return ps;
+//     }
 
 
-    ParameterSet& operator>>(ParameterSet& ps, BBSStrategy& bs)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      bs.read(ps); 
-      return ps;
-    }
+//     ParameterSet& operator>>(ParameterSet& ps, BBSStrategy& bs)
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//       bs.read(ps); 
+//       return ps;
+//     }
 
 
   } // namespace BBS
