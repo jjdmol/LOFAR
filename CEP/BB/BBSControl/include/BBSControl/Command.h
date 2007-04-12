@@ -44,10 +44,6 @@ namespace LOFAR
     class Command
     {
     public:
-      // Create a new Command object. The key \c Command.type key in \a ps
-      // must contain the type of Command to be constructed.
-      static Command* create(const ACC::APS::ParameterSet& ps);
-
       // Destructor.
       virtual ~Command() {}
 

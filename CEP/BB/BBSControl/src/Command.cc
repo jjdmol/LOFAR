@@ -35,25 +35,6 @@ namespace LOFAR
   {
     using ACC::APS::ParameterSet;
 
-    Command* Command::create(const ParameterSet& ps)
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-
-      string type = ps.getString("Command.Type");
-      LOG_TRACE_VAR_STR("Class type to be created: " << type);
-
-      // Create a new Command object based on \a type.
-      Command* obj = CommandFactory::instance().create(type);
-      ASSERTSTR(obj, "Failed to create object of type " << type);
-
-      // Read the rest of the data into the new Command object.
-      obj->read(ps);
-
-      // Return the new Command object.
-      return obj;
-    }
-
-
     ParameterSet& operator<<(ParameterSet& ps, const Command& cmd)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
