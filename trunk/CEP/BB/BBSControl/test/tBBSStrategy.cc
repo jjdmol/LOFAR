@@ -31,6 +31,17 @@ using namespace LOFAR;
 using namespace LOFAR::BBS;
 using namespace LOFAR::ACC::APS;
 
+// Compare files. Return true if equal, otherwise false.
+bool compareFiles(const char* f1, const char* f2)
+{
+  string cmd = "diff " + string(f1) + " " + string(f2);
+  LOG_TRACE_FLOW_STR("About to make call `system(" << cmd << ")'");
+  int result = system(cmd.c_str());
+  LOG_TRACE_FLOW_STR("Return value of system() call: " << result);
+  return (result == 0);
+}
+
+
 int main()
 {
   const string progName("tBBSStrategy");
@@ -38,8 +49,32 @@ int main()
 
   try {
 
-    BBSStrategy strategy(ParameterSet("tBBSControl.parset"));
-    cout << strategy << endl;
+    const char* psFile  = "tBBSControl.parset";
+    const char* refFile = "tBBSControl.parset.ref";
+    const char* outFile = "tBBSControl.parset.out";
+
+    ParameterSet ps(psFile);
+    BBSStrategy writtenStrategy(ps);
+    writtenStrategy.shouldWriteSteps(true);
+
+    ps.clear();
+    cout << writtenStrategy << endl;
+    ps << writtenStrategy;
+    ps.writeFile(refFile);
+
+    ps.clear();
+    ps.adoptFile(refFile);
+    BBSStrategy readStrategy;
+    ps >> readStrategy;
+
+    ps.clear();
+    ps << readStrategy;
+    ps.writeFile(outFile);
+    
+    if (!compareFiles(refFile, outFile)) {
+      LOG_ERROR_STR("Files " << refFile << " and " << outFile << " differ");
+      return 1;
+    }
 
   } catch (LOFAR::Exception& e) {
     LOG_FATAL_STR(e);

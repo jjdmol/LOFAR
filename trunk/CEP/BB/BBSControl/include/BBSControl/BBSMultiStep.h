@@ -68,15 +68,6 @@ namespace LOFAR
       virtual void print(ostream& os) const;
 
     private:
-//       // Write the contents of \c *this into the blob output stream \a bos.
-//       virtual void write(BlobOStream& bos) const;
-
-//       // Read the contents from the blob input stream \a bis into \c *this.
-//       virtual void read(BlobIStream& bis);
-
-//       // Return the type of \c *this as a string.
-//       virtual const string& classType() const;
-
       // Write the contents of \c *this into the ParameterSet \a ps.
       virtual void write(ACC::APS::ParameterSet& ps) const;
 
@@ -85,6 +76,14 @@ namespace LOFAR
 
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
+
+      // Write the individual BBSStep objects in \a itsSteps, which make up
+      // this BBSMultiStep, to the ParameterSet \a ps.
+      void writeSteps(ACC::APS::ParameterSet& ps) const;
+
+      // Read the individual BBSStep objects, which make up this BBSMultiStep,
+      // from the ParameterSet \a ps and store them in \a itsSteps.
+      void readSteps(const ACC::APS::ParameterSet& ps);
 
       // Implementation of getAllSteps() for BBSMultiStep. It retrieves all
       // steps by calling getAllSteps() on all steps that comprise this

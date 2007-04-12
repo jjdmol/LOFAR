@@ -27,26 +27,11 @@ namespace LOFAR
 {
   namespace BBS
   {
-//     // Register BBSSubtractStep with the BBSStepFactory. Use an
-//     // anonymous namespace. This ensures that the variable `dummy' gets its
-//     // own private storage area and is only visible in this compilation unit.
-//     namespace
-//     {
-//       bool dummy = BBSStepFactory::instance().
-// 	registerClass<BBSSubtractStep>("BBSSubtractStep");
-//     }
-
     const string& BBSSubtractStep::operation() const 
     {
       static string theOperation("Subtract");
       return theOperation;
     }
-  
-//     const string& BBSSubtractStep::classType() const 
-//     {
-//       static string theType("BBSSubtractStep");
-//       return theType;
-//     }
   
     const string& BBSSubtractStep::type() const 
     {

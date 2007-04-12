@@ -52,18 +52,6 @@ namespace LOFAR
       return obj;
     }
 
-
-    void Command::serialize(ParameterSet& ps) const
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-
-      // Write the class type of \c *this.
-      ps.add("Command.Type", type());
-
-      // Write the contents of \c *this into the parameter set \a ps.
-      write(ps);
-    }
-
   } // namespace BBS
 
 } // namespace LOFAR

@@ -71,10 +71,10 @@ namespace LOFAR
     // Selection of the data domain that is to be processed.
     struct RegionOfInterest
     {
-        vector<int32>   frequency;
-//        uint                stepChannel;
-        vector<string>  time;
-//        vector<string>      stations;
+      vector<int32>   frequency;
+      //        uint                stepChannel;
+      vector<string>  time;
+      //        vector<string>      stations;
     };    
     
     // Domain size is defined by two parameters: bandwidth f(Hz), and time
@@ -104,60 +104,8 @@ namespace LOFAR
     ostream& operator<<(ostream&, const Integration&);
     // @}
 
-//     // ParameterSet I/O methods for these structs.
-//     // @{
-//     ACC::APS::ParameterSet& 
-//     operator<<(ACC::APS::ParameterSet& ps, const BBDB& obj);
-//     ACC::APS::ParameterSet& 
-//     operator<<(ACC::APS::ParameterSet& ps, const ParmDB& obj);
-//     ACC::APS::ParameterSet& 
-//     operator<<(ACC::APS::ParameterSet& ps, const DomainSize& obj);
-//     ACC::APS::ParameterSet& 
-//     operator<<(ACC::APS::ParameterSet& ps, const Correlation& obj);
-//     ACC::APS::ParameterSet& 
-//     operator<<(ACC::APS::ParameterSet& ps, const Integration& obj);
-//     ACC::APS::ParameterSet& 
-//     operator<<(ACC::APS::ParameterSet& ps, const Baselines& obj);
-//     // @}
-
-//     // Blob I/O methods for these structs.
-//     // @{
-//     BlobOStream& operator<<(BlobOStream&, const BBDB&);
-//     BlobOStream& operator<<(BlobOStream&, const ParmDB&);
-//     BlobOStream& operator<<(BlobOStream&, const RegionOfInterest&);
-//     BlobOStream& operator<<(BlobOStream&, const DomainSize&);
-//     BlobOStream& operator<<(BlobOStream&, const Integration&);
-
-//     BlobIStream& operator>>(BlobIStream&, BBDB&);
-//     BlobIStream& operator>>(BlobIStream&, ParmDB&);
-//     BlobIStream& operator>>(BlobIStream&, RegionOfInterest&);
-//     BlobIStream& operator>>(BlobIStream&, DomainSize&);
-//     BlobIStream& operator>>(BlobIStream&, Integration&);
-//     // @}
-
     // @}
     
-    template <typename T>
-    ACC::APS::ParameterSet& 
-    operator<<(ACC::APS::ParameterSet& ps, const T& obj)
-    {
-      ostringstream oss;
-      oss << obj;
-      ps.adoptBuffer(oss.str());
-      return ps;
-    }
-
-
-    template <typename T>
-    ACC::APS::ParameterSet& 
-    operator<<(ACC::APS::ParameterSet& ps, const vector<T>& obj)
-    {
-      ostringstream oss;
-      oss << obj;
-      ps.adoptBuffer(oss.str());
-      return ps;
-    }
-
   } // namespace BBS
 
 } // namespace LOFAR

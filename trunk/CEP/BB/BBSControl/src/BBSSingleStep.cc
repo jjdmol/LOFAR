@@ -48,7 +48,7 @@ namespace LOFAR
 
     void BBSSingleStep::accept(CommandHandler &handler) const
     {
-        handler.handle(*this);
+      handler.handle(*this);
     }
 
 
@@ -90,7 +90,8 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSStep::write(ps);
-      ps.add("Step." + getName() + ".OutputData", itsOutputData);
+      ps.replace("Step." + getName() + ".OutputData", itsOutputData);
+      ps.replace("Step." + getName() + ".Operation", toUpper(operation()));
     }
 
 
@@ -100,23 +101,6 @@ namespace LOFAR
       BBSStep::read(ps);
       itsOutputData = ps.getString("Step." + getName() + ".OutputData");
     }
-
-
-//     void BBSSingleStep::write(BlobOStream& bos) const
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       BBSStep::write(bos);
-//       bos << itsOutputData;
-//     }
-
-
-//     void BBSSingleStep::read(BlobIStream& bis)
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       BBSStep::read(bis);
-//       bis >> itsOutputData;
-//     }
-
 
   } // namespace BBS
 

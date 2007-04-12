@@ -39,16 +39,6 @@ namespace LOFAR
     using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
 
-//     // Register BBSSolveStep with the BBSStepFactory. Use an anonymous
-//     // namespace. This ensures that the variable `dummy' gets its own private
-//     // storage area and is only visible in this compilation unit.
-//     namespace
-//     {
-//       bool dummy = BBSStepFactory::instance().
-// 	registerClass<BBSSolveStep>("BBSSolveStep");
-//     }
-
-
     //##--------   P u b l i c   m e t h o d s   --------##//
 
     BBSSolveStep::BBSSolveStep(const BBSStep* parent) : 
@@ -90,7 +80,7 @@ namespace LOFAR
 
     void BBSSolveStep::accept(CommandHandler &handler) const
     {
-        handler.handle(*this);
+      handler.handle(*this);
     }
 
 
@@ -119,40 +109,7 @@ namespace LOFAR
     }
   
 
-//     const string& BBSSolveStep::classType() const
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       static const string theType("BBSSolveStep");
-//       return theType;
-//     }
-
-
     //##--------   P r i v a t e   m e t h o d s   --------##//
-
-//     void BBSSolveStep::write(BlobOStream& bos) const
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       BBSSingleStep::write(bos);
-//       bos << itsMaxIter
-// 	  << itsEpsilon
-// 	  << itsMinConverged
-// 	  << itsParms
-//   	  << itsExclParms
-// 	  << itsDomainSize;
-//     }
-
-
-//     void BBSSolveStep::read(BlobIStream& bis)
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       BBSSingleStep::read(bis);
-//       bis >> itsMaxIter
-// 	  >> itsEpsilon
-// 	  >> itsMinConverged
-// 	  >> itsParms
-// 	  >> itsExclParms
-// 	  >> itsDomainSize;
-//     }
 
     const string& BBSSolveStep::type() const
     {
@@ -173,7 +130,7 @@ namespace LOFAR
           << endl << "ExclParms = " << itsExclParms
           << endl << "DomainSize.Freq = " << itsDomainSize.bandWidth
           << endl << "DomainSize.Time = " << itsDomainSize.timeInterval;
-      ps.adoptBuffer(oss.str(), "Step." + getName() + ".");
+      ps.adoptBuffer(oss.str(), "Step." + getName() + ".Solve.");
     }
 
 
@@ -181,7 +138,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSSingleStep::read(ps);
-      ParameterSet pss(ps.makeSubset("Step." + getName() + "."));
+      ParameterSet pss(ps.makeSubset("Step." + getName() + ".Solve."));
       itsMaxIter                 = pss.getInt32("MaxIter");
       itsEpsilon                 = pss.getDouble("Epsilon");
       itsMinConverged            = pss.getDouble("MinConverged");

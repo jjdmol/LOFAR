@@ -69,7 +69,7 @@ namespace LOFAR
 
     void BBSStep::accept(CommandHandler &handler) const
     {
-        handler.handle(*this);
+      handler.handle(*this);
     }
 
 
@@ -136,42 +136,14 @@ namespace LOFAR
 
       // Overrride default values for data members of the current BBSStep, if
       // they're specified in \a parset.
-//       setParms(parset.makeSubset("Step." + name + "."));
       read(parset.makeSubset("Step." + name + "."));
 
     }
 
 
-//     void BBSStep::read(BlobIStream& bis)
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       bis >> itsName
-// 	  >> itsBaselines
-// 	  >> itsCorrelation
-//  	  >> itsIntegration
-//  	  >> itsSources
-//  	  >> itsExtraSources
-//  	  >> itsInstrumentModels;
-//     }
-
-
-//     void BBSStep::write(BlobOStream& bos) const
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       bos << itsName
-//  	  << itsBaselines
-//  	  << itsCorrelation
-//  	  << itsIntegration
-//  	  << itsSources
-//  	  << itsExtraSources
-//  	  << itsInstrumentModels;
-//     }
-
-
     void BBSStep::write(ParameterSet& ps) const
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
+      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << itsName);
       ostringstream oss;
       oss << "Baselines.Station1 = "    << itsBaselines.station1    << endl
           << "Baselines.Station2 = "    << itsBaselines.station2    << endl
@@ -183,6 +155,7 @@ namespace LOFAR
           << "ExtraSources = "          << itsExtraSources          << endl
           << "InstrumentModel = "       << itsInstrumentModels      << endl;
       ps.adoptBuffer(oss.str(), "Step." + itsName + ".");
+      LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
 
@@ -243,48 +216,6 @@ namespace LOFAR
 
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
-
-//     void BBSStep::setParms(const ParameterSet& ps)
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-//       // If defined, get the baseline selection for this step.
-//       try {
-// 	itsBaselines.station1 = ps.getStringVector("Baselines.Station1");
-// 	itsBaselines.station2 = ps.getStringVector("Baselines.Station2");
-//       } catch (APSException&) {}
-
-//       // If defined, get the correlation selection (ALL, AUTO, or CROSS), and
-//       // type (e.g., ["XX", "XY", "YX", "YY"]
-//       try {
-// 	itsCorrelation.selection = ps.getString("Correlation.Selection");
-// 	itsCorrelation.type = ps.getStringVector("Correlation.Type");
-//       } catch (APSException&) {}
-
-//       // If defined, get the integration intervals in frequency (Hz) and
-//       // time (s).
-//       try {
-// 	itsIntegration.deltaFreq = ps.getDouble("Integration.Freq");
-// 	itsIntegration.deltaTime = ps.getDouble("Integration.Time");
-//       } catch (APSException&) {}
-
-//       // If defined, get the sources for the current patch.
-//       try {
-// 	itsSources = ps.getStringVector("Sources");
-//       } catch (APSException&) {}
-
-//       // If defined, get the extra source, outside the current patch.
-//       try {
-// 	itsExtraSources = ps.getStringVector("ExtraSources");
-//       } catch (APSException&) {}
-
-//       // If defined, get the instrument model(s) used.
-//       try {
-// 	itsInstrumentModels = ps.getStringVector("InstrumentModel");
-//       } catch (APSException&) {}
-
-//     }
-
 
     void BBSStep::doGetAllSteps(vector<const BBSStep*>& steps) const
     {

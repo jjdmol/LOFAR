@@ -91,15 +91,6 @@ namespace LOFAR
       // @}
 
     private:
-//       // Read the contents from the blob input stream \a bis into \c *this.
-//       virtual void read(BlobIStream& bis);
-
-//       // Write the contents of \c *this into the blob output stream \a bos.
-//       virtual void write(BlobOStream& bos) const;
-
-//       // Return the class type of \c *this as a string.
-//       virtual const string& classType() const;
-
       // Write the contents of \c *this into the ParameterSet \a ps.
       virtual void write(ACC::APS::ParameterSet& ps) const;
 
@@ -109,20 +100,20 @@ namespace LOFAR
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
 
-//       // Read the BBSStep objects from the blob input stream \a bis and store
-//       // them in \a itsSteps.
-//       void readSteps(BlobIStream& bis);
-
-//       // Write the BBSStep objects in \a itsSteps to the blob output stream \a
-//       // bos.
-//       void writeSteps(BlobOStream& bos) const;
-
       // Read the BBSStep objects from the parameter set \a ps and store them
       // in \a itsSteps.
       bool readSteps(const ACC::APS::ParameterSet& ps);
 
       // Write the BBSStep objects in \a itsSteps to parameter set \a ps.
       void writeSteps(ACC::APS::ParameterSet& ps) const;
+
+      // Write the contents of a BBSStrategy to a ParameterSet.
+      friend ACC::APS::ParameterSet& 
+      operator<<(ACC::APS::ParameterSet&, const BBSStrategy&);
+
+      // Read the contents of a ParameterSet into a BBSStrategy.
+      friend ACC::APS::ParameterSet& 
+      operator>>(ACC::APS::ParameterSet&, BBSStrategy&);
 
       // Name of the Measurement Set
       string                 itsDataSet;
