@@ -53,6 +53,14 @@ namespace LOFAR
 
       virtual void accept(CommandHandler &handler) const = 0;
 
+      // Write the contents of a Command to a ParameterSet.
+      friend ACC::APS::ParameterSet& 
+      operator<<(ACC::APS::ParameterSet&, const Command&);
+
+      // Read the contents of a ParameterSet into a Command.
+      friend ACC::APS::ParameterSet& 
+      operator>>(ACC::APS::ParameterSet&, Command&);
+
     protected:
       // Return the command type of \c *this as a string.
       virtual const string& type() const = 0;
