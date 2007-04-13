@@ -45,9 +45,13 @@ Observation.StationPositions = [\   # long, lat, alt
 Observation.NBeams = 1              # number of beams used
 Observation.DirectionType = J2000   # direction type
 Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
-6.1234876806221052, 1.0265153995604648]
+0, 90] #NCP
+#6.1234876806221052, 1.0265153995604648] # Cas A
 
-Observation.DelayCompensation = T
+Observation.DelayCompensation = F
+
+Observation.nyquistZone = 1    # 160MHz-LBA&HBA nq=1, 200MHZ-LBA nq=3, 200MHz-HBA nq=2
+Observation.sampleClock = 160
 
 Observation.SubbandIDs = [213, 245, 283, 334, 366, 384, 417, 475, 150, 151, 152, 153, 154, 155, 156, 157]
 
@@ -128,5 +132,5 @@ BGLProc.MaxConcurrentCommunications = 2
 
 # Variables for Storage
 Storage.WriteToMAC = F
-Storage.StorageStationNames = ["CS10_dipole0", "CS10_dipole4","CS10_dipole8", "CS10_dipole12", "CS8_dipole0", "CS8_dipole4", "CS8_dipole8",  "CS8_dipole12","CS1_dipole0", "CS1_dipole4", "CS1_dipole8", "CS1_dipole12","CS16_dipole0", "CS16_dipole4", "CS16_dipole8", "CS16_dipole12"]
+Storage.StorageStationNames = ["CS10_dipole0", "CS10_dipole4","CS10_dipole8", "CS10_dipole12"]
 

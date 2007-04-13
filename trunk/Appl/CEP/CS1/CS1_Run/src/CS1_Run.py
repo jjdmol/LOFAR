@@ -6,6 +6,11 @@ import os
 import sys
 from optparse import OptionParser
 
+#check machine name
+if  os.environ.get('HOSTNAME', 'default') != 'listfen':
+    print 'Please restart CS1_Run script on hostname: listfen'
+    sys.exit(0)
+
 from CS1_Hosts import *
 from CS1_Parset import CS1_Parset
 from CS1_RSPCtl import RSPCtl
@@ -19,20 +24,26 @@ def doObservation(obsID, parset):
         rsp.selectSubbands(parset.getFirstSubband())
         rsp.selectRCUs([0, 1, 2, 8, 9])
         rsp.setWG([2], 60e6)
+
+    mapTable = dict({'gels': gels, 'lofarsystem': lofarsystem, 'romein': romein, 'broekema': broekema})
+    logname = os.environ.get("LOGNAME", os.environ.get("USERNAME"))
     
+    if mapTable.has_key(logname):
+        userId = mapTable.get(logname)
+    else:
+        print 'Invalid userId: ' + logname
+	sys.exit(0)
 
     sections = [\
         DelayCompensationSection(parset, list012),
         InputSection(parset, liifen),
-        BGLProcSection(parset, bglfen3, 'R000_128_0', '/bglhome2/lofarsystem/'),
+        BGLProcSection(parset, userId.getHost(), 'R000_128_0', userId.getHost()),
         StorageSection(parset, listfen)
         #Flagger(parset, listfen)
         ]
 
-
     stepTime = float(parset['Observation.NSubbandSamples']) / parset['Observation.SampleRate']
     sz = int(math.ceil((parset['Observation.StopTime'] - parset['Observation.StartTime']) / stepTime))
-    #print int(parset['Observation.StopTime']), int(parset['Observation.StartTime']), noRuns
 
     logdir = '/log/'
     if not os.access(logdir, os.W_OK):
@@ -74,7 +85,7 @@ if __name__ == '__main__':
     parser.add_option('--clock'          , dest='clock'          , default='160MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
     parser.add_option('--subbands'       , dest='subbands'       , default='60MHz,8'   , type='string', help='freq of first subband and number of subbands to use [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
-    parser.add_option('--starttime'     , dest='starttime', default=int(time.time() + 150), type='int', help='start of measurement in UTC seconds [now + 150s]')
+    parser.add_option('--starttime'     , dest='starttime', default=int(time.time() + 80), type='int', help='start of measurement in UTC seconds [now + 80s]')
     parser.add_option('--integrationtime', dest='integrationtime', default='60'        , type='int'   , help='length of integration interval in seconds [%default]')
     parser.add_option('--msname'         , dest='msname'                               , type='string', help='name of the measurement set')
     parser.add_option('--stationlist'    , dest='stationlist' , default='CS10_4dipoles', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')

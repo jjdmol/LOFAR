@@ -15,9 +15,11 @@ class CS1_Parset(LOFAR_Parset.Parset):
         if self.clock == '160MHz':
             self['Observation.NSubbandSamples'] = 155648
             self['Observation.SampleRate'] = 156250
+	    self['Observation.sampleClock'] = 160
         elif self.clock == '200MHz':
             self['Observation.NSubbandSamples'] = 196608
             self['Observation.SampleRate'] = 195312.5
+	    self['Observation.sampleClock'] = 200
         self.updateSBValues()
         
     def getClockString(self):
@@ -164,7 +166,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 
 	sbs = list()
         for sb in range(0, len(subbandIDs)):
-            sbs.append(subbandIDs[sb] * subbandwidth)
+            sbs.append((self.getInt32('Observation.nyquistZone')-1)*(self.getInt32('Observation.sampleClock')*1000000/2)  + subbandIDs[sb] * subbandwidth)
 
         # create the frequencies for all subbands
         self['Observation.RefFreqs'] = '[' + ', '.join(str(sb) for sb in sbs) + ']'

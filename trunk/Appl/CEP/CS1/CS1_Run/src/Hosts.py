@@ -53,3 +53,20 @@ class ClusterFEN(Host):
         for number in numberRange:
             self.slaves.append(ClusterSlave(intNamePattern % number, extIPPattern % number))
 
+class UserId(object):
+    """
+    Represents a userId
+    """
+    def __init__(self, host, name, path):
+        self.name = name
+	self.path = path
+	self.host = host
+    
+    def getName(self):
+        return self.name
+        
+    def getPath(self):
+        return self.path
+    
+    def getHost(self):
+        return self.host
