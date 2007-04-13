@@ -37,7 +37,7 @@ def doObservation(obsID, parset):
     sections = [\
         DelayCompensationSection(parset, list012),
         InputSection(parset, liifen),
-        BGLProcSection(parset, userId.getHost(), 'R000_128_0', userId.getHost()),
+        BGLProcSection(parset, userId.getHost(), 'R000_128_0', userId.getPath()),
         StorageSection(parset, listfen)
         #Flagger(parset, listfen)
         ]
