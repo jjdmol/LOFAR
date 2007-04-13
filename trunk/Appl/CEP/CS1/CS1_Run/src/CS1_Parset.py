@@ -1,6 +1,7 @@
 import time
 import LOFAR_Parset
 import math
+import sys
 
 class CS1_Parset(LOFAR_Parset.Parset):
 
@@ -163,6 +164,10 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	subbandIDs = self.getInt32Vector('Observation.SubbandIDs')
 	if len(subbandIDs) != self.nSubbands:
 	    raise Exception('nSubbands(%d) !=  SubbandIDs(%d).' % (self.nSubbands, len(subbandIDs)))
+
+        if self.getInt32('Observation.nyquistZone') not in range(1,4):
+	    print 'Use nyquistZone 1, 2 or 3'
+	    sys.exit(0)
 
 	sbs = list()
         for sb in range(0, len(subbandIDs)):
