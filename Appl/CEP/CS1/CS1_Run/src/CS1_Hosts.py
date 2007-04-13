@@ -21,7 +21,7 @@ hpclf     = Host(name = 'hpclf'  , \
 bglfen1   = Host(name = 'bglfen1', \
                  address = 'bglfen1.service.rug.nl')
 bglfen2   = Host(name = 'bglfen2', \
-                 address = 'bgl2en1.service.rug.nl')
+                 address = 'bglfen2.service.rug.nl')
 bglfen3   = Host(name = 'bglfen3', \
                  address = 'bglfen3.service.rug.nl')
 CS10LCU   = Host(name = 'lcu', \
