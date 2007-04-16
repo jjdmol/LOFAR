@@ -513,8 +513,7 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
   switch (e.signal)
   {
     case F_ENTRY:
-      if (ackout.rcu_settings == 0)
-      {
+      if (ackout.rcu_settings == 0) {
         ackout.rcu_settingsNOE = _nrOfRCUs;
         ackout.rcu_settings = new uint8[_nrOfRCUs];
         ackout.invalidNOE = _nrOfRCUs;
@@ -528,15 +527,13 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
          
     case F_CONNECTED:
     case F_DISCONNECTED:
-      if (&_rspDriverPort == &p)
-      {
+      if (&_rspDriverPort == &p) {
         RSPGetstatusEvent 		getstatus;
         getstatus.timestamp = Timestamp(0, 0);
         getstatus.cache 	= true;
         getstatus.rspmask 	= _allRSPSMask;
         
-        if (!_rspDriverPort.send(getstatus))
-        {
+        if (!_rspDriverPort.send(getstatus)) {
           SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (connection to rsp driver could not be established or is lost)");
           if (e.signal == F_DISCONNECTED)
           {
@@ -545,18 +542,15 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
           TRAN(MISSession::waiting_state);
         }
       }
-      else
-      {
+      else {
         status = defaultHandling(e, p);
       }  
       break;
       
-    case RSP_GETSTATUSACK:
-    {
+    case RSP_GETSTATUSACK: {
       RSPGetstatusackEvent ack(e);
 
-      if (SUCCESS != ack.status)
-      {
+      if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
         TRAN(MISSession::waiting_state);      
         break;
@@ -569,19 +563,17 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       getrcu.timestamp = Timestamp(0, 0);
       getrcu.rcumask = _allRCUSMask;
       getrcu.cache = true;
-      if (!_rspDriverPort.send(getrcu))
-      {
+      if (!_rspDriverPort.send(getrcu)) {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
         TRAN(MISSession::waiting_state);      
       }
       break;
     }
-    case RSP_GETRCUACK:
-    {
+
+    case RSP_GETRCUACK: {
       RSPGetrcuackEvent ack(e);
       
-      if (SUCCESS != ack.status)
-      {
+      if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
         TRAN(MISSession::waiting_state);      
         break;
@@ -598,19 +590,17 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       getstats.cache = true;
       getstats.type = Statistics::SUBBAND_POWER;
       
-      if (!_rspDriverPort.send(getstats))
-      {
+      if (!_rspDriverPort.send(getstats)) {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (lost connection to rsp driver)");
         TRAN(MISSession::waiting_state);      
       }
       break;
     }  
-    case RSP_GETSTATSACK:
-    {
+
+    case RSP_GETSTATSACK: {
       RSPGetstatsackEvent ack(e);
 
-      if (SUCCESS != ack.status)
-      {
+      if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (error in ack of rspdriver)");
         TRAN(MISSession::waiting_state);      
         break;
