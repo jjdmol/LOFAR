@@ -45,6 +45,21 @@ const string MISD_PORT_NAME("server");
 
 const string MIS_RSP_PORT_NAME("rspclient");
 
+enum {
+    RS_DEFECT = -3,
+    RS_VERIFY,
+    RS_OFFLINE,
+    RS_IDLE,
+    RS_BUSY,
+    RS_SUSPECT_IDLE = 0x40000000
+};
+
+#define IS_BUSY(s) ((s > 0) && (s != RS_SUSPECT_IDLE))
+#define IS_SUSPECT(s) (s >= RS_SUSPECT_IDLE)
+#define IS_IDLE(s) ((s == 0) || (s == RS_SUSPECT_IDLE))
+#define MAKE_SUSPECT(s) (s |= RS_SUSPECT_IDLE)
+#define MAKE_UNSUSPECT(s) (s &= ~RS_SUSPECT_IDLE)
+
  } // namespace AMI
 } // namespace LOFAR
 

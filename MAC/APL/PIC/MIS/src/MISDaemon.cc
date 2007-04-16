@@ -21,42 +21,45 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 
-#include "MISDaemon.h"
+#include <APS/ParameterSet.h>
 #include <GCF/LogSys/GCF_KeyValueLogger.h>
-#include <MISSession.h>
-#include <MIS_Protocol.ph>
-#include <MISDefines.h>
-#include <GCF/ParameterSet.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include "MISSession.h"
+#include "MIS_Protocol.ph"
+#include "MISDefines.h"
+#include "MISDaemon.h"
 
 namespace LOFAR 
 {
 using namespace GCF::Common;
 using namespace GCF::TM;
 using namespace GCF::PAL;
+using namespace ACC::APS;
  namespace AMI
  {
 
 MISDaemon::MISDaemon() :
-  GCFTask((State)&MISDaemon::initial, MISD_TASK_NAME)
+	GCFTask((State)&MISDaemon::initial, MISD_TASK_NAME)
 {
-  // register the protocol for debugging purposes
-  registerProtocol(MIS_PROTOCOL, MIS_PROTOCOL_signalnames);
-  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+	// register the protocol for debugging purposes
+	registerProtocol(MIS_PROTOCOL, MIS_PROTOCOL_signalnames);
+	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
-  // initialize the port
-  _misdPortProvider.init(*this, MISD_PORT_NAME, GCFPortInterface::MSPP, MIS_PROTOCOL);
-  try
-  {
-    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
-  }
-  catch (Exception e)
-  {
-    LOG_WARN_STR("Error: failed to load configuration files: " << e.text());
-  }  
+	// initialize the port
+	_misdPortProvider.init(*this, MISD_PORT_NAME, GCFPortInterface::MSPP, MIS_PROTOCOL);
+	try {
+		ConfigLocator	aCL;
+		globalParameterSet()->adoptFile(aCL.locate("RemoteStation.conf"),"");
+	}
+	catch (Exception e) {
+		LOG_WARN_STR("Error: failed to load configuration files: " << e.text());
+	}  
 }
+
 
 GCFEvent::TResult MISDaemon::initial(GCFEvent& e, GCFPortInterface& p)
 {

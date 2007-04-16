@@ -94,7 +94,8 @@ class MISSession : public GCF::TM::GCFTask
     list<MISSubscription*>  _subscriptionsGarbage;
     GCF::TM::GCFEvent*      _pRememberedEvent;
     uint16                  _nrOfRCUs;
-    std::bitset<MAX_N_RCUS> _allRCUSMask;    
+    std::bitset<MEPHeader::MAX_N_RCUS> _allRCUSMask;    
+    std::bitset<MAX_N_RSPBOARDS> _allRSPSMask;    
 };
  } // namespace AMI
 } // namespace LOFAR

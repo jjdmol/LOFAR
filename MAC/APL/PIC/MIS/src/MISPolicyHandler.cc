@@ -21,15 +21,16 @@
 //#  $Id$
 
 #include <lofar_config.h>
-
-#include "MISDaemon.h"
-#include <GCF/LogSys/GCF_KeyValueLogger.h>
-#include <MIS_Protocol.ph>
-#include <MISDefines.h>
 #include <Common/lofar_fstream.h>
-#include <APL/APLCommon/APL_Defines.h>
+#include <Common/LofarLocators.h>
+
+#include <GCF/LogSys/GCF_KeyValueLogger.h>
 #include <GCF/GCF_PVInteger.h>
-#include <fnmatch.h>
+#include <APL/APLCommon/APL_Defines.h>
+#include "MISDaemon.h"
+#include "MIS_Protocol.ph"
+#include "MISDefines.h"
+#include "fnmatch.h"
 
 using std::ifstream;
 
@@ -60,103 +61,90 @@ string trim(string source)
 
 void MISPolicyHandler::rereadPolicyFile()
 {
-  ifstream    policyRulesFile;
+	ifstream    policyRulesFile;
 
-  // Try to open the policy rules file  
-  policyRulesFile.open("mis.pol", ifstream::in);
-  
-  if (!policyRulesFile)
-  {
-    LOG_ERROR("File 'mis.pol' with policy rules could not be opend. No rules (re)loaded!");
-    return;
-  }
-  
-  char asciiLine[ASCII_LINE_SIZE];
+	// Try to open the policy rules file  
+	ConfigLocator		aCL;
+	string				policyFilename(aCL.locate("mis.pol"));
+	LOG_DEBUG_STR("Using policy file: " << policyFilename);
+	policyRulesFile.open(policyFilename.c_str(), ifstream::in);
 
-  _rules.clear();
+	if (!policyRulesFile) {
+		LOG_ERROR("File 'mis.pol' with policy rules could not be opend. No rules (re)loaded!");
+		return;
+	}
 
-  // Read the file line by line and convert to rules.
-  uint16 lineNr(0);
-  while (policyRulesFile.getline (asciiLine, ASCII_LINE_SIZE))
-  {
-    lineNr++;
-    if (strlen(asciiLine) == 0) // empty row -> skip
-    {
-      continue;
-    }
-    else if (asciiLine[0] == '#') // comment row -> skip
-    {
-      continue;
-    }
-    else if (strchr(asciiLine, '|') > 0)
-    {
-      vector<string> ruleElements = StringUtil::split(asciiLine, '|');
-      int confFound;
-      if (ruleElements.size() != 5)
-      {
-        LOG_ERROR(formatString(
-            "Line %d: A policy rule row should have five colums.",
-            lineNr));
-        continue;      
-      }
-      TPolicyRule newRule;
-      newRule.resourceNameFilter = trim(ruleElements[0]);
-      newRule.diagnosis = trim(ruleElements[1]);
-      if (newRule.diagnosis != "FAULTY" && newRule.diagnosis != "HEALTHY")
-      {
-        LOG_ERROR(formatString(
-            "Line %d: \"%s\" not a possible diagnosis. Chose from (FAULTY | HEALTHY). Skipped!",
-            lineNr,
-            newRule.diagnosis.c_str()));              
-        continue;
-      }
-      confFound = sscanf(ruleElements[2].c_str(), "%hd", &newRule.lowConf);
-      if (confFound < 1)
-      {
-        newRule.lowConf = 0;
-      }
-      confFound = sscanf(ruleElements[3].c_str(), "%hd", &newRule.highConf);
-      if (confFound < 1)
-      {
-        newRule.highConf = 0xFFFF;
-      }
-      if (newRule.lowConf > newRule.highConf)
-      {
-        LOG_ERROR(formatString(
-            "Line %d: Lowest confidence level (%d) is higher then highest confidence level (%d)!. Skipped!",
-            lineNr,
-            newRule.lowConf,
-            newRule.highConf))              
-        continue;
-      }
-      if (trim(ruleElements[4]) == "LOG")
-      {
-        newRule.action = LOG;          
-      }
-      else if (trim(ruleElements[4]) == "MANUAL" && newRule.diagnosis == "FAULTY")
-      {
-        newRule.action = MANUAL;          
-      }
-      else if (trim(ruleElements[4]) == "AUTO")
-      {
-        newRule.action = AUTO;          
-      }
-      else
-      {
-        LOG_ERROR(formatString(
-            "Line %d: \"%s\" not a possible action. Choose from (LOG | MANUAL | AUTO). Skipped!",
-            lineNr,
-            trim(ruleElements[4]).c_str()))              
-        continue;
-      }
-      _rules.push_back(newRule);
-    }    
-  }
-  policyRulesFile.close();  
-  LOG_DEBUG(formatString(
-      "Reading policy file ready. It contains %d valid rules on %d lines.",
-      _rules.size(),
-      lineNr));
+	char asciiLine[ASCII_LINE_SIZE];
+
+	_rules.clear();
+
+	// Read the file line by line and convert to rules.
+	uint16 lineNr(0);
+	while (policyRulesFile.getline (asciiLine, ASCII_LINE_SIZE)) {
+		lineNr++;
+		if (strlen(asciiLine) == 0) { // empty row -> skip
+			continue;
+		}
+		else if (asciiLine[0] == '#') { // comment row -> skip
+			continue;
+		}
+		else if (strchr(asciiLine, '|') > 0) {
+			vector<string> ruleElements = StringUtil::split(asciiLine, '|');
+			int confFound;
+			if (ruleElements.size() != 5) {
+				LOG_ERROR(formatString( "Line %d: A policy rule row should have five colums.", lineNr));
+				continue;      
+			}
+			TPolicyRule newRule;
+			newRule.resourceNameFilter = trim(ruleElements[0]);
+			newRule.diagnosis = trim(ruleElements[1]);
+			if (newRule.diagnosis != "FAULTY" && newRule.diagnosis != "HEALTHY") {
+				LOG_ERROR(formatString(
+							"Line %d: \"%s\" not a possible diagnosis. Chose from (FAULTY | HEALTHY). Skipped!",
+							lineNr,
+							newRule.diagnosis.c_str()));              
+				continue;
+			}
+			confFound = sscanf(ruleElements[2].c_str(), "%hd", &newRule.lowConf);
+			if (confFound < 1) {
+				newRule.lowConf = 0;
+			}
+			confFound = sscanf(ruleElements[3].c_str(), "%hd", &newRule.highConf);
+			if (confFound < 1) {
+				newRule.highConf = 0xFFFF;
+			}
+			if (newRule.lowConf > newRule.highConf) {
+				LOG_ERROR(formatString(
+							"Line %d: Lowest confidence level (%d) is higher then highest confidence level (%d)!. Skipped!",
+							lineNr,
+							newRule.lowConf,
+							newRule.highConf));
+				continue;
+			}
+			if (trim(ruleElements[4]) == "LOG") {
+				newRule.action = LOG;          
+			}
+			else if (trim(ruleElements[4]) == "MANUAL" && newRule.diagnosis == "FAULTY") {
+				newRule.action = MANUAL;          
+			}
+			else if (trim(ruleElements[4]) == "AUTO") {
+				newRule.action = AUTO;          
+			}
+			else {
+				LOG_ERROR(formatString(
+							"Line %d: \"%s\" not a possible action. Choose from (LOG | MANUAL | AUTO). Skipped!",
+							lineNr,
+							trim(ruleElements[4]).c_str()));
+				continue;
+			}
+			_rules.push_back(newRule);
+		}    
+	} // while
+	policyRulesFile.close();  
+	LOG_DEBUG(formatString(
+		"Reading policy file ready. It contains %d valid rules on %d lines.",
+		_rules.size(),
+		lineNr));
 }
 
 string MISPolicyHandler::checkDiagnose(const MISDiagnosisNotificationEvent& diag, 
