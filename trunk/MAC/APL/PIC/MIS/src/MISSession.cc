@@ -455,55 +455,54 @@ GCFEvent::TResult MISSession::subscribe_state(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+//
+// getSubbandStatistics(event)
+//
 void MISSession::getSubbandStatistics(GCFEvent& e)
 {
-  assert(_pRememberedEvent == 0);
-  MISSubbandStatisticsRequestEvent* pIn = new MISSubbandStatisticsRequestEvent(e);
-  LOGMSGHDR((*pIn));
+	assert(_pRememberedEvent == 0);
+	MISSubbandStatisticsRequestEvent* pIn = new MISSubbandStatisticsRequestEvent(e);
+	LOGMSGHDR((*pIn));
 
-  if (_nrOfRCUs == 0)
-  {
-    try
-    {
-      _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-      LOG_DEBUG(formatString (
-          "NrOfRCUs %d",
-          _nrOfRCUs));
-      _allRCUSMask.reset(); // init all bits to false value
-      _allRCUSMask.flip(); // flips all bits to the true value
-      // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-      for (int i = _nrOfRCUs; i < MAX_N_RCUS; i++)
-      {
-        _allRCUSMask.set(i, false);
-      }
-    }
-    catch (...)
-    {
-      SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (no RSP configuration available)");
-      delete pIn;
-      return;
-    }    
-  }
+	if (_nrOfRCUs == 0) {
+		try {
+			_nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+			LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
+			_allRCUSMask.reset(); // init all bits to false value
+			_allRCUSMask.flip(); // flips all bits to the true value
+			// if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
+			for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
+				_allRCUSMask.set(i, false);
+			}
+			// idem for RSP mask [reo]
+			_allRSPSMask.reset();
+			_allRSPSMask.flip();
+			for (int b = GET_CONFIG("RS.N_RSPBOARDS",i); b < MAX_N_RSPBOARDS; b++) {
+				_allRSPSMask.set(b,false);
+			}
+		}
+		catch (...) {
+			SEND_RESP_MSG((*pIn), SubbandStatisticsResponse, "NAK (no RSP configuration available)");
+			delete pIn;
+			return;
+		}    
+	}
 
-  if (_rspDriverPort.isConnected())
-  {
-    
-    RSPGetstatusEvent getstatus;
-    getstatus.timestamp = Timestamp(0, 0);
-    getstatus.cache = true;
-    
-    getstatus.rcumask = _allRCUSMask;
-    _rspDriverPort.send(getstatus);
-  }
-  else    
-  {
-    _rspDriverPort.open();
-  }
-  _pRememberedEvent = pIn;
-  TRAN(MISSession::getSubbandStatistics_state);
+	if (_rspDriverPort.isConnected()) {
+		RSPGetstatusEvent 		getstatus;
+		getstatus.timestamp = Timestamp(0, 0);
+		getstatus.cache 	= true;
+		getstatus.rspmask 	= _allRSPSMask;
+		_rspDriverPort.send(getstatus);
+	}
+	else    {
+		_rspDriverPort.open();
+	}
 
-
+	_pRememberedEvent = pIn;
+	TRAN(MISSession::getSubbandStatistics_state);
 }
+
 
 GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInterface& p)
 {
@@ -531,11 +530,10 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
     case F_DISCONNECTED:
       if (&_rspDriverPort == &p)
       {
-        RSPGetstatusEvent getstatus;
+        RSPGetstatusEvent 		getstatus;
         getstatus.timestamp = Timestamp(0, 0);
-        getstatus.cache = true;
-      
-        getstatus.rcumask = _allRCUSMask;
+        getstatus.cache 	= true;
+        getstatus.rspmask 	= _allRSPSMask;
         
         if (!_rspDriverPort.send(getstatus))
         {
