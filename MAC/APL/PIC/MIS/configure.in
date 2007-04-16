@@ -46,6 +46,7 @@ lofar_INTERNAL(MAC/GCF/PAL, gcfpal, , 1, GCF/PAL/GCF_PVSSInfo.h,,)
 lofar_INTERNAL(MAC/GCF/LogSys, gcfkvlc, , 1, GCF/LogSys/GCF_KeyValueLogger.h,,)
 lofar_INTERNAL(MAC/APL/RTCCommon, rtccommon, , 1, APL/RTCCommon/Timestamp.h,,)
 lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, rsp_protocol, , 1, APL/RSP_Protocol/RSP_Protocol.ph,,)
+lofar_INTERNAL(MAC/APL/APLCommon, aplcommon, , 1, APL/APLCommon/APL_Defines.h,,)
 lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
 
 dnl
