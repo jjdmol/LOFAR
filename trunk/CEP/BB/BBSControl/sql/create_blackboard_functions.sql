@@ -1,3 +1,96 @@
+-- ------- --
+-- CONTROL --
+-------------
+
+-- Check if the global or a local controller is started cleanly,
+-- or if it is restarted after failure. For the global controller,
+-- startup is considered clean if no strategy has been set yet.
+-- For the local controller, this check does not suffice, because
+-- if the global controller was started before the local controller
+-- a strategy could already have been set. Therefore, it is verified
+-- that the local controller hasn't completed any commands yet by
+-- checking the result table. NOTE: This is also not foolproof, if
+-- the first command modifies data/state (because it can be partly
+-- executed).
+CREATE OR REPLACE FUNCTION blackboard.is_new_run(global BOOL)
+RETURNS BOOLEAN AS
+$$
+    DECLARE
+        _strategy blackboard.strategy%ROWTYPE;
+    BEGIN
+        SELECT *
+            INTO _strategy
+            FROM blackboard.strategy;
+
+        IF NOT FOUND THEN
+            RETURN TRUE;
+        ELSIF global THEN
+            RETURN FALSE;
+        ELSE
+            RETURN
+                (
+                    SELECT COUNT(1)
+                        FROM
+                        (
+                            SELECT COUNT(1)
+                                FROM blackboard.result
+                                WHERE node = inet_client_addr()
+                                LIMIT 1
+                        )
+                        AS tmp
+                ) = 0;
+        END IF;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION blackboard.command_queue_empty()
+RETURNS BOOL AS
+$$
+    SELECT
+        (
+            SELECT COUNT(1)
+                FROM
+                (
+                    SELECT 1
+                        FROM blackboard.command
+                        LIMIT 1
+                )
+                AS tmp
+        ) = 0;
+$$
+LANGUAGE SQL;
+
+
+-- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
+CREATE OR REPLACE FUNCTION blackboard.get_next_command_id()
+RETURNS INTEGER AS
+$$
+    SELECT id
+        FROM blackboard.command
+        WHERE id NOT IN
+            (
+                SELECT command_id
+                    FROM blackboard.result
+                    WHERE node = inet_client_addr()
+            )
+        ORDER BY id
+        LIMIT 1;
+$$
+LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION blackboard.get_next_command()
+RETURNS blackboard.command AS
+$$
+    SELECT *
+        FROM blackboard.command
+        WHERE id = blackboard.get_next_command_id();
+$$
+LANGUAGE SQL;
+
+
 -- -------- --
 -- STRATEGY --
 -- -------- --
@@ -64,42 +157,11 @@ $$
 LANGUAGE SQL;
 
 
--- Check if the global or a local controller is started cleanly,
--- or if it is restarted after failure. For the global controller,
--- startup is considered clean if no strategy has been set yet.
--- For the local controller, this check does not suffice, because
--- if the global controller was started before the local controller
--- a strategy could already have been set. Therefore, it is verified
--- that the local controller hasn't completed any commands yet by
--- checking the result table. NOTE: This is also not foolproof, if
--- the first command modifies data/state (because it can be partly
--- executed).
-CREATE OR REPLACE FUNCTION blackboard.is_new_run(global BOOL)
-RETURNS BOOLEAN AS
-$$
-    DECLARE
-        _strategy blackboard.strategy%ROWTYPE;
-    BEGIN
-        SELECT *
-            INTO _strategy
-            FROM blackboard.strategy;
-
-        IF NOT FOUND THEN
-            RETURN TRUE;
-        ELSIF global THEN
-            RETURN FALSE;
-        ELSE
-            RETURN (SELECT COUNT(*) FROM blackboard.result WHERE node = inet_client_addr()) = 0;
-        END IF;
-    END;
-$$
-LANGUAGE plpgsql;
-
-
 -- ------- --
 -- COMMAND --
 -- ------- --
-CREATE OR REPLACE FUNCTION blackboard.add_command()
+-- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
+CREATE OR REPLACE FUNCTION blackboard.add_command(_type TEXT)
 RETURNS INTEGER AS
 $$
     DECLARE
@@ -108,7 +170,7 @@ $$
         _id := nextval('blackboard.command_id_seq');
         INSERT
             INTO blackboard.command(id, "Type")
-            VALUES (_id, 'EXEC_STEP');
+            VALUES (_id, _type);
 
         RETURN _id;
     END;
@@ -116,68 +178,43 @@ $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION blackboard.get_next_command(_current_command_id INTEGER)
-RETURNS blackboard.command AS
+-- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
+CREATE OR REPLACE FUNCTION blackboard.add_single_step_args
+    (_command_id INTEGER,
+    args anyelement)
+RETURNS VOID AS
 $$
-    SELECT *
-        FROM blackboard.command
-        WHERE id > $1
-        ORDER BY id;
-$$
-LANGUAGE SQL;
-
-
--- ---- --
--- STEP --
--- ---- --
-CREATE TYPE blackboard.iface_step AS
-(
-    "Name"                  TEXT,
-    "Operation"             TEXT,
-    "Baselines.Station1"    TEXT,
-    "Baselines.Station2"    TEXT,
-    "Correlation.Selection" TEXT,
-    "Correlation.Type"      TEXT,
-    "Sources"               TEXT,
-    "InstrumentModel"       TEXT,
-    "OutputData"            TEXT
-);
-
-
-CREATE TYPE blackboard.iface_solve_arguments AS
-(
-    "MaxIter"               INTEGER,
-    "Epsilon"               DOUBLE PRECISION,
-    "MinConverged"          DOUBLE PRECISION,
-    "Parms"                 TEXT,
-    "ExclParms"             TEXT,
-    "DomainSize.Freq"       DOUBLE PRECISION,
-    "DomainSize.Time"       DOUBLE PRECISION
-);
-
-
--- This function is a 'combination' of get_next_command and
--- get_next_step. Therefore, it has to return a combination of
--- a command_id and an iface_step. We could define a separate
--- iface composite type for this, but then we would have two
--- interface definitions for a step. Instead, we just return a
--- row from the step table. Of course, this is not very clean.
--- Therefore, it is recommended to use get_next_command and
--- get_step sequentially.
-CREATE OR REPLACE FUNCTION blackboard.get_next_step(_current_command_id INTEGER)
-RETURNS blackboard.step AS
-$$
-    SELECT blackboard.step.*
-        FROM blackboard.command, blackboard.step
-        WHERE blackboard.command.id > $1
-        AND blackboard.command.id = blackboard.step.command_id
-        ORDER BY blackboard.command.id;
+    INSERT
+        INTO blackboard.single_step_args
+            (command_id,
+            "Name",
+            "Operation",
+            "Baselines.Station1",
+            "Baselines.Station2",
+            "Correlation.Selection",
+            "Correlation.Type",
+            "Sources",
+            "InstrumentModel",
+            "OutputData")
+        VALUES
+            ($1,
+            $2."Name",
+            $2."Operation",
+            $2."Baselines.Station1",
+            $2."Baselines.Station2",
+            $2."Correlation.Selection",
+            $2."Correlation.Type",
+            $2."Sources",
+            $2."InstrumentModel",
+            $2."OutputData");
 $$
 LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION blackboard.get_step(_command_id INTEGER)
-RETURNS blackboard.iface_step AS
+-- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
+CREATE OR REPLACE FUNCTION blackboard.get_single_step_args
+    (_command_id INTEGER)
+RETURNS blackboard.iface_single_step_args AS
 $$
     SELECT
         "Name",
@@ -189,181 +226,97 @@ $$
         "Sources",
         "InstrumentModel",
         "OutputData"
-        FROM blackboard.step
-        WHERE blackboard.step.command_id = $1; 
+        FROM blackboard.single_step_args
+        WHERE command_id = $1;
 $$
 LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION blackboard.get_solve_arguments(_command_id INTEGER)
-RETURNS blackboard.iface_solve_arguments AS
+CREATE OR REPLACE FUNCTION blackboard.add_predict_command
+    (command_args blackboard.iface_predict_args)
+RETURNS VOID AS
 $$
     DECLARE
-        step blackboard.step%ROWTYPE;
-        arguments blackboard.iface_solve_arguments;
-    BEGIN
-        SELECT *
-            INTO step
-            FROM blackboard.step
-            WHERE command_id = _command_id;
-
-        IF NOT FOUND OR step."Operation" != 'SOLVE' THEN
-            RAISE EXCEPTION 'Work order % either is not a solve step or it is not a step at all.', $1;
-        END IF;
-
-        SELECT
-            "MaxIter",
-            "Epsilon",
-            "MinConverged",
-            "Parms",
-            "ExclParms",
-            "DomainSize.Freq",
-            "DomainSize.Time"
-            INTO arguments
-            FROM blackboard.solve_arguments
-            WHERE step_id = step.id;
-
-        RETURN arguments;
-    END;
-$$
-LANGUAGE plpgsql;
-
-
--- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
-CREATE OR REPLACE FUNCTION blackboard.add_step
-    (name TEXT,
-    operation TEXT,
-    baselines_station1 TEXT,
-    baselines_station2 TEXT,
-    correlation_selection TEXT,
-    correlation_type TEXT,
-    sources TEXT,
-    instrument_model TEXT,
-    output_data TEXT)
-RETURNS INTEGER AS
-$$
-    DECLARE
-        _id INTEGER;
         _command_id INTEGER;
     BEGIN
-        _command_id := blackboard.add_command();
-        _id := nextval('blackboard.step_id_seq');
-        
-         INSERT
-            INTO blackboard.step
-                (id,
-                command_id,
-                "Name",
-                "Operation",
-                "Baselines.Station1",
-                "Baselines.Station2",
-                "Correlation.Selection",
-                "Correlation.Type",
-                "Sources",
-                "InstrumentModel",
-                "OutputData")
-            VALUES
-                (_id,
-                _command_id,
-                name,
-                operation,
-                baselines_station1,
-                baselines_station2,
-                correlation_selection,
-                correlation_type,
-                sources,
-                instrument_model,
-                output_data);
-                
-        RETURN _id;
+        _command_id := blackboard.add_command('predict');
+        command_args."Operation" := 'PREDICT';
+        PERFORM blackboard.add_single_step_args(_command_id, command_args);
     END;
 $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION blackboard.add_predict_step
-    (name TEXT,
-    baselines_station1 TEXT,
-    baselines_station2 TEXT,
-    correlation_selection TEXT,
-    correlation_type TEXT,
-    sources TEXT,
-    instrument_model TEXT,
-    output_data TEXT)
-RETURNS INTEGER AS
+CREATE OR REPLACE FUNCTION blackboard.get_predict_args(_command_id INTEGER)
+RETURNS blackboard.iface_predict_args
+AS
 $$
-    SELECT blackboard.add_step($1, 'PREDICT', $2, $3, $4, $5, $6, $7, $8);
+    SELECT * FROM blackboard.get_single_step_args($1);
 $$
 LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION blackboard.add_subtract_step
-    (name TEXT,
-    baselines_station1 TEXT,
-    baselines_station2 TEXT,
-    correlation_selection TEXT,
-    correlation_type TEXT,
-    sources TEXT,
-    instrument_model TEXT,
-    output_data TEXT)
-RETURNS INTEGER AS
-$$
-    SELECT blackboard.add_step($1, 'SUBTRACT', $2, $3, $4, $5, $6, $7, $8);
-$$
-LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_correct_step
-    (name TEXT,
-    baselines_station1 TEXT,
-    baselines_station2 TEXT,
-    correlation_selection TEXT,
-    correlation_type TEXT,
-    sources TEXT,
-    instrument_model TEXT,
-    output_data TEXT)
-RETURNS INTEGER AS
-$$
-    SELECT blackboard.add_step($1, 'CORRECT', $2, $3, $4, $5, $6, $7, $8);
-$$
-LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_solve_step
-    (name TEXT,
-    baselines_station1 TEXT,
-    baselines_station2 TEXT,
-    correlation_selection TEXT,
-    correlation_type TEXT,
-    sources TEXT,
-    instrument_model TEXT,
-    output_data TEXT,
-    max_iter INTEGER,
-    epsilon DOUBLE PRECISION,
-    min_converged DOUBLE PRECISION,
-    parms TEXT,
-    excl_parms TEXT,
-    domain_size_freq DOUBLE PRECISION,
-    domain_size_time DOUBLE PRECISION)
-RETURNS INTEGER AS
+CREATE OR REPLACE FUNCTION blackboard.add_subtract_command
+    (command_args blackboard.iface_subtract_args)
+RETURNS VOID AS
 $$
     DECLARE
-        _step_id INTEGER;
+        _command_id INTEGER;
     BEGIN
-        _step_id := blackboard.add_step
-            (name,
-            'SOLVE',
-            baselines_station1,
-            baselines_station2,
-            correlation_selection,
-            correlation_type,
-            sources,
-            instrument_model,
-            output_data);
-        
+        _command_id := blackboard.add_command('subtract');
+        command_args."Operation" := 'SUBTRACT';
+        PERFORM blackboard.add_single_step_args(_command_id, command_args);
+    END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION blackboard.get_subtract_args(_command_id INTEGER)
+RETURNS blackboard.iface_subtract_args
+AS
+$$
+    SELECT * FROM blackboard.get_single_step_args($1);
+$$
+LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION blackboard.add_correct_command
+    (command_args blackboard.iface_correct_args)
+RETURNS VOID AS
+$$
+    DECLARE
+        _command_id INTEGER;
+    BEGIN
+        _command_id := blackboard.add_command('correct');
+        command_args."Operation" := 'CORRECT';
+        PERFORM blackboard.add_single_step_args(_command_id, command_args);
+    END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION blackboard.get_correct_args(_command_id INTEGER)
+RETURNS blackboard.iface_correct_args
+AS
+$$
+    SELECT * FROM blackboard.get_single_step_args($1);
+$$
+LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION blackboard.add_solve_command
+    (command_args blackboard.iface_solve_args)
+RETURNS VOID AS
+$$
+    DECLARE
+        _command_id INTEGER;
+    BEGIN
+        _command_id := blackboard.add_command('solve');
+        command_args."Operation" := 'SOLVE';
+        PERFORM blackboard.add_single_step_args(_command_id, command_args);
         INSERT
-            INTO blackboard.solve_arguments
-                (step_id,
+            INTO blackboard.solve_args
+                (command_id,
                 "MaxIter",
                 "Epsilon",
                 "MinConverged",
@@ -372,37 +325,82 @@ $$
                 "DomainSize.Freq",
                 "DomainSize.Time")
             VALUES
-                (_step_id,
-                max_iter,
-                epsilon,
-                min_converged,
-                parms,
-                excl_parms,
-                domain_size_freq,
-                domain_size_time);
-
-        RETURN _step_id;
+                (_command_id,
+                command_args."MaxIter",
+                command_args."Epsilon",
+                command_args."MinConverged",
+                command_args."Parms",
+                command_args."ExclParms",
+                command_args."DomainSize.Freq",
+                command_args."DomainSize.Time");
     END;
 $$
 LANGUAGE plpgsql;
 
 
--- -------------- --
--- COMMAND RESULT --
--- -------------- --
-CREATE OR REPLACE FUNCTION blackboard.set_result(command_id INTEGER, result_code INTEGER, message TEXT)
-RETURNS VOID AS
+CREATE OR REPLACE FUNCTION blackboard.get_solve_args(_command_id INTEGER)
+RETURNS blackboard.iface_solve_args AS
 $$
-    INSERT INTO blackboard.result(command_id, result_code, message)
-        VALUES ($1, $2, $3);
+    SELECT
+            "Name",
+            "Operation",
+            "Baselines.Station1",
+            "Baselines.Station2",
+            "Correlation.Selection",
+            "Correlation.Type",
+            "Sources",
+            "InstrumentModel",
+            "OutputData",
+            "MaxIter",
+            "Epsilon",
+            "MinConverged",
+            "Parms",
+            "ExclParms",
+            "DomainSize.Freq",
+            "DomainSize.Time"
+        FROM blackboard.single_step_args, blackboard.solve_args
+        WHERE blackboard.single_step_args.command_id = $1
+        AND blackboard.solve_args.command_id = $1;
 $$
 LANGUAGE SQL;
+
+
+-- ------ --
+-- RESULT --
+-- ------ --
+CREATE OR REPLACE FUNCTION blackboard.add_result
+    (_command_id INTEGER,
+    _result_code INTEGER,
+    _message TEXT)
+RETURNS VOID AS
+$$
+    DECLARE
+        last_id INTEGER;
+    BEGIN
+        IF blackboard.command_queue_empty()
+            OR _command_id != blackboard.get_next_command_id()
+        THEN
+            RAISE EXCEPTION
+                'Attempt to add result for a command that is not current';
+        END IF;
+
+        INSERT INTO blackboard.result(command_id, result_code, message)
+            VALUES (_command_id, _result_code, _message);
+    END;
+$$
+LANGUAGE plpgsql;
 
 
 -- --- --
 -- LOG --
 -- --- --
-CREATE OR REPLACE FUNCTION blackboard.log(command_id INTEGER, level INTEGER, pid INTEGER, scope TEXT, line_no INTEGER, message TEXT)
+CREATE OR REPLACE FUNCTION blackboard.log
+    (_command_id INTEGER,
+    level INTEGER,
+    pid INTEGER,
+    scope TEXT,
+    line_no INTEGER,
+    message TEXT)
 RETURNS VOID AS
 $$
     INSERT INTO blackboard.log(command_id, level, pid, scope, line_no, message)
