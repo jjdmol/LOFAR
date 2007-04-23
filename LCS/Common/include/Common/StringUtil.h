@@ -153,10 +153,10 @@ inline void ltrim(string&		aString, const string&	whiteSpace = " 	")
 }
 
 // Return an uppercased string of \a str.
-std::string toUpper(const string& str);
+std::string toUpper(string str);
 
 // Return a lowercased string of \a str.
-std::string toLower(const string& str);
+std::string toLower(string str);
 
 // @name Convert numeric value to string
 // Convert the value of any of the fundamental arithmetic data types to a
