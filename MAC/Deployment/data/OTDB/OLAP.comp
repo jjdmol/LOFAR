@@ -52,7 +52,7 @@ node  OLAP         1.0.0  development 'node constraint'  "OLAP"
 
 #    name          		dir.    type   unit   prun.     vm      value   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par delayCompensation		I       pbool   -       10      0       'TRUE|FALSE;TRUE'	-	'???'
+par delayCompensation		I       pbool   -       10      0       'true|false;true'	-	'???'
 par IPHeaderSize		I	int	-	10	0	32	-		'???'
 par EPAHeaderSize		I	int	-	10	0	16	-		'???'
 par firstInputPortnr 		I	int	-	10	0	4346	- 		'Portnumber the first RSPboard uses'
