@@ -188,7 +188,6 @@ $$
         INTO blackboard.single_step_args
             (command_id,
             "Name",
-            "Operation",
             "Baselines.Station1",
             "Baselines.Station2",
             "Correlation.Selection",
@@ -199,7 +198,6 @@ $$
         VALUES
             ($1,
             $2."Name",
-            $2."Operation",
             $2."Baselines.Station1",
             $2."Baselines.Station2",
             $2."Correlation.Selection",
@@ -218,7 +216,6 @@ RETURNS blackboard.iface_single_step_args AS
 $$
     SELECT
         "Name",
-        "Operation",
         "Baselines.Station1",
         "Baselines.Station2",
         "Correlation.Selection",
@@ -240,7 +237,6 @@ $$
         _command_id INTEGER;
     BEGIN
         _command_id := blackboard.add_command('predict');
-        command_args."Operation" := 'PREDICT';
         PERFORM blackboard.add_single_step_args(_command_id, command_args);
     END;
 $$
@@ -264,7 +260,6 @@ $$
         _command_id INTEGER;
     BEGIN
         _command_id := blackboard.add_command('subtract');
-        command_args."Operation" := 'SUBTRACT';
         PERFORM blackboard.add_single_step_args(_command_id, command_args);
     END;
 $$
@@ -288,7 +283,6 @@ $$
         _command_id INTEGER;
     BEGIN
         _command_id := blackboard.add_command('correct');
-        command_args."Operation" := 'CORRECT';
         PERFORM blackboard.add_single_step_args(_command_id, command_args);
     END;
 $$
@@ -312,7 +306,6 @@ $$
         _command_id INTEGER;
     BEGIN
         _command_id := blackboard.add_command('solve');
-        command_args."Operation" := 'SOLVE';
         PERFORM blackboard.add_single_step_args(_command_id, command_args);
         INSERT
             INTO blackboard.solve_args
@@ -343,7 +336,6 @@ RETURNS blackboard.iface_solve_args AS
 $$
     SELECT
             "Name",
-            "Operation",
             "Baselines.Station1",
             "Baselines.Station2",
             "Correlation.Selection",
