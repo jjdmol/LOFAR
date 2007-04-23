@@ -21,8 +21,10 @@ par  timeout_snapshot       I    text    period 10    0    30        -        "M
 par  timeout_reinit         I    text    period 10    0    30        -        "Max time the reinit phase of the processes may take"
 par  timeout_info           I    text    period 10    0    30        -        "Max time it may take to give an answer"
 par  timeout_quit           I    text    period 10    0    60        -        "Max time the processes may take to quit"
-par  timeout_kill           I    text    period 10    0    60        -        "Delay after the quit command before the remaining processes are killed""
+par  timeout_kill           I    text    period 10    0    60        -        "Delay after the quit command before the remaining processes are killed"
 
-par  application            I    text    -      10    0    '[]'      -        "List of the applications that must be controlled"
+par  application            I    vtext   -      10    0    '[]'      -        "The name of the application that must be controlled."
+par  processes              I    vtext   -      10    0    '[]'      -        "List of processes that must be started, syntax: procname|procname(n)"
+par  procesOrder            I    vtext   -      10    0    '[]'      -        "For future use."
 par  resultfile             I    text    -      10    0    ../log/ACC.result  -  "The file the results should be written in."
 

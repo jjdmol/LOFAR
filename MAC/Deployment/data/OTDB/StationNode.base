@@ -14,6 +14,7 @@ par  nrLBAntennas      I    int    -      10    0    0                          
 par  nrHBAntennas      I    int    -      10    0    0                                         -        'Number of HighBand antennas in this station'
 par  stsPosition       I    text   -      10    0    [0,0,0]                                   -        'Station position in longitude, latitude and heigth'
 par  RSPMacAddresses   I    text   -      10    0    '[00:30:00:00:00:00, 00:30:00:00:00:00]'  -        'MAC addresses of the RSPBoards'     
+par  inputNodeList     I    text   -      10    0    '[lii001,lii001,lii002,lii003]'		   -        'Inputnodes connected to the RSPBoards'
 
 #      name          vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
