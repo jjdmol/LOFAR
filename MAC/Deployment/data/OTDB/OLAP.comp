@@ -23,10 +23,10 @@ node  OLAP_Conn    1.0.0  development 'node constraint'  "Connection specificati
 #--------------------------------------------------------------------------------------------------------
 par AMCServerPort		I	int	-	10	0	31337					-	"Port the AMCServer is listening on"
 par AMCServerHost		I	text	-	10	0	localhost				-	"Machine the AMCServer is running on"
-par Station_Input_Transport	I	ptext	-	10	0	'File|TCP|UDP|Ethernet|Null;UDP'	- 	'Type of transport used between Station en InputSection.'
-par Input_BGLProc_Transport	I	ptext	-	10	0	'File|TCP|UDP|Ethernet|Null;TCP'  	- 	'Type of transport used between Input section and the Blue Gene.'
-par Input_BGLProc_Ports	     	I	vtext	-	10	0	'[8100..8163]'				- 	'Portnumbers to use in the connections.'
-par Input_BGLProc_BaseFileName  I	text	-	10	0	'/data/gijs'				- 	'File to use when transport=File'
+par station_Input_Transport	I	ptext	-	10	0	'File|TCP|UDP|Ethernet|Null;UDP'	- 	'Type of transport used between Station en InputSection.'
+par input_BGLProc_Transport	I	ptext	-	10	0	'File|TCP|UDP|Ethernet|Null;TCP'  	- 	'Type of transport used between Input section and the Blue Gene.'
+par input_BGLProc_Ports	     	I	vtext	-	10	0	'[8100..8163]'				- 	'Portnumbers to use in the connections.'
+par input_BGLProc_BaseFileName  I	text	-	10	0	'/data/gijs'				- 	'File to use when transport=File'
 par BGLProc_Storage_Transport	I	ptext	-	10	0	'File|TCP|UDP|Ethernet|Null;TCP'  	- 	'Type of transport used between Blue Gene and StorageSection.'
 par BGLProc_Storage_Ports	I	vtext	-	10	0	'[8300..8363]'				- 	'Portnumbers to use in the connections.'
 par BGLProc_Storage_BaseFileName I	text	-	10	0	'Correlations'				- 	'File to use when transport=File'
@@ -52,6 +52,7 @@ node  OLAP         1.0.0  development 'node constraint'  "OLAP"
 
 #    name          		dir.    type   unit   prun.     vm      value   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
+par delayCompensation		I       pbool   -       10      0       'TRUE|FALSE;TRUE'	-	'???'
 par IPHeaderSize		I	int	-	10	0	32	-		'???'
 par EPAHeaderSize		I	int	-	10	0	16	-		'???'
 par firstInputPortnr 		I	int	-	10	0	4346	- 		'Portnumber the first RSPboard uses'
