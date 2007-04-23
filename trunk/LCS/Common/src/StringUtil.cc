@@ -127,18 +127,16 @@ char*	ltrim(char*	aCstring, char*	whiteSpace)
 	return (aCstring);
 }
 
-string	toUpper(const string& str)
+string	toUpper(string str)
 {
-  string result;
-  transform(str.begin(), str.end(), back_inserter(result), toupper);
-  return result;
+  transform(str.begin(), str.end(), str.begin(), toupper);
+  return str;
 }
 
-string	toLower(const string& str)
+string	toLower(string str)
 {
-  string result;
-  transform(str.begin(), str.end(), back_inserter(result), tolower);
-  return result;
+  transform(str.begin(), str.end(), str.begin(), tolower);
+  return str;
 }
 
 bool	StringToBool(const string& aString) throw(Exception)
