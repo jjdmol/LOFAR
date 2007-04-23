@@ -21,11 +21,15 @@ node  OLAP_Conn    1.0.0  development 'node constraint'  "Connection specificati
 
 #    name         	     		dir. type   unit   prun. vm  value                     		constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par AMCServerPort				I	node	-		10	0	7000								-	"Port the AMCServer is listening on"
-par AMCServerHost				I	text	-		10	0	lii001								-	"Machine the AMCServer is running on"
-par Station_Input_Transport		I	ptext	-		10	0	'File|Socket|Ethernet|Null;Socket'  - 	'Type of transport used between Station en InputSection.'
-par BGLProc_Storage_Transport	I	ptext	-		10	0	'File|Socket|Ethernet|Null;Socket'  - 	'Type of transport used between Blue Gene and StorageSection.'
-par Input_BGLProc_Transport		I	ptext	-		10	0	'File|Socket|Ethernet|Null;Socket'  - 	'Type of transport used between Input section and the Blue Gene.'
+par AMCServerPort				I	int		-		10	0	31337							  -		"Port the AMCServer is listening on"
+par AMCServerHost				I	text	-		10	0	localhost						  -		"Machine the AMCServer is running on"
+par Station_Input_Transport		I	ptext	-		10	0	'File|TCP|UDP|Ethernet|Null;UDP'  - 	'Type of transport used between Station en InputSection.'
+par Input_BGLProc_Transport		I	ptext	-		10	0	'File|TCP|UDP|Ethernet|Null;TCP'  - 	'Type of transport used between Input section and the Blue Gene.'
+par Input_BGLProc_Ports	     	I	vtext	-		10	0	'[8100..8163]'					  - 	'Portnumbers to use in the connections.'
+par Input_BGLProc_BaseFileName  I	text	-		10	0	'/data/gijs'					  - 	'File to use when transport=File'
+par BGLProc_Storage_Transport	I	ptext	-		10	0	'File|TCP|UDP|Ethernet|Null;TCP'  - 	'Type of transport used between Blue Gene and StorageSection.'
+par BGLProc_Storage_Ports	  	I	vtext	-		10	0	'[8300..8363]'					  - 	'Portnumbers to use in the connections.'
+par BGLProc_Storage_BaseFileName I	text	-		10	0	'Correlations'					  - 	'File to use when transport=File'
 
 
 # -- DelayComp --
@@ -35,9 +39,9 @@ node  DelayComp    1.0.0  development 'node constraint'  "Setting of the delayco
 
 #    name          		  dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par converterType		  I	  ptext	  -		10	   0	'Impl|Client;Impl'		-		'Depends on whether of not AIPS++ is installed'
+par converterType		  I	  ptext	  -		10	   0	'IMPL|Client;IMPL'		-		'Depends on whether of not AIPS++ is installed'
 par hostname      		  I	  text	  -		10	   0	'list012'		 		-		'Machine the Delay Compensation-program runs on'
-par ports		          I	  vint	  -		10	   0	'[7000]'				-		'The port(2) the Delay Compansation-program listens on'
+par ports		          I	  vint	  -		10	   0	'[7200..7220]'			-		'The ports the Delay Compansation-program listens on'
 
 
 # -- OLAP--
@@ -47,13 +51,20 @@ node  OLAP         1.0.0  development 'node constraint'  "OLAP"
 
 #    name          		       dir. type   unit   prun. vm   value                     constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par nrBitsPerSample				I	int		-		10	0		16						-		'???'
 par IPHeaderSize				I	int		-		10	0		32						-		'???'
-par nrTimesInFrame				I	int		-		10	0		16						-		'???'
 par EPAHeaderSize				I	int		-		10	0		16						-		'???'
-par minorIntegrationSteps		I	int		-		10	0		1000					-		'???'
+par firstInputPortnr 			I	int		-		10	0		4346				    - 		'Portnumber the first RSPboard uses'
+par nrBitsPerSample				I	int		-		10	0		16						-		'???'
+par nrRSPboards					I	int		-		10	0		16						-		'???'
+par nrSecondsOfBuffer			I	int		-		10	0		40						-		'???'
+par nrSubbandsPerFrame			I	int		-		10	0		32						-		'???'
+par nrTimesInFrame				I	int		-		10	0		16						-		'???'
 par majorIntegrationSteps		I	int		-		10	0		1000					-		'???'
+par minorIntegrationSteps		I	int		-		10	0		608 					-		'???'
 par positionType				I	text	-		10	0		'ITRF'					-		'???'
+par storageIntegrationTime		I	int		-		10	0		60						-		'???'
+par storageStationNames			I	vtext	-		10	0		'[CS010_us0..CS010_us3,CS001_dipole0,CS001_dipole4,CS001_dipole8,CS001_dipole12]'	-		'???'
+par subbandsPerPset				I	int		-		10	0		2						-		'???'
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------

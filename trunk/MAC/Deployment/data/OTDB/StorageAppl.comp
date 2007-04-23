@@ -6,13 +6,21 @@
 #
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   StorageAppl        	 1.0.0  development 'node constraint'  "Storage"
-
+node   StorageProg        	 1.0.0  development 'node constraint'  "StorageProg"
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  DataSet                 I    text   -      10    0    >>Observation.MSNameMask      -        'Name of the measurement set'
-par  _nodes                  I    text   -      10    0    '[]'                          -        'Nodes used by the process'
-par  _startstopType          I    text   -      10    0    cmdline,mpirun,bgl            -        'Method of starting the proces'
-par  _executable             I    text   -      10    0    -                             -        'The name of the executable to start'
-par  _hostname               I    text   -      10    0    -                             -        'The hostname of the machine to start the proces on'
-par  _depends                I    text   -      10    0    '[Imager]'                    -        'The processes that must be finished before this process can start'
+par  _executable             I    text   -      10    0    "CS1_Storage"                 -     'The name of the executable to start'
+par  _hostname               I    text   -      10    0    "cs001t"                      -     'The machine on which the start- and stop-script is executed.'
+par  _nodes                  I    vtext  -      10    0    '[list001..list004]'          -     'Nodes used by the (mpi)processes'
+par  _startstopType          I    ptext  -      10    0    "cmdline|mpirun|bgl;mpirun"   -     'Method of starting the proces'
+
+
+#      name              vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node   StorageAppl        	 1.0.0  development 'node constraint'  "Storage"
+uses   StorageProg        	 1.0.0  development 'node constraint'  "StorageProg"
+#    name                    dir. type   unit   prun. vm   value                         constr.  descr.
+#--------------------------------------------------------------------------------------------------------
+par  processes               I    vtext  -      10    0    '[StorageProg(4)]'			 -	   "list of processes that must be started"
+par  procesOrder             I    vtext  -      10    0    '[]'							 -	   "Order of the processes, if any! FOR FUTURE USE."
+par  extraInfo               I    vtext  -      10    0    '[.OLAP,PIC]'				 -	   "list of components that the application expects to be in the parsettfile."
