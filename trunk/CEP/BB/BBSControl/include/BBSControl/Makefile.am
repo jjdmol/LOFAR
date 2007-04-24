@@ -27,7 +27,6 @@ pkginclude_HEADERS = \
 	IterationResult.h \
 	KernelProcessControl.h \
 	NextChunkCommand.h \
-	Property.h \
 	SolverProcessControl.h
 
 noinst_HEADERS = \

@@ -27,13 +27,11 @@
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/CommandQueueTransactors.h>
 #include <BBSControl/QueryBuilder/AddCommand.h>
-#include <BBSControl/QueryBuilder/GetNextCommand.h>
 #include <BBSControl/BBSSingleStep.h>
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStructs.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/CommandInserter.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
 #include <Common/StreamUtil.h>
