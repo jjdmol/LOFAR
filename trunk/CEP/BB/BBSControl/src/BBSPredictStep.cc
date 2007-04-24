@@ -22,27 +22,28 @@
 
 #include <lofar_config.h>
 #include <BBSControl/BBSPredictStep.h>
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    void BBSPredictStep::accept(CommandHandler &handler) const
+    void BBSPredictStep::accept(CommandVisitor &visitor) const
     {
-        handler.handle(*this);
+        visitor.visit(*this);
+    }
+
+
+    const string& BBSPredictStep::type() const 
+    {
+      static const string theType("Predict");
+      return theType;
     }
 
     const string& BBSPredictStep::operation() const
     {
       static string theOperation("Predict");
       return theOperation;
-    }
-  
-    const string& BBSPredictStep::type() const 
-    {
-      static const string theType("PredictStep");
-      return theType;
     }
 
   } // namespace BBS

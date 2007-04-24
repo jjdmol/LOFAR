@@ -25,13 +25,10 @@
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSStructs.h>
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
-#include <Blob/BlobIStream.h>
-#include <Blob/BlobOStream.h>
-#include <Blob/BlobArray.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
@@ -125,9 +122,9 @@ namespace LOFAR
     }
 
 
-    void BBSStrategy::accept(CommandHandler &handler) const
+    void BBSStrategy::accept(CommandVisitor &visitor) const
     {
-      handler.handle(*this);
+      visitor.visit(*this);
     }
 
 

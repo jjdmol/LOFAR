@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 #include <BBSControl/InitializeCommand.h>
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -43,17 +43,15 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    void InitializeCommand::accept(CommandHandler &handler) const
+    void InitializeCommand::accept(CommandVisitor &visitor) const
     {
-      handler.handle(*this);
+      visitor.visit(*this);
     }
 
 
-    //##--------   P r o t e c t e d   m e t h o d s   --------##//
-
     const string& InitializeCommand::type() const
     {
-      static const string theType("InitializeCommand");
+      static const string theType("Initialize");
       return theType;
     }
 

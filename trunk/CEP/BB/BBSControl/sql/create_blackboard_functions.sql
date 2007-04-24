@@ -319,13 +319,13 @@ $$
                 "DomainSize.Time")
             VALUES
                 (_command_id,
-                command_args."MaxIter",
-                command_args."Epsilon",
-                command_args."MinConverged",
-                command_args."Parms",
-                command_args."ExclParms",
-                command_args."DomainSize.Freq",
-                command_args."DomainSize.Time");
+                command_args."Solve.MaxIter",
+                command_args."Solve.Epsilon",
+                command_args."Solve.MinConverged",
+                command_args."Solve.Parms",
+                command_args."Solve.ExclParms",
+                command_args."Solve.DomainSize.Freq",
+                command_args."Solve.DomainSize.Time");
     END;
 $$
 LANGUAGE plpgsql;

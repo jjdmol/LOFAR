@@ -24,10 +24,8 @@
 
 #include <BBSControl/BBSMultiStep.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
 #include <APS/ParameterSet.h>
-#include <Blob/BlobIStream.h>
-#include <Blob/BlobOStream.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
@@ -70,9 +68,9 @@ namespace LOFAR
     }
 
 
-    void BBSMultiStep::accept(CommandHandler &handler) const
+    void BBSMultiStep::accept(CommandVisitor &visitor) const
     {
-      handler.handle(*this);
+      visitor.visit(*this);
     }
 
 

@@ -22,17 +22,54 @@
 
 #include <lofar_config.h>
 #include <BBSControl/NextChunkCommand.h>
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
-namespace BBS 
-{
+  namespace BBS 
+  {
+    using ACC::APS::ParameterSet;
 
-void NextChunkCommand::accept(CommandHandler &handler) const
-{
-    handler.handle(*this);
-}
+    // Register NextChunkCommand with the CommandFactory. Use an anonymous
+    // namespace. This ensures that the variable `dummy' gets its own private
+    // storage area and is only visible in this compilation unit.
+    namespace
+    {
+      bool dummy = CommandFactory::instance().
+        registerClass<NextChunkCommand>("NextChunkCommand");
+    }
 
-} //# namespace BBS
+
+    //##--------   P u b l i c   m e t h o d s   --------##//
+
+    void NextChunkCommand::accept(CommandVisitor &visitor) const
+    {
+      visitor.visit(*this);
+    }
+
+
+    const string& NextChunkCommand::type() const
+    {
+      static const string theType("NextChunk");
+      return theType;
+    }
+
+
+    //##--------   P r i v a t e   m e t h o d s   --------##//
+
+    void NextChunkCommand::write(ParameterSet& ps) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+    }
+
+
+    void NextChunkCommand::read(const ParameterSet& ps)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+    }
+
+
+  } //# namespace BBS
+
 } //# namespace LOFAR

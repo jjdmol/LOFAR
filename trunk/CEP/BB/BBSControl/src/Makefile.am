@@ -14,6 +14,7 @@ libbbscontrol_la_SOURCES	= \
 	BBSSubtractStep.cc \
 	BlobStreamableConnection.cc \
 	Command.cc \
+	CommandExecutor.cc \
 	CommandQueue.cc \
 	CommandQueueTrigger.cc \
 	CommandQueueTransactors.cc \
@@ -25,10 +26,10 @@ libbbscontrol_la_SOURCES	= \
 	IterationRequest.cc \
 	IterationResult.cc \
 	KernelProcessControl.cc \
-	KernelCommandControl.cc \
 	NextChunkCommand.cc \
 	pqutil.cc \
-	SolverProcessControl.cc
+	SolverProcessControl.cc \
+	QueryBuilder/AddCommand.cc
 
 #bin_PROGRAMS			= GlobalControl KernelControl SolverControl
 

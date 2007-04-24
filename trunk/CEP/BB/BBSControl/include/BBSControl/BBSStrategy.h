@@ -36,8 +36,6 @@
 namespace LOFAR
 {
   //# Forward declarations
-  class BlobIStream;
-  class BlobOStream;
   namespace ACC { namespace APS { class ParameterSet; } }
 
   namespace BBS
@@ -61,8 +59,17 @@ namespace LOFAR
       // Destructor.
       ~BBSStrategy();
 
-      // Accept a CommandHandler that wants to process \c *this.
-      virtual void accept(CommandHandler &handler) const;
+      // Return the command type of \c *this as a string.
+      virtual const string& type() const;
+
+      // Write the contents of \c *this into the ParameterSet \a ps.
+      virtual void write(ACC::APS::ParameterSet& ps) const;
+
+      // Read the contents from the ParameterSet \a ps into \c *this.
+      virtual void read(const ACC::APS::ParameterSet& ps);
+
+      // Accept a CommandVisitor that wants to process \c *this.
+      virtual void accept(CommandVisitor &visitor) const;
 
       // Print the contents of \c this into the output stream \a os.
       void print(ostream& os) const;
@@ -75,7 +82,7 @@ namespace LOFAR
       vector<const BBSStep*> getAllSteps() const;
 
       // Indicate whether the BBSSteps contained in \c itsSteps should also be
-      // written when write(BlobOStream&) is called.
+      // written when write(ParameterSet&) is called.
       void shouldWriteSteps(bool doSteps) { itsWriteSteps = doSteps; }
 
       // @name Accessor methods
@@ -91,15 +98,6 @@ namespace LOFAR
       // @}
 
     private:
-      // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ACC::APS::ParameterSet& ps) const;
-
-      // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ACC::APS::ParameterSet& ps);
-
-      // Return the command type of \c *this as a string.
-      virtual const string& type() const;
-
       // Read the BBSStep objects from the parameter set \a ps and store them
       // in \a itsSteps.
       bool readSteps(const ACC::APS::ParameterSet& ps);
@@ -145,7 +143,7 @@ namespace LOFAR
       vector<const BBSStep*> itsSteps;
 
       // Flag indicating whether the BBSStep objects in \c itsSteps should
-      // also be written when write(BlobOStream&) is called.
+      // also be written when write(ParameterSet&) is called.
       bool                   itsWriteSteps;
     };
 

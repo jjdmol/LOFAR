@@ -35,6 +35,16 @@ namespace LOFAR
   {
     using ACC::APS::ParameterSet;
 
+    //##--------   G l o b a l   m e t h o d s   --------##//
+
+//     ostream& operator<<(ostream& os, const Command& cmd)
+//     {
+//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+//       cmd.print(os);
+//       return os;
+//     }
+
+
     ParameterSet& operator<<(ParameterSet& ps, const Command& cmd)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");

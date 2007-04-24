@@ -24,12 +24,9 @@
 
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
 #include <Common/StreamUtil.h>
 #include <APS/ParameterSet.h>
-#include <Blob/BlobIStream.h>
-#include <Blob/BlobOStream.h>
-#include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -38,6 +35,7 @@ namespace LOFAR
   {
     using ACC::APS::ParameterSet;
     using LOFAR::operator<<;
+
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
@@ -78,9 +76,9 @@ namespace LOFAR
     }
 
 
-    void BBSSolveStep::accept(CommandHandler &handler) const
+    void BBSSolveStep::accept(CommandVisitor &visitor) const
     {
-      handler.handle(*this);
+      visitor.visit(*this);
     }
 
 
@@ -102,21 +100,20 @@ namespace LOFAR
     }
 
 
-    const string& BBSSolveStep::operation() const 
+    const string& BBSSolveStep::type() const
+    {
+      static const string theType("Solve");
+      return theType;
+    }
+
+
+    const string& BBSSolveStep::operation() const
     {
       static string theOperation("Solve");
       return theOperation;
     }
-  
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
-
-    const string& BBSSolveStep::type() const
-    {
-      static const string theType("SolveStep");
-      return theType;
-    }
-
 
     void BBSSolveStep::write(ParameterSet& ps) const
     {
@@ -139,6 +136,7 @@ namespace LOFAR
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSSingleStep::read(ps);
       ParameterSet pss(ps.makeSubset("Step." + getName() + ".Solve."));
+//       ParameterSet pss(ps);
       itsMaxIter                 = pss.getInt32("MaxIter");
       itsEpsilon                 = pss.getDouble("Epsilon");
       itsMinConverged            = pss.getDouble("MinConverged");

@@ -35,6 +35,7 @@
 
 #include <Common/lofar_string.h>
 #include <Common/lofar_smartptr.h>
+#include <sys/time.h>
 
 namespace LOFAR
 {
@@ -44,6 +45,7 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations
+    class Command;
     class BBSStep;
     class BBSStrategy;
 
@@ -62,24 +64,35 @@ namespace LOFAR
 		   const string& host="dop50.nfra.nl",
 		   const string& port="5432");
 
-      // Add a BBSStep to the command queue. Once in the command queue,
-      // this step represents a "unit of work", a.k.a. \e workorder. This
-      // method is typically used by the global controller.
-      // \pre \a step must a BBSSingleStep.
-      // \return The unique command-id associated with \a step.
-      int addStep(const BBSStep& step) const;
+      // Set the time-out period. If data being requested is not (yet) present
+      // in the database, the get*() methods will wait up to \a sec seconds
+      // for a data trigger from the database. 
+      // \note A non-positive value for \a sec will set the time-out
+      // period to indefinite.
+      void setTimeOut(double sec);
 
-      // Get the next BBSStep from the command queue. When this step is
+      // Add a Command to the command queue. Once in the command queue,
+      // the command represents a "unit of work", a.k.a. \e workorder. This
+      // method is typically used by the global controller.
+      // \return The unique command-id associated with \a cmd.
+      void addCommand(const Command& cmd) const;
+
+      // Forward this call to setStrategy(), in order to avoid the risk that
+      // the return value of the stored procedure being called is ignored.
+      void addCommand(const BBSStrategy& cmd) const
+      { setStrategy(cmd); }
+
+      // Get the next Command from the command queue. When this command is
       // retrieved from the database, its status will be set to "active"
       // ([TBD]). This method is typically used by the local controller.
       //
-      // \attention Currently, a BBSStep object is reconstructed using one \e
+      // \attention Currently, a Command object is reconstructed using one \e
       // or \e more queries. Although each query is executed as a transaction,
       // multiple queries are \e not executed as one transaction. So beware!
       //
       // \todo Wrap multiple queries (needed for, e.g., reconstructing a
       // BBSSolveStep) in one transaction.
-      const BBSStep* getNextStep();
+      const Command* getNextCommand();
 
       // Set the BBSStrategy in the command queue. All information, \e except
       // the BBSStep objects within the BBSStrategy are stored in the
@@ -101,7 +114,9 @@ namespace LOFAR
     private:
       // CommandQueueTrigger needs to have access to itsConnection, so we make
       // it a friend.
+      // @{
       friend class CommandQueueTrigger;
+      // @}
 
       // Execute \a query. The result will be returned as a ParameterSet.
       ACC::APS::ParameterSet execQuery(const string& query) const;
@@ -115,8 +130,11 @@ namespace LOFAR
       // constructed, we need to wrap it into a managed pointer class.
       scoped_ptr<pqxx::connection> itsConnection;
 
-      // Keep track of the ID of the current command.
-      uint itsCurrentId;
+//       // Keep track of the ID of the current command.
+//       uint itsCurrentId;
+
+      // Time-out value
+      timeval itsTimeOut;
     };
 
     // @}

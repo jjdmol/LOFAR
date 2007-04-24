@@ -25,9 +25,8 @@
 
 #include <Common/ObjectFactory.h>
 #include <Common/Singleton.h>
+#include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
-
-#include <Blob/BlobStreamable.h>
 
 namespace LOFAR
 {
@@ -36,18 +35,41 @@ namespace LOFAR
 
   namespace BBS
   {
-    class CommandHandler;
+    class CommandVisitor;
 
     // Base class for commands that can be sent to or retrieved from the
-    // CommandQueue. This class implements a double-dispatch mechanism using
-    // the Visitor pattern (Gamma, 1995). 
+    // CommandQueue. This class works in close cooperation with the
+    // CommandVisitor class, which implements a double-dispatch mechanism for
+    // the Command class, using the Visitor pattern (Gamma, 1995).
     class Command
     {
     public:
       // Destructor.
       virtual ~Command() {}
 
-      virtual void accept(CommandHandler &handler) const = 0;
+      // Return the command type of \c *this as a string.
+      virtual const string& type() const = 0;
+
+      // Write the contents of \c *this into the ParameterSet \a ps.
+      virtual void write(ACC::APS::ParameterSet& ps) const = 0;
+
+      // Read the contents from the ParameterSet \a ps into \c *this.
+      virtual void read(const ACC::APS::ParameterSet& ps) = 0;
+
+//       // Print the contents of \c *this in human readable form into the output
+//       // stream \a os.
+//       virtual void print(ostream& os) const = 0;
+
+      // Accept the "visiting" CommandVisitor. Derived classes must implement
+      // this method such that it will make a callback to visitor.visit()
+      // passing themselves as argument.
+      // \code
+      // visitor.visit(*this);
+      // \endcode
+      virtual void accept(CommandVisitor &visitor) const = 0;
+
+//       // Write the contents of a Command to an output stream.
+//       friend ostream& operator<<(ostream&, const Command&);
 
       // Write the contents of a Command to a ParameterSet.
       friend ACC::APS::ParameterSet& 
@@ -56,18 +78,6 @@ namespace LOFAR
       // Read the contents of a ParameterSet into a Command.
       friend ACC::APS::ParameterSet& 
       operator>>(ACC::APS::ParameterSet&, Command&);
-
-    protected:
-      // Return the command type of \c *this as a string.
-      virtual const string& type() const = 0;
-
-    private:
-      // Write the contents of \c *this into the ParameterSet \a ps.
-      virtual void write(ACC::APS::ParameterSet& ps) const = 0;
-
-      // Read the contents from the ParameterSet \a ps into \c *this.
-      virtual void read(const ACC::APS::ParameterSet& ps) = 0;
-
     };
 
     // Factory that can be used to generate new Command objects.

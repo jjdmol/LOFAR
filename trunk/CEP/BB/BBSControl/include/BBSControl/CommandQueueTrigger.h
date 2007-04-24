@@ -51,7 +51,7 @@ namespace LOFAR
     class CommandQueueTrigger : public pqxx::trigger
     {
     public:
-      // Constructor. The trigger handler will handle notifications received
+      // Constructor. The trigger visitor will handle notifications received
       // from the CommandQueue \a queue.
       explicit CommandQueueTrigger(const CommandQueue& queue,
 				   const string& name = "");
@@ -67,7 +67,7 @@ namespace LOFAR
       // notifications.
       const CommandQueue& itsQueue;
 
-      // Name associated with this trigger handler.
+      // Name associated with this trigger visitor.
       const string itsName;
     };
 
