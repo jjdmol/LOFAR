@@ -44,7 +44,8 @@ namespace CS1 {
 AH_InputSection::AH_InputSection() :
   itsDelayStub(0),
   itsOutputStub(0)
-{}
+{
+}
 
 AH_InputSection::~AH_InputSection()
 {
@@ -68,7 +69,6 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&)
 {
   LOG_TRACE_FLOW_STR("Start of AH_InputSection::define()");
 
-  itsParamSet.getDouble("Observation.SampleRate");
   TimeStamp::setMaxBlockId(itsParamSet.getDouble("Observation.SampleRate"));
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
