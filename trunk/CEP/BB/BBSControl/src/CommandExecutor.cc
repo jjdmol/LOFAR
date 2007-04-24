@@ -1,4 +1,4 @@
-//# KernelCommandControl.cc: 
+//# CommandExecutor.cc: 
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/KernelCommandControl.h>
+#include <BBSControl/CommandExecutor.h>
 
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/BBSStructs.h>
@@ -32,9 +32,7 @@
 #include <BBSControl/IterationResult.h>
 
 #include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSMultiStep.h>
-#include <BBSControl/BBSSingleStep.h>
 #include <BBSControl/BBSPredictStep.h>
 #include <BBSControl/BBSSubtractStep.h>
 #include <BBSControl/BBSCorrectStep.h>
@@ -61,7 +59,7 @@ template class BlobStreamableVector<IterationRequest>;
 template class BlobStreamableVector<IterationResult>;
 
 
-bool KernelCommandControl::convertTime(string in, double &out)
+bool CommandExecutor::convertTime(string in, double &out)
 {
     //# TODO: Convert from default epoch to MS epoch (as it may differ from 
     //# the default!)
@@ -75,7 +73,7 @@ bool KernelCommandControl::convertTime(string in, double &out)
 }
 
 
-void KernelCommandControl::handle(const InitializeCommand &command)
+void CommandExecutor::visit(const InitializeCommand &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -150,7 +148,7 @@ void KernelCommandControl::handle(const InitializeCommand &command)
 }
 
 
-void KernelCommandControl::handle(const FinalizeCommand &command)
+void CommandExecutor::visit(const FinalizeCommand &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -158,7 +156,7 @@ void KernelCommandControl::handle(const FinalizeCommand &command)
 }
 
 
-void KernelCommandControl::handle(const NextChunkCommand &command)
+void CommandExecutor::visit(const NextChunkCommand &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -181,7 +179,7 @@ void KernelCommandControl::handle(const NextChunkCommand &command)
 }
 
 
-void KernelCommandControl::handle(const BBSStrategy &command)
+void CommandExecutor::visit(const BBSStrategy &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -192,28 +190,14 @@ void KernelCommandControl::handle(const BBSStrategy &command)
 }
 
 
-void KernelCommandControl::handle(const BBSStep &command)
-{
-    LOG_DEBUG("Handling a BBSStep");
-    LOG_DEBUG_STR("Command: " << endl << command);
-}
-
-
-void KernelCommandControl::handle(const BBSMultiStep &command)
+void CommandExecutor::visit(const BBSMultiStep &command)
 {
     LOG_DEBUG("Handling a BBSMultiStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 }
 
 
-void KernelCommandControl::handle(const BBSSingleStep &command)
-{
-    LOG_DEBUG("Handling a BBSSingleStep");
-    LOG_DEBUG_STR("Command: " << endl << command);
-}
-
-
-void KernelCommandControl::handle(const BBSPredictStep &command)
+void CommandExecutor::visit(const BBSPredictStep &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -240,7 +224,7 @@ void KernelCommandControl::handle(const BBSPredictStep &command)
 }
 
 
-void KernelCommandControl::handle(const BBSSubtractStep &command)
+void CommandExecutor::visit(const BBSSubtractStep &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -267,7 +251,7 @@ void KernelCommandControl::handle(const BBSSubtractStep &command)
 }
 
 
-void KernelCommandControl::handle(const BBSCorrectStep &command)
+void CommandExecutor::visit(const BBSCorrectStep &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -294,7 +278,7 @@ void KernelCommandControl::handle(const BBSCorrectStep &command)
 }
 
 
-void KernelCommandControl::handle(const BBSSolveStep &command)
+void CommandExecutor::visit(const BBSSolveStep &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -517,14 +501,14 @@ void KernelCommandControl::handle(const BBSSolveStep &command)
 }
 
 
-void KernelCommandControl::handle(const BBSShiftStep &command)
+void CommandExecutor::visit(const BBSShiftStep &command)
 {
     LOG_DEBUG("Handling a BBSShiftStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 }
 
 
-void KernelCommandControl::handle(const BBSRefitStep &command)
+void CommandExecutor::visit(const BBSRefitStep &command)
 {
     LOG_DEBUG("Handling a BBSRefitStep");
     LOG_DEBUG_STR("Command: " << endl << command);

@@ -1,4 +1,4 @@
-//# KernelCommandControl.h: 
+//# CommandExecutor.h: 
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,10 +20,10 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_KERNELCOMMANDCONTROL_H
-#define LOFAR_BBSCONTROL_KERNELCOMMANDCONTROL_H
+#ifndef LOFAR_BBSCONTROL_COMMANDEXECUTOR_H
+#define LOFAR_BBSCONTROL_COMMANDEXECUTOR_H
 
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
 #include <BBSControl/BlobStreamableConnection.h>
 //#include <BBSControl/BBSStructs.h>
 
@@ -45,35 +45,33 @@ class Prediffer;
 class RegionOfInterest;
 
 
-class KernelCommandControl: public CommandHandler
+class CommandExecutor: public CommandVisitor
 {
 public:
-    KernelCommandControl(shared_ptr<CommandQueue> &queue,
+    CommandExecutor(shared_ptr<CommandQueue> &queue,
         shared_ptr<BlobStreamableConnection> &solver)
         :   itsCommandQueue(queue),
             itsSolverConnection(solver)
     {
     }
 
-    virtual ~KernelCommandControl()
+    virtual ~CommandExecutor()
     {
     }
 
-    // @name Implementation of handle() for different commands.
+    // @name Implementation of visit() for different commands.
     // @{
-    virtual void handle(const InitializeCommand &command);
-    virtual void handle(const FinalizeCommand &command);
-    virtual void handle(const NextChunkCommand &command);
-    virtual void handle(const BBSStrategy &command);
-    virtual void handle(const BBSStep &command);
-    virtual void handle(const BBSMultiStep &command);
-    virtual void handle(const BBSSingleStep &command);
-    virtual void handle(const BBSPredictStep &command);
-    virtual void handle(const BBSSubtractStep &command);
-    virtual void handle(const BBSCorrectStep &command);
-    virtual void handle(const BBSSolveStep &command);
-    virtual void handle(const BBSShiftStep &command);
-    virtual void handle(const BBSRefitStep &command);
+    virtual void visit(const InitializeCommand &command);
+    virtual void visit(const FinalizeCommand &command);
+    virtual void visit(const NextChunkCommand &command);
+    virtual void visit(const BBSStrategy &command);
+    virtual void visit(const BBSMultiStep &command);
+    virtual void visit(const BBSPredictStep &command);
+    virtual void visit(const BBSSubtractStep &command);
+    virtual void visit(const BBSCorrectStep &command);
+    virtual void visit(const BBSSolveStep &command);
+    virtual void visit(const BBSShiftStep &command);
+    virtual void visit(const BBSRefitStep &command);
     // @}
 
 private:
