@@ -30,6 +30,9 @@
 #include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
 
+#include <climits>
+#include <cfloat>
+
 using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::ACC::APS;
@@ -86,7 +89,71 @@ int doIt(KeyCompare::Mode mode)
     myPS.adoptBuffer(buf);
     ASSERT(myPS.isDefined("a.b.double"));
     FAILWHEN(myPS.isDefined("Gnat.Gnu.a.b.double"));
-    
+
+    ASSERT(myPS.getBool("Bool", true));
+    ASSERT(myPS.getInt16("Int16", SHRT_MIN) == SHRT_MIN);
+    ASSERT(myPS.getUint16("Uint16", USHRT_MAX) == USHRT_MAX);
+    ASSERT(myPS.getInt32("Int32", INT_MIN) == INT_MIN);
+    ASSERT(myPS.getUint32("Uint32", UINT_MAX) == UINT_MAX);
+#if HAVE_LONG_LONG
+    ASSERT(myPS.getInt64("Int64", LONG_MIN) == LONG_MIN);
+    ASSERT(myPS.getUint64("Uint64", ULONG_MAX) == ULONG_MAX);
+#endif
+    ASSERT(myPS.getFloat("FloatMin", FLT_MIN) == FLT_MIN);
+    ASSERT(myPS.getFloat("FloatMax", FLT_MAX) == FLT_MAX);
+    ASSERT(myPS.getDouble("DoubleMin", DBL_MIN) == DBL_MIN);
+    ASSERT(myPS.getDouble("DoubleMax", DBL_MAX) == DBL_MAX);
+    ASSERT(myPS.getString("String", "Hello World") == "Hello World");
+    ASSERT(myPS.getTime("Time", 15) == 15);
+    ASSERT(myPS.getTime("Time", 18000) == 18000);
+
+    {
+      vector<bool> v(2); v[0] = true; v[1] = false;
+      ASSERT(myPS.getBoolVector("BoolVector", v) == v);
+    }
+    {
+      vector<int16> v(2); v[0] = SHRT_MIN; v[1] = SHRT_MAX;
+      ASSERT(myPS.getInt16Vector("Int16Vector", v) == v);
+    }
+    {
+      vector<uint16> v(2); v[0] = 0; v[1] = USHRT_MAX;
+      ASSERT(myPS.getUint16Vector("Uint16Vector", v) == v);
+    }
+    {
+      vector<int32> v(2); v[0] = INT_MIN; v[1] = INT_MAX;
+      ASSERT(myPS.getInt32Vector("Int32Vector", v) == v);
+    }
+    {
+      vector<uint32> v(2); v[0] = 0; v[1] = UINT_MAX;
+      ASSERT(myPS.getUint32Vector("Uint32Vector", v) == v);
+    }
+#if HAVE_LONG_LONG
+    {
+      vector<int64> v(2); v[0] = LONG_MIN; v[1] = LONG_MAX;
+      ASSERT(myPS.getInt64Vector("Int64Vector", v) == v);
+    }
+    {
+      vector<uint64> v(2); v[0] = 0; v[1] = ULONG_MAX;
+      ASSERT(myPS.getUint64Vector("Uint64Vector", v) == v);
+    }
+#endif
+    {
+      vector<float> v(2); v[0] = FLT_MIN; v[1] = FLT_MAX;
+      ASSERT(myPS.getFloatVector("FloatVector", v) == v);
+    }
+    {
+      vector<double> v(2); v[0] = DBL_MIN; v[1] = DBL_MAX;
+      ASSERT(myPS.getDoubleVector("DoubleVector", v) == v);
+    }
+    {
+      vector<string> v(2); v[0] = "Hello"; v[1] = "World";
+      ASSERT(myPS.getStringVector("StringVector", v) == v);
+    }
+    {
+      vector<time_t> v(2); v[0] = time_t(15); v[1] = time_t(18000);
+      ASSERT(myPS.getTimeVector("TimeVector", v) == v);
+    }
+
     cout << "\nShowing some values\n";
     cout << "a.b.c=" 			<< myPS.getInt32("a.b.c") << endl;
     cout << "a.b=" 				<< myPS.getInt32("a.b") << endl;
@@ -180,6 +247,7 @@ int doIt(KeyCompare::Mode mode)
   return 0;
 
 }
+
 
 int main()
 {

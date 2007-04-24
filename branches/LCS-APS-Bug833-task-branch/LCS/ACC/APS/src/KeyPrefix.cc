@@ -33,34 +33,33 @@ namespace LOFAR
   {
     namespace APS 
     {
-
       // Initialization of static variables.
       string KeyPrefix::theirPrefix("");
 
       KeyPrefix::KeyPrefix(const string& str)
       {
-	// String must not be empty and must not contain a dot character.
-	if (str.empty() || str.find('.') != string::npos) 
-	  THROW (APSException, "Invalid key prefix");
-	theirPrefix += str + ".";
+        // String must not be empty and must not contain a dot character.
+        if (str.empty() || str.find('.') != string::npos) 
+          THROW (APSException, "Invalid key prefix");
+        theirPrefix += str + ".";
       }
 
 
       KeyPrefix::~KeyPrefix()
       {
-	// First strip off the last character, which must be a dot (.).
-	theirPrefix.resize(theirPrefix.size()-1);
-	// Then find the now last dot character.
-	string::size_type idx = theirPrefix.rfind('.');
-	// Strip off everything after the last dot, or clear if no dot found.
-	if (idx == string::npos) theirPrefix.clear();
-	else theirPrefix = theirPrefix.substr(0, idx+1);
+        // First strip off the last character, which must be a dot (.).
+        theirPrefix.resize(theirPrefix.size()-1);
+        // Then find the now last dot character.
+        string::size_type idx = theirPrefix.rfind('.');
+        // Strip off everything after the last dot, or clear if no dot found.
+        if (idx == string::npos) theirPrefix.clear();
+        else theirPrefix = theirPrefix.substr(0, idx+1);
       }
 
 
       ostream& operator<<(ostream& os, const KeyPrefix& kp)
       {
-	return os << kp.get();
+        return os << kp.get();
       }
 
 
