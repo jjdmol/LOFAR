@@ -25,9 +25,6 @@
 #include <BBSControl/BBSStructs.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_sstream.h>
-#include <Blob/BlobArray.h>
-#include <Blob/BlobIStream.h>
-#include <Blob/BlobOStream.h>
 #include <APS/ParameterSet.h>
 
 namespace LOFAR

@@ -22,21 +22,29 @@
 
 #include <lofar_config.h>
 #include <BBSControl/BBSSubtractStep.h>
+#include <BBSControl/CommandVisitor.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    const string& BBSSubtractStep::operation() const 
+    void BBSSubtractStep::accept(CommandVisitor &visitor) const
+    {
+      visitor.visit(*this);
+    }
+
+
+    const string& BBSSubtractStep::type() const 
+    {
+      static const string theType("Subtract");
+      return theType;
+    }
+
+
+    const string& BBSSubtractStep::operation() const
     {
       static string theOperation("Subtract");
       return theOperation;
-    }
-  
-    const string& BBSSubtractStep::type() const 
-    {
-      static const string theType("SubtractStep");
-      return theType;
     }
 
   } // namespace BBS

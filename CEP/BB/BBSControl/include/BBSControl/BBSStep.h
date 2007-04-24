@@ -38,8 +38,6 @@ namespace LOFAR
 {
   //# Forward Declarations.
   namespace ACC { namespace APS { class ParameterSet; } }
-  class BlobIStream;
-  class BlobOStream;
 
   namespace BBS
   {
@@ -93,9 +91,6 @@ namespace LOFAR
       static BBSStep* create(const string& name,
 			     const ACC::APS::ParameterSet& parSet,
 			     const BBSStep* parent = 0);
-
-      // Accept a CommandHandler that wants to process \c *this.
-      virtual void accept(CommandHandler &handler) const;
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.

@@ -191,7 +191,7 @@ namespace LOFAR
 	else {
 	  if (itsStepsIterator != itsSteps.end()) {
 	    // Send the next step and increment the iterator.
-	    itsCommandQueue->addStep(**itsStepsIterator++);
+	    itsCommandQueue->addCommand(**itsStepsIterator++);
 	  }
 	  else {
 	    LOG_TRACE_COND("Reached end of vector of steps");

@@ -51,11 +51,13 @@ namespace LOFAR
 		      const BBSStep* parent) :
 	BBSSingleStep(name, parSet, parent) {}
 
-      // Return the operation type of \c *this as a string.
+      // Accept a CommandVisitor that wants to process \c *this.
+      virtual void accept(CommandVisitor &visitor) const;
+
+       // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
 
-    private:
-      // Return the command type of \c *this as a string.
+     // Return the command type of \c *this as a string.
       virtual const string& type() const;
     };
 

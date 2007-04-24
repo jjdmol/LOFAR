@@ -24,11 +24,9 @@
 
 #include <BBSControl/BBSSingleStep.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
 #include <Common/StreamUtil.h>
 #include <APS/ParameterSet.h>
-#include <Blob/BlobIStream.h>
-#include <Blob/BlobOStream.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -43,12 +41,6 @@ namespace LOFAR
     BBSSingleStep::~BBSSingleStep()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-    }
-
-
-    void BBSSingleStep::accept(CommandHandler &handler) const
-    {
-      handler.handle(*this);
     }
 
 

@@ -30,14 +30,10 @@
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/BBSSubtractStep.h>
 #include <BBSControl/BBSMultiStep.h>
-#include <BBSControl/CommandHandler.h>
 #include <BBSControl/Exceptions.h>
 #include <Common/StreamUtil.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
-#include <Blob/BlobIStream.h>
-#include <Blob/BlobOStream.h>
-#include <Blob/BlobArray.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -67,12 +63,6 @@ namespace LOFAR
     }
 
 
-    void BBSStep::accept(CommandHandler &handler) const
-    {
-      handler.handle(*this);
-    }
-
-
     vector<const BBSStep*> BBSStep::getAllSteps() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -97,22 +87,27 @@ namespace LOFAR
 	LOG_TRACE_COND_STR(name << " is a SingleStep");
 	// We'll have to figure out what kind of SingleStep we must
 	// create. The key "Operation" contains this information.
-	string oper = toUpper(parset.getString("Step." + name + ".Operation"));
-	LOG_TRACE_COND_STR("Creating a " << oper << " step ...");
-	if      (oper == "SOLVE")
-	  return new BBSSolveStep(name, parset, parent);
-	else if (oper == "SUBTRACT")
-	  return new BBSSubtractStep(name, parset, parent);
-	else if (oper == "CORRECT")
-	  return new BBSCorrectStep(name, parset, parent);
-	else if (oper == "PREDICT")
-	  return new BBSPredictStep(name, parset, parent);
-	else if (oper == "SHIFT")
-	  return new BBSShiftStep(name, parset, parent);
-	else if (oper == "REFIT")
-	  return new BBSRefitStep(name, parset, parent);
-	else THROW (BBSControlException, "Operation \"" << oper << 
-		    "\" is not a valid Step operation");
+        try {
+          string oper = 
+            toUpper(parset.getString("Step." + name + ".Operation"));
+          LOG_TRACE_COND_STR("Creating a " << oper << " step ...");
+          if      (oper == "SOLVE")
+            return new BBSSolveStep(name, parset, parent);
+          else if (oper == "SUBTRACT")
+            return new BBSSubtractStep(name, parset, parent);
+          else if (oper == "CORRECT")
+            return new BBSCorrectStep(name, parset, parent);
+          else if (oper == "PREDICT")
+            return new BBSPredictStep(name, parset, parent);
+          else if (oper == "SHIFT")
+            return new BBSShiftStep(name, parset, parent);
+          else if (oper == "REFIT")
+            return new BBSRefitStep(name, parset, parent);
+          else THROW (BBSControlException, "Operation \"" << oper << 
+                      "\" is not a valid Step operation");
+        } catch (APSException& e) {
+          THROW (BBSControlException, e.what());
+        }
       }
     }
 

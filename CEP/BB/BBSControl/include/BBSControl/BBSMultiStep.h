@@ -60,12 +60,15 @@ namespace LOFAR
 
       virtual ~BBSMultiStep();
 
-      // Accept a CommandHandler that wants to process \c *this.
-      virtual void accept(CommandHandler &handler) const;
+      // Accept a CommandVisitor that wants to process \c *this.
+      virtual void accept(CommandVisitor &visitor) const;
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
       virtual void print(ostream& os) const;
+
+      // Return the command type of \c *this as a string.
+      virtual const string& type() const;
 
     private:
       // Write the contents of \c *this into the ParameterSet \a ps.
@@ -73,9 +76,6 @@ namespace LOFAR
 
       // Read the contents from the ParameterSet \a ps into \c *this.
       virtual void read(const ACC::APS::ParameterSet& ps);
-
-      // Return the command type of \c *this as a string.
-      virtual const string& type() const;
 
       // Write the individual BBSStep objects in \a itsSteps, which make up
       // this BBSMultiStep, to the ParameterSet \a ps.

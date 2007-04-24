@@ -22,26 +22,28 @@
 
 #include <lofar_config.h>
 #include <BBSControl/BBSCorrectStep.h>
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    void BBSCorrectStep::accept(CommandHandler &handler) const
+    void BBSCorrectStep::accept(CommandVisitor &visitor) const
     {
-        handler.handle(*this);
+        visitor.visit(*this);
     }
+
 
     const string& BBSCorrectStep::operation() const
     {
       static string theOperation("Correct");
       return theOperation;
     }
-  
+
+
     const string& BBSCorrectStep::type() const 
     {
-      static const string theType("CorrectStep");
+      static const string theType("Correct");
       return theType;
     }
 

@@ -56,11 +56,11 @@ CREATE TYPE blackboard.iface_solve_args AS
     "Sources"               TEXT,
     "InstrumentModel"       TEXT,
     "OutputData"            TEXT,
-    "MaxIter"               INTEGER,
-    "Epsilon"               DOUBLE PRECISION,
-    "MinConverged"          DOUBLE PRECISION,
-    "Parms"                 TEXT,
-    "ExclParms"             TEXT,
-    "DomainSize.Freq"       DOUBLE PRECISION,
-    "DomainSize.Time"       DOUBLE PRECISION
+    "Solve.MaxIter"               INTEGER,
+    "Solve.Epsilon"               DOUBLE PRECISION,
+    "Solve.MinConverged"          DOUBLE PRECISION,
+    "Solve.Parms"                 TEXT,
+    "Solve.ExclParms"             TEXT,
+    "Solve.DomainSize.Freq"       DOUBLE PRECISION,
+    "Solve.DomainSize.Time"       DOUBLE PRECISION
 );

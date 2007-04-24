@@ -132,7 +132,7 @@ namespace BBS
             }
             LOG_DEBUG("+ ok");
             
-            itsCommandControl.reset(new KernelCommandControl(itsCommandQueue,
+            itsCommandExecutor.reset(new CommandExecutor(itsCommandQueue,
                 itsSolverConnection));
         }
         catch(Exception& e)
@@ -180,12 +180,12 @@ namespace BBS
                 {
                     LOG_DEBUG("Executing an implicit INITIALIZE command.");
                     InitializeCommand cmd;
-                    cmd.accept(*itsCommandControl);
+                    cmd.accept(*itsCommandExecutor);
                 }
                 {
                     LOG_DEBUG("Executing an implicit NEXT_CHUNK command.");
                     NextChunkCommand cmd;
-                    cmd.accept(*itsCommandControl);
+                    cmd.accept(*itsCommandExecutor);
                 }
                 itsState = KernelProcessControl::RUN;
                 break;
@@ -193,13 +193,13 @@ namespace BBS
 
             case KernelProcessControl::RUN:
                 {
-                scoped_ptr<const BBSStep> step(itsCommandQueue->getNextStep());
+                scoped_ptr<const Command> cmd(itsCommandQueue->getNextCommand());
 
-                if(step)
+                if(cmd)
                 {
                     LOG_DEBUG("Received command, remaining in RUN state.");
 
-                    step->accept(*itsCommandControl);
+                    cmd->accept(*itsCommandExecutor);
                 }
                 else
                 {

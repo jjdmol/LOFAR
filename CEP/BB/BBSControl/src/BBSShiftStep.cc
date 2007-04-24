@@ -22,27 +22,29 @@
 
 #include <lofar_config.h>
 #include <BBSControl/BBSShiftStep.h>
-#include <BBSControl/CommandHandler.h>
+#include <BBSControl/CommandVisitor.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    void BBSShiftStep::accept(CommandHandler &handler) const
+    void BBSShiftStep::accept(CommandVisitor &visitor) const
     {
-      handler.handle(*this);
+      visitor.visit(*this);
     }
 
-    const string& BBSShiftStep::operation() const 
+
+    const string& BBSShiftStep::type() const 
+    {
+      static const string theType("Shift");
+      return theType;
+    }
+
+
+    const string& BBSShiftStep::operation() const
     {
       static string theOperation("Shift");
       return theOperation;
-    }
-  
-    const string& BBSShiftStep::type() const 
-    {
-      static const string theType("ShiftStep");
-      return theType;
     }
 
   } // namespace BBS

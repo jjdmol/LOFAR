@@ -13,10 +13,11 @@ pkginclude_HEADERS = \
 	BlobStreamableConnection.h \
 	BlobStreamableVector.h \
 	Command.h \
-	CommandHandler.h \
+	CommandExecutor.h \
 	CommandQueue.h \
 	CommandQueueTrigger.h \
 	CommandQueueTransactors.h \
+	CommandVisitor.h \
 	DomainRegistrationRequest.h \
 	Exceptions.h \
 	FinalizeCommand.h \
@@ -25,11 +26,12 @@ pkginclude_HEADERS = \
 	IterationRequest.h \
 	IterationResult.h \
 	KernelProcessControl.h \
-	KernelCommandControl.h \
 	NextChunkCommand.h \
+	Property.h \
 	SolverProcessControl.h
 
 noinst_HEADERS = \
-	pqutil.h
+	pqutil.h \
+	QueryBuilder/AddCommand.h
 
 include $(top_srcdir)/Makefile.common

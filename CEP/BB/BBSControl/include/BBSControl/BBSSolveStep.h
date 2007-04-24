@@ -57,10 +57,13 @@ namespace LOFAR
 
       virtual ~BBSSolveStep();
 
-      // Accept a CommandHandler that wants to process \c *this.
-      virtual void accept(CommandHandler &handler) const;
+      // Accept a CommandVisitor that wants to process \c *this.
+      virtual void accept(CommandVisitor &visitor) const;
 
-      // Print the contents of \c *this in human readable form into the output
+       // Return the operation type of \c *this as a string.
+      virtual const string& operation() const;
+
+     // Print the contents of \c *this in human readable form into the output
       // stream \a os.
       virtual void print(ostream& os) const;
 
@@ -74,13 +77,10 @@ namespace LOFAR
       DomainSize domainSize()    const { return itsDomainSize; }
       // @}
 
-      // Return the operation type of \c *this as a string.
-      virtual const string& operation() const;
-
-    private:
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
 
+    private:
       // Write the contents of \c *this into the ParameterSet \a ps.
       virtual void write(ACC::APS::ParameterSet& ps) const;
 

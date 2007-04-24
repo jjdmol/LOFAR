@@ -42,7 +42,7 @@ namespace LOFAR
       itsQueue(queue),
       itsName(name)
     {
-      LOG_DEBUG_STR("Created trigger handler for " << name);
+      LOG_DEBUG_STR("Created trigger visitor for " << name);
     }
 
 
