@@ -32,33 +32,26 @@
 #include <GCF/TM/GCF_Task.h>
 #include <APS/ParameterSet.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
 GSASCADAHandler* GSASCADAHandler::_pInstance = 0;
 
 GSASCADAHandler* GSASCADAHandler::instance()
 {
-  if (0 == _pInstance)
-  {
+  if (0 == _pInstance) {
     string cmdline;
-    for (int i = 0; i < GCFTask::_argc; i++)
-    {
+    for (int i = 0; i < GCFTask::_argc; i++) {
       cmdline += GCFTask::_argv[i];
       cmdline += " ";
     }
     cmdline += "-currentproj ";
     string pvssCmdLineParam = PARAM_DEFAULT_PVSS_CMDLINE;
     char* appName = strrchr(GCFTask::_argv[0], '/');
-    if (!ACC::APS::globalParameterSet()->isDefined(pvssCmdLineParam))
-    {            
+    if (!ACC::APS::globalParameterSet()->isDefined(pvssCmdLineParam)) {            
       pvssCmdLineParam = formatString(PARAM_PVSS_CMDLINE, (appName ? appName + 1 : GCFTask::_argv[0]));
     }
-    if (ACC::APS::globalParameterSet()->isDefined(pvssCmdLineParam))
-    {
+    if (ACC::APS::globalParameterSet()->isDefined(pvssCmdLineParam)) {
       cmdline += ACC::APS::globalParameterSet()->getString(pvssCmdLineParam);
     }
     // The PVSS API 3.0.1 redirects stdout and stderr output automatically to 
@@ -72,14 +65,11 @@ GSASCADAHandler* GSASCADAHandler::instance()
     char* words = new char[cmdline.length() + 1];
     argv[0] = words;
     string::size_type indexf(0), indexl(0);
-    do 
-    {
+    do {
       indexf = cmdline.find_first_not_of(' ', indexl);
-      if (indexf < string::npos)
-      {
+      if (indexf < string::npos) {
         indexl = cmdline.find_first_of(' ', indexf);
-        if (indexl == string::npos)
-        {
+        if (indexl == string::npos) {
           indexl = cmdline.length();
         }        
         argv[nrOfWords] = words + offset;
@@ -89,8 +79,7 @@ GSASCADAHandler* GSASCADAHandler::instance()
         offset++;
         nrOfWords++;
       } 
-      else
-      {
+      else {
         indexl = indexf;
       }
     } while (indexl < cmdline.length());
@@ -113,8 +102,7 @@ void GSASCADAHandler::release()
   ASSERT(_pInstance);
   ASSERT(!_pInstance->mayDeleted());
   _pInstance->leave(); 
-  if (_pInstance->mayDeleted())
-  {
+  if (_pInstance->mayDeleted()) {
     delete _pInstance;
     ASSERT(!_pInstance);
   }
@@ -136,14 +124,17 @@ void GSASCADAHandler::stop()
  
 void GSASCADAHandler::workProc()
 { 
-  if (_running) _pvssApi.workProc();
+  if (_running) {
+	_pvssApi.workProc();
+  }
 }
 
 TSAResult GSASCADAHandler::isOperational()
 { 
   TSAResult result(SA_SCADA_NOT_AVAILABLE);
-  if (_pvssApi.getManagerState() == Manager::STATE_RUNNING)
+  if (_pvssApi.getManagerState() == Manager::STATE_RUNNING) {
     result = SA_NO_ERROR;
+  }
   return result;
 }
   } // namespace PAL

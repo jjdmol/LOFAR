@@ -50,8 +50,7 @@ GSASysConnGuard::~GSASysConnGuard()
 void GSASysConnGuard::start ()
 {
   ASSERT(!_isSubscribed);
-  if (dpeSubscribe("__gcf_wd.sys") != SA_NO_ERROR) 
-  {
+  if (dpeSubscribe("__gcf_wd.sys") != SA_NO_ERROR) {
     LOG_ERROR("Subscription is necessary for the System Connection Guard service."
               " Please check the existens of the DP __gcf_wd");
   }
@@ -64,8 +63,7 @@ void GSASysConnGuard::stop ()
 
 void GSASysConnGuard::dpeSubscribed(const string& dpName)
 {
-  if (dpName.find("__gcf_wd.sys") < dpName.length())
-  {
+  if (dpName.find("__gcf_wd.sys") < dpName.length()) {
     _isSubscribed = true;
   }
 }
@@ -82,8 +80,7 @@ void GSASysConnGuard::dpeValueChanged(const string& /*dpName*/, const GCFPValue&
   string sysIDStr;
   sysIDStr.assign(pValue->getValue(), 1, pValue->getValue().length() - 2);
   unsigned int sysID = atoi(sysIDStr.c_str());
-  switch (pValue->getValue()[0])
-  {
+  switch (pValue->getValue()[0]) {
     case 'd':
       _sysConnGuard.serviceEvent(GCFPVSSInfo::getSystemName(sysID), true);
       break;

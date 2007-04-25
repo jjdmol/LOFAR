@@ -28,12 +28,10 @@
 #include <GSA_Defines.h>
 #include <GSA_PvssApi.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
+
 /**
  * This class implements the main loop part of message exchange handling, which 
  * uses the PVSS API. It calls the dispatch of the PVSS API to handle incoming 
@@ -41,7 +39,7 @@ namespace LOFAR
  */
 class GSASCADAHandler : GCFHandler
 {
-  public:
+public:
     static GSASCADAHandler* instance ();
     static void release();
     
@@ -49,7 +47,7 @@ class GSASCADAHandler : GCFHandler
     void stop ();
     TSAResult isOperational ();
 
-  private:
+private:
     GSASCADAHandler ();
     virtual ~GSASCADAHandler () { _pInstance = 0; }
     /**

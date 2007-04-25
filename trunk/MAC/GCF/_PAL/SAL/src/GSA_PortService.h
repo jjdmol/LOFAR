@@ -26,12 +26,9 @@
 #include <GSA_Service.h>
 #include <GCF/GCF_PVString.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
 /**
    This class manages the properties with its use count, which are created 
    (resp. deleted) by means of the base class GSAService.
@@ -42,7 +39,7 @@ class GCFPVSSUIMConverter;
 
 class GSAPortService : public GSAService
 {
-  public:
+public:
   	GSAPortService(GCFPVSSPort& port);
   	virtual ~GSAPortService();
 
@@ -60,7 +57,7 @@ class GSAPortService : public GSAService
     GCFPVSSPort& getPort() const { return _port;}
     const string& getCurPortId() const { return _curPeerID.getValue();}
     
-  protected:
+protected:
     void dpCreated(const string& propName);
     void dpDeleted(const string& /*propName*/) {};
     void dpeValueGet(const string& /*propName*/, const Common::GCFPValue& /*value*/) {}; 
@@ -70,14 +67,15 @@ class GSAPortService : public GSAService
     void dpeSubscriptionLost (const string& propName);
     void dpeUnsubscribed(const string& /*propName*/) {};
 
-  private: // helper methods
+private: 
+	// helper methods
     GCFPVSSPort* findClient(const string& c);
     void disconnectedEvent(const string& curPeerID);
     
-  private: // data members
+	// data members
     GCFPVSSPort& _port;
     
-  private: // admin. data members
+	// admin. data members
     bool _isSubscribed;
     unsigned char* _msgBuffer;
     unsigned int _bytesLeft;

@@ -21,12 +21,13 @@
 //
 //  $Id$
 
-#include "Echo.h"
+#include <lofar_config.h>
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVInteger.h>
 #include <Common/lofar_iostream.h>
 #include "Echo_Protocol.ph"
 #include <GCF/PAL/GCF_PVSSInfo.h>
+#include "Echo.h"
 
 using std::cout;
 using std::endl;

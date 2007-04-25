@@ -29,12 +29,9 @@
 class DpMsgAnswer;
 class DpHLGroup;
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
 
 class GSAService;
 /**
@@ -56,7 +53,7 @@ class GSAService;
 
 class GSAWaitForAnswer : public HotLinkWaitForAnswer
 {
-  public:
+public:
     GSAWaitForAnswer (GSAService& service);
     virtual ~GSAWaitForAnswer () {};
     
@@ -64,13 +61,13 @@ class GSAWaitForAnswer : public HotLinkWaitForAnswer
     const std::string& getDpName () const {return _dpName;}
     void setDpName (const string& dpName) {_dpName = dpName;}
 
-  protected:
+protected:
     // Answer on conenct
     void hotLinkCallBack (DpHLGroup& group);
 
-  private:
-    GSAService& _service;
-    std::string      _dpName;
+private:
+    GSAService& 	_service;
+    std::string		_dpName;
 };                                 
   } // namespace PAL
  } // namespace GCF

@@ -26,15 +26,13 @@
 
 #include  <Resources.hxx>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
+
 class GSAResources : public Resources
 {
-  public:
+public:
     // These functions initializes the manager
     static void init (int &argc, char *argv[]);  
 

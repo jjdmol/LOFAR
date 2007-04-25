@@ -33,15 +33,15 @@ class Variable;
 class CharString;
 class DpIdentifier;
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
+
 class GSASCADAHandler;
 class GSAWaitForAnswer;
 
+
+string	GSAerror (TSAResult		resultNr);
 
 /**
  * This is the abstract class, which provides the possibility to invoke all 
@@ -54,68 +54,59 @@ class GSAWaitForAnswer;
  */
 class GSAService
 {
-  public:
+public:
     GSAService ();
     virtual ~GSAService ();
 
-  protected:
-    virtual TSAResult dpCreate (const string& dpName, 
-                                const string& typeName);
-    virtual TSAResult dpDelete (const string& dpName);
-    virtual TSAResult dpeSubscribe (const string& dpeName);
+protected:
+    virtual TSAResult dpCreate		 (const string& dpName, const string& typeName);
+    virtual TSAResult dpDelete		 (const string& dpName);
+    virtual TSAResult dpeSubscribe	 (const string& dpeName);
     virtual TSAResult dpeUnsubscribe (const string& dpeName);
-    virtual TSAResult dpeGet (const string& dpeName);
-    virtual TSAResult dpeSet (const string& dpeName, 
-                              const Common::GCFPValue& value, 
-                              double timestamp,
-                              bool wantAnswer);
+    virtual TSAResult dpeGet		 (const string& dpeName);
+    virtual TSAResult dpeSet		 (const string& 			dpeName, 
+									  const Common::GCFPValue&	value, 
+									  double					timestamp,
+									  bool   					wantAnswer);
     virtual TSAResult dpQuerySubscribeSingle(const string& queryWhere, 
                                              const string& queryFrom);
-    virtual TSAResult dpQueryUnsubscribe(uint32 /*queryId*/);
+    virtual TSAResult dpQueryUnsubscribe	(uint32 queryId);
     
-    virtual void dpCreated (const string& /*dpName*/) = 0;
-    virtual void dpDeleted (const string& /*dpName*/) = 0;
-    virtual void dpeSubscribed (const string& /*dpeName*/) = 0;    
-    virtual void dpeSubscriptionLost (const string& /*dpeName*/) = 0;
-    virtual void dpeUnsubscribed (const string& /*dpeName*/) = 0;
-    virtual void dpeValueGet (const string& /*dpeName*/, 
-                              const Common::GCFPValue& /*value*/) = 0;
-    virtual void dpeValueChanged (const string& /*dpeName*/, 
-                                  const Common::GCFPValue& /*value*/) = 0;        
-    virtual void dpeValueSet (const string& /*dpeName*/) = 0;
-    virtual void dpQuerySubscribed(uint32 /*queryId*/);        
+    virtual void dpCreated 			 (const string& dpName)  = 0;
+    virtual void dpDeleted	 		 (const string& dpName)  = 0;
+    virtual void dpeSubscribed 		 (const string& dpeName) = 0;    
+    virtual void dpeSubscriptionLost (const string& dpeName) = 0;
+    virtual void dpeUnsubscribed	 (const string& dpeName) = 0;
+    virtual void dpeValueGet		 (const string& dpeName, const Common::GCFPValue& value) = 0;
+    virtual void dpeValueChanged	 (const string& dpeName, const Common::GCFPValue& value) = 0;        
+    virtual void dpeValueSet		 (const string& dpeName) = 0;
+    virtual void dpQuerySubscribed	 (uint32 queryId);        
 
-  private: // methods
+private: 
+	// methods
     // interface for GSAWaitForAnswer
-    void handleHotLink (const DpMsgAnswer& answer, 
-                        const GSAWaitForAnswer& wait);
-    void handleHotLink (const DpHLGroup& group, 
-                        const GSAWaitForAnswer& wait);
+    void handleHotLink (const DpMsgAnswer&	answer, const GSAWaitForAnswer& wait);
+    void handleHotLink (const DpHLGroup& 	group,  const GSAWaitForAnswer& wait);
     friend class GSAWaitForAnswer;
   
-  private:  
     // helper methods to convert PVSS dpTypes to MAC types and visa versa
-    TSAResult convertPVSSToMAC (const Variable& variable, 
+    TSAResult convertPVSSToMAC (const Variable& 	variable, 
                                 Common::GCFPValue** pMacValue) const;
                           
     TSAResult convertMACToPVSS (const Common::GCFPValue& macValue, 
-                                Variable** pVar,
-                                const DpIdentifier& dpId) const;
+                                Variable** 				 pVar,
+                                const DpIdentifier& 	 dpId) const;
     bool getPVSSType (Common::TMACValueType macType, 
-                      CharString& pvssTypeName) const;
+                      CharString& 			pvssTypeName) const;
 
     // helper methods
-    TSAResult getDpId (const string& dpName, 
-                       DpIdentifier& dpId) const;
-    void convPropToDpConfig (const string& dpeName, 
-                             string& pvssDpName, 
-                             bool willReadValue);
-    void convDpConfigToProp (const string& pvssDPEConfigName, 
-                             string& dpeName);    
+    TSAResult getDpId 		(const string& dpName,  		  DpIdentifier& dpId) const;
+    void convPropToDpConfig (const string& dpeName, 		  string& 	  	pvssDpName, bool willReadValue);
+    void convDpConfigToProp (const string& pvssDPEConfigName, string& 		dpeName);    
 
     void convAndForwardValueChange(const DpIdentifier& dpId, const Variable& pvssVar);
     
-  private: // data members    
+	// data members    
     GSAWaitForAnswer* _pWFA;
     GSASCADAHandler*  _pSCADAHandler;
 };                                 
@@ -123,6 +114,7 @@ class GSAService
 inline void GSAService::dpQuerySubscribed(uint32 /*queryId*/)
 {
 }
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

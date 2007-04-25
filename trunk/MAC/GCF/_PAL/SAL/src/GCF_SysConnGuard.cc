@@ -31,13 +31,10 @@
 #include <stdio.h>
 #include <unistd.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
+namespace LOFAR {
+ namespace GCF {
 using namespace TM;
-  namespace PAL
-  {
+  namespace PAL {
 /**
  * F_SCG_PROTOCOL signal names
  */
@@ -66,8 +63,7 @@ GCFSysConnGuard::~GCFSysConnGuard()
 
 GCFSysConnGuard* GCFSysConnGuard::instance ()
 {
-  if (_instance == 0)
-  {
+  if (_instance == 0) {
     _instance = new GCFSysConnGuard();
   }
   ASSERT(_instance);
@@ -82,17 +78,14 @@ bool GCFSysConnGuard::isRunning() const
 
 bool GCFSysConnGuard::registerTask(GCFTask& task)
 {
-  if (_registeredTasks.find(&task) != _registeredTasks.end())
-  {
+  if (_registeredTasks.find(&task) != _registeredTasks.end()) {
     LOG_WARN(formatString(
         "Task '%s' is already registered in the System Connection Guard",
         task.getName().c_str()));
     return false;
   }
-  else
-  {
-    if (_registeredTasks.empty())
-    {
+  else {
+    if (_registeredTasks.empty()) {
       ASSERT(_pSysConnGuardService);
       _pSysConnGuardService->start();
     }
@@ -103,18 +96,15 @@ bool GCFSysConnGuard::registerTask(GCFTask& task)
 
 bool GCFSysConnGuard::unregisterTask(GCFTask& task)
 {
-  if (_registeredTasks.find(&task) != _registeredTasks.end())
-  {
+  if (_registeredTasks.find(&task) != _registeredTasks.end()) {
     LOG_WARN(formatString(
         "Task '%s' was not registered in the System Connection Guard",
         task.getName().c_str()));
     return false;
   }
-  else
-  {
+  else {
     _registeredTasks.erase(&task);
-    if (_registeredTasks.empty())
-    {
+    if (_registeredTasks.empty()) {
       ASSERT(_pSysConnGuardService);
       _pSysConnGuardService->stop();
     }
@@ -126,13 +116,10 @@ void GCFSysConnGuard::serviceEvent(const string& sysName, bool gone)
 {
   GCFSysConnGuardEvent e((gone ? F_SYSGONE : F_SYSCONN));
   e.pSysName = sysName.c_str();
-  LOG_INFO(formatString(
-      "Remote PVSS system '%s' is %s!",
-      e.pSysName,
-      (gone ? "gone" : "connected")));
+  LOG_DEBUG(formatString("Remote PVSS system '%s' is %s!",
+			  e.pSysName, (gone ? "gone" : "connected")));
   for (TRegisteredTasks::iterator iter = _registeredTasks.begin();
-       iter != _registeredTasks.end(); ++iter)
-  {
+       iter != _registeredTasks.end(); ++iter) {
     (*iter)->dispatch(e, _dummyPort); 
   }
 }

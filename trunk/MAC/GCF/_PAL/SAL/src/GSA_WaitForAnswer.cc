@@ -26,12 +26,9 @@
 #include "GSA_WaitForAnswer.h"
 #include "GSA_Service.h"
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
 
 GSAWaitForAnswer::GSAWaitForAnswer(GSAService& service) :
   HotLinkWaitForAnswer(),

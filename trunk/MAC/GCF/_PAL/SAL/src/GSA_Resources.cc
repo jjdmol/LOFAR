@@ -30,12 +30,9 @@
 // PVSS includes
 #include  <ErrHdl.hxx>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
 // Wrapper to read config file
 void  GSAResources::init(int &argc, char *argv[])
 {
@@ -62,10 +59,8 @@ PVSSboolean  GSAResources::readSection()
   
   // Loop thru section
   while ( (cfgState != CFG_SECT_START) &&  // Not next section
-          (cfgState != CFG_EOF) )          // End of config file
-  {
-    if (!readGeneralKeyWords())            // keywords handled in Resources
-    {
+          (cfgState != CFG_EOF) ) {         // End of config file
+    if (!readGeneralKeyWords()) {            // keywords handled in Resources
       ErrHdl::error(ErrClass::PRIO_WARNING,     // not that bad
                     ErrClass::ERR_PARAM,        // wrong parametrization
                     ErrClass::ILLEGAL_KEYWORD,  // illegal Keyword in Res.

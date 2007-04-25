@@ -37,12 +37,9 @@
 
 #include <unistd.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
 // -------------------------------------------------------------------------
 // Our manager class
 
@@ -64,8 +61,7 @@ void GSAPvssApi::init()
   long sec, usec;
   
   // While we are in STATE_INIT  we are initialized by the Data manager
-  while (getManagerState() == STATE_INIT)
-  {
+  while (getManagerState() == STATE_INIT) {
     // Wait max. 1 second in select to receive next message from data.
     // It won't take that long...
     sec = 1;
@@ -77,8 +73,7 @@ void GSAPvssApi::init()
   // This call will succeed or the manager will exit
   connectToEvent();
 
-  if (getManagerState() == STATE_RUNNING)
-  {
+  if (getManagerState() == STATE_RUNNING) {
     LOG_INFO("Application connected to PVSS system");
   }
   
@@ -87,14 +82,12 @@ void GSAPvssApi::init()
 
 void GSAPvssApi::workProc()
 {
-  if (getManagerState() == STATE_RUNNING)
-  {
+  if (getManagerState() == STATE_RUNNING) {
    	long sec(0), usec(1);
 
     dispatch(sec, usec);
   }
-  else
-  {
+  else {
     init();
   }
 }

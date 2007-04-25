@@ -21,22 +21,11 @@
 //# $Id$
 
 #include <lofar_config.h>
+#include <Common/lofar_string.h>
 
 #define LOFARLOGGER_SUBPACKAGE "SAL"
 
-#include "GSA_Service.h"
-#include "GSA_Defines.h"
-#include "GSA_WaitForAnswer.h"
-#include "GSA_SCADAHandler.h"
-
-#include <GCF/GCF_PVBool.h>
-#include <GCF/GCF_PVChar.h>
-#include <GCF/GCF_PVInteger.h>
-#include <GCF/GCF_PVUnsigned.h>
-#include <GCF/GCF_PVDouble.h>
-#include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVDynArr.h>
-#include <GCF/GCF_PVBlob.h>
+#include <GCF/GCF_PVTypes.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
 #include <DpMsgAnswer.hxx>
@@ -56,11 +45,51 @@
 #include <AnyTypeVar.hxx>
 #include <DpIdentifierVar.hxx>
 
+#include "GSA_Service.h"
+#include "GSA_Defines.h"
+#include "GSA_WaitForAnswer.h"
+#include "GSA_SCADAHandler.h"
+
 namespace LOFAR {
 	namespace GCF {
 		using namespace Common;
 		namespace PAL {
 
+static char*	SALErrors[]  = {
+	"No error",						//  SA_NO_ERROR
+	"Unknown error",				//  SA_UNKNOWN_ERROR
+	"Propertyname is missing",		//  SA_PROPNAME_MISSING
+	"Wrong variable type",			//  SA_VARIABLE_WRONG_TYPE
+	"Datapointtype unknown",		//  SA_DPTYPE_UNKNOWN
+	"MAC variabletype unknown",		//  SA_MACTYPE_UNKNOWN
+	"Creation of DP failed",		//  SA_CREATEPROP_FAILED
+	"Deletion of DP failed",		//  SA_DELETEPROP_FAILED
+	"Subscribtion on DP failed",	//  SA_SUBSCRIBEPROP_FAILED
+	"Unsubscribtion of DP failed",	//  SA_UNSUBSCRIBEPROP_FAILED
+	"Set DP value failed",			//  SA_SETPROP_FAILED
+	"Get DP value failed",			//  SA_GETPROP_FAILED
+	"Subscribe on query failed",	//  SA_QUERY_SUBSC_FAILED
+	"Unsubscribe of query failed",	//  SA_QUERY_UNSUBSC_FAILED
+	"PVSS datbase not running",		//  SA_SCADA_NOT_AVAILABLE
+	"DP does not exist",			//  SA_PROP_DOES_NOT_EXIST
+	"DP already exists",			//  SA_PROP_ALREADY_EXIST
+	"Invalid valuestring",			//  SA_VALUESTRING_NOT_VALID
+	"MAC variabletype mismatch"		//  SA_MACTYPE_MISMATCH
+};
+
+//
+// GSAerror (resultNr)
+//
+string GSAerror(TSAResult	resultNr)
+{
+	if ((resultNr < SA_NO_ERROR) || (resultNr > SA_MACTYPE_MISMATCH)) {
+		return ("???");
+	}
+
+	return (SALErrors[resultNr]);
+}
+
+	
 //
 // GSAService()
 //
@@ -71,7 +100,7 @@ GSAService::GSAService() : _pWFA(0)
 	ASSERT(_pSCADAHandler);
 
 	if (_pSCADAHandler->isOperational() == SA_SCADA_NOT_AVAILABLE) {
-		LOG_ERROR(formatString("Error on creating a SCADA service"));
+		LOG_FATAL(formatString("Error on creating a SCADA service"));
 		Manager::exit(-1);
 	}
 }
@@ -115,7 +144,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
 			GCFPVSSInfo::_lastSysNr = pAnItem->getDpIdentifier().getSystem();
 			if (pAnItem->getDpIdentifier().convertToString(pvssDPEConfigName) == PVSS_FALSE) {
 				if (answer.isAnswerOn() == DP_MSG_DP_REQ) {
-					LOG_INFO(formatString("DP %s was deleted successful",wait.getDpName().c_str()));
+					LOG_TRACE_FLOW(formatString("DP %s was deleted successful",wait.getDpName().c_str()));
 					dpDeleted(wait.getDpName());
 					handled = true;
 				}
@@ -130,12 +159,12 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
 				handled = true;
 				switch (answer.isAnswerOn()) {
 				case DP_MSG_CONNECT:
-					LOG_INFO(formatString("DPE %s was subscribed successful", dpName.c_str()));
+					LOG_TRACE_FLOW(formatString("DPE %s was subscribed successful", dpName.c_str()));
 					dpeSubscribed(dpName);
 					break;
 
 				case DP_MSG_REQ_NEW_DP:
-					LOG_INFO(formatString("DP %s was created successful", dpName.c_str()));
+					LOG_TRACE_FLOW(formatString("DP %s was created successful", dpName.c_str()));
 					dpCreated(dpName);
 					break;
 
@@ -148,7 +177,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
 								(const char*)pvssTypeName, dpName.c_str()));
 						}
 						else {
-							LOG_DEBUG(formatString("Value of '%s' has get", dpName.c_str()));
+							LOG_TRACE_FLOW(formatString("Value of '%s' has get", dpName.c_str()));
 							dpeValueGet(dpName, *pPropertyValue);
 						}
 						if (pPropertyValue)
@@ -160,7 +189,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
 					pVar = pAnItem->getValuePtr();
 					if (pVar) {		// could be NULL !!
 						if (pVar->isA() == UINTEGER_VAR) {
-							LOG_DEBUG(formatString (
+							LOG_TRACE_FLOW(formatString (
 								"Query subscription is performed successful (with queryid %d)", 
 								((UIntegerVar *)pVar)->getValue()));
 							dpQuerySubscribed(((UIntegerVar *)pVar)->getValue());
@@ -357,7 +386,7 @@ void GSAService::convAndForwardValueChange(const DpIdentifier& dpId, const Varia
 					dpName.c_str()));
 		}
 		else {
-			LOG_DEBUG(formatString("Value of '%s' has been changed", dpName.c_str()));
+			LOG_TRACE_FLOW(formatString("Value of '%s' has been changed", dpName.c_str()));
 			dpeValueChanged(dpName, *pPropertyValue);
 		}
 		if (pPropertyValue)
@@ -378,7 +407,7 @@ TSAResult GSAService::dpCreate(const string& dpName,
 	GSAWaitForAnswer 	*pWFA = new GSAWaitForAnswer(*this);
 	CharString 			pvssTypeName(typeName.c_str());
 
-	LOG_INFO(formatString("Create DP '%s'", dpName.c_str()));
+	LOG_TRACE_FLOW(formatString("Create DP '%s'", dpName.c_str()));
 
 	ASSERT(_pSCADAHandler);
 	if ((result = _pSCADAHandler->isOperational()) == SA_SCADA_NOT_AVAILABLE) {
@@ -386,7 +415,7 @@ TSAResult GSAService::dpCreate(const string& dpName,
 	}
 	else if (GCFPVSSInfo::propExists(dpName)) {
 		LOG_WARN(formatString ("DP '%s' already exists", dpName.c_str()));
-		result = SA_DP_ALREADY_EXISTS;
+  		result = SA_PROP_ALREADY_EXIST;
 	}
 	else if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_FALSE) {
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
@@ -442,7 +471,7 @@ TSAResult GSAService::dpDelete(const string& dpName)
 	GSAWaitForAnswer 	*pWFA = new GSAWaitForAnswer(*this);
 	pWFA->setDpName(dpName);
 
-	LOG_INFO(formatString("Delete DP '%s'", dpName.c_str()));
+	LOG_TRACE_FLOW(formatString("Delete DP '%s'", dpName.c_str()));
 
 	ASSERT(_pSCADAHandler);
 	if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR) {
@@ -469,7 +498,7 @@ TSAResult GSAService::dpDelete(const string& dpName)
 		result = SA_DELETEPROP_FAILED;
 	}
 	else {
-		LOG_DEBUG(formatString ("Deletion of DP '%s' was requested successful", 
+		LOG_TRACE_FLOW(formatString ("Deletion of DP '%s' was requested successful", 
 																	dpName.c_str()));
 	}
 
@@ -494,7 +523,7 @@ TSAResult GSAService::dpeSubscribe(const string& propName)
 
 	convPropToDpConfig(propName, pvssDpName, true);
 
-	LOG_INFO(formatString ("Subscribe on property '%s'", propName.c_str()));
+	LOG_TRACE_FLOW(formatString ("Subscribe on property '%s'", propName.c_str()));
 
 	ASSERT(_pSCADAHandler);
 	if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR) {
@@ -522,7 +551,7 @@ TSAResult GSAService::dpeSubscribe(const string& propName)
 			result = SA_SUBSCRIBEPROP_FAILED;
 		}
 		else {
-			LOG_DEBUG(formatString(
+			LOG_TRACE_FLOW(formatString(
 						"Subscription on property '%s' was requested successful", 
 						propName.c_str()));
 		}
@@ -545,7 +574,7 @@ TSAResult GSAService::dpeUnsubscribe(const string& propName)
 
 	convPropToDpConfig(propName, pvssDpName, true);
 
-	LOG_INFO(formatString("Unsubscribe from property '%s'", propName.c_str()));
+	LOG_TRACE_FLOW(formatString("Unsubscribe from property '%s'", propName.c_str()));
 
 	ASSERT(_pSCADAHandler);
 	if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR) {
@@ -575,7 +604,7 @@ TSAResult GSAService::dpeUnsubscribe(const string& propName)
 			result = SA_UNSUBSCRIBEPROP_FAILED;
 		}
 		else {
-			LOG_DEBUG(formatString (
+			LOG_TRACE_FLOW(formatString (
 				"Unsubscription from property '%s' was requested successful", 
 				propName.c_str()));
 		}
@@ -601,7 +630,7 @@ TSAResult GSAService::dpeGet(const string& dpeName)
 
 	convPropToDpConfig(dpeName, pvssDpName, true);
 
-	LOG_INFO (formatString("Request value of property '%s'", dpeName.c_str()));
+	LOG_TRACE_FLOW (formatString("Request value of property '%s'", dpeName.c_str()));
 
 	ASSERT(_pSCADAHandler);
 	if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR) {
@@ -630,7 +659,7 @@ TSAResult GSAService::dpeGet(const string& dpeName)
 		result = SA_GETPROP_FAILED;
 	}
 	else {
-		LOG_DEBUG(formatString("Value of property '%s' was requested successful", 
+		LOG_TRACE_FLOW(formatString("Value of property '%s' was requested successful", 
 					dpeName.c_str()));
 	}
 
@@ -658,7 +687,7 @@ TSAResult GSAService::dpeSet(const string& dpeName,
 
 	convPropToDpConfig(dpeName, pvssDpName, false);
 
-	LOG_INFO (formatString("Set value of property '%s'", dpeName.c_str()));
+	LOG_TRACE_FLOW (formatString("Set value of property '%s'", dpeName.c_str()));
 
 	ASSERT(_pSCADAHandler);
 	// DB must be active
@@ -721,12 +750,12 @@ TSAResult GSAService::dpeSet(const string& dpeName,
 		}
 		else {
 			if (wantAnswer) {
-			LOG_DEBUG(formatString (
+			LOG_TRACE_FLOW(formatString (
 					"Setting the value of property '%s' is requested successful", 
 					dpeName.c_str()));
 			}
 			else {
-				LOG_DEBUG(formatString ("Property value '%s' is set successful", 
+				LOG_TRACE_FLOW(formatString ("Property value '%s' is set successful", 
 						dpeName.c_str()));
 			}
 		}
@@ -750,7 +779,7 @@ TSAResult GSAService::dpQuerySubscribeSingle(const string& queryWhere, const str
 	CharString query;
 	query.format(queryFormat, queryWhere.c_str(), queryFrom.c_str());
 
-	LOG_INFO(formatString("Subscription on queried properties '%s'", (const char*)query));
+	LOG_TRACE_FLOW(formatString("Subscription on queried properties '%s'", (const char*)query));
 
 	ASSERT(_pSCADAHandler);
 	if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR) {
@@ -771,7 +800,7 @@ TSAResult GSAService::dpQuerySubscribeSingle(const string& queryWhere, const str
 		result = SA_QUERY_SUBSC_FAILED;
 	}
 	else {
-		LOG_DEBUG(formatString ( "Query subscription (%s) was requested succesful", 
+		LOG_TRACE_FLOW(formatString ( "Query subscription (%s) was requested succesful", 
 					(const char*) query));
 	}
 
@@ -784,7 +813,7 @@ TSAResult GSAService::dpQuerySubscribeSingle(const string& queryWhere, const str
 TSAResult GSAService::dpQueryUnsubscribe(uint32 queryId)
 {
 	TSAResult result(SA_NO_ERROR);
-	LOG_INFO (formatString("Unsubscription from queried properties '%d'", queryId));
+	LOG_TRACE_FLOW (formatString("Unsubscription from queried properties '%d'", queryId));
 
 	ASSERT(_pSCADAHandler);
 	if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR) {
@@ -804,7 +833,7 @@ TSAResult GSAService::dpQueryUnsubscribe(uint32 queryId)
 		result = SA_QUERY_UNSUBSC_FAILED;
 	}
 	else {
-		LOG_DEBUG(formatString (
+		LOG_TRACE_FLOW(formatString (
 				"Unsubscription of queried properties (%d) was requested succesful", 
 				queryId));
 	}
