@@ -10,7 +10,7 @@ node   BGLProc     1.0.0  development 'node constraint'  "Blue Gene Processing"
 #--------------------------------------------------------------------------------------------------------
 par maxConcurrentComm	I	int	-	10	0	2	 -	"max number of nodes that share the same ethernet device"
 par nodesPerPset	I	pint	-	10	0	"8|16;8" -	"number of BGL nodes in one Pset"
-par nrPFFTaps		I	int	-	10	0	16	 -	"number of elements in the polyphasefilter"
+par nrPPFTaps		I	int	-	10	0	16	 -	"number of elements in the polyphasefilter"
 par psetsPerCell	I	pint	-	10	0	"1|2;1"	 -	"number of Pset per Cell"
 
 
@@ -40,7 +40,7 @@ node  DelayComp    1.0.0  development 'node constraint'  "Setting of the delayco
 #    name          	dir.    type    unit    prun.   vm      value                   constr. descr.
 #--------------------------------------------------------------------------------------------------------
 par converterType	I	ptext	-	10	0	'IMPL|Client;IMPL'	-	'Depends on whether of not AIPS++ is installed'
-par hostname      	I	text	-	10	0	'list012'		-	'Machine the Delay Compensation-program runs on'
+par hostName      	I	text	-	10	0	'list012'		-	'Machine the Delay Compensation-program runs on'
 par ports		I	vint	-	10	0	'[7200..7220]'		-	'The ports the Delay Compansation-program listens on'
 par positionType 	I	text	-	10	0	'ITRF'			-	'???'
 
@@ -52,12 +52,11 @@ node  OLAP         1.0.0  development 'node constraint'  "OLAP"
 
 #    name          		dir.    type   unit   prun.     vm      value   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par delayCompensation		I       pbool   -       10      0       'true|false;true'	-	'???'
+par delayCompensation		I       bool   -       10      0        true	-		'???'
 par IPHeaderSize		I	int	-	10	0	32	-		'???'
 par EPAHeaderSize		I	int	-	10	0	16	-		'???'
-par firstInputPortnr 		I	int	-	10	0	4346	- 		'Portnumber the first RSPboard uses'
+par firstInputPortNr 		I	int	-	10	0	4346	- 		'Portnumber the first RSPboard uses'
 par nrBitsPerSample		I	int	-	10	0	16	-		'???'
-par nrRSPboards			I	int	-	10	0	16	-		'???'
 par nrSecondsOfBuffer		I	int	-	10	0	40	-		'???'
 par nrSubbandsPerFrame		I	int	-	10	0	32	-		'???'
 par nrTimesInFrame		I	int	-	10	0	16	-		'???'
