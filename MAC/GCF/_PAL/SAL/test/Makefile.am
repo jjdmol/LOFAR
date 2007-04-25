@@ -1,16 +1,20 @@
 AM_CPPFLAGS = -I$(top_srcdir)/SAL/src
 
-check_PROGRAMS 		= salEcho salPing
+check_PROGRAMS 		= salEcho salPing tGSAService
 
-TESTS			= #salEcho salPing
+TESTS				= tGSAService #salEcho salPing
 
-salEcho_SOURCES 			= $(BUILT_SOURCES) Echo.cc Service.cc Echo_Protocol.cc
-salEcho_LDADD					= ../src/libsal.la $(LOFAR_DEPEND)
+salEcho_SOURCES 		= $(BUILT_SOURCES) Echo.cc Service.cc Echo_Protocol.cc
+salEcho_LDADD			= ../src/libsal.la $(LOFAR_DEPEND)
 salEcho_DEPENDENCIES	= ../src/libsal.la $(LOFAR_DEPEND)
 
-salPing_SOURCES 					= $(BUILT_SOURCES) Ping.cc  Echo_Protocol.cc
-salPing_LDADD						=  ../src/libsal.la $(LOFAR_DEPEND)
-salPing_DEPENDENCIES			= ../src/libsal.la $(LOFAR_DEPEND)
+salPing_SOURCES 		= $(BUILT_SOURCES) Ping.cc  Echo_Protocol.cc
+salPing_LDADD			=  ../src/libsal.la $(LOFAR_DEPEND)
+salPing_DEPENDENCIES	= ../src/libsal.la $(LOFAR_DEPEND)
+
+tGSAService_SOURCES 		= $(BUILT_SOURCES) tGSAService.cc Service.cc
+tGSAService_LDADD			=  ../src/libsal.la $(LOFAR_DEPEND)
+tGSAService_DEPENDENCIES	= ../src/libsal.la $(LOFAR_DEPEND)
 
 AUTOGEN = autogen
 SUFFIXES = .ph

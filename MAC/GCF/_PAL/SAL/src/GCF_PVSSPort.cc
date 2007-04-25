@@ -177,7 +177,7 @@ ssize_t GCFPVSSPort::send(GCFEvent& e)
 	bytesPacked += _portAddr.pack(newBuf + bytesPacked);
 	memcpy(newBuf + bytesPacked, buf, packsize);
 
-	LOG_DEBUG(formatString("Sending event '%s' for task '%s' on port '%s'",
+	LOG_TRACE_FLOW(formatString("Sending event '%s' for task '%s' on port '%s'",
 							getTask()->evtstr(e),
 							getTask()->getName().c_str(), 
 							getRealName().c_str()));

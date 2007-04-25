@@ -22,9 +22,10 @@
 //  $Id$
 //
 
+#include <lofar_config.h>
+#include <Common/lofar_iostream.h>
 #include "Ping.h"
 #include "Echo_Protocol.ph"
-#include <Common/lofar_iostream.h>
 
 using std::cout;
 using std::endl;
