@@ -136,7 +136,7 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 
 	if (itsPropertySet) {
 		CTState		cts;
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString(cts.name(newState)));
+		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString(cts.name(newState)));
 	}
 }   
 
@@ -146,16 +146,21 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 //
 int32 CalibrationControl::convertFilterSelection(const string&	filterselection) 
 {
-	if (filterselection == "LBL_10_90")		{ return(1); }
+	if (filterselection == "LBL_10_80")		{ return(1); }
 	if (filterselection == "LBL_30_80")		{ return(2); }
-	if (filterselection == "LBH_10_90")		{ return(3); }
+	if (filterselection == "LBH_10_80")		{ return(3); }
 	if (filterselection == "LBH_30_80")		{ return(4); }
 	if (filterselection == "HB_110_190") 	{ return(5); }
 	if (filterselection == "HB_170_230") 	{ return(6); }
+	if (filterselection == "HB_210_240") 	{ return(7); }
+
+	// those will become obsolete!
+	if (filterselection == "LBL_10_90")		{ return(1); }
+	if (filterselection == "LBH_10_90")		{ return(3); }
 	if (filterselection == "HB_210_250") 	{ return(7); }
 
 	LOG_WARN_STR ("filterselection value '" << filterselection << 
-											"' not recognized, using LBL_10_90");
+											"' not recognized, using LBL_10_80");
 	return (1);
 }
 
@@ -249,7 +254,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString ("initial"));
+			itsPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString ("initial"));
 			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString (""));
 			itsPropertySet->setValue(PN_CC_CONNECTED,	GCFPVBool   (false));
 			itsPropertySet->setValue(PN_CC_OBSNAME,		GCFPVString (""));
@@ -613,6 +618,7 @@ bool	CalibrationControl::startCalibration()
 	calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
 										convertFilterSelection(itsObsPar.filter));
 //	calStartEvent.nyquist_zone = itsObsPar.nyquistZone;
+	calStartEvent.rcumode()(0).setSpecinv(calStartEvent.rcumode()(0).getNyquistZone() == 2);
 	calStartEvent.subset 	   = itsObsPar.RCUset;
 	LOG_DEBUG(formatString("Sending CALSTART(%s,%s,08X)", 
 							obsName.c_str(), calStartEvent.parent.c_str(),

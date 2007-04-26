@@ -39,8 +39,11 @@ namespace LOFAR {
 #define PVSSNAME_MS_CLAIMPERIOD		"ClaimPeriod"
 
 // next lines should be defined somewhere in Common.
-#define PVSSNAME_FSM_STATE			"state"
+#define PVSSNAME_FSM_CURACT			"currentAction"
 #define PVSSNAME_FSM_ERROR			"error"
+#define PVSSNAME_FSM_LOGMSG			"logMsg"
+#define PVSSNAME_FSM_STATE			"state"
+#define PVSSNAME_FSM_CHILDSTATE		"childState"
 
 
 }; // MCU

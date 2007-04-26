@@ -35,7 +35,7 @@
 
 // Observation
 #define PSN_OBSERVATION	"LOFAR_ObsSW_@observation@"
-#define PST_OBSERVATION	"Observation"
+#define PST_OBSERVATION	"StnObservation"
 
 namespace LOFAR {
 	using ACC::APS::ParameterSet;
@@ -127,6 +127,7 @@ void ActiveObs::handlePropertySetAnswer(GCFEvent& answer)
 		// don't watch state and error fields.
 		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
 			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_CURACT) != 0) ||
 			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
 			return;
 		}
@@ -282,6 +283,14 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	/*port
 
 	case CONTROL_CLAIM: {
 		// The stationControllerTask should have set the stationclock by now.
+#if 0
+		// Wait a second to give the RSPDriver time to register the clocksetting
+		itsPropSetTimer->setTimer(1.5);
+	}
+	break;
+
+	case F_TIMER: {
+#endif
 		// Activate the Calibration Controller
 		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to connect to CalServer");
 		ChildControl::instance()->
@@ -316,9 +325,6 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	/*port
 
 	case CONTROL_QUIT:
 		TRAN(ActiveObs::stopping);
-		break;
-
-	case F_INIT: 
 		break;
 
 	default:

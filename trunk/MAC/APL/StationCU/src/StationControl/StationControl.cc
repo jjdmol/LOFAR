@@ -189,6 +189,7 @@ void StationControl::handlePropertySetAnswer(GCFEvent& answer)
 		// don't watch state and error fields.
 		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
 			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_CURACT) != 0) ||
 			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
 			return;
 		}
@@ -261,7 +262,7 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsOwnPropSet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
+			itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("initial"));
 			itsOwnPropSet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 
 			// enable clock propertyset.
@@ -318,7 +319,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
    		break;
 
 	case F_ENTRY: {
-		itsOwnPropSet->setValue(PVSSNAME_FSM_STATE,GCFPVString("connected"));
+		itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("connected"));
 
 		// start DigitalBoardController
 		LOG_DEBUG_STR("Starting DigitalBoardController");
@@ -403,7 +404,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 	case F_ENTRY: {
 		// update PVSS
-		itsOwnPropSet->setValue(PVSSNAME_FSM_STATE,GCFPVString("active"));
+		itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("active"));
 		itsOwnPropSet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 	}
 	break;
@@ -554,7 +555,7 @@ GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterf
 		itsParentPort->send(msg);
 
 		// update PVSS
-		itsOwnPropSet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsOwnPropSet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
 		itsOwnPropSet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		itsTimerPort->setTimer(1L);

@@ -186,6 +186,7 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 		// don't watch state and error fields.
 		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
 			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_CURACT) != 0) ||
 			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
 			return;
 		}
@@ -279,13 +280,13 @@ myPropSetName=myPropSetName.substr(8);
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
+			itsOwnPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("initial"));
 			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 			itsOwnPropertySet->setValue(PN_DBC_CONNECTED, GCFPVBool(false));
 			
 			// Now connect to propertyset that dictates the clocksetting
 			string	extPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
-extPropSetName= extPropSetName.substr(8);
+//extPropSetName= extPropSetName.substr(8);
 			LOG_DEBUG_STR ("Connecting to PropertySet " << extPropSetName);
 			itsExtPropertySet = GCFExtPropertySetPtr(
 									new GCFExtPropertySet(extPropSetName.c_str(),
@@ -359,7 +360,7 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 
 	case F_ENTRY:
 	case F_TIMER:
-		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("connecting"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("connecting"));
 		itsOwnPropertySet->setValue(PN_DBC_CONNECTED,  GCFPVBool(false));
 		itsSubscription = 0;
 		itsRSPDriver->open();		// will result in F_CONN or F_DISCONN
@@ -410,7 +411,7 @@ GCFEvent::TResult DigitalBoardControl::subscribe_state(GCFEvent& event,
 
 	case F_ENTRY:
 	case F_TIMER:
-		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("subscribe on clock"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("subscribe on clock"));
 		requestSubscription();		// will result in RSP_SUBCLOCKACK;
 		break;
 
@@ -463,7 +464,7 @@ GCFEvent::TResult DigitalBoardControl::retrieve_state(GCFEvent& event,
 
 	case F_ENTRY:
 	case F_TIMER:
-		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("retrieve clock"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("retrieve clock"));
 		requestClockSetting();		// will result in RSP_GETCLOCKACK;
 		break;
 
@@ -523,7 +524,7 @@ GCFEvent::TResult DigitalBoardControl::setClock_state(GCFEvent& event,
 
 	case F_ENTRY:
 	case F_TIMER:
-		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("set clock"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("set clock"));
 		sendClockSetting();		// will result in RSP_SETCLOCKACK;
 		break;
 
@@ -574,7 +575,7 @@ GCFEvent::TResult DigitalBoardControl::active_state(GCFEvent& event, GCFPortInte
 
 	case F_ENTRY: {
 		// update PVSS
-		itsOwnPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("active"));
+		itsOwnPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("active"));
 		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		break;
 	}
@@ -806,7 +807,7 @@ GCFEvent::TResult DigitalBoardControl::finishing_state(GCFEvent& event, GCFPortI
 
 	case F_ENTRY: {
 		// update PVSS
-		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
 		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		itsTimerPort->setTimer(1L);

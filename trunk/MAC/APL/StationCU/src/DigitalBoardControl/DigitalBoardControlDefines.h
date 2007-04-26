@@ -32,14 +32,16 @@ namespace LOFAR {
 #define PN_DBC_CLOCK		"clock"
 
 // next three line should be defined elsewhere because we are not the owner.
-#define	PSN_STATION_CLOCK	"lofar28:LOFAR_PIC_StationClock"
+#define	PSN_STATION_CLOCK	"LOFAR_PIC_StationClock"
 #define PST_STATION_CLOCK	"StationClock"
 #define PN_SC_CLOCK			"clock"
 
 // next lines should be defined somewhere in Common.
-#define PVSSNAME_FSM_STATE			"state"
+#define PVSSNAME_FSM_CURACT			"currentAction"
 #define PVSSNAME_FSM_ERROR			"error"
-#define PVSSNAME_FSM_LOGMSG			"logmsg"
+#define PVSSNAME_FSM_LOGMSG			"logMsg"
+#define PVSSNAME_FSM_STATE			"state"
+#define PVSSNAME_FSM_CHILDSTATE		"childState"
 
 
 }; // StationCU

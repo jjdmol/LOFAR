@@ -1,4 +1,4 @@
-//#  MACScheduler_Defines.h: preprocessor definitions of various constants
+//#  ObservationControlDefines.h: preprocessor definitions of various constants
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -51,9 +51,11 @@ namespace LOFAR {
 
 
 // next lines should be defined somewhere in Common.
-#define PVSSNAME_FSM_STATE			"state"
+#define PVSSNAME_FSM_CURACT			"currentAction"
 #define PVSSNAME_FSM_ERROR			"error"
-#define PVSSNAME_FSM_LOGMSG			"logmsg"
+#define PVSSNAME_FSM_LOGMSG			"logMsg"
+#define PVSSNAME_FSM_STATE			"state"
+#define PVSSNAME_FSM_CHILDSTATE		"childState"
 
 // Observation
 #define PSN_OBSERVATION	"LOFAR_ObsSW_@observation@"

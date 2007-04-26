@@ -129,11 +129,6 @@ ObservationControl::~ObservationControl()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
 
-//	if (itsPropertySet) {
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("down"));
-//		itsPropertySet->disable();
-//	}
-
 }
 
 //
@@ -168,7 +163,7 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 	LOG_INFO_STR(getName() << " now in state " << cts.name(newState));
 
 	if (itsPropertySet) {
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),
+		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),
 									 GCFPVString(cts.name(newState)));
 	}
 
@@ -222,6 +217,7 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 		// don't watch state and error fields.
 		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
 			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_CURACT) != 0) ||
 			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
 			return;
 		}
@@ -368,7 +364,13 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		}
 		break;
 	  
-	case F_TIMER: {		// must be timer that PropSet has set.
+	case F_TIMER: {		// can be timer that PropSet has set or timer from
+						// wait period for Child and Parent Control.
+		if (thisObservationControl == this) {	// task timer
+			TRAN(ObservationControl::active_state);				// go to next state.
+			break;
+		}
+
 		// first redirect signalhandler to finishing state to leave PVSS in the
 		// right state when we are going down.
 		thisObservationControl = this;
@@ -377,7 +379,7 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE,  GCFPVString("initial"));
+		itsPropertySet->setValue(PVSSNAME_FSM_CURACT,  GCFPVString("initial"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,  GCFPVString(""));
 		itsPropertySet->setValue(PN_OC_CLAIM_PERIOD,  GCFPVInteger(itsClaimPeriod));
 		itsPropertySet->setValue(PN_OC_PREPARE_PERIOD,GCFPVInteger(itsPreparePeriod));
@@ -414,7 +416,7 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		itsPropertySet->setValue(PN_OC_STORAGE_NODE_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.storageNodeList"))));
-
+		
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControl task");
 		itsChildControl->openService(MAC_SVCMASK_OBSERVATIONCTRL, itsInstanceNr);
@@ -424,7 +426,8 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		LOG_DEBUG ("Enabling ParentControl task");
 		itsParentPort = itsParentControl->registerTask(this);
 
-		TRAN(ObservationControl::active_state);				// go to next state.
+		itsTimerPort->setTimer(2.0);	// wait 2 second for tasks to come up.
+
 		}
 		break;
 
@@ -640,7 +643,7 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		itsParentPort->send(msg);
 
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		itsTimerPort->setTimer(1L);
