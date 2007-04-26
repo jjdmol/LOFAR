@@ -197,8 +197,9 @@ bool ChildControl::startChild (uint16				aCntlrType,
 				wholeSet.locateModule("PIC")+"PIC","PIC"));
 
 		// is there a duplicate of the controller info?
-		string	nodePos(cntlrSet.locateModule(nodeName));
-		cntlrSet.substractSubset(nodePos+nodeName);
+//		string	nodePos(cntlrSet.locateModule(nodeName));
+//		cntlrSet.substractSubset(nodePos+nodeName);
+// [260407] the code above leads to problems in starting childcontrollers.
 
 		// Add some comment lines and some extra fields to the file
 		cntlrSet.add("prefix", prefix+position+nodeName+".");
