@@ -36,9 +36,11 @@ namespace LOFAR {
 #define PST_STATION_CTRL	"StationCtrl"
 
 // next lines should be defined somewhere in Common.
-#define PVSSNAME_FSM_STATE			"state"
+#define PVSSNAME_FSM_CURACT			"currentAction"
 #define PVSSNAME_FSM_ERROR			"error"
-#define PVSSNAME_FSM_LOGMSG			"logmsg"
+#define PVSSNAME_FSM_LOGMSG			"logMsg"
+#define PVSSNAME_FSM_STATE			"state"
+#define PVSSNAME_FSM_CHILDSTATE		"childState"
 
 
 }; // StationCU

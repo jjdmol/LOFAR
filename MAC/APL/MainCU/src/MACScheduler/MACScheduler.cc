@@ -227,7 +227,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 	case F_TIMER: {		// must be timer that PropSet is enabled.
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE,      GCFPVString  ("initial"));
+		itsPropertySet->setValue(PVSSNAME_FSM_CURACT,     GCFPVString  ("initial"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,      GCFPVString  (""));
 		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,    GCFPVBool    (false));
 		itsPropertySet->setValue(PN_MS_OTDB_LAST_POLL,    GCFPVString  (""));
@@ -292,7 +292,7 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("recover"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("recover"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		//
@@ -335,7 +335,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		signal (SIGTERM, MACScheduler::sigintHandler);	// kill
 
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("active"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		// Timers must be connected to ports, so abuse serverPort for second timer.
@@ -472,7 +472,7 @@ GCFEvent::TResult MACScheduler::finishing_state(GCFEvent& event, GCFPortInterfac
 
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("finished"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		itsTimerPort->setTimer(1L);

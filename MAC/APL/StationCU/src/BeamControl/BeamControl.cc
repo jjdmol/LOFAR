@@ -143,7 +143,7 @@ void    BeamControl::setState(CTState::CTstateNr     newState)
 
 	if (itsPropertySet) {
 		CTState		cts;
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString(cts.name(newState)));
+		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString(cts.name(newState)));
 	}
 }   
 
@@ -264,7 +264,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("initial"));
+			itsPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("initial"));
 			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool  (false));
 			itsPropertySet->setValue(PN_BC_SUBBANDLIST,	GCFPVString(""));
@@ -326,7 +326,7 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("started"));
+//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("started"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool  (false));
 		break;
@@ -402,7 +402,7 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("claimed"));
+//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("claimed"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 		break;
 	}
@@ -478,7 +478,7 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
+//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("active"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 		break;
 	}
@@ -578,7 +578,7 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 	case F_ENTRY: {
 		// update PVSS
 		setState(CTState::QUIT);
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("quiting"));
+//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("quiting"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 		// disconnect from BeamServer
 		itsBeamServer->close();

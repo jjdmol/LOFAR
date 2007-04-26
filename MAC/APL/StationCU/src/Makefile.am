@@ -1,4 +1,4 @@
-SUBDIRS = BeamControl CalibrationControl DigitalBoardControl StationControl
+SUBDIRS = BeamControl CalibrationControl DigitalBoardControl StationControl HardwareMonitor
 
 include $(top_srcdir)/Makefile.common
 
