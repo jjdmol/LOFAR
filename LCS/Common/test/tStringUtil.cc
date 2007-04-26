@@ -64,7 +64,8 @@ bool testSplit()
 
 bool testCompare(bool nocase)
 {
-  set<string, StringUtil::Compare> 
+  typedef set<string, StringUtil::Compare> set_type;
+  set_type 
     s(nocase ? StringUtil::Compare::NOCASE : StringUtil::Compare::NORMAL);
   s.insert("Alfons");
   s.insert("aap");
@@ -74,7 +75,7 @@ bool testCompare(bool nocase)
   s.insert("chocolade");
   if (nocase) cout << "=== Strings sorted NOCASE ===" << endl;
   else cout << "=== Strings sorted NORMAL ===" << endl;
-  for (set<string>::const_iterator it = s.begin(); it != s.end(); ++it) {
+  for (set_type::const_iterator it = s.begin(); it != s.end(); ++it) {
     cout << *it << endl;
   }
   cout << endl;
