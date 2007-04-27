@@ -126,7 +126,7 @@ void ApplController::startupNetwork()
 //
 void ApplController::handleProcMessage(APAdmin*	anAP)
 {
-	LOG_TRACE_FLOW("ApplController:handleProcMessage()");
+	LOG_TRACE_FLOW_STR("ApplController:handleProcMessage(" << anAP->getName() << ")");
 
 	DH_ProcControl*		DHProcPtr = anAP->getDH();
 	PCCmd				command   = DHProcPtr->getCommand();
@@ -187,6 +187,9 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 
 			if (ackOnTime && !successful) { 
 				sendExecutionResult(0, "Nack from process:" + anAP->getName());
+			}
+			else {
+				sendExecutionResult(0, "Ack from process:" + anAP->getName());
 			}
 		}
 		else {

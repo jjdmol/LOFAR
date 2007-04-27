@@ -41,9 +41,9 @@ int main (int	argc, char*	argv[])
 {
 
 	// close filedescriptors from our launcher
-	for (int f = dup(2); f > 2; --f) {
-		close(f);
-	}
+//	for (int f = dup(2); f > 2; --f) {
+//		close(f);
+//	}
 
 	// Always bring up he logger first
 	ConfigLocator	aCL;

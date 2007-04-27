@@ -38,6 +38,7 @@ namespace LOFAR {
 // Socket is attached to the APAdmin.
 //
 APAdmin::APAdmin(Socket*	aSocket) :
+	itsName			(""),
 	itsDHPC         (new DH_ProcControl),
 	itsSocket       (aSocket),
 	itsBytesToRead  (0),
