@@ -83,6 +83,7 @@ CREATE TABLE blackboard.result
     node            INET                        DEFAULT inet_client_addr(),
     result_code     INTEGER                     NOT NULL,
     message         TEXT                        NOT NULL,
+    read_flag       BOOL                        DEFAULT 'false',
     
     UNIQUE (command_id, node)
 );

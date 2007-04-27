@@ -454,6 +454,32 @@ $$
 LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION blackboard.get_result()
+RETURNS blackboard.result AS
+$$
+    DECLARE
+        _result blackboard.result%ROWTYPE;
+    BEGIN        
+        SELECT *
+            INTO _result
+            FROM blackboard.result
+            WHERE read_flag = 'false'
+            ORDER BY timestamp
+            LIMIT 1;
+        
+        IF FOUND THEN
+            UPDATE blackboard.result
+                SET read_flag = 'true'
+                WHERE command_id = _result.command_id
+                AND node = _result.node;
+        END IF;
+        
+        RETURN _result;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
 -- --- --
 -- LOG --
 -- --- --
