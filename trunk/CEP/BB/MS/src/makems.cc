@@ -56,6 +56,8 @@ using namespace std;
 // Now write out all descriptive data.
 void writeDesc (const string& fileName, bool writeDess,
 		const string& msName, int nparts,
+		const Vector<double>& ra,
+		const Vector<double>& dec,
 		const Array<double>& antPos,
 		const Vector<String>& antNames,
 		bool writeAutoCorr,
@@ -67,7 +69,8 @@ void writeDesc (const string& fileName, bool writeDess,
   msd.msPath = path.dirName();
   msd.msName = path.baseName();
   msd.npart = nparts;
-  info.getPos (msd.ra, msd.dec);
+  msd.ra  = ra[0];
+  msd.dec = dec[0];
   int ntime;
   info.getTime (msd.startTime, msd.endTime, ntime);
   msd.corrTypes.push_back ("XX");
@@ -136,14 +139,16 @@ void writeDesc (const string& fileName, bool writeDess,
   }
 }
 
-void createMS (const string& msName, const Array<double>& antPos,
+void createMS (const string& msName,
+	       const Vector<double>& ra,
+	       const Vector<double>& dec,
+	       const Array<double>& antPos,
 	       bool writeAutoCorr, const DH_MSMake& info)
 {
-  double startFreq, endFreq, startTime, endTime, ra, dec;
+  double startFreq, endFreq, startTime, endTime;
   int nband, nfreq, ntime;
   info.getFreq (startFreq, endFreq, nband, nfreq);
   info.getTime (startTime, endTime, ntime);
-  info.getPos (ra, dec);
   int nfpb = nfreq/nband;
   double freqStep = (endFreq-startFreq) / nfreq;
   double freqRef  = startFreq + nfpb*freqStep / 2;    // middle of 1st band
@@ -155,13 +160,18 @@ void createMS (const string& msName, const Array<double>& antPos,
     msmaker.addBand (4, nfpb, freqRef, freqStep);
     freqRef += nfpb*freqStep;
   }
-  msmaker.addField (ra, dec);
+  for (uint i=0; i<ra.size(); ++i) {
+    msmaker.addField (ra[i], dec[i]);
+  }
   for (int i=0; i<ntime; ++i) {
     msmaker.writeTimeStep();
   }
 }
 
-void createMSSeq (const string& msName, int seqnr, const Array<double>& antPos,
+void createMSSeq (const string& msName, int seqnr,
+		  const Vector<double>& ra,
+		  const Vector<double>& dec,
+		  const Array<double>& antPos,
 		  const Vector<String>& antNames,
 		  bool writeAutoCorr,
 		  const DH_MSMake& info)
@@ -170,15 +180,14 @@ void createMSSeq (const string& msName, int seqnr, const Array<double>& antPos,
   ostringstream ostr;
   ostr << "_p" << seqnr;
   string msNameF = msName + ostr.str();
-  createMS (msNameF, antPos, writeAutoCorr, info);
+  createMS (msNameF, ra, dec, antPos, writeAutoCorr, info);
   // Write the description file.
-  writeDesc (msNameF + "/vis", false, msNameF, 0, antPos, antNames,
-	     writeAutoCorr, info);
+  writeDesc (msNameF + "/vis", false, msNameF, 0,
+	     ra, dec, antPos, antNames, writeAutoCorr, info);
 }
 
 void doMaster (bool send)
 {
-  cout << "Master sends the data" << endl;
   APS::ParameterSet params ("makems.cfg");
   // Get the various parameters.
   double startFreq = params.getDouble ("StartFreq");
@@ -188,12 +197,17 @@ void doMaster (bool send)
   Quantity qn;
   ASSERT (MVTime::read (qn, startTimeStr, true));
   double startTime = qn.getValue ("s");
-  string raStr  = params.getString ("RightAscension");
-  string decStr = params.getString ("Declination");
-  ASSERT (MVAngle::read (qn, raStr, true));
-  double ra = qn.getValue ("rad");
-  ASSERT (MVAngle::read (qn, decStr, true));
-  double dec = qn.getValue ("rad");
+  vector<string> raStr  = params.getStringVector ("RightAscension");
+  vector<string> decStr = params.getStringVector ("Declination");
+  ASSERT (raStr.size() == decStr.size());
+  Vector<double>  ra(raStr.size());
+  Vector<double> dec(raStr.size());
+  for (uint i=0; i<raStr.size(); ++i) {
+    ASSERT (MVAngle::read (qn, raStr[i], true));
+    ra[i] = qn.getValue ("rad");
+    ASSERT (MVAngle::read (qn, decStr[i], true));
+    dec[i] = qn.getValue ("rad");
+  }
   int nband = params.getInt32 ("NBands");
   int nfreq = params.getInt32 ("NFrequencies");
   int ntime = params.getInt32 ("NTimes");
@@ -242,9 +256,8 @@ void doMaster (bool send)
   // Fill the DataHolder as much as possible.
   conn.sender.setTime (startTime, endTime, ntime);
   conn.sender.setTileSize (tileSizeFreq, tileSizeRest);
-  conn.sender.setPos (ra, dec);
   // Write the antPos and MSName in the extra blob.
-  conn.sender.fillExtra (msName, antPos, antNames, writeAutoCorr);
+  conn.sender.fillExtra (msName, ra, dec, antPos, antNames, writeAutoCorr);
   // Write the data in the DataHolder and send it to each slave.
   for (int i=0; i<nnode; ++i) {
     conn.sender.setFreq (startFreq+i*nfpn*stepFreq,
@@ -252,7 +265,8 @@ void doMaster (bool send)
     if (send) {
       conn.conns[i]->write();
     } else {
-      createMSSeq (msName, i+1, antPos, antNames, writeAutoCorr, conn.sender);
+      createMSSeq (msName, i+1, ra, dec, antPos, antNames, writeAutoCorr,
+		   conn.sender);
     }
   }
   // Write the overall description files.
@@ -261,7 +275,7 @@ void doMaster (bool send)
   Path path = Path(mspath.absoluteName());
   string msDesName = msDesPath + "/" + string(path.baseName());
   writeDesc (msDesName, true, path.originalName(), nnode,
-	     antPos, antNames, writeAutoCorr, conn.sender);
+	     ra, dec, antPos, antNames, writeAutoCorr, conn.sender);
 }
 
 void doSlave (int rank)
@@ -274,13 +288,15 @@ void doSlave (int rank)
   conn.conns[rank-1]->read();
   cout << "Rank " << rank << " received " << conn.receiver.getDataSize()
        << " bytes" << endl;
+  Array<double> ra, dec;
   Array<double> antPos;
   Array<String> antNamesArr;
   string msName;
   bool writeAutoCorr;
-  conn.receiver.getExtra (msName, antPos, antNamesArr, writeAutoCorr);
+  conn.receiver.getExtra (msName, ra, dec, antPos, antNamesArr, writeAutoCorr);
   Vector<String> antNames(antNamesArr);
-  createMSSeq (msName, rank, antPos, antNames, writeAutoCorr, conn.receiver);
+  createMSSeq (msName, rank, ra, dec, antPos, antNames, writeAutoCorr,
+	       conn.receiver);
 }
 
 
@@ -295,6 +311,7 @@ int main (int argc, const char** argv)
     // Otherwise receive the data and generate the MS.
     int rank = TH_MPI::getCurrentRank();
     if (rank == 0) {
+      cout << "MPI run; master sends the data" << endl;
       doMaster (true);
     } else {
       doSlave (rank);
@@ -302,6 +319,7 @@ int main (int argc, const char** argv)
     TH_MPI::finalize();
 #else
     // No MPI, so handle everything in one process.
+    cout << "No MPI; single process used" << endl;
     doMaster (false);
 #endif
   } catch (std::exception& x) {

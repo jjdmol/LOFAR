@@ -92,7 +92,6 @@ public:
   int addField (double azimuth, double elevation);
 
   // Write the rows for a single time step.
-  // Only one band and field should have been defined.
   // It sets the shape of the data array.
   // All flags are set to False.
   void writeTimeStep();
@@ -164,7 +163,7 @@ private:
   casa::Block<casa::MBaseline>* itsAntBL; //# Baseline vector for each antenna
   casa::MPosition*      itsArrayPos; //# Position of array center
   casa::MeasFrame*      itsFrame;    //# Frame to convert to apparent coordinates
-  casa::MDirection*     itsPhaseDir; //# Phase direction of one and only field
+  casa::Block<casa::MDirection>* itsPhaseDir;   //# Phase directions of fields
   casa::MeasurementSet* itsMS;
   casa::MSMainColumns*  itsMSCol;
 };

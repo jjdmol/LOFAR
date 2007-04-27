@@ -53,9 +53,10 @@ namespace LOFAR {
       { itsTimes[0]=start; itsTimes[1]=end; *itsNTime=n; }
     void setTileSize (int tileSizeFreq, int tileSizeRest)
       { *itsTileSizeFreq = tileSizeFreq; *itsTileSizeRest = tileSizeRest; }
-    void setPos (double ra, double dec)
-      { itsPos[0]=ra; itsPos[1]=dec; }
-    void fillExtra (const string& msName, const casa::Array<double>& antPos,
+    void fillExtra (const string& msName,
+		    const casa::Array<double>& ra,
+		    const casa::Array<double>& dec,
+		    const casa::Array<double>& antPos,
 		    const casa::Array<casa::String>& antNames,
 		    bool writeAutoCorr);
 
@@ -67,9 +68,10 @@ namespace LOFAR {
       { return *itsTileSizeFreq; }
     int getTileSizeRest() const
       { return *itsTileSizeRest; }
-    void getPos (double& ra, double& dec) const
-      { ra=itsPos[0]; dec=itsPos[1]; }
-    void getExtra (string& msName, casa::Array<double>& antPos,
+    void getExtra (string& msName,
+		   casa::Array<double>& ra,
+		   casa::Array<double>& dec,
+		   casa::Array<double>& antPos,
 		   casa::Array<casa::String>& antNames,
 		   bool& writeAutoCorr);
 
@@ -84,7 +86,6 @@ namespace LOFAR {
     int*    itsTileSizeRest;
     double* itsFreqs;
     double* itsTimes;
-    double* itsPos;
   };
 
 
