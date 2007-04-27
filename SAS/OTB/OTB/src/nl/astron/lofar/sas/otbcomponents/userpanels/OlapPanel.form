@@ -1,0 +1,855 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Form version="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+  <NonVisualComponents>
+    <Container class="javax.swing.JPanel" name="jPanel9">
+
+      <Layout>
+        <DimensionLayout dim="0">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <EmptySpace min="0" pref="100" max="32767" attributes="0"/>
+          </Group>
+        </DimensionLayout>
+        <DimensionLayout dim="1">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <EmptySpace min="0" pref="100" max="32767" attributes="0"/>
+          </Group>
+        </DimensionLayout>
+      </Layout>
+    </Container>
+  </NonVisualComponents>
+  <Properties>
+    <Property name="minimumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+      <Dimension value="[800, 600]"/>
+    </Property>
+  </Properties>
+  <AuxValues>
+    <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
+    <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
+    <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
+    <AuxValue name="designerSize" type="java.awt.Dimension" value="-84,-19,0,5,115,114,0,18,106,97,118,97,46,97,119,116,46,68,105,109,101,110,115,105,111,110,65,-114,-39,-41,-84,95,68,20,2,0,2,73,0,6,104,101,105,103,104,116,73,0,5,119,105,100,116,104,120,112,0,0,2,-99,0,0,3,43"/>
+  </AuxValues>
+
+  <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
+  <SubComponents>
+    <Container class="javax.swing.JPanel" name="jPanel1">
+      <Properties>
+        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+          <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+            <TitledBorder/>
+          </Border>
+        </Property>
+        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+          <Dimension value="[100, 25]"/>
+        </Property>
+      </Properties>
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+          <BorderConstraints direction="North"/>
+        </Constraint>
+      </Constraints>
+
+      <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout"/>
+      <SubComponents>
+        <Component class="javax.swing.JLabel" name="jLabel1">
+          <Properties>
+            <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
+              <Font name="Tahoma" size="11" style="1"/>
+            </Property>
+            <Property name="horizontalAlignment" type="int" value="0"/>
+            <Property name="text" type="java.lang.String" value="OLAP Details"/>
+          </Properties>
+          <Constraints>
+            <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+              <BorderConstraints direction="Center"/>
+            </Constraint>
+          </Constraints>
+        </Component>
+      </SubComponents>
+    </Container>
+    <Container class="javax.swing.JPanel" name="jPanel2">
+      <Properties>
+        <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+          <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+            <TitledBorder/>
+          </Border>
+        </Property>
+      </Properties>
+      <Constraints>
+        <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
+          <BorderConstraints direction="Center"/>
+        </Constraint>
+      </Constraints>
+
+      <Layout>
+        <DimensionLayout dim="0">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="102" alignment="0" attributes="0">
+                  <Component id="jPanel4" max="32767" attributes="1"/>
+                  <EmptySpace max="-2" attributes="0"/>
+              </Group>
+          </Group>
+        </DimensionLayout>
+        <DimensionLayout dim="1">
+          <Group type="103" groupAlignment="0" attributes="0">
+              <Group type="102" alignment="0" attributes="0">
+                  <Component id="jPanel4" min="-2" max="-2" attributes="0"/>
+                  <EmptySpace max="32767" attributes="0"/>
+              </Group>
+          </Group>
+        </DimensionLayout>
+      </Layout>
+      <SubComponents>
+        <Container class="javax.swing.JPanel" name="jPanel4">
+
+          <Layout>
+            <DimensionLayout dim="0">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" attributes="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <EmptySpace min="10" pref="10" max="10" attributes="0"/>
+                              <Component id="jPanel8" max="32767" attributes="1"/>
+                          </Group>
+                          <Component id="jPanel3" alignment="0" min="-2" max="-2" attributes="1"/>
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="buttonPanel1" min="-2" pref="774" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+            <DimensionLayout dim="1">
+              <Group type="103" groupAlignment="0" attributes="0">
+                  <Group type="102" alignment="0" attributes="0">
+                      <Component id="jPanel8" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="jPanel3" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="buttonPanel1" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
+                  </Group>
+              </Group>
+            </DimensionLayout>
+          </Layout>
+          <SubComponents>
+            <Container class="javax.swing.JPanel" name="jPanel8">
+              <Properties>
+                <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                  <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+                    <TitledBorder title="Olap">
+                      <Color PropertyName="color" blue="0" green="0" red="0" type="rgb"/>
+                    </TitledBorder>
+                  </Border>
+                </Property>
+              </Properties>
+
+              <Layout>
+                <DimensionLayout dim="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                  <Component id="labelDelayCompensation" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelStorageIntegrationTime" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelFirstInputPortNr" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelIPHeaderSize" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelNrTimesInFrame" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelNrBitsPerSample" alignment="0" min="-2" max="-2" attributes="1"/>
+                              </Group>
+                              <Component id="labelStorageStationNames" alignment="0" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                              <Group type="102" attributes="1">
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="inputNrBitsPerSample" alignment="0" min="-2" pref="91" max="-2" attributes="1"/>
+                                      <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
+                                          <Component id="inputNrTimesInFrame" max="32767" attributes="1"/>
+                                          <Component id="inputFirstInputPortNr" max="32767" attributes="1"/>
+                                          <Component id="inputIPHeaderSize" alignment="0" max="32767" attributes="1"/>
+                                          <Component id="inputStorageIntegrationTime" alignment="0" pref="91" max="32767" attributes="1"/>
+                                      </Group>
+                                  </Group>
+                                  <EmptySpace min="-2" pref="45" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="labelSubbandsPerPset" min="-2" max="-2" attributes="0"/>
+                                      <Component id="labelMinIntSteps" min="-2" max="-2" attributes="0"/>
+                                      <Component id="labelEPAHeaderSize" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="labelNrSubbandsPerFrame" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="labelNrSecondsOfBuffer" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Group type="102" attributes="0">
+                                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                              <Component id="inputNrSubbandsPerFrame" alignment="0" pref="91" max="32767" attributes="1"/>
+                                              <Component id="inputMinIntSteps" alignment="0" max="32767" attributes="1"/>
+                                              <Component id="inputEPAHeaderSize" alignment="0" pref="86" max="32767" attributes="1"/>
+                                              <Component id="inputSubbandsPerPset" alignment="0" max="32767" attributes="1"/>
+                                          </Group>
+                                          <EmptySpace min="-2" pref="54" max="-2" attributes="0"/>
+                                          <Component id="labelMajIntSteps" min="-2" max="-2" attributes="0"/>
+                                          <EmptySpace max="-2" attributes="0"/>
+                                          <Component id="inputMajIntSteps" min="-2" pref="76" max="-2" attributes="1"/>
+                                      </Group>
+                                      <Component id="inputNrSecondsOfBuffer" alignment="0" min="-2" pref="91" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="32767" attributes="0"/>
+                              </Group>
+                              <Component id="inputDelayCompensation" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputStorageStationNames" alignment="0" max="32767" attributes="1"/>
+                          </Group>
+                          <EmptySpace pref="24" max="32767" attributes="0"/>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+                <DimensionLayout dim="1">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" alignment="0" attributes="0">
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelFirstInputPortNr" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputFirstInputPortNr" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelStorageIntegrationTime" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputStorageIntegrationTime" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelIPHeaderSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputIPHeaderSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelSubbandsPerPset" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputSubbandsPerPset" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelMinIntSteps" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputMinIntSteps" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="labelMajIntSteps" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputMajIntSteps" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelEPAHeaderSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputEPAHeaderSize" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="labelNrTimesInFrame" min="-2" max="-2" attributes="0"/>
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelNrSubbandsPerFrame" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputNrSubbandsPerFrame" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Group type="103" groupAlignment="3" attributes="0">
+                                      <Component id="labelNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="labelNrSecondsOfBuffer" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      <Component id="inputNrSecondsOfBuffer" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <Component id="inputNrTimesInFrame" alignment="0" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="1" attributes="0">
+                              <Component id="labelDelayCompensation" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputDelayCompensation" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="labelStorageStationNames" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="inputStorageStationNames" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+              </Layout>
+              <SubComponents>
+                <Component class="javax.swing.JLabel" name="labelMinIntSteps">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Minor Integration Steps:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputMinIntSteps">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelMajIntSteps">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Major Integration Steps:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputMajIntSteps">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelEPAHeaderSize">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="EPA Header Size:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputEPAHeaderSize">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelIPHeaderSize">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="IP Header Size:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputIPHeaderSize">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelNrBitsPerSample">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="# Bits per Sample:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputNrBitsPerSample">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelNrTimesInFrame">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="# Times In Frame:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputNrTimesInFrame">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelDelayCompensation">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Delay Compensation:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JCheckBox" name="inputDelayCompensation">
+                  <Properties>
+                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                      <Border info="org.netbeans.modules.form.compat2.border.EmptyBorderInfo">
+                        <EmptyBorder bottom="0" left="0" right="0" top="0"/>
+                      </Border>
+                    </Property>
+                    <Property name="margin" type="java.awt.Insets" editor="org.netbeans.beaninfo.editors.InsetsEditor">
+                      <Insets value="[0, 0, 0, 0]"/>
+                    </Property>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelFirstInputPortNr">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="First InputPort nr:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputFirstInputPortNr">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelNrSubbandsPerFrame">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="# nrSubbandsPerFrame:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputNrSubbandsPerFrame">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelNrSecondsOfBuffer">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="# SecondsOfBuffer:"/>
+                  </Properties>
+                  <AuxValues>
+                    <AuxValue name="JavaCodeGenerator_VariableLocal" type="java.lang.Boolean" value="true"/>
+                    <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="0"/>
+                  </AuxValues>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputNrSecondsOfBuffer">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelSubbandsPerPset">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="Subbands Per Pset:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputSubbandsPerPset">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelStorageIntegrationTime">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="StorageIntegrationTime:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputStorageIntegrationTime">
+                </Component>
+                <Component class="javax.swing.JLabel" name="labelStorageStationNames">
+                  <Properties>
+                    <Property name="text" type="java.lang.String" value="storageStationNames:"/>
+                  </Properties>
+                </Component>
+                <Component class="javax.swing.JTextField" name="inputStorageStationNames">
+                </Component>
+              </SubComponents>
+            </Container>
+            <Container class="javax.swing.JPanel" name="jPanel3">
+
+              <Layout>
+                <DimensionLayout dim="0">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="102" alignment="0" attributes="0">
+                                  <Component id="jPanel6" min="-2" max="-2" attributes="1"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                                  <Component id="jPanel7" max="32767" attributes="0"/>
+                              </Group>
+                              <Component id="jPanel5" alignment="0" max="32767" attributes="1"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+                <DimensionLayout dim="1">
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Group type="102" attributes="0">
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="jPanel7" max="32767" attributes="1"/>
+                              <Component id="jPanel6" alignment="0" min="-2" max="-2" attributes="1"/>
+                          </Group>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="jPanel5" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                </DimensionLayout>
+              </Layout>
+              <SubComponents>
+                <Container class="javax.swing.JPanel" name="jPanel6">
+                  <Properties>
+                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                      <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+                        <TitledBorder title="Olap Conn">
+                          <Border PropertyName="innerBorder" info="null"/>
+                          <Color PropertyName="color" blue="0" green="0" red="0" type="rgb"/>
+                        </TitledBorder>
+                      </Border>
+                    </Property>
+                    <Property name="toolTipText" type="java.lang.String" value="Olap Conn"/>
+                  </Properties>
+
+                  <Layout>
+                    <DimensionLayout dim="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="1">
+                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                  <Component id="labelInputBGLProcBaseFileName" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelInputBGLProcPorts" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelInputBGLProcTransport" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelStationInputTransport" alignment="1" max="32767" attributes="1"/>
+                                  <Component id="labelBGLProcStorageTransport" alignment="1" max="32767" attributes="1"/>
+                                  <Component id="labelBGLProcStoragePorts" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="labelBGLProcStorageBaseFileName" alignment="0" max="32767" attributes="1"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="15" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="inputBGLProcStorageBaseFileName" pref="240" max="32767" attributes="0"/>
+                                  <Component id="inputBGLProcStoragePorts" pref="240" max="32767" attributes="0"/>
+                                  <Component id="inputInputBGLProcBaseFileName" pref="240" max="32767" attributes="0"/>
+                                  <Component id="inputInputBGLProcPorts" pref="240" max="32767" attributes="0"/>
+                                  <Component id="inputInputBGLProcTransport" min="-2" pref="111" max="-2" attributes="0"/>
+                                  <Component id="inputStationInputTransport" alignment="0" min="-2" pref="111" max="-2" attributes="0"/>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="inputBGLProcStorageTransport" min="-2" pref="111" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="1">
+                              <Component id="labelAMCServerHost" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="11" max="-2" attributes="0"/>
+                              <Component id="inputAMCServerHost" min="-2" pref="207" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="labelAMCServerPort" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace pref="8" max="32767" attributes="0"/>
+                              <Component id="inputAMCServerPort" min="-2" pref="68" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                    <DimensionLayout dim="1">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelAMCServerHost" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputAMCServerHost" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelAMCServerPort" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputAMCServerPort" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelStationInputTransport" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputStationInputTransport" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelInputBGLProcTransport" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputInputBGLProcTransport" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelInputBGLProcPorts" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputInputBGLProcPorts" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelInputBGLProcBaseFileName" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputInputBGLProcBaseFileName" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelBGLProcStorageTransport" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputBGLProcStorageTransport" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelBGLProcStoragePorts" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputBGLProcStoragePorts" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelBGLProcStorageBaseFileName" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputBGLProcStorageBaseFileName" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="20" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                  </Layout>
+                  <SubComponents>
+                    <Component class="javax.swing.JLabel" name="labelAMCServerHost">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="AMC Host:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputAMCServerHost">
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelAMCServerPort">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="AMC port:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputAMCServerPort">
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelStationInputTransport">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Station-&gt;Input Transport:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JComboBox" name="inputStationInputTransport">
+                      <Properties>
+                        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                          <StringArray count="4">
+                            <StringItem index="0" value="Item 1"/>
+                            <StringItem index="1" value="Item 2"/>
+                            <StringItem index="2" value="Item 3"/>
+                            <StringItem index="3" value="Item 4"/>
+                          </StringArray>
+                        </Property>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelInputBGLProcTransport">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Input-&gt;BGLProc Transport:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JComboBox" name="inputInputBGLProcTransport">
+                      <Properties>
+                        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                          <StringArray count="4">
+                            <StringItem index="0" value="Item 1"/>
+                            <StringItem index="1" value="Item 2"/>
+                            <StringItem index="2" value="Item 3"/>
+                            <StringItem index="3" value="Item 4"/>
+                          </StringArray>
+                        </Property>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelBGLProcStorageTransport">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="BGLProc-&gt;Storage Transport:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JComboBox" name="inputBGLProcStorageTransport">
+                      <Properties>
+                        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                          <StringArray count="4">
+                            <StringItem index="0" value="Item 1"/>
+                            <StringItem index="1" value="Item 2"/>
+                            <StringItem index="2" value="Item 3"/>
+                            <StringItem index="3" value="Item 4"/>
+                          </StringArray>
+                        </Property>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelInputBGLProcPorts">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Input-&gt;BGLProc Ports:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputInputBGLProcPorts">
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelInputBGLProcBaseFileName">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Input-&gt;BGLProc BaseFile:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputInputBGLProcBaseFileName">
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelBGLProcStoragePorts">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="BGLProc-&gt;Storage Ports:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputBGLProcStoragePorts">
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelBGLProcStorageBaseFileName">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="BGLProc-&gt;Storage BaseFile:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputBGLProcStorageBaseFileName">
+                    </Component>
+                  </SubComponents>
+                </Container>
+                <Container class="javax.swing.JPanel" name="jPanel7">
+                  <Properties>
+                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                      <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+                        <TitledBorder title="BGLProc">
+                          <Color PropertyName="color" blue="0" green="0" red="0" type="rgb"/>
+                        </TitledBorder>
+                      </Border>
+                    </Property>
+                    <Property name="toolTipText" type="java.lang.String" value="BGLProc"/>
+                  </Properties>
+
+                  <Layout>
+                    <DimensionLayout dim="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                      <Component id="labelNrPPFTaps" alignment="0" min="-2" max="-2" attributes="0"/>
+                                      <Component id="labelMaxConcurrentComm" alignment="0" pref="131" max="32767" attributes="1"/>
+                                  </Group>
+                                  <Component id="labelNodesPerPset" alignment="0" min="-2" max="-2" attributes="1"/>
+                                  <Component id="labelPsetsPerCell" alignment="0" pref="131" max="32767" attributes="1"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                  <Component id="inputNodesPerPset" alignment="0" pref="143" max="32767" attributes="1"/>
+                                  <Component id="inputPsetsPerCell" alignment="0" pref="143" max="32767" attributes="1"/>
+                                  <Component id="inputMaxConcurrentComm" alignment="0" max="32767" attributes="1"/>
+                                  <Component id="inputNrPPFTaps" alignment="0" max="32767" attributes="1"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="53" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                    <DimensionLayout dim="1">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelMaxConcurrentComm" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputMaxConcurrentComm" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="12" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelNrPPFTaps" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputNrPPFTaps" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="21" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelNodesPerPset" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputNodesPerPset" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelPsetsPerCell" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputPsetsPerCell" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace pref="84" max="32767" attributes="0"/>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                  </Layout>
+                  <SubComponents>
+                    <Component class="javax.swing.JLabel" name="labelMaxConcurrentComm">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Max Concurrent Comm:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputMaxConcurrentComm">
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelNrPPFTaps">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="# PPFTaps:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputNrPPFTaps">
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelPsetsPerCell">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="# Psets per Cell:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JComboBox" name="inputPsetsPerCell">
+                      <Properties>
+                        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                          <StringArray count="4">
+                            <StringItem index="0" value="Item 1"/>
+                            <StringItem index="1" value="Item 2"/>
+                            <StringItem index="2" value="Item 3"/>
+                            <StringItem index="3" value="Item 4"/>
+                          </StringArray>
+                        </Property>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelNodesPerPset">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="# Nodes per Pset:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JComboBox" name="inputNodesPerPset">
+                      <Properties>
+                        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                          <StringArray count="4">
+                            <StringItem index="0" value="Item 1"/>
+                            <StringItem index="1" value="Item 2"/>
+                            <StringItem index="2" value="Item 3"/>
+                            <StringItem index="3" value="Item 4"/>
+                          </StringArray>
+                        </Property>
+                      </Properties>
+                    </Component>
+                  </SubComponents>
+                </Container>
+                <Container class="javax.swing.JPanel" name="jPanel5">
+                  <Properties>
+                    <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
+                      <Border info="org.netbeans.modules.form.compat2.border.TitledBorderInfo">
+                        <TitledBorder title="Delay Compensation">
+                          <Border PropertyName="innerBorder" info="null"/>
+                          <Color PropertyName="color" blue="0" green="0" red="0" type="rgb"/>
+                        </TitledBorder>
+                      </Border>
+                    </Property>
+                    <Property name="toolTipText" type="java.lang.String" value="Delay Compensation"/>
+                  </Properties>
+
+                  <Layout>
+                    <DimensionLayout dim="0">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="labelHostName" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace min="-2" pref="35" max="-2" attributes="0"/>
+                                      <Component id="inputHostName" min="-2" pref="331" max="-2" attributes="1"/>
+                                  </Group>
+                                  <Group type="102" alignment="0" attributes="0">
+                                      <Component id="labelConverterType" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace min="-2" pref="7" max="-2" attributes="0"/>
+                                      <Component id="inputConverterType" min="-2" pref="140" max="-2" attributes="0"/>
+                                  </Group>
+                              </Group>
+                              <EmptySpace min="-2" pref="23" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="labelPositionType" alignment="0" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelPorts" alignment="0" min="-2" pref="45" max="-2" attributes="1"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="0" attributes="0">
+                                  <Component id="inputPorts" alignment="0" pref="240" max="32767" attributes="1"/>
+                                  <Component id="inputPositionType" alignment="0" min="-2" pref="122" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                    <DimensionLayout dim="1">
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelHostName" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputHostName" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelPorts" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputPorts" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace min="-2" pref="15" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="labelConverterType" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputConverterType" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="labelPositionType" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="inputPositionType" alignment="3" min="-2" max="-2" attributes="0"/>
+                              </Group>
+                              <EmptySpace max="32767" attributes="0"/>
+                          </Group>
+                      </Group>
+                    </DimensionLayout>
+                  </Layout>
+                  <SubComponents>
+                    <Component class="javax.swing.JLabel" name="labelHostName">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="HostName:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputHostName">
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelPorts">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Ports:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputPorts">
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelConverterType">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="Converter Type:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JComboBox" name="inputConverterType">
+                      <Properties>
+                        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+                          <StringArray count="4">
+                            <StringItem index="0" value="Item 1"/>
+                            <StringItem index="1" value="Item 2"/>
+                            <StringItem index="2" value="Item 3"/>
+                            <StringItem index="3" value="Item 4"/>
+                          </StringArray>
+                        </Property>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JLabel" name="labelPositionType">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="PositionType:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputPositionType">
+                    </Component>
+                  </SubComponents>
+                </Container>
+              </SubComponents>
+            </Container>
+            <Component class="nl.astron.lofar.sas.otbcomponents.ButtonPanel" name="buttonPanel1">
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonPanel1ActionPerformed"/>
+              </Events>
+            </Component>
+          </SubComponents>
+        </Container>
+      </SubComponents>
+    </Container>
+  </SubComponents>
+</Form>

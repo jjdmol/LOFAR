@@ -159,36 +159,40 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     public void popupMenuHandler(java.awt.event.ActionEvent evt) {
         if (evt.getActionCommand().equals("Create ParSet File")) {
             logger.debug("Create ParSet File");
-            int aTreeID=itsMainFrame.getSharedVars().getTreeID();
-            if (fc == null) {
-                fc = new JFileChooser();
-            }
-            // try to get a new filename to write the parsetfile to
-            if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
-                try {
-                    File aFile = fc.getSelectedFile();
-                    
-                    // create filename that can be used at the remote site    
-                    String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
-                    
-                    // write the parset
-                    itsOtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
-                    
-                    //obtain the remote file
-                    byte[] dldata = itsOtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+            saveParSet();
+        }
+    }
 
-                    BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
-                    output.write(dldata,0,dldata.length);
-                    output.flush();
-                    output.close();
-                    logger.debug("File written to: " + aFile.getPath());
-                } catch (RemoteException ex) {
-                    logger.debug("exportTree failed : " + ex);
-                } catch (FileNotFoundException ex) {
-                    logger.debug("Error during newPICTree creation: "+ ex);
-                } catch (IOException ex) {
-                    logger.debug("Error during newPICTree creation: "+ ex);
-                }
+    private void saveParSet() {
+        int aTreeID=itsMainFrame.getSharedVars().getTreeID();
+        if (fc == null) {
+            fc = new JFileChooser();
+        }
+        // try to get a new filename to write the parsetfile to
+        if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try {
+                File aFile = fc.getSelectedFile();
+                    
+                // create filename that can be used at the remote site    
+                String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
+                    
+                // write the parset
+                itsOtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
+                    
+                //obtain the remote file
+                byte[] dldata = itsOtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+
+                BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
+                output.write(dldata,0,dldata.length);
+                output.flush();
+                output.close();
+                logger.debug("File written to: " + aFile.getPath());
+            } catch (RemoteException ex) {
+                logger.debug("exportTree failed : " + ex);
+            } catch (FileNotFoundException ex) {
+                logger.debug("Error during newPICTree creation: "+ ex);
+            } catch (IOException ex) {
+                logger.debug("Error during newPICTree creation: "+ ex);
             }
         }
     }
@@ -217,6 +221,10 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 logger.debug("ParSetViewPanel: Error getting treeInfo/treetype" + ex);
                 itsTreeType="";
             }
+            
+            // Fill the table
+            
+            getParSet();
 
 
         } else {
@@ -231,7 +239,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   enabled     true/false enabled/disabled
      */
     public void enableButtons(boolean enabled) {
-        this.GetParsetButton.setEnabled(enabled);
+        this.SaveParsetButton.setEnabled(enabled);
     }
     
     /** Sets the buttons visible/invisible
@@ -239,7 +247,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   visible     true/false visible/invisible
      */
     public void setButtonsVisible(boolean visible) {
-        this.GetParsetButton.setVisible(visible);
+        this.SaveParsetButton.setVisible(visible);
     }
 
     /** Enables/disables the complete form
@@ -293,15 +301,15 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
      */
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
-        GetParsetButton = new javax.swing.JButton();
+        SaveParsetButton = new javax.swing.JButton();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
 
-        GetParsetButton.setText("Get Parset");
-        GetParsetButton.addActionListener(new java.awt.event.ActionListener() {
+        SaveParsetButton.setText("Save Parset to File");
+        SaveParsetButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                GetParsetButtonActionPerformed(evt);
+                SaveParsetButtonActionPerformed(evt);
             }
         });
 
@@ -341,8 +349,8 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(layout.createSequentialGroup()
-                        .add(GetParsetButton)
-                        .addContainerGap(871, Short.MAX_VALUE))
+                        .add(SaveParsetButton)
+                        .addContainerGap(833, Short.MAX_VALUE))
                     .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
                         .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
                             .add(org.jdesktop.layout.GroupLayout.LEADING, jLabel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 845, Short.MAX_VALUE)
@@ -357,14 +365,14 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 407, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(GetParsetButton)
+                .add(SaveParsetButton)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void GetParsetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GetParsetButtonActionPerformed
-        getParSet();
-    }//GEN-LAST:event_GetParsetButtonActionPerformed
+    private void SaveParsetButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SaveParsetButtonActionPerformed
+        saveParSet();
+    }//GEN-LAST:event_SaveParsetButtonActionPerformed
     
     private jOTDBnode itsNode        = null;
     private MainFrame  itsMainFrame  = null;
@@ -373,7 +381,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     private JFileChooser fc          = null;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton GetParsetButton;
+    private javax.swing.JButton SaveParsetButton;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
