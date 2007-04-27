@@ -70,11 +70,38 @@ GCFEvent::TResult tGSAService::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 	case F_ENTRY:
 		break;
 
-	case F_INIT: 
+	case F_INIT:  {
 		LOG_DEBUG("Creating a Service Class");
 		_pService = new Service();
+
+		// test PVSSInfo class
+		int8	sysID;
+		string	sysName;
+		LOG_DEBUG_STR("LocalSystemName: " << GCFPVSSInfo::getLocalSystemName());
+		LOG_DEBUG_STR("LocalSystemID  : " << (sysID = GCFPVSSInfo::getLocalSystemId()));
+		LOG_DEBUG_STR("ProjectName    : " << GCFPVSSInfo::getProjectName());
+		LOG_DEBUG_STR("SystemName(" << sysID << ") : " << (sysName = GCFPVSSInfo::getSystemName(sysID)));
+		LOG_DEBUG_STR("SystemID(" << sysName << ") : " << GCFPVSSInfo::getSysId(sysName));
+		LOG_DEBUG_STR("Own Man Num    : " << GCFPVSSInfo::getOwnManNum());
+		LOG_DEBUG_STR("Last Evt ManNum: " << GCFPVSSInfo::getLastEventManNum());
+		LOG_DEBUG_STR("typeExist(ExampleDP_Bit): " << (GCFPVSSInfo::typeExists("ExampleDP_Bit") ? "Yes" : "no"));
+		LOG_DEBUG_STR("typeExist(IsErNiet): " << (GCFPVSSInfo::typeExists("IsErNiet") ? "Yes" : "no"));
+		LOG_DEBUG_STR("propExist(testBit): " << (GCFPVSSInfo::propExists("testBit") ? "Yes" : "no"));
+		LOG_DEBUG_STR("propExist(IsErNiet): " << (GCFPVSSInfo::propExists("IsErNiet") ? "Yes" : "no"));
+
+		if (GCFPVSSInfo::propExists("testBit")) {
+			_pService->dpDelete("testBit");
+		}
+		if (GCFPVSSInfo::propExists("testInt")) {
+			_pService->dpDelete("testInt");
+		}
+		itsTimerPort->setTimer(1.0);
+	}
+	break;
+
+	case F_TIMER:
 		TRAN(tGSAService::test1);
-		break;
+	break;
 
 	default:
 		status = GCFEvent::NOT_HANDLED;
