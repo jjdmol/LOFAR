@@ -32,7 +32,7 @@ $$
                     SELECT COUNT(1)
                         FROM
                         (
-                            SELECT COUNT(1)
+                            SELECT 1
                                 FROM blackboard.result
                                 WHERE node = inet_client_addr()
                                 LIMIT 1
@@ -45,40 +45,51 @@ $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION blackboard.command_queue_empty()
-RETURNS BOOL AS
-$$
-    SELECT
-        (
-            SELECT COUNT(1)
-                FROM
-                (
-                    SELECT 1
-                        FROM blackboard.command
-                        LIMIT 1
-                )
-                AS tmp
-        ) = 0;
-$$
-LANGUAGE SQL;
+--CREATE OR REPLACE FUNCTION blackboard.command_queue_empty()
+--RETURNS BOOL AS
+--$$
+--    SELECT
+--        (
+--            SELECT COUNT(1)
+--                FROM
+--                (
+--                    SELECT 1
+--                        FROM blackboard.command
+--                        LIMIT 1
+--                )
+--                AS tmp
+--        ) = 0;
+--$$
+--LANGUAGE SQL;
 
 
 -- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
 CREATE OR REPLACE FUNCTION blackboard.get_next_command_id()
 RETURNS INTEGER AS
 $$
-    SELECT id
-        FROM blackboard.command
-        WHERE id NOT IN
-            (
-                SELECT command_id
-                    FROM blackboard.result
-                    WHERE node = inet_client_addr()
-            )
-        ORDER BY id
-        LIMIT 1;
+    DECLARE
+        _id INTEGER;
+    BEGIN
+        SELECT id
+            INTO _id
+            FROM blackboard.command
+            WHERE id NOT IN
+                (
+                    SELECT command_id
+                        FROM blackboard.result
+                        WHERE node = inet_client_addr()
+                )
+            ORDER BY id
+            LIMIT 1;
+        
+        IF FOUND THEN
+            RETURN _id;
+        END IF;
+        
+        RETURN 0;
+    END;        
 $$
-LANGUAGE SQL;
+LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION blackboard.get_next_command()
@@ -110,7 +121,7 @@ CREATE OR REPLACE FUNCTION blackboard.set_strategy
 RETURNS BOOLEAN AS
 $$
     BEGIN
-        IF (SELECT COUNT(*) FROM blackboard.strategy) <> 0 THEN
+        IF (SELECT COUNT(1) FROM blackboard.strategy) <> 0 THEN
             RETURN FALSE;
         END IF;
 
@@ -268,13 +279,6 @@ $$
 LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION blackboard.get_nextchunk_args(_command_id INTEGER)
-RETURNS VOID AS
-$$
-$$
-LANGUAGE SQL;
-
-
 CREATE OR REPLACE FUNCTION blackboard.add_nextchunk_command()
 RETURNS VOID AS
 $$
@@ -283,6 +287,13 @@ $$
     END;
 $$
 LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION blackboard.get_nextchunk_args(_command_id INTEGER)
+RETURNS VOID AS
+$$
+$$
+LANGUAGE SQL;
 
 
 CREATE OR REPLACE FUNCTION blackboard.add_predict_command
@@ -425,20 +436,19 @@ CREATE OR REPLACE FUNCTION blackboard.add_result
     (_command_id INTEGER,
     _result_code INTEGER,
     _message TEXT)
-RETURNS VOID AS
+RETURNS BOOL AS
 $$
-    DECLARE
-        last_id INTEGER;
     BEGIN
-        IF blackboard.command_queue_empty()
-            OR _command_id != blackboard.get_next_command_id()
+        IF _command_id > 0
+            AND _command_id = blackboard.get_next_command_id()
         THEN
-            RAISE EXCEPTION
-                'Attempt to add result for a command that is not current';
+            INSERT INTO blackboard.result(command_id, result_code, message)
+                VALUES (_command_id, _result_code, _message);
+            
+            RETURN FOUND;
         END IF;
-
-        INSERT INTO blackboard.result(command_id, result_code, message)
-            VALUES (_command_id, _result_code, _message);
+        
+        RETURN FALSE;
     END;
 $$
 LANGUAGE plpgsql;
