@@ -50,7 +50,7 @@ public abstract class LofarUtils {
             return aS;
         }
 
-        String s[] = aName.split("[.]");
+        String s[] = aName.split("\\.");
         
         if (s.length>0) {
             return s[s.length-1];
@@ -65,7 +65,7 @@ public abstract class LofarUtils {
         if (aName == null || aName.length() < 1) {
             return aS;
         }
-        String s[] = aName.split("[.]");
+        String s[] = aName.split("\\.");
         
         if (s.length>0) {
             aS=s[0];
@@ -176,7 +176,7 @@ public abstract class LofarUtils {
             aList = aList.substring(0,aList.length()-1);
         }
         if(!aList.equals("")){
-            String[] aS=aList.split(",");
+            String[] aS=aList.split("\\,");
             for (int i=0; i< aS.length;i++) {
                 if(removeQuotes){
                     itsModel.addElement(aS[i].substring(1,aS[i].length()-1));
@@ -233,7 +233,7 @@ public abstract class LofarUtils {
             aList = aList.substring(0,aList.length()-1);
         }
         if(!aList.equals("")){
-            String[] aS=aList.split(",");
+            String[] aS=aList.split("\\,");
             String[] toBeSelectedValues = new String[aS.length];
             for (int i=0; i< aS.length;i++) {
                 if(removeQuotes){
@@ -277,14 +277,14 @@ public abstract class LofarUtils {
             return;
         }
         // first strip input on ; because after the ; a default choice has been given.
-        String[] stripped = aS.split("[;]");
+        String[] stripped = aS.split("\\;");
         String defaultChoice = "";
         if (stripped.length > 1) {
             defaultChoice = stripped[1];
         }
         
         // now determine all possible choices and fill the combobox
-        String[] choices = stripped[0].split("[|]");
+        String[] choices = stripped[0].split("\\|");
         for (int i=0; i< choices.length;i++) {
             if (!choices[i].equals("")) {
                 aComboBox.addItem(choices[i]);
