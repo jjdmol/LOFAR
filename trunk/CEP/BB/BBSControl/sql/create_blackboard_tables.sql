@@ -1,6 +1,6 @@
 CREATE TABLE blackboard.strategy
 (
-    state                   TEXT                DEFAULT 'PROCESSING',
+    state                   TEXT                DEFAULT 'UNDEFINED',
 
     "DataSet"               TEXT                NOT NULL,
 
@@ -39,6 +39,7 @@ CREATE TABLE blackboard.single_step_args
                                                 ON DELETE CASCADE,
 
     "Name"                  TEXT                NOT NULL,
+    "Operation"             TEXT                NOT NULL,
 
     "Baselines.Station1"    TEXT                DEFAULT '[]',
     "Baselines.Station2"    TEXT                DEFAULT '[]',
