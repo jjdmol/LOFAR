@@ -82,7 +82,9 @@ CREATE TABLE blackboard.result
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node            INET                        DEFAULT inet_client_addr(),
     result_code     INTEGER                     NOT NULL,
-    message         TEXT                        NOT NULL
+    message         TEXT                        NOT NULL,
+    
+    UNIQUE (command_id, node)
 );
 
 
