@@ -331,8 +331,10 @@ int MSCreate::addField (double ra, double dec)
   MVDirection radec (Quantity(ra,"rad"), Quantity(dec,"rad"));
   MDirection indir(radec, MDirection::J2000);
   if (itsPhaseDir == 0) {
-    itsPhaseDir = new MDirection(indir);
+    itsPhaseDir = new Block<MDirection>();
   }
+  itsPhaseDir->resize (itsNrField+1);
+  (*itsPhaseDir)[itsNrField] = indir;
   Vector<MDirection> outdir(1);
   outdir(0) = indir;
   // Put the direction into the FIELD subtable.
@@ -530,9 +532,6 @@ void MSCreate::updateTimes()
 
 void MSCreate::writeTimeStep()
 {
-  // Only one field can be used.
-  ASSERT(itsNrField==1);
-  const int fieldId=0;
   // Make sure all bands are equally sized.
   for (int i=1; i<itsNrBand; ++i) {
     ASSERT ((*itsNrPol)[i] == (*itsNrPol)[0]);
@@ -551,7 +550,7 @@ void MSCreate::writeTimeStep()
 
   // Add the number of rows needed.
   int rowNumber = itsMS->nrow();
-  itsMS->addRow (nrbasel*itsNrBand);
+  itsMS->addRow (nrbasel*itsNrBand*itsNrField);
   Array<Float> sigma(IPosition(1, shape(0)));
   sigma = 1;
   Array<Float> weight(IPosition(1, shape(0)));
@@ -562,46 +561,48 @@ void MSCreate::writeTimeStep()
   // First store time in frame.
   Quantity qtime(time, "s");
   itsFrame->set (MEpoch(qtime, MEpoch::UTC));
-  itsFrame->set (*itsPhaseDir);
-  vector<Vector<Double> > antuvw(itsNrAnt);
-  for (int j=0; j<itsNrAnt; ++j) {
-    MBaseline& mbl = (*itsAntBL)[j];
-    mbl.getRefPtr()->set(*itsFrame);      // attach frame
-    MBaseline::Convert mcvt(mbl, MBaseline::J2000);
-    MVBaseline bas = mcvt().getValue();
-    MVuvw jvguvw(bas, itsPhaseDir->getValue());
-    antuvw[j] = Muvw(jvguvw, Muvw::J2000).getValue().getVector();
-  }
-
-  Vector<double> myuvw(3);
-  for (int band=0; band<itsNrBand; ++band) {
-    defData = Complex(float(band), float(itsNrTimes));
+  for (int field=0; field<itsNrField; ++field) {
+    itsFrame->set ((*itsPhaseDir)[field]);
+    vector<Vector<Double> > antuvw(itsNrAnt);
     for (int j=0; j<itsNrAnt; ++j) {
-      int st = (itsWriteAutoCorr ? j : j+1);
-      for (int i=st; i<itsNrAnt; ++i) {
-	myuvw = antuvw[i] - antuvw[j];
-	itsMSCol->data().put(rowNumber, defData);
-	itsMSCol->flag().put(rowNumber, defFlags);
-	itsMSCol->flagRow().put (rowNumber, False);
-	itsMSCol->time().put (rowNumber, time);
-	itsMSCol->antenna1().put (rowNumber, j);
-	itsMSCol->antenna2().put (rowNumber, i);
-	itsMSCol->feed1().put (rowNumber, 0);
-	itsMSCol->feed2().put (rowNumber, 0);
-	itsMSCol->dataDescId().put (rowNumber, band);
-	itsMSCol->processorId().put (rowNumber, 0);
-	itsMSCol->fieldId().put (rowNumber, fieldId);
-	itsMSCol->interval().put (rowNumber, itsTimeStep);
-	itsMSCol->exposure().put (rowNumber, itsTimeStep);
-	itsMSCol->timeCentroid().put (rowNumber, time);
-	itsMSCol->scanNumber().put (rowNumber, 0);
-	itsMSCol->arrayId().put (rowNumber, 0);
-	itsMSCol->observationId().put (rowNumber, 0);
-	itsMSCol->stateId().put (rowNumber, 0);
-	itsMSCol->uvw().put (rowNumber, myuvw);
-	itsMSCol->weight().put (rowNumber, weight);
-	itsMSCol->sigma().put (rowNumber, sigma);
-	rowNumber++;
+      MBaseline& mbl = (*itsAntBL)[j];
+      mbl.getRefPtr()->set(*itsFrame);      // attach frame
+      MBaseline::Convert mcvt(mbl, MBaseline::J2000);
+      MVBaseline bas = mcvt().getValue();
+      MVuvw jvguvw(bas, (*itsPhaseDir)[field].getValue());
+      antuvw[j] = Muvw(jvguvw, Muvw::J2000).getValue().getVector();
+    }
+    
+    Vector<double> myuvw(3);
+    for (int band=0; band<itsNrBand; ++band) {
+      defData = Complex(float(band), float(itsNrTimes));
+      for (int j=0; j<itsNrAnt; ++j) {
+	int st = (itsWriteAutoCorr ? j : j+1);
+	for (int i=st; i<itsNrAnt; ++i) {
+	  myuvw = antuvw[i] - antuvw[j];
+	  itsMSCol->data().put(rowNumber, defData);
+	  itsMSCol->flag().put(rowNumber, defFlags);
+	  itsMSCol->flagRow().put (rowNumber, False);
+	  itsMSCol->time().put (rowNumber, time);
+	  itsMSCol->antenna1().put (rowNumber, j);
+	  itsMSCol->antenna2().put (rowNumber, i);
+	  itsMSCol->feed1().put (rowNumber, 0);
+	  itsMSCol->feed2().put (rowNumber, 0);
+	  itsMSCol->dataDescId().put (rowNumber, band);
+	  itsMSCol->processorId().put (rowNumber, 0);
+	  itsMSCol->fieldId().put (rowNumber, field);
+	  itsMSCol->interval().put (rowNumber, itsTimeStep);
+	  itsMSCol->exposure().put (rowNumber, itsTimeStep);
+	  itsMSCol->timeCentroid().put (rowNumber, time);
+	  itsMSCol->scanNumber().put (rowNumber, 0);
+	  itsMSCol->arrayId().put (rowNumber, 0);
+	  itsMSCol->observationId().put (rowNumber, 0);
+	  itsMSCol->stateId().put (rowNumber, 0);
+	  itsMSCol->uvw().put (rowNumber, myuvw);
+	  itsMSCol->weight().put (rowNumber, weight);
+	  itsMSCol->sigma().put (rowNumber, sigma);
+	  rowNumber++;
+	}
       }
     }
   }
@@ -632,14 +633,14 @@ void MSCreate::writeTimeStep2()
   // First store time in frame.
   Quantity qtime(time, "s");
   itsFrame->set (MEpoch(qtime, MEpoch::UTC));
-  itsFrame->set (*itsPhaseDir);
+  itsFrame->set ((*itsPhaseDir)[0]);
   vector<Vector<Double> > antuvw(itsNrAnt);
   for (int j=0; j<itsNrAnt; ++j) {
     MBaseline& mbl = (*itsAntBL)[j];
     mbl.getRefPtr()->set(*itsFrame);      // attach frame
     MBaseline::Convert mcvt(mbl, MBaseline::J2000);
     MVBaseline bas = mcvt().getValue();
-    MVuvw jvguvw(bas, itsPhaseDir->getValue());
+    MVuvw jvguvw(bas, (*itsPhaseDir)[0].getValue());
     antuvw[j] = Muvw(jvguvw, Muvw::J2000).getValue().getVector();
   }
     

@@ -66,7 +66,6 @@ namespace LOFAR {
     addField ("TileSizeRest", BlobField<int>(1));
     addField ("Freqs", BlobField<double>(1, 2));
     addField ("Times", BlobField<double>(1, 2));
-    addField ("Pos",   BlobField<double>(1, 2));
     // Create the data blob (which calls fillDataPointers).
     createDataBlock();
     // Set default tile sizes.
@@ -84,24 +83,29 @@ namespace LOFAR {
     itsTileSizeRest = getData<int> ("TileSizeRest");
     itsFreqs = getData<double> ("Freqs");
     itsTimes = getData<double> ("Times");
-    itsPos   = getData<double> ("Pos");
   }
 
   void DH_MSMake::fillExtra (const string& msName,
+			     const Array<double>& ra,
+			     const Array<double>& dec,
 			     const Array<double>& antPos,
 			     const Array<String>& antNames,
 			     bool writeAutoCorr)
   {
-    createExtraBlob() << msName << antPos << antNames << writeAutoCorr;
+    createExtraBlob() << msName << ra << dec
+		      << antPos << antNames << writeAutoCorr;
   }
 
   void DH_MSMake::getExtra (string& msName,
+			    Array<double>& ra,
+			    Array<double>& dec,
 			    Array<double>& antPos,
 			    Array<String>& antNames,
 			    bool& writeAutoCorr)
   {
     BlobIStream& bis = getExtraBlob();
-    bis >> msName >> antPos >> antNames >> writeAutoCorr;
+    bis >> msName >> ra >> dec
+	>> antPos >> antNames >> writeAutoCorr;
     bis.getEnd();
   }
 
