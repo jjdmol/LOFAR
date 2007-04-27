@@ -80,7 +80,13 @@ public class ResultPanelHelper {
         itsVector = new Vector<String>();
         itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ObservationPanel");
         itsPanelMap.put("Observation",itsVector);
-        
+        addParSetAndLogPanels();
+
+        //OLAP
+        itsVector = new Vector<String>();
+        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.OlapPanel");
+        itsPanelMap.put("OLAP",itsVector);        
+        addParSetAndLogPanels();
     }
     
     
@@ -89,6 +95,10 @@ public class ResultPanelHelper {
         itsVector.add("nl.astron.lofar.sas.otbcomponents.NodeViewPanel");
         //generic parameter panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParameterViewPanel");
+        addParSetAndLogPanels();
+    }
+    
+    private void addParSetAndLogPanels() {
         //generic parset view panel
         itsVector.add("nl.astron.lofar.sas.otbcomponents.ParSetViewPanel");
         //generic logging panel
