@@ -46,6 +46,7 @@ bldtest=0
 check=0
 checktool=
 install=2
+dist=0
 distcheck=0
 rpm=0
 skipbuilt=0
@@ -153,7 +154,13 @@ do
   elif [ "$1" = -noinstall ]; then
     shift
     install=0
-  elif [ "$1" = -distcheck ]; then
+  elif [ "$1" = -dist ]; then
+    shift
+    dist=1
+  elif [ "$1" = -nodist ]; then
+    shift
+    dist=0
+  elif [ "$1" = -dist ]; then
     shift
     distcheck=1
   elif [ "$1" = -nodistcheck ]; then
@@ -207,7 +214,7 @@ if test $# -lt 1; then
   echo ' rubbuild [-srcdir] [-build variant] [-skipbuilt] [-bg]'
   echo '          [-conf] [-confopt string] [-k] [-j<option>]'
   echo '          [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-install]'
-  echo '          [-distcheck] [-rpm]'
+  echo '          [-dist] [-distcheck] [-rpm]'
   echo '          package1 ...'
   exit 1
 fi
@@ -277,8 +284,8 @@ fi
 # dorubbuild writes the build output to a log file.
 if [ $bg = 1 ]; then
   echo "Building packages on `uname -n` in $buildvarpr in the background"
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$distcheck" "$rpm" $pkgs >> /dev/null 2>&1 &
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$dist" "$distcheck" "$rpm" $pkgs >> /dev/null 2>&1 &
 else
   echo "Building packages in $buildvarpr ..."
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$distcheck" "$rpm" $pkgs
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$dist" "$distcheck" "$rpm" $pkgs
 fi

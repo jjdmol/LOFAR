@@ -52,6 +52,8 @@ checktool=$1
 shift
 install=$1
 shift
+dist=$1
+shift
 distcheck=$1
 shift
 rpm=$1
@@ -112,19 +114,22 @@ if [ $buildmake = 1 ]; then
   fi
   if [ $check = 1 ]; then
     if [ "$checktool" = "" ]; then
-      postmake="$postmake && make $kstr check "
+      postmake="$postmake && make $kstr check"
     else
-      postmake="$postmake && make $kstr CHECKTOOL='$checktool' check "
+      postmake="$postmake && make $kstr CHECKTOOL='$checktool' check"
     fi
   fi
   if [ $install = 1 ]; then
-    postmake="$postmake && make $kstr install "
+    postmake="$postmake && make $kstr install"
+  fi
+  if [ $dist = 1 ]; then
+    postmake="$postmake && make $kstr dist"
   fi
   if [ $distcheck = 1 ]; then
-    postmake="$postmake && make $kstr distcheck "
+    postmake="$postmake && make $kstr distcheck"
   fi
   if [ $rpm = 1 ]; then
-    postmake="$postmake && make $kstr rpm "
+    postmake="$postmake && make $kstr rpm"
   fi
 fi
 
@@ -150,6 +155,7 @@ do
   fi
   echo " *** Building package $pkg ***" | tee -a $logfile
 
+  pkgb=`basename $pkg`
   if [ "$builddir" = "." ]; then
     initcmd="cd $pkg && mkdir -p build/$variant && cd build/$variant"
   else
@@ -161,12 +167,15 @@ do
   if [ $clean = 2 ]; then
     premake="make distclean && $srcdir/$pkg/lofarconf $confopt && "
   fi
-  echo "($initcmd && $confcmd $premake $mainmake $postmake;)" >> $logfile
+  if [ $dist = 1 ]; then
+    postmakex="$postmake && mkdir -p $srcdir/installed/$variant/dist && cp $pkgb-*.tar.gz $srcdir/installed/$variant/dist"
+  fi
+  echo "($initcmd && $confcmd $premake $mainmake $postmakex;)" >> $logfile
   if [ $buildmake = 1 ]; then
-    eval "($initcmd && $confcmd $premake $mainmake $postmake && echo $pkg '# built at' `date` >> $srcdir/$resfile;)" >> $logfile 2>&1
+    eval "($initcmd && $confcmd $premake $mainmake $postmakex && echo $pkg '# built at' `date` >> $srcdir/$resfile;)" >> $logfile 2>&1
     stat=$?
   else
-    eval "($initcmd && $confcmd $premake $mainmake $postmake;)" >> $logfile 2>&1
+    eval "($initcmd && $confcmd $premake $mainmake $postmakex;)" >> $logfile 2>&1
     stat=$?
   fi
   # Stop if error and -k is not given.
