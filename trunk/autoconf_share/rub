@@ -78,6 +78,7 @@ bldtest=0
 check=0
 checktool=
 install=2
+dist=0
 distcheck=0
 rpm=0
 update=1
@@ -245,6 +246,12 @@ do
   elif [ "$1" = -noinstall ]; then
     shift
     install=0
+  elif [ "$1" = -dist ]; then
+    shift
+    dist=1
+  elif [ "$1" = -nodist ]; then
+    shift
+    dist=0
   elif [ "$1" = -distcheck ]; then
     shift
     distcheck=1
@@ -333,7 +340,7 @@ if [ $help = 1 ]; then
   echo '     [-recur[sive]] [-release=option] [-build variants]] [-skipbuilt]'
   echo '     [-system] [-boot] [-conf] [-confopt string] [-k] [-j<option>]'
   echo '     [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-install]'
-  echo '     [-distcheck] [-rpm]'
+  echo '     [-dist] [-distcheck] [-rpm]'
   echo '     package1 [-v<version>] [...]'
   echo ''
   echo '  -cvs cvs-command  is an optional cvs command making it possible to'
@@ -417,6 +424,9 @@ if [ $help = 1 ]; then
   echo '  -install          indicates that a make install should be done.'
   echo '                    Default is -install if -build is given.'
   echo '                    Otherwise -noinstall.'
+  echo '  -dist             indicates that a make dist should be done. The generated'
+  echo '                    tarball is copied to LOFAR/installed/variant/dist.'
+  echo '                    Default is -nodist.'
   echo '  -distcheck        indicates that a make distcheck should be done.'
   echo '                    Default is -nodistcheck.'
   echo '  -rpm              indicates that a make rpm should be done.'
@@ -444,9 +454,9 @@ if [ $pkgfound != 1 ]; then
   echo "  Use 'rub -h' to get a description"
   exit 1
 fi
-if test $install = 1  -o  $clean != 0  -o  $check = 1  -o  $conf = 1  -o  $bldtest = 1  -o  $distcheck = 1  -o  $rpm = 1; then
+if test $install = 1  -o  $clean != 0  -o  $check = 1  -o  $conf = 1  -o  $bldtest = 1  -o  $dist = 1  -o  $distcheck = 1  -o  $rpm = 1; then
   if [ "$variants" = "" ]; then
-    echo "Error: -build variant is needed with -conf,-(dist)clean,-test,-check,-install,-distcheck,-rpm"
+    echo "Error: -build variant is needed with -conf,-(dist)clean,-test,-check,-install,-dist(check),-rpm"
     exit 1
   fi
 fi
@@ -738,6 +748,11 @@ else
   if [ $install = 1 ]; then
     bopt="$bopt -install"
     echo "  Packages will be installed"
+  fi
+  if [ $dist = 1 ]; then
+    bopt="$bopt -dist"
+    echo "  Packages will be dist-ed"
+    echo "   tarballs are copied to $curwd/installed/<variant>/dist"
   fi
   if [ $distcheck = 1 ]; then
     bopt="$bopt -distcheck"
