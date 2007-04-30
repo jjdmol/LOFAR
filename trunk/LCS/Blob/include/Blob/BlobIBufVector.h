@@ -43,8 +43,9 @@ namespace LOFAR {
     public:
       // Construct from a vector.
       explicit BlobIBufVector (const std::vector<T>& buffer)
-	: BlobIBufChar(&buffer[0], buffer.size()*sizeof(T))
-	{}
+	: BlobIBufChar(buffer.empty()  ?  0 : &(buffer[0]),
+		       buffer.size()*sizeof(T))
+      {}
       
       // Destructor.
       virtual ~BlobIBufVector()

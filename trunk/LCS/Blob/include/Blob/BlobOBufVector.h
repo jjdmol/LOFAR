@@ -53,12 +53,12 @@ namespace LOFAR {
       // not be deleted before this object.
       explicit BlobOBufVector (std::vector<T>& buffer,
 			       uint expandSize=1024, uint start=0)
-	: BlobOBufChar(&buffer[0], buffer.capacity(),
-		       expandSize, start, false),
-	itsVector (&buffer)
+	: BlobOBufChar(buffer.empty()  ?  0 : &(buffer[0]),
+		       buffer.capacity(), expandSize, start, false),
+	  itsVector   (&buffer)
 	{
 	  ASSERT(sizeof(T)==1);
-	  ASSERT(start <= buffer.size());
+          ASSERT(start <= buffer.size());
 	}
       
       // Destructor.
@@ -71,9 +71,11 @@ namespace LOFAR {
 	{
 	  if (newReservedSize > itsVector->capacity()) {
 	    itsVector->reserve (newReservedSize);
-	    setBuffer (&((*itsVector)[0]));
 	  }
 	  itsVector->resize (newSize);
+	  if (newSize > 0) {
+	    setBuffer (&((*itsVector)[0]));
+	  }
 	}
       
       std::vector<T>* itsVector;
