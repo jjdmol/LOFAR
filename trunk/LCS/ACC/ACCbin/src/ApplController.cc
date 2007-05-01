@@ -188,9 +188,6 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 			if (ackOnTime && !successful) { 
 				sendExecutionResult(0, "Nack from process:" + anAP->getName());
 			}
-			else {
-				sendExecutionResult(0, "Ack from process:" + anAP->getName());
-			}
 		}
 		else {
 			LOG_WARN(formatString(
