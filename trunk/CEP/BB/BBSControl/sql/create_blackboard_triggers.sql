@@ -14,9 +14,9 @@ $$
     BEGIN
         cmd_type := "Type" FROM blackboard.command WHERE id = NEW.command_id;
         
-        IF cmd_type ~ 'initialize|finalize|nextchunk' THEN
+        IF cmd_type ~ '^initialize$|^finalize$|^nextchunk$' THEN
 --            RAISE NOTICE 'NOTIFY %', quote_ident(TG_NAME) || '_' || cmd_type;
-            EXECUTE 'NOTIFY ' || quote_ident(TG_NAME) || '_' || cmd_type;    
+            EXECUTE 'NOTIFY ' || quote_ident(TG_NAME || '_' || cmd_type);
         END IF;
 
         RETURN NULL;
