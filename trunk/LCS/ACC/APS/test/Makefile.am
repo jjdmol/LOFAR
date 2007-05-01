@@ -13,8 +13,10 @@ TESTSCRIPTS 		= tKeyPrefix.sh \
 TESTS			= $(TESTSCRIPTS)
 
 
-EXTRA_DIST		= tParameterSet.in_merge \
-			  tParameterSet.in_param \
+EXTRA_DIST		= tParameterSet.in_merge_nocase \
+			  tParameterSet.in_merge_normal \
+			  tParameterSet.in_param_nocase \
+			  tParameterSet.in_param_normal \
 			  tParameterSet.log_prop \
 			  tParameterSet.stdout \
 			  $(TESTSCRIPTS)
