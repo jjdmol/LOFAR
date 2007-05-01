@@ -169,6 +169,8 @@ do
   fi
   if [ $dist = 1 ]; then
     postmakex="$postmake && mkdir -p $srcdir/installed/$variant/dist && cp $pkgb-*.tar.gz $srcdir/installed/$variant/dist"
+  else
+    postmakex="$postmake"
   fi
   echo "($initcmd && $confcmd $premake $mainmake $postmakex;)" >> $logfile
   if [ $buildmake = 1 ]; then
