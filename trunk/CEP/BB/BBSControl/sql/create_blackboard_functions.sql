@@ -246,10 +246,10 @@ LANGUAGE SQL;
 
 
 CREATE OR REPLACE FUNCTION blackboard.add_finalize_command()
-RETURNS VOID AS
+RETURNS INTEGER AS
 $$
     BEGIN
-        PERFORM blackboard.add_command('finalize');
+        RETURN blackboard.add_command('finalize');
     END;
 $$
 LANGUAGE plpgsql;
@@ -263,10 +263,10 @@ LANGUAGE SQL;
 
 
 CREATE OR REPLACE FUNCTION blackboard.add_initialize_command()
-RETURNS VOID AS
+RETURNS INTEGER AS
 $$
     BEGIN
-        PERFORM blackboard.add_command('initialize');
+        RETURN blackboard.add_command('initialize');
     END;
 $$
 LANGUAGE plpgsql;
@@ -280,10 +280,10 @@ LANGUAGE SQL;
 
 
 CREATE OR REPLACE FUNCTION blackboard.add_nextchunk_command()
-RETURNS VOID AS
+RETURNS INTEGER AS
 $$
     BEGIN
-        PERFORM blackboard.add_command('nextchunk');
+        RETURN blackboard.add_command('nextchunk');
     END;
 $$
 LANGUAGE plpgsql;
@@ -298,7 +298,7 @@ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION blackboard.add_predict_command
     (command_args blackboard.iface_predict_args)
-RETURNS VOID AS
+RETURNS INTEGER AS
 $$
     DECLARE
         _command_id INTEGER;
@@ -306,6 +306,7 @@ $$
         _command_id := blackboard.add_command('predict');
         command_args."Operation" := 'PREDICT';
         PERFORM blackboard.add_single_step_args(_command_id, command_args);
+        RETURN _command_id;
     END;
 $$
 LANGUAGE plpgsql;
@@ -322,7 +323,7 @@ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION blackboard.add_subtract_command
     (command_args blackboard.iface_subtract_args)
-RETURNS VOID AS
+RETURNS INTEGER AS
 $$
     DECLARE
         _command_id INTEGER;
@@ -330,6 +331,7 @@ $$
         _command_id := blackboard.add_command('subtract');
         command_args."Operation" := 'SUBTRACT';
         PERFORM blackboard.add_single_step_args(_command_id, command_args);
+        RETURN _command_id;
     END;
 $$
 LANGUAGE plpgsql;
@@ -346,7 +348,7 @@ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION blackboard.add_correct_command
     (command_args blackboard.iface_correct_args)
-RETURNS VOID AS
+RETURNS INTEGER AS
 $$
     DECLARE
         _command_id INTEGER;
@@ -354,6 +356,7 @@ $$
         _command_id := blackboard.add_command('correct');
         command_args."Operation" := 'CORRECT';
         PERFORM blackboard.add_single_step_args(_command_id, command_args);
+        RETURN _command_id;
     END;
 $$
 LANGUAGE plpgsql;
@@ -370,7 +373,7 @@ LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION blackboard.add_solve_command
     (command_args blackboard.iface_solve_args)
-RETURNS VOID AS
+RETURNS INTEGER AS
 $$
     DECLARE
         _command_id INTEGER;
@@ -397,6 +400,7 @@ $$
                 command_args."Solve.ExclParms",
                 command_args."Solve.DomainSize.Freq",
                 command_args."Solve.DomainSize.Time");
+        RETURN _command_id;
     END;
 $$
 LANGUAGE plpgsql;
@@ -454,27 +458,26 @@ $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION blackboard.get_result()
-RETURNS blackboard.result AS
+CREATE OR REPLACE FUNCTION blackboard.get_new_results()
+RETURNS SETOF blackboard.result AS
 $$
     DECLARE
         _result blackboard.result%ROWTYPE;
     BEGIN        
-        SELECT *
-            INTO _result
-            FROM blackboard.result
-            WHERE read_flag = 'false'
-            ORDER BY timestamp
-            LIMIT 1;
-        
-        IF FOUND THEN
+        FOR _result IN 
+            SELECT *
+                FROM blackboard.result
+                WHERE read_flag = 'false'
+                ORDER BY timestamp
+        LOOP
             UPDATE blackboard.result
                 SET read_flag = 'true'
                 WHERE command_id = _result.command_id
                 AND node = _result.node;
-        END IF;
-        
-        RETURN _result;
+                
+            RETURN NEXT _result;
+        END LOOP;
+        RETURN;
     END;
 $$
 LANGUAGE plpgsql;
