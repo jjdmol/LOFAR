@@ -55,22 +55,24 @@ namespace LOFAR
       uint nNodesPerCell = itsParamSet.getUint32("BGLProc.NodesPerPset") * nrPsetsPerCell;
       ASSERT(nNodesPerCell > 0);
       uint maxConcurrent = itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications");
+      uint nrPsetsPerStorage = itsParamSet.getUint32("Storage.PsetsPerStorage");
+
 
       // We must derive how many WH_SubbandWriter objects we have to
       // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerCell
       // to an AIPS++ Measurement Set.
-      uint nrWriters = (nrSubbands - 1) / nrSubbandsPerCell + 1;
+      uint nrWriters = ((nrSubbands - 1) / nrSubbandsPerCell + 1) / nrPsetsPerStorage;
       LOG_TRACE_VAR_STR("Creating " << nrWriters << " subband writers ...");
-      
+
       for (uint nw = 0; nw < nrWriters; ++nw)
       {
         // For now, we'll assume that the subbands can be sorted and grouped
         // by ID. Hence, the first WH_SubbandWriter will write the first \a
         // nrSubbandsPerCell subbands, the second will write the second \a
         // nrSubbandsPerCell, etc.
-        vector<uint> sbIDs(nrSubbandsPerCell);
-        for (uint i = 0; i < nrSubbandsPerCell; ++i) {
-          sbIDs[i] = nrSubbandsPerCell * nw + i;
+        vector<uint> sbIDs(nrSubbandsPerCell * nrPsetsPerStorage);
+        for (uint i = 0; i < nrSubbandsPerCell * nrPsetsPerStorage; ++i) {
+          sbIDs[i] = nrSubbandsPerCell * nrPsetsPerStorage * nw + i;
           LOG_TRACE_LOOP_STR("Writer " << nw << ": sbIDs[" << i << "] = " 
                              << sbIDs[i]);
         }
@@ -79,16 +81,16 @@ namespace LOFAR
         snprintf(whName, 32, "WH_Storage_%03d", nw);
         LOG_TRACE_STAT_STR("Creating " << whName);
         WH_SubbandWriter wh(whName, sbIDs, itsParamSet);
-
+	
         Step step(wh);
         comp.addBlock(step);
-
+	
         // Each writer will run on a separate node.
         step.runOnNode(nw);
-
+	
 	vector<int> channels;
         // Connect to BG output
-	for (int core = 0; core < nNodesPerCell; core++) {
+	for (int core = 0; core < nNodesPerCell * nrPsetsPerStorage; core++) {
 	  step.getInDataManager(core).setInBuffer(core, false, 10);
 	  itsStub->connect(nw, core, step.getInDataManager(core), core);
 	  channels.push_back(core);
@@ -97,10 +99,9 @@ namespace LOFAR
 	// limit the number of concurrent incoming connections
 	step.getInDataManager(0).setInRoundRobinPolicy(channels, maxConcurrent);
       }
-
 #ifdef HAVE_MPI
-      ASSERTSTR (TH_MPI::getNumberOfNodes() ==  nrWriters, 
-                 TH_MPI::getNumberOfNodes() << " == " << nrWriters);
+      ASSERTSTR (TH_MPI::getNumberOfNodes() ==  nrWriters,
+                 TH_MPI::getNumberOfNodes() << " == " << nrWriters );
 #endif
     }
 

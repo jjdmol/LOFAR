@@ -50,7 +50,7 @@ namespace LOFAR
     WH_SubbandWriter::WH_SubbandWriter(const string& name, 
                                        const vector<uint>& subbandID,
                                        const ACC::APS::ParameterSet& pset) 
-      : WorkHolder    (pset.getUint32("BGLProc.NodesPerPset") * pset.getUint32("BGLProc.PsetsPerCell"), 
+      : WorkHolder    (pset.getUint32("BGLProc.NodesPerPset") * pset.getUint32("BGLProc.PsetsPerCell") * pset.getUint32("Storage.PsetsPerStorage"), 
                        0,
                        name,
                        "WH_SubbandWriter"),
@@ -182,7 +182,7 @@ namespace LOFAR
 			       itsNBeams,
 			       itsNStations, 
                                antPos, storageStationNames, itsTimesToIntegrate, 
-			       itsPS.getUint32("General.SubbandsPerPset"));
+			       itsPS.getUint32("General.SubbandsPerPset") * itsPS.getUint32("Storage.PsetsPerStorage"));
 			       
       double chanWidth = itsPS.getDouble("Observation.SampleRate") /
 			 itsPS.getDouble("Observation.NChannels");
@@ -193,7 +193,7 @@ namespace LOFAR
       // Here we should (somehow) derive which subband we're going to write.
       // At least we know how many subbands we can expect, because that's in
       // the parameter set file.
-      itsNrSubbandsPerCell = itsPS.getUint32("General.SubbandsPerPset") * itsPS.getUint32("BGLProc.PsetsPerCell");
+      itsNrSubbandsPerCell = itsPS.getUint32("General.SubbandsPerPset") * itsPS.getUint32("BGLProc.PsetsPerCell") * itsPS.getUint32("Storage.PsetsPerStorage");
       LOG_TRACE_VAR_STR("SubbandsPerCell = " << itsNrSubbandsPerCell);
 
       // Now we must add \a itsNrSubbandsPerCell to the measurement set. The

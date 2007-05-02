@@ -119,6 +119,7 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   unsigned psetsPerCell	     = itsParamSet.getInt32("BGLProc.PsetsPerCell");
   unsigned usedNodesPerPset  = itsParamSet.getInt32("BGLProc.NodesPerPset");
   unsigned nrSubbandsPerPset = itsParamSet.getInt32("General.SubbandsPerPset");
+  unsigned nrPsetsPerStorage = itsParamSet.getInt32("Storage.PsetsPerStorage");
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
@@ -166,6 +167,9 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
       unsigned cell = pset / psetsPerCell;
       unsigned cellCore = core + usedNodesPerPset * (pset % psetsPerCell);
 
+      unsigned storage_host = pset / psetsPerCell / nrPsetsPerStorage;
+      unsigned storage_port = core + usedNodesPerPset * (pset % (psetsPerCell * nrPsetsPerStorage) );
+
 #if defined USE_ZOID
       TH_ZoidClient *th = new TH_ZoidClient();
 
@@ -185,7 +189,7 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 #else
       itsSubbandStub->connect(cell, cellCore, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
 //    itsRFI_MitigationStub->connect(cell, cellCore, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
-      itsVisibilitiesStub->connect(cell, cellCore, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+      itsVisibilitiesStub->connect(storage_host, storage_port, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 #endif
 
 #if defined HAVE_BGL

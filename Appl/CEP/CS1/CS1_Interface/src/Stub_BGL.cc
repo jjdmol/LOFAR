@@ -44,8 +44,12 @@ Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, cons
   int psetsPerCell  = pSet.getInt32("BGLProc.PsetsPerCell");
   itsNrCells	    = pSet.getInt32("Observation.NSubbands") / (pSet.getInt32("General.SubbandsPerPset") * psetsPerCell);
   itsNrNodesPerCell = pSet.getInt32("BGLProc.NodesPerPset") * psetsPerCell;
+  itsNrPsetsPerStorage = pSet.getInt32("Storage.PsetsPerStorage");
 
   size_t size = itsNrCells * itsNrNodesPerCell;
+  if ((!itsIAmOnBGL && isInput) || (itsIAmOnBGL && !itsIsInput)) {
+    size *= itsNrPsetsPerStorage;
+  }
 
   itsTHs = new TransportHolder * [size];
   memset(itsTHs, 0, sizeof(TransportHolder * [size]));
@@ -72,11 +76,23 @@ Stub_BGL::~Stub_BGL()
 
 void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel)
 {
-  size_t index = cellNr * itsNrNodesPerCell + nodeNr;
+
+  size_t index;
+  if ((!itsIAmOnBGL && itsIsInput) || (itsIAmOnBGL && !itsIsInput)) {
+    index = cellNr * itsNrNodesPerCell * itsNrPsetsPerStorage + nodeNr;
+  } else {
+    index = cellNr * itsNrNodesPerCell + nodeNr;
+  }
 
   ASSERTSTR(cellNr < itsNrCells, "cellNr argument out of bounds; " << cellNr << " / " << itsNrCells);
-  ASSERTSTR(nodeNr < itsNrNodesPerCell, "nodeNr argument out of bounds; " << nodeNr << " / " << itsNrNodesPerCell);
   ASSERTSTR(itsTHs[index] == 0, "already connected: cellNr = " << cellNr << ", nodeNr = " << nodeNr);
+
+  if ((!itsIAmOnBGL && itsIsInput) || (itsIAmOnBGL && !itsIsInput)) {
+    ASSERTSTR(nodeNr < itsNrNodesPerCell * itsNrPsetsPerStorage, "nodeNr argument out of bounds; " << nodeNr << "/" << itsNrNodesPerCell * itsNrPsetsPerStorage);
+  } else {
+    ASSERTSTR(nodeNr < itsNrNodesPerCell, "nodeNr argument out of bounds; " << nodeNr << " / " << itsNrNodesPerCell);
+  }
+
 
   TransportHolder *th;
   string transportType = itsPS.getString(itsPrefix + ".TransportHolder");
@@ -84,6 +100,7 @@ void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, un
   if (transportType == "TCP") {
     string server  = itsPS.getStringVector(itsPrefix + ".ServerHosts")[cellNr];
     string service = itsPS.getStringVector(itsPrefix + ".Ports")[nodeNr];
+
     th = itsIAmOnBGL ? new TH_Socket(server, service, false, Socket::TCP, false) : new TH_Socket(service, false, Socket::TCP, 5, false);
   } else if (transportType == "FILE") {
     string baseFileName = itsPS.getString(itsPrefix + ".BaseFileName");
