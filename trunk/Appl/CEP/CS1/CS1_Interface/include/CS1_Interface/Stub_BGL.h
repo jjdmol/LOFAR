@@ -48,7 +48,7 @@ class Stub_BGL
     const ACC::APS::ParameterSet &itsPS;
     bool			 itsIAmOnBGL, itsIsInput;
     std::string			 itsPrefix;
-    unsigned			 itsNrCells, itsNrNodesPerCell;
+    unsigned			 itsNrCells, itsNrNodesPerCell, itsNrPsetsPerStorage;
     TransportHolder		 **itsTHs;
     Connection			 **itsConnections;
 
@@ -58,4 +58,3 @@ class Stub_BGL
 } // namespace LOFAR
 
 #endif
-
