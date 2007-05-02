@@ -84,27 +84,30 @@ class InputSection(Section):
         host = copy.deepcopy(myhost)
         slaves = host.getSlaves()
 
-	inputNodes = parset.getInputNodes()
-	outputNodes = range(1, self.nCells + 1)
-	allNodes = inputNodes + [node for node in outputNodes if not node in inputNodes]
+        inputNodes = parset.getInputNodes()
+        outputNodes = range(1, self.nCells + 1)
+        allNodes = inputNodes + [node for node in outputNodes if not node in inputNodes]
+    
+        inputIndices = range(len(inputNodes))
+        outputIndices = [allNodes.index(node) for node in outputNodes]
 
-	inputIndices = range(len(inputNodes))
-	outputIndices = [allNodes.index(node) for node in outputNodes]
+        print("slaves %d"  % len(slaves))
+        print("allNodes %d" % len(allNodes))
+        
+        newslaves = [slaves[ind - 1] for ind in allNodes]
+        host.setSlaves(newslaves)
+        self.noProcesses = len(newslaves)
 
-	newslaves = [slaves[ind - 1] for ind in allNodes]
-	host.setSlaves(newslaves)
-	self.noProcesses = len(newslaves)
+        Section.__init__(self, parset, \
+                         'Appl/CEP/CS1/CS1_InputSection', \
+                         host = host, \
+                         buildvar = 'gnu64_mpich-opt')
 
-	Section.__init__(self, parset, \
-			 'Appl/CEP/CS1/CS1_InputSection', \
-			 host = host, \
-			 buildvar = 'gnu64_mpich-opt')
+        self.parset['Input.InputNodes'] = inputIndices
+        self.parset['Input.OutputNodes'] = outputIndices
 
-	self.parset['Input.InputNodes'] = inputIndices
-	self.parset['Input.OutputNodes'] = outputIndices
-
-	bglprocIPs = [newslaves[j].getExtIP() for j in outputIndices]
-	self.parset['Connections.Input_BGLProc.ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
+        bglprocIPs = [newslaves[j].getExtIP() for j in outputIndices]
+        self.parset['Connections.Input_BGLProc.ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
 
     def run(self, runlog, noRuns, runCmd = None):
         Section.run(self, runlog, noRuns, runCmd)
@@ -113,18 +116,19 @@ class StorageSection(Section):
     def __init__(self, parset, host):
 
         nSubbands = parset.getInt32('Observation.NSubbands')
-        nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
-        if not nSubbands % nSubbandsPerCell == 0:
-            raise Exception('Not a integer number of subbands per compute cells!')
+        nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset')
+        nPsetsPerStorage = parset.getInt32('Storage.PsetsPerStorage');
+        if not nSubbands % (nSubbandsPerCell * nPsetsPerStorage) == 0:
+            raise Exception('Not a integer number of subbands per storage node!')
 
-        self.noProcesses = nSubbands / nSubbandsPerCell
+        self.noProcesses = nSubbands / (nSubbandsPerCell * nPsetsPerStorage)
 
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_Storage', \
                          host = host, \
                          buildvar = 'gnu32_openmpi-opt')
 
-        storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses)]
+        storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
         self.parset['Connections.BGLProc_Storage.ServerHosts'] = '[' + ','.join(storageIPs) + ']'
 
         
@@ -135,8 +139,10 @@ class BGLProcSection(Section):
 
         nSubbands = parset.getInt32('Observation.NSubbands')
         nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
+
         if not nSubbands % nSubbandsPerCell == 0:
             raise Exception('Not a integer number of compute cells!')
+
         nCells = nSubbands / nSubbandsPerCell
         self.noProcesses = int(nCells) * parset.getInt32('BGLProc.NodesPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
         self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
