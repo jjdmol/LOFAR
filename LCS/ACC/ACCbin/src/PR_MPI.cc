@@ -78,7 +78,7 @@ PR_MPI::PR_MPI(const string&			aHostName,
 									aExecutable.c_str(),
 									aParamFile.c_str(),
 									nodes.size());
-		itsStopCmd  = formatString("./stopBGL.sh %s", 
+		itsStopCmd  = formatString("./stopMPI.sh %s", 
 									aJobName.c_str());
 	}
 }
