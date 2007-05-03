@@ -69,7 +69,7 @@ PR_MPI::PR_MPI(const string&			aHostName,
 									nodes.size());
 		itsStopCmd  = formatString("ssh %s \"( cd /opt/lofar/bin ; ./stopMPI.sh %s ) \"", 
 									aHostName.c_str(),
-									aJobName.c_str());
+									aExecutable.c_str());
 	}
 	else { // start/stop on local machine
 		itsStartCmd = formatString("./startMPI.sh %s %s %s %s %d", 
