@@ -2,7 +2,7 @@ lib_LTLIBRARIES         = libparmdb.la
 
 libparmdb_la_SOURCES = \
 ParmValue.cc ParmDomain.cc ParmDBMeta.cc \
-ParmDB.cc ParmDBAIPS.cc
+ParmDB.cc ParmDBAIPS.cc ParmDBPostgres.cc ParmDBPostgresTransactors.cc
 
 
 # AM_YFLAGS               = -d -p KeyParse

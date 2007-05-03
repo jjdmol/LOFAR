@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmDBAIPS.h>
+#include <ParmDB/ParmDBPostgres.h>
 #include <Common/LofarLogger.h>
 #include <casa/Utilities/Regex.h>
 #include <casa/Utilities/GenSort.cc>     // for automatic template
@@ -129,6 +132,12 @@ ParmDB::ParmDB (const ParmDBMeta& ptm, bool forceNew)
     itsRep = new ParmDBAIPS (ptm.getTableName(), forceNew);
     ///  } else if (ptm.getType() == "bdb") {
     ///itsRep = new ParmDBBDB (ptm, forceNew);
+  } else if(ptm.getType() == "postgres") {
+    itsRep = new ParmDBPostgres(ptm.getDBName(),
+        ptm.getUserName(),
+        ptm.getDBPwd(),
+        ptm.getHostName(),
+        "");
   } else {
     ASSERTSTR(false, "unknown parmTableType: "<<ptm.getType());
   }

@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
 #include <ParmDB/ParmDBMeta.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobIStream.h>

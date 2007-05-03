@@ -768,7 +768,7 @@ void doIt (bool noPrompt)
 	  parmtab = new LOFAR::ParmDB::ParmDB (meta);
 	} else if (cmd == CREATE)  {
 	  ASSERTSTR(parmtab==0, "OPEN or CREATE already done");
-	  // create dataBase	
+	  // create dataBase
 	  KeyValueMap kvmap = KeyParser::parse (cstr);
 	  string dbUser = kvmap.getString ("user", getUserName());
 	  string dbHost = kvmap.getString ("host", "dop50.astron.nl");
@@ -895,8 +895,11 @@ void doIt (bool noPrompt)
   parmtab = 0;
 }
 
-int main (int argc)
+int main (int argc, char *argv[])
 {
+  const char* progName = basename(argv[0]);
+  INIT_LOGGER(progName);
+  
   try {
     doIt (argc > 1);
   } catch (std::exception& x) {

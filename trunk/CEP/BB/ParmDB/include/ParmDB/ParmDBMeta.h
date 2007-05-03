@@ -26,8 +26,7 @@
 // \file
 // one line description.
 
-#include <string>
-
+#include <Common/lofar_string.h>
 
 namespace LOFAR {
 //# Forward Declarations.
@@ -48,7 +47,7 @@ namespace ParmDB {
     ParmDBMeta (const std::string& type, const std::string& tableName);
 
     void setSQLMeta (const std::string& dbName, const std::string& userName,
-		     const std::string& dbPwd, const std::string& hostName);
+        const std::string& dbPwd, const std::string& hostName);
 
     const std::string& getType() const
       { return itsType; }
@@ -56,6 +55,18 @@ namespace ParmDB {
     const std::string& getTableName() const
       { return itsTableName; }
 
+    const std::string& getDBName() const
+      { return itsDBName; }
+      
+    const std::string& getUserName() const
+      { return itsUserName; }
+      
+    const std::string& getDBPwd() const
+      { return itsDBPwd; }
+    
+    const std::string& getHostName() const
+      { return itsHostName; }
+    
     // Write the object into a blob.
     friend BlobOStream& operator<< (BlobOStream&, const ParmDBMeta&);
 
