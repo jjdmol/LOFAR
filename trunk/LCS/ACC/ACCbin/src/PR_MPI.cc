@@ -67,7 +67,7 @@ PR_MPI::PR_MPI(const string&			aHostName,
 									aExecutable.c_str(),
 									aParamFile.c_str(),
 									nodes.size());
-		itsStopCmd  = formatString("ssh %s \"( cd /opt/lofar/bin ; ./stopBGL.sh %s ) \"", 
+		itsStopCmd  = formatString("ssh %s \"( cd /opt/lofar/bin ; ./stopMPI.sh %s ) \"", 
 									aHostName.c_str(),
 									aJobName.c_str());
 	}
