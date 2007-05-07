@@ -183,36 +183,64 @@ public:
 	// in the parameterSet.
 	string	locateModule(const string&	shortName) const;
 
-	// Returns the value as a boolean.
+	// Return scalar value.
+	// @{
 	bool	getBool  (const string& aKey) const;
+        bool	getBool  (const string& aKey, bool aValue) const;
 	int16	getInt16 (const string& aKey) const;
+        int16	getInt16 (const string& aKey, int16 aValue) const;
 	uint16	getUint16(const string& aKey) const;
+        uint16	getUint16(const string& aKey, uint16 aValue) const;
 	int32	getInt32 (const string& aKey) const;
+        int32	getInt32 (const string& aKey, int32 aValue) const;
 	uint32	getUint32(const string& aKey) const;
+        uint32	getUint32(const string& aKey, uint32 aValue) const;
 #if HAVE_LONG_LONG
 	int64	getInt64 (const string& aKey) const;
+        int64	getInt64 (const string& aKey, int64 aValue) const;
 	uint64	getUint64(const string& aKey) const;
+        uint64	getUint64(const string& aKey, uint64 aValue) const;
 #endif
 	float	getFloat (const string& aKey) const;
+        float	getFloat (const string& aKey, float aValue) const;
 	double	getDouble(const string& aKey) const;
+        double	getDouble(const string& aKey, double aValue) const;
 	string	getString(const string& aKey) const;
+        string	getString(const string& aKey, const string& aValue) const;
 	// Returns the value as a time value (seconds since 1970).
+	// @{
 	time_t	getTime  (const string& aKey) const;
+        time_t	getTime  (const string& aKey, const time_t& aValue) const;
+	// @}
+	// @}
 
-	// Returns the value as an integer
+	// Return vector of values.
+	// @{
 	vector<bool>	getBoolVector  (const string& aKey) const;
+        vector<bool>	getBoolVector  (const string& aKey, const vector<bool>& aValue) const;
 	vector<int16>	getInt16Vector (const string& aKey) const;
+        vector<int16>	getInt16Vector (const string& aKey, const vector<int16>& aValue) const;
 	vector<uint16>	getUint16Vector(const string& aKey) const;
+        vector<uint16>	getUint16Vector(const string& aKey, const vector<uint16>& aValue) const;
 	vector<int32>	getInt32Vector (const string& aKey) const;
+        vector<int32>	getInt32Vector (const string& aKey, const vector<int32>& aValue) const;
 	vector<uint32>	getUint32Vector(const string& aKey) const;
+        vector<uint32>	getUint32Vector(const string& aKey, const vector<uint32>& aValue) const;
 #if HAVE_LONG_LONG
 	vector<int64>	getInt64Vector (const string& aKey) const;
+        vector<int64>	getInt64Vector (const string& aKey, const vector<int64>& aValue) const;
 	vector<uint64>	getUint64Vector(const string& aKey) const;
+        vector<uint64>	getUint64Vector(const string& aKey, const vector<uint64>& aValue) const;
 #endif
 	vector<float>	getFloatVector (const string& aKey) const;
+        vector<float>	getFloatVector (const string& aKey, const vector<float>& aValue) const;
 	vector<double>	getDoubleVector(const string& aKey) const;
+        vector<double>	getDoubleVector(const string& aKey, const vector<double>& aValue) const;
 	vector<string>	getStringVector(const string& aKey) const;
+        vector<string>	getStringVector(const string& aKey, const vector<string>& aValue) const;
 	vector<time_t>	getTimeVector  (const string& aKey) const;
+        vector<time_t>	getTimeVector  (const string& aKey, const vector<time_t>& aValue) const;
+	// @}
 
 	// @}
 
@@ -344,10 +372,22 @@ inline bool ParameterSet::getBool(const string& aKey) const
 	return itsSet->getBool(aKey);
 }
 
+//#	getBool(key, value)
+inline bool ParameterSet::getBool(const string& aKey, bool aValue) const
+{
+        return itsSet->getBool(aKey, aValue);
+}
+
 //#	getInt16(key)
 inline int16 ParameterSet::getInt16(const string& aKey) const
 {
 	return itsSet->getInt16(aKey);
+}
+
+//#	getInt16(key, value)
+inline int16 ParameterSet::getInt16(const string& aKey, int16 aValue) const
+{
+        return itsSet->getInt16(aKey, aValue);
 }
 
 //#	getUint16(key)
@@ -356,16 +396,34 @@ inline uint16 ParameterSet::getUint16(const string& aKey) const
 	return itsSet->getUint16(aKey);
 }
 
+//#	getUint16(key, value)
+inline uint16 ParameterSet::getUint16(const string& aKey, uint16 aValue) const
+{
+        return itsSet->getUint16(aKey, aValue);
+}
+
 //#	getInt32(key)
 inline int32 ParameterSet::getInt32(const string& aKey) const
 {
 	return itsSet->getInt32(aKey);
 }
 
+//#	getInt32(key, value)
+inline int32 ParameterSet::getInt32(const string& aKey, int32 aValue) const
+{
+        return itsSet->getInt32(aKey, aValue);
+}
+
 //#	getUint32(key)
 inline uint32 ParameterSet::getUint32(const string& aKey) const
 {
 	return itsSet->getUint32(aKey);
+}
+
+//#	getUint32(key, value)
+inline uint32 ParameterSet::getUint32(const string& aKey, uint32 aValue) const
+{
+        return itsSet->getUint32(aKey, aValue);
 }
 
 #if HAVE_LONG_LONG
@@ -375,10 +433,22 @@ inline int64 ParameterSet::getInt64(const string& aKey) const
 	return itsSet->getInt64(aKey);
 }
 
+//#	getInt64(key, value)
+inline int64 ParameterSet::getInt64(const string& aKey, int64 aValue) const
+{
+        return itsSet->getInt64(aKey, aValue);
+}
+
 //#	getUint64(key)
 inline uint64 ParameterSet::getUint64(const string& aKey) const
 {
 	return itsSet->getUint64(aKey);
+}
+
+//#	getUint64(key, value)
+inline uint64 ParameterSet::getUint64(const string& aKey, uint64 aValue) const
+{
+        return itsSet->getUint64(aKey, aValue);
 }
 #endif
 
@@ -388,15 +458,34 @@ inline float ParameterSet::getFloat (const string& aKey) const
 	return itsSet->getFloat(aKey);
 }
 
+//#	getFloat(key, value)
+inline float ParameterSet::getFloat (const string& aKey, float aValue) const
+{
+        return itsSet->getFloat(aKey, aValue);
+}
+
 //#	getDouble(key)
 inline double ParameterSet::getDouble(const string& aKey) const
 {
 	return itsSet->getDouble(aKey);
 }
+
+//#	getDouble(key, value)
+inline double ParameterSet::getDouble(const string& aKey, double aValue) const
+{
+        return itsSet->getDouble(aKey, aValue);
+}
+
 //#	getString(key)
 inline string ParameterSet::getString(const string& aKey) const
 {
 	return itsSet->getString(aKey);
+}
+
+//#	getString(key, value)
+inline string ParameterSet::getString(const string& aKey, const string& aValue) const
+{
+        return itsSet->getString(aKey, aValue);
 }
 
 //#	getTime(key)
@@ -405,10 +494,22 @@ inline time_t ParameterSet::getTime(const string& aKey) const
 	return itsSet->getTime(aKey);
 }
 
+//#	getTime(key, value)
+inline time_t ParameterSet::getTime(const string& aKey, const time_t& aValue) const
+{
+        return itsSet->getTime(aKey, aValue);
+}
+
 //#	getBoolVector(key)
 inline vector<bool> ParameterSet::getBoolVector(const string& aKey) const
 {
 	return itsSet->getBoolVector(aKey);
+}
+
+//#	getBoolVector(key, value)
+inline vector<bool> ParameterSet::getBoolVector(const string& aKey, const vector<bool>& aValue) const
+{
+        return itsSet->getBoolVector(aKey, aValue);
 }
 
 //#	getInt16Vector(key)
@@ -417,10 +518,22 @@ inline vector<int16> ParameterSet::getInt16Vector(const string& aKey) const
 	return itsSet->getInt16Vector(aKey);
 }
 
+//#	getInt16Vector(key, value)
+inline vector<int16> ParameterSet::getInt16Vector(const string& aKey, const vector<int16>& aValue) const
+{
+        return itsSet->getInt16Vector(aKey, aValue);
+}
+
 //#	getUint16Vector(key)
 inline vector<uint16> ParameterSet::getUint16Vector(const string& aKey) const
 {
 	return itsSet->getUint16Vector(aKey);
+}
+
+//#	getUint16Vector(key, value)
+inline vector<uint16> ParameterSet::getUint16Vector(const string& aKey, const vector<uint16>& aValue) const
+{
+        return itsSet->getUint16Vector(aKey, aValue);
 }
 
 //#	getInt32Vector(key)
@@ -429,10 +542,22 @@ inline vector<int32> ParameterSet::getInt32Vector(const string& aKey) const
 	return itsSet->getInt32Vector(aKey);
 }
 
+//#	getInt32Vector(key, value)
+inline vector<int32> ParameterSet::getInt32Vector(const string& aKey, const vector<int32>& aValue) const
+{
+        return itsSet->getInt32Vector(aKey, aValue);
+}
+
 //#	getUint32Vector(key)
 inline vector<uint32> ParameterSet::getUint32Vector(const string& aKey) const
 {
 	return itsSet->getUint32Vector(aKey);
+}
+
+//#	getUint32Vector(key, value)
+inline vector<uint32> ParameterSet::getUint32Vector(const string& aKey, const vector<uint32>& aValue) const
+{
+        return itsSet->getUint32Vector(aKey, aValue);
 }
 
 #if HAVE_LONG_LONG
@@ -442,10 +567,22 @@ inline vector<int64> ParameterSet::getInt64Vector(const string& aKey) const
 	return itsSet->getInt64Vector(aKey);
 }
 
+//#	getInt64Vector(key, value)
+inline vector<int64> ParameterSet::getInt64Vector(const string& aKey, const vector<int64>& aValue) const
+{
+	return itsSet->getInt64Vector(aKey, aValue);
+}
+
 //#	getUint64Vector(key)
 inline vector<uint64> ParameterSet::getUint64Vector(const string& aKey) const
 {
 	return itsSet->getUint64Vector(aKey);
+}
+
+//#	getUint64Vector(key, value)
+inline vector<uint64> ParameterSet::getUint64Vector(const string& aKey, const vector<uint64>& aValue) const
+{
+        return itsSet->getUint64Vector(aKey, aValue);
 }
 #endif
 
@@ -455,21 +592,45 @@ inline vector<float> ParameterSet::getFloatVector(const string& aKey) const
 	return itsSet->getFloatVector(aKey);
 }
 
+//#	getFloatVector(key, value)
+inline vector<float> ParameterSet::getFloatVector(const string& aKey, const vector<float>& aValue) const
+{
+        return itsSet->getFloatVector(aKey, aValue);
+}
+
 //#	getDoubleVector(key)
 inline vector<double> ParameterSet::getDoubleVector(const string& aKey) const
 {
 	return itsSet->getDoubleVector(aKey);
 }
+//#	getDoubleVector(key, value)
+inline vector<double> ParameterSet::getDoubleVector(const string& aKey, const vector<double>& aValue) const
+{
+        return itsSet->getDoubleVector(aKey, aValue);
+}
+
 //#	getStringVector(key)
 inline vector<string> ParameterSet::getStringVector(const string& aKey) const
 {
 	return itsSet->getStringVector(aKey);
 }
 
+//#	getStringVector(key, value)
+inline vector<string> ParameterSet::getStringVector(const string& aKey, const vector<string>& aValue) const
+{
+        return itsSet->getStringVector(aKey, aValue);
+}
+
 //#	getTimeVector(key)
 inline vector<time_t> ParameterSet::getTimeVector(const string& aKey) const
 {
 	return itsSet->getTimeVector(aKey);
+}
+
+//#	getTimeVector(key, value)
+inline vector<time_t> ParameterSet::getTimeVector(const string& aKey, const vector<time_t>& aValue) const
+{
+        return itsSet->getTimeVector(aKey, aValue);
 }
 
     } // namespace APS
