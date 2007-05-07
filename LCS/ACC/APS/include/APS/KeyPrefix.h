@@ -50,22 +50,22 @@ namespace LOFAR
       class KeyPrefix
       {
       public:
-	// Constructor. Add a field \a str + <tt>"."</tt> to the static key
-	// prefix.
-	KeyPrefix(const string& str);
+        // Constructor. Add a field \a str + <tt>"."</tt> to the static key
+        // prefix.
+        KeyPrefix(const string& str);
 
-	// Destructor. Remove the last field from the static key prefix.
-	~KeyPrefix();
+        // Destructor. Remove the last field from the static key prefix.
+        ~KeyPrefix();
 
-	// Return the current key prefix.
-	static const string& get() { return theirPrefix; }
+        // Return the current key prefix.
+        static const string& get() { return theirPrefix; }
 
       private:
-	// Print the current key prefix into the output stream \a os.
-	friend ostream& operator<<(ostream& os, const KeyPrefix& kp);
+        // Print the current key prefix into the output stream \a os.
+        friend ostream& operator<<(ostream& os, const KeyPrefix& kp);
 
-	// Static key prefix. Keeps track of the current key prefix.
-	static string theirPrefix;
+        // Static key prefix. Keeps track of the current key prefix.
+        static string theirPrefix;
       };
 
       // @}
