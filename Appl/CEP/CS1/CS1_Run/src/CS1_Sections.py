@@ -153,9 +153,6 @@ class BGLProcSection(Section):
                          buildvar = 'gnu_bgl')
 
 
-        # The executable for BGL_Processing should be recompiled for every combination of the number
-        # of stations and the clock setting. So for every combination there should be an executable present.
-        # todo: We should check here if the executable exists
         nstations = parset.getNStations()
         clock = parset.getClockString()
 	self.executable = 'CS1_BGL_Processing'
