@@ -691,7 +691,8 @@ void ApplController::checkAckCompletion()
 	LOG_TRACE_STAT("All ack's received?");
 
 	if (itsCurState == StateStartupAppl) {
-		if (itsAPAPool->onlineCount() == itsProcRuler.size()) {
+//		if (itsAPAPool->onlineCount() == itsProcRuler.size()) {
+		if (itsAPAPool->onlineCount() == itsAPAPool->processCount()) {
 			itsStateEngine->ready();
 		}
 	}
