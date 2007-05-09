@@ -2,7 +2,7 @@
 inputMACs = [
     '00:E0:81:31:B3:EB',
     '00:E0:81:31:B0:E1',
-    '00:E0:81:31:B2:F5',
+    '00:E0:81:41:7C:0F',
     '00:E0:81:31:DE:8B',
     '00:E0:81:29:20:37',
     '00:E0:81:31:DE:9B',
@@ -128,4 +128,5 @@ CS16_4us = CS16_us0 + CS16_us1 + CS16_us2 + CS16_us3
 AllMicroStations = CS10_4us + CS01_4us + CS08_4us + CS16_4us
 AllDipoles = CS10_4dipoles + CS01_4dipoles + CS08_4dipoles + CS16_4dipoles
 Mixed = CS10_us0 + CS10_dipole4 + CS10_dipole8 + CS10_dipole12 + CS01_4dipoles + CS08_4dipoles + CS16_4dipoles
-Apr06 = CS01_4dipoles + CS08_4dipoles + CS16_4dipoles
+Test = CS16_4dipoles
+
