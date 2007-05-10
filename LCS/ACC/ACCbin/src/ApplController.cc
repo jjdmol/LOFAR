@@ -255,6 +255,7 @@ void ApplController::createParSubsets()
 		// nrProcs  := x | 0
 		string procName = procList[procIdx];
 		int32  nrProcs  = indexValue(procName, "()");
+		itsNrOfProcs += nrProcs;
 		rtrim(procName, "()0123456789");
 		string procPrefix = applName +"." + procName;
         
@@ -692,9 +693,16 @@ void ApplController::checkAckCompletion()
 
 	if (itsCurState == StateStartupAppl) {
 //		if (itsAPAPool->onlineCount() == itsProcRuler.size()) {
-		if (itsAPAPool->onlineCount() == itsAPAPool->processCount()) {
+//		if (itsAPAPool->onlineCount() == itsAPAPool->processCount()) {
+		if (itsAPAPool->onlineCount() == itsNrOfProcs) {
 			itsStateEngine->ready();
 		}
+		else {
+			LOG_TRACE_STAT_STR("Still waiting for: " << itsNrOfProcs << "-"
+					<< itsAPAPool->onlineCount() << "=" << itsNrOfProcs-itsAPAPool->onlineCount() 
+					<< " connections");
+		}
+		return;
 	}
 
 	if (itsAPAPool->allAcksReceived()) {
