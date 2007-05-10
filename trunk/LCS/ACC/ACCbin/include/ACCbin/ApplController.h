@@ -109,6 +109,8 @@ private:
 	DH_ApplControl*		itsCurACMsg;		// Command under handling
 
 	ProcRuler			itsProcRuler;		// Starts/stops all AP's
+
+	uint16				itsNrOfProcs;		// Nr of processes to manage.
 };
 
 // @} addgroup
