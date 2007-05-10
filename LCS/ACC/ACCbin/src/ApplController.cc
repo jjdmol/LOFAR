@@ -255,7 +255,12 @@ void ApplController::createParSubsets()
 		// nrProcs  := x | 0
 		string procName = procList[procIdx];
 		int32  nrProcs  = indexValue(procName, "()");
-		itsNrOfProcs += nrProcs;
+		if (nrProcs == 0) {
+			itsNrOfProcs++;
+		}
+		else {
+			itsNrOfProcs += nrProcs;
+		}
 		rtrim(procName, "()0123456789");
 		string procPrefix = applName +"." + procName;
         
