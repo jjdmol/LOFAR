@@ -157,10 +157,10 @@ if __name__ == '__main__':
 	        for i in range(1, parset.getInt32('Observation.NSubbands')):
                     MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % i + '.MS' + '\''
 	    else:
-		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (parset.getInt32('General.SubbandsPerPset') - 1) +'.MS' + '\''
-		for i in range(1, (parset.getInt32('Observation.NSubbands')/parset.getInt32('General.SubbandsPerPset'))):
-		    first = i * parset.getInt32('General.SubbandsPerPset')
-		    last =  first + (parset.getInt32('General.SubbandsPerPset') -1)
+		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (parset.getInt32('General.SubbandsPerPset') * parset.getInt32('Storage.PsetsPerStorage') - 1) +'.MS' + '\''
+		for i in range(1, (parset.getInt32('Observation.NSubbands') / (parset.getInt32('General.SubbandsPerPset') * parset.getInt32('Storage.PsetsPerStorage')) )):
+		    first = i * parset.getInt32('General.SubbandsPerPset') * parset.getInt32('Storage.PsetsPerStorage')
+		    last =  first + (parset.getInt32('General.SubbandsPerPset') * parset.getInt32('Storage.PsetsPerStorage') -1)
 		    MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % first + '-%01d' % last +'.MS' + '\''
             outf = open(runningNumberFile, 'w')
             outf.write(str(measurementnumber + 1) + '\n')
