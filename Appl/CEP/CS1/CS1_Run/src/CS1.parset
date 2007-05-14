@@ -48,7 +48,7 @@ Observation.BeamDirections = [\     # pair of RA/DEC per beam (angle in rad)
 0, 90] #NCP
 #6.1234876806221052, 1.0265153995604648] # Cas A
 
-Observation.DelayCompensation = F
+Observation.DelayCompensation = T
 
 Observation.nyquistZone = 1    # 160MHz-LBA&HBA nq=1, 200MHZ-LBA nq=3, 200MHz-HBA nq=2
 Observation.sampleClock = 160
