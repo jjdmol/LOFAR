@@ -57,6 +57,7 @@ Observation.SubbandIDs = [213, 245, 283, 334, 366, 384, 417, 475, 150, 151, 152,
 
 # General Variables
 General.SubbandsPerPset = 2
+Storage.PsetsPerStorage = 1
 
 # Variables for the DelayCompensation
 DelayComp.ConverterType=IMPL        # should be one of IMPL, CLIENT
