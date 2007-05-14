@@ -255,10 +255,7 @@ namespace LOFAR
         // Select the next input
 	int inHolderNr = getDataManager().getInputSelector()->getCurrentSelection();
 	//cerr<<"Current selection "<<inHolderNr<<endl;
-	getDataManager().getInHolder(inHolderNr);
-	getDataManager().readyWithInHolder(inHolderNr);
 	DH_Visibilities* inputDH = (DH_Visibilities*)getDataManager().getInHolder(inHolderNr);
-
 
 	//Dump input
 
@@ -311,6 +308,7 @@ namespace LOFAR
 	}
 	cout <<sb<<" from inputholder "<<getDataManager().getInputSelector()->getCurrentSelection()<<endl;
 #endif
+	getDataManager().readyWithInHolder(inHolderNr);
 	getDataManager().getInputSelector()->selectNext();
       }
 
