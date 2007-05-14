@@ -79,7 +79,7 @@ PR_MPI::PR_MPI(const string&			aHostName,
 									aParamFile.c_str(),
 									nodes.size());
 		itsStopCmd  = formatString("./stopMPI.sh %s", 
-									aJobName.c_str());
+									aExecutable.c_str());
 	}
 }
 
