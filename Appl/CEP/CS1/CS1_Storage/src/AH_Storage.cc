@@ -88,16 +88,21 @@ namespace LOFAR
         // Each writer will run on a separate node.
         step.runOnNode(nw);
 	
-	vector<int> channels;
         // Connect to BG output
-	for (int core = 0; core < nNodesPerCell * nrPsetsPerStorage; core++) {
-	  step.getInDataManager(core).setInBuffer(core, false, 10);
-	  itsStub->connect(nw, core, step.getInDataManager(core), core);
-	  channels.push_back(core);
-	}	
-
-	// limit the number of concurrent incoming connections
-	step.getInDataManager(0).setInRoundRobinPolicy(channels, maxConcurrent);
+	for (unsigned pset = 0; pset < nrPsetsPerStorage; pset ++) {
+	  vector<int> channels;
+	  for (unsigned core = 0; core < nNodesPerCell; core++) {
+	    int channel = pset * nNodesPerCell + core;
+	    step.getInDataManager(channel).setInBuffer(channel, false, 10);
+	    itsStub->connect(nw, channel, step.getInDataManager(channel), channel);
+	    channels.push_back(channel);
+	  }
+	  // limit the number of concurrent incoming connections
+	  // actually, we would like to set the number of concurrent
+	  // communications for all psets together, but we cannot express this
+	  // thus we do this for each pset
+	  step.getInDataManager(0).setInRoundRobinPolicy(channels, maxConcurrent);
+	}
       }
 #ifdef HAVE_MPI
       ASSERTSTR (TH_MPI::getNumberOfNodes() ==  nrWriters,
