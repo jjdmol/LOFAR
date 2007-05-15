@@ -77,7 +77,6 @@ namespace LOFAR
       const ACC::APS::ParameterSet itsPS;
       uint  itsNStations;
       uint  itsNBaselines;
-      uint  itsNInputsPerSubband;
       uint  itsNChannels;
       uint  itsNBeams;
       uint  itsNPolSquared;
@@ -86,6 +85,9 @@ namespace LOFAR
       MSWriter* itsWriter;
 
       uint itsNrSubbandsPerCell; ///< Number of subbands per BG/L cell
+      uint itsNrSubbandsPerStorage;
+      uint itsNrNodesPerCell;
+      vector<uint> itsCurrentInputs;
       vector<uint> itsBandIDs;   ///< MS IDs of the frequency bands
       uint itsFieldID;           ///< MS ID of the field, i.e. the beam.
       uint itsTimeCounter;       ///< Counts the time
