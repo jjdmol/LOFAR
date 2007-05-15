@@ -627,9 +627,9 @@ namespace LOFAR
       MBaseline  MB_J2000;
       MVBaseline MBV_J2000;
       
-      for (int i=0; i<itsNrAnt; i++) {
-        for (int j=0; j<=i; j++) {
-	  MB_ITRF = MBaseline(MVBaseline(basel(0,i,j), basel(1,i,j), basel(2,i,j)), 
+      for (int ant2=0; ant2<itsNrAnt; ant2++) {
+        for (int ant1=0; ant1<=ant2; ant1++) {
+	  MB_ITRF = MBaseline(MVBaseline(basel(0,ant1,ant2), basel(1,ant1,ant2), basel(2,ant1,ant2)), 
 	                      MBaseline::ITRF);
 	  MB_J2000 = MBaseline::Convert (MB_ITRF, MBaseline::Ref (MBaseline::J2000, *itsFrame)) ();
 	  MBV_J2000 = MB_J2000.getValue();
@@ -641,8 +641,8 @@ namespace LOFAR
 
           itsMSCol->flagRow().put (rowNumber, False);
           itsMSCol->time().put (rowNumber, time);
-          itsMSCol->antenna1().put (rowNumber, j);
-          itsMSCol->antenna2().put (rowNumber, i);
+          itsMSCol->antenna1().put (rowNumber, ant1);
+          itsMSCol->antenna2().put (rowNumber, ant2);
           itsMSCol->feed1().put (rowNumber, 0);
           itsMSCol->feed2().put (rowNumber, 0);
           itsMSCol->dataDescId().put (rowNumber, bandId);
@@ -667,6 +667,8 @@ namespace LOFAR
             Array<Complex> dataArray(dShape, (Complex*)data, SHARE);
             IPosition start(2, 0, channelId);
             IPosition leng(2, shape[0], nrChannels);
+	    dataArray.apply(conj); // Temporary fix, necessary to prevent flipping of the sky, since
+	                           // the UVW coordinates are reversed (20070515)
             itsMSCol->data().putSlice(rowNumber, Slicer(start, leng), dataArray);
           }
           catch (AipsError& e)
