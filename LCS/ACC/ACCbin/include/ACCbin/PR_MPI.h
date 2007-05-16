@@ -52,7 +52,8 @@ public:
 			const string& 			aJobName, 
 			const vector<string>& 	nodes,
 			const string& 			aExecutable,
-			const string& 			aParamfile);
+			const string& 			aParamfile,
+			uint16					nrProcs);
 
 	PR_MPI(const PR_MPI&	other);
 

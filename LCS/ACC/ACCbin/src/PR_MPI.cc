@@ -39,7 +39,8 @@ PR_MPI::PR_MPI(const string&			aHostName,
 			   const string&  			aJobName,
 			   const vector<string>& 	nodes,
 			   const string&  			aExecutable,
-			   const string&  			aParamFile)
+			   const string&  			aParamFile,
+			   uint16					nrProcs)
 	: ProcRule("MPIjob", aJobName, aExecutable, aParamFile)
 {
 	LOG_TRACE_OBJ_STR ("PR_MPI: constructor");
@@ -66,7 +67,7 @@ PR_MPI::PR_MPI(const string&			aHostName,
 									machinefileName.c_str(),
 									aExecutable.c_str(),
 									aParamFile.c_str(),
-									nodes.size());
+									nrProcs);
 		itsStopCmd  = formatString("ssh %s \"( cd /opt/lofar/bin ; ./stopMPI.sh %s ) \"", 
 									aHostName.c_str(),
 									aExecutable.c_str());
@@ -77,7 +78,7 @@ PR_MPI::PR_MPI(const string&			aHostName,
 									machinefileName.c_str(),
 									aExecutable.c_str(),
 									aParamFile.c_str(),
-									nodes.size());
+									nrProcs);
 		itsStopCmd  = formatString("./stopMPI.sh %s", 
 									aExecutable.c_str());
 	}
