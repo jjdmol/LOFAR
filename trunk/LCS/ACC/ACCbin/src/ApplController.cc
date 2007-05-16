@@ -255,15 +255,25 @@ void ApplController::createParSubsets()
 		// nrProcs  := x | 0
 		string procName = procList[procIdx];
 		int32  nrProcs  = indexValue(procName, "()");
+		rtrim(procName, "()0123456789");
+		string procPrefix = applName +"." + procName;
+
+		// TODO: REMOVE THIS CS1 HACK
+		// number of processes if very complex to calculate. For CS1 this is done
+		// by a python script, for final LOFAR we need to do this in SAS.
+		if (procPrefix == "InputAppl.Transpose") {
+			LOG_DEBUG("CS1_SPECIAL: calling prepare_CS1_InputSection.py");
+			nrProcs = system("/opt/lofar/bin/prepare_CS1_InputSection.py");
+			LOG_DEBUG_STR("nrOfProcesses calculated by script = " << nrProcs);
+		}
+        
 		if (nrProcs == 0) {
 			itsNrOfProcs++;
 		}
 		else {
 			itsNrOfProcs += nrProcs;
 		}
-		rtrim(procName, "()0123456789");
-		string procPrefix = applName +"." + procName;
-        
+
 		// The startstopType determines what information is put in the parsetfiles
 		// for the processes.
 		string startstopType = itsObsParamSet->getString(procPrefix+"._startstopType");
