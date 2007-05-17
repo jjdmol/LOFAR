@@ -146,6 +146,12 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 	}
 
 	default:
+	// 170507: This IN/OUT stuff is not very handy in the control-chains.
+	//		   It is also not neccesary to check this because signals will always
+	//		   be catched in switches. It is much more usefull to use these two bits
+	//		   for marking whether a message is an order/request or an acknowlegdement.
+	//		   For now these checks are disabled.
+#if 0
 		if (SPP == getType() && (F_EVT_INOUT(event) == F_OUT)) {    
 			LOG_ERROR(formatString ("Developer error in %s (port %s): "
 									"received an OUT event (%s) in a SPP",
@@ -162,6 +168,7 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 									_pTask->evtstr(event)));    
 			return (status);
 		}
+#endif
 		break;
 	}
 

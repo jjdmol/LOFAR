@@ -271,6 +271,12 @@ ssize_t GCFPort::send(GCFEvent& e)
 		return (0);
 	}
 
+	// 170507: This IN/OUT stuff is not very handy in the control-chains.
+	//		   It is also not neccesary to check this because signals will always
+	//		   be catched in switches. It is much more usefull to use these two bits
+	//		   for marking whether a message is an order/request or an acknowlegdement.
+	//		   For now these checks are disabled.
+#if 0
 	if (SPP == _type) {
 		if (!(F_EVT_INOUT(e) & F_OUT)) {
 			LOG_ERROR(formatString ("Trying to send IN event '%s' on SPP "
@@ -297,6 +303,7 @@ ssize_t GCFPort::send(GCFEvent& e)
 
 		return (-1);
 	}
+#endif
 
 	return (_pSlave->send(e));
 }
