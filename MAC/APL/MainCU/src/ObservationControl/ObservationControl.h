@@ -130,14 +130,17 @@ private:
 	GCFTimerPort*			itsTimerPort;
 
 	CTState::CTstateNr		itsState;
+	uint32					itsNrControllers;
 	uint32					itsBusyControllers;
 	uint16					itsChildResult;
+	uint16					itsQuitReason;
 	
 	// timers for the several stages.
 	uint32					itsClaimTimer;
 	uint32					itsPrepareTimer;
 	uint32					itsStartTimer;
 	uint32					itsStopTimer;
+	uint32					itsForcedQuitTimer;
 	uint32					itsHeartBeatTimer;
 
 	// ParameterSet variables
