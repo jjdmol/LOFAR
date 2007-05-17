@@ -50,6 +50,8 @@ typedef struct stateFlow_t {
 static	stateFlow	stateFlowTable[] = {
 //		received signal			expected in state		requested state
 //		------------------------------------------------------------------
+	{	CONTROL_STARTED,		CTState::ANYSTATE,		CTState::CREATED	},
+	{	CONTROL_CONNECTED,		CTState::NOSTATE,		CTState::CONNECTED	},
 	{	CONTROL_CONNECTED,		CTState::CONNECT,		CTState::CONNECTED	},
 	{	CONTROL_CLAIM,			CTState::CONNECTED,		CTState::CLAIMED	},
 	{	CONTROL_CLAIMED,		CTState::CLAIM,			CTState::CLAIMED	},
@@ -61,16 +63,15 @@ static	stateFlow	stateFlowTable[] = {
 	{	CONTROL_SUSPEND,		CTState::RESUMED,		CTState::SUSPENDED	},
 	{	CONTROL_SUSPEND,		CTState::PREPARED,		CTState::SUSPENDED	},
 	{	CONTROL_SUSPENDED,		CTState::SUSPEND,		CTState::SUSPENDED	},
-	{	CONTROL_RELEASE,		CTState::ANYSTATE,		CTState::RELEASED	},
+	{	CONTROL_RELEASE,		CTState::CLAIMED,		CTState::RELEASED	},
+	{	CONTROL_RELEASE,		CTState::PREPARED,		CTState::RELEASED	},
+	{	CONTROL_RELEASE,		CTState::SUSPENDED,		CTState::RELEASED	},
 	{	CONTROL_RELEASED,		CTState::RELEASE,		CTState::RELEASED	},
-	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::QUITED		},
+	{	CONTROL_QUIT,			CTState::CONNECTED,		CTState::QUITED		},
+	{	CONTROL_QUIT,			CTState::RELEASED,		CTState::QUITED		},
 	{	CONTROL_QUITED,			CTState::QUIT,			CTState::QUITED		},
-//	{	CONTROL_FINISH,			CTState::RELEASED,		CTState::FINISHED	},
-//	{	CONTROL_FINISHED,		CTState::RELEASED,		CTState::FINISHED	},
-//	{	CONTROL_FINISHED,		CTState::FINISH,		CTState::FINISHED	},
 	{	CONTROL_RESYNCED,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	CONTROL_SCHEDULE,		CTState::ANYSTATE,		CTState::ANYSTATE	},
-//	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::FINISH		},
 	{	0x00,					CTState::NOSTATE,		CTState::NOSTATE	}
 };
 
@@ -482,16 +483,22 @@ bool ParentControl::_confirmState(uint16			signal,
 //					  cts.name(parent->requestedState));
 //	}
 
-	if (result != CT_RESULT_NO_ERROR) {
-		parent->failed = true;
+	if (result != CT_RESULT_NO_ERROR) {		// error reaching a state?
+		parent->failed = true;				// report problem
 		LOG_ERROR_STR(cntlrName << " DID NOT reach the " << 
 			cts.name(requestedState(signal)) << " state, error=" << result);
-		return (false);
+		// if we are NOT trying to quit, don't continue with the state-sequence.
+		// when we ARE trying to reach the QUIT state continue otherwise we will 
+		// be running forever.
+		if (parent->requestedState != CTState::QUITED) {
+			return (false);
+		}
 	}
-
-	parent->currentState = requestedState(signal);
-	LOG_DEBUG_STR(cntlrName << " reached " << cts.name(parent->currentState) << 
-						" state succesfully");
+	else {		// no error while reaching the new state
+		LOG_DEBUG_STR(cntlrName << " reached " << cts.name(cts.signal2stateNr(signal)) << 
+							" state succesfully");
+	}
+	parent->currentState = requestedState(signal);			// store new state
 
 	if (parent->currentState != parent->requestedState) {	// chain of states?
 		_doRequestedAction(parent);							// start next step
@@ -756,7 +763,9 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		// should be a parentport
 		PIiter		parent = findParent(&port);
 		if (!isParent(parent)) {
-			LOG_WARN_STR ("Received CONNECTED event from unknown parent, ignoring");
+			CONTROLConnectedEvent	inMsg(event);
+			LOG_WARN_STR ("Received CONNECTED event from unknown parent (" <<
+													inMsg.cntlrName << "), ignoring");
 			break;
 		}
 

@@ -135,6 +135,22 @@ uint16	CTState::signal(CTstateNr	aStateNr) const
 }
 
 //
+// signal2stateNr(signal)
+//
+CTState::CTstateNr	CTState::signal2stateNr  (uint16	someSignal)   const
+{
+	uint16	i = NOSTATE;
+	while (i < LAST_STATE) {
+		if (stateSignalTable[i].signal == someSignal) {
+			return (stateSignalTable[i].state);
+		}
+		i++;
+	}
+
+	ASSERTSTR(false, someSignal << " is not a supported signal");
+}
+
+//
 // stateAck(state)
 //
 // Return the 'ack' state of the given state.

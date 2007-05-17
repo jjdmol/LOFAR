@@ -71,7 +71,7 @@ ChildControl::ChildControl() :
 	itsActionList	 		(),
 	itsActionTimer			(0),
 	itsGarbageTimer			(0),
-	itsGarbageInterval		(30),		// TODO: set to 300 for real life
+	itsGarbageInterval		(10),		// TODO: set to 300 for real life
 	itsCompletionTimer		(0),
 	itsCompletionPort		(0)
 {
@@ -1030,17 +1030,21 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 		break;
 
 	case F_DISCONNECTED: {
-			port.close();		// always close port
-
+			// 170507: in one way or another the controllerport is not recognized here
+			//		   anymore. So the code of cleaning up the admin is moved to the
+			// 		   reception of the QUITED event.
+#if 1
 			CIiter		controller = itsCntlrList->begin();
 			CIiter		end		   = itsCntlrList->end();
 			while (controller != end) {
 				// search corresponding controller
+				LOG_DEBUG_STR("Check:" << controller->cntlrName);
 				if (controller->port != &port) {
 					controller++;
 					continue;
 				}
 
+				
 				// found controller, close port
 				if (controller->currentState >= CTState::QUIT) {// expected disconnect?
 					LOG_DEBUG_STR("Removing " << controller->cntlrName << 
@@ -1056,7 +1060,8 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 													time(0), CT_RESULT_LOST_CONNECTION);
 					controller->port = 0;
 
-#if 0					// Try to restart the controller over 5 seconds
+#if 0
+					// Try to restart the controller over 5 seconds
 					// Add it to the action list.
 					controller->retryTime = time(0) + 300 ;
 					itsListener->cancelTimer(itsActionTimer);
@@ -1070,8 +1075,11 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 					}
 					itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
 				}
-				break;// out of while loop
-			}
+				// controlelr was found and handled, break out of the while loop.
+				break;
+			} // while
+#endif
+			port.close();		// always close port
 		}
 		break;
 
@@ -1208,12 +1216,15 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			_setEstablishedState(msg.cntlrName, CTState::QUITED, time(0),
 								 msg.result);
 
-			// inform child its shutdown is registered
-//			CONTROLFinishedEvent	reply;
-//			reply.cntlrName = msg.cntlrName;
-//			port.send(reply);
-//			_setEstablishedState(msg.cntlrName, CTState::FINISHED, time(0),
-//								 msg.result);
+#if 0
+			CIiter	controller = findController(msg.cntlrName);
+			ASSERTSTR(isController(controller), "Controller " << msg.cntlrName << 
+															" not in our administration anymore!");
+			// found controller, close port
+			LOG_DEBUG_STR("Removing " << controller->cntlrName << 
+														" from the controllerlist");
+			itsCntlrList->erase(controller);			// just remove
+#endif
 		}
 		break;
 	
