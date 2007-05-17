@@ -369,6 +369,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 				itsNextOTDBpolltime = time(0) + itsOTDBpollInterval;
 				itsNextOTDBpolltime -= (itsNextOTDBpolltime % itsOTDBpollInterval);
 			}
+			port.cancelTimer(itsSecondTimer);
 			itsSecondTimer = port.setTimer(1.0);
 		}
 		// a connection was lost and a timer was set to try to reconnect.
@@ -409,7 +410,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	case CONTROL_QUITED: {
 		// The observationController is going down.
 		CONTROLQuitedEvent quitedEvent(event);
-		LOG_DEBUG_STR("Received QUITED(" << quitedEvent.cntlrName << ")");
+		LOG_DEBUG_STR("Received QUITED(" << quitedEvent.cntlrName << "," << quitedEvent.result << ")");
 
 		// update SAS database.
 		Observation*	theObs(_findActiveObservation(quitedEvent.cntlrName));
@@ -420,7 +421,12 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
-		tm.setTreeState(theObs->treeID, tsc.get("finished"));
+		if (quitedEvent.result == CT_RESULT_NO_ERROR) {
+			tm.setTreeState(theObs->treeID, tsc.get("finished"));
+		}
+		else {
+			tm.setTreeState(theObs->treeID, tsc.get("aborted"));
+		}
 
 		// update our administration
 		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << 
@@ -509,7 +515,7 @@ void MACScheduler::finish()
 //
 void MACScheduler::_doOTDBcheck()
 {
-	// update PVSS database
+	// update PVSS database with polltime
 	ptime	currentTime = from_time_t(time(0));
 	itsPropertySet->setValue(string(PN_MS_OTDB_LAST_POLL),
 										GCFPVString(to_simple_string(currentTime)));
@@ -541,11 +547,13 @@ void MACScheduler::_doOTDBcheck()
 		// get current state of Observation
 		string		cntlrName = controllerName(CNTLRTYPE_OBSERVATIONCTRL, 
 												0, newTreeList[idx].treeID());
-		CTState::CTstateNr	requestedState= itsChildControl->getRequestedState(cntlrName);
+		CTState		cts;
+		CTState::CTstateNr	curState      = itsChildControl->getCurrentState(cntlrName);
+		LOG_DEBUG_STR(cntlrName << ":cur=" << cts.name(curState));
 
 		// When in startup or claimtime we should try to start the controller.
-		if ((timediff > seconds(0)) && (requestedState != CTState::CONNECTED)) {
-			// no, let database construct the parset for the whole observation
+		if ((timediff > seconds(0)) && (curState < CTState::CREATED)) {
+			// Let database construct the parset for the whole observation
 			OTDB::TreeMaintenance	tm(itsOTDBconnection);
 			OTDB::treeIDType		treeID = newTreeList[idx].treeID();
 			OTDBnode				topNode = tm.getTopNode(treeID);
@@ -583,10 +591,11 @@ void MACScheduler::_doOTDBcheck()
 		// in CLAIM period?
 		if ((timediff > seconds(0)) && (timediff <= seconds(itsClaimPeriod))) {
 			// Observation is somewhere in the claim period its should be up by now.
-			if (requestedState != CTState::CLAIMED) {
+			if (curState < CTState::CLAIMED) {
 				LOG_ERROR_STR("Observation " << cntlrName << 
 							" should have reached the CLAIMING state by now," <<
 							" check state of observation.");
+				LOG_DEBUG_STR("Its state is: " << cts.name(curState));
 			}
 			idx++;
 			continue;
@@ -693,22 +702,7 @@ void MACScheduler::_connectedHandler(GCFPortInterface& /*port*/)
 //
 void MACScheduler::_disconnectedHandler(GCFPortInterface& port)
 {
-	string visd;
 	port.close();
-#if 0
-	if(_isServerPort(itsVIparentPort,port)) {
-		LOG_FATAL("VI parent server closed");
-		itsVIparentPort.open(); // server closed? reopen it
-	}
-	else if(_isVISDclientPort(port,visd)) {
-		LOG_FATAL(formatString("VI Startdaemon port disconnected: %s",visd.c_str()));
-		port.setTimer(3L);
-	}
-	else if(_isVIclientPort(port)) {
-		LOG_FATAL("VI client port disconnected");
-		// do something with the nodeId?
-	}
-#endif
 }
 
 
