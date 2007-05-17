@@ -51,16 +51,16 @@ static	stateFlow	stateFlowTable[] = {
 	{	CONTROL_SUSPEND,		CTState::RESUMED,		CTState::SUSPENDED	},
 	{	CONTROL_SUSPEND,		CTState::PREPARED,		CTState::SUSPENDED	},
 	{	CONTROL_SUSPENDED,		CTState::SUSPEND,		CTState::SUSPENDED	},
-	{	CONTROL_RELEASE,		CTState::ANYSTATE,		CTState::RELEASED	},
+	{	CONTROL_RELEASE,		CTState::CLAIMED,		CTState::RELEASED	},
+	{	CONTROL_RELEASE,		CTState::PREPARED,		CTState::RELEASED	},
+	{	CONTROL_RELEASE,		CTState::SUSPENDED,		CTState::RELEASED	},
 	{	CONTROL_RELEASED,		CTState::RELEASE,		CTState::RELEASED	},
-	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::QUITED		},
+	{	CONTROL_QUIT,			CTState::CONNECTED,		CTState::QUITED		},
+	{	CONTROL_QUIT,			CTState::RELEASED,		CTState::QUITED		},
+//	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::QUITED		},
 	{	CONTROL_QUITED,			CTState::QUIT,			CTState::QUITED		},
-//	{	CONTROL_FINISH,			CTState::RELEASED,		CTState::FINISHED	},
-//	{	CONTROL_FINISHED,		CTState::RELEASED,		CTState::FINISHED	},
-//	{	CONTROL_FINISHED,		CTState::FINISH,		CTState::FINISHED	},
 	{	CONTROL_RESYNCED,		CTState::ANYSTATE,		CTState::ANYSTATE	},
 	{	CONTROL_SCHEDULE,		CTState::ANYSTATE,		CTState::ANYSTATE	},
-//	{	CONTROL_QUIT,			CTState::ANYSTATE,		CTState::FINISH		},
 	{	0x00,					CTState::NOSTATE,		CTState::NOSTATE	}
 };
 
@@ -98,8 +98,8 @@ CTState::CTstateNr getNextState(CTState::CTstateNr		theCurrentState,
 	CTState::CTstateNr	currentState   = theCurrentState;
 	i = 0;
 	for (;;) {
-		LOG_DEBUG_STR("Check " << cts.name(stateFlowTable[i].currentState) << 
-						" to " << cts.name(stateFlowTable[i].requestedState));
+//		LOG_DEBUG_STR("Check " << cts.name(stateFlowTable[i].currentState) << 
+//						" to " << cts.name(stateFlowTable[i].requestedState));
 		// find matching requested state
 		if (stateFlowTable[i].requestedState == requestedState) {
 			// does (moved) currentState match state of table?
@@ -167,7 +167,15 @@ int main (int	argc, char*		argv[]) {
 																   CTState::PREPARED)));
 	LOG_DEBUG_STR("resumed  -> released : " << cts.name(getNextState(CTState::RESUMED, 
 																   CTState::RELEASED)));
-	LOG_DEBUG_STR("resumed  -> finished : " << cts.name(getNextState(CTState::RESUMED, 
+	LOG_DEBUG_STR("connected-> quited   : " << cts.name(getNextState(CTState::CONNECTED, 
+																   CTState::QUITED)));
+	LOG_DEBUG_STR("claimed  -> quited   : " << cts.name(getNextState(CTState::CLAIMED, 
+																   CTState::QUITED)));
+	LOG_DEBUG_STR("prepared -> quited   : " << cts.name(getNextState(CTState::PREPARED, 
+																   CTState::QUITED)));
+	LOG_DEBUG_STR("resumed  -> quited   : " << cts.name(getNextState(CTState::RESUMED, 
+																   CTState::QUITED)));
+	LOG_DEBUG_STR("suspended-> quited   : " << cts.name(getNextState(CTState::SUSPENDED, 
 																   CTState::QUITED)));
 
 

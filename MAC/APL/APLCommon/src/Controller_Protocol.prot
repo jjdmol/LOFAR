@@ -98,7 +98,7 @@ event = {
 //
 event = {
 	signal = CONNECT;
-	dir = IN; // from child to parent
+	dir = OUT; // from child to parent
 	param = {
 		name = "cntlrName";
 		type = "string";
@@ -110,7 +110,7 @@ event = {
 //
 event = {
 	signal = CONNECTED;
-	dir = OUT; // from parent to child
+	dir = IN; // from parent to child
 	param = {
 		name = "cntlrName";
 		type = "string";
@@ -126,7 +126,7 @@ event = {
 //
 event = {
 	signal = RESYNC;
-	dir = IN; // from child to parent
+	dir = OUT; // from child to parent
 	param = {
 		name = "cntlrName";
 		type = "string";
@@ -146,7 +146,7 @@ event = {
 //
 event = {
 	signal = RESYNCED;
-	dir = OUT; // from parent to child
+	dir = IN; // from parent to child
 	param = {
 		name = "cntlrName";
 		type = "string";
@@ -376,7 +376,7 @@ event = {
 //
 event = {
 	signal = COMMON;
-	dir = OUT; // from parent to child
+	dir = IN; // from parent to child
 	param = {
 		name = "cntlrName";
 		type = "string";
