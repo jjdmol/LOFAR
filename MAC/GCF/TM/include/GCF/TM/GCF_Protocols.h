@@ -49,6 +49,10 @@ namespace LOFAR {
 #define F_OUT   0x02
 #define F_INOUT (F_IN | F_OUT)
 
+// Macros for getting  the direction from a signal
+#define F_INDIR(signal)  ( ((unsigned short)signal >> 14) & F_IN)
+#define F_OUTDIR(signal) ( ((unsigned short)signal >> 14) & F_OUT)
+
 /**
  * This enum lists all framework protocols. The application protocols should
  * start numbering enums at F_APPLICATION_PROTOCOL, e.g.:
