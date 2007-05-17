@@ -415,10 +415,22 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		break;
 
 	case F_TIMER:  {
-		ObsIter			 theObs     = itsObsMap.find(port.getName());
-		if (theObs == itsObsMap.end()) {
-			LOG_WARN_STR("Event for unknown observation: " << port.getName());
-			break;
+		// try to map the timer on portname to an Observation
+		ObsIter		theObs = itsObsMap.find(port.getName());
+		if (theObs == itsObsMap.end()) {		// not found, try timerID
+			GCFTimerEvent	timerEvt = static_cast<GCFTimerEvent&>(event);
+			theObs = _searchObsByTimerID(timerEvt.id);
+			if (theObs == itsObsMap.end()) {	// still not found?
+				LOG_WARN_STR("Event for unknown observation: " << port.getName());
+				break;
+			}
+			// found on timerID. This means that the Observation should have died
+			// five seconds ago. Send a QUIT command.
+			LOG_WARN_STR("Observation " << theObs->second->getName() << 
+						" should have died by now, sending an extra QUIT command.");
+			CONTROLQuitEvent	quitevent;
+			quitevent.cntlrName = theObs->second->getName();
+			theObs->second->dispatch(quitevent, port);
 		}
 
 		// pass event to observation FSM
@@ -428,7 +440,10 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	}
 	break;
 
-	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL ----------------
+
+	// A new observationcontroller has connected, create a new ActiveObs to
+	// handle the admin of this observation.
 	case CONTROL_CONNECT: {
 		CONTROLConnectEvent		msg(event);
 		CONTROLConnectedEvent	answer;
@@ -441,6 +456,10 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	}
 	break;
 
+	// ------------ EVENTS RECEIVED FROM CHILD AND PARENT CONTROL --------------
+
+	// The events from the child-task may be of the DigBoardCtlr or one of the
+	// BeamCtlrs or CalCntrls of the active observations.
 	case CONTROL_CONNECTED:		// from ChildITCport
 	case CONTROL_SCHEDULED:
 	case CONTROL_CLAIMED:
@@ -449,6 +468,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	case CONTROL_SUSPENDED:
 	case CONTROL_RELEASED:
 	case CONTROL_QUITED:
+	// The next events are from one of the ObservationControllers.
 	case CONTROL_CLAIM:			// from ParentITCport
 	case CONTROL_SCHEDULE:
 	case CONTROL_PREPARE:
@@ -458,9 +478,10 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	case CONTROL_QUIT: {
 		// All the events have the problem that the controller can be StationControl,
 		// CalibrationControl or BeamControl. But what they all have in common is
-		// the instancenumber and treeID.
-		// Substract instanceNr and treeID and contruct the StationControl-variant.
-		CONTROLCommonEvent	ObsEvent(event);
+		// the instancenumber and treeID. So we can substract instanceNr and treeID 
+		// form the name and contruct the StationControl-name which we use for the
+		// registration of the Active Obs.
+		CONTROLCommonEvent	ObsEvent(event);		// we just need the name
 		uint16			 instanceNr = getInstanceNr(ObsEvent.cntlrName);
 		OTDBtreeIDType	 treeID	    = getObservationNr(ObsEvent.cntlrName);
 		string			 cntlrName  = controllerName(CNTLRTYPE_STATIONCTRL, 
@@ -471,6 +492,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			break;
 		}
 
+		// Clock changes are done in the claim state and require an extra action
 		if (event.signal == CONTROL_CLAIM && 
 								itsClock != theObs->second->obsPar()->sampleClock) {
 			itsClock = theObs->second->obsPar()->sampleClock;
@@ -479,6 +501,27 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 			// TODO: give clock 5 seconds to stabelize
 		}
 
+		// before passing a new state request from the ObsController to the 
+		// activeObs, make sure the last state is reached.
+LOG_DEBUG_STR(formatString("event.signal = %04X", event.signal));
+LOG_DEBUG_STR("F_INDIR = " << F_INDIR(event.signal));
+LOG_DEBUG_STR("F_OUTDIR = " << F_OUTDIR(event.signal));
+LOG_DEBUG_STR("inSync = " << theObs->second->inSync() ? "true" : "false");
+#if 0
+		if (F_OUTDIR(event.signal) && !theObs->second->inSync()) {
+			// TODO
+			CTState		cts;
+			LOG_FATAL_STR("Ignoring change to state " << 
+						cts.name(cts.signal2stateNr(event.signal)) << 
+						" for observation " << treeID << 
+						" because obs is still in state " << 
+						cts.name(theObs->second->curState()));
+			sendControlResult(*itsParentPort, event.signal, cntlrName, 
+																CT_RESULT_OUT_OF_SYNC);
+			break;
+			
+		}
+#endif
 		// pass event to observation FSM
 		LOG_TRACE_FLOW("Dispatch to observation FSM's");
 		theObs->second->dispatch(event, port);
@@ -486,12 +529,12 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 		// end of FSM?
 		if (event.signal == CONTROL_QUITED && theObs->second->isReady()) {
 			LOG_DEBUG_STR("Removing " <<ObsEvent.cntlrName<< " from the administration");
+			itsTimerPort->cancelTimer(theObs->second->itsStopTimerID);
 			delete theObs->second;
 			itsObsMap.erase(theObs);
 		}
 
 		// check if all actions for this event are finished.
-LOG_TRACE_FLOW("Counting busy controllers...");
 		vector<ChildControl::StateInfo>	cntlrStates = 
 									itsChildControl->getPendingRequest("", treeID);
 LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
@@ -546,6 +589,9 @@ GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterf
 
 	switch (event.signal) {
 	case F_ENTRY: {
+		// tell Parent task we like to go down.
+		itsParentControl->nowInState(getName(), CTState::QUIT);
+
 		// Inform parent process we are going down.
 		CONTROLQuitedEvent		msg;
 		msg.cntlrName = getName();
@@ -601,7 +647,29 @@ uint16 StationControl::_addObservation(const string&	name)
 	LOG_DEBUG_STR(*theNewObs);
 	theNewObs->start();				// call initial state.
 
+	// Start a timer that while expire 5 seconds after stoptime.
+	time_t	stopTime = to_time_t(time_from_string(theObsPS.getString("Observation.stopTime")));
+	time_t	now		 = to_time_t(second_clock::universal_time());
+	theNewObs->itsStopTimerID = itsTimerPort->setTimer(now-stopTime+5);
+	
 	return (CT_RESULT_NO_ERROR);
+}
+
+//
+// _searchObsByTimerID(timerID)
+//
+StationControl::ObsIter StationControl::_searchObsByTimerID(uint32	timerID)
+{
+	ObsIter		iter(itsObsMap.begin());
+	ObsIter		end (itsObsMap.end());
+
+	while (iter != end) {
+		if (iter->second->itsStopTimerID == timerID)
+			return (iter);
+		++iter;
+	}
+
+	return (iter);
 }
 
 

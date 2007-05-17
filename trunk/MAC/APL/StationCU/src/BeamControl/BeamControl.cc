@@ -67,7 +67,8 @@ BeamControl::BeamControl(const string&	cntlrName) :
 	itsParentPort		(0),
 	itsTimerPort		(0),
 	itsBeamServer		(0),
-	itsState			(CTState::NOSTATE)
+	itsState			(CTState::NOSTATE),
+	itsBeamID			(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -298,6 +299,13 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		setState(CTState::CONNECTED);
 		sendControlResult(port, CONTROL_CONNECTED, msg.cntlrName, CT_RESULT_NO_ERROR);
 
+		// let ParentControl watch over the start and stop times for extra safety.
+		ptime	startTime = time_from_string(globalParameterSet()->
+													getString("Observation.startTime"));
+		ptime	stopTime  = time_from_string(globalParameterSet()->
+													getString("Observation.stopTime"));
+		itsParentControl->activateObservationTimers(msg.cntlrName, startTime, stopTime);
+
 		LOG_INFO ("Going to started state");
 		TRAN(BeamControl::started_state);				// go to next state.
 		break;
@@ -338,7 +346,7 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 
 	case F_CONNECTED: {
 		ASSERTSTR (&port == itsBeamServer, "F_CONNECTED event from port " 
-											<< port.getName());
+																	<< port.getName());
 		itsTimerPort->cancelAllTimers();
 		LOG_INFO ("Connected with BeamServer, going to claimed state");
 		itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool(true));
@@ -428,7 +436,17 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
 		setState(CTState::PREPARE);
-		doPrepare();	// will result in BS_BEAMALLOCACK event
+		// try to send a BEAMALLOC event to the BeamServer.
+		if (!doPrepare()) { // could not sent it?
+			LOG_WARN_STR("Beamallocation error: nr subbands != nr beamlets" << 
+						 ", staying in CLAIMED mode");
+			setState(CTState::CLAIMED);
+			LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << 
+												CT_RESULT_CONFLICTING_ARGS << ")");
+			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), 
+															CT_RESULT_CONFLICTING_ARGS);
+		}
+		// else a BS_BEAMALLOCACK event will happen.
 		break;
 	}
 
@@ -501,9 +519,9 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 
 	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
 
-	case CONTROL_SCHEDULED: {
+	case CONTROL_SCHEDULE: {
 		CONTROLScheduledEvent		msg(event);
-		LOG_DEBUG_STR("Received SCHEDULED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received SCHEDULE(" << msg.cntlrName << ")");
 		// TODO: do something usefull with this information!
 		break;
 	}
@@ -530,7 +548,14 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 		CONTROLReleaseEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
 		setState(CTState::RELEASE);
-		doRelease();	// results in BS_BEAMFREEACK
+		if (!doRelease()) {
+			LOG_WARN_STR("Cannot release a beam that was not allocated, continuing");
+			setState(CTState::RELEASED);
+			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
+															CT_RESULT_NO_ERROR);
+			TRAN(BeamControl::claimed_state);
+		}
+		// else a BS_BEAMFREEACK event will be sent
 		break;
 	}
 
@@ -578,6 +603,9 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 	case F_ENTRY: {
 		// update PVSS
 		setState(CTState::QUIT);
+		// tell Parent task we like to go down.
+		itsParentControl->nowInState(getName(), CTState::QUIT);
+
 //		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("quiting"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 		// disconnect from BeamServer
@@ -620,12 +648,16 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 //
 // doPrepare()
 //
-void BeamControl::doPrepare()
+bool BeamControl::doPrepare()
 {
 	Observation		theObs(globalParameterSet());	// does all nasty conversions
-	ASSERTSTR (theObs.subbands.size() == theObs.beamlets.size(),
-			"size of subbandList " << theObs.subbands.size() << " != " <<
-			" size of beamletList" << theObs.beamlets.size());
+
+	if (theObs.subbands.size() != theObs.beamlets.size()) {
+		LOG_FATAL_STR("size of subbandList (" << theObs.subbands.size() << ") != " <<
+						"size of beamletList (" << theObs.beamlets.size() << ")");
+		return (false);
+	}
+
 	LOG_TRACE_VAR_STR("nr Subbands:" << theObs.subbands.size());
 	LOG_TRACE_VAR_STR("nr Beamlets:" << theObs.beamlets.size());
 
@@ -660,6 +692,8 @@ void BeamControl::doPrepare()
 	itsPropertySet->setValue(PN_BC_ANGLETIMES,	
 				GCFPVString(globalParameterSet()->getString("Observation.Beam.angleTimes")));
 	itsPropertySet->setValue(PN_BC_SUBARRAY, GCFPVString(beamAllocEvent.subarrayname));
+
+	return (true);
 }
 
 //
@@ -724,11 +758,16 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 //
 // doRelease(event)
 //
-void BeamControl::doRelease()
+bool BeamControl::doRelease()
 {
+	if (!itsBeamID) {
+		return (false);
+	}
+
 	BSBeamfreeEvent		beamFreeEvent;
 	beamFreeEvent.handle = itsBeamID;
 	itsBeamServer->send(beamFreeEvent);	// will result in BS_BEAMFREEACK event
+	return (true);
 }
 
 
@@ -751,6 +790,8 @@ bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 	itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
 	itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
 	itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
+
+	itsBeamID = 0;
 
 	return (true);
 }

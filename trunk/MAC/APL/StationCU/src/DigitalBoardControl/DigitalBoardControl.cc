@@ -806,6 +806,9 @@ GCFEvent::TResult DigitalBoardControl::finishing_state(GCFEvent& event, GCFPortI
 		break;
 
 	case F_ENTRY: {
+		// tell Parent task we like to go down.
+		itsParentControl->nowInState(getName(), CTState::QUIT);
+
 		// update PVSS
 		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
 		itsOwnPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));

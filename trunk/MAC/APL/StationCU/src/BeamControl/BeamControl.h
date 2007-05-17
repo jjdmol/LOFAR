@@ -97,10 +97,10 @@ private:
    	BeamControl& operator=(const BeamControl&);
 
 	int32	convertDirection		(const string&	typeName);
-	void	doPrepare				();
+	bool	doPrepare				();
+	bool	doRelease				();
 	uint16	handleBeamAllocAck		(GCFEvent&	event);
 	bool	handleBeamFreeAck		(GCFEvent&	event);
-	void	doRelease				();
 
    	void	_connectedHandler		(GCFPortInterface& port);
    	void	_disconnectedHandler	(GCFPortInterface& port);

@@ -33,6 +33,7 @@
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_TimerPort.h>
 #include <APL/APLCommon/Observation.h>
+#include <APL/APLCommon/CTState.h>
 #include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
 #include <APL/APLCommon/PropertySetAnswer.h>
 #include <GCF/PAL/GCF_MyPropertySet.h>
@@ -48,6 +49,7 @@ namespace LOFAR {
 	using GCF::TM::GCFTask;
 	using GCF::TM::GCFTimerPort;
 	using GCF::PAL::GCFMyPropertySet;
+	using APLCommon::CTState;
 	namespace StationCU {
 
 // \addtogroup package
@@ -73,7 +75,10 @@ public:
 	virtual void handlePropertySetAnswer(GCFEvent&	answer);
 
 	void					start()		{ initFsm();	}
-	bool					isReady()	{ return (itsReadyFlag); }
+	bool					isReady()	const { return (itsReadyFlag); }
+	bool					inSync()	const { return (itsCurState == itsReqState); }
+	CTState::CTstateNr		curState()	const { return (itsCurState); }
+	string					getName()	const { return (itsName); }
 	APLCommon::Observation*	obsPar()	{ return (&itsObsPar); }
 
 	ostream& print (ostream& os) const;
@@ -85,8 +90,10 @@ public:
 	GCFEvent::TResult	operational(GCFEvent&	event, GCFPortInterface&	port);
 	GCFEvent::TResult	stopping   (GCFEvent&	event, GCFPortInterface&	port);
 
+	uint32						itsStopTimerID;
+
 private:
-	// Default construnction and copying is not allowed
+	// Default construction and copying is not allowed
 	ActiveObs();
 	ActiveObs(const ActiveObs&	that);
 	ActiveObs& operator=(const ActiveObs& that);
@@ -104,6 +111,8 @@ private:
 	string						itsBeamCntlrName;
 	string						itsCalCntlrName;
 	bool						itsReadyFlag;
+	CTState::CTstateNr			itsReqState;
+	CTState::CTstateNr			itsCurState;
 };
 
 //#
