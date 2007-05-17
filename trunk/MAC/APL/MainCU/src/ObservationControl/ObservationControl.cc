@@ -66,10 +66,14 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsParentPort		(0),
 	itsTimerPort		(0),
 	itsState			(CTState::NOSTATE),
+	itsNrControllers  	(0),
+	itsBusyControllers  (0),
+	itsQuitReason		(CT_RESULT_NO_ERROR),
 	itsClaimTimer		(0),
 	itsPrepareTimer		(0),
 	itsStartTimer		(0),
 	itsStopTimer		(0),
+	itsForcedQuitTimer	(0),
 	itsHeartBeatTimer	(0),
 	itsHeartBeatItv		(0)
 {
@@ -464,6 +468,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 	case F_ENTRY: {
 		// convert times and periods to timersettings.
 		itsChildControl->startChildControllers();
+		itsNrControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 		setObservationTimers();
 		itsHeartBeatTimer = itsTimerPort->setTimer(1.0 * itsHeartBeatItv);
 		break;
@@ -516,6 +521,13 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			LOG_DEBUG("Requesting all childs to quit");
 			itsChildControl->requestState(CTState::QUITED, "");
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
+			// reschedule forced-quit timer for safety.
+			itsTimerPort->cancelTimer(itsForcedQuitTimer);
+			itsForcedQuitTimer = itsTimerPort->setTimer(5.0);
+		}
+		else if (timerEvent.id == itsForcedQuitTimer) {
+			LOG_WARN("QUITING BEFORE ALL CHILDREN DIED.");
+			TRAN(ObservationControl::finishing_state);
 		}
 		// some other timer?
 
@@ -636,17 +648,24 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		break;
 
 	case F_ENTRY: {
+		// first turn off 'old' timers
+		itsTimerPort->cancelTimer(itsForcedQuitTimer);
+		itsTimerPort->cancelTimer(itsStopTimer);
+
+		// tell Parent task we like to go down.
+		itsParentControl->nowInState(getName(), CTState::QUIT);
+
 		// inform MACScheduler we are going down
 		CONTROLQuitedEvent	msg;
 		msg.cntlrName = getName();
-		msg.result 	  = CT_RESULT_NO_ERROR;
+		msg.result 	  = itsQuitReason;;
 		itsParentPort->send(msg);
 
 		// update PVSS
 		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
-		itsTimerPort->setTimer(1L);
+		itsTimerPort->setTimer(1L);	// give PVSS task some time to update the DB.
 		break;
 	}
   
@@ -680,7 +699,9 @@ void ObservationControl::setObservationTimers()
 	itsTimerPort->cancelTimer(itsPrepareTimer);
 	itsTimerPort->cancelTimer(itsStartTimer);
 	itsTimerPort->cancelTimer(itsStopTimer);
-	itsClaimTimer = itsPrepareTimer = itsStartTimer = itsStopTimer = 0;
+	itsTimerPort->cancelTimer(itsForcedQuitTimer);
+	itsClaimTimer = itsPrepareTimer = itsStartTimer = 
+					itsStopTimer = itsForcedQuitTimer = 0;
 
 	// recalc new intervals
 	int32	sec2claim   = start - now - itsPreparePeriod - itsClaimPeriod;
@@ -730,6 +751,8 @@ void ObservationControl::setObservationTimers()
 	if (itsState < CTState::RELEASE) { 				// not yet shutting down?
 		if (sec2stop > 0) {
 			itsStopTimer = itsTimerPort->setTimer(1.0 * sec2stop);
+			// make sure we go down 5 seconds after quit was requested.
+			itsForcedQuitTimer = itsTimerPort->setTimer(sec2stop + 5.0);
 			LOG_DEBUG_STR ("Observation stops over " << sec2stop << " seconds");
 		}
 		else {
@@ -768,6 +791,20 @@ void  ObservationControl::doHeartBeatTask()
 	vector<ChildControl::StateInfo>		lateCntlrs = 
 						itsChildControl->getPendingRequest("", 0, CNTLRTYPE_NO_TYPE);
 
+	// check if enough stations are left too do our job.
+	// TODO: add criteria to SAS database and test those iso this foolish criteria.
+	if (nrChilds != itsNrControllers) {
+		LOG_WARN_STR("Only " << nrChilds << " out of " << itsNrControllers << " stations still available.");
+		// if no more children left while we are not in the quit-phase (stoptimer still running)
+		if (!nrChilds && itsStopTimer) {
+			LOG_FATAL("Too less stations left, FORCING QUIT OF OBSERVATION");
+			itsQuitReason = CT_RESULT_LOST_CONNECTION;
+			itsTimerPort->cancelTimer(itsStopTimer);
+			itsStopTimer = itsTimerPort->setTimer(0.0);
+			return;
+		}
+	}
+
 	LOG_TRACE_FLOW_STR("itsBusyControllers=" << itsBusyControllers);
 
 	// all controllers up to date?
@@ -779,8 +816,8 @@ void  ObservationControl::doHeartBeatTask()
 			return;
 		}
  
-		if (itsBusyControllers) {	// last time not all cntrls ready?
-			CTState		cts;
+		if (itsBusyControllers) {	// last time NOT all cntrls ready?
+			CTState		cts;		// report that state is reached.
 			setState(cts.stateAck(itsState));
 			itsBusyControllers = 0;
 			// inform Parent (ignore funtion-result)
