@@ -94,8 +94,11 @@ private:
 	StationControl(const StationControl&);
    	StationControl& operator=(const StationControl&);
 
-	uint16	_addObservation(const string&   name);
-   	void	_disconnectedHandler(GCFPortInterface& port);
+	typedef	map<string, ActiveObs*>::iterator		ObsIter;
+
+	uint16	_addObservation		(const string&   	name);
+   	void	_disconnectedHandler(GCFPortInterface&	port);
+	ObsIter	_searchObsByTimerID (uint32				aTimerID);
 
 	// Data members
    	APLCommon::PropertySetAnswer	itsPropertySetAnswer;

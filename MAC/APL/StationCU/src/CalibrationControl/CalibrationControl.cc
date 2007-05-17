@@ -286,6 +286,13 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		setState(CTState::CONNECTED);
 		sendControlResult(port, CONTROL_CONNECTED, msg.cntlrName, CT_RESULT_NO_ERROR);
 		
+		// let ParentControl watch over the start and stop times for extra safety.
+		ptime	startTime = time_from_string(globalParameterSet()->
+													getString("Observation.startTime"));
+		ptime	stopTime  = time_from_string(globalParameterSet()->
+													getString("Observation.stopTime"));
+		itsParentControl->activateObservationTimers(msg.cntlrName, startTime, stopTime);
+
 		LOG_INFO ("Going to started state");
 		TRAN(CalibrationControl::started_state);
 		break;
@@ -437,6 +444,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(),
 																CT_RESULT_NO_ERROR);
 			setState(CTState::PREPARED);
+			TRAN(CalibrationControl::active_state);			// go to next state.
 		}
 		else {
 			LOG_ERROR("Start of calibration failed, staying in CLAIMED mode");
@@ -510,6 +518,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
+		setState(CTState::RELEASE);
 		if (!stopCalibration()) {	// will result in CAL_STOPACK event
 			sendControlResult(port,CONTROL_RELEASED, getName(), CT_RESULT_CALSTOP_FAILED);
 		}
@@ -570,6 +579,10 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 
 	case F_ENTRY: {
 		// update PVSS
+		setState(CTState::QUIT);
+		// tell Parent task we like to go down.
+		itsParentControl->nowInState(getName(), CTState::QUIT);
+
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		itsCalServer->close();
 		break;
@@ -581,7 +594,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 	case F_CLOSED:  {
 		ASSERTSTR (&port == itsCalServer,
 						"F_DISCONNECTED event from port " << port.getName());
-		LOG_DEBUG("Connection with CalServer down, sending FINISH");
+		LOG_DEBUG("Connection with CalServer down, sending QUITED");
 		CONTROLQuitedEvent		request;
 		request.cntlrName = getName();
 		request.result	  = CT_RESULT_NO_ERROR;
@@ -669,7 +682,7 @@ GCFEvent::TResult CalibrationControl::_defaultEventHandler(GCFEvent&		 event,
 	switch (event.signal) {
 		case CONTROL_CONNECT:
 		case CONTROL_RESYNC:
-		case CONTROL_SCHEDULE:  // we should do something with this
+		case CONTROL_SCHEDULE:  // handled by parentControl task
 		case CONTROL_CLAIM:
 		case CONTROL_PREPARE:
 		case CONTROL_RESUME:

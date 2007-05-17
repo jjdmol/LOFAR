@@ -20,6 +20,11 @@
 //#
 //#  $Id$
 
+//
+// Note: the ActiveObs does all the administration of 1 observation. The admin
+//		 of all observations is done by the StationController itself.
+//
+
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
@@ -52,20 +57,23 @@ ActiveObs::ActiveObs(const string&		name,
 					 State				initial,
 					 ParameterSet*		thePS,
 					 GCFTask&			task) :
-	GCFFsm(initial),
+	GCFFsm				(initial),
 	PropertySetAnswerHandlerInterface(),
+	itsStopTimerID		(0),
 	itsPropertySetAnswer(*this),
-	itsPropSetTimer(new GCFTimerPort(task, name)),
-	itsName(name),
-	itsInstanceNr(getInstanceNr(name)),
-	itsObsPar(APLCommon::Observation(thePS)),
-	itsBeamCntlrReady(false),
-	itsCalCntlrReady(false),
-	itsBeamCntlrName(controllerName(CNTLRTYPE_BEAMCTRL, 
-									itsInstanceNr, itsObsPar.treeID)),
-	itsCalCntlrName(controllerName(CNTLRTYPE_CALIBRATIONCTRL, 
-								   itsInstanceNr, itsObsPar.treeID)),
-	itsReadyFlag(false)
+	itsPropSetTimer		(new GCFTimerPort(task, name)),
+	itsName				(name),
+	itsInstanceNr		(getInstanceNr(name)),
+	itsObsPar			(APLCommon::Observation(thePS)),
+	itsBeamCntlrReady	(false),
+	itsCalCntlrReady	(false),
+	itsBeamCntlrName	(controllerName(CNTLRTYPE_BEAMCTRL, 
+						 itsInstanceNr, itsObsPar.treeID)),
+	itsCalCntlrName		(controllerName(CNTLRTYPE_CALIBRATIONCTRL, 
+						 itsInstanceNr, itsObsPar.treeID)),
+	itsReadyFlag		(false),
+	itsReqState			(CTState::NOSTATE),
+	itsCurState			(CTState::NOSTATE)
 {
 }
 
@@ -159,7 +167,7 @@ void ActiveObs::handlePropertySetAnswer(GCFEvent& answer)
 // Create top datapoint of this observation in PVSS.
 //
 GCFEvent::TResult ActiveObs::initial(GCFEvent& event, 
-								     GCFPortInterface& port)
+								     GCFPortInterface& /*port*/)
 {
 	LOG_DEBUG(formatString("%s:initial - %04X", itsName.c_str(), event.signal));
 
@@ -167,6 +175,7 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
   
 	switch (event.signal) {
     case F_INIT:
+		itsReqState = CTState::CREATED;
 		LOG_DEBUG_STR("Starting statemachine for observation " << itsName);
    		break;
 
@@ -186,6 +195,7 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 	case F_TIMER: {		// must be timer that PropSet has set.
 		// update PVSS.
 		LOG_TRACE_FLOW ("top DP of observation created, going to starting state");
+		itsCurState = CTState::CREATED;
 		TRAN(ActiveObs::starting);				// go to next state.
 		}
 		break;
@@ -209,12 +219,13 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 // starting(event, port)
 // Connect to childControllers BeamControl and CalControl
 //
-GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	/*port*/)
+GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 {
 	LOG_DEBUG(formatString("%s:starting - %04X", itsName.c_str(), event.signal));
 
 	switch (event.signal) {
 	case F_ENTRY:  {
+		itsReqState = CTState::CREATED;
 		LOG_DEBUG_STR("Starting controller " << itsCalCntlrName);
 		ChildControl::instance()->startChild(CNTLRTYPE_CALIBRATIONCTRL,
 											 itsObsPar.treeID,
@@ -227,6 +238,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	/*port*
 											 itsObsPar.treeID,
 											 itsInstanceNr,
 											 myHostname(false));
+		itsCurState = CTState::CONNECT;
 		// Results in CONTROL_CONNECT in StationControl Task.
 	}
 	break;
@@ -247,6 +259,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	/*port*
 		}
 		if (itsBeamCntlrReady && itsCalCntlrReady) {
 			LOG_DEBUG_STR("Connected to both controllers, going to connected state");
+			itsCurState = CTState::CONNECTED;
 			TRAN(ActiveObs::connected);
 		}
 	}
@@ -255,6 +268,14 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	/*port*
 	case CONTROL_QUIT:
 		TRAN(ActiveObs::stopping);
 		break;
+
+	case CONTROL_QUITED: {		// one of the controller died unexpected. Force quit.
+		CONTROLQuitedEvent		msg(event);
+		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
+		TRAN(ActiveObs::stopping);
+		dispatch(event, port);
+	}
+	break;
 
 	default:
 		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," <<
@@ -270,14 +291,12 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	/*port*
 // connected(event, port)
 // Wait for CLAIM event
 //
-GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	/*port*/)
+GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 {
 	LOG_DEBUG_STR(itsName << ":connected");
 
 	switch (event.signal) {
 	case F_ENTRY: 
-		itsBeamCntlrReady = false;
-		itsCalCntlrReady  = false;
 		LOG_DEBUG_STR(itsName << ": in 'connected-mode', waiting for CLAIM event");
 		break;
 
@@ -292,6 +311,9 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	/*port
 	case F_TIMER: {
 #endif
 		// Activate the Calibration Controller
+		itsReqState = CTState::CLAIMED;
+		itsBeamCntlrReady = false;
+		itsCalCntlrReady  = false;
 		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to connect to CalServer");
 		ChildControl::instance()->
 				requestState(CTState::CLAIMED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
@@ -318,6 +340,7 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	/*port
 		}
 		if (itsBeamCntlrReady && itsCalCntlrReady) {
 			LOG_DEBUG("Both controllers are ready, going to standby mode");
+			itsCurState = CTState::CLAIMED;
 			TRAN(ActiveObs::standby);
 		}
 	}
@@ -326,6 +349,14 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	/*port
 	case CONTROL_QUIT:
 		TRAN(ActiveObs::stopping);
 		break;
+
+	case CONTROL_QUITED: {		// one of the controller died unexpected. Force quit.
+		CONTROLQuitedEvent		msg(event);
+		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
+		TRAN(ActiveObs::stopping);
+		dispatch(event, port);
+	}
+	break;
 
 	default:
 		LOG_DEBUG_STR(itsName << ":default(" << F_EVT_PROTOCOL(event) << "," <<
@@ -341,18 +372,19 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	/*port
 // standby(event, port)
 // Wait for PREPARE(?) event to set the beam
 //
-GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	/*port*/)
+GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 {
 	LOG_DEBUG_STR(itsName << ":standby");
 
 	switch (event.signal) {
 	case F_ENTRY: 
-		itsBeamCntlrReady = false;
-		itsCalCntlrReady  = false;
 		LOG_DEBUG_STR(itsName << ": in 'standby-mode', waiting for PREPARE event");
 		break;
 
 	case CONTROL_PREPARE: {
+		itsReqState 	  = CTState::PREPARED;
+		itsBeamCntlrReady = false;
+		itsCalCntlrReady  = false;
 		// Activate the BeamController
 		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to calibrate the subarray");
 		ChildControl::instance()->
@@ -376,7 +408,7 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	/*port*/
 		}
 		else if (msg.cntlrName == itsBeamCntlrName) {
 			if (msg.result != CT_RESULT_NO_ERROR) {
-				LOG_ERROR_STR("Start op beam failed with error " << msg.result);	
+				LOG_ERROR_STR("Start of beam failed with error " << msg.result);	
 				break;
 			}
 			LOG_DEBUG_STR("BeamController has started the beam");
@@ -389,6 +421,7 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	/*port*/
 
 		if (itsBeamCntlrReady && itsCalCntlrReady) {
 			LOG_DEBUG("Both controllers are ready, going to operational mode");
+			itsCurState = CTState::PREPARED;
 			TRAN(ActiveObs::operational);
 		}
 	}
@@ -397,6 +430,14 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	/*port*/
 	case CONTROL_QUIT:
 		TRAN(ActiveObs::stopping);
 		break;
+
+	case CONTROL_QUITED: {		// one of the controller died unexpected. Force quit.
+		CONTROLQuitedEvent		msg(event);
+		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
+		TRAN(ActiveObs::stopping);
+		dispatch(event, port);
+	}
+	break;
 
 	case F_INIT: 
 		break;
@@ -415,20 +456,19 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	/*port*/
 // operational(event, port)
 // Wait for RELEASE(?) event to stop the beam
 //
-GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	/*port*/)
+GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port)
 {
 	LOG_DEBUG_STR(itsName << ":operational");
 
 	switch (event.signal) {
 	case F_ENTRY: 
-		itsBeamCntlrReady = false;
-		itsCalCntlrReady  = false;
 		LOG_DEBUG_STR(itsName << ": in 'operational-mode' until RELEASE event");
 		break;
 
 	case CONTROL_SUSPEND: {
 		// pass event through to controllers
 		LOG_DEBUG("Passing SUSPEND event to childs");
+		itsReqState 	  = CTState::SUSPENDED;
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
 		ChildControl::instance()->
@@ -439,12 +479,10 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	/*po
 	}
 	break;
 	
-	case CONTROL_SUSPENDED:
-		break;
-
 	case CONTROL_RESUME: {
 		// pass event through to controllers
 		LOG_DEBUG("Passing RESUME event to childs");
+		itsReqState 	  = CTState::RESUMED;
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
 		ChildControl::instance()->
@@ -455,12 +493,29 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	/*po
 	}
 	break;
 
-	case CONTROL_RESUMED:
-		break;
+	case CONTROL_SUSPENDED:
+	case CONTROL_RESUMED: {
+		// TODO: test for the results of the actions
+		CONTROLCommonEvent		msg(event);			// we only need the name for now
+		if (msg.cntlrName == itsBeamCntlrName) {
+			itsBeamCntlrReady = true;
+		}
+		if (msg.cntlrName == itsCalCntlrName) {
+			itsCalCntlrReady = true;
+		}
+		if (itsBeamCntlrReady && itsBeamCntlrReady) {
+			CTState		cts;
+			itsCurState == cts.signal2stateNr(event.signal);
+		}
+	}
+	break;
 	
 	case CONTROL_RELEASE: {
 		// release beam at the BeamController
 		LOG_DEBUG_STR("Asking " << itsBeamCntlrName << " to stop the beam");
+		itsReqState = CTState::RELEASED;
+		itsBeamCntlrReady = false;
+		itsCalCntlrReady  = false;
 		ChildControl::instance()->
 				requestState(CTState::RELEASED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		// will result in CONTROL_RELEASED
@@ -470,13 +525,16 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	/*po
 	case CONTROL_RELEASED: {
 		CONTROLReleaseEvent		msg(event);
 		if (msg.cntlrName == itsBeamCntlrName) {
+			itsBeamCntlrReady = true;
 			LOG_DEBUG_STR("Beam is stopped, stopping calibration");
 			ChildControl::instance()->
 				requestState(CTState::RELEASED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
 			break;
 		}
 		if (msg.cntlrName == itsCalCntlrName) {
+			itsCalCntlrReady  = true;
 			LOG_DEBUG_STR("Calibration is stopped, going to standby mode");
+			itsCurState = CTState::RESUMED;
 			TRAN(ActiveObs::standby);
 			break;
 		}
@@ -488,6 +546,14 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	/*po
 	case CONTROL_QUIT:
 		TRAN(ActiveObs::stopping);
 		break;
+
+	case CONTROL_QUITED: {		// one of the controller died unexpected. Force quit.
+		CONTROLQuitedEvent		msg(event);
+		LOG_FATAL_STR("Controller " << msg.cntlrName << " died unexpectedly. Aborting observation");
+		TRAN(ActiveObs::stopping);
+		dispatch(event, port);
+	}
+	break;
 
 	case F_INIT: 
 		break;
@@ -512,6 +578,7 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 
 	switch (event.signal) {
 	case F_ENTRY:  {
+		itsReqState 	  = CTState::QUITED;
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
 
@@ -546,6 +613,7 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 		}
 		if (itsBeamCntlrReady && itsCalCntlrReady) {
 			LOG_DEBUG_STR("Both controllers are down, informing stationControl task");
+			itsCurState  = CTState::QUITED;
 			itsReadyFlag = true;
 		}
 	}
