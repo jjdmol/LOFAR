@@ -28,7 +28,7 @@
 #include <CS1_DataSquasher/SquasherProcessControl.h>
 #include "DataSquasher.h"
 
-#define SQUASHER_VERSION "0.10"
+#define SQUASHER_VERSION "0.20"
 
 namespace LOFAR
 {
@@ -58,11 +58,13 @@ namespace LOFAR
     tribool SquasherProcessControl::define()
     {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
-      itsInMS  = ParamSet->getString("inms");
-      itsOutMS = ParamSet->getString("outms");
-      itsStart = ParamSet->getInt32("start");
-      itsStep  = ParamSet->getInt32("step");
-      itsNChan = ParamSet->getInt32("nchan");
+      itsInMS    = ParamSet->getString("inms");
+      itsOutMS   = ParamSet->getString("outms");
+      itsStart   = ParamSet->getInt32("start");
+      itsStep    = ParamSet->getInt32("step");
+      itsNChan   = ParamSet->getInt32("nchan");
+      itsSkip    = ParamSet->getBool("useflags"); //used to be called "skip flags", hence the name
+      itsColumns = ParamSet->getBool("allcolumns");
       return true;
     }
 
@@ -73,6 +75,8 @@ namespace LOFAR
         std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
         inMS->deepCopy(itsOutMS, Table::NewNoReplace);
         MeasurementSet outMS = MeasurementSet(itsOutMS, Table::Update);
+
+        //some magic to create a new DATA column
         TableDesc tdesc = outMS.tableDesc();
         ColumnDesc desc = tdesc.rwColumnDesc("DATA");
         IPosition pos = desc.shape();
@@ -87,13 +91,70 @@ namespace LOFAR
         desc.setOptions(4);
         outMS.addColumn(desc);
 
-        itsSquasher->Squash(outMS,
-                            "OLDDATA",
-                            "DATA",
-                            itsStart,
-                            itsStep,
-                            itsNChan);
-        //outMS.removeColumn("OLDDATA");
+        //do the actual data squashing
+        Cube<Bool> NewFlags(0, 0, 0);
+        itsSquasher->Squash(outMS, "OLDDATA", "DATA",
+                            itsStart, itsStep, itsNChan, itsSkip, NewFlags);
+        outMS.removeColumn("OLDDATA");
+
+        //if present handle the CORRECTED_DATA column
+        if (tdesc.isColumn("CORRECTED_DATA"))
+        {
+          if (itsColumns)
+          {
+            desc = tdesc.rwColumnDesc("CORRECTED_DATA");
+            outMS.renameColumn("OLDCORRECTED_DATA", "CORRECTED_DATA");
+            desc.setOptions(0);
+            desc.setShape(pos2);
+            desc.setOptions(4);
+            outMS.addColumn(desc);
+
+            //do the actual data squashing
+            itsSquasher->Squash(outMS, "OLDCORRECTED_DATA", "CORRECTED_DATA",
+                                itsStart, itsStep, itsNChan, itsSkip, NewFlags);
+            outMS.removeColumn("OLDCORRECTED_DATA");
+          }
+          else
+          { outMS.removeColumn("CORRECTED_DATA");
+          }
+        }
+
+        //if present handle the MODEL_DATA column
+        if (tdesc.isColumn("MODEL_DATA"))
+        {
+          if (itsColumns)
+          {
+            desc = tdesc.rwColumnDesc("MODEL_DATA");
+            outMS.renameColumn("OLDMODEL_DATA", "MODEL_DATA");
+            desc.setOptions(0);
+            desc.setShape(pos2);
+            desc.setOptions(4);
+            outMS.addColumn(desc);
+
+            //do the actual data squashing
+            itsSquasher->Squash(outMS, "OLDMODEL_DATA", "MODEL_DATA",
+                                itsStart, itsStep, itsNChan, itsSkip, NewFlags);
+            outMS.removeColumn("OLDMODEL_DATA");
+          }
+          else
+          { outMS.removeColumn("MODEL_DATA");
+          }
+        }
+
+        //fix the FLAGS column
+        desc = tdesc.rwColumnDesc("FLAG");
+        desc.setOptions(0);
+        desc.setShape(pos2);
+        desc.setOptions(4);
+        outMS.removeColumn("FLAG");
+        outMS.addColumn(desc);
+        ArrayColumn<Bool> flags(outMS, "FLAG");
+        flags.putColumn(NewFlags);
+
+        //Fix the SpectralWindow values
+        MSSpectralWindow SPW = outMS.spectralWindow();
+        ScalarColumn<Int> channum(SPW, "NUM_CHAN");
+        channum.fillColumn(itsNChan/itsStep);
       }
       catch(casa::AipsError& err)
       {
@@ -113,7 +174,7 @@ namespace LOFAR
 
       cout  << string(SQUASHER_VERSION) + string(" data squasher by Adriaan Renting for LOFAR CS1\n") +
               string("This is experimental software, please report errors or requests to renting@astron.nl\n") +
-              string("Documentation can be found at: www.lofar.org/wiki\n");
+              string("Documentation can be found at: www.lofar.org/wiki/index.php/CS1/Software#Post_Processing_tools\n");
       cout << string("Squashing ") << itsInMS << string(" into ") << itsOutMS << endl;
       if (itsInMS == "" || itsOutMS == "")
       {
