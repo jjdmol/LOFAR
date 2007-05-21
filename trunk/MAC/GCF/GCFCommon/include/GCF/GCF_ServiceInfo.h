@@ -37,7 +37,8 @@ namespace LOFAR {
 // \addtogroup gcfcommon
 // @{
 
-// The only well-known port of whole MAC.
+// The two only well-known ports of whole MAC.
+#define	MAC_CODELOGGING_PORT			23999
 #define	MAC_SERVICEBROKER_PORT			24000
 
 // Define names for the services
