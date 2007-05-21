@@ -32,7 +32,7 @@ localhost = Host(name = 'localhost', \
                  address = 'localhost')
 		 
 gels        = UserId(bglfen1,'gels' ,'/cephome/gels/LOFAR/installed/gnu_bgl/bin/')
-lofarsystem = UserId(bglfen3,'lofarsystem' ,'/bglhome2/lofarsystem/')
+lofarsystem = UserId(bglfen3,'lofarsystem' ,'/cephome/lofarsystem/LOFAR/installed/gnu_bgl/bin/')
 romein      = UserId(bglfen2,'romein' ,'/cephome/romein/LOFAR/installed/gnu_bgl/bin/')
 broekema    = UserId(bglfen2,'broekema' ,'/cephome/broekema/LOFAR/installed/gnu_bgl/bin/')
 		 
