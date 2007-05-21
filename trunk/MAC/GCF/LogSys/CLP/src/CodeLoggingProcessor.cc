@@ -20,12 +20,16 @@
 //#
 //#  $Id$
 
+// REO:210507: Disables link to KVL, we don't use that at this moment.
+//			   We will evaluate this solution when we need it.
+
 #include <lofar_config.h>
 
 #include "CodeLoggingProcessor.h"
 #include <log4cplus/helpers/socketbuffer.h>
 #include <log4cplus/socketappender.h>
-#include <GCF/LogSys/GCF_KeyValueLogger.h>
+//#include <GCF/LogSys/GCF_KeyValueLogger.h>
+#include <GCF/GCF_ServiceInfo.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVChar.h>
 #include <GCF/Utils.h>
@@ -46,21 +50,20 @@ CodeLoggingProcessor::CodeLoggingProcessor() :
   GCFTask((State)&CodeLoggingProcessor::initial, "GCF-CLPD")
 {
   // initialize the port
-  _clpPortProvider.init(*this, "server", GCFPortInterface::MSPP, 0, true);
+  _clpPortProvider.init(*this, "listener", GCFPortInterface::MSPP, 0, true);
+	_clpPortProvider.setPortNumber(MAC_CODELOGGING_PORT);
 }
 
 GCFEvent::TResult CodeLoggingProcessor::initial(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  switch (e.signal)
-  {
+  switch (e.signal) {
     case F_INIT:
       break;
 
     case F_ENTRY:
     case F_TIMER:
-      if (!_clpPortProvider.isConnected())
-      {
+      if (!_clpPortProvider.isConnected()) {
         _clpPortProvider.open();
       }
       break;
@@ -86,21 +89,18 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static unsigned long garbageTimerID = 0;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
     case F_DISCONNECTED:
       DBGFAILWHEN(&_clpPortProvider == &p && "CLP port provider may not be disconnected."); 
       LOG_INFO("Connection lost to a LofarLogger client.");
       p.close();
       break;
       
-    case F_TIMER:
-    {
+    case F_TIMER: {
       // cleanup the garbage of closed ports to master clients
       GCFPortInterface* pPort;
       for (TClients::iterator iter = _clientsGarbage.begin();
-           iter != _clientsGarbage.end(); ++iter)
-      {
+           iter != _clientsGarbage.end(); ++iter) {
         pPort = *iter;
         delete pPort;
       }
@@ -117,8 +117,7 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
       DBGFAILWHEN(&_clpPortProvider == &p);
       break;
       
-    case F_ACCEPT_REQ:
-    {
+    case F_ACCEPT_REQ: {
       LOG_INFO("New LofarLogger client accepted!");
       GCFTCPPort* pNewCLPPort = new GCFTCPPort();
       ASSERT(pNewCLPPort);
@@ -130,46 +129,44 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
       garbageTimerID = _clpPortProvider.setTimer(1.0, 5.0); 
       break;
 
-    case F_DATAIN:
-    {
+    case F_DATAIN: {
       // extract the incomming data to a Logger event object
       SocketBuffer msgSizeBuffer(sizeof(unsigned int));
-      if(!readFromPortData(p, msgSizeBuffer)) break;
+      if (!readFromPortData(p, msgSizeBuffer)) {
+		break;
+	  }
 
       unsigned int msgSize = msgSizeBuffer.readInt();
 
       SocketBuffer buffer(msgSize);
-      if(!readFromPortData(p, buffer)) break;
+      if (!readFromPortData(p, buffer)) {
+		break;
+	  }
       
       spi::InternalLoggingEvent event = readFromBuffer(buffer);           
 
       // prepare conversions
       TLoggerClients::iterator iter = _clients.find(&p);
       vector<string> key;
-      if (iter == _clients.end())
-      {
+      if (iter == _clients.end()) {
         bool startSequenceFound(false);
-        if (event.getLogLevel() == INFO_LOG_LEVEL)
-        {
+        if (event.getLogLevel() == INFO_LOG_LEVEL) {
           string scope = event.getMessage();
           
-          if (scope.find("MACProcessScope:") == 0)
-          {
+          if (scope.find("MACProcessScope:") == 0) {
             scope.erase(0, sizeof("MACProcessScope:"));
             ltrim(scope);
             rtrim(scope);
-            if (isValidPropName(scope.c_str()))
-            {
+            if (isValidPropName(scope.c_str())) {
               // context (can) contain '.' (dots) (KeyValue TreeDB notation)
               key.push_back(scope);
               
               // '.' must be converted to the '_' in case of DP names
               string::size_type dotSepPos;
-              while ((dotSepPos = scope.find('.')) < string::npos)
-              {
+              while ((dotSepPos = scope.find('.')) < string::npos) {
                 scope[dotSepPos] = '_';
               } 
-              key.push_back(formatString("%s.logmsg", scope.c_str()));
+              key.push_back(formatString("%s.logMsg", scope.c_str()));
               _clients[&p] = key;
               startSequenceFound = true;
               // this start sequence message not needed to be logged
@@ -177,21 +174,18 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
             }
           }         
         }
-        if (!startSequenceFound)
-        {
+        if (!startSequenceFound) {
           // skip all incomming logger events 
           break;
         }
       }
-      else
-      {
+      else {
         key = iter->second;
       }
       
       string file = event.getFile();
       string::size_type sepPos = file.rfind("/"); 
-      if (sepPos < string::npos)
-      {
+      if (sepPos < string::npos) {
         file.erase(0, sepPos + 1);
       }
 
@@ -203,12 +197,8 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
           event.getLine()));
        
       // convert the logger event to the key value
-          
       GCFPVString value(msg);
-      
-      LOG_DEBUG(formatString(
-          "Msg: %s",
-          msg.c_str()));
+      LOG_DEBUG(formatString("Msg: %s", msg.c_str()));
                 
       // timestamp conversion
       timeval kvlTimestamp;  
@@ -217,7 +207,9 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
       kvlTimestamp.tv_usec = l4pTimestamp.usec();
 
       // log!
-      LOG_KEYVALUE_TS(key[0], value, KVL_ORIGIN_MAC, kvlTimestamp);
+//TODO
+//      LOG_KEYVALUE_TS(key[0], value, KVL_ORIGIN_MAC, kvlTimestamp);
+//
       
       // convert logger event to DP log msg
       string plMsg = event.getTimestamp().getFormattedTime("%d-%m-%y %H:%M:%S.%q") + "|" + msg;
@@ -237,8 +229,7 @@ GCFEvent::TResult CodeLoggingProcessor::operational(GCFEvent& e, GCFPortInterfac
 bool CodeLoggingProcessor::readFromPortData(GCFPortInterface& port, SocketBuffer& buf)
 {
   size_t res, read = 0;  
-  do
-  { 
+  do { 
     res = port.recv(buf.getBuffer() + read, buf.getMaxSize() - read);
     if ( res <= 0 )
       break;
