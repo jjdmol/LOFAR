@@ -45,6 +45,8 @@ namespace LOFAR
       int          itsStart;
       int          itsStep;
       int          itsNChan;
+      bool         itsSkip;
+      bool         itsColumns;
       casa::MeasurementSet* inMS;
       DataSquasher*   itsSquasher;
     public:
