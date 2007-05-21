@@ -40,6 +40,9 @@ namespace LOFAR
 
     void DataSquasher::GetMSInfo(MeasurementSet& myMS)
     {
+      //Number of samples
+      itsNumSamples                    = myMS.nrow();
+
       //Number of channels in the Band
       MSSpectralWindow spectral_window = myMS.spectralWindow();
       ROScalarColumn<Int>              NUM_CHAN_col(spectral_window, "NUM_CHAN");
@@ -66,23 +69,32 @@ namespace LOFAR
 
     //===============>>>  DataSquasher::SquashData  <<<===============
 
-    void DataSquasher::SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData, int Start, int Step, int NChan)
+    void DataSquasher::SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData,
+                                  Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags,
+                                  int Start, int Step, int NChan)
     {
       int incounter  = 0;
       int outcounter = 0;
+      bool flagrow   = true;
       Vector<Complex> values(itsNumPolarizations, 0);
       while (incounter < NChan)
       {
         for (int j = 0; j < itsNumPolarizations; j++)
         {
-          values(j) += oldData(j, Start + incounter);
+          if (!oldFlags(j, Start + incounter))
+          { //weight is not handled here, maybe sometime in the future?
+            values(j) += oldData(j, Start + incounter);
+            flagrow = false;
+          }
         }
         incounter++;
         if ((incounter) % Step == 0)
         {
-          newData.column(outcounter) = values;
+          newData.column(outcounter)  = values;
+          newFlags.column(outcounter) = flagrow;
           values = 0;
           outcounter++;
+          flagrow = true;
         }
       }
     }
@@ -90,12 +102,17 @@ namespace LOFAR
     //===============>>>  DataSquasher::Squash  <<<===============
 
     void DataSquasher::Squash(MeasurementSet& myMS, std::string OldData, std::string NewData,
-                              int Start, int Step, int NChan)
+                              int Start, int Step, int NChan, bool UseFlags, Cube<Bool>& newFlags)
     {
       TableIterator iter = CreateDataIterator(myMS);
       GetMSInfo(myMS);
       int step = myMS.nrow() / 10 + 1; //not exact but it'll do
       int row  = 0;
+      bool rwFlags = newFlags.nrow() > 0;
+      if (!rwFlags)
+      { newFlags.resize(itsNumPolarizations, NChan/Step, itsNumSamples);
+      }
+
       while (!iter.pastEnd())
       {
         if (row++ % step == 0) // to tell the user how much % we have processed,
@@ -107,9 +124,19 @@ namespace LOFAR
         Matrix<Complex>        myOldData(itsNumPolarizations, itsNumChannels);
         Matrix<Complex>        myNewData(itsNumPolarizations, NChan/Step);
 
+        ROArrayColumn<Bool>    Flags(DataTable, "FLAG");
+        Matrix<Bool>           myOldFlags(itsNumPolarizations, itsNumChannels, false);
+        Matrix<Bool>           myNewFlags(itsNumPolarizations, NChan/Step);
+
         Old.get(0, myOldData);
-        SquashData(myOldData, myNewData, Start, Step, NChan);
+        if (UseFlags)
+        { Flags.get(0, myOldFlags);
+        }
+        SquashData(myOldData, myNewData, myOldFlags, myNewFlags, Start, Step, NChan);
         New.put(0, myNewData);
+        if (!rwFlags)
+        { newFlags.xyPlane(row - 1) = myNewFlags;
+        }
         iter++;
       }
     }
