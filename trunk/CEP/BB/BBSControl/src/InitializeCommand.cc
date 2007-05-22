@@ -24,6 +24,7 @@
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/CommandVisitor.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
@@ -37,7 +38,7 @@ namespace LOFAR
     namespace
     {
       bool dummy = CommandFactory::instance().
-        registerClass<InitializeCommand>("InitializeCommand");
+        registerClass<InitializeCommand>("initialize");
     }
 
 
@@ -56,15 +57,22 @@ namespace LOFAR
     }
 
 
+    void InitializeCommand::print(ostream& os) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      Command::print(os);
+    }
+
+
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    void InitializeCommand::write(ParameterSet& ps) const
+    void InitializeCommand::write(ParameterSet&) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
-    void InitializeCommand::read(const ParameterSet& ps)
+    void InitializeCommand::read(const ParameterSet&)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }

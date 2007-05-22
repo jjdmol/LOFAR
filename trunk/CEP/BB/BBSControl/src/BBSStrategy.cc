@@ -136,7 +136,7 @@ namespace LOFAR
 	 << endl << indent << "Strategy:";
       Indent id;
       os << endl << indent << "Input data: " << itsInputData
-	 << endl << indent << "Region of interest: " << itsRegionOfInterest
+	 << endl << indent << itsRegionOfInterest
 	 << endl << indent << itsDomainSize
 	 << endl << indent << itsCorrelation
 	 << endl << indent << itsIntegration
@@ -283,23 +283,6 @@ namespace LOFAR
       bs.print(os); 
       return os;
     }
-
-
-//     ParameterSet& operator<<(ParameterSet& ps, const BBSStrategy& bs)
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       bs.write(ps); 
-//       return ps;
-//     }
-
-
-//     ParameterSet& operator>>(ParameterSet& ps, BBSStrategy& bs)
-//     {
-//       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-//       bs.read(ps); 
-//       return ps;
-//     }
-
 
   } // namespace BBS
 

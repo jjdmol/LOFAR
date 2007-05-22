@@ -63,6 +63,12 @@ namespace BBS
     }
 
 
+    SolverProcessControl::~SolverProcessControl()
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    }
+
+
     tribool SolverProcessControl::define()
     {
         LOG_INFO("SolverProcessControl::define()");

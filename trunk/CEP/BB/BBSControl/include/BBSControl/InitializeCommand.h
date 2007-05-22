@@ -1,4 +1,4 @@
-//# InitializeCommand.h: 
+//# InitializeCommand.h: Concrete "initialize" command
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,12 +23,23 @@
 #ifndef LOFAR_BBSCONTROL_INITIALIZECOMMAND_H
 #define LOFAR_BBSCONTROL_INITIALIZECOMMAND_H
 
+// \file
+// Concrete "initialize" command
+
 #include <BBSControl/Command.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
+    // \addtogroup BBSControl
+    // @{
+
+    // Concrete \c initialize command. This command is sent by the global
+    // controller to indicate that the required information for the local
+    // controllers is available on the blackboard. This command is sent when a
+    // new run is started, immediately after the strategy has been posted to
+    // the blackboard.
     class InitializeCommand : public Command
     {
     public:
@@ -44,16 +55,19 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this.
       virtual void read(const ACC::APS::ParameterSet& ps);
 
-//       // Print the contents of \c *this in human readable form into the output
-//       // stream \a os.
-//       virtual void print(ostream& os) const;
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
+      virtual void print(ostream& os) const;
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;
 
     };
 
+    // @}
+
   } //# namespace BBS
+
 } //# namespace LOFAR
 
 #endif

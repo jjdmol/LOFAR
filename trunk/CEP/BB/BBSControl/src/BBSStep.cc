@@ -198,9 +198,10 @@ namespace LOFAR
     void BBSStep::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      os << "Step: " << itsName;
+      os << "Step: " << type();
       Indent id;  // add an extra indentation level
-      os << endl << indent << "Full name: " << fullName()
+      os << endl << indent << "Name: " << itsName
+         << endl << indent << "Full name: " << fullName()
 	 << endl << indent << itsBaselines
 	 << endl << indent << itsCorrelation
 	 << endl << indent << itsIntegration

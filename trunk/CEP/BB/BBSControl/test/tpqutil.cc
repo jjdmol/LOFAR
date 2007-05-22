@@ -8,6 +8,7 @@ using namespace LOFAR;
 using namespace LOFAR::BBS;
 using namespace LOFAR::ACC::APS;
 
+#if 0
 void toPQ(ostream& os, const ParameterSet& ps)
 {
 }
@@ -15,6 +16,7 @@ void toPQ(ostream& os, const ParameterSet& ps)
 void toPS(ostream& os, ParameterSet& ps)
 {
 }
+#endif
 
 int main()
 {

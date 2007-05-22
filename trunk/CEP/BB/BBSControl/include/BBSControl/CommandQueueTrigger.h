@@ -36,6 +36,7 @@
 #endif
 
 #include <Common/lofar_string.h>
+#include <Common/lofar_map.h>
 
 namespace LOFAR
 {
@@ -47,29 +48,67 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
-    // Functor class for handling in incoming trigger.
-    class CommandQueueTrigger : public pqxx::trigger
-    {
-    public:
-      // Constructor. The trigger visitor will handle notifications received
-      // from the CommandQueue \a queue.
-      explicit CommandQueueTrigger(const CommandQueue& queue,
-				   const string& name = "");
+      // Trigger class handles notification of triggers received from the
+      // database backend by raising the flag associated with the trigger.
+      class CommandQueueTrigger : public pqxx::trigger
+      {
+      public:
+        // Valid trigger types.
+        typedef enum {
+          Command = 1L << 0,
+          Result  = 1L << 1
+        } Type;
 
-      // Destructor. Reimplemented only because of no-throw specification.
-      virtual ~CommandQueueTrigger() throw() {}
+        // Construct a trigger handler for trigger of type \a type.
+        CommandQueueTrigger(const CommandQueue& queue, Type type);
 
-      // Handle the notification.
-      virtual void operator()(int be_pid);
+        // Destructor. Reimplemented only because of no-throw specification in
+        // the base class.
+        virtual ~CommandQueueTrigger() throw() {}
 
-    private:
-      // Here we store a \e reference to the CommandQueue that will trigger
-      // notifications.
-      const CommandQueue& itsQueue;
+        // Handle the notification, by raising the flag associated with the
+        // received trigger.
+        virtual void operator()(int be_pid);
 
-      // Name associated with this trigger visitor.
-      const string itsName;
-    };
+        // Test if any of the \a flags are raised.
+        Type testFlags(Type flags) const { return Type(theirFlags & flags); }
+
+        // Raise \a flags.
+        void raiseFlags(Type flags) { theirFlags = Type(theirFlags | flags); }
+
+        // Clear \a flags.
+        void clearFlags(Type flags) { theirFlags = Type(theirFlags & ~flags); }
+
+        // Test if any of the \a flags are raised and clear them.
+        Type testAndClearFlags(Type flags) {
+          Type tp = testFlags(flags);
+          clearFlags(flags);
+          return tp;
+        }
+
+      private:
+        // Map associating trigger types with their string representation.
+        // @{
+        typedef map<Type, string> TypeMap;
+        static TypeMap theirTypes;
+        // @}
+
+        // Keep track of flags that were raised as a result of a handled
+        // notification. Note that this is a \e shared variable, because we're
+        // not really interested in who responds to a raised flag; it's
+        // important that it is handled, but not by whom.
+        static Type theirFlags;
+
+        // Initializer struct. The default constructor contains code to
+        // initialize the static data members theirTypes and theirFlags.
+        struct Init {
+          Init();
+        };
+
+        // Static instance of Init, triggers the initialization of static data
+        // members during its construction.
+        static Init theirInit;
+      };
 
     // @}
 

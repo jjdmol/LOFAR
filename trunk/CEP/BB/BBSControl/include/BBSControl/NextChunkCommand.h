@@ -1,4 +1,4 @@
-//# NextChunkCommand.h: 
+//# NextChunkCommand.h: Concrete "next-chunk" command
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,12 +23,22 @@
 #ifndef LOFAR_BBSCONTROL_NEXTCHUNKCOMMAND_H
 #define LOFAR_BBSCONTROL_NEXTCHUNKCOMMAND_H
 
+// \file 
+// Concrete "next-chunk" command
+
 #include <BBSControl/Command.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
+    // \addtogroup BBSControl
+    // @{
+
+    // Concrete \c next-chunk command. This command is sent by the global
+    // controller when all steps in the strategy have been posted to the
+    // database. It indicates to the local controller that it can proceed
+    // processing with the "next chunk" of data.
     class NextChunkCommand : public Command
     {
     public:
@@ -51,6 +61,8 @@ namespace LOFAR
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;
     };
+
+    // @}
 
   } //# namespace BBS
 

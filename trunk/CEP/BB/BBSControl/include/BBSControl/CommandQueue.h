@@ -29,13 +29,18 @@
 //# Includes
 #if defined(HAVE_PQXX)
 # include <pqxx/connection>
+# include <pqxx/result>
+# include <pqxx/transactor>
+# include <pqxx/trigger>
 #else
 # error libpqxx, the C++ API to PostgreSQL, is required
 #endif
 
-#include <Common/lofar_string.h>
+#include <Common/lofar_list.h>
+#include <Common/lofar_map.h>
 #include <Common/lofar_smartptr.h>
-#include <sys/time.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
@@ -48,13 +53,102 @@ namespace LOFAR
     class Command;
     class BBSStep;
     class BBSStrategy;
+    class CommandResult;
+    class CommandId;
+    class LocalControlId;
 
     // \addtogroup BBSControl
     // @{
+
+    // @name Typedefs
+    // @{
+
+    // Return type of the function CommandQueue::getNextCommand(). It pairs a
+    // (managed) pointer to a Command with its ID.
+    typedef pair<shared_ptr<const Command>, const CommandId> NextCommandType;
+
+    // Return type of the function CommandQueue::getNewResults(const
+    // CommandId&). It pairs a command result with the local controller that
+    // executed that command.
+    typedef pair<LocalControlId, CommandResult> ResultType;
+    
+    // Return type of the function CommandQueue::getNewResults(). It binds a
+    // command-id and the results received from the local controllers.
+    typedef map<const CommandId, vector<ResultType> > ResultMapType;
+
+    // @}
+
+
     // Command queue of the blackboard system.
     class CommandQueue
     {
     public:
+      // Trigger class handles notification of triggers received from the
+      // database backend by raising the flag associated with the trigger.
+      class Trigger : public pqxx::trigger
+      {
+      public:
+        // Valid trigger types.
+        typedef enum {
+          Command = 1L << 0,
+          Result  = 1L << 1
+        } Type;
+
+        // Construct a trigger handler for trigger of type \a type.
+        Trigger(const CommandQueue& queue, Type type);
+
+        // Destructor. Reimplemented only because of no-throw specification in
+        // the base class.
+        virtual ~Trigger() throw() {}
+
+        // Handle the notification, by raising the flag associated with the
+        // received trigger.
+        virtual void operator()(int be_pid);
+
+        // Test if any of the \a flags are raised.
+        static Type testFlags(Type flags) 
+        { return Type(theirFlags & flags); }
+
+        // Raise \a flags.
+        static void raiseFlags(Type flags) 
+        { theirFlags = Type(theirFlags | flags); }
+
+        // Clear \a flags.
+        static void clearFlags(Type flags)
+        { theirFlags = Type(theirFlags & ~flags); }
+
+        // Test if any of the \a flags are raised and clear them.
+        static Type testAndClearFlags(Type flags) {
+          Type tp = testFlags(flags);
+          clearFlags(flags);
+          return tp;
+        }
+
+      private:
+        // Map associating trigger types with their string representation.
+        // @{
+        typedef map<Type, string> TypeMap;
+        static TypeMap theirTypes;
+        // @}
+
+        // Keep track of flags that were raised as a result of a handled
+        // notification. Note that this is a \e shared variable, because we're
+        // not really interested in who responds to a raised flag; it's
+        // important that it is handled, but not by whom.
+        static Type theirFlags;
+
+        // Initializer struct. The default constructor contains code to
+        // initialize the static data members theirTypes and theirFlags.
+        struct Init {
+          Init();
+        };
+
+        // Static instance of Init, triggers the initialization of static data
+        // members during its construction.
+        static Init theirInit;
+      }; //# class Trigger
+
+
       // Construct the command queue. The command queue is stored in a part of
       // the blackboard DBMS, identified by the name \a dbname.  The arguments
       // \a user, \a host, and \a port are optional, but have "sensible"
@@ -64,18 +158,17 @@ namespace LOFAR
 		   const string& host="dop50.nfra.nl",
 		   const string& port="5432");
 
-      // Set the time-out period. If data being requested is not (yet) present
-      // in the database, the get*() methods will wait up to \a sec seconds
-      // for a data trigger from the database. 
-      // \note A non-positive value for \a sec will set the time-out
-      // period to indefinite.
-      void setTimeOut(double sec);
+      //!!-- temporary "hack", I don't know if I'll need this method --!!//
+      bool allDone() const;
+
+      //!!-- temporary "hack", I don't know if I'll need this method --!!//
+      bool setStrategyDone() const;
 
       // Add a Command to the command queue. Once in the command queue,
       // the command represents a "unit of work", a.k.a. \e workorder. This
       // method is typically used by the global controller.
       // \return The unique command-id associated with \a cmd.
-      void addCommand(const Command& cmd) const;
+      CommandId addCommand(const Command& cmd) const;
 
       // Forward this call to setStrategy(), in order to avoid the risk that
       // the return value of the stored procedure being called is ignored.
@@ -86,13 +179,18 @@ namespace LOFAR
       // retrieved from the database, its status will be set to "active"
       // ([TBD]). This method is typically used by the local controller.
       //
+      // \return A pair consisting of a pointer to the next command and the ID
+      // of this command. When there are no more commands left in the queue a
+      // null pointer will be returned and the ID is set to -1.
+      //
       // \attention Currently, a Command object is reconstructed using one \e
       // or \e more queries. Although each query is executed as a transaction,
       // multiple queries are \e not executed as one transaction. So beware!
       //
       // \todo Wrap multiple queries (needed for, e.g., reconstructing a
       // BBSSolveStep) in one transaction.
-      const Command* getNextCommand();
+//       const Command* getNextCommand();
+      pair<shared_ptr<const Command>, const CommandId> getNextCommand() const;
 
       // Set the BBSStrategy in the command queue. All information, \e except
       // the BBSStep objects within the BBSStrategy are stored in the
@@ -104,22 +202,96 @@ namespace LOFAR
       // database consists of the "meta data" of a BBSStrategy object
       // (i.e. all information \e except the BBSStep objects). This method is
       // typically called by the local controller.
-      const BBSStrategy* getStrategy() const;
+      shared_ptr<const BBSStrategy> getStrategy() const;
+
+      // Add the result \a result for the command (identified by) \a commandId
+      // to the blackboard result table. \a commandId must be the ID of the
+      // first command in the queue for which no result has been set yet.
+      // \return \c true upon successful insertion; otherwise \c false (e.g.,
+      // wrong \a commanId was specified).
+      bool addResult(const CommandId& commandId, 
+                     const CommandResult& result) const;
+
+      // Get all new results from the database.
+      ResultMapType getNewResults() const;
+
+      // Get new results from the database for the given command-id.
+      vector<ResultType> getNewResults(const CommandId& id) const; 
 
       // Check to see if we're starting a new run. The local controller needs
       // to do a few extra checks; these checks will be done when \a
       // isGlobalCtrl is \c false.
       bool isNewRun(bool isGlobalCtrl) const;
 
-    private:
-      // CommandQueueTrigger needs to have access to itsConnection, so we make
-      // it a friend.
-      // @{
-      friend class CommandQueueTrigger;
-      // @}
+      // Register for the trigger of type \a type. Once registered, we will
+      // receive notification from the database when a new result for a
+      // command of type \a type is available.
+      bool registerTrigger(Trigger::Type type);
 
-      // Execute \a query. The result will be returned as a ParameterSet.
-      ACC::APS::ParameterSet execQuery(const string& query) const;
+      // De-register for the result trigger of \a command. We will no longer
+      // receive notifications when a new result for \a command is available.
+      bool deregisterTrigger(Trigger::Type type);
+
+      // Wait for a trigger from the database backend. Only triggers that were
+      // previously registered will get through. When a trigger arrives the
+      // associated trigger flag will be raised. This way, we decoupled
+      // reception of the trigger from any action to be taken.
+      bool waitForTrigger(Trigger::Type type, 
+                          double timeOut = theirDefaultTimeOut) const;
+
+    private:
+      // Functor class for executing a query as a transaction.
+      class ExecQuery : public pqxx::transactor<>
+      {
+      public:
+        // Constructor for insert/update-like queries. These queries do not
+        // return a result.
+        explicit ExecQuery(const string& query);
+
+        // Constructor for select-like queries. The result is returned as a
+        // string.
+        ExecQuery(const string& query, string& result);
+
+        // This method will be invoked by the perform() method of your
+        // pqxx::connection class to execute the query stored in itsQuery. The
+        // result, if any, will be stored in itsPQResult.
+        void operator()(argument_type& transaction);
+
+        // This method will be invoked by the perform() method of your
+        // pqxx::connection class, when the transaction succeeded. The result
+        // of the query, stored in itsPQResult, will be converted to a string
+        // and assigned to itsResult.
+        // 
+        // The result string will be formatted as a collection of key/value
+        // pairs, where each key is uniquely defined as
+        // "_row(<row-number>).<column-name>", i.e. "_row(0)." for the first
+        // row, "_row(1)." for the second, etc. The key "_nrows" will contain
+        // the number of rows in the result.
+        void on_commit();
+
+      private:
+        // Empty string, used to initialize itsResult properly, when the
+        // one-argument constructor is used.
+        static string emptyString;
+
+        // String containing the query to be executed.
+        const string itsQuery;
+
+        // Reference to the string that will hold the query result.
+        string& itsResult;
+
+        // The result of the executed query must be stored internally, because
+        // it will be written in operator() and will be read in on_commit().
+        pqxx::result itsPQResult;
+      }; //# class ExecQuery
+
+
+      // Execute \a query. The result will be returned as a ParameterSet. The
+      // optional argument \a doAlwaysPrefix indicates whether keys should
+      // always be prefixed with \c _row(<row-nr>) or not. By default, when
+      // only one row is returned, the prefix \c _row(0). is dropped.
+      ACC::APS::ParameterSet execQuery(const string& query,
+                                       bool doAlwaysPrefix = false) const;
 
       // Connection to the PostgreSQL database. The pqxx::connection object
       // will be destroyed when \c *this goes out of scope.
@@ -130,11 +302,12 @@ namespace LOFAR
       // constructed, we need to wrap it into a managed pointer class.
       scoped_ptr<pqxx::connection> itsConnection;
 
-//       // Keep track of the ID of the current command.
-//       uint itsCurrentId;
+      // Triggers that have been registered with the command queue.
+      // \note Triggers cannot be copied, so we must use a shared pointer.
+      map<Trigger::Type, shared_ptr<Trigger> > itsTriggers;
 
-      // Time-out value
-      timeval itsTimeOut;
+      // Default time-out value
+      static double theirDefaultTimeOut;
     };
 
     // @}

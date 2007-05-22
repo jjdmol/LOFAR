@@ -1,4 +1,4 @@
-//#  KernelProcessControl.h: 
+//#  KernelProcessControl.h:  Local (kernel) process controller
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,7 +25,8 @@
 #ifndef LOFAR_BBSCONTROL_KERNELPROCESSCONTROL_H
 #define LOFAR_BBSCONTROL_KERNELPROCESSCONTROL_H
 
-//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+// \file
+// Local (kernel) process controller
 
 //# Includes
 #include <BBSControl/CommandQueue.h>
@@ -58,6 +59,9 @@ public:
 
     // Constructor
     KernelProcessControl();
+
+    // Destructor
+    virtual ~KernelProcessControl();
 
     // @name Implementation of PLC interface.
     // @{

@@ -1,4 +1,4 @@
-//# CommandExecutor.h: 
+//# CommandExecutor.h: Concrete viistor class for concrete Command classes
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,79 +23,84 @@
 #ifndef LOFAR_BBSCONTROL_COMMANDEXECUTOR_H
 #define LOFAR_BBSCONTROL_COMMANDEXECUTOR_H
 
+// \file
+// Concrete viistor class for concrete Command classes
+
 #include <BBSControl/CommandVisitor.h>
-#include <BBSControl/BlobStreamableConnection.h>
-//#include <BBSControl/BBSStructs.h>
-
 #include <BBSKernel/Prediffer.h>
-
 #include <Common/lofar_smartptr.h>
-
+#include <Common/lofar_string.h>
+#include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
-//# Forward declations
-class BlobStreamable;
+  //# Forward declations
+  class BlobStreamable;
 
-namespace BBS
-{
-//# Forward declations
-class CommandQueue;
-class Prediffer;
-class RegionOfInterest;
+  namespace BBS
+  {
+    //# Forward declations
+    class CommandQueue;
+    class Prediffer;
+    class BlobStreamableConnection;
 
+    // \addtogroup BBSControl
+    // @{
 
-class CommandExecutor: public CommandVisitor
-{
-public:
-    CommandExecutor(shared_ptr<CommandQueue> &queue,
-        shared_ptr<BlobStreamableConnection> &solver)
+    class CommandExecutor: public CommandVisitor
+    {
+    public:
+      CommandExecutor(shared_ptr<CommandQueue> &queue,
+                      shared_ptr<BlobStreamableConnection> &solver)
         :   itsCommandQueue(queue),
             itsSolverConnection(solver)
-    {
-    }
+      {
+      }
 
-    virtual ~CommandExecutor()
-    {
-    }
+      virtual ~CommandExecutor();
 
-    // @name Implementation of visit() for different commands.
-    // @{
-    virtual void visit(const InitializeCommand &command);
-    virtual void visit(const FinalizeCommand &command);
-    virtual void visit(const NextChunkCommand &command);
-    virtual void visit(const BBSStrategy &command);
-    virtual void visit(const BBSMultiStep &command);
-    virtual void visit(const BBSPredictStep &command);
-    virtual void visit(const BBSSubtractStep &command);
-    virtual void visit(const BBSCorrectStep &command);
-    virtual void visit(const BBSSolveStep &command);
-    virtual void visit(const BBSShiftStep &command);
-    virtual void visit(const BBSRefitStep &command);
+      // @name Implementation of visit() for different commands.
+      // @{
+      virtual void visit(const InitializeCommand &command);
+      virtual void visit(const FinalizeCommand &command);
+      virtual void visit(const NextChunkCommand &command);
+      virtual void visit(const RecoverCommand &command);
+      virtual void visit(const SynchronizeCommand &command);
+      virtual void visit(const BBSStrategy &command);
+      virtual void visit(const BBSMultiStep &command);
+      virtual void visit(const BBSPredictStep &command);
+      virtual void visit(const BBSSubtractStep &command);
+      virtual void visit(const BBSCorrectStep &command);
+      virtual void visit(const BBSSolveStep &command);
+      virtual void visit(const BBSShiftStep &command);
+      virtual void visit(const BBSRefitStep &command);
+      // @}
+
+    private:
+      bool convertTime(string in, double &out);
+    
+      // Kernel.
+      scoped_ptr<Prediffer>                   itsKernel;
+
+      // CommandQueue.
+      shared_ptr<CommandQueue>                itsCommandQueue;
+
+      // Connection to the solver.
+      shared_ptr<BlobStreamableConnection>    itsSolverConnection;
+    
+      // Region of interest.
+      int32                                   itsROIFrequency[2];
+      double                                  itsROITime[2];
+
+      // Chunk size and position (in time).
+      double                                  itsChunkSize;
+      double                                  itsChunkPosition;
+    };
+
     // @}
 
-private:
-    bool convertTime(string in, double &out);
-    
-    // Kernel.
-    scoped_ptr<Prediffer>                   itsKernel;
+  } //# namespace BBS
 
-    // CommandQueue.
-    shared_ptr<CommandQueue>                itsCommandQueue;
-
-    // Connection to the solver.
-    shared_ptr<BlobStreamableConnection>    itsSolverConnection;
-    
-    // Region of interest.
-    int32                                   itsROIFrequency[2];
-    double                                  itsROITime[2];
-
-    // Chunk size and position (in time).
-    double                                  itsChunkSize;
-    double                                  itsChunkPosition;
-};
-
-} //# namespace BBS
 } //# namespace LOFAR
 
 #endif

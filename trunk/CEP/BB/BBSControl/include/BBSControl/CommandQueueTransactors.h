@@ -70,6 +70,12 @@ namespace LOFAR
       // pqxx::connection class, when the transaction succeeded. The result of
       // the query, stored in itsPQResult, will be converted to a string and
       // assigned to itsResult.
+      // 
+      // The result string will be formatted as a collection of key/value
+      // pairs, where each key is uniquely defined as
+      // "_row(<row-number>).<column-name>", i.e. "_row(0)." for the first
+      // row, "_row(1)." for the second, etc. The key "_nrows" will contain
+      // the number of rows in the result.
       void on_commit();
 
     private:
@@ -87,71 +93,6 @@ namespace LOFAR
       // it will be written in operator() and will be read in on_commit().
       pqxx::result itsPQResult;
     };
-
-
-    // Functor class for adding a BBSSingleStep to the command queue of the
-    // blackboard database.
-    class AddStep : public pqxx::transactor<>
-    {
-    public:
-      // Construct the functor, using the BBSSingleStep \a step as argument.
-      explicit AddStep(const BBSSingleStep& step);
-
-      // This method will be invoked by the perform() method of your
-      // pqxx::connection class. The actual query to add the BBSSingleStep \c
-      // itsStep to the command queue is constructed and executed here.
-      // \note argument_type is defined in std::unary_function, which is the
-      // parent class of pqxx::transactor<>.
-      void operator()(argument_type& t);
-
-    private:
-      // Store a reference to the single step we need to operate upon.
-      const BBSSingleStep& itsStep;
-
-    };
-
-
-    // Functor class for retrieving the next BBSSingleStep from the command
-    // queue of the blackboard database.
-    class GetNextStep : public pqxx::transactor<>
-    {
-    public:
-      // Construct the functor. 
-      // \param os Reference to an output stream that will be used to write
-      // the result of the query to.
-      // \param currentId ID of the current command
-      // \note All constructor arguments are passed by reference, and locally
-      // stored as reference, because the \e original constructor arguments
-      // must be modified.
-      explicit GetNextStep(ostream& os, uint& currentId);
-
-      // This method will be invoked by the perform() method of your
-      // pqxx::connection class. The actual query to retrieve the next
-      // BBSSingleStep from the command queue is constructed and executed
-      // here. If the query succeeds, on_commit() will write the query result
-      // as a string to the output stream itsStream.
-      // \note argument_type is defined in std::unary_function, which is the
-      // parent class of pqxx::transactor<>.
-      int operator()(argument_type& t);
-
-      // This method will be invoked by the perform() method of your
-      // pqxx::connection class, when the transaction succeeded. Here, we will
-      // write the query result to the output stream itsStream.
-      void on_commit();
-
-    private:
-      // Reference to the output stream that will be used to write the result
-      // of the query to.
-      ostream& itsStream;
-
-      // Reference to the ID of the current command
-      uint& itsCurrentId;
-
-      // ID of the new command. When the transaction was successful,
-      // itsCurrentId will be assigned the value of itsNewId;
-      uint itsNewId;
-    };
-
 
     // @}
 

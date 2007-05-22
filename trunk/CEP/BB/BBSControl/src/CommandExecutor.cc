@@ -27,9 +27,16 @@
 #include <BBSControl/BBSStructs.h>
 
 #include <BBSControl/BlobStreamableVector.h>
+#include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/DomainRegistrationRequest.h>
 #include <BBSControl/IterationRequest.h>
 #include <BBSControl/IterationResult.h>
+
+#include <BBSControl/InitializeCommand.h>
+#include <BBSControl/FinalizeCommand.h>
+#include <BBSControl/NextChunkCommand.h>
+#include <BBSControl/RecoverCommand.h>
+#include <BBSControl/SynchronizeCommand.h>
 
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSMultiStep.h>
@@ -39,6 +46,8 @@
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/BBSShiftStep.h>
 #include <BBSControl/BBSRefitStep.h>
+
+#include <BBSKernel/Prediffer.h>
 
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
@@ -59,6 +68,11 @@ template class BlobStreamableVector<IterationRequest>;
 template class BlobStreamableVector<IterationResult>;
 
 
+CommandExecutor::~CommandExecutor()
+{
+}
+
+
 bool CommandExecutor::convertTime(string in, double &out)
 {
     //# TODO: Convert from default epoch to MS epoch (as it may differ from 
@@ -73,13 +87,13 @@ bool CommandExecutor::convertTime(string in, double &out)
 }
 
 
-void CommandExecutor::visit(const InitializeCommand &command)
+void CommandExecutor::visit(const InitializeCommand &/*command*/)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
     LOG_DEBUG("Handling an InitializeCommand");
 
-    scoped_ptr<const BBSStrategy> strategy(itsCommandQueue->getStrategy());
+    shared_ptr<const BBSStrategy> strategy(itsCommandQueue->getStrategy());
     ASSERT(strategy);
 
     try
@@ -148,7 +162,7 @@ void CommandExecutor::visit(const InitializeCommand &command)
 }
 
 
-void CommandExecutor::visit(const FinalizeCommand &command)
+void CommandExecutor::visit(const FinalizeCommand &/*command*/)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -156,7 +170,7 @@ void CommandExecutor::visit(const FinalizeCommand &command)
 }
 
 
-void CommandExecutor::visit(const NextChunkCommand &command)
+void CommandExecutor::visit(const NextChunkCommand &/*command*/)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
@@ -176,6 +190,22 @@ void CommandExecutor::visit(const NextChunkCommand &command)
         
     if(!result)
         LOG_DEBUG_STR("NextChunk: OUT_OF_DATA");
+}
+
+
+void CommandExecutor::visit(const RecoverCommand &/*command*/)
+{
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+    LOG_DEBUG("Handling a RecoverCommand");
+}
+
+
+void CommandExecutor::visit(const SynchronizeCommand &/*command*/)
+{
+    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+
+    LOG_DEBUG("Handling a SynchronizeCommand");
 }
 
 
@@ -414,7 +444,7 @@ void CommandExecutor::visit(const BBSSolveStep &command)
         //     - wait for result
         //     - check for convergence
         //     - update cached values of the unknowns
-        unsigned int converged = 0, stopped = 0;
+        unsigned int converged = 0/*, stopped = 0*/;
         for(size_t i = 0; i < results.size(); ++i)
         {
             const IterationResult *result = results[i];

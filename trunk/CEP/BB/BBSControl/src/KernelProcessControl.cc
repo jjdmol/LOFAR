@@ -27,6 +27,8 @@
 
 #include <BBSControl/KernelProcessControl.h>
 //#include <BBSControl/Command.h>
+#include <BBSControl/CommandQueue.h>
+#include <BBSControl/CommandId.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
@@ -68,6 +70,12 @@ namespace BBS
     KernelProcessControl::KernelProcessControl() :
         ProcessControl(),
         itsState(KernelProcessControl::INIT)
+    {
+        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+    }
+
+
+    KernelProcessControl::~KernelProcessControl()
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
@@ -168,7 +176,7 @@ namespace BBS
 
             case KernelProcessControl::FIRST_RUN:
                 {
-                scoped_ptr<const BBSStrategy>strategy(
+                shared_ptr<const BBSStrategy>strategy(
                     itsCommandQueue->getStrategy());
 
                 if(!strategy)
@@ -193,13 +201,14 @@ namespace BBS
 
             case KernelProcessControl::RUN:
                 {
-                scoped_ptr<const Command> cmd(itsCommandQueue->getNextCommand());
+                
+                NextCommandType cmd(itsCommandQueue->getNextCommand());
 
-                if(cmd)
+                if(cmd.first)
                 {
                     LOG_DEBUG("Received command, remaining in RUN state.");
 
-                    cmd->accept(*itsCommandExecutor);
+                    cmd.first->accept(*itsCommandExecutor);
                 }
                 else
                 {
