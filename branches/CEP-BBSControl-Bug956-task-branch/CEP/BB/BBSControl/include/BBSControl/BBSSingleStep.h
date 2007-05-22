@@ -59,7 +59,7 @@ namespace LOFAR
     protected:
       // Default constructor. Construct an empty BBSSingleStep object and make
       // it a child of the BBSStep object \a parent.
-      BBSSingleStep(const BBSStep* parent = 0);
+      BBSSingleStep(shared_ptr<const BBSStep> parent = 0);
 
       // Construct a BBSSingleStep having the name \a name. Configuration
       // information for this step can be retrieved from the parameter set \a
@@ -67,7 +67,7 @@ namespace LOFAR
       // is a pointer to the BBSStep object that is the parent of \c *this.
       BBSSingleStep(const string& name,
                     const ACC::APS::ParameterSet& parset,
-                    const BBSStep* parent);
+                    shared_ptr<const BBSStep> parent);
 
       // Write the contents of \c *this into the ParameterSet \a ps.
       virtual void write(ACC::APS::ParameterSet& ps) const;

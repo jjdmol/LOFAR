@@ -43,12 +43,12 @@ namespace LOFAR
     class BBSSubtractStep : public BBSSingleStep
     {
     public:
-      BBSSubtractStep(const BBSStep* parent = 0) : 
+      BBSSubtractStep(shared_ptr<const BBSStep> parent = 0) : 
 	BBSSingleStep(parent) {}
 
       BBSSubtractStep(const string& name, 
 		      const ACC::APS::ParameterSet& parSet,
-		      const BBSStep* parent) :
+		      shared_ptr<const BBSStep> parent) :
 	BBSSingleStep(name, parSet, parent) {}
 
       // Accept a CommandVisitor that wants to process \c *this.

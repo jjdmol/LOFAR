@@ -32,6 +32,7 @@
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+#include <Common/lofar_smartptr.h>
 
 namespace LOFAR
 {
@@ -140,7 +141,7 @@ namespace LOFAR
       Integration            itsIntegration;
 
       // Sequence of steps that comprise this solve strategy.
-      vector<const BBSStep*> itsSteps;
+      vector< shared_ptr<const BBSStep> > itsSteps;
 
       // Flag indicating whether the BBSStep objects in \c itsSteps should
       // also be written when write(ParameterSet&) is called.

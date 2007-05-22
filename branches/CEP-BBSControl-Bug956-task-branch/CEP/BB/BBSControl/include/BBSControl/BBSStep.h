@@ -32,6 +32,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
+#include <Common/lofar_smartptr.h>
 #include <Common/LofarTypes.h>
 
 namespace LOFAR
@@ -61,7 +62,8 @@ namespace LOFAR
     // cause the pointer to never be freed. This can happen since a BBSStep
     // stores a pointer to its parent as backreference. Here, we should
     // probably use a boost::weak_ptr. See Bug #906
-    class BBSStep : public Command
+    class BBSStep : public Command,
+                    public enable_shared_from_this<BBSStep>
     {
     public:
       // Destructor.
@@ -80,7 +82,7 @@ namespace LOFAR
       // class that can be used to iterate over the all steps. I had some
       // trouble getting that thingy working, so, due to time constraints, I
       // implemented things the ugly way.
-      vector<const BBSStep*> getAllSteps() const;
+      vector< shared_ptr<const BBSStep> > getAllSteps() const;
 
       // Create a new step object. The new step can either be a BBSSingleStep
       // or a BBSMultiStep object. This is determined by examining the
@@ -88,9 +90,10 @@ namespace LOFAR
       // <tt>Step.<em>name</em>.Steps</tt>, then \a aName is a BBSMultiStep,
       // otherwise it is a SingleStep. The third, optional, argument is used
       // to pass a backreference to the parent BBSStep object.
-      static BBSStep* create(const string& name,
-			     const ACC::APS::ParameterSet& parSet,
-			     const BBSStep* parent = 0);
+      static shared_ptr<BBSStep> create(const string& name,
+                                        const ACC::APS::ParameterSet& parSet,
+                                        shared_ptr<const BBSStep> parent = 
+                                        shared_ptr<const BBSStep>());
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
@@ -103,10 +106,11 @@ namespace LOFAR
       string getName() const { return itsName; }
 
       // Return a pointer to the parent of this step.
-      const BBSStep* getParent() const { return itsParent; }
+      shared_ptr<const BBSStep> getParent() const 
+      { return shared_ptr<const BBSStep>(itsParent); }
 
       // Make \a parent the parent of this step.
-      void setParent(const BBSStep* parent) { itsParent = parent; }
+      void setParent(shared_ptr<const BBSStep> parent) { itsParent = parent; }
 
       // Return the selection of baselines for this step.
       Baselines baselines() const { return itsBaselines; }
@@ -139,7 +143,7 @@ namespace LOFAR
     protected:
       // Default constructor. Construct an empty BBSStep object and make it a
       // child of the BBSStep object \a parent.
-      BBSStep(const BBSStep* parent = 0) : itsParent(parent) {}
+      BBSStep(shared_ptr<const BBSStep> parent = 0) : itsParent(parent) {}
 
       // Construct a BBSStep. \a name identifies the step name in the
       // parameter set file. It does \e not uniquely identify the step \e
@@ -147,61 +151,52 @@ namespace LOFAR
       // backreference to the parent BBSStep object.
       BBSStep(const string& name, 
 	      const ACC::APS::ParameterSet& parSet,
-	      const BBSStep* parent);
+	      shared_ptr<const BBSStep> parent);
 
     private:
       // Implementation of getAllSteps(). The default implementation adds \c
       // this to the vector \a steps.
       // \note This method must be overridden by BBSMultiStep.
-      virtual void doGetAllSteps(vector<const BBSStep*>& steps) const;
+      virtual void 
+      doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const;
 
       // Name of this step.
-      string                 itsName;
+      string                  itsName;
 
       // Pointer to the parent of \c *this. All BBSStep objects have a parent,
       // except the top-level BBSStep object. The parent reference is used,
       // among other things, to initialize the data members of the child
       // object with those of its parent.
-      const BBSStep*         itsParent;
+      shared_ptr<const BBSStep> itsParent;
 
       // Selection of baselines for this step.
-      Baselines              itsBaselines;
+      Baselines               itsBaselines;
 
       // Parameters describing which correlation products for which
       // polarizations should be used for this step.
-      Correlation            itsCorrelation;
+      Correlation             itsCorrelation;
 
       // Parameters describing the amount of integration that must be applied
       // to the data. Integration can be useful to decrease the amount of
       // data.
-      Integration            itsIntegration;
+      Integration             itsIntegration;
 
       // The sources in the source model for the current patch.
-      vector<string>         itsSources;
+      vector<string>          itsSources;
 
       // Extra sources outside the current patch that may contribute to the
       // current patch. They should be taken into account in order to improve
       // the predictions of source parameters for the current patch.
-      vector<string>         itsExtraSources;
+      vector<string>          itsExtraSources;
 
       // A list of instrument models to be used for this step.
-      vector<string>         itsInstrumentModels;
+      vector<string>          itsInstrumentModels;
 
       // Write the contents of a BBSStep to an output stream.
       friend ostream& operator<<(ostream&, const BBSStep&);
 
     };
 
-    // Factory that can be used to generate new BBSStep objects.
-    // The factory is defined as a singleton.
-    typedef Singleton < 
-      ObjectFactory < BBSStep(const string&, 
-                              const ACC::APS::ParameterSet&, 
-                              const BBSStep*), 
-                      string >
-    > BBSStepFactory;
-
-    
   } // namespace BBS
 
 } // namespace LOFAR

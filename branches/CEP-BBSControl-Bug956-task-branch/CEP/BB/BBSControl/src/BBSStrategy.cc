@@ -104,7 +104,7 @@ namespace LOFAR
 
         // Create a new step for each name in \a steps.
         for (uint i = 0; i < steps.size(); ++i) {
-          itsSteps.push_back(BBSStep::create(steps[i], aParSet, 0));
+          itsSteps.push_back(BBSStep::create(steps[i], aParSet, shared_ptr<const BBSStep>()));
         }
       } catch (APSException&) {}
     }
@@ -113,11 +113,6 @@ namespace LOFAR
     BBSStrategy::~BBSStrategy()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      // Clean up all steps.
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-        delete itsSteps[i];
-      }
       itsSteps.clear();
     }
 

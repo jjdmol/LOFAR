@@ -49,11 +49,11 @@ namespace LOFAR
       // backreference to the parent BBSStep object.
       BBSMultiStep(const string& name,
 		   const ACC::APS::ParameterSet& parset,
-		   const BBSStep* parent);
+		   shared_ptr<const BBSStep> parent);
 
       // Default constructor. Construct an empty BBSMultiStep object and make
       // it a child of the BBSStep object \a parent.
-      BBSMultiStep(const BBSStep* parent = 0) :
+      BBSMultiStep(shared_ptr<const BBSStep> parent = 0) :
         BBSStep(parent)
       {
       }
@@ -88,7 +88,8 @@ namespace LOFAR
       // Implementation of getAllSteps() for BBSMultiStep. It retrieves all
       // steps by calling getAllSteps() on all steps that comprise this
       // multistep.
-      virtual void doGetAllSteps(vector<const BBSStep*>& steps) const;
+      virtual void 
+      doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const;
 
       // Check to see if there's an infinite recursion present in the
       // definition of a BBSMultiStep. This can happen when one of the steps
@@ -97,7 +98,7 @@ namespace LOFAR
       void infiniteRecursionCheck(const string& name) const;
 
       // Vector holding a sequence of BBSSteps.
-      vector<const BBSStep*> itsSteps;
+      vector< shared_ptr<const BBSStep> > itsSteps;
     };
 
     // @}
