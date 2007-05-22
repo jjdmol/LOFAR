@@ -32,6 +32,7 @@ namespace LOFAR
   using std::set;
   using std::multiset;
   using std::pair;
+  using std::make_pair;
 }
 
 #endif
