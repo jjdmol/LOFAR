@@ -28,6 +28,8 @@
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
+#include <BBSControl/RecoverCommand.h>
+#include <BBSControl/SynchronizeCommand.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSMultiStep.h>
 #include <BBSControl/BBSPredictStep.h>
@@ -58,18 +60,55 @@ namespace LOFAR
       void AddCommand::visit(const InitializeCommand &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
+        itsQuery = 
+          selectClause(command) + 
+          beginArgumentList(command)   +
+          argumentList(command) +
+          endArgumentList(command);
       }
 
 
       void AddCommand::visit(const FinalizeCommand &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
+        itsQuery = 
+          selectClause(command) + 
+          beginArgumentList(command)   +
+          argumentList(command) +
+          endArgumentList(command);
       }
 
 
       void AddCommand::visit(const NextChunkCommand &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
+        itsQuery = 
+          selectClause(command) + 
+          beginArgumentList(command)   +
+          argumentList(command) +
+          endArgumentList(command);
+      }
+
+
+      void AddCommand::visit(const RecoverCommand &command)
+      {
+        LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
+        itsQuery = 
+          selectClause(command) + 
+          beginArgumentList(command)   +
+          argumentList(command) +
+          endArgumentList(command);
+      }
+
+
+      void AddCommand::visit(const SynchronizeCommand &command)
+      {
+        LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
+        itsQuery = 
+          selectClause(command) + 
+          beginArgumentList(command)   +
+          argumentList(command) +
+          endArgumentList(command);
       }
 
 
@@ -183,25 +222,31 @@ namespace LOFAR
 
       string AddCommand::beginArgumentList(const Command&) const
       {
+        return "(";
+      }
+
+
+      string AddCommand::beginArgumentList(const BBSSingleStep&) const
+      {
         return "(ROW(";
       }
 
 
       string AddCommand::endArgumentList(const Command&) const
       {
-        return "))";
-      }
-
-
-      string AddCommand::beginArgumentList(const BBSStrategy&) const
-      {
-        return "(";
-      }
-
-
-      string AddCommand::endArgumentList(const BBSStrategy&) const
-      {
         return ") AS result";
+      }
+
+
+      string AddCommand::endArgumentList(const BBSSingleStep&) const
+      {
+        return ")) AS result";
+      }
+
+
+      string AddCommand::argumentList(const Command&) const
+      {
+        return "";
       }
 
 

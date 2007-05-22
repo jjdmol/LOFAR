@@ -29,16 +29,15 @@
 //# Includes
 #include <PLC/ProcessControl.h>
 
+#include <BBSControl/CommandId.h>
+#include <BBSControl/CommandResult.h>
+#include <BBSControl/CommandQueue.h>
+#include <BBSControl/LocalControlId.h>
+
+#include <Common/lofar_smartptr.h>
+
 namespace LOFAR
 {
-  //# Forward Declarations.
-#if 0
-  class BlobStreamable;
-  class DH_BlobStreamable;
-  class TH_Socket;
-  class CSConnection;
-#endif
-
   namespace BBS
   {
     //# Forward Declarations.
@@ -74,16 +73,50 @@ namespace LOFAR
       // @}
 
     private:
-#if 0
-      // Send the strategy or one of the steps across.
-      bool sendObject(const BlobStreamable& bs);
+        enum RunState {
+          UNDEFINED = 0,
+//           PREPARE,
+//           PREPARE_WAIT,
+          NEXT_CHUNK,
+          NEXT_CHUNK_WAIT,
+          RUN,
+          WAIT,
+          RECOVER,
+          FINALIZE,
+          QUIT
+        };
 
-      // Receive a BlobStreamable object, e.g., a BBSStatus.
-      BlobStreamable* recvObject();
+#if 0
+      // Post the command \a cmd to the command queue and wait until all local
+      // controllers have executed the command.
+      bool execCommand(const Command& cmd);
+
+      // Number of local controllers.
+      uint itsNrLocalCtrls;
 #endif
 
+      // Wait for results for the command with id \a cmdId. If new results
+      // arrive within the time-out period (which is a modifiable property of
+      // the CommandQueue), then \c itsResults will be updated. These new
+      // results will also be returned as a vector of ResultType.
+      vector<ResultType> waitForResults(const CommandId& cmdId);
+
+      // Wait for results for any command. If new results arrive within the
+      // time-out period (which is a modifiable property of the CommandQueue),
+      // then \c itsResults will be updated. These new results will also be
+      // returned as ResultMapType.
+      ResultMapType waitForResults();
+
+      // State of the global process controller.
+      RunState itsState;
+
+      // Keep track of the status of the commands sent to the command queue.
+      // Once a local controller has executed a command, it will post a
+      // result, which we can use to update our administration.
+      ResultMapType itsResults;
+
       // The strategy that will be executed by this controller.
-      BBSStrategy*            itsStrategy;
+      scoped_ptr<BBSStrategy> itsStrategy;
 
       // Vector containing all the separate steps, in sequential order, that
       // the strategy consists of.
@@ -95,27 +128,9 @@ namespace LOFAR
       // execute one BBSStep.
       vector<const BBSStep*>::const_iterator itsStepsIterator;
 
-#if 0
-      // DataHolder for exchanging data between global (BBS) and local
-      // (BBSKernel) global control.
-      DH_BlobStreamable* itsDataHolder;
-
-      // TransportHolder used to exchange DataHolders. The global controller
-      // will open a server connection, waiting for local controllers to
-      // connect.
-      TH_Socket* itsTransportHolder;
-
-      // Connection between the global (BBS) control and the local
-      // (BBSKernel) control.
-      CSConnection* itsConnection;
-#endif
-
       // CommandQueue where strategies and steps can be "posted".
-      CommandQueue* itsCommandQueue;
+      scoped_ptr<CommandQueue> itsCommandQueue;
 
-      // Flag indicating whether we've sent \c itsStrategy. We only need to
-      // send it once, as the very first message.
-      bool itsStrategySent;
     };
 
     // @}

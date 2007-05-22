@@ -55,28 +55,39 @@ namespace LOFAR
         N_Result       ///< Number of result values.
       };
 
-      // If \a result matches with one of the enumeration values in Result,
-      // then itsResult is set to \a result, else itsResult is set to \c
-      // UNKNOWN. The optional extra message can provide a more detailed
-      // description of the actual error.
+      // Default constructor.
       CommandResult(Result result = UNKNOWN, const string& msg = string());
 
-      // Get the return value.
-      Result get() const
+      // This constructor was added to make the life of the programmer a
+      // little brighter. The job of converting the \c int \a result to an \c
+      // enum Result is now done by the constructor.
+      CommandResult(int result, const string& msg = string());
+
+      // Return the result code as an integer.
+      int asInt() const
       { return itsResult; }
+
+      // Return the result code as a string.
+      const string& asString() const;
 
       // Return the user-supplied message.
       const string& message() const
       { return itsMessage; }
 
-      // Return the result as a string.
-      const string& asString() const;
-
       // Return \c true if result is OK, else return \c false.
       operator bool() const
       { return itsResult == OK; }
 
+      // Return \c true if result is equal to \a result, else return \c false.
+      bool is(Result result) const
+      { return itsResult == result; }
+
     private:
+      // If \a result matches with one of the enumeration values in Result,
+      // then itsResult is set to \a result, else itsResult is set to \c
+      // UNKNOWN. 
+      void set(Result result);
+
       // The return result
       Result itsResult;
 

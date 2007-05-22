@@ -6,7 +6,9 @@ Parameter database:
 . History table: test.his
 Strategy:
 . Input data: INDATA
-. Region of interest: [1.175e+09,1.176e+09,1000,3000]
+. Region of interest:
+. . Frequency: []
+. . Time: []
 . Domain size:
 . . Bandwidth: 1e+06 (Hz)
 . . Time interval: 10 (s)
@@ -17,7 +19,8 @@ Strategy:
 . . Delta frequency: 1 (Hz)
 . . Delta time: 0.1 (s)
 . Stations: [CS*,RS1*,RS2*,DE*]
-. Step: xyz1
+. Step: MultiStep
+. . Name: xyz1
 . . Full name: xyz1
 . . Baselines:
 . . . Station1: [CS*,CS*,CS*,RS1*,RS1*,RS2*]
@@ -31,7 +34,8 @@ Strategy:
 . . Sources: [3C343]
 . . Extra sources: [M81]
 . . Instrument models: [Bandpass,DirGain,Phase]
-. . Step: sl1
+. . Step: Solve
+. . . Name: sl1
 . . . Full name: xyz1.sl1
 . . . Baselines:
 . . . . Station1: [CS*,RS1*]
@@ -55,7 +59,8 @@ Strategy:
 . . . . Domain size:
 . . . . . Bandwidth: 1000 (Hz)
 . . . . . Time interval: 1 (s)
-. . Step: sl2
+. . Step: Correct
+. . . Name: sl2
 . . . Full name: xyz1.sl2
 . . . Baselines:
 . . . . Station1: [CS*,CS*,CS*,RS1*,RS1*,RS2*]
@@ -70,7 +75,8 @@ Strategy:
 . . . Extra sources: [M81]
 . . . Instrument models: [DirGain,Phase]
 . . . Output data: OUTDATA2
-. Step: xyz2
+. Step: MultiStep
+. . Name: xyz2
 . . Full name: xyz2
 . . Baselines:
 . . . Station1: [CS*,CS*,RS1*]
@@ -84,7 +90,8 @@ Strategy:
 . . Sources: [3C343]
 . . Extra sources: []
 . . Instrument models: [Bandpass]
-. . Step: sl1
+. . Step: Solve
+. . . Name: sl1
 . . . Full name: xyz2.sl1
 . . . Baselines:
 . . . . Station1: [CS*,RS1*]
@@ -108,7 +115,8 @@ Strategy:
 . . . . Domain size:
 . . . . . Bandwidth: 1000 (Hz)
 . . . . . Time interval: 1 (s)
-. . Step: sl3
+. . Step: Predict
+. . . Name: sl3
 . . . Full name: xyz2.sl3
 . . . Baselines:
 . . . . Station1: [CS*,CS*,RS1*]

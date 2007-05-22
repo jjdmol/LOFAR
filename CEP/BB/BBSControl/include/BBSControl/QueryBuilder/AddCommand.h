@@ -54,6 +54,8 @@ namespace LOFAR
         virtual void visit(const InitializeCommand &command);
         virtual void visit(const FinalizeCommand &command);
         virtual void visit(const NextChunkCommand &command);
+        virtual void visit(const RecoverCommand &command);
+        virtual void visit(const SynchronizeCommand &command);
         virtual void visit(const BBSStrategy &command);
         virtual void visit(const BBSMultiStep &command);
         virtual void visit(const BBSPredictStep &command);
@@ -77,17 +79,18 @@ namespace LOFAR
         // Start the argument list
         // @{
         string beginArgumentList(const Command&) const;
-        string beginArgumentList(const BBSStrategy&) const;
+        string beginArgumentList(const BBSSingleStep&) const;
         // @}
 
         // End the argument list
         // @{
         string endArgumentList(const Command&) const;
-        string endArgumentList(const BBSStrategy&) const;
+        string endArgumentList(const BBSSingleStep&) const;
         // @}
 
         // Return the argument list.
         // @{
+        string argumentList(const Command& command) const;
         string argumentList(const BBSStrategy& command) const;
         string argumentList(const BBSSingleStep& command) const;
         string argumentList(const BBSSolveStep& command) const;

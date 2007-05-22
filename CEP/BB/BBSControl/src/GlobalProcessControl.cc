@@ -23,17 +23,21 @@
 #include <lofar_config.h>
 
 #include <BBSControl/GlobalProcessControl.h>
+#include <BBSControl/Exceptions.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSStep.h>
-#if 0
-# include <BBSKernel/BBSStatus.h>
-# include <Transport/DH_BlobStreamable.h>
-# include <Transport/TH_Socket.h>
-# include <Transport/CSConnection.h>
-#endif
+#include <BBSControl/InitializeCommand.h>
+#include <BBSControl/NextChunkCommand.h>
+#include <BBSControl/SynchronizeCommand.h>
+#include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/CommandQueue.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
+
+#include <BBSControl/CommandId.h>
+#include <BBSControl/LocalControlId.h>
+
+#include <unistd.h>    // for sleep()
 
 using namespace LOFAR::ACC::APS;
 
@@ -41,18 +45,22 @@ namespace LOFAR
 {
   namespace BBS
   {
+    // Unnamed namespace, used to define local (static) variables, etc.
+    namespace
+    {
+      // Number of local controllers
+      uint nrLocalCtrls(0);
+
+      // ID of the last "next chunk" command (if any).
+      CommandId nextChunkId(0);
+    }
+
+
     //##--------   P u b l i c   m e t h o d s   --------##//
 
     GlobalProcessControl::GlobalProcessControl() :
       ProcessControl(),
-      itsStrategy(0),
-#if 0
-      itsDataHolder(0), 
-      itsTransportHolder(0), 
-      itsConnection(0),
-#endif
-      itsCommandQueue(0),
-      itsStrategySent(false)
+      itsState(UNDEFINED)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
     }
@@ -61,175 +69,309 @@ namespace LOFAR
     GlobalProcessControl::~GlobalProcessControl()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      delete itsStrategy;
-#if 0
-      delete itsDataHolder;
-      delete itsTransportHolder;
-      delete itsConnection;
-#endif
-      delete itsCommandQueue;
     }
 
 
     tribool GlobalProcessControl::define()
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
       LOG_INFO("GlobalProcessControl::define()");
       
       try {
 	// Retrieve the strategy from the parameter set.
-	itsStrategy = new BBSStrategy(*globalParameterSet());
+	itsStrategy.reset(new BBSStrategy(*globalParameterSet()));
 
 	// Retrieve the steps in the strategy in sequential order.
-	itsSteps = itsStrategy->getAllSteps();
+        itsSteps = itsStrategy->getAllSteps();
 	LOG_DEBUG_STR("# of steps in strategy: " << itsSteps.size());
-    
-#if 0
-	// Create a new data holder.
-	itsDataHolder = new DH_BlobStreamable();
-
-	// Create a new server TH_Socket. Do not open the socket yet.
-	itsTransportHolder = 
-	  new TH_Socket(globalParameterSet()->getString("Controller.Port"),
-			true,         // sync
-			Socket::TCP,  // protocol
-			false);       // open socket now
-#endif
-      }
-      catch (Exception& e) {
-	LOG_ERROR_STR("Caught exception in GlobalProcessControl::define()\n"
-		      << e);
-	  return false;
-      }
-      return true;
-    }
-
-
-    tribool GlobalProcessControl::init()
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      LOG_INFO("GlobalProcessControl::init()");
-
-      try {
-#if 0
-	// Check pre-conditions
-	ASSERT(itsDataHolder);
-	ASSERT(itsTransportHolder);
-#endif
-
-	// We need to send the strategy first.
-	itsStrategySent = false;
-
-	// Set the step iterator at the start of the vector of steps.
-	itsStepsIterator = itsSteps.begin();
-
-#if 0
-	// DH_BlobStreamable is initialized implicitly by its constructor.
-	if (!itsDataHolder->isInitialized()) {
-	  LOG_ERROR("Initialization of DataHolder failed");
-	  return false;
-	}
-	// Connect the client socket to the server.
-	if (!itsTransportHolder->init()) {
-	  LOG_ERROR("Initialization of TransportHolder failed");
-	  return false;
-	}
-	// Create a new CSConnection object.
-	itsConnection = new CSConnection("RWConn", 
-					 itsDataHolder, 
-					 itsDataHolder, 
-					 itsTransportHolder);
-	if (!itsConnection || !itsConnection->isConnected()) {
-	  LOG_ERROR("Creation of Connection failed");
-	  return false;
-	}
-#endif
-	// Create a new CommandQueue. This will open a connection to the
-	// blackboard database.
-	itsCommandQueue = 
-	  new CommandQueue(globalParameterSet()->getString("BBDB.DBName"));
-
-	// Check if this is a new run. It usually is, but we might be resuming
-	// a paused run, or we might be recovering from a crash.
-// 	itsIsNewRun = itsCommandQueue->isNewRun();
-
       }
       catch (Exception& e) {
 	LOG_ERROR_STR(e);
-	return false;
+        return false;
       }
       // All went well.
       return true;
     }
 
 
-    tribool GlobalProcessControl::run()
+    tribool GlobalProcessControl::init()
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      LOG_INFO("GlobalProcessControl::run()");
+      LOG_INFO("GlobalProcessControl::init()");
 
       try {
-	// Check pre-conditions
-#if 0
-	ASSERT(itsDataHolder);
-	ASSERT(itsConnection);
-#endif
-	ASSERT(itsStrategy);
-	ASSERT(itsCommandQueue);
+	// Create a new CommandQueue. This will open a connection to the
+	// blackboard database.
+	itsCommandQueue.reset
+          (new CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
 
-	// Keep the result of sending data.
-	bool result;
+        // Register for the "result" trigger, which fires when a new result is
+        // posted to the blackboard database.
+        itsCommandQueue->registerTrigger(CommandQueue::Trigger::Result);
 
-	// If we haven't sent the strategy to the command queue yet, we should
-	// do it now.
-	if (!itsStrategySent) {
-	  itsCommandQueue->setStrategy(*itsStrategy);
-	  itsStrategySent = true;
-	}
-	// Else, we should send the next step, unless we're at the end of the
-	// vector of steps.
-	else {
-	  if (itsStepsIterator != itsSteps.end()) {
-	    // Send the next step and increment the iterator.
-	    itsCommandQueue->addCommand(**itsStepsIterator++);
-	  }
-	  else {
-	    LOG_TRACE_COND("Reached end of vector of steps");
-	    result = false;
-	  }
-	}
+        // Retrieve the number of local controllers.
+        nrLocalCtrls = globalParameterSet()->getUint32("NrLocalCtrls");
+        LOG_DEBUG_STR("Number of local controllers: " << nrLocalCtrls);
 
-#if 0
-	// Read back the response from the BBS kernel (probably a BBSStatus).
- 	BlobStreamable* bs = recvObject();
+        // Send the strategy.
+        itsCommandQueue->setStrategy(*itsStrategy);
 
-	// Something went (terribly) wrong. Return immediately.
- 	if (!bs) return false;
+        // Send an "initialize" command to the queue.
+        CommandId id = itsCommandQueue->addCommand(InitializeCommand());
+        LOG_DEBUG_STR("Initialize command has ID: " << id);
 
-        // Assume we've received a BBSStatus
-        BBSStatus* sts = dynamic_cast<BBSStatus*>(bs);
-        if (!sts) {
-          LOG_ERROR("Expected to receive a BBSStatus");
-          return false;
+        // Get a reference to the results registered in our local result map
+        // for the given command-id.
+        ResultMapType::mapped_type& results = itsResults[id];
+
+        // Wait until all local controllers have acknowledged the "initialize"
+        // command.
+        while (results.size() < nrLocalCtrls) {
+
+          LOG_DEBUG("Waiting for result trigger ...");
+          if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
+
+            // Retrieve the new results from the command queue.
+            vector<ResultType> newResults = itsCommandQueue->getNewResults(id);
+
+            // Add the new results to our local results vector.
+            results.insert(results.end(), 
+                           newResults.begin(), newResults.end());
+          }
+          LOG_DEBUG_STR(results.size() << " out of " << nrLocalCtrls << 
+                        " local controllers have responded");
         }
 
-        LOG_DEBUG_STR("Received BBSStatus: " << *sts);
-        if (!(*sts)) {
-          LOG_ERROR_STR("Received BBSStatus: " << *sts);
-          return false;
+        // Did all local controllers respond with an "OK" status?
+        // Here we have to iterate over all elements in result -- a count()
+        // will not do, because result is a vector<pair<LocalControlId,
+        // CmdResult> > instead of a "plain" vector<CmdResult>. Could this be
+        // avoided by choosing a different STL container for ResultMapType??
+        LOG_TRACE_CALC("Results:");
+        uint notOk(0);
+        for (uint i = 0; i < results.size(); ++i) {
+          LOG_TRACE_CALC_STR(results[i].first << " - " << results[i].second);
+          if (!results[i].second) {
+            LOG_DEBUG_STR("Local controller " << results[i].first <<
+                          " returned: " << results[i].second.asString());
+            notOk++;
+          }
         }
-#endif
+        LOG_DEBUG_STR(notOk << " out of " << nrLocalCtrls << 
+                      " local controllers returned an error status");
 
-	// Wait for a trigger from the database to fetch the result
-	
+        // Set the steps iterator to the *end* of the steps vector. This
+        // sounds odd, but it is a safety net to insure that all local
+        // controllers execute a "next chunk" command prior to any step.
+        itsStepsIterator = itsSteps.end();
 
+        // Switch to NEXT_CHUNK state, indicating that the next thing we
+        // should do is send a "next chunk" command.
+        itsState = NEXT_CHUNK;
 
+        // Only return true if none of the local controllers returned an error
+        // status.
+        return notOk == 0;
       }
       catch (Exception& e) {
 	LOG_ERROR_STR(e);
 	return false;
       }
+    }
 
+
+    tribool GlobalProcessControl::run()
+    {
+      LOG_INFO("GlobalProcessControl::run()");
+
+      try {
+        
+        switch(itsState) {
+
+        case NEXT_CHUNK: {
+          // Send a "next chunk" command. 
+          LOG_TRACE_FLOW("RunState::NEXT_CHUNK");
+
+          nextChunkId = itsCommandQueue->addCommand(NextChunkCommand());
+          LOG_DEBUG_STR("Next-chunk command has ID: " << nextChunkId);
+
+          itsState = NEXT_CHUNK_WAIT;
+          break;
+        }
+
+
+        case NEXT_CHUNK_WAIT: {
+          // Wait for a "result trigger" form the database. If trigger
+          // received within time-out period, fetch new results. If any of the
+          // new results contain an OK status to the "next chunk" command,
+          // switch to RUN state.
+          LOG_TRACE_FLOW("RunState::NEXT_CHUNK_WAIT");
+
+          // Get a reference to the results registered in our local result map
+          // for the given command-id.
+          ResultMapType::mapped_type& results = itsResults[nextChunkId];
+
+          LOG_DEBUG("Waiting for result trigger ...");
+          if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
+
+            // Retrieve the new results from the command queue.
+            vector<ResultType> newResults = 
+              itsCommandQueue->getNewResults(nextChunkId);
+
+            // Add the new results to our local results vector.
+            results.insert(results.end(), 
+                           newResults.begin(), newResults.end());
+
+            // If any of the local controllers have responded with an OK
+            // status, switch to RUN state and set the steps iterator to the
+            // beginning of the strategy.
+            for (uint i = 0; i < newResults.size(); ++i) {
+              LOG_DEBUG_STR("Local controller " << newResults[i].first << 
+                            " returned: "<< newResults[i].second.asString());
+              if (newResults[i].second) {
+                LOG_DEBUG("Switching to RUN state");
+                itsState = RUN;
+                itsStepsIterator = itsSteps.begin();
+                break;
+              }
+            }
+          }
+
+          // If we're still in NEXT_CHUNK_WAIT state and if all local
+          // controllers have responded, check if all returned an OUT_OF_DATA
+          // status. If so, we're done and must switch to FINALIZE state.
+          if (itsState == NEXT_CHUNK_WAIT && results.size() == nrLocalCtrls) {
+            uint nrOutOfData(0);
+            for (uint i = 0; i < results.size(); ++i) {
+              if (results[i].second.is(CommandResult::OUT_OF_DATA)) {
+                nrOutOfData++;
+              }
+            }
+            if (nrOutOfData == nrLocalCtrls) {
+              LOG_DEBUG("All local controllers responded with OUT_OF_DATA. "
+                        "Switching to FINALIZE state");
+              itsState = FINALIZE;
+            } else {
+              LOG_DEBUG("One or more local controllers returned with "
+                        "an error status");
+              // Returning false might not be the best thing to do in the end
+              // -- doing a LOG_WARN() is probably better -- but it will
+              // (hopefully) make debugging easier.
+              return false;
+            }
+          }
+          break;
+        }
+
+
+        case RUN: {
+          // Send the next "step" command and switch to the WAIT state, unless
+          // we're at the end of the strategy. In that case we should switch
+          // to the NEXT_CHUNK state.
+          LOG_TRACE_FLOW("RunState::RUN");
+
+          if (itsStepsIterator != itsSteps.end()) {
+            itsCommandQueue->addCommand(**itsStepsIterator++);
+//             LOG_DEBUG("Switching to WAIT state");
+//             itsState = WAIT;
+          } else {
+            LOG_DEBUG("Switching to NEXT_CHUNK state");
+            itsState = NEXT_CHUNK;
+          }
+          break;
+        }
+
+
+        case WAIT: {
+          // Wait for a trigger from the database. If trigger received within
+          // time-out period, switch to RUN state.
+          LOG_TRACE_FLOW("RunState::WAIT");
+
+          if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
+            itsState = RUN;
+          }
+          break;
+        }
+
+
+        case FINALIZE: {
+          // Send "finalize" command. Wait until all local controllers have
+          // responded. If all local controllers returned an OK status, mark
+          // the strategy as 'done'.
+          LOG_TRACE_FLOW("RunState::FINALIZE");
+
+          CommandId id = itsCommandQueue->addCommand(FinalizeCommand());
+          LOG_DEBUG_STR("Finalize command has ID: " << id);
+
+          // Get a reference to the results registered in our local result map.
+          ResultMapType::mapped_type& results = itsResults[id];
+
+          // Wait until all local controllers have acknowledged the "finalize"
+          // command.
+          while (results.size() < nrLocalCtrls) {
+
+            LOG_DEBUG("Waiting for result trigger ...");
+            
+            if (itsCommandQueue->
+                waitForTrigger(CommandQueue::Trigger::Result)) {
+
+            // Retrieve the new results from the command queue.
+            vector<ResultType> newResults = itsCommandQueue->getNewResults(id);
+
+            // Add the new results to our local results vector.
+            results.insert(results.end(), 
+                           newResults.begin(), newResults.end());
+            }
+            LOG_DEBUG_STR(results.size() << " out of " << nrLocalCtrls << 
+                          " local controllers have responded");
+          }
+          
+          // Did all local controllers respond with an "OK" status?
+          LOG_TRACE_CALC("Results:");
+          uint notOk(0);
+          for (uint i = 0; i < results.size(); ++i) {
+            LOG_TRACE_CALC_STR(results[i].first << " - " << results[i].second);
+            if (!results[i].second) {
+              LOG_DEBUG_STR("Local controller " << results[i].first <<
+                            " returned: " << results[i].second.asString());
+              notOk++;
+            }
+          }
+          LOG_DEBUG_STR(notOk << " out of " << nrLocalCtrls << 
+                        " local controllers returned an error status");
+
+          // Only set strategy state flag to "done" if none of the local
+          // controllers returned an error status.
+          if (notOk == 0) {
+            itsCommandQueue->setStrategyDone();
+          }
+
+          // Switch to QUIT state.
+          itsState = QUIT;
+          break;
+        }
+
+
+        case QUIT: {
+          // We're done. All we have to do now is wait for ACC to invoke
+          // quit(). Sleep for a second to avoid continuous polling by
+          // ACCmain.
+          LOG_TRACE_FLOW("RunState::QUIT");
+          sleep(1);
+          break;
+        }
+
+
+        default: {
+          THROW (GlobalControlException, "Wrong RunState: " << itsState);
+          break;
+        }
+          
+        } // switch
+      }
+      catch (Exception& e) {
+        LOG_ERROR_STR(e);
+        return false;
+      }
+      
       // All went well.
       return true;
     }
@@ -237,15 +379,20 @@ namespace LOFAR
 
     tribool GlobalProcessControl::quit()
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      // Do we want to send a "finalize" command first? It might be a good
+      // way to properly quit. But then again, how long should we wait for
+      // the local controllers to respond. A terribly slow local controller
+      // could still be "miles away" from processing the "finalize" command,
+      // because several "steps" are still in the queue. It's not likely it
+      // will be able to quit gracefully before the ACC quit timer expires.
       LOG_INFO("GlobalProcessControl::quit()");
-      return true;
+      return itsState == QUIT;
     }
 
 
     tribool GlobalProcessControl::pause(const string& /*condition*/)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_INFO("GlobalProcessControl::pause()");
       LOG_WARN("Not supported");
       return false;
     }
@@ -253,7 +400,7 @@ namespace LOFAR
 
     tribool GlobalProcessControl::snapshot(const string& /*destination*/)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_INFO("GlobalProcessControl::snapshot()");
       LOG_WARN("Not supported");
       return false;
     }
@@ -261,7 +408,7 @@ namespace LOFAR
 
     tribool GlobalProcessControl::recover(const string& /*source*/)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_INFO("GlobalProcessControl::recover()");
       LOG_WARN("Not supported");
       return false;
     }
@@ -269,74 +416,117 @@ namespace LOFAR
 
     tribool GlobalProcessControl::reinit(const string& /*configID*/)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_INFO("GlobalProcessControl::reinit()");
       LOG_WARN("Not supported");
       return false;
     }
 
     string GlobalProcessControl::askInfo(const string& /*keylist*/)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+      LOG_INFO("GlobalProcessControl::askInfo()");
       LOG_WARN("Not supported");
       return string();
     }
 
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
-    
+
+
 #if 0
-    bool GlobalProcessControl::sendObject(const BlobStreamable& bs)
+    bool GlobalProcessControl::execCommand(const Command& cmd)
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      try {
-	// Serialize the object
-	itsDataHolder->serialize(bs);
-	LOG_DEBUG_STR("Sending a " << itsDataHolder->classType() << " object");
+      // Send the command \a cmd to the queue
+      CommandId id = itsCommandQueue->addCommand(cmd);
+      LOG_DEBUG_STR(cmd.type() << " command has ID: " << id);
 
-	// Do a blocking send
-	if (itsConnection->write() == CSConnection::Error) {
-	  LOG_ERROR("Connection::write() failed");
-	  return false;
-	}
+      // Get a reference to the results registered in our local result map
+      // for the given command-id.
+      ResultMapType::mapped_type& results = itsResults[id];
+
+      // Wait until all local controllers have posted a result.
+      while (results.size() < itsNrLocalCtrls) {
+
+        LOG_DEBUG("Waiting for result trigger ...");
+        if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
+
+          // Retrieve the new results from the command queue.
+          vector<ResultType> newResults = itsCommandQueue->getNewResults(id);
+
+          // Add the new results to our local results vector.
+          results.insert(results.end(), 
+                         newResults.begin(), newResults.end());
+        }
+        LOG_DEBUG_STR(results.size() << " out of " << itsNrLocalCtrls << 
+                      " local controllers have responded");
       }
-      catch (Exception& e) {
-	LOG_ERROR_STR(e);
-	return false;
+
+      // Did all local controllers respond with an "OK" status?
+      // Here we have to iterate over all elements in result -- a count()
+      // will not do, because result is a vector<pair<LocalControlId,
+      // CmdResult> > instead of a "plain" vector<CmdResult>. Could this be
+      // avoided by choosing a different STL container for ResultMapType??
+      LOG_TRACE_CALC("Results:");
+      uint notOk(0);
+      for (uint i = 0; i < results.size(); ++i) {
+        LOG_TRACE_CALC_STR(results[i].first << " - " << results[i].second);
+        if (!results[i].second) {
+          LOG_DEBUG_STR("Local controller " << results[i].first <<
+                        " returned: " << results[i].second.asString());
+          notOk++;
+        }
       }
-      // All went well.
-      return true;
-    }
+      LOG_DEBUG_STR(notOk << " out of " << itsNrLocalCtrls << 
+                    " local controllers returned an error status");
 
-
-    BlobStreamable* GlobalProcessControl::recvObject()
-    {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-      try {
-	// Do a blocking receive
-	if (itsConnection->read() == CSConnection::Error) {
-	  THROW(IOException, "CSConnection::read() failed");
-	}
-
-	// Deserialize the object
-	BlobStreamable* bs = itsDataHolder->deserialize();
-	if (!bs) {
-	  LOG_ERROR("Error while receiving object");
-	}
-	LOG_DEBUG_STR("Received a " << itsDataHolder->classType() <<
-		      " object");
-
-	// Return the object
-	return bs;
-      }
-      catch (Exception& e) {
-	LOG_ERROR_STR(e);
-	return 0;
-      }
-      // We should never get here.
-      ASSERTSTR(false, "We should never get here.");
     }
 #endif
 
-  } // namespace BBS
 
+#if 0
+    vector<ResultType>
+    GlobalProcessControl::waitForResults(const CommandId& id)
+    {
+      LOG_DEBUG("Waiting for result trigger ...");
+      if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
+        
+        // Retrieve the new results from the command queue.
+        vector<ResultType> newResults = itsCommandQueue->getNewResults(id);
+
+        // Get a reference to the results registered in our local result map
+        // for the given command-id. If we're worried about exception safety,
+        // we should not use a reference here, but get a copy which should
+        // later be swapped with the orginal.
+        ResultMapType::mapped_type& results = itsResults[id];
+        
+        // Add the new results to our local results vector.
+        results.insert(results.end(), newResults.begin(), newResults.end());
+        
+        // Return the new results.
+        return newResults;
+      }
+    }
+
+
+    ResultMapType GlobalProcessControl::waitForResults()
+    {
+      LOG_DEBUG("Waiting for result trigger ...");
+      if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Result)) {
+        
+        // Retrieve the new results from the command queue.
+        ResultMapType newResults = itsCommandQueue->getNewResults();
+
+        // Insert the results in our local result map. If we're worried about
+        // exception safety, we should make a copy of our local result map,
+        // which should later be swapped with the orginal.
+        itsResults.insert(newResults.begin(), newResults.end());
+
+        // Return the new results.
+        return newResults;
+      }
+    }
+#endif
+
+
+  } // namespace BBS
+    
 } // namespace LOFAR

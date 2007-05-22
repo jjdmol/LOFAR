@@ -1,3 +1,5 @@
+NrLocalCtrls            = 2                 # number of local controllers
+
 DataSet                 = test.ms           # name of Measurement Set
 
 Strategy.Steps          = [ xyz1, xyz2 ]    # steps

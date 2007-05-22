@@ -23,6 +23,8 @@
 #ifndef LOFAR_BBSCONTROL_COMMAND_H
 #define LOFAR_BBSCONTROL_COMMAND_H
 
+// \file
+
 #include <Common/ObjectFactory.h>
 #include <Common/Singleton.h>
 #include <Common/lofar_iosfwd.h>
@@ -36,6 +38,9 @@ namespace LOFAR
   namespace BBS
   {
     class CommandVisitor;
+
+    // \addtogroup BBSControl
+    // @{
 
     // Base class for commands that can be sent to or retrieved from the
     // CommandQueue. This class works in close cooperation with the
@@ -56,9 +61,9 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this.
       virtual void read(const ACC::APS::ParameterSet& ps) = 0;
 
-//       // Print the contents of \c *this in human readable form into the output
-//       // stream \a os.
-//       virtual void print(ostream& os) const = 0;
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
+      virtual void print(ostream& os) const;
 
       // Accept the "visiting" CommandVisitor. Derived classes must implement
       // this method such that it will make a callback to visitor.visit()
@@ -68,8 +73,8 @@ namespace LOFAR
       // \endcode
       virtual void accept(CommandVisitor &visitor) const = 0;
 
-//       // Write the contents of a Command to an output stream.
-//       friend ostream& operator<<(ostream&, const Command&);
+      // Write the contents of a Command to an output stream.
+      friend ostream& operator<<(ostream&, const Command&);
 
       // Write the contents of a Command to a ParameterSet.
       friend ACC::APS::ParameterSet& 
@@ -83,6 +88,8 @@ namespace LOFAR
     // Factory that can be used to generate new Command objects.
     // The factory is defined as a singleton.
     typedef Singleton< ObjectFactory< Command(), string > > CommandFactory;
+
+    // @}
 
   } //# namespace BBS
 

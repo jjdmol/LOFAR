@@ -35,9 +35,16 @@ namespace LOFAR
     CommandResult::CommandResult(Result result, const string& msg) :
       itsMessage(msg)
     {
-      if (UNKNOWN < result && result < N_Result) itsResult = result;
-      else itsResult = UNKNOWN;
+      set(result);
     }
+
+
+    CommandResult::CommandResult(int result, const string& msg) :
+      itsMessage(msg)
+    {
+      set(static_cast<Result>(result));
+    }
+
 
     const string& CommandResult::asString() const
     {
@@ -53,6 +60,13 @@ namespace LOFAR
       else return resultString[itsResult];
     }
 
+
+    void CommandResult::set(Result result)
+    {
+      if (UNKNOWN < result && result < N_Result) itsResult = result;
+      else itsResult = UNKNOWN;
+    }
+    
 
     ostream& operator<<(ostream& os, const CommandResult& result)
     {

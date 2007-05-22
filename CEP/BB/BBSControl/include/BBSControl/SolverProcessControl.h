@@ -58,6 +58,9 @@ namespace BBS
             // Default constructor.
             SolverProcessControl();
 
+            // Destructor.
+            virtual ~SolverProcessControl();
+
             // @name Implementation of PLC interface.
             // @{
             virtual tribool define();

@@ -61,18 +61,22 @@ namespace LOFAR
     {
       LOG_DEBUG_STR("Executing query : " << itsQuery);
       itsPQResult = transaction.exec(itsQuery);
-      // Assert that the result contains exactly one row; if not the
-      // stored procedure should have thrown an exception.
-      ASSERT(itsPQResult.size() == 1); 
     }
 
 
     void ExecQuery::on_commit()
     {
       ostringstream oss;
-      for (uint i = 0; i < itsPQResult.columns(); ++i) {
-	oss << itsPQResult[0][i].name()  << " = " 
-	    << itsPQResult[0][i].c_str() << endl;
+      uint rows(itsPQResult.size());
+      uint cols(itsPQResult.columns());
+
+      oss << "_nrows = " << rows << endl;
+      for (uint row = 0; row < rows; ++row) {
+        for (uint col = 0; col < cols; ++col) {
+          oss << "_row(" << row << ")."
+              << itsPQResult[row][col].name() << " = "
+              << itsPQResult[row][col].c_str() << endl;
+        }
       }
       itsResult = oss.str();
     }

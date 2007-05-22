@@ -1,4 +1,4 @@
-//# FinalizeCommand.h: 
+//# FinalizeCommand.h: Concrete "Finalize" command
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,12 +23,21 @@
 #ifndef LOFAR_BBSCONTROL_FINALIZECOMMAND_H
 #define LOFAR_BBSCONTROL_FINALIZECOMMAND_H
 
+// \file
+// Concrete "Finalize" command
+
 #include <BBSControl/Command.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
+    // \addtogroup BBSControl
+    // @{
+
+    // Concrete \c finalize command. This command is sent to the local
+    // controllers when a BBS run has been completed; i.e. the BBSStrategy was
+    // executed by every local controller for every chunk of data.
     class FinalizeCommand : public Command
     {
     public:
@@ -44,13 +53,15 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this.
       virtual void read(const ACC::APS::ParameterSet& ps);
 
-//       // Print the contents of \c *this in human readable form into the output
-//       // stream \a os.
-//       virtual void print(ostream& os) const;
+      // Print the contents of \c *this in human readable form into the output
+      // stream \a os.
+      virtual void print(ostream& os) const;
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;
     };
+
+    // @}
 
   } //# namespace BBS
 

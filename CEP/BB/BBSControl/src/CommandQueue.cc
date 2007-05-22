@@ -25,7 +25,11 @@
 
 //# Includes
 #include <BBSControl/CommandQueue.h>
-#include <BBSControl/CommandQueueTransactors.h>
+#include <BBSControl/CommandId.h>
+#include <BBSControl/CommandResult.h>
+#include <BBSControl/LocalControlId.h>
+// #include <BBSControl/CommandQueueTransactors.h>
+// #include <BBSControl/CommandQueueTrigger.h>
 #include <BBSControl/QueryBuilder/AddCommand.h>
 #include <BBSControl/BBSSingleStep.h>
 #include <BBSControl/BBSSolveStep.h>
@@ -75,40 +79,43 @@ namespace LOFAR
     using LOFAR::operator<<;
 
 
+    namespace
+    {
+      timeval asTimeval(double d)
+      {
+        timeval tv;
+        tv.tv_sec = static_cast<long>(d);
+        tv.tv_usec = static_cast<long>(round((d-tv.tv_sec)*1e6));
+        if (tv.tv_usec > 999999) {
+          tv.tv_sec += 1;
+          tv.tv_usec -= 1000000;
+        }
+        if (tv.tv_usec < -999999) {
+          tv.tv_sec -= 1;
+          tv.tv_usec += 1000000;
+        }
+        return tv;
+      }
+    }
+
+
     //##--------   P u b l i c   m e t h o d s   --------##//
 
     CommandQueue::CommandQueue(const string& dbname, const string& user,
-			       const string& host, const string& port)
+                               const string& host, const string& port)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       string opts("dbname=" + dbname  + " user=" + user + 
-		  " host=" + host + " port=" + port);
-    try {
-	LOG_DEBUG_STR("Connecting to database using options: " << opts);
-	itsConnection.reset(new pqxx::connection(opts));
-    } CATCH_PQXX_AND_RETHROW;
+                  " host=" + host + " port=" + port);
+      try {
+        LOG_DEBUG_STR("Connecting to database using options: " << opts);
+        itsConnection.reset(new pqxx::connection(opts));
+      } CATCH_PQXX_AND_RETHROW;
     }
 
 
-    void CommandQueue::setTimeOut(double sec)
-    {
-      timeval tv;
-      tv.tv_sec  = static_cast<long>(sec);
-      tv.tv_usec = static_cast<long>(round((sec - tv.tv_sec) * 1e6));
-      if (tv.tv_usec > 999999) {
-        tv.tv_sec  += 1;
-        tv.tv_usec -= 1000000;
-      } else if (tv.tv_usec < -999999) {
-        tv.tv_sec  -= 1;
-        tv.tv_usec += 1000000;
-      }
-      ASSERT(-1000000 < tv.tv_usec && tv.tv_usec < 1000000);
-      itsTimeOut = tv;
-    }
-
-
-    void CommandQueue::addCommand(const Command& aCommand) const
+    CommandId CommandQueue::addCommand(const Command& aCommand) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -121,13 +128,16 @@ namespace LOFAR
       aCommand.accept(query);
 
       // Execute the query.
-      execQuery(query.getQuery());
+      return execQuery(query.getQuery()).getUint32("result");
     }
 
 
-    const Command* CommandQueue::getNextCommand()
+    NextCommandType CommandQueue::getNextCommand() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+      Command* command(0);
+      CommandId id;
 
       // Get the next command from the command queue. This call will only
       // return the command type.
@@ -137,12 +147,15 @@ namespace LOFAR
       // If command type is an empty string, then we've probably received an
       // empty result row; return a null pointer.
       string type = ps.getString("Type");
-      if (type.empty()) return 0;
+      if (type.empty()) return make_pair(command, id);
+
+      // Get the command-id
+      id = ps.getInt32("id");
 
       // Retrieve the command parameters associated with the received command.
       ostringstream query;
       query << "SELECT * FROM blackboard.get_" << toLower(type) << "_args"
-            << "(" << ps.getInt32("id") << ")";
+            << "(" << id << ")";
 
       // Execute the query. Add the result to the ParameterSet \a ps.
       ps.adoptCollection(execQuery(query.str()));
@@ -158,20 +171,19 @@ namespace LOFAR
         ps.writeBuffer(buf);
         ps.clear();
         ps.adoptBuffer(buf, "Step." + name + ".");
-        LOG_DEBUG_STR(ps);
 
         // Create a new BBSStep and return it.
-        return BBSStep::create(name, ps, 0);
+        command = BBSStep::create(name, ps, 0);
+        return make_pair(command, id);
       } 
       catch (APSException&) {
         // In the catch clause we handle all other commands. They can be
         // constructed using the CommandFactory and initialized using read().
-        Command* command = CommandFactory::instance().create(type);
+        command = CommandFactory::instance().create(type);
         ASSERTSTR(command, "Failed to create a `" << type << 
                   "' command object");
-        LOG_DEBUG_STR(ps);
         command->read(ps);
-        return command;
+        return make_pair(command, id);
       }
     }
 
@@ -195,7 +207,19 @@ namespace LOFAR
     }
 
 
-    const BBSStrategy* CommandQueue::getStrategy() const
+    bool CommandQueue::setStrategyDone() const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+      // Compose the query.
+      string query("SELECT * FROM blackboard.set_strategy_done() AS result");
+
+      // Execute the query and return the result
+      return execQuery(query).getBool("result");
+    }
+
+
+    shared_ptr<const BBSStrategy> CommandQueue::getStrategy() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -208,7 +232,9 @@ namespace LOFAR
 
       // If DataSet is an empty string, then we've probably received an empty
       // result row; return a null pointer.
-      if (ps.getString("DataSet").empty()) return 0;
+      if (ps.getString("DataSet").empty()) {
+        return shared_ptr<const BBSStrategy>();
+      }
 
       // Create a new BBSStrategy object.
       BBSStrategy* strategy = dynamic_cast<BBSStrategy*>
@@ -217,27 +243,92 @@ namespace LOFAR
       // Initialize the BBSStrategy object with the parameters just retrieved.
       strategy->read(ps);
 
-      // Return the new BBSStrategy object.
-      return strategy;
+      // Wrap the new BBSStrategy object in a managed pointer and return it.
+      return shared_ptr<const BBSStrategy>(strategy);
+    }
 
-//       // Nasty but (currently) unavoidable conversion...
-//       // We could move DataSet (and ParmDB.*) to Strategy as well?
-//       ParameterSet tmp;
-//       for(ParameterSet::const_iterator it = ps.begin(); it != ps.end(); ++it)
-//       {
-//         if(it->first == "DataSet"
-//           || it->first == "ParmDB.Instrument"
-//           || it->first == "ParmDB.LocalSky"
-//           || it->first == "ParmDB.History")
-//         {
-//             tmp.add(it->first, it->second);
-//         }
-//         else
-//             tmp.add("Strategy." + it->first, it->second);
-//       }
 
-//       // Create a BBSStrategy object using the parameter set and return it.
-//       return new BBSStrategy(tmp);
+    bool CommandQueue::addResult(const CommandId& commandId, 
+                                 const CommandResult& result) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+      // Compose the query.
+      ostringstream query;
+      query << "SELECT * FROM blackboard.add_result(" 
+            << commandId.asInt() << "," 
+            << result.asInt()    << ",'" 
+            << result.message()  << "') AS result";
+
+      // Execute the query and return the result
+      return execQuery(query.str()).getBool("result");
+    }
+
+
+    ResultMapType CommandQueue::getNewResults() const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+      // Compose the query.
+      string query("SELECT * FROM blackboard.get_new_results()");
+
+      // Execute the query and fetch the result
+      ParameterSet ps = execQuery(query, true);
+      uint nRows = ps.getUint32("_nrows");
+      LOG_TRACE_CALC_STR("Query returned " << nRows << " rows");
+
+      // Create a result map.
+      ResultMapType results;
+
+      for (uint row = 0; row < nRows; ++row) {
+        ostringstream prefix;
+        prefix << "_row(" << row << ")."; 
+        CommandId      cmdId (ps.getUint32(prefix.str() + "command_id"));
+        LocalControlId ctrlId(ps.getString(prefix.str() + "node"));
+        CommandResult  cmdRes(ps.getUint32(prefix.str() + "result_code"),
+                              ps.getString(prefix.str() + "message"));
+        LOG_TRACE_CALC_STR("Row: " << row << " [" << cmdId << "],[[" 
+                           << ctrlId << "],[" << cmdRes << "]]");
+        // Looking up results[cmdId] each iteration may cause a performance
+        // problem. However, most of the times nRows will be small (probably
+        // just 1), so leave it for the time being.
+        results[cmdId].push_back(ResultType(ctrlId, cmdRes));
+      }
+      // Return the result map.
+      return results;
+    }
+
+
+    vector<ResultType> CommandQueue::getNewResults(const CommandId& id) const 
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
+      // Compose the query.
+      ostringstream query;
+      query << "SELECT * FROM blackboard.get_new_results(" << id << ")";
+
+      // Execute the query and fetch the result
+      ParameterSet ps = execQuery(query.str(), true);
+      uint nRows = ps.getUint32("_nrows");
+      LOG_TRACE_CALC_STR("Query returned " << nRows << " rows");
+
+      // Create a results vector and reserve space.
+      vector<ResultType> results;
+      results.reserve(nRows);
+
+      // Fill the vector with the new results.
+      for (uint row = 0; row < nRows; ++row) {
+        ostringstream prefix;
+        prefix << "_row(" << row << ").";
+        LocalControlId id(ps.getString(prefix.str() + "node"));
+        CommandResult res(ps.getUint32(prefix.str() + "result_code"),
+                          ps.getString(prefix.str() + "message"));
+        LOG_TRACE_CALC_STR("Row: " << row << "[" << id << "],[" << res << "]");
+        results.push_back(ResultType(id,res));
+      }
+
+      // Return the new results.
+      return results;
     }
 
 
@@ -248,33 +339,163 @@ namespace LOFAR
       // Compose the query.
       ostringstream query;
       query << "SELECT * FROM blackboard.is_new_run('"
-        << (isGlobalCtrl ? "TRUE" : "FALSE")
-        << "') AS result";
-
+            << (isGlobalCtrl ? "TRUE" : "FALSE")
+            << "') AS result";
+      
       // Execute the query and return the result.
       return execQuery(query.str()).getBool("result");
     }
+    
 
+    bool CommandQueue::waitForTrigger(Trigger::Type type, double timeOut) const
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
+      LOG_TRACE_COND("Waiting for notification");
+      uint notifs;
+      if (timeOut < 0) {
+        notifs = itsConnection->await_notification();
+      } else {
+        timeval tv = asTimeval(timeOut);
+        notifs = itsConnection->await_notification(tv.tv_sec, tv.tv_usec);
+      }
+
+      if (notifs) {
+        LOG_TRACE_COND("Received notification ...");
+        if (Trigger::testAndClearFlags(type) == type) {
+          LOG_TRACE_COND("... of the correct type");
+          return true;
+        }
+      }
+      return false;
+    }
+
+      
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    ParameterSet CommandQueue::execQuery(const string& query) const
+    string CommandQueue::ExecQuery::emptyString;
+
+    CommandQueue::ExecQuery::ExecQuery(const string& query) :
+      pqxx::transactor<>("ExecQuery"),
+      itsQuery(query),
+      itsResult(emptyString)
+    {
+    }
+
+
+    CommandQueue::ExecQuery::ExecQuery(const string& query, string& result) :
+      pqxx::transactor<>("ExecQuery"),
+      itsQuery(query),
+      itsResult(result)
+    {
+    }
+
+
+    void CommandQueue::ExecQuery::operator()(argument_type& transaction)
+    {
+      LOG_DEBUG_STR("Executing query : " << itsQuery);
+      itsPQResult = transaction.exec(itsQuery);
+    }
+
+
+    void CommandQueue::ExecQuery::on_commit()
+    {
+      ostringstream oss;
+      uint rows(itsPQResult.size());
+      uint cols(itsPQResult.columns());
+
+      oss << "_nrows = " << rows << endl;
+      for (uint row = 0; row < rows; ++row) {
+        for (uint col = 0; col < cols; ++col) {
+          oss << "_row(" << row << ")."
+              << itsPQResult[row][col].name() << " = "
+              << itsPQResult[row][col].c_str() << endl;
+        }
+      }
+      itsResult = oss.str();
+    }
+
+
+    CommandQueue::Trigger::Init::Init()
+    {
+      theirTypes[Command] = "insert_command";
+      theirTypes[Result]  = "insert_result";
+    }
+
+
+    CommandQueue::Trigger::Trigger(const CommandQueue& queue, Type type) :
+      pqxx::trigger(*queue.itsConnection,
+                    theirTypes.find(type) == theirTypes.end() 
+                    ? "" : theirTypes[type])
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      ASSERT(theirTypes.find(type) != theirTypes.end());
+      LOG_DEBUG_STR("Created trigger of type: " << theirTypes[type]);
+    }
+
+
+    void CommandQueue::Trigger::operator()(int be_pid)
+    {
+      LOG_DEBUG_STR("Received notification: " << name() << 
+                    "; pid = " << be_pid);
+      TypeMap::const_iterator it;
+      for (it = theirTypes.begin(); it != theirTypes.end(); ++it) {
+        if (it->second == name()) {
+          LOG_TRACE_COND_STR("Raising flag [" << 
+                             it->first << "," << it->second << "]");
+          raiseFlags(it->first);
+          break;
+        }
+      }
+    }
+
+
+    ParameterSet CommandQueue::execQuery(const string& query,
+                                         bool doAlwaysPrefix) const
     {
       // Create a transactor object and execute the query. The result will be
       // stored, as a string in \a result.
       string result;
       try {
-	itsConnection->perform(ExecQuery(query, result));
-	LOG_TRACE_VAR_STR("Result of query: " << result);
+        itsConnection->perform(ExecQuery(query, result));
+        LOG_TRACE_VAR_STR("Result of query: " << result);
       } CATCH_PQXX_AND_RETHROW;
 
       // Create an empty parameter set and add the result to it.
       ParameterSet ps;
       ps.adoptBuffer(result);
 
+      // If the result consists of only one row, and we do not always want to
+      // prefix, then strip off the prefix "_row(0)". 
+      if (ps.getUint32("_nrows") == 1 && !doAlwaysPrefix) {
+        ps = ps.makeSubset("_row(0).");
+      }
+      
       // Return the ParameterSet
       return ps;
     }
+
+
+    bool CommandQueue::registerTrigger(Trigger::Type type)
+    {
+      shared_ptr<Trigger> trigger(new Trigger(*this, type));
+      return itsTriggers.insert(make_pair(type, trigger)).second;
+    }
+  
+
+    bool CommandQueue::deregisterTrigger(Trigger::Type type)
+    {
+      return itsTriggers.erase(type);
+    }
+
+
+    //##--------   S t a t i c   d a t a m e m b e r s   --------##//
+
+    double                         CommandQueue::theirDefaultTimeOut = 5.0;
+    CommandQueue::Trigger::TypeMap CommandQueue::Trigger::theirTypes;
+    CommandQueue::Trigger::Type    CommandQueue::Trigger::theirFlags;
+    CommandQueue::Trigger::Init    CommandQueue::Trigger::theirInit;
+
 
   } // namespace BBS
   

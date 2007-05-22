@@ -161,6 +161,22 @@ $$
 LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION blackboard.set_strategy_done()
+RETURNS BOOLEAN AS
+$$
+    BEGIN
+        IF (SELECT COUNT(1) FROM blackboard.strategy) <> 1 THEN
+            RETURN FALSE;
+        END IF;
+
+        UPDATE blackboard.strategy
+        SET state = 'DONE';
+        RETURN FOUND;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
 CREATE OR REPLACE FUNCTION blackboard.get_strategy()
 RETURNS blackboard.strategy AS
 $$
@@ -468,6 +484,31 @@ $$
             SELECT *
                 FROM blackboard.result
                 WHERE read_flag = 'false'
+                ORDER BY command_id, timestamp
+        LOOP
+            UPDATE blackboard.result
+                SET read_flag = 'true'
+                WHERE command_id = _result.command_id
+                AND node = _result.node;
+                
+            RETURN NEXT _result;
+        END LOOP;
+        RETURN;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION blackboard.get_new_results(_command_id INTEGER)
+RETURNS SETOF blackboard.result AS
+$$
+    DECLARE
+        _result blackboard.result%ROWTYPE;
+    BEGIN        
+        FOR _result IN 
+            SELECT *
+                FROM blackboard.result
+                WHERE read_flag = 'false' AND command_id = _command_id
                 ORDER BY timestamp
         LOOP
             UPDATE blackboard.result
@@ -478,6 +519,19 @@ $$
             RETURN NEXT _result;
         END LOOP;
         RETURN;
+    END;
+$$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION blackboard.get_results(_command_id INTEGER)
+RETURNS SETOF blackboard.result AS
+$$
+    BEGIN
+        SELECT * 
+            FROM blackboard.result 
+            WHERE command_id = _command_id
+            ORDER BY timestamp;
     END;
 $$
 LANGUAGE plpgsql;

@@ -14,9 +14,8 @@ pkginclude_HEADERS = \
 	BlobStreamableVector.h \
 	Command.h \
 	CommandExecutor.h \
+	CommandId.h \
 	CommandQueue.h \
-	CommandQueueTrigger.h \
-	CommandQueueTransactors.h \
 	CommandResult.h \
 	CommandVisitor.h \
 	DomainRegistrationRequest.h \
@@ -27,8 +26,12 @@ pkginclude_HEADERS = \
 	IterationRequest.h \
 	IterationResult.h \
 	KernelProcessControl.h \
+	LocalControlId.h \
 	NextChunkCommand.h \
-	SolverProcessControl.h
+	ProcessControlState.h \
+	RecoverCommand.h \
+	SolverProcessControl.h \
+	SynchronizeCommand.h
 
 noinst_HEADERS = \
 	pqutil.h \

@@ -1,4 +1,4 @@
-//# CommandVisitor.h: 
+//# CommandVisitor.h: Abstract visitor class for the Command class
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_BBSCONTROL_COMMANDVISITOR_H
 #define LOFAR_BBSCONTROL_COMMANDVISITOR_H
 
+// \file 
+// Abstract visitor class for the Command class
+
 namespace LOFAR
 {
   namespace BBS
@@ -31,6 +34,8 @@ namespace LOFAR
     class InitializeCommand;
     class FinalizeCommand;
     class NextChunkCommand;
+    class RecoverCommand;
+    class SynchronizeCommand;
     class BBSStrategy;
     class BBSMultiStep;
     class BBSPredictStep;
@@ -39,6 +44,9 @@ namespace LOFAR
     class BBSSolveStep;
     class BBSShiftStep;
     class BBSRefitStep;
+
+    // \addtogroup BBSControl
+    // @{
 
     // Abstract Visitor class, declares visit() operations for each concrete
     // Command class. It helps to retrieve lost type information when handling
@@ -57,6 +65,8 @@ namespace LOFAR
       virtual void visit(const InitializeCommand &command) = 0;
       virtual void visit(const FinalizeCommand &command) = 0;
       virtual void visit(const NextChunkCommand &command) = 0;
+      virtual void visit(const RecoverCommand &command) = 0;
+      virtual void visit(const SynchronizeCommand &command) = 0;
       virtual void visit(const BBSStrategy &command) = 0;
       virtual void visit(const BBSMultiStep &command) = 0;
       virtual void visit(const BBSPredictStep &command) = 0;
@@ -72,7 +82,10 @@ namespace LOFAR
     {
     }
 
+    // @}
+
   } //# namespace BBS
+
 } //# namespace LOFAR
 
 #endif

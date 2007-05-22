@@ -36,13 +36,26 @@ namespace LOFAR
   namespace BBS 
   {
 
-    CommandQueueTrigger:: CommandQueueTrigger(const CommandQueue& queue,
-					      const string& name) :
-      pqxx::trigger(*queue.itsConnection, name),
-      itsQueue(queue),
-      itsName(name)
+    CommandQueueTrigger::TypeMap CommandQueueTrigger::theirTypes;
+    CommandQueueTrigger::Type    CommandQueueTrigger::theirFlags;
+    CommandQueueTrigger::Init    CommandQueueTrigger::theirInit;
+
+
+    CommandQueueTrigger::Init::Init()
     {
-      LOG_DEBUG_STR("Created trigger visitor for " << name);
+      theirTypes[Command] = "insert_command";
+      theirTypes[Result]  = "insert_result";
+    }
+
+
+    CommandQueueTrigger::CommandQueueTrigger(const CommandQueue& queue, 
+                                             Type type) :
+      pqxx::trigger(*queue.itsConnection,
+                    theirTypes.find(type) == theirTypes.end() 
+                    ? "" : theirTypes[type])
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      ASSERT(theirTypes.find(type) != theirTypes.end());
     }
 
 
@@ -50,8 +63,15 @@ namespace LOFAR
     {
       LOG_DEBUG_STR("Received notification: " << name() << 
 		    "; pid = " << be_pid);
-
-      // itsQueue.blabla();
+      TypeMap::const_iterator it;
+      for (it = theirTypes.begin(); it != theirTypes.end(); ++it) {
+        if (it->second == name()) {
+          LOG_TRACE_COND_STR("Raising flag [" << 
+                             it->first << "," << it->second << "]");
+          raiseFlags(it->first);
+          break;
+        }
+      }
     }
 
   } // namespace BBS

@@ -25,7 +25,9 @@
 
 //# Includes
 #include <BBSControl/CommandQueue.h>
-#include <BBSControl/CommandQueueTrigger.h>
+#include <BBSControl/CommandId.h>
+#include <BBSControl/CommandResult.h>
+#include <BBSControl/InitializeCommand.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/BBSSolveStep.h>
 #include <BBSControl/BBSSubtractStep.h>
@@ -43,14 +45,14 @@ using namespace LOFAR;
 using namespace LOFAR::BBS;
 using namespace LOFAR::ACC::APS;
 
-int main(int argc, char* argv[])
+int main(int /*argc*/, char* argv[])
 {
   const char* progName = basename(argv[0]);
   const char* refFile  = "/tmp/tCommandQueue.ref";
   const char* outFile  = "/tmp/tCommandQueue.out";
   const char* parsetFile = "tBBSControl.parset";
 
-  const Command* command;
+//   NextCommandType nextCommand;
 
   INIT_LOGGER(progName);
   LOG_INFO_STR(progName << " is starting up ...");
@@ -62,7 +64,7 @@ int main(int argc, char* argv[])
     BBSStrategy strategy(parset);
 //     CommandQueue queue(getenv("USER"));
     CommandQueue queue("bbs");
-    CommandQueueTrigger insert_trig(queue, "insert_command");
+    CommandQueue::Trigger insert_trig(queue, CommandQueue::Trigger::Command);
     vector<const BBSStep*> steps = strategy.getAllSteps();
     ofstream ofs;
 
@@ -70,7 +72,8 @@ int main(int argc, char* argv[])
     ofs.open(refFile);
     ASSERT(ofs);
     // ASSERT(queue.getStrategy(0.00000001));
-//     queue.setStrategy(strategy);
+    queue.setStrategy(strategy);
+    queue.addCommand(InitializeCommand());
     for (uint i = 0; i < steps.size(); ++i) {
       queue.addCommand(*steps[i]);
       ofs << *steps[i] << endl;
@@ -81,10 +84,15 @@ int main(int argc, char* argv[])
     // Read steps from command queue and write them to output file.
     ofs.open(outFile);
     ASSERT(ofs);
-    queue.getNextCommand();
-//     while ((command = queue.getNextCommand()) != 0) {
-//       ofs << *command << endl;
-//     }
+//     cout << "++++" << endl 
+//          << *(queue.getNextCommand()) << endl 
+//          << "++++" << endl;
+    while(true) {
+      NextCommandType command = queue.getNextCommand();
+      if (!command.first) break;
+      queue.addResult(command.second, CommandResult());
+      ofs << *command.first << endl;
+    }
     ofs.close();
     ASSERT(ofs);
 
@@ -92,7 +100,7 @@ int main(int argc, char* argv[])
     string arg = string(refFile) + " " + string(outFile);
 
     // Compare reference and output file.
-    cmd = "diff " + arg;
+    cmd = "diff -q " + arg;
     LOG_TRACE_FLOW_STR("About to make call `system(" << cmd << ")'");
     int result = system(cmd.c_str());
     LOG_TRACE_FLOW_STR("Return value of system() call: " << result);
