@@ -52,19 +52,20 @@ node  OLAP         1.0.0  development 'node constraint'  "OLAP"
 
 #    name          		dir.    type   unit   prun.     vm      value   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par delayCompensation		I       bool   -       10      0        true	-		'???'
-par IPHeaderSize		I	int	-	10	0	32	-		'???'
-par EPAHeaderSize		I	int	-	10	0	16	-		'???'
-par firstInputPortNr 		I	int	-	10	0	4346	- 		'Portnumber the first RSPboard uses'
-par nrBitsPerSample		I	int	-	10	0	16	-		'???'
-par nrSecondsOfBuffer		I	int	-	10	0	40	-		'???'
-par nrSubbandsPerFrame		I	int	-	10	0	32	-		'???'
-par nrTimesInFrame		I	int	-	10	0	16	-		'???'
-par majorIntegrationSteps	I	int	-	10	0	1000	-		'???'
-par minorIntegrationSteps	I	int	-	10	0	608 	-		'???'
-par storageIntegrationTime	I	int	-	10	0	60	-		'???'
-par storageStationNames		I	vtext	-	10	0	'[CS010_us0..CS010_us3,CS001_dipole0,CS001_dipole4,CS001_dipole8,CS001_dipole12]'	-		'???'
-par subbandsPerPset		I	int	-	10	0	2	-		'???'
+par delayCompensation			I   bool    -       10  0		true					-		'???'
+par IPHeaderSize				I	int		-		10	0		32						-		'???'
+par EPAHeaderSize				I	int		-		10	0		16						-		'???'
+par firstInputPortNr 			I	int		-		10	0		4346				    - 		'Portnumber the first RSPboard uses'
+par nrBitsPerSample				I	int		-		10	0		16						-		'???'
+par nrSecondsOfBuffer			I	int		-		10	0		40						-		'???'
+par nrSubbandsPerFrame			I	int		-		10	0		32						-		'???'
+par nrTimesInFrame				I	int		-		10	0		16						-		'???'
+par majorIntegrationSteps		I	int		-		10	0		1000					-		'???'
+par minorIntegrationSteps		I	int		-		10	0		608 					-		'???'
+par storageIntegrationTime		I	int		-		10	0		60						-		'???'
+par storageStationNames			I	vtext	-		10	0		'[CS010_us0..CS010_us3,CS001_dipole0,CS001_dipole4,CS001_dipole8,CS001_dipole12]'	-		'???'
+par PsetsPerStorage				I	int		-		10	0		1						-		'???'
+par subbandsPerPset				I	int		-		10	0		2						-		'???'
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
