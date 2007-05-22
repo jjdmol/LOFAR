@@ -28,7 +28,6 @@ pkginclude_HEADERS = \
 	KernelProcessControl.h \
 	LocalControlId.h \
 	NextChunkCommand.h \
-	ProcessControlState.h \
 	RecoverCommand.h \
 	SolverProcessControl.h \
 	SynchronizeCommand.h
