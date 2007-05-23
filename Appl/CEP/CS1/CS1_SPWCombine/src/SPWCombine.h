@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef LOFARDATASQUASHER_H
-#define LOFARDATASQUASHER_H
+#ifndef LOFARSPWCOMBINE_H
+#define LOFARSPWCOMBINE_H
 
 /**
 @author Adriaan Renting
@@ -37,23 +37,24 @@ namespace LOFAR
   {
     using namespace casa;
 
-    class DataSquasher
+    class SPWCombine
     {
     private:
-      int itsNumChannels;
       int itsNumPolarizations;
+      int itsNumAntennae;
+      int itsNumPairs;
 
       TableIterator CreateDataIterator(MeasurementSet& myMS);
-      void GetMSInfo(MeasurementSet& myMS);
-      void SquashData(Matrix<Complex>& oldData, Matrix<Bool>& Flags,
-                      Matrix<Complex>& newData, int Start, int Step, int NChan);
 
     public:
-      DataSquasher(void);
-      ~DataSquasher(void);
+      SPWCombine(void);
+      ~SPWCombine(void);
+      int itsNumChannels;
+      int itsNumBands;
 
-      void Squash(MeasurementSet& myMS, std::string OldData, std::string NewData, int Start, int Step, int NChan);
+      void GetMSInfo(MeasurementSet& myMS);
+      void Combine(vector<MeasurementSet*> inMS, MeasurementSet& myMS, std::string Data);
     };
-  } //namespace CS1_Squasher
+  } //namespace CS1_Combiner
 }; //namespace LOFAR
 #endif

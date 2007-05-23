@@ -17,11 +17,12 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef LOFARSQUASHERPROCESSCONTROL_H
-#define LOFARSQUASHERPROCESSCONTROL_H
+#ifndef LOFARCOMBINERPROCESSCONTROL_H
+#define LOFARCOMBINERPROCESSCONTROL_H
 
 #include <PLC/ProcessControl.h>
 #include <APS/ParameterSet.h>
+#include <vector>
 
 /**
 @author Adriaan Renting
@@ -35,23 +36,19 @@ namespace LOFAR
 {
   namespace CS1
   {
-    class DataSquasher; //foreward declaration
+    class SPWCombine; //foreward declaration
 
-    class SquasherProcessControl : public LOFAR::ACC::PLC::ProcessControl
+    class CombinerProcessControl : public LOFAR::ACC::PLC::ProcessControl
     {
     private:
-      std::string  itsInMS;
+      vector<std::string> itsInMS;
       std::string  itsOutMS;
-      int          itsStart;
-      int          itsStep;
-      int          itsNChan;
-      bool         itsSkip;
-      casa::MeasurementSet* inMS;
-      DataSquasher*   itsSquasher;
+      vector<casa::MeasurementSet*> inMS;
+      SPWCombine*   itsCombiner;
     public:
-      SquasherProcessControl(void);
+      CombinerProcessControl(void);
 
-      ~SquasherProcessControl(void);
+      ~CombinerProcessControl(void);
       // \name Command to control the processes.
       // There are a dozen commands that can be sent to a application process
       // to control its flow. The return values for these command are:<br>
@@ -83,7 +80,7 @@ namespace LOFAR
       tribool snapshot(const std::string&);
       std::string askInfo(const std::string&);
 
-    }; //class SquasherProcessControl
+    }; //class CombinerProcessControl
   } //namespace CS1
 }; //namespace LOFAR
 
