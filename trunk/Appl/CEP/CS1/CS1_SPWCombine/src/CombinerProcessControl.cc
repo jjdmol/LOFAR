@@ -22,79 +22,86 @@
 #include <cstdlib>
 #include <string>
 #include <tables/Tables.h>
+#include <tables/Tables/TableParse.h>
 #include <ms/MeasurementSets.h>
 #include <casa/Exceptions.h>
 
-#include <CS1_DataSquasher/SquasherProcessControl.h>
-#include "DataSquasher.h"
+#include <CS1_SPWCombine/CombinerProcessControl.h>
+#include "SPWCombine.h"
 
-#define SQUASHER_VERSION "0.10"
+#define COMBINER_VERSION "0.10"
 
 namespace LOFAR
 {
   namespace CS1
   {
     using namespace casa;
-    //===============>>> SquasherProcessControl::SquasherProcessControl  <<<===============
-    SquasherProcessControl::SquasherProcessControl()
+    //===============>>> CombinerProcessControl::CombinerProcessControl  <<<===============
+    CombinerProcessControl::CombinerProcessControl()
     : ProcessControl()
     {
-      inMS        = NULL;
-      itsSquasher = NULL;
+      itsCombiner = NULL;
     }
 
-    //===============>>> SquasherProcessControl::~SquasherProcessControl  <<<==============
-    SquasherProcessControl::~SquasherProcessControl()
+    //===============>>> CombinerProcessControl::~CombinerProcessControl  <<<==============
+    CombinerProcessControl::~CombinerProcessControl()
     {
-      if (inMS)
-      { delete inMS;
-      }
-      if (itsSquasher)
-      { delete itsSquasher;
-      }
     }
 
-    //===============>>> SquasherProcessControl::define  <<<==============================
-    tribool SquasherProcessControl::define()
+    //===============>>> CombinerProcessControl::define  <<<==============================
+    tribool CombinerProcessControl::define()
     {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
-      itsInMS  = ParamSet->getString("inms");
+      itsInMS  = ParamSet->getStringVector("inms");
       itsOutMS = ParamSet->getString("outms");
-      itsStart = ParamSet->getInt32("start");
-      itsStep  = ParamSet->getInt32("step");
-      itsNChan = ParamSet->getInt32("nchan");
-      itsSkip  = ParamSet->getBool("skipflags");
       return true;
     }
 
-    //===============>>> SquasherProcessControl::run  <<<=================================
-    tribool SquasherProcessControl::run()
+    //===============>>> CombinerProcessControl::run  <<<=================================
+    tribool CombinerProcessControl::run()
     {
       try{
         std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
-        inMS->deepCopy(itsOutMS, Table::NewNoReplace);
+        Table TempTable = tableCommand(string("SELECT FROM ") + itsInMS[0] + string(" WHERE DATA_DESC_ID = 0"));
+        TempTable.deepCopy(itsOutMS, Table::NewNoReplace, true);
+        tableCommand(string("DELETE FROM ") + itsOutMS + string("/DATA_DESCRIPTION WHERE rownumber() > 1"));
+        tableCommand(string("DELETE FROM ") + itsOutMS + string("/SPECTRAL_WINDOW WHERE rownumber() > 1"));
         MeasurementSet outMS = MeasurementSet(itsOutMS, Table::Update);
+        int nchan = 0;
+        for (int i = 0; i < itsInMS.size(); i++)
+        {
+          itsCombiner->GetMSInfo(*(inMS[i]));
+          for (int j = 0; j < itsCombiner->itsNumBands; j++)
+          { nchan += itsCombiner->itsNumChannels;
+          }
+        }
         TableDesc tdesc = outMS.tableDesc();
         ColumnDesc desc = tdesc.rwColumnDesc("DATA");
         IPosition pos = desc.shape();
         Vector<Int> temp = pos.asVector();
-        std::cout << "Old shape: " << temp(0) << ":" <<  temp(1) << std::endl;
-        temp(1) = itsNChan/itsStep;
-        std::cout << "New shape: " << temp(0) << ":" <<  temp(1) << std::endl;
-        outMS.renameColumn("OLDDATA", "DATA");
+        temp(1) = nchan;
+        std::cout << "New number of channels: " << nchan << std::endl;
         IPosition pos2(temp);
         desc.setOptions(0);
         desc.setShape(pos2);
         desc.setOptions(4);
+        outMS.removeColumn("DATA");
         outMS.addColumn(desc);
 
-        itsSquasher->Squash(outMS,
-                            "OLDDATA",
-                            "DATA",
-                            itsStart,
-                            itsStep,
-                            itsNChan);
-        //outMS.removeColumn("OLDDATA");
+        //fix the FLAGS column
+        desc = tdesc.rwColumnDesc("FLAG");
+        desc.setOptions(0);
+        desc.setShape(pos2);
+        desc.setOptions(4);
+        outMS.removeColumn("FLAG");
+        outMS.addColumn(desc);
+
+        //Fix the SpectralWindow values
+        MSSpectralWindow SPW = outMS.spectralWindow();
+        ScalarColumn<Int> channum(SPW, "NUM_CHAN");
+        channum.fillColumn(nchan);
+
+        itsCombiner->Combine(inMS, outMS, "DATA");
       }
       catch(casa::AipsError& err)
       {
@@ -104,25 +111,34 @@ namespace LOFAR
       return true;
     }
 
-    //===============>>> SquasherProcessControl::init  <<<================================
-    tribool SquasherProcessControl::init()
+    //===============>>> CombinerProcessControl::init  <<<================================
+    tribool CombinerProcessControl::init()
     {
       try {
       using std::cout;
       using std::cerr;
       using std::endl;
 
-      cout  << string(SQUASHER_VERSION) + string(" data squasher by Adriaan Renting for LOFAR CS1\n") +
+      cout  << string(COMBINER_VERSION) + string(" spw combine by Adriaan Renting for LOFAR CS1\n") +
               string("This is experimental software, please report errors or requests to renting@astron.nl\n") +
               string("Documentation can be found at: www.lofar.org/wiki\n");
-      cout << string("Squashing ") << itsInMS << string(" into ") << itsOutMS << endl;
-      if (itsInMS == "" || itsOutMS == "")
+      cout << string("Combining ");
+      for (int i = 0; i < itsInMS.size(); i++)
+      {
+        cout << itsInMS[i] << ", ";
+      }
+      cout << string(" into ") << itsOutMS << endl;
+      if (itsInMS[0] == "" || itsOutMS == "")
       {
         cerr  << " Error missing input" << endl;
         return false;
       }
-      inMS        = new MeasurementSet(itsInMS);
-      itsSquasher = new DataSquasher();
+      inMS.resize(itsInMS.size());
+      for (int i = 0; i < itsInMS.size(); i++)
+      {
+        inMS[i] = new MeasurementSet(itsInMS[i]);
+      }
+      itsCombiner = new SPWCombine();
       }
       catch(casa::AipsError& err)
       {
@@ -132,44 +148,34 @@ namespace LOFAR
       return true;
     }
 
-    //===============>>> SquasherProcessControl::pause  <<<===============================
-    tribool SquasherProcessControl::pause(const std::string&)
+    //===============>>> CombinerProcessControl::pause  <<<===============================
+    tribool CombinerProcessControl::pause(const std::string&)
     { return false;
     }
 
-    //===============>>> SquasherProcessControl::quit  <<<================================
-    tribool SquasherProcessControl::quit()
+    //===============>>> CombinerProcessControl::quit  <<<================================
+    tribool CombinerProcessControl::quit()
     {
-      if (inMS)
-      {
-        delete inMS;
-        inMS = NULL;
-      }
-      if (itsSquasher)
-      {
-        delete itsSquasher;
-        itsSquasher = NULL;
-      }
       return true;
     }
 
-    //===============>>> SquasherProcessControl::recover  <<<=============================
-    tribool SquasherProcessControl::recover(const std::string&)
+    //===============>>> CombinerProcessControl::recover  <<<=============================
+    tribool CombinerProcessControl::recover(const std::string&)
     { return false;
     }
 
-    //===============>>> SquasherProcessControl::reinit  <<<==============================
-    tribool SquasherProcessControl::reinit(const  std::string&)
+    //===============>>> CombinerProcessControl::reinit  <<<==============================
+    tribool CombinerProcessControl::reinit(const  std::string&)
     { return false;
     }
 
-    //===============>>> SquasherProcessControl::askInfo  <<<=============================
-    std::string SquasherProcessControl::askInfo(const std::string&)
+    //===============>>> CombinerProcessControl::askInfo  <<<=============================
+    std::string CombinerProcessControl::askInfo(const std::string&)
     { return std::string("");
     }
 
-    //===============>>> SquasherProcessControl::snapshot  <<<============================
-    tribool SquasherProcessControl::snapshot(const std::string&)
+    //===============>>> CombinerProcessControl::snapshot  <<<============================
+    tribool CombinerProcessControl::snapshot(const std::string&)
     { return false;
     }
   } //namespace CS1

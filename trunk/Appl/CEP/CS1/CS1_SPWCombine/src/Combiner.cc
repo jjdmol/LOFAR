@@ -25,14 +25,14 @@
 #include <libgen.h>
 #include <PLC/ACCmain.h>
 #include <casa/Exceptions.h>
-#include <CS1_DataSquasher/SquasherProcessControl.h>
+#include <CS1_SPWCombine/CombinerProcessControl.h>
 
 int main(int argc, char *argv[])
 {
   try
   {
     INIT_LOGGER(basename(argv[0]));
-    LOFAR::CS1::SquasherProcessControl myProcess;
+    LOFAR::CS1::CombinerProcessControl myProcess;
     return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
   } //try
   catch(casa::AipsError& err)
