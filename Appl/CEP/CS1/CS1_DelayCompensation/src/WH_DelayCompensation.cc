@@ -47,26 +47,26 @@ namespace LOFAR
     //##----------------  Public methods  ----------------##//
 
     WH_DelayCompensation::WH_DelayCompensation(const string& name,
-                                               const ParameterSet& ps) :
+                                                     CS1_Parset *ps) :
       WorkHolder   (0,                                   // inputs
-                    ps.getUint32("Input.NRSPBoards"),    // outputs
+                    ps->getUint32("OLAP.nrRSPboards"),    // outputs
                     name,                                // name
                     "WH_DelayCompensation"),             // type
-      itsParamSet  (ps),
-      itsNrBeams   (ps.getUint32("Observation.NBeams")),
-      itsNrStations(ps.getUint32("Observation.NStations")),
+      itsCS1PS     (ps),
+      itsNrBeams   (ps->getUint32("Observation.nrBeams")),
+      itsNrStations(itsCS1PS->nrStations()),
       itsNrDelays  (itsNrBeams*itsNrStations),
-      itsSampleRate(ps.getDouble("Observation.SampleRate")),
+      itsSampleRate(itsCS1PS->sampleRate()),
       itsLoopCount (0),
       itsConverter (0)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
       // Initialize our private data structures.
-      getConverterConfig(itsParamSet);
-      getBeamDirections(itsParamSet);
-      getPhaseCentres(itsParamSet);
-      getObservationEpoch(itsParamSet);
+      getConverterConfig();
+      getBeamDirections();
+      getPhaseCentres();
+      getObservationEpoch();
       setPositionDiffs();
 
       // Create outgoing dataholders for the delay information; 
@@ -76,7 +76,6 @@ namespace LOFAR
         LOG_TRACE_LOOP_STR("Creating " << str);
 	getDataManager().addOutDataHolder(i, new DH_Delay(str, itsNrDelays));
       }
-
     }
 
 
@@ -99,7 +98,6 @@ namespace LOFAR
       // Pre-allocate and initialize storage for the delay vectors.
       itsDelaysAtBegin.resize(itsNrDelays);
       itsDelaysAfterEnd.resize(itsNrDelays);
-      
       // Initialize \c itsDelaysAfterEnd with the conversion results for the
       // epoch after the end of the first time interval.
       calculateDelays();
@@ -153,7 +151,6 @@ namespace LOFAR
   	  (*dh)[i] = delayInfo[i];
 	}
       }
-      
     }
 
 
@@ -170,36 +167,35 @@ namespace LOFAR
     WH_DelayCompensation* WH_DelayCompensation::make(const string& name)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      return new WH_DelayCompensation(name, itsParamSet);
+      return new WH_DelayCompensation(name, itsCS1PS);
     }
 
 
     //##----------------  Private methods  ----------------##//
 
-    void WH_DelayCompensation::getConverterConfig(const ParameterSet& ps)
+    void WH_DelayCompensation::getConverterConfig()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      string type = toUpper(ps.getString("DelayComp.ConverterType"));
+      string type = toUpper(itsCS1PS->getString("OLAP.DelayComp.converterType"));
       if (type == "IMPL") itsConverterConfig.type = IMPL;
       else if (type == "CLIENT") {
         itsConverterConfig.type   = CLIENT;
-        itsConverterConfig.server = ps.getString("Connections.AMC.ServerHost");
-        itsConverterConfig.port   = ps.getUint16("Connections.AMC.Port");
+        itsConverterConfig.server = itsCS1PS->getString("OLAP.OLAP_Conn.AMCServerHost");
+        itsConverterConfig.port   = itsCS1PS->getUint16("OLAP.OLAP_Conn.AMCServerPort");
       }
     }
 
 
-    void WH_DelayCompensation::getBeamDirections(const ParameterSet& ps)
+    void WH_DelayCompensation::getBeamDirections()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
       // First let's find out how many sources we have.
       LOG_TRACE_VAR_STR(itsNrBeams << " beam direction(s):");
 
       // What coordinate system is used for these source directions?
       // Currently, we support J2000, ITRF, and AZEL.
       Direction::Types dirType(Direction::INVALID);
-      string str = toUpper(ps.getString("Observation.DirectionType"));
+      string str = toUpper(itsCS1PS->getString("Observation.Beam.directionTypes"));
       if      (str == "J2000") dirType = Direction::J2000;
       else if (str == "ITRF")  dirType = Direction::ITRF;
       else if (str == "AZEL")  dirType = Direction::AZEL;
@@ -209,41 +205,43 @@ namespace LOFAR
       // Get the source directions from the parameter set. The source
       // directions are stored as one large vector of doubles. A direction
       // consists of two doubles.
-      vector<double> dir;
-      dir = ps.getDoubleVector("Observation.BeamDirections");
-      ASSERTSTR(dir.size() == 2 * itsNrBeams, 
-                dir.size() << " == " << 2 * itsNrBeams);
+      vector<double> angle1, angle2;
+
+      angle1 = itsCS1PS->getDoubleVector("Observation.Beam.angle1");
+      angle2 = itsCS1PS->getDoubleVector("Observation.Beam.angle2");
+      ASSERTSTR(angle1.size() == itsNrBeams, 
+                angle1.size() << " == " << itsNrBeams);
+      ASSERTSTR(angle2.size() == itsNrBeams, 
+                angle2.size() << " == " << itsNrBeams);
       
       // Reserve space in \a itsBeamDirections to avoid reallocations.
       itsBeamDirections.reserve(itsNrBeams);
       
       // Split the \a dir vector into separate Direction objects.
       for (uint i = 0; i < itsNrBeams; ++i) {
-        itsBeamDirections.push_back(Direction(dir[2*i], dir[2*i+1], dirType));
+        itsBeamDirections.push_back(Direction(angle1[i], angle2[i], dirType));
 	LOG_TRACE_VAR_STR(" [" << i << "] = " << itsBeamDirections[i]);
       }
     }
 
 
-    void WH_DelayCompensation::getPhaseCentres(const ParameterSet& ps)
+    void WH_DelayCompensation::getPhaseCentres()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
       // First, let's find out how many stations we have.
       LOG_TRACE_VAR_STR(itsNrStations << " station position(s):");
 
       // Station positions must be given in ITRF; there is currently no
       // support in the AMC package to convert between WGS84 and ITRF.
       Position::Types posType(Position::INVALID);
-      string str = toUpper(ps.getString("Observation.PositionType"));
+      string str = toUpper(itsCS1PS->getString("OLAP.DelayComp.positionType"));
       if (str == "ITRF") posType = Position::ITRF;
-      else ASSERTSTR(false, "Observation.PositionType must be ITRF");
+      else ASSERTSTR(false, "OLAP.DelayComp.positionType must be ITRF");
 
       // Get the antenna positions from the parameter set. The antenna
       // positions are stored as one large vector of doubles.
       vector<double> pos;
-      pos = ps.getDoubleVector("Observation.PhaseCentres");
-      //pos = ps.getDoubleVector("Observation.StationPositions");
+      pos = itsCS1PS->trackingPhaseCentras();
       ASSERTSTR(pos.size() == 3 * itsNrStations,
                 pos.size() << " == " << 3 * itsNrStations);
 
@@ -259,22 +257,20 @@ namespace LOFAR
     }
 
 
-    void WH_DelayCompensation::getObservationEpoch(const ParameterSet& ps)
+    void WH_DelayCompensation::getObservationEpoch()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-      
       // The observation epoch should be given by a start time and a stop
       // time. Both times must be specified in Modified Julian Date (MJD).
       Epoch startTime;
-      startTime.utc(ps.getDouble("Observation.StartTime"));
+      startTime.utc(itsCS1PS->startTime());
       Epoch stopTime;
-      stopTime.utc(ps.getDouble("Observation.StopTime"));
+      stopTime.utc(itsCS1PS->stopTime());
 
       // The time step is equal to one integration period, which, in turn, is
       // defined as the number of samples used per integration period divided
       // by the sample rate in seconds. Divide by 86400 to get it in days.
-      Epoch stepTime  = ps.getDouble("Observation.NSubbandSamples") / 
-        ps.getDouble("Observation.SampleRate") / 86400;
+      Epoch stepTime  = itsCS1PS->integrationTime() / 86400;
  
       LOG_TRACE_VAR("Observation:");
       LOG_TRACE_VAR_STR(" startTime = " << startTime);
@@ -306,7 +302,6 @@ namespace LOFAR
     void WH_DelayCompensation::setPositionDiffs()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
       // Reserve space in \a itsPhasePositionDiffs to avoid reallocations.
       itsPhasePositionDiffs.reserve(itsPhaseCentres.size());
 

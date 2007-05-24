@@ -40,6 +40,7 @@ namespace LOFAR
     INIT_TRACER_CONTEXT(AH_DelayCompensation, LOFARLOGGER_PACKAGE);
     
     AH_DelayCompensation::AH_DelayCompensation() : 
+      itsCS1PS(0),
       itsStub(0)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
@@ -49,6 +50,7 @@ namespace LOFAR
     AH_DelayCompensation::~AH_DelayCompensation()
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      delete itsCS1PS;
     }
 
 
@@ -59,25 +61,28 @@ namespace LOFAR
       // Create the top-level composite
       LOG_TRACE_STAT("Create the top-level composite");
       Composite comp(0, 0, "topComposite");
-      setComposite(comp); 
-
+      setComposite(comp);
+      itsCS1PS = new CS1_Parset(&itsParamSet);
+      itsCS1PS->adoptFile("OLAP.parset");
+      
       // \note \c itsParamSet is a protected data member of
       // tinyApplicationHolder
-      itsStub = new Stub_Delay(false, itsParamSet);
+      itsStub = new Stub_Delay(false, itsCS1PS);
       
       // Create a work holder for the delay compensation and place it in the
       // top-level compositie. Since we have only one work holder, we will let
       // it run on node 0.
       LOG_TRACE_STAT("Creating WH_DelayCompensation; "
                      "adding it to top-level composite");
-      WH_DelayCompensation wh("WH_DelayCompensation", itsParamSet);
+      
+      WH_DelayCompensation wh("WH_DelayCompensation", itsCS1PS);
       Step step(wh);
       comp.addBlock(step);
       step.runOnNode(0);
 
       // Find out how many input section nodes we have; this number is equal
       // to the number of RSP boards we have.
-      uint nrRSPBoards = itsParamSet.getUint32("Input.NRSPBoards");
+      uint nrRSPBoards = itsCS1PS->getUint32("OLAP.nrRSPboards");
       LOG_TRACE_VAR_STR(nrRSPBoards << " RSP boards");
 
       // Connect to the input section nodes.
@@ -88,7 +93,6 @@ namespace LOFAR
         itsStub->connect(i, step.getOutDataManager(i), i);
 #endif
       }
-      
     }
     
 

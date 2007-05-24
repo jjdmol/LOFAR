@@ -12,6 +12,7 @@ libcs1_interface_la_SOURCES	= \
 	SparseSet.cc \
 	Stub_BGL.cc \
 	Stub_Delay.cc \
+	CS1_Parset.cc \
 	Stub_RSP.cc
 
 configfilesdir			= $(bindir)

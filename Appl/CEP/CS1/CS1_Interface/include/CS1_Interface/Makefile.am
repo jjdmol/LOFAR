@@ -11,6 +11,7 @@ pkginclude_HEADERS = \
 	SparseSet.h \
 	Stub_BGL.h \
 	Stub_Delay.h \
+	CS1_Parset.h \
 	Stub_RSP.h
 
 include $(top_srcdir)/Makefile.common

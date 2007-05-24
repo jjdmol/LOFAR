@@ -23,6 +23,7 @@
 
 #include <tinyCEP/TinyApplicationHolder.h>
 #include <CS1_Interface/Stub_BGL.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 #if defined HAVE_BGL
 #include <rts.h>
@@ -52,7 +53,8 @@ class AH_BGL_Processing : public TinyApplicationHolder
 #if defined HAVE_BGL
     static unsigned remapOnTree(unsigned cell, unsigned core, struct BGLPersonality &);
 #endif
-
+    
+    CS1_Parset                  *itsCS1PS;
     vector<WH_BGL_Processing *> itsWHs;
     Stub_BGL			*itsSubbandStub, *itsVisibilitiesStub;
 };

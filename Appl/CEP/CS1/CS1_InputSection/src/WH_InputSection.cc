@@ -28,7 +28,7 @@
 #include <AMCBase/Epoch.h>
 #include <CS1_InputSection/WH_InputSection.h>
 #include <CS1_Interface/DH_Delay.h>
-#include <APS/ParameterSet.h>
+#include <CS1_Interface/CS1_Parset.h>
 #include <Transport/TransportHolder.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_InputSection/BeamletBuffer.h>
@@ -48,14 +48,14 @@
 
 #undef USE_TIMER
 
+
 namespace LOFAR {
 namespace CS1 {
 
 bool WH_InputSection::signalReceived;
 
-
 WH_InputSection::WH_InputSection(const string &name, 
-				 ACC::APS::ParameterSet &ps,
+				 CS1_Parset      *ps,
 				 TransportHolder *inputTH,
 				 unsigned stationNr,
 				 unsigned nrInputChannels,
@@ -68,7 +68,7 @@ WH_InputSection::WH_InputSection(const string &name,
   itsOutputNodes(outputNodes),
   itsInputTH(inputTH),
   itsStationNr(stationNr),
-  itsPS(ps),
+  itsCS1PS(ps),
   itsBBuffer(0),
   itsPrePostTimer("pre/post"),
   itsProcessTimer("process"),
@@ -77,20 +77,20 @@ WH_InputSection::WH_InputSection(const string &name,
   LOG_TRACE_FLOW_STR("WH_InputSection constructor");    
 
   // get parameters
-  itsNSubbandsPerCell = ps.getUint32("General.SubbandsPerPset") * ps.getUint32("BGLProc.PsetsPerCell");
-  itsNSamplesPerSec   = ps.getUint32("Observation.NSubbandSamples");
-  itsNHistorySamples  = (ps.getUint32("BGLProc.NPPFTaps") - 1) * ps.getUint32("Observation.NChannels");
+  itsNSubbandsPerCell = itsCS1PS->nrSubbandsPerCell();
+  itsNSamplesPerSec   = itsCS1PS->nrSubbandSamples();
+  itsNHistorySamples  = itsCS1PS->nrHistorySamples();
 
   // create incoming dataholder holding the delay information 
   if (nrInputChannels > 0)
-    getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay", ps.getInt32("Input.NRSPBoards")));
+    getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay", itsCS1PS->getInt32("OLAP.nrRSPboards")));
 
   // create a outgoing dataholder for each subband
   if (nrOutputChannels > 0) {
     vector<int> channels;
 
     for (int i = 0; i < itsNoutputs; i ++) {
-      getDataManager().addOutDataHolder(i, new DH_Subband("DH_Subband", ps));
+      getDataManager().addOutDataHolder(i, new DH_Subband("DH_Subband", itsCS1PS));
       getDataManager().setAutoTriggerOut(i, false);
       channels.push_back(i);
     }
@@ -107,7 +107,7 @@ WH_InputSection::~WH_InputSection()
 
 WH_InputSection *WH_InputSection::make(const string& name)
 {
-  return new WH_InputSection(name, itsPS, itsInputTH, itsStationNr, itsNinputs, itsNoutputs, itsInputNodes, itsOutputNodes);
+  return new WH_InputSection(name, itsCS1PS, itsInputTH, itsStationNr, itsNinputs, itsNoutputs, itsInputNodes, itsOutputNodes);
 }
 
 
@@ -120,10 +120,10 @@ void WH_InputSection::startThread()
   ThreadArgs args;
   args.BBuffer            = itsBBuffer;
   args.th                 = itsInputTH;
-  args.ipHeaderSize       = itsPS.getInt32("Input.IPHeaderSize");
-  args.frameHeaderSize    = itsPS.getInt32("Input.SzEPAheader");
-  args.nTimesPerFrame     = itsPS.getInt32("Input.NTimesInFrame");
-  args.nSubbandsPerFrame  = itsPS.getInt32("Input.NSubbandsPerFrame");
+  args.ipHeaderSize       = itsCS1PS->getInt32("OLAP.IPHeaderSize");
+  args.frameHeaderSize    = itsCS1PS->getInt32("OLAP.EPAHeaderSize");
+  args.nTimesPerFrame     = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
+  args.nSubbandsPerFrame  = itsCS1PS->getInt32("OLAP.nrSubbandsPerFrame");
 
   args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
   args.ID                 = itsStationNr;
@@ -148,17 +148,17 @@ void WH_InputSection::preprocess()
 
   if (itsIsInput) {
     // create the buffer controller.
-    int cyclicBufferSize = itsPS.getInt32("Input.NSamplesToBuffer");
-    int subbandsToReadFromFrame = itsPS.getInt32("Observation.NSubbands") * itsPS.getInt32("Observation.NStations") / itsPS.getInt32("Input.NRSPBoards");
-    ASSERTSTR(subbandsToReadFromFrame <= itsPS.getInt32("Input.NSubbandsPerFrame"), subbandsToReadFromFrame << " < " << itsPS.getInt32("Input.NSubbandsPerFrame"));
+    int cyclicBufferSize = itsCS1PS->nrSamplesToBuffer();
+    int subbandsToReadFromFrame = itsCS1PS->subbandsToReadFromFrame();
+    ASSERTSTR(subbandsToReadFromFrame <= itsCS1PS->getInt32("OLAP.nrSubbandsPerFrame"), subbandsToReadFromFrame << " < " << itsCS1PS->getInt32("OLAP.nrSubbandsPerFrame"));
 
     itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, cyclicBufferSize/6, cyclicBufferSize/6);
     startThread();
 
-    itsDelayCompensation = itsPS.getBool("Observation.DelayCompensation");
+    itsDelayCompensation = itsCS1PS->getBool("OLAP.delayCompensation");
 
     // determine starttime
-    double startTime = itsPS.getDouble("Observation.StartTime");
+    double startTime = itsCS1PS->startTime();
 
 #if 1
     // interpret the time as utc
@@ -166,7 +166,7 @@ void WH_InputSection::preprocess()
 #else
     double utc = AMC::Epoch(startTime).utc();
 #endif
-    int sampleFreq = itsPS.getInt32("Observation.SampleRate");
+    int sampleFreq = (int)itsCS1PS->sampleRate();
     int seconds = (int)floor(utc);
     int samples = (int)((utc - floor(utc)) * sampleFreq);
 
@@ -174,8 +174,7 @@ void WH_InputSection::preprocess()
 
     cout<<"Starting buffer at "<<itsSyncedStamp<<endl;cout.flush();
     itsBBuffer->startBufferRead(itsSyncedStamp);
-
-    unsigned nrCells = itsPS.getUint32("Observation.NSubbands") / itsNSubbandsPerCell;
+    unsigned nrCells = itsCS1PS->nrCells();
 
     itsInputData     = new boost::multi_array<SampleType, 4>(boost::extents[nrCells][itsNSubbandsPerCell][itsNSamplesPerSec + itsNHistorySamples][NR_POLARIZATIONS]);
     itsInputMetaData = new struct metaData[nrCells];
@@ -192,7 +191,7 @@ void WH_InputSection::preprocess()
     ASSERTSTR(ret != SIG_ERR, "WH_InputSection couldn't set signal handler for timer");    
     struct itimerval value;
 
-    double interval = itsNSamplesPerSec / itsPS.getDouble("Observation.SampleRate") / itsNSubbandsPerCell;
+    double interval = itsCS1PS->timeInterval();
     __time_t secs  = static_cast<__time_t>(floor(interval));
     __time_t usecs = static_cast<__time_t>(1e6 * (interval - secs));
 

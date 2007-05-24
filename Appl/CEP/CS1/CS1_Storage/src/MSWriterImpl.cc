@@ -626,7 +626,7 @@ namespace LOFAR
       MBaseline  MB_ITRF;
       MBaseline  MB_J2000;
       MVBaseline MBV_J2000;
-      
+ 
       for (int ant2=0; ant2<itsNrAnt; ant2++) {
         for (int ant1=0; ant1<=ant2; ant1++) {
 	  MB_ITRF = MBaseline(MVBaseline(basel(0,ant1,ant2), basel(1,ant1,ant2), basel(2,ant1,ant2)), 

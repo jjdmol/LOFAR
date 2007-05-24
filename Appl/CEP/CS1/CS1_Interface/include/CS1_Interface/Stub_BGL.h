@@ -23,10 +23,10 @@
 #ifndef LOFAR_CS1_INTERFACE_STUB_BGL_H
 #define LOFAR_CS1_INTERFACE_STUB_BGL_H
 
-#include <APS/ParameterSet.h>
 #include <tinyCEP/TinyDataManager.h>
 #include <Transport/Connection.h>
 #include <Transport/TransportHolder.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 #include <string>
 
@@ -40,12 +40,12 @@ class Stub_BGL
   // classes that must provide the necessary TransportHolders.
 
   public:
-    Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const ACC::APS::ParameterSet &pSet);
+    Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const CS1_Parset *pSet);
     virtual ~Stub_BGL();
 
     void connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel);
 
-    const ACC::APS::ParameterSet &itsPS;
+    const CS1_Parset            *itsCS1PS;
     bool			 itsIAmOnBGL, itsIsInput;
     std::string			 itsPrefix;
     unsigned			 itsNrCells, itsNrNodesPerCell, itsNrPsetsPerStorage;

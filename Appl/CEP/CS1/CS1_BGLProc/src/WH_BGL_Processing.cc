@@ -1129,15 +1129,15 @@ fcomplex FIR::processNextSample(fcomplex sample, const float weights[NR_TAPS])
 #endif
 
 
-WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, const ACC::APS::ParameterSet &ps)
+WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, CS1_Parset *ps)
   :
   WorkHolder(NR_IN_CHANNELS, NR_OUT_CHANNELS, name, "WH_Correlator"),
-  itsPS(ps),
+  itsCS1PS(ps),
   itsCoreNumber(coreNumber)
 {
-  ASSERT(ps.getInt32("BGLProc.NPPFTaps")	    == NR_TAPS);
-  ASSERT(ps.getInt32("Observation.NPolarisations")  == NR_POLARIZATIONS);
-  ASSERT(ps.getInt32("Observation.NChannels")	    == NR_SUBBAND_CHANNELS);
+  ASSERT(itsCS1PS->nrPFFTaps()	                            == NR_TAPS);
+  ASSERT(itsCS1PS->getInt32("Observation.nrPolarisations")  == NR_POLARIZATIONS);
+  ASSERT(itsCS1PS->nrChannelsPerSubband()	            == NR_SUBBAND_CHANNELS);
 
 #if !defined C_IMPLEMENTATION
   ASSERT(_FIR_constants_used.input_type			== INPUT_TYPE);
@@ -1149,26 +1149,26 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, co
   ASSERT(_correlator_constants_used.nr_polarizations	== NR_POLARIZATIONS);
 #endif
 
-  itsNrStations	       = ps.getUint32("Observation.NStations");
+  itsNrStations	       = itsCS1PS->nrStations();
   itsNrBaselines       = itsNrStations * (itsNrStations + 1) / 2;
-  itsNrSamplesPerIntegration = ps.getUint32("Observation.NSubbandSamples") / NR_SUBBAND_CHANNELS;
+  itsNrSamplesPerIntegration = itsCS1PS->nrSubbandSamples() / NR_SUBBAND_CHANNELS;
 
 #if !defined C_IMPLEMENTATION
   ASSERT(itsNrSamplesPerIntegration % 16 == 0);
 #endif
 
-  itsCenterFrequencies = ps.getDoubleVector("Observation.RefFreqs");
-  itsChannelBandwidth  = ps.getDouble("Observation.SampleRate") / NR_SUBBAND_CHANNELS;
+  itsCenterFrequencies = itsCS1PS->refFreqs();
+  itsChannelBandwidth  = itsCS1PS->sampleRate() / NR_SUBBAND_CHANNELS;
 
-  unsigned nrSubbandsPerPset = ps.getUint32("General.SubbandsPerPset");
-  unsigned nrNodesPerPset    = ps.getUint32("BGLProc.NodesPerPset");
+  unsigned nrSubbandsPerPset = itsCS1PS->getUint32("OLAP.subbandsPerPset");
+  unsigned nrNodesPerPset    = itsCS1PS->getUint32("OLAP.BGLProc.nodesPerPset");
 
   itsFirstSubband     = (coreNumber / nrNodesPerPset) * nrSubbandsPerPset;
   itsLastSubband      = itsFirstSubband + nrSubbandsPerPset;
   itsCurrentSubband   = itsFirstSubband + coreNumber % nrNodesPerPset % nrSubbandsPerPset;
   itsSubbandIncrement = nrNodesPerPset % nrSubbandsPerPset;
 
-  itsInputConnected   = ps.getString("Connections.Input_BGLProc.TransportHolder") != "NULL";
+  itsInputConnected   = itsCS1PS->getString("OLAP.OLAP_Conn.input_BGLProc_Transport") != "NULL";
 
   getDataManager().addInDataHolder(SUBBAND_CHANNEL, new DH_Subband("input", ps));
 //getDataManager().addInDataHolder(RFI_MITIGATION_CHANNEL, new DH_RFI_Mitigation("RFI"));
@@ -1183,7 +1183,7 @@ WH_BGL_Processing::~WH_BGL_Processing()
 }
 
 
-WorkHolder* WH_BGL_Processing::construct(const string &name, unsigned coreNumber, const ACC::APS::ParameterSet &ps)
+WorkHolder* WH_BGL_Processing::construct(const string &name, unsigned coreNumber, CS1_Parset *ps)
 {
   return new WH_BGL_Processing(name, coreNumber, ps);
 }
@@ -1191,7 +1191,7 @@ WorkHolder* WH_BGL_Processing::construct(const string &name, unsigned coreNumber
 
 WH_BGL_Processing* WH_BGL_Processing::make(const string &name)
 {
-  return new WH_BGL_Processing(name, itsCoreNumber, itsPS);
+  return new WH_BGL_Processing(name, itsCoreNumber, itsCS1PS);
 }
 
 
@@ -1271,7 +1271,7 @@ void WH_BGL_Processing::preprocess()
   mutex = rts_allocate_mutex();
 #endif
 
-  itsDelayCompensation = itsPS.getBool("Observation.DelayCompensation");
+  itsDelayCompensation = itsCS1PS->getBool("OLAP.delayCompensation");
 }
 
 

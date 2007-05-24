@@ -30,21 +30,23 @@
 namespace LOFAR {
 namespace CS1 {
 
-DH_Subband::DH_Subband(const string &name, const ACC::APS::ParameterSet &pSet)
+DH_Subband::DH_Subband(const string &name, const CS1_Parset *pSet)
   : DataHolder(name, "DH_Subband"),
-    itsNrStations(pSet.getUint32("Observation.NStations")),
-    itsNrInputSamples(pSet.getUint32("Observation.NSubbandSamples") + (pSet.getUint32("BGLProc.NPPFTaps") - 1) * pSet.getUint32("Observation.NChannels")),
+    itsCS1PS  (pSet),
+    itsNrStations(itsCS1PS->nrStations()),
+    itsNrInputSamples(itsCS1PS->nrSamplesToBGLProc()),
     itsSamples(0),
     itsFlags(0),
     itsDelays(0)
 {
   setExtraBlob("Flags", 0);
 
-  ASSERT(pSet.getUint32("Observation.NSubbandSamples") % (pSet.getUint32("BGLProc.NPPFTaps") * pSet.getUint32("Observation.NChannels")) == 0);
+  ASSERT(itsCS1PS->nrSubbandSamples() % (itsCS1PS->nrPFFTaps() * itsCS1PS->nrChannelsPerSubband()) == 0);
 }
 
 DH_Subband::DH_Subband(const DH_Subband &that)
   : DataHolder(that),
+    itsCS1PS(that.itsCS1PS),
     itsNrStations(that.itsNrStations),
     itsNrInputSamples(that.itsNrInputSamples),
     itsSamples(0),

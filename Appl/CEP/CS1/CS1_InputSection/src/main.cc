@@ -25,10 +25,11 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <CS1_InputSection/AH_InputSection.h>
 #include <tinyCEP/Profiler.h>
 #include <tinyCEP/ApplicationHolderController.h>
-#include <PLC/ACCmain.h>
+#include <CS1_InputSection/ACCmainInputSection.h>
 
 #ifdef HAVE_MPI
 #include <Transport/TH_MPI.h>
@@ -39,11 +40,15 @@ using namespace LOFAR::CS1;
 
 #if 1
 int main(int argc, char **argv) {
-  INIT_LOGGER("CS1_InputSection");
+  ConfigLocator aCL;
+  string        progName = basename(argv[0]);
+  string        logPropFile(progName + ".log_prop");
+  INIT_LOGGER (aCL.locate(logPropFile).c_str());
+  LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
   AH_InputSection myAH;
   ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
-  return ACC::PLC::ACCmain(argc, argv, &myAHController);
+  return ACCmainInputSection(argc, argv, &myAHController);
 }
 
 #else

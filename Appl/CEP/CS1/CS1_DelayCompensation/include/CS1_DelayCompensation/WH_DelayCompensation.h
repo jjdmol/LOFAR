@@ -30,7 +30,7 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
-#include <APS/ParameterSet.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 namespace LOFAR 
 {
@@ -82,7 +82,7 @@ namespace LOFAR
     {
     public:
       WH_DelayCompensation(const string& name,
-                           const ACC::APS::ParameterSet& ps);
+                                 CS1_Parset *ps);
 
       virtual ~WH_DelayCompensation();
 
@@ -117,28 +117,28 @@ namespace LOFAR
 
       // Get the configuration data for the Converter from the parameter file
       // and initialize \c itsConverterConfig.
-      void getConverterConfig(const ACC::APS::ParameterSet& ps);
+      void getConverterConfig();
 
       // Get the source directions from the parameter file and initialize \c
       // itsBeamDirections. Beam positions must be specified as
       // <tt>(longitude, latitude, direction-type)</tt>. The direction angles
       // are in radians; the direction type must be one of J2000, ITRF, or
       // AZEL.
-      void getBeamDirections(const ACC::APS::ParameterSet& ps);
+      void getBeamDirections();
 
       // Get the station phase centres from the parameter file and
       // initialize \c itsStationPositions. Station phase centres must
       // be specified as <tt>(longitude, latitude, height,
       // position-type)</tt>. The position angles are in radians;
       // height is in meters; the position type must be ITRF.
-      void getPhaseCentres(const ACC::APS::ParameterSet& ps);
+      void getPhaseCentres();
 
       // Get the observation epoch from the parameter file and initialize \c
       // itsObservationEpoch. The epoch is a series of times, with an
       // approximately one-second interval, starting at the observation start
       // time, and ending at the observation end time. Start and end time must
       // be specified as Modified Julian Date (MJD).
-      void getObservationEpoch(const ACC::APS::ParameterSet& ps);
+      void getObservationEpoch();
 
       // Set the station to reference station position differences for all
       // stations. The choice of reference station is arbitrary (so we choose
@@ -169,7 +169,7 @@ namespace LOFAR
       // The parameter set, containing all configurable variables.
       // \note Unfortunately we must keep a copy here, because (!@#$%!)
       // make() needs it. Hopefully, we can get rid of it, some day.
-      const ACC::APS::ParameterSet  itsParamSet;
+      CS1_Parset                   *itsCS1PS;
 
       // Number of beams.
       const uint                    itsNrBeams;

@@ -18,6 +18,19 @@ class Parset(object):
                 self.parameters[key.strip()] = value.strip()
                 lastline = ''
 
+        # Add keys from file: OLAP.parset.
+        lastline = ''
+        for line in open('OLAP.parset', 'r').readlines():
+            lastline = lastline + line.split('#')[0]
+            lastline = lastline.rstrip()
+            if len(lastline) > 0 and lastline[-1] == '\\':
+                lastline = lastline[:-1]
+            elif '=' in lastline:
+                key, value = lastline.split('=')
+                self.parameters[key.strip()] = value.strip()
+                lastline = ''
+		
+
     def writeToFile(self, fileName):
         outf = open(fileName, 'w')
         for key, value in sorted(self.parameters.iteritems()):

@@ -73,9 +73,10 @@ class Section(object):
 class InputSection(Section):
     def __init__(self, parset, myhost):
 
-        self.nrsp = parset.getInt32('Input.NRSPBoards')
-        nSubbands = parset.getInt32('Observation.NSubbands')
-        nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
+        self.nrsp = parset.getInt32('OLAP.nrRSPboards')
+	
+        nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
+        nSubbandsPerCell = parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.BGLProc.psetsPerCell')
         nCells = float(nSubbands) / float(nSubbandsPerCell)
         if not nSubbands % nSubbandsPerCell == 0:
             raise Exception('Not a integer number of compute cells (nSubbands = %d and nSubbandsPerCell = %d)' % (nSubbands, nSubbandsPerCell))
@@ -107,7 +108,7 @@ class InputSection(Section):
         self.parset['Input.OutputNodes'] = outputIndices
 
         bglprocIPs = [newslaves[j].getExtIP() for j in outputIndices]
-        self.parset['Connections.Input_BGLProc.ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
+        self.parset['OLAP.OLAP_Conn.input_BGLProc_ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
 
     def run(self, runlog, noRuns, runCmd = None):
         Section.run(self, runlog, noRuns, runCmd)
@@ -115,9 +116,9 @@ class InputSection(Section):
 class StorageSection(Section):
     def __init__(self, parset, host):
 
-        nSubbands = parset.getInt32('Observation.NSubbands')
-        nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset')
-        nPsetsPerStorage = parset.getInt32('Storage.PsetsPerStorage');
+        nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
+        nSubbandsPerCell = parset.getInt32('OLAP.subbandsPerPset')
+        nPsetsPerStorage = parset.getInt32('OLAP.psetsPerStorage');
         if not nSubbands % (nSubbandsPerCell * nPsetsPerStorage) == 0:
             raise Exception('Not a integer number of subbands per storage node!')
 
@@ -129,7 +130,7 @@ class StorageSection(Section):
                          buildvar = 'gnu32_openmpi-opt')
 
         storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
-        self.parset['Connections.BGLProc_Storage.ServerHosts'] = '[' + ','.join(storageIPs) + ']'
+        self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
 
         
 class BGLProcSection(Section):
@@ -137,14 +138,14 @@ class BGLProcSection(Section):
         self.partition = partition
         self.bglWorkingDir = workingDir
 
-        nSubbands = parset.getInt32('Observation.NSubbands')
-        nSubbandsPerCell = parset.getInt32('General.SubbandsPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
+        nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
+        nSubbandsPerCell = parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.BGLProc.psetsPerCell')
 
         if not nSubbands % nSubbandsPerCell == 0:
             raise Exception('Not a integer number of compute cells!')
 
         nCells = nSubbands / nSubbandsPerCell
-        self.noProcesses = int(nCells) * parset.getInt32('BGLProc.NodesPerPset') * parset.getInt32('BGLProc.PsetsPerCell')
+        self.noProcesses = int(nCells) * parset.getInt32('OLAP.BGLProc.nodesPerPset') * parset.getInt32('OLAP.BGLProc.psetsPerCell')
         self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
 
         Section.__init__(self, parset, \
@@ -152,14 +153,13 @@ class BGLProcSection(Section):
                          host = host, \
                          buildvar = 'gnu_bgl')
 
-
         nstations = parset.getNStations()
         clock = parset.getClockString()
 	self.executable = 'CS1_BGL_Processing'
         
     def run(self, runlog, noRuns, runCmd = None):
-        nodesPerCell = self.parset.getInt32('BGLProc.NodesPerPset') * self.parset.getInt32('BGLProc.PsetsPerCell')
-        subbandsPerCell = self.parset.getInt32('General.SubbandsPerPset') * self.parset.getInt32('BGLProc.PsetsPerCell')
+        nodesPerCell = self.parset.getInt32('OLAP.BGLProc.nodesPerPset') * self.parset.getInt32('OLAP.BGLProc.psetsPerCell')
+        subbandsPerCell = self.parset.getInt32('OLAP.subbandsPerPset') * self.parset.getInt32('OLAP.BGLProc.psetsPerCell')
         actualRuns = int(noRuns * subbandsPerCell / nodesPerCell)
         if not actualRuns * nodesPerCell == noRuns * subbandsPerCell:
             raise Exception('illegal number of runs')

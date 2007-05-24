@@ -30,7 +30,7 @@
 
 //# Includes
 #include <Transport/TransportHolder.h>
-#include <APS/ParameterSet.h>
+#include <CS1_Interface/CS1_Parset.h>
 #include <CEPFrame/Step.h>
 
 namespace LOFAR 
@@ -52,7 +52,7 @@ namespace LOFAR
       Connector();
       ~Connector();
 
-      static TransportHolder* readTH(const ACC::APS::ParameterSet& ps, const string& key, const bool isReceiver = true);
+      static TransportHolder* readTH(const CS1_Parset *ps, const string& key);
       void connectSteps(Step* src, int srcDH, Step* dst, int dstDH);
 
     private:

@@ -20,26 +20,27 @@
 
 #include <lofar_config.h>
 
-#include <APS/ParameterSet.h>
 #include <CS1_Interface/DH_Visibilities.h>
 #include <Common/Timer.h>
 
 namespace LOFAR {
 namespace CS1 {
 
-DH_Visibilities::DH_Visibilities(const string &name, const ACC::APS::ParameterSet &pSet)
+DH_Visibilities::DH_Visibilities(const string &name, const CS1_Parset *pSet)
 : DataHolder(name, "DH_Visibilities"),
+  itsCS1PS  (pSet),
   itsVisibilities(0),
   itsNrValidSamples(0)
 {
-  itsNrChannels       = pSet.getUint32("Observation.NChannels");
-  unsigned nrStations = pSet.getUint32("Observation.NStations");
+  itsNrChannels       = itsCS1PS->nrChannelsPerSubband();
+  unsigned nrStations = itsCS1PS->nrStations();
   itsNrBaselines      = nrStations * (nrStations + 1) / 2;
 }   
 
 
 DH_Visibilities::DH_Visibilities(const DH_Visibilities &that)
 : DataHolder(that),
+  itsCS1PS(that.itsCS1PS),
   itsNrBaselines(that.itsNrBaselines),
   itsNrChannels(that.itsNrChannels),
   itsVisibilities(0),

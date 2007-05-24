@@ -13,6 +13,7 @@
 
 #include <CEPFrame/ApplicationHolder.h>
 #include <CS1_Interface/Stub_BGL.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 namespace LOFAR
 {
@@ -35,8 +36,8 @@ namespace LOFAR
       virtual void dump    () const;
       virtual void quit    ();
     private:
-
-      Stub_BGL *itsStub;
+      CS1_Parset       *itsCS1PS;
+      Stub_BGL         *itsStub;
 
     };
 

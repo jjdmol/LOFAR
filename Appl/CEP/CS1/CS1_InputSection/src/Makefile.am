@@ -7,6 +7,7 @@ lib_LTLIBRARIES         = libcs1_inputsection.la
 libcs1_inputsection_la_SOURCES        = Connector.cc \
 		 InputThread.cc \
 		 BeamletBuffer.cc \
+		 ACCmainInputSection.cc \
 		 AH_InputSection.cc \
 		 WH_InputSection.cc
 
@@ -34,3 +35,5 @@ scriptdir = $(bindir)
 dist_script_SCRIPTS = 
 
 include $(top_srcdir)/Makefile.common
+
+sysconf_DATA = CS1_InputSection.log_prop

@@ -23,7 +23,7 @@
 #ifndef LOFAR_CS1_INTERFACE_STUB_RSP_H
 #define LOFAR_CS1_INTERFACE_STUB_RSP_H
 
-#include <APS/ParameterSet.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 namespace LOFAR 
 {
@@ -34,7 +34,7 @@ namespace LOFAR
     {
     public:
       // Create the stub. Get its parameters from the given file name.
-      explicit Stub_RSP (bool onServer, const ACC::APS::ParameterSet &ps);
+      explicit Stub_RSP (bool onServer, const CS1_Parset *ps);
 
       ~Stub_RSP();
 
@@ -43,7 +43,7 @@ namespace LOFAR
 
     private:
       bool			       itsStubOnServer;
-      const ACC::APS::ParameterSet &itsPS;
+      const CS1_Parset                *itsCS1PS;
     };
 
   } // namespace CS1

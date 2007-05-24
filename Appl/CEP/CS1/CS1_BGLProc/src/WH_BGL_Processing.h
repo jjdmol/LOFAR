@@ -39,6 +39,7 @@
 #include <CS1_Interface/DH_Subband.h>
 //#include <CS1_Interface/DH_RFI_Mitigation.h>
 #include <CS1_Interface/DH_Visibilities.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 #include <boost/multi_array.hpp>
 #include <malloc.h>
@@ -101,10 +102,10 @@ class WH_BGL_Processing: public WorkHolder {
       NR_OUT_CHANNELS
     };
 
-    explicit WH_BGL_Processing(const string &name, unsigned coreNumber, const ACC::APS::ParameterSet &ps);
+    explicit WH_BGL_Processing(const string &name, unsigned coreNumber, CS1_Parset *ps);
     virtual ~WH_BGL_Processing();
 
-    static WorkHolder *construct(const string &name, unsigned coreNumber, const ACC::APS::ParameterSet &);
+    static WorkHolder *construct(const string &name, unsigned coreNumber, CS1_Parset *ps);
     virtual WH_BGL_Processing *make(const string &name);
 
     virtual void preprocess();
@@ -156,7 +157,7 @@ class WH_BGL_Processing: public WorkHolder {
     unsigned	    itsNrStations, itsNrBaselines;
     unsigned	    itsNrSamplesPerIntegration;
 
-    const ACC::APS::ParameterSet &itsPS;
+    CS1_Parset     *itsCS1PS;
     const unsigned  itsCoreNumber;
     unsigned        itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool	    itsInputConnected;
