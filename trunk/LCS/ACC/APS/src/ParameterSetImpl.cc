@@ -246,6 +246,7 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 	bool	addToPrev = false;			// previous line was multiline
 	string	lineColl;					// Collects multiline values
 	string	keyCopy;					// Saved key in multiline
+	string	prefixedKey;					// Key with added prefix (which may be an empty string)
 
 	// Read the file line by line and convert it to Key Value pairs.
 	while (inputStream.getline (paramLine, 1024)) {
@@ -272,11 +273,8 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 			// skip leading and trailing spaces from key (allowing spaces before = sign)
 			rtrim(keyStr = ltrim(paramLine));
 
-			// add prefix if it is not empty
-			// I really hate these const_casts (GML)
-			if (!prefix.empty()) {
-				keyStr = const_cast<char*>(string(prefix + keyStr).c_str());
-			}
+			// add prefix
+			prefixedKey = prefix + string(keyStr);
 		}
 
 		// skip leading spaces from value (allowing space afer = sign)
@@ -309,7 +307,7 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 			valueStr[valLen] = '\0';
 			valLen = rtrim(valueStr, valLen) - 1;
 			if (!addToPrev) {			// first multiline?
-				keyCopy = keyStr;		// save copy of key
+				keyCopy = prefixedKey;
 			}
 		}
 		else {
@@ -334,19 +332,19 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 		if (!multiLine) {
 			if (addToPrev) {	// result in tmp strings?
 				valueStr = const_cast<char*>(lineColl.c_str());
-				keyStr   = const_cast<char*>(keyCopy.c_str());
+				keyStr   = const_cast<char*>(prefixedKey.c_str());
 			}
-			LOG_TRACE_VAR(formatString("pair:[%s][%s]", keyStr, valueStr));
+			LOG_TRACE_VAR(formatString("pair:[%s][%s]", prefixedKey.c_str(), valueStr));
 
 			// remove any existed value and insert this value
-			if ((erase(keyStr) > 0) && !merge) {
+			if ((erase(prefixedKey) > 0) && !merge) {
 				LOG_WARN (
 				formatString("Key %s is defined twice. Ignoring first value.", 
-																  keyStr));
+																  prefixedKey.c_str()));
 			}
 			// Finally add to map
 			pair< KeyValueMap::iterator, bool>		result;
-			result = insert(std::make_pair(keyStr, valueStr)); 
+			result = insert(std::make_pair(prefixedKey, valueStr)); 
 			if (!result.second) {
 				THROW (APSException, 
 					   formatString("Key %s double defined?", keyStr));
