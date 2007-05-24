@@ -36,6 +36,7 @@
 #endif
 #include <Common/Timer.h>
 #include <Common/lofar_vector.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 namespace LOFAR
 {
@@ -49,13 +50,13 @@ namespace LOFAR
     public:
 
       WH_SubbandWriter(const string& name,  const vector<uint>& subbandIDs,
-                       const ACC::APS::ParameterSet& pset);
+                             CS1_Parset *pset);
 
       virtual ~WH_SubbandWriter();
     
       static WorkHolder* construct(const string& name,  
                                    const vector<uint>& subbandIDs,
-                                   const ACC::APS::ParameterSet& pset);
+				         CS1_Parset *pset);
 
       virtual WH_SubbandWriter* make(const string& name);
 
@@ -72,9 +73,9 @@ namespace LOFAR
 
       // clear the integration buffers
       void clearAllSums();
-
+      
+      CS1_Parset *itsCS1PS;
       const vector<uint> itsSubbandIDs;     ///< IDs of the subband(s)
-      const ACC::APS::ParameterSet itsPS;
       uint  itsNStations;
       uint  itsNBaselines;
       uint  itsNChannels;

@@ -23,14 +23,16 @@ namespace LOFAR
   namespace CS1
   {
 
-    AH_Storage::AH_Storage() 
-      : itsStub (0)
+    AH_Storage::AH_Storage() : 
+      itsCS1PS(0),
+      itsStub (0)
     {
     }
 
 
     AH_Storage::~AH_Storage()
     {
+      delete itsCS1PS;
     }
 
 
@@ -44,20 +46,20 @@ namespace LOFAR
       // tell the ApplicationHolder this is the top-level composite
       setComposite(comp);
 
-      itsStub = new Stub_BGL(false, true, "BGLProc_Storage", itsParamSet);
+      itsCS1PS = new CS1_Parset(&itsParamSet);
+      itsCS1PS->adoptFile("OLAP.parset");
+      
+      itsStub = new Stub_BGL(false, true, "BGLProc_Storage", itsCS1PS);
 
-      uint nrPsetsPerCell = itsParamSet.getUint32("BGLProc.PsetsPerCell");
-      ASSERT(nrPsetsPerCell > 0);
-      uint nrSubbands = itsParamSet.getUint32("Observation.NSubbands");
+      uint nrSubbands = itsCS1PS->nrSubbands();
       ASSERT(nrSubbands > 0);
-      uint nrSubbandsPerCell = itsParamSet.getUint32("General.SubbandsPerPset") * nrPsetsPerCell;
+      uint nrSubbandsPerCell = itsCS1PS->nrSubbandsPerCell();
       ASSERT(nrSubbandsPerCell > 0);
-      uint nNodesPerCell = itsParamSet.getUint32("BGLProc.NodesPerPset") * nrPsetsPerCell;
+      uint nNodesPerCell = itsCS1PS->nrBGLNodesPerCell();
       ASSERT(nNodesPerCell > 0);
-      uint maxConcurrent = itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications");
-      uint nrPsetsPerStorage = itsParamSet.getUint32("Storage.PsetsPerStorage");
-
-
+      uint maxConcurrent = itsCS1PS->getInt32("OLAP.BGLProc.maxConcurrentComm");
+      uint nrPsetsPerStorage = itsParamSet.getUint32("OLAP.psetsPerStorage");
+      
       // We must derive how many WH_SubbandWriter objects we have to
       // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerCell
       // to an AIPS++ Measurement Set.
@@ -72,22 +74,21 @@ namespace LOFAR
         // nrSubbandsPerCell, etc.
         vector<uint> sbIDs(nrSubbandsPerCell * nrPsetsPerStorage);
         for (uint i = 0; i < nrSubbandsPerCell * nrPsetsPerStorage; ++i) {
-          sbIDs[i] = nrSubbandsPerCell * nrPsetsPerStorage * nw + i;
-          LOG_TRACE_LOOP_STR("Writer " << nw << ": sbIDs[" << i << "] = " 
+          sbIDs[i] = nrSubbandsPerCell * nrPsetsPerStorage * nw + i;         
+	  LOG_TRACE_LOOP_STR("Writer " << nw << ": sbIDs[" << i << "] = " 
                              << sbIDs[i]);
         }
 
         char whName[32];
         snprintf(whName, 32, "WH_Storage_%03d", nw);
         LOG_TRACE_STAT_STR("Creating " << whName);
-        WH_SubbandWriter wh(whName, sbIDs, itsParamSet);
-	
+        WH_SubbandWriter wh(whName, sbIDs, itsCS1PS);
+
         Step step(wh);
         comp.addBlock(step);
 	
         // Each writer will run on a separate node.
         step.runOnNode(nw);
-	
         // Connect to BG output
 	for (unsigned pset = 0; pset < nrPsetsPerStorage; pset ++) {
 	  vector<int> channels;

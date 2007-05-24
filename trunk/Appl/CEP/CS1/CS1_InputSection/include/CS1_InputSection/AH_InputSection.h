@@ -32,6 +32,7 @@
 #include <CEPFrame/ApplicationHolder.h>
 #include <CS1_Interface/Stub_BGL.h>
 #include <CS1_Interface/Stub_Delay.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 namespace LOFAR 
 {
@@ -62,6 +63,7 @@ namespace LOFAR
       AH_InputSection& operator= (const AH_InputSection& that);
 
       //# Datamembers
+      CS1_Parset    *itsCS1PS;
       Stub_Delay     *itsDelayStub;
       Stub_BGL	     *itsOutputStub;
 

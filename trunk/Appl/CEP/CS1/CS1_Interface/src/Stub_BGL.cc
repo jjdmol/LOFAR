@@ -32,19 +32,19 @@
 namespace LOFAR { 
 namespace CS1 {
 
-Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const ACC::APS::ParameterSet &pSet)
+Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const CS1_Parset *pSet)
 :
-  itsPS(pSet)
+  itsCS1PS (pSet)
+  
 {
   itsIAmOnBGL	    = iAmOnBGL;
   itsIsInput	    = isInput;
-  itsPrefix	    = string("Connections.") + connectionName;
+  itsPrefix	    = string("OLAP.OLAP_Conn.") + connectionName;
   itsTHs	    = 0;
   itsConnections    = 0;
-  int psetsPerCell  = pSet.getInt32("BGLProc.PsetsPerCell");
-  itsNrCells	    = pSet.getInt32("Observation.NSubbands") / (pSet.getInt32("General.SubbandsPerPset") * psetsPerCell);
-  itsNrNodesPerCell = pSet.getInt32("BGLProc.NodesPerPset") * psetsPerCell;
-  itsNrPsetsPerStorage = pSet.getInt32("Storage.PsetsPerStorage");
+  itsNrCells	    = itsCS1PS->nrCells();
+  itsNrNodesPerCell = itsCS1PS->nrBGLNodesPerCell();
+  itsNrPsetsPerStorage = itsCS1PS->getInt32("OLAP.psetsPerStorage");
 
   size_t size = itsNrCells * itsNrNodesPerCell;
   if ((!itsIAmOnBGL && isInput) || (itsIAmOnBGL && !itsIsInput)) {
@@ -76,14 +76,13 @@ Stub_BGL::~Stub_BGL()
 
 void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel)
 {
-
   size_t index;
   if ((!itsIAmOnBGL && itsIsInput) || (itsIAmOnBGL && !itsIsInput)) {
     index = cellNr * itsNrNodesPerCell * itsNrPsetsPerStorage + nodeNr;
   } else {
     index = cellNr * itsNrNodesPerCell + nodeNr;
   }
-
+  
   ASSERTSTR(cellNr < itsNrCells, "cellNr argument out of bounds; " << cellNr << " / " << itsNrCells);
   ASSERTSTR(itsTHs[index] == 0, "already connected: cellNr = " << cellNr << ", nodeNr = " << nodeNr);
 
@@ -92,18 +91,16 @@ void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, un
   } else {
     ASSERTSTR(nodeNr < itsNrNodesPerCell, "nodeNr argument out of bounds; " << nodeNr << " / " << itsNrNodesPerCell);
   }
-
-
+   
   TransportHolder *th;
-  string transportType = itsPS.getString(itsPrefix + ".TransportHolder");
+  string transportType = itsCS1PS->getString(itsPrefix + "_Transport");
 
   if (transportType == "TCP") {
-    string server  = itsPS.getStringVector(itsPrefix + ".ServerHosts")[cellNr];
-    string service = itsPS.getStringVector(itsPrefix + ".Ports")[nodeNr];
-
+    string server  = itsCS1PS->getStringVector(itsPrefix + "_ServerHosts")[cellNr];
+    string service = itsCS1PS->getPortsOf(itsPrefix)[nodeNr];
     th = itsIAmOnBGL ? new TH_Socket(server, service, false, Socket::TCP, false) : new TH_Socket(service, false, Socket::TCP, 5, false);
   } else if (transportType == "FILE") {
-    string baseFileName = itsPS.getString(itsPrefix + ".BaseFileName");
+    string baseFileName = itsCS1PS->getString(itsPrefix + "_BaseFileName");
     char fileName[baseFileName.size() + 32];
     sprintf(fileName, "%s.%u.%u", baseFileName.c_str(), cellNr, nodeNr);
     th = new TH_File(string(fileName), itsIsInput ? TH_File::Read : TH_File::Write);

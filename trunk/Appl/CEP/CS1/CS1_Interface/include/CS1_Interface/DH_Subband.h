@@ -27,7 +27,7 @@
 #include <CS1_Interface/SparseSet.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
-#include <APS/ParameterSet.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 #if defined HAVE_BOOST
 #include <boost/multi_array.hpp>
@@ -49,7 +49,7 @@ class DH_Subband: public DataHolder
     } DelayIntervalType;
 
     explicit DH_Subband(const string &name,
-			const ACC::APS::ParameterSet &pSet); 
+			const CS1_Parset *pSet); 
 
     DH_Subband(const DH_Subband &);
 
@@ -132,6 +132,7 @@ class DH_Subband: public DataHolder
     /// Forbid assignment.
     DH_Subband &operator = (const DH_Subband &);
 
+    const CS1_Parset       *itsCS1PS;
     unsigned		   itsNrStations, itsNrInputSamples;
 
     SampleType		   *itsSamples;

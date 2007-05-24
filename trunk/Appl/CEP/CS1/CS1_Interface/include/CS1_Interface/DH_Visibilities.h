@@ -26,7 +26,7 @@
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <CS1_Interface/CS1_Config.h>
-#include <APS/ParameterSet.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 #if defined HAVE_BOOST
 #include <boost/multi_array.hpp>
@@ -42,7 +42,7 @@ class DH_Visibilities: public DataHolder
     typedef unsigned short NrValidSamplesType;
 
     explicit DH_Visibilities(const string& name,
-			     const ACC::APS::ParameterSet &pSet);
+			     const CS1_Parset *pSet);
 
     DH_Visibilities(const DH_Visibilities&);
 
@@ -97,6 +97,7 @@ class DH_Visibilities: public DataHolder
     /// Forbid assignment.
     DH_Visibilities& operator= (const DH_Visibilities&);
 
+    const CS1_Parset  *itsCS1PS;
     unsigned	       itsNrBaselines, itsNrChannels;
 
     VisibilityType     *itsVisibilities;

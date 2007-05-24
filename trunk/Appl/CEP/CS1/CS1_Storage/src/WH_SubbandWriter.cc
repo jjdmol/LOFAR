@@ -1,4 +1,5 @@
 
+
 //#  WH_SubbandWriter.cc: Writes visibilities in an AIPS++ measurement set
 //#
 //#  Copyright (C) 2002-2005
@@ -49,13 +50,13 @@ namespace LOFAR
 
     WH_SubbandWriter::WH_SubbandWriter(const string& name, 
                                        const vector<uint>& subbandID,
-                                       const ACC::APS::ParameterSet& pset) 
-      : WorkHolder    (pset.getUint32("BGLProc.NodesPerPset") * pset.getUint32("BGLProc.PsetsPerCell") * pset.getUint32("Storage.PsetsPerStorage"), 
+                                             CS1_Parset *pset) 
+      : WorkHolder    (pset->nrBGLNodesPerCell() * pset->getUint32("OLAP.psetsPerStorage"), 
                        0,
                        name,
                        "WH_SubbandWriter"),
+        itsCS1PS       (pset),
         itsSubbandIDs  (subbandID),
-        itsPS         (pset),
         itsWriter     (0),
         itsTimeCounter(0),
 	itsTimesToIntegrate(1),
@@ -71,18 +72,18 @@ namespace LOFAR
 #ifdef USE_MAC_PI
       itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-      itsNStations = itsPS.getUint32("Observation.NStations");
+      itsNStations = itsCS1PS->nrStations();
       itsNBaselines = itsNStations * (itsNStations +1)/2;
-      itsNChannels = itsPS.getUint32("Observation.NChannels");
-      itsNBeams = itsPS.getUint32("Observation.NBeams");
-      uint pols = itsPS.getUint32("Observation.NPolarisations");
+      itsNChannels = itsCS1PS->nrChannelsPerSubband();
+      itsNBeams = itsCS1PS->getUint32("Observation.nrBeams");
+      uint pols = itsCS1PS->getUint32("Observation.nrPolarisations");
       itsNPolSquared = pols*pols;
 
-      uint nrSamples = itsPS.getUint32("Observation.NSubbandSamples");
+      uint nrSamples = itsCS1PS->nrSubbandSamples();
       itsWeightFactor = (float)itsNChannels/(float)nrSamples;  // The inverse of maximum number of valid samples
       
-      vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
-      unsigned nrSubbands = itsPS.getUint32("Observation.NSubbands");
+      vector<double> refFreqs= itsCS1PS->refFreqs();
+      unsigned nrSubbands = itsCS1PS->nrSubbands();
       ASSERTSTR(refFreqs.size() >= nrSubbands, "Wrong number of refFreqs specified!");
 
       itsNVisibilities = itsNBaselines * itsNChannels * itsNPolSquared;
@@ -111,14 +112,14 @@ namespace LOFAR
 
     WorkHolder* WH_SubbandWriter::construct(const string& name,
                                             const vector<uint>& subbandIDs,
-                                            const ACC::APS::ParameterSet& pset)
+					          CS1_Parset *pset)
     {
       return new WH_SubbandWriter(name, subbandIDs, pset);
     }
 
     WH_SubbandWriter* WH_SubbandWriter::make(const string& name)
     {
-      return new WH_SubbandWriter(name, itsSubbandIDs, itsPS);
+      return new WH_SubbandWriter(name, itsSubbandIDs, itsCS1PS);
     }
 
     void WH_SubbandWriter::preprocess() 
@@ -135,7 +136,7 @@ namespace LOFAR
 #endif
 
       // create MSWriter object
-      vector<string> msNames = itsPS.getStringVector("Storage.MSNames");
+      vector<string> msNames = itsCS1PS->msNames();
 
 #if 0
       // split name in base part and extension (if any)
@@ -155,26 +156,25 @@ namespace LOFAR
       LOG_TRACE_VAR_STR("Creating MS-file \"" << msNames[0] << "\"");
 #endif
       
-      double startTime = itsPS.getDouble("Observation.StartTime");
+      double startTime = itsCS1PS->startTime();
       LOG_TRACE_VAR_STR("startTime = " << startTime);
       
-      itsTimesToIntegrate = itsPS.getInt32("Storage.IntegrationTime");
-      double timeStep = itsPS.getDouble("Observation.NSubbandSamples") / 
-                        itsPS.getDouble("Observation.SampleRate");
+      itsTimesToIntegrate = itsCS1PS->getInt32("OLAP.storageIntegrationTime");
+      double timeStep = itsCS1PS->integrationTime();
       LOG_TRACE_VAR_STR("timeStep = " << timeStep);
       
-      vector<double> antPos = itsPS.getDoubleVector("Observation.StationPositions");
+      vector<double> antPos = itsCS1PS->physicalPhaseCentras();
       ASSERTSTR(antPos.size() == 3 * itsNStations,
                 antPos.size() << " == " << 3 * itsNStations);
-      
-      itsNrSubbandsPerCell    = itsPS.getUint32("General.SubbandsPerPset") * itsPS.getUint32("BGLProc.PsetsPerCell");
-      itsNrSubbandsPerStorage = itsNrSubbandsPerCell * itsPS.getUint32("Storage.PsetsPerStorage");
-      itsNrNodesPerCell       = itsPS.getUint32("BGLProc.NodesPerPset") * itsPS.getUint32("BGLProc.PsetsPerCell");
+
+      itsNrSubbandsPerCell    = itsCS1PS->nrSubbandsPerCell();
+      itsNrSubbandsPerStorage = itsNrSubbandsPerCell * itsCS1PS->getUint32("OLAP.psetsPerStorage");
+      itsNrNodesPerCell       = itsCS1PS->nrBGLNodesPerCell();
       itsCurrentInputs.resize(itsNrSubbandsPerStorage / itsNrSubbandsPerCell, 0);
-
+  
       LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
-
-      vector<string> storageStationNames = itsPS.getStringVector("Storage.StorageStationNames");
+        
+      vector<string> storageStationNames = itsCS1PS->getStringVector("OLAP.storageStationNames");
 #if defined HAVE_MPI
       itsWriter = new MSWriter(msNames[TH_MPI::getCurrentRank()].c_str(),
 #else
@@ -185,17 +185,16 @@ namespace LOFAR
 			       itsNBeams,
 			       itsNStations, 
                                antPos, storageStationNames, itsTimesToIntegrate, 
-			       itsPS.getUint32("General.SubbandsPerPset") * itsPS.getUint32("Storage.PsetsPerStorage"));
+			       itsCS1PS->getUint32("OLAP.subbandsPerPset")* itsCS1PS->getUint32("OLAP.psetsPerStorage"));
 			       
-      double chanWidth = itsPS.getDouble("Observation.SampleRate") /
-			 itsPS.getDouble("Observation.NChannels");
+      double chanWidth = itsCS1PS->chanWidth();
       LOG_TRACE_VAR_STR("chanWidth = " << chanWidth);
       
-      vector<double> refFreqs= itsPS.getDoubleVector("Observation.RefFreqs");
+      vector<double> refFreqs= itsCS1PS->refFreqs();
 
       // Now we must add \a itsNrSubbandsPerStorage to the measurement set. The
       // correct indices for the reference frequencies are in the vector of
-      // subbandIDs.
+      // subbandIDs.      
       itsBandIDs.resize(itsNrSubbandsPerStorage);
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++sb) {
 	// compensate for the half-channel shift introduced by the PPF
@@ -205,10 +204,10 @@ namespace LOFAR
       }
       
       //## TODO: add support for more than 1 beam ##//
-      vector<double> beamDirs = itsPS.getDoubleVector("Observation.BeamDirections");
-      ASSERT(beamDirs.size() == 2 * itsNBeams);
-      double RA = beamDirs[0];
-      double DEC = beamDirs[1];
+      ASSERT(itsCS1PS->getDoubleVector("Observation.Beam.angle1").size() == itsNBeams);
+      ASSERT(itsCS1PS->getDoubleVector("Observation.Beam.angle2").size() == itsNBeams);
+      double RA = itsCS1PS->getDoubleVector("Observation.Beam.angle1")[0];
+      double DEC = itsCS1PS->getDoubleVector("Observation.Beam.angle2")[0];
       // For nr of beams
       itsFieldID = itsWriter->addField (RA, DEC);
 
@@ -242,6 +241,7 @@ namespace LOFAR
 #endif
 	      ", count = " << counter ++ << endl;
 
+
       if (itsTimeCounter % itsTimesToIntegrate == 0) {
 	clearAllSums();
       }
@@ -249,13 +249,13 @@ namespace LOFAR
       // Write the visibilities for all subbands per cell.
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++sb) {
         // find out from which input channel we should read
-	unsigned cell	      = sb / itsNrSubbandsPerCell;
-	unsigned inputChannel = itsCurrentInputs[cell] + cell * itsNrNodesPerCell;
-
-	DH_Visibilities			    *inputDH	= static_cast<DH_Visibilities *>(getDataManager().getInHolder(inputChannel));
+  	unsigned cell	      = sb / itsNrSubbandsPerCell;
+  	unsigned inputChannel = itsCurrentInputs[cell] + cell * itsNrNodesPerCell;
+   
+   	DH_Visibilities			    *inputDH	= static_cast<DH_Visibilities *>(getDataManager().getInHolder(inputChannel));
         DH_Visibilities::NrValidSamplesType *valSamples = &inputDH->getNrValidSamples(0, 0);
-	DH_Visibilities::VisibilityType     *newVis	= &inputDH->getVisibility(0, 0, 0, 0);
-
+  	DH_Visibilities::VisibilityType     *newVis	= &inputDH->getVisibility(0, 0, 0, 0);
+       
         // Write 1 DH_Visibilities of size
         // fcomplex[itsNBaselines][itsNChannels][npol][npol]
 
@@ -286,9 +286,9 @@ namespace LOFAR
 
 	getDataManager().readyWithInHolder(inputChannel);
 
-	// select next channel
-	if (++ itsCurrentInputs[cell] == itsNrNodesPerCell)
-	  itsCurrentInputs[cell] = 0;
+   	// select next channel
+   	if (++ itsCurrentInputs[cell] == itsNrNodesPerCell)
+   	  itsCurrentInputs[cell] = 0;
       }
 
       // Update the time counter.

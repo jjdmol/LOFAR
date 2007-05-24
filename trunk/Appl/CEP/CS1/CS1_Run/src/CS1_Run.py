@@ -2,6 +2,7 @@
 
 import math
 import time
+import datetime
 import os
 import sys
 from optparse import OptionParser
@@ -41,14 +42,18 @@ def doObservation(obsID, parset):
         StorageSection(parset, listfen)
         #Flagger(parset, listfen)
         ]
+    
+    nSubbandSamples = float(parset['OLAP.minorIntegrationSteps']) * float(parset['Observation.channelsPerSubband'])
+    stepTime = nSubbandSamples / (parset['Observation.sampleClock']*1000000/1024)
 
-    stepTime = float(parset['Observation.NSubbandSamples']) / parset['Observation.SampleRate']
-    sz = int(math.ceil((parset['Observation.StopTime'] - parset['Observation.StartTime']) / stepTime))
+    startTime = parset['Observation.startTime']
+    stopTime = parset['Observation.stopTime']
+ 
+    sz = int(math.ceil((time.mktime(stopTime.timetuple()) - time.mktime(startTime.timetuple())) / stepTime))
 
     logdir = '/log/'
     if not os.access(logdir, os.W_OK):
         logdir = './'
-    #parset.writeToFile(logdir + parset.getMSName().split('/')[-1] + '.parset')
     parset.writeToFile(logdir + obsID + '.parset')
 
     try:
@@ -59,7 +64,7 @@ def doObservation(obsID, parset):
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
             if not isinstance(section, StorageSection):
-		noRuns = ((sz+15)&~15) + 16;
+		noRuns = ((sz+15)&~15) + 16
 		section.run(runlog, noRuns)
             else:
 	        noRuns = (sz+15)&~15
@@ -95,14 +100,10 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     # create the parset
-    parset = CS1_Parset()    
-
-    # todo: set following variables
-    parset['General.SubbandsPerPset'] = 8
-    parset['BGLProc.NodesPerPset'] = 8
-    parset['BGLProc.PsetsPerCell'] = 1
+    parset = CS1_Parset() 
 
     parset.readFromFile(options.parset)
+    
     parset.setClock(options.clock)
     parset.setIntegrationTime(options.integrationtime)
     if options.msname:
@@ -116,10 +117,10 @@ if __name__ == '__main__':
 
     # read the runtime (optional start in utc and the length of the measurement)
     parset.setInterval(options.starttime, options.runtime)
-    
+
     # convert beamdirections from RA and Dec to Radians
     #parset.setBeamdir()
-
+    
     # read the stations from CS1_Stations.py
     # todo: WARNING this is very dangerous, because there could be any code in the station string
     # the exec should probably be replaced by something safer, but this is only a temporary script
@@ -129,9 +130,9 @@ if __name__ == '__main__':
     except:
         print 'Cannot parse station configuration: ' + str(options.stationlist)
         sys.exit(1)
-        
+    
     parset.setStations(stationList)
-
+    
     # see if we are using fake input
     if options.fakeinput > 0:
         parset.setInterval(1, options.runtime+10)
@@ -141,31 +142,36 @@ if __name__ == '__main__':
     runningNumberFile = '/log/nextMSNumber'
     MSdatabaseFile = '/log/MSList'
 
-    if not 'Storage.MSNames' in parset:
+    if not 'Observation.MSNameMask' in parset:
         try:
             inf = open(runningNumberFile, 'r')
             measurementnumber = int(inf.readline())
             inf.close()
-
+            
             # MS name is L<yyyy>_<nnnnn>_<mmm>.MS
             # the <mmm> is filled in by the subbandwriter
+	    
+	    #MSNumber = '/data/L' + parset.getString(Observation.year) + '_' + parset.getString('Observation.treeID')
+	    
             year = str(time.gmtime()[0])
             MSNumber = '/data/L' + year + '_' + '%05d' % measurementnumber
 	    MSName = MSNumber + '.MS'
-	    if (parset.getInt32('General.SubbandsPerPset') == 1):
+	    
+	    if (parset.getInt32('OLAP.subbandsPerPset') == 1):
 	        MSName = '\'' + MSNumber + '_SB%01d' % 0 + '.MS' + '\''
-	        for i in range(1, parset.getInt32('Observation.NSubbands')):
+	        for i in range(1, len(parset.getInt32Vector('Observation.subbandList'))):
                     MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % i + '.MS' + '\''
 	    else:
-		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (parset.getInt32('General.SubbandsPerPset') * parset.getInt32('Storage.PsetsPerStorage') - 1) +'.MS' + '\''
-		for i in range(1, (parset.getInt32('Observation.NSubbands') / (parset.getInt32('General.SubbandsPerPset') * parset.getInt32('Storage.PsetsPerStorage')) )):
-		    first = i * parset.getInt32('General.SubbandsPerPset') * parset.getInt32('Storage.PsetsPerStorage')
-		    last =  first + (parset.getInt32('General.SubbandsPerPset') * parset.getInt32('Storage.PsetsPerStorage') -1)
+		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage') - 1) +'.MS' + '\''
+		for i in range(1, (len(parset.getInt32Vector('Observation.subbandList')) / (parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage')) )):
+		    first = i * parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage')
+		    last =  first + (parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage') -1)
 		    MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % first + '-%01d' % last +'.MS' + '\''
+            
             outf = open(runningNumberFile, 'w')
             outf.write(str(measurementnumber + 1) + '\n')
             outf.close()
-
+            
             dbfile = open(MSdatabaseFile, 'a')
             nodesStr = str([1] * parset.getNCells() + [0] * (12 - parset.getNCells()))[1:-1]
             dateStr = time.strftime('%Y %0m %0d', time.gmtime())
@@ -173,11 +179,11 @@ if __name__ == '__main__':
             dbfile.close()
         except:
             MSName = '/data/Test.MS'
-	    print 'Error: please start CS1_Run.py from host: LISTFEN'
 	    sys.exit(1)
-        parset['Storage.MSNames'] = '[' + MSName + ']'
-    
-    obsID = parset['Storage.MSNames'].strip('.MS').split('/')[-1]
+
+	parset['Observation.MSNameMask'] = '[' + MSName + ']'
+ 
+    obsID = parset['Observation.MSNameMask'].strip('.MS').split('/')[-1]
     obsID = obsID.split('_')
     obsID = obsID[0] + '_' + obsID[1] 
 

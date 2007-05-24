@@ -30,6 +30,7 @@
 
 //# Includes
 #include <CEPFrame/ApplicationHolder.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 namespace LOFAR 
 {
@@ -57,7 +58,7 @@ namespace LOFAR
       AH_DelayCompensation& operator= (const AH_DelayCompensation& that);
 
       //# Datamembers
-
+      CS1_Parset *itsCS1PS;
       // Stub for the DH_Delay data holder
       Stub_Delay* itsStub;
 

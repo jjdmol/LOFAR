@@ -43,9 +43,10 @@ namespace LOFAR {
     Connector::~Connector()
     {}
 
-    TransportHolder* Connector::readTH(const ACC::APS::ParameterSet& ps, const string& key, const bool isReceiver) {
+    TransportHolder* Connector::readTH(const CS1_Parset *ps, const string& key) {
       TransportHolder* theTH = 0;
-      string transportType = ps.getString(key + ".th");
+      string transportType = ps->getString("OLAP.OLAP_Conn.station_Input_Transport");
+#if 0
       if (transportType=="ETHERNET") {
 	string interface = ps.getString(key + ".interface");
 	string srcMac = ps.getString(key + ".sourceMac");
@@ -63,17 +64,20 @@ namespace LOFAR {
 	} else {
 	  theTH = new TH_File(file, TH_File::Write);
 	}	  
-      } else if (transportType=="NULL") {
+      } else 
+#endif      
+      if (transportType=="NULL") {
 	theTH = new TH_Null();
       } else if (transportType=="TCP") {
-	string service = ps.getString(key + ".port");
-	if (isReceiver) {
-	  theTH = new TH_Socket(service, 
-				true, 
-				Socket::TCP, 
-				5, 
-				false);
-	} else {
+	string service = toString(ps->inputPortnr(key));
+	theTH = new TH_Socket(service, 
+		              true, 
+			      Socket::TCP, 
+			      5, 
+			      false);
+	} 
+#if 0	
+	else {
 	  string host = ps.getString(key + ".host");
 	  theTH = new TH_Socket(host,
 				service,
@@ -81,18 +85,20 @@ namespace LOFAR {
 				Socket::TCP,
 				false);
 	}
-      } else if (transportType == "UDP") {
-	string service = ps.getString(key+".port");
-	if (isReceiver) {
-	  theTH = new TH_Socket(service,
-				true, 
-				Socket::UDP, 
-				5,
-				false,
-				8 * 1024 * 1024, 
-				-1);
+      } 
+#endif      
+      else if (transportType == "UDP") {
+	string service = toString(ps->inputPortnr(key));
+	theTH = new TH_Socket(service,
+			      true, 
+			      Socket::UDP, 
+			      5,
+			      false,
+			      8 * 1024 * 1024, 
+			      -1);
 
-	} else { 
+#if 0	
+	else { 
 	  string host = ps.getString(key+".host");
 	  theTH = new TH_Socket(host, 
 				service, 
@@ -102,7 +108,9 @@ namespace LOFAR {
 				-1, 
 				8 * 1024 * 1024);
 	}
-      } else {
+#endif      
+      } 
+      else {
 	ASSERTSTR(false, "TransportHolder " << transportType << " unknown to Connector");
       }
       return theTH;

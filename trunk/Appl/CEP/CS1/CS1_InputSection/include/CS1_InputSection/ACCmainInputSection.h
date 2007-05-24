@@ -1,5 +1,7 @@
-//# Stub_RSP.cc: Stub for connection to DFTServer and DFTRequest
+//#  ACCmainInputSection.h: main loop that can be used by any ACC enabled program
 //#
+//#  Copyright (C) 2006
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //#  This program is free software; you can redistribute it and/or modify
@@ -18,36 +20,23 @@
 //#
 //#  $Id$
 
-#include <lofar_config.h>
+#ifndef LOFAR_CS1_INPUTSECTION_ACCMAININPUTSECTION_H
+#define LOFAR_CS1_INPUTSECTION_ACCMAININPUTSECTION_H
 
-#include <CS1_Interface/Stub_RSP.h>
-#include <Transport/TH_Socket.h>
+// \file
+// main loop that can be used by any ACC enabled program
+
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+
+//# Includes
+#include <PLC/ProcessControl.h>
 
 namespace LOFAR 
-{ 
+{
   namespace CS1
   {
-    Stub_RSP::Stub_RSP (bool stubOnServer, const CS1_Parset *ps)
-      : itsStubOnServer (stubOnServer),
-        itsCS1PS(ps)
-    {
-      // todo: add DH_?? for pre-correlation correction factors 
-      //    for (int i=0; i<itsNSBF; i++) {
-      //      itsSB.push_back(new DH_SubBand("noname",1)); //todo: get correct SubbandID
-      //    }
-    }
-
-    Stub_RSP::~Stub_RSP()
-    {}
-
-    void Stub_RSP::connect ()
-    {
-    };
-
-    //todo: add connections for pre-correlation correction DH_?? 
-
+    int ACCmainInputSection (int argc, char* argv[], ProcessControl* theProcess);
   } // namespace CS1
-
 } // namespace LOFAR
 
-
+#endif

@@ -37,11 +37,11 @@
 
 #include <algorithm>
 
-
 namespace LOFAR {
 namespace CS1 {
 
 AH_InputSection::AH_InputSection() :
+  itsCS1PS(0),
   itsDelayStub(0),
   itsOutputStub(0)
 {
@@ -61,15 +61,19 @@ void AH_InputSection::undefine()
 
   delete itsOutputStub;
   delete itsDelayStub;
+  delete itsCS1PS;
   itsDelayStub = 0;
   itsOutputStub = 0;
+  itsCS1PS = 0;
 }
 
 void AH_InputSection::define(const LOFAR::KeyValueMap&) 
 {
   LOG_TRACE_FLOW_STR("Start of AH_InputSection::define()");
+  itsCS1PS = new CS1_Parset(&itsParamSet);
+  itsCS1PS->adoptFile("OLAP.parset");
 
-  TimeStamp::setMaxBlockId(itsParamSet.getDouble("Observation.SampleRate"));
+   TimeStamp::setMaxBlockId(itsCS1PS->sampleRate());
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   Composite comp(0, 0, "topComposite");
@@ -78,13 +82,13 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&)
   LOG_TRACE_FLOW_STR("Create the input side delay stub");
   LOG_TRACE_FLOW_STR("Create the RSP reception Steps");
 
-  itsDelayStub  = new Stub_Delay(true, itsParamSet);
-  itsOutputStub = new Stub_BGL(false, false, "Input_BGLProc", itsParamSet);
+  itsDelayStub  = new Stub_Delay(true, itsCS1PS);
+  itsOutputStub = new Stub_BGL(false, false, "input_BGLProc", itsCS1PS);
 
   // TODO: support multiple RSPs per station
-  itsInputNodes  = itsParamSet.getUint32Vector("Input.InputNodes");
-  itsOutputNodes = itsParamSet.getUint32Vector("Input.OutputNodes");
-  unsigned nrBGLnodesPerCell = itsParamSet.getUint32("BGLProc.NodesPerPset") * itsParamSet.getInt32("BGLProc.PsetsPerCell");
+  itsInputNodes  = itsCS1PS->getUint32Vector("Input.InputNodes");
+  itsOutputNodes = itsCS1PS->getUint32Vector("Input.OutputNodes");
+  unsigned nrBGLnodesPerCell = itsCS1PS->nrBGLNodesPerCell();
 
 #if defined HAVE_MPI
   unsigned nrNodes = TH_MPI::getNumberOfNodes();
@@ -98,14 +102,12 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&)
     bool isInput  = std::find(itsInputNodes.begin(), itsInputNodes.end(), node) != itsInputNodes.end();
     bool isOutput = std::find(itsOutputNodes.begin(), itsOutputNodes.end(), node) != itsOutputNodes.end();
     TransportHolder *th = 0;
-    char nameBuffer[40];
 
     if (isInput) {
-      snprintf(nameBuffer, sizeof nameBuffer, "Input.Transport.Station%d.Rsp%d", station, 0); // FIXME last arg is RSP number
-      th = Connector::readTH(itsParamSet, nameBuffer, true); 
+      th = Connector::readTH(itsCS1PS, itsCS1PS->stationName(station)); 
     }
 
-    itsWHs[node] = new WH_InputSection("InputSection", itsParamSet, th, isInput ? station : 0, isInput ? 1 : 0, isOutput ? nrBGLnodesPerCell : 0, itsInputNodes, itsOutputNodes);
+    itsWHs[node] = new WH_InputSection("InputSection", itsCS1PS, th, isInput ? station : 0, isInput ? 1 : 0, isOutput ? nrBGLnodesPerCell : 0, itsInputNodes, itsOutputNodes);
     Step *step = new Step(itsWHs[node], "Step", false);
     step->runOnNode(node); 
     comp.addBlock(step);
@@ -125,17 +127,17 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&)
 	channels[core] = core;
       }
 	
-      dm.setOutRoundRobinPolicy(channels, itsParamSet.getInt32("BGLProc.MaxConcurrentCommunications"));
+      dm.setOutRoundRobinPolicy(channels, itsCS1PS->getInt32("OLAP.BGLProc.maxConcurrentComm"));
       cell ++;
     }
   }
-  
   LOG_TRACE_FLOW_STR("Finished define()");
 }
 
 void AH_InputSection::run(int steps)
 {
   LOG_TRACE_FLOW_STR("Start AH_InputSection::run() "  );
+  
   for (int i = 0; i < steps; i++) {
     LOG_TRACE_LOOP_STR("processing run " << i );
     getComposite().process();

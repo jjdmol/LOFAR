@@ -18,3 +18,5 @@ configfiles_DATA                = CS1_Storage.machinefile \
 				  PropertyInterface.conf
 
 include $(top_srcdir)/Makefile.common
+
+sysconf_DATA = CS1_Storage.log_prop

@@ -47,7 +47,8 @@ namespace CS1 {
 
 
 AH_BGL_Processing::AH_BGL_Processing() 
-  : itsWHs(0),
+  : itsCS1PS(0),
+    itsWHs(0),
     itsSubbandStub(0),
     //itsRFI_MitigationStub(0),
     itsVisibilitiesStub(0)
@@ -61,6 +62,8 @@ AH_BGL_Processing::~AH_BGL_Processing()
 
 void AH_BGL_Processing::undefine()
 {
+  delete itsCS1PS;              itsCS1PS              = 0;
+  
   for (uint i = 0; i < itsWHs.size(); i ++) {
     delete itsWHs[i];
   }
@@ -114,18 +117,22 @@ unsigned AH_BGL_Processing::remapOnTree(unsigned pset, unsigned core, struct BGL
 void AH_BGL_Processing::define(const KeyValueMap&) {
 
   LOG_TRACE_FLOW_STR("Start of AH_BGL_Processing::define()");
-  unsigned nrSubBands	     = itsParamSet.getInt32("Observation.NSubbands");
-  vector<double> baseFreqs   = itsParamSet.getDoubleVector("Observation.RefFreqs");
-  unsigned psetsPerCell	     = itsParamSet.getInt32("BGLProc.PsetsPerCell");
-  unsigned usedNodesPerPset  = itsParamSet.getInt32("BGLProc.NodesPerPset");
-  unsigned nrSubbandsPerPset = itsParamSet.getInt32("General.SubbandsPerPset");
-  unsigned nrPsetsPerStorage = itsParamSet.getInt32("Storage.PsetsPerStorage");
+  
+  itsCS1PS = new CS1_Parset(&itsParamSet);
+  itsCS1PS->adoptFile("OLAP.parset");
+  
+  unsigned nrSubBands	     = itsCS1PS->nrSubbands();
+  vector<double> baseFreqs   = itsCS1PS->refFreqs();
+  unsigned psetsPerCell	     = itsCS1PS->getInt32("OLAP.BGLProc.psetsPerCell");
+  unsigned usedNodesPerPset  = itsCS1PS->getInt32("OLAP.BGLProc.nodesPerPset");
+  unsigned nrSubbandsPerPset = itsCS1PS->getInt32("OLAP.subbandsPerPset");
+  unsigned nrPsetsPerStorage = itsCS1PS->getInt32("OLAP.psetsPerStorage");
 
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
-  itsSubbandStub	= new Stub_BGL(true, true, "Input_BGLProc", itsParamSet);
-//itsRFI_MitigationStub	= new Stub_BGL_RFI_Mitigation(true, itsParamSet);
-  itsVisibilitiesStub	= new Stub_BGL(true, false, "BGLProc_Storage", itsParamSet);
+  itsSubbandStub	= new Stub_BGL(true, true, "input_BGLProc", itsCS1PS);
+//itsRFI_MitigationStub	= new Stub_BGL_RFI_Mitigation(true, itsCS1PS);
+  itsVisibilitiesStub	= new Stub_BGL(true, false, "BGLProc_Storage", itsCS1PS);
 
 #if defined HAVE_BGL
   struct BGLPersonality personality;
@@ -160,13 +167,13 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 
   for (unsigned pset = firstPset; pset < lastPset; pset ++) {
     for (unsigned core = 0; core < usedNodesPerPset; core ++) {
-      WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", logicalNode, itsParamSet);
+      WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", logicalNode, itsCS1PS);
       itsWHs.push_back(wh);
       TinyDataManager &dm = wh->getDataManager();
 
       unsigned cell = pset / psetsPerCell;
       unsigned cellCore = core + usedNodesPerPset * (pset % psetsPerCell);
-
+      
       unsigned storage_host = pset / psetsPerCell / nrPsetsPerStorage;
       unsigned storage_port = core + usedNodesPerPset * (pset % (psetsPerCell * nrPsetsPerStorage) );
 

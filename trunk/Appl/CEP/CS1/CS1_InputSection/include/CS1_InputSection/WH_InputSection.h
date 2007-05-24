@@ -32,7 +32,6 @@
 #include <tinyCEP/WorkHolder.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/DH_Subband.h>
-#include <APS/ParameterSet.h>
 #include <Common/Timer.h>
 
 #include <boost/thread.hpp>
@@ -61,7 +60,7 @@ namespace LOFAR
       typedef DH_Subband::SampleType SampleType;
 
       explicit WH_InputSection(const string &name, 
-                           ACC::APS::ParameterSet &ps,
+                           CS1_Parset      *ps,
                            TransportHolder *inputTH,
 			   unsigned stationNr,
 			   unsigned nrInputChannels,
@@ -91,7 +90,7 @@ namespace LOFAR
       
       //# Datamembers
       bool itsDelayCompensation;
-      bool itsIsInput, itsIsOutput;
+      bool itsIsInput, itsIsOutput;      
       const std::vector<unsigned> &itsInputNodes, &itsOutputNodes;
 
       boost::multi_array<SampleType, 4> *itsInputData, *itsOutputData;
@@ -108,8 +107,7 @@ namespace LOFAR
       TransportHolder *itsInputTH;
       uint itsStationNr;
       
-      // ACC parameters interface
-      ACC::APS::ParameterSet &itsPS;
+      CS1_Parset *itsCS1PS;
       
       // synced stamp
       TimeStamp itsSyncedStamp;
@@ -119,6 +117,8 @@ namespace LOFAR
       unsigned itsNHistorySamples;
      
       BeamletBuffer *itsBBuffer;
+      
+      bool itsFirstRun;
 
       NSTimer itsPrePostTimer, itsProcessTimer, itsGetElemTimer;
       

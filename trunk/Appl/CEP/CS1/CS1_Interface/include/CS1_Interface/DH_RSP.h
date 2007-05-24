@@ -24,11 +24,11 @@
 #ifndef LOFAR_CS1_INTERFACE_DH_RSP_H
 #define LOFAR_CS1_INTERFACE_DH_RSP_H
 
-#include <APS/ParameterSet.h>
 #include <Transport/DataHolder.h>
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/SparseSet.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 #if defined HAVE_BOOST
 #include <boost/multi_array.hpp>
@@ -45,7 +45,7 @@ namespace LOFAR
       typedef INPUT_SAMPLE_TYPE BufferType;
 
       explicit DH_RSP (const string &name,
-                       const ACC::APS::ParameterSet &pset);
+                       const CS1_Parset *pSet);
 
       DH_RSP(const DH_RSP&);
 
@@ -93,6 +93,8 @@ namespace LOFAR
       virtual void fillDataPointers();
 
       /// pointers to data in the blob
+      const CS1_Parset *itsCS1PS;
+      
       BufferType*  itsBuffer;
       SparseSet *itsFlags;
       int* itsStationID;
@@ -104,7 +106,6 @@ namespace LOFAR
       int itsNSubbands;
       unsigned int itsBufSize;
 
-      const ACC::APS::ParameterSet &itsPSet;
     };
 
     inline const int DH_RSP::getStationID() const

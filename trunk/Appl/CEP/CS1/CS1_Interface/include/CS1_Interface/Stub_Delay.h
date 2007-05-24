@@ -23,9 +23,9 @@
 #ifndef LOFAR_CS1_INTERFACE_STUB_DELAY_H
 #define LOFAR_CS1_INTERFACE_STUB_DELAY_H
 
-#include <APS/ParameterSet.h>
 #include <tinyCEP/TinyDataManager.h>
 #include <Common/lofar_vector.h>
+#include <CS1_Interface/CS1_Parset.h>
 
 namespace LOFAR
 {
@@ -40,7 +40,7 @@ namespace LOFAR
     {
     public:
       // Create the stub. Get its parameters from the given file name.
-      explicit Stub_Delay(bool isInput, const ACC::APS::ParameterSet &pSet);
+      explicit Stub_Delay(bool isInput, const CS1_Parset *pSet);
 
       ~Stub_Delay();
 
@@ -50,11 +50,11 @@ namespace LOFAR
     private:
       // Is this stub an input for a step
       bool			    itsIsInput;
-      const ACC::APS::ParameterSet &itsPS;
+      const CS1_Parset             *itsCS1PS;
       // total number of RSPinputs
       uint		            itsNRSP;
       // ports used to connect to RSPs
-      vector<uint16>                itsPorts;
+      vector<string>                itsPorts;
       TH_Socket		          **itsTHs;
       Connection       		  **itsConnections;
       ALLOC_TRACER_CONTEXT;

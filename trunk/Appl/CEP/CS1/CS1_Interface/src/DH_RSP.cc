@@ -30,30 +30,28 @@ namespace LOFAR
   {
 
     DH_RSP::DH_RSP (const string& name,
-                    const ACC::APS::ParameterSet &pset)
+                    const CS1_Parset *pSet)
       : DataHolder (name, "DH_RSP"),
+        itsCS1PS   (pSet),
         itsBuffer  (0),
-	itsFlags   (0),
-        itsPSet    (pset)
+	itsFlags   (0)
     {
       setExtraBlob("Flags", 0);
-
-      int resendAmount = (pset.getInt32("BGLProc.NPPFTaps") - 1) * pset.getInt32("Observation.NChannels");
-      itsNTimes          = pset.getInt32("Observation.NSubbandSamples") + resendAmount;
-      itsNoPolarisations = pset.getInt32("Observation.NPolarisations");
-      itsNSubbands       = pset.getInt32("General.SubbandsPerPset") * pset.getInt32("BGLProc.PsetsPerCell");
+      itsNTimes          = itsCS1PS->nrSamplesToBGLProc();
+      itsNoPolarisations = itsCS1PS->getInt32("Observation.nrPolarisations");
+      itsNSubbands       = itsCS1PS->nrSubbandsPerCell();
       itsBufSize         = itsNTimes * itsNoPolarisations * itsNSubbands;
     }
 
     DH_RSP::DH_RSP(const DH_RSP& that)
       : DataHolder         (that),
+        itsCS1PS           (that.itsCS1PS),
         itsBuffer          (0),
 	itsFlags	   (that.itsFlags),
         itsNTimes          (that.itsNTimes),
         itsNoPolarisations (that.itsNoPolarisations),
 	itsNSubbands       (that.itsNSubbands),
-        itsBufSize         (that.itsBufSize),
-        itsPSet            (that.itsPSet)
+        itsBufSize         (that.itsBufSize)
     {}
 
     DH_RSP::~DH_RSP()

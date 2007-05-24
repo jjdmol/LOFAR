@@ -37,6 +37,7 @@ class Job(object):
     def isSuccess(self):
         self.waitForDone()
         if not self.runLogRetreived:
+	    
             self.host.sget(self.remoteRunLog, self.runlog)
             self.runLogRetreived = True
         return self.runCommand.isSuccess()
@@ -101,6 +102,7 @@ class BGLJob(Job):
         print 'NOT executing: Immediately executing ' + self.host.getSSHCommand() + ' "cp ' + self.executable + ' ' + self.workingDir + '"'
         #self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
 	self.host.sput(parsetfile, self.workingDir)
+	self.host.sput('OLAP.parset', self.workingDir)
         Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
 
 

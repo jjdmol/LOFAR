@@ -1,4 +1,5 @@
 import time
+import datetime
 import LOFAR_Parset
 import math
 import sys
@@ -13,14 +14,13 @@ class CS1_Parset(LOFAR_Parset.Parset):
 
     def setClock(self, clock):
         self.clock = clock
+        
         if self.clock == '160MHz':
-            self['Observation.NSubbandSamples'] = 155648
-            self['Observation.SampleRate'] = 156250
 	    self['Observation.sampleClock'] = 160
+	    self['OLAP.minorIntegrationSteps'] = 608
         elif self.clock == '200MHz':
-            self['Observation.NSubbandSamples'] = 196608
-            self['Observation.SampleRate'] = 195312.5
 	    self['Observation.sampleClock'] = 200
+	    self['OLAP.minorIntegrationSteps'] = 768
         self.updateSBValues()
         
     def getClockString(self):
@@ -33,66 +33,55 @@ class CS1_Parset(LOFAR_Parset.Parset):
 
     def setStations(self, stationList):
         self.stationList = stationList
-        self['Observation.NStations'] = len(stationList)
-        self['Input.NRSPBoards'] = len(stationList)
-        self['Storage.StorageStationNames'] = [s.getName() for s in stationList]
-        positionlist = list()
-        phaseslist = list()
-        for s in stationList:
-            (x,y,z) = s.getPosition()
-            (xp, yp, zp) = s.getPhaseCentre()
-            positionlist.append(x)
-            positionlist.append(y)
-            positionlist.append(z)
-            phaseslist.append(xp)
-            phaseslist.append(yp)
-            phaseslist.append(zp)
-        self['Observation.StationPositions'] = positionlist
-        self['Observation.PhaseCentres'] = phaseslist
-
-        for i in range(0, len(stationList)):
-            station = stationList[i]
-            # todo: this doesn't work yet with multiple rspboards per station
-            THKey = 'Input.Transport.Station%d.Rsp0' % i
-            if self.inputFromMemory == True:
-                self[THKey + '.th'] = 'NULL'
-            elif self.inputFromRaw:
-                self[THKey + '.th'] = 'ETHERNET'
-            else:
-                self[THKey + '.th'] = 'UDP'
-            self[THKey + '.interface'] = 'eth1'
-            self[THKey + '.sourceMac'] = station.getSrcMAC()
-            self[THKey + '.destinationMac'] = station.getDstMAC()
-            self[THKey + '.port'] = station.getDstPort()
-            self[THKey + '.host'] = station.getSrcIP()
-            
+        self['OLAP.nrRSPboards'] = len(stationList)
+        self['OLAP.storageStationNames'] = [s.getName() for s in stationList]
 
     def setInputToMem(self):
         self.inputFromMemory = True
-        for i in range(0, len(self.stationList)):
-            station = self.stationList[i]
-            # todo: this doesn't work yet with multiple rspboards per station
-            THKey = 'Input.Transport.Station%d.Rsp0' % i
-            self[THKey + '.th'] = 'NULL'
+	self['OLAP.OLAP_Conn.station_Input_Transport'] = 'NULL'
 
     def getInputNodes(self):
-        return [s.getInputNode() for s in self.stationList]
+	inputNodelist = list()
+        
+	for s in self.stationList:
+	    name = s.getName()[0:s.getName().find('_')]
+	    if s.getName()[s.getName().find('_')+1:s.getName().find('_')+3] == 'us':
+	        index = int(s.getName()[len(s.getName())-1:len(s.getName())])
+	    else:
+	        if len(s.getName()) < 14: 
+	            index = int(s.getName()[len(s.getName())-1:len(s.getName())])/4
+		else:
+		    index = int(s.getName()[len(s.getName())-2:len(s.getName())])/4  
+
+	    nm = self.getStringVector('PIC.Core.' + name + '.inputNodeList')[index]
+	    nm = nm.strip("[")
+	    nm = nm.strip("]")
+	    nm = nm.strip(" ")
+	    
+	    if name == 'CS016':
+	        inputnode = int(nm[len(nm)-2:len(nm)])
+	    else:
+	        inputnode = int(nm[len(nm)-1:len(nm)])
+            
+	    inputNodelist.append(inputnode)
+	    
+        return inputNodelist
 
     def getNStations(self):
-        return int(self['Observation.NStations'])
+        return int(len(self.stationList))
         
     def getFirstSubband(self):
         return self.firstSB
 
     def setBeamdir(self):
-	beamdir = self.getStringVector('Observation.BeamDirections')
-	tmp = beamdir[0].split('[')
-	ra = tmp[1]
+	ra = self.getStringVector('Observation.Beam.angle1')[0]
+	ra = ra.strip("[")
+	ra = ra.strip("]")
 	
-	tmp1 = beamdir[1].split(']')
-	dec = tmp1[0]
-	
-	#tests = beamdir.split(",")
+	dec = self.getStringVector('Observation.Beam.angle2')[0]
+	dec = dec.strip("[")
+	dec = dec.strip("]")
+
 	#ra = '18:32:45.213'
 	#dec = '-01:47:26.1'
 	
@@ -131,25 +120,26 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    if decdeg > 90:
 	        raise Exception('ERROR: There is nowhere north of 90degrees')
 	
-	self['Observation.BeamDirections'] = [radeg*torad, decdeg*torad]	
+	self['Observation.Beam.angle1'] = [radeg*torad]
+	self['Observation.Beam.angle2'] = [decdeg*torad]
 	
     def setInterval(self, start, duration):
-        self['Observation.StartTime'] = start
-        self['Observation.StopTime'] = start + duration
+        self['Observation.startTime'] = datetime.datetime.fromtimestamp(start)
+        self['Observation.stopTime'] = datetime.datetime.fromtimestamp(start + duration)
 
     def setIntegrationTime(self, integrationTime):
-        self['Storage.IntegrationTime'] = integrationTime
+        self['OLAP.StorageIntegrationTime'] = integrationTime
 
     def setMSName(self, msName):
-        self['Storage.MSNames'] = msName
+        self['Observation.MSNameMask'] = msName
 
     def getMSName(self):
-        return self['Storage.MSNames']
+        return self['Observation.MSNameMask']
 
     def getNCells(self):
-        subbands = self.getInt32('Observation.NSubbands')
-        psetspercell = self.getInt32('BGLProc.PsetsPerCell')
-        subbandsperpset = self.getInt32('General.SubbandsPerPset')
+        subbands = len(self.getInt32Vector('Observation.subbandList'))
+        psetspercell = self.getInt32('OLAP.BGLProc.psetsPerCell')
+        subbandsperpset = self.getInt32('OLAP.subbandsPerPset')
         return subbands / (psetspercell * subbandsperpset)
 
     def updateSBValues(self):
@@ -160,15 +150,15 @@ class CS1_Parset(LOFAR_Parset.Parset):
         
         if not self.__dict__.has_key('nSubbands'):
             return
-	    
-	subbandIDs = self.getInt32Vector('Observation.SubbandIDs')
+
+	subbandIDs = self.getInt32Vector('Observation.subbandList')
 	if len(subbandIDs) != self.nSubbands:
-	    raise Exception('nSubbands(%d) !=  SubbandIDs(%d).' % (self.nSubbands, len(subbandIDs)))
+	    raise Exception('Number of subbandList(%d) in parset file is not equal with command line option: --subbands(%d).' % (len(subbandIDs), self.nSubbands))
 
         if self.getInt32('Observation.nyquistZone') not in range(1,4):
 	    print 'Use nyquistZone 1, 2 or 3'
 	    sys.exit(0)
-
+	    
 	sbs = list()
         for sb in range(0, len(subbandIDs)):
             sbs.append((self.getInt32('Observation.nyquistZone')-1)*(self.getInt32('Observation.sampleClock')*1000000/2)  + subbandIDs[sb] * subbandwidth)
@@ -176,8 +166,8 @@ class CS1_Parset(LOFAR_Parset.Parset):
         # create the frequencies for all subbands
         self['Observation.RefFreqs'] = '[' + ', '.join(str(sb) for sb in sbs) + ']'
         self['Observation.NSubbands'] = self.nSubbands
-        
+	
         #the number of subbands should be dividable by the number of subbands per pset
-        if not self.nSubbands % self.getInt32('General.SubbandsPerPset') == 0:
-            raise Exception('Number of subbands(%d) in not dividable by the number of subbands per pset (%d).' % self.nSubbands, self['General.SubbandsPerPset'])
+        if not self.nSubbands % self.getInt32('OLAP.subbandsPerPset') == 0:
+            raise Exception('Number of subbands(%d) in not dividable by the number of subbands per pset (%d).' % self.nSubbands, self['OLAP.subbandsPerPset'])
             

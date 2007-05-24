@@ -11,3 +11,5 @@ CS1_DelayCompensation_DEPENDENCIES	= ../src/libcs1_delaycompensation.la \
 					  $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
+
+sysconf_DATA = CS1_DelayCompensation.log_prop

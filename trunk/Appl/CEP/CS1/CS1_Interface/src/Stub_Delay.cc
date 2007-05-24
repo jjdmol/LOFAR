@@ -23,7 +23,6 @@
 #include <CS1_Interface/Stub_Delay.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/Connection.h>
-#include <APS/ParameterSet.h>
 
 namespace LOFAR 
 { 
@@ -32,18 +31,17 @@ namespace LOFAR
 
     INIT_TRACER_CONTEXT(Stub_Delay, LOFARLOGGER_PACKAGE);
   
-    Stub_Delay::Stub_Delay(bool isInput, const ACC::APS::ParameterSet &pSet)
+    Stub_Delay::Stub_Delay(bool isInput, const CS1_Parset *pSet)
       : itsIsInput    (isInput),
-        itsPS         (pSet),
+        itsCS1PS      (pSet),
         itsTHs        (0),
         itsConnections(0)
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      itsNRSP = itsCS1PS->getUint32("OLAP.nrRSPboards");
+      LOG_TRACE_VAR_STR("OLAP.nrRSPboards = " << itsNRSP);
 
-      itsNRSP = itsPS.getUint32("Input.NRSPBoards");
-      LOG_TRACE_VAR_STR("Input.NRSPBoards = " << itsNRSP);
-
-      itsPorts = itsPS.getUint16Vector("Connections.Input_Delay.Ports");
+      itsPorts = itsCS1PS->delay_Ports();
       ASSERTSTR(itsPorts.size() >= itsNRSP, 
                 itsPorts.size() << " >= " << itsNRSP);
 
@@ -54,8 +52,7 @@ namespace LOFAR
         itsTHs[i] = 0;
         itsConnections[i] = 0;
       }
-  
-    }
+     }
   
     Stub_Delay::~Stub_Delay()
     {
@@ -74,15 +71,15 @@ namespace LOFAR
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
       ASSERTSTR(RSP_nr < itsNRSP, RSP_nr << " < " << itsNRSP);
-      string service = toString(itsPorts[RSP_nr]);
+      string service = itsPorts[RSP_nr];
 
       if (itsIsInput) // on the input side, start client socket
       {
         ASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << 
                   " has already been connected.");
         // Create a client socket
-        string server = itsPS.getString("Connections.Input_Delay.ServerHost");
-        string service = toString(itsPorts[RSP_nr]);
+        string server = itsCS1PS->getString("OLAP.DelayComp.hostname");
+        string service = itsPorts[RSP_nr];
         itsTHs[RSP_nr] = new TH_Socket(server,
                                        service,
                                        true,
