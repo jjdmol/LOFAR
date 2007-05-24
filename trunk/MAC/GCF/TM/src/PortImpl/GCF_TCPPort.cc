@@ -54,6 +54,7 @@ GCFTCPPort::GCFTCPPort(GCFTask& 	 task,
 	_addr(),
 	_host(myHostname(false)),
     _portNumber(0),
+	itsFixedPortNr(false),
     _broker(0)
 {
 	if (SPP == getType() || MSPP == getType()) {
@@ -74,6 +75,7 @@ GCFTCPPort::GCFTCPPort()
 	_addr(),
 	_host(myHostname(false)),
     _portNumber(0),
+	itsFixedPortNr(false),
     _broker(0)
 {
 }
@@ -106,9 +108,10 @@ void GCFTCPPort::init(GCFTask& 		task,
 {
     _state = S_DISCONNECTED;
     GCFRawPort::init(task, name, type, protocol, transportRawData);
-    _portNumber = 0;
-    _host       = myHostname(false);
-    _addrIsSet  = false;
+    _portNumber 	= 0;
+    _host       	= myHostname(false);
+    _addrIsSet  	= false;
+	itsFixedPortNr	= false;
     if (_pSocket) {
 		delete _pSocket;
 		_pSocket = 0;
@@ -149,6 +152,7 @@ bool GCFTCPPort::open()
 
 	if (getType() == SAP) {						// client socket?
 		if (_portNumber != 0) {					// dest. overruled by user?
+												// or answer already received before
 			// Try to 'open' en 'connect' to port
 			serviceInfo(SB_NO_ERROR, _portNumber, _host);
 			return (true);
@@ -356,6 +360,9 @@ bool GCFTCPPort::close()
 {
 	setState(S_CLOSING);  
 	_pSocket->close();
+	if (!itsFixedPortNr) {	// when portnumber was resolved clear it, so that on
+		_portNumber = 0;	// the next open it will be resolved again.
+	}
 	schedule_close();
 
 	// return success when port is still connected
@@ -365,6 +372,8 @@ bool GCFTCPPort::close()
 
 //
 // setAddr(addr)
+//
+// Depricated: this mechanisme should not be used anymore, use modern task-masks instead.
 //
 void GCFTCPPort::setAddr(const TPeerAddr& addr)
 {

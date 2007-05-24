@@ -42,19 +42,19 @@ int main (int	argc, char* argv[])
 	LOG_INFO("Trying to print an errormsg before registering the protocol");
 	LOG_INFO_STR("errornr: " << TEST_PTC_WINDOWS_ERR << " = " 
 							 << errorName (TEST_PTC_WINDOWS_ERR));
-	LOG_INFO_STR("signalname of in-event: " << signalName(inEvent));
+	LOG_INFO_STR("eventname of in-event: " << eventName(inEvent));
 
 	LOG_INFO("--- Registering the testprotocol ---");
 	registerProtocol (TESTPROTOCOL, TESTPROTOCOL_STRINGS);
 	LOG_INFO(formatString("errornr: %d = %s", TEST_PTC_WINDOWS_ERR, 
 									errorName (TEST_PTC_WINDOWS_ERR).c_str()));
-	LOG_INFO_STR("signalname of in-event: " << signalName(inEvent));
+	LOG_INFO_STR("signalname of in-event: " << eventName(inEvent));
 
 	LOG_INFO ("Registering a second protocol");
 	registerProtocol (ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
 	
 	EchoPingEvent		pingEvent;
-	LOG_INFO_STR("signalname of ping-event: " << signalName(pingEvent));
+	LOG_INFO_STR("signalname of ping-event: " << eventName(pingEvent));
 
 	return (0);
 }
