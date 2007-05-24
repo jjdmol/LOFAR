@@ -122,7 +122,8 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
 	registerProtocol (F_PML_PROTOCOL, 	   F_PML_PROTOCOL_signalnames);
  
-	setState(CTState::CREATED);
+	// we cannot use setState right now, wait for propertysets to come online
+	//	setState(CTState::CREATED);
 }
 
 
@@ -380,6 +381,9 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		thisObservationControl = this;
 		signal (SIGINT,  ObservationControl::sigintHandler);	// ctrl-c
 		signal (SIGTERM, ObservationControl::sigintHandler);	// kill
+
+		// register what we are doing
+		setState(CTState::CONNECT);
 
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
@@ -820,7 +824,7 @@ void  ObservationControl::doHeartBeatTask()
 			CTState		cts;		// report that state is reached.
 			setState(cts.stateAck(itsState));
 			itsBusyControllers = 0;
-			// inform Parent (ignore funtion-result)
+			// inform Parent (ignore function-result)
 			sendControlResult(*itsParentPort, cts.signal(itsState), getName(), 
 							  itsChildResult);
 		}
