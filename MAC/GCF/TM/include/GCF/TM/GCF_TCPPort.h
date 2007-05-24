@@ -115,11 +115,12 @@ protected: // data members
     GTMTCPSocket*   _pSocket;
 
 private:
-    bool              _addrIsSet;
-    TPeerAddr         _addr;
-    string            _host;
-    unsigned int      _portNumber;
-    SB::GTMServiceBroker* _broker;
+    bool					_addrIsSet;
+    TPeerAddr				_addr;
+    string					_host;
+    unsigned int			_portNumber;
+	bool					itsFixedPortNr;
+    SB::GTMServiceBroker*	_broker;
 };
 
 inline void GCFTCPPort::setHostName(const string& hostname)
@@ -135,7 +136,8 @@ inline void GCFTCPPort::setHostName(const string& hostname)
 
 inline void GCFTCPPort::setPortNumber(unsigned int portNumber)
 {
-  _portNumber = portNumber;
+	_portNumber = portNumber;
+	itsFixedPortNr = true;
 }
 
 inline string GCFTCPPort::getHostName()
