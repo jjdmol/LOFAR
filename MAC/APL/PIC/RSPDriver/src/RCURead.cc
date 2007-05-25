@@ -63,16 +63,14 @@ void RCURead::sendrequest_status()
 
 GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_RCU_SETTINGS != event.signal)
-  {
+  if (EPA_RCU_SETTINGS != event.signal) {
     LOG_WARN("RCURead::handleack: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
 
   EPARcuSettingsEvent rcusettings(event);
 
-  if (!rcusettings.hdr.isValidAck(m_hdr))
-  {
+  if (!rcusettings.hdr.isValidAck(m_hdr)) {
     LOG_ERROR("RCURead::handleack: invalid ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -83,16 +81,13 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   RCUSettings::Control& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));
   RCUSettings::Control& y = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2) + 1);
 
-  if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-  {
+  if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
     EPA_Protocol::RCUHandler cachedvalue = { x.getDelay(), 0, y.getDelay(), 0 };
-    if (memcmp(&cachedvalue, &rcusettings.ap, sizeof(EPA_Protocol::RCUHandler)))
-    {
+    if (memcmp(&cachedvalue, &rcusettings.ap, sizeof(EPA_Protocol::RCUHandler))) {
       LOG_WARN("LOOPBACK CHECK FAILED: RCURead mismatch ");
     }
   }
-  else
-  {
+  else {
     x.setDelay(rcusettings.ap.input_delay_x);
     y.setDelay(rcusettings.ap.input_delay_y);
   }

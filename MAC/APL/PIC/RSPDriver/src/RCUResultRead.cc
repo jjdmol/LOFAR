@@ -63,7 +63,8 @@ void RCUResultRead::sendrequest()
   MEPHeader::FieldsType hdr;
   if (0 == global_rcu % MEPHeader::N_POL) {
     hdr = MEPHeader::RCU_RESULTX_HDR;
-  } else {
+  } 
+  else {
     hdr = MEPHeader::RCU_RESULTY_HDR;
   }
 
@@ -81,8 +82,7 @@ void RCUResultRead::sendrequest_status()
 
 GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_RCU_RESULT != event.signal)
-  {
+  if (EPA_RCU_RESULT != event.signal) {
     LOG_WARN("RCUResultRead::handleack:: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -91,8 +91,7 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
 
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + getCurrentIndex();
 
-  if (!ack.hdr.isValidAck(m_hdr))
-  {
+  if (!ack.hdr.isValidAck(m_hdr)) {
     LOG_ERROR("RCUResultRead::handleack: invalid ack");
     Cache::getInstance().getState().rcuprotocol().read_error(global_rcu);
     return GCFEvent::HANDLED;
