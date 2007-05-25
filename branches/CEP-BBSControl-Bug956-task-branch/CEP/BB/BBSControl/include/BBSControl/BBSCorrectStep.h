@@ -43,14 +43,14 @@ namespace LOFAR
     class BBSCorrectStep : public BBSSingleStep
     {
     public:
-      BBSCorrectStep(shared_ptr<const BBSStep> parent = 0) : 
+      BBSCorrectStep(const BBSStep* parent = 0) : 
         BBSSingleStep(parent)
       {
       }
 
       BBSCorrectStep(const string& name, 
 		     const ACC::APS::ParameterSet& parSet,
-		     shared_ptr<const BBSStep> parent) :
+		     const BBSStep* parent) :
         BBSSingleStep(name, parSet, parent)
       {
       }

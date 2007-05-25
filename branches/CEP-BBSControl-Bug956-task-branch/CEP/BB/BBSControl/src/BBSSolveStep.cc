@@ -39,7 +39,7 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    BBSSolveStep::BBSSolveStep(shared_ptr<const BBSStep> parent) : 
+    BBSSolveStep::BBSSolveStep(const BBSStep* parent) : 
       BBSSingleStep(parent),
       itsMaxIter(0), itsEpsilon(0), itsMinConverged(0)
     {
@@ -49,7 +49,7 @@ namespace LOFAR
 
     BBSSolveStep::BBSSolveStep(const string& name, 
 			       const ParameterSet& parset,
-			       shared_ptr<const BBSStep> parent) :
+			       const BBSStep* parent) :
       BBSSingleStep(name, parset, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");

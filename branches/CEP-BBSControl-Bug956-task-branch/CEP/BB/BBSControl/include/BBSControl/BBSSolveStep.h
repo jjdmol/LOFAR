@@ -45,7 +45,7 @@ namespace LOFAR
     public:
       // Default constructor. Construct an empty BBSSolveStep object and make
       // it a child of the BBSStep object \a parent.
-      BBSSolveStep(shared_ptr<const BBSStep> parent = 0);
+      BBSSolveStep(const BBSStep* parent = 0);
 
       // Construct a BBSSolveStep having the name \a name. Configuration
       // information for this step can be retrieved from the parameter set \a
@@ -53,7 +53,7 @@ namespace LOFAR
       // is a pointer to the BBSStep object that is the parent of \c *this.
       BBSSolveStep(const string& name,
                    const ACC::APS::ParameterSet& parset,
-                   shared_ptr<const BBSStep> parent);
+                   const BBSStep* parent);
 
       virtual ~BBSSolveStep();
 

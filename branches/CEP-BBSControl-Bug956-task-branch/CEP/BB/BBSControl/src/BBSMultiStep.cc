@@ -40,7 +40,7 @@ namespace LOFAR
 
     BBSMultiStep::BBSMultiStep(const string& name,
 			       const ParameterSet& parset,
-			       shared_ptr<const BBSStep> parent) :
+			       const BBSStep* parent) :
       BBSStep(name, parset, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -51,7 +51,9 @@ namespace LOFAR
       // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
 	infiniteRecursionCheck(steps[i]);
-	itsSteps.push_back(BBSStep::create(steps[i], parset, shared_from_this()));
+	itsSteps.push_back(shared_ptr<const BBSStep>
+                           (BBSStep::create(steps[i], parset, this))
+                           );
       }
     }
 
@@ -59,7 +61,6 @@ namespace LOFAR
     BBSMultiStep::~BBSMultiStep()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      itsSteps.clear();
     }
 
 
@@ -129,18 +130,19 @@ namespace LOFAR
     {
       vector<string> steps = ps.getStringVector("Strategy.Steps");
       for (uint i = 0; i < steps.size(); ++i) {
-        itsSteps.push_back(BBSStep::create(steps[i], ps));
+        itsSteps.push_back(shared_ptr<const BBSStep>
+                           (BBSStep::create(steps[i], ps, 0))
+                           );
       }
     }
 
 
-    void BBSMultiStep::
-    doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const
+    void
+    BBSMultiStep::doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	vector< shared_ptr<const BBSStep> > substeps = 
-          itsSteps[i]->getAllSteps();
+	vector< shared_ptr<const BBSStep> > substeps = itsSteps[i]->getAllSteps();
 	steps.insert(steps.end(), substeps.begin(), substeps.end());
       }
     }
@@ -154,9 +156,9 @@ namespace LOFAR
 	       "Infinite recursion detected in defintion of BBSStep \""
 	       << name << "\". Please check your ParameterSet file.");
       }
-      if (shared_ptr<const BBSMultiStep> parent = 
-          dynamic_pointer_cast<const BBSMultiStep>(getParent())) {
- 	parent->infiniteRecursionCheck(name);
+      const BBSMultiStep* parent;
+      if ((parent = dynamic_cast<const BBSMultiStep*>(getParent())) != 0) {
+	parent->infiniteRecursionCheck(name);
       }
     }
 

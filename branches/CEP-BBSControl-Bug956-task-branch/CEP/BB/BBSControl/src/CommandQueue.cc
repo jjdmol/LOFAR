@@ -161,7 +161,7 @@ namespace LOFAR
         LOG_DEBUG_STR(ps);
 
         // Create a new BBSStep and return it.
-        return BBSStep::create(name, ps);
+        return BBSStep::create(name, ps, 0);
       } 
       catch (APSException&) {
         // In the catch clause we handle all other commands. They can be

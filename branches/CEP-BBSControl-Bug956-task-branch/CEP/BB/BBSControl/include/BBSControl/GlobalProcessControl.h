@@ -28,6 +28,7 @@
 
 //# Includes
 #include <PLC/ProcessControl.h>
+#include <Common/lofar_smartptr.h>
 
 namespace LOFAR
 {
@@ -87,13 +88,13 @@ namespace LOFAR
 
       // Vector containing all the separate steps, in sequential order, that
       // the strategy consists of.
-      vector<const BBSStep*>  itsSteps;
+      vector< shared_ptr<const BBSStep> >  itsSteps;
 
       // Iterator for keeping track where we left while traversing the vector
       // \c itsSteps. We need this iterator, because the run() method will be
       // invoked several times by ACCmain. In each call to run() we must
       // execute one BBSStep.
-      vector<const BBSStep*>::const_iterator itsStepsIterator;
+      vector< shared_ptr<const BBSStep> >::const_iterator itsStepsIterator;
 
 #if 0
       // DataHolder for exchanging data between global (BBS) and local

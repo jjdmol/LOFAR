@@ -80,7 +80,7 @@ namespace LOFAR
       // done in pre-order, depth-first.
       // \todo Do we really want to implement such "iterator-like behaviour"
       // in this class?
-      vector<const BBSStep*> getAllSteps() const;
+      vector< shared_ptr<const BBSStep> > getAllSteps() const;
 
       // Indicate whether the BBSSteps contained in \c itsSteps should also be
       // written when write(ParameterSet&) is called.

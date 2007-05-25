@@ -6,7 +6,9 @@ Parameter database:
 . History table: test.his
 Strategy:
 . Input data: INDATA
-. Region of interest: [1.175e+09,1.176e+09,1000,3000]
+. Region of interest: Region of interest:
+. . Frequency: []
+. . Time: []
 . Domain size:
 . . Bandwidth: 1e+06 (Hz)
 . . Time interval: 10 (s)

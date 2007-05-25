@@ -72,20 +72,17 @@ namespace LOFAR
     }
 
 
-    shared_ptr<BBSStep> BBSStep::create(const string& name,
-                                        const ParameterSet& parset,
-                                        shared_ptr<const BBSStep> parent)
+    BBSStep* BBSStep::create(const string& name,
+			     const ParameterSet& parset,
+			     const BBSStep* parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      // New BBSStep to be constructed and then returned.
-      shared_ptr<BBSStep> step;
 
       // If \a parset contains a key <tt>Step.<em>name</em>.Steps</tt>, then
       // \a name is a BBSMultiStep, otherwise it is a SingleStep.
       if (parset.isDefined("Step." + name + ".Steps")) {
 	LOG_TRACE_COND_STR(name << " is a MultiStep");
-        step.reset(new BBSMultiStep(name, parset, parent));
+	return new BBSMultiStep(name, parset, parent);
       } else {
 	LOG_TRACE_COND_STR(name << " is a SingleStep");
 	// We'll have to figure out what kind of SingleStep we must
@@ -95,24 +92,23 @@ namespace LOFAR
             toUpper(parset.getString("Step." + name + ".Operation"));
           LOG_TRACE_COND_STR("Creating a " << oper << " step ...");
           if      (oper == "SOLVE")
-            step.reset(new BBSSolveStep(name, parset, parent));
+            return new BBSSolveStep(name, parset, parent);
           else if (oper == "SUBTRACT")
-            step.reset(new BBSSubtractStep(name, parset, parent));
+            return new BBSSubtractStep(name, parset, parent);
           else if (oper == "CORRECT")
-            step.reset(new BBSCorrectStep(name, parset, parent));
+            return new BBSCorrectStep(name, parset, parent);
           else if (oper == "PREDICT")
-            step.reset(new BBSPredictStep(name, parset, parent));
+            return new BBSPredictStep(name, parset, parent);
           else if (oper == "SHIFT")
-            step.reset(new BBSShiftStep(name, parset, parent));
+            return new BBSShiftStep(name, parset, parent);
           else if (oper == "REFIT")
-            step.reset(new BBSRefitStep(name, parset, parent));
+            return new BBSRefitStep(name, parset, parent);
           else THROW (BBSControlException, "Operation \"" << oper << 
                       "\" is not a valid Step operation");
         } catch (APSException& e) {
           THROW (BBSControlException, e.what());
         }
       }
-      return step;
     }
 
 
@@ -120,7 +116,7 @@ namespace LOFAR
 
     BBSStep::BBSStep(const string& name, 
 		     const ParameterSet& parset,
-		     shared_ptr<const BBSStep> parent)
+		     const BBSStep* parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 

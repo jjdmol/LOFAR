@@ -104,7 +104,9 @@ namespace LOFAR
 
         // Create a new step for each name in \a steps.
         for (uint i = 0; i < steps.size(); ++i) {
-          itsSteps.push_back(BBSStep::create(steps[i], aParSet, shared_ptr<const BBSStep>()));
+          itsSteps.push_back(shared_ptr<const BBSStep>
+                             (BBSStep::create(steps[i], aParSet, 0))
+                             );
         }
       } catch (APSException&) {}
     }
@@ -113,7 +115,6 @@ namespace LOFAR
     BBSStrategy::~BBSStrategy()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      itsSteps.clear();
     }
 
 
@@ -142,12 +143,13 @@ namespace LOFAR
     }
  
 
-    vector<const BBSStep*> BBSStrategy::getAllSteps() const
+    vector< shared_ptr<const BBSStep> > BBSStrategy::getAllSteps() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      vector<const BBSStep*> steps;
+      vector< shared_ptr<const BBSStep> > steps;
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
+	vector< shared_ptr<const BBSStep> > substeps =
+          itsSteps[i]->getAllSteps();
 	steps.insert(steps.end(), substeps.begin(), substeps.end());
       }
       return steps;
@@ -241,7 +243,9 @@ namespace LOFAR
         steps = ps.getStringVector("Strategy.Steps");
         LOG_TRACE_COND_STR("Strategy.Steps = " << steps);
         for (uint i = 0; i < steps.size(); ++i) {
-          itsSteps.push_back(BBSStep::create(steps[i], ps, 0));
+          itsSteps.push_back(shared_ptr<const BBSStep>
+                             (BBSStep::create(steps[i], ps, 0))
+                             );
         }
         return true;
       } catch (APSException&) {

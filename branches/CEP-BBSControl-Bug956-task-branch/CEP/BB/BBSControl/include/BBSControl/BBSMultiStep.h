@@ -49,11 +49,11 @@ namespace LOFAR
       // backreference to the parent BBSStep object.
       BBSMultiStep(const string& name,
 		   const ACC::APS::ParameterSet& parset,
-		   shared_ptr<const BBSStep> parent);
+		   const BBSStep* parent);
 
       // Default constructor. Construct an empty BBSMultiStep object and make
       // it a child of the BBSStep object \a parent.
-      BBSMultiStep(shared_ptr<const BBSStep> parent = 0) :
+      BBSMultiStep(const BBSStep* parent = 0) :
         BBSStep(parent)
       {
       }
