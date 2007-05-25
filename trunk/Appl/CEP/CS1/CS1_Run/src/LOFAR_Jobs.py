@@ -2,7 +2,6 @@ import Hosts
 import time
 import os
 
-
 class Job(object):
     """
     Represents a run of some program.
@@ -20,6 +19,8 @@ class Job(object):
         self.runlog = runlog
         self.runLogRetreived = False
         self.host.sput(parsetfile, '~/')
+	tmp = '~/LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop'
+	self.host.sput(tmp, '~/')
 	self.host.sput('OLAP.parset', '~/')
         if runCmd == None:
             runCmd = self.executable
