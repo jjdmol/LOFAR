@@ -507,7 +507,7 @@ void HBACommand::send()
 
     gethba.timestamp = Timestamp(0,0);
     gethba.rcumask = getRCUMask();
-    gethba.cache = true;
+    gethba.cache = false;
 
     m_rspport.send(gethba);
   }

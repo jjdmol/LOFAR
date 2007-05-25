@@ -146,8 +146,7 @@ void RCUProtocolWrite::sendrequest_status()
 
 GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_WRITEACK != event.signal)
-  {
+  if (EPA_WRITEACK != event.signal) {
     LOG_WARN("RCUProtocolWrite::handleack:: unexpected ack");
     return GCFEvent::NOT_HANDLED;
   }
@@ -156,8 +155,7 @@ GCFEvent::TResult RCUProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 
   uint8 global_rcu = (getBoardId() * StationSettings::instance()->nrRcusPerBoard()) + (getCurrentIndex() / N_WRITES);
 
-  if (!ack.hdr.isValidAck(m_hdr))
-  {
+  if (!ack.hdr.isValidAck(m_hdr)) {
     LOG_ERROR("RCUProtocolWrite::handleack: invalid ack");
     Cache::getInstance().getState().rcuprotocol().write_error(global_rcu);
     return GCFEvent::NOT_HANDLED;

@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/hexdump.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include <APL/RTCCommon/PSAccess.h>
@@ -53,40 +54,40 @@ namespace LOFAR {
     //
     int HBAProtocolWrite::i2c_protocol_patch_indices[] = {
       8, 9,
-      51, // stride is 17, server 1
-      51 + 17,
-      51 + 17 + 17,
-      51 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17,
-      51 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17 + 17, // server 16
+	  51 + ( 0*17), // stride is 17, server 1
+	  51 + ( 1*17),
+	  51 + ( 2*17),
+	  51 + ( 3*17),
+	  51 + ( 4*17),
+	  51 + ( 5*17),
+	  51 + ( 6*17),
+	  51 + ( 7*17),
+	  51 + ( 8*17),
+	  51 + ( 9*17),
+	  51 + (10*17),
+	  51 + (11*17),
+	  51 + (12*17),
+	  51 + (13*17),
+	  51 + (14*17),
+	  51 + (15*17), // server  16
     };
     int HBAProtocolWrite::i2c_result_patch_indices[] = {
-      4, // stride is 7, server 1
-      4 + 7,
-      4 + 7 + 7,
-      4 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7,
-      4 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7 + 7, // server 16
+	   4 + ( 0*7), // stride is 7, server 1
+	   4 + ( 1*7),
+	   4 + ( 2*7),
+	   4 + ( 3*7),
+	   4 + ( 4*7),
+	   4 + ( 5*7),
+	   4 + ( 6*7),
+	   4 + ( 7*7),
+	   4 + ( 8*7),
+	   4 + ( 9*7),
+	   4 + (10*7),
+	   4 + (11*7),
+	   4 + (12*7),
+	   4 + (13*7),
+	   4 + (14*7),
+	   4 + (15*7), // server 16
     };
 
 #ifndef HBA_WRITE_DELAYS
@@ -266,18 +267,26 @@ HBAProtocolWrite::HBAProtocolWrite(GCFPortInterface& board_port, int board_id)
   // using nrBlpsPerBoard() because only the Y RCU's (odd numbered 1,3,5,...)
   // control both the X and Y delays of HBA
 {
-  memset(&m_hdr, 0, sizeof(MEPHeader));
+	static	bool	i2c_tables_patched = false;
+
+	memset(&m_hdr, 0, sizeof(MEPHeader));
 
 #ifdef HBA_WRITE_DELAYS
-  // add the hba server address offset to specified indices
-  for (int i = 0; i < (int)(sizeof(i2c_protocol_patch_indices)/sizeof(int)); i++) {
-    i2c_protocol[i2c_protocol_patch_indices[i]]
-      += GET_CONFIG("RSPDriver.HBA_SERVER_ADDRESS_OFFSET", i);
-  }
-  for (int i = 0; i < (int)(sizeof(i2c_result_patch_indices)/sizeof(int)); i++) {
-    i2c_result[i2c_result_patch_indices[i]]
-      += GET_CONFIG("RSPDriver.HBA_SERVER_ADDRESS_OFFSET", i);
-  }
+	LOG_INFO_STR("HBAProtocolWrite: " << board_id);
+	if (!i2c_tables_patched) {
+		// add the hba server address offset to specified indices
+		int		offset(GET_CONFIG("RSPDriver.HBA_SERVER_ADDRESS_OFFSET", i));
+		LOG_INFO_STR ("Patching i2c tables with offset " << offset);
+		// patch protocol table
+		for (int i = 0; i < (int)(sizeof(i2c_protocol_patch_indices)/sizeof(int)); i++) {
+			i2c_protocol[i2c_protocol_patch_indices[i]] += offset;
+		}
+		// patch result table
+		for (int i = 0; i < (int)(sizeof(i2c_result_patch_indices)/sizeof(int)); i++) {
+			i2c_result[i2c_result_patch_indices[i]] += offset;
+		}
+		i2c_tables_patched = true;
+	}
 #endif
 }
 
@@ -309,6 +318,7 @@ void HBAProtocolWrite::sendrequest()
 
   // delays for at least on HBA need to be written, and the RCUProtocol register is not in use by RCUProtocolWrite
 
+	LOG_INFO_STR("HBAsendrequest: " << getCurrentIndex());
   switch (getCurrentIndex() % N_WRITES) {
     
   case 0:
@@ -343,6 +353,9 @@ void HBAProtocolWrite::sendrequest()
       EPARcuProtocolEvent rcuprotocol;
       rcuprotocol.hdr.set(MEPHeader::RCU_PROTOCOLY_HDR, 1 << (getCurrentIndex() / N_WRITES), MEPHeader::WRITE, sizeof(i2c_protocol));
       rcuprotocol.protocol.setBuffer(i2c_protocol, sizeof(i2c_protocol));
+	  string tmpbuf;
+	  hexdump (tmpbuf, i2c_protocol, sizeof(i2c_protocol));
+	  LOG_INFO_STR("HBA WRITE: " << tmpbuf);
   
       m_hdr = rcuprotocol.hdr; // remember header to match with ack
       getBoardPort().send(rcuprotocol);
