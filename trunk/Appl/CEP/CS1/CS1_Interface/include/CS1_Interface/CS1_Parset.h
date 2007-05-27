@@ -126,7 +126,7 @@ inline uint32 CS1_Parset::nrStations() const
   
 inline double CS1_Parset::sampleRate() const
 {
-  return getUint32("Observation.sampleClock")*1000000/1024;
+  return getUint32("Observation.sampleClock") * 1000000.0 / 1024;
 } 
 
 inline uint32 CS1_Parset::nrSubbandSamples() const
