@@ -27,6 +27,7 @@
 // Concrete viistor class for concrete Command classes
 
 #include <BBSControl/CommandVisitor.h>
+#include <BBSControl/CommandResult.h>
 #include <BBSKernel/Prediffer.h>
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
@@ -76,9 +77,15 @@ namespace LOFAR
       virtual void visit(const BBSRefitStep &command);
       // @}
 
+      // Get result of the last executed command.
+      const CommandResult &getResult()
+      {
+          return itsResult;
+      }
+
     private:
       bool convertTime(string in, double &out);
-    
+
       // Kernel.
       scoped_ptr<Prediffer>                   itsKernel;
 
@@ -87,7 +94,7 @@ namespace LOFAR
 
       // Connection to the solver.
       shared_ptr<BlobStreamableConnection>    itsSolverConnection;
-    
+
       // Region of interest.
       int32                                   itsROIFrequency[2];
       double                                  itsROITime[2];
@@ -95,6 +102,9 @@ namespace LOFAR
       // Chunk size and position (in time).
       double                                  itsChunkSize;
       double                                  itsChunkPosition;
+
+      // Result of the last executed command.
+      CommandResult                           itsResult;
     };
 
     // @}
