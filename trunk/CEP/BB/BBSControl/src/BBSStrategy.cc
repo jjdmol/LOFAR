@@ -113,12 +113,6 @@ namespace LOFAR
     BBSStrategy::~BBSStrategy()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      // Clean up all steps.
-      for (uint i = 0; i < itsSteps.size(); ++i) {
-        delete itsSteps[i];
-      }
-      itsSteps.clear();
     }
 
 
@@ -147,12 +141,13 @@ namespace LOFAR
     }
  
 
-    vector<const BBSStep*> BBSStrategy::getAllSteps() const
+    vector< shared_ptr<const BBSStep> > BBSStrategy::getAllSteps() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      vector<const BBSStep*> steps;
+      vector< shared_ptr<const BBSStep> > steps;
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
+	vector< shared_ptr<const BBSStep> > substeps =
+          itsSteps[i]->getAllSteps();
 	steps.insert(steps.end(), substeps.begin(), substeps.end());
       }
       return steps;

@@ -65,7 +65,7 @@ int main(int /*argc*/, char* argv[])
 //     CommandQueue queue(getenv("USER"));
     CommandQueue queue("bbs");
     CommandQueue::Trigger insert_trig(queue, CommandQueue::Trigger::Command);
-    vector<const BBSStep*> steps = strategy.getAllSteps();
+    vector< shared_ptr<const BBSStep> > steps = strategy.getAllSteps();
     ofstream ofs;
 
     // Create data; store into command queue and write to reference file.

@@ -59,12 +59,6 @@ namespace LOFAR
     BBSMultiStep::~BBSMultiStep()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      // Clean up all steps.
-      for(uint i = 0; i < itsSteps.size(); ++i) {
-	delete itsSteps[i];
-      }
-      itsSteps.clear();
     }
 
 
@@ -139,11 +133,12 @@ namespace LOFAR
     }
 
 
-    void BBSMultiStep::doGetAllSteps(vector<const BBSStep*>& steps) const
+    void
+    BBSMultiStep::doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	vector<const BBSStep*> substeps = itsSteps[i]->getAllSteps();
+	vector< shared_ptr<const BBSStep> > substeps = itsSteps[i]->getAllSteps();
 	steps.insert(steps.end(), substeps.begin(), substeps.end());
       }
     }

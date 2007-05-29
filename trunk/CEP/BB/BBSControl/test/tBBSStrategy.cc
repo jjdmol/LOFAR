@@ -57,6 +57,10 @@ int main()
     BBSStrategy writtenStrategy(ps);
     writtenStrategy.shouldWriteSteps(true);
 
+    {
+      BBSStrategy dummy(writtenStrategy);
+    }
+
     ps.clear();
     cout << writtenStrategy << endl;
     ps << writtenStrategy;

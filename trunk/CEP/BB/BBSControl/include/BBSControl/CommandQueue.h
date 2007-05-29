@@ -189,7 +189,6 @@ namespace LOFAR
       //
       // \todo Wrap multiple queries (needed for, e.g., reconstructing a
       // BBSSolveStep) in one transaction.
-//       const Command* getNextCommand();
       pair<shared_ptr<const Command>, const CommandId> getNextCommand() const;
 
       // Set the BBSStrategy in the command queue. All information, \e except
