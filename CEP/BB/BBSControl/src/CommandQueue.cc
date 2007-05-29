@@ -24,23 +24,18 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <BBSControl/CommandQueue.h>
+#include <BBSControl/Command.h>
 #include <BBSControl/CommandId.h>
+#include <BBSControl/CommandQueue.h>
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/LocalControlId.h>
-// #include <BBSControl/CommandQueueTransactors.h>
-// #include <BBSControl/CommandQueueTrigger.h>
 #include <BBSControl/QueryBuilder/AddCommand.h>
-#include <BBSControl/BBSSingleStep.h>
-#include <BBSControl/BBSSolveStep.h>
+#include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSStructs.h>
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
-#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
-#include <Common/lofar_typeinfo.h>
 
 //# Now here's an ugly kludge: libpqxx defines four different top-level
 //# exception classes. In order to avoid a lot of code duplication we clumped
@@ -136,9 +131,6 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      Command* command(0);
-      CommandId id;
-
       // Get the next command from the command queue. This call will only
       // return the command type.
       ParameterSet ps = 
@@ -147,10 +139,10 @@ namespace LOFAR
       // If command type is an empty string, then we've probably received an
       // empty result row; return a null pointer.
       string type = ps.getString("Type");
-      if (type.empty()) return make_pair(command, id);
+      if (type.empty()) return make_pair(shared_ptr<Command>(), CommandId());
 
       // Get the command-id
-      id = ps.getInt32("id");
+      CommandId id = ps.getInt32("id");
 
       // Retrieve the command parameters associated with the received command.
       ostringstream query;
@@ -173,13 +165,12 @@ namespace LOFAR
         ps.adoptBuffer(buf, "Step." + name + ".");
 
         // Create a new BBSStep and return it.
-        command = BBSStep::create(name, ps, 0);
-        return make_pair(command, id);
+        return make_pair(BBSStep::create(name, ps, 0), id);
       } 
       catch (APSException&) {
         // In the catch clause we handle all other commands. They can be
         // constructed using the CommandFactory and initialized using read().
-        command = CommandFactory::instance().create(type);
+        shared_ptr<Command> command(CommandFactory::instance().create(type));
         ASSERTSTR(command, "Failed to create a `" << type << 
                   "' command object");
         command->read(ps);

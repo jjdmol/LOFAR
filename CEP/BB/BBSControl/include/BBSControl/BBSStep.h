@@ -33,6 +33,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_smartptr.h>
 
 namespace LOFAR
 {
@@ -61,7 +62,8 @@ namespace LOFAR
     // cause the pointer to never be freed. This can happen since a BBSStep
     // stores a pointer to its parent as backreference. Here, we should
     // probably use a boost::weak_ptr. See Bug #906
-    class BBSStep : public Command
+    class BBSStep : public Command,
+                    public enable_shared_from_this<BBSStep>
     {
     public:
       // Destructor.
@@ -80,7 +82,7 @@ namespace LOFAR
       // class that can be used to iterate over the all steps. I had some
       // trouble getting that thingy working, so, due to time constraints, I
       // implemented things the ugly way.
-      vector<const BBSStep*> getAllSteps() const;
+      vector< shared_ptr<const BBSStep> > getAllSteps() const;
 
       // Create a new step object. The new step can either be a BBSSingleStep
       // or a BBSMultiStep object. This is determined by examining the
@@ -88,9 +90,9 @@ namespace LOFAR
       // <tt>Step.<em>name</em>.Steps</tt>, then \a aName is a BBSMultiStep,
       // otherwise it is a SingleStep. The third, optional, argument is used
       // to pass a backreference to the parent BBSStep object.
-      static BBSStep* create(const string& name,
-			     const ACC::APS::ParameterSet& parSet,
-			     const BBSStep* parent = 0);
+      static shared_ptr<BBSStep> create(const string& name,
+                                        const ACC::APS::ParameterSet& parSet,
+                                        const BBSStep* parent = 0);
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
@@ -153,7 +155,8 @@ namespace LOFAR
       // Implementation of getAllSteps(). The default implementation adds \c
       // this to the vector \a steps.
       // \note This method must be overridden by BBSMultiStep.
-      virtual void doGetAllSteps(vector<const BBSStep*>& steps) const;
+      virtual void
+      doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const;
 
       // Name of this step.
       string                 itsName;
@@ -192,16 +195,7 @@ namespace LOFAR
 
     };
 
-    // Factory that can be used to generate new BBSStep objects.
-    // The factory is defined as a singleton.
-    typedef Singleton < 
-      ObjectFactory < BBSStep(const string&, 
-                              const ACC::APS::ParameterSet&, 
-                              const BBSStep*), 
-                      string >
-    > BBSStepFactory;
-
-    
+   
   } // namespace BBS
 
 } // namespace LOFAR

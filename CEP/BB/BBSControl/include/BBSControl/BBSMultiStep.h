@@ -88,7 +88,8 @@ namespace LOFAR
       // Implementation of getAllSteps() for BBSMultiStep. It retrieves all
       // steps by calling getAllSteps() on all steps that comprise this
       // multistep.
-      virtual void doGetAllSteps(vector<const BBSStep*>& steps) const;
+      virtual void 
+      doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const;
 
       // Check to see if there's an infinite recursion present in the
       // definition of a BBSMultiStep. This can happen when one of the steps
@@ -97,7 +98,7 @@ namespace LOFAR
       void infiniteRecursionCheck(const string& name) const;
 
       // Vector holding a sequence of BBSSteps.
-      vector<const BBSStep*> itsSteps;
+      vector< shared_ptr<const BBSStep> > itsSteps;
     };
 
     // @}
