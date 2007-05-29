@@ -83,11 +83,11 @@ namespace LOFAR
         itsRegionOfInterest.time  = 
           ps.getStringVector("RegionOfInterest.Time");
       } catch (APSException&) {}
-      
+
       // Get the work domain size for this strategy
       itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");      
       itsDomainSize.timeInterval = ps.getDouble("WorkDomainSize.Time");
-      
+
       // Get the correlation product selection (ALL, AUTO, or CROSS)
       itsCorrelation.selection = ps.getString("Correlation.Selection");
       itsCorrelation.type = ps.getStringVector("Correlation.Type");
@@ -178,12 +178,14 @@ namespace LOFAR
           << itsStations
           << endl << "Strategy.InputData = "
           << itsInputData
-        //           << endl << "Strategy.RegionOfInterest = "
-        //           << itsRegionOfInterest
-          << endl << "Strategy.WorkDomainSize.Freq = " 
+          << endl << "Strategy.WorkDomainSize.Freq = "
           << itsDomainSize.bandWidth
           << endl << "Strategy.WorkDomainSize.Time = "
           << itsDomainSize.timeInterval
+          << endl << "Strategy.RegionOfInterest.Freq = "
+          << itsRegionOfInterest.frequency
+          << endl << "Strategy.RegionOfInterest.Time = "
+          << itsRegionOfInterest.time
           << endl << "Strategy.Correlation.Selection = "
           << itsCorrelation.selection
           << endl << "Strategy.Correlation.Type = "
@@ -215,7 +217,11 @@ namespace LOFAR
         ps.getDouble("Strategy.WorkDomainSize.Freq");
       itsDomainSize.timeInterval = 
         ps.getDouble("Strategy.WorkDomainSize.Time");
-      itsCorrelation.selection   = 
+      itsRegionOfInterest.frequency =
+        ps.getInt32Vector("Strategy.RegionOfInterest.Freq");
+      itsRegionOfInterest.time  =
+        ps.getStringVector("Strategy.RegionOfInterest.Time");
+      itsCorrelation.selection   =
         ps.getString("Strategy.Correlation.Selection");
       itsCorrelation.type        = 
         ps.getStringVector("Strategy.Correlation.Type");

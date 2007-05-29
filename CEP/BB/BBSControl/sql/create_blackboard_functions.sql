@@ -132,14 +132,14 @@ $$
                 "ParmDB.LocalSky", 
                 "ParmDB.Instrument", 
                 "ParmDB.History", 
-                "Stations", 
-                "InputData", 
-                "RegionOfInterest.Freq", 
-                "RegionOfInterest.Time", 
-                "WorkDomainSize.Freq", 
-                "WorkDomainSize.Time", 
-                "Correlation.Selection", 
-                "Correlation.Type")
+                "Strategy.Stations",
+                "Strategy.InputData",
+                "Strategy.RegionOfInterest.Freq",
+                "Strategy.RegionOfInterest.Time",
+                "Strategy.WorkDomainSize.Freq",
+                "Strategy.WorkDomainSize.Time",
+                "Strategy.Correlation.Selection",
+                "Strategy.Correlation.Type")
             VALUES
                 ('ACTIVE',
                 data_set,

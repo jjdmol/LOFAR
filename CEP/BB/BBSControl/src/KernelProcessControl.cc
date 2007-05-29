@@ -31,6 +31,7 @@
 #include <BBSControl/CommandId.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/InitializeCommand.h>
+#include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
 #include <BBSControl/BBSStrategy.h>
 /*
@@ -66,6 +67,14 @@ namespace LOFAR
 {
 namespace BBS 
 {
+    namespace
+    {
+        InitializeCommand cmd1;
+        FinalizeCommand cmd2;
+        NextChunkCommand cmd3;
+    }
+
+
     //##----   P u b l i c   m e t h o d s   ----##//
     KernelProcessControl::KernelProcessControl() :
         ProcessControl(),
@@ -91,7 +100,6 @@ namespace BBS
                     globalParameterSet()->getString("Controller.Host"),
                     globalParameterSet()->getString("Controller.Port")));
 */
-            
             char *user = getenv("USER");
             ASSERT(user);
             string userString(user);
@@ -115,22 +123,15 @@ namespace BBS
         LOG_DEBUG("KernelProcessControl::init()");
 
         try {
-/*
-            LOG_DEBUG_STR("Trying to connect to controller@"
-                << globalParameterSet()->getString("Controller.Host") << ":"
-                << globalParameterSet()->getString("Controller.Port"   )
-                << "...");
-
-            if(!itsControllerConnection->connect())
-            {
-                LOG_ERROR("+ could not connect to controller");
-                return false;
-            }
-            LOG_DEBUG("+ ok");
-*/
-
+            // Create a new CommandQueue. This will open a connection to the
+            // blackboard database.
             itsCommandQueue.reset(new CommandQueue(
                 globalParameterSet()->getString("BBDB.DBName")));
+
+            // Register for the "command" trigger, which fires when a new
+            // command is posted to the blackboard database.
+            itsCommandQueue->registerTrigger(CommandQueue::Trigger::Command);
+
 
             LOG_DEBUG("Trying to connect to solver@localhost");
             if(!itsSolverConnection->connect())
@@ -139,7 +140,7 @@ namespace BBS
                 return false;
             }
             LOG_DEBUG("+ ok");
-            
+
             itsCommandExecutor.reset(new CommandExecutor(itsCommandQueue,
                 itsSolverConnection));
         }
@@ -170,10 +171,12 @@ namespace BBS
                 }
 
                 LOG_DEBUG("New run, entering RUN state.");
-                itsState = KernelProcessControl::FIRST_RUN;
+//                itsState = KernelProcessControl::FIRST_RUN;
+                itsState = KernelProcessControl::RUN;
                 break;
                 }
 
+/*
             case KernelProcessControl::FIRST_RUN:
                 {
                 shared_ptr<const BBSStrategy>strategy(
@@ -198,35 +201,39 @@ namespace BBS
                 itsState = KernelProcessControl::RUN;
                 break;
                 }
+*/
 
             case KernelProcessControl::RUN:
                 {
-                
                 NextCommandType cmd(itsCommandQueue->getNextCommand());
 
                 if(cmd.first)
                 {
-                    LOG_DEBUG("Received command, remaining in RUN state.");
-
                     cmd.first->accept(*itsCommandExecutor);
+                    itsCommandQueue->addResult(cmd.second,
+                        itsCommandExecutor->getResult());
+
+                    if(cmd.first->type() == "Finalize")
+                        return false;
                 }
                 else
-                {
-                    LOG_DEBUG("Command Queue empty, entering WAIT state.");
                     itsState = KernelProcessControl::WAIT;
-                }
+
                 break;
                 }
 
             case KernelProcessControl::WAIT:
                 {
-                /* await notification here */
-                LOG_DEBUG("WAIT state not yet implemented, returning to \
-                    RUN state.");
-                sleep(3);
-                itsState = KernelProcessControl::RUN;
+                LOG_DEBUG("Waiting from next Command...");
+
+                if(itsCommandQueue->
+                    waitForTrigger(CommandQueue::Trigger::Command))
+                {
+                    itsState = KernelProcessControl::RUN;
+                }
                 break;
                 }
+
 
             default:
                 {

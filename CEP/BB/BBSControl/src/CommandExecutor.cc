@@ -78,10 +78,10 @@ bool CommandExecutor::convertTime(string in, double &out)
     //# TODO: Convert from default epoch to MS epoch (as it may differ from 
     //# the default!)
     casa::Quantum<casa::Double> time;
-    
+
     if(in.empty() || !casa::MVTime::read(time, in))
         return false;
-    
+
     out = static_cast<double>(time.getValue("s"));
     return true;
 }
@@ -113,16 +113,21 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     }
 
     //# Select stations and correlations.
-    itsKernel->setSelection(strategy->stations(), strategy->correlation());
+    if(!itsKernel->setSelection(strategy->stations(), strategy->correlation()))
+    {
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Data selection is empty.");
+        return;
+    }
 
     //# Store chunk size.
     itsChunkSize = strategy->domainSize().timeInterval;
-    
+
     LOG_DEBUG_STR("ChunkSize: " << itsChunkSize);
 
     //# Get Region Of Interest.
     RegionOfInterest roi = strategy->regionOfInterest();
-    
+
     //# Get Local Data Domain.
     MeqDomain ldd = itsKernel->getLocalDataDomain();
 
@@ -151,14 +156,16 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
         itsROIFrequency[0] = roi.frequency[0];
     if(roi.frequency.size() >= 2)
         itsROIFrequency[1] = roi.frequency[1];
-    
+
     //# Reset chunk iteration.
     itsChunkPosition = itsROITime[0];
-    
+
     LOG_DEBUG_STR("Region Of Interest:" << endl
         << "  + Channels: " << itsROIFrequency[0] << " - " << itsROIFrequency[1]
         << endl
         << "  + Time:     " << itsROITime[0] << " - " << itsROITime[1] << endl);
+
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -167,6 +174,9 @@ void CommandExecutor::visit(const FinalizeCommand &/*command*/)
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
     LOG_DEBUG("Handling a FinalizeCommand");
+
+    //# How to notify KernelProcessControl of this?
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -180,16 +190,30 @@ void CommandExecutor::visit(const NextChunkCommand &/*command*/)
     //# issue an itsKernel->nextChunk() here. However, as this is entangled with 
     //# the new MS interface, we'll emulate it by setting a new local work 
     //# domain for now.
-    
-    bool result = itsKernel->setWorkDomain(static_cast<int>(itsROIFrequency[0]),
+    if(itsChunkPosition >= itsROITime[1])
+    {
+        LOG_DEBUG_STR("NextChunk: OUT_OF_DATA");
+        itsResult = CommandResult(CommandResult::OUT_OF_DATA);
+        return;
+    }
+
+    double size = itsChunkSize;
+    if(itsChunkPosition + itsChunkSize > itsROITime[1])
+        size = itsROITime[1] - itsChunkPosition;
+
+    if(!itsKernel->setWorkDomain(static_cast<int>(itsROIFrequency[0]),
         static_cast<int>(itsROIFrequency[1]),
         itsChunkPosition,
-        itsChunkSize);
-
-    itsChunkPosition += itsChunkSize;
-        
-    if(!result)
-        LOG_DEBUG_STR("NextChunk: OUT_OF_DATA");
+        size))
+    {
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Could not set work domain.");
+    }
+    else
+    {
+        itsChunkPosition += itsChunkSize;
+        itsResult = CommandResult(CommandResult::OK, "Ok.");
+    }
 }
 
 
@@ -198,6 +222,7 @@ void CommandExecutor::visit(const RecoverCommand &/*command*/)
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
     LOG_DEBUG("Handling a RecoverCommand");
+    itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
 
@@ -206,6 +231,7 @@ void CommandExecutor::visit(const SynchronizeCommand &/*command*/)
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
     LOG_DEBUG("Handling a SynchronizeCommand");
+    itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
 
@@ -224,6 +250,8 @@ void CommandExecutor::visit(const BBSMultiStep &command)
 {
     LOG_DEBUG("Handling a BBSMultiStep");
     LOG_DEBUG_STR("Command: " << endl << command);
+
+    ASSERTSTR(false, "Should not get here...");
 }
 
 
@@ -245,12 +273,15 @@ void CommandExecutor::visit(const BBSPredictStep &command)
 
     // Set context.
     if(!itsKernel->setContext(context))
-//        return false;
+    {
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Could not set context.");
         return;
+    }
 
     // Execute predict.
     itsKernel->predictVisibilities();
-//    return true;
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -272,12 +303,15 @@ void CommandExecutor::visit(const BBSSubtractStep &command)
 
     // Set context.
     if(!itsKernel->setContext(context))
-//        return false;
+    {
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Could not set context.");
         return;
+    }
 
     // Execute subtract.
     itsKernel->subtractVisibilities();
-//    return true;
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -299,12 +333,15 @@ void CommandExecutor::visit(const BBSCorrectStep &command)
 
     // Set context.
     if(!itsKernel->setContext(context))
-//        return false;
+    {
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Could not set context.");
         return;
+    }
 
     // Execute correct.
     itsKernel->correctVisibilities();
-    //return true;
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -376,6 +413,8 @@ void CommandExecutor::visit(const BBSSolveStep &command)
     // Set context.
     if(!itsKernel->setContext(context))
     {
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Could not set context.");
         return;
     }
 
@@ -527,7 +566,8 @@ void CommandExecutor::visit(const BBSSolveStep &command)
 
     timer.stop();
     LOG_DEBUG_STR("[END  ] Writing solutions; " << timer);
-    //return true;
+
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -535,6 +575,8 @@ void CommandExecutor::visit(const BBSShiftStep &command)
 {
     LOG_DEBUG("Handling a BBSShiftStep");
     LOG_DEBUG_STR("Command: " << endl << command);
+
+    itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
 
@@ -542,6 +584,8 @@ void CommandExecutor::visit(const BBSRefitStep &command)
 {
     LOG_DEBUG("Handling a BBSRefitStep");
     LOG_DEBUG_STR("Command: " << endl << command);
+
+    itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
 } //# namespace BBS

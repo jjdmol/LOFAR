@@ -1,24 +1,27 @@
 CREATE TABLE blackboard.strategy
 (
-    state                   TEXT                DEFAULT 'UNDEFINED',
+    state                               TEXT                DEFAULT 'UNDEFINED',
 
-    "DataSet"               TEXT                NOT NULL,
+    "DataSet"                           TEXT                NOT NULL,
 
-    "ParmDB.LocalSky"       TEXT                NOT NULL,
-    "ParmDB.Instrument"     TEXT                NOT NULL,
-    "ParmDB.History"        TEXT                NOT NULL,
+    "ParmDB.LocalSky"                   TEXT                NOT NULL,
+    "ParmDB.Instrument"                 TEXT                NOT NULL,
+    "ParmDB.History"                    TEXT                NOT NULL,
 
-    "Stations"              TEXT                DEFAULT '[]',
-    "InputData"             TEXT                DEFAULT 'DATA',
+    "Strategy.Stations"                 TEXT                DEFAULT '[]',
+    "Strategy.InputData"                TEXT                DEFAULT 'DATA',
 
-    "RegionOfInterest.Freq" TEXT                DEFAULT '[]',
-    "RegionOfInterest.Time" TEXT                DEFAULT '[]',
+    "Strategy.RegionOfInterest.Freq"    TEXT                DEFAULT '[]',
+    "Strategy.RegionOfInterest.Time"    TEXT                DEFAULT '[]',
 
-    "WorkDomainSize.Freq"   DOUBLE PRECISION    NOT NULL,
-    "WorkDomainSize.Time"   DOUBLE PRECISION    NOT NULL,
+    "Strategy.WorkDomainSize.Freq"      DOUBLE PRECISION    NOT NULL,
+    "Strategy.WorkDomainSize.Time"      DOUBLE PRECISION    NOT NULL,
 
-    "Correlation.Selection" TEXT                DEFAULT 'CROSS',
-    "Correlation.Type"      TEXT                DEFAULT '[]'
+    "Strategy.Correlation.Selection"    TEXT                DEFAULT 'CROSS',
+    "Strategy.Correlation.Type"         TEXT                DEFAULT '[]',
+
+    "Strategy.Integration.Freq"         DOUBLE PRECISION    DEFAULT 1.0,
+    "Strategy.Integration.Time"         DOUBLE PRECISION    DEFAULT 1.0
 );
 
 
