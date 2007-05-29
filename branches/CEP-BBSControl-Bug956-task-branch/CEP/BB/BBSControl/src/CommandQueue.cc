@@ -125,7 +125,7 @@ namespace LOFAR
     }
 
 
-    const Command* CommandQueue::getNextCommand()
+    shared_ptr<const Command> CommandQueue::getNextCommand()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -137,7 +137,7 @@ namespace LOFAR
       // If command type is an empty string, then we've probably received an
       // empty result row; return a null pointer.
       string type = ps.getString("Type");
-      if (type.empty()) return 0;
+      if (type.empty()) return shared_ptr<const Command>();
 
       // Retrieve the command parameters associated with the received command.
       ostringstream query;
@@ -166,7 +166,7 @@ namespace LOFAR
       catch (APSException&) {
         // In the catch clause we handle all other commands. They can be
         // constructed using the CommandFactory and initialized using read().
-        Command* command = CommandFactory::instance().create(type);
+        shared_ptr<Command> command(CommandFactory::instance().create(type));
         ASSERTSTR(command, "Failed to create a `" << type << 
                   "' command object");
         LOG_DEBUG_STR(ps);

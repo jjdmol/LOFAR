@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
   const char* outFile  = "/tmp/tCommandQueue.out";
   const char* parsetFile = "tBBSControl.parset";
 
-  const Command* command;
+  shared_ptr<const Command> command;
 
   INIT_LOGGER(progName);
   LOG_INFO_STR(progName << " is starting up ...");
@@ -81,9 +81,9 @@ int main(int argc, char* argv[])
     // Read steps from command queue and write them to output file.
     ofs.open(outFile);
     ASSERT(ofs);
-    queue.getNextCommand();
-//     while ((command = queue.getNextCommand()) != 0) {
-//       ofs << *command << endl;
+    command = queue.getNextCommand();
+//     while (command = queue.getNextCommand()) {
+//       ofs << command << endl;
 //     }
     ofs.close();
     ASSERT(ofs);

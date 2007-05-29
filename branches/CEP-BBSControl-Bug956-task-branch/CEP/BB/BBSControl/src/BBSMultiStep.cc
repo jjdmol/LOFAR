@@ -51,9 +51,7 @@ namespace LOFAR
       // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
 	infiniteRecursionCheck(steps[i]);
-	itsSteps.push_back(shared_ptr<const BBSStep>
-                           (BBSStep::create(steps[i], parset, this))
-                           );
+	itsSteps.push_back(BBSStep::create(steps[i], parset, this));
       }
     }
 
@@ -130,9 +128,7 @@ namespace LOFAR
     {
       vector<string> steps = ps.getStringVector("Strategy.Steps");
       for (uint i = 0; i < steps.size(); ++i) {
-        itsSteps.push_back(shared_ptr<const BBSStep>
-                           (BBSStep::create(steps[i], ps, 0))
-                           );
+        itsSteps.push_back(BBSStep::create(steps[i], ps, 0));
       }
     }
 

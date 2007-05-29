@@ -193,7 +193,7 @@ namespace BBS
 
             case KernelProcessControl::RUN:
                 {
-                scoped_ptr<const Command> cmd(itsCommandQueue->getNextCommand());
+                shared_ptr<const Command> cmd(itsCommandQueue->getNextCommand());
 
                 if(cmd)
                 {

@@ -90,9 +90,9 @@ namespace LOFAR
       // <tt>Step.<em>name</em>.Steps</tt>, then \a aName is a BBSMultiStep,
       // otherwise it is a SingleStep. The third, optional, argument is used
       // to pass a backreference to the parent BBSStep object.
-      static BBSStep* create(const string& name,
-			     const ACC::APS::ParameterSet& parSet,
-			     const BBSStep* parent = 0);
+      static shared_ptr<BBSStep> create(const string& name,
+                                        const ACC::APS::ParameterSet& parSet,
+                                        const BBSStep* parent = 0);
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
