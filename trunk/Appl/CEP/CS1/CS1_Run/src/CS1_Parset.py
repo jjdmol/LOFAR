@@ -35,38 +35,22 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self.stationList = stationList
         self['OLAP.nrRSPboards'] = len(stationList)
         self['OLAP.storageStationNames'] = [s.getName() for s in stationList]
-
+	
     def setInputToMem(self):
         self.inputFromMemory = True
 	self['OLAP.OLAP_Conn.station_Input_Transport'] = 'NULL'
 
     def getInputNodes(self):
-	inputNodelist = list()
-        
+        inputNodelist = list()
+	
 	for s in self.stationList:
-	    name = s.getName()[0:s.getName().find('_')]
-	    if s.getName()[s.getName().find('_')+1:s.getName().find('_')+3] == 'us':
-	        index = int(s.getName()[len(s.getName())-1:len(s.getName())])
-	    else:
-	        if len(s.getName()) < 14: 
-	            index = int(s.getName()[len(s.getName())-1:len(s.getName())])/4
-		else:
-		    index = int(s.getName()[len(s.getName())-2:len(s.getName())])/4  
-
-	    nm = self.getStringVector('PIC.Core.' + name + '.inputNodeList')[index]
-	    nm = nm.strip("[")
-	    nm = nm.strip("]")
-	    nm = nm.strip(" ")
-	    
-	    if name == 'CS016':
-	        inputnode = int(nm[len(nm)-2:len(nm)])
-	    else:
-	        inputnode = int(nm[len(nm)-1:len(nm)])
-            
-	    inputNodelist.append(inputnode)
-	    
+	    name = self.getString('PIC.Core.' + s.getName() + '.port')
+	    name=name.split(":")
+	    name=name[0].strip("lii")
+	    inputNodelist.append(int(name))
+    
         return inputNodelist
-
+	
     def getNStations(self):
         return int(len(self.stationList))
         
