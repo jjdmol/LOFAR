@@ -15,6 +15,12 @@ class Station(object):
 #Keep the antenna positions in ITRF coordinates.
 #Storing a position on earth given as (lon,lat,height)
 
+CS010_HBA10 = [Station('CS010_HBA10')]
+CS010_HBA17 = [Station('CS010_HBA17')]
+CS010_HBA25 = [Station('CS010_HBA25')]
+CS010_HBA29 = [Station('CS010_HBA29')]
+CS010_HBA = CS010_HBA10 + CS010_HBA17 + CS010_HBA25 + CS010_HBA29
+
 CS010_dipole0  = [Station('CS010_dipole0')]
 CS010_dipole4  = [Station('CS010_dipole4')]
 CS010_dipole8  = [Station('CS010_dipole8')]

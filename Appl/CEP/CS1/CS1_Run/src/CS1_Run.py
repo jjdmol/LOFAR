@@ -132,7 +132,7 @@ if __name__ == '__main__':
         sys.exit(1)
     
     parset.setStations(stationList)
-    
+
     # see if we are using fake input
     if options.fakeinput > 0:
         parset.setInterval(1, options.runtime+10)
