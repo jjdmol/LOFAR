@@ -68,7 +68,6 @@ namespace LOFAR
       ,itsPropertySet(0)
 #endif
     {
-
 #ifdef USE_MAC_PI
       itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
@@ -163,7 +162,7 @@ namespace LOFAR
       double timeStep = itsCS1PS->integrationTime();
       LOG_TRACE_VAR_STR("timeStep = " << timeStep);
       
-      vector<double> antPos = itsCS1PS->physicalPhaseCentras();
+      vector<double> antPos = itsCS1PS->positions();
       ASSERTSTR(antPos.size() == 3 * itsNStations,
                 antPos.size() << " == " << 3 * itsNStations);
 
