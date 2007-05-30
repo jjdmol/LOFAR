@@ -62,8 +62,8 @@ public:
 	double         stopTime() const;
 	uint32	       nrStations() const;
 	double         sampleRate() const;
-	vector<double> physicalPhaseCentras() const;
-	vector<double> trackingPhaseCentras() const;
+	vector<double> positions() const;
+	vector<double> phaseCenters() const;
 	uint32         nrSubbandSamples() const;
 	double         integrationTime() const;
 	uint32         nrSamplesToBGLProc() const;
@@ -82,7 +82,7 @@ public:
 	double         chanWidth() const;
 	vector<string> delay_Ports() const;
 	vector<string> getPortsOf(const string& aKey) const;
-	uint32         inputPortnr(const string& aKey) const;
+	string         inputPortnr(const string& aKey) const;
 	string         stationName(const int index) const;
 	string         expandedArrayString(const string& orgStr) const;
 	
@@ -91,9 +91,6 @@ public:
 	vector<double> itsStPositions;
 	
 private:
-        uint32         getStationIndex(const string& aKey) const;
-	
-	
 	void           addPosition(string stName);
 };
 
@@ -109,9 +106,11 @@ inline double CS1_Parset::stopTime() const
   return  to_time_t(time_from_string(getString("Observation.stopTime")));
 }
 
-inline uint32 CS1_Parset::inputPortnr(const string& aKey) const
+inline string CS1_Parset::inputPortnr(const string& aKey) const
 {
-  return getUint32("OLAP.firstInputPortnr") + getStationIndex(aKey);
+  string rst = getString("PIC.Core." + aKey + ".port");
+  int index = rst.find(":");
+  return rst.substr(index+1,4);
 }
 
 inline string CS1_Parset::stationName(const int index) const
