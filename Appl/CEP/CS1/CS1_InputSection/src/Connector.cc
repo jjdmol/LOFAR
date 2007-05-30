@@ -69,7 +69,7 @@ namespace LOFAR {
       if (transportType=="NULL") {
 	theTH = new TH_Null();
       } else if (transportType=="TCP") {
-	string service = toString(ps->inputPortnr(key));
+	string service = ps->inputPortnr(key);
 	theTH = new TH_Socket(service, 
 		              true, 
 			      Socket::TCP, 
@@ -88,7 +88,7 @@ namespace LOFAR {
       } 
 #endif      
       else if (transportType == "UDP") {
-	string service = toString(ps->inputPortnr(key));
+	string service = ps->inputPortnr(key);
 	theTH = new TH_Socket(service,
 			      true, 
 			      Socket::UDP, 
