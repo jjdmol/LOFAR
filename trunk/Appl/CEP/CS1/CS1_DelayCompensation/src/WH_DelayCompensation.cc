@@ -241,7 +241,7 @@ namespace LOFAR
       // Get the antenna positions from the parameter set. The antenna
       // positions are stored as one large vector of doubles.
       vector<double> pos;
-      pos = itsCS1PS->trackingPhaseCentras();
+      pos = itsCS1PS->phaseCenters();
       ASSERTSTR(pos.size() == 3 * itsNrStations,
                 pos.size() << " == " << 3 * itsNrStations);
 
