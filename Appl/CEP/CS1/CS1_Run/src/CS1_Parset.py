@@ -112,7 +112,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self['Observation.stopTime'] = datetime.datetime.fromtimestamp(start + duration)
 
     def setIntegrationTime(self, integrationTime):
-        self['OLAP.StorageIntegrationTime'] = integrationTime
+        self['OLAP.storageIntegrationTime'] = integrationTime
 
     def setMSName(self, msName):
         self['Observation.MSNameMask'] = msName
