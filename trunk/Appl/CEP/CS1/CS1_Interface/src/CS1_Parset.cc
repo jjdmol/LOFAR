@@ -42,21 +42,21 @@ CS1_Parset::~CS1_Parset()
 {
 }
 
-vector<double> CS1_Parset::physicalPhaseCentras() const
+vector<double> CS1_Parset::positions() const
 {
   vector<string> stNames = getStringVector("OLAP.storageStationNames");
   vector<double> pos, list;
-
+  
   for (uint i = 0; i < nrStations(); i++)
   {
-    pos = getDoubleVector(locateModule(stNames[i]) + stNames[i] + ".physicalPhaseCentre");
+    pos = getDoubleVector("PIC.Core." + stNames[i] + ".position");
     list.insert(list.end(), pos.begin(), pos.end());
   }
 
   return list;
 }
 
-vector<double> CS1_Parset::trackingPhaseCentras() const
+vector<double> CS1_Parset::phaseCenters() const
 {
   vector<double> pos, list;
   vector<string> stNames = getStringVector("OLAP.storageStationNames");
@@ -65,30 +65,11 @@ vector<double> CS1_Parset::trackingPhaseCentras() const
   for (uint i = 0; i < nrStations(); i++)
   {
     index = stNames[i].find("_");
-    pos = getDoubleVector(locateModule(stNames[i].substr(0,index)) + stNames[i].substr(0,index)  + ".trackingPhaseCentre");
+    pos = getDoubleVector(locateModule(stNames[i].substr(0,index)) + stNames[i].substr(0,index)  + ".phaseCenter");
     list.insert(list.end(), pos.begin(), pos.end());
   }
  
   return list; 
-}
-
-uint32 CS1_Parset::getStationIndex(const string& aKey) const
-{
-  int pos = aKey.find("_");
-   
-  if (aKey.substr(pos + 1,2) == "us")
-    return std::atoi(aKey.substr(aKey.size()-1,1).c_str());
-  else if (aKey.substr(pos + 1,6) == "dipole")
-  {
-    if (aKey.size() < 14)
-      return std::atoi(aKey.substr(aKey.size()-1,1).c_str())/4;  
-    else
-      return std::atoi(aKey.substr(aKey.size()-2,2).c_str())/4;  
-  }
-  
-  cout << "Index of " << aKey << "not found." << endl;
-  
-  return 0;     
 }
 
 vector<double> CS1_Parset::refFreqs() const
