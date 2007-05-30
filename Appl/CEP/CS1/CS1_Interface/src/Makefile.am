@@ -16,6 +16,5 @@ libcs1_interface_la_SOURCES	= \
 	Stub_RSP.cc
 
 configfilesdir			= $(bindir)
-dist_configfiles_DATA	= CS1.parset
 
 include $(top_srcdir)/Makefile.common
