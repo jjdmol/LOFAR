@@ -412,18 +412,24 @@ else
     # Update EXTERNAL_CPPFLAGS and EXTERNAL_LDFLAGS. Do not update
     # EXTERNAL_CXXFLAGS, since we do not want to propagate C++ compiler flags.
     # Use tr to translate any newline into a space.
-    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr $'\n' " "`
-    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr $'\n' " "`
+    EXTERNAL_CPPFLAGS=`cat pkgextcppflags | tr '\n' " "`
+    EXTERNAL_LDFLAGS=`cat pkgextldflags | tr '\n' " "`
 
     # Finally, update the flags that will be exported. Remove any remaining
-    # duplicate tokens. Note that this will sort the flags.
-    # Do not sort LIBS since the order is usually important.
-    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " $'\n' | \
-              sort | uniq | tr $'\n' " "`
-    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " $'\n' | \
-             sort | uniq | tr $'\n' " "`
+    # duplicate tokens, without sorting the flags.
+    # WARNING: Spaces act as separators, so neither put any spaces between a
+    #          -D or -I flag and its argument, nor use a -I path with spaces.
+    CPPFLAGS=`echo "$CPPFLAGS $EXTERNAL_CPPFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    CXXFLAGS=`echo "$CXXFLAGS $EXTERNAL_CXXFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    LDFLAGS=`echo "$LDFLAGS $EXTERNAL_LDFLAGS" | tr " " '\n' | \
+              cat -n - | sort -k2 -k1,1n | uniq -f1 | sort -k1,1n | \
+              cut -f2 | tr '\n' " "`
+    # Do not sort LIBS. Usually, order is important and duplicates are
+    # intentional.
     LIBS="$LIBS $EXTERNAL_LIBS"
     LOFAR_DEPEND="$LOFAR_DEPEND $lfr_depend"
 
