@@ -62,6 +62,17 @@ namespace LOFAR {
 	} \
 	} while(0)
 
+#define INIT_VAR_LOGGER(filename,logfile) do { \
+	::LOFAR::lofarLoggerInitNode(); \
+	LofarInitTracingModule \
+	if (!strstr(filename, ".log_prop")) { \
+		log4cplus::PropertyConfigurator::doConfigureP2(log4cplus::tstring(filename)+".log_prop",logfile); \
+	} \
+	else  {\
+		log4cplus::PropertyConfigurator::doConfigureP2(filename,logfile); \
+	} \
+	} while(0)
+
 // After initialisation a thread is started to monitor any changes in the
 // properties file. An intervaltime in millisecs must be provided.
 #ifdef USE_THREADS
