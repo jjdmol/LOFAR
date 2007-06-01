@@ -377,6 +377,8 @@ void ApplController::createParSubsets()
 									fileName, 
 									nrProcs));
 			writeParSubset(basePS, procName, fileName);
+			// BGL processes do not connect to the ApplController.
+			itsNrOfProcs -= nrProcs ? nrProcs : 1;
 		}
 	} // for processes
 }
