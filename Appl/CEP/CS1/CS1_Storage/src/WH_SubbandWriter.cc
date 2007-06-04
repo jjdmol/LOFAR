@@ -297,11 +297,9 @@ namespace LOFAR
 
     void WH_SubbandWriter::postprocess() 
     {
-      delete [] itsFlagsBuffers;
-      delete [] itsWeightsBuffers;
-      delete itsWriter;
-      itsFlagsBuffers = 0;
-      itsWeightsBuffers = 0;
+      delete [] itsFlagsBuffers;	itsFlagsBuffers	  = 0;
+      delete [] itsWeightsBuffers;	itsWeightsBuffers = 0;
+      delete itsWriter;			itsWriter	  = 0;
       cout<<itsWriteTimer<<endl;
     }
     
