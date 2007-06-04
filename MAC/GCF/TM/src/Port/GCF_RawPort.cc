@@ -105,7 +105,7 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 						  (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL)) {
 		// Inform about the fact of an incomming message
 		LOG_DEBUG(formatString ("%s was received on port '%s' in task '%s'",
-								_pTask->evtstr(event), 
+								_pTask->evtstr(event).c_str(), 
 								getRealName().c_str(), 
 								_pTask->getName().c_str())); 
 	}
@@ -347,7 +347,7 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 		ASSERT(getTask());
 		LOG_DEBUG(formatString (
 			"'%s' for port '%s' in task '%s' not handled or an error occured",
-			getTask()->evtstr(e), getRealName().c_str(),
+			getTask()->evtstr(e).c_str(), getRealName().c_str(),
 			getTask()->getName().c_str()));
 	}
 

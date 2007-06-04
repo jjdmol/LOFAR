@@ -68,7 +68,7 @@ class GCFTask : public GCFFsm
      * - lofar logger("mac.log_prop")
      * - parameterset(argv[0] + ".conf")
      */     
-    static void init (int argc, char** argv);
+    static void init (int argc, char** argv, const string&	logfile = "");
     
     /**
     * The static run method. This starts the event processing loop.
@@ -112,8 +112,7 @@ class GCFTask : public GCFFsm
     void setName (string& name) {_name = name;}
 
     /// returns the "define" of a signal ID as a string    
-    const char* evtstr(const GCFEvent& e) const;
-    string eventstr(const GCFEvent& e) const;
+    string evtstr(const GCFEvent& e) const;
 
   protected:
     /**
