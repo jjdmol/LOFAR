@@ -57,13 +57,15 @@ namespace LOFAR
       ASSERT(nrSubbandsPerCell > 0);
       uint nNodesPerCell = itsCS1PS->nrBGLNodesPerCell();
       ASSERT(nNodesPerCell > 0);
-      uint maxConcurrent = itsCS1PS->getInt32("OLAP.BGLProc.maxConcurrentComm");
       uint nrPsetsPerStorage = itsParamSet.getUint32("OLAP.psetsPerStorage");
-      
+      ASSERT(nrSubbands % nrSubbandsPerCell == 0);
+      ASSERT(nrSubbandsPerCell % nrPsetsPerStorage == 0);
+
       // We must derive how many WH_SubbandWriter objects we have to
       // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerCell
       // to an AIPS++ Measurement Set.
-      uint nrWriters = ((nrSubbands - 1) / nrSubbandsPerCell + 1) / nrPsetsPerStorage;
+      uint nrWriters = nrSubbands / nrSubbandsPerCell / nrPsetsPerStorage;
+      uint maxConcurrent = itsCS1PS->getInt32("OLAP.BGLProc.maxConcurrentComm");
       LOG_TRACE_VAR_STR("Creating " << nrWriters << " subband writers ...");
 
       for (uint nw = 0; nw < nrWriters; ++nw)
