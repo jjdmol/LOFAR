@@ -485,26 +485,29 @@ create_dpt_file()
 		fi
 		prevdpt=${dpt}
 
-		if [ ! -f ${dpt}.dpdef ]; then
-			echo "TypeName"
-			echo "${dpt}.${dpt}	1#1"
-			echo "	state	21#2"
-			echo "	childState	21#3"
-			if [ ${prefix} != "-" ]; then
+
+	
+
+#
+# create PVSStypes
+#
+		echo "TypeName"
+		echo "${dpt}.${dpt}	1#1"
+		echo "	state	21#2"
+		echo "	childState	21#3"
+                let count=4
+		if [ ${prefix} != "-" ]; then
+			if [ ! -f ${dpt}.dpdef ]; then
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
-				echo "	currentAction	25#4"
-				echo "	error	25#5"
-				echo "	logMsg	25#6"
 			fi
-		else
-			echo "TypeName"
-			echo "${dpt}.${dpt}	1#1"
-			echo "	currentAction	25#2"
-			echo "	error	25#3"
-			echo "	logMsg	25#4"
-			echo "	state	21#5"
-			echo "	childState	21#6"
+			echo "	currentAction	25#4"
+			echo "	error	25#5"
+			echo "	logMsg	25#6"
 			let count=7
+		fi
+
+
+		if [ -f ${dpt}.dpdef ]; then
 			let depth=1
 			oldnode=""
 			cleanlist ${dpt}.dpdef | awk -v elemNr=$count ' 
@@ -555,6 +558,27 @@ create_dpt_file()
 				}'
 		fi
 		echo ""
+
+#
+# Create MasterDataPoint
+#
+		echo "DpName	TypeName	ID"
+		echo "_mp_${dpt}	${dpt}	0"
+		echo ""
+
+#
+# if software then create an hourarchive for the logMsg in the MasterDataPoint
+#
+		if [ ${prefix} != "-" ]; then
+			echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
+			echo "0	0	_mp_${dpt}.logMsg	${dpt}		45	1"
+			echo "0	0	_mp_${dpt}.logMsg	${dpt}	1	15		_ValueArchive_2"
+		echo ""
+		fi
+
+
+
+	
 	done >>${DESTDIR}/${DPT_FILE}
 	echo "created: ${DESTDIR}/${DPT_FILE}"
 
