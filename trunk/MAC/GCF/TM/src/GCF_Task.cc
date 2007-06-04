@@ -72,7 +72,7 @@ GCFTask::~GCFTask()
 {
 }
 
-void GCFTask::init(int argc, char** argv)
+void GCFTask::init(int argc, char** argv, const string&	logfile)
 {
 	_argc = argc;
 	_argv = argv;
@@ -87,8 +87,15 @@ void GCFTask::init(int argc, char** argv)
 		// locator could not find it try defaultname
 		logPropFile = "mac.log_prop";
 	}
-	INIT_LOGGER(aCL.locate(logPropFile).c_str());   
-	LOG_DEBUG_STR ("Initialized logsystem with: " << aCL.locate(logPropFile));
+	if (logfile.empty()) {
+		INIT_LOGGER(aCL.locate(logPropFile).c_str());   
+		LOG_DEBUG_STR ("Initialized logsystem with: " << aCL.locate(logPropFile));
+	}
+	else {
+		INIT_VAR_LOGGER(aCL.locate(logPropFile).c_str(), logfile);   
+		LOG_DEBUG_STR ("Initialized logsystem with: " << aCL.locate(logPropFile) <<
+						"," << logfile);
+	}
 
 	// Read in the ParameterSet of the task (<task>.conf)
 	ParameterSet*	pParamSet = ACC::APS::globalParameterSet();
@@ -194,22 +201,10 @@ void GCFTask::registerProtocol(unsigned short protocolID,
   _protocols[protocolID] = signal_names;
 }
 
-const char* GCFTask::evtstr(const GCFEvent& e)  const
-{
-  static const char* unknown = "unknown signal";
-  const char* signame(0);
-  TProtocols::const_iterator iter = _protocols.find(F_EVT_PROTOCOL(e));
-  if (iter != _protocols.end())
-  {
-    signame = (iter->second)[F_EVT_SIGNAL(e)];
-  }
-  return (signame?signame:unknown);
-}
-
 //
-// eventstr(event&)
+// evtstr(event&)
 //
-string GCFTask::eventstr(const GCFEvent& e)  const
+string GCFTask::evtstr(const GCFEvent& e)  const
 {
 	TProtocols::const_iterator iter = _protocols.find(F_EVT_PROTOCOL(e));
 	if (iter != _protocols.end()) {

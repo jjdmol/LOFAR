@@ -193,7 +193,7 @@ ssize_t GCFETHRawPort::send(GCFEvent& e)
 
   LOG_DEBUG(formatString (
       "Sending event '%s' for task '%s' on port '%s'",
-      getTask()->evtstr(e),
+      getTask()->evtstr(e).c_str(),
       getTask()->getName().c_str(), 
       getRealName().c_str()));
 

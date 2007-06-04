@@ -316,7 +316,7 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
 
 	LOG_TRACE_STAT(formatString (
 						"Sending event '%s' for task '%s' on port '%s'",
-						getTask()->evtstr(e), getTask()->getName().c_str(), 
+						getTask()->evtstr(e).c_str(), getTask()->getName().c_str(), 
 						getRealName().c_str()));
 
 	if ((written = _pSocket->send(buf, packsize)) != (ssize_t) packsize) {  

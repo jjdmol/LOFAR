@@ -85,7 +85,7 @@ class GCFDummyPort : public GCFPortInterface
     int cancelAllTimers ()
     {	return (0);	}
 
-	double timeLeft(long	timerID)
+	double timeLeft(long	/*timerID*/)
     {	return (0);	}
   
   private:
