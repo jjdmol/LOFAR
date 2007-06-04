@@ -156,16 +156,17 @@ if __name__ == '__main__':
             year = str(time.gmtime()[0])
             MSNumber = '/data/L' + year + '_' + '%05d' % measurementnumber
 	    MSName = MSNumber + '.MS'
+	    subbandsPerStorage = parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage')
 	    
-	    if (parset.getInt32('OLAP.subbandsPerPset') == 1):
+	    if (subbandsPerStorage == 1):
 	        MSName = '\'' + MSNumber + '_SB%01d' % 0 + '.MS' + '\''
 	        for i in range(1, len(parset.getInt32Vector('Observation.subbandList'))):
                     MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % i + '.MS' + '\''
 	    else:
-		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage') - 1) +'.MS' + '\''
-		for i in range(1, (len(parset.getInt32Vector('Observation.subbandList')) / (parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage')) )):
-		    first = i * parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage')
-		    last =  first + (parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage') -1)
+		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (subbandsPerStorage - 1) +'.MS' + '\''
+		for i in range(1, len(parset.getInt32Vector('Observation.subbandList')) / subbandsPerStorage):
+		    first = i * subbandsPerStorage
+		    last =  first + subbandsPerStorage - 1
 		    MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % first + '-%01d' % last +'.MS' + '\''
             
             outf = open(runningNumberFile, 'w')
