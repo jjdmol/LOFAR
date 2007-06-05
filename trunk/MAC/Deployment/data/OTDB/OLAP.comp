@@ -62,18 +62,19 @@ par integrationSteps	I	int	-	10  0	1000	-	'???'
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  StorageProc     1.0.0  development 'node constraint'  "???"
+node  StorageProc     1.0.1  development 'node constraint'  "???"
 
 #    name         	   	dir. 	type   unit   prun. vm  value   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par integrationSteps		I	int		-		10	0		60						-		'???'
+par subbandsPerMS		I	int		-		10	0		1						-		'???'
 
 
 
 # -- OLAP--
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  OLAP         1.0.1  development 'node constraint'  "OLAP"
+node  OLAP         1.0.2  development 'node constraint'  "OLAP"
 
 #    name          		dir.    type   unit   prun.     vm      value   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
