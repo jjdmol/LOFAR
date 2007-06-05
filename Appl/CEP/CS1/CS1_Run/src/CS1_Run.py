@@ -36,7 +36,7 @@ def doObservation(obsID, parset):
 	sys.exit(0)
 
     sections = [\
-        DelayCompensationSection(parset, list012),
+        DelayCompensationSection(parset, list001),
         InputSection(parset, liifen),
         BGLProcSection(parset, userId.getHost(), 'R000_128_0', userId.getPath()),
         StorageSection(parset, listfen)
@@ -157,17 +157,18 @@ if __name__ == '__main__':
             MSNumber = '/data/L' + year + '_' + '%05d' % measurementnumber
 	    MSName = MSNumber + '.MS'
 	    subbandsPerStorage = parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage')
+	    subbandsPerMS      = parset.getInt32('OLAP.StorageProc.subbandsPerMS')
 	    
-	    if (subbandsPerStorage == 1):
+	    if (subbandsPerMS == 1):
 	        MSName = '\'' + MSNumber + '_SB%01d' % 0 + '.MS' + '\''
 	        for i in range(1, len(parset.getInt32Vector('Observation.subbandList'))):
-                    MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % i + '.MS' + '\''
+                    MSName = MSName + ', \\\n' + '\'' + MSNumber + '_SB%01d' % i + '.MS' + '\''
 	    else:
-		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (subbandsPerStorage - 1) +'.MS' + '\''
-		for i in range(1, len(parset.getInt32Vector('Observation.subbandList')) / subbandsPerStorage):
-		    first = i * subbandsPerStorage
-		    last =  first + subbandsPerStorage - 1
-		    MSName = MSName + ', ' + '\'' + MSNumber + '_SB%01d' % first + '-%01d' % last +'.MS' + '\''
+		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (subbandsPerMS - 1) +'.MS' + '\''
+		for i in range(1, len(parset.getInt32Vector('Observation.subbandList')) / subbandsPerMS):
+		    first = i * subbandsPerMS
+		    last =  first + subbandsPerMS - 1
+		    MSName = MSName + ', \\\n' + '\'' + MSNumber + '_SB%01d' % first + '-%01d' % last +'.MS' + '\''
             
             outf = open(runningNumberFile, 'w')
             outf.write(str(measurementnumber + 1) + '\n')

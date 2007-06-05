@@ -57,7 +57,6 @@ namespace LOFAR
                        "WH_SubbandWriter"),
         itsCS1PS       (pset),
         itsSubbandIDs  (subbandID),
-        itsWriter     (0),
         itsTimeCounter(0),
 	itsTimesToIntegrate(1),
         itsFlagsBuffers(0),
@@ -97,7 +96,11 @@ namespace LOFAR
 
     WH_SubbandWriter::~WH_SubbandWriter() 
     {
-      delete itsWriter;
+      for (unsigned i = 0; i < itsWriters.size(); i ++)
+	delete itsWriters[i];
+
+      itsWriters.clear();
+
 #ifdef USE_MAC_PI
       delete itsPropertySet;
 
@@ -170,46 +173,54 @@ namespace LOFAR
       itsNrSubbandsPerStorage = itsNrSubbandsPerCell * itsCS1PS->getUint32("OLAP.psetsPerStorage");
       itsNrNodesPerCell       = itsCS1PS->nrBGLNodesPerCell();
       itsCurrentInputs.resize(itsNrSubbandsPerStorage / itsNrSubbandsPerCell, 0);
-  
       LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
         
       vector<string> storageStationNames = itsCS1PS->getStringVector("OLAP.storageStationNames");
+
+
+      itsNrSubbandsPerMS = itsCS1PS->getUint32("OLAP.StorageProc.subbandsPerMS");
+      ASSERT(itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage") % itsNrSubbandsPerMS == 0);
+      itsWriters.resize(itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage") / itsNrSubbandsPerMS);
+      itsFieldIDs.resize(itsWriters.size());
+  
+      for (unsigned i = 0; i < itsWriters.size(); i ++) {
+	itsWriters[i] = new MSWriter(
 #if defined HAVE_MPI
-      itsWriter = new MSWriter(msNames[TH_MPI::getCurrentRank()].c_str(),
+	  msNames[TH_MPI::getCurrentRank() * itsWriters.size() + i].c_str(),
 #else
-      itsWriter = new MSWriter(msNames[0].c_str(),
+	  msNames[0].c_str(),
 #endif
-			       startTime, timeStep * itsTimesToIntegrate, 
-                               itsNChannels, itsNPolSquared, 
-			       itsNBeams,
-			       itsNStations, 
-                               antPos, storageStationNames, itsTimesToIntegrate, 
-			       itsCS1PS->getUint32("OLAP.subbandsPerPset")* itsCS1PS->getUint32("OLAP.psetsPerStorage"));
+	  startTime, timeStep * itsTimesToIntegrate, 
+	  itsNChannels, itsNPolSquared, 
+	  itsNBeams,
+	  itsNStations, 
+	  antPos, storageStationNames, itsTimesToIntegrate, 
+	  itsNrSubbandsPerMS);
 			       
-      double chanWidth = itsCS1PS->chanWidth();
-      LOG_TRACE_VAR_STR("chanWidth = " << chanWidth);
-      
+	//## TODO: add support for more than 1 beam ##//
+	ASSERT(itsCS1PS->getDoubleVector("Observation.Beam.angle1").size() == itsNBeams);
+	ASSERT(itsCS1PS->getDoubleVector("Observation.Beam.angle2").size() == itsNBeams);
+	double RA = itsCS1PS->getDoubleVector("Observation.Beam.angle1")[0];
+	double DEC = itsCS1PS->getDoubleVector("Observation.Beam.angle2")[0];
+	// For nr of beams
+	itsFieldIDs[i] = itsWriters[i]->addField(RA, DEC);
+      }
+
       vector<double> refFreqs= itsCS1PS->refFreqs();
 
       // Now we must add \a itsNrSubbandsPerStorage to the measurement set. The
       // correct indices for the reference frequencies are in the vector of
       // subbandIDs.      
       itsBandIDs.resize(itsNrSubbandsPerStorage);
+      double chanWidth = itsCS1PS->chanWidth();
+      LOG_TRACE_VAR_STR("chanWidth = " << chanWidth);
+
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++sb) {
 	// compensate for the half-channel shift introduced by the PPF
 	double refFreq = refFreqs[itsSubbandIDs[sb]] - chanWidth / 2;
-        itsBandIDs[sb] = itsWriter->addBand (itsNPolSquared, itsNChannels,
-                                             refFreq, chanWidth);
+	itsBandIDs[sb] = itsWriters[sb / itsNrSubbandsPerMS]->addBand(itsNPolSquared, itsNChannels, refFreq, chanWidth);
       }
       
-      //## TODO: add support for more than 1 beam ##//
-      ASSERT(itsCS1PS->getDoubleVector("Observation.Beam.angle1").size() == itsNBeams);
-      ASSERT(itsCS1PS->getDoubleVector("Observation.Beam.angle2").size() == itsNBeams);
-      double RA = itsCS1PS->getDoubleVector("Observation.Beam.angle1")[0];
-      double DEC = itsCS1PS->getDoubleVector("Observation.Beam.angle2")[0];
-      // For nr of beams
-      itsFieldID = itsWriter->addField (RA, DEC);
-
       // Allocate buffers
       itsFlagsBuffers   = new bool[itsNrSubbandsPerStorage * itsNVisibilities];
       itsWeightsBuffers = new float[itsNrSubbandsPerStorage * itsNBaselines * itsNChannels];
@@ -275,11 +286,13 @@ namespace LOFAR
 
 	if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
 	  itsWriteTimer.start();
-	  itsWriter->write (itsBandIDs[sb], itsFieldID, 0, itsNChannels,
-			    itsTimeCounter, itsNVisibilities,
-			    &(itsVisibilities[sb * itsNVisibilities]),
-			    &(itsFlagsBuffers[sb * itsNVisibilities]), 
-			    &(itsWeightsBuffers[sb * itsNBaselines * itsNChannels]));
+std::clog << "CPU " << TH_MPI::getCurrentRank() << " writes sb " << sb << " to writer " << (sb / itsNrSubbandsPerMS) << ", band = " << itsBandIDs[sb] << std::endl;
+	  itsWriters[sb / itsNrSubbandsPerMS]->write(itsBandIDs[sb],
+	    itsFieldIDs[sb / itsNrSubbandsPerMS], 0, itsNChannels,
+	    itsTimeCounter, itsNVisibilities,
+	    &itsVisibilities[sb * itsNVisibilities],
+	    &itsFlagsBuffers[sb * itsNVisibilities], 
+	    &itsWeightsBuffers[sb * itsNBaselines * itsNChannels]);
 	  itsWriteTimer.stop();
 	}
 
@@ -297,9 +310,13 @@ namespace LOFAR
 
     void WH_SubbandWriter::postprocess() 
     {
-      delete [] itsFlagsBuffers;	itsFlagsBuffers	  = 0;
+      delete [] itsFlagsBuffers;	itsFlagsBuffers   = 0;
       delete [] itsWeightsBuffers;	itsWeightsBuffers = 0;
-      delete itsWriter;			itsWriter	  = 0;
+
+      for (unsigned i = 0; i < itsWriters.size(); i ++)
+	delete itsWriters[i];
+
+      itsWriters.clear();
       cout<<itsWriteTimer<<endl;
     }
     

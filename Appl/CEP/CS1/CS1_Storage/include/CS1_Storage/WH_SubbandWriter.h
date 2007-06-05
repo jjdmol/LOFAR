@@ -83,14 +83,15 @@ namespace LOFAR
       uint  itsNPolSquared;
       uint  itsNVisibilities;
 
-      MSWriter* itsWriter;
+      vector <MSWriter *> itsWriters;
 
       uint itsNrSubbandsPerCell; ///< Number of subbands per BG/L cell
       uint itsNrSubbandsPerStorage;
       uint itsNrNodesPerCell;
+      uint itsNrSubbandsPerMS;
       vector<uint> itsCurrentInputs;
       vector<uint> itsBandIDs;   ///< MS IDs of the frequency bands
-      uint itsFieldID;           ///< MS ID of the field, i.e. the beam.
+      vector<uint> itsFieldIDs;  ///< MS IDs of the field, i.e. the beam.
       uint itsTimeCounter;       ///< Counts the time
       uint itsTimesToIntegrate;  ///< Number of timeSteps to integrate
       bool *itsFlagsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];

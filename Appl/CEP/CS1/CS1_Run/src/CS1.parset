@@ -9,7 +9,7 @@
 # Do not change these hosts without changing the machinefile(s). Host on which TFC_DelayCompensation runs.
 
 OLAP.OLAP_Conn.AMCServerHost = localhost
-OLAP.DelayComp.hostname = list012
+OLAP.DelayComp.hostname = list001
 
 # The ports for all (socket)connections
 
@@ -31,7 +31,7 @@ OLAP.OLAP_Conn.station_Input_Transport = UDP
 # The format of the data
 
 # Variables for Storage
-OLAP.subbandsPerPset = 3
+OLAP.subbandsPerPset = 4
 OLAP.psetsPerStorage = 2
 OLAP.storageIntegrationTime = 60
 OLAP.minorIntegrationSteps = 608  #768 at 200MHz
@@ -39,6 +39,7 @@ OLAP.BGLProc.nrPPFTaps=16
 OLAP.BGLProc.psetsPerCell = 1
 OLAP.BGLProc.nodesPerPset = 8
 OLAP.BGLProc.maxConcurrentComm = 2
+OLAP.StorageProc.subbandsPerMS = 1
 
 # Variables for the DelayCompensation
 OLAP.DelayComp.converterType = IMPL  # should be one of IMPL, CLIENT
@@ -47,7 +48,7 @@ OLAP.DelayComp.positionType  = ITRF  # should be ITRF
 OLAP.IPHeaderSize = 32
 OLAP.EPAHeaderSize = 16
 OLAP.nrTimesInFrame = 16
-OLAP.nrSubbandsPerFrame = 36
+OLAP.nrSubbandsPerFrame = 48
 OLAP.nrBitsPerSample=16
 OLAP.nrSecondsOfBuffer = 26
 OLAP.delayCompensation = T
@@ -62,7 +63,8 @@ Observation.channelsPerSubband = 256
 Observation.nrPolarisations = 2
 Observation.year = 2007
 Observation.treeID = 00001
-Observation.subbandList = [307,310,313,317,320,323,326,330,333,336,339,343,346,349,353,356,359,363,366,369,374,377,380,384]
+Observation.subbandList = [65, 73, 81, 89, 98, 106, 114, 122, 130, 138, 146, 155, 163, 171, 179, 187, 195, 204, 212, 220, 228, 236, 244, 252, 261, 269, 277, 285, 293, 301, 309, 318, 326, 334, 342, 350, 358, 367, 375, 383, 391, 399, 407, 415, 424, 432, 440, 448]
+
 Observation.VirtualInstrument.stationList = ['CS010', 'CS008', 'CS001', 'CS016']
 
 PIC.Core.CS010.inputNodeList = [lii001, lii001, lii002, lii003]

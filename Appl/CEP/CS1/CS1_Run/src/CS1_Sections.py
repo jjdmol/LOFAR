@@ -10,7 +10,7 @@ class Section(object):
     Represents a part of the CS1 application
     """
 
-    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = '~/'):
+    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = '~/projects/cvs/'):
         self.workingDir = workingDir
         self.parset = parset
         self.package = package
