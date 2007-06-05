@@ -18,7 +18,8 @@ tWH_BGL_Processing.cc				\
 transpose_SOURCES =				\
 transpose.cc					
 
-CCAS			= /bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/gcc
+#CCAS			= /bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/gcc
+CCAS			= gcc
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 
 
