@@ -239,7 +239,7 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 				 const string&	prefix,
 				 bool		merge)
 {
-	char	paramLine[1024];
+	char	paramLine[4096];
 	char*	keyStr;
 	char*	valueStr;
 	bool	multiLine = false;			// current line is multiline
@@ -249,7 +249,7 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 	string	prefixedKey;					// Key with added prefix (which may be an empty string)
 
 	// Read the file line by line and convert it to Key Value pairs.
-	while (inputStream.getline (paramLine, 1024)) {
+	while (inputStream.getline (paramLine, 4096)) {
 		LOG_TRACE_LOOP(formatString("data:>%s<", paramLine));
 	
 		if (!paramLine[0] || paramLine[0] == '#') {		// skip empty lines
