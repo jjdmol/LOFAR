@@ -42,6 +42,7 @@
 #ifdef HAVE_BGL
 // netdb is not available on BGL; all code using netdb will be 
 // conditionally included using the HAVE_BGL definition;
+#define OPT_BGL_BLOCK 64*1024
 #else
 #include <netdb.h>
 #endif
@@ -812,8 +813,11 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 			int32 oldCounter = *sigpipeCounter;
 
 			// try to read something
-#if defined HAVE_BGL
-			bytesRead = ::recv (itsSocketID, (char*)buf, std::min(26000, bytesLeft), 0);
+#if (defined HAVE_BGL && !defined USE_ZOID)
+			// BG/L using CIOD has it's optimum
+			// performance when using packet of about
+			// 64kb. Should not be used with ZOID!
+			bytesRead = ::recv (itsSocketID, (char*)buf, std::min(OPT_BGL_BLOCK, bytesLeft), 0);
 #else
 			bytesRead = ::recv (itsSocketID, (char*)buf, bytesLeft, 0);
 #endif
@@ -838,7 +842,8 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 
 			if (bytesRead < 0) { 					// error?
 				if (errno == EWOULDBLOCK) { 
-					// if refuses to block, that's OK, return 0
+					// if refuses to block, that's
+					// OK, return received bytes
 					itsErrno = INCOMPLETE;
 					return (maxBytes - bytesLeft);
 				}
@@ -911,8 +916,11 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 		while (bytesLeft > 0 && !itsErrno && !sigpipe) {
 			errno = 0;								// reset system error
 			int32 oldCounter = *sigpipeCounter;
-#if defined HAVE_BGL
-			bytesWritten = ::write (itsSocketID, buf, std::min(26000, bytesLeft));
+#if (defined HAVE_BGL && !defined USE_ZOID)
+			// BG/L using CIOD has it's optimum
+			// performance when using packets of about
+			// 64kb. Should not be used with ZOID!
+			bytesWritten = ::write (itsSocketID, buf, std::min(OPT_BGL_BLOCK, bytesLeft));
 #else
 			bytesWritten = ::write (itsSocketID, buf, bytesLeft);
 #endif
@@ -926,7 +934,7 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 			if (itsIsBlocking && itsAllowIntr)
 				return (setErrno(INCOMPLETE));
 
-#ifdef IN_SERIUOS_TROUBLE
+#ifdef IN_SERIOUS_TROUBLE
 			// trace databytes
 			string	hdump;
 			hexdump (hdump, buf, bytesWritten);
@@ -934,7 +942,9 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 #endif
 
 			if (bytesWritten < 0) {
-				if (errno == EWOULDBLOCK) { // if refuses to block, that's OK, return 0
+				if (errno == EWOULDBLOCK) { 
+				  // if refused to block, that's OK,
+				  // return sent bytes
 					itsErrno = INCOMPLETE;
 					return (nrBytes - bytesLeft);
 				}
