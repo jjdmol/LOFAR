@@ -279,7 +279,6 @@ namespace LOFAR
 
 	if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
 	  itsWriteTimer.start();
-std::clog << "CPU " << TH_MPI::getCurrentRank() << " writes sb " << sb << " to writer " << (sb / itsNrSubbandsPerMS) << ", band = " << itsBandIDs[sb] << std::endl;
 	  itsWriters[sb / itsNrSubbandsPerMS]->write(itsBandIDs[sb],
 	    itsFieldIDs[sb / itsNrSubbandsPerMS], 0, itsNChannels,
 	    itsTimeCounter, itsNVisibilities,
