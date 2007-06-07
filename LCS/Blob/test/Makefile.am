@@ -1,16 +1,16 @@
-check_PROGRAMS	      =	tBlobString tBlobStream tBlobArray tBlobField \
-			tBlobAipsIO tKeyValueMap
+check_PROGRAMS	      =	tBlobString tBlobStream tBlobArray tBlobSTL \
+			tBlobField tBlobAipsIO tKeyValueMap
 
 # programs to run through supplied checktools
-CHECKTOOLPROGS	      =	tBlobString tBlobStream tBlobArray tBlobField \
-			tBlobAipsIO tKeyValueMap
-#ENDCHECKTOOLPROGS
+CHECKTOOLPROGS	      =	tBlobString tBlobStream tBlobArray tBlobSTL
+			tBlobField tBlobAipsIO tKeyValueMap
 
 TESTSCRIPTS = \
-	  tBlobArray_test.sh \
-	  tBlobField_test.sh \
-          tBlobStream_test.sh \
           tBlobString_test.sh \
+          tBlobStream_test.sh \
+	  tBlobArray_test.sh \
+	  tBlobSTL_test.sh \
+	  tBlobField_test.sh \
 	  tBlobAipsIO_test.sh \
 	  tKeyValueMap_test.sh 
 
@@ -32,6 +32,10 @@ tBlobStream_DEPENDENCIES	= ../src/libblob.la $(LOFAR_DEPEND)
 tBlobArray_SOURCES		= tBlobArray.cc
 tBlobArray_LDADD		= ../src/libblob.la
 tBlobArray_DEPENDENCIES		= ../src/libblob.la $(LOFAR_DEPEND)
+
+tBlobSTL_SOURCES		= tBlobSTL.cc
+tBlobSTL_LDADD			= ../src/libblob.la
+tBlobSTL_DEPENDENCIES		= ../src/libblob.la $(LOFAR_DEPEND)
 
 tBlobField_SOURCES		= tBlobField.cc
 tBlobField_LDADD		= ../src/libblob.la
