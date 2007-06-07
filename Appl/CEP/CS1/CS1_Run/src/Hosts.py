@@ -57,16 +57,12 @@ class UserId(object):
     """
     Represents a userId
     """
-    def __init__(self, host, name, path):
+    def __init__(self, host, name):
         self.name = name
-	self.path = path
 	self.host = host
     
     def getName(self):
         return self.name
         
-    def getPath(self):
-        return self.path
-    
     def getHost(self):
         return self.host

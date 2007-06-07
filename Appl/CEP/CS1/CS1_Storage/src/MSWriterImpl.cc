@@ -25,6 +25,7 @@
 
 #include <lofar_config.h>
 
+#if defined HAVE_AIPSPP
 #include <CS1_Storage/MSWriterImpl.h>
 #include <ms/MeasurementSets.h>
 #include <tables/Tables/IncrementalStMan.h>
@@ -703,3 +704,5 @@ namespace LOFAR
   } // namespace CS1
 
 } // namespace LOFAR
+
+#endif // defined HAVE_AIPSPP

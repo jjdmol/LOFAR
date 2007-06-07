@@ -182,7 +182,7 @@ namespace LOFAR
 	  if (!amWaiting)
 	    {
 	      itsReadLockTimer.stop ();
-	      cout<<"Waiting for data: "<<begin<<" - "<<end<< endl;
+	      //cout<<"Waiting for data: "<<begin<<" - "<<end<< endl;
       	      //printPointers();
 	      itsWaitingForDataTimer.start ();
 	      amWaiting = true;
@@ -192,7 +192,7 @@ namespace LOFAR
       if (amWaiting)
 	{
 	  itsWaitingForDataTimer.stop ();
-	  cout<<"Data available"<<endl;
+	  //cout<<"Data available"<<endl;
 	  itsReadLockTimer.start ();
 	}
       itsReadHead = end;

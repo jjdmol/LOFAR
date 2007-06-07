@@ -39,10 +39,10 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#ifdef HAVE_BGL
+#if defined HAVE_BGL && !defined HAVE_ZOID
 // netdb is not available on BGL; all code using netdb will be 
 // conditionally included using the HAVE_BGL definition;
-#define OPT_BGL_BLOCK 64*1024
+#define OPTIMAL_CIOD_CHUNK_SIZE (64 * 1024)
 #else
 #include <netdb.h>
 #endif
@@ -813,14 +813,15 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 			int32 oldCounter = *sigpipeCounter;
 
 			// try to read something
-#if (defined HAVE_BGL && !defined USE_ZOID)
-			// BG/L using CIOD has it's optimum
-			// performance when using packet of about
-			// 64kb. Should not be used with ZOID!
-			bytesRead = ::recv (itsSocketID, (char*)buf, std::min(OPT_BGL_BLOCK, bytesLeft), 0);
+#if defined HAVE_BGL && !defined HAVE_ZOID
+			// BG/L using CIOD achieves optimal performance when
+			// receiving in chunks of 64kb.
+			// Should not be used with ZOID!
+			bytesRead = ::recv (itsSocketID, (char*)buf, std::min(OPTIMAL_CIOD_CHUNK_SIZE, bytesLeft), 0);
 #else
 			bytesRead = ::recv (itsSocketID, (char*)buf, bytesLeft, 0);
 #endif
+			//std::clog << "read " << bytesRead << " from " << bytesLeft << " bytes" << std::endl;
 			sigpipe = (oldCounter != *sigpipeCounter); 	// check for SIGPIPE
 			LOG_TRACE_CALC(formatString("Socket(%d):read(%d)=%d%s, errno=%d(%s)", 
 						itsSocketID, bytesLeft, bytesRead, 
@@ -916,14 +917,15 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 		while (bytesLeft > 0 && !itsErrno && !sigpipe) {
 			errno = 0;								// reset system error
 			int32 oldCounter = *sigpipeCounter;
-#if (defined HAVE_BGL && !defined USE_ZOID)
-			// BG/L using CIOD has it's optimum
-			// performance when using packets of about
-			// 64kb. Should not be used with ZOID!
-			bytesWritten = ::write (itsSocketID, buf, std::min(OPT_BGL_BLOCK, bytesLeft));
+#if defined HAVE_BGL && !defined HAVE_ZOID
+			// BG/L using CIOD achieves optimal performance when
+			// writing in chunks of 64kb.
+			// Should not be used with ZOID!
+			bytesWritten = ::write (itsSocketID, buf, std::min(OPTIMAL_CIOD_CHUNK_SIZE, bytesLeft));
 #else
 			bytesWritten = ::write (itsSocketID, buf, bytesLeft);
 #endif
+			//std::clog << "wrote " << bytesWritten << " from " << bytesLeft << " bytes" << std::endl;
 			sigpipe = (oldCounter != *sigpipeCounter); // check for SIGPIPE
 			LOG_TRACE_CALC(formatString("Socket(%d):write(%d)=%d%s, errno=%d(%s)",
 							itsSocketID, bytesLeft, bytesWritten, 

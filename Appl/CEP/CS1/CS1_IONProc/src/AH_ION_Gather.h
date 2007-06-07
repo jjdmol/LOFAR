@@ -1,4 +1,4 @@
-//#  AH_BGL_Processing.h: 
+//#  AH_ION_Gather.h: 
 //#
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,47 +18,32 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_CS1_BGL_PROC_AH_BGL_PROCESSING_H
-#define LOFAR_CS1_BGL_PROC_AH_BGL_PROCESSING_H
+#ifndef LOFAR_CS1_ION_PROC_AH_ION_GATHER_H
+#define LOFAR_CS1_ION_PROC_AH_ION_GATHER_H
 
-#include <tinyCEP/TinyApplicationHolder.h>
+#include <CEPFrame/ApplicationHolder.h>
+#include <CS1_IONProc/WH_ION_Gather.h>
 #include <CS1_Interface/Stub_BGL.h>
-#include <CS1_Interface/CS1_Parset.h>
 
-#if defined HAVE_BGL
-#include <rts.h>
-#endif
 
 namespace LOFAR {
 namespace CS1 {
 
-    //# Forward declarations
-class WH_BGL_Processing;
-
-    // Description of class.
-class AH_BGL_Processing : public TinyApplicationHolder
+class AH_ION_Gather : public ApplicationHolder
 {
   public:
-		 AH_BGL_Processing();
-    virtual	 ~AH_BGL_Processing();
+		 AH_ION_Gather();
+    virtual	 ~AH_ION_Gather();
     virtual void undefine();
     virtual void define(const KeyValueMap&);
-    virtual void init();
+    virtual void prerun();
     virtual void run(int nsteps);
-    /*   virtual void postrun  (); */
-    virtual void dump() const;
-    virtual void quit();
-
-    static char  **original_argv;
+    virtual void postrun();
 
   private:
-#if defined HAVE_BGL
-    static unsigned remapOnTree(unsigned cell, unsigned core, struct BGLPersonality &);
-#endif
-    
-    CS1_Parset                  *itsCS1PS;
-    vector<WH_BGL_Processing *> itsWHs;
-    Stub_BGL			*itsSubbandStub, *itsVisibilitiesStub;
+    CS1_Parset	  *itsCS1PS;
+    WH_ION_Gather *itsWH;
+    Stub_BGL	  *itsVisibilitiesStub;
 };
 
 } // namespace CS1

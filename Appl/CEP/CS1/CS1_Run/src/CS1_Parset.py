@@ -17,10 +17,10 @@ class CS1_Parset(LOFAR_Parset.Parset):
         
         if self.clock == '160MHz':
 	    self['Observation.sampleClock'] = 160
-	    self['OLAP.minorIntegrationSteps'] = 608
+	    self['OLAP.BGLProc.integrationSteps'] = 608
         elif self.clock == '200MHz':
 	    self['Observation.sampleClock'] = 200
-	    self['OLAP.minorIntegrationSteps'] = 768
+	    self['OLAP.BGLProc.integrationSteps'] = 768
         self.updateSBValues()
         
     def getClockString(self):
@@ -112,7 +112,12 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self['Observation.stopTime'] = datetime.datetime.fromtimestamp(start + duration)
 
     def setIntegrationTime(self, integrationTime):
-        self['OLAP.storageIntegrationTime'] = integrationTime
+	if self.getBool('OLAP.IONProc.useGather'):
+	  self['OLAP.IONProc.integrationSteps']     = integrationTime
+	  self['OLAP.StorageProc.integrationSteps'] = 1
+	else:
+	  self['OLAP.IONProc.integrationSteps']     = 1
+	  self['OLAP.StorageProc.integrationSteps'] = integrationTime
 
     def setMSName(self, msName):
         self['Observation.MSNameMask'] = msName

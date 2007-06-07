@@ -65,16 +65,64 @@ void DH_Visibilities::init()
   createDataBlock();  // calls fillDataPointers
 }
 
+
+#if 0
+// TODO: add nrValidSamples
+
+extern "C" { void do_add(fcomplex *, const fcomplex *, unsigned); }
+
+asm(
+"do_add:\n"
+"	.long 0x7c001b1c\n"	// lfpsx   0,0,3
+"	li      8,8\n"
+"	.long 0x7c20231c\n"	// lfpsx   1,0,4
+"	addi    9,3,-8\n"
+"	.long 0x7c43435c\n"	// lfpsux  2,3,8
+"	rlwinm  5,5,30,2,31\n"
+"	.long 0x7c64435c\n"	// lfpsux  3,4,8
+"	mtctr   5\n"
+"	.long 0x7c83435c\n"	// lfpsux  4,3,8
+"	li	10,64\n"
+"	.long 0x7ca4435c\n"	// lfpsux  5,4,8
+"	.long 0x7cc3435c\n"	// lfpsux  6,3,8
+"	.long 0x7ce4435c\n"	// lfpsux  7,4,8
+"0:\n"
+"	.long 0x01000818\n"	// fpadd   8,0,1
+"	.long 0x7c03435c\n"	// lfpsux  0,3,8
+"	.long 0x01221818\n"	// fpadd   9,2,3
+"	.long 0x7c24435c\n"	// lfpsux  1,4,8
+"	.long 0x01442818\n"	// fpadd   10,4,5
+"	.long 0x7c43435c\n"	// lfpsux  2,3,8
+"	.long 0x01663818\n"	// fpadd   11,6,7
+"	.long 0x7c64435c\n"	// lfpsux  3,4,8
+"	.long 0x7c83435c\n"	// lfpsux  4,3,8
+"	.long 0x7d09475c\n"	// stfpsux 8,9,8
+"	.long 0x7ca4435c\n"	// lfpsux  5,4,8
+"	.long 0x7d29475c\n"	// stfpsux 9,9,8
+"	.long 0x7cc3435c\n"	// lfpsux  6,3,8
+"	.long 0x7d49475c\n"	// stfpsux 10,9,8
+"	.long 0x7ce4435c\n"	// lfpsux  7,4,8
+"	.long 0x7d69475c\n"	// stfpsux 11,9,8
+"	bdnz+   0b\n"
+"	blr\n"
+);
+#endif
+
+
 DH_Visibilities &DH_Visibilities::operator += (const DH_Visibilities &dh)
 {
   NSTimer timer("DH_Vis add", true);
   timer.start();
 
+#if 1
   for (unsigned i = 0; i < getNrVisibilities(); i ++)
     itsVisibilities[i] += dh.itsVisibilities[i];
 
   for (unsigned i = 0; i < itsNrBaselines * itsNrChannels; i ++)
     itsNrValidSamples[i] += dh.itsNrValidSamples[i];
+#else
+  do_add(itsVisibilities, dh.itsVisibilities, getNrVisibilities());
+#endif
 
   timer.stop();
   return *this;

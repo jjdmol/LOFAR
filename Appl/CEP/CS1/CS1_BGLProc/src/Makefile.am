@@ -3,7 +3,8 @@ Correlator.h		\
 FFT.h			\
 FIR.h			\
 AH_BGL_Processing.h	\
-WH_BGL_Processing.h	
+WH_BGL_Processing.h	\
+TH_ZoidClient.h
 
 NOINSTHDRS 		=
 
@@ -19,8 +20,7 @@ DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 
 bin_PROGRAMS 		= CS1_BGL_Processing 
 
-#CCAS			= /bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/bin/gcc
-CCAS			= gcc
+CCAS			= $(CC)
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 
 CS1_BGL_Processing_SOURCES	= $(DOCHDRS) \
@@ -29,7 +29,8 @@ FIR.S				\
 FFT.S				\
 CS1_BGL_Processing_main.cc 	\
 AH_BGL_Processing.cc		\
-WH_BGL_Processing.cc
+WH_BGL_Processing.cc		\
+TH_ZoidClient.cc
 
 configfilesdir=$(bindir)
 configfiles_DATA	=	\

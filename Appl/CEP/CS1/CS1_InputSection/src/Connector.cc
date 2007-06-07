@@ -56,7 +56,7 @@ namespace LOFAR {
 				srcMac,
 				dstMac, 
 				0x0008,
-				8 * 1024 * 1024);
+				16 * 1024 * 1024);
       } else if (transportType=="FILE") {
 	string file = ps.getString(key + ".inputFile");
 	if (isReceiver) {

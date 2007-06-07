@@ -88,7 +88,7 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&)
   // TODO: support multiple RSPs per station
   itsInputNodes  = itsCS1PS->getUint32Vector("Input.InputNodes");
   itsOutputNodes = itsCS1PS->getUint32Vector("Input.OutputNodes");
-  unsigned nrBGLnodesPerCell = itsCS1PS->nrBGLNodesPerCell();
+  unsigned nrOutputChannels = itsCS1PS->nrOutputsPerInputNode();
 
 #if defined HAVE_MPI
   unsigned nrNodes = TH_MPI::getNumberOfNodes();
@@ -98,31 +98,33 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&)
 
   itsWHs.resize(nrNodes);
 
+  bool doTranspose = itsInputNodes.size() > 0 && itsOutputNodes.size() > 0;
+
   for (unsigned node = 0, cell = 0, station = 0; node < nrNodes; node ++) {
-    bool isInput  = std::find(itsInputNodes.begin(), itsInputNodes.end(), node) != itsInputNodes.end();
-    bool isOutput = std::find(itsOutputNodes.begin(), itsOutputNodes.end(), node) != itsOutputNodes.end();
+    bool doInput  = std::find(itsInputNodes.begin(), itsInputNodes.end(), node) != itsInputNodes.end();
+    bool doOutput = std::find(itsOutputNodes.begin(), itsOutputNodes.end(), node) != itsOutputNodes.end();
     TransportHolder *th = 0;
 
-    if (isInput) {
+    if (doInput) {
       th = Connector::readTH(itsCS1PS, itsCS1PS->stationName(station)); 
     }
 
-    itsWHs[node] = new WH_InputSection("InputSection", itsCS1PS, th, isInput ? station : 0, isInput ? 1 : 0, isOutput ? nrBGLnodesPerCell : 0, itsInputNodes, itsOutputNodes);
+    itsWHs[node] = new WH_InputSection("InputSection", doInput, doTranspose, doOutput, itsCS1PS, th, doInput ? station : 0, doInput ? 1 : 0, doOutput ? nrOutputChannels : 0, itsInputNodes, itsOutputNodes);
     Step *step = new Step(itsWHs[node], "Step", false);
     step->runOnNode(node); 
     comp.addBlock(step);
 
-    if (isInput) {
+    if (doInput) {
       itsDelayStub->connect(station, step->getInDataManager(0), 0);
       station ++;
     }
 
-    if (isOutput) {
+    if (doOutput) {
       DataManager      &dm = step->getOutDataManager(0);
-      std::vector<int> channels(nrBGLnodesPerCell);
+      std::vector<int> channels(nrOutputChannels);
 
-      for (unsigned core = 0; core < nrBGLnodesPerCell; core ++) {
-	dm.setOutBuffer(core, false, 3);
+      for (unsigned core = 0; core < nrOutputChannels; core ++) {
+	dm.setOutBuffer(core, false, itsCS1PS->useScatter() ? 8 : 3);
 	itsOutputStub->connect(cell, core, dm, core);
 	channels[core] = core;
       }

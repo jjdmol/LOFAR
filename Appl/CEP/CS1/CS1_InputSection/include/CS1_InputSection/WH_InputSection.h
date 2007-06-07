@@ -60,7 +60,10 @@ namespace LOFAR
       typedef DH_Subband::SampleType SampleType;
 
       explicit WH_InputSection(const string &name, 
-                           CS1_Parset      *ps,
+			   bool doInput,
+			   bool doTranspose,
+			   bool doOutput,
+                           CS1_Parset *ps,
                            TransportHolder *inputTH,
 			   unsigned stationNr,
 			   unsigned nrInputChannels,
@@ -90,7 +93,7 @@ namespace LOFAR
       
       //# Datamembers
       bool itsDelayCompensation;
-      bool itsIsInput, itsIsOutput;      
+      bool itsDoInput, itsDoTranspose, itsDoOutput;
       const std::vector<unsigned> &itsInputNodes, &itsOutputNodes;
 
       boost::multi_array<SampleType, 4> *itsInputData, *itsOutputData;

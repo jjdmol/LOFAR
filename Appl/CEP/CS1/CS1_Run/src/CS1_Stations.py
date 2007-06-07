@@ -45,8 +45,6 @@ CS016_dipole8  = [Station('CS016_dipole8')]
 CS016_dipole12 = [Station('CS016_dipole12')]
 CS016_4dipoles = CS016_dipole0 + CS016_dipole4 + CS016_dipole8 + CS016_dipole12
 
-Fourstations_4dipoles = CS010_4dipoles + CS001_4dipoles + CS008_4dipoles + CS016_4dipoles
-
 CS010_us0  = [Station('CS010_us0')]
 CS010_us1  = [Station('CS010_us1')]
 CS010_us2  = [Station('CS010_us2')]

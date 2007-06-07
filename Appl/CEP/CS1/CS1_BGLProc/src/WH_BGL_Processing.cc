@@ -1151,7 +1151,7 @@ WH_BGL_Processing::WH_BGL_Processing(const string& name, unsigned coreNumber, CS
 
   itsNrStations	       = itsCS1PS->nrStations();
   itsNrBaselines       = itsNrStations * (itsNrStations + 1) / 2;
-  itsNrSamplesPerIntegration = itsCS1PS->nrSubbandSamples() / NR_SUBBAND_CHANNELS;
+  itsNrSamplesPerIntegration = itsCS1PS->BGLintegrationSteps();
 
 #if !defined C_IMPLEMENTATION
   ASSERT(itsNrSamplesPerIntegration % 16 == 0);
@@ -1680,6 +1680,12 @@ void WH_BGL_Processing::doCorrelate()
   weightTimer.stop();
 #endif  
 
+#if 0
+static unsigned count;
+nrValidSamples[0][0] = itsCurrentSubband;
+nrValidSamples[0][1] = TH_MPI::getCurrentRank();
+nrValidSamples[0][2] = count ++;
+#endif
   doCorrelateTimer.stop();
 }
 

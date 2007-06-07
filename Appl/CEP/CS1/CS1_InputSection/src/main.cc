@@ -31,6 +31,8 @@
 #include <tinyCEP/ApplicationHolderController.h>
 #include <CS1_InputSection/ACCmainInputSection.h>
 
+#include <exception>
+
 #ifdef HAVE_MPI
 #include <Transport/TH_MPI.h>
 #endif
@@ -39,7 +41,8 @@ using namespace LOFAR;
 using namespace LOFAR::CS1;
 
 #if 1
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   ConfigLocator aCL;
   string        progName = basename(argv[0]);
   string        logPropFile(progName + ".log_prop");

@@ -270,7 +270,7 @@ namespace LOFAR
       // The time step is equal to one integration period, which, in turn, is
       // defined as the number of samples used per integration period divided
       // by the sample rate in seconds. Divide by 86400 to get it in days.
-      Epoch stepTime  = itsCS1PS->integrationTime() / 86400;
+      Epoch stepTime  = itsCS1PS->BGLintegrationTime() / 86400;
  
       LOG_TRACE_VAR("Observation:");
       LOG_TRACE_VAR_STR(" startTime = " << startTime);
