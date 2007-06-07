@@ -22,35 +22,38 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#undef USE_ZOID
-
 #include <Common/lofar_iostream.h>
 
+#include <Blob/KeyValueMap.h>
 #include <CS1_BGLProc/AH_BGL_Processing.h>
 #include <CS1_BGLProc/WH_BGL_Processing.h>
+#include <CS1_BGLProc/TH_ZoidClient.h>
 #include <CS1_Interface/CS1_Config.h>
 #include <CS1_Interface/Stub_BGL.h>
 #include <Transport/BGLConnection.h>
+#include <Transport/TH_Null.h>
 
 #if defined HAVE_MPI
 #include <Transport/TH_MPI.h>
 #endif
 
-#if defined USE_ZOID
-#include <CS1_BGLProc/TH_ZoidClient.h>
+#if defined HAVE_ZOID
+extern "C" {
+#include <lofar.h>
+}
 #endif
-
-#include <Blob/KeyValueMap.h>
 
 namespace LOFAR {
 namespace CS1 {
+
+
+char **AH_BGL_Processing::original_argv;
 
 
 AH_BGL_Processing::AH_BGL_Processing() 
   : itsCS1PS(0),
     itsWHs(0),
     itsSubbandStub(0),
-    //itsRFI_MitigationStub(0),
     itsVisibilitiesStub(0)
 {
 }
@@ -62,15 +65,13 @@ AH_BGL_Processing::~AH_BGL_Processing()
 
 void AH_BGL_Processing::undefine()
 {
-  delete itsCS1PS;              itsCS1PS              = 0;
-  
   for (uint i = 0; i < itsWHs.size(); i ++) {
     delete itsWHs[i];
   }
   itsWHs.clear();
 
+  delete itsCS1PS;              itsCS1PS              = 0;
   delete itsSubbandStub;	itsSubbandStub	      = 0;
-//delete itsRFI_MitigationStub;	itsRFI_MitigationStub = 0;
   delete itsVisibilitiesStub;	itsVisibilitiesStub   = 0;
 }  
 
@@ -120,6 +121,12 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   
   itsCS1PS = new CS1_Parset(&itsParamSet);
   itsCS1PS->adoptFile("OLAP.parset");
+
+#if defined HAVE_ZOID
+  ASSERT(itsCS1PS->getBool("OLAP.BGLProc.useZoid"));
+#else
+  ASSERT(!itsCS1PS->getBool("OLAP.BGLProc.useZoid"));
+#endif
   
   unsigned nrSubBands	     = itsCS1PS->nrSubbands();
   vector<double> baseFreqs   = itsCS1PS->refFreqs();
@@ -131,7 +138,6 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
   ASSERTSTR(nrSubBands <= baseFreqs.size(), "Not enough base frequencies in Data.RefFreqs specified");
 
   itsSubbandStub	= new Stub_BGL(true, true, "input_BGLProc", itsCS1PS);
-//itsRFI_MitigationStub	= new Stub_BGL_RFI_Mitigation(true, itsCS1PS);
   itsVisibilitiesStub	= new Stub_BGL(true, false, "BGLProc_Storage", itsCS1PS);
 
 #if defined HAVE_BGL
@@ -165,6 +171,23 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
 
   ASSERTSTR(firstPset < lastPset, "not enough nodes specified (firstPset = " << firstPset << ", lastPset = " << lastPset << ", totalPsets = " << totalPsets << ", logicalNode = " << logicalNode << ", nrSubBands = " << nrSubBands << ", nrSubbandsPerPset = " << nrSubbandsPerPset << ", physicalNodesPerPset = " << physicalNodesPerPset << ", usedNodesPerPset = " << usedNodesPerPset << ")\n");
 
+#if defined HAVE_ZOID
+  // one of the compute cores in each Pset has to initialize its I/O node
+  if (personality.rankInPset() == 0 && (unsigned) TH_MPI::getCurrentRank() < personality.numComputeNodes()) {
+    vector<size_t> lengths;
+
+    for (int arg = 0; original_argv[arg] != 0; arg ++) {
+      std::clog << "adding arg " << original_argv[arg] << std::endl;
+      lengths.push_back(strlen(original_argv[arg]) + 1);
+    }
+
+    std::clog << "calling lofar_init(..., ..., " << lengths.size() << ")" << std::endl;
+    lofar_init(original_argv, &lengths[0], lengths.size());
+  }
+
+  TH_ZoidClient *thZoid = new TH_ZoidClient();
+#endif
+
   for (unsigned pset = firstPset; pset < lastPset; pset ++) {
     for (unsigned core = 0; core < usedNodesPerPset; core ++) {
       WH_BGL_Processing *wh = new WH_BGL_Processing("BGL_Proc", logicalNode, itsCS1PS);
@@ -177,27 +200,21 @@ void AH_BGL_Processing::define(const KeyValueMap&) {
       unsigned storage_host = pset / psetsPerCell / nrPsetsPerStorage;
       unsigned storage_port = core + usedNodesPerPset * (pset % (psetsPerCell * nrPsetsPerStorage) );
 
-#if defined USE_ZOID
-      TH_ZoidClient *th = new TH_ZoidClient();
-
-      if (1) {
-	Connection *in = new BGLConnection("zoid", 0, dm.getGeneralInHolder(WH_BGL_Processing::SUBBAND_CHANNEL), th);
+#if defined HAVE_ZOID
+      if (itsParamSet.getBool("OLAP.IONProc.useScatter")) {
+	Connection *in = new BGLConnection("zoid", 0, dm.getGeneralInHolder(WH_BGL_Processing::SUBBAND_CHANNEL), thZoid);
 	dm.setInConnection(WH_BGL_Processing::SUBBAND_CHANNEL, in);
-      }
+      } else
+#endif
+	itsSubbandStub->connect(cell, cellCore, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
 
-      if (1) {
-#if 1
-	Connection *out = new BGLConnection("zoid", dm.getGeneralOutHolder(WH_BGL_Processing::VISIBILITIES_CHANNEL), 0, th);
+#if defined HAVE_ZOID
+      if (itsParamSet.getBool("OLAP.IONProc.useGather")) {
+	Connection *out = new BGLConnection("zoid", dm.getGeneralOutHolder(WH_BGL_Processing::VISIBILITIES_CHANNEL), 0, thZoid);
 	dm.setOutConnection(WH_BGL_Processing::VISIBILITIES_CHANNEL, out);
-#else
-	itsVisibilitiesStub->connect(cell, cellCore, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
+      } else
 #endif
-      }
-#else
-      itsSubbandStub->connect(cell, cellCore, dm, WH_BGL_Processing::SUBBAND_CHANNEL);
-//    itsRFI_MitigationStub->connect(cell, cellCore, dm, WH_BGL_Processing::RFI_MITIGATION_CHANNEL);
-      itsVisibilitiesStub->connect(storage_host, storage_port, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
-#endif
+	itsVisibilitiesStub->connect(storage_host, storage_port, dm, WH_BGL_Processing::VISIBILITIES_CHANNEL);
 
 #if defined HAVE_BGL
       wh->runOnNode(remapOnTree(pset - firstPset, core, personality));
@@ -216,15 +233,6 @@ void AH_BGL_Processing::init()
   for (uint i = 0; i < itsWHs.size(); i ++) {
     WH_BGL_Processing *wh = itsWHs[i];
     wh->basePreprocess();
-
-#if 0 && defined HAVE_MPI
-    if (wh->getNode() == TH_MPI::getCurrentRank()) {
-      DH_RFI_Mitigation			  *dh	 = wh->get_DH_RFI_Mitigation();
-      DH_RFI_Mitigation::ChannelFlagsType *flags = dh->getChannelFlags();
-
-      memset(flags, 0, sizeof(DH_RFI_Mitigation::ChannelFlagsType));
-    }
-#endif
   }
 }
 

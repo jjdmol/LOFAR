@@ -35,8 +35,6 @@
 #include <CS1_InputSection/InputThread.h>
 #include <tinyCEP/Sel_RoundRobin.h>
 
-#include <algorithm>
-
 #if defined HAVE_MPI
 #include <Transport/TH_MPI.h>
 #include <mpi.h>
@@ -55,7 +53,10 @@ namespace CS1 {
 bool WH_InputSection::signalReceived;
 
 WH_InputSection::WH_InputSection(const string &name, 
-				 CS1_Parset      *ps,
+				 bool doInput,
+				 bool doTranspose,
+				 bool doOutput,
+				 CS1_Parset *ps,
 				 TransportHolder *inputTH,
 				 unsigned stationNr,
 				 unsigned nrInputChannels,
@@ -64,6 +65,9 @@ WH_InputSection::WH_InputSection(const string &name,
 				 const std::vector<unsigned> &outputNodes)
 :
   WorkHolder(nrInputChannels, nrOutputChannels, name, "WH_InputSection"),
+  itsDoInput(doInput),
+  itsDoTranspose(doTranspose),
+  itsDoOutput(doOutput),
   itsInputNodes(inputNodes),
   itsOutputNodes(outputNodes),
   itsInputTH(inputTH),
@@ -82,11 +86,11 @@ WH_InputSection::WH_InputSection(const string &name,
   itsNHistorySamples  = itsCS1PS->nrHistorySamples();
 
   // create incoming dataholder holding the delay information 
-  if (nrInputChannels > 0)
+  if (doInput)
     getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay", itsCS1PS->getInt32("OLAP.nrRSPboards")));
 
   // create a outgoing dataholder for each subband
-  if (nrOutputChannels > 0) {
+  if (doOutput) {
     vector<int> channels;
 
     for (int i = 0; i < itsNoutputs; i ++) {
@@ -107,7 +111,7 @@ WH_InputSection::~WH_InputSection()
 
 WH_InputSection *WH_InputSection::make(const string& name)
 {
-  return new WH_InputSection(name, itsCS1PS, itsInputTH, itsStationNr, itsNinputs, itsNoutputs, itsInputNodes, itsOutputNodes);
+  return new WH_InputSection(name, itsDoInput, itsDoTranspose, itsDoOutput, itsCS1PS, itsInputTH, itsStationNr, itsNinputs, itsNoutputs, itsInputNodes, itsOutputNodes);
 }
 
 
@@ -143,10 +147,7 @@ void WH_InputSection::preprocess()
 {
   itsPrePostTimer.start();
 
-  itsIsInput  = std::find(itsInputNodes.begin(),  itsInputNodes.end(),  (unsigned) getNode()) != itsInputNodes.end();
-  itsIsOutput = std::find(itsOutputNodes.begin(), itsOutputNodes.end(), (unsigned) getNode()) != itsOutputNodes.end();
-
-  if (itsIsInput) {
+  if (itsDoInput) {
     // create the buffer controller.
     int cyclicBufferSize = itsCS1PS->nrSamplesToBuffer();
     int subbandsToReadFromFrame = itsCS1PS->subbandsToReadFromFrame();
@@ -172,7 +173,7 @@ void WH_InputSection::preprocess()
 
     itsSyncedStamp = TimeStamp(seconds, samples);
 
-    cout<<"Starting buffer at "<<itsSyncedStamp<<endl;cout.flush();
+    std::clog << "Starting buffer at " << itsSyncedStamp << std::endl;
     itsBBuffer->startBufferRead(itsSyncedStamp);
     unsigned nrCells = itsCS1PS->nrCells();
 
@@ -180,8 +181,8 @@ void WH_InputSection::preprocess()
     itsInputMetaData = new struct metaData[nrCells];
   }
 
-  if (itsIsOutput) {
-    unsigned nrStations = itsInputNodes.size();
+  if (itsDoOutput) {
+    unsigned nrStations = itsCS1PS->nrStations();
 
     itsOutputData     = new boost::multi_array<SampleType, 4>(boost::extents[nrStations][itsNSubbandsPerCell][itsNSamplesPerSec + itsNHistorySamples][NR_POLARIZATIONS]);
     itsOutputMetaData = new struct metaData[nrStations];
@@ -247,27 +248,29 @@ void WH_InputSection::transposeData()
   memset(sendCounts, 0, sizeof sendCounts);
   memset(receiveCounts, 0, sizeof receiveCounts);
 
-  if (itsIsInput)
+  if (itsDoInput)
     for (unsigned output = 0; output < itsOutputNodes.size(); output ++) {
       sendCounts[itsOutputNodes[output]] = (*itsInputData)[output].num_elements() * sizeof(SampleType);
       sendDisplacements[itsOutputNodes[output]] = reinterpret_cast<char *>((*itsInputData)[output].origin()) - reinterpret_cast<char *>(itsInputData->origin());
     }
 
-  if (itsIsOutput)
+  if (itsDoOutput)
     for (unsigned input = 0; input < itsInputNodes.size(); input ++) {
       receiveCounts[itsInputNodes[input]] = (*itsOutputData)[input].num_elements() * sizeof(SampleType);
       receiveDisplacements[itsInputNodes[input]] = reinterpret_cast<char *>((*itsOutputData)[input].origin()) - reinterpret_cast<char *>(itsOutputData->origin());
     }
 
-#if defined HAVE_MPI
-  if (MPI_Alltoallv(itsIsInput ? itsInputData->origin() : 0,
+#if 1 && defined HAVE_MPI
+  if (MPI_Alltoallv(itsDoInput ? itsInputData->origin() : 0,
 		    sendCounts, sendDisplacements, MPI_BYTE,
-		    itsIsOutput ? itsOutputData->origin() : 0,
+		    itsDoOutput ? itsOutputData->origin() : 0,
 		    receiveCounts, receiveDisplacements, MPI_BYTE,
 		    MPI_COMM_WORLD) != MPI_SUCCESS) {
     std::cerr << "MPI_Alltoallv() failed" << std::endl;
     exit(1);
   }
+#else
+  TH_MPI::synchroniseAllProcesses();
 #endif
 }
 
@@ -286,7 +289,7 @@ void WH_InputSection::transposeMetaData(const SparseSet &flags)
   memset(sendCounts, 0, sizeof sendCounts);
   memset(receiveCounts, 0, sizeof receiveCounts);
 
-  if (itsIsInput) {
+  if (itsDoInput) {
     DH_Delay *delayDHp = static_cast<DH_Delay *>(getDataManager().getInHolder(0));
 
     for (unsigned output = 0; output < itsOutputNodes.size(); output++) { 
@@ -303,16 +306,16 @@ void WH_InputSection::transposeMetaData(const SparseSet &flags)
     }
   }
 
-  if (itsIsOutput)
+  if (itsDoOutput)
     for (unsigned input = 0; input < itsInputNodes.size(); input ++) {
       receiveCounts[itsInputNodes[input]] = sizeof(struct metaData);
       receiveDisplacements[itsInputNodes[input]] = reinterpret_cast<char *>(&itsOutputMetaData[input]) - reinterpret_cast<char *>(itsOutputMetaData);
     }
 
 #if defined HAVE_MPI
-  if (MPI_Alltoallv(itsIsInput ? itsInputMetaData : 0,
+  if (MPI_Alltoallv(itsDoInput ? itsInputMetaData : 0,
 		    sendCounts, sendDisplacements, MPI_BYTE,
-		    itsIsOutput ? itsOutputMetaData : 0,
+		    itsDoOutput ? itsOutputMetaData : 0,
 		    receiveCounts, receiveDisplacements, MPI_BYTE,
 		    MPI_COMM_WORLD) != MPI_SUCCESS) {
     std::cerr << "MPI_Alltoallv() failed" << std::endl;
@@ -358,15 +361,22 @@ void WH_InputSection::process()
   itsProcessTimer.start();
   SparseSet flags;
 
-  if (itsIsInput) {
+  if (itsDoInput) {
     doInput(flags);
     limitFlagsLength(flags);
   }
 
-  transposeData();
-  transposeMetaData(flags);
+  if (itsDoTranspose) {
+    NSTimer transposeTimer("transpose", TH_MPI::getCurrentRank() == 0);
+    transposeTimer.start();
 
-  if (itsIsOutput)
+    transposeData();
+    transposeMetaData(flags);
+
+    transposeTimer.stop();
+  }
+
+  if (itsDoOutput)
     doOutput();
 
   itsProcessTimer.stop();
@@ -381,7 +391,7 @@ void WH_InputSection::process()
 
 void WH_InputSection::postprocess()
 {
-  if (itsIsInput) {
+  if (itsDoInput) {
     InputThread::stopThreads();
     itsBBuffer->clear();
     itsInputThread->join();
@@ -392,7 +402,7 @@ void WH_InputSection::postprocess()
     delete [] itsInputMetaData;
   }
 
-  if (itsIsOutput) {
+  if (itsDoOutput) {
     delete itsOutputData;
     delete [] itsOutputMetaData;
   }

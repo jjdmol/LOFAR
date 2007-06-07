@@ -63,6 +63,9 @@ class Parset(object):
         line.strip('[').strip(']')
         return [float(lp) for lp in line.split(',')]
 
+    def getBool(self, key):
+        return self.parameters[key] == 'T'
+
     def __contains__(self, key):
         return key in self.parameters
         

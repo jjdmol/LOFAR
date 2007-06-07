@@ -37,8 +37,7 @@
 #include <Common/LofarLogger.h> 
 
 namespace LOFAR {
-
-  namespace CS1 {
+namespace CS1 {
 
 // \addtogroup APLCommon
 // @{
@@ -64,8 +63,13 @@ public:
 	double         sampleRate() const;
 	vector<double> positions() const;
 	vector<double> phaseCenters() const;
+	uint32	       BGLintegrationSteps() const;
+	uint32	       IONintegrationSteps() const;
+	uint32	       storageIntegrationSteps() const;
+	double         BGLintegrationTime() const;
+	double         IONintegrationTime() const;
+	double         storageIntegrationTime() const;
 	uint32         nrSubbandSamples() const;
-	double         integrationTime() const;
 	uint32         nrSamplesToBGLProc() const;
         uint32         nrSubbandsPerCell() const; 
 	uint32         nrHistorySamples() const;
@@ -85,9 +89,13 @@ public:
 	string         inputPortnr(const string& aKey) const;
 	string         stationName(const int index) const;
 	string         expandedArrayString(const string& orgStr) const;
+	bool	       useScatter() const;
+	bool	       useGather() const;
+	uint32	       nrOutputsPerInputNode() const;
+	uint32	       nrInputsPerStorageNode() const;
 	
 	//# Datamembers
-	string			name;
+	string	       name;
 	vector<double> itsStPositions;
 	
 private:
@@ -128,21 +136,44 @@ inline double CS1_Parset::sampleRate() const
   return getUint32("Observation.sampleClock") * 1000000.0 / 1024;
 } 
 
-inline uint32 CS1_Parset::nrSubbandSamples() const
+inline uint32 CS1_Parset::BGLintegrationSteps() const
 {
-  return getUint32("OLAP.minorIntegrationSteps") * 
-         nrChannelsPerSubband();
+  return getUint32("OLAP.BGLProc.integrationSteps");
 }
 
-inline double CS1_Parset::integrationTime() const
+inline uint32 CS1_Parset::IONintegrationSteps() const
 {
-  return nrSubbandSamples()/sampleRate();
+  return getUint32("OLAP.IONProc.integrationSteps");
+}
+
+inline uint32 CS1_Parset::storageIntegrationSteps() const
+{
+  return getUint32("OLAP.StorageProc.integrationSteps");
+}
+
+inline double CS1_Parset::BGLintegrationTime() const
+{
+  return nrSubbandSamples() / sampleRate();
+}
+
+inline double CS1_Parset::IONintegrationTime() const
+{
+  return BGLintegrationTime() * IONintegrationSteps();
+}
+
+inline double CS1_Parset::storageIntegrationTime() const
+{
+  return IONintegrationTime() * storageIntegrationSteps();
+}
+
+inline uint32 CS1_Parset::nrSubbandSamples() const
+{
+  return BGLintegrationSteps() * nrChannelsPerSubband();
 }
 
 inline uint32 CS1_Parset::nrSamplesToBGLProc() const
 {
-  return nrSubbandSamples() + ((nrPFFTaps() - 1) *
-         nrChannelsPerSubband());
+  return nrSubbandSamples() + ((nrPFFTaps() - 1) * nrChannelsPerSubband());
 }
 
 inline uint32 CS1_Parset::nrHistorySamples() const
@@ -162,8 +193,7 @@ inline int CS1_Parset::subbandsToReadFromFrame() const
 
 inline uint32 CS1_Parset::nrSubbandsPerCell() const
 {
-  return getUint32("OLAP.subbandsPerPset") * 
-         getUint32("OLAP.BGLProc.psetsPerCell");
+  return getUint32("OLAP.subbandsPerPset") * getUint32("OLAP.BGLProc.psetsPerCell");
 }
 
 inline uint32 CS1_Parset::nrPFFTaps() const
@@ -193,8 +223,7 @@ inline double CS1_Parset::timeInterval() const
 
 inline uint32 CS1_Parset::nrBGLNodesPerCell() const
 {
-  return getUint32("OLAP.BGLProc.nodesPerPset") * 
-         getUint32("OLAP.BGLProc.psetsPerCell");
+  return getUint32("OLAP.BGLProc.nodesPerPset") * getUint32("OLAP.BGLProc.psetsPerCell");
 }  
  
 inline double CS1_Parset::chanWidth() const
@@ -202,7 +231,27 @@ inline double CS1_Parset::chanWidth() const
   return sampleRate() / nrChannelsPerSubband();
 }
 
-  } // namespace CS1
+inline bool CS1_Parset::useScatter() const
+{
+  return getBool("OLAP.IONProc.useScatter");
+}
+
+inline bool CS1_Parset::useGather() const
+{
+  return getBool("OLAP.IONProc.useGather");
+}
+
+inline uint32 CS1_Parset::nrOutputsPerInputNode() const
+{
+  return useScatter() ? getUint32("OLAP.BGLProc.psetsPerCell") : nrBGLNodesPerCell();
+}
+
+inline uint32 CS1_Parset::nrInputsPerStorageNode() const
+{
+  return (useGather() ? getUint32("OLAP.BGLProc.psetsPerCell") : nrBGLNodesPerCell()) * getUint32("OLAP.psetsPerStorage");
+}
+
+} // namespace CS1
 } // namespace LOFAR
 
 #endif

@@ -10,7 +10,7 @@ class Section(object):
     Represents a part of the CS1 application
     """
 
-    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = '~/projects/cvs/'):
+    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = os.getcwd().rstrip('LOFAR/Appl/CEP/CS1/CS1_Run/src')):
         self.workingDir = workingDir
         self.parset = parset
         self.package = package
@@ -38,7 +38,7 @@ class Section(object):
                                  executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                                  noProcesses = self.noProcesses, \
                                  partition = self.partition, \
-                                 workingDir = self.bglWorkingDir)
+                                 workingDir = self.workingDir)
         elif 'mpi' in self.buildvar:
             self.runJob = MPIJob(self.package.split('/')[-1], \
                                  self.host, \
@@ -132,11 +132,15 @@ class StorageSection(Section):
         storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
         self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
 
+    def run(self, runlog, noRuns, runCmd = None):
+	if self.parset.getBool("OLAP.IONProc.useGather"):
+	    noRuns = noRuns / self.parset.getInt32("OLAP.IONProc.integrationSteps");
+        Section.run(self, runlog, noRuns, runCmd)
+
         
 class BGLProcSection(Section):
-    def __init__(self, parset, host, partition, workingDir):
+    def __init__(self, parset, host, partition):
         self.partition = partition
-        self.bglWorkingDir = workingDir
 
         nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
         nSubbandsPerCell = parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.BGLProc.psetsPerCell')
@@ -151,7 +155,7 @@ class BGLProcSection(Section):
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_BGLProc', \
                          host = host, \
-                         buildvar = 'gnu_bgl')
+                         buildvar = 'gnubgl_bgl')
 
         nstations = parset.getNStations()
         clock = parset.getClockString()
@@ -163,7 +167,7 @@ class BGLProcSection(Section):
         actualRuns = int(noRuns * subbandsPerCell / nodesPerCell)
         if not actualRuns * nodesPerCell == noRuns * subbandsPerCell:
             raise Exception('illegal number of runs')
-        Section.run(self, runlog, int(noRuns * subbandsPerCell / nodesPerCell), runCmd)        
+        Section.run(self, runlog, actualRuns, runCmd)        
 
 class GeneratorSection(Section):
     def __init__(self, parset, host):

@@ -24,6 +24,7 @@
 
 #include <lofar_config.h>
 
+#if defined HAVE_AIPSPP
 #include <CS1_Storage/MSWriter.h>
 #include <CS1_Storage/MSWriterImpl.h>
 #include <casa/Exceptions/Error.h>
@@ -149,3 +150,5 @@ namespace LOFAR
   } // namespace CS1
 
 } // namespace LOFAR
+
+#endif // defined HAVE_AIPSPP

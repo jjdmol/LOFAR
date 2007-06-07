@@ -37,15 +37,17 @@ Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, cons
   itsCS1PS (pSet)
   
 {
-  itsIAmOnBGL	    = iAmOnBGL;
-  itsIsInput	    = isInput;
-  itsPrefix	    = string("OLAP.OLAP_Conn.") + connectionName;
-  itsTHs	    = 0;
-  itsConnections    = 0;
-  itsNrCells	    = itsCS1PS->nrCells();
-  itsNrNodesPerCell = itsCS1PS->nrBGLNodesPerCell();
-  itsNrPsetsPerStorage = itsCS1PS->getInt32("OLAP.psetsPerStorage");
+  itsIAmOnBGL		= iAmOnBGL;
+  itsIsInput		= isInput;
+  itsPrefix		= string("OLAP.OLAP_Conn.") + connectionName;
+  itsTHs		= 0;
+  itsConnections	= 0;
+  itsNrCells		= itsCS1PS->nrCells();
+  itsNrNodesPerCell	= itsCS1PS->nrBGLNodesPerCell();
+  itsNrPsetsPerStorage	= itsCS1PS->getInt32("OLAP.psetsPerStorage");
 
+  // TODO: itsNrNodesPerCell overestimates the number of connections if
+  // useScatter/useGather is used
   size_t size = itsNrCells * itsNrNodesPerCell;
   if ((!itsIAmOnBGL && isInput) || (itsIAmOnBGL && !itsIsInput)) {
     size *= itsNrPsetsPerStorage;

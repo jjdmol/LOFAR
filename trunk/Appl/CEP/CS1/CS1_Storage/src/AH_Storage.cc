@@ -32,7 +32,7 @@ namespace LOFAR
 
     AH_Storage::~AH_Storage()
     {
-      delete itsCS1PS;
+      undefine();
     }
 
 
@@ -55,8 +55,8 @@ namespace LOFAR
       ASSERT(nrSubbands > 0);
       uint nrSubbandsPerCell = itsCS1PS->nrSubbandsPerCell();
       ASSERT(nrSubbandsPerCell > 0);
-      uint nNodesPerCell = itsCS1PS->nrBGLNodesPerCell();
-      ASSERT(nNodesPerCell > 0);
+      uint nrInputChannels = (itsCS1PS->useGather() ? 1 : itsCS1PS->getUint32("OLAP.BGLProc.nodesPerPset")) * itsCS1PS->getUint32("OLAP.BGLProc.psetsPerCell");
+      ASSERT(nrInputChannels > 0);
       uint nrPsetsPerStorage = itsParamSet.getUint32("OLAP.psetsPerStorage");
       ASSERT(nrSubbands % nrSubbandsPerCell == 0);
       ASSERT(nrSubbandsPerCell % nrPsetsPerStorage == 0);
@@ -94,8 +94,8 @@ namespace LOFAR
         // Connect to BG output
 	for (unsigned pset = 0; pset < nrPsetsPerStorage; pset ++) {
 	  vector<int> channels;
-	  for (unsigned core = 0; core < nNodesPerCell; core++) {
-	    int channel = pset * nNodesPerCell + core;
+	  for (unsigned core = 0; core < nrInputChannels; core++) {
+	    int channel = pset * nrInputChannels + core;
 	    step.getInDataManager(channel).setInBuffer(channel, false, 10);
 	    itsStub->connect(nw, channel, step.getInDataManager(channel), channel);
 	    channels.push_back(channel);
@@ -111,6 +111,13 @@ namespace LOFAR
       ASSERTSTR (TH_MPI::getNumberOfNodes() ==  nrWriters,
                  TH_MPI::getNumberOfNodes() << " == " << nrWriters );
 #endif
+    }
+
+
+    void AH_Storage::undefine()
+    {
+      delete itsCS1PS; itsCS1PS = 0;
+      delete itsStub;  itsStub  = 0;
     }
 
 
@@ -138,8 +145,6 @@ namespace LOFAR
 
     void AH_Storage::quit()
     {
-      delete itsStub;
-      itsStub = 0;
     }
 
 

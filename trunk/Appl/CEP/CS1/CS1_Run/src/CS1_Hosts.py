@@ -7,7 +7,8 @@ liifen.setSlavesByPattern('lii%03d', '10.20.150.%d', [1,2,3,4,5,6,7,8,9,10,11,12
 
 listfen   = ClusterFEN(name = 'listfen'    ,
                        address = '129.125.99.50')
-listfen.setSlavesByPattern('list%03d', '10.20.170.%d', [1,2,3,4,5,6,7,8,9,10,11,12])
+#listfen.setSlavesByPattern('list%03d', '10.20.170.%d', [1,2,3,4,5,6,7,8,9,10,11,12])
+listfen.setSlavesByPattern('list%03d', '10.20.170.%d', [1,3,5,7,2,4,10,11,12])
 
 
 list001   = Host(name = 'list001'  , \
@@ -29,7 +30,7 @@ CS10LCU   = Host(name = 'lcu', \
 localhost = Host(name = 'localhost', \
                  address = 'localhost')
 
-gels        = UserId(bglfen1,'gels' ,'/cephome/gels/LOFAR/installed/gnu_bgl/bin/')
-romein      = UserId(bglfen2,'romein' ,'/cephome/romein/projects/cvs/LOFAR/installed/gnu_bgl/bin/')
-lofarsystem = UserId(bglfen3,'lofarsystem' ,'/cephome/lofarsystem/LOFAR/installed/gnu_bgl/bin/')
-broekema    = UserId(bglfen2,'broekema' ,'/cephome/broekema/LOFAR/installed/gnu_bgl/bin/')
+gels        = UserId(bglfen1,'gels')
+romein      = UserId(bglfen2,'romein')
+lofarsystem = UserId(bglfen3,'lofarsystem')
+broekema    = UserId(bglfen2,'broekema')

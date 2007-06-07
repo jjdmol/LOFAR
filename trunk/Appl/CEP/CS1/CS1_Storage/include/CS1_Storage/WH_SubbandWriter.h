@@ -87,8 +87,9 @@ namespace LOFAR
 
       uint itsNrSubbandsPerCell; ///< Number of subbands per BG/L cell
       uint itsNrSubbandsPerStorage;
-      uint itsNrNodesPerCell;
+      uint itsNrInputChannels;
       uint itsNrSubbandsPerMS;
+
       vector<uint> itsCurrentInputs;
       vector<uint> itsBandIDs;   ///< MS IDs of the frequency bands
       vector<uint> itsFieldIDs;  ///< MS IDs of the field, i.e. the beam.

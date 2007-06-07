@@ -50,15 +50,12 @@ namespace LOFAR
 
     WH_SubbandWriter::WH_SubbandWriter(const string& name, 
                                        const vector<uint>& subbandID,
-                                             CS1_Parset *pset) 
-      : WorkHolder    (pset->nrBGLNodesPerCell() * pset->getUint32("OLAP.psetsPerStorage"), 
-                       0,
-                       name,
-                       "WH_SubbandWriter"),
-        itsCS1PS       (pset),
-        itsSubbandIDs  (subbandID),
+				       CS1_Parset *pset) 
+      : WorkHolder(pset->nrInputsPerStorageNode(), 0, name, "WH_SubbandWriter"),
+        itsCS1PS(pset),
+        itsSubbandIDs(subbandID),
         itsTimeCounter(0),
-	itsTimesToIntegrate(1),
+	itsTimesToIntegrate(pset->storageIntegrationSteps()),
         itsFlagsBuffers(0),
         itsWeightsBuffers(0),
 	itsVisibilities(0),
@@ -77,8 +74,8 @@ namespace LOFAR
       uint pols = itsCS1PS->getUint32("Observation.nrPolarisations");
       itsNPolSquared = pols*pols;
 
-      uint nrSamples = itsCS1PS->nrSubbandSamples();
-      itsWeightFactor = (float)itsNChannels/(float)nrSamples;  // The inverse of maximum number of valid samples
+      // itsWeightFactor = the inverse of maximum number of valid samples
+      itsWeightFactor = 1.0 / (pset->BGLintegrationSteps() * pset->IONintegrationSteps() * pset->storageIntegrationSteps());
       
       vector<double> refFreqs= itsCS1PS->refFreqs();
       unsigned nrSubbands = itsCS1PS->nrSubbands();
@@ -126,6 +123,7 @@ namespace LOFAR
 
     void WH_SubbandWriter::preprocess() 
     {
+#if defined HAVE_AIPSPP
       LOG_TRACE_FLOW("WH_SubbandWriter enabling PropertySet");
 #ifdef USE_MAC_PI
       if (itsWriteToMAC) {
@@ -161,22 +159,15 @@ namespace LOFAR
       double startTime = itsCS1PS->startTime();
       LOG_TRACE_VAR_STR("startTime = " << startTime);
       
-      itsTimesToIntegrate = itsCS1PS->getInt32("OLAP.storageIntegrationTime");
-      double timeStep = itsCS1PS->integrationTime();
-      LOG_TRACE_VAR_STR("timeStep = " << timeStep);
-      
       vector<double> antPos = itsCS1PS->positions();
       ASSERTSTR(antPos.size() == 3 * itsNStations,
                 antPos.size() << " == " << 3 * itsNStations);
-
       itsNrSubbandsPerCell    = itsCS1PS->nrSubbandsPerCell();
       itsNrSubbandsPerStorage = itsNrSubbandsPerCell * itsCS1PS->getUint32("OLAP.psetsPerStorage");
-      itsNrNodesPerCell       = itsCS1PS->nrBGLNodesPerCell();
+      itsNrInputChannels      = itsCS1PS->useGather() ? itsCS1PS->getUint32("OLAP.BGLProc.psetsPerCell") : itsCS1PS->nrBGLNodesPerCell();
       itsCurrentInputs.resize(itsNrSubbandsPerStorage / itsNrSubbandsPerCell, 0);
       LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
-        
       vector<string> storageStationNames = itsCS1PS->getStringVector("OLAP.storageStationNames");
-
 
       itsNrSubbandsPerMS = itsCS1PS->getUint32("OLAP.StorageProc.subbandsPerMS");
       ASSERT(itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage") % itsNrSubbandsPerMS == 0);
@@ -185,17 +176,15 @@ namespace LOFAR
   
       for (unsigned i = 0; i < itsWriters.size(); i ++) {
 	itsWriters[i] = new MSWriter(
+
 #if defined HAVE_MPI
 	  msNames[TH_MPI::getCurrentRank() * itsWriters.size() + i].c_str(),
 #else
 	  msNames[0].c_str(),
 #endif
-	  startTime, timeStep * itsTimesToIntegrate, 
-	  itsNChannels, itsNPolSquared, 
-	  itsNBeams,
-	  itsNStations, 
-	  antPos, storageStationNames, itsTimesToIntegrate, 
-	  itsNrSubbandsPerMS);
+	  startTime, itsCS1PS->storageIntegrationTime(), itsNChannels,
+	  itsNPolSquared, itsNBeams, itsNStations, antPos,
+	  storageStationNames, itsTimesToIntegrate, itsNrSubbandsPerMS);
 			       
 	//## TODO: add support for more than 1 beam ##//
 	ASSERT(itsCS1PS->getDoubleVector("Observation.Beam.angle1").size() == itsNBeams);
@@ -227,6 +216,7 @@ namespace LOFAR
       itsVisibilities   = new DH_Visibilities::VisibilityType[itsNrSubbandsPerStorage * itsNVisibilities];
 
       clearAllSums();
+#endif // defined HAVE_AIPSPP
     }
 
     void WH_SubbandWriter::clearAllSums(){
@@ -251,26 +241,29 @@ namespace LOFAR
 #endif
 	      ", count = " << counter ++ << endl;
 
-
+#if defined HAVE_AIPSPP
       if (itsTimeCounter % itsTimesToIntegrate == 0) {
 	clearAllSums();
       }
+#endif
 
       // Write the visibilities for all subbands per cell.
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++sb) {
         // find out from which input channel we should read
-  	unsigned cell	      = sb / itsNrSubbandsPerCell;
-  	unsigned inputChannel = itsCurrentInputs[cell] + cell * itsNrNodesPerCell;
-   
-   	DH_Visibilities			    *inputDH	= static_cast<DH_Visibilities *>(getDataManager().getInHolder(inputChannel));
+	unsigned cell	      = sb / itsNrSubbandsPerCell;
+	unsigned inputChannel = itsCurrentInputs[cell] + cell * itsNrInputChannels;
+
+	DH_Visibilities			    *inputDH	= static_cast<DH_Visibilities *>(getDataManager().getInHolder(inputChannel));
         DH_Visibilities::NrValidSamplesType *valSamples = &inputDH->getNrValidSamples(0, 0);
   	DH_Visibilities::VisibilityType     *newVis	= &inputDH->getVisibility(0, 0, 0, 0);
        
         // Write 1 DH_Visibilities of size
         // fcomplex[itsNBaselines][itsNChannels][npol][npol]
 
+//std::clog << TH_MPI::getCurrentRank() << ": sb = " << valSamples[0] << " (exp. " << (sb + TH_MPI::getCurrentRank() * itsNrSubbandsPerStorage) << "), from " << valSamples[1] << ", count = " << valSamples[2] << ", inputChannel = " << inputChannel << std::endl;
+#if defined HAVE_AIPSPP
         for (uint i = 0; i < itsNBaselines * itsNChannels; i ++) {
-          itsWeightsBuffers[sb * itsNBaselines * itsNChannels + i] += itsWeightFactor * valSamples[i] / itsTimesToIntegrate;
+          itsWeightsBuffers[sb * itsNBaselines * itsNChannels + i] += itsWeightFactor * valSamples[i];
           bool flagged = valSamples[i] == 0;
           itsFlagsBuffers[sb * itsNVisibilities + 4 * i    ] &= flagged;
           itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 1] &= flagged;
@@ -295,12 +288,13 @@ std::clog << "CPU " << TH_MPI::getCurrentRank() << " writes sb " << sb << " to w
 	    &itsWeightsBuffers[sb * itsNBaselines * itsNChannels]);
 	  itsWriteTimer.stop();
 	}
+#endif
 
 	getDataManager().readyWithInHolder(inputChannel);
 
-   	// select next channel
-   	if (++ itsCurrentInputs[cell] == itsNrNodesPerCell)
-   	  itsCurrentInputs[cell] = 0;
+	// select next channel
+	if (++ itsCurrentInputs[cell] == itsNrInputChannels)
+	  itsCurrentInputs[cell] = 0;
       }
 
       // Update the time counter.

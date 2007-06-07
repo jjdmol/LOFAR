@@ -31,6 +31,7 @@ using namespace LOFAR::CS1;
 int main(int argc, char **argv) {
   INIT_LOGGER("CS1_BGL_Processing");
 
+  AH_BGL_Processing::original_argv = argv;
   AH_BGL_Processing myAH;
   ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
   return ACC::PLC::ACCmain(argc, argv, &myAHController);

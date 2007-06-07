@@ -12,7 +12,7 @@ class Job(object):
         self.name = name
         self.host = host
         self.executable = executable
-        self.remoteRunLog = self.workingDir + 'run.' + name + '.log'
+        self.remoteRunLog = self.workingDir + '/run.' + name + '.log'
         self.runlog = None
 
     def run(self, runlog, parsetfile, timeOut, noRuns, runCmd = None):
@@ -101,9 +101,10 @@ class BGLJob(Job):
         self.jobID = '0'
 
     def run(self, runlog, parsetfile, timeOut, noRuns, runCmd):
-        print 'NOT executing: Immediately executing ' + self.host.getSSHCommand() + ' "cp ' + self.executable + ' ' + self.workingDir + '"'
-        #self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
+        print 'executing: Immediately executing ' + self.host.getSSHCommand() + ' "cp ' + self.executable + ' ' + self.workingDir + '"'
+        self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
 	self.host.sput(parsetfile, self.workingDir)
+	self.host.sput(parsetfile, self.workingDir + '/CS1.parset')
 	self.host.sput('OLAP.parset', self.workingDir)
         Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
 

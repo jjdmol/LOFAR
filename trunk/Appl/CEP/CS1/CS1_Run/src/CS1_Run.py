@@ -10,7 +10,7 @@ from optparse import OptionParser
 #check machine name
 if  os.environ.get('HOSTNAME', 'default') != 'listfen':
     print 'Please restart CS1_Run script on hostname: listfen'
-    sys.exit(0)
+    sys.exit(1)
 
 from CS1_Hosts import *
 from CS1_Parset import CS1_Parset
@@ -33,18 +33,20 @@ def doObservation(obsID, parset):
         userId = mapTable.get(logname)
     else:
         print 'Invalid userId: ' + logname
-	sys.exit(0)
+	sys.exit(1)
+
+    BGLPartition = ('R000_128_0', 'R000_128_0Z')[parset.getBool('OLAP.BGLProc.useZoid')]
 
     sections = [\
         DelayCompensationSection(parset, list001),
         InputSection(parset, liifen),
-        BGLProcSection(parset, userId.getHost(), 'R000_128_0', userId.getPath()),
+        BGLProcSection(parset, userId.getHost(), BGLPartition),
         StorageSection(parset, listfen)
         #Flagger(parset, listfen)
         ]
     
-    nSubbandSamples = float(parset['OLAP.minorIntegrationSteps']) * float(parset['Observation.channelsPerSubband'])
-    stepTime = nSubbandSamples / (parset['Observation.sampleClock']*1000000/1024)
+    nSubbandSamples = float(parset['OLAP.BGLProc.integrationSteps']) * float(parset['Observation.channelsPerSubband'])
+    stepTime = nSubbandSamples / (parset['Observation.sampleClock'] * 1000000.0 / 1024)
 
     startTime = parset['Observation.startTime']
     stopTime = parset['Observation.stopTime']
@@ -63,13 +65,11 @@ def doObservation(obsID, parset):
 
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
+
+	    noRuns = (sz+15)&~15
             if not isinstance(section, StorageSection):
-		noRuns = ((sz+15)&~15) + 16
-		section.run(runlog, noRuns)
-            else:
-	        noRuns = (sz+15)&~15
-                section.run(runlog, noRuns)
-            print 
+		noRuns = noRuns + 16
+	    section.run(runlog, noRuns)
 
         for section in sections:
             print ('Waiting for ' + section.package + ' to finish ...')
@@ -90,11 +90,13 @@ if __name__ == '__main__':
     parser.add_option('--clock'          , dest='clock'          , default='160MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
     parser.add_option('--subbands'       , dest='subbands'       , default='60MHz,8'   , type='string', help='freq of first subband and number of subbands to use [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
-    parser.add_option('--starttime'     , dest='starttime', default=int(time.time() + 80), type='int', help='start of measurement in UTC seconds [now + 80s]')
+    parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 80), type='int', help='start of measurement in UTC seconds [now + 80s]')
     parser.add_option('--integrationtime', dest='integrationtime', default='60'        , type='int'   , help='length of integration interval in seconds [%default]')
     parser.add_option('--msname'         , dest='msname'                               , type='string', help='name of the measurement set')
-    parser.add_option('--stationlist'    , dest='stationlist' , default='CS10_4dipoles', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
+    parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS10_4dipoles', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
     parser.add_option('--fakeinput'      , dest='fakeinput'      , action='count'                     , help='do not really read from the inputs, but from memory')
+    parser.add_option('--zoid'		 , dest='zoid'		 , action='store_true', default=True, help='use ZOID (default)')
+    parser.add_option('--nozoid'	 , dest='zoid'		 , action='store_false', help='do not use ZOID')
 
     # parse the options
     (options, args) = parser.parse_args()
@@ -103,7 +105,15 @@ if __name__ == '__main__':
     parset = CS1_Parset() 
 
     parset.readFromFile(options.parset)
-    
+
+    parset['OLAP.BGLProc.useZoid'] = 'FT'[options.zoid == True]
+
+    if not options.zoid: # override CS1.parset
+	parset['OLAP.IONProc.useScatter']	 = 'F'
+	parset['OLAP.IONProc.useGather']	 = 'F'
+	parset['OLAP.BGLProc.nodesPerPset']	 = 8
+	parset['OLAP.IONProc.maxConcurrentComm'] = 2
+
     parset.setClock(options.clock)
     parset.setIntegrationTime(options.integrationtime)
     if options.msname:
