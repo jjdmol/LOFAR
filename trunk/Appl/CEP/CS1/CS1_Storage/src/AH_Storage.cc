@@ -59,7 +59,7 @@ namespace LOFAR
       ASSERT(nrInputChannels > 0);
       uint nrPsetsPerStorage = itsParamSet.getUint32("OLAP.psetsPerStorage");
       ASSERT(nrSubbands % nrSubbandsPerCell == 0);
-      ASSERT(nrSubbandsPerCell % nrPsetsPerStorage == 0);
+      ASSERT(nrSubbands / nrSubbandsPerCell % nrPsetsPerStorage == 0);
 
       // We must derive how many WH_SubbandWriter objects we have to
       // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerCell
