@@ -66,9 +66,14 @@ def doObservation(obsID, parset):
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
 
-	    noRuns = (sz+15)&~15
-            if not isinstance(section, StorageSection):
-		noRuns = noRuns + 16
+	    noRuns = ((sz+15)&~15) + 16
+	    
+            if isinstance(section, StorageSection):
+	        noRuns = (sz+15)&~15
+	        commandstr ='cexec mkdir ' + '/data/' + obsID
+	        if os.system(commandstr) != 0:
+	            print 'Failed to create directory: /data/' + obsID
+	    
 	    section.run(runlog, noRuns)
 
         for section in sections:
@@ -170,15 +175,15 @@ if __name__ == '__main__':
 	    subbandsPerMS      = parset.getInt32('OLAP.StorageProc.subbandsPerMS')
 	    
 	    if (subbandsPerMS == 1):
-	        MSName = '\'' + MSNumber + '_SB%01d' % 0 + '.MS' + '\''
+	        MSName = '\'' + MSNumber + '/SB%01d' % 0 + '.MS' + '\''
 	        for i in range(1, len(parset.getInt32Vector('Observation.subbandList'))):
-                    MSName = MSName + ', \\\n' + '\'' + MSNumber + '_SB%01d' % i + '.MS' + '\''
+                    MSName = MSName + ', \\\n' + '\'' + MSNumber + '/SB%01d' % i + '.MS' + '\''
 	    else:
-		MSName = '\'' + MSNumber + '_SB%01d' % 0 + '-%01d' % (subbandsPerMS - 1) +'.MS' + '\''
+		MSName = '\'' + MSNumber + '/SB%01d' % 0 + '-%01d' % (subbandsPerMS - 1) +'.MS' + '\''
 		for i in range(1, len(parset.getInt32Vector('Observation.subbandList')) / subbandsPerMS):
 		    first = i * subbandsPerMS
 		    last =  first + subbandsPerMS - 1
-		    MSName = MSName + ', \\\n' + '\'' + MSNumber + '_SB%01d' % first + '-%01d' % last +'.MS' + '\''
+		    MSName = MSName + ', \\\n' + '\'' + MSNumber + '/SB%01d' % first + '-%01d' % last +'.MS' + '\''
             
             outf = open(runningNumberFile, 'w')
             outf.write(str(measurementnumber + 1) + '\n')
@@ -195,9 +200,7 @@ if __name__ == '__main__':
 
 	parset['Observation.MSNameMask'] = '[' + MSName + ']'
  
-    obsID = parset['Observation.MSNameMask'].strip('.MS').split('/')[-1]
-    obsID = obsID.split('_')
-    obsID = obsID[0] + '_' + obsID[1] 
-
+    obsID = 'L' + year + '_' + '%05d' % measurementnumber
+    
     # start the observation
     doObservation(obsID, parset)
