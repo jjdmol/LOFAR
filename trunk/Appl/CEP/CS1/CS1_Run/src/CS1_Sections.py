@@ -10,7 +10,7 @@ class Section(object):
     Represents a part of the CS1 application
     """
 
-    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = os.getcwd().rstrip('LOFAR/Appl/CEP/CS1/CS1_Run/src')):
+    def __init__(self, parset, package, host, buildvar = 'gnu_opt', workingDir = os.getcwd()[:-len('LOFAR/Appl/CEP/CS1/CS1_Run/src')]):
         self.workingDir = workingDir
         self.parset = parset
         self.package = package
