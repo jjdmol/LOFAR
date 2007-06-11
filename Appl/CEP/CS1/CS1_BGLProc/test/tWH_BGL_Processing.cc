@@ -194,14 +194,9 @@ void doWork()
   }
 #endif
 
-  ACC::APS::ParameterSet pset("CS1.parset");
-
-  unsigned   nrStations	     = pset.getUint32("Observation.NStations");
-  double     sampleRate	     = pset.getDouble("Observation.SampleRate");
-  unsigned   nrChannels	     = pset.getUint32("Observation.NChannels");
-  double     baseFrequency   = pset.getDoubleVector("Observation.RefFreqs")[0];
-  double     channelWidth    = sampleRate / nrChannels;
-  double     signalFrequency = baseFrequency + 73 * channelWidth; // channel 73
+  ACC::APS::ParameterSet parameterSet("CS1.parset");
+  CS1_Parset pset(&parameterSet);
+  double     signalFrequency = pset.refFreqs()[0] + 73 * pset.chanWidth(); // channel 73
   int	     nRuns	     = 1;
   const char *env;
 
@@ -214,24 +209,24 @@ void doWork()
     signalFrequency = atof(env);
   }
 
-  std::clog << "base frequency = " << baseFrequency << std::endl;
-  std::clog << "channel bandwidth = " << channelWidth << std::endl;
+  std::clog << "base frequency = " << pset.refFreqs()[0] << std::endl;
+  std::clog << "channel bandwidth = " << pset.chanWidth() << std::endl;
   std::clog << "signal frequency = " << signalFrequency << std::endl;
-  WH_BGL_Processing wh("WH_BGL_Processing", 0, pset);
+  WH_BGL_Processing wh("WH_BGL_Processing", 0, &pset);
 
 #if defined HAVE_MPI
   wh.runOnNode(TH_MPI::getCurrentRank());
 #endif
 
   wh.basePreprocess();
-  setSubbandTestPattern(wh, nrStations, signalFrequency, sampleRate);
+  setSubbandTestPattern(wh, pset.nrStations(), signalFrequency, pset.sampleRate());
 //setRFItestPattern(wh);
 
   for (int i = 0; i < nRuns; i ++) {
     wh.baseProcess();
   }
 
-  checkCorrelatorTestPattern(wh, nrStations);
+  checkCorrelatorTestPattern(wh, pset.nrStations());
   wh.basePostprocess();
 }
 
