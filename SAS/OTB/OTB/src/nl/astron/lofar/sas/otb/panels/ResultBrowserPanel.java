@@ -276,28 +276,23 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     }
     
     private boolean viewInfo() {
-        //get the selected tree from the database
-        
-        try {
-            jOTDBtree aSelectedTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeID, false);
-            
-            if (aSelectedTree != null) {
-                // show treeInfo dialog
-                treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
-                treeInfoDialog.setLocationRelativeTo(this);
-                treeInfoDialog.setVisible(true);
-                
-                if (treeInfoDialog.isChanged()) {
-                    logger.debug("tree has been changed and saved");
-                } else {
-                    logger.debug("tree has not been changed");
-                }
-                
+        int [] id=null;
+        id[0]=itsTreeID;
+           
+        if (itsTreeID > -1) {
+            // show treeInfo dialog
+            treeInfoDialog = new TreeInfoDialog(true,id, itsMainFrame);
+            treeInfoDialog.setLocationRelativeTo(this);
+            treeInfoDialog.setVisible(true);
+               
+            if (treeInfoDialog.isChanged()) {
+                logger.debug("tree has been changed and saved");
             } else {
-                logger.debug("no tree selected");
+                logger.debug("tree has not been changed");
             }
-        } catch (Exception e) {
-            logger.debug("Error in viewInfo: " + e);
+                
+        } else {
+            logger.debug("no tree selected");
         }
         return treeInfoDialog.isChanged();
     }

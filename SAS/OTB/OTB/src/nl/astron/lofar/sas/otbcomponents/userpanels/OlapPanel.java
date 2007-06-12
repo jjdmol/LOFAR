@@ -106,55 +106,20 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
                     aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aNode);
-                    setField(aParam,aNode);
-                } else if (LofarUtils.keyName(aNode.name).equals("BGLProc")) {
-                    //we need to get all the childs from this node also.    
-                    Vector BGLProcChilds = itsOtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-            
-                    // get all the params per child
-                    Enumeration e1 = BGLProcChilds.elements();
-                    while( e1.hasMoreElements()  ) {
-                       
-                        jOTDBnode aBGLProcNode = (jOTDBnode)e1.nextElement();
-                        aParam=null;
-                        // We need to keep all the params needed by this panel
-                        if (aBGLProcNode.leaf) {
-                            aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aBGLProcNode);
-                        }
-                        setField(aParam,aBGLProcNode);
-                    }
+                    setField(itsNode,aParam,aNode);
+                    
+                                    
+                //we need to get all the childs from the following nodes as well.
+                }else if (LofarUtils.keyName(aNode.name).equals("BGLProc")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("DelayComp")) {
-                    //we need to get all the childs from this node also.    
-                    Vector delayCompChilds = itsOtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-            
-                    // get all the params per child
-                    Enumeration e2 = delayCompChilds.elements();
-                    while( e2.hasMoreElements()  ) {
-                       
-                        jOTDBnode aDelayCompNode = (jOTDBnode)e2.nextElement();
-                        aParam=null;
-                        // We need to keep all the params needed by this panel
-                        if (aDelayCompNode.leaf) {
-                            aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aDelayCompNode);
-                        }
-                        setField(aParam,aDelayCompNode);
-                    }
+                    this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("OLAP_Conn")) {
-                    //we need to get all the childs from this node also.    
-                    Vector OlapConnChilds = itsOtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-            
-                    // get all the params per child
-                    Enumeration e2 = OlapConnChilds.elements();
-                    while( e2.hasMoreElements()  ) {
-                       
-                        jOTDBnode anOlapConnNode = (jOTDBnode)e2.nextElement();
-                        aParam=null;
-                        // We need to keep all the params needed by this panel
-                        if (anOlapConnNode.leaf) {
-                            aParam = itsOtdbRmi.getRemoteMaintenance().getParam(anOlapConnNode);
-                        }
-                        setField(aParam,anOlapConnNode);
-                    }
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                } else if (LofarUtils.keyName(aNode.name).equals("IONProc")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
+                } else if (LofarUtils.keyName(aNode.name).equals("StorageProc")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
                 }
             }
         } catch (RemoteException ex) {
@@ -265,16 +230,53 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         }       
     } 
     
+    /** 
+     * Helper method that retrieves the child nodes for a given jOTDBnode, 
+     * and triggers setField() accordingly.
+     * @param aNode the node to retrieve and display child data of.
+     */
+    private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
+        jOTDBparam aParam=null;
+        try {
+            Vector HWchilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            // get all the params per child
+            Enumeration e1 = HWchilds.elements();
+            while( e1.hasMoreElements()  ) {
+                
+                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                aParam=null;
+                // We need to keep all the params needed by this panel
+                if (aHWNode.leaf) {
+                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
+                }
+                setField(aNode,aParam,aHWNode);
+            }
+        } catch (RemoteException ex) {
+            logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            return;
+        }
+    }
     
-    /* Set's the different fields in the GUI */
-    private void setField(jOTDBparam aParam, jOTDBnode aNode) {
+    /**
+     * Sets the different fields in the GUI, using the names of the nodes provided
+     * @param parent the parent node of the node to be displayed
+     * @param aParam the parameter of the node to be displayed if applicable
+     * @param aNode  the node to be displayed
+     */
+    private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
+        if (aParam==null) {
+            return;
+        }
+        boolean isRef = LofarUtils.isReference(aNode.limits);
+        String aKeyName = LofarUtils.keyName(aNode.name);
+        String parentName = String.valueOf(parent.name);
+        /* Set's the different fields in the GUI */
+
         // Generic OLAP
-        if (aNode==null) {
+        if (aParam==null) {
             return;
         }
         logger.debug("setField for: "+ aNode.name);
-        boolean isRef = LofarUtils.isReference(aNode.limits);
-        String aKeyName = LofarUtils.keyName(aNode.name);   
         try {
             if (itsOtdbRmi.getRemoteTypes().getParamType(aParam.type).substring(0,1).equals("p")) {
                // Have to get new param because we need the unresolved limits field.
@@ -284,263 +286,283 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             logger.debug("Error during getParam: "+ ex);
         }
         
-        // Olap Specific parameters
-        if (aKeyName.equals("EPAHeaderSize")) {
-            inputEPAHeaderSize.setToolTipText(aParam.description);
-            itsEPAHeaderSize=aNode;
-            if (isRef && aParam != null) {
-                inputEPAHeaderSize.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputEPAHeaderSize.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("IPHeaderSize")) {
-            inputIPHeaderSize.setToolTipText(aParam.description);
-            itsIPHeaderSize=aNode;
-            if (isRef && aParam != null) {
-                inputIPHeaderSize.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputIPHeaderSize.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("delayCompensation")) {
-            inputDelayCompensation.setToolTipText(aParam.description);
-            itsDelayCompensation=aNode;
-            boolean aSelection = false;
-            if (isRef && aParam != null) {
-                if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
-                    aSelection = true;
-                }
-            } else {
-                if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
-                    aSelection = true;
-                }
-            }
-            inputDelayCompensation.setSelected(aSelection);
-        } else if (aKeyName.equals("firstInputPortNr")) {
-            inputFirstInputPortNr.setToolTipText(aParam.description);
-            itsFirstInputPortNr=aNode;
-            if (isRef && aParam != null) {
-                inputFirstInputPortNr.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputFirstInputPortNr.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("majorIntegrationSteps")) {
-            inputMajIntSteps.setToolTipText(aParam.description);
-            itsMajorIntegrationSteps=aNode;
-            if (isRef && aParam != null) {
-                inputMajIntSteps.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputMajIntSteps.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("minorIntegrationSteps")) {
-            inputMinIntSteps.setToolTipText(aParam.description);
-            itsMinorIntegrationSteps=aNode;
-            if (isRef && aParam != null) {
-                inputMinIntSteps.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputMinIntSteps.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("nrBitsPerSample")) {
-            inputNrBitsPerSample.setToolTipText(aParam.description);
-            itsNrBitsPerSample=aNode;
-            if (isRef && aParam != null) {
-                inputNrBitsPerSample.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputNrBitsPerSample.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("nrSecondsOfBuffer")) {
-            inputNrSecondsOfBuffer.setToolTipText(aParam.description);
-            itsNrSecondsOfBuffer=aNode;
-            if (isRef && aParam != null) {
-                inputNrSecondsOfBuffer.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputNrSecondsOfBuffer.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("nrSubbandsPerFrame")) {
-            inputNrSubbandsPerFrame.setToolTipText(aParam.description);
-            itsNrSubbandsPerFrame=aNode;
-            if (isRef && aParam != null) {
-                inputNrSubbandsPerFrame.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputNrSubbandsPerFrame.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("nrTimesInFrame")) {
-            inputNrTimesInFrame.setToolTipText(aParam.description);
-            itsNrTimesInFrame=aNode;
-            if (isRef && aParam != null) {
-                inputNrTimesInFrame.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputNrTimesInFrame.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("storageIntegrationTime")) {
-            inputStorageIntegrationTime.setToolTipText(aParam.description);
-            itsStorageIntegrationTime=aNode;
-            if (isRef && aParam != null) {
-                inputStorageIntegrationTime.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputStorageIntegrationTime.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("storageStationNames")) {
-            inputStorageStationNames.setToolTipText(aParam.description);
-            itsStorageStationNames=aNode;
-            if (isRef && aParam != null) {
-                inputStorageStationNames.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputStorageStationNames.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("subbandsPerPset")) {
-            inputSubbandsPerPset.setToolTipText(aParam.description);
-            itsSubbandsPerPset=aNode;
-            if (isRef && aParam != null) {
-                inputSubbandsPerPset.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputSubbandsPerPset.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("psetsPerStorage")) {
-            inputPsetsPerStorage.setToolTipText(aParam.description);
-            itsPsetsPerStorage=aNode;
-            if (isRef && aParam != null) {
-                inputPsetsPerStorage.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputPsetsPerStorage.setText(aNode.limits);
-            }
-
+        if(parentName.equals("BGLProc")){
             // OLAP-BGLProc params
-        } else if (aKeyName.equals("maxConcurrentComm")) {
-            inputMaxConcurrentComm.setToolTipText(aParam.description);
-            itsMaxConcurrentComm=aNode;
-            if (isRef && aParam != null) {
-                inputMaxConcurrentComm.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputMaxConcurrentComm.setText(aNode.limits);
+            if (aKeyName.equals("integrationSteps")) {
+                inputBGLIntegrationSteps.setToolTipText(aParam.description);
+                itsBGLProcIntegrationSteps=aNode;
+                if (isRef && aParam != null) {
+                    inputBGLIntegrationSteps.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputBGLIntegrationSteps.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("maxConcurrentComm")) {
+                inputMaxConcurrentComm.setToolTipText(aParam.description);
+                itsMaxConcurrentComm=aNode;
+                if (isRef && aParam != null) {
+                    inputMaxConcurrentComm.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputMaxConcurrentComm.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("nodesPerPset")) {        
+                inputNodesPerPset.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputNodesPerPset,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputNodesPerPset.setSelectedItem(aNode.limits);
+                }
+                itsNodesPerPset=aNode;
+            } else if (aKeyName.equals("nrPPFTaps")) {
+                inputNrPPFTaps.setToolTipText(aParam.description);
+                itsNrPPFTaps=aNode;
+                if (isRef && aParam != null) {
+                    inputNrPPFTaps.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputNrPPFTaps.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("psetsPerCell")) {        
+                inputPsetsPerCell.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputPsetsPerCell,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputPsetsPerCell.setSelectedItem(aNode.limits);
+                }
+                itsPsetsPerCell=aNode; 
             }
-        } else if (aKeyName.equals("nodesPerPset")) {        
-            inputNodesPerPset.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputNodesPerPset,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputNodesPerPset.setSelectedItem(aNode.limits);
-            }
-            itsNodesPerPset=aNode;
-        } else if (aKeyName.equals("nrPPFTaps")) {
-            inputNrPPFTaps.setToolTipText(aParam.description);
-            itsNrPPFTaps=aNode;
-            if (isRef && aParam != null) {
-                inputNrPPFTaps.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputNrPPFTaps.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("psetsPerCell")) {        
-            inputPsetsPerCell.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputPsetsPerCell,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputPsetsPerCell.setSelectedItem(aNode.limits);
-            }
-            itsPsetsPerCell=aNode;  
-            
+        } else if(parentName.equals("DelayComp")){       
             // OLAP DelayComp params
 
-        } else if (aKeyName.equals("converterType")) {        
-            inputConverterType.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputConverterType,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputConverterType.setSelectedItem(aNode.limits);
+            if (aKeyName.equals("converterType")) {        
+                inputConverterType.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputConverterType,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                  inputConverterType.setSelectedItem(aNode.limits);
+                }
+                itsConverterType=aNode;  
+            } else if (aKeyName.equals("hostName")) {
+                inputHostName.setToolTipText(aParam.description);
+                itsHostName=aNode;
+                if (isRef && aParam != null) {
+                    inputHostName.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputHostName.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("ports")) {
+                inputPorts.setToolTipText(aParam.description);
+                itsPorts=aNode;
+                if (isRef && aParam != null) {
+                    inputPorts.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputPorts.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("positionType")) {
+                inputPositionType.setToolTipText(aParam.description);
+                itsPositionType=aNode;
+                if (isRef && aParam != null) {
+                    inputPositionType.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputPositionType.setText(aNode.limits);
+                }
             }
-            itsConverterType=aNode;  
-        } else if (aKeyName.equals("hostName")) {
-            inputHostName.setToolTipText(aParam.description);
-            itsHostName=aNode;
-            if (isRef && aParam != null) {
-                inputHostName.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputHostName.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("ports")) {
-            inputPorts.setToolTipText(aParam.description);
-            itsPorts=aNode;
-            if (isRef && aParam != null) {
-                inputPorts.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputPorts.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("positionType")) {
-            inputPositionType.setToolTipText(aParam.description);
-            itsPositionType=aNode;
-            if (isRef && aParam != null) {
-                inputPositionType.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputPositionType.setText(aNode.limits);
-            }
-            
+        } else if(parentName.equals("OLAP_Conn")){
             // OLAP OLAP_Conn params
-        } else if (aKeyName.equals("AMCServerHost")) {
-            inputAMCServerHost.setToolTipText(aParam.description);
-            itsAMCServerHost=aNode;
-            if (isRef && aParam != null) {
-                inputAMCServerHost.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputAMCServerHost.setText(aNode.limits);
+            if (aKeyName.equals("AMCServerHost")) {
+                inputAMCServerHost.setToolTipText(aParam.description);
+               itsAMCServerHost=aNode;
+                if (isRef && aParam != null) {
+                    inputAMCServerHost.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputAMCServerHost.setText(aNode.limits);
+                }
+           } else if (aKeyName.equals("AMCServerPort")) {
+                inputAMCServerPort.setToolTipText(aParam.description);
+                itsAMCServerPort=aNode;
+                if (isRef && aParam != null) {
+                    inputAMCServerPort.setText(aNode.limits + " : " + aParam.limits);
+               } else {
+                    inputAMCServerPort.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("BGLProc_Storage_BaseFileName")) {
+                inputBGLProcStorageBaseFileName.setToolTipText(aParam.description);
+                itsBGLProcStorageBaseFileName=aNode;
+                if (isRef && aParam != null) {
+                    inputBGLProcStorageBaseFileName.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputBGLProcStorageBaseFileName.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("BGLProc_Storage_Ports")) {
+                inputBGLProcStoragePorts.setToolTipText(aParam.description);
+                itsBGLProcStoragePorts=aNode;
+                if (isRef && aParam != null) {
+                    inputBGLProcStoragePorts.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputBGLProcStoragePorts.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("BGLProc_Storage_Transport")) {        
+                inputBGLProcStorageTransport.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputBGLProcStorageTransport,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputBGLProcStorageTransport.setSelectedItem(aNode.limits);
+                }
+                itsBGLProcStorageTransport=aNode;
+            } else if (aKeyName.equals("input_BGLProc_BaseFileName")) {
+                inputInputBGLProcBaseFileName.setToolTipText(aParam.description);
+                itsInputBGLProcBaseFileName=aNode;
+              if (isRef && aParam != null) {
+                    inputInputBGLProcBaseFileName.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputInputBGLProcBaseFileName.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("input_BGLProc_Ports")) {
+                inputInputBGLProcPorts.setToolTipText(aParam.description);
+                itsInputBGLProcPorts=aNode;
+                if (isRef && aParam != null) {
+                    inputInputBGLProcPorts.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputInputBGLProcPorts.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("input_BGLProc_Transport")) {        
+                inputInputBGLProcTransport.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputInputBGLProcTransport,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputInputBGLProcTransport.setSelectedItem(aNode.limits);
+                }
+                itsInputBGLProcTransport=aNode;
+           } else if (aKeyName.equals("station_Input_Transport")) {        
+                inputStationInputTransport.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputStationInputTransport,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputStationInputTransport.setSelectedItem(aNode.limits);
+                }
+                itsStationInputTransport=aNode;
             }
-        } else if (aKeyName.equals("AMCServerPort")) {
-            inputAMCServerPort.setToolTipText(aParam.description);
-            itsAMCServerPort=aNode;
-            if (isRef && aParam != null) {
-                inputAMCServerPort.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputAMCServerPort.setText(aNode.limits);
+        } else if(parentName.equals("IONProc")){       
+            // OLAP IONProc params
+            if (aKeyName.equals("integrationSteps")) {
+                inputIONProcIntegrationSteps.setToolTipText(aParam.description);
+                itsIONProcIntegrationSteps=aNode;
+                if (isRef && aParam != null) {
+                    inputIONProcIntegrationSteps.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputIONProcIntegrationSteps.setText(aNode.limits);
+                }
             }
-        } else if (aKeyName.equals("BGLProc_Storage_BaseFileName")) {
-            inputBGLProcStorageBaseFileName.setToolTipText(aParam.description);
-            itsBGLProcStorageBaseFileName=aNode;
-            if (isRef && aParam != null) {
-                inputBGLProcStorageBaseFileName.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputBGLProcStorageBaseFileName.setText(aNode.limits);
+        } else if(parentName.equals("StorageProc")){       
+            // OLAP StorageProc params
+            if (aKeyName.equals("integrationSteps")) {
+                inputStorageProcIntegrationSteps.setToolTipText(aParam.description);
+                itsStorageProcIntegrationSteps=aNode;
+                if (isRef && aParam != null) {
+                    inputStorageProcIntegrationSteps.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputStorageProcIntegrationSteps.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("subbandsPerMS")) {
+                inputSubbandsPerMS.setToolTipText(aParam.description);
+                itsSubbandsPerMS=aNode;
+                if (isRef && aParam != null) {
+                    inputSubbandsPerMS.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputSubbandsPerMS.setText(aNode.limits);
+                }
             }
-        } else if (aKeyName.equals("BGLProc_Storage_Ports")) {
-            inputBGLProcStoragePorts.setToolTipText(aParam.description);
-            itsBGLProcStoragePorts=aNode;
-            if (isRef && aParam != null) {
-                inputBGLProcStoragePorts.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputBGLProcStoragePorts.setText(aNode.limits);
+        } else if(parentName.equals("OLAP")){
+            // Olap Specific parameters
+            if (aKeyName.equals("EPAHeaderSize")) {
+                inputEPAHeaderSize.setToolTipText(aParam.description);
+                itsEPAHeaderSize=aNode;
+                if (isRef && aParam != null) {
+                    inputEPAHeaderSize.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputEPAHeaderSize.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("IPHeaderSize")) {
+                inputIPHeaderSize.setToolTipText(aParam.description);
+                itsIPHeaderSize=aNode;
+                if (isRef && aParam != null) {
+                    inputIPHeaderSize.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputIPHeaderSize.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("delayCompensation")) {
+                inputDelayCompensation.setToolTipText(aParam.description);
+                itsDelayCompensation=aNode;
+                boolean aSelection = false;
+                if (isRef && aParam != null) {
+                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                } else {
+                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
+                        aSelection = true;
+                    }
+                }
+                inputDelayCompensation.setSelected(aSelection);
+            } else if (aKeyName.equals("firstInputPortNr")) {
+                inputFirstInputPortNr.setToolTipText(aParam.description);
+                itsFirstInputPortNr=aNode;
+                if (isRef && aParam != null) {
+                    inputFirstInputPortNr.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputFirstInputPortNr.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("nrBitsPerSample")) {
+                inputNrBitsPerSample.setToolTipText(aParam.description);
+                itsNrBitsPerSample=aNode;
+                if (isRef && aParam != null) {
+                    inputNrBitsPerSample.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputNrBitsPerSample.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("nrSecondsOfBuffer")) {
+                inputNrSecondsOfBuffer.setToolTipText(aParam.description);
+                itsNrSecondsOfBuffer=aNode;
+                if (isRef && aParam != null) {
+                    inputNrSecondsOfBuffer.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputNrSecondsOfBuffer.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("nrSubbandsPerFrame")) {
+                inputNrSubbandsPerFrame.setToolTipText(aParam.description);
+                itsNrSubbandsPerFrame=aNode;
+                if (isRef && aParam != null) {
+                    inputNrSubbandsPerFrame.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputNrSubbandsPerFrame.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("nrTimesInFrame")) {
+                inputNrTimesInFrame.setToolTipText(aParam.description);
+                itsNrTimesInFrame=aNode;
+                if (isRef && aParam != null) {
+                    inputNrTimesInFrame.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputNrTimesInFrame.setText(aNode.limits);
+                }
+
+            } else if (aKeyName.equals("storageStationNames")) {
+                inputStorageStationNames.setToolTipText(aParam.description);
+                itsStorageStationNames=aNode;
+                if (isRef && aParam != null) {
+                    inputStorageStationNames.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputStorageStationNames.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("subbandsPerPset")) {
+                inputSubbandsPerPset.setToolTipText(aParam.description);
+                itsSubbandsPerPset=aNode;
+                if (isRef && aParam != null) {
+                    inputSubbandsPerPset.setText(aNode.limits + " : " + aParam.limits);
+               } else {
+                    inputSubbandsPerPset.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("psetsPerStorage")) {
+                inputPsetsPerStorage.setToolTipText(aParam.description);
+                itsPsetsPerStorage=aNode;
+                if (isRef && aParam != null) {  
+                    inputPsetsPerStorage.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputPsetsPerStorage.setText(aNode.limits);
+                }
             }
-        } else if (aKeyName.equals("BGLProc_Storage_Transport")) {        
-            inputBGLProcStorageTransport.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputBGLProcStorageTransport,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputBGLProcStorageTransport.setSelectedItem(aNode.limits);
-            }
-            itsBGLProcStorageTransport=aNode;
-        } else if (aKeyName.equals("input_BGLProc_BaseFileName")) {
-            inputInputBGLProcBaseFileName.setToolTipText(aParam.description);
-            itsInputBGLProcBaseFileName=aNode;
-            if (isRef && aParam != null) {
-                inputInputBGLProcBaseFileName.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputInputBGLProcBaseFileName.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("input_BGLProc_Ports")) {
-            inputInputBGLProcPorts.setToolTipText(aParam.description);
-            itsInputBGLProcPorts=aNode;
-            if (isRef && aParam != null) {
-                inputInputBGLProcPorts.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputInputBGLProcPorts.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("input_BGLProc_Transport")) {        
-            inputInputBGLProcTransport.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputInputBGLProcTransport,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputInputBGLProcTransport.setSelectedItem(aNode.limits);
-            }
-            itsInputBGLProcTransport=aNode;
-        } else if (aKeyName.equals("station_Input_Transport")) {        
-            inputStationInputTransport.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputStationInputTransport,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputStationInputTransport.setSelectedItem(aNode.limits);
-            }
-            itsStationInputTransport=aNode;
-        }
+        }   
     }
     
     private void restore() {
@@ -553,18 +575,16 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
       }
       inputDelayCompensation.setSelected(delay);
       inputFirstInputPortNr.setText(itsFirstInputPortNr.limits);
-      inputMajIntSteps.setText(itsMajorIntegrationSteps.limits);
-      inputMinIntSteps.setText(itsMinorIntegrationSteps.limits);
       inputNrBitsPerSample.setText(itsNrBitsPerSample.limits);
       inputNrSecondsOfBuffer.setText(itsNrSecondsOfBuffer.limits);
       inputNrSubbandsPerFrame.setText(itsNrSubbandsPerFrame.limits);
       inputNrTimesInFrame.setText(itsNrTimesInFrame.limits);
-      inputStorageIntegrationTime.setText(itsStorageIntegrationTime.limits);
       inputStorageStationNames.setText(itsStorageStationNames.limits);
       inputSubbandsPerPset.setText(itsSubbandsPerPset.limits);
       inputSubbandsPerPset.setText(itsPsetsPerStorage.limits);
       
       //OLAP-BGLProc      
+      inputBGLIntegrationSteps.setText(itsBGLProcIntegrationSteps.limits);
       inputMaxConcurrentComm.setText(itsMaxConcurrentComm.limits);
       inputNodesPerPset.setSelectedItem(itsNodesPerPset.limits);
       inputNrPPFTaps.setText(itsNrPPFTaps.limits);
@@ -575,6 +595,13 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
       inputHostName.setText(itsHostName.limits);
       inputPorts.setText(itsPorts.limits);
       inputPositionType.setText(itsPositionType.limits);
+      
+      //OLAP IONProc
+      inputIONProcIntegrationSteps.setText(itsIONProcIntegrationSteps.limits);
+      
+      //OLAP StorageProc
+      inputStorageProcIntegrationSteps.setText(itsStorageProcIntegrationSteps.limits);
+      inputSubbandsPerMS.setText(itsSubbandsPerMS.limits);
       
       //OLAP-OLAP_Conn
       inputAMCServerHost.setText(itsAMCServerHost.limits);
@@ -688,14 +715,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             itsFirstInputPortNr.limits = inputFirstInputPortNr.getText();
             saveNode(itsFirstInputPortNr);
         }
-        if (itsMajorIntegrationSteps != null && !inputMajIntSteps.equals(itsMajorIntegrationSteps.limits)) {  
-            itsMajorIntegrationSteps.limits = inputMajIntSteps.getText();
-            saveNode(itsMajorIntegrationSteps);
-        }
-        if (itsMinorIntegrationSteps != null && !inputMinIntSteps.equals(itsMinorIntegrationSteps.limits)) {  
-            itsMinorIntegrationSteps.limits = inputMinIntSteps.getText();
-            saveNode(itsMinorIntegrationSteps);
-        }
         if (itsIPHeaderSize != null && !inputIPHeaderSize.equals(itsIPHeaderSize.limits)) {  
             itsIPHeaderSize.limits = inputIPHeaderSize.getText();
             saveNode(itsIPHeaderSize);
@@ -716,10 +735,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             itsNrTimesInFrame.limits = inputNrTimesInFrame.getText();
             saveNode(itsNrTimesInFrame);
         }
-        if (itsStorageIntegrationTime != null && !inputStorageIntegrationTime.equals(itsStorageIntegrationTime.limits)) {  
-            itsStorageIntegrationTime.limits = inputStorageIntegrationTime.getText();
-            saveNode(itsStorageIntegrationTime);
-        }
         if (itsStorageStationNames != null && !inputStorageStationNames.equals(itsStorageStationNames.limits)) {  
             itsStorageStationNames.limits = inputStorageStationNames.getText();
             saveNode(itsStorageStationNames);
@@ -734,6 +749,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         }
         
         // OLAP-BGLProc
+        if (itsBGLProcIntegrationSteps != null && !inputBGLIntegrationSteps.equals(itsBGLProcIntegrationSteps.limits)) {  
+            itsBGLProcIntegrationSteps.limits = inputBGLIntegrationSteps.getText();
+            saveNode(itsBGLProcIntegrationSteps);
+        }
         if (itsMaxConcurrentComm != null && !inputMaxConcurrentComm.equals(itsMaxConcurrentComm.limits)) {  
             itsMaxConcurrentComm.limits = inputMaxConcurrentComm.getText();
             saveNode(itsMaxConcurrentComm);
@@ -806,6 +825,22 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             itsStationInputTransport.limits = inputStationInputTransport.getSelectedItem().toString();
             saveNode(itsStationInputTransport);
         }
+
+        // OLAP-IONProc
+        if (itsIONProcIntegrationSteps != null && !inputIONProcIntegrationSteps.equals(itsIONProcIntegrationSteps.limits)) {  
+            itsIONProcIntegrationSteps.limits = inputIONProcIntegrationSteps.getText();
+            saveNode(itsIONProcIntegrationSteps);
+        }
+
+        //OLAP-StorageProc
+        if (itsStorageProcIntegrationSteps != null && !inputStorageProcIntegrationSteps.equals(itsStorageProcIntegrationSteps.limits)) {  
+            itsStorageProcIntegrationSteps.limits = inputStorageProcIntegrationSteps.getText();
+            saveNode(itsStorageProcIntegrationSteps);
+        }
+        if (itsSubbandsPerMS != null && !inputSubbandsPerMS.equals(itsSubbandsPerMS.limits)) {  
+            itsSubbandsPerMS.limits = inputSubbandsPerMS.getText();
+            saveNode(itsSubbandsPerMS);
+        }
     }
     
     /** This method is called from within the constructor to
@@ -823,10 +858,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel2 = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
         jPanel8 = new javax.swing.JPanel();
-        labelMinIntSteps = new javax.swing.JLabel();
-        inputMinIntSteps = new javax.swing.JTextField();
-        labelMajIntSteps = new javax.swing.JLabel();
-        inputMajIntSteps = new javax.swing.JTextField();
         labelEPAHeaderSize = new javax.swing.JLabel();
         inputEPAHeaderSize = new javax.swing.JTextField();
         labelIPHeaderSize = new javax.swing.JLabel();
@@ -845,8 +876,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         inputNrSecondsOfBuffer = new javax.swing.JTextField();
         labelSubbandsPerPset = new javax.swing.JLabel();
         inputSubbandsPerPset = new javax.swing.JTextField();
-        labelStorageIntegrationTime = new javax.swing.JLabel();
-        inputStorageIntegrationTime = new javax.swing.JTextField();
         labelStorageStationNames = new javax.swing.JLabel();
         inputStorageStationNames = new javax.swing.JTextField();
         labelPsetsPerStorage = new javax.swing.JLabel();
@@ -880,6 +909,8 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         inputPsetsPerCell = new javax.swing.JComboBox();
         labelNodesPerPset = new javax.swing.JLabel();
         inputNodesPerPset = new javax.swing.JComboBox();
+        labelBGLIntegrationSteps = new javax.swing.JLabel();
+        inputBGLIntegrationSteps = new javax.swing.JTextField();
         jPanel5 = new javax.swing.JPanel();
         labelHostName = new javax.swing.JLabel();
         inputHostName = new javax.swing.JTextField();
@@ -889,6 +920,14 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         inputConverterType = new javax.swing.JComboBox();
         labelPositionType = new javax.swing.JLabel();
         inputPositionType = new javax.swing.JTextField();
+        jPanel10 = new javax.swing.JPanel();
+        labelIONProcIntegrationSteps = new javax.swing.JLabel();
+        inputIONProcIntegrationSteps = new javax.swing.JTextField();
+        jPanel11 = new javax.swing.JPanel();
+        labelStorageIntegrationTime = new javax.swing.JLabel();
+        inputStorageProcIntegrationSteps = new javax.swing.JTextField();
+        labelSubbandsPerMs = new javax.swing.JLabel();
+        inputSubbandsPerMS = new javax.swing.JTextField();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
@@ -918,10 +957,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
         jPanel8.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Olap", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0)));
-        labelMinIntSteps.setText("Minor Integration Steps:");
-
-        labelMajIntSteps.setText("Major Integration Steps:");
-
         labelEPAHeaderSize.setText("EPA Header Size:");
 
         labelIPHeaderSize.setText("IP Header Size:");
@@ -943,8 +978,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
 
         labelSubbandsPerPset.setText("# Subbands Per Pset:");
 
-        labelStorageIntegrationTime.setText("StorageIntegrationTime:");
-
         labelStorageStationNames.setText("storageStationNames:");
 
         labelPsetsPerStorage.setText("#psetsPerStorage:");
@@ -958,46 +991,36 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                         .addComponent(labelDelayCompensation, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(labelStorageIntegrationTime, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(labelFirstInputPortNr, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(labelIPHeaderSize, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(labelNrTimesInFrame, javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(labelNrBitsPerSample, javax.swing.GroupLayout.Alignment.LEADING))
-                    .addComponent(labelStorageStationNames))
+                        .addComponent(labelIPHeaderSize, javax.swing.GroupLayout.Alignment.LEADING))
+                    .addComponent(labelStorageStationNames)
+                    .addComponent(labelNrTimesInFrame)
+                    .addComponent(labelNrBitsPerSample))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(inputStorageStationNames)
                     .addGroup(jPanel8Layout.createSequentialGroup()
-                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(inputNrBitsPerSample, javax.swing.GroupLayout.PREFERRED_SIZE, 91, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(inputNrTimesInFrame)
-                                .addComponent(inputFirstInputPortNr)
-                                .addComponent(inputIPHeaderSize)
-                                .addComponent(inputStorageIntegrationTime, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE))
-                            .addComponent(inputDelayCompensation))
-                        .addGap(45, 45, 45)
-                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(labelNrSecondsOfBuffer)
-                            .addComponent(labelSubbandsPerPset)
-                            .addComponent(labelNrSubbandsPerFrame)
-                            .addComponent(labelEPAHeaderSize)
-                            .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                .addComponent(labelPsetsPerStorage, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(labelMinIntSteps, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                        .addGap(18, 18, 18)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(inputPsetsPerStorage)
-                            .addComponent(inputSubbandsPerPset)
-                            .addComponent(inputMinIntSteps)
-                            .addComponent(inputEPAHeaderSize)
+                            .addComponent(inputNrTimesInFrame)
+                            .addComponent(inputIPHeaderSize)
+                            .addComponent(inputFirstInputPortNr, javax.swing.GroupLayout.DEFAULT_SIZE, 115, Short.MAX_VALUE)
+                            .addComponent(inputDelayCompensation)
+                            .addComponent(inputNrBitsPerSample))
+                        .addGap(21, 21, 21)
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(labelSubbandsPerPset)
+                            .addComponent(labelPsetsPerStorage)
+                            .addComponent(labelEPAHeaderSize)
+                            .addComponent(labelNrSubbandsPerFrame)
+                            .addComponent(labelNrSecondsOfBuffer))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(inputNrSecondsOfBuffer, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE)
                             .addComponent(inputNrSubbandsPerFrame)
-                            .addComponent(inputNrSecondsOfBuffer, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE))
-                        .addGap(31, 31, 31)
-                        .addComponent(labelMajIntSteps)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(inputMajIntSteps, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(47, Short.MAX_VALUE))
+                            .addComponent(inputEPAHeaderSize)
+                            .addComponent(inputPsetsPerStorage, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE)
+                            .addComponent(inputSubbandsPerPset, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE))))
+                .addContainerGap(286, Short.MAX_VALUE))
         );
         jPanel8Layout.setVerticalGroup(
             jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1009,43 +1032,33 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                             .addComponent(inputFirstInputPortNr, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelStorageIntegrationTime)
-                            .addComponent(inputStorageIntegrationTime, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(labelPsetsPerStorage)
                             .addComponent(inputPsetsPerStorage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(labelIPHeaderSize)
                             .addComponent(inputIPHeaderSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(labelMinIntSteps)
-                            .addComponent(inputMinIntSteps, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(labelMajIntSteps)
-                            .addComponent(inputMajIntSteps, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(inputEPAHeaderSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(labelEPAHeaderSize)))
                     .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(labelSubbandsPerPset)
                         .addComponent(inputSubbandsPerPset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(inputNrTimesInFrame, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(labelNrSubbandsPerFrame)
                     .addComponent(labelNrTimesInFrame)
-                    .addGroup(jPanel8Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(inputEPAHeaderSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(labelNrBitsPerSample)
-                            .addComponent(inputNrBitsPerSample, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(labelNrSubbandsPerFrame)
-                            .addComponent(inputNrSubbandsPerFrame, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(inputNrTimesInFrame, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(labelEPAHeaderSize)))
+                    .addComponent(inputNrSubbandsPerFrame, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelNrBitsPerSample)
+                    .addComponent(labelNrSecondsOfBuffer)
+                    .addComponent(inputNrSecondsOfBuffer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(inputNrBitsPerSample, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(12, 12, 12)
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(labelDelayCompensation)
-                    .addComponent(inputDelayCompensation)
-                    .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(inputNrSecondsOfBuffer, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(labelNrSecondsOfBuffer)))
+                    .addComponent(inputDelayCompensation))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelStorageStationNames)
@@ -1147,10 +1160,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelBGLProcStorageBaseFileName)
                     .addComponent(inputBGLProcStorageBaseFileName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(31, 31, 31))
+                .addGap(98, 98, 98))
         );
 
-        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "BGLProc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0)));
+        jPanel7.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "BGL Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0)));
         jPanel7.setToolTipText("BGLProc");
         labelMaxConcurrentComm.setText("Max Concurrent Comm:");
 
@@ -1164,6 +1177,8 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
 
         inputNodesPerPset.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
+        labelBGLIntegrationSteps.setText("Integration Steps:");
+
         javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
         jPanel7.setLayout(jPanel7Layout);
         jPanel7Layout.setHorizontalGroup(
@@ -1171,39 +1186,47 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(labelNrPPFTaps)
-                        .addComponent(labelMaxConcurrentComm, javax.swing.GroupLayout.DEFAULT_SIZE, 131, Short.MAX_VALUE))
-                    .addComponent(labelNodesPerPset)
-                    .addComponent(labelPsetsPerCell, javax.swing.GroupLayout.DEFAULT_SIZE, 131, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(inputNodesPerPset, 0, 143, Short.MAX_VALUE)
-                    .addComponent(inputPsetsPerCell, 0, 143, Short.MAX_VALUE)
-                    .addComponent(inputMaxConcurrentComm)
-                    .addComponent(inputNrPPFTaps))
-                .addGap(53, 53, 53))
+                    .addGroup(jPanel7Layout.createSequentialGroup()
+                        .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(labelMaxConcurrentComm, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(labelNrPPFTaps)
+                            .addComponent(labelNodesPerPset)
+                            .addComponent(labelPsetsPerCell, javax.swing.GroupLayout.DEFAULT_SIZE, 140, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                    .addGroup(jPanel7Layout.createSequentialGroup()
+                        .addComponent(labelBGLIntegrationSteps, javax.swing.GroupLayout.DEFAULT_SIZE, 97, Short.MAX_VALUE)
+                        .addGap(47, 47, 47)))
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(inputBGLIntegrationSteps, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
+                    .addComponent(inputPsetsPerCell, javax.swing.GroupLayout.Alignment.TRAILING, 0, 189, Short.MAX_VALUE)
+                    .addComponent(inputNrPPFTaps, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
+                    .addComponent(inputNodesPerPset, 0, 189, Short.MAX_VALUE)
+                    .addComponent(inputMaxConcurrentComm, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE))
+                .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelMaxConcurrentComm)
                     .addComponent(inputMaxConcurrentComm, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(12, 12, 12)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelNrPPFTaps)
                     .addComponent(inputNrPPFTaps, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(21, 21, 21)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelNodesPerPset)
                     .addComponent(inputNodesPerPset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(14, 14, 14)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelPsetsPerCell)
                     .addComponent(inputPsetsPerCell, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(95, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelBGLIntegrationSteps)
+                    .addComponent(inputBGLIntegrationSteps, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Delay Compensation", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0)));
@@ -1238,7 +1261,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addComponent(labelPorts, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(inputPorts, javax.swing.GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
+                    .addComponent(inputPorts, javax.swing.GroupLayout.DEFAULT_SIZE, 252, Short.MAX_VALUE)
                     .addComponent(inputPositionType, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
         );
@@ -1260,6 +1283,66 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
+        jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "ION Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0)));
+        labelIONProcIntegrationSteps.setText("Integration Steps:");
+
+        javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
+        jPanel10.setLayout(jPanel10Layout);
+        jPanel10Layout.setHorizontalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel10Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(labelIONProcIntegrationSteps)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 44, Short.MAX_VALUE)
+                .addComponent(inputIONProcIntegrationSteps, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(29, 29, 29))
+        );
+        jPanel10Layout.setVerticalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel10Layout.createSequentialGroup()
+                .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelIONProcIntegrationSteps)
+                    .addComponent(inputIONProcIntegrationSteps, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Storage Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0)));
+        labelStorageIntegrationTime.setText("Integration Steps:");
+
+        labelSubbandsPerMs.setText("#subbands per MS:");
+
+        javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
+        jPanel11.setLayout(jPanel11Layout);
+        jPanel11Layout.setHorizontalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel11Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel11Layout.createSequentialGroup()
+                        .addComponent(labelStorageIntegrationTime, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(56, 56, 56))
+                    .addGroup(jPanel11Layout.createSequentialGroup()
+                        .addComponent(labelSubbandsPerMs, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(40, 40, 40)))
+                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(inputSubbandsPerMS)
+                    .addComponent(inputStorageProcIntegrationSteps, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE))
+                .addContainerGap())
+        );
+        jPanel11Layout.setVerticalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel11Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelStorageIntegrationTime)
+                    .addComponent(inputStorageProcIntegrationSteps, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(labelSubbandsPerMs)
+                    .addComponent(inputSubbandsPerMS, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -1270,17 +1353,25 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(jPanel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, 263, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addComponent(jPanel7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel10, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jPanel6, javax.swing.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -1298,13 +1389,13 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGap(10, 10, 10)
-                        .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addContainerGap()
+                        .addComponent(jPanel8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(buttonPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 774, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
+                        .addComponent(buttonPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 785, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1314,7 +1405,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
@@ -1322,8 +1413,8 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1356,18 +1447,16 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode itsIPHeaderSize=null;
     private jOTDBnode itsDelayCompensation=null;
     private jOTDBnode itsFirstInputPortNr=null;
-    private jOTDBnode itsMajorIntegrationSteps=null;
-    private jOTDBnode itsMinorIntegrationSteps=null;
     private jOTDBnode itsNrBitsPerSample=null;
     private jOTDBnode itsNrSecondsOfBuffer=null;
     private jOTDBnode itsNrSubbandsPerFrame=null;
     private jOTDBnode itsNrTimesInFrame=null;
-    private jOTDBnode itsStorageIntegrationTime=null;
     private jOTDBnode itsStorageStationNames=null;
     private jOTDBnode itsSubbandsPerPset=null;
     private jOTDBnode itsPsetsPerStorage=null;
     
     // OLAP-BGLProc parameters
+    private jOTDBnode itsBGLProcIntegrationSteps=null;
     private jOTDBnode itsMaxConcurrentComm=null;
     private jOTDBnode itsNodesPerPset=null;
     private jOTDBnode itsNrPPFTaps=null;
@@ -1379,7 +1468,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode itsPorts=null;
     private jOTDBnode itsPositionType=null;
     
-    // OLAP-OLAP_Conn
+    // OLAP-Conn parameters
     private jOTDBnode itsAMCServerHost=null;
     private jOTDBnode itsAMCServerPort=null;
     private jOTDBnode itsBGLProcStorageBaseFileName=null;
@@ -1390,11 +1479,18 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode itsInputBGLProcTransport=null;
     private jOTDBnode itsStationInputTransport=null;
    
+    // OLAP-StorageProc parameters
+    private jOTDBnode itsSubbandsPerMS=null;
+    private jOTDBnode itsStorageProcIntegrationSteps=null;
+    
+    // OLAP-IONProc parameters
+    private jOTDBnode itsIONProcIntegrationSteps=null;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
     private javax.swing.JTextField inputAMCServerHost;
     private javax.swing.JTextField inputAMCServerPort;
+    private javax.swing.JTextField inputBGLIntegrationSteps;
     private javax.swing.JTextField inputBGLProcStorageBaseFileName;
     private javax.swing.JTextField inputBGLProcStoragePorts;
     private javax.swing.JComboBox inputBGLProcStorageTransport;
@@ -1403,13 +1499,12 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTextField inputEPAHeaderSize;
     private javax.swing.JTextField inputFirstInputPortNr;
     private javax.swing.JTextField inputHostName;
+    private javax.swing.JTextField inputIONProcIntegrationSteps;
     private javax.swing.JTextField inputIPHeaderSize;
     private javax.swing.JTextField inputInputBGLProcBaseFileName;
     private javax.swing.JTextField inputInputBGLProcPorts;
     private javax.swing.JComboBox inputInputBGLProcTransport;
-    private javax.swing.JTextField inputMajIntSteps;
     private javax.swing.JTextField inputMaxConcurrentComm;
-    private javax.swing.JTextField inputMinIntSteps;
     private javax.swing.JComboBox inputNodesPerPset;
     private javax.swing.JTextField inputNrBitsPerSample;
     private javax.swing.JTextField inputNrPPFTaps;
@@ -1421,11 +1516,14 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JComboBox inputPsetsPerCell;
     private javax.swing.JTextField inputPsetsPerStorage;
     private javax.swing.JComboBox inputStationInputTransport;
-    private javax.swing.JTextField inputStorageIntegrationTime;
+    private javax.swing.JTextField inputStorageProcIntegrationSteps;
     private javax.swing.JTextField inputStorageStationNames;
+    private javax.swing.JTextField inputSubbandsPerMS;
     private javax.swing.JTextField inputSubbandsPerPset;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel10;
+    private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
@@ -1436,6 +1534,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JPanel jPanel9;
     private javax.swing.JLabel labelAMCServerHost;
     private javax.swing.JLabel labelAMCServerPort;
+    private javax.swing.JLabel labelBGLIntegrationSteps;
     private javax.swing.JLabel labelBGLProcStorageBaseFileName;
     private javax.swing.JLabel labelBGLProcStoragePorts;
     private javax.swing.JLabel labelBGLProcStorageTransport;
@@ -1444,13 +1543,12 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel labelEPAHeaderSize;
     private javax.swing.JLabel labelFirstInputPortNr;
     private javax.swing.JLabel labelHostName;
+    private javax.swing.JLabel labelIONProcIntegrationSteps;
     private javax.swing.JLabel labelIPHeaderSize;
     private javax.swing.JLabel labelInputBGLProcBaseFileName;
     private javax.swing.JLabel labelInputBGLProcPorts;
     private javax.swing.JLabel labelInputBGLProcTransport;
-    private javax.swing.JLabel labelMajIntSteps;
     private javax.swing.JLabel labelMaxConcurrentComm;
-    private javax.swing.JLabel labelMinIntSteps;
     private javax.swing.JLabel labelNodesPerPset;
     private javax.swing.JLabel labelNrBitsPerSample;
     private javax.swing.JLabel labelNrPPFTaps;
@@ -1463,6 +1561,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JLabel labelStationInputTransport;
     private javax.swing.JLabel labelStorageIntegrationTime;
     private javax.swing.JLabel labelStorageStationNames;
+    private javax.swing.JLabel labelSubbandsPerMs;
     private javax.swing.JLabel labelSubbandsPerPset;
     // End of variables declaration//GEN-END:variables
  

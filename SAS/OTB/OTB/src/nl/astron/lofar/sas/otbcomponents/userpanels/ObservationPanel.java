@@ -118,39 +118,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
                     aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aNode);
-                    setField(aParam,aNode);
-                } else if (LofarUtils.keyName(aNode.name).equals("Beam")) {
-                    //we need to get all the childs from this node also.    
-                    Vector beamChilds = itsOtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-            
-                    // get all the params per child
-                    Enumeration e1 = beamChilds.elements();
-                    while( e1.hasMoreElements()  ) {
-                       
-                        jOTDBnode aBeamNode = (jOTDBnode)e1.nextElement();
-                        aParam=null;
-                        // We need to keep all the params needed by this panel
-                        if (aBeamNode.leaf) {
-                            aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aBeamNode);
-                        }
-                        setField(aParam,aBeamNode);
-                    }
+                    setField(itsNode,aParam,aNode);
+                //we need to get all the childs from the following nodes as well.
+                }else if (LofarUtils.keyName(aNode.name).equals("Beam")) {
+                    this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("VirtualInstrument")) {
-                    //we need to get all the childs from this node also.    
-                    Vector VIChilds = itsOtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
-            
-                    // get all the params per child
-                    Enumeration e2 = VIChilds.elements();
-                    while( e2.hasMoreElements()  ) {
-                       
-                        jOTDBnode aVINode = (jOTDBnode)e2.nextElement();
-                        aParam=null;
-                        // We need to keep all the params needed by this panel
-                        if (aVINode.leaf) {
-                            aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aVINode);
-                        }
-                        setField(aParam,aVINode);
-                    }
+                    this.retrieveAndDisplayChildDataForNode(aNode);
                 }
             }
         } catch (RemoteException ex) {
@@ -261,15 +234,55 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }       
     }
     
-    /* Set's the different fields in the GUI */
-    private void setField(jOTDBparam aParam, jOTDBnode aNode) {
+     /** 
+     * Helper method that retrieves the child nodes for a given jOTDBnode, 
+     * and triggers setField() accordingly.
+     * @param aNode the node to retrieve and display child data of.
+     */
+    private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
+        jOTDBparam aParam=null;
+        try {
+            Vector HWchilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            // get all the params per child
+            Enumeration e1 = HWchilds.elements();
+            while( e1.hasMoreElements()  ) {
+                
+                jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                aParam=null;
+                // We need to keep all the params needed by this panel
+                if (aHWNode.leaf) {
+                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
+                }
+                setField(aNode,aParam,aHWNode);
+            }
+        } catch (RemoteException ex) {
+            logger.debug("Error during retrieveAndDisplayChildDataForNode: "+ ex);
+            return;
+        }
+    }
+    
+    /**
+     * Sets the different fields in the GUI, using the names of the nodes provided
+     * @param parent the parent node of the node to be displayed
+     * @param aParam the parameter of the node to be displayed if applicable
+     * @param aNode  the node to be displayed
+     */
+    private void setField(jOTDBnode parent,jOTDBparam aParam, jOTDBnode aNode) {
+
         // Generic Observation
-        if (aNode==null) {
+        if (aParam==null) {
+            return;
+        }
+        boolean isRef = LofarUtils.isReference(aNode.limits);
+        String aKeyName = LofarUtils.keyName(aNode.name);
+        String parentName = String.valueOf(parent.name);
+        /* Set's the different fields in the GUI */
+
+        // Generic OLAP
+        if (aParam==null) {
             return;
         }
         logger.debug("setField for: "+ aNode.name);
-        boolean isRef = LofarUtils.isReference(aNode.limits);
-        String aKeyName = LofarUtils.keyName(aNode.name);   
         try {
             if (itsOtdbRmi.getRemoteTypes().getParamType(aParam.type).substring(0,1).equals("p")) {
                // Have to get new param because we need the unresolved limits field.
@@ -279,120 +292,122 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             logger.debug("Error during getParam: "+ ex);
         }
         
+        if(parentName.equals("Observation")){        
         // Observation Specific parameters
-        if (aKeyName.equals("MSNameMask")) {
-            inputMSNameMask.setToolTipText(aParam.description);
-            itsMSNameMask=aNode;
-            if (isRef && aParam != null) {
-                inputMSNameMask.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputMSNameMask.setText(aNode.limits);
+            if (aKeyName.equals("MSNameMask")) {
+                inputMSNameMask.setToolTipText(aParam.description);
+               itsMSNameMask=aNode;
+                if (isRef && aParam != null) {
+                    inputMSNameMask.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputMSNameMask.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("antennaArray")) {        
+                inputAntennaArray.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputAntennaArray,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputAntennaArray.setSelectedItem(aNode.limits);            
+                }
+                itsAntennaArray=aNode;
+            } else if (aKeyName.equals("bandFilter")) {        
+                inputBandFilter.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputBandFilter,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                  inputBandFilter.setSelectedItem(aNode.limits);
+                }
+                itsBandFilter=aNode;
+            } else if (aKeyName.equals("clockMode")) {        
+                inputClockMode.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputClockMode,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputClockMode.setSelectedItem(aNode.limits);
+                }
+                itsClockMode=aNode;
+            } else if (aKeyName.equals("nyquistZone")) {        
+                inputNyquistZone.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputNyquistZone,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                  inputNyquistZone.setSelectedItem(aNode.limits);
+                }
+                itsNyquistZone=aNode;
+            } else if (aKeyName.equals("beamletList")) {        
+                inputBeamletList.setToolTipText(aParam.description);
+                itsBeamletList=aNode;
+                if (isRef && aParam != null) {
+                    inputBeamletList.setText(aNode.limits + " : " + aParam.limits);
+               } else {
+                    inputBeamletList.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("receiverList")) {        
+                inputReceiverList.setToolTipText(aParam.description);
+                itsReceiverList=aNode;
+                if (isRef && aParam != null) {
+                    inputReceiverList.setText(aNode.limits + " : " + aParam.limits);
+               } else {
+                    inputReceiverList.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("subbandList")) {        
+                inputSubbandList.setToolTipText(aParam.description);
+                itsSubbandList=aNode;
+                if (isRef && aParam != null) {
+                    inputSubbandList.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputSubbandList.setText(aNode.limits);
+                }
             }
-        } else if (aKeyName.equals("antennaArray")) {        
-            inputAntennaArray.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputAntennaArray,aParam.limits);
-            if (!aNode.limits.equals("")) {
-                inputAntennaArray.setSelectedItem(aNode.limits);            
-            }
-            itsAntennaArray=aNode;
-        } else if (aKeyName.equals("bandFilter")) {        
-            inputBandFilter.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputBandFilter,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputBandFilter.setSelectedItem(aNode.limits);
-            }
-            itsBandFilter=aNode;
-        } else if (aKeyName.equals("clockMode")) {        
-            inputClockMode.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputClockMode,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputClockMode.setSelectedItem(aNode.limits);
-            }
-            itsClockMode=aNode;
-        } else if (aKeyName.equals("nyquistZone")) {        
-            inputNyquistZone.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputNyquistZone,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputNyquistZone.setSelectedItem(aNode.limits);
-            }
-            itsNyquistZone=aNode;
-        } else if (aKeyName.equals("beamletList")) {        
-            inputBeamletList.setToolTipText(aParam.description);
-            itsBeamletList=aNode;
-            if (isRef && aParam != null) {
-                inputBeamletList.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputBeamletList.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("receiverList")) {        
-            inputReceiverList.setToolTipText(aParam.description);
-            itsReceiverList=aNode;
-            if (isRef && aParam != null) {
-                inputReceiverList.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputReceiverList.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("subbandList")) {        
-            inputSubbandList.setToolTipText(aParam.description);
-            itsSubbandList=aNode;
-            if (isRef && aParam != null) {
-                inputSubbandList.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputSubbandList.setText(aNode.limits);
-            }
-
+        } else if(parentName.equals("Beam")){        
             // Observation Beam parameters
-
-        
-        } else if (aKeyName.equals("angle1")) {        
-            inputAngle1.setToolTipText(aParam.description);
-            itsAngle1=aNode;
-            if (isRef && aParam != null) {
-                inputAngle1.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputAngle1.setText(aNode.limits);
+            if (aKeyName.equals("angle1")) {        
+                inputAngle1.setToolTipText(aParam.description);
+                itsAngle1=aNode;
+                if (isRef && aParam != null) {
+                    inputAngle1.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputAngle1.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("angle2")) {        
+                inputAngle2.setToolTipText(aParam.description);
+                itsAngle2=aNode;
+                if (isRef && aParam != null) {
+                    inputAngle2.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputAngle2.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("angleTimes")) {        
+                inputAngleTimes.setToolTipText(aParam.description);
+                itsAngleTimes=aNode;
+                if (isRef && aParam != null) {
+                    inputAngleTimes.setText(aNode.limits + " : " + aParam.limits);
+                } else {
+                    inputAngleTimes.setText(aNode.limits);
+                }
+            } else if (aKeyName.equals("directionTypes")) {        
+                inputDirectionTypes.setToolTipText(aParam.description);
+                LofarUtils.setPopupComboChoices(inputDirectionTypes,aParam.limits);
+                if (!aNode.limits.equals("")) {
+                    inputDirectionTypes.setSelectedItem(aNode.limits);
+                }
+                itsDirectionTypes=aNode;
             }
-        } else if (aKeyName.equals("angle2")) {        
-            inputAngle2.setToolTipText(aParam.description);
-            itsAngle2=aNode;
-            if (isRef && aParam != null) {
-                inputAngle2.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputAngle2.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("angleTimes")) {        
-            inputAngleTimes.setToolTipText(aParam.description);
-            itsAngleTimes=aNode;
-            if (isRef && aParam != null) {
-                inputAngleTimes.setText(aNode.limits + " : " + aParam.limits);
-            } else {
-                inputAngleTimes.setText(aNode.limits);
-            }
-        } else if (aKeyName.equals("directionTypes")) {        
-            inputDirectionTypes.setToolTipText(aParam.description);
-            LofarUtils.setPopupComboChoices(inputDirectionTypes,aParam.limits);
-            if (!aNode.limits.equals("")) {
-              inputDirectionTypes.setSelectedItem(aNode.limits);
-            }
-            itsDirectionTypes=aNode;
-
+        } else if(parentName.equals("VirtualObservation")){        
             // Observation VirtualObservation parameters
 
-        } else if (aKeyName.equals("stationList")) {        
-            this.stationsList.setToolTipText(aParam.description);
-            this.itsStationList = aNode;
+            if (aKeyName.equals("stationList")) {        
+                this.stationsList.setToolTipText(aParam.description);
+                this.itsStationList = aNode;
                 
-            //set the checkbox correctly when no stations are provided in the data
-            if(itsStationList.limits == null || itsStationList.limits.equals("[]")){
-                stationsList.setModel(new DefaultListModel());
-            }else{
-                TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
-                if (isRef && aParam != null) {
-                    aBorder.setTitle("Station Names (Referenced)");
-                    LofarUtils.fillList(stationsList,aParam.limits,false);
-                } else {
-                    aBorder.setTitle("Station Names");
-                    LofarUtils.fillList(stationsList,aNode.limits,false);
+                //set the checkbox correctly when no stations are provided in the data
+                if(itsStationList.limits == null || itsStationList.limits.equals("[]")){
+                    stationsList.setModel(new DefaultListModel());
+                }else{
+                    TitledBorder aBorder = (TitledBorder)this.stationsPanel.getBorder();
+                    if (isRef && aParam != null) {
+                        aBorder.setTitle("Station Names (Referenced)");
+                        LofarUtils.fillList(stationsList,aParam.limits,false);
+                    } else {
+                        aBorder.setTitle("Station Names");
+                        LofarUtils.fillList(stationsList,aNode.limits,false);
+                    }
                 }
             }
         }
