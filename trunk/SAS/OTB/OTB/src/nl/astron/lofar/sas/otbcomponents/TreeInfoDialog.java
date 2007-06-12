@@ -20,6 +20,7 @@
  */
 
 package nl.astron.lofar.sas.otbcomponents;
+import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
@@ -48,34 +49,64 @@ public class TreeInfoDialog extends javax.swing.JDialog {
      * @param   aTree       the Tree we wrok with
      * @param   aMainFrame  the Mainframe we are part off
      */
-    public TreeInfoDialog(java.awt.Frame parent, boolean modal, jOTDBtree aTree, MainFrame aMainFrame ) {
-        super(parent, modal);
+    public TreeInfoDialog(boolean modal, int[] treeIDs , MainFrame aMainFrame) {
+        super(aMainFrame, modal);
         initComponents();
         itsMainFrame = aMainFrame;
-        itsTree = aTree;
+        itsTreeIDs = treeIDs;
+        try {
+            // set selected Tree to first in the list
+            itsTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
+        } catch (RemoteException e) {
+            logger.debug("Error getting the Treeinfo " + e);
+            itsTree=null;
+        }
+        if (treeIDs.length > 1) {
+            itsMultiple=true;
+        }
         init();        
     }
     
-    public void setTree(jOTDBtree aTree) {
-        itsTree = aTree;
+    public void setTree(int [] treeIDs) {
+        itsTreeIDs = treeIDs;
+        if (treeIDs.length > 1) {
+            itsMultiple=true;
+        }
+        try {
+            // set selected Tree to first in the list
+            itsTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
+        } catch (RemoteException e) {
+            logger.debug("Error getting the Treeinfo " + e);
+            itsTree=null;
+        }
         init();                
     }
     
     private void init() {
+        if (itsMultiple) {
+            topLabel.setText("Tree Meta Data  -- MULTIPLE SELECTION -- Only first Tree's info is shown \n" +
+                             "                Changes will be applied to all selections");            
+        } else {
+            topLabel.setText("Tree Meta Data");
+        }
         itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         isAdministrator=itsMainFrame.getUserAccount().isAdministrator();
-        itsTreeType=itsOtdbRmi.getTreeType().get(itsTree.type);
-        // keep the fields that can be changed
-        itsTreeState=itsOtdbRmi.getTreeState().get(itsTree.state);
-        itsClassification = itsOtdbRmi.getClassif().get(itsTree.classification);
-        itsCampaign = itsTree.campaign;
-        itsStarttime = itsTree.starttime;
-        itsStoptime = itsTree.stoptime;
-        itsDescription = itsTree.description;     
-        initComboLists();
-        initView();
-        initFocus();
-        getRootPane().setDefaultButton(saveButton);
+        if (itsTree != null) {
+            itsTreeType=itsOtdbRmi.getTreeType().get(itsTree.type);
+            // keep the fields that can be changed
+            itsTreeState=itsOtdbRmi.getTreeState().get(itsTree.state);
+            itsClassification = itsOtdbRmi.getClassif().get(itsTree.classification);
+            itsCampaign = itsTree.campaign;
+            itsStarttime = itsTree.starttime;
+            itsStoptime = itsTree.stoptime;
+            itsDescription = itsTree.description;     
+            initComboLists();
+            initView();
+            initFocus();
+            getRootPane().setDefaultButton(saveButton);
+        } else {
+            logger.debug("No tree found to work with");
+        }
     }
 
      /**
@@ -109,6 +140,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             startTimeInput.setVisible(false);
             stopTimeLabel.setVisible(false);
             stopTimeInput.setVisible(false);
+            descriptionInput.setEnabled(true);                
             // VICtemplate    
         } else if (itsTreeType.equals("VItemplate")) {
             if (itsTree.momID() < 1) {
@@ -119,6 +151,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             startTimeInput.setVisible(false);
             stopTimeLabel.setVisible(false);
             stopTimeInput.setVisible(false);
+            descriptionInput.setEnabled(true);                
+            campaignInput.setEnabled(true);        
             
         // VIC
         } else if (itsTreeType.equals("VHtree")) {
@@ -130,6 +164,13 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             startTimeInput.setVisible(true);
             stopTimeLabel.setVisible(true);
             stopTimeInput.setVisible(true);
+            if (itsMultiple) {
+                descriptionInput.setEnabled(false);
+                campaignInput.setEnabled(false);        
+            } else {
+                descriptionInput.setEnabled(true);                
+                campaignInput.setEnabled(true);        
+            }
         }
         if (isAdministrator) {
             classificationInput.setEnabled(true);
@@ -186,46 +227,84 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     private void saveNewTree() {
         try {
+            
+            // if multiple selections have been made, then the changes should be set to all the selected trees
+            if (itsMultiple) {
+                for (int i=0; i < itsTreeIDs.length; i++) {
+                    jOTDBtree aTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeIDs[i], false); 
+                    String aTreeState=itsOtdbRmi.getTreeState().get(aTree.state);
+                    String aClassification = itsOtdbRmi.getClassif().get(aTree.classification);
+                    
+                    // Check treeState and alter in DB when changed
+                    if (!aTreeState.equals(stateInput.getSelectedItem().toString())) {
+                        hasChanged=true;
+                        aTree.state=itsOtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
+                        if (!itsOtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state)) {
+                            logger.debug("Error during setTreeState: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                      
+                        }
+                    }
 
-            // changable settings for PIC/VIC and templates
-            if ( !itsClassification.equals(classificationInput.getSelectedItem().toString())) {
-                hasChanged=true;
-                itsTree.classification=itsOtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
-                if (!itsOtdbRmi.getRemoteMaintenance().setClassification(itsTree.treeID(), itsTree.classification)) {
-                    logger.debug("Error during setClassification: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());
-                }
-            }
-            if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
-                hasChanged=true;
-                itsTree.state=itsOtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
-                if (!itsOtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
-                    logger.debug("Error during setTreeState: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                      
-                }
-            }
-            if (!itsDescription.equals(descriptionInput.getText())) {
-                hasChanged=true;
-                itsTree.description = descriptionInput.getText();
-                if (!itsOtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
-                    logger.debug("Error during setDescription: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
-                }
-            }
-            // Next for VIC and Templates only
-            if (itsTreeType.equals("VItemplate") || itsTreeType.equals("VHtree")) {
-                if (!itsCampaign.equals(campaignInput.getText()) && itsTree.momID() > 0) {
-                    hasChanged=true;
-                    itsTree.campaign = campaignInput.getText();
-                    if (!itsOtdbRmi.getRemoteMaintenance().setMomInfo(itsTree.treeID(), itsTree.momID(),itsTree.campaign)) {
-                        logger.debug("Error during setCampaign: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                    // Check treeClassification and alter in DB when changed
+                    if ( !aClassification.equals(classificationInput.getSelectedItem().toString())) {
+                        hasChanged=true;
+                        aTree.classification=itsOtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
+                        if (!itsOtdbRmi.getRemoteMaintenance().setClassification(aTree.treeID(), aTree.classification)) {
+                            logger.debug("Error during setClassification: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                        }
+                    }
+                    
+                    // Check start & stoptimes and alter in DB when changed
+                    if (!aTree.starttime.equals(startTimeInput.getText()) || !aTree.stoptime.equals(stopTimeInput.getText())) {
+                        hasChanged=true;
+                        aTree.starttime = startTimeInput.getText();
+                        aTree.stoptime = stopTimeInput.getText();
+                        if (itsOtdbRmi.getRemoteMaintenance().setSchedule(aTree.treeID(),aTree.starttime,aTree.stoptime)) {
+                            logger.debug("Error during setSchedule: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                        }
                     }
                 }
-                // Next for VIC only
-                if (itsTreeType.equals("VHtree")) {
-                    if (!itsStarttime.equals(startTimeInput.getText()) || !itsStoptime.equals(stopTimeInput.getText())) {
+            } else {
+
+                // changable settings for PIC/VIC and templates
+                if ( !itsClassification.equals(classificationInput.getSelectedItem().toString())) {
+                    hasChanged=true;
+                    itsTree.classification=itsOtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
+                    if (!itsOtdbRmi.getRemoteMaintenance().setClassification(itsTree.treeID(), itsTree.classification)) {
+                        logger.debug("Error during setClassification: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                    }
+                }
+                if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
+                    hasChanged=true;
+                    itsTree.state=itsOtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
+                    if (!itsOtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
+                        logger.debug("Error during setTreeState: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                      
+                    }
+                }
+                if (!itsDescription.equals(descriptionInput.getText())) {
+                    hasChanged=true;
+                    itsTree.description = descriptionInput.getText();
+                    if (!itsOtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
+                        logger.debug("Error during setDescription: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                    }
+                }
+                // Next for VIC and Templates only
+                if (itsTreeType.equals("VItemplate") || itsTreeType.equals("VHtree")) {
+                    if (!itsCampaign.equals(campaignInput.getText()) && itsTree.momID() > 0) {
                         hasChanged=true;
-                        itsTree.starttime = startTimeInput.getText();
-                        itsTree.stoptime = stopTimeInput.getText();
-                        if (itsOtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
-                            logger.debug("Error during setSchedule: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                        itsTree.campaign = campaignInput.getText();
+                        if (!itsOtdbRmi.getRemoteMaintenance().setMomInfo(itsTree.treeID(), itsTree.momID(),itsTree.campaign)) {
+                            logger.debug("Error during setCampaign: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                        }
+                    }
+                    // Next for VIC only
+                    if (itsTreeType.equals("VHtree")) {
+                        if (!itsStarttime.equals(startTimeInput.getText()) || !itsStoptime.equals(stopTimeInput.getText())) {
+                            hasChanged=true;
+                            itsTree.starttime = startTimeInput.getText();
+                            itsTree.stoptime = stopTimeInput.getText();
+                            if (itsOtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
+                                logger.debug("Error during setSchedule: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                            }
                         }
                     }
                 }
@@ -248,7 +327,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         descriptionInput = new javax.swing.JTextArea();
         cancelButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
-        topLabel = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         treeIDInput = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
@@ -269,6 +347,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         originalTreeIDInput = new javax.swing.JTextField();
         campaignLabel = new javax.swing.JLabel();
         campaignInput = new javax.swing.JTextField();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        topLabel = new javax.swing.JTextArea();
 
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -310,11 +390,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         });
 
         getContentPane().add(saveButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 490, -1, -1));
-
-        topLabel.setFont(new java.awt.Font("Tahoma", 1, 11));
-        topLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
-        topLabel.setText("Tree Meta Data");
-        getContentPane().add(topLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 570, -1));
 
         jLabel1.setText("ID:");
         getContentPane().add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 50, -1, 20));
@@ -382,6 +457,17 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         campaignInput.setToolTipText("Campaign name");
         getContentPane().add(campaignInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 290, 330, -1));
 
+        jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+        topLabel.setColumns(20);
+        topLabel.setFont(new java.awt.Font("Tahoma", 1, 11));
+        topLabel.setRows(2);
+        topLabel.setText("Tree Meta Data");
+        topLabel.setOpaque(false);
+        jScrollPane1.setViewportView(topLabel);
+
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 480, 40));
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
@@ -400,8 +486,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private MainFrame itsMainFrame;
     private OtdbRmi   itsOtdbRmi;
     private jOTDBtree itsTree;
+    private int []    itsTreeIDs=null;
     private boolean   isAdministrator;
     private boolean   hasChanged=false;
+    private boolean   itsMultiple=false;
     private String    itsClassification;
     private String    itsTreeState;
     private String    itsTreeType;
@@ -425,6 +513,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTextField momIDInput;
     private javax.swing.JLabel momIDLabel;
     private javax.swing.JTextField originalTreeIDInput;
@@ -435,7 +524,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JComboBox stateInput;
     private javax.swing.JTextField stopTimeInput;
     private javax.swing.JLabel stopTimeLabel;
-    private javax.swing.JLabel topLabel;
+    private javax.swing.JTextArea topLabel;
     private javax.swing.JTextField treeIDInput;
     private javax.swing.JTextField typeInput;
     // End of variables declaration//GEN-END:variables

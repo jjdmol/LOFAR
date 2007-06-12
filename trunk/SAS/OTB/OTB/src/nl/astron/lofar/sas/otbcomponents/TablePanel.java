@@ -54,6 +54,22 @@ public class TablePanel extends javax.swing.JPanel {
         return jTable1.getSelectedRow();
     }
     
+    /** get the selected Rows
+     *
+     * @return the selected Rows
+     */
+    public int[] getSelectedRows() {
+        return jTable1.getSelectedRows();
+    }
+
+    /** get the nr of selected Rows
+     *
+     * @return the selected Rowcount
+     */
+    public int getSelectedRowCount() {
+        return jTable1.getSelectedRowCount();
+    }
+
     /** set the selected Row
      *
      * @param aRow the seledcted Row
@@ -142,12 +158,21 @@ public class TablePanel extends javax.swing.JPanel {
                 jTable1MouseClicked(evt);
             }
         });
+        jTable1.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseDragged(java.awt.event.MouseEvent evt) {
+                jTable1MouseDragged(evt);
+            }
+        });
 
         jScrollPane1.setViewportView(jTable1);
 
         add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
+
+    private void jTable1MouseDragged(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseDragged
+        fireMouseListenerMouseClicked(evt);
+    }//GEN-LAST:event_jTable1MouseDragged
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
         fireMouseListenerMouseClicked(evt);

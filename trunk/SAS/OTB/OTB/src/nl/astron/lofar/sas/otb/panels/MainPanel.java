@@ -160,7 +160,7 @@ public class MainPanel extends javax.swing.JPanel
 
         VICtableModel VICmodel = new VICtableModel(itsMainFrame.getSharedVars().getOTDBrmi());
         VICPanel.setTableModel(VICmodel);
-        VICPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        VICPanel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         VICPanel.setColumnSize("ID",35);
         VICPanel.setColumnSize("OriginalTree",75);
         VICPanel.setColumnSize("MoMID",50);
@@ -390,6 +390,21 @@ public class MainPanel extends javax.swing.JPanel
         return aRow;
     }
 
+    /** Returns the selected rows in the present tree */
+    private int[] getSelectedRows() {
+        int [] rows=null;
+        if (itsTabFocus.equals("PIC")) {
+            rows = PICPanel.getSelectedRows();
+        } else if (itsTabFocus.equals("VIC")) {
+            rows = VICPanel.getSelectedRows();
+        } else if (itsTabFocus.equals("Templates")) {
+            rows = TemplatesPanel.getSelectedRows();
+        } else if (itsTabFocus.equals("Components")) {
+            rows = ComponentsPanel.getSelectedRows();
+        }
+        return rows;
+    }
+
     /** Sets the selected row in the present tree */
     private void setSelectedID(int aTreeID) {
         if (aTreeID > -1) {
@@ -403,6 +418,32 @@ public class MainPanel extends javax.swing.JPanel
                 ComponentsPanel.setSelectedID(aTreeID);
             }
         }
+    }
+    
+    /** Returns the ids of the selected Trees in case of a multiple selection */
+    private int [] getSelectedTreeIDs() {
+        int [] rows=this.getSelectedRows();
+        int [] treeIDs=new int[rows.length];
+        if (itsTabFocus.equals("PIC")) {
+            for (int i=0; i < rows.length; i++) {
+                treeIDs[i] = ((Integer)PICPanel.getTableModel().getValueAt(rows[i], 0)).intValue();
+            }
+        } else if (itsTabFocus.equals("VIC")) {
+            for (int i=0; i < rows.length; i++) {
+                treeIDs[i] = ((Integer)VICPanel.getTableModel().getValueAt(rows[i], 0)).intValue();
+            }
+        } else if (itsTabFocus.equals("Templates")) {
+            for (int i=0; i < rows.length; i++) {
+                treeIDs[i] = ((Integer)TemplatesPanel.getTableModel().getValueAt(rows[i], 0)).intValue();
+            }
+        } else if (itsTabFocus.equals("Components")) {
+            for (int i=0; i < rows.length; i++) {
+                // is the node ID in the case of Components
+                treeIDs[i] = ((Integer)ComponentsPanel.getTableModel().getValueAt(rows[i], 0)).intValue();
+            }
+        }
+
+        return treeIDs;   
     }
 
     /** Returns the id of the selected Tree */
@@ -545,7 +586,9 @@ public class MainPanel extends javax.swing.JPanel
                 }
             } else if (aButton.equals("Info")) {
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
-                    if (viewInfo(itsMainFrame.getSharedVars().getTreeID())) {
+                    int [] id=new int[1];
+                    id[0]=itsMainFrame.getSharedVars().getTreeID();
+                    if (viewInfo(id)) {
                         logger.debug("Tree has been changed, reloading tableline");
                           itsMainFrame.setChanged(this.getFriendlyName(),true);
                           checkChanged();
@@ -584,12 +627,17 @@ public class MainPanel extends javax.swing.JPanel
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
             } else if (aButton.equals("Info")) {
-                if (itsMainFrame.getSharedVars().getTreeID() > 0) {
-                    if (viewInfo(itsMainFrame.getSharedVars().getTreeID()) ) {
+                
+                // in case of VICtree we have the possibility of changing a multiple selection
+                // so things like start and/or stoptimes can be set for a few entries at once
+                
+                if (this.VICPanel.getSelectedRowCount() > 0) {
+                    if (viewInfo(this.getSelectedTreeIDs()) ) {
                         logger.debug("Tree has been changed, reloading tableline");
                           itsMainFrame.setChanged(this.getFriendlyName(),true);
                           checkChanged();
                     }
+                    
                 }
             }
         } else if (itsTabFocus.equals("Templates")) {
@@ -692,7 +740,9 @@ public class MainPanel extends javax.swing.JPanel
                 
             } else if (aButton.equals("Info")) {
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
-                    if (viewInfo(itsMainFrame.getSharedVars().getTreeID()) ) {
+                    int [] id = new int[1];
+                    id[0]=itsMainFrame.getSharedVars().getTreeID();
+                    if (viewInfo(id)) {
                         logger.debug("Tree has been changed, reloading table line");
                           itsMainFrame.setChanged(this.getFriendlyName(),true);
                           checkChanged();
@@ -796,36 +846,32 @@ public class MainPanel extends javax.swing.JPanel
     
     /** Launch TreeInfoDialog,
      *
-     * @param  aTreeID  The ID of the chosen tree.
+     * @param  treeIDs  The IDs of the chosen trees.
      */
-    private boolean viewInfo(int aTreeID) {
-        logger.debug("viewInfo for treeID: " + aTreeID);
+    private boolean viewInfo(int[] treeIDs) {
+        logger.debug("viewInfo for treeID: " + treeIDs);
         //get the selected tree from the database
-        
-        try {
-            jOTDBtree aSelectedTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(aTreeID, false);
-            
-            if (aSelectedTree != null) {
-                // show treeInfo dialog
-                if (treeInfoDialog == null ) {
-                    treeInfoDialog = new TreeInfoDialog(itsMainFrame,true,aSelectedTree, itsMainFrame);
-                } else {
-                    treeInfoDialog.setTree(aSelectedTree);
-                }
-                treeInfoDialog.setLocationRelativeTo(this);
-                treeInfoDialog.setVisible(true);
+        boolean multiple=false;
 
-                if (treeInfoDialog.isChanged()) {
-                    logger.debug("tree has been changed and saved");
-                } else {
-                    logger.debug("tree has not been changed");
-                }
-               
+        
+        if (treeIDs.length > 0) {
+            // show treeInfo dialog
+            if (treeInfoDialog == null ) {
+                treeInfoDialog = new TreeInfoDialog(true,treeIDs, itsMainFrame);
             } else {
-                logger.debug("no tree selected");
+                treeInfoDialog.setTree(treeIDs);
             }
-        } catch (Exception e) {
-            logger.debug("Error in viewInfo: " + e);
+            treeInfoDialog.setLocationRelativeTo(this);
+            treeInfoDialog.setVisible(true);
+
+            if (treeInfoDialog.isChanged()) {
+                logger.debug("tree has been changed and saved");
+            } else {
+                logger.debug("tree has not been changed");
+            }
+               
+        } else {
+            logger.debug("no tree selected");
         }
         return treeInfoDialog.isChanged();
     }
