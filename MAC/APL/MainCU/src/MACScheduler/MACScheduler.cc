@@ -24,6 +24,7 @@
 
 #include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
+#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/Protocols/PA_Protocol.ph>
@@ -96,9 +97,9 @@ MACScheduler::MACScheduler() :
 
 	itsObservations.reserve(10);		// already reserve memory for 10 observations.
 
-	registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
-	registerProtocol(PA_PROTOCOL, 		  PA_PROTOCOL_signalnames);
-	registerProtocol(F_PML_PROTOCOL, 	  F_PML_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol(PA_PROTOCOL, 		  PA_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol(F_PML_PROTOCOL, 	  F_PML_PROTOCOL_STRINGS);
 }
 
 
@@ -138,7 +139,7 @@ void MACScheduler::sigintHandler(int signum)
 void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 {
 
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << evtstr(answer));
+	LOG_DEBUG_STR ("handlePropertySetAnswer:" << eventName(answer));
 
 	switch(answer.signal) {
 	case F_MYPS_ENABLED: {
@@ -204,7 +205,7 @@ void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
 //
 GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("initial_state:" << evtstr(event));
+	LOG_DEBUG_STR ("initial_state:" << eventName(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -282,7 +283,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("recover_state:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("recover_state:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -319,7 +320,7 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -388,22 +389,50 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		// observationController was started (or not)
 		CONTROLStartedEvent	msg(event);
 		if (msg.successful) {
-			LOG_DEBUG_STR("Start of " << msg.cntlrName << " was successful");
+			LOG_DEBUG_STR("Start of " << msg.cntlrName << 
+						  " was successful, waiting for connection.");
+			// ---
+			// Ok, controller is really up, update SAS so that obs will not appear in
+			// in the SAS list again.
+			Observation*	theObs(_findActiveObservation(msg.cntlrName));
+			if (!theObs) {
+				LOG_WARN_STR("Cannot find controller " << msg.cntlrName << 	
+							  ". Can't update the SAS database");
+				break;
+			}
+			OTDB::TreeMaintenance	tm(itsOTDBconnection);
+			TreeStateConv			tsc(itsOTDBconnection);
+			tm.setTreeState(theObs->treeID, tsc.get("queued"));
+			// ---
 		}
 		else {
 			LOG_ERROR_STR("Observation controller " << msg.cntlrName <<
-						" could not be started");
-			LOG_INFO("Observation will be removed from administration");
+						  " could not be started");
+			LOG_INFO_STR("Observation is be removed from administration, " << 
+						 "restart will occur in next cycle");
 			_removeActiveObservation(msg.cntlrName);
 		}
 		break;
 	}
 
+// TODO: the ObsControls don't send the CONTROL_CONNECT yet.
+// so the code is copied to the CONTROL STARTED event for now.
 	case CONTROL_CONNECT: {
 		// The observationController has registered itself at childControl.
 		CONTROLConnectEvent conEvent(event);
-		LOG_DEBUG_STR("Received CONNECT(" << conEvent.cntlrName << ")");
-		// TODO: do something usefull with this information?
+		LOG_DEBUG_STR(conEvent.cntlrName << " is connected, updating SAS)");
+
+		// Ok, controller is really up, update SAS so that obs will not appear in
+		// in the SAS list again.
+		Observation*	theObs(_findActiveObservation(conEvent.cntlrName));
+		if (!theObs) {
+			LOG_WARN_STR("Cannot find controller " << conEvent.cntlrName << 	
+						  ". Can't update the SAS database");
+			break;
+		}
+		OTDB::TreeMaintenance	tm(itsOTDBconnection);
+		TreeStateConv			tsc(itsOTDBconnection);
+		tm.setTreeState(theObs->treeID, tsc.get("queued"));
 		break;
 	}
 
@@ -468,7 +497,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 //
 GCFEvent::TResult MACScheduler::finishing_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -544,15 +573,27 @@ void MACScheduler::_doOTDBcheck()
 			break;
 		}
 
-		// get current state of Observation
+		// note: as soon as observation is up it will not show up anymore in the
+		// SAS list because we changed the state.
+		// If startup is in progress, it is in the SAS list but also in our admin.
 		string		cntlrName = controllerName(CNTLRTYPE_OBSERVATIONCTRL, 
 												0, newTreeList[idx].treeID());
-		CTState		cts;
-		CTState::CTstateNr	curState      = itsChildControl->getCurrentState(cntlrName);
-		LOG_DEBUG_STR(cntlrName << ":cur=" << cts.name(curState));
+		if (_findActiveObservation(cntlrName)) {
+			LOG_DEBUG_STR("Skipping " << cntlrName);
+			idx++;
+			continue;
+		}
+
+		// get current state of Observation
+//		CTState		cts;
+//		CTState::CTstateNr	curState      = itsChildControl->getCurrentState(cntlrName);
+//		LOG_DEBUG_STR(cntlrName << ":cur=" << cts.name(curState));
 
 		// When in startup or claimtime we should try to start the controller.
-		if ((timediff > seconds(0)) && (curState < CTState::CREATED)) {
+//		if ((timediff > seconds(0)) && (curState < CTState::CREATED)) {
+
+		// Obs is unknown so try to start it up as long as we didn't reach its starttime.
+		if (timediff > seconds(0)) {
 			// Let database construct the parset for the whole observation
 			OTDB::TreeMaintenance	tm(itsOTDBconnection);
 			OTDB::treeIDType		treeID = newTreeList[idx].treeID();
@@ -579,15 +620,15 @@ void MACScheduler::_doOTDBcheck()
 				newObs.treeID = treeID;
 				_addActiveObservation(newObs);
 				LOG_DEBUG_STR("Observation " << cntlrName << " added to active Observations");
-
-				TreeStateConv	tsc(itsOTDBconnection);
-				tm.setTreeState(treeID, tsc.get("queued"));
-
 			}
-			idx++;
-			continue;
+
+			// TODO: due to problems with the PA we only start one obs every cycle.
+			break;
+//			idx++;
+//			continue;
 		}
 
+#if 0
 		// in CLAIM period?
 		if ((timediff > seconds(0)) && (timediff <= seconds(itsClaimPeriod))) {
 			// Observation is somewhere in the claim period its should be up by now.
@@ -605,7 +646,8 @@ void MACScheduler::_doOTDBcheck()
 		// TODO: check if endtime is reached and observation is still running.
 	
 		idx++;	
-	}
+#endif
+	} // while
 
 }
 
