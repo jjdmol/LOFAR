@@ -28,6 +28,7 @@
 #include <Transport/TransportHolder.h>
 #include <CS1_Interface/CS1_Parset.h>
 
+#include <map>
 #include <string>
 
 namespace LOFAR {
@@ -41,17 +42,16 @@ class Stub_BGL
 
   public:
     Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const CS1_Parset *pSet);
-    virtual ~Stub_BGL();
+    ~Stub_BGL();
 
     void connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel);
 
-    const CS1_Parset            *itsCS1PS;
-    bool			 itsIAmOnBGL, itsIsInput;
-    std::string			 itsPrefix;
-    unsigned			 itsNrCells, itsNrNodesPerCell, itsNrPsetsPerStorage;
-    TransportHolder		 **itsTHs;
-    Connection			 **itsConnections;
-
+  private:
+    const CS1_Parset				     *itsCS1PS;
+    bool					     itsIAmOnBGL, itsIsInput;
+    string					     itsPrefix;
+    map<pair<unsigned, unsigned>, TransportHolder *> itsTHs;
+    map<pair<unsigned, unsigned>, Connection *>      itsConnections;
 };
 
 } // namespace CS1
