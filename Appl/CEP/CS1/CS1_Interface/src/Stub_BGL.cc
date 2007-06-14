@@ -34,65 +34,29 @@ namespace CS1 {
 
 Stub_BGL::Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const CS1_Parset *pSet)
 :
-  itsCS1PS (pSet)
-  
+  itsCS1PS(pSet),
+  itsIAmOnBGL(iAmOnBGL),
+  itsIsInput(isInput),
+  itsPrefix(string("OLAP.OLAP_Conn.") + connectionName)
 {
-  itsIAmOnBGL		= iAmOnBGL;
-  itsIsInput		= isInput;
-  itsPrefix		= string("OLAP.OLAP_Conn.") + connectionName;
-  itsTHs		= 0;
-  itsConnections	= 0;
-  itsNrCells		= itsCS1PS->nrCells();
-  itsNrNodesPerCell	= itsCS1PS->nrBGLNodesPerCell();
-  itsNrPsetsPerStorage	= itsCS1PS->getInt32("OLAP.psetsPerStorage");
-
-  // TODO: itsNrNodesPerCell overestimates the number of connections if
-  // useScatter/useGather is used
-  size_t size = itsNrCells * itsNrNodesPerCell;
-  if ((!itsIAmOnBGL && isInput) || (itsIAmOnBGL && !itsIsInput)) {
-    size *= itsNrPsetsPerStorage;
-  }
-
-  itsTHs = new TransportHolder * [size];
-  memset(itsTHs, 0, sizeof(TransportHolder * [size]));
-
-  itsConnections = new Connection * [size];
-  memset(itsConnections, 0, sizeof(TransportHolder * [size]));
 }
 
 
 Stub_BGL::~Stub_BGL()
 {
-  if (itsTHs != 0 && itsConnections != 0) {
-    size_t size = itsNrCells * itsNrNodesPerCell;
-    for (uint i = 0; i < size; i ++) {
-      delete itsTHs[i];
-      delete itsConnections[i];
-    }
+  for (map<pair<unsigned, unsigned>, TransportHolder *>::iterator it = itsTHs.begin(); it != itsTHs.end(); it ++)
+    delete it->second;
 
-    delete [] itsTHs;
-    delete [] itsConnections;
-  }
+  for (map<pair<unsigned, unsigned>, Connection *>::iterator it = itsConnections.begin(); it != itsConnections.end(); it ++)
+    delete it->second;
 }
 
 
 void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel)
 {
-  size_t index;
-  if ((!itsIAmOnBGL && itsIsInput) || (itsIAmOnBGL && !itsIsInput)) {
-    index = cellNr * itsNrNodesPerCell * itsNrPsetsPerStorage + nodeNr;
-  } else {
-    index = cellNr * itsNrNodesPerCell + nodeNr;
-  }
-  
-  ASSERTSTR(cellNr < itsNrCells, "cellNr argument out of bounds; " << cellNr << " / " << itsNrCells);
-  ASSERTSTR(itsTHs[index] == 0, "already connected: cellNr = " << cellNr << ", nodeNr = " << nodeNr);
+  pair<unsigned, unsigned> index(cellNr, nodeNr);
 
-  if ((!itsIAmOnBGL && itsIsInput) || (itsIAmOnBGL && !itsIsInput)) {
-    ASSERTSTR(nodeNr < itsNrNodesPerCell * itsNrPsetsPerStorage, "nodeNr argument out of bounds; " << nodeNr << "/" << itsNrNodesPerCell * itsNrPsetsPerStorage);
-  } else {
-    ASSERTSTR(nodeNr < itsNrNodesPerCell, "nodeNr argument out of bounds; " << nodeNr << " / " << itsNrNodesPerCell);
-  }
+  ASSERTSTR(itsTHs.find(index) == itsTHs.end(), "already connected: cellNr = " << cellNr << ", nodeNr = " << nodeNr);
    
   TransportHolder *th;
   string transportType = itsCS1PS->getString(itsPrefix + "_Transport");
@@ -119,11 +83,13 @@ void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, un
   itsTHs[index] = th;
 
   if (itsIsInput) {
-    itsConnections[index] = new BGLConnection("output", 0, dm.getGeneralInHolder(channel), th);
-    dm.setInConnection(channel, itsConnections[index]);
+    Connection *conn = new BGLConnection("output", 0, dm.getGeneralInHolder(channel), th);
+    itsConnections[index] = conn;
+    dm.setInConnection(channel, conn);
   } else {
-    itsConnections[index] = new BGLConnection("input", dm.getGeneralOutHolder(channel), 0, th);
-    dm.setOutConnection(channel, itsConnections[index]);
+    Connection *conn = new BGLConnection("input", dm.getGeneralOutHolder(channel), 0, th);
+    itsConnections[index] = conn;
+    dm.setOutConnection(channel, conn);
   }
 };
 
