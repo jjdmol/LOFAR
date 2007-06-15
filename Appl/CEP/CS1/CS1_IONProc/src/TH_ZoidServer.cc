@@ -29,8 +29,8 @@
 
 #include <cassert>
 
-namespace LOFAR
-{
+namespace LOFAR {
+namespace CS1 {
 
 extern "C"
 {
@@ -42,7 +42,7 @@ extern "C"
 std::vector<TH_ZoidServer *> TH_ZoidServer::theirTHs;
 
 
-static void sendCompleted(void *buf, void *arg)
+void TH_ZoidServer::sendCompleted(void * /*buf*/, void *arg)
 {
   TH_ZoidServer *th = static_cast<TH_ZoidServer *>(arg);
 
@@ -65,7 +65,7 @@ ssize_t lofar_ion_to_cn(void * /*buf*/ /* out:arr:size=+1:zerocopy:userbuf */,
   if (*count > th->bytesToSend)
     *count = th->bytesToSend;
 
-  __zoid_register_userbuf(th->sendBufferPtr, sendCompleted, th);
+  __zoid_register_userbuf(th->sendBufferPtr, TH_ZoidServer::sendCompleted, th);
   th->sendBufferPtr += *count;
   th->bytesToSend -= *count;
 
@@ -73,7 +73,7 @@ ssize_t lofar_ion_to_cn(void * /*buf*/ /* out:arr:size=+1:zerocopy:userbuf */,
 }
 
 
-void *lofar_cn_to_ion_allocate_cb(int len)
+void *lofar_cn_to_ion_allocate_cb(int /*len*/)
 {
   TH_ZoidServer *th = TH_ZoidServer::theirTHs[__zoid_calling_process_id()];
   pthread_mutex_lock(&th->mutex);
@@ -86,7 +86,7 @@ void *lofar_cn_to_ion_allocate_cb(int len)
 }
 
 
-ssize_t lofar_cn_to_ion(const void *buf /* in:arr:size=+1:zerocopy:userbuf */,
+ssize_t lofar_cn_to_ion(const void * /*buf*/ /* in:arr:size=+1:zerocopy:userbuf */,
 		        size_t count /* in:obj */)
 {
   // still holding lock
@@ -111,10 +111,6 @@ TH_ZoidServer::TH_ZoidServer(unsigned core)
   itsCore(core),
   bytesToSend(0)
 {
-  if (core >= theirTHs.size())
-    theirTHs.resize(core + 1);
-
-  theirTHs[core] = this;
   pthread_cond_init(&newSendDataAvailable, 0);
   pthread_cond_init(&newReceiveBufferAvailable, 0);
   pthread_cond_init(&dataSent, 0);
@@ -130,6 +126,30 @@ TH_ZoidServer::~TH_ZoidServer()
   pthread_cond_destroy(&dataSent);
   pthread_cond_destroy(&dataReceived);
   pthread_mutex_destroy(&mutex);
+}
+
+
+void TH_ZoidServer::createAllTH_ZoidServers(unsigned nrCoresPerPset)
+{
+  theirTHs.resize(nrCoresPerPset);
+
+  for (unsigned core = 0; core < nrCoresPerPset; core ++)
+    theirTHs[core] = new TH_ZoidServer(core);
+}
+
+
+void TH_ZoidServer::deleteAllTH_ZoidServers()
+{
+  for (unsigned core = 0; core < theirTHs.size(); core ++)
+    delete theirTHs[core];
+
+  theirTHs.clear();
+}
+
+
+bool TH_ZoidServer::init()
+{
+  return true;
 }
 
 
@@ -164,4 +184,52 @@ bool TH_ZoidServer::recvBlocking(void *buf, int nbytes, int, int, DataHolder *)
   return true;
 }
 
+
+// functions below are not supported
+
+int32 recvNonBlocking(void *, int32, int , int32, DataHolder *)
+{
+  return false;
 }
+
+
+void TH_ZoidServer::waitForReceived(void *, int, int)
+{
+}
+
+
+bool TH_ZoidServer::sendNonBlocking(void *, int, int, DataHolder *)
+{
+  return false;
+}
+
+
+void TH_ZoidServer::waitForSent(void *, int, int)
+{
+}
+
+
+string TH_ZoidServer::getType() const
+{
+  return "TH_ZoidServer";
+}
+
+
+bool TH_ZoidServer::isClonable() const
+{
+  return true;
+}
+
+
+TransportHolder *TH_ZoidServer::clone() const
+{
+  return new TH_ZoidServer(itsCore);
+}
+
+
+void TH_ZoidServer::reset()
+{
+}
+
+} // namespace CS1
+} // namespace LOFAR

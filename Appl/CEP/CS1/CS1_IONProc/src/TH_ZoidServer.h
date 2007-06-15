@@ -33,67 +33,54 @@
 #include <pthread.h>
 #include <vector>
 
-namespace LOFAR 
+namespace LOFAR {
+namespace CS1 {  
+
+class TH_ZoidServer : public TransportHolder
 {
-    // \addtogroup Transport
-    // @{
+  public:
+    static  void	     createAllTH_ZoidServers(unsigned nrCoresPerPset);
+    static  void	     deleteAllTH_ZoidServers();
 
-    //# Forward Declarations
+    virtual bool	     init();
 
-    // Description of class.
-    class TH_ZoidServer : public TransportHolder
-    {
-    public:
-      TH_ZoidServer(unsigned core);
-      virtual ~TH_ZoidServer();
+    virtual bool	     recvBlocking(void *, int, int, int, DataHolder *);
+    virtual bool	     sendBlocking(void *, int, int, DataHolder *);
 
-      virtual bool init() {return true;};
+    static  void	     sendCompleted(void *buf, void *arg);
 
-      virtual bool recvBlocking (void*, int, int, int, DataHolder*);
+    // functions below are not supported
+    virtual int32	     recvNonBlocking(void *, int32, int, int32, DataHolder *);
+    virtual void	     waitForReceived(void *, int, int);
+    virtual bool	     sendNonBlocking (void *, int, int, DataHolder *);
+    virtual void	     waitForSent(void *, int, int);
+    virtual string	     getType() const;
+    virtual bool	     isClonable() const;
+    virtual TransportHolder* clone() const;
+    virtual void	     reset();
 
-      virtual bool sendBlocking (void*, int, int, DataHolder*);
+  private:
+    // create via createAllTH_ZoidServers(...)
+			     TH_ZoidServer(unsigned core);
+    virtual		     ~TH_ZoidServer();
 
-      virtual int32 recvNonBlocking (void*, int32, int, int32, DataHolder*)
-      { return true; }
+    // Copying is not allowed
+			     TH_ZoidServer(const TH_ZoidServer& that);
+			     TH_ZoidServer& operator=(const TH_ZoidServer& that);
 
-      virtual void waitForReceived(void*, int, int)
-      {}
+    //# Datamembers
+  public:
+    static std::vector<TH_ZoidServer *> theirTHs;
 
-      virtual bool sendNonBlocking (void*, int, int, DataHolder*)
-      { return true; }
+    unsigned		     itsCore;
+    pthread_mutex_t	     mutex;
+    pthread_cond_t	     newSendDataAvailable, newReceiveBufferAvailable;
+    pthread_cond_t	     dataReceived, dataSent;
+    char		     *sendBufferPtr, *receiveBufferPtr;
+    size_t		     bytesToSend, bytesToReceive;
+};
 
-      virtual void waitForSent(void*, int, int)
-      {}
-
-      virtual string getType() const
-      { return "TH_ZoidServer"; }
-
-      virtual bool isClonable() const
-      { return true; }
-
-      virtual TransportHolder* clone() const
-      { return new TH_ZoidServer(itsCore); }
-
-      virtual void reset()
-      {}
-
-    private:
-      // Copying is not allowed
-      TH_ZoidServer(const TH_ZoidServer& that);
-      TH_ZoidServer& operator=(const TH_ZoidServer& that);
-
-      //# Datamembers
-public:
-      unsigned itsCore;
-      static std::vector<TH_ZoidServer *> theirTHs;
-      pthread_mutex_t mutex;
-      pthread_cond_t newSendDataAvailable, newReceiveBufferAvailable;
-      pthread_cond_t dataReceived, dataSent;
-      char *sendBufferPtr, *receiveBufferPtr;
-      size_t bytesToSend, bytesToReceive;
-    };
-
-    // @}
+} // namespace CS1
 } // namespace LOFAR
 
 #endif

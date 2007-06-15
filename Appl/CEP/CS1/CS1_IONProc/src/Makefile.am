@@ -11,7 +11,7 @@ WH_ION_Gather.cc		\
 TH_ZoidServer.cc
 
 install-exec-local:
-	ln -s liblofar_impl.so lofar_impl.so
+	ln -sf .libs/liblofar_impl.so lofar_impl.so
 
 uninstall-local:
 	rm lofar_impl.so
