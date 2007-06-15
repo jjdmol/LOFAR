@@ -88,8 +88,7 @@ void lofar__init(int nrComputeNodes)
 {
   std::clog << "begin of lofar__init" << std::endl;
 
-  for (int i = 0; i < nrComputeNodes; i ++)
-    TH_ZoidServer::theirTHs.push_back(new TH_ZoidServer(i));
+  TH_ZoidServer::createAllTH_ZoidServers(nrComputeNodes);
 
   global_argv	    = 0;
   scatter_thread_id = 0;
@@ -154,10 +153,7 @@ void lofar__fini(void)
     }
   }
 
-  for (unsigned i = 0; i < TH_ZoidServer::theirTHs.size(); i ++)
-    delete TH_ZoidServer::theirTHs[i];
-
-  TH_ZoidServer::theirTHs.clear();
+  TH_ZoidServer::deleteAllTH_ZoidServers();
 
   if (global_argv != 0) {
     for (int arg = 0; arg < global_argc; arg ++)
