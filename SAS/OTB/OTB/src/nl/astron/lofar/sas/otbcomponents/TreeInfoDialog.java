@@ -418,10 +418,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         stopTimeLabel.setText("StopTime:");
         getContentPane().add(stopTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 350, -1, 20));
 
-        startTimeInput.setToolTipText("Start Time");
+        startTimeInput.setToolTipText("Start Time in GMT (YYYY-MMM-DD hh:mm:ss)");
         getContentPane().add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 320, 330, -1));
 
-        stopTimeInput.setToolTipText("Stop Time");
+        stopTimeInput.setToolTipText("Stop Time in GMT (YYYY-MMM-DD hh:mm:ss)");
         getContentPane().add(stopTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 350, 330, -1));
 
         momIDLabel.setText("MoMID:");

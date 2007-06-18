@@ -181,7 +181,7 @@
     </Component>
     <Component class="javax.swing.JTextField" name="startTimeInput">
       <Properties>
-        <Property name="toolTipText" type="java.lang.String" value="Start Time"/>
+        <Property name="toolTipText" type="java.lang.String" value="Start Time in GMT (YYYY-MMM-DD hh:mm:ss)"/>
       </Properties>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
@@ -191,7 +191,7 @@
     </Component>
     <Component class="javax.swing.JTextField" name="stopTimeInput">
       <Properties>
-        <Property name="toolTipText" type="java.lang.String" value="Stop Time"/>
+        <Property name="toolTipText" type="java.lang.String" value="Stop Time in GMT (YYYY-MMM-DD hh:mm:ss)"/>
       </Properties>
       <Constraints>
         <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
