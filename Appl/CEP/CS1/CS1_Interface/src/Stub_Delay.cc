@@ -95,7 +95,7 @@ namespace LOFAR
 	  // Create a server socket
 	  th = new TH_Socket(service, true, Socket::TCP, 5, false);
 	}
-      } else if (transportType == "Null") { 
+      } else if (transportType == "NULL") { 
 	th = new TH_Null();
       }
       
