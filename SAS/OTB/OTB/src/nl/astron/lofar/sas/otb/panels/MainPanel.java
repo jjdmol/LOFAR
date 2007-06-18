@@ -961,14 +961,26 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Info",false);
             }
         } else if (itsTabFocus.equals("VIC")) {
+            boolean infoOnly=false;
+            if (VICPanel.getSelectedRowCount() > 1) {
+                infoOnly=true;
+            }
             if (treeID>0) {
-                if (aTreeState.equals("idle") || aTreeState.endsWith("being specified") || aTreeState.equals("finished")
-                || aTreeState.equals("aborted") || aTreeState.equals("obsolete")) {
+                if ((aTreeState.equals("idle") || aTreeState.endsWith("being specified") || aTreeState.equals("finished")
+                || aTreeState.equals("aborted") || aTreeState.equals("obsolete")) && !infoOnly) {
                     buttonPanel1.setButtonEnabled("Delete",true);
                 } else {
                     buttonPanel1.setButtonEnabled("Delete",false);                    
                 }
-                buttonPanel1.setButtonEnabled("View",true);
+                if (!infoOnly) {
+                    buttonPanel1.setButtonEnabled("View",true);
+                    buttonPanel1.setButtonEnabled("Query Panel",true);
+                    buttonPanel1.setButtonEnabled("Refresh",true);
+                } else {
+                    buttonPanel1.setButtonEnabled("Query Panel",false);
+                    buttonPanel1.setButtonEnabled("Refresh",false);
+                    buttonPanel1.setButtonEnabled("View",false);
+                }
                 buttonPanel1.setButtonEnabled("Info",true);
             } else {
                 buttonPanel1.setButtonEnabled("Delete",false);
