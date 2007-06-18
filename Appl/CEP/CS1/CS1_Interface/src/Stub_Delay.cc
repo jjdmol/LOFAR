@@ -22,7 +22,8 @@
 
 #include <CS1_Interface/Stub_Delay.h>
 #include <Transport/TH_Socket.h>
-#include <Transport/Connection.h>
+#include <Transport/TH_File.h>
+#include <Transport/TH_Null.h>
 
 namespace LOFAR 
 { 
@@ -45,7 +46,7 @@ namespace LOFAR
       ASSERTSTR(itsPorts.size() >= itsNRSP, 
                 itsPorts.size() << " >= " << itsNRSP);
 
-      itsTHs = new TH_Socket*[itsNRSP];
+      itsTHs = new TransportHolder*[itsNRSP];
       itsConnections = new Connection*[itsNRSP];
   
       for (uint i=0; i<itsNRSP; i++) {
@@ -73,43 +74,40 @@ namespace LOFAR
       ASSERTSTR(RSP_nr < itsNRSP, RSP_nr << " < " << itsNRSP);
       string service = itsPorts[RSP_nr];
 
-      if (itsIsInput) // on the input side, start client socket
-      {
-        ASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << 
-                  " has already been connected.");
-        // Create a client socket
-        string server = itsCS1PS->getString("OLAP.DelayComp.hostname");
-        string service = itsPorts[RSP_nr];
-        itsTHs[RSP_nr] = new TH_Socket(server,
-                                       service,
-                                       true,
-                                       Socket::TCP,
-                                       false);
 
-        itsConnections[RSP_nr] = new Connection("toDelayCompensation", 0, 
-                                                dm.getGeneralInHolder(dhNr),
-                                                itsTHs[RSP_nr], true);
-        dm.setInConnection(dhNr, itsConnections[RSP_nr]);
-      } 
-      else    // on the delay compensation side, start a server socket
-      {
-        ASSERTSTR(itsTHs[RSP_nr] == 0, "Stub output " << RSP_nr << 
-                  " has already been connected.");
-        // Create a server socket
-        itsTHs[RSP_nr] = new TH_Socket(service,
-                                       true,
-                                       Socket::TCP,
-                                       5,
-                                       false);
-        itsConnections[RSP_nr] = new Connection("fromInpSection", 
-                                                dm.getGeneralOutHolder(dhNr), 
-                                                0, itsTHs[RSP_nr], true);
-        dm.setOutConnection(dhNr, itsConnections[RSP_nr]);
+      // Determine tranport type
+      string transportType = itsCS1PS->getString("OLAP.OLAP_Conn.input_DelayComp_Transport");
 
+      TransportHolder *th;
+      if (transportType == "TCP") {
+
+	 // on the input side, start client socket
+	string service = itsPorts[RSP_nr];
+	if (itsIsInput) { 
+	  // Create a client socket
+	  ASSERTSTR(itsTHs[RSP_nr] == 0, "Stub input " << RSP_nr << " has already been connected.");
+	  
+	  string server = itsCS1PS->getString("OLAP.DelayComp.hostname");
+	  th = new TH_Socket(server, service, true, Socket::TCP, false);
+
+	} else {    // on the delay compensation side, start a server socket
+	  ASSERTSTR(itsTHs[RSP_nr] == 0, "Stub output " << RSP_nr << " has already been connected.");
+	  // Create a server socket
+	  th = new TH_Socket(service, true, Socket::TCP, 5, false);
+	}
+      } else if (transportType == "Null") { 
+	th = new TH_Null();
+      }
+      
+      itsTHs[RSP_nr] = th;
+      if (itsIsInput) {
+	itsConnections[RSP_nr] = new Connection("toDelayCompensation", 0, dm.getGeneralInHolder(dhNr), th, true);
+	dm.setInConnection(dhNr, itsConnections[RSP_nr]);
+      } else {
+	itsConnections[RSP_nr] = new Connection("fromInpSection", dm.getGeneralOutHolder(dhNr), 0, th, true);
+	dm.setOutConnection(dhNr, itsConnections[RSP_nr]);
       }
     }
-
   } // namespace CS1
-
 } //namespace LOFAR
 

@@ -26,6 +26,8 @@
 #include <tinyCEP/TinyDataManager.h>
 #include <Common/lofar_vector.h>
 #include <CS1_Interface/CS1_Parset.h>
+#include <Transport/TransportHolder.h>
+#include <Transport/Connection.h>
 
 namespace LOFAR
 {
@@ -55,7 +57,7 @@ namespace LOFAR
       uint		            itsNRSP;
       // ports used to connect to RSPs
       vector<string>                itsPorts;
-      TH_Socket		          **itsTHs;
+      TransportHolder	          **itsTHs;
       Connection       		  **itsConnections;
       ALLOC_TRACER_CONTEXT;
     };
