@@ -17,5 +17,5 @@ uses  ApplCtrl     1.0.0  development 1                  "The ACC controller"
 uses  InputAppl    1.0.0  development 1                  "InputSection Application"
 uses  CorrAppl     1.0.0  development 1                  "Blue Gene Application"
 uses  StorageAppl  1.0.0  development 1                  "StorageSection Application"
-uses  OLAP         1.0.2  development 1                  "OLAP specific information"
+uses  OLAP         1.0.3  development 1                  "OLAP specific information"
 
