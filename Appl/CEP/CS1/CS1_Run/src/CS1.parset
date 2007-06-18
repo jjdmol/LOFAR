@@ -28,6 +28,8 @@ OLAP.OLAP_Conn.BGLProc_Storage_BaseFileName = "Correlations"
 # should be one of NULL(inputFromMemory), FILE, TCP, UDP, ETHERNET
 OLAP.OLAP_Conn.station_Input_Transport = UDP
 
+OLAP.OLAP_Conn.input_DelayComp_Transport = TCP # one of TCP, NULL
+
 # The format of the data
 
 # Variables for Storage

@@ -40,8 +40,8 @@ def doObservation(obsID, parset):
     sections = [\
         DelayCompensationSection(parset, list001),
         InputSection(parset, liifen),
-        BGLProcSection(parset, userId.getHost(), BGLPartition),
-        StorageSection(parset, listfen)
+#        BGLProcSection(parset, userId.getHost(), BGLPartition),
+#        StorageSection(parset, listfen)
         #Flagger(parset, listfen)
         ]
     
@@ -200,6 +200,7 @@ if __name__ == '__main__':
 
 	parset['Observation.MSNameMask'] = '[' + MSName + ']'
  
+
     obsID = 'L' + year + '_' + '%05d' % measurementnumber
     
     # start the observation
