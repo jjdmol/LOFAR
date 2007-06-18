@@ -275,7 +275,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
         boolean isRef = LofarUtils.isReference(aNode.limits);
         String aKeyName = LofarUtils.keyName(aNode.name);
-        String parentName = String.valueOf(parent.name);
+        String parentName = LofarUtils.keyName(String.valueOf(parent.name));
         /* Set's the different fields in the GUI */
 
         // Generic OLAP
@@ -389,8 +389,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 }
                 itsDirectionTypes=aNode;
             }
-        } else if(parentName.equals("VirtualObservation")){        
-            // Observation VirtualObservation parameters
+        } else if(parentName.equals("VirtualInstrument")){        
+            // Observation VirtualInstrument parameters
 
             if (aKeyName.equals("stationList")) {        
                 this.stationsList.setToolTipText(aParam.description);
@@ -436,7 +436,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
       inputDirectionTypes.setSelectedItem(itsDirectionTypes.limits);
     
   
-      // Observation VirtualObservation parameters
+      // Observation VirtualInstrument parameters
       //set the checkbox correctly when no stations are provided in the data
       if(itsStationList.limits == null || itsStationList.limits.equals("[]")){
         stationsList.setModel(new DefaultListModel());
@@ -1231,7 +1231,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode itsAngleTimes;
     private jOTDBnode itsDirectionTypes;
     
-    // Observation VirtualObservation parameters
+    // Observation Virtual Instrument parameters
     private jOTDBnode itsStationList;
 
 

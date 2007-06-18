@@ -290,7 +290,7 @@ public class BBSPanel extends javax.swing.JPanel implements IViewPanel{
         }
         boolean isRef = LofarUtils.isReference(aNode.limits);
         String aKeyName = LofarUtils.keyName(aNode.name);
-        String parentName = String.valueOf(parent.name);
+        String parentName = LofarUtils.keyName(String.valueOf(parent.name));
         
         if(parentName.equals("BBSControl")){
             if (aKeyName.equals("DataSet")) {
