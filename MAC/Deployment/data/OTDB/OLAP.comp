@@ -32,7 +32,7 @@ par input_BGLProc_BaseFileName  I	text	-	10	0	'/data/gijs'		- 	'File to use when
 par BGLProc_Storage_Transport	I	ptext	-	10	0	'File|TCP|UDP|Null;TCP' - 	'Type of transport used between Blue Gene and StorageSection.'
 par BGLProc_Storage_Ports	I	vtext	-	10	0	'[8300..8363]'		- 	'Portnumbers to use in the connections.'
 par BGLProc_Storage_BaseFileName I	text	-	10	0	'Correlations'		- 	'File to use when transport=File'
-
+par useZoid			I   	bool    -       10  	0	true			-	'???'
 
 # -- DelayComp --
 #      name        vers   qual        constr.            descr.
@@ -53,10 +53,12 @@ par positionType 	I	text	-	10	0	'ITRF'			-	'???'
 #--------------------------------------------------------------------------------------------------------
 node  IONProc     1.0.0  development 'node constraint'  "???"
 
-#    name         	   	dir. 	type   unit   prun. vm  value   constr.  descr.
-#--------------------------------------------------------------------------------------------------------
-par integrationSteps	I	int	-	10  0	1000	-	'???'
 
+#    name         	dir. 	type   	unit   	prun. 	vm  	value	constr. descr.
+#--------------------------------------------------------------------------------------------------------
+par integrationSteps	I	int	-	10  	0	1000	-	'???'
+par useGather		I   	bool    -       10  	0	true	-	'???'
+par useScatter		I   	bool    -       10  	0	true	-	'???'
 
 
 # -- StorageProc
