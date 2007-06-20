@@ -187,7 +187,7 @@ bool TH_ZoidServer::recvBlocking(void *buf, int nbytes, int, int, DataHolder *)
 
 // functions below are not supported
 
-int32 recvNonBlocking(void *, int32, int , int32, DataHolder *)
+int32 TH_ZoidServer::recvNonBlocking(void *, int32, int, int32, DataHolder *)
 {
   return false;
 }
