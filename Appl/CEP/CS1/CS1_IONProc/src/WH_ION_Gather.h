@@ -34,10 +34,10 @@ namespace CS1 {
 class WH_ION_Gather : public WorkHolder
 {
   public:
-    explicit WH_ION_Gather(const string &name, unsigned ionodeNumber, const CS1_Parset *ps);
+    explicit WH_ION_Gather(const string &name, const CS1_Parset *ps);
     virtual  ~WH_ION_Gather();
 
-    //static WorkHolder *construct(const string &name, unsigned ionodeNumber, const ACC::APS::ParameterSet &);
+    //static WorkHolder *construct(const string &name, const ACC::APS::ParameterSet &);
     virtual WH_ION_Gather *make(const string &name);
 
     virtual void preprocess();
@@ -54,7 +54,7 @@ class WH_ION_Gather : public WorkHolder
     vector<DH_Visibilities *>	itsSumDHs;
     DH_Visibilities		*itsTmpDH;
 
-    unsigned			itsIONodeNumber, itsNrComputeNodes, itsCurrentComputeNode;
+    unsigned			itsNrComputeNodes, itsCurrentComputeNode;
     unsigned			itsNrSubbandsPerPset, itsCurrentSubband;
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
     const CS1_Parset		*itsPS;

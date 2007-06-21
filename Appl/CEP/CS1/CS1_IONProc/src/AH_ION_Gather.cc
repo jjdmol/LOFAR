@@ -53,15 +53,15 @@ AH_ION_Gather::~AH_ION_Gather()
 void AH_ION_Gather::define(const KeyValueMap&)
 {
   itsCS1PS = new CS1_Parset(&itsParamSet);
-  itsWH = new WH_ION_Gather("ION_Gather", 0, itsCS1PS);
+  itsWH = new WH_ION_Gather("ION_Gather", itsCS1PS);
   itsWH->runOnNode(0);
-  
+
   DataManager *dm = new DataManager(itsWH->getDataManager());
   itsWH->setDataManager(dm);
   dm->setOutBuffer(0, false, 2);
 
   unsigned nrPsetsPerStorage = itsCS1PS->getInt32("OLAP.psetsPerStorage");
-  unsigned pset		     = getBGLpersonality()->psetNum;
+  unsigned pset		     = getBGLpersonality()->getPsetNum();
   unsigned storage_host	     = pset / nrPsetsPerStorage;
   unsigned storage_port	     = pset % nrPsetsPerStorage;
 

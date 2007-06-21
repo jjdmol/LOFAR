@@ -39,13 +39,12 @@ namespace LOFAR {
 namespace CS1 {
 
 
-WH_ION_Gather::WH_ION_Gather(const string &name, unsigned ionodeNumber, const CS1_Parset *ps)
+WH_ION_Gather::WH_ION_Gather(const string &name, const CS1_Parset *ps)
 :
   WorkHolder(0, 1, name, "WH_ION_Gather"),
   itsPS(ps)
 {
   itsTmpDH		    = 0;
-  itsIONodeNumber	    = ionodeNumber;
   itsNrComputeNodes	    = ps->getUint32("OLAP.BGLProc.nodesPerPset");
   itsCurrentComputeNode	    = 0;
   itsNrSubbandsPerPset	    = ps->getUint32("OLAP.subbandsPerPset");
@@ -74,16 +73,16 @@ WH_ION_Gather::~WH_ION_Gather()
 
 
 #if 0
-WorkHolder* WH_ION_Gather::construct(const string &name, unsigned ionodeNumber, const ACC::APS::ParameterSet &ps)
+WorkHolder* WH_ION_Gather::construct(const string &name, const ACC::APS::ParameterSet &ps)
 {
-  return new WH_ION_Gather(name, ionodeNumber, ps);
+  return new WH_ION_Gather(name, ps);
 }
 #endif
 
 
 WH_ION_Gather* WH_ION_Gather::make(const string &name)
 {
-  return new WH_ION_Gather(name, itsIONodeNumber, itsPS);
+  return new WH_ION_Gather(name, itsPS);
 }
 
 

@@ -57,7 +57,7 @@ AH_ION_Scatter::~AH_ION_Scatter()
 void AH_ION_Scatter::define(const KeyValueMap&)
 {
   itsCS1PS = new CS1_Parset(&itsParamSet);
-  itsWH = new WH_ION_Scatter("ION_Scatter", 0, itsCS1PS);
+  itsWH = new WH_ION_Scatter("ION_Scatter", itsCS1PS);
   itsWH->runOnNode(0);
   
   DataManager *dm = new DataManager(itsWH->getDataManager());
