@@ -117,20 +117,26 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
 
   global_argv[argc] = 0; // terminating zero pointer
 
-  //ACC::APS::ParameterSet parameterSet(basename(argv[0]));
+  try {
+    std::string fileName = std::string(basename(argv[0])) + ".parset";
+    std::clog << "trying to use " << fileName << " as ParameterSet" << std::endl;
+    ACC::APS::ParameterSet parameterSet(fileName);
 
-  /* if (parameterSet.getBool("OLAP.IONProc.useScatter")) */ {
-    if (pthread_create(&scatter_thread_id, 0, scatter_thread, 0) != 0) {
-      perror("pthread_create");
-      exit(1);
+    if (parameterSet.getBool("OLAP.IONProc.useScatter")) {
+      if (pthread_create(&scatter_thread_id, 0, scatter_thread, 0) != 0) {
+	perror("pthread_create");
+	exit(1);
+      }
     }
-  }
 
-  /* if (parameterSet.getBool("OLAP.IONProc.useGather")) */ {
-    if (pthread_create(&gather_thread_id, 0, gather_thread, 0) != 0) {
-      perror("pthread_create");
-      exit(1);
+    if (parameterSet.getBool("OLAP.IONProc.useGather")) {
+      if (pthread_create(&gather_thread_id, 0, gather_thread, 0) != 0) {
+	perror("pthread_create");
+	exit(1);
+      }
     }
+  } catch (std::exception &ex) {
+    std::cerr << "caught exception: " << ex.what() << std::endl;
   }
 }
 
