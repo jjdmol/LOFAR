@@ -34,10 +34,10 @@ namespace CS1 {
 class WH_ION_Scatter : public WorkHolder
 {
   public:
-    explicit WH_ION_Scatter(const string &name, unsigned ionodeNumber, const CS1_Parset *ps);
+    explicit WH_ION_Scatter(const string &name, const CS1_Parset *ps);
     virtual  ~WH_ION_Scatter();
 
-    //static WorkHolder *construct(const string &name, unsigned ionodeNumber, const ACC::APS::ParameterSet &);
+    //static WorkHolder *construct(const string &name, const ACC::APS::ParameterSet &);
     virtual WH_ION_Scatter *make(const string &name);
 
     virtual void preprocess();
@@ -51,7 +51,7 @@ class WH_ION_Scatter : public WorkHolder
     // forbid assignment
     WH_ION_Scatter &operator = (const WH_ION_Scatter &);
 
-    unsigned			itsIONodeNumber, itsNrComputeNodes, itsCurrentComputeNode;
+    unsigned			itsNrComputeNodes, itsCurrentComputeNode;
     //vector<TH_ZoidServer *>	itsOutputs;
     const CS1_Parset		*itsPS;
 };

@@ -39,10 +39,9 @@ namespace LOFAR {
 namespace CS1 {
 
 
-WH_ION_Scatter::WH_ION_Scatter(const string &name, unsigned ionodeNumber, const CS1_Parset *ps)
+WH_ION_Scatter::WH_ION_Scatter(const string &name, const CS1_Parset *ps)
 :
   WorkHolder(1, 0, name, "WH_ION_Scatter"),
-  itsIONodeNumber(ionodeNumber),
   itsCurrentComputeNode(0),
   itsPS(ps)
 {
@@ -63,16 +62,16 @@ WH_ION_Scatter::~WH_ION_Scatter()
 
 
 #if 0
-WorkHolder* WH_ION_Scatter::construct(const string &name, unsigned ionodeNumber, const ACC::APS::ParameterSet &ps)
+WorkHolder* WH_ION_Scatter::construct(const string &name, const ACC::APS::ParameterSet &ps)
 {
-  return new WH_ION_Scatter(name, ionodeNumber, ps);
+  return new WH_ION_Scatter(name, ps);
 }
 #endif
 
 
 WH_ION_Scatter* WH_ION_Scatter::make(const string &name)
 {
-  return new WH_ION_Scatter(name, itsIONodeNumber, itsPS);
+  return new WH_ION_Scatter(name, itsPS);
 }
 
 
