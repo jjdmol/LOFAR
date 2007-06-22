@@ -26,6 +26,9 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MCPosition.h>
+#include <measures/Measures/MCEpoch.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasTable.h>
 #include <casa/Quanta/MVPosition.h>

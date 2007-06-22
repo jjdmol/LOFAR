@@ -31,6 +31,7 @@
 
 #include <measures/Measures/MBaseline.h>
 #include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MCBaseline.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasFrame.h>
 #include <casa/Quanta/MVuvw.h>
