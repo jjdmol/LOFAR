@@ -58,8 +58,6 @@ namespace LOFAR {
 
 				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
 				
-				virtual bool waitAck();
-      
       private:
       //private methods
 
@@ -83,9 +81,9 @@ namespace LOFAR {
 				uint32	itsMode; // Transient or subbands
 				
 				TPUdpEvent			*itsTPE;
-				TPUdpackEvent		*itsTPackE;
+				TPUdpAckEvent		*itsTPackE;
 				TBBModeEvent		*itsTBBE;
-				TBBModeackEvent	*itsTBBackE;
+				TBBModeAckEvent	*itsTBBackE;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

@@ -66,9 +66,9 @@ namespace LOFAR {
 				uint32	itsRcuStatus;
 				
 				TPFreeEvent			*itsTPE;
-				TPFreeackEvent	*itsTPackE;
+				TPFreeAckEvent	*itsTPackE;
 				TBBFreeEvent		*itsTBBE;
-				TBBFreeackEvent	*itsTBBackE;
+				TBBFreeAckEvent	*itsTBBackE;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

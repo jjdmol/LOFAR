@@ -61,9 +61,9 @@ namespace LOFAR {
 				TbbSettings *TS;
 				
 				TPReadEvent			*itsTPE;
-				TPReadackEvent	*itsTPackE;
+				TPReadAckEvent	*itsTPackE;
 				TBBReadEvent		*itsTBBE;
-				TBBReadackEvent	*itsTBBackE;
+				TBBReadAckEvent	*itsTBBackE;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

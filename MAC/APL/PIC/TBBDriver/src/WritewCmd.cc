@@ -38,7 +38,9 @@ WritewCmd::WritewCmd():
 	itsTPE 			= new TPWritewEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBWritewackEvent();
+	itsTBBackE 	= new TBBWritewAckEvent();
+	
+	itsTBBackE->status_mask = 0;
 	setWaitAck(true);
 }
 	  
@@ -52,7 +54,7 @@ WritewCmd::~WritewCmd()
 // ----------------------------------------------------------------------------
 bool WritewCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_WRITEW)||(event.signal == TP_WRITEWACK)) {
+	if ((event.signal == TBB_WRITEW)||(event.signal == TP_WRITEW_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -62,11 +64,15 @@ bool WritewCmd::isValid(GCFEvent& event)
 void WritewCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE	= new TBBWritewEvent(event);
-		
-	setBoardNr(itsTBBE->board);
 	
 	itsTBBackE->status_mask = 0;
-	
+	if (TS->isBoardActive(itsTBBE->board)) {	
+		setBoardNr(itsTBBE->board);
+	} else {
+		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		setDone(true);
+	}
+		
 	// initialize TP send frame
 	itsTPE->opcode	= TPWRITEW;
 	itsTPE->status	= 0;
@@ -93,7 +99,7 @@ void WritewCmd::saveTpAckEvent(GCFEvent& event)
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
-		itsTPackE = new TPWritewackEvent(event);
+		itsTPackE = new TPWritewAckEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
 				

@@ -61,9 +61,9 @@ namespace LOFAR {
 				TbbSettings *TS;
 				
 				TPReadwEvent			*itsTPE;
-				TPReadwackEvent		*itsTPackE;
+				TPReadwAckEvent		*itsTPackE;
 				TBBReadwEvent			*itsTBBE;
-				TBBReadwackEvent	*itsTBBackE;
+				TBBReadwAckEvent	*itsTBBackE;
 				
 				// variables holding data from tp cmd
 				uint32	itsBoardStatus;

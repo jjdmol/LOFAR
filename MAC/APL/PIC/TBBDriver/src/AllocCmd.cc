@@ -39,7 +39,7 @@ AllocCmd::AllocCmd(): itsStage(0),itsRcuStatus(0)
 	itsTPE 			= new TPAllocEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE	= new TBBAllocackEvent();
+	itsTBBackE	= new TBBAllocAckEvent();
 	
 	for(int boardnr = 0;boardnr < TS->maxBoards();boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
@@ -59,8 +59,8 @@ AllocCmd::~AllocCmd()
 bool AllocCmd::isValid(GCFEvent& event)
 {
 	if ((event.signal == TBB_ALLOC)
-		|| (event.signal == TP_ALLOCACK)
-		|| (event.signal == TP_SIZEACK)) {
+		|| (event.signal == TP_ALLOC_ACK)
+		|| (event.signal == TP_SIZE_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -72,18 +72,21 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 	itsTBBE	= new TBBAllocEvent(event);
 	
 	// convert rcu-bitmask to tbb-channelmask
-	int32 board;
-	int32 channel;
+	int32 board;				// board 0 .. 11
+	int32 board_channel;// board_channel 0 .. 15	
+	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)	
 	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
 		if(itsTBBE->rcu_mask.test(rcunr)) {
-			TS->convertRcu2Ch(rcunr,&board,&channel);	
-			itsChannelMask[board] |= (1 << channel);
+			TS->convertRcu2Ch(rcunr,&board,&board_channel);
+			channel = (board * TS->nrChannelsOnBoard()) + board_channel;	
+			itsChannelMask[board] |= (1 << board_channel);
+			TS->setChSelected(channel,true);
 		}
 	} 
 	
 	uint32 boardmask = 0;	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		if (itsChannelMask[board] != 0) boardmask |= (1 << boardnr); 
+		if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr); 
 		
 		if (TS->isBoardActive(boardnr)) {
 			
@@ -95,7 +98,6 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 					if (TS->getChState((ch + (boardnr * 16))) != 'F') {
 						itsTBBackE->status_mask[boardnr] |= TBB_ALLOC_ERROR;
 					}	else {	
-						TS->setChSelected((ch + (boardnr * 16)),true);
 						LOG_DEBUG_STR(formatString("Ch[%d] is selected",ch + (boardnr * 16)));
 					}
 				}
@@ -111,6 +113,7 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 	}
 	
 	setBoardMask(boardmask);
+	LOG_DEBUG_STR(formatString("boardmask = 0x%08X",boardmask));
 		
 	// select first board to handle
 	nextBoardNr();
@@ -125,7 +128,7 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void AllocCmd::sendTpEvent()
 {
-	if (itsTBBackE->status_mask[getBoardNr()] == 0) {
+	//if (itsTBBackE->status_mask[getBoardNr()] == 0) {
 	
 		switch (itsStage) {
 			// stage 1, get board memory size
@@ -150,16 +153,16 @@ void AllocCmd::sendTpEvent()
 					itsRcuStatus |= TBB_RCU_NOT_FREE;
 		
 				// send cmd if no errors
-				if (itsRcuStatus == 0) {
+				//if (itsRcuStatus == 0) {
 					TS->boardPort(getBoardNr()).send(*itsTPE);
 					LOG_DEBUG_STR(formatString("Sending Alloc to boardnr[%d], channel[%d]",getBoardNr(),getChannelNr()));
-				}
+			//}
 			} break;
 			
 			default: {
 			} break;
 		}
-	}	
+	//}	
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
@@ -173,12 +176,14 @@ void AllocCmd::saveTpAckEvent(GCFEvent& event)
 			if (event.signal == F_TIMER) {
 				itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
 			}	else {
-				TPSizeackEvent *sizeAckEvent = new TPSizeackEvent(event);
+				TPSizeAckEvent *sizeAckEvent = new TPSizeAckEvent(event);
 		
-				if ((sizeAckEvent->status >= 0xF0) && (sizeAckEvent->status <= 0xF6)) 
+				if ((sizeAckEvent->status >= 0xF0) && (sizeAckEvent->status <= 0xF6)) {
 					itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (sizeAckEvent->status & 0x0F)));	
+				}
 		
-				TS->setMemorySize(getBoardNr(),sizeAckEvent->npages);
+				//TS->setMemorySize(getBoardNr(),sizeAckEvent->npages);
+				TS->setMemorySize(getBoardNr(),4194304);
 				
 				if (!devideChannels(getBoardNr())) // calculate allocations
 					itsTBBackE->status_mask[getBoardNr()] |= TBB_ALLOC_ERROR;
@@ -192,7 +197,7 @@ void AllocCmd::saveTpAckEvent(GCFEvent& event)
 			if (isDone()) {
 				setDone(false);
 				resetChannelNr(); 
-				nextChannelNr();
+				nextSelectedChannelNr();
 				itsStage = 1;
 			}
 		} break;
@@ -206,7 +211,7 @@ void AllocCmd::saveTpAckEvent(GCFEvent& event)
 				LOG_INFO_STR(formatString("F_TIMER AllocCmd DriverStatus[0x%08X], RcuStatus[0x%08X]",
 										 itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
 			}	else {
-				itsTPackE = new TPAllocackEvent(event);
+				itsTPackE = new TPAllocAckEvent(event);
 				
 				if (itsTPackE->status == 0) {
 					TS->setChState(getChannelNr(),'A');
@@ -231,12 +236,17 @@ void AllocCmd::saveTpAckEvent(GCFEvent& event)
 			if (itsRcuStatus || itsTBBackE->status_mask[getBoardNr()]) {
 				int32 rcu;
 				TS->convertCh2Rcu(getChannelNr(),&rcu);
-				LOG_INFO_STR(formatString("ERROR AllocCmd Rcu[%d], DriverStatus[0x%x], RcuStatus[0x%x]",
+				LOG_INFO_STR(formatString("ERROR AllocCmd Rcu[%d], DriverStatus[0x%08x], RcuStatus[0x%08x]",
 										 rcu, itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
 			}
 	
 			itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
-			nextChannelNr();
+			/*
+			if (itsTBBackE->status_mask[getBoardNr()] != 0) {
+				setChannelNr((getBoardNr() * 16) + 15);
+			}
+			*/
+			nextSelectedChannelNr();
 		} break;
 		
 		default: {

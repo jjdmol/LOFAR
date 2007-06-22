@@ -38,7 +38,9 @@ ReadwCmd::ReadwCmd():
 	itsTPE 			= new TPReadwEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBReadwackEvent();
+	itsTBBackE 	= new TBBReadwAckEvent();
+	
+	itsTBBackE->status_mask = 0;
 	setWaitAck(true);
 }
 	  
@@ -52,7 +54,7 @@ ReadwCmd::~ReadwCmd()
 // ----------------------------------------------------------------------------
 bool ReadwCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_READW)||(event.signal == TP_READWACK)) {
+	if ((event.signal == TBB_READW)||(event.signal == TP_READW_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -63,9 +65,12 @@ void ReadwCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE	= new TBBReadwEvent(event);
 	
-	setBoardNr(itsTBBE->board);	
-	
-	itsTBBackE->status_mask = 0;
+	if (TS->isBoardActive(itsTBBE->board)) {	
+		setBoardNr(itsTBBE->board);
+	} else {
+		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		setDone(true);
+	}
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPREADW;
@@ -90,7 +95,7 @@ void ReadwCmd::saveTpAckEvent(GCFEvent& event)
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
-		itsTPackE = new TPReadwackEvent(event);
+		itsTPackE = new TPReadwAckEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
 		itsTBBackE->wordlo	= itsTPackE->wordlo;

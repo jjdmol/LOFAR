@@ -36,7 +36,7 @@ StatusCmd::StatusCmd()
 	itsTPE 			= new TPStatusEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBStatusackEvent();
+	itsTBBackE 	= new TBBStatusAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
@@ -54,7 +54,7 @@ StatusCmd::~StatusCmd()
 // ----------------------------------------------------------------------------
 bool StatusCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_STATUS)||(event.signal == TP_STATUSACK)) {
+	if ((event.signal == TBB_STATUS)||(event.signal == TP_STATUS_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -96,7 +96,7 @@ void StatusCmd::saveTpAckEvent(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
 	}	else {
-		itsTPackE = new TPStatusackEvent(event);
+		itsTPackE = new TPStatusAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	

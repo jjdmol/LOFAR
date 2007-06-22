@@ -38,7 +38,7 @@ VersionCmd::VersionCmd()
 	itsTPE 			= new TPVersionEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBVersionackEvent();
+	itsTBBackE 	= new TBBVersionAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]		= 0;
@@ -56,7 +56,7 @@ VersionCmd::~VersionCmd()
 // ----------------------------------------------------------------------------
 bool VersionCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_VERSION)||(event.signal == TP_VERSIONACK)) {
+	if ((event.signal == TBB_VERSION)||(event.signal == TP_VERSION_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -101,19 +101,19 @@ void VersionCmd::saveTpAckEvent(GCFEvent& event)
 	}
 	else {
 		//TPVersionEvent tpe(event);
-		itsTPackE = new TPVersionackEvent(event);
+		itsTPackE = new TPVersionAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
 		
-		itsTBBackE->boardid[getBoardNr()] 			= itsTPackE->boardid;
+		itsTBBackE->boardid[getBoardNr()] 		= itsTPackE->boardid;
 		itsTBBackE->swversion[getBoardNr()]  	= itsTPackE->swversion;
-		itsTBBackE->boardversion[getBoardNr()]	= itsTPackE->boardversion;
+		itsTBBackE->boardversion[getBoardNr()]= itsTPackE->boardversion;
 		itsTBBackE->tpversion[getBoardNr()]		= itsTPackE->tpversion;
-		itsTBBackE->mp0version[getBoardNr()] 	= itsTPackE->mp0version;
-		itsTBBackE->mp1version[getBoardNr()] 	= itsTPackE->mp1version;
-		itsTBBackE->mp2version[getBoardNr()] 	= itsTPackE->mp2version;
-		itsTBBackE->mp3version[getBoardNr()] 	= itsTPackE->mp3version;
+		itsTBBackE->mp0version[getBoardNr()] 	= (itsTPackE->mp0version >> 24);
+		itsTBBackE->mp1version[getBoardNr()] 	= (itsTPackE->mp1version >> 24);
+		itsTBBackE->mp2version[getBoardNr()] 	= (itsTPackE->mp2version >> 24);
+		itsTBBackE->mp3version[getBoardNr()] 	= (itsTPackE->mp3version >> 24);
 		
 		LOG_DEBUG_STR(formatString("VersionCmd: board[%d] %08X;%u;%u;%u;%u;%u;%u;%u;%u",
 				getBoardNr(),itsTBBackE->status_mask[getBoardNr()],itsTPackE->boardid,itsTPackE->swversion,itsTPackE->boardversion,

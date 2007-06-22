@@ -37,7 +37,7 @@ ClearCmd::ClearCmd()
 	itsTPE 			= new TPClearEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBClearackEvent();
+	itsTBBackE 	= new TBBClearAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
@@ -55,7 +55,7 @@ ClearCmd::~ClearCmd()
 // ----------------------------------------------------------------------------
 bool ClearCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_CLEAR)||(event.signal == TP_CLEARACK)) {
+	if ((event.signal == TBB_CLEAR)||(event.signal == TP_CLEAR_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -97,7 +97,7 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		;
 	}	else {
-		itsTPackE = new TPClearackEvent(event);
+		itsTPackE = new TPClearAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	

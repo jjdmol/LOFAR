@@ -50,7 +50,7 @@ static const int FL_BLOCKS_IN_PAGE	= FL_PAGE_SIZE / FL_BLOCK_SIZE; // 2048 block
 
 //--Constructors for a WritefCmd object.----------------------------------------
 WritefCmd::WritefCmd():
-		itsStage(idle),itsImage(0),itsSector(0),itsBlock(0),itsImageSize(0),itsBoardStatus(0)
+		itsStage(idle),itsImage(0),itsSector(0),itsBlock(0),itsImageSize(0),itsDataPtr(0),itsBoardStatus(0)
 {
 	TS					= TbbSettings::instance();
 	itsTPE 			= new TPWritefEvent();
@@ -58,6 +58,8 @@ WritefCmd::WritefCmd():
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBWriteImageAckEvent();
 	itsImageData= 0;
+	
+	itsTBBackE->status_mask = 0;
 	setWaitAck(true);
 }
 	  
@@ -74,9 +76,9 @@ WritefCmd::~WritefCmd()
 bool WritefCmd::isValid(GCFEvent& event)
 {
 	if ((event.signal == TBB_WRITE_IMAGE) 
-		|| (event.signal == TP_ERASEFACK)
-		|| (event.signal == TP_WRITEFACK)
-		|| (event.signal == TP_READFACK)) {
+		|| (event.signal == TP_ERASEF_ACK)
+		|| (event.signal == TP_WRITEF_ACK)
+		|| (event.signal == TP_READF_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -87,7 +89,13 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE	= new TBBWriteImageEvent(event);
 	
-	setBoardNr(itsTBBE->board);	
+	itsTBBackE->status_mask = 0;
+	if (TS->isBoardActive(itsTBBE->board)) {	
+		setBoardNr(itsTBBE->board);
+	} else {
+		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		setDone(true);
+	}
 	
 	memcpy(itsFileNameTp,itsTBBE->filename_tp,sizeof(char) * 64);
 	memcpy(itsFileNameMp,itsTBBE->filename_mp,sizeof(char) * 64);
@@ -98,8 +106,6 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 	itsImageData = new uint8[1966080];
 			
 	readFiles();
-	
-	itsTBBackE->status_mask = 0;
 	
 	itsImage 	= itsTBBE->image;
 	itsSector	= (itsImage * FL_SECTORS_IN_PAGE);
@@ -133,12 +139,12 @@ void WritefCmd::sendTpEvent()
 				// fill event with data and send
 				itsTPE->addr = static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
 				
-				int ptr = itsBlock - (itsImage * FL_BLOCKS_IN_PAGE);
+				//int ptr = itsBlock - (itsImage * FL_BLOCKS_IN_PAGE);
 				for (int tp_an=0; tp_an < 256; tp_an++) {
-					itsTPE->data[tp_an]  = itsImageData[ptr]; ptr++;
-					itsTPE->data[tp_an] |= (itsImageData[ptr] << 8); ptr++; 
-					itsTPE->data[tp_an] |= (itsImageData[ptr] << 16); ptr++; 
-					itsTPE->data[tp_an] |= (itsImageData[ptr] << 24); ptr++; 		
+					itsTPE->data[tp_an]  = itsImageData[itsDataPtr]; itsDataPtr++;
+					itsTPE->data[tp_an] |= (itsImageData[itsDataPtr] << 8); itsDataPtr++; 
+					itsTPE->data[tp_an] |= (itsImageData[itsDataPtr] << 16); itsDataPtr++; 
+					itsTPE->data[tp_an] |= (itsImageData[itsDataPtr] << 24); itsDataPtr++; 		
 				}
 				
 				TS->boardPort(getBoardNr()).send(*itsTPE);
@@ -209,7 +215,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 		switch (itsStage) {
 			
 			case erase_flash: {
-				TPErasefackEvent *erasefAckEvent = new TPErasefackEvent(event);
+				TPErasefAckEvent *erasefAckEvent = new TPErasefAckEvent(event);
 				
 				if (erasefAckEvent->status == 0) {
 					itsSector++;
@@ -224,7 +230,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 			} break;
 			
 			case write_flash: {
-				itsTPackE = new TPWritefackEvent(event);
+				itsTPackE = new TPWritefAckEvent(event);
 					
 					if (itsTPackE->status == 0) {
 						itsStage = verify_flash;		
@@ -239,7 +245,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 				// check if write-data is read-data
 				bool same = true;
 				
-				TPReadfackEvent *readfAckEvent = new TPReadfackEvent(event);
+				TPReadfAckEvent *readfAckEvent = new TPReadfAckEvent(event);
 				
 				if (readfAckEvent->status == 0) {
 					for (int i = 0; i < (FL_BLOCK_SIZE / 4); i++) {
@@ -268,7 +274,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 			} break;
 			
 			case write_info: {
-				itsTPackE = new TPWritefackEvent(event);
+				itsTPackE = new TPWritefAckEvent(event);
 					
 				if (itsTPackE->status == 0) {
 					itsStage = verify_info;		
@@ -283,7 +289,7 @@ void WritefCmd::saveTpAckEvent(GCFEvent& event)
 			// check if write-data is read-data
 				bool same = true;
 				
-				TPReadfackEvent *readfAckEvent = new TPReadfackEvent(event);
+				TPReadfAckEvent *readfAckEvent = new TPReadfAckEvent(event);
 				
 				if (readfAckEvent->status == 0) {
 					for (int i = 0; i < 10; i++) {

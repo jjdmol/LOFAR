@@ -65,56 +65,72 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   //
   // If no error, lookup buf.opcode number, else assign ACK_ERROR buf.event.signal number
   //
+  // for all commands opcode(4) + status(4)
   switch(buf.opcode)
 	 {
-	 
 	 case TPALLOC:
-  		buf.event.signal = TP_ALLOCACK;
+  		buf.event.signal = TP_ALLOC_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPFREE:
-  		buf.event.signal = TP_FREEACK;
+  		buf.event.signal = TP_FREE_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPRECORD:
-  		buf.event.signal = TP_RECORDACK;
+  		buf.event.signal = TP_RECORD_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPSTOP:
-  		buf.event.signal = TP_STOPACK;
+  		buf.event.signal = TP_STOP_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPTRIGGER:
   		buf.event.signal = TP_TRIGGER;
-  		buf.event.length = 20;
+  		buf.event.length = 44;
   		break;
-	 case TPTRIGCLR:
-  		buf.event.signal = TP_TRIGCLRACK;
+	 case TPTRIGRELEASE:
+  		buf.event.signal = TP_TRIG_RELEASE_ACK;
   		buf.event.length = 8;
   		break;
+  	case TPTRIGGENERATE:
+  		buf.event.signal = TP_TRIG_GENERATE_ACK;
+  		buf.event.length = 8;
+  		break;
+  	case TPTRIGSETUP:
+  		buf.event.signal = TP_TRIG_SETUP_ACK;
+  		buf.event.length = 8;
+  		break;
+  	case TPTRIGCOEF:
+  		buf.event.signal = TP_TRIG_COEF_ACK;
+  		buf.event.length = 8;
+  		break;
+  	case TPTRIGINFO:
+  		buf.event.signal = TP_TRIG_INFO_ACK;
+  		buf.event.length = 40;
+  		break;	
 	 case TPREAD:
-  		buf.event.signal = TP_READACK;
+  		buf.event.signal = TP_READ_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPUDP:
-  		buf.event.signal = TP_UDPACK;
+  		buf.event.signal = TP_UDP_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPPAGEPERIOD:
-  		buf.event.signal = TP_PAGEPERIODACK;
+  		buf.event.signal = TP_PAGEPERIOD_ACK;
   		buf.event.length = 12;
   		break;
   		
 	 case TPVERSION:
-  		buf.event.signal = TP_VERSIONACK;
+  		buf.event.signal = TP_VERSION_ACK;
   		buf.event.length = 40;
   		break;
 	 case TPSIZE:
-  		buf.event.signal = TP_SIZEACK;
+  		buf.event.signal = TP_SIZE_ACK;
   		buf.event.length = 12;
   		break;
    case TPSTATUS:
-  		buf.event.signal = TP_STATUSACK;
+  		buf.event.signal = TP_STATUS_ACK;
   		buf.event.length = 44;
   		break;
 	 case TPERROR:
@@ -122,51 +138,51 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   		buf.event.length = 12;
   		break;
 	 case TPCLEAR:
-  		buf.event.signal = TP_CLEARACK;
+  		buf.event.signal = TP_CLEAR_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPRESET:
-  		buf.event.signal = TP_RESETACK;
+  		buf.event.signal = TP_RESET_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPCONFIG:
-  		buf.event.signal = TP_CONFIGACK;
+  		buf.event.signal = TP_CONFIG_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPERASEF:
-  		buf.event.signal = TP_ERASEFACK;
+  		buf.event.signal = TP_ERASEF_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPREADF:
-  		buf.event.signal = TP_READFACK;
+  		buf.event.signal = TP_READF_ACK;
   		buf.event.length = 1032;
   		break;
 	 case TPWRITEF:
-  		buf.event.signal = TP_WRITEFACK;
+  		buf.event.signal = TP_WRITEF_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPREADW:
-  		buf.event.signal = TP_READWACK;
+  		buf.event.signal = TP_READW_ACK;
   		buf.event.length = 16;
   		break;
 	 case TPWRITEW:
-  		buf.event.signal = TP_WRITEWACK;
+  		buf.event.signal = TP_WRITEW_ACK;
   		buf.event.length = 8;
   		break;
 	 case TPREADR:
-  		buf.event.signal = TP_READRACK;
+  		buf.event.signal = TP_READR_ACK;
   		buf.event.length = 2056;
   		break;
    case TPWRITER:
-  		buf.event.signal = TP_WRITERACK;
+  		buf.event.signal = TP_WRITER_ACK;
   		buf.event.length = 8;
   		break;
    case TPREADX:
-  		buf.event.signal = TP_READXACK;
+  		buf.event.signal = TP_READX_ACK;
   		buf.event.length = 1032;
   		break;	
    case TPALIVE:
-  		buf.event.signal = TP_ALIVEACK;
+  		buf.event.signal = TP_ALIVE_ACK;
   		buf.event.length = 12;
   		break;	
   		

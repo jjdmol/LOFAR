@@ -164,7 +164,7 @@ UdpCmd::UdpCmd():
 	itsTPE 			= new TPUdpEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBModeackEvent();
+	itsTBBackE 	= new TBBModeAckEvent();
 	
 	itsTBBackE->status_mask	= 0;
 	setWaitAck(true);	
@@ -180,7 +180,7 @@ UdpCmd::~UdpCmd()
 // ----------------------------------------------------------------------------
 bool UdpCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_MODE)||(event.signal == TP_UDPACK)) {
+	if ((event.signal == TBB_MODE)||(event.signal == TP_UDP_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -234,7 +234,7 @@ void UdpCmd::saveTpAckEvent(GCFEvent& event)
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
-		itsTPackE = new TPUdpackEvent(event);
+		itsTPackE = new TPUdpAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsTBBackE->status_mask |= (1 << (16 + (itsTPackE->status & 0x0F)));
@@ -255,8 +255,3 @@ void UdpCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	clientport->send(*itsTBBackE);
 }
 
-// ----------------------------------------------------------------------------
-bool UdpCmd::waitAck()
-{
-	return(true);
-}

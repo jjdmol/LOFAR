@@ -61,7 +61,7 @@ namespace LOFAR {
 				TbbSettings *TS;
 				
 				TPReadfEvent					*itsTPE;
-				TPReadfackEvent				*itsTPackE;
+				TPReadfAckEvent				*itsTPackE;
 				TBBImageInfoEvent			*itsTBBE;
 				TBBImageInfoAckEvent	*itsTBBackE;
 				

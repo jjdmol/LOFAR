@@ -148,9 +148,44 @@ void Command::nextChannelNr()
 		itsBoard = TS->getChBoardNr(itsChannel);
 		
 		if (itsBoard < TS->maxBoards()) {
+			// see if board is active 
+			if (	TS->boardPort(itsBoard).isConnected()
+						&& TS->isBoardActive(itsBoard)
+						&& (itsChannel < TS->maxChannels())) 
+			{
+				validNr = true;
+			}
+		} else {
+			break;	
+		}
+	} while (!validNr && (itsChannel < TS->maxChannels()));
+		
+	// if all nr done send clear all variables
+	if (!validNr) {
+		itsDone = true;
+		itsChannel = -1;
+		for (int ch = 0; ch < TS->maxChannels(); ch++) {
+			TS->setChSelected(ch, false);
+		}
+	}
+	LOG_DEBUG_STR(formatString("nextChannelNr() = %d",itsChannel));	
+}
+
+// ----------------------------------------------------------------------------
+// only channels with a state different than 'F' are selected
+void Command::nextSelectedChannelNr()
+{
+	bool validNr = false;
+	
+	do {
+		itsChannel++;
+		itsBoard = TS->getChBoardNr(itsChannel);
+		
+		if (itsBoard < TS->maxBoards()) {
 			// see if board is active and channel is selected
 			if (TS->boardPort(itsBoard).isConnected()
-						&& TS->isBoardActive(itsBoard) 
+						&& TS->isBoardActive(itsBoard)
+						&& (itsChannel < TS->maxChannels()) 
 						&& TS->isChSelected(itsChannel)) 
 			{
 				validNr = true;
@@ -164,8 +199,9 @@ void Command::nextChannelNr()
 	if (!validNr) {
 		itsDone = true;
 		itsChannel = -1;
+		for (int ch = 0; ch < TS->maxChannels(); ch++) {
+			TS->setChSelected(ch, false);
+		}
 	}
-	LOG_DEBUG_STR(formatString("nextChannelNr() = %d",itsChannel));	
+	LOG_DEBUG_STR(formatString("nextSelectedChannelNr() = %d",itsChannel));	
 }
-
-

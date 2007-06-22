@@ -37,7 +37,7 @@ ResetCmd::ResetCmd()
 	itsTPE 			= new TPResetEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBResetackEvent();
+	itsTBBackE 	= new TBBResetAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
@@ -55,7 +55,7 @@ ResetCmd::~ResetCmd()
 // ----------------------------------------------------------------------------
 bool ResetCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_RESET)||(event.signal == TP_RESETACK)) {
+	if ((event.signal == TBB_RESET)||(event.signal == TP_RESET_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -101,7 +101,7 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 		;
 	}
 	else {
-		itsTPackE = new TPResetackEvent(event);
+		itsTPackE = new TPResetAckEvent(event);
 		
 		delete itsTPackE;
 	}

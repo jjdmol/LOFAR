@@ -39,7 +39,7 @@ ReadCmd::ReadCmd()
 	itsTPE 			= new TPReadEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBReadackEvent();
+	itsTBBackE 	= new TBBReadAckEvent();
 	
 	itsTBBackE->status_mask = 0;
 	setWaitAck(true);
@@ -55,7 +55,7 @@ ReadCmd::~ReadCmd()
 // ----------------------------------------------------------------------------
 bool ReadCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_READ)||(event.signal == TP_READACK)) {
+	if ((event.signal == TBB_READ)||(event.signal == TP_READ_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -71,6 +71,11 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 	TS->convertRcu2Ch(itsTBBE->channel,&boardnr,&channelnr);
 		
 	setChannelNr(channelnr);
+	
+	if (!TS->isBoardActive(getBoardNr())) {	
+		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		setDone(true);
+	}
 				
 	// initialize TP send frame
 	itsTPE->opcode			= TPREAD;
@@ -98,7 +103,7 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}	else {
-		itsTPackE = new TPReadackEvent(event);
+		itsTPackE = new TPReadAckEvent(event);
 		
 		LOG_DEBUG_STR(formatString("Received ReadAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;

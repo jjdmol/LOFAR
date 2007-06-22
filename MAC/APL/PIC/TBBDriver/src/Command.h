@@ -75,6 +75,8 @@ namespace LOFAR {
 			
 			void nextChannelNr();
 			
+			void nextSelectedChannelNr();
+			
 			void setBoardMask(uint32 mask);
 			
     private:

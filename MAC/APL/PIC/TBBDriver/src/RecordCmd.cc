@@ -38,7 +38,7 @@ RecordCmd::RecordCmd():
 	itsTPE 			= new TPRecordEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBRecordackEvent();
+	itsTBBackE 	= new TBBRecordAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
@@ -57,7 +57,7 @@ RecordCmd::~RecordCmd()
 // ----------------------------------------------------------------------------
 bool RecordCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_RECORD)||(event.signal == TP_RECORDACK)) {
+	if ((event.signal == TBB_RECORD)||(event.signal == TP_RECORD_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -67,14 +67,23 @@ bool RecordCmd::isValid(GCFEvent& event)
 void RecordCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE	= new TBBRecordEvent(event);
+	
 		
 	// convert rcu-bitmask to tbb-channelmask
-	int boardnr;
-	int channelnr;
+	int32 board;				// board 0 .. 11
+	int32 board_channel;// board_channel 0 .. 15	
+	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)	
 	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
-		if(itsTBBE->rcu_mask.test(rcunr)) {
-			TS->convertRcu2Ch(rcunr,&boardnr,&channelnr);	
-			itsChannelMask[boardnr] |= (1 << channelnr);
+		TS->convertRcu2Ch(rcunr,&board,&board_channel);
+		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
+		if (itsTBBE->rcu_mask.test(rcunr)) { 
+			if ((TS->getChState(channel) == 'A') || (TS->getChState(channel) == 'S')) {
+				itsChannelMask[board] |= (1 << board_channel);
+				TS->setChSelected(channel,true);
+				
+			} else {
+				TS->setChStatus(channel,(uint16)(TBB_RCU_NOT_ALLOCATED >> 16));
+			}
 		}
 	} 
 	
@@ -97,7 +106,7 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 	setBoardMask(boardmask);
 	
 	// select firt channel to handle
-	nextChannelNr();
+	nextSelectedChannelNr();
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPRECORD;
@@ -109,18 +118,12 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void RecordCmd::sendTpEvent()
 {
+	itsTPE->channel = TS->getChInputNr(getChannelNr());
 	itsRcuStatus = 0;
 	
-	itsTPE->channel = TS->getChInputNr(getChannelNr());
-	
-	if ((TS->getChState(getChannelNr()) != 'A') && (TS->getChState(getChannelNr()) != 'S'))
-		itsRcuStatus |= TBB_RCU_NOT_ALLOCATED;
-	
-	if (itsTBBackE->status_mask[getBoardNr()] == 0) {
-		if (itsRcuStatus == 0) {
-			TS->boardPort(getBoardNr()).send(*itsTPE);
-			LOG_DEBUG_STR(formatString("Sending RecordCmd to boardnr[%d], channel[%08X]", getBoardNr(), itsTPE->channel));
-		}
+	if ((itsTBBackE->status_mask[getBoardNr()] == 0) && (itsRcuStatus == 0)) {
+		TS->boardPort(getBoardNr()).send(*itsTPE);
+		LOG_DEBUG_STR(formatString("Sending RecordCmd to boardnr[%d], channel[%08X]", getBoardNr(), itsTPE->channel));
 	}
 	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
@@ -132,9 +135,8 @@ void RecordCmd::saveTpAckEvent(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		itsTBBackE->status_mask[getBoardNr()] |= TBB_RCU_COMM_ERROR;
 		itsRcuStatus |= TBB_TIMEOUT_ETH;
-	}
-	else {
-		itsTPackE = new TPRecordackEvent(event);
+	}	else {
+		itsTPackE = new TPRecordAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsRcuStatus |= (1 << (16 + (itsTPackE->status & 0x0F)));
@@ -152,11 +154,11 @@ void RecordCmd::saveTpAckEvent(GCFEvent& event)
 	if (itsRcuStatus || itsTBBackE->status_mask[getBoardNr()]) {
 		int32 rcu;
 		TS->convertCh2Rcu(getChannelNr(),&rcu);
-		LOG_INFO_STR(formatString("ERROR RecordCmd Rcu[%d], DriverStatus[0x%x], RcuStatus[0x%x]",
+		LOG_INFO_STR(formatString("ERROR RecordCmd Rcu[%d], DriverStatus[0x%08x], RcuStatus[0x%08x]",
 			rcu, itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
 	}
 	itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
-	nextChannelNr();
+	nextSelectedChannelNr();
 }
 
 // ----------------------------------------------------------------------------

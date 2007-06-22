@@ -61,9 +61,9 @@ namespace LOFAR {
 				TbbSettings *TS;
 				
 				TPStatusEvent			*itsTPE;
-				TPStatusackEvent	*itsTPackE;
+				TPStatusAckEvent	*itsTPackE;
 				TBBStatusEvent		*itsTBBE;
-				TBBStatusackEvent	*itsTBBackE;
+				TBBStatusAckEvent	*itsTBBackE;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

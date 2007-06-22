@@ -33,6 +33,7 @@
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "TP_Protocol.ph"
+#include "DriverSettings.h"
 
 namespace LOFAR {
 	namespace TBB {
@@ -51,7 +52,7 @@ namespace LOFAR {
 				
 				void removeClient(GCFPortInterface& port);
 				
-				void sendTrigger(GCFEvent& event);
+				void sendTrigger(GCFEvent& event, int boardnr);
 				
 				void sendError(GCFEvent& event);
 				
@@ -62,6 +63,7 @@ namespace LOFAR {
 			protected:
 				
 			private:
+				TbbSettings *TS;
 				
 				std::set<GCFPortInterface*> itsClientMsgList;  // list of clients witch receive messages
 				
