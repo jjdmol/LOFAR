@@ -313,11 +313,73 @@ class StopCmd : public Command
 };
 
 //-----------------------------------------------------------------------------
-class TrigclrCmd : public Command
+class TrigReleaseCmd : public Command
 {
 	public:
-		TrigclrCmd(GCFPortInterface& port);
-		virtual ~TrigclrCmd() { }
+		TrigReleaseCmd(GCFPortInterface& port);
+		virtual ~TrigReleaseCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+	private:
+};
+
+//-----------------------------------------------------------------------------
+class TrigGenerateCmd : public Command
+{
+	public:
+		TrigGenerateCmd(GCFPortInterface& port);
+		virtual ~TrigGenerateCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+	private:
+};
+
+//-----------------------------------------------------------------------------
+class TrigSetupCmd : public Command
+{
+	public:
+		TrigSetupCmd(GCFPortInterface& port);
+		virtual ~TrigSetupCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setLevel(uint32 level) { itsLevel = level; }
+		void setMode(uint32 mode) { itsMode = mode; }
+		void setFilter(uint32 filter) { itsFilter = filter; }
+		void setWindow(uint32 window) { itsWindow = window; }
+		void setDummy(uint32 dummy) { itsDummy = dummy; }
+	private:
+		uint32 itsLevel;
+		uint32 itsMode;
+		uint32 itsFilter;
+		uint32 itsWindow;
+		uint32 itsDummy;
+};
+
+//-----------------------------------------------------------------------------
+class TrigCoefficientCmd : public Command
+{
+	public:
+		TrigCoefficientCmd(GCFPortInterface& port);
+		virtual ~TrigCoefficientCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setC0(int16 c0) { itsC0 = c0; }
+		void setC1(int16 c1) { itsC1 = c1; }
+		void setC2(int16 c2) { itsC2 = c2; }
+		void setC3(int16 c3) { itsC3 = c3; }
+	private:
+		int16 itsC0;
+		int16 itsC1;
+		int16 itsC2;
+		int16 itsC3;
+};
+
+//-----------------------------------------------------------------------------
+class TrigInfoCmd : public Command
+{
+	public:
+		TrigInfoCmd(GCFPortInterface& port);
+		virtual ~TrigInfoCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
 	private:
@@ -512,6 +574,24 @@ class WritewCmd : public Command
 	private:
 		uint32	itsMp;
 		uint32	itsAddr;
+		uint32	itsWordLo;
+		uint32	itsWordHi;
+};
+
+//-----------------------------------------------------------------------------
+class TestDdrCmd : public Command
+{
+	public:
+		TestDdrCmd(GCFPortInterface& port);
+		virtual ~TestDdrCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+	private:
+		int32		itsCmdStage;
+		uint32	itsMp;
+		uint32	itsAddr;
+		uint32	itsAddrLine;
+		uint32	itsTestPatern;
 		uint32	itsWordLo;
 		uint32	itsWordHi;
 };

@@ -31,6 +31,7 @@ namespace LOFAR {
 
 MsgHandler::MsgHandler()
 {
+	TS						= TbbSettings::instance();
 	itsTriggerE		= new TBBTriggerEvent();
 	itsErrorE			=	new TBBErrorEvent();
 	itsBoardchangeE	= new	TBBBoardchangeEvent();
@@ -61,17 +62,21 @@ void MsgHandler::removeClient(GCFPortInterface& port)
 }
 
 //-----------------------------------------------------------------------------
-void MsgHandler::sendTrigger(GCFEvent& event)
+void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 {
 	TPTriggerEvent	*TPE;
 	TPE	= new TPTriggerEvent(event);
-		
-	itsTriggerE->channel	= TPE->channel;
-	itsTriggerE->time			=	TPE->time;
-	itsTriggerE->sample		= TPE->sample;
-	
+	int channel = TPE->trigger.channel + (boardnr * TS->maxBoards());	
+	TS->convertCh2Rcu(channel, &itsTriggerE->rcu);
+	itsTriggerE->sequence_nr			=	TPE->trigger.sequence_nr;
+	itsTriggerE->time							=	TPE->trigger.time;
+	itsTriggerE->sample_nr				= TPE->trigger.sample_nr;
+	itsTriggerE->trigger_sum 			= TPE->trigger.sum;
+	itsTriggerE->trigger_samples	= TPE->trigger.samples;
+	itsTriggerE->peak_value 			= TPE->trigger.peak;
+				
 	sendMessage(*itsTriggerE);
-	
+	TS->setChTriggered(channel, true);
 	delete TPE;		
 }
 

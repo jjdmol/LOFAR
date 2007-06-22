@@ -47,6 +47,15 @@ struct ChannelInfo
 	int32		MpNr;
 	uint32	StartAddr;
 	uint32	PageSize;
+	// settings for the trigger system
+	bool	TriggerReleased;
+	bool	Triggered;
+	uint32	TriggerLevel;
+	uint32	TriggerMode;
+	uint32	FilterSelect;
+	uint32	DetectWindow;
+	uint32	TriggerDummy;
+	uint32	Coefficient[4];
 };
 
 struct BoardInfo
@@ -97,6 +106,14 @@ public:
 	int32 getChMpNr(int32 channelnr);
 	uint32 getChStartAddr(int32 channelnr);
 	uint32 getChPageSize(int32 channelnr);
+	bool isChTriggerReleased(int32 channelnr);
+	bool isChTriggered(int32 channelnr);
+	uint32 getChTriggerLevel(int32 channelnr);
+	uint32 getChTriggerMode(int32 channelnr);
+	uint32 getChFilterSelect(int32 channelnr);
+	uint32 getChDetectWindow(int32 channelnr);
+	uint32 getChTriggerDummy(int32 channelnr);
+	uint32 getChFilterCoefficient(int32 channelnr, int32 coef_nr);
 	
 	string getIfName();
 	string getSrcIp(int32 boardnr);
@@ -109,6 +126,14 @@ public:
 	void setChState(int32 channelnr, char state);
 	void setChStartAddr(int32 channelnr, uint32 startaddr);
 	void setChPageSize(int32 channelnr, uint32 pagesize);
+	void setChTriggered(int32 channelnr, bool triggered);
+	void setChTriggerReleased(int32 channelnr, bool released);
+	void setChTriggerLevel(int32 channelnr, uint32 level);
+	void setChTriggerMode(int32 channelnr, uint32 mode);
+	void setChFilterSelect(int32 channelnr, uint32 filter_select);
+	void setChDetectWindow(int32 channelnr, uint32 detect_window);
+	void setChTriggerDummy(int32 channelnr, uint32 dummy);
+	void setChFilterCoefficient(int32 channelnr, int32 coef_nr, uint32 coef);
 	
 	void convertRcu2Ch(int32 rcunr, int32 *boardnr, int32 *channelnr);
 	void convertCh2Rcu(int32 channelnr, int32 *rcunr);
@@ -195,6 +220,14 @@ inline	int32 TbbSettings::getChInputNr(int32 channelnr) { return (itsChannelInfo
 inline	int32 TbbSettings::getChMpNr(int32 channelnr) { return (itsChannelInfo[channelnr].MpNr); }
 inline	uint32 TbbSettings::getChStartAddr(int32 channelnr) { return (itsChannelInfo[channelnr].StartAddr); }
 inline	uint32 TbbSettings::getChPageSize(int32 channelnr) { return (itsChannelInfo[channelnr].PageSize); }
+inline	bool TbbSettings::isChTriggered(int32 channelnr) { return (itsChannelInfo[channelnr].Triggered); }	
+inline	bool TbbSettings::isChTriggerReleased(int32 channelnr) { return (itsChannelInfo[channelnr].TriggerReleased); }
+inline	uint32 TbbSettings::getChTriggerLevel(int32 channelnr) { return (itsChannelInfo[channelnr].TriggerLevel); }
+inline	uint32 TbbSettings::getChTriggerMode(int32 channelnr) { return (itsChannelInfo[channelnr].TriggerMode); }
+inline	uint32 TbbSettings::getChFilterSelect(int32 channelnr) { return (itsChannelInfo[channelnr].FilterSelect); }
+inline	uint32 TbbSettings::getChDetectWindow(int32 channelnr) { return (itsChannelInfo[channelnr].DetectWindow); }
+inline	uint32 TbbSettings::getChTriggerDummy(int32 channelnr) { return (itsChannelInfo[channelnr].TriggerDummy); }
+inline	uint32 TbbSettings::getChFilterCoefficient(int32 channelnr, int32 coef_nr) { return (itsChannelInfo[channelnr].Coefficient[coef_nr]); }
 inline	string TbbSettings::getIfName() { return(itsIfName); }
 inline	string TbbSettings::getSrcIp(int32 boardnr) { return(itsBoardInfo[boardnr].srcIp); }
 inline	string TbbSettings::getDstIp(int32 boardnr) { return(itsBoardInfo[boardnr].dstIp); }
@@ -206,6 +239,14 @@ inline	void TbbSettings::setChStatus(int32 channelnr, uint32 status){ itsChannel
 inline	void TbbSettings::setChState(int32 channelnr, char state){ itsChannelInfo[channelnr].State = state; }
 inline	void TbbSettings::setChStartAddr(int32 channelnr, uint32 startaddr){ itsChannelInfo[channelnr].StartAddr = startaddr; }
 inline	void TbbSettings::setChPageSize(int32 channelnr, uint32 pagesize){ itsChannelInfo[channelnr].PageSize = pagesize; }
+inline	void TbbSettings::setChTriggered(int32 channelnr, bool triggered){ itsChannelInfo[channelnr].Triggered = triggered; }
+inline	void TbbSettings::setChTriggerReleased(int32 channelnr, bool release){ itsChannelInfo[channelnr].TriggerReleased = release; }
+inline	void TbbSettings::setChTriggerLevel(int32 channelnr, uint32 level){ itsChannelInfo[channelnr].TriggerLevel = level; }
+inline	void TbbSettings::setChTriggerMode(int32 channelnr, uint32 mode){ itsChannelInfo[channelnr].TriggerMode = mode; }
+inline	void TbbSettings::setChFilterSelect(int32 channelnr, uint32 select){ itsChannelInfo[channelnr].FilterSelect = select; }
+inline	void TbbSettings::setChDetectWindow(int32 channelnr, uint32 window){ itsChannelInfo[channelnr].DetectWindow = window; }
+inline	void TbbSettings::setChTriggerDummy(int32 channelnr, uint32 dummy){ itsChannelInfo[channelnr].TriggerDummy = dummy; }
+inline	void TbbSettings::setChFilterCoefficient(int32 channelnr, int32 coef_nr, uint32 coef){ itsChannelInfo[channelnr].Coefficient[coef_nr] = coef; }
 
 //---- inline functions for board information ------------
 inline	uint32 TbbSettings::getMemorySize(int32 boardnr) { return (itsBoardInfo[boardnr].memorySize); }

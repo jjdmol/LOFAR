@@ -72,12 +72,13 @@ namespace LOFAR {
 				int32		itsSector;
 				int32		itsBlock;
 				int32		itsImageSize;
+				int32		itsDataPtr;
 				char		itsFileNameTp[64];
 				char		itsFileNameMp[64];
 				
 								
 				TPWritefEvent					*itsTPE;
-				TPWritefackEvent			*itsTPackE;
+				TPWritefAckEvent			*itsTPackE;
 				TBBWriteImageEvent		*itsTBBE;
 				TBBWriteImageAckEvent	*itsTBBackE;
 				uint8									*itsImageData;

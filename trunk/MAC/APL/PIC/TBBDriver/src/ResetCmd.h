@@ -61,9 +61,9 @@ namespace LOFAR {
 				TbbSettings *TS;
 				
 				TPResetEvent			*itsTPE;
-				TPResetackEvent		*itsTPackE;
+				TPResetAckEvent		*itsTPackE;
 				TBBResetEvent			*itsTBBE;
-				TBBResetackEvent	*itsTBBackE;
+				TBBResetAckEvent	*itsTBBackE;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

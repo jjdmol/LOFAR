@@ -34,7 +34,7 @@ using	namespace TBB;
 static const int FL_SIZE 						= 64 * 1024 *1024; // 64 MB in bytes
 static const int FL_N_PAGES 				= 32; // 32 pages in flash
 static const int FL_N_SECTORS				= 512; // 512 sectors in flash
-static const int FL_N_BLOCKS				= 65536; // 65336 blocks in flash
+static const int FL_N_BLOCKS				= 65536; // 65536 blocks in flash
 
 static const int FL_PAGE_SIZE 			= FL_SIZE / FL_N_PAGES; // 2.097.152 bytes  
 static const int FL_SECTOR_SIZE			= FL_SIZE / FL_N_SECTORS; // 131.072 bytes
@@ -70,7 +70,7 @@ ReadfCmd::~ReadfCmd()
 // ----------------------------------------------------------------------------
 bool ReadfCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_READ_IMAGE)||(event.signal == TP_READFACK)) {
+	if ((event.signal == TBB_READ_IMAGE)||(event.signal == TP_READF_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -81,9 +81,13 @@ void ReadfCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE = new TBBReadImageEvent(event);
 	
-	setBoardNr(itsTBBE->board);	
-	
 	itsTBBackE->status_mask = 0;
+	if (TS->isBoardActive(itsTBBE->board)) {	
+		setBoardNr(itsTBBE->board);
+	} else {
+		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		setDone(true);
+	}
 	
 	itsImage = itsTBBE->image;
 	itsBlock = (itsImage * FL_BLOCKS_IN_PAGE);
@@ -101,7 +105,7 @@ void ReadfCmd::sendTpEvent()
 {
 	itsTPE->addr		= static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
 	TS->boardPort(getBoardNr()).send(*itsTPE);
-	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+	TS->boardPort(getBoardNr()).setTimer(0.2);
 }
 
 // ----------------------------------------------------------------------------
@@ -112,7 +116,7 @@ void ReadfCmd::saveTpAckEvent(GCFEvent& event)
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 		setDone(true);	
 	} else {
-		itsTPackE = new TPReadfackEvent(event);
+		itsTPackE = new TPReadfAckEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
 		  
@@ -142,7 +146,7 @@ void ReadfCmd::saveTpAckEvent(GCFEvent& event)
 			}
 			
 			itsBlock++;
-			if (itsBlock >= ((itsImage + 1) * FL_BLOCKS_IN_PAGE)) {
+			if (itsBlock == ((itsImage + 1) * FL_BLOCKS_IN_PAGE)) {
 				setDone(true);
 			}
 		} else {

@@ -68,9 +68,9 @@ namespace LOFAR {
 				uint32	itsChannelMask[MAX_N_TBBBOARDS];
 								
 				TPAllocEvent			*itsTPE;
-				TPAllocackEvent		*itsTPackE;
+				TPAllocAckEvent		*itsTPackE;
 				TBBAllocEvent			*itsTBBE;
-				TBBAllocackEvent	*itsTBBackE;
+				TBBAllocAckEvent	*itsTBBackE;
 		};
 	} // end TBB namespace
 } // end LOFAR namespace

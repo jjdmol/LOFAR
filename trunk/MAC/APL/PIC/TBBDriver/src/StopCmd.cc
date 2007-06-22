@@ -38,7 +38,7 @@ StopCmd::StopCmd():
 	itsTPE 			= new TPStopEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBStopackEvent();
+	itsTBBackE 	= new TBBStopAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
@@ -57,7 +57,7 @@ StopCmd::~StopCmd()
 // ----------------------------------------------------------------------------
 bool StopCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_STOP)||(event.signal == TP_STOPACK)) {
+	if ((event.signal == TBB_STOP)||(event.signal == TP_STOP_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -67,14 +67,22 @@ bool StopCmd::isValid(GCFEvent& event)
 void StopCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE	= new TBBStopEvent(event);
+	
 		
 	// convert rcu-bitmask to tbb-channelmask
-	int boardnr;
-	int channelnr;
+	int32 board;				// board 0 .. 11
+	int32 board_channel;// board_channel 0 .. 15	
+	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)	
 	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
-		if(itsTBBE->rcu_mask.test(rcunr)) {
-			TS->convertRcu2Ch(rcunr,&boardnr,&channelnr);	
-			itsChannelMask[boardnr] |= (1 << channelnr);
+		TS->convertRcu2Ch(rcunr,&board,&board_channel);
+		channel = (board * TS->nrChannelsOnBoard()) + board_channel;	
+		if(itsTBBE->rcu_mask.test(rcunr)) { 
+			if (TS->getChState(channel) == 'R') {
+				itsChannelMask[board] |= (1 << board_channel);
+				TS->setChSelected(channel,true);
+			} else {
+				TS->setChStatus(channel,(uint16)(TBB_RCU_NOT_RECORDING >> 16));	
+			}
 		}
 	} 
 	
@@ -99,7 +107,7 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 	setBoardMask(boardmask);
 	
 	// select firt channel to handle
-	nextChannelNr();
+	nextSelectedChannelNr();
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPSTOP;
@@ -111,13 +119,8 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void StopCmd::sendTpEvent()
 {
-	itsRcuStatus = 0;
-		
 	itsTPE->channel = TS->getChInputNr(getChannelNr());
-	
-	if (TS->getChState(getChannelNr()) != 'R') {
-		itsRcuStatus |= TBB_RCU_NOT_RECORDING;
-	}
+	itsRcuStatus = 0;
 	
 	if ((itsTBBackE->status_mask[getBoardNr()] == 0) && (itsRcuStatus == 0)) {
 		TS->boardPort(getBoardNr()).send(*itsTPE);
@@ -135,7 +138,7 @@ void StopCmd::saveTpAckEvent(GCFEvent& event)
 		itsRcuStatus |= TBB_TIMEOUT_ETH;
 	}
 	else {
-		itsTPackE = new TPStopackEvent(event);
+		itsTPackE = new TPStopAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsRcuStatus |= (1 << (16 + (itsTPackE->status & 0x0F)));
@@ -158,7 +161,7 @@ void StopCmd::saveTpAckEvent(GCFEvent& event)
 			rcu, itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
 	}
 	itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
-	nextChannelNr();
+	nextSelectedChannelNr();
 }
 
 // ----------------------------------------------------------------------------

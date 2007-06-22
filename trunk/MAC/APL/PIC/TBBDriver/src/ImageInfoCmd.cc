@@ -70,7 +70,7 @@ ImageInfoCmd::~ImageInfoCmd()
 // ----------------------------------------------------------------------------
 bool ImageInfoCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_IMAGE_INFO)||(event.signal == TP_READFACK)) {
+	if ((event.signal == TBB_IMAGE_INFO)||(event.signal == TP_READF_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -111,7 +111,7 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 		setDone(true);	
 	} else {
-		itsTPackE = new TPReadfackEvent(event);
+		itsTPackE = new TPReadfAckEvent(event);
 		
 		if (itsTPackE->status == 0) {
 			itsTBBackE->image_version[itsImage]= itsTPackE->data[0];	  

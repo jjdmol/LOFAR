@@ -38,7 +38,7 @@ FreeCmd::FreeCmd():
 	itsTPE 			= new TPFreeEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBFreeackEvent();
+	itsTBBackE 	= new TBBFreeAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
@@ -57,7 +57,7 @@ FreeCmd::~FreeCmd()
 // ----------------------------------------------------------------------------
 bool FreeCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_FREE)||(event.signal == TP_FREEACK)) {
+	if ((event.signal == TBB_FREE)||(event.signal == TP_FREE_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -69,16 +69,16 @@ void FreeCmd::saveTbbEvent(GCFEvent& event)
 	itsTBBE = new TBBFreeEvent(event);
 	
 	// convert rcu-bitmask to tbb-channelmask
-	int boardnr;
-	int channelnr;
+	int32 board;				// board 0 .. 11
+	int32 board_channel;// board_channel 0 .. 15	
+	int32 channel;			// channel 0 .. 191 (= maxboard * max_channels_on_board)	
 	for (int rcunr = 0; rcunr < TS->maxChannels(); rcunr++) {
+		TS->convertRcu2Ch(rcunr,&board,&board_channel);
+		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
 		if(itsTBBE->rcu_mask.test(rcunr)) {
-			TS->convertRcu2Ch(rcunr,&boardnr,&channelnr);	
-			itsChannelMask[boardnr] |= (1 << channelnr);
-			TS->setChSelected(((boardnr * 16) + channelnr),true);
+			itsChannelMask[board] |= (1 << board_channel);
+			TS->setChSelected(channel,true);
 		}
-		//else
-		//	TS->setChSelected(((boardnr * 16) + channelnr),false);
 	} 
 	
 	uint32 boardmask = 0;		
@@ -99,7 +99,7 @@ void FreeCmd::saveTbbEvent(GCFEvent& event)
 	setBoardMask(boardmask);
 	
 	// select firt channel to handle
-	nextChannelNr();
+	nextSelectedChannelNr();
 	
 	// initialize TP send frame
 	itsTPE->opcode			= TPFREE;
@@ -148,7 +148,7 @@ void FreeCmd::saveTpAckEvent(GCFEvent& event)
 		itsRcuStatus |= TBB_TIMEOUT_ETH;
 	}
 	else {
-		itsTPackE = new TPFreeackEvent(event);
+		itsTPackE = new TPFreeAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsRcuStatus |= (1 << (16 + (itsTPackE->status & 0x0F)));
@@ -182,8 +182,10 @@ void FreeCmd::saveTpAckEvent(GCFEvent& event)
 				(getBoardNr() * 16),((getBoardNr() + 1) * 16), itsTBBackE->status_mask[getBoardNr()],itsRcuStatus));
 	}
 	itsTBBackE->status_mask[getBoardNr()] |= itsRcuStatus;
-	
-	nextChannelNr();
+	if (itsTPE->channel == 0xFFFFFFFF) {
+		setChannelNr((getBoardNr() * 16) + 15);
+	}
+	nextSelectedChannelNr();
 }
 
 // ----------------------------------------------------------------------------

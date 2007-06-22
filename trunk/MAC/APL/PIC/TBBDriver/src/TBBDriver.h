@@ -98,7 +98,6 @@ namespace LOFAR{
 			
 			// define some variables
 			TPAliveEvent			*itsAlive;
-			TPSizeEvent				*itsSize;
 	  	BoardCmdHandler		*cmdhandler;
 			MsgHandler				*msghandler;
 			Command 					*cmd;
@@ -109,8 +108,10 @@ namespace LOFAR{
 			int32 						*itsResetCount;
 			
 			struct TbbEvent{
-				unsigned short		signal;
+				//unsigned short		signal;
 				GCFPortInterface	*port;
+				uint32						length;
+				uint8							*event;
 			};
 			
 			std::deque<TbbEvent> *itsTbbQueue;

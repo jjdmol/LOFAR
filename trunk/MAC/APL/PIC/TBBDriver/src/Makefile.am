@@ -60,7 +60,11 @@ libtbbdriver_la_SOURCES = \
 	FreeCmd.cc \
 	RecordCmd.cc \
 	StopCmd.cc \
-	TrigclrCmd.cc \
+	TrigReleaseCmd.cc \
+	TrigGenCmd.cc\
+	TrigSetupCmd.cc\
+	TrigCoefCmd.cc\
+	TrigInfoCmd.cc\
 	ReadCmd.cc \
 	UdpCmd.cc \
 	PageperiodCmd.cc \
@@ -89,7 +93,11 @@ noinst_HEADERS = \
 	FreeCmd.h \
 	RecordCmd.h \
 	StopCmd.h \
-	TrigclrCmd.h \
+	TrigReleaseCmd.h \
+	TrigGenCmd.h\
+	TrigSetupCmd.h\
+	TrigCoefCmd.h\
+	TrigInfoCmd.h\
 	ReadCmd.h \
 	UdpCmd.h \
 	PageperiodCmd.h \

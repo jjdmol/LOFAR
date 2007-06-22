@@ -51,7 +51,7 @@ TbbSettings* TbbSettings::instance()
 // Default constructor
 //
 TbbSettings::TbbSettings() :
-	itsDriverVersion(10),				  // driver version 1.0
+	itsDriverVersion(19),				  // driver version 1.9
 	itsMaxBoards(0),							// max.number of boards on 1 driver 
 	itsMaxChannels(0),						// max.number of channels on 1 driver
 	itsMpsOnBoard(4),							// number of MPs on 1 board
@@ -178,6 +178,18 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 			boardnr++;
 		}
 		mpnr = (int32)(inputnr / 4);
+		
+		// initialize filter settings
+		itsChannelInfo[ch].TriggerReleased = false;
+		itsChannelInfo[ch].Triggered = false;
+		itsChannelInfo[ch].TriggerLevel = 0;
+		itsChannelInfo[ch].TriggerMode = 0;
+		itsChannelInfo[ch].FilterSelect = 0;
+		itsChannelInfo[ch].DetectWindow = 0;
+		itsChannelInfo[ch].TriggerDummy = 0;
+		for (int i = 0; i < 4; i++) {
+			itsChannelInfo[ch].Coefficient[i] = 0;
+		}
 	}
 	
 	if (itsBoardInfo) delete itsBoardInfo;
@@ -228,8 +240,8 @@ void TbbSettings::setConversionTable(int32 rcu, int32 channel)
 
 void TbbSettings::convertRcu2Ch(int32 rcunr, int32 *boardnr, int32 *channelnr)
 {
-	int32 board;
-	int32 channel;
+	int32 board;		// board 0 .. 11
+	int32 channel;	// channel 0 .. 15
 	
 	board = (int32)(rcunr / itsChannelsOnBoard);
 	channel = itsRcu2ChTable[rcunr - (board * itsChannelsOnBoard)];

@@ -68,7 +68,7 @@ ErasefCmd::~ErasefCmd()
 // ----------------------------------------------------------------------------
 bool ErasefCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_ERASE_IMAGE)||(event.signal == TP_ERASEFACK)) {
+	if ((event.signal == TBB_ERASE_IMAGE)||(event.signal == TP_ERASEF_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -78,10 +78,14 @@ bool ErasefCmd::isValid(GCFEvent& event)
 void ErasefCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE = new TBBEraseImageEvent(event);
-		
-	setBoardNr(itsTBBE->board);
 	
-	itsTBBackE->status_mask = 0;
+	itsTBBackE->status_mask = 0;	
+	if (TS->isBoardActive(itsTBBE->board)) {	
+		setBoardNr(itsTBBE->board);
+	} else {
+		itsTBBackE->status_mask |= TBB_NO_BOARD ;
+		setDone(true);
+	}
 	
 	itsImage = itsTBBE->image;
 	itsSector = (itsImage * FL_SECTORS_IN_PAGE);
@@ -110,7 +114,7 @@ void ErasefCmd::saveTpAckEvent(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	} else {
-		itsTPackE = new TPErasefackEvent(event);
+		itsTPackE = new TPErasefAckEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
 		if (itsBoardStatus == 0) {

@@ -38,7 +38,7 @@ PageperiodCmd::PageperiodCmd():
 	itsTPE 			= new TPPageperiodEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBPageperiodackEvent();
+	itsTBBackE 	= new TBBPageperiodAckEvent();
 	setWaitAck(true);
 }
 	  
@@ -52,7 +52,7 @@ PageperiodCmd::~PageperiodCmd()
 // ----------------------------------------------------------------------------
 bool PageperiodCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_PAGEPERIOD)||(event.signal == TP_PAGEPERIODACK)) {
+	if ((event.signal == TBB_PAGEPERIOD)||(event.signal == TP_PAGEPERIOD_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -94,7 +94,7 @@ void PageperiodCmd::saveTpAckEvent(GCFEvent& event)
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
-		itsTPackE = new TPPageperiodackEvent(event);
+		itsTPackE = new TPPageperiodAckEvent(event);
 		
 		itsBoardStatus 					= itsTPackE->status;
 		itsTBBackE->pageperiod	= itsTPackE->pageperiod;

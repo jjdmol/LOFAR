@@ -37,7 +37,7 @@ SizeCmd::SizeCmd()
 	itsTPE 			= new TPSizeEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBSizeackEvent();
+	itsTBBackE 	= new TBBSizeAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
@@ -55,7 +55,7 @@ SizeCmd::~SizeCmd()
 // ----------------------------------------------------------------------------
 bool SizeCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_SIZE)||(event.signal == TP_SIZEACK)) {
+	if ((event.signal == TBB_SIZE)||(event.signal == TP_SIZE_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -97,7 +97,7 @@ void SizeCmd::saveTpAckEvent(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
 	} else {
-		itsTPackE = new TPSizeackEvent(event);
+		itsTPackE = new TPSizeAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	

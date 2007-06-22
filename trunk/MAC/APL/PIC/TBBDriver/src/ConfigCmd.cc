@@ -38,7 +38,7 @@ ConfigCmd::ConfigCmd()
 	itsTPE 			= new TPConfigEvent();
 	itsTPackE 	= 0;
 	itsTBBE 		= 0;
-	itsTBBackE 	= new TBBConfigackEvent();
+	itsTBBackE 	= new TBBConfigAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
@@ -56,7 +56,7 @@ ConfigCmd::~ConfigCmd()
 // ----------------------------------------------------------------------------
 bool ConfigCmd::isValid(GCFEvent& event)
 {
-	if ((event.signal == TBB_CONFIG)||(event.signal == TP_CONFIGACK)) {
+	if ((event.signal == TBB_CONFIG)||(event.signal == TP_CONFIG_ACK)) {
 		return(true);
 	}
 	return(false);
@@ -100,7 +100,7 @@ void ConfigCmd::saveTpAckEvent(GCFEvent& event)
 	if (event.signal == F_TIMER) {
 		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
 	}	else {
-		itsTPackE = new TPConfigackEvent(event);
+		itsTPackE = new TPConfigAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
 			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
