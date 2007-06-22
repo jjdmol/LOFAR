@@ -60,7 +60,9 @@
 #include <casa/Arrays/Slicer.h>
 #include <casa/Arrays/Vector.h>
 // Vector2.cc: necessary to instantiate .tovector()
+#ifdef AIPS_NO_TEMPLATE_SRC
 #include <casa/Arrays/Vector2.cc>
+#endif
 #include <casa/Quanta/MVBaseline.h>
 #include <casa/Quanta/MVPosition.h>
 #include <casa/OS/Timer.h>
