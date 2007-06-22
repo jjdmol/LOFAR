@@ -43,8 +43,10 @@
 #include <casa/BasicMath/Math.h>
 #include <casa/OS/Time.h>
 #include <casa/Quanta/MVTime.h>
-//# Include this file for automatic instantiation of Vector<vector>.
+//# If needed, include this file for automatic instantiation of toVector.
+#ifdef AIPS_NO_TEMPLATE_SRC
 #include <casa/Arrays/Vector2.cc>
+#endif
 
 using namespace casa;
 using namespace std;
