@@ -94,13 +94,15 @@ cd $curwd
 
 # Initialize AIPS++.
 if test "$AIPSPP" != ""; then
-    aipsroot=`dirname $AIPSPP`
+  aipsroot=`dirname $AIPSPP`
+  if test -r $aipsroot/aipsinit.sh; then
     . $aipsroot/aipsinit.sh
     # Set correct AIPS++ variant.
     aipsd=`basename $AIPSPP`
     aipsv=`echo $AIPSPATH | awk '{print $2}'`
     AIPSPATH=`echo $AIPSPATH | sed -e "s% $aipsv % $aipsd %"`
     export AIPSPATH
+  fi
 fi
 
 # Delete all possible files from previous test runs.
@@ -110,36 +112,36 @@ fi
 # Copy expected files to current directory
 #
 if test -f "$srcdir/$1.in"; then
-    \rm -f $1.in
-    \cp $srcdir/$1.in  .
+  \rm -f $1.in
+  \cp $srcdir/$1.in  .
 fi
 \rm -rf $1.in_*
 \cp -r $srcdir/$1.in_* . > /dev/null 2>&1
 chmod -R +w $1.in_* > /dev/null 2>&1    # Make writable (for make distcheck).
 if test -f "$srcdir/$1.stdout"; then
-    \rm -f $1.stdout
-    \cp $srcdir/$1.stdout .
+  \rm -f $1.stdout
+  \cp $srcdir/$1.stdout .
 elif test -f "$srcdir/$1.out"; then
-    \rm -f $1.stdout
-    \cp $srcdir/$1.out $1.stdout
+  \rm -f $1.stdout
+  \cp $srcdir/$1.out $1.stdout
 fi
 if test -f "$srcdir/$1.run"; then
-    \rm -f $1.run
-    \cp $srcdir/$1.run .
+  \rm -f $1.run
+  \cp $srcdir/$1.run .
 fi
 if test -f "$srcdir/$1.parset"; then
-    \rm -f $1.parset
-    \cp $srcdir/$1.parset .
+  \rm -f $1.parset
+  \cp $srcdir/$1.parset .
 fi
 if test -f "$srcdir/$1.log_prop"; then
-    \rm -f $1.log_prop
-    \cp $srcdir/$1.log_prop .
+  \rm -f $1.log_prop
+  \cp $srcdir/$1.log_prop .
 else
-    if test ! -f "$1.log_prop"; then
-        sed -e "s/<LOGFILENAME>/$1_tmp.log/" $lfr_share_dir/default.log_prop > $1.log_prop
-    fi
+  if test ! -f "$1.log_prop"; then
+    sed -e "s/<LOGFILENAME>/$1_tmp.log/" $lfr_share_dir/default.log_prop > $1.log_prop
+  fi
 fi
-    
+
 #
 # Define source directory and run assay
 #
