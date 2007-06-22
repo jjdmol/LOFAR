@@ -346,5 +346,7 @@ void Solver::show (ostream& os)
 } // namespace LOFAR
 
 //# Instantiate the makeNorm template.
+#ifdef AIPS_NO_TEMPLATE_SRC
 #include <scimath/Fitting/LSQFit2.cc>
 template void casa::LSQFit::makeNorm<double, double*, int*>(unsigned, int* const&, double* const&, double const&, double const&, bool, bool);
+#endif

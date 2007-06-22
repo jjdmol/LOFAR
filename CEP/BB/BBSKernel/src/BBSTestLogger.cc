@@ -26,7 +26,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <BBSTestLogger.h>
+#include <BBSKernel/BBSTestLogger.h>
 #include <BBSKernel/ParmData.h>
 #include <sstream>
 
