@@ -41,6 +41,7 @@
 #  lofar_compiler    compiler type used (gnu, kcc, or icc) derived from CXX
 #                    Other compilers are not recognized and result in
 #                    a warning.
+#  lofar_shared_ext  the extension name of a shared library (so, sl, dylib)
 #  LOFAR_DEPEND      all lofar libraries this package is dependent on
 #
 # A warning is given if the compiler type mismatches the compiler part
@@ -88,6 +89,13 @@ AC_ARG_WITH(lofar-libdir,
   [lofar_root_libdir="$withval"])
 
 [
+  # Determine the shared library extension.
+  lofar_shared_ext=so
+  case `uname -s` in
+    Darwin*) lofar_shared_ext=dylib;;
+    HP-UX)   lofar_shared_ext=sl;;
+  esac
+
   LOFARROOT=$prefix  
   if test "$with_lofar" != ""  -a  "$with_lofar" != "no"  -a \
           "$with_lofar" != "yes"; then
