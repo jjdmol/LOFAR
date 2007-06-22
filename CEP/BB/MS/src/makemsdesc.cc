@@ -54,8 +54,10 @@
 #include <casa/Utilities/GenSort.h>
 #include <casa/Exceptions/Error.h>
 
-//# Include for instantiation of tovector.
+//# If needed, include for instantiation of tovector.
+#ifdef AIPS_NO_TEMPLATE_SRC
 #include <casa/Arrays/Vector2.cc>
+#endif
 
 #include <iostream>
 #include <fstream>
