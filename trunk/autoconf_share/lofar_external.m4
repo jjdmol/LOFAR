@@ -285,7 +285,7 @@ else
   fi
 ## Put possible version into the library names.
   lfr_libsc=`echo $lfr_libs | sed -e "s%+vers%$lfr_ext_version%g"`
-## Search for header if given, otherwise for library (.a or .so).
+## Search for header if given, otherwise for library (shared or static).
   lfr_searchfil=
   if test "$lfr_hdr" != ""; then
     lfr_searchfil=$lfr_hdr
@@ -293,7 +293,7 @@ else
   else
     if test "$lfr_libsc" != ""; then
       lfr_sfil=lib`echo "$lfr_libsc" | sed -e 's/ .*//'`
-      lfr_searchfil="$lfr_sfil.so $lfr_sfil.a"
+      lfr_searchfil="$lfr_sfil.$lofar_shared_ext $lfr_sfil.a"
       lfr_searchext=$lfr_libdext
     fi
   fi
