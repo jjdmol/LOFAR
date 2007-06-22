@@ -28,7 +28,10 @@
 #include <Common/LofarLogger.h>
 
 #include <casa/Arrays/Vector.h>
+#include <casa/Utilities/GenSort.h>
+#ifdef AIPS_NO_TEMPLATE_SRC
 #include <casa/Utilities/GenSort.cc>     // for automatic template
+#endif
 #include <algorithm>
 
 using namespace casa;

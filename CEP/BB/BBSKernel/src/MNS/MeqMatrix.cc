@@ -455,6 +455,7 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
 //# This is needed because dcomplex is usually not the same as casa::DComplex.
 //# The inclusion of the other .cc files is needed for the automatic
 //# instantiation of the templates used by Matrix.
+#ifdef AIPS_NO_TEMPLATE_SRC
 #include <casa/Arrays/Matrix.cc>
 #include <casa/Arrays/Vector.cc>
 #include <casa/Arrays/Array.cc>
@@ -462,3 +463,4 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
 #include <casa/Utilities/Copy.cc>
 #include <casa/Utilities/CountedPtr.cc>
 template class Matrix<LOFAR::dcomplex>;
+#endif
