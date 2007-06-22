@@ -44,6 +44,7 @@
 #include <measures/Measures/Muvw.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/Stokes.h>
+#include <measures/Measures/MCBaseline.h>
 #include <measures/Measures/MeasConvert.h>
 #include <casa/Quanta/MVEpoch.h>
 #include <casa/Quanta/MVDirection.h>

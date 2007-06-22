@@ -300,7 +300,7 @@ void doSlave (int rank)
 }
 
 
-int main (int argc, const char** argv)
+int main (int argc, char** argv)
 {
   INIT_LOGGER("makems");
   int status = 0;
