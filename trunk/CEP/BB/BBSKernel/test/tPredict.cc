@@ -25,7 +25,9 @@
 #include <Common/LofarLogger.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ArrayColumn.h>
+#ifdef AIPS_NO_TEMPLATE_SRC
 #include <casa/Arrays/ArrayLogical.cc>   //include .cc for template
+#endif
 #include <stdexcept>
 
 using namespace LOFAR;
