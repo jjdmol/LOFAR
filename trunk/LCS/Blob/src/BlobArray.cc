@@ -133,4 +133,31 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<bool>& vec)
   return bs;
 }
 
+#if defined(HAVE_AIPSPP) 
+BlobOStream& operator<< (BlobOStream& bs, const casa::IPosition& ipos)
+{
+  uint32 size = ipos.size();
+  putBlobArrayHeader (bs, true,
+		      LOFAR::typeName((const casa::Int**)0),
+		      &size, 1, true, 1);
+  bs.put (ipos.begin(), size);
+  bs.putEnd();
+  return bs;
+}
+
+BlobIStream& operator>> (BlobIStream& bs, casa::IPosition& ipos)
+{
+  bs.getStart (LOFAR::typeName((const casa::Int**)0));
+  bool fortranOrder;
+  uint16 ndim;
+  uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
+  ASSERT(ndim == 1);
+  uint32 size;
+  getBlobArrayShape (bs, &size, 1, false, nalign);
+  ipos.resize (size, false);
+  bs.get (ipos.begin(), size);
+  return bs;
+}
+#endif
+
 } //end namespace LOFAR

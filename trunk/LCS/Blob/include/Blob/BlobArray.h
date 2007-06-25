@@ -134,6 +134,12 @@ namespace LOFAR
   // If the shape matches, the array can be non-contiguous.
   template<typename T>
   BlobIStream& operator>> (BlobIStream&, casa::Array<T>&);
+
+  // Write/read the shape of an AIPS++ array.
+  // <group>
+  BlobOStream& operator<< (BlobOStream&, const casa::IPosition&);
+  BlobIStream& operator>> (BlobIStream&, casa::IPosition&);
+  // </group>
 #endif
 
   // \name Write a vector of objects
