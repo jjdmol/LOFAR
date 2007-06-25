@@ -111,13 +111,13 @@ int main()
     {
       {
 	// Create the blob in a file.
-	std::ofstream os ("tBlobArray_tmp.dat");
+	std::ofstream os ("tBlobSTL_tmp.dat");
 	BlobOBufStream bob(os);
         doOut (bob);
       }
       {
 	// Read it back from the file.
-	std::ifstream is ("tBlobArray_tmp.dat");
+	std::ifstream is ("tBlobSTL_tmp.dat");
 	BlobIBufStream bib(is);
 	doIn (bib);
       }
