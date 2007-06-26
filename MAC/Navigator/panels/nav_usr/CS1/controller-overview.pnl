@@ -1,12 +1,12 @@
 V 10
 1
 LANG:1 13 ObsCtrl_State
-PANEL,431 110 950 741 N "_3DFace" 1
+PANEL,562 144 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
 	// check if this panel is placed on the right datapoint
-	navViewCheckDpType($datapoint,\"ObsCtrl\");  
+	checkDpType($datapoint,\"ObsCtrl\");  
   // get obsname from dp
 	string obsName= getPathComponent($datapoint,3);
 	//DebugTN(\"Observation: \"+obsName);
@@ -46,7 +46,7 @@ updateObsCtrl(string dp1, string error,
 }" 0
 E E E 1 0 0 0  10 10
 "" 0 1
-E"#uses \"nav_usr/CS1/CS1_Common.ctl\"
+E"#uses \"nav_fw/gcfnav-panel-util.ctl\"
 showLogging()
 {
 	//DebugTN(\"startLogging\");

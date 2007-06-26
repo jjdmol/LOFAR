@@ -18,7 +18,7 @@ PANEL,304 275 950 471 N "_3DFace" 3
                                             \"Column11Titles\", \"\", \"Column12Titles\", \"\", \"Column13Titles\", \"\", \"Column14Titles\", \"\");
   }
   
-  setColumnConfig($AreaNr, 1, nrOfColumns, 15, \"Config\");
+  setTableColumnConfig($AreaNr, 1, nrOfColumns, 15, \"Config\");
   setValue(\"Table1\", \"scale\", 1.0, nrOfRows/15.0);  
   setValue(\"Table1\", \"visible\", TRUE);  
 }

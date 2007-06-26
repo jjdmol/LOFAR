@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 StationCtrlViewPanel
-PANEL,431 110 484 325 N "_3DFace" 2
+PANEL,463 129 484 325 N "_3DFace" 2
 "$Station"
 "$datapoint"
 "main()
@@ -148,7 +148,7 @@ updateStationCtrlTable(string dp1, string action,
 }" 0
 E E E 1 0 0 0  5 320
 "" 0 1
-E"#uses \"nav_usr/CS1/CS1_Common.ctl\"
+E"#uses \"nav_fw/gcf-util.ctl\"
 
 string obsName;
 string baseDP;
@@ -185,20 +185,26 @@ showLogging()
 	dyn_string dp = strsplit(dpSubStr(selectedDP,DPSUB_DP),\"_\");
 	txt_Controller.text = dp[dynlen(dp)]; 
 	
+	//DebugTN(\"startLogging 2\");
 
  	// get the systemname and systemnameless part of the datapoint
 	string systemName = dpSubStr(selectedDP,DPSUB_SYS);
   string bareDP     = dpSubStr(selectedDP,DPSUB_DP_EL_CONF_DET_ATT);
  
  	
+	//DebugTN(\"startLogging 3\");
 
   // clear the table from the old logging
   table_logging.deleteAllLines();
 
+
+	//DebugTN(\"startLogging 4 selectedDP: \" + selectedDP);
   // if the datapoint exists, try to get some of the historical data on this point
   // fill the table with it and do a dpConnect so that new changes will be added to the table 
   if(dpExists(selectedDP))
   {
+    
+  	//DebugTN(\"startLogging 5 selectedDP\");
 
 		// initialize the logging table with historical data:
 		dyn_dyn_anytype tab;
@@ -222,6 +228,9 @@ showLogging()
 			addLogMessage(tab[z][2]);
 		}
 	}
+	else {
+	  //DebugTN(\"NOT FOUND: wanted to log from : \" + selectedDP);
+	}
 }
 
 //
@@ -229,7 +238,7 @@ showLogging()
 //
 updateLogging(string dpe, string dpv)
 {
-  //DebugTN(\"LogMsg: \"+dpv);
+  //DebugTN(\"updateLogging: LogMsg: \"+dpv + \" point: \" + dpe);
   if (dpv != \"\") {
     addLogMessage(dpv);
   }
@@ -245,7 +254,7 @@ addLogMessage(string msg)
   // into relevant pieces
 
   if (msg != \"\") {
-    //DebugTN(\"msg: \" + msg);
+    //DebugTN(\"addLogMessage: \" + msg);
 
     dyn_string msgParts;
     string dateTime=\"\";
@@ -319,7 +328,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E U  0 E 5 5 470 310
+"main()
+{
+
+}" 0
+ E 0 2 1 0 1 E U  0 E 5 5 470 310
 2 1
 "StationName"
 ""

@@ -24,18 +24,34 @@
 //# Functions to send events to the PropertyAgent
 //# 
 
-void sendEventToPA(string msg, string destSysName)
-{
-  LOG_DEBUG("sendEventToPA: ", msg, destSysName);
-  sendEvent(destSysName + "__gcfportAPI_DPAserver.", msg);
+#uses "nav_fw/gcf-logging.ctl"
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function sendEventToPA (message, systemName)
+//
+// Delivers the message to the PA by writing is to '<sys>:__gcfportAPI_DPAserver'
+//
+////////////////////////////////////////////////////////////////////////////////
+void sendEventToPA(string msg, string destSysName) {
+	LOG_DEBUG("sendEventToPA: ", msg, destSysName);
+
+	sendEvent(destSysName + "__gcfportAPI_DPAserver.", msg);
 }
 
-void sendEvent(string dest, string msg)
-{
-  LOG_DEBUG("Msg: ", msg);
-  blob event;
-  blobZero(event, strlen(msg) + 1); // "+ 1" workaround for known bug in CTRL impl.
-  blobSetValue(event, 0, msg, strlen(msg));
-  dpSet(dest, event);
+////////////////////////////////////////////////////////////////////////////////
+//
+// Private Function sendEvent (dp, message)
+//
+// Write message as a blob to the given DP.
+//
+////////////////////////////////////////////////////////////////////////////////
+void sendEvent(string dest, string msg) {
+	LOG_DEBUG("Msg: ", msg);
+
+	blob event;
+	blobZero(event, strlen(msg) + 1); // "+ 1" workaround for known bug in CTRL impl.
+	blobSetValue(event, 0, msg, strlen(msg));
+	dpSet(dest, event);
 }
 

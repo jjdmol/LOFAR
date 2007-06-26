@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 12 trend_config
-PANEL,307 228 879 700 N "_3DFace" 5
+PANEL,465 97 879 700 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -10,8 +10,7 @@ PANEL,307 228 879 700 N "_3DFace" 5
 EEE E E 1 -1 -1 0  20 20
 "" 0 1
 E"//Include of ctl file
-#uses \"nav_fw/gcfnav_view.ctl\"
-#uses \"nav_fw/gcfnav_view.ctl\"
+#uses \"nav_fw/gcfnav-view.ctl\"
 " 0
  2
 "CBRef""1"

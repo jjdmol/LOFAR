@@ -19,7 +19,7 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-#uses "nav_fw/gcf-util.ctl"
+#uses "nav_fw/gcf-common.ctl"
 
 
 // This script needs to run on every CSU, CCU and MainCU
@@ -34,26 +34,26 @@ main () {
   initLofarColors();
 
   // subscribe to the statechange update mechanism
-  subscribePSStateChange();
+  subscribeObjectStateChange();
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
-//Function subscribePSStateChange
+//Function subscribeObjectStateChange
 // 
-// subscribes to the __pa_PSState DP of the database to monitor 
+// subscribes to the __navObjectState DP of the database to monitor 
 // possible stateChanges, also checks if the scripts runs on a MCU*** 
 // machine and subscribes to the needed statechanges there also.
 //
 // Added 26-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-void subscribePSStateChange() {
+void subscribeObjectStateChange() {
 
-  LOG_TRACE("subscribePSStateChange");
-  // ROutine to connnect to the __pa_PSState point to trigger statechanges
+  LOG_TRACE("subscribeObjectStateChange");
+  // ROutine to connnect to the __navObjectState point to trigger statechanges
   // So that chilcState points can bes set/reset accordingly.
 
-  dpConnect("PSStateTriggered",true,"__pa_PSState.");
+  dpConnect("objectStateTriggered",true,"__navObjectState.");
   
   //Find out the Database we are running on
   string database=getSystemName();
@@ -180,14 +180,14 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function PSStateTriggered
+//Function objectStateTriggered
 // 
-// Callback where a trigger of __pa_PSState is handled.
+// Callback where a trigger of __navObjectState is handled.
 //
 // Added 26-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-void PSStateTriggered(string dp1, string trigger) {
-  // __ps_PSState change.
+void objectStateTriggered(string dp1, string trigger) {
+  // __navObjectState change.
   // This point should have points like:
   // LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.state=bad
   // This State should be set to childState=bad in all upper (LOFAR-PIC_Cabinet0_Subrack0_RSPBoard0) treenodes

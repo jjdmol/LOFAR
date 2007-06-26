@@ -41,6 +41,9 @@
  * @author Ph. Gras CERN/EP - University of Karlsruhe
  * @version 2.0
  */
+
+#uses "nav_fw/gcf-logging.ctl"
+
 //@{
 
 /** @name "constants"
@@ -419,30 +422,24 @@ fwTreeView_draw(string referenceName = "")
   getValue(referenceName + "list","itemCount",existingNodes);
 
   imax = fwTreeView_getNodeCount(referenceName);
-  for(i = 1; i <= imax ; i++)
-  {
-    if(!(fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_HIDDEN))		
-    {
+  for(i = 1; i <= imax ; i++) {
+    if(!(fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_HIDDEN)) {
       visibleNodes++;
       // the node is visible
       spaceCnt = fwTreeView_INDENT * fwTreeView_getNode(i, referenceName)[fwTreeView_LEVEL];
       item = strexpand("\\fill{ }", spaceCnt);
-      if((fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_BRANCH) && (fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_EXPANDED))
-      {
+      if((fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_BRANCH) && (fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_EXPANDED)) {
         // this is an expanded branch
         item += fwTreeView_BRANCH_MARK_EXPANDED;
         //	DebugN("expanded",fwTreeView_getNode(i)[fwTreeView_STATE]);
       }
-      else 
-      {
-        if(fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_BRANCH)
-        {
+      else {
+        if(fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_BRANCH) {
           // this is a collapsed branch
           item += fwTreeView_BRANCH_MARK_COLLAPSED;
           //	DebugN("collapsed", fwTreeView_getNode(i)[fwTreeView_STATE]);
         }
-        else
-        {
+        else {
           // this is a leaf
           item += strexpand("\\fill{ }", branchMarkLen);
         }
@@ -456,8 +453,7 @@ fwTreeView_draw(string referenceName = "")
   }
   // remove surplus items
   int deletePos = visibleNodes+1;
-  while(deletePos <= existingNodes)
-  {
+  while(deletePos <= existingNodes) {
     setValue(referenceName + "list","deletePos",deletePos);
     getValue(referenceName + "list","itemCount",existingNodes);
   }
@@ -615,19 +611,6 @@ fwTreeView_pruneChildren(unsigned index, int &collapsedNodes, string referenceNa
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /** Replaces a node of the tree by a new node.
  * @param node new node
  * @param index of the node to replace
@@ -682,9 +665,11 @@ unsigned fwTreeView_Tree2ViewIndex(unsigned treeIndex, string referenceName = ""
 	// the following for loop scan the tree from 1 to viewIndex
 	// skipping the "hidden" nodes; the iview loop index is not
 	// incremented for these nodes.
-	for(itree = 1 ; itree <= treeIndex ; itree++)
-		if(!(fwTreeView_getNode(itree, referenceName)[fwTreeView_STATE]& fwTreeView_HIDDEN)) 
+	for (itree = 1 ; itree <= treeIndex ; itree++) {
+		if(!(fwTreeView_getNode(itree, referenceName)[fwTreeView_STATE]& fwTreeView_HIDDEN)) {
 			viewIndex++;
+		}
+	}
   
 	return viewIndex;
 }

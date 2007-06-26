@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 Panel template
-PANEL,438 374 950 740 N "_3DFace" 0
+PANEL,465 97 950 740 N "_3DFace" 0
 "main()
 {
   // This function loads the PropertySet. Datapoint is now live updated with actual value's
@@ -34,7 +34,7 @@ $referenceDatapoint
 E E E 1 -1 -1 0  370 280
 "" 0 1
 E"//Include a library where functions are stored, which you what to use
-#uses \"nav_fw/gcfnav_view.ctl\" 
+#uses \"nav_fw/gcfnav-view.ctl\" 
 
 // Declare a global variable within THIS panel
 // It is not allowed to initialize this variable with a 

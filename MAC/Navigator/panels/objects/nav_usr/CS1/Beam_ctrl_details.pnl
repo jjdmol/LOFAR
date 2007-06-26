@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,245 109 1057 342 N "_3DFace" 1
+PANEL,539 217 1057 342 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -34,7 +34,7 @@ string baseDP=\"\";
 string systemName = \"\";  
  
 string getObsName(string aString) {
-return strsplit(aString,\"_\")[3];
+  return strsplit(aString,\"_\")[3];
 }
 
 
@@ -186,7 +186,8 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 17 45 933 272
 E "main(int row, string column, string value)
 {
-	string dp = \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(row,\"Observation\")+\"_ObsCtrl\";
+ 
+	string dp = \"LOFAR_ObsSW_\" + beamControlTable.cellValueRC(row,\"Observation\")+\"_ObsCtrl\";
 	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0

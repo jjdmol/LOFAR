@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,315 109 1145 286 N "_3DFace" 1
+PANEL,562 144 1145 286 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -183,7 +183,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 17 45 933 272
 E "main(int row, string column, string value)
 {
-	string dp = \"LOFAR_ObsSW_\" + calControlTable.cellValueRC(row,\"Observation\")+\"_CalCtrl\";
+	string dp = \"LOFAR_ObsSW_\" + calControlTable.cellValueRC(row,\"Observation\")+\"_ObsCtrl\";
 	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0

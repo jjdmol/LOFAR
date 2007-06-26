@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,388 212 690 289 N "_3DFace" 6
+PANEL,525 364 690 289 N "_3DFace" 6
 "$AreaNr"
 "$Column"
 "$Row"
@@ -26,7 +26,7 @@ PANEL,388 212 690 289 N "_3DFace" 6
 EE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file
-#uses \"nav_fw/gcfnav_view.ctl\"" 0
+#uses \"nav_fw/gcfnav-view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -379,7 +379,7 @@ navViewAlertApplyCellSettings(int AreaNr, string RowNumber, string Column)
   }
   else
   {
-    navConfigMessageWarning(\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
+    showPopupMessage(\"Warning\",\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
   }
  
 }

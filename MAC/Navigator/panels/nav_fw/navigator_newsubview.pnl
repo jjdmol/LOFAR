@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 18 Add Remove subview
-PANEL,391 228 429 103 N "_3DFace" 4
+PANEL,465 97 429 103 N "_3DFace" 4
 "$addView"
 "$selectedElementDpType"
 "$selectedView"
@@ -86,8 +86,8 @@ PANEL,391 228 429 103 N "_3DFace" 4
 }" 0
 EE E E 1 -1 -1 0  40 11
 "" 0 1
-E"#uses \"nav_fw/gcfnav-configuration-functions.ctl\"
-#uses \"nav_fw/gcfnav_view.ctl\"
+E"#uses \"nav_fw/gcfnav-configuration.ctl\"
+#uses \"nav_fw/gcfnav-view.ctl\"
 " 0
  2
 "CBRef""1"

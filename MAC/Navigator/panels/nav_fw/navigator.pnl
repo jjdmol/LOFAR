@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,391 228 1272 960 N "_3DFace" 0
+PANEL,465 97 1272 960 N "_3DFace" 0
 "main()
 {
   gcfStartFollowDistSystems();
@@ -80,8 +80,8 @@ E E E 1 -1 -1 0  10 570
 "" 0 1
 E"// global functions. All event handlers are implemented here
 
-#uses \"nav_fw/gcfnav-functions.ctl\"
-#uses \"nav_fw/gcfnav_view.ctl\"
+#uses \"nav_fw/gcfnavigator.ctl\"
+#uses \"nav_fw/gcfnav-view.ctl\"
 " 0
  2
 "CBRef""1"

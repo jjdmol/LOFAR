@@ -24,24 +24,29 @@
 //# Prepares the PVSS database for the PropertyAgent
 //# 
 
-main()
-{
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function Main.
+//
+// Create the base types needed for PA, Dist and Point Trigger in the databse
+//
+////////////////////////////////////////////////////////////////////////////////
+main() {
 	dyn_dyn_string xxdepes;
 	dyn_dyn_int xxdepei;
 	dyn_string types;
 
 	types = dpTypes("GCF*");
-	handleType(types, "GCFPaPsState", DPEL_STRING);
+  dynAppend(types,"NCFObjectState");
+	handleType(types, "NCFObjectState", DPEL_STRING);
 	handleType(types, "GCFPaPsEnabled", DPEL_STRING);
 	handleType(types, "GCFPaPsIndication", DPEL_STRING);
 	handleType(types, "GCFDistPort", DPEL_BLOB);
-	if (!dpExists("__gcfportAPI_DPAserver"))
-	{
+	if (!dpExists("__gcfportAPI_DPAserver")) {
 		dpCreate("__gcfportAPI_DPAserver", "GCFDistPort");
 	}
 	string type = "GCFWatchDog";
-	if (dynContains(types, type))
-	{
+	if (dynContains(types, type)) {
 		deleteDPs(type);
 	}
 	xxdepes[1] = makeDynString (type, "");
@@ -54,36 +59,44 @@ main()
 	DebugN("Add type " + type);
 	dpCreate("__gcf_wd", type);
 	dpCreate("__pa_PSIndication", "GCFPaPsIndication");
-	dpCreate("__pa_PSState", "GCFPaPsState");
+	dpCreate("__navObjectState", "NCFObjectState");
 }
 
-deleteDPs(string type)
-{
-  DebugTN("deleteDPs: ", type);
-  string dpName;
-  dyn_string names = dpNames("*",type);  
-  int i, len;
-  len = dynlen(names);
-  if (len > 0)
-  {
-    for (i = 1; i <= len; i++)
-    {
-      dpName = names[i];
-      if (dpName != getSystemName() + "__gcfportAPI_DPAserver")
-      {
-      	dpDelete(dpName);
-      	DebugTN(dpName + " deleted");
-      }
-    }
-  }
-  dpTypeDelete(type);
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function: deleteDPs(string)
+//
+// delete all DP's from given type and delete the type when finished
+//
+////////////////////////////////////////////////////////////////////////////////
+deleteDPs(string type) {
+  	DebugTN("deleteDPs: ", type);
+  	string dpName;
+  	dyn_string names = dpNames("*",type);  
+  	int i, len;
+  	len = dynlen(names);
+  	if (len > 0) {
+    	for (i = 1; i <= len; i++) {
+      		dpName = names[i];
+      		if (dpName != getSystemName() + "__gcfportAPI_DPAserver") {
+      			dpDelete(dpName);
+      			DebugTN(dpName + " deleted");
+      		}
+    	}
+  	}
+  	dpTypeDelete(type);
 }
 
-void handleType(dyn_string types, string type, int dpelType)
-{
-  DebugTN("handleType: ", types, type, dpelType);
-	if (dynContains(types, type))
-	{
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function handleType(dyn_string,string,int)
+//
+//  handle dynstring types to be created
+//
+////////////////////////////////////////////////////////////////////////////////
+void handleType(dyn_string types, string type, int dpelType) {
+	DebugTN("handleType: ", types, type, dpelType);
+	if (dynContains(types, type)) {
 		deleteDPs(type);
 	}
 	dyn_dyn_string xxdepes;

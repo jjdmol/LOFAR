@@ -1,18 +1,18 @@
 V 10
 1
 LANG:1 14 Subrack Detail
-PANEL,320 184 951 694 N "_3DFace" 2
+PANEL,562 144 951 694 N "_3DFace" 2
 "$datapoint"
 "$referenceDatapoint"
 "main()
 {
 	// check if this panel is placed on the right datapoint
-	navViewCheckDpType($datapoint,\"SubRack\");
+	checkDpType($datapoint,\"SubRack\");
 }" 0
 EE E E 1 0 0 0  107 694
 "" 0 1
 E"#uses \"nav_usr/STS/STS-functions.ctl\"
-#uses \"nav_usr/CS1/CS1_Common.ctl\"" 0
+#uses \"nav_fw/gcfnav-panel-util.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E

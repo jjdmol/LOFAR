@@ -1,14 +1,14 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,319 356 950 741 N "_3DFace" 2
+PANEL,494 199 950 741 N "_3DFace" 2
 "$datapoint"
 "$referenceDatapoint"
 "main()
 {
 
 	// check if this panel is placed on the right datapoint
-	navViewCheckDpType($datapoint,\"LOFAR\");
+	checkDpType($datapoint,\"LOFAR\");
 	
 	
 	// select all states from Observations online (ObsCtrl) && offline(OfflineCtrl)
@@ -32,7 +32,8 @@ PANEL,319 356 950 741 N "_3DFace" 2
 }" 0
 E E E 1 0 0 0  10 10
 "" 0 1
-E"#uses \"nav_usr/CS1/CS1_Common.ctl\"
+E"#uses \"nav_fw/gcf-util.ctl\"
+#uses \"nav_fw/gcfnav-panel-util.ctl\"
 
 // Unique identifiesr to be able to disconnect the query connect later
 string observationID=\"mainObsStatusChange\";
@@ -40,7 +41,13 @@ string offlineID=\"mainOfflineStatusChange\";
 
 
 string getObsName(string aString) {
-	return strsplit(aString,\"_\")[3];
+	string anOb=strsplit(aString,\"_\")[3];
+	if (strpos(anOb,\"Observation\") == 0) {
+	  return anOb;
+	}
+	else {
+	  return \"\";
+	}
 }
 
 string getResultType(string aString) {
