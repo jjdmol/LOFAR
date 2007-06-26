@@ -110,16 +110,16 @@ ostream &NSTimer::print(ostream &str) const
     }
 
     if (CPU_speed_in_MHz == 0)
-	str << "could not determine CPU speed\n";
+	str << "could not determine CPU speed" << endl;
     else if (count > 0) {
 	double total = static_cast<double>(total_time);
 
 	print_time(str, "avg", total / static_cast<double>(count));
 	print_time(str, ", total", total);
-	str << ", count = " << setw(9) << count << '\n';
+	str << ", count = " << setw(9) << count << endl;
     }
     else
-	str << "not used\n";
+	str << "not used" << endl;
 
     return str;
 }
