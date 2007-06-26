@@ -2,17 +2,21 @@ fwTreeView.ctl						Base routine to manage the tree-object in a panel.
 									Complete admin is in the object _trees_AWqOe1L6
 fwTreeViewTest.ctl					Program for testing the base routines.
 fwUtil.ctl							Generic functions for inserting/removing and element from dyns.
-gcf-common.ctl						Obsolete: backupadmin of 'connected systems'
-gcfnav-configuration-functions.ctl	Functions that manage the configuration admin of the Navigator.
-gcfnav-functions.ctl				Layer on fwTreeView the uses g_xxx vars for performance.
+gcf-common.ctl						backupadmin of 'connected systems' and init lofar colors
+gcf-dputil.ctl						Datapoint utilities.
+gcf-logging.ctl						The equivalent of the LofarLogger for the Navigator.
+gcfnav-configuration.ctl			Functions that manage the configuration admin of the Navigator.
+gcfnavigator.ctl					global functions for the Navigator.
+gcfnav-panel-util.ctl				General panel util functions
 gcfnav_plotrecord.ctl				Functions for writing DPvalue changes to file???
 gcfnav-pmlinterface.ctl				Somewhat simpler I/F for PML (init/terminate/(un)load/configure)
-gcfnav-tab-functions.ctl			Implements the 'connect panel to datapoint' dialog
+gcfnav-tab.ctl						Implements the 'connect panel to datapoint' dialog
+gcfnav-tree.ctl						Layer on fwTreeView the uses g_xxx vars for performance.
+gcfnav-util.ctl						utility functions for the Navigator.
 gcfnav_view.ctl						Routines for implementing the various tab-views.
 gcfpa-com.ctl						sendEventToPA (__gcfportAPI_DPAserver)
 gcfpa-cwd.ctl						Keep track of (dis)connecting systems and applications.
 gcfpa-pml.ctl						Property Management Layer for Navigator (init/leave/(un)load/configure)
 gcfpa-prep.ctl						Prepares database for PropertyAgent
-gcf-logging.ctl						The equivalent of the LofarLogger for the Navigator.
 gcf-util.ctl						State(color) routines and other generic functions.
-treeView.ctl						Obsolete: Incomplete attempt of TM to write a treeView.
+
