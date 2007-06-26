@@ -2,7 +2,7 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl Do not define VERSION, etc. in config.h.
 dnl
-AC_INIT(src/Solver.h)
+AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
@@ -71,6 +71,8 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+include/Makefile
+include/BBSKernel/Makefile
 src/Makefile
 test/Makefile
 Makefile
