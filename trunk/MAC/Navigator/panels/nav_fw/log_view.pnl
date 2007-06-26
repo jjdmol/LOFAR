@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,355 259 950 780 N "_3DFace" 2
+PANEL,465 97 950 780 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -134,7 +134,7 @@ EE E E 1 -1 -1 0  10 200
 "" 0 1
 E"#uses \"nav_fw/gcfnav-pmlinterface.ctl\"
 #uses \"nav_fw/gcf-common.ctl\"
-#uses \"nav_fw/gcfnav_view.ctl\"" 0
+#uses \"nav_fw/gcfnav-view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,431 110 950 741 N "_3DFace" 1
+PANEL,562 144 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -49,7 +49,7 @@ fillStationsList(string observation)
 " 0
 EE E E 1 0 0 0  10 10
 "" 0 1
-E"#uses \"nav_usr/CS1/CS1_Common.ctl\"" 0
+E"#uses \"nav_fw/gcfnav-panel-util.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E

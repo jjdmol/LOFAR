@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,426 108 174 196 N "_3DFace" 3
+PANEL,494 199 174 196 N "_3DFace" 3
 "$Station"
 "$datapoint"
 "$referenceDatapoint"
@@ -28,7 +28,7 @@ PANEL,426 108 174 196 N "_3DFace" 3
 }" 0
  E E 1 0 0 0  145 135
 "" 0 1
-E"#uses \"nav_usr/CS1/CS1_Common.ctl\"
+E"#uses \"nav_fw/gcf-util.ctl\"
 
 string baseDP=\"\";
 

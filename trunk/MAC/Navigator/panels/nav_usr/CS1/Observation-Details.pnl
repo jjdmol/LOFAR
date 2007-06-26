@@ -6,7 +6,7 @@ PANEL,451 113 1007 801 N "_3DFace" 1
 "main()
 {
 	// check if this panel is placed on the right datapoint
-	navViewCheckDpType($datapoint,\"Observation\");  
+	checkDpType($datapoint,\"Observation\");  
 	
 	
 	initTable();

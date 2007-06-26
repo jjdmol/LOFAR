@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,307 228 697 398 N "_3DFace" 5
+PANEL,514 446 697 398 N "_3DFace" 5
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -39,10 +39,9 @@ PANEL,307 228 697 398 N "_3DFace" 5
 EE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file
-#uses \"nav_fw/gcfnav_view.ctl\"
 #uses \"nav_fw/gcf-common.ctl\"
-#uses \"nav_fw/gcfnav-functions.ctl\"
-#uses \"nav_fw/gcfnav_view.ctl\"
+#uses \"nav_fw/gcfnavigator.ctl\"
+#uses \"nav_fw/gcfnav-view.ctl\"
 
 string traceColor=\"\";
 string newTraceColor=\"\";" 0
@@ -594,7 +593,7 @@ void navViewTrendConfigApplyTraceSettings()
 /*  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", currentDpName);
   if(\"\"==dpeName)
   {
-    navConfigMessageWarning(\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
+    showPopupMessage(\"Warning\",\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
   }
   else if(currentDpName!=legendName)
   {
@@ -638,7 +637,7 @@ void navViewTrendConfigApplyTraceSettings()
   }
   else
   {
-    navConfigMessageWarning(\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
+    showPopupMessage(\"Warning\",\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
   }
 
   

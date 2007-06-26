@@ -29,7 +29,7 @@ fillTextStatus(string dp1, string value)
 " 0
 EE E E 1 -1 -1 0  30 70
 "" 0 1
-E"#uses \"nav_fw/gcfnav-functions.ctl\"
+E"#uses \"nav_fw/gcfnavigator.ctl\"
 " 0
  2
 "CBRef""1"

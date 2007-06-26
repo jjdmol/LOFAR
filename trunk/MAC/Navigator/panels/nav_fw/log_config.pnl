@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,350 288 950 740 N "_3DFace" 5
+PANEL,465 97 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -9,7 +9,7 @@ PANEL,350 288 950 740 N "_3DFace" 5
 "$viewName"
 EEE E E 1 -1 -1 0  20 20
 "" 0 1
-E"#uses \"nav_fw/gcfnav_view.ctl\"" 0
+E"#uses \"nav_fw/gcfnav-view.ctl\"" 0
  2
 "CBRef""1"
 "EClose"E
@@ -260,17 +260,17 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|
 0 ""
 1
 LANG:1 5 Title
-1 41 0 "" 0
+1 40 0 "" 0
 0
-1 42 0 "" 4
+1 41 0 "" 4
 0
-1 43 0 "" 1
+1 42 0 "" 1
 0
-1 44 0 "" 2
+1 43 0 "" 2
 0
-1 45 0 "" 3
+1 44 0 "" 3
 0
-1 46 1 "" 57
+1 45 1 "" 57
 0
 22 30
 "messageWindow"
@@ -448,11 +448,11 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 E
 E
-1 47 1 "" 54
+1 46 1 "" 54
 0
-1 48 1 "" 55
+1 47 1 "" 55
 0
-1 49 1 "" 58
+1 48 1 "" 58
 0
 0
 LAYER, 1 

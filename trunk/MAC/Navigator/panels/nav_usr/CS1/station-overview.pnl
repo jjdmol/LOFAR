@@ -7,7 +7,7 @@ PANEL,251 109 950 741 N "_3DFace" 1
 {
 
 	// check if this panel is placed on the right datapoint
-	navViewCheckDpType($datapoint,\"Ring\");
+	checkDpType($datapoint,\"Ring\");
 
   dyn_string dpElements = splitDatapointPath($datapoint);
   if(dynlen(dpElements) >= 2)

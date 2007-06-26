@@ -1,12 +1,12 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,451 113 1026 741 N "_3DFace" 1
+PANEL,562 144 1026 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
 	// check if this panel is placed on the right datapoint
-	navViewCheckDpType($datapoint,\"PermSW\");
+	checkDpType($datapoint,\"PermSW\");
 
   observationsDP = $datapoint+\"_MACScheduler\";	
 
@@ -27,7 +27,10 @@ PANEL,451 113 1026 741 N "_3DFace" 1
 }" 0
 E E E 1 0 0 0  10 10
 "" 0 1
-E"string observationsDP=\"\";
+E"#uses \"nav_fw/gcf-util.ctl\"
+#uses \"nav_fw/gcfnav-panel-util.ctl\"
+
+string observationsDP=\"\";
 string OTDBDP=\"\";
 string connected=\"\";
 updateObservationsTable(string dpe, dyn_string dpv,

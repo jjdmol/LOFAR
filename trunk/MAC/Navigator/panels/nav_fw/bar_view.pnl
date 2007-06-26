@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 barview
-PANEL,258 161 1001 600 N "_3DFace" 2
+PANEL,465 97 1001 600 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -118,7 +118,7 @@ prepareButtons(string aDp1, dyn_string aDpNamesList)
 EE E E 1 -1 -1 0  70 40
 "" 0 1
 E"//Include a library where functions are stored, which you what to use
-#uses \"nav_fw/gcfnav_view.ctl\" 
+#uses \"nav_fw/gcfnav-view.ctl\" 
 dyn_string dpNamesList;
 int topLineNr = 1;
 int bottomLineNr =15;

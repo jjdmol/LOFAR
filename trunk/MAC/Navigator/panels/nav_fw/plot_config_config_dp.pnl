@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,307 228 710 349 N "_3DFace" 4
+PANEL,520 387 710 349 N "_3DFace" 4
 "$PlotNr"
 "$configDatapoint"
 "$datapoint"
@@ -9,9 +9,8 @@ PANEL,307 228 710 349 N "_3DFace" 4
 EEE E E 1 -1 -1 0  190 250
 "" 0 1
 E"//Include of ctl file
-#uses \"nav_fw/gcfnav_view.ctl\"
 #uses \"nav_fw/gcf-common.ctl\"
-#uses \"nav_fw/gcfnav_view.ctl\"
+#uses \"nav_fw/gcfnav-view.ctl\"
 " 0
  2
 "CBRef""1"
@@ -563,7 +562,7 @@ navViewPlotApplyTraceSettings(int PlotNumber)
   }
   else
   {
-    navConfigMessageWarning(\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
+    showPopupMessage(\"Warning\",\"DPE not selected, please select one.\\nSelection is not stored in the database!\"); 
   }
 
 ////////////////////////////////////////////////////////////////////////  
