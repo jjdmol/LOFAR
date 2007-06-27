@@ -29,9 +29,10 @@
 #include <Blob/BlobString.h>
 #include <Blob/BlobOBufString.h>
 #include <Blob/BlobIBufString.h>
-#include <casa/Arrays/Array.h>
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
+#include <casa/BasicSL/Complex.h>
 
 using namespace LOFAR;
 
@@ -42,10 +43,29 @@ void doOut (BlobOBuffer& bb)
   bs.putStart ("test", 1);
   // Create and fill a 3-dim array.
   casa::IPosition shp(3,2,3,4);
+  bs << shp;
   casa::Array<double> arr(shp);
   indgen (arr);
-  // Write the shape and the array.
-  bs << shp << arr;
+  bs << arr;
+  // Create an int vector.
+  std::vector<casa::Int> vec(2);
+  vec[0] = 10;
+  vec[1] = 11;
+  bs << vec;
+  // Create an empty vector.
+  casa::Vector<casa::String> empVec;
+  bs << empVec;
+  // Create a complex vector.
+  casa::Vector<casa::DComplex> vecc(1);
+  vecc[0] = casa::DComplex(2,3);
+  bs << vecc;
+  // Create a string vector.
+  casa::Vector<casa::String> vecs(2);
+  vecs[0] = "str1";
+  vecs[1] = "str1a";
+  bs << vecs;
+  // Write the shape and the arrays.
+  //  bs << shp << arr << vec << empVec << vecc << vecs;
   bs.putEnd();
 }
 
@@ -54,12 +74,11 @@ void doIn (BlobIBuffer& bb)
   BlobIStream bs(bb);
   bs.getStart ("test");
   // Read the shape as a vector.
-  std::vector<casa::Int> vec;
+  std::vector<casa::Int> vec(1,100);
   bs >> vec;
   // Read the array.
   casa::Array<double> arr;
   bs >> arr;
-  bs.getEnd();
   // Check the values.
   ASSERT (vec.size() == 3);
   ASSERT (vec[0] == 2  &&  vec[1] == 3  &&  vec[2] == 4);
@@ -68,6 +87,26 @@ void doIn (BlobIBuffer& bb)
   casa::Array<double> arr2(shp);
   indgen(arr2);
   ASSERT (allEQ(arr, arr2));
+  // Read the vector as a shape.
+  bs >> shp;
+  ASSERT (shp.size() == 2);
+  ASSERT (shp[0] = 10  && shp[1] == 11);
+  // Get the empty vector.
+  casa::Vector<casa::String> vecs(1);
+  vecs[0] = "a";
+  bs >> vecs;
+  ASSERT (vecs.size() == 0);
+  // Get the complex vector.
+  casa::Vector<casa::DComplex> vecc;
+  bs >> vecc;
+  ASSERT (vecc.size() == 1);
+  ASSERT (vecc[0] == casa::DComplex(2,3));
+  // Get the string vector.
+  bs >> vecs;
+  ASSERT (vecs.size() == 2);
+  ASSERT (vecs[0] == "str1");
+  ASSERT (vecs[1] == "str1a");
+  bs.getEnd();
 }
 
 int main()
