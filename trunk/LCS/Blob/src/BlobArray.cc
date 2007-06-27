@@ -156,6 +156,7 @@ BlobIStream& operator>> (BlobIStream& bs, casa::IPosition& ipos)
   getBlobArrayShape (bs, &size, 1, false, nalign);
   ipos.resize (size, false);
   bs.get (ipos.begin(), size);
+  bs.getEnd();
   return bs;
 }
 #endif
