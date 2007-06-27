@@ -42,6 +42,7 @@
 #                    Other compilers are not recognized and result in
 #                    a warning.
 #  lofar_shared_ext  the extension name of a shared library (so, sl, dylib)
+#  lofar_no_rpath    1 = rpath cannot be used when linking
 #  LOFAR_DEPEND      all lofar libraries this package is dependent on
 #
 # A warning is given if the compiler type mismatches the compiler part
@@ -94,6 +95,13 @@ AC_ARG_WITH(lofar-libdir,
   case `uname -s` in
     Darwin*) lofar_shared_ext=dylib;;
     HP-UX)   lofar_shared_ext=sl;;
+  esac
+
+  # Determine if -rpath cannot be given.
+  lofar_no_rpath=0
+  case `uname -s` in
+    Darwin*) lofar_no_rpath=1;;
+    Cray*) lofar_no_rpath=1;;
   esac
 
   LOFARROOT=$prefix  

@@ -363,7 +363,7 @@ else
     fi
     if test "$lfr_ext_lib" != "" ; then
       EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
-      if test "$lofar_compiler" != "pgi"; then
+      if test "$lofar_no_rpath" = 0; then
         EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
       fi
     fi
