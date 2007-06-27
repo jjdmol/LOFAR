@@ -233,7 +233,7 @@ namespace LOFAR {
   template<typename T>
     inline BlobIStream& BlobIStream::operator>> (std::complex<T>& value)
     {
-      getBuf (value, sizeof(std::complex<T>));
+      getBuf (&value, sizeof(std::complex<T>));
       if (itsMustConvert) {
 	LOFAR::dataConvert (itsDataFormat, &value, 1);
       }
