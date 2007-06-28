@@ -27,8 +27,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 
-#include <BBSKernel/BBSTestLogger.h>
-
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/ParmDomain.h>
 
