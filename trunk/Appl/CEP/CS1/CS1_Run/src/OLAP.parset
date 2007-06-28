@@ -53,10 +53,10 @@ PIC.Core.CS001_us1.port  = lii007:4347
 PIC.Core.CS001_us2.port  = lii008:4348
 PIC.Core.CS001_us3.port  = lii009:4349
 
-PIC.CORE.CS016_us0.port  = lii010:4346
-PIC.CORE.CS016_us1.port  = lii010:4347
-PIC.CORE.CS016_us2.port  = lii011:4348
-PIC.CORE.CS016_us3.port  = lii012:4349
+PIC.Core.CS016_us0.port  = lii010:4346
+PIC.Core.CS016_us1.port  = lii010:4347
+PIC.Core.CS016_us2.port  = lii011:4348
+PIC.Core.CS016_us3.port  = lii012:4349
 
 PIC.Core.CS010_dipole0.position  = [0.119881248042,  0.920262545738, 6364621.18843]
 PIC.Core.CS010_dipole4.position  = [0.119888779622,  0.920265564336, 6364621.16629]
