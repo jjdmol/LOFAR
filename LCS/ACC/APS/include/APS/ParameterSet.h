@@ -77,6 +77,9 @@ public:
 	ParameterSet& 	operator=(const ParameterSet& that);
 	//@}
 
+        // Get the number of parameters.
+        int size() const;
+
 	// Iteration.
 	//@{
 	iterator begin();
@@ -270,6 +273,10 @@ ParameterSet* 	globalParameterSet();
 //#
 //# ---------- inline functions ----------
 //#
+inline int ParameterSet::size() const
+{
+	return itsSet->size();
+}
 inline ParameterSet::iterator	ParameterSet::begin      ()
 {
 	return itsSet->begin();
