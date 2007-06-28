@@ -1,13 +1,6 @@
-INSTHDRS = MSDesc.h
+pkginclude_HEADERS	= MSDesc.h
 
-NOINSTHDRS = DH_MSMake.h MSCreate.h
-
-TCCHDRS = 
-
-pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
+noinst_HEADERS		= DH_MSMake.h \
+			  MSCreate.h
 
 include $(top_srcdir)/Makefile.common
