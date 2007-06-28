@@ -30,6 +30,10 @@
 #include <errno.h>
 #include <string.h>
 
+#ifdef __APPLE_CC__
+#define open64 open
+#endif
+
 namespace LOFAR
 {
 namespace BBS 
