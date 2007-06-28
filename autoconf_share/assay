@@ -240,6 +240,7 @@ EOF
       if test $NRTIMES -gt 600
       then
         # Keep job file.
+        mv $PROG_tmp_job $PROG.err
         echo "FAIL (execution killed): $*"
         exit 1
       fi
