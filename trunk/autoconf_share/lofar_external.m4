@@ -115,6 +115,7 @@ if test "$lfr_ext_searchp" = ""  -o  "$lfr_ext_searchp" = "yes"  -o  "$lfr_ext_s
   lfr_ext_searchp="+prefix +root /usr/local/+pkg+vers/+comp /usr/local/+pkg+vers /usr/local /usr"
 fi
 lfr_search="$lfr_search $lfr_ext_searchp"
+
 ##
 ## Set version to blank if it is yes or no.
 ##
@@ -140,7 +141,7 @@ if test "$with_external" = "no"; then
 else
   if test "$with_external" = ""; then
     external_search=
-    if test "$with_external_libdir" != ""; then
+    if test "$lfr_external_libdir" != ""; then
       enable_external=yes
     fi
   else
@@ -297,7 +298,7 @@ else
       lfr_searchext=$lfr_libdext
     fi
   fi
-## Now fo the actual search.
+## Now do the actual search.
 ## Stop if a file is found.
   lfr_ext_dir=
   lfr_pkg_rootdir=
@@ -329,6 +330,7 @@ else
       break
     fi
   done
+
 # Now search for the libraries.
   lfr_depend=
   lfr_ext_lib=
