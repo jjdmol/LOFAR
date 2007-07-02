@@ -39,9 +39,12 @@ typedef	int	socklen_t;
 #define    INADDR_NONE             ((in_addr_t) 0xffffffff)
 #endif
 
+#if defined(__APPLE__)
+#include <netinet/in.h> 
+#endif
+
 #include <resolv.h>
 #include <sys/un.h>
-
 #endif
 
 #include <errno.h>
