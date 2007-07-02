@@ -40,7 +40,7 @@ const string GCF_WD_DP = "__gcf_wd";
 main() {
 
    // prepare pa points
-   pa-prep();
+   PAPrep();
 
    // prepare watchdog
    addGlobal("gConnManList", DYN_DYN_STRING_VAR);	
@@ -235,7 +235,7 @@ void connectionsChanged(string dp, dyn_uint value, string manType) {
 // Create the base types needed for PA, Dist and Point Trigger in the database
 //
 ////////////////////////////////////////////////////////////////////////////////
-void pa-prep() {
+void PAPrep() {
 	dyn_dyn_string xxdepes;
 	dyn_dyn_int xxdepei;
 	dyn_string types;
@@ -299,7 +299,7 @@ deleteDPs(string type) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void handleType(dyn_string types, string type, int dpelType) {
-	DebugTN("handleType: ", types, type, dpelType);
+//	DebugTN("handleType: ", types, type, dpelType);
 //	if (dynContains(types, type)) {
 //		deleteDPs(type);
 //	}
@@ -307,7 +307,10 @@ void handleType(dyn_string types, string type, int dpelType) {
 	dyn_dyn_int xxdepei;
 	xxdepes[1] = makeDynString (type);
 	xxdepei[1] = makeDynInt (dpelType);
-	dpTypeCreate(xxdepes,xxdepei);
-	DebugN("Add type " + type);
+	// create type if not allready there
+	if (!dynContains(types, type)) {
+		dpTypeCreate(xxdepes,xxdepei);
+		DebugN("Add type " + type);
+	}
 }
 	
