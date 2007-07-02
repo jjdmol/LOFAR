@@ -4,21 +4,22 @@
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   BGLProc     1.0.1  development 'node constraint'  "Blue Gene Processing"
+node   BGLProc     1.0.2  development 'node constraint'  "Blue Gene Processing"
 
 # name   	        dir.    type    unit    prun.   vm      value    constr. descr.
 #--------------------------------------------------------------------------------------------------------
 par integrationSteps	I	int	-	10	0	608 	 -	'???'
-par maxConcurrentComm	I	int	-	10	0	2	 -	"max number of nodes that share the same ethernet device"
+par maxConcurrentComm	I	int	-	10	0	1	 -	"max number of nodes that share the same ethernet device"
 par nodesPerPset	I	pint	-	10	0	"8|16;8" -	"number of BGL nodes in one Pset"
 par nrPPFTaps		I	int	-	10	0	16	 -	"number of elements in the polyphasefilter"
 par psetsPerCell	I	pint	-	10	0	"1|2;1"	 -	"number of Pset per Cell"
+par useZoid		I   	bool    -       10  	0	true			-	'???'
 
 
 # -- OLAP_Conn--
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  OLAP_Conn    1.0.1  development 'node constraint'  "Connection specification of OLAP"
+node  OLAP_Conn    1.0.2  development 'node constraint'  "Connection specification of OLAP"
 
 #    name         	     		dir. type   unit   prun. vm  value                     		constr.  descr.
 #--------------------------------------------------------------------------------------------------------
@@ -32,7 +33,6 @@ par input_BGLProc_BaseFileName  I	text	-	10	0	'/data/gijs'		- 	'File to use when
 par BGLProc_Storage_Transport	I	ptext	-	10	0	'File|TCP|UDP|Null;TCP' - 	'Type of transport used between Blue Gene and StorageSection.'
 par BGLProc_Storage_Ports	I	vtext	-	10	0	'[8300..8363]'		- 	'Portnumbers to use in the connections.'
 par BGLProc_Storage_BaseFileName I	text	-	10	0	'Correlations'		- 	'File to use when transport=File'
-par useZoid			I   	bool    -       10  	0	true			-	'???'
 
 # -- DelayComp --
 #      name        vers   qual        constr.            descr.
@@ -57,6 +57,7 @@ node  IONProc     1.0.0  development 'node constraint'  "???"
 #    name         	dir. 	type   	unit   	prun. 	vm  	value	constr. descr.
 #--------------------------------------------------------------------------------------------------------
 par integrationSteps	I	int	-	10  	0	1000	-	'???'
+par maxConcurrentComm	I	int	-	10	0	1	-	"max number of nodes that share the same ethernet device"
 par useGather		I   	bool    -       10  	0	true	-	'???'
 par useScatter		I   	bool    -       10  	0	true	-	'???'
 
@@ -77,14 +78,13 @@ par subbandsPerMS		I	int		-		10	0		1						-		'???'
 # -- OLAP--
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  OLAP         1.0.3  development 'node constraint'  "OLAP"
+node  OLAP         1.0.4  development 'node constraint'  "OLAP"
 
 #    name          		dir.    type   unit   prun.     vm      value   constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par delayCompensation			I   bool    -       10  0		true					-		'???'
 par IPHeaderSize				I	int		-		10	0		32						-		'???'
 par EPAHeaderSize				I	int		-		10	0		16						-		'???'
-par firstInputPortNr 			I	int		-		10	0		4346				    - 		'Portnumber the first RSPboard uses'
 par nrBitsPerSample				I	int		-		10	0		16						-		'???'
 par nrSecondsOfBuffer			I	int		-		10	0		40						-		'???'
 par nrSubbandsPerFrame			I	int		-		10	0		32						-		'???'
@@ -95,8 +95,8 @@ par subbandsPerPset				I	int		-		10	0		2						-		'???'
 
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses  BGLProc      1.0.1  development 'node constraint'  "Blue Gene Processing"
-uses  OLAP_Conn    1.0.1  development 'node constraint'  "Connection specification of OLAP"
+uses  BGLProc      1.0.2  development 'node constraint'  "Blue Gene Processing"
+uses  OLAP_Conn    1.0.2  development 'node constraint'  "Connection specification of OLAP"
 uses  DelayComp    1.0.0  development 'node constraint'  "Setting of the delaycompensation"
 uses  IONProc      1.0.0  development 'node constraint'  "???"
 uses  StorageProc  1.0.1  development 'node constraint'  "???"

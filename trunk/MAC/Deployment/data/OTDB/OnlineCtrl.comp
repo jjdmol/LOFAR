@@ -18,5 +18,5 @@ uses  InputAppl    1.0.1  development 1                  "InputSection Applicati
 uses  DelayAppl    1.0.0  development 1                  "DelayCompensation Application"
 uses  CorrAppl     1.0.0  development 1                  "Blue Gene Application"
 uses  StorageAppl  1.0.0  development 1                  "StorageSection Application"
-uses  OLAP         1.0.3  development 1                  "OLAP specific information"
+uses  OLAP         1.0.4  development 1                  "OLAP specific information"
 
