@@ -1,8 +1,16 @@
-#include "MSInfo.h"
+#include <casa/Arrays.h>
+#include <casa/aipstype.h>
 
-MSInfo::MSInfo()
+#include "MSInfo.h"
+#include "Antenna.h"
+
+MSInfo::MSInfo():
+	antennae(),
+	timeSlots()
 {
 	validInfo = false;
+	
+	
 }
 
 MSInfo::~MSInfo()
