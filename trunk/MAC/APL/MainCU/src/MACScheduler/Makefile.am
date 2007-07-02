@@ -1,4 +1,4 @@
-bin_PROGRAMS 				= MACScheduler 
+in_PROGRAMS 				= MACScheduler 
 
 MACScheduler_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -Wno-deprecated \
@@ -24,7 +24,7 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
-configfiles_DATA 	= customPrepPVSSDB.ctl
+configfiles_DATA 	= 
 
 sysconf_DATA		= MACScheduler.conf \
 					  MACScheduler.log_prop
