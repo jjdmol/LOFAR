@@ -240,8 +240,7 @@ void PAPrep() {
 	dyn_dyn_int xxdepei;
 	dyn_string types;
 
-	types = dpTypes("GCF*");
-  	dynAppend(types,"NCFObjectState");
+	types = dpTypes("*");
 	handleType(types, "NCFObjectState", DPEL_STRING);
 	handleType(types, "GCFPaPsEnabled", DPEL_STRING);
 	handleType(types, "GCFPaPsIndication", DPEL_STRING);
