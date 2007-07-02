@@ -25,7 +25,7 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
-configfiles_DATA 	= customPrepPVSSDB.ctl
+configfiles_DATA 	=
 
 sysconf_DATA		= StationControl.conf \
 					  StationControl.log_prop
