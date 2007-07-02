@@ -8,7 +8,7 @@ main() {
       dpType = types[i];
 
       // skip internal datapoints and GCF stuff        
-      if (substr(dpType,0,1) != "_" & substr(dpType,0,3) != "GCF") {
+      if (substr(dpType,0,1) != "_") {
 
         // Skip original ETM points
         if (dpType == "ANALOG1" ||
