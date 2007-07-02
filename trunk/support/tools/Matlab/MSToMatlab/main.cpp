@@ -43,6 +43,7 @@ CSimpleOpt::SOption cmdOptions[] = {
 	{ 7, _T("-f"), SO_NONE  },
 	{ 8, _T("-time"), SO_NONE  },
 	{ 8, _T("-t"), SO_NONE  },
+	{ 9, _T("-all"), SO_NONE },
 	SO_END_OF_OPTIONS
 };
 
@@ -56,10 +57,11 @@ void ShowUsage()
 	cout << setw(20) << "-fend"  				<< setw(60)   <<  "Frequency bin end." << endl;
 	cout << setw(20) << "-tstart"				<< setw(60)   << setiosflags(ios::left)<< "Time slot start. " << endl;
 	cout << setw(20) << "-tend"  				<< setw(60)   << setiosflags(ios::left)<< "Time slot end." << endl;
+	cout << setw(20) << "-all"  				<< setw(60)   << setiosflags(ios::left)<< "All time slots." << endl;
 	cout << setw(20) << "-polarization"	<< setw(60)		<< setiosflags(ios::left)<< "Polarization ID." << endl;
 	cout << setw(20) << "-band"  				<< setw(60)   << setiosflags(ios::left)<< "Band ID." << endl;
 	cout << setw(20) << "-frequency"		<< setw(60)   << setiosflags(ios::left)<< "Cube output is in R(i,j,t). (real slow)" << endl;
-	cout << setw(20) << "-time"					<< setw(60)   << setiosflags(ios::left)<< "Cube output is in R(i,j,f)." << endl;
+	cout << setw(20) << "-time"					<< setw(60)   << setiosflags(ios::left)<< "Cube output is in R(i,j,f). (default)" << endl;
 
 	cout << endl << "It is possible to abbreviate the arguments to respectivelly to" << endl;
 	cout << "-h -fs= -fe= -ts= te= -p= -b=" << endl << endl;
@@ -69,6 +71,7 @@ void ShowUsage()
 	cout << "Or with abbreviated arguments: " << endl ;
 	cout << "./MSToMatlab -ts=0 -te=5 /measurementsets/L2007_01575_SB0-1.MS ./outputDir" << endl;
 }
+
 
 int main(int argc, char ** argv){
 	string polarizations[4];
@@ -82,16 +85,18 @@ int main(int argc, char ** argv){
 	int error = 0;
 	bool foundError=false;
 
-	int freqStart = 0;
-	int freqStop = 0;
-	int timeSlotStart = 0;
-	int timeSlotStop = 0;
+	int freqStart = 	 0;
+	int freqStop = 		-1; // if after parsing of cmd args this is still -1 than the max frequency will be put in.
+	int timeSlotStart =0; 
+	int timeSlotStop = 1; // default timeslot stop if not overrided
 
 	int bandID = 0;
 	int polarizationID = 0;
 
 	string msFileName;
 	string outputDir = ".";
+
+	bool allTimeSlots=false;
 
 	CSimpleOpt args(argc, argv, cmdOptions);
 
@@ -133,77 +138,67 @@ int main(int argc, char ** argv){
 			if(args.OptionArg() != NULL){
 				iss.str(args.OptionArg());
 			}
-
-			if(args.OptionId() == 1)
+			switch(args.OptionId())
 			{
-				iss >> freqStart;
+				case 1:
+					iss >> freqStart;
+					break;
+				case 2:
+					iss >> freqStop;
+					break;
+				case 3:
+					iss >> timeSlotStart;
+					break;
+				case 4:
+					iss >> timeSlotStop;
+					break;
+				case 5:
+					iss >> polarizationID;
+					break;
+				case 6:
+					iss >> bandID;
+					break;
+				case 7:
+					fillMode = FillFrequency;
+					break;
+				case 8:
+					fillMode = FillTime;
+					break;
+				case 9:
+					allTimeSlots = true;
+					break;
+				default:
+					cout << "Invalid argument: " <<  args.OptionText();
+					return 1;
 			}
-			else if(args.OptionId() == 2)
-			{
-				iss >> freqStop;
-			}
-			else if(args.OptionId() == 3)
-			{
-				iss >> timeSlotStart;
-			}
-			else if(args.OptionId() == 4)
-			{
-				iss >> timeSlotStop;
-			}
-			else if(args.OptionId() == 5)
-			{
-				iss >> polarizationID;
-			}
-			else if(args.OptionId() == 6)
-			{
-				iss >> bandID;
-			}
-			else if(args.OptionId() == 7)
-			{
-				fillMode = FillFrequency;
-			}
-			else if(args.OptionId() == 8)
-			{
-				fillMode = FillTime;
-			}
-		}
-		else {
-			cout << "Invalid argument: " <<  args.OptionText();
-			return 1;
 		}
 	}
 
-	if(args.FileCount() ==0)
+	switch(args.FileCount())
 	{
-		cout << "Measurement set directory is missing..." << endl;
-		return -1;
+		case 0:
+			cout << "Measurement set directory is missing..." << endl;
+			return -1;
+			break;
+		case 1:
+			// only MS dir is given
+			msFileName = args.File(0);
+			// output dir is .
+			break;
+		case 2:
+			msFileName = args.File(0);
+			outputDir = args.File(1);
+			break;
+		default:
+			cout << "Only two file or directory arguments are parsed " << args.File(2) << " is being ignored." << endl;
+			break;
+			
 	}
-	else if(args.FileCount()== 1)
-	{
-		// only MS dir is given
-		msFileName = args.File(0);
-		// output dir is .
-	}
-	else if(args.FileCount() == 2)
-	{
-		msFileName = args.File(0);
-		outputDir = args.File(1);
-	}
-	else if(args.FileCount() == 3){
-		cout << "Third file argument " << args.File(2) << " is being ignored." << endl;
-	}
-	
 
 	if(outputDir.at(outputDir.size()-1) != '/')
 	{
 		outputDir.append("/");
 	}
-
-	cout << "Frequency range " << freqStart << "-" << freqStop << endl;
-	cout << "Time range "  << timeSlotStart << "-" << timeSlotStop << endl;
-	cout << "Polarization " << polarizations[polarizationID] << endl;
-	cout << "Selected band " << bandID << endl;
-
 	if(fillMode == FillTime)
 	{
 		cout << "Third dimension of cube is time." << endl;
@@ -214,25 +209,45 @@ int main(int argc, char ** argv){
 	}
 
 	cout << endl;
-	
-	//string msFileName("/dop156_0/jeurink/L2007_01575_SB0-1.MS");
-	//string outputDir = "testdir/";
 
+	// create directory
 	int status = mkdir( outputDir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH );
-
 	if(status == -1)
 	{
-		cout << "Error creating " << outputDir << " directory."  << endl;
+		cout << "Directory " << outputDir << " already exists or no rights to create."  << endl;
 	}
 	
-	MSReader* msReader = new MSReader(msFileName);
-	int nAntennae = msReader->getNumberAntennae();
-	cout << "N antennae " << nAntennae << flush << endl;
+	MSReader msReader(msFileName);
+	
+	// To tell MSReader witch band we are going to use.. needs some redesigning
+	// It has to be called before msReader.getTimeCube and getFrequencyCube are called.
+	msReader.setBandInfo(bandID);
+	
+	MSInfo tempMSInfo = msReader.getMSInfo();
+
+	if(allTimeSlots)
+	{
+		timeSlotStop = msReader.getNTimeSlots();
+	}
+
+	if(freqStop == -1){ // the default is to copy the full frequency spectrum
+		freqStop = tempMSInfo.nChannels;
+	}
+
+	cout << "Frequency range " << freqStart << "-" << freqStop << endl;
+	cout << "Time range "  << timeSlotStart << "-" << timeSlotStop << endl;
+	cout << "Polarization " << polarizations[polarizationID] << endl;
+	cout << "Selected band " << bandID << endl;
+	
+	MatWriter matWriter;
 
 	if(fillMode == FillTime){
-		MatWriter* matWriter = new MatWriter(nAntennae, nAntennae, freqStop - freqStart);
 
+		bool foundError = false;
+		int error=0;
+	
 		stringstream stm("");
+		string varName;
 	
 		cout << "For loop start "<< timeSlotStart << flush;
 		cout << " For loop stop "<< timeSlotStop << flush << endl;
@@ -241,40 +256,41 @@ int main(int argc, char ** argv){
 		{
 			stm << "R";
 			stm << polarizations[polarizationID];
-			stm << "b";
-			stm << bandID;
+			//stm << "b";
+			//stm << bandID;
 			stm << "t";
 			stm << setw(4) << setfill('0') << timeSlot;
+			varName = stm.str();
+			
 			stm << ".mat";
 			//cout << "Output file name: " << stm.str() << endl;
 	
 			cout << "Get cube " << timeSlot << " from ms..." << flush ;
-			Cube<complex<float> > cube = msReader->getTimeCube(timeSlot, bandID, polarizationID, freqStart, freqStop);
+			Cube<complex<float> > cube = msReader.getTimeCube(timeSlot, bandID, polarizationID, freqStart, freqStop);
 			cout << "Done." << flush << endl;
 			
 			string fileName(outputDir+ stm.str());
 			stm.str("");
 			
-			error = matWriter->openFile(fileName);
+			error = matWriter.openFile(fileName);
 			if(error!=0){
 				foundError = true;
 			}
-			error = matWriter->writeCube(cube);
+			error = matWriter.writeCube(cube);
 			if(error!=0){
 				foundError = true;
 			}
-			error = matWriter->closeFile();
+			error = matWriter.closeFile(varName);
 			if(error!=0){
 				foundError = true;
-			}			
+			}
 			cout << endl;
 		}
 	}
 	else if(fillMode == FillFrequency)
 	{
-		MatWriter* matWriter = new MatWriter(nAntennae, nAntennae, timeSlotStop - timeSlotStart);
-
 		stringstream stm("");
+		string varName;
 	
 		cout << "Loop for frequencies: "<< freqStart << flush;
 		cout << " - "<< freqStop << flush << endl;
@@ -282,15 +298,16 @@ int main(int argc, char ** argv){
 		{
 			stm << "R";
 			stm << polarizations[polarizationID];
-			stm << "b";
-			stm << bandID;
+			//stm << "b";
+			//stm << bandID;
 			stm << "f";
 			stm << setw(4) << setfill('0') << freq;
+			varName = stm.str();
 			stm << ".mat";
 			cout << "Output file name: " << stm.str() << endl;
 	
 			cout << "Get cube " << freq << " from ms..." << flush ;
-			Cube<complex<float> > cube = msReader->getFrequencyCube(freq, bandID, polarizationID, timeSlotStart, timeSlotStop);
+			Cube<complex<float> > cube = msReader.getFrequencyCube(freq, bandID, polarizationID, timeSlotStart, timeSlotStop);
 			uInt nAnntenae1 = cube.nrow();
 			uInt nAnntenae2 = cube.ncolumn();
 			uInt nFreq = cube.nplane();
@@ -302,21 +319,30 @@ int main(int argc, char ** argv){
 			string fileName(outputDir+ stm.str());
 			stm.str("");
 			
-			error = matWriter->openFile(fileName);
+			error = matWriter.openFile(fileName);
 			if(error!=0){
 				foundError = true;
 			}
-			error = matWriter->writeCube(cube);
+			error = matWriter.writeCube(cube);
 			if(error!=0){
 				foundError = true;
 			}
-			error = matWriter->closeFile();
+			error = matWriter.closeFile(varName);
 			if(error!=0){
 				foundError = true;
 			}			
 			cout << endl;
 		}
 	}
+	String infoFilename("info.mat");
+	String infoFileFullName(outputDir);
+	
+	MSInfo msInfo = msReader.getMSInfo();
+	
+	infoFileFullName.append(infoFilename);
+
+	matWriter.writeInfoFile(infoFileFullName, msInfo);
+	
 	if(foundError)
 	{
 		cout << "Found error. Quit... " << endl;

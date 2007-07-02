@@ -1,5 +1,8 @@
 #include "MatWriter.h"
+
 #include "mat.h"
+#include "MSInfo.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -11,42 +14,65 @@ using namespace casa;
 
 typedef float dataType;
 
-void plotCube(const Cube<complex<float> >& cube)
+void writeMSInfoToScreen(MSInfo& msInfo)
 {
-	uInt nAntenae1 = cube.nrow();
-	uInt nAntenae2 = cube.ncolumn();
-	uInt nFreq = cube.nplane();
-
-	for(uInt i=0; i<nAntenae1; i++){
-		for(uInt j=0; j<nAntenae2; j++)
-		{
-			if(j >= i)
-			{
-				complex<float> complexFloat = cube(i,j,1);
-				cout << setw(5) << complexFloat << ",";
-			}
-			else
-			{
-				cout << setw(6) << " ";
-			}
-		}
-		cout << endl;
+	uint end= msInfo.timeSlots.size();
+	for (uint i=0; i< end; i++)
+	{
+		cout << "TimeSlot " << i << ": " << msInfo.timeSlots.at(i) << endl;
 	}
 }
 
-MatWriter::MatWriter(int dim1, int dim2, int dim3)
+MatWriter::MatWriter()
 {
 	dimensions = 3;
-	dimensionLengths[0]= dim1;
-	dimensionLengths[1]= dim2;
-	dimensionLengths[2]= dim3;
 	matlabDocument = NULL;
-
+	pa = NULL;
 }
 
 MatWriter::~MatWriter()
 {
+}
+
+int MatWriter::writeInfoFile(const string& fileName, MSInfo& msInfo)
+{
+	//writeMSInfoToScreen(msInfo);
+	cout << "Writing INFO file..." << flush;
+	MATFile *matlabInfoDocument;
+	matlabInfoDocument = matOpen(fileName.c_str(), "w");
+
+	mxArray *paFreqInfo;
+	int nChannels = msInfo.nChannels;
+	paFreqInfo = mxCreateNumericArray(1, &nChannels, mxDOUBLE_CLASS, mxREAL);
+	for(int i=0; i < nChannels; i++ )
+	{
+		double temp = msInfo.frequencies(i);
+		memcpy((void *)(mxGetPr(paFreqInfo)+i), (void *) &temp, sizeof(double));
+	}
+	matPutVariableAsGlobal(matlabInfoDocument, "Frequencies", paFreqInfo);
+
+	mxArray *paTimeslotInfo;
+	int nTimeSlots= msInfo.timeSlots.size();
+	paTimeslotInfo = mxCreateNumericArray(1, &nTimeSlots, mxDOUBLE_CLASS, mxREAL);
+
+	for (int i=0; i< nTimeSlots; i++)
+	{
+		double temp = msInfo.timeSlots.at(i);
+		cout << "Timeslot " << i << " = " << temp << endl;
+		memcpy((void *)(mxGetPr(paTimeslotInfo)+i), (void *) &temp, sizeof(double));
+	}
 	
+	matPutVariableAsGlobal(matlabInfoDocument, "TimeSlots", paTimeslotInfo);
+	
+	
+	matClose(matlabInfoDocument);
+	
+	//mxDestroyArray(paInfo);
+	mxDestroyArray(paFreqInfo);
+	mxDestroyArray(paTimeslotInfo);
+	cout << "Done." << endl;
+	
+	return 0;
 }
 
 int MatWriter::openFile(const string& fileName)
@@ -61,45 +87,69 @@ int MatWriter::openFile(const string& fileName)
 			return(-1);
 		}
 		cout << "Done." << endl;
-
-		std::cout << "Create " << dimensions << "d array..." << std::flush;
-		pa = mxCreateNumericArray(dimensions, dimensionLengths, mxSINGLE_CLASS, mxCOMPLEX);
-		if (pa == NULL) {
-			printf("%s : Out of memory on line %d\n", __FILE__, __LINE__);
-			printf("Unable to create mxArray.\n");
-			return(-1);
-		}
-		std::cout << "Done.\n";
 	}
 	else
 	{
 		cout << "Close prevorious document before opening an other!" << endl;
-		return -1;
+		return 1;
 	}
+	return 0;
+}
+
+void MatWriter::setCubeSize(int dim1, int dim2, int dim3)
+{
+	cout << "Cube dimensions: " << dim1 << "," << dim2 << "," << dim3 << endl << flush << endl;
+	dimensionLengths[0]= dim1;
+	dimensionLengths[1]= dim2;
+	dimensionLengths[2]= dim3;
+}
+
+int MatWriter::initMatCube()
+{
+	std::cout << "Create " << dimensions << "d array... of " << dimensionLengths[0] <<"," << dimensionLengths[1] << "," << dimensionLengths[2] << endl << std::flush;
+	pa = mxCreateNumericArray(dimensions, dimensionLengths, mxSINGLE_CLASS, mxCOMPLEX);
+	
+	if (pa == NULL) {
+		printf("%s : Out of memory on line %d\n", __FILE__, __LINE__);
+		printf("Unable to create mxArray.\n");
+		return 1;
+	}
+	std::cout << "Done.\n";
 	return 0;
 }
 
 int MatWriter::writeCube(const Cube<complex<float> >& cube)
 {
-	if(matlabDocument == NULL)
-	{
-		cout << "Open Matlab document before writing to it!" << endl;
-		return -1;
-	}
-// Indexer for 3D matlab array
-	int multiDimensionalIndex[3] = {0,0,0};
-
-	// time is 4th dimension
-	//multiDimensionalIndex[3] = timeSlot;
-
 	// Amount of antenna1's, antenna2's and frequency bands
 	uInt nAntenae1 = cube.nrow();
 	uInt nAntenae2 = cube.ncolumn();
 	uInt nFreq = cube.nplane();
 
-	cout << "Cube dimensions: " << nAntenae1 << "," << nAntenae2 << "," << nFreq << flush << endl;
+	setCubeSize(nAntenae1, nAntenae2, nFreq);
 
-	// Indexers for matlab 1D array
+	int result = initMatCube();
+	
+	if(result == 1)
+	{
+		return 1;
+	}
+	
+	if(matlabDocument == NULL)
+	{
+		cout << "Open Matlab document before writing to it!" << endl;
+		return 1;
+	}
+
+	if(pa == NULL)
+	{
+		cout << "Create cube before writing to it!" << endl;
+		return 1;
+	}
+
+	// Indexer for 3D matlab array
+	int multiDimensionalIndex[3] = {0,0,0};
+
+	// Indexers for flatten matlab 1D array
 	int matlabIndex=0;
 	int matlabIndexConjugate=0;
 
@@ -147,16 +197,16 @@ int MatWriter::writeCube(const Cube<complex<float> >& cube)
 	return 0;
 }
 
-int MatWriter::closeFile()
+int MatWriter::closeFile(const string& varName)
 {
 	if(matlabDocument == NULL)
 	{
 		cout << "Cannot close document that is not opened." << endl;
-		return -1;
+		return 1;
 	}
 	int status =0;
 	std::cout << "Saving..." <<std::flush;
-	status = matPutVariableAsGlobal(matlabDocument, "Measurements", pa);
+	status = matPutVariableAsGlobal(matlabDocument, varName.c_str(), pa);
 	if (status != 0) {
 		printf("Error using matPutVariableAsGlobal\n");
 	}
@@ -172,6 +222,7 @@ int MatWriter::closeFile()
 	mxDestroyArray(pa);
 	printf("Done.\n");
 	matlabDocument = NULL;
+	pa = NULL;
 	return 0;
 }
 
