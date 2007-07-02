@@ -46,7 +46,7 @@ main()
       	    setGCFPaPsIndication("d",newString);
       	  }
  	}
-        deleteDP(dpName);
+//        deleteDP(dpName);
       }
     }
   } else {
