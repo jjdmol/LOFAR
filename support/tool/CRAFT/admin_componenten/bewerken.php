@@ -152,7 +152,7 @@
 					}
 					else $query = $query . ", NOW()";
 					
-					$query = $query . " WHERE Comp_Lijst_ID = '" . $_GET['c'] . "'";
+					$query = $query . ", Contact_Leverancier='".$_POST['leverancier']."', Contact_Fabricant='".$_POST['fabricant']."' WHERE Comp_Lijst_ID = '" . $_GET['c'] . "'";
 
 					if (mysql_query($query)) echo("Het gewijzigde component \"". $_POST['comp_naam'] ."\" is in het systeem bijgewerkt<br>");
 					else("Er is iets mis gegaan met het opslaan van het component \"". $_POST['comp_naam'] ."\"!! Het component is niet bijgewerkt!");
@@ -189,26 +189,6 @@
 										echo($data[0]);
   							 ?></td>
 							</tr>
-<?php /* 
-							<tr>
-								<td>Type component:</td>
-								<td><input type="hidden" name="comp_huidige_type" value="<?php echo($row['Comp_Type_ID']); ?>"><select name="comp_nieuwe_type">
-									<?php 
-										$query = "SELECT Comp_Type, Type_Naam FROM comp_type WHERE Comp_Type > 1";
-										$result = mysql_query($query);
-										while ($data = mysql_fetch_array($result)) {
-											echo("<option value=\"". $data['Comp_Type'] ."\"");
-											if (isset($_POST['comp_nieuwe_type']) && isset($_POST['comp_huidige_type']) && $_POST['comp_nieuwe_type'] != $_POST['comp_huidige_type']) {
-												if ($_POST['comp_nieuwe_type'] == $data['Comp_Type']) echo(" SELECTED"); }
-											else {if ($data['Comp_Type'] == $row['Comp_Type_ID']) echo(" SELECTED");}
-											echo(">". $data['Type_Naam'] ."</option>\r\n");
-										}									
-									?></select>
-				    			<?php if(!Type_Controle()) echo('<b>* Type kan niet veranderen vanwege onderliggende componenten!</b>');?>
-								</td>
-							</tr>
-							
- */ ?>	
 							<tr>
 								<td>Parent component:</td>
 								<td><input type="hidden" name="comp_huidige_parent" value="<?php echo($row['Comp_Parent']); ?>"><select name="comp_nieuwe_parent">
@@ -275,11 +255,38 @@
 							</tr>
 							<tr>
 								<td>Fabricant:</td>
-								<td><select></select></td>
+								<td><select name="fabricant">				    				
+									<?php
+					    			$query = 'SELECT Contact_ID, Contact_Naam FROM contact WHERE Contact_ID > 1';
+				    			  $resultaat = mysql_query($query);
+			  						if (isset($_POST['fabricant'])) $selectie = $_POST['fabricant'];
+			  						else $selectie = $row['Contact_Fabricant'];
+										
+								  	while ($data = mysql_fetch_array($resultaat)) {
+								  		echo('<option value="'. $data['Contact_ID'] .'"');
+								  		if(isset($selectie) && $data['Contact_ID'] == $selectie)
+								  			echo('SELECTED');
+								  		echo('>'. $data['Contact_Naam'] .'</option>');
+								  	}
+							    ?></select>
+								</td>
 							</tr>
 							<tr>
 								<td>Leverancier:</td>
-								<td><select></select></td>
+								<td><select name="leverancier">									
+									<?php
+					    			$query = 'SELECT Contact_ID, Contact_Naam FROM contact WHERE Contact_ID > 1';
+				    			  $resultaat = mysql_query($query);
+			  						if (isset($_POST['leverancier'])) $selectie = $_POST['leverancier'];
+			  						else $selectie = $row['Contact_Leverancier'];
+										
+								  	while ($data = mysql_fetch_array($resultaat)) {
+								  		echo('<option value="'. $data['Contact_ID'] .'"');
+								  		if(isset($selectie) && $data['Contact_ID'] == $selectie)
+								  			echo('SELECTED');
+								  		echo('>'. $data['Contact_Naam'] .'</option>');
+								  	}
+							    ?></select></td>
 							</tr>
 							<tr>
 								<td>Leverdatum:</td>

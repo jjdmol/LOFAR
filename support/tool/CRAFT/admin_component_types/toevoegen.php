@@ -58,9 +58,9 @@
 					if (isset($_POST['entry']) && ($_POST['entry'] == 1 || $_POST['entry'] == 'on')) $entry = 1;
 					else $entry = 0;
 					
-					$query = "INSERT INTO comp_type (Type_Naam, Type_Parent, Aangemaakt_Door, Aanmaak_Datum, Structuur_Entry, Min_Aantal, Max_Aantal, Reserve_Minimum, Type_Verantwoordelijke) ";
+					$query = "INSERT INTO comp_type (Type_Naam, Type_Parent, Aangemaakt_Door, Aanmaak_Datum, Structuur_Entry, Min_Aantal, Max_Aantal, Reserve_Minimum, Type_Verantwoordelijke, Gefabriceerd_door, Geleverd_Door) ";
 					$query = $query . " VALUES ('". $_POST['naam'] ."', '". $_POST['parent'] ."', '". $_SESSION['gebr_id'] ."' ,NOW(), '". $entry ."', '". $_POST['minimum'] ."', '";
-					$query = $query. $_POST['maximum'] ."', '". $_POST['reserve'] ."', '". $_POST['verantwoordelijke'] ."')";
+					$query = $query. $_POST['maximum'] ."', '". $_POST['reserve'] ."', '". $_POST['verantwoordelijke'] ."', '".$_POST['fabricant']."', '". $_POST['leverancier'] ."')";
 					if (mysql_query($query)) echo("Het nieuwe type \"". $_POST['naam'] ."\" is aan het systeem toegevoegd<br>");
 					else echo("Het nieuwe type \"". $_POST['naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
 					echo('<a href="admin.php?s=1&p=1">Klik hier om nog een type toe te voegen.</a>');
@@ -89,8 +89,32 @@
 	    			?>
 	    			</select></td></tr>
 	    		<tr><td>Structurele entry:</td><td><input name="entry" type="checkbox" value="1" <?php if(isset($_POST['entry']) && $_POST['entry'] == 1 ) echo("CHECKED"); ?>></td></tr>
-	    		<tr><td>Gefabriceerd door:</td><td><select name="fabricant"></select></td></tr>
-	    		<tr><td>Geleverd door:</td><td><select name="leverancier"></select></td></tr>
+	    		<tr><td>Gefabriceerd door:</td><td><select name="fabricant">
+		    		<?php
+		    			$query = 'SELECT Contact_ID, Contact_Naam FROM contact WHERE Contact_ID > 1';
+	    			  $resultaat = mysql_query($query);
+							
+					  	while ($data = mysql_fetch_array($resultaat)) {
+					  		echo('<option value="'. $data['Contact_ID'] .'"');
+					  		if(isset($_POST['fabricant']) && $data['Contact_ID'] == $_POST['fabricant'])
+					  			echo('SELECTED');
+					  		echo('>'. $data['Contact_Naam'] .'</option>');
+					  	}
+			    	?>
+	    			</select></td></tr>
+	    		<tr><td>Geleverd door:</td><td><select name="leverancier">
+		    		<?php
+		    			$query = 'SELECT Contact_ID, Contact_Naam FROM contact WHERE Contact_ID > 1';
+	    			  $resultaat = mysql_query($query);
+							
+					  	while ($data = mysql_fetch_array($resultaat)) {
+					  		echo('<option value="'. $data['Contact_ID'] .'"');
+					  		if(isset($_POST['leverancier']) && $data['Contact_ID'] == $_POST['leverancier'])
+					  			echo('SELECTED');
+					  		echo('>'. $data['Contact_Naam'] .'</option>');
+					  	}
+			    	?>
+	    			</select></td></tr>
 	    		<tr><td>Minimaal aan te maken aantal:</td><td><input name="minimum" type="text" value="<?php if(isset($_POST['minimum'])) echo($_POST['minimum']); else echo('1'); ?>"><?php if (isset($_POST['minimum']) && $_POST['minimum'] < 0 ) echo('<b id="type_minimum">* Het minimum aantal ('. $_POST['minimum'] .') mag niet negatief zijn!</b>');?></td></tr>
 	    		<tr><td>Maximaal aan te maken aantal:</td><td><input name="maximum" type="text" value="<?php if(isset($_POST['maximum'])) echo($_POST['maximum']); ?>"><?php if (isset($_POST['minimum']) && isset($_POST['maximum']) && ($_POST['maximum'] < $_POST['minimum']) ) echo('<b id="type_maximum">* Het minimum aantal is hoger dan het maximum aantal!</b>'); ?> </td></tr>
 	    		<tr><td>Aantal op reserve:</td><td><input name="reserve" type="text" value="<?php if(isset($_POST['reserve'])) echo($_POST['reserve']) ?>"><?php

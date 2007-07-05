@@ -104,7 +104,7 @@
     			//controleren of er opgeslagen kan worden, of dat de invoervelden getoond moeten worden
     			if (Valideer_Invoer()) {
     				//het eerste gedeelte van de query
-    				$query = "INSERT INTO comp_lijst (Comp_Naam, Comp_Type_ID, Comp_Parent, Comp_Status, Comp_Locatie, Comp_Verantwoordelijke, Status_Datum";
+    				$query = "INSERT INTO comp_lijst (Comp_Naam, Comp_Type_ID, Comp_Parent, Comp_Status, Comp_Locatie, Comp_Verantwoordelijke, Contact_Fabricant, Contact_Leverancier, Status_Datum";
     				//als er een leverdatum ingevoerd is, dan dit veld ook toevoegen aan de query
     				if (isset($_POST['leverdatum']) && $_POST['leverdatum'] != '')
     					$query = $query . ", Lever_datum";
@@ -114,7 +114,7 @@
     				
     				//de waardes, welke opgeslagen moeten worden in de database
     				$query = $query . ") VALUES ('". $_POST['hidden_naam'] ."', '". $_POST['comp_type'] ."', '". $_POST['hidden_type'] ."', '";
-    				$query = $query . $_POST['comp_status'] ."', '". $_POST['comp_locatie'] ."', '".  $_POST['comp_verantwoordelijke']."'";
+    				$query = $query . $_POST['comp_status'] ."', '". $_POST['comp_locatie'] ."', '".  $_POST['comp_verantwoordelijke']."', '".$_POST['hidden_fabricant']."', '".$_POST['hidden_leverancier']."'";
     				
     				//de waarde voor de statusdatum aan de query toevoegen
     				//wanneer er een waarde in is gevuld, dan deze gebruiken en anders de huidige datum en tijd
@@ -137,7 +137,7 @@
     				
     				//de query afsluiten met een haakje
     				$query = $query . ')';
-
+	echo($query);
 						if (mysql_query($query)) echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" is aan het systeem toegevoegd<br>");
 						else echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
     				echo('<a href="admin.php?p=2&s=1">Klik hier om nog een component toe te voegen.</a>');
@@ -231,11 +231,13 @@
 	    			</tr>
 	    			<tr>
 	    				<td>Fabricant contact:</td>
-	    				<td><select></select></td>
+	    				<td><iframe id="frame_fabricant" name="frame_fabricant" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_fabricant.php?c=<?php echo($selected); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="450" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+	    				</td>
 	    			</tr>
 	    			<tr>
 	    				<td>Leverancier contact:</td>
-	    				<td><select></select></td>
+	    				<td><iframe id="frame_leverancier" name="frame_leverancier" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_leverancier.php?c=<?php echo($selected); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="450" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+	    				</td>
 	    			</tr>
 	    			<tr>
 	    				<td>Leverdatum:</td>
@@ -251,7 +253,8 @@
 	    			</tr>
 	    			<tr>
 	    				<td><input id="hidden_type" name="hidden_type" type="hidden" value=""><input id="hidden_naam" name="hidden_naam" type="hidden" value="">
-	    						<input id="hidden_aantal" name="hidden_aantal" type="hidden" value=""><input id="hidden_maximum" name="hidden_maximum" type="hidden" value=""></td>
+	    						<input id="hidden_aantal" name="hidden_aantal" type="hidden" value=""><input id="hidden_maximum" name="hidden_maximum" type="hidden" value="">
+	    						<input id="hidden_fabricant" name="hidden_fabricant" type="hidden" value=""><input id="hidden_leverancier" name="hidden_leverancier" type="hidden" value=""></td>
 	    				<td><a href="javascript:submitComponentToevoegen();">Toevoegen</a></td>
 	    			</tr>
 	    		</table>
