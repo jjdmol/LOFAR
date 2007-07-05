@@ -21,11 +21,13 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 import java.rmi.RemoteException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
@@ -186,9 +188,19 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             Calendar cal = Calendar.getInstance();
             cal.setTime(now);
             cal.set(Calendar.MINUTE,cal.get(Calendar.MINUTE)+4);
-            Date minTime = cal.getTime();
+            DateFormat idf = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
+            DateFormat odf = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
+            odf.setTimeZone(TimeZone.getTimeZone("GMT"));
+            String aGMTTime = odf.format(cal.getTime());
+            Date minTime = null;
+            try {
+                minTime = idf.parse(aGMTTime);
+            } catch (ParseException ex) {
+                logger.debug("Error converting date string: " + aGMTTime);
+                return false;
+            }
             if (itsStartDate.before(minTime)) {
-                anErrorMsg = "Start time needs to be minimal 4 minutes away from now";
+                anErrorMsg = "Start time needs to be minimal 4 minutes away from now (GMT)";
             }
             if (itsStopDate.before(itsStartDate)) {
                 if (anErrorMsg.length() > 0) {
