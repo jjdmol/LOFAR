@@ -64,7 +64,8 @@
 						$query = $query . "1', ";
 					else $query = $query . "0', ";
 					$query = $query . "Min_Aantal='". $_POST['minimum'] ."', Max_Aantal='". $_POST['maximum'] ."', Reserve_Minimum='". $_POST['reserve'] ."', ";
-					$query = $query . "Type_Verantwoordelijke='". $_POST['verantwoordelijke'] ."' WHERE Comp_Type = '" . $_GET['c'] . "'";
+					$query = $query . "Type_Verantwoordelijke='". $_POST['verantwoordelijke'] ."', Geleverd_Door='".$_POST['leverancier']."', Gefabriceerd_Door='".$_POST['fabricant']."'";
+					$query = $query . " WHERE Comp_Type = '" . $_GET['c'] . "'";
 					
 					if (mysql_query($query)) echo("Het gewijzigde type \"". $_POST['naam'] ."\" is in het systeem bijgewerkt<br>");
 					else("Er is iets mis gegaan met het opslaan van het type \"". $_POST['naam'] ."\"!! Het type is niet bijgewerkt!");
@@ -139,11 +140,39 @@
 				    		<tr><td>Aangemaakt op:</td><td><?php echo($row['Aanmaak_Datum']) ?></td><td></td></tr>
 				    		<tr>
 				    			<td>Gefabriceerd door:</td>
-				    			<td><select name="fabricant"></select></td>
+				    			<td><select name="fabricant">						    		
+				    				<?php
+						    			$query = 'SELECT Contact_ID, Contact_Naam FROM contact WHERE Contact_ID > 1';
+					    			  $resultaat = mysql_query($query);
+				  						if (isset($_POST['fabricant'])) $selectie = $_POST['fabricant'];
+				  						else $selectie = $row['Gefabriceerd_Door'];
+											
+									  	while ($data = mysql_fetch_array($resultaat)) {
+									  		echo('<option value="'. $data['Contact_ID'] .'"');
+									  		if(isset($selectie) && $data['Contact_ID'] == $selectie)
+									  			echo('SELECTED');
+									  		echo('>'. $data['Contact_Naam'] .'</option>');
+									  	}
+							    	?></select>
+							    </td>
 				    		</tr>
 				    		<tr>
 				    			<td>Geleverd door:</td>
-				    			<td><select name="leverancier"></select></td>
+				    			<td><select name="leverancier">
+						    		<?php
+						    			$query = 'SELECT Contact_ID, Contact_Naam FROM contact WHERE Contact_ID > 1';
+					    			  $resultaat = mysql_query($query);
+				  						if (isset($_POST['leverancier'])) $selectie = $_POST['leverancier'];
+				  						else $selectie = $row['Geleverd_Door'];
+											
+									  	while ($data = mysql_fetch_array($resultaat)) {
+									  		echo('<option value="'. $data['Contact_ID'] .'"');
+									  		if(isset($selectie) && $data['Contact_ID'] == $selectie)
+									  			echo('SELECTED');
+									  		echo('>'. $data['Contact_Naam'] .'</option>');
+									  	}
+							    	?></select>
+				    			</td>
 				    		</tr>
 				    		<tr>
 				    			<td>Minimaal aan te maken aantal:</td>
