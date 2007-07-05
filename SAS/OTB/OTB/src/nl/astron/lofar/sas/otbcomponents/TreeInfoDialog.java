@@ -21,9 +21,15 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 import java.rmi.RemoteException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JOptionPane;
+import nl.astron.lofar.lofarutils.DateTimeChooser;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
@@ -46,7 +52,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
      * 
      * @param   parent      Frame where this dialog belongs
      * @param   modal       Should the Dialog be modal or not
-     * @param   aTree       the Tree we wrok with
+     * @param   aTree       the Tree we work with
      * @param   aMainFrame  the Mainframe we are part off
      */
     public TreeInfoDialog(boolean modal, int[] treeIDs , MainFrame aMainFrame) {
@@ -83,6 +89,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }
     
     private void init() {
+        SimpleDateFormat id = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
         if (itsMultiple) {
             topLabel.setText("Tree Meta Data  -- MULTIPLE SELECTION -- Only first Tree's info is shown \n" +
                              "                Changes will be applied to all selections");            
@@ -98,7 +105,27 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             itsClassification = itsOtdbRmi.getClassif().get(itsTree.classification);
             itsCampaign = itsTree.campaign;
             itsStarttime = itsTree.starttime;
+            // try to set the dates
+            if (itsStarttime.length() > 0) {
+                try {
+                    itsStartDate = id.parse(itsStarttime);
+                } catch (ParseException ex) {
+                    logger.debug("Error converting starttime");
+                    itsStarttime="";
+                    itsStartDate=null;
+                }
+            }
             itsStoptime = itsTree.stoptime;
+            if (itsStoptime.length() > 0) {
+                try {
+                    itsStopDate = id.parse(itsStoptime);
+                } catch (ParseException ex) {
+                    logger.debug("Error converting stoptime");
+                    itsStoptime="";
+                    itsStopDate=null;
+                }
+            }
+            
             itsDescription = itsTree.description;     
             initComboLists();
             initView();
@@ -125,6 +152,66 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         return hasChanged;
     }
     
+    /*
+     * Compose the timestring from a given date
+     */
+    public void composeTimeString(String time) {
+        // Set the dateformat OTDB takes
+        SimpleDateFormat id = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
+        if (time.equals("start")) {
+            startTimeInput.setText(id.format(itsStartDate));
+        } else if (time.equals("stop")) {
+            stopTimeInput.setText(id.format(itsStopDate));
+        }
+    }
+
+    private boolean checkTimes() {
+        // start the checking. Both dates need to be set.
+        // the startdate needs to be at least 4 minutes away from NOW
+        // the enddate needs to be further in the future then the starttime/.
+
+        String anErrorMsg = "";
+        if (itsStartDate == null || startTimeInput.getText().length() == 0) {
+            anErrorMsg = "Start time not set";
+        } else if (itsStopDate == null || stopTimeInput.getText().length() == 0) {
+            anErrorMsg = "Stop time not set";
+        } else {
+            
+            if (itsStopDate.before(itsStartDate)) {
+               anErrorMsg = "Stop time BEFORE start time";
+            }
+            
+            // check if date is further away then now + 4minutes
+            Date now = new Date();
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(now);
+            cal.set(Calendar.MINUTE,cal.get(Calendar.MINUTE)+4);
+            Date minTime = cal.getTime();
+            if (itsStartDate.before(minTime)) {
+                anErrorMsg = "Start time needs to be minimal 4 minutes away from now";
+            }
+            if (itsStopDate.before(itsStartDate)) {
+                if (anErrorMsg.length() > 0) {
+                    anErrorMsg+=", and ";
+                }
+                anErrorMsg = "Stop time BEFORE start time";
+            }
+        }
+        
+        if (anErrorMsg.length() > 0) {
+            anErrorMsg +="\n Do you want to Continue?";
+
+            // create a warning popup.
+            if (JOptionPane.showConfirmDialog(this,anErrorMsg,"Warning",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return true;
+
+    }
+    
     private void initFocus() {
         
             
@@ -140,6 +227,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             startTimeInput.setVisible(false);
             stopTimeLabel.setVisible(false);
             stopTimeInput.setVisible(false);
+            setStartDateButton.setVisible(false);
+            setStopDateButton.setVisible(false);
             descriptionInput.setEnabled(true);                
             // VICtemplate    
         } else if (itsTreeType.equals("VItemplate")) {
@@ -151,6 +240,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             startTimeInput.setVisible(false);
             stopTimeLabel.setVisible(false);
             stopTimeInput.setVisible(false);
+            setStartDateButton.setVisible(false);
+            setStopDateButton.setVisible(false);
             descriptionInput.setEnabled(true);                
             campaignInput.setEnabled(true);        
             
@@ -164,6 +255,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             startTimeInput.setVisible(true);
             stopTimeLabel.setVisible(true);
             stopTimeInput.setVisible(true);
+            setStartDateButton.setVisible(true);
+            setStopDateButton.setVisible(true);
             if (itsMultiple) {
                 descriptionInput.setEnabled(false);
                 campaignInput.setEnabled(false);        
@@ -225,7 +318,15 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         descriptionInput.setText(itsDescription);
     }
     
-    private void saveNewTree() {
+    private boolean saveNewTree() {
+        
+        // make sure that if a VICtree is selected we check the start-end time first. If they are not correct, pop up a dialog.
+        
+        if (itsTreeType.equals("VHtree")) {
+            if ( ! checkTimes()) {
+                return false;
+            }
+        }
         try {
             
             // if multiple selections have been made, then the changes should be set to all the selected trees
@@ -309,8 +410,10 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     }
                 }
             }
+            return true;
         } catch (Exception e) {
-          logger.debug("Changing metainfo via RMI and JNI failed");  
+          logger.debug("Changing metainfo via RMI and JNI failed"); 
+          return false;
         }
     }
     
@@ -349,6 +452,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         campaignInput = new javax.swing.JTextField();
         jScrollPane1 = new javax.swing.JScrollPane();
         topLabel = new javax.swing.JTextArea();
+        setStartDateButton = new javax.swing.JButton();
+        setStopDateButton = new javax.swing.JButton();
 
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
@@ -418,11 +523,14 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         stopTimeLabel.setText("StopTime:");
         getContentPane().add(stopTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 350, -1, 20));
 
+        startTimeInput.setEditable(false);
         startTimeInput.setToolTipText("Start Time in GMT (YYYY-MMM-DD hh:mm:ss)");
-        getContentPane().add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 320, 330, -1));
+        startTimeInput.setDragEnabled(true);
+        getContentPane().add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 320, 270, -1));
 
+        stopTimeInput.setEditable(false);
         stopTimeInput.setToolTipText("Stop Time in GMT (YYYY-MMM-DD hh:mm:ss)");
-        getContentPane().add(stopTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 350, 330, -1));
+        getContentPane().add(stopTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 350, 270, -1));
 
         momIDLabel.setText("MoMID:");
         getContentPane().add(momIDLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 80, -1, 20));
@@ -468,13 +576,50 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
         getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 480, 40));
 
+        setStartDateButton.setText("set");
+        setStartDateButton.setToolTipText("set Start Date");
+        setStartDateButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                setStartDateButtonActionPerformed(evt);
+            }
+        });
+
+        getContentPane().add(setStartDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 320, 60, 20));
+
+        setStopDateButton.setText("set");
+        setStopDateButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                setStopDateButtonActionPerformed(evt);
+            }
+        });
+
+        getContentPane().add(setStopDateButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 350, 60, 20));
+
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void setStopDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStopDateButtonActionPerformed
+        Date initialDate = new Date();
+        if (itsStartDate != null | itsStartDate.after(initialDate)) {
+            initialDate=itsStartDate;
+        }
+        DateTimeChooser chooser = new DateTimeChooser(initialDate);
+        itsStopDate = DateTimeChooser.showDialog(this,"StopTime",chooser);
+        composeTimeString("stop");
+    }//GEN-LAST:event_setStopDateButtonActionPerformed
+
+    private void setStartDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStartDateButtonActionPerformed
+        Date initialDate = new Date();
+        DateTimeChooser chooser = new DateTimeChooser(initialDate);
+        itsStartDate = DateTimeChooser.showDialog(this,"StartTime",chooser);
+        composeTimeString("start");
+    }//GEN-LAST:event_setStartDateButtonActionPerformed
+
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
-        saveNewTree();
-        setVisible(false);
-        dispose();
+        if (saveNewTree()) {
+            setVisible(false);
+            dispose();
+        }
     }//GEN-LAST:event_saveButtonActionPerformed
 
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
@@ -483,20 +628,22 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_cancelButtonActionPerformed
 
 
-    private MainFrame itsMainFrame;
-    private OtdbRmi   itsOtdbRmi;
-    private jOTDBtree itsTree;
+    private MainFrame itsMainFrame = null;
+    private OtdbRmi   itsOtdbRmi = null;
+    private jOTDBtree itsTree = null;
     private int []    itsTreeIDs=null;
     private boolean   isAdministrator;
     private boolean   hasChanged=false;
     private boolean   itsMultiple=false;
-    private String    itsClassification;
-    private String    itsTreeState;
-    private String    itsTreeType;
-    private String    itsCampaign;
-    private String    itsStarttime;
-    private String    itsStoptime;
-    private String    itsDescription;
+    private String    itsClassification = "";
+    private String    itsTreeState = "";
+    private String    itsTreeType = "";
+    private String    itsCampaign = "";
+    private String    itsStarttime = "";
+    private String    itsStoptime = "";
+    private String    itsDescription = "";
+    private Date      itsStartDate = null;
+    private Date      itsStopDate = null;
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField campaignInput;
@@ -519,6 +666,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private javax.swing.JTextField originalTreeIDInput;
     private javax.swing.JLabel originalTreeIDLabel;
     private javax.swing.JButton saveButton;
+    private javax.swing.JButton setStartDateButton;
+    private javax.swing.JButton setStopDateButton;
     private javax.swing.JTextField startTimeInput;
     private javax.swing.JLabel startTimeLabel;
     private javax.swing.JComboBox stateInput;
