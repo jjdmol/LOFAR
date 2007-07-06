@@ -82,7 +82,8 @@ public:
 				  uint16				aNrProcs,
 				  uint32				aExpectedLifeTime,
 				  uint16				anActivityLevel = 2,
-				  uint16				anArchitecture = 0);
+				  uint16				anArchitecture = 0,
+				  const string&			hostname = string(""));
 
 	// Destructor;
 	virtual ~ACAsyncClient();

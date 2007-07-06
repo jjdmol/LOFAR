@@ -68,7 +68,8 @@ public:
 				  	  uint32			aExpectedLifeTime,
 				  	  uint16			anActivityLevel,
 				  	  uint16			anArchitecture,
-					  bool				syncClient);
+					  bool				syncClient,
+					  const string&		hostname);
 
 	// Closes the connection with the server.
 	virtual ~ApplControlClient();

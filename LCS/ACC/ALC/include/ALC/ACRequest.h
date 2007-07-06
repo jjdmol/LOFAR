@@ -90,7 +90,7 @@ struct ACRequest
 	uint16	itsState;		// loaded, new, ok, losing
 
 	// @}
-};
+} __attribute__ ((aligned (4)));
 
 // @} addgroup
     } // namespace ALC
