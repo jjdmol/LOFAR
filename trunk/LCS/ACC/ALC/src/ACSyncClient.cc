@@ -37,13 +37,15 @@ ACSyncClient::ACSyncClient(const string&	aUniqUserName,
 				  		   uint16			aNrProcs,
 				  		   uint32			aExpectedLifeTime,
 				  		   uint16			anActivityLevel,
-				  		   uint16			anArchitecture) :
+				  		   uint16			anArchitecture,
+						   const string&	hostname) :
  	ApplControlClient(aUniqUserName, 
 					  aNrProcs, 
 					  aExpectedLifeTime,
 					  anActivityLevel,
 					  anArchitecture, 
-					  true)
+					  true,
+					  hostname)
 {
 }
 

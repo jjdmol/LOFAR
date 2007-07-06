@@ -43,7 +43,8 @@ ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 								  	 uint32			aExpectedLifeTime,
 								  	 uint16			anActivityLevel,
 								  	 uint16			anArchitecture,
-									 bool			syncClient) :
+									 bool			syncClient,
+									 const string&	hostname) :
 	ApplControl()
 {
 	// First setup a connection with the AC master at node 'hostID' and
@@ -51,9 +52,14 @@ ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 	ACRequest	aRequest;
 	uint16		reqSize = sizeof (ACRequest);
 
-	//TODO define constant for 3800 and hostname
+	//TODO define constant for 3800
 	// Connect to ACdaemon
-	Socket		reqSocket("ACClient", "localhost", "3800");
+	string	ACDhost (hostname);
+	if (ACDhost.empty()) {
+		ACDhost = "localhost";
+	}
+	LOG_DEBUG_STR("Trying to connect to ACDaemon on " << ACDhost << ":3800");
+	Socket		reqSocket("ACClient", ACDhost, "3800");
 	reqSocket.setBlocking(true);
 	reqSocket.connect(-1);
 
