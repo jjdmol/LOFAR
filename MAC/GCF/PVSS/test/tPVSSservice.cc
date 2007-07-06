@@ -26,10 +26,8 @@
 #include <Common/Exception.h>
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
-#include "tGSAService.h"
-
-using std::cout;
-using std::endl;
+#include "tPVSSservice.h"
+#include "Response.h"
 
 namespace LOFAR {
   namespace GCF {
@@ -40,18 +38,23 @@ namespace LOFAR {
 
 tGSAService::tGSAService(const string& name) : 
 	GCFTask((State)&tGSAService::initial, name), 
-	_pService(0),
+	itsService(0),
+	itsResponse(0),
 	itsTimerPort(0)
 {
 	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	itsResponse  = new Response;
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
 }
 
 tGSAService::~tGSAService()
 {
-	cout << "Deleting tGSAService" << endl;
-	if (_pService) {
-		delete _pService;
+	LOG_DEBUG("Deleting tGSAService");
+	if (itsService) {
+		delete itsService;
+	}
+	if (itsResponse) {
+		delete itsResponse;
 	}
 	if (itsTimerPort) {
 		delete itsTimerPort;
@@ -72,28 +75,28 @@ GCFEvent::TResult tGSAService::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	case F_INIT:  {
 		LOG_DEBUG("Creating a Service Class");
-		_pService = new Service();
+		itsService = new PVSSservice(itsResponse);
 
 		// test PVSSInfo class
 		int8	sysID;
 		string	sysName;
-		LOG_DEBUG_STR("LocalSystemName: " << GCFPVSSInfo::getLocalSystemName());
-		LOG_DEBUG_STR("LocalSystemID  : " << (sysID = GCFPVSSInfo::getLocalSystemId()));
-		LOG_DEBUG_STR("ProjectName    : " << GCFPVSSInfo::getProjectName());
-		LOG_DEBUG_STR("SystemName(" << sysID << ") : " << (sysName = GCFPVSSInfo::getSystemName(sysID)));
-		LOG_DEBUG_STR("SystemID(" << sysName << ") : " << GCFPVSSInfo::getSysId(sysName));
-		LOG_DEBUG_STR("Own Man Num    : " << GCFPVSSInfo::getOwnManNum());
-		LOG_DEBUG_STR("Last Evt ManNum: " << GCFPVSSInfo::getLastEventManNum());
-		LOG_DEBUG_STR("typeExist(ExampleDP_Bit): " << (GCFPVSSInfo::typeExists("ExampleDP_Bit") ? "Yes" : "no"));
-		LOG_DEBUG_STR("typeExist(IsErNiet): " << (GCFPVSSInfo::typeExists("IsErNiet") ? "Yes" : "no"));
-		LOG_DEBUG_STR("propExist(testBit): " << (GCFPVSSInfo::propExists("testBit") ? "Yes" : "no"));
-		LOG_DEBUG_STR("propExist(IsErNiet): " << (GCFPVSSInfo::propExists("IsErNiet") ? "Yes" : "no"));
+		LOG_DEBUG_STR("LocalSystemName: " << PVSSinfo::getLocalSystemName());
+		LOG_DEBUG_STR("LocalSystemID  : " << (sysID = PVSSinfo::getLocalSystemId()));
+		LOG_DEBUG_STR("ProjectName    : " << PVSSinfo::getProjectName());
+		LOG_DEBUG_STR("SystemName(" << sysID << ") : " << (sysName = PVSSinfo::getSystemName(sysID)));
+		LOG_DEBUG_STR("SystemID(" << sysName << ") : " << PVSSinfo::getSysId(sysName));
+		LOG_DEBUG_STR("Own Man Num    : " << PVSSinfo::getOwnManNum());
+		LOG_DEBUG_STR("Last Evt ManNum: " << PVSSinfo::getLastEventManNum());
+		LOG_DEBUG_STR("typeExist(ExampleDP_Bit): " << (PVSSinfo::typeExists("ExampleDP_Bit") ? "Yes" : "no"));
+		LOG_DEBUG_STR("typeExist(IsErNiet): " << (PVSSinfo::typeExists("IsErNiet") ? "Yes" : "no"));
+		LOG_DEBUG_STR("propExist(testBit): " << (PVSSinfo::propExists("testBit") ? "Yes" : "no"));
+		LOG_DEBUG_STR("propExist(IsErNiet): " << (PVSSinfo::propExists("IsErNiet") ? "Yes" : "no"));
 
-		if (GCFPVSSInfo::propExists("testBit")) {
-			_pService->dpDelete("testBit");
+		if (PVSSinfo::propExists("testBit")) {
+			itsService->dpDelete("testBit");
 		}
-		if (GCFPVSSInfo::propExists("testInt")) {
-			_pService->dpDelete("testInt");
+		if (PVSSinfo::propExists("testInt")) {
+			itsService->dpDelete("testInt");
 		}
 		itsTimerPort->setTimer(1.0);
 	}
@@ -122,9 +125,9 @@ GCFEvent::TResult tGSAService::final(GCFEvent& e, GCFPortInterface& /*p*/)
 	switch (e.signal) {
 	case F_ENTRY:
 		LOG_DEBUG("Creating a Service Class");
-		if (_pService) {
-			_pService->dpDelete("testBit");
-			_pService->dpDelete("testInt");
+		if (itsService) {
+			itsService->dpDelete("testBit");
+			itsService->dpDelete("testInt");
 			itsTimerPort->setTimer(1.0);
 		}
 		break;
@@ -149,7 +152,7 @@ GCFEvent::TResult tGSAService::test1(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test1:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_INIT: 
@@ -157,9 +160,9 @@ GCFEvent::TResult tGSAService::test1(GCFEvent& e, GCFPortInterface& p)
 
 	case F_ENTRY:
 		LOG_DEBUG("Creating a bit variable: testBit");
-		result = _pService->dpCreate("testBit", "ExampleDP_Bit");
+		result = itsService->dpCreate("testBit", "ExampleDP_Bit");
 		ASSERTSTR(result == SA_NO_ERROR, "Creation of a bit variable returned result: " 
-					<< GSAerror(result));
+					<< PVSSerrstr(result));
 		itsTimerPort->setTimer(1.0);
 		break;
 
@@ -183,7 +186,7 @@ GCFEvent::TResult tGSAService::test2(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test2:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_INIT: 
@@ -191,9 +194,9 @@ GCFEvent::TResult tGSAService::test2(GCFEvent& e, GCFPortInterface& p)
 
 	case F_ENTRY:
 		LOG_DEBUG("Creating a integer variable: testInt");
-        result = _pService->dpCreate("testInt", "ExampleDP_Int");
+        result = itsService->dpCreate("testInt", "ExampleDP_Int");
 		ASSERTSTR(result == SA_NO_ERROR, "Creation of a int variable returned result: "
-					<< GSAerror(result));
+					<< PVSSerrstr(result));
 		itsTimerPort->setTimer(1.0);
 		break;
 
@@ -217,14 +220,14 @@ GCFEvent::TResult tGSAService::test3(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test3:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY:
 		LOG_DEBUG("Taking a subscription on testBit");
-        result = _pService->dpeSubscribe("testBit");
+        result = itsService->dpeSubscribe("testBit");
 		ASSERTSTR(result == SA_NO_ERROR, 
-				"Taking a subscription on testBit returned result: " << GSAerror(result));
+				"Taking a subscription on testBit returned result: " << PVSSerrstr(result));
 		itsTimerPort->setTimer(1.0);
 		break;
 
@@ -248,14 +251,14 @@ GCFEvent::TResult tGSAService::test4(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test4:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY:
 		LOG_DEBUG("Taking a subscription on testInt");
-        result = _pService->dpeSubscribe("testInt");
+        result = itsService->dpeSubscribe("testInt");
 		ASSERTSTR(result == SA_NO_ERROR, 
-				"Taking a subscription on testInt returned result: " << GSAerror(result));
+				"Taking a subscription on testInt returned result: " << PVSSerrstr(result));
 		itsTimerPort->setTimer(1.0);
 		break;
 
@@ -279,18 +282,18 @@ GCFEvent::TResult tGSAService::test5(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test5:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
 		try {
 			LOG_DEBUG("Writing a bool to the integer var");
 			GCFPVBool wrongTestVal(true);
-			result = _pService->dpeSet("testInt", wrongTestVal, 0.0);
+			result = itsService->dpeSet("testInt", wrongTestVal, 0.0, true);
 		}
 		catch (Exception& except) {
 			LOG_INFO_STR ("Writing a bool to the testInt returned result: " 
-							<< GSAerror(result));
+							<< PVSSerrstr(result));
 		}
 		itsTimerPort->setTimer(1.0);
 	}
@@ -316,14 +319,14 @@ GCFEvent::TResult tGSAService::test6(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test6:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		LOG_DEBUG("Writing a integer to the integer var");
+		LOG_DEBUG("Writing 1000 to the integer var");
 		GCFPVInteger goodTestVal(1000);
-		result = _pService->dpeSet("testInt", goodTestVal, 0.0);
-		ASSERTSTR(result == SA_NO_ERROR, "Writing an integer to the testInt returned result: " << GSAerror(result));
+		result = itsService->dpeSet("testInt", goodTestVal, 0.0, true);
+		ASSERTSTR(result == SA_NO_ERROR, "Writing an integer to the testInt returned result: " << PVSSerrstr(result));
 		itsTimerPort->setTimer(1.0);
 	}
 	break;
@@ -348,13 +351,13 @@ GCFEvent::TResult tGSAService::test7(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test7:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
 		LOG_DEBUG("Reading back the integer variable");
-        result = _pService->dpeGet("testInt");
-		ASSERTSTR(result == SA_NO_ERROR, "Reading the integer testInt returned result: " << GSAerror(result));
+        result = itsService->dpeGet("testInt");
+		ASSERTSTR(result == SA_NO_ERROR, "Reading the integer testInt returned result: " << PVSSerrstr(result));
 		itsTimerPort->setTimer(1.0);
 	}
 	break;
@@ -379,20 +382,20 @@ GCFEvent::TResult tGSAService::test8(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test8:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
 		LOG_DEBUG("Unsubscribing from the variables");
-		result = _pService->dpeUnsubscribe("testInt");
-		ASSERTSTR(result == SA_NO_ERROR, "Unsubscribing from testInt returned result: " << GSAerror(result));
-		result = _pService->dpeUnsubscribe("testBit");
-		ASSERTSTR(result == SA_NO_ERROR, "Unsubscribing from testBit returned result: " << GSAerror(result));
+		result = itsService->dpeUnsubscribe("testInt");
+		ASSERTSTR(result == SA_NO_ERROR, "Unsubscribing from testInt returned result: " << PVSSerrstr(result));
+		result = itsService->dpeUnsubscribe("testBit");
+		ASSERTSTR(result == SA_NO_ERROR, "Unsubscribing from testBit returned result: " << PVSSerrstr(result));
 		try {
-			result = _pService->dpeUnsubscribe("DoesNotExist");
+			result = itsService->dpeUnsubscribe("DoesNotExist");
 		}
 		catch (Exception&	except) {
-			LOG_DEBUG_STR("Unsubscribing from DoesNotExist returned result: " << GSAerror(result));
+			LOG_DEBUG_STR("Unsubscribing from DoesNotExist returned result: " << PVSSerrstr(result));
 		}
 		itsTimerPort->setTimer(1.0);
 	}
@@ -418,18 +421,18 @@ GCFEvent::TResult tGSAService::test9(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test9:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
 		LOG_DEBUG("Subscribe, unsubscribe and dpSet on the testInt");
-		result = _pService->dpeSubscribe("testInt");
-		ASSERTSTR(result == SA_NO_ERROR, "Subscribing from testInt returned result: " << GSAerror(result));
-		result = _pService->dpeUnsubscribe("testInt");
-		ASSERTSTR(result == SA_NO_ERROR, "Unsubscribing from testInt returned result: " << GSAerror(result));
+		result = itsService->dpeSubscribe("testInt");
+		ASSERTSTR(result == SA_NO_ERROR, "Subscribing from testInt returned result: " << PVSSerrstr(result));
+		result = itsService->dpeUnsubscribe("testInt");
+		ASSERTSTR(result == SA_NO_ERROR, "Unsubscribing from testInt returned result: " << PVSSerrstr(result));
 		GCFPVInteger goodTestVal(1000);
-		result = _pService->dpeSet("testInt", goodTestVal, 0.0);
-		ASSERTSTR(result == SA_NO_ERROR, "Writing an integer to the testInt returned result: " << GSAerror(result));
+		result = itsService->dpeSet("testInt", goodTestVal, 0.0, true);
+		ASSERTSTR(result == SA_NO_ERROR, "Writing an integer to the testInt returned result: " << PVSSerrstr(result));
 		itsTimerPort->setTimer(1.0);
 	}
 	break;
@@ -454,18 +457,18 @@ GCFEvent::TResult tGSAService::test10(GCFEvent& e, GCFPortInterface& p)
 	LOG_DEBUG_STR("test10:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
 		LOG_DEBUG("Reading back a non existant variable");
 		try {
-			result = _pService->dpeGet("UnknownVariable");
+			result = itsService->dpeGet("UnknownVariable");
 			ASSERTSTR(result == SA_NO_ERROR, "Reading an unknown variable should return an error!");
 		}
 		catch (Exception& except) {
 			LOG_INFO_STR ("Reading an unknown variable returned result: " 
-							<< GSAerror(result));
+							<< PVSSerrstr(result));
 		}
 		itsTimerPort->setTimer(1.0);
 	}

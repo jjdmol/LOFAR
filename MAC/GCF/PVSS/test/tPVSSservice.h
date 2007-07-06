@@ -1,4 +1,3 @@
-//
 //  tGSAService.h: Definition of the tGSAService task class.
 //
 //  Copyright (C) 2003
@@ -26,7 +25,8 @@
 #define _TGSASERVICE_H_
 
 #include <GCF/TM/GCF_Control.h>
-#include "Service.h"
+#include <GCF/PVSS/PVSSservice.h>
+#include <GCF/PVSS/PVSSresponse.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -68,7 +68,8 @@ class tGSAService : public GCFTask
    * task are received on the server port. And reply events to the Ping task
    * are sent through the server port.
    */
-	Service* 		_pService;
+	PVSSservice* 	itsService;;
+	PVSSresponse*	itsResponse;
 	GCFTimerPort*	itsTimerPort;
 };
 

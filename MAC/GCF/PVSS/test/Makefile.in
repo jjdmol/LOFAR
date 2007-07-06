@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # Some common rules.
-SOURCES = $(tGSAPerformance_SOURCES) $(tGSAService_SOURCES)
+SOURCES = $(tPVSSservice_SOURCES) $(tPerformance_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -39,7 +39,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = tGSAService$(EXEEXT) tGSAPerformance$(EXEEXT)
+check_PROGRAMS = tPVSSservice$(EXEEXT) tPerformance$(EXEEXT)
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/Makefile.common
 subdir = test
@@ -60,12 +60,12 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-am_tGSAPerformance_OBJECTS = tGSAPerformance.$(OBJEXT) \
-	PerformanceService.$(OBJEXT)
-tGSAPerformance_OBJECTS = $(am_tGSAPerformance_OBJECTS)
+am_tPVSSservice_OBJECTS = tPVSSservice.$(OBJEXT) Response.$(OBJEXT)
+tPVSSservice_OBJECTS = $(am_tPVSSservice_OBJECTS)
 am__DEPENDENCIES_1 =
-am_tGSAService_OBJECTS = tGSAService.$(OBJEXT) Service.$(OBJEXT)
-tGSAService_OBJECTS = $(am_tGSAService_OBJECTS)
+am_tPerformance_OBJECTS = tPerformance.$(OBJEXT) \
+	PerformanceResponse.$(OBJEXT)
+tPerformance_OBJECTS = $(am_tPerformance_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -77,8 +77,8 @@ LTCXXCOMPILE = $(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) \
 CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --mode=link --tag=CXX $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(tGSAPerformance_SOURCES) $(tGSAService_SOURCES)
-DIST_SOURCES = $(tGSAPerformance_SOURCES) $(tGSAService_SOURCES)
+SOURCES = $(tPVSSservice_SOURCES) $(tPerformance_SOURCES)
+DIST_SOURCES = $(tPVSSservice_SOURCES) $(tPerformance_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -225,13 +225,13 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AM_CPPFLAGS = -I$(top_srcdir)/PVSS/src
-TESTS = tGSAService 
-tGSAService_SOURCES = $(BUILT_SOURCES) tGSAService.cc Service.cc
-tGSAService_LDADD = ../src/libsal.la $(LOFAR_DEPEND)
-tGSAService_DEPENDENCIES = ../src/libsal.la $(LOFAR_DEPEND)
-tGSAPerformance_SOURCES = $(BUILT_SOURCES) tGSAPerformance.cc PerformanceService.cc
-tGSAPerformance_LDADD = ../src/libsal.la $(LOFAR_DEPEND)
-tGSAPerformance_DEPENDENCIES = ../src/libsal.la $(LOFAR_DEPEND)
+TESTS = PVSSservice 
+tPVSSservice_SOURCES = $(BUILT_SOURCES) tPVSSservice.cc Response.cc
+tPVSSservice_LDADD = ../src/libpvss.la $(LOFAR_DEPEND)
+tPVSSservice_DEPENDENCIES = ../src/libpvss.la $(LOFAR_DEPEND)
+tPerformance_SOURCES = $(BUILT_SOURCES) tPerformance.cc PerformanceResponse.cc
+tPerformance_LDADD = ../src/libpvss.la $(LOFAR_DEPEND)
+tPerformance_DEPENDENCIES = ../src/libpvss.la $(LOFAR_DEPEND)
 #CLEANFILES += tca.* .inslog* *.cc *.h $(top_builddir)/pure_cache docxxhtml/* *.log docxx_hdrs.names
 DISTCLEANFILES = \
       pkgext*\
@@ -304,12 +304,12 @@ clean-checkPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-tGSAPerformance$(EXEEXT): $(tGSAPerformance_OBJECTS) $(tGSAPerformance_DEPENDENCIES) 
-	@rm -f tGSAPerformance$(EXEEXT)
-	$(CXXLINK) $(tGSAPerformance_LDFLAGS) $(tGSAPerformance_OBJECTS) $(tGSAPerformance_LDADD) $(LIBS)
-tGSAService$(EXEEXT): $(tGSAService_OBJECTS) $(tGSAService_DEPENDENCIES) 
-	@rm -f tGSAService$(EXEEXT)
-	$(CXXLINK) $(tGSAService_LDFLAGS) $(tGSAService_OBJECTS) $(tGSAService_LDADD) $(LIBS)
+tPVSSservice$(EXEEXT): $(tPVSSservice_OBJECTS) $(tPVSSservice_DEPENDENCIES) 
+	@rm -f tPVSSservice$(EXEEXT)
+	$(CXXLINK) $(tPVSSservice_LDFLAGS) $(tPVSSservice_OBJECTS) $(tPVSSservice_LDADD) $(LIBS)
+tPerformance$(EXEEXT): $(tPerformance_OBJECTS) $(tPerformance_DEPENDENCIES) 
+	@rm -f tPerformance$(EXEEXT)
+	$(CXXLINK) $(tPerformance_LDFLAGS) $(tPerformance_OBJECTS) $(tPerformance_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -317,10 +317,10 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PerformanceService.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Service.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tGSAPerformance.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tGSAService.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PerformanceResponse.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Response.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tPVSSservice.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tPerformance.Po@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

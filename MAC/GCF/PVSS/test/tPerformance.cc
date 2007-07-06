@@ -1,5 +1,5 @@
 //
-//  tGSAPerformance.cc: Test program to test the majority of the GSA Service class.
+//  tPerformance.cc: Test program to test the majority of the GSA Service class.
 //
 //  Copyright (C) 2007
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,10 +27,8 @@
 #include <Common/Timer.h>
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
-#include "tGSAPerformance.h"
-
-using std::cout;
-using std::endl;
+#include "tPerformance.h"
+#include "PerformanceResponse.h"
 
 namespace LOFAR {
   namespace GCF {
@@ -39,20 +37,25 @@ namespace LOFAR {
   namespace PVSS {
 
 
-tGSAPerformance::tGSAPerformance(const string& name) : 
-	GCFTask((State)&tGSAPerformance::initial, name), 
-	_pService(0),
+tPerformance::tPerformance(const string& name) : 
+	GCFTask((State)&tPerformance::initial, name), 
+	itsService(0),
+	itsResponse(0),
 	itsTimerPort(0)
 {
 	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	itsResponse  = new PerformanceResponse;
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
 }
 
-tGSAPerformance::~tGSAPerformance()
+tPerformance::~tPerformance()
 {
-	cout << "Deleting tGSAPerformance" << endl;
-	if (_pService) {
-		delete _pService;
+	LOG_DEBUG("Deleting tPerformance");
+	if (itsService) {
+		delete itsService;
+	}
+	if (itsResponse) {
+		delete itsResponse;
 	}
 	if (itsTimerPort) {
 		delete itsTimerPort;
@@ -62,7 +65,7 @@ tGSAPerformance::~tGSAPerformance()
 //
 // initial (event, port)
 //
-GCFEvent::TResult tGSAPerformance::initial(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult tPerformance::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
 	LOG_DEBUG_STR("initial:" << eventName(e));
 	GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -73,14 +76,14 @@ GCFEvent::TResult tGSAPerformance::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	case F_INIT:  {
 		LOG_INFO("Creating a Service Class");
-		_pService = new PerformanceService();
+		itsService = new PVSSservice(itsResponse);
 
 		itsTimerPort->setTimer(1.0);
 	}
 	break;
 
 	case F_TIMER:
-		TRAN(tGSAPerformance::test1cleanup);
+		TRAN(tPerformance::test1cleanup);
 	break;
 
 	default:
@@ -94,15 +97,15 @@ GCFEvent::TResult tGSAPerformance::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 //
 // final (event, port)
 //
-GCFEvent::TResult tGSAPerformance::final(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult tPerformance::final(GCFEvent& e, GCFPortInterface& /*p*/)
 {
 	LOG_DEBUG_STR("final:" << eventName(e));
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (e.signal) {
 	case F_ENTRY:
-		if (_pService) {
-//			_pService->dpDelete("testInt");
+		if (itsService) {
+//			itsService->dpDelete("testInt");
 			itsTimerPort->setTimer(1.0);
 		}
 		break;
@@ -122,7 +125,7 @@ GCFEvent::TResult tGSAPerformance::final(GCFEvent& e, GCFPortInterface& /*p*/)
 //
 // test1cleanup (event, port)
 //
-GCFEvent::TResult tGSAPerformance::test1cleanup(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult tPerformance::test1cleanup(GCFEvent& e, GCFPortInterface& p)
 {
 	LOG_DEBUG_STR("test1cleanup:" << eventName(e) << "@" << p.getName());
 
@@ -131,7 +134,7 @@ GCFEvent::TResult tGSAPerformance::test1cleanup(GCFEvent& e, GCFPortInterface& p
 	switch (e.signal) {
 	case F_ENTRY: {
 		// test PVSSInfo class
-		bool	DBok (GCFPVSSInfo::typeExists("ExampleDP_Int"));
+		bool	DBok (PVSSinfo::typeExists("ExampleDP_Int"));
 		LOG_INFO_STR("typeExist(ExampleDP_Int): " << DBok ? "Yes" : "no");
 		ASSERTSTR(DBok, "type ExampleDP_Int does not exist in PVSS");
 
@@ -140,8 +143,8 @@ GCFEvent::TResult tGSAPerformance::test1cleanup(GCFEvent& e, GCFPortInterface& p
 		string	DPname;
 		for (int i = 0; i < NR_OF_DPS; i++) {
 			DPname = formatString ("Integer%04d", i);
-			if (GCFPVSSInfo::propExists(DPname)) {
-				_pService->dpDelete(DPname);
+			if (PVSSinfo::propExists(DPname)) {
+				itsService->dpDelete(DPname);
 				gDeleteCounter++;
 			}
 		}
@@ -156,7 +159,7 @@ GCFEvent::TResult tGSAPerformance::test1cleanup(GCFEvent& e, GCFPortInterface& p
 			LOG_INFO_STR ("Waiting for " << gDeleteCounter << " datapoints to disappear");
 		}
 		else {
-			TRAN(tGSAPerformance::test1create);
+			TRAN(tPerformance::test1create);
 		}
 		break;
 
@@ -171,12 +174,12 @@ GCFEvent::TResult tGSAPerformance::test1cleanup(GCFEvent& e, GCFPortInterface& p
 //
 // test1create (event, port)
 //
-GCFEvent::TResult tGSAPerformance::test1create(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult tPerformance::test1create(GCFEvent& e, GCFPortInterface& p)
 {
 	LOG_DEBUG_STR("test1create:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 	static NSTimer		timer("Creating");
 
 	switch (e.signal) {
@@ -186,9 +189,9 @@ GCFEvent::TResult tGSAPerformance::test1create(GCFEvent& e, GCFPortInterface& p)
 		timer.start();
 		for (int i = 0; i < NR_OF_DPS; i++) {
 			DPname = formatString ("Integer%04d", i);
-			result = _pService->dpCreate(DPname, "ExampleDP_Int");
+			result = itsService->dpCreate(DPname, "ExampleDP_Int");
 			ASSERTSTR(result == SA_NO_ERROR, "Creation variable " << i << 
-											" returned result: " << GSAerror(result));
+											" returned result: " << PVSSerrstr(result));
 		}
 		timer.stop();
 		LOG_INFO_STR (timer);
@@ -206,7 +209,7 @@ GCFEvent::TResult tGSAPerformance::test1create(GCFEvent& e, GCFPortInterface& p)
 		else {
 			timer.stop();
 			LOG_INFO_STR (timer);
-			TRAN(tGSAPerformance::test1setvalue);
+			TRAN(tPerformance::test1setvalue);
 		}
 		break;
 
@@ -221,12 +224,12 @@ GCFEvent::TResult tGSAPerformance::test1create(GCFEvent& e, GCFPortInterface& p)
 //
 // test1setvalue (event, port)
 //
-GCFEvent::TResult tGSAPerformance::test1setvalue(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult tPerformance::test1setvalue(GCFEvent& e, GCFPortInterface& p)
 {
 	LOG_DEBUG_STR("test1setvalue:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 
 	switch (e.signal) {
 	case F_ENTRY: {
@@ -237,9 +240,9 @@ GCFEvent::TResult tGSAPerformance::test1setvalue(GCFEvent& e, GCFPortInterface& 
 		for (int i = 0; i < NR_OF_DPS; i++) {
 			DPname = formatString ("Integer%04d", i);
 			GCFPVInteger	newVal(123-i);
-			result = _pService->dpeSet(DPname, newVal, 0.0, gValidate);
+			result = itsService->dpeSet(DPname, newVal, 0.0, gValidate);
 			ASSERTSTR(result == SA_NO_ERROR, "Setting variable " << i << 
-											" returned result: " << GSAerror(result));
+											" returned result: " << PVSSerrstr(result));
 		}
 		timer.stop();
 		LOG_INFO_STR (timer);
@@ -254,7 +257,7 @@ GCFEvent::TResult tGSAPerformance::test1setvalue(GCFEvent& e, GCFPortInterface& 
 			LOG_INFO_STR ("Waiting for " << gSetCounter << " datapoints to be written");
 		}
 		else {
-			TRAN(tGSAPerformance::test1getvalue);
+			TRAN(tPerformance::test1getvalue);
 		}
 		break;
 
@@ -269,12 +272,12 @@ GCFEvent::TResult tGSAPerformance::test1setvalue(GCFEvent& e, GCFPortInterface& 
 //
 // test1getvalue (event, port)
 //
-GCFEvent::TResult tGSAPerformance::test1getvalue(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult tPerformance::test1getvalue(GCFEvent& e, GCFPortInterface& p)
 {
 	LOG_DEBUG_STR("test1getvalue:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 	static NSTimer		timer("Getting");
 
 	switch (e.signal) {
@@ -284,9 +287,9 @@ GCFEvent::TResult tGSAPerformance::test1getvalue(GCFEvent& e, GCFPortInterface& 
 		timer.start();
 		for (int i = 0; i < NR_OF_DPS; i++) {
 			DPname = formatString ("Integer%04d", i);
-			result = _pService->dpeGet(DPname);
+			result = itsService->dpeGet(DPname);
 			ASSERTSTR(result == SA_NO_ERROR, "Getting variable " << i << 
-											" returned result: " << GSAerror(result));
+											" returned result: " << PVSSerrstr(result));
 		}
 		timer.stop();
 		LOG_INFO_STR (timer);
@@ -304,7 +307,7 @@ GCFEvent::TResult tGSAPerformance::test1getvalue(GCFEvent& e, GCFPortInterface& 
 		else {
 			timer.stop();
 			LOG_INFO_STR (timer);
-			TRAN(tGSAPerformance::test1delete);
+			TRAN(tPerformance::test1delete);
 		}
 		break;
 
@@ -319,12 +322,12 @@ GCFEvent::TResult tGSAPerformance::test1getvalue(GCFEvent& e, GCFPortInterface& 
 //
 // test1delete (event, port)
 //
-GCFEvent::TResult tGSAPerformance::test1delete(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult tPerformance::test1delete(GCFEvent& e, GCFPortInterface& p)
 {
 	LOG_DEBUG_STR("test1delete:" << eventName(e) << "@" << p.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	TSAResult		  result;
+	PVSSresult		  result;
 	static NSTimer		timer("Deleting");
 
 	switch (e.signal) {
@@ -334,9 +337,9 @@ GCFEvent::TResult tGSAPerformance::test1delete(GCFEvent& e, GCFPortInterface& p)
 		timer.start();
 		for (int i = 0; i < NR_OF_DPS; i++) {
 			DPname = formatString ("Integer%04d", i);
-			result = _pService->dpDelete(DPname);
+			result = itsService->dpDelete(DPname);
 			ASSERTSTR(result == SA_NO_ERROR, "Deleting variable " << i << 
-											" returned result: " << GSAerror(result));
+											" returned result: " << PVSSerrstr(result));
 		}
 		timer.stop();
 		LOG_INFO_STR (timer);
@@ -354,7 +357,7 @@ GCFEvent::TResult tGSAPerformance::test1delete(GCFEvent& e, GCFPortInterface& p)
 		else {
 			timer.stop();
 			LOG_INFO_STR (timer);
-			TRAN(tGSAPerformance::final);
+			TRAN(tPerformance::final);
 		}
 		break;
 
@@ -374,6 +377,7 @@ GCFEvent::TResult tGSAPerformance::test1delete(GCFEvent& e, GCFPortInterface& p)
 
 
 using namespace LOFAR::GCF;
+using namespace std;
 
 int main(int argc, char* argv[])
 {
@@ -394,7 +398,7 @@ int main(int argc, char* argv[])
 
 	TM::GCFTask::init(argc, argv);
 
-	PVSS::tGSAPerformance test_task("SALSpeedTest");  
+	PVSS::tPerformance test_task("SALSpeedTest");  
 	test_task.start(); // make initial transition
 
 	TM::GCFTask::run();

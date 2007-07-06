@@ -1,7 +1,6 @@
+//  PerformanceResponse.h: Concrete GSAResponse class definition.
 //
-//  Service.h: Concrete GSAService class definition.
-//
-//  Copyright (C) 2003
+//  Copyright (C) 2007
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -22,39 +21,36 @@
 //  $Id$
 //
 
-#include <PVSSservice.h>
+#include <GCF/PVSS/PVSSresponse.h>
+
+extern int	gDeleteCounter;
+extern int	gCreateCounter;
+extern int	gSetCounter;
+extern int	gGetCounter;
+extern int	NR_OF_DPS;
+extern bool	gValidate;
 
 namespace LOFAR {
  namespace GCF {
   namespace PVSS {
-
-class Service : public PVSSservice
+class PerformanceResponse : public PVSSresponse
 {
-  public:
-    Service() {};
-    virtual ~Service() {};
+public:
+    PerformanceResponse() {};
+    virtual ~PerformanceResponse() {};
 
-    virtual TSAResult dpCreate(const string& propName, 
-                               const string& macType);
-    virtual TSAResult dpDelete(const string& propName);
-    virtual TSAResult dpeSubscribe(const string& propName);
-    virtual TSAResult dpeUnsubscribe(const string& propName);
-    virtual TSAResult dpeGet(const string& propName);
-    virtual TSAResult dpeSet(const string& propName, const Common::GCFPValue& value, double timestamp, bool wantAnswer = false);
-    virtual bool dpeExists(const string& propName);
-    
-  protected:
+protected:
     virtual void dpCreated(const string& propName);
     virtual void dpDeleted(const string& propName);
     virtual void dpeSubscribed(const string& propName);
-    virtual void dpeSubscriptionLost(const string& /*propName*/) {;}
+    virtual void dpeSubscriptionLost(const string& propName);
     virtual void dpeUnsubscribed(const string& propName);
     virtual void dpeValueGet(const string& propName, const Common::GCFPValue& value);
     virtual void dpeValueChanged(const string& propName, const Common::GCFPValue& value);
     virtual void dpeValueSet(const string& propName);
-  
-  private:
+    virtual void dpQuerySubscribed	(uint32 queryId);
 };
+
   } // namespace PVSS
  } // namespace GCF
 } // namespace LOFAR
