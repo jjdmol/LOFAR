@@ -38,7 +38,7 @@ namespace LOFAR {
   namespace PVSS {
 
 class GSASCADAHandler;
-class WaitForAnswer;
+class GSAWaitForAnswer;
 class PVSSresponse;
 
 
@@ -50,7 +50,7 @@ string	PVSSerrstr (PVSSresult		resultNr);
 class PVSSservice
 {
 public:
-    PVSSservice (const PVSSresponse&	response);
+    PVSSservice (PVSSresponse*	response);
     ~PVSSservice ();
 
     PVSSresult dpCreate		 (const string& dpName, const string& typeName);
@@ -69,10 +69,10 @@ public:
     
 private: 
 	// methods
-    // interface for WaitForAnswer
-    void handleHotLink (const DpMsgAnswer&	answer, const WaitForAnswer& wait);
-    void handleHotLink (const DpHLGroup& 	group,  const WaitForAnswer& wait);
-    friend class WaitForAnswer;
+    // interface for GSAWaitForAnswer
+    void handleHotLink (const DpMsgAnswer&	answer, const GSAWaitForAnswer& wait);
+    void handleHotLink (const DpHLGroup& 	group,  const GSAWaitForAnswer& wait);
+    friend class GSAWaitForAnswer;
   
     // helper methods to convert PVSS dpTypes to MAC types and visa versa
     PVSSresult convertPVSSToMAC (const Variable&		variable, 
@@ -92,9 +92,9 @@ private:
     void convAndForwardValueChange(const DpIdentifier& dpId, const Variable& pvssVar);
     
 	// data members    
-    WaitForAnswer* 		itsWFA;
+    GSAWaitForAnswer*	itsWFA;
     GSASCADAHandler*  	itsSCADAHandler;
-	PVSSResponse*		itsResponse;
+	PVSSresponse*		itsResponse;
 };                                 
 
 

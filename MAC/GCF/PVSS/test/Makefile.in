@@ -15,8 +15,7 @@
 @SET_MAKE@
 
 # Some common rules.
-
-SOURCES = $(salEcho_SOURCES) $(salPing_SOURCES) $(tGSAPerformance_SOURCES) $(tGSAService_SOURCES)
+SOURCES = $(tGSAPerformance_SOURCES) $(tGSAService_SOURCES)
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -24,7 +23,7 @@ VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ../..
+top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
 install_sh_DATA = $(install_sh) -c -m 644
@@ -40,11 +39,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-check_PROGRAMS = salEcho$(EXEEXT) salPing$(EXEEXT) \
-	tGSAService$(EXEEXT) tGSAPerformance$(EXEEXT)
+check_PROGRAMS = tGSAService$(EXEEXT) tGSAPerformance$(EXEEXT)
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/Makefile.common
-subdir = SAL/test
+subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autoconf_share/am_rpm_init.m4 \
 	$(top_srcdir)/autoconf_share/lofar_docxx.m4 \
@@ -62,19 +60,11 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-am__objects_1 =
-am_salEcho_OBJECTS = $(am__objects_1) Echo.$(OBJEXT) Service.$(OBJEXT) \
-	Echo_Protocol.$(OBJEXT)
-salEcho_OBJECTS = $(am_salEcho_OBJECTS)
-am__DEPENDENCIES_1 =
-am_salPing_OBJECTS = $(am__objects_1) Ping.$(OBJEXT) \
-	Echo_Protocol.$(OBJEXT)
-salPing_OBJECTS = $(am_salPing_OBJECTS)
-am_tGSAPerformance_OBJECTS = $(am__objects_1) \
-	tGSAPerformance.$(OBJEXT) PerformanceService.$(OBJEXT)
+am_tGSAPerformance_OBJECTS = tGSAPerformance.$(OBJEXT) \
+	PerformanceService.$(OBJEXT)
 tGSAPerformance_OBJECTS = $(am_tGSAPerformance_OBJECTS)
-am_tGSAService_OBJECTS = $(am__objects_1) tGSAService.$(OBJEXT) \
-	Service.$(OBJEXT)
+am__DEPENDENCIES_1 =
+am_tGSAService_OBJECTS = tGSAService.$(OBJEXT) Service.$(OBJEXT)
 tGSAService_OBJECTS = $(am_tGSAService_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -87,19 +77,8 @@ LTCXXCOMPILE = $(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) \
 CXXLD = $(CXX)
 CXXLINK = $(LIBTOOL) --mode=link --tag=CXX $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(salEcho_SOURCES) $(salPing_SOURCES) \
-	$(tGSAPerformance_SOURCES) $(tGSAService_SOURCES)
-DIST_SOURCES = $(salEcho_SOURCES) $(salPing_SOURCES) \
-	$(tGSAPerformance_SOURCES) $(tGSAService_SOURCES)
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(sysconfdir)"
-sysconfDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(sysconf_DATA)
+SOURCES = $(tGSAPerformance_SOURCES) $(tGSAService_SOURCES)
+DIST_SOURCES = $(tGSAPerformance_SOURCES) $(tGSAService_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -136,8 +115,6 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
-HAVE_APS_FALSE = @HAVE_APS_FALSE@
-HAVE_APS_TRUE = @HAVE_APS_TRUE@
 HAVE_COMMON_FALSE = @HAVE_COMMON_FALSE@
 HAVE_COMMON_TRUE = @HAVE_COMMON_TRUE@
 HAVE_DOCPP_FALSE = @HAVE_DOCPP_FALSE@
@@ -146,12 +123,6 @@ HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
 HAVE_GCFCOMMON_FALSE = @HAVE_GCFCOMMON_FALSE@
 HAVE_GCFCOMMON_TRUE = @HAVE_GCFCOMMON_TRUE@
-HAVE_GCFPAPROT_FALSE = @HAVE_GCFPAPROT_FALSE@
-HAVE_GCFPAPROT_TRUE = @HAVE_GCFPAPROT_TRUE@
-HAVE_GCFPICEPPROT_FALSE = @HAVE_GCFPICEPPROT_FALSE@
-HAVE_GCFPICEPPROT_TRUE = @HAVE_GCFPICEPPROT_TRUE@
-HAVE_GCFPIRTCPROT_FALSE = @HAVE_GCFPIRTCPROT_FALSE@
-HAVE_GCFPIRTCPROT_TRUE = @HAVE_GCFPIRTCPROT_TRUE@
 HAVE_GCFTM_FALSE = @HAVE_GCFTM_FALSE@
 HAVE_GCFTM_TRUE = @HAVE_GCFTM_TRUE@
 HAVE_LOG4CPLUS_FALSE = @HAVE_LOG4CPLUS_FALSE@
@@ -160,8 +131,6 @@ HAVE_PVSS_FALSE = @HAVE_PVSS_FALSE@
 HAVE_PVSS_TRUE = @HAVE_PVSS_TRUE@
 HAVE_SHMEM_FALSE = @HAVE_SHMEM_FALSE@
 HAVE_SHMEM_TRUE = @HAVE_SHMEM_TRUE@
-HAVE_TRANSPORT_FALSE = @HAVE_TRANSPORT_FALSE@
-HAVE_TRANSPORT_TRUE = @HAVE_TRANSPORT_TRUE@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -255,28 +224,14 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CPPFLAGS = -I$(top_srcdir)/SAL/src
-TESTS = tGSAService #salEcho salPing
-salEcho_SOURCES = $(BUILT_SOURCES) Echo.cc Service.cc Echo_Protocol.cc
-salEcho_LDADD = ../src/libsal.la $(LOFAR_DEPEND)
-salEcho_DEPENDENCIES = ../src/libsal.la $(LOFAR_DEPEND)
-salPing_SOURCES = $(BUILT_SOURCES) Ping.cc  Echo_Protocol.cc
-salPing_LDADD = ../src/libsal.la $(LOFAR_DEPEND)
-salPing_DEPENDENCIES = ../src/libsal.la $(LOFAR_DEPEND)
+AM_CPPFLAGS = -I$(top_srcdir)/PVSS/src
+TESTS = tGSAService 
 tGSAService_SOURCES = $(BUILT_SOURCES) tGSAService.cc Service.cc
 tGSAService_LDADD = ../src/libsal.la $(LOFAR_DEPEND)
 tGSAService_DEPENDENCIES = ../src/libsal.la $(LOFAR_DEPEND)
 tGSAPerformance_SOURCES = $(BUILT_SOURCES) tGSAPerformance.cc PerformanceService.cc
 tGSAPerformance_LDADD = ../src/libsal.la $(LOFAR_DEPEND)
 tGSAPerformance_DEPENDENCIES = ../src/libsal.la $(LOFAR_DEPEND)
-AUTOGEN = autogen
-SUFFIXES = .ph
-BUILT_SOURCES = Echo_Protocol.ph
-EXTRA_DIST = $(sysconf_DATA)
-sysconf_DATA = \
-	salEcho.conf \
-	salPing.conf
-
 #CLEANFILES += tca.* .inslog* *.cc *.h $(top_builddir)/pure_cache docxxhtml/* *.log docxx_hdrs.names
 DISTCLEANFILES = \
       pkgext*\
@@ -309,11 +264,10 @@ TESTS_ENVIRONMENT = LOFARROOT="$(LOFARROOT)" \
 		    MPIBIN="$(MPIBIN)" \
 		    AIPSPP="$(AIPSPP)"
 
-all: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) all-am
+all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .ph .cc .lo .o .obj
+.SUFFIXES: .cc .lo .o .obj
 $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/Makefile.common $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -323,9 +277,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/Makefile.common $(am
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  SAL/test/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  test/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  SAL/test/Makefile
+	  $(AUTOMAKE) --foreign  test/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -350,12 +304,6 @@ clean-checkPROGRAMS:
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-salEcho$(EXEEXT): $(salEcho_OBJECTS) $(salEcho_DEPENDENCIES) 
-	@rm -f salEcho$(EXEEXT)
-	$(CXXLINK) $(salEcho_LDFLAGS) $(salEcho_OBJECTS) $(salEcho_LDADD) $(LIBS)
-salPing$(EXEEXT): $(salPing_OBJECTS) $(salPing_DEPENDENCIES) 
-	@rm -f salPing$(EXEEXT)
-	$(CXXLINK) $(salPing_LDFLAGS) $(salPing_OBJECTS) $(salPing_LDADD) $(LIBS)
 tGSAPerformance$(EXEEXT): $(tGSAPerformance_OBJECTS) $(tGSAPerformance_DEPENDENCIES) 
 	@rm -f tGSAPerformance$(EXEEXT)
 	$(CXXLINK) $(tGSAPerformance_LDFLAGS) $(tGSAPerformance_OBJECTS) $(tGSAPerformance_LDADD) $(LIBS)
@@ -369,10 +317,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Echo.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Echo_Protocol.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/PerformanceService.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Ping.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Service.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tGSAPerformance.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tGSAService.Po@am__quote@
@@ -407,23 +352,6 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-sysconfDATA: $(sysconf_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(sysconfdir)" || $(mkdir_p) "$(DESTDIR)$(sysconfdir)"
-	@list='$(sysconf_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(sysconfDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(sysconfdir)/$$f'"; \
-	  $(sysconfDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(sysconfdir)/$$f"; \
-	done
-
-uninstall-sysconfDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(sysconf_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(sysconfdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(sysconfdir)/$$f"; \
-	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -547,7 +475,7 @@ check-TESTS: $(TESTS)
 	else :; fi
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/../..
+	$(mkdir_p) $(distdir)/..
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -577,15 +505,10 @@ distdir: $(DISTFILES)
 check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
-check: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(DATA)
+check: check-am
+all-am: Makefile
 installdirs:
-	for dir in "$(DESTDIR)$(sysconfdir)"; do \
-	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
-	done
-install: $(BUILT_SOURCES)
-	$(MAKE) $(AM_MAKEFLAGS) install-am
+install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -608,10 +531,9 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
-clean-am: clean-checkPROGRAMS clean-generic clean-libtool clean-local \
+clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -632,7 +554,7 @@ info-am:
 
 install-data-am:
 
-install-exec-am: install-sysconfDATA
+install-exec-am:
 
 install-info: install-info-am
 
@@ -658,29 +580,20 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-sysconfDATA
+uninstall-am: uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am check check-TESTS check-am clean \
-	clean-checkPROGRAMS clean-generic clean-libtool clean-local \
-	ctags distclean distclean-compile distclean-generic \
+	clean-checkPROGRAMS clean-generic clean-libtool ctags \
+	distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip install-sysconfDATA \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-sysconfDATA
+	tags uninstall uninstall-am uninstall-info-am
 
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
-
-%.conf: sal-test.conf.in
-	ln -sf $< $@
-
-clean-local:
-	rm -f *.ph
 
 # CLEANFILES cannot delete directories, therefore use target clean-generic.
 clean-generic:
