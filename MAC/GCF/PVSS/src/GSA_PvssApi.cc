@@ -22,8 +22,6 @@
 //#  $Id$
 #include <lofar_config.h>
 
-#define LOFARLOGGER_SUBPACKAGE "PVSS"
-
 #include <unistd.h>
 #include <GCF/TM/GCF_Task.h>
 #include <CharString.hxx>

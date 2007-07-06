@@ -25,8 +25,6 @@
 
 #include <lofar_config.h>
 
-#define LOFARLOGGER_SUBPACKAGE "PVSS"
-
 #include "GSA_SCADAHandler.h"
 #include <GSA_Resources.h>
 #include <GCF/TM/GCF_Task.h>

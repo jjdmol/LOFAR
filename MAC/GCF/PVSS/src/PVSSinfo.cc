@@ -22,8 +22,6 @@
 
 #include <lofar_config.h>
 
-#define LOFARLOGGER_SUBPACKAGE "PVSS"
-
 #include <GCF/Utils.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/PVSS/PVSSservice.h>

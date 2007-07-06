@@ -21,8 +21,6 @@
 //#  $Id$
 #include <lofar_config.h>
 
-#define LOFARLOGGER_SUBPACKAGE "PVSS"
-
 #include <GCF/PVSS/PVSSservice.h>
 #include "GSA_WaitForAnswer.h"
 

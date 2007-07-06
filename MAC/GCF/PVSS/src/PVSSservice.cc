@@ -23,8 +23,6 @@
 #include <lofar_config.h>
 #include <Common/lofar_string.h>
 
-#define LOFARLOGGER_SUBPACKAGE "PVSS"
-
 #include <DpMsgAnswer.hxx>
 #include <DpMsgHotLink.hxx>
 #include <DpHLGroup.hxx>

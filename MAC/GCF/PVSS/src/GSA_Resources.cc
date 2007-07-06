@@ -22,8 +22,6 @@
 
 #include <lofar_config.h>
 
-#define LOFARLOGGER_SUBPACKAGE "PVSS"
-
 // GCF includes
 #include  <GSA_Resources.h>
 
