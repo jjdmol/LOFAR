@@ -84,7 +84,8 @@ struct ACRequest
 	// @{
 	
 	// Time last ping message was received.
-	time_t	itsPingtime;
+	//#time_t	itsPingtime;	 == signed long
+	int32	itsPingtime;
 
 	// Internal state administration
 	uint16	itsState;		// loaded, new, ok, losing
