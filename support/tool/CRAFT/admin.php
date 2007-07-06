@@ -71,6 +71,18 @@
     			else 
 						include($_SESSION['pagina'] . 'admin_contacten/toevoegen.php');   			
     		}
+    		//locaties
+    		else if ($pagina == 8) {
+ 					//bewerken van locaties
+					if (isset($_GET['s']) && $_GET['s'] == 2)
+						include($_SESSION['pagina'] . 'admin_locaties/bewerken.php');
+					//locaties van contacten
+					else if (isset($_GET['s']) && $_GET['s'] == 3)
+						include($_SESSION['pagina'] . 'admin_locaties/verwijderen.php');    			
+    			//toevoegen van locaties (standaard actie)
+    			else 
+						include($_SESSION['pagina'] . 'admin_locaties/toevoegen.php');   			
+    		}
     	?>
 	
 		</div> 	

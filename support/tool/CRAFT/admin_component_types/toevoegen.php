@@ -63,7 +63,7 @@
 					$query = $query. $_POST['maximum'] ."', '". $_POST['reserve'] ."', '". $_POST['verantwoordelijke'] ."', '".$_POST['fabricant']."', '". $_POST['leverancier'] ."')";
 					if (mysql_query($query)) echo("Het nieuwe type \"". $_POST['naam'] ."\" is aan het systeem toegevoegd<br>");
 					else echo("Het nieuwe type \"". $_POST['naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
-					echo('<a href="admin.php?s=1&p=1">Klik hier om nog een type toe te voegen.</a>');
+					echo('<a href="admin.php?p=1&s=1">Klik hier om nog een type toe te voegen.</a>');
 				}
 				else {
 					

@@ -82,27 +82,32 @@
       document.getElementById('suboptie1').innerHTML="Melding type toevoegen"
       document.getElementById('suboptie2').innerHTML="Melding type bewerken"
       document.getElementById('suboptie3').innerHTML="Melding type verwijderen";
-   	}	
+   	}
   	else if (optie ==4) {
       document.getElementById('suboptie1').innerHTML="Melding toevoegen"
       document.getElementById('suboptie2').innerHTML="Melding bewerken"
       document.getElementById('suboptie3').innerHTML="Melding verwijderen";
-  	}	
+  	}
   	else if (optie ==5) {
       document.getElementById('suboptie1').innerHTML="Statistieken toevoegen"
       document.getElementById('suboptie2').innerHTML="Statistieken bewerken"
       document.getElementById('suboptie3').innerHTML="Statistieken verwijderen";
-   	}	  
+   	}
   	else if (optie ==6) {
       document.getElementById('suboptie1').innerHTML="Gebruikers toevoegen"
       document.getElementById('suboptie2').innerHTML="Gebruikers bewerken"
       document.getElementById('suboptie3').innerHTML="Gebruikers verwijderen";
-  	}	  
+  	}
   	else if (optie ==7) {
       document.getElementById('suboptie1').innerHTML="Contacten toevoegen"
       document.getElementById('suboptie2').innerHTML="Contacten bewerken"
       document.getElementById('suboptie3').innerHTML="Contacten verwijderen";
-  	}	  
+  	}
+  	else if (optie ==8) {
+      document.getElementById('suboptie1').innerHTML="Locaties toevoegen"
+      document.getElementById('suboptie2').innerHTML="Locaties bewerken"
+      document.getElementById('suboptie3').innerHTML="Locaties verwijderen";
+  	}
   }
   
   //functie om een kader rond de hoofdmenuopties te plaatsen en de huidige keuze te highlighten
@@ -119,6 +124,7 @@
    		menuOptie('hoofdmenuoptie10');
    		menuOptie('hoofdmenuoptie11');
    		menuOptie('hoofdmenuoptie12');
+   		menuOptie('hoofdmenuoptie13');
    		
    		if (actief == 1) {
 				menuSelectie('hoofdmenuoptie6');     	
@@ -148,6 +154,10 @@
 				menuSelectie('hoofdmenuoptie12');     	
 	    	document.getElementById('hoofdoptie7').className = "actieveoptie";
    		}
+   		else if (actief == 8) {
+				menuSelectie('hoofdmenuoptie13');     	
+	    	document.getElementById('hoofdoptie7').className = "actieveoptie";
+   		}   		
     }
   	else {
   		stel_subbalk_samen(optie);
