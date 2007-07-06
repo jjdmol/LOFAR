@@ -44,11 +44,12 @@
 
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSservice.h>
+#include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/PVSS/PVSSresult.h>
-//#include <GCF/PAL/GCF_PVSSInfo.h>
+#include <GCF/PVSS/PVSSinfo.h>
 
-#include "WaitForAnswer.h"
-#include "GSASCADAHandler.h"
+#include "GSA_WaitForAnswer.h"
+#include "GSA_SCADAHandler.h"
 
 namespace LOFAR {
 	namespace GCF {
@@ -91,17 +92,17 @@ string PVSSerrstr(PVSSresult	resultNr)
 
 	
 //
-// PVSSService()
+// PVSSservice()
 //
-PVSSService::PVSSService(const PVSSresponse&	responsePtr) : 
+PVSSservice::PVSSservice(PVSSresponse*	responsePtr) : 
 	itsWFA(0),
 	itsSCADAHandler(0),
 	itsResponse(responsePtr)
 {
-	itsWFA			= new WaitForAnswer(*this);
-	itsSCADAHandler	= PVSSSCADAHandler::instance();
-	ASSERT_STR(itsSCADAHandler, "Unable to get SCADA handler");
-	ASSERT_STR(itsResponse,	    "No response-class specified");
+	itsWFA			= new GSAWaitForAnswer(*this);
+	itsSCADAHandler	= GSASCADAHandler::instance();
+	ASSERTSTR(itsSCADAHandler, "Unable to get SCADA handler");
+	ASSERTSTR(itsResponse,	    "No response-class specified");
 
 	if (itsSCADAHandler->isOperational() == SA_SCADA_NOT_AVAILABLE) {
 		LOG_FATAL(formatString("Error on creating a SCADA service"));
@@ -110,15 +111,15 @@ PVSSService::PVSSService(const PVSSresponse&	responsePtr) :
 }
 
 //
-// ~PVSSService()
+// ~PVSSservice()
 //
-PVSSService::~PVSSService()
+PVSSservice::~PVSSservice()
 {
 	if (itsWFA)
 		delete itsWFA;
 
 	ASSERT(itsSCADAHandler);
-	PVSSSCADAHandler::release();
+	GSASCADAHandler::release();
 	itsSCADAHandler = 0;
 }
 
@@ -127,7 +128,7 @@ PVSSService::~PVSSService()
 //
 // Receive Signals.
 // We are interested in SIGINT and SIGTERM. 
-void PVSSService::handleHotLink(const DpMsgAnswer& answer, const WaitForAnswer& wait)
+void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer& wait)
 {
 	CharString	pvssDPEConfigName;
 	string 		DPEConfigName;
@@ -138,14 +139,14 @@ void PVSSService::handleHotLink(const DpMsgAnswer& answer, const WaitForAnswer& 
 	CharString	pvssTypeName;
 	TimeVar 	ts(answer.getOriginTime());
 
-	GCFPVSSInfo::_lastTimestamp.tv_sec  = ts.getSeconds();
-	GCFPVSSInfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
+	PVSSinfo::_lastTimestamp.tv_sec  = ts.getSeconds();
+	PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
 
 	for (AnswerGroup *pGrItem = answer.getFirstGroup();
 								pGrItem; pGrItem = answer.getNextGroup()) {
 		for (AnswerItem *pAnItem = pGrItem->getFirstItem(); pAnItem;
 											pAnItem = pGrItem->getNextItem()) {
-			GCFPVSSInfo::_lastSysNr = pAnItem->getDpIdentifier().getSystem();
+			PVSSinfo::_lastSysNr = pAnItem->getDpIdentifier().getSystem();
 			if (pAnItem->getDpIdentifier().convertToString(pvssDPEConfigName) == PVSS_FALSE) {
 				if (answer.isAnswerOn() == DP_MSG_DP_REQ) {
 					LOG_TRACE_FLOW(formatString("DP %s was deleted successful",wait.getDpName().c_str()));
@@ -207,7 +208,7 @@ void PVSSService::handleHotLink(const DpMsgAnswer& answer, const WaitForAnswer& 
 					break;
 				}
 			}
-			GCFPVSSInfo::_lastSysNr = 0;
+			PVSSinfo::_lastSysNr = 0;
 		} // for AnserItem
 
 		if (!handled) {
@@ -231,8 +232,8 @@ void PVSSService::handleHotLink(const DpMsgAnswer& answer, const WaitForAnswer& 
 		MsgType mt = answer.isAnswerOn();
 		LOG_DEBUG(formatString ("Answer on: %d is not handled", mt));
 	}
-	GCFPVSSInfo::_lastTimestamp.tv_sec = 0;
-	GCFPVSSInfo::_lastTimestamp.tv_usec = 0;
+	PVSSinfo::_lastTimestamp.tv_sec = 0;
+	PVSSinfo::_lastTimestamp.tv_usec = 0;
 }
 
 const Variable* extractArrayValue(Variable& var, uint8 index);
@@ -242,7 +243,7 @@ const Variable* extractArrayValue(Variable& var, uint8 index);
 //
 // Handle incoming hotlinks.
 // This function is called from our hotlink object
-void PVSSService::handleHotLink(const DpHLGroup& group, const WaitForAnswer& wait)
+void PVSSservice::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& wait)
 {
 	ErrClass* 	pErr(0);
 	TimeVar 	ts(group.getOriginTime());
@@ -256,11 +257,11 @@ void PVSSService::handleHotLink(const DpHLGroup& group, const WaitForAnswer& wai
 	// A group consists of pairs of DpIdentifier and values called items.
 	// There is exactly one item for all configs we are connected.
 	if (group.getIdentifier() == 0) { 
-		GCFPVSSInfo::_lastTimestamp.tv_sec = ts.getSeconds();
-		GCFPVSSInfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
-		GCFPVSSInfo::_lastManNum = group.getOriginManager().getManNum();
-		GCFPVSSInfo::_lastManType = group.getOriginManager().getManType();
-		GCFPVSSInfo::_lastSysNr = group.getOriginManager().getSystem();
+		PVSSinfo::_lastTimestamp.tv_sec = ts.getSeconds();
+		PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
+		PVSSinfo::_lastManNum = group.getOriginManager().getManNum();
+		PVSSinfo::_lastManType = group.getOriginManager().getManType();
+		PVSSinfo::_lastSysNr = group.getOriginManager().getSystem();
 		// normal subscription (with dpeSubscribe)
 		for (DpVCItem *pItem = group.getFirstItem(); pItem; pItem = group.getNextItem()) {
 			Variable *pVar = pItem->getValuePtr();
@@ -324,8 +325,8 @@ void PVSSService::handleHotLink(const DpHLGroup& group, const WaitForAnswer& wai
 
 		ts = *(TimeVar*) pTempVar;
 
-		GCFPVSSInfo::_lastTimestamp.tv_sec = ts.getSeconds();
-		GCFPVSSInfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
+		PVSSinfo::_lastTimestamp.tv_sec = ts.getSeconds();
+		PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
 
 		// extract the originator mananger ID of the changed DP (column 4)
 		if ((pTempVar = extractArrayValue(*pVar, 4)) == 0) 
@@ -337,9 +338,9 @@ void PVSSService::handleHotLink(const DpHLGroup& group, const WaitForAnswer& wai
 
 		ManagerIdentifier manId;
 		manId.convFromInt(pManIdInt->getValue());
-		GCFPVSSInfo::_lastManNum = manId.getManNum();
-		GCFPVSSInfo::_lastManType = manId.getManType();
-		GCFPVSSInfo::_lastSysNr = manId.getSystem();
+		PVSSinfo::_lastManNum = manId.getManNum();
+		PVSSinfo::_lastManType = manId.getManType();
+		PVSSinfo::_lastSysNr = manId.getSystem();
 
 		// extract the new value of the changed DP (column 2)
 		if ((pTempVar = extractArrayValue(*pVar, 2)) == 0) 
@@ -348,11 +349,11 @@ void PVSSService::handleHotLink(const DpHLGroup& group, const WaitForAnswer& wai
 		convAndForwardValueChange(pDpId->getValue(), *pTempVar);
 	}
 
-	GCFPVSSInfo::_lastTimestamp.tv_sec = 0;
-	GCFPVSSInfo::_lastTimestamp.tv_usec = 0;
-	GCFPVSSInfo::_lastManNum = 0;
-	GCFPVSSInfo::_lastManType = 0;
-	GCFPVSSInfo::_lastSysNr = 0;
+	PVSSinfo::_lastTimestamp.tv_sec = 0;
+	PVSSinfo::_lastTimestamp.tv_usec = 0;
+	PVSSinfo::_lastManNum = 0;
+	PVSSinfo::_lastManType = 0;
+	PVSSinfo::_lastSysNr = 0;
 }
 
 //
@@ -373,7 +374,7 @@ const Variable* extractArrayValue(Variable& var, uint8 index)
 //
 // convAndForwardValueChange(dpID, pvssVar)
 //
-void PVSSService::convAndForwardValueChange(const DpIdentifier& dpId, const Variable& pvssVar)
+void PVSSservice::convAndForwardValueChange(const DpIdentifier& dpId, const Variable& pvssVar)
 {
 	static CharString pvssDPEConfigName = "";
 	static string DPEConfigName = "";
@@ -403,14 +404,14 @@ void PVSSService::convAndForwardValueChange(const DpIdentifier& dpId, const Vari
 //
 // dpCreate(dpname, typename)
 //
-PVSSresult PVSSService::dpCreate(const string& dpName, 
+PVSSresult PVSSservice::dpCreate(const string& dpName, 
 							   const string& typeName)
 {
 	PVSSresult result(SA_NO_ERROR);
 
 	DpTypeId 			dpTypeId;
 	LangText 			dpNameLang(dpName.c_str());
-	WaitForAnswer 		*pWFA = new WaitForAnswer(*this);
+	GSAWaitForAnswer	*pWFA = new GSAWaitForAnswer(*this);
 	CharString 			pvssTypeName(typeName.c_str());
 
 	LOG_TRACE_FLOW(formatString("Create DP '%s'", dpName.c_str()));
@@ -419,7 +420,7 @@ PVSSresult PVSSService::dpCreate(const string& dpName,
 	if ((result = itsSCADAHandler->isOperational()) == SA_SCADA_NOT_AVAILABLE) {
 		LOG_FATAL(formatString ("Unable to create DP: '%s'", dpName.c_str()));
 	}
-	else if (GCFPVSSInfo::propExists(dpName)) {
+	else if (PVSSinfo::propExists(dpName)) {
 		LOG_WARN(formatString ("DP '%s' already exists", dpName.c_str()));
   		result = SA_PROP_ALREADY_EXIST;
 	}
@@ -427,7 +428,7 @@ PVSSresult PVSSService::dpCreate(const string& dpName,
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
-					  "PVSSService",					// our file name
+					  "PVSSservice",					// our file name
 					  "createProp",					// our function name
 					  CharString("DatapointType ") + 
 					  pvssTypeName + 
@@ -443,7 +444,7 @@ PVSSresult PVSSService::dpCreate(const string& dpName,
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
-					  "PVSSService",					// our file name
+					  "PVSSservice",					// our file name
 					  "dpCreate",					// our function name
 					  CharString("Datapoint ") + 
 					  dpName.c_str() + 
@@ -470,11 +471,11 @@ PVSSresult PVSSService::dpCreate(const string& dpName,
 //
 // dpDelete(dpname)
 //
-PVSSresult PVSSService::dpDelete(const string& dpName)
+PVSSresult PVSSservice::dpDelete(const string& dpName)
 {
 	PVSSresult 			result(SA_NO_ERROR);
 	DpIdentifier 		dpId;
-	WaitForAnswer 		*pWFA = new WaitForAnswer(*this);
+	GSAWaitForAnswer	*pWFA = new GSAWaitForAnswer(*this);
 	pWFA->setDpName(dpName);
 
 	LOG_TRACE_FLOW(formatString("Delete DP '%s'", dpName.c_str()));
@@ -483,7 +484,7 @@ PVSSresult PVSSService::dpDelete(const string& dpName)
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
 		LOG_FATAL(formatString ("Unable to delete DP: '%s'", dpName.c_str()));
 	}
-	else if (!GCFPVSSInfo::propExists(dpName)) {
+	else if (!PVSSinfo::propExists(dpName)) {
 		LOG_WARN(formatString ("DP '%s' does not exists", dpName.c_str()));
 		result = SA_PROP_DOES_NOT_EXIST;
 	}
@@ -494,7 +495,7 @@ PVSSresult PVSSService::dpDelete(const string& dpName)
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
-					  "PVSSService",					// our file name
+					  "PVSSservice",					// our file name
 					  "dpDelete",					// our function name
 					  CharString("Datapoint ") + dpName.c_str() + 
 					  CharString(" could not be deleted"));
@@ -520,7 +521,7 @@ PVSSresult PVSSService::dpDelete(const string& dpName)
 //
 // dpeSubscribe(propName)
 //
-PVSSresult PVSSService::dpeSubscribe(const string& propName)
+PVSSresult PVSSservice::dpeSubscribe(const string& propName)
 {
 	PVSSresult 		result(SA_NO_ERROR);
 	DpIdentifier 	dpId;
@@ -535,7 +536,7 @@ PVSSresult PVSSService::dpeSubscribe(const string& propName)
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
 		LOG_FATAL(formatString("Unable to subscribe on property: '%s'",propName.c_str()));
 	}
-	else if (!GCFPVSSInfo::propExists(propName)) {
+	else if (!PVSSinfo::propExists(propName)) {
 		LOG_WARN(formatString ("Property: '%s' does not exists", propName.c_str()));
 		result = SA_PROP_DOES_NOT_EXIST;
 	}
@@ -547,7 +548,7 @@ PVSSresult PVSSService::dpeSubscribe(const string& propName)
 			ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 						  ErrClass::ERR_PARAM,			// wrong name: blame others
 						  ErrClass::UNEXPECTEDSTATE,	// fits all
-						  "PVSSService",					// our file name
+						  "PVSSservice",					// our file name
 						  "dpeSubscribe",				// our function name
 						  CharString("Datapoint ") + propName.c_str() + 
 						  CharString(" could not be connected"));
@@ -572,7 +573,7 @@ PVSSresult PVSSService::dpeSubscribe(const string& propName)
 //
 // dpeUnsubscribe(propName)
 //
-PVSSresult PVSSService::dpeUnsubscribe(const string& propName)
+PVSSresult PVSSservice::dpeUnsubscribe(const string& propName)
 {
 	PVSSresult 		result(SA_NO_ERROR);
 	DpIdentifier 	dpId;
@@ -587,7 +588,7 @@ PVSSresult PVSSService::dpeUnsubscribe(const string& propName)
 		LOG_FATAL(formatString ("Unable to unsubscribe from property: '%s'", 
 																propName.c_str()));
 	}
-	else if (!GCFPVSSInfo::propExists(propName)) {
+	else if (!PVSSinfo::propExists(propName)) {
 		LOG_WARN(formatString ("Property: '%s' does not exists", propName.c_str()));
 		result = SA_PROP_DOES_NOT_EXIST;
 	}
@@ -600,7 +601,7 @@ PVSSresult PVSSService::dpeUnsubscribe(const string& propName)
 			ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 						  ErrClass::ERR_PARAM,			// wrong name: blame others
 						  ErrClass::UNEXPECTEDSTATE,	// fits all
-						  "PVSSService",					// our file name
+						  "PVSSservice",					// our file name
 						  "dpeUnsubscribe",				// our function name
 						  CharString("Datapoint ") + propName.c_str() + 
 						  CharString(" could not be disconnected"));
@@ -626,12 +627,12 @@ PVSSresult PVSSService::dpeUnsubscribe(const string& propName)
 //
 // dpeGet(dpename)
 //
-PVSSresult PVSSService::dpeGet(const string& dpeName)
+PVSSresult PVSSservice::dpeGet(const string& dpeName)
 {
 	PVSSresult 			result(SA_NO_ERROR);
 	DpIdentifier 		dpId;
 	string 				pvssDpName;
-	WaitForAnswer 		*pWFA = new WaitForAnswer(*this);
+	GSAWaitForAnswer	*pWFA = new GSAWaitForAnswer(*this);
 	pWFA->setDpName(dpeName);
 
 	convPropToDpConfig(dpeName, pvssDpName, true);
@@ -642,7 +643,7 @@ PVSSresult PVSSService::dpeGet(const string& dpeName)
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
 		LOG_FATAL(formatString ( "Unable to request of property: '%s'", dpeName.c_str()));
 	}
-	else if (!GCFPVSSInfo::propExists(dpeName)) {
+	else if (!PVSSinfo::propExists(dpeName)) {
 		LOG_WARN(formatString ( "Property: '%s' does not exists", dpeName.c_str()));
 		result = SA_PROP_DOES_NOT_EXIST;
 	}
@@ -654,7 +655,7 @@ PVSSresult PVSSService::dpeGet(const string& dpeName)
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
-					  "PVSSService",					// our file name
+					  "PVSSservice",					// our file name
 					  "dpeGet",						// our function name
 					  CharString("Value of datapoint ") + dpeName.c_str() + 
 					  CharString(" could not be requested"));
@@ -681,7 +682,7 @@ PVSSresult PVSSService::dpeGet(const string& dpeName)
 //
 // dpeSet (name, GCFPValue, timestamp, wantanswer)
 //
-PVSSresult PVSSService::dpeSet(const string& dpeName, 
+PVSSresult PVSSservice::dpeSet(const string& dpeName, 
 							 const GCFPValue& value,
 							 double timestamp, 
 							 bool wantAnswer)
@@ -701,7 +702,7 @@ PVSSresult PVSSService::dpeSet(const string& dpeName,
 		LOG_FATAL(formatString("Unable to set value of property: '%s'", dpeName.c_str()));
 	}
 	// Property must exist
-	else if (!GCFPVSSInfo::propExists(dpeName)) {
+	else if (!PVSSinfo::propExists(dpeName)) {
 		LOG_WARN(formatString("Property: '%s' does not exists", dpeName.c_str()));
 		result = SA_PROP_DOES_NOT_EXIST;
 	}
@@ -712,10 +713,10 @@ PVSSresult PVSSService::dpeSet(const string& dpeName,
 		LOG_ERROR(formatString("Unable to set value of property: '%s'", dpeName.c_str()));
 	}
 	else {
-		WaitForAnswer* pWFA(0);
+		GSAWaitForAnswer* pWFA(0);
 		if (wantAnswer) {
 			// Note: pWFA will be deleted by PVSS API
-			WaitForAnswer *pWFA = new WaitForAnswer(*this); 
+			GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this); 
 			pWFA->setDpName(dpeName);
 		}
 		PVSSboolean retVal, retValTS(PVSS_TRUE);
@@ -740,7 +741,7 @@ PVSSresult PVSSService::dpeSet(const string& dpeName,
 			ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 						  ErrClass::ERR_PARAM,			// wrong name: blame others
 						  ErrClass::UNEXPECTEDSTATE,	// fits all
-						  "PVSSService",					// our file name
+						  "PVSSservice",					// our file name
 						  "dpeSet()",					// our function name
 						  CharString("Value of datapoint ") + dpeName.c_str() + 
 						  CharString(" could not be set"));
@@ -777,7 +778,7 @@ PVSSresult PVSSService::dpeSet(const string& dpeName,
 //
 // dpQuerySubscribeSingle(queryWhere, queryFrom)
 //
-PVSSresult PVSSService::dpQuerySubscribeSingle(const string& queryWhere, const string& queryFrom)
+PVSSresult PVSSservice::dpQuerySubscribeSingle(const string& queryWhere, const string& queryFrom)
 {
 	PVSSresult result(SA_NO_ERROR);
 	const char queryFormat[] = "SELECT '_online.._value', '_online.._stime','_online.._manager' FROM %s WHERE %s";
@@ -795,7 +796,7 @@ PVSSresult PVSSService::dpQuerySubscribeSingle(const string& queryWhere, const s
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
-					  "PVSSService",					// our file name
+					  "PVSSservice",					// our file name
 					  "dpQuerySubscribeSingle()",	// our function name
 					  CharString("Query subscription (") + query + 
 					  CharString(") could not be requested!"));
@@ -816,7 +817,7 @@ PVSSresult PVSSService::dpQuerySubscribeSingle(const string& queryWhere, const s
 //
 // dpQueryUnscubscribe(queryID)
 //
-PVSSresult PVSSService::dpQueryUnsubscribe(uint32 queryId)
+PVSSresult PVSSservice::dpQueryUnsubscribe(uint32 queryId)
 {
 	PVSSresult result(SA_NO_ERROR);
 	LOG_TRACE_FLOW (formatString("Unsubscription from queried properties '%d'", queryId));
@@ -829,7 +830,7 @@ PVSSresult PVSSService::dpQueryUnsubscribe(uint32 queryId)
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
-					  "PVSSService",					// our file name
+					  "PVSSservice",					// our file name
 					  "dpQuerySubscribeSingle()",	// our function name
 					  CharString("Query unsubscription (") + queryId + 
 					  CharString(") could not be requested!"));
@@ -850,7 +851,7 @@ PVSSresult PVSSService::dpQueryUnsubscribe(uint32 queryId)
 //
 // convertPVSSToMAC(variable, GCFPValue)
 //
-PVSSresult PVSSService::convertPVSSToMAC(const Variable& variable, 
+PVSSresult PVSSservice::convertPVSSToMAC(const Variable& variable, 
 									   GCFPValue** pMacValue) const
 {
 	PVSSresult result(SA_NO_ERROR);
@@ -959,7 +960,7 @@ PVSSresult PVSSService::convertPVSSToMAC(const Variable& variable,
 //
 // convertMACToPVSS(GCFPValue, Variable, dpID)
 //
-PVSSresult PVSSService::convertMACToPVSS(const GCFPValue& macValue, 
+PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue, 
 									   Variable** 		pVar, 
 									   const DpIdentifier& dpId) const
 {
@@ -1107,7 +1108,7 @@ PVSSresult PVSSService::convertMACToPVSS(const GCFPValue& macValue,
 //
 // getPVSSType(macType, pvssTypeName)
 //
-bool PVSSService::getPVSSType(TMACValueType macType, 
+bool PVSSservice::getPVSSType(TMACValueType macType, 
 							 CharString& pvssTypeName) const
 {
 	switch (macType) {
@@ -1169,7 +1170,7 @@ bool PVSSService::getPVSSType(TMACValueType macType,
 //
 // getDpId(dpname, &dpID)
 //
-PVSSresult PVSSService::getDpId(const string& dpName, DpIdentifier& dpId) const
+PVSSresult PVSSservice::getDpId(const string& dpName, DpIdentifier& dpId) const
 {
 	PVSSresult result(SA_NO_ERROR);
 
@@ -1182,7 +1183,7 @@ PVSSresult PVSSService::getDpId(const string& dpName, DpIdentifier& dpId) const
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
-					  "PVSSService",					// our file name
+					  "PVSSservice",					// our file name
 					  "getDpId",					// our function name
 					  CharString("Datapoint ") + pvssDpName + CharString(" missing"));
 
@@ -1197,7 +1198,7 @@ PVSSresult PVSSService::getDpId(const string& dpName, DpIdentifier& dpId) const
 //
 // convPropToDpConfig(propName, pvssDpName, willReadValue)
 //
-void PVSSService::convPropToDpConfig(const string& propName, string& pvssDpName, bool willReadValue)
+void PVSSservice::convPropToDpConfig(const string& propName, string& pvssDpName, bool willReadValue)
 {
 	pvssDpName = propName.c_str();
 	if (propName.find('.') >= propName.size()) {
@@ -1214,7 +1215,7 @@ void PVSSService::convPropToDpConfig(const string& propName, string& pvssDpName,
 //
 // convDpConfigToProp(pvssDPEConfigName, propName)
 //
-void PVSSService::convDpConfigToProp(const string& pvssDPEConfigName, string& propName)
+void PVSSservice::convDpConfigToProp(const string& pvssDPEConfigName, string& propName)
 {
 	string::size_type doublePointPos = pvssDPEConfigName.find(':');
 	string::size_type dotPos 		 = pvssDPEConfigName.find('.');

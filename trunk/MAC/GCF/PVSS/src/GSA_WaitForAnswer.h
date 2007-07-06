@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef  WAITFORANSWER_H
-#define  WAITFORANSWER_H
+#ifndef  GSA_WAITFORANSWER_H
+#define  GSA_WAITFORANSWER_H
 
 #include <HotLinkWaitForAnswer.hxx>   
 #include <Common/lofar_string.h>
@@ -53,11 +53,11 @@ class PVSSservice;
  * dpDelete           delete
  */
 
-class WaitForAnswer : public HotLinkWaitForAnswer
+class GSAWaitForAnswer : public HotLinkWaitForAnswer
 {
 public:
-    WaitForAnswer (PVSSservice& service);
-    virtual ~WaitForAnswer () {};
+    GSAWaitForAnswer (PVSSservice& service);
+    virtual ~GSAWaitForAnswer () {};
     
     void hotLinkCallBack (DpMsgAnswer& answer);
 

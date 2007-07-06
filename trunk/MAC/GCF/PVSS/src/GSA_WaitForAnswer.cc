@@ -1,4 +1,4 @@
-//#  WaitForAnswer.cc: 
+//#  GSA_WaitForAnswer.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,25 +24,25 @@
 #define LOFARLOGGER_SUBPACKAGE "PVSS"
 
 #include <GCF/PVSS/PVSSservice.h>
-#include "WaitForAnswer.h"
+#include "GSA_WaitForAnswer.h"
 
 namespace LOFAR {
  namespace GCF {
   namespace PVSS {
 
-WaitForAnswer::WaitForAnswer(PVSSservice& service) :
+GSAWaitForAnswer::GSAWaitForAnswer(PVSSservice& service) :
 	HotLinkWaitForAnswer(),
 	_service(service)
 {
 }
 
-void WaitForAnswer::hotLinkCallBack(DpMsgAnswer& answer)
+void GSAWaitForAnswer::hotLinkCallBack(DpMsgAnswer& answer)
 {
 	_service.handleHotLink(answer, *this);  
 }
 
 
-void WaitForAnswer::hotLinkCallBack(DpHLGroup& group)
+void GSAWaitForAnswer::hotLinkCallBack(DpHLGroup& group)
 {
 	_service.handleHotLink(group, *this);
 }

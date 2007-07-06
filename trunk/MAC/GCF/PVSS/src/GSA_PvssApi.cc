@@ -28,7 +28,7 @@
 #include <GCF/TM/GCF_Task.h>
 #include <CharString.hxx>
 #include <StartDpInitSysMsg.hxx>
-#include "GSA_Defines.h"
+#include <GCF/PVSS/PVSSresult.h>
 #include "GSA_PvssApi.h"
 
 namespace LOFAR {

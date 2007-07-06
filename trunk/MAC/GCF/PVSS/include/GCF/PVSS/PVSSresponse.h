@@ -40,6 +40,7 @@ public:
     virtual ~PVSSresponse ();
 
 protected:
+	friend class PVSSservice;
     virtual void dpCreated 			 (const string& dpName)  = 0;
     virtual void dpDeleted	 		 (const string& dpName)  = 0;
     virtual void dpeSubscribed 		 (const string& dpeName) = 0;    
