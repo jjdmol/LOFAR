@@ -62,13 +62,13 @@
 
 					if (mysql_query($query)) echo("Het nieuwe melding type \"". $_POST['type_naam'] ."\" is aan het systeem toegevoegd<br>");
 					else echo("Het nieuwe type melding \"". $_POST['type_naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
-					echo('<a href="admin.php?p=3&s=1">Klik hier om nog een meldingtype toe te voegen.</a>');
+					echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om nog een meldingtype toe te voegen.</a>');
    			
     		}
     		else {
     	?>
     	
-	    	<form name="theForm" method="post" action="admin.php?p=3&s=1">
+	    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>">
 		    	<table>
 		    		<tr>
 		    			<td>Naam type:</td>

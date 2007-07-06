@@ -30,7 +30,7 @@
 					$query = "DELETE FROM melding_type WHERE Meld_Type_ID = " . $_POST['type_melding'];
 					if (mysql_query($query)) echo("Het door u geselecteerde type component is uit het systeem verwijderd.<br>");
 					else("Er is iets mis gegaan met het verwijderen van het type!! Het type is niet verwijderd!");
-					echo('<a href="admin.php?p=3&s=3">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een type uit de treeview.</a>');
+					echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een type uit de treeview.</a>');
    			}
    			else {
     			if (isset($_GET['c']) && $_GET['c'] != 0 ) {
@@ -48,7 +48,7 @@
 						//er zijn geen meldingen van dit type.
 						if ($row[0] == NULL) {
 	 					?>
-				    	<form name="theForm" method="post" action="admin.php?p=3&s=3&c=<?php echo($_GET['c']); ?>">
+				    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
 				    		<table>
 				    			<tr><td><input type="hidden" name="type_melding" value="<?php echo($_GET['c']);?>">Weet u zeker dat u dit type melding verwijderen wilt?</td></tr>
 				    			<tr><td><input type="CheckBox" name="confirmatie"> Ja, ik wil dit type melding verwijderen</td></tr>

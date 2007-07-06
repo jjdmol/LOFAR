@@ -137,10 +137,10 @@
     				
     				//de query afsluiten met een haakje
     				$query = $query . ')';
-	echo($query);
+	
 						if (mysql_query($query)) echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" is aan het systeem toegevoegd<br>");
 						else echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
-    				echo('<a href="admin.php?p=2&s=1">Klik hier om nog een component toe te voegen.</a>');
+    				echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om nog een component toe te voegen.</a>');
     			
     			}
     			//er mag niet opgeslagen worden, dus toon het formulier met invoervelden
@@ -149,7 +149,7 @@
 						date_default_timezone_set ("Europe/Amsterdam");
     		?>
     	
-    		<form name="theForm" method="post" action="admin.php?p=2&s=1">
+    		<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>">
 	    		<table>
 	    			<tr>
 	    				<td>Selecteer type om toe te voegen:</td>

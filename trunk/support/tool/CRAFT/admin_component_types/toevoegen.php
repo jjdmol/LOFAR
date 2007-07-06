@@ -63,13 +63,13 @@
 					$query = $query. $_POST['maximum'] ."', '". $_POST['reserve'] ."', '". $_POST['verantwoordelijke'] ."', '".$_POST['fabricant']."', '". $_POST['leverancier'] ."')";
 					if (mysql_query($query)) echo("Het nieuwe type \"". $_POST['naam'] ."\" is aan het systeem toegevoegd<br>");
 					else echo("Het nieuwe type \"". $_POST['naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
-					echo('<a href="admin.php?p=1&s=1">Klik hier om nog een type toe te voegen.</a>');
+					echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om nog een type toe te voegen.</a>');
 				}
 				else {
 					
     	?>
     	
-    	<form name="theForm" method="post" action="admin.php?p=1&s=1">
+    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']);?>">
 	    	<table>
 	    		<tr><td>Naam van het type:</td><td><input type="text" name="naam" value="<?php if(isset($_POST['naam'])) echo($_POST['naam']); ?>"><?php if(isset($_POST['naam']) && $_POST['naam'] == '') echo('<b id="type_naam">* Er is geen naam ingevoerd!</b>'); ?></td></tr>
 	    		<tr><td>Parent van het type:</td><td>

@@ -97,7 +97,7 @@
 					
 					if (mysql_query($query)) echo("Het gewijzigde contact \"". $_POST['Contact_Naam'] ."\" is in het systeem bijgewerkt<br>");
 					else("Er is iets mis gegaan met het opslaan van het contact \"". $_POST['Contact_Naam'] ."\"!! Het contact is niet bijgewerkt!");
-					echo('<a href="admin.php?p=7&s=2&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige contact of selecteer links een contact uit de treeview.</a>');
+					echo('<a href="'.$_SESSION['huidige_pagina'].'&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige contact of selecteer links een contact uit de treeview.</a>');
 
 				}
 				else {
@@ -116,7 +116,7 @@
 				  		$parent_gegevens = $row['Contact_Parent_Gegevens'];
 				?>
 
-			    	<form name="theForm" method="post" action="admin.php?p=7&s=2&c=<?php echo($_GET['c']); ?>">
+			    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
 				    	<table>
 				    		<tr>
 				    			<td>Naam:</td>

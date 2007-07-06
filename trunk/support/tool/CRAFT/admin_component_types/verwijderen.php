@@ -30,7 +30,7 @@
 						$query = "DELETE FROM comp_type WHERE Comp_Type = " . $_POST['component'];
 						if (mysql_query($query)) echo("Het door u geselecteerde type component is uit het systeem verwijderd.<br>");
 						else("Er is iets mis gegaan met het verwijderen van het type!! Het type is niet verwijderd!");
-						echo('<a href="admin.php?p=1&s=3">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een type uit de treeview.</a>');
+						echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een type uit de treeview.</a>');
     				
     				
     			}
@@ -59,7 +59,7 @@
 								if ($row2[0] == NULL) {
 									//FORMPJE MAKEN!!!!!!!!!!!!!!!!!!!!!
 									?>
-							    	<form name="theForm" method="post" action="admin.php?p=1&s=3&c=<?php echo($_GET['c']); ?>">
+							    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
 							    		<table>
 							    			<tr><td><input type="hidden" name="component" value="<?php echo($_GET['c']);?>">Weet u zeker dat u dit component verwijderen wilt?</td></tr>
 							    			<tr><td><input type="CheckBox" name="confirmatie"> Ja, ik wil dit component verwijderen</td></tr>
