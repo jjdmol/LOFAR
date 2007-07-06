@@ -69,11 +69,7 @@
 					
 					if (mysql_query($query)) echo("Het gewijzigde type \"". $_POST['naam'] ."\" is in het systeem bijgewerkt<br>");
 					else("Er is iets mis gegaan met het opslaan van het type \"". $_POST['naam'] ."\"!! Het type is niet bijgewerkt!");
-					echo('<a href="admin.php?p=1&s=2&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige type of selecteer links een type uit de treeview.</a>');
-										
-					//$_POST['fabricant'];
-					//$_POST['leverancier'];
-					
+					echo('<a href="'.$_SESSION['huidige_pagina'].'&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige type of selecteer links een type uit de treeview.</a>');					
 				}
 				else {
 				
@@ -84,7 +80,7 @@
 				  	$row = mysql_fetch_array($resultaat);
 	    	?>
 	    	
-			    	<form name="theForm" method="post" action="admin.php?p=1&s=2&c=<?php echo($_GET['c']); ?>">
+			    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
 				    	<table>
 				    		<tr>
 				    			<td>Type ID:</td>

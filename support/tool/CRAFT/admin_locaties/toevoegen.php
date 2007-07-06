@@ -48,13 +48,13 @@
 						$query = $query . "', '". $_POST['Loc_Adres1'] . "', '". $_POST['Loc_Adres2'] . "', '". $_POST['Loc_Postcode']. "', '". $_POST['Loc_Plaats']. "')";
 						if (mysql_query($query)) echo("De nieuwe locatie \"". $_POST['Loc_Naam'] ."\" is aan het systeem toegevoegd<br>");
 						else echo("De nieuwe locatie \"". $_POST['Loc_Naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
-						echo('<a href="admin.php?p=8&s=1">Klik hier om nog een locatie toe te voegen.</a>');
+						echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om nog een locatie toe te voegen.</a>');
 	    		}
 	    		else {
 	    		
 	    	?>
 	    	
-	    	<form name="theForm" method="post" action="admin.php?p=8&s=1">
+	    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']);?>">
 	    		<table>
 	    			<tr>
 	    				<td>Locatie naam:</td>

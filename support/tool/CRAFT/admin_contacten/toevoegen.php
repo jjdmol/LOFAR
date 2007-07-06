@@ -100,12 +100,12 @@
 					
 					if (mysql_query($query)) echo("Het nieuwe contact \"". $_POST['Contact_Naam'] ."\" is aan het systeem toegevoegd<br>");
 					else echo("Het nieuwe contact \"". $_POST['Contact_Naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
-					echo('<a href="admin.php?p=7&s=1">Klik hier om nog een contact toe te voegen.</a>');
+					echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om nog een contact toe te voegen.</a>');
     			
     		}
     		else {
     	?>
-		    	<form name="theForm" method="post" action="admin.php?p=7&s=1">
+		    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']);?>">
 			    	<table>
 			    		<tr>
 			    			<td>Naam:</td>

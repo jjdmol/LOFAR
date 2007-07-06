@@ -31,7 +31,7 @@
 						$query = "DELETE FROM comp_locatie WHERE Locatie_ID = " . $_POST['Loc_ID'];
 						if (mysql_query($query)) echo("De door u geselecteerde locatie is uit het systeem verwijderd.<br>");
 						else("Er is iets mis gegaan met het verwijderen van de locatie!! De locatie is niet verwijderd!");
-						echo('<a href="admin.php?p=8&s=3">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een locatie uit de treeview.</a>');
+						echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een locatie uit de treeview.</a>');
     			}
     			else {
 	    			if (isset($_GET['c']) && $_GET['c'] != 0 ) {
@@ -49,7 +49,7 @@
 							if ($row[0] == NULL) {
 								//FORMPJE MAKEN!!!!!!!!!!!!!!!!!!!!!
 								?>
-						    	<form name="theForm" method="post" action="admin.php?p=8&s=3&c=<?php echo($_GET['c']); ?>">
+						    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']);?>&c=<?php echo($_GET['c']); ?>">
 						    		<table>
 						    			<tr><td><input type="hidden" name="Loc_ID" value="<?php echo($_GET['c']);?>">Weet u zeker dat u deze locatie wilt verwijderen wilt?</td></tr>
 						    			<tr><td><input type="CheckBox" name="confirmatie"> Ja, ik wil deze locatie verwijderen</td></tr>

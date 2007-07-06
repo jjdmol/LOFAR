@@ -156,7 +156,7 @@
 
 					if (mysql_query($query)) echo("Het gewijzigde component \"". $_POST['comp_naam'] ."\" is in het systeem bijgewerkt<br>");
 					else("Er is iets mis gegaan met het opslaan van het component \"". $_POST['comp_naam'] ."\"!! Het component is niet bijgewerkt!");
-					echo('<a href="admin.php?p=2&s=2&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige component of selecteer links een component uit de treeview.</a>');
+					echo('<a href="'.$_SESSION['huidige_pagina'].'&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige component of selecteer links een component uit de treeview.</a>');
 										
     		}
     		else {
@@ -166,7 +166,7 @@
 						$resultaat = mysql_query($query);
 				  	$row = mysql_fetch_array($resultaat);
 				?>
-		    	<form name="theForm" method="post" action="admin.php?p=2&s=2&c=<?php echo($_GET['c']); ?>">
+		    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
 						<table>
 							<tr>
 								<td>Component ID:</td>

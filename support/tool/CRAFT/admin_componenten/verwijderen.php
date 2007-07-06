@@ -32,7 +32,7 @@
 					$query = "DELETE FROM comp_lijst WHERE Comp_Lijst_ID = " . $_POST['component'];
 					if (mysql_query($query)) echo("Het door u geselecteerde component is uit het systeem verwijderd.<br>");
 					else("Er is iets mis gegaan met het verwijderen van het geselecteerde component!! Het component is niet verwijderd!");
-					echo('<a href="admin.php?p=2&s=3">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een component uit de treeview.</a>');
+					echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een component uit de treeview.</a>');
   			}
   			else {
 
@@ -51,7 +51,7 @@
 						if ($row[0] == NULL) {
 							//FORMPJE MAKEN!!!!!!!!!!!!!!!!!!!!!
 							?>
-					    	<form name="theForm" method="post" action="admin.php?p=2&s=3&c=<?php echo($_GET['c']); ?>">
+					    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
 					    		<table>
 					    			<tr><td><input type="hidden" name="component" value="<?php echo($_GET['c']);?>">Weet u zeker dat u dit component verwijderen wilt?</td></tr>
 					    			<tr><td><input type="CheckBox" name="confirmatie"> Ja, ik wil dit component verwijderen</td></tr>

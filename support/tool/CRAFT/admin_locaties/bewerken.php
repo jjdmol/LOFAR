@@ -48,7 +48,7 @@
 
 					if (mysql_query($query)) echo("De gewijzigde locatie \"". $_POST['Loc_Naam'] ."\" is in het systeem bijgewerkt<br>");
 					else("Er is iets mis gegaan met het opslaan van de locatie \"". $_POST['Loc_Naam'] ."\"!! De locatie is niet bijgewerkt!");
-					echo('<a href="admin.php?p=8&s=2&c='.$_GET['c']. '">Klik hier om terug te keren naar de vorige locatie of selecteer links een locatie uit de treeview.</a>');
+					echo('<a href="'.$_SESSION['huidige_pagina'].'&c='.$_GET['c']. '">Klik hier om terug te keren naar de vorige locatie of selecteer links een locatie uit de treeview.</a>');
     		}
     		else {
     		
@@ -59,7 +59,7 @@
 			
 			?>
 	    	
-	    	<form name="theForm" method="post" action="admin.php?p=8&s=2&c=<?php echo($_GET['c']); ?>">
+	    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
 	    		<table>
 	    			<tr>
 	    				<td>Locatie ID:</td>
