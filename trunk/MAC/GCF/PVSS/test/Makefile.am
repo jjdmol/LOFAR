@@ -1,16 +1,16 @@
 AM_CPPFLAGS = -I$(top_srcdir)/PVSS/src
 
-check_PROGRAMS 		= tGSAService tGSAPerformance
+check_PROGRAMS 		= tPVSSservice tPerformance
 
-TESTS				= tGSAService 
+TESTS				= PVSSservice 
 
-tGSAService_SOURCES 		= $(BUILT_SOURCES) tGSAService.cc Service.cc
-tGSAService_LDADD			=  ../src/libsal.la $(LOFAR_DEPEND)
-tGSAService_DEPENDENCIES	= ../src/libsal.la $(LOFAR_DEPEND)
+tPVSSservice_SOURCES 		= $(BUILT_SOURCES) tPVSSservice.cc Response.cc
+tPVSSservice_LDADD			=  ../src/libpvss.la $(LOFAR_DEPEND)
+tPVSSservice_DEPENDENCIES	= ../src/libpvss.la $(LOFAR_DEPEND)
 
-tGSAPerformance_SOURCES 	= $(BUILT_SOURCES) tGSAPerformance.cc PerformanceService.cc
-tGSAPerformance_LDADD		=  ../src/libsal.la $(LOFAR_DEPEND)
-tGSAPerformance_DEPENDENCIES= ../src/libsal.la $(LOFAR_DEPEND)
+tPerformance_SOURCES 		= $(BUILT_SOURCES) tPerformance.cc PerformanceResponse.cc
+tPerformance_LDADD			=  ../src/libpvss.la $(LOFAR_DEPEND)
+tPerformance_DEPENDENCIES	= ../src/libpvss.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 

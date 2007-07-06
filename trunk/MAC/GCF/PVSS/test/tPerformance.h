@@ -1,5 +1,5 @@
 //
-//  tGSAPerformance.h: Definition of the tGSAService task class.
+//  tPerformance.h: Definition of the tService task class.
 //
 //  Copyright (C) 2003
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,31 +22,32 @@
 //  $Id$
 //
 
-#ifndef _TGSAPERFORMANCE_H_
-#define _TGSAPERFORMANCE_H_
+#ifndef _TPERFORMANCE_H_
+#define _TPERFORMANCE_H_
 
 #include <GCF/TM/GCF_Control.h>
-#include "PerformanceService.h"
+#include <GCF/PVSS/PVSSservice.h>
+#include <GCF/PVSS/PVSSresponse.h>
 
 namespace LOFAR {
  namespace GCF {
   namespace PVSS {
 /**
- * The tGSAPerformance task receives ECHO_PING events from the Ping task and
+ * The tPerformance task receives ECHO_PING events from the Ping task and
  * returns an ECHO_ECHO event for each ECHO_PING event received.
  */
-class tGSAPerformance : public GCFTask
+class tPerformance : public GCFTask
 {
  public:
 
   /**
-   * The constructor for the tGSAPerformance task.
+   * The constructor for the tPerformance task.
    * @param name The name of this task. By differentiating in the name, multiple
    * instances of the same task can be created and addressed.
    */
-  tGSAPerformance (const string& name);
+  tPerformance (const string& name);
 
-  virtual ~tGSAPerformance();
+  virtual ~tPerformance();
 
   GCFEvent::TResult initial  	 (GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult final    	 (GCFEvent& e, GCFPortInterface& p);
@@ -59,12 +60,13 @@ class tGSAPerformance : public GCFTask
  private:
 
   /**
-   * The tGSAPerformance task acts as a server for Ping tasks to use. Event from the Ping
+   * The tPerformance task acts as a server for Ping tasks to use. Event from the Ping
    * task are received on the server port. And reply events to the Ping task
    * are sent through the server port.
    */
-	PerformanceService* 	_pService;
-	GCFTimerPort*			itsTimerPort;
+	PVSSservice* 	itsService;
+	PVSSresponse*	itsResponse;
+	GCFTimerPort*	itsTimerPort;
 };
 
   } // namespace PVSS

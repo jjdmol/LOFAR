@@ -36,8 +36,8 @@ namespace LOFAR {
 class PVSSresponse
 {
 public:
-    PVSSresponse ();
-    virtual ~PVSSresponse ();
+    PVSSresponse () {};
+    virtual ~PVSSresponse () {};
 
 protected:
 	friend class PVSSservice;
