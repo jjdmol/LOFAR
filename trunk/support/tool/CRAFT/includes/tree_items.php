@@ -6,6 +6,23 @@
   $Types_Objecten = array();
 
 	//functie om alle externe contacten uit de database te lezen en deze hierarchisch op te slaan 
+  function Locaties_Lijst() {
+  	$Collectie = array();
+  	$query = 'SELECT Locatie_ID, Loc_Naam FROM comp_locatie';
+	  $resultaat = mysql_query($query);
+  	while ($huidige_level = mysql_fetch_array($resultaat)) {
+  		$Comp_Type = new Type_Object();
+  		$Comp_Type->Set_ID($huidige_level['Locatie_ID'],$huidige_level['Loc_Naam']);
+	  	$num_rows = mysql_num_rows(mysql_query($query));		
+	  	//if ($num_rows > 0) $Comp_Type->Add(Contacten_Lijst($huidige_level['Contact_ID']));
+ 	  	array_push($Collectie, $Comp_Type);
+	  	$Comp_Type = NULL;
+	  }
+  	return $Collectie;	
+  }
+
+
+	//functie om alle externe contacten uit de database te lezen en deze hierarchisch op te slaan 
   function Contacten_Lijst($parent) {
   	$Collectie = array();
   	$query = 'SELECT Contact_ID, Contact_Naam FROM contact WHERE Contact_Parent = '.$parent;
@@ -94,6 +111,7 @@
   else if ($_SESSION['admin_deel'] == 2) $Types_Objecten = Comp_Lijst(1);
   else if ($_SESSION['admin_deel'] == 3) $Types_Objecten = Melding_Type_Lijst();
 	else if ($_SESSION['admin_deel'] == 7) $Types_Objecten = Contacten_Lijst(1);
+	else if ($_SESSION['admin_deel'] == 8) $Types_Objecten = Locaties_Lijst();
 
 	echo ("var TREE_ITEMS = [");
 	

@@ -7,9 +7,10 @@
 			<div ID="hoofdmenuoptie7"><a class="hoofdmenuoptie" id="hoofdoptie2" onmouseover="changeSubmenu(2,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=2&s=1">Componenten</a></div>
 			<div ID="hoofdmenuoptie8"><a class="hoofdmenuoptie" id="hoofdoptie3" onmouseover="changeSubmenu(3,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=3&s=1">Meldingtypes</a></div>
 			<div ID="hoofdmenuoptie9"><a class="hoofdmenuoptie" id="hoofdoptie4" onmouseover="changeSubmenu(4,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=4&s=1">Meldingen</a></div>
-			<div ID="hoofdmenuoptie10"><a class="hoofdmenuoptie" id="hoofdoptie5" onmouseover="changeSubmenu(5,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=5&s=1">Statistieken</a></div>	
-			<div ID="hoofdmenuoptie11"><a class="hoofdmenuoptie" id="hoofdoptie6" onmouseover="changeSubmenu(6,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=6&s=1">Gebruikers</a></div>	
-			<div ID="hoofdmenuoptie12"><a class="hoofdmenuoptie" id="hoofdoptie7" onmouseover="changeSubmenu(7,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=7&s=1">Contacten</a></div>	
+			<div ID="hoofdmenuoptie10"><a class="hoofdmenuoptie" id="hoofdoptie5" onmouseover="changeSubmenu(5,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=5&s=1">Statistieken</a></div>
+			<div ID="hoofdmenuoptie11"><a class="hoofdmenuoptie" id="hoofdoptie6" onmouseover="changeSubmenu(6,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=6&s=1">Gebruikers</a></div>
+			<div ID="hoofdmenuoptie12"><a class="hoofdmenuoptie" id="hoofdoptie7" onmouseover="changeSubmenu(7,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=7&s=1">Contacten</a></div>
+			<div ID="hoofdmenuoptie13"><a class="hoofdmenuoptie" id="hoofdoptie8" onmouseover="changeSubmenu(8,<?php echo($_GET['p']); ?>,1)" href="admin.php?p=8&s=1">Locatie</a></div>
 		</div>
 	</div>   
 </div>

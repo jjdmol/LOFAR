@@ -158,8 +158,6 @@
 					else("Er is iets mis gegaan met het opslaan van het component \"". $_POST['comp_naam'] ."\"!! Het component is niet bijgewerkt!");
 					echo('<a href="admin.php?p=2&s=2&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige component of selecteer links een component uit de treeview.</a>');
 										
-					//$_POST['fabricant'];
-					//$_POST['leverancier'];
     		}
     		else {
     	
