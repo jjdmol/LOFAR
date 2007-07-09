@@ -1,7 +1,7 @@
   	<?php
 	
 	$_SESSION['admin_deel'] = 1;
-  $_SESSION['huidige_pagina'] = $_SESSION['pagina'] . 'admin.php?p=1&s=1';
+  $_SESSION['huidige_pagina'] = $_SESSION['pagina'] . 'admin.php?p='.$_SESSION['admin_deel'].'&s=1';
   
   require_once($_SESSION['pagina'] . 'includes/login_funcs.php');
 	

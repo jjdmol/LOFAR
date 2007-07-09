@@ -89,10 +89,11 @@
       document.getElementById('suboptie3').innerHTML="Melding verwijderen";
   	}
   	else if (optie ==5) {
-      document.getElementById('suboptie1').innerHTML="Statistieken toevoegen"
-      document.getElementById('suboptie2').innerHTML="Statistieken bewerken"
-      document.getElementById('suboptie3').innerHTML="Statistieken verwijderen";
-   	}
+      document.getElementById('suboptie1').innerHTML="Gebruikersgroep toevoegen"
+      document.getElementById('suboptie2').innerHTML="Gebruikersgroep bewerken"
+      document.getElementById('suboptie3').innerHTML="Gebruikersgroep verwijderen";
+      document.getElementById('suboptie4').innerHTML="Groepsmail versturen";
+  	}
   	else if (optie ==6) {
       document.getElementById('suboptie1').innerHTML="Gebruikers toevoegen"
       document.getElementById('suboptie2').innerHTML="Gebruikers bewerken"
@@ -145,7 +146,7 @@
    		else if (actief == 5) {
 				menuSelectie('hoofdmenuoptie10');     	
 	    	document.getElementById('hoofdoptie5').className = "actieveoptie";
-			}
+   		}
    		else if (actief == 6) {
 				menuSelectie('hoofdmenuoptie11');     	
 	    	document.getElementById('hoofdoptie6').className = "actieveoptie";
@@ -153,10 +154,10 @@
    		else if (actief == 7) {
 				menuSelectie('hoofdmenuoptie12');     	
 	    	document.getElementById('hoofdoptie7').className = "actieveoptie";
-   		}
+   		}   		
    		else if (actief == 8) {
 				menuSelectie('hoofdmenuoptie13');     	
-	    	document.getElementById('hoofdoptie7').className = "actieveoptie";
+	    	document.getElementById('hoofdoptie8').className = "actieveoptie";
    		}   		
     }
   	else {

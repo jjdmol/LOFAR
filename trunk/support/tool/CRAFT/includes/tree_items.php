@@ -22,6 +22,40 @@
   }
 
 
+	//functie om alle gebruikers uit de database te lezen en deze hierarchisch (onder hun groep) op te slaan 
+  function Gebruikersgroepen_Lijst($parent) {
+  	$Collectie = array();
+  	$query = 'SELECT Groep_ID, Groeps_Naam FROM gebruikers_groepen WHERE Groep_Parent = '.$parent;
+	  $resultaat = mysql_query($query);
+  	while ($huidige_level = mysql_fetch_array($resultaat)) {
+  		$Comp_Type = new Type_Object();
+  		$Comp_Type->Set_ID($huidige_level['Groep_ID'],$huidige_level['Groeps_Naam']);
+	  	$num_rows = mysql_num_rows(mysql_query($query));		
+	  	if ($num_rows > 0) $Comp_Type->Add(Gebruikersgroepen_Lijst($huidige_level['Groep_ID']));
+ 	  	array_push($Collectie, $Comp_Type);
+	  	$Comp_Type = NULL;
+	  }
+  	return $Collectie;	
+  }
+  
+
+	//functie om alle gebruikers uit de database te lezen en deze hierarchisch (onder hun groep) op te slaan 
+  function Gebruikers_Lijst() {
+  	$Collectie = array();
+  	$query = 'SELECT Werknem_ID, inlognaam FROM gebruiker';
+	  $resultaat = mysql_query($query);
+  	while ($huidige_level = mysql_fetch_array($resultaat)) {
+  		$Comp_Type = new Type_Object();
+  		$Comp_Type->Set_ID($huidige_level['Werknem_ID'],$huidige_level['inlognaam']);
+	  	$num_rows = mysql_num_rows(mysql_query($query));		
+	  	//if ($num_rows > 0) $Comp_Type->Add(Contacten_Lijst($huidige_level['Contact_ID']));
+ 	  	array_push($Collectie, $Comp_Type);
+	  	$Comp_Type = NULL;
+	  }
+  	return $Collectie;	
+  }
+
+
 	//functie om alle externe contacten uit de database te lezen en deze hierarchisch op te slaan 
   function Contacten_Lijst($parent) {
   	$Collectie = array();
@@ -110,6 +144,8 @@
   	$Types_Objecten = Comp_Type_Lijst(1);
   else if ($_SESSION['admin_deel'] == 2) $Types_Objecten = Comp_Lijst(1);
   else if ($_SESSION['admin_deel'] == 3) $Types_Objecten = Melding_Type_Lijst();
+	else if ($_SESSION['admin_deel'] == 5) $Types_Objecten = Gebruikersgroepen_Lijst(1);
+	else if ($_SESSION['admin_deel'] == 6) $Types_Objecten = Gebruikers_Lijst();
 	else if ($_SESSION['admin_deel'] == 7) $Types_Objecten = Contacten_Lijst(1);
 	else if ($_SESSION['admin_deel'] == 8) $Types_Objecten = Locaties_Lijst();
 
