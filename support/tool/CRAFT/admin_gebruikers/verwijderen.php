@@ -25,7 +25,39 @@
     <div id="rechterdeel">
     	
     	<h2>Gebruikers verwijderen</h2>
-    	
+			<?php
+    			if (isset($_POST['verwijderen']) && $_POST['verwijderen'] == 1 && isset($_POST['confirmatie']) && $_POST['confirmatie'] == 'on') {
+						$query = "DELETE FROM gebruiker WHERE Werknem_ID = " . $_POST['gebruiker'];
+						if (mysql_query($query)) echo("De door u geselecteerde gebruiker is uit het systeem verwijderd.<br>");
+						else("Er is iets mis gegaan met het verwijderen van de gebruiker!! De gebruiker is niet verwijderd!");
+						echo('<a href="'.$_SESSION['huidige_pagina'].'&s=3">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een gebruiker uit de treeview.</a>');
+    			}
+    			else {
+		  			if (isset($_GET['c']) && $_GET['c'] != 0 ) {
+							$query = "SELECT inlognaam FROM gebruiker WHERE Werknem_ID = '". $_GET['c'] ."'";
+							$resultaat = mysql_query($query);
+							$row = mysql_fetch_row($resultaat);
+							
+							echo('U heeft "'. $row[0] .'" geselecteerd:<br>');
+							
+							//kijken of de gebruiker niet de ingelogde persoon is							
+							if ($_GET['c'] != $_SESSION['gebr_id']) {
+							//FORMPJE MAKEN!!!!!!!!!!!!!!!!!!!!!
+								?>
+						    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
+						    		<table>
+						    			<tr><td><input type="hidden" name="gebruiker" value="<?php echo($_GET['c']);?>">Weet u zeker dat u deze gebruiker verwijderen wilt?</td></tr>
+						    			<tr><td><input type="CheckBox" name="confirmatie"> Ja, ik wil deze gebruiker verwijderen</td></tr>
+						    			<tr><td><input type="hidden" name="verwijderen" value="1"><a href="javascript:document.theForm.submit();">Verwijderen</a></td></tr>
+						    		</table>
+						    	</form>
+								<?php
+							}
+							else echo("<br>Dit bent u zelf. U kunt uzelf niet verwijderen!");
+						}
+						else echo("Er is geen gebruiker geselecteerd om te verwijderen<br>Selecteer hiernaast een gebruiker.");
+					}
+				?>    	
     </div>
 
 <?php  
