@@ -35,15 +35,15 @@ public:
     virtual ~Response() {};
 
 protected:
-    virtual void dpCreated			(const string& propName);
-    virtual void dpDeleted			(const string& propName);
-    virtual void dpeSubscribed		(const string& propName);
-    virtual void dpeSubscriptionLost(const string& /*propName*/);
-    virtual void dpeUnsubscribed	(const string& propName);
-    virtual void dpeValueGet		(const string& propName, const Common::GCFPValue& value);
-    virtual void dpeValueChanged	(const string& propName, const Common::GCFPValue& value);
-    virtual void dpeValueSet		(const string& propName);
-    virtual void dpQuerySubscribed	(uint32 queryId);
+    virtual void dpCreated			(const string& propName, PVSSresult		result);
+    virtual void dpDeleted			(const string& propName, PVSSresult		result);
+    virtual void dpeSubscribed		(const string& propName, PVSSresult		result);
+    virtual void dpeSubscriptionLost(const string& /*propNm*/, PVSSresult	result);
+    virtual void dpeUnsubscribed	(const string& propName, PVSSresult		result);
+    virtual void dpeValueGet		(const string& propName, PVSSresult		result, const Common::GCFPValue& value);
+    virtual void dpeValueChanged	(const string& propName, PVSSresult		result, const Common::GCFPValue& value);
+    virtual void dpeValueSet		(const string& propName, PVSSresult		result);
+    virtual void dpQuerySubscribed	(uint32 queryId, PVSSresult		result);
 };
 
   } // namespace PVSS
