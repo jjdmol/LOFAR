@@ -92,7 +92,7 @@
       document.getElementById('suboptie1').innerHTML="Gebruikersgroep toevoegen"
       document.getElementById('suboptie2').innerHTML="Gebruikersgroep bewerken"
       document.getElementById('suboptie3').innerHTML="Gebruikersgroep verwijderen";
-      document.getElementById('suboptie4').innerHTML="Groepsmail versturen";
+      document.getElementById('suboptie4').innerHTML="Groepmail versturen";
   	}
   	else if (optie ==6) {
       document.getElementById('suboptie1').innerHTML="Gebruikers toevoegen"
