@@ -77,7 +77,25 @@
 		    		</tr>
 		    		<tr>
 		    			<td>Status melding:</td>
-		    			<td><select name="type_status"><option value="1" SELECTED>1</option></select></td>
+		    			<td><select name="type_status">
+								<?php
+									$query2 = "SELECT Status_ID, Status FROM status";
+									$result = mysql_query($query2);
+
+									$selectie = 'SELECTED';
+						  		if(isset($_POST['type_status'])) $selectie  = $_POST['type_status'];
+
+									while ($data = mysql_fetch_array($result)) {
+										echo("<option value=\"". $data['Status_ID'] ."\"");
+
+							  		if($data['Status_ID'] == $selectie || $selectie == 'SELECTED') {
+							  			echo ('SELECTED');
+							  			$selectie = -1;
+							  		}
+										echo(">". $data['Status'] ."</option>\r\n");
+									}
+								?>
+		    			</select></td>
 		    		</tr>
 		    		<tr>
 		    			<td>Algemene melding:</td>

@@ -78,11 +78,16 @@
     							$query = 'SELECT Groep_ID, Groeps_Naam FROM gebruikers_groepen WHERE Groep_ID >1';
 									$resultaat = mysql_query($query);
 									
+									$selectie = 'SELECTED';
+						  		if(isset($_POST['Gebr_Groep'])) $selectie  = $_POST['Gebr_Groep'];
+									
     							while ($data = mysql_fetch_array($resultaat)) {
 										echo("<option value=\"". $data['Groep_ID'] ."\" ");
 							  		
-							  		if(isset($_POST['Gebr_Groep']) && $data['Groep_ID'] == $_POST['Gebr_Groep'])
-							  			echo('SELECTED');
+							  		if($data['Groep_ID'] == $selectie || $selectie == 'SELECTED') {
+							  			echo ('SELECTED');
+							  			$selectie = -1;
+							  		}
 										echo(">". $data['Groeps_Naam'] ."</option>\r\n");
 									}
     						 ?></select></td>
