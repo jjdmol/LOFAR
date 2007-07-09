@@ -1621,7 +1621,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         );
         jScrollPane1.setViewportView(jPanel2);
 
-        add(jScrollPane1, java.awt.BorderLayout.WEST);
+        add(jScrollPane1, java.awt.BorderLayout.CENTER);
 
     }// </editor-fold>//GEN-END:initComponents
 
