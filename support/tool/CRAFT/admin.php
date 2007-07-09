@@ -56,9 +56,45 @@
     			else 
 						include($_SESSION['pagina'] . 'admin_melding_types/toevoegen.php');   			
     		}
-     		//else if ($pagina == 4) include ('admin_gebruikers.php');
-    		//else if ($pagina == 5) include ('admin_rest.php');
-    		//else if ($pagina == 6) include ('admin_rest.php');
+     		//(instanties van) meldingen
+     		else if ($pagina == 4) {
+ 					//bewerken van meldingen
+					if (isset($_GET['s']) && $_GET['s'] == 2)
+						include($_SESSION['pagina'] . 'admin_meldingen/bewerken.php');
+					//verwijderen van meldingen
+					else if (isset($_GET['s']) && $_GET['s'] == 3)
+						include($_SESSION['pagina'] . 'admin_meldingen/verwijderen.php');    			
+    			//toevoegen van meldingen (standaard actie)
+    			else 
+						include($_SESSION['pagina'] . 'admin_meldingen/toevoegen.php');   			
+    		}   		
+    		//gebruikersgroepen
+    		else if ($pagina == 5) {
+ 					//bewerken van gebruikersgroepen
+					if (isset($_GET['s']) && $_GET['s'] == 2)
+						include($_SESSION['pagina'] . 'admin_gebruikersgroep/bewerken.php');
+					//verwijderen van gebruikersgroepen
+					else if (isset($_GET['s']) && $_GET['s'] == 3)
+						include($_SESSION['pagina'] . 'admin_gebruikersgroep/verwijderen.php');
+					//versturen van een groepsmail
+					else if (isset($_GET['s']) && $_GET['s'] == 4)
+						include($_SESSION['pagina'] . 'admin_gebruikersgroep/groepsmail.php');
+    			//toevoegen van gebruikersgroepen (standaard actie)
+    			else 
+						include($_SESSION['pagina'] . 'admin_gebruikersgroep/toevoegen.php');   			
+    		}    		
+    		//gebruikers
+    		else if ($pagina == 6) {
+ 					//bewerken van gebruikers
+					if (isset($_GET['s']) && $_GET['s'] == 2)
+						include($_SESSION['pagina'] . 'admin_gebruikers/bewerken.php');
+					//verwijderen van gebruikers
+					else if (isset($_GET['s']) && $_GET['s'] == 3)
+						include($_SESSION['pagina'] . 'admin_gebruikers/verwijderen.php');    			
+    			//toevoegen van gebruikers (standaard actie)
+    			else 
+						include($_SESSION['pagina'] . 'admin_gebruikers/toevoegen.php');   			
+    		}
     		//(externe) contacten
     		else if ($pagina == 7) {
  					//bewerken van contacten
