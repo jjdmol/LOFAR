@@ -148,7 +148,7 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 			if (pAnItem->getDpIdentifier().convertToString(pvssDPEConfigName) == PVSS_FALSE) {
 				if (answer.isAnswerOn() == DP_MSG_DP_REQ) {
 					LOG_TRACE_FLOW(formatString("DP %s was deleted successful",wait.getDpName().c_str()));
-					itsResponse->dpDeleted(wait.getDpName());
+					itsResponse->dpDeleted(wait.getDpName(), SA_NO_ERROR);
 					handled = true;
 				}
 				else {
@@ -163,12 +163,12 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 				switch (answer.isAnswerOn()) {
 				case DP_MSG_CONNECT:
 					LOG_TRACE_FLOW(formatString("DPE %s was subscribed successful", dpName.c_str()));
-					itsResponse->dpeSubscribed(dpName);
+					itsResponse->dpeSubscribed(dpName, SA_NO_ERROR);
 					break;
 
 				case DP_MSG_REQ_NEW_DP:
 					LOG_TRACE_FLOW(formatString("DP %s was created successful", dpName.c_str()));
-					itsResponse->dpCreated(dpName);
+					itsResponse->dpCreated(dpName, SA_NO_ERROR);
 					break;
 
 				case DP_MSG_SIMPLE_REQUEST:
@@ -181,7 +181,7 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 						}
 						else {
 							LOG_TRACE_FLOW(formatString("Value of '%s' was get", dpName.c_str()));
-							itsResponse->dpeValueGet(dpName, *pPropertyValue);
+							itsResponse->dpeValueGet(dpName, SA_NO_ERROR, *pPropertyValue);
 						}
 						if (pPropertyValue)
 							delete pPropertyValue; // constructed by convertPVSSToMAC method
@@ -192,10 +192,11 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 					pVar = pAnItem->getValuePtr();
 					if (pVar) {		// could be NULL !!
 						if (pVar->isA() == UINTEGER_VAR) {
+							uint32		queryID = ((UIntegerVar *)pVar)->getValue();
 							LOG_TRACE_FLOW(formatString (
 								"Query subscription is performed successful (with queryid %d)", 
-								((UIntegerVar *)pVar)->getValue()));
-							itsResponse->dpQuerySubscribed(((UIntegerVar *)pVar)->getValue());
+								queryID));
+							itsResponse->dpQuerySubscribed(queryID, SA_NO_ERROR);
 						}
 					}
 					break;
@@ -214,7 +215,7 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 				if (answer.isAnswerOn() == DP_MSG_COMPLEX_VC) {
 					// this must be the answer on a dpSet(Wait) 
 					LOG_TRACE_FLOW_STR("dpe " << wait.getDpName() << " was set");
-					itsResponse->dpeValueSet(wait.getDpName());
+					itsResponse->dpeValueSet(wait.getDpName(), SA_NO_ERROR);
 					handled = true;
 				}
 			}
@@ -249,7 +250,7 @@ void PVSSservice::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& 
 	if ((pErr = group.getErrorPtr()) != 0) {
 		// The only error, which can occur here means always that the subscriptions 
 		// to the DPE is lost
-		itsResponse->dpeSubscriptionLost(wait.getDpName());
+		itsResponse->dpeSubscriptionLost(wait.getDpName(), SA_NO_ERROR);
 	}
 
 	// A group consists of pairs of DpIdentifier and values called items.
@@ -392,7 +393,7 @@ void PVSSservice::convAndForwardValueChange(const DpIdentifier& dpId, const Vari
 		}
 		else {
 			LOG_TRACE_FLOW(formatString("Value of '%s' has been changed", dpName.c_str()));
-			itsResponse->dpeValueChanged(dpName, *pPropertyValue);
+			itsResponse->dpeValueChanged(dpName, SA_NO_ERROR, *pPropertyValue);
 		}
 		if (pPropertyValue)
 			delete pPropertyValue; // constructed by convertPVSSToMAC method

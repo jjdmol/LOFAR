@@ -11,7 +11,8 @@ libpvss_la_SOURCES	= $(NODOCHDRS) \
 					  GSA_Resources.cc \
 					  GSA_WaitForAnswer.cc \
 					  PVSSinfo.cc \
-					  PVSSservice.cc 
+					  PVSSservice.cc \
+					  PVSSresponse.cc 
 
 AM_CPPFLAGS 		= -DLOFARLOGGER_SUBPACKAGE=\"PVSS\"
 		

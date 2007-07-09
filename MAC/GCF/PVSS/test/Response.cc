@@ -8,50 +8,58 @@ namespace LOFAR {
     using namespace Common;
 	namespace PVSS {
    
-void Response::dpCreated(const string& propName)
+void Response::dpCreated(const string& propName, PVSSresult		result)
 {
-	LOG_DEBUG(formatString("RESPONSE:Property '%s' created", propName.c_str()));
+	LOG_DEBUG(formatString("RESPONSE:Property '%s' created (err=%d)", 
+				propName.c_str(), result));
 }
 
-void Response::dpDeleted(const string& propName)
+void Response::dpDeleted(const string& propName, PVSSresult		result)
 {
-	LOG_DEBUG(formatString("RESPONSE:Property '%s' deleted", propName.c_str()));
+	LOG_DEBUG(formatString("RESPONSE:Property '%s' deleted (err=%d)", 
+				propName.c_str(), result));
 }
 
-void Response::dpeSubscribed(const string& propName)
+void Response::dpeSubscribed(const string& propName, PVSSresult		result)
 {
-	LOG_DEBUG(formatString("RESPONSE:Property '%s' subscribed", propName.c_str()));
+	LOG_DEBUG(formatString("RESPONSE:Property '%s' subscribed (err=%d)", 
+				propName.c_str(), result));
 }
 
-void Response::dpeUnsubscribed(const string& propName)
+void Response::dpeUnsubscribed(const string& propName, PVSSresult		result)
 {
-	LOG_DEBUG(formatString("RESPONSE:Property '%s' unsubscribed", propName.c_str()));
+	LOG_DEBUG(formatString("RESPONSE:Property '%s' unsubscribed (err=%d)", 
+				propName.c_str(), result));
 }
 
-void Response::dpeValueGet(const string& propName, const GCFPValue& value)
+void Response::dpeValueGet(const string& propName, PVSSresult		result, const GCFPValue& value)
 {
 	LOG_DEBUG_STR("RESPONSE:Valueget of property " << propName << " : " << 
-								((GCFPVInteger *)&value)->getValue());
+					((GCFPVInteger *)&value)->getValue() << " (err=" << result << ")");
 }
 
-void Response::dpeValueChanged(const string& propName, const GCFPValue& /*value*/)
+void Response::dpeValueChanged(const string& propName, PVSSresult		result, const GCFPValue& /*value*/)
 {
-	LOG_DEBUG(formatString("RESPONSE:Value of property '%s' changed", propName.c_str()));
+	LOG_DEBUG(formatString("RESPONSE:Value of property '%s' changed (err=%d)", 
+				propName.c_str(), result));
 }
 
-void Response::dpeValueSet(const string& propName)
+void Response::dpeValueSet(const string& propName, PVSSresult		result)
 {
-	LOG_DEBUG(formatString("RESPONSE:Value of property '%s' is set", propName.c_str()));
+	LOG_DEBUG(formatString("RESPONSE:Value of property '%s' is set (err=%d)", 
+				propName.c_str(), result));
 }
 
-void Response::dpeSubscriptionLost(const string& propName)
+void Response::dpeSubscriptionLost(const string& propName, PVSSresult		result)
 {
-	LOG_DEBUG(formatString("RESPONSE:Lost subscription of %s", propName.c_str()));
+	LOG_DEBUG(formatString("RESPONSE:Lost subscription of %s (err=%d)", 
+				propName.c_str(), result));
 }
 
-void Response::dpQuerySubscribed(uint32 queryId)
+void Response::dpQuerySubscribed(uint32 queryId, PVSSresult		result)
 {
-	LOG_DEBUG(formatString("RESPONSE:dpQuerySubscribed: id=", queryId));
+	LOG_DEBUG(formatString("RESPONSE:dpQuerySubscribed: id=%d (err=%d)", 
+				queryId, result));
 }
 
   } // namespace PVSS

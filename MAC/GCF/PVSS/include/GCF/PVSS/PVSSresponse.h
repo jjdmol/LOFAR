@@ -24,6 +24,7 @@
 #define  PVSS_RESPONSE_H
 
 #include <GCF/GCF_PValue.h>
+#include <GCF/PVSS/PVSSresult.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -41,15 +42,32 @@ public:
 
 protected:
 	friend class PVSSservice;
-    virtual void dpCreated 			 (const string& dpName)  = 0;
-    virtual void dpDeleted	 		 (const string& dpName)  = 0;
-    virtual void dpeSubscribed 		 (const string& dpeName) = 0;    
-    virtual void dpeSubscriptionLost (const string& dpeName) = 0;
-    virtual void dpeUnsubscribed	 (const string& dpeName) = 0;
-    virtual void dpeValueGet		 (const string& dpeName, const Common::GCFPValue& value) = 0;
-    virtual void dpeValueChanged	 (const string& dpeName, const Common::GCFPValue& value) = 0;        
-    virtual void dpeValueSet		 (const string& dpeName) = 0;
-    virtual void dpQuerySubscribed	 (uint32 queryId) 		 = 0;        
+    virtual void dpCreated 			 (const string& dpName,  PVSSresult result) = 0;
+    virtual void dpDeleted	 		 (const string& dpName,  PVSSresult result) = 0;
+    virtual void dpeSubscribed 		 (const string& dpeName, PVSSresult result) = 0;    
+    virtual void dpeSubscriptionLost (const string& dpeName, PVSSresult result) = 0;
+    virtual void dpeUnsubscribed	 (const string& dpeName, PVSSresult result) = 0;
+    virtual void dpeValueGet		 (const string& dpeName, PVSSresult result, const Common::GCFPValue& value) = 0;
+    virtual void dpeValueChanged	 (const string& dpeName, PVSSresult result, const Common::GCFPValue& value) = 0;        
+    virtual void dpeValueSet		 (const string& dpeName, PVSSresult result) = 0;
+    virtual void dpQuerySubscribed	 (uint32 queryId,  		 PVSSresult result) = 0;        
+
+	// Function for PVSSservice for invoking one of the response functions.
+	enum PVSSresponseFunctionNr {
+		PR_FUNC_CREATED = 1,
+		PR_FUNC_DELETED,
+		PR_FUNC_SUBSCRIBED,
+		PR_FUNC_SUB_LOST,
+		PR_FUNC_UNSUBSCRIBED,
+		PR_FUNC_VALUE_GET,
+		PR_FUNC_VALUE_CHANGED,
+		PR_FUNC_VALUE_SET,
+		PR_FUNC_QRY_SUBSCRIBED
+	};
+	void	dispatch (PVSSresponseFunctionNr	fNr,
+					  const string&				dpName,
+					  PVSSresult				result,
+					  const Common::GCFPValue*	valPtr = 0);
 
 private: 
 	// data members    
