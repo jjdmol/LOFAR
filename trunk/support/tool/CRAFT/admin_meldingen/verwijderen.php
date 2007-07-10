@@ -27,7 +27,6 @@
     	<h2>Meldingen verwijderen</h2>
     	
     	
-    	
 	  </div>
 
 <?php  

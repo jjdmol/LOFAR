@@ -12,7 +12,7 @@
   	?>
   	<div id="linkerdeel">
   		<?php 
-  			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/comp_functies.php\"></script>");
+  			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."admin_componenten/comp_functies.php\"></script>");
   			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree.js\"></script>");
 				echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree_items.php\"></script>");
 				echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree_tpl.js\"></script>");
@@ -127,10 +127,28 @@
 
 				//eerst een validatie doen om de ingevoerde gegevens te controleren en te kijken of er opgeslagen mag worden...
     		if(Validatie_Opslaan()) {
+
+					//Een nieuwe melding van het component toevoegen, dit is zeer waarschijnlijk een bewerkenmelding oid
+					$query_melding = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door)";
+					$query_melding = $query_melding . "VALUES ('". $_POST['type_melding'] ."', '".$_GET['c']."'";
+
+  				//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
+  				if (isset($_POST['statusdatum']) && $_POST['statusdatum'] != '') {
+    				$datum=split("-",$_POST['statusdatum']);
+	  				$query_melding = $query_melding . ", '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['statustijd'] .":00'";							
+					}
+					else $query_melding = $query_melding . ", NOW()";
+					$query_melding = $query_melding . ", '". $_POST['hidden_status'] ."', '". $_POST['Voorgaande_Melding'] ."', '". $_POST['hidden_melding'] ."', '". $_SESSION['gebr_id'] ."', '". $_SESSION['gebr_id'] ."') ";
+
+					mysql_query($query_melding);
+					$melding_id = mysql_insert_id();
+
+					echo ($query_melding . "   ".$melding_id);
+
+
 					//opslaan van het component
-					
-					$query = "UPDATE comp_lijst SET Comp_Naam = '". $_POST['comp_naam'] . "', Comp_Parent = '". $_POST['comp_nieuwe_parent'];
-					$query = $query . "', Comp_Status = '". $_POST['comp_status'] ."', Comp_Locatie = '". $_POST['comp_locatie'] ."', Comp_Verantwoordelijke = '". $_POST['comp_verantwoordelijke'] . "'";
+					$query = "UPDATE comp_lijst SET Comp_Naam = '". $_POST['comp_naam'] . "', Comp_Parent = '". $_POST['comp_nieuwe_parent'] . "', Laatste_Melding ='". $melding_id;
+					$query = $query . "', Comp_Locatie = '". $_POST['comp_locatie'] ."', Comp_Verantwoordelijke = '". $_POST['comp_verantwoordelijke'] . "'";
 					
   				//de waarde voor de leverdatum aan de query toevoegen
   				if (isset($_POST['leverdatum']) && $_POST['leverdatum'] != '') {
@@ -143,15 +161,7 @@
     				$datum = split("-",$_POST['fabricagedatum']);
     				$query = $query . ", Fabricatie_Datum = '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['fabricagetijd'] .":00'";
   				}
-
-  				//de waarde voor de statusdatum aan de query toevoegen
-  				//wanneer er een waarde in is gevuld, dan deze gebruiken en anders de huidige datum en tijd
-  				if (isset($_POST['statusdatum']) && $_POST['statusdatum'] != '') {
-    				$datum = split("-",$_POST['statusdatum']);
-	  				$query = $query . ", Status_Datum = '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['statustijd'] .":00'";
-					}
-					else $query = $query . ", NOW()";
-					
+				
 					$query = $query . ", Contact_Leverancier='".$_POST['leverancier']."', Contact_Fabricant='".$_POST['fabricant']."' WHERE Comp_Lijst_ID = '" . $_GET['c'] . "'";
 
 					if (mysql_query($query)) echo("Het gewijzigde component \"". $_POST['comp_naam'] ."\" is in het systeem bijgewerkt<br>");
@@ -160,6 +170,8 @@
 										
     		}
     		else {
+					//de tijdzone waarin we leven instellen, wordt dit niet gedaan dan klaagt PHP
+					date_default_timezone_set ("Europe/Amsterdam");
     	
 	    		if (isset($_GET['c']) && $_GET['c'] != 0 ) {
 						$query = "SELECT * FROM comp_lijst WHERE Comp_Lijst_ID ='". $_GET['c'] ."'";
@@ -204,23 +216,48 @@
 				    		<?php if(!Parent_Controle()) echo('<b>* Parent kan niet veranderen vanwege onderliggende componenten!</b>');?>
 								</td>
 							</tr>
+		    			<tr>
+		    				<td>Type melding:</td>
+		    				<td><select name="type_melding" onchange="switchMelding();">
+		    					<?php
+		    						$query = "SELECT Meld_Type_ID, Melding_Type_Naam FROM melding_type";
+				    			  $resultaat = mysql_query($query);
+	
+							  		if (isset($_POST['type_melding'])) $selectie = $_POST['type_melding'];
+							  		else $selectie = 'SELECTED';
+	
+								  	while ($data = mysql_fetch_array($resultaat)) {
+				  	  				echo('<option value="'.$data['Meld_Type_ID'].'"');
+					  	  			if ($data['Meld_Type_ID'] == $selectie || $selectie == 'SELECTED') {
+					  	  				echo('SELECTED');
+					  	  				$selectie = $data['Meld_Type_ID'];
+					  	  			}
+					  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
+										}
+		    					?>
+		    					</select></td>
+		    			</tr>
 							<tr>
-								<td>Status component:</td>
-								<td><select name="comp_status"><option value="1" <?php if($row['Comp_Status']) echo("SELECTED"); ?>>1</option></select></td>
+								<td>Melding beschrijving:</td>
+								<td><iframe id="frame_melding" name="frame_melding" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_melding.php?c=<?php echo($selectie); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="450" height="72" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+								</td>
 							</tr>
 							<tr>
 								<td>Status datum:</td>
 								<td>
 									<?php 
+										
+										//beginnen met huidige datum
+									/*	
 										//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
 			    					$gedeeldveld=split(" ",$row['Status_Datum']);
 										//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
 										$datum = split("-",$gedeeldveld[0]);
 										//tijd veld opdelen zodat de uren, minuten en secondevelden makkelijk te benaderen zijn
-										$tijd = split(":",$gedeeldveld[1]);
+										$tijd = split(":",$gedeeldveld[1]);*/
 									 ?>
-									<input name="statusdatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['statusdatum'])) echo($_POST['statusdatum']); else echo($datum[2] ."-". $datum[1] ."-". $datum[0]); ?>">
-									<input name="statustijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['statustijd'])) echo($_POST['statustijd']); else echo($tijd[0] .":". $tijd[1]); ?>">
+									<input name="statusdatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['statusdatum'])) echo($_POST['statusdatum']); else echo(date('d-m-Y')); ?>">
+									<input name="statustijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['statustijd'])) echo($_POST['statustijd']); else echo(date('H:i')); ?>">
 	    					  <?php if(isset($_POST['statusdatum']) && (!Valideer_Datum($_POST['statusdatum']) || !Valideer_Tijd($_POST['statustijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?></td>
 							</tr>
 							<tr>
@@ -317,8 +354,13 @@
 	    					  <?php if(isset($_POST['fabricagedatum']) && (!Valideer_Datum($_POST['fabricagedatum']) || !Valideer_Tijd($_POST['fabricagetijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?></td>
 							</tr>
 			    		<tr>
-								<td id="opslaan" align="right"><a href="javascript:document.theForm.submit();">Opslaan</a></td>
-			    			<td><input id="opslaan" name="opslaan" type="hidden" value="1"></td>
+								<td id="opslaan" align="right"><a href="javascript:SubmitComponentBewerken();">Opslaan</a></td>
+			    			<td>
+		    					<input id="hidden_melding" name="hidden_melding" type="hidden" value="">
+		    					<input id="hidden_status" name="hidden_status" type="hidden" value="">
+			    				<input id="opslaan" name="opslaan" type="hidden" value="1">
+			    				<input id="Voorgaande_Melding" name="Voorgaande_Melding" type="hidden" value="<?php echo($row['Laatste_Melding']); ?>">
+			    			</td>
 			    		</tr>
 						</table>
 					</form>

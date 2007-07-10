@@ -12,7 +12,7 @@
   	?>
   	<div id="linkerdeel">
   		<?php 
-  			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/comp_functies.php\"></script>");
+  			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."admin_componenten/comp_functies.php\"></script>");
   			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree.js\"></script>");
 				echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree_items.php\"></script>");
 				echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree_tpl.js\"></script>");
@@ -104,7 +104,7 @@
     			//controleren of er opgeslagen kan worden, of dat de invoervelden getoond moeten worden
     			if (Valideer_Invoer()) {
     				//het eerste gedeelte van de query
-    				$query = "INSERT INTO comp_lijst (Comp_Naam, Comp_Type_ID, Comp_Parent, Comp_Status, Comp_Locatie, Comp_Verantwoordelijke, Contact_Fabricant, Contact_Leverancier, Status_Datum";
+    				$query = "INSERT INTO comp_lijst (Comp_Naam, Comp_Type_ID, Comp_Parent, Comp_Locatie, Comp_Verantwoordelijke, Contact_Fabricant, Contact_Leverancier";
     				//als er een leverdatum ingevoerd is, dan dit veld ook toevoegen aan de query
     				if (isset($_POST['leverdatum']) && $_POST['leverdatum'] != '')
     					$query = $query . ", Lever_datum";
@@ -114,16 +114,8 @@
     				
     				//de waardes, welke opgeslagen moeten worden in de database
     				$query = $query . ") VALUES ('". $_POST['hidden_naam'] ."', '". $_POST['comp_type'] ."', '". $_POST['hidden_type'] ."', '";
-    				$query = $query . $_POST['comp_status'] ."', '". $_POST['comp_locatie'] ."', '".  $_POST['comp_verantwoordelijke']."', '".$_POST['hidden_fabricant']."', '".$_POST['hidden_leverancier']."'";
-    				
-    				//de waarde voor de statusdatum aan de query toevoegen
-    				//wanneer er een waarde in is gevuld, dan deze gebruiken en anders de huidige datum en tijd
-    				if (isset($_POST['statusdatum']) && $_POST['statusdatum'] != '') {
-	    				$datum=split("-",$_POST['statusdatum']);
-  	  				$query = $query . ", '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['statustijd'] .":00'";							
-						}
-						else $query = $query . ", NOW()";
-    				
+    				$query = $query .  $_POST['comp_locatie'] ."', '".  $_POST['comp_verantwoordelijke']."', '".$_POST['hidden_fabricant']."', '".$_POST['hidden_leverancier']."'";
+    				    				
     				//de waarde voor de leverdatum aan de query toevoegen
     				if (isset($_POST['leverdatum']) && $_POST['leverdatum'] != '') {
 	    				$datum=split("-",$_POST['leverdatum']);
@@ -137,11 +129,46 @@
     				
     				//de query afsluiten met een haakje
     				$query = $query . ')';
-	
-						if (mysql_query($query)) echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" is aan het systeem toegevoegd<br>");
-						else echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
+						
+						//variabele om bij te houden hoeveel querys goed uitgevoerd zijn
+						//dit is bedoeld voor het geven van de juiste foutmelding
+						$errorLevel = 0;
+						
+						//wanneer het toevoegen van het component goed gegaan is, dan een melding toevoegen
+						if (mysql_query($query)) {
+							$errorLevel = 1;
+
+							//de toegevoegde component_ID opslaan voor later gebruik
+							$Comp_ID = mysql_insert_id();
+
+							//De eerste melding van het component toevoegen, dit is zeer waarschijnlijk het plaatsen van het component oid
+							$query = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door)";
+							$query = $query . "VALUES ('". $_POST['type_melding'] ."', '". $Comp_ID ."'";
+		
+		  				//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
+		  				if (isset($_POST['statusdatum']) && $_POST['statusdatum'] != '') {
+		    				$datum=split("-",$_POST['statusdatum']);
+			  				$query = $query . ", '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['statustijd'] .":00'";							
+							}
+							else $query = $query . ", NOW()";
+							$query = $query . ", '". $_POST['hidden_status'] ."', '1', '". $_POST['hidden_melding'] ."', '". $_SESSION['gebr_id'] ."', '". $_SESSION['gebr_id'] ."') ";
+							
+							//de melding is goed toegevoegd, dus nu een verwijzing naar de laatste melding bij het component voegen
+							if (mysql_query($query)) {
+								$errorLevel = 2;
+								//de ID van de toegevoegde melding ophalen
+								$Meld_ID = mysql_insert_id();
+								
+								$query = "UPDATE comp_lijst SET Laatste_Melding = '". $Meld_ID ."' WHERE Comp_Lijst_ID='". $Comp_ID ."'";
+								if (mysql_query($query)) {$errorLevel = 3;}
+							}
+						}
+												
+						if ($errorLevel == 3) echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" is aan het systeem toegevoegd!<br>");
+						else if ($errorLevel == 0) echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" kon niet aan het systeem toegevoegd worden!.");
+						else if ($errorLevel == 1) echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" is aan het systeem toegevoegd.<br>Alleen er is iets foutgegaan met het toevoegen van de melding! De melding is dus niet aan het systeem toegevoegd!");
+						else if ($errorLevel == 2) echo("Het nieuwe component \"". $_POST['hidden_naam'] ."\" en bijbehorende melding is aan het systeem toegevoegd.<br>Alleen er is iets foutgegaan met het verwijzen van de melding naar het component!");
     				echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om nog een component toe te voegen.</a>');
-    			
     			}
     			//er mag niet opgeslagen worden, dus toon het formulier met invoervelden
     			else {
@@ -194,9 +221,31 @@
 	    				<td><iframe id="frame_parent" name="frame_parent" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_parent.php?c=<?php echo($selected); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="450" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
 	    			</tr>
 	    			<tr>
-	    				<td>Status:</td>
-	    				<td><select name="comp_status"><option value="1" SELECTED>1</option></select></td>
+	    				<td>Type melding:</td>
+	    				<td><select name="type_melding" onchange="switchMelding();">
+	    					<?php
+	    						$query = "SELECT Meld_Type_ID, Melding_Type_Naam FROM melding_type";
+			    			  $resultaat = mysql_query($query);
+
+						  		if (isset($_POST['type_melding'])) $selectie = $_POST['type_melding'];
+						  		else $selectie = 'SELECTED';
+
+							  	while ($data = mysql_fetch_array($resultaat)) {
+			  	  				echo('<option value="'.$data['Meld_Type_ID'].'"');
+				  	  			if ($data['Meld_Type_ID'] == $selectie || $selectie == 'SELECTED') {
+				  	  				echo('SELECTED');
+				  	  				$selectie = $data['Meld_Type_ID'];
+				  	  			}
+				  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
+									}
+	    					?>
+	    					</select></td>
 	    			</tr>
+						<tr>
+							<td>Melding beschrijving:</td>
+							<td><iframe id="frame_melding" name="frame_melding" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_melding.php?c=<?php echo($selectie); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="450" height="72" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+							</td>
+						</tr>
 	    			<tr>
 	    				<td>statusdatum:</td>
 	    				<td><input name="statusdatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['statusdatum'])) echo($_POST['statusdatum']); else echo(date('d-m-Y'));?>">
@@ -254,7 +303,8 @@
 	    			<tr>
 	    				<td><input id="hidden_type" name="hidden_type" type="hidden" value=""><input id="hidden_naam" name="hidden_naam" type="hidden" value="">
 	    						<input id="hidden_aantal" name="hidden_aantal" type="hidden" value=""><input id="hidden_maximum" name="hidden_maximum" type="hidden" value="">
-	    						<input id="hidden_fabricant" name="hidden_fabricant" type="hidden" value=""><input id="hidden_leverancier" name="hidden_leverancier" type="hidden" value=""></td>
+	    						<input id="hidden_fabricant" name="hidden_fabricant" type="hidden" value=""><input id="hidden_leverancier" name="hidden_leverancier" type="hidden" value="">
+		    					<input id="hidden_melding" name="hidden_melding" type="hidden" value=""><input id="hidden_status" name="hidden_status" type="hidden" value=""></td>
 	    				<td><a href="javascript:submitComponentToevoegen();">Toevoegen</a></td>
 	    			</tr>
 	    		</table>
