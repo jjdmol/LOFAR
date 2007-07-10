@@ -190,7 +190,6 @@ namespace LOFAR {
 		// get pointer to received data
 		DH_ProcControl* newMsg = pcServer.getDataHolder();
 	  
-		PCcmd	command = getCommand()&~PCCmdResult;
 		if (newMsg->getCommand() == ACC::PLC::PCCmdQuit) {
 		  break;
 		} else if (newMsg->getCommand() == ACC::PLC::PCCmdRun) {
