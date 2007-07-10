@@ -4,7 +4,6 @@
   $_SESSION['huidige_pagina'] = $_SESSION['pagina'] . 'admin.php?p='.$_SESSION['admin_deel'].'&s=3';
   
   require_once($_SESSION['pagina'] . 'includes/login_funcs.php');
-	include_once($_SESSION['pagina'] . 'includes/controle_functies.php');
 	
   //controleren of er iemand ingelogd is...
   if ($LOGGED_IN = user_isloggedin()) {

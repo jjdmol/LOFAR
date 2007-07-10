@@ -242,17 +242,6 @@
 							<tr>
 								<td>Status datum:</td>
 								<td>
-									<?php 
-										
-										//beginnen met huidige datum
-									/*	
-										//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
-			    					$gedeeldveld=split(" ",$row['Status_Datum']);
-										//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
-										$datum = split("-",$gedeeldveld[0]);
-										//tijd veld opdelen zodat de uren, minuten en secondevelden makkelijk te benaderen zijn
-										$tijd = split(":",$gedeeldveld[1]);*/
-									 ?>
 									<input name="statusdatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['statusdatum'])) echo($_POST['statusdatum']); else echo(date('d-m-Y')); ?>">
 									<input name="statustijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['statustijd'])) echo($_POST['statustijd']); else echo(date('H:i')); ?>">
 	    					  <?php if(isset($_POST['statusdatum']) && (!Valideer_Datum($_POST['statusdatum']) || !Valideer_Tijd($_POST['statustijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?></td>

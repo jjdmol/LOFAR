@@ -99,7 +99,13 @@
 		    		</tr>
 		    		<tr>
 		    			<td>Algemene melding:</td>
-		    			<td><input name="type_algemeen" type="checkbox"></td>
+		    			<td><input name="type_algemeen" type="checkbox"
+							<?php
+		    				if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) {
+		    					if(isset($_POST['type_algemeen']) && ($_POST['type_algemeen'] == 1 || $_POST['type_algemeen'] == 'on')) 
+		    					echo('CHECKED');
+		    				}
+		    				?>></td>
 		    		</tr>
 		    		<tr>
 		    			<td>Omschrijving:</td>

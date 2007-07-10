@@ -144,6 +144,7 @@
   	$Types_Objecten = Comp_Type_Lijst(1);
   else if ($_SESSION['admin_deel'] == 2) $Types_Objecten = Comp_Lijst(1);
   else if ($_SESSION['admin_deel'] == 3) $Types_Objecten = Melding_Type_Lijst();
+	else if ($_SESSION['admin_deel'] == 4) $Types_Objecten = Comp_Lijst(1);
 	else if ($_SESSION['admin_deel'] == 5) $Types_Objecten = Gebruikersgroepen_Lijst(1);
 	else if ($_SESSION['admin_deel'] == 6) $Types_Objecten = Gebruikers_Lijst();
 	else if ($_SESSION['admin_deel'] == 7) $Types_Objecten = Contacten_Lijst(1);
