@@ -49,16 +49,26 @@
 						$row = mysql_fetch_row($resultaat);
 						//er zijn geen componenten van dit type.
 						if ($row[0] == NULL) {
-							//FORMPJE MAKEN!!!!!!!!!!!!!!!!!!!!!
-							?>
-					    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
-					    		<table>
-					    			<tr><td><input type="hidden" name="component" value="<?php echo($_GET['c']);?>">Weet u zeker dat u dit component verwijderen wilt?</td></tr>
-					    			<tr><td><input type="CheckBox" name="confirmatie"> Ja, ik wil dit component verwijderen</td></tr>
-					    			<tr><td><input type="hidden" name="verwijderen" value="1"><a href="javascript:document.theForm.submit();">Verwijderen</a></td></tr>
-					    		</table>
-					    	</form>
-							<?php
+							
+							//kijken of er meldingen bij dit component behoren
+							$query = "SELECT COUNT(Meld_Lijst_ID) FROM melding_lijst WHERE Comp_Lijst_ID = '".$_GET['c']."' GROUP BY Comp_Lijst_ID";
+							$resultaat = mysql_query($query);
+							$row = mysql_fetch_row($resultaat);
+							//er zijn geen meldingen bij dit component.
+							if ($row[0] == NULL) {
+							
+								//FORMPJE MAKEN!!!!!!!!!!!!!!!!!!!!!
+								?>
+						    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
+						    		<table>
+						    			<tr><td><input type="hidden" name="component" value="<?php echo($_GET['c']);?>">Weet u zeker dat u dit component verwijderen wilt?</td></tr>
+						    			<tr><td><input type="CheckBox" name="confirmatie"> Ja, ik wil dit component verwijderen</td></tr>
+						    			<tr><td><input type="hidden" name="verwijderen" value="1"><a href="javascript:document.theForm.submit();">Verwijderen</a></td></tr>
+						    		</table>
+						    	</form>
+								<?php
+							}
+							else echo("<br><br>Dit component heeft bijbehorende meldingen.<br>Hierdoor kan dit component niet verwijderd worden!");
 						}
 						else echo("<br><br>Dit component heeft onderliggende componenten, welke naar dit component verwijzen.<br>Hierdoor kan dit component niet verwijderd worden!");
 					}

@@ -26,6 +26,43 @@
     <div id="rechterdeel">
     	<h2>Meldingen toevoegen</h2>
 
+    	<form>
+    		<table>
+    			<tr>
+    				<td>Type melding:</td>
+    				<td><select></select></td>
+    			</tr>
+    			<tr>
+    				<td>Component van invloed:</td>
+    				<td><select></select></td>
+    			</tr>
+    			<tr>
+    				<td>Gemeld door:</td>
+    				<td><select></select></td>
+    			</tr>
+    			<tr>
+    				<td>Melddatum:</td>
+    				<td><input type="text"><input type="text"></td>
+    			</tr>
+    			<tr>
+    				<td>Prob. beschrijving</td>
+    				<td><textarea></textarea></td>
+    			</tr>
+    			<tr>
+    				<td>Prob oplossing</td>
+    				<td><textarea></textarea></td>
+    			</tr>
+    			<tr>
+    				<td>Behandeld door:</td>
+    				<td><select></select></td>
+    			</tr>
+    			<tr>
+    				<td>Afgehandeld:</td>
+    				<td><input type="checkbox"></td>
+    			</tr>
+
+    		</table>
+    	</form>
 
 
 	  </div>
