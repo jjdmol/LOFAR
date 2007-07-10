@@ -143,9 +143,6 @@
 					mysql_query($query_melding);
 					$melding_id = mysql_insert_id();
 
-					echo ($query_melding . "   ".$melding_id);
-
-
 					//opslaan van het component
 					$query = "UPDATE comp_lijst SET Comp_Naam = '". $_POST['comp_naam'] . "', Comp_Parent = '". $_POST['comp_nieuwe_parent'] . "', Laatste_Melding ='". $melding_id;
 					$query = $query . "', Comp_Locatie = '". $_POST['comp_locatie'] ."', Comp_Verantwoordelijke = '". $_POST['comp_verantwoordelijke'] . "'";
