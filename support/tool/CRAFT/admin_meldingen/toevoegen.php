@@ -61,8 +61,40 @@
 
 
 				if (Valideer_Invoer()) {
-					echo("opslaan");
-				
+					//uit de componenten lijst halen welke melding hier als laatste bij opgeslagen is
+					//deze waarde is nodig om een keten van meldingen te kunnen vormen
+					$query = "SELECT Laatste_Melding FROM comp_lijst WHERE Comp_Lijst_ID = '". $_GET['c'] ."'";
+					$resultaat = mysql_query($query);
+			  	$row = mysql_fetch_array($resultaat);
+					
+					//de query om de melding toe te voegen, samenstellen
+					$query = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Prob_Oplossing, Behandeld_Door, Gemeld_Door, Afgehandeld)";
+					$query = $query . "VALUES ('". $_POST['Type_Melding'] ."', '". $_GET['c'] ."'";
+
+  				//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
+  				if (isset($_POST['Meld_Datum']) && $_POST['Meld_Datum'] != '') {
+    				$datum=split("-",$_POST['Meld_Datum']);
+	  				$query = $query . ", '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['Meld_Tijd'] .":00'";							
+					}
+					else $query = $query . ", NOW()";
+					$query = $query . ", '". $_POST['hidden_status'] ."', '". $row[0] ."', '". $_POST['hidden_beschrijving'] ."', '". $_POST['hidden_oplossing'];
+					$query = $query . "', '". $_POST['Behandeld_Door'] ."', '". $_POST['Gemeld_Door'] ."', '";
+					//de afgehandeld checkbox vertalen naar sql taal ;)
+					if (isset($_POST['afgehandeld']) && ($_POST['afgehandeld'] == 'on' || $_POST['afgehandeld'] == '1'))
+						$query = $query . "1') ";
+					else $query = $query . "0') ";
+
+					//uitvoeren van de insert query
+					mysql_query($query);
+					//de id van de zojuist toegevoegde melding halen
+					$Laatste_Melding = mysql_insert_id();
+					//het component waar deze melding bijhoort bijwerken, zodat deze weet dat er een nieuwe laatste_melding is (einde van de keten)
+					$query = "UPDATE comp_lijst SET Laatste_Melding='". $Laatste_Melding ."' WHERE Comp_Lijst_ID='". $_GET['c'] ."'";
+					mysql_query($query);
+					
+					//meldingen voor de gebruiker
+					echo("De nieuwe melding (". $Laatste_Melding .") is aan het systeem toegevoegd!<br>");
+   				echo('<a href="'.$_SESSION['huidige_pagina']. '&c=' . $_GET['c'] . '">Klik hier om nog een melding aan dit component toe te voegen of geselecteer een component uit de treeview.</a>');
 				}
 				else {
 					if (isset($_GET['c']) && $_GET['c'] != 0 ) {
@@ -169,6 +201,7 @@
 			    			</tr>
 			    			<tr>
 			    				<td>
+			    					<input name="hidden_status" id="hidden_status" type="hidden" value="">
 			    					<input name="hidden_beschrijving" id="hidden_beschrijving" type="hidden" value="">
 			    					<input name="hidden_oplossing" id="hidden_oplossing" type="hidden" value="">
 			    					<input name="opslaan" type="hidden" value="1">

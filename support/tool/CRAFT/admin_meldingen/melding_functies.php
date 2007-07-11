@@ -14,9 +14,11 @@ function switchMelding()
 
 function SubmitMeldingToevoegen() 
 {
+	var s = document.frames['frame_beschrijving'].document.getElementById('sStatus').value;
 	var o = document.frames['frame_oplossing'].document.getElementById('sProb_Oplossing').value;
 	var b = document.frames['frame_beschrijving'].document.getElementById('sProb_Beschrijving').value;
 	
+	document.getElementById('hidden_status').value = s;
 	document.getElementById('hidden_oplossing').value = o;
 	document.getElementById('hidden_beschrijving').value = b;
 	
