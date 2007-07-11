@@ -1,3 +1,7 @@
+<?php 
+	if (isset($_SESSION['admin_deel'])){
+?>
+
 <div id="hoofdbalk">
 	<div id="admin_hoofdbalk">
   	<div id="spacerbalk">
@@ -36,3 +40,7 @@
 		</ul>
 	</div>
 </div>
+
+<?php
+	}
+?>

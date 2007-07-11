@@ -17,7 +17,7 @@
 				$naam = $data[0];
 				if(isset($_GET['n']))
 					$naam = $_GET['n'];
-				$inputveld = "<input id=\"sComp_Naam\" name=\"sComp_Naam\" type=\"text\" value=\"". $naam;
+				$inputveld = "<input id=\"sComp_Naam\" name=\"sComp_Naam\" type=\"text\" value=\"". htmlentities($naam, ENT_QUOTES);
 
 				$query = "SELECT Count(Comp_Type_ID) FROM comp_lijst WHERE Comp_Type_ID = '".$_GET['c']."' GROUP BY Comp_Type_ID";
 				$resultaat = mysql_query($query);
