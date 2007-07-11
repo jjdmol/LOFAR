@@ -1,6 +1,4 @@
 <?php
-	
-  
   require_once('includes/login_funcs.php');
 	
   //controleren of er iemand ingelogd is...
