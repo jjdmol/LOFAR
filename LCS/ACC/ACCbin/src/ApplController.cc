@@ -454,7 +454,7 @@ void ApplController::startCmdState()
 		// the incomming acks decide the result of the start action
 		break;
 	case StateKillAppl:
-		sleep (5);								// give procs some extra time
+		sleep (10);								// give procs some extra time
 		itsProcRuler.stopAll();
 		itsStateEngine->ready();				// report this state is ready.
 		break;
