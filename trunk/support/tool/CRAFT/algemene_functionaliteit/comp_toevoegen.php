@@ -152,28 +152,34 @@
   				<td>Selecteer type om toe te voegen:</td>
   				<td><select name="comp_type" id="comp_type" onchange="switchDocument(<?php if(isset($_POST['comp_naam'])){ echo("&n=". $_POST['hidden_naam']); } ?> );">
 		    	  <?php
+		    			if (isset($_POST['comp_type']))
+		    				$selected = $_POST['comp_type'];
+		    			//het selecteren van de waarde die in de treeview is aangeklikt
+		    			//in dit geval is er een type aangeklikt
+		    			else if (isset($_GET['c']) && $_SESSION['type_overzicht'] == 2) {
+		    				$selected = $_GET['c'];
+		    			}
+		    			//nu is er een component aangeklikt, dus hier het type van bepalen
+		    			else if (isset($_GET['c'])){
+		    				$query = "SELECT Comp_Type_ID FROM comp_lijst WHERE Comp_Lijst_ID = '". $_GET['c'] ."'";
+			    			$resultaat = mysql_query($query);
+			    			$data = mysql_fetch_array($resultaat);
+								$selected = $data['Comp_Type_ID'];
+		    			}
+		    			else $selected = 'SELECTED';
+		    			
 		    			$query = "SELECT Comp_Type, Type_Naam FROM comp_type WHERE Type_Parent IN (SELECT Comp_Type_ID FROM comp_lijst)";
 		    			$resultaat = mysql_query($query);
-		    			$selected = 'SELECTED';
+		    			//$selected = 'SELECTED';
 					  	while ($data = mysql_fetch_array($resultaat)) {
 	  	  				echo('<option value="'.$data['Comp_Type'].'"');
 		  	  			
-		  	  			//wanneer er data gepost is, dan....
-		  	  			if (isset($_POST['comp_type'])) {
-		  	  				//kijken of het huidige record hetzelfde is als de geposte record,
-		  	  				//is dit het geval, dan dit record als de huidige selectie instellen
-		  	  				if ($_POST['comp_type'] == $data['Comp_Type'])  {
-		  	  					echo(" SELECTED"); 
-		  	  					$selected = $data['Comp_Type'];
-		  	  				}
-		  	  			}
-		  	  			//geen data gepost
-		  	  			else {
-		  	  				if ($selected == 'SELECTED') {
-		  	  					echo($selected);
-		  	  					$selected = $data['Comp_Type'];
-		  	  				}
-		  	  			}
+	  	  				//kijken of het huidige record hetzelfde is als de geposte record,
+	  	  				//is dit het geval, dan dit record als de huidige selectie instellen
+	  	  				if ($data['Comp_Type'] == $selected || $selected == 'SELECTED')  {
+	  	  					echo(" SELECTED"); 
+	  	  					$selected = $data['Comp_Type'];
+	  	  				}
 		  	  			echo('>'. $data['Type_Naam'] .'</option>');
 					  	}
 		    		?></select>

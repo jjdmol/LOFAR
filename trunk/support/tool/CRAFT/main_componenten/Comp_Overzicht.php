@@ -11,7 +11,7 @@
 			<?php
 				$query = "SELECT * FROM comp_lijst WHERE Laatste_Melding in";
 				$query = $query . "(SELECT Meld_Lijst_ID FROM melding_lijst WHERE Meld_Datum > ";
-				$query = $query . "'".$_SESSION['laatste_inlog']."' AND Voorgaande_Melding = 1)";
+				$query = $query . "'".$_SESSION['laatste_inlog']."' AND Voorgaande_Melding = 1 ORDER BY Meld_Datum DESC)";
 			  $resultaat = mysql_query($query);
 				echo("<table border=\"1\">");
 				while ($data = mysql_fetch_array($resultaat)) {

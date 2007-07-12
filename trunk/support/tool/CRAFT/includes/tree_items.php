@@ -153,6 +153,11 @@
   		if ($_SESSION['type_overzicht'] == 1) 		 $Types_Objecten = Comp_Lijst(1);
   		else if ($_SESSION['type_overzicht'] == 2) $Types_Objecten = Comp_Type_Lijst(1);
   	}
+  	else if ($_SESSION['main_deel'] == 3) {
+  		if ($_SESSION['type_overzicht'] == 1) 		 $Types_Objecten = Comp_Lijst(1);
+  		else if ($_SESSION['type_overzicht'] == 2) $Types_Objecten = Melding_Type_Lijst();
+  	}
+  	
   }
 	echo ("var TREE_ITEMS = [");
 	

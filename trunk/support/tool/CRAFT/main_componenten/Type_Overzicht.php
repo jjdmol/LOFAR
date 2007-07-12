@@ -11,7 +11,7 @@
 	
 			<?php
 			
-				$query = "SELECT * FROM comp_type WHERE Aanmaak_Datum > '".$_SESSION['laatste_inlog']."'";
+				$query = "SELECT * FROM comp_type WHERE Aanmaak_Datum > '".$_SESSION['laatste_inlog']."'  ORDER BY Aanmaak_Datum desc ";
 			  $resultaat = mysql_query($query);
 
 				echo("<table border=\"1\">");
