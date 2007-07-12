@@ -145,7 +145,7 @@
 					}
 					//nieuwste meldingen per laatste inlog
 					else {
-						$_SESSION['laatste_inlog'] = '2007-01-12 09:00:00'; //<----- CHEATZ!!!!!!
+//						$_SESSION['laatste_inlog'] = '2007-01-12 09:00:00'; //<----- CHEATZ!!!!!!
 
 						$query = "SELECT Count(Meld_Lijst_ID) FROM melding_lijst WHERE Meld_Datum > '".$_SESSION['laatste_inlog']."'";
 					  $res = mysql_query($query);
