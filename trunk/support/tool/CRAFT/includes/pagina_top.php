@@ -20,7 +20,7 @@
 
 
   	<!-- Het toevoegen van het javascript bestandje met de benodigde functies --> 
-		<?php echo('<script type="text/javascript" src="'.$help.'includes/functies.js"></script>'); ?>
+		<?php echo('<script type="text/javascript" src="'.$help.'includes/functies.php"></script>'); ?>
 		
 
 	</head>

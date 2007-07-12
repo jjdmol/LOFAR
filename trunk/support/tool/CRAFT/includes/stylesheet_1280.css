@@ -63,4 +63,5 @@ a.actieveoptie:active			{text-decoration: underline; }
 #boom_schakel_knop  { border:1px solid #000000; background-color=#B3CCE6; text-align: center; width: 85%; height: 100%; margin-left: auto; margin-right: auto; }
 
 .foutmelding { font-family: verdana, helvetica, arial, sans-serif; color: #FF0000; }
+#zwart {color: #000000; }
 b { color: #FF0000; }

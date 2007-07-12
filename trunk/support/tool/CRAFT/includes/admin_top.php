@@ -22,7 +22,7 @@
 		</script>
   	
   	<!-- Het toevoegen van het javascript bestandje met de benodigde functies --> 
-		<?php echo('<script type="text/javascript" src="'.$_SESSION['pagina'].'includes/functies.js"></script>'); ?>
+		<?php echo('<script type="text/javascript" src="'.$_SESSION['pagina'].'includes/functies.php"></script>'); ?>
 
 	</head>
 	
