@@ -15,26 +15,137 @@ include = '<bitset>';
 include = '<Common/LofarTypes.h>';
 
 include = '<APL/RTCCommon/Timestamp.h>';
-include = '<APL/RSP_Protocol/BeamletWeights.h>';
-include = '<APL/RSP_Protocol/SubbandSelection.h>';
-include = '<APL/RSP_Protocol/RCUSettings.h>';
-include = '<APL/RSP_Protocol/HBASettings.h>';
-include = '<APL/RSP_Protocol/RSUSettings.h>';
-include = '<APL/RSP_Protocol/WGSettings.h>';
-include = '<APL/RSP_Protocol/SystemStatus.h>';
-include = '<APL/RSP_Protocol/Statistics.h>';
-include = '<APL/RSP_Protocol/XCStatistics.h>';
-include = '<APL/RSP_Protocol/Versions.h>';
-include = '<APL/RSP_Protocol/TDStatus.h>';
-include = '<APL/RSP_Protocol/TBBSettings.h>';
 include = '<APL/RSP_Protocol/AllRegisterState.h>';
+include = '<APL/RSP_Protocol/BeamletWeights.h>';
+include = '<APL/RSP_Protocol/BypassSettings.h>';
+include = '<APL/RSP_Protocol/HBASettings.h>';
 include = '<APL/RSP_Protocol/MEPHeader.h>';
+include = '<APL/RSP_Protocol/RCUSettings.h>';
+include = '<APL/RSP_Protocol/RSUSettings.h>';
+include = '<APL/RSP_Protocol/Statistics.h>';
+include = '<APL/RSP_Protocol/SubbandSelection.h>';
+include = '<APL/RSP_Protocol/SystemStatus.h>';
+include = '<APL/RSP_Protocol/TBBSettings.h>';
+include = '<APL/RSP_Protocol/TDStatus.h>';
+include = '<APL/RSP_Protocol/Versions.h>';
+include = '<APL/RSP_Protocol/WGSettings.h>';
+include = '<APL/RSP_Protocol/XCStatistics.h>';
 
 prelude = << PRELUDE_END
 
   static const int MAX_N_RSPBOARDS = 24;
   static const int SUCCESS         = 1;
   static const int FAILURE         = 0;
+
+// The protocol implements the following messages.
+// SETWEIGHTS			(timestamp,	rcumask,weights)
+// SETWEIGHTSACK		(timestamp,	status)
+// GETWEIGHTS			(timestamp,	rcumask,cache)
+// GETWEIGHTSACK		(timestamp,	status,	weights)
+
+// SETSUBBANDS			(timestamp,	rcumask,subbands)
+// SETSUBBANDSACK		(timestamp,	status)
+// GETSUBBANDS			(timestamp,	rcumask,cache,	type)
+// GETSUBBANDSACK		(timestamp,	status,	subbands)
+// SUBSUBBANDS			(timestamp,	rcumask,period, type)
+// SUBSUBBANDSACK		(timestamp,	status,	handle)
+// UPDSUBBANDS			(timestamp,	status,	handle,	subbands)
+// UNSUBSUBBANDS		(handle)
+// UNSUBSUBBANDSACK		(timestamp,	status,	handle)
+
+// SETRCU				(timestamp,	rcumask,settings)
+// SETRCUACK			(timestamp,	status)
+// GETRCU				(timestamp,	rcumask,cache)
+// GETRCUACK			(timestamp,	status,	settings)
+// SUBRCU				(timestamp,	rcumask,period)
+// SUBRCUACK			(timestamp,	status,	handle)
+// UPDRCU				(timestamp,	status,	handle,	settings)
+// UNSUBRCU				(handle)
+// UNSUBRCUACK			(timestamp,	status,	handle)
+
+// SETRSU				(timestamp,	rspmask,settings)
+// SETRSUACK			(timestamp,	status)
+
+// SETWG				(timestamp,	rcumask,settings)
+// SETWGACK				(timestamp,	status))
+// GETWG				(timestamp,	rcumask,cache)
+// GETWGACK				(timestamp,	status,	settings)
+
+// SUBSTATUS			(timestamp,	rspmask,period)
+// SUBSTATUSACK			(timestamp,	status,	handle)
+// UNSUBSTATUS			(handle)
+// UNSUBSTATUSACK		(timestamp,	status,	handle )
+// UPDSTATUS			(timestamp,	status,	handle,	sysstatus)
+// GETSTATUS			(timestamp,	rspmask,cache)
+// GETSTATUSACK			(timestamp,	status,	sysstatus)
+
+// SUBSTATS				(timestamp,	rcumask,period,	type,	reduction)
+// SUBSTATSACK			(timestamp,	status,	handle)
+// UNSUBSTATS			(handle)
+// UNSUBSTATSACK		(timestamp,	status,	handle)
+// UPDSTATS				(timestamp,	status,	handle,	stats)
+// GETSTATS				(timestamp,	rcumask,cache,	type)
+// GETSTATSACK			(timestamp,	status,	stats)
+
+// SUBXCSTATS			(timestamp,	period)
+// SUBXCSTATSACK		(timestamp,	status,	handle)
+// UNSUBXCSTATS			(handle)
+// UNSUBXCSTATSACK		(timestamp,	status,	handle)
+// UPDXCSTATS			(timestamp,	status,	handle,	stats)
+// GETXCSTATS			(timestamp,	cache)
+// GETXCSTATSACK		(timestamp,	status,	stats)
+
+// GETVERSION			(timestamp,	cache)
+// GETVERSIONACK		(timestamp,	status,	versions)
+
+// GETCONFIG			()
+// GETCONFIGACK			(n_rcus,	n_rspboards, max_rspboards)
+
+// SETCLOCK				(timestamp,	clock)
+// SETCLOCKACK			(timestamp,	status)
+// GETCLOCK				(timestamp,	cache)
+// GETCLOCKACK			(timestamp,	status,	clock)
+// SUBCLOCK				(timestamp,	period)
+// SUBCLOCKACK			(timestamp,	status,	handle)
+// UPDCLOCK				(timestamp,	status,	handle,	clock)
+// UNSUBCLOCK			(handle)
+// UNSUBCLOCKACK		(timestamp,	status,	handle)
+
+// GETREGISTERSTATE		(timestamp)
+// GETREGISTERSTATEACK	(timestamp,	status,	state)
+// SUBREGISTERSTATE		(timestamp,	period)
+// SUBREGISTERSTATEACK	(timestamp,	status,	handle)
+// UPDREGISTERSTATE		(timestamp,	status,	handle,	state)
+// UNSUBREGISTERSTATE	(handle)
+// UNSUBREGISTERSTATEACK(timestamp,	status,	handle)
+
+// SETHBA				(timestamp,	rcumask,settings)
+// SETHBAACK			(timestamp,	status)
+// GETHBA				(timestamp,	rcumask,cache)
+// GETHBAACK			(timestamp,	status,	settings)
+// SUBHBA				(timestamp,	rcumask,period)
+// SUBHBAACK			(timestamp,	status,	handle)
+// UPDHBA				(timestamp,	status,	handle,	settings)
+// UNSUBHBA				(handle)
+// UNSUBHBAACK			(timestamp,	status,	handle)
+
+// GETTDSTATUS			(timestamp,	rspmask,cache)
+// GETTDSTATUSACK		(timestamp,	status,	tdstatus)
+// SUBTDSTATUS			(timestamp,	rspmask,period)
+// SUBTDSTATUSACK		(timestamp,	status,	handle)
+// UPDTDSTATUS			(timestamp,	status,	handle,	tdstatus)
+// UNSUBTDSTATUS		(handle)
+// UNSUBTDSTATUSACK		(timestamp,	status,	handle)
+
+// SETTBB				(timestamp,	rcumask,settings)
+// SETTBBACK			(timestamp,	status)
+// GETTBB				(timestamp,	rcumask,cache)
+// GETTBBACK			(timestamp,	status,	settings)
+
+// SETBYPASS			(timestamp, rcumask,settings)
+// SETBYPASSACK			(timestamp, status)
+// GETBYPASS			(timestamp, rcumask,cache)
+// GETBYPASSACK			(timestamp, status, settings)
 
 PRELUDE_END;
 
@@ -1588,6 +1699,79 @@ event = {
   param = {
     name = "settings";
     type = "TBBSettings";
+    userdefined;
+  };
+};
+
+//
+// Bypass Control (spectral inversion)
+//
+event = {
+  signal = SETBYPASS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "settings";
+    type = "BypassSettings";
+    userdefined;
+  };
+};
+
+event = {
+  signal = SETBYPASSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+};
+
+event = {
+  signal = GETBYPASS;
+  dir = IN;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "rcumask";
+    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+  };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
+};
+
+event = {
+  signal = GETBYPASSACK;
+  dir = OUT;
+  param = {
+    name = "timestamp";
+    type = "RTC::Timestamp";
+    userdefined;
+  };
+  param = {
+    name = "status";
+    type = "int16";
+  };
+  param = {
+    name = "settings";
+    type = "BypassSettings";
     userdefined;
   };
 };

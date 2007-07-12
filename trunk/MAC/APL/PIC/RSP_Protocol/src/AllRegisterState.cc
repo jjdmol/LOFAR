@@ -55,7 +55,8 @@ unsigned int AllRegisterState::getSize()
     + tdstatuswrite_state.getSize()
     + tdstatusread_state.getSize()
     + tbbsettings_state.getSize()
-    + tbbbandsel_state.getSize();
+    + tbbbandsel_state.getSize()
+    + bypasssettings_state.getSize();
 }
 
 unsigned int AllRegisterState::pack  (void* buffer)
@@ -84,6 +85,7 @@ unsigned int AllRegisterState::pack  (void* buffer)
   offset += tdstatusread_state.pack((char*)buffer + offset);
   offset += tbbsettings_state.pack((char*)buffer + offset);
   offset += tbbbandsel_state.pack((char*)buffer + offset);
+  offset += bypasssettings_state.pack((char*)buffer + offset);
 
   return offset;
 }
@@ -114,6 +116,7 @@ unsigned int AllRegisterState::unpack(void *buffer)
   offset += tdstatusread_state.unpack((char*)buffer + offset);
   offset += tbbsettings_state.unpack((char*)buffer + offset);
   offset += tbbbandsel_state.unpack((char*)buffer + offset);
+  offset += bypasssettings_state.unpack((char*)buffer + offset);
 
   return offset;
 }

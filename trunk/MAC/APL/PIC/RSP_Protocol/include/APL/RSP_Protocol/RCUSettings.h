@@ -125,7 +125,7 @@ namespace LOFAR {
 	 *
 	 * 0x01000000 PRSG        pseudo random sequence generator on (1), off (0)
 	 * 0x02000000 RESET       on (1) hold board in reset
-	 * 0x04000000 SPEC_INV    Enable spectral inversion (1) if needed.
+	 * 0x04000000 free		  used to be SPEC_INV, SI now in DIAG/Bypass
 	 * 0xF8000000 TBD         reserved
 	 */
 	void   setRaw(uint32 raw) { m_value = raw; m_modified = 0xFFFFFFFF; }
@@ -165,17 +165,6 @@ namespace LOFAR {
 	  m_modified |= ATT_MASK;
 	}
 	uint8 getAttenuation() const { return (m_value & ATT_MASK) >> (11 + 8); }
-
-	/**
-	 * Enable (true) or disable (false) spectral inversion.
-	 */
-	void setSpecinv(bool value) {
-	  if (value) m_value |= SPECINV_MASK;  // set SPECINV bit
-	  else       m_value &= ~SPECINV_MASK; // clear SPECINV bit
-
-	  m_modified |= SPECINV_MASK;
-	}
-	bool getSpecinv() const { return m_value & SPECINV_MASK; }
 
 	/**
 	 * Set sample delay (true time delay). Valid values are 0..127 (7 bits)
