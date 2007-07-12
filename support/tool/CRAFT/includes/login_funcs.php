@@ -74,6 +74,9 @@
 					$_SESSION['pag_meld']   = $row['Melding_Zichtbaar'];
 					$_SESSION['pag_stats']  = $row['Stats_Zichtbaar'];
 					$_SESSION['pag_instel'] = $row['Instel_Zichtbaar'];
+					$_SESSION['toevoegen']   = $row['Toevoegen'];
+					$_SESSION['bewerken']    = $row['Bewerken'];
+					$_SESSION['verwijderen'] = $row['Verwijderen'];
 					
 					$query = "UPDATE gebruiker SET Laatst_Ingelogd = NOW() WHERE Werknem_ID='". $_SESSION['gebr_id'] ."'";
 					mysql_query($query);

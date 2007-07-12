@@ -1,4 +1,8 @@
-  
+<?php
+	
+	session_start();
+
+?>  
   //functie welke controleert of een documentElement bestaat
   //als dit element bestaat, dan wordt de border verwijderd en de kleur gereset
   function menuOptie(item) {
@@ -32,22 +36,28 @@
     if (optie == 1) {
   	}
   	else if (optie ==2) {
-      document.getElementById('suboptie1').innerHTML="Comp. overzicht"
-      document.getElementById('suboptie2').innerHTML="Comp. toevoegen"
-      document.getElementById('suboptie3').innerHTML="Comp. bewerken"
-      document.getElementById('suboptie4').innerHTML="Comp. verwijderen";
+      <?php 
+      	echo("document.getElementById('suboptie1').innerHTML=\"Comp. overzicht\";");
+      	if($_SESSION['toevoegen'] == 1)  echo("document.getElementById('suboptie2').innerHTML=\"Comp. toevoegen\";");
+      	if($_SESSION['bewerken'] == 1)   echo("document.getElementById('suboptie3').innerHTML=\"Comp. bewerken\";");
+      	if($_SESSION['verwijderen'] ==1) echo("document.getElementById('suboptie4').innerHTML=\"Comp. verwijderen\";");
+      ?>
   	}	
   	else if (optie ==3) {
-      document.getElementById('suboptie1').innerHTML="Melding overzicht"
-      document.getElementById('suboptie2').innerHTML="Melding toevoegen"
-      document.getElementById('suboptie3').innerHTML="Melding bewerken"
-      document.getElementById('suboptie4').innerHTML="Melding verwijderen";
+    	<?php 
+	    	echo("document.getElementById('suboptie1').innerHTML=\"Melding overzicht\";");
+	    	if($_SESSION['toevoegen'] == 1)   echo("document.getElementById('suboptie2').innerHTML=\"Melding toevoegen\";");
+	    	if($_SESSION['bewerken'] == 1)    echo("document.getElementById('suboptie3').innerHTML=\"Melding bewerken\";");
+	    	if($_SESSION['verwijderen'] == 1) echo("document.getElementById('suboptie4').innerHTML=\"Melding verwijderen\";");
+      ?>
    	}	
   	else if (optie ==4) {
-      document.getElementById('suboptie1').innerHTML="Statistieken overzicht"
-      document.getElementById('suboptie2').innerHTML="Statistieken toevoegen"
-      document.getElementById('suboptie3').innerHTML="Statistieken bewerken"
-      document.getElementById('suboptie4').innerHTML="Statistieken verwijderen";
+      <?php 
+      	echo("document.getElementById('suboptie1').innerHTML=\"Statistieken overzicht\";");
+      	if($_SESSION['toevoegen'] == 1)   echo("document.getElementById('suboptie2').innerHTML=\"Statistieken toevoegen\";");
+      	if($_SESSION['bewerken'] == 1)    echo("document.getElementById('suboptie3').innerHTML=\"Statistieken bewerken\";");
+      	if($_SESSION['verwijderen'] == 1) echo("document.getElementById('suboptie4').innerHTML=\"Statistieken verwijderen\";");
+      ?>
   	}	
   	else if (optie ==5) {
   	}	
