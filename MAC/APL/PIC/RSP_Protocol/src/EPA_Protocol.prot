@@ -164,14 +164,17 @@ prelude = << PRELUDE_END
 
   typedef struct DIAGBypass
   {
-    uint8 dc_disable:1; // enable DC block (high pass filter processing)
-    uint8 pfs_bypass:1; // bypass PFS
-    uint8 pft_bypass:1; // bypass PFT
-    uint8 bf_bypass :1; // bypass BF
-    uint8 si_enable :1; // enable spectral inversion processing
-    uint8 ffi0      :1;
-    uint8 use_sync  :1; // use (soft)sync, useful when WG single slice mode is used
-    uint8 use_resync:1; // use (soft)sync realigned to BLP output sync to preserve X,Y order in DIAG results buffer
+    uint8 dc_disable :1; // enable DC block (high pass filter processing)
+    uint8 pfs_bypass :1; // bypass PFS
+    uint8 pft_bypass :1; // bypass PFT
+    uint8 bf_bypass  :1; // bypass BF
+    uint8 six_enable :1; // enable spectral inversion processing X pol
+    uint8 siy_enable :1; // enable spectral inversion processing Y pol
+    uint8 use_sync   :1; // use (soft)sync, useful when WG single slice mode is used
+    uint8 use_resync :1; // use (soft)sync realigned to BLP output sync to preserve X,Y order in DIAG results buffer
+
+    uint8 fft_disable:1; // disable FFT phase switching
+	uint8 ffi		 :7;
   };
 
   typedef struct DIAGSelftest

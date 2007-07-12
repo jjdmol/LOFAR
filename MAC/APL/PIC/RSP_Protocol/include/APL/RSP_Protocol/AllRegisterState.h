@@ -86,6 +86,7 @@ namespace LOFAR {
 	  tdstatusread_state.resize(nrRspBoards);
 	  tbbsettings_state.resize(nrRcus);
 	  tbbbandsel_state.resize(nrRcus);
+	  bypasssettings_state.resize(nrBlps);
 	}
 
 	/*
@@ -116,6 +117,7 @@ namespace LOFAR {
 	  tdstatusread_state.reset();
 	  tbbsettings_state.reset();
 	  tbbbandsel_state.reset();
+	  bypasssettings_state.reset();
 
 	  sys_state.read();
 	  bf_state.write();
@@ -139,6 +141,7 @@ namespace LOFAR {
 	  tdstatusread_state.read();
 	  tbbsettings_state.check();
 	  tbbbandsel_state.check();
+	  bypasssettings_state.write(); // REO: When is this function called???
 	}
 
 	void schedule() {
@@ -164,6 +167,7 @@ namespace LOFAR {
 	  tdstatusread_state.read();
 	  tbbsettings_state.check();
 	  tbbbandsel_state.check();
+	  bypasssettings_state.check(); // REO ?
 	}
 
 	void clear() {
@@ -189,6 +193,7 @@ namespace LOFAR {
 	  tdstatusread_state.clear();
 	  tbbsettings_state.clear();
 	  tbbbandsel_state.clear();
+	  bypasssettings_state.clear();
 	}
 
 	void print(std::ostream& out) const {
@@ -219,6 +224,7 @@ namespace LOFAR {
 	  out << "TDS Status (read) "; tdstatusread_state.print(out);
 	  out << "TBBSettings       "; tbbsettings_state.print(out);
 	  out << "TBBBandsel        "; tbbbandsel_state.print(out);
+	  out << "DIAGBypassSettings"; bypasssettings_state.print(out);
 	  out << endl;
 	}
 
@@ -258,6 +264,7 @@ namespace LOFAR {
 	RTC::RegisterState& tdstatusread()   { return tdstatusread_state; }
 	RTC::RegisterState& tbbsettings()    { return tbbsettings_state; }
 	RTC::RegisterState& tbbbandsel()     { return tbbbandsel_state; }
+	RTC::RegisterState& bypasssettings() { return bypasssettings_state; }
 	/*@}*/
 
       private:
@@ -283,6 +290,7 @@ namespace LOFAR {
 	RTC::RegisterState tdstatusread_state;   // TDS status result
 	RTC::RegisterState tbbsettings_state;    // TBB settings state
 	RTC::RegisterState tbbbandsel_state;     // TBB bandsel state
+	RTC::RegisterState bypasssettings_state; // Bypass (specinv) state
 
 	int m_nrcus;
       };

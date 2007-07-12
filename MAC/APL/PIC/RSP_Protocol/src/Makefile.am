@@ -33,21 +33,22 @@ lib_LTLIBRARIES         = librsp_protocol.la
 
 librsp_protocol_la_SOURCES = \
 	$(BUILT_SOURCES) \
+	AllRegisterState.cc \
 	BeamletWeights.cc \
-	RCUSettings.cc \
+	BypassSettings.cc \
 	HBASettings.cc \
+	MEPHeader.cc \
+	MEPData.cc \
+	RCUSettings.cc \
 	RSUSettings.cc \
 	Statistics.cc \
 	SubbandSelection.cc \
 	SystemStatus.cc \
+	TBBSettings.cc \
+	TDStatus.cc \
 	Versions.cc \
 	WGSettings.cc \
-	XCStatistics.cc \
-	TDStatus.cc \
-	TBBSettings.cc \
-	AllRegisterState.cc \
-	MEPHeader.cc \
-	MEPData.cc
+	XCStatistics.cc
 
 clean-local:
 	rm -f *.ph
