@@ -163,6 +163,9 @@ namespace LOFAR {
 
       void rsp_settbb(GCFEvent& event, GCFPortInterface &port);
       void rsp_gettbb(GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_setbypass(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getbypass(GCFEvent& event, GCFPortInterface &port);
       /*@}*/
 
     private:

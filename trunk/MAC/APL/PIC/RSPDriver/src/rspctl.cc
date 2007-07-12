@@ -88,7 +88,7 @@ do {									\
 //
 #define DEFAULT_SAMPLE_FREQUENCY 160.0e6
 double g_sample_frequency = DEFAULT_SAMPLE_FREQUENCY;
-bool   g_getclock = false;
+bool   g_getclock		  = false;
 
 #define PAIR 2
 
@@ -518,21 +518,21 @@ void HBACommand::send()
     sethba.timestamp = Timestamp(0,0);
     sethba.rcumask = getRCUMask();
 
-    sethba.settings().resize(1, MEPHeader::N_HBA_DELAYS);
+    sethba.settings().resize(sethba.rcumask.count(), MEPHeader::N_HBA_DELAYS);
 
     if (1 == m_delaylist.size()) {
       std::list<int>::iterator it = m_delaylist.begin();
-      sethba.settings()(0, Range::all()) = (*it);
+      sethba.settings() = (*it);
     } else {
 
       // clear first
-      sethba.settings()(0) = 0;
+      sethba.settings() = 0;
 
       int i = 0;
       std::list<int>::iterator it;
       for (it = m_delaylist.begin(); it != m_delaylist.end(); it++, i++) {
 	if (i >= MEPHeader::N_HBA_DELAYS) break;
-	sethba.settings()(0, i) = (*it);
+	  sethba.settings()(Range::all(), i) = (*it);
       }
     }
 #if 0
@@ -1011,6 +1011,118 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
   GCFTask::stop();
 
   return status;
+}
+
+//
+// SICommand
+//
+SICommand::SICommand(GCFPortInterface& port) : Command(port), m_siOn(false)
+{
+}
+
+void SICommand::send()
+{
+	if (getMode()) {
+		// GET
+		RSPGetbypassEvent	request;
+
+		request.timestamp = Timestamp(0,0);
+		request.rcumask   = getRCUMask();
+		request.cache     = true;
+
+		m_rspport.send(request);
+	}
+	else {
+		// SET
+		RSPSetbypassEvent 		request;
+
+		request.timestamp = Timestamp(0,0);
+		request.rcumask   = getRCUMask();
+		request.settings().resize(1);
+		request.settings()(0).setXSI(m_siOn);
+		request.settings()(0).setYSI(m_siOn);
+
+		logMessage(cout,formatString("bypassSetting  =%02X", request.settings()(0).getAsUint16()));
+
+		m_rspport.send(request);
+	}
+}
+
+GCFEvent::TResult SICommand::ack(GCFEvent& e)
+{
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case RSP_GETBYPASSACK: {
+		RSPGetbypassackEvent ack(e);
+
+		std::ostringstream msg;
+		msg << "getSIack.timestamp=" << ack.timestamp;
+		logMessage(cout, msg.str());
+		msg.seekp(0);
+
+		if (ack.status != SUCCESS) {
+			logMessage(cerr, "Error: RSP_GETSI command failed.");
+			break;
+		}
+
+		// user made a selection? Only show the selection.
+		if (getRCUMask().count() != (uint) get_ndevices()) {
+			int rcuin = 0;
+			for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
+				if (getRCUMask()[rcuout]) {
+					if (rcuout % 2 == 0) {  // X-pol?
+						cout << formatString("RCU[%03d].si=%s\n", rcuout, ack.settings()(rcuin).getXSI() ? "on":"off");
+					}
+					else {
+						cout << formatString("RCU[%03d].si=%s\n", rcuout, ack.settings()(rcuin).getYSI() ? "on":"off");
+					}
+					rcuin++;    // there is a setting for every rcu!
+				}
+			}
+			break;
+		}
+
+		// no selection made. Show all settings in a nice matrix.
+		int rcusPerBoard = 8;	// !!!
+		for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
+			if (rcuout % rcusPerBoard == 0) {
+				cout << formatString("\nBoard[%02d]:", rcuout / rcusPerBoard);
+			}
+			bool 	isOn = (rcuout % 2 == 0) ? ack.settings()(rcuout).getXSI() : 
+											   ack.settings()(rcuout).getYSI();
+			if (isOn) {
+				cout << formatString("%3d ", rcuout);
+			}
+			else {
+				cout << "  . ";
+			}
+		}
+		cout << endl;
+	}
+	break;
+
+	case RSP_SETBYPASSACK: {
+		RSPSetbypassackEvent ack(e);
+
+		std::ostringstream msg;
+		msg << "setSIack.timestamp=" << ack.timestamp;
+		logMessage(cout, msg.str());
+
+		if (ack.status != SUCCESS) {
+			logMessage(cerr, "Error: RSP_SETSI command failed.");
+		}
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	GCFTask::stop();
+
+	return status;
 }
 
 //
@@ -1932,9 +2044,9 @@ RSPCtl::RSPCtl(string name, int argc, char** argv)
 //    exit(EXIT_FAILURE);
 //  }
 
-  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+  GCF::TM::registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 #ifdef ENABLE_RSPFE
-  registerProtocol(RSPFE_PROTOCOL, RSPFE_PROTOCOL_signalnames);
+  GCF::TM::registerProtocol(RSPFE_PROTOCOL, RSPFE_PROTOCOL_STRINGS);
 #endif
 
   string	instanceID;
@@ -2076,6 +2188,8 @@ GCFEvent::TResult RSPCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case RSP_GETHBAACK:
     case RSP_SETTBBACK:
     case RSP_GETTBBACK:
+    case RSP_GETBYPASSACK:
+    case RSP_SETBYPASSACK:
       status = m_command->ack(e); // handle the acknowledgement
       break;
 
@@ -2143,58 +2257,57 @@ static void usage()
 {
   cout << "rspctl usage:" << endl;
   cout << endl;
-  cout << "rspctl --weights        [--select=<set>]  # get weights as complex values" << endl;
-  cout << "  Example --select sets: --select=1,2,4:7 or --select=1:3,5:7" << endl;
-  cout << "rspctl --weights=value.re[,value.im] [--select=<set>]  # set weights as complex value" << endl;
-  cout << "rspctl --aweights       [--select=<set>]  # get weights as power and angle (in degrees)" << endl;
+  cout << "rspctl --weights                    [--select=<set>]  # get weights as complex values" << endl;
+  cout << "  Example --weights --select=1,2,4:7 or --select=1:3,5:7" << endl;
+  cout << "rspctl --weights=value.re[,value.im][--select=<set>]  # set weights as complex value" << endl;
+  cout << "rspctl --aweights                   [--select=<set>]  # get weights as power and angle (in degrees)" << endl;
   cout << "rspctl --aweights=amplitude[,angle] [--select=<set>]  # set weights as amplitude and angle (in degrees)" << endl;
-  cout << "rspctl --subbands       [--select=<set>]  # get subband selection" << endl;
-  cout << "rspctl --subbands=<set> [--select=<set>]  # set subband selection" << endl;
+  cout << "rspctl --subbands                   [--select=<set>]  # get subband selection" << endl;
+  cout << "rspctl --subbands=<set>             [--select=<set>]  # set subband selection" << endl;
   cout << "  Example --subbands sets: --subbands=0:39 or --select=0:19,40:59" << endl;
-  cout << "rspctl --rcu            [--select=<set>]  # show current rcu control setting" << endl;
-  cout << "rspctl --rcu=0x00000000 [--select=<set>]  # set the rcu control registers" << endl;
+  cout << "rspctl --rcu                        [--select=<set>]  # show current rcu control setting" << endl;
+  cout << "rspctl --rcu=0x00000000             [--select=<set>]  # set the rcu control registers" << endl;
   cout << "     mask      value    " << endl;
   cout << "  0x0000007F INPUT_DELAY  Sample delay for the data from the RCU." << endl;
   cout << "  0x00000080 INPUT_ENABLE Enable RCU input." << endl;
   cout << endl;
-  cout << "  0x00000100 LBL-EN      supply LBL antenna on (1) or off (0)" << endl;
-  cout << "  0x00000200 LBH-EN      sypply LBH antenna on (1) or off (0)" << endl;
-  cout << "  0x00000400 HB-EN       supply HB on (1) or off (0)" << endl;
-  cout << "  0x00000800 BANDSEL     low band (1) or high band (0)" << endl;
-  cout << "  0x00001000 HB-SEL-0    HBA filter selection" << endl;
-  cout << "  0x00002000 HB-SEL-1    HBA filter selection" << endl;
-  cout << "               Options : HBA-SEL-0 HBA-SEL-1 Function" << endl;
+  cout << "  0x00000100 LBL-EN       supply LBL antenna on (1) or off (0)" << endl;
+  cout << "  0x00000200 LBH-EN       sypply LBH antenna on (1) or off (0)" << endl;
+  cout << "  0x00000400 HB-EN        supply HB on (1) or off (0)" << endl;
+  cout << "  0x00000800 BANDSEL      low band (1) or high band (0)" << endl;
+  cout << "  0x00001000 HB-SEL-0     HBA filter selection" << endl;
+  cout << "  0x00002000 HB-SEL-1     HBA filter selection" << endl;
+  cout << "                Options : HBA-SEL-0 HBA-SEL-1 Function" << endl;
   cout << "                             0          0      210-270 MHz" << endl;
   cout << "                             0          1      170-230 MHz" << endl;
   cout << "                             1          0      110-190 MHz" << endl;
   cout << "                             1          1      all off" << endl;
-  cout << "  0x00004000 VL-EN       low band supply on (1) or off (0)" << endl;
-  cout << "  0x00008000 VH-EN       high band supply on (1) or off (0)" << endl;
+  cout << "  0x00004000 VL-EN        low band supply on (1) or off (0)" << endl;
+  cout << "  0x00008000 VH-EN        high band supply on (1) or off (0)" << endl;
   cout << endl;
-  cout << "  0x00010000 VDIG-EN     ADC supply on (1) or off (0)" << endl;
-  cout << "  0x00020000 LB-SEL-0    LBA input selection" << endl;
-  cout << "  0x00040000 LB-SEL-1    HP filter selection" << endl;
-  cout << "               Options : LB-SEL-0 LB-SEL-1 Function" << endl;
+  cout << "  0x00010000 VDIG-EN      ADC supply on (1) or off (0)" << endl;
+  cout << "  0x00020000 LB-SEL-0     LBA input selection" << endl;
+  cout << "  0x00040000 LB-SEL-1     HP filter selection" << endl;
+  cout << "                Options : LB-SEL-0 LB-SEL-1 Function" << endl;
   cout << "                             0        0    10-90 MHz + 10 MHz HPF" << endl;
   cout << "                             0        1    30-80 MHz + 10 MHz HPF" << endl;
   cout << "                             1        0    10-90 MHz + 30 MHz HPF" << endl;
   cout << "                             1        1    30-80 MHz + 30 MHz HPF" << endl;
-  cout << "  0x00080000 ATT-CNT-4   on (1) is  1dB attenuation" << endl;
-  cout << "  0x00100000 ATT-CNT-3   on (1) is  2dB attenuation" << endl;
-  cout << "  0x00200000 ATT-CNT-2   on (1) is  4dB attenuation" << endl;
-  cout << "  0x00300000 ATT-CNT-1   on (1) is  8dB attenuation" << endl;
-  cout << "  0x00800000 ATT-CNT-0   on (1) is 16dB attenuation" << endl;
+  cout << "  0x00080000 ATT-CNT-4    on (1) is  1dB attenuation" << endl;
+  cout << "  0x00100000 ATT-CNT-3    on (1) is  2dB attenuation" << endl;
+  cout << "  0x00200000 ATT-CNT-2    on (1) is  4dB attenuation" << endl;
+  cout << "  0x00300000 ATT-CNT-1    on (1) is  8dB attenuation" << endl;
+  cout << "  0x00800000 ATT-CNT-0    on (1) is 16dB attenuation" << endl;
   cout << endl;
-  cout << "  0x01000000 PRSG        pseudo random sequence generator on (1), off (0)" << endl;
-  cout << "  0x02000000 RESET       on (1) hold board in reset" << endl;
-  cout << "  0x04000080 SPEC_INV    Enable spectral inversion (1) if needed." << endl;
-  cout << "  0xF8000000 TBD         reserved" << endl;
+  cout << "  0x01000000 PRSG         pseudo random sequence generator on (1), off (0)" << endl;
+  cout << "  0x02000000 RESET        on (1) hold board in reset" << endl;
+  cout << "  0x04000080 SPEC_INV     Enable spectral inversion (1) if needed." << endl;
+  cout << "  0xF8000000 TBD          reserved" << endl;
   cout << endl;
   cout << "rspctl [ --rcumode        |" << endl;
   cout << "         --rcuprsg        |" << endl;
   cout << "         --rcureset       |" << endl;
   cout << "         --rcuattenuation |" << endl;
-  cout << "         --rcuspecinv     |" << endl;
   cout << "         --rcudelay       |" << endl;
   cout << "         --rcuenable      |" << endl;
   cout << "       ]+ [--select=<set>] # control RCU by combining one or more of these options with RCU selection" << endl;
@@ -2211,14 +2324,13 @@ static void usage()
   cout << "       --rcuprsg[=0]             # turn psrg on (or off)" << endl;
   cout << "       --rcureset[=0]            # hold rcu in reset (or take out of reset)" << endl;
   cout << "       --rcuattenuation=[0..31]  # set the RCU attenuation" << endl;
-  cout << "       --rcuspecinv[=0]          # enable (or disable) spectral inversion" << endl;
   cout << "       --rcudelay=[0..127]       # set the delay for rcu's" << endl;
   cout << "       --rcuenable[=0]           # enable (or disable) input from RCU's" << endl;
   cout << endl;
   cout << "rspctl --wg                  [--select=<set>]  # get waveform generator settings" << endl;
   cout << "rspctl --wg=freq [--phase=..] [--amplitude=..] [--select=<set>]  # set waveform generator settings" << endl;
-  cout << "rspctl --status         [--select=<set>]       # get status of RSP boards" << endl;
-  cout << "rspctl --tdstatus       [--select=<set>]       # get status of TD boards" << endl;
+  cout << "rspctl --status              [--select=<set>]  # get status of RSP boards" << endl;
+  cout << "rspctl --tdstatus            [--select=<set>]  # get status of TD boards" << endl;
   cout << "rspctl --statistics[=(subband|beamlet)]        # get subband (default) or beamlet statistics" << endl;
   cout << "             [--select=<set>]                  #" << endl;
   cout << "             [--duration=<seconds>]            #" << endl;
@@ -2238,10 +2350,11 @@ static void usage()
   cout << "rspctl --xcsubband=<int>                       # set the subband to cross correlate" << endl;
   cout << "rspctl --clock[=<int>]                         # get or set the clock frequency of clocks in MHz" << endl;
   cout << "rspctl --hbadelays[=<list>] [--select=<set>]   # set or get the 16 delays of one or more HBA's" << endl;
-  cout << "rspctl --tbbmode[=transient | =subbands,<set>]  # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
+  cout << "rspctl --tbbmode[=transient | =subbands,<set>] # set or get TBB mode, 'transient' or 'subbands', if subbands then specify subband set" << endl;
   cout << "rspctl --version            [--select=<set>]   # get version information" << endl;
   cout << "rspctl --rspclear           [--select=<set>]   # clear FPGA registers on RSPboard" << endl;
   cout << "rspctl --regstate                              # show update status of all registers once every second" << endl;
+  cout << "rspctl --specinv[=0]        [--select=<set>]   # enable (or disable) spectral inversion" << endl;
 }
 
 Command* RSPCtl::parse_options(int argc, char** argv)
@@ -2258,10 +2371,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
   optind = 0; // reset option parsing
   //opterr = 0; // no error reporting to stderr
-  while (1)
-    {
-      static struct option long_options[] =
-	{
+  while (1) {
+      static struct option long_options[] = {
 	  { "select",         required_argument, 0, 'l' },
 	  { "weights",        optional_argument, 0, 'w' },
 	  { "aweights",       optional_argument, 0, 'a' },
@@ -2271,9 +2382,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "rcuprsg",        optional_argument, 0, 'p' },
 	  { "rcureset",       optional_argument, 0, 'e' },
 	  { "rcuattenuation", required_argument, 0, 'n' },
-	  { "rcuspecinv",     optional_argument, 0, 'u' },
 	  { "rcudelay",       required_argument, 0, 'y' },
-          { "rcuenable",      optional_argument, 0, 'E' },
+      { "rcuenable",      optional_argument, 0, 'E' },
 	  { "wg",             optional_argument, 0, 'g' },
 	  { "wgmode",         required_argument, 0, 'G' },
 	  { "amplitude",      required_argument, 0, 'A' },
@@ -2297,7 +2407,8 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 #endif
 	  { "duration",       required_argument, 0, 'd' },
 	  { "integration",    required_argument, 0, 'i' },
-	  { "instance",       required_argument, 0, 'I' },
+	  { "specinv",	      optional_argument, 0, 'I' },
+//	  { "instance",       required_argument, 0, 'I' },
 	  { "directory"  ,    required_argument, 0, 'D' },
 
 	  { 0, 0, 0, 0 },
@@ -2313,24 +2424,20 @@ Command* RSPCtl::parse_options(int argc, char** argv)
       switch (c)
 	{
 	case 'l': 	// --select
-	  if (optarg)
-	    {
-	      if (!command || 0 == command->get_ndevices())
-		{
+	  if (optarg) {
+	      if (!command || 0 == command->get_ndevices()) {
 		  logMessage(cerr,"Error: 'command' argument should come before --select argument");
 		  exit(EXIT_FAILURE);
-		}
+	      }
 	      select = strtolist(optarg, command->get_ndevices());
-	      if (select.empty())
-		{
+	      if (select.empty()) {
 		  logMessage(cerr,"Error: invalid or missing '--select' option");
 		  exit(EXIT_FAILURE);
-		}
-	    }
-	  else
-	    {
+	      }
+	  }
+	  else {
 	      logMessage(cerr,"Error: option '--select' requires an argument");
-	    }
+	  }
 	  break;
 
 	case 'w':	// --weights
@@ -2343,8 +2450,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	    command->set_ndevices(m_nrcus);
 
-	    if (optarg)
-	      {
+	    if (optarg) {
 		weightscommand->setMode(false);
 		double re = 0.0, im = 0.0;
 		int numitems = sscanf(optarg, "%lf,%lf", &re, &im);
@@ -2368,8 +2474,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	    command->set_ndevices(m_nrcus);
 
-	    if (optarg)
-	      {
+	    if (optarg) {
 		weightscommand->setMode(false);
 		double amplitude = 0.0, angle = 0.0;
 		int numitems = sscanf(optarg, "%lf,%lf", &amplitude, &angle);
@@ -2400,17 +2505,15 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	    command = subbandscommand;
 	    command->set_ndevices(m_nrcus);
 
-	    if (optarg)
-	      {
+	    if (optarg) {
 		subbandscommand->setMode(false);
 		list<int> subbandlist = strtolist(optarg, MEPHeader::N_SUBBANDS);
-		if (subbandlist.empty())
-		  {
+		if (subbandlist.empty()) {
 		    logMessage(cerr,"Error: invalid or empty '--subbands' option");
 		    exit(EXIT_FAILURE);
-		  }
+		}
 		subbandscommand->setSubbandList(subbandlist);
-	      }
+	    }
 	  }
 	  break;
 
@@ -2423,19 +2526,17 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	    command->set_ndevices(m_nrcus);
 
-	    if (optarg)
-	      {
+	    if (optarg) {
 		rcucommand->setMode(false);
 		unsigned long controlopt = strtoul(optarg, 0, 0);
-		if ( controlopt > 0xFFFFFFFF )
-		  {
+		if ( controlopt > 0xFFFFFFFF ) {
 		    logMessage(cerr,"Error: option '--rcu' parameter must be < 0xFFFFFFFF");
 		    delete command;
 		    return 0;
-		  }
+		}
 
 		rcucommand->control().setRaw((uint32)controlopt);
-	      }
+	    }
 	  }
 	  break;
 
@@ -2443,7 +2544,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	case 'p': // --rcuprsg
 	case 'e': // --rcureset
 	case 'n': // --rcuattenuation
-	case 'u': // --rcuspecinv
+//	case 'u': // --rcuspecinv
 	case 'y': // --rcudelay
         case 'E': // --rcuenable
 	  {
@@ -2505,13 +2606,13 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      rcumodecommand->control().setAttenuation((uint8)controlopt);
 	      break;
 
-	    case 'u': // --rcuspecinv
-	      if (optarg && !strncmp(optarg, "0", 1)) {
-		rcumodecommand->control().setSpecinv(false);
-	      } else {
-		rcumodecommand->control().setSpecinv(true);
-	      }
-	      break;
+//	    case 'u': // --rcuspecinv
+//	      if (optarg && !strncmp(optarg, "0", 1)) {
+//		rcumodecommand->control().setSpecinv(false);
+//	      } else {
+//		rcumodecommand->control().setSpecinv(true);
+//	      }
+//	      break;
 
 	    case 'y': // --rcudelay
 	      controlopt = strtoul(optarg, 0, 0);
@@ -2544,12 +2645,10 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	    command->set_ndevices(m_nrcus);
 
-	    if (optarg)
-	      {
+	    if (optarg) {
 		wgcommand->setMode(false);
 		double frequency = atof(optarg);
-		if ( frequency < 0 )
-		  {
+		if ( frequency < 0 ) {
 		    logMessage(cerr,"Error: option '--wg' parameter must be > 0");
 		    delete command;
 		    return 0;
@@ -2633,8 +2732,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	    command->set_ndevices(m_nrcus);
 
-	    if (optarg)
-	      {
+	    if (optarg) {
 		if (!strcmp(optarg, "subband")) {
 		  statscommand->setType(Statistics::SUBBAND_POWER);
 		} else if (!strcmp(optarg, "beamlet")) {
@@ -2674,23 +2772,20 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	    command->set_ndevices(m_nrcus);
 
-	    if (optarg)
-	      {
+	    if (optarg) {
 		subbandscommand->setMode(false);
 
 		int subband = atoi(optarg);
 
-		if (subband < 0 || subband >= MEPHeader::N_SUBBANDS)
-		  {
+		if (subband < 0 || subband >= MEPHeader::N_SUBBANDS) {
 		    logMessage(cerr,formatString("Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MEPHeader::N_SUBBANDS));
 		    exit(EXIT_FAILURE);
-		  }
+		}
 
 		list<int> subbandlist;
-		for (int rcu = 0; rcu < m_nrcus / MEPHeader::N_POL; rcu++)
-		  {
+		for (int rcu = 0; rcu < m_nrcus / MEPHeader::N_POL; rcu++) {
 		    subbandlist.push_back(subband);
-		  }
+		}
 		subbandscommand->setSubbandList(subbandlist);
 	      }
 	  }
@@ -2705,8 +2800,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	    command->set_ndevices(m_nrspboards);
 
-	    if (optarg)
-	      {
+	    if (optarg) {
 		clockcommand->setMode(false);
 		double clock = atof(optarg);
 		if ( 0 != (uint32)clock && 160 != (uint32)clock && 200 != (uint32)clock)
@@ -2778,8 +2872,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
 	    command->set_ndevices(m_nrcus);
 
-	    if (optarg)
-	      {
+	    if (optarg) {
 		tbbcommand->setMode(false);
 		if (!strcmp(optarg, "transient")) {
 		  tbbcommand->setType(TBBCommand::TRANSIENT);
@@ -2806,107 +2899,107 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  }
 	  break;
 
+	case 'I': // --spectral Inversion
+	  {
+	    if (command)
+	      delete command;
+	    SICommand* specInvCmd = new SICommand(m_server);
+	    command = specInvCmd;
+
+	    command->set_ndevices(m_nrcus);
+
+	    if (optarg) {
+		specInvCmd->setMode(false);
+		specInvCmd->setSI(strncmp(optarg, "0", 1));
+	    }
+	  }
+	  break;
+
 	case 'h':	// --help
 	  usage();
 	  break;
 
 #ifdef ENABLE_RSPFE
 	case 'f':	// --feport
-	  if (optarg)
-	    {
-	      if (!command || 0 == command->get_ndevices())
-		{
+	  if (optarg) {
+	      if (!command || 0 == command->get_ndevices()) {
 		  logMessage(cerr,"Error: 'command' argument should come before --feport argument");
 		  exit(EXIT_FAILURE);
 		}
 	      FECommand* feCommand = dynamic_cast<FECommand*>(command);
-	      if (feCommand == 0)
-		{
+	      if (feCommand == 0) {
 		  logMessage(cerr,"Error: 'feport' argument can not be used in conjunction with the specified command");
 		  exit(EXIT_FAILURE);
 		}
 	      feCommand->setFrontEnd(optarg);
 	    }
-	  else
-	    {
+	  else {
 	      logMessage(cerr,"Error: option '--feport' requires an argument");
 	    }
 	  break;
 #endif
 
 	case 'd':	// --duration
-	  if (optarg)
-	    {
-	      if (!command || 0 == command->get_ndevices())
-		{
+	  if (optarg) {
+	      if (!command || 0 == command->get_ndevices()) {
 		  logMessage(cerr,"Error: 'command' argument should come before --duration argument");
 		  exit(EXIT_FAILURE);
-		}
+	      }
 	      StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
-	      if (statisticsBaseCommand == 0)
-		{
+	      if (statisticsBaseCommand == 0) {
 		  logMessage(cerr,"Error: 'duration' argument can not be used in conjunction with the specified command");
 		  exit(EXIT_FAILURE);
-		}
+	      }
 	      statisticsBaseCommand->setDuration(atoi(optarg));
-	    }
-	  else
-	    {
+	  }
+	  else {
 	      logMessage(cerr,"Error: option '--duration' requires an argument");
-	    }
+	  }
 	  break;
 
 	case 'i':	// -- integration
-	  if (optarg)
-	    {
-	      if (!command || 0 == command->get_ndevices())
-		{
+	  if (optarg) {
+	      if (!command || 0 == command->get_ndevices()) {
 		  logMessage(cerr,"Error: 'command' argument should come before --integration argument");
 		  exit(EXIT_FAILURE);
-		}
+	      }
 	      StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
-	      if (statisticsBaseCommand == 0)
-		{
+	      if (statisticsBaseCommand == 0) {
 		  logMessage(cerr,"Error: 'integration' argument can not be used in conjunction with the specified command");
 		  exit(EXIT_FAILURE);
-		}
+	      }
 	      statisticsBaseCommand->setIntegration(atoi(optarg));
-	    }
-	  else
-	    {
-	      logMessage(cerr,"Error: option '--integration' requires an argument");
-	    }
-	  break;
-
-	case 'I':	// -- instance
-	  if (optarg) {
-	    m_instancenr = atoi(optarg);
 	  }
 	  else {
-	    logMessage(cerr,"Error: option '--instance' requires an argument");
+	      logMessage(cerr,"Error: option '--integration' requires an argument");
 	  }
 	  break;
 
+//	case 'I':	// -- instance
+//	  if (optarg) {
+//	    m_instancenr = atoi(optarg);
+//	  }
+//	  else {
+//	    logMessage(cerr,"Error: option '--instance' requires an argument");
+//	  }
+//	  break;
+
 	case 'D':	// -- directory
-	  if (optarg)
-	    {
-	      if (!command || 0 == command->get_ndevices())
-		{
+	  if (optarg) {
+	      if (!command || 0 == command->get_ndevices()) {
 		  logMessage(cerr,"Error: 'command' argument should come before --directory argument");
 		  exit(EXIT_FAILURE);
-		}
+	      }
 	      StatisticsBaseCommand* statisticsBaseCommand = dynamic_cast<StatisticsBaseCommand*>(command);
-	      if (statisticsBaseCommand == 0)
-		{
+	      if (statisticsBaseCommand == 0) {
 		  logMessage(cerr,"Error: 'directory' argument can not be used in conjunction with the specified command");
 		  exit(EXIT_FAILURE);
-		}
+	      }
 	      statisticsBaseCommand->setDirectory(optarg);
-	    }
-	  else
-	    {
+	  }
+	  else {
 	      logMessage(cerr,"Error: option '--directory' requires an argument");
-	    }
+	  }
 	  break;
 
 	case '?':
@@ -2917,10 +3010,9 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	}
     }
 
-  if (command)
-    {
+  if (command) {
       command->setSelect(select);
-    }
+  }
 
   return command;
 }
@@ -2936,30 +3028,23 @@ std::list<int> RSPCtl::strtolist(const char* str, int max)
 
   resultset.clear();
 
-  while (start)
-  {
+  while (start) {
     long val = strtol(start, &end, 10); // read decimal numbers
     start = (end ? (*end ? end + 1 : 0) : 0); // advance
-    if (val >= max || val < 0)
-    {
+    if (val >= max || val < 0) {
       logMessage(cerr,formatString("Error: value %ld out of range",val));
       resultset.clear();
       return resultset;
     }
 
-    if (end)
-    {
-      switch (*end)
-      {
+    if (end) {
+      switch (*end) {
         case ',':
-        case 0:
-        {
-          if (range)
-          {
+        case 0: {
+          if (range) {
             if (0 == prevval && 0 == val)
               val = max - 1;
-            if (val < prevval)
-            {
+            if (val < prevval) {
               logMessage(cerr,"Error: invalid range specification");
               resultset.clear();
               return resultset;
@@ -2967,9 +3052,7 @@ std::list<int> RSPCtl::strtolist(const char* str, int max)
             for (long i = prevval; i <= val; i++)
               resultset.push_back(i);
           }
-
-          else
-          {
+          else {
             resultset.push_back(val);
           }
           range=false;
@@ -2995,12 +3078,10 @@ std::list<int> RSPCtl::strtolist(const char* str, int max)
 
 void RSPCtl::logMessage(ostream& stream, const string& message)
 {
-  if(m_command != 0)
-  {
+  if(m_command != 0) {
     m_command->logMessage(stream,message);
   }
-  else
-  {
+  else {
     stream << message << endl;
   }
 }
@@ -3013,12 +3094,10 @@ int main(int argc, char** argv)
 
   RSPCtl c("RSPCtl", argc, argv);
 
-  try
-  {
+  try {
     c.mainloop();
   }
-  catch (Exception e)
-  {
+  catch (Exception e) {
     cerr << "Exception: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }

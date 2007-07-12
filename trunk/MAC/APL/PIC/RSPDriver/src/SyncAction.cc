@@ -54,23 +54,19 @@ GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*po
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_INIT:
-    {
+  switch (event.signal) {
+    case F_INIT: {
     }
     break;
       
-    case F_ENTRY:
-    {
+    case F_ENTRY: {
       // reset extended state variables on initialization
       m_current_index = 0;
       m_retries     = 0;
     }
     break;
     
-    case F_TIMER:
-    {
+    case F_TIMER: {
       // Scheduler::run send a timer signal to start of the next update
       TRAN(SyncAction::sendrequest_state);
     }
@@ -88,19 +84,13 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
+  switch (event.signal) {
+    case F_ENTRY: {
       for (;;) {
-
 	if (!m_atinit && Sequencer::getInstance().isActive()) {
-
 	  // skip this action and continue with the next
 	  setContinue(true); // continue with next action
-
 	} else {
-
 	  // send initial request
 	  setContinue(false); // initialize on each entry
 	  sendrequest();
@@ -108,12 +98,10 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
 
 	// if sendrequest calls setContinue(true), then no event
 	// has been sent, move on to next index
-	if (doContinue())
-	{
+	if (doContinue()) {
 	  // OK, move on to the next index
 	  m_current_index++;
 	  m_retries = 0;
-
 	  if (m_current_index >= m_n_indices) {
 	    // done
 	    setCompleted(true);
@@ -121,8 +109,7 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
 	    break; // break the loop
 	  }
 	}
-	else
-	{
+	else {
 	  TRAN(SyncAction::waitack_state);
 	  break; // break the loop
 	}
@@ -130,8 +117,7 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
     }
     break;
 
-    case F_TIMER:
-    {
+    case F_TIMER: {
       LOG_FATAL("missed real-time deadline");
       exit(EXIT_FAILURE);
     }
@@ -149,16 +135,13 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch(event.signal)
-  {
-    case F_ENTRY:
-    {
+  switch(event.signal) {
+    case F_ENTRY: {
       sendrequest_status();
     }
     break;
 
-    case F_TIMER:
-    {
+    case F_TIMER: {
       LOG_FATAL("missed real-time deadline, should have been caught in Scheduler::run");
       exit(EXIT_FAILURE);
     }
@@ -176,37 +159,30 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
       break;
       
     default:
-    {
       status = handleack(event, port);
       
       // check status of previous write
-      if (GCFEvent::HANDLED == status)
-      {
+      if (status == GCFEvent::HANDLED) {
 	// OK, move on to the next index
 	m_current_index++;
 	m_retries = 0;
-
-	if (m_current_index < m_n_indices)
-	{
+	if (m_current_index < m_n_indices) {
 	  // send next bit of data
 	  TRAN(SyncAction::sendrequest_state);
 	}
-	else
-	{
+	else {
 	  // we've completed the update
 	  setCompleted(true); // done with this statemachine
 	  TRAN(SyncAction::idle_state);
 	}
       }
-      else
-      {
+      else {
 	//
 	// didn't receive what we expected, simply wait
 	// for another (hopefully correct) event,
 	// but only allow m_retries of these situations.
 	//
-	if (m_retries++ > N_RETRIES)
-	{
+	if (m_retries++ > N_RETRIES) {
 	  // abort
 	  LOG_WARN("maximum retries reached, protocol probably out of sync, trying to continue anyway");
 
@@ -215,7 +191,6 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 	  TRAN(SyncAction::idle_state);
 	}
       }
-    }
     break;
   }
 

@@ -34,8 +34,8 @@ sysconf_DATA = \
 	RSPDriver.log_prop \
 	rspctl.log_prop
 
-makeTimestamp.c: $(bin_PROGRAMS)
-	$(srcdir)/makeTimestamp.sh
+#makeTimestamp.c: $(bin_PROGRAMS)
+#	$(srcdir)/makeTimestamp.sh
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
@@ -68,7 +68,8 @@ bin_PROGRAMS = \
 	rspctl \
 	geni2c
 
-RSPDriver_SOURCES = $(RSPDriverFiles) makeTimestamp.c 
+#RSPDriver_SOURCES = $(RSPDriverFiles) makeTimestamp.c 
+RSPDriver_SOURCES = $(RSPDriverFiles) 
 
 RSPDriverFiles = \
 	RefCount.h \
@@ -143,6 +144,10 @@ RSPDriverFiles = \
 	SetTBBCmd.cc \
 	GetTBBCmd.h \
 	GetTBBCmd.cc \
+	SetBypassCmd.h \
+	SetBypassCmd.cc \
+	GetBypassCmd.h \
+	GetBypassCmd.cc \
 	\
 	SyncAction.h \
 	SyncAction.cc \
@@ -176,6 +181,8 @@ RSPDriverFiles = \
 	BstRead.cc \
 	XstRead.h \
 	XstRead.cc \
+	BypassRead.h \
+	BypassRead.cc \
 	VersionsRead.h \
 	VersionsRead.cc \
 	WGWrite.h \
@@ -211,6 +218,8 @@ RSPDriverFiles = \
 	TBBSettingsWrite.cc \
 	TBBBandselWrite.h \
 	TBBBandselWrite.cc \
+	BypassWrite.h \
+	BypassWrite.cc \
 	Sequencer.h \
 	Sequencer.cc
 

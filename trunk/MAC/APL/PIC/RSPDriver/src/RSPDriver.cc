@@ -77,6 +77,8 @@
 #include "UpdRegisterStateCmd.h"
 #include "SetTBBCmd.h"
 #include "GetTBBCmd.h"
+#include "SetBypassCmd.h"
+#include "GetBypassCmd.h"
 
 #include "RSUWrite.h"
 #include "BSWrite.h"
@@ -108,6 +110,8 @@
 #include "TDSStatusRead.h"
 #include "TBBSettingsWrite.h"
 #include "TBBBandselWrite.h"
+#include "BypassRead.h"
+#include "BypassWrite.h"
 #include "RADWrite.h"
 #include "TimestampWrite.h"
 
@@ -220,7 +224,7 @@ RSPDriver::RSPDriver(string name)
     exit(EXIT_FAILURE);
   }
 
-  // tell broker we are here
+  // Register protocols for debugging
   LOG_DEBUG("Registering protocols");
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
@@ -318,6 +322,7 @@ bool RSPDriver::isEnabled()
  * - BST:     read beamlet statistics           // BstRead
  * - XST:     read crosslet statistics          // XstRead
  * - WG:      write waveform generator settings // WGWrite
+ * - SI:	  write spectral inversion bits.// BypassWrite
  * - TBB:     write                             // TBBSettingsWrite/TBBBandselWrite
  * - VERSION: read version info                 // VersionsRead
  *
@@ -333,19 +338,16 @@ void RSPDriver::addAllSyncActions()
    * For each board a separate BWSync instance is created which handles
    * the synchronization of data between the board and the cache for that board.
    */
-  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
-  {
+  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++) {
     /*
      * Always read status and version first.
      */
-    if (1 == GET_CONFIG("RSPDriver.READ_STATUS", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.READ_STATUS", i)) {
       StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
       ASSERT(statusread);
       m_scheduler.addSyncAction(statusread);
     }
-    if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.READ_VERSION", i)) {
       VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
       ASSERT(versionread);
       m_scheduler.addSyncAction(versionread);
@@ -359,8 +361,7 @@ void RSPDriver::addAllSyncActions()
      * - Requesting a soft PPS by writing a 1 in the SYNC bit
      *   of the RSU_RESET register.
      */  
-    if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.SOFTPPS", i)) {
       WriteReg* writereg = 0;
 
       // Disable External Sync for all FPGA's
@@ -386,8 +387,7 @@ void RSPDriver::addAllSyncActions()
     }
 
     // order is important; TDSResultRead should be added before TDSProtocolWrite
-    if (1 == GET_CONFIG("RSPDriver.READWRITE_TDS_PROTOCOL", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.READWRITE_TDS_PROTOCOL", i)) {
       TDSResultWrite* tdsresultwrite = new TDSResultWrite(m_board[boardid], boardid);
       ASSERT(tdsresultwrite);
       m_scheduler.addSyncAction(tdsresultwrite);
@@ -401,8 +401,7 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(tdsresultread);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READWRITE_TDSSTATUS", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.READWRITE_TDSSTATUS", i)) {
       TDSStatusWrite* tdsstatuswrite = new TDSStatusWrite(m_board[boardid], boardid);
       ASSERT(tdsstatuswrite);
       m_scheduler.addSyncAction(tdsstatuswrite);
@@ -417,8 +416,7 @@ void RSPDriver::addAllSyncActions()
      * This needs to be first after WRITE_TDS_PROTOCOL, but before
      * WRITE_BS.
      */
-    if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.WRITE_RSU", i)) {
       RSUWrite* rsuwrite = new RSUWrite(m_board[boardid], boardid, m_scheduler);
       ASSERT(rsuwrite);
       m_scheduler.addSyncAction(rsuwrite);
@@ -429,8 +427,7 @@ void RSPDriver::addAllSyncActions()
      * This needs to be done before RCU and WG registers,
      * but after WRITE_TDS_PROTOCOL
      */
-    if (1 == GET_CONFIG("RSPDriver.WRITE_BS", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.WRITE_BS", i)) {
       for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
         BSWrite* bswrite = new BSWrite(m_board[boardid], boardid, blp, m_scheduler);
         ASSERT(bswrite);
@@ -438,8 +435,7 @@ void RSPDriver::addAllSyncActions()
       }
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_BST", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.READ_BST", i)) {
       BstRead* bstread = 0;
 
       bstread = new BstRead(m_board[boardid], boardid);
@@ -447,8 +443,7 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(bstread);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_XST", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.READ_XST", i)) {
       XstRead* xstread = 0;
 
       for (int regid = MEPHeader::XST_STATS; regid < MEPHeader::XST_NR_STATS; regid++)
@@ -459,8 +454,7 @@ void RSPDriver::addAllSyncActions()
       }
     }
 
-    if (1 == GET_CONFIG("RSPDriver.WRITE_CDO", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.WRITE_CDO", i)) {
       CDOWrite* cdowrite = new CDOWrite(m_board[boardid], boardid);
 
       m_scheduler.addSyncAction(cdowrite);
@@ -477,27 +471,21 @@ void RSPDriver::addAllSyncActions()
       }
     }
 
-    if (1 == GET_CONFIG("RSPDriver.WRITE_RAD", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.WRITE_RAD", i)) {
       RADWrite* radwrite = new RADWrite(m_board[boardid], boardid);
       m_scheduler.addSyncAction(radwrite);
     }
 
-    for (int action = 0; action < 2; action++)
-    {
-      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-      {
-        if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i))
-        {
+    for (int action = 0; action < 2; action++) {
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
+        if (1 == GET_CONFIG("RSPDriver.WRITE_WG", i)) {
           WGWrite* wgwrite = new WGWrite(m_board[boardid], boardid);
           ASSERT(wgwrite);
           m_scheduler.addSyncAction(wgwrite);
         }
       }
-      else
-      {
-        if (1 == GET_CONFIG("RSPDriver.READ_WG", i))
-        {
+      else {
+        if (1 == GET_CONFIG("RSPDriver.READ_WG", i)) {
           WGRead* wgread = new WGRead(m_board[boardid], boardid);
           ASSERT(wgread);
           m_scheduler.addSyncAction(wgread);
@@ -505,8 +493,16 @@ void RSPDriver::addAllSyncActions()
       }
     }
 
-    if (1 == GET_CONFIG("RSPDriver.WRITE_TBB", i))
-    {
+    // write Spectral Invertion information
+    if (GET_CONFIG("RSPDriver.WRITE_SI", i)) {
+      for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
+        BypassWrite* bypasswrite = new BypassWrite(m_board[boardid], boardid, blp);
+        ASSERT(bypasswrite);
+        m_scheduler.addSyncAction(bypasswrite);
+	  }
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.WRITE_TBB", i)) {
       TBBSettingsWrite* tbbsettingswrite = new TBBSettingsWrite(m_board[boardid], boardid);
       ASSERT(tbbsettingswrite);
       m_scheduler.addSyncAction(tbbsettingswrite);
@@ -516,21 +512,16 @@ void RSPDriver::addAllSyncActions()
       m_scheduler.addSyncAction(tbbbandselwrite);
     }
     
-    for (int action = 0; action < 2; action++)
-    {
-      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-      {
-        if (1 == GET_CONFIG("RSPDriver.WRITE_SS", i))
-        {
+    for (int action = 0; action < 2; action++) {
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
+        if (1 == GET_CONFIG("RSPDriver.WRITE_SS", i)) {
           SSWrite* sswrite = new SSWrite(m_board[boardid], boardid);
           ASSERT(sswrite);
           m_scheduler.addSyncAction(sswrite);
         }
       }
-      else
-      {
-        if (1 == GET_CONFIG("RSPDriver.READ_SS", i))
-        {
+      else {
+        if (1 == GET_CONFIG("RSPDriver.READ_SS", i)) {
           SSRead* ssread = new SSRead(m_board[boardid], boardid);
           ASSERT(ssread);
           m_scheduler.addSyncAction(ssread);
@@ -556,12 +547,9 @@ void RSPDriver::addAllSyncActions()
     //
     // This is done in the same way for all read/write registers.
     //
-    for (int action = 0; action < 2; action++)
-    {
-      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-      {
-        if (1 == GET_CONFIG("RSPDriver.WRITE_BF", i))
-        {
+    for (int action = 0; action < 2; action++) {
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
+        if (1 == GET_CONFIG("RSPDriver.WRITE_BF", i)) {
           BWWrite* bwwrite = 0;
 
           for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
@@ -579,8 +567,7 @@ void RSPDriver::addAllSyncActions()
             m_scheduler.addSyncAction(bwwrite);
           }
         }
-        if (1 == GET_CONFIG("RSPDriver.WRITE_XBF", i))
-        {
+        if (1 == GET_CONFIG("RSPDriver.WRITE_XBF", i)) {
           XWWrite* xwwrite = 0;
 
           for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
@@ -599,10 +586,8 @@ void RSPDriver::addAllSyncActions()
           }
         }
       }
-      else
-      {
-        if (1 == GET_CONFIG("RSPDriver.READ_BF", i))
-        {
+      else {
+        if (1 == GET_CONFIG("RSPDriver.READ_BF", i)) {
           BWRead* bwread = 0;
 
           for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
@@ -623,8 +608,7 @@ void RSPDriver::addAllSyncActions()
       }
     }
     
-    if (1 == GET_CONFIG("RSPDriver.READ_SST", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.READ_SST", i)) {
       SstRead* sstread = 0;
 
       sstread = new SstRead(m_board[boardid], boardid);
@@ -633,21 +617,16 @@ void RSPDriver::addAllSyncActions()
 
     }
 
-    for (int action = 0; action < 2; action++)
-    {
-      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-      {
-        if (1 == GET_CONFIG("RSPDriver.WRITE_RCU", i))
-        {
+    for (int action = 0; action < 2; action++) {
+      if (action == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
+        if (1 == GET_CONFIG("RSPDriver.WRITE_RCU", i)) {
           RCUWrite* rcuwrite = new RCUWrite(m_board[boardid], boardid);
           ASSERT(rcuwrite);
           m_scheduler.addSyncAction(rcuwrite);
         }
       }
-      else
-      {
-        if (1 == GET_CONFIG("RSPDriver.READ_RCU", i))
-        {
+      else {
+        if (1 == GET_CONFIG("RSPDriver.READ_RCU", i)) {
           RCURead* rcuread = new RCURead(m_board[boardid], boardid);
           ASSERT(rcuread);
           m_scheduler.addSyncAction(rcuread);
@@ -656,15 +635,13 @@ void RSPDriver::addAllSyncActions()
     }
 
     // order is important; RCUProtocolWrite should go before RCUResultRead
-    if (1 == GET_CONFIG("RSPDriver.WRITE_RCU_PROTOCOL", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.WRITE_RCU_PROTOCOL", i)) {
       RCUProtocolWrite* rcuprotocolwrite = new RCUProtocolWrite(m_board[boardid], boardid);
       ASSERT(rcuprotocolwrite);
       m_scheduler.addSyncAction(rcuprotocolwrite);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_RCU_RESULT", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.READ_RCU_RESULT", i)) {
       RCUResultRead* rcuresultread = new RCUResultRead(m_board[boardid], boardid);
       ASSERT(rcuresultread);
       m_scheduler.addSyncAction(rcuresultread);
@@ -672,22 +649,28 @@ void RSPDriver::addAllSyncActions()
 
     // order is important; HBAProtocolWrite should go before HBAResultRead,
     // these two should go before RCUProtocolWrite/RCUResultRead
-    if (1 == GET_CONFIG("RSPDriver.WRITE_HBA_PROTOCOL", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.WRITE_HBA_PROTOCOL", i)) {
       HBAProtocolWrite* hbaprotocolwrite = new HBAProtocolWrite(m_board[boardid], boardid);
       ASSERT(hbaprotocolwrite);
       m_scheduler.addSyncAction(hbaprotocolwrite);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_HBA_RESULT", i))
-    {
+    if (1 == GET_CONFIG("RSPDriver.READ_HBA_RESULT", i)) {
       HBAResultRead* hbaresultread = new HBAResultRead(m_board[boardid], boardid);
       ASSERT(hbaresultread);
       m_scheduler.addSyncAction(hbaresultread);
     }
 
-    if (1 == GET_CONFIG("RSPDriver.WRITE_TIMESTAMP", i))
-    {
+    // read Spectral Invertion information
+//    if (GET_CONFIG("RSPDriver.READ_SI", i)) {
+//      for (int blp = 0; blp < StationSettings::instance()->nrBlpsPerBoard(); blp++) {
+//        BypassRead* bypassread = new BypassRead(m_board[boardid], boardid, blp);
+//          ASSERT(bypassread);
+//        m_scheduler.addSyncAction(bypassread);
+//	  }
+//    }
+
+    if (1 == GET_CONFIG("RSPDriver.WRITE_TIMESTAMP", i)) {
       TimestampWrite* timestampwrite = new TimestampWrite(m_board[boardid], boardid, m_scheduler);
       ASSERT(timestampwrite);
       m_scheduler.addSyncAction(timestampwrite);
@@ -700,8 +683,7 @@ void RSPDriver::addAllSyncActions()
 //
 void RSPDriver::openBoards()
 {
-  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
-  {
+  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++) {
     if (!m_board[boardid].isConnected()) m_board[boardid].open();
   }
 }
@@ -731,8 +713,7 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
-  switch(event.signal)
-  {
+  switch(event.signal) {
     case F_INIT:
     {
       if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
@@ -870,8 +851,7 @@ void RSPDriver::undertaker()
 {
   for (list<GCFPortInterface*>::iterator it = m_dead_clients.begin();
        it != m_dead_clients.end();
-       it++)
-  {
+       it++) {
     delete (*it);
   }
   m_dead_clients.clear();
@@ -886,21 +866,20 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 
   undertaker(); // destroy dead clients
 
-  switch (event.signal)
-  {
+  switch (event.signal) {
     case F_ENTRY:
     {
       // start waiting for clients
-      if (!m_acceptor.isConnected()) m_acceptor.open();
+      if (!m_acceptor.isConnected()) {
+		m_acceptor.open();
+	  }
 
-      if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE)
-      {
+      if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE) {
         /* Start the update timer after 1 second */
         m_board[0].setTimer(1.0,
                             GET_CONFIG("RSPDriver.SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
       }
-      else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST)
-      {
+      else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST) {
         //
         // single timeout after 1 second to set
         // off as-fast-as-possible update mode
@@ -913,8 +892,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
         //
         m_acceptor.setTimer(1.0, 1.0); // every second after 1.0 second
       }
-      else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS)
-      {
+      else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
 #ifdef HAVE_SYS_TIMEPPS_H
         //
         // read away most recent timestamp..
@@ -943,14 +921,15 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     }
     break;
 
-    case F_ACCEPT_REQ:
-    {
+    case F_ACCEPT_REQ: {
       GCFTCPPort* client = new GCFTCPPort();
       client->init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
-      if (!m_acceptor.accept(*client)) delete client;
+      if (!m_acceptor.accept(*client)) {
+		delete client;
+	  }
       else {
-	m_client_list.push_back(client);
-	LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
+		m_client_list.push_back(client);
+		LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
       }
     }
     break;
@@ -1130,6 +1109,14 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       rsp_unsubregisterstate(event, port);
       break;
 
+    case RSP_SETBYPASS:
+      rsp_setbypass(event, port);
+      break;
+
+    case RSP_GETBYPASS:
+      rsp_getbypass(event, port);
+      break;
+
     case RSP_SETTBB:
       rsp_settbb(event, port);
       break;
@@ -1140,19 +1127,16 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 
     case F_TIMER:
     {
-      if (&port == &m_board[0])
-      {
+      if (&port == &m_board[0]) {
         //
         // If SYNC_MODE == SOFTWARE|FAST then run the scheduler
         // directly on the software timer.
         //
         if (   (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_SOFTWARE)
-            || (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST))
-        {
+            || (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST)) {
           (void)clock_tick(m_acceptor); // force clock tick
         }
-        else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS)
-        {
+        else if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PPS) {
           GCFTimerEvent timer;
 
 #ifdef HAVE_SYS_TIMEPPS_H
@@ -1210,16 +1194,14 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 
           /* run the scheduler with the timer event */
           status = m_scheduler.run(timer, port);
-	  Sequencer::getInstance().run(timer, port);
+		  Sequencer::getInstance().run(timer, port);
         }
       }
-      else if (&port == &m_acceptor)
-      {
+      else if (&port == &m_acceptor) {
         // print average number of updates
         cerr << "Updates per second = " << m_update_counter << endl;
 
-        if (m_update_counter > 0)
-        {
+        if (m_update_counter > 0) {
           m_n_updates += m_update_counter;
           m_elapsed++;
           
@@ -1236,18 +1218,15 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       LOG_INFO(formatString("DISCONNECTED: port '%s'", port.getName().c_str()));
       port.close();
 
-      if (&port == &m_acceptor)
-      {
+      if (&port == &m_acceptor) {
         LOG_FATAL("Failed to start listening for client connections.");
         exit(EXIT_FAILURE);
       }
-      else if (&port == &m_board[0] || &port == &m_board[1] || &port == &m_acceptor)
-      {
+      else if (&port == &m_board[0] || &port == &m_board[1] || &port == &m_acceptor) {
         m_acceptor.close();
         TRAN(RSPDriver::initial);
       }
-      else
-      {
+      else {
         /* cancel all commands for this port */
         (void)m_scheduler.cancel(port);
 
@@ -1266,8 +1245,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     break;
 
     default:
-      if (isBoardPort(port))
-      {
+      if (isBoardPort(port)) {
         status = m_scheduler.dispatch(event, port);
 
         //
@@ -1275,8 +1253,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
         // send new clock_tick
         //
         if ((GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_FAST) &&
-            m_scheduler.syncHasCompleted())
-        {
+            m_scheduler.syncHasCompleted()) {
           m_board[0].setTimer(0.0); // immediate
           m_update_counter++;
         }
@@ -2476,6 +2453,66 @@ void RSPDriver::rsp_unsubregisterstate(GCFEvent& event, GCFPortInterface& port)
 }
 
 //
+// rsp_setbypass(event,port)
+//
+void RSPDriver::rsp_setbypass(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<SetBypassCmd> command = new SetBypassCmd(event, port, Command::WRITE);
+
+  if (!command->validate()) {
+    LOG_ERROR("SETBypass: invalid parameter");
+    
+    RSPSetbypassackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+
+  // if timestamp == Timestamp(0,0) apply changes immediately
+  if (Timestamp(0,0) == command->getTimestamp()) {
+    LOG_INFO("applying Bypass control immediately");
+    command->apply(Cache::getInstance().getFront(), true);
+    command->apply(Cache::getInstance().getBack(), false);
+  }
+  else
+  {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+  command->ack(Cache::getInstance().getFront());
+}
+
+//
+// rsp_getbypass(event,port)
+//
+void RSPDriver::rsp_getbypass(GCFEvent& event, GCFPortInterface& port)
+{
+  Ptr<GetBypassCmd> command = new GetBypassCmd(event, port, Command::READ);
+
+  if (!command->validate()) {
+    LOG_ERROR("GETBypass: invalid parameter");
+    
+    RSPGetbypassackEvent ack;
+    ack.settings().resize(1);
+    ack.settings() = BypassSettings::Control();
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+  
+  // if null timestamp get value from the cache and acknowledge immediately
+  if ( (Timestamp(0,0) == command->getTimestamp())
+       && (true == command->readFromCache())) {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+  }
+  else {
+    (void)m_scheduler.enter(Ptr<Command>(&(*command)));
+  }
+}
+
+//
 // rsp_settbb(event,port)
 //
 void RSPDriver::rsp_settbb(GCFEvent& event, GCFPortInterface& port)
@@ -2486,7 +2523,7 @@ void RSPDriver::rsp_settbb(GCFEvent& event, GCFPortInterface& port)
   {
     LOG_ERROR("SETTBB: invalid parameter");
     
-    RSPSethbaackEvent ack;
+    RSPSettbbackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
     port.send(ack);
