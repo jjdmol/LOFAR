@@ -52,9 +52,9 @@
 	 	    		
 	 	    		
 	 	    		if (Valideer_Invoer()) {
-							$query = "INSERT INTO gebruiker (inlognaam, Wachtwoord, Start_Alg, Start_Comp, Start_Melding, Start_Stats, Groep_ID, Gebruiker_Taal, Emailadres) ";
-							$query = $query . "VALUES ('". $_POST['Gebr_Naam'] ."', '". md5($_POST['Wachtwoord']) ."', '". $_POST['Alg_Start'] ."' ,'". $_POST['Comp_Start'] ."', ";
-							$query = $query . "'". $_POST['Melding_Start'] ."', '". $_POST['Stats_Start'] ."', '" . $_POST['Gebr_Groep'] ."', '". $_POST['Gebr_Taal'] ."', '". $_POST['Gebr_Email'] ."')";
+							$query = "INSERT INTO gebruiker (inlognaam, Wachtwoord, Start_Alg, Start_Comp, Start_Melding, Start_Stats, Groep_ID, Gebruiker_Taal, Emailadres, Laatst_Ingelogd) ";
+							$query = $query . "VALUES ('". $_POST['Gebr_Naam'] ."', '". md5($_POST['Wachtwoord']) ."', '". $_POST['Alg_Start'] ."' ,'". $_POST['Comp_Start'] ."', '". $_POST['Melding_Start'];
+							$query = $query . "', '". $_POST['Stats_Start'] ."', '" . $_POST['Gebr_Groep'] ."', '". $_POST['Gebr_Taal'] ."', '". $_POST['Gebr_Email'] ."', NOW())";
 							
 							if (mysql_query($query)) echo("De nieuwe gebruiker \"". $_POST['Gebr_Naam'] ."\" is aan het systeem toegevoegd<br>");
 							else echo("De nieuwe gebruiker \"". $_POST['Gebr_Naam'] ."\" kon niet aan het systeem toegevoegd worden!.");

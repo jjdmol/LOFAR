@@ -62,14 +62,21 @@
 					$_SESSION['gebr_id']    = $row['Werknem_ID'];					
 					$_SESSION['gebr_naam']  = $row['inlognaam'];
 					$_SESSION['gebr_email'] = $row['Emailadres'];
+					$_SESSION['groep_id']		= $row['Groep_ID'];
+					$_SESSION['taal']			  = $row['Gebruiker_Taal'];
+					$_SESSION['start_tabblad'] = $row['Start_Alg'];
+					$_SESSION['laatste_inlog'] = $row['Laatst_Ingelogd'];
+					$query = "SELECT * FROM gebruikers_groepen WHERE Groep_ID = '".$row['Groep_ID']."'";
+					$result = mysql_query($query);
+					$row = mysql_fetch_array($result);
 					$_SESSION['pag_start']  = $row['Intro_Zichtbaar'];
 					$_SESSION['pag_comp']   = $row['Comp_Zichtbaar'];
 					$_SESSION['pag_meld']   = $row['Melding_Zichtbaar'];
 					$_SESSION['pag_stats']  = $row['Stats_Zichtbaar'];
 					$_SESSION['pag_instel'] = $row['Instel_Zichtbaar'];
-					$_SESSION['groep_id']		= $row['Groep_ID'];
-					$_SESSION['taal']			  = $row['Gebruiker_Taal'];
-					$_SESSION['start_tabblad'] = $row['Start_Alg'];
+					
+					$query = "UPDATE gebruiker SET Laatst_Ingelogd = NOW() WHERE Werknem_ID='". $_SESSION['gebr_id'] ."'";
+					mysql_query($query);
 				}
 				
 				return 1;
