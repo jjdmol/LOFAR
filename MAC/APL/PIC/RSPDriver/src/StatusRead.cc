@@ -68,16 +68,14 @@ void StatusRead::sendrequest_status()
 
 GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (EPA_RSR_STATUS != event.signal)
-    {
+  if (EPA_RSR_STATUS != event.signal) {
       LOG_WARN("StatusRead::handleack: unexpected ack");
       return GCFEvent::NOT_HANDLED;
     }
 
   EPARsrStatusEvent ack(event);
 
-  if (!ack.hdr.isValidAck(m_hdr))
-    {
+  if (!ack.hdr.isValidAck(m_hdr)) {
       Cache::getInstance().getState().sys().read_error(getBoardId());
       LOG_ERROR("StatusRead::handleack: invalid ack");
       return GCFEvent::NOT_HANDLED;
@@ -91,22 +89,19 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
   // sanity check on SYNC status, status for all AP's must be the same
   if (ack.board.ap0_sync.sample_offset != ack.board.ap1_sync.sample_offset
       || ack.board.ap0_sync.sample_offset != ack.board.ap2_sync.sample_offset
-      || ack.board.ap0_sync.sample_offset != ack.board.ap3_sync.sample_offset)
-    {
+      || ack.board.ap0_sync.sample_offset != ack.board.ap3_sync.sample_offset) {
       LOG_WARN(formatString("RSP[%02d]: sample_offset mismatch", getBoardId()));
     }
 
   if (ack.board.ap0_sync.sync_count != ack.board.ap1_sync.sync_count
       || ack.board.ap0_sync.sync_count != ack.board.ap2_sync.sync_count
-      || ack.board.ap0_sync.sync_count != ack.board.ap3_sync.sync_count)
-    {
+      || ack.board.ap0_sync.sync_count != ack.board.ap3_sync.sync_count) {
       LOG_WARN(formatString("RSP[%02d]: sync_count mismatch", getBoardId()));
     }
 
   if (ack.board.ap0_sync.slice_count != ack.board.ap1_sync.slice_count
       || ack.board.ap0_sync.slice_count != ack.board.ap2_sync.slice_count
-      || ack.board.ap0_sync.slice_count != ack.board.ap3_sync.slice_count)
-    {
+      || ack.board.ap0_sync.slice_count != ack.board.ap3_sync.slice_count) {
       LOG_WARN(formatString("RSP[%02d]: slice_count mismatch", getBoardId()));
     }
 

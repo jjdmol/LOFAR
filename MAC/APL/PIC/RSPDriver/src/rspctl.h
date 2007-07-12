@@ -634,6 +634,24 @@ namespace LOFAR {
     };
 
     //
+    // class SICommand
+    //
+    class SICommand : public Command
+    {
+    public:
+      SICommand(GCFPortInterface& port);
+      virtual ~SICommand() {}
+      virtual void send();
+      virtual GCFEvent::TResult ack(GCFEvent& e);
+      void setSI(bool	siOn)
+      {
+        m_siOn = siOn;
+      }
+    private:
+      bool m_siOn;
+    };
+
+    //
     // class RegisterStateCommand
     //
     class RegisterStateCommand : public Command

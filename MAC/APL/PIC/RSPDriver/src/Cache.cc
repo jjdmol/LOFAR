@@ -71,6 +71,7 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_versions.ap().size()        =" << m_versions.ap().size()        * sizeof(EPA_Protocol::RSRVersion));
   LOG_DEBUG_STR("m_tdstatus.board().size()     =" << m_tdstatus.board().size()     * sizeof(EPA_Protocol::TDBoardStatus));
   LOG_DEBUG_STR("m_tbbsettings().size()        =" << m_tbbsettings().size()        * sizeof(bitset<MEPHeader::N_SUBBANDS>));
+  LOG_DEBUG_STR("m_bypasssettings().size()     =" << m_bypasssettings().size()     * sizeof(EPA_Protocol::DIAGBypass));
 
   LOG_INFO_STR(formatString("CacheBuffer size = %d bytes",
 	         m_beamletweights().size()    	       
@@ -85,7 +86,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 	       + m_versions.bp().size()       
 	       + m_versions.ap().size()       
 	       + m_tdstatus.board().size()    
-	       + m_tbbsettings().size()));
+	       + m_tbbsettings().size()
+	       + m_bypasssettings().size()));
 }
 
 CacheBuffer::~CacheBuffer()
@@ -104,6 +106,7 @@ CacheBuffer::~CacheBuffer()
   m_versions.ap().free();
   m_tdstatus.board().free();
   m_tbbsettings().free();
+  m_bypasssettings().free();
 }
 
 void CacheBuffer::reset(void)
@@ -122,8 +125,7 @@ void CacheBuffer::reset(void)
 			      MEPHeader::N_LOCAL_XLETS + MEPHeader::N_BEAMLETS);
   m_subbandselection() = 0;
 
-  if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i))
-  {
+  if (GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i)) {
     // these weights ensure that the beamlet statistics
     // exactly match the subband statistics
     m_beamletweights()(Range::all(), Range::all(), Range::all()) =
@@ -135,8 +137,8 @@ void CacheBuffer::reset(void)
     for (int rcu = 0; rcu < m_subbandselection().extent(firstDim); rcu++) {
       for (int sb = 0; sb < MEPHeader::N_BEAMLETS; sb++) {
 	m_subbandselection()(rcu, sb + MEPHeader::N_LOCAL_XLETS) = (rcu % MEPHeader::N_POL) +
-	  (sb * MEPHeader::N_POL) +
-	  (GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) * 2);
+								   (sb * MEPHeader::N_POL) +
+								   (GET_CONFIG("RSPDriver.FIRST_SUBBAND", i) * 2);
       }
     }
   }
@@ -209,6 +211,12 @@ void CacheBuffer::reset(void)
   bitset<MEPHeader::N_SUBBANDS> bandsel;
   bandsel = 0;
   m_tbbsettings() = bandsel;
+
+  // BypassSettings (per BP)
+  LOG_INFO_STR("Resizing bypass array to: " << StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
+  m_bypasssettings().resize(StationSettings::instance()->nrRcus() / MEPHeader::N_POL);
+  BypassSettings::Control	control;
+  m_bypasssettings() = control;
 }
 
 RTC::Timestamp CacheBuffer::getTimestamp() const
@@ -284,6 +292,11 @@ TDStatus& CacheBuffer::getTDStatus()
 TBBSettings& CacheBuffer::getTBBSettings()
 {
   return m_tbbsettings;
+}
+
+BypassSettings& CacheBuffer::getBypassSettings()
+{
+  return m_bypasssettings;
 }
 
 void CacheBuffer::setTimestamp(const RTC::Timestamp& timestamp)

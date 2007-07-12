@@ -51,18 +51,15 @@ WGRead::~WGRead()
 
 void WGRead::sendrequest()
 {
-  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL)
-  {
+  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) {
     EPAReadEvent wgsettingsread;
 
-    if (0 == getCurrentIndex() % MEPHeader::N_POL)
-    {
+    if (0 == getCurrentIndex() % MEPHeader::N_POL) {
       wgsettingsread.hdr.set(MEPHeader::DIAG_WGX_HDR,
 			     1 << (getCurrentIndex() / MEPHeader::N_POL),
 			     MEPHeader::READ);
     }
-    else
-    {
+    else {
       wgsettingsread.hdr.set(MEPHeader::DIAG_WGY_HDR,
 			     1 << (getCurrentIndex() / MEPHeader::N_POL),
 			     MEPHeader::READ);
@@ -71,20 +68,17 @@ void WGRead::sendrequest()
     m_hdr = wgsettingsread.hdr;
     getBoardPort().send(wgsettingsread);
   }
-  else
-  {
+  else {
     int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL;
 
     EPAReadEvent wgwaveread;
 
-    if (0 == current_blp % MEPHeader::N_POL)
-    {
+    if (0 == current_blp % MEPHeader::N_POL) {
       wgwaveread.hdr.set(MEPHeader::DIAG_WGXWAVE_HDR,
 			 1 << (current_blp / MEPHeader::N_POL),
 			 MEPHeader::READ);
     }
-    else
-    {
+    else {
       wgwaveread.hdr.set(MEPHeader::DIAG_WGYWAVE_HDR,
 			 1 << (current_blp / MEPHeader::N_POL),
 			 MEPHeader::READ);
@@ -102,18 +96,15 @@ void WGRead::sendrequest_status()
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL)
-  {
-    if (EPA_DIAG_WG != event.signal)
-    {
+  if (getCurrentIndex() < StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL) {
+    if (EPA_DIAG_WG != event.signal) {
       LOG_WARN("WGRead::handleack: unexpected ack");
       return GCFEvent::NOT_HANDLED;
     }
   
     EPADiagWgEvent wgsettings(event);
 
-    if (!wgsettings.hdr.isValidAck(m_hdr))
-    {
+    if (!wgsettings.hdr.isValidAck(m_hdr)) {
       LOG_ERROR("WGRead::handleack: invalid ack");
       return GCFEvent::NOT_HANDLED;
     }
@@ -122,8 +113,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 
     WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
-    if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
-    {
+    if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i)) {
       if (w()(global_rcu).freq != wgsettings.freq
 	  || w()(global_rcu).phase != wgsettings.phase
 	  || w()(global_rcu).ampl != wgsettings.ampl
@@ -133,8 +123,7 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 	LOG_WARN(formatString("LOOPBACK CHECK FAILED: WGRead mismatch (rcu=%d)", global_rcu));
       }
     }
-    else
-    {
+    else {
       w()(global_rcu).freq        = wgsettings.freq;
       w()(global_rcu).phase       = wgsettings.phase;
       w()(global_rcu).ampl        = wgsettings.ampl;
@@ -142,20 +131,17 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
       w()(global_rcu).mode        = wgsettings.mode;
     }
   }
-  else
-  {
+  else {
     int current_blp = getCurrentIndex() - StationSettings::instance()->nrBlpsPerBoard() * MEPHeader::N_POL;
     
-    if (EPA_DIAG_WGWAVE != event.signal)
-    {
+    if (EPA_DIAG_WGWAVE != event.signal) {
       LOG_WARN("WGRead::handleack: unexpected ack");
       return GCFEvent::NOT_HANDLED;
     }
   
     EPADiagWgwaveEvent wgwave(event);
 
-    if (!wgwave.hdr.isValidAck(m_hdr))
-    {
+    if (!wgwave.hdr.isValidAck(m_hdr)) {
       LOG_ERROR("WGRead::handleack: invalid ack");
       return GCFEvent::NOT_HANDLED;
     }

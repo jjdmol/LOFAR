@@ -70,6 +70,7 @@ namespace LOFAR {
       uint32&                          getClock();
       RSP_Protocol::TDStatus&          getTDStatus();
       RSP_Protocol::TBBSettings&       getTBBSettings();
+      RSP_Protocol::BypassSettings&    getBypassSettings();
       /*@}*/
 
       /**
@@ -83,6 +84,16 @@ namespace LOFAR {
       Cache& getCache() { return *m_cache; }
 
     private:
+	// NOTE [reo]: The relation between the RSPprotocol classes,
+	//	the EPAProtocol classes and the cache is not implemented 
+	//	in the right way. The Cache should consist of (blitz)
+	//	arrays of EPA-structures and the RSP classes should
+	//	contain a single element of the RSP equivalent of the
+	//	EPA information.
+	//	In the current implementation the RSP class iso the cache
+	//	contains the blitz array. This is very confusing since it
+	//	indicates that the RSP class can contain many elements,
+	//	which is never the case.
 
       CacheBuffer(); // prevent default construction
 
@@ -102,6 +113,7 @@ namespace LOFAR {
       uint32                         m_clock;
       RSP_Protocol::TDStatus         m_tdstatus;
       RSP_Protocol::TBBSettings      m_tbbsettings;
+      RSP_Protocol::BypassSettings   m_bypasssettings;
 
       Cache* m_cache;
     };
