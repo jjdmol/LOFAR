@@ -22,7 +22,7 @@
 							else
 				  			echo("<a href=\"".$_SESSION['huidige_pagina']. "&o=2\">Geef type overzicht weer</a>");
 		  			?>
-					</div>	  		
+					</div>
 	  		</div>
 	  		<?php 
 	  			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree.js\"></script>");
