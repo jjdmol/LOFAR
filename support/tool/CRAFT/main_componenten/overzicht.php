@@ -95,9 +95,17 @@
 
 							echo("<tr><td>Leverdatum:</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. " (".$gedeeldveld[1].")</td><td>&nbsp</td></tr>");
 							echo("</table>");
-		   				echo("<br>Meldingen historie van dit component:<br>");
-		   				echo("<iframe id=\"frame_overzicht\" name=\"frame_overzicht\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."algemene_functionaliteit/melding_historie.php?c=".$_GET['c']."\" width=\"450\" height=\"175\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
-							
+
+							$query = "SELECT Count(Meld_Lijst_ID) FROM melding_lijst WHERE Comp_Lijst_ID = '".$_GET['c']."'";
+						  $res = mysql_query($query);
+							$row = mysql_fetch_array($res);
+							if ($row[0] != 0){
+			   				echo("<br>Meldingen historie van dit component:<br>");
+			   				echo("<iframe id=\"frame_overzicht\" name=\"frame_overzicht\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."algemene_functionaliteit/melding_historie.php?c=".$_GET['c']."\" width=\"450\" height=\"175\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");	
+			   			}
+							else 
+		   					echo("<br>Er zijn bij dit component geen meldingen gevonden.<br>");
+						
 						}
 						//of is er een type gekozen
 						else if ($_SESSION['type_overzicht'] == 2) {
@@ -152,20 +160,43 @@
 							echo($row['inlognaam'] ."</td><td><a href=\"".$_SESSION['pagina'] ."algemene_functionaliteit/gebruiker.php?c=".$data['Type_Verantwoordelijke']."\" target=\"_blank\">Meer info</a></td></tr>");
 							echo("</table>");
 							
-							//alle componenten van dit type
-		   				echo("<br>Aangemaakte componenten van dit type:<br>");
-		   				echo("<iframe id=\"frame_overzicht\" name=\"frame_overzicht\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."algemene_functionaliteit/componenten_per_type.php?c=".$_GET['c']."\" width=\"450\" height=\"130\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
+							
+							$query = "SELECT Count(Comp_Lijst_ID) FROM comp_lijst WHERE Comp_Type_ID = '".$_GET['c']."'";
+						  $res = mysql_query($query);
+							$row = mysql_fetch_array($res);
+							if ($row[0] != 0){
+			   				echo("<br>Aangemaakte componenten van dit type:<br>");
+			   				echo("<iframe id=\"frame_overzicht\" name=\"frame_overzicht\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."algemene_functionaliteit/componenten_per_type.php?c=".$_GET['c']."\" width=\"450\" height=\"130\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
+			   			}
+							else 
+		   					echo("<br>Er bestaan geen instanties van dit type.<br>");
 						}
 					}
 					else {					
-	
-						$_SESSION['laatste_inlog'] = '2007-01-12 09:00:00'; //<----- CHEATZ!!!!!!
+//						$_SESSION['laatste_inlog'] = '2007-01-12 09:00:00'; //<----- CHEATZ!!!!!!
+						
+						$query = "SELECT Count(Comp_Lijst_ID) FROM comp_lijst WHERE Laatste_Melding in";
+						$query = $query . "(SELECT Meld_Lijst_ID FROM melding_lijst WHERE Meld_Datum > ";
+						$query = $query . "'".$_SESSION['laatste_inlog']."' AND Voorgaande_Melding = 1)";
+					  $res = mysql_query($query);
+						$row = mysql_fetch_array($res);
 
-						echo("Sinds uw laatste inlog zijn onderstaande componenten aan het systeem toegevoegd:<br>");
-	   				echo("<iframe id=\"frame_comp\" name=\"frame_comp\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Comp_Overzicht.php\" width=\"450\" height=\"126\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
-	
-						echo("<br><br>Sinds uw laatste inlog zijn onderstaande componenttypes aan het systeem toegevoegd:<br>");
-	   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Type_Overzicht.php\" width=\"450\" height=\"126\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
+						if ($row[0] != 0) {
+							echo("Sinds uw laatste inlog zijn onderstaande componenten aan het systeem toegevoegd:<br>");
+	   					echo("<iframe id=\"frame_comp\" name=\"frame_comp\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Comp_Overzicht.php\" width=\"450\" height=\"126\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
+	   				} 
+	   				else
+	   					echo("Er zijn geen nieuwe componenten aan het systeem toegevoegd sinds uw laatste inlog.<br>");
+
+						$query = "SELECT Count(Comp_Type) FROM comp_type WHERE Aanmaak_Datum > '".$_SESSION['laatste_inlog']."'";
+					  $res = mysql_query($query);
+						$row = mysql_fetch_array($res);
+						if ($row[0] != 0) {
+							echo("<br><br>Sinds uw laatste inlog zijn onderstaande componenttypes aan het systeem toegevoegd:<br>");
+		   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Type_Overzicht.php\" width=\"450\" height=\"126\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
+		   			}
+		   			else
+	   					echo("<br>Er zijn geen nieuwe type componenten aan het systeem toegevoegd sinds uw laatste inlog.<br>");
 					}
 				?>	    
 	    </div>

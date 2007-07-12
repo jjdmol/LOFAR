@@ -117,7 +117,7 @@
 			    		</tr>
 			    		<tr>
 			    			<td>Eventuele oplossing:</td>
-			    			<td><textarea name="type_oplossing" rows="5" cols="35"><?php if(isset($_POST['type_oplossing'])) echo(htmlentities($_POST['type_oplossing'], ENT_QUOTES); ?></textarea></td>
+			    			<td><textarea name="type_oplossing" rows="5" cols="35"><?php if(isset($_POST['type_oplossing'])) echo(htmlentities($_POST['type_oplossing'], ENT_QUOTES)); ?></textarea></td>
 			    		</tr>
 			    		<tr>
 			    			<td><input name="opslaan" type="hidden" value="1"></td>

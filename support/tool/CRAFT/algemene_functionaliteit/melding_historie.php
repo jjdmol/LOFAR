@@ -26,8 +26,12 @@
 
 
 		echo("<table border =\"1\">");
-		echo("<tr><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td>" . substr($data[6], 0, 40) . "...</td><td><a href=\"../algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Meer</a></td></tr>");
-
+		echo("<tr><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td>");
+		$query = "SELECT Melding_Type_Naam FROM melding_type WHERE Meld_Type_ID ='". $data['Meld_Type_ID'] ."'";
+		$res = mysql_query($query);
+		$row = mysql_fetch_array($res);
+		echo(substr($row['Melding_Type_Naam'], 0, 30));
+		echo("</td><td>" . substr($data[6], 0, 30) . "...</td><td><a href=\"../algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Meer</a></td></tr>");
 			
 		while ($data['Voorgaande_Melding'] != 1) { 
 			$query = "SELECT * FROM melding_lijst WHERE Meld_Lijst_ID ='". $data['Voorgaande_Melding'] ."'";
@@ -39,7 +43,12 @@
 			//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
 			$datum = split("-",$gedeeldveld[0]);
 		
-			echo("<tr><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td>" .substr($data[6], 0, 40) . "...</td><td><a href=\"../algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Meer</a></td></tr>");
+			echo("<tr><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td>");
+			$query = "SELECT Melding_Type_Naam FROM melding_type WHERE Meld_Type_ID ='". $data['Meld_Type_ID'] ."'";
+			$res = mysql_query($query);
+			$row = mysql_fetch_array($res);
+			echo(substr($row['Melding_Type_Naam'], 0, 30));
+			echo("</td><td>" .substr($data[6], 0, 30) . "...</td><td><a href=\"../algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Meer</a></td></tr>");
 		}
 		echo("</table>");
 	}
