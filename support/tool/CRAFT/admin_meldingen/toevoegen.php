@@ -197,7 +197,7 @@
 				    			</tr>
 				    			<tr>
 				    				<td>Historie:</td>
-				    				<td><iframe id="frame_historie" name="frame_historie" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>admin_meldingen/historie.php <?php if(isset($_GET['c'])) echo("?c=".$_GET['c']); ?>" width="425" height="105" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
+				    				<td><iframe id="frame_historie" name="frame_historie" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_historie.php <?php if(isset($_GET['c'])) echo("?c=".$_GET['c']); ?>" width="425" height="105" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
 				    			</tr>
 				    			<tr>
 				    				<td>

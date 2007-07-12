@@ -34,7 +34,7 @@
 	  	<?php if (isset($_SESSION['admin_deel']) && $_SESSION['admin_deel'] == 0) { 
 	  		echo("<li><A name=\"Admin\" href=\"admin.php?p=0\">Admin-gedeelte</A></li>");
 	  	 } else 
-	  		echo("<li><A name=\"Admin\" href=\"main.php\">Hoofdapplicatie</A></li>");
+	  		echo("<li><A name=\"Admin\" href=\"main.php?p=".$_SESSION['tab']."\">Hoofdapplicatie</A></li>");
 	  	?>
 	  	<li><A name="LogUit" href="index.php">Uitloggen</A></li>
 		</ul>

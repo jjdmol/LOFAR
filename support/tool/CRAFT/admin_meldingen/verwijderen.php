@@ -66,7 +66,7 @@
 	
 							//tabel aanmaken om de gegevens in te tonen
 							echo("<table border=\"1\">\n");
-							echo("<tr><td><input type=\"checkbox\" name=\"cVerwijderen\" CHECKED></td><td>" . substr($data['Prob_Beschrijving'], 0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['pagina']."admin_meldingen/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Bekijken</a></td></tr>\n");
+							echo("<tr><td><input type=\"checkbox\" name=\"cVerwijderen\" CHECKED></td><td>" . substr($data['Prob_Beschrijving'], 0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['pagina']."algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Bekijken</a></td></tr>\n");
 							$melding = $data['Meld_Lijst_ID'];
 							$laatste = $data['Voorgaande_Melding'];
 							//terugwerken richting het begin van de meldingenketen
@@ -81,7 +81,7 @@
 								$datum = split("-",$gedeeldveld[0]);
 	
 								//tonen gegevens
-								echo("<tr><td>&nbsp</td><td>" .substr($data['Prob_Beschrijving'],0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['pagina']."admin_meldingen/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Bekijken</a></td></tr>\n");
+								echo("<tr><td>&nbsp</td><td>" .substr($data['Prob_Beschrijving'],0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['pagina']."algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Bekijken</a></td></tr>\n");
 							}
 							//afsluiten tabel
 							echo("</table>");

@@ -5,6 +5,7 @@
 	  
 	  require_once($_SESSION['pagina'] . 'includes/login_funcs.php');
 		include_once($_SESSION['pagina'] . 'includes/controle_functies.php');  
+		include_once($_SESSION['pagina'] . 'includes/datum_tijd_functies.php');
 		
 	  //controleren of er iemand ingelogd is...
 	  if ($LOGGED_IN = user_isloggedin()) {
@@ -35,26 +36,46 @@
 								if ($_POST['Gebr_Naam'] == '')
 									return false;
 							} else return false;
-	 	    			
-	 	    			//Wachtwoord
-							if (isset($_POST['Wachtwoord'])) {
-								if ($_POST['Wachtwoord'] == '')
-									return false;
-							} else return false;
-	
+	 	    				
 	 	    			//Gebr_Email
 							if (isset($_POST['Gebr_Email'])) {
 								if ($_POST['Gebr_Email'] != '' && !mail_check($_POST['Gebr_Email']))
 									return false;
 							} else return false;
 	
+							//Laatst_Ingelogd
+		  				if (isset($_POST['Inlog_Datum'])) {
+		  					//wanneer de Inlog_Datum ingevuld is, dan... 
+		  					if($_POST['Inlog_Datum'] !='') {
+		
+		   						//controleren op de juiste samenstelling van de Inlog_Datum
+			   					if (Valideer_Datum($_POST['Inlog_Datum']) == false)
+			   						return false;
+		  						//controleren of de tijd correct ingevoerd is
+		    					if(isset($_POST['Inlog_Tijd'])) {
+		    						if (Valideer_Tijd($_POST['Inlog_Tijd']) == false)
+		    					 		return false;
+		  						} else return false;
+		   					} else return false;
+		     			} else return false;
+	
 	 	    			return true;
 	 	    		}
 				
 					if(Valideer_Invoer()) {
-						$query = "UPDATE gebruiker SET inlognaam = '". $_POST['Gebr_Naam'] ."', Wachtwoord = '". md5($_POST['Wachtwoord']) ."', Start_Alg='". $_POST['Alg_Start'] ."'";
+						$query = "UPDATE gebruiker SET inlognaam = '". $_POST['Gebr_Naam'] ."', ";
+						if ($_POST['Wachtwoord'] != '')
+							$query = $query . "Wachtwoord = '". md5($_POST['Wachtwoord']) ."', ";
+						
+						$query = $query . "Start_Alg='". $_POST['Alg_Start'] ."'";
 						$query = $query . ", Start_Comp='". $_POST['Comp_Start'] ."', Start_Melding = '". $_POST['Melding_Start'] ."', Start_Stats='". $_POST['Stats_Start'] ."'";
 						$query = $query . ", Groep_ID = '". $_POST['Gebr_Groep'] ."', Gebruiker_Taal='". $_POST['Gebr_Taal'] ."', Emailadres = '". $_POST['Gebr_Email'] ."'";
+
+	  				//de waarde voor de inlogdatum aan de query toevoegen
+	  				if (isset($_POST['Inlog_Datum']) && $_POST['Inlog_Datum'] != '') {
+	    				$datum = split("-",$_POST['Inlog_Datum']);
+	    				$query = $query . ", Laatst_Ingelogd = '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['Inlog_Tijd'] .":00'";
+	  				}
 						$query = $query . " WHERE Werknem_ID = '" . $_GET['c'] . "'";
 						
 						if (mysql_query($query)) echo("De gewijzigde gebruiker \"". $_POST['Gebr_Naam'] ."\" is in het systeem bijgewerkt<br>");
@@ -95,9 +116,7 @@
 	    				</tr>
 	    				<tr>
 	    					<td>Wachtwoord:</td>
-	    					<td><input name="Wachtwoord" type="password">
-		    				  <?php if(isset($_POST['Wachtwoord']) && $_POST['Wachtwoord'] == '') echo('<b>* Er is geen wachtwoord ingevoerd!</b>'); ?>
-		    				</td>
+	    					<td><input name="Wachtwoord" type="password"></td>
 	    				</tr>
 	    				<tr>
 	    					<td>E-mailadres:</td>
@@ -187,6 +206,22 @@
 	   							<option value="3" <?php if($selectie == 3) echo('SELECTED'); ?>>Statistieken bewerken</option>
 	   							<option value="4" <?php if($selectie == 4) echo('SELECTED'); ?>>Statistieken verwijderen</option>
 	   						</select></td>
+	    				</tr>
+	    				<tr>
+	    					<td>Laatste inlog:</td>
+	    					<td>
+									<?php 
+										//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
+			    					$gedeeldveld=split(" ",$row['Laatst_Ingelogd']);
+										//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
+										$datum = split("-",$gedeeldveld[0]);
+										//tijd veld opdelen zodat de uren, minuten en secondevelden makkelijk te benaderen zijn
+										$tijd = split(":",$gedeeldveld[1]);
+									 ?>
+									<input name="Inlog_Datum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['Inlog_Datum'])) echo(htmlentities($_POST['Inlog_Datum'], ENT_QUOTES)); else echo($datum[2] ."-". $datum[1] ."-". $datum[0]); ?>">
+									<input name="Inlog_Tijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['Inlog_Tijd'])) echo(htmlentities($_POST['Inlog_Tijd'], ENT_QUOTES)); else echo($tijd[0] .":". $tijd[1]); ?>">	    						
+	    					  <?php if(isset($_POST['Inlog_Datum']) && (!Valideer_Datum($_POST['Inlog_Datum']) || !Valideer_Tijd($_POST['Inlog_Tijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?></td>
+	    					</td>
 	    				</tr>
 	    				<tr>
 			    			<td><input name="opslaan" type="hidden" value="1"></td>

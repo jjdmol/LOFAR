@@ -26,7 +26,7 @@
 
 
 		echo("<table border =\"1\">");
-		echo("<tr><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td>" . substr($data[6], 0, 40) . "...</td><td><a href=\"../admin_meldingen/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Meer</a></td></tr>");
+		echo("<tr><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td>" . substr($data[6], 0, 40) . "...</td><td><a href=\"../algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Meer</a></td></tr>");
 
 			
 		while ($data['Voorgaande_Melding'] != 1) { 
@@ -39,7 +39,7 @@
 			//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
 			$datum = split("-",$gedeeldveld[0]);
 		
-			echo("<tr><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td>" .substr($data[6], 0, 40) . "...</td><td><a href=\"../admin_meldingen/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Meer</a></td></tr>");
+			echo("<tr><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td>" .substr($data[6], 0, 40) . "...</td><td><a href=\"../algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."\" target=\"_blank\">Meer</a></td></tr>");
 		}
 		echo("</table>");
 	}

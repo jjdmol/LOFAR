@@ -140,8 +140,7 @@
   $query = 'SELECT Comp_Type, Type_Naam FROM comp_type WHERE Type_Parent = 1';
   $rest = mysql_query($query);
   
-  if ($_SESSION['admin_deel'] == 1)
-  	$Types_Objecten = Comp_Type_Lijst(1);
+  if ($_SESSION['admin_deel'] == 1)      $Types_Objecten = Comp_Type_Lijst(1);
   else if ($_SESSION['admin_deel'] == 2) $Types_Objecten = Comp_Lijst(1);
   else if ($_SESSION['admin_deel'] == 3) $Types_Objecten = Melding_Type_Lijst();
 	else if ($_SESSION['admin_deel'] == 4) $Types_Objecten = Comp_Lijst(1);
@@ -149,7 +148,12 @@
 	else if ($_SESSION['admin_deel'] == 6) $Types_Objecten = Gebruikers_Lijst();
 	else if ($_SESSION['admin_deel'] == 7) $Types_Objecten = Contacten_Lijst(1);
 	else if ($_SESSION['admin_deel'] == 8) $Types_Objecten = Locaties_Lijst();
-
+  else if ($_SESSION['admin_deel'] == 0) {
+  	if ($_SESSION['main_deel'] == 2) {
+  		if ($_SESSION['type_overzicht'] == 1) 		 $Types_Objecten = Comp_Lijst(1);
+  		else if ($_SESSION['type_overzicht'] == 2) $Types_Objecten = Comp_Type_Lijst(1);
+  	}
+  }
 	echo ("var TREE_ITEMS = [");
 	
 	echo(Recursieve_Uitlees_Methode($Types_Objecten));
