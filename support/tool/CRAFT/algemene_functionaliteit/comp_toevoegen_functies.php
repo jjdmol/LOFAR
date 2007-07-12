@@ -6,7 +6,7 @@
 function switchMelding() 
 {
 	var y=document.getElementById('type_melding').value;
-	document.getElementById('frame_melding').src = "<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_melding.php?c=" + y;
+	document.getElementById('frame_melding').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_melding.php?c=" + y;
 }
 
 
@@ -24,10 +24,10 @@ function SubmitComponentBewerken()
 function switchDocument(naam)
 {
 	var y=document.getElementById('comp_type').value;
-	document.getElementById('frame_parent').src = "<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_parent.php?c=" + y + naam;
-	document.getElementById('frame_naam').src = "<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_naam.php?c=" + y + naam;	
-	document.getElementById('frame_fabricant').src = "<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_fabricant.php?c=" + y + naam;	
-	document.getElementById('frame_leverancier').src = "<?php echo($_SESSION['pagina']); ?>admin_componenten/comp_leverancier.php?c=" + y + naam;	
+	document.getElementById('frame_parent').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_parent.php?c=" + y + naam;
+	document.getElementById('frame_naam').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_naam.php?c=" + y + naam;	
+	document.getElementById('frame_fabricant').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_fabricant.php?c=" + y + naam;	
+	document.getElementById('frame_leverancier').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_leverancier.php?c=" + y + naam;	
 }
 
 function submitComponentToevoegen() 
