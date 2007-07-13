@@ -34,8 +34,13 @@ void Response::dpeUnsubscribed(const string& propName, PVSSresult		result)
 
 void Response::dpeValueGet(const string& propName, PVSSresult		result, const GCFPValue& value)
 {
-	LOG_DEBUG_STR("RESPONSE:Valueget of property " << propName << " : " << 
+	if (result == SA_NO_ERROR) {
+		LOG_DEBUG_STR("RESPONSE:Valueget of property " << propName << " : " << 
 					((GCFPVInteger *)&value)->getValue() << " (err=" << result << ")");
+	}
+	else {
+		LOG_DEBUG_STR("RESPONSE: error " << result << " while getting the value of " << propName);
+	}
 }
 
 void Response::dpeValueChanged(const string& propName, PVSSresult		result, const GCFPValue& /*value*/)
