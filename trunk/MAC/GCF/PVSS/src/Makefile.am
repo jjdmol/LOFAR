@@ -3,16 +3,15 @@ NODOCHDRS			= GSA_SCADAHandler.h \
 					  GSA_Resources.h \
 					  GSA_WaitForAnswer.h 
     
-lib_LTLIBRARIES 	= libpvss.la
+lib_LTLIBRARIES 	= libgcfpvss.la
 
-libpvss_la_SOURCES	= $(NODOCHDRS) \
+libgcfpvss_la_SOURCES=$(NODOCHDRS) \
 					  GSA_SCADAHandler.cc \
 					  GSA_PvssApi.cc \
 					  GSA_Resources.cc \
 					  GSA_WaitForAnswer.cc \
 					  PVSSinfo.cc \
-					  PVSSservice.cc \
-					  PVSSresponse.cc 
+					  PVSSservice.cc
 
 AM_CPPFLAGS 		= -DLOFARLOGGER_SUBPACKAGE=\"PVSS\"
 		

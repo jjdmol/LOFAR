@@ -458,7 +458,9 @@ PVSSresult PVSSservice::dpCreate(const string& dpName,
 																dpName.c_str()));
 	}
 
+	// some error occured?
 	if (result != SA_NO_ERROR) {
+		itsResponse->dpCreated(dpName, result);
 		// default the PVSS API is configured to delete this object
 		// but if there is an error occured PVSS API will not do this
 		delete pWFA;
@@ -509,6 +511,7 @@ PVSSresult PVSSservice::dpDelete(const string& dpName)
 	}
 
 	if (result != SA_NO_ERROR) {
+		itsResponse->dpDeleted(dpName, result);
 		// default the PVSS API is configured to delete this object
 		// but if there is an error occured PVSS API will not do this
 		delete pWFA;
@@ -566,6 +569,10 @@ PVSSresult PVSSservice::dpeSubscribe(const string& propName)
 		LOG_ERROR(formatString("Unable to subscribe on property: '%s'",propName.c_str()));
 	}
 
+	if (result != SA_NO_ERROR) {
+		itsResponse->dpeSubscribed(propName, result);
+	}
+
 	return result;
 }
 
@@ -620,6 +627,9 @@ PVSSresult PVSSservice::dpeUnsubscribe(const string& propName)
 								propName.c_str()));
 	}
 
+	if (result != SA_NO_ERROR) {
+		itsResponse->dpeUnsubscribed(propName, result);
+	}
 	return result;
 }
 
@@ -672,6 +682,9 @@ PVSSresult PVSSservice::dpeGet(const string& dpeName)
 	if (result != SA_NO_ERROR) {
 		// default the PVSS API is configured to delete this object
 		// but if there is an error occured PVSS API will not do this
+		GCFPValue*		dummyValue = new GCFPVBool(false);
+		itsResponse->dpeValueGet(dpeName, result, *dummyValue);
+		delete dummyValue;
 		delete pWFA;
 	}
 
@@ -771,6 +784,10 @@ PVSSresult PVSSservice::dpeSet(const string& dpeName,
 		delete pVar; // constructed by convertMACToPVSS method
 	}
 
+	if (result != SA_NO_ERROR) {
+		itsResponse->dpeValueSet(dpeName, result);
+	}
+
 	return (result);
 }
 
@@ -810,6 +827,10 @@ PVSSresult PVSSservice::dpQuerySubscribeSingle(const string& queryWhere, const s
 					(const char*) query));
 	}
 
+	if (result != SA_NO_ERROR) {
+		itsResponse->dpQuerySubscribed(0, result);
+	}
+
 	return result;
 }
 
@@ -842,6 +863,10 @@ PVSSresult PVSSservice::dpQueryUnsubscribe(uint32 queryId)
 		LOG_TRACE_FLOW(formatString (
 				"Unsubscription of queried properties (%d) was requested succesful", 
 				queryId));
+	}
+
+	if (result != SA_NO_ERROR) {
+		itsResponse->dpQuerySubscribed(queryId, result);
 	}
 
 	return result;
