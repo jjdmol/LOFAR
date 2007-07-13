@@ -42,16 +42,42 @@
 								
 								//kijken of de gebruiker niet de ingelogde persoon is							
 								if ($_GET['c'] != $_SESSION['gebr_id']) {
-								//FORMPJE MAKEN!!!!!!!!!!!!!!!!!!!!!
-									?>
-							    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
-							    		<table>
-							    			<tr><td><input type="hidden" name="gebruiker" value="<?php echo($_GET['c']);?>">Weet u zeker dat u deze gebruiker verwijderen wilt?</td></tr>
-							    			<tr><td><input type="CheckBox" name="confirmatie"> Ja, ik wil deze gebruiker verwijderen</td></tr>
-							    			<tr><td><input type="hidden" name="verwijderen" value="1"><a href="javascript:document.theForm.submit();">Verwijderen</a></td></tr>
-							    		</table>
-							    	</form>
-									<?php
+									
+									//controleren of er verwijzingen naar deze gebruiker zijn, 
+									//wanneer deze er zijn dan (in verband met de historie) deze gebruiker niet verwijderen
+									$query = "SELECT COUNT(Meld_Lijst_ID) FROM melding_lijst WHERE Gemeld_Door = '".$_GET['c']."' OR Behandeld_Door = '".$_GET['c']."'";
+									$resultaat = mysql_query($query);
+									$row = mysql_fetch_row($resultaat);
+									if ($row[0] == 0) {
+										//controleren of er verwijzingen naar deze gebruiker zijn, 
+										//wanneer deze er zijn dan (in verband met de historie) deze gebruiker niet verwijderen
+										$query = "SELECT COUNT(Comp_Lijst_ID) FROM comp_lijst WHERE Comp_verantwoordelijke = '".$_GET['c']."'";
+										$resultaat = mysql_query($query);
+										$row = mysql_fetch_row($resultaat);
+										if ($row[0] == 0) {
+											//controleren of er verwijzingen naar deze gebruiker zijn, 
+											//wanneer deze er zijn dan (in verband met de historie) deze gebruiker niet verwijderen
+											$query = "SELECT COUNT(Comp_Type) FROM comp_type WHERE Aangemaakt_Door = '".$_GET['c']."' OR Type_Verantwoordelijke = '".$_GET['c']."'";
+											$resultaat = mysql_query($query);
+											$row = mysql_fetch_row($resultaat);
+											if ($row[0] == 0) {
+									
+												//FORMPJE MAKEN!!!!!!!!!!!!!!!!!!!!!
+												?>
+										    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); ?>">
+										    		<table>
+										    			<tr><td><input type="hidden" name="gebruiker" value="<?php echo($_GET['c']);?>">Weet u zeker dat u deze gebruiker verwijderen wilt?</td></tr>
+										    			<tr><td><input type="CheckBox" name="confirmatie"> Ja, ik wil deze gebruiker verwijderen</td></tr>
+										    			<tr><td><input type="hidden" name="verwijderen" value="1"><a href="javascript:document.theForm.submit();">Verwijderen</a></td></tr>
+										    		</table>
+										    	</form>
+												<?php
+											}
+											else echo("<br>Er bestaan type componenten, welke naar de geselecteerde gebruiker wijzen!");										
+										}
+										else echo("<br>Er bestaan componenten, welke naar de geselecteerde gebruiker wijzen!");
+									}
+									else echo("<br>Er bestaan meldingen, welke naar de geselecteerde gebruiker wijzen!");
 								}
 								else echo("<br>Dit bent u zelf. U kunt uzelf niet verwijderen!");
 							}

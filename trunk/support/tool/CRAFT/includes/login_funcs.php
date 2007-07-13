@@ -77,6 +77,7 @@
 					$_SESSION['toevoegen']   = $row['Toevoegen'];
 					$_SESSION['bewerken']    = $row['Bewerken'];
 					$_SESSION['verwijderen'] = $row['Verwijderen'];
+					$_SESSION['admin_rechten'] = $row['Admin_Rechten'];
 					
 					$query = "UPDATE gebruiker SET Laatst_Ingelogd = NOW() WHERE Werknem_ID='". $_SESSION['gebr_id'] ."'";
 					mysql_query($query);

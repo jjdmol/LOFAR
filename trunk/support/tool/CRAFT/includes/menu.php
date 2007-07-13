@@ -32,10 +32,13 @@
 	</div>
 	<div id="alg_opties">
 		<ul>
-	  	<?php if (isset($_SESSION['admin_deel']) && $_SESSION['admin_deel'] == 0) { 
-	  		echo("<li><A name=\"Admin\" href=\"admin.php?p=1&s=1\">Admin-gedeelte</A></li>");
-	  	 } else 
-	  		echo("<li><A name=\"Admin\" href=\"main.php\">Hoofdapplicatie</A></li>");
+	  	<?php 
+	  		if (isset($_SESSION['admin_rechten'])&& $_SESSION['admin_rechten'] == 1) {
+		  		if (isset($_SESSION['admin_deel']) && $_SESSION['admin_deel'] == 0) { 
+		  			echo("<li><A name=\"Admin\" href=\"admin.php?p=1&s=1\">Admin-gedeelte</A></li>");
+		  	 	} else 
+		  			echo("<li><A name=\"Admin\" href=\"main.php\">Hoofdapplicatie</A></li>");
+	  		}
 	  	?>
 	  	<li><A name="LogUit" href="index.php">Uitloggen</A></li>
 		</ul>

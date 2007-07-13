@@ -49,8 +49,14 @@
 						
 						if(Valideer_Invoer()) {
 	
-	    				$query = "INSERT INTO gebruikers_groepen (Groeps_Naam, Groep_Parent, Intro_Zichtbaar, Comp_Zichtbaar, Melding_Zichtbaar, Stats_Zichtbaar, ";
-	    				$query = $query . "Instel_Zichtbaar, Toevoegen, Bewerken, Verwijderen) VALUES ('". htmlentities($_POST['groepsnaam'], ENT_QUOTES) ."', '". $_POST['groepsparent'] ."', '";
+	    				//Bekijken of de toe te voegen groep een afgeleide van een admin-groep is
+	    				//dit kan door de waarde van het "admin_rechten" veld van de geselecteerde parent te bekijken
+	    				$query = "SELECT Admin_Rechten FROM gebruikers_groepen WHERE Groep_ID = '". $_POST['groepsparent'] ."'";
+	    				$resultaat = mysql_query($query);
+							$row = mysql_fetch_array($resultaat);
+
+	    				$query = "INSERT INTO gebruikers_groepen (Groeps_Naam, Admin_Rechten, Groep_Parent, Intro_Zichtbaar, Comp_Zichtbaar, Melding_Zichtbaar, Stats_Zichtbaar, ";
+	    				$query = $query . "Instel_Zichtbaar, Toevoegen, Bewerken, Verwijderen) VALUES ('". htmlentities($_POST['groepsnaam'], ENT_QUOTES) ."', '". $row['Admin_Rechten'] ."', '". $_POST['groepsparent'] ."', '";
 							$query = $query . Omzetten_Checkbox($_POST['hidden_intro']) ."', '". Omzetten_Checkbox($_POST['hidden_comp']) ."', '". Omzetten_Checkbox($_POST['hidden_melding']) ."', '". Omzetten_Checkbox($_POST['hidden_stats']) ."', '";
 							$query = $query . Omzetten_Checkbox($_POST['hidden_inst']) ."', '" . Omzetten_Checkbox($_POST['hidden_toevoeg']) ."', '". Omzetten_Checkbox($_POST['hidden_bewerk']) ."', '". Omzetten_Checkbox($_POST['hidden_verwijder']) ."')";
 							

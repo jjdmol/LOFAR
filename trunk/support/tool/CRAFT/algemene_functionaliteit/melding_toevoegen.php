@@ -39,8 +39,8 @@
   	$row = mysql_fetch_array($resultaat);
 		
 		//de query om de melding toe te voegen, samenstellen
-		$query = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Prob_Oplossing, Behandeld_Door, Gemeld_Door, Afgehandeld)";
-		$query = $query . "VALUES ('". $_POST['Type_Melding'] ."', '". $_GET['c'] ."'";
+		$query = "INSERT INTO melding_lijst (Meld_Type_ID, Melding_Locatie, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Prob_Oplossing, Behandeld_Door, Gemeld_Door, Afgehandeld)";
+		$query = $query . "VALUES ('". $_POST['Type_Melding'] ."', '". $_POST['Melding_Locatie'] ."', '". $_GET['c'] ."'";
 
 		//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
 		if (isset($_POST['Meld_Datum']) && $_POST['Meld_Datum'] != '') {
@@ -96,6 +96,29 @@
     					?>
     				</select></td>
     			</tr>
+					<tr>
+						<td>Locatie van de melding:</td>
+						<td><select name="Melding_Locatie">
+						<?php
+							$query = "SELECT Comp_Locatie FROM comp_lijst";
+	    			  $resultaat = mysql_query($query);
+					  	$row = mysql_fetch_array($resultaat);
+
+							$query = "SELECT Locatie_ID, Loc_Naam FROM comp_locatie";
+	    			  $resultaat = mysql_query($query);
+
+				  		if (isset($_POST['Melding_Locatie'])) $selectie = $_POST['Melding_Locatie'];
+				  		else $selectie = $row[0];
+
+					  	while ($data = mysql_fetch_array($resultaat)) {
+	  	  				echo('<option value="'.$data['Locatie_ID'].'"');
+		  	  			if ($data['Locatie_ID'] == $selectie)
+		  	  				echo('SELECTED');
+		  	  			echo('>'. $data['Loc_Naam'] .'</option>');
+							}
+						?>	
+						</select></td>
+					</tr>
     			<tr>
     				<td>Gemeld door:</td>
     				<td><select name="Gemeld_Door">
