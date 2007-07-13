@@ -32,6 +32,7 @@
 						echo("<b id=\"zwart\">Toegevoegde meldingen:</b><br>");
 	   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_meldingen/Meldingen_Overzicht.php\" width=\"650\" height=\"110\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
 	   			}
+	   			else echo("<b id=\"zwart\">Er zijn sinds uw laatste inlog geen meldingen toegevoegd.</b><br>");
 
 					$query = "SELECT Count(Comp_Lijst_ID) FROM comp_lijst WHERE Laatste_Melding in";
 					$query = $query . "(SELECT Meld_Lijst_ID FROM melding_lijst WHERE Meld_Datum > ";
@@ -43,6 +44,7 @@
 						echo("<br><br><b id=\"zwart\">Toegevoegde componenten:</b><br>");
    					echo("<iframe id=\"frame_comp\" name=\"frame_comp\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Comp_Overzicht.php\" width=\"650\" height=\"110\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
    				} 
+	   			else echo("<b id=\"zwart\">Er zijn sinds uw laatste inlog geen componenten toegevoegd.</b><br>");   				
 
 					$query = "SELECT Count(Comp_Type) FROM comp_type WHERE Aanmaak_Datum > '".$_SESSION['laatste_inlog']."'";
 				  $res = mysql_query($query);
@@ -50,11 +52,10 @@
 					if ($row[0] != 0) {
 						echo("<br><br><b id=\"zwart\">Toegevoegde componenttypes:</b><br>");
 	   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Type_Overzicht.php\" width=\"650\" height=\"110\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
-	   			}		    	
+	   			}
+	   			else echo("<b id=\"zwart\">Er zijn sinds uw laatste inlog geen componenttypes toegevoegd.</b><br>");
     	
 	    	?>
-	    	
-	    	
 	    
 	    </div>
 	

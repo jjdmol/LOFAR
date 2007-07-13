@@ -46,11 +46,17 @@
 					
 					//het opslaan van de wijzigingen
 					if(Validatie_Opslaan()) {
+    				//Bekijken of de te bewerken groep een afgeleide van een admin-groep is
+    				//dit kan door de waarde van het "admin_rechten" veld van de geselecteerde parent te bekijken
+    				$query = "SELECT Admin_Rechten FROM gebruikers_groepen WHERE Groep_ID = '". $_POST['groepsparent'] ."'";
+    				$resultaat = mysql_query($query);
+						$row = mysql_fetch_array($resultaat);
+						
 						$query = "UPDATE gebruikers_groepen SET Groeps_Naam = '". htmlentities($_POST['groepsnaam'], ENT_QUOTES) ."', Groep_Parent = '". $_POST['groepsparent'] ."', ";
 						$query = $query . "Intro_Zichtbaar ='". checkboxWaardes('Intro_Zichtbaar') ."', Comp_Zichtbaar ='". checkboxWaardes('Comp_Zichtbaar') ."', "; 
 						$query = $query . "Melding_Zichtbaar = '". checkboxWaardes('Melding_Zichtbaar') ."', Stats_Zichtbaar = '". checkboxWaardes('Stats_Zichtbaar') ."', ";
 						$query = $query . "Instel_Zichtbaar = '". checkboxWaardes('Inst_Zichtbaar') ."', Toevoegen = '". checkboxWaardes('Toevoeg_Rechten') ."', ";
-						$query = $query . "Bewerken = '". checkboxWaardes('Bewerk_Rechten') ."', Verwijderen = '". checkboxWaardes('Verwijder_Rechten') ."' ";
+						$query = $query . "Bewerken = '". checkboxWaardes('Bewerk_Rechten') ."', Verwijderen = '". checkboxWaardes('Verwijder_Rechten') ."', Admin_Rechten='". $row['Admin_Rechten'] ."'";
 						$query = $query . " WHERE Groep_ID = '" . $_GET['c'] . "'";
 	
 						if (mysql_query($query)) echo("De gewijzigde gebruikersgroep \"". $_POST['groepsnaam'] ."\" is in het systeem bijgewerkt<br>");
@@ -80,10 +86,12 @@
 				    			  else $selected = $row['Groep_Parent'];
 	
 	    							while ($data = mysql_fetch_array($resultaat)) {
-											echo("<option value=\"". $data['Groep_ID'] ."\" ");
-											if ($selected == $data['Groep_ID'])
-												echo ('SELECTED');
-											echo(">". $data['Groeps_Naam'] ."</option>\r\n");
+											if ($data['Groep_ID'] != $_GET['c']) {
+												echo("<option value=\"". $data['Groep_ID'] ."\" ");
+												if ($selected == $data['Groep_ID'])
+													echo ('SELECTED');
+												echo(">". $data['Groeps_Naam'] ."</option>\r\n");
+											}
 										}
 	    						 ?></select>
 	    					</td>

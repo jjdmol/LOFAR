@@ -38,7 +38,7 @@
 		else $afgehandeld = 0;
 		
 		//query samenstellen
-		$query = "UPDATE melding_lijst SET Meld_Type_ID='". $_POST['Type_Melding'] ."', Gemeld_Door='". $_POST['Gemeld_Door'] ."', ";
+		$query = "UPDATE melding_lijst SET Meld_Type_ID='". $_POST['Type_Melding'] ."', Melding_Locatie='".$_POST['Melding_Locatie']."', Gemeld_Door='". $_POST['Gemeld_Door'] ."', ";
 		$query = $query . "Prob_Beschrijving='". htmlentities($_POST['Prob_Beschrijving'], ENT_QUOTES)."', Prob_Oplossing='". htmlentities($_POST['Prob_Oplossing'], ENT_QUOTES) ."', Behandeld_Door='".$_POST['Behandeld_Door']."', ";
 		$query = $query . "Afgehandeld='". $afgehandeld ."', Meld_Datum=";
 
@@ -105,6 +105,25 @@
 				  	  			echo('>'. $data['inlognaam'] .'</option>');
 									}
 								?>
+								</select></td>
+							</tr>
+							<tr>
+								<td>Locatie van de melding:</td>
+								<td><select name="Melding_Locatie">
+								<?php
+									$query = "SELECT Locatie_ID, Loc_Naam FROM comp_locatie";
+			    			  $resultaat = mysql_query($query);
+	
+						  		if (isset($_POST['Melding_Locatie'])) $selectie = $_POST['Melding_Locatie'];
+						  		else $selectie = $row['Melding_Locatie'];
+	
+							  	while ($data = mysql_fetch_array($resultaat)) {
+			  	  				echo('<option value="'.$data['Locatie_ID'].'"');
+				  	  			if ($data['Locatie_ID'] == $selectie)
+				  	  				echo('SELECTED');
+				  	  			echo('>'. $data['Loc_Naam'] .'</option>');
+									}
+								?>	
 								</select></td>
 							</tr>
 							<tr>
