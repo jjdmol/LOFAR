@@ -1,6 +1,7 @@
 
 
-log4cplus.rootLogger=INFO, MACSTDERR
+#log4cplus.rootLogger=INFO, MACSTDERR, FILE
+log4cplus.rootLogger=DEBUG, STDOUT
 log4cplus.additivity.ASTRON=FALSE
 
 log4cplus.appender.STDOUT=log4cplus::ConsoleAppender
@@ -18,7 +19,7 @@ log4cplus.appender.MACCLP.host=lofar30
 log4cplus.appender.MACCLP.Threshold=INFO
 
 log4cplus.appender.FILE=log4cplus::RollingFileAppender
-log4cplus.appender.FILE.File=RSPDriver.log
+log4cplus.appender.FILE.File=../log/RSPDriver.log
 log4cplus.appender.FILE.MaxFileSize=10MB
 log4cplus.appender.FILE.MaxBackupIndex=10
 log4cplus.appender.FILE.layout=log4cplus::PatternLayout
@@ -29,10 +30,3 @@ log4cplus.appender.DUMP=log4cplus::NullAppender
 
 log4cplus.logger.TRC=DUMP
 log4cplus.additivity.TRC=FALSE
-
-#log4cplus.additivity.TRC=FALSE
-#log4cplus.logger.TRC=TRACE, FILE
-
-log4cplus.additivity.MAC=FALSE
-log4cplus.logger.MAC=INFO, FILE
-

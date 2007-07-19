@@ -783,15 +783,17 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
     //
     // Print debugging info
     // 
+#if 0
     if ((F_DATAIN != buf.event.signal) && 
-	(F_DATAOUT != buf.event.signal) &&
-	(F_EVT_PROTOCOL(buf.event) != F_FSM_PROTOCOL) &&
-	(F_EVT_PROTOCOL(buf.event) != F_PORT_PROTOCOL))
+			(F_DATAOUT != buf.event.signal) &&
+			(F_EVT_PROTOCOL(buf.event) != F_FSM_PROTOCOL) &&
+			(F_EVT_PROTOCOL(buf.event) != F_PORT_PROTOCOL))
     {
       LOG_DEBUG(formatString("%s receives '%s' on port '%s'",
 			     task.getName().c_str(), 
 			     task.evtstr(buf.event), port.getName().c_str()));
     }
+#endif
 
     //
     // dispatch the MEP message as a GCFEvent (which it now is)
