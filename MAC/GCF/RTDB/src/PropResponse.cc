@@ -21,7 +21,7 @@ void PropResponse::dpDeleted(const string& /*propName*/, PVSSresult		/*result*/)
 
 void PropResponse::dpeSubscribed(const string& /*propName*/, PVSSresult		/*result*/)
 {
-	// TODO: look aat PVSSresult
+	// TODO: look at PVSSresult
 	itsProperty->setSubscription(true);
 }
 

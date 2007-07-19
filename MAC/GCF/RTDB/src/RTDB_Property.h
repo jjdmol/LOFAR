@@ -24,8 +24,6 @@
 #define RTDB_PROPERTY_H
 
 #include <GCF/GCF_Defines.h>
-#include <GCF/GCF_PValue.h>
-#include <GCF/PVSS/PVSSresult.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/PVSS/PVSSresponse.h>
 
@@ -43,8 +41,9 @@ class RTDBProperty
 {
 public:
 	// Constructor.
-    RTDBProperty (const TPropertyInfo&		propInfo,
-				 PVSSresponse*				responsePtr);
+    RTDBProperty (const string&				scope,
+				  const TPropertyInfo&		propInfo,
+				  PVSSresponse*				responsePtr);
     virtual ~RTDBProperty ();
 
 	const string getName () const 

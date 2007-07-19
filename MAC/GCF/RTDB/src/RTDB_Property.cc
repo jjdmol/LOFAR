@@ -35,8 +35,9 @@ namespace LOFAR {
 //
 // RTDBProperty(name, type, accesstype)
 //
-RTDBProperty::RTDBProperty (const TPropertyInfo&		propInfo,
-						  PVSSresponse*				clientResponse) :
+RTDBProperty::RTDBProperty (const string&			scope, 
+							const TPropertyInfo&	propInfo,
+							PVSSresponse*			clientResponse) :
 	itsPropInfo	  (propInfo),
 	itsCurValue   (0),
 	itsOldValue	  (0),
@@ -52,6 +53,9 @@ RTDBProperty::RTDBProperty (const TPropertyInfo&		propInfo,
 
 	itsService = new PVSSservice(itsOwnResponse);
 	ASSERTSTR(itsService, "Can't connect to PVSS database(" << propInfo.propName << ")");
+
+	// insert scope before propertyname
+	itsPropInfo.propName = scope + GCF_PROP_NAME_SEP + itsPropInfo.propName;
 
 	// get current value.
 	itsService->dpeGet(itsPropInfo.propName);
@@ -99,7 +103,7 @@ PVSSresult RTDBProperty::setValueTimed(const string& value, double timestamp, bo
 { 
 	GCFPValue* pValue = GCFPValue::createMACTypeObject(itsPropInfo.type);
 	if (!pValue) { 
-		return (SA_VARIABLE_WRONG_TYPE);
+		return (SA_MACTYPE_UNKNOWN);
 	}
 
 	if ((pValue->setValue(value)) != GCF_NO_ERROR) { // assign value to  GCFPValue
@@ -109,6 +113,9 @@ PVSSresult RTDBProperty::setValueTimed(const string& value, double timestamp, bo
 	return (itsService->dpeSet(itsPropInfo.propName, *pValue, timestamp, wantAnswer));
 }
 
+//
+// valueSetAck(result)
+//
 void RTDBProperty::valueSetAck(PVSSresult	result)
 {
 	if (result != SA_NO_ERROR) {
@@ -119,6 +126,9 @@ void RTDBProperty::valueSetAck(PVSSresult	result)
 	itsOldValue->copy(*itsCurValue);
 }
 
+//
+// valueGetAck(result, value)
+//
 void RTDBProperty::valueGetAck(PVSSresult	result, const GCFPValue&	value)
 {
 	if (result == SA_NO_ERROR) {
@@ -130,6 +140,9 @@ void RTDBProperty::valueGetAck(PVSSresult	result, const GCFPValue&	value)
 	}
 }
 
+//
+// valueChangedAck(result, value)
+//
 void RTDBProperty::valueChangedAck(PVSSresult	result, const GCFPValue&	value)
 {
 	if (result == SA_NO_ERROR) {

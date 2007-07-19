@@ -16,6 +16,7 @@
 
 # Some common rules.
 
+
 SOURCES = $(librtdb_la_SOURCES)
 
 srcdir = @srcdir@
@@ -23,7 +24,6 @@ top_srcdir = @top_srcdir@
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
-pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
@@ -40,8 +40,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/Makefile.common
+DIST_COMMON = $(pkginclude_HEADERS) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(top_srcdir)/Makefile.common
 subdir = src
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/autoconf_share/am_rpm_init.m4 \
@@ -66,13 +66,13 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 librtdb_la_LIBADD =
 am__objects_1 = librtdb_la-DP_Protocol.lo
 am_librtdb_la_OBJECTS = $(am__objects_1) librtdb_la-RTDB_Property.lo \
-	librtdb_la-RTDB_PropertySet.lo librtdb_la-DP_Answer.lo \
+	librtdb_la-RTDB_PropertySet.lo librtdb_la-DPanswer.lo \
 	librtdb_la-PropResponse.lo
 librtdb_la_OBJECTS = $(am_librtdb_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
@@ -88,9 +88,12 @@ CXXLINK = $(LIBTOOL) --mode=link --tag=CXX $(CXXLD) $(AM_CXXFLAGS) \
 	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(librtdb_la_SOURCES)
 DIST_SOURCES = $(librtdb_la_SOURCES)
+pkgincludeHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(pkginclude_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+pkgincludedir = $(includedir)/GCF/RTDB
 ACLOCAL = @ACLOCAL@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
@@ -240,8 +243,9 @@ AUTOGEN = autogen
 SUFFIXES = .ph
 DOCHDRS = RTDB_Property.h \
 					  RTDB_PropertySet.h \
-					  DP_Answer.h  \
-					  PropResponse.h
+					  DPanswer.h  \
+					  PropResponse.h \
+					  PropResponseSet.h
 
 librtdb_la_CPPFLAGS = -I$(top_srcdir)/PVSS/src
 BUILT_SOURCES = DP_Protocol.ph \
@@ -250,11 +254,12 @@ BUILT_SOURCES = DP_Protocol.ph \
 EXTRA_DIST = DP_Protocol.prot \
 					  $(sysconf_DATA)
 
+pkginclude_HEADERS = $(BUILT_SOURCES)
 lib_LTLIBRARIES = librtdb.la
 librtdb_la_SOURCES = $(BUILT_SOURCES) \
 					  RTDB_Property.cc \
 					  RTDB_PropertySet.cc \
-					  DP_Answer.cc \
+					  DPanswer.cc \
 					  PropResponse.cc
 
 #CLEANFILES += tca.* .inslog* *.cc *.h $(top_builddir)/pure_cache docxxhtml/* *.log docxx_hdrs.names
@@ -359,8 +364,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtdb_la-DP_Answer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtdb_la-DP_Protocol.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtdb_la-DPanswer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtdb_la-PropResponse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtdb_la-RTDB_Property.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/librtdb_la-RTDB_PropertySet.Plo@am__quote@
@@ -407,12 +412,12 @@ librtdb_la-RTDB_PropertySet.lo: RTDB_PropertySet.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtdb_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librtdb_la-RTDB_PropertySet.lo `test -f 'RTDB_PropertySet.cc' || echo '$(srcdir)/'`RTDB_PropertySet.cc
 
-librtdb_la-DP_Answer.lo: DP_Answer.cc
-@am__fastdepCXX_TRUE@	if $(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtdb_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librtdb_la-DP_Answer.lo -MD -MP -MF "$(DEPDIR)/librtdb_la-DP_Answer.Tpo" -c -o librtdb_la-DP_Answer.lo `test -f 'DP_Answer.cc' || echo '$(srcdir)/'`DP_Answer.cc; \
-@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/librtdb_la-DP_Answer.Tpo" "$(DEPDIR)/librtdb_la-DP_Answer.Plo"; else rm -f "$(DEPDIR)/librtdb_la-DP_Answer.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='DP_Answer.cc' object='librtdb_la-DP_Answer.lo' libtool=yes @AMDEPBACKSLASH@
+librtdb_la-DPanswer.lo: DPanswer.cc
+@am__fastdepCXX_TRUE@	if $(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtdb_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librtdb_la-DPanswer.lo -MD -MP -MF "$(DEPDIR)/librtdb_la-DPanswer.Tpo" -c -o librtdb_la-DPanswer.lo `test -f 'DPanswer.cc' || echo '$(srcdir)/'`DPanswer.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/librtdb_la-DPanswer.Tpo" "$(DEPDIR)/librtdb_la-DPanswer.Plo"; else rm -f "$(DEPDIR)/librtdb_la-DPanswer.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='DPanswer.cc' object='librtdb_la-DPanswer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtdb_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librtdb_la-DP_Answer.lo `test -f 'DP_Answer.cc' || echo '$(srcdir)/'`DP_Answer.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtdb_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o librtdb_la-DPanswer.lo `test -f 'DPanswer.cc' || echo '$(srcdir)/'`DPanswer.cc
 
 librtdb_la-PropResponse.lo: PropResponse.cc
 @am__fastdepCXX_TRUE@	if $(LIBTOOL) --mode=compile --tag=CXX $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(librtdb_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT librtdb_la-PropResponse.lo -MD -MP -MF "$(DEPDIR)/librtdb_la-PropResponse.Tpo" -c -o librtdb_la-PropResponse.lo `test -f 'PropResponse.cc' || echo '$(srcdir)/'`PropResponse.cc; \
@@ -430,6 +435,23 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
+install-pkgincludeHEADERS: $(pkginclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgincludedir)" || $(mkdir_p) "$(DESTDIR)$(pkgincludedir)"
+	@list='$(pkginclude_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(pkgincludeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(pkgincludedir)/$$f'"; \
+	  $(pkgincludeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(pkgincludedir)/$$f"; \
+	done
+
+uninstall-pkgincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkginclude_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(pkgincludedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pkgincludedir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -510,9 +532,9 @@ distdir: $(DISTFILES)
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: $(BUILT_SOURCES)
@@ -561,7 +583,7 @@ info: info-am
 
 info-am:
 
-install-data-am:
+install-data-am: install-pkgincludeHEADERS
 
 install-exec-am: install-libLTLIBRARIES
 
@@ -589,7 +611,8 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
+uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
+	uninstall-pkgincludeHEADERS
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
 	clean-libLTLIBRARIES clean-libtool clean-local ctags distclean \
@@ -597,12 +620,13 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
 	install-exec-am install-info install-info-am \
-	install-libLTLIBRARIES install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-libLTLIBRARIES
+	install-libLTLIBRARIES install-man install-pkgincludeHEADERS \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-info-am uninstall-libLTLIBRARIES \
+	uninstall-pkgincludeHEADERS
 
 %.cc: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
