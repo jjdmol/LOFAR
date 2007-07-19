@@ -56,9 +56,7 @@ namespace LOFAR {
 
 static char*	SALErrors[]  = {
 	"No error",						//  SA_NO_ERROR
-	"Unknown error",				//  SA_UNKNOWN_ERROR
 	"Propertyname is missing",		//  SA_PROPNAME_MISSING
-	"Wrong variable type",			//  SA_VARIABLE_WRONG_TYPE
 	"Datapointtype unknown",		//  SA_DPTYPE_UNKNOWN
 	"MAC variabletype unknown",		//  SA_MACTYPE_UNKNOWN
 	"Creation of DP failed",		//  SA_CREATEPROP_FAILED
@@ -72,7 +70,6 @@ static char*	SALErrors[]  = {
 	"PVSS datbase not running",		//  SA_SCADA_NOT_AVAILABLE
 	"DP does not exist",			//  SA_PROP_DOES_NOT_EXIST
 	"DP already exists",			//  SA_PROP_ALREADY_EXIST
-	"Invalid valuestring",			//  SA_VALUESTRING_NOT_VALID
 	"MAC variabletype mismatch"		//  SA_MACTYPE_MISMATCH
 };
 
