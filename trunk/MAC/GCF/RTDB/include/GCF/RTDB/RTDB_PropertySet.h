@@ -26,6 +26,7 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 #include <GCF/GCF_PValue.h>
+#include <GCF/TM/GCF_Task.h>
 #include <GCF/PVSS/PVSSresponse.h>
 
 namespace LOFAR {
@@ -36,6 +37,8 @@ namespace LOFAR {
   using PVSS::PVSSresult;
   namespace RTDB {
   class RTDBProperty;
+  class PropSetResponse;
+  class DPanswer;
 
 typedef enum PSAccessType {
 	PS_AT_EXTERNAL,			// owned by other program
@@ -48,9 +51,9 @@ class RTDBPropertySet
 public:
 	// Constructor.
 	RTDBPropertySet (const string&	name,
-					const string&	type, 
-					PSAccessType	accessType,
-					PVSSresponse*	pAnswerObj);
+					 const string&	type, 
+					 PSAccessType	accessType,
+					 TM::GCFTask*	clientTask);	// must be pointer!
 	~RTDBPropertySet ();
 
 	string getScope		() const ;
@@ -58,17 +61,6 @@ public:
 	string getType 		() const ;
     bool   exists 		(const string& propName) const;
     
-
-	// Searches the property specified by the propName param
-	// @param propName with or without the scope
-	// @returns 0 if not in this property set
-	RTDBProperty* getProperty (const string& propName) const;
-
-	// Searches the property specified by the propName param
-	// @param propName with or without the scope
-	// @returns a dummy port if property could not be found
-//	GCFProperty& operator[] (const string& propName);
-
 	// Changes the property value, if isMonitoringOn is true and property is 
 	// readable the value will be forwared to the DP element in DB
 	// @param propName with or without the scope
@@ -98,6 +90,10 @@ public:
 							  bool 				wantAnswer = false);
     // </group>
 
+protected:
+	friend class PropSetResponse;
+	void _dpCreated(PVSSresult	result);
+
 private:
 	RTDBPropertySet();
 	// Don't allow copying this object.
@@ -111,13 +107,16 @@ private:
     void _deleteAllProperties();
     void _cutScope	 (string& propName) const;
     void _addProperty(const string& propName, RTDBProperty& prop);
+	RTDBProperty* _getProperty (const string& propName) const;
+
 
 	// data members
     string              		itsScope;	// with or without DBname:
     string              		itsType;
 	PSAccessType				itsAccessType;
 	PVSSservice*          		itsService;
-	PVSSresponse*          		itsResponse;
+	PVSSresponse*          		itsOwnResponse;
+	DPanswer*	          		itsExtResponse;		// REO
 	bool						itsIsTemp;
 	// map with pointers to Property objects
     typedef map<string /*propName*/, RTDBProperty*> PropertyMap_t;

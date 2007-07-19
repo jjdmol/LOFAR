@@ -14,8 +14,9 @@ clean-local:
 
 DOCHDRS				= RTDB_Property.h \
 					  RTDB_PropertySet.h \
-					  DP_Answer.h  \
-					  PropResponse.h
+					  DPanswer.h  \
+					  PropResponse.h \
+					  PropResponseSet.h
    
 librtdb_la_CPPFLAGS	= -I$(top_srcdir)/PVSS/src
 
@@ -25,12 +26,15 @@ BUILT_SOURCES 		= DP_Protocol.ph \
 EXTRA_DIST 			= DP_Protocol.prot \
 					  $(sysconf_DATA)
 
+pkgincludedir		= $(includedir)/GCF/RTDB
+pkginclude_HEADERS	= $(BUILT_SOURCES)
+
 lib_LTLIBRARIES 	= librtdb.la
 
 librtdb_la_SOURCES	= $(BUILT_SOURCES) \
 					  RTDB_Property.cc \
 					  RTDB_PropertySet.cc \
-					  DP_Answer.cc \
+					  DPanswer.cc \
 					  PropResponse.cc
 
 include $(top_srcdir)/Makefile.common

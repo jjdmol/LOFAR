@@ -28,10 +28,12 @@
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 #include "RTDB_Property.h"
+#include "PropSetResponse.h"
 
 namespace LOFAR {
   namespace GCF {
   using namespace Common;
+  using namespace TM;
   using namespace PVSS;
   namespace RTDB {
 const TPropertyInfo dummyPropInfo("DUMMY", LPT_BOOL);
@@ -40,20 +42,23 @@ const TPropertyInfo dummyPropInfo("DUMMY", LPT_BOOL);
 // RTDBPropertySet (name, type, answer*)
 //
 RTDBPropertySet::RTDBPropertySet (const string& 	name,
-                                const string& 	type,
-								PSAccessType	accessType,
-                                PVSSresponse*	responsePtr) : 
+                                  const string& 	type,
+								  PSAccessType		accessType,
+								  GCFTask*			clientTask) :
 	itsScope	  (name),
 	itsType		  (type),
 	itsAccessType (accessType),
 	itsService	  (0),
-	itsResponse   (responsePtr),
+	itsOwnResponse(0),
+	itsExtResponse(new DPanswer(clientTask)),
 	itsIsTemp	  (accessType == PS_AT_OWNED_TEMP)
-//	_dummyProperty(dummyPropInfo, this),
 {
 	LOG_TRACE_FLOW_STR("RTDBPropertySet(" << name << "," << type << "," << accessType << ")");
 
-	itsService = new PVSSservice(itsResponse);
+	itsOwnResponse = new PropSetResponse(this, itsExtResponse);
+	ASSERTSTR(itsOwnResponse, "Can't allocate Response class for PropertySet " << name);
+
+	itsService = new PVSSservice(itsOwnResponse);
 	ASSERTSTR(itsService, "Can't connect to PVSS database for " << itsScope);
 
 	// check name convention of DP
@@ -65,11 +70,28 @@ RTDBPropertySet::RTDBPropertySet (const string& 	name,
 	// create dp if it doesn't exist yet.
 	if (!PVSSinfo::propExists(itsScope)) {
 		itsService->dpCreate(itsScope, itsType);
-		// note: result is returned via itsResponse object direct to user.
+		// note: PVSS will call via PropSetResponse object _dpCreated.
 	}
+	else {
+		// DP already exists in the database, immediately continue with 'created' function.
+		_dpCreated(SA_NO_ERROR);
+	}
+}
 
-	// create all the property-instances
+//
+// _dpCreated(result)
+//
+// Note: called by PropSetResponse.
+//
+void RTDBPropertySet::_dpCreated(PVSSresult		result)
+{
+	LOG_TRACE_FLOW_STR("RTDBPropertySet::_dpCreated(" << result << ")");
+
+	// Now that Dp exists in the database we can access the elements.
 	_createAllProperties();
+
+	// Pass 'created' event to client.
+	itsExtResponse->dpCreated(itsScope, result);
 }
 
 //
@@ -77,6 +99,8 @@ RTDBPropertySet::RTDBPropertySet (const string& 	name,
 //
 RTDBPropertySet::~RTDBPropertySet()
 {
+	LOG_TRACE_FLOW_STR("~RTDBPropertySet(" << "?" << ")");
+
 	_deleteAllProperties();// cleanup propMap
 
 	if (itsIsTemp) {
@@ -88,27 +112,11 @@ RTDBPropertySet::~RTDBPropertySet()
 
 #if 0
 //
-// getProperty (propName)
-//
-RTDBProperty* RTDBPropertySet::getProperty (const string& propName) const
-{
-	string 	shortPropName(propName);	// modifyable copy
-	_cutScope(shortPropName);
-
-	PropertyMap_t::const_iterator PMiter = itsPropMap.find(shortPropName);
-	if (PMiter != itsPropMap.end()) {
-		return (PMiter->second);
-	}
-
-	return (0);
-}
-
-//
 // operator[](propName)
 //
 RTDBProperty& RTDBPropertySet::operator[] (const string& propName)
 { 
-	RTDBProperty* 	propPtr = getProperty(propName);
+	RTDBProperty* 	propPtr = _getProperty(propName);
 // TODO
 //	if (propPtr == 0) {
 //		propPtr = &dummyPropInfo;
@@ -126,7 +134,7 @@ PVSSresult RTDBPropertySet::setValueTimed (const string& propName,
                                      double timestamp, 
                                      bool wantAnswer)
 {
-	RTDBProperty* propPtr = getProperty(propName);
+	RTDBProperty* propPtr = _getProperty(propName);
 	if (propPtr) {
 		return propPtr->setValueTimed(value, timestamp, wantAnswer);    
 	}
@@ -142,7 +150,7 @@ PVSSresult RTDBPropertySet::setValueTimed (const string& propName,
                                      double timestamp, 
                                      bool wantAnswer)
 {
-	RTDBProperty* propPtr = getProperty(propName);
+	RTDBProperty* propPtr = _getProperty(propName);
 	if (propPtr) {
 		return propPtr->setValueTimed(value, timestamp, wantAnswer);    
 	}
@@ -155,7 +163,7 @@ PVSSresult RTDBPropertySet::setValueTimed (const string& propName,
 //
 bool RTDBPropertySet::exists (const string& propName) const
 {
-	RTDBProperty* propPtr = getProperty(propName);
+	RTDBProperty* propPtr = _getProperty(propName);
 	if (propPtr) {
 		return (PVSSinfo::propExists(getFullScope() + GCF_PROP_NAME_SEP + propName));
 	}
@@ -209,7 +217,7 @@ void RTDBPropertySet::_createAllProperties()
 	RTDBProperty* 	propPtr;
 	for (PropInfoList_t::iterator PIiter = itsPropInfoList.begin();
 									PIiter != itsPropInfoList.end(); ++PIiter) { 
-		propPtr = new RTDBProperty(*PIiter, itsResponse);
+		propPtr = new RTDBProperty(itsScope, *PIiter, itsExtResponse);
 		_addProperty(PIiter->propName, *propPtr);
 	}
 }
@@ -234,16 +242,17 @@ void RTDBPropertySet::_addProperty(const string& propName, RTDBProperty& prop)
 {
 	ASSERT(propName.length() > 0);
 
-	string shortPropName(propName);		// modifyable copy
-	_cutScope(shortPropName);			// cut off propertySET name
+//	string shortPropName(propName);		// modifyable copy
+//	_cutScope(shortPropName);			// cut off propertySET name
 
-	if (itsPropMap.find(shortPropName) != itsPropMap.end()) {	// double name!
-		LOG_ERROR_STR("Property " << shortPropName << " double defined in " << itsScope);
+	if (itsPropMap.find(propName) != itsPropMap.end()) {	// double name!
+		LOG_ERROR_STR("Property " << propName << " double defined in " << itsScope);
 		return;
 	}
 
 	// add it to the map
-	itsPropMap[shortPropName] = &prop;
+	itsPropMap[propName] = &prop;
+	LOG_TRACE_VAR_STR("Added property " << propName << ", mapsize=" << itsPropMap.size());
 }
 
 //
@@ -259,6 +268,27 @@ void RTDBPropertySet::_cutScope(string& propName) const
 		propName.erase(0, EOname + 1); 	// including seperator
 		LOG_DEBUG_STR("_cutScope to " << propName);
 	}
+}
+
+//
+// _getProperty (propName)
+//
+RTDBProperty* RTDBPropertySet::_getProperty (const string& propName) const
+{
+//	string 	shortPropName(propName);	// modifyable copy
+//	_cutScope(shortPropName);
+
+	LOG_TRACE_VAR_STR("itsPropMap.size() = " << itsPropMap.size());
+	LOG_TRACE_VAR_STR("propName = " << propName);
+
+	PropertyMap_t::const_iterator PMiter = itsPropMap.find(propName);
+	if (PMiter != itsPropMap.end()) {
+		return (PMiter->second);
+	}
+
+	ASSERTSTR(false, "Property " << propName << " not in the PropertySet"); //REO
+
+	return (0);
 }
 
   } // namespace RTDB

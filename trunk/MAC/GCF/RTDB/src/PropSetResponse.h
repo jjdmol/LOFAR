@@ -1,4 +1,4 @@
-//#  PropResponse.h:  PVSS response class for catching private Property events.
+//#  PropSetResponse.h:  PVSS response class for catching private Property events.
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,10 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef RTDB_PROPRESPONSE_H
-#define RTDB_PROPRESPONSE_H
+#ifndef RTDB_PROPSETRESPONSE_H
+#define RTDB_PROPSETRESPONSE_H
 
 #include <GCF/PVSS/PVSSresponse.h>
+#include "DPanswer.h"
 
 namespace LOFAR {
   namespace GCF {
@@ -31,13 +32,14 @@ namespace LOFAR {
 	using PVSS::PVSSresult;
 	using PVSS::PVSSresponse;
     namespace RTDB {
-	  class RTDBProperty;
+	  class RTDBPropertySet;
 
-class PropResponse: public PVSSresponse
+class PropSetResponse: public PVSSresponse
 {
 public:
-	PropResponse (RTDBProperty*		propPtr) : itsProperty(propPtr) {};
-	virtual ~PropResponse () {};
+	PropSetResponse (RTDBPropertySet*		propSetPtr, DPanswer*	extResponse) : 
+		itsPropertySet(propSetPtr), itsExtResponse(extResponse) {};
+	virtual ~PropSetResponse () {};
 
 	virtual void dpCreated 			 (const string& propName, PVSSresult	result);
 	virtual void dpDeleted	 		 (const string& propName, PVSSresult	result);
@@ -50,8 +52,55 @@ public:
 	virtual void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
 
 private:
-	RTDBProperty*	itsProperty;
+	RTDBPropertySet*	itsPropertySet;
+//	PVSSresponse*		itsExtResponse;
+	DPanswer*			itsExtResponse;
 };
+
+//# ----- inline functions -----
+inline void PropSetResponse::dpCreated(const string& /*propName*/, PVSSresult	result)
+{
+	itsPropertySet->_dpCreated(result);
+}
+
+inline void PropSetResponse::dpDeleted(const string& propName, PVSSresult	result)
+{
+	itsExtResponse->dpDeleted(propName, result);
+}
+inline void PropSetResponse::dpeSubscribed(const string& propName, PVSSresult	result)
+{
+	itsExtResponse->dpeSubscribed(propName, result);
+}
+
+inline void PropSetResponse::dpeUnsubscribed(const string& propName, PVSSresult	result)
+{
+	itsExtResponse->dpeUnsubscribed(propName, result);
+}
+
+inline void PropSetResponse::dpeValueGet(const string& propName, PVSSresult	result, const GCFPValue& value)
+{
+	itsExtResponse->dpeValueGet(propName, result, value);
+}
+
+inline void PropSetResponse::dpeValueChanged(const string& propName, PVSSresult	result, const GCFPValue& value)
+{
+	itsExtResponse->dpeValueChanged(propName, result, value);
+}
+
+inline void PropSetResponse::dpeValueSet(const string& propName, PVSSresult	result)
+{
+	itsExtResponse->dpeValueSet(propName, result);
+}
+
+inline void PropSetResponse::dpeSubscriptionLost(const string& propName, PVSSresult	result)
+{
+	itsExtResponse->dpeSubscriptionLost(propName, result);
+}
+
+inline void PropSetResponse::dpQuerySubscribed(uint32 queryId, PVSSresult	result)
+{
+	itsExtResponse->dpQuerySubscribed(queryId, result);
+}
 
     } // namespace RTDB
   } // namespace GCF

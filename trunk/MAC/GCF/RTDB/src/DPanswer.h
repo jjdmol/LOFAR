@@ -1,4 +1,4 @@
-//#  DP_Answer.h:  PVSS response class that delivers DP_protocol messages.
+//#  DPanswer.h:  PVSS response class that delivers DP_protocol messages.
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,10 +23,8 @@
 #ifndef RTDB_DP_ANSWER_H
 #define RTDB_DP_ANSWER_H
 
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/GCF_PValue.h>
 #include <GCF/PVSS/PVSSresponse.h>
-#include <GCF/PVSS/PVSSresult.h>
+#include <GCF/TM/GCF_Task.h>
 
 namespace LOFAR {
   namespace GCF {
@@ -34,12 +32,13 @@ namespace LOFAR {
 	using PVSS::PVSSresponse;
 	using PVSS::PVSSresult;
     namespace RTDB {
+	class PropSetResponse;
 
-class DPAnswer: public PVSSresponse
+class DPanswer: public PVSSresponse
 {
 public:
-	DPAnswer (TM::GCFTask&	aTask) : itsTask(&aTask) {};
-	virtual ~DPAnswer () {};
+	DPanswer (TM::GCFTask*	aTask) : itsTask(aTask) {};
+	virtual ~DPanswer () {};
 
 	virtual void dpCreated 			 (const string& dpName,  PVSSresult result);
 	virtual void dpDeleted	 		 (const string& dpName,  PVSSresult result);
@@ -54,11 +53,15 @@ public:
 	virtual void dpQuerySubscribed	 (uint32 queryId, 		 PVSSresult result);        
     
 private:
+	friend class PropSetResponse;
+
 	// Don't allow copying this object.
 	// <group>
-	DPAnswer (const DPAnswer&);
-	DPAnswer& operator= (const DPAnswer&);  
+	DPanswer (const DPanswer&);
+	DPanswer& operator= (const DPanswer&);  
 	// </group>
+
+	void _dispatchEvent(TM::GCFEvent&	event);
 
 	// ----- datamembers -----
 	TM::GCFTask*				itsTask;
