@@ -129,7 +129,7 @@ namespace LOFAR {
       void              processCommands();
       void              resetSyncActions();
       void              initiateSync(GCFEvent& event);
-      //GCFEvent::TResult syncCache(GCFEvent& event, GCFPortInterface& port);
+      //GCFEvent::TswitchResult syncCache(GCFEvent& event, GCFPortInterface& port);
       void              resetSync(GCFPortInterface& port);
       void              completeSync();
       void              completeCommands();
@@ -141,7 +141,7 @@ namespace LOFAR {
       pqueue m_done_queue;
 
       std::map< GCFPortInterface*,
-		std::vector<SyncAction*> > m_syncactions;
+				std::vector<SyncAction*> > m_syncactions;
       std::map< GCFPortInterface*, bool >  m_sync_completed;
 
       RTC::Timestamp m_current_time;

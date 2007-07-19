@@ -62,14 +62,15 @@ void SetHBACmd::ack(CacheBuffer& /*cache*/)
 
 void SetHBACmd::apply(CacheBuffer& cache, bool setModFlag)
 {
-  for (int cache_rcu = 0;
-       cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
-    if (m_event->rcumask[cache_rcu]) {
-      cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(0, Range::all());
+	int event_rcu = 0; // rcu number in m_event->settings()
+	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+		if (m_event->rcumask.test(cache_rcu)) { // check if rcu is selected
+      cache.getHBASettings()()(cache_rcu, Range::all()) = m_event->settings()(event_rcu, Range::all());
       if (setModFlag) {
         cache.getCache().getState().hbaprotocol().write(cache_rcu);
-	cache.getCache().getState().hbaprotocol().write(cache_rcu);
+				// cache.getCache().getState().hbaprotocol().write(cache_rcu); // waarom deze 2e keer ??
       }
+			event_rcu++;
     }
   }
 }
@@ -91,8 +92,14 @@ void SetHBACmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetHBACmd::validate() const
 {
+  LOG_INFO_STR(
+  	"validate-> rcus=" << m_event->rcumask.count() 
+  	<< " dims=" << m_event->settings().dimensions() 
+  	<< " ext_firt=" << m_event->settings().extent(firstDim)
+  	<< " hba_delays=" << m_event->settings().extent(secondDim) );
+  
   return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
-	  && (2 == m_event->settings().dimensions())
-	  && (1 == m_event->settings().extent(firstDim))
-	  && (MEPHeader::N_HBA_DELAYS == m_event->settings().extent(secondDim)));
+	  	&& (2 == m_event->settings().dimensions())
+			&& (m_event->rcumask.count() == m_event->settings().extent(firstDim))		// check number off selected rcus
+			&& (MEPHeader::N_HBA_DELAYS == m_event->settings().extent(secondDim))); // check number of delays
 }
