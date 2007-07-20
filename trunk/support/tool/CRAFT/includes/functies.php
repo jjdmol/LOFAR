@@ -52,12 +52,11 @@
       ?>
    	}	
   	else if (optie ==4) {
-      <?php 
-      	echo("document.getElementById('suboptie1').innerHTML=\"Statistieken overzicht\";");
-      	if($_SESSION['toevoegen'] == 1)   echo("document.getElementById('suboptie2').innerHTML=\"Statistieken toevoegen\";");
-      	if($_SESSION['bewerken'] == 1)    echo("document.getElementById('suboptie3').innerHTML=\"Statistieken bewerken\";");
-      	if($_SESSION['verwijderen'] == 1) echo("document.getElementById('suboptie4').innerHTML=\"Statistieken verwijderen\";");
-      ?>
+    	document.getElementById('suboptie1').innerHTML="Algemeen";
+    	document.getElementById('suboptie2').innerHTML="Type componenten";
+    	document.getElementById('suboptie3').innerHTML="Componenten";
+    	document.getElementById('suboptie4').innerHTML="Type meldingen";
+    	document.getElementById('suboptie5').innerHTML="Meldingen";
   	}	
   	else if (optie ==5) {
   	}	

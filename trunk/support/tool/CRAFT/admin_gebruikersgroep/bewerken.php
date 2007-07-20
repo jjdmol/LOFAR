@@ -40,7 +40,7 @@
 					function checkboxWaardes($waarde) {
 						if (isset($_POST[$waarde]) && $_POST[$waarde] == 'on') 
 							return "1";
-						else return "0";					
+						else return "0";
 					}
 					
 					
@@ -58,7 +58,9 @@
 						$query = $query . "Instel_Zichtbaar = '". checkboxWaardes('Inst_Zichtbaar') ."', Toevoegen = '". checkboxWaardes('Toevoeg_Rechten') ."', ";
 						$query = $query . "Bewerken = '". checkboxWaardes('Bewerk_Rechten') ."', Verwijderen = '". checkboxWaardes('Verwijder_Rechten') ."', Admin_Rechten='". $row['Admin_Rechten'] ."'";
 						$query = $query . " WHERE Groep_ID = '" . $_GET['c'] . "'";
-	
+
+						
+
 						if (mysql_query($query)) echo("De gewijzigde gebruikersgroep \"". $_POST['groepsnaam'] ."\" is in het systeem bijgewerkt<br>");
 						else("Er is iets mis gegaan met het opslaan van de gebruikersgroep \"". $_POST['groepsnaam'] ."\"!! De gebruikersgroep is niet bijgewerkt!");
 						echo('<a href="'.$_SESSION['huidige_pagina'].'&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige type of selecteer links een gebruikersgroep uit de treeview.</a>');
@@ -95,6 +97,45 @@
 										}
 	    						 ?></select>
 	    					</td>
+	    				</tr>
+	    				<tr>
+	    					<td>Zichtbaar vanaf:</td>
+	    					<td><select name="Comp_Type" <?php if ($row['Vaste_gegevens'] == 1) echo('DISABLED'); ?>>
+	    						<?php 
+	    							$query = "SELECT Comp_Type_ID FROM gebruikersgroeprechten WHERE Groep_ID = '". $_GET['c']."'";
+	    							$resultaat = mysql_query($query);
+	    							$data2 = mysql_fetch_array($resultaat);
+	    							
+	    							$query = 'SELECT Comp_Type, Type_Naam FROM comp_type';
+										$resultaat = mysql_query($query);
+				    			  if (isset($_POST['Comp_Type'])) $selected = $_POST['Comp_Type'];
+				    			  else $selected = $data2['Comp_Type_ID'];
+	
+	    							while ($data = mysql_fetch_array($resultaat)) {
+											echo("<option value=\"". $data['Comp_Type'] ."\" ");
+											if ($selected == $data['Comp_Type'])
+												echo ('SELECTED');
+											echo(">". $data['Type_Naam'] ."</option>\r\n");
+										}
+	    						 ?></select>
+	    					</td>
+	    				</tr>
+	    				<tr>
+	    					<td>Onderliggende data vanaf component:</td>
+	    					<td><?php 
+    							$query = "SELECT onderliggende_Data FROM gebruikersgroeprechten WHERE Groep_ID = '". $_GET['c']."'";
+    							$resultaat = mysql_query($query);
+    							$data2 = mysql_fetch_array($resultaat);
+
+			    				echo('<input id="onderliggende_data" name="onderliggende_data"  type="checkbox" ');
+			    				if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) {
+			    					if(isset($_POST['onderliggende_data']) && ($_POST['onderliggende_data'] == 1 || $_POST['onderliggende_data'] == 'on')) 
+			    						echo('CHECKED');
+			    				}
+			    				else if ($data2['onderliggende_Data'] == 1) echo('CHECKED');
+			    				if ($row['Vaste_gegevens'] == 1) echo(' DISABLED');
+			    				echo('>');
+			    			?></td>
 	    				</tr>
 							<tr>
 								<td>Intro scherm zichtbaar:</td>

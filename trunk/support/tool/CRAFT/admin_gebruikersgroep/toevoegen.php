@@ -55,13 +55,30 @@
 	    				$resultaat = mysql_query($query);
 							$row = mysql_fetch_array($resultaat);
 
+							//"onderliggende_data"
 	    				$query = "INSERT INTO gebruikers_groepen (Groeps_Naam, Admin_Rechten, Groep_Parent, Intro_Zichtbaar, Comp_Zichtbaar, Melding_Zichtbaar, Stats_Zichtbaar, ";
 	    				$query = $query . "Instel_Zichtbaar, Toevoegen, Bewerken, Verwijderen) VALUES ('". htmlentities($_POST['groepsnaam'], ENT_QUOTES) ."', '". $row['Admin_Rechten'] ."', '". $_POST['groepsparent'] ."', '";
 							$query = $query . Omzetten_Checkbox($_POST['hidden_intro']) ."', '". Omzetten_Checkbox($_POST['hidden_comp']) ."', '". Omzetten_Checkbox($_POST['hidden_melding']) ."', '". Omzetten_Checkbox($_POST['hidden_stats']) ."', '";
 							$query = $query . Omzetten_Checkbox($_POST['hidden_inst']) ."', '" . Omzetten_Checkbox($_POST['hidden_toevoeg']) ."', '". Omzetten_Checkbox($_POST['hidden_bewerk']) ."', '". Omzetten_Checkbox($_POST['hidden_verwijder']) ."')";
+
+							$errorLevel = 0;
+							if (mysql_query($query)) {
+								$errorLevel = 1;
+
+								$Groep = mysql_insert_id();
+								$query = "INSERT INTO gebruikersgroeprechten (Groep_ID, Comp_Type_ID, onderliggende_Data) VALUES (";
+								$query = $query . "'".$Groep."', '".$_POST['Comp_Type']."', '";
+								
+								if (isset($_POST['onderliggende_data']) && $_POST['onderliggende_data'] == 'on') 
+									$query = $query .  "1')";
+								else $query = $query . "0')";
+								
+								if (mysql_query($query)) { $errorLevel = 2; }
+							}
 							
-							if (mysql_query($query)) echo("De nieuwe groep \"". $_POST['groepsnaam'] ."\" is aan het systeem toegevoegd<br>");
-							else echo("De nieuwe groep \"". $_POST['groepsnaam'] ."\" kon niet aan het systeem toegevoegd worden!.");
+							if ($errorLevel == 2) echo("De nieuwe groep \"". $_POST['groepsnaam'] ."\" is samen met de groepsrechten aan het systeem toegevoegd!<br>");
+							else if ($errorLevel == 0) echo("De nieuwe groep \"". $_POST['groepsnaam'] ."\" kon niet aan het systeem toegevoegd worden!.");
+							else if ($errorLevel == 1) echo("De nieuwe groep \"". $_POST['groepsnaam'] ."\" is aan het systeem toegevoegd.<br>Alleen er is iets foutgegaan met het toevoegen van de groepsrechten! De groepsrechten zijn dus niet aan het systeem toegevoegd!");
 	    				echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om nog een groep toe te voegen.</a>');
 						}
 						else {
@@ -93,6 +110,30 @@
 												}
 			    						 ?></select>
 			    					</td>
+			    				</tr>
+			    				<tr>
+			    					<td>Zichtbaar vanaf:</td>
+			    					<td><select name="Comp_Type">
+			    						<?php 
+			    							$query = 'SELECT Comp_Type, Type_Naam FROM comp_type';
+												$resultaat = mysql_query($query);
+						    			  if (isset($_POST['Comp_Type'])) $selected = $_POST['Comp_Type'];
+						    			  else $selected = 'SELECTED';
+			
+			    							while ($data = mysql_fetch_array($resultaat)) {
+													echo("<option value=\"". $data['Comp_Type'] ."\" ");
+													if ($selected == $data['Comp_Type'] || $selected == 'SELECTED'){
+														echo ('SELECTED');
+														$selected = $data['Comp_Type'];
+													}
+													echo(">". $data['Type_Naam'] ."</option>\r\n");
+												}
+			    						 ?></select>
+			    					</td>
+			    				</tr>
+			    				<tr>
+			    					<td>Onderliggende data vanaf component:</td>
+			    					<td><input type="Checkbox" name="onderliggende_data" CHECKED></td>
 			    				</tr>
 			    			</table>
 	    				</td></tr>

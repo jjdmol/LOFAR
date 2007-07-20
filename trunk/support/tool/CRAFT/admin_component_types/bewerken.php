@@ -6,6 +6,7 @@
 	  $_SESSION['huidige_pagina'] = $_SESSION['pagina'] . 'admin.php?p='.$_SESSION['admin_deel'].'&s=2';
 	  
 	  require_once($_SESSION['pagina'] . 'includes/login_funcs.php');
+	  require_once($_SESSION['pagina'] . 'algemene_functionaliteit/globale_functies.php');
 		
 	  //controleren of er iemand ingelogd is...
 	  if ($LOGGED_IN = user_isloggedin()) {
@@ -13,6 +14,8 @@
 	  	?>
 	  	<div id="linkerdeel">
 	  		<?php 
+	  			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."admin_component_types/comp_type_functies.php\"></script>");
+
 	  			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree.js\"></script>");
 					echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree_items.php\"></script>");
 					echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree_tpl.js\"></script>");
@@ -48,7 +51,7 @@
 							return false;
 	
 						//Reserve tussen minimum en maximum										
-						if (isset($_POST['minimum']) && isset($_POST['maximum']) && isset($_POST['reserve']) && 
+						if (isset($_POST['minimum']) && isset($_POST['maximum']) && isset($_POST['reserve']) && ($_POST['reserve'] != 0) &&
 							($_POST['reserve'] > $_POST['maximum'] || $_POST['reserve'] < $_POST['minimum']))
 								return false;
 						
@@ -62,7 +65,7 @@
 							$query = $query . "1', ";
 						else $query = $query . "0', ";
 						$query = $query . "Min_Aantal='". htmlspecialchars($_POST['minimum']) ."', Max_Aantal='". htmlspecialchars($_POST['maximum']) ."', Reserve_Minimum='". htmlspecialchars($_POST['reserve']) ."', ";
-						$query = $query . "Type_Verantwoordelijke='". $_POST['verantwoordelijke'] ."', Geleverd_Door='".$_POST['leverancier']."', Gefabriceerd_Door='".$_POST['fabricant']."'";
+						$query = $query . "Type_Verantwoordelijke='". $_POST['hidden_verantwoordelijke'] ."', Geleverd_Door='".$_POST['leverancier']."', Gefabriceerd_Door='".$_POST['fabricant']."'";
 						$query = $query . " WHERE Comp_Type = '" . $_GET['c'] . "'";
 						
 						if (mysql_query($query)) echo("Het gewijzigde type \"". $_POST['naam'] ."\" is in het systeem bijgewerkt<br>");
@@ -72,7 +75,7 @@
 					else {
 					
 						if (isset($_GET['c']) && $_GET['c'] != 0 ) {
-						
+							$type_selectie = -1;
 							$query = 'SELECT * FROM comp_type WHERE Comp_Type = '. $_GET['c'];
 					  	$resultaat = mysql_query($query);  	
 					  	$row = mysql_fetch_array($resultaat);
@@ -91,20 +94,18 @@
 					    		</tr>
 					    		<tr>
 					    			<td>Parent van het type:</td>
-					    			<td><select name="parent">
+					    			<td>
+ 						    			<select name="parent" id="parent" onchange="switchDocument(<?php if(isset($_POST['hidden_verantwoordelijke'])) echo($_POST['hidden_verantwoordelijke']); else echo("-1");?>);">
 						    			<?php 
-						    				$query = 'SELECT Comp_Type, Type_Naam FROM comp_type';
+						    				//Type ophalen uit gebruikersgroeprechten
+						    				$query = "SELECT Comp_Type_ID FROM gebruikersgroeprechten WHERE Groep_ID = '".$_SESSION['groep_id']."'";
 						    			  $resultaat = mysql_query($query);
-						    			  if (isset($_POST['parent'])) $selectie = $_POST['parent'];
-						    			  else $selectie = $row['Type_Parent'];
-										  	while ($data = mysql_fetch_array($resultaat)) {
-										  		if ($data['Comp_Type'] != $_GET['c']) {
-											  		echo('<option value="'. $data['Comp_Type'] .'"');
-											  		if(isset($selectie) && isset($_GET['c']) &&  $data['Comp_Type'] == $selectie)
-											  			echo('SELECTED');
-											  		echo('>'. $data['Type_Naam'] .'</option>');
-										  		}
-										  	}
+												$data = mysql_fetch_array($resultaat);
+						    				
+									  		if (isset($_POST['parent'])) $type_selectie = $_POST['parent'];
+									  		else if(isset($_GET['c'])) $type_selectie = $row['Type_Parent'];
+				
+												Vul_Component_Types_Select_Box($data[0], $type_selectie, true);
 						    			?></select>
 						    		</td>
 					    		</tr>
@@ -189,30 +190,21 @@
 					    			<td>Aantal op reserve:</td>
 					    			<td><input name="reserve" type="text" value="<?php if(isset($_POST['reserve'])) echo(htmlentities($_POST['reserve'],ENT_QUOTES)); else echo($row['Reserve_Minimum']); ?>">
 					    			<?php
-											if (isset($_POST['minimum']) && isset($_POST['maximum']) && isset($_POST['reserve']) && 
+											if (isset($_POST['minimum']) && isset($_POST['maximum']) && isset($_POST['reserve']) && ($_POST['reserve'] != 0) &&
 												($_POST['reserve'] > $_POST['maximum'] || $_POST['reserve'] < $_POST['minimum']))
 						    					echo('<b id="type_reserve">* De invoer ('.$_POST['reserve'] .') valt buiten de min. / max. waardes.</b>');
 					    				?></td>
 					    		</tr>
+			    				<?php
+			    					if (isset($_POST['hidden_verantwoordelijke'])) 
+    									$verantwoordelijke = $_POST['hidden_verantwoordelijke'];
+    								else $verantwoordelijke = $row['Type_Verantwoordelijke'];
+			    				
+			    				?>
+			    				<tr><td>Type verantwoordelijke:</td><td><iframe id="frame_contact" name="frame_contact" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/type_verantwoordelijke.php?c=<?php echo($type_selectie . "&s=" . $verantwoordelijke);?>" width="300" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td></tr>
 					    		<tr>
-					    			<td>Type verantwoordelijke:</td>
-					    			<td><select name="verantwoordelijke">
-					    			<?php
-											$query2 = 'SELECT Werknem_ID, inlognaam FROM gebruiker';
-					  					$resultaat2 = mysql_query($query2); 
-									  	if (isset($_POST['verantwoordelijke'])) $selectie = $_POST['verantwoordelijke'];
-									  	else $selectie = $row['Type_Verantwoordelijke'];
-									  	while ($data = mysql_fetch_array($resultaat2)) {
-									  		echo('<option value="'. $data['Werknem_ID'] .'"');
-									  		if(isset($selectie) && $data['Werknem_ID'] == $selectie)
-									  			echo('SELECTED');
-									  		echo('>'. $data['inlognaam'] .'</option>');
-									  	}
-					    			?></select></td>
-					    		</tr>
-					    		<tr>
-										<td id="opslaan" align="right"><a href="javascript:document.theForm.submit();">Opslaan</a></td>
-					    			<td><input id="opslaan" name="opslaan" type="hidden" value="1"></td>
+										<td id="opslaan" align="right"><a href="javascript:submitTypeOpslaan();">Opslaan</a></td>
+					    			<td><input name="hidden_verantwoordelijke" id="hidden_verantwoordelijke" type="hidden" value="-1"><input id="opslaan" name="opslaan" type="hidden" value="1"></td>
 					    		</tr>
 					    	</table>
 							</form> 		   	
