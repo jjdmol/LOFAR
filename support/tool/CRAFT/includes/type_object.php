@@ -18,7 +18,7 @@
 		function Get_ID() {
 			return $this->comp_id;
 		}
-		
+
 		function Get_Childarray() {
 			return $this->Childarray;
 		}

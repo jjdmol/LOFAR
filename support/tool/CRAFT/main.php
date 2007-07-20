@@ -49,8 +49,24 @@
     			else 
 						include($_SESSION['pagina'] . 'main_meldingen/overzicht.php');
     		}
-    		//include ($_SESSION['pagina'] .'main/meldingen.php');
-    		else if ($pagina == 4) include ($_SESSION['pagina'] .'main/statistieken.php');
+    		//statistieken
+    		else if ($pagina == 4) {
+    			//Type Componenten
+					if (isset($_GET['s']) && $_GET['s'] == 2)
+						include($_SESSION['pagina'] . 'main_statistieken/type_componenten.php');
+					//componenten 
+					else if (isset($_GET['s']) && $_GET['s'] == 3)
+						include($_SESSION['pagina'] . 'main_statistieken/componenten.php');
+					//Type Meldingen 
+					else if (isset($_GET['s']) && $_GET['s'] == 4)
+						include($_SESSION['pagina'] . 'main_statistieken/type_meldingen.php');
+					//meldingen
+					else if (isset($_GET['s']) && $_GET['s'] == 5)
+						include($_SESSION['pagina'] . 'main_statistieken/meldingen.php');    			
+    			//algemene statistieken
+    			else 
+						include($_SESSION['pagina'] . 'main_statistieken/algemeen.php');
+    		}
     		else if ($pagina == 5) include ($_SESSION['pagina'] .'main/instellingen.php');
     	?>
 	</div> 

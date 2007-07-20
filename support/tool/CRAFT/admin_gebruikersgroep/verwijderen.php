@@ -28,9 +28,19 @@
 	
 				<?php
 	  			if (isset($_POST['verwijderen']) && $_POST['verwijderen'] == 1 && isset($_POST['confirmatie']) && $_POST['confirmatie'] == 'on') {
-						$query = "DELETE FROM gebruikers_groepen WHERE Groep_ID = " . $_POST['groep'];
-						if (mysql_query($query)) echo("De door u geselecteerde gebruikersgroep is uit het systeem verwijderd.<br>");
-						else("Er is iets mis gegaan met het verwijderen van de geselecteerde gebruikersgroep!! De gebruikersgroep is niet verwijderd!");
+						$errorlevel = 0;
+						//eerst de gebruikersgroeprechten verwijderen
+						$query = "DELETE FROM gebruikersgroeprechten WHERE Groep_ID = '". $_POST['groep'] ."'";
+						if (mysql_query($query)) {
+							$errorlevel = 1;
+							//hierna de gebruikersgroep verwijderen
+							$query = "DELETE FROM gebruikers_groepen WHERE Groep_ID = " . $_POST['groep'];
+							if (mysql_query($query)) {$errorlevel = 2;}
+						}	
+						
+						if ($errorlevel == 2) echo("De door u geselecteerde gebruikersgroep is uit het systeem verwijderd.<br>");
+						else if ($errorlevel == 0) echo ("Er is iets mis gegaan met het verwijderen van de geselecteerde gebruikersgroep!! De gebruikersgroep is niet verwijderd!<br>"); 
+						else if ($errorlevel == 1) echo ("Er is iets mis gegaan met het verwijderen van de geselecteerde gebruikersgroep!! De groepsrechten zijn echter wel verwijderd!<br>");
 						echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een gebruikersgroep uit de treeview.</a>');
 	  			}
 	  			else {

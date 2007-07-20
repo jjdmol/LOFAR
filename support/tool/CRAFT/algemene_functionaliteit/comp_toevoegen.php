@@ -1,4 +1,5 @@
 <?php
+		  require_once($_SESSION['pagina'] . 'algemene_functionaliteit/globale_functies.php');
 
 			//het valideren van de invoer, dus controleren of de ingevoerde gegevens opgeslagen mogen worden
 			function Valideer_Invoer() {
@@ -84,7 +85,7 @@
 				
 				//de waardes, welke opgeslagen moeten worden in de database
 				$query = $query . ") VALUES ('". htmlentities($_POST['hidden_naam'], ENT_QUOTES) ."', '". $_POST['comp_type'] ."', '". $_POST['hidden_type'] ."', '";
-				$query = $query .  $_POST['comp_locatie'] ."', '".  $_POST['comp_verantwoordelijke']."', '".$_POST['hidden_fabricant']."', '".$_POST['hidden_leverancier']."'";
+				$query = $query .  $_POST['comp_locatie'] ."', '".  $_POST['hidden_verantwoordelijke']."', '".$_POST['hidden_fabricant']."', '".$_POST['hidden_leverancier']."'";
 				    				
 				//de waarde voor de leverdatum aan de query toevoegen
 				if (isset($_POST['leverdatum']) && $_POST['leverdatum'] != '') {
@@ -112,8 +113,8 @@
 					$Comp_ID = mysql_insert_id();
 
 					//De eerste melding van het component toevoegen, dit is zeer waarschijnlijk het plaatsen van het component oid
-					$query = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door)";
-					$query = $query . "VALUES ('". $_POST['type_melding'] ."', '". $Comp_ID ."'";
+					$query = "INSERT INTO melding_lijst (Melding_Locatie, Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door)";
+					$query = $query . "VALUES ('". $_POST['comp_locatie'] ."', '". $_POST['type_melding'] ."', '". $Comp_ID ."'";
 
   				//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
   				if (isset($_POST['statusdatum']) && $_POST['statusdatum'] != '') {
@@ -122,7 +123,7 @@
 					}
 					else $query = $query . ", NOW()";
 					$query = $query . ", '". $_POST['hidden_status'] ."', '1', '". htmlentities($_POST['hidden_melding'], ENT_QUOTES) ."', '". $_SESSION['gebr_id'] ."', '". $_SESSION['gebr_id'] ."') ";
-					
+										
 					//de melding is goed toegevoegd, dus nu een verwijzing naar de laatste melding bij het component voegen
 					if (mysql_query($query)) {
 						$errorLevel = 2;
@@ -150,7 +151,7 @@
   		<table>
   			<tr>
   				<td>Selecteer type om toe te voegen:</td>
-  				<td><select name="comp_type" id="comp_type" onchange="switchDocument(<?php if(isset($_POST['comp_naam'])){ echo("&n=". $_POST['hidden_naam']); } ?> );">
+  				<td><select name="comp_type" id="comp_type" onchange="switchDocument(<?php if(isset($_POST['comp_naam'])){ echo("'&n=". $_POST['hidden_naam']."'"); } else echo("''");  ?>, <?php if(isset($_POST['hidden_verantwoordelijke'])) echo("'".$_POST['hidden_verantwoordelijke']."'"); else echo("'-1'");?> );">
 		    	  <?php
 		    			if (isset($_POST['comp_type']))
 		    				$selected = $_POST['comp_type'];
@@ -167,25 +168,15 @@
 								$selected = $data['Comp_Type_ID'];
 		    			}
 		    			else $selected = 'SELECTED';
-		    			
-		    			$query = "SELECT Comp_Type, Type_Naam FROM comp_type WHERE Type_Parent IN (SELECT Comp_Type_ID FROM comp_lijst)";
-		    			$resultaat = mysql_query($query);
-		    			//$selected = 'SELECTED';
-					  	while ($data = mysql_fetch_array($resultaat)) {
-	  	  				echo('<option value="'.$data['Comp_Type'].'"');
-		  	  			
-	  	  				//kijken of het huidige record hetzelfde is als de geposte record,
-	  	  				//is dit het geval, dan dit record als de huidige selectie instellen
-	  	  				if ($data['Comp_Type'] == $selected || $selected == 'SELECTED')  {
-	  	  					echo(" SELECTED"); 
-	  	  					$selected = $data['Comp_Type'];
-	  	  				}
-		  	  			echo('>'. $data['Type_Naam'] .'</option>');
-					  	}
+
+	    				//Type ophalen uit gebruikersgroeprechten
+	    				$query = "SELECT Comp_Type_ID FROM gebruikersgroeprechten WHERE Groep_ID = '".$_SESSION['groep_id']."'";
+	    			  $resultaat = mysql_query($query);
+							$data = mysql_fetch_array($resultaat);
+
+							Vul_Component_Types_Select_Box($data[0], $selected, false);
 		    		?></select>
 		    	</td>
-  			</tr>
-  			<tr>
   			</tr>
   			<tr>
   				<td>Naam van het component:</td>
@@ -240,20 +231,18 @@
   				?>	
  					</select></td>
   			</tr>
-  			<tr>
-  				<td>Verantwoordelijke:</td>
-  				<td><select name="comp_verantwoordelijke">
-  				<?php
-  					$query = "SELECT Werknem_ID, inlognaam FROM gebruiker";
+				<?php
+
+					if (isset($_POST['hidden_verantwoordelijke'])) 
+						$verantwoordelijke = $_POST['hidden_verantwoordelijke'];
+					else {
+  					$query = "SELECT Type_Verantwoordelijke FROM comp_type WHERE Comp_Type = '". $selected ."'";
 	    			$resultaat = mysql_query($query);
-				  	while ($data = mysql_fetch_array($resultaat)) {
-	  	  			echo('<option value="'.$data['Werknem_ID'].'"');
-	  	  			if ($_SESSION['gebr_id'] == $data['Werknem_ID']) echo(' SELECTED');
-	  	  			echo('>'. $data['inlognaam'] .'</option>');
-				  	}
-  				?>    					
-  				</select></td>
-  			</tr>
+				  	$data = mysql_fetch_array($resultaat);
+						$verantwoordelijke = $data[0];
+					}
+				?>
+ 				<tr><td>Verantwoordelijke:</td><td><iframe id="frame_contact" name="frame_contact" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/type_verantwoordelijke.php?c=<?php echo($selected . "&s=" . $verantwoordelijke);?>" width="300" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td></tr>
   			<tr>
   				<td>Fabricant contact:</td>
   				<td><iframe id="frame_fabricant" name="frame_fabricant" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_fabricant.php?c=<?php echo($selected); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="450" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
@@ -281,7 +270,7 @@
   						<input id="hidden_aantal" name="hidden_aantal" type="hidden" value=""><input id="hidden_maximum" name="hidden_maximum" type="hidden" value="">
   						<input id="hidden_fabricant" name="hidden_fabricant" type="hidden" value=""><input id="hidden_leverancier" name="hidden_leverancier" type="hidden" value="">
     					<input id="hidden_melding" name="hidden_melding" type="hidden" value=""><input id="hidden_status" name="hidden_status" type="hidden" value=""></td>
-  				<td><a href="javascript:submitComponentToevoegen();">Toevoegen</a></td>
+  				<td><input name="hidden_verantwoordelijke" id="hidden_verantwoordelijke" type="hidden" value="-1"><a href="javascript:submitComponentToevoegen();">Toevoegen</a></td>
   			</tr>
   		</table>
   	</form>

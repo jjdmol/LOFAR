@@ -115,7 +115,7 @@
 
 		//opslaan van het component
 		$query = "UPDATE comp_lijst SET Comp_Naam = '". htmlentities($_POST['comp_naam'], ENT_QUOTES) . "', Comp_Parent = '". $_POST['comp_nieuwe_parent'] . "', Laatste_Melding ='". $melding_id;
-		$query = $query . "', Comp_Locatie = '". $_POST['comp_locatie'] ."', Comp_Verantwoordelijke = '". $_POST['comp_verantwoordelijke'] . "'";
+		$query = $query . "', Comp_Locatie = '". $_POST['comp_locatie'] ."', Comp_Verantwoordelijke = '". $_POST['hidden_verantwoordelijke'] . "'";
 		
 		//de waarde voor de leverdatum aan de query toevoegen
 		if (isset($_POST['leverdatum']) && $_POST['leverdatum'] != '') {
@@ -230,20 +230,13 @@
 						?>
 					</select></td>
 				</tr>
-				<tr>
-					<td>Verantwoordelijke component:</td>
-					<td><select name="comp_verantwoordelijke">
-						<?php
-							$query2 = "SELECT Werknem_ID, inlognaam FROM gebruiker";
-							$result = mysql_query($query2);
-							while ($data = mysql_fetch_array($result)) {
-								echo("<option value=\"". $data['Werknem_ID'] ."\"");
-								if ($data['Werknem_ID'] == $row['Comp_Verantwoordelijke']) echo(" SELECTED");
-								echo(">". $data['inlognaam'] ."</option>\r\n");
-							}
-						?>
-					</select></td>
-				</tr>
+				<?php
+					if (isset($_POST['hidden_verantwoordelijke'])) 
+						$verantwoordelijke = $_POST['hidden_verantwoordelijke'];
+					else $verantwoordelijke = $row['Comp_Verantwoordelijke'];
+				?>
+ 				<tr><td>Verantwoordelijke:</td><td><iframe id="frame_contact" name="frame_contact" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/type_verantwoordelijke.php?c=<?php echo($row['Comp_Type_ID'] . "&s=" . $verantwoordelijke);?>" width="300" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td></tr>
+
 				<tr>
 					<td>Fabricant:</td>
 					<td><select name="fabricant">				    				
@@ -315,6 +308,7 @@
   					<input id="hidden_melding" name="hidden_melding" type="hidden" value="">
   					<input id="hidden_status" name="hidden_status" type="hidden" value="">
     				<input id="opslaan" name="opslaan" type="hidden" value="1">
+    				<input id="hidden_verantwoordelijke" name="hidden_verantwoordelijke" type="hidden" value="-1">
     				<input id="Voorgaande_Melding" name="Voorgaande_Melding" type="hidden" value="<?php echo($row['Laatste_Melding']); ?>">
     			</td>
     		</tr>
