@@ -142,17 +142,20 @@
   function Bepaal_Comp_Lijst() {
   	$Collectie = array();
 
-  	$query = "SELECT Comp_Type FROM comp_type WHERE Comp_Type IN (SELECT Comp_Type_ID FROM gebruikersgroeprechten WHERE Groep_ID = '". $_SESSION['groep_id'] ."')";
+  	$query = "SELECT Comp_Type_ID, onderliggende_Data FROM gebruikersgroeprechten WHERE Groep_ID = '". $_SESSION['groep_id'] ."'";
   	$result = mysql_query($query);
 		$row = mysql_fetch_array($result);
-		if ($row['Comp_Type'] != 1) {
-	  	$query = "SELECT Comp_Lijst_ID, Comp_Naam FROM comp_lijst WHERE Comp_Type_ID = '".$row['Comp_Type']."'";
+  	
+		if ($row['Comp_Type_ID'] != 1) {
+	  	$query = "SELECT Comp_Lijst_ID, Comp_Naam FROM comp_lijst WHERE Comp_Type_ID = '".$row['Comp_Type_ID']."'";
   		$resultaat = mysql_query($query);
     	while ($data = mysql_fetch_array($resultaat)) {
 				$Comp_Type = new Type_Object();
 				$Comp_Type->Set_ID($data['Comp_Lijst_ID'],$data['Comp_Naam']);
-		  	$num_rows = mysql_num_rows(mysql_query($query));		
-		  	if ($num_rows > 0) $Comp_Type->Add(Comp_Lijst($data['Comp_Lijst_ID']));
+		  	if ($row['onderliggende_Data'] == 1) {
+		  		$num_rows = mysql_num_rows(mysql_query($query));		
+		  		if ($num_rows > 0) $Comp_Type->Add(Comp_Lijst($data['Comp_Lijst_ID']));
+		  	}
 	  		array_push($Collectie, $Comp_Type);
 	  		$Comp_Type = NULL;
     	}
@@ -165,7 +168,11 @@
   function Bepaal_Comp_Type_Lijst() {
   	$Collectie = array();
 
-  	$query = "SELECT Comp_Type, Type_Naam FROM comp_type WHERE Comp_Type IN (SELECT Comp_Type_ID FROM gebruikersgroeprechten WHERE Groep_ID = '". $_SESSION['groep_id'] ."')";
+  	$query = "SELECT Comp_Type_ID, onderliggende_Data FROM gebruikersgroeprechten WHERE Groep_ID = '". $_SESSION['groep_id'] ."'";
+  	$result = mysql_query($query);
+		$rechten = mysql_fetch_array($result);
+
+  	$query = "SELECT Comp_Type, Type_Naam FROM comp_type WHERE Comp_Type = '".$rechten['Comp_Type_ID']."'";
   	$result = mysql_query($query);
 		$row = mysql_fetch_array($result);
 
@@ -173,8 +180,10 @@
 			$Comp_Type = new Type_Object();
 			$Comp_Type->Set_ID($row['Comp_Type'],$row['Type_Naam']);
 	  	$query = 'SELECT Comp_Type, Type_Naam FROM comp_type WHERE Type_Parent = '.$row['Comp_Type'];
-	  	$num_rows = mysql_num_rows(mysql_query($query));		
-	  	if ($num_rows > 0) $Comp_Type->Add(Comp_Type_Lijst($row['Comp_Type']));
+	  	if($rechten['onderliggende_Data'] == 1) {
+	  		$num_rows = mysql_num_rows(mysql_query($query));		
+		  	if ($num_rows > 0) $Comp_Type->Add(Comp_Type_Lijst($row['Comp_Type']));
+		  }
 	  	array_push($Collectie, $Comp_Type);
 	  	$Comp_Type = NULL;
 	  }
