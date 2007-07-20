@@ -99,7 +99,7 @@
 	if(Validatie_Opslaan()) {
 
 		//Een nieuwe melding van het component toevoegen, dit is zeer waarschijnlijk een bewerkenmelding oid
-		$query_melding = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door)";
+		$query_melding = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door, Melding_Locatie)";
 		$query_melding = $query_melding . "VALUES ('". $_POST['type_melding'] ."', '".$_GET['c']."'";
 
 		//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
@@ -108,7 +108,8 @@
 			$query_melding = $query_melding . ", '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['statustijd'] .":00'";							
 		}
 		else $query_melding = $query_melding . ", NOW()";
-		$query_melding = $query_melding . ", '". $_POST['hidden_status'] ."', '". $_POST['Voorgaande_Melding'] ."', '". htmlentities($_POST['hidden_melding'], ENT_QUOTES) ."', '". $_SESSION['gebr_id'] ."', '". $_SESSION['gebr_id'] ."') ";
+		$query_melding = $query_melding . ", '". $_POST['hidden_status'] ."', '". $_POST['Voorgaande_Melding'] ."', '". htmlentities($_POST['hidden_melding'], ENT_QUOTES);
+		$query_melding = $query_melding . "', '". $_SESSION['gebr_id'] . "', '". $_SESSION['gebr_id'] ."', '" . $_POST['comp_locatie'] ."') ";
 
 		mysql_query($query_melding);
 		$melding_id = mysql_insert_id();

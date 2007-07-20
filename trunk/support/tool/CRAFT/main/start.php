@@ -30,7 +30,7 @@
 					$row = mysql_fetch_array($res);
 					if ($row[0] != 0) {
 						echo("<b id=\"zwart\">Toegevoegde meldingen:</b><br>");
-	   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_meldingen/Meldingen_Overzicht.php\" width=\"650\" height=\"110\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
+	   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_meldingen/Meldingen_Overzicht.php\" width=\"650\" height=\"110\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe><br>");
 	   			}
 	   			else echo("<b id=\"zwart\">Er zijn sinds uw laatste inlog geen meldingen toegevoegd.</b><br>");
 
@@ -41,8 +41,8 @@
 					$row = mysql_fetch_array($res);
 
 					if ($row[0] != 0) {
-						echo("<br><br><b id=\"zwart\">Toegevoegde componenten:</b><br>");
-   					echo("<iframe id=\"frame_comp\" name=\"frame_comp\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Comp_Overzicht.php\" width=\"650\" height=\"110\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
+						echo("<br><b id=\"zwart\">Toegevoegde componenten:</b><br>");
+   					echo("<iframe id=\"frame_comp\" name=\"frame_comp\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Comp_Overzicht.php\" width=\"650\" height=\"110\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe><br>");
    				} 
 	   			else echo("<b id=\"zwart\">Er zijn sinds uw laatste inlog geen componenten toegevoegd.</b><br>");   				
 
@@ -50,8 +50,8 @@
 				  $res = mysql_query($query);
 					$row = mysql_fetch_array($res);
 					if ($row[0] != 0) {
-						echo("<br><br><b id=\"zwart\">Toegevoegde componenttypes:</b><br>");
-	   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Type_Overzicht.php\" width=\"650\" height=\"110\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
+						echo("<br><b id=\"zwart\">Toegevoegde componenttypes:</b><br>");
+	   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_componenten/Type_Overzicht.php\" width=\"650\" height=\"110\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe><br>");
 	   			}
 	   			else echo("<b id=\"zwart\">Er zijn sinds uw laatste inlog geen componenttypes toegevoegd.</b><br>");
     	
