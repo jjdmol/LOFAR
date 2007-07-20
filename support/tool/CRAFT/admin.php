@@ -67,9 +67,21 @@
     			//toevoegen van meldingen (standaard actie)
     			else 
 						include($_SESSION['pagina'] . 'admin_meldingen/toevoegen.php');   			
-    		}   		
-    		//gebruikersgroepen
+    		}   	
+    		//extra velden
     		else if ($pagina == 5) {
+ 					//bewerken van extra velden
+					if (isset($_GET['s']) && $_GET['s'] == 2)
+						include($_SESSION['pagina'] . 'admin_extra_velden/bewerken.php');
+					//verwijderen van extra velden
+					else if (isset($_GET['s']) && $_GET['s'] == 3)
+						include($_SESSION['pagina'] . 'admin_extra_velden/verwijderen.php');
+    			//toevoegen van extra velden (standaard actie)
+    			else 
+						include($_SESSION['pagina'] . 'admin_extra_velden/toevoegen.php');   			
+    		}
+    		//gebruikersgroepen
+    		else if ($pagina == 6) {
  					//bewerken van gebruikersgroepen
 					if (isset($_GET['s']) && $_GET['s'] == 2)
 						include($_SESSION['pagina'] . 'admin_gebruikersgroep/bewerken.php');
@@ -84,7 +96,7 @@
 						include($_SESSION['pagina'] . 'admin_gebruikersgroep/toevoegen.php');   			
     		}    		
     		//gebruikers
-    		else if ($pagina == 6) {
+    		else if ($pagina == 7) {
  					//bewerken van gebruikers
 					if (isset($_GET['s']) && $_GET['s'] == 2)
 						include($_SESSION['pagina'] . 'admin_gebruikers/bewerken.php');
@@ -96,7 +108,7 @@
 						include($_SESSION['pagina'] . 'admin_gebruikers/toevoegen.php');   			
     		}
     		//(externe) contacten
-    		else if ($pagina == 7) {
+    		else if ($pagina == 8) {
  					//bewerken van contacten
 					if (isset($_GET['s']) && $_GET['s'] == 2)
 						include($_SESSION['pagina'] . 'admin_contacten/bewerken.php');
@@ -108,7 +120,7 @@
 						include($_SESSION['pagina'] . 'admin_contacten/toevoegen.php');   			
     		}
     		//locaties
-    		else if ($pagina == 8) {
+    		else if ($pagina == 9) {
  					//bewerken van locaties
 					if (isset($_GET['s']) && $_GET['s'] == 2)
 						include($_SESSION['pagina'] . 'admin_locaties/bewerken.php');

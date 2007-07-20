@@ -205,14 +205,16 @@
   else if ($_SESSION['admin_deel'] == 3) $Types_Objecten = Melding_Type_Lijst();
 	//meldingen
 	else if ($_SESSION['admin_deel'] == 4) $Types_Objecten = Bepaal_Comp_Lijst();
+	//extra velden
+	else if ($_SESSION['admin_deel'] == 5) {}
 	//gebruikersgroepen
-	else if ($_SESSION['admin_deel'] == 5) $Types_Objecten = Gebruikersgroepen_Lijst(1);
+	else if ($_SESSION['admin_deel'] == 6) $Types_Objecten = Gebruikersgroepen_Lijst(1);
 	//gebruikers
-	else if ($_SESSION['admin_deel'] == 6) $Types_Objecten = Gebruikers_Lijst();
+	else if ($_SESSION['admin_deel'] == 7) $Types_Objecten = Gebruikers_Lijst();
 	//contacten
-	else if ($_SESSION['admin_deel'] == 7) $Types_Objecten = Contacten_Lijst(1);
+	else if ($_SESSION['admin_deel'] == 8) $Types_Objecten = Contacten_Lijst(1);
 	//Locaties
-	else if ($_SESSION['admin_deel'] == 8) $Types_Objecten = Locaties_Lijst();
+	else if ($_SESSION['admin_deel'] == 9) $Types_Objecten = Locaties_Lijst();
   //Het admin scherm is niet geselecteerd...
   else if ($_SESSION['admin_deel'] == 0) {
   	//componenten
