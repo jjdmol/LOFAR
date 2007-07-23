@@ -269,4 +269,4 @@
 		//niemand ingelogt, dus bezoeker naar de inlogpagina sturen
 		else header("Location: index.php");  
 	}
-?>     	
+?>

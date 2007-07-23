@@ -5,7 +5,22 @@
   include("type_object.php");
   $Types_Objecten = array();
 
-	//functie om alle externe contacten uit de database te lezen en deze hierarchisch op te slaan 
+	//functie om alle extra velden uit de database te lezen en deze op te slaan 
+  function Extra_Velden_Lijst() {
+  	$Collectie = array();
+  	$query = 'SELECT Kolom_ID, Veld_Naam FROM comp_locatie';
+	  $resultaat = mysql_query($query);
+  	while ($huidige_level = mysql_fetch_array($resultaat)) {
+  		$Comp_Type = new Type_Object();
+  		$Comp_Type->Set_ID($huidige_level['Kolom_ID'],$huidige_level['Veld_Naam']);
+	  	$num_rows = mysql_num_rows(mysql_query($query));		
+ 	  	array_push($Collectie, $Comp_Type);
+	  	$Comp_Type = NULL;
+	  }
+  	return $Collectie;	
+  }
+		
+	//functie om alle externe contacten uit de database te lezen en deze op te slaan 
   function Locaties_Lijst() {
   	$Collectie = array();
   	$query = 'SELECT Locatie_ID, Loc_Naam FROM comp_locatie';
@@ -206,7 +221,7 @@
 	//meldingen
 	else if ($_SESSION['admin_deel'] == 4) $Types_Objecten = Bepaal_Comp_Lijst();
 	//extra velden
-	else if ($_SESSION['admin_deel'] == 5) {}
+	else if ($_SESSION['admin_deel'] == 5) $Types_Objecten = Extra_Velden_Lijst();
 	//gebruikersgroepen
 	else if ($_SESSION['admin_deel'] == 6) $Types_Objecten = Gebruikersgroepen_Lijst(1);
 	//gebruikers
