@@ -23,6 +23,6 @@ uses   DelayCompensation   	 1.0.1  development 'node constraint'  "DelayCompens
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  processes               I    vtext  -      10    0    '[DelayComp]'	 -	   "list of processes that must be started"
-par  procesOrder             I    vtext  -      10    0    '[]'							 -	   "Order of the processes, if any! FOR FUTURE USE."
-par  extraInfo               I    vtext  -      10    0    '[.OLAP,PIC]'					 -	   "list of components that the application expects to be in the parsettfile."
-
+par  procesOrder             I    vtext  -      10    0    '[]'			 -	   "Order of the processes, if any! FOR FUTURE USE."
+par  extraInfo               I    vtext  -      10    0    '[.OLAP,PIC]'	 -	   "list of components that the application expects to be in the parsettfile."
+par  _hostname               I    text   -      10    0    'listfen'           -         "???"
