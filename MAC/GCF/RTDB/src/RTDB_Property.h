@@ -36,6 +36,7 @@ namespace LOFAR {
 	using PVSS::PVSSresponse;
     namespace RTDB {
 	  class RTDBPropertySet;
+	  class DPanswer;
 
 class RTDBProperty
 {
@@ -43,7 +44,7 @@ public:
 	// Constructor.
     RTDBProperty (const string&				scope,
 				  const TPropertyInfo&		propInfo,
-				  PVSSresponse*				responsePtr);
+				  DPanswer*					clientResponse);
     virtual ~RTDBProperty ();
 
 	const string getName () const 
@@ -57,26 +58,26 @@ public:
     // (A)Synchronous (!) action
     // Performs a set operation on the SCADA DB
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
-    PVSSresult setValue(const GCFPValue& value, bool wantAnswer = false);
+    PVSSresult setValue(const GCFPValue& value, bool wantAnswer = true);
       
     // (A)Synchronous (!) action
     // Performs a set operation on the SCADA DB
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
-    PVSSresult setValue(const string& value, bool wantAnswer = false);
+    PVSSresult setValue(const string& value, bool wantAnswer = true);
 
     // (A)Synchronous (!) action
     // Performs a set operation on the SCADA DB with a timestamp
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
     PVSSresult setValueTimed(const GCFPValue& value, 
 							 double timestamp, 
-							 bool wantAnswer = false);
+							 bool wantAnswer = true);
       
     // (A)Synchronous (!) action
     // Performs a set operation on the SCADA DB with a timestamp
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
     PVSSresult setValueTimed(const string& value, 
     						 double timestamp, 
-							 bool wantAnswer = false);
+							 bool wantAnswer = true);
 protected:
 	friend class PropResponse;
 	void setSubscription(bool	on) {};
@@ -94,11 +95,11 @@ private:
 
 	// data members
 	TPropertyInfo		itsPropInfo;
-	GCFPValue*			itsCurValue;	// ???
-	GCFPValue*			itsOldValue;	// ???
+	GCFPValue*			itsCurValue;		// ???
+	GCFPValue*			itsOldValue;		// ???
 	PVSSservice*		itsService;			// connection to database.
 	PVSSresponse*		itsOwnResponse;		// catching internal events
-	PVSSresponse*		itsExtResponse;		// dispatching to client
+	DPanswer*			itsExtResponse;		// dispatching to client
 };
 
 inline PVSSresult RTDBProperty::setValue (const string& value, bool wantAnswer)

@@ -135,11 +135,12 @@ PVSSresult RTDBPropertySet::setValueTimed (const string& propName,
                                      bool wantAnswer)
 {
 	RTDBProperty* propPtr = _getProperty(propName);
-	if (propPtr) {
-		return propPtr->setValueTimed(value, timestamp, wantAnswer);    
+	if (!propPtr) {
+		return (SA_PROP_DOES_NOT_EXIST);
 	}
 
-	return (SA_PROP_DOES_NOT_EXIST);
+	return propPtr->setValueTimed(value, timestamp, wantAnswer);
+
 }
 
 //
@@ -151,11 +152,11 @@ PVSSresult RTDBPropertySet::setValueTimed (const string& propName,
                                      bool wantAnswer)
 {
 	RTDBProperty* propPtr = _getProperty(propName);
-	if (propPtr) {
-		return propPtr->setValueTimed(value, timestamp, wantAnswer);    
+	if (!propPtr) {
+		return (SA_PROP_DOES_NOT_EXIST);
 	}
 
-	return (SA_PROP_DOES_NOT_EXIST);
+	return propPtr->setValueTimed(value, timestamp, wantAnswer);
 }
                              
 //
@@ -217,6 +218,7 @@ void RTDBPropertySet::_createAllProperties()
 	RTDBProperty* 	propPtr;
 	for (PropInfoList_t::iterator PIiter = itsPropInfoList.begin();
 									PIiter != itsPropInfoList.end(); ++PIiter) { 
+//		propPtr = new RTDBProperty(itsScope, *PIiter);
 		propPtr = new RTDBProperty(itsScope, *PIiter, itsExtResponse);
 		_addProperty(PIiter->propName, *propPtr);
 	}

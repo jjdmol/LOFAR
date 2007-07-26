@@ -73,21 +73,21 @@ public:
 	// <group>
 	PVSSresult setValue (const string& 				propName, 
 						 const Common::GCFPValue&	value, 
-						 bool  						wantAnswer = false);
+						 bool  						wantAnswer = true);
 
 	PVSSresult setValue (const string& 	propName,
 						 const string& 	value, 
-						 bool  			wantAnswer = false);
+						 bool  			wantAnswer = true);
 
 	PVSSresult setValueTimed (const string& 			propName, 
 							  const Common::GCFPValue&	value, 
 							  double 					timestamp,
-							  bool 						wantAnswer = false);
+							  bool 						wantAnswer = true);
 
 	PVSSresult setValueTimed (const string& 	propName,
 							  const string&		value, 
 							  double 			timestamp,
-							  bool 				wantAnswer = false);
+							  bool 				wantAnswer = true);
     // </group>
 
 protected:

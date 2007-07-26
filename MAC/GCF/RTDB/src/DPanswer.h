@@ -33,6 +33,7 @@ namespace LOFAR {
 	using PVSS::PVSSresult;
     namespace RTDB {
 	class PropSetResponse;
+	class RTDBProperty;
 
 class DPanswer: public PVSSresponse
 {
@@ -53,7 +54,8 @@ public:
 	virtual void dpQuerySubscribed	 (uint32 queryId, 		 PVSSresult result);        
     
 private:
-	friend class PropSetResponse;
+//	friend class PropSetResponse;
+//	friend class RTDBProperty;
 
 	// Don't allow copying this object.
 	// <group>

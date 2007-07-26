@@ -103,7 +103,7 @@ void GTMTimerHandler::workProc()
     }
     else
     {
-      pCurTimer->decreaseTime();
+      pCurTimer->decreaseTime();	// and dispatch F_TIMER when elapsed
     }
   }
 }
