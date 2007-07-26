@@ -40,8 +40,9 @@ void PropResponse::dpeValueChanged(const string& /*propName*/, PVSSresult		resul
 	itsProperty->valueChangedAck(result, value);
 }
 
-void PropResponse::dpeValueSet(const string& /*propName*/, PVSSresult		result)
+void PropResponse::dpeValueSet(const string& propName, PVSSresult		result)
 {
+	LOG_DEBUG_STR("### PropResponse: valueSet: " << propName);
 	itsProperty->valueSetAck(result);
 }
 

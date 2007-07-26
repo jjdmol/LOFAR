@@ -28,7 +28,6 @@ extern int	gCreateCounter;
 extern int	gSetCounter;
 extern int	gGetCounter;
 extern int	NR_OF_DPS;
-extern bool	gValidate;
 
 namespace LOFAR {
  namespace GCF {

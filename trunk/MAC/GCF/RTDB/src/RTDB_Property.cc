@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <GCF/PVSS/PVSSinfo.h>
+#include "DPanswer.h"
 #include "PropResponse.h"
 #include "RTDB_Property.h"
 
@@ -37,7 +38,7 @@ namespace LOFAR {
 //
 RTDBProperty::RTDBProperty (const string&			scope, 
 							const TPropertyInfo&	propInfo,
-							PVSSresponse*			clientResponse) :
+							DPanswer*				clientResponse) :
 	itsPropInfo	  (propInfo),
 	itsCurValue   (0),
 	itsOldValue	  (0),
@@ -120,10 +121,12 @@ void RTDBProperty::valueSetAck(PVSSresult	result)
 {
 	if (result != SA_NO_ERROR) {
 		LOG_WARN_STR ("Setting new value to " << itsPropInfo.propName << " failed");
-		return;
+	}
+	else {
+		itsOldValue->copy(*itsCurValue);
 	}
 
-	itsOldValue->copy(*itsCurValue);
+	itsExtResponse->dpeValueSet(itsPropInfo.propName, result);
 }
 
 //
@@ -138,6 +141,8 @@ void RTDBProperty::valueGetAck(PVSSresult	result, const GCFPValue&	value)
 		LOG_ERROR_STR ("Get Value of " << itsPropInfo.propName << " resulted in error " 
 						<< result);
 	}
+
+	itsExtResponse->dpeValueGet(itsPropInfo.propName, result, value);
 }
 
 //
@@ -147,8 +152,9 @@ void RTDBProperty::valueChangedAck(PVSSresult	result, const GCFPValue&	value)
 {
 	if (result == SA_NO_ERROR) {
 		itsCurValue->copy(value);
-		// TODO: pass event to PS or user.
 	}
+
+	itsExtResponse->dpeValueChanged(itsPropInfo.propName, result, value);
 }
 
 

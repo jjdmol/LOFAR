@@ -8,7 +8,6 @@ int		gCreateCounter = 0;
 int		gSetCounter = 0;
 int		gGetCounter = 0;
 int		NR_OF_DPS = 10;
-bool	gValidate = false;
 
 namespace LOFAR {
   namespace GCF {
@@ -37,12 +36,10 @@ void PerformanceResponse::dpeUnsubscribed(const string& propName, PVSSresult /*r
 
 void PerformanceResponse::dpeValueGet(const string& propName, PVSSresult /*result*/, const GCFPValue& value)
 {
-	if (gValidate) {
 	//	GCFPVInteger	theValue = ((GCFPVInteger *)&value)->getValue();
 	//	if (value < 23 || value > (23 + NR_OF_DPS)) {
 	//		LOG_DEBUG_STR (propName << " returned value " << theValue);
 	//	}
-	}
 	gGetCounter--;
 }
 

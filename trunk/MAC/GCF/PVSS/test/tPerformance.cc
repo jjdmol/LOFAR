@@ -197,13 +197,13 @@ GCFEvent::TResult tPerformance::test1create(GCFEvent& e, GCFPortInterface& p)
 		LOG_INFO_STR (timer);
 		timer.start();
 		gCreateCounter = NR_OF_DPS;
-		itsTimerPort->setTimer(1.0);
+		itsTimerPort->setTimer(0.25);
 	}
 	break;
 
 	case F_TIMER:
 		if (gCreateCounter != 0) {
-			itsTimerPort->setTimer(1.0);
+			itsTimerPort->setTimer(0.25);
 			LOG_INFO_STR ("Waiting for " << gCreateCounter << " datapoints to be created");
 		}
 		else {
@@ -230,33 +230,36 @@ GCFEvent::TResult tPerformance::test1setvalue(GCFEvent& e, GCFPortInterface& p)
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	PVSSresult		  result;
+	static NSTimer		timer("Setting");
 
 	switch (e.signal) {
 	case F_ENTRY: {
 		LOG_INFO_STR("Setting " << NR_OF_DPS << " integer variables");
 		string	DPname;
-		NSTimer		timer("Setting");
 		timer.start();
 		for (int i = 0; i < NR_OF_DPS; i++) {
 			DPname = formatString ("Integer%04d", i);
 			GCFPVInteger	newVal(123-i);
-			result = itsService->dpeSet(DPname, newVal, 0.0, gValidate);
+			result = itsService->dpeSet(DPname, newVal, 0.0, true);
 			ASSERTSTR(result == SA_NO_ERROR, "Setting variable " << i << 
 											" returned result: " << PVSSerrstr(result));
 		}
 		timer.stop();
 		LOG_INFO_STR (timer);
-		gSetCounter = 0;	// !!!!!!
-		itsTimerPort->setTimer(1.0);
+		timer.start();
+		gSetCounter = NR_OF_DPS;
+		itsTimerPort->setTimer(0.1);
 	}
 	break;
 
 	case F_TIMER:
 		if (gSetCounter != 0) {
-			itsTimerPort->setTimer(1.0);
+			itsTimerPort->setTimer(0.1);
 			LOG_INFO_STR ("Waiting for " << gSetCounter << " datapoints to be written");
 		}
 		else {
+			timer.stop();
+			LOG_INFO_STR (timer);
 			TRAN(tPerformance::test1getvalue);
 		}
 		break;
@@ -345,13 +348,13 @@ GCFEvent::TResult tPerformance::test1delete(GCFEvent& e, GCFPortInterface& p)
 		LOG_INFO_STR (timer);
 		timer.start();
 		gDeleteCounter = NR_OF_DPS;
-		itsTimerPort->setTimer(1.0);
+		itsTimerPort->setTimer(0.25);
 	}
 	break;
 
 	case F_TIMER:
 		if (gDeleteCounter != 0) {
-			itsTimerPort->setTimer(1.0);
+			itsTimerPort->setTimer(0.25);
 			LOG_INFO_STR ("Waiting for " << gDeleteCounter << " datapoints to be deleted");
 		}
 		else {
@@ -382,12 +385,9 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 	switch (argc) {
-	case 3:		gValidate = true;
-				// no break!
 	case 2:		NR_OF_DPS = atoi(argv[1]);
 				break;
-	default:	cout << "Syntax: " << argv[0] << " number_of_datapoints [-v]" << endl;
-				cout << "    -v   Validate values after get." << endl;
+	default:	cout << "Syntax: " << argv[0] << " number_of_datapoints" << endl;
 				exit(1);
 	}
 

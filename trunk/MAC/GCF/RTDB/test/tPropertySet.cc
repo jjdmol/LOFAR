@@ -76,12 +76,16 @@ GCFEvent::TResult tPropertySet::createPS(GCFEvent& e, GCFPortInterface& /*p*/)
 		break;
 
 	case F_ENTRY: {
-		LOG_DEBUG("@@@@ BEFORE PS CREATE @@@@@");
 		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PS_AT_OWNED_TEMP, this);
 		ASSERTSTR(itsPropSet, "Can't allocate PropertySet");
-		LOG_DEBUG("@@@@ AFTER PS CREATE @@@@@");
-
-		itsTimerPort->setTimer(5.0);	// when things go wrong
+//		if (itsPropSet.created()) {
+//			LOG_DEBUG("PropertySet is created, going to next state");
+//			TRAN(tPropertySet::WriteTest);
+//		}
+//		else {
+			LOG_DEBUG("Waiting for creation confirmation");
+			itsTimerPort->setTimer(5.0);	// when things go wrong
+//		}
 	}
 	break;
 
@@ -91,11 +95,9 @@ GCFEvent::TResult tPropertySet::createPS(GCFEvent& e, GCFPortInterface& /*p*/)
 	break;
 
 	case DP_CREATED: {
+		// NOTE: this function may be called DURING the construction of the PropertySet.
 		DPCreatedEvent		dpEvent(e);
 		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
-//		itsTimerPort->cancelAllTimers();
-//		ASSERTSTR(itsPropSet, "Already lost propset!!!!");
-//		TRAN(tPropertySet::WriteTest);
 	}
 	break;
 
@@ -144,17 +146,18 @@ GCFEvent::TResult tPropertySet::WriteTest(GCFEvent& e, GCFPortInterface& /*p*/)
 	case F_ENTRY: {
 		ASSERTSTR(itsPropSet, "Lost propertySet");
 		itsPropSet->setValue("uintVal", "25");
-		
-
-
-		itsTimerPort->setTimer(5.0);	// when things go wrong
+//		if (itsPropSet->setValue("uintVal", "25") == SA_NO_ERROR) {
+//			schedule_tran(tPropertySet::final);
+//		}
+//		else {
+			itsTimerPort->setTimer(5.0);	// wait for DP_SET command.
+//		}
 	}
 	break;
 
 	case F_TIMER:
 		LOG_DEBUG_STR("TIMEOUT ON WRITE");
 		TRAN(tPropertySet::final);
-//		TRAN(tPropertySet::WriteTest);
 	break;
 
 	case DP_SET: {
@@ -162,7 +165,6 @@ GCFEvent::TResult tPropertySet::WriteTest(GCFEvent& e, GCFPortInterface& /*p*/)
 		LOG_DEBUG_STR("Result of set " << dpEvent.DPname << " = " << dpEvent.result);
 		itsTimerPort->cancelAllTimers();
 		TRAN(tPropertySet::final);
-//		TRAN(tPropertySet::WriteTest);
 	}
 	break;
 
@@ -173,6 +175,7 @@ GCFEvent::TResult tPropertySet::WriteTest(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	return status;
 }
+
 
 
 

@@ -34,19 +34,17 @@ using std::list;
 using std::map;
 using std::vector;
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace Common 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace Common {
 
 // This header file will be included by each GCF API class header and provides
 // therefore a number of defines, structs or macro's. They can/must be used when
 // calling a GCF API class memberfunction.
 
-#define GCF_PROP_NAME_SEP     '.' // separates the levels in property sets
-#define GCF_SCOPE_NAME_SEP     '_' // separates the levels in structure of property sets
+#define GCF_SYS_NAME_SEP     ':' // separates the databasename from the ppropertyname
+#define GCF_PROP_NAME_SEP    '.' // separates the levels in property sets
+#define GCF_SCOPE_NAME_SEP   '_' // separates the levels in structure of property sets
 
 // possible results of GCF api class member calls.
 enum TGCFResult 

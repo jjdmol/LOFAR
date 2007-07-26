@@ -527,7 +527,7 @@ PVSSresult PVSSservice::dpeSubscribe(const string& propName)
 	string 			pvssDpName;
 	itsWFA->setDpName(propName);
 
-	convPropToDpConfig(propName, pvssDpName, true);
+	convPropToDpConfig(propName, pvssDpName, true);		//add :_online.._value
 
 	LOG_TRACE_FLOW(formatString ("Subscribe on property '%s'", propName.c_str()));
 
@@ -582,7 +582,7 @@ PVSSresult PVSSservice::dpeUnsubscribe(const string& propName)
 	DpIdentifier 	dpId;
 	string 			pvssDpName;
 
-	convPropToDpConfig(propName, pvssDpName, true);
+	convPropToDpConfig(propName, pvssDpName, true);		// add :_online.._value
 
 	LOG_TRACE_FLOW(formatString("Unsubscribe from property '%s'", propName.c_str()));
 
@@ -641,7 +641,7 @@ PVSSresult PVSSservice::dpeGet(const string& dpeName)
 	GSAWaitForAnswer	*pWFA = new GSAWaitForAnswer(*this);
 	pWFA->setDpName(dpeName);
 
-	convPropToDpConfig(dpeName, pvssDpName, true);
+	convPropToDpConfig(dpeName, pvssDpName, true);	// add :_online.._value
 
 	LOG_TRACE_FLOW (formatString("Request value of property '%s'", dpeName.c_str()));
 
@@ -701,7 +701,7 @@ PVSSresult PVSSservice::dpeSet(const string& dpeName,
 	Variable* 		pVar(0);
 	string 			pvssDpName;
 
-	convPropToDpConfig(dpeName, pvssDpName, false);
+	convPropToDpConfig(dpeName, pvssDpName, false);	// add .:_original.._value
 
 	LOG_TRACE_FLOW (formatString("Set value of property '%s'", dpeName.c_str()));
 
@@ -725,7 +725,7 @@ PVSSresult PVSSservice::dpeSet(const string& dpeName,
 		GSAWaitForAnswer* pWFA(0);
 		if (wantAnswer) {
 			// Note: pWFA will be deleted by PVSS API
-			GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this); 
+			pWFA = new GSAWaitForAnswer(*this); 
 			pWFA->setDpName(dpeName);
 		}
 		PVSSboolean retVal, retValTS(PVSS_TRUE);
