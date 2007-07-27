@@ -82,11 +82,12 @@ RTDBProperty::~RTDBProperty()
 
 
 //
-// getValue()
+// getValue(returnVar)
 //
-GCFPValue& RTDBProperty::getValue()
+PVSSresult RTDBProperty::getValue(GCFPValue&	returnVar)
 { 
-	return (*itsCurValue);
+	returnVar.copy(*itsCurValue);
+	return (returnVar.getType() == GCF_DIFFERENT_TYPES ? SA_MACTYPE_MISMATCH : SA_NO_ERROR);
 }
 
 //
@@ -94,6 +95,8 @@ GCFPValue& RTDBProperty::getValue()
 //
 PVSSresult RTDBProperty::setValueTimed(const GCFPValue& value, double timestamp, bool wantAnswer)
 { 
+	itsCurValue->copy(value);
+
 	return (itsService->dpeSet(itsPropInfo.propName, value, timestamp, wantAnswer));
 }
 
@@ -110,6 +113,8 @@ PVSSresult RTDBProperty::setValueTimed(const string& value, double timestamp, bo
 	if ((pValue->setValue(value)) != GCF_NO_ERROR) { // assign value to  GCFPValue
 		return (SA_SETPROP_FAILED);
 	}
+
+	itsCurValue->copy(*pValue);
 
 	return (itsService->dpeSet(itsPropInfo.propName, *pValue, timestamp, wantAnswer));
 }
@@ -141,8 +146,6 @@ void RTDBProperty::valueGetAck(PVSSresult	result, const GCFPValue&	value)
 		LOG_ERROR_STR ("Get Value of " << itsPropInfo.propName << " resulted in error " 
 						<< result);
 	}
-
-	itsExtResponse->dpeValueGet(itsPropInfo.propName, result, value);
 }
 
 //

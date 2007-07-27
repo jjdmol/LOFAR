@@ -37,7 +37,11 @@ namespace LOFAR {
   using namespace PVSS;
   namespace RTDB {
 
+static bool	gTestPassed;
 
+//
+// constructor
+//
 tPropertySet::tPropertySet(const string& name) : 
 	GCFTask((State)&tPropertySet::createPS, name), 
 	itsPropSet  (0),
@@ -52,6 +56,9 @@ tPropertySet::tPropertySet(const string& name) :
 	ASSERTSTR(itsTimerPort, "Can't allocate GCFTimerPort");
 }
 
+//
+// destructor
+//
 tPropertySet::~tPropertySet()
 {
 	LOG_DEBUG("Deleting tPropertySet");
@@ -76,21 +83,15 @@ GCFEvent::TResult tPropertySet::createPS(GCFEvent& e, GCFPortInterface& /*p*/)
 		break;
 
 	case F_ENTRY: {
+		gTestPassed = false;
 		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PS_AT_OWNED_TEMP, this);
 		ASSERTSTR(itsPropSet, "Can't allocate PropertySet");
-//		if (itsPropSet.created()) {
-//			LOG_DEBUG("PropertySet is created, going to next state");
-//			TRAN(tPropertySet::WriteTest);
-//		}
-//		else {
-			LOG_DEBUG("Waiting for creation confirmation");
-			itsTimerPort->setTimer(5.0);	// when things go wrong
-//		}
+		itsTimerPort->setTimer(1.0); // max time for this test.
 	}
 	break;
 
 	case F_TIMER:
-		LOG_DEBUG_STR("TIMEOUT ON CREATE");
+		LOG_DEBUG_STR("Creation of DP " << (gTestPassed ? "was successful" : "FAILED"));
 		TRAN(tPropertySet::WriteTest);
 	break;
 
@@ -98,6 +99,7 @@ GCFEvent::TResult tPropertySet::createPS(GCFEvent& e, GCFPortInterface& /*p*/)
 		// NOTE: this function may be called DURING the construction of the PropertySet.
 		DPCreatedEvent		dpEvent(e);
 		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+		gTestPassed = true;
 	}
 	break;
 
@@ -141,30 +143,32 @@ GCFEvent::TResult tPropertySet::WriteTest(GCFEvent& e, GCFPortInterface& /*p*/)
 {
 	LOG_DEBUG_STR("WriteTest:" << eventName(e));
 	GCFEvent::TResult status = GCFEvent::HANDLED;
+	static	int		nrWriteTests;
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		ASSERTSTR(itsPropSet, "Lost propertySet");
-		itsPropSet->setValue("uintVal", "25");
-//		if (itsPropSet->setValue("uintVal", "25") == SA_NO_ERROR) {
-//			schedule_tran(tPropertySet::final);
-//		}
-//		else {
-			itsTimerPort->setTimer(5.0);	// wait for DP_SET command.
-//		}
+		gTestPassed = false;
+		itsPropSet->setValue("uintVal",   "25");
+		itsPropSet->setValue("intVal",    "-36");
+		itsPropSet->setValue("floatVal",  "3.1415926");
+		itsPropSet->setValue("boolVal",   "true");
+		itsPropSet->setValue("stringVal", "test Stringetje");
+		nrWriteTests = 5;
+		itsTimerPort->setTimer(1.0);
 	}
 	break;
 
 	case F_TIMER:
-		LOG_DEBUG_STR("TIMEOUT ON WRITE");
-		TRAN(tPropertySet::final);
+		LOG_DEBUG_STR("Writetest " << (gTestPassed ? "was successful" : "FAILED"));
+		TRAN(tPropertySet::ReadTest);
 	break;
 
 	case DP_SET: {
 		DPSetEvent		dpEvent(e);
-		LOG_DEBUG_STR("Result of set " << dpEvent.DPname << " = " << dpEvent.result);
-		itsTimerPort->cancelAllTimers();
-		TRAN(tPropertySet::final);
+		LOG_DEBUG_STR("Result of setting " << dpEvent.DPname << " = " << dpEvent.result);
+		if (--nrWriteTests == 0) {
+			gTestPassed = true;
+		}
 	}
 	break;
 
@@ -176,8 +180,94 @@ GCFEvent::TResult tPropertySet::WriteTest(GCFEvent& e, GCFPortInterface& /*p*/)
 	return status;
 }
 
+//
+// ReadTest (event, port)
+//
+GCFEvent::TResult tPropertySet::ReadTest(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	LOG_DEBUG_STR("ReadTest:" << eventName(e));
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
+	switch (e.signal) {
+	case F_ENTRY: {
+		gTestPassed = true;
 
+		{
+			GCFPVUnsigned	theVar;
+			PVSSresult	result = itsPropSet->getValue("uintVal", theVar);
+			if (result != SA_NO_ERROR) {
+				LOG_DEBUG_STR("getValue(uintVal) returned errno: " << result);
+				gTestPassed = false;
+			}
+			else {
+				LOG_DEBUG_STR ("Value of 'uintVal' element = " << theVar.getValueAsString());
+			}
+		}
+
+		{
+			GCFPVInteger	theVar;
+			PVSSresult	result = itsPropSet->getValue("intVal", theVar);
+			if (result != SA_NO_ERROR) {
+				LOG_DEBUG_STR("getValue(intVal) returned errno: " << result);
+				gTestPassed = false;
+			}
+			else {
+				LOG_DEBUG_STR ("Value of 'intVal' element = " << theVar.getValueAsString());
+			}
+		}
+
+		{
+			GCFPVDouble	theVar;
+			PVSSresult	result = itsPropSet->getValue("floatVal", theVar);
+			if (result != SA_NO_ERROR) {
+				LOG_DEBUG_STR("getValue(floatVal) returned errno: " << result);
+				gTestPassed = false;
+			}
+			else {
+				LOG_DEBUG_STR ("Value of 'floatVal' element = " << theVar.getValueAsString());
+			}
+		}
+
+		{
+			GCFPVBool	theVar;
+			PVSSresult	result = itsPropSet->getValue("boolVal", theVar);
+			if (result != SA_NO_ERROR) {
+				LOG_DEBUG_STR("getValue(boolVal) returned errno: " << result);
+				gTestPassed = false;
+			}
+			else {
+				LOG_DEBUG_STR ("Value of 'boolVal' element = " << theVar.getValueAsString());
+			}
+		}
+
+		{
+			GCFPVString	theVar;
+			PVSSresult	result = itsPropSet->getValue("stringVal", theVar);
+			if (result != SA_NO_ERROR) {
+				LOG_DEBUG_STR("getValue(stringVal) returned errno: " << result);
+				gTestPassed = false;
+			}
+			else {
+				LOG_DEBUG_STR ("Value of 'stringVal' element = " << theVar.getValueAsString());
+			}
+		}
+
+		itsTimerPort->setTimer(0.0);
+	}
+	break;
+
+	case F_TIMER:
+		LOG_DEBUG_STR("Readtest " << (gTestPassed ? "was successful" : "FAILED"));
+		TRAN(tPropertySet::final);
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
 
   } // namespace RTDB
  } // namespace GCF

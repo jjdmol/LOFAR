@@ -139,7 +139,7 @@ PVSSresult RTDBPropertySet::setValueTimed (const string& propName,
 		return (SA_PROP_DOES_NOT_EXIST);
 	}
 
-	return propPtr->setValueTimed(value, timestamp, wantAnswer);
+	return (propPtr->setValueTimed(value, timestamp, wantAnswer));
 
 }
 
@@ -156,9 +156,23 @@ PVSSresult RTDBPropertySet::setValueTimed (const string& propName,
 		return (SA_PROP_DOES_NOT_EXIST);
 	}
 
-	return propPtr->setValueTimed(value, timestamp, wantAnswer);
+	return (propPtr->setValueTimed(value, timestamp, wantAnswer));
 }
                              
+//
+// getValue(propname, GCFPValue)
+//
+PVSSresult	RTDBPropertySet::getValue(const string&			propName,
+									  GCFPValue&			returnVar)
+{
+	RTDBProperty* propPtr = _getProperty(propName);
+	if (!propPtr) {
+		return (SA_PROP_DOES_NOT_EXIST);
+	}
+
+	return (propPtr->getValue(returnVar));
+}
+
 //
 // exists(propName)
 //
@@ -279,9 +293,6 @@ RTDBProperty* RTDBPropertySet::_getProperty (const string& propName) const
 {
 //	string 	shortPropName(propName);	// modifyable copy
 //	_cutScope(shortPropName);
-
-	LOG_TRACE_VAR_STR("itsPropMap.size() = " << itsPropMap.size());
-	LOG_TRACE_VAR_STR("propName = " << propName);
 
 	PropertyMap_t::const_iterator PMiter = itsPropMap.find(propName);
 	if (PMiter != itsPropMap.end()) {
