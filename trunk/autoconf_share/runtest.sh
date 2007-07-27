@@ -101,8 +101,10 @@ if test "$AIPSPP" != ""; then
     aipsd=`basename $AIPSPP`
     aipsv=`echo $AIPSPATH | awk '{print $2}'`
     AIPSPATH=`echo $AIPSPATH | sed -e "s% $aipsv % $aipsd %"`
-    export AIPSPATH
+  else
+    AIPSPATH=`dirname $AIPSPP`
   fi
+  export AIPSPATH
 fi
 
 # Delete all possible files from previous test runs.
