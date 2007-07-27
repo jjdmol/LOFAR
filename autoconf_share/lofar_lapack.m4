@@ -35,5 +35,6 @@ AC_DEFUN([lofar_LAPACK],dnl
 [dnl
 AC_PREREQ(2.13)dnl
 ifelse($1, [], [lfr_option=0], [lfr_option=$1])
-lofar_EXTERNAL(lapack,[$lfr_option],,"lapack blas",,,,,-lg2c)
+lofar_EXTERNAL(lapack,[$lfr_option],,"lapack",,,,,-lg2c)
+lofar_EXTERNAL(blas,[$lfr_option],,"blas",,,,,-lg2c)
 ])

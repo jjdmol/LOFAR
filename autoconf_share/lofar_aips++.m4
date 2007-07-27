@@ -23,7 +23,7 @@
 
 # lofar_AIPSPP
 #
-# Macro to check for AIPS++ installation
+# Macro to check for casacore and/or AIPS++ installation
 # If AIPS++ functions are used that use LAPACK, lofar_LAPACK should
 # also be made part of the configure.in (after lofar_AIPSPP).
 #
@@ -38,15 +38,15 @@ AC_DEFUN([lofar_AIPSPP],dnl
 [dnl
 AC_PREREQ(2.13)dnl
 ifelse($1, [], [lfr_option=0], [lfr_option=$1])
-ifelse($2, [], [lfr_aipslibs="-ltasking -lms -lfits -lmeasures -ltables -lscimath -lscimath_f -lcasa -lglish -lsos -lnpd"], [lfr_aipslibs=$2])
+ifelse($2, [], [lfr_aipslibs="-lms -lmeasures -ltables -lscimath -lscimath_f -lcasa"], [lfr_aipslibs=$2])
+AC_ARG_WITH(casacore,
+	[  --with-casacore=PFX         enable use of casacore (via explicit path)],
+	[with_casacore="$withval"],
+	[with_casacore=""])
 AC_ARG_WITH(aipspp,
-	[  --with-aipspp[=PFX]         enable use of AIPS++ (via AIPSPATH or explicit path)],
+	[  --with-aipspp=PFX           enable use of AIPS++ (via explicit path)],
 	[with_aipspp="$withval"],
 	[with_aipspp=""])
-AC_ARG_WITH(casa,
-	[  --with-casa[=PFX]           enable use of casa (via casapath or explicit path)],
-	[with_casa="$withval"],
-	[with_casa=""])
 AC_ARG_WITH(pgplot,
 	[  --with-pgplot[=PFX]         enable use of PGPLOT if needed by AIPS++],
 	[with_pgplot="$withval"],
@@ -55,190 +55,221 @@ AC_ARG_WITH(wcs,
 	[  --with-wcs[=PFX]            specific path for wcslib if needed by AIPS++],
 	[with_wcs="$withval"],
 	[with_wcs=""])
+AC_ARG_WITH(wcs-libdir,
+	[  --with-wcs-libdir[=PFX]     specific path for wcslib library if needed by AIPS++],
+	[with_wcs_libdir="$withval"],
+	[with_wcs_libdir=""])
 [
 
 
+if test "$with_casacore" = ""; then
+    with_casacore=no;
+fi
+if test "$with_aipspp" = ""; then
+    with_aipspp=no;
+fi
 if test "$with_pgplot" = ""; then
     with_pgplot=no;
 fi
 if test "$with_wcs" = ""; then
     with_wcs=yes;
+    if test "$with_casacore" = "no" -a "$with_aipspp" = "no"; then
+        with_wcs=no;
+    else
+        lfr_al=`echo "$lfr_aipslibs " | sed -e 's/-lcoordinates //'`
+        if test "lfr_al" = "lfr_aipslibs "; then
+            with_wcs=no
+        fi
+    fi
 fi
 
 # the path where the libraries can be found
-AIPSPP_LIB_PATH=""
+CASAC_LIB_PATH=
+AIPSPP_LIB_PATH=
 # the path where the include files can be found
-AIPSPP_INC_PATH=""
+CASAC_INC_PATH=
+AIPSPP_INC_PATH=
 
-# if casa and aips are both set, casa will be used
-# check the --with-casa option
-if test "$with_casa" = ""; then
-  # --with-casa was not given, so look in casapath if it exists
-  ]AC_MSG_CHECKING([whether casapath environment variable is set])[
-  if test "${casapath}set" != "set"; then
-    ]AC_MSG_RESULT([yes])[
-    AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} ${casapath}"
-    AIPSPP_INC_PATH="${AIPSPP_INC_PATH} ${casapath}/include/casa"
-  else
-    ]AC_MSG_RESULT([no])[
+AIPSPP_CPPFLAGS=
+AIPSPP_LDFLAGS=
+AIPSPP_LIBS=
+
+lfr_use_casa=0
+# check the --with-casacore option
+if test "$with_casacore" != "no"; then
+  lfr_use_casa=1
+  CASAC_LIB_PATH=$with_casacore/lib
+  CASAC_INC_PATH=$with_casacore/include/casacore
+  ]AC_CHECK_FILE([$CASAC_LIB_PATH/libcasa_casa.$lofar_shared_ext],
+			[lfr_ext_dir=yes],
+			[lfr_ext_dir=no])[
+  if test "$lfr_ext_dir" = "no" ; then
+    ]AC_CHECK_FILE([$CASAC_LIB_PATH/libcasa_casa.a],
+			[lfr_ext_dir=yes],
+			[lfr_ext_dir=no])[
   fi
-elif test "$with_casa" = "no"; then
-  # do nothing
-  echo
-elif test "$with_casa" = "yes"; then
-  # --with-casa was given, so look in casapath if it exists otherwise give an error
-  ]AC_MSG_CHECKING([whether casapath environment variable is set])[
-  if test "${casapath}set" != "set"; then
-    ]AC_MSG_RESULT([yes])[
-    AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} ${casapath}"
-    AIPSPP_INC_PATH="${AIPSPP_INC_PATH} ${casapath}/include/casa"
-  else
-    echo
-    ]AC_MSG_RESULT([no])[
-    ]AC_MSG_ERROR([--with-casa=yes has been given, but casapath has not been set])[
+  if test "$lfr_ext_dir" = "no" ; then
+    ]AC_MSG_ERROR([Could not find casacore library libcasa_casa in $CASAC_LIB_PATH])[
   fi
-else
-  # the casa path was given manually so look there
-  AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} ${AIPSPP_LIB_PATH} ${with_casa}"
-  AIPSPP_INC_PATH="${AIPSPP_INC_PATH} ${AIPSPP_INC_PATH} ${with_casa}/include/casa"
+  ]AC_CHECK_FILE([$CASAC_INC_PATH/casa/aips.h],
+			[lfr_ext_dir=yes],
+			[lfr_ext_dir=no])[
+  if test "$lfr_ext_dir" = "no" ; then
+    ]AC_MSG_ERROR([Could not find casacore header casa/aips.h in $CASAC_INC_PATH])[
+  fi
+  AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$CASAC_INC_PATH"
+  AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$CASAC_LIB_PATH"
+  if test "$lofar_no_rpath" = 0; then
+    AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$CASAC_LIB_PATH"
+  fi
 fi
 
 # check the --with-aipspp option
-if test "$with_aipspp" = ""; then
-  # --with-aips was not given, so look in AIPSPATH if it exists
-  ]AC_MSG_CHECKING([whether AIPSPATH environment variable is set])[
-  if test "${AIPSPATH}set" != "set"; then
-    ]AC_MSG_RESULT([yes])[
-    AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} `expr "$AIPSPATH" : "\(.*\) .* .* .*"`/`expr "$AIPSPATH" : ".* \(.*\) .* .*"`"
-    AIPSPP_INC_PATH="${AIPSPP_INC_PATH} `expr "$AIPSPATH" : "\(.*\) .* .* .*"`/code/include"
-  else
-    ]AC_MSG_RESULT([no])[
+if test "$with_aipspp" != "no"; then
+  lfr_use_casa=1
+  AIPSPP_LIB_PATH=$with_aipspp/lib
+  AIPSPP_INC_PATH=`dirname $with_aipspp`/code/include
+  # Look for lib directory.
+  ]AC_CHECK_FILE([$AIPSPP_LIB_PATH],
+			[lfr_ext_dir=yes],
+			[lfr_ext_dir=no])[
+  if test "$lfr_ext_dir" = "no" ; then
+    ]AC_MSG_ERROR([Could not find AIPS++ library directory $AIPSPP_LIB_PATH])[
   fi
-elif test "$with_aipspp" = "no"; then
-  # do nothing
-  echo
-elif test "$with_aipspp" = "yes"; then
-  # --with-aips was given, so look in AIPSPATH if it exists otherwise give an error
-  ]AC_MSG_CHECKING([whether AIPSPATH environment variable is set])[
-  if test "${AIPSPATH}set" != "set"; then
-    ]AC_MSG_RESULT([yes])[
-    AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} `expr "$AIPSPATH" : "\(.*\) .* .* .*"`/`expr "$AIPSPATH" : ".* \(.*\) .* .*"`"
-    AIPSPP_INC_PATH="${AIPSPP_INC_PATH} `expr "$AIPSPATH" : "\(.*\) .* .* .*"`/code/include"
-  else
-    echo
-    ]AC_MSG_RESULT([no])[
-    ]AC_MSG_ERROR([--with-aipspp=yes has been given, but AIPSPATH has not been set])[
+  ]AC_CHECK_FILE([$AIPSPP_INC_PATH],
+			[lfr_ext_dir=yes],
+			[lfr_ext_dir=no])[
+  if test "$lfr_ext_dir" = "no" ; then
+    ]AC_MSG_ERROR([Could not find AIPS++ include directory $AIPSPP_INC_PATH])[
   fi
-else
-  # the aips path was given manually so look there
-  AIPSPP_LIB_PATH="${AIPSPP_LIB_PATH} ${with_aipspp}";
-  AIPSPP_INC_PATH="${AIPSPP_INC_PATH} `dirname $with_aipspp`/code/include";
+  AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$AIPSPP_INC_PATH"
+  AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$AIPSPP_LIB_PATH"
+  if test "$lofar_no_rpath" = 0; then
+    AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$AIPSPP_LIB_PATH"
+  fi
+  AIPSPP_LIBS="$AIPSPP_LIBS $AIPSPP_LIB_PATH/version.o"
 fi
 
 # Do we have enough info?
-if test "$AIPSPP_LIB_PATH" = ""; then
+if test "$CASAC_LIB_PATH" = "" -a "$AIPSPP_LIB_PATH" = ""; then
   if test "$lfr_option" != "0"; then
-    ]AC_MSG_ERROR([AIPS++ is needed, but casapath and AIPSPATH have not been set and  --with-aipspp=path and --with-casa=path have not been given])[
+    ]AC_MSG_ERROR([AIPS++ is needed, but neither --with-casacore=path nor --with-aipspp=path has been given])[
   fi
-else
-  # Now we have the paths and we can start searching for the aips installation
+fi
 
-  # I don't know a nicer way to do a for loop over two lists
-  INDEX=0
-  for dummy in $AIPSPP_LIB_PATH; do
-    let "INDEX += 1"
-    AIP=`echo $AIPSPP_INC_PATH | awk '{print $'$INDEX'}'`
-    ALP=`echo $AIPSPP_LIB_PATH | awk '{print $'$INDEX'}'`
+# Set build variables.
+if [ "$lfr_use_casa" = 1 ]; then
+  case `uname -s` in
+    SunOS)   darch="-DAIPS_SOLARIS";;
+    Linux)   darch="-DAIPS_LINUX";;
+    IRIX32)  darch="-DAIPS_IRIX";;
+    IRIX64)  darch="-DAIPS_IRIX";;
+    Darwin*) darch="-DAIPS_DARWIN";;
+    *)       darch=;;
+  esac
+  AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS $darch -DAIPS_STDLIB"
+  if test "$CASAC_LIB_PATH" = ""; then
+    AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_NO_TEMPLATE_SRC"
+  fi
+  # Check if we're on a x86-64 bit system.
+  if test "`arch`" = "x86_64"; then
+    AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_64B"
+  fi
 
-    ALL_FOUND="yes"
-    ]AC_CHECK_FILE([$AIP],, [ALL_FOUND="no"])[
-    ]AC_CHECK_FILE([$ALP/lib],, [ALL_FOUND="no"])[
-    if test "$ALL_FOUND" = "yes"; then
-      # we have a winner
-      break
+  # For casacore, add casa_ to the libraries.
+  if test "$CASAC_LIB_PATH" != ""; then
+    clibs=`ls $CASAC_LIB_PATH/libcasa_* | sed -e 's%.*/%%g' -e 's%libcasa_%%g' -e 's%\..*%%g' | sort | uniq`
+    for LIB in $clibs
+    do
+      lfr_aipslibs=`echo "$lfr_aipslibs " | sed -e "s/-l$LIB /-lcasa_$LIB /"`
+    done
+  fi
+  AIPSPP_LIBS="$AIPSPP_LIBS $lfr_aipslibs"
+fi
+
+# Test for wcs.
+if [ "$with_wcs" != "no" ]; then
+  if [ "$with_wcs" = "yes" ]; then
+    with_wcs=`echo $AIPSPP_INC_PATH | sed -e 's%/include$%/casa%'`
+  fi
+  ]AC_CHECK_FILE([$with_wcs/wcslib/wcs.h],
+	        [lfr_wcs=$with_wcs], [lfr_wcs=no])[
+  if test $lfr_wcs = no; then
+    ]AC_CHECK_FILE([$with_wcs/include/wcslib/wcs.h],
+	          [lfr_wcs=$with_wcs/include], [lfr_wcs=no])[
+    if test $lfr_wcs = no; then
+      ]AC_MSG_ERROR([wcs.h not found in WCS directory $with_wcs])[
     fi
-  done
-
-  if test "$ALL_FOUND" = "no"; then 
-    # the paths do not contain the needed files/dirs
-    if test "$lfr_option" != "0"; then
-      ]AC_MSG_ERROR([AIPS++ installation not found])[
+  fi
+  AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$lfr_wcs"
+  if [ "$with_wcs_libdir" = "" ]; then
+    if [ "$AIPSPP_LIB_PATH" != "" ]; then
+      with_wcs_libdir=$AIPSPP_LIB_PATH
+    else
+      with_wcs_libdir=$with_wcs/lib
     fi
-  else
-    case `uname -s` in
-      SunOS)  arch=SOLARIS;;
-      Linux)  arch=LINUX;;
-      IRIX32) arch=IRIX;;
-      IRIX64) arch=IRIX;;
-      *)      arch=UNKNOWN;;
-    esac
+  fi
+  ]AC_CHECK_FILE([$with_wcs_libdir/libwcs.$lofar_shared_ext],
+			[lfr_wcs_dir=yes],
+			[lfr_wcs_dir=no])[
+  if test "$lfr_wcs_dir" = "no" ; then
+    ]AC_CHECK_FILE([$with_wcs_libdir/libwcs.a],
+			[lfr_wcs_dir=yes],
+			[lfr_wcs_dir=no])[
+  fi
+  if test "$lfr_wcs_dir" = "no" ; then
+    ]AC_MSG_ERROR([Could not find libwcs in $with_wcs_libdir])[
+  fi
+  if [ "$with_wcs_libdir" != "$AIPSPP_LIB_PATH" ]; then
+    AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$with_wcs_libdir"
+  fi
+  AIPSPP_LIBS="$AIPSPP_LIBS -lwcs"
+fi
 
+# Test for pgplot.
+if test "$with_pgplot" != "no"; then
+  ]AC_CHECK_FILE([$with_pgplot],
+        [lfr_pg=yes], [lfr_pg=no])[
+  if test $lfr_pg = no; then
+    ]AC_MSG_ERROR([given PGPLOT directory not found])[
+  fi
+  AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$with_pgplot"
+  AIPSPP_LIBS="$AIPSPP_LIBS -lcpgplot -lpgplot"
+fi
 
-    # Define the CPP flags.
-    AIPSPP_CPPFLAGS="-I$AIP"
-    if [ "$with_wcs" != "no" ]; then
-      if [ "$with_wcs" = "yes" ]; then
-        with_wcs=`echo $AIP | sed -e 's%/include.*%/casa%'`
-      fi
-      ]AC_CHECK_FILE([$with_wcs/wcslib/wcs.h],
-            [lfr_wcs=yes], [lfr_wcs=no])[
-      if test $lfr_wcs = no; then
-        ]AC_MSG_ERROR([WCS directory not found])[
-      fi
-      AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -I$with_wcs"
-    fi      
-    AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_$arch -DAIPS_NO_TEMPLATE_SRC"
-    # Check if we're on a x86-64 bit system.
-    if test "`arch`" = "x86_64"; then
-      AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_64B"
-    fi
-    if test "$lofar_compiler" = "kcc"; then
-      AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_KAICC"
-    fi
-    AIPSPP_LDFLAGS="-L$ALP/lib"
-    if test "$lofar_compiler" != "pgi"; then
-      AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$ALP/lib"
-    fi
-    AIPSPP_LIBS="$ALP/lib/version.o $lfr_aipslibs"
+# If we're using GCC 4.x, we need to add -lgfortran to AIPSPP_LIBS. 
+# This should be handled by the AIPS++ build environment IMHO.
+version=`$CXX -v 2>&1 | tail -1`
+# A typical version strings looks like this:
+#   gcc version 4.0.2 20050901 (prerelease) (SUSE Linux)
+if echo $version | grep -iq gcc; then
+  # We'll assume that the first word starting with one or more digits is
+  # the version number, so strip off the rest.
+  version=`echo $version | sed -e 's,^[^0-9]*,,' -e 's,[ \t].*$,,'`
+  # We only need the major version number.
+  major=`echo $version | cut -s -d'.' -f1`
+  if test $major -ge 4; then
+    AIPSPP_LIBS="$AIPSPP_LIBS -lgfortran"
+  fi
+fi
 
-    # If we're using GCC 4.x, we need to add -lgfortran to AIPSPP_LIBS. 
-    # This should be handled by the AIPS++ build environment IMHO.
-    version=`$CXX -v 2>&1 | tail -1`
-    # A typical version strings looks like this:
-    #   gcc version 4.0.2 20050901 (prerelease) (SUSE Linux)
-    if echo $version | grep -iq gcc; then
-      # We'll assume that the first word starting with one or more digits is
-      # the version number, so strip off the rest.
-      version=`echo $version | sed -e 's,^[^0-9]*,,' -e 's,[ \t].*$,,'`
-      # We only need the major version number.
-      major=`echo $version | cut -s -d'.' -f1`
-      if test $major -ge 4; then
-        AIPSPP_LIBS="$AIPSPP_LIBS -lgfortran"
-      fi
-    fi
+echo AIPSPP >> pkgext
+echo "$AIPSPP_CPPFLAGS" >> pkgextcppflags
 
-    if test "$with_pgplot" != "no"; then
-      ]AC_CHECK_FILE([$with_pgplot],
-            [lfr_pg=yes], [lfr_pg=no])[
-      if test $lfr_pg = no; then
-        ]AC_MSG_ERROR([given PGPLOT directory not found])[
-      fi
-      AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -L$with_pgplot"
-      AIPSPP_LIBS="$AIPSPP_LIBS -lcpgplot -lpgplot"
-    fi
+CPPFLAGS="$CPPFLAGS $AIPSPP_CPPFLAGS"
+LDFLAGS="$LDFLAGS $AIPSPP_LDFLAGS"
+LIBS="$LIBS $AIPSPP_LIBS"
+AIPSPP=$with_aipspp
 
-    echo AIPSPP >> pkgext
-    echo "$AIPSPP_CPPFLAGS" >> pkgextcppflags
-
-    CPPFLAGS="$CPPFLAGS $AIPSPP_CPPFLAGS"
-    if test "$lofar_compiler" = "gnu"; then
-      CXXFLAGS="$CXXFLAGS -Wno-non-template-friend"
-      echo "-Wno-non-template-friend" >> pkgextcxxflags
-    fi
-    LDFLAGS="$LDFLAGS $AIPSPP_LDFLAGS"
-    LIBS="$LIBS $AIPSPP_LIBS"
-    AIPSPP="$ALP"
-
+if [ "$lfr_use_casa" = 1 ]; then
+  if test "$lofar_compiler" = "gnu"; then
+    CXXFLAGS="$CXXFLAGS -Wno-non-template-friend"
+    echo "-Wno-non-template-friend" >> pkgextcxxflags
+  fi
+  ]
+   AC_DEFINE(HAVE_AIPSPP, $lfr_use_casa, [Define if AIPS++ is installed])dnl
+  [
+fi
     ]
 dnl
     AC_SUBST(AIPSPP)dnl
@@ -247,9 +278,4 @@ dnl
     AC_SUBST(LDFLAGS)dnl
     AC_SUBST(LIBS)dnl
 dnl
-    AC_DEFINE(HAVE_AIPSPP, 1, [Define if AIPS++ is installed])dnl
-    [
-  fi
-fi
-]
 ])
