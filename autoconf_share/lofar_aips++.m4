@@ -98,6 +98,7 @@ lfr_use_casa=0
 # check the --with-casacore option
 if test "$with_casacore" != "no"; then
   lfr_use_casa=1
+  AIPSPP=$with_casacore
   CASAC_LIB_PATH=$with_casacore/lib
   CASAC_INC_PATH=$with_casacore/include/casacore
   ]AC_CHECK_FILE([$CASAC_LIB_PATH/libcasa_casa.$lofar_shared_ext],
@@ -127,6 +128,7 @@ fi
 # check the --with-aipspp option
 if test "$with_aipspp" != "no"; then
   lfr_use_casa=1
+  AIPSPP=$with_aipspp
   AIPSPP_LIB_PATH=$with_aipspp/lib
   AIPSPP_INC_PATH=`dirname $with_aipspp`/code/include
   # Look for lib directory.
@@ -259,7 +261,6 @@ echo "$AIPSPP_CPPFLAGS" >> pkgextcppflags
 CPPFLAGS="$CPPFLAGS $AIPSPP_CPPFLAGS"
 LDFLAGS="$LDFLAGS $AIPSPP_LDFLAGS"
 LIBS="$LIBS $AIPSPP_LIBS"
-AIPSPP=$with_aipspp
 
 if [ "$lfr_use_casa" = 1 ]; then
   if test "$lofar_compiler" = "gnu"; then
