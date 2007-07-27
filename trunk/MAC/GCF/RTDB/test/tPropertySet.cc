@@ -200,7 +200,7 @@ GCFEvent::TResult tPropertySet::ReadTest(GCFEvent& e, GCFPortInterface& /*p*/)
 				gTestPassed = false;
 			}
 			else {
-				LOG_DEBUG_STR ("Value of 'uintVal' element = " << theVar.getValueAsString());
+				LOG_DEBUG_STR ("Value of 'uintVal' element = " << theVar.getValue());
 			}
 		}
 
@@ -212,7 +212,7 @@ GCFEvent::TResult tPropertySet::ReadTest(GCFEvent& e, GCFPortInterface& /*p*/)
 				gTestPassed = false;
 			}
 			else {
-				LOG_DEBUG_STR ("Value of 'intVal' element = " << theVar.getValueAsString());
+				LOG_DEBUG_STR ("Value of 'intVal' element = " << theVar.getValue());
 			}
 		}
 
@@ -224,7 +224,7 @@ GCFEvent::TResult tPropertySet::ReadTest(GCFEvent& e, GCFPortInterface& /*p*/)
 				gTestPassed = false;
 			}
 			else {
-				LOG_DEBUG_STR ("Value of 'floatVal' element = " << theVar.getValueAsString());
+				LOG_DEBUG_STR ("Value of 'floatVal' element = " << theVar.getValue());
 			}
 		}
 
@@ -236,7 +236,7 @@ GCFEvent::TResult tPropertySet::ReadTest(GCFEvent& e, GCFPortInterface& /*p*/)
 				gTestPassed = false;
 			}
 			else {
-				LOG_DEBUG_STR ("Value of 'boolVal' element = " << theVar.getValueAsString());
+				LOG_DEBUG_STR ("Value of 'boolVal' element = " << theVar.getValue());
 			}
 		}
 
@@ -248,7 +248,7 @@ GCFEvent::TResult tPropertySet::ReadTest(GCFEvent& e, GCFPortInterface& /*p*/)
 				gTestPassed = false;
 			}
 			else {
-				LOG_DEBUG_STR ("Value of 'stringVal' element = " << theVar.getValueAsString());
+				LOG_DEBUG_STR ("Value of 'stringVal' element = " << theVar.getValue());
 			}
 		}
 
