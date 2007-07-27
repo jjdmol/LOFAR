@@ -29,6 +29,7 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_DevicePort.h>
+#include <GCF/TM/GCF_TimerPort.h>
 
 #include <Common/lofar_deque.h>
 
@@ -117,8 +118,9 @@ namespace LOFAR{
 			std::deque<TbbEvent> *itsTbbQueue;
 			
 			GCFTCPPort      itsAcceptor;     // listen for clients on this port
-			GCFETHRawPort   *itsBoard;        // array of ports, one for each TBB board
-			
+			GCFETHRawPort*	itsBoard;        // array of ports, one for each TBB board
+			GCFTimerPort*		itsAliveTimer;
+			  
 			std::list<GCFPortInterface*> itsClientList;  // list of clients
 			std::list<GCFPortInterface*> itsDeadClients; // list of clients to cleanup
     };

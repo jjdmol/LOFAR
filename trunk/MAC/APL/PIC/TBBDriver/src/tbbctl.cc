@@ -1321,7 +1321,7 @@ GCFEvent::TResult WriterCmd::ack(GCFEvent& e)
 
 //---- READPAGE ------------------------------------------------------------------
 ReadPageCmd::ReadPageCmd(GCFPortInterface& port) : Command(port),
-	itsRcu(0),itsPages(1),itsCmdStage(0),itsPage(0),itsAddr(0),itsStartAddr(0),itsSize(0),itsBoard(0),itsMp(0),
+	itsRcu(0),itsStartPage(0),itsPages(1),itsCmdStage(0),itsPage(0),itsTotalSize(0),itsStartAddr(0),itsSize(0),itsBoard(0),itsMp(0),
 	itsStationId(0),itsRspId(0),itsRcuId(0),itsSampleFreq(0),itsTime(0),itsSampleNr(0),itsSamplesPerFrame(0),
 	itsFreqBands(0),itsTotalSamples(0),itsTotalBands(0)
 {
@@ -1333,19 +1333,27 @@ void ReadPageCmd::send()
 {
 	
 	switch (itsCmdStage) {
-		case 0: {
+		
+		case 0: {	// get info about allocated RCU's
 			TBBRcuInfoEvent send;
 			itsPort.send(send);
 			itsPort.setTimer((long)1);
 		} break;
 		
-		case 1: {
+		case 1: {	// get total memmory size
+  		TBBSizeEvent send;
+  		send.boardmask = (1 << itsBoard);
+  		itsPort.send(send);
+  		itsPort.setTimer((long)1);
+		} break;
+		
+		case 2: {	// write page address to board
 			TBBWriterEvent send;
 			send.board = itsBoard;
 			send.mp = itsMp;
 			send.pid = PID6;
 			send.regid = REGID1;
-			send.data[0] = itsAddr;
+			send.data[0] = (itsStartPage + itsPage);
 			send.data[1] = 0; 
 			send.data[2] = 0;
 			itsPort.send(send);
@@ -1355,7 +1363,7 @@ void ReadPageCmd::send()
 				send.mp,send.pid,send.regid,send.data[0]));
 		} break;
 		
-		case 2: {
+		case 3: { // write page-read-cmd to board
 			TBBWriterEvent send;
 			send.board = itsBoard;
 			send.mp = itsMp;
@@ -1371,7 +1379,7 @@ void ReadPageCmd::send()
 				send.mp,send.pid,send.regid,send.data[0]));
 		} break;
 		
-		case 3: {
+		case 4: { // read first part of frame
 			TBBReadxEvent send;
 			send.board = itsBoard;	
 			send.mp = itsMp;
@@ -1386,7 +1394,7 @@ void ReadPageCmd::send()
 				send.mp,send.pid,send.regid,send.pagelength,send.pageaddr));
 		} break;
 		
-		case 4: {
+		case 5: {	// read second part of frame
 			TBBReadxEvent send;
 			send.board = itsBoard;	
 			send.mp = itsMp;
@@ -1412,18 +1420,19 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 	int16 val[1400];
 		
 	switch (itsCmdStage) {
+		
 		case 0: {
-			int rcu;
-			rcu = getRcu();
 			TBBRcuInfoAckEvent ack(e);
-			itsState = ack.rcu_state[rcu];
-			itsStartAddr = ack.rcu_start_addr[rcu];
-			itsSize = ack.rcu_pages[rcu];
-			itsBoard = ack.rcu_on_board[rcu];
-			itsMp = static_cast<int32>(ack.rcu_on_input[rcu]) / 4;
-			//logMessage(cout,formatString("Rcu-%d Board[%d] Mp[%d]",rcu,itsBoard,itsMp));
+			itsRcu = getRcu();
+			itsState = ack.rcu_state[itsRcu];
+			itsStartAddr = ack.rcu_start_addr[itsRcu];
+			itsSize = ack.rcu_pages[itsRcu];
+			itsBoard = ack.rcu_on_board[itsRcu];
+			itsMp = static_cast<int32>(ack.rcu_on_input[itsRcu] / 4);
+			logMessage(cout,formatString("Rcu-%d Board[%d] Mp[%d]",itsRcu,itsBoard,itsMp));
 			
-			itsAddr = itsStartAddr;
+			itsStartPage += itsStartAddr;
+			
 			if (itsState == 'F') {
 				logMessage(cout,"Rcu not allocated");
 				itsCmdStage = 10;
@@ -1431,10 +1440,16 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 		} break;
 				
 		case 1: {
-			TBBWriterAckEvent ack(e);
-			if (!(ack.status_mask & TBB_SUCCESS)) {
-				logMessage(cout,formatString("%s",getDriverErrorStr(ack.status_mask).c_str()));
+  		TBBSizeAckEvent ack(e);
+  		if (!(ack.status_mask[itsBoard] & TBB_SUCCESS)) {
+				logMessage(cout,formatString("%s",getDriverErrorStr(ack.status_mask[itsBoard]).c_str()));
 				itsCmdStage = 10;
+			} else {
+				itsTotalSize = ack.npages[itsBoard] / 4;
+				if ((itsStartPage < itsStartAddr) || (itsStartPage > (itsStartAddr + itsTotalSize))) {
+					logMessage(cout,formatString("Requested Page belongs not to rcu-%d", itsRcu));			 
+				}
+				logMessage(cout,formatString("StartPage = %u ",itsStartPage));			 
 			}
 		} break;
 		
@@ -1447,6 +1462,14 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 		} break;
 		
 		case 3: {
+			TBBWriterAckEvent ack(e);
+			if (!(ack.status_mask & TBB_SUCCESS)) {
+				logMessage(cout,formatString("%s",getDriverErrorStr(ack.status_mask).c_str()));
+				itsCmdStage = 10;
+			}
+		} break;
+		
+		case 4: {
 			TBBReadxAckEvent ack(e);
 			if (!(ack.status_mask & TBB_SUCCESS)) {
 				logMessage(cout,formatString("%s", getDriverErrorStr(ack.status_mask).c_str()));
@@ -1459,7 +1482,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			}
 		} break;
 		
-		case 4: {
+		case 5: {
 			TBBReadxAckEvent ack(e);
 			if (!(ack.status_mask & TBB_SUCCESS)) {
 				logMessage(cout,formatString("%s", getDriverErrorStr(ack.status_mask).c_str()));
@@ -1478,7 +1501,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 	}
 	
 	itsCmdStage++;
-	if (itsCmdStage < 5) {
+	if (itsCmdStage < 6) {
 		//itsPort.setTimer(0.01);
 	} else { 
 		
@@ -1547,14 +1570,14 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 				}
 			}
 		}
+		// write all data to file
+		FILE* file;
+		char line[10][256];
+		char basefilename[PATH_MAX];
+		char filename[PATH_MAX];
+		char timestring[256];
+		
 		if (val_cnt > 0) {
-			// write all data to file
-			FILE* file;
-			char line[10][256];
-			char basefilename[PATH_MAX];
-			char filename[PATH_MAX];
-			char timestring[256];
-			
 			strftime(timestring, 255, "%Y%m%d_%H%M%S", gmtime(&itsTime));
 			snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsTotalBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
 			
@@ -1562,49 +1585,53 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			file = fopen(filename,"a");
 			fwrite(val,sizeof(int16),val_cnt,file);
 			fclose(file);
+		}
+		itsPage++;
+		if (itsPage < itsPages) {
+			itsCmdStage = 2;
+		}	else {
+			// print page information
+			strftime(timestring, 255, "%Y-%m-%d  %H:%M:%S", gmtime(&itsTime));
 			
-			itsPage++;
-			if (itsPage < itsPages) {
-				itsCmdStage = 1;
-				itsAddr = itsStartAddr + itsPage;
-				//itsPort.setTimer(0.02);
+			sprintf(line[0],"Station ID      : %d",itsStationId);
+			sprintf(line[1],"RSP ID          : %d",itsRspId);
+			sprintf(line[2],"RCU ID          : %d",itsRcuId);
+			sprintf(line[3],"Sample freq     : %d MHz",itsSampleFreq);
+			if (itsTime < 0) {
+				sprintf(line[4],"Time            : invalid");
+			} else {
+				sprintf(line[4],"Time            : %s (%u)",timestring,(uint32)itsTime);
+			}
+			sprintf(line[5],"SampleNr        : %u",itsSampleNr);
+			if (itsTotalBands) {
+				sprintf(line[6],"FreqBands       : %u",itsTotalBands);
+				sprintf(line[7],"Data file format: binary complex(int16 Re, int16 Im)");
 			}	else {
-				// print page information
-				strftime(timestring, 255, "%Y-%m-%d  %H:%M:%S", gmtime(&itsTime));
-				
-				sprintf(line[0],"Station ID      : %d",itsStationId);
-				sprintf(line[1],"RSP ID          : %d",itsRspId);
-				sprintf(line[2],"RCU ID          : %d",itsRcuId);
-				sprintf(line[3],"Sample freq     : %d MHz",itsSampleFreq);
-				if (itsTime < 0) {
-					sprintf(line[4],"Time            : invalid");
-				} else {
-					sprintf(line[4],"Time            : %s (%u)",timestring,(uint32)itsTime);
-				}
-				sprintf(line[5],"SampleNr        : %u",itsSampleNr);
-				if (itsTotalBands) {
-					sprintf(line[6],"FreqBands       : %u",itsTotalBands);
-					sprintf(line[7],"Data file format: binary complex(int16 Re, int16 Im)");
-				}	else {
-					sprintf(line[6],"Samples         : %u",itsTotalSamples);
-					sprintf(line[7],"Data file format: binary  int16");
-				}
+				sprintf(line[6],"Samples         : %u",itsTotalSamples);
+				sprintf(line[7],"Data file format: binary  int16");
+			}
+			if (val_cnt > 0) {
 				sprintf(line[8],"Filename        : %s.nfo",basefilename);
 				sprintf(line[9],"                : %s.dat",basefilename);
-							
+			} else {
+				sprintf(line[8],"Filename        : NO DATA IN FRAME");
+				sprintf(line[9],"                : ");
+			}
+			
+			if (val_cnt > 0) {			
 				snprintf(filename, PATH_MAX, "%s.nfo",basefilename);
 				file = fopen(filename,"w");		
-										
+									
 				for (int32 lnr = 0;lnr < 10; lnr++) {
-					logMessage(cout,line[lnr]);
 					fprintf(file,line[lnr]);
 					fprintf(file,"\n");
 				}
-				logMessage(cout,"\n");
-				fclose(file);	
+				fclose(file);
 			}
-		}	else {
-			logMessage(cout,"No data in Frame");
+			
+			for (int32 lnr = 0;lnr < 10; lnr++) {
+				logMessage(cout,line[lnr]);
+			}
 		}
 	}
 	if (itsPage == itsPages) {
@@ -1627,7 +1654,7 @@ void TBBCtl::help()
 	logMessage(cout,"#  --command --select=<set> : only information for all selected boards or rcu's is displayed\n"
 									"#    Example: --select=0,1,4  or  --select=0:6  or  --select=0,1,2,8:11\n");
 	logMessage(cout,"tbbctl --alloc [--select=<set>]                                    # allocate memmory locations for selected rcu's");
-	logMessage(cout,"tbbctl --free [--select=<set>]                                     # free memmory locationsfor selected rcu's");
+	logMessage(cout,"tbbctl --free [--select=<set>]                                     # free memmory locations for selected rcu's");
 	logMessage(cout,"tbbctl --record [--select=<set>]                                   # start recording on selected rcu's");
 	logMessage(cout,"tbbctl --stop [--select=<set>]                                     # stop recording on all selected rcu's");
 	logMessage(cout,"tbbctl --rcuinfo [--select=<set>]                                  # list rcu info for all allocated rcu's\n");
@@ -1647,13 +1674,13 @@ void TBBCtl::help()
 	logMessage(cout,"tbbctl --eraseimage=board,image                                    # erase image from flash");
 	logMessage(cout,"tbbctl --readimage=board,image                                     # read image from flash to file");
 	logMessage(cout,"tbbctl --writeimage=boardnr,imagenr,version,tpfilename,mpfilename  # write tp and mp file to imagenr on boardnr");
-	logMessage(cout,"                                                                   # version is the version of the image stored");
+	logMessage(cout,"                                                                   # version is the sw version of the image stored");
 	logMessage(cout,"tbbctl --imageinfo=board                                           # read info from all images on board\n");
 	
-	logMessage(cout,"tbbctl --readddr=board,mp,addr,size                                # read 2 words from DDR2 memory");
-	logMessage(cout,"tbbctl --writeddr=board,mp,addr,wordL,wordH                        # write 2 words to DDR2 memory at addr");
-	logMessage(cout,"tbbctl --testddr=board                                             # test all adress lines from DDR2 memory");
-	logMessage(cout,"tbbctl --readpage=rcunr,npages                                     # read from rcunr, npages from DDR2 memory");
+	logMessage(cout,"tbbctl --readddr=board,mp,addr,size                                # DDR2 read, (size x 2) words starting on addr");
+	logMessage(cout,"tbbctl --writeddr=board,mp,addr,wordL,wordH                        # DDR2 write, 2 words to starting on addr");
+	logMessage(cout,"tbbctl --testddr=board                                             # DDR2 memory test, adress and data lines");
+	logMessage(cout,"tbbctl --readpage=rcunr,startpage,npages                           # DDR2 read npages from rcunr, starting on startpage");
 	logMessage(cout,"tbbctl --clear [--select=<set>]                                    # clear selected board");
 	logMessage(cout,"tbbctl --reset [--select=<set>]                                    # reset to factory images on selected boards");
 	logMessage(cout,"tbbctl --config=imagenr [--select=<set>]                           # reconfigure TP and MP's with imagenr [0..31] on ");
@@ -2169,22 +2196,24 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				
 				if (optarg) {
 					int32 rcu = 0;
+					uint32 startpage = 0;
 					uint32 pages = 0;
 					
-					int numitems = sscanf(optarg, "%d,%u", &rcu,&pages);
+					int numitems = sscanf(optarg, "%d,%u,%u", &rcu,&startpage,&pages);
 					
-					if (numitems < 2 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
-						logMessage(cerr,"Error: invalid read ddr value. Should be of the format "
-								"'--readw=board,mp,addr' where rcu= 0..191");  
+					if (numitems < 3 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
+						logMessage(cerr,"Error: invalid readpage value's. Should be of the format "
+								"'--readpage=rcu,startpage,pages' where rcu= 0..191");  
 						exit(EXIT_FAILURE);
 					}
+					readddrcmd->setStartPage(startpage);
 					readddrcmd->setPages(pages);
 					select.clear();
 		  		select.push_back(rcu);
 		  		command->setSelected(true);
 				}	else {
-					logMessage(cerr,"Error: invalid read ddr value. Should be of the format "
-								"'--readw=board,mp,addr' where board= 0..11, mp= 0..3 and addr= 0x..");  
+					logMessage(cerr,"Error: invalid readpage value's. Should be of the format "
+							"'--readpage=rcu,startpage,pages' where rcu= 0..191");  
 						exit(EXIT_FAILURE);
 				}
 				command->setCmdType(BOARDCMD);
@@ -2501,8 +2530,8 @@ void TBBCtl::mainloop()
 int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
-
-  LOG_INFO(formatString("Program %s has started", argv[0]));
+  
+  LOG_DEBUG(formatString("Program %s has started", argv[0]));
 
   TBBCtl tbbctl("tbbctl", argc, argv);
 
@@ -2511,10 +2540,11 @@ int main(int argc, char** argv)
   }
   catch (Exception e) {
     cerr << "Exception: " << e.text() << endl;
+    cout << endl << "== abnormal termination of tbbctl ============================================" << endl;
     exit(EXIT_FAILURE);
   }
-	
-  LOG_INFO("Normal termination of program");
+	cout << endl << "== normal termination of tbbctl ==============================================" << endl;
+  LOG_DEBUG("Normal termination of program");
 
   return(0);
 }

@@ -103,9 +103,11 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 	LOG_DEBUG_STR(formatString("TP file: %s",itsFileNameTp));
 	LOG_DEBUG_STR(formatString("MP file: %s",itsFileNameMp));
 	
-	itsImageData = new uint8[1966080];
-			
+	//itsImageData = new uint8[1966080];
+	itsImageData = new uint8[2097152];
+				
 	readFiles();
+	LOG_DEBUG_STR("Image files are read");
 	
 	itsImage 	= itsTBBE->image;
 	itsSector	= (itsImage * FL_SECTORS_IN_PAGE);
@@ -329,30 +331,44 @@ void WritefCmd::readFiles()
 	int dataPtr = 0;
 	int ch_h, ch_l;
 	
+	LOG_DEBUG_STR("Opening TP file");
 	// load Tp hex file
 	itsFile = fopen(itsFileNameTp,"r");
+	if (itsFile == 0) {
+		LOG_DEBUG_STR("Error on opening TP file");
+		return;
+	}
 	
-	ch_h = getc(itsFile);
-	ch_l = getc(itsFile);
-	while (ch_l != EOF) {
+	LOG_DEBUG_STR("Getting TP file");
+	while (1) {
+		ch_h = getc(itsFile);
+		if (ch_h == EOF) break;
+		ch_l = getc(itsFile);
+		if (ch_l == EOF) break;	
 		itsImageData[dataPtr] = (charToHex(ch_h) << 4) + charToHex(ch_l);
 		dataPtr++;
-		ch_h = getc(itsFile);
-		ch_l = getc(itsFile);
 	}
+	LOG_DEBUG_STR("Closing TP file");
 	fclose(itsFile);
 	
+	LOG_DEBUG_STR("Opening MP file");
 	// load Mp hex file
 	itsFile = fopen(itsFileNameMp,"r");
+	if (itsFile == 0) {
+		LOG_DEBUG_STR("Error on opening MP file");
+		return;
+	}
 	
-	ch_h = getc(itsFile);
-	ch_l = getc(itsFile);
-	while (ch_l != EOF) {
+	LOG_DEBUG_STR("Getting MP file");   
+	while (1) {
+		ch_h = getc(itsFile);
+		if (ch_h == EOF) break;
+		ch_l = getc(itsFile);
+		if (ch_l == EOF) break;
 		itsImageData[dataPtr] = (charToHex(ch_h) << 4) + charToHex(ch_l);
 		dataPtr++;
-		ch_h = getc(itsFile);
-		ch_l = getc(itsFile);
 	}
+	LOG_DEBUG_STR("Closing MP file");    
 	fclose(itsFile);
 	
 	itsImageSize = dataPtr;

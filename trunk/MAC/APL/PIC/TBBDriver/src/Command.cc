@@ -145,6 +145,7 @@ void Command::nextChannelNr()
 	
 	do {
 		itsChannel++;
+		if (itsChannel == TS->maxChannels()) break;
 		itsBoard = TS->getChBoardNr(itsChannel);
 		
 		if (itsBoard < TS->maxBoards()) {
@@ -179,8 +180,9 @@ void Command::nextSelectedChannelNr()
 	
 	do {
 		itsChannel++;
+		if (itsChannel == TS->maxChannels()) break;
 		itsBoard = TS->getChBoardNr(itsChannel);
-		
+
 		if (itsBoard < TS->maxBoards()) {
 			// see if board is active and channel is selected
 			if (TS->boardPort(itsBoard).isConnected()

@@ -24,19 +24,20 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <GCF/GCF_ServiceInfo.h>
+
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include <APL/RTCCommon/TestSuite.h>
-#include <TBBTest.h>
+#include "TBBTest.h"
 
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
-#include <blitz/array.h>
+
 
 using namespace std;
-using namespace blitz;
 using namespace LOFAR;
-using namespace RTC;
+//using namespace RTC;
 using namespace TBB_Protocol;
 using namespace TBB_Test;
 
@@ -46,9 +47,9 @@ TBBTest::TBBTest(string name)
 {
   registerProtocol(TBB_PROTOCOL, TBB_PROTOCOL_signalnames);
 
-  m_server.init(*this, "server", GCFPortInterface::SAP, TBB_PROTOCOL);
+  itsClient.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
 	
-	m_boardmask = 0x00000001; // bitmask with boards to test bo = board1
+	itsboardmask = 0x00000001; // bitmask with boards to test bo = board1
 }
 
 TBBTest::~TBBTest()
@@ -67,19 +68,22 @@ GCFEvent::TResult TBBTest::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_ENTRY:
     {
-      m_server.open();
+      LOG_DEBUG_STR("Opening client port");
+      itsClient.open();
     }
     break;
 
     case F_CONNECTED:
     {
-      TRAN(TBBTest::test001);
+      LOG_DEBUG_STR("port is connected, switch to test001");
+      TRAN(TBBTest::test008);
     }
     break;
 
     case F_DISCONNECTED:
     {
-      port.setTimer((long)1);
+      LOG_DEBUG_STR("port is disconnected, set timer, and close port");
+      port.setTimer((long)2);
       port.close();
     }
     break;
@@ -87,11 +91,13 @@ GCFEvent::TResult TBBTest::initial(GCFEvent& e, GCFPortInterface& port)
     case F_TIMER:
     {
       // try again
-      m_server.open();
+      LOG_DEBUG_STR("Try to open the port again");
+      itsClient.open();
     }
     break;
 
     default:
+      LOG_DEBUG_STR("unknown message");
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -112,20 +118,19 @@ GCFEvent::TResult TBBTest::test001(GCFEvent& e, GCFPortInterface& port)
 				/* start of the test sequence */
 				TBBAllocEvent sw;
 				
-				sw.tbbmask = boardmask; // only board 0
-				sw.channel = 1;
-				sw.pageaddr = 1;
-				sw.pagelength = 1; // 1 page
+				sw.rcu_mask.set();
 				
-				TESTC_ABORT(m_server.send(sw), TBBTest::final);
+				TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 			}
 			break;
 
-    case TBB_ALLOCACK:
+    case TBB_ALLOC_ACK:
 			{
-				TBBAllocackEvent ack(e);
-	
-				TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+				TBBAllocAckEvent ack(e);
+				LOG_INFO_STR(formatString	 ("Ack status = 0X%08X", ack.status_mask));
+				for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
+				}
 				LOG_INFO_STR("Alloc test OK");
 	
 				TRAN(TBBTest::test002);
@@ -167,21 +172,22 @@ GCFEvent::TResult TBBTest::test002(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBFreeEvent sw;
 				
-			sw.tbbmask = boardmask; // boards tot test
-			sw.channel = 1;
+			sw.rcu_mask.set();
 				
-			TESTC_ABORT(m_server.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
 
-		case TBB_FREEACK:
+		case TBB_FREE_ACK:
 		{
-			TBBAllocackEvent ack(e);
-	
-			TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+			TBBAllocAckEvent ack(e);
+			LOG_INFO_STR(formatString	 ("Ack status = 0X%08X", ack.status_mask));
+			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
+				}
 			LOG_INFO_STR("Free test OK");
 	
-			TRAN(TBBTest::test003);
+			TRAN(TBBTest::test008);
 		}
 		break;
 
@@ -220,18 +226,19 @@ GCFEvent::TResult TBBTest::test003(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBRecordEvent sw;
 				
-			sw.tbbmask = boardmask; // boards tot test
-			sw.channel = 1;
+			sw.rcu_mask.set();
 				
-			TESTC_ABORT(m_server.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
 
-		case TBB_FREEACK:
+		case TBB_FREE_ACK:
 		{
-			TBBRecordackEvent ack(e);
+			TBBRecordAckEvent ack(e);
 	
-			TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
+				}
 			LOG_INFO_STR("Record test OK");
 	
 			TRAN(TBBTest::test004);
@@ -273,18 +280,19 @@ GCFEvent::TResult TBBTest::test004(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBStopEvent sw;
 				
-			sw.tbbmask = boardmask; // boards tot test
-			sw.channel = 1;
+			sw.rcu_mask.set();
 				
-			TESTC_ABORT(m_server.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
 
-		case TBB_STOPACK:
+		case TBB_STOP_ACK:
 		{
-			TBBStopackEvent ack(e);
+			TBBStopAckEvent ack(e);
 	
-			TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
+				}
 			LOG_INFO_STR("Stop test OK");
 	
 			TRAN(TBBTest::test005);
@@ -324,20 +332,19 @@ GCFEvent::TResult TBBTest::test005(GCFEvent& e, GCFPortInterface& port)
 			START_TEST("test005", "test TRIGCLR");
 	
 			/* start of the test sequence */
-			TBBTrigclrEvent sw;
+			TBBTrigReleaseEvent sw;
+
+			//sw.channel = 1;
 				
-			sw.tbbmask = boardmask; // boards tot test
-			sw.channel = 1;
-				
-			TESTC_ABORT(m_server.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
 
-		case TBB_TRIGCLRACK:
+		case TBB_TRIG_RELEASE_ACK:
 		{
-			TBBTrigclrackEvent ack(e);
+			TBBTrigReleaseAckEvent ack(e);
 	
-			TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+			//TESTC_ABORT(ack.status_mask == TBB_SUCCESS, TBBTest::final);
 			LOG_INFO_STR("TrigClr test OK");
 	
 			TRAN(TBBTest::test006);
@@ -379,18 +386,17 @@ GCFEvent::TResult TBBTest::test006(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBReadEvent sw;
 				
-			sw.tbbmask = boardmask; // boards tot test
 			sw.channel = 1;
 				
-			TESTC_ABORT(m_server.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
 
-		case TBB_READACK:
+		case TBB_READ_ACK:
 		{
-			TBBReadackEvent ack(e);
+			TBBReadAckEvent ack(e);
 	
-			TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+			TESTC_ABORT(ack.status_mask == TBB_SUCCESS, TBBTest::final);
 			LOG_INFO_STR("Read test OK");
 	
 			TRAN(TBBTest::test007);
@@ -429,28 +435,19 @@ GCFEvent::TResult TBBTest::test007(GCFEvent& e, GCFPortInterface& port)
 			START_TEST("test007", "test UDP");
 
 			/* start of the test sequence */
-			TBBUdpEvent sw;
+			TBBModeEvent sw;
 			
-			sw.tbbmask = boardmask; // boards tot test
-			sw.udp[0] = 1;
-			sw.udp[1] = 1;
-			sw.ip[0] = 2;
-			sw.ip[1] = 2;
-			sw.ip[2] = 2;
-			sw.ip[3] = 2;
-			sw.ip[4] = 2;
-			sw.mac[0] = 3;
-			sw.mac[1] = 3;
+			sw.board = itsboardmask; // boards tot test
 			
-			TESTC_ABORT(m_server.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
 
-		case TBB_UDPACK:
+		case TBB_MODE_ACK:
 		{
-			TBBUdpackEvent ack(e);
+			TBBModeAckEvent ack(e);
 
-			TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+			TESTC_ABORT(ack.status_mask == TBB_SUCCESS, TBBTest::final);
 			LOG_INFO_STR("Udp test OK");
 
 			TRAN(TBBTest::test008);
@@ -492,20 +489,36 @@ GCFEvent::TResult TBBTest::test008(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBVersionEvent sw;
 			
-			sw.tbbmask = boardmask; // boards tot test
+			sw.boardmask =itsboardmask; // boards tot test
 			
-			TESTC_ABORT(m_server.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
 
-		case TBB_VERSIONACK:
+		case TBB_VERSION_ACK:
 		{
-			TBBVersionackEvent ack(e);
-
-			TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+			TBBVersionAckEvent ack(e);
+			
+			for(int cnt = 0;cnt < 12;cnt++) {
+				LOG_INFO_STR(formatString("boardnr      = %d", cnt));
+				LOG_INFO_STR(formatString("boardid      = 0X%08X", ack.boardid[cnt]));
+				LOG_INFO_STR(formatString("swversion    = 0X%08X", ack.swversion[cnt]));
+				LOG_INFO_STR(formatString("boardversion = 0X%08X", ack.boardversion[cnt]));
+				LOG_INFO_STR(formatString("tpversion    = 0X%08X", ack.tpversion[cnt]));
+				LOG_INFO_STR(formatString("mp0version   = 0X%08X", ack.mp0version[cnt]));
+				LOG_INFO_STR(formatString("mp1version   = 0X%08X", ack.mp1version[cnt]));
+				LOG_INFO_STR(formatString("mp2version   = 0X%08X", ack.mp2version[cnt]));
+				LOG_INFO_STR(formatString("mp3version   = 0X%08X", ack.mp3version[cnt]));
+			}
+			LOG_INFO_STR(formatString	 ("Ack status = 0X%08X", ack.status_mask));
+			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
+				}
 			LOG_INFO_STR("Version test OK");
-
-			TRAN(TBBTest::test009);
+			
+			
+			TRAN(TBBTest::final);
+			//TRAN(TBBTest::test009);
 		}
 		break;
 
@@ -544,17 +557,19 @@ GCFEvent::TResult TBBTest::test009(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBSizeEvent sw;
 			
-			sw.tbbmask = boardmask; // boards tot test
+			sw.boardmask = itsboardmask; // boards tot test
 			
-			TESTC_ABORT(m_server.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
 
-		case TBB_SIZEACK:
+		case TBB_SIZE_ACK:
 		{
-			TBBSizeackEvent ack(e);
+			TBBSizeAckEvent ack(e);
 
-			TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
+				}
 			LOG_INFO_STR("Size test OK");
 
 			TRAN(TBBTest::test010);
@@ -596,20 +611,22 @@ GCFEvent::TResult TBBTest::test010(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBSizeEvent sw;
 			
-			sw.tbbmask = boardmask; // boards tot test
+			sw.boardmask =itsboardmask; // boards tot test
 			
-			TESTC_ABORT(m_server.send(sw), TBBTest::final);
+			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
 
-		case TBB_SIZEACK:
+		case TBB_SIZE_ACK:
 		{
-			TBBSizeackEvent ack(e);
+			TBBSizeAckEvent ack(e);
 
-			TESTC_ABORT(ack.status == SUCCESS, TBBTest::final);
+			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
+					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
+				}
 			LOG_INFO_STR("Size test OK");
 
-			TRAN(TBBTest::test011);
+			TRAN(TBBTest::final);
 		}
 		break;
 
@@ -661,6 +678,7 @@ void TBBTest::run()
   start(); // make initial transition
   GCFTask::run();
 }
+
 
 int main(int argc, char** argv)
 {

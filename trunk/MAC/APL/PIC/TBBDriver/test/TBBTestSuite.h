@@ -24,8 +24,8 @@
 //#  $Id$
 //#
 
-#ifndef RSPTESTSUITE_H_
-#define RSPTESTSUITE_H_
+#ifndef TBBTESTSUITE_H_
+#define TBBTESTSUITE_H_
 
 #include <Suite/test.h>
 #include <Suite/suite.h>
