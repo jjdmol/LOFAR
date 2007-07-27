@@ -65,7 +65,6 @@ lofar_EXTERNAL(zoid_lofar,1,lofar.h,"",/cephome/romein/projects/zoid/zoid/lofar)
 lofar_EXTERNAL(zoid,1,zoid_api.h,"",/cephome/romein/projects/zoid/zoid)
 dnl lofar_EXTERNAL(zoid_lofar,0,lofar.h,lofar_blrts,/home/romein/projects/zoid/zoid/lofar)
 dnl lofar_EXTERNAL(zoid,0,zoid_api.h,zoid,/home/romein/projects/zoid/zoid/linux-client)
-dnl lofar_EXTERNAL(boost,1,boost/logic/tribool.hpp,"")
 
 dnl
 dnl Output Makefiles
