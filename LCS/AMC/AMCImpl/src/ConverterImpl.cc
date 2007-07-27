@@ -33,6 +33,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MCDirection.h>
 #include <casa/Exceptions/Error.h>
 
 using namespace casa;
