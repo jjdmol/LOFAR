@@ -460,7 +460,7 @@ if test $install = 1  -o  $clean != 0  -o  $check = 1  -o  $conf = 1  -o  $bldte
     exit 1
   fi
 fi
-if [ "$verstype" == "" ]; then
+if [ "$verstype" = "" ]; then
   verstype=m
   if [ "$cvstag" != "" ]; then
     verstype="tag"
@@ -685,20 +685,22 @@ if [ $boot = 1 ]; then
     echo "" >> build.log
     echo "  bootstrapping package $pkg ..."
 
-    pushd $curwd/$pkg >> $curwd/build.log 2>&1
-    rm -rf autom4te.cache >> $curwd/build.log 2>&1
+    (cd $curwd/$pkg
+      pwd >> $curwd/build.log 2>&1
+      rm -rf autom4te.cache >> $curwd/build.log 2>&1
     
-    # Try to set execution permissions, ignore failure.
-    chmod +x bootstrap >> $curwd/build.log 2>&1 
+      # Try to set execution permissions, ignore failure.
+      chmod +x bootstrap >> $curwd/build.log 2>&1 
 
-    # Try to run bootstrap
-    ./bootstrap >> $curwd/build.log 2>&1
-    if [ $? != 0 ]; then
-      echo "  bootstrap of package $pkg failed, check file permissions..."
-      exit 1
-    fi
+      # Try to run bootstrap
+      ./bootstrap >> $curwd/build.log 2>&1
+      if [ $? != 0 ]; then
+	echo "  bootstrap of package $pkg failed, check file permissions..."
+	exit 1
+      fi
 
-    popd >> $curwd/build.log 2>&1
+    )
+    pwd >> $curwd/build.log 2>&1
 
     echo $pkg '# bootstrapped at' `date` >> $curwd/build.result; >> $curwd/build.log 2>&1
   done
