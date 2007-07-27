@@ -72,7 +72,6 @@ lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 
 lofar_AIPSPP(1,"-lms -lmeasures -ltables -lscimath -lscimath_f -lcasa")
 lofar_LAPACK(1)
-lofar_EXTERNAL(boost,1,boost/logic/tribool.hpp,"")
 
 dnl
 dnl Output Makefiles

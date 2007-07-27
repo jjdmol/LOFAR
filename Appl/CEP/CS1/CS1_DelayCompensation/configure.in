@@ -59,8 +59,6 @@ lofar_INTERNAL(LCS/AMC/AMCImpl,AMCImpl,,1,AMCImpl/ConverterImpl.h)
 lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/WorkHolder.h)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/ApplicationHolder.h)
 lofar_INTERNAL(Appl/CEP/CS1/CS1_Interface,CS1_Interface,,1,CS1_Interface/CS1_Config.h)
-dnl lofar_EXTERNAL(boost,1,boost/logic/tribool.hpp,"")
-lofar_EXTERNAL(boost,1.32,boost/date_time/date.hpp, boost_date_time)
 dnl
 dnl Output Makefiles
 dnl

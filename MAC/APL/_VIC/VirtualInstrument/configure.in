@@ -61,6 +61,7 @@ lofar_INTERNAL(MAC/APL/APLCommon, aplcommon, MAC-APL-3_1, 1, APL/APLCommon/APL_D
 dnl lofar_INTERNAL(MAC/APL/VIC/ArrayOperations, arrayoperations, MAC-APL-3_1, 1, APL/ArrayOperations/ArrayOperations.h,,)
 dnl lofar_INTERNAL(MAC/APL/VIC/ArrayReceptorGroup, arrayreceptorgroup, MAC-APL-3_1, 1, APL/ArrayReceptorGroup/ArrayReceptorGroup.h,,)
 dnl lofar_INTERNAL(MAC/APL/VIC/VirtualRoute, virtualroute, MAC-APL-4_0, 1, APL/VirtualRoute/VirtualRoute.h,,)
+lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
 
 dnl
 dnl Output Makefiles

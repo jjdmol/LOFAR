@@ -52,7 +52,6 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
-lofar_EXTERNAL(boost,0,boost/preprocessor/repetition.hpp,"")
 lofar_AIPSPP(0,"-lcasa")
 
 dnl

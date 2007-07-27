@@ -63,6 +63,7 @@ lofar_INTERNAL(MAC/APL/PAC/StationOperations, stationoperations, MAC-APL-3_1, 1,
 lofar_INTERNAL(MAC/APL/PAC/StationReceptorGroup, stationreceptorgroup, MAC-APL-3_1, 1, APL/StationReceptorGroup/StationReceptorGroup.h,,)
 lofar_INTERNAL(MAC/APL/PAC/VirtualTelescope, virtualtelescope, MAC-APL-3_1, 1, APL/VirtualTelescope/VirtualTelescope.h,,)
 lofar_INTERNAL(LCS/AMC/AMCBase,AMCBase, LCS-AMC-1_0, 1, AMCBase/EarthCoord.h,,)
+lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
 
 dnl
 dnl Output Makefiles

@@ -47,7 +47,6 @@ lofar_AIPSPP(1, "-lsynthesis -lsynthesis_f -lcalibration -lmsvis -lms -limages -
 lofar_LAPACK(1)
 lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/ProcessControl.h)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h)
-lofar_EXTERNAL(boost,1,boost/logic/tribool.hpp,"")
 
 dnl
 dnl Output Makefiles
