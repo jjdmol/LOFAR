@@ -144,7 +144,7 @@ public:
 	uint32 getMemorySize(int32 boardnr);
 	void setMemorySize(int32 boardnr,uint32 pages);
 	
-	friend class TBBDriver;
+friend class TBBDriver;
 
 protected:	// note TBBDriver must be able to set them
 	void getTbbSettings();
@@ -161,7 +161,7 @@ private:
 	TbbSettings(const TbbSettings&	that);
 	TbbSettings& operator=(const TbbSettings& that);
 
-	// --- Datamembers ---
+	// --- Datamembers ---  
 	int32	itsDriverVersion;
 	int32	itsMaxBoards;	// constants
 	int32	itsMaxChannels;

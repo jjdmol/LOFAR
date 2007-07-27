@@ -2,5 +2,3 @@
 #
 # Configuration to connect TBBTest to the TBBDriver
 #
-mac.ns.TBBTest.server.type=TCP
-mac.top.TBBTest.server.remoteservice=TBBDriver:acceptor_v2

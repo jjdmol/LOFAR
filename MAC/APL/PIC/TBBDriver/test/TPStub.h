@@ -29,8 +29,10 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
+#include "TP_Protocol.ph"
+
 namespace LOFAR {
-  namespace TBB_Test {
+	namespace TBB_Test {
 
     class TPStub : public GCFTask, public Test
     {
@@ -50,14 +52,14 @@ namespace LOFAR {
        * The initial and final state.
        */
       /*@{*/
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
-      GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult initial(GCFEvent &event, GCFPortInterface &port);
+      GCFEvent::TResult final(GCFEvent &event, GCFPortInterface &port);
       /*@}*/
 
       /**
        * The stub states.
        */
-      GCFEvent::TResult connected(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult connected(GCFEvent &event, GCFPortInterface &port);
 
       
       /**
@@ -70,7 +72,7 @@ namespace LOFAR {
 
     private:
       // ports
-      GCFETHRawPort m_client;
+      GCFETHRawPort itsServer;
 
 //       // lookup for register pointers
 //       typedef struct
@@ -81,8 +83,8 @@ namespace LOFAR {
 //       
 //       reginfo m_reg[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 1];
     };
-
-  };
-};
+		
+  }
+}
      
 #endif /* TPSTUB_H_ */

@@ -65,7 +65,7 @@ class Command
 public:
 	virtual ~Command()
 	{
-		logMessage(cout,formatString("=============================================================================="));
+		//logMessage(cout,formatString("=============================================================================="));
 	}
 	
 	// Send the command to the TBBDriver
@@ -627,7 +627,7 @@ class ReadPageCmd : public Command
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
 		void setMp(int32 mp)		{	itsMp = mp;	}
-		void setAddr(uint32 addr)  { itsAddr = addr; }
+		void setStartPage(uint32 startpage)  { itsStartPage = startpage; }
 		void setPages(uint32 pages)  { itsPages = pages; }
 		static const uint32 PID6 = 6;
 		static const uint32 REGID0 = 0;
@@ -640,11 +640,12 @@ class ReadPageCmd : public Command
 	private:
 		// values given by user
 		int32		itsRcu;
+		uint32	itsStartPage;
 		uint32	itsPages;
 		// values used in program
 		int32		itsCmdStage;
 		uint32	itsPage;
-		uint32	itsAddr;
+		uint32	itsTotalSize;
 		// data from channelInfoCmd
 		char		itsState;		
 		uint32	itsStartAddr;

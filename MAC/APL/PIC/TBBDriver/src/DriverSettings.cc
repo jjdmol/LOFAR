@@ -25,6 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <APS/ParameterSet.h>
+#include <APS/Exceptions.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <DriverSettings.h>
 
@@ -119,16 +120,16 @@ void TbbSettings::getTbbSettings()
 		snprintf(dstmac, 64, "TBBDriver.DST_MAC_ADDR_%d", boardnr);
 		
 		try { itsBoardInfo[boardnr].srcIp = globalParameterSet()->getString(srcip); }
-  	catch (...) { LOG_INFO_STR(formatString("%s not found",srcip)); configOK = false; }
+  	catch (APSException&) { LOG_INFO_STR(formatString("%s not found",srcip)); configOK = false; }
 		
 		try { itsBoardInfo[boardnr].dstIp = globalParameterSet()->getString(dstip); }
-  	catch (...) {	LOG_INFO_STR(formatString("%s not found",dstip)); configOK = false; }
+  	catch (APSException&) {	LOG_INFO_STR(formatString("%s not found",dstip)); configOK = false; }
 		
 		try { itsBoardInfo[boardnr].srcMac = globalParameterSet()->getString(srcmac); }
-  	catch (...) { LOG_INFO_STR(formatString("%s not found",srcmac)); }
+  	catch (APSException&) { LOG_INFO_STR(formatString("%s not found",srcmac)); }
 		
 		try { itsBoardInfo[boardnr].dstMac = globalParameterSet()->getString(dstmac); }
-  	catch (...) { LOG_INFO_STR(formatString("%s not found",dstmac)); }
+  	catch (APSException&) { LOG_INFO_STR(formatString("%s not found",dstmac)); }
 		
 		LOG_INFO_STR(formatString("Board %d:",boardnr));
 		LOG_INFO_STR(formatString("Control port: Mac = '%s'"

@@ -23,23 +23,27 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-#include "TP_Protocol.ph"
-#include <RawEvent.h>
-#include <TPStub.h>
-#include <APL/RTCCommon/PSAccess.h>
-#include <GCF/ParameterSet.h>
+#include <Common/LofarLocators.h>
+#include <APS/ParameterSet.h>
 
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
 #include <math.h>
 
+#include "TPStub.h"
+#include "TP_Protocol.ph"
+#include "StubRawEvent.h"
+
+
 using namespace std;
 using namespace LOFAR;
+using namespace ACC::APS;
+using namespace TP_Protocol;
+using namespace TBB;
 using namespace TBB_Test;
 
-#define ETHERTYPE_TP 0x10FA
+#define ETHERTYPE_TP 0x7BB0	// TBB
 
 TPStub::TPStub(string name)
   : GCFTask((State)&TPStub::initial, name), Test(name)
@@ -51,22 +55,23 @@ TPStub::TPStub(string name)
 
   LOG_INFO("TPStub constructor");
   
-  m_client.init(*this, "client", GCFPortInterface::SAP, TP_PROTOCOL, true /*raw*/);
-  m_client.setAddr(GET_CONFIG_STRING("TPStub.IF_NAME"),
-		   GET_CONFIG_STRING(addrstr));
-  m_client.setEtherType(ETHERTYPE_TP);
+  itsServer.init(*this, "tp_server", GCFPortInterface::SPP, TP_PROTOCOL, true /*raw*/);
+  itsServer.setAddr(	globalParameterSet()->getString("TPStub.IF_NAME").c_str(),
+  									globalParameterSet()->getString(addrstr).c_str());
+  itsServer.setEtherType(ETHERTYPE_TP);
 }
+
 
 TPStub::~TPStub()
 {
 	// TODO
 }
 
-GCFEvent::TResult TPStub::initial(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult TPStub::initial(GCFEvent &event, GCFPortInterface &port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch(e.signal)
+  switch(event.signal)
   {
     case F_INIT:
     	{
@@ -75,7 +80,7 @@ GCFEvent::TResult TPStub::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_ENTRY:
     	{
-      	m_client.open();
+      	itsServer.open();
     	}
     	break;
 
@@ -97,7 +102,7 @@ GCFEvent::TResult TPStub::initial(GCFEvent& e, GCFPortInterface& port)
 			{
 				// try again
 				LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
-				m_client.open();
+				itsServer.open();
 			}
 			break;
 
@@ -109,230 +114,213 @@ GCFEvent::TResult TPStub::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-
-GCFEvent::TResult TPStub::connected(GCFEvent& ack, GCFPortInterface& port)
+GCFEvent::TResult TPStub::connected(GCFEvent &event, GCFPortInterface &port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-		
-  switch (ack.signal)
+	LOG_DEBUG_STR("Connected and waiting.");	
+  switch (event.signal)
   {
     case F_ENTRY:
 			{
-			}
-    break;
+			} break;
 
     case F_DATAIN:
 			{
-				status = RawEvent::dispatch(*this, port);
-			}
-    break;
+				status = RawEvent::dispatch(*this, port); //*this
+			} break;
 
     case TP_ALLOC:
 			{
-				TPAllocEvent allocack;
+				TPAllocAckEvent allocack(event);
 				allocack.opcode = TPALLOC;
-				allocack.channel = ack.channel;
-				allocack.pageaddr = ack.pageaddr;
-				allocack.pagelength = ack.pagelength;
+				allocack.status = 0;
 				port.send(allocack);
-			}
-			break;
+			} break;
 			
 		case TP_FREE:
 			{
-				TPFreeEvent freeack;
+				TPFreeAckEvent freeack(event);
 				freeack.opcode = TPFREE;
-				freeack.channel = ack.channel;
+				freeack.status = 0;
 				port.send(freeack);
-			}
-			break;
+			} break;
 			
     case TP_RECORD:
 			{
-				TPRecordEvent recordack;
+				TPRecordAckEvent recordack(event);
 				recordack.opcode = TPRECORD;
-				recordack.channel = ack.channel;
+				recordack.status = 0;
 				port.send(recordack);
-			}
-			break;
+			} break;
 			
     case TP_STOP:
 			{
-				TPStopEvent stopack;
+				TPStopAckEvent stopack(event);
 				stopack.opcode = TPSTOP;
-				stopack.channel = ack.channel;
+				stopack.status = 0;
 				port.send(stopack);
-			}
-			break;
+			} break;
 				
-    case TP_TRIGCLR:
+    case TP_TRIG_RELEASE:
 			{
-				TPTrigclrEvent trigclrack;
-				trigclrack.opcode = TPTRIGCLR;
-				trigclrack.channel = ack.channel;
-				port.send(trigclrack);
-			}
-			break;
+				TPTrigReleaseAckEvent trigreleaseack(event);
+				trigreleaseack.opcode = TPTRIGRELEASE;
+				trigreleaseack.status = 0;
+				port.send(trigreleaseack);
+			} break;
 				
     case TP_READ:
 			{
-				TPReadEvent readack;
+				TPReadAckEvent readack(event);
 				readack.opcode = TPREAD;
-				readack.channel = ack.channel;
-				readack.time = ack.time;
-				readack.period = ack.period;
+				readack.status = 0;
 				port.send(readack);
-			}
-			break;
+			} break;
 			
     case TP_UDP:
 			{
-				TPUdpEvent udpack;
+				TPUdpAckEvent udpack(event);
 				udpack.opcode = TPUDP;
-				udpack.udp[0] = ack.udp[0];
-				udpack.udp[1] = ack.udp[1];
-				udpack.ip[0] = ack.ip[0];
-				udpack.ip[1] = ack.ip[1];
-				udpack.ip[2] = ack.ip[2];
-				udpack.ip[3] = ack.ip[3];
-				udpack.ip[4] = ack.ip[4];
-				udpack.mac[0] = ack.mac[0];
-				udpack.mac[1] = ack.mac[1];
+				udpack.status = 0;
 				port.send(udpack);
-			}
-			break;
+			} break;
 		
 		case TP_VERSION:
-			{
-				TPVersionEvent versionack;
+			{	
+				TPVersionAckEvent versionack;
 				versionack.opcode = TPVERSION;
-				versionack.boardid = 1;
-				versionack.swversion = 1;
-				versionack.boardversion = 1;
-				versionack.tp_version = 1;
-				versionack.mp_version[0] = 2;
-				versionack.mp_version[1] = 2;
-				versionack.mp_version[2] = 2;
-				versionack.mp_version[3] = 2;
+				versionack.status = 0x3;
+				versionack.boardid = 0;
+				versionack.swversion = 10;
+				versionack.boardversion = 56;
+      	versionack.tpversion = 4;
+      	versionack.mp0version = 0;
+      	versionack.mp1version = 1;
+      	versionack.mp2version = 2;
+      	versionack.mp3version = 3;
+				
 				port.send(versionack);
-			}
-			break;
+			} break;
 		
+		case TP_STATUS:
+			{	
+				TPStatusAckEvent statusack;
+				statusack.opcode = TPSTATUS;
+				statusack.status = 0;
+				statusack.V12 = 12;
+				statusack.V25 = 25;
+				statusack.V33 = 33;
+      	statusack.Tpcb = 40;
+      	statusack.Ttp = 44;
+      	statusack.Tmp0 = 1;
+      	statusack.Tmp1 = 2;
+      	statusack.Tmp2 = 3;
+				statusack.Tmp3 = 3;
+				
+				port.send(statusack);
+			} break;
+			
 		case TP_SIZE:
 			{
-				TPSizeEvent sizeack;
+				TPSizeAckEvent sizeack;
 				sizeack.opcode = TPSIZE;
-				sizeack.size = 8;
+				sizeack.status = 0;
+				sizeack.npages = 4000000;
 				port.send(sizeack);
-			}  
-			break;
+			} break;
 				
     case TP_CLEAR:
 			{
-				TPClearEvent clearack;
+				TPClearAckEvent clearack(event);
 				clearack.opcode = TPCLEAR;
+				clearack.status = 0;
 				port.send(clearack);
-			}
-			break;
+			} break;
 				
     case TP_RESET:
 			{
-				TPResetEvent resetack;
+				TPResetAckEvent resetack(event);
 				resetack.opcode = TPRESET;
+				resetack.status = 0;
 				port.send(resetack);
-			}
-			break;
+			} break;
 			
     case TP_CONFIG:
 			{
-				TPConfigEvent configack;
+				TPConfigAckEvent configack(event);
 				configack.opcode = TPCONFIG;
-				configack.image = ack.image;
-			}
-			break;
+				configack.status = 0;
+				port.send(configack);
+			} break;
 			
     case TP_ERASEF:
 			{
-				TPErasefEvent erasefack;
+				TPErasefAckEvent erasefack(event);
 				erasefack.opcode = TPERASEF;
-				erasefack.addr = ack.addr;
-			}
-			break;
+				erasefack.status = 0;
+				port.send(erasefack);
+			} break;
 			
 		case TP_READF:
 			{
-				TPReadfEvent readfack;
+				TPReadfAckEvent readfack(event);
 				readfack.opcode = TPREADF;
-				readfack.addr = ack.addr;
-				readfack.data = ack.data;
+				readfack.status = 0;
 				port.send(readfack);
-			}
-			break;
+			} break;
 			
     case TP_WRITEF:
 			{
-				TPWritefEvent writefack;
+				TPWritefAckEvent writefack(event);
 				writefack.opcode = TPWRITEF;
-				writefack.addr = ack.addr;
-				writefack.data = ack.data;
+				writefack.status = 0;
 				port.send(writefack);
-			}
-			break; 
+			} break; 
     
 		case TP_READW:
 			{
-				TPReadwEvent readwack;
+				TPReadwAckEvent readwack(event);
 				readwack.opcode = TPREADW;
-				readwack.mp = ack.mp;
-				readwack.addr = ack.addr;
-				readwack.wordlo = ack.wordlo;
-				readwack.wordhi = ack.wordhi;
+				readwack.status = 0;
 				port.send(readwack);
-			}
-			break;
+			} break;
     
 		case TP_WRITEW:
 			{
-				TPWritewEvent writewack;
+				TPWritewAckEvent writewack(event);
 				writewack.opcode = TPWRITEW;
-				writewack.mp = ack.mp;
-				writewack.addr = ack.addr;
-				writewack.wordlo = ack.wordlo;
-				writewack.wordhi = ack.wordhi;
+				writewack.status = 0;
 				port.send(writewack);
-			}
-			break;
+			} break;
 		
 		case F_DISCONNECTED:
 			{
 				port.close();
 				TRAN(TPStub::initial);
-			}
-			break;
+			} break;
 
     case F_EXIT:
 			{
-			}
-			break;
+			} break;
 
-    default:
+    default: {
+      LOG_DEBUG_STR("default: unknown command");
       status = GCFEvent::NOT_HANDLED;
-      break;
+    } break;
 	}
   return status;
 }
 
-GCFEvent::TResult TPStub::final(GCFEvent& ack, GCFPortInterface& /*port*/)
+GCFEvent::TResult TPStub::final(GCFEvent &event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch(ack.signal)
+  switch(event.signal)
   {
     case F_ENTRY:
 			{
 				GCFTask::stop();
-    	}
-			break;
+    	} break;
 
     case F_EXIT:
     	break;
@@ -354,8 +342,18 @@ void TPStub::run()
 int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
-
-  LOG_INFO(formatString("Program %s has started", argv[0]));
+	
+	LOG_DEBUG_STR("Reading configuration files");
+  try {
+		ConfigLocator cl;
+		globalParameterSet()->adoptFile(cl.locate("TPStub.conf"));
+	}
+	catch (LOFAR::Exception e) {
+		LOG_ERROR_STR("Failed to load configuration files: " << e.text());
+		//exit(EXIT_FAILURE);
+	}
+	
+  //LOG_INFO(formatString("Program %s has started", argv[0]));
 
   TPStub stub("TPStub");
   stub.run();

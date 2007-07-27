@@ -192,15 +192,17 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   		break;
 	 }
   
-  if (buf.event.signal) // buf.event.signal == 0 indicates unrecognised or invalid MEP message
+  if (buf.event.signal) // buf.event.signal == 0 indicates unrecognised or invalid TP message
 	{				
 		//
 		// Print debugging info
 		// 
+#if 0
 		LOG_DEBUG(formatString("%s receives '%s' on port '%s'",
 							task.getName().c_str(),
 							task.evtstr(buf.event),
 							port.getName().c_str()));
+#endif
 				
 		//
 		// dispatch the TP message as a GCFEvent (which it now is)

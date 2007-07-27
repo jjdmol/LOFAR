@@ -29,8 +29,9 @@
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
-namespace TBB_Test
-{
+namespace LOFAR {
+	namespace TBB_Test {
+  
   class TBBTest : public GCFTask, public Test
   {
     public:
@@ -55,7 +56,7 @@ namespace TBB_Test
 
       /**
        * The test states. This state is reached when the
-       * beam_server port is connected.
+       * beaitsClient port is connected.
        */
       GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
       GCFEvent::TResult test002(GCFEvent& e, GCFPortInterface &p);
@@ -82,10 +83,11 @@ namespace TBB_Test
 
     private:
       // ports
-      GCFPort	m_server;
-			uint32	m_boardmask;
+      GCFPort	itsClient;
+			uint32	itsboardmask;
   };
-
-};
+	
+	}
+}
      
 #endif /* TBBTEST_H_ */
