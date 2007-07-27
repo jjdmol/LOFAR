@@ -50,10 +50,10 @@ public:
 	const string getName () const 
 		{ return (itsPropInfo.propName); }
       
-    // Asynchronous action
+    // Synchronous action
     // Performs a get operation on the SCADA DB
-    // @return can be GCF_NO_ERROR or GCF_PML_ERROR
-    GCFPValue& getValue();
+    // @return can be SA_MACTYPE_MISMATCH or SA_NO_ERROR
+    PVSSresult getValue(GCFPValue&	returnVar);
       
     // (A)Synchronous (!) action
     // Performs a set operation on the SCADA DB

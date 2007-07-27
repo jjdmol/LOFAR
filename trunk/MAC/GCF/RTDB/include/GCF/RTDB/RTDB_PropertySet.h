@@ -31,7 +31,7 @@
 
 namespace LOFAR {
   namespace GCF {
-  class Common::GCFPValue;
+  using Common::GCFPValue;
   using PVSS::PVSSresponse;
   using PVSS::PVSSservice;
   using PVSS::PVSSresult;
@@ -61,8 +61,6 @@ public:
 	string getType 		() const ;
     bool   exists 		(const string& propName) const;
     
-	// Changes the property value, if isMonitoringOn is true and property is 
-	// readable the value will be forwared to the DP element in DB
 	// @param propName with or without the scope
 	// @param value can be of type GCFPValue or string (will be converted to 
 	//              GCFPValue content)
@@ -71,24 +69,26 @@ public:
 	//                   in case the value must be set on a property of a remote system.
 	// @returns GCF_PROP_NOT_IN_SET,  GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
 	// <group>
-	PVSSresult setValue (const string& 				propName, 
-						 const Common::GCFPValue&	value, 
-						 bool  						wantAnswer = true);
+	PVSSresult setValue (const string&		propName, 
+						 const GCFPValue&	value, 
+						 bool				wantAnswer = true);
 
 	PVSSresult setValue (const string& 	propName,
 						 const string& 	value, 
 						 bool  			wantAnswer = true);
 
-	PVSSresult setValueTimed (const string& 			propName, 
-							  const Common::GCFPValue&	value, 
-							  double 					timestamp,
-							  bool 						wantAnswer = true);
+	PVSSresult setValueTimed (const string&		propName, 
+							  const GCFPValue&	value, 
+							  double 			timestamp,
+							  bool 				wantAnswer = true);
 
 	PVSSresult setValueTimed (const string& 	propName,
 							  const string&		value, 
 							  double 			timestamp,
 							  bool 				wantAnswer = true);
     // </group>
+	PVSSresult getValue(const string&		propName,
+						GCFPValue&			returnVar);
 
 protected:
 	friend class PropSetResponse;
