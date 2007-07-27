@@ -79,7 +79,22 @@ AC_ARG_WITH(mpich,
 	[  --with-mpich[=PFX]      prefix where MPICH is installed (default=/usr/local/mpich]MPICH_VERSION[)],
 	[mpich_prefix="$withval"],
 	[mpich_prefix="no"])
+AC_ARG_WITH(mpich-incdir,
+	[  --with-mpich-incdir[=PFX]  prefix where MPICH include files are installed (default=--with-mpich/include)],
+	[mpich_incdir="$withval"],
+	[mpich_incdir=""])
+AC_ARG_WITH(mpich-libdir,
+	[  --with-mpich-libdir[=PFX]  prefix where MPICH libraries are installed (default=--with-mpich/lib)],
+	[mpich_libdir="$withval"],
+	[mpich_libdir=""])
 [
+if test "$mpich_libdir" = "yes"; then
+  mpich_libdir=
+fi
+if test "$mpich_incdir" = "yes"; then
+  mpich_incdir=
+fi
+
 if test "$mpich_prefix" = "no" ; then
   enable_mpich=no
 else
@@ -90,11 +105,11 @@ else
   enable_mpich=yes
 ]
 dnl
-AC_CHECK_FILE([$mpich_prefix/include/mpi.h],
-	[lofar_cv_header_mpich=yes],
-	[lofar_cv_header_mpich=no])
+AC_CHECK_FILE([$mpich_prefix/bin/mpicc],
+	[lofar_cv_bincc_mpich=yes],
+	[lofar_cv_bincc_mpich=no])
 [
-	if test $lofar_cv_header_mpich = yes ; then
+	if test $lofar_cv_bincc_mpich = yes ; then
 
 		MPIBIN="$mpich_prefix/bin"
 		MPICH_CC="$MPIBIN/mpicc"
