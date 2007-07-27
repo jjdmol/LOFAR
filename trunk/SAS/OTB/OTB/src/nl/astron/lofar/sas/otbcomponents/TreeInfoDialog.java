@@ -412,11 +412,13 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     // Next for VIC only
                     if (itsTreeType.equals("VHtree")) {
                         if (!itsStarttime.equals(startTimeInput.getText()) || !itsStoptime.equals(stopTimeInput.getText())) {
-                            hasChanged=true;
-                            itsTree.starttime = startTimeInput.getText();
-                            itsTree.stoptime = stopTimeInput.getText();
-                            if (itsOtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
-                                logger.debug("Error during setSchedule: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                            if (startTimeInput.getText().length() > 0 && stopTimeInput.getText().length() > 0 ) {
+                               hasChanged=true;
+                               itsTree.starttime = startTimeInput.getText();
+                               itsTree.stoptime = stopTimeInput.getText();
+                               if (itsOtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
+                                   logger.debug("Error during setSchedule: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                               }
                             }
                         }
                     }
