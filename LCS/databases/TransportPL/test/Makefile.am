@@ -1,4 +1,3 @@
-common_top_builddir=@common_top_builddir@
 
 check_PROGRAMS			= Example ExampleMem ExamplePL ExamplePL2 ExamplePL3 ExamplePL4 TestBidirectional
 
