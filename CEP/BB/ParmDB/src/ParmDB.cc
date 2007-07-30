@@ -27,7 +27,12 @@
 #include <ParmDB/ParmDBPostgres.h>
 #include <Common/LofarLogger.h>
 #include <casa/Utilities/Regex.h>
-#include <casa/Utilities/GenSort.cc>     // for automatic template
+
+#ifdef AIPS_NO_TEMPLATE_SRC
+# include <casa/Utilities/GenSort.cc>     // for automatic template
+#else
+# include <casa/Utilities/GenSort.h>
+#endif
 
 using namespace std;
 using namespace casa;
