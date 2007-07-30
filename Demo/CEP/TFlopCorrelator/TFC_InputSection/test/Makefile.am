@@ -14,11 +14,6 @@ CyclicBufferTest.cc				\
 ../src/BeamletBuffer.cc                      \
 ../src/CyclicCounter.cc               
 
-RSPBufferingTest_SOURCES =                      \
-RSPBufferingTest.cc				\
-../src/BufferController.cc                      \
-../src/CyclicCounter.cc
-
 CyclicCounterTest_SOURCES =                      \
 CyclicCounterTest.cc				\
 ../src/CyclicCounter.cc
