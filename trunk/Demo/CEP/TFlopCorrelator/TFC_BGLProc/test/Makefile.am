@@ -1,4 +1,3 @@
-..common_top_builddir=@common_top_builddir@
 
 check_PROGRAMS = tWH_PPF tWH_Correlator tWH_BGL_Processing
 
