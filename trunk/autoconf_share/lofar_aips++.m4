@@ -255,14 +255,14 @@ if echo $version | grep -iq gcc; then
   fi
 fi
 
-echo AIPSPP >> pkgext
-echo "$AIPSPP_CPPFLAGS" >> pkgextcppflags
-
-CPPFLAGS="$CPPFLAGS $AIPSPP_CPPFLAGS"
-LDFLAGS="$LDFLAGS $AIPSPP_LDFLAGS"
-LIBS="$LIBS $AIPSPP_LIBS"
-
 if [ "$lfr_use_casa" = 1 ]; then
+  echo AIPSPP >> pkgext
+  echo "$AIPSPP_CPPFLAGS" >> pkgextcppflags
+
+  CPPFLAGS="$CPPFLAGS $AIPSPP_CPPFLAGS"
+  LDFLAGS="$LDFLAGS $AIPSPP_LDFLAGS"
+  LIBS="$LIBS $AIPSPP_LIBS"
+
   if test "$lofar_compiler" = "gnu"; then
     CXXFLAGS="$CXXFLAGS -Wno-non-template-friend"
     echo "-Wno-non-template-friend" >> pkgextcxxflags
