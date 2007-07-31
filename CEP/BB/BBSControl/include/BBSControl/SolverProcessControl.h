@@ -80,11 +80,8 @@ namespace BBS
                 uint32          index;
                 vector<double>  unknowns;
                 casa::LSQFit    solver;
-                //# this attribute is only temporary, until the problems with
-                //# the latest version of LSQFit have been solved.
-                double          epsilon;
             };
-            
+
             bool dispatch(const BlobStreamable *message);
             bool handle(const DomainRegistrationRequest *request);
             bool handle(const BlobStreamableVector<DomainRegistrationRequest> *request);
@@ -93,12 +90,12 @@ namespace BBS
 
             bool registerDomain(const DomainRegistrationRequest *request);
             IterationResult *performIteration(const IterationRequest *request);
-            
+
             // Parameter set for this process controller.
             ACC::APS::ParameterSet itsParameterSet;
 
             scoped_ptr<BlobStreamableConnection> itsKernelConnection;
-            
+
             map<uint32, Domain> itsRegisteredDomains;
         };
     // @}

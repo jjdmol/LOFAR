@@ -78,14 +78,11 @@ namespace LOFAR
       // @}
 
       // Get result of the last executed command.
-      const CommandResult &getResult()
-      {
-          return itsResult;
-      }
+      const CommandResult &getResult() const
+      { return itsResult; }
+
 
     private:
-      bool convertTime(string in, double &out);
-
       // Kernel.
       scoped_ptr<Prediffer>                   itsKernel;
 
@@ -94,14 +91,6 @@ namespace LOFAR
 
       // Connection to the solver.
       shared_ptr<BlobStreamableConnection>    itsSolverConnection;
-
-      // Region of interest.
-      int32                                   itsROIFrequency[2];
-      double                                  itsROITime[2];
-
-      // Chunk size and position (in time).
-      double                                  itsChunkSize;
-      double                                  itsChunkPosition;
 
       // Result of the last executed command.
       CommandResult                           itsResult;

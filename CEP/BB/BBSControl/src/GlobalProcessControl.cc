@@ -98,10 +98,13 @@ namespace LOFAR
       LOG_INFO("GlobalProcessControl::init()");
 
       try {
-	// Create a new CommandQueue. This will open a connection to the
-	// blackboard database.
-	itsCommandQueue.reset
-          (new CommandQueue(globalParameterSet()->getString("BBDB.DBName")));
+        // Create a new CommandQueue. This will open a connection to the
+        // blackboard database.
+        itsCommandQueue.reset
+          (new CommandQueue(globalParameterSet()->getString("BBDB.DBName"),
+          globalParameterSet()->getString("BBDB.UserName"),
+          globalParameterSet()->getString("BBDB.Host"),
+          globalParameterSet()->getString("BBDB.Port")));
 
         // Register for the "result" trigger, which fires when a new result is
         // posted to the blackboard database.

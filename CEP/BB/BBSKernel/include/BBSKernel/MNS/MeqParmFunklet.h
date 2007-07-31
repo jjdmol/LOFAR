@@ -103,6 +103,7 @@ public:
 
   // Make the new value persistent (for the given domain).
   virtual void save();
+  virtual void save(size_t domainIndex);
 
   // Update the solvable parameter with the new value.
   virtual void update (const ParmData& values);

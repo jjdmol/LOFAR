@@ -26,59 +26,44 @@
 // \file
 // Read and predict read visibilities
 
-#include <casa/BasicSL/Complex.h>
-#include <casa/Arrays/Matrix.h>
-#include <scimath/Fitting/LSQFit.h>
+//#include <casa/BasicSL/Complex.h>
+//#include <casa/Arrays/Matrix.h>
+
+#include <BBSKernel/Measurement.h>
+#include <BBSKernel/Model.h>
+#include <BBSKernel/VisSelection.h>
+#include <BBSKernel/VisData.h>
 
 #include <BBSKernel/BBSKernelStructs.h>
-#include <BBSKernel/StrategyProp.h>
-#include <BBSKernel/StepProp.h>
-#include <BBSKernel/SolveProp.h>
-#include <BBSKernel/ParmData.h>
-#include <BBSKernel/MMapMSInfo.h>
+//#include <BBSKernel/ParmData.h>
 #include <BBSKernel/MNS/MeqDomain.h>
 #include <BBSKernel/MNS/MeqJonesExpr.h>
-#include <BBSKernel/MNS/MeqJonesNode.h>
 #include <BBSKernel/MNS/MeqMatrix.h>
 #include <BBSKernel/MNS/MeqParm.h>
 #include <BBSKernel/MNS/MeqPhaseRef.h>
-#include <BBSKernel/MNS/MeqSourceList.h>
 #include <BBSKernel/MNS/MeqRequest.h>
-#include <BBSKernel/MNS/MeqStation.h>
-#include <BBSKernel/MNS/MeqStatUVW.h>
-#include <BBSKernel/MNS/MeqLMN.h>
-#include <BBSKernel/MNS/MeqDFTPS.h>
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/ParmDomain.h>
-#include <MS/MSDesc.h>
 
 #include <Common/Timer.h>
-#include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <Common/lofar_iomanip.h>
+#include <Common/lofar_map.h>
 
-#include <map>
 #include <utility>
 
-namespace casa {
-  class Table;
+namespace casa
+{
+    class LSQFit;
 }
 
 namespace LOFAR
 {
 namespace BBS
 {
-
 // \addtogroup BBSKernel
 // @{
-
-//# Forward Declarations
-class MMap;
-class FlagsMap;
-class MeqJonesMMap;
-
 
 // Prediffer calculates the equations for the solver.
 // It reads the measured data and predicts the data from the model.
@@ -92,444 +77,207 @@ struct SolveDomainDescriptor
     vector<size_t>      unknownIndex;
     vector<double>      unknowns;
 };
-  
+
+
+struct ProcessingContext
+{
+    ProcessingContext()
+        :   derivativeCount(0),
+            domainSize(0, 0),
+            domainCount(0, 0)
+    {}
+
+    set<baseline_t>                 baselines;
+    set<pair<size_t, size_t> >      polarizations;
+
+    // Sum of the maximal number (over all solve domains) of partial derivatives
+    // of each parameter.
+    size_t                          derivativeCount;
+
+    // Nominal solve domain size along each axis in #channels, #timeslots.
+    std::pair<size_t, size_t>       domainSize;
+    // Number of solve domains along each axis (frequency, time).
+    std::pair<size_t, size_t>       domainCount;
+    vector<SolveDomainDescriptor>   domains;
+};
+
 
 class Prediffer
 {
 public:
-  // NOTE: new constructor to comply with BBSStep interface.
-  Prediffer(const string &measurementSet,
-            const string &inputColumn,
-            const string &skyParameterDB,
-            const string &instrumentParameterDB,
-            const string &historyDB,
-            uint subbandID,
-            bool calcUVW);
-                          
-  // Destructor
-  ~Prediffer();
+    Prediffer(const string &measurement, size_t subband,
+        const string &inputColumn,
+        const string &skyDBase, const string &instrumentDBase,
+        const string &historyDBase, bool readUVW);
 
-  // Lock and unlock the parm database tables.
-  // The user does not need to lock/unlock, but it can increase performance
-  // if many small accesses have to be done.
-  // <group>
-  void lock (bool lockForWrite = true)
-    { itsMEP->lock (lockForWrite); itsGSMMEP->lock (lockForWrite); }
-  void unlock()
-    { itsMEP->unlock(); itsGSMMEP->unlock(); }
+    // Destructor
+    ~Prediffer();
 
-  bool setSelection(const vector<string> &stations, const Correlation &correlation);
-  
-  // Set the work domain.
-  // The work domain (in frequency and time) is adjusted to the
-  // observation domain of the MS used.
-  // It reads all parms in the given domain.
-  // It returns false if the given work domain has no overlap with the
-  // MS part handled by this Prediffer
-  // <group>
-  bool setWorkDomain(const MeqDomain& domain);
-  bool setWorkDomain(double startFreq, double endFreq, double startTime, double endTime);
-  bool setWorkDomain(int startChan, int endChan, double startTime, double lengthTime);
-  // </group>
-  
-  bool setContext(const PredictContext &context);
-  bool setContext(const SubtractContext &context);
-  bool setContext(const CorrectContext &context);
-  bool setContext(const GenerateContext &context);
-  
-  void predictVisibilities();
-  void subtractVisibilities();
-  void correctVisibilities();
-  void generateEquations(vector<casa::LSQFit> &equations);
+    // Lock and unlock the parm database tables.
+    // The user does not need to lock/unlock, but it can increase performance
+    // if many small accesses have to be done.
+    // <group>
+    void lock(bool lockForWrite = true)
+    {
+        itsInstrumentDBase->lock(lockForWrite);
+        itsSkyDBase->lock(lockForWrite);
+    }
 
-  
-  // Get the actual work domain for this MS (after a setStrategy).
-  const MeqDomain &getWorkDomain() const
-    { return itsWorkDomain; }
+    void unlock()
+    {
+        itsInstrumentDBase->unlock();
+        itsSkyDBase->unlock();
+    }
 
-  // Get the local data domain.
-  MeqDomain getLocalDataDomain() const;
+    void setSelection(VisSelection selection);
+    void setChunkSize(size_t time);
+    bool nextChunk();
 
-  // Return the solvable parms.
-  // The parms are in ascending order of spidnr.
-  const ParmDataInfo& getSolvableParmData() const
-    { return itsParmData; }
+    bool setContext(const PredictContext &context);
+    bool setContext(const SubtractContext &context);
+    bool setContext(const CorrectContext &context);
+    bool setContext(const GenerateContext &context);
 
-  // There are three ways to update the solvable parms after the solver
-  // found a new solution.
-  // <group>
-  // Update the values of solvable parms.
-  // Using its spid index each parm takes its values from the vector.
-  void updateSolvableParms (const vector<double>& values);
+    void predict();
+    void subtract();
+    void correct();
+    void generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
+        vector<casa::LSQFit> &solvers);
 
-  // Update the given values (for the current domain) of solvable parms
-  // matching the corresponding parm name in the vector.
-  // Vector values with a name matching no solvable parm are ignored.
-  void updateSolvableParms (const ParmDataInfo& parmData);
+    // Get the actual work domain for this MS (after a setStrategy).
+    const MeqDomain &getWorkDomain() const
+        { return itsWorkDomain; }
 
-  // Update the solvable parm values (reread from table).
-  void updateSolvableParms();
+    // Get the local data domain.
+    MeqDomain getLocalDataDomain() const;
 
-  void updateSolvableParms(size_t solveDomainIndex,
-    const vector<double> unknowns);
+    // There are three ways to update the solvable parms after the solver
+    // found a new solution.
+    // <group>
+    // Update the values of solvable parms.
+    // Using its spid index each parm takes its values from the vector.
+    void updateSolvableParms (const vector<double>& values);
 
-  // Log the updated values of a single solve domain.
-  void logIteration(
-    const string &stepName,
-    size_t solveDomainIndex,
-    double rank,
-    double chiSquared,
-    double LMFactor);
-  
-  // Write the solved parms.
-  void writeParms();
+    // Update the given values (for the current domain) of solvable parms
+    // matching the corresponding parm name in the vector.
+    // Vector values with a name matching no solvable parm are ignored.
+//    void updateSolvableParms (const ParmDataInfo& parmData);
+
+    // Update the solvable parm values (reread from table).
+    void updateSolvableParms();
+
+    void updateSolvableParms(size_t solveDomainIndex,
+        const vector<double> unknowns);
+
+    // Log the updated values of a single solve domain.
+    void logIteration(const string &stepName, size_t solveDomainIndex,
+        double rank, double chiSquared, double LMFactor);
+
+    // Write the solved parms.
+    void writeParms();
+    void writeParms(size_t solveDomainIndex);
+
+    const vector<SolveDomainDescriptor> &getSolveDomainDescriptors() const
+    {
+        return itsContext.domains;
+    }
 
 #ifdef EXPR_GRAPH
-  void writeExpressionGraph(const string &fileName, int baselineIndex);
+    void writeExpressionGraph(const string &fileName, baseline_t baseline);
 #endif
 
-  // Show the settings of the Prediffer.
-  void showSettings() const;
-
-  // Get the results instead of the equations.
-  // This is mainly used for test purposes.
-  vector<MeqResult> getResults (bool calcDeriv=true);
-
-  // Get the data and flags for the time domain.
-  // This is mainly used for test purposes.
-  void getData (bool useTree,
-        casa::Array<casa::Complex>& data,
-        casa::Array<casa::Bool>& flags);
-
-  const vector<SolveDomainDescriptor> &getSolveDomainDescriptors() const
-  {
-    return itsSolveDomainDescriptors;
-  }
-  
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  
-  // WARNING: DEPRECATED. Create Prediffer object for a specific
-  // MeaurementSet, MEQ model (with associated MEP database) and skymodel
-  // for the specified data descriptor (i.e. spectral window).
-  // The UVW coordinates can be calculated or taken from the MS.
-  Prediffer (const string& msName,
-         const LOFAR::ParmDB::ParmDBMeta& meqPtd,
-         const LOFAR::ParmDB::ParmDBMeta& skyPtd,
-         uint ddid,
-         bool calcUVW);
-  
-  // WARNING: DEPRECATED. Will be removed in the next release.
-  // Old interface to set strategy and steps.
-  // Set the strategy properties.
-  // It returns false if no antennas are to be used in this MS part.
-  bool setStrategyProp (const StrategyProp&);
-
-  // Set the properties to be used in the step that will be performed.
-  // It selects the data to be used and it builds the expression tree using
-  // the given instrument and source model.
-  // It returns false if the selection is such that no data is left.
-  bool setStepProp (const StepProp&);
-  
-  // Initialize all solvable parameters in the MeqExpr tree for the
-  // given solve domains.
-  // It sets the scids of the solvable parms and fills itsParmData.
-  // It returns false if no solvable parameters are found for this MS.
-  bool setSolveProp (const SolveProp&);
-  
-  // Get the equations for all selected baselines and fill the
-  // fitter vector with them.
-  // The fitter vector is resized as needed.
-  // All fitter objects are initialized before being filled.
-  void fillFitters(vector<casa::LSQFit>& fitters);
-
-  // Shift data to another phase reference position.
-  void shiftData();
-
-  // Apply corrections to the data.
-  void correctData();
-
-  // Subtract (corrupted) sources from the data.
-  void subtractData();
-
-  // Write the predicted data into the .res or .dat file.
-  void writePredictedData();
-
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-
 private:
-  // Copy constructor and assignment are not allowed.
-  // <group>
-  Prediffer (const Prediffer& other);
-  Prediffer& operator= (const Prediffer& other);
-  // </group>
+    // Copy constructor and assignment are not allowed.
+    // <group>
+    Prediffer (const Prediffer& other);
+    Prediffer& operator= (const Prediffer& other);
+    // </group>
 
-  // Read measurement set meta data.
-  void readMeasurementSetMetaData(const string& fileName);
+    bool setContext(const Context &context);
 
-  // Get the name of the file that contains the data that belongs to the specified column.
-  string getFileForColumn(const string &column);
-  
-  // Process the MS description for the given dd (spectral window).
-  void processMSDesc (uint ddid);
+    void initializeSolveDomains(std::pair<size_t, size_t> size);
 
-  // Get the phase reference position of the first field.
-  void getPhaseRef (double ra, double dec, double startTime);
+    // Make all parameters non-solvable.
+    void clearSolvableParms();
 
-  bool setContext(const Context &context);
-  void updateCorrelationMask(vector<bool> &mask, const vector<string> &requestedCorrelations);
+    // Read the polcs for all parameters for the current work domain.
+    void readParms();
 
-  // Get the station info (position and name).
-  void fillStations();
+    // Define the signature of a function processing a baseline.
+    typedef void (Prediffer::*BaselineProcessor) (int threadnr, void* arguments,
+        VisData::Pointer chunk, pair<size_t, size_t> offset,
+        const MeqRequest& request, baseline_t baseline, bool showd);
 
-  // Fill all UVW coordinates if they are not calculated.
-  void fillUVW();
+    // Loop through all data and process each baseline by ProcessFuncBL.
+    void process(bool useFlags, bool precalc, bool derivatives,
+        pair<size_t, size_t> start, pair<size_t, size_t> end,
+        BaselineProcessor processor, void *arguments);
 
-  // Get all sources from the sky model table.
-  // Also check the source groups.
-  void getSources();
+    // Write the predicted data of a baseline.
+    void predictBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
+        pair<size_t, size_t> offset, const MeqRequest& request,
+        baseline_t baseline, bool showd = false);
 
-  // Make the entire tree.
-  void makeTree (const vector<string>& modelType,
-         const vector<string>& sourceNames);
+    // Subtract the data of a baseline.
+    void subtractBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
+        pair<size_t, size_t> offset, const MeqRequest& request,
+        baseline_t baseline, bool showd = false);
 
-  // Create the expressions for each baseline and source(group).
-  // The gains can be expressed as real/imag or ampl/phase.
-  // The station parameters are optionally taken into account.
-  void makeLOFARExprs (const vector<MeqSource*>& sources,
-               const map<string, vector<int> >& groups,
-               bool useTotalGain, bool usePatchGain,
-               bool asAP,
-               bool useDipole, bool useBandpass);
+    // Correct the data of a baseline.
+    void correctBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
+        pair<size_t, size_t> offset, const MeqRequest& request,
+        baseline_t baseline, bool showd = false);
 
-  // Find all nodes to be precalculated.
-  void setPrecalcNodes (vector<MeqJonesExpr>& nodes);
+    // Generate equations for a baseline.
+    void generateBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
+        pair<size_t, size_t> offset, const MeqRequest& request,
+        baseline_t baseline, bool showd = false);
 
-  // Fill the fitter with the equations for the given baseline.
-  void fillEquation (int threadnr, void* arg,
-             const fcomplex* dataIn, fcomplex* dummy,
-             const bool* flags,
-             const MeqRequest& request, int blindex,
-             bool showd=false);
+    void testFlagsBaseline(int threadnr, void* arguments,
+        VisData::Pointer chunk, const MeqRequest& request, baseline_t baseline,
+        bool showd);
 
-  // Reset the loop variables for the getEquations loop.
-  void resetEqLoop();
 
-  // Map the correct data files (if not mapped yet).
-  // If a string is empty, the file is not mapped.
-  void mapDataFiles (const string& inFile, const string& outFile);
+    size_t                              itsSubband;
+    string                              itsInputColumn;
+    string                              itsOutputColumn;
+    bool                                itsReadUVW;
 
-  // Add a data column to the table and create a symlink for it.
-//  void addDataColumn (casa::Table& tab, const string& columnName,
-//              const string& symlinkName);
-  void addDataColumn (casa::Table& tab, const string& columnName);
+    scoped_ptr<ParmDB::ParmDB>          itsInstrumentDBase;
+    scoped_ptr<ParmDB::ParmDB>          itsSkyDBase;
+    scoped_ptr<ParmDB::ParmDB>          itsHistoryDBase;
 
-  // Define the signature of a function processing a baseline.
-  typedef void (Prediffer::*ProcessFuncBL) (int threadnr, void* arg,
-                        const fcomplex* dataIn,
-                        fcomplex* dataOut,
-                        const bool* flags,
-                        const MeqRequest& request,
-                        int blindex, bool showd);
+    //# Container for all parameters.
+    MeqParmGroup                        itsParmGroup;
+    //# Phase reference position in J2000 coordinates.
+    MeqPhaseRef                         itsPhaseRef;
 
-  // Loop through all data and process each baseline by ProcessFuncBL.
-  void processData (bool useFlags, bool preCalc, bool calcDeriv,
-            ProcessFuncBL func, void* arg);
+    MeqDomain                           itsWorkDomain;
 
-  // Subtract the data of a baseline.
-  void subtractBL (int threadnr, void* arg,
-           const fcomplex* dataIn, fcomplex* dataOut,
-           const bool* flags,
-           const MeqRequest& request, int blindex,
-           bool showd);
+    //# All parm values in current work domain.
+    map<string,ParmDB::ParmValueSet>    itsParmValues;
 
-  // Correct the data of a baseline.
-  void correctBL (int threadnr, void* arg,
-          const fcomplex* dataIn, fcomplex* dataOut,
-          const bool* flags,
-          const MeqRequest& request, int blindex,
-          bool showd);
+    //# Thread private buffers.
+    int itsNthread;
+    vector<casa::Block<bool> >          itsFlagVecs;
+    vector<vector<const double*> >      itsResultVecs;
+    vector<vector<double> >             itsDiffVecs;
+    vector<vector<uint> >               itsIndexVecs;
 
-  // Write the predicted data of a baseline.
-  void predictBL (int threadnr, void* arg,
-          const fcomplex* dummy, fcomplex* dataOut,
-          const bool* flags,
-          const MeqRequest& request, int blindex,
-          bool showd);
+    NSTimer                             itsPredTimer, itsEqTimer;
 
-  // Get the data of a single baseline.
-  // <group>
-  void getBL (int threadnr, void* arg,
-          const fcomplex* data, fcomplex*,
-          const bool* flags,
-          const MeqRequest&, int blindex,
-          bool);
-  void getMapBL (int threadnr, void* arg,
-         const fcomplex* data, fcomplex*,
-         const bool* flags,
-         const MeqRequest& request, int blindex,
-         bool);
-  // </group>
+    Measurement::Pointer                itsMeasurement;
+    Model::Pointer                      itsModel;
+    VisGrid                             itsGrid;
+    VisSelection                        itsChunkSelection;
+    VisData::Pointer                    itsChunkData;
+    size_t                              itsChunkSize, itsChunkPosition;
+    ProcessingContext                   itsContext;
 
-  // Make all parameters non-solvable.
-  void clearSolvableParms();
-
-  // Read the polcs for all parameters for the current work domain.
-  void readParms();
-
-  // Get access to the next data chunk and fill in all pointers.
-  // The data pointers are filled in the MMapMSInfo object.
-  bool nextDataChunk (bool useFitters);
-
-  // Do the precalculations for all lower level nodes.
-  void precalcNodes (const MeqRequest& request);
-
-  // Show the data on cout.
-  void showData (int corr, int sdch, int inc, int nrchan,
-         const bool* flags, const fcomplex* data,
-         const double* realData, const double* imagData);
-
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  
-  // Initialize all solvable parameters in the MeqExpr tree for the
-  // given solve domains.
-  // It sets the scids of the solvable parms and fills itsParmData.
-  void initSolvableParms (const vector<MeqDomain>& solveDomains);
-
-  // Get measurement set description from file
-  // NB. DEPRECATED -- only use for debugging purposes, will
-  // be removed in the next release.
-  void readDescriptiveData (const string& fileName);
-
-  // Select the stations for a strategy.
-  // False is returned if no stations/baselines are left.
-  bool selectStations (const vector<int>& antnrs, bool useAutoCorr);
-
-  // Do the selection of baselines and correlations for a step.
-  bool selectStep (const vector<int>& ant1,
-           const vector<int>& ant2,
-           bool useAutoCorrelations,
-           const vector<bool>& corr);
-
-  // Fill indices and count nr of baselines and correlations selected.
-  bool fillBaseCorr (const casa::Matrix<bool>& blSel);
-
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  
-  uint                  itsSubbandID;
-  bool                  itsCalcUVW;
-  
-  string                itsMSName;      //# Measurement set name
-  LOFAR::ParmDB::ParmDB *itsMEP;        //# Common parmtable
-  string                itsMEPName;     //# Common parmtable name
-  LOFAR::ParmDB::ParmDB *itsGSMMEP;     //# parmtable for GSM parameters
-  string                itsGSMMEPName;  //# GSM parameters parmtable name
-  LOFAR::ParmDB::ParmDB *itsHistoryDB;  //# parmtable for solve history
-  MeqParmGroup          itsParmGroup;   //# container for all parms
-
-  MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
-
-  MeqSourceList*        itsSources;
-  vector<MeqExpr>       itsLMN;         //# LMN for sources used
-  vector<MeqStation*>   itsStations;    //# All stations
-  vector<MeqStation*>   itsSelStations; //# Subset of selected stations
-  vector<MeqStatUVW*>   itsStatUVW;     //# UVW values per station
-  vector<MeqJonesExpr>  itsExpr;        //# solve expression tree per baseline
-  vector<vector<MeqExprRep*> > itsPrecalcNodes;  //# nodes to be precalculated
-  vector<MeqJonesExpr>  itsCorrStat;    //# Correct per station
-  vector<MeqJonesMMap*> itsCorrMMap;    //# MMap for each baseline
-  vector<MeqJonesExpr>  itsCorrExpr;    //# Ampl/phase expressions (to correct)
-
-  string itsInDataColumn;
-  string itsOutDataColumn;
-
-  MSDesc itsMSDesc;                   //# description of the MS
-  map<string, string>  itsColumns;   //# mapping from column name to table file within MS.
-  double itsStartFreq;                //# start frequency of observation
-  double itsEndFreq;
-  double itsStepFreq;
-  int    itsNrChan;                   //# nr of channels in observation
-  int    itsFirstChan;                //# first channel of selected domain
-  int    itsLastChan;                 //# last channel of selected domain
-  bool   itsReverseChan;              //# Channels are in reversed order
-  int    itsDataFirstChan;            //# First channel to use in data
-                                      //# (can be different if reversed order)
-
-  MeqDomain    itsWorkDomain;         //# Current work domain
-  vector<int>  itsNrScids;            //# Nr of solvable coeff per solve domain
-  int          itsNrPert;             //# Nr of perturbed values in result
-  ParmDataInfo itsParmData;           //# solvable parm info.
-
-  vector<bool>         itsSelectedCorr;//# Correlations selected in initial data selection (setSelection())
-  vector<bool>         itsCorr;        //# Correlations to use (subset of itsSelectedCorr)
-  int                  itsNCorr;       //# Number of correlations (XX, etc.)
-  int                  itsNSelCorr;    //# Number of correlations selected
-  casa::Vector<double> itsTimes;       //# All times in MS
-  casa::Vector<double> itsIntervals;   //# All intervals in MS
-
-  //# All baselines in the MS are numbered 0 to itsNrBl-1.
-  unsigned int         itsNrBl;        //# Total number of baselines in MS
-  //# Define the baselines that can be used (thus selected in strategy).
-  //# The seqnr is the sequence number of the baseline in the MS.
-  
-  map<pair<int, int>, int>    itsSelectedBaselines;
-  
-  //# Define which baselines are selected in the select function.
-  vector<int>    itsBLInx;         //# Seqnrs of selected baselines
-  unsigned int   itsTimeIndex;     //# The index of the current time
-  unsigned int   itsNrTimes;       //# The number of times in the time domain
-  unsigned int   itsNrTimesDone;   //# Nr of times done after a setDomain
-  vector<double> itsChunkTimes;    //# Times in current data chunk
-
-  MMapMSInfo     itsMSMapInfo;     //# Info about mapped input and output file
-  MMap*          itsInDataMap;     //# Input data file mapped
-  MMap*          itsOutDataMap;    //# Output data file mapped (can same as in)
-  FlagsMap*      itsFlagsMap;      //# Flags file mapped
-  MMap*          itsWeightMap;     //# Weights file mapped
-  bool           itsIsWeightSpec;  //# true = weight per channel
-
-  //# All parm values in current work domain.
-  map<string,LOFAR::ParmDB::ParmValueSet> itsParmValues;
-
-  //# Fitter info set by initSolvableParms.
-  vector<int> itsFreqFitInx;       //# Fitter for each freq in work domain
-                                   //# for the data in the MS resolution
-  vector<int> itsTimeFitInx;       //# Fitter for each time in work domain
-  uint        itsFreqNrFit;        //# Nr of fitters in freq direction
-
-  //# Thread private buffers.
-  int itsNthread;
-  vector<casa::Block<bool> >      itsFlagVecs;
-  vector<vector<const double*> >  itsResultVecs;
-  vector<vector<double> >         itsDiffVecs;
-  vector<vector<uint> >           itsIndexVecs;
-  //  vector<casa::Block<bool> >     itsOrdFlagVecs;
-
-  //# Timers.
-  NSTimer itsPredTimer;
-  NSTimer itsEqTimer;
-  
-  vector<MeqDomain>               itsSolveDomains;
-  
-  vector<SolveDomainDescriptor>   itsSolveDomainDescriptors;
-
-  void initializeSolveDomains(const vector<MeqDomain> &globalSolveDomains);
-
-#ifdef COMPUTE_SQUARED_ERROR  
-  vector<double> itsSquaredErrorReal;
-  vector<double> itsSquaredErrorImag;
-#endif 
-       
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  
-  casa::Matrix<bool>   itsBLSel;       //# Antenna pair selected in strategy?
-  
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
-  // DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED DEPRECATED
+#ifdef COMPUTE_SQUARED_ERROR
+    vector<double>                      itsSquaredErrorReal;
+    vector<double>                      itsSquaredErrorImag;
+#endif
 };
 
 // @}

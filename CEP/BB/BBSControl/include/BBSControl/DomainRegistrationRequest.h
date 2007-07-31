@@ -25,7 +25,8 @@
 #define LOFAR_BBSCONTROL_DOMAINREGISTRATIONREQUEST_H
 
 // \file
-// Request sent from kernel to solver to register a solve domain and set the initial values of the unknowns.
+// Request sent from kernel to solver to register a solve domain and set the
+// initial values of the unknowns.
 
 
 #include <Blob/BlobStreamable.h>
@@ -34,63 +35,74 @@
 
 namespace LOFAR
 {
-    class BlobIStream;
-    class BlobOStream;
+class BlobIStream;
+class BlobOStream;
 
 namespace BBS
 {
     // \addtogroup BBSControl
     // @{
 
-    // Request sent from kernel to solver to register a solve domain and set the initial values of the
-    // unknowns.
+    // Request sent from kernel to solver to register a solve domain and set the
+    // initial values of the unknowns.
     //
-    // Note that the initial values are not necessary for computing a solution, because a single iteration consists
-    // of computing the solution to a set of linear (normal) equations (see AIPS++ note 224). However, they seem to
-    // be needed to check for convergence (inside LSQFit).
+    // Note that the initial values are not necessary for computing a solution,
+    // because a single iteration consists of computing the solution to a
+    // set of linear (normal) equations (see AIPS++ note 224). However, they
+    // seem to be needed to check for convergence (inside LSQFit).
     class DomainRegistrationRequest : public BlobStreamable
     {
     public:
         DomainRegistrationRequest(uint32 domainIndex = 0)
             :   itsDomainIndex(domainIndex),
+                itsMaxIter(0),
                 itsEpsilon(1e-8),
-                itsMaxIter(0)
+                itsColFactor(1e-8),
+                itsLMFactor(1.0),
+                itsBalancedEq(false)
         {
         }
-    
-        DomainRegistrationRequest(uint32 domainIndex, double epsilon, uint32 maxIter, const vector<double> &unknowns)
+
+        DomainRegistrationRequest(uint32 domainIndex,
+            const vector<double> &unknowns, uint32 maxIter = 0,
+            double epsilon = 1e-8, double colFactor = 1e-8,
+            double lmFactor = 1.0, bool balancedEq = false)
             :   itsDomainIndex(domainIndex),
-                itsEpsilon(epsilon),
                 itsMaxIter(maxIter),
+                itsEpsilon(epsilon),
+                itsColFactor(colFactor),
+                itsLMFactor(lmFactor),
+                itsBalancedEq(balancedEq),
                 itsUnknowns(unknowns)
         {
         }
-        
+
         uint32 getDomainIndex() const
-        {
-            return itsDomainIndex;
-        }
-    
-        double getEpsilon() const
-        {
-            return itsEpsilon;
-        }
-        
+        { return itsDomainIndex; }
+
         uint32 getMaxIter() const
-        {
-            return itsMaxIter;
-        }
-        
+        { return itsMaxIter; }
+
+        double getEpsilon() const
+        { return itsEpsilon; }
+
+        double getColFactor() const
+        { return itsColFactor; }
+
+        double getLMFactor() const
+        { return itsLMFactor; }
+
+        bool getBalancedEq() const
+        { return itsBalancedEq; }
+
         const vector<double> &getUnknowns() const
-        {
-            return itsUnknowns;
-        }
+        { return itsUnknowns; }
 
         static const string theirClassType;
-   
+
     private:
-        //# -------- BlobStreamable interface implementation -------- 
-    
+        //# -------- BlobStreamable interface implementation --------
+
         // Write the contents of \c *this into the blob output stream \a bos.
         virtual void write(BlobOStream& bos) const;
 
@@ -99,11 +111,14 @@ namespace BBS
 
         // Return the type of \c *this as a string.
         virtual const string& classType() const;
-        
-        //# -------- Attributes -------- 
+
+        //# -------- Attributes --------
         uint32              itsDomainIndex;
-        double              itsEpsilon;
         uint32              itsMaxIter;
+        double              itsEpsilon;
+        double              itsColFactor;
+        double              itsLMFactor;
+        bool                itsBalancedEq;
         vector<double>      itsUnknowns;
     };
 

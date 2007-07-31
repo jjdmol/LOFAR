@@ -38,7 +38,7 @@ namespace BBS
     using LOFAR::operator>>;
 
     const string DomainRegistrationRequest::theirClassType = "DomainRegistrationRequest";
-    
+
     // Register DomainRegistrationRequest with the BlobStreamableFactory. Use an anonymous
     // namespace. This ensures that the variable `dummy' gets its own private
     // storage area and is only visible in this compilation unit.
@@ -47,14 +47,17 @@ namespace BBS
         bool dummy = BlobStreamableFactory::instance().registerClass<DomainRegistrationRequest>("DomainRegistrationRequest");
         bool dummy_vector = BlobStreamableFactory::instance().registerClass<BlobStreamableVector<DomainRegistrationRequest> >("BlobStreamableVector<" + DomainRegistrationRequest::theirClassType + ">");
     }
-    
+
     void DomainRegistrationRequest::write(BlobOStream& bos) const
     {
         LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
-        
+
         bos << itsDomainIndex
-            << itsEpsilon
             << itsMaxIter
+            << itsEpsilon
+            << itsColFactor
+            << itsLMFactor
+            << itsBalancedEq
             << itsUnknowns;
     }
 
@@ -62,10 +65,13 @@ namespace BBS
     void DomainRegistrationRequest::read(BlobIStream& bis)
     {
         LOG_TRACE_LIFETIME(TRACE_LEVEL_RTTI, "");
-        
+
         bis >> itsDomainIndex
-            >> itsEpsilon
             >> itsMaxIter
+            >> itsEpsilon
+            >> itsColFactor
+            >> itsLMFactor
+            >> itsBalancedEq
             >> itsUnknowns;
     }
 

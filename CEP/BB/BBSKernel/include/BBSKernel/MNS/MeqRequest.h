@@ -31,11 +31,13 @@
 #include <BBSKernel/MNS/MeqDomain.h>
 #include <BBSKernel/MNS/MeqMatrix.h>
 #include <Common/lofar_vector.h>
+#include <utility>
 
 namespace LOFAR
 {
 namespace BBS
 {
+using std::pair;
 
 // \ingroup BBSKernel
 // \addtogroup MNS
@@ -106,11 +108,17 @@ public:
 
   // Set or get the first X-value (i.e. first channel).
   // <group>
-  void setFirstX (int firstX)
-    { itsFirstX = firstX; }
-  int firstX() const
-    { return itsFirstX; }
+//  void setFirstX (int firstX)
+//    { itsFirstX = firstX; }
+//  int firstX() const
+//    { return itsFirstX; }
   // </group>
+
+  void setOffset(pair<size_t, size_t> offset)
+  { itsOffset = offset; }
+
+  pair<size_t, size_t> offset() const
+  { return itsOffset; }
 
   // Get the request id.
   MeqRequestId getId() const
@@ -128,9 +136,10 @@ private:
   double         itsStepX;
   vector<double> itsY;     //# The vector of Y values.
   double*        itsYP;    //# The pointer to itsY for a partial request
-  int            itsFirstX;
+//  int            itsFirstX;
   int            itsSourceNr;
   int            itsNspids;
+  pair<size_t, size_t>  itsOffset;
 
   static MeqRequestId theirRequestId;
 };

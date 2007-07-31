@@ -3,17 +3,11 @@ lib_LTLIBRARIES = libbbskernel.la
 libbbskernel_la_SOURCES = 	\
 	BBSKernelStructs.cc	\
 	BBSStatus.cc		\
-	BBSTestLogger.cc	\
-	FlagsMap.cc		\
-	MMap.cc			\
-	MMapMSInfo.cc		\
-	ParmData.cc		\
-	ParmWriter.cc		\
+	MeasurementAIPS.cc	\
+	Model.cc		\
 	Prediffer.cc		\
-	Quality.cc		\
-	Solver.cc		\
-	StepProp.cc		\
-	StrategyProp.cc		\
+	VisData.cc		\
+	VisSelection.cc		\
 	MNS/MeqBaseDFTPS.cc	\
 	MNS/MeqBaseLinPS.cc	\
 	MNS/MeqDFTPS.cc		\
@@ -26,11 +20,11 @@ libbbskernel_la_SOURCES = 	\
 	MNS/MeqJonesCMul3.cc	\
 	MNS/MeqJonesExpr.cc	\
 	MNS/MeqJonesInvert.cc	\
-	MNS/MeqJonesMMap.cc	\
 	MNS/MeqJonesMul2.cc	\
 	MNS/MeqJonesMul3.cc	\
 	MNS/MeqJonesNode.cc	\
 	MNS/MeqJonesSum.cc	\
+	MNS/MeqJonesVisData.cc	\
 	MNS/MeqLMN.cc		\
 	MNS/MeqMatrix.cc	\
 	MNS/MeqMatrixComplexArr.cc \
@@ -56,11 +50,5 @@ libbbskernel_la_SOURCES = 	\
 	MNS/MeqStation.cc	\
 	MNS/MeqStatUVW.cc	\
 	MNS/MeqTabular.cc 
-
-bin_PROGRAMS = BBSrun
-
-BBSrun_SOURCES 		= BBSrun.cc
-BBSrun_LDADD 		= libbbskernel.la
-BBSrun_DEPENDENCIES 	= libbbskernel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
