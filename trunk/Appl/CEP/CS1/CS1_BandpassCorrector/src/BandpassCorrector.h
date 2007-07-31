@@ -50,7 +50,7 @@ namespace LOFAR
                           int InputWindowSize);
         ~BandpassCorrector();
 
-        void CorrectBandpass();
+        void CorrectBandpass(bool fixed);
 
       protected:
         int                       NumAntennae;
@@ -72,10 +72,10 @@ namespace LOFAR
         void ComputeBaselineLengths();
         void ProcessBaselineBand(Cube<Complex>* Timeslots,
                                  Matrix<Complex>* Data,
-                                 int Position);
+                                 int Position, bool fixed);
         void ProcessTimeslot(casa::TableIterator* write_iter,
                              casa::TableIterator* data_iter,
-                             int Position);
+                             int Position, bool fixed);
         bool UpdateTimeslotData(vector<int>* OldFields,
                                 vector<int>* OldBands,
                                 int* TimeCounter,

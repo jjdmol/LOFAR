@@ -58,6 +58,7 @@ namespace LOFAR
     {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
       itsMS       = ParamSet->getString("ms");
+      itsFixed    = ParamSet->getBool("fixed");
       itsWindow   = ParamSet->getInt32("window");
       return true;
     }
@@ -67,7 +68,7 @@ namespace LOFAR
     {
       try{
       std::cout << "Runnning Bandpass corrector please wait..." << std::endl;
-      itsCorrector->CorrectBandpass();
+      itsCorrector->CorrectBandpass(itsFixed);
       }
       catch(casa::AipsError& err)
       {

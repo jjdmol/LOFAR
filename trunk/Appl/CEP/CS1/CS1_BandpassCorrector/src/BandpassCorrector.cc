@@ -17,10 +17,66 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+
 #include <tables/Tables.h>
 #include <tables/Tables/TableIter.h>
 #include "BandpassCorrector.h"
 #include <casa/Quanta/MVEpoch.h>
+
+// Oo nice, hardcoded values. These are the bandpass shape. Source: andre Gunst
+double StaticBandpass[] = {
+   0.47917056206591,   0.51450263071820,   0.55013957156187,   0.58584868428573,   0.62138865122171,
+   0.65651292433973,   0.69097334380148,   0.72452392243909,   0.75692472409382,   0.78794575881674,
+   0.81737081468304,   0.84500114455045,   0.87065892660331,   0.89419042002261,   0.91546874161156,
+   0.93439619563701,   0.95090609741619,   0.96496404112995,   0.97656857377370,   0.98575124981431,
+   0.99257605471542,   0.99713819970126,   0.99956230460231,   1.00000000000000,   0.99862699379184,
+   0.99563966036629,   0.99125122245431,   0.98568760608377,   0.97918305760825,   0.97197561825935,
+   0.96430255588093,   0.95639585529698,   0.94847786806089,   0.94075721911367,   0.93342506219264,
+   0.92665176779672,   0.92058411731185,   0.91534306477258,   0.91102211398211,   0.90768634367826,
+   0.90537209750188,   0.90408733910995,   0.90381265630883,   0.90450288199946,   0.90608928445621,
+   0.90848226541450,   0.91157449200084,   0.91524437804093,   0.91935982201606,   0.92378210313208,
+   0.92836983378122,   0.93298286620382,   0.93748605340990,   0.94175276933707,   0.94566810066759,
+   0.94913163249466,   0.95205976184504,   0.95438748660080,   0.95606963223775,   0.95708149459414,
+   0.95741889315667,   0.95709764564320,   0.95615249051559,   0.95463549902499,   0.95261403205704,
+   0.95016830902312,   0.94738866600390,   0.94437258801850,   0.94122160546060,   0.93803814727657,
+   0.93492244330520,   0.93196956537344,   0.92926669134954,   0.92689066856720,   0.92490594309794,
+   0.92336290956911,   0.92229672296394,   0.92172659949879,   0.92165561868575,   0.92207102350523,
+   0.92294500068830,   0.92423590888613,   0.92588990940517,   0.92784294259746,   0.93002298325291,
+   0.93235250072533,   0.93475104425126,   0.93713787113164,   0.93943453520778,   0.94156735536265,
+   0.94346968852602,   0.94508393869381,   0.94636324255392,   0.94727278314801,   0.94779069524276,
+   0.94790853934551,   0.94763133515851,   0.94697715928785,   0.94597632576900,   0.94467018101252,
+   0.94310955670785,   0.94135293468239,   0.93946438637821,   0.93751135621784,   0.93556236248781,
+   0.93368469134975,   0.93194215914449,   0.93039301531247,   0.92908805311787,   0.92806898810783,
+   0.92736715510567,   0.92700256382656,   0.92698334126653,   0.92730557623643,   0.92795356820590,
+   0.92890046941120,   0.93010929639068,   0.93153427515032,   0.93312247341126,   0.93481566419362,
+   0.93655235763669,   0.93826993267811,   0.93990679717679,   0.94140450436077,   0.94270975512823,
+   0.94377621967076,   0.94456611799130,   0.94505150695426,   0.94521523126914,   0.94505150695426,
+   0.94456611799130,   0.94377621967076,   0.94270975512823,   0.94140450436077,   0.93990679717679,
+   0.93826993267811,   0.93655235763669,   0.93481566419362,   0.93312247341126,   0.93153427515032,
+   0.93010929639068,   0.92890046941120,   0.92795356820590,   0.92730557623643,   0.92698334126653,
+   0.92700256382656,   0.92736715510567,   0.92806898810783,   0.92908805311787,   0.93039301531247,
+   0.93194215914449,   0.93368469134975,   0.93556236248781,   0.93751135621784,   0.93946438637821,
+   0.94135293468239,   0.94310955670785,   0.94467018101252,   0.94597632576900,   0.94697715928785,
+   0.94763133515851,   0.94790853934551,   0.94779069524276,   0.94727278314801,   0.94636324255392,
+   0.94508393869381,   0.94346968852602,   0.94156735536265,   0.93943453520778,   0.93713787113164,
+   0.93475104425126,   0.93235250072533,   0.93002298325291,   0.92784294259746,   0.92588990940517,
+   0.92423590888613,   0.92294500068830,   0.92207102350523,   0.92165561868575,   0.92172659949879,
+   0.92229672296394,   0.92336290956911,   0.92490594309794,   0.92689066856720,   0.92926669134954,
+   0.93196956537344,   0.93492244330520,   0.93803814727657,   0.94122160546060,   0.94437258801850,
+   0.94738866600390,   0.95016830902312,   0.95261403205704,   0.95463549902499,   0.95615249051559,
+   0.95709764564320,   0.95741889315667,   0.95708149459414,   0.95606963223775,   0.95438748660080,
+   0.95205976184504,   0.94913163249466,   0.94566810066759,   0.94175276933707,   0.93748605340990,
+   0.93298286620382,   0.92836983378122,   0.92378210313208,   0.91935982201606,   0.91524437804093,
+   0.91157449200084,   0.90848226541450,   0.90608928445621,   0.90450288199946,   0.90381265630883,
+   0.90408733910995,   0.90537209750188,   0.90768634367826,   0.91102211398211,   0.91534306477258,
+   0.92058411731185,   0.92665176779672,   0.93342506219264,   0.94075721911367,   0.94847786806089,
+   0.95639585529698,   0.96430255588093,   0.97197561825935,   0.97918305760825,   0.98568760608377,
+   0.99125122245431,   0.99563966036629,   0.99862699379184,   1.00000000000000,   0.99956230460231,
+   0.99713819970126,   0.99257605471542,   0.98575124981431,   0.97656857377370,   0.96496404112995,
+   0.95090609741619,   0.93439619563701,   0.91546874161156,   0.89419042002261,   0.87065892660331,
+   0.84500114455045,   0.81737081468304,   0.78794575881674,   0.75692472409382,   0.72452392243909,
+   0.69097334380148,   0.65651292433973,   0.62138865122171,   0.58584868428573,   0.55013957156187,
+   0.51450263071820};
 
 using namespace casa;
 
@@ -122,19 +178,26 @@ namespace LOFAR
     */
     void BandpassCorrector::ProcessBaselineBand(Cube<Complex>* Timeslots,
                                                 Matrix<Complex>* Data,
-                                                int Position)
+                                                int Position, bool fixed)
     {
       for (int i = NumChannels-1; i >= 0; i--)
       {
         for (int j = NumPolarizations-1; j >= 0; j--)
-        { //we need to loop twice, once to determine FlagAllCorrelations
-          double MS = 0.0;
-          for (int k = 0; k < WindowSize; k++)
-          { //This might be faster in some other way ?
-            MS += abs((*Timeslots)(j, i, k));
+        {
+          if (fixed) // we should not do it down here, better is a separate function at the top, but this was easier to implement right now.
+          {
+            (*Data)(j, i) = (*Timeslots)(j, i, Position) / StaticBandpass[i];
           }
-          double RMS = MS / WindowSize;
-          (*Data)(j, i) = (*Timeslots)(j, i, Position) / RMS;
+          else
+          {
+            double MS = 0.0;
+            for (int k = 0; k < WindowSize; k++)
+            { //This might be faster in some other way ?
+              MS += abs((*Timeslots)(j, i, k));
+            }
+            double RMS = MS / WindowSize;
+            (*Data)(j, i) = (*Timeslots)(j, i, Position) / RMS;
+          }
         }
       }
     }
@@ -145,7 +208,7 @@ namespace LOFAR
     */
     void BandpassCorrector::ProcessTimeslot(TableIterator* write_iter,
                                             TableIterator* data_iter,
-                                            Int Position)
+                                            Int Position, bool fixed)
     {
       Table         DataTable = (*data_iter).table();
       int           rowcount = DataTable.nrow();
@@ -175,7 +238,7 @@ namespace LOFAR
             { //we skip bogus telescopes
               ProcessBaselineBand(&(TimeslotData[index]),
                                   &WriteData[index],
-                                  Position);
+                                  Position, fixed);
             }
           }
         }
@@ -245,7 +308,7 @@ namespace LOFAR
     //===============>>> BandpassCorrector::FlagDataOrBaselines  <<<===============
     /* This function iterates over the data per timeslot and uses Flagtimeslot()
       to actually flag datapoints (if flagDatapoints), and entire baselines (if flagRMS)*/
-    void BandpassCorrector::CorrectBandpass()
+    void BandpassCorrector::CorrectBandpass(bool fixed)
     {
       TableIterator timeslot_iter = (*MSfile).TimeslotIterator();
       TableIterator data_iter     = (*MSfile).TimeslotIterator();
@@ -271,11 +334,11 @@ namespace LOFAR
         if (TimeCounter == WindowSize - 1)
         { //We have filled WindowSize timeslots and need to flag the first WindowSize/2 timeslots
           for (int position = 0; position < WindowSize/2; position++)
-          { ProcessTimeslot(&write_iter, &data_iter, position);
+          { ProcessTimeslot(&write_iter, &data_iter, position, fixed);
           }
         }
         if (TimeCounter > WindowSize - 1) //nothing special just falg a timeslot
-        { ProcessTimeslot(&write_iter, &data_iter, (TimeCounter + WindowSize/2) % WindowSize);
+        { ProcessTimeslot(&write_iter, &data_iter, (TimeCounter + WindowSize/2) % WindowSize, fixed);
         }
         timeslot_iter++;
         if (row++ % step == 0) // to tell the user how much % we have processed,
@@ -284,7 +347,7 @@ namespace LOFAR
         if (timeslot_iter.pastEnd() || NewFieldorFreq)
         { //We still need to flag the last WindowSize/2 timeslots
           for (int position = WindowSize/2 + 1; position < WindowSize; position++)
-          { ProcessTimeslot(&write_iter, &data_iter, (TimeCounter + position) % WindowSize);
+          { ProcessTimeslot(&write_iter, &data_iter, (TimeCounter + position) % WindowSize, fixed);
           }
           TimeCounter = 0; //reset because we have changed to a new Field or frequency
         }
