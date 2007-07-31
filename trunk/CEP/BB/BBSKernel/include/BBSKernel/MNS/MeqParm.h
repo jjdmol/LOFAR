@@ -99,6 +99,7 @@ public:
 
   // Make the new value persistent (for the given domain).
   virtual void save();
+  virtual void save(size_t domainIndex);
 
   // Functions needed for MeqParmFunklet.
   // By default they throw an exception.
@@ -160,6 +161,8 @@ public:
     { return itsParmPtr->getFunklets(); }
   void save()
     { itsParmPtr->save(); }
+  void save(size_t domainIndex)
+    { itsParmPtr->save(domainIndex); }
   void update (const ParmData& values)
     { itsParmPtr->update (values); }
   void update (const vector<double>& value)

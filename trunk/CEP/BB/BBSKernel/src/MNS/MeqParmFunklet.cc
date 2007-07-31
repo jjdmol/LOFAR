@@ -409,5 +409,14 @@ void MeqParmFunklet::update(size_t domainIndex, size_t unknownIndex, const vecto
     itsFunklets[domainIndex]->update(unknownIndex, unknowns);
 }
 
+void MeqParmFunklet::save(size_t domainIndex)
+{
+  ASSERT(domainIndex < itsFunklets.size());
+  //itsTable->lock();
+  LOFAR::ParmDB::ParmValue pval = itsFunklets[domainIndex]->getParmValue();
+  itsTable->putValue(getName(), pval);
+  //itsTable->unlock();
+}
+
 } // namespace BBS
 } // namespace LOFAR

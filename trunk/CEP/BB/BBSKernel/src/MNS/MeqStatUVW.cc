@@ -31,10 +31,10 @@
 
 #include <measures/Measures/MBaseline.h>
 #include <measures/Measures/MEpoch.h>
-#include <measures/Measures/MCBaseline.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasFrame.h>
 #include <casa/Quanta/MVuvw.h>
+#include <stdint.h>
 
 using namespace casa;
 
@@ -62,11 +62,11 @@ MeqStatUVW::MeqStatUVW (MeqStation* station,
 }
 */
 
-
-MeqStatUVW::MeqStatUVW(MeqStation* station, const pair<double, double> &phaseCenter, const vector<double> &arrayPosition)
-: itsStation   (station),
-  itsPhaseCenter(MVDirection(phaseCenter.first, phaseCenter.second), MDirection::J2000),
-  itsArrayPosition(MVPosition(arrayPosition[0], arrayPosition[1], arrayPosition[2]), MPosition::ITRF),
+MeqStatUVW::MeqStatUVW(MeqStation *station, const casa::MDirection &phaseCenter,
+    const casa::MPosition &arrayPosition)
+    :   itsStation(station),
+        itsPhaseCenter(phaseCenter),
+        itsArrayPosition(arrayPosition),
   itsU         (0),
   itsV         (0),
   itsW         (0),
@@ -82,7 +82,7 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   double* uptr = itsU.setDoubleFormat (1, ntime);
   double* vptr = itsV.setDoubleFormat (1, ntime);
   double* wptr = itsW.setDoubleFormat (1, ntime);
-  
+
   //# Use the UVW coordinates if already calculated for a time.
   int ndone = 0;
   for (int i=0; i<ntime; ++i) {
@@ -100,59 +100,64 @@ void MeqStatUVW::calculate (const MeqRequest& request)
     itsLastReqId = request.getId();
     return;
   }
-  
+
   //# Calculate the other UVW coordinates using the AIPS++ code.
   //# First form the time-independent stuff.
   ASSERTSTR (itsStation, "UVW coordinates cannot be calculated");
-  
+
   //# Get station coordinates in ITRF coordinates
   MeqResult posx = itsStation->getPosX().getResult (request);
   MeqResult posy = itsStation->getPosY().getResult (request);
   MeqResult posz = itsStation->getPosZ().getResult (request);
-  
+
   LOG_TRACE_FLOW_STR ("posx" << posx.getValue());
   LOG_TRACE_FLOW_STR ("posy" << posy.getValue());
   LOG_TRACE_FLOW_STR ("posz" << posz.getValue());
-  
+
   //# Get position relative to center to keep values small.
 //#  const MVPosition& mvcpos = itsPhaseRef->earthPosition().getValue();
   const MVPosition& mvcpos = itsArrayPosition.getValue();
   MVPosition mvpos(posx.getValue().getDouble() - mvcpos(0),
                    posy.getValue().getDouble() - mvcpos(1),
                    posz.getValue().getDouble() - mvcpos(2));
-                   
-  MVBaseline mvbl(mvpos);
-  MBaseline mbl(mvbl, MBaseline::ITRF);
-  LOG_TRACE_FLOW_STR ("mbl " << mbl);
-  
-  Quantum<double> qepoch(0, "s");
-//# ?? qepoch.setValue(time(0)) ??
-  MEpoch mepoch(qepoch, MEpoch::UTC);
-//#  itsFrame.set (mepoch);
-  MeasFrame frame(itsArrayPosition);
-  frame.set(itsPhaseCenter);
-  frame.set(mepoch);
-  
+
+//  LOG_TRACE_FLOW_STR ("mbl " << mbl);
 //#  mbl.getRefPtr()->set(itsFrame);      // attach frame
-  mbl.getRefPtr()->set(frame);      // attach frame
-  
-  MBaseline::Convert mcvt(mbl, MBaseline::J2000);
-  
+
+
   for (int i=0; i<ntime; ++i) {
     double time = request.y(i);
+//    cout << "Time: " << setprecision(25) << time << endl;
     map<MeqTime,MeqUVW>::iterator pos = itsUVW.find (MeqTime(time));
     if (pos == itsUVW.end()) {
-      qepoch.setValue(time);
-      mepoch.set(qepoch);
+
+      Quantum<double> qepoch(time, "s");
+      MEpoch mepoch(qepoch, MEpoch::UTC);
+
+      MeasFrame frame(itsArrayPosition);
+      frame.set(itsPhaseCenter);
       frame.set(mepoch);
 
-      LOG_TRACE_FLOW_STR ("frame " << mbl.getRefPtr()->getFrame());
+//      cout << "Frame: " << setprecision(25) << frame << endl;
+//      LOG_TRACE_FLOW_STR ("frame " << mbl.getRefPtr()->getFrame());
 
+      MVBaseline mvbl(mvpos);
+//      cout << "mvbl: " << setprecision(25) << mvbl << endl;
+      MBaseline mbl(mvbl, MBaseline::ITRF);
+//      cout << "mbl: " << setprecision(25) << mbl << endl;
+      mbl.getRefPtr()->set(frame);      // attach frame
+//      cout << "mbl (after set frame): " << setprecision(25) << mbl << endl;
+      MBaseline::Convert mcvt(mbl, MBaseline::J2000);
+//      cout << "mcvt: " << setprecision(25) << mcvt << endl;
       const MVBaseline& bas2000 = mcvt().getValue();
-      LOG_TRACE_FLOW_STR (bas2000);
+//      cout << "bas2000: " << setprecision(25) << bas2000 << endl;
+
+//      LOG_TRACE_FLOW_STR (bas2000);
 //#      LOG_TRACE_FLOW_STR (itsPhaseRef->direction().getValue());
-      LOG_TRACE_FLOW_STR (itsPhaseCenter.getValue());
+//      LOG_TRACE_FLOW_STR (itsPhaseCenter.getValue());
 //#      MVuvw uvw2000 (bas2000, itsPhaseRef->direction().getValue());
+
+
       MVuvw uvw2000 (bas2000, itsPhaseCenter.getValue());
 
       const Vector<double>& xyz = uvw2000.getValue();
@@ -161,6 +166,15 @@ void MeqStatUVW::calculate (const MeqRequest& request)
       *uptr++ = xyz(0);
       *vptr++ = xyz(1);
       *wptr++ = xyz(2);
+/*
+      cout << "Baseline: " << hex
+<< *reinterpret_cast<unsigned long long int*>(const_cast<double*>(&(xyz(0))))
+<< " " << hex
+<< *reinterpret_cast<unsigned long long int*>(const_cast<double*>(&(xyz(1))))
+<< " " << hex
+<< *reinterpret_cast<unsigned long long int*>(const_cast<double*>(&(xyz(2))))
+<< dec << endl;
+*/
       // Save the UVW coordinates in the map.
       itsUVW[MeqTime(time)] = MeqUVW(xyz(0), xyz(1), xyz(2));
     }
@@ -168,6 +182,13 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   LOG_TRACE_FLOW_STR ('U' << itsU.getValue());
   LOG_TRACE_FLOW_STR ('V' << itsV.getValue());
   LOG_TRACE_FLOW_STR ('W' << itsW.getValue());
+
+/*
+  cout << "Station: " << itsStation->getName() << endl;
+  cout << "U: " << setprecision(25) << itsU.getValue() << endl;
+  cout << "V: " << setprecision(25) << itsV.getValue() << endl;
+  cout << "W: " << setprecision(25) << itsW.getValue() << endl;
+*/
   itsLastReqId = request.getId();
 }
 

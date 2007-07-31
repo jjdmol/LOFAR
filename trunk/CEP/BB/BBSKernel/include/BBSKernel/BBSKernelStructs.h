@@ -26,9 +26,12 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_iosfwd.h>
+#include <utility>
 
 namespace LOFAR
 {
+  using std::pair;
+
   //# Forward declarations
   class BlobIStream;
   class BlobOStream;
@@ -79,7 +82,7 @@ namespace LOFAR
       Baselines         baselines;
       Correlation       correlation;
       vector<string>    sources;
-      vector<string>    instrumentModel;    
+      vector<string>    instrumentModel;
     };
 
 
@@ -103,9 +106,9 @@ namespace LOFAR
 
     struct GenerateContext: Context
     {
-      vector<string>    unknowns;
-      vector<string>    excludedUnknowns;
-      vector<MeqDomain> solveDomains;
+      vector<string>        unknowns;
+      vector<string>        excludedUnknowns;
+      pair<size_t, size_t>  domainSize;
     };
 
     // I/O stream methods

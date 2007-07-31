@@ -56,7 +56,8 @@ public:
   MeqStatUVW() {};
 
 //#   MeqStatUVW (MeqStation*, const MeqPhaseRef*);
-  MeqStatUVW(MeqStation* station, const pair<double, double> &phaseCenter, const vector<double> &arrayPosition);
+  MeqStatUVW(MeqStation *station, const casa::MDirection &phaseCenter,
+    const casa::MPosition &arrayPosition);
 
   void calculate (const MeqRequest&);
 

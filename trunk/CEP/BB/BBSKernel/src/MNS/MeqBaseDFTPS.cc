@@ -23,8 +23,11 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/MNS/MeqBaseDFTPS.h>
+#include <BBSKernel/MNS/MeqDFTPS.h>
+#include <BBSKernel/MNS/MeqStatUVW.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 
 using namespace casa;
 
@@ -105,20 +108,28 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
   // complex numbers which can be turned into a cheaper multiplication.
   //  exp(x)/exp(y) = (cos(x) + i.sin(x)) / (cos(y) + i.sin(y))
   //                = (cos(x) + i.sin(x)) * (cos(y) - i.sin(y))
-    {
-      //const MeqResult& ul = itsLeft->uvw().getU(request);
-      //const MeqResult& vl = itsLeft->uvw().getV(request);
-      //const MeqResult& wl = itsLeft->uvw().getW(request);
-      //const MeqResult& ur = itsRight->uvw().getU(request);
-      //const MeqResult& vr = itsRight->uvw().getV(request);
-      //const MeqResult& wr = itsRight->uvw().getW(request);
-      //cout << "U: " << ur.getValue() - ul.getValue() << endl;
-      //cout << "V: " << vr.getValue() - vl.getValue() << endl;
-      //cout << "W: " << wr.getValue() - wl.getValue() << endl;
-      //LOG_TRACE_FLOW ("U: " << ur.getValue() - ul.getValue());
-      //LOG_TRACE_FLOW ("V: " << vr.getValue() - vl.getValue());
-      //LOG_TRACE_FLOW ("W: " << wr.getValue() - wl.getValue());
-    }
+/*    {
+
+      MeqDFTPS *dftpsl = dynamic_cast<MeqDFTPS*>(itsLeft.rep());
+      MeqDFTPS *dftpsr = dynamic_cast<MeqDFTPS*>(itsRight.rep());
+
+      const MeqResult& ul = dftpsl->uvw()->getU(request);
+      const MeqResult& vl = dftpsl->uvw()->getV(request);
+      const MeqResult& wl = dftpsl->uvw()->getW(request);
+      const MeqResult& ur = dftpsr->uvw()->getU(request);
+      const MeqResult& vr = dftpsr->uvw()->getV(request);
+      const MeqResult& wr = dftpsr->uvw()->getW(request);
+      cout << "U: " << setprecision(20) << ur.getValue() - ul.getValue()
+        << endl;
+      cout << "V: " << setprecision(20) << vr.getValue() - vl.getValue()
+        << endl;
+      cout << "W: " << setprecision(20) << wr.getValue() - wl.getValue()
+        << endl;*/
+//      LOG_TRACE_FLOW ("U: " << ur.getValue() - ul.getValue());
+//      LOG_TRACE_FLOW ("V: " << vr.getValue() - vl.getValue());
+//      LOG_TRACE_FLOW ("W: " << wr.getValue() - wl.getValue());
+//     }
+
   MeqMatrix res(makedcomplex(0,0), request.nx(), request.ny(), false);
   for (int iy=0; iy<request.ny(); ++iy) {
     dcomplex tmpl = left.getValue().getDComplex(0,iy);
@@ -126,7 +137,8 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
     // We have to divide by N.
     // However, we divide by 2N to get the factor 0.5 needed in (I+Q)/2, etc.
     // in MeqBaseLinPS.
-    double tmpnk = 2. * nk.getValue().getDouble(0,iy);
+//    double tmpnk = 2. * nk.getValue().getDouble(0,iy);
+    double tmpnk = 2.0;
     dcomplex factor;
     if (multFreq) {
       dcomplex deltal = leftDelta.getValue().getDComplex(0,iy);
@@ -136,6 +148,9 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
     res.fillRowWithProducts (tmpr * conj(tmpl) / tmpnk, factor, iy);
   }
   result.setValue (res);
+
+//  cout << "DFT:" << endl;
+//  cout << setprecision(20) << res << endl;
 
   // Evaluate (if needed) for the perturbed parameter values.
   // Note that we do not have to test for perturbed values in nk,
@@ -155,7 +170,8 @@ MeqResult MeqBaseDFTPS::getResult (const MeqRequest& request)
       for (int iy=0; iy<request.ny(); ++iy) {
     dcomplex tmpl = left.getPerturbedValue(spinx).getDComplex(0,iy);
     dcomplex tmpr = right.getPerturbedValue(spinx).getDComplex(0,iy);
-    double tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble(0,iy);
+//    double tmpnk = 2. * nk.getPerturbedValue(spinx).getDouble(0,iy);
+    double tmpnk = 2.0;
     dcomplex factor;
     if (multFreq) {
       dcomplex deltal = leftDelta.getPerturbedValue(spinx).getDComplex(0,iy);

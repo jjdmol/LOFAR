@@ -261,11 +261,12 @@ void MeqExprRep::writeExpressionGraph(std::ostream &os)
 {
     os << "id" << std::hex << this << " [label=\"" << getLabel() << "\"];" << std::endl;
 
-    std::vector<MeqExprRep*>::const_iterator it;
+    std::vector<MeqExpr>::iterator it;
     for(it = itsChildren.begin(); it != itsChildren.end(); ++it)
     {
-          os << "id" << std::hex << (*it) << " -> " << "id" << std::hex << this << ";" << std::endl;
-          (*it)->writeExpressionGraph(os);
+          os << "id" << std::hex << it->rep() << " -> " << "id" << std::hex
+            << this << ";" << std::endl;
+          it->writeExpressionGraph(os);
     }
 }
 #endif

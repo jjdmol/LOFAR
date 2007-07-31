@@ -66,6 +66,9 @@ int MeqParm::initDomain (const vector<MeqDomain>&, int&, vector<int>&)
 void MeqParm::save()
 {}
 
+void MeqParm::save(size_t domainIndex)
+{}
+
 void MeqParm::update (const ParmData&)
 {
   throw Exception("MeqParm::update ParmData should not be called");

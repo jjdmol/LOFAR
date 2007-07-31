@@ -52,8 +52,21 @@
 #include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/MVTime.h>
+//#include <casa/Quanta/Quantum.h>
+//#include <casa/Quanta/MVTime.h>
+
+#if 0
+#define NONREADY        casa::LSQFit::NONREADY
+#define SOLINCREMENT    casa::LSQFit::SOLINCREMENT
+#define DERIVLEVEL      casa::LSQFit::DERIVLEVEL
+#define N_ReadyCode     casa::LSQFit::N_ReadyCode
+#else
+#define NONREADY        0
+#define SOLINCREMENT    1
+#define DERIVLEVEL      2
+#define N_ReadyCode     999
+#endif
+
 
 namespace LOFAR
 {
@@ -73,20 +86,6 @@ CommandExecutor::~CommandExecutor()
 }
 
 
-bool CommandExecutor::convertTime(string in, double &out)
-{
-    //# TODO: Convert from default epoch to MS epoch (as it may differ from 
-    //# the default!)
-    casa::Quantum<casa::Double> time;
-
-    if(in.empty() || !casa::MVTime::read(time, in))
-        return false;
-
-    out = static_cast<double>(time.getValue("s"));
-    return true;
-}
-
-
 void CommandExecutor::visit(const InitializeCommand &/*command*/)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
@@ -98,72 +97,48 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
 
     try
     {
-        //# Create a new kernel.
+        // Create a new kernel.
         itsKernel.reset(new Prediffer(strategy->dataSet(),
+//            strategy->subband(),
+            0,
             strategy->inputData(),
             strategy->parmDB().localSky,
             strategy->parmDB().instrument,
             strategy->parmDB().history,
-            0,
+//            strategy->readUVW()));
             false));
     }
-    catch(Exception& e)
+    catch(Exception &ex)
     {
-        LOG_WARN_STR(e);
+        // TODO: get exception msg and put into result msg.
+        itsResult = CommandResult(CommandResult::ERROR, "Could not create"
+            " kernel.");
     }
 
-    //# Select stations and correlations.
-    if(!itsKernel->setSelection(strategy->stations(), strategy->correlation()))
-    {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Data selection is empty.");
-        return;
-    }
-
-    //# Store chunk size.
-    itsChunkSize = strategy->domainSize().timeInterval;
-
-    LOG_DEBUG_STR("ChunkSize: " << itsChunkSize);
-
-    //# Get Region Of Interest.
+    // Create selection from information in strategy.
     RegionOfInterest roi = strategy->regionOfInterest();
+    Correlation correlation = strategy->correlation();
 
-    //# Get Local Data Domain.
-    MeqDomain ldd = itsKernel->getLocalDataDomain();
+    VisSelection selection;
+    if(!strategy->stations().empty())
+        selection.setStations(strategy->stations());
 
-    //# Parse and validate time selection.
-    bool start = false, end = false;
+    if(!correlation.type.empty())
+        selection.setCorrelations(correlation.type);
 
-    start = (roi.time.size() >= 1) && convertTime(roi.time[0], itsROITime[0]);
-    end = (roi.time.size() >= 2) && convertTime(roi.time[1], itsROITime[1]);
-
-    if(start && end && itsROITime[0] > itsROITime[1])
+    if(correlation.selection == "AUTO")
     {
-        LOG_WARN("Specified start/end times are incorrect; All times will" 
-            " be selected.");
-        start = end = false;
+        selection.setBaselineFilter(VisSelection::AUTO);
     }
+    else if(correlation.selection == "CROSS")
+    {
+        selection.setBaselineFilter(VisSelection::CROSS);
+    }
+    itsKernel->setSelection(selection);
 
-    if(!start || itsROITime[0] <= ldd.startY())
-        itsROITime[0] = ldd.startY();
-
-    if(!end || itsROITime[1] >= ldd.endY())
-        itsROITime[1] = ldd.endY();
-
-    //# Get frequency (channel) selection.
-    itsROIFrequency[0] = itsROIFrequency[0] = -1;
-    if(roi.frequency.size() >= 1)
-        itsROIFrequency[0] = roi.frequency[0];
-    if(roi.frequency.size() >= 2)
-        itsROIFrequency[1] = roi.frequency[1];
-
-    //# Reset chunk iteration.
-    itsChunkPosition = itsROITime[0];
-
-    LOG_DEBUG_STR("Region Of Interest:" << endl
-        << "  + Channels: " << itsROIFrequency[0] << " - " << itsROIFrequency[1]
-        << endl
-        << "  + Time:     " << itsROITime[0] << " - " << itsROITime[1] << endl);
+    size_t size = strategy->domainSize().timeInterval;
+    LOG_DEBUG_STR("Chunk size: " << size << " timeslot(s)");
+    itsKernel->setChunkSize(size);
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
@@ -186,33 +161,14 @@ void CommandExecutor::visit(const NextChunkCommand &/*command*/)
 
     LOG_DEBUG("Handling a NextChunkCommand");
 
-    //# Iteration should be moved to the kernel code. Ideally, we would only 
-    //# issue an itsKernel->nextChunk() here. However, as this is entangled with 
-    //# the new MS interface, we'll emulate it by setting a new local work 
-    //# domain for now.
-    if(itsChunkPosition >= itsROITime[1])
+    if(itsKernel->nextChunk())
     {
-        LOG_DEBUG_STR("NextChunk: OUT_OF_DATA");
-        itsResult = CommandResult(CommandResult::OUT_OF_DATA);
-        return;
-    }
-
-    double size = itsChunkSize;
-    if(itsChunkPosition + itsChunkSize > itsROITime[1])
-        size = itsROITime[1] - itsChunkPosition;
-
-    if(!itsKernel->setWorkDomain(static_cast<int>(itsROIFrequency[0]),
-        static_cast<int>(itsROIFrequency[1]),
-        itsChunkPosition,
-        size))
-    {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Could not set work domain.");
+        itsResult = CommandResult(CommandResult::OK, "Ok.");
     }
     else
     {
-        itsChunkPosition += itsChunkSize;
-        itsResult = CommandResult(CommandResult::OK, "Ok.");
+        LOG_DEBUG_STR("NextChunk: OUT_OF_DATA");
+        itsResult = CommandResult(CommandResult::OUT_OF_DATA);
     }
 }
 
@@ -280,7 +236,7 @@ void CommandExecutor::visit(const BBSPredictStep &command)
     }
 
     // Execute predict.
-    itsKernel->predictVisibilities();
+    itsKernel->predict();
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -310,7 +266,7 @@ void CommandExecutor::visit(const BBSSubtractStep &command)
     }
 
     // Execute subtract.
-    itsKernel->subtractVisibilities();
+    itsKernel->subtract();
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -340,7 +296,7 @@ void CommandExecutor::visit(const BBSCorrectStep &command)
     }
 
     // Execute correct.
-    itsKernel->correctVisibilities();
+    itsKernel->correct();
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -365,50 +321,23 @@ void CommandExecutor::visit(const BBSSolveStep &command)
     context.unknowns = command.parms();
     context.excludedUnknowns = command.exclParms();
 
-    // Create solve domains. For now this just splits the work domain in a
-    // rectangular grid, with cells of size command.itsDomainSize. Should 
-    // become more interesting in the near future.
-    const MeqDomain &workDomain = itsKernel->getWorkDomain();
+/*
+    pair<size_t, size_t> domainSize(command.domainSize().bandWidth,
+        command.domainSize().timeInterval);
 
-    const int freqCount = (int) ceil((workDomain.endX() -
-        workDomain.startX()) / command.domainSize().bandWidth);
-    const int timeCount = (int) ceil((workDomain.endY() -
-        workDomain.startY()) / command.domainSize().timeInterval);
-
-    double timeOffset = workDomain.startY();
-    double timeSize = command.domainSize().timeInterval;
-
-    int time = 0;
-    while(time < timeCount)
+    if (domainSize.first != 0)
     {
-        double freqOffset = workDomain.startX();
-        double freqSize = command.domainSize().bandWidth;
-
-        if(timeOffset + timeSize > workDomain.endY())
-        {
-            timeSize = workDomain.endY() - timeOffset;
-        }
-
-        int freq = 0;
-        while(freq < freqCount)
-        {
-            if(freqOffset + freqSize > workDomain.endX())
-            {
-                freqSize = workDomain.endX() - freqOffset;
-            }
-
-            context.solveDomains.push_back(MeqDomain(freqOffset,
-                freqOffset + freqSize,
-                timeOffset,
-                timeOffset + timeSize));
-
-            freqOffset += freqSize;
-            freq++;
-        }
-
-        timeOffset += timeSize;
-        time++;
+        LOG_WARN_STR("Subdividing in frequency not support yet; setting"
+            " will be ignored.");
+        domainSize.first = 0;
     }
+
+    context.domainSize = domainSize;
+*/
+
+    LOG_WARN_STR("Subdivision specfication not yet implemented; using domains"
+        " of 1 timeslot.");
+    context.domainSize = make_pair(0, 1);
 
     // Set context.
     if(!itsKernel->setContext(context))
@@ -418,154 +347,198 @@ void CommandExecutor::visit(const BBSSolveStep &command)
         return;
     }
 
-    // Register all solve domains with the solver.
-    BlobStreamableVector<DomainRegistrationRequest> request;
+    // Get domain descriptors.
     const vector<SolveDomainDescriptor> &descriptors =
         itsKernel->getSolveDomainDescriptors();
-    for(size_t i = 0; i < descriptors.size(); ++i)
+
+    size_t blockSize = 1;
+    size_t nBlocks =
+        ceil(descriptors.size() / static_cast<double>(blockSize));
+
+    vector<double> solution(descriptors.front().unknowns);
+    vector<casa::LSQFit> solvers(blockSize);
+    size_t convergedTotal = 0, stoppedTotal = 0;
+    for(size_t block = 0; block < nBlocks; ++block)
     {
-        request.getVector().push_back(new DomainRegistrationRequest(
-            i,
-            command.epsilon(),
-            command.maxIter(),
-            descriptors[i].unknowns));
-    }
-    itsSolverConnection->sendObject(request);
+        pair<size_t, size_t> domainRange(block * blockSize,
+            (block + 1) * blockSize - 1);
+        if(domainRange.second >= descriptors.size())
+            domainRange.second = descriptors.size() - 1;
+        size_t nDomains = domainRange.second - domainRange.first + 1;
 
-    // Main iteration loop.
-    bool finished = false;
-    unsigned int iteration = 1;
-    while(!finished)
-    {
-        LOG_DEBUG_STR("[START] Iteration: " << iteration);
+        LOG_DEBUG_STR("Processing domain(s) " << domainRange.first << " - "
+            << domainRange.second << " (" << descriptors.size()
+            << " domain(s) in total)");
+        LOG_DEBUG_STR("Initial values: " << solution);
 
-        LOG_DEBUG_STR("[START] Generating normal equations...");
-        timer.reset();
-        timer.start();
-
-        // Generate normal equations.
-        vector<casa::LSQFit> equations;
-        itsKernel->generateEquations(equations);
-
-        timer.stop();
-        LOG_DEBUG_STR("[END  ] Generating normal equations; " << timer);
-
-        LOG_DEBUG_STR("[START] Sending equations to solver and waiting for"
-            " results...");
-        timer.reset();
-        timer.start();
-
-        // Send iteration requests to the solver in one go.
-        BlobStreamableVector<IterationRequest> iterationRequests;
-        for(size_t i = 0; i < equations.size(); ++i)
+        // Register all solve domains with the solver.
+        BlobStreamableVector<DomainRegistrationRequest> request;
+        for(size_t i = domainRange.first; i <= domainRange.second; ++i)
         {
-            iterationRequests.getVector().push_back(new IterationRequest(i,
-                equations[i]));
+            itsKernel->updateSolvableParms(i, solution);
+            request.getVector().push_back(new DomainRegistrationRequest(i,
+                solution,
+                command.maxIter(),
+                command.epsilon()));
         }
-        itsSolverConnection->sendObject(iterationRequests);
+        itsSolverConnection->sendObject(request);
 
-        BlobStreamableVector<IterationResult> *resultv =
-            dynamic_cast<BlobStreamableVector<IterationResult>*>(
-                itsSolverConnection->recvObject());
-        ASSERT(resultv);
-
-        timer.stop();
-        LOG_DEBUG_STR("[END ] Sending/waiting; " << timer);
-
-        LOG_DEBUG_STR("[START] Processing results...");
-        timer.reset();
-        timer.start();
-
-        const vector<IterationResult*> &results = resultv->getVector();
-
-
-        // For each solve domain:
-        //     - wait for result
-        //     - check for convergence
-        //     - update cached values of the unknowns
-        unsigned int converged = 0/*, stopped = 0*/;
-        for(size_t i = 0; i < results.size(); ++i)
+        // Main iteration loop.
+        bool finished = false;
+        size_t iteration = 1, converged = 0, stopped = 0;
+        while(!finished)
         {
-            const IterationResult *result = results[i];
+            LOG_DEBUG_STR("[START] Iteration: " << iteration);
+            LOG_DEBUG_STR("[START] Generating normal equations...");
+            timer.reset();
+            timer.start();
 
-            // Check for convergence.
-            if(result->getResultCode() != 0)
-                converged++;
+            // Generate normal equations.
+            itsKernel->generate(make_pair(0, domainRange.first),
+                make_pair(0, domainRange.second), solvers);
 
-//                if(result->getResultCode() != casa::LSQFit::NONREADY)
-//                {
-//                    if(result->getResultCode() == casa::LSQFit::SOLINCREMENT
-//||
-//                        result->getResultCode() == casa::LSQFit::DERIVLEVEL)
-//                    {
-//                        converged++;
-//                    }
-//                    else
-//                        stopped++;
-//                }
+            timer.stop();
+            LOG_DEBUG_STR("[ END ] Generating normal equations; " << timer);
 
-//                LOG_DEBUG_STR("+ Domain: " << result->getDomainIndex());
-                //LOG_DEBUG_STR("  + result: " << result->getResultCode() <<
-                //              ", " << result->getResultText());
-//                LOG_DEBUG_STR("  + rank: " << result->getRank() <<
-//                            ", chi^2: " << result->getChiSquared() <<
-//                            ", LM factor: " << result->getLMFactor());
-//                LOG_DEBUG_STR("  + unknowns: " << result->getUnknowns());
 
-            if(result->getResultCode() != 2)
+            LOG_DEBUG_STR("[START] Sending equations to solver and waiting"
+                " for results...");
+            timer.reset();
+            timer.start();
+
+            // Send iteration requests to the solver in one go.
+            BlobStreamableVector<IterationRequest> iterationRequests;
+            for(size_t i = 0; i < nDomains; ++i)
             {
-#ifdef LOG_SOLVE_DOMAIN_STATS
-                LOG_DEBUG_STR("Domain: " << result->getDomainIndex()
-                    << ", Rank: " << result->getRank()
-                    << ", Chi^2: " << result->getChiSquared()
-                    << ", LM factor: " << result->getLMFactor());
-#endif
-                // Update cached values of the unknowns.
-                itsKernel->updateSolvableParms(i, result->getUnknowns());
-
-                // Log the updated unknowns.
-                itsKernel->logIteration(
-                    command.getName(),
-                    i,
-                    result->getRank(),
-                    result->getChiSquared(),
-                    result->getLMFactor());
+                iterationRequests.getVector().push_back(
+                    new IterationRequest(domainRange.first + i,
+                        solvers[i]));
             }
+            itsSolverConnection->sendObject(iterationRequests);
+
+            BlobStreamableVector<IterationResult> *resultv =
+                dynamic_cast<BlobStreamableVector<IterationResult>*>(
+                    itsSolverConnection->recvObject());
+
+            ASSERT(resultv);
+
+            timer.stop();
+            LOG_DEBUG_STR("[ END ] Sending/waiting; " << timer);
+
+            LOG_DEBUG_STR("[START] Processing results...");
+            timer.reset();
+            timer.start();
+
+            const vector<IterationResult*> &results = resultv->getVector();
+
+            // For each solve domain:
+            //     - check for convergence
+            //     - update cached values of the unknowns
+            converged = stopped = 0;
+            for(size_t i = 0; i < results.size(); ++i)
+            {
+                const IterationResult *result = results[i];
+                size_t resultCode = result->getResultCode();
+
+                if(resultCode == NONREADY)
+                {
+                    // Update cached values of the unknowns.
+                    itsKernel->updateSolvableParms(
+                        result->getDomainIndex(),
+                        result->getUnknowns());
+/*
+                    // Log the updated unknowns.
+                    itsKernel->logIteration(
+                        command.getName(),
+                        startDomain + i,
+                        result->getRank(),
+                        result->getChiSquared(),
+                        result->getLMFactor());
+*/
+
 #ifdef LOG_SOLVE_DOMAIN_STATS
-            else
-                LOG_DEBUG_STR("Domain: " << result->getDomainIndex()
-                    << " - Already converged");
+                    LOG_DEBUG_STR("Domain: " << result->getDomainIndex()
+                        << ", Rank: " << result->getRank()
+                        << ", Chi^2: " << result->getChiSquared()
+                        << ", LM factor: " << result->getLMFactor()
+                        << ", Message: " << result->getResultText());
 #endif
+                }
+                else if(resultCode == SOLINCREMENT
+                        || resultCode == DERIVLEVEL
+                        || resultCode == N_ReadyCode)
+                {
+                    converged++;
+                }
+                else
+                {
+                    stopped++;
+                }
+            }
+
+            if(results.back()->getResultCode() == NONREADY)
+            {
+                // Save solution of last solve domain in this block.
+                solution = results.back()->getUnknowns();
+            }
+
+            delete resultv;
+
+            timer.stop();
+            LOG_DEBUG_STR("[ END ] Processing results; " << timer);
+
+            LOG_DEBUG_STR("[ END ] Iteration: " << iteration);
+
+
+            ostringstream oss;
+            oss << "Block statistics: " << endl;
+            oss << "    converged: " << converged << "/" << nDomains
+                << " (" << (((double) converged) / nDomains * 100.0) << "%)"
+                << endl;
+            oss << "    stopped  : " << stopped << "/" << nDomains
+                << " (" << (((double) stopped) / nDomains * 100.0) << "%)";
+            LOG_DEBUG(oss.str());
+            //finished = (converged + stopped ==
+            // context.solveDomains.size()) || (converged>=
+            //(command.minConverged() *
+            //context.solveDomains.size()) / 100.0);
+
+            finished = ((converged + stopped) == nDomains)
+                || (iteration == command.maxIter());
+            iteration++;
         }
+
+        convergedTotal += converged;
+        stoppedTotal += stopped;
+
+        ostringstream oss;
+        oss << "Global statistics: " << endl;
+        oss << "    converged: " << convergedTotal << "/"
+            << descriptors.size() << " ("
+            << (((double) convergedTotal) / descriptors.size() * 100.0)
+            << "%)" << endl;
+        oss << "    stopped  : " << stoppedTotal << "/"
+            << descriptors.size() << " ("
+            << (((double) stoppedTotal) / descriptors.size() * 100.0)
+            << "%)";
+        LOG_DEBUG(oss.str());
+
+        LOG_DEBUG_STR("[START] Writing solutions into parameter"
+            " databases...");
+        timer.reset();
+        timer.start();
+
+        for(size_t i = domainRange.first; i <= domainRange.second; ++i)
+        {
+            itsKernel->writeParms(i);
+        }
+
         timer.stop();
-        LOG_DEBUG_STR("[END  ] Processing results; " << timer);
-
-        LOG_DEBUG_STR("[END  ] Iteration: " << iteration
-            << ", Solve domains converged: " << converged << "/"
-            << context.solveDomains.size()
-            << " (" << (((double) converged) / context.solveDomains.size() *
-            100.0) << "%)");
-        //LOG_INFO_STR("Solve domains stopped: " << stopped << "/" <<
-        //context.solveDomains.size() << " (" << (((double) stopped) /
-        //context.solveDomains.size() * 100.0) << "%)");
-
-        delete resultv;
-        //finished = (converged + stopped == context.solveDomains.size()) ||
-        //    (converged>= (command.minConverged() *
-        //      context.solveDomains.size()) / 100.0);
-        finished = (converged == context.solveDomains.size())
-            || (iteration == command.maxIter());
-        iteration++;
+        LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
     }
 
-    LOG_DEBUG_STR("[START] Writing solutions into parameter databases...");
-    timer.reset();
-    timer.start();
-
-    itsKernel->writeParms();
-
-    timer.stop();
-    LOG_DEBUG_STR("[END  ] Writing solutions; " << timer);
+    // Try to force log4cplus to flush its buffers.
+    cout << "DONE." << endl;
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }

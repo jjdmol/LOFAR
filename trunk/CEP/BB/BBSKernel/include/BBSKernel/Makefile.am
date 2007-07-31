@@ -1,20 +1,16 @@
 pkginclude_MNSdir = $(pkgincludedir)/MNS
 
 pkginclude_HEADERS =		\
+	Axis.h			\
 	BBSKernelStructs.h	\
 	BBSStatus.h		\
 	Exceptions.h		\
-	FlagsMap.h		\
-	MMap.h			\
-	MMapMSInfo.h		\
-	ParmData.h		\
-	ParmWriter.h		\
+	Measurement.h		\
+	MeasurementAIPS.h	\
+	Model.h			\
 	Prediffer.h		\
-	Quality.h		\
-	SolveProp.h		\
-	Solver.h		\
-	StepProp.h		\
-	StrategyProp.h
+	VisData.h		\
+	VisSelection.h
 
 pkginclude_MNS_HEADERS	= 	\
 	MNS/MeqBaseDFTPS.h	\
@@ -29,12 +25,12 @@ pkginclude_MNS_HEADERS	= 	\
 	MNS/MeqJonesCMul3.h	\
 	MNS/MeqJonesExpr.h	\
 	MNS/MeqJonesInvert.h	\
-	MNS/MeqJonesMMap.h	\
 	MNS/MeqJonesMul2.h	\
 	MNS/MeqJonesMul3.h	\
 	MNS/MeqJonesNode.h	\
 	MNS/MeqJonesResult.h	\
 	MNS/MeqJonesSum.h	\
+	MNS/MeqJonesVisData.h	\
 	MNS/MeqLMN.h		\
 	MNS/MeqMatrixComplexArr.h \
 	MNS/MeqMatrixComplexSca.h \

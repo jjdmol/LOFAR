@@ -35,7 +35,7 @@ MeqRequestId MeqRequest::theirRequestId = 0;
 
 MeqRequest::MeqRequest (const MeqDomain& domain, int nx, int ny, int nrSpid)
 : itsRequestId (theirRequestId++),
-  itsFirstX    (0),
+  itsOffset    (0, 0),
   itsSourceNr  (0),
   itsNspids    (nrSpid)
 {
@@ -46,7 +46,7 @@ MeqRequest::MeqRequest (const MeqDomain& domain, int nx,
 			const vector<double>& y,
 			int nrSpid)
 : itsRequestId (theirRequestId++),
-  itsFirstX    (0),
+  itsOffset    (0, 0),
   itsSourceNr  (0),
   itsNspids    (nrSpid)
 {
@@ -57,7 +57,7 @@ MeqRequest::MeqRequest (const MeqRequest& req,
 			uint stx, uint nrx, uint sty, uint nry)
 : itsRequestId (req.itsRequestId),
   itsStepX     (req.itsStepX),
-  itsFirstX    (req.itsFirstX),
+  itsOffset    (req.itsOffset),
   itsSourceNr  (req.itsSourceNr),
   itsNspids    (req.itsNspids)
 {
@@ -78,7 +78,7 @@ MeqRequest::MeqRequest (const MeqRequest& req)
   itsStepX     (req.itsStepX),
   itsY         (req.itsY),
   itsYP        (req.itsYP),
-  itsFirstX    (req.itsFirstX),
+  itsOffset    (req.itsOffset),
   itsSourceNr  (req.itsSourceNr),
   itsNspids    (req.itsNspids)
 {
@@ -97,7 +97,7 @@ MeqRequest& MeqRequest::operator= (const MeqRequest& req)
     itsStepX     = req.itsStepX;
     itsY         = req.itsY;
     itsYP        = req.itsYP;
-    itsFirstX    = req.itsFirstX;
+    itsOffset    = req.itsOffset;
     itsSourceNr  = req.itsSourceNr;
     itsNspids    = req.itsNspids;
     if (itsY.size() > 0) {
