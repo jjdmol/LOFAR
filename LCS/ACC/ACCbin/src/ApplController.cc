@@ -263,7 +263,7 @@ void ApplController::createParSubsets()
 		// by a python script, for final LOFAR we need to do this in SAS.
 		if (procPrefix == "InputAppl.Transpose") {
 			LOG_DEBUG("CS1_SPECIAL: calling prepare_CS1_InputSection.py");
-			string	command("/opt/lofar/bin/prepare_CS1_InputSection.py --parsetfile " + itsObsPSfilename);
+			string	command("/opt/lofar/bin/prepare_CS1_InputSection.py --parsetfile=" + itsObsPSfilename);
 			nrProcs = system(command.c_str())/256;
 			LOG_DEBUG_STR("nrOfProcesses calculated by script = " << nrProcs);
 		}
