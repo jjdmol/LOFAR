@@ -263,7 +263,8 @@ void ApplController::createParSubsets()
 		// by a python script, for final LOFAR we need to do this in SAS.
 		if (procPrefix == "InputAppl.Transpose") {
 			LOG_DEBUG("CS1_SPECIAL: calling prepare_CS1_InputSection.py");
-			nrProcs = system("/opt/lofar/bin/prepare_CS1_InputSection.py")/256;
+			string	command("/opt/lofar/bin/prepare_CS1_InputSection.py --parsetfile " + itsObsPSfilename);
+			nrProcs = system(command.c_str())/256;
 			LOG_DEBUG_STR("nrOfProcesses calculated by script = " << nrProcs);
 		}
         
@@ -438,6 +439,9 @@ void ApplController::startCmdState()
 	case StateInitController:
 		// read in the Application Parameter file
 		itsObsParamSet->adoptFile(itsCurACMsg->getOptions());// May throw
+		// CS1_HACK save name of parameterfile
+		itsObsPSfilename = itsCurACMsg->getOptions();
+		LOG_DEBUG_STR("Observation parsetfilename=" << itsObsPSfilename);
 		// StateEngine needs to know the timeout values for the states
 		itsStateEngine->init(itsObsParamSet);
 		itsStateEngine->ready();				// report this state is ready.
@@ -454,7 +458,7 @@ void ApplController::startCmdState()
 		// the incomming acks decide the result of the start action
 		break;
 	case StateKillAppl:
-		sleep (10);								// give procs some extra time
+		sleep (5);								// give procs some extra time
 		itsProcRuler.stopAll();
 		itsStateEngine->ready();				// report this state is ready.
 		break;

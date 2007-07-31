@@ -111,6 +111,9 @@ private:
 	ProcRuler			itsProcRuler;		// Starts/stops all AP's
 
 	uint16				itsNrOfProcs;		// Nr of processes to manage.
+
+	// TODO: REMOVE THIS CS1 HACK
+	string				itsObsPSfilename;	// name of observation parameterset.
 };
 
 // @} addgroup
