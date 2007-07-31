@@ -267,6 +267,15 @@ void ApplController::createParSubsets()
 			nrProcs = system(command.c_str())/256;
 			LOG_DEBUG_STR("nrOfProcesses calculated by script = " << nrProcs);
 		}
+		else if (procPrefix == "StorageAppl.StorageProg") {
+			LOG_DEBUG("CS1_SPECIAL: for StorageAppl.StorageProg");
+			vector<int>	subbands = itsObsParamSet->getInt32Vector("Observation.subbandList");
+			int			psetsPerStorage = itsObsParamSet->getInt32("OLAP.psetsPerStorage");
+			int			subbandsPerPset = itsObsParamSet->getInt32("OLAP.subbandsPerPset");
+			nrProcs = subbands.size() / (psetsPerStorage * subbandsPerPset);
+			LOG_DEBUG_STR("nrOfProcesses = " << subbands.size() << "/(" << psetsPerStorage << "*" << 
+							subbandsPerPset << ")=" << nrProcs);
+		}
         
 		if (nrProcs == 0) {
 			itsNrOfProcs++;
