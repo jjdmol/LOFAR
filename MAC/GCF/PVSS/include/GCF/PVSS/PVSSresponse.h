@@ -48,7 +48,7 @@ protected:
     virtual void dpeSubscriptionLost (const string& dpeName, PVSSresult result) = 0;
     virtual void dpeUnsubscribed	 (const string& dpeName, PVSSresult result) = 0;
     virtual void dpeValueGet		 (const string& dpeName, PVSSresult result, const Common::GCFPValue& value) = 0;
-    virtual void dpeValueChanged	 (const string& dpeName, PVSSresult result, const Common::GCFPValue& value) = 0;        
+    virtual void dpeValueChanged	 (const string& dpeName, PVSSresult result, const Common::GCFPValue& value) = 0;
     virtual void dpeValueSet		 (const string& dpeName, PVSSresult result) = 0;
     virtual void dpQuerySubscribed	 (uint32 queryId,  		 PVSSresult result) = 0;        
 
