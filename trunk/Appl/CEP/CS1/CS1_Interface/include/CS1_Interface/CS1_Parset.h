@@ -34,6 +34,8 @@
 #include <APS/ParameterSet.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_datetime.h>
+#include <boost/date_time/c_local_time_adjustor.hpp>
+
 #include <Common/LofarLogger.h> 
 
 namespace LOFAR {
@@ -100,18 +102,24 @@ public:
 	
 private:
 	void           addPosition(string stName);
+	double         getTime(const char *name) const;
 };
 
 // @}
 
+inline double CS1_Parset::getTime(const char *name) const
+{
+  return to_time_t(boost::date_time::c_local_adjustor<ptime>::utc_to_local(time_from_string(getString(name))));
+}
+
 inline double CS1_Parset::startTime() const
 {
-  return  to_time_t(time_from_string(getString("Observation.startTime")));
+  return getTime("Observation.startTime");
 }
 
 inline double CS1_Parset::stopTime() const
 {
-  return  to_time_t(time_from_string(getString("Observation.stopTime")));
+  return getTime("Observation.stopTime");
 }
 
 inline string CS1_Parset::inputPortnr(const string& aKey) const
