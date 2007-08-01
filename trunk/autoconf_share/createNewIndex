@@ -100,7 +100,7 @@ def main(argv):
       server=arg
       if server=="dop40.nfra.nl" or server=="dop40.astron.nl":
         server="www.lofar.org/software"
-        serverDir="/lofar.org/software"
+        serverDir="/www/lofar.org/software"
   #
   # open the index file in lastWeek
   #
