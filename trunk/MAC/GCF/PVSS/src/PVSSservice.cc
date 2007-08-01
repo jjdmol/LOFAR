@@ -691,10 +691,10 @@ PVSSresult PVSSservice::dpeGet(const string& dpeName)
 //
 // dpeSet (name, GCFPValue, timestamp, wantanswer)
 //
-PVSSresult PVSSservice::dpeSet(const string& dpeName, 
-							 const GCFPValue& value,
-							 double timestamp, 
-							 bool wantAnswer)
+PVSSresult PVSSservice::dpeSet(const string& 	dpeName, 
+							   const GCFPValue& value,
+							   double 			timestamp, 
+							   bool 			wantAnswer)
 {
 	PVSSresult 		result(SA_NO_ERROR);
 	DpIdentifier 	dpId;

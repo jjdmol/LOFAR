@@ -62,7 +62,7 @@ public:
     PVSSresult dpeSet		 (const string& 			dpeName, 
 							  const Common::GCFPValue&	value, 
 							  double					timestamp,
-							  bool   					wantAnswer);
+							  bool   					wantAnswer = true);
     PVSSresult dpQuerySubscribeSingle(const string& queryWhere, 
                                       const string& queryFrom);
     PVSSresult dpQueryUnsubscribe	(uint32 queryId);
