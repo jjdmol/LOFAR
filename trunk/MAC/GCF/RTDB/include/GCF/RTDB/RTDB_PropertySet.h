@@ -31,19 +31,25 @@
 
 namespace LOFAR {
   namespace GCF {
-  using Common::GCFPValue;
-  using PVSS::PVSSresponse;
-  using PVSS::PVSSservice;
-  using PVSS::PVSSresult;
-  namespace RTDB {
-  class RTDBProperty;
-  class PropSetResponse;
-  class DPanswer;
+	using Common::GCFPValue;
+	using PVSS::PVSSresponse;
+	using PVSS::PVSSservice;
+	using PVSS::PVSSresult;
+	namespace RTDB {
+	  class PropSetResponse;
+	  class DPanswer;
+
+#define PSAT_RD_MASK	0x0001
+#define PSAT_WR_MASK	0x0002
+#define PSAT_TMP_MASK	0x0004
 
 typedef enum PSAccessType {
-	PS_AT_EXTERNAL,			// owned by other program
-	PS_AT_OWNED_PERM,		// my own PS, permanent in database
-	PS_AT_OWNED_TEMP		// my own PS, temporarely in database
+	PSAT_RO = 1,		// read-only
+	PSAT_WO,			// write-only
+	PSAT_RW,			// read-write
+	PSAT_RO_TMP = 5,	// |
+	PSAT_WO_TMP,		//  > PS wil be created and delete on the fly.
+	PSAT_RW_TMP			// /
 };
 
 class RTDBPropertySet
@@ -56,10 +62,9 @@ public:
 					 TM::GCFTask*	clientTask);	// must be pointer!
 	~RTDBPropertySet ();
 
-	string getScope		() const ;
+	string getScope		() const;
 	string getFullScope () const;
-	string getType 		() const ;
-    bool   exists 		(const string& propName) const;
+	string getType 		() const;
     
 	// @param propName with or without the scope
 	// @param value can be of type GCFPValue or string (will be converted to 
@@ -70,29 +75,48 @@ public:
 	// @returns GCF_PROP_NOT_IN_SET,  GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
 	// <group>
 	PVSSresult setValue (const string&		propName, 
-						 const GCFPValue&	value, 
-						 bool				wantAnswer = true);
+						 const GCFPValue&	value,
+						 bool				immediately = true);
 
-	PVSSresult setValue (const string& 	propName,
-						 const string& 	value, 
-						 bool  			wantAnswer = true);
+	PVSSresult setValue (const string& 		propName,
+						 const string& 		value,
+						 bool				immediately = true);
 
 	PVSSresult setValueTimed (const string&		propName, 
 							  const GCFPValue&	value, 
 							  double 			timestamp,
-							  bool 				wantAnswer = true);
+							  bool				immediately = true);
 
 	PVSSresult setValueTimed (const string& 	propName,
 							  const string&		value, 
 							  double 			timestamp,
-							  bool 				wantAnswer = true);
+							  bool				immediately = true);
     // </group>
+
 	PVSSresult getValue(const string&		propName,
 						GCFPValue&			returnVar);
 
+	PVSSresult flush();
+
+	void setSubscription(bool	on);
+
 protected:
 	friend class PropSetResponse;
-	void _dpCreated(PVSSresult	result);
+	void dpCreated 			 (const string& propName, PVSSresult	result);
+	void dpDeleted	 		 (const string& propName, PVSSresult	result);
+	void dpeSubscribed 		 (const string& propName, PVSSresult	result);    
+	void dpeSubscriptionLost (const string& propName, PVSSresult	result);
+	void dpeUnsubscribed	 (const string& propName, PVSSresult	result);
+	void dpeValueGet		 (const string& propName, PVSSresult	result, const Common::GCFPValue& value);
+	void dpeValueChanged	 (const string& propName, PVSSresult	result, const Common::GCFPValue& value);
+	void dpeValueSet		 (const string& propName, PVSSresult	result);
+	void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
+#if 0	
+	void 	dpCreated		(PVSSresult	result);
+	void	valueGetAck		(const string&	propName, PVSSresult	result, const GCFPValue&	value);
+	void	valueChangedAck	(const string&	propName, PVSSresult	result, const GCFPValue&	value);
+	void	valueSetAck		(const string&	propName, PVSSresult	result);
+#endif
 
 private:
 	RTDBPropertySet();
@@ -102,41 +126,64 @@ private:
 	RTDBPropertySet& operator= (const RTDBPropertySet&);
 	// </group>
 
+	// define a struct for handling the DPE's.
+	typedef struct Property_t {
+		GCFPValue*		value;			// container for the actual value.
+		bool			dirty;			// nedd to be updated to the database.
+		bool			initialized;	// initial value is get from data.
+		bool			isBasicType;	// PS is not a structure but a basictype
+
+		Property_t(GCFPValue*	aValPtr, bool	basicType = false) : 
+			value(aValPtr), dirty(false), initialized(false), isBasicType(basicType) {};
+		~Property_t() { delete value; };
+	} Property;
+
 	// helper methods
     void _createAllProperties();
     void _deleteAllProperties();
     void _cutScope	 (string& propName) const;
-    void _addProperty(const string& propName, RTDBProperty& prop);
-	RTDBProperty* _getProperty (const string& propName) const;
+    void _addProperty(const string& propName, Property* prop);
+	Property* _getProperty (const string& propName) const;
 
 
 	// data members
-    string              		itsScope;	// with or without DBname:
-    string              		itsType;
-	PSAccessType				itsAccessType;
-	PVSSservice*          		itsService;
-	PVSSresponse*          		itsOwnResponse;
-	DPanswer*	          		itsExtResponse;		// REO
-	bool						itsIsTemp;
+    string              		itsScope;			// with or without DBname:
+    string              		itsType;			// PVSS typename
+	PSAccessType				itsAccessType;		// READ/WRITE/TEMP
+	PVSSservice*          		itsService;			// connection to database
+	PVSSresponse*          		itsOwnResponse;		// callback to myself
+	DPanswer*	          		itsExtResponse;		// callback to client
+	bool						itsExtSubscription;	// client has subscription
+
 	// map with pointers to Property objects
-    typedef map<string /*propName*/, RTDBProperty*> PropertyMap_t;
+    typedef map<string /*propName*/, Property*> PropertyMap_t;
     PropertyMap_t       		itsPropMap;
-	// list of property info
-    typedef list<Common::TPropertyInfo> PropInfoList_t;
-    PropInfoList_t       		itsPropInfoList;
 };
 
 //# ----- inline functions -----
 
-inline PVSSresult RTDBPropertySet::setValue (const string& propName, const string& value, bool wantAnswer)
+// setValue(propname, valueString immediately)
+inline PVSSresult RTDBPropertySet::setValue (const string&	propName, 
+											 const string&	value,
+											 bool			immediately)
 {
-  return (setValueTimed(propName, value, 0.0, wantAnswer));
+  return (setValueTimed(propName, value, 0.0, immediately));
 }
 
-inline PVSSresult RTDBPropertySet::setValue (const string& propName, const Common::GCFPValue& value, bool wantAnswer)
+// setValue(propname, value&, immediately)
+inline PVSSresult RTDBPropertySet::setValue (const string&				propName, 
+											 const Common::GCFPValue&	value,
+											 bool						immediately)
 {
-  return (setValueTimed(propName, value, 0.0, wantAnswer));
+  return (setValueTimed(propName, value, 0.0, immediately));
 }
+
+// setSubscription(on)
+inline	void RTDBPropertySet::setSubscription(bool	on)
+{
+	itsExtSubscription = on;
+}
+
   } // namespace RTDB
  } // namespace GCF
 } // namespace LOFAR

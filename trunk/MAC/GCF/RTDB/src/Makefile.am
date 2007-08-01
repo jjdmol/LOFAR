@@ -12,11 +12,9 @@ SUFFIXES 			= .ph
 clean-local:
 	rm -f *.ph
 
-DOCHDRS				= RTDB_Property.h \
-					  RTDB_PropertySet.h \
-					  DPanswer.h  \
-					  PropResponse.h \
-					  PropResponseSet.h
+DOCHDRS				= RTDB_PropertySet.h \
+					  PropSetResponse.h \
+					  DPanswer.h
    
 librtdb_la_CPPFLAGS	= -I$(top_srcdir)/PVSS/src
 
@@ -32,10 +30,8 @@ pkginclude_HEADERS	= $(BUILT_SOURCES)
 lib_LTLIBRARIES 	= librtdb.la
 
 librtdb_la_SOURCES	= $(BUILT_SOURCES) \
-					  RTDB_Property.cc \
 					  RTDB_PropertySet.cc \
-					  DPanswer.cc \
-					  PropResponse.cc
+					  DPanswer.cc
 
 include $(top_srcdir)/Makefile.common
 

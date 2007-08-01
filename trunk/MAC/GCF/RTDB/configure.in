@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/PropResponse.h)
+AC_INIT(src/RTDB_PropertySet.cc)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(GCFRTDB, 1.0, no-define)
 
