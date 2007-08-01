@@ -24,6 +24,7 @@
 #define TRANSPORTPOSTGRES_TH_POSTGRES_H
 
 #include <TransportPostgres/TH_DB.h>
+#include <Blob/BlobStringTraits.h>  // needed because pqxx uses char_traits
 #include <pqxx/pqxx>
 
 // This is a simple transportholder to store data in a Postgresql database.
