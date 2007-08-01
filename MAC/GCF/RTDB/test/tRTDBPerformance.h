@@ -1,4 +1,5 @@
-//  tPropertySet.h: Definition of the PropertySet task class.
+//
+//  tPerformance.h: Definition of the tService task class.
 //
 //  Copyright (C) 2007
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,50 +22,53 @@
 //  $Id$
 //
 
-#ifndef _RTDB_TPROPERTYSET_H_
-#define _RTDB_TPROPERTYSET_H_
+#ifndef _TPERFORMANCE_H_
+#define _TPERFORMANCE_H_
 
 #include <GCF/TM/GCF_Control.h>
+#include <GCF/PVSS/PVSSservice.h>
+#include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
 namespace LOFAR {
  namespace GCF {
   namespace RTDB {
-
-class tPropertySet : public GCFTask
+/**
+ * The tPerformance task receives ECHO_PING events from the Ping task and
+ * returns an ECHO_ECHO event for each ECHO_PING event received.
+ */
+class tPerformance : public GCFTask
 {
  public:
 
   /**
-   * The constructor for the tGSAService task.
+   * The constructor for the tPerformance task.
    * @param name The name of this task. By differentiating in the name, multiple
    * instances of the same task can be created and addressed.
    */
-  tPropertySet (const string& name);
+  tPerformance (const string& name);
 
-  virtual ~tPropertySet();
+  virtual ~tPerformance();
 
-  GCFEvent::TResult final			(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult createPS		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult WriteTest		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult ReadTest		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult Level1Test		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult Level2Test		(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult WriteErrorTest	(GCFEvent& e, GCFPortInterface& p);
-#if 0
-  GCFEvent::TResult ReadErrorTest	(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult DeletePS		(GCFEvent& e, GCFPortInterface& p);
-#endif
+  GCFEvent::TResult initial  	 (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult final    	 (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1cleanup (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1create	 (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1setvalue(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1getvalue(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1delete	 (GCFEvent& e, GCFPortInterface& p);
 
  private:
 
   /**
-   * The tGSAService task acts as a server for Ping tasks to use. Event from the Ping
+   * The tPerformance task acts as a server for Ping tasks to use. Event from the Ping
    * task are received on the server port. And reply events to the Ping task
    * are sent through the server port.
    */
-	RTDBPropertySet*	itsPropSet;
-	GCFTimerPort*		itsTimerPort;
+	PVSSservice* 				itsService;
+	PVSSresponse*				itsResponse;
+	GCFTimerPort*				itsTimerPort;
+	vector<RTDBPropertySet*>	itsPSvector;
 };
 
   } // namespace RTDB

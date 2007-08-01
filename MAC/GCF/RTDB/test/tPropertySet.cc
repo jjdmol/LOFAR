@@ -84,7 +84,9 @@ GCFEvent::TResult tPropertySet::createPS(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	case F_ENTRY: {
 		gTestPassed = false;
-		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PS_AT_OWNED_TEMP, this);
+		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PSAT_RO_TMP, this);
+//		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PSAT_WO_TMP, this);
+//		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PSAT_RW_TMP, this);
 		ASSERTSTR(itsPropSet, "Can't allocate PropertySet");
 		itsTimerPort->setTimer(1.0); // max time for this test.
 	}
@@ -258,7 +260,142 @@ GCFEvent::TResult tPropertySet::ReadTest(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	case F_TIMER:
 		LOG_DEBUG_STR("Readtest " << (gTestPassed ? "was successful" : "FAILED"));
+		TRAN(tPropertySet::Level1Test);
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+
+//
+// Level1Test (event, port)
+//
+GCFEvent::TResult tPropertySet::Level1Test(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	LOG_DEBUG_STR("Level1Test:" << eventName(e));
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		LOG_DEBUG_STR("Writing to myPS.level1.intVal");
+		gTestPassed = false;
+		// try it this time via a variable iso a valueString
+		GCFPVInteger	anIntVar;
+		anIntVar.setValue(9372);
+		itsPropSet->setValue("level1.intVal", anIntVar);
+		itsTimerPort->setTimer(2.0);
+	}
+	break;
+
+	case F_TIMER:
+		LOG_DEBUG_STR("Level1Test " << (gTestPassed ? "was successful" : "FAILED"));
+		TRAN(tPropertySet::Level2Test);
+	break;
+
+	case DP_SET: {
+		DPSetEvent		dpEvent(e);
+		LOG_DEBUG_STR("Result of setting " << dpEvent.DPname << " = " << dpEvent.result);
+		GCFPVInteger	resultVar;
+		itsPropSet->getValue("level1.intVal", resultVar);
+		ASSERTSTR (resultVar.getValue() == 9372, "Readback of variable returned value " <<
+					resultVar.getValue() << " iso 9372");
+		gTestPassed = true;
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(0.0);
+		
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// Level2Test (event, port)
+//
+GCFEvent::TResult tPropertySet::Level2Test(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	LOG_DEBUG_STR("Level2Test:" << eventName(e));
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		LOG_DEBUG_STR("Writing to myPS.level1.level2.stringVal");
+		gTestPassed = false;
+		itsPropSet->setValue("level1.level2.stringVal", "Level2 testje");
+		itsTimerPort->setTimer(2.0);
+	}
+	break;
+
+	case F_TIMER:
+		LOG_DEBUG_STR("Level2Test " << (gTestPassed ? "was successful" : "FAILED"));
+		TRAN(tPropertySet::WriteErrorTest);
+	break;
+
+	case DP_SET: {
+		DPSetEvent		dpEvent(e);
+		LOG_DEBUG_STR("Result of setting " << dpEvent.DPname << " = " << dpEvent.result);
+		GCFPVString	resultVar;
+		itsPropSet->getValue("level1.level2.stringVal", resultVar);
+		ASSERTSTR (resultVar.getValue() == "Level2 testje", "Readback of variable returned value " <<
+					resultVar.getValue() << " iso 'Level2 testje'");
+		gTestPassed = true;
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(0.0);
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// WriteError:Test (event, port)
+//
+GCFEvent::TResult tPropertySet::WriteErrorTest(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	LOG_DEBUG_STR("WriteErrorTest:" << eventName(e));
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		gTestPassed = true;
+		itsTimerPort->setTimer(2.0);
+		itsPropSet->setValue("uintVal", "-25");
+		try {
+			itsPropSet->setValue("iserniet", "-36");
+		}
+		catch (...) {
+			LOG_DEBUG_STR("Caught exception");
+			return (GCFEvent::HANDLED);
+		}
+		gTestPassed = false;
+	}
+	break;
+
+	case F_TIMER:
+		LOG_DEBUG_STR("WriteErrortest " << (gTestPassed ? "was successful" : "FAILED"));
 		TRAN(tPropertySet::final);
+	break;
+
+	case DP_SET: {
+		DPSetEvent		dpEvent(e);
+		LOG_DEBUG_STR("Result of setting " << dpEvent.DPname << " = " << dpEvent.result);
+		gTestPassed = (dpEvent.result != SA_NO_ERROR);
+	}
 	break;
 
 	default:

@@ -1,4 +1,4 @@
-//#  PropSetResponse.h:  PVSS response class for catching private Property events.
+//#  PropSetResponse.h:  PVSS response class for catching PVSS events.
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,6 +19,10 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+//#
+
+//	Note: This class simply forwards all PVSS-callback routines to the PropertySet.
+//		  We still need this function because a PropertySet IS NOT A PVSSresponse.
 
 #ifndef RTDB_PROPSETRESPONSE_H
 #define RTDB_PROPSETRESPONSE_H
@@ -37,8 +41,7 @@ namespace LOFAR {
 class PropSetResponse: public PVSSresponse
 {
 public:
-	PropSetResponse (RTDBPropertySet*		propSetPtr, DPanswer*	extResponse) : 
-		itsPropertySet(propSetPtr), itsExtResponse(extResponse) {};
+	PropSetResponse (RTDBPropertySet*		propSetPtr) : itsPropertySet(propSetPtr) {};
 	virtual ~PropSetResponse () {};
 
 	virtual void dpCreated 			 (const string& propName, PVSSresult	result);
@@ -53,53 +56,51 @@ public:
 
 private:
 	RTDBPropertySet*	itsPropertySet;
-//	PVSSresponse*		itsExtResponse;
-	DPanswer*			itsExtResponse;
 };
 
 //# ----- inline functions -----
-inline void PropSetResponse::dpCreated(const string& /*propName*/, PVSSresult	result)
+inline void PropSetResponse::dpCreated(const string& propName, PVSSresult	result)
 {
-	itsPropertySet->_dpCreated(result);
+	itsPropertySet->dpCreated(propName, result);
 }
 
 inline void PropSetResponse::dpDeleted(const string& propName, PVSSresult	result)
 {
-	itsExtResponse->dpDeleted(propName, result);
+	itsPropertySet->dpDeleted(propName, result);
 }
 inline void PropSetResponse::dpeSubscribed(const string& propName, PVSSresult	result)
 {
-	itsExtResponse->dpeSubscribed(propName, result);
+	itsPropertySet->dpeSubscribed(propName.empty() ? "value" : propName, result);
 }
 
 inline void PropSetResponse::dpeUnsubscribed(const string& propName, PVSSresult	result)
 {
-	itsExtResponse->dpeUnsubscribed(propName, result);
+	itsPropertySet->dpeUnsubscribed(propName.empty() ? "value" : propName, result);
 }
 
 inline void PropSetResponse::dpeValueGet(const string& propName, PVSSresult	result, const GCFPValue& value)
 {
-	itsExtResponse->dpeValueGet(propName, result, value);
+	itsPropertySet->dpeValueGet(propName.empty() ? "value" : propName, result, value);
 }
 
 inline void PropSetResponse::dpeValueChanged(const string& propName, PVSSresult	result, const GCFPValue& value)
 {
-	itsExtResponse->dpeValueChanged(propName, result, value);
+	itsPropertySet->dpeValueChanged(propName.empty() ? "value" : propName, result, value);
 }
 
 inline void PropSetResponse::dpeValueSet(const string& propName, PVSSresult	result)
 {
-	itsExtResponse->dpeValueSet(propName, result);
+	itsPropertySet->dpeValueSet(propName.empty() ? "value" : propName, result);
 }
 
 inline void PropSetResponse::dpeSubscriptionLost(const string& propName, PVSSresult	result)
 {
-	itsExtResponse->dpeSubscriptionLost(propName, result);
+	itsPropertySet->dpeSubscriptionLost(propName.empty() ? "value" : propName, result);
 }
 
 inline void PropSetResponse::dpQuerySubscribed(uint32 queryId, PVSSresult	result)
 {
-	itsExtResponse->dpQuerySubscribed(queryId, result);
+	itsPropertySet->dpQuerySubscribed(queryId, result);
 }
 
     } // namespace RTDB
