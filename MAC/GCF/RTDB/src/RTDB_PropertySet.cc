@@ -29,6 +29,8 @@
 #include <GCF/RTDB/RTDB_PropertySet.h>
 #include "PropSetResponse.h"
 
+#include <unistd.h>
+
 namespace LOFAR {
   namespace GCF {
 	using namespace Common;
@@ -87,6 +89,10 @@ RTDBPropertySet::~RTDBPropertySet()
 
 	if (itsAccessType & PSAT_TMP_MASK) {
 		itsService->dpDelete(itsScope);
+		itsService->doWork();		// force DBmanager to do its work
+		while (PVSSinfo::propExists(itsScope)) {
+			itsService->doWork();		// force DBmanager to do its work
+		}
 	}
 
 	delete itsService;
@@ -189,6 +195,18 @@ PVSSresult	RTDBPropertySet::getValue(const string&			propName,
 
 	return (SA_NO_ERROR);
 }
+
+//
+// flush()
+//
+PVSSresult	RTDBPropertySet::flush()
+{
+
+
+
+
+}
+
 
 #if 0
 //
