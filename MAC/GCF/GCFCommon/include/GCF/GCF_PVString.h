@@ -58,6 +58,10 @@ class GCFPVString : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
  
+    /** @see GCFPValue::operator==() */
+    virtual bool operator==(const GCFPValue& that) const;
+    virtual bool operator!=(const GCFPValue& that) const { return (!(*this == that)); }
+ 
   private:
     /// @see GCFPValue::unpack()
     unsigned int unpackConcrete(const char* valBuf);
@@ -72,6 +76,12 @@ class GCFPVString : public GCFPValue
     /** The value*/
     string _value;
 };
+
+//# ---------- inline functions ----------
+inline bool GCFPVString::operator==(const GCFPValue&	that) const {
+	return ((that.getType() == getType()) && (getValue() == ((GCFPVString *) &that)->getValue()));
+}
+
   } // namespace Common
  } // namespace GCF
 } // namespace LOFAR

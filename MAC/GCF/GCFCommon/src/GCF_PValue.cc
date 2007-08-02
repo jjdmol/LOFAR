@@ -33,126 +33,115 @@
 #include <GCF/GCF_PVBlob.h>
 #include <GCF/GCF_Defines.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace Common 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace Common {
 
+//
+// createMACTypeObject(type)
+//
 GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
 {
-  GCFPValue* pResult(0);
-  
-  switch (type)
-  {
-    case LPT_BOOL:
-      pResult = new GCFPVBool();
-      break;
-    case LPT_CHAR:
-      pResult = new GCFPVChar();
-      break;
-    case LPT_UNSIGNED:
-      pResult = new GCFPVUnsigned();
-      break;
-    case LPT_INTEGER:
-      pResult = new GCFPVInteger();
-      break;
-    case LPT_DOUBLE:
-      pResult = new GCFPVDouble();
-      break;
-    case LPT_STRING:
-      pResult = new GCFPVString();
-      break;
-    case LPT_BLOB:
-      pResult = new GCFPVBlob();
-      break;      
-/*    case LPT_REF:
-      pResult = new GCFPVRef();
-      break;
-    case LPT_BIT32:
-      pResult = new GCFPVBit32();
-      break;    
-    case LPT_DATETIME:
-      pResult = new GCFPVDateTime();
-      break;*/
-    default:
-      if (type > LPT_DYNARR &&
-          type < END_DYNLPT)
-      {
-        pResult = new GCFPVDynArr(type);
-      }
-      else
-      {
-        LOG_ERROR(LOFAR::formatString (
-            "Type of MAC value is unknown or not supported yet: '%d'", 
-            type));
-      }
-      break;
-  }  
-  
-  return pResult;
+	GCFPValue* pResult(0);
+
+	switch (type) {
+		case LPT_BOOL: 		pResult = new GCFPVBool(); 		break;
+		case LPT_CHAR: 		pResult = new GCFPVChar(); 		break;
+		case LPT_UNSIGNED:	pResult = new GCFPVUnsigned();	break;
+		case LPT_INTEGER:	pResult = new GCFPVInteger();	break;
+		case LPT_DOUBLE:	pResult = new GCFPVDouble();	break;
+		case LPT_STRING:	pResult = new GCFPVString();	break;
+		case LPT_BLOB:		pResult = new GCFPVBlob();		break;      
+		/* 
+		case LPT_REF: 		pResult = new GCFPVRef(); 		break;
+		case LPT_BIT32:		pResult = new GCFPVBit32(); 	break;    
+		case LPT_DATETIME:	pResult = new GCFPVDateTime();	break;
+		*/
+		default:
+			if (type > LPT_DYNARR && type < END_DYNLPT) {
+				pResult = new GCFPVDynArr(type);
+			}
+			else {
+				LOG_ERROR(LOFAR::formatString (
+				"Type of MAC value is unknown or not supported yet: '%d'", type));
+			}
+		break;
+	}  
+
+	return (pResult);
 }
 
+//
+// unpackValue(buffer)
+//
 GCFPValue* GCFPValue::unpackValue(const char* valBuf)
 {
-  GCFPValue* pValue = createMACTypeObject((TMACValueType) (uchar) *valBuf);
-  if (pValue)
-  {
-    unsigned int readLength = pValue->unpack(valBuf);
-    if (readLength != pValue->getSize())
-    {
-      delete pValue;
-      pValue = 0;
-    }
-  }
-  return pValue;
+	GCFPValue* pValue = createMACTypeObject((TMACValueType) (uchar) *valBuf);
+	if (pValue) {
+		unsigned int readLength = pValue->unpack(valBuf);
+		if (readLength != pValue->getSize()) {
+			delete pValue;
+			pValue = 0;
+		}
+	}
+
+	return (pValue);
 }
 
+//
+// unpack(buffer)
+//
 unsigned int GCFPValue::unpack(const char* valBuf)
 {
-  ASSERT(_type == (TMACValueType) (uchar) *valBuf);
-  _dataFormat = (LOFAR::DataFormat) valBuf[1];
-  // the type was already set, because it was set on construction of this class
-  // later maybe also a timestamp can be assigned to a value.
-  return 2 + unpackConcrete(valBuf + 2);
+	ASSERT(_type == (TMACValueType) (uchar) *valBuf);
+	_dataFormat = (LOFAR::DataFormat) valBuf[1];
+	// the type was already set, because it was set on construction of this class
+	// later maybe also a timestamp can be assigned to a value.
+	return (2 + unpackConcrete(valBuf + 2));
 }
 
+//
+// pack (buffer)
+//
 unsigned int GCFPValue::pack(char* valBuf) const
 {
-  valBuf[0] = _type;
-  valBuf[1] = _dataFormat;
-  
-  // at this moment only the type will be packed, later maybe a timestamp can 
-  // be assigned to a value.
-  return 2 + packConcrete(valBuf + 2);
+	valBuf[0] = _type;
+	valBuf[1] = _dataFormat;
+
+	// at this moment only the type will be packed, later maybe a timestamp can 
+	// be assigned to a value.
+	return (2 + packConcrete(valBuf + 2));
 }
 
+//
+// getTypeName()
+//
 string GCFPValue::getTypeName() const
 {
-  string retVal;
-  static const char* typeNames[] = 
-  {
-    "NO_TYPE", 
-    "bool", 
-    "char", 
-    "unsigned", 
-    "integer",
-    "NO_TYPE", 
-    "blob",
-    "NO_TYPE", 
-    "float", 
-    "NO_TYPE", 
-    "string", 
-    "NO_TYPE",    
-  };
-  if (_type >= LPT_DYNARR)
-  {
-    retVal = "dyn_";
-  }
-  retVal += typeNames[_type & ~LPT_DYNARR];
-  return retVal;
+	string retVal;
+	static const char* typeNames[] = {
+		"NO_TYPE", 
+		"bool", 
+		"char", 
+		"unsigned", 
+		"integer",
+		"NO_TYPE", 
+		"blob",
+		"NO_TYPE", 
+		"float", 
+		"NO_TYPE", 
+		"string", 
+		"NO_TYPE",    
+	};
+
+	if (_type >= LPT_DYNARR) {
+		retVal = "dyn_";
+	}
+	retVal += typeNames[_type & ~LPT_DYNARR];
+
+	return (retVal);
 }
+
   } // namespace Common
  } // namespace GCF
 } // namespace LOFAR
