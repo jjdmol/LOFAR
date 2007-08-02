@@ -7,8 +7,6 @@ pkginclude_HEADERS = \
 	APLUtilities.h \
 	ControllerDefines.h \
 	StationInfo.h \
-	PropertySetAnswer.h \
-	PropertySetAnswerHandlerInterface.h  \
 	CTState.h \
 	ControllerInfo.h \
 	ControllerAdmin.h \

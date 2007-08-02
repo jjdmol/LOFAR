@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
+#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APLUtilities.h>
@@ -100,8 +101,8 @@ ParentControl::ParentControl() :
 	itsControllerName()
 {
 	// Log the protocols I use.
-	registerProtocol(CONTROLLER_PROTOCOL,  CONTROLLER_PROTOCOL_signalnames);
-	registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol(CONTROLLER_PROTOCOL,  CONTROLLER_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_STRINGS);
 
 }
 
@@ -254,6 +255,8 @@ bool ParentControl::nowInState(const string&		cntlrName,
 
 	parent->currentState   = newState;
 	parent->requestedState = requestedState(cts.signal(newState));
+	// Note: by converting the state to a signal and than back to the requested
+	//		 state we translate xxxing states to xxxed states.
 	return (true);
 }
 
@@ -293,7 +296,7 @@ CTState::CTstateNr ParentControl::requestedState(uint16	aSignal)
 		}
 		i++;
 	}
-	ASSERTSTR(false, "No new state defined for signal " << evtstr(aSignal));
+	ASSERTSTR(false, "No new state defined for signal " << eventName(aSignal));
 }
 
 //
@@ -450,7 +453,6 @@ void ParentControl::_doRequestedAction(PIiter	parent)
 		}
 		break;
 	case CTState::QUITED: {
-			// pass to maintask
 			CONTROLQuitEvent	request;
 			request.cntlrName = parent->name;
 			itsMainTaskPort->sendBack(request);
@@ -478,7 +480,7 @@ bool ParentControl::_confirmState(uint16			signal,
 
 	CTState	cts;
 //	if (!isLegalSignal(event.signal, parent)) {
-//		LOG_WARN_STR ("Received " << evtstr(event.signal) <<
+//		LOG_WARN_STR ("Received " << eventName(event.signal) <<
 //					  " event while requested state is " << 
 //					  cts.name(parent->requestedState));
 //	}
@@ -516,7 +518,7 @@ GCFEvent::TResult	ParentControl::initial(GCFEvent&			event,
 										   GCFPortInterface&	port)
 
 {
-	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
 
@@ -576,7 +578,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 											   GCFPortInterface&	port)
 
 {
-	LOG_DEBUG_STR ("operational:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("operational:" << eventName(event) << "@" << port.getName());
 
 	CTState				cts;
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
@@ -613,7 +615,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			resync.cntlrName = parent->name;
 			resync.curState	 = parent->currentState;
 			resync.hostname	 = myHostname(true);
-			port.send(resync);		// will result in CONTROLF_RESYNCED;
+			port.send(resync);		// will result in CONTROL_RESYNCED;
 		}
 		break;
 
@@ -644,6 +646,14 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 					break;
 				}
 				
+				// lost connection during shutdown phase? ok, update admin.
+				if (parent->requestedState >= CTState::RELEASED) {
+					LOG_DEBUG_STR("Removing " << parent->name << " from administration");
+					parent->port->close();
+					itsParentList.erase(parent);
+					break;
+				}
+
 				// lost connection during normal operation, start reconnect sequence
 				parent->port->close();
 				parent->timerID   = itsTimerPort.setTimer(10.0);// retry every 10 seconds
@@ -800,14 +810,14 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			// do we know this parent?
 			PIiter		parent = findParent(&port);
 			if (!isParent(parent)) {
-				LOG_WARN_STR ("Received " << evtstr(event) << 
+				LOG_WARN_STR ("Received " << eventName(event) << 
 								" event from unknown parent, ignoring");
 				break;
 			}
 
 			// warn operator when we are out of sync with our parent.
 			if (!isLegalSignal(event.signal, parent)) {
-				LOG_WARN_STR ("Received " << evtstr(event.signal) <<
+				LOG_WARN_STR ("Received " << eventName(event.signal) <<
 							" event while requested state is " << 
 							cts.name(parent->requestedState));
 			}
@@ -847,7 +857,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			// do we know this parent?
 			PIiter		parent = findParent(msg.cntlrName);
 			if (!isParent(parent)) {
-				LOG_WARN_STR ("Received "<< evtstr(event) <<" answer for unknown parent "
+				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
 								<< msg.cntlrName <<", ignoring");
 				break;
 			}
@@ -862,7 +872,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			// do we know this parent?
 			PIiter		parent = findParent(msg.cntlrName);
 			if (!isParent(parent)) {
-				LOG_WARN_STR ("Received "<< evtstr(event) <<" answer for unknown parent "
+				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
 								<< msg.cntlrName <<", ignoring");
 				break;
 			}
@@ -876,10 +886,13 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			CONTROLResumedEvent	msg(event);
 			// do we know this parent?
 			PIiter		parent = findParent(msg.cntlrName);
-			if (isParent(parent)) {
-				_confirmState(event.signal, msg.cntlrName, msg.result);
-				parent->port->send(msg);
+			if (!isParent(parent)) {
+				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
+								<< msg.cntlrName <<", ignoring");
+				break;
 			}
+			_confirmState(event.signal, msg.cntlrName, msg.result);
+			parent->port->send(msg);
 		}
 		break;
 
@@ -888,10 +901,13 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			CONTROLSuspendedEvent	msg(event);
 			// do we know this parent?
 			PIiter		parent = findParent(msg.cntlrName);
-			if (isParent(parent)) {
-				_confirmState(event.signal, msg.cntlrName, msg.result);
-				parent->port->send(msg);
+			if (!isParent(parent)) {
+				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
+								<< msg.cntlrName <<", ignoring");
+				break;
 			}
+			_confirmState(event.signal, msg.cntlrName, msg.result);
+			parent->port->send(msg);
 		}
 		break;
 
@@ -900,10 +916,13 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			CONTROLReleasedEvent	msg(event);
 			// do we know this parent?
 			PIiter		parent = findParent(msg.cntlrName);
-			if (isParent(parent)) {
-				_confirmState(event.signal, msg.cntlrName, msg.result);
-				parent->port->send(msg);
+			if (!isParent(parent)) {
+				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
+								<< msg.cntlrName <<", ignoring");
+				break;
 			}
+			_confirmState(event.signal, msg.cntlrName, msg.result);
+			parent->port->send(msg);
 		}
 		break;
 
@@ -915,6 +934,8 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			if (isParent(parent)) {
 				// note do not register this state, it is not a real state
 				LOG_INFO_STR("Controller " << msg.cntlrName << " is resynced");
+				// REO 300507
+				_doRequestedAction(parent);	// do queued action if any.
 			}
 			else {
 				LOG_WARN_STR("Received RESYNCED message from unknown controller " 
@@ -941,13 +962,21 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			CONTROLQuitedEvent	msg(event);
 			// do we know this parent?
 			PIiter		parent = findParent(msg.cntlrName);
-			if (isParent(parent)) {
-				_confirmState(event.signal, msg.cntlrName, msg.result);
-				parent->port->send(msg);
+			if (!isParent(parent)) {
+				LOG_WARN_STR("Controller " << msg.cntlrName << " not in administration, ignoring QUIT message");
+				break;
 			}
-			// close port and cleanup admin
-			parent->port->close();
-			itsParentList.erase(parent);
+
+			// Known parent, update admin and pass message to main task
+			_confirmState(event.signal, msg.cntlrName, msg.result);
+			parent->port->send(msg);
+
+			// when message is of a non-shared controller close the port.
+			if (!isSharedController(getControllerType(msg.cntlrName))) {
+				LOG_DEBUG_STR("Not a shared controller, closing port");
+				parent->port->close();
+				itsParentList.erase(parent);
+			}
 		}
 		break;
 

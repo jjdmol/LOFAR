@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>					// rtrim
 #include <GCF/Utils.h>							// myHostname
+#include <GCF/PAL/GCF_PropertyProxy.h>
 #include <APS/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
@@ -39,6 +40,7 @@ using namespace boost;
 namespace LOFAR {
   using namespace Deployment;
   using namespace GCF::Common;
+  using namespace GCF::PAL;
   namespace APLCommon {
 
 typedef struct cntlrDefinition {
@@ -66,6 +68,19 @@ static cntlrDefinition_t controllerTable[] = {
 	{	"",						"",				false	}
 };
 
+static char*	modeNameTable[] = {
+	"off",
+	"operational",
+	"maintenance",
+	"test",
+	"suspicious",
+	"broken",
+	""
+};
+
+//
+// controllerName(type,instance,obsNr,hostname)
+//
 // Construct a uniq controllername from the controllerType, the instanceNr
 // of the controller and the observationID.
 // Note: the returned name is always the 'non-shared' name. To get the 'shared'
@@ -93,6 +108,9 @@ string	controllerName (uint16			cntlrType,
 										  instanceNr, ObservationNr));
 }
 
+//
+// parsetNodeName(type)
+//
 // Convert a controller type to the coresponding node in the OTDB.
 string	parsetNodeName (uint16		cntlrType)
 {
@@ -102,6 +120,9 @@ string	parsetNodeName (uint16		cntlrType)
 	return (controllerTable[cntlrType].parsetName);
 }
 
+//
+// sharedControllerName(controllername)
+//
 // Convert the 'non-shared controllername' to the 'shared controller' name.
 string	sharedControllerName (const string&	controllerName)
 {
@@ -110,14 +131,14 @@ string	sharedControllerName (const string&	controllerName)
 		return (controllerName);
 	}
 
-//	uint32	observationNr = getObservationNr (controllerName);
-//	return (formatString("%s{%d}", controllerTable[cntlrType].cntlrName,
-//															observationNr));
 	string	cntlrName(controllerName);			// destroyable copy.
 	rtrim(cntlrName, "[]{}0123456789");
 	return (cntlrName);
 }
 
+//
+// getExecutable(type)
+//
 // Return name of the executable
 string	getExecutable (uint16		cntlrType)
 {
@@ -127,6 +148,9 @@ string	getExecutable (uint16		cntlrType)
 	return (controllerTable[cntlrType].cntlrName);
 }
 
+//
+// isSharedController(type)
+//
 // return 'shared' bit of controllertype
 bool	isSharedController(uint16		cntlrType) 
 {
@@ -136,12 +160,18 @@ bool	isSharedController(uint16		cntlrType)
 	return (controllerTable[cntlrType].shared);
 }
 
+//
+// getObservationNr(controllerName)
+//
 // Get the ObservationNr from the controllername.
 uint32	getObservationNr (const string&	controllerName)
 {
 	return (ACC::APS::indexValue(controllerName, "{}"));
 }
 
+//
+// getInstanceNr(controllername)
+//
 // Get the instanceNr from the controllername.
 uint16	getInstanceNr (const string&	controllerName)
 {
@@ -150,6 +180,9 @@ uint16	getInstanceNr (const string&	controllerName)
 	return (ACC::APS::indexValue(cntlrName, "[]"));
 }
 
+//
+// getControllerType(controllerName)
+//
 // Get the controllerType from the controllername.
 int32	getControllerType	(const string&	controllerName)
 {
@@ -229,7 +262,9 @@ string	createPropertySetName(const string&		propSetMask,
 	return (psName);
 }
 
-// sendControlResult(port, CONTROLsignal, cntlrName, result);
+//
+// sendControlResult(port, CONTROLsignal, cntlrName, result)
+//
 // Construct a message that matches the given signal and send it on the port.
 // Supported are:
 // CONNECTED, RESYNCED, SCHEDULED, CLAIMED, PREPARED, RESUMED, SUSPENDED, RELEASED
@@ -319,6 +354,25 @@ bool sendControlResult(GCF::TM::GCFPortInterface&	port,
 
 	}
 }
+
+//
+// setControllerMode(PSname, modeNr)
+//
+void setControllerMode(const string&	propertyName, int16	modeNr)
+{
+#if 0
+	ASSERTSTR (modeNr >= CT_MODE_OFF && modeNr < CT_MODE_NR_MODES,
+									"No mode defined with nr: " << modeNr);
+
+	// construct command and store that in __navObjectState, PVSS scripts will
+	// do the rest.
+	string	command(propertyName+".state="+modeNameTable[modeNr]);
+	LOG_DEBUG_STR("Setting state: " << command);
+	GCFPropertyProxy	pp;
+	pp.setPropValue("__navObjectState", command);
+#endif
+}
+
 
   } // namespace APLCommon
 } // namespace LOFAR

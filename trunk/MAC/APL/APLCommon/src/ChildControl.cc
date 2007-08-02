@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
+#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APLUtilities.h>
@@ -76,8 +77,8 @@ ChildControl::ChildControl() :
 	itsCompletionPort		(0)
 {
 	// Log the protocols I use.
-	registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
-	registerProtocol(STARTDAEMON_PROTOCOL,STARTDAEMON_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol(STARTDAEMON_PROTOCOL,STARTDAEMON_PROTOCOL_STRINGS);
 
 	// adopt optional redefinition of startup-retry settings
 	if (globalParameterSet()->isDefined("ChildControl.StartupRetryInterval")) {
@@ -177,6 +178,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 											LOFAR_SHARE_LOCATION, anObsID);
 		LOG_DEBUG_STR ("Reading parameterfile: " << baseSetName);
 		ParameterSet	wholeSet (baseSetName);
+		LOG_DEBUG_STR (wholeSet.size() << " elements in parameterfile");
 		string			prefix = wholeSet.getString("prefix");
 
 		// Create a parameterset with software related issues.
@@ -920,6 +922,7 @@ void ChildControl::_doGarbageCollection()
 				itsTimerPort.cancelTimer(itsGarbageTimer);
 			}
 			itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
+			LOG_DEBUG_STR("GarbageTimer = " << itsGarbageTimer);
 			iter++;
 		} else if (iter->port == (GCFPortInterface*)-1) {
 			LOG_DEBUG_STR ("Removing controller " << iter->cntlrName << 
@@ -946,6 +949,7 @@ GCFEvent::TResult	ChildControl::initial (GCFEvent&			event,
 										   GCFPortInterface&	port)
 {
 	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
 
@@ -998,7 +1002,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 											  GCFPortInterface&	port)
 
 {
-	LOG_DEBUG_STR ("operational:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("operational:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
 
@@ -1038,7 +1042,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 			CIiter		end		   = itsCntlrList->end();
 			while (controller != end) {
 				// search corresponding controller
-				LOG_DEBUG_STR("Check:" << controller->cntlrName);
+				LOG_DEBUG_STR("Check:" << controller->cntlrName << ":" << controller->port << "=?" << &port);
 				if (controller->port != &port) {
 					controller++;
 					continue;
@@ -1074,6 +1078,7 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 						itsTimerPort.cancelTimer(itsGarbageTimer);
 					}
 					itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
+					LOG_DEBUG_STR("GarbageTimer = " << itsGarbageTimer);
 				}
 				// controlelr was found and handled, break out of the while loop.
 				break;
@@ -1102,6 +1107,21 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 															<< result.result);
 			_setEstablishedState(result.cntlrName, CTState::CREATED, time(0),
 								 result.result);
+
+			// Was startdaemon unable to start the controller?
+			if (result.result != CT_RESULT_NO_ERROR) {
+				LOG_DEBUG_STR("Marking port of " << result.cntlrName << 
+												" invalid because startup failed.");
+				CIiter	controller = findController(result.cntlrName);
+				if (controller != itsCntlrList->end()) {
+					controller->port == (GCFPortInterface*)-1;
+				}
+
+				// Start garbagetimer to cleanup the idle controller entry.
+				itsTimerPort.cancelTimer(itsGarbageTimer);
+				itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
+				LOG_DEBUG_STR("GarbageTimer = " << itsGarbageTimer);
+			}
 		}
 		break;
 
