@@ -22,7 +22,6 @@ libaplcommon_la_SOURCES  =  $(DOCHDRS) \
 							APLUtilities.cc \
 							ControllerDefines.cc \
 							StationInfo.cc \
-							PropertySetAnswer.cc \
 							CTState.cc \
 							ControllerAdmin.cc \
 							ChildControl.cc \

@@ -30,24 +30,6 @@ namespace APLCommon {
 typedef	uint32					OTDBtreeIDType;
 
 #if 0
-  enum TLDResult
-  {
-    LD_RESULT_NO_ERROR = 0, 
-    LD_RESULT_UNSPECIFIED,
-    LD_RESULT_FILENOTFOUND,
-    LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS,
-    LD_RESULT_UNKNOWN_COMMAND,
-    LD_RESULT_DISABLED,
-    LD_RESULT_LOW_QUALITY,
-    LD_RESULT_TIMING_FAILURE,
-    LD_RESULT_RANGE_ERROR,     // range error in message parameters
-    LD_RESULT_BEAMALLOC_ERROR, // could not allocate beam
-    LD_RESULT_BEAMFREE_ERROR,  // could not free beam
-    LD_RESULT_SETCLOCKS_ERROR, // error setting td clocks
-    LD_RESULT_STARTCAL_ERROR,  // error starting calibration
-    LD_RESULT_LOW_PRIORITY,    // a higher priority LD caused a suspend of this LD
-  };
-
   enum 
   {
     RS_DEFECT = -3,
