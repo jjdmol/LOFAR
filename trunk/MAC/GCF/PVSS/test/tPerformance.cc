@@ -304,7 +304,7 @@ GCFEvent::TResult tPerformance::test1getvalue(GCFEvent& e, GCFPortInterface& p)
 
 	case F_TIMER:
 		if (gGetCounter != 0) {
-			itsTimerPort->setTimer(0.1);
+			itsTimerPort->setTimer(0.022);
 			LOG_INFO_STR ("Waiting for " << gGetCounter << " datapoints to be read");
 		}
 		else {

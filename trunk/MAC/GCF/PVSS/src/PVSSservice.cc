@@ -398,6 +398,16 @@ void PVSSservice::convAndForwardValueChange(const DpIdentifier& dpId, const Vari
 }
 
 //
+// doWork()
+//
+void PVSSservice::doWork()
+{
+	ASSERT(itsSCADAHandler);
+	itsSCADAHandler->workProc();
+}
+
+
+//
 // dpCreate(dpname, typename)
 //
 PVSSresult PVSSservice::dpCreate(const string& dpName, 

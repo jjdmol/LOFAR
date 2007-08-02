@@ -66,6 +66,8 @@ public:
     PVSSresult dpQuerySubscribeSingle(const string& queryWhere, 
                                       const string& queryFrom);
     PVSSresult dpQueryUnsubscribe	(uint32 queryId);
+
+	void doWork();
     
 private: 
 	// methods
