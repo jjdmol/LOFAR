@@ -74,7 +74,11 @@ class GCFPVBlob : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
  
-  private:
+    /** @see GCFPValue::operator==() */
+    virtual bool operator==(const GCFPValue& that) const;
+    virtual bool operator!=(const GCFPValue& that) const { return (!(*this == that)); }
+ 
+private:
     /// @see GCFPValue::unpack()
     unsigned int unpackConcrete(const char* valBuf);
 
@@ -84,7 +88,7 @@ class GCFPVBlob : public GCFPValue
     /// @see GCFPValue::getSize()
     unsigned int getConcreteSize() const { return sizeof(_length) + _length; }
     
-  private: // Private attributes
+private: // Private attributes
     /// The value (buffer)
     unsigned char* _value;
     /// length of the buffer

@@ -46,6 +46,7 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 src/Makefile
+test/Makefile
 include/Makefile
 include/GCF/Makefile
 pvss/Makefile
