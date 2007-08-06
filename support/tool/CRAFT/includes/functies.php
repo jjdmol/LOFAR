@@ -42,6 +42,7 @@
       	if($_SESSION['bewerken'] == 1)   echo("document.getElementById('suboptie3').innerHTML=\"Comp. bewerken\";");
       	if($_SESSION['verwijderen'] ==1) echo("document.getElementById('suboptie4').innerHTML=\"Comp. verwijderen\";");
       ?>
+      document.getElementById('suboptie5').innerHTML="Comp. zoeken";
   	}	
   	else if (optie ==3) {
     	<?php 
@@ -50,6 +51,7 @@
 	    	if($_SESSION['bewerken'] == 1)    echo("document.getElementById('suboptie3').innerHTML=\"Melding bewerken\";");
 	    	if($_SESSION['verwijderen'] == 1) echo("document.getElementById('suboptie4').innerHTML=\"Melding verwijderen\";");
       ?>
+      document.getElementById('suboptie5').innerHTML="Melding zoeken";      
    	}	
   	else if (optie ==4) {
     	document.getElementById('suboptie1').innerHTML="Algemeen";
@@ -57,6 +59,7 @@
     	document.getElementById('suboptie3').innerHTML="Componenten";
     	document.getElementById('suboptie4').innerHTML="Type meldingen";
     	document.getElementById('suboptie5').innerHTML="Meldingen";
+    	document.getElementById('suboptie6').innerHTML="Historie";
   	}	
   	else if (optie ==5) {
   	}	
@@ -83,44 +86,45 @@
     	document.getElementById('suboptie3').innerHTML="Comp. type verwijderen";
   	}
   	else if (optie ==2) {
-      document.getElementById('suboptie1').innerHTML="Comp. toevoegen"
-      document.getElementById('suboptie2').innerHTML="Comp. bewerken"
+      document.getElementById('suboptie1').innerHTML="Comp. toevoegen";
+      document.getElementById('suboptie2').innerHTML="Comp. bewerken";
       document.getElementById('suboptie3').innerHTML="Comp. verwijderen";
   	}	
   	else if (optie ==3) {
-      document.getElementById('suboptie1').innerHTML="Melding type toevoegen"
-      document.getElementById('suboptie2').innerHTML="Melding type bewerken"
+      document.getElementById('suboptie1').innerHTML="Melding type toevoegen";
+      document.getElementById('suboptie2').innerHTML="Melding type bewerken";
       document.getElementById('suboptie3').innerHTML="Melding type verwijderen";
    	}
   	else if (optie ==4) {
-      document.getElementById('suboptie1').innerHTML="Melding toevoegen"
-      document.getElementById('suboptie2').innerHTML="Melding bewerken"
+      document.getElementById('suboptie1').innerHTML="Melding toevoegen";
+      document.getElementById('suboptie2').innerHTML="Melding bewerken";
       document.getElementById('suboptie3').innerHTML="Melding verwijderen";
   	}
   	else if (optie ==5) {
-      document.getElementById('suboptie1').innerHTML="Velden toevoegen"
-      document.getElementById('suboptie2').innerHTML="Velden bewerken"
+      document.getElementById('suboptie1').innerHTML="Velden toevoegen";
+      document.getElementById('suboptie2').innerHTML="Velden bewerken";
       document.getElementById('suboptie3').innerHTML="Velden verwijderen";
   	}
   	else if (optie ==6) {
-      document.getElementById('suboptie1').innerHTML="Gebruikersgroep toevoegen"
-      document.getElementById('suboptie2').innerHTML="Gebruikersgroep bewerken"
+      document.getElementById('suboptie1').innerHTML="Gebruikersgroep toevoegen";
+      document.getElementById('suboptie2').innerHTML="Gebruikersgroep bewerken";
       document.getElementById('suboptie3').innerHTML="Gebruikersgroep verwijderen";
       document.getElementById('suboptie4').innerHTML="Groepmail versturen";
   	}
   	else if (optie ==7) {
-      document.getElementById('suboptie1').innerHTML="Gebruikers toevoegen"
-      document.getElementById('suboptie2').innerHTML="Gebruikers bewerken"
+      document.getElementById('suboptie1').innerHTML="Gebruikers toevoegen";
+      document.getElementById('suboptie2').innerHTML="Gebruikers bewerken";
       document.getElementById('suboptie3').innerHTML="Gebruikers verwijderen";
+      document.getElementById('suboptie4').innerHTML="Gebruikers mailen";
   	}
   	else if (optie ==8) {
-      document.getElementById('suboptie1').innerHTML="Contacten toevoegen"
-      document.getElementById('suboptie2').innerHTML="Contacten bewerken"
+      document.getElementById('suboptie1').innerHTML="Contacten toevoegen";
+      document.getElementById('suboptie2').innerHTML="Contacten bewerken";
       document.getElementById('suboptie3').innerHTML="Contacten verwijderen";
   	}
   	else if (optie ==9) {
-      document.getElementById('suboptie1').innerHTML="Locaties toevoegen"
-      document.getElementById('suboptie2').innerHTML="Locaties bewerken"
+      document.getElementById('suboptie1').innerHTML="Locaties toevoegen";
+      document.getElementById('suboptie2').innerHTML="Locaties bewerken";
       document.getElementById('suboptie3').innerHTML="Locaties verwijderen";
   	}
   }

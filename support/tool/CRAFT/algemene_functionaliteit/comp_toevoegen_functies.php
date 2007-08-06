@@ -3,6 +3,25 @@
 	session_start();
 ?>
 
+function Laad_Gegevens()
+{
+	var aantal = document.getElementById('aantal').value;
+	for(i=0; i < aantal; i++) {
+		var waarde = document.getElementById(i).value;
+		var type = document.getElementById('t' + i).value;
+		var verplicht = document.getElementById('v' + i).value;
+		var id = document.getElementById('i' + i).value;
+		var naam = document.getElementById('n' + i).value;
+
+		document.frames['frame_extra_velden'].document.getElementById(i).value = waarde;
+		document.frames['frame_extra_velden'].document.getElementById('t'+i).value = type;
+		document.frames['frame_extra_velden'].document.getElementById('v'+i).value = verplicht;
+		document.frames['frame_extra_velden'].document.getElementById('i'+i).value = id;
+		document.frames['frame_extra_velden'].document.getElementById('n'+i).value = naam;
+	}
+}
+
+
 function switchMelding() 
 {
 	var y=document.getElementById('type_melding').value;
@@ -12,29 +31,74 @@ function switchMelding()
 
 function SubmitComponentBewerken() 
 {
+	var aantal = document.frames['frame_extra_velden'].document.getElementById('aantal').value;
+	for(i=0; i < aantal; i++) {
+		var waarde = document.frames['frame_extra_velden'].document.getElementById(i).value;
+		var type = document.frames['frame_extra_velden'].document.getElementById('t'+i).value;
+		var verplicht = document.frames['frame_extra_velden'].document.getElementById('v'+i).value;
+		var id = document.frames['frame_extra_velden'].document.getElementById('i'+i).value;
+		var naam = document.frames['frame_extra_velden'].document.getElementById('n'+i).value;
+		
+		document.getElementById(i).value = waarde;
+		document.getElementById('t' + i).value = type;
+		document.getElementById('v' + i).value = verplicht;
+		document.getElementById('i' + i).value = id;
+		document.getElementById('n' + i).value = naam;
+	}
+
+	var aantemaken = document.frames['frame_extra_velden'].document.getElementById('aantemaken').value;
+
+	for(i=0; i < aantemaken; i++) {
+		var waarde = document.frames['frame_extra_velden'].document.getElementById('a' + i).value;
+		var type = document.frames['frame_extra_velden'].document.getElementById('at'+i).value;
+		var verplicht = document.frames['frame_extra_velden'].document.getElementById('av'+i).value;
+		var id = document.frames['frame_extra_velden'].document.getElementById('ai'+i).value;
+		var naam = document.frames['frame_extra_velden'].document.getElementById('an'+i).value;
+		
+		document.getElementById('a' + i).value = waarde;
+		document.getElementById('at' + i).value = type;
+		document.getElementById('av' + i).value = verplicht;
+		document.getElementById('ai' + i).value = id;
+		document.getElementById('an' + i).value = naam;
+	}
+
 	var s = document.frames['frame_melding'].document.getElementById('sStatus').value;
 	var m = document.frames['frame_melding'].document.getElementById('sMelding').value;
 	var n = document.frames['frame_contact'].document.getElementById('sVerantwoordelijke').value;
-	
+
 	document.getElementById('hidden_melding').value = m;
 	document.getElementById('hidden_status').value = s;
 	document.getElementById('hidden_verantwoordelijke').value = n;
-	
+
 	document.theForm.submit();
 }
 
-function switchDocument(naam, verantwoordelijke)
-{
-	var y=document.getElementById('comp_type').value;
-	document.getElementById('frame_parent').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_parent.php?c=" + y + naam;
-	document.getElementById('frame_naam').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_naam.php?c=" + y + naam;	
-	document.getElementById('frame_fabricant').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_fabricant.php?c=" + y + naam;	
-	document.getElementById('frame_leverancier').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_leverancier.php?c=" + y + naam;	
-	document.getElementById('frame_contact').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/type_verantwoordelijke.php?c=" + y + "&s=" + verantwoordelijke;	
+function PostDocument(url) {
+	var type	= document.getElementById('comp_type').value;
+	document.getElementById('opslaan').value = 0;
+	document.theForm.action = url + "&c=" + type;
+	document.theForm.submit();
 }
+
 
 function submitComponentToevoegen() 
 {
+	var aantal = document.frames['frame_extra_velden'].document.getElementById('aantal').value;
+	
+	for(i=0; i < aantal; i++) {
+		var waarde = document.frames['frame_extra_velden'].document.getElementById(i).value;
+		var type = document.frames['frame_extra_velden'].document.getElementById('t'+i).value;
+		var verplicht = document.frames['frame_extra_velden'].document.getElementById('v'+i).value;
+		var id = document.frames['frame_extra_velden'].document.getElementById('i'+i).value;
+		var naam = document.frames['frame_extra_velden'].document.getElementById('n'+i).value;
+		
+		document.getElementById(i).value = waarde;
+		document.getElementById('t' + i).value = type;
+		document.getElementById('v' + i).value = verplicht;
+		document.getElementById('i' + i).value = id;
+		document.getElementById('n' + i).value = naam;
+	}
+	
 	var n = document.frames['frame_contact'].document.getElementById('sVerantwoordelijke').value;
 	var s = document.frames['frame_melding'].document.getElementById('sStatus').value;
 	var m = document.frames['frame_melding'].document.getElementById('sMelding').value;
@@ -42,6 +106,10 @@ function submitComponentToevoegen()
 	var x = document.frames['frame_naam'].document.getElementById('sComp_Naam').value;
 	var y = document.frames['frame_fabricant'].document.getElementById('sComp_Fabricant').value;
 	var z = document.frames['frame_leverancier'].document.getElementById('sComp_Leverancier').value;
+	var levertijd  = document.frames['frame_leverancier'].document.getElementById('sLevertijd').value;
+	var leverdatum = document.frames['frame_leverancier'].document.getElementById('sLeverdatum').value;
+	var fabricagetijd  = document.frames['frame_fabricant'].document.getElementById('sFabricagetijd').value;
+	var fabricagedatum = document.frames['frame_fabricant'].document.getElementById('sFabricagedatum').value;
 	
 	var aantal  = document.frames['frame_naam'].document.getElementById('sComp_Aantal').value;
 	var maximum = document.frames['frame_naam'].document.getElementById('sComp_Max').value;
@@ -50,6 +118,10 @@ function submitComponentToevoegen()
 	document.getElementById('hidden_naam').value = x;
 	document.getElementById('hidden_fabricant').value = y;
 	document.getElementById('hidden_leverancier').value = z;
+	document.getElementById('hidden_leverdatum').value = leverdatum;
+	document.getElementById('hidden_levertijd').value = levertijd;
+	document.getElementById('hidden_fabricagedatum').value = fabricagedatum;
+	document.getElementById('hidden_fabricagetijd').value = fabricagetijd;
 	document.getElementById('hidden_melding').value = m;
 	document.getElementById('hidden_status').value = s;
 

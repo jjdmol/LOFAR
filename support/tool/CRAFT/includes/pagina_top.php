@@ -20,7 +20,12 @@
 
 
   	<!-- Het toevoegen van het javascript bestandje met de benodigde functies --> 
-		<?php echo('<script type="text/javascript" src="'.$help.'includes/functies.php"></script>'); ?>
+		<?php 
+			if (isset($_SESSION['gebr_id'])) {
+				echo("<script type=\"text/javascript\" src=\"".$help."includes/functies.php\"></script>"); 
+			}
+			
+		?>
 		
 
 	</head>
@@ -29,9 +34,10 @@
   <?php 
 	  //controleren of er een startpagina opgeslagen is.
 	  //dit is benodigd om de startpagina in het menu te highlighten, na het inloggen
-	  if (isset($_SESSION['pag_start']) && isset($_GET['p'])) 
-			echo('onload="changeSubmenu('.$_SESSION['pag_start'].','.$_GET['p'].',0)">');
-		else echo(">");
+	  //if (isset($_SESSION['pag_start']) && isset($_GET['p'])) 
+		//	echo('onload="changeSubmenu('.$_SESSION['pag_start'].','.$_GET['p'].',0)">');
+		//else 
+		echo(">");
 		?>
 	  <div id="container">
 

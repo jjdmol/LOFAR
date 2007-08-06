@@ -115,6 +115,22 @@
 			    				<td>Standaard oplossing:</td>
 			    				<td><textarea name="type_oplossing" rows="5" cols="35"><?php if (isset($_POST['type_oplossing'])) echo(htmlentities($_POST['type_oplossing'], ENT_QUOTES)); else echo($row['Stand_Oplossing']); ?></textarea></td>
 			    			</tr>
+			    			<?php 
+			    			
+			    				$query = "SELECT COUNT(Kolom_ID) FROM Type_Melding_Koppel_Extra WHERE Meld_Type_ID = '". $_GET['c']."'";
+									$resultaat = mysql_query($query);
+									$data = mysql_fetch_row($resultaat);
+									
+									if ($data[0] > 0) {
+			    				
+				    				?>
+					    			<tr>
+					    				<td>Extra velden:</td>
+						  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>admin_melding_types/type_melding_extra_velden.php?c=<?php echo($_GET['c']); ?>" width="400" height="100" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
+					    			</tr>
+			    					<?php
+			    				}
+			    			?>
 				    		<tr>
 				    			<td><input name="opslaan" type="hidden" value="1"></td>
 				    			<td><a href="javascript:document.theForm.submit();">Opslaan</a></td>

@@ -14,14 +14,18 @@
 		include_once($_SESSION['pagina'] . "includes/pagina_top.php");
 
 	?>
-  <div id="hoofdscherm">    
+  <div id="hoofdscherm">  	    
   	
-    	<?php 
+		<?php  			
+				echo('<script language="JavaScript">');
+				echo("changeSubmenu(". $_GET['p'] . ",". $_GET['p'] . ",0)");
+				echo("</script>");   	
+
     		//hieronder wordt de te laden pagina bepaalt
     		//TODO controleren of die pagina wel geladen mag worden!!!!!!!
     		$pagina = $_GET['p'];
     		if ($pagina == 1) include ($_SESSION['pagina'] .'main/start.php');
-    		else if ($pagina == 2) {
+    		else if ($pagina == 2) {					
 					//toevoegen van componenten 
 					if (isset($_GET['s']) && $_GET['s'] == 2)
 						include($_SESSION['pagina'] . 'main_componenten/toevoegen.php');
@@ -33,9 +37,9 @@
 						include($_SESSION['pagina'] . 'main_componenten/verwijderen.php');    			
     			//toevoegen van componenten (standaard actie)
     			else 
-						include($_SESSION['pagina'] . 'main_componenten/overzicht.php');
+						include($_SESSION['pagina'] . 'main_componenten/overzicht.php');					
     		}
-    		else if ($pagina == 3) {
+    		else if ($pagina == 3) { 			
 					//toevoegen van componenten 
 					if (isset($_GET['s']) && $_GET['s'] == 2)
 						include($_SESSION['pagina'] . 'main_meldingen/toevoegen.php');
@@ -63,6 +67,9 @@
 					//meldingen
 					else if (isset($_GET['s']) && $_GET['s'] == 5)
 						include($_SESSION['pagina'] . 'main_statistieken/meldingen.php');    			
+					//historie
+					else if (isset($_GET['s']) && $_GET['s'] == 6)
+						include($_SESSION['pagina'] . 'main_statistieken/historie.php');
     			//algemene statistieken
     			else 
 						include($_SESSION['pagina'] . 'main_statistieken/algemeen.php');

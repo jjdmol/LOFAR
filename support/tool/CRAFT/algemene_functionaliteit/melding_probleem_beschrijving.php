@@ -10,7 +10,7 @@
 		$resultaat = mysql_query($query);
 		$data = mysql_fetch_array($resultaat);
 		echo("<input name=\"sStatus\" id=\"sStatus\" type=\"hidden\" value=\"".$data[1]."\">");
-		echo("<textarea name=\"sProb_Beschrijving\" rows=\"4\" cols=\"35\">".$data[0]."</textarea>");
+		echo("<textarea name=\"sProb_Beschrijving\" rows=\"3\" cols=\"35\">".$data[0]."</textarea>");
 		
 	}
 	echo("</BODY>");

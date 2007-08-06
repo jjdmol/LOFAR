@@ -7,6 +7,7 @@
 <h2>Instellingen</h2>
 <?php
 	
+	//controle van ingevoerde gegevens
 	function Validatie_Opslaan() {
 		if(isset($_POST['opslaan']) && $_POST['opslaan'] == 0)
 			return false;
@@ -29,12 +30,21 @@
 	if(Validatie_Opslaan()) {
 		//opslaan
 		$query = "UPDATE gebruiker SET inlognaam= '". $_POST['naam'] . "', Wachtwoord= '". md5($_POST['wachtwoord']) ."'
-		, Emailadres='". $_POST['email'] ."', Start_Alg='". $_POST['start'] ."' WHERE Werknem_ID = '" .$_SESSION['gebr_id']. "'";
+		, Emailadres='". $_POST['email'] ."', Start_Alg='". $_POST['start'] ."', Start_Comp='". $_POST['Start_Comp'] ."'
+		, Start_Melding='". $_POST['Start_Melding'] ."', Start_Stats='". $_POST['Start_Stats'] ."' WHERE Werknem_ID = '" .$_SESSION['gebr_id']. "'";
+
+		//de "nieuwe" gegevens in de sessievariabelen zetten, zodat deze meteen geladen/bruikbaar zijn
+		$_SESSION['gebr_naam']  = $_POST['naam'];
+		$_SESSION['gebr_email'] = $_POST['email'];
+//		$_SESSION['taal']			  = $_POST[''];
+		$_SESSION['start_tabblad'] = $_POST['start'];
+		$_SESSION['start_comp'] 	 = $_POST['Start_Comp'];
+		$_SESSION['start_melding'] = $_POST['Start_Melding'];
+		$_SESSION['start_stats'] 	 = $_POST['Start_Stats'];
+
 		if (mysql_query($query)) echo("Uw persoons-gegevens zijn gewijzigd<br>");
 		else("Er is iets mis gegaan met het opslaan uw gegevens. Probeer het nog een keer.");
 		echo('<a href="main.php?p=5">Klik hier om terug te keren naar uw gegevens of selecteer uit het menu een andere optie.</a>');
-		
-		
 	}
 	else {
 		//het ophalen van de gegevens van de gebruiker uit de database om deze te tonen
@@ -84,15 +94,83 @@
 	  </tr>
 		<tr>
 			<td>Componenten startpagina:</td>
-			<td><?php echo($row['Start_Comp']) ?></td>
+			<td>
+				<select name="Start_Comp">
+					<?php 
+						if(isset($_POST['Start_Comp'])) $start_comp = $_POST['Start_Comp'];
+						else $start_comp = $row['Start_Comp'];
+					?>
+
+					<option value="1" <?php if ($start_comp == 1) echo("SELECTED"); ?>>Comp. overzicht</option>
+					<?php 
+						if ($_SESSION['toevoegen'] == 1) {
+							echo('<option value=\"2\"'); 
+							if ($start_comp == 2) echo("SELECTED"); 
+							echo(">Comp. toevoegen</option>");
+						}
+						if ($_SESSION['bewerken'] == 1) {
+							echo('<option value=\"3\"'); 
+							if ($start_comp == 3) echo("SELECTED"); 
+							echo(">Comp. bewerken</option>");
+						}
+						if ($_SESSION['verwijderen'] == 1) {
+							echo('<option value=\"4\"'); 
+							if ($start_comp == 4) echo("SELECTED"); 
+							echo(">Comp. verwijderen</option>");
+						}
+					?>
+					<option value="5" <?php if ($start_comp == 5) echo("SELECTED"); ?>>Comp. zoeken</option>
+				</select>
+			</td>
 		</tr>
 		<tr>
 			<td>Meldingen startpagina:</td>
-			<td><?php echo($row['Start_Melding']) ?></td>
+			<td>
+				<select name="Start_Melding">
+					<?php 
+						if(isset($_POST['Start_Melding'])) $start_melding = $_POST['Start_Melding'];
+						else $start_melding = $row['Start_Melding'];
+					?>
+
+					<option value="1" <?php if ($start_melding == 1) echo("SELECTED"); ?>>Melding overzicht</option>
+					<?php 
+						if ($_SESSION['toevoegen'] == 1) {
+							echo('<option value=\"2\"'); 
+							if ($start_melding == 2) echo("SELECTED"); 
+							echo(">Melding toevoegen</option>");
+						}
+						if ($_SESSION['bewerken'] == 1) {
+							echo('<option value=\"3\"'); 
+							if ($start_melding == 3) echo("SELECTED"); 
+							echo(">Melding bewerken</option>");
+						}
+						if ($_SESSION['verwijderen'] == 1) {
+							echo('<option value=\"4\"'); 
+							if ($start_melding == 4) echo("SELECTED"); 
+							echo(">Melding verwijderen</option>");
+						}
+					?>
+					<option value="5" <?php if ($start_melding == 5) echo("SELECTED"); ?>>Melding zoeken</option>
+				</select>
+			</td>
 		</tr>
 		<tr>
 			<td>Statistieken startpagina:</td>
-			<td><?php echo($row['Start_Stats']) ?></td>
+			<td>
+				<select name="Start_Stats">
+					<?php 
+						if(isset($_POST['Start_Stats'])) $start_stats = $_POST['Start_Stats'];
+						else $start_stats = $row['Start_Stats'];
+					?>
+
+					<option value="1" <?php if ($start_stats == 1) echo("SELECTED"); ?>>Algemeen</option>
+					<option value="2" <?php if ($start_stats == 2) echo("SELECTED"); ?>>Type componenten</option>
+					<option value="3" <?php if ($start_stats == 3) echo("SELECTED"); ?>>Componenten</option>
+					<option value="4" <?php if ($start_stats == 4) echo("SELECTED"); ?>>Type meldingen</option>
+					<option value="5" <?php if ($start_stats == 5) echo("SELECTED"); ?>>Meldingen</option>
+					<option value="6" <?php if ($start_stats == 6) echo("SELECTED"); ?>>Historie</option>
+				</select>
+			</td>
 		</tr>
 		<tr>
 			<td align="right"><input name="opslaan" type="hidden" value="1"><a href="javascript:document.theForm.submit();">Wijzigen</a></td>

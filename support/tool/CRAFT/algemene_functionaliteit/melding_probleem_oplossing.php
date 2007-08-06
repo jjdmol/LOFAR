@@ -10,7 +10,7 @@
 		$resultaat = mysql_query($query);
 		$data = mysql_fetch_array($resultaat);
 		
-		echo("<textarea name=\"sProb_Oplossing\" rows=\"4\" cols=\"35\">".$data[0]."</textarea>");
+		echo("<textarea name=\"sProb_Oplossing\" rows=\"3\" cols=\"35\">".$data[0]."</textarea>");
 		
 	}
 	echo("</BODY>");

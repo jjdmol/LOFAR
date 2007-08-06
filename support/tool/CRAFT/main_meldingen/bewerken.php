@@ -26,6 +26,8 @@
 					</div>
 	  		</div>
 	  		<?php	
+	  			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."algemene_functionaliteit/melding_toevoegen_functies.php\"></script>");
+
 	  			echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree.js\"></script>");
 					echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree_items.php\"></script>");
 					echo("<script language=\"JavaScript\" src=\"". $_SESSION['pagina'] ."includes/tree_tpl.js\"></script>");

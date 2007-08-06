@@ -65,6 +65,9 @@
 					$_SESSION['groep_id']		= $row['Groep_ID'];
 					$_SESSION['taal']			  = $row['Gebruiker_Taal'];
 					$_SESSION['start_tabblad'] = $row['Start_Alg'];
+					$_SESSION['start_comp'] 	 = $row['Start_Comp'];
+					$_SESSION['start_melding'] = $row['Start_Melding'];
+					$_SESSION['start_stats'] 	 = $row['Start_Stats'];
 					$_SESSION['laatste_inlog'] = $row['Laatst_Ingelogd'];
 					$query = "SELECT * FROM gebruikers_groepen WHERE Groep_ID = '".$row['Groep_ID']."'";
 					$result = mysql_query($query);
