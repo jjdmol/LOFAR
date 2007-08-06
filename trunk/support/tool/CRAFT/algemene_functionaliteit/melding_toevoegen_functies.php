@@ -4,16 +4,70 @@
 
 ?>
 
-function switchMelding() 
+function PostDocument(url) {
+	var type	= document.getElementById('Type_Melding').value;
+	document.getElementById('opslaan').value = 0;
+	document.theForm.action = url + "&n=" + type;
+	document.theForm.submit();
+}
+
+
+function SubmitMeldingBewerken()
 {
-	var y=document.getElementById('Type_Melding').value;
-	document.getElementById('frame_beschrijving').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_probleem_beschrijving.php?c=" + y;
-	document.getElementById('frame_oplossing').src = "<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_probleem_oplossing.php?c=" + y;
+	var aantal = document.frames['frame_extra_velden'].document.getElementById('aantal').value;
+
+	for(i=0; i < aantal; i++) {
+		var waarde = document.frames['frame_extra_velden'].document.getElementById(i).value;
+		var type = document.frames['frame_extra_velden'].document.getElementById('t'+i).value;
+		var verplicht = document.frames['frame_extra_velden'].document.getElementById('v'+i).value;
+		var id = document.frames['frame_extra_velden'].document.getElementById('i'+i).value;
+		var naam = document.frames['frame_extra_velden'].document.getElementById('n'+i).value;
+		
+		document.getElementById(i).value = waarde;
+		document.getElementById('t' + i).value = type;
+		document.getElementById('v' + i).value = verplicht;
+		document.getElementById('i' + i).value = id;
+		document.getElementById('n' + i).value = naam;
+	}
+	
+	var aantemaken = document.frames['frame_extra_velden'].document.getElementById('aantemaken').value;
+
+	for(i=0; i < aantemaken; i++) {
+		var waarde = document.frames['frame_extra_velden'].document.getElementById('a' + i).value;
+		var type = document.frames['frame_extra_velden'].document.getElementById('at'+i).value;
+		var verplicht = document.frames['frame_extra_velden'].document.getElementById('av'+i).value;
+		var id = document.frames['frame_extra_velden'].document.getElementById('ai'+i).value;
+		var naam = document.frames['frame_extra_velden'].document.getElementById('an'+i).value;
+		
+		document.getElementById('a' + i).value = waarde;
+		document.getElementById('at' + i).value = type;
+		document.getElementById('av' + i).value = verplicht;
+		document.getElementById('ai' + i).value = id;
+		document.getElementById('an' + i).value = naam;
+	}
+	
+	document.theForm.submit();
 }
 
 
 function SubmitMeldingToevoegen() 
 {
+	var aantal = document.frames['frame_extra_velden'].document.getElementById('aantal').value;
+	
+	for(i=0; i < aantal; i++) {
+		var waarde = document.frames['frame_extra_velden'].document.getElementById(i).value;
+		var type = document.frames['frame_extra_velden'].document.getElementById('t'+i).value;
+		var verplicht = document.frames['frame_extra_velden'].document.getElementById('v'+i).value;
+		var id = document.frames['frame_extra_velden'].document.getElementById('i'+i).value;
+		var naam = document.frames['frame_extra_velden'].document.getElementById('n'+i).value;
+		
+		document.getElementById(i).value = waarde;
+		document.getElementById('t' + i).value = type;
+		document.getElementById('v' + i).value = verplicht;
+		document.getElementById('i' + i).value = id;
+		document.getElementById('n' + i).value = naam;
+	}
+
 	var s = document.frames['frame_beschrijving'].document.getElementById('sStatus').value;
 	var o = document.frames['frame_oplossing'].document.getElementById('sProb_Oplossing').value;
 	var b = document.frames['frame_beschrijving'].document.getElementById('sProb_Beschrijving').value;

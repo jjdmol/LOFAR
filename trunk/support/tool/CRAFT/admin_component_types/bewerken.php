@@ -202,6 +202,22 @@
 			    				
 			    				?>
 			    				<tr><td>Verantwoordelijke:</td><td><iframe id="frame_contact" name="frame_contact" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/type_verantwoordelijke.php?c=<?php echo($type_selectie . "&s=" . $verantwoordelijke);?>" width="300" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td></tr>
+				    			<?php 
+				    			
+				    				$query = "SELECT COUNT(Kolom_ID) FROM Type_Comp_Koppel_Extra WHERE Comp_Type_ID = '". $_GET['c']."'";
+										$resultaat = mysql_query($query);
+										$data = mysql_fetch_row($resultaat);
+										
+										if ($data[0] > 0) {
+				    				
+					    				?>
+						    			<tr>
+						    				<td>Extra velden:</td>
+							  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>admin_component_types/comp_type_extra_velden.php?c=<?php echo($_GET['c']); ?>" width="400" height="100" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
+						    			</tr>
+				    					<?php
+				    				}
+				    			?>
 					    		<tr>
 										<td id="opslaan" align="right"><a href="javascript:submitTypeOpslaan();">Opslaan</a></td>
 					    			<td><input name="hidden_verantwoordelijke" id="hidden_verantwoordelijke" type="hidden" value="-1"><input id="opslaan" name="opslaan" type="hidden" value="1"></td>

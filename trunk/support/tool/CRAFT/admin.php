@@ -14,8 +14,12 @@
 ?>
 
 	  <div id="hoofdscherm">    
+  	
+			<?php  			
+				echo('<script language="JavaScript">');
+				echo("changeSubmenu(". $_GET['p'] . ",". $_GET['p'] . ",1)");
+				echo("</script>");   	
 
-    	<?php 
     		//hieronder wordt de te laden pagina bepaalt
     		//TODO controleren of die pagina wel geladen mag worden!!!!!!!
     		$pagina = $_GET['p'];
@@ -102,7 +106,10 @@
 						include($_SESSION['pagina'] . 'admin_gebruikers/bewerken.php');
 					//verwijderen van gebruikers
 					else if (isset($_GET['s']) && $_GET['s'] == 3)
-						include($_SESSION['pagina'] . 'admin_gebruikers/verwijderen.php');    			
+						include($_SESSION['pagina'] . 'admin_gebruikers/verwijderen.php');
+					//mailen van gebruikers
+					else if (isset($_GET['s']) && $_GET['s'] == 4)
+						include($_SESSION['pagina'] . 'admin_gebruikers/mailen.php');
     			//toevoegen van gebruikers (standaard actie)
     			else 
 						include($_SESSION['pagina'] . 'admin_gebruikers/toevoegen.php');   			

@@ -8,7 +8,7 @@
 	//functie om alle extra velden uit de database te lezen en deze op te slaan 
   function Extra_Velden_Lijst() {
   	$Collectie = array();
-  	$query = 'SELECT Kolom_ID, Veld_Naam FROM comp_locatie';
+  	$query = "SELECT Kolom_ID, Veld_Naam FROM extra_velden WHERE Type_Beschrijving = '-1'";
 	  $resultaat = mysql_query($query);
   	while ($huidige_level = mysql_fetch_array($resultaat)) {
   		$Comp_Type = new Type_Object();
@@ -206,9 +206,8 @@
 	  return $Collectie;
   }
   
+  include("vars.php");
   
-  $link = mysql_connect("localhost", "root", "root") or die("Kan niet verbinden: " . mysql_error());
-  mysql_select_db('LOFAR-CRAFT', $link) or die('Could not select database.');
   $query = 'SELECT Comp_Type, Type_Naam FROM comp_type WHERE Type_Parent = 1';
   $rest = mysql_query($query);
   
@@ -253,7 +252,5 @@
 	echo ("var TREE_ITEMS = [");	
 	echo(Recursieve_Uitlees_Methode($Types_Objecten));
 	echo ("];");
-
-  mysql_close($link);  
 
 ?>

@@ -1,7 +1,48 @@
 <?php
 
+	function Extra_Velden_Controle() {
+		//extra velden controle!!!
+		$aantal_velden = $_POST['aantal'];
+		
+		for($i = 0; $i < $aantal_velden; $i++) {
+			//verplichte velden ingevuld??
+			if ($_POST['v' . $i] == 1) {
+				if ($_POST[$i] == '') return false;
+			}
+			//datum controle bij datum velden
+			if ($_POST['t' . $i] == '4a') {
+				if (Valideer_Datum($_POST[$i]) == false) return false;
+			}
+			//tijd controle bij datum velden
+			if ($_POST['t' . $i] == '4b') {
+				if (Valideer_Tijd($_POST[$i]) == false) return false;
+			}
+		}
+		
+		//extra velden controle!!!
+		$aan_te_maken = $_POST['aantemaken'];
+		
+		for($i = 0; $i < $aan_te_maken; $i++) {
+			//verplichte velden ingevuld??
+			if ($_POST['av' . $i] == 1) {
+				if ($_POST['a' . $i] == '') return false;
+			}
+			//datum controle bij datum velden
+			if ($_POST['at' . $i] == '4a') {
+				if (Valideer_Datum($_POST['a'.$i]) == false) return false;
+			}
+			//tijd controle bij datum velden
+			if ($_POST['at' . $i] == '4b') {
+				if (Valideer_Tijd($_POST['a'.$i]) == false) return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	
 	function Child_Controle() {
-		$query = "SELECT Count(Comp_Type_ID) FROM comp_lijst WHERE Comp_Type_ID = '".$_GET['c']."' GROUP BY Comp_Type_ID";
+		$query = "SELECT Count(Comp_Type_ID) FROM comp_lijst WHERE Comp_Parent_ID = '".$_GET['c']."' GROUP BY Comp_Type_ID";
 		$resultaat = mysql_query($query);
 		if ($resultaat != null) {
 			$data = mysql_fetch_array($resultaat);
@@ -92,6 +133,9 @@
 				}
 			}
 		}
+		
+		return Extra_Velden_Controle();
+
 		return true;
 	}
 
@@ -119,21 +163,97 @@
 		$query = $query . "', Comp_Locatie = '". $_POST['comp_locatie'] ."', Comp_Verantwoordelijke = '". $_POST['hidden_verantwoordelijke'] . "'";
 		
 		//de waarde voor de leverdatum aan de query toevoegen
-		if (isset($_POST['leverdatum']) && $_POST['leverdatum'] != '') {
-			$datum = split("-",$_POST['leverdatum']);
-			$query = $query . ", Lever_Datum = '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['levertijd'] .":00'";
-		}
+		if (isset($_POST['leverdatum']) && $_POST['leverdatum'] != '')
+			$query = $query . ", Lever_Datum = '". Datum_Tijd_Naar_DB_Conversie($_POST['leverdatum'],$_POST['levertijd']) ."'";
 
 		//de waarde voor de fabricagedatum aan de query toevoegen
-		if (isset($_POST['fabricagedatum']) && $_POST['fabricagedatum'] != '') {
-			$datum = split("-",$_POST['fabricagedatum']);
-			$query = $query . ", Fabricatie_Datum = '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['fabricagetijd'] .":00'";
-		}
+		if (isset($_POST['fabricagedatum']) && $_POST['fabricagedatum'] != '')
+			$query = $query . ", Fabricatie_Datum = '". Datum_Tijd_Naar_DB_Conversie($_POST['fabricagedatum'],$_POST['fabricagetijd']) ."'";
 	
 		$query = $query . ", Contact_Leverancier='".$_POST['leverancier']."', Contact_Fabricant='".$_POST['fabricant']."' WHERE Comp_Lijst_ID = '" . $_GET['c'] . "'";
 
-		if (mysql_query($query)) echo("Het gewijzigde component \"". $_POST['comp_naam'] ."\" is in het systeem bijgewerkt<br>");
-		else("Er is iets mis gegaan met het opslaan van het component \"". $_POST['comp_naam'] ."\"!! Het component is niet bijgewerkt!");
+		$errorlevel = 0;
+		if (mysql_query($query)) {
+			$errorlevel = 1;
+			
+			//aantal velden controle.. meer dan 0 dan dit doen, anders overslaan
+			if (isset($_POST['aantal']) && $_POST['aantal'] > 0) {
+				//voor elk veld het record updaten
+				for ($i = 0; $i < $_POST['aantal']; $i++){
+    			
+    			$query  = "SELECT Data_Kolom_ID FROM extra_velden WHERE Kolom_ID ='".$_POST['i'. $i]."'";
+					$result = mysql_query($query);
+					$veld   = mysql_fetch_array($result);
+    			
+    			$waarde = $_POST[$i];
+    			//1 = integer, 2 = double, 3 = text, 4 = datumtijd, 5 = bestandsverwijzing
+					if ($_POST['t'.$i] == 1)   		$type = 'Type_Integer';
+					else if ($_POST['t'.$i] == 2) $type = 'Type_Double';
+					else if ($_POST['t'.$i] == 3) $type = 'Type_Text';
+					else if ($_POST['t'.$i] == '4b') {
+						$type = 'Type_DateTime';
+						$waarde = Datum_Tijd_Naar_DB_Conversie($_POST[$i -1],$_POST[$i]);
+					}
+					else if ($_POST['t'.$i] == 5) $type = 'Type_TinyText';
+ 					else $type = '';
+
+					$query = "UPDATE datatabel SET " . $type . " ='" . $waarde . "' WHERE Data_Kolom_ID = '". $veld['Data_Kolom_ID'] ."'";
+					
+					if (($_POST['t' . $i] != '4a') && mysql_query($query)) {
+						$errorlevel = 2;
+					}
+				}
+			}
+			
+			$error_extra = 0;
+			//de extra velden, welke nog niet aangemaakt zijn, in de database toevoegen
+			if (isset($_POST['aantemaken']) && $_POST['aantemaken'] > 0) {
+
+				for ($i = 0; $i < $_POST['aantemaken']; $i++){
+ 				
+	 				//DataTabel entry maken
+	  			//integer
+	  			if ($_POST['at' . $i] == '1') 		   $query = "INSERT INTO datatabel (Type_Integer) VALUES('".$_POST['a'.$i]."')";
+	  			//double
+	  			else if ($_POST['at' . $i] == '2')  $query = "INSERT INTO datatabel (Type_Double) VALUES('".$_POST['a'.$i]."')"; 
+	  			//text
+	  			else if ($_POST['at' . $i] == '3')  $query = "INSERT INTO datatabel (Type_Text) VALUES('".$_POST['a'.$i]."')"; 
+	  			//datumtijd
+	  			else if ($_POST['at' . $i] == '4b') $query = "INSERT INTO datatabel (Type_DateTime) VALUES('". Datum_Tijd_Naar_DB_Conversie($_POST['a'.($i -1)],$_POST['a'.$i]) ."')"; 
+	  			//bestandsverwijzing
+	  			else if ($_POST['at' . $i] == '5')  $query = "INSERT INTO datatabel (Type_TinyText) VALUES('".$_POST['a'.$i]."')"; 
+	  			else $query = "";
+	
+					//uitvoeren van de datatabel record
+					if (($_POST['at' . $i] != '4a') && mysql_query($query)) {
+		 				$error_extra = 1;
+	
+    				$Veld_ID = mysql_insert_id();
+    				
+    				if ($_POST['at'.$i] == '4b') $datatype = 4;
+    				else $datatype = $_POST['at'.$i];
+    				
+    				$query = "INSERT INTO extra_velden (Data_Kolom_ID, Veld_Naam, Aangemaakt_Door, DataType, Type_Beschrijving, Tabel_Type, Is_Verplicht)";
+    				$query = $query . "VALUES ('".$Veld_ID."', '".$_POST['an'.$i]."', '".$_SESSION['gebr_id'] ."', '".$datatype."', '". $_POST['ai'.$i] ."', '3', '".$_POST['av'.$i]."')";
+
+	    			if (mysql_query($query)) {
+			 				$error_extra = 2;
+
+	    				$Veld_ID = mysql_insert_id();	  				
+	  					$query = "INSERT INTO Comp_Koppel_Extra (Kolom_ID, Comp_Lijst_ID) VALUES('".$Veld_ID. "', '". $_GET['c'] ."')";
+		    			
+		    			if (mysql_query($query)) {
+				 				$error_extra = 3;
+  		  			}
+	    			}
+					}
+				}
+			}
+		}
+		
+		if ($errorlevel == 2) echo("Het gewijzigde component \"". $_POST['comp_naam'] ."\" is (inclusief extra velden)in het systeem bijgewerkt<br>");
+		else if ($errorlevel == 0) echo("Er is iets mis gegaan met het opslaan van het component \"". $_POST['comp_naam'] ."\"!! Het component is niet bijgewerkt!");
+		else if ($errorlevel == 1) echo("Het gewijzigde component \"". $_POST['comp_naam'] ."\" is in het systeem bijgewerkt<br>");
 		echo('<a href="'.$_SESSION['huidige_pagina'].'&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige component of selecteer links een component uit de treeview.</a>');
 							
 	}
@@ -203,19 +323,16 @@
 		  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
 							}
   					?>
-  					</select></td>
+  					</select> Aangemaakt:
+						<input name="statusdatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['statusdatum'])) echo($_POST['statusdatum']); else echo(date('d-m-Y')); ?>">
+						<input name="statustijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['statustijd'])) echo($_POST['statustijd']); else echo(date('H:i')); ?>">
+					  <?php if(isset($_POST['statusdatum']) && (!Valideer_Datum($_POST['statusdatum']) || !Valideer_Tijd($_POST['statustijd']))) echo('<b>* Onjuiste datum/tijd samenstelling!</b>'); ?></td>
+  				</td>
   			</tr>
 				<tr>
 					<td>Melding beschrijving:</td>
 					<td><iframe id="frame_melding" name="frame_melding" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_melding.php?c=<?php echo($selectie); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="450" height="72" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
 					</td>
-				</tr>
-				<tr>
-					<td>Status datum:</td>
-					<td>
-						<input name="statusdatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['statusdatum'])) echo($_POST['statusdatum']); else echo(date('d-m-Y')); ?>">
-						<input name="statustijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['statustijd'])) echo($_POST['statustijd']); else echo(date('H:i')); ?>">
-					  <?php if(isset($_POST['statusdatum']) && (!Valideer_Datum($_POST['statusdatum']) || !Valideer_Tijd($_POST['statustijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?></td>
 				</tr>
 				<tr>
 					<td>Locatie component:</td>
@@ -229,15 +346,15 @@
 								echo(">". $data['Loc_Naam'] ."</option>\r\n");
 							}
 						?>
-					</select></td>
+					</select> Verantwoordelijke: 
+						<?php
+							if (isset($_POST['hidden_verantwoordelijke'])) 
+								$verantwoordelijke = $_POST['hidden_verantwoordelijke'];
+							else $verantwoordelijke = $row['Comp_Verantwoordelijke'];
+						?>
+	 					<iframe id="frame_contact" name="frame_contact" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/type_verantwoordelijke.php?c=<?php echo($row['Comp_Type_ID'] . "&s=" . $verantwoordelijke);?>" width="300" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+					</td>
 				</tr>
-				<?php
-					if (isset($_POST['hidden_verantwoordelijke'])) 
-						$verantwoordelijke = $_POST['hidden_verantwoordelijke'];
-					else $verantwoordelijke = $row['Comp_Verantwoordelijke'];
-				?>
- 				<tr><td>Verantwoordelijke:</td><td><iframe id="frame_contact" name="frame_contact" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/type_verantwoordelijke.php?c=<?php echo($row['Comp_Type_ID'] . "&s=" . $verantwoordelijke);?>" width="300" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td></tr>
-
 				<tr>
 					<td>Fabricant:</td>
 					<td><select name="fabricant">				    				
@@ -253,7 +370,19 @@
 					  			echo('SELECTED');
 					  		echo('>'. $data['Contact_Naam'] .'</option>');
 					  	}
-				    ?></select>
+				    ?></select> Fabr. datum: 						
+				    <?php 
+							//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
+    					$gedeeldveld=split(" ",$row['Fabricatie_Datum']);
+							//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
+							$datum = split("-",$gedeeldveld[0]);
+							//tijd veld opdelen zodat de uren, minuten en secondevelden makkelijk te benaderen zijn
+							$tijd = split(":",$gedeeldveld[1]);
+						 ?>
+						<input name="fabricagedatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['fabricagedatum'])) echo($_POST['fabricagedatum']); else echo($datum[2] ."-". $datum[1] ."-". $datum[0]); ?>">
+						<input name="fabricagetijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['fabricagetijd'])) echo($_POST['fabricagetijd']); else echo($tijd[0] .":". $tijd[1]); ?>">
+					  <?php if(isset($_POST['fabricagedatum']) && (!Valideer_Datum($_POST['fabricagedatum']) || !Valideer_Tijd($_POST['fabricagetijd']))) echo('<b>* Onjuiste datum/tijd samenstelling!</b>'); ?></td>
+
 					</td>
 				</tr>
 				<tr>
@@ -271,11 +400,7 @@
 					  			echo('SELECTED');
 					  		echo('>'. $data['Contact_Naam'] .'</option>');
 					  	}
-				    ?></select></td>
-				</tr>
-				<tr>
-					<td>Leverdatum:</td>
-					<td>
+				    ?></select> Leverdatum:
 						<?php 
 							//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
     					$gedeeldveld=split(" ",$row['Lever_Datum']);
@@ -286,32 +411,92 @@
 						 ?>
 						<input name="leverdatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['leverdatum'])) echo($_POST['leverdatum']); else echo($datum[2] ."-". $datum[1] ."-". $datum[0]); ?>">
 						<input name="levertijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['levertijd'])) echo($_POST['levertijd']); else echo($tijd[0] .":". $tijd[1]); ?>">
-					  <?php if(isset($_POST['leverdatum']) && (!Valideer_Datum($_POST['leverdatum']) || !Valideer_Tijd($_POST['levertijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?></td>
+					  <?php if(isset($_POST['leverdatum']) && (!Valideer_Datum($_POST['leverdatum']) || !Valideer_Tijd($_POST['levertijd']))) echo('<b>* Onjuiste datum/tijd samenstelling!</b>'); ?>
+					</td>
 				</tr>
 				<tr>
-					<td>Fabricagedatum:</td>
-					<td>
-						<?php 
-							//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
-    					$gedeeldveld=split(" ",$row['Fabricatie_Datum']);
-							//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
-							$datum = split("-",$gedeeldveld[0]);
-							//tijd veld opdelen zodat de uren, minuten en secondevelden makkelijk te benaderen zijn
-							$tijd = split(":",$gedeeldveld[1]);
-						 ?>
-						<input name="fabricagedatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['fabricagedatum'])) echo($_POST['fabricagedatum']); else echo($datum[2] ."-". $datum[1] ."-". $datum[0]); ?>">
-						<input name="fabricagetijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['fabricagetijd'])) echo($_POST['fabricagetijd']); else echo($tijd[0] .":". $tijd[1]); ?>">
-					  <?php if(isset($_POST['fabricagedatum']) && (!Valideer_Datum($_POST['fabricagedatum']) || !Valideer_Tijd($_POST['fabricagetijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?></td>
+  				<td>Extra velden:<br>(* = verplicht)</td>
+  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/component_bewerken_extra_velden.php?c=<?php echo($_GET['c']); ?>" width="400" height="110" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+  					<?php
+  					  if (isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && !Extra_Velden_Controle()) echo("<b>* Foutieve waardes!</b>");
+  					?>
+  				</td>
 				</tr>
     		<tr>
-					<td id="opslaan" align="right"><a href="javascript:SubmitComponentBewerken();">Opslaan</a></td>
     			<td>
+  					<?php
+		 					//eerst bepalen hoeveel velden er zijn, ivm met het datumveld dat uit 2 input boxen bestaat
+							$query = "SELECT Kolom_ID FROM comp_koppel_extra WHERE Comp_Lijst_ID = '". $_GET['c'] ."'";
+							$resultaat = mysql_query($query);
+							$aangemaakte_velden = array();
+							$aantal_velden = 0;
+							while ($data = mysql_fetch_row($resultaat)) {
+								$query = "SELECT * FROM extra_velden WHERE Kolom_ID = '". $data[0]  ."'";
+								$result = mysql_query($query);
+								$velden = mysql_fetch_array($result);
+								//4 = datumtijd
+								if ($velden['DataType'] == 4)
+									$aantal_velden++;
+
+								$aantal_velden++;								
+			 	  			array_push($aangemaakte_velden, $velden['Type_Beschrijving']);
+							}
+ 							//het aantal onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
+ 							echo("<input id=\"aantal\" name=\"aantal\" type=\"hidden\" value=\"".$aantal_velden."\">\n");
+							
+  						//4 hidden velden aanmaken voor elk extra veld: 1 voor de waarde, 1 voor het type en 1 voor de verplichtheid
+							for($i = 0; $i < $aantal_velden; $i++){
+	  						echo("<input id=\"".$i."\" name=\"".$i."\" type=\"hidden\" value=\"\">");
+  							echo("<input id=\"t".$i."\" name=\"t".$i."\" type=\"hidden\" value=\"\">");
+  							echo("<input id=\"v".$i."\" name=\"v".$i."\" type=\"hidden\" value=\"\">");
+  							echo("<input id=\"i".$i."\" name=\"i".$i."\" type=\"hidden\" value=\"\">");
+  							echo("<input id=\"n".$i."\" name=\"n".$i."\" type=\"hidden\" value=\"\">\n");
+							}
+							
+							//de hidden velden voor de nog niet aangemaakte extra velden aanmaken
+							$aan_te_maken = 0;
+							//nog niet aangemaakte extra velden (die later toegevoegd zijn) toevoegen
+							$query = "SELECT Kolom_ID FROM type_comp_koppel_extra WHERE Comp_Type_ID in (SELECT Comp_Type_ID FROM comp_lijst WHERE Comp_Lijst_ID = '". $_GET['c'] ."')";
+							$rest = mysql_query($query);
+							while ($data = mysql_fetch_array($rest)) {
+								$gevonden = false;
+								//bekijken of dit record al is aangemaakt, dus array met aangemaakte waarden door itereren
+								//$aan_te_maken verhogen
+						  	for ($j = 0; $j < count($aangemaakte_velden);$j++) {
+			   					if ($data['Kolom_ID'] == $aangemaakte_velden[$j]) $gevonden = true;
+								}
+								
+								if($gevonden == false) {
+									$query = "SELECT DataType FROM extra_velden WHERE Kolom_ID = '". $data['Kolom_ID'] ."'";
+									$resultt = mysql_query($query);
+									$uitkomst = mysql_fetch_array($resultt);
+
+									if ($uitkomst['DataType'] == 4)
+										$aan_te_maken++;
+	
+									$aan_te_maken++;									
+								}
+							}
+ 							//het aantal aan te maken velden onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
+ 							echo("<input id=\"aantemaken\" name=\"aantemaken\" type=\"hidden\" value=\"".$aan_te_maken."\">\n");
+							
+							//niet aangemaakte extra velden, dus hidden fields hiervoor aan maken					
+							for($i = 0; $i < $aan_te_maken; $i++){
+			
+								echo("<input type=\"hidden\" name=\"a" . $i ."\" id=\"a" . $i ."\" value=\"\">");
+								echo("<input type=\"hidden\" name=\"at". $i ."\" id=\"at". $i ."\" value=\"\">");
+								echo("<input type=\"hidden\" name=\"av". $i ."\" id=\"av". $i ."\" value=\"\">");
+								echo("<input type=\"hidden\" name=\"ai". $i ."\" id=\"ai". $i ."\" value=\"\">");
+								echo("<input type=\"hidden\" name=\"an". $i ."\" id=\"an". $i ."\" value=\"\">\n");
+							}
+							
+					 ?>
   					<input id="hidden_melding" name="hidden_melding" type="hidden" value="">
   					<input id="hidden_status" name="hidden_status" type="hidden" value="">
     				<input id="opslaan" name="opslaan" type="hidden" value="1">
     				<input id="hidden_verantwoordelijke" name="hidden_verantwoordelijke" type="hidden" value="-1">
     				<input id="Voorgaande_Melding" name="Voorgaande_Melding" type="hidden" value="<?php echo($row['Laatste_Melding']); ?>">
-    			</td>
+    			</td><td><a href="javascript:SubmitComponentBewerken();">Opslaan</a></td>
     		</tr>
 			</table>
 		</form>

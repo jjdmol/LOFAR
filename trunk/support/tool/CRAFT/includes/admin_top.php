@@ -30,9 +30,10 @@
   <?php 
 	  //controleren of er een startpagina opgeslagen is.
 	  //dit is benodigd om de startpagina in het menu te highlighten, na het inloggen
-	  if (isset($_SESSION['pag_start']) && isset($_GET['p'])) 
-			echo('onload="changeSubmenu(1,1,1)">');
-		else echo(">");
+	  //if (isset($_SESSION['pag_start']) && isset($_GET['p'])) 
+		//	echo('onload="changeSubmenu(1,1,1)">');
+		//else 
+		echo(">");
 		?>
 
 	  <div id="container">

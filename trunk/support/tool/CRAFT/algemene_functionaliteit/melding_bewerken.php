@@ -1,5 +1,45 @@
 <?php
 	
+	function Extra_Velden_Controle() {
+		//extra velden controle!!!
+		$aantal_velden = $_POST['aantal'];
+		
+		for($i = 0; $i < $aantal_velden; $i++) {
+			//verplichte velden ingevuld??
+			if ($_POST['v' . $i] == 1) {
+				if ($_POST[$i] == '') return false;
+			}
+			//datum controle bij datum velden
+			if ($_POST['t' . $i] == '4a') {
+				if (Valideer_Datum($_POST[$i]) == false) return false;
+			}
+			//tijd controle bij datum velden
+			if ($_POST['t' . $i] == '4b') {
+				if (Valideer_Tijd($_POST[$i]) == false) return false;
+			}
+		}
+		
+		//extra velden controle!!!
+		$aan_te_maken = $_POST['aantemaken'];
+		
+		for($i = 0; $i < $aan_te_maken; $i++) {
+			//verplichte velden ingevuld??
+			if ($_POST['av' . $i] == 1) {
+				if ($_POST['a' . $i] == '') return false;
+			}
+			//datum controle bij datum velden
+			if ($_POST['at' . $i] == '4a') {
+				if (Valideer_Datum($_POST['a'.$i]) == false) return false;
+			}
+			//tijd controle bij datum velden
+			if ($_POST['at' . $i] == '4b') {
+				if (Valideer_Tijd($_POST['a'.$i]) == false) return false;
+			}
+		}
+		return true;
+	}
+
+	
 	//controle functie om te bekijken of er opgeslagen mag worden
 	function Valideer_Invoer() {
 		if (isset($_POST['opslaan']) && $_POST['opslaan'] == 0) 
@@ -28,11 +68,17 @@
 				return false;
 		} else return false;
 
+		return Extra_Velden_Controle();
+		
 		return true;
 	}
 	
 	//controleren of er opgeslagen moet worden, of dat er een ander scherm getoond moet worden
 	if(Valideer_Invoer()) {
+		$query = "SELECT Meld_Type_ID FROM melding_lijst WHERE Meld_Lijst_ID = '".$_GET['c']."'";
+		$result = mysql_query($query);
+		$data = mysql_fetch_array($result);
+		
 		if (isset($_POST['Afgehandeld']) && ($_POST['Afgehandeld'] == 1 || $_POST['Afgehandeld'] == 'on'))
 			$afgehandeld = 1;
 		else $afgehandeld = 0;
@@ -44,15 +90,194 @@
 
 		//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
 		if (isset($_POST['Meld_Datum']) && $_POST['Meld_Datum'] != '') {
-			$datum=split("-",$_POST['Meld_Datum']);
-			$query = $query . "'". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['Meld_Tijd'] .":00'";
+			$query = $query . "'".Datum_Tijd_Naar_DB_Conversie($_POST['Meld_Datum'], $_POST['Meld_Tijd'])."'";
 		}
 		else $query = $query . "NOW()";
 		
 		$query = $query . " WHERE Meld_Lijst_ID='".$_GET['m']."'";
+
+		$errorlevel = 0;
+		if (mysql_query($query)) {
+			//extra velden gedeelte!!!!!!!!!!!!
+			$errorlevel = 1;
+			
+			
+			//type controle: als het type melding verandert is, is de extra velden samensteling anders,
+			//dus moet alles opnieuw aangemaakt worden..
+			if ($data['Meld_Type_ID'] != $_POST['Type_Melding']) {
+
+				//kijken of er wel entries in de datatabel voor dit component zijn
+				$query = "SELECT COUNT(Kolom_ID) FROM melding_koppel_extra WHERE Meld_Lijst_ID = '". $_GET['m'] ."'";
+				$resultaat2 = mysql_query($query);
+				$tijdelijk = mysql_fetch_array($resultaat2);
+				//wanneer de count waarde hoger is dan 0, dan zijn er entries en moeten deze verwijderd worden
+				if ($tijdelijk[0] > 0) {
+					
+					//bij verandering van type is alles nieuw, dus alle oude dingen weggooien
+					$opslag_Kolom_ID = "";
+					$query = "SELECT Kolom_ID FROM melding_koppel_extra WHERE Meld_Lijst_ID = '".$_GET['m']."'";
+					$resultaat2 = mysql_query($query);
+					while ($tijdelijk = mysql_fetch_array($resultaat2)) {
+			 			if ($opslag_Kolom_ID != "") $opslag_Kolom_ID = $opslag_Kolom_ID . ',';
+			 			$opslag_Kolom_ID = $opslag_Kolom_ID . $tijdelijk['Kolom_ID'];
+					}
+					$query = "DELETE FROM melding_koppel_extra WHERE Meld_Lijst_ID = '".$_GET['m']."'";
+					mysql_query($query);
+					
+					$query = "SELECT Data_Kolom_ID FROM extra_velden WHERE Kolom_ID IN(".$opslag_Kolom_ID.")";
+					$opslag_Data_Kolom_ID = "";
+					$resultaat2 = mysql_query($query);
+					while ($tijdelijk = mysql_fetch_array($resultaat2)) {
+			 			if ($opslag_Data_Kolom_ID != "") $opslag_Data_Kolom_ID = $opslag_Data_Kolom_ID . ',';
+			 			$opslag_Data_Kolom_ID = $opslag_Data_Kolom_ID . $tijdelijk['Data_Kolom_ID'];
+					}
+					$query = "DELETE FROM extra_velden WHERE Kolom_ID IN(".$opslag_Kolom_ID.")";
+					mysql_query($query);				
+					
+					$query = "DELETE FROM datatabel WHERE Data_Kolom_ID IN(".$opslag_Data_Kolom_ID.")";
+					mysql_query($query);
+				}
+					
+				//het oude is nu verwijderd, dus kan het nieuwe toegevoegd worden...
+				if (isset($_POST['aantemaken']) && $_POST['aantemaken'] > 0) {
+					$errorlevel = 2;
+					for ($i = 0; $i < $_POST['aantemaken']; $i++){
+	 				
+		 				//DataTabel entry maken
+		  			//integer
+		  			if ($_POST['at' . $i] == '1') 		  $query = "INSERT INTO datatabel (Type_Integer) VALUES('".$_POST['a'.$i]."')";
+		  			//double
+		  			else if ($_POST['at' . $i] == '2')  $query = "INSERT INTO datatabel (Type_Double) VALUES('".$_POST['a'.$i]."')"; 
+		  			//text
+		  			else if ($_POST['at' . $i] == '3')  $query = "INSERT INTO datatabel (Type_Text) VALUES('".$_POST['a'.$i]."')"; 
+		  			//datumtijd
+		  			else if ($_POST['at' . $i] == '4b') $query = "INSERT INTO datatabel (Type_DateTime) VALUES('". Datum_Tijd_Naar_DB_Conversie($_POST['a'.($i -1)],$_POST['a'.$i]) ."')"; 
+		  			//bestandsverwijzing
+		  			else if ($_POST['at' . $i] == '5')  $query = "INSERT INTO datatabel (Type_TinyText) VALUES('".$_POST['a'.$i]."')"; 
+		  			else $query = "";
 		
-		if (mysql_query($query)) echo("De gewijzigde melding (". $_GET['m'] .") is in het systeem bijgewerkt<br>");
-		else("Er is iets mis gegaan met het opslaan van deze melding (". $_GET['m'] .")!! Deze melding is niet bijgewerkt!");
+						//uitvoeren van de datatabel record
+						if (($_POST['at' . $i] != '4a') && mysql_query($query)) {
+			 				$error_extra = 1;
+		
+	    				$Veld_ID = mysql_insert_id();
+	    				
+	    				if ($_POST['at'.$i] == '4b') $datatype = 4;
+	    				else $datatype = $_POST['at'.$i];
+	    				
+	    				$query = "INSERT INTO extra_velden (Data_Kolom_ID, Veld_Naam, Aangemaakt_Door, DataType, Type_Beschrijving, Tabel_Type, Is_Verplicht)";
+	    				$query = $query . "VALUES ('".$Veld_ID."', '".$_POST['an'.$i]."', '".$_SESSION['gebr_id'] ."', '".$datatype."', '". $_POST['ai'.$i] ."', '4', '".$_POST['av'.$i]."')";
+	
+		    			if (mysql_query($query)) {
+				 				$error_extra = 2;
+	
+		    				$Veld_ID = mysql_insert_id();	  				
+		  					$query = "INSERT INTO Melding_Koppel_Extra (Kolom_ID, Meld_Lijst_ID) VALUES('".$Veld_ID. "', '". $_GET['m'] ."')";
+			    			
+			    			if (mysql_query($query)) {
+					 				$error_extra = 3;
+	  		  			}
+		    			}
+						}
+					}
+				}				
+			}
+			//type melding is niet verandert, dus de datatabel updaten en eventuele nieuwe extra velden toevoegen
+			else {
+			
+				//aantal velden controle.. meer dan 0 dan dit doen, anders overslaan
+				if (isset($_POST['aantal']) && $_POST['aantal'] > 0) {
+					//voor elk veld het record updaten
+					for ($i = 0; $i < $_POST['aantal']; $i++){
+	    			
+	    			$query  = "SELECT Data_Kolom_ID FROM extra_velden WHERE Kolom_ID ='".$_POST['i'. $i]."'";
+						$result = mysql_query($query);
+						$veld   = mysql_fetch_array($result);
+	    			
+	    			$waarde = $_POST[$i];
+	    			//1 = integer, 2 = double, 3 = text, 4 = datumtijd, 5 = bestandsverwijzing
+						if ($_POST['t'.$i] == 1)   		$type = 'Type_Integer';
+						else if ($_POST['t'.$i] == 2) $type = 'Type_Double';
+						else if ($_POST['t'.$i] == 3) $type = 'Type_Text';
+						else if ($_POST['t'.$i] == '4b') {
+							$type = 'Type_DateTime';
+							$waarde = Datum_Tijd_Naar_DB_Conversie($_POST[$i -1],$_POST[$i]);
+						}
+						else if ($_POST['t'.$i] == 5) $type = 'Type_TinyText';
+	 					else $type = '';
+	
+						$query = "UPDATE datatabel SET " . $type . " ='" . $waarde . "' WHERE Data_Kolom_ID = '". $veld['Data_Kolom_ID'] ."'";
+						
+						if (($_POST['t' . $i] != '4a') && mysql_query($query)) {
+							$errorlevel = 2;
+						}
+					}
+				}
+				
+				$error_extra = 0;
+				//de extra velden, welke nog niet aangemaakt zijn, in de database toevoegen
+				if (isset($_POST['aantemaken']) && $_POST['aantemaken'] > 0) {
+	
+					for ($i = 0; $i < $_POST['aantemaken']; $i++){
+	 				
+		 				//DataTabel entry maken
+		  			//integer
+		  			if ($_POST['at' . $i] == '1') 		   $query = "INSERT INTO datatabel (Type_Integer) VALUES('".$_POST['a'.$i]."')";
+		  			//double
+		  			else if ($_POST['at' . $i] == '2')  $query = "INSERT INTO datatabel (Type_Double) VALUES('".$_POST['a'.$i]."')"; 
+		  			//text
+		  			else if ($_POST['at' . $i] == '3')  $query = "INSERT INTO datatabel (Type_Text) VALUES('".$_POST['a'.$i]."')"; 
+		  			//datumtijd
+		  			else if ($_POST['at' . $i] == '4b') $query = "INSERT INTO datatabel (Type_DateTime) VALUES('". Datum_Tijd_Naar_DB_Conversie($_POST['a'.($i -1)],$_POST['a'.$i]) ."')"; 
+		  			//bestandsverwijzing
+		  			else if ($_POST['at' . $i] == '5')  $query = "INSERT INTO datatabel (Type_TinyText) VALUES('".$_POST['a'.$i]."')"; 
+		  			else $query = "";
+		
+						//uitvoeren van de datatabel record
+						if (($_POST['at' . $i] != '4a') && mysql_query($query)) {
+			 				$error_extra = 1;
+		
+	    				$Veld_ID = mysql_insert_id();
+	    				
+	    				if ($_POST['at'.$i] == '4b') $datatype = 4;
+	    				else $datatype = $_POST['at'.$i];
+	    				
+	    				$query = "INSERT INTO extra_velden (Data_Kolom_ID, Veld_Naam, Aangemaakt_Door, DataType, Type_Beschrijving, Tabel_Type, Is_Verplicht)";
+	    				$query = $query . "VALUES ('".$Veld_ID."', '".$_POST['an'.$i]."', '".$_SESSION['gebr_id'] ."', '".$datatype."', '". $_POST['ai'.$i] ."', '4', '".$_POST['av'.$i]."')";
+	
+		    			if (mysql_query($query)) {
+				 				$error_extra = 2;
+	
+		    				$Veld_ID = mysql_insert_id();	  				
+		  					$query = "INSERT INTO Melding_Koppel_Extra (Kolom_ID, Meld_Lijst_ID) VALUES('".$Veld_ID. "', '". $_GET['m'] ."')";
+			    			
+			    			if (mysql_query($query)) {
+					 				$error_extra = 3;
+	  		  			}
+		    			}
+						}
+					}
+				}
+			}
+		}
+
+		//de foutmeldingen
+		if ($errorlevel == 2) {
+			if($error_extra == 3) echo("De melding (". $_GET['m'] .") is (inclusief extra velden) in het systeem bijgewerkt!<br>");
+			else if ($error_extra == 1) echo("De melding (". $_GET['m'] .") is succesvol in het systeem bijgewerkt!<br>Alleen het toevoegen van extra velden (in de extra_velden tabel) is mislukt!<br>");
+			else if ($error_extra == 2) echo("De melding (". $_GET['m'] .") is succesvol in het systeem bijgewerkt!<br>Alleen het leggen van de koppeling tussen de extra velden en de melding is mislukt!<br>");
+			else if ($error_extra == 0) {
+				if($_POST['aantemaken'] == 0)
+					echo("De melding (". $_GET['m'] .") is succesvol in het systeem bijgewerkt!<br>");
+				else echo("De melding (". $_GET['m'] .") is succesvol in het systeem bijgewerkt!<br>Alleen het toevoegen van extra velden (in de datatabel) is mislukt!<br>");
+			}
+		}
+		else if ($errorlevel == 0) echo("De bewerkte melding (". $_GET['m'] .") kon niet in het systeem opgeslagen worden!.");
+		else if ($errorlevel == 1) echo("De melding (". $_GET['m'] .") is in het systeem opgeslagen.<br>Alleen is er iets foutgegaan met het updaten van de datatabel!");
+
+
+//		if (mysql_query($query)) echo("De gewijzigde melding (". $_GET['m'] .") is in het systeem bijgewerkt<br>");
+//		else("Er is iets mis gegaan met het opslaan van deze melding (". $_GET['m'] .")!! Deze melding is niet bijgewerkt!");
 		echo('<br><a href="'.$_SESSION['huidige_pagina'].'&c='.$_GET['c']. '&m='.$_GET['m'].'">Klik hier om deze melding opnieuw te bewerken/bewerken.</a>');
 		echo('<br><a href="'.$_SESSION['huidige_pagina'].'&c='.$_GET['c']. '">Klik hier om terug te keren naar het meldingenoverzicht van dit component.</a>');
 		echo('<br>of selecteer links een component uit de treeview.');
@@ -66,17 +291,22 @@
 				$query = "SELECT * FROM melding_lijst WHERE Meld_Lijst_ID='". $_GET['m'] ."'";
 				$resultaat = mysql_query($query);
 				$row = mysql_fetch_array($resultaat);
+				
+				if (isset($_GET['n'])) $geselecteerd_type = $_GET['n'];
+				else $geselecteerd_type = $row['Meld_Type_ID'];
+				
 				?>
-					<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']."&m=".$_GET['m']); ?>">
+					<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']."&m=".$_GET['m']. "&n=". $geselecteerd_type); ?>">
 						<table>
 							<tr>
 								<td>Type melding:</td>
-								<td><select name="Type_Melding">
+								<td><select name="Type_Melding" onChange="PostDocument('<?php echo($_SESSION['huidige_pagina'] . "&c=" . $_GET['c'] . "&o=" . $row['Meld_Type_ID'] . "&m=". $_GET['m']); ?>');">
 								<?php
 	    						$query = "SELECT Meld_Type_ID, Melding_Type_Naam FROM melding_type";
 			    			  $resultaat = mysql_query($query);
 	
-						  		if (isset($_POST['Type_Melding'])) $type = $_POST['Type_Melding'];
+						  		if (isset($_GET['q'])) $type = $_GET['q'];
+						  		else if (isset($_POST['Type_Melding'])) $type = $_POST['Type_Melding'];
 						  		else $type = $row['Meld_Type_ID'];
 	
 							  	while ($data = mysql_fetch_array($resultaat)) {
@@ -86,7 +316,23 @@
 				  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
 									}
 								?>	
-								</select></td>
+								</select> Locatie melding: <select name="Melding_Locatie">
+								<?php
+									$query = "SELECT Locatie_ID, Loc_Naam FROM comp_locatie";
+			    			  $resultaat = mysql_query($query);
+	
+						  		if (isset($_POST['Melding_Locatie'])) $selectie = $_POST['Melding_Locatie'];
+						  		else $selectie = $row['Melding_Locatie'];
+	
+							  	while ($data = mysql_fetch_array($resultaat)) {
+			  	  				echo('<option value="'.$data['Locatie_ID'].'"');
+				  	  			if ($data['Locatie_ID'] == $selectie)
+				  	  				echo('SELECTED');
+				  	  			echo('>'. $data['Loc_Naam'] .'</option>');
+									}
+								?>	
+								</select>
+								</td>
 							</tr>
 							<tr>
 								<td>Gemeld door:</td>
@@ -105,33 +351,14 @@
 				  	  			echo('>'. $data['inlognaam'] .'</option>');
 									}
 								?>
-								</select></td>
-							</tr>
-							<tr>
-								<td>Locatie van de melding:</td>
-								<td><select name="Melding_Locatie">
-								<?php
-									$query = "SELECT Locatie_ID, Loc_Naam FROM comp_locatie";
-			    			  $resultaat = mysql_query($query);
-	
-						  		if (isset($_POST['Melding_Locatie'])) $selectie = $_POST['Melding_Locatie'];
-						  		else $selectie = $row['Melding_Locatie'];
-	
-							  	while ($data = mysql_fetch_array($resultaat)) {
-			  	  				echo('<option value="'.$data['Locatie_ID'].'"');
-				  	  			if ($data['Locatie_ID'] == $selectie)
-				  	  				echo('SELECTED');
-				  	  			echo('>'. $data['Loc_Naam'] .'</option>');
-									}
-								?>	
-								</select></td>
-							</tr>
-							<tr>
-								<td>Meld datum:</td>
-								<td>
-									<?php
+								</select> op <?php
+										if (isset($_POST['datumopslag']))
+											$hidden_datum = $_POST['datumopslag'];
+										else $hidden_datum = $row['Meld_Datum'];
+										
 										//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
-			    					$gedeeldveld=split(" ",$row['Meld_Datum']);
+			    					$gedeeldveld=split(" ",$hidden_datum);
+			    					
 										//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
 										$datum = split("-",$gedeeldveld[0]);
 										//tijd veld opdelen zodat de uren, minuten en secondevelden makkelijk te benaderen zijn
@@ -140,17 +367,8 @@
 			    				<input name="Meld_Datum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['Meld_Datum'])) echo($_POST['Meld_Datum']); else echo($datum[2] ."-". $datum[1] ."-". $datum[0]); ?>">
     					  	<input name="Meld_Tijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['Meld_Tijd'])) echo($_POST['Meld_Tijd']); else echo($tijd[0] .":". $tijd[1]); ?>">
 	    					  <?php if(isset($_POST['Meld_Datum']) && (!Valideer_Datum($_POST['Meld_Datum']) || !Valideer_Tijd($_POST['Meld_Tijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?>
+
 								</td>
-							</tr>
-							<tr>
-								<td>Probleem beschrijving:</td>
-								<td><textarea name="Prob_Beschrijving" rows="4" cols="35"><?php if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1 ) echo(htmlentities($_POST['Prob_Beschrijving'], ENT_QUOTES)); else echo($row['Prob_Beschrijving']); ?></textarea>
-									<?php if(isset($_POST['Prob_Beschrijving']) && $_POST['Prob_Beschrijving'] == '') echo('<b>* Er is geen probleem beschrijving ingevoerd!</b>'); ?>
-								</td>
-							</tr>
-							<tr>
-								<td>Probleem oplossing:</td>
-								<td><textarea name="Prob_Oplossing" rows="4" cols="35"><?php if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1 ) echo(htmlentities($_POST['Prob_Oplossing'], ENT_QUOTES)); else echo($row['Prob_Oplossing']); ?></textarea></td>
 							</tr>
 							<tr>
 								<td>Behandeld door:</td>
@@ -169,23 +387,141 @@
 					  	  			echo('>'. $data['inlognaam'] .'</option>');
 										}
 		    					?>	
-								</select></td>
-							</tr>
-							<tr>
-								<td>Afgehandeld:</td>
-								<td><input name="Afgehandeld" type="checkbox" 
+								</select> Afgehandeld: <input name="Afgehandeld" type="checkbox"
 			    				<?php
-				    				if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) {
+				    				if(isset($_POST['opslaan'])) {
 				    					if(isset($_POST['Afgehandeld']) && ($_POST['Afgehandeld'] == 1 || $_POST['Afgehandeld'] == 'on')) 
 				    					echo('CHECKED');
 				    				}
 				    				else if ($row['Afgehandeld'] == 1) echo('CHECKED');
 									?>>
 								</td>
+							</tr>							
+							<tr>
+								<td>Probleem beschrijving:</td>
+								<td><textarea name="Prob_Beschrijving" rows="3" cols="35"><?php if(isset($_POST['opslaan'])) echo(htmlentities($_POST['Prob_Beschrijving'], ENT_QUOTES)); else echo($row['Prob_Beschrijving']); ?></textarea>
+									<?php if(isset($_POST['Prob_Beschrijving']) && $_POST['Prob_Beschrijving'] == '') echo('<b>* Er is geen probleem beschrijving ingevoerd!</b>'); ?>
+								</td>
+							</tr>
+							<tr>
+								<td>Probleem oplossing:</td>
+								<td><textarea name="Prob_Oplossing" rows="3" cols="35"><?php if(isset($_POST['opslaan'])) echo(htmlentities($_POST['Prob_Oplossing'], ENT_QUOTES)); else echo($row['Prob_Oplossing']); ?></textarea></td>
+							</tr>
+							<tr>
+			  				<td>Extra velden:<br>(* = verplicht)</td>
+			  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/Melding_Bewerken_Extra_Velden.php?c=<?php echo($_GET['m'] . '&o=' . $row['Meld_Type_ID'] . '&n=' .$type); ?>" width="400" height="110" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+			  					<?php
+			  					  if (isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && !Extra_Velden_Controle()) echo("<b>* Foutieve waardes!</b>");
+			  					?>
+			  				</td>
 							</tr>
 							<tr>
 								<td><a href="<?php echo($_SESSION['huidige_pagina']."&c=".$_GET['c']); ?>">Overzicht meldingen</a></td>
-								<td><input type="hidden" name="opslaan" value="1"><a href="javascript:document.theForm.submit();">Opslaan</a></td>
+								<td><input type="hidden" name="opslaan" value="1"><a href="javascript:SubmitMeldingBewerken();">Opslaan</a>
+		  					<?php
+				 					//type is gelijk gebleven, dus kunnen extra velden en nog niet aangemaakte velden aanwezig zijn
+				 					if ($row['Meld_Type_ID'] == $type){
+					 					//eerst bepalen hoeveel velden er zijn, ivm met het datumveld dat uit 2 input boxen bestaat
+										$query = "SELECT Kolom_ID FROM melding_koppel_extra WHERE Meld_Lijst_ID = '". $_GET['m'] ."'";
+										$resultaat = mysql_query($query);
+										$aangemaakte_velden = array();
+										$aantal_velden = 0;
+										while ($data = mysql_fetch_row($resultaat)) {
+											$query = "SELECT * FROM extra_velden WHERE Kolom_ID = '". $data[0]  ."'";
+											$result = mysql_query($query);
+											$velden = mysql_fetch_array($result);
+											//4 = datumtijd
+											if ($velden['DataType'] == 4)
+												$aantal_velden++;
+			
+											$aantal_velden++;								
+						 	  			array_push($aangemaakte_velden, $velden['Type_Beschrijving']);
+										}
+			 							//het aantal onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
+			 							echo("<input id=\"aantal\" name=\"aantal\" type=\"hidden\" value=\"".$aantal_velden."\">\n");
+										
+			  						//4 hidden velden aanmaken voor elk extra veld: 1 voor de waarde, 1 voor het type en 1 voor de verplichtheid
+										for($i = 0; $i < $aantal_velden; $i++){
+				  						echo("<input id=\"".$i."\" name=\"".$i."\" type=\"hidden\" value=\"\">");
+			  							echo("<input id=\"t".$i."\" name=\"t".$i."\" type=\"hidden\" value=\"\">");
+			  							echo("<input id=\"v".$i."\" name=\"v".$i."\" type=\"hidden\" value=\"\">");
+			  							echo("<input id=\"i".$i."\" name=\"i".$i."\" type=\"hidden\" value=\"\">");
+			  							echo("<input id=\"n".$i."\" name=\"n".$i."\" type=\"hidden\" value=\"\">\n");
+										}
+										
+										//de hidden velden voor de nog niet aangemaakte extra velden aanmaken
+										$aan_te_maken = 0;
+										//nog niet aangemaakte extra velden (die later toegevoegd zijn) toevoegen
+										$query = "SELECT Kolom_ID FROM type_melding_koppel_extra WHERE Meld_Type_ID in (SELECT Meld_Type_ID FROM melding_lijst WHERE Meld_Lijst_ID = '". $_GET['m'] ."')";
+										$rest = mysql_query($query);
+										while ($data = mysql_fetch_array($rest)) {
+											$gevonden = false;
+											//bekijken of dit record al is aangemaakt, dus array met aangemaakte waarden door itereren
+											//$aan_te_maken verhogen
+									  	for ($j = 0; $j < count($aangemaakte_velden);$j++) {
+						   					if ($data['Kolom_ID'] == $aangemaakte_velden[$j]) $gevonden = true;
+											}
+											
+											if($gevonden == false) {
+												$query = "SELECT DataType FROM extra_velden WHERE Kolom_ID = '". $data['Kolom_ID'] ."'";
+												$resultt = mysql_query($query);
+												$uitkomst = mysql_fetch_array($resultt);
+			
+												if ($uitkomst['DataType'] == 4)
+													$aan_te_maken++;
+				
+												$aan_te_maken++;									
+											}
+										}
+			 							//het aantal aan te maken velden onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
+			 							echo("<input id=\"aantemaken\" name=\"aantemaken\" type=\"hidden\" value=\"".$aan_te_maken."\">\n");
+										
+										//niet aangemaakte extra velden, dus hidden fields hiervoor aan maken					
+										for($i = 0; $i < $aan_te_maken; $i++){
+						
+											echo("<input type=\"hidden\" name=\"a" . $i ."\" id=\"a" . $i ."\" value=\"\">");
+											echo("<input type=\"hidden\" name=\"at". $i ."\" id=\"at". $i ."\" value=\"\">");
+											echo("<input type=\"hidden\" name=\"av". $i ."\" id=\"av". $i ."\" value=\"\">");
+											echo("<input type=\"hidden\" name=\"ai". $i ."\" id=\"ai". $i ."\" value=\"\">");
+											echo("<input type=\"hidden\" name=\"an". $i ."\" id=\"an". $i ."\" value=\"\">\n");
+										}
+				 					}
+				 					//het type is veranderd, dus alleen a velden plaatsen
+				 					else {
+										$aantal_velden = 0;
+			 							//het aantal onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
+			 							echo("<input id=\"aantal\" name=\"aantal\" type=\"hidden\" value=\"".$aantal_velden."\">\n");
+										//de hidden velden voor de nog niet aangemaakte extra velden aanmaken
+										$aan_te_maken = 0;
+										//nog niet aangemaakte extra velden (die later toegevoegd zijn) toevoegen
+										$query = "SELECT Kolom_ID FROM type_melding_koppel_extra WHERE Meld_Type_ID = '". $type ."'";
+										$rest = mysql_query($query);
+										while ($data = mysql_fetch_array($rest)) {
+											$query = "SELECT DataType FROM extra_velden WHERE Kolom_ID = '". $data['Kolom_ID'] ."'";
+											$resultt = mysql_query($query);
+											$uitkomst = mysql_fetch_array($resultt);
+		
+											if ($uitkomst['DataType'] == 4)
+												$aan_te_maken++;
+			
+											$aan_te_maken++;									
+										}
+			 							//het aantal aan te maken velden onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
+			 							echo("<input id=\"aantemaken\" name=\"aantemaken\" type=\"hidden\" value=\"".$aan_te_maken."\">\n");
+										
+										//niet aangemaakte extra velden, dus hidden fields hiervoor aan maken					
+										for($i = 0; $i < $aan_te_maken; $i++){
+						
+											echo("<input type=\"hidden\" name=\"a" . $i ."\" id=\"a" . $i ."\" value=\"\">");
+											echo("<input type=\"hidden\" name=\"at". $i ."\" id=\"at". $i ."\" value=\"\">");
+											echo("<input type=\"hidden\" name=\"av". $i ."\" id=\"av". $i ."\" value=\"\">");
+											echo("<input type=\"hidden\" name=\"ai". $i ."\" id=\"ai". $i ."\" value=\"\">");
+											echo("<input type=\"hidden\" name=\"an". $i ."\" id=\"an". $i ."\" value=\"\">\n");
+										}
+				 					}
+									
+							  ?>
+								</td>
 							</tr>
 						</table>
 					</form>
@@ -219,7 +555,7 @@
 		
 				//terugwerken richting het begin van de meldingenketen
 				while ($data['Voorgaande_Melding'] != 1) { 
-					$query = "SELECT Meld_Lijst_ID, Meld_Datum, Prob_Beschrijving, Voorgaande_Melding FROM melding_lijst WHERE Meld_Lijst_ID ='". $data['Voorgaande_Melding'] ."'";
+					$query = "SELECT Meld_Lijst_ID, Meld_Datum, Prob_Beschrijving, Voorgaande_Melding, Meld_Type_ID FROM melding_lijst WHERE Meld_Lijst_ID ='". $data['Voorgaande_Melding'] ."'";
 					$resultaat = mysql_query($query);
 					$data = mysql_fetch_array($resultaat);
 		
@@ -229,7 +565,7 @@
 					$datum = split("-",$gedeeldveld[0]);
 				
 					//tonen gegevens
-					echo("<tr><td>". $data['Meld_Lijst_ID'] ."</td><td>" .substr($data['Prob_Beschrijving'], 0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['huidige_pagina']."&c=".$_GET['c']. "&m=". $data['Meld_Lijst_ID']. "\">Bewerken</a></td></tr>");
+					echo("<tr><td>". $data['Meld_Lijst_ID'] ."</td><td>" .substr($data['Prob_Beschrijving'], 0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['huidige_pagina']."&c=".$_GET['c']. "&m=". $data['Meld_Lijst_ID']. "&q=" . $data['Meld_Type_ID'] .  "\">Bewerken</a></td></tr>");
 				}
 				//afsluiten tabel
 				echo("</table>");

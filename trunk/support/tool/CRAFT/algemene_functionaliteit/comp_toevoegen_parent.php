@@ -9,9 +9,20 @@
 			  $query = "SELECT Comp_Lijst_ID, Comp_Naam FROM comp_lijst WHERE Comp_Type_ID in (SELECT Type_Parent FROM comp_type WHERE Comp_Type = '".$_GET['c']."')";
 				$resultaat = mysql_query($query);
 				echo("<form name=\"fTest\">\r\n");
+				if (isset($_GET['n']) && $_GET['n'] > 0)
+					$selectie = $_GET['n'];
+				else 
+					$selectie = 'SELECTED';
+				
 				echo("<select id=\"sComp_Parent\" name=\"sComp_Parent\">\r\n");
-				while ($data = mysql_fetch_array($resultaat)) 
-					echo("<option value=\"". $data['Comp_Lijst_ID'] ."\">". $data['Comp_Naam'] ."</option>\r\n");
+				while ($data = mysql_fetch_array($resultaat)) {
+					echo("<option value=\"". $data['Comp_Lijst_ID'] ."\"");
+					if ($data['Comp_Lijst_ID'] == $selectie || $selectie == 'SELECTED') {
+						echo(' SELECTED');
+						$selectie = -1;
+					}
+					echo(">". $data['Comp_Naam'] ."</option>\r\n");
+				}
 				echo("</select></form>");
 			}
 	
