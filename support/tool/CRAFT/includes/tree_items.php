@@ -139,6 +139,24 @@
   	return $Collectie;	
   }
   
+  //functie om alle componenten uit de database te lezen en deze hierarchisch op te slaan
+  function Historische_Comp_Lijst($parent, $datum) {
+	
+  	$Collectie = array();
+ 		$query = "SELECT c.Comp_Lijst_ID, c.Comp_Naam FROM comp_lijst c, melding_lijst m WHERE c.Comp_Lijst_ID = m.Comp_Lijst_ID AND m.Voorgaande_Melding = 1 AND m.Meld_Datum < '".$datum."' AND c.Comp_Parent = '".$parent ."'";
+
+	  $resultaat = mysql_query($query);
+  	while ($huidige_level = mysql_fetch_array($resultaat)) {
+  		$Comp_Type = new Type_Object();
+  		$Comp_Type->Set_ID($huidige_level['Comp_Lijst_ID'],$huidige_level['Comp_Naam']);
+	  	$num_rows = mysql_num_rows(mysql_query($query));		
+	  	if ($num_rows > 0) $Comp_Type->Add(Historische_Comp_Lijst($huidige_level['Comp_Lijst_ID'], $datum));
+ 	  	array_push($Collectie, $Comp_Type);
+	  	$Comp_Type = NULL;
+	  }
+  	return $Collectie;	
+  }  
+  
   function Recursieve_Uitlees_Methode($type_object) {
   	$uitkomst = '';
   	for ($i = 0; $i < count($type_object);$i++) {
@@ -151,6 +169,34 @@
     	$uitkomst = $uitkomst . "],";
   	}
   	return $uitkomst;
+  }
+  
+  //Functie welke bepaalt wat voor componenten zichtbaar zijn voor de ingelogde gebruiker
+  function Bepaal_Historische_Comp_Lijst($datum) {
+  	$Collectie = array();
+
+  	$query = "SELECT Comp_Type_ID, onderliggende_Data FROM gebruikersgroeprechten WHERE Groep_ID = '". $_SESSION['groep_id'] ."'";
+  	$result = mysql_query($query);
+		$row = mysql_fetch_array($result);
+  	
+		if ($row['Comp_Type_ID'] != 1) {
+	//  	$query = 'SELECT Comp_Lijst_ID, Comp_Naam FROM comp_lijst WHERE Comp_Parent = '.$parent ." AND Voorgaande_Melding = 1 AND Meld_Datum < '".$datum."'";
+			$query = "SELECT c.Comp_Lijst_ID, c.Comp_Naam FROM comp_lijst c, melding_lijst m WHERE c.Comp_Lijst_ID = m.Comp_Lijst_ID AND m.Voorgaande_Melding = 1 AND m.Meld_Datum < '".$datum."' AND c.Comp_Type_ID = '".$row['Comp_Type_ID']."'";
+
+  		$resultaat = mysql_query($query);
+    	while ($data = mysql_fetch_array($resultaat)) {
+				$Comp_Type = new Type_Object();
+				$Comp_Type->Set_ID($data['Comp_Lijst_ID'],$data['Comp_Naam']);
+		  	if ($row['onderliggende_Data'] == 1) {
+		  		$num_rows = mysql_num_rows(mysql_query($query));		
+		  		if ($num_rows > 0) $Comp_Type->Add(Historische_Comp_Lijst($data['Comp_Lijst_ID'], $datum));
+		  	}
+	  		array_push($Collectie, $Comp_Type);
+	  		$Comp_Type = NULL;
+    	}
+	  }
+	  else $Collectie = Historische_Comp_Lijst(1, $datum);
+	  return $Collectie;
   }
   
   //Functie welke bepaalt wat voor componenten zichtbaar zijn voor de ingelogde gebruiker
@@ -246,6 +292,7 @@
   		if ($_SESSION['type_overzicht'] == 1) 		 $Types_Objecten = Bepaal_Comp_Type_Lijst();
   		else if ($_SESSION['type_overzicht'] == 2) $Types_Objecten = Bepaal_Comp_Lijst();
   		else if ($_SESSION['type_overzicht'] == 3) $Types_Objecten = Melding_Type_Lijst();
+  		else $Types_Objecten = Bepaal_Historische_Comp_Lijst($_SESSION['type_overzicht']);
   	}
   }
   

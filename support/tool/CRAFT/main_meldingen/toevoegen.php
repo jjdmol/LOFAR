@@ -8,6 +8,7 @@
 		} else if (!isset($_SESSION['type_overzicht'])) $_SESSION['type_overzicht'] = 2;
 	  
 	  require_once($_SESSION['pagina'] . 'includes/login_funcs.php');
+		include_once($_SESSION['pagina'] . 'includes/datum_tijd_functies.php');
 
 	  //controleren of er iemand ingelogd is...
 	  if ($LOGGED_IN = user_isloggedin()) {

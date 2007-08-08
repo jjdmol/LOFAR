@@ -21,6 +21,21 @@
 		return true;
 	}
 
+	//functie welke controleert of de ingevoerde datum wel correct is
+	//dwz: de ingevoerde datum moet hoger dan zijn voorligger zijn
+	function Check_Melding_Datum() {
+		if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) {
+			//bij de laatste melding van dit component kijken of de ingevoerde datum hoger is dan die ingevoerde datum
+			$query = "SELECT Meld_Datum FROM melding_lijst WHERE Meld_Lijst_ID IN (SELECT Laatste_Melding FROM comp_lijst WHERE Comp_Lijst_ID = '" . $_GET['c'] . "')";
+			$result = mysql_query($query);
+			$data = mysql_fetch_array($result);
+			if ($data['Meld_Datum'] > Datum_Tijd_Naar_DB_Conversie($_POST['Meld_Datum'], $_POST['Meld_Tijd']))
+				return false;
+		}
+		return true;
+	}
+	
+
 	function Valideer_Invoer() {
 		if (isset($_POST['opslaan']) && $_POST['opslaan'] == 0) 
 			return false;
@@ -41,6 +56,11 @@
 				}
 			}
 		} 
+		
+		//meldingdatum checken
+		if (Check_Melding_Datum() == false) {
+			return false;
+		}
 		
 		//beschrijving
 		if (isset($_POST['hidden_beschrijving'])) {
@@ -222,7 +242,10 @@
     					?>
     				</select> op <input name="Meld_Datum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['Meld_Datum'])) echo($_POST['Meld_Datum']); else echo(date('d-m-Y'));?>">
     					  <input name="Meld_Tijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['Meld_Tijd'])) echo($_POST['Meld_Tijd']); else echo(date('H:i'));?>">
-    					  <?php if(isset($_POST['Meld_Datum']) && (!Valideer_Datum($_POST['Meld_Datum']) || !Valideer_Tijd($_POST['Meld_Tijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?></td>
+    					  <?php if(isset($_POST['Meld_Datum']) && (!Valideer_Datum($_POST['Meld_Datum']) || !Valideer_Tijd($_POST['Meld_Tijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); 
+	   					  			if (!Check_Melding_Datum()) echo("<b>* De ingevoerde datum is te laag!</b>");
+    					  ?>
+    					</td>
     				</td>
     			</tr>
     			<tr>

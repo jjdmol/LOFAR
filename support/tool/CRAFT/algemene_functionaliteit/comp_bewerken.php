@@ -147,10 +147,8 @@
 		$query_melding = $query_melding . "VALUES ('". $_POST['type_melding'] ."', '".$_GET['c']."'";
 
 		//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
-		if (isset($_POST['statusdatum']) && $_POST['statusdatum'] != '') {
-			$datum=split("-",$_POST['statusdatum']);
-			$query_melding = $query_melding . ", '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['statustijd'] .":00'";							
-		}
+		if (isset($_POST['statusdatum']) && $_POST['statusdatum'] != '')
+			$query_melding = $query_melding . ", '". Datum_Tijd_Naar_DB_Conversie($_POST['statusdatum'],$_POST['statustijd']) ."'";
 		else $query_melding = $query_melding . ", NOW()";
 		$query_melding = $query_melding . ", '". $_POST['hidden_status'] ."', '". $_POST['Voorgaande_Melding'] ."', '". htmlentities($_POST['hidden_melding'], ENT_QUOTES);
 		$query_melding = $query_melding . "', '". $_SESSION['gebr_id'] . "', '". $_SESSION['gebr_id'] ."', '" . $_POST['comp_locatie'] ."') ";
@@ -305,7 +303,7 @@
 					</td>
 				</tr>
   			<tr>
-  				<td>Type melding:</td>
+  				<td>Reden bewerking:</td>
   				<td><select name="type_melding" onchange="switchMelding();">
   					<?php
   						$query = "SELECT Meld_Type_ID, Melding_Type_Naam FROM melding_type";
@@ -322,15 +320,26 @@
 		  	  			}
 		  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
 							}
+
+  						$query = "SELECT Meld_Datum FROM melding_lijst WHERE Meld_Lijst_ID = '".$row['Laatste_Melding']."'";
+	    			  $resultaat = mysql_query($query);
+					  	$data = mysql_fetch_array($resultaat);
+
+    					$gedeeldveld=split(" ",$data['Meld_Datum']);
+							//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
+							$datum = split("-",$gedeeldveld[0]);
+							//tijd veld opdelen zodat de uren, minuten en secondevelden makkelijk te benaderen zijn
+							$tijd = split(":",$gedeeldveld[1]);
+							
   					?>
   					</select> Aangemaakt:
-						<input name="statusdatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['statusdatum'])) echo($_POST['statusdatum']); else echo(date('d-m-Y')); ?>">
-						<input name="statustijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['statustijd'])) echo($_POST['statustijd']); else echo(date('H:i')); ?>">
+						<input name="statusdatum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['statusdatum'])) echo($_POST['statusdatum']); else echo($datum[2] ."-". $datum[1] ."-". $datum[0]); ?>">
+						<input name="statustijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['statustijd'])) echo($_POST['statustijd']); else echo($tijd[0] .":". $tijd[1]); ?>">
 					  <?php if(isset($_POST['statusdatum']) && (!Valideer_Datum($_POST['statusdatum']) || !Valideer_Tijd($_POST['statustijd']))) echo('<b>* Onjuiste datum/tijd samenstelling!</b>'); ?></td>
   				</td>
   			</tr>
 				<tr>
-					<td>Melding beschrijving:</td>
+					<td>Beschrijving:</td>
 					<td><iframe id="frame_melding" name="frame_melding" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_melding.php?c=<?php echo($selectie); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="450" height="72" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
 					</td>
 				</tr>

@@ -6,7 +6,11 @@
 
 	echo("<HTML>");
 	echo("<HEAD></HEAD>");
-	echo("<BODY bgcolor=\"#B3CCE6\">");
+	echo("<BODY");
+
+	if(isset($_GET['q']))
+		echo("bgcolor=\"#B3CCE6\">");
+	else echo(">");
 	
 	if(isset($_GET['c']))  {
 		
