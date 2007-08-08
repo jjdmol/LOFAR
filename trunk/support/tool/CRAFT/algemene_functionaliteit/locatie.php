@@ -16,7 +16,7 @@
 				echo("<tr><td>Locatie adres 1:</td><td>". $data['Loc_Adres1'] . "</td></tr>");
 				echo("<tr><td>Locatie adres 2:</td><td>". $data['Loc_Adres2'] . "</td></tr>");
 				echo("<tr><td>Postcode:</td><td>" . $data['Loc_Postcode'] . "</td></tr>");
-				echo("<tr><td>Plaats:</td><td>" . $data['Loc_Woonplaats'] . "</td></tr>");
+				echo("<tr><td>Plaats:</td><td>" . $data['Loc_Plaats'] . "</td></tr>");
 				
 				echo("<tr><td>Longitude graden:</td><td>". $data['Long_Graden'] . "</td></tr>");
 				echo("<tr><td>Longitude minuten:</td><td>". $data['Long_Min'] . "</td></tr>");

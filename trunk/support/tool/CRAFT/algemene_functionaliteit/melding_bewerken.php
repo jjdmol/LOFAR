@@ -60,7 +60,12 @@
 				  	return false;
 				}
 			}
-		} 
+		}
+		
+		//meldingdatum checken
+		if (Check_Melding_Datum() == false) {
+			return false;
+		}
 		
 		//beschrijving
 		if (isset($_POST['Prob_Beschrijving'])) {
@@ -72,6 +77,30 @@
 		
 		return true;
 	}
+	
+	//functie welke controleert of de ingevoerde datum wel correct is
+	//dwz: de ingevoerde datum moet hoger dan zijn voorligger zijn en lager dan de datum na hem
+	function Check_Melding_Datum() {
+		if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) {
+		
+			//De melding is onderdeel van een keten, als de melding datum daardoor lager is dan de datum van de voorgaande melding
+			$query = "SELECT Meld_Datum FROM melding_lijst WHERE Meld_Lijst_ID IN (SELECT Voorgaande_Melding FROM melding_lijst m WHERE Meld_Lijst_ID = '".$_GET['m']."')";
+			$result = mysql_query($query);
+			$data = mysql_fetch_array($result);
+			if ($data['Meld_Datum'] > Datum_Tijd_Naar_DB_Conversie($_POST['Meld_Datum'], $_POST['Meld_Tijd']))
+				return false;
+	
+			//of hoger is dan de melding na deze melding, dan is de keten corrupt.		
+			$query = "SELECT Meld_Datum FROM melding_lijst WHERE Voorgaande_Melding = '".$_GET['m']."'";
+			$result = mysql_query($query);
+			$data = mysql_fetch_array($result);
+			if (isset($data['Meld_Datum']) && ($data['Meld_Datum'] < Datum_Tijd_Naar_DB_Conversie($_POST['Meld_Datum'], $_POST['Meld_Tijd'])))
+				return false;
+		}
+		return true;
+	}
+	
+	
 	
 	//controleren of er opgeslagen moet worden, of dat er een ander scherm getoond moet worden
 	if(Valideer_Invoer()) {
@@ -273,8 +302,11 @@
 			}
 		}
 		else if ($errorlevel == 0) echo("De bewerkte melding (". $_GET['m'] .") kon niet in het systeem opgeslagen worden!.");
-		else if ($errorlevel == 1) echo("De melding (". $_GET['m'] .") is in het systeem opgeslagen.<br>Alleen is er iets foutgegaan met het updaten van de datatabel!");
-
+		else if ($errorlevel == 1) {
+			echo("De melding (". $_GET['m'] .") is in het systeem opgeslagen.");
+			if (isset($_POST['aantal']) && $_POST['aantal'] > 0)
+				echo("<br>Alleen is er iets foutgegaan met het updaten van de datatabel!");
+		}
 
 //		if (mysql_query($query)) echo("De gewijzigde melding (". $_GET['m'] .") is in het systeem bijgewerkt<br>");
 //		else("Er is iets mis gegaan met het opslaan van deze melding (". $_GET['m'] .")!! Deze melding is niet bijgewerkt!");
@@ -366,8 +398,9 @@
 									?>
 			    				<input name="Meld_Datum" type="text" size="8" maxlength="10" value="<?php if(isset($_POST['Meld_Datum'])) echo($_POST['Meld_Datum']); else echo($datum[2] ."-". $datum[1] ."-". $datum[0]); ?>">
     					  	<input name="Meld_Tijd" type="text" size="2" maxlength="5" value="<?php if(isset($_POST['Meld_Tijd'])) echo($_POST['Meld_Tijd']); else echo($tijd[0] .":". $tijd[1]); ?>">
-	    					  <?php if(isset($_POST['Meld_Datum']) && (!Valideer_Datum($_POST['Meld_Datum']) || !Valideer_Tijd($_POST['Meld_Tijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); ?>
-
+	    					  <?php if(isset($_POST['Meld_Datum']) && (!Valideer_Datum($_POST['Meld_Datum']) || !Valideer_Tijd($_POST['Meld_Tijd']))) echo('<b>* De ingevoerde datum/tijd is onjuist samengesteld!</b>'); 
+	    					  			if (!Check_Melding_Datum()) echo("<b>* De ingevoerde datum is te hoog of te laag!</b>");
+	    					  ?>
 								</td>
 							</tr>
 							<tr>

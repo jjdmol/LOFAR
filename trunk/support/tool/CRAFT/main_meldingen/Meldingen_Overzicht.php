@@ -25,7 +25,15 @@
 				  $res = mysql_query($query);
 				  $row = mysql_fetch_array($res);
 					echo(substr($row['Comp_Naam'], 0, 40). "</td>");
-					echo("<td><a href=\"../". $_SESSION['huidige_pagina']."&c=". $data['Meld_Lijst_ID']."\" target=\"_top\">Info</a></td></tr>");
+					
+					
+					echo("<td>");
+					$id = substr($_SESSION['huidige_pagina'], (strpos ($_SESSION['huidige_pagina'], "p=") + 2 ), 1);
+					$temp = $_SESSION['huidige_pagina'];
+					$temp = str_replace("p=".$id  , "p=3", $temp);
+
+					//p=1 > p=3
+					echo("  <a href=\"../". $temp."&c=".$data['Comp_Lijst_ID'] . "&m=" . $data['Meld_Lijst_ID']."\" target=\"_top\">Info</a></td></tr>");
 				}
 				echo("</table>");
 			?>
