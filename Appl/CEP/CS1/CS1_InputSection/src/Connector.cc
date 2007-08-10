@@ -66,9 +66,12 @@ namespace LOFAR {
 	}	  
       } else 
 #endif      
-      if (transportType=="NULL") {
+      if (transportType == "NULL") {
 	theTH = new TH_Null();
-      } else if (transportType=="TCP") {
+      } else if (transportType == "FILE") {
+	string filename = ps->getString("OLAP.OLAP_Conn.station_Input_BaseFileName") + "." + key;
+	theTH = new TH_File(filename, TH_File::Read);
+      } else if (transportType == "TCP") {
 	string service = ps->inputPortnr(key);
 	theTH = new TH_Socket(service, 
 		              true, 
