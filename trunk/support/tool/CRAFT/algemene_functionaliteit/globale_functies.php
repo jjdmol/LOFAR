@@ -85,4 +85,60 @@
   	//de (gevonden) groepen retourneren
   	return $Groepen;
 	}
+	
+	
+	//functie welke een array teruggeeft met component types welke een gebruikersgroep zien mag
+	Function Bepaal_Types(){
+  	$uitkomst = array();
+
+		function Comp_Type_Selectie($parent) {
+			$Collectie = array();
+			$query = "SELECT * FROM comp_type WHERE Type_Parent = '".$parent."'";
+	  	$result = mysql_query($query);
+		 	while ($data = mysql_fetch_array($result)) {
+		  	array_push($Collectie, $data['Comp_Type']);
+		  	$num_rows = mysql_num_rows(mysql_query($query));			
+				if ($num_rows > 0) { 
+					$Collectie = array_merge($Collectie, Comp_Type_Selectie($data['Comp_Type']));
+				}
+			}
+			return $Collectie;
+		}
+  	
+  	//het ophalen van het begintype
+  	$query = "SELECT Comp_Type_ID, onderliggende_Data FROM gebruikersgroeprechten WHERE Groep_ID = '". $_SESSION['groep_id'] ."'";
+  	$result = mysql_query($query);
+		$row = mysql_fetch_array($result);
+		if ($row['onderliggende_Data'] == 1) {
+			if ($row['Comp_Type_ID'] != 1)
+				array_push($uitkomst,$row['Comp_Type_ID']);
+
+			$query = "SELECT * FROM comp_type WHERE Type_Parent = '".$row['Comp_Type_ID']."'";
+	  	$result = mysql_query($query);
+		 	while ($data = mysql_fetch_array($result)) {
+		 		array_push($uitkomst,$data['Comp_Type']);
+		 		$uitkomst = array_merge($uitkomst, Comp_Type_Selectie($data['Comp_Type']));
+		 	}
+		}
+		return $uitkomst;
+	}
+	
+	
+  //Functie welke de componenten weergeeft waar de ingelogde gebruiker toegang tot heeft
+  //dit gebeurt aan de hand van een array met types
+  Function Vul_Componenten_Select_Box($types_array, $selectie) {
+		//het ophalen van alle componenten van de types die de gebruiker zien mag
+		for ($i = 0; $i < Count($types_array); $i++)
+		{
+			$query = "SELECT Comp_Lijst_ID, Comp_Naam FROM comp_lijst WHERE Comp_Type_ID = '".$types_array[$i]."'";
+	  	$result = mysql_query($query);
+		 	while ($data = mysql_fetch_array($result)) {
+				echo("<option value=\"". $data['Comp_Lijst_ID'] ."\"");
+				if ($selectie == $data['Comp_Lijst_ID']) echo(" SELECTED");
+				echo(">".  $data['Comp_Naam'] ."</option>\n");
+			}
+		}
+  }
+	
+	
 ?>

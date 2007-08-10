@@ -7,7 +7,7 @@
 function PostDocument(url) {
 	var type	= document.getElementById('Type_Melding').value;
 	document.getElementById('opslaan').value = 0;
-	document.theForm.action = url + "&n=" + type;
+	document.theForm.action = url + "&b=" + type;
 	document.theForm.submit();
 }
 

@@ -35,21 +35,27 @@
 					//verwijderen van componenten
 					else if (isset($_GET['s']) && $_GET['s'] == 4)
 						include($_SESSION['pagina'] . 'main_componenten/verwijderen.php');    			
-    			//toevoegen van componenten (standaard actie)
+					//zoeken van componenten
+					else if (isset($_GET['s']) && $_GET['s'] == 5)
+						include($_SESSION['pagina'] . 'main_componenten/zoeken.php');    			
+    			//overzicht van componenten (standaard actie)
     			else 
 						include($_SESSION['pagina'] . 'main_componenten/overzicht.php');					
     		}
     		else if ($pagina == 3) { 			
-					//toevoegen van componenten 
+					//toevoegen van meldingen 
 					if (isset($_GET['s']) && $_GET['s'] == 2)
 						include($_SESSION['pagina'] . 'main_meldingen/toevoegen.php');
-					//bewerken van componenten 
+					//bewerken van meldingen 
 					else if (isset($_GET['s']) && $_GET['s'] == 3)
 						include($_SESSION['pagina'] . 'main_meldingen/bewerken.php');
-					//verwijderen van componenten
+					//verwijderen van meldingen
 					else if (isset($_GET['s']) && $_GET['s'] == 4)
 						include($_SESSION['pagina'] . 'main_meldingen/verwijderen.php');    			
-    			//toevoegen van componenten (standaard actie)
+					//zoeken van meldingen
+					else if (isset($_GET['s']) && $_GET['s'] == 5)
+						include($_SESSION['pagina'] . 'main_meldingen/zoeken.php');    			
+    			//overzicht van meldingen (standaard actie)
     			else 
 						include($_SESSION['pagina'] . 'main_meldingen/overzicht.php');
     		}

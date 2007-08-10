@@ -25,8 +25,14 @@
 	//dwz: de ingevoerde datum moet hoger dan zijn voorligger zijn
 	function Check_Melding_Datum() {
 		if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) {
+
+			if (isset($_SESSION['type_overzicht']) && $_SESSION['type_overzicht'] == '2') 
+				$Comp_Selectie = $_POST['Comp_Selection'];
+			else 
+				$Comp_Selectie = $_GET['c'];
+
 			//bij de laatste melding van dit component kijken of de ingevoerde datum hoger is dan die ingevoerde datum
-			$query = "SELECT Meld_Datum FROM melding_lijst WHERE Meld_Lijst_ID IN (SELECT Laatste_Melding FROM comp_lijst WHERE Comp_Lijst_ID = '" . $_GET['c'] . "')";
+			$query = "SELECT Meld_Datum FROM melding_lijst WHERE Meld_Lijst_ID IN (SELECT Laatste_Melding FROM comp_lijst WHERE Comp_Lijst_ID = '" . $Comp_Selectie . "')";
 			$result = mysql_query($query);
 			$data = mysql_fetch_array($result);
 			if ($data['Meld_Datum'] > Datum_Tijd_Naar_DB_Conversie($_POST['Meld_Datum'], $_POST['Meld_Tijd']))
@@ -57,6 +63,10 @@
 			}
 		} 
 		
+		if (isset($_POST['Comp_Selection']) && $_POST['Comp_Selection'] == -1)
+			return false;
+		
+		
 		//meldingdatum checken
 		if (Check_Melding_Datum() == false) {
 			return false;
@@ -75,15 +85,21 @@
 
 
 	if (Valideer_Invoer()) {
+		if (isset($_SESSION['type_overzicht']) && $_SESSION['type_overzicht'] == '2') 
+			$Comp_Selectie = $_POST['Comp_Selection'];
+		else 
+			$Comp_Selectie = $_GET['c'];
+
+		
 		//uit de componenten lijst halen welke melding hier als laatste bij opgeslagen is
 		//deze waarde is nodig om een keten van meldingen te kunnen vormen
-		$query = "SELECT Laatste_Melding FROM comp_lijst WHERE Comp_Lijst_ID = '". $_GET['c'] ."'";
+		$query = "SELECT Laatste_Melding FROM comp_lijst WHERE Comp_Lijst_ID = '". $Comp_Selectie ."'";
 		$resultaat = mysql_query($query);
   	$row = mysql_fetch_array($resultaat);
 		
 		//de query om de melding toe te voegen, samenstellen
 		$query = "INSERT INTO melding_lijst (Meld_Type_ID, Melding_Locatie, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Prob_Oplossing, Behandeld_Door, Gemeld_Door, Afgehandeld)";
-		$query = $query . "VALUES ('". $_POST['Type_Melding'] ."', '". $_POST['Melding_Locatie'] ."', '". $_GET['c'] ."'";
+		$query = $query . "VALUES ('". $_POST['Type_Melding'] ."', '". $_POST['Melding_Locatie'] ."', '" .$Comp_Selectie . "'";
 
 		//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
 		if (isset($_POST['Meld_Datum']) && $_POST['Meld_Datum'] != '') {
@@ -106,7 +122,7 @@
 			//de id van de zojuist toegevoegde melding halen
 			$Laatste_Melding = mysql_insert_id();
 			//het component waar deze melding bijhoort bijwerken, zodat deze weet dat er een nieuwe laatste_melding is (einde van de keten)
-			$query = "UPDATE comp_lijst SET Laatste_Melding='". $Laatste_Melding ."' WHERE Comp_Lijst_ID='". $_GET['c'] ."'";
+			$query = "UPDATE comp_lijst SET Laatste_Melding='". $Laatste_Melding ."' WHERE Comp_Lijst_ID='". $Comp_Selectie ."'";
 			
 			if (mysql_query($query)) {
 				$errorlevel = 2;
@@ -169,36 +185,58 @@
 		}
 		else if ($errorlevel == 0) echo("De nieuwe melding (". $Laatste_Melding .") kon niet aan het systeem toegevoegd worden!.");
 		else if ($errorlevel == 1) echo("De nieuwe melding (". $Laatste_Melding .") is aan het systeem toegevoegd.<br>Alleen is er iets foutgegaan met het updaten van de componten tabel! De 'laatste meldin' verwijzing is niet geupdated!");
-		echo('<a href="'.$_SESSION['huidige_pagina']. '&c=' . $_GET['c'] . '">Klik hier om nog een melding aan dit component toe te voegen of geselecteer een component uit de treeview.</a>');
+		echo('<a href="'.$_SESSION['huidige_pagina']. '&c=' . $Comp_Selectie . '">Klik hier om nog een melding aan dit component toe te voegen of geselecteer een component uit de treeview.</a>');
 	}
 	else {
-		if (isset($_GET['c']) && $_GET['c'] != 0 ) {
+		if ((isset($_GET['c']) && $_GET['c'] != 0) || (isset($_GET['b']))) {
 			//de tijdzone waarin we leven instellen, wordt dit niet gedaan dan klaagt PHP
 			date_default_timezone_set ("Europe/Amsterdam");
 ?>
 
-    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']); if(isset($_GET['m'])) echo("&m=".$_GET['m']); ?>">
+    	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); if(isset($_GET['c'])) echo("&c=" . $_GET['c']); if(isset($_GET['b'])) echo("&b=".$_GET['b']); ?>">
     		<table>
-    			<tr>
+  				<?php
+  					if (isset($_SESSION['type_overzicht']) && $_SESSION['type_overzicht'] == '2') {
+							if (isset($_POST['Comp_Selection']))
+								$Comp_Selection = $_POST['Comp_Selection'];
+							else $Comp_Selection = -1;
+
+							echo("<tr><td>Component:</td><td><select name=\"Comp_Selection\" onChange=\"PostDocument('" . $_SESSION['huidige_pagina'] ."');\">");
+							echo("<option value=\"-1\"");
+							if ($Comp_Selection == -1) echo (" SELECTED");
+							echo(">None selected</option>");
+							Vul_Componenten_Select_Box(Bepaal_Types(), $Comp_Selection);
+							echo("</select>");
+
+							if(isset($_POST['Comp_Selection']) && ($_POST['Comp_Selection'] == -1)) echo('<b>* Er is geen component geselecteerd!</b>'); 
+							echo("</td></tr>");
+						}
+  				?>    				
+    			<tr>    				
     				<td>Type melding:</td>
-    				<td><select name="Type_Melding" onChange="PostDocument('<?php echo($_SESSION['huidige_pagina'] . "&c=" . $_GET['c']); ?>');">
-    					<?php
-    						$query = "SELECT Meld_Type_ID, Melding_Type_Naam FROM melding_type";
-		    			  $resultaat = mysql_query($query);
+	  				<?php
+	  					if (isset($_GET['c'])) {
+		    				echo("<td><select name=\"Type_Melding\" onChange=\"PostDocument('" . $_SESSION['huidige_pagina'] . "&c=" . $_GET['c'] ."');\">");	
+							}
+							else 
+		    				echo("<td><select name=\"Type_Melding\" onChange=\"PostDocument('" . $_SESSION['huidige_pagina'] ."');\">");
 
-					  		if (isset($_GET['m'])) $type = $_GET['m'];
-					  		else if (isset($_POST['Type_Melding'])) $type = $_POST['Type_Melding'];
-					  		else $type = 'SELECTED';
+  						$query = "SELECT Meld_Type_ID, Melding_Type_Naam FROM melding_type";
+	    			  $resultaat = mysql_query($query);
 
-						  	while ($data = mysql_fetch_array($resultaat)) {
-		  	  				echo('<option value="'.$data['Meld_Type_ID'].'"');
-			  	  			if ($data['Meld_Type_ID'] == $type || $type == 'SELECTED') {
-			  	  				echo('SELECTED');
-			  	  				$type = $data['Meld_Type_ID'];
-			  	  			}
-			  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
-								}    					
-    					?>
+				  		if (isset($_GET['b'])) $type = $_GET['b'];
+				  		else if (isset($_POST['Type_Melding'])) $type = $_POST['Type_Melding'];
+				  		else $type = 'SELECTED';
+
+					  	while ($data = mysql_fetch_array($resultaat)) {
+	  	  				echo('<option value="'.$data['Meld_Type_ID'].'"');
+		  	  			if ($data['Meld_Type_ID'] == $type || $type == 'SELECTED') {
+		  	  				echo('SELECTED');
+		  	  				$type = $data['Meld_Type_ID'];
+		  	  			}
+		  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
+							}    					
+  					?>
     				</select> Locatie melding: <select name="Melding_Locatie">
 						<?php
 							$query = "SELECT Comp_Locatie FROM comp_lijst";
@@ -286,16 +324,37 @@
     				<td><iframe id="frame_oplossing" name="frame_oplossing" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_probleem_oplossing.php<?php if(isset($type)) echo("?c=".$type); ?>" width="305" height="56" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
     			</tr>
     			<tr>
+  					<?php
+	  					$grootte = '110';
+	  					if (isset($_SESSION['type_overzicht']) && $_SESSION['type_overzicht'] == '2') {
+									$grootte = '93';
+							}
+						?>
+
 	  				<td>Extra velden:<br>(* = verplicht)</td>
-	  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/Melding_Toevoegen_Extra_Velden.php?c=<?php echo($type); ?>" width="400" height="110" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+	  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/Melding_Toevoegen_Extra_Velden.php?c=<?php echo($type); ?>" width="400" height="<?php echo($grootte); ?>" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
 	  					<?php
 	  					  if (isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && !Extra_Velden_Controle()) echo("<b>* Foutieve waardes!</b>");
 	  					?>
 	  				</td>
     			</tr>
     			<tr>
+  					<?php
+  						$dinges = "";
+  						if (isset($_SESSION['type_overzicht']) && $_SESSION['type_overzicht'] == '2') {
+  							if (isset($_POST['Comp_Selection']) && $_POST['Comp_Selection'] != -1)
+  								$dinges = ("?c=".$_POST['Comp_Selection']);
+  						}
+  						else if(isset($_GET['c'])) $dinges = ("?c=".$_GET['c']);
+
+							$grootte = '105';
+							if (isset($_SESSION['type_overzicht']) && $_SESSION['type_overzicht'] == '2') {
+									$grootte = '88';
+							}
+  					?>
+
     				<td>Historie:</td>
-    				<td><iframe id="frame_historie" name="frame_historie" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_historie.php <?php if(isset($_GET['c'])) echo("?c=".$_GET['c']); ?>" width="500" height="105" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
+    				<td><iframe id="frame_historie" name="frame_historie" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_historie.php <?php echo($dinges); ?>" width="500" height="<?php echo($grootte); ?>" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
     			</tr>
     			<tr>
     				<td>
