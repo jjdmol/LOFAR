@@ -8,8 +8,8 @@
 	echo("<HEAD></HEAD>");
 	echo("<BODY");
 
-	if(isset($_GET['q']))
-		echo("bgcolor=\"#B3CCE6\">");
+	if(!isset($_GET['q']))
+		echo(" bgcolor=\"#B3CCE6\">");
 	else echo(">");
 	
 	if(isset($_GET['c']))  {

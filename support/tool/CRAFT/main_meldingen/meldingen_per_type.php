@@ -10,7 +10,7 @@
 			<body bgcolor="#B3CCE6">
 	
 			<?php
-				$query = "SELECT * FROM melding_lijst WHERE Meld_Type_ID = '".$_GET['c']."' ORDER BY Meld_Datum DESC";
+				$query = "SELECT * FROM melding_lijst WHERE Meld_Type_ID = '".$_GET['c']."' AND Meld_Lijst_ID > '1' ORDER BY Meld_Datum DESC";
 			  $resultaat = mysql_query($query);
 
 				echo("<table border=\"1\">");

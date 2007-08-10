@@ -42,7 +42,7 @@
 				<?php
 					
 					//er is iets gekozen, dus gegevens weergeven
-					if (isset($_GET['c'])) {
+					if (isset($_GET['c']) || isset($_GET['b'])) {
 						//bepalen wat er precies weergegeven moet worden
 						//meldingen per component
 						if ($_SESSION['type_overzicht'] == 1) {
@@ -110,7 +110,7 @@
 						}
 						//melding per type melding
 						else if ($_SESSION['type_overzicht'] == 2) {
-							$query = "SELECT * FROM melding_type WHERE Meld_Type_ID = '".$_GET['c']."'";
+							$query = "SELECT * FROM melding_type WHERE Meld_Type_ID = '".$_GET['b']."'";
 						  $res = mysql_query($query);
 							$row = mysql_fetch_array($res);
 							
@@ -132,12 +132,12 @@
 							echo("</td></tr>");
 							echo("</table>");
 							
-							$query = "SELECT Count(Meld_Lijst_ID) FROM melding_lijst WHERE Meld_Type_ID = '".$_GET['c']."'";
+							$query = "SELECT Count(Meld_Lijst_ID) FROM melding_lijst WHERE Meld_Type_ID = '".$_GET['b']."'";
 						  $res = mysql_query($query);
 							$row = mysql_fetch_array($res);
 							if ($row[0] != 0){
 			   				echo("<br>Meldingen van dit type:<br>");
-			   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_meldingen/meldingen_per_type.php?c=".$_GET['c']."\" width=\"650\" height=\"250\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
+			   				echo("<iframe id=\"frame_type\" name=\"frame_type\" align=\"middle\" marginwidth=\"0\" marginheight=\"0\" src=\"". $_SESSION['pagina'] ."main_meldingen/meldingen_per_type.php?c=".$_GET['b']."\" width=\"650\" height=\"250\" ALLOWTRANSPARENCY frameborder=\"0\" scrolling=\"auto\"></iframe>");
 			   			}
 							else 
 		   					echo("<br>Er zijn geen meldingen van dit type gevonden.<br>");

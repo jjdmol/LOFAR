@@ -317,18 +317,22 @@
 	//niet opslaan
 	else {
 		//er is een component geselecteerd
-		if (isset($_GET['c']) && $_GET['c'] != 0) {
+		if (isset($_GET['c']) && $_GET['c'] != 0 || isset($_GET['b']) && $_GET['b'] != 0) {
+			
+			
+			
+			
 			//er is een melding geselecteerd, dus de gegevens van die melding weergeven
 			if (isset($_GET['m']) && $_GET['m'] != 0) {
 				$query = "SELECT * FROM melding_lijst WHERE Meld_Lijst_ID='". $_GET['m'] ."'";
 				$resultaat = mysql_query($query);
 				$row = mysql_fetch_array($resultaat);
 				
-				if (isset($_GET['n'])) $geselecteerd_type = $_GET['n'];
+				if (isset($_GET['b'])) $geselecteerd_type = $_GET['b'];
 				else $geselecteerd_type = $row['Meld_Type_ID'];
 				
 				?>
-					<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']."&m=".$_GET['m']. "&n=". $geselecteerd_type); ?>">
+					<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>&c=<?php echo($_GET['c']."&m=".$_GET['m']. "&b=". $geselecteerd_type); ?>">
 						<table>
 							<tr>
 								<td>Type melding:</td>
@@ -561,47 +565,82 @@
 				
 				<?php
 				
-			} // er is geen melding geselecteerd, dus alle meldingen van dat component tonen
+			} // er is geen melding geselecteerd, 
 			else {
-				//meldingen laten zien
-				//gegevens over het geselecteerde component ophalen, zoals de naam van het component en de laatste opgeslagen melding (einde van de keten)
-				$query = "SELECT Laatste_Melding, Comp_Naam FROM comp_lijst WHERE Comp_Lijst_ID = '". $_GET['c'] ."'";
-				$resultaat = mysql_query($query);
-				$data = mysql_fetch_array($resultaat);
-				
-				//melding richting de gebruiker
-				echo("U heeft \"". $data[1] ."\" geselecteerd.<br>Voor dit component staan de volgende meldingen in het systeem:<br><br>");
-				
-				//het einde van de keten selecteren, hierna terug werken naar het begin
-				$query = "SELECT Meld_Lijst_ID, Meld_Datum, Prob_Beschrijving, Voorgaande_Melding FROM melding_lijst WHERE Meld_Lijst_ID ='". $data[0] ."'";
-				$resultaat = mysql_query($query);
-				$data = mysql_fetch_array($resultaat);
-				
-				//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
-				$gedeeldveld=split(" ",$data['Meld_Datum']);
-				//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
-				$datum = split("-",$gedeeldveld[0]);
-
-				//tabel aanmaken om de gegevens in te tonen
-				echo("<table border =\"1\">");
-				echo("<tr><td>". $data['Meld_Lijst_ID'] ."</td><td>" . substr($data['Prob_Beschrijving'], 0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['huidige_pagina']."&c=".$_GET['c']. "&m=". $data['Meld_Lijst_ID']. "\">Bewerken</a></td></tr>");
-		
-				//terugwerken richting het begin van de meldingenketen
-				while ($data['Voorgaande_Melding'] != 1) { 
-					$query = "SELECT Meld_Lijst_ID, Meld_Datum, Prob_Beschrijving, Voorgaande_Melding, Meld_Type_ID FROM melding_lijst WHERE Meld_Lijst_ID ='". $data['Voorgaande_Melding'] ."'";
+				//dus alle meldingen van dat component tonen
+				if(isset($_GET['c']) && $_GET['c'] != 0) {
+					//meldingen laten zien
+					//gegevens over het geselecteerde component ophalen, zoals de naam van het component en de laatste opgeslagen melding (einde van de keten)
+					$query = "SELECT Laatste_Melding, Comp_Naam FROM comp_lijst WHERE Comp_Lijst_ID = '". $_GET['c'] ."'";
 					$resultaat = mysql_query($query);
 					$data = mysql_fetch_array($resultaat);
-		
+					
+					//melding richting de gebruiker
+					echo("U heeft \"". $data[1] ."\" geselecteerd.<br>Voor dit component staan de volgende meldingen in het systeem:<br><br>");
+					
+					//het einde van de keten selecteren, hierna terug werken naar het begin
+					$query = "SELECT Meld_Lijst_ID, Meld_Datum, Prob_Beschrijving, Voorgaande_Melding FROM melding_lijst WHERE Meld_Lijst_ID ='". $data[0] ."'";
+					$resultaat = mysql_query($query);
+					$data = mysql_fetch_array($resultaat);
+					
 					//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
 					$gedeeldveld=split(" ",$data['Meld_Datum']);
 					//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
 					$datum = split("-",$gedeeldveld[0]);
-				
-					//tonen gegevens
-					echo("<tr><td>". $data['Meld_Lijst_ID'] ."</td><td>" .substr($data['Prob_Beschrijving'], 0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['huidige_pagina']."&c=".$_GET['c']. "&m=". $data['Meld_Lijst_ID']. "&q=" . $data['Meld_Type_ID'] .  "\">Bewerken</a></td></tr>");
+
+					//tabel aanmaken om de gegevens in te tonen
+					echo("<table border =\"1\">");
+					echo("<tr><td>". $data['Meld_Lijst_ID'] ."</td><td>" . substr($data['Prob_Beschrijving'], 0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['huidige_pagina']."&c=".$_GET['c']. "&m=". $data['Meld_Lijst_ID']. "\">Bewerken</a></td></tr>");
+			
+					//terugwerken richting het begin van de meldingenketen
+					while ($data['Voorgaande_Melding'] != 1) { 
+						$query = "SELECT Meld_Lijst_ID, Meld_Datum, Prob_Beschrijving, Voorgaande_Melding, Meld_Type_ID FROM melding_lijst WHERE Meld_Lijst_ID ='". $data['Voorgaande_Melding'] ."'";
+						$resultaat = mysql_query($query);
+						$data = mysql_fetch_array($resultaat);
+			
+						//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
+						$gedeeldveld=split(" ",$data['Meld_Datum']);
+						//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
+						$datum = split("-",$gedeeldveld[0]);
+					
+						//tonen gegevens
+						echo("<tr><td>". $data['Meld_Lijst_ID'] ."</td><td>" .substr($data['Prob_Beschrijving'], 0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['huidige_pagina']."&c=".$_GET['c']. "&m=". $data['Meld_Lijst_ID']. "&q=" . $data['Meld_Type_ID'] .  "\">Bewerken</a></td></tr>");
+					}
+					//afsluiten tabel
+					echo("</table>");
 				}
-				//afsluiten tabel
-				echo("</table>");
+				//alle meldingen van dit type laten zien
+				else if (isset($_GET['b']) && $_GET['b'] != 0) {
+					//meldingen laten zien
+					//gegevens over het geselecteerde type melding ophalen, zoals de naam van de melding 
+					$query = "SELECT Melding_Type_Naam FROM melding_type WHERE Meld_Type_ID = '". $_GET['b'] ."'";
+					$resultaat = mysql_query($query);
+					$data = mysql_fetch_array($resultaat);
+					
+					//melding richting de gebruiker
+					echo("U heeft \"". $data[0] ."\" geselecteerd.<br>Voor dit type melding staan de volgende meldingen in het systeem:<br><br>");
+					
+					//het einde van de keten selecteren, hierna terug werken naar het begin
+					$query = "SELECT Meld_Lijst_ID, Meld_Datum, Prob_Beschrijving, Comp_Lijst_ID FROM melding_lijst WHERE Meld_Type_ID ='". $_GET['b'] ."'";
+					$resultaat = mysql_query($query);
+
+					//tabel aanmaken om de gegevens in te tonen
+					echo("<table border =\"1\">");
+			
+					//terugwerken richting het begin van de meldingenketen
+					while ($data = mysql_fetch_array($resultaat)) { 
+			
+						//splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
+						$gedeeldveld=split(" ",$data['Meld_Datum']);
+						//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
+						$datum = split("-",$gedeeldveld[0]);
+					
+						//tonen gegevens
+						echo("<tr><td>". $data['Meld_Lijst_ID'] ."</td><td>" .substr($data['Prob_Beschrijving'], 0, 40) . "...</td><td>". $datum[2] ."-". $datum[1] ."-". $datum[0]. "</td><td><a href=\"".$_SESSION['huidige_pagina']."&c=".$data['Comp_Lijst_ID']. "&m=". $data['Meld_Lijst_ID']. "&b=" . $_GET['b'] .  "\">Bewerken</a></td></tr>");
+					}
+					//afsluiten tabel
+					echo("</table>");
+				}
 			}
 		}
 		//er is geen component geselecteerd

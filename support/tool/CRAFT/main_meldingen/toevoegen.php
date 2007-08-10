@@ -9,6 +9,7 @@
 	  
 	  require_once($_SESSION['pagina'] . 'includes/login_funcs.php');
 		include_once($_SESSION['pagina'] . 'includes/datum_tijd_functies.php');
+    include_once($_SESSION['pagina'] . 'algemene_functionaliteit/globale_functies.php');
 
 	  //controleren of er iemand ingelogd is...
 	  if ($LOGGED_IN = user_isloggedin()) {

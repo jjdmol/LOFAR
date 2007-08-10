@@ -161,7 +161,12 @@
   	$uitkomst = '';
   	for ($i = 0; $i < count($type_object);$i++) {
 			$uitkomst = $uitkomst . "['". $type_object[$i]->Get_Naam()."', ";
-			$uitkomst = $uitkomst . "'". $_SESSION['huidige_pagina']. "&c=". $type_object[$i]->Get_ID() ."'";
+
+			//geen c maar n wanneer p = 3 en type_overzicht = 2
+			if (isset($_SESSION['main_deel']) && isset($_SESSION['type_overzicht']) && $_SESSION['main_deel'] == 3 && $_SESSION['type_overzicht'] == 2)
+				$uitkomst = $uitkomst . "'". $_SESSION['huidige_pagina']. "&b=". $type_object[$i]->Get_ID() ."'";
+			else
+				$uitkomst = $uitkomst . "'". $_SESSION['huidige_pagina']. "&c=". $type_object[$i]->Get_ID() ."'";
 
   		$temp = $type_object[$i]->Get_Childarray();
 			if (count($temp) > 0) $uitkomst = $uitkomst . ", ";
