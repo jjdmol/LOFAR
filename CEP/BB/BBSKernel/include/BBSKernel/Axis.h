@@ -24,7 +24,7 @@
 #define LOFAR_BBS_BBSKERNEL_GRID_H
 
 #include <Common/lofar_vector.h>
-#include <algorithm>
+#include <Common/lofar_algorithm.h>
 #include <functional>
 #include <utility>
 
@@ -37,29 +37,6 @@ using std::pair;
 using std::make_pair;
 using std::max;
 using std::min;
-
-/*
-template <typename T>
-class BoundingBox
-{
-    BoundingBox(T minx, T miny, T maxx, T maxy)
-        :   min(minx, miny),
-            max(maxx, maxy)
-    {}
-
-    pair<T, T>      min;
-    pair<T, T>      max;
-}
-
-template <typename T>
-BoudingBox union(const BoundingBox<T> &a, const BoundingBox<T> &b)
-{
-    return BoundingBox(min(a.min.first, b.min.first),
-        min(a.min.second, b.min.second),
-        max(a.max.first, b.max.first),
-        max(a.max.second, b.max.second));
-}
-*/
 
 class regular_series: public unary_function<size_t, double>
 {

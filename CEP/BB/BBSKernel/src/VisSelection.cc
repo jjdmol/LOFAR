@@ -42,7 +42,7 @@ VisSelection::VisSelection()
 }
 
 
-void VisSelection::setChannelRange(size_t start, size_t end)
+void VisSelection::setStartChannel(size_t start)
 {
     if(!isSet(CHANNEL_START)
         && (!isSet(CHANNEL_END) || start <= itsChannelRange.second))
@@ -52,7 +52,11 @@ void VisSelection::setChannelRange(size_t start, size_t end)
     }
     else if(start < itsChannelRange.first)
         itsChannelRange.first = start;
+}
 
+
+void VisSelection::setEndChannel(size_t end)
+{
     if(!isSet(CHANNEL_END)
         && (!isSet(CHANNEL_START) || end >= itsChannelRange.first))
     {
@@ -64,51 +68,7 @@ void VisSelection::setChannelRange(size_t start, size_t end)
 }
 
 
-bool VisSelection::convertTime(const string &in, double &out) const
-{
-    //# TODO: Convert from default epoch to MS epoch (as it may differ from 
-    //# the default!)
-    casa::Quantity time;
-
-    if(in.empty() || !casa::MVTime::read(time, in))
-        return false;
-
-    out = time.getValue("s");
-    return true;
-}
-
-
-void VisSelection::setTimeRange(string start, string end)
-{
-    double time;
-
-    if(convertTime(start, time))
-    {
-        if(!isSet(TIME_START)
-            && (!isSet(TIME_END) || time <= itsTimeRange.second))
-        {
-            itsFieldFlags[TIME_START] = true;
-            itsTimeRange.first = time;
-        }
-        else if(time < itsTimeRange.first)
-            itsTimeRange.first = time;
-    }
-
-    if(convertTime(end, time))
-    {
-        if(!isSet(TIME_END)
-            && (!isSet(TIME_START) || time >= itsTimeRange.first))
-        {
-            itsFieldFlags[TIME_END] = true;
-            itsTimeRange.second = time;
-        }
-        else if(time > itsTimeRange.second)
-            itsTimeRange.second = time;
-    }
-}
-
-
-void VisSelection::setTimeRange(double start, double end)
+void VisSelection::setStartTime(double start)
 {
     if(!isSet(TIME_START)
         && (!isSet(TIME_END) || start <= itsTimeRange.second))
@@ -117,37 +77,65 @@ void VisSelection::setTimeRange(double start, double end)
         itsTimeRange.first = start;
     }
     else if(start < itsTimeRange.first)
-        itsTimeRange.first = start;
-
-    if(!isSet(TIME_END)
-        && (!isSet(TIME_START) || end >= itsTimeRange.first))
     {
-        itsFieldFlags[TIME_END] = true;
-        itsTimeRange.second = end;
+        itsTimeRange.first = start;
     }
-    else if(end > itsTimeRange.second)
-        itsTimeRange.second = end;
 }
 
 
-void VisSelection::setCorrelations(vector<string> correlations)
+void VisSelection::setEndTime(double end)
 {
-    set<string> selection(correlations.begin(), correlations.end());
+        if(!isSet(TIME_END)
+            && (!isSet(TIME_START) || end >= itsTimeRange.first))
+        {
+            itsFieldFlags[TIME_END] = true;
+            itsTimeRange.second = end;
+        }
+        else if(end > itsTimeRange.second)
+        {
+            itsTimeRange.second = end;
+        }
+}
 
-    if(!isSet(CORRELATIONS))
+
+void VisSelection::setStartTime(const string &start)
+{
+    double time;
+    if(convertTime(start, time))
     {
-        itsCorrelations = selection;
-        itsFieldFlags[CORRELATIONS] = true;
+        setStartTime(time);
+    }
+}
+
+
+void VisSelection::setEndTime(const string &end)
+{
+    double time;
+    if(convertTime(end, time))
+    {
+        setEndTime(time);
+    }
+}
+
+
+void VisSelection::setPolarizations(vector<string> polarizations)
+{
+    set<string> selection(polarizations.begin(), polarizations.end());
+
+    if(!isSet(POLARIZATIONS))
+    {
+        itsPolarizations = selection;
+        itsFieldFlags[POLARIZATIONS] = true;
     }
     else
     {
-        set<string>::const_iterator it = itsCorrelations.begin();
-        while(it != itsCorrelations.end())
+        set<string>::const_iterator it = itsPolarizations.begin();
+        while(it != itsPolarizations.end())
         {
             if(selection.count(*it))
                 ++it;
             else
-                itsCorrelations.erase(it++);
+                itsPolarizations.erase(it++);
         }
     }
 }
@@ -180,6 +168,20 @@ void VisSelection::setBaselineFilter(BaselineFilter filter)
 {
     itsFieldFlags[BASELINE_FILTER] = true;
     itsBaselineFilter = filter;
+}
+
+
+bool VisSelection::convertTime(const string &in, double &out) const
+{
+    //# TODO: Convert from default epoch to MS epoch (as it may differ from 
+    //# the default!)
+    casa::Quantity time;
+
+    if(in.empty() || !casa::MVTime::read(time, in))
+        return false;
+
+    out = time.getValue("s");
+    return true;
 }
 
 } //# namespace BBS
