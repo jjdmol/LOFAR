@@ -1293,13 +1293,13 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
                         for(int scinx = 0; scinx < nrParamsFound; ++scinx)
                         {
                             ASSERT(indices[scinx]
-                                < solvers[solverIndex].nUnknowns());
+                                < solvers[solverIndex]->nUnknowns());
                                 
                             // Approximate the derivative for real and imag
                             // part.
                             double invp = 1.0 
                                 / tcres.getPerturbation(indices[scinx],
-                               ??? (need absolute domain index here) ???);
+                               solverIndex);
                             resultr[scinx] = (*pertReal[scinx] - *realVals)
                                 * invp;
                             resulti[scinx] = (*pertImag[scinx] - *imagVals)
