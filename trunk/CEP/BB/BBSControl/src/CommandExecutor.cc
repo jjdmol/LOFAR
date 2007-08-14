@@ -116,15 +116,13 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     }
 
     // Create selection from information in strategy.
-    RegionOfInterest roi = strategy->regionOfInterest();
-    Correlation correlation = strategy->correlation();
-
     VisSelection selection;
     if(!strategy->stations().empty())
         selection.setStations(strategy->stations());
 
+    Correlation correlation = strategy->correlation();
     if(!correlation.type.empty())
-        selection.setCorrelations(correlation.type);
+        selection.setPolarizations(correlation.type);
 
     if(correlation.selection == "AUTO")
     {
@@ -134,6 +132,25 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     {
         selection.setBaselineFilter(VisSelection::CROSS);
     }
+
+    RegionOfInterest roi = strategy->regionOfInterest();
+    if(!roi.frequency.empty())
+    {
+        selection.setStartChannel(roi.frequency[0]);
+    }
+    if(roi.frequency.size() > 1)
+    {
+        selection.setEndChannel(roi.frequency[1]);
+    }
+    if(!roi.time.empty())
+    {
+        selection.setStartTime(roi.time[0]);
+    }
+    if(roi.time.size() > 1)
+    {
+        selection.setEndTime(roi.time[1]);
+    }
+
     itsKernel->setSelection(selection);
 
     size_t size = strategy->domainSize().timeInterval;
@@ -304,13 +321,11 @@ void CommandExecutor::visit(const BBSCorrectStep &command)
 void CommandExecutor::visit(const BBSSolveStep &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
     LOG_DEBUG("Handling a BBSSolveStep");
     LOG_DEBUG_STR("Command: " << endl << command);
+    ASSERTSTR(itsKernel, "No kernel available.");
 
     NSTimer timer;
-
-    ASSERTSTR(itsKernel, "No kernel available.");
 
     // Construct context.
     GenerateContext context;
@@ -320,30 +335,19 @@ void CommandExecutor::visit(const BBSSolveStep &command)
     context.instrumentModel = command.instrumentModels();
     context.unknowns = command.parms();
     context.excludedUnknowns = command.exclParms();
-
-/*
-    pair<size_t, size_t> domainSize(command.domainSize().bandWidth,
+//    if(command.domainSize().bandWidth != 0)
+//    {
+//        LOG_WARN_STR("Subdivision in frequency not yet implemented; setting"
+//            " will be ignored.");
+//    }
+    context.domainSize = pair<size_t, size_t>(command.domainSize().bandWidth,
         command.domainSize().timeInterval);
-
-    if (domainSize.first != 0)
-    {
-        LOG_WARN_STR("Subdividing in frequency not support yet; setting"
-            " will be ignored.");
-        domainSize.first = 0;
-    }
-
-    context.domainSize = domainSize;
-*/
-
-    LOG_WARN_STR("Subdivision specfication not yet implemented; using domains"
-        " of 1 timeslot.");
-    context.domainSize = make_pair(0, 1);
 
     // Set context.
     if(!itsKernel->setContext(context))
     {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Could not set context.");
+        itsResult = CommandResult(CommandResult::ERROR, "Could not set"
+            " context.");
         return;
     }
 
@@ -351,33 +355,64 @@ void CommandExecutor::visit(const BBSSolveStep &command)
     const vector<SolveDomainDescriptor> &descriptors =
         itsKernel->getSolveDomainDescriptors();
 
+    // Get solve domain grid size
+    pair<size_t, size_t> gridSize = itsKernel->getSolveDomainGridSize();
+
     size_t blockSize = 1;
-    size_t nBlocks =
-        ceil(descriptors.size() / static_cast<double>(blockSize));
+    size_t blockCount =
+        ceil(gridSize.second / static_cast<double>(blockSize));
 
-    vector<double> solution(descriptors.front().unknowns);
-    vector<casa::LSQFit> solvers(blockSize);
-    size_t convergedTotal = 0, stoppedTotal = 0;
-    for(size_t block = 0; block < nBlocks; ++block)
+    vector<casa::LSQFit> solvers(gridSize.first * blockSize);
+    vector<vector<double> > border(gridSize.first);
+    for(size_t i = 0; i < gridSize.first; ++i)
     {
-        pair<size_t, size_t> domainRange(block * blockSize,
-            (block + 1) * blockSize - 1);
-        if(domainRange.second >= descriptors.size())
-            domainRange.second = descriptors.size() - 1;
-        size_t nDomains = domainRange.second - domainRange.first + 1;
+        border[i] = descriptors[i].unknowns;
+    }
 
-        LOG_DEBUG_STR("Processing domain(s) " << domainRange.first << " - "
-            << domainRange.second << " (" << descriptors.size()
+    size_t convergedTotal = 0, stoppedTotal = 0;
+    for(size_t block = 0; block < blockCount; ++block)
+    {
+        pair<size_t, size_t> frange(0, gridSize.first - 1);
+        pair<size_t, size_t> trange(block * blockSize,
+            (block + 1) * blockSize - 1);
+
+        if(trange.second >= gridSize.second)
+        {
+            trange.second = gridSize.second - 1;
+        }
+
+        pair<size_t, size_t> drange(
+            trange.first * gridSize.first + frange.first,
+            trange.second * gridSize.first + frange.second);
+        size_t nDomains = drange.second - drange.first + 1;
+
+        LOG_DEBUG_STR("frange: [" << frange.first << ", " << frange.second
+            << "]");
+        LOG_DEBUG_STR("trange: [" << trange.first << ", " << trange.second
+            << "]");
+        LOG_DEBUG_STR("drange: [" << drange.first << ", " << drange.second
+            << "]");
+
+        LOG_DEBUG_STR("Processing domain(s) " << drange.first << " - "
+            << drange.second << " (" << descriptors.size()
             << " domain(s) in total)");
-        LOG_DEBUG_STR("Initial values: " << solution);
+
+        LOG_DEBUG_STR("Initial values: ");
+        for(size_t i = drange.first; i <= drange.second; ++i)
+        {
+            size_t idx = (i - drange.first) % gridSize.first;
+            LOG_DEBUG_STR("Domain " << i << " Index " << idx << ": "
+                << border[idx]);
+        }
 
         // Register all solve domains with the solver.
         BlobStreamableVector<DomainRegistrationRequest> request;
-        for(size_t i = domainRange.first; i <= domainRange.second; ++i)
+        for(size_t i = drange.first; i <= drange.second; ++i)
         {
-            itsKernel->updateSolvableParms(i, solution);
+            size_t idx = (i - drange.first) % gridSize.first;
+            itsKernel->updateSolvableParms(i, border[idx]);
             request.getVector().push_back(new DomainRegistrationRequest(i,
-                solution,
+                border[idx],
                 command.maxIter(),
                 command.epsilon()));
         }
@@ -394,8 +429,8 @@ void CommandExecutor::visit(const BBSSolveStep &command)
             timer.start();
 
             // Generate normal equations.
-            itsKernel->generate(make_pair(0, domainRange.first),
-                make_pair(0, domainRange.second), solvers);
+            itsKernel->generate(make_pair(frange.first, trange.first),
+                make_pair(frange.second, trange.second), solvers);
 
             timer.stop();
             LOG_DEBUG_STR("[ END ] Generating normal equations; " << timer);
@@ -411,7 +446,7 @@ void CommandExecutor::visit(const BBSSolveStep &command)
             for(size_t i = 0; i < nDomains; ++i)
             {
                 iterationRequests.getVector().push_back(
-                    new IterationRequest(domainRange.first + i,
+                    new IterationRequest(drange.first + i,
                         solvers[i]));
             }
             itsSolverConnection->sendObject(iterationRequests);
@@ -476,19 +511,25 @@ void CommandExecutor::visit(const BBSSolveStep &command)
                 }
             }
 
-            if(results.back()->getResultCode() == NONREADY)
-            {
-                // Save solution of last solve domain in this block.
-                solution = results.back()->getUnknowns();
-            }
 
+            // Update border.
+            for(size_t i = (blockSize - 1) * gridSize.first;
+                i <= (blockSize) * gridSize.first - 1;
+                ++i)
+            {
+                size_t idx = i % gridSize.first;
+
+                if(results[i]->getResultCode() == NONREADY)
+                {
+                    // Save solution of last solve domain in this block.
+                    border[idx] = results[i]->getUnknowns();
+                }
+            }
             delete resultv;
 
             timer.stop();
             LOG_DEBUG_STR("[ END ] Processing results; " << timer);
-
             LOG_DEBUG_STR("[ END ] Iteration: " << iteration);
-
 
             ostringstream oss;
             oss << "Block statistics: " << endl;
@@ -503,8 +544,8 @@ void CommandExecutor::visit(const BBSSolveStep &command)
             //(command.minConverged() *
             //context.solveDomains.size()) / 100.0);
 
-            finished = ((converged + stopped) == nDomains)
-                || (iteration == command.maxIter());
+            finished = ((converged + stopped) == nDomains);
+//                || (iteration == command.maxIter());
             iteration++;
         }
 
@@ -528,17 +569,24 @@ void CommandExecutor::visit(const BBSSolveStep &command)
         timer.reset();
         timer.start();
 
-        for(size_t i = domainRange.first; i <= domainRange.second; ++i)
+        NSTimer write_timer, unlock_timer;
+        itsKernel->lock();
+        for(size_t i = drange.first; i <= drange.second; ++i)
         {
+            write_timer.start();
             itsKernel->writeParms(i);
+            write_timer.stop();
         }
+        unlock_timer.start();
+        itsKernel->unlock();
+        unlock_timer.stop();
+
+        LOG_DEBUG_STR("write timer: " << write_timer);
+        LOG_DEBUG_STR("unlock timer: " << unlock_timer);
 
         timer.stop();
         LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
     }
-
-    // Try to force log4cplus to flush its buffers.
-    cout << "DONE." << endl;
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
