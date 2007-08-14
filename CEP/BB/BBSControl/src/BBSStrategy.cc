@@ -78,9 +78,12 @@ namespace LOFAR
 
       // Get the region of interest (optional)
       try {
-        itsRegionOfInterest.frequency = 
-          ps.getInt32Vector("RegionOfInterest.Freq");          
-        itsRegionOfInterest.time  = 
+        itsRegionOfInterest.frequency =
+          ps.getInt32Vector("RegionOfInterest.Freq");
+      } catch (APSException&) {}
+
+      try {
+        itsRegionOfInterest.time =
           ps.getStringVector("RegionOfInterest.Time");
       } catch (APSException&) {}
 
