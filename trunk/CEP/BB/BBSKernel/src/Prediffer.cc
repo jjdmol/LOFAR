@@ -168,6 +168,9 @@ Prediffer::Prediffer(const string &measurement, size_t subband,
 //    ASSERTSTR(computeUVW, "Reading of UVW coordinates from the input"
 //        " measurement temporarily disabled.");
 
+    // Initialize chunk.
+    itsChunkData.reset(new VisData());
+
     // Initialize model.
     casa::MEpoch startTimeMeas = itsMeasurement->getTimeRange().first;
     casa::Quantum<casa::Double> startTime = startTimeMeas.get("s");
@@ -245,23 +248,26 @@ bool Prediffer::nextChunk()
         itsChunkSelection.setTimeRange(start, end);
     }
 
+    // Clear equations.
+    itsModel->clearEquations();
+
     // Read data.
     LOG_DEBUG("Reading chunk...");
-    itsChunkData = itsMeasurement->read(itsChunkSelection, itsInputColumn,
+    itsMeasurement->read(itsChunkSelection, itsChunkData, itsInputColumn,
         itsReadUVW);
     if(itsReadUVW)
         itsModel->setStationUVW(itsMeasurement->getInstrument(), itsChunkData);
 
 /*
     LOG_DEBUG_STR("Times:");
-    for(size_t i = 0; i < itsChunkData->time.size(); ++i)
+    for(size_t i = 0; i < itsChunkData->grid.time.size(); ++i)
         LOG_DEBUG_STR("i: " << i << " " << setprecision(15) <<
-        itsChunkData->time(i));
+        itsChunkData->grid.time(i));
 */
 
     // Set work domain.
-    pair<double, double> freqRange = itsChunkData->freq.range();
-    pair<double, double> timeRange = itsChunkData->time.range();
+    pair<double, double> freqRange = itsChunkData->grid.freq.range();
+    pair<double, double> timeRange = itsChunkData->grid.time.range();
     itsWorkDomain = MeqDomain(freqRange.first, freqRange.second,
         timeRange.first, timeRange.second);
 
@@ -276,9 +282,9 @@ bool Prediffer::nextChunk()
         << setprecision(3) << freqRange.second / 1000.0 << " kHz");
     LOG_INFO_STR("  Bandwidth: "
         << setprecision(3) << (freqRange.second - freqRange.first) / 1000.0
-        << "kHz (" << itsChunkData->freq.size() << " channels of "
+        << "kHz (" << itsChunkData->grid.freq.size() << " channels of "
         << setprecision(3)
-        << (freqRange.second - freqRange.first) / itsChunkData->freq.size()
+        << (freqRange.second - freqRange.first) / itsChunkData->grid.freq.size()
         << " Hz)");
     LOG_INFO_STR("  Time:      "
         << casa::MVTime::Format(casa::MVTime::YMD, 6)
@@ -288,9 +294,9 @@ bool Prediffer::nextChunk()
         << casa::MVTime(casa::Quantum<casa::Double>(timeRange.second, "s")));
     LOG_INFO_STR("  Duration:  "
         << setprecision(3) << (timeRange.second - timeRange.first) / 3600.0
-        << " hours (" << itsChunkData->time.size() << " samples of "
+        << " hours (" << itsChunkData->grid.time.size() << " samples of "
         << setprecision(3)
-        << (timeRange.second - timeRange.first) / itsChunkData->time.size()
+        << (timeRange.second - timeRange.first) / itsChunkData->grid.time.size()
         << " s on average)");
 
     return true;
@@ -305,7 +311,7 @@ bool Prediffer::setContext(const Context &context)
     // Select polarizations.
     vector<string> requested;
     if(context.correlation.type.empty())
-        requested = itsMeasurement->getCorrelations();
+        requested = itsMeasurement->getPolarizations();
     else
         requested = context.correlation.type;
 
@@ -598,10 +604,16 @@ bool Prediffer::setContext(const GenerateContext &context)
 
     // Initialize solve domain grid.
     pair<size_t, size_t> domainSize(context.domainSize);
-    if(domainSize.first == 0 || domainSize.first > itsChunkData->freq.size())
-        domainSize.first = itsChunkData->freq.size();
-    if(domainSize.second == 0 || domainSize.second > itsChunkData->time.size())
-        domainSize.second = itsChunkData->time.size();
+    if(domainSize.first == 0
+        || domainSize.first > itsChunkData->grid.freq.size())
+    {
+        domainSize.first = itsChunkData->grid.freq.size();
+    }
+    if(domainSize.second == 0
+        || domainSize.second > itsChunkData->grid.time.size())
+    {
+        domainSize.second = itsChunkData->grid.time.size();
+    }
 
     LOG_DEBUG_STR("Nominal solve domain size: " << domainSize.first
         << " channels by " << domainSize.second << " timeslots.");
@@ -615,7 +627,8 @@ bool Prediffer::setContext(const GenerateContext &context)
 void Prediffer::predict()
 {
     process(false, true, false, make_pair(0, 0),
-        make_pair(itsChunkData->freq.size() - 1, itsChunkData->time.size() - 1),
+        make_pair(itsChunkData->grid.freq.size() - 1,
+            itsChunkData->grid.time.size() - 1),
         &Prediffer::predictBaseline, 0);
 
     if(!itsOutputColumn.empty())
@@ -632,7 +645,8 @@ void Prediffer::predict()
 void Prediffer::subtract()
 {
     process(false, true, false, make_pair(0, 0),
-        make_pair(itsChunkData->freq.size() - 1, itsChunkData->time.size() - 1),
+        make_pair(itsChunkData->grid.freq.size() - 1,
+            itsChunkData->grid.time.size() - 1),
         &Prediffer::subtractBaseline, 0);
 
     if(!itsOutputColumn.empty())
@@ -649,7 +663,8 @@ void Prediffer::subtract()
 void Prediffer::correct()
 {
     process(false, true, false, make_pair(0, 0),
-        make_pair(itsChunkData->freq.size() - 1, itsChunkData->time.size() - 1),
+        make_pair(itsChunkData->grid.freq.size() - 1,
+            itsChunkData->grid.time.size() - 1),
         &Prediffer::correctBaseline, 0);
 
     if(!itsOutputColumn.empty())
@@ -730,14 +745,14 @@ void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
     pair<size_t, size_t> vend
         ((end.first + 1) * itsContext.domainSize.first - 1,
         (end.second + 1) * itsContext.domainSize.second - 1);
-    ASSERT(vstart.first < itsChunkData->freq.size());
-    ASSERT(vstart.second < itsChunkData->time.size());
+    ASSERT(vstart.first < itsChunkData->grid.freq.size());
+    ASSERT(vstart.second < itsChunkData->grid.time.size());
 
     // Clip against data boundary.
-    if(vend.first >= itsChunkData->freq.size())
-        vend.first = itsChunkData->freq.size() - 1;
-    if(vend.second >= itsChunkData->time.size())
-        vend.second = itsChunkData->time.size() - 1;
+    if(vend.first >= itsChunkData->grid.freq.size())
+        vend.first = itsChunkData->grid.freq.size() - 1;
+    if(vend.second >= itsChunkData->grid.time.size())
+        vend.second = itsChunkData->grid.time.size() - 1;
 
 //    LOG_DEBUG_STR("Processing visbility domain: " << vstart.first << ", "
 //        << vstart.second << " - " << vend.first << ", " << vend.second <<
@@ -802,15 +817,15 @@ void Prediffer::initializeSolveDomains(pair<size_t, size_t> size)
     // Need to implement some way to select local solve domains
     // from global solve domains, see initSolvableParms().
     size_t nFreqDomains =
-        ceil(itsChunkData->freq.size() / static_cast<double>(size.first));
+        ceil(itsChunkData->grid.freq.size() / static_cast<double>(size.first));
     size_t nTimeDomains =
-        ceil(itsChunkData->time.size() / static_cast<double>(size.second));
+        ceil(itsChunkData->grid.time.size() / static_cast<double>(size.second));
     size_t nSolveDomains = nFreqDomains * nTimeDomains;
 
-    cout << "freq.size(): " << itsChunkData->freq.size() << " #domains: "
-        << nFreqDomains << endl;
-    cout << "time.size(): " << itsChunkData->time.size() << " #domains: "
-        << nTimeDomains << endl;
+//    cout << "freq.size(): " << itsChunkData->grid.freq.size() << " #domains: "
+//        << nFreqDomains << endl;
+//    cout << "time.size(): " << itsChunkData->grid.time.size() << " #domains: "
+//        << nTimeDomains << endl;
 
     itsContext.domainSize = size;
     itsContext.domainCount = make_pair(nFreqDomains, nTimeDomains);
@@ -826,21 +841,21 @@ void Prediffer::initializeSolveDomains(pair<size_t, size_t> size)
     for(size_t tdomain = 0; tdomain < nTimeDomains; ++tdomain)
     {
         size_t tend = tstart + size.second - 1;
-        if(tend >= itsChunkData->time.size())
-            tend = itsChunkData->time.size() - 1;
+        if(tend >= itsChunkData->grid.time.size())
+            tend = itsChunkData->grid.time.size() - 1;
 
         size_t fstart = 0;
         for(size_t fdomain = 0; fdomain < nFreqDomains; ++fdomain)
         {
             size_t fend = fstart + size.first - 1;
-            if(fend >= itsChunkData->freq.size())
-                fend = itsChunkData->freq.size() - 1;
+            if(fend >= itsChunkData->grid.freq.size())
+                fend = itsChunkData->grid.freq.size() - 1;
 
             itsContext.domains[idx].domain =
-                MeqDomain(itsChunkData->freq.lower(fstart),
-                    itsChunkData->freq.upper(fend),
-                    itsChunkData->time.lower(tstart),
-                    itsChunkData->time.upper(tend));
+                MeqDomain(itsChunkData->grid.freq.lower(fstart),
+                    itsChunkData->grid.freq.upper(fend),
+                    itsChunkData->grid.time.lower(tstart),
+                    itsChunkData->grid.time.upper(tend));
 
             solveDomains[idx] = itsContext.domains[idx].domain;
 
@@ -861,7 +876,8 @@ void Prediffer::initializeSolveDomains(pair<size_t, size_t> size)
         // parameter.
         int max = it->second.initDomain(solveDomains, nDerivatives,
             domainUnknownCount);
-
+        LOG_DEBUG_STR(it->second.getName() << " max: " << max);
+	
         if(max > 0)
         {
             const vector<MeqFunklet*>& funklets = it->second.getFunklets();
@@ -884,6 +900,7 @@ void Prediffer::initializeSolveDomains(pair<size_t, size_t> size)
         }
     }
     itsContext.derivativeCount = nDerivatives;
+    LOG_DEBUG_STR("nDerivatives: " << nDerivatives);
 }
 
 
@@ -914,8 +931,8 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     // NOTE: Temporary vector should be removed after MNS overhaul.
     vector<double> timeAxis(nTimeslots + 1);
     for(size_t i = 0; i < nTimeslots; ++i)
-        timeAxis[i] = itsChunkData->time.lower(start.second + i);
-    timeAxis[nTimeslots] = itsChunkData->time.upper(end.second);
+        timeAxis[i] = itsChunkData->grid.time.lower(start.second + i);
+    timeAxis[nTimeslots] = itsChunkData->grid.time.upper(end.second);
 
     // Initialize the ComplexArr pool with the most frequently used size.
     uint64 defaultPoolSize = itsMeasurement->getChannelCount() * nTimeslots;
@@ -925,10 +942,10 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     MeqMatrixRealArr::poolActivate(defaultPoolSize);
 
     // Create a request.
-    MeqDomain domain(itsChunkData->freq.lower(start.first),
-        itsChunkData->freq.upper(end.first),
-        itsChunkData->time.lower(start.second),
-        itsChunkData->time.upper(end.second));
+    MeqDomain domain(itsChunkData->grid.freq.lower(start.first),
+        itsChunkData->grid.freq.upper(end.first),
+        itsChunkData->grid.time.lower(start.second),
+        itsChunkData->grid.time.upper(end.second));
 
     MeqRequest request(domain, nChannels, timeAxis, nPerturbedValues);
     request.setOffset(start);
@@ -1193,7 +1210,6 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
 
     // To avoid having to use large temporary arrays, step through the
     // data by timestep and correlation.
-    uint nreq=0;
     for(set<pair<size_t, size_t> >::const_iterator it =
             itsContext.polarizations.begin();
         it != itsContext.polarizations.end();
@@ -1254,12 +1270,12 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
                     ch < offset.first + nChannels;
                     ++ch)
                 {
-                    // Compute relative solver index.
-                    size_t solverIndex = solverIndexTime +
-                        (ch - offset.first) / itsContext.domainSize.first;
-
                     if (!chunk->vis_flag[basel][tslot][ch][pol])
                     {
+                        // Compute relative solver index.
+                        size_t solverIndex = solverIndexTime +
+                            (ch - offset.first) / itsContext.domainSize.first;
+                            
                         // Compute right hand side of the equation pair.
                         double diffr =
                             real(chunk->vis_data[basel][tslot][ch][pol])
@@ -1276,9 +1292,14 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
                         // Compute left hand side of the equation pair.
                         for(int scinx = 0; scinx < nrParamsFound; ++scinx)
                         {
+                            ASSERT(indices[scinx]
+                                < solvers[solverIndex].nUnknowns());
+                                
                             // Approximate the derivative for real and imag
                             // part.
-                            double invp = invPert[scinx];
+                            double invp = 1.0 
+                                / tcres.getPerturbation(indices[scinx],
+                               ??? (need absolute domain index here) ???);
                             resultr[scinx] = (*pertReal[scinx] - *realVals)
                                 * invp;
                             resulti[scinx] = (*pertImag[scinx] - *imagVals)
@@ -1289,13 +1310,10 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
                         // object.
                         if (nrParamsFound != itsContext.derivativeCount)
                         {
-                            solvers[solverIndex]->makeNorm(
-                                itsContext.derivativeCount, indices, resultr,
-                                1.0, diffr);
-
-                            solvers[solverIndex]->makeNorm(
-                                itsContext.derivativeCount, indices, resulti,
-                                1.0, diffi);
+                            solvers[solverIndex]->makeNorm(nrParamsFound,
+                                indices, resultr, 1.0, diffr);
+                            solvers[solverIndex]->makeNorm(nrParamsFound,
+                                indices, resulti, 1.0, diffi);
                         }
                         else
                         {
@@ -1323,8 +1341,6 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
                         }
 */
 /************** DEBUG DEBUG DEBUG **************/
-
-                        nreq += 2;
                     } // !chunk->vis_flag[basel][tslot][ch][pol]
 
                     // Move pointers to the next channel.
@@ -1596,6 +1612,7 @@ void Prediffer::updateSolvableParms()
 // last iteration to a ParmDB. The type of the parameters is set to 'history'
 // to ensure that they cannot accidentily be used as input for BBSkernel. Also,
 // ParmFacade::getHistory() checks on this type.
+/*
 void Prediffer::logIteration(const string &stepName, size_t solveDomainIndex,
     double rank, double chiSquared, double LMFactor)
 {
@@ -1679,17 +1696,27 @@ value);
         }
     }
 }
-
+*/
 
 void Prediffer::writeParms(size_t solveDomainIndex)
 {
-    lock();
+//    NSTimer timer, unlock_timer;
+
+//    lock();
     SolveDomainDescriptor &descriptor = itsContext.domains[solveDomainIndex];
     for(size_t i = 0; i < descriptor.parameters.size(); ++i)
     {
+//        timer.start();
         descriptor.parameters[i].save(solveDomainIndex);
+//        timer.stop();
     }
-    unlock();
+
+//    unlock_timer.start();
+//    unlock();
+//    unlock_timer.stop();
+
+//    LOG_DEBUG_STR("saving: " << timer);
+//    LOG_DEBUG_STR("unlocking: " << unlock_timer);
 }
 
 

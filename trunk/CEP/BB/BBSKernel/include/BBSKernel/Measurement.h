@@ -55,7 +55,6 @@ public:
     string              name;
     casa::MPosition     position;
     vector<Station>     stations;
-    map<string, size_t> stationIndex;
 };
 
 class Measurement
@@ -64,8 +63,16 @@ public:
     typedef shared_ptr<Measurement> Pointer;
 
     virtual ~Measurement()
-    {
-    }
+    {}
+
+    virtual VisGrid grid(const VisSelection &selection) const = 0;
+
+    virtual void read(const VisSelection &selection, VisData::Pointer buffer,
+        const string &column = "DATA", bool readUVW = true) const = 0;
+
+    virtual void write(const VisSelection &selection, VisData::Pointer buffer,
+        const string &column = "CORRECTED_DATA",
+        bool writeFlags = true) = 0;
 
     const Instrument &getInstrument() const
     { return itsInstrument; }
@@ -73,14 +80,8 @@ public:
     const casa::MDirection &getPhaseCenter() const
     { return itsPhaseCenter; }
 
-    const vector<string> &getCorrelations() const
-    { return itsCorrelationProducts; }
-
-    size_t getCorrelationCount() const
-    { return itsCorrelationProducts.size(); }
-
-    size_t getChannelCount() const
-    { return itsSpectrum.size(); }
+    pair<casa::MEpoch, casa::MEpoch> getTimeRange() const
+    { return itsTimeRange; }
 
     const cell_centered_axis<regular_series> &getSpectrum() const
     { return itsSpectrum; }
@@ -88,26 +89,21 @@ public:
     pair<double, double> getFreqRange() const
     { return itsSpectrum.range(); }
 
-    pair<casa::MEpoch, casa::MEpoch> getTimeRange() const
-    { return itsTimeRange; }
+    size_t getChannelCount() const
+    { return itsSpectrum.size(); }
 
-    virtual VisGrid grid(const VisSelection &selection) const = 0;
+    const vector<string> &getPolarizations() const
+    { return itsPolarizations; }
 
-    virtual VisData::Pointer read(const VisSelection &selection,
-        const string &column = "DATA",
-        bool readUVW = true) const = 0;
-
-    virtual void write(const VisSelection &selection,
-        VisData::Pointer buffer,
-        const string &column = "CORRECTED_DATA",
-        bool writeFlags = true) const = 0;
+    size_t getPolarizationCount() const
+    { return itsPolarizations.size(); }
 
 protected:
     Instrument                          itsInstrument;
     casa::MDirection                    itsPhaseCenter;
     pair<casa::MEpoch, casa::MEpoch>    itsTimeRange;
     cell_centered_axis<regular_series>  itsSpectrum;
-    vector<string>                      itsCorrelationProducts;
+    vector<string>                      itsPolarizations;
 };
 
 } //# namespace BBS

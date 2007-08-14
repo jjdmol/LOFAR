@@ -23,6 +23,8 @@
 #include <lofar_config.h>
 #include <BBSKernel/VisData.h>
 #include <BBSKernel/Exceptions.h>
+
+#include <Common/lofar_algorithm.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -30,17 +32,22 @@ namespace LOFAR
 namespace BBS 
 {
 
-VisData::VisData(uint32 nTimeslots,
-    uint32 nBaselines,
-    uint32 nChannels,
-    uint32 nPolarizations)
-    :
-    uvw(boost::extents[nBaselines][nTimeslots][3]),
-    tslot_flag(boost::extents[nBaselines][nTimeslots]),
-    vis_flag(boost::extents[nBaselines][nTimeslots][nChannels][nPolarizations]),
-    vis_data(boost::extents[nBaselines][nTimeslots][nChannels][nPolarizations])
+VisData::VisData(const VisGrid &grid)
 {
-    LOG_DEBUG_STR("Chunk size: "
+    reset(grid);
+}
+
+
+void VisData::reset(const VisGrid &grid)
+{
+    this->grid = grid;
+
+    size_t nTimeslots = grid.time.size();
+    size_t nBaselines = grid.baseline.size();
+    size_t nChannels = grid.freq.size();
+    size_t nPolarizations = grid.polarization.size();
+
+    LOG_DEBUG_STR("Size: "
         << (nBaselines * nTimeslots * 3 * sizeof(double)
             + nBaselines * nTimeslots * sizeof(tslot_flag_t)
             + nBaselines * nTimeslots * nChannels * nPolarizations
@@ -49,6 +56,42 @@ VisData::VisData(uint32 nTimeslots,
                 * sizeof(sample_t))
             / (1024.0 * 1024.0)
         << " Mb.");
+
+    uvw.resize(boost::extents[nBaselines][nTimeslots][3]);
+    tslot_flag.resize(boost::extents[nBaselines][nTimeslots]);
+    vis_flag.resize(boost::extents[nBaselines][nTimeslots][nChannels]
+        [nPolarizations]);
+    vis_data.resize(boost::extents[nBaselines][nTimeslots][nChannels]
+        [nPolarizations]);
+
+    // Initially flag all timeslots as UNAVAILABLE.
+    for(size_t i = 0; i < nBaselines; ++i)
+        for(size_t j = 0; j < nTimeslots; ++j)
+    {
+        tslot_flag[i][j] = VisData::UNAVAILABLE;
+    }
+
+    size_t index;
+
+    // Initialize baseline index.
+    index = 0;
+    for(vector<baseline_t>::const_iterator it = grid.baseline.begin();
+        it != grid.baseline.end();
+        ++it)
+    {
+        baselines[*it] = index;
+        ++index;
+    }
+
+    // Initialize polarizations index.
+    index = 0;
+    for(vector<string>::const_iterator it = grid.polarization.begin();
+        it != grid.polarization.end();
+        ++it)
+    {
+        polarizations[*it] = index;
+        ++index;
+    }
 }
 
 

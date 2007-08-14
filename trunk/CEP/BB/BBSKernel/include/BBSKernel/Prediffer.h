@@ -128,6 +128,7 @@ public:
         itsInstrumentDBase->unlock();
         itsSkyDBase->unlock();
     }
+    // </group>
 
     void setSelection(VisSelection selection);
     void setChunkSize(size_t time);
@@ -149,7 +150,7 @@ public:
         { return itsWorkDomain; }
 
     // Get the local data domain.
-    MeqDomain getLocalDataDomain() const;
+//    MeqDomain getLocalDataDomain() const;
 
     // There are three ways to update the solvable parms after the solver
     // found a new solution.
@@ -170,17 +171,18 @@ public:
         const vector<double> unknowns);
 
     // Log the updated values of a single solve domain.
-    void logIteration(const string &stepName, size_t solveDomainIndex,
-        double rank, double chiSquared, double LMFactor);
+    //void logIteration(const string &stepName, size_t solveDomainIndex,
+    //    double rank, double chiSquared, double LMFactor);
 
     // Write the solved parms.
     void writeParms();
     void writeParms(size_t solveDomainIndex);
 
     const vector<SolveDomainDescriptor> &getSolveDomainDescriptors() const
-    {
-        return itsContext.domains;
-    }
+    { return itsContext.domains; }
+
+    pair<size_t, size_t> getSolveDomainGridSize() const
+    { return itsContext.domainCount; }
 
 #ifdef EXPR_GRAPH
     void writeExpressionGraph(const string &fileName, baseline_t baseline);
@@ -233,10 +235,10 @@ private:
         pair<size_t, size_t> offset, const MeqRequest& request,
         baseline_t baseline, bool showd = false);
 
-    void testFlagsBaseline(int threadnr, void* arguments,
-        VisData::Pointer chunk, const MeqRequest& request, baseline_t baseline,
-        bool showd);
-
+//    void testFlagsBaseline(int threadnr, void* arguments,
+//        VisData::Pointer chunk, const MeqRequest& request, baseline_t
+//baseline,
+//        bool showd);
 
     size_t                              itsSubband;
     string                              itsInputColumn;

@@ -74,14 +74,17 @@ public:
     Model(const Instrument &instrument, MeqParmGroup &parmGroup,
         ParmDB::ParmDB *skyDBase, MeqPhaseRef *phaseRef);
 
-    void setStationUVW(const Instrument &instrument, VisData::Pointer data);
+    void setStationUVW(const Instrument &instrument, VisData::Pointer buffer);
 
     void makeEquations(EquationType type, const vector<string> &components,
         const set<baseline_t> &baselines, const vector<string> &sources,
         MeqParmGroup &parmGroup, ParmDB::ParmDB *instrumentDBase,
-        MeqPhaseRef *phaseRef, VisData::Pointer data);
+        MeqPhaseRef *phaseRef, VisData::Pointer buffer);
+
+    void clearEquations();
 
     void precalculate(const MeqRequest& request);
+
     MeqJonesResult evaluate(baseline_t baseline, const MeqRequest& request);
 
 private:

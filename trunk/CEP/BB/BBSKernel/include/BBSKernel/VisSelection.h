@@ -42,15 +42,12 @@ class VisSelection
 public:
     enum FieldEnum
     {
-//        FREQ_START = 0,
-//        FREQ_END,
         CHANNEL_START = 0,
         CHANNEL_END,
-//        CHANNEL_STEP,
         TIME_START,
         TIME_END,
         STATIONS,
-        CORRELATIONS,
+        POLARIZATIONS,
         BASELINE_FILTER,
         N_FieldEnum
     };
@@ -70,24 +67,42 @@ public:
     bool isSet(FieldEnum field) const
     { return itsFieldFlags[field]; }
 
-    void setChannelRange(size_t start, size_t end);
-    void setTimeRange(string start, string end);
-    void setTimeRange(double start, double end);
-    void setCorrelations(vector<string> correlations);
+    void setStartChannel(size_t start);
+    void setEndChannel(size_t end);
+    void setChannelRange(size_t start, size_t end)
+    {
+        setStartChannel(start);
+        setEndChannel(end);
+    }
+
+    void setStartTime(double start);
+    void setEndTime(double end);
+    void setTimeRange(double start, double end)
+    {
+        setStartTime(start);
+        setEndTime(end);
+    }
+
+    void setStartTime(const string &start);
+    void setEndTime(const string &end);
+    void setTimeRange(const string &start, const string &end)
+    {
+        setStartTime(start);
+        setEndTime(end);
+    }
+
+    void setPolarizations(vector<string> polarizations);
     void setStations(vector<string> stations);
     void setBaselineFilter(BaselineFilter filter);
 
     pair<size_t, size_t> getChannelRange() const
     { return itsChannelRange; }
 
-//    size_t getChannelStep() const
-//    { return itsChannelStep; }
-
     pair<double, double> getTimeRange() const
     { return itsTimeRange; }
 
-    set<string> getCorrelations() const
-    { return itsCorrelations; }
+    set<string> getPolarizations() const
+    { return itsPolarizations; }
 
     set<string> getStations() const
     { return itsStations; }
@@ -95,20 +110,12 @@ public:
     BaselineFilter getBaselineFilter() const
     { return itsBaselineFilter; }
 
-//    void selectFreqRange(const pair<uint, uint> &range);
-//    void selectBaselines(const vector<string> &stations);
-//    void selectBaselines(
-//        const pair<vector<string>, vector<string> > &baselines);
-
 private:
     bool convertTime(const string &in, double &out) const;
     vector<bool>            itsFieldFlags;
     pair<size_t, size_t>    itsChannelRange;
-//    size_t                  itsChannelStep;
-//    pair<double, double>    itsFreqRange;
     pair<double, double>    itsTimeRange;
-//    set<pair<uint, uint> >  itsBaselines;
-    set<string>             itsCorrelations;
+    set<string>             itsPolarizations;
     set<string>             itsStations;
     BaselineFilter          itsBaselineFilter;
 };

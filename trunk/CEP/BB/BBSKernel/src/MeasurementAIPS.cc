@@ -84,54 +84,38 @@ MeasurementAIPS::MeasurementAIPS(string filename,
         uint observationId,
         uint dataDescriptionId,
         uint fieldId)
-        :   itsFilename(filename),
-            itsObservationId(observationId),
-            itsDataDescriptionId(dataDescriptionId),
-            itsFieldId(fieldId)
 {
-    itsMS = casa::MeasurementSet(itsFilename);
+    itsMS = MeasurementSet(filename);
 
-    itsInstrument = readInstrumentInfo(itsMS.antenna(), itsMS.observation(),
-        itsObservationId);
+    ROMSAntennaColumns antenna(itsMS.antenna());
+    ROMSDataDescColumns description(itsMS.dataDescription());
+    ROMSFieldColumns field(itsMS.field());
+    ROMSObservationColumns observation(itsMS.observation());
+    ROMSPolarizationColumns polarization(itsMS.polarization());
+    ROMSSpWindowColumns window(itsMS.spectralWindow());
 
-    // Read time range.
-    MSObservation observation(itsMS.observation());
-    ROMSObservationColumns observationCols(observation);
-
-    ASSERT(observation.nrow() > observationId);
-    ASSERT(!observationCols.flagRow()(observationId));
-
-    const Vector<MEpoch> timeRange =
-        observationCols.timeRangeMeas()(observationId);
-
-    itsTimeRange = make_pair(timeRange(0), timeRange(1));
+    initObservationInfo(observation, observationId);
+    initInstrumentInfo(antenna, observation, observationId);
+    initFieldInfo(field, fieldId);
 
     // Read polarization id and spectral window id.
-    ROMSDataDescColumns dataDescription(itsMS.dataDescription());
-    ASSERT(itsMS.dataDescription().nrow() > dataDescriptionId);
-    ASSERT(!dataDescription.flagRow()(dataDescriptionId));
+    ASSERT(description.nrow() > dataDescriptionId);
+    ASSERT(!description.flagRow()(dataDescriptionId));
+    Int polarizationId = description.polarizationId()(dataDescriptionId);
+    Int windowId = description.spectralWindowId()(dataDescriptionId);
 
-    Int polarizationId =
-        dataDescription.polarizationId()(dataDescriptionId);
-
-    Int spectralWindowId =
-        dataDescription.spectralWindowId()(dataDescriptionId);
-
-    itsCorrelationProducts =
-        readPolarizationInfo(itsMS.polarization(), polarizationId);
-
-    readSpectralInfo(itsMS.spectralWindow(), spectralWindowId);
-    itsPhaseCenter = readFieldInfo(itsMS.field(), itsFieldId);
+    initPolarizationInfo(polarization, polarizationId);
+    initSpectralInfo(window, windowId);
 
     // Select all rows that match the specified observation.
-    itsMS = itsMS(itsMS.col("OBSERVATION_ID") == itsObservationId
-        && itsMS.col("DATA_DESC_ID") == itsDataDescriptionId
-        && itsMS.col("FIELD_ID") == itsFieldId);
+    itsMS = itsMS(itsMS.col("OBSERVATION_ID") == static_cast<Int>(observationId)
+        && itsMS.col("DATA_DESC_ID") == static_cast<Int>(dataDescriptionId)
+        && itsMS.col("FIELD_ID") == static_cast<Int>(fieldId));
 
     // Sort MS on TIME.
     itsMS.sort("TIME");
 
-    LOG_DEBUG_STR("Measurement " << itsObservationId << " contains "
+    LOG_DEBUG_STR("Measurement " << observationId << " contains "
         << itsMS.nrow() << " row(s).");
 }
 
@@ -150,46 +134,43 @@ VisGrid MeasurementAIPS::grid(const VisSelection &selection) const
     Table tab_selection = itsMS(taqlExpr);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
-    return getGrid(tab_selection, slicer);
+    return grid(tab_selection, slicer);
 }
 
 
-VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
-    const string &column,
-    bool readUVW) const
+void MeasurementAIPS::read(const VisSelection &selection,
+    VisData::Pointer buffer, const string &column, bool readUVW) const
 {
     NSTimer readTimer, copyTimer;
 
-    TableExprNode taqlExpr = getTAQLExpression(selection);
     Slicer slicer = getCellSlicer(selection);
-
+    TableExprNode taqlExpr = getTAQLExpression(selection);
     Table tab_selection = itsMS(taqlExpr);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
-    VisGrid grid = getGrid(tab_selection, slicer);
-    VisData::Pointer buffer = allocate(grid);
+    buffer->reset(grid(tab_selection, slicer));
 
-    size_t nChannels = buffer->freq.size();
-    size_t nCorrelations = getCorrelationCount();
+    size_t nChannels = buffer->grid.freq.size();
+    size_t nPolarizations = buffer->grid.polarization.size();
 
+    Table tab_tslot;
+    size_t tslot = 0;
     TableIterator tslotIterator(tab_selection, "TIME");
-
-    Table tslot;
-    uint32 tslotIdx = 0;
     while(!tslotIterator.pastEnd())
     {
-        ASSERT(tslotIdx < buffer->getTimeslotCount());
+        ASSERT(tslot < buffer->grid.time.size());
 
         // Get next timeslot.
-        tslot = tslotIterator.table();
+        tab_tslot = tslotIterator.table();
+        size_t nRows = tab_tslot.nrow();
 
         // Declare all the columns we want to read.
-        ROScalarColumn<Int> c_antenna1(tslot, "ANTENNA1");
-        ROScalarColumn<Int> c_antenna2(tslot, "ANTENNA2");
-        ROScalarColumn<Bool> c_flag_row(tslot, "FLAG_ROW");
-        ROArrayColumn<Double> c_uvw(tslot, "UVW");
-        ROArrayColumn<Complex> c_data(tslot, column);
-        ROArrayColumn<Bool> c_flag(tslot, "FLAG");
+        ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
+        ROScalarColumn<Int> c_antenna2(tab_tslot, "ANTENNA2");
+        ROScalarColumn<Bool> c_flag_row(tab_tslot, "FLAG_ROW");
+        ROArrayColumn<Double> c_uvw(tab_tslot, "UVW");
+        ROArrayColumn<Complex> c_data(tab_tslot, column);
+        ROArrayColumn<Bool> c_flag(tab_tslot, "FLAG");
 
         // Read data from the MS.
         readTimer.start();
@@ -198,39 +179,44 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
         Vector<Bool> aips_flag_row = c_flag_row.getColumn();
         Matrix<Double> aips_uvw;
         if(readUVW)
+        {
              aips_uvw = c_uvw.getColumn();
-
+        }
         Cube<Complex> aips_data = c_data.getColumn(slicer);
         Cube<Bool> aips_flag = c_flag.getColumn(slicer);
         readTimer.stop();
 
         // Validate shapes.
-        ASSERT(aips_antenna1.shape().isEqual(IPosition(1,tslot.nrow())));
-        ASSERT(aips_antenna2.shape().isEqual(IPosition(1,tslot.nrow())));
-        ASSERT(aips_flag_row.shape().isEqual(IPosition(1, tslot.nrow())));
+        ASSERT(aips_antenna1.shape().isEqual(IPosition(1, nRows)));
+        ASSERT(aips_antenna2.shape().isEqual(IPosition(1, nRows)));
+        ASSERT(aips_flag_row.shape().isEqual(IPosition(1, nRows)));
         ASSERT(!readUVW
-            || aips_uvw.shape().isEqual(IPosition(2, 3, tslot.nrow())));
-        IPosition shape = IPosition(3, nCorrelations, nChannels, tslot.nrow());
+            || aips_uvw.shape().isEqual(IPosition(2, 3, nRows)));
+        IPosition shape = IPosition(3, nPolarizations, nChannels, nRows);
         ASSERT(aips_data.shape().isEqual(shape));
         ASSERT(aips_flag.shape().isEqual(shape));
-
+        ASSERT(aips_uvw.contiguousStorage());
         ASSERT(aips_data.contiguousStorage());
         ASSERT(aips_flag.contiguousStorage());
 
         // The const_cast<>() call below is needed becase multi_array_ref
         // expects a non-const pointer. This does not break the const semantics
         // as we never write to the array.
+        Double *ptr_uvw = const_cast<Double*>(aips_uvw.data());
+        boost::multi_array_ref<double, 2> uvw(ptr_uvw,
+                boost::extents[nRows][3]);
+
         Complex *ptr_data = const_cast<Complex*>(aips_data.data());
         boost::multi_array_ref<sample_t, 3>
             data(reinterpret_cast<sample_t*>(ptr_data),
-                boost::extents[tslot.nrow()][nChannels][nCorrelations]);
+                boost::extents[nRows][nChannels][nPolarizations]);
 
         Bool *ptr_flag = const_cast<Bool*>(aips_flag.data());
         boost::multi_array_ref<flag_t, 3> flag(ptr_flag,
-                boost::extents[tslot.nrow()][nChannels][nCorrelations]);
+                boost::extents[nRows][nChannels][nPolarizations]);
 
         copyTimer.start();
-        for(uInt i = 0; i < tslot.nrow(); ++i)
+        for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
             map<baseline_t, size_t>::iterator it =
@@ -241,102 +227,104 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
             size_t baseline = it->second;
 
             // Flag timeslot as available.
-            buffer->tslot_flag[baseline][tslotIdx] = 0;
+            buffer->tslot_flag[baseline][tslot] = 0;
 
             // Copy row (timeslot) flag.
             if(aips_flag_row(i))
-                buffer->tslot_flag[baseline][tslotIdx] |=
+            {
+                buffer->tslot_flag[baseline][tslot] |=
                     VisData::FLAGGED_IN_INPUT;
+            }
 
             // Copy UVW.
             if(readUVW)
             {
-                buffer->uvw[baseline][tslotIdx][0] = aips_uvw(0, i);
-                buffer->uvw[baseline][tslotIdx][1] = aips_uvw(1, i);
-                buffer->uvw[baseline][tslotIdx][2] = aips_uvw(2, i);
+                buffer->uvw[baseline][tslot] = uvw[i];
+//                buffer->uvw[baseline][tslot][0] = aips_uvw(0, i);
+//                buffer->uvw[baseline][tslot][1] = aips_uvw(1, i);
+//                buffer->uvw[baseline][tslot][2] = aips_uvw(2, i);
             }
 
             // Copy visibilities.
-            buffer->vis_data[baseline][tslotIdx] = data[i];
+            buffer->vis_data[baseline][tslot] = data[i];
             // Copy flags.
-            buffer->vis_flag[baseline][tslotIdx] = flag[i];
+            buffer->vis_flag[baseline][tslot] = flag[i];
         }
         copyTimer.stop();
 
         // Proceed to the next timeslot.
-        ++tslotIdx;
+        ++tslot;
         ++tslotIterator;
     }
 
     LOG_DEBUG_STR("Read time: " << readTimer);
     LOG_DEBUG_STR("Copy time: " << copyTimer);
-
-    return buffer;
 }
 
 
 
 void MeasurementAIPS::write(const VisSelection &selection,
-    VisData::Pointer buffer,
-    const string &column,
-    bool writeFlags) const
+    VisData::Pointer buffer, const string &column, bool writeFlags)
 {
     NSTimer readTimer, writeTimer;
 
-    ASSERTSTR(!writeFlags, "Flag writing not implemented yet!");
+    // Reopen MS for writing.
+    itsMS.reopenRW();
+    ASSERT(itsMS.isWritable());
 
-    // TODO: The addition of a column is not noted by the MeasurementSet
-    // class.
-    Table out(itsFilename);
-    out.reopenRW();
+    ASSERTSTR(itsMS.tableDesc().isColumn(column), "Attempt to write to non-"
+        "existent column '" << column << "'.");
 
-    Slicer slicer = getCellSlicer(selection);
-    size_t nChannels = buffer->freq.size();
-    size_t nCorrelations = getCorrelationCount();
-
+/*
     // Add column if it does not exist.
     // TODO: Check why the AIPS++ imager does not recognize these columns.
-    if(!out.tableDesc().isColumn(column))
+    if(!itsMS.tableDesc().isColumn(column))
     {
         LOG_INFO_STR("Adding column '" << column << "'.");
 
+        // Added column should get the same shape as the other data columns in
+        // the MS.
         ArrayColumnDesc<Complex> descriptor(column,
-            IPosition(2, nCorrelations, nChannels),
+            IPosition(2, getPolarizationCount(), getChannelCount()),
             ColumnDesc::FixedShape);
         TiledColumnStMan storageManager("Tiled_" + column,
-            IPosition(3, nCorrelations, nChannels, 1));
+            IPosition(3, getPolarizationCount(), getChannelCount(), 1));
 
-        out.addColumn(descriptor, storageManager);
-        out.flush();
+        itsMS.addColumn(descriptor, storageManager);
+        itsMS.flush();
     }
-
+*/
     LOG_DEBUG_STR("Writing to column: " << column);
 
+    Slicer slicer = getCellSlicer(selection);
     TableExprNode taqlExpr = getTAQLExpression(selection);
     Table tab_selection = itsMS(taqlExpr);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
-    Table tslot;
-    size_t tslotIdx = 0;
+    size_t nChannels = buffer->grid.freq.size();
+    size_t nPolarizations = buffer->grid.polarization.size();
+
+    Table tab_tslot;
+    size_t tslot = 0;
     bool mismatch = false;
     TableIterator tslotIterator(tab_selection, "TIME");
     while(!tslotIterator.pastEnd())
     {
-        ASSERTSTR(tslotIdx < buffer->getTimeslotCount(),
+        ASSERTSTR(tslot < buffer->grid.time.size(),
             "Timeslot out of range!");
 
         // Extract next timeslot.
-        tslot = tslotIterator.table();
-//        LOG_DEBUG_STR("No. of rows in timeslot " << tslotIdx << ": "
-//            << tslot.nrow());
+        tab_tslot = tslotIterator.table();
+        size_t nRows = tab_tslot.nrow();
 
         // TODO: Should use TIME_CENTROID here (centroid of exposure)?
         // NOTE: TIME_CENTROID may be different for each baseline!
-        ROScalarColumn<Double> c_time(tslot, "TIME");
-        ROScalarColumn<Int> c_antenna1(tslot, "ANTENNA1");
-        ROScalarColumn<Int> c_antenna2(tslot, "ANTENNA2");
-        ArrayColumn<Complex> c_data(tslot, column);
-        ArrayColumn<Bool> c_flag(tslot, "FLAG");
+        ROScalarColumn<Double> c_time(tab_tslot, "TIME");
+        ROScalarColumn<Int> c_antenna1(tab_tslot, "ANTENNA1");
+        ROScalarColumn<Int> c_antenna2(tab_tslot, "ANTENNA2");
+        ScalarColumn<Bool> c_flag_row(tab_tslot, "FLAG_ROW");
+        ArrayColumn<Complex> c_data(tab_tslot, column);
+        ArrayColumn<Bool> c_flag(tab_tslot, "FLAG");
 
         // Read meta data.
         readTimer.start();
@@ -345,15 +333,10 @@ void MeasurementAIPS::write(const VisSelection &selection,
         Vector<Int> aips_antenna2 = c_antenna2.getColumn();
         readTimer.stop();
 
-        // Validate shapes.
-        ASSERT(aips_antenna1.shape().isEqual(IPosition(1, tslot.nrow())));
-        ASSERT(aips_antenna2.shape().isEqual(IPosition(1, tslot.nrow())));
-        ASSERT(aips_time.shape().isEqual(IPosition(1, tslot.nrow())));
-
-        mismatch = mismatch && (buffer->time(tslotIdx) == aips_time(0));
+        mismatch = mismatch && (buffer->grid.time(tslot) == aips_time(0));
 
         writeTimer.start();
-        for(uInt i = 0; i < tslot.nrow(); ++i)
+        for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
             map<baseline_t, size_t>::iterator it =
@@ -363,86 +346,101 @@ void MeasurementAIPS::write(const VisSelection &selection,
             ASSERTSTR(it != buffer->baselines.end(), "Unknown baseline!");
             size_t baseline = it->second;
 
+            if(writeFlags)
+            {
+                // Write row flag.
+                c_flag_row.put(i, buffer->tslot_flag[baseline][tslot]);
+
+                // Write visibility flags.
+                Array<Bool> vis_flag(IPosition(2, nPolarizations, nChannels),
+                    &(buffer->vis_flag[baseline][tslot][0][0]), SHARE);
+                c_flag.putSlice(i, slicer, vis_flag);
+            }
+
             // Write visibilities.
-            Array<Complex> vis_data(IPosition(2, nCorrelations, nChannels),
+            Array<Complex> vis_data(IPosition(2, nPolarizations, nChannels),
                 reinterpret_cast<Complex*>
-                    (&(buffer->vis_data[baseline][tslotIdx][0][0])),
-                SHARE);
+                    (&(buffer->vis_data[baseline][tslot][0][0])), SHARE);
             c_data.putSlice(i, slicer, vis_data);
         }
         writeTimer.stop();
 
-        ++tslotIdx;
+        ++tslot;
         ++tslotIterator;
     }
     tab_selection.flush();
 
     if(mismatch)
+    {
         LOG_WARN_STR("Time mismatches detected while writing data.");
+    }
 
     LOG_DEBUG_STR("Read time (meta data): " << readTimer);
     LOG_DEBUG_STR("Write time: " << writeTimer);
 }
 
 
-Instrument
-MeasurementAIPS::readInstrumentInfo(const casa::MSAntenna &tab_antenna,
-    const casa::MSObservation &tab_observation,
-    uint id)
+void MeasurementAIPS::initObservationInfo
+    (const ROMSObservationColumns &observation, uint id)
 {
-    // Get station names and positions in ITRF coordinates.
-    ROMSAntennaColumns antenna(tab_antenna);
-    ROMSObservationColumns observation(tab_observation);
-    ASSERT(tab_observation.nrow() > id);
+    ASSERT(observation.nrow() > id);
     ASSERT(!observation.flagRow()(id));
 
-    Instrument instrument;
-    instrument.name = observation.telescopeName()(id);
-    instrument.stations.resize(tab_antenna.nrow());
+    const Vector<MEpoch> &range = observation.timeRangeMeas()(id);
+    itsTimeRange = make_pair(range(0), range(1));
+}
+
+
+void MeasurementAIPS::initInstrumentInfo(const ROMSAntennaColumns &antenna,
+    const ROMSObservationColumns &observation, uint id)
+{
+    // Get station names and positions in ITRF coordinates.
+    ASSERT(observation.nrow() > id);
+    ASSERT(!observation.flagRow()(id));
+
+    itsInstrument.name = observation.telescopeName()(id);
+    itsInstrument.stations.resize(antenna.nrow());
 
     MVPosition stationCentroid;
-    for(size_t i = 0; i < instrument.stations.size(); ++i)
+    for(size_t i = 0; i < static_cast<size_t>(antenna.nrow()); ++i)
     {
         // Store station name and update index.
-        instrument.stations[i].name = antenna.name()(i);
-        instrument.stationIndex[antenna.name()(i)] = i;
+        itsInstrument.stations[i].name = antenna.name()(i);
 
         // Store station position.
         MPosition position = antenna.positionMeas()(i);
-        instrument.stations[i].position =
+        itsInstrument.stations[i].position =
             MPosition::Convert(position, MPosition::ITRF)();
 
         // Update centroid.
-        stationCentroid += instrument.stations[i].position.getValue();
+        stationCentroid += itsInstrument.stations[i].position.getValue();
     }
 
     // Get the instrument position in ITRF coordinates, or use the centroid
     // of the station positions if the instrument position is unknown.
     MPosition instrumentPosition;
-    if(MeasTable::Observatory(instrumentPosition, instrument.name))
+    if(MeasTable::Observatory(instrumentPosition, itsInstrument.name))
     {
-        instrument.position =
+        itsInstrument.position =
             MPosition::Convert(instrumentPosition, MPosition::ITRF)();
     }
     else
     {
         LOG_WARN("Instrument position unknown; will use centroid of stations.");
-        stationCentroid *= (1.0 / (double) instrument.stations.size());
-        instrument.position = MPosition(stationCentroid, MPosition::ITRF);
+        stationCentroid *= (1.0
+            / static_cast<double>(itsInstrument.stations.size()));
+        itsInstrument.position = MPosition(stationCentroid, MPosition::ITRF);
     }
-
-    return instrument;
 }
 
-void MeasurementAIPS::readSpectralInfo(const casa::MSSpectralWindow &tab_window,
+
+void MeasurementAIPS::initSpectralInfo(const ROMSSpWindowColumns &window,
     uint id)
 {
-    ROMSSpWindowColumns window(tab_window);
-    ASSERT(tab_window.nrow() > id);
+    ASSERT(window.nrow() > id);
     ASSERT(!window.flagRow()(id));
 
-    Int nChannels = window.numChan()(id);
-    ASSERT(nChannels > 0);
+    size_t nChannels = window.numChan()(id);
 
     Vector<Double> frequency = window.chanFreq()(id);
     Vector<Double> width = window.chanWidth()(id);
@@ -453,7 +451,7 @@ void MeasurementAIPS::readSpectralInfo(const casa::MSSpectralWindow &tab_window,
         "Channels are in reverse order. This is not supported yet.");
     // TODO: Technically, checking for equal channel widths is not enough,
     // because there could still be gaps between channels even though the
-    // widths are still equal (this is not prevented by the MS 2.0 standard).
+    // widths are all equal (this is not prevented by the MS 2.0 standard).
     ASSERTSTR(allEQ(width, width(0)),
         "Channels width is not the same for all channels. This is not supported"
         " yet.");
@@ -465,26 +463,23 @@ void MeasurementAIPS::readSpectralInfo(const casa::MSSpectralWindow &tab_window,
 }
 
 
-vector<string>
-MeasurementAIPS::readPolarizationInfo(const MSPolarization &tab_polarization,
-    uint id)
+void MeasurementAIPS::initPolarizationInfo
+    (const ROMSPolarizationColumns &polarization, uint id)
 {
-    ROMSPolarizationColumns polarization(tab_polarization);
-    ASSERT(tab_polarization.nrow() > id);
+    ASSERT(polarization.nrow() > id);
     ASSERT(!polarization.flagRow()(id));
 
     Vector<Int> products = polarization.corrType()(id);
 
-    vector<string> result;
+    itsPolarizations.resize(products.nelements());
     for(size_t i = 0; i < products.nelements(); ++i)
-        result.push_back(Stokes::name(Stokes::type(products(i))));
-
-    return result;
+    {
+        itsPolarizations[i] = Stokes::name(Stokes::type(products(i)));
+    }
 }
 
 
-casa::MDirection MeasurementAIPS::readFieldInfo(const MSField &tab_field,
-    uint id)
+void MeasurementAIPS::initFieldInfo(const ROMSFieldColumns &field, uint id)
 {
     /*
       Get phase center as RA and DEC (J2000).
@@ -504,11 +499,10 @@ casa::MDirection MeasurementAIPS::readFieldInfo(const MSField &tab_field,
       MDirection phaseRef = mssubc.phaseDirMeas(0);
       as used in the code below.
     */
-    ROMSFieldColumns field(tab_field);
-    ASSERT(tab_field.nrow() > id);
+    ASSERT(field.nrow() > id);
     ASSERT(!field.flagRow()(id));
-
-    return MDirection::Convert(field.phaseDirMeas(id), MDirection::J2000)();
+    itsPhaseCenter =
+        MDirection::Convert(field.phaseDirMeas(id),MDirection::J2000)();
 }
 
 /*
@@ -556,13 +550,13 @@ MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
             it != stations.end();
             ++it)
         {
-            casa::Regex regex = casa::Regex::fromPattern(*it);
+            Regex regex = Regex::fromPattern(*it);
 
             // If the name of a station matches the pattern, add it to the
             // selection.
             for(size_t i = 0; i < itsInstrument.getStationCount(); ++i)
             {
-                casa::String name(itsInstrument.stations[i].name);
+                String name(itsInstrument.stations[i].name);
                 if(name.matches(regex))
                     selection.insert(i);
             }
@@ -574,7 +568,7 @@ MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
             ++it)
         {
             selectionExpr.add(
-                TableExprNodeSetElem(static_cast<casa::Int>(*it)));
+                TableExprNodeSetElem(static_cast<Int>(*it)));
         }
 
         filter = filter && itsMS.col("ANTENNA1").in(selectionExpr)
@@ -589,10 +583,10 @@ MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
             filter = filter && (itsMS.col("ANTENNA1") != itsMS.col("ANTENNA2"));
     }
 
-    if(selection.isSet(VisSelection::CORRELATIONS))
+    if(selection.isSet(VisSelection::POLARIZATIONS))
     {
-        LOG_WARN_STR("Correlation selection not yet implemented; all available"
-            " correlations will be used.");
+        LOG_WARN_STR("Polarization selection not yet implemented; all available"
+            " polarizations will be used.");
     }
 
     return filter;
@@ -606,8 +600,8 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
     // Construct slicer with default setting.
     IPosition start(2, 0, 0);
     size_t lastChannel = getChannelCount() - 1;
-    size_t lastCorrelation = getCorrelationCount() - 1;
-    IPosition end(2, lastCorrelation, lastChannel);
+    size_t lastPolarization = getPolarizationCount() - 1;
+    IPosition end(2, lastPolarization, lastChannel);
 
     // Validate and set selection.
     pair<size_t, size_t> range = selection.getChannelRange();
@@ -619,19 +613,19 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
             LOG_WARN("Invalid end channel specified; using last channel"
                 " instead.");
         else
-            end = IPosition(2, lastCorrelation, range.second);
+            end = IPosition(2, lastPolarization, range.second);
 
     return Slicer(start, end, Slicer::endIsLast);
 }
 
 
-VisGrid MeasurementAIPS::getGrid(const casa::Table tab_selection,
-    const casa::Slicer slicer) const
+VisGrid
+MeasurementAIPS::grid(const Table tab_selection, const Slicer slicer) const
 {
     VisGrid grid;
 
     IPosition shape = slicer.length();
-    size_t nCorrelations = shape[0];
+    size_t nPolarizations = shape[0];
     size_t nChannels = shape[1];
 
     // Extract time grid based on TIME column (mid-point of integration
@@ -657,7 +651,7 @@ VisGrid MeasurementAIPS::getGrid(const casa::Table tab_selection,
 
     LOG_DEBUG_STR("Selection contains " << nBaselines << " baseline(s), "
         << nTimeslots << " timeslot(s), " << nChannels << " channel(s), and "
-        << nCorrelations << " correlation(s).");
+        << nPolarizations << " polarization(s).");
 
     // Initialize baseline axis.
     ROScalarColumn<Int> c_antenna1(baselines, "ANTENNA1");
@@ -665,7 +659,7 @@ VisGrid MeasurementAIPS::getGrid(const casa::Table tab_selection,
     Vector<Int> antenna1 = c_antenna1.getColumn();
     Vector<Int> antenna2 = c_antenna2.getColumn();
     for(uInt i = 0; i < nBaselines; ++i)
-        grid.baselines.insert(baseline_t(antenna1[i], antenna2[i]));
+        grid.baseline.push_back(baseline_t(antenna1[i], antenna2[i]));
 
     // Initialize time axis.
     ROScalarColumn<Double> c_interval(tab_selection, "INTERVAL");
@@ -690,61 +684,11 @@ VisGrid MeasurementAIPS::getGrid(const casa::Table tab_selection,
         delta), nChannels);
 
     // Initialize polarization axis.
-    for(size_t i = 0; i < itsCorrelationProducts.size(); ++i)
-        grid.polarizations.insert(itsCorrelationProducts[i]);
+    for(size_t i = 0; i < itsPolarizations.size(); ++i)
+        grid.polarization.push_back(itsPolarizations[i]);
 
     return grid;
 }
-
-
-VisData::Pointer MeasurementAIPS::allocate(const VisGrid &grid) const
-{
-    size_t nTimeslots = grid.time.size();
-    size_t nBaselines = grid.baselines.size();
-    size_t nChannels = grid.freq.size();
-    size_t nPolarizations = grid.polarizations.size();
-
-    LOG_DEBUG_STR("Allocate: " << nBaselines << " baseline(s), "
-        << nTimeslots << " timeslot(s), " << nChannels << " channel(s), and "
-        << nPolarizations << " polarization(s).");
-
-    VisData::Pointer buffer(new VisData(nTimeslots, nBaselines, nChannels,
-        nPolarizations));
-
-    // Initially flag all timeslots as UNAVAILABLE.
-    for(size_t i = 0; i < nBaselines; ++i)
-        for(size_t j = 0; j < nTimeslots; ++j)
-           buffer->tslot_flag[i][j] = VisData::UNAVAILABLE;
-
-    // Copy time and frequency axis.
-    buffer->time = grid.time;
-    buffer->freq = grid.freq;
-
-    size_t index;
-
-    // Initialize baseline index.
-    index = 0;
-    for(set<baseline_t>::const_iterator it = grid.baselines.begin();
-        it != grid.baselines.end();
-        ++it)
-    {
-        buffer->baselines[*it] = index;
-        ++index;
-    }
-
-    // Initialize polarizations index.
-    index = 0;
-    for(set<string>::const_iterator it = grid.polarizations.begin();
-        it != grid.polarizations.end();
-        ++it)
-    {
-        buffer->polarizations[*it] = index;
-        ++index;
-    }
-
-    return buffer;
-}
-
 
 } //# namespace BBS
 } //# namespace LOFAR

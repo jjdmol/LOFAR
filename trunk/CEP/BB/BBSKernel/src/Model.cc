@@ -77,7 +77,7 @@ Model::Model(const Instrument &instrument, MeqParmGroup &parmGroup,
 void Model::makeEquations(EquationType type, const vector<string> &components,
     const set<baseline_t> &baselines, const vector<string> &sources,
     MeqParmGroup &parmGroup, ParmDB *instrumentDBase, MeqPhaseRef *phaseRef,
-    VisData::Pointer data)
+    VisData::Pointer buffer)
 {
     // Parse component names.
     vector<bool> mask(N_ModelComponent, false);
@@ -260,7 +260,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
         {
             const baseline_t &baseline = *it;
             itsEquations[baseline] = new MeqJonesCMul3(inv_gain[baseline.first],
-                    new MeqJonesVisData(data, baseline),
+                    new MeqJonesVisData(buffer, baseline),
                     inv_gain[baseline.second]);
         }
     }
@@ -318,6 +318,12 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
 }
 
 
+void Model::clearEquations()
+{
+    itsEquations.clear();
+}
+
+
 void Model::precalculate(const MeqRequest& request)
 {
     if(itsEquations.empty())
@@ -354,7 +360,7 @@ void Model::precalculate(const MeqRequest& request)
     // It may happen that a station is used by only one baseline. Calculating
     // such a baseline is much more work if the station was not precalculated.
     vector<vector<MeqExprRep*> > precalcNodes(nrLev);
-    for(size_t level = 1; level < nrLev; ++level)
+    for(size_t level = 1; level < static_cast<size_t>(nrLev); ++level)
     {
         vector<MeqExprRep*> &nodes = precalcNodes[level];
         nodes.resize(0);
@@ -371,7 +377,7 @@ void Model::precalculate(const MeqRequest& request)
 
 /************ DEBUG DEBUG DEBUG ************/
     LOG_TRACE_FLOW_STR("#levels=" << nrLev);
-    for(size_t i = 0; i < nrLev; ++i)
+    for(size_t i = 0; i < static_cast<size_t>(nrLev); ++i)
     {
         LOG_TRACE_FLOW_STR("#expr on level " << i << " is "
             << precalcNodes[i].size());
@@ -458,20 +464,20 @@ void Model::makeSourceNodes(const vector<string> &names, MeqPhaseRef *phaseRef)
 }
 
 
-void Model::setStationUVW(const Instrument &instrument, VisData::Pointer data)
+void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
 {
     size_t nStations = instrument.getStationCount();
     vector<bool> statDone(nStations);
     vector<double> statUVW(3 * nStations);
 
     // Step through the MS by timeslot.
-    for (size_t tslot = 0; tslot < data->time.size(); ++tslot)
+    for (size_t tslot = 0; tslot < buffer->grid.time.size(); ++tslot)
     {
-        double time = data->time(tslot);
+        double time = buffer->grid.time(tslot);
         fill(statDone.begin(), statDone.end(), false);
 
         // Set UVW of first station used to 0 (UVW coordinates are relative!).
-        size_t station0 = data->baselines.begin()->first.first;
+        size_t station0 = buffer->baselines.begin()->first.first;
         statUVW[3 * station0] = 0.0;
         statUVW[3 * station0 + 1] = 0.0;
         statUVW[3 * station0 + 2] = 0.0;
@@ -483,12 +489,12 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer data)
         {
             nDone = 0;
             for (map<baseline_t, size_t>::const_iterator it =
-                    data->baselines.begin();
-                it != data->baselines.end();
+                    buffer->baselines.begin();
+                it != buffer->baselines.end();
                 ++it)
             {
                 size_t blindex = it->second;
-                if(data->tslot_flag[blindex][tslot])
+                if(buffer->tslot_flag[blindex][tslot])
                     continue;
 
                 size_t statA = it->first.first;
@@ -496,11 +502,11 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer data)
                 if (statDone[statA] && !statDone[statB])
                 {
                     statUVW[3 * statB] =
-                        data->uvw[blindex][tslot][0] - statUVW[3 * statA];
+                        buffer->uvw[blindex][tslot][0] - statUVW[3 * statA];
                     statUVW[3 * statB + 1] =
-                        data->uvw[blindex][tslot][1] - statUVW[3 * statA + 1];
+                        buffer->uvw[blindex][tslot][1] - statUVW[3 * statA + 1];
                     statUVW[3 * statB + 2] =
-                        data->uvw[blindex][tslot][2] - statUVW[3 * statA + 2];
+                        buffer->uvw[blindex][tslot][2] - statUVW[3 * statA + 2];
                     statDone[statB] = true;
                     itsUVWNodes[statB]->set(time, statUVW[3 * statB],
                         statUVW[3 * statB + 1], statUVW[3 * statB + 2]);
@@ -509,11 +515,11 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer data)
                 else if (statDone[statB] && !statDone[statA])
                 {
                     statUVW[3 * statA] =
-                        statUVW[3 * statB] - data->uvw[blindex][tslot][0];
+                        statUVW[3 * statB] - buffer->uvw[blindex][tslot][0];
                     statUVW[3 * statA + 1] =
-                        statUVW[3 * statB + 1] - data->uvw[blindex][tslot][1];
+                        statUVW[3 * statB + 1] - buffer->uvw[blindex][tslot][1];
                     statUVW[3 * statA + 2] =
-                        statUVW[3 * statB + 2] - data->uvw[blindex][tslot][2];
+                        statUVW[3 * statB + 2] - buffer->uvw[blindex][tslot][2];
                     statDone[statA] = true;
                     itsUVWNodes[statA]->set(time, statUVW[3 * statA],
                         statUVW[3 * statA + 1], statUVW[3 * statA + 2]);

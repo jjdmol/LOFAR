@@ -30,6 +30,15 @@
 #include <casa/Arrays/Slicer.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
+namespace casa
+{
+    class ROMSObservationColumns;
+    class ROMSAntennaColumns;
+    class ROMSSpWindowColumns;
+    class ROMSPolarizationColumns;
+    class ROMSFieldColumns;
+};
+
 namespace LOFAR
 {
 namespace BBS
@@ -48,43 +57,28 @@ public:
 
     virtual VisGrid grid(const VisSelection &selection) const;
 
-    virtual VisData::Pointer read(const VisSelection &selection,
-        const string &column = "DATA",
-        bool readUVW = true) const;
+    virtual void read(const VisSelection &selection, VisData::Pointer buffer,
+        const string &column = "DATA", bool readUVW = true) const;
 
-    virtual void write(const VisSelection &selection,
-        VisData::Pointer buffer,
-        const string &column = "CORRECTED_DATA",
-        bool writeFlags = true) const;
+    virtual void write(const VisSelection &selection, VisData::Pointer buffer,
+        const string &column = "CORRECTED_DATA", bool writeFlags = true);
 
 private:
-    Instrument readInstrumentInfo
-        (const casa::MSAntenna &tab_antenna,
-        const casa::MSObservation &tab_observation,
+    void initObservationInfo(const casa::ROMSObservationColumns &observation,
         uint id);
-
-    vector<string> readPolarizationInfo
-        (const casa::MSPolarization &tab_polarization, uint id);
-
-    void readSpectralInfo
-        (const casa::MSSpectralWindow &tab_spectralWindow, uint id);
-
-    casa::MDirection readFieldInfo(const casa::MSField &tab_field, uint id);
+    void initInstrumentInfo(const casa::ROMSAntennaColumns &antenna,
+        const casa::ROMSObservationColumns &observation, uint id);
+    void initSpectralInfo(const casa::ROMSSpWindowColumns &window, uint id);
+    void initPolarizationInfo(const casa::ROMSPolarizationColumns &polarization,
+        uint id);
+    void initFieldInfo(const casa::ROMSFieldColumns &field, uint id);
 
     casa::TableExprNode getTAQLExpression(const VisSelection &selection) const;
-
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
-
-    VisGrid getGrid(const casa::Table tab_selection, const casa::Slicer slicer)
+    VisGrid grid(const casa::Table tab_selection, const casa::Slicer slicer)
         const;
 
-    VisData::Pointer allocate(const VisGrid &grid) const;
-
-    string                  itsFilename;
     casa::MeasurementSet    itsMS;
-
-    casa::Int               itsObservationId, itsDataDescriptionId,
-                            itsFieldId;
 };
 
 } //# namespace BBS

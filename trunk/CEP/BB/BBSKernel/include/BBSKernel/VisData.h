@@ -23,16 +23,17 @@
 #ifndef LOFAR_BBS_BBSKERNEL_VISDATA_H
 #define LOFAR_BBS_BBSKERNEL_VISDATA_H
 
-#include <Common/LofarTypes.h>
-#include <Common/lofar_smartptr.h>
-#include <Common/lofar_map.h>
-#include <Common/lofar_set.h>
-#include <Common/lofar_string.h>
-
 #include <BBSKernel/Axis.h>
 
-#include <boost/multi_array.hpp>
+#include <Common/LofarTypes.h>
+#include <stddef.h>
+
+#include <Common/lofar_smartptr.h>
+#include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
+#include <Common/lofar_string.h>
 #include <utility>
+#include <boost/multi_array.hpp>
 
 namespace LOFAR
 {
@@ -40,27 +41,27 @@ namespace BBS
 {
 using std::pair;
 
+
 typedef fcomplex                sample_t;
 typedef bool                    flag_t;
 typedef uint8                   tslot_flag_t;
 typedef pair<uint32, uint32>    baseline_t;
 
-// TODO: Find an elegant way to unify VisGrid and VisData.
 
 class VisGrid
 {
 public:
     cell_centered_axis<regular_series>      freq;
     cell_centered_axis<irregular_series>    time;
-    set<baseline_t>                         baselines;
-    set<string>                             polarizations;
+    vector<baseline_t>                      baseline;
+    vector<string>                          polarization;
 };
 
 
 class VisData
 {
 public:
-    typedef shared_ptr<VisData>         Pointer;
+    typedef shared_ptr<VisData>     Pointer;
 
     enum TimeslotFlag
     {
@@ -69,22 +70,11 @@ public:
         N_TimeslotFlag
     };
 
-    VisData(uint32 nTimeslots,
-        uint32 nBaselines,
-        uint32 nChannels,
-        uint32 nPolarizations);
+    VisData()
+    {}
+    VisData(const VisGrid &grid);
 
-    size_t getPolarizationCount() const
-    { return polarizations.size(); }
-
-    size_t getChannelCount() const
-    { return freq.size(); }
-
-    size_t getTimeslotCount() const
-    { return time.size(); }
-
-    size_t getBaselineCount() const
-    { return baselines.size(); }
+    void reset(const VisGrid &in);
 
     bool hasBaseline(baseline_t baseline) const;
     size_t getBaselineIndex(baseline_t baseline) const;
@@ -92,11 +82,14 @@ public:
     bool hasPolarization(const string &polarization) const;
     size_t getPolarizationIndex(const string &polarization) const;
 
-    cell_centered_axis<regular_series>      freq;
-    cell_centered_axis<irregular_series>    time;
+    // Grid on which the visibility data is sampled.
+    VisGrid                                 grid;
+
+    // Indexes
     map<baseline_t, size_t>                 baselines;
     map<string, size_t>                     polarizations;
 
+    // Data
     boost::multi_array<double, 3>           uvw;
     boost::multi_array<tslot_flag_t, 2>     tslot_flag;
     boost::multi_array<flag_t, 4>           vis_flag;
