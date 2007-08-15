@@ -93,10 +93,12 @@ namespace LOFAR
 
     WH_SubbandWriter::~WH_SubbandWriter() 
     {
+#if defined HAVE_AIPSPP
       for (unsigned i = 0; i < itsWriters.size(); i ++)
 	delete itsWriters[i];
 
       itsWriters.clear();
+#endif
 
 #ifdef USE_MAC_PI
       delete itsPropertySet;
@@ -211,15 +213,21 @@ namespace LOFAR
       }
       
       // Allocate buffers
-      itsFlagsBuffers   = new bool[itsNrSubbandsPerStorage * itsNVisibilities];
-      itsWeightsBuffers = new float[itsNrSubbandsPerStorage * itsNBaselines * itsNChannels];
-      itsVisibilities   = new DH_Visibilities::VisibilityType[itsNrSubbandsPerStorage * itsNVisibilities];
-
-      clearAllSums();
+      if (itsTimesToIntegrate > 1) {
+	itsFlagsBuffers   = new bool[itsNrSubbandsPerStorage * itsNVisibilities];
+	itsWeightsBuffers = new float[itsNrSubbandsPerStorage * itsNBaselines * itsNChannels];
+	itsVisibilities   = new DH_Visibilities::VisibilityType[itsNrSubbandsPerStorage * itsNVisibilities];
+	clearAllSums();
+      } else {
+	itsFlagsBuffers   = new bool[itsNVisibilities];
+	itsWeightsBuffers = new float[itsNBaselines * itsNChannels];
+      }
 #endif // defined HAVE_AIPSPP
     }
 
-    void WH_SubbandWriter::clearAllSums(){
+    void WH_SubbandWriter::clearAllSums()
+    {
+      assert(itsTimesToIntegrate > 1);
       memset(itsWeightsBuffers, 0, itsNrSubbandsPerStorage * itsNBaselines * itsNChannels * sizeof(float));
       memset(itsVisibilities, 0, itsNrSubbandsPerStorage * itsNVisibilities * sizeof(DH_Visibilities::VisibilityType));
       for (uint i = 0; i < itsNrSubbandsPerStorage * itsNVisibilities; i++) {
@@ -242,13 +250,13 @@ namespace LOFAR
 	      ", count = " << counter ++ << endl;
 
 #if defined HAVE_AIPSPP
-      if (itsTimeCounter % itsTimesToIntegrate == 0) {
+      if (itsTimesToIntegrate > 1 && itsTimeCounter % itsTimesToIntegrate == 0) {
 	clearAllSums();
       }
 #endif
 
       // Write the visibilities for all subbands per cell.
-      for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++sb) {
+      for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++ sb) {
         // find out from which input channel we should read
 	unsigned cell	      = sb / itsNrSubbandsPerCell;
 	unsigned inputChannel = itsCurrentInputs[cell] + cell * itsNrInputChannels;
@@ -260,31 +268,50 @@ namespace LOFAR
         // Write 1 DH_Visibilities of size
         // fcomplex[itsNBaselines][itsNChannels][npol][npol]
 
-//std::clog << TH_MPI::getCurrentRank() << ": sb = " << valSamples[0] << " (exp. " << (sb + TH_MPI::getCurrentRank() * itsNrSubbandsPerStorage) << "), from " << valSamples[1] << ", count = " << valSamples[2] << ", inputChannel = " << inputChannel << std::endl;
 #if defined HAVE_AIPSPP
-        for (uint i = 0; i < itsNBaselines * itsNChannels; i ++) {
-          itsWeightsBuffers[sb * itsNBaselines * itsNChannels + i] += itsWeightFactor * valSamples[i];
-          bool flagged = valSamples[i] == 0;
-          itsFlagsBuffers[sb * itsNVisibilities + 4 * i    ] &= flagged;
-          itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 1] &= flagged;
-          itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 2] &= flagged;
-          itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 3] &= flagged;
-	  // Currently we just add the samples, this way the time centroid stays in place
-	  // We could also divide by the weight and multiple the sum by the total weight.
-	  itsVisibilities[sb * itsNVisibilities + 4 * i    ] += newVis[4 * i    ];
-	  itsVisibilities[sb * itsNVisibilities + 4 * i + 1] += newVis[4 * i + 1];
-	  itsVisibilities[sb * itsNVisibilities + 4 * i + 2] += newVis[4 * i + 2];
-	  itsVisibilities[sb * itsNVisibilities + 4 * i + 3] += newVis[4 * i + 3];
-        }
+	if (itsTimesToIntegrate > 1) {
+	  for (uint i = 0; i < itsNBaselines * itsNChannels; i ++) {
+	    itsWeightsBuffers[sb * itsNBaselines * itsNChannels + i] += itsWeightFactor * valSamples[i];
+	    bool flagged = valSamples[i] == 0;
+	    itsFlagsBuffers[sb * itsNVisibilities + 4 * i    ] &= flagged;
+	    itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 1] &= flagged;
+	    itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 2] &= flagged;
+	    itsFlagsBuffers[sb * itsNVisibilities + 4 * i + 3] &= flagged;
+	    // Currently we just add the samples, this way the time centroid stays in place
+	    // We could also divide by the weight and multiple the sum by the total weight.
+	    itsVisibilities[sb * itsNVisibilities + 4 * i    ] += newVis[4 * i    ];
+	    itsVisibilities[sb * itsNVisibilities + 4 * i + 1] += newVis[4 * i + 1];
+	    itsVisibilities[sb * itsNVisibilities + 4 * i + 2] += newVis[4 * i + 2];
+	    itsVisibilities[sb * itsNVisibilities + 4 * i + 3] += newVis[4 * i + 3];
+	  }
 
-	if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
+	  if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
+	    itsWriteTimer.start();
+	    itsWriters[sb / itsNrSubbandsPerMS]->write(itsBandIDs[sb],
+	      itsFieldIDs[sb / itsNrSubbandsPerMS], 0, itsNChannels,
+	      itsTimeCounter, itsNVisibilities,
+	      &itsVisibilities[sb * itsNVisibilities],
+	      &itsFlagsBuffers[sb * itsNVisibilities], 
+	      &itsWeightsBuffers[sb * itsNBaselines * itsNChannels]);
+	    itsWriteTimer.stop();
+	  }
+	} else {
+	  for (uint i = 0; i < itsNBaselines * itsNChannels; i ++) {
+	    itsWeightsBuffers[i] = itsWeightFactor * valSamples[i];
+	    bool flagged = valSamples[i] == 0;
+	    itsFlagsBuffers[4 * i    ] = flagged;
+	    itsFlagsBuffers[4 * i + 1] = flagged;
+	    itsFlagsBuffers[4 * i + 2] = flagged;
+	    itsFlagsBuffers[4 * i + 3] = flagged;
+	  }
+
 	  itsWriteTimer.start();
 	  itsWriters[sb / itsNrSubbandsPerMS]->write(itsBandIDs[sb],
 	    itsFieldIDs[sb / itsNrSubbandsPerMS], 0, itsNChannels,
 	    itsTimeCounter, itsNVisibilities,
-	    &itsVisibilities[sb * itsNVisibilities],
-	    &itsFlagsBuffers[sb * itsNVisibilities], 
-	    &itsWeightsBuffers[sb * itsNBaselines * itsNChannels]);
+	    newVis,
+	    itsFlagsBuffers,
+	    itsWeightsBuffers);
 	  itsWriteTimer.stop();
 	}
 #endif
@@ -306,10 +333,12 @@ namespace LOFAR
       delete [] itsFlagsBuffers;	itsFlagsBuffers   = 0;
       delete [] itsWeightsBuffers;	itsWeightsBuffers = 0;
 
+#if defined HAVE_AIPSPP
       for (unsigned i = 0; i < itsWriters.size(); i ++)
 	delete itsWriters[i];
 
       itsWriters.clear();
+#endif
       cout<<itsWriteTimer<<endl;
     }
     
