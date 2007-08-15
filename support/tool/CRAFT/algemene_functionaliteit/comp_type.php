@@ -48,7 +48,7 @@
 				$row = mysql_fetch_array($res);
 				echo($row[0] ."</td></tr>");
 				echo("<tr><td>Maximum aantal:</td><td>".$data['Max_Aantal']."</td></tr>");
-				echo("<tr><td>Reserve minimum:</td><td>".$data['Reserve_Minimum']."</td></tr>");
+				echo("<tr><td>Reserve minimum:</td><td>".$data['Reserve_Minimum']." (20% drempel: " . (round($data['Reserve_Minimum'] * 1.2)) .")</td></tr>");
 				echo("<tr><td>Type verantwoordelijke:</td><td>");
 				$query = "SELECT inlognaam FROM gebruiker WHERE Werknem_ID ='".$data['Type_Verantwoordelijke']."'";
 			  $res = mysql_query($query);

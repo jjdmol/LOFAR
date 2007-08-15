@@ -142,7 +142,7 @@
 	  			//datumtijd
 	  			else if ($_POST['t' . $i] == '4b') $query = "INSERT INTO datatabel (Type_DateTime) VALUES('". Datum_Tijd_Naar_DB_Conversie($_POST[$i -1],$_POST[$i]) ."')"; 
 	  			//bestandsverwijzing
-	  			else if ($_POST['t' . $i] == '5')  $query = "INSERT INTO datatabel (Type_TinyText) VALUES('".$_POST[$i]."')"; 
+	  			else if ($_POST['t' . $i] == '5')  $query = "INSERT INTO datatabel (Type_TinyText) VALUES('".$_SESSION['bestand' . $i]."')"; 
 	  			else $query = "";
 	
 					//uitvoeren van de datatabel record
@@ -364,6 +364,8 @@
 								$query = "SELECT Kolom_ID FROM type_melding_koppel_extra WHERE Meld_Type_ID = '". $type ."'";
 								$resultaat = mysql_query($query);
 								$aantal_velden = 0;
+								//een bestands_velden variabele, om bij te houden hoeveel bestanden hier maximaal geupload kunnen worden
+								$bestands_velden = 0;
 								while ($data = mysql_fetch_row($resultaat)) {
 									$query = "SELECT * FROM extra_velden WHERE Kolom_ID = '". $data[0]  ."'";
 									$result = mysql_query($query);
@@ -371,11 +373,16 @@
 									//4 = datumtijd
 									if ($velden['DataType'] == 4)
 										$aantal_velden++;
+									if ($velden['DataType'] == 5)
+										$bestands_velden++;
 									
 									$aantal_velden++;
 								}
 	 							//het aantal onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
 	 							echo("<input id=\"aantal\" name=\"aantal\" type=\"hidden\" value=\"".$aantal_velden."\">\n");
+
+	 							//het aantal bestandsvelden onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
+	 							echo("<input id=\"bestands_velden\" name=\"bestands_velden\" type=\"hidden\" value=\"".$bestands_velden."\">\n");
 								
 	  						//5 hidden velden aanmaken voor elk extra veld: 1 voor de waarde, 1 voor het type en 1 voor de verplichtheid en 1 voor de ID van de parent record en 1 voor de veldnaam
 								for($i = 0; $i < $aantal_velden; $i++){

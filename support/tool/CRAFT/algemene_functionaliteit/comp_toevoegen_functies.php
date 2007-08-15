@@ -33,13 +33,16 @@ function SubmitComponentBewerken()
 {
 	var aantal = document.frames['frame_extra_velden'].document.getElementById('aantal').value;
 	for(i=0; i < aantal; i++) {
-		var waarde = document.frames['frame_extra_velden'].document.getElementById(i).value;
 		var type = document.frames['frame_extra_velden'].document.getElementById('t'+i).value;
 		var verplicht = document.frames['frame_extra_velden'].document.getElementById('v'+i).value;
 		var id = document.frames['frame_extra_velden'].document.getElementById('i'+i).value;
 		var naam = document.frames['frame_extra_velden'].document.getElementById('n'+i).value;
+
+		if(type != 5) {
+			var waarde = document.frames['frame_extra_velden'].document.getElementById(i).value;		
+			document.getElementById(i).value = waarde;
+		}
 		
-		document.getElementById(i).value = waarde;
 		document.getElementById('t' + i).value = type;
 		document.getElementById('v' + i).value = verplicht;
 		document.getElementById('i' + i).value = id;
@@ -49,13 +52,16 @@ function SubmitComponentBewerken()
 	var aantemaken = document.frames['frame_extra_velden'].document.getElementById('aantemaken').value;
 
 	for(i=0; i < aantemaken; i++) {
-		var waarde = document.frames['frame_extra_velden'].document.getElementById('a' + i).value;
 		var type = document.frames['frame_extra_velden'].document.getElementById('at'+i).value;
 		var verplicht = document.frames['frame_extra_velden'].document.getElementById('av'+i).value;
 		var id = document.frames['frame_extra_velden'].document.getElementById('ai'+i).value;
 		var naam = document.frames['frame_extra_velden'].document.getElementById('an'+i).value;
-		
-		document.getElementById('a' + i).value = waarde;
+
+		if(type != 5) {
+			var waarde = document.frames['frame_extra_velden'].document.getElementById('a' + i).value;		
+			document.getElementById('a' + i).value = waarde;
+		}
+
 		document.getElementById('at' + i).value = type;
 		document.getElementById('av' + i).value = verplicht;
 		document.getElementById('ai' + i).value = id;
@@ -86,13 +92,16 @@ function submitComponentToevoegen()
 	var aantal = document.frames['frame_extra_velden'].document.getElementById('aantal').value;
 	
 	for(i=0; i < aantal; i++) {
-		var waarde = document.frames['frame_extra_velden'].document.getElementById(i).value;
 		var type = document.frames['frame_extra_velden'].document.getElementById('t'+i).value;
 		var verplicht = document.frames['frame_extra_velden'].document.getElementById('v'+i).value;
 		var id = document.frames['frame_extra_velden'].document.getElementById('i'+i).value;
 		var naam = document.frames['frame_extra_velden'].document.getElementById('n'+i).value;
-		
-		document.getElementById(i).value = waarde;
+
+		if(type != 5) {
+			var waarde = document.frames['frame_extra_velden'].document.getElementById(i).value;
+			document.getElementById(i).value = waarde;
+		}
+
 		document.getElementById('t' + i).value = type;
 		document.getElementById('v' + i).value = verplicht;
 		document.getElementById('i' + i).value = id;
