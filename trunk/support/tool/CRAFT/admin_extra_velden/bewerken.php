@@ -21,6 +21,7 @@
 		?>
 		<script language="JavaScript">
 		<!--//
+		
  			new tree (TREE_ITEMS, TREE_TPL);
  		//-->
 		</script> 
@@ -31,16 +32,14 @@
     	<?php
 
 				function datumveld_Controle() {
-  				//onderscheid maken tussen datum en tijd en alleen datum
-  				if(strpos($_POST['standaard'] , " ")) {
-  					$test=split("-",$datum_string);
-  					return (Valideer_Tijd($test[1]) && Valideer_Datum($test[0]));
-  				}
-  				else return (Valideer_Datum($_POST['standaard']));
+					return (Valideer_Tijd($_POST['tijd']) && Valideer_Datum($_POST['datum']));
 				}
 				
 				
 				function Valideer_Invoer() {
+					if(isset($_POST['opslaan']) && $_POST['opslaan'] != 1)
+						return false;
+						
 					//contact naam
 					if (isset($_POST['veldnaam'])) {
 						if ($_POST['veldnaam'] == '')
@@ -74,20 +73,20 @@
 
 				//valideren of er opgeslagen moet worden of dat de gegevens weergegeven moeten worden.
 				if (Valideer_Invoer()){
-					//bijwerken
-					//datatype en standaard waarde... in de datatabel bijwerken
-					//wanneer het datatype verandert is, dan het oude veld op NULL zetten en het nieuwe een waarde toekennen
-					if ($_POST['hidden_type'] != $_POST['datatype'])
-						$query = "UPDATE datatabel SET ". Converteer_Datatype_Naar_DBVeld($_POST['hidden_type']) ." = NULL, ". Converteer_Datatype_Naar_DBVeld($_POST['datatype']) ." = '". $_POST['standaard'] ."'";
-					// en anders alleen de standaard waarde updaten
-					else
-						$query = "UPDATE datatabel SET ". Converteer_Datatype_Naar_DBVeld($_POST['datatype']) ." = '"	. $_POST['standaard'] . "'";
-					
-					$errorlevel = 0;
-					//het updaten van de datatabel
-					if (mysql_query($query)) {
-						$errorlevel  = 1;
-						
+          //bijwerken 
+          //datatype en standaard waarde... in de datatabel bijwerken 
+          //wanneer het datatype verandert is, dan het oude veld op NULL zetten en het nieuwe een waarde toekennen 
+          if($_POST['datatype'] == 4) {
+          	$query = "UPDATE datatabel SET ". Converteer_Datatype_Naar_DBVeld($_POST['datatype']) ." = '"   . Datum_Tijd_Naar_DB_Conversie($_POST['datum'], $_POST['tijd']) . "'"; 
+          }
+          else
+          	$query = "UPDATE datatabel SET ". Converteer_Datatype_Naar_DBVeld($_POST['datatype']) ." = '"   . $_POST['standaard'] . "'"; 
+
+          $errorlevel = 0; 
+          //het updaten van de datatabel 
+          if (mysql_query($query)) { 
+	          $errorlevel  = 1; 
+				
 						//de query voor het updaten van de extra_velden tabel
 						$query = "UPDATE extra_velden SET Veld_Naam = '". $_POST['veldnaam'] ."', DataType = '". $_POST['datatype'] ."', Is_Verplicht = ";
 						//de verplicht checkbox vertalen naar sql
@@ -99,12 +98,12 @@
 						//het updaten van de extra_velden tabel
 						if (mysql_query($query)) {
 							$errorlevel  = 2;
-						}					
+						}
 					}
 
 					//foutcode vertalen en een melding genereren voor de gebruiker
 					if ($errorlevel == 2) echo("Het extra veld \"". $_POST['veldnaam'] ."\" is succesvol in het systeem bijgewerkt!<br>");
-					else if ($errorlevel == 0) echo("Het extra veld \"". $_POST['veldnaam'] ."\" kon niet in het systeem bijgewerkt worden!<br>Er ging iets fout met het bijwerken van de datatabel.<br>");
+ 					else if ($errorlevel == 0) echo("Het extra veld \"". $_POST['veldnaam'] ."\" kon niet in het systeem bijgewerkt worden!<br>Er ging iets fout met het bijwerken van de datatabel.<br>");
 					else if ($errorlevel == 1) echo("Het extra veld \"". $_POST['veldnaam'] ."\" kon niet in het systeem bijgewerkt worden!<br>Het dataveld is echter wel bijgewerkt!<br>");
 					echo('<a href="'.$_SESSION['huidige_pagina'].'&c='.$_GET['c']. '">Klik hier om terug te keren naar het vorige veld of selecteer links een veld uit de treeview.</a>');
 
@@ -135,53 +134,80 @@
 											$resultaat = mysql_query($query);
 											$data = mysql_fetch_row($resultaat);
 											
-											if ($data[0] == 0) {
-
-					    					echo('<select name="datatype">');
-				    						if (isset($_POST['datatype'])) $selected = $_POST['datatype'];
-				    						else $selected = $row['DataType'];
-					    					echo ('<option value="1"'); 
-					    					if ($selected == 1) { echo(' SELECTED');} 
-					    					echo('>Geheel getal (integer)</option>');
-					    					echo ('<option value="2"'); 
-					    					if ($selected == 2) { echo(' SELECTED'); } 
-					    					echo('>Getal met decimalen (double)</option>');
-					    					echo ('<option value="3"'); 
-					    					if ($selected == 3) { echo(' SELECTED'); } 
-					    					echo('>Text veld</option>');
-					    					echo ('<option value="4"'); 
-					    					if ($selected == 4) { echo(' SELECTED'); } 
-					    					echo('>Datum/tijd veld (datetime)</option>');
-					    					echo ('<option value="5"'); 
-					    					if ($selected == 5) { echo(' SELECTED'); } 
-					    					echo('>Bestandsverwijzing</option>');
-				    						echo('</select>');
-				    					}
-				    					else {
-				    						if($row['DataType'] == 1) 		 echo("Geheel getal (integer)");
-				    						else if($row['DataType'] == 2) echo("Getal met decimalen (double)");
-				    						else if($row['DataType'] == 3) echo("Text veld");
-				    						else if($row['DataType'] == 4) echo("Datum/tijd veld (datetime)");
-				    						else if($row['DataType'] == 5) echo("Bestandsverwijzing");
-				    						else echo("");
-				    					}
+			    						if($row['DataType'] == 1) 		 echo("Geheel getal (integer)");
+			    						else if($row['DataType'] == 2) echo("Getal met decimalen (double)");
+			    						else if($row['DataType'] == 3) echo("Text veld");
+			    						else if($row['DataType'] == 4) echo("Datum/tijd veld (datetime)");
+			    						else if($row['DataType'] == 5) echo("Bestandsverwijzing");
+			    						else echo("");
+			    						echo("<input type=\"hidden\" name=\"datatype\" id=\"datatype\" value=\"".$row['DataType']."\">");
 			    					?>
 				    			</td>
 				    		</tr>
 				    		<tr>
-				    			<?php
-				    				$query = "SELECT * FROM datatabel WHERE Data_Kolom_ID = '". $row['Data_Kolom_ID'] ."'";
-								  	$resultaat = mysql_query($query);
-								  	$data = mysql_fetch_array($resultaat);
-										if ($row['DataType'] == 1) $waarde = $data['Type_Integer'];
-										else if ($row['DataType'] == 2) $waarde = $data['Type_Double'];
-										else if ($row['DataType'] == 3) $waarde = $data['Type_Text'];
-										else if ($row['DataType'] == 4) $waarde = $data['Type_DateTime'];
-										else if ($row['DataType'] == 5) $waarde = $data['Type_TinyText'];
-										else $waarde = "";
-				    			?>
-				    			<td>Standaard waarde:</td><td><input name="standaard" type="text" value="<?php if(isset($_POST['standaard'])) echo(htmlentities($_POST['standaard'], ENT_QUOTES)); else echo(htmlentities($waarde, ENT_QUOTES)); ?>">
-		    				  <?php if(isset($_POST['standaard']) && ($_POST['datatype'] == 4) && !datumveld_Controle()) echo('<b>* Er is een foutieve standaard waarde ingevoerd!</b>'); ?></td>
+				    			<td>Standaard waarde:</td>
+				    			<td>
+					    			<?php
+					    				$query = "SELECT * FROM datatabel WHERE Data_Kolom_ID = '". $row['Data_Kolom_ID'] ."'";
+									  	$resultaat = mysql_query($query);
+									  	$data = mysql_fetch_array($resultaat);
+											if ($row['DataType'] == 1) {
+												$waarde = $data['Type_Integer'];
+												echo("<input name=\"standaard\" type=\"text\" value=\"");
+												if(isset($_POST['standaard'])) 
+													echo(htmlentities($_POST['standaard'], ENT_QUOTES));
+												else echo(htmlentities($waarde, ENT_QUOTES));
+												
+												echo("\">");
+											}
+											else if ($row['DataType'] == 2) {
+												$waarde = $data['Type_Double'];
+												echo("<input name=\"standaard\" type=\"text\" value=\"");
+												if(isset($_POST['standaard'])) 
+													echo(htmlentities($_POST['standaard'], ENT_QUOTES));
+												else echo(htmlentities($waarde, ENT_QUOTES));
+
+												echo("\">");
+											}
+											else if ($row['DataType'] == 3) {
+												$waarde = $data['Type_Text'];
+												echo("<textarea name=\"standaard\" rows=\"3\" cols=\"30\">");
+												if(isset($_POST['standaard'])) 
+													echo(htmlentities($_POST['standaard'], ENT_QUOTES));
+												else echo(htmlentities($waarde, ENT_QUOTES));
+										
+												echo("</textarea>");
+											}
+											else if ($row['DataType'] == 4) {
+												$waarde = $data['Type_DateTime'];
+
+												if (isset($_POST['datum']) && isset($_POST['tijd'])) {
+													$datum = $_POST['datum'];
+													$tijd = $_POST['tijd'];
+												}
+												else {
+													//datum tijd opdelen
+						    					$gedeeldveld=split(" ",$waarde);
+				    					
+													//datum veld opdelen zodat de jaar, maand en dagvelden makkelijk te benaderen zijn
+													$dat = split("-",$gedeeldveld[0]);
+													//tijd veld opdelen zodat de uren, minuten en secondevelden makkelijk te benaderen zijn
+													$td = split(":",$gedeeldveld[1]);
+
+													$datum = $dat[2] ."-". $dat[1] ."-". $dat[0];
+													$tijd = $td[0] .":". $td[1];
+												}
+
+	 	 	 	 								echo("<input name=\"datum\" type=\"text\" size=\"8\" maxlength=\"10\" value=\"".htmlentities($datum, ENT_QUOTES)."\">");
+    					  				echo("<input name=\"tijd\" type=\"text\" size=\"2\" maxlength=\"5\" value=\"".htmlentities($tijd, ENT_QUOTES)."\">");
+											}
+											else if ($row['DataType'] == 5) {
+												echo($data['Type_TinyText'] . "(deze standaardwaarde kan niet gewijzigd worden!)");
+											}
+											else $waarde = "";
+					    			?>
+
+		    				  <?php if(isset($_POST['datum']) && ($_POST['datatype'] == 4) && !datumveld_Controle()) echo('<b>* Er is een foutieve standaard waarde ingevoerd!</b>'); ?></td>
 				    		</tr>
 				    		<tr>
 				    			<td>Koppelen aan:</td>
@@ -211,8 +237,8 @@
 				    			<td>Verplicht:</td>
 				    			<td><input name="verplicht" type="checkbox"    				
 				    				<?php
-				    		  	if(isset($_POST['opslaan'])) {
-				    		  		if (($_POST['verplicht']) && ($_POST['verplicht'] == 1 || $_POST['verplicht'] == 'on'))	echo(' CHECKED');
+				    		  	if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) {
+				    		  		if (isset($_POST['verplicht']) && ($_POST['verplicht'] == 1 || $_POST['verplicht'] == 'on'))	echo(' CHECKED');
 				    		  	}
 				    		  	else if($row['Is_verplicht'] == 1) echo(' CHECKED');
   							?>></td>
@@ -230,7 +256,7 @@
 				    </form>
 			    <?php
 	    		}
-					else echo('Er is geen contact geselecteerd om te wijzigen.<br>Selecteer hiernaast een contact.');
+					else echo('Er is geen extra veld geselecteerd om te wijzigen.<br>Selecteer hiernaast een extra veld.');
 				}
     	?>
   </div>

@@ -25,6 +25,8 @@
 					echo("<input name=\"data\" id=\"datum\" type=\"text\" size=\"8\" maxlength=\"10\" value=\"".$waarde1."\">");
 					echo("<input name=\"tijd\" id=\"tijd\" type=\"text\" size=\"2\" maxlength=\"5\" value=\"".$waarde2."\">");
 				}
+				else if($_GET['c'] == 5)
+					echo("Geen standaard waarde mogelijk!");
 				else 
 					echo("<input name=\"data\" id=\"data\" type=\"text\" value=\"".$waarde1."\">");
 				echo("</select></form>");

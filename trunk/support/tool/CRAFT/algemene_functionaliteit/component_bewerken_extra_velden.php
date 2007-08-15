@@ -60,10 +60,30 @@
 						echo("</td>");
 						$aantal_velden++;
 					}
+					else if($row['DataType'] == 5){
+
+						echo("<td>");
+						if($uitkomst['Type_TinyText'] == -1) {
+							echo("<a href=\"bestand_uploaden.php?c=\" target=\"_blank\">Upload een bestand</a>");
+							echo("<input type=\"hidden\" name=\"t". $aantal_velden ."\" id=\"t". $aantal_velden ."\" value=\"". $row['DataType'] ."\">");
+							echo("<input type=\"hidden\" name=\"v". $aantal_velden ."\" id=\"v". $aantal_velden ."\" value=\"". $row['Is_verplicht'] ."\">");
+							echo("<input type=\"hidden\" name=\"i". $aantal_velden ."\" id=\"i". $aantal_velden ."\" value=\"". $row['Kolom_ID'] ."\">");
+							echo("<input type=\"hidden\" name=\"n". $aantal_velden ."\" id=\"n". $aantal_velden ."\" value=\"". $row['Veld_Naam'] ."\">");
+						}
+						else {
+							echo("<a href=\"".$uitkomst['Type_TinyText']."\" target=\"_blank\">Openen</a>");
+							echo("<input type=\"hidden\" name=\"t". $aantal_velden ."\" id=\"t". $aantal_velden ."\" value=\"". $row['DataType'] ."\">");
+							echo("<input type=\"hidden\" name=\"v". $aantal_velden ."\" id=\"v". $aantal_velden ."\" value=\"". $row['Is_verplicht'] ."\">");
+							echo("<input type=\"hidden\" name=\"i". $aantal_velden ."\" id=\"i". $aantal_velden ."\" value=\"". $row['Kolom_ID'] ."\">");
+							echo("<input type=\"hidden\" name=\"n". $aantal_velden ."\" id=\"n". $aantal_velden ."\" value=\"". $row['Veld_Naam'] ."\">");
+						}
+						$_SESSION['bestand' . $aantal_velden] = $uitkomst['Type_TinyText'];
+						echo("</td>");
+					}
+
 					else {
 						if ($row['DataType'] == 1) $waarde = $uitkomst['Type_Integer'];
 						else if ($row['DataType'] == 2) $waarde = $uitkomst['Type_Double'];
-						else if ($row['DataType'] == 5) $waarde = $uitkomst['Type_TinyText'];
 						else  $waarde = '';
 						
 						echo("<td><input name=\"".$aantal_velden."\" id=\"".$aantal_velden."\" type=\"text\" value=\"".$waarde."\">"); 
@@ -135,10 +155,30 @@
 							echo("</td>");
 							$aan_te_maken ++;
 						}
+						else if($row['DataType'] == 5){
+
+							echo("<td>");
+							if($uitkomst['Type_TinyText'] == -1) {
+								echo("<a href=\"bestand_uploaden.php?a=".$aan_te_maken."\" target=\"_blank\">Upload een bestand</a>");
+								echo("<input type=\"hidden\" name=\"at". $aan_te_maken ."\" id=\"at". $aan_te_maken ."\" value=\"". $row['DataType'] ."\">");
+								echo("<input type=\"hidden\" name=\"av". $aan_te_maken ."\" id=\"av". $aan_te_maken ."\" value=\"". $row['Is_verplicht'] ."\">");
+								echo("<input type=\"hidden\" name=\"ai". $aan_te_maken ."\" id=\"ai". $aan_te_maken ."\" value=\"". $row['Kolom_ID'] ."\">");
+								echo("<input type=\"hidden\" name=\"an". $aan_te_maken ."\" id=\"an". $aan_te_maken ."\" value=\"". $row['Veld_Naam'] ."\">");
+							}
+							else {
+								echo("<a href=\"".$uitkomst['Type_TinyText']."\" target=\"_blank\">Openen</a>");
+								echo("<input type=\"hidden\" name=\"at". $aan_te_maken ."\" id=\"at". $aan_te_maken ."\" value=\"". $row['DataType'] ."\">");
+								echo("<input type=\"hidden\" name=\"av". $aan_te_maken ."\" id=\"av". $aan_te_maken ."\" value=\"". $row['Is_verplicht'] ."\">");
+								echo("<input type=\"hidden\" name=\"ai". $aan_te_maken ."\" id=\"ai". $aan_te_maken ."\" value=\"". $row['Kolom_ID'] ."\">");
+								echo("<input type=\"hidden\" name=\"an". $aan_te_maken ."\" id=\"an". $aan_te_maken ."\" value=\"". $row['Veld_Naam'] ."\">");
+							}
+							$_SESSION['abestand' . $aan_te_maken] = $uitkomst['Type_TinyText'];
+							echo("</td>");
+						}
+
 						else {
 							if ($row['DataType'] == 1) $waarde = $uitkomst['Type_Integer'];
 							else if ($row['DataType'] == 2) $waarde = $uitkomst['Type_Double'];
-							else if ($row['DataType'] == 5) $waarde = $uitkomst['Type_TinyText'];
 							else  $waarde = '';
 							
 							echo("<td><input name=\"a".$aan_te_maken."\" id=\"a".$aan_te_maken."\" type=\"text\" value=\"".$waarde."\">"); 

@@ -185,17 +185,32 @@
     			
     			$waarde = $_POST[$i];
     			//1 = integer, 2 = double, 3 = text, 4 = datumtijd, 5 = bestandsverwijzing
-					if ($_POST['t'.$i] == 1)   		$type = 'Type_Integer';
-					else if ($_POST['t'.$i] == 2) $type = 'Type_Double';
-					else if ($_POST['t'.$i] == 3) $type = 'Type_Text';
-					else if ($_POST['t'.$i] == '4b') {
-						$type = 'Type_DateTime';
-						$waarde = Datum_Tijd_Naar_DB_Conversie($_POST[$i -1],$_POST[$i]);
+					if ($_POST['t'.$i] == 1) {
+						$query = "UPDATE datatabel SET Type_Integer ='" . $waarde . "', Type_TinyText = NULL, Type_Double = NULL, Type_Text = NULL, Type_DateTime = NULL WHERE Data_Kolom_ID = '". $veld['Data_Kolom_ID'] ."'";
 					}
-					else if ($_POST['t'.$i] == 5) $type = 'Type_TinyText';
- 					else $type = '';
+					else if ($_POST['t'.$i] == 2) {
+						$query = "UPDATE datatabel SET Type_Double ='" . $waarde . "', Type_TinyText = NULL, Type_Integer = NULL, Type_Text = NULL, Type_DateTime = NULL WHERE Data_Kolom_ID = '". $veld['Data_Kolom_ID'] ."'";
+					}
+					else if ($_POST['t'.$i] == 3) {
+						$query = "UPDATE datatabel SET Type_Text ='" . $waarde . "', Type_TinyText = NULL, Type_Integer = NULL, Type_Double = NULL, Type_DateTime = NULL WHERE Data_Kolom_ID = '". $veld['Data_Kolom_ID'] ."'";
+					}
+					else if ($_POST['t'.$i] == '4b') {
+						$waarde = Datum_Tijd_Naar_DB_Conversie($_POST[$i -1],$_POST[$i]);
+						$query = "UPDATE datatabel SET Type_DateTime ='" . $waarde . "', Type_TinyText = NULL, Type_Integer = NULL, Type_Double = NULL, Type_Text = NULL WHERE Data_Kolom_ID = '". $veld['Data_Kolom_ID'] ."'";
+					}
+					else if ($_POST['t'.$i] == 5) {
+						//geen nieuwe waarde, want bewerken van een opgeslagen is niet mogelijk
+						//dus de opgeslagen waarde ophalen en deze opslaan
+						$query = "SELECT Type_TinyText FROM datatabel WHERE Data_Kolom_ID = '".$veld['Data_Kolom_ID']."'";
+						$rest = mysql_query($query);
+						$uitkomst = mysql_fetch_array($rest);
+						$waarde = $uitkomst[0];
 
-					$query = "UPDATE datatabel SET " . $type . " ='" . $waarde . "' WHERE Data_Kolom_ID = '". $veld['Data_Kolom_ID'] ."'";
+						$query = "UPDATE datatabel SET Type_TinyText ='" . $waarde . "', Type_DateTime = NULL, Type_Integer = NULL, Type_Double = NULL, Type_Text = NULL WHERE Data_Kolom_ID = '". $veld['Data_Kolom_ID'] ."'";
+					}
+ 					else $query = '';
+
+					//$query = "UPDATE datatabel SET " . $type . " ='" . $waarde . "' WHERE Data_Kolom_ID = '". $veld['Data_Kolom_ID'] ."'";
 					
 					if (($_POST['t' . $i] != '4a') && mysql_query($query)) {
 						$errorlevel = 2;
@@ -219,7 +234,7 @@
 	  			//datumtijd
 	  			else if ($_POST['at' . $i] == '4b') $query = "INSERT INTO datatabel (Type_DateTime) VALUES('". Datum_Tijd_Naar_DB_Conversie($_POST['a'.($i -1)],$_POST['a'.$i]) ."')"; 
 	  			//bestandsverwijzing
-	  			else if ($_POST['at' . $i] == '5')  $query = "INSERT INTO datatabel (Type_TinyText) VALUES('".$_POST['a'.$i]."')"; 
+	  			else if ($_POST['at' . $i] == '5')  $query = "INSERT INTO datatabel (Type_TinyText) VALUES('".$_SESSION['abestand'.$i]."')"; 
 	  			else $query = "";
 	
 					//uitvoeren van de datatabel record
@@ -439,6 +454,7 @@
 							$resultaat = mysql_query($query);
 							$aangemaakte_velden = array();
 							$aantal_velden = 0;
+							$bestands_velden = 0;
 							while ($data = mysql_fetch_row($resultaat)) {
 								$query = "SELECT * FROM extra_velden WHERE Kolom_ID = '". $data[0]  ."'";
 								$result = mysql_query($query);
@@ -446,12 +462,16 @@
 								//4 = datumtijd
 								if ($velden['DataType'] == 4)
 									$aantal_velden++;
+								//4 = bestanden
+								if ($velden['DataType'] == 5)
+									$bestands_velden++;
 
 								$aantal_velden++;								
 			 	  			array_push($aangemaakte_velden, $velden['Type_Beschrijving']);
 							}
  							//het aantal onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
  							echo("<input id=\"aantal\" name=\"aantal\" type=\"hidden\" value=\"".$aantal_velden."\">\n");
+ 							echo("<input id=\"bestands_velden\" name=\"bestands_velden\" type=\"hidden\" value=\"".$bestands_velden."\">\n");
 							
   						//4 hidden velden aanmaken voor elk extra veld: 1 voor de waarde, 1 voor het type en 1 voor de verplichtheid
 							for($i = 0; $i < $aantal_velden; $i++){
@@ -464,6 +484,7 @@
 							
 							//de hidden velden voor de nog niet aangemaakte extra velden aanmaken
 							$aan_te_maken = 0;
+							$bestand_aanmaken = 0;
 							//nog niet aangemaakte extra velden (die later toegevoegd zijn) toevoegen
 							$query = "SELECT Kolom_ID FROM type_comp_koppel_extra WHERE Comp_Type_ID in (SELECT Comp_Type_ID FROM comp_lijst WHERE Comp_Lijst_ID = '". $_GET['c'] ."')";
 							$rest = mysql_query($query);
@@ -482,12 +503,15 @@
 
 									if ($uitkomst['DataType'] == 4)
 										$aan_te_maken++;
-	
+									if ($uitkomst['DataType'] == 5)
+										$bestand_aanmaken++;
+
 									$aan_te_maken++;									
 								}
 							}
  							//het aantal aan te maken velden onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
  							echo("<input id=\"aantemaken\" name=\"aantemaken\" type=\"hidden\" value=\"".$aan_te_maken."\">\n");
+ 							echo("<input id=\"bestand_aanmaken\" name=\"bestand_aanmaken\" type=\"hidden\" value=\"".$bestand_aanmaken."\">\n");
 							
 							//niet aangemaakte extra velden, dus hidden fields hiervoor aan maken					
 							for($i = 0; $i < $aan_te_maken; $i++){

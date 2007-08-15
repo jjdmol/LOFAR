@@ -1,3 +1,9 @@
+<?php
+
+	session_start();
+	
+?>
+
 <html>
 	<head>
 	</head>
@@ -16,7 +22,7 @@
 					$query = "SELECT * FROM extra_velden WHERE Kolom_ID = '". $data['Kolom_ID']  ."'";
 					$result = mysql_query($query);
 					$row = mysql_fetch_array($result);
-					echo("<tr><td>". $row['Veld_Naam']);
+					echo("<tr><td>". $row['Veld_Naam'].": ");
 					if ($row['Is_verplicht'] == 1)
 						echo("*");
 					echo("</td>"); 
@@ -65,6 +71,25 @@
 						echo("<input type=\"hidden\" name=\"n". ($aantal_velden +1) ."\" id=\"n". ($aantal_velden +1) ."\" value=\"". $row['Veld_Naam'] ."\">");
 						echo("</td>");
 						$aantal_velden++;
+					}
+					else if($row['DataType'] == 5){
+						echo("<td>");
+						if($waarde1 == -1) {
+							echo("<a href=\"bestand_uploaden.php?c=".$aantal_velden."\" target=\"_blank\">Upload een bestand</a>");
+							echo("<input type=\"hidden\" name=\"t". $aantal_velden ."\" id=\"t". $aantal_velden ."\" value=\"". $row['DataType'] ."\">");
+							echo("<input type=\"hidden\" name=\"v". $aantal_velden ."\" id=\"v". $aantal_velden ."\" value=\"". $row['Is_verplicht'] ."\">");
+							echo("<input type=\"hidden\" name=\"i". $aantal_velden ."\" id=\"i". $aantal_velden ."\" value=\"". $row['Kolom_ID'] ."\">");
+							echo("<input type=\"hidden\" name=\"n". $aantal_velden ."\" id=\"n". $aantal_velden ."\" value=\"". $row['Veld_Naam'] ."\">");
+						}
+						else {
+							echo("<a href=\"".$waarde1."\" target=\"_blank\">Openen</a>");
+							echo("<input type=\"hidden\" name=\"t". $aantal_velden ."\" id=\"t". $aantal_velden ."\" value=\"". $row['DataType'] ."\">");
+							echo("<input type=\"hidden\" name=\"v". $aantal_velden ."\" id=\"v". $aantal_velden ."\" value=\"". $row['Is_verplicht'] ."\">");
+							echo("<input type=\"hidden\" name=\"i". $aantal_velden ."\" id=\"i". $aantal_velden ."\" value=\"". $row['Kolom_ID'] ."\">");
+							echo("<input type=\"hidden\" name=\"n". $aantal_velden ."\" id=\"n". $aantal_velden ."\" value=\"". $row['Veld_Naam'] ."\">");
+						}
+						$_SESSION['bestand' . $aantal_velden] = $waarde1;
+						echo("</td>");
 					}
 					else {
 						echo("<td><input name=\"".$aantal_velden."\" id=\"".$aantal_velden."\" type=\"text\" value=\"".$waarde1."\">"); 

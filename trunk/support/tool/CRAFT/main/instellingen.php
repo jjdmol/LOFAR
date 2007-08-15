@@ -104,17 +104,17 @@
 					<option value="1" <?php if ($start_comp == 1) echo("SELECTED"); ?>>Comp. overzicht</option>
 					<?php 
 						if ($_SESSION['toevoegen'] == 1) {
-							echo('<option value=\"2\"'); 
+							echo('<option value="2"'); 
 							if ($start_comp == 2) echo("SELECTED"); 
 							echo(">Comp. toevoegen</option>");
 						}
 						if ($_SESSION['bewerken'] == 1) {
-							echo('<option value=\"3\"'); 
+							echo('<option value="3"'); 
 							if ($start_comp == 3) echo("SELECTED"); 
 							echo(">Comp. bewerken</option>");
 						}
 						if ($_SESSION['verwijderen'] == 1) {
-							echo('<option value=\"4\"'); 
+							echo('<option value="4"'); 
 							if ($start_comp == 4) echo("SELECTED"); 
 							echo(">Comp. verwijderen</option>");
 						}
@@ -135,17 +135,17 @@
 					<option value="1" <?php if ($start_melding == 1) echo("SELECTED"); ?>>Melding overzicht</option>
 					<?php 
 						if ($_SESSION['toevoegen'] == 1) {
-							echo('<option value=\"2\"'); 
+							echo('<option value="2"'); 
 							if ($start_melding == 2) echo("SELECTED"); 
 							echo(">Melding toevoegen</option>");
 						}
 						if ($_SESSION['bewerken'] == 1) {
-							echo('<option value=\"3\"'); 
+							echo('<option value="3"'); 
 							if ($start_melding == 3) echo("SELECTED"); 
 							echo(">Melding bewerken</option>");
 						}
 						if ($_SESSION['verwijderen'] == 1) {
-							echo('<option value=\"4\"'); 
+							echo('<option value="4"'); 
 							if ($start_melding == 4) echo("SELECTED"); 
 							echo(">Melding verwijderen</option>");
 						}

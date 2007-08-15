@@ -40,10 +40,14 @@
   				else if ($_POST['datatype'] == 2)
 						return is_numeric($_POST['waarde1']);
 					//3	Text veld
+  				else if ($_POST['datatype'] == 3)
+  					return true;
 					//4	Datum/tijd veld (datetime)
   				else if ($_POST['datatype'] == 4)
 	  				return (Valideer_Datum($_POST['waarde1']) && Valideer_Tijd($_POST['waarde2']));
 					//5	Bestandsverwijzing
+  				else if ($_POST['datatype'] == 5)
+  					return true;
 				}    	
     	
     		function Valideer_Invoer() {
@@ -70,7 +74,7 @@
     			//datumtijd
     			else if ($_POST['datatype'] == 4) $query = "INSERT INTO datatabel (Type_DateTime) VALUES('".Datum_Tijd_Naar_DB_Conversie($_POST['waarde1'], $_POST['waarde2'])."')"; 
     			//bestandsverwijzing
-    			else if ($_POST['datatype'] == 5) $query = "INSERT INTO datatabel (Type_TinyText) VALUES('".$_POST['waarde1']."')"; 
+    			else if ($_POST['datatype'] == 5) $query = "INSERT INTO datatabel (Type_TinyText) VALUES('-1')"; 
     			
     			$errorlevel = 0;
     			if (mysql_query($query)) {
@@ -91,9 +95,9 @@
 	
 	    				$Veld_ID = mysql_insert_id();	  				
   	  				if ($_POST['koppel'] == 1)
-  	  					$query = "INSERT INTO Type_Comp_Koppel_Extra (Kolom_ID, Comp_Type_ID) VALUES('".$Veld_ID. "', '". $_POST['hidden_component'] ."')";
+  	  					$query = "INSERT INTO type_comp_koppel_extra (Kolom_ID, Comp_Type_ID) VALUES('".$Veld_ID. "', '". $_POST['hidden_component'] ."')";
   	  				else if ($_POST['koppel'] == 2)
-  	  					$query = "INSERT INTO Type_Melding_Koppel_Extra (Kolom_ID, Meld_Type_ID) VALUES('".$Veld_ID. "', '". $_POST['hidden_component'] ."')";
+  	  					$query = "INSERT INTO type_melding_koppel_extra (Kolom_ID, Meld_Type_ID) VALUES('".$Veld_ID. "', '". $_POST['hidden_component'] ."')";
 		    			
 		    			if (mysql_query($query)) 
   		  				$errorlevel = 3;

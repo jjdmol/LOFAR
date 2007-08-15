@@ -23,7 +23,17 @@
 			$pos  = strripos($_SERVER['PHP_SELF'], '/');
 			$_SESSION['pagina'] = '..' . (substr($_SERVER['PHP_SELF'] ,0, $pos) . "/");
 
-  		header("Location: ". $_SESSION['pagina'] ."main.php?p=" . $_SESSION['start_tabblad']);
+			//de startpagina bepalen
+			$startpagina = "?p=" . $_SESSION['start_tabblad'];
+			if($_SESSION['start_tabblad'] == 2)
+				$startpagina = $startpagina . "&s=" . $_SESSION['start_comp'];
+			else if($_SESSION['start_tabblad'] == 3)
+				$startpagina = $startpagina . "&s=" . $_SESSION['start_melding'];
+			else if($_SESSION['start_tabblad'] == 4)
+				$startpagina = $startpagina . "&s=" . $_SESSION['start_stats'];
+  		
+  		header("Location: ". $_SESSION['pagina'] ."main.php" . $startpagina);
+
   	}
   }
 	
