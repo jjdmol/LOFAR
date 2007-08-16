@@ -125,8 +125,9 @@ namespace LOFAR
       } catch (AipsError x) {
         cerr << "AIPS exception in MSWriterImpl: " << x.getMesg() << endl;
         exit(0);
-      } catch (...) {
-        cerr << "Unexpected MSWriter exception during write" << endl;
+      } catch (std::exception &ex)  {
+        cerr << "Unexpected MSWriter exception during write:" << ex.what() << endl;
+	perror("perror returns: ");
         exit(0);
       }
     }
