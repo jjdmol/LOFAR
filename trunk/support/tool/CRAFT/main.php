@@ -24,7 +24,7 @@
     		//TODO controleren of die pagina wel geladen mag worden!!!!!!!
  		  	
  		  	//de P van de versturende ophalen. als deze anders is dan de P waar die heen moet,
- 		  	//dan de startpagina openen
+ 		  	//dan de startpagina openen, ALLEEN NIET WANNEER DEZE AFKOMSTIG IS VAN EEN OVERZICHT!!!
  		  	
  		  	//?p=
  		  	//echo($_SERVER['HTTP_REFERER']);
@@ -33,7 +33,9 @@
     		
     		$pagina = $_GET['p'];
 
-    		if ($pagina != $vorige_pagina) {
+				if (isset($_GET['bypass']) && $_GET['bypass'])
+					$start = $_GET['s'];
+				else if ($pagina != $vorige_pagina) {
 					if($pagina == 2)
 						$start = $_SESSION['start_comp'];
 					else if($pagina == 3)

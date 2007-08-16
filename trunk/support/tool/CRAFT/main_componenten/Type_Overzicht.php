@@ -17,7 +17,13 @@
 				echo("<table border=\"1\">");
 				while ($data = mysql_fetch_array($resultaat)) {
 					echo("<tr><td>". $data['Comp_Type'] ."</td><td>".substr($data['Type_Naam'], 0, 40)."...</td>");
-					echo("<td><a href=\"../". $_SESSION['huidige_pagina']."&o=2&c=". $data['Comp_Type']."\" target=\"_top\">Info</a></td></tr>");
+
+					$id = substr($_SESSION['huidige_pagina'], (strpos ($_SESSION['huidige_pagina'], "p=") + 2 ), 1);
+					$temp = $_SESSION['huidige_pagina'];
+					$temp = str_replace("p=".$id  , "p=2", $temp);
+					$_SESSION['type_overzicht'] = 1;
+					//p=1 > p=2
+					echo("<td><a href=\"../". $temp."&bypass=1&o=2&c=". $data['Comp_Type']."\" target=\"_top\">Info</a></td></tr>");
 				}
 				echo("</table>");
 
