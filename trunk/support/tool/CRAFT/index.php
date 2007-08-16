@@ -4,7 +4,7 @@
     
   //login functionaliteit includen
   require_once('includes/login_funcs.php');
-  
+   
   //de gebruikers uitloggen (wanneer ze ingelogd zijn)
   if ($LOGGED_IN = user_isloggedin()) {
   	user_logout();
@@ -45,7 +45,7 @@
 	<div id="hoofdscherm">
 		<br><center><h2>Inlogscherm</h2></center>
 
-		<center><form method="post" action="<?php echo($php_self); ?>">
+		<center><form name="inloggen" method="post" action="<?php echo($php_self); ?>">
 			<table>
 				<tr>
 					<td>Inlognaam:</td><td><INPUT name="gebruiker"></td>
@@ -54,6 +54,7 @@
 					<td>Wachtwoord:</td><td><INPUT name="wachtwoord" type="password"></td>
 				</tr>
 			</table>
+
 			<BUTTON NAME="submit" type="submit" value="Login">Login</BUTTON>
 		</form>
 		<?php 
