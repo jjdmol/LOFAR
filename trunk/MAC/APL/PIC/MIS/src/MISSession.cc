@@ -26,6 +26,7 @@
 #include "MISDaemon.h"
 #include "MISDefines.h"
 #include "MISSubscription.h"
+#include "XCStatistics.h"         //MAXMOD
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/PAL/GCF_Answer.h>
 #include <APL/APLCommon/APL_Defines.h>
@@ -35,6 +36,7 @@
 
 using namespace blitz;
 
+
 namespace LOFAR 
 {
 using namespace GCF::Common;
@@ -42,6 +44,7 @@ using namespace GCF::TM;
 using namespace GCF::PAL;
 using namespace RTC;
 using namespace APLCommon;
+
  namespace AMI
  {
 
@@ -85,6 +88,9 @@ using namespace APLCommon;
     _missPort.send(_eventout_); \
   }
 
+   //MAXMOD
+   unsigned int i,j;
+   
 MISSession::MISSession(MISDaemon& daemon) :
   GCFTask((State)&MISSession::initial_state, MISS_TASK_NAME),
   _daemon(daemon),
@@ -213,8 +219,10 @@ GCFEvent::TResult MISSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
       break;
     
     case MIS_ANTENNA_CORRELATION_MATRIX_REQUEST:
-      TRAN(MISSession::getAntennaCorrelation_state);
-      dispatch(e, p);
+      //MAXMOD
+      getAntennaCorrelation(e);
+      //      TRAN(MISSession::getAntennaCorrelation_state);
+      //dispatch(e, p);
       break;
     
     default:
@@ -466,7 +474,9 @@ void MISSession::getSubbandStatistics(GCFEvent& e)
 
 	if (_nrOfRCUs == 0) {
 		try {
-			_nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+		  //MAXMOD
+		  //_nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+		  _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * MEPHeader::N_POL;
 			LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
 			_allRCUSMask.reset(); // init all bits to false value
 			_allRCUSMask.flip(); // flips all bits to the true value
@@ -509,6 +519,8 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static MISSubbandStatisticsResponseEvent ackout;
   static MISSubbandStatisticsRequestEvent* pIn(0);
+  //MAXMOD
+  ssize_t maxsend;
 
   switch (e.signal)
   {
@@ -618,7 +630,8 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       ackout.payload_timestamp_sec = ack.timestamp.sec();
       ackout.payload_timestamp_nsec = ack.timestamp.usec() * 1000;
       setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
-      _missPort.send(ackout);
+      maxsend = _missPort.send(ackout);
+      LOG_DEBUG(formatString("MAXMOD %d response of _missPort.send(ackout).size",maxsend));
       TRAN(MISSession::waiting_state);
       break;
     }
@@ -630,25 +643,215 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
   return status;
 }
 
+// code copied from getSubbandStatistics
+// types defined in:
+///home/avruch/LOFAR/MAC/APL/PIC/MIS/build/gnu_debug/src/MIS_Protocol.ph
+
+
+void MISSession::getAntennaCorrelation(GCFEvent& e)
+{
+	assert(_pRememberedEvent == 0);
+	//MAXMOD see MIS_Protocol.cc for typedefs
+	MISAntennaCorrelationMatrixRequestEvent* pIn = new MISAntennaCorrelationMatrixRequestEvent(e);
+	LOGMSGHDR((*pIn));
+
+	// MAXMOD select the subband for XLETs 
+	// OK from SHM this works
+	LOG_DEBUG(formatString("MAXMOD: Requested Subband for XLETs is %d",pIn->subband_selector));
+
+	int subband = pIn->subband_selector;
+
+	if (subband < 0 || subband >= MEPHeader::N_SUBBANDS)
+	  {
+	    LOG_DEBUG(formatString("MAXMOD: Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MEPHeader::N_SUBBANDS));
+	    //exit(EXIT_FAILURE);
+	    TRAN(MISSession::waiting_state);
+	  }
+
+	//MAXMOD I'm not sure the following is really nec.
+	if (_nrOfRCUs == 0) {
+	  try {
+	    _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * MEPHeader::N_POL;
+	    LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
+	    _allRCUSMask.reset(); // init all bits to false value
+	    _allRCUSMask.flip(); // flips all bits to the true value
+	    // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
+	    for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
+	      _allRCUSMask.set(i, false);
+	    }
+	    // idem for RSP mask [reo]
+	    _allRSPSMask.reset();
+	    _allRSPSMask.flip();
+	    for (int b = GET_CONFIG("RS.N_RSPBOARDS",i); b < MAX_N_RSPBOARDS; b++) {
+	      _allRSPSMask.set(b,false);
+	    }
+	  }
+	  catch (...) {
+	    SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (no RSP configuration available)");
+	    delete pIn;
+	    return;
+	  }    
+	}
+	
+
+	if (_rspDriverPort.isConnected()) {
+		RSPGetxcstatsEvent 	getstats;
+		getstats.timestamp = Timestamp(0, 0);
+		getstats.cache 	= true;
+		_rspDriverPort.send(getstats);
+	}
+	else    {
+		_rspDriverPort.open();
+	}
+
+	_pRememberedEvent = pIn;
+	TRAN(MISSession::getAntennaCorrelation_state);
+}
+
 GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortInterface& p)
 {
+  //MAXMOD copied from getSubbandStatistics
+
+  ////MAXMOD here you need to add code to handle it.
+  //case MIS_ANTENNA_CORRELATION_MATRIX_REQUEST:
+  //{
+  //  RETURN_NOACK_MSG(AntennaCorrelationMatrixRequest, AntennaCorrelationMatrixResponse, "NAK (not supported yet)");
+  //  TRAN(MISSession::waiting_state);
+  //  break;
+  //}       
+  //default:
+  //  status = defaultHandling(e, p);
+  //  break;
+  //}
+
   GCFEvent::TResult status = GCFEvent::HANDLED;
+  static MISAntennaCorrelationMatrixResponseEvent ackout;
+  static MISAntennaCorrelationMatrixRequestEvent* pIn(0);
+  //MAXMOD
+  ssize_t maxsend;
 
   switch (e.signal)
-  {
-      
-    case MIS_ANTENNA_CORRELATION_MATRIX_REQUEST:
     {
-      RETURN_NOACK_MSG(AntennaCorrelationMatrixRequest, AntennaCorrelationMatrixResponse, "NAK (not supported yet)");
+    case F_ENTRY:
+      if (ackout.rcu_settings == 0) {
+        ackout.rcu_settingsNOE = _nrOfRCUs;
+        ackout.rcu_settings = new uint8[_nrOfRCUs];
+        ackout.invalidNOE = _nrOfRCUs;
+        ackout.invalid = new uint8[_nrOfRCUs];
+        ackout.acmdataNOE = _nrOfRCUs * _nrOfRCUs;
+        //ackout.data = new double[_nrOfRCUs * 512];
+      }
+      assert(_pRememberedEvent);
+      pIn = (MISAntennaCorrelationMatrixRequestEvent*) _pRememberedEvent;
+      break;
+
+    case F_CONNECTED:
+      if (&_rspDriverPort == &p){
+	// SET subbands for XC
+	RSPSetsubbandsEvent  setsubbands;
+
+	setsubbands.timestamp = Timestamp(0,0);
+	setsubbands.rcumask = _allRCUSMask;
+	//MAXMOD the constant SubbandSelection::XLET is defined in LOFAR/MAC/APL/PIC/RSP_Protocol/include/APL/RSP_Protocol/SubbandSelection.h
+	//LOG_DEBUG(formatString("MAXMOD SubbandSelection::XLET is %d",SubbandSelection::XLET));
+	setsubbands.subbands.setType(SubbandSelection::XLET);
+
+	setsubbands.subbands().resize(1,1);
+	list<int> subbandlist;
+	for (int rcu = 0; rcu < _nrOfRCUs / MEPHeader::N_POL; rcu++)
+	  {
+	    subbandlist.push_back(pIn->subband_selector);
+	  }
+	std::list<int>::iterator it = subbandlist.begin();
+	setsubbands.subbands() = (*it);
+
+	if (!_rspDriverPort.send(setsubbands)) {
+	  SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
+	  TRAN(MISSession::waiting_state);      
+	}
+      }
+      break;
+      
+    case F_DISCONNECTED:
+      if (&_rspDriverPort == &p) {
+
+	SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (connection to rsp driver could not be established or is lost)");
+	p.close();
+	TRAN(MISSession::waiting_state);
+      }
+      else {
+        status = defaultHandling(e, p);
+      }  
+      break;
+      
+      
+    case RSP_SETSUBBANDSACK: {
+      RSPGetxcstatsEvent 	getxcstats;
+      
+      RSPSetsubbandsackEvent ack(e);
+      if (SUCCESS != ack.status) {
+        SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
+        TRAN(MISSession::waiting_state);      
+        break;
+      }
+      getxcstats.timestamp = Timestamp(0, 0);
+      getxcstats.cache 	= true;
+      if (!_rspDriverPort.send(getxcstats)) {
+	SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
+	TRAN(MISSession::waiting_state);      
+      }
+      break;
+    }
+
+    case RSP_GETXCSTATSACK: {
+      RSPGetxcstatsackEvent ack(e);
+
+      if (SUCCESS != ack.status) {
+        SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
+        TRAN(MISSession::waiting_state);      
+        break;
+      }
+      
+      //MAXMOD declare it here or above?
+      //MISAntennaCorrelationMatrixResponseEvent ackout;
+      ackout.seqnr = _curSeqNr++;
+      ackout.replynr = pIn->seqnr;
+
+      //memcpy(ackout.acmdata(), ack.stats(), ack.stats().size());
+      //Number of complex elements is nRCUs^2
+      ackout.acmdata().resize(ack.stats().shape());
+      ackout.acmdata() = ack.stats();
+      ackout.acmdataNOE = _nrOfRCUs * _nrOfRCUs * 2;
+      //MAXMOD
+      LOG_DEBUG(formatString("MAXMOD %d response of ack.stats().size",ack.stats().size()));
+      LOG_DEBUG(formatString("MAXMOD %d response of ackout.acmdata().size",ackout.acmdata().size()));
+      //cout << "MAXMOD ack.stats = " << ack.stats()(1,1,Range::all(),Range::all()) << endl;
+
+      ///defn of _missPort see home/avruch/LOFAR/MAC/GCF/TM/include/GCF/TM/GCF_PortInterface.h 
+      ackout.response = "ACK";
+      LOG_DEBUG(formatString(
+          "RSP Timestamp: %lu.%06lu",
+          ack.timestamp.sec(),
+          ack.timestamp.usec()));
+      //ackout.timestamp_sec = ack.timestamp.sec();
+      //ackout.timestamp_nsec = ack.timestamp.usec()*1000;
+      ackout.payload_timestamp_sec = ack.timestamp.sec();
+      ackout.payload_timestamp_nsec = ack.timestamp.usec() * 1000;
+      setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
+      maxsend = _missPort.send(ackout);
+      LOG_DEBUG(formatString("MAXMOD %d response of _missPort.send(ackout).size",maxsend));
       TRAN(MISSession::waiting_state);
       break;
-    }       
+      
+    }
+
     default:
       status = defaultHandling(e, p);
       break;
   }
 
   return status;
+
 }
 
 GCFEvent::TResult MISSession::closing_state(GCFEvent& e, GCFPortInterface& /*p*/)

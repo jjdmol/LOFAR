@@ -10,8 +10,9 @@ DOCHDRS	=	 $(BUILT_SOURCES) \
 	MISSession.h \
 	MISSubscription.h \
 	PropertyProxy.h \
-	MISPolicyHandler.h
-   
+	MISPolicyHandler.h \
+	XCStatistics.h 
+
 noinst_LTLIBRARIES 	= libmis.la
 
 libmis_la_SOURCES	= $(DOCHDRS) \
@@ -20,8 +21,9 @@ libmis_la_SOURCES	= $(DOCHDRS) \
 	MISSubscription.cc \
 	PropertyProxy.cc \
 	MISPolicyHandler.cc \
-	MIS_Protocol.cc
-	
+	MIS_Protocol.cc \
+	XCStatistics.cc 
+
 bin_PROGRAMS   		= MACInformationServer
   
 MACInformationServer_SOURCES		  = MISMain.cc
