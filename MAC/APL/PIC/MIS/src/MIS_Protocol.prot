@@ -8,6 +8,10 @@ prefix = "MIS"; // for the signal names
 id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+5)"; 
 include = '<Common/LofarTypes.h>';
 
+//MAXMOD
+include = '<XCStatistics.h>';
+//include = '<XCSubbandSelection.h>';  MAXMOD-TEST removal
+
 // The "MIS" (MAC Information Server) protocol describes all possible
 // interactions between the MAC (Monitoring-And-Control) and SHM
 // (System Health Management) subsystems of LOFAR.
@@ -646,7 +650,7 @@ event = {
         name = "invalid";
         type = "uint8[]";
     };
-    // see LOFAR/MAC/APL/PAC/RSPDriver/src/RCUSettings.h
+    // see LOFAR/MAC/APL/PIC/RSP_Protocol/include/APL/RSP_Protocol/RCUSettings.h
     param = {
       name = "rcu_settings";
         type = "uint8[]";
@@ -682,9 +686,10 @@ event = {
         name = "timestamp_nsec";
         type = "uint32";
     };
+    //MAXMOD
     param = {
-        name = "subband_selector";
-        type = "uint16"; // *** FORMAT TO BE DEFINED ***
+      name = "subband_selector";
+      type = "uint16"; // *** FORMAT TO BE DEFINED ***
     };
 };
 
@@ -719,12 +724,33 @@ event = {
         name = "payload_timestamp_nsec";
         type = "uint32";
     };
+    //MAXMOD
+    //    param = {
+    //    name = "metadata"; // AS MUCH INFO AS POSSIBLE (e.g., BAND, AMPLIFIER STATE, etc.)
+    //    type = "string"; // *** FORMAT To BE DEFINED ***
+    //};
+    // 0=valid; 1, 2, 3.... = invalid.
+    // e.g. if an RSP board cannot be reached, this may be != 0.
     param = {
-        name = "metadata"; // AS MUCH INFO AS POSSIBLE (e.g., BAND, AMPLIFIER STATE, etc.)
-        type = "string"; // *** FORMAT To BE DEFINED ***
+        name = "invalid";
+        type = "uint8[]";
+    };
+    // see LOFAR/MAC/APL/PIC/RSP_Protocol/include/APL/RSP_Protocol/RCUSettings.h
+    param = {
+      name = "rcu_settings";
+        type = "uint8[]";
     };
     param = {
-        name = "data"; // antenna correlation matrix
-        type = "double[]"; // *** FORMAT TO BE DEFINED ***
+        // I cannot figure out how arrays automatically get arrayNOE class members
+        // I cannot get the acmdata blitz array to behave similarly.
+        // So I will hard-code it here.
+        name = "acmdataNOE"; // antenna correlation matrix
+	type = "uint32"; //on SHM recv I expect to peel 4 bytes off as size
+    };
+    param = {
+        name = "acmdata"; // antenna correlation matrix
+        //type = "double[]"; // *** FORMAT TO BE DEFINED ***
+	type = "XCStatistics"; // *** FORMAT TO BE DEFINED ***
+	userdefined;
     };
 };

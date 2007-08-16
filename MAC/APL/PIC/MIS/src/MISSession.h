@@ -26,6 +26,9 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_TCPPort.h>
+//MAXMOD
+#include <GCF/GCF_ServiceInfo.h>
+
 #include <PropertyProxy.h>
 #include <MISSubscription.h>
 
@@ -77,6 +80,8 @@ class MISSession : public GCF::TM::GCFTask
     void setDiagnosis (GCF::TM::GCFEvent& e);
     void subscribe (GCF::TM::GCFEvent& e);
     void getSubbandStatistics (GCF::TM::GCFEvent& e);
+    //MAXMOD
+    void getAntennaCorrelation (GCF::TM::GCFEvent& e);
     
   private: // data members      
     typedef map<string /*resource name*/, MISSubscription*> TSubscriptions;
