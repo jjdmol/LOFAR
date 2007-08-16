@@ -20,7 +20,14 @@
 					$row = mysql_fetch_array($res);
 					
 					echo("<tr><td>".$data['Comp_Lijst_ID']."</td><td>".substr($data['Comp_Naam'], 0, 40)."...</td><td>". $row['Loc_Naam'] ."</td>");
-					echo("<td><a href=\"../". $_SESSION['huidige_pagina']."&o=1&c=". $data['Comp_Lijst_ID'] ."\" target=\"_top\">Info</a></td></tr>");
+
+					$id = substr($_SESSION['huidige_pagina'], (strpos ($_SESSION['huidige_pagina'], "p=") + 2 ), 1);
+					$temp = $_SESSION['huidige_pagina'];
+					$temp = str_replace("p=".$id  , "p=2", $temp);
+					$_SESSION['type_overzicht'] = 1;
+
+					//p=1 > p=2
+					echo("<td><a href=\"../". $temp."&bypass=1&c=". $data['Comp_Lijst_ID'] ."\" target=\"_top\">Info</a></td></tr>");
 				}
 				echo("</table>");
 			?>

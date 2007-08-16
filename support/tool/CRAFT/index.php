@@ -32,6 +32,7 @@
 			else if($_SESSION['start_tabblad'] == 4)
 				$startpagina = $startpagina . "&s=" . $_SESSION['start_stats'];
   		
+  		
   		header("Location: ". $_SESSION['pagina'] ."main.php" . $startpagina);
 
   	}
@@ -45,18 +46,19 @@
 	<div id="hoofdscherm">
 		<br><center><h2>Inlogscherm</h2></center>
 
-		<center><form name="inloggen" method="post" action="<?php echo($php_self); ?>">
-			<table>
-				<tr>
-					<td>Inlognaam:</td><td><INPUT name="gebruiker"></td>
-				</tr>
-				<tr>
-					<td>Wachtwoord:</td><td><INPUT name="wachtwoord" type="password"></td>
-				</tr>
-			</table>
+		<center>
+			<form name="inloggen" method="post" action="<?php echo($php_self); ?>">
+				<table>
+					<tr>
+						<td>Inlognaam:</td><td><INPUT name="gebruiker"></td>
+					</tr>
+					<tr>
+						<td>Wachtwoord:</td><td><INPUT name="wachtwoord" type="password"></td>
+					</tr>
+				</table>
 
-			<BUTTON NAME="submit" type="submit" value="Login">Login</BUTTON>
-		</form>
+				<BUTTON NAME="submit" type="submit" value="Login">Login</BUTTON>
+			</form>
 		<?php 
 			//er is iets fouts gegaan met het inloggen, dus een melding tonen
 			if ($feedback != '') echo("<p class=\"foutmelding\">". $feedback. "</p>");
