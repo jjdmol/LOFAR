@@ -16,7 +16,7 @@
  	  	<?php } ?>
 		</div>
 	</div>   
-  <div id="logo">LOFAR-CRAFT
+  <div id="logo"><img id="logoplaatje" src="logo.JPG" alt="Lofar-logo">
   </div> 
 </div>
 <div id="subbalk">	
