@@ -24,7 +24,6 @@
 					$id = substr($_SESSION['huidige_pagina'], (strpos ($_SESSION['huidige_pagina'], "p=") + 2 ), 1);
 					$temp = $_SESSION['huidige_pagina'];
 					$temp = str_replace("p=".$id  , "p=2", $temp);
-					$_SESSION['type_overzicht'] = 1;
 
 					//p=1 > p=2
 					echo("<td><a href=\"../". $temp."&bypass=1&c=". $data['Comp_Lijst_ID'] ."\" target=\"_top\">Info</a></td></tr>");

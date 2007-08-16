@@ -44,8 +44,13 @@
 
 					//er is een component gekozen, dus gegevens weergeven
 					if (isset($_GET['c'])) {
+						//kijken of er een bypass actie uitgevoerd moet worden
+						//dit vanwege het aanroepen van gegevens uit een popup oid
+						//is dit niet t geval dan gewoon het type overzicht gebruiken
+						if (isset($_GET['bypass'])) $actie = $_GET['bypass'];
+						else $actie = $_SESSION['type_overzicht'];
 						//is er een instantie van een type gekozen
-						if ($_SESSION['type_overzicht'] == 1) {
+						if ($actie == 1) {
 							$query = "SELECT * FROM comp_lijst WHERE Comp_Lijst_ID='". $_GET['c'] ."'";
 						  $resultaat = mysql_query($query);
 							$data = mysql_fetch_array($resultaat);
@@ -108,7 +113,7 @@
 						
 						}
 						//of is er een type gekozen
-						else if ($_SESSION['type_overzicht'] == 2) {
+						else if ($actie == 2) {
 							$query = "SELECT * FROM comp_type WHERE Comp_Type='". $_GET['c'] ."'";
 						  $resultaat = mysql_query($query);
 							$data = mysql_fetch_array($resultaat);

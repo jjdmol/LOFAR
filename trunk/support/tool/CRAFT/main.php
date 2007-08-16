@@ -33,7 +33,7 @@
     		
     		$pagina = $_GET['p'];
 
-				if (isset($_GET['bypass']) && $_GET['bypass'])
+				if (isset($_GET['bypass']) && $_GET['bypass'] > 0)
 					$start = $_GET['s'];
 				else if ($pagina != $vorige_pagina) {
 					if($pagina == 2)
