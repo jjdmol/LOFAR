@@ -1,5 +1,5 @@
 <?php
-	
+
 	//functie welke het geheel van het vullen van ene select lijst met component types vereenvoudigt
 	//hierdoor hoeft er geen lange code meer geschreven te worden
 	//$type_selectie wordt als call by reference variable meegegeven, zodat de geselecteerde type teruggegeven kan worden
@@ -18,7 +18,7 @@
 		}
 		echo(Component_Types($data['Comp_Type'], $type_selectie));
 	}
-	
+
 	//functie om alle type componenten uit de database te lezen en deze hierarchisch op te slaan 
 	//voor gebruik in een <select></select> lijst
   function Component_Types($parent, &$selectie) {
@@ -60,11 +60,11 @@
 		  }
   	}  
   }
-	
+
   //Functie welke de groepen retouneert (in een array) welke access hebben tot het meegegeven componentType
   function Check_groepen($Gezocht_Component) {
 	  $Groepen = array();
-	  
+
 		//elk record in de gebruikersgroeprechten tabel langs om te evalueren
 	  $query = 'SELECT * FROM gebruikersgroeprechten';
 	  $rest = mysql_query($query);
@@ -85,8 +85,8 @@
   	//de (gevonden) groepen retourneren
   	return $Groepen;
 	}
-	
-	
+
+
 	//functie welke een array teruggeeft met component types welke een gebruikersgroep zien mag
 	Function Bepaal_Types(){
   	$uitkomst = array();
@@ -104,7 +104,7 @@
 			}
 			return $Collectie;
 		}
-  	
+
   	//het ophalen van het begintype
   	$query = "SELECT Comp_Type_ID, onderliggende_Data FROM gebruikersgroeprechten WHERE Groep_ID = '". $_SESSION['groep_id'] ."'";
   	$result = mysql_query($query);
@@ -122,8 +122,8 @@
 		}
 		return $uitkomst;
 	}
-	
-	
+
+
   //Functie welke de componenten weergeeft waar de ingelogde gebruiker toegang tot heeft
   //dit gebeurt aan de hand van een array met types
   Function Vul_Componenten_Select_Box($types_array, $selectie) {
@@ -139,6 +139,5 @@
 			}
 		}
   }
-	
-	
+
 ?>

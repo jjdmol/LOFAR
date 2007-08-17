@@ -185,7 +185,10 @@
 		}
 		else if ($errorlevel == 0) echo("De nieuwe melding (". $Laatste_Melding .") kon niet aan het systeem toegevoegd worden!.");
 		else if ($errorlevel == 1) echo("De nieuwe melding (". $Laatste_Melding .") is aan het systeem toegevoegd.<br>Alleen is er iets foutgegaan met het updaten van de componten tabel! De 'laatste meldin' verwijzing is niet geupdated!");
-		echo('<a href="'.$_SESSION['huidige_pagina']. '&c=' . $Comp_Selectie . '">Klik hier om nog een melding aan dit component toe te voegen of geselecteer een component uit de treeview.</a>');
+		if(isset($_GET['b'])) $url = ("&b=" . $_GET['b']);
+		else $url = ("&c=" . $Comp_Selectie);
+		
+		echo('<a href="'.$_SESSION['huidige_pagina']. $url .'">Klik hier om nog een melding aan dit component toe te voegen of geselecteer een component uit de treeview.</a>');
 	}
 	else {
 		if ((isset($_GET['c']) && $_GET['c'] != 0) || (isset($_GET['b']))) {
@@ -211,33 +214,53 @@
 							if(isset($_POST['Comp_Selection']) && ($_POST['Comp_Selection'] == -1)) echo('<b>* Er is geen component geselecteerd!</b>'); 
 							echo("</td></tr>");
 						}
+						else {
+							//het weergeven van de naam van het geselecteerde component
+							$query = "SELECT Comp_Naam FROM comp_lijst WHERE Comp_Lijst_ID = '".$_GET['c']."'";
+	    			  $resultaat = mysql_query($query);
+					  	$data = mysql_fetch_array($resultaat);
+					  	echo("<tr><td>Component:</td><td>".$data[0]."</td></tr>");
+						}
   				?>    				
     			<tr>    				
     				<td>Type melding:</td>
 	  				<?php
-	  					if (isset($_GET['c'])) {
-		    				echo("<td><select name=\"Type_Melding\" onChange=\"PostDocument('" . $_SESSION['huidige_pagina'] . "&c=" . $_GET['c'] ."');\">");	
+	  					if (isset($_SESSION['type_overzicht']) && $_SESSION['type_overzicht'] == '2') {
+	  						$query = "SELECT Melding_Type_Naam FROM melding_type WHERE Meld_Type_ID = '".$_GET['b']."'";
+		    			  $resultaat = mysql_query($query);
+						  	$data = mysql_fetch_array($resultaat);
+						  	
+						  	$type = $_GET['b'];
+						  	echo("<td><input type=\"hidden\" name=\"Type_Melding\" id=\"Type_Melding\" value=\"".$type."\">");
+	  						echo($data['Melding_Type_Naam'] . "&nbsp&nbsp&nbsp&nbsp");
+	  					}
+	  					else {
+	  					
+		  					if (isset($_GET['c'])) {
+			    				echo("<td><select name=\"Type_Melding\" onChange=\"PostDocument('" . $_SESSION['huidige_pagina'] . "&c=" . $_GET['c'] ."');\">");	
+								}
+								else 
+			    				echo("<td><select name=\"Type_Melding\" onChange=\"PostDocument('" . $_SESSION['huidige_pagina'] ."');\">");
+	
+	  						$query = "SELECT Meld_Type_ID, Melding_Type_Naam FROM melding_type";
+		    			  $resultaat = mysql_query($query);
+	
+					  		if (isset($_GET['b'])) $type = $_GET['b'];
+					  		else if (isset($_POST['Type_Melding'])) $type = $_POST['Type_Melding'];
+					  		else $type = 'SELECTED';
+	
+						  	while ($data = mysql_fetch_array($resultaat)) {
+		  	  				echo('<option value="'.$data['Meld_Type_ID'].'"');
+			  	  			if ($data['Meld_Type_ID'] == $type || $type == 'SELECTED') {
+			  	  				echo('SELECTED');
+			  	  				$type = $data['Meld_Type_ID'];
+			  	  			}
+			  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
+								}    					
+								echo("</select> ");
 							}
-							else 
-		    				echo("<td><select name=\"Type_Melding\" onChange=\"PostDocument('" . $_SESSION['huidige_pagina'] ."');\">");
-
-  						$query = "SELECT Meld_Type_ID, Melding_Type_Naam FROM melding_type";
-	    			  $resultaat = mysql_query($query);
-
-				  		if (isset($_GET['b'])) $type = $_GET['b'];
-				  		else if (isset($_POST['Type_Melding'])) $type = $_POST['Type_Melding'];
-				  		else $type = 'SELECTED';
-
-					  	while ($data = mysql_fetch_array($resultaat)) {
-	  	  				echo('<option value="'.$data['Meld_Type_ID'].'"');
-		  	  			if ($data['Meld_Type_ID'] == $type || $type == 'SELECTED') {
-		  	  				echo('SELECTED');
-		  	  				$type = $data['Meld_Type_ID'];
-		  	  			}
-		  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
-							}    					
   					?>
-    				</select> Locatie melding: <select name="Melding_Locatie">
+    				 Locatie melding: <select name="Melding_Locatie">
 						<?php
 							$query = "SELECT Comp_Locatie FROM comp_lijst";
 	    			  $resultaat = mysql_query($query);
@@ -324,15 +347,8 @@
     				<td><iframe id="frame_oplossing" name="frame_oplossing" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_probleem_oplossing.php<?php if(isset($type)) echo("?c=".$type); ?>" width="305" height="56" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
     			</tr>
     			<tr>
-  					<?php
-	  					$grootte = '110';
-	  					if (isset($_SESSION['type_overzicht']) && $_SESSION['type_overzicht'] == '2') {
-									$grootte = '93';
-							}
-						?>
-
 	  				<td>Extra velden:<br>(* = verplicht)</td>
-	  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/Melding_Toevoegen_Extra_Velden.php?c=<?php echo($type); ?>" width="400" height="<?php echo($grootte); ?>" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+	  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/Melding_Toevoegen_Extra_Velden.php?c=<?php echo($type); ?>" width="400" height="93" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
 	  					<?php
 	  					  if (isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && !Extra_Velden_Controle()) echo("<b>* Foutieve waardes!</b>");
 	  					?>
@@ -346,15 +362,10 @@
   								$dinges = ("?c=".$_POST['Comp_Selection']);
   						}
   						else if(isset($_GET['c'])) $dinges = ("?c=".$_GET['c']);
-
-							$grootte = '105';
-							if (isset($_SESSION['type_overzicht']) && $_SESSION['type_overzicht'] == '2') {
-									$grootte = '88';
-							}
   					?>
 
     				<td>Historie:</td>
-    				<td><iframe id="frame_historie" name="frame_historie" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_historie.php <?php echo($dinges); ?>" width="500" height="<?php echo($grootte); ?>" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
+    				<td><iframe id="frame_historie" name="frame_historie" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_historie.php <?php echo($dinges); ?>" width="500" height="88" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
     			</tr>
     			<tr>
     				<td>

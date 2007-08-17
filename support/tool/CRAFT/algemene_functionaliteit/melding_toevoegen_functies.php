@@ -11,7 +11,6 @@ function PostDocument(url) {
 	document.theForm.submit();
 }
 
-
 function SubmitMeldingBewerken()
 {
 	var aantal = document.frames['frame_extra_velden'].document.getElementById('aantal').value;
