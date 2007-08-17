@@ -3,7 +3,13 @@
 		$_SESSION['main_deel'] = 3;
 	  $_SESSION['huidige_pagina'] = $_SESSION['pagina'] . 'main.php?p='.$_SESSION['main_deel'].'&s=1';
 	  
-		if (isset($_GET['o'])) {
+		if (isset($_GET['b'])) {
+			$_SESSION['type_overzicht'] = 2;
+		}
+		else if(isset($_GET['c'])) {
+			$_SESSION['type_overzicht'] = 1;
+		}
+		else if(isset($_GET['o'])) {
 			$_SESSION['type_overzicht'] = $_GET['o'];
 		} else if (!isset($_SESSION['type_overzicht'])) $_SESSION['type_overzicht'] = 2;
 	  
@@ -45,7 +51,7 @@
 					if (isset($_GET['c']) || isset($_GET['b'])) {
 						//bepalen wat er precies weergegeven moet worden
 						//meldingen per component
-						if ($_SESSION['type_overzicht'] == 1) {
+						if (isset($_GET['c'])) {  //($_SESSION['type_overzicht'] == 1) {
 							
 							$query = "SELECT * FROM comp_lijst WHERE Comp_Lijst_ID = '".$_GET['c']."'";
 						  $res = mysql_query($query);
@@ -109,7 +115,7 @@
 		   					echo("<br>Er zijn bij dit component geen meldingen gevonden.<br>");
 						}
 						//melding per type melding
-						else if ($_SESSION['type_overzicht'] == 2) {
+						else if (isset($_GET['b'])) {//($_SESSION['type_overzicht'] == 2) {
 							$query = "SELECT * FROM melding_type WHERE Meld_Type_ID = '".$_GET['b']."'";
 						  $res = mysql_query($query);
 							$row = mysql_fetch_array($res);

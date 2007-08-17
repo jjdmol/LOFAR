@@ -73,14 +73,18 @@
 
 				//valideren of er opgeslagen moet worden of dat de gegevens weergegeven moeten worden.
 				if (Valideer_Invoer()){
+          $query = "SELECT Data_Kolom_ID FROM extra_velden WHERE Kolom_ID = '".$_GET['c']."'";
+			  	$resultaat = mysql_query($query);  	
+			  	$row = mysql_fetch_array($resultaat);
+          
           //bijwerken 
           //datatype en standaard waarde... in de datatabel bijwerken 
           //wanneer het datatype verandert is, dan het oude veld op NULL zetten en het nieuwe een waarde toekennen 
           if($_POST['datatype'] == 4) {
-          	$query = "UPDATE datatabel SET ". Converteer_Datatype_Naar_DBVeld($_POST['datatype']) ." = '"   . Datum_Tijd_Naar_DB_Conversie($_POST['datum'], $_POST['tijd']) . "'"; 
+          	$query = "UPDATE datatabel SET ". Converteer_Datatype_Naar_DBVeld($_POST['datatype']) ." = '" . Datum_Tijd_Naar_DB_Conversie($_POST['datum'], $_POST['tijd']) . "' WHERE Data_Kolom_ID ='".$row[0]."'"; 
           }
           else
-          	$query = "UPDATE datatabel SET ". Converteer_Datatype_Naar_DBVeld($_POST['datatype']) ." = '"   . $_POST['standaard'] . "'"; 
+          	$query = "UPDATE datatabel SET ". Converteer_Datatype_Naar_DBVeld($_POST['datatype']) ." = '" . $_POST['standaard'] . "' WHERE Data_Kolom_ID ='".$row[0]."'"; 
 
           $errorlevel = 0; 
           //het updaten van de datatabel 
@@ -203,6 +207,8 @@
 											}
 											else if ($row['DataType'] == 5) {
 												echo($data['Type_TinyText'] . "(deze standaardwaarde kan niet gewijzigd worden!)");
+												echo("<input type=\"hidden\" id=\"standaard\" name=\"standaard\" value=\"".$data['Type_TinyText']."\">");
+												$waarde = $data['Type_TinyText'];
 											}
 											else $waarde = "";
 					    			?>
