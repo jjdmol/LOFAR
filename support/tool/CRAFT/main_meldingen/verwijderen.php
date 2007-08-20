@@ -61,7 +61,6 @@
 		    			$query = "SELECT * FROM comp_lijst WHERE Comp_Lijst_ID = '". $data['Comp_Lijst_ID'] ."'";
 					  	$resultaat = mysql_query($query);  	
 					  	$row = mysql_fetch_array($resultaat);
-
 					  	
 					  	echo("<br>Om deze melding te verwijderen dient u contact op te nemen met de administrator van uw groep<br>");
 					  	echo("Ook kunt u contact opnemen met de algemene administrators<br>");

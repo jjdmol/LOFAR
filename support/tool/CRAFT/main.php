@@ -83,24 +83,21 @@
     		}
     		//statistieken
     		else if ($pagina == 4) {
-    			//Type Componenten
-					if ($start == 2)
-						include($_SESSION['pagina'] . 'main_statistieken/type_componenten.php');
 					//componenten 
-					else if ($start == 3)
+					if ($start == 2)
 						include($_SESSION['pagina'] . 'main_statistieken/componenten.php');
 					//Type Meldingen 
-					else if ($start == 4)
+					else if ($start == 3)
 						include($_SESSION['pagina'] . 'main_statistieken/type_meldingen.php');
 					//meldingen
-					else if ($start == 5)
+					else if ($start == 4)
 						include($_SESSION['pagina'] . 'main_statistieken/meldingen.php');    			
 					//historie
-					else if ($start == 6)
+					else if ($start == 5)
 						include($_SESSION['pagina'] . 'main_statistieken/historie.php');
-    			//algemene statistieken
+    			//Type Componenten
     			else 
-						include($_SESSION['pagina'] . 'main_statistieken/algemeen.php');
+						include($_SESSION['pagina'] . 'main_statistieken/type_componenten.php');
     		}
     		else if ($pagina == 5) include ($_SESSION['pagina'] .'main/instellingen.php');
     	?>

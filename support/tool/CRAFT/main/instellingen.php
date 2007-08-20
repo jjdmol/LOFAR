@@ -19,6 +19,12 @@
 			
 		if (isset($_POST['wachtwoord']) && $_POST['wachtwoord'] == '')
 			return false;
+
+		if (isset($_POST['wachtwoord2']) && $_POST['wachtwoord2'] == '')
+			return false;
+			
+		if ($_POST['wachtwoord'] != $_POST['wachtwoord2'])
+			return false;
 			
 		if (isset($_POST['email']) && ($_POST['email'] == '' || strpos($_POST['email'], '@') == -1 ))
 			return false;
@@ -30,13 +36,13 @@
 	if(Validatie_Opslaan()) {
 		//opslaan
 		$query = "UPDATE gebruiker SET inlognaam= '". $_POST['naam'] . "', Wachtwoord= '". md5($_POST['wachtwoord']) ."'
-		, Emailadres='". $_POST['email'] ."', Start_Alg='". $_POST['start'] ."', Start_Comp='". $_POST['Start_Comp'] ."'
+		, Emailadres='". $_POST['email'] ."', Start_Alg='". $_POST['start'] ."', Start_Comp='". $_POST['Start_Comp'] ."', Gebruiker_Taal='".$_POST['taal']."'
 		, Start_Melding='". $_POST['Start_Melding'] ."', Start_Stats='". $_POST['Start_Stats'] ."' WHERE Werknem_ID = '" .$_SESSION['gebr_id']. "'";
 
 		//de "nieuwe" gegevens in de sessievariabelen zetten, zodat deze meteen geladen/bruikbaar zijn
 		$_SESSION['gebr_naam']  = $_POST['naam'];
 		$_SESSION['gebr_email'] = $_POST['email'];
-//		$_SESSION['taal']			  = $_POST[''];
+		$_SESSION['taal']			  = $_POST['taal'];
 		$_SESSION['start_tabblad'] = $_POST['start'];
 		$_SESSION['start_comp'] 	 = $_POST['Start_Comp'];
 		$_SESSION['start_melding'] = $_POST['Start_Melding'];
@@ -65,7 +71,21 @@
 	 	</tr>
 		<tr>
 			<td>Wachtwoord:</td>
-			<td><input name="wachtwoord" value="" type="password"><?php if(isset($_POST['wachtwoord']) && $_POST['wachtwoord'] == '') echo('<b id="type_wachtwoord">* Er is geen wachtwoord ingevoerd!</b>'); ?></td>
+			<td><input name="wachtwoord" value="" type="password">
+				<?php 
+					if(isset($_POST['wachtwoord']) && $_POST['wachtwoord'] == '') echo('<b id="type_wachtwoord">* Er is geen wachtwoord ingevoerd!</b>'); 
+					if(isset($_POST['wachtwoord']) && $_POST['wachtwoord'] != '' && isset($_POST['wachtwoord2']) && $_POST['wachtwoord2'] != '') echo('<b id="type_wachtwoord">* Beide wachtwoorden komen niet overeen!</b>'); 
+				?>
+			</td>
+		</tr>
+		<tr>
+			<td>Nogmaals het wachtwoord:</td>
+			<td><input name="wachtwoord2" value="" type="password">
+				<?php 
+					if(isset($_POST['wachtwoord2']) && $_POST['wachtwoord2'] == '') echo('<b id="type_wachtwoord">* Er is geen wachtwoord ingevoerd!</b>'); 
+					if(isset($_POST['wachtwoord']) && $_POST['wachtwoord'] != '' && isset($_POST['wachtwoord2']) && $_POST['wachtwoord2'] != '') echo('<b id="type_wachtwoord">* Beide wachtwoorden komen niet overeen!</b>'); 
+				?>
+			</td>
 		</tr>
 		<tr>
 			<td>E-mail adres:</td>
@@ -76,7 +96,11 @@
 		</tr>
 		<tr>
 			<td>Ingestelde taal:</td>
-			<td><select></select></td>
+			<td>
+				<select name="taal">
+					<option value="1">Nederlands</option>
+				</select>
+			</td>
 		</tr>
 		<tr>
 			<td>Algemene startpagina:</td>

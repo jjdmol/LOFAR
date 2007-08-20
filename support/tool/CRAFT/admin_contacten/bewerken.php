@@ -86,7 +86,7 @@
 					}
 					
 					if(Validatie_Opslaan()) {
-						$query = "UPDATE contact SET Contact_Naam = '". htmlentities($_POST['Contact_Naam'], ENT_QUOTES) ."', Contact_Adres1 = '". htmlentities($_POST['Contact_Adres1'], ENT_QUOTES) ."', Contact_Adres2='". htmlentities($_POST['Contact_Adres2'], ENTQUOTES) ."'";
+						$query = "UPDATE contact SET Contact_Naam = '". htmlentities($_POST['Contact_Naam'], ENT_QUOTES) ."', Contact_Adres1 = '". htmlentities($_POST['Contact_Adres1'], ENT_QUOTES) ."', Contact_Adres2='". htmlentities($_POST['Contact_Adres2'], ENT_QUOTES) ."'";
 						$query = $query . ", Contact_Postcode='". htmlentities($_POST['Contact_Postcode'], ENT_QUOTES) ."', Contact_Woonplaats = '". htmlentities($_POST['Contact_Woonplaats'], ENT_QUOTES) ."', Contact_Telefoon_Vast='". htmlentities($_POST['Contact_Telefoon_Vast'], ENT_QUOTES) ."'";
 						$query = $query . ", Contact_Telefoon_Mobiel = '". htmlentities($_POST['Contact_Telefoon_Mobiel'], ENT_QUOTES) ."', Contact_Email='". htmlentities($_POST['Contact_Email'], ENT_QUOTES) ."', Contact_Fax = '". htmlentities($_POST['Contact_Telefoon_Fax'], ENT_QUOTES) ."'";
 						$query = $query . ", Contact_Parent = '". $_POST['Contact_Parent'] ."', Contact_Functie='". $_POST['Contact_Functie'] ."', Contact_Parent_Gegevens=";

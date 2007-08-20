@@ -54,12 +54,12 @@
       document.getElementById('suboptie5').innerHTML="Melding zoeken";      
    	}	
   	else if (optie ==4) {
-    	document.getElementById('suboptie1').innerHTML="Algemeen";
-    	document.getElementById('suboptie2').innerHTML="Type componenten";
-    	document.getElementById('suboptie3').innerHTML="Componenten";
-    	document.getElementById('suboptie4').innerHTML="Type meldingen";
-    	document.getElementById('suboptie5').innerHTML="Meldingen";
-    	document.getElementById('suboptie6').innerHTML="Historie";
+//    	document.getElementById('suboptie1').innerHTML="Algemeen";
+    	document.getElementById('suboptie1').innerHTML="Type componenten";
+    	document.getElementById('suboptie2').innerHTML="Componenten";
+    	document.getElementById('suboptie3').innerHTML="Type meldingen";
+    	document.getElementById('suboptie4').innerHTML="Meldingen";
+    	document.getElementById('suboptie5').innerHTML="Historie";
   	}	
   	else if (optie ==5) {
   	}	
@@ -109,13 +109,13 @@
       document.getElementById('suboptie1').innerHTML="Gebruikersgroep toevoegen";
       document.getElementById('suboptie2').innerHTML="Gebruikersgroep bewerken";
       document.getElementById('suboptie3').innerHTML="Gebruikersgroep verwijderen";
-      document.getElementById('suboptie4').innerHTML="Groepmail versturen";
+      //document.getElementById('suboptie4').innerHTML="Groepmail versturen";
   	}
   	else if (optie ==7) {
       document.getElementById('suboptie1').innerHTML="Gebruikers toevoegen";
       document.getElementById('suboptie2').innerHTML="Gebruikers bewerken";
       document.getElementById('suboptie3').innerHTML="Gebruikers verwijderen";
-      document.getElementById('suboptie4').innerHTML="Gebruikers mailen";
+      //document.getElementById('suboptie4').innerHTML="Gebruikers mailen";
   	}
   	else if (optie ==8) {
       document.getElementById('suboptie1').innerHTML="Contacten toevoegen";
