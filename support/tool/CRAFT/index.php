@@ -44,7 +44,9 @@
 	$php_self = $_SERVER['PHP_SELF'];
 ?>
 	<div id="hoofdscherm">
-		<br><center><h2>Inlogscherm</h2></center>
+		<br><center>
+			<h2>LOFAR craft</h2>
+			<h3>Inlogscherm</h3></center>
 
 		<center>
 			<form name="inloggen" method="post" action="<?php echo($php_self); ?>">
