@@ -1,7 +1,7 @@
 <?php
 	if(isset($_SESSION['main_deel'])){
 		$_SESSION['main_deel'] = 4;
-	  $_SESSION['huidige_pagina'] = $_SESSION['pagina'] . 'main.php?p='.$_SESSION['main_deel'].'&s=6';
+	  $_SESSION['huidige_pagina'] = $_SESSION['pagina'] . 'main.php?p='.$_SESSION['main_deel'].'&s=5';
 
 	  require_once($_SESSION['pagina'] . 'includes/login_funcs.php');
 		include_once($_SESSION['pagina'] . 'includes/datum_tijd_functies.php');

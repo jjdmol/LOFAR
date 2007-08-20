@@ -358,7 +358,7 @@
 							$levertijd = $_POST['hidden_fabricagetijd']; 
 						else $levertijd = date('H:i');
   				?>
-  				<td><iframe id="frame_fabricant" name="frame_fabricant" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_fabricant.php?c=<?php echo($selected ."&d=".$leverdatum . "&t=". $levertijd . $selectie); ?>" width="350" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+  				<td><iframe id="frame_fabricant" name="frame_fabricant" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_fabricant.php?c=<?php echo($selected ."&d=".$leverdatum . "&t=". $levertijd . $selectie); ?>" width="375" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
   					  <?php if(isset($_POST['hidden_fabricagedatum']) && (!Valideer_Datum($_POST['hidden_fabricagedatum']) || !Valideer_Tijd($_POST['hidden_fabricagetijd']))) echo('<b>* Onjuiste datum/tijd samenstelling!</b>'); ?></td>
   				</td>
   			</tr>
@@ -383,7 +383,7 @@
 							$fabricagetijd = $_POST['hidden_levertijd']; 
 						else $fabricagetijd = date('H:i');
   				?>
-  				<td><iframe id="frame_leverancier" name="frame_leverancier" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_leverancier.php?c=<?php echo($selected ."&d=".$fabricagedatum . "&t=". $fabricagetijd . $selectie);  ?>" width="350" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+  				<td><iframe id="frame_leverancier" name="frame_leverancier" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_leverancier.php?c=<?php echo($selected ."&d=".$fabricagedatum . "&t=". $fabricagetijd . $selectie);  ?>" width="375" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
  					  <?php if(isset($_POST['hidden_leverdatum']) && (!Valideer_Datum($_POST['hidden_leverdatum']) || !Valideer_Tijd($_POST['hidden_levertijd']))) echo('<b>* Onjuiste datum/tijd samenstelling!</b>'); ?></td>
   				</td>
   			</tr>
