@@ -8,10 +8,12 @@ libbbskernel_la_SOURCES = 	\
 	Prediffer.cc		\
 	VisData.cc		\
 	VisSelection.cc		\
+	MNS/MeqAzEl.cc		\
 	MNS/MeqBaseDFTPS.cc	\
 	MNS/MeqBaseLinPS.cc	\
 	MNS/MeqDFTPS.cc		\
 	MNS/MeqDiag.cc		\
+	MNS/MeqDipoleBeam.cc	\
 	MNS/MeqDomain.cc	\
 	MNS/MeqExpr.cc		\
 	MNS/MeqFunklet.cc	\
