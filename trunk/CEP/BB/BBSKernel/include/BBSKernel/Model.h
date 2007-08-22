@@ -57,9 +57,10 @@ public:
 
     enum ModelComponent
     {
-        GAIN = 0,
+        BANDPASS = 0,
+        GAIN,
         DIRECTIONAL_GAIN,
-        BANDPASS,
+        DIPOLE_BEAM,
         PHASORS,
         N_ModelComponent
     };

@@ -144,6 +144,7 @@ protected:
   // It also increases NParents in the child.
   void addChild(MeqExpr child);
   void removeChild(MeqExpr child);
+  MeqExpr getChild(size_t index);
 
 private:
   // Forbid copy and assignment.

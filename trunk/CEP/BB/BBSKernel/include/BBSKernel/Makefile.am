@@ -13,10 +13,12 @@ pkginclude_HEADERS =		\
 	VisSelection.h
 
 pkginclude_MNS_HEADERS	= 	\
+	MNS/MeqAzEl.h		\
 	MNS/MeqBaseDFTPS.h	\
 	MNS/MeqBaseLinPS.h	\
 	MNS/MeqDFTPS.h		\
 	MNS/MeqDiag.h		\
+	MNS/MeqDipoleBeam.h	\
 	MNS/MeqDomain.h		\
 	MNS/MeqExpr.h		\
 	MNS/MeqFunklet.h	\
