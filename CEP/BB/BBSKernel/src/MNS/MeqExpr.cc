@@ -80,6 +80,12 @@ void MeqExprRep::removeChild(MeqExpr child)
     itsChildren.erase(it);
 }
 
+MeqExpr MeqExprRep::getChild(size_t index)
+{
+    ASSERT(index < itsChildren.size());
+    return itsChildren[index];
+}
+
 int MeqExprRep::setLevel (int level)
 {
   if (level < itsMinLevel) itsMinLevel = level;

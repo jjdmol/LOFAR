@@ -35,6 +35,8 @@
 #include <BBSKernel/MNS/MeqJonesCMul3.h>
 #include <BBSKernel/MNS/MeqJonesSum.h>
 #include <BBSKernel/MNS/MeqJonesVisData.h>
+#include <BBSKernel/MNS/MeqAzEl.h>
+#include <BBSKernel/MNS/MeqDipoleBeam.h>
 
 #include <BBSKernel/MNS/MeqStation.h>
 #include <BBSKernel/MNS/MeqStatUVW.h>
@@ -89,17 +91,14 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             mask[GAIN] = true;
         else if(*it == "DIRECTIONAL_GAIN")
             mask[DIRECTIONAL_GAIN] = true;
+        else if(*it == "DIPOLE_BEAM")
+            mask[DIPOLE_BEAM] = true;
         else if(*it == "BANDPASS")
             mask[BANDPASS] = true;
         else if(*it == "PHASORS")
             mask[PHASORS] = true;
     }
-/*
-    if(mask{GAIN] && mask[DIRECTIONAL_GAIN])
-        LOG_WARN("Model components GAIN and DIRECTIONAL_GAIN are mutually"
-            " exclusive; using GAIN only.");
-*/
-
+    
     string part1("real:");
     string part2("imag:");
     if(mask[PHASORS])
@@ -121,19 +120,42 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
     size_t nStations = itsStationNodes.size();
     size_t nSources = itsSourceNodes.size();
 
+    ASSERT(nStations > 0 && nSources > 0);
+
+    vector<MeqExpr> azel(nSources);
     vector<MeqExpr> dft(nStations * nSources);
-    vector<MeqJonesExpr> gain, inv_gain, bandpass;
+    vector<MeqJonesExpr> bandpass, gain, dir_gain, dipole_beam;
 
     if(mask[BANDPASS])
-        bandpass.resize(nStations);
-
-    if(mask[GAIN] || mask[DIRECTIONAL_GAIN])
     {
-        inv_gain.resize(nStations);
-        if(mask[GAIN])
-            gain.resize(nStations);
-        else
-            gain.resize(nStations * nSources);
+        bandpass.resize(nStations);
+    }
+    
+    if(mask[GAIN])
+    {
+        gain.resize(nStations);
+    }
+        
+    if(mask[DIRECTIONAL_GAIN])
+    {
+        dir_gain.resize(nStations * nSources);
+    }
+
+    if(mask[DIPOLE_BEAM])
+    {
+        // Make an E-jones expression per source. For now, we use the instrument
+        // position as reference position on earth. In the future, we will need
+        // an E-jones expression per source, _per station_.
+        azel.resize(nSources);
+        dipole_beam.resize(nSources);
+        for(size_t i = 0; i < nSources; ++i)
+        {
+            azel[i] =
+                new MeqAzEl(*(itsSourceNodes[i]), *(itsStationNodes[i].get()));
+
+            dipole_beam[i] = new MeqDipoleBeam(azel[i], 1.706, 1.38,
+                casa::C::pi / 4.001, -casa::C::pi_4);
+        }
     }
 
     for(size_t i = 0; i < nStations; ++i)
@@ -153,13 +175,13 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             MeqExpr B22(MeqParmFunklet::create("bandpass:22:" + suffix,
                 parmGroup, instrumentDBase));
 
-            bandpass[i] = new MeqDiag(MeqExpr(B11), MeqExpr(B22));
+            bandpass[i] = new MeqDiag(B11, B22);
         }
 
         // Make a complex gain expression per station and possibly per source.
         if(mask[GAIN])
         {
-            MeqExprRep *J11, *J12, *J21, *J22;
+            MeqExpr J11, J12, J21, J22;
             string suffix = itsStationNodes[i]->getName();
 
             // Make a J-jones expression per station
@@ -195,17 +217,17 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
                 J22 = new MeqExprToComplex(J22_part1, J22_part2);
             }
 
-            gain[i] = new MeqJonesNode(MeqExpr(J11), MeqExpr(J12),
-                MeqExpr(J21), MeqExpr(J22));
-            inv_gain[i] = new MeqJonesInvert(gain[i]);
+            gain[i] = new MeqJonesNode(J11, J12, J21, J22);
+//            inv_gain[i] = new MeqJonesInvert(gain[i]);
         }
-        else if(mask[DIRECTIONAL_GAIN])
+        
+        if(mask[DIRECTIONAL_GAIN])
         {
             // Make a J-jones expression per station per source. Eventually,
             // patches of several sources will be supported as well.
             for(size_t j = 0; j < nSources; ++j)
             {
-                MeqExprRep *J11, *J12, *J21, *J22;
+                MeqExpr J11, J12, J21, J22;
                 string suffix = itsStationNodes[i]->getName() + ":"
                     + itsSourceNodes[j]->getName();
 
@@ -241,32 +263,96 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
                     J22 = new MeqExprToComplex(J22_part1, J22_part2);
                 }
 
-                gain[i * nSources + j] = new MeqJonesNode(MeqExpr(J11),
-                    MeqExpr(J12), MeqExpr(J21), MeqExpr(J22));
+                dir_gain[i * nSources + j] =
+                    new MeqJonesNode(J11, J12, J21, J22);
 
                 // Gain correction is always performed with respect to the
                 // direction of the first source (patch).
-                if(j == 0)
-                    inv_gain[i] = new MeqJonesInvert(gain[i * nSources]);
+//                if(j == 0)
+//                    inv_gain[i] = new MeqJonesInvert(gain[i * nSources]);
             }
         }
     }
 
     if(type == CORRECT)
     {
+        ASSERTSTR(mask[GAIN] || mask[DIRECTIONAL_GAIN] || mask[DIPOLE_BEAM],
+            "Need at least one of GAIN, DIRECTIONAL_GAIN, or DIPOLE_BEAM to"
+            " correct for.");
+            
+        vector<MeqJonesExpr> inv_bandpass, inv_gain, inv_dir_gain;
+        MeqJonesExpr inv_dipole_beam;
+        
+        if(mask[BANDPASS])
+        {
+            inv_bandpass.resize(nStations);
+            for(size_t i = 0; i < nStations; ++i)
+            {
+                inv_bandpass[i] = new MeqJonesInvert(bandpass[i]);
+            }
+        }
+
+        if(mask[GAIN])
+        {
+            inv_gain.resize(nStations);
+            for(size_t i = 0; i < nStations; ++i)
+            {
+                inv_gain[i] = new MeqJonesInvert(gain[i]);
+            }
+        }
+        
+        if(mask[DIRECTIONAL_GAIN])
+        {
+            inv_dir_gain.resize(nStations);
+            for(size_t i = 0; i < nStations; ++i)
+            {
+                // Always correct for the first source (direction).
+                inv_dir_gain[i] = new MeqJonesInvert(dir_gain[i * nSources]);
+            }
+        }
+
+        if(mask[DIPOLE_BEAM])
+        {
+            // Always correct for the first source (direction).
+            inv_dipole_beam = new MeqJonesInvert(dipole_beam[0]);
+        }
+
         for(set<baseline_t>::const_iterator it = baselines.begin();
             it != baselines.end();
             ++it)
         {
             const baseline_t &baseline = *it;
-            itsEquations[baseline] = new MeqJonesCMul3(inv_gain[baseline.first],
-                    new MeqJonesVisData(buffer, baseline),
+
+            MeqJonesExpr vis = new MeqJonesVisData(buffer, baseline);
+            
+            if(mask[BANDPASS])
+            {
+                vis = new MeqJonesCMul3(inv_bandpass[baseline.first], vis,
+                    inv_bandpass[baseline.second]);
+            }
+
+            if(mask[GAIN])
+            {
+                vis = new MeqJonesCMul3(inv_gain[baseline.first], vis,
                     inv_gain[baseline.second]);
+            }
+            
+            if(mask[DIRECTIONAL_GAIN])
+            {
+                vis = new MeqJonesCMul3(inv_dir_gain[baseline.first], vis,
+                    inv_dir_gain[baseline.second]);
+            }
+
+            if(mask[DIPOLE_BEAM])
+            {
+                vis = new MeqJonesCMul3(inv_dipole_beam, vis, inv_dipole_beam);
+            }
+            
+            itsEquations[baseline] = vis;
         }
     }
     else
     {
-
         for(set<baseline_t>::const_iterator it = baselines.begin();
             it != baselines.end();
             ++it)
@@ -276,23 +362,33 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             vector<MeqJonesExpr> terms;
             for(size_t j = 0; j < nSources; ++j)
             {
-                MeqExpr base
+                // Phase shift (incorporates geometry and fringe stopping).
+                MeqExpr shift
                     (new MeqBaseDFTPS(dft[baseline.first * nSources + j],
                     dft[baseline.second * nSources + j], itsLMNNodes[j]));
 
+                // Point source.
                 MeqPointSource *source =
                     dynamic_cast<MeqPointSource*>(itsSourceNodes[j]);
 
-                MeqJonesExpr sourceTerm(new MeqBaseLinPS(base, source));
+                MeqJonesExpr sourceExpr = new MeqBaseLinPS(shift, source);
+                
+                // Apply image plane effects if required.
+                if(mask[DIPOLE_BEAM])
+                {
+                    sourceExpr = new MeqJonesCMul3(dipole_beam[j], sourceExpr,
+                        dipole_beam[j]);
+                }
 
                 if(mask[DIRECTIONAL_GAIN])
                 {
-                    terms.push_back
-                        (new MeqJonesCMul3(gain[baseline.first * nSources + j],
-                        sourceTerm, gain[baseline.second * nSources + j]));
+                    sourceExpr = new MeqJonesCMul3
+                        (dir_gain[baseline.first * nSources + j],
+                        sourceExpr,
+                        dir_gain[baseline.second * nSources + j]);
                 }
-                else
-                    terms.push_back(sourceTerm);
+                
+                terms.push_back(sourceExpr);
             }
 
             MeqJonesExpr sum;
@@ -301,6 +397,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             else
                 sum = MeqJonesExpr(new MeqJonesSum(terms));
 
+            // Apply UV-plane effects if required.
             if(mask[GAIN])
             {
                 sum = new MeqJonesCMul3(gain[baseline.first], sum,
@@ -312,6 +409,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
                 sum = new MeqJonesCMul3(bandpass[baseline.first], sum,
                     bandpass[baseline.second]);
             }
+            
             itsEquations[baseline] = sum;
         }
     }
