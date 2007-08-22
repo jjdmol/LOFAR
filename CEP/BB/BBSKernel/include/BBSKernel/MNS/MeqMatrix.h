@@ -139,6 +139,9 @@ public:
   void show (ostream& os) const
     { itsRep->show (os); }
 
+  bool isArray() const
+    { return itsRep->isArray(); }
+
   bool isComplex() const
     { return itsRep->isComplex(); }
 

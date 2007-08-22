@@ -112,6 +112,7 @@ public:
 
 private:
     bool convertTime(const string &in, double &out) const;
+    
     vector<bool>            itsFieldFlags;
     pair<size_t, size_t>    itsChannelRange;
     pair<double, double>    itsTimeRange;
