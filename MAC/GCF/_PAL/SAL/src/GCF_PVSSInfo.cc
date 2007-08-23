@@ -143,7 +143,6 @@ TMACValueType GCFPVSSInfo::getMACTypeId (const string& dpeName)
 	if ((Manager::getId(pvssDpeName, dpId) == PVSS_TRUE) &&
 		(Manager::getTypeContainerPtr(sysNr)->getElementType(dpId, dpElType) == DpTypeContOK)) {
 			return(macValueTypes[dpElType]);
-		} 
 	}
 	return (NO_LPT);
 }
@@ -311,7 +310,6 @@ TGCFResult GCFPVSSInfo::getTypeStruct(const string& 		typeName,
 									  list<TPropertyInfo>& 	propInfos, 
 									  int8 					sysNr)
 {
-	TGCFResult result(GCF_NO_ERROR);
 	propInfos.clear();
 
 	CharString 	pvssTypeName = typeName.c_str();
