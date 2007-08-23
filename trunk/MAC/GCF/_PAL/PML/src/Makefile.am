@@ -16,16 +16,17 @@ libgcfpal_la_DEPENDENCIES= libpml.la $(LOFAR_DEPEND) \
 noinst_LTLIBRARIES 	= libpml.la
 
 libpml_la_SOURCES= $(DOCHDRS) \
-	GCF_ExtProperty.cc \
 	GCF_Property.cc \
+	GCF_PropertyProxy.cc \
 	GCF_MyProperty.cc \
-	GCF_ExtPropertySet.cc \
+	GCF_ExtProperty.cc \
 	GCF_PropertySet.cc \
 	GCF_MyPropertySet.cc \
+	GCF_ExtPropertySet.cc \
 	GCF_Answer.cc \
+	GCF_PropertySetAnswer.cc \
 	GPM_Controller.cc \
-	GPM_PropertyService.cc \
-	GCF_PropertyProxy.cc
+	GPM_PropertyService.cc 
 
 libpml_la_CPPFLAGS= -I$(top_srcdir)/SAL/src
 
@@ -34,12 +35,6 @@ AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PML\"
 BUILT_SOURCES = 
 
 EXTRA_DIST = $(sysconf_DATA)
-
-sysconf_DATA= \
-	gcf-pml.conf
-
-%.conf: %.conf.in
-	cp $< $@
 
 include $(top_srcdir)/Makefile.common
 

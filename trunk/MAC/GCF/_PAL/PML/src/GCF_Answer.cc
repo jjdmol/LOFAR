@@ -27,27 +27,31 @@
 /**
  * F_PVSS_PROTOCOL signal names
  */
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
+
 const char* F_PML_PROTOCOL_signalnames[] =
 {
   "F_PML_PROTOCOL: invalid signal",
-  "F_SUBCRIBED (IN)",
-  "F_UNSUBCRIBED (IN)",
-  "F_VCHANGEMSG (IN)",
-  "F_VGETRESP (IN)",
-  "F_VSETRESP (IN)",
-  "F_EXTPS_LOADED (IN)",
-  "F_EXTPS_UNLOADED (IN)",
-  "F_PS_CONFIGURED (IN)",
-  "F_MYPS_ENABLED (IN)",
-  "F_MYPS_DISABLED (IN)",
-  "F_SERVER_GONE (IN)",
+  "F_SUBCRIBED",
+  "F_UNSUBCRIBED",
+  "F_VCHANGEMSG",
+  "F_VGETRESP",
+  "F_VSETRESP",
+  "F_EXTPS_LOADED",
+  "F_EXTPS_UNLOADED",
+  "F_PS_CONFIGURED",
+  "F_MYPS_ENABLED",
+  "F_MYPS_DISABLED",
+  "F_SERVER_GONE",
 };
+
+const struct TM::protocolStrings F_PML_PROTOCOL_STRINGS = {
+	12, 0, F_PML_PROTOCOL_signalnames, 0
+};
+
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

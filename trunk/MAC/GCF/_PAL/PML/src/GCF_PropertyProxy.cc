@@ -26,70 +26,103 @@
 #include <GPM_PropertyProxy.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
+namespace LOFAR {
+ namespace GCF {
 using namespace Common;
-  namespace PAL
-  {
+  namespace PAL {
+
+//
+// GCFPropertyProxy()
+//
 GCFPropertyProxy::GCFPropertyProxy() :
-  _pPMProxy(0)
+	_pPMProxy(0)
 {
-  _pPMProxy = new GPMPropertyProxy(*this);
+	_pPMProxy = new GPMPropertyProxy(*this);
 }
 
+
+//
+// ~GCFPropertyProxy()
+//
 GCFPropertyProxy::~GCFPropertyProxy()
 {
-  delete _pPMProxy;
-  _pPMProxy = 0;
+	delete _pPMProxy;
+	_pPMProxy = 0;
 }
 
+//
+// subscribeProp(propName)
+//
 TGCFResult GCFPropertyProxy::subscribeProp(const string& propName)
 {
-  return (_pPMProxy->subscribePM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+	return (_pPMProxy->subscribePM(propName) == SA_NO_ERROR ? 
+													GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
+//
+// unsubscribeProp(propName)
+//
 TGCFResult GCFPropertyProxy::unsubscribeProp(const string& propName)
 {
-  return (_pPMProxy->unsubscribePM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+	return (_pPMProxy->unsubscribePM(propName) == SA_NO_ERROR ? 
+													GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
+//
+// requestPropValue(propName)
+//
 TGCFResult GCFPropertyProxy::requestPropValue(const string& propName)
 {
-  return (_pPMProxy->getPM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+	return (_pPMProxy->getPM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
+//
+// setPropValueTimed(propName,value, timestamp, wantAnswer)
+//
 TGCFResult GCFPropertyProxy::setPropValueTimed(const string& propName, 
                                                const GCFPValue& value, 
                                                double timestamp, 
                                                bool wantAnswer)
 {
-  return (_pPMProxy->setPM(propName, value, timestamp, wantAnswer) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+	return (_pPMProxy->setPM(propName, value, timestamp, wantAnswer) == SA_NO_ERROR ? 
+														GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
+//
+// setPropValueTimed(propName,valueStr, timestamp, wantAnswer)
+//
 TGCFResult GCFPropertyProxy::setPropValueTimed(const string& propName, 
                                                const string& value, 
                                                double timestamp, 
                                                bool wantAnswer)
 {
-  GCFPValue* pValue = GCFPValue::createMACTypeObject(GCFPVSSInfo::getMACTypeId(propName));
-  if (pValue) 
-  {  
-   pValue->setValue(value);
-    return (_pPMProxy->setPM(propName, *pValue, timestamp, wantAnswer) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
-  }
-  return GCF_PML_ERROR;
+	GCFPValue* pValue = GCFPValue::createMACTypeObject(GCFPVSSInfo::getMACTypeId(propName));
+	if (!pValue) {  
+		return GCF_PML_ERROR;
+	}
+
+	pValue->setValue(value);
+
+	return (_pPMProxy->setPM(propName, *pValue, timestamp, wantAnswer) == SA_NO_ERROR ?
+															GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
+//
+// dpQuerySubscribeSingle(queryWhere, queryFrom)
+//
 TGCFResult GCFPropertyProxy::dpQuerySubscribeSingle(const string& queryWhere, const string& queryFrom)
 {
-  return (_pPMProxy->dpQuerySubscribeSinglePM(queryWhere, queryFrom) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+	return (_pPMProxy->dpQuerySubscribeSinglePM(queryWhere, queryFrom) == SA_NO_ERROR ? 
+														GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
+//
+// GCFPropertyProxy::dpQueryUnsubscribe(queryID)
+//
 TGCFResult GCFPropertyProxy::dpQueryUnsubscribe(uint32 queryId)
 {
-  return (_pPMProxy->dpQueryUnsubscribePM(queryId) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+	return (_pPMProxy->dpQueryUnsubscribePM(queryId) == SA_NO_ERROR ? 
+														GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
   } // namespace PAL

@@ -25,7 +25,7 @@
 #define GPM_CONTROLLER_H
 
 #include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Port.h>
+#include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Handler.h>
 #include <GCF/PAL/GCF_PVSSPort.h>
 #include "GPM_Defines.h"
@@ -39,117 +39,109 @@
    property set or load APC).
 */
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace Common
-  {
-class GCFPValue;
+namespace LOFAR {
+ namespace GCF {
+  namespace Common {
+	class GCFPValue;
   }
-  namespace TM
-  {
-class TM::GCFEvent;
-class TM::GCFPortInterface;
+  namespace TM {
+	class TM::GCFEvent;
+	class TM::GCFPortInterface;
   }
-  namespace PAL
-  {
-class GCFPropertySet;
-class GCFMyPropertySet;
-class GCFExtPropertySet;
-class GPMHandler;
-class GCFSysConnGuard;
+  namespace PAL {
+	class GCFPropertySet;
+	class GCFMyPropertySet;
+	class GCFExtPropertySet;
+	class GPMHandler;
+	class GCFSysConnGuard;
 
 class GPMController : public TM::GCFTask
 {
-  public:
-    ~GPMController ();
-    static GPMController* instance(bool temporary = false);
-    static void release();
+public:
+	~GPMController ();
+	static GPMController* instance(bool temporary = false);
+	static void release();
 
-  public: // member functions
-    TPMResult loadPropSet (GCFExtPropertySet& propSet);
-    TPMResult unloadPropSet (GCFExtPropertySet& propSet);
-    TPMResult configurePropSet (GCFPropertySet& propSet, const string& apcName);
-    void deletePropSet (const GCFPropertySet& propSet);
-    
-    TPMResult registerScope (GCFMyPropertySet& propSet);
-    TPMResult unregisterScope (GCFMyPropertySet& propSet);
-       
-    void propertiesLinked (const string& scope, TPAResult result);
-    void propertiesUnlinked (const string& scope, TPAResult result);
-       
-  private:
-    friend class GPMHandler;
-    GPMController ();
+	// member functions
+	TPMResult loadPropSet 	   (GCFExtPropertySet& propSet);
+	TPMResult unloadPropSet    (GCFExtPropertySet& propSet);
+	TPMResult configurePropSet (GCFPropertySet&    propSet, const string& apcName);
+	void 	  deletePropSet    (const GCFPropertySet& propSet);
 
-  private: // state methods
-    TM::GCFEvent::TResult initial   (TM::GCFEvent& e, TM::GCFPortInterface& p);
-    TM::GCFEvent::TResult connected (TM::GCFEvent& e, TM::GCFPortInterface& p);
-        
-  private: // helper methods
-    typedef struct Action
-    {
-      GCFPropertySet* pPropSet;
-      string apcName;
-      unsigned short signal;
-      Action& operator= (const Action& other)
-      {
-        if (this != &other)
-        {
-          pPropSet = other.pPropSet;
-          signal = other.signal;
-          apcName.replace(0, string::npos, other.apcName);
-        }
-        return *this;
-      }      
-    } TAction;
-    unsigned short registerAction (TAction& action);
-    string determineDest(const string& scope) const;
-    bool checkDestination(const string& destAddr) const;
-    GCFPropertySet* findPropSetInActionList(unsigned short seqnr) const;
-    GCFMyPropertySet* findMyPropSet(string& scope) const;
+	TPMResult registerScope   (GCFMyPropertySet& propSet);
+	TPMResult unregisterScope (GCFMyPropertySet& propSet);
 
-  private: // data members        
-    GCFPort                       _propertyAgent;
-    typedef map<string /* scope */, GCFMyPropertySet*>  TMyPropertySets;
-    TMyPropertySets _myPropertySets;
-    typedef list<GCFExtPropertySet*>  TExtPropertySets;
-    TExtPropertySets _extPropertySets;
-    typedef map<unsigned short /*seqnr*/, TAction>  TActionSeqList;
-    TActionSeqList _actionSeqList;    
+	void propertiesLinked   (const string& scope, TPAResult result);
+	void propertiesUnlinked (const string& scope, TPAResult result);
 
-    typedef struct
-    {
-      unsigned long linkedTimeOutId;
-      unsigned long lastRetryTimerId;
-    } TLinkTimers;  
-    
-    typedef map<GCFMyPropertySet*, TLinkTimers>  TLinkTimerList;
-    TLinkTimerList _linkTimerList;    
+private:
+	friend class GPMHandler;
+	GPMController ();
 
-    GCFPVSSPort       _distPropertyAgent;
-    GCFSysConnGuard*  _pSysConnGuard;
+	// state methods
+	TM::GCFEvent::TResult initial   (TM::GCFEvent& e, TM::GCFPortInterface& p);
+	TM::GCFEvent::TResult connected (TM::GCFEvent& e, TM::GCFPortInterface& p);
 
-  private: // admin members  
+	// helper methods for administration of (future) actions.
+	// Define a struct the can contain the action that must be executed.
+	typedef struct Action {
+		GCFPropertySet* pPropSet;
+		string 			apcName;
+		unsigned short	signal;
+		Action& operator= (const Action& other) {
+			if (this != &other) {
+				pPropSet = other.pPropSet;
+				signal   = other.signal;
+				apcName.replace(0, string::npos, other.apcName);
+			}
+			return *this;
+		}      
+	} TAction;
+	// add the given action to the action queue
+	uint16	registerAction  (TAction& action);
+	// Constructs the full DPname of the PA that will handle the administration
+	// of the given datapoint.
+	string	getPAcommunicationDP(const string& fullDPname) const;
+	bool 	checkDestination    (const string& PAcommDP) const;
+	GCFPropertySet*   findPropSetInActionList(uint16 seqnr) const;
+	GCFMyPropertySet* findMyPropSet			 (string& scope) const;
+
+	// data members        
+	typedef map<string /* scope */, GCFMyPropertySet*>  TMyPropertySets;
+	typedef list<GCFExtPropertySet*>  TExtPropertySets;
+	typedef map<unsigned short /*seqnr*/, TAction>  TActionSeqList;
+	typedef struct {
+		unsigned long linkedTimeOutId;
+		unsigned long lastRetryTimerId;
+	} TLinkTimers;  
+	typedef map<GCFMyPropertySet*, TLinkTimers>  TLinkTimerList;
+
+	TMyPropertySets 	_myPropertySets;
+	TExtPropertySets 	_extPropertySets;
+	TActionSeqList 		_actionSeqList;    
+	TLinkTimerList 		_linkTimerList;    
+
+	GCFTCPPort* 		itsPAport;
+	GCFPVSSPort*		itsPADBport;
+	GCFSysConnGuard*	_pSysConnGuard;
 
 };
 
 class GPMHandler : public TM::GCFHandler
 {
-  public:
-    
-    ~GPMHandler() { _pInstance = 0; }
-    void workProc() {}
-    void stop () {}
-    
-  private:
-    friend class GPMController;
-    GPMHandler() {};
+public:
+	~GPMHandler() { _pInstance = 0; }
+	void workProc() {};
+	void stop () {};
 
-    static GPMHandler* _pInstance;
-    GPMController _controller;
+private:
+	friend class GPMController;
+	GPMHandler() {};
+
+	static GPMHandler*	_pInstance;
+	GPMController 		_controller;
 };
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

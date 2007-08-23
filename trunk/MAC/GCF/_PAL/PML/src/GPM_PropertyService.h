@@ -27,16 +27,13 @@
 #include <GSA_Service.h>
 #include <GCF/PAL/GCF_Property.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
    
 class GPMPropertyService : public GSAService
 {
-  public:
+public:
     GPMPropertyService(GCFProperty& gcfProperty);
     virtual ~GPMPropertyService();
 
@@ -48,7 +45,7 @@ class GPMPropertyService : public GSAService
                                     double timestamp, 
                                     bool wantAnswer);
         
-  protected:
+protected:
     void dpCreated(const string& /*propName*/);
     void dpDeleted(const string& /*propName*/);
     void dpeSubscribed(const string& propName);
@@ -58,7 +55,7 @@ class GPMPropertyService : public GSAService
     void dpeValueChanged(const string& propName, const Common::GCFPValue& value);
     void dpeValueSet(const string& propName);
     
-  private:
+private:
     GCFProperty& _gcfProperty;
 };
 

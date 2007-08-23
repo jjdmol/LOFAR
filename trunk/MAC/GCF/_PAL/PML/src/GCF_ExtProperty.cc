@@ -27,20 +27,23 @@
 #include <GCF/Utils.h>
 #include <GPM_Defines.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-using namespace Common;
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  using namespace Common;
+  namespace PAL {
    
+//
+// GCFExtProperty(propInfo)
+//
 GCFExtProperty::GCFExtProperty (const TPropertyInfo& propInfo) :
    GCFProperty(propInfo, 0),
    _isSubscribed(false)
 {
 }
 
+//
+// GCFExtProperty(propInfo, propSet)
+//
 GCFExtProperty::GCFExtProperty (const TPropertyInfo& propInfo, 
                           GCFExtPropertySet& propertySet) :
    GCFProperty(propInfo, &propertySet),
@@ -48,74 +51,83 @@ GCFExtProperty::GCFExtProperty (const TPropertyInfo& propInfo,
 {
 }
 
+//
+// subscribe()
+//
 TGCFResult GCFExtProperty::subscribe ()
 {  
-  TGCFResult result(GCF_NO_ERROR);
-  if (_isBusy)
-  {
-    result = GCF_BUSY;
-  }
-  else if (_isSubscribed)
-  {
-    result = GCF_ALREADY_SUBSCRIBED;
-  }
-  else
-  {
-    result = GCFProperty::subscribe();
-    if (result == GCF_NO_ERROR)
-    {
-      _isBusy = true;
-    }
-  }
-  return result;
+	if (_isBusy) {
+		return (GCF_BUSY);
+	}
+
+	if (_isSubscribed) {
+		return (GCF_ALREADY_SUBSCRIBED);
+	}
+
+	TGCFResult result(GCFProperty::subscribe());
+	if (result == GCF_NO_ERROR) {
+		_isBusy = true;
+	}
+
+	return result;
 }
 
+//
+// unsubscribe()
+//
 TGCFResult GCFExtProperty::unsubscribe ()
 {
-  TGCFResult result(GCF_NO_ERROR);
-  if (_isBusy)
-  {
-    result = GCF_BUSY;
-  }
-  else if (!_isSubscribed)
-  {
-    result = GCF_NOT_SUBSCRIBED;
-  }
-  else
-  {
-    result = GCFProperty::unsubscribe();
-    _isSubscribed = false;
-  }
-  
-  return result;
+	if (_isBusy) {
+		return (GCF_BUSY);
+	}
+
+	if (!_isSubscribed) {
+		return (GCF_NOT_SUBSCRIBED);
+	}
+
+	TGCFResult result(GCFProperty::unsubscribe());
+	_isSubscribed = false;
+
+	return result;
 }
 
-void GCFExtProperty::subscribed ()
+//
+// subscribed()
+//
+void GCFExtProperty::subscribed()
 {
-  ASSERT(!_isSubscribed);
-  ASSERT(_isBusy);
-  
-  _isSubscribed = true;
-  _isBusy = false;
-  GCFProperty::subscribed();
+	ASSERT(!_isSubscribed);
+	ASSERT(_isBusy);
+
+	_isSubscribed = true;
+	_isBusy = false;
+	GCFProperty::subscribed();
 }
 
-void GCFExtProperty::subscriptionLost () 
+//
+// subscriptionLost()
+//
+void GCFExtProperty::subscriptionLost() 
 {
-  ASSERT(_isSubscribed);
-  _isSubscribed = false;
+	ASSERT(_isSubscribed);
+	_isSubscribed = false;
 }
 
-bool GCFExtProperty::exists ()
+//
+// exists()
+//
+bool GCFExtProperty::exists()
 {
-  bool existsInDB(true);
-  
-  existsInDB = GCFProperty::exists();
+	if (GCFProperty::exists()) {
+		return true;
+	}
 
-  if (!existsInDB) _isSubscribed = _isBusy = false;
-    
-  return existsInDB;
+	_isSubscribed = false;
+	_isBusy 	  = false;
+
+	return false;
 }
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

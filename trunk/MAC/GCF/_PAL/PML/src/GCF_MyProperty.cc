@@ -130,43 +130,42 @@ GCFPValue* GCFMyProperty::getOldValue() const
 
 bool GCFMyProperty::link(bool setDefault, TGCFResult& result)
 {
-  bool isAsync(false);
-  ASSERT(!_isLinked);  
+	ASSERT(!_isLinked);  
+	ASSERT(exists());
+	ASSERT(!_isBusy);
 
-  result = GCF_NO_ERROR;
-  ASSERT(exists());
-  ASSERT(!_isBusy);
-  if (_accessMode & GCF_READABLE_PROP && setDefault)
-  {
-    ASSERT(_pCurValue);
-    result = GCFProperty::setValueTimed(*_pCurValue, 0.0);    
-  }
-  if (_accessMode & GCF_WRITABLE_PROP && result == GCF_NO_ERROR)
-  {
-    _changingAccessMode = false;
-    if (!setDefault) // getDefault from DB
-    {
-      requestValue();
-    }
-    result = subscribe();
-    if (result == GCF_NO_ERROR)
-    {
-      isAsync = true;
-      _isBusy = true;
-    }
-  }
-  if (!isAsync && result == GCF_NO_ERROR)
-    _isLinked = true;
-  return isAsync;
+	bool isAsync(false);
+	result = GCF_NO_ERROR;
+
+	if (_accessMode & GCF_READABLE_PROP && setDefault) {
+		ASSERT(_pCurValue);
+		result = GCFProperty::setValueTimed(*_pCurValue, 0.0);    
+	}
+
+	if (_accessMode & GCF_WRITABLE_PROP && result == GCF_NO_ERROR) {
+		_changingAccessMode = false;
+		if (!setDefault) { // getDefault from DB
+			requestValue();
+		}
+		result = subscribe();
+		if (result == GCF_NO_ERROR) {
+			isAsync = true;
+			_isBusy = true;
+		}
+	}
+
+	if (!isAsync && result == GCF_NO_ERROR) {
+		_isLinked = true;
+	}
+
+	return (isAsync);
 }
 
 void GCFMyProperty::unlink()
 {  
   ASSERT(!_isBusy);
-  if (_accessMode & GCF_WRITABLE_PROP )
-  {
-    if (exists()) // can already be deleted by the Property Agent
-    {      
+  if (_accessMode & GCF_WRITABLE_PROP ) {
+    if (exists()) { // can already be deleted by the Property Agent
       unsubscribe();
     }
   }
@@ -220,8 +219,7 @@ void GCFMyProperty::subscribed ()
 {
   ASSERT(_isBusy);
   _isBusy = false;  
-  if (!_changingAccessMode)
-  {
+  if (!_changingAccessMode) {
     ASSERT(!_isLinked);
     _isLinked = true;
     _propertySet.linked(*this);
@@ -245,8 +243,7 @@ void GCFMyProperty::valueGet (const GCFPValue& value)
                                
 void GCFMyProperty::valueChanged (const GCFPValue& value)
 {
-  if (_accessMode & GCF_WRITABLE_PROP )
-  {
+  if (_accessMode & GCF_WRITABLE_PROP ) {
     TGCFResult result;
     ASSERT(_pOldValue && _pCurValue);
     result = _pOldValue->copy(*_pCurValue);
