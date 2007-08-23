@@ -56,7 +56,7 @@ namespace LOFAR {
 //
 OfflineControl::OfflineControl(const string&	cntlrName) :
 	GCFTask 			((State)&OfflineControl::initial_state,cntlrName),
-	PropertySetAnswerHandlerInterface(),
+	GCFPropertySetAnswerHandlerInterface(),
 	itsPropertySetAnswer(*this),
 	itsPropertySet		(),
 	itsPropertySetInitialized (false),

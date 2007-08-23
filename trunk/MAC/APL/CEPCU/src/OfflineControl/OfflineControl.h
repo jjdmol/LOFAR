@@ -35,8 +35,8 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# local includes
-#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
-#include <APL/APLCommon/PropertySetAnswer.h>
+#include <GCF/PAL/GCF_PropertySetAnswerHandlerInterface.h>
+#include <GCF/PAL/GCF_PropertySetAnswer.h>
 #include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ParentControl.h>
@@ -68,7 +68,7 @@ using	APLCommon::ParentControl;
 
 
 class OfflineControl : public GCFTask,
-                      public APLCommon::PropertySetAnswerHandlerInterface,
+                      public GCF::PAL::GCFPropertySetAnswerHandlerInterface,
                       public CEPApplicationManagerInterface
 {
 public:
@@ -122,9 +122,9 @@ private:
    	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
 	typedef boost::shared_ptr<CEPApplicationManager> CEPApplicationManagerPtr;
 
-   	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
-   	GCFMyPropertySetPtr           itsPropertySet;
-	bool						  itsPropertySetInitialized;
+    GCF::PAL::GCFPropertySetAnswer  itsPropertySetAnswer;
+   	GCFMyPropertySetPtr           	itsPropertySet;
+	bool						  	itsPropertySetInitialized;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;

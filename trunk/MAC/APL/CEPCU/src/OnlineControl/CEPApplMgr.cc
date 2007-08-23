@@ -34,10 +34,14 @@ namespace LOFAR {
 // CEPApplMgr(interface, appl)
 //
 CEPApplMgr::CEPApplMgr(CEPApplMgrInterface& interface, 
-					   const string& 		appName) :
+					   const string& 		appName,
+					   const string&		acdHost,
+					   const string&		paramFile) :
 	itsProcName	   (appName),
+	itsParamFile   (paramFile),
 	itsCAMInterface(interface),
-	itsACclient	   (this, appName, 10, 100, 1, 0),
+	//			   (nrProcs, expectedlifetime,activityLevel,architecture);
+	itsACclient	   (this, appName, 10, time(0)%100, 1, 0, acdHost),
 	itsReqState	   (CTState::NOSTATE),
 	itsCurState	   (CTState::NOSTATE),
 	itsContinuePoll(true)
@@ -115,7 +119,7 @@ void  CEPApplMgr::handleAckMsg(ACCmd         cmd,
 
 	case ACCmdQuit:
 		if (ACCresult == AcCmdMaskOk) {
-			itsContinuePoll = false;
+//			itsContinuePoll = false;
 			itsCurState = CTState::QUITED;
 		}
 		itsCAMInterface.appSetStateResult(itsProcName, CTState::QUIT, MACresult);
@@ -137,7 +141,7 @@ void CEPApplMgr::sendCommand (CTState::CTstateNr	newState, const string&		option
 {
 	switch (newState) {
 	case CTState::CONNECT:
-		itsACclient.boot(0, options);
+		itsACclient.boot(0, itsParamFile);
 		break;
 	case CTState::CLAIM:
 		itsACclient.define(0);
