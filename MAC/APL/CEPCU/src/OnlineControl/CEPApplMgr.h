@@ -70,7 +70,10 @@ class CEPApplMgr : public ACC::ALC::ACClientFunctions,
 						  GCF::TM::GCFHandler
 {
 public:
-	CEPApplMgr(CEPApplMgrInterface& interface, const string& appName);
+	CEPApplMgr(CEPApplMgrInterface& 	interface, 
+			   const string& 			appName, 
+			   const string& 			acdHost,
+			   const string&			paramFile);
 	virtual ~CEPApplMgr();
 
 	// method used by the OnlineController to initiate a new command
@@ -125,6 +128,7 @@ private:
 
 	// --- datamembers ---
 	string                          itsProcName;		// my name
+	string                          itsParamFile;		// name of paramfile
 	CEPApplMgrInterface& 			itsCAMInterface;	// link to OnlineController
 	ACC::ALC::ACAsyncClient         itsACclient;		// link to ACC controller
 	uint16							itsReqState;		// requested state
