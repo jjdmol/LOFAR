@@ -43,7 +43,7 @@ GPAController::GPAController() :
   _queueTimerId(0)
 {
   // register the protocol for debugging purposes
-  registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
+  TM::registerProtocol(PA_PROTOCOL, PA_PROTOCOL_STRINGS);
 
   // startup_stateize the TCP port provider
   _pmlPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PA_PROTOCOL);
@@ -66,9 +66,9 @@ GCFEvent::TResult GPAController::startup_state(GCFEvent& e, GCFPortInterface& p)
   {
     case F_INIT:
     {
-      LOG_INFO("Prepare PVSS DB for proper use by PA");
-      system("chmod 777 preparePVSS-DB");
-      system("./preparePVSS-DB");
+//      LOG_INFO("Prepare PVSS DB for proper use by PA");
+//      system("chmod 777 preparePVSS-DB");
+//      system("./preparePVSS-DB");
       break;
     }
     case F_ENTRY:

@@ -29,59 +29,56 @@
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/PAL/GCF_PVSSPort.h>
 
-/**
-   This is the main class of the Property Agent. It uses a number of helper 
-   classes to manage PML requests, registered scopes and use counts of created 
-   properties. The assigned port provider supports the possibility to accept 
-   more than one connect request from different clients (PML).
-*/
+// This is the main class of the Property Agent. It uses a number of helper 
+// classes to manage PML requests, registered scopes and use counts of created 
+// properties. The assigned port provider supports the possibility to accept 
+// more than one connect request from different clients (PML).
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
 
 class GPAPropSetSession;
 
 class GPAController : public TM::GCFTask
 {
-	public:
-		GPAController();
-		virtual ~GPAController();
+public:
+	GPAController();
+	virtual ~GPAController();
   
-	private: // state methods
-		TM::GCFEvent::TResult startup_state(TM::GCFEvent& e, TM::GCFPortInterface& p);
-		TM::GCFEvent::TResult waiting_state(TM::GCFEvent& e, TM::GCFPortInterface& p);
+private: 
+	// state methods
+	TM::GCFEvent::TResult startup_state(TM::GCFEvent& e, TM::GCFPortInterface& p);
+	TM::GCFEvent::TResult waiting_state(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
-  private: // helper methods
+	// helper methods
     friend class GPAPropSetSession;
-    void mayDeleted(GPAPropSetSession& session);
-    GPAPropSetSession* findPropSet(const string& scope) const;
+
     void acceptConnectRequest(TM::GCFPortInterface& p);
-    void emptyGarbage();
-    void closingPortFinished(GPAPropSetSession &pss, TM::GCFPortInterface& p);
-    void propSetIdle(GPAPropSetSession& idlePropSet);    
+    void mayDeleted			 (GPAPropSetSession& 	session);
+    void closingPortFinished (GPAPropSetSession&	pss, TM::GCFPortInterface& p);
+    void propSetIdle		 (GPAPropSetSession&	idlePropSet);    
+    void emptyGarbage		 ();
+    GPAPropSetSession*	findPropSet	(const string& scope) const;
     
-	private: // data members
+	// data members
     typedef map<string /*scope*/, GPAPropSetSession*> TPropSetSessions;
-    TPropSetSessions         _propSetSessions;
-    list<GPAPropSetSession*> _propSetSessionsGarbage;
-    
-    list<TM::GCFPortInterface*> _pmlPorts;		
+    TPropSetSessions         	_propSetSessions;			// the actual PSses
+    list<GPAPropSetSession*> 	_propSetSessionsGarbage;	// to be deleted
     
     typedef map<TM::GCFPortInterface* /*pPortToDelete*/, list<GPAPropSetSession*> /*pendingPSs*/> TClosedPorts;
     // pendingPSs = propsets, which are busy with the close port procedure
     
-    TClosedPorts      _pmlPortGarbage;
-		TM::GCFTCPPort    _pmlPortProvider;
-    PAL::GCFPVSSPort  _distPmlPortProvider;
+    list<TM::GCFPortInterface*> _pmlPorts;					// conn. with clients
+    TClosedPorts      			_pmlPortGarbage;			// ports to delete
     
-  private: // admin. data members
-    unsigned long     _garbageTimerId;
-    unsigned long     _queueTimerId;
-    GPAConverter      _converter;   
+	TM::GCFTCPPort    			_pmlPortProvider;			// TCP listener
+    PAL::GCFPVSSPort  			_distPmlPortProvider;		// PVSS DP 'listener'
+    
+	// admin. data members
+    unsigned long     			_garbageTimerId;
+    unsigned long     			_queueTimerId;
+    GPAConverter      			_converter;   
 };
 
   } // namespace PAL

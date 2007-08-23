@@ -58,6 +58,7 @@ PA/Makefile
 PI/src/Makefile
 PI/Makefile
 PML/src/Makefile
+PML/test/Makefile
 PML/Makefile
 SAL/src/Makefile
 SAL/test/Makefile
