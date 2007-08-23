@@ -96,10 +96,10 @@ itsClock = globalParameterSet()->getUint32(itsTreePrefix + "sampleClock");
 	itsParentPort->open();		// will result in F_CONNECTED
 
 	// for debugging purposes
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
-	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
-	registerProtocol (RSP_PROTOCOL, 	   RSP_PROTOCOL_signalnames);
-	registerProtocol (F_PML_PROTOCOL, 	   F_PML_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (PA_PROTOCOL, 		PA_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (RSP_PROTOCOL, 	    RSP_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (F_PML_PROTOCOL, 	    F_PML_PROTOCOL_STRINGS);
 }
 
 
@@ -146,7 +146,7 @@ void DigitalBoardControl::finish()
 //
 void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 {
-	LOG_TRACE_FLOW_STR ("handlePropertySetAnswer:" << eventstr(answer));
+	LOG_TRACE_FLOW_STR ("handlePropertySetAnswer:" << eventName(answer));
 
 	switch(answer.signal) {
 	case F_MYPS_ENABLED: 
@@ -240,7 +240,7 @@ void DigitalBoardControl::handlePropertySetAnswer(GCFEvent& answer)
 GCFEvent::TResult DigitalBoardControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << eventstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -350,7 +350,7 @@ myPropSetName=myPropSetName.substr(8);
 GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("connect:" << eventstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("connect:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -401,7 +401,7 @@ GCFEvent::TResult DigitalBoardControl::connect_state(GCFEvent& event,
 GCFEvent::TResult DigitalBoardControl::subscribe_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("subscribe:" << eventstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("subscribe:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -454,7 +454,7 @@ GCFEvent::TResult DigitalBoardControl::subscribe_state(GCFEvent& event,
 GCFEvent::TResult DigitalBoardControl::retrieve_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("retrieve:" << eventstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("retrieve:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -514,7 +514,7 @@ GCFEvent::TResult DigitalBoardControl::retrieve_state(GCFEvent& event,
 GCFEvent::TResult DigitalBoardControl::setClock_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("setClock:" << eventstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("setClock:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -565,7 +565,7 @@ GCFEvent::TResult DigitalBoardControl::setClock_state(GCFEvent& event,
 //
 GCFEvent::TResult DigitalBoardControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << eventstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -781,7 +781,7 @@ GCFEvent::TResult DigitalBoardControl::defaultMessageHandling(GCFEvent& 		event,
 		break;
 
 		default: {
-			LOG_WARN_STR ("no action defined for event:" << eventstr(event));
+			LOG_WARN_STR ("no action defined for event:" << eventName(event));
 		}
 		break;
 	}
@@ -797,7 +797,7 @@ GCFEvent::TResult DigitalBoardControl::defaultMessageHandling(GCFEvent& 		event,
 //
 GCFEvent::TResult DigitalBoardControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
