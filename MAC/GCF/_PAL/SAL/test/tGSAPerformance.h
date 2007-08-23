@@ -1,5 +1,5 @@
 //
-//  tGSAService.h: Definition of the tGSAService task class.
+//  tGSAPerformance.h: Definition of the tGSAService task class.
 //
 //  Copyright (C) 2003
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,54 +22,49 @@
 //  $Id$
 //
 
-#ifndef _TGSASERVICE_H_
-#define _TGSASERVICE_H_
+#ifndef _TGSAPERFORMANCE_H_
+#define _TGSAPERFORMANCE_H_
 
 #include <GCF/TM/GCF_Control.h>
-#include "Service.h"
+#include "PerformanceService.h"
 
 namespace LOFAR {
  namespace GCF {
   namespace PAL {
 /**
- * The tGSAService task receives ECHO_PING events from the Ping task and
+ * The tGSAPerformance task receives ECHO_PING events from the Ping task and
  * returns an ECHO_ECHO event for each ECHO_PING event received.
  */
-class tGSAService : public GCFTask
+class tGSAPerformance : public GCFTask
 {
  public:
 
   /**
-   * The constructor for the tGSAService task.
+   * The constructor for the tGSAPerformance task.
    * @param name The name of this task. By differentiating in the name, multiple
    * instances of the same task can be created and addressed.
    */
-  tGSAService (const string& name);
+  tGSAPerformance (const string& name);
 
-  virtual ~tGSAService();
+  virtual ~tGSAPerformance();
 
-  GCFEvent::TResult initial  (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult final    (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test1	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test2	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test3	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test4	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test5	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test6	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test7	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test8	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test9	 (GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult test10	 (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult initial  	 (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult final    	 (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1cleanup (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1create	 (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1setvalue(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1getvalue(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult test1delete	 (GCFEvent& e, GCFPortInterface& p);
 
  private:
 
   /**
-   * The tGSAService task acts as a server for Ping tasks to use. Event from the Ping
+   * The tGSAPerformance task acts as a server for Ping tasks to use. Event from the Ping
    * task are received on the server port. And reply events to the Ping task
    * are sent through the server port.
    */
-	Service* 		_pService;
-	GCFTimerPort*	itsTimerPort;
+	PerformanceService* 	_pService;
+	GCFTimerPort*			itsTimerPort;
 };
 
   } // namespace PAL
