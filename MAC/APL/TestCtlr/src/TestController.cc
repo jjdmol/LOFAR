@@ -200,19 +200,19 @@ GCFEvent::TResult TestController::active_state(GCFEvent& event, GCFPortInterface
 			answer.result = 0;
 			LOG_DEBUG_STR("Sending RELEASED event");
 			itsParentPort->send(answer);
-			LOG_DEBUG_STR("Will send FINISH event over 6 seconds");
-			itsState      = CTState::FINISH;
+			LOG_DEBUG_STR("Will send QUITED event over 6 seconds");
+			itsState      = CTState::QUIT;
 			itsTimerPort->setTimer(6.0);
 		}
 		break;
 
-		case CTState::FINISH: {
-			CONTROLFinishEvent	msg;
+		case CTState::QUIT: {
+			CONTROLQuitedEvent	msg;
 			msg.cntlrName = itsController;
 			msg.treeID    = 7;
 			msg.errorMsg  = "Normal Termination";
 			msg.result    = 0;
-			LOG_DEBUG_STR("Sending FINISH event");
+			LOG_DEBUG_STR("Sending QUITED event");
 			itsParentPort->send(msg);
 		}
 		break;
@@ -286,19 +286,11 @@ GCFEvent::TResult TestController::active_state(GCFEvent& event, GCFPortInterface
 	case CONTROL_QUIT: {
 		CONTROLQuitEvent		msg(event);
 		itsController = msg.cntlrName;
-		itsState      = CTState::FINISH;
+		itsState      = CTState::QUIT;
 		itsTimerPort->setTimer(5.0);
 	}
 	break;
 		
-	case CONTROL_FINISHED: {
-		CONTROLFinishedEvent		msg(event);
-		LOG_DEBUG_STR("About to quit");
-		sleep(2);
-		stop();
-	}
-	break;
-
 	default:
 		LOG_DEBUG("active_state, default");
 		break;

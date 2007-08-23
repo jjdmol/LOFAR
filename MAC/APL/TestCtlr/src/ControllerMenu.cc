@@ -463,7 +463,7 @@ GCFEvent::TResult ControllerMenu::finish_state(GCFEvent& event, GCFPortInterface
 			// Start ChildControl task
 			cout << "Telling controller we are FINISHED ..." << endl;;
 			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
-			if (!itsChildControl->requestState(CTState::FINISHED, cntlrName, itsObsNr, itsCntlrType)) {
+			if (!itsChildControl->requestState(CTState::QUITED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
 				stop();
 			}
@@ -475,16 +475,15 @@ GCFEvent::TResult ControllerMenu::finish_state(GCFEvent& event, GCFPortInterface
 	case F_DISCONNECTED:
 		break;
 
-	case CONTROL_FINISH: {
-			CONTROLFinishEvent msg(event);
-			cout << endl << "Finish result = " << msg.result << endl;
+	case CONTROL_QUITED: {
+			CONTROLQuitedEvent msg(event);
 			if (msg.result != CT_RESULT_NO_ERROR) {
-				cout << "Bailing out because of the errors." << endl;
-				stop ();
+				cout << endl << "WARNING: Finish result = " << msg.result << endl;
 			}
 			else {
-				_doActionMenu();
+				cout << endl << "Finish result = " << msg.result << endl;
 			}
+			_doActionMenu();
 		}
 		break;
 
