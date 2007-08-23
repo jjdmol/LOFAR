@@ -41,16 +41,12 @@
 // handle events in a state machine of a task, to skip or to handle in a 
 // different way.
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace Common
-  {
-class GCFPValue;
+namespace LOFAR {
+ namespace GCF {
+  namespace Common {
+	class GCFPValue;
   }
-  namespace PAL
-  {
+  namespace PAL {
 
 class GCFAnswer
 {
@@ -213,6 +209,8 @@ struct GCFConfAnswerEvent : public GCFPropSetAnswerEvent
 
 // defined in GCF_Answer.cc
 extern const char* F_PML_PROTOCOL_signalnames[];
+extern const struct TM::protocolStrings F_PML_PROTOCOL_STRINGS;
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR

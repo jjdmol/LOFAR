@@ -36,21 +36,17 @@
 // value change in the SCADA DB will be received. In most of the cases this is 
 // not wanted. Always use this class with cautions.
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace Common
-  {
-class Common::GCFPValue;
+namespace LOFAR {
+ namespace GCF {
+  namespace Common {
+	class Common::GCFPValue;
   }
-  namespace PAL
-  {
-class GPMPropertyProxy;
+  namespace PAL {
+   class GPMPropertyProxy;
 
 class GCFPropertyProxy
 {
-  public:
+public:
     GCFPropertyProxy ();
     virtual ~GCFPropertyProxy ();
 
@@ -102,7 +98,7 @@ class GCFPropertyProxy
                                                       const string& queryFrom);
     virtual Common::TGCFResult dpQueryUnsubscribe(uint32 queryId);
 
-  protected:
+protected:
     friend class GPMPropertyProxy;
 
     // Response on 'subscribeProp' request
@@ -127,7 +123,7 @@ class GCFPropertyProxy
 
     virtual void dpQuerySubscribed(uint32 queryId);
 
-  private:
+private:
     // Don't allow copying this object.
     // <group>
     GCFPropertyProxy (const GCFPropertyProxy&);

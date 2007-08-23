@@ -27,6 +27,27 @@ enum TPAResult
   PA_LINK_TIME_OUT,
   PA_SERVER_GONE,
 };
+
+// implements to following events:
+// From GPMController to PA
+// LOAD_PROP_SET	  (int seqnr, string 	scope);
+// PROP_SET_LOADED	  (int seqnr, TPAResult result);
+// UNLOAD_PROP_SET	  (int seqnr, string 	scope);
+// PROP_SET_UNLOADED  (int seqnr, TPAResult result);
+// CONF_PROP_SET	  (int seqnr, string 	scope,	 string 	apcName);
+// PROP_SET_CONF	  (int seqnr, string 	apcName, TPAResult  result);
+// REGISTER_SCOPE	  (int seqnr, string 	scope,	 string		type,	TPSCategory	category);
+// SCOPE_REGISTERED	  (int seqnr, TPAResult result);
+// UNREGISTER_SCOPE	  (int seqnr, string 	scope);
+// SCOPE_UNREGISTERED (int seqnr, TPAResult result);
+
+// From PA to GPMController
+// LINK_PROP_SET	  (string 	scope);
+// PROP_SET_LINKED	  (string	scope,	TPAResult result);
+// UNLINK_PROP_SET	  (string 	scope);
+// PROP_SET_UNLINKED  (string	scope,	TPAResult result);
+// PROP_SET_GONE	  (string 	scope);
+
 PRELUDE_END;
 //
 // An "event" has a "signal" and a "dir" (direction)

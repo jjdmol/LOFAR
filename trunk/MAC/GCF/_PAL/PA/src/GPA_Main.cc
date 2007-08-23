@@ -26,17 +26,17 @@
 #include <GCF/TM/GCF_Control.h>
 
 using namespace LOFAR::GCF;
-int main(int argC, char *argV[])
+int main(int argc, char *argv[])
 {
-  TM::GCFTask::init(argC, argV);
-  
-  LOG_INFO("MACProcessScope: GCF.PA");
-  
-  PAL::GPAController propertyAgent; 
-  
-  propertyAgent.start(); // make initial transition
-  
-  TM::GCFTask::run();
+	TM::GCFTask::init(argc, argv);
 
-  return 0;
+	LOG_INFO("MACProcessScope: GCF.PA");
+
+	PAL::GPAController propertyAgent; 
+
+	propertyAgent.start(); // make initial transition
+
+	TM::GCFTask::run();
+
+	return 0;
 }

@@ -39,7 +39,7 @@ GPIController::GPIController() :
   GCFTask((State)&GPIController::initial, PI_TASK_NAME)
 {
   // register the protocol for debugging purposes
-  registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
+  TM::registerProtocol(PI_PROTOCOL, PI_PROTOCOL_STRINGS);
 
   // initialize the port provider
   _rtcClientPortProvider.init(*this, "rtc-provider", GCFPortInterface::MSPP, PI_PROTOCOL);

@@ -41,8 +41,8 @@ GPIPMLlightServer::GPIPMLlightServer(GPIController& controller, const string& na
   _timerID(-1)
 {
   // register the protocols for debugging purposes only
-  registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
-  registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
+  TM::registerProtocol(PI_PROTOCOL, PI_PROTOCOL_STRINGS);
+  TM::registerProtocol(PA_PROTOCOL, PA_PROTOCOL_STRINGS);
 
   // initialize the port to the real Client 
   _clientPort.init(*this, "server", GCFPortInterface::SPP, PI_PROTOCOL, transportRawData);
