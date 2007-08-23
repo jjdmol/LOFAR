@@ -177,7 +177,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
 								(const char*)pvssTypeName, dpName.c_str()));
 						}
 						else {
-							LOG_TRACE_FLOW(formatString("Value of '%s' has get", dpName.c_str()));
+							LOG_TRACE_FLOW(formatString("Value of '%s' was get", dpName.c_str()));
 							dpeValueGet(dpName, *pPropertyValue);
 						}
 						if (pPropertyValue)
@@ -198,6 +198,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
 					break;
 
 				default:
+					LOG_TRACE_FLOW_STR("Event " << answer.isAnswerOn() << " unhandled");
 					handled = false;
 					break;
 				}
@@ -209,6 +210,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
 			if (pGrItem->wasOk() == PVSS_TRUE) {
 				if (answer.isAnswerOn() == DP_MSG_COMPLEX_VC) {
 					// this must be the answer on a dpSet(Wait) 
+					LOG_TRACE_FLOW_STR("dpe " << wait.getDpName() << " was set");
 					dpeValueSet(wait.getDpName());
 					handled = true;
 				}
@@ -709,7 +711,7 @@ TSAResult GSAService::dpeSet(const string& dpeName,
 		GSAWaitForAnswer* pWFA(0);
 		if (wantAnswer) {
 			// Note: pWFA will be deleted by PVSS API
-			GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this); 
+			pWFA = new GSAWaitForAnswer(*this); 
 			pWFA->setDpName(dpeName);
 		}
 		PVSSboolean retVal, retValTS(PVSS_TRUE);
