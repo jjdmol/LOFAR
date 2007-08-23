@@ -118,9 +118,9 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
-	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
-	registerProtocol (F_PML_PROTOCOL, 	   F_PML_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (F_PML_PROTOCOL, 	   F_PML_PROTOCOL_STRINGS);
  
 	// we cannot use setState right now, wait for propertysets to come online
 	//	setState(CTState::CREATED);
@@ -180,7 +180,7 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 //
 void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 {
-	LOG_TRACE_FLOW_STR ("handlePropertySetAnswer:" << evtstr(answer));
+	LOG_TRACE_FLOW_STR ("handlePropertySetAnswer:" << eventName(answer));
 
 	switch(answer.signal) {
 	case F_MYPS_ENABLED: {
@@ -297,7 +297,7 @@ void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
 GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -348,7 +348,7 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("starting:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("starting:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -461,7 +461,7 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 //
 GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -643,7 +643,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event, 
 													  GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 

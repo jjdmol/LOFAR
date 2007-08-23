@@ -31,7 +31,7 @@ using namespace LOFAR::MainCU;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFTask::init(argc, argv);
+	GCFTask::init(argc, argv, argv[1]);
 
 	ChildControl*	cc = ChildControl::instance();
 	cc->start();	// make initial transition
