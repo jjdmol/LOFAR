@@ -37,38 +37,54 @@ using namespace LOFAR;
 void showpar3 (KeyValueMap& par3)
 {
   par3.show (cout);
-  cout << par3["b1"].getBool() << ' ' << par3["b1"].getVecBool() << endl;
-  cout << par3["i1"].getInt() << ' ' << par3["i1"].getVecInt() << endl;
-  cout << par3["i1"].getFloat() << ' ' << par3["i1"].getVecFloat() << endl;
-  cout << par3["i1"].getDouble() << ' ' << par3["i1"].getVecDouble() << endl;
-  cout << par3["i1"].getFComplex() << ' ' << par3["i1"].getVecFComplex() << endl;
-  cout << par3["i1"].getDComplex() << ' ' << par3["i1"].getVecDComplex() << endl;
-  cout << par3["f1"].getFloat() << ' ' << par3["f1"].getVecFloat() << endl;
-  cout << par3["f1"].getDouble() << ' ' << par3["f1"].getVecDouble() << endl;
-  cout << par3["f1"].getFComplex() << ' ' << par3["f1"].getVecFComplex() << endl;
-  cout << par3["f1"].getDComplex() << ' ' << par3["f1"].getVecDComplex() << endl;
-  cout << par3["d1"].getDouble() << ' ' << par3["d1"].getVecDouble() << endl;
-  cout << par3["d1"].getDComplex() << ' ' << par3["d1"].getVecDComplex() << endl;
-  cout << par3["c1"].getFComplex() << ' ' << par3["c1"].getVecFComplex() << endl;
-  cout << par3["c1"].getDComplex() << ' ' << par3["c1"].getVecDComplex() << endl;
-  cout << par3["dc1"].getDComplex() << ' ' << par3["dc1"].getVecDComplex() << endl;
-  cout << par3["s1"].getString() << ' ' << par3["s1"].getVecString() << endl;
-  cout << par3["vb1"].getVecBool() << endl;
-  cout << par3["vi1"].getVecInt() << endl;
-  cout << par3["vi1"].getVecFloat() << endl;
-  cout << par3["vi1"].getVecDouble() << endl;
-  cout << par3["vi1"].getVecFComplex() << endl;
-  cout << par3["vi1"].getVecDComplex() << endl;
-  cout << par3["vf1"].getVecFloat() << endl;
-  cout << par3["vf1"].getVecDouble() << endl;
-  cout << par3["vf1"].getVecFComplex() << endl;
-  cout << par3["vf1"].getVecDComplex() << endl;
-  cout << par3["vd1"].getVecDouble() << endl;
-  cout << par3["vd1"].getVecDComplex() << endl;
-  cout << par3["vc1"].getVecFComplex() << endl;
-  cout << par3["vc1"].getVecDComplex() << endl;
-  cout << par3["vdc1"].getVecDComplex() << endl;
-  cout << par3["vs1"].getVecString() << endl;
+  cout << par3["b1"].getBool() << ' '
+       << KeyValue(par3["b1"].getVecBool()) << endl;
+  cout << par3["i1"].getInt() << ' '
+       << KeyValue(par3["i1"].getVecInt()) << endl;
+  cout << par3["i1"].getFloat() << ' '
+       << KeyValue(par3["i1"].getVecFloat()) << endl;
+  cout << par3["i1"].getDouble() << ' '
+       << KeyValue(par3["i1"].getVecDouble()) << endl;
+  cout << par3["i1"].getFComplex() << ' '
+       << KeyValue(par3["i1"].getVecFComplex()) << endl;
+  cout << par3["i1"].getDComplex() << ' '
+       << KeyValue(par3["i1"].getVecDComplex()) << endl;
+  cout << par3["f1"].getFloat() << ' '
+       << KeyValue(par3["f1"].getVecFloat()) << endl;
+  cout << par3["f1"].getDouble() << ' '
+       << KeyValue(par3["f1"].getVecDouble()) << endl;
+  cout << par3["f1"].getFComplex() << ' '
+       << KeyValue(par3["f1"].getVecFComplex()) << endl;
+  cout << par3["f1"].getDComplex() << ' '
+       << KeyValue(par3["f1"].getVecDComplex()) << endl;
+  cout << par3["d1"].getDouble() << ' '
+       << KeyValue(par3["d1"].getVecDouble()) << endl;
+  cout << par3["d1"].getDComplex() << ' '
+       << KeyValue(par3["d1"].getVecDComplex()) << endl;
+  cout << par3["c1"].getFComplex() << ' '
+       << KeyValue(par3["c1"].getVecFComplex()) << endl;
+  cout << par3["c1"].getDComplex() << ' '
+       << KeyValue(par3["c1"].getVecDComplex()) << endl;
+  cout << par3["dc1"].getDComplex() << ' '
+       << KeyValue(par3["dc1"].getVecDComplex()) << endl;
+  cout << par3["s1"].getString() << ' '
+       << KeyValue(par3["s1"].getVecString()) << endl;
+  cout << KeyValue(par3["vb1"].getVecBool()) << endl;
+  cout << KeyValue(par3["vi1"].getVecInt()) << endl;
+  cout << KeyValue(par3["vi1"].getVecFloat()) << endl;
+  cout << KeyValue(par3["vi1"].getVecDouble()) << endl;
+  cout << KeyValue(par3["vi1"].getVecFComplex()) << endl;
+  cout << KeyValue(par3["vi1"].getVecDComplex()) << endl;
+  cout << KeyValue(par3["vf1"].getVecFloat()) << endl;
+  cout << KeyValue(par3["vf1"].getVecDouble()) << endl;
+  cout << KeyValue(par3["vf1"].getVecFComplex()) << endl;
+  cout << KeyValue(par3["vf1"].getVecDComplex()) << endl;
+  cout << KeyValue(par3["vd1"].getVecDouble()) << endl;
+  cout << KeyValue(par3["vd1"].getVecDComplex()) << endl;
+  cout << KeyValue(par3["vc1"].getVecFComplex()) << endl;
+  cout << KeyValue(par3["vc1"].getVecDComplex()) << endl;
+  cout << KeyValue(par3["vdc1"].getVecDComplex()) << endl;
+  cout << KeyValue(par3["vs1"].getVecString()) << endl;
   cout << par3["b1"].dataType() << ' ' << par3["b1"].isVector() << ' '
        << par3["b1"].size() << endl;
   cout << par3["i1"].dataType() << ' ' << par3["i1"].isVector() << ' '
