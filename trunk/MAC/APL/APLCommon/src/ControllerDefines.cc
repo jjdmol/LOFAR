@@ -223,6 +223,10 @@ int32	getControllerType	(const string&	controllerName)
 //	@station@
 //  @instance@
 //	@observation@
+//	@cabinet@
+//	@subrack@
+//	@RSPboard@
+//	@rcu@
 //
 string	createPropertySetName(const string&		propSetMask,
 							  const string&		controllerName)
@@ -255,8 +259,18 @@ string	createPropertySetName(const string&		propSetMask,
 		psName.replace(pos, 13, string("Observation") +
 								lexical_cast<string>(getObservationNr(controllerName)));
 	}
+
+	if ((pos = psName.find("@cabinet@")) != string::npos) {
+		psName.replace(pos, 9, string("cabinet%d"));
+	}
+	if ((pos = psName.find("@subrack@")) != string::npos) {
+		psName.replace(pos, 9, string("subrack%d"));
+	}
 	if ((pos = psName.find("@RSPBoard@")) != string::npos) {
 		psName.replace(pos, 10, string("RSPBoard%d"));
+	}
+	if ((pos = psName.find("@rcu@")) != string::npos) {
+		psName.replace(pos, 5, string("rcu%d"));
 	}
 		
 	return (psName);
