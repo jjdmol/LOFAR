@@ -25,6 +25,7 @@
 #include <Common/lofar_fstream.h>
 #include <APS/ParameterSet.h>
 #include <GCF/Utils.h>
+#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <../SB_Protocol.ph>
 #include <GSB_Defines.h>
@@ -51,7 +52,8 @@ GSBController::GSBController() :
 	itsNrFreePorts(0)
 {
 	// register the protocol for debugging purposes
-	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_signalnames);
+//	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_signalnames);
+	TM::registerProtocol(SB_PROTOCOL, SB_PROTOCOL_STRINGS);
 
 	// allocate the listener port
 	itsListener.init(*this, MAC_SVCMASK_SERVICEBROKER, 
@@ -110,7 +112,7 @@ GCFEvent::TResult GSBController::initial(GCFEvent& event, GCFPortInterface& port
 //
 GCFEvent::TResult GSBController::operational(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_TRACE_FLOW_STR ("operation:" << evtstr(event) << "@" << port.getName());
+	LOG_TRACE_FLOW_STR ("operation:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 

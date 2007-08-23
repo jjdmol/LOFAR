@@ -55,7 +55,8 @@ GTMServiceBroker::GTMServiceBroker() :
 	itsTimerPort   (*this, "timerport")
 {
 	// register the protocol for debugging purposes
-	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_signalnames);
+//	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_signalnames);
+	TM::registerProtocol(SB_PROTOCOL, SB_PROTOCOL_STRINGS);
 }
 
 //
@@ -473,7 +474,7 @@ void GTMServiceBroker::_checkActionList(const string&	hostname)
 //
 GCFEvent::TResult GTMServiceBroker::operational(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("operational:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("operational:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch (event.signal) {

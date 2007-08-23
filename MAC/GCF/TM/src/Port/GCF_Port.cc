@@ -281,7 +281,7 @@ ssize_t GCFPort::send(GCFEvent& e)
 		if (!(F_EVT_INOUT(e) & F_OUT)) {
 			LOG_ERROR(formatString ("Trying to send IN event '%s' on SPP "
 									"port '%s'; discarding this event.",
-							getTask()->evtstr(e), makeServiceName().c_str()));
+							getTask()->eventName(e), makeServiceName().c_str()));
 
 			return (-1);
 		}
@@ -290,7 +290,7 @@ ssize_t GCFPort::send(GCFEvent& e)
 		if (!(F_EVT_INOUT(e) & F_IN)) {
 			LOG_ERROR(formatString ("Trying to send OUT event '%s' on SAP "
 									"port '%s'; discarding this event.",
-							getTask()->evtstr(e), makeServiceName().c_str()));
+							getTask()->eventName(e), makeServiceName().c_str()));
 
 			return (-1);
 		}
@@ -299,7 +299,7 @@ ssize_t GCFPort::send(GCFEvent& e)
 		LOG_ERROR(formatString ("Trying to send event '%s' by means of "
 								"the portprovider: %s (MSPP). "
 								"Not supported yet",
-							getTask()->evtstr(e), makeServiceName().c_str()));
+							getTask()->eventName(e), makeServiceName().c_str()));
 
 		return (-1);
 	}

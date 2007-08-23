@@ -87,12 +87,13 @@ void GCFTask::init(int argc, char** argv, const string&	logfile)
 		// locator could not find it try defaultname
 		logPropFile = "mac.log_prop";
 	}
+
 	if (logfile.empty()) {
-		INIT_LOGGER(aCL.locate(logPropFile).c_str());   
+		INIT_LOGGER(aCL.locate(logPropFile).c_str());
 		LOG_DEBUG_STR ("Initialized logsystem with: " << aCL.locate(logPropFile));
 	}
 	else {
-		INIT_VAR_LOGGER(aCL.locate(logPropFile).c_str(), logfile);   
+		INIT_VAR_LOGGER(aCL.locate(logPropFile).c_str(), logfile);
 		LOG_DEBUG_STR ("Initialized logsystem with: " << aCL.locate(logPropFile) <<
 						"," << logfile);
 	}
@@ -194,6 +195,8 @@ void GCFTask::deregisterHandler(GCFHandler& handler)
   _handlers.erase(&handler);
 }
 
+//
+// Old style registering ,will be obsolete.
 void GCFTask::registerProtocol(unsigned short protocolID,
               const char* signal_names[])
 {
@@ -203,6 +206,7 @@ void GCFTask::registerProtocol(unsigned short protocolID,
 
 //
 // evtstr(event&)
+// Will also become obsolete
 //
 string GCFTask::evtstr(const GCFEvent& e)  const
 {

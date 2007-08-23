@@ -65,7 +65,7 @@ class GCFTask : public GCFFsm
     /** static method; 
      * inits a number of services for the GCF based application:
      * - holds the argc and argv parameters in static data members
-     * - lofar logger("mac.log_prop")
+     * - lofar logger(argv[0].log_prop or "mac.log_prop")
      * - parameterset(argv[0] + ".conf")
      */     
     static void init (int argc, char** argv, const string&	logfile = "");
