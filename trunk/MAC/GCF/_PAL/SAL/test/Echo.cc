@@ -43,7 +43,7 @@ using namespace TM;
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name) , _pService(0)
 {
   // register the protocol for debugging purposes
-  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
+  TM::registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
 
   // initialize the port
   server.init(*this, "server", GCFPortInterface::SPP, ECHO_PROTOCOL);

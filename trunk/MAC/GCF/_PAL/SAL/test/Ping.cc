@@ -1,5 +1,5 @@
 //
-//  Ping.cc: Implementation of the Ping task class.
+// Ping.cc: Implementation of the Ping task class.
 //
 //  Copyright (C) 2003
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -30,12 +30,9 @@
 using std::cout;
 using std::endl;
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace PAL
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
 /**
  * Function to calculate the elapsed time between two tiemval's.
  */
@@ -49,7 +46,7 @@ Ping::Ping(string name)
   : GCFTask((State)&Ping::initial, name), ping_timer(-1)
 {
   // register the port for debug tracing
-  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
+  TM::registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
 
   /**
    * Initialize the "client" port

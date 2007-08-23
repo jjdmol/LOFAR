@@ -352,7 +352,7 @@ GCFEvent::TResult tGSAService::test7(GCFEvent& e, GCFPortInterface& p)
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		LOG_DEBUG("Reding back the integer variable");
+		LOG_DEBUG("Reading back the integer variable");
         result = _pService->dpeGet("testInt");
 		ASSERTSTR(result == SA_NO_ERROR, "Reading the integer testInt returned result: " << GSAerror(result));
 		itsTimerPort->setTimer(1.0);
@@ -430,6 +430,43 @@ GCFEvent::TResult tGSAService::test9(GCFEvent& e, GCFPortInterface& p)
 		GCFPVInteger goodTestVal(1000);
 		result = _pService->dpeSet("testInt", goodTestVal, 0.0);
 		ASSERTSTR(result == SA_NO_ERROR, "Writing an integer to the testInt returned result: " << GSAerror(result));
+		itsTimerPort->setTimer(1.0);
+	}
+	break;
+
+	case F_TIMER:
+		TRAN(tGSAService::test10);
+		break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// test10 (event, port)
+//
+GCFEvent::TResult tGSAService::test10(GCFEvent& e, GCFPortInterface& p)
+{
+	LOG_DEBUG_STR("test10:" << eventName(e) << "@" << p.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	TSAResult		  result;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		LOG_DEBUG("Reading back a non existant variable");
+		try {
+			result = _pService->dpeGet("UnknownVariable");
+			ASSERTSTR(result == SA_NO_ERROR, "Reading an unknown variable should return an error!");
+		}
+		catch (Exception& except) {
+			LOG_INFO_STR ("Reading an unknown variable returned result: " 
+							<< GSAerror(result));
+		}
 		itsTimerPort->setTimer(1.0);
 	}
 	break;
