@@ -1,16 +1,31 @@
-VddVccEn		bool
-VhEnable		bool
-VlEnable		bool
-filSel1		bool
-filSel0		bool
-bandSelLBA_HBA		bool
-bandSelLBL_LBH		bool
-HBAEnable		bool
-LBLEnable		bool
-LBHEnable		bool
-nofOverflow		uint
-LBL.state		int
-LBH.state		int
-HBA.state		int
+# Info from RCU directly
+Delay					uint
+InputEnable				bool
+#
+LBLEnable				bool
+LBHEnable				bool
+HBAEnable				bool
+#
+bandSelLBA_HBA			bool
+HBAFilterSel			uint
+#
+VlEnable				bool
+VhEnable				bool
+VddVccEnable			bool
+#
+bandSelLBL_LBH			bool
+LBAFilterSel			uint
+#
+Attenuation				uint
+#
+# Info from RSPboard or derived
+nofOverflow				uint
 ADCStatistics.overflow	bool
-Attenuating             uint
+#
+LBL.state				int
+LBH.state				int
+HBA.state				int
+#
+# Obsolote: Replaced with xBAFilterSel
+# filSel1			bool
+# filSel0			bool
