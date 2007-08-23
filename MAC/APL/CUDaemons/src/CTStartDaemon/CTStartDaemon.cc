@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 
+#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
@@ -61,7 +62,7 @@ CTStartDaemon::CTStartDaemon(const string& name) :
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 	ASSERTSTR(itsTimerPort, "Unable to allocate timer port");
 
-	registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_STRINGS);
 }
 
 
@@ -284,7 +285,8 @@ int32 CTStartDaemon::startController(uint16			cntlrType,
 GCFEvent::TResult CTStartDaemon::initial_state(GCFEvent& event, 
 											   GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG(formatString("CTStartDaemon(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
+	LOG_DEBUG(formatString("CTStartDaemon(%s)::initial_state (%s)",
+								getName().c_str(), eventName(event).c_str()));
   
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 	switch (event.signal) {
@@ -336,7 +338,7 @@ GCFEvent::TResult CTStartDaemon::initial_state(GCFEvent& event,
 GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG(formatString("operational_state:%s", evtstr(event)));
+	LOG_DEBUG(formatString("operational_state:%s", eventName(event).c_str()));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -380,6 +382,23 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 
 				LOG_DEBUG_STR ("Removing " << action->cntlrName << " from actionlist");
 				itsActionList.erase(action);
+
+				// [310507] there can be more events in the action queue be waiting.
+				// if there are just wait for the timer to expire.
+				if (isAction(findAction(createdEvent.cntlrName))) {
+					LOG_DEBUG_STR("More actions waiting for " << createdEvent.cntlrName);
+					break;
+				}
+
+				// [310507] this was the last action, remove from controllerlist
+				// because startup failed.
+				string	adminName  = sharedControllerName(createdEvent.cntlrName);
+				CTiter	controller = itsActiveCntlrs.find(adminName);
+				if (isController(controller)) {
+					LOG_DEBUG_STR("Last action removed, removing " << 
+										adminName << " also from the controllerList");
+					itsActiveCntlrs.erase(controller);
+				}
 			}
 		}
 		break;
@@ -412,6 +431,10 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 				port.send(createdEvent);
 				break;
 			}
+
+			// startup succesfull: add to admin [310507]
+			itsActiveCntlrs[adminName] = 0;
+			LOG_DEBUG_STR("Added " << adminName << " to the controllerList");
 		}
 
 		// controller already registered?
@@ -448,13 +471,19 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 		STARTDAEMONAnnouncementEvent	inMsg(event);
 		// known controller? (announcement msg always contains sharedname).
 		CTiter	controller = itsActiveCntlrs.find(inMsg.cntlrName);
-		// controller already registered?
-		if (isController(controller) && controller->second != 0) {
+		// controller must be known! [310507]
+		if (!isController(controller)) {
+			LOG_WARN_STR ("PROGRAMMING ERROR, controller " << inMsg.cntlrName << 
+												" should have bin in the administration");
+		}
+		else {
+			// controller already registered?
 			if (controller->second == &port) {	// on same port, no problem
-				LOG_DEBUG_STR ("Double announcement received of " << inMsg.cntlrName);
+				LOG_WARN_STR ("Double announcement received of " << inMsg.cntlrName);
 				break;
 			}
-			else {								// on other port, report error.
+			if ((controller->second != 0) && (controller->second != &port)) {
+				// on other port, report error.
 				LOG_ERROR_STR ("Controller " << inMsg.cntlrName << 
 						  " registered at two ports!!! Ignoring second registration!");
 				break;
@@ -464,9 +493,10 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 		// register the controller and its port
 		itsActiveCntlrs[inMsg.cntlrName] = &port; 
 		LOG_DEBUG_STR("Received announcement of " << inMsg.cntlrName << 
-						", adding it to the controllerList");
+													", updating the controllerList");
 
 		// are there a newParent actions waiting?
+		// inMsg should contain shared-name but better safe than sorry.
 		string	adminName = sharedControllerName(inMsg.cntlrName);
 		actionIter	action = findAction(adminName);
 		while (isAction(action)) {
@@ -476,9 +506,9 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 			sendNewParentAndCreatedMsg(action);
 			LOG_DEBUG_STR ("Removing " << action->cntlrName << " from actionlist");
 		LOG_DEBUG(formatString("XXX %s:%d:%s:%s:%X:%ld", action->cntlrName.c_str(), action->cntlrType, action->parentHost.c_str(), action->parentService.c_str(), action->parentPort, action->timerID));
-			LOG_DEBUG("Clearing pointer to port to prevent close");
-		LOG_DEBUG(formatString("XXX %s:%d:%s:%s:%X:%ld", action->cntlrName.c_str(), action->cntlrType, action->parentHost.c_str(), action->parentService.c_str(), action->parentPort, action->timerID));
+		LOG_DEBUG("Clearing pointer to port to prevent close");
 			action->parentPort = 0;	// don't destroy the port yet
+		LOG_DEBUG(formatString("XXX %s:%d:%s:%s:%X:%ld", action->cntlrName.c_str(), action->cntlrType, action->parentHost.c_str(), action->parentService.c_str(), action->parentPort, action->timerID));
 			itsActionList.erase(action);
 			action = findAction(adminName);
 		}
