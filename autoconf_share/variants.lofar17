@@ -12,6 +12,10 @@ gnunew.compiler.conf: CXX="$CCACHE /usr/local/gcc343/bin/g++" --with-ldflags="-W
 gnunew.compiler.aipspp.var: --with-casacore=/lofarbuild/casacore/prod/linux_gnunew --with-wcs=/usr/local/wcslib/gnunew
 gnunew.compiler.sse.var:    --with-sse
 
+gnu4.compiler.conf: CXX="$CCACHE /usr/local/gcc421/bin/g++" --with-ldflags="-Wl,-rpath,/usr/local/gcc421/lib"
+gnu4.compiler.aipspp.var: --with-casacore=/lofarbuild/casacore/prod/linux_gnu4 --with-wcs=/usr/local/wcslib/gnu
+gnu4.compiler.see.var:    --with-sse
+
 icc.compiler.conf: CXX="$CCACHE /usr/local/compiler80/bin/icc" --with-cppflags="-cxxlib-gcc" --with-ldflags="-cxxlib-gcc -Xlinker -rpath -Xlinker /usr/local/compiler80/lib"
 icc.compiler.aipspp.var: --with-casacore=/lofarbuild/casacore/prod/linux_gnu --with-wcs=/usr/local/wcslib/gnu --with-blitz=/usr/local/blitz/gnu --with-fftw2=/usr/local/fftw2/gnu --with-dtl=/usr/local/dtl/gnu
 
