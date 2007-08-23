@@ -89,10 +89,10 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	ASSERTSTR(itsCalServer, "Cannot allocate TCPport to CalServer");
 
 	// for debugging purposes
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
-	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
-	registerProtocol (CAL_PROTOCOL,		   CAL_PROTOCOL_signalnames);
-	registerProtocol (F_PML_PROTOCOL,	   F_PML_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (PA_PROTOCOL, 		PA_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (CAL_PROTOCOL,		CAL_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (F_PML_PROTOCOL,	    F_PML_PROTOCOL_STRINGS);
 
 	setState(CTState::CREATED);
 }
@@ -169,7 +169,7 @@ int32 CalibrationControl::convertFilterSelection(const string&	filterselection)
 //
 void CalibrationControl::handlePropertySetAnswer(GCFEvent& answer)
 {
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << evtstr(answer));
+	LOG_DEBUG_STR ("handlePropertySetAnswer:" << eventName(answer));
 
 	switch(answer.signal) {
     case F_MYPS_ENABLED: {
@@ -216,7 +216,7 @@ void CalibrationControl::handlePropertySetAnswer(GCFEvent& answer)
 GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -314,7 +314,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("started:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("started:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -388,7 +388,7 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("claimed:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("claimed:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -471,7 +471,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 //
 GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -568,7 +568,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("quiting:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("quiting:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -674,7 +674,7 @@ GCFEvent::TResult CalibrationControl::_defaultEventHandler(GCFEvent&		 event,
 														   GCFPortInterface& port)
 {
 	CTState     cts;
-	LOG_DEBUG_STR("Received " << evtstr(event) << " in state " << cts.name(itsState)
+	LOG_DEBUG_STR("Received " << eventName(event) << " in state " << cts.name(itsState)
 					<< ". DEFAULT handling.");
 
 	GCFEvent::TResult   result(GCFEvent::NOT_HANDLED);
@@ -708,7 +708,7 @@ GCFEvent::TResult CalibrationControl::_defaultEventHandler(GCFEvent&		 event,
 	}
 
 	if (result == GCFEvent::NOT_HANDLED) {
-		LOG_WARN_STR("Event " << evtstr(event) << " NOT handled in state " <<
+		LOG_WARN_STR("Event " << eventName(event) << " NOT handled in state " <<
 					cts.name(itsState));
 	}
 

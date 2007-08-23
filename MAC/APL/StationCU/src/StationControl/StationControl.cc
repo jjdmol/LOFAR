@@ -103,9 +103,9 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
 	// for debugging purposes
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
-	registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_signalnames);
-	registerProtocol (F_PML_PROTOCOL, 	   F_PML_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (PA_PROTOCOL, 		PA_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (F_PML_PROTOCOL, 	    F_PML_PROTOCOL_STRINGS);
 }
 
 
@@ -583,7 +583,7 @@ LOG_TRACE_FLOW_STR("There are " << cntlrStates.size() << " busy controllers");
 //
 GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("finishing_state:" << evtstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("finishing_state:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
