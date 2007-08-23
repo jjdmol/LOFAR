@@ -38,7 +38,7 @@ using namespace blitz;
 
 #define TDREAD_TIMEOUT 3
 #define RSUCLEAR_WAIT  5
-#define WRITE_TIMEOUT  2
+#define WRITE_TIMEOUT  3
 
 /**
  * Instance pointer for the Cache singleton class.
