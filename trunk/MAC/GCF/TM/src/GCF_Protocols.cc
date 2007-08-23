@@ -22,6 +22,7 @@
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_map.h>
 #include <Common/StringUtil.h>
 #include <GCF/TM/GCF_Protocols.h>
@@ -76,6 +77,7 @@ void registerProtocol (unsigned short					protID,
 					   const struct protocolStrings&	protDef)
 {
 	_protNameTable[protID] = &protDef;
+	LOG_DEBUG_STR ("registered protocol: " << protID);
 }
 
 //

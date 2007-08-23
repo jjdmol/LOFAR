@@ -105,7 +105,8 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 						  (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL)) {
 		// Inform about the fact of an incomming message
 		LOG_DEBUG(formatString ("%s was received on port '%s' in task '%s'",
-								_pTask->evtstr(event).c_str(), 
+//								_pTask->eventName(event).c_str(), 
+								eventName(event).c_str(), 
 								getRealName().c_str(), 
 								_pTask->getName().c_str())); 
 	}
@@ -157,7 +158,7 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 									"received an OUT event (%s) in a SPP",
 									_pTask->getName().c_str(), 
 									getRealName().c_str(), 
-									_pTask->evtstr(event)));    
+									_pTask->eventName(event)));    
 		return (status);
 		}
 		else if (SAP == getType() && (F_EVT_INOUT(event) == F_IN)) {
@@ -165,7 +166,7 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 									"received an IN event (%s) in a SAP",
 									_pTask->getName().c_str(), 
 									getRealName().c_str(), 
-									_pTask->evtstr(event)));    
+									_pTask->eventName(event)));    
 			return (status);
 		}
 #endif
@@ -347,7 +348,9 @@ GCFEvent::TResult GCFRawPort::recvEvent()
 		ASSERT(getTask());
 		LOG_DEBUG(formatString (
 			"'%s' for port '%s' in task '%s' not handled or an error occured",
-			getTask()->evtstr(e).c_str(), getRealName().c_str(),
+//			getTask()->eventName(e).c_str(), 
+			eventName(e).c_str(), 
+			getRealName().c_str(),
 			getTask()->getName().c_str()));
 	}
 

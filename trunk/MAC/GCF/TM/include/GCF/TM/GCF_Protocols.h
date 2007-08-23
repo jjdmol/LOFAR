@@ -144,7 +144,7 @@ struct GCFTimerEvent : public GCFEvent
 
 void registerProtocol (unsigned short					protID, 
 					   const struct protocolStrings&	protDef);
-string eventName(const GCFEvent& e);
+string eventName (const GCFEvent& 	e);
 string errorName (unsigned short	errorID);
 
   } // namespace TM
