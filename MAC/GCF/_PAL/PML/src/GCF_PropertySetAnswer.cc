@@ -1,6 +1,6 @@
-//#  GPM_Defines.h: preprocessor definitions of various constants
+//#  GCF_PropertySetAnswer.cc: Implementation of the PropertySet Answer
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,41 +19,30 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
-#ifndef GPM_DEFINES_H
-#define GPM_DEFINES_H
+#include "GCF/PAL/GCF_PropertySetAnswer.h"
+#include "GCF/PAL/GCF_PropertySetAnswerHandlerInterface.h"
 
-//#define LOFARLOGGER_PACKAGE "MAC.GCF.PAL.PML.Logger"
+using namespace LOFAR;
+using namespace LOFAR::GCF;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PAL;
 
-#include <GCF/GCF_Defines.h>
+GCFPropertySetAnswer::GCFPropertySetAnswer(GCFPropertySetAnswerHandlerInterface& handler) :
+  GCFAnswer(),
+  m_handler(handler)
+{
+  LOG_DEBUG("GCFPropertySetAnswer::GCFPropertySetAnswer");
+}
 
-namespace LOFAR {
- namespace GCF {
-  namespace PAL {
+GCFPropertySetAnswer::~GCFPropertySetAnswer()
+{
+  LOG_DEBUG("GCFPropertySetAnswer::~GCFPropertySetAnswer");
+}
 
-enum TPMResult {
-	PM_NO_ERROR, 
-	PM_UNKNOWN_ERROR,
-	PM_PA_NOTCONNECTED,
-	PM_IS_BUSY,
-	PM_SCOPE_ALREADY_EXISTS,
-	PM_SCOPE_NOT_EXISTS, 
-	PM_PROP_NOT_EXISTS,
-	PM_SCADA_ERROR,
-	PM_PROP_NOT_VALID,
-	PM_PROP_WRONG_TYPE,
-	PM_PROP_LINK_NOT_IN_SYNC,
-	PM_PROP_SET_BUSY,
-	PM_PROP_LIST_FAILURE,
-	PM_PROP_ALREADY_LINKED,
-	PM_PROP_NOT_LINKED,
-	PM_PROP_NOT_IN_SET,
-	PM_SCOPE_NOT_FOUND,
-	PM_PA_NOT_REACHABLE,
-};
-
-  } // namespace PAL
- } // namespace GCF
-} // namespace LOFAR
-
-#endif
+void GCFPropertySetAnswer::handleAnswer(GCFEvent& answer)
+{
+  m_handler.handlePropertySetAnswer(answer);
+}

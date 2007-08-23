@@ -33,13 +33,14 @@ namespace LOFAR {
  namespace GCF {
 using namespace Common;  
   namespace PAL {
+
 //
-// GCFMyPropertySet(name, type, cat, answer* usedDlts)
+// GCFMyPropertySet(name, type, cat, answer*, useDflts)
 //
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
                                    const char* type, 
                                    TPSCategory category,
-                                   GCFAnswer* pAnswerObj,
+                                   GCFAnswer*  pAnswerObj,
                                    TDefaultUse defaultUse) : 
   GCFPropertySet(name, type, pAnswerObj),
   _state(S_DISABLED),
@@ -48,12 +49,15 @@ GCFMyPropertySet::GCFMyPropertySet(const char* name,
   _counter(0),
   _missing(0)
 {
-  LOG_DEBUG(formatString("GCFMyPropertySet()(scope=%s,type=%s)",
+	LOG_DEBUG(formatString("GCFMyPropertySet()(scope=%s,type=%s)",
 								getScope().c_str(), getType().c_str()));
-  loadPropSetIntoRam();
+	loadPropSetIntoRam();
 }
 
 
+//
+// GCFMyPropertySet(name, type, cat, useDflts)
+//
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
                                    const char* type, 
                                    TPSCategory category,
@@ -65,26 +69,33 @@ GCFMyPropertySet::GCFMyPropertySet(const char* name,
   _counter(0),
   _missing(0)
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  loadPropSetIntoRam();
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__,
+										getScope().c_str(),getType().c_str()));
+	loadPropSetIntoRam();
 }
 
+//
+// GCFMyPropertySet()
+//
 GCFMyPropertySet::~GCFMyPropertySet ()
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  if (_state != S_DISABLED && _state != S_DISABLING)
-  {
-    // the baseclass deletes this set from the controller permanent
-    // this means no response will be send to this object
-    // on response of the PA
-    ASSERT(_pController);
-    _pController->unregisterScope(*this); 
-  }
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
+
+	if (_state != S_DISABLED && _state != S_DISABLING) {
+		// the baseclass deletes this set from the controller permanent
+		// this means no response will be send to this object
+		// on response of the PA
+		ASSERT(_pController);
+		_pController->unregisterScope(*this); 
+	}
 }
 
+//
+// createPropObject(propInfo)
+//
 GCFProperty* GCFMyPropertySet::createPropObject(const TPropertyInfo& propInfo)
 {
-  return new GCFMyProperty(propInfo, *this);
+	return new GCFMyProperty(propInfo, *this);
 }
   
 //
@@ -103,7 +114,8 @@ TGCFResult GCFMyPropertySet::enable ()
 
 	// register PS
 	ASSERT(_pController);
-	TPMResult pmResult = _pController->registerScope(*this);
+	// ask controller to send a request to the PA.
+	TPMResult pmResult = _pController->registerScope(*this); 
 
 	if (pmResult == PM_NO_ERROR) {
 		_state = S_ENABLING;
@@ -120,87 +132,86 @@ TGCFResult GCFMyPropertySet::enable ()
 	return (GCF_NO_ERROR);
 }
 
+//
+// disable()
+//
 TGCFResult GCFMyPropertySet::disable ()
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  TGCFResult result(GCF_NO_ERROR);
-  
-  LOG_INFO(LOFAR::formatString ( 
-      "REQ: Disable property set '%s'",
-      getScope().c_str()));
-  switch (_state)
-  {
-    case S_LINKING:
-      ASSERT(_counter > 0);
-      _state = S_DELAYED_DISABLING;
-      break;
-    case S_LINKED:
-      GCFMyProperty* pProperty;
-      for (TPropertyList::iterator iter = _properties.begin();
-           iter != _properties.end(); ++iter)
-      {
-        pProperty = (GCFMyProperty*)(iter->second);
-        ASSERT(pProperty);
-        if (pProperty->isMonitoringOn())
-        {
-          pProperty->unlink();
-        }
-      }
-      // intentional fall through
-    case S_ENABLED:
-    {
-  
-      ASSERT(_pController);
-      TPMResult pmResult = _pController->unregisterScope(*this);
-      ASSERT(pmResult == PM_NO_ERROR);  
-      
-      _state = S_DISABLING;
-      
-      break;
-    }
-    default:
-      wrongState("disable");
-      result = GCF_WRONG_STATE;
-      break;
-  }
-  return result;
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__,
+												getScope().c_str(), getType().c_str()));
+	TGCFResult result(GCF_NO_ERROR);
+
+	switch (_state) {
+	case S_LINKING:		// still the linking process?
+		ASSERT(_counter > 0);
+		_state = S_DELAYED_DISABLING;
+	break;
+
+	case S_LINKED:		// when linked, unlink it first
+		GCFMyProperty* pProperty;
+		for (TPropertyList::iterator iter = _properties.begin(); 
+									 iter != _properties.end(); ++iter) {
+			pProperty = (GCFMyProperty*)(iter->second);
+			ASSERT(pProperty);
+			if (pProperty->isMonitoringOn()) {
+				pProperty->unlink();
+			}
+		}
+	// intentional fall through
+
+	case S_ENABLED: {	// only enabled, not linked?
+		ASSERT(_pController);
+		// send PA a request to unregister this propertySet.
+		TPMResult pmResult = _pController->unregisterScope(*this);
+		ASSERT(pmResult == PM_NO_ERROR);  // REO ASSERT????
+		_state = S_DISABLING;
+	break;
+	}
+
+	default:
+		wrongState("disable");
+		result = GCF_WRONG_STATE;
+		break;
+	}
+
+	return result;
 }
 
+//
+// getValue(propName)
+//
 GCFPValue* GCFMyPropertySet::getValue (const string propName)
 {
-  GCFMyProperty* pProperty = (GCFMyProperty*)getProperty(propName);
-  if (pProperty)
-  {
-    return pProperty->getValue();
-  }
-  else 
-  {
-    return 0;
-  }
+	GCFMyProperty* pProperty = (GCFMyProperty*)getProperty(propName);
+	if (pProperty) {
+		return pProperty->getValue();
+	}
+
+	return 0;
 }
                                      
+//
+// getOldValue(propName)
+//
 GCFPValue* GCFMyPropertySet::getOldValue (const string propName)
 {
-  GCFMyProperty* pProperty = (GCFMyProperty*)getProperty(propName);
-  if (pProperty)
-  {
-    return pProperty->getOldValue();
-  }
-  else 
-  {
+	GCFMyProperty* pProperty = (GCFMyProperty*)getProperty(propName);
+	if (pProperty) {
+		return pProperty->getOldValue();
+	}
+
     return 0;
-  }
 }                                         
           
 //
 // scopeRegistered(result)
 //
+// EventHandler: Handle the response from the registering of a PS.
+//
 void GCFMyPropertySet::scopeRegistered (TGCFResult result)
 {
-	LOG_DEBUG(formatString("scopeRegistered(scope=%s,type=%s)", getScope().c_str(), 
-																getType().c_str()));
-
 	ASSERT(_state == S_ENABLING);
+
 	LOG_INFO(LOFAR::formatString ("PA-RESP: Property set '%s' is enabled%s", 
 				getScope().c_str(), (result == GCF_NO_ERROR ? "" : " (with errors)")));
 
@@ -217,13 +228,13 @@ void GCFMyPropertySet::scopeRegistered (TGCFResult result)
 //
 // scopeUnregistered(result)
 //
+// EventHandler: Handle the response from the unregistering of a PS.
+//
 void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
 {
-	LOG_DEBUG(formatString("scopeUnregistered(scope=%s,type=%s)", getScope().c_str(),
-																getType().c_str()));
 	ASSERT(_state == S_DISABLING);
 
-	LOG_INFO(LOFAR::formatString("Property set '%s' is disabled%s", getScope().c_str(), 
+	LOG_DEBUG(LOFAR::formatString("Property set '%s' is disabled%s", getScope().c_str(), 
 								(result == GCF_NO_ERROR ? "" : " (with errors)")));
 
 	_state = S_DISABLED;
@@ -231,237 +242,256 @@ void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
 	dispatchAnswer(F_MYPS_DISABLED, result);
 }
 
+//
+// linkProperties
+//
 bool GCFMyPropertySet::linkProperties()
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  bool successful(true);
-  ASSERT(_pController);
-  switch (_state)
-  {
-    case S_DISABLED:
-    case S_DISABLING:
-      _pController->propertiesLinked(getScope(), PA_PS_GONE);
-      break;
-      
-    case S_ENABLED:
-      ASSERT(_counter == 0);
-      _missing = 0;
-      _state = S_LINKING;
-      successful = tryLinking();
-      break;
-      
-    default:
-      wrongState("linkProperties");
-      _pController->propertiesLinked(getScope(), PA_WRONG_STATE);
-      break;
-  }
-  return successful;
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__,
+										getScope().c_str(), getType().c_str()));
+	bool successful(true);
+	ASSERT(_pController);
+
+	switch (_state) {
+	case S_DISABLED:
+	case S_DISABLING:
+		_pController->propertiesLinked(getScope(), PA_PS_GONE);
+	break;
+
+	case S_ENABLED:
+		ASSERT(_counter == 0);
+		_missing = 0;
+		_state = S_LINKING;
+		successful = tryLinking();
+	break;
+
+	default:
+		wrongState("linkProperties");
+		_pController->propertiesLinked(getScope(), PA_WRONG_STATE);
+	break;
+	}
+
+	return successful;
 }
 
+//
+// tryLinking()
+//
 bool GCFMyPropertySet::tryLinking()
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  bool successful(true);
-  ASSERT(_pController);
-  switch (_state)
-  {
-    case S_DELAYED_DISABLING:
-      _pController->propertiesLinked(getScope(), PA_PS_GONE);
-      _state = S_ENABLED;
-      disable();
-      break;
-      
-    case S_DISABLED:
-    case S_DISABLING:
-      _pController->propertiesLinked(getScope(), PA_PS_GONE);
-      break;
-      
-    case S_LINKING:
-    {
-      GCFMyProperty* pProperty(0);
-      TGCFResult result;
-      for (TPropertyList::iterator iter = _properties.begin(); 
-           iter != _properties.end(); ++iter)
-      {
-        pProperty = (GCFMyProperty*) iter->second;
-        ASSERT(pProperty);
-        if (pProperty->exists())
-        {
-                 
-          if (pProperty->link((_defaultUse == USE_MY_DEFAULTS), result)) 
-          {
-            _counter++;
-          }
-          if (result != GCF_NO_ERROR)
-          {
-            _missing++;
-          }
-        }
-        else 
-        {
-          _missing++;
-        }
-      }      
-      if (_counter == 0)
-      {
-        if (_missing == _properties.size())
-        {
-          // propset is not yet known in this application, retry it with a 
-          // 0 timer
-          _missing = 0;
-          successful = false;
-          break;
-        }
-        // no more asyncronous link responses will be expected and 
-        // no more properties needed to be linked 
-        // so we can return a response to the controller
-        _state = S_LINKED;
-        _pController->propertiesLinked(getScope(), (_missing > 0 ? PA_MISSING_PROPS : PA_NO_ERROR));
-      }
-      break;
-    }
-    default:
-      wrongState("tryLinking");
-      _pController->propertiesLinked(getScope(), PA_WRONG_STATE);
-      break;
-  }
-  
-  return successful;
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__,
+											getScope().c_str(),getType().c_str()));
+	bool successful(true);
+	ASSERT(_pController);
+
+	switch (_state) {
+	case S_DELAYED_DISABLING:
+		_pController->propertiesLinked(getScope(), PA_PS_GONE);
+		_state = S_ENABLED;
+		disable();
+	break;
+
+	case S_DISABLED:
+	case S_DISABLING:
+		_pController->propertiesLinked(getScope(), PA_PS_GONE);
+	break;
+
+	case S_LINKING: {
+		GCFMyProperty* pProperty(0);
+		TGCFResult result;
+		for (TPropertyList::iterator iter = _properties.begin(); 
+									iter != _properties.end(); ++iter) {
+			pProperty = (GCFMyProperty*) iter->second;
+			ASSERT(pProperty);
+			if (pProperty->exists()) {
+				if (pProperty->link((_defaultUse == USE_MY_DEFAULTS), result)) {
+					_counter++;
+				}
+				if (result != GCF_NO_ERROR) {
+					_missing++;
+				}
+			}
+			else {
+				_missing++;
+			}
+		}      
+		if (_counter == 0) {
+			if (_missing == _properties.size()) {
+				// propset is not yet known in this application, retry it with a 
+				// 0 timer
+				_missing = 0;
+				successful = false;
+				break;
+			}
+			// no more asyncronous link responses will be expected and 
+			// no more properties needed to be linked 
+			// so we can return a response to the controller
+			_state = S_LINKED;
+			_pController->propertiesLinked(getScope(), (_missing > 0 ? PA_MISSING_PROPS : PA_NO_ERROR));
+		}
+	break;
+	}
+
+	default:
+		wrongState("tryLinking");
+		_pController->propertiesLinked(getScope(), PA_WRONG_STATE);
+	break;
+	}
+
+	return successful;
 }
 
+//
+// linked(PS)
+//
+// EventHandler
+//
 void GCFMyPropertySet::linked (GCFMyProperty& prop)
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  _counter--;
-  if (_counter == 0)
-  {
-    ASSERT(_pController);
-    switch (_state)
-    {
-      case S_DELAYED_DISABLING:
-        _pController->propertiesLinked(getScope(), PA_NO_ERROR);
-        _state = S_LINKED;
-        disable();
-        break;
-        
-      case S_DISABLED:
-      case S_DISABLING:
-        prop.unlink();
-        _pController->propertiesLinked(getScope(), PA_PS_GONE);
-        break;
-        
-      case S_LINKING:
-      {
-        _state = S_LINKED;
-        if (_missing > 0)
-        {
-          _pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
-        }
-        else
-        {        
-          _pController->propertiesLinked(getScope(), PA_NO_ERROR);
-        }
-        break;
-      }
-      default:
-        wrongState("linked");
-        prop.unlink();
-        _pController->propertiesLinked(getScope(), PA_WRONG_STATE);
-        break;
-    }
-  }
-  else if (_state == S_DISABLING)
-  {
-    prop.unlink();
-  }    
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__,
+									getScope().c_str(), getType().c_str()));
+	_counter--;
+	if (_counter == 0) {
+		ASSERT(_pController);
+
+		switch (_state) {
+		case S_DELAYED_DISABLING:
+			_pController->propertiesLinked(getScope(), PA_NO_ERROR);
+			_state = S_LINKED;
+			disable();
+		break;
+
+		case S_DISABLED:
+		case S_DISABLING:
+			prop.unlink();
+			_pController->propertiesLinked(getScope(), PA_PS_GONE);
+		break;
+
+		case S_LINKING: {
+			_state = S_LINKED;
+			if (_missing > 0) {
+				_pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
+			}
+			else {        
+				_pController->propertiesLinked(getScope(), PA_NO_ERROR);
+			}
+		}
+		break;
+
+		default:
+			wrongState("linked");
+			prop.unlink();
+			_pController->propertiesLinked(getScope(), PA_WRONG_STATE);
+		break;
+		}
+	}
+	else if (_state == S_DISABLING) {
+		prop.unlink();
+	}    
 }
 
+//
+// unlinkProperties()
+//
 void GCFMyPropertySet::unlinkProperties()
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  ASSERT(_pController);
-  switch (_state)
-  {
-    case S_DISABLED:
-    case S_DISABLING:
-      _pController->propertiesUnlinked(getScope(), PA_PS_GONE);
-      break;
-      
-    case S_LINKED:
-    {
-      _state = S_ENABLED;
-      GCFMyProperty* pProperty(0);
-      for (TPropertyList::iterator iter = _properties.begin(); 
-           iter != _properties.end(); ++iter)
-      {
-        pProperty = (GCFMyProperty*) iter->second;
-        if (pProperty) pProperty->unlink();
-      }  
-      _pController->propertiesUnlinked(getScope(), PA_NO_ERROR);
-      break;
-    }
-    default:
-      wrongState("unlinkProperties");
-      _pController->propertiesUnlinked(getScope(), PA_WRONG_STATE);
-      break;      
-  }
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__, 
+											getScope().c_str(),getType().c_str()));
+	ASSERT(_pController);
+
+	switch (_state) {
+	case S_DISABLED:
+	case S_DISABLING:
+		_pController->propertiesUnlinked(getScope(), PA_PS_GONE);
+		break;
+
+	case S_LINKED: {
+		_state = S_ENABLED;
+		GCFMyProperty* pProperty(0);
+		for (TPropertyList::iterator iter = _properties.begin(); 
+									   iter != _properties.end(); ++iter) {
+			pProperty = (GCFMyProperty*) iter->second;
+			if (pProperty) {
+				pProperty->unlink();
+			}
+		}  
+		_pController->propertiesUnlinked(getScope(), PA_NO_ERROR);
+		break;
+	}
+
+	default:
+		wrongState("unlinkProperties");
+		_pController->propertiesUnlinked(getScope(), PA_WRONG_STATE);
+		break;      
+	}
 }
 
+//
+// setAllAccessModes(mode, on)
+//
 void GCFMyPropertySet::setAllAccessModes(TAccessMode mode, bool on)
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  GCFMyProperty* pProperty;
-  for(TPropertyList::iterator iter = _properties.begin(); 
-      iter != _properties.end(); ++iter)
-  {
-    pProperty = (GCFMyProperty*) iter->second;
-    ASSERT(pProperty);
-    pProperty->setAccessMode(mode, on);    
-  }
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__,
+											getScope().c_str(),getType().c_str()));
+
+	GCFMyProperty* pProperty;
+	for(TPropertyList::iterator iter = _properties.begin(); 
+								iter != _properties.end(); ++iter) {
+		pProperty = (GCFMyProperty*) iter->second;
+		ASSERT(pProperty);
+		pProperty->setAccessMode(mode, on);    
+	}
 }
 
+//
+// initProperties(config[])
+//
 void GCFMyPropertySet::initProperties(const TPropertyConfig config[])
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  GCFMyProperty* pProperty;
-  unsigned int i = 0;
-  while (config[i].propName != 0)
-  {
-    pProperty = (GCFMyProperty*) getProperty(config[i].propName);
-    if (pProperty)
-    {
-      if (config[i].defaultValue)
-      {
-        pProperty->setValue(config[i].defaultValue);
-      }
-      if (~config[i].accessMode & GCF_READABLE_PROP)
-        pProperty->setAccessMode(GCF_READABLE_PROP, false);    
-      if (~config[i].accessMode & GCF_WRITABLE_PROP)
-        pProperty->setAccessMode(GCF_WRITABLE_PROP, false);    
-    }
-    i++;
-  }
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__,
+											getScope().c_str(),getType().c_str()));
+
+	GCFMyProperty* pProperty;
+	unsigned int i = 0;
+	while (config[i].propName != 0) {
+		pProperty = (GCFMyProperty*) getProperty(config[i].propName);
+		if (pProperty) {
+			if (config[i].defaultValue) {
+				pProperty->setValue(config[i].defaultValue);
+			}
+			if (~config[i].accessMode & GCF_READABLE_PROP) {
+				pProperty->setAccessMode(GCF_READABLE_PROP, false);    
+			}
+			if (~config[i].accessMode & GCF_WRITABLE_PROP) {
+				pProperty->setAccessMode(GCF_WRITABLE_PROP, false);    
+			}
+		}
+		i++;
+	}
 }
 
+//
+// wrongState(request)
+//
 void GCFMyPropertySet::wrongState(const char* request)
 {
-  LOG_DEBUG(formatString("%s(scope=%s,type=%s)",__PRETTY_FUNCTION__,getScope().c_str(),getType().c_str()));
-  const char* stateString[] =
-  {
-    "DISABLED", 
-    "DISABLING", 
-    "ENABLING", 
-    "ENABLED", 
-    "LINKING", 
-    "LINKED", 
-    "DELAYED_DISABLING"
-  };
-  LOG_WARN(LOFAR::formatString ( 
-        "Could not perform '%s' on property set '%s'. Wrong state: %s",
-        request,
-        getScope().c_str(),
-        stateString[_state]));  
+	LOG_DEBUG(formatString("%s(scope=%s,type=%s)", __PRETTY_FUNCTION__,
+											getScope().c_str(),getType().c_str()));
+	const char* stateString[] = {
+		"DISABLED", 
+		"DISABLING", 
+		"ENABLING", 
+		"ENABLED", 
+		"LINKING", 
+		"LINKED", 
+		"DELAYED_DISABLING"
+	};
+
+	LOG_WARN(LOFAR::formatString ( 
+				"Could not perform '%s' on property set '%s'. Wrong state: %s",
+				request, getScope().c_str(), stateString[_state]));  
 }
+
   } // namespace PAL
  } // namespace GCF
 } // namespace LOFAR
