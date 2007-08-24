@@ -149,7 +149,7 @@ if test "$with_aipspp" != "no"; then
   if test "$lofar_no_rpath" = 0; then
     AIPSPP_LDFLAGS="$AIPSPP_LDFLAGS -Wl,-rpath,$AIPSPP_LIB_PATH"
   fi
-  AIPSPP_LIBS="$AIPSPP_LIBS $AIPSPP_LIB_PATH/version.o"
+##  AIPSPP_LIBS="$AIPSPP_LIBS $AIPSPP_LIB_PATH/version.o"
 fi
 
 # Do we have enough info?
@@ -239,20 +239,9 @@ if test "$with_pgplot" != "no"; then
   AIPSPP_LIBS="$AIPSPP_LIBS -lcpgplot -lpgplot"
 fi
 
-# If we're using GCC 4.x, we need to add -lgfortran to AIPSPP_LIBS. 
-# This should be handled by the AIPS++ build environment IMHO.
-version=`$CXX -v 2>&1 | tail -1`
-# A typical version strings looks like this:
-#   gcc version 4.0.2 20050901 (prerelease) (SUSE Linux)
-if echo $version | grep -iq gcc; then
-  # We'll assume that the first word starting with one or more digits is
-  # the version number, so strip off the rest.
-  version=`echo $version | sed -e 's,^[^0-9]*,,' -e 's,[ \t].*$,,'`
-  # We only need the major version number.
-  major=`echo $version | cut -s -d'.' -f1`
-  if test $major -ge 4; then
-    AIPSPP_LIBS="$AIPSPP_LIBS -lgfortran"
-  fi
+# If we're using GCC 4.x, we need to replace -lg2c by -lgfortran.
+if test $lofar_gcc_major -ge 4; then
+  AIPSPP_LIBS=`echo "$AIPSPP_LIBS " | sed -e 's/-lg2c /-lgfortran/ '`
 fi
 
 if [ "$lfr_use_casa" = 1 ]; then
