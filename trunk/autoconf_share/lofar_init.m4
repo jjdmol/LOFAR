@@ -41,6 +41,7 @@
 #  lofar_compiler    compiler type used (gnu, kcc, or icc) derived from CXX
 #                    Other compilers are not recognized and result in
 #                    a warning.
+#  lofar_gcc_major   major version of gcc compiler
 #  lofar_shared_ext  the extension name of a shared library (so, sl, dylib)
 #  lofar_no_rpath    1 = rpath cannot be used when linking
 #  LOFAR_DEPEND      all lofar libraries this package is dependent on
@@ -210,6 +211,21 @@ AC_ARG_WITH(lofar-libdir,
       lofar_compiler="xlc";
     else
       ]AC_MSG_WARN([$CXX is an unknown compiler for LOFAR; assuming gnu])[
+    fi
+  fi
+
+  # Get the major gcc version.
+  lofar_gcc_major=0
+  if [ "$lofar_compiler" = "gnu" ]; then
+    version=`$CXX -v 2>&1 | tail -1`
+    # A typical version strings looks like this:
+    #   gcc version 4.0.2 20050901 (prerelease) (SUSE Linux)
+    if echo $version | grep -iq gcc; then
+      # We'll assume that the first word starting with one or more digits is
+      # the version number, so strip off the rest.
+      version=`echo $version | sed -e 's,^[^0-9]*,,' -e 's,[ \t].*$,,'`
+      # We only need the major version number.
+      lofar_gcc_major=`echo $version | cut -s -d'.' -f1`
     fi
   fi
 
