@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 	// args: cntlrname, parentHost, parentService
 	GCFTask::init(argc, argv);
 
-	HardwareMonitor	hm(argv[1]);
+	HardwareMonitor	hm("HWmonitor");
 	hm.start(); 	// make initial transition
 
 	GCFTask::run();

@@ -51,7 +51,7 @@ static HardwareMonitor*	thisHardwareMonitor = 0;
 //
 HardwareMonitor::HardwareMonitor(const string&	cntlrName) :
 	GCFTask 			((State)&HardwareMonitor::initial_state,cntlrName),
-	itsOwnPropertySet	(),
+	itsOwnPropertySet	(0),
 	itsTimerPort		(0),
 	itsRSPDriver		(0),
 	itsPollInterval		(10),
@@ -170,6 +170,9 @@ GCFEvent::TResult HardwareMonitor::initial_state(GCFEvent& event,
 		TRAN (HardwareMonitor::connect2RSP);
 	}
 	
+	case DP_SET:
+		break;
+
 	default:
 		LOG_DEBUG_STR ("initial, DEFAULT");
 		break;
@@ -215,6 +218,9 @@ GCFEvent::TResult HardwareMonitor::connect2RSP(GCFEvent& event,
 		LOG_DEBUG("Connection with RSPDriver failed, retry in 2 seconds");
 		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString("connection timeout"));
 		itsTimerPort->setTimer(2.0);
+		break;
+
+	case DP_SET:
 		break;
 
 	default:
@@ -280,6 +286,9 @@ GCFEvent::TResult HardwareMonitor::askConfiguration(GCFEvent& event,
 		}
 		break;
 
+	case DP_SET:
+		break;
+
 	default:
 		LOG_DEBUG_STR ("askConfiguration, DEFAULT");
 		break;
@@ -323,26 +332,26 @@ GCFEvent::TResult HardwareMonitor::createPropertySets(GCFEvent& event,
 			if (rcu % (NR_RCUS_PER_CABINET) == 0) {
 				cabinet++;
 				string	PSname(formatString(cabinetNameMask.c_str(), cabinet));
-				itsCabinets[cabinet] = new RTDBPropertySet(PSname, "type", PSAT_WO, this);
+				itsCabinets[cabinet] = new RTDBPropertySet(PSname, PST_CABINET, PSAT_WO, this);
 			}
 
 			// new subrack?
 			if (rcu % (NR_RCUS_PER_SUBRACK) == 0) {
 				subrack++;
 				string	PSname(formatString(subrackNameMask.c_str(), cabinet, subrack));
-				itsSubracks[subrack] = new RTDBPropertySet(PSname, "type", PSAT_WO, this);
+				itsSubracks[subrack] = new RTDBPropertySet(PSname, PST_SUB_RACK, PSAT_WO, this);
 			}
 
 			// new RSPboard?
 			if (rcu % (NR_RCUS_PER_RSPBOARD) == 0) {
 				RSP++;
 				string	PSname(formatString(rspboardNameMask.c_str(), cabinet, subrack, RSP));
-				itsRSPs[RSP] = new RTDBPropertySet(PSname, "type", PSAT_WO, this);
+				itsRSPs[RSP] = new RTDBPropertySet(PSname, PST_RSP_BOARD, PSAT_WO, this);
 			}
 
 			// allocate RCU PS
 			string	PSname(formatString(rcuNameMask.c_str(), cabinet, subrack, RSP, rcu));
-			itsRCUs[rcu] = new RTDBPropertySet(PSname, "type", PSAT_WO, this);
+			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO, this);
 		}
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
 	}
@@ -371,6 +380,9 @@ GCFEvent::TResult HardwareMonitor::createPropertySets(GCFEvent& event,
 	case F_DISCONNECTED:
 		_disconnectedHandler(port);		// might result in transition to connect2RSP
 	break;
+
+	case DP_SET:
+		break;
 
 	default:
 		LOG_DEBUG_STR ("createPropertySets, DEFAULT");
@@ -445,6 +457,9 @@ GCFEvent::TResult HardwareMonitor::askVersion(GCFEvent& event,
 
 	case F_DISCONNECTED:
 		_disconnectedHandler(port);		// might result in transition to connect2RSP
+		break;
+
+	case DP_SET:
 		break;
 
 	default:
@@ -571,6 +586,9 @@ GCFEvent::TResult HardwareMonitor::askRSPinfo(GCFEvent& event,
 		_disconnectedHandler(port);		// might result in transition to connect2RSP
 		break;
 
+	case DP_SET:
+		break;
+
 	default:
 		LOG_DEBUG_STR ("askRSPinfo, DEFAULT");
 		break;
@@ -587,7 +605,9 @@ GCFEvent::TResult HardwareMonitor::askRSPinfo(GCFEvent& event,
 //
 GCFEvent::TResult HardwareMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("askRCUinfo:" << eventName(event) << "@" << port.getName());
+	if (eventName(event) != "DP_SET") {
+		LOG_DEBUG_STR ("askRCUinfo:" << eventName(event) << "@" << port.getName());
+	}
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -620,6 +640,7 @@ GCFEvent::TResult HardwareMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface&
 		string		versionStr;
 		string		DPEname;
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
+			LOG_DEBUG_STR("Updating rcu " << rcu);
 			uint32		rawValue = ack.settings()(rcu).getRaw();
 			// update all RCU variables
 			itsRCUs[rcu]->setValue(PN_RCU_DELAY, 
@@ -634,7 +655,7 @@ GCFEvent::TResult HardwareMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface&
 						GCFPVBool(rawValue & LBH_ANT_POWER_MASK), double(ack.timestamp));
 			itsRCUs[rcu]->setValue(PN_RCU_HBA_ENABLE, 
 						GCFPVBool(rawValue & HBA_ANT_POWER_MASK), double(ack.timestamp));
-			itsRCUs[rcu]->setValue(PN_RCU_BAND_SELLBA_HBA, 
+			itsRCUs[rcu]->setValue(PN_RCU_BAND_SEL_LBA_HBA, 
 						GCFPVBool(rawValue & USE_LB_MASK),
 						double(ack.timestamp));
 			itsRCUs[rcu]->setValue(PN_RCU_HBA_FILTER_SEL, 
@@ -646,7 +667,7 @@ GCFEvent::TResult HardwareMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface&
 						GCFPVBool(rawValue & HB_POWER_MASK), double(ack.timestamp));
 			itsRCUs[rcu]->setValue(PN_RCU_VDD_VCC_ENABLE, 
 						GCFPVBool(rawValue & ADC_POWER_MASK), double(ack.timestamp));
-			itsRCUs[rcu]->setValue(PN_RCU_BAND_SELLBL_LBH, 
+			itsRCUs[rcu]->setValue(PN_RCU_BAND_SEL_LBL_LBH, 
 						GCFPVBool(rawValue & USE_LBH_MASK),
 						double(ack.timestamp));
 			itsRCUs[rcu]->setValue(PN_RCU_LBA_FILTER_SEL, 
@@ -656,15 +677,18 @@ GCFEvent::TResult HardwareMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface&
 						GCFPVUnsigned(uint32((rawValue & ATT_MASK) >> ATT_OFFSET)),
 						double(ack.timestamp));
 		} // for all boards
-		break;
 
 		LOG_DEBUG ("Updated all RCU information, waiting for next cycle");
 		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 		TRAN(HardwareMonitor::waitForNextCycle);			// go to next state.
 	}
+	break;
 
 	case F_DISCONNECTED:
 		_disconnectedHandler(port);		// might result in transition to connect2RSP
+		break;
+
+	case DP_SET:
 		break;
 
 	default:
@@ -683,19 +707,21 @@ GCFEvent::TResult HardwareMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface&
 GCFEvent::TResult HardwareMonitor::waitForNextCycle(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());
+	if (eventName(event) != "DP_SET") {
+		LOG_DEBUG_STR ("waitForNextCycle:" << eventName(event) << "@" << port.getName());	}
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
 	case F_ENTRY: {
 		itsOwnPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("wait for next cycle"));
-		int		waitTime = time(0) % itsPollInterval;
+		int		waitTime = itsPollInterval - (time(0) % itsPollInterval);
 		if (waitTime == 0) {
 			waitTime = itsPollInterval;
 		}
 		itsTimerPort->cancelAllTimers();
 		itsTimerPort->setTimer(double(waitTime));
+		LOG_DEBUG_STR("Waiting " << waitTime << " seconds for next cycle");
 	}
 	break;
 
@@ -707,6 +733,9 @@ GCFEvent::TResult HardwareMonitor::waitForNextCycle(GCFEvent& event,
 		TRAN(HardwareMonitor::askRSPinfo);
 	}
 	break;
+
+	case DP_SET:
+		break;
 
 	default:
 		LOG_DEBUG_STR ("waitForNextCycle, DEFAULT");
@@ -759,6 +788,9 @@ GCFEvent::TResult HardwareMonitor::finishing_state(GCFEvent& event, GCFPortInter
       GCFTask::stop();
       break;
     
+	case DP_SET:
+		break;
+
 	default:
 		LOG_DEBUG("finishing_state, DEFAULT");
 		status = GCFEvent::NOT_HANDLED;
