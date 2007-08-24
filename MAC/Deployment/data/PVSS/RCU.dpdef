@@ -6,14 +6,14 @@ LBLEnable				bool
 LBHEnable				bool
 HBAEnable				bool
 #
-bandSelLBA_HBA			bool
+bandSelLbaHba			bool
 HBAFilterSel			uint
 #
 VlEnable				bool
 VhEnable				bool
 VddVccEnable			bool
 #
-bandSelLBL_LBH			bool
+bandSelLblLbh			bool
 LBAFilterSel			uint
 #
 Attenuation				uint
