@@ -433,6 +433,10 @@ else
     # Do not sort LIBS. Usually, order is important and duplicates are
     # intentional.
     LIBS="$LIBS $EXTERNAL_LIBS"
+    # If we're using GCC 4.x, we need to replace -lg2c by -lgfortran.
+    if test $lofar_gcc_major -ge 4; then
+      LIBS=`echo "$LIBS " | sed -e 's/-lg2c /-lgfortran/ '`
+    fi
     LOFAR_DEPEND="$LOFAR_DEPEND $lfr_depend"
 
     enable_external=yes
