@@ -818,6 +818,14 @@ event = {
 		name = "write_date";
 		type = "uint32[MAX_N_IMAGES]";
 	};
+	param = {
+		name = "tp_file_name";
+		type = "char[32][64]";
+	};
+	param = {
+		name = "mp_file_name";
+		type = "char[32][64]";
+	};
 };
 
 // DDR2 Access
