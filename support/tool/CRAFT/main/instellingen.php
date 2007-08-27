@@ -17,15 +17,6 @@
 				return false;
 		} else return false;
 			
-		if (isset($_POST['wachtwoord']) && $_POST['wachtwoord'] == '')
-			return false;
-
-		if (isset($_POST['wachtwoord2']) && $_POST['wachtwoord2'] == '')
-			return false;
-			
-		if ($_POST['wachtwoord'] != $_POST['wachtwoord2'])
-			return false;
-			
 		if (isset($_POST['email']) && ($_POST['email'] == '' || strpos($_POST['email'], '@') == -1 ))
 			return false;
 
@@ -35,8 +26,7 @@
 	//de ingevoerde gegevens valideren en daarna opslaan
 	if(Validatie_Opslaan()) {
 		//opslaan
-		$query = "UPDATE gebruiker SET inlognaam= '". $_POST['naam'] . "', Wachtwoord= '". md5($_POST['wachtwoord']) ."'
-		, Emailadres='". $_POST['email'] ."', Start_Alg='". $_POST['start'] ."', Start_Comp='". $_POST['Start_Comp'] ."', Gebruiker_Taal='".$_POST['taal']."'
+		$query = "UPDATE gebruiker SET inlognaam= '". $_POST['naam'] . "', Emailadres='". $_POST['email'] ."', Start_Alg='". $_POST['start'] ."', Start_Comp='". $_POST['Start_Comp'] ."', Gebruiker_Taal='".$_POST['taal']."'
 		, Start_Melding='". $_POST['Start_Melding'] ."', Start_Stats='". $_POST['Start_Stats'] ."' WHERE Werknem_ID = '" .$_SESSION['gebr_id']. "'";
 
 		//de "nieuwe" gegevens in de sessievariabelen zetten, zodat deze meteen geladen/bruikbaar zijn
@@ -70,22 +60,8 @@
 	 		<td><input name="naam" type="text" value="<?php if(isset($_POST['naam'])) echo($_POST['naam']); else echo($row['inlognaam']) ?>"><?php if(isset($_POST['naam']) && $_POST['naam'] == '') echo('<b id="type_naam">* Er is geen inlognaam ingevoerd!</b>'); ?></td>
 	 	</tr>
 		<tr>
-			<td>Wachtwoord:</td>
-			<td><input name="wachtwoord" value="" type="password">
-				<?php 
-					if(isset($_POST['wachtwoord']) && $_POST['wachtwoord'] == '') echo('<b id="type_wachtwoord">* Er is geen wachtwoord ingevoerd!</b>'); 
-					if(isset($_POST['wachtwoord']) && $_POST['wachtwoord'] != '' && isset($_POST['wachtwoord2']) && $_POST['wachtwoord2'] != '') echo('<b id="type_wachtwoord">* Beide wachtwoorden komen niet overeen!</b>'); 
-				?>
-			</td>
-		</tr>
-		<tr>
-			<td>Nogmaals het wachtwoord:</td>
-			<td><input name="wachtwoord2" value="" type="password">
-				<?php 
-					if(isset($_POST['wachtwoord2']) && $_POST['wachtwoord2'] == '') echo('<b id="type_wachtwoord">* Er is geen wachtwoord ingevoerd!</b>'); 
-					if(isset($_POST['wachtwoord']) && $_POST['wachtwoord'] != '' && isset($_POST['wachtwoord2']) && $_POST['wachtwoord2'] != '') echo('<b id="type_wachtwoord">* Beide wachtwoorden komen niet overeen!</b>'); 
-				?>
-			</td>
+			<td>Wijzig wachtwoord:</td>
+			<td><a href="<?php echo($_SESSION['pagina']); ?>main/wachtwoord.php" target="_blank">Klik hier om uw wachtwoord te wijzigen</a></td>
 		</tr>
 		<tr>
 			<td>E-mail adres:</td>
@@ -109,7 +85,7 @@
 					if (isset($_POST['start'])) $startpagina = $_POST['start'];
 					else $startpagina = $row['Start_Alg'];
 			  ?>
-			 	<option value="1" <?php if ($startpagina == 1) echo("SELECTED"); ?>>Intro</option>	
+			 	<option value="1" <?php if ($startpagina == 1) echo("SELECTED"); ?>>Start</option>	
 				<option value="2" <?php if ($startpagina == 2) echo("SELECTED"); ?>>Componenten</option>	
 				<option value="3" <?php if ($startpagina == 3) echo("SELECTED"); ?>>Meldingen</option>	
 				<option value="4" <?php if ($startpagina == 4) echo("SELECTED"); ?>>Statistieken</option>	
@@ -186,13 +162,11 @@
 						if(isset($_POST['Start_Stats'])) $start_stats = $_POST['Start_Stats'];
 						else $start_stats = $row['Start_Stats'];
 					?>
-
-					<option value="1" <?php if ($start_stats == 1) echo("SELECTED"); ?>>Algemeen</option>
-					<option value="2" <?php if ($start_stats == 2) echo("SELECTED"); ?>>Type componenten</option>
-					<option value="3" <?php if ($start_stats == 3) echo("SELECTED"); ?>>Componenten</option>
-					<option value="4" <?php if ($start_stats == 4) echo("SELECTED"); ?>>Type meldingen</option>
-					<option value="5" <?php if ($start_stats == 5) echo("SELECTED"); ?>>Meldingen</option>
-					<option value="6" <?php if ($start_stats == 6) echo("SELECTED"); ?>>Historie</option>
+					<option value="1" <?php if ($start_stats == 1) echo("SELECTED"); ?>>Type componenten</option>
+					<option value="2" <?php if ($start_stats == 2) echo("SELECTED"); ?>>Componenten</option>
+					<option value="3" <?php if ($start_stats == 3) echo("SELECTED"); ?>>Type meldingen</option>
+					<option value="4" <?php if ($start_stats == 4) echo("SELECTED"); ?>>Meldingen</option>
+					<option value="5" <?php if ($start_stats == 5) echo("SELECTED"); ?>>Historie</option>
 				</select>
 			</td>
 		</tr>

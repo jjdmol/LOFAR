@@ -14,7 +14,7 @@
 						$tijd = time();
 						$pos = strrpos($_FILES['file']['name'], "." );
 						$extensie = substr($_FILES['file']['name'], $pos);
-						
+
 						if (move_uploaded_file($_FILES['file']['tmp_name'], "data/" . $tijd . $extensie)) {
 							if (isset($_GET['a'])) {
 								$_SESSION['abestand'.$_GET['a']] = ("data/" . time().$extensie);
@@ -42,7 +42,7 @@
 					}
 					else {
 					//pad bepalen om naar toe te posten (dus zichzelf, maar dan inclusiet C OF A!!)
-					$pad = "/LOFAR-CRAFT/algemene_functionaliteit/bestand_uploaden.php"; 
+					$pad = "/LOFAR-craft/algemene_functionaliteit/bestand_uploaden.php"; 
 					if(isset($_GET['c'])) $pad = $pad . ("?c=" . $_GET['c']);
 					if(isset($_GET['a'])) $pad = $pad . ("?a=" . $_GET['a']);
 				?>

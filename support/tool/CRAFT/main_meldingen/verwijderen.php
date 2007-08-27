@@ -163,7 +163,7 @@
 						}
 					}
 					//er is geen component geselecteerd
-					else echo('Selecteer hiernaast een component om een melding aan toe te voegen.');
+					else echo('Selecteer hiernaast een component om een melding van te verwijderen.');
 	    	?>
 
 	    </div>	

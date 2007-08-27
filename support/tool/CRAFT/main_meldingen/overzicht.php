@@ -59,9 +59,15 @@
 							echo("<h3>". $data['Comp_Naam']."</h3>");
 
 							echo("<table border=\"0\">");
+
+							echo("<tr><td>Status component:</td><td>");
+							$query = "SELECT Status FROM status WHERE Status_ID IN (SELECT Huidige_Status FROM melding_lijst WHERE Meld_Lijst_ID ='".$data['Laatste_Melding']."')";
+						  $res = mysql_query($query);
+							$row = mysql_fetch_array($res);
+							echo($row[0] . "</td></tr>");
 							
 							echo("<tr><td>Type component:</td><td>");
-							$query = "SELECT Type_Naam FROM Comp_Type WHERE Comp_Type ='".$data['Comp_Type_ID']."'";
+							$query = "SELECT Type_Naam FROM comp_type WHERE Comp_Type ='".$data['Comp_Type_ID']."'";
 						  $res = mysql_query($query);
 							$row = mysql_fetch_array($res);
 							echo($row['Type_Naam'] ."</td><td><a href=\"".$_SESSION['pagina']."algemene_functionaliteit/comp_type.php?c=". $data['Comp_Type_ID']."\" target=\"_blank\">Meer info</a></td></tr>");

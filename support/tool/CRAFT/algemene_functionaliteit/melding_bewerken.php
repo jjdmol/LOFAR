@@ -1,13 +1,20 @@
 <?php
 	
 	function Extra_Velden_Controle() {
-		//extra velden controle!!!
+		//bestaande extra velden
 		$aantal_velden = $_POST['aantal'];
 		
 		for($i = 0; $i < $aantal_velden; $i++) {
 			//verplichte velden ingevuld??
-			if ($_POST['v' . $i] == 1) {
-				if ($_POST[$i] == '') return false;
+			if ($_POST['v' . $i] == '1') {
+				//bestanden
+				if ($_POST['t' . $i] == '5') {
+					if ($_SESSION['bestand' . $i] == '-1') return false;
+				}
+				//overige
+				else {
+					if ($_POST[$i] == '') return false;
+				}
 			}
 			//datum controle bij datum velden
 			if ($_POST['t' . $i] == '4a') {
@@ -19,13 +26,20 @@
 			}
 		}
 		
-		//extra velden controle!!!
+		//aan te maken extra velden
 		$aan_te_maken = $_POST['aantemaken'];
 		
 		for($i = 0; $i < $aan_te_maken; $i++) {
 			//verplichte velden ingevuld??
-			if ($_POST['av' . $i] == 1) {
-				if ($_POST['a' . $i] == '') return false;
+			if ($_POST['av' . $i] == '1') {
+				//bestanden
+				if ($_POST['t' . $i] == '5') {
+					if ($_SESSION['bestand' . $i] == '-1') return false;
+				}
+				//overige
+				else {
+					if ($_POST['a' . $i] == '') return false;
+				}
 			}
 			//datum controle bij datum velden
 			if ($_POST['at' . $i] == '4a') {
@@ -36,6 +50,7 @@
 				if (Valideer_Tijd($_POST['a'.$i]) == false) return false;
 			}
 		}
+		
 		return true;
 	}
 
@@ -215,7 +230,7 @@
 				 				$error_extra = 2;
 	
 		    				$Veld_ID = mysql_insert_id();	  				
-		  					$query = "INSERT INTO Melding_Koppel_Extra (Kolom_ID, Meld_Lijst_ID) VALUES('".$Veld_ID. "', '". $_GET['m'] ."')";
+		  					$query = "INSERT INTO melding_koppel_extra (Kolom_ID, Meld_Lijst_ID) VALUES('".$Veld_ID. "', '". $_GET['m'] ."')";
 			    			
 			    			if (mysql_query($query)) {
 					 				$error_extra = 3;
@@ -309,7 +324,7 @@
 				 				$error_extra = 2;
 	
 		    				$Veld_ID = mysql_insert_id();	  				
-		  					$query = "INSERT INTO Melding_Koppel_Extra (Kolom_ID, Meld_Lijst_ID) VALUES('".$Veld_ID. "', '". $_GET['m'] ."')";
+		  					$query = "INSERT INTO melding_koppel_extra (Kolom_ID, Meld_Lijst_ID) VALUES('".$Veld_ID. "', '". $_GET['m'] ."')";
 			    			
 			    			if (mysql_query($query)) {
 					 				$error_extra = 3;
@@ -683,7 +698,7 @@
 			}
 		}
 		//er is geen component geselecteerd
-		else echo('Selecteer hiernaast een component om een melding aan toe te voegen.');
+		else echo('Selecteer hiernaast een component om een melding van te bewerken.');
 	}
 
 ?>

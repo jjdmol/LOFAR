@@ -7,8 +7,15 @@
 				
 				for($i = 0; $i < $aantal_velden; $i++) {
 					//verplichte velden ingevuld??
-					if ($_POST['v' . $i] == 1) {
-						if ($_POST[$i] == '') return false;
+					if ($_POST['v' . $i] == '1') {
+						//bestanden
+						if ($_POST['t' . $i] == '5') {
+							if ($_SESSION['bestand' . $i] == '-1') return false;
+						}
+						//overige
+						else {
+							if ($_POST[$i] == '') return false;
+						}
 					}
 					//datum controle bij datum velden
 					if ($_POST['t' . $i] == '4a') {
@@ -194,8 +201,8 @@
 						 				$error_extra = 2;
 
 				    				$Veld_ID = mysql_insert_id();	  				
-		  	  					$query = "INSERT INTO Comp_Koppel_Extra (Kolom_ID, Comp_Lijst_ID) VALUES('".$Veld_ID. "', '". $Comp_ID ."')";
-					    			
+		  	  					$query = "INSERT INTO comp_koppel_extra (Kolom_ID, Comp_Lijst_ID) VALUES('".$Veld_ID. "', '". $Comp_ID ."')";
+
 					    			if (mysql_query($query)) {
 							 				$error_extra = 3;
 			  		  			}
