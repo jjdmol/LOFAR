@@ -50,7 +50,7 @@ ConfigCmd::ConfigCmd()
 ConfigCmd::~ConfigCmd()
 {
 	delete itsTPE;
-	delete itsTBBackE;
+	delete itsTBBackE;	
 }
 
 // ----------------------------------------------------------------------------

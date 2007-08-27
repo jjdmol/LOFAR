@@ -49,7 +49,7 @@ ClearCmd::ClearCmd()
 ClearCmd::~ClearCmd()
 {
 	delete itsTPE;
-	delete itsTBBackE;
+	delete itsTBBackE;	
 }
 
 // ----------------------------------------------------------------------------

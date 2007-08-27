@@ -47,7 +47,7 @@ ReadxCmd::ReadxCmd()
 ReadxCmd::~ReadxCmd()
 {
 	delete itsTPE;
-	delete itsTBBackE;
+	delete itsTBBackE;	
 }
 
 // ----------------------------------------------------------------------------

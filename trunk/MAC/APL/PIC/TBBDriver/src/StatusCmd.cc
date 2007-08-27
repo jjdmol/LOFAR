@@ -40,6 +40,15 @@ StatusCmd::StatusCmd()
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
+		itsTBBackE->V12[boardnr]	= 0;
+		itsTBBackE->V25[boardnr]	= 0;
+		itsTBBackE->V33[boardnr]	= 0;
+		itsTBBackE->Tpcb[boardnr]	= 0;
+		itsTBBackE->Ttp[boardnr]	= 0;
+		itsTBBackE->Tmp0[boardnr]	= 0;
+		itsTBBackE->Tmp1[boardnr]	= 0;
+		itsTBBackE->Tmp2[boardnr]	= 0;
+		itsTBBackE->Tmp3[boardnr]	= 0;
 	}
 	setWaitAck(true);		
 }

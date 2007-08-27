@@ -41,6 +41,7 @@ SizeCmd::SizeCmd()
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
+		itsTBBackE->npages[boardnr] 			= 0;
 	}
 	setWaitAck(true);		
 }
