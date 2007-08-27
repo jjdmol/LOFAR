@@ -52,7 +52,8 @@ GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface&
   	} break;
   	
   	case F_ENTRY: {
-			itsCmd = 0;
+			//itsCmd = 0;
+			if (itsCmd) delete itsCmd;
 		} break;			
 	  
 	  case F_TIMER: {

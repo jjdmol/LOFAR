@@ -29,6 +29,7 @@
 
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
+#include <GCF/TM/GCF_TimerPort.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
 #include <Common/lofar_string.h>
@@ -665,6 +666,8 @@ class ReadPageCmd : public Command
 		int itsFreqBands;
 		int itsTotalSamples;
 		int itsTotalBands;
+		int itsBandNr;
+		int itsSliceNr;
 };
 
 
@@ -716,8 +719,8 @@ private:
 	void help();
 private:
   // ports
-  GCFPort	itsServerPort;
-
+  GCFPort				itsServerPort;
+	GCFTimerPort*	itsCmdTimer;
   // the command to execute
   Command* 	itsCommand;
 	

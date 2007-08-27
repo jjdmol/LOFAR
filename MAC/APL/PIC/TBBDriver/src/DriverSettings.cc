@@ -52,7 +52,7 @@ TbbSettings* TbbSettings::instance()
 // Default constructor
 //
 TbbSettings::TbbSettings() :
-	itsDriverVersion(19),				  // driver version 1.9
+	itsDriverVersion(112),				// set cvs version of TBBDriver.c (now 1.12)
 	itsMaxBoards(0),							// max.number of boards on 1 driver 
 	itsMaxChannels(0),						// max.number of channels on 1 driver
 	itsMpsOnBoard(4),							// number of MPs on 1 board
@@ -82,6 +82,7 @@ TbbSettings::~TbbSettings()
 	if (itsCh2RcuTable) delete itsCh2RcuTable;
 	if (itsBoardInfo) delete itsBoardInfo;
 	if (itsChannelInfo) delete itsChannelInfo;
+	if (theirTbbSettings) delete theirTbbSettings;	
 }
 
 //---- get Tbb settings loaded from config file ---

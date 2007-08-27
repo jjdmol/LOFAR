@@ -188,9 +188,14 @@ TBBDriver::TBBDriver(string name)
 //-----------------------------------------------------------------------------
 TBBDriver::~TBBDriver()
 {
-	delete cmdhandler; 
+	delete [] itsBoard;
+	delete itsAliveTimer;
+	delete cmdhandler;
 	delete msghandler;
+	delete [] itsResetCount;
+	delete itsTbbQueue;
 	delete itsAlive;
+	if (cmd) delete cmd;
 }
 
 //-----------------------------------------------------------------------------
@@ -212,27 +217,7 @@ GCFEvent::TResult TBBDriver::init_state(GCFEvent& event, GCFPortInterface& port)
       LOG_INFO_STR(formatString("CONNECTED: port '%s'", port.getName().c_str()));
 			
 			if (isEnabled() && !itsAcceptor.isConnected()) {
- 			/*	
- 				// free all inputs on all boards
- 				TPFreeEvent free;
- 				free.opcode = TPFREE;
- 				free.status = 0;
- 				free.channel = 0xFFFFFFFF;  // send channel = -1 to free all inputs
- 				for (int32 bnr = 0; bnr < TS->maxBoards(); bnr++) {
- 					itsBoard[bnr].send(free);	
- 					LOG_DEBUG(formatString("FREE -1 is send to port '%s'", itsBoard[bnr].getName().c_str()));
- 				}
- 				  
- 				// clear all boards(FPGA register are set to 0 and firmware is maintained)
- 				TPClearEvent clear;
- 				clear.opcode = TPCLEAR;
- 				clear.status = 0;
- 				for (int32 bnr = 0; bnr < TS->maxBoards(); bnr++) {
- 					itsBoard[bnr].send(clear);	
- 					LOG_DEBUG(formatString("CLEAR is send to port '%s'", itsBoard[bnr].getName().c_str()));
- 				}
- 			*/
-				itsAcceptor.open();
+ 				itsAcceptor.open();
 			}	      			
 			if (itsAcceptor.isConnected()) {
 				TRAN(TBBDriver::idle_state);
@@ -387,8 +372,7 @@ GCFEvent::TResult TBBDriver::idle_state(GCFEvent& event, GCFPortInterface& port)
 			// look if the event is a Tbb event
 			if (SetTbbCommand(event.signal)) {
 				itsAliveTimer->cancelAllTimers();
-				//itsAliveTimer->setTimer(ALIVECHECKTIME);
-				itsAliveTimer->setTimer((long)10);
+				itsAliveTimer->setTimer(ALIVECHECKTIME);
 				status = cmdhandler->dispatch(event,port);
 				TRAN(TBBDriver::busy_state);
 			} else {
@@ -510,6 +494,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 			status = cmdhandler->dispatch(event,port); // dispatch ack from boards
 			
 			if (cmdhandler->tpCmdDone() == true) {
+				delete cmd;
 				itsAliveTimer->setTimer((long)2);
 				itsAliveCheck = false;
 				TRAN(TBBDriver::idle_state);
@@ -521,7 +506,7 @@ GCFEvent::TResult TBBDriver::busy_state(GCFEvent& event, GCFPortInterface& port)
 			if (cmdhandler->tpCmdDone() == true){
 				// set ALIVE timer, and check for resets
 				//if (!itsAliveCheck) {
-				//	itsAliveTimer->setTimer((long)1);
+				//	itsAliveTimer->setTimer((long)2);
 				//	itsAliveCheck = false;
 				//}
 				TRAN(TBBDriver::idle_state);
@@ -678,10 +663,12 @@ bool TBBDriver::CheckAlive(GCFEvent& event, GCFPortInterface& port)
 //-----------------------------------------------------------------------------
 bool TBBDriver::SetTbbCommand(unsigned short signal)
 {
-	if (cmd) delete cmd;
+	if (cmd) {
+		//cmdhandler->setTpCmd(0);
+		delete cmd;
+	}
 	switch(signal)
 	{
-		
 		case TBB_ALLOC:	{
 			AllocCmd *cmd;
 			cmd = new AllocCmd();

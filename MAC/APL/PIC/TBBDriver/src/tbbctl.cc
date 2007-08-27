@@ -242,7 +242,7 @@ GCFEvent::TResult RecordCmd::ack(GCFEvent& e)
 		if (isSelected(cnr) && !(ack.status_mask[bnr] & TBB_NO_BOARD) ) {
 			if (ack.rcu_mask.test(cnr)) {
 				if (ack.status_mask[bnr] & TBB_SUCCESS) {
-					logMessage(cout,formatString("      ERROR, Rcu-%d NOT in correct state\n",cnr));
+					//logMessage(cout,formatString("      ERROR, Rcu-%d NOT in correct state\n",cnr));
 				} else {
 					logMessage(cout,formatString("      ERROR, Rcu-%d  %s\n",cnr,getDriverErrorStr(ack.status_mask[bnr]).c_str()));
 				}
@@ -297,7 +297,7 @@ GCFEvent::TResult StopCmd::ack(GCFEvent& e)
 		if (isSelected(cnr) && !(ack.status_mask[bnr] & TBB_NO_BOARD) ) {
 			if (ack.rcu_mask.test(cnr)) {
 				if (ack.status_mask[bnr] & TBB_SUCCESS) {
-					logMessage(cout,formatString("      ERROR, Rcu-%d NOT in correct state\n",cnr));
+					//logMessage(cout,formatString("      ERROR, Rcu-%d NOT in correct state\n",cnr));
 				} else {
 				  logMessage(cout,formatString("      ERROR, Rcu-%d  %s\n",cnr,getDriverErrorStr(ack.status_mask[bnr]).c_str()));
 				}
@@ -604,7 +604,7 @@ GCFEvent::TResult VersionCmd::ack(GCFEvent& e)
 {
   TBBVersionAckEvent ack(e);
 	
-	logMessage(cout,formatString("TBBDriver software version %3.1f\n",(ack.driverversion / 10.)));
+	logMessage(cout,formatString("TBBDriver software version %3.2f\n",(ack.driverversion / 100.)));
 	logMessage(cout,"TBB  ID  Software   Board    TP0      MP0      MP1      MP2      MP3");
 	logMessage(cout,"---  --  --------  -------  -------  -------  -------  -------  -------");
 	for (int bnr=0; bnr < getMaxSelections(); bnr++) {
@@ -966,12 +966,13 @@ GCFEvent::TResult ImageInfoCmd::ack(GCFEvent& e)
 {
 	TBBImageInfoAckEvent ack(e);
 	logMessage(cout,formatString("Reading image information from TBB %d\n", getBoard()));
-	logMessage(cout,"IMAGE  Version  Flash date");
-	logMessage(cout,"-----  -------  -------------------");  
+	logMessage(cout,"IMAGE  SW      Flash date_time      TP file name    MP file name");
+	logMessage(cout,"-----  ------  -------------------  --------------  --------------");  
 	if (ack.status_mask & TBB_SUCCESS) {
 		for (int image = 0; image < 32; image++) {	
-			if (ack.image_version[image] > 0xF0000000) {
-				logMessage(cout,formatString("  %2d      -          -                 no image information",image));
+			if (ack.write_date[image] == 0xFFFFFFFF) {
+				//logMessage(cout,formatString("  %2d   no information",image));
+				logMessage(cout,formatString("  %2d   free",image));
 			} else {
 				time_t write_time;
 				struct tm t;
@@ -980,8 +981,13 @@ GCFEvent::TResult ImageInfoCmd::ack(GCFEvent& e)
 				write_time = static_cast<time_t>(ack.write_date[image]);
 				t = *gmtime(&write_time);
 				version = static_cast<double>(ack.image_version[image] / 10.);
-				logMessage(cout,formatString("  %2d   %5.1f    %d-%d-%d  %d:%02d:%02d",image, version, 
-									 t.tm_mday,t.tm_mon,t.tm_year+1900,t.tm_hour,t.tm_min,t.tm_sec));
+				logMessage(cout,formatString("  %2d   V%5.1lf  %d-%d-%d_%d:%02d:%02d  %-14.14s  %-14.14s",
+									 	image,
+										version, 
+									 	t.tm_mday,t.tm_mon+1,t.tm_year+1900,
+										t.tm_hour,t.tm_min,t.tm_sec,
+										ack.tp_file_name[image],
+										ack.mp_file_name[image]));
 			}
 		}
 	}	else {	
@@ -1323,7 +1329,7 @@ GCFEvent::TResult WriterCmd::ack(GCFEvent& e)
 ReadPageCmd::ReadPageCmd(GCFPortInterface& port) : Command(port),
 	itsRcu(0),itsStartPage(0),itsPages(1),itsCmdStage(0),itsPage(0),itsTotalSize(0),itsStartAddr(0),itsSize(0),itsBoard(0),itsMp(0),
 	itsStationId(0),itsRspId(0),itsRcuId(0),itsSampleFreq(0),itsTime(0),itsSampleNr(0),itsSamplesPerFrame(0),
-	itsFreqBands(0),itsTotalSamples(0),itsTotalBands(0)
+	itsFreqBands(0),itsTotalSamples(0),itsTotalBands(0), itsBandNr(0), itsSliceNr(0)
 {
 	for (int i = 0; i < 512; i++) itsData[i] = 0;
 	logMessage(cout,"\n==== TBB-board, readx register ================================================\n");
@@ -1349,6 +1355,9 @@ void ReadPageCmd::send()
 		
 		case 2: {	// write page address to board
 			TBBWriterEvent send;
+			
+			itsMp = static_cast<int32>((itsStartPage + itsPage) / itsTotalSize);	// MP of requested addr
+			
 			send.board = itsBoard;
 			send.mp = itsMp;
 			send.pid = PID6;
@@ -1417,7 +1426,15 @@ void ReadPageCmd::send()
 //-----------------------------------------------------------------------------
 GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 {
+	char basefilename[PATH_MAX];
+	char filename[PATH_MAX];
+	char timestring[256];
+
 	int16 val[1400];
+	
+	double 				bar_size = 40;
+	static double	bar_interval = 1;
+	static double	bar_buff = 0;
 		
 	switch (itsCmdStage) {
 		
@@ -1428,7 +1445,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			itsStartAddr = ack.rcu_start_addr[itsRcu];
 			itsSize = ack.rcu_pages[itsRcu];
 			itsBoard = ack.rcu_on_board[itsRcu];
-			itsMp = static_cast<int32>(ack.rcu_on_input[itsRcu] / 4);
+			//itsMp = static_cast<int32>(ack.rcu_on_input[itsRcu] / 4);
 			logMessage(cout,formatString("Rcu-%d Board[%d] Mp[%d]",itsRcu,itsBoard,itsMp));
 			
 			itsStartPage += itsStartAddr;
@@ -1446,10 +1463,12 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 				itsCmdStage = 10;
 			} else {
 				itsTotalSize = ack.npages[itsBoard] / 4;
-				if ((itsStartPage < itsStartAddr) || (itsStartPage > (itsStartAddr + itsTotalSize))) {
+				
+				if ((itsStartPage < itsStartAddr) || ((itsStartPage + itsPages) > (itsStartAddr + itsSize))) {
 					logMessage(cout,formatString("Requested Page belongs not to rcu-%d", itsRcu));			 
+				} else {
+					logMessage(cout,formatString("StartPage = %u ",itsStartPage));			 
 				}
-				logMessage(cout,formatString("StartPage = %u ",itsStartPage));			 
 			}
 		} break;
 		
@@ -1501,50 +1520,97 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 	}
 	
 	itsCmdStage++;
-	if (itsCmdStage < 6) {
-		//itsPort.setTimer(0.01);
-	} else { 
-		
+	if (itsCmdStage > 5) { // if stage > 5, received 1 frame
 				
+		bar_buff += 1;
 		if (itsPage == 0) {
+						
 			itsStationId = static_cast<int>(itsData[0] & 0xFF);
 			itsRspId = static_cast<int>((itsData[0] >> 8) & 0xFF);
 			itsRcuId = static_cast<int>((itsData[0] >> 16) & 0xFF);
 			itsSampleFreq = static_cast<int>((itsData[0] >> 24) & 0xFF);
-			itsTime = static_cast<time_t>(itsData[2])-1;
-			itsSampleNr = static_cast<int>(itsData[3]);
+			itsTime = static_cast<time_t>(itsData[2]);
+			itsFreqBands = static_cast<int>((itsData[4] >> 16) & 0xFFFF);
+			
+			if (itsFreqBands == 0) {
+				itsSampleNr = static_cast<int>(itsData[3]);
+			} else {
+				itsBandNr = static_cast<int>(itsData[3] & 0x03FF);
+				itsSliceNr = static_cast<int>(itsData[3] >> 10);
+			}
+			strftime(timestring, 255, "%Y%m%d_%H%M%S", gmtime(&itsTime));
+			
+			cout << "Station ID      : " << itsStationId << endl;
+			cout << "RSP ID          : " << itsRspId << endl;
+			cout << "RCU ID          : " << itsRcuId << endl;
+			cout << "Sample freq     : " << itsSampleFreq << " MHz" << endl;
+			if (itsTime < 0) {
+				cout << "Time            : invalid" << endl;
+			} else {
+				cout << "Time of 1e sample/slice  : " << timestring << " (" << (uint32)itsTime << ")" << endl ;
+			}
+			if (itsTotalBands > 0) {
+				cout << "Slice number of 1e slice : " << itsSliceNr << endl;
+				cout << "Band number of 1e sample : " << itsBandNr << endl;
+				cout << "Number of bands          : " << itsTotalBands << endl;
+				cout << "Data file format         : binary complex(int16 Re, int16 Im)" << endl;
+			}	else {
+				cout << "Sample number of 1e sample : " << itsSampleNr << endl;
+				cout << "Data file format           : binary  int16" << endl;
+			}
+			
+			// print size of progressbar on screen
+			bar_interval = itsPages / bar_size;
+			
+			cout << "|";
+			for (int i = 0; i < bar_size; i++) {
+				cout << "-";
+			}
+			cout << "|" << endl ;
+			cout << "|";
+						
+			
+			snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsTotalBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
 		}
 		itsSamplesPerFrame = static_cast<int>(itsData[4] & 0xFFFF);
-		itsFreqBands = static_cast<int>((itsData[4] >> 16) & 0xFFFF);
-						
+		
+		// print receive progress on screen
+		if (bar_interval < 1.) {
+			int count = ceil(bar_buff / bar_interval);
+			for (int i = 0; i < count; i++) {
+				cout << "x" << flush;
+			}
+			bar_buff -= (count * bar_interval); 
+		} else {
+			if (bar_buff >= bar_interval) {
+				cout << "x" << flush;
+				bar_buff -= bar_interval;
+			}
+		}
+								
 		int sample_cnt = 0;
 		int val_cnt = 0;
 		int data_cnt = 22; // 22 = startadress of data in frame
 		
-		
-		if (itsFreqBands > 0) {
-			// its SPECTRAL data
+		// extract payload
+		if (itsFreqBands > 0) {	// if itsFreqBands > 0 then it's SPECTRAL data
 			if (itsSamplesPerFrame < 975) {		
 				itsTotalSamples += itsSamplesPerFrame;
-				itsTotalBands += itsFreqBands;
-				//logMessage(cout,formatString("Samples[%d] Bands[%d]",itsTotalSamples,itsTotalBands));
+
 				// convert uint32 to complex int16
 				while (sample_cnt < itsSamplesPerFrame) {
-					// get complex sample
 					val[val_cnt++] = static_cast<int16>(itsData[data_cnt] & 0xFFFF);	// re part
 					val[val_cnt++] = static_cast<int16>((itsData[data_cnt++] >> 16) & 0xFFFF);	// im part
 					sample_cnt++;
 				}
 			}
-		}	else {
-			// its RAW data
+		}	else {	// if itsFreqBands = 0, it's RAW data
+
 			if (itsSamplesPerFrame < 1299) {		
-				itsTotalSamples += itsSamplesPerFrame;
-				itsTotalBands += itsFreqBands;
-				//logMessage(cout,formatString("Samples[%d] Bands[%d]",itsTotalSamples,itsTotalBands));
-				// convert uint32 to int12
 				uint32 data[3];
-				
+				itsTotalSamples += itsSamplesPerFrame;
+
+				// 1e convert uint32 to int12
 				while (sample_cnt < itsSamplesPerFrame) {
 					// get 96 bits from received data
 					data[0] = itsData[data_cnt++];
@@ -1564,78 +1630,77 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 					sample_cnt += 8;
 				}
 				
-				// convert all received samples from signed 12bit to signed 16bit
+				// 2e convert all received samples from signed 12bit to signed 16bit
 				for (int cnt = 0; cnt < val_cnt; cnt++) {
 					if (val[cnt] & 0x0800) val[cnt] |= 0xF000;
 				}
 			}
 		}
+		
 		// write all data to file
 		FILE* file;
-		char line[10][256];
-		char basefilename[PATH_MAX];
-		char filename[PATH_MAX];
-		char timestring[256];
-		
+				
 		if (val_cnt > 0) {
-			strftime(timestring, 255, "%Y%m%d_%H%M%S", gmtime(&itsTime));
-			snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsTotalBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
-			
+			// save unpacked frame to file
 			snprintf(filename, PATH_MAX, "%s.dat",basefilename);
 			file = fopen(filename,"a");
-			fwrite(val,sizeof(int16),val_cnt,file);
+			fwrite(&itsData[0],sizeof(uint32),22,file);		// frame header 88 bytes (4 x 22)
+			fwrite(&val[0],sizeof(int16),val_cnt,file);		// payload
+			fwrite(&itsData[509],sizeof(uint32),1,file);	// payload CRC 4 bytes (4 x 1)
 			fclose(file);
 		}
+		
 		itsPage++;
-		if (itsPage < itsPages) {
-			itsCmdStage = 2;
+		if ((itsPage < itsPages) && (itsPage < itsSize)) { 
+				itsCmdStage = 2;
 		}	else {
-			// print page information
-			strftime(timestring, 255, "%Y-%m-%d  %H:%M:%S", gmtime(&itsTime));
-			
-			sprintf(line[0],"Station ID      : %d",itsStationId);
-			sprintf(line[1],"RSP ID          : %d",itsRspId);
-			sprintf(line[2],"RCU ID          : %d",itsRcuId);
-			sprintf(line[3],"Sample freq     : %d MHz",itsSampleFreq);
-			if (itsTime < 0) {
-				sprintf(line[4],"Time            : invalid");
-			} else {
-				sprintf(line[4],"Time            : %s (%u)",timestring,(uint32)itsTime);
-			}
-			sprintf(line[5],"SampleNr        : %u",itsSampleNr);
-			if (itsTotalBands) {
-				sprintf(line[6],"FreqBands       : %u",itsTotalBands);
-				sprintf(line[7],"Data file format: binary complex(int16 Re, int16 Im)");
-			}	else {
-				sprintf(line[6],"Samples         : %u",itsTotalSamples);
-				sprintf(line[7],"Data file format: binary  int16");
-			}
+			// last page received, print last info on screen
+			cout << "|" << endl;
+			cout << "Total received frames : " << itsPage << endl;
+			cout << "Total received samples: " << itsTotalSamples << endl;
+
 			if (val_cnt > 0) {
-				sprintf(line[8],"Filename        : %s.nfo",basefilename);
-				sprintf(line[9],"                : %s.dat",basefilename);
+				cout << "Filename        : " << basefilename << ".nfo" << endl;
+				cout << "                : " << basefilename << ".dat" << endl;;
+				cout << "Each frame exists of:" << endl;
+				cout << "  HEADER(88 bytes) + PAYLOAD(see header for size) + PAYLOAD_CRC(4 bytes)" << endl;
 			} else {
-				sprintf(line[8],"Filename        : NO DATA IN FRAME");
-				sprintf(line[9],"                : ");
+				cout << "Filename        : NO DATA IN FRAME" << endl;
 			}
 			
-			if (val_cnt > 0) {			
-				snprintf(filename, PATH_MAX, "%s.nfo",basefilename);
-				file = fopen(filename,"w");		
-									
-				for (int32 lnr = 0;lnr < 10; lnr++) {
-					fprintf(file,line[lnr]);
-					fprintf(file,"\n");
-				}
-				fclose(file);
-			}
 			
-			for (int32 lnr = 0;lnr < 10; lnr++) {
-				logMessage(cout,line[lnr]);
+			
+			// save page information to file
+			strftime(timestring, 255, "%Y-%m-%d  %H:%M:%S", gmtime(&itsTime));
+
+			snprintf(filename, PATH_MAX, "%s.nfo",basefilename);
+			file = fopen(filename,"w");		
+			
+			fprintf(file,  "Station ID      : %d",itsStationId);
+			fprintf(file,  "RSP ID          : %d",itsRspId);
+			fprintf(file,  "RCU ID          : %d",itsRcuId);
+			fprintf(file,  "Sample freq     : %d MHz",itsSampleFreq);
+			if (itsTime < 0) {
+				fprintf(file,"Time            : invalid");
+			} else {
+				fprintf(file,"Time of 1e sample/slice  : %s (%u)",timestring,(uint32)itsTime);
 			}
+			if (itsTotalBands > 0) {
+				fprintf(file,"Slice number of 1e slice : %u",itsSliceNr);
+				fprintf(file,"Band number of 1e sample : %u",itsBandNr);
+				fprintf(file,"Number of bands          : %u",itsTotalBands);
+				fprintf(file,"Data file format         : binary complex(int16 Re, int16 Im)");
+			}	else {
+				fprintf(file,"Sample number of 1e sample : %u",itsSampleNr);
+				fprintf(file,"Total number of samples    : %u",itsTotalSamples);
+				fprintf(file,"Data file format           : binary  int16");
+				fprintf(file," ");
+			}
+			fclose(file);
 		}
 	}
+
 	if (itsPage == itsPages) {
-		
 		setCmdDone(true);
 	}
 
@@ -1663,9 +1728,9 @@ void TBBCtl::help()
 	logMessage(cout,"tbbctl --generate [--select=<set>]                                 # generate a trigger for all selected rcu's");	
 	logMessage(cout,"tbbctl --setup=level,mode,filter,window,dummy [--select=<set>]     # setup trigger system for all selected rcu's");
 	logMessage(cout,"tbbctl --coef=c0,c1,c2,c3 [--select=<set>]                         # set trigger coeffients for all selected rcu's");
-	logMessage(cout,"tbbctl --triginfo=rcu                                              # get trigger info for all selected rcu's\n");
+	logMessage(cout,"tbbctl --triginfo=rcu                                              # get trigger info for selected rcu\n");
 	
-	logMessage(cout,"tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP");
+	logMessage(cout,"tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, use --mode first");
 	logMessage(cout,"tbbctl --mode=board,[transient | subbands]                         # set mode to configure UDP/IP header for CEP"); 
 	logMessage(cout,"tbbctl --version [--select=<set>]                                  # get version information from selected boards");
 	logMessage(cout,"tbbctl --status [--select=<set>]                                   # get status information from selected boards");	
@@ -1700,14 +1765,14 @@ TBBCtl::TBBCtl(string name, int argc, char** argv): GCFTask((State)&TBBCtl::init
 	}
 	registerProtocol(TBB_PROTOCOL, TBB_PROTOCOL_signalnames);
 	itsServerPort.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
+	itsCmdTimer = new GCFTimerPort(*this, "AliveTimer");
 }
 
 //-----------------------------------------------------------------------------
 TBBCtl::~TBBCtl()
 {
-  if (itsCommand) {
-  	delete itsCommand;
-  }
+  if (itsCommand)		{ delete itsCommand; }
+  if (itsCmdTimer)	{ delete itsCmdTimer; }
 }
 
 //-----------------------------------------------------------------------------
@@ -1803,11 +1868,14 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     } break;
 		
 		case F_TIMER: {
-			//itsCommand->send();
-			logMessage(cout,"Timeout, tbbctl stopped\n");
-			TBBUnsubscribeEvent unsubscribe;
-      itsServerPort.send(unsubscribe);
-    	GCFTask::stop();
+			if (&port == itsCmdTimer) {
+				itsCommand->send();
+			} else {
+				logMessage(cout,"Timeout, tbbctl stopped\n");
+				TBBUnsubscribeEvent unsubscribe;
+      	itsServerPort.send(unsubscribe);
+    		GCFTask::stop();
+    	}
 		} break;
     
     case TBB_TRIG_GENERATE_ACK:
@@ -1816,8 +1884,6 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     	itsServerPort.setTimer((long)5);
     	status = itsCommand->ack(e); // handle the acknowledgement
     } break;
-    
-    
     	
     case TBB_ALLOC_ACK:
     case TBB_RCU_INFO_ACK:
@@ -1849,7 +1915,8 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     	status = itsCommand->ack(e); // handle the acknowledgement
     	if (!itsCommand->isCmdDone()) {
     		// not done send next command
-    		itsCommand->send();
+    		//itsCommand->send();
+    		itsCmdTimer->setTimer((long)0);
     	}
     } break;
 

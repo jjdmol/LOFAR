@@ -105,7 +105,7 @@ void ReadfCmd::sendTpEvent()
 {
 	itsTPE->addr		= static_cast<uint32>(itsBlock * FL_BLOCK_SIZE);
 	TS->boardPort(getBoardNr()).send(*itsTPE);
-	TS->boardPort(getBoardNr()).setTimer(0.2);
+	TS->boardPort(getBoardNr()).setTimer(TS->timeout());
 }
 
 // ----------------------------------------------------------------------------

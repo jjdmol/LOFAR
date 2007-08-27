@@ -114,8 +114,21 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 		itsTPackE = new TPReadfAckEvent(event);
 		
 		if (itsTPackE->status == 0) {
+			char info[256];
+			memset(info,0,256);
+			memcpy(info,&itsTPackE->data,256);
+			LOG_DEBUG_STR(formatString("ImageInfoCmd: %s",info)); 
+			
 			itsTBBackE->image_version[itsImage]= itsTPackE->data[0];	  
-			itsTBBackE->write_date[itsImage] = itsTPackE->data[1];		  		
+			itsTBBackE->write_date[itsImage] = itsTPackE->data[1];	
+			
+			sscanf(&info[8],"%s %s",
+						 &itsTBBackE->tp_file_name[itsImage][0],
+						 &itsTBBackE->mp_file_name[itsImage][0]);
+						
+			
+			//itsTBBackE->image_version[itsImage]= itsTPackE->data[0];	  
+			//itsTBBackE->write_date[itsImage] = itsTPackE->data[1];		  		
 		
 			itsImage++;
 			if (itsImage == 32) {

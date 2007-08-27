@@ -52,7 +52,7 @@ AllocCmd::AllocCmd(): itsStage(0),itsRcuStatus(0)
 AllocCmd::~AllocCmd()
 {
 	delete itsTPE;
-	delete itsTBBackE;
+	delete itsTBBackE;	
 }
 
 // ----------------------------------------------------------------------------
@@ -275,7 +275,6 @@ void AllocCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	}
 	
 	clientport->send(*itsTBBackE);
-	
 }
 
 // ----------------------------------------------------------------------------

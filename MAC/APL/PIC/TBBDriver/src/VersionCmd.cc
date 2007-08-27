@@ -41,7 +41,15 @@ VersionCmd::VersionCmd()
 	itsTBBackE 	= new TBBVersionAckEvent();
 	
 	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
-		itsTBBackE->status_mask[boardnr]		= 0;
+		itsTBBackE->status_mask[boardnr]	= 0;
+		itsTBBackE->boardid[boardnr]			= 0;
+		itsTBBackE->swversion[boardnr]  	= 0;
+		itsTBBackE->boardversion[boardnr]	= 0;
+		itsTBBackE->tpversion[boardnr]		= 0;
+		itsTBBackE->mp0version[boardnr] 	= 0;
+		itsTBBackE->mp1version[boardnr] 	= 0;
+		itsTBBackE->mp2version[boardnr] 	= 0;
+		itsTBBackE->mp3version[boardnr] 	= 0;
 	}
 	setWaitAck(true);
 }
@@ -74,7 +82,7 @@ void VersionCmd::saveTbbEvent(GCFEvent& event)
 			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
 	}
 	
-	itsTBBackE->driverversion = TS->driverVersion();
+	itsTBBackE->driverversion = TS->driverVersion(); // set cvs version of TBBDriver.c
 	// select firt board
 	nextBoardNr();
 	
