@@ -53,7 +53,7 @@
 	 	    		
 	 	    		if (Valideer_Invoer()) {
 							$query = "INSERT INTO gebruiker (inlognaam, Wachtwoord, Start_Alg, Start_Comp, Start_Melding, Start_Stats, Groep_ID, Gebruiker_Taal, Emailadres, Laatst_Ingelogd) ";
-							$query = $query . "VALUES ('". $_POST['Gebr_Naam'] ."', '". md5($_POST['Wachtwoord']) ."', '". $_POST['Alg_Start'] ."' ,'". $_POST['Comp_Start'] ."', '". $_POST['Melding_Start'];
+							$query = $query . "VALUES ('". $_POST['Gebr_Naam'] ."', '". md5(strtolower($_POST['Wachtwoord'])) ."', '". $_POST['Alg_Start'] ."' ,'". $_POST['Comp_Start'] ."', '". $_POST['Melding_Start'];
 							$query = $query . "', '". $_POST['Stats_Start'] ."', '" . $_POST['Gebr_Groep'] ."', '". $_POST['Gebr_Taal'] ."', '". $_POST['Gebr_Email'] ."', NOW())";
 							
 							if (mysql_query($query)) echo("De nieuwe gebruiker \"". $_POST['Gebr_Naam'] ."\" is aan het systeem toegevoegd<br>");
@@ -94,7 +94,7 @@
 	    				</tr>
 	    				<tr>
 	    					<td>Wachtwoord:</td>
-	    					<td><input name="Wachtwoord" type="password">
+	    					<td><input name="Wachtwoord" type="text">
 		    				  <?php if(isset($_POST['Wachtwoord']) && $_POST['Wachtwoord'] == '') echo('<b>* Er is geen wachtwoord ingevoerd!</b>'); ?>
 		    				</td>
 	    				</tr>

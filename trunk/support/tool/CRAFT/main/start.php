@@ -22,7 +22,7 @@
 					$datum = split("-",$gedeeldveld[0]);
 		    	echo("Sinds uw laatste keer inloggen (".$datum[2] ."-". $datum[1] ."-". $datum[0]." om ". $gedeeldveld[1] .") zijn de volgende wijzigingen in het systeem opgetreden.<br>");
 
-//$_SESSION['laatste_inlog'] = '2007-01-12 09:00:00'; //<----- CHEATZ!!!!!!
+$_SESSION['laatste_inlog'] = '2007-01-12 09:00:00'; //<----- CHEATZ!!!!!!
 
 					//het reservegedeelte!!
 					echo("<b id=\"zwart\">Componenten reserve status:</b><br>");

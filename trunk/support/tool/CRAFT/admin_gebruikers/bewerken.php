@@ -65,7 +65,7 @@
 					if(Valideer_Invoer()) {
 						$query = "UPDATE gebruiker SET inlognaam = '". $_POST['Gebr_Naam'] ."', ";
 						if ($_POST['Wachtwoord'] != '')
-							$query = $query . "Wachtwoord = '". md5($_POST['Wachtwoord']) ."', ";
+							$query = $query . "Wachtwoord = '". md5(strtolower($_POST['Wachtwoord'])) ."', ";
 						
 						$query = $query . "Start_Alg='". $_POST['Alg_Start'] ."'";
 						$query = $query . ", Start_Comp='". $_POST['Comp_Start'] ."', Start_Melding = '". $_POST['Melding_Start'] ."', Start_Stats='". $_POST['Stats_Start'] ."'";
@@ -116,7 +116,7 @@
 	    				</tr>
 	    				<tr>
 	    					<td>Wachtwoord:</td>
-	    					<td><input name="Wachtwoord" type="password"></td>
+	    					<td><input name="Wachtwoord" type="text"></td>
 	    				</tr>
 	    				<tr>
 	    					<td>E-mailadres:</td>
@@ -232,7 +232,7 @@
 				
 				<?php 
 						}
-						else echo('Er is geen contact geselecteerd om te wijzigen.<br>Selecteer hiernaast een contact.');
+						else echo('Er is geen gebruiker geselecteerd om te wijzigen.<br>Selecteer hiernaast een contact.');
 					}
 				?>
 	

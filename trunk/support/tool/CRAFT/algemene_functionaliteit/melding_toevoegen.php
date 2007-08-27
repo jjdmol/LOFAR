@@ -6,8 +6,15 @@
 		
 		for($i = 0; $i < $aantal_velden; $i++) {
 			//verplichte velden ingevuld??
-			if ($_POST['v' . $i] == 1) {
-				if ($_POST[$i] == '') return false;
+			if ($_POST['v' . $i] == '1') {
+				//bestanden
+				if ($_POST['t' . $i] == '5') {
+					if ($_SESSION['bestand' . $i] == '-1') return false;
+				}
+				//overige
+				else {
+					if ($_POST[$i] == '') return false;
+				}
 			}
 			//datum controle bij datum velden
 			if ($_POST['t' . $i] == '4a') {
@@ -161,7 +168,7 @@
 			 				$error_extra = 2;
 	
 	    				$Veld_ID = mysql_insert_id();	  				
-	  					$query = "INSERT INTO Melding_Koppel_Extra (Kolom_ID, Meld_Lijst_ID) VALUES('".$Veld_ID. "', '". $Laatste_Melding ."')";
+	  					$query = "INSERT INTO melding_koppel_extra (Kolom_ID, Meld_Lijst_ID) VALUES('".$Veld_ID. "', '". $Laatste_Melding ."')";
 		    			
 		    			if (mysql_query($query)) {
 				 				$error_extra = 3;
@@ -365,7 +372,7 @@
   					?>
 
     				<td>Historie:</td>
-    				<td><iframe id="frame_historie" name="frame_historie" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_historie.php <?php echo($dinges); ?>" width="500" height="88" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
+    				<td><iframe id="frame_historie" name="frame_historie" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/melding_historie.php<?php echo($dinges); ?>" width="500" height="88" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
     			</tr>
     			<tr>
     				<td>
