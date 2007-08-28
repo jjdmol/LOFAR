@@ -88,15 +88,26 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
         ++it)
     {
         if(*it == "GAIN")
+        {
             mask[GAIN] = true;
+        }
         else if(*it == "DIRECTIONAL_GAIN")
+        {
             mask[DIRECTIONAL_GAIN] = true;
+        }
         else if(*it == "DIPOLE_BEAM")
+        {
             mask[DIPOLE_BEAM] = true;
+            LOG_DEBUG_STR("Using dipole beam....");
+        }
         else if(*it == "BANDPASS")
+        {
             mask[BANDPASS] = true;
+        }
         else if(*it == "PHASORS")
+        {
             mask[PHASORS] = true;
+        }
     }
     
     string part1("real:");
@@ -151,7 +162,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
         for(size_t i = 0; i < nSources; ++i)
         {
             azel[i] =
-                new MeqAzEl(*(itsSourceNodes[i]), *(itsStationNodes[i].get()));
+                new MeqAzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
 
             dipole_beam[i] = new MeqDipoleBeam(azel[i], 1.706, 1.38,
                 casa::C::pi / 4.001, -casa::C::pi_4);
@@ -575,7 +586,7 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
         fill(statDone.begin(), statDone.end(), false);
 
         // Set UVW of first station used to 0 (UVW coordinates are relative!).
-        size_t station0 = buffer->baselines.begin()->first.first;
+        size_t station0 = buffer->grid.baseline[0].first;
         statUVW[3 * station0] = 0.0;
         statUVW[3 * station0 + 1] = 0.0;
         statUVW[3 * station0 + 2] = 0.0;
@@ -586,38 +597,38 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
         do
         {
             nDone = 0;
-            for (map<baseline_t, size_t>::const_iterator it =
-                    buffer->baselines.begin();
-                it != buffer->baselines.end();
-                ++it)
+            for(size_t idx = 0; idx < buffer->grid.baseline.size(); ++idx)
             {
-                size_t blindex = it->second;
-                if(buffer->tslot_flag[blindex][tslot])
+                // If the contents of the UVW column is uninitialized, skip
+                // it.
+                if(buffer->tslot_flag[idx][tslot] & VisData::UNAVAILABLE)
+                {
                     continue;
-
-                size_t statA = it->first.first;
-                size_t statB = it->first.second;
-                if (statDone[statA] && !statDone[statB])
+                }
+                
+                size_t statA = buffer->grid.baseline[idx].first;
+                size_t statB = buffer->grid.baseline[idx].second;
+                if(statDone[statA] && !statDone[statB])
                 {
                     statUVW[3 * statB] =
-                        buffer->uvw[blindex][tslot][0] - statUVW[3 * statA];
+                        buffer->uvw[idx][tslot][0] - statUVW[3 * statA];
                     statUVW[3 * statB + 1] =
-                        buffer->uvw[blindex][tslot][1] - statUVW[3 * statA + 1];
+                        buffer->uvw[idx][tslot][1] - statUVW[3 * statA + 1];
                     statUVW[3 * statB + 2] =
-                        buffer->uvw[blindex][tslot][2] - statUVW[3 * statA + 2];
+                        buffer->uvw[idx][tslot][2] - statUVW[3 * statA + 2];
                     statDone[statB] = true;
                     itsUVWNodes[statB]->set(time, statUVW[3 * statB],
                         statUVW[3 * statB + 1], statUVW[3 * statB + 2]);
                     ++nDone;
                 }
-                else if (statDone[statB] && !statDone[statA])
+                else if(statDone[statB] && !statDone[statA])
                 {
                     statUVW[3 * statA] =
-                        statUVW[3 * statB] - buffer->uvw[blindex][tslot][0];
+                        statUVW[3 * statB] - buffer->uvw[idx][tslot][0];
                     statUVW[3 * statA + 1] =
-                        statUVW[3 * statB + 1] - buffer->uvw[blindex][tslot][1];
+                        statUVW[3 * statB + 1] - buffer->uvw[idx][tslot][1];
                     statUVW[3 * statA + 2] =
-                        statUVW[3 * statB + 2] - buffer->uvw[blindex][tslot][2];
+                        statUVW[3 * statB + 2] - buffer->uvw[idx][tslot][2];
                     statDone[statA] = true;
                     itsUVWNodes[statA]->set(time, statUVW[3 * statA],
                         statUVW[3 * statA + 1], statUVW[3 * statA + 2]);
@@ -626,6 +637,12 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
             }
         }
         while(nDone > 0);
+        
+        for(size_t i = 0; i < statDone.size(); ++i)
+        {
+            ASSERTSTR(statDone[i], "UVW of station " << i << " could not be"
+                " determined for timeslot " << tslot);
+        }
     }
 }
 

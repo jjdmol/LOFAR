@@ -105,6 +105,7 @@ MeqResult MeqParmFunklet::getResult (const MeqRequest& request)
     }
     return res;
   }
+
   // Get the domain, etc.
   const MeqDomain& domain = request.domain();
   MeqResult result(0);
@@ -125,6 +126,10 @@ MeqResult MeqParmFunklet::getResult (const MeqRequest& request)
     result.setPerturbedValue (itsPertInx+ip, matp);
     result.setPerturbedParm (itsPertInx+ip, this);
   }
+
+//  LOG_DEBUG_STR("Name: " << getName() << " nrpert: " << nrpert << " ["
+//    << itsPertInx << " - " << itsPertInx + nrpert - 1 << "]");
+
   // Iterate over all funklets.
   // Evaluate one if its domain overlaps the request domain.
   int sty = 0;

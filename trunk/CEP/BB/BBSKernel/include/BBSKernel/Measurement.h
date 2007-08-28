@@ -67,7 +67,7 @@ public:
 
     virtual VisGrid grid(const VisSelection &selection) const = 0;
 
-    virtual void read(const VisSelection &selection, VisData::Pointer buffer,
+    virtual VisData::Pointer read(const VisSelection &selection,
         const string &column = "DATA", bool readUVW = true) const = 0;
 
     virtual void write(const VisSelection &selection, VisData::Pointer buffer,

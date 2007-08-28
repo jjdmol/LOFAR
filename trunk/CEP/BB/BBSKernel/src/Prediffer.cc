@@ -75,6 +75,7 @@ using LOFAR::operator<<;
 using LOFAR::ParmDB::ParmDB;
 using LOFAR::ParmDB::ParmDBMeta;
 
+
 Prediffer::Prediffer(const string &measurement, size_t subband,
     const string &inputColumn, const string &skyDBase,
     const string &instrumentDBase, const string &historyDBase, bool readUVW)
@@ -109,6 +110,9 @@ Prediffer::Prediffer(const string &measurement, size_t subband,
     {
         LOG_INFO_STR("Input: " << measurement << "::" << itsInputColumn);
         itsMeasurement.reset(new MeasurementAIPS(measurement, 0, subband, 0));
+        
+        // Initialize the polarization map.
+        initPolarizationMap();
     }
     catch(casa::AipsError &_ex)
     {
@@ -165,11 +169,9 @@ Prediffer::Prediffer(const string &measurement, size_t subband,
     LOG_INFO_STR("UVW source: " << (readUVW ? "read" : "computed"));
     LOG_INFO_STR("UVW convention: " << (readUVW ? "as recorded in the input"
         " measurement" : "ANTENNA2 - ANTENNA1 (AIPS++ convention)"));
-//    ASSERTSTR(computeUVW, "Reading of UVW coordinates from the input"
-//        " measurement temporarily disabled.");
 
     // Initialize chunk.
-    itsChunkData.reset(new VisData());
+//    itsChunkData.reset(new VisData());
 
     // Initialize model.
     casa::MEpoch startTimeMeas = itsMeasurement->getTimeRange().first;
@@ -200,6 +202,48 @@ Prediffer::~Prediffer()
   // clear up the matrix pool
   MeqMatrixComplexArr::poolDeactivate();
   MeqMatrixRealArr::poolDeactivate();
+}
+
+
+void Prediffer::initPolarizationMap()
+{
+    // Create a lookup table that maps external (measurement) polarization
+    // indices to internal polarization indices. The internal indices are:
+    // 0 - XX or LL
+    // 1 - XY or LR
+    // 2 - YX or RL
+    // 3 - YY or RR
+    // No assumptions can be made regarding the external polarization indices,
+    // which is why we need this table in the first place.
+    
+    const vector<string> &polarizations = itsMeasurement->getPolarizations();
+        
+    itsPolarizationMap.resize(polarizations.size());
+    for(size_t i = 0; i < polarizations.size(); ++i)
+    {
+        if(polarizations[i] == "XX" || polarizations[i] == "LL")
+        {
+            itsPolarizationMap[i] = 0;
+        }
+        else if(polarizations[i] == "XY" || polarizations[i] == "LR")
+        {
+            itsPolarizationMap[i] = 1;
+        }
+        else if(polarizations[i] == "YX" || polarizations[i] == "RL")
+        {
+            itsPolarizationMap[i] = 2;
+        }
+        else if(polarizations[i] == "YY" || polarizations[i] == "RR")
+        {
+            itsPolarizationMap[i] = 3;
+        }
+        else
+        {
+            LOG_WARN_STR("Don't know how to process polarization "
+                << polarizations[i] << "; will be skipped.");
+            itsPolarizationMap[i] = -1;
+        }
+    }
 }
 
 
@@ -251,10 +295,15 @@ bool Prediffer::nextChunk()
     // Clear equations.
     itsModel->clearEquations();
 
+    // Deallocate chunk.
+    ASSERTSTR(itsChunkData.use_count() == 0 || itsChunkData.use_count() == 1,
+        "itsChunkData shoud be unique (or uninitialized) by now.");
+    itsChunkData.reset();
+
     // Read data.
     LOG_DEBUG("Reading chunk...");
-    itsMeasurement->read(itsChunkSelection, itsChunkData, itsInputColumn,
-        itsReadUVW);
+    itsChunkData = 
+        itsMeasurement->read(itsChunkSelection, itsInputColumn, itsReadUVW);
     if(itsReadUVW)
         itsModel->setStationUVW(itsMeasurement->getInstrument(), itsChunkData);
 
@@ -309,35 +358,36 @@ bool Prediffer::setContext(const Context &context)
     itsContext = ProcessingContext();
 
     // Select polarizations.
-    vector<string> requested;
     if(context.correlation.type.empty())
-        requested = itsMeasurement->getPolarizations();
-    else
-        requested = context.correlation.type;
-
-    for(vector<string>::const_iterator it = requested.begin();
-        it != requested.end();
-        ++it)
     {
-        size_t idx;
-
-        try
+        for(size_t i = 0; i < itsPolarizationMap.size(); ++i)
         {
-            idx = itsChunkData->getPolarizationIndex(*it);
-            if(*it == "XX" || *it == "LL")
-                itsContext.polarizations.insert(make_pair(idx, 0));
-            else if(*it == "XY" || *it == "LR")
-                itsContext.polarizations.insert(make_pair(idx, 1));
-            else if(*it == "YX" || *it == "RL")
-                itsContext.polarizations.insert(make_pair(idx, 2));
-            else if(*it == "YY" || *it == "RR")
-                itsContext.polarizations.insert(make_pair(idx, 3));
-            else
-                LOG_WARN_STR("Don't know how to process polarization " << *it
-                    << "; skipping");
+            if(itsPolarizationMap[i] >= 0)
+            {
+                itsContext.polarizations.insert(i);
+            }
         }
-        catch(BBSKernelException &ex)
+    }
+    else
+    {
+        const vector<string> &requested = context.correlation.type;
+        const vector<string> &available = itsMeasurement->getPolarizations();
+
+        for(size_t i = 0; i < available.size(); ++i)
         {
+            // Skip all unknown polarizations.
+            if(itsPolarizationMap[i] >= 0)
+            {
+                // Check if this polarization needs to be processed.
+                for(size_t j = 0; j < requested.size(); ++j)
+                {
+                    if(available[i] == requested[j])
+                    {
+                        itsContext.polarizations.insert(i);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -353,12 +403,12 @@ bool Prediffer::setContext(const Context &context)
     {
         // If no baselines are speficied, use all baselines selected in the
         // strategy that match the correlation selection of this context.
-        map<baseline_t, size_t>::const_iterator it =
-            itsChunkData->baselines.begin();
-
-        while(it != itsChunkData->baselines.end())
+        for(vector<baseline_t>::const_iterator it =
+            itsChunkData->grid.baseline.begin();
+            it != itsChunkData->grid.baseline.end();
+            ++it)
         {
-            const baseline_t &baseline = it->first;
+            const baseline_t &baseline = *it;
 
             if(context.correlation.selection == "ALL"
                 || (baseline.first == baseline.second
@@ -366,7 +416,7 @@ bool Prediffer::setContext(const Context &context)
                 || (baseline.first != baseline.second
                     && context.correlation.selection == "CROSS"))
             {
-                itsContext.baselines.insert(it->first);
+                itsContext.baselines.insert(baseline);
             }
             ++it;
         }
@@ -423,8 +473,10 @@ bool Prediffer::setContext(const Context &context)
                     {
                         baseline_t baseline(*it1, *it2);
 
-                        if (itsChunkData->hasBaseline(baseline))
+                        if(itsChunkData->hasBaseline(baseline))
+                        {
                             itsContext.baselines.insert(baseline);
+                        }
                     }
                 }
             }
@@ -464,7 +516,7 @@ bool Prediffer::setContext(const PredictContext &context)
         it->second.fillFunklets(itsParmValues, itsWorkDomain);
     }
 
-    itsOutputColumn = context.outputColumn;
+    itsContext.outputColumn = context.outputColumn;
     return true;
 }
 
@@ -489,7 +541,7 @@ bool Prediffer::setContext(const SubtractContext &context)
         it->second.fillFunklets(itsParmValues, itsWorkDomain);
     }
 
-    itsOutputColumn = context.outputColumn;
+    itsContext.outputColumn = context.outputColumn;
     return true;
 }
 
@@ -514,8 +566,7 @@ bool Prediffer::setContext(const CorrectContext &context)
         it->second.fillFunklets(itsParmValues, itsWorkDomain);
     }
 
-
-    itsOutputColumn = context.outputColumn;
+    itsContext.outputColumn = context.outputColumn;
     return true;
 }
 
@@ -618,7 +669,7 @@ bool Prediffer::setContext(const GenerateContext &context)
     LOG_DEBUG_STR("Nominal solve domain size: " << domainSize.first
         << " channels by " << domainSize.second << " timeslots.");
 
-    initializeSolveDomains(domainSize);
+    initSolveDomains(domainSize);
 
     return (itsContext.derivativeCount > 0);
 }
@@ -629,12 +680,14 @@ void Prediffer::predict()
     process(false, true, false, make_pair(0, 0),
         make_pair(itsChunkData->grid.freq.size() - 1,
             itsChunkData->grid.time.size() - 1),
-        &Prediffer::predictBaseline, 0);
+        &Prediffer::copyBaseline, 0);
 
-    if(!itsOutputColumn.empty())
-        itsMeasurement->write(itsChunkSelection, itsChunkData, itsOutputColumn,
-            false);
-
+    if(!itsContext.outputColumn.empty())
+    {
+        itsMeasurement->write(itsChunkSelection, itsChunkData,
+            itsContext.outputColumn, false);
+    }
+    
     LOG_DEBUG_STR("Predict: " << itsPredTimer);
     LOG_DEBUG_STR("Copy: " << itsEqTimer);
     itsPredTimer.reset();
@@ -649,9 +702,11 @@ void Prediffer::subtract()
             itsChunkData->grid.time.size() - 1),
         &Prediffer::subtractBaseline, 0);
 
-    if(!itsOutputColumn.empty())
-        itsMeasurement->write(itsChunkSelection, itsChunkData, itsOutputColumn,
-            false);
+    if(!itsContext.outputColumn.empty())
+    {
+        itsMeasurement->write(itsChunkSelection, itsChunkData,
+            itsContext.outputColumn, false);
+    }
 
     LOG_DEBUG_STR("Predict: " << itsPredTimer);
     LOG_DEBUG_STR("Subtract: " << itsEqTimer);
@@ -665,11 +720,13 @@ void Prediffer::correct()
     process(false, true, false, make_pair(0, 0),
         make_pair(itsChunkData->grid.freq.size() - 1,
             itsChunkData->grid.time.size() - 1),
-        &Prediffer::correctBaseline, 0);
+        &Prediffer::copyBaseline, 0);
 
-    if(!itsOutputColumn.empty())
-        itsMeasurement->write(itsChunkSelection, itsChunkData, itsOutputColumn,
-            false);
+    if(!itsContext.outputColumn.empty())
+    {
+        itsMeasurement->write(itsChunkSelection, itsChunkData,
+            itsContext.outputColumn, false);
+    }
 
     LOG_DEBUG_STR("Correct: " << itsEqTimer);
     LOG_DEBUG_STR("Copy: " << itsPredTimer);
@@ -812,7 +869,7 @@ void Prediffer::readParms()
 }
 
 
-void Prediffer::initializeSolveDomains(pair<size_t, size_t> size)
+void Prediffer::initSolveDomains(pair<size_t, size_t> size)
 {
     // Need to implement some way to select local solve domains
     // from global solve domains, see initSolvableParms().
@@ -901,6 +958,7 @@ void Prediffer::initializeSolveDomains(pair<size_t, size_t> size)
     }
     itsContext.derivativeCount = nDerivatives;
     LOG_DEBUG_STR("nDerivatives: " << nDerivatives);
+    LOG_DEBUG_STR("domainUnknownCount: " << domainUnknownCount);
 }
 
 
@@ -928,7 +986,7 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     int nChannels = end.first - start.first + 1;
     int nTimeslots = end.second - start.second + 1;
 
-    // NOTE: Temporary vector should be removed after MNS overhaul.
+    // NOTE: Temporary vector; should be removed after MNS overhaul.
     vector<double> timeAxis(nTimeslots + 1);
     for(size_t i = 0; i < nTimeslots; ++i)
         timeAxis[i] = itsChunkData->grid.time.lower(start.second + i);
@@ -951,10 +1009,11 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     request.setOffset(start);
 
     // Precalculate if required.
-    // TODO: Fix this when doing a correct!
     if(precalc)
+    {
         itsModel->precalculate(request);
-
+    }
+    
 /************** DEBUG DEBUG DEBUG **************/
 /*
     cout << "Processing correlations: ";
@@ -975,28 +1034,25 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
 #pragma omp parallel
     {
 #pragma omp for schedule(dynamic)
-    // Process all selected baselines.
-    for(set<baseline_t>::const_iterator it = itsContext.baselines.begin();
-        it != itsContext.baselines.end();
-        ++it)
-    {
-//        LOG_DEBUG_STR("Processing baseline " << it->first << " - "
-//            << it->second);
-
+        // Process all selected baselines.
+        for(set<baseline_t>::const_iterator it = itsContext.baselines.begin();
+            it != itsContext.baselines.end();
+            ++it)
+        {
 #if defined _OPENMP
-        size_t thread = omp_get_thread_num();
+            size_t thread = omp_get_thread_num();
 #else
-        size_t thread = 0;
+            size_t thread = 0;
 #endif
-        // Process baseline.
-        (this->*processor)
-            (thread, arguments, itsChunkData, start, request, *it, false);
-    }
+            // Process baseline.
+            (this->*processor)
+                (thread, arguments, itsChunkData, start, request, *it, false);
+        }
     } // omp parallel
 }
 
 
-void Prediffer::predictBaseline(int, void*, VisData::Pointer chunk,
+void Prediffer::copyBaseline(int, void*, VisData::Pointer chunk,
     pair<size_t, size_t> offset, const MeqRequest& request, baseline_t baseline,
     bool showd)
 {
@@ -1021,6 +1077,10 @@ void Prediffer::predictBaseline(int, void*, VisData::Pointer chunk,
     size_t nChannels = request.nx();
     size_t nTimeslots = request.ny();
 
+    // Check preconditions.
+    ASSERT(offset.first + nChannels <= chunk->grid.freq.size());
+    ASSERT(offset.second + nTimeslots <= chunk->grid.time.size());
+
     // Get baseline index.
     size_t basel = chunk->getBaselineIndex(baseline);
 
@@ -1029,24 +1089,25 @@ void Prediffer::predictBaseline(int, void*, VisData::Pointer chunk,
         tslot < offset.second + nTimeslots;
         ++tslot)
     {
-        for(set<pair<size_t, size_t> >::const_iterator it =
-                itsContext.polarizations.begin();
+        for(set<size_t>::const_iterator it = itsContext.polarizations.begin();
             it != itsContext.polarizations.end();
             ++it)
         {
-            size_t pol = it->first;
+            // External (Measurement) polarization index.
+            size_t ext_pol = *it;
+            // Internal (MEQ) polarization index.
+            int int_pol = itsPolarizationMap[ext_pol];
 
-            const double* re = resultRe[it->second];
-            const double* im = resultIm[it->second];
-
+            const double *re = resultRe[int_pol];
+            const double *im = resultIm[int_pol];
             for(size_t chan = 0; chan < nChannels; ++chan)
             {
-                chunk->vis_data[basel][tslot][offset.first + chan][pol] =
+                chunk->vis_data[basel][tslot][offset.first + chan][ext_pol] =
                     makefcomplex(re[chan], im[chan]);
             }
 
-            resultRe[pol] += nChannels;
-            resultIm[pol] += nChannels;
+            resultRe[int_pol] += nChannels;
+            resultIm[int_pol] += nChannels;
         }
     }
     itsEqTimer.stop();
@@ -1077,97 +1138,45 @@ void Prediffer::subtractBaseline(int, void*, VisData::Pointer chunk,
     // Get information about request grid.
     size_t nChannels = request.nx();
     size_t nTimeslots = request.ny();
+    
+    // Check preconditions.
+    ASSERT(offset.first + nChannels <= chunk->grid.freq.size());
+    ASSERT(offset.second + nTimeslots <= chunk->grid.time.size());
 
     // Get baseline index.
     size_t basel = chunk->getBaselineIndex(baseline);
-
+    
     // Copy the data to the right location.
     for(size_t tslot = offset.second;
         tslot < offset.second + nTimeslots;
         ++tslot)
     {
-        for(set<pair<size_t, size_t> >::const_iterator it =
-                itsContext.polarizations.begin();
+        for(set<size_t>::const_iterator it = itsContext.polarizations.begin();
             it != itsContext.polarizations.end();
             ++it)
         {
-            size_t pol = it->first;
+            // External (Measurement) polarization index.
+            size_t ext_pol = *it;
+            // Internal (MEQ) polarization index.
+            int int_pol = itsPolarizationMap[ext_pol];
 
-            const double* re = resultRe[it->second];
-            const double* im = resultIm[it->second];
-
+            const double *re = resultRe[int_pol];
+            const double *im = resultIm[int_pol];
             for(size_t chan = 0; chan < nChannels; ++chan)
             {
-                chunk->vis_data[basel][tslot][offset.first + chan][pol] -=
+                chunk->vis_data[basel][tslot][offset.first + chan][ext_pol] -=
                     makefcomplex(re[chan], im[chan]);
             }
 
-            resultRe[pol] += nChannels;
-            resultIm[pol] += nChannels;
+            resultRe[int_pol] += nChannels;
+            resultIm[int_pol] += nChannels;
         }
     }
     itsEqTimer.stop();
 }
 
 
-void Prediffer::correctBaseline(int, void*, VisData::Pointer chunk,
-    pair<size_t, size_t> offset, const MeqRequest& request, baseline_t baseline,
-    bool showd)
-{
-    // Do the actual correct.
-    itsPredTimer.start();
-    MeqJonesResult jresult = itsModel->evaluate(baseline, request);
-    itsPredTimer.stop();
-
-    itsEqTimer.start();
-    // Put the results in a single array for easier handling.
-    const double *resultRe[4], *resultIm[4];
-    jresult.getResult11().getValue().dcomplexStorage(resultRe[0],
-        resultIm[0]);
-    jresult.getResult12().getValue().dcomplexStorage(resultRe[1],
-        resultIm[1]);
-    jresult.getResult21().getValue().dcomplexStorage(resultRe[2],
-        resultIm[2]);
-    jresult.getResult22().getValue().dcomplexStorage(resultRe[3],
-        resultIm[3]);
-
-    // Get information about request grid.
-    size_t nChannels = request.nx();
-    size_t nTimeslots = request.ny();
-
-    // Get baseline index.
-    size_t basel = chunk->getBaselineIndex(baseline);
-
-    // Copy the data to the right location.
-    for(size_t tslot = offset.second;
-        tslot < offset.second + nTimeslots;
-        ++tslot)
-    {
-        for(set<pair<size_t, size_t> >::const_iterator it =
-                itsContext.polarizations.begin();
-            it != itsContext.polarizations.end();
-            ++it)
-        {
-            size_t pol = it->first;
-
-            const double* re = resultRe[it->second];
-            const double* im = resultIm[it->second];
-
-            for(size_t chan = 0; chan < nChannels; ++chan)
-            {
-                chunk->vis_data[basel][tslot][offset.first + chan][pol] =
-                    makefcomplex(re[chan], im[chan]);
-            }
-
-            resultRe[pol] += nChannels;
-            resultIm[pol] += nChannels;
-        }
-    }
-    itsEqTimer.stop();
-}
-
-
-void Prediffer::generateBaseline(int threadnr, void* arguments,
+void Prediffer::generateBaseline(int threadnr, void *arguments,
     VisData::Pointer chunk, pair<size_t, size_t> offset,
     const MeqRequest& request, baseline_t baseline, bool showd)
 {
@@ -1205,20 +1214,26 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
     size_t nChannels = request.nx();
     size_t nTimeslots = request.ny();
 
+    // Check preconditions.
+    ASSERT(offset.first + nChannels <= chunk->grid.freq.size());
+    ASSERT(offset.second + nTimeslots <= chunk->grid.time.size());
+
     // Get baseline index.
     size_t basel = chunk->getBaselineIndex(baseline);
 
     // To avoid having to use large temporary arrays, step through the
-    // data by timestep and correlation.
-    for(set<pair<size_t, size_t> >::const_iterator it =
-            itsContext.polarizations.begin();
+    // data by timeslot and correlation.
+    for(set<size_t>::const_iterator it = itsContext.polarizations.begin();
         it != itsContext.polarizations.end();
         ++it)
     {
-        size_t pol = it->first;
+        // External (Measurement) polarization index.
+        size_t ext_pol = *it;
+        // Internal (MEQ) polarization index.
+        int int_pol = itsPolarizationMap[ext_pol];
 
         // Get the results for this correlation.
-        const MeqResult &tcres = *predictResults[it->second];
+        const MeqResult &tcres = *predictResults[int_pol];
 
         // Get pointers to the main data.
         const MeqMatrix &val = tcres.getValue();
@@ -1236,6 +1251,7 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
         {
             if (tcres.isDefined(scinx))
             {
+//                LOG_DEBUG_STR("scinx: " << scinx << " #params: " << nrParamsFound);
                 indices[nrParamsFound] = scinx;
                 const MeqMatrix& valp = tcres.getPerturbedValue(scinx);
                 valp.dcomplexStorage (pertReal[nrParamsFound],
@@ -1259,6 +1275,20 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
 //                }
 /************** DEBUG DEBUG DEBUG **************/
 
+                // Skip timeslot if flagged.
+                if(chunk->tslot_flag[basel][tslot])
+                {
+                    // Move pointers to the next timeslot.
+                    for(int scinx = 0; scinx < nrParamsFound; ++scinx)
+                    {
+                        pertReal[scinx] += nChannels;
+                        pertImag[scinx] += nChannels;
+                    }
+                    realVals += nChannels;
+                    imagVals += nChannels;
+                    continue;
+                }
+
                 // Compute relative solver index (time part).
                 size_t solverIndexTime =
                     ((tslot - offset.second) / itsContext.domainSize.second)
@@ -1270,7 +1300,7 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
                     ch < offset.first + nChannels;
                     ++ch)
                 {
-                    if (!chunk->vis_flag[basel][tslot][ch][pol])
+                    if (!chunk->vis_flag[basel][tslot][ch][ext_pol])
                     {
                         // Compute relative solver index.
                         size_t solverIndex = solverIndexTime +
@@ -1278,10 +1308,10 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
                             
                         // Compute right hand side of the equation pair.
                         double diffr =
-                            real(chunk->vis_data[basel][tslot][ch][pol])
+                            real(chunk->vis_data[basel][tslot][ch][ext_pol])
                                 - *realVals;
                         double diffi =
-                            imag(chunk->vis_data[basel][tslot][ch][pol])
+                            imag(chunk->vis_data[basel][tslot][ch][ext_pol])
                                 - *imagVals;
 
                         #ifdef COMPUTE_SQUARED_ERROR
@@ -1308,7 +1338,7 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
 
                         // Now add the equations to the correct fitter
                         // object.
-                        if (nrParamsFound != itsContext.derivativeCount)
+                        if(nrParamsFound != itsContext.derivativeCount)
                         {
                             solvers[solverIndex]->makeNorm(nrParamsFound,
                                 indices, resultr, 1.0, diffr);
@@ -1341,7 +1371,7 @@ void Prediffer::generateBaseline(int threadnr, void* arguments,
                         }
 */
 /************** DEBUG DEBUG DEBUG **************/
-                    } // !chunk->vis_flag[basel][tslot][ch][pol]
+                    } // !chunk->vis_flag[basel][tslot][ch][ext_pol]
 
                     // Move pointers to the next channel.
                     for (int scinx = 0; scinx < nrParamsFound; ++scinx)
