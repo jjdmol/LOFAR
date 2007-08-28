@@ -70,11 +70,8 @@ public:
         N_TimeslotFlag
     };
 
-    VisData()
-    {}
-    VisData(const VisGrid &grid);
-
-    void reset(const VisGrid &in);
+    VisData(const VisGrid &visGrid);
+    ~VisData();
 
     bool hasBaseline(baseline_t baseline) const;
     size_t getBaselineIndex(baseline_t baseline) const;
@@ -85,15 +82,16 @@ public:
     // Grid on which the visibility data is sampled.
     VisGrid                                 grid;
 
-    // Indexes
-    map<baseline_t, size_t>                 baselines;
-    map<string, size_t>                     polarizations;
-
     // Data
     boost::multi_array<double, 3>           uvw;
     boost::multi_array<tslot_flag_t, 2>     tslot_flag;
     boost::multi_array<flag_t, 4>           vis_flag;
     boost::multi_array<sample_t, 4>         vis_data;
+
+private:
+    // Indexes
+    map<baseline_t, size_t>                 baselines;
+    map<string, size_t>                     polarizations;
 };
 
 } //# namespace BBS

@@ -88,8 +88,8 @@ struct ProcessingContext
     {}
 
     set<baseline_t>                 baselines;
-    set<pair<size_t, size_t> >      polarizations;
-
+    set<size_t>                     polarizations;
+    string                          outputColumn;
     // Sum of the maximal number (over all solve domains) of partial derivatives
     // of each parameter.
     size_t                          derivativeCount;
@@ -196,8 +196,8 @@ private:
     // </group>
 
     bool setContext(const Context &context);
-
-    void initializeSolveDomains(std::pair<size_t, size_t> size);
+    void initSolveDomains(std::pair<size_t, size_t> size);
+    void initPolarizationMap();
 
     // Make all parameters non-solvable.
     void clearSolvableParms();
@@ -216,17 +216,12 @@ private:
         BaselineProcessor processor, void *arguments);
 
     // Write the predicted data of a baseline.
-    void predictBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
+    void copyBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
         pair<size_t, size_t> offset, const MeqRequest& request,
         baseline_t baseline, bool showd = false);
 
     // Subtract the data of a baseline.
     void subtractBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
-        pair<size_t, size_t> offset, const MeqRequest& request,
-        baseline_t baseline, bool showd = false);
-
-    // Correct the data of a baseline.
-    void correctBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
         pair<size_t, size_t> offset, const MeqRequest& request,
         baseline_t baseline, bool showd = false);
 
@@ -242,8 +237,8 @@ private:
 
     size_t                              itsSubband;
     string                              itsInputColumn;
-    string                              itsOutputColumn;
     bool                                itsReadUVW;
+    vector<int>                         itsPolarizationMap;
 
     scoped_ptr<ParmDB::ParmDB>          itsInstrumentDBase;
     scoped_ptr<ParmDB::ParmDB>          itsSkyDBase;

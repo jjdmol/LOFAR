@@ -138,8 +138,8 @@ VisGrid MeasurementAIPS::grid(const VisSelection &selection) const
 }
 
 
-void MeasurementAIPS::read(const VisSelection &selection,
-    VisData::Pointer buffer, const string &column, bool readUVW) const
+VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
+    const string &column, bool readUVW) const
 {
     NSTimer readTimer, copyTimer;
 
@@ -148,7 +148,8 @@ void MeasurementAIPS::read(const VisSelection &selection,
     Table tab_selection = itsMS(taqlExpr);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
-    buffer->reset(grid(tab_selection, slicer));
+    VisGrid visGrid(grid(tab_selection, slicer));
+    VisData::Pointer buffer(new VisData(visGrid));
 
     size_t nChannels = buffer->grid.freq.size();
     size_t nPolarizations = buffer->grid.polarization.size();
@@ -219,15 +220,12 @@ void MeasurementAIPS::read(const VisSelection &selection,
         for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
-            map<baseline_t, size_t>::iterator it =
-                buffer->baselines.find(baseline_t(aips_antenna1[i],
+            size_t baseline =
+                buffer->getBaselineIndex(baseline_t(aips_antenna1[i],
                     aips_antenna2[i]));
 
-            ASSERTSTR(it != buffer->baselines.end(), "Unknown baseline!");
-            size_t baseline = it->second;
-
             // Flag timeslot as available.
-            buffer->tslot_flag[baseline][tslot] = 0;
+            buffer->tslot_flag[baseline][tslot] &= ~VisData::UNAVAILABLE;
 
             // Copy row (timeslot) flag.
             if(aips_flag_row(i))
@@ -259,6 +257,8 @@ void MeasurementAIPS::read(const VisSelection &selection,
 
     LOG_DEBUG_STR("Read time: " << readTimer);
     LOG_DEBUG_STR("Copy time: " << copyTimer);
+    
+    return buffer;
 }
 
 
@@ -339,12 +339,9 @@ void MeasurementAIPS::write(const VisSelection &selection,
         for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
-            map<baseline_t, size_t>::iterator it =
-                buffer->baselines.find(baseline_t(aips_antenna1[i],
+            size_t baseline =
+                buffer->getBaselineIndex(baseline_t(aips_antenna1[i],
                     aips_antenna2[i]));
-
-            ASSERTSTR(it != buffer->baselines.end(), "Unknown baseline!");
-            size_t baseline = it->second;
 
             if(writeFlags)
             {

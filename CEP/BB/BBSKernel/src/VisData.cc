@@ -32,16 +32,9 @@ namespace LOFAR
 namespace BBS 
 {
 
-VisData::VisData(const VisGrid &grid)
+VisData::VisData(const VisGrid &visGrid)
+    : grid(visGrid)
 {
-    reset(grid);
-}
-
-
-void VisData::reset(const VisGrid &grid)
-{
-    this->grid = grid;
-
     size_t nTimeslots = grid.time.size();
     size_t nBaselines = grid.baseline.size();
     size_t nChannels = grid.freq.size();
@@ -95,6 +88,12 @@ void VisData::reset(const VisGrid &grid)
 }
 
 
+VisData::~VisData()
+{
+    LOG_DEBUG("VisData destructor called.");
+}
+
+
 bool VisData::hasBaseline(baseline_t baseline) const
 {
     map<baseline_t, size_t>::const_iterator it = baselines.find(baseline);
@@ -106,10 +105,12 @@ size_t VisData::getBaselineIndex(baseline_t baseline) const
 {
     map<baseline_t, size_t>::const_iterator it = baselines.find(baseline);
     if(it != baselines.end())
+    {
         return it->second;
-    else
-        THROW(BBSKernelException, "Request for index of unknown baseline "
-            << baseline.first << " - " << baseline.second);
+    }
+    
+    THROW(BBSKernelException, "Request for index of unknown baseline "
+        << baseline.first << " - " << baseline.second);
 }
 
 
@@ -123,12 +124,13 @@ bool VisData::hasPolarization(const string &polarization) const
 size_t VisData::getPolarizationIndex(const string &polarization) const
 {
     map<string, size_t>::const_iterator it = polarizations.find(polarization);
-
     if(it != polarizations.end())
+    {
         return it->second;
-    else
-        THROW(BBSKernelException, "Request for index of unknown polarization "
-            << polarization);
+    }
+    
+    THROW(BBSKernelException, "Request for index of unknown polarization "
+        << polarization);
 }
 
 } //# namespace BBS
