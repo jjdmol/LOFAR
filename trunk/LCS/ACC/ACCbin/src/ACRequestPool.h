@@ -31,7 +31,6 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <netinet/in.h>				// in_addr
 #include <Common/lofar_list.h>
 #include <ALC/ACRequest.h>
 
@@ -51,8 +50,7 @@ public:
 	typedef list<ACRequest*>::const_iterator	const_iterator;
 
 	ACRequestPool(uint16			firstPortnr, 
-				  uint16			nrOfPorts,
-				  const string&		firstNodeIP);
+				  uint16			nrOfPorts);
 	~ACRequestPool();
 
 	// Element maintenance
@@ -84,7 +82,6 @@ private:
 	uint16				itsFirstPort;
 	uint16				itsLastPort;
 	uint16				itsNextPort;
-	string				itsFirstNodeIP;	// TODO: version 2.0 issue
 };
 
 

@@ -34,7 +34,7 @@
 #include <Common/Net/Socket.h>
 #include <Common/Net/FdSet.h>
 #include <APS/ParameterSet.h>
-#include <ACCbin/ACRequestPool.h>
+#include "ACRequestPool.h"
 
 using namespace LOFAR::ACC::APS;
 
@@ -91,6 +91,8 @@ private:
 	// File descriptor set of connected sockets
 	FdSet			itsConnSet;
 
+	// Name of the administration file forr surviving restarts.
+	string			itsAdminFile;
 };
 
 // @} addgroup

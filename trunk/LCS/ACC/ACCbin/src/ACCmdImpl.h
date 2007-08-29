@@ -60,6 +60,7 @@ public:
 	virtual bool	pause  	 (const time_t		scheduleTime,
 							  const time_t		waitTime,
 							  const	string&		condition)    const;
+	virtual bool	release	 (const time_t		scheduleTime) const;
 	virtual bool	quit  	 (const time_t		scheduleTime) const;
 	virtual bool	shutdown (const time_t		scheduleTime) const;
 	virtual bool	snapshot (const time_t		scheduleTime,

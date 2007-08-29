@@ -46,8 +46,9 @@ namespace LOFAR {
 enum ACState {  StateNone = 0, StateInitController,
 		StateCreatePSubset, StateStartupAppl,  StateDefineCmd,
 		StateInitCmd,		StateRunCmd,       StatePauseCmd,
-		StateRecoverCmd, 	StateSnapshotCmd,  StateReinitCmd,
-		StateInfoCmd,		StateQuitCmd,      StateKillAppl,
+		StateReleaseCmd,	StateRecoverCmd,   StateSnapshotCmd,  
+		StateReinitCmd, 	StateInfoCmd,	   StateQuitCmd,
+		StateKillAppl,
 		NR_OF_STATES
 };
 
@@ -106,6 +107,7 @@ private:
 	time_t	itsInitCmdTime;
     time_t	itsRunCmdTime;
 	time_t	itsPauseCmdTime;
+	time_t	itsReleaseCmdTime;
 	time_t	itsRecoverCmdTime;
 	time_t	itsSnapshotCmdTime;
 	time_t	itsReinitCmdTime;
