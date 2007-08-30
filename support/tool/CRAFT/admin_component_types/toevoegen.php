@@ -84,7 +84,7 @@
 		    				$query = "SELECT Comp_Type_ID FROM gebruikersgroeprechten WHERE Groep_ID = '".$_SESSION['groep_id']."'";
 		    			  $resultaat = mysql_query($query);
 								$data = mysql_fetch_array($resultaat);
-		    				
+
 					  		if (isset($_POST['parent'])) $Geselecteerd_Type = $_POST['parent'];
 					  		else if(isset($_GET['c'])) $Geselecteerd_Type = $_GET['c'];
 					  		else $Geselecteerd_Type = 'SELECTED';

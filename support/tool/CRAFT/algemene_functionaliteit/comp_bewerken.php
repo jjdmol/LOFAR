@@ -33,8 +33,8 @@
 			//verplichte velden ingevuld??
 			if ($_POST['av' . $i] == '1') {
 				//bestanden
-				if ($_POST['t' . $i] == '5') {
-					if ($_SESSION['bestand' . $i] == '-1') return false;
+				if ($_POST['at' . $i] == '5') {				
+					if ($_SESSION['abestand' . $i] == '-1') return false;
 				}
 				//overige
 				else {
@@ -95,7 +95,53 @@
 				return false;
 		} else return false;
 
-		if (!Type_Controle()) return false;					
+		//controleren of er wel een PARENT voor dit component geselecteerd is
+		if (isset($_POST['hidden_parent']) && $_POST['hidden_parent'] =='') 
+			return false;
+		//er is een PARENT ingevoerd, dus kijken of het maximum aantal niet overschreden wordt...
+		else {
+			//kijken of deze PARENT een schaduwtype is
+			$query = "SELECT Schaduw_Vlag FROM comp_lijst WHERE Comp_Lijst_ID = '".$_POST['hidden_parent']."'";
+		  $resultaat = mysql_query($query);
+	  	$data = mysql_fetch_array($resultaat);
+	  	
+	  	//Parent is een schaduwtype, dus maximumaantal geldt niet. 
+	  	//wel controleren of dit niet zelf een parent is, in dit geval mag dit type maar 1 x voorkomen
+	  	if ($data['Schaduw_Vlag'] == 1) {
+	  		$query = "SELECT * FROM comp_type WHERE Type_Parent = '".$_POST['comp_type']."'";
+				$num_rows = mysql_num_rows(mysql_query($query));
+				if($num_rows > 0 && isset($_POST['hidden_schaduw']) && $_POST['hidden_schaduw'] == '0')
+					return false;
+	  	}
+	  	//geen schaduw_vlag, dus controleren of het maximum aantal niet overschreden wordt
+	  	else {
+				//kijken wat het maximum aantal voor dit type is
+				$query = "SELECT Max_Aantal FROM comp_type WHERE Comp_Type = '". $_POST['comp_type'] ."'";
+			  $resultaat = mysql_query($query);
+		  	$data = mysql_fetch_array($resultaat);
+			  $maximum = $data['Max_Aantal'];
+				
+				//kijken welke parent dit is en hoeveel comps hier al van zijn aangemaakt +1
+				$query = "SELECT Count(Comp_Lijst_ID) FROM comp_lijst WHERE Comp_Parent = '".$_POST['hidden_parent']."' AND Comp_Type_ID = '".$_POST['comp_type']."'";
+			  $resultaat = mysql_query($query);
+		  	$data = mysql_fetch_array($resultaat);
+			  $aantal = $data[0];
+				
+				//alleen bij wijzigen van een parent, 
+				//moet er gecontroleerd worden of het maximum aantal overschreden wordt
+				$query = "SELECT Comp_Parent FROM comp_lijst WHERE Comp_Lijst_ID = '".$_GET['c']."'";
+			  $resultaat = mysql_query($query);
+		  	$data = mysql_fetch_array($resultaat);
+				if ($data['Comp_Parent'] != $_POST['hidden_parent'])  {
+				
+					//met elkaar vergelijken			  
+				  if(($aantal + 1) > $maximum) 
+				  	return false;
+		  	}
+			}
+		}
+
+		if (!Type_Controle()) return false;
 		if (!Parent_Controle()) return false;
 
 		//de statusdatum controleren
@@ -157,8 +203,8 @@
 	if(Validatie_Opslaan()) {
 
 		//Een nieuwe melding van het component toevoegen, dit is zeer waarschijnlijk een bewerkenmelding oid
-		$query_melding = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door, Melding_Locatie)";
-		$query_melding = $query_melding . "VALUES ('". $_POST['type_melding'] ."', '".$_GET['c']."'";
+		$query_melding = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Lijst_ID, Comp_Parent, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door, Melding_Locatie)";
+		$query_melding = $query_melding . "VALUES ('". $_POST['type_melding'] ."', '".$_GET['c']."', '". $_POST['hidden_parent'] ."'";
 
 		//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
 		if (isset($_POST['statusdatum']) && $_POST['statusdatum'] != '')
@@ -171,7 +217,7 @@
 		$melding_id = mysql_insert_id();
 
 		//opslaan van het component
-		$query = "UPDATE comp_lijst SET Comp_Naam = '". htmlentities($_POST['comp_naam'], ENT_QUOTES) . "', Comp_Parent = '". $_POST['comp_nieuwe_parent'] . "', Laatste_Melding ='". $melding_id;
+		$query = "UPDATE comp_lijst SET Comp_Naam = '". htmlentities($_POST['comp_naam'], ENT_QUOTES) . "', Comp_Parent = '". $_POST['hidden_parent'] . "', Laatste_Melding ='". $melding_id;
 		$query = $query . "', Comp_Locatie = '". $_POST['comp_locatie'] ."', Comp_Verantwoordelijke = '". $_POST['hidden_verantwoordelijke'] . "'";
 		
 		//de waarde voor de leverdatum aan de query toevoegen
@@ -311,26 +357,19 @@
 							$query = "SELECT Type_Naam FROM comp_type WHERE Comp_Type = " . $row['Comp_Type_ID'];
 							$result = mysql_query($query);
 							$data = mysql_fetch_array($result);
-							echo($data[0]);
+							echo($data[0] .  "<input type=\"hidden\" name=\"comp_type\" id=\"comp_type\" value=\"".$row['Comp_Type_ID']."\">");
 					 ?></td>
 				</tr>
 				<tr>
 					<td>Parent component:</td>
-					<td><input type="hidden" name="comp_huidige_parent" value="<?php echo($row['Comp_Parent']); ?>"><select name="comp_nieuwe_parent">
-						<?php
-						  $query2 = "SELECT Comp_Lijst_ID, Comp_Naam FROM comp_lijst WHERE Comp_Type_ID in (SELECT Type_Parent FROM comp_type WHERE Comp_Type = '".$row['Comp_Type_ID']."')";
-							$resultaat2 = mysql_query($query2);
-							while ($data = mysql_fetch_array($resultaat2)) {
-								echo("<option value=\"". $data['Comp_Lijst_ID'] ."\"");
-								if (isset($_POST['comp_nieuwe_parent']) && isset($_POST['comp_huidige_parent']) && $_POST['comp_nieuwe_parent'] != $_POST['comp_huidige_parent']) {
-									if ($_POST['comp_nieuwe_parent'] == $data['Comp_Lijst_ID']) echo(" SELECTED"); }
-								else {if ($data['Comp_Lijst_ID'] == $row['Comp_Parent']) echo(" SELECTED");}
-								echo(">". $data['Comp_Naam'] ."</option>\r\n");
-							}
-						?></select>
-	    		<?php if(!Parent_Controle()) echo('<b>* Parent kan niet veranderen vanwege onderliggende componenten!</b>');?>
-					</td>
+					<?php
+						$selected = $row['Comp_Lijst_ID']; //is het geselecteerde component welke bewerkt gaat worden
+						$selectie = "&n=" .$row['Comp_Parent']; //parent component
+					?>
+					
+					<td><iframe id="frame_parent" name="frame_parent" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_bewerken_parent.php?c=<?php echo($selected . $selectie); ?>" width="550" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
 				</tr>
+
   			<tr>
   				<td>Reden bewerking:</td>
   				<td><select name="type_melding" onchange="switchMelding();">
@@ -538,6 +577,7 @@
 							}
 							
 					 ?>
+  					<input id="hidden_parent" name="hidden_parent" type="hidden" value="">
   					<input id="hidden_melding" name="hidden_melding" type="hidden" value="">
   					<input id="hidden_status" name="hidden_status" type="hidden" value="">
     				<input id="opslaan" name="opslaan" type="hidden" value="1">
