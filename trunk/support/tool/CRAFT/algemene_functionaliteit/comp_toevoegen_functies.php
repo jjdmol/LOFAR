@@ -71,10 +71,12 @@ function SubmitComponentBewerken()
 	var s = document.frames['frame_melding'].document.getElementById('sStatus').value;
 	var m = document.frames['frame_melding'].document.getElementById('sMelding').value;
 	var n = document.frames['frame_contact'].document.getElementById('sVerantwoordelijke').value;
+	var p = document.frames['frame_parent'].document.getElementById('sComp_Parent').value;
 
 	document.getElementById('hidden_melding').value = m;
 	document.getElementById('hidden_status').value = s;
 	document.getElementById('hidden_verantwoordelijke').value = n;
+	document.getElementById('hidden_parent').value = p;
 
 	document.theForm.submit();
 }
@@ -119,11 +121,20 @@ function submitComponentToevoegen()
 	var leverdatum = document.frames['frame_leverancier'].document.getElementById('sLeverdatum').value;
 	var fabricagetijd  = document.frames['frame_fabricant'].document.getElementById('sFabricagetijd').value;
 	var fabricagedatum = document.frames['frame_fabricant'].document.getElementById('sFabricagedatum').value;
+
+	<?php
+
+		if(isset($_SESSION['admin_deel']) && 	$_SESSION['admin_deel'] > 0) {
+			
+			echo("if (document.frames['frame_parent'].document.getElementById('schaduw')) { \n");
+			echo("var q = document.frames['frame_parent'].document.getElementById('schaduw').value;\n");
+			echo("document.getElementById('hidden_schaduw').value = q; \n }");
+		}
+
+	?>
 	
-	var aantal  = document.frames['frame_naam'].document.getElementById('sComp_Aantal').value;
-	var maximum = document.frames['frame_naam'].document.getElementById('sComp_Max').value;
 	document.getElementById('hidden_verantwoordelijke').value = n;
-	document.getElementById('hidden_type').value = w;
+	document.getElementById('hidden_parent').value = w;
 	document.getElementById('hidden_naam').value = x;
 	document.getElementById('hidden_fabricant').value = y;
 	document.getElementById('hidden_leverancier').value = z;
@@ -134,7 +145,5 @@ function submitComponentToevoegen()
 	document.getElementById('hidden_melding').value = m;
 	document.getElementById('hidden_status').value = s;
 
-	document.getElementById('hidden_aantal').value = aantal;
-	document.getElementById('hidden_maximum').value = maximum;
 	document.theForm.submit();
 }

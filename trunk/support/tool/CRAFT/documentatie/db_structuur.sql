@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `comp_lijst` (
 -- 
 
 INSERT INTO `comp_lijst` (`Comp_Lijst_ID`, `Comp_Naam`, `Comp_Type_ID`, `Comp_Parent`, `Comp_Locatie`, `Comp_Verantwoordelijke`, `Contact_Fabricant`, `Contact_Leverancier`, `Lever_Datum`, `Fabricatie_Datum`, `Laatste_Melding`) VALUES 
-(1, 'ASTRON', 1, NULL, 1, 3, NULL, NULL, NULL, NULL, 1);
+(1, 'ASTRON', 1, NULL, 1, 1, NULL, NULL, NULL, NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -111,6 +111,9 @@ CREATE TABLE IF NOT EXISTS `comp_locatie` (
 -- 
 -- Gegevens worden uitgevoerd voor tabel `comp_locatie`
 -- 
+
+INSERT INTO `comp_locatie` (`Locatie_ID`, `Loc_Naam`, `Loc_Adres1`, `Loc_Adres2`, `Loc_Postcode`, `Loc_Plaats`, `Long_Graden`, `Long_Min`, `Long_Sec`, `Lat_Graden`, `Lat_Min`, `Lat_Sec`) VALUES 
+(1, 'Lhee', NULL, NULL, NULL, NULL, 6, 39, 51, 52, 81, 28);
 
 -- --------------------------------------------------------
 
@@ -145,7 +148,7 @@ CREATE TABLE IF NOT EXISTS `comp_type` (
 -- 
 
 INSERT INTO `comp_type` (`Comp_Type`, `Type_Naam`, `Type_Parent`, `Aangemaakt_Door`, `Aanmaak_Datum`, `Structuur_Entry`, `Gefabriceerd_Door`, `Geleverd_Door`, `Min_Aantal`, `Max_Aantal`, `Reserve_Minimum`, `Type_Verantwoordelijke`) VALUES 
-(1, 'Faciliteit', NULL, 1, '2007-06-18 13:29:26', 1, 2, 2, 1, 1, 0, 3);
+(1, 'Faciliteit', NULL, 1, '2007-06-18 13:29:26', 1, 1, 1, 1, 1, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -277,9 +280,6 @@ CREATE TABLE IF NOT EXISTS `gebruikersgroeprechten` (
 -- 
 -- Gegevens worden uitgevoerd voor tabel `gebruikersgroeprechten`
 -- 
-
-INSERT INTO `gebruikersgroeprechten` (`Groep_ID`, `Comp_Type_ID`, `Zichtbaar`, `Toevoegen`, `Bewerken`, `Verwijderen`, `onderliggende_Data`) VALUES 
-(2, 1, 0, 0, 0, 0, 1);
 
 -- --------------------------------------------------------
 

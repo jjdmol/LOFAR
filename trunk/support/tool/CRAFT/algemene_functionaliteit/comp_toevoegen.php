@@ -32,22 +32,57 @@
 
 			//het valideren van de invoer, dus controleren of de ingevoerde gegevens opgeslagen mogen worden
 			function Valideer_Invoer() {
+				if (!isset($_POST['opslaan']))
+					return false; 
+					
 				if (isset($_POST['opslaan']) && $_POST['opslaan'] != 1)
 					return false;
-				
-				//controleren of het component niet het maximum aantal instanties van dit component overtreedt
-				if (isset($_POST['hidden_aantal']) && isset($_POST['hidden_maximum']) && $_POST['hidden_aantal'] > $_POST['hidden_maximum'])
+
+
+				//controleren of er wel een PARENT voor dit component geselecteerd is
+				if (isset($_POST['hidden_parent']) && $_POST['hidden_parent'] =='') 
 					return false;
+				//er is een PARENT ingevoerd, dus kijken of het maximum aantal niet overschreden wordt...
+				else {
+					
+					//kijken of deze PARENT een schaduwtype is
+					$query = "SELECT Schaduw_Vlag FROM comp_lijst WHERE Comp_Lijst_ID = '".$_POST['hidden_parent']."'";
+  			  $resultaat = mysql_query($query);
+			  	$data = mysql_fetch_array($resultaat);
+			  	
+			  	//Parent is een schaduwtype, dus maximumaantal geldt niet. 
+			  	//wel controleren of dit niet zelf een parent is, in dit geval mag dit type maar 1 x voorkomen
+			  	if ($data['Schaduw_Vlag'] == 1) {
+			  		$query = "SELECT * FROM comp_type WHERE Type_Parent = '".$_POST['comp_type']."'";
+						$num_rows = mysql_num_rows(mysql_query($query));
+						if($num_rows > 0 && isset($_POST['hidden_schaduw']) && $_POST['hidden_schaduw'] == '0')
+							return false;
+			  	}
+			  	//geen schaduw_vlag, dus controleren of het maximum aantal niet overschreden wordt
+			  	else {
+						//kijken wat het maximum aantal voor dit type is
+						$query = "SELECT Max_Aantal FROM comp_type WHERE Comp_Type = '". $_POST['comp_type'] ."'";
+	  			  $resultaat = mysql_query($query);
+				  	$data = mysql_fetch_array($resultaat);
+	  			  $maximum = $data['Max_Aantal'];
+						
+						//kijken welke parent dit is en hoeveel comps hier al van zijn aangemaakt +1
+						$query = "SELECT Count(Comp_Lijst_ID) FROM comp_lijst WHERE Comp_Parent = '".$_POST['hidden_parent']."' AND Comp_Type_ID = '".$_POST['comp_type']."'";
+	  			  $resultaat = mysql_query($query);
+				  	$data = mysql_fetch_array($resultaat);
+	  			  $aantal = $data[0];
+						
+						//met elkaar vergelijken			  
+	  			  if(($aantal + 1) > $maximum) 
+	  			  	return false;
+	  			 }
+				}
 					
 				//controleren of er wel een naam voor dit component ingevoerd is
 				if (isset($_POST['hidden_naam'])) {
 					if ($_POST['hidden_naam'] == '')
 						return false;
 				} else return false;
-
-				//controleren of er wel een type voor dit component geselecteerd is
-				if (isset($_POST['hidden_type']) && $_POST['hidden_type'] =='') 
-					return false;
 
 				//de statusdatum controleren
 				if (isset($_POST['statusdatum'])) {
@@ -117,8 +152,12 @@
 				if (isset($_POST['hidden_fabricagedatum']) && $_POST['hidden_fabricagedatum'] != '')
 					$query = $query . ", Fabricatie_Datum";
 				
+				//als dit het admingedeelte is, dan is het schaduw_vlag checkbox aanwezig
+				if(isset($_SESSION['admin_deel']) && 	$_SESSION['admin_deel'] > 0)
+					$query = $query . ", Schaduw_Vlag";
+				
 				//de waardes, welke opgeslagen moeten worden in de database
-				$query = $query . ") VALUES ('". htmlentities($_POST['hidden_naam'], ENT_QUOTES) ."', '". $_POST['comp_type'] ."', '". $_POST['hidden_type'] ."', '";
+				$query = $query . ") VALUES ('". htmlentities($_POST['hidden_naam'], ENT_QUOTES) ."', '". $_POST['comp_type'] ."', '". $_POST['hidden_parent'] ."', '";
 				$query = $query .  $_POST['comp_locatie'] ."', '".  $_POST['hidden_verantwoordelijke']."', '".$_POST['hidden_fabricant']."', '".$_POST['hidden_leverancier']."'";
 				    				
 				//de waarde voor de leverdatum aan de query toevoegen
@@ -130,6 +169,13 @@
 				if (isset($_POST['hidden_fabricagedatum']) && $_POST['hidden_fabricagedatum'] != '') {
   				$query = $query . ", '". Datum_Tijd_Naar_DB_Conversie($_POST['hidden_fabricagedatum'], $_POST['hidden_fabricagetijd']) . "'";
 				}
+				
+				//waarde voor schaduw_vlag aan de query toevoegen
+				if(isset($_SESSION['admin_deel']) && 	$_SESSION['admin_deel'] > 0) {
+					if (isset($_POST['hidden_schaduw']) && ($_POST['hidden_schaduw'] == '1' || $_POST['hidden_schaduw'] == 'on')) 
+						$query = $query . ", '1'";
+					else $query = $query . ",'0'";
+				}				
 				
 				//de query afsluiten met een haakje
 				$query = $query . ')';
@@ -146,8 +192,8 @@
 					$Comp_ID = mysql_insert_id();
 
 					//De eerste melding van het component toevoegen, dit is zeer waarschijnlijk het plaatsen van het component oid
-					$query = "INSERT INTO melding_lijst (Melding_Locatie, Meld_Type_ID, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door)";
-					$query = $query . "VALUES ('". $_POST['comp_locatie'] ."', '". $_POST['type_melding'] ."', '". $Comp_ID ."'";
+					$query = "INSERT INTO melding_lijst (Melding_Locatie, Meld_Type_ID, Comp_Lijst_ID, Comp_Parent, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Behandeld_Door, Gemeld_Door)";
+					$query = $query . "VALUES ('". $_POST['comp_locatie'] ."', '". $_POST['type_melding'] ."', '". $Comp_ID ."', '". $_POST['hidden_parent'] ."'";
 
   				//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
   				if (isset($_POST['statusdatum']) && $_POST['statusdatum'] != '') {
@@ -269,17 +315,21 @@
   			</tr>
   			<tr>
   				<td>Naam component:</td>
-  				<td><iframe id="frame_naam" name="frame_naam" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_naam.php?c=<?php echo($selected); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="400" height="44" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+  				<td><iframe id="frame_naam" name="frame_naam" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_naam.php?c=<?php echo($selected); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="150" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
   					<?php if (isset($_POST['opslaan']) && ($_POST['opslaan'] == 1) && isset($_POST['hidden_naam']) && $_POST['hidden_naam'] == '') echo("<b>* Er is geen naam voor deze instantie ingevuld!</b>");?></td>
   			</tr>
   			<tr>
   				<td>Parent component:</td>
 					<?php 
-						if(isset($_POST['hidden_type']) && isset($_POST['opslaan']) && $_POST['opslaan'] == 1) 
-  						$selectie = "&n=" . $_POST['hidden_type']; 
+						if(isset($_POST['hidden_parent']))// && isset($_POST['opslaan']) && $_POST['opslaan'] == 1) 
+  						$selectie = "&n=" . $_POST['hidden_parent']; 
   					else $selectie = "&n=-1";
+ 						//bepalen hoogte van het scherm
+						if(isset($_SESSION['admin_deel']) && 	$_SESSION['admin_deel'] > 0)
+							$hoogte = 42;
+						else $hoogte = 22;
  					?>
-  				<td><iframe id="frame_parent" name="frame_parent" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_parent.php?c=<?php echo($selected . $selectie); ?>" width="450" height="26" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
+  				<td><iframe id="frame_parent" name="frame_parent" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_parent.php?c=<?php echo($selected . $selectie); ?>" width="550" height="<?php echo($hoogte); ?>" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe></td>
   			</tr>
   			<tr>
   				<td>Type melding:</td>
@@ -396,7 +446,7 @@
   			</tr>
   			<tr>
   				<td>Extra velden:<br>(* = verplicht)</td>
-  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/component_extra_velden.php?c=<?php echo($selected); ?>" width="400" height="110" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+  				<td><iframe id="frame_extra_velden" name="frame_extra_velden" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/component_extra_velden.php?c=<?php echo($selected); ?>" width="400" height="100" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
   					<?php
   					  if (isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && !Extra_Velden_Controle()) echo("<b>* Foutieve waardes!</b>");
   					?>
@@ -453,10 +503,9 @@
   					<input id="hidden_fabricagetijd" name="hidden_fabricagetijd" type="hidden" value="<?php echo($fabricagetijd); ?>">
 						<input id="hidden_leverdatum" name="hidden_leverdatum" type="hidden" value="<?php echo($leverdatum); ?>">
 						<input id="hidden_levertijd" name="hidden_levertijd" type="hidden" value="<?php echo($levertijd); ?>">
-						<input id="hidden_type" name="hidden_type" type="hidden" value="">
+						<input id="hidden_parent" name="hidden_parent" type="hidden" value="">
+						<input id="hidden_schaduw" name="hidden_schaduw" type="hidden" value="">
 						<input id="hidden_naam" name="hidden_naam" type="hidden" value="">
-						<input id="hidden_aantal" name="hidden_aantal" type="hidden" value="">
-						<input id="hidden_maximum" name="hidden_maximum" type="hidden" value="">
 						<input id="hidden_fabricant" name="hidden_fabricant" type="hidden" value="">
 						<input id="hidden_leverancier" name="hidden_leverancier" type="hidden" value="">
   					<input id="hidden_melding" name="hidden_melding" type="hidden" value="">

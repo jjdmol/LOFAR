@@ -94,58 +94,67 @@
 	    		if(Valideer_Zoeken()) {
 	    			
 	    			//basisquery: selecteert alle componenten... de criteria wordt hierachter geplakt
-	  				$query = "SELECT * FROM comp_lijst WHERE Comp_Lijst_ID > 1";
+	  				//wanneer er ook op status gezocht moet worden, dan moeten 2 tabellen doorgezocht worden
+	  				if(isset($_POST['Status']) && $_POST['Status'] != -1) {
+							$query = "SELECT c.* FROM comp_lijst c, melding_lijst m WHERE c.Comp_Lijst_ID > 1";
+	  				}
+	  				else $query = "SELECT c.* FROM comp_lijst c WHERE c.Comp_Lijst_ID > 1";
 	  				
 	  				//naam component
 	  				if(isset($_POST['naam']))
-							$query = $query . " AND Comp_Naam LIKE '%".$_POST['naam']."%'";
+							$query = $query . " AND c.Comp_Naam LIKE '%".$_POST['naam']."%'";
 
 						//type component
 	  				if(isset($_POST['Type']) && $_POST['Type'] != -1)
-							$query = $query . " AND Comp_Type_ID = '".$_POST['Type']."'";
-						
+							$query = $query . " AND c.Comp_Type_ID = '".$_POST['Type']."'";
+
+						//status
+	  				if(isset($_POST['Status']) && $_POST['Status'] != -1) {
+	  					$query = $query . " AND c.laatste_melding = m.Meld_Lijst_ID AND m.Huidige_Status = '". $_POST['Status'] ."'";
+	  				}
+
 						//locatie
 						if (isset($_POST['Locatie1']) && $_POST['Locatie2'] == -1 )
-							$query = $query . " AND Comp_Locatie IN (SELECT Locatie_ID FROM comp_locatie WHERE Loc_Naam LIKE '%".$_POST['Locatie1']."%')";
+							$query = $query . " AND c.Comp_Locatie IN (SELECT Locatie_ID FROM comp_locatie WHERE Loc_Naam LIKE '%".$_POST['Locatie1']."%')";
 						else if ($_POST['Locatie2'] > 0)
-							$query = $query . " AND Comp_Locatie = '".$_POST['Locatie2']."'";
+							$query = $query . " AND c.Comp_Locatie = '".$_POST['Locatie2']."'";
 
 						//parent 
 	  				if(isset($_POST['Parent']) && $_POST['Parent'] != -1)
-							$query = $query . " AND Comp_Parent = '".$_POST['Parent']."'";
+							$query = $query . " AND c.Comp_Parent = '".$_POST['Parent']."'";
 						
 						//verantwoordelijke voor dit component
 						if (isset($_POST['Verantwoordelijke1']) && $_POST['Verantwoordelijke2'] == -1 )
-							$query = $query . " AND Comp_Verantwoordelijke IN (SELECT Werknem_ID FROM gebruiker WHERE inlognaam LIKE '%".$_POST['Verantwoordelijke1']."%')";
+							$query = $query . " AND c.Comp_Verantwoordelijke IN (SELECT Werknem_ID FROM gebruiker WHERE inlognaam LIKE '%".$_POST['Verantwoordelijke1']."%')";
 						else if ($_POST['Verantwoordelijke2'] > 0)
-							$query = $query . " AND Comp_Verantwoordelijke = '".$_POST['Verantwoordelijke2']."'";
+							$query = $query . " AND c.Comp_Verantwoordelijke = '".$_POST['Verantwoordelijke2']."'";
 
 						//fabricant voor dit component
 						if (isset($_POST['Fabricant1']) && $_POST['Fabricant2'] == -1 )
-							$query = $query . " AND Contact_Fabricant IN (SELECT Contact_ID FROM contact WHERE Contact_Naam LIKE '%".$_POST['Fabricant1']."%')";
+							$query = $query . " AND c.Contact_Fabricant IN (SELECT Contact_ID FROM contact WHERE Contact_Naam LIKE '%".$_POST['Fabricant1']."%')";
 						else if ($_POST['Fabricant2'] > 0)
-							$query = $query . " AND Contact_Fabricant = '".$_POST['Fabricant2']."'";
+							$query = $query . " AND c.Contact_Fabricant = '".$_POST['Fabricant2']."'";
 
 						//leverancier voor dit component
 						if (isset($_POST['Leverancier1']) && $_POST['Leverancier2'] == -1 )
-							$query = $query . " AND Contact_Leverancier IN (SELECT Contact_ID FROM contact WHERE Contact_Naam LIKE '%".$_POST['Leverancier1']."%')";
+							$query = $query . " AND c.Contact_Leverancier IN (SELECT Contact_ID FROM contact WHERE Contact_Naam LIKE '%".$_POST['Leverancier1']."%')";
 						else if ($_POST['Leverancier2'] > 0)
-							$query = $query . " AND Contact_Leverancier = '".$_POST['Leverancier2']."'";
+							$query = $query . " AND c.Contact_Leverancier = '".$_POST['Leverancier2']."'";
 
 	  				//Leverdatum
 	  				if (isset($_POST['Lever_Datum1']) && isset($_POST['Lever_Tijd1']) && isset($_POST['Lever_Datum2']) && isset($_POST['Lever_Tijd2']) &&
 	  					 Datum_Geldigheid($_POST['Lever_Datum1'], $_POST['Lever_Tijd1']) && Datum_Geldigheid($_POST['Lever_Datum2'], $_POST['Lever_Tijd2']))
-							$query = $query . " AND Lever_Datum >= '".Datum_Tijd_Naar_DB_Conversie($_POST['Lever_Datum1'], $_POST['Lever_Tijd1'])."' AND Lever_Datum <= '".Datum_Tijd_Naar_DB_Conversie($_POST['Lever_Datum2'], $_POST['Lever_Tijd2'])."'";
+							$query = $query . " AND c.Lever_Datum >= '".Datum_Tijd_Naar_DB_Conversie($_POST['Lever_Datum1'], $_POST['Lever_Tijd1'])."' AND c.Lever_Datum <= '".Datum_Tijd_Naar_DB_Conversie($_POST['Lever_Datum2'], $_POST['Lever_Tijd2'])."'";
 
 	  				//Fabricatiedatum
 	  				if (isset($_POST['Fabr_Datum1']) && isset($_POST['Fabr_Tijd1']) && isset($_POST['Fabr_Datum2']) && isset($_POST['Fabr_Tijd2']) &&
 	  					 Datum_Geldigheid($_POST['Fabr_Datum1'], $_POST['Fabr_Tijd1']) && Datum_Geldigheid($_POST['Fabr_Datum2'], $_POST['Fabr_Tijd2']))
-							$query = $query . " AND Fabricatie_Datum >= '".Datum_Tijd_Naar_DB_Conversie($_POST['Fabr_Datum1'], $_POST['Fabr_Tijd1'])."' AND Fabricatie_Datum <= '".Datum_Tijd_Naar_DB_Conversie($_POST['Fabr_Datum2'], $_POST['Fabr_Tijd2'])."'";
+							$query = $query . " AND c.Fabricatie_Datum >= '".Datum_Tijd_Naar_DB_Conversie($_POST['Fabr_Datum1'], $_POST['Fabr_Tijd1'])."' AND c.Fabricatie_Datum <= '".Datum_Tijd_Naar_DB_Conversie($_POST['Fabr_Datum2'], $_POST['Fabr_Tijd2'])."'";
 
 	  				//Aangemaakt:
 	  				if (isset($_POST['Meld_Datum1']) && isset($_POST['Meld_Tijd1']) && isset($_POST['Meld_Datum2']) && isset($_POST['Meld_Tijd2']) &&
 	  					 Datum_Geldigheid($_POST['Meld_Datum1'], $_POST['Meld_Tijd1']) && Datum_Geldigheid($_POST['Meld_Datum2'], $_POST['Meld_Tijd2'])) {
-							$query = $query . " AND Comp_Lijst_ID IN (SELECT Comp_Lijst_ID FROM melding_lijst WHERE Voorgaande_Melding = 1 AND Meld_Datum >= '".Datum_Tijd_Naar_DB_Conversie($_POST['Meld_Datum1'], $_POST['Meld_Tijd1'])."' AND Meld_Datum <= '".Datum_Tijd_Naar_DB_Conversie($_POST['Meld_Datum2'], $_POST['Meld_Tijd2'])."')";	  				
+							$query = $query . " AND c.Comp_Lijst_ID IN (SELECT Comp_Lijst_ID FROM melding_lijst WHERE Voorgaande_Melding = 1 AND Meld_Datum >= '".Datum_Tijd_Naar_DB_Conversie($_POST['Meld_Datum1'], $_POST['Meld_Tijd1'])."' AND Meld_Datum <= '".Datum_Tijd_Naar_DB_Conversie($_POST['Meld_Datum2'], $_POST['Meld_Tijd2'])."')";	  				
 	  				}
 						
 	  				//de samengestelde query uitvoeren
@@ -186,6 +195,29 @@
 									echo(">None selected</option>");
 									Vul_Component_Types_Select_Box($data[0], $selected, false);
 								?></select>
+		    			</td>
+		    		</tr>
+		    		<tr>
+		    			<td>Status:</td>
+		    			<td>
+		    				<select name="Status">
+		    				<?php
+			    				if (isset($_POST['Status']))
+			    					$selected = $_POST['Status'];
+			    				else $selected = -1;
+
+									echo("<option value=\"-1\"");
+									if($selected == -1) echo(" SELECTED");
+									echo(">None selected</option>");
+			    				$query = "SELECT * FROM status WHERE Status_ID";
+			    			  $resultaat = mysql_query($query);
+							  	while ($data = mysql_fetch_array($resultaat)) {
+										echo("<option value=\"".$data['Status_ID']."\"");
+										if ($selected == $data['Status_ID']) echo(" SELECTED");
+										echo(">".$data['Status']."</option>");
+							  	}									
+								?>
+								</select>
 		    			</td>
 		    		</tr>
 		    		<tr>

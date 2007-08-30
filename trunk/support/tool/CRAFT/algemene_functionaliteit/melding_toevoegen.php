@@ -100,13 +100,13 @@
 		
 		//uit de componenten lijst halen welke melding hier als laatste bij opgeslagen is
 		//deze waarde is nodig om een keten van meldingen te kunnen vormen
-		$query = "SELECT Laatste_Melding FROM comp_lijst WHERE Comp_Lijst_ID = '". $Comp_Selectie ."'";
+		$query = "SELECT Laatste_Melding, Comp_Parent FROM comp_lijst WHERE Comp_Lijst_ID = '". $Comp_Selectie ."'";
 		$resultaat = mysql_query($query);
   	$row = mysql_fetch_array($resultaat);
 		
 		//de query om de melding toe te voegen, samenstellen
-		$query = "INSERT INTO melding_lijst (Meld_Type_ID, Melding_Locatie, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Prob_Oplossing, Behandeld_Door, Gemeld_Door, Afgehandeld)";
-		$query = $query . "VALUES ('". $_POST['Type_Melding'] ."', '". $_POST['Melding_Locatie'] ."', '" .$Comp_Selectie . "'";
+		$query = "INSERT INTO melding_lijst (Meld_Type_ID, Comp_Parent, Melding_Locatie, Comp_Lijst_ID, Meld_Datum, Huidige_Status, Voorgaande_Melding, Prob_Beschrijving, Prob_Oplossing, Behandeld_Door, Gemeld_Door, Afgehandeld)";
+		$query = $query . "VALUES ('". $_POST['Type_Melding'] ."', '". $row['Comp_Parent']. "', '". $_POST['Melding_Locatie'] ."', '" .$Comp_Selectie . "'";
 
 		//het toevoegen van een statusdatum: eerst kijken of er 1 ingevuld is, anders de huidige datum gebruiken...
 		if (isset($_POST['Meld_Datum']) && $_POST['Meld_Datum'] != '') {
@@ -114,7 +114,7 @@
 			$query = $query . ", '". $datum[2]."-".$datum[1]."-".$datum[0] ." ". $_POST['Meld_Tijd'] .":00'";							
 		}
 		else $query = $query . ", NOW()";
-		$query = $query . ", '". $_POST['hidden_status'] ."', '". $row[0] ."', '". htmlentities($_POST['hidden_beschrijving'], ENT_QUOTES) ."', '". htmlentities($_POST['hidden_oplossing'], ENT_QUOTES);
+		$query = $query . ", '". $_POST['hidden_status'] ."', '". $row['Laatste_Melding'] ."', '". htmlentities($_POST['hidden_beschrijving'], ENT_QUOTES) ."', '". htmlentities($_POST['hidden_oplossing'], ENT_QUOTES);
 		$query = $query . "', '". $_POST['Behandeld_Door'] ."', '". $_POST['Gemeld_Door'] ."', '";
 		//de afgehandeld checkbox vertalen naar sql taal ;)
 		if (isset($_POST['afgehandeld']) && ($_POST['afgehandeld'] == 'on' || $_POST['afgehandeld'] == '1'))
@@ -192,8 +192,9 @@
 		}
 		else if ($errorlevel == 0) echo("De nieuwe melding (". $Laatste_Melding .") kon niet aan het systeem toegevoegd worden!.");
 		else if ($errorlevel == 1) echo("De nieuwe melding (". $Laatste_Melding .") is aan het systeem toegevoegd.<br>Alleen is er iets foutgegaan met het updaten van de componten tabel! De 'laatste meldin' verwijzing is niet geupdated!");
-		if(isset($_GET['b'])) $url = ("&b=" . $_GET['b']);
-		else $url = ("&c=" . $Comp_Selectie);
+		$url = '';
+		if(isset($_GET['c'])) $url = $url . ("&c=" . $Comp_Selectie);		
+		if(isset($_GET['b'])) $url = $url . ("&b=" . $_GET['b']);
 		
 		echo('<a href="'.$_SESSION['huidige_pagina']. $url .'">Klik hier om nog een melding aan dit component toe te voegen of geselecteer een component uit de treeview.</a>');
 	}
