@@ -38,6 +38,7 @@ namespace LOFAR {
 
     // Remove lines or remove comments for copy constructor and assignment.
     ////%CLASS%::%CLASS% (const %CLASS%& that)
+    ////:      //... initialize members ...
     ////{}
     ////%CLASS%& %CLASS%::operator= (const %CLASS%& that)
     ////{

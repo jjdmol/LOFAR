@@ -47,16 +47,21 @@ namespace LOFAR
     class %CLASS%
     {
     public:
+      // Default constructor.
       %CLASS%();
+
+      // Destructor.
       ~%CLASS%();
 
+    //// Remove this private line if copying is allowed.
     private:
-      // Copying is not allowed
+      // Copy constructor is not allowed.
       %CLASS% (const %CLASS%& that);
+      // Assignment is not allowed.
       %CLASS%& operator= (const %CLASS%& that);
 
-      //# Datamembers
-
+    private:
+      //# Data members
     };
 
     // @}

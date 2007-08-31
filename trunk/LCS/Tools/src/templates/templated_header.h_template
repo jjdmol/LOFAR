@@ -47,22 +47,28 @@ namespace LOFAR {
     class %CLASS%
     {
     public:
+      // Default constructor.
       %CLASS%();
+
+      // Destructor.
       ~%CLASS%();
 
+    //// Remove this private line if copying is allowed.
     private:
-      // Copying is not allowed
-      %CLASS% (const %CLASS%%TEMPLATEPARAM%& that);
-      %CLASS%%TEMPLATEPARAM%& operator= (const %CLASS%%TEMPLATEPARAM%& that);
+      // Copy constructor is not allowed.
+      %CLASS% (const %CLASS%& that);
+      // Assignment is not allowed.
+      %CLASS%& operator= (const %CLASS%& that);
 
+    private:
       //# Datamembers
-
     };
 
     // @}
   } // namespace %PACKAGE%
 } // namespace LOFAR
 
+// Include the .tcc file for automatic template instantiation.
 %INCLUDETCC%
 
 #endif

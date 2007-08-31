@@ -8,7 +8,7 @@ NOINSTHDRS =
 
 TCCHDRS =
 
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS = $(NOINSTHDRS)
 

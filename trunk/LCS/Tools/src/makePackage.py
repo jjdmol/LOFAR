@@ -70,7 +70,9 @@ def createPackageDoc(packageName,dirLevel):
     if dirLevel>0:
       baseGroup=os.path.basename(os.environ["PWD"])
       writeFile.write("// \ingroup "+baseGroup+"\n")
-    writeFile.write("// \defgroup "+packageName+" "+packageName+" Description\n")
+    writeFile.write("// \defgroup "+packageName+" "+packageName+"\n")
+    writeFile.write("//\n")
+    writeFile.write("//  ... description ...\n")
     writeFile.close()
 
 def replacePackageName(readFile,writeFile,packageName,dirLevel):
@@ -201,15 +203,17 @@ def main(argv):
   #
   # get Lofar base dir
   #
+  file= os.popen("echo $PWD | sed -e 's%/LOFAR/.*%/LOFAR%'")
+  baseLofarDir=str.replace(file.readline(),"\n","")
+  file.close()
   if "LOFARROOT" in os.environ:
     lofarDir = os.environ["LOFARROOT"] + "/share"
   else:
     file= os.popen("echo $PWD | sed -e 's%/LOFAR/.*%/LOFAR%'")
-    lofarDir=str.replace(file.readline(),"\n","")
-    file.close()
+    lofarDir=baseLofarDir
 
   # find out the directory sublevel
-  dirLevel=len(baseDir.split('/'))-len(lofarDir.split('/'))
+  dirLevel=len(baseDir.split('/'))-len(baseLofarDir.split('/'))
 
   # Get lofar data dir.
   if "LOFARDATAROOT" in os.environ:
@@ -242,11 +246,11 @@ def main(argv):
       print "Trying to set up Super Package: " + baseDir + "/" + packageName +"\n"
       
     #
-    # Check of given package name allready exists in the working directory as
+    # Check of given package name already exists in the working directory as
     # directory or as file
     #
     if os.path.isdir(packageName) | os.path.isfile(packageName):
-      print "Sorry, that name allready exists. Please take another one\n"
+      print "Sorry, that name already exists. Please take another one\n"
       sys.exit(1)
 
     #
