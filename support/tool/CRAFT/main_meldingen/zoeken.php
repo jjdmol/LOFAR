@@ -148,9 +148,13 @@
 				  	
 				  	//de resultaten weergeven
 				  	echo("<table border=\"1\">");
-				  	while ($data = mysql_fetch_array($resultaat))
-							echo("<tr><td>".$data['Meld_Lijst_ID']."</td><td>".substr($data['Prob_Beschrijving'],0,40)."...</td><td><a href=\"../".$_SESSION['pagina']."algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."  \" target=\"_blank\">Info</a></td></tr>\n");
-				  	
+				  	while ($data = mysql_fetch_array($resultaat)) {
+							$quer = "SELECT Comp_Naam FROM comp_lijst WHERE Comp_Lijst_ID = '". $data['Comp_Lijst_ID'] ."'";
+		  			  $rest = mysql_query($quer);
+							$row = mysql_fetch_array($rest);
+							
+							echo("<tr><td>".$data['Meld_Lijst_ID']."</td><td>".substr($data['Prob_Beschrijving'],0,40)."...</td><td>".$row['Comp_Naam']."</td><td><a href=\"../".$_SESSION['pagina']."algemene_functionaliteit/melding_info.php?c=".$data['Meld_Lijst_ID']."  \" target=\"_blank\">Info</a></td></tr>\n");
+				  	}
 				  	echo("</table><br><a href=".$_SESSION['huidige_pagina'].">Klik hier om terug te keren naar het zoekscherm</a>");
 	    		}
 	    		else {

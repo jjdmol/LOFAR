@@ -118,6 +118,9 @@
 					echo("<input type=\"hidden\" name=\"aantal\" id=\"aantal\" value=\"". $aantal_velden ."\">\n");
 					
 				}
+				else 
+					echo("<input type=\"hidden\" name=\"aantal\" id=\"aantal\" value=\"0\">\n");
+
 				echo ("</td></tr></table>");
 
 			}
