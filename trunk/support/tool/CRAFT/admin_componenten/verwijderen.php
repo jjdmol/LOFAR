@@ -30,7 +30,43 @@
 	
 				<?php
 	  			if (isset($_POST['verwijderen']) && $_POST['verwijderen'] == 1 && isset($_POST['confirmatie']) && $_POST['confirmatie'] == 'on') {
+						//extra velden verwijzingen verwijderen!!!
+						//eerst kijken of er extra velden verwijzingen zijn.
+						$query = "SELECT * FROM comp_koppel_extra WHERE Comp_Lijst_ID = '".$_POST['component']."'";
+						$num_rows = mysql_num_rows(mysql_query($query));
+						$extra_velden = array();
+						if($num_rows > 0) {
+							//door de extra velden itereren en de ID's van de extra velden opslaan
+							$resultaat = mysql_query($query);
+					  	while ($data = mysql_fetch_array($resultaat)) {
+		  		 	  	array_push($extra_velden, $data['Kolom_ID']);
+
+					  	}
+					  	//De koppeling tussen het component en het extra veld verwijderen
+					  	$query = "DELETE FROM comp_koppel_extra WHERE Comp_Lijst_ID = '".$_POST['component']."'";
+							if (mysql_query($query)) {
+								$datatabel = array();
+								//door de extra velden itereren om de datatabel verwijzing op te slaan en het extra veld  te verwijderen
+								for($i = 0; $i < Count($extra_velden); $i++) {
+									$query = "SELECT Data_Kolom_ID FROM extra_velden WHERE Kolom_ID = '".$extra_velden[$i]."'";
+									$resultaat = mysql_query($query);
+							  	$data = mysql_fetch_array($resultaat);
+			  		 	  	array_push($datatabel, $data['Data_Kolom_ID']);
+			  		 	  	
+			  		 	  	$query = "DELETE FROM extra_velden WHERE Kolom_ID = '".$extra_velden[$i]."'";
+									mysql_query($query);
+								}
+								
+								//de entries in de datatabel verwijderen
+								for($i = 0; $i < Count($datatabel); $i++) {			  		 	  	
+			  		 	  	$query = "DELETE FROM datatabel WHERE Data_Kolom_ID = '".$datatabel[$i]."'";
+									mysql_query($query);
+								}								
+							}
+						}
+
 						$query = "DELETE FROM comp_lijst WHERE Comp_Lijst_ID = " . $_POST['component'];
+						
 						if (mysql_query($query)) echo("Het door u geselecteerde component is uit het systeem verwijderd.<br>");
 						else("Er is iets mis gegaan met het verwijderen van het geselecteerde component!! Het component is niet verwijderd!");
 						echo('<a href="'.$_SESSION['huidige_pagina'].'">Klik hier om terug te keren naar het verwijderen scherm of selecteer links een component uit de treeview.</a>');
