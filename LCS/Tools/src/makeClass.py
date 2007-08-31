@@ -15,7 +15,7 @@
 #                           makeClass -t T,U className
 #       d,--diy             Do it yourself (manual template instanciation)
 #                           Only together with -t
-#       m,--main            This is a main class
+#       m,--main            This is a main program for a class
 #
 # Revisions:
 #
@@ -181,14 +181,14 @@ def makeDefaultClass(lofarDir,className,packageName,srcDir,incDir,subDirName):
   replacePackageAndClassName(readFile,writeFile,packageName,className,subDirName)
   writeFile.close()
   readFile.close()
-  addToMakefile("h",className,incDir,subDirName)
+  addToMakefile("h",packageName,className,incDir,subDirName)
   #default.cc file
   readFile=openFile(lofarDir+"/LCS/Tools/src/templates/header.cc_template","r")
   writeFile=openFile(className+".cc","w")
   replacePackageAndClassName(readFile,writeFile,packageName,className,subDirName)
   writeFile.close()
   readFile.close()
-  addToMakefile("cc",className,srcDir,subDirName)
+  addToMakefile("cc",packageName,className,srcDir,subDirName)
 
 def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,srcDir,incDir,subDirName):
   #default h file
@@ -200,7 +200,7 @@ def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,
   addTemplates("h",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
   writeFile.close()
   readFile.close()
-  addToMakefile("h",className,incDir,subDirName)
+  addToMakefile("h",packageName,className,incDir,subDirName)
 
   #default tcc template file
   readFile=openFile(lofarDir+"/LCS/Tools/src/templates/templated_header.tcc_template","r")
@@ -208,7 +208,7 @@ def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,
   addTemplates("tcc",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
   writeFile.close()
   readFile.close()
-  addToMakefile("tcc",className,incDir,subDirName)
+  addToMakefile("tcc",packageName,className,incDir,subDirName)
 
   if autoTemplate==0:
     #default diy-cc template file
@@ -217,7 +217,7 @@ def makeTemplatedClass(lofarDir,className,packageName,templateList,autoTemplate,
     addTemplates("diy",readFile,writeFile,className,packageName,templateList,autoTemplate,subDirName)
     writeFile.close()
     readFile.close()
-    addToMakefile("diy",className,srcDir,subDirName)
+    addToMakefile("diy",packageName,className,srcDir,subDirName)
 
 def makeMainClass(lofarDir,className,packageName,srcDir,subDirName):
   readFile=openFile(lofarDir+"/LCS/Tools/src/templates/main.cc_template","r")
@@ -225,10 +225,10 @@ def makeMainClass(lofarDir,className,packageName,srcDir,subDirName):
   replacePackageAndClassName(readFile,writeFile,packageName,className,subDirName)
   writeFile.close()
   readFile.close()
-  addToMakefile("maincc",className+"Main",srcDir,subDirName)
+  addToMakefile("maincc",packageName,className+"Main",srcDir,subDirName)
 
 
-def addToMakefile(type,className,srcDir,subDirName):
+def addToMakefile(type,packageName,className,srcDir,subDirName):
   hPattern=re.compile('^([ \t]*)INSTHDRS[ \t]*=.*$',re.IGNORECASE)
   ccPattern=re.compile('^(.*)_la_SOURCES[ \t]*=.*$',re.IGNORECASE)
   mainccPattern=re.compile('^(.*)bin_PROGRAMS[ \t]*=.*$',re.IGNORECASE)
@@ -248,7 +248,7 @@ def addToMakefile(type,className,srcDir,subDirName):
     if type == "h":
       # find INSTHDRS to start inserting headerfiles
       if hPattern.search(aLine):
-        #find / to see if the line allready contains another header
+        #find / to see if the line already contains another header
         front,end = aLine.split("=")
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+".h \\\n")
@@ -264,7 +264,7 @@ def addToMakefile(type,className,srcDir,subDirName):
     elif type == "cc" or type == "diy":
       # find _la_SOURCES to start inserting sourcefiles
       if ccPattern.search(aLine):
-        #find / to see if the line allready contains another source
+        #find / to see if the line already contains another source
         front,end = aLine.split("=")
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+".cc \\\n")
@@ -278,36 +278,49 @@ def addToMakefile(type,className,srcDir,subDirName):
         writeFile.write(aLine)
 
     elif type == "maincc":
+      pkgLower=packageName.lower()
       # find bin_PROGRAMS to start inserting mainsourcefiles
+      # they are inserted in reverse order
       if mainccPattern.search(aLine):        
-        #find / to see if the line allready contains another source
         front,end = aLine.split("=")
+        # the line already contains another source, so that becomes next line
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+" \\\n")
           writeFile.write("\t"+end)
-          searchEnd=1
+          if end.find('\\') > -1:
+            # a backslash, so search further (for more program names)
+            searchEnd=1
         elif end.find('\\') > -1:
-          writeFile.write(front+" = "+extendedClassName+" \\\n")
+          # only a backslash (no name), so write and search further
+          writeFile.write(front+"="+end);
+          writeFile.write("\t"+extendedClassName+" \\\n")
           searchEnd=1
-        else :
-          writeFile.write(front+" = "+className+"\n")
-          writeFile.write(className+"_SOURCES = "+extendedClassName+".cc\n")
+        else:
+          # nothing yet, so write program name
+          writeFile.write(front+" = "+extendedClassName+"\n")
+        if searchEnd == 0:
+          writeFile.write("\n")
+          writeFile.write(className+"_SOURCES      = "+extendedClassName+".cc\n")
+          writeFile.write(className+"_LDADD        = lib"+pkgLower+".la\n")
+          writeFile.write(className+"_DEPENDENCIES = lib"+pkgLower+".la $(LOFAR_DEPEND)\n")
 
       elif searchEnd > 0:
         # there have been other mainprograms, so we need to look
-        # for the end of all programName_SOURCES line to include our
-        # new mainprogram SOURCES line
-        if aLine.find("_SOURCES") < 0:
-          writeFile.write(className+"_SOURCES = "+extendedClassName+".cc\n")
+        # for the last program name (thus without backslash).
+        writeFile.write(aLine)
+        if aLine.find('\\') < 0:
+          writeFile.write("\n")
+          writeFile.write(className+"_SOURCES      = "+extendedClassName+".cc\n")
+          writeFile.write(className+"_LDADD        = lib"+pkgLower+".la\n")
+          writeFile.write(className+"_DEPENDENCIES = lib"+pkgLower+".la $(LOFAR_DEPEND)\n")
           searchEnd=0
-        writeFile.write(aLine)  
       else:
         writeFile.write(aLine)
 
     elif type == "tcc":
       # find TCCHDRS to start inserting templatefiles
       if tccPattern.search(aLine):
-        #find / to see if the line allready contains another source
+        #find / to see if the line already contains another source
         front,end = aLine.split("=")
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedClassName+".tcc \\\n")
@@ -333,7 +346,7 @@ def addToMakefile(type,className,srcDir,subDirName):
 def usage():
   print "usage: "+sys.argv[0]+" [-h] [-m | -t list [-d]] className [className...]"
   print "args:  -h,--help               - print usage"
-  print "       -m,--main               - make main class" 
+  print "       -m,--main               - make main program for a class" 
   print "       -t,--templated list     - automated templated class"
   print "                                 list can contain a comma seperated list"
   print "                                 with the template parameters. Example:"
@@ -443,10 +456,10 @@ def main(argv):
       if templateList == "":
         print "No templates provided, so only default template class will be created."
     if noMain==0:
-      print "Trying to set up main class " + className + " for package " + packageName
+      print "Trying to set up main class program " + className + " for package " + packageName
 
     #
-    # Check of given class name allready exists in the working directory as
+    # Check of given class name already exists in the working directory as
     # directory or as file
     #
     if noMain: 

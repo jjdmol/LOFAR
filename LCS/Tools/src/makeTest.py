@@ -136,8 +136,7 @@ def makeTestFiles(lofarDir,testName,packageName,testDir,subDirName,shortName,dir
 
 def addToMakefile(type,testName,testDir,subDirName,packageName,dirLevel):
   checkPattern=re.compile('^([ \t]*)check_PROGRAMS[ \t]*=.*$',re.IGNORECASE)
-  checkToolPattern=re.compile('^([ \t]*)CHECKTOOLPROGS[ \t]*=.*$',re.IGNORECASE)
-  testPattern=re.compile('^([ \t]*)TESTS[ \t]*=.*$',re.IGNORECASE)
+  testPattern=re.compile('^([ \t]*)TESTSCRIPTS[ \t]*=.*$',re.IGNORECASE)
 
   startPattern=re.compile('^([ \t]*)XFAIL_TESTS[ \t]*=.*$',re.IGNORECASE)
   
@@ -159,9 +158,9 @@ def addToMakefile(type,testName,testDir,subDirName,packageName,dirLevel):
       extendedTestName=testName
       
     if type == "cc":
-      # add testprogram to check_PROGRAMS and CHECKTOOLPROGRAMS
-      if checkPattern.search(aLine) or checkToolPattern.search(aLine):
-        #find / to see if the line allready contains another source
+      # add testprogram to check_PROGRAMS
+      if checkPattern.search(aLine):
+        #find / to see if the line already contains another source
         front,end = aLine.split("=")
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedTestName+" \\\n")
@@ -170,8 +169,9 @@ def addToMakefile(type,testName,testDir,subDirName,packageName,dirLevel):
           writeFile.write(front+" = "+extendedTestName+"\n")
       elif startPattern.search(aLine):
         writeFile.write(aLine)
-        writeFile.write(testName+"_SOURCES = "+extendedTestName+".cc\n")
-        writeFile.write(testName+"_LDADD = "+levelString+"src/lib"+packageName+".la\n")
+        writeFile.write("\n")
+        writeFile.write(testName+"_SOURCES      = "+extendedTestName+".cc\n")
+        writeFile.write(testName+"_LDADD        = "+levelString+"src/lib"+packageName+".la\n")
         writeFile.write(testName+"_DEPENDENCIES = "+levelString+"src/lib"+packageName+".la $(LOFAR_DEPEND)\n")        
 
       else:
@@ -179,9 +179,9 @@ def addToMakefile(type,testName,testDir,subDirName,packageName,dirLevel):
 
 
     if type == "sh":
-      # add testprogram  script to TESTS
+      # add testprogram  script to TESTSCRIPTS
       if testPattern.search(aLine):
-        #find / to see if the line allready contains another source
+        #find / to see if the line already contains another source
         front,end = aLine.split("=")
         if re.search("[a-zA-Z]",end):
           writeFile.write(front+" = "+extendedTestName+".sh \\\n")
@@ -214,9 +214,12 @@ def main(argv):
   #
   # get Lofar base dir
   #
-  file= os.popen("echo $PWD | sed -e 's%/LOFAR/.*%/LOFAR%'")
-  lofarDir=str.replace(file.readline(),"\n","")
-  file.close()
+  if "LOFARROOT" in os.environ:
+    lofarDir = os.environ["LOFARROOT"] + "/share"
+  else:
+    file= os.popen("echo $PWD | sed -e 's%/LOFAR/.*%/LOFAR%'")
+    lofarDir=str.replace(file.readline(),"\n","")
+    file.close()
   baseDir = os.environ["PWD"]
   subDirName = ""
   packageName = ""
@@ -273,12 +276,12 @@ def main(argv):
     print "Trying to set up test files and programs for " + shortName + " in package " + packageName
 
     #
-    # Check of given testname allready exists in the working directory as
+    # Check of given testname already exists in the working directory as
     # directory or as file
     #
   
     if os.path.isfile(testName+".cc"):
-      print "Sorry, that test allready exists. Please take another name"
+      print "Sorry, that test already exists. Please take another name"
       sys.exit(1)
 
     #
