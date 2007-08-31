@@ -67,6 +67,26 @@ function SubmitComponentBewerken()
 		document.getElementById('ai' + i).value = id;
 		document.getElementById('an' + i).value = naam;
 	}
+	
+	var aantal = document.frames['frame_melding'].document.getElementById('aantal').value;
+	
+	for(i=0; i < aantal; i++) {
+		var type = document.frames['frame_melding'].document.getElementById('t'+i).value;
+		var verplicht = document.frames['frame_melding'].document.getElementById('v'+i).value;
+		var id = document.frames['frame_melding'].document.getElementById('i'+i).value;
+		var naam = document.frames['frame_melding'].document.getElementById('n'+i).value;
+
+		if(type != 5) {
+			var waarde = document.frames['frame_melding'].document.getElementById(i).value;
+			document.getElementById('m_' + i).value = waarde;
+		}
+
+		document.getElementById('m_t' + i).value = type;
+		document.getElementById('m_v' + i).value = verplicht;
+		document.getElementById('m_i' + i).value = id;
+		document.getElementById('m_n' + i).value = naam;
+	}
+
 
 	var s = document.frames['frame_melding'].document.getElementById('sStatus').value;
 	var m = document.frames['frame_melding'].document.getElementById('sMelding').value;
@@ -88,6 +108,9 @@ function PostDocument(url) {
 	document.theForm.submit();
 }
 
+function PostBewerkenDocument(url) {
+	document.theForm.submit();
+}
 
 function submitComponentToevoegen() 
 {
@@ -109,6 +132,27 @@ function submitComponentToevoegen()
 		document.getElementById('i' + i).value = id;
 		document.getElementById('n' + i).value = naam;
 	}
+
+
+	var aantal = document.frames['frame_melding'].document.getElementById('aantal').value;
+	
+	for(i=0; i < aantal; i++) {
+		var type = document.frames['frame_melding'].document.getElementById('t'+i).value;
+		var verplicht = document.frames['frame_melding'].document.getElementById('v'+i).value;
+		var id = document.frames['frame_melding'].document.getElementById('i'+i).value;
+		var naam = document.frames['frame_melding'].document.getElementById('n'+i).value;
+
+		if(type != 5) {
+			var waarde = document.frames['frame_melding'].document.getElementById(i).value;
+			document.getElementById('m_' + i).value = waarde;
+		}
+
+		document.getElementById('m_t' + i).value = type;
+		document.getElementById('m_v' + i).value = verplicht;
+		document.getElementById('m_i' + i).value = id;
+		document.getElementById('m_n' + i).value = naam;
+	}
+
 	
 	var n = document.frames['frame_contact'].document.getElementById('sVerantwoordelijke').value;
 	var s = document.frames['frame_melding'].document.getElementById('sStatus').value;

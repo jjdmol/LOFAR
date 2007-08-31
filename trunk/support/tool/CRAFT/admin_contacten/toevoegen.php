@@ -65,7 +65,7 @@
 								return false;
 						} else if (!isset($_POST['parent_gegevens'])) return false;
 	   			
-	
+	/*
 						if (isset($_POST['Contact_Telefoon_Vast'])) {
 							if ($_POST['Contact_Telefoon_Vast'] != '' && !telefoon_check($_POST['Contact_Telefoon_Vast']))
 								return false;
@@ -82,7 +82,7 @@
 							if ($_POST['Contact_Telefoon_Fax'] != '' && !telefoon_check($_POST['Contact_Telefoon_Fax']))
 								return false;
 						}
-	
+	*/
 	    			return true;
 	    		}
 	    		
@@ -203,7 +203,7 @@
 			    				  		$vast = $_POST['Contact_Telefoon_Vast'];
 			    				  	else $vast = '';
 			    				  	
-			    				  	if(isset($_POST['opslaan'])) {
+/*			    				  	if(isset($_POST['opslaan'])) {
 												if(isset($_POST['parent_gegevens'])) {
 													if ($vast != '' && !telefoon_check($vast))
 				   				  				echo('<b>* Er is geen geldig vast nummer ingevoerd!</b>');
@@ -212,7 +212,7 @@
 													if ($vast == '' || !telefoon_check($vast))
 				   				  				echo('<b>* Er is geen geldig vast nummer ingevoerd!</b>');
 												}
-			    				  	}
+			    				  	}*/
 			    				  ?>
 			    				</td>
 				    		</tr>
@@ -224,7 +224,7 @@
 			    				  		$mobiel = $_POST['Contact_Telefoon_Mobiel'];
 			    				  	else $mobiel = '';
 	
-			    				  	if(isset($_POST['opslaan'])) {
+			    				/*  	if(isset($_POST['opslaan'])) {
 												if(isset($_POST['parent_gegevens'])) {
 													if ($mobiel != '' && !telefoon_check($mobiel))
 				   				  				echo('<b>* Er is geen geldig mobiel nummer ingevoerd!</b>');
@@ -233,7 +233,7 @@
 													if ($mobiel == '' || !telefoon_check($mobiel))
 				   				  				echo('<b>* Er is geen geldig mobiel nummer ingevoerd!</b>');
 												}
-			    				  	}
+			    				  	}*/
 			    				  ?>
 			    				</td>
 				    		</tr>
@@ -245,10 +245,10 @@
 			    				  		$fax = $_POST['Contact_Telefoon_Fax'];
 			    				  	else $fax = '';
 	
-			    				  	if(isset($_POST['opslaan'])) {
+			    				 /* 	if(isset($_POST['opslaan'])) {
 												if ($fax != '' && !telefoon_check($fax))
 			   				  				echo('<b>* Er is geen geldig fax nummer ingevoerd!</b>');
-			    				  	}
+			    				  	}*/
 			   						?>
 			   					</td>
 				    		</tr>

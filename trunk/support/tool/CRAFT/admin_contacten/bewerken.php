@@ -57,7 +57,7 @@
 							if ($_POST['Contact_Postcode'] != '' && !postcode_check($_POST['Contact_Postcode']))
 								return false;
 						} else if (!isset($_POST['parent_gegevens'])) return false;
-	
+/*	
 	    			//e-mail
 						if (isset($_POST['Contact_Email'])) {
 							if ($_POST['Contact_Email'] != '' && !mail_check($_POST['Contact_Email']))
@@ -81,7 +81,7 @@
 							if ($_POST['Contact_Telefoon_Fax'] != '' && !telefoon_check($_POST['Contact_Telefoon_Fax']))
 								return false;
 						}
-	
+	*/
 	    			return true;
 					}
 					
@@ -190,30 +190,30 @@
 					    			<td>E-mail:</td>
 					    			<td><input name="Contact_Email" type="text" value="<?php if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) echo(htmlentities($_POST['Contact_Email'], ENT_QUOTES)); else echo($row['Contact_Email']); ?>">
 					    				<?php
-					    					if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) { 
+					 /*   					if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) { 
 					    						if (($parent_gegevens == 1 && $_POST['Contact_Email'] != '' && !mail_check($_POST['Contact_Email'])) ||
 					    							($parent_gegevens == 0 && ($_POST['Contact_Email'] == '' || !mail_check($_POST['Contact_Email']))))
 					    						 		echo('<b>* Er is geen (geldig) e-mailadres ingevoerd!</b>');
-					    					}
+					    					}*/
 					    				 ?>
 				    				</td>
 					    		</tr>
 					    		<tr>
 					    			<td>Telefoon (vast):</td>
 					    			<td><input name="Contact_Telefoon_Vast" type="text" value="<?php if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) echo(htmlentities($_POST['Contact_Telefoon_Vast'], ENT_QUOTES)); else echo($row['Contact_Telefoon_Vast']); ?>">
-					    				<?php if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && $_POST['Contact_Telefoon_Vast']!= '' && !telefoon_check($_POST['Contact_Telefoon_Vast'])) echo('<b>* Er is geen (geldig) telefoonnummer ingevoerd!</b>');?>
+					    				<?php /* if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && $_POST['Contact_Telefoon_Vast']!= '' && !telefoon_check($_POST['Contact_Telefoon_Vast'])) echo('<b>* Er is geen (geldig) telefoonnummer ingevoerd!</b>'); */ ?>
 				    				</td>
 					    		</tr>
 					    		<tr>
 					    			<td>Telefoon (mobiel):</td>
 					    			<td><input name="Contact_Telefoon_Mobiel" type="text" value="<?php if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) echo(htmlentities($_POST['Contact_Telefoon_Mobiel'], ENT_QUOTES)); else echo($row['Contact_Telefoon_Mobiel']); ?>">
-					    				<?php if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && $_POST['Contact_Telefoon_Mobiel']!= '' && !telefoon_check($_POST['Contact_Telefoon_Mobiel'])) echo('<b>* Er is geen (geldig) telefoonnummer ingevoerd!</b>');?>
+					    				<?php /* if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && $_POST['Contact_Telefoon_Mobiel']!= '' && !telefoon_check($_POST['Contact_Telefoon_Mobiel'])) echo('<b>* Er is geen (geldig) telefoonnummer ingevoerd!</b>'); */ ?>
 				    				</td>
 					    		</tr>
 					    		<tr>
 					    			<td>Telefoon (fax):</td>
 					    			<td><input name="Contact_Telefoon_Fax" type="text" value="<?php if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1) echo(htmlentities($_POST['Contact_Telefoon_Fax'], ENT_QUOTES)); else echo($row['Contact_Fax']); ?>">
-					    				<?php if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && $_POST['Contact_Telefoon_Fax']!= '' && !telefoon_check($_POST['Contact_Telefoon_Fax'])) echo('<b>* Er is geen (geldig) telefoonnummer ingevoerd!</b>');?>
+					    				<?php /* if(isset($_POST['opslaan']) && $_POST['opslaan'] == 1 && $_POST['Contact_Telefoon_Fax']!= '' && !telefoon_check($_POST['Contact_Telefoon_Fax'])) echo('<b>* Er is geen (geldig) telefoonnummer ingevoerd!</b>'); */ ?>
 				   					</td>
 					    		</tr>
 					    		<tr>
