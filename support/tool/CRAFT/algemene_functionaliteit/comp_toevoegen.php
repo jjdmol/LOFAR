@@ -432,7 +432,7 @@
   			</tr>
 				<tr>
 					<td>Melding beschrijving:</td>					
-					<td><iframe id="frame_melding" name="frame_melding" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_melding.php?c=<?php echo($meld_selectie); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="580" height="72" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>as
+					<td><iframe id="frame_melding" name="frame_melding" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_melding.php?c=<?php echo($meld_selectie); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="580" height="72" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
 					</td>
 				</tr>
   			<tr>

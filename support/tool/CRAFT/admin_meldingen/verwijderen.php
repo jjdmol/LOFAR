@@ -30,6 +30,42 @@
 	    		//verwijder controle
 	    		if(isset($_POST['verwijderen']) && $_POST['verwijderen'] == 1 && isset($_POST['confirmatie']) && $_POST['confirmatie'] == 'on') {
 						$query1 = "UPDATE comp_lijst SET Laatste_Melding='". $_POST['laatste'] ."' WHERE Comp_Lijst_ID = '".$_GET['c']."'";
+	
+						//extra velden verwijzingen verwijderen!!!
+						//eerst kijken of er extra velden verwijzingen zijn.
+						$query = "SELECT * FROM melding_koppel_extra WHERE Meld_Lijst_ID = '".$_POST['melding']."'";
+						$num_rows = mysql_num_rows(mysql_query($query));
+						$extra_velden = array();
+						if($num_rows > 0) {
+							//door de extra velden itereren en de ID's van de extra velden opslaan
+							$resultaat = mysql_query($query);
+					  	while ($data = mysql_fetch_array($resultaat)) {
+		  		 	  	array_push($extra_velden, $data['Kolom_ID']);
+
+					  	}
+					  	//De koppeling tussen de melding en het extra veld verwijderen
+					  	$query = "DELETE FROM melding_koppel_extra WHERE Meld_Lijst_ID = '".$_POST['melding']."'";
+							if (mysql_query($query)) {
+								$datatabel = array();
+								//door de extra velden itereren om de datatabel verwijzing op te slaan en het extra veld  te verwijderen
+								for($i = 0; $i < Count($extra_velden); $i++) {
+									$query = "SELECT Data_Kolom_ID FROM extra_velden WHERE Kolom_ID = '".$extra_velden[$i]."'";
+									$resultaat = mysql_query($query);
+							  	$data = mysql_fetch_array($resultaat);
+			  		 	  	array_push($datatabel, $data['Data_Kolom_ID']);
+			  		 	  	
+			  		 	  	$query = "DELETE FROM extra_velden WHERE Kolom_ID = '".$extra_velden[$i]."'";
+									mysql_query($query);
+								}
+								
+								//de entries in de datatabel verwijderen
+								for($i = 0; $i < Count($datatabel); $i++) {			  		 	  	
+			  		 	  	$query = "DELETE FROM datatabel WHERE Data_Kolom_ID = '".$datatabel[$i]."'";
+									mysql_query($query);
+								}								
+							}
+						}
+	
 						$query2 = "DELETE FROM melding_lijst WHERE Meld_Lijst_ID = " . $_POST['melding'];
 	
 						if (mysql_query($query1) && mysql_query($query2)) echo("De door u geselecteerde melding is uit het systeem verwijderd.<br>");
