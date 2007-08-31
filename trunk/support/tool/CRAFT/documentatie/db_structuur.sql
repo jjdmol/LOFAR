@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 -- 
 -- Host: localhost
--- Generatie Tijd: 27 Aug 2007 om 15:48
+-- Generatie Tijd: 31 Aug 2007 om 16:28
 -- Server versie: 4.1.22
 -- PHP Versie: 5.2.2
 
@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS `comp_lijst` (
   `Lever_Datum` datetime default NULL,
   `Fabricatie_Datum` datetime default NULL,
   `Laatste_Melding` int(11) NOT NULL default '0',
+  `Schaduw_Vlag` tinyint(1) NOT NULL default '0',
   PRIMARY KEY  (`Comp_Lijst_ID`),
   KEY `Comp_Type_ID` (`Comp_Type_ID`),
   KEY `Comp_Locatie` (`Comp_Locatie`),
@@ -76,14 +77,14 @@ CREATE TABLE IF NOT EXISTS `comp_lijst` (
   KEY `Contact_Fabricant` (`Contact_Fabricant`),
   KEY `Contact_Leverancier` (`Contact_Leverancier`),
   KEY `Comp_Parent` (`Comp_Parent`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=83 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=162 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `comp_lijst`
 -- 
 
-INSERT INTO `comp_lijst` (`Comp_Lijst_ID`, `Comp_Naam`, `Comp_Type_ID`, `Comp_Parent`, `Comp_Locatie`, `Comp_Verantwoordelijke`, `Contact_Fabricant`, `Contact_Leverancier`, `Lever_Datum`, `Fabricatie_Datum`, `Laatste_Melding`) VALUES 
-(1, 'ASTRON', 1, NULL, 1, 1, NULL, NULL, NULL, NULL, 1);
+INSERT INTO `comp_lijst` (`Comp_Lijst_ID`, `Comp_Naam`, `Comp_Type_ID`, `Comp_Parent`, `Comp_Locatie`, `Comp_Verantwoordelijke`, `Contact_Fabricant`, `Contact_Leverancier`, `Lever_Datum`, `Fabricatie_Datum`, `Laatste_Melding`, `Schaduw_Vlag`) VALUES 
+(1, 'ASTRON', 1, NULL, 1, 1, NULL, NULL, NULL, NULL, 1, 0);
 
 -- --------------------------------------------------------
 
@@ -106,14 +107,22 @@ CREATE TABLE IF NOT EXISTS `comp_locatie` (
   `Lat_Min` int(11) default NULL,
   `Lat_Sec` int(11) default NULL,
   PRIMARY KEY  (`Locatie_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=16 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=24 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `comp_locatie`
 -- 
 
 INSERT INTO `comp_locatie` (`Locatie_ID`, `Loc_Naam`, `Loc_Adres1`, `Loc_Adres2`, `Loc_Postcode`, `Loc_Plaats`, `Long_Graden`, `Long_Min`, `Long_Sec`, `Lat_Graden`, `Lat_Min`, `Lat_Sec`) VALUES 
-(1, 'Lhee', NULL, NULL, NULL, NULL, 6, 39, 51, 52, 81, 28);
+(1, 'Lhee', NULL, NULL, NULL, NULL, 6, 39, 51, 52, 81, 28),
+(16, 'CS001', '', '', '', '', 0, 0, 0, 0, 0, 0),
+(17, 'CS008', '', '', '', '', 0, 0, 0, 0, 0, 0),
+(18, 'CS010', '', '', '', '', 0, 0, 0, 0, 0, 0),
+(19, 'CS016', '', '', '', '', 0, 0, 0, 0, 0, 0),
+(20, 'CS001T', '', '', '', '', 0, 0, 0, 0, 0, 0),
+(21, 'RS002', '', '', '', '', 0, 0, 0, 0, 0, 0),
+(22, 'ISGE01', '', '', '', '', 0, 0, 0, 0, 0, 0),
+(23, 'Neways', '', '', '', 'Leeuwarden', 0, 0, 0, 0, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -141,7 +150,7 @@ CREATE TABLE IF NOT EXISTS `comp_type` (
   KEY `Gefabriceerd_Door` (`Gefabriceerd_Door`),
   KEY `Geleverd_Door` (`Geleverd_Door`),
   KEY `Type_Parent` (`Type_Parent`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=27 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=43 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `comp_type`
@@ -149,7 +158,6 @@ CREATE TABLE IF NOT EXISTS `comp_type` (
 
 INSERT INTO `comp_type` (`Comp_Type`, `Type_Naam`, `Type_Parent`, `Aangemaakt_Door`, `Aanmaak_Datum`, `Structuur_Entry`, `Gefabriceerd_Door`, `Geleverd_Door`, `Min_Aantal`, `Max_Aantal`, `Reserve_Minimum`, `Type_Verantwoordelijke`) VALUES 
 (1, 'Faciliteit', NULL, 1, '2007-06-18 13:29:26', 1, 1, 1, 1, 1, 0, 1);
-
 -- --------------------------------------------------------
 
 -- 
@@ -173,14 +181,16 @@ CREATE TABLE IF NOT EXISTS `contact` (
   `Contact_Parent_Gegevens` tinyint(4) default '0',
   PRIMARY KEY  (`Contact_ID`),
   KEY `Contact_Parent` (`Contact_Parent`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=26 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=5 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `contact`
 -- 
 
 INSERT INTO `contact` (`Contact_ID`, `Contact_Naam`, `Contact_Adres1`, `Contact_Adres2`, `Contact_Postcode`, `Contact_Woonplaats`, `Contact_Telefoon_Vast`, `Contact_Telefoon_Mobiel`, `Contact_Email`, `Contact_Fax`, `Contact_Parent`, `Contact_Functie`, `Contact_Parent_Gegevens`) VALUES 
-(1, 'Nieuw bedrijf toevoegen', NULL, NULL, NULL, NULL, NULL, '0', NULL, NULL, NULL, 'Structuur entry', 0);
+(1, 'Nieuw bedrijf toevoegen', NULL, NULL, NULL, NULL, NULL, '0', NULL, NULL, NULL, 'Structuur entry', 0),
+(2, 'ASTRON', 'Oude hoogeveensedijk 4', '', '1234 aa', 'Lhee', '', '', '', '', 1, 'eerste contact', 0),
+(4, 'Neways', 'Harlingerstraatweg 111', '', '8914 AZ', 'Leeuwarden', '', '', 'info@neways-leeuwarden.nl', '', 1, '', 0);
 
 -- --------------------------------------------------------
 
@@ -197,11 +207,12 @@ CREATE TABLE IF NOT EXISTS `datatabel` (
   `Type_Text` text,
   `Type_DateTime` datetime default NULL,
   PRIMARY KEY  (`Data_Kolom_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=183 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=372 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `datatabel`
 -- 
+
 
 -- --------------------------------------------------------
 
@@ -222,11 +233,12 @@ CREATE TABLE IF NOT EXISTS `extra_velden` (
   PRIMARY KEY  (`Kolom_ID`),
   KEY `Aangemaakt_Door` (`Aangemaakt_Door`),
   KEY `Data_Kolom_ID` (`Data_Kolom_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=177 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=190 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `extra_velden`
 -- 
+
 
 -- --------------------------------------------------------
 
@@ -249,14 +261,14 @@ CREATE TABLE IF NOT EXISTS `gebruiker` (
   `Laatst_Ingelogd` datetime NOT NULL default '0000-00-00 00:00:00',
   PRIMARY KEY  (`Werknem_ID`),
   KEY `Groep_ID` (`Groep_ID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=6 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=20 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `gebruiker`
 -- 
 
 INSERT INTO `gebruiker` (`Werknem_ID`, `inlognaam`, `Wachtwoord`, `Start_Alg`, `Start_Comp`, `Start_Melding`, `Start_Stats`, `Groep_ID`, `Gebruiker_Taal`, `Emailadres`, `Laatst_Ingelogd`) VALUES 
-(1, 'admin', '21232f297a57a5a743894a0e4a801fc3', 1, 1, 1, 1, 4, 1, 'admin@astron.nl', '2007-08-07 14:28:53');
+(1, 'sysadmin', '21232f297a57a5a743894a0e4a801fc3', 1, 1, 1, 1, 4, 1, 'admin@astron.nl', '2007-08-27 21:14:57');
 
 -- --------------------------------------------------------
 
@@ -280,6 +292,11 @@ CREATE TABLE IF NOT EXISTS `gebruikersgroeprechten` (
 -- 
 -- Gegevens worden uitgevoerd voor tabel `gebruikersgroeprechten`
 -- 
+
+INSERT INTO `gebruikersgroeprechten` (`Groep_ID`, `Comp_Type_ID`, `Zichtbaar`, `Toevoegen`, `Bewerken`, `Verwijderen`, `onderliggende_Data`) VALUES 
+(2, 1, 0, 0, 0, 0, 1),
+(3, 1, 0, 0, 0, 0, 1),
+(4, 1, 0, 0, 0, 0, 1);
 
 -- --------------------------------------------------------
 
@@ -327,7 +344,7 @@ CREATE TABLE IF NOT EXISTS `gebruikers_groepen` (
   `Admin_Rechten` tinyint(4) NOT NULL default '0',
   PRIMARY KEY  (`Groep_ID`),
   KEY `gebruikers_groepen_ibfk_1` (`Groep_Parent`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=12 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=9 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `gebruikers_groepen`
@@ -397,6 +414,7 @@ CREATE TABLE IF NOT EXISTS `melding_lijst` (
   `Afgehandeld` tinyint(1) default '0',
   `Voorgaande_Melding` int(11) default '0',
   `Melding_Locatie` int(11) NOT NULL default '0',
+  `Comp_Parent` int(11) NOT NULL default '0',
   PRIMARY KEY  (`Meld_Lijst_ID`),
   KEY `melding_lijst_ibfk_1` (`Gemeld_Door`),
   KEY `melding_lijst_ibfk_2` (`Behandeld_Door`),
@@ -404,15 +422,16 @@ CREATE TABLE IF NOT EXISTS `melding_lijst` (
   KEY `melding_lijst_ibfk_4` (`Meld_Type_ID`),
   KEY `Huidige_Status` (`Huidige_Status`),
   KEY `Voorgaande_Melding` (`Voorgaande_Melding`),
-  KEY `melding_lijst_ibfk_8` (`Melding_Locatie`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=102 ;
+  KEY `melding_lijst_ibfk_8` (`Melding_Locatie`),
+  KEY `melding_lijst_ibfk_9` (`Comp_Parent`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=198 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `melding_lijst`
 -- 
 
-INSERT INTO `melding_lijst` (`Meld_Lijst_ID`, `Meld_Type_ID`, `Comp_Lijst_ID`, `Meld_Datum`, `Gemeld_Door`, `Huidige_Status`, `Prob_Beschrijving`, `Prob_Oplossing`, `Behandeld_Door`, `Afgehandeld`, `Voorgaande_Melding`, `Melding_Locatie`) VALUES 
-(1, 3, NULL, '1982-07-01 09:00:00', 1, NULL, 'Bewerkt hooraaa', 'Bewerken (dus text typen) en daarna op opslaan drukken...', 1, 0, NULL, 1);
+INSERT INTO `melding_lijst` (`Meld_Lijst_ID`, `Meld_Type_ID`, `Comp_Lijst_ID`, `Meld_Datum`, `Gemeld_Door`, `Huidige_Status`, `Prob_Beschrijving`, `Prob_Oplossing`, `Behandeld_Door`, `Afgehandeld`, `Voorgaande_Melding`, `Melding_Locatie`, `Comp_Parent`) VALUES 
+(1, 3, NULL, '1982-07-01 09:00:00', 1, NULL, 'Bewerkt hooraaa', 'Bewerken (dus text typen) en daarna op opslaan drukken...', 1, 0, NULL, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -430,7 +449,7 @@ CREATE TABLE IF NOT EXISTS `melding_type` (
   `Stand_Oplossing` text,
   PRIMARY KEY  (`Meld_Type_ID`),
   KEY `melding_type_ibfk_1` (`Huidige_Status`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=5 ;
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=8 ;
 
 -- 
 -- Gegevens worden uitgevoerd voor tabel `melding_type`
@@ -440,7 +459,6 @@ INSERT INTO `melding_type` (`Meld_Type_ID`, `Melding_Type_Naam`, `Huidige_Status
 (1, 'Plaatsing component', 1, 1, 'Het plaatsen van het component', NULL),
 (2, 'Verplaatsen component', 1, 1, 'Component verplaatst en hoe ;)', ''),
 (3, 'Bewerken component', 1, 1, 'Gegevens van het component zijn bewerkt', 'Bewerken (dus text typen) en daarna op opslaan drukken...');
-
 -- --------------------------------------------------------
 
 -- 
@@ -578,6 +596,7 @@ CREATE TABLE IF NOT EXISTS `type_melding_koppel_extra` (
 -- Gegevens worden uitgevoerd voor tabel `type_melding_koppel_extra`
 -- 
 
+
 -- --------------------------------------------------------
 
 -- 
@@ -693,6 +712,7 @@ ALTER TABLE `melding_koppel_regels`
 -- Beperkingen voor tabel `melding_lijst`
 -- 
 ALTER TABLE `melding_lijst`
+  ADD CONSTRAINT `melding_lijst_ibfk_9` FOREIGN KEY (`Comp_Parent`) REFERENCES `comp_lijst` (`Comp_Lijst_ID`) ON DELETE NO ACTION ON UPDATE CASCADE,
   ADD CONSTRAINT `melding_lijst_ibfk_1` FOREIGN KEY (`Gemeld_Door`) REFERENCES `gebruiker` (`Werknem_ID`) ON DELETE NO ACTION ON UPDATE CASCADE,
   ADD CONSTRAINT `melding_lijst_ibfk_2` FOREIGN KEY (`Behandeld_Door`) REFERENCES `gebruiker` (`Werknem_ID`) ON DELETE NO ACTION ON UPDATE CASCADE,
   ADD CONSTRAINT `melding_lijst_ibfk_3` FOREIGN KEY (`Comp_Lijst_ID`) REFERENCES `comp_lijst` (`Comp_Lijst_ID`) ON DELETE NO ACTION ON UPDATE CASCADE,
