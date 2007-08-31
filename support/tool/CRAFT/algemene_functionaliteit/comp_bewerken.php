@@ -53,6 +53,35 @@
 		
 		return true;
 	}
+	
+	function Melding_Velden_Controle() {
+		//extra velden controle!!!
+		$aantal_velden = $_POST['meld_aantal'];
+		
+		for($i = 0; $i < $aantal_velden; $i++) {
+
+			//verplichte velden ingevuld??
+			if ($_POST['m_v' . $i] == '1') {
+				//bestanden
+				if ($_POST['m_t' . $i] == '5') {
+					if ($_SESSION['m_bestand' . $i] == '-1') return false;
+				}
+				//overige
+				else {
+					if ($_POST['m_' . $i] == '') return false;
+				}
+			}
+			//datum controle bij datum velden
+			if ($_POST['m_t' . $i] == '4a') {
+				if (Valideer_Datum($_POST['m_' . $i]) == false) return false;
+			}
+			//tijd controle bij datum velden
+			if ($_POST['m_t' . $i] == '4b') {
+				if (Valideer_Tijd($_POST['m_' . $i]) == false) return false;
+			}
+		}
+		return true;
+	}
 
 	
 	function Child_Controle() {
@@ -194,7 +223,8 @@
 			}
 		}
 		
-		return Extra_Velden_Controle();
+		if (Extra_Velden_Controle() == false)   return false;
+		if (Melding_Velden_Controle() == false) return false;
 
 		return true;
 	}
@@ -322,6 +352,49 @@
 					}
 				}
 			}
+			
+			//extra velden van de melding toevoegen
+			$aantal_velden = $_POST['meld_aantal'];
+			
+			$error_extra = 0;
+			for($i = 0; $i < $_POST['meld_aantal']; $i++) {
+ 				//DataTabel entry maken
+  			//integer
+  			if ($_POST['m_t' . $i] == '1') 		   $query = "INSERT INTO datatabel (Type_Integer) VALUES('".$_POST['m_' . $i]."')";
+  			//double
+  			else if ($_POST['m_t' . $i] == '2')  $query = "INSERT INTO datatabel (Type_Double) VALUES('".$_POST['m_' . $i]."')"; 
+  			//text
+  			else if ($_POST['m_t' . $i] == '3')  $query = "INSERT INTO datatabel (Type_Text) VALUES('".$_POST['m_' . $i]."')"; 
+  			//datumtijd
+  			else if ($_POST['m_t' . $i] == '4b') $query = "INSERT INTO datatabel (Type_DateTime) VALUES('". Datum_Tijd_Naar_DB_Conversie($_POST['m_' . $i -1],$_POST['m_' . $i]) ."')"; 
+  			//bestandsverwijzing
+  			else if ($_POST['m_t' . $i] == '5')  $query = "INSERT INTO datatabel (Type_TinyText) VALUES('".$_SESSION['m_bestand' . $i]."')"; 
+  			else $query = "";
+
+				//uitvoeren van de datatabel record
+				if (($_POST['m_t' . $i] != '4a') && mysql_query($query)) {
+	 				$error_extra = 1;
+
+  				$Veld_ID = mysql_insert_id();
+  				
+  				if ($_POST['m_t'.$i] == '4b') $datatype = 4;
+  				else $datatype = $_POST['m_t'.$i];
+  				
+  				$query = "INSERT INTO extra_velden (Data_Kolom_ID, Veld_Naam, Aangemaakt_Door, DataType, Type_Beschrijving, Tabel_Type, Is_Verplicht)";
+  				$query = $query . "VALUES ('".$Veld_ID."', '".$_POST['m_n'.$i]."', '".$_SESSION['gebr_id'] ."', '".$datatype."', '". $_POST['m_i'.$i] ."', '3', '".$_POST['m_v'.$i]."')";
+
+    			if (mysql_query($query)) {
+		 				$error_extra = 2;
+
+    				$Veld_ID = mysql_insert_id();	  				
+  					$query = "INSERT INTO melding_koppel_extra (Kolom_ID, Meld_Lijst_ID) VALUES('".$Veld_ID. "', '". $melding_id ."')";
+
+	    			if (mysql_query($query)) {
+			 				$error_extra = 3;
+		  			}
+    			}
+				}
+			}
 		}
 		
 		if ($errorlevel == 2) echo("Het gewijzigde component \"". $_POST['comp_naam'] ."\" is (inclusief extra velden)in het systeem bijgewerkt<br>");
@@ -372,19 +445,19 @@
 
   			<tr>
   				<td>Reden bewerking:</td>
-  				<td><select name="type_melding" onchange="switchMelding();">
+  				<td><select name="type_melding" onchange="document.theForm.submit();">
   					<?php
   						$query = "SELECT Meld_Type_ID, Melding_Type_Naam FROM melding_type";
 	    			  $resultaat = mysql_query($query);
 
-				  		if (isset($_POST['type_melding'])) $selectie = $_POST['type_melding'];
-				  		else $selectie = 'SELECTED';
+				  		if (isset($_POST['type_melding'])) $meld_selectie = $_POST['type_melding'];
+				  		else $meld_selectie = 'SELECTED';
 
 					  	while ($data = mysql_fetch_array($resultaat)) {
 	  	  				echo('<option value="'.$data['Meld_Type_ID'].'"');
-		  	  			if ($data['Meld_Type_ID'] == $selectie || $selectie == 'SELECTED') {
+		  	  			if ($data['Meld_Type_ID'] == $meld_selectie || $meld_selectie == 'SELECTED') {
 		  	  				echo('SELECTED');
-		  	  				$selectie = $data['Meld_Type_ID'];
+		  	  				$meld_selectie = $data['Meld_Type_ID'];
 		  	  			}
 		  	  			echo('>'. $data['Melding_Type_Naam'] .'</option>');
 							}
@@ -408,7 +481,7 @@
   			</tr>
 				<tr>
 					<td>Beschrijving:</td>
-					<td><iframe id="frame_melding" name="frame_melding" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_melding.php?c=<?php echo($selectie); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="450" height="72" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
+					<td><iframe id="frame_melding" name="frame_melding" align="middle" marginwidth="0" marginheight="0" src="<?php echo($_SESSION['pagina']); ?>algemene_functionaliteit/comp_toevoegen_melding.php?c=<?php echo($meld_selectie); if(isset($_POST['hidden_naam'])){ echo("&n=".$_POST['hidden_naam']); } ?>" width="580" height="72" ALLOWTRANSPARENCY frameborder="0" scrolling="auto"></iframe>
 					</td>
 				</tr>
 				<tr>
@@ -574,6 +647,48 @@
 								echo("<input type=\"hidden\" name=\"av". $i ."\" id=\"av". $i ."\" value=\"\">");
 								echo("<input type=\"hidden\" name=\"ai". $i ."\" id=\"ai". $i ."\" value=\"\">");
 								echo("<input type=\"hidden\" name=\"an". $i ."\" id=\"an". $i ."\" value=\"\">\n");
+							}
+							
+							//extra velden (welke bij de melding horen) bepalen
+		 					//eerst bepalen hoeveel velden er zijn, ivm met het datumveld dat uit 2 input boxen bestaat
+							$query = "SELECT Kolom_ID FROM type_melding_koppel_extra WHERE Meld_Type_ID = '". $meld_selectie ."'";
+							$resultaat = mysql_query($query);
+							$meld_aantal = 0;
+							$meld_bestand = 0;
+							while ($data = mysql_fetch_row($resultaat)) {
+								$query = "SELECT * FROM extra_velden WHERE Kolom_ID = '". $data[0]  ."'";
+								$result = mysql_query($query);
+								$meld_velden = mysql_fetch_array($result);
+								//4 = datumtijd
+								if ($meld_velden['DataType'] == 4)
+									$meld_aantal++;
+								if ($meld_velden['DataType'] == 5)
+									$meld_bestand++;
+								
+								$meld_aantal++;
+							}
+ 							//het aantal onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
+ 							echo("<input id=\"meld_aantal\" name=\"meld_aantal\" type=\"hidden\" value=\"".$meld_aantal."\">\n");
+ 							//het aantal bestandsvelden onthouden zodat er nadat er gepost is, gemakkelijk door de velden geitereerd kunnen worden
+ 							echo("<input id=\"meld_bestand\" name=\"meld_bestand\" type=\"hidden\" value=\"".$meld_bestand."\">\n");
+							
+  						//5 hidden velden aanmaken voor elk extra veld: 1 voor de waarde, 1 voor het type en 1 voor de verplichtheid en 1 voor de ID van de parent record en 1 voor de veldnaam
+							for($i = 0; $i < $meld_aantal; $i++){
+	  						echo("<input id=\"m_".$i."\" name=\"m_".$i."\" type=\"hidden\" value=\"");
+	  						if (isset($_POST["m_".$i])) echo($_POST["m_".$i]);
+	  						echo("\">");
+  							echo("<input id=\"m_t".$i."\" name=\"m_t".$i."\" type=\"hidden\" value=\"");
+	  						if (isset($_POST['m_t'.$i])) echo($_POST['m_t'.$i]);
+	  						echo("\">");
+  							echo("<input id=\"m_v".$i."\" name=\"m_v".$i."\" type=\"hidden\" value=\"");
+	  						if (isset($_POST['m_v'.$i])) echo($_POST['m_v'.$i]);
+	  						echo("\">");
+  							echo("<input id=\"m_i".$i."\" name=\"m_i".$i."\" type=\"hidden\" value=\"");
+	  						if (isset($_POST['m_i'.$i])) echo($_POST['m_i'.$i]);
+	  						echo("\">");
+  							echo("<input id=\"m_n".$i."\" name=\"m_n".$i."\" type=\"hidden\" value=\"");
+	  						if (isset($_POST['m_n'.$i])) echo($_POST['m_n'.$i]);
+	  						echo("\">\n");
 							}
 							
 					 ?>

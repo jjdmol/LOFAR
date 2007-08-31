@@ -33,8 +33,8 @@
 			//verplichte velden ingevuld??
 			if ($_POST['av' . $i] == '1') {
 				//bestanden
-				if ($_POST['t' . $i] == '5') {
-					if ($_SESSION['bestand' . $i] == '-1') return false;
+				if ($_POST['at' . $i] == '5') {
+					if ($_SESSION['abestand' . $i] == '-1') return false;
 				}
 				//overige
 				else {
