@@ -102,10 +102,6 @@ PVSS00pmon -currentproj -stopWait
 
 
 
-cp ../LOFAR/MAC/Navigator/panels/nav_fw/tools/EnablePropertySets.pnl panels
-
-
-
 
 
 
