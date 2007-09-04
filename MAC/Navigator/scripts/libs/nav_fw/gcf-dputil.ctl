@@ -87,31 +87,34 @@ bool dpAccessable(string dpName)
 ///////////////////////////////////////////////////////////////////////////
 bool checkDpEnabled(string datapointName)
 {
-	LOG_DEBUG("checkDpEnabled: ",datapointName);
+//	LOG_DEBUG("checkDpEnabled: ",datapointName);
+//
+//	if (dpAccessable(datapointName + "__enabled")) {
+//		LOG_TRACE("dpName__enabled Exists", datapointName);
+//		return true;
+//	}
+//	LOG_TRACE("dpName__enabled NOT Exists", datapointName);
 
-	if (dpAccessable(datapointName + "__enabled")) {
-		LOG_TRACE("dpName__enabled Exists", datapointName);
-		return true;
-	}
-	LOG_TRACE("dpName__enabled NOT Exists", datapointName);
-
-	// check the ignoreEnabledRoots field
-	dyn_string 	 ignoreEnabledDPs;
-	dyn_errClass err;
-	dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS, ignoreEnabledDPs);
-	// If the datapointName is a reference, use the refernce to check for enabled
-	err = getLastError();
-	if (dynlen(err) == 0) {
-		for (int i = 1; i <= dynlen(ignoreEnabledDPs); i++) {
-			int pos = strpos(datapointName, ignoreEnabledDPs[i]);
-			LOG_TRACE("checkEnabled", pos, datapointName, ignoreEnabledDPs[i]);
-			if (pos >= 0) {
-				return true;
-			}
-		}
-	}
-
-	return false;
+//	// check the ignoreEnabledRoots field
+//	dyn_string 	 ignoreEnabledDPs;
+//	dyn_errClass err;
+//	dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS, ignoreEnabledDPs);
+//	// If the datapointName is a reference, use the refernce to check for enabled
+//	err = getLastError();
+//	if (dynlen(err) == 0) {
+//		for (int i = 1; i <= dynlen(ignoreEnabledDPs); i++) {
+//			int pos = strpos(datapointName, ignoreEnabledDPs[i]);
+//			LOG_TRACE("checkEnabled", pos, datapointName, ignoreEnabledDPs[i]);
+//			if (pos >= 0) {
+//				return true;
+//			}
+//		}
+//	}
+//
+//	return false;
+// 
+// Enabled point removed from total design, so return true for now
+  return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////

@@ -612,7 +612,7 @@ void convertOriginal2ReferenceDP(string datapointOriginal, string &datapointPath
 ///////////////////////////////////////////////////////////////////////////
 bool checkForReference(string &parentDatapoint, dyn_string &reference, bool &parentDatapointIsReference)
 {
-  LOG_DEBUG("checkForReference: ", parentDatapoint, LOG_DYN(reference), parentDatapointIsReference);
+  LOG_DEBUG("checkForReference: ", parentDatapoint);
   dyn_string refOut;
   parentDatapointIsReference = FALSE;
   for (int i = 1; i <= dynlen(g_referenceList); i++) {
@@ -734,7 +734,7 @@ void InitializeTree()
 
 	// get top level resources. "" means root, 1 means: 1 level deep
 	dyn_string resources = navConfigGetResources("", 2);
-	LOG_DEBUG("adding resources: ", LOG_DYN(resources));
+	LOG_DEBUG("adding ",dynlen(resources)," resources: ", LOG_DYN(resources));
 	treeAddDatapoints(resources);
 
 	if (ActiveXSupported()) {
@@ -930,13 +930,14 @@ TreeView_OnExpand(unsigned pos)
     dyn_string reference;
     bool parentDatapointIsReference;
     checkForReference(datapointPath, reference, parentDatapointIsReference);
+    LOG_DEBUG("check for expand", datapointPath, reference,parentDatapointIsReference, dpAccessable(datapointPath));
     if (!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath))) {
       TreeCtrl_HandleEventOnExpand(pos);
       // also call the default OnExpand implementation to expand the node
       fwTreeView_defaultExpand(pos);  
     }
     else {
-      showPopupMessage("Warning",MESSAGE_DPACCESS); //dp not accessable
+      showPopupMessage("Warning",MESSAGE_DPACCESS+" "+datapointPath); //dp not accessable
     }
   }
   else {
@@ -979,7 +980,7 @@ TreeView_OnSelect(unsigned pos)
   bool parentDatapointIsReference;
   checkForReference(datapointPath, reference, parentDatapointIsReference);
   
-  LOG_TRACE("check for expand", parentDatapointIsReference, datapointPath, dpAccessable(datapointPath));
+  LOG_DEBUG("check for select", datapointPath,reference, parentDatapointIsReference);
   //Check if the access is permitted to this point in the tree
   if (checkDpPermit(datapointPath) || pos == 1) {
     //check if the selected item in the tree is an dpe. If yes, use the dp name to check the existence
@@ -988,12 +989,12 @@ TreeView_OnSelect(unsigned pos)
      datapointPath = datapointPathSplit[1];
      //DebugN("datapointPath after split:" + datapointPath);
     }
-    if (!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath + "__enabled"))) {
+    if (!parentDatapointIsReference || (parentDatapointIsReference && dpAccessable(datapointPath))) {
       TreeCtrl_HandleEventOnSelChange(pos);
     }
     else {
       LOG_INFO((parentDatapointIsReference ? "Is reference: " : "No reference: ") + datapointPath);
-      showPopupMessage("Warning",MESSAGE_DPACCESS); //dp not accessable
+      showPopupMessage("Warning",MESSAGE_DPACCESS+" "+datapointPath); //dp not accessable
     }
   }
   else {
@@ -1070,7 +1071,7 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
 	}
 
 	// do the query
-	dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath + "*__enabled' " + REMOTESYSTEM, tab);
+	dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath  + REMOTESYSTEM, tab);
 
 	int maximumCount = dynlen(tab);
 	for (int i = 2; i <= dynlen(tab); i++) {
@@ -1172,12 +1173,12 @@ string getDpTypeFromEnabled(string dp)
 	LOG_DEBUG("getDpTypeFromEnabled: ", dp);
 
 	// first try normal DP
-	string retDpType;
+	string retDpType = -1;
 	if (dpAccessable(dp)) {
 		retDpType = dpTypeName(dp);
 	}
 
-	if (strlen(retDpType) == 0) {
+/*	if (strlen(retDpType) == 0) {
 		retDpType = "-1";
 		if (dpAccessable(dp + "__enabled.")) {		// try __enabled DP
 			// get value and split it on | to get the second part
@@ -1193,6 +1194,6 @@ string getDpTypeFromEnabled(string dp)
 			}
 		}
 	}
-
+*/
 	return retDpType;
 }

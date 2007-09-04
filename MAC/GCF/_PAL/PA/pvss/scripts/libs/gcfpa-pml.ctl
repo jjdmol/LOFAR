@@ -24,8 +24,8 @@
 //# Functions to handle propertysets from PVSS scripts and panels
 //# 
 
-#uses "gcf-logging.ctl"
-#uses "gcfpa-com.ctl"
+#uses "nav_fw/gcf-logging.ctl"
+#uses "nav_fw/gcfpa-com.ctl"
 
 global dyn_dyn_string gCallBackList; // 1 == callBackFuncName; 2 == ID; 3 == myManNum
 global dyn_dyn_string gSeqList;	// 1 == seqNr ; 2 == ID; 3 == scope
@@ -41,7 +41,7 @@ global dyn_dyn_string gPSList;	// 1 == scope; 2 == ID
 //
 ////////////////////////////////////////////////////////////////////////////////
 unsigned gcfInit(string callBackFuncName) {
-	LOG_DEBUG("gcfInit: ", callBackFuncName);
+/*	LOG_DEBUG("gcfInit: ", callBackFuncName);
 
 	dyn_string callBackFuncNames, IDlist;
 	callBackFuncNames = getDynString(gCallBackList, 1);
@@ -63,6 +63,7 @@ unsigned gcfInit(string callBackFuncName) {
 	gCallBackList[dynlen(gCallBackList) + 1] = newItem;
  	dpConnect("gcfWatchDog", FALSE, "__gcf_wd.sys");
 	return ID;
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +74,7 @@ unsigned gcfInit(string callBackFuncName) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void gcfLeave(unsigned ID, bool inTerminate = false) {
-	LOG_DEBUG("GCF: ID " + ID + " will be freed.");
+/*	LOG_DEBUG("GCF: ID " + ID + " will be freed.");
 	
 	for (int i = 1; i <= dynlen(gCallBackList); i++) {
 		if (gCallBackList[i][2] == ID) {
@@ -104,6 +105,7 @@ void gcfLeave(unsigned ID, bool inTerminate = false) {
 	for (int i = 1; i <= dynlen(systemsToInform); i++) {
 		sendEventToPA(disconnectMsg, systemsToInform[i]);
 	}
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,6 +116,7 @@ void gcfLeave(unsigned ID, bool inTerminate = false) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void gcfLoadPS(unsigned ID, string psScope) {
+/*
   	LOG_DEBUG("gcfLoadPS: ", ID, psScope);
 	correctScope(psScope);
 	LOG_TRACE("GCF: Request to load property set " + psScope);
@@ -124,6 +127,7 @@ void gcfLoadPS(unsigned ID, string psScope) {
 		string msg = "u" + portID + "|" + callBackDP + "|l|" + seqNr + "|" + getDPNameOnly(psScope);
 		sendEventToPA(msg, dpSubStr(psScope, DPSUB_SYS));
 	}
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +138,7 @@ void gcfLoadPS(unsigned ID, string psScope) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void gcfUnloadPS(unsigned ID, string psScope) {
+/*
   	LOG_DEBUG("gcfUnloadPS: ", ID, psScope);
 	correctScope(psScope);
 	LOG_TRACE("GCF: Request to unload property set " + psScope);
@@ -145,6 +150,7 @@ void gcfUnloadPS(unsigned ID, string psScope) {
 		sendEventToPA(msg, dpSubStr(psScope, DPSUB_SYS));
 		deletePropSet(psScope, ID);
 	}
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +161,7 @@ void gcfUnloadPS(unsigned ID, string psScope) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void gcfConfigurePS(unsigned ID, string psScope, string psApcName) {
-  	LOG_DEBUG("gcfConfigurePS: ", ID, psScope, psApcName);
+/*  	LOG_DEBUG("gcfConfigurePS: ", ID, psScope, psApcName);
 	correctScope(psScope);
 	LOG_TRACE("GCF: Request to configure property set " + psScope + " with APC " + psApcName);
 	if (idExists(ID) && isPAOnline(dpSubStr(psScope, DPSUB_SYS))) {
@@ -165,6 +171,7 @@ void gcfConfigurePS(unsigned ID, string psScope, string psApcName) {
 		string msg = "u" + portID + "|" + callBackDP + "|conf|" + seqNr + "|" +  + getDPNameOnly(psScope) + "|" + psApcName;
 		sendEventToPA(msg, dpSubStr(psScope, DPSUB_SYS));
 	}
+*/
 }
 
 // GCF INTERFACE METHODS - END
@@ -179,6 +186,7 @@ void gcfConfigurePS(unsigned ID, string psScope, string psApcName) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void gcfMainCallBack(string callBackDP, blob value) {
+/*
 	LOG_DEBUG("gcfMainCallBack: ", callBackDP, value);
 	dyn_string splittedDP = strsplit(dpSubStr(callBackDP, DPSUB_DP), "_");
 	unsigned lastElement = dynlen(splittedDP);
@@ -227,6 +235,7 @@ void gcfMainCallBack(string callBackDP, blob value) {
 			callUserDefinedFunction(callBackFunc, response);
 		}		
 	}
+*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -237,15 +246,16 @@ void gcfMainCallBack(string callBackDP, blob value) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 unsigned registerAction(unsigned ID, string& psScope) {
-  	LOG_DEBUG("registerAction: ", ID, psScope);
-	dyn_string seqNrlist = getDynString(gSeqList, 1);
+//  	LOG_DEBUG("registerAction: ", ID, psScope);
+//	dyn_string seqNrlist = getDynString(gSeqList, 1);
 	unsigned seqNr = 0;
-	do {
+/*	do {
 		seqNr++;
 	} while (dynContains(seqNrlist, seqNr) > 0);
 	
 	dyn_string newItem = makeDynString(seqNr, ID, psScope);	
 	gSeqList[dynlen(gSeqList) + 1] = newItem;
+*/
 	return seqNr;
 }
 
@@ -257,6 +267,7 @@ unsigned registerAction(unsigned ID, string& psScope) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void unregisterAction(unsigned seqNr) {
+
   	LOG_DEBUG("unregisterAction: ", seqNr);
 	for (int i = 1; i <= dynlen(gSeqList); i++) {
 		if (gSeqList[i][1] == seqNr) {
@@ -264,6 +275,7 @@ void unregisterAction(unsigned seqNr) {
 			break;
 		}
 	}
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -422,7 +434,7 @@ string getDPNameOnly(string& psScope) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 bool isPAOnline(string sysName) {
-	LOG_DEBUG("isPAOnline: ", sysName);
+//	LOG_DEBUG("isPAOnline: ", sysName);
 	bool paOnline = dpExists(sysName + "__gcfportAPI_DPAserver");
 	
 	if (!paOnline) {
@@ -440,7 +452,7 @@ bool isPAOnline(string sysName) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void gcfWatchDog(string dp, string wdMsg) {
-	LOG_DEBUG("gcfWatchDog: ", dp, wdMsg);
+/*	LOG_DEBUG("gcfWatchDog: ", dp, wdMsg);
 
 	unsigned sysNr = substr(wdMsg, 1, strlen(wdMsg) - 2);
 	if (wdMsg[0] != 'd') {
@@ -473,4 +485,5 @@ void gcfWatchDog(string dp, string wdMsg) {
 			dynRemove(gSeqList, i);
 		}
 	}	
+*/
 }

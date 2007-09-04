@@ -97,7 +97,7 @@ int getStateNumber(string aState) {
 // Added 3-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 void showSelfState(string aDP) {
-  	// check if the requiered datapoint for this view are enabled and accessible
+  	// check if the requiered datapoint for this view are accessible
   	if (dpAccessable(aDP+".state")) {
     	dpConnect("updateSelfState",aDP + ".state", aDP + ".state:_online.._invalid");
   	} 
@@ -115,7 +115,7 @@ void showSelfState(string aDP) {
 // Added 3-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 void showChildState(string aDP) {
-  	// check if the requiered datapoint for this view are enabled and accessible
+  	// check if the requiered datapoint for this view are accessible
   	if (dpAccessable(aDP+".childState")) {
     	dpConnect("updateChildState",aDP + ".childState", aDP + ".childState:_online.._invalid");
   	} 

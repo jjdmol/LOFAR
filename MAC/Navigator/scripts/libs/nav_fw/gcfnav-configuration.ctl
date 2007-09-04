@@ -470,7 +470,8 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   
   /////////////////////////////////////////////////////////////
   LOG_DEBUG("All resources: ", dynlen(allResources));
-  dyn_string newCollection;
+
+/*  dyn_string newCollection;
   dyn_string checkCollection = allResources; // collection with DP's, which have no "__enabled" equivalent
   dyn_string enabledCollection = dynPatternMatch("*__enabled", allResources);
   int enabledCollectionLength = dynlen(enabledCollection);
@@ -510,6 +511,9 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   }
   ////////////////////////////////////////////////////////////////
   allResources = newCollection;
+
+*/
+
   /////////////////////////////////////////////////////////////
   // strip everything below the requested level
   // remove duplicates  
@@ -605,12 +609,13 @@ string navConfigGetViewConfig(string datapointPath)
   dyn_string reference;
   
   checkForReference(dpNameTemp, reference, isReference);
-  if (dpAccessable(dpNameTemp + "__enabled")) {
-    datapointType = getDpTypeFromEnabled(dpNameTemp);
-    // find __nav_<datapointType>_viewconfig datapoint
-    dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointType + "_viewconfig";
-  }
-  else if (dpExists(dpNameTemp)) { // Explicit use op dpExist!!!
+//  if (dpAccessable(dpNameTemp + "__enabled")) {
+//    datapointType = getDpTypeFromEnabled(dpNameTemp);
+//    // find __nav_<datapointType>_viewconfig datapoint
+//   dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointType + "_viewconfig";
+//  }
+//  else
+  if (dpExists(dpNameTemp)) { // Explicit use op dpExist!!!
     datapointType = dpTypeName(datapointPath);
     dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointType + "_viewconfig";
   }
