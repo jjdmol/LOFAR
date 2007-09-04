@@ -122,7 +122,7 @@ void addManagers(unsigned sysNr, dyn_anytype manNums, string manType) {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void distSystemChanged(string dp, dyn_uint newDistSysList) {
-  	LOG_DEBUG("distSystemChanged: ", dp, newDistSysList);	
+//  	LOG_DEBUG("distSystemChanged: ", dp, newDistSysList);	
 
   	for (int i = 1; i <= dynlen(gDistSysList); i++) {
     	if (!dynContains(newDistSysList, gDistSysList[i])) {	
@@ -232,7 +232,7 @@ void connectionsChanged(string dp, dyn_uint value, string manType) {
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Create the base types needed for PA, Dist and Point Trigger in the database
+// Create the base types needed for watchdog and State Trigger in the database
 //
 ////////////////////////////////////////////////////////////////////////////////
 void PAPrep() {
@@ -242,12 +242,6 @@ void PAPrep() {
 
 	types = dpTypes("*");
 	handleType(types, "NCFObjectState", DPEL_STRING);
-	handleType(types, "GCFPaPsEnabled", DPEL_STRING);
-	handleType(types, "GCFPaPsIndication", DPEL_STRING);
-	handleType(types, "GCFDistPort", DPEL_BLOB);
-	if (!dpExists("__gcfportAPI_DPAserver")) {
-		dpCreate("__gcfportAPI_DPAserver", "GCFDistPort");
-	}
 	string type = "GCFWatchDog";
 	if (dynContains(types, type)) {
 		deleteDPs(type);
@@ -261,7 +255,6 @@ void PAPrep() {
 	dpTypeCreate(xxdepes,xxdepei);
 	DebugN("Add type " + type);
 	dpCreate("__gcf_wd", type);
-	dpCreate("__pa_PSIndication", "GCFPaPsIndication");
 	dpCreate("__navObjectState", "NCFObjectState");
 }
 
@@ -279,13 +272,12 @@ deleteDPs(string type) {
   	int i, len;
   	len = dynlen(names);
   	if (len > 0) {
-    	for (i = 1; i <= len; i++) {
+    	  for (i = 1; i <= len; i++) {
       		dpName = names[i];
-      		if (dpName != getSystemName() + "__gcfportAPI_DPAserver") {
-      			dpDelete(dpName);
-      			DebugTN(dpName + " deleted");
-      		}
-    	}
+   		dpDelete(dpName);
+      		DebugTN(dpName + " deleted");
+      	
+    	  }
   	}
   	dpTypeDelete(type);
 }

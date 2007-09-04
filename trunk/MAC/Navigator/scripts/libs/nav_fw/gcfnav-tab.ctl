@@ -224,11 +224,12 @@ void ComboBoxViewsSelectionChanged() {
   	}            
  
   	string datapointTypeName = "";
-  	if(dpAccessable(g_datapoint+"__enabled")) {
-    	datapointTypeName = getDpTypeFromEnabled(g_datapoint);
-    	LOG_INFO("get typename from enabled",g_datapoint,datapointTypeName);
-  	}
-  	else if(dpAccessable(g_datapoint)) {
+//  	if(dpAccessable(g_datapoint+"__enabled")) {
+//    	datapointTypeName = getDpTypeFromEnabled(g_datapoint);
+//    	LOG_INFO("get typename from enabled",g_datapoint,datapointTypeName);
+//  	}
+//  	else 
+	if(dpAccessable(g_datapoint)) {
     	datapointTypeName = dpTypeName(g_datapoint);
     	LOG_INFO("get typename not from enabled but it is accessible ",g_datapoint,datapointTypeName);
   	}
@@ -239,7 +240,7 @@ void ComboBoxViewsSelectionChanged() {
     	if (sepPos >= 0) {
       		datapointTypeName = substr(datapointTypeName, sepPos + 1);
     	}
-    	LOG_INFO("datapoint is not enabled and not accessible",g_datapoint,datapointTypeName);
+    	LOG_INFO("datapoint is not accessible",g_datapoint,datapointTypeName);
   	}
 
   	// Load the config panel in the viewTabsCtrl

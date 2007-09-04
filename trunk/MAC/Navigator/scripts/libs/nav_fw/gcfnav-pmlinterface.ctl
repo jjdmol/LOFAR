@@ -45,7 +45,7 @@ global string    NAVPML_ENABLED_TEMP_AUTOLOADED =  "temp-autoloaded";
 //
 ///////////////////////////////////////////////////////////////////////////
 void navPMLinitialize() {
-	LOG_DEBUG("navPMLinitialize");
+/*	LOG_DEBUG("navPMLinitialize");
 
 	// Create communication DP with PA and attach callback function
 	if (g_PAclientId == 0) {
@@ -62,6 +62,7 @@ void navPMLinitialize() {
 		dpConnect("HandlePanelMessage", false, DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_MESSAGE);
 		LOG_INFO("PML initialized. Using ID:", g_PAclientId);
 	}
+*/
 }  
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +73,7 @@ void navPMLinitialize() {
 //
 ////////////////////////////////////////////////////////////////////////////////
 void HandlePanelMessage(string dp, string msg) {
-	LOG_DEBUG("HandlePanelMessage: ", dp, msg);
+/*	LOG_DEBUG("HandlePanelMessage: ", dp, msg);
 
 	dyn_string splittedMsg = strsplit(msg, "|");  
 	if ((dynlen(splittedMsg) == 2) && (splittedMsg[1] == "PML_UNLOAD")) {
@@ -82,6 +83,8 @@ void HandlePanelMessage(string dp, string msg) {
 			gcfUnloadPS(g_PAclientId, datapoint);
 		}
 	}
+
+*/
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -92,12 +95,13 @@ void HandlePanelMessage(string dp, string msg) {
 //
 ///////////////////////////////////////////////////////////////////////////
 void navPMLterminate(bool inTerminate = false) {
-	LOG_DEBUG("navPMLterminate");
+/*	LOG_DEBUG("navPMLterminate");
 
 	if (g_PAclientId != 0) {
 		gcfLeave(g_PAclientId, inTerminate);
 		g_PAclientId = 0;
 	}
+*/
 }  
 
 ///////////////////////////////////////////////////////////////////////////
@@ -108,12 +112,13 @@ void navPMLterminate(bool inTerminate = false) {
 //
 ///////////////////////////////////////////////////////////////////////////
 void navPMLloadPropertySet(string datapoint) {
-	LOG_DEBUG("navPMLloadPropertySet", datapoint);
+/*	LOG_DEBUG("navPMLloadPropertySet", datapoint);
 
 	navPMLCorrectDp(datapoint);
 	if (!navPMLisAutoLoaded(datapoint)) {
 		gcfLoadPS(g_PAclientId, datapoint);
 	}
+*/
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -124,7 +129,7 @@ void navPMLloadPropertySet(string datapoint) {
 //
 ///////////////////////////////////////////////////////////////////////////
 bool navPMLunloadPropertySet(string datapoint) {
-	LOG_DEBUG("navPMLunloadPropertySet", datapoint);
+/*	LOG_DEBUG("navPMLunloadPropertySet", datapoint);
 	
 	string navigatorMessagePoint=DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_MESSAGE;
 
@@ -137,6 +142,7 @@ bool navPMLunloadPropertySet(string datapoint) {
 	else {
 		LOG_TRACE("navPMLunloadPropertySet -- Datapoint does not exist", datapoint);
 	}
+*/
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -147,10 +153,11 @@ bool navPMLunloadPropertySet(string datapoint) {
 //
 ///////////////////////////////////////////////////////////////////////////
 void navPMLconfigurePropertySet(string psScope, string psApcName) {
-	LOG_DEBUG("navPMLconfigurePropertySet", psScope, psApcName);
+/*	LOG_DEBUG("navPMLconfigurePropertySet", psScope, psApcName);
 
 	navPMLCorrectDp(psScope);  
 	gcfConfigurePS(g_PAclientId, psScope, psApcName);
+*/
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -164,7 +171,8 @@ void navPMLconfigurePropertySet(string psScope, string psApcName) {
 //
 ///////////////////////////////////////////////////////////////////////////
 void pmlCallback(dyn_string response) {
-  LOG_DEBUG("pmlCallback:", LOG_DYN(response));
+/*  LOG_DEBUG("pmlCallback:", LOG_DYN(response));
+*/
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -175,7 +183,7 @@ void pmlCallback(dyn_string response) {
 //
 ///////////////////////////////////////////////////////////////////////////
 bool navPMLisAutoLoaded(string datapoint) {
-	LOG_DEBUG("navPMLisAutoLoaded", datapoint);
+/*	LOG_DEBUG("navPMLisAutoLoaded", datapoint);
 
 	// DP must exist ofcourse
 	if (!dpAccessable(datapoint)) {
@@ -194,6 +202,8 @@ bool navPMLisAutoLoaded(string datapoint) {
 	}
 
 	return FALSE;
+*/
+  return true;
 }
 
 
@@ -205,7 +215,7 @@ bool navPMLisAutoLoaded(string datapoint) {
 //
 ///////////////////////////////////////////////////////////////////////////
 bool navPMLisTemporary(string datapoint) {
-	LOG_DEBUG("navPMLisTemporary: ", datapoint);
+/*	LOG_DEBUG("navPMLisTemporary: ", datapoint);
 
 	bool temporary = false;
 
@@ -228,6 +238,8 @@ bool navPMLisTemporary(string datapoint) {
 	LOG_TRACE("navPMLisTemporary[T/F]", temporary);
 
 	return temporary;
+*/
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -239,6 +251,7 @@ bool navPMLisTemporary(string datapoint) {
 //
 ///////////////////////////////////////////////////////////////////////////
 void navPMLCorrectDp(string& dpName) {
+/*
 	LOG_DEBUG("navPMLCorrectDp: ", dpName);
 
 	// don't use the PVSS function dpSubStr here, because the dpName could 
@@ -250,5 +263,6 @@ void navPMLCorrectDp(string& dpName) {
 	if (enabledPos > 0) {
 		dpName = substr(dpName, 0, enabledPos);	// cut it off.
 	}  
+*/
 }
 
