@@ -432,11 +432,15 @@ else
               cut -f2 | tr '\n' " "`
     # Do not sort LIBS. Usually, order is important and duplicates are
     # intentional.
-    LIBS="$LIBS $EXTERNAL_LIBS"
-    # If we're using GCC 4.x, we need to replace -lg2c by -lgfortran.
+    # If we're using GCC 4.x, we need to add or replace -lg2c by -lgfortran.
     if test $lofar_gcc_major -ge 4; then
-      LIBS=`echo "$LIBS " | sed -e 's/-lg2c /-lgfortran/ '`
+      if test $lofar_have_libg2c = 1; then
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/\(-lgfortran  *\)\?-lg2c /-lgfortran -lg2c /g'`
+      else
+        EXTERNAL_LIBS=`echo "$EXTERNAL_LIBS " | sed -e 's/-lg2c /-lgfortran /'`
+      fi
     fi
+    LIBS="$LIBS $EXTERNAL_LIBS"
     LOFAR_DEPEND="$LOFAR_DEPEND $lfr_depend"
 
     enable_external=yes

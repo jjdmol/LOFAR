@@ -42,6 +42,7 @@
 #                    Other compilers are not recognized and result in
 #                    a warning.
 #  lofar_gcc_major   major version of gcc compiler
+#  lofar_have_libg2c 1 = libg2c is available
 #  lofar_shared_ext  the extension name of a shared library (so, sl, dylib)
 #  lofar_no_rpath    1 = rpath cannot be used when linking
 #  LOFAR_DEPEND      all lofar libraries this package is dependent on
@@ -227,6 +228,15 @@ AC_ARG_WITH(lofar-libdir,
       # We only need the major version number.
       lofar_gcc_major=`echo $version | cut -s -d'.' -f1`
     fi
+  fi
+
+  # Find out if libg2c exists.
+  lofar_have_libg2c=0
+  lfr_flib=`echo $CXX | sed -e 's%bin/.*%lib%'`
+  if [ -e $lfr_flib/libg2c.$lofar_shared_ext ]; then
+    lofar_have_libg2c=1
+  elif [ -e $lfr_flib/libg2c.a ]; then
+    lofar_have_libg2c=1
   fi
 
   # Check if compiler matches build variant.

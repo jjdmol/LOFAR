@@ -241,7 +241,11 @@ fi
 
 # If we're using GCC 4.x, we need to replace -lg2c by -lgfortran.
 if test $lofar_gcc_major -ge 4; then
-  AIPSPP_LIBS=`echo "$AIPSPP_LIBS " | sed -e 's/-lg2c /-lgfortran/ '`
+  if test $lofar_have_libg2c = 1; then
+    AIPSPP_LIBS=`echo "$AIPSPP_LIBS " | sed -e 's/\(-lgfortran  *\)\?-lg2c /-lgfortran -lg2c /g'`
+  else
+    AIPSPP_LIBS=`echo "$AIPSPP_LIBS " | sed -e 's/-lg2c /-lgfortran /'`
+  fi
 fi
 
 if [ "$lfr_use_casa" = 1 ]; then
