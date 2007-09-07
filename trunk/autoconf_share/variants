@@ -23,7 +23,7 @@ nolog4cplus.variant.conf: $(standard) $(debug) --without-log4cplus
 insure.variant.conf:	  $(standard) --with-insuretools --with-cppflags="-D__INSURE__"
 insure.variant.make:	  QA=insure
 
-standard.var:             $(lofar_root) $(aipspp) $(sockets) $(threads) $(sse) $(shmem) $(searchpath) $(python)
+standard.var:             $(lofar_root) $(aipspp) $(sockets) $(threads) $(sse) $(shmem) $(searchpath) $(python) --without-log4cxx
 
 lofar_root.var:
 

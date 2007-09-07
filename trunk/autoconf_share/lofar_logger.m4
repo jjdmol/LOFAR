@@ -21,19 +21,48 @@
 #  $Id$
 
 
+# lofar_LOGGER
+#
+# Macro to check for logger (log4cplus, log4cxx or none)
+#
+AC_DEFUN([lofar_LOGGER],dnl
+[dnl
+lofar_HEADER_LOG4CPLUS([])dnl
+lofar_HEADER_LOG4CXX([])dnl
+[
+enable_logger=0
+if test "$enable_log4cplus" = "yes"; then
+  enable_logger=${enable_logger}1
+fi
+if test "$enable_log4cxx" = "yes"; then
+  enable_logger=${enable_logger}1
+fi
+if test $enable_logger -gt 1; then
+]
+    AC_MSG_ERROR([Cannot use more than one LOGGER implementation.])
+[fi]
+])
+
+
 # lofar_LOG4CPLUS
 #
 # Macro to check for LOG4CPLUS installation
 #
-# lofar_LOG4CPLUS(option)
-#     option 0 means that Log4cplus++ is optional, otherwise mandatory.
-#
-# e.g. lofar_LOG4CPLUS(1)
-# -------------------------
-#
-AC_DEFUN([lofar_LOG4CPLUS],dnl
+AC_DEFUN([lofar_HEADER_LOG4CPLUS],dnl
 [dnl
 AC_PREREQ(2.13)dnl
-ifelse($1, [], [lfr_option=0], [lfr_option=$1])
-lofar_EXTERNAL(log4cplus,[$lfr_option],log4cplus/logger.h,,)
+lofar_EXTERNAL(log4cplus,0,log4cplus/logger.h,,)
+enable_log4cplus=$enable_external
+])
+
+
+# lofar_LOG4CXX
+#
+# Macro to check for LOG4CXX installation
+#
+AC_DEFUN([lofar_HEADER_LOG4CXX],dnl
+[dnl
+AC_PREREQ(2.13)dnl
+lofar_EXTERNAL(log4cxx,0,log4cxx/logger.h,,)
+enable_logger=$enable_external
 ])

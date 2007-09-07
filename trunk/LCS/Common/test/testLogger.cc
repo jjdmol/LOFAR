@@ -121,7 +121,7 @@ int main (int, char *argv[]) {
 	// Read in the log-environment configuration
 	// We should always start with this.
 	//INIT_LOGGER_AND_WATCH("testLogger", 10000);
-	INIT_LOGGER("testLogger");
+	INIT_LOGGER("testLogger.in_log4cxx");
 
 	// Show operator were are on the air
 	LOG_INFO (formatString("Program %s has started", argv[0]));
@@ -187,12 +187,12 @@ int main (int, char *argv[]) {
 	LOG_INFO("We now set the Threshold of the TRACE logger to "
 					  "TRACE_LEVEL_VAR so the loop counter don't show up anymore");
 
-#ifdef HAVE_LOG4CPLUS
+#if defined(HAVE_LOG4CPLUS)
 	// You normally do this by editing your propertyfile.
 	log4cplus::Logger::getInstance("TRC").setLogLevel(TRACE_LEVEL_VAR);
-#else
+#elif !defined(HAVE_LOG4CXX)
 	getLFDebugContext().setLevel(TRACE_LEVEL_VAR);
-#endif // HAVE_LOG4CPLUS
+#endif
 
 	for (int i = 0; i < 5; ++i) {
 		LOG_TRACE_LOOP(formatString("Loop counter = %d", i));
