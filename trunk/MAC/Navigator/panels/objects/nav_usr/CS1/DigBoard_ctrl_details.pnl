@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,422 105 950 124 N "_3DFace" 1
+PANEL,450 141 950 124 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -18,7 +18,7 @@ PANEL,422 105 950 124 N "_3DFace" 1
   showSelfState(baseDP);
   
   // check if the requiered datapoint for this view are enabled and accessible
-	if (dpAccessable($datapoint+\".currentAction\")) {
+	if (dpAccessable(baseDP+\".currentAction\")) {
 	  dpConnect(\"updateInfo\",baseDP + \".currentAction\",
 	  		                   baseDP + \".error\",
 	  		                   baseDP + \".connected\",
