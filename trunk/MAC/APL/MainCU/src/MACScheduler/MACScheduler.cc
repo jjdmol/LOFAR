@@ -22,19 +22,16 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/GCF_PVTypes.h>
-#include <GCF/Protocols/PA_Protocol.ph>
-#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <OTDB/TreeStateConv.h>
 #include <signal.h>
 
@@ -43,7 +40,7 @@
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::OTDB;
 using namespace LOFAR::Deployment;
 using namespace std;
@@ -61,9 +58,7 @@ static MACScheduler* pMacScheduler = 0;
 //
 MACScheduler::MACScheduler() :
 	GCFTask 			((State)&MACScheduler::initial_state,string(MS_TASKNAME)),
-	PropertySetAnswerHandlerInterface(),
-	itsPropertySetAnswer(*this),
-	itsPropertySet		(),
+	itsPropertySet		(0),
 	itsObservations		(),
 	itsPVSSObsList		(),
 	itsTimerPort		(0),
@@ -98,8 +93,7 @@ MACScheduler::MACScheduler() :
 	itsObservations.reserve(10);		// already reserve memory for 10 observations.
 
 	GCF::TM::registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol(PA_PROTOCOL, 		  PA_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol(F_PML_PROTOCOL, 	  F_PML_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol(DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
 }
 
 
@@ -110,10 +104,9 @@ MACScheduler::~MACScheduler()
 {
 	LOG_TRACE_OBJ ("~MACscheduler");
 
-//	if (itsPropertySet) {
-		// Note: disable is not neccesary because this is always done in destructor
-		//		 of propertyset.
-//	}
+	if (itsPropertySet) {
+		delete itsPropertySet;
+	}
 
 	if (itsOTDBconnection) {
 		delete itsOTDBconnection;
@@ -134,63 +127,30 @@ void MACScheduler::sigintHandler(int signum)
 
 
 //
-// handlePropertySetAnswer(answer)
+// _databaseEventHandler(event)
 //
-void MACScheduler::handlePropertySetAnswer(GCFEvent& answer)
+void MACScheduler::_databaseEventHandler(GCFEvent& event)
 {
 
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << eventName(answer));
+	LOG_DEBUG_STR ("_databaseEventHandler:" << eventName(event));
 
-	switch(answer.signal) {
-	case F_MYPS_ENABLED: {
-		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-		if(pPropAnswer->result != GCF_NO_ERROR) {
-			LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",
-										getName().c_str(), pPropAnswer->pScope));
-		}
-		// always let timer expire so main task will continue.
-		itsTimerPort->setTimer(0.0);
-		break;
-	}
-
-	case F_PS_CONFIGURED:
-	{
-		GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
-		if(pConfAnswer->result == GCF_NO_ERROR) {
-			LOG_DEBUG(formatString("%s : apc %s Loaded",
-										getName().c_str(), pConfAnswer->pApcName));
-			//apcLoaded();
-		}
-		else {
-			LOG_ERROR(formatString("%s : apc %s NOT LOADED",
-										getName().c_str(), pConfAnswer->pApcName));
-		}
-		break;
-	}
-
-	case F_VGETRESP:
-	case F_VCHANGEMSG: {
-		// check which property changed
-		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+	switch(event.signal) {
+	case DP_CHANGED: {
+		DPChangedEvent	dpEvent(event);
 
 		// TODO: implement something usefull.
-		// change of queueTime
-		if ((strstr(pPropAnswer->pPropName, PSN_MAC_SCHEDULER) != 0) &&
-			(pPropAnswer->pValue->getType() == LPT_INTEGER)) {
-			uint32	newVal = (uint32) ((GCFPVInteger*)pPropAnswer->pValue)->getValue();
-			if (strstr(pPropAnswer->pPropName, PVSSNAME_MS_QUEUEPERIOD) != 0) {
-				LOG_INFO_STR ("Changing QueuePeriod from " << itsQueuePeriod <<
-							  " to " << newVal);
-				itsQueuePeriod = newVal;
-			}
-			else if (strstr(pPropAnswer->pPropName, PVSSNAME_MS_CLAIMPERIOD) != 0) {
-				LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod <<
-							  " to " << newVal);
-				itsClaimPeriod = newVal;
-			}
+		if (strstr(dpEvent.DPname.c_str(), PVSSNAME_MS_QUEUEPERIOD) != 0) {
+			uint32	newVal = ((GCFPVUnsigned*) (dpEvent.value._pValue))->getValue();
+			LOG_INFO_STR ("Changing QueuePeriod from " << itsQueuePeriod << " to " << newVal);
+			itsQueuePeriod = newVal;
 		}
-		break;
+		if (strstr(dpEvent.DPname.c_str(), PVSSNAME_MS_CLAIMPERIOD) != 0) {
+			uint32	newVal = ((GCFPVUnsigned*) (dpEvent.value._pValue))->getValue();
+			LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod << " to " << newVal);
+			itsClaimPeriod = newVal;
+		}
 	}  
+	break;
 
 	default:
 		break;
@@ -216,13 +176,21 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 	case F_ENTRY: {
 		// Get access to my own propertyset.
 		LOG_DEBUG ("Activating PropertySet");
-		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(PSN_MAC_SCHEDULER,
-																  PST_MAC_SCHEDULER,
-																  PS_CAT_PERM_AUTOLOAD,
-																  &itsPropertySetAnswer));
-		itsPropertySet->enable();
-		// Wait for timer that is set in PropertySetAnswer on ENABLED event.
+		itsPropertySet = new RTDBPropertySet(PSN_MAC_SCHEDULER,
+											 PST_MAC_SCHEDULER,
+											 PSAT_RW,
+											 this);
 		}
+		break;
+
+	case DP_CREATED: {
+			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// Always exit this event in a way that GCF can end the construction.
+			DPCreatedEvent	dpEvent(event);
+			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+			itsTimerPort->cancelAllTimers();
+			itsTimerPort->setTimer(0.0);
+        }
 		break;
 	  
 	case F_TIMER: {		// must be timer that PropSet is enabled.
@@ -232,7 +200,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,      GCFPVString  (""));
 		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,    GCFPVBool    (false));
 		itsPropertySet->setValue(PN_MS_OTDB_LAST_POLL,    GCFPVString  (""));
-		itsPropertySet->setValue(PN_MS_OTDB_POLLINTERVAL, GCFPVUnsigned(itsOTDBpollInterval));
+		itsPropertySet->setValue(PN_MS_OTDB_POLLINTERVAL, GCFPVInteger (itsOTDBpollInterval));
 		itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
 
       
@@ -249,7 +217,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 					"Unable to connect to database " << DBname << " using " <<
 					username << "," << password);
 		LOG_INFO ("Connected to the OTDB");
-		itsPropertySet->setValue(string(PN_MS_OTDB_CONNECTED),GCFPVBool(true));
+		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED, GCFPVBool(true));
 
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControltask");
@@ -357,6 +325,10 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		// StartDaemon: trouble! Try to reconnect asap.
 		// ObsController: ok when obs is finished, BIG TROUBLE when not!
 		_disconnectedHandler(port);
+		break;
+
+	case DP_CHANGED:
+		_databaseEventHandler(event);
 		break;
 
 	case F_TIMER: {		// secondTimer or reconnectTimer.
@@ -508,7 +480,8 @@ GCFEvent::TResult MACScheduler::finishing_state(GCFEvent& event, GCFPortInterfac
 	case F_ENTRY: {
 		// update PVSS
 		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR), GCFPVString(""));
+		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,       GCFPVBool  (false));
 
 		itsTimerPort->setTimer(1L);
 		break;

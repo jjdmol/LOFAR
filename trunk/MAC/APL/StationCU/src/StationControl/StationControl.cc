@@ -26,19 +26,15 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_PVTypes.h>
-#include <GCF/PAL/GCF_PVSSInfo.h>
-#include <GCF/PAL/GCF_Answer.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
-#include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
 #include <signal.h>
 
@@ -48,7 +44,7 @@
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
 namespace LOFAR {
@@ -64,10 +60,8 @@ static StationControl*	thisStationControl = 0;
 //
 StationControl::StationControl(const string&	cntlrName) :
 	GCFTask 			((State)&StationControl::initial_state,cntlrName),
-	PropertySetAnswerHandlerInterface(),
-	itsPropertySetAnswer(*this),
-	itsClockPropSet		(),
-	itsOwnPropSet		(),
+	itsClockPropSet		(0),
+	itsOwnPropSet		(0),
 	itsClockPSinitialized(false),
 	itsOwnPSinitialized (false),
 	itsChildControl		(0),
@@ -104,8 +98,7 @@ StationControl::StationControl(const string&	cntlrName) :
 
 	// for debugging purposes
 	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (PA_PROTOCOL, 		PA_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (F_PML_PROTOCOL, 	    F_PML_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
 }
 
 
@@ -141,74 +134,32 @@ void StationControl::finish()
 
 
 //
-// handlePropertySetAnswer(answer)
+// _databaseEventHandler(event)
 //
-void StationControl::handlePropertySetAnswer(GCFEvent& answer)
+void StationControl::_databaseEventHandler(GCFEvent& event)
 {
-	LOG_TRACE_FLOW_STR ("handlePropertySetAnswer:" << eventstr(answer));
+	LOG_TRACE_FLOW_STR ("_databaseEventHandler:" << eventName(event));
 
-	switch(answer.signal) {
-	case F_MYPS_ENABLED: 
-	case F_EXTPS_LOADED: {
-		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-		if(pPropAnswer->result != GCF_NO_ERROR) {
-			LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",
-										getName().c_str(), pPropAnswer->pScope));
-		}
-		// always let timer expire so main task will continue.
-		LOG_DEBUG_STR("Property set " << pPropAnswer->pScope << 
-													" enabled, continuing main task");
-		itsTimerPort->setTimer(0.5);
-		break;
-	}
-	
-	case F_VGETRESP: {	// initial get of required clock
-		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
-			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
-
-			// signal main task we have the value.
-			LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
-			itsTimerPort->setTimer(0.5);
-			break;
-		}
-		LOG_WARN_STR("Got VGETRESP signal from unknown property " << 
-															pPropAnswer->pPropName);
-	}
-
-	case F_VCHANGEMSG: {
-		// check which property changed
-		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-
-		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
-			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
+	switch(event.signal) {
+	case DP_CHANGED:  {
+		DPChangedEvent		dpEvent(event);
+		if (strstr(dpEvent.DPname.c_str(), PN_SC_CLOCK) != 0) {
+			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
 			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
 			break;
 		}
 
 		// don't watch state and error fields.
-		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_CURACT) != 0) ||
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
+		if ((strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_STATE) != 0) || 
+			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_CURACT) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_LOGMSG) != 0)) {
 			return;
 		}
  
-		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << 
-															pPropAnswer->pPropName);
+		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << dpEvent.DPname);
 	}
-
-//  case F_SUBSCRIBED:      GCFPropAnswerEvent      pPropName
-//  case F_UNSUBSCRIBED:    GCFPropAnswerEvent      pPropName
-//  case F_PS_CONFIGURED:   GCFConfAnswerEvent      pApcName
-//  case F_EXTPS_LOADED:    GCFPropSetAnswerEvent   pScope, result
-//  case F_EXTPS_UNLOADED:  GCFPropSetAnswerEvent   pScope, result
-//  case F_MYPS_ENABLED:    GCFPropSetAnswerEvent   pScope, result
-//  case F_MYPS_DISABLED:   GCFPropSetAnswerEvent   pScope, result
-//  case F_VGETRESP:        GCFPropValueEvent       pValue, pPropName
-//  case F_VSETRESP:        GCFPropAnswerEvent      pPropName
-//  case F_VCHANGEMSG:      GCFPropValueEvent       pValue, pPropName
-//  case F_SERVER_GONE:     GCFPropSetAnswerEvent   pScope, result
+	break;
 
 	default:
 		break;
@@ -224,7 +175,7 @@ void StationControl::handlePropertySetAnswer(GCFEvent& answer)
 GCFEvent::TResult StationControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << eventstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -236,23 +187,33 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 		// Get access to my own propertyset.
 		string	myPropSetName(createPropertySetName(PSN_STATION_CTRL, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet " << myPropSetName);
-		itsOwnPropSet = new GCFMyPropertySet(PSN_STATION_CTRL,
-													 PST_STATION_CTRL,
-													 PS_CAT_PERM_AUTOLOAD,
-													 &itsPropertySetAnswer);
-		itsOwnPropSet->enable();		// will result in F_MYPS_ENABLED
-
-		// When myPropSet is enabled we will connect to the external PropertySet
-		// that dictates the systemClock setting.
-
+		itsOwnPropSet = new RTDBPropertySet(myPropSetName,
+											PST_STATION_CTRL,
+											PSAT_RW,
+											this);
 		// Wait for timer that is set in PropertySetAnswer on ENABLED event
 		}
 		break;
 
+	case DP_CREATED: {
+			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// Always exit this event in a way that GCF can end the construction.
+			DPCreatedEvent	dpEvent(event);
+			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+			itsTimerPort->cancelAllTimers();
+			itsTimerPort->setTimer(0.0);
+        }
+		break;
+	  
 	case F_TIMER:
 		// first timer event is from own propertyset
 		if (!itsOwnPSinitialized) {
 			itsOwnPSinitialized = true;
+
+			// Enable Child task on time so we have some time to resolve the name
+			LOG_DEBUG ("Enabling ChildControl task");
+			itsChildControl->openService(MAC_SVCMASK_STATIONCTRL, itsInstanceNr);
+			itsChildControl->registerCompletionPort(itsChildPort);
 
 			// first redirect signalHandler to our finishing state to leave PVSS
 			// in the right state when we are going down
@@ -262,26 +223,25 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("initial"));
+			itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("Initial"));
 			itsOwnPropSet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 
 			// enable clock propertyset.
 			string	clkPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
 			LOG_DEBUG_STR ("Activating PropertySet " << clkPropSetName);
-			itsClockPropSet = new GCFMyPropertySet(PSN_STATION_CLOCK,
-														 PST_STATION_CLOCK,
-														 PS_CAT_PERM_AUTOLOAD,
-														 &itsPropertySetAnswer);
-			itsClockPropSet->enable();		// will result in F_MYPS_ENABLED
+			itsClockPropSet = new RTDBPropertySet(clkPropSetName,
+												  PST_STATION_CLOCK,
+												  PSAT_WO,
+												  this);
 		}
 		else {
 			itsClockPSinitialized = true;
-
 			LOG_DEBUG ("Attached to external propertySets");
 
-			LOG_DEBUG ("Enabling ChildControl task");
-			itsChildControl->openService(MAC_SVCMASK_STATIONCTRL, itsInstanceNr);
-			itsChildControl->registerCompletionPort(itsChildPort);
+			GCFPVInteger	clockVal;
+			itsClockPropSet->getValue(PN_SC_CLOCK, clockVal);
+			itsClock = clockVal.getValue();
+			LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
 
 			LOG_DEBUG ("Going to connect state to attach to DigitalBoardController");
 			TRAN(StationControl::connect_state);			// go to next state.
@@ -294,6 +254,10 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 	case F_DISCONNECTED:
 		break;
 	
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
+
 	default:
 		LOG_DEBUG_STR ("initial, default");
 		status = GCFEvent::NOT_HANDLED;
@@ -310,7 +274,7 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 GCFEvent::TResult StationControl::connect_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("connect:" << eventstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("connect:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -319,7 +283,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
    		break;
 
 	case F_ENTRY: {
-		itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("connected"));
+		itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("Connected"));
 
 		// start DigitalBoardController
 		LOG_DEBUG_STR("Starting DigitalBoardController");
@@ -378,6 +342,10 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		port.close();
 		break;
 	
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
+
 	default:
 		LOG_DEBUG_STR ("connect, default");
 		status = GCFEvent::NOT_HANDLED;
@@ -394,7 +362,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 //
 GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("operational:" << eventstr(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("operational:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -404,7 +372,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 	case F_ENTRY: {
 		// update PVSS
-		itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("active"));
+		itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("Active"));
 		itsOwnPropSet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
 	}
 	break;
@@ -412,6 +380,10 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 	case F_ACCEPT_REQ:
 	case F_CONNECTED:
 	case F_DISCONNECTED:
+		break;
+
+	case DP_CHANGED:
+		_databaseEventHandler(event);
 		break;
 
 	case F_TIMER:  {
@@ -601,7 +573,7 @@ GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterf
 		itsParentPort->send(msg);
 
 		// update PVSS
-		itsOwnPropSet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
+		itsOwnPropSet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("Finished"));
 		itsOwnPropSet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		itsTimerPort->setTimer(1L);

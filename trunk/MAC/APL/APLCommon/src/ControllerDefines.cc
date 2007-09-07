@@ -27,7 +27,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>					// rtrim
 #include <GCF/Utils.h>							// myHostname
-#include <GCF/PAL/GCF_PropertyProxy.h>
 #include <APS/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
@@ -40,7 +39,6 @@ using namespace boost;
 namespace LOFAR {
   using namespace Deployment;
   using namespace GCF::Common;
-  using namespace GCF::PAL;
   namespace APLCommon {
 
 typedef struct cntlrDefinition {
@@ -261,16 +259,16 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 
 	if ((pos = psName.find("@cabinet@")) != string::npos) {
-		psName.replace(pos, 9, string("cabinet%d"));
+		psName.replace(pos, 9, string("Cabinet%d"));
 	}
 	if ((pos = psName.find("@subrack@")) != string::npos) {
-		psName.replace(pos, 9, string("subrack%d"));
+		psName.replace(pos, 9, string("Subrack%d"));
 	}
 	if ((pos = psName.find("@RSPBoard@")) != string::npos) {
 		psName.replace(pos, 10, string("RSPBoard%d"));
 	}
 	if ((pos = psName.find("@rcu@")) != string::npos) {
-		psName.replace(pos, 5, string("rcu%d"));
+		psName.replace(pos, 5, string("RCU%d"));
 	}
 		
 	return (psName);
@@ -372,6 +370,7 @@ bool sendControlResult(GCF::TM::GCFPortInterface&	port,
 //
 // setControllerMode(PSname, modeNr)
 //
+// TODO MOVE TO RTDBCommon or something like that.
 void setControllerMode(const string&	propertyName, int16	modeNr)
 {
 #if 0

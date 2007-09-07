@@ -7,7 +7,7 @@ subbandList		string
 beamletList		string
 bandFilter		string
 nyquistzone		int
-antenneArray	string
+antennaArray	string
 receiverList	string
 sampleClock		int
 

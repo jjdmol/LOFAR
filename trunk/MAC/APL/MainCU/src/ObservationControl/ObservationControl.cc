@@ -22,18 +22,15 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_PVTypes.h>
-#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
-#include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 
 #include "ObservationControl.h"
@@ -41,7 +38,7 @@
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
 namespace LOFAR {
@@ -57,9 +54,7 @@ static ObservationControl*	thisObservationControl = 0;
 //
 ObservationControl::ObservationControl(const string&	cntlrName) :
 	GCFTask 			((State)&ObservationControl::initial_state,cntlrName),
-	PropertySetAnswerHandlerInterface(),
-	itsPropertySetAnswer(*this),
-	itsPropertySet		(),
+	itsPropertySet		(0),
 	itsChildControl		(0),
 	itsChildPort		(0),
 	itsParentControl	(0),
@@ -119,8 +114,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
 	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (PA_PROTOCOL, 		   PA_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (F_PML_PROTOCOL, 	   F_PML_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
  
 	// we cannot use setState right now, wait for propertysets to come online
 	//	setState(CTState::CREATED);
@@ -176,120 +170,6 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 }
 
 //
-// handlePropertySetAnswer(answer)
-//
-void ObservationControl::handlePropertySetAnswer(GCFEvent& answer)
-{
-	LOG_TRACE_FLOW_STR ("handlePropertySetAnswer:" << eventName(answer));
-
-	switch(answer.signal) {
-	case F_MYPS_ENABLED: {
-		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-		if(pPropAnswer->result != GCF_NO_ERROR) {
-			LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",
-										getName().c_str(), pPropAnswer->pScope));
-		}
-		// always let timer expire so main task will continue.
-		itsTimerPort->setTimer(0.0);
-		break;
-	}
-
-	case F_PS_CONFIGURED:
-	{
-		GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
-		if(pConfAnswer->result == GCF_NO_ERROR) {
-			LOG_DEBUG(formatString("%s : apc %s Loaded",
-										getName().c_str(), pConfAnswer->pApcName));
-			//apcLoaded();
-		}
-		else {
-			LOG_ERROR(formatString("%s : apc %s NOT LOADED",
-										getName().c_str(), pConfAnswer->pApcName));
-		}
-		break;
-	}
-
-	case F_VGETRESP:
-	case F_VCHANGEMSG: {
-		// check which propertySet(!) changed
-		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-
-		string PropSetName = createPropertySetName(PSN_OBS_CTRL, getName());
-		if (strstr(pPropAnswer->pPropName, PropSetName.c_str()) == 0) {
-			break;	// if not my own, exit
-		}
-
-		// don't watch state and error fields.
-		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_CURACT) != 0) ||
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
-			return;
-		}
- 
-		// periods are of type integer.
-		if	(pPropAnswer->pValue->getType() == LPT_INTEGER) {
-			uint32  newVal = (uint32) ((GCFPVInteger*)pPropAnswer->pValue)->getValue();
-
-			if (strstr(pPropAnswer->pPropName, PN_OC_CLAIM_PERIOD) != 0) {
-				LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod <<
-							  " to " << newVal);
-				itsClaimPeriod = newVal;
-			}
-			else if (strstr(pPropAnswer->pPropName, PN_OC_PREPARE_PERIOD) != 0) {
-				LOG_INFO_STR ("Changing PreparePeriod from " << itsPreparePeriod <<
-							  " to " << newVal);
-				itsPreparePeriod = newVal;
-			}
-		}
-		// times are of type string
-		else if	(pPropAnswer->pValue->getType() == LPT_STRING) {
-			string  newVal = (string) ((GCFPVString*)pPropAnswer->pValue)->getValue();
-			ptime	newTime;
-			try {
-				newTime = time_from_string(newVal);
-			}
-			catch (exception&	e) {
-				LOG_DEBUG_STR(newVal << " is not a legal time!!!");
-				return;
-			}
-			if (strstr(pPropAnswer->pPropName, PN_OC_START_TIME) != 0) {
-				LOG_INFO_STR ("Changing startTime from " << to_simple_string(itsStartTime)
-							 << " to " << newVal);
-				itsStartTime = newTime;
-			}
-			else if (strstr(pPropAnswer->pPropName, PN_OC_STOP_TIME) != 0) {
-				LOG_INFO_STR ("Changing stopTime from " << to_simple_string(itsStopTime)
-							 << " to " << newVal);
-				itsStopTime = newTime;
-			}
-		}
-		setObservationTimers();
-		LOG_DEBUG("Sending all childs a RESCHEDULE event");
-		itsChildControl->rescheduleChilds(to_time_t(itsStartTime), 
-										  to_time_t(itsStopTime), "");
-		break;
-	}  
-
-//  case F_SUBSCRIBED:      GCFPropAnswerEvent      pPropName
-//  case F_UNSUBSCRIBED:    GCFPropAnswerEvent      pPropName
-//  case F_PS_CONFIGURED:   GCFConfAnswerEvent      pApcName
-//  case F_EXTPS_LOADED:    GCFPropSetAnswerEvent   pScope, result
-//  case F_EXTPS_UNLOADED:  GCFPropSetAnswerEvent   pScope, result
-//  case F_MYPS_ENABLED:    GCFPropSetAnswerEvent   pScope, result
-//  case F_MYPS_DISABLED:   GCFPropSetAnswerEvent   pScope, result
-//  case F_VGETRESP:        GCFPropValueEvent       pValue, pPropName
-//  case F_VSETRESP:        GCFPropAnswerEvent      pPropName
-//  case F_VCHANGEMSG:      GCFPropValueEvent       pValue, pPropName
-//  case F_SERVER_GONE:     GCFPropSetAnswerEvent   pScope, result
-
-	default:
-		break;
-	}  
-}
-
-
-//
 // initial_state(event, port)
 //
 // Create top datapoint of this observation in PVSS.
@@ -309,13 +189,21 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 		// Create 'Observationxxx' datapoint as top of the observation tree
 		string	propSetName(createPropertySetName(PSN_OBSERVATION, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
-		itsBootPS = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-															 PST_OBSERVATION,
-															 PS_CAT_TEMP_AUTOLOAD,
-															 &itsPropertySetAnswer));
-		itsBootPS->enable();
-		// Wait for timer that is set in PropertySetAnswer on ENABLED event
+		itsBootPS = new RTDBPropertySet(propSetName.c_str(),
+										PST_OBSERVATION,
+										PSAT_RW,
+										this);
 		}
+		break;
+	  
+	case DP_CREATED: {
+			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// Always exit this event in a way that GCF can end the construction.
+			DPCreatedEvent	dpEvent(event);
+			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+			itsTimerPort->cancelAllTimers();
+			itsTimerPort->setTimer(0.0);
+        }
 		break;
 	  
 	case F_TIMER: {		// must be timer that PropSet has set.
@@ -360,13 +248,21 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		// Get access to my own propertyset.
 		string	propSetName(createPropertySetName(PSN_OBS_CTRL, getName()));
 		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
-		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  PST_OBS_CTRL,
-																  PS_CAT_TEMP_AUTOLOAD,
-																  &itsPropertySetAnswer));
-		itsPropertySet->enable();
-		// Wait for timer that is set in PropertySetAnswer on ENABLED event
+		itsPropertySet = new RTDBPropertySet(propSetName.c_str(),
+											 PST_OBS_CTRL,
+											 PSAT_RW,
+											 this);
 		}
+		break;
+	  
+	case DP_CREATED: {
+			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// Always exit this event in a way that GCF can end the construction.
+			DPCreatedEvent	dpEvent(event);
+			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+			itsTimerPort->cancelAllTimers();
+			itsTimerPort->setTimer(0.0);
+        }
 		break;
 	  
 	case F_TIMER: {		// can be timer that PropSet has set or timer from
@@ -387,7 +283,7 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(PVSSNAME_FSM_CURACT,  GCFPVString("initial"));
+		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("Initial"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,  GCFPVString(""));
 		itsPropertySet->setValue(PN_OC_CLAIM_PERIOD,  GCFPVInteger(itsClaimPeriod));
 		itsPropertySet->setValue(PN_OC_PREPARE_PERIOD,GCFPVInteger(itsPreparePeriod));
@@ -445,6 +341,10 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 	case F_DISCONNECTED:
 		break;
 	
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
+
 	default:
 		LOG_DEBUG_STR ("starting, default");
 		status = GCFEvent::NOT_HANDLED;
@@ -487,6 +387,10 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case F_DISCONNECTED:	
 		_disconnectedHandler(port);
+		break;
+
+	case DP_CHANGED:
+		_databaseEventHandler(event);
 		break;
 
 	case F_TIMER:  {
@@ -666,7 +570,7 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		itsParentPort->send(msg);
 
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
+		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("Finished"));
 		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
 
 		itsTimerPort->setTimer(1L);	// give PVSS task some time to update the DB.
@@ -857,6 +761,72 @@ void ObservationControl::_disconnectedHandler(GCFPortInterface& port)
 {
 	port.close();
 }
+
+//
+// _databaseEventHandler(answer)
+//
+void ObservationControl::_databaseEventHandler(GCFEvent& event)
+{
+	LOG_TRACE_FLOW_STR ("_databaseEventHandler:" << eventName(event));
+
+	switch(event.signal) {
+	case DP_CHANGED: {
+		DPChangedEvent	dpEvent(event);
+
+		// don't watch state and error fields.
+		if ((strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_STATE) != 0) || 
+			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_ERROR) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_CURACT) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_LOGMSG) != 0)) {
+			return;
+		}
+ 
+		// Change of claim_period?
+		if (strstr(dpEvent.DPname.c_str(), PN_OC_CLAIM_PERIOD) != 0) {
+			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
+			LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod << " to " << newVal);
+				itsClaimPeriod = newVal;
+		}
+		// Change of prepare_period?
+		else if (strstr(dpEvent.DPname.c_str(), PN_OC_PREPARE_PERIOD) != 0) {
+			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
+			LOG_INFO_STR ("Changing PreparePeriod from " << itsPreparePeriod << " to " << newVal);
+			itsPreparePeriod = newVal;
+		}
+
+		// Change of start or stop time?
+		if ((strstr(dpEvent.DPname.c_str(), PN_OC_START_TIME) != 0)  || 
+		    (strstr(dpEvent.DPname.c_str(), PN_OC_STOP_TIME) != 0)) {
+			string  newVal = ((GCFPVString*) (dpEvent.value._pValue))->getValue();
+			ptime	newTime;
+			try {
+				newTime = time_from_string(newVal);
+			}
+			catch (exception&	e) {
+				LOG_DEBUG_STR(newVal << " is not a legal time!!!");
+				return;
+			}
+			if (strstr(dpEvent.DPname.c_str(), PN_OC_START_TIME) != 0) { 
+				LOG_INFO_STR ("Changing startTime from " << to_simple_string(itsStartTime) << " to " << newVal);
+				itsStartTime = newTime;
+			}
+			else {
+				LOG_INFO_STR ("Changing stopTime from " << to_simple_string(itsStopTime) << " to " << newVal);
+				itsStopTime = newTime;
+			}
+			setObservationTimers();
+			LOG_DEBUG("Sending all childs a RESCHEDULE event");
+			itsChildControl->rescheduleChilds(to_time_t(itsStartTime), 
+											  to_time_t(itsStopTime), "");
+		}
+	}  
+	break;
+
+	default:
+		break;
+	}  
+}
+
 
 
 };

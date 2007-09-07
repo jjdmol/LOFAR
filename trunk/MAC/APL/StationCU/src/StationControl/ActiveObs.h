@@ -34,10 +34,7 @@
 #include <GCF/TM/GCF_TimerPort.h>
 #include <APL/APLCommon/Observation.h>
 #include <APL/APLCommon/CTState.h>
-#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
-#include <APL/APLCommon/PropertySetAnswer.h>
-#include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/PAL/GCF_Answer.h>
+#include <GCF/RTDB/RTDB_PropertySet.h>
 
 
 // Avoid 'using namespace' in headerfiles
@@ -48,7 +45,7 @@ namespace LOFAR {
 	using GCF::TM::GCFPortInterface;
 	using GCF::TM::GCFTask;
 	using GCF::TM::GCFTimerPort;
-	using GCF::PAL::GCFMyPropertySet;
+	using GCF::RTDB::RTDBPropertySet;
 	using APLCommon::CTState;
 	namespace StationCU {
 
@@ -63,8 +60,7 @@ namespace LOFAR {
 // The ActiveObs class can instruct the ChildControl task directly, the responses
 // are captured in the StationController task that will forward them.
 //
-class ActiveObs : public GCFFsm,
-				  APLCommon::PropertySetAnswerHandlerInterface
+class ActiveObs : public GCFFsm
 {
 public:
 	ActiveObs (const string&			name,
@@ -72,7 +68,6 @@ public:
 			   ACC::APS::ParameterSet*	aPS,
 			   GCFTask&					task);
 	virtual ~ActiveObs();
-	virtual void handlePropertySetAnswer(GCFEvent&	answer);
 
 	void					start()		{ initFsm();	}
 	bool					isReady()	const { return (itsReadyFlag); }
@@ -99,11 +94,11 @@ private:
 	ActiveObs& operator=(const ActiveObs& that);
 
 	//# --- Datamembers ---
-	APLCommon::PropertySetAnswer	itsPropertySetAnswer;
-	GCFMyPropertySet*				itsPropertySet;
-	GCFTimerPort*					itsPropSetTimer;
+	RTDBPropertySet*			itsPropertySet;
+	GCFTimerPort*				itsPropSetTimer;
 
 	string						itsName;
+	GCFTask*					itsTask;
 	int32						itsInstanceNr;
 	APLCommon::Observation		itsObsPar;
 	bool						itsBeamCntlrReady;

@@ -23,31 +23,19 @@
 #ifndef CALIBRATIONCONTROL_H
 #define CALIBRATIONCONTROL_H
 
-//# Includes
-#include <boost/shared_ptr.hpp>
-
 //# GCF Includes
-#include <GCF/PAL/GCF_MyPropertySet.h>
-//#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
+#include <GCF/RTDB/RTDB_PropertySet.h>
 
 //# local includes
-#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
-#include <APL/APLCommon/PropertySetAnswer.h>
-//#include <APL/APLCommon/APLCommonExceptions.h>
-//#include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/Observation.h>
 #include <APL/APLCommon/CTState.h>
 
 //# Common Includes
 #include <Common/lofar_string.h>
-//#include <bitset>
-
-//# ACC Includes
-//#include <APS/ParameterSet.h>
 
 // forward declaration
 
@@ -59,11 +47,11 @@ using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
+using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
 
 
-class CalibrationControl : public GCFTask,
-						   APLCommon::PropertySetAnswerHandlerInterface
+class CalibrationControl : public GCFTask
 {
 public:
 	explicit CalibrationControl(const string& cntlrName);
@@ -74,9 +62,6 @@ public:
 	void finish();
 
 private:
-   	// PropertySetAnswerHandlerInterface method
-   	virtual void handlePropertySetAnswer(GCFEvent& answer);
-
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult started_state (GCFEvent& e, GCFPortInterface& p);
@@ -93,6 +78,7 @@ private:
 
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
+
 	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
 
 	void    setState          	  (CTState::CTstateNr     newState);
@@ -102,11 +88,8 @@ private:
 	bool	startCalibration  	  ();
 	bool	stopCalibration	  	  ();
 
-   	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
-
-   	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
-   	GCFMyPropertySetPtr           itsPropertySet;
-	bool						  itsPropertySetInitialized;
+   	RTDBPropertySet*		itsPropertySet;
+	bool					itsPropertySetInitialized;
 
 	//# --- Datamembers ---
 	ParentControl*			itsParentControl;	// pointer to parent control task

@@ -23,11 +23,8 @@
 #ifndef ObservationControl_H
 #define ObservationControl_H
 
-//# Includes
-#include <boost/shared_ptr.hpp>
-
 //# GCF Includes
-#include <GCF/PAL/GCF_MyPropertySet.h>
+#include <GCF/RTDB/RTDB_PropertySet.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -35,9 +32,6 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# local includes
-#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
-#include <APL/APLCommon/PropertySetAnswer.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ChildControl.h>
@@ -64,19 +58,16 @@ using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
+using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ChildControl;
 using	APLCommon::ParentControl;
 using	APLCommon::CTState;
 
-class ObservationControl : public GCFTask,
-						   APLCommon::PropertySetAnswerHandlerInterface
+class ObservationControl : public GCFTask
 {
 public:
 	explicit ObservationControl(const string& cntlrName);
 	~ObservationControl();
-
-   	// PropertySetAnswerHandlerInterface method
-   	virtual void handlePropertySetAnswer(GCFEvent& answer);
 
 	// During this state the top DP LOFAR_ObsSW_<observation> is created
    	GCFEvent::TResult initial_state (GCFEvent& e, 
@@ -111,13 +102,10 @@ private:
 
    	void 	_connectedHandler(GCFPortInterface& port);
    	void	_disconnectedHandler(GCFPortInterface& port);
+   	void	_databaseEventHandler(GCFEvent& answer);
 
-   	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
-//   	typedef GCF::PAL::GCFMyPropertySet* GCFMyPropertySetPtr;
-
-   	APLCommon::PropertySetAnswer	itsPropertySetAnswer;
-   	GCFMyPropertySetPtr				itsPropertySet;
-	GCFMyPropertySetPtr				itsBootPS;
+   	RTDBPropertySet*		itsPropertySet;
+	RTDBPropertySet*		itsBootPS;
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;
