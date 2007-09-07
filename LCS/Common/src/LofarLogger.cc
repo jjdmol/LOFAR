@@ -29,6 +29,11 @@
 #include <libgen.h>				// basename
 #include <Common/LofarLogger.h>
 
+#if defined(HAVE_LOG4CXX)
+# include <log4cxx/ndc.h>
+#endif
+
+
 namespace LOFAR {
 
 //#------------------------- Internal implementation -----------------------------
@@ -59,12 +64,14 @@ void lofarLoggerInitNode(void) {
 
 	// construct loggerId and register it.
 	snprintf(loggerId, MAXLEN-1, "%s@%s", basename(applName), hostName);
-#ifdef HAVE_LOG4CPLUS
+#if defined(HAVE_LOG4CPLUS)
 	log4cplus::getNDC().push(loggerId);
-#endif // HAVE_LOG4CPLUS
+#elif defined(HAVE_LOG4CXX)
+        log4cxx::NDC::push(loggerId);
+#endif
 }
 
-#ifdef HAVE_LOG4CPLUS
+#if defined(HAVE_LOG4CPLUS)
 using namespace log4cplus;
 
 //# ------------------------ implement the five trace levels ------------------------
@@ -114,9 +121,14 @@ LogLevel string2TraceLevel (const tstring& lname) {
 	return NOT_SET_LOG_LEVEL;			// not found
 }
 
-LOFAR::LoggerReference	theirTraceLoggerRef("TRC");		// create the tracelogger
+LOFAR::LoggerReference theirTraceLoggerRef("TRC");   // create the tracelogger
 
-#endif // HAVE_LOG4CPLUS
+#elif defined(HAVE_LOG4CXX)
+
+log4cxx::LoggerPtr theirTraceLoggerRef(log4cxx::Logger::getLogger("TRC"));
+
+#endif
+
 
 // initTracemodule
 //

@@ -50,7 +50,7 @@ lofar_CHECK_PRETTY_FUNCTION([])
 lofar_CHECK_INSTALL_IF_MODIFIED([])
 lofar_QATOOLS([])
 lofar_DOCXX([])
-lofar_LOG4CPLUS([])
+lofar_LOGGER([])
 dnl
 ])
 

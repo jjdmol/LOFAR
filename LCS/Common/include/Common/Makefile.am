@@ -31,6 +31,7 @@ pkginclude_HEADERS = \
 	lofar_list.h \
 	LofarLocators.h \
 	LofarLog4Cplus.h \
+	LofarLog4Cxx.h \
 	LofarLogCout.h \
 	LofarLogger.h \
 	lofar_map.h \
