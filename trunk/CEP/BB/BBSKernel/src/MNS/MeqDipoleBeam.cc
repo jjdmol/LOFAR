@@ -23,13 +23,17 @@
 #include <lofar_config.h>
 #include <BBSKernel/MNS/MeqDipoleBeam.h>
 #include <Common/lofar_complex.h>
+#include <Common/lofar_math.h>
 
 namespace LOFAR
 {
 namespace BBS 
 {
-//using LOFAR::dcomplex;
-//using LOFAR::conj;
+using LOFAR::sin;
+using LOFAR::cos;
+using LOFAR::tan;
+using LOFAR::dcomplex;
+using LOFAR::conj;
 
 
 MeqDipoleBeam::MeqDipoleBeam(MeqExpr azel, double height, double length,
@@ -195,10 +199,10 @@ void MeqDipoleBeam::evaluate(const MeqRequest &request, const MeqMatrix &in_az,
                 // k-term vanishes when computing E_phi/E_theta.
                 double term3_G = G * G - inv_sin_alpha_sqr;
 
-                dcomplex Gamma1 = (-term1 * term2_G) / term3_G;
-                dcomplex Gamma2 = (-term1 * term2_F) / term3_F;
-                dcomplex Gamma3 = (-conj(term1) * term2_G) / term3_G;
-                dcomplex Gamma4 = (-conj(term1) * term2_F) / term3_F;
+                dcomplex Gamma1 = (-1.0 * term1 * term2_G) / term3_G;
+                dcomplex Gamma2 = (-1.0 * term1 * term2_F) / term3_F;
+                dcomplex Gamma3 = (-1.0 * conj(term1) * term2_G) / term3_G;
+                dcomplex Gamma4 = (-1.0 * conj(term1) * term2_F) / term3_F;
 
                 // mu = 1e-7 * 4.0 * pi --> mu / (4 * pi) = 1e-7
                 double H = (1e-7 * inv_sin_alpha) * omega;
