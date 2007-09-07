@@ -34,6 +34,8 @@
 // Vector2.cc: necessary to instantiate .tovector()
 //#include <casa/Arrays/Vector2.cc>
 
+#include <measures/Measures/MCDirection.h>
+#include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MeasConvert.h>
 
@@ -152,7 +154,7 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
     VisData::Pointer buffer(new VisData(visGrid));
 
     size_t nChannels = buffer->grid.freq.size();
-    size_t nPolarizations = buffer->grid.polarization.size();
+    size_t nPolarizations = buffer->grid.polarizations.size();
 
     Table tab_tslot;
     size_t tslot = 0;
@@ -220,33 +222,29 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
         for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
-            size_t baseline =
-                buffer->getBaselineIndex(baseline_t(aips_antenna1[i],
-                    aips_antenna2[i]));
+            size_t basel = 
+                buffer->getBaselineIndex(baseline_t(aips_antenna1[i], aips_antenna2[i]));
 
             // Flag timeslot as available.
-            buffer->tslot_flag[baseline][tslot] &= ~VisData::UNAVAILABLE;
+            buffer->tslot_flag[basel][tslot] = 0;
 
             // Copy row (timeslot) flag.
             if(aips_flag_row(i))
             {
-                buffer->tslot_flag[baseline][tslot] |=
+                buffer->tslot_flag[basel][tslot] |=
                     VisData::FLAGGED_IN_INPUT;
             }
 
             // Copy UVW.
             if(readUVW)
             {
-                buffer->uvw[baseline][tslot] = uvw[i];
-//                buffer->uvw[baseline][tslot][0] = aips_uvw(0, i);
-//                buffer->uvw[baseline][tslot][1] = aips_uvw(1, i);
-//                buffer->uvw[baseline][tslot][2] = aips_uvw(2, i);
+                buffer->uvw[basel][tslot] = uvw[i];
             }
 
             // Copy visibilities.
-            buffer->vis_data[baseline][tslot] = data[i];
+            buffer->vis_data[basel][tslot] = data[i];
             // Copy flags.
-            buffer->vis_flag[baseline][tslot] = flag[i];
+            buffer->vis_flag[basel][tslot] = flag[i];
         }
         copyTimer.stop();
 
@@ -257,7 +255,7 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
 
     LOG_DEBUG_STR("Read time: " << readTimer);
     LOG_DEBUG_STR("Copy time: " << copyTimer);
-    
+
     return buffer;
 }
 
@@ -302,7 +300,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
     size_t nChannels = buffer->grid.freq.size();
-    size_t nPolarizations = buffer->grid.polarization.size();
+    size_t nPolarizations = buffer->grid.polarizations.size();
 
     Table tab_tslot;
     size_t tslot = 0;
@@ -339,25 +337,24 @@ void MeasurementAIPS::write(const VisSelection &selection,
         for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
-            size_t baseline =
-                buffer->getBaselineIndex(baseline_t(aips_antenna1[i],
-                    aips_antenna2[i]));
+            size_t basel =
+                buffer->getBaselineIndex(baseline_t(aips_antenna1[i], aips_antenna2[i]));
 
             if(writeFlags)
             {
                 // Write row flag.
-                c_flag_row.put(i, buffer->tslot_flag[baseline][tslot]);
+                c_flag_row.put(i, buffer->tslot_flag[basel][tslot]);
 
                 // Write visibility flags.
                 Array<Bool> vis_flag(IPosition(2, nPolarizations, nChannels),
-                    &(buffer->vis_flag[baseline][tslot][0][0]), SHARE);
+                    &(buffer->vis_flag[basel][tslot][0][0]), SHARE);
                 c_flag.putSlice(i, slicer, vis_flag);
             }
 
             // Write visibilities.
             Array<Complex> vis_data(IPosition(2, nPolarizations, nChannels),
                 reinterpret_cast<Complex*>
-                    (&(buffer->vis_data[baseline][tslot][0][0])), SHARE);
+                    (&(buffer->vis_data[basel][tslot][0][0])), SHARE);
             c_data.putSlice(i, slicer, vis_data);
         }
         writeTimer.stop();
@@ -555,7 +552,9 @@ MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
             {
                 String name(itsInstrument.stations[i].name);
                 if(name.matches(regex))
+                {
                     selection.insert(i);
+                }
             }
         }
 
@@ -564,8 +563,7 @@ MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
             it != selection.end();
             ++it)
         {
-            selectionExpr.add(
-                TableExprNodeSetElem(static_cast<Int>(*it)));
+            selectionExpr.add(TableExprNodeSetElem(static_cast<Int>(*it)));
         }
 
         filter = filter && itsMS.col("ANTENNA1").in(selectionExpr)
@@ -656,7 +654,7 @@ MeasurementAIPS::grid(const Table tab_selection, const Slicer slicer) const
     Vector<Int> antenna1 = c_antenna1.getColumn();
     Vector<Int> antenna2 = c_antenna2.getColumn();
     for(uInt i = 0; i < nBaselines; ++i)
-        grid.baseline.push_back(baseline_t(antenna1[i], antenna2[i]));
+        grid.baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
 
     // Initialize time axis.
     ROScalarColumn<Double> c_interval(tab_selection, "INTERVAL");
@@ -682,7 +680,7 @@ MeasurementAIPS::grid(const Table tab_selection, const Slicer slicer) const
 
     // Initialize polarization axis.
     for(size_t i = 0; i < itsPolarizations.size(); ++i)
-        grid.polarization.push_back(itsPolarizations[i]);
+        grid.polarizations.push_back(itsPolarizations[i]);
 
     return grid;
 }

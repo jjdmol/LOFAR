@@ -181,7 +181,7 @@ public:
     const vector<SolveDomainDescriptor> &getSolveDomainDescriptors() const
     { return itsContext.domains; }
 
-    pair<size_t, size_t> getSolveDomainGridSize() const
+    const pair<size_t, size_t> &getSolveDomainGridSize() const
     { return itsContext.domainCount; }
 
 #ifdef EXPR_GRAPH

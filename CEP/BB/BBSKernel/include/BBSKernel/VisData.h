@@ -41,7 +41,6 @@ namespace BBS
 {
 using std::pair;
 
-
 typedef fcomplex                sample_t;
 typedef bool                    flag_t;
 typedef uint8                   tslot_flag_t;
@@ -53,8 +52,8 @@ class VisGrid
 public:
     cell_centered_axis<regular_series>      freq;
     cell_centered_axis<irregular_series>    time;
-    vector<baseline_t>                      baseline;
-    vector<string>                          polarization;
+    vector<baseline_t>                      baselines;
+    vector<string>                          polarizations;
 };
 
 
@@ -90,8 +89,8 @@ public:
 
 private:
     // Indexes
-    map<baseline_t, size_t>                 baselines;
-    map<string, size_t>                     polarizations;
+    map<baseline_t, size_t>                 baseline_idx;
+    map<string, size_t>                     polarization_idx;
 };
 
 } //# namespace BBS

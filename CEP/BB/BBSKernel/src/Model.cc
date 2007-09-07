@@ -333,7 +333,6 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             ++it)
         {
             const baseline_t &baseline = *it;
-
             MeqJonesExpr vis = new MeqJonesVisData(buffer, baseline);
             
             if(mask[BANDPASS])
@@ -469,7 +468,7 @@ void Model::precalculate(const MeqRequest& request)
     // It may happen that a station is used by only one baseline. Calculating
     // such a baseline is much more work if the station was not precalculated.
     vector<vector<MeqExprRep*> > precalcNodes(nrLev);
-    for(size_t level = 1; level < static_cast<size_t>(nrLev); ++level)
+    for(size_t level = 1; level < nrLev; ++level)
     {
         vector<MeqExprRep*> &nodes = precalcNodes[level];
         nodes.resize(0);
@@ -486,7 +485,7 @@ void Model::precalculate(const MeqRequest& request)
 
 /************ DEBUG DEBUG DEBUG ************/
     LOG_TRACE_FLOW_STR("#levels=" << nrLev);
-    for(size_t i = 0; i < static_cast<size_t>(nrLev); ++i)
+    for(size_t i = 0; i < nrLev; ++i)
     {
         LOG_TRACE_FLOW_STR("#expr on level " << i << " is "
             << precalcNodes[i].size());
@@ -586,7 +585,7 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
         fill(statDone.begin(), statDone.end(), false);
 
         // Set UVW of first station used to 0 (UVW coordinates are relative!).
-        size_t station0 = buffer->grid.baseline[0].first;
+        size_t station0 = buffer->grid.baselines[0].first;
         statUVW[3 * station0] = 0.0;
         statUVW[3 * station0 + 1] = 0.0;
         statUVW[3 * station0 + 2] = 0.0;
@@ -597,7 +596,7 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
         do
         {
             nDone = 0;
-            for(size_t idx = 0; idx < buffer->grid.baseline.size(); ++idx)
+            for(size_t idx = 0; idx < buffer->grid.baselines.size(); ++idx)
             {
                 // If the contents of the UVW column is uninitialized, skip
                 // it.
@@ -606,8 +605,8 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
                     continue;
                 }
                 
-                size_t statA = buffer->grid.baseline[idx].first;
-                size_t statB = buffer->grid.baseline[idx].second;
+                size_t statA = buffer->grid.baselines[idx].first;
+                size_t statB = buffer->grid.baselines[idx].second;
                 if(statDone[statA] && !statDone[statB])
                 {
                     statUVW[3 * statB] =
