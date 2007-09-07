@@ -24,12 +24,13 @@
 
 
 # This script is useful to checkout all code needed for a package.
+# CVS and SVN are supported.
 # It checks out the package itself, looks in its configure.in file which
 # other packages it needs, checks those out, etc..
 # If the package already exists in the code tree, the package is updated,
-# otherwise the package is checked out. The cvs log output is written
+# otherwise the package is checked out. The log output is written
 # to the file rub.log. The script generates a warning if it finds
-# that there are cvs update conflicts.
+# update conflicts.
 # Furthermore it generates a lofarconf.in.private file which makes it possible
 # to bootstrap, configure and build all those packages (in the correct order).
 #
@@ -61,16 +62,15 @@ do
 done
 
 # Set default options.
-cvsdefault=cvs
-cvscomm=$cvsdefault
-updq=
-cvstag=
+usesvn=1
+command=svn
+cutag=
 kopt=
 jobsopt=
 variants=
 buildmake=1
 boot=2
-conf=0
+conf=2
 confopt=
 clean=0
 distclean=0
@@ -97,17 +97,27 @@ fi
 # Handle possible options.
 while [ $# != 0 ]
 do
-  # Special cvs command?
   if [ "$1" = "-h"  -o  "$1" = "-help"  -o  "$1" = "--help" ]; then
     help=1
     break
   elif [ "$1" = "-cvs" ]; then
     shift
-    cvscomm="$1"
+    command="$1"
+    usesvn=0
     shift
   elif [ "$1" = "-nocvs" ]; then
     shift
-    cvscomm=$cvsdefault
+    command="svn"
+    usesvn=1
+  elif [ "$1" = "-svn" ]; then
+    shift
+    command="$1"
+    usesvn=1
+    shift
+  elif [ "$1" = "-nosvn" ]; then
+    shift
+    command="cvs"
+    usesvn=0
   elif [ "$1" = -update ]; then
     shift
     update=1
@@ -119,22 +129,14 @@ do
   elif [ "$1" = -noupdas ]; then
     shift
     updas=0
-  # cvs update qualifiers?
-  elif [ "$1" = -updq ]; then
-    shift
-    updq="$1"
-    shift
-  elif [ "$1" = -noupdq ]; then
-    shift
-    updq=
-  # cvs tag?
+  # tag?
   elif [ "$1" = -r ]; then
     shift
-    cvstag="$1"
+    cutag="$1"
     shift
   elif [ "$1" = -nor ]; then
     shift
-    cvstag=
+    cutag=
   # continue after error?
   elif [ "$1" = -k ]; then
     shift
@@ -298,7 +300,7 @@ do
       exit 1
       ;;
     -r*)
-      cvstag=`echo $1 | sed -e 's/-r//'`
+      cutag=`echo $1 | sed -e 's/-r//'`
       shift
       ;;
     -j*)
@@ -321,14 +323,28 @@ if [ $distclean = 1 ]; then
   clean=2
   conf=1
 fi
-if [ $boot = 2 -a $conf = 1 ]; then
-  boot=1
+if [ $boot = 2  -a  "$variants" = "" ]; then
+  boot=0
+fi
+if [ $boot = 1 ]; then
+  conf=1
+fi
+if [ $usesvn = 1 ]; then
+  updcomm="$command update"
+  chocomm="$command update"
+else
+  updcomm="$command update -dAP"
+  chocomm="$command checkout"
+  # svn -N is sticky; in v1.5 the --recursive flag gets supported
+##  updcommf="$svncomm update --recursive"
+##  updcomm="$svncomm update -N"
+##  chocomm="$svncomm update -N"
 fi
 
 if [ $help = 1 ]; then
   echo ''
   echo 'rub stands for recursive update and build.'
-  echo 'It check outs/updates LOFAR packages and the packages they depend on.'
+  echo 'It checks out/updates LOFAR packages and the packages they depend on.'
   echo 'It uses the .spec.in or configure.in files to find out if specific'
   echo 'package versions are to be used.'
   echo 'If -build is given, the packages are configured, cleaned, built,'
@@ -336,7 +352,7 @@ if [ $help = 1 ]; then
   echo 'using the script rubbuild.'
   echo ''
   echo 'Run as:'
-  echo ' rub [-cvs cvs-command] [-update] [-updq string] [-r<cvstag>]'
+  echo ' rub [-cvs cvs-command] [-svn svn-command] [-update] [-r<tag>]'
   echo '     [-recur[sive]] [-release=option] [-build variants]] [-skipbuilt]'
   echo '     [-system] [-boot] [-conf] [-confopt string] [-k] [-j<option>]'
   echo '     [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-install]'
@@ -345,27 +361,31 @@ if [ $help = 1 ]; then
   echo ''
   echo '  -cvs cvs-command  is an optional cvs command making it possible to'
   echo '                    specify (for example) the root.'
-  echo '                    It defaults to cvs.'
+  echo '                    It also tells to use cvs instead of svn'
+  echo '                    -nocvs tells to use svn instead of cvs.'
+  echo '                    Default is -nocvs.'
+  echo '  -svn svn-command  is an optional svn command making it possible to'
+  echo '                    specify (for example) the root.'
+  echo '                    It also tells to use svn instead of cvs'
+  echo '                    -nosvn tells to use cvs instead of svn.'
   echo '  -update           checkout/update autoconf_share and the source tree.'
   echo '                     -noupdate prevents it all.'
   echo '                     -noupdas  prevents updating autoconf_share.'
   echo '                    Default is -update.'
-  echo '  -updq string      is a string containing qualifiers for the cvs update'
-  echo '                    command (default is empty)'
-  echo '  -r<cvstag>        cvs tag of the given package(s) to be updated/checked out'
+  echo '  -r<tag>           tag of the given package(s) to be updated/checked out'
   echo '                    If given, the tag will be used for all packages'
   echo '                    (excluding autoconf_share).'
   echo '  -recur[sive]      Do everything recursively, thus also for all'
   echo '                    packages used by the given packages.'
   echo '                    Default is -recur.'
-  echo '  -release=option   defines which CVS release to check out depending on'
+  echo '  -release=option   defines which release to check out depending on'
   echo '                    the version given in the LOFAR_INTERNAL macros in'
   echo '                    configure.in or the Requires line in PKG.spec.in.'
   echo '                    exact   Use the versions as given and check if they'
   echo '                            match if a package is used from multiple packages.'
   echo '                    max     Use the maximum package version given if'
   echo '                            used from multiple packages.'
-  echo '                    latest  Use latest package release version in CVS.'
+  echo '                    latest  Use latest package release version in repository.'
   echo '                    main    Always use the MAIN for all packages.'
   echo '                    Default = -release=max.'
   echo '  -build variants   one or more variants to be built (e.g. "gnu_debug gnu_opt")'
@@ -378,7 +398,7 @@ if [ $help = 1 ]; then
   echo '                    rooting in buildroot. /build is added if not present. E.g.'
   echo '                    gnu_opt::/adir builds in /adir/build/gnu_opt/LCS/Common).'
   echo '  -skipbuilt        Skip packages built in the previous build run to'
-  echo '                    speed up the build process (especially with -conf).'
+  echo '                    speed up the build process (especially with -check).'
   echo '                    It can be used after an unsuccesful built to start'
   echo '                    the build at the package that failed.'
   echo '                    It can also be used when building another package'
@@ -388,15 +408,17 @@ if [ $help = 1 ]; then
   echo '                    -skipbuilt sets -noupdate, which is undone'
   echo '                    if -update is given thereafter.'
   echo '                    Default is -noskipbuilt'.
-  echo '                    Note that it is not checked if source files have'
-  echo '                    changed, so it should be used with care.'
   echo '  -system           Do system build for given variants (using buildsys).'
   echo '                    Options like -make, -conf, etc. are ignored. Implies -k.'
   echo '                    Default is -nosystem.'
-  echo '  -boot             do bootstrap before build.'
-  echo '                    Default is -boot if -conf is given, otherwise -noboot.'
-  echo '  -conf             do configure before build.'
-  echo '                    Default is -noconf.'
+  echo '  -boot             Always do a bootstrap before the build.'
+  echo '                    It forces -conf.'
+  echo '                    -noboot means do not bootstrap.'
+  echo '                    Default is to only do a bootstrap when needed.'
+  echo '                    If no build is done, the default is -noboot.'
+  echo '  -conf             Always do a configure before the build.'
+  echo '                    -noconf means do not configure.'
+  echo '                    Default is to only do a configure when needed.'
   echo '  -confopt string   configure options.'
   echo '  -k                continue after an error?'
   echo '                    Default is -nok.'
@@ -437,7 +459,11 @@ if [ $help = 1 ]; then
   echo '                    Each package can be followed by -v<version>, where'
   echo '                    <version> gives the version of the package to be'
   echo '                    checked out/updated.'
-  echo '                    -v is ignored if -r is given.'
+  echo '                    A LOFAR release name looks like LCS-Common-2_1'.
+  echo '                    A version can be given fully, but also like'
+  echo '                     2_1  or  2.1   (where . is replaced by _)'
+  echo '                    in which case it is prepended with the package name.'
+  echo '                    -v cannot be used if -r is given.'
   echo ''
   echo 'All options can be undone by preceeding them with no (e.g. -nobuild).'
   echo 'If an option is given multiple times, only the last value takes effect.'
@@ -462,12 +488,18 @@ if test $install = 1  -o  $clean != 0  -o  $check = 1  -o  $conf = 1  -o  $bldte
 fi
 if [ "$verstype" = "" ]; then
   verstype=m
-  if [ "$cvstag" != "" ]; then
+  if [ "$cutag" != "" ]; then
     verstype="tag"
   fi
-elif [ "$cvstag" != "" ]; then
+elif [ "$cutag" != "" ]; then
   "Error: no -release option can be given if a specific -r tag is used"
   exit 1
+fi
+
+# Get the URL of svn.
+if [ "$usesvn" = 1 ]; then
+  svnurl=`svn info | grep 'URL: ' | sed -e 's/URL: *//' -e 's%/\(trunk\|tags\)\(/.*\)\?$%%'`
+  export svnurl
 fi
 
 # Get and check the package names and versions.
@@ -478,7 +510,7 @@ while [ $# != 0 ]
 do
   case "$1" in
   -v*)
-    if [ "$cvstag" != "" ]; then
+    if [ "$cutag" != "" ]; then
       echo "Error: -v cannot be used if a specific -r tag is used"
       exit 1
     fi
@@ -508,6 +540,11 @@ do
     esac
     # Substitute . by _ on the version.
     vers=`echo $vers | sed -e 's/\./_/g'`
+    # If needed, prepend by package name.
+    evers=`echo $vers | sed -e 's/[0-9_]*//g'`
+    if [ "$evers" = "" ]; then
+      vers=`echo $pkg | sed -e 's%/%-%g'`-$vers
+    fi
     PKGS="$PKGS $pkg#-v$vers"
     pkg=
     ;;
@@ -560,12 +597,12 @@ echo "" >> rub.log
 if [ $updas != 0 ]; then
   if [ -f bootstrap ]; then
     echo "Update of LOFAR/bootstrap"
-    $cvscomm update bootstrap >> rub.log 2>&1
+    $updcomm bootstrap >> rub.log 2>&1
   else
     echo "Checkout of LOFAR/bootstrap"
-    (cd .. && $cvscomm checkout LOFAR/bootstrap) >> rub.log 2>&1
+    (cd .. && $chocomm LOFAR/bootstrap) >> rub.log 2>&1
   fi
-  $pgmpath/rub1 autoconf_share 2 h "" "" "$updas" "$recur" "$cvscomm" "$updq" || exit 1
+  $pgmpath/rub1 autoconf_share 2 h "" "" "$updas" "$recur" "$usesvn" "$command" || exit 1
 fi
 \rm -f allpkg.tmp
 touch allpkg.tmp
@@ -575,7 +612,7 @@ for PKG in $PKGS
 do
   pkg=`echo $PKG | sed -e 's%#-v.*%%'`
   vers=`echo $PKG | sed -e 's%.*#-v%%'`
-  $pgmpath/rub1 $pkg 1 "$verstype" "$vers" "$cvstag" "$update" "$recur" "$cvscomm" "$updq" || exit 1
+  $pgmpath/rub1 $pkg 1 "$verstype" "$vers" "$cutag" "$update" "$recur" "$usesvn" "$command" || exit 1
 done
 
 # Convert allpkg.tmp to lofarconf.in.private
@@ -601,7 +638,7 @@ do
 done
 \rm -f allpkg.tmp
 
-# Now check out/update the full package and show its name.
+# Now update the full package and show its name.
 for PKG in $PKGS
 do
   pkg=`echo $PKG | sed -e 's%#-v.*%%'`
@@ -609,23 +646,35 @@ do
   rtag=
   tagstr=
   if [ "$vers" != "" ]; then
-    rtag=-r$vers
-    tagstr=", cvstag $vers"
+    rtag="-r $vers"
+    tagstr=", tag $vers"
   fi
   if [ $update = 0 ]; then
     echo "Uses package $pkg$tagstr"
   else
     echo "Full update of package $pkg$tagstr"
-    echo "$cvscomm update -dAP $rtag $updq $pkg" >> rub.log 2>&1
-    $cvscomm update -dAP $rtag $updq $pkg >> rub.log 2>&1
-    status=$?
+    if [ "$usesvn" != 1 ]; then
+      echo "$updcomm $rtag $pkg" >> rub.log 2>&1
+      $updcomm $rtag $pkg >> rub.log 2>&1
+      status=$?
+    else
+      # Use the switch command to do this.
+      part="trunk"
+      if [ "$vers" != "" ]; then
+        part="tags/$vers"
+      fi
+      echo "(cd $pkg  &&  $command switch $svnurl/$part/$pkg)" >> rub.log 2>&1
+      (cd $pkg  &&  $command switch $svnurl/$part/$pkg) >> rub.log 2>&1
+      status=$?
+    fi
     if [ $status != 0 ]; then
       echo "Exiting; update/checkout returned with an error status ..."
+      exit 1
     fi
   fi
 done
 if [ $update != 0 ]; then
-  echo "See rub.log for the cvs update/checkout details"
+  echo "See rub.log for the update/checkout details"
   egrep "^C " rub.log > greplog.tmp 2>&1
   if [ $? = 0 ]; then
     echo "Error: there seem to be UPDATE CONFLICTS"
@@ -672,7 +721,7 @@ touch build.result
 # Do bootstrap if needed.
 # Make sure bootstrap is executable; Eclipse does not set x bit.
 # Remove the cache, because sometimes it keeps old data.
-if [ $boot = 1 ]; then
+if [ $boot != 0 ]; then
   for pkg in $pkgs
   do
     if [ $skipbuilt = 1 ]; then
@@ -682,27 +731,40 @@ if [ $boot = 1 ]; then
         continue
       fi
     fi
-    echo "" >> build.log
-    echo "  bootstrapping package $pkg ..."
-
-    (cd $curwd/$pkg
-      pwd >> $curwd/build.log 2>&1
+   (
+    cd $curwd/$pkg
+    # Determine new md5sum of files affecting the bootstrap.
+    md5sum configure.in $pgmpath/*.m4 > boot.md5
+    # Check if boot.md5 has changed.
+    chg=1
+    if [ $boot = 2  -a  -f boot.md5-check ]; then
+      md5sum --check boot.md5-check > /dev/null 2>&1
+      chg=$?
+    fi
+    if [ $chg = 0 ]; then
+      echo "  package $pkg needs no bootstrapping; md5sum has not changed" | tee -a $curwd/build.log
+    else
+      echo "  bootstrapping package $pkg ..."
+      pwd >> $curwd/build.log
       rm -rf autom4te.cache >> $curwd/build.log 2>&1
-    
+   
       # Try to set execution permissions, ignore failure.
       chmod +x bootstrap >> $curwd/build.log 2>&1 
 
-      # Try to run bootstrap
+      # Try to run bootstrap.
+      # First remove md5, so if bootstrap fails it will always be redone.
+      rm -f boot.md5-check
       ./bootstrap >> $curwd/build.log 2>&1
       if [ $? != 0 ]; then
-	echo "  bootstrap of package $pkg failed, check file permissions..."
-	exit 1
+        echo "  bootstrap of package $pkg failed, check file permissions..."
+        exit 1
       fi
-
-    )
-    pwd >> $curwd/build.log 2>&1
-
-    echo $pkg '# bootstrapped at' `date` >> $curwd/build.result; >> $curwd/build.log 2>&1
+      # Keep the current md5sum.
+      md5sum boot.md5 configure > boot.md5-check
+      pwd >> $curwd/build.log
+    fi
+   )
+    echo $pkg '# bootstrapped at' `date` >> $curwd/build.result
   done
   echo "" >> build.log
 fi
@@ -721,7 +783,9 @@ if [ $skipbuilt = 1 ]; then
 fi  
 if [ $conf = 1 ]; then
   bopt="$bopt -conf"
-  echo "  Packages will be configured"
+  echo "  Packages will always be configured"
+elif [ $conf = 2 ]; then
+  echo "  Packages will be configured when needed"
 fi
 if [ $clean = 1 ]; then
   bopt="$bopt -clean"

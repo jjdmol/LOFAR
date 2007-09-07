@@ -27,7 +27,7 @@
 # See rub for more details.
 #
 # Use as:
-#   rub1 package verstype version cvstag checkout recur cvscomm updq
+#   rub1 package verstype version cutag checkout recur usesvn command
 #
 #     package     name of package to checkout/update
 #     conftype    0 = configure.in must be present
@@ -37,14 +37,15 @@
 #                     (is used for autoconf_share)
 #     verstype    version type (e, m, l, t, tag)
 #     version     version of package to check out
-#     cvstag      tag of package to checkout/update (blank = no tag)
+#     cutag       tag of package to checkout/update (blank = no tag)
 #     checkout    1 = do actual checkout/update if not done yet
 #                 0 = do not checkout/update, but only write used
 #                     packages in allpkg.tmp. This is needed for rub
 #                     to get the correct build order.
 #     recur       0 = do not rub recursively
-#     cvscomm     cvs command to be used
-#     updq        cvs update qualifiers (e.g. -dAP)
+#     usesvn      0 = use cvs
+#                 1 = use svn
+#     command     cvs or svn command to be used
 
 
 # Get package name (without trailing /), version, etc.
@@ -53,23 +54,28 @@ conftype="$2"
 verstype="$3"
 getvers="$4"
 curvers=""
-cvstag="$5"
+cutag="$5"
 # Does an actual checkout/update need to be done.
 checkout="$6"
 # Does it need to be done recursively?
 recur="$7"
-# Get cvs command (defaults to cvs).
-cvscomm="$8"
-if [ "$cvscomm" = "" ]; then
-  cvscomm="cvs"
+# Use cvs or svn?
+usesvn="$8"
+# Get command (defaults is cvs or svn).
+command="$9"
+if [ "$command" = "" ]; then
+  command="cvs"
+  if [ "$usesvn" = 1 ]; then
+    command="svn"
+  fi
 fi
-# Get cvs update flags.
-updq="$9"
+# Keep current working directory.
+curwd=`pwd`
 
 # Always use a specific tag if given.
 # Set version to blank for types t and l.
-if [ "$cvstag" != "" ]; then
-  getvers=$cvstag
+if [ "$cutag" != "" ]; then
+  getvers=$cutag
 elif [ $verstype = t  -o  $verstype = l ]; then
   getvers=
 fi
@@ -93,17 +99,22 @@ if [ "$pkgline" = "" ]; then
     fi
   elif [ $verstype = l ]; then
     # Find the highest released version.
-    # Check out the package if not existing yet.
-    if [ -d $pkgname ]; then
-      (cd ..  &&  $cvscomm checkout -l LOFAR/$pkgname) >> rub.log 2>&1
+    if [ "$usesvn" != 1 ]; then
+      # Check out the package if not existing yet.
+      if [ -d $pkgname ]; then
+        (cd ..  &&  $command checkout -l LOFAR/$pkgname) >> rub.log 2>&1
+      fi
+      # Remove the part '-release-branch' leaving the CVS tag name.
+      getvers=`cvs log $pkgname/configure.in 2>&1 | grep release-branch | head -1 | sed -e 's/[ \t]*\(.*\)-release-branch.*/\1/'`
+    else
+      pkgnm1=`echo $pkgname | sed -e 's%/%-%g'`
+      getvers=`svn list $svnurl/tags 2>&1 | grep $pkgnm1 | grep release-root | tail -1 | sed -e 's/[ \t]*\(.*\)-release-root.*/\1/'`
     fi
-    # Remove the part '-release-branch' leaving the CVS tag name.
-    getvers=`cvs log $pkgname/configure.in 2>&1 | grep release-branch | head -1 | sed -e 's/[ \t]*\(.*\)-release-branch.*/\1/'`
   fi
 
 # The package was already updated.
-elif [ "$cvstag" != "" ]; then
-  curvers=$cvstag
+elif [ "$cutag" != "" ]; then
+  curvers=$cutag
 else
   # Check wanted version and possibly already checked out version.
   # verstypes t and l are already handled when the package was retrieved
@@ -143,21 +154,93 @@ fi
 # Checkout/update if needed.
 rtag=
 if [ "$getvers" != "" ]; then
-  rtag="-r$getvers"
-  tagstr=", cvstag $getvers"
+  rtag="-r $getvers"
+  tagstr=", tag $getvers"
 fi
 if [ "$pkgline" = ""  -o  "$getvers" != "$curvers" ]; then
   if [ $checkout = 1 ]; then
-    if [ -d $pkgname ]; then
+    status=0
+    if [ -e $pkgname ]; then
+      if [ ! -d $pkgname ]; then
+        echo "Cannot checkout $pkgname: it exists, but is no package directory"
+        exit 1
+      fi
+      # Package already exists, so update it.
       echo "Toplevel update of package $pkgname$tagstr"
-      echo "(cd $pkgname  &&  $cvscomm update -lA $rtag $updq)" >> rub.log 2>&1
-      (cd $pkgname  &&  $cvscomm update -lA $rtag $updq) >> rub.log 2>&1
-      status=$?
+      if [ "$usesvn" != 1 ]; then
+        # Use local update for cvs.
+        echo "(cd $pkgname  &&  $command update -lA $rtag $updq)" >> rub.log 2>&1
+        (cd $pkgname  &&  $command update -lA $rtag $updq) >> rub.log 2>&1
+	status=$?
+      else
+        # Local update does not work well for svn, so need to do full update.
+        # Use the switch command to do this, because in that way a change
+        # in version is also handled.
+        part="trunk"
+        if [ "$getvers" != "" ]; then
+          part="tags/$getvers"
+        fi
+        echo "(cd $pkgname  &&  $command switch $svnurl/$part/$pkgname)" >> rub.log 2>&1
+        (cd $pkgname  &&  $command switch $svnurl/$part/$pkgname) >> rub.log 2>&1
+        status=$?
+      fi
     else
       echo "Toplevel checkout of package $pkgname$tagstr"
-      echo "(cd ..  &&  $cvscomm checkout -l $rtag LOFAR/$pkgname)" >> rub.log 2>&1
-      (cd ..  &&  $cvscomm checkout -l $rtag LOFAR/$pkgname) >> rub.log 2>&1
-      status=$?
+      # Package does not exist yet.
+      if [ "$usesvn" != 1 ]; then
+        # Use simple checkout for cvs.
+        echo "(cd ..  &&  $command checkout -l $rtag LOFAR/$pkgname)" >> rub.log 2>&1
+        (cd ..  &&  $command checkout -l $rtag LOFAR/$pkgname) >> rub.log 2>&1
+        status=$?
+      else
+        # With svn the check out needs to be done package by package.
+        # It is done locally to avoid that e.g. all of LCS is checked out
+        # when LCS/Common needs to be checked out.
+        # Only the leaf is checked out fully.
+        leafnm=`basename $pkgname`
+        nms=`echo $pkgname | sed -e "s%$leafnm$%%" -e 's%/% %g'`
+        for nm in $nms
+        do
+	  # Check out locally if not existing yet.
+	  local="-N";
+          if [ -e $nm ]; then
+            if [ ! -d $nm ]; then
+              echo "Cannot checkout $pkgname: file $nm exists, but is no directory"
+              exit 1
+            fi
+	    local=
+          fi
+          echo "$command update $local $nm" >> $curwd/rub.log 2>&1
+          $command update $local $nm >> $curwd/rub.log 2>&1
+          status=$?
+	  if [ $status = 0 ]; then
+            cd $nm > /dev/null 2>&1  ||  exit 1
+          fi
+        done
+        # Check out the leaf.
+        part=trunk
+        if [ "$getvers" != "" ]; then
+          part="tags/$getvers"
+        fi
+        # Find out if it is a leaf package or super package by testing
+	# if it has a configure.in file.
+        # A super package is checked out locally only.
+        local=
+        svn list $svnurl/$part/$pkgname/configure.in > /dev/null 2>&1
+        if [ $? != 0 ]; then
+          local="-N"    # no leaf package
+        fi
+        if [ "$getvers" != "" ]; then
+          echo "$command checkout $local $svnurl/$part/$pkgname $leafnm" >> $curwd/rub.log 2>&1
+          $command checkout $local $svnurl/$part/$pkgname $leafnm >> $curwd/rub.log 2>&1
+	  status=$?
+        else
+          echo "$command update $local $leafnm" >> $curwd/rub.log 2>&1
+          $command update $local $leafnm >> $curwd/rub.log 2>&1
+          status=$?
+        fi
+        cd $curwd > /dev/null 2>&1
+      fi
     fi
     if [ $status != 0 ]; then
       echo "Exiting; update/checkout returned with an error status ..."
@@ -201,7 +284,7 @@ if [ -f $pgkname/$pkgname.spec.in ]; then
     # Replace a . in the version by _.
     vers=`echo $pkg | awk -F= '{ print $2 }' | sed -e 's/\./_/g'`
     # Check out the package.
-    $0 $nm 0 "$verstype" "$vers" "$cvstag" $checkout $recur "$cvscomm" "$updq"  ||  exit 1
+    $0 $nm 0 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
   done
 elif [ -f $pkgname/configure.in ]; then
   if [ -f $pkgname/lofarconf.in  -o  -f $pkgname/lofarconf.in.private ]; then
@@ -223,7 +306,7 @@ elif [ -f $pkgname/configure.in ]; then
       # Possible third name is the version. Replace possible . by _.
       vers=`echo $nma | awk -F, '{ print $3 }' | sed -e 's/\./_/g'`
       # Check out the package.
-      $0 $nm 0 "$verstype" "$vers" "$cvstag" $checkout $recur "$cvscomm" "$updq"  ||  exit 1
+      $0 $nm 0 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
     done
   fi
 else
@@ -246,7 +329,7 @@ else
         vers=`echo $PKG | sed -e 's%.*#-v%%'`
       fi
       # Check out the package.
-      $0 $pkgname/$pkg 1 "$verstype" "$vers" "$cvstag" $checkout $recur "$cvscomm" "$updq"  ||  exit 1
+      $0 $pkgname/$pkg 1 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
     done
   fi
 fi

@@ -155,14 +155,36 @@ do
   fi
   echo " *** Building package $pkg ***" | tee -a $logfile
 
+  # Create the build directory as needed.
   pkgb=`basename $pkg`
   if [ "$builddir" = "." ]; then
-    initcmd="cd $pkg && mkdir -p build/$variant && cd build/$variant"
+    (cd $pkg && mkdir -p build/$variant) >> $logfile 2>&1
+    if [ $? != 0 ]; then
+      exit 1
+    fi
+    blddir=$srcdir/$pkg/build/$variant
   else
-    initcmd="cd $builddir/build/$variant && mkdir -p $pkg && cd $pkg"
+    (cd $builddir/build/$variant && mkdir -p $pkg) >> $logfile 2>&1
+    if [ $? != 0 ]; then
+      exit 1
+    fi
+    blddir=$builddir/build/$variant/$pkg
   fi
-  if [ $conf = 1 ]; then
-    confcmd="$srcdir/$pkg/lofarconf $confopt && "
+  initcmd="cd $blddir"
+
+  # Determine new md5sum of files affecting the configure.
+  md5sum $srcdir/autoconf_share/variants > $blddir/conf.md5
+  lfr_host=`uname -n | sed -e "s%\..*%%"`
+  if [ -f $srcdir/autoconf_share/variants.$lfr_host ]; then
+    md5sum $srcdir/autoconf_share/variants.$lfr_host >> $blddir/conf.md5
+  fi
+  if [ -f $srcdir/$pkg/boot.md5 ]; then
+    md5sum $srcdir/$pkg/boot.md5 >> $blddir/conf.md5
+  fi
+
+  # 
+  if [ $conf != 0 ]; then
+    confcmd="(chg=1; if [ $conf = 2  -a  -f conf.md5-check ]; then md5sum --check conf.md5-check > /dev/null 2>&1; chg="'$?'"; fi; if [ "'$chg'" = 0 ]; then echo '  package '"$pkg"' needs no configuring; md5sum has not changed'; else rm -f conf.md5-check; $srcdir/$pkg/lofarconf $confopt && md5sum conf.md5 > conf.md5-check; fi) && "
   fi
   if [ $clean = 2 ]; then
     premake="make distclean && $srcdir/$pkg/lofarconf $confopt && "
