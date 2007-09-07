@@ -930,6 +930,7 @@ void ChildControl::_doGarbageCollection()
 			CIiter	iterCopy = iter;
 			iter++;
 			itsCntlrList->erase(iterCopy);
+			LOG_DEBUG_STR("Size of itsCntlrList = " << itsCntlrList->size());
 		} else {
 			iter++;
 		}
@@ -948,7 +949,7 @@ void ChildControl::_doGarbageCollection()
 GCFEvent::TResult	ChildControl::initial (GCFEvent&			event, 
 										   GCFPortInterface&	port)
 {
-	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
+//	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
 	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult	status = GCFEvent::HANDLED;
@@ -1053,7 +1054,9 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 				if (controller->currentState >= CTState::QUIT) {// expected disconnect?
 					LOG_DEBUG_STR("Removing " << controller->cntlrName << 
 															" from the controllerList");
+					port.close();
 					itsCntlrList->erase(controller);			// just remove
+					LOG_DEBUG_STR("Size of itsCntlrList = " << itsCntlrList->size());
 				}
 				else {	// unexpected disconnect give child some time to reconnect(?)
 					LOG_WARN_STR ("Lost connection with controller " << 
@@ -1072,15 +1075,16 @@ GCFEvent::TResult	ChildControl::operational(GCFEvent&			event,
 					itsActionTimer = itsListener->setTimer(1.0);
 					itsActionList.push_back(*controller);
 
-					// And schedule cleanup when everthing fails
 #endif
-					if (itsGarbageTimer) {
-						itsTimerPort.cancelTimer(itsGarbageTimer);
-					}
-					itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
-					LOG_DEBUG_STR("GarbageTimer = " << itsGarbageTimer);
 				}
-				// controlelr was found and handled, break out of the while loop.
+
+				// And schedule cleanup when everthing fails
+				if (itsGarbageTimer) {
+					itsTimerPort.cancelTimer(itsGarbageTimer);
+				}
+				itsGarbageTimer = itsTimerPort.setTimer(1.0 * itsGarbageInterval);
+				LOG_DEBUG_STR("GarbageTimer = " << itsGarbageTimer);
+				// controller was found and handled, break out of the while loop.
 				break;
 			} // while
 #endif

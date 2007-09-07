@@ -32,8 +32,7 @@
 #include <APS/ParameterSet.h>
 
 //# GCF Includes
-#include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/PAL/GCF_ExtPropertySet.h>
+#include <GCF/RTDB/RTDB_PropertySet.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -41,9 +40,6 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# Application includes
-#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
-#include <APL/APLCommon/PropertySetAnswer.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
@@ -68,8 +64,7 @@ namespace LOFAR {
 	using	GCF::TM::GCFTask;
 
 
-class StationControl : public GCFTask,
-						   APLCommon::PropertySetAnswerHandlerInterface
+class StationControl : public GCFTask
 {
 public:
 	explicit StationControl(const string& cntlrName);
@@ -80,9 +75,6 @@ public:
 	void finish();
 
 private:
-   	// PropertySetAnswerHandlerInterface method
-   	virtual void handlePropertySetAnswer(GCFEvent& answer);
-
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state     (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult connect_state     (GCFEvent& e, GCFPortInterface& p);
@@ -98,14 +90,14 @@ private:
 
 	uint16	_addObservation		(const string&   	name);
    	void	_disconnectedHandler(GCFPortInterface&	port);
+   	void	_databaseEventHandler(GCFEvent& event);
 	ObsIter	_searchObsByTimerID (uint32				aTimerID);
 
 	// Data members
-   	APLCommon::PropertySetAnswer	itsPropertySetAnswer;
-   	GCF::PAL::GCFMyPropertySet*		itsClockPropSet;
-   	GCF::PAL::GCFMyPropertySet*		itsOwnPropSet;
-	bool							itsClockPSinitialized;
-	bool							itsOwnPSinitialized;
+   	RTDBPropertySet*		itsClockPropSet;
+   	RTDBPropertySet*		itsOwnPropSet;
+	bool					itsClockPSinitialized;
+	bool					itsOwnPSinitialized;
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;

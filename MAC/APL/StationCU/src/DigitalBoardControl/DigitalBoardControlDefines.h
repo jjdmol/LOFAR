@@ -26,7 +26,7 @@
 namespace LOFAR {
   namespace StationCU {
 
-#define PSN_DIG_BOARD_CTRL	"lofar28:LOFAR_PermSW_DigBoardCtrl@instance@"
+#define PSN_DIG_BOARD_CTRL	"LOFAR_PermSW_DigBoardCtrl@instance@"
 #define PST_DIG_BOARD_CTRL	"DigBoardCtrl"
 #define PN_DBC_CONNECTED	"connected"
 #define PN_DBC_CLOCK		"clock"

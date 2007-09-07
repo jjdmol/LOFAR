@@ -261,14 +261,19 @@ GCFEvent::TResult HardwareMonitor::askConfiguration(GCFEvent& event,
 		// calc size of the propertyset vectors
 		itsNrRCUs	   = ack.n_rcus;
 		itsNrRSPboards = ack.n_rspboards;
-		itsNrSubracks  = itsNrRSPboards/NR_RSPBOARDS_PER_SUBRACK + (itsNrRSPboards%NR_RSPBOARDS_PER_SUBRACK) ? 1 : 0;
-		itsNrCabinets  = itsNrSubracks /NR_SUBRACKS_PER_CABINET  + (itsNrSubracks%NR_SUBRACKS_PER_CABINET) ? 1 : 0;
+		itsNrSubracks  = (itsNrRSPboards/NR_RSPBOARDS_PER_SUBRACK) + 
+						 	((itsNrRSPboards%NR_RSPBOARDS_PER_SUBRACK) ? 1 : 0);
+		itsNrCabinets  = (itsNrSubracks /NR_SUBRACKS_PER_CABINET)  + 
+						 	((itsNrSubracks%NR_SUBRACKS_PER_CABINET) ? 1 : 0);
 
 		// inform user
 		LOG_DEBUG(formatString("nr RCUs      = %d",ack.n_rcus));
 		LOG_DEBUG(formatString("nr RSPboards = %d",ack.max_rspboards));
 		LOG_DEBUG(formatString("nr Subracks  = %d", itsNrSubracks));
 		LOG_DEBUG(formatString("nr Cabinets  = %d", itsNrCabinets));
+		LOG_DEBUG_STR("("<<itsNrRSPboards<<"/"<<NR_RSPBOARDS_PER_SUBRACK<<") + (("<<itsNrRSPboards<<"%"<<NR_RSPBOARDS_PER_SUBRACK<<") ? 1 : 0)");
+		LOG_DEBUG_STR("("<<itsNrRSPboards<<"/"<<NR_RSPBOARDS_PER_SUBRACK<<") = " << itsNrRSPboards/NR_RSPBOARDS_PER_SUBRACK);
+		LOG_DEBUG_STR("("<<itsNrRSPboards<<"%"<<NR_RSPBOARDS_PER_SUBRACK<<") = " << itsNrRSPboards%NR_RSPBOARDS_PER_SUBRACK);
 	
 		// do some checks
 		if (itsNrRSPboards != (uint32)ack.max_rspboards) {
@@ -373,7 +378,7 @@ GCFEvent::TResult HardwareMonitor::createPropertySets(GCFEvent& event,
 		}
 		LOG_DEBUG_STR("Allocation of all propertySets successfull, going to operational mode");
 		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
-		TRAN(HardwareMonitor::askRSPinfo);
+		TRAN(HardwareMonitor::askVersion);
 	}
 	break;
 
@@ -501,7 +506,12 @@ GCFEvent::TResult HardwareMonitor::askRSPinfo(GCFEvent& event,
 		if (ack.status != SUCCESS) {
 			LOG_ERROR_STR ("Failed to get the status information, trying other information");
 			itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("getStatus error"));
+#if 0
 			TRAN(HardwareMonitor::askRCUinfo);				// go to next state.
+#else
+			LOG_WARN ("SKIPPING RCU INFO FOR A MOMENT");
+			TRAN(HardwareMonitor::waitForNextCycle);			// go to next state.
+#endif
 			break;
 		}
 
@@ -578,7 +588,12 @@ GCFEvent::TResult HardwareMonitor::askRSPinfo(GCFEvent& event,
 
 		LOG_DEBUG_STR ("RSPboard information updated, going to RCU information");
 		itsOwnPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+#if 0
 		TRAN(HardwareMonitor::askRCUinfo);				// go to next state.
+#else
+		LOG_WARN ("SKIPPING RCU INFO FOR A MOMENT");
+		TRAN(HardwareMonitor::waitForNextCycle);			// go to next state.
+#endif
 		break;
 	}
 

@@ -23,13 +23,9 @@
 #ifndef MACScheduler_H
 #define MACScheduler_H
 
-//# Includes
-#include <boost/shared_ptr.hpp>
-
 //# GCF Includes
-#include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/GCF_PVDynArr.h>
-#include <GCF/GCF_PVString.h>
+#include <GCF/RTDB/RTDB_PropertySet.h>
+#include <GCF/GCF_PVTypes.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -37,9 +33,6 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# local includes
-#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
-#include <APL/APLCommon/PropertySetAnswer.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/CTState.h>
@@ -67,19 +60,16 @@ using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
+using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ChildControl;
 using	APLCommon::Observation;
 
 
-class MACScheduler : public GCFTask,
-							APLCommon::PropertySetAnswerHandlerInterface
+class MACScheduler : public GCFTask
 {
 public:
 	MACScheduler();
 	~MACScheduler();
-
-   	// PropertySetAnswerHandlerInterface method
-   	virtual void handlePropertySetAnswer(GCFEvent& answer);
 
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state (GCFEvent& e, 
@@ -114,12 +104,10 @@ private:
 	void _removeActiveObservation(const string& name);
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
+   	void _databaseEventHandler(GCFEvent& event);
    	void _doOTDBcheck();
 
-   	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
-
-   	APLCommon::PropertySetAnswer  itsPropertySetAnswer;
-   	GCFMyPropertySetPtr           itsPropertySet;
+   	RTDBPropertySet*		itsPropertySet;
 
 	// Information about the Observations. Not used yet.
 	vector<Observation>			itsObservations;

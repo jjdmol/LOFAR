@@ -441,6 +441,8 @@ LOG_DEBUG_STR("RTDBPropertySet::dpeValueGet(" << propName << ")");
 //
 void RTDBPropertySet::dpeValueChanged(const string&		propName, PVSSresult	result, const GCFPValue&	value)
 {
+	LOG_DEBUG_STR("RTDBPropertySet::dpeValueChanged(" << propName << ")");
+
 	// find property
 	string		shortName(propName);
 	_cutScope(shortName);
@@ -448,24 +450,31 @@ void RTDBPropertySet::dpeValueChanged(const string&		propName, PVSSresult	result
 		shortName = "value";
 	}
 	Property*	propPtr = _getProperty(shortName);
+
 	// if property is not yet initialized than this call is from our initial dpeGet.
+	bool	informClient(false);
 	if (!propPtr->initialized) {
 		propPtr->value->copy(value);
 		propPtr->initialized = true;
-		return;
+		LOG_DEBUG("RTDBPropertySet::dpeValueChanged:internal event");
+		informClient = true;
+//		return;
+	} 
+	else {
+		// if property is changed adopt the value if it all went ok.
+		if (*(propPtr->value) != value) {
+			if (result == SA_NO_ERROR) {
+				propPtr->value->copy(value);
+				informClient = true;
+			}
+		}
 	}
 
-	// if property is changed adopt the value if it all went ok.
-	if (*(propPtr->value) != value) {
-		if (result == SA_NO_ERROR) {
-			propPtr->value->copy(value);
-		}
-		// notify user when he is interested in it.
-		if (itsAccessType & PSAT_RD_MASK) {
-			itsExtResponse->dpeValueChanged(propName, result, value);
-		}
+	// notify user when he is interested in it.
+	if (informClient && (itsAccessType & PSAT_RD_MASK)) {
+		LOG_DEBUG("RTDBPropertySet::dpeValueChanged:propagate");
+		itsExtResponse->dpeValueChanged(propName, result, value);
 	}
-
 }
 
   } // namespace RTDB

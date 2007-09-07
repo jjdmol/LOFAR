@@ -24,15 +24,10 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 
-#include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_PVTypes.h>
-#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
-#include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
@@ -41,7 +36,6 @@
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::PAL;
 
 namespace LOFAR {
 	using namespace APLCommon;
@@ -53,7 +47,6 @@ namespace LOFAR {
 //
 TestController::TestController(const string&	cntlrName) :
 	GCFTask 			((State)&TestController::initial_state,cntlrName),
-	PropertySetAnswerHandlerInterface(),
 	itsParentControl	(0),
 	itsParentPort		(0),
 	itsTimerPort		(0)
@@ -81,15 +74,6 @@ TestController::TestController(const string&	cntlrName) :
 TestController::~TestController()
 {
 	LOG_TRACE_OBJ_STR (getName() << " destruction");
-}
-
-
-//
-// handlePropertySetAnswer(answer)
-//
-void TestController::handlePropertySetAnswer(GCFEvent& answer)
-{
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << evtstr(answer));
 }
 
 

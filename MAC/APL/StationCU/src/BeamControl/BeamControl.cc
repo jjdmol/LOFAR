@@ -22,20 +22,17 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <boost/shared_array.hpp>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_PVTypes.h>
-#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
-#include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/Observation.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 
 #include "BeamControl.h"
@@ -43,7 +40,7 @@
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
 namespace LOFAR {
@@ -59,9 +56,7 @@ static BeamControl*	thisBeamControl = 0;
 //
 BeamControl::BeamControl(const string&	cntlrName) :
 	GCFTask 			((State)&BeamControl::initial_state,cntlrName),
-	PropertySetAnswerHandlerInterface(),
-	itsPropertySetAnswer(*this),
-	itsPropertySet		(),
+	itsPropertySet		(0),
 	itsPropertySetInitialized (false),
 	itsParentControl	(0),
 	itsParentPort		(0),
@@ -97,9 +92,8 @@ BeamControl::BeamControl(const string&	cntlrName) :
 
 	// for debugging purposes
 	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (PA_PROTOCOL, 		PA_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
 	GCF::TM::registerProtocol (BS_PROTOCOL, 		BS_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (F_PML_PROTOCOL, 	    F_PML_PROTOCOL_STRINGS);
 
 	setState(CTState::CREATED);
 }
@@ -161,65 +155,6 @@ int32 BeamControl::convertDirection(const string&	typeName)
 }
 
 //
-// handlePropertySetAnswer(answer)
-//
-void BeamControl::handlePropertySetAnswer(GCFEvent& answer)
-{
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << eventName(answer));
-
-	switch(answer.signal) {
-	case F_MYPS_ENABLED: {
-		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-		if(pPropAnswer->result != GCF_NO_ERROR) {
-			LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",
-										getName().c_str(), pPropAnswer->pScope));
-		}
-		// always let timer expire so main task will continue.
-		itsTimerPort->setTimer(1.0);
-		break;
-	}
-
-	case F_PS_CONFIGURED: {
-		GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
-		if(pConfAnswer->result == GCF_NO_ERROR) {
-			LOG_DEBUG(formatString("%s : apc %s Loaded",
-										getName().c_str(), pConfAnswer->pApcName));
-			//apcLoaded();
-		}
-		else {
-			LOG_ERROR(formatString("%s : apc %s NOT LOADED",
-										getName().c_str(), pConfAnswer->pApcName));
-		}
-		break;
-	}
-
-	case F_VGETRESP:
-	case F_VCHANGEMSG: {
-		// check which property changed
-		// GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-
-		// TODO: implement something usefull.
-		break;
-	}  
-
-//	case F_SUBSCRIBED:
-//	case F_UNSUBSCRIBED:
-//	case F_PS_CONFIGURED:
-//	case F_EXTPS_LOADED:
-//	case F_EXTPS_UNLOADED:
-//	case F_MYPS_ENABLED:
-//	case F_MYPS_DISABLED:
-//	case F_VGETRESP:
-//	case F_VCHANGEMSG:
-//	case F_SERVER_GONE:
-
-	default:
-		break;
-	}  
-}
-
-
-//
 // initial_state(event, port)
 //
 // Connect to PVSS and report state back to startdaemon
@@ -239,15 +174,24 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		// Get access to my own propertyset.
 		string	propSetName(createPropertySetName(PSN_BEAM_CTRL, getName()));
 		LOG_INFO_STR ("Activating PropertySet" << propSetName);
-		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  PST_BEAM_CTRL,
-																  PS_CAT_TEMP_AUTOLOAD,
-																  &itsPropertySetAnswer));
-		itsPropertySet->enable();
-		// Wait for timer that is set in PropertySetAnswer on ENABLED event
-		}
-		break;
+		itsPropertySet = new RTDBPropertySet(propSetName,
+											 PST_BEAM_CTRL,
+											 PSAT_RW,
+											 this);
+		// Wait for timer that is set on DP_CREATED event
+	}
+	break;
 
+	case DP_CREATED: {
+		// NOTE: thsi function may be called DURING the construction of the PropertySet.
+		// Always exit this event in a way that GCF can end the construction.
+		DPCreatedEvent	dpEvent(event);
+		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(0.0);
+	}
+	break;
+	  
 	case F_TIMER:
 		if (!itsPropertySetInitialized) {
 			itsPropertySetInitialized = true;
@@ -836,6 +780,12 @@ GCFEvent::TResult BeamControl::_defaultEventHandler(GCFEvent&			event,
 		case CONTROL_QUITED:
 			result = GCFEvent::HANDLED;
 			break;
+
+		case DP_CHANGED: {
+			LOG_DEBUG_STR("DP " << DPChangedEvent(event).DPname << " was changed"); 
+			result = GCFEvent::HANDLED;
+		}
+		break;
 	}
 
 	if (result == GCFEvent::NOT_HANDLED) {

@@ -35,6 +35,7 @@
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include "StationControlDefines.h"
 #include "ActiveObs.h"
 
@@ -47,7 +48,7 @@ namespace LOFAR {
 	using namespace APLCommon;
 	using namespace GCF::TM;
 	using namespace GCF::Common;
-	using namespace GCF::PAL;
+	using namespace GCF::RTDB;
 	namespace StationCU {
 
 //
@@ -58,11 +59,10 @@ ActiveObs::ActiveObs(const string&		name,
 					 ParameterSet*		thePS,
 					 GCFTask&			task) :
 	GCFFsm				(initial),
-	PropertySetAnswerHandlerInterface(),
 	itsStopTimerID		(0),
-	itsPropertySetAnswer(*this),
 	itsPropSetTimer		(new GCFTimerPort(task, name)),
 	itsName				(name),
+	itsTask				(&task),
 	itsInstanceNr		(getInstanceNr(name)),
 	itsObsPar			(APLCommon::Observation(thePS)),
 	itsBeamCntlrReady	(false),
@@ -83,82 +83,8 @@ ActiveObs::ActiveObs(const string&		name,
 ActiveObs::~ActiveObs()
 {
 	if (itsPropertySet) {
-		itsPropertySet->disable();
 		delete itsPropertySet;
 	}
-}
-
-//
-// handlePropertySetAnswer(answer)
-//
-void ActiveObs::handlePropertySetAnswer(GCFEvent& answer)
-{
-	LOG_DEBUG_STR ("ActiveObs::handlePropertySetAnswer");
-
-	switch(answer.signal) {
-	case F_MYPS_ENABLED: 
-	case F_EXTPS_LOADED: {
-		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-		if(pPropAnswer->result != GCF_NO_ERROR) {
-			LOG_ERROR(formatString("PropertySet %s NOT ENABLED", pPropAnswer->pScope));
-		}
-		// always let timer expire so main task will continue.
-		LOG_DEBUG_STR("Property set " << pPropAnswer->pScope << 
-													" enabled, continuing main task");
-		itsPropSetTimer->setTimer(0.5);
-		break;
-	}
-	
-	case F_VGETRESP: {	// initial get of required clock
-		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-//		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
-//			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
-//
-//			// signal main task we have the value.
-//			LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
-//			itsTimerPort->setTimer(0.5);
-//			break;
-//		}
-		LOG_WARN_STR("Got VGETRESP signal from unknown property " << 
-															pPropAnswer->pPropName);
-	}
-
-	case F_VCHANGEMSG: {
-		// check which property changed
-		GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-//		if (strstr(pPropAnswer->pPropName, PN_SC_CLOCK) != 0) {
-//			itsClock =(static_cast<const GCFPVInteger*>(pPropAnswer->pValue))->getValue();
-//			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
-//			break;
-//		}
-
-		// don't watch state and error fields.
-		if ((strstr(pPropAnswer->pPropName, PVSSNAME_FSM_STATE) != 0) || 
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_ERROR) != 0) ||
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_CURACT) != 0) ||
-			(strstr(pPropAnswer->pPropName, PVSSNAME_FSM_LOGMSG) != 0)) {
-			return;
-		}
- 
-		LOG_WARN_STR("Got VCHANGEMSG signal from unknown property " << 
-															pPropAnswer->pPropName);
-	}
-
-//  case F_SUBSCRIBED:      GCFPropAnswerEvent      pPropName
-//  case F_UNSUBSCRIBED:    GCFPropAnswerEvent      pPropName
-//  case F_PS_CONFIGURED:   GCFConfAnswerEvent      pApcName
-//  case F_EXTPS_LOADED:    GCFPropSetAnswerEvent   pScope, result
-//  case F_EXTPS_UNLOADED:  GCFPropSetAnswerEvent   pScope, result
-//  case F_MYPS_ENABLED:    GCFPropSetAnswerEvent   pScope, result
-//  case F_MYPS_DISABLED:   GCFPropSetAnswerEvent   pScope, result
-//  case F_VGETRESP:        GCFPropValueEvent       pValue, pPropName
-//  case F_VSETRESP:        GCFPropAnswerEvent      pPropName
-//  case F_VCHANGEMSG:      GCFPropValueEvent       pValue, pPropName
-//  case F_SERVER_GONE:     GCFPropSetAnswerEvent   pScope, result
-
-	default:
-		break;
-	}  
 }
 
 //
@@ -174,25 +100,25 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-    case F_INIT:
+    case F_ENTRY:
 		itsReqState = CTState::CREATED;
 		LOG_DEBUG_STR("Starting statemachine for observation " << itsName);
    		break;
 
-	case F_ENTRY: {
+	case F_INIT: {
 		// Get access to my own propertyset.
 		string	propSetName(createPropertySetName(PSN_OBSERVATION, itsName));
 		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
-		itsPropertySet = new GCFMyPropertySet(propSetName.c_str(),
+		itsPropertySet = new RTDBPropertySet(propSetName,
 											 PST_OBSERVATION,
-											 PS_CAT_TEMP_AUTOLOAD,
-											 &itsPropertySetAnswer);
-		itsPropertySet->enable();
-		// Wait for timer that is set in PropertySetAnswer on ENABLED event
+											 PSAT_WO,
+											 itsTask);
+#if 0
 		}
 		break;
 	  
 	case F_TIMER: {		// must be timer that PropSet has set.
+#endif
 		// update PVSS.
 		LOG_TRACE_FLOW ("top DP of observation created, going to starting state");
 		itsCurState = CTState::CREATED;
@@ -200,6 +126,16 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 		}
 		break;
 
+	case DP_CREATED: {
+			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// Always exit this event in a way that GCF can end the construction.
+			DPCreatedEvent	dpEvent(event);
+			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+//			itsPropSetTimer->setTimer(0.1);
+// TODO: Find out why this timer is not running.
+        }
+		break;
+	  
 	case F_CONNECTED:
 		break;
 

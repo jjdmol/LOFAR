@@ -23,9 +23,10 @@
 #ifndef PARENTONLY_H
 #define PARENTONLY_H
 
+//# Common Includes
+#include <Common/LofarLogger.h>
+
 //# GCF Includes
-#include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -33,18 +34,9 @@
 #include <GCF/TM/GCF_Event.h>
 
 //# local includes
-#include <APL/APLCommon/PropertySetAnswerHandlerInterface.h>
-#include <APL/APLCommon/PropertySetAnswer.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/CTState.h>
-
-//# Common Includes
-#include <Common/LofarLogger.h>
-
-//# ACC Includes
-#include <APS/ParameterSet.h>
 
 // forward declaration
 
@@ -59,15 +51,11 @@ using	GCF::TM::GCFPortInterface;
 using	APLCommon::ParentControl;
 
 
-class TestController : public GCFTask,
-						   APLCommon::PropertySetAnswerHandlerInterface
+class TestController : public GCFTask
 {
 public:
 	explicit TestController(const string& cntlrName);
 	~TestController();
-
-   	// PropertySetAnswerHandlerInterface method
-   	virtual void handlePropertySetAnswer(GCFEvent& answer);
 
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);

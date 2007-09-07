@@ -25,11 +25,11 @@
 
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
-#include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 
 #include "CalibrationControl.h"
@@ -37,7 +37,7 @@
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::GCF::RTDB;
 
 namespace LOFAR {
 	using namespace APLCommon;
@@ -52,9 +52,7 @@ static CalibrationControl*	thisCalibrationControl = 0;
 //
 CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	GCFTask 			((State)&CalibrationControl::initial_state,cntlrName),
-	PropertySetAnswerHandlerInterface(),
-	itsPropertySetAnswer(*this),
-	itsPropertySet		(),
+	itsPropertySet		(0),
 	itsPropertySetInitialized (false),
 	itsParentControl	(0),
 	itsParentPort		(0),
@@ -90,9 +88,8 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 
 	// for debugging purposes
 	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (PA_PROTOCOL, 		PA_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
 	GCF::TM::registerProtocol (CAL_PROTOCOL,		CAL_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (F_PML_PROTOCOL,	    F_PML_PROTOCOL_STRINGS);
 
 	setState(CTState::CREATED);
 }
@@ -150,7 +147,7 @@ int32 CalibrationControl::convertFilterSelection(const string&	filterselection)
 	if (filterselection == "LBL_30_80")		{ return(2); }
 	if (filterselection == "LBH_10_80")		{ return(3); }
 	if (filterselection == "LBH_30_80")		{ return(4); }
-	if (filterselection == "HB_110_190") 	{ return(5); }
+	if (filterselection == "HB_100_190") 	{ return(5); }
 	if (filterselection == "HB_170_230") 	{ return(6); }
 	if (filterselection == "HB_210_240") 	{ return(7); }
 
@@ -163,50 +160,6 @@ int32 CalibrationControl::convertFilterSelection(const string&	filterselection)
 											"' not recognized, using LBL_10_80");
 	return (1);
 }
-
-//
-// handlePropertySetAnswer(answer)
-//
-void CalibrationControl::handlePropertySetAnswer(GCFEvent& answer)
-{
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << eventName(answer));
-
-	switch(answer.signal) {
-    case F_MYPS_ENABLED: {
-		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-		if (pPropAnswer->result != GCF_NO_ERROR) {
-			LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",
-										getName().c_str(), pPropAnswer->pScope));
-		}
-		// always let timer expire so main task will continue.
-		itsTimerPort->setTimer(0.5);
-		break;
-	}
-
-	case F_VGETRESP: 
-	case F_VCHANGEMSG: 
-		// check which property changed
-		// GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-		// TODO: implement something usefull.
-		break;
-
-//  case F_SUBSCRIBED:      GCFPropAnswerEvent      pPropName
-//  case F_UNSUBSCRIBED:    GCFPropAnswerEvent      pPropName
-//  case F_PS_CONFIGURED:   GCFConfAnswerEvent      pApcName
-//  case F_EXTPS_LOADED:    GCFPropSetAnswerEvent   pScope, result
-//  case F_EXTPS_UNLOADED:  GCFPropSetAnswerEvent   pScope, result
-//  case F_MYPS_ENABLED:    GCFPropSetAnswerEvent   pScope, result
-//  case F_MYPS_DISABLED:   GCFPropSetAnswerEvent   pScope, result
-//  case F_VGETRESP:        GCFPropValueEvent       pValue, pPropName
-//  case F_VSETRESP:        GCFPropAnswerEvent      pPropName
-//  case F_VCHANGEMSG:      GCFPropValueEvent       pValue, pPropName
-//  case F_SERVER_GONE:     GCFPropSetAnswerEvent   pScope, result
-
-	default:
-		break;
-	}  
-}
-
 
 //
 // initial_state(event, port)
@@ -228,15 +181,24 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		// Get access to my own propertyset.
 		string	propSetName(createPropertySetName(PSN_CAL_CTRL, getName()));
 		LOG_INFO_STR ("Activating PropertySet" << propSetName);
-		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  PST_CAL_CTRL,
-																  PS_CAT_TEMP_AUTOLOAD,
-																  &itsPropertySetAnswer));
-		itsPropertySet->enable();
-		// Wait for timer that is set in PropertySetAnswer on ENABLED event
-		}
-		break;
+		itsPropertySet = new RTDBPropertySet(propSetName,
+											 PST_CAL_CTRL,
+											 PSAT_RW_TMP,
+											 this);
+		// Wait for timer that is set on DP_CREATED event
+	}
+	break;
 
+	case DP_CREATED: {
+		// NOTE: thsi function may be called DURING the construction of the PropertySet.
+		// Always exit this event in a way that GCF can end the construction.
+		DPCreatedEvent	dpEvent(event);
+		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(0.0);
+	}
+	break;
+	  
 	case F_TIMER:
 		if (!itsPropertySetInitialized) {
 			itsPropertySetInitialized = true;
@@ -631,9 +593,9 @@ bool	CalibrationControl::startCalibration()
 	calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
 										convertFilterSelection(itsObsPar.filter));
 //	calStartEvent.nyquist_zone = itsObsPar.nyquistZone;
-	calStartEvent.rcumode()(0).setSpecinv(calStartEvent.rcumode()(0).getNyquistZone() == 2);
+//	calStartEvent.rcumode()(0).setSpecinv(calStartEvent.rcumode()(0).getNyquistZone() == 2);
 	calStartEvent.subset 	   = itsObsPar.RCUset;
-	LOG_DEBUG(formatString("Sending CALSTART(%s,%s,08X)", 
+	LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
 							obsName.c_str(), calStartEvent.parent.c_str(),
 							calStartEvent.rcumode()(0).getRaw()));
 
@@ -705,6 +667,12 @@ GCFEvent::TResult CalibrationControl::_defaultEventHandler(GCFEvent&		 event,
 		case CONTROL_QUITED:
 			result = GCFEvent::HANDLED;
 			break;
+
+		case DP_CHANGED:
+		case DP_SET:
+			result = GCFEvent::HANDLED;
+			break;
+
 	}
 
 	if (result == GCFEvent::NOT_HANDLED) {
