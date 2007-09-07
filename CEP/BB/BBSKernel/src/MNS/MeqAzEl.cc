@@ -29,6 +29,7 @@
 #include <Common/LofarLogger.h>
 
 #include <measures/Measures/MDirection.h>
+#include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MeasFrame.h>
