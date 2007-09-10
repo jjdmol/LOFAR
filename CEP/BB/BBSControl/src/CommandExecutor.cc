@@ -106,7 +106,7 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
             strategy->parmDB().instrument,
             strategy->parmDB().history,
 //            strategy->readUVW()));
-            false));
+            true));
     }
     catch(Exception &ex)
     {
@@ -351,11 +351,10 @@ void CommandExecutor::visit(const BBSSolveStep &command)
         return;
     }
 
-    // Get domain descriptors.
-    const vector<SolveDomainDescriptor> &descriptors =
-        itsKernel->getSolveDomainDescriptors();
+    // Get unknowns.
+    const vector<vector<double> > &domainUnknowns = itsKernel->getUnknowns();
 
-    // Get solve domain grid size
+    // Get solve domain grid size.
     pair<size_t, size_t> gridSize = itsKernel->getSolveDomainGridSize();
 
     size_t blockSize = 1;
@@ -366,7 +365,7 @@ void CommandExecutor::visit(const BBSSolveStep &command)
     vector<vector<double> > border(gridSize.first);
     for(size_t i = 0; i < gridSize.first; ++i)
     {
-        border[i] = descriptors[i].unknowns;
+        border[i] = domainUnknowns[i];
     }
 
     size_t convergedTotal = 0, stoppedTotal = 0;
@@ -394,7 +393,7 @@ void CommandExecutor::visit(const BBSSolveStep &command)
             << "]");
 
         LOG_DEBUG_STR("Processing domain(s) " << drange.first << " - "
-            << drange.second << " (" << descriptors.size()
+            << drange.second << " (" << domainUnknowns.size()
             << " domain(s) in total)");
 
         LOG_DEBUG_STR("Initial values: ");
@@ -410,7 +409,7 @@ void CommandExecutor::visit(const BBSSolveStep &command)
         for(size_t i = drange.first; i <= drange.second; ++i)
         {
             size_t idx = (i - drange.first) % gridSize.first;
-            itsKernel->updateSolvableParms(i, border[idx]);
+            itsKernel->updateUnknowns(i, border[idx]);
             request.getVector().push_back(new DomainRegistrationRequest(i,
                 border[idx],
                 command.maxIter(),
@@ -478,8 +477,7 @@ void CommandExecutor::visit(const BBSSolveStep &command)
                 if(resultCode == NONREADY)
                 {
                     // Update cached values of the unknowns.
-                    itsKernel->updateSolvableParms(
-                        result->getDomainIndex(),
+                    itsKernel->updateUnknowns(result->getDomainIndex(),
                         result->getUnknowns());
 /*
                     // Log the updated unknowns.
@@ -510,7 +508,6 @@ void CommandExecutor::visit(const BBSSolveStep &command)
                     stopped++;
                 }
             }
-
 
             // Update border.
             for(size_t i = (blockSize - 1) * gridSize.first;
@@ -555,12 +552,12 @@ void CommandExecutor::visit(const BBSSolveStep &command)
         ostringstream oss;
         oss << "Global statistics: " << endl;
         oss << "    converged: " << convergedTotal << "/"
-            << descriptors.size() << " ("
-            << (((double) convergedTotal) / descriptors.size() * 100.0)
+            << domainUnknowns.size() << " ("
+            << (((double) convergedTotal) / domainUnknowns.size() * 100.0)
             << "%)" << endl;
         oss << "    stopped  : " << stoppedTotal << "/"
-            << descriptors.size() << " ("
-            << (((double) stoppedTotal) / descriptors.size() * 100.0)
+            << domainUnknowns.size() << " ("
+            << (((double) stoppedTotal) / domainUnknowns.size() * 100.0)
             << "%)";
         LOG_DEBUG(oss.str());
 
