@@ -191,23 +191,5 @@ void MeqFunklet::update (const vector<double>& values)
   }
 }
 
-void MeqFunklet::update(size_t unknownIndex, const vector<double>& unknowns)
-{
-    double* coeff = itsCoeff.doubleStorage();
-    for(unsigned int i = 0; i < itsCoeff.nelements(); i++)
-    {
-        if(isCoeffSolvable(i))
-        {
-            DBGASSERT(unknownIndex < unknowns.size());
-            coeff[i] = unknowns[unknownIndex];
-            itsParmValue.rep().itsCoeff[i] = unknowns[unknownIndex];
-            unknownIndex++;
-        }
-    }
-}
-
-
-
-
 } // namespace BBS
 } // namespace LOFAR
