@@ -70,35 +70,51 @@ namespace BBS
 // It subtracts them from each other and calculates the derivatives.
 // These results can be sent to the solver to find better parameter values.
 
-struct SolveDomainDescriptor
-{
-    MeqDomain           domain;
-    vector<MeqPExpr>    parameters;
-    vector<size_t>      unknownIndex;
-    vector<double>      unknowns;
-};
-
-
 struct ProcessingContext
 {
     ProcessingContext()
-        :   derivativeCount(0),
-            domainSize(0, 0),
-            domainCount(0, 0)
+        :   domainSize(0, 0),
+            domainCount(0, 0),
+            unknownCount(0)
     {}
 
     set<baseline_t>                 baselines;
     set<size_t>                     polarizations;
     string                          outputColumn;
-    // Sum of the maximal number (over all solve domains) of partial derivatives
-    // of each parameter.
-    size_t                          derivativeCount;
+
+    // 
+    // Information for the SOLVE operation (valid if unknownCount > 0).
+    //     
 
     // Nominal solve domain size along each axis in #channels, #timeslots.
     std::pair<size_t, size_t>       domainSize;
-    // Number of solve domains along each axis (frequency, time).
+    // Number of solve domains along each axis.
     std::pair<size_t, size_t>       domainCount;
-    vector<SolveDomainDescriptor>   domains;
+    // Solve domains.
+    vector<MeqDomain>               domains;
+//    boost::multi_array<MeqDomain, 2>    domains;
+    
+    // Sum of the maximal number (over all solve domains) of unknowns of each
+    // parameter.
+    size_t                          unknownCount;
+    // The set of unknowns for each solve domain.
+    vector<vector<double> >         unknowns;
+//    boost::multi_array<double, 3>   unknowns;
+
+    // The set of parameters included in the SOLVE operation.
+//    vector<MeqPExpr>                parameters;
+    // Index into the unknown vector of the first (solvable) coefficient of a
+    // given parameter.
+//    vector<size_t>                  parameterOffset;
+};
+
+
+struct ThreadContext
+{
+    vector<casa::LSQFit*>   solvers;
+    vector<uint>            unknownIndex;
+    vector<const double*>   perturbedRe, perturbedIm;
+    vector<double>          partialRe, partialIm;
 };
 
 
@@ -157,7 +173,7 @@ public:
     // <group>
     // Update the values of solvable parms.
     // Using its spid index each parm takes its values from the vector.
-    void updateSolvableParms (const vector<double>& values);
+//    void updateSolvableParms (const vector<double>& values);
 
     // Update the given values (for the current domain) of solvable parms
     // matching the corresponding parm name in the vector.
@@ -166,9 +182,7 @@ public:
 
     // Update the solvable parm values (reread from table).
     void updateSolvableParms();
-
-    void updateSolvableParms(size_t solveDomainIndex,
-        const vector<double> unknowns);
+    void updateUnknowns(size_t domain, const vector<double> &unknowns);
 
     // Log the updated values of a single solve domain.
     //void logIteration(const string &stepName, size_t solveDomainIndex,
@@ -178,10 +192,10 @@ public:
     void writeParms();
     void writeParms(size_t solveDomainIndex);
 
-    const vector<SolveDomainDescriptor> &getSolveDomainDescriptors() const
-    { return itsContext.domains; }
+    const vector<vector<double > > &getUnknowns() const
+    { return itsContext.unknowns; }
 
-    const pair<size_t, size_t> &getSolveDomainGridSize() const
+    pair<size_t, size_t> getSolveDomainGridSize() const
     { return itsContext.domainCount; }
 
 #ifdef EXPR_GRAPH
@@ -198,7 +212,7 @@ private:
     bool setContext(const Context &context);
     void initSolveDomains(std::pair<size_t, size_t> size);
     void initPolarizationMap();
-
+    
     // Make all parameters non-solvable.
     void clearSolvableParms();
 
@@ -235,9 +249,11 @@ private:
 //baseline,
 //        bool showd);
 
-    size_t                              itsSubband;
     string                              itsInputColumn;
     bool                                itsReadUVW;
+    size_t                              itsChunkSize;
+    size_t                              itsChunkPosition;
+
     vector<int>                         itsPolarizationMap;
 
     scoped_ptr<ParmDB::ParmDB>          itsInstrumentDBase;
@@ -246,20 +262,15 @@ private:
 
     //# Container for all parameters.
     MeqParmGroup                        itsParmGroup;
+    //# All parm values in current work domain.
+    map<string, ParmDB::ParmValueSet>   itsParmValues;
+
     //# Phase reference position in J2000 coordinates.
     MeqPhaseRef                         itsPhaseRef;
-
     MeqDomain                           itsWorkDomain;
 
-    //# All parm values in current work domain.
-    map<string,ParmDB::ParmValueSet>    itsParmValues;
-
     //# Thread private buffers.
-    int itsNthread;
-    vector<casa::Block<bool> >          itsFlagVecs;
-    vector<vector<const double*> >      itsResultVecs;
-    vector<vector<double> >             itsDiffVecs;
-    vector<vector<uint> >               itsIndexVecs;
+    vector<ThreadContext>               itsThreadContexts;
 
     NSTimer                             itsPredTimer, itsEqTimer;
 
@@ -268,13 +279,7 @@ private:
     VisGrid                             itsGrid;
     VisSelection                        itsChunkSelection;
     VisData::Pointer                    itsChunkData;
-    size_t                              itsChunkSize, itsChunkPosition;
     ProcessingContext                   itsContext;
-
-#ifdef COMPUTE_SQUARED_ERROR
-    vector<double>                      itsSquaredErrorReal;
-    vector<double>                      itsSquaredErrorImag;
-#endif
 };
 
 // @}

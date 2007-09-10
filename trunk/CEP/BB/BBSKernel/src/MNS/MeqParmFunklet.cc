@@ -342,14 +342,16 @@ int MeqParmFunklet::initDomain (const vector<MeqDomain>& solveDomains,
     }
     // Determine the solvable coeff ids for each funklet.
     // The highest nr of scids is the nr of perturbed values.
+    itsPertInx = pertIndex;
     for (uint i=0; i<nDomain; ++i) {
-      int nrs = itsFunklets[i]->makeSolvable (scidIndex[i]);
+//      int nrs = itsFunklets[i]->makeSolvable (scidIndex[i]);
+      int nrs = itsFunklets[i]->makeSolvable (itsPertInx);
       scidIndex[i] += nrs;
       if (nrs > itsNrPert) {
-	itsNrPert = nrs;
+      	itsNrPert = nrs;
       }
     }
-    itsPertInx = pertIndex;
+//    itsPertInx = pertIndex;
     pertIndex += itsNrPert;
   } else {
     for (uint i=0; i<itsFunklets.size(); i++) {
@@ -408,10 +410,10 @@ void MeqParmFunklet::save()
   itsTable->unlock();
 }
 
-void MeqParmFunklet::update(size_t domainIndex, size_t unknownIndex, const vector<double> &unknowns)
+void MeqParmFunklet::update(size_t domain, const vector<double> &unknowns)
 {
-    ASSERT(domainIndex < itsFunklets.size());
-    itsFunklets[domainIndex]->update(unknownIndex, unknowns);
+    ASSERT(domain < itsFunklets.size());
+    itsFunklets[domain]->update(unknowns);
 }
 
 void MeqParmFunklet::save(size_t domainIndex)

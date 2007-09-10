@@ -78,8 +78,7 @@ using LOFAR::ParmDB::ParmDBMeta;
 Prediffer::Prediffer(const string &measurement, size_t subband,
     const string &inputColumn, const string &skyDBase,
     const string &instrumentDBase, const string &historyDBase, bool readUVW)
-    :   itsSubband              (subband),
-        itsInputColumn          (inputColumn),
+    :   itsInputColumn          (inputColumn),
         itsReadUVW              (readUVW),
         itsChunkSize            (0),
         itsChunkPosition        (0)
@@ -102,12 +101,6 @@ Prediffer::Prediffer(const string &measurement, size_t subband,
     LOG_INFO("  EXPR_GRAPH: yes");
 #else
     LOG_INFO("  EXPR_GRAPH: no");
-#endif
-
-#ifdef COMPUTE_SQUARED_ERROR
-    LOG_INFO("  COMPUTE_SQUARED_ERROR: yes");
-#else
-    LOG_INFO("  COMPUTE_SQUARED_ERROR: no");
 #endif
 
     // Open measurement.
@@ -180,30 +173,25 @@ Prediffer::Prediffer(const string &measurement, size_t subband,
     casa::Quantum<casa::Double> startTime = startTimeMeas.get("s");
     itsPhaseRef = MeqPhaseRef(itsMeasurement->getPhaseCenter(),
         startTime.getValue("s"));
-
     itsModel.reset(new Model(itsMeasurement->getInstrument(), itsParmGroup,
         itsSkyDBase.get(), &itsPhaseRef));
 
     // Allocate thread private buffers.
 #if defined _OPENMP
-    itsNthread = omp_get_max_threads();
+    itsThreadContexts.resize(omp_get_max_threads());
 #else
-    itsNthread = 1;
+    itsThreadContexts.resize(1);
 #endif
-    itsFlagVecs.resize(itsNthread);
-    itsResultVecs.resize(itsNthread);
-    itsDiffVecs.resize(itsNthread);
-    itsIndexVecs.resize(itsNthread);
 }
 
 
 Prediffer::~Prediffer()
 {
-  LOG_TRACE_FLOW( "Prediffer destructor" );
+    LOG_TRACE_FLOW( "Prediffer destructor" );
 
-  // clear up the matrix pool
-  MeqMatrixComplexArr::poolDeactivate();
-  MeqMatrixRealArr::poolDeactivate();
+    // clear up the matrix pool
+    MeqMatrixComplexArr::poolDeactivate();
+    MeqMatrixRealArr::poolDeactivate();
 }
 
 
@@ -617,7 +605,7 @@ bool Prediffer::setContext(const GenerateContext &context)
         return false;
     }
 
-    // Find all parms matching context.unknowns, exclude those that
+    // Find all parameters matching context.unknowns, exclude those that
     // match context.excludedUnknowns.
     for(MeqParmGroup::iterator parameter_it = itsParmGroup.begin();
         parameter_it != itsParmGroup.end();
@@ -648,8 +636,10 @@ bool Prediffer::setContext(const GenerateContext &context)
                 }
 
                 if(include)
+                {
                     parameter_it->second.setSolvable(true);
-
+                }
+                
                 break;
             }
         }
@@ -662,6 +652,7 @@ bool Prediffer::setContext(const GenerateContext &context)
     {
         domainSize.first = itsChunkData->grid.freq.size();
     }
+    
     if(domainSize.second == 0
         || domainSize.second > itsChunkData->grid.time.size())
     {
@@ -673,7 +664,110 @@ bool Prediffer::setContext(const GenerateContext &context)
 
     initSolveDomains(domainSize);
 
-    return (itsContext.derivativeCount > 0);
+    return (itsContext.unknownCount > 0);
+}
+
+
+void Prediffer::initSolveDomains(pair<size_t, size_t> size)
+{
+    size_t nFreqDomains =
+        ceil(itsChunkData->grid.freq.size() / static_cast<double>(size.first));
+    size_t nTimeDomains =
+        ceil(itsChunkData->grid.time.size() / static_cast<double>(size.second));
+    size_t nSolveDomains = nFreqDomains * nTimeDomains;
+
+//    cout << "freq.size(): " << itsChunkData->grid.freq.size() << " #domains: "
+//        << nFreqDomains << endl;
+//    cout << "time.size(): " << itsChunkData->grid.time.size() << " #domains: "
+//        << nTimeDomains << endl;
+
+    itsContext.domainSize = size;
+    itsContext.domainCount = make_pair(nFreqDomains, nTimeDomains);
+    itsContext.domains.resize(nSolveDomains);
+
+    // Determine solve domains.
+    size_t idx = 0, tstart = 0;
+    for(size_t tdomain = 0; tdomain < nTimeDomains; ++tdomain)
+    {
+        size_t tend = tstart + size.second - 1;
+        if(tend >= itsChunkData->grid.time.size())
+            tend = itsChunkData->grid.time.size() - 1;
+
+        size_t fstart = 0;
+        for(size_t fdomain = 0; fdomain < nFreqDomains; ++fdomain)
+        {
+            size_t fend = fstart + size.first - 1;
+            if(fend >= itsChunkData->grid.freq.size())
+                fend = itsChunkData->grid.freq.size() - 1;
+
+            itsContext.domains[idx] =
+                MeqDomain(itsChunkData->grid.freq.lower(fstart),
+                    itsChunkData->grid.freq.upper(fend),
+                    itsChunkData->grid.time.lower(tstart),
+                    itsChunkData->grid.time.upper(tend));
+
+            fstart += size.first;
+            ++idx;
+        }
+        tstart += size.second;
+    }
+
+    // Initialize meta data needed for processing.
+    int nUnknowns = 0;
+    // Temporary vector (required by MeqParmFunklet::initDomain() but not
+    // needed here).
+    vector<int> tmp(nSolveDomains, 0);
+    
+    for(MeqParmGroup::iterator it = itsParmGroup.begin();
+        it != itsParmGroup.end();
+        ++it)
+    {
+        // Determine maximal number of unknowns over all solve domains for this
+        // parameter.
+        it->second.initDomain(itsContext.domains, nUnknowns, tmp);
+    }
+    itsContext.unknownCount = nUnknowns;
+
+    // Initialize unknowns.
+    itsContext.unknowns.resize(nSolveDomains);
+    for(size_t i = 0; i < nSolveDomains; ++i)
+    {
+    	itsContext.unknowns[i].resize(nUnknowns);
+    	fill(itsContext.unknowns[i].begin(), itsContext.unknowns[i].end(), 0.0);
+    }
+    
+    // Copy unknowns (we need the unknowns of all parameters for each domain,
+    // instead of the unknowns of all domains for each parameter).
+    for(MeqParmGroup::iterator it = itsParmGroup.begin();
+        it != itsParmGroup.end();
+        ++it)
+    {
+        if(it->second.isSolvable())
+        {
+            // TODO: Create method on MeqParmFunklet to do what follows.
+            const vector<MeqFunklet*> &funklets = it->second.getFunklets();
+            ASSERT(funklets.size() == nSolveDomains);
+
+            for(size_t domain = 0; domain < nSolveDomains; ++domain)
+            {
+                size_t offset = funklets[domain]->scidInx();            
+                const MeqMatrix &coeff = funklets[domain]->getCoeff();
+                const vector<bool> &mask = funklets[domain]->getSolvMask();
+
+                for(size_t i = 0; i < coeff.nelements(); ++i)
+                {
+                    if(mask[i])
+                    {
+                        itsContext.unknowns[domain][i + offset] =
+                            coeff.doubleStorage()[i];
+                        ++offset;
+                    }
+                }
+            }
+        }
+    }
+
+    LOG_DEBUG_STR("nDerivatives: " << nUnknowns);
 }
 
 
@@ -750,51 +844,30 @@ void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
     size_t nDomains = nFreqDomains * nTimeDomains;
     ASSERT(solvers.size() >= nDomains);
 
-#ifdef COMPUTE_SQUARED_ERROR
-    itsSquaredErrorReal.resize(nDomains);
-    itsSquaredErrorImag.resize(nDomains);
-    fill(itsSquaredErrorReal.begin(), itsSquaredErrorReal.end(), 0.0);
-    fill(itsSquaredErrorImag.begin(), itsSquaredErrorImag.end(), 0.0);
-#endif
-
-    // Create thread private fitters for parallel execution.
-    vector<vector<casa::LSQFit*> > threadPrivateSolvers(itsNthread);
-    for(size_t i = 0; i < itsNthread; ++i)
-        threadPrivateSolvers[i].resize(nDomains);
-
-    // Initialize the solver objects.
-    size_t solverIdx = 0;
-    size_t domainIdx =
-        start.second * itsContext.domainCount.first + start.first;
-    for(size_t i = 0; i < nTimeDomains; ++i)
+    // Pre-allocate buffers for parallel execution.
+    for(size_t thread = 0; thread < itsThreadContexts.size(); ++thread)
     {
-        for(size_t j = 0; j < nFreqDomains; ++j)
-        {
-//            LOG_DEBUG_STR("Domain (" << j << ", " << i << ") -> "
-//                << domainIdx + j << endl);
+        ThreadContext &context = itsThreadContexts[thread];
 
-            size_t nUnknowns =
-                itsContext.domains[domainIdx + j].unknowns.size();
-            solvers[solverIdx].set(nUnknowns);
-            threadPrivateSolvers[0][solverIdx] = &solvers[solverIdx];
-
-            for(size_t j = 1; j < itsNthread; ++j)
-            {
-                threadPrivateSolvers[j][solverIdx] =
-                    new casa::LSQFit(nUnknowns);
-            }
-
-            ++solverIdx;
-        }
-        domainIdx += itsContext.domainCount.first;
+        context.solvers.resize(nDomains);
+        context.unknownIndex.resize(itsContext.unknownCount);
+        context.perturbedRe.resize(itsContext.unknownCount);
+        context.perturbedIm.resize(itsContext.unknownCount);
+        context.partialRe.resize(itsContext.unknownCount);
+        context.partialIm.resize(itsContext.unknownCount);
     }
-
-    // Size the thread private buffers.
-    for(size_t i = 0; i < itsNthread; ++i)
+    
+    // Initialize thread specific solvers.
+    for(size_t domain = 0; domain < nDomains; ++domain)
     {
-        itsResultVecs[i].resize(2 * itsContext.derivativeCount);
-        itsDiffVecs[i].resize(3 * itsContext.derivativeCount);
-        itsIndexVecs[i].resize(itsContext.derivativeCount);
+    	solvers[domain].set(itsContext.unknownCount);
+    	itsThreadContexts[0].solvers[domain] = &solvers[domain];
+    	
+    	for(size_t thread = 1; thread < itsThreadContexts.size(); ++thread)
+    	{
+        	itsThreadContexts[thread].solvers[domain] =
+        	    new casa::LSQFit(itsContext.unknownCount);
+    	}
     }
 
     // Convert from solve domain 'coordinates' to sample numbers (i.e. channel
@@ -816,29 +889,20 @@ void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
 //    LOG_DEBUG_STR("Processing visbility domain: " << vstart.first << ", "
 //        << vstart.second << " - " << vend.first << ", " << vend.second <<
 //endl);
+    // Generate equations.
+    process(true, true, true, vstart, vend, &Prediffer::generateBaseline, 0);
 
-    process(true, true, true, vstart, vend, &Prediffer::generateBaseline,
-        &threadPrivateSolvers);
-
-    // Merge the thread-specific solvers into the main ones.
-    for(size_t j = 1; j < itsNthread; ++j)
+    // Merge thead specific solvers back into the main ones.
+    for(size_t thread = 1; thread < itsThreadContexts.size(); ++thread)
     {
-        for(size_t i = 0; i < nDomains; ++i)
+        for(size_t domain = 0; domain < nDomains; ++domain)
         {
-            solvers[i].merge(*threadPrivateSolvers[j][i]);
-            delete threadPrivateSolvers[j][i];
-        }
+    	    solvers[domain].merge(*itsThreadContexts[thread].solvers[domain]);
+    	    delete itsThreadContexts[thread].solvers[domain];
+    	    itsThreadContexts[thread].solvers[domain] = 0;
+    	}
     }
-
-#ifdef COMPUTE_SQUARED_ERROR
-    for(size_t i = 0; i < nDomains; ++i)
-    {
-        LOG_DEBUG_STR("SquaredError: domain: " << domains.first + i
-            << " real: " << itsSquaredErrorReal[i]
-            << " imaginary: " << itsSquaredErrorImag[i]);
-    }
-#endif
-
+    
     LOG_DEBUG_STR("Predict: " << itsPredTimer);
     LOG_DEBUG_STR("Construct equations: " << itsEqTimer);
     itsPredTimer.reset();
@@ -871,96 +935,6 @@ void Prediffer::readParms()
 }
 
 
-void Prediffer::initSolveDomains(pair<size_t, size_t> size)
-{
-    // Need to implement some way to select local solve domains
-    // from global solve domains, see initSolvableParms().
-    size_t nFreqDomains =
-        ceil(itsChunkData->grid.freq.size() / static_cast<double>(size.first));
-    size_t nTimeDomains =
-        ceil(itsChunkData->grid.time.size() / static_cast<double>(size.second));
-    size_t nSolveDomains = nFreqDomains * nTimeDomains;
-
-    cout << "freq.size(): " << itsChunkData->grid.freq.size() << " #domains: "
-        << nFreqDomains << endl;
-    cout << "time.size(): " << itsChunkData->grid.time.size() << " #domains: "
-        << nTimeDomains << endl;
-
-    itsContext.domainSize = size;
-    itsContext.domainCount = make_pair(nFreqDomains, nTimeDomains);
-    itsContext.domains.resize(nSolveDomains);
-
-    // Generate solve domains.
-    // TODO: Update interface of MeqParmFunklet so we can lose the solveDomains
-    // vector and the domainUnknownCount vector below.
-    vector<MeqDomain> solveDomains(nSolveDomains);
-    vector<int> domainUnknownCount(nSolveDomains, 0);
-
-    size_t idx = 0, tstart = 0;
-    for(size_t tdomain = 0; tdomain < nTimeDomains; ++tdomain)
-    {
-        size_t tend = tstart + size.second - 1;
-        if(tend >= itsChunkData->grid.time.size())
-            tend = itsChunkData->grid.time.size() - 1;
-
-        size_t fstart = 0;
-        for(size_t fdomain = 0; fdomain < nFreqDomains; ++fdomain)
-        {
-            size_t fend = fstart + size.first - 1;
-            if(fend >= itsChunkData->grid.freq.size())
-                fend = itsChunkData->grid.freq.size() - 1;
-
-            itsContext.domains[idx].domain =
-                MeqDomain(itsChunkData->grid.freq.lower(fstart),
-                    itsChunkData->grid.freq.upper(fend),
-                    itsChunkData->grid.time.lower(tstart),
-                    itsChunkData->grid.time.upper(tend));
-
-            solveDomains[idx] = itsContext.domains[idx].domain;
-
-            fstart += size.first;
-            ++idx;
-        }
-        tstart += size.second;
-    }
-
-    // Initialize solve domain meta data (e.g. number of unknowns, unknown
-    // index, etc.)
-    int nDerivatives = 0;
-    for(MeqParmGroup::iterator it = itsParmGroup.begin();
-        it != itsParmGroup.end();
-        ++it)
-    {
-        // Determine maximal number of unknowns over all solve domains for this
-        // parameter.
-        int max = it->second.initDomain(solveDomains, nDerivatives,
-            domainUnknownCount);
-
-        if(max > 0)
-        {
-            const vector<MeqFunklet*>& funklets = it->second.getFunklets();
-            ASSERT(funklets.size() == nSolveDomains);
-
-            for(size_t i = 0; i < nSolveDomains; ++i)
-            {
-                SolveDomainDescriptor &domain = itsContext.domains[i];
-                domain.parameters.push_back(it->second);
-                domain.unknownIndex.push_back(domain.unknowns.size());
-
-                const MeqMatrix &coeff = funklets[i]->getCoeff();
-                const vector<bool> &mask = funklets[i]->getSolvMask();
-                for(size_t j = 0; j < coeff.nelements(); ++j)
-                {
-                    if(mask[j])
-                        domain.unknowns.push_back(coeff.doubleStorage()[j]);
-                }
-            }
-        }
-    }
-    itsContext.derivativeCount = nDerivatives;
-}
-
-
 void Prediffer::clearSolvableParms()
 {
     LOG_TRACE_FLOW( "clearSolvableParms" );
@@ -979,7 +953,7 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     BaselineProcessor processor, void *arguments)
 {
     // Determine if perturbed values have to be calculated.
-    int nPerturbedValues = derivatives ? itsContext.derivativeCount : 0;
+    int nPerturbedValues = derivatives ? itsContext.unknownCount : 0;
 
     // Get frequency / time grid information.
     int nChannels = end.first - start.first + 1;
@@ -1094,7 +1068,7 @@ void Prediffer::copyBaseline(int, void*, VisData::Pointer chunk,
         {
             // External (Measurement) polarization index.
             size_t ext_pol = *it;
-            // Internal (MEQ) polarization index.
+            // Internal (MNS) polarization index.
             int int_pol = itsPolarizationMap[ext_pol];
 
             const double *re = resultRe[int_pol];
@@ -1156,7 +1130,7 @@ void Prediffer::subtractBaseline(int, void*, VisData::Pointer chunk,
         {
             // External (Measurement) polarization index.
             size_t ext_pol = *it;
-            // Internal (MEQ) polarization index.
+            // Internal (MNS) polarization index.
             int int_pol = itsPolarizationMap[ext_pol];
 
             const double *re = resultRe[int_pol];
@@ -1183,25 +1157,16 @@ void Prediffer::generateBaseline(int threadnr, void *arguments,
     ASSERT(offset.first % itsContext.domainSize.first == 0);
     ASSERT(offset.second % itsContext.domainSize.second == 0);
 
-    // Get the solver objects.
-    vector<casa::LSQFit*> &solvers =
-        (*static_cast<vector<vector<casa::LSQFit*> >*>(arguments))[threadnr];
-
-    // Get pointers to thread specific data structures.
-    // TODO: Get rid of ghastly pointer arithmetic.
-    uint* indices = &(itsIndexVecs[threadnr][0]);
-    const double** pertReal = &(itsResultVecs[threadnr][0]);
-    const double** pertImag = pertReal + itsContext.derivativeCount;
-    double* invPert = &(itsDiffVecs[threadnr][0]);
-    double* resultr = invPert + itsContext.derivativeCount;
-    double* resulti = resultr + itsContext.derivativeCount;
-
     // Do the actual predict.
     itsPredTimer.start();
     MeqJonesResult jresult = itsModel->evaluate(baseline, request);
     itsPredTimer.stop();
 
     itsEqTimer.start();
+    
+    // Get thread context.
+    ThreadContext &threadContext = itsThreadContexts[threadnr];
+    
     // Put the results in a single array for easier handling.
     const MeqResult *predictResults[4];
     predictResults[0] = &(jresult.getResult11());
@@ -1217,6 +1182,19 @@ void Prediffer::generateBaseline(int threadnr, void *arguments,
     ASSERT(offset.first + nChannels <= chunk->grid.freq.size());
     ASSERT(offset.second + nTimeslots <= chunk->grid.time.size());
 
+    pair<size_t, size_t> relDomainOffset = make_pair
+        (offset.first / itsContext.domainSize.first,
+        offset.second / itsContext.domainSize.second);
+
+    pair<size_t, size_t> relDomainCount = make_pair
+        (ceil(nChannels / static_cast<double>(itsContext.domainSize.first)),
+        ceil(nTimeslots / static_cast<double>(itsContext.domainSize.second)));
+
+//    LOG_DEBUG_STR("relDomainOffset: " << relDomainOffset.first << ", "
+//        << relDomainOffset.second);
+//    LOG_DEBUG_STR("relDomainCount: " << relDomainCount.first << ", "
+//        << relDomainCount.second);
+
     // Get baseline index.
     size_t basel = chunk->getBaselineIndex(baseline);
 
@@ -1228,38 +1206,41 @@ void Prediffer::generateBaseline(int threadnr, void *arguments,
     {
         // External (Measurement) polarization index.
         size_t ext_pol = *it;
-        // Internal (MEQ) polarization index.
+        // Internal (MNS) polarization index.
         int int_pol = itsPolarizationMap[ext_pol];
 
-        // Get the results for this correlation.
-        const MeqResult &tcres = *predictResults[int_pol];
+        // Get the result for this polarization.
+        const MeqResult &result = *predictResults[int_pol];
 
-        // Get pointers to the main data.
-        const MeqMatrix &val = tcres.getValue();
-        const double *realVals;
-        const double *imagVals;
-        val.dcomplexStorage(realVals, imagVals);
+        // Get pointers to the main value.
+        const double *predictRe, *predictIm;
+        const MeqMatrix &predict = result.getValue();
+        predict.dcomplexStorage(predictRe, predictIm);
 
         // Determine which parameters have derivatives and keep that info.
         // E.g. when solving for station parameters, only a few parameters
         // per baseline have derivatives.
         // Note that this is the same for the entire work domain.
         // Also get pointers to the perturbed values.
-        int nrParamsFound = 0;
-        for (int scinx = 0; scinx < itsContext.derivativeCount; ++scinx)
+        int nUnknownsFound = 0;
+        for(size_t idx = 0; idx < itsContext.unknownCount; ++idx)
         {
-            if (tcres.isDefined(scinx))
+            if(result.isDefined(idx))
             {
-                indices[nrParamsFound] = scinx;
-                const MeqMatrix& valp = tcres.getPerturbedValue(scinx);
-                valp.dcomplexStorage (pertReal[nrParamsFound],
-                    pertImag[nrParamsFound]);
-                invPert[nrParamsFound] = 1. / tcres.getPerturbation(scinx,0);
-                ++nrParamsFound;
-            }
+                threadContext.unknownIndex[nUnknownsFound] = idx;
+                
+                const MeqMatrix &perturbed = result.getPerturbedValue(idx);
+                perturbed.dcomplexStorage
+                    (threadContext.perturbedRe[nUnknownsFound],
+                    threadContext.perturbedIm[nUnknownsFound]);
+                    
+                ++nUnknownsFound;
+            }        	
         }
 
-        if (nrParamsFound > 0)
+//        LOG_DEBUG_STR("nUnknownsFound: " << nUnknownsFound);
+
+        if(nUnknownsFound > 0)
         {
             for(size_t tslot = offset.second;
                 tslot < offset.second + nTimeslots;
@@ -1273,102 +1254,98 @@ void Prediffer::generateBaseline(int threadnr, void *arguments,
 //                }
 /************** DEBUG DEBUG DEBUG **************/
 
-                // Compute relative solver index (time part).
-                size_t solverIndexTime =
-                    ((tslot - offset.second) / itsContext.domainSize.second)
-                        * itsContext.domainCount.first;
+                size_t domainIdxTime = tslot / itsContext.domainSize.second;
+                size_t solverIdxTime = domainIdxTime - relDomainOffset.second;
+                domainIdxTime *= itsContext.domainCount.first;
+                solverIdxTime *= relDomainCount.first;
 
-                // Loop through all channels.
-                // Form two equations for each unflagged data point.
-                for (int ch = offset.first;
+                // Construct two equations for each unflagged visibility.
+                for(int ch = offset.first;
                     ch < offset.first + nChannels;
                     ++ch)
                 {
-                    if (!chunk->vis_flag[basel][tslot][ch][ext_pol])
+                    if(!chunk->vis_flag[basel][tslot][ch][ext_pol])
                     {
-                        // Compute relative solver index.
-                        size_t solverIndex = solverIndexTime +
-                            (ch - offset.first) / itsContext.domainSize.first;
+                        size_t domainIdx = ch / itsContext.domainSize.first;
+                        size_t solverIdx = domainIdx - relDomainOffset.first;
+                        domainIdx += domainIdxTime;
+                        solverIdx += solverIdxTime;
                             
                         // Compute right hand side of the equation pair.
-                        double diffr =
-                            real(chunk->vis_data[basel][tslot][ch][ext_pol])
-                                - *realVals;
-                        double diffi =
-                            imag(chunk->vis_data[basel][tslot][ch][ext_pol])
-                                - *imagVals;
+                        sample_t vis =
+                            chunk->vis_data[basel][tslot][ch][ext_pol];
 
-                        #ifdef COMPUTE_SQUARED_ERROR
-                        itsSquaredErrorReal[solverIndex] += diffr*diffr;
-                        itsSquaredErrorImag[solverIndex] += diffi*diffi;
-                        #endif
+                        double diffRe = real(vis) - *predictRe;
+                        double diffIm = imag(vis) - *predictIm;
 
-                        // Compute left hand side of the equation pair.
-                        for(int scinx = 0; scinx < nrParamsFound; ++scinx)
+//                        LOG_DEBUG_STR("ch: " << ch);
+//                        LOG_DEBUG_STR("predictRe: " << *predictRe << " diffRe: "
+//                            << diffRe);
+//                        LOG_DEBUG_STR("predictIm: " << *predictIm << " diffIm: "
+//                            << diffIm);
+
+                        // Approximate partial derivatives (forward
+                        // differences).
+                        for(int idx = 0; idx < nUnknownsFound; ++idx)
                         {
-                            // Approximate the derivative for real and imag
-                            // part.
-                            double invp = invPert[scinx];
-                            resultr[scinx] = (*pertReal[scinx] - *realVals)
-                                * invp;
-                            resulti[scinx] = (*pertImag[scinx] - *imagVals)
-                                * invp;
+                            double invPerturbation = 1.0 /
+                                result.getPerturbation
+                                    (threadContext.unknownIndex[idx],
+                                    domainIdx);
+                                
+                            threadContext.partialRe[idx] =
+                                (*(threadContext.perturbedRe[idx]) - *predictRe)
+                                    * invPerturbation;
+                            threadContext.partialIm[idx] =
+                                (*(threadContext.perturbedIm[idx]) - *predictIm)
+                                    * invPerturbation;
                         }
 
-                        // Now add the equations to the correct fitter
-                        // object.
-                        if (nrParamsFound != itsContext.derivativeCount)
+                        // Add condition equations to the solver.
+                        if(nUnknownsFound != itsContext.unknownCount)
                         {
-                            solvers[solverIndex]->makeNorm(
-                                itsContext.derivativeCount, indices, resultr,
-                                1.0, diffr);
-
-                            solvers[solverIndex]->makeNorm(
-                                itsContext.derivativeCount, indices, resulti,
-                                1.0, diffi);
+//                            LOG_DEBUG_STR("solverIdx: " << solverIdx);
+                            threadContext.solvers[solverIdx]->makeNorm
+                                (nUnknownsFound,
+                                &(threadContext.unknownIndex[0]),
+                                &(threadContext.partialRe[0]),
+                                1.0,
+                                diffRe);
+                                
+                            threadContext.solvers[solverIdx]->makeNorm
+                                (nUnknownsFound,
+                                &(threadContext.unknownIndex[0]),
+                                &(threadContext.partialIm[0]),
+                                1.0,
+                                diffIm);
                         }
                         else
                         {
-                            solvers[solverIndex]->makeNorm(resultr, 1.0, diffr);
-                            solvers[solverIndex]->makeNorm(resulti, 1.0, diffi);
+                            threadContext.solvers[solverIdx]->makeNorm
+                                (&(threadContext.partialRe[0]),
+                                1.0,
+                                diffRe);
+                                
+                            threadContext.solvers[solverIdx]->makeNorm
+                                (&(threadContext.partialIm[0]),
+                                1.0,
+                                diffIm);
                         }
-
-/************** DEBUG DEBUG DEBUG **************/
-/*
-                        if (showd)
-                        {
-                            cout << "eq"<<corr<<" ch " << 2*ch << " diff "
-                                << diffr;
-                            for (int ii=0; ii<nrParamsFound; ii++)
-                                cout << ' '<<resultr[ii];
-
-                            cout << endl;
-                            cout << "eq"<<corr<<" ch " << 2*ch+1 << " diff "
-                                << diffi;
-
-                            for (int ii=0; ii<nrParamsFound; ii++)
-                                cout << ' '<<resulti[ii];
-
-                            cout << endl;
-                        }
-*/
-/************** DEBUG DEBUG DEBUG **************/
                     } // !chunk->vis_flag[basel][tslot][ch][ext_pol]
 
                     // Move pointers to the next channel.
-                    for (int scinx = 0; scinx < nrParamsFound; ++scinx)
+                    for(size_t idx = 0; idx < nUnknownsFound; ++idx)
                     {
-                        pertReal[scinx]++;
-                        pertImag[scinx]++;
+                        ++threadContext.perturbedRe[idx];
+                        ++threadContext.perturbedIm[idx];
                     }
-                    realVals++;
-                    imagVals++;
+                    ++predictRe;
+                    ++predictIm;
                 }
             }
         }
     }
 
-    //fillEquationTimer.stop();
     itsEqTimer.stop();
 }
 
@@ -1417,7 +1394,7 @@ vector<MeqResult> Prediffer::getResults(bool calcDeriv)
     MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
     MeqRequest request(domain, nrchan, 1, 0);
     if (calcDeriv) {
-      request = MeqRequest(domain, nrchan, 1, itsContext.derivativeCount);
+      request = MeqRequest(domain, nrchan, 1, itsContext.unknownCount);
     }
     // Loop through expressions to be precalculated.
     // We can parallellize them at each level.
@@ -1550,6 +1527,7 @@ void Prediffer::testFlagsBaseline(int, void*, VisData::Pointer chunk,
 */
 
 
+/*
 void Prediffer::updateSolvableParms(const vector<double>& values)
 {
   // Iterate through all parms.
@@ -1562,15 +1540,18 @@ void Prediffer::updateSolvableParms(const vector<double>& values)
     }
   }
 }
+*/
 
-void Prediffer::updateSolvableParms(size_t solveDomainIndex, const vector<double> unknowns)
+void Prediffer::updateUnknowns(size_t domain, const vector<double> &unknowns)
 {
-    SolveDomainDescriptor &descriptor =
-        itsContext.domains[solveDomainIndex];
-
-    for(size_t i = 0; i < descriptor.parameters.size(); ++i)
+    for(MeqParmGroup::iterator it = itsParmGroup.begin();
+        it != itsParmGroup.end();
+        ++it)
     {
-        descriptor.parameters[i].update(solveDomainIndex, descriptor.unknownIndex[i], unknowns);
+        if(it->second.isSolvable())
+        {
+            it->second.update(domain, unknowns);
+        }
     }
 }
 
@@ -1710,15 +1691,25 @@ value);
 }
 */
 
-void Prediffer::writeParms(size_t solveDomainIndex)
+void Prediffer::writeParms(size_t domain)
 {
-    lock();
+    for(MeqParmGroup::iterator it = itsParmGroup.begin();
+        it != itsParmGroup.end();
+        ++it)
+    {
+        if(it->second.isSolvable())
+        {
+            it->second.save(domain);
+        }
+    }
+
+/*
     SolveDomainDescriptor &descriptor = itsContext.domains[solveDomainIndex];
     for(size_t i = 0; i < descriptor.parameters.size(); ++i)
     {
         descriptor.parameters[i].save(solveDomainIndex);
     }
-    unlock();
+*/
 }
 
 
