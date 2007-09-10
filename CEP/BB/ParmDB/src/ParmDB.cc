@@ -137,12 +137,16 @@ ParmDB::ParmDB (const ParmDBMeta& ptm, bool forceNew)
     itsRep = new ParmDBAIPS (ptm.getTableName(), forceNew);
     ///  } else if (ptm.getType() == "bdb") {
     ///itsRep = new ParmDBBDB (ptm, forceNew);
-  } else if(ptm.getType() == "postgres") {
+  } else if (ptm.getType() == "postgres") {
+#if defined(HAVE_PGSQL)
     itsRep = new ParmDBPostgres(ptm.getDBName(),
         ptm.getUserName(),
         ptm.getDBPwd(),
         ptm.getHostName(),
         "");
+#else
+    ASSERTSTR(false, "unsupported parmTableType: "<<ptm.getType());
+#endif
   } else {
     ASSERTSTR(false, "unknown parmTableType: "<<ptm.getType());
   }

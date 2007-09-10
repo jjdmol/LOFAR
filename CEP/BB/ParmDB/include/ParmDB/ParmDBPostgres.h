@@ -23,6 +23,9 @@
 #ifndef LOFAR_PARMDB_PARMDBPOSTGRES_H
 #define LOFAR_PARMDB_PARMDBPOSTGRES_H
 
+//# Skip all code if PostgreSQL is not configured in.
+#if defined(HAVE_PGSQL)
+
 #if defined(HAVE_PQXX)
 # include <pqxx/connection>
 #else
@@ -148,4 +151,5 @@ private:
 //# Include function templates.
 #include <ParmDB/ParmDBPostgres.tcc>
 
+#endif
 #endif
