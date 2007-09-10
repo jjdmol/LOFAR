@@ -23,6 +23,9 @@
 #ifndef LOFAR_PARMDB_PARMDBPOSTGRESTRANSACTORS_H
 #define LOFAR_PARMDB_PARMDBPOSTGRESTRANSACTORS_H
 
+//# Skip all code if PostgreSQL is not configured in.
+#if defined(HAVE_PGSQL)
+
 #if defined(HAVE_PQXX)
 # include <pqxx/connection>
 # include <pqxx/transactor>
@@ -184,4 +187,5 @@ private:
 } //# namespace BBS
 } //# namespace LOFAR
 
+#endif
 #endif

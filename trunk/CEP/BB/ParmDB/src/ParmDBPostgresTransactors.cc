@@ -24,6 +24,9 @@
 #include <ParmDB/ParmDBPostgresTransactors.h>
 #include <ParmDB/ParmDBPostgres.h>
 
+//# Skip all code if PostgreSQL is not configured in.
+#if defined(HAVE_PGSQL)
+
 namespace LOFAR
 {
 namespace ParmDB 
@@ -496,3 +499,5 @@ void PQDeleteDefValues::operator()(argument_type& transaction)
 
 } //# namespace BBS
 } //# namespace LOFAR
+
+#endif

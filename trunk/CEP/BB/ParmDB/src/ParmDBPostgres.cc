@@ -29,6 +29,9 @@
 #include <ParmDB/ParmDBPostgresTransactors.h>
 
 
+//# Skip all code if PostgreSQL is not configured in.
+#if defined(HAVE_PGSQL)
+
 namespace LOFAR
 {
 namespace ParmDB 
@@ -384,3 +387,5 @@ string ParmDBPostgres::translatePattern(const string &pattern)
 
 } //# namespace BBS
 } //# namespace LOFAR
+
+#endif
