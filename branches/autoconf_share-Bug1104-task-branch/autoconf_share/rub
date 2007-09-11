@@ -498,7 +498,7 @@ fi
 
 # Get the URL of svn.
 if [ "$usesvn" = 1 ]; then
-  svnurl=`svn info | grep 'URL: ' | sed -e 's/URL: *//' -e 's%/\(trunk\|tags\)\(/.*\)\?$%%'`
+  svnurl=`svn info | grep 'URL: ' | sed -e 's/URL: *//' -e 's%/LOFAR/.*%/LOFAR%'`
   export svnurl
 fi
 
