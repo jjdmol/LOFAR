@@ -224,14 +224,10 @@ void ComboBoxViewsSelectionChanged() {
   	}            
  
   	string datapointTypeName = "";
-//  	if(dpAccessable(g_datapoint+"__enabled")) {
-//    	datapointTypeName = getDpTypeFromEnabled(g_datapoint);
-//    	LOG_INFO("get typename from enabled",g_datapoint,datapointTypeName);
-//  	}
-//  	else 
+
 	if(dpAccessable(g_datapoint)) {
     	datapointTypeName = dpTypeName(g_datapoint);
-    	LOG_INFO("get typename not from enabled but it is accessible ",g_datapoint,datapointTypeName);
+    	LOG_INFO("get typename : ",g_datapoint,datapointTypeName);
   	}
   	else {
     	// cut system name myself. Necessary for datapoint parts that are not datapoints themselves

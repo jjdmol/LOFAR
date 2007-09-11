@@ -256,7 +256,6 @@ void treeAddDatapoints(dyn_string names)
 			}
 		}
 
-		// only add ENABLED datapoints
 		dyn_string 	reference;
 		string 		dpName 		  = aName;
 		bool 		dpIsReference = false;
@@ -311,131 +310,128 @@ void treeAddDatapoints(dyn_string names)
 		} // for all parts of the DPname
 
 		// [3] ...
-		if (checkDpEnabled(dpName)) { 		// if data point is enabled
-			// get the datapoint structure
-			dyn_string elements = getDpTypeStructure(dpName);
-			dyn_string splittedElement;
-			// is DP a real DP with more than 1 element?
-			if ((addedNode != 0) && (addingDPpart != systemName) && (dynlen(elements) > 1)) {          
-				int         elementIndex;
-				dyn_int     parentIds;
-				dyn_string  parentNodes;
+		// get the datapoint structure
+		dyn_string elements = getDpTypeStructure(dpName);
+		dyn_string splittedElement;
+		// is DP a real DP with more than 1 element?
+		if ((addedNode != 0) && (addingDPpart != systemName) && (dynlen(elements) > 1)) {          
+			int         elementIndex;
+			dyn_int     parentIds;
+			dyn_string  parentNodes;
+			parentIds[1]   = addedNode;
+			parentNodes[1] = "";
 
-				parentIds[1]   = addedNode;
-				parentNodes[1] = "";
+			string fullDPname;
+			// skip the first element in the array because it contains the root element
+			for (elementIndex = 2; elementIndex <= dynlen(elements); elementIndex++) {
+				splittedElement     = strsplit(elements[elementIndex], ".");
+				int    elementLevel = dynlen(splittedElement) - 1; 		// how deep is the element?
+				string elementName  = splittedElement[elementLevel + 1];
 
-				string fullDPname;
-				// skip the first element in the array because it contains the root element
-				for (elementIndex = 2; elementIndex <= dynlen(elements); elementIndex++) {
-					splittedElement     = strsplit(elements[elementIndex], ".");
-					int    elementLevel = dynlen(splittedElement) - 1; 		// how deep is the element?
-					string elementName  = splittedElement[elementLevel + 1];
-
-					// first handle the reference fields (those start with __)
-					if ("__" == substr(elementName, 0, 2)) { //Check if the elementName contains reference info 
-						if (elementName == "__childDp" )  {		 	// special case: __childDp ?
+				// first handle the reference fields (those start with __)
+				if ("__" == substr(elementName, 0, 2)) { //Check if the elementName contains reference info 
+					if (elementName == "__childDp" )  {		 	// special case: __childDp ?
 							
-							// __childDP contains e.g. CS001=CS001:LOFAR_PIC
-							if (strpos(addingDPpart, " ->") > -1) {
-								LOG_WARN("TreeAddDataPoints: This should not happen !!!!");
+						// __childDP contains e.g. CS001=CS001:LOFAR_PIC
+						if (strpos(addingDPpart, " ->") > -1) {
+							LOG_WARN("TreeAddDataPoints: This should not happen !!!!");
+						}
+						else {			
+							string referenceContent;
+							// get reference definition: CS001=CS001:LOFAR_PIC
+							if (dpAccessable(addingDPpart + "." + elementName)) {
+								dpGet(addingDPpart + "." + elementName, referenceContent);
 							}
-							else {			
-								string referenceContent;
-								// get reference definition: CS001=CS001:LOFAR_PIC
-								if (dpAccessable(addingDPpart + "." + elementName)) {
-									dpGet(addingDPpart + "." + elementName, referenceContent);
-								}
-								else {
-									LOG_WARN("Unable to get reference info for datapoint",addingDPpart + "." + elementName);
-								}
-								
-								dyn_string referenceSplit = strsplit(referenceContent, "=");
-								if (dynlen(referenceSplit) >= 2) {
-									string referenceText = addingDPpart + referenceSign(referenceSplit[2]);
-									// e.g. MCU001:LOFAR_PIC_Core_CS001->>
-									//only add reference if not allready present...
-									if (! dynContains(g_referenceList,referenceText + "=" + referenceSplit[2])) {
-										dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
-									}
-
-									// Change internalNodeMapping Name to reference name
-									int index = dynContains(internalFullDPName,addingDPpart);
-									dynRemove(internalFullDPName,index);
-									dynInsertAt(internalFullDPName, referenceText,index);
-
-									// Remove the old datapoint
-									int index = dynContains(names,addingDPpart);
-									dynRemove(names,index);
-									dynInsertAt(names, referenceText,index);
-									LOG_TRACE("Add reference: ", referenceText);
-
-									// Because this is a reference, the DP's of the branche must be retrieved and
-									// add to the dyn_string names, for correct build-up of the tree.
-									dyn_string refResources = navConfigGetResources(referenceText, 2);
-									dynAppend(names, refResources);
-								} // legal reference contents
-								else { // add by REO
-									LOG_WARN("Invalid reference: ", referenceContent);
+							else {
+								LOG_WARN("Unable to get reference info for datapoint",addingDPpart + "." + elementName);
+							}
+							
+							dyn_string referenceSplit = strsplit(referenceContent, "=");
+							if (dynlen(referenceSplit) >= 2) {
+								string referenceText = addingDPpart + referenceSign(referenceSplit[2]);
+								// e.g. MCU001:LOFAR_PIC_Core_CS001->>
+								//only add reference if not allready present...
+								if (! dynContains(g_referenceList,referenceText + "=" + referenceSplit[2])) {
+									dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
 								}
 
-							} // addingPart contains ->
-						} // element = __childDP
-						else { 
-							// element is not __childDP: add a reference to the tree
-							if (strpos(addingDPpart, " ->") < 0) {
-								string referenceContent;
-								if (dpAccessable(addingDPpart + "." + elementName)) {
-									dpGet(addingDPpart + "." + elementName, referenceContent);
-								}
-								else {
-									LOG_WARN("Unable to get reference info for datapoint",addingDPpart + "." + elementName);
-								}
+								// Change internalNodeMapping Name to reference name
+								int index = dynContains(internalFullDPName,addingDPpart);
+								dynRemove(internalFullDPName,index);
+								dynInsertAt(internalFullDPName, referenceText,index);
 
-								LOG_TRACE("ref. content to split: " + referenceContent);
-								dyn_string referenceSplit = strsplit(referenceContent, "=");
-								if (dynlen(referenceSplit) >=2) {
-									string referenceText = addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
+								// Remove the old datapoint
+								int index = dynContains(names,addingDPpart);
+								dynRemove(names,index);
+								dynInsertAt(names, referenceText,index);
+								LOG_TRACE("Add reference: ", referenceText);
 
-									//only add reference if not allready present...
-									if (! dynContains(g_referenceList,referenceText + "=" + referenceSplit[2])) {
-										dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
-									} 
-									dynAppend(names, referenceText);
-									// Because this is a reference, the DP's of the branche must be retrieved and
-									// add to the dyn_string names, for correct build-up of the tree.
-									dyn_string refResources = navConfigGetResources(referenceText, 2);
-									dynAppend(names, refResources);
+								// Because this is a reference, the DP's of the branche must be retrieved and
+								// add to the dyn_string names, for correct build-up of the tree.
+								dyn_string refResources = navConfigGetResources(referenceText, 2);
+								dynAppend(names, refResources);
+							} // legal reference contents
+							else { // add by REO
+								LOG_WARN("Invalid reference: ", referenceContent);
+							}
+
+						} // addingPart contains ->
+					} // element = __childDP
+					else { 
+						// element is not __childDP: add a reference to the tree
+						if (strpos(addingDPpart, " ->") < 0) {
+							string referenceContent;
+							if (dpAccessable(addingDPpart + "." + elementName)) {
+								dpGet(addingDPpart + "." + elementName, referenceContent);
+							}
+							else {
+								LOG_WARN("Unable to get reference info for datapoint",addingDPpart + "." + elementName);
+							}
+
+							LOG_TRACE("ref. content to split: " + referenceContent);
+							dyn_string referenceSplit = strsplit(referenceContent, "=");
+							if (dynlen(referenceSplit) >=2) {
+								string referenceText = addingDPpart + "_" + referenceSplit[1] + referenceSign(referenceSplit[2]);
+
+								//only add reference if not allready present...
+								if (! dynContains(g_referenceList,referenceText + "=" + referenceSplit[2])) {
+									dynAppend(g_referenceList, referenceText + "=" + referenceSplit[2]);
 								} 
-								else {
-									LOG_DEBUG("No reference info found");
-								}
-
-							} // addingPart contains ->
-						} // __childDP or not
-					} // element started with __
-					else if (g_showDPE) { //show elements?
-						//a reference element must never appear in the treebrowser
-						fullDPname = addingDPpart + parentNodes[elementLevel] + "." + elementName;
-						if (mappingHasKey(g_datapoint2itemID, fullDPname)) {
-							addedNode = g_datapoint2itemID[fullDPname];
-						}
-						else {
-							addedNode = treeAddNode(parentIds[elementLevel], pathIndex - 1 + elementLevel, elementName); 
-							LOG_TRACE("Added element node: ", addedNode, parentIds[elementLevel], pathIndex - 1 + elementLevel, fullDPname);
-							if (addedNode != 0) {
-								internalNodeMapping[dynlen(internalNodeMapping) + 1] = addedNode;
-								internalFullDPName[dynlen(internalFullDPName) + 1] = fullDPname;
+								dynAppend(names, referenceText);
+								// Because this is a reference, the DP's of the branche must be retrieved and
+								// add to the dyn_string names, for correct build-up of the tree.
+								dyn_string refResources = navConfigGetResources(referenceText, 2);
+								dynAppend(names, refResources);
+							} 
+							else {
+								LOG_DEBUG("No reference info found");
 							}
+
+						} // addingPart contains ->
+					} // __childDP or not
+				} // element started with __
+				else if (g_showDPE) { //show elements?
+					//a reference element must never appear in the treebrowser
+					fullDPname = addingDPpart + parentNodes[elementLevel] + "." + elementName;
+					if (mappingHasKey(g_datapoint2itemID, fullDPname)) {
+						addedNode = g_datapoint2itemID[fullDPname];
+					}
+					else {
+						addedNode = treeAddNode(parentIds[elementLevel], pathIndex - 1 + elementLevel, elementName); 
+						LOG_TRACE("Added element node: ", addedNode, parentIds[elementLevel], pathIndex - 1 + elementLevel, fullDPname);
+						if (addedNode != 0) {
+							internalNodeMapping[dynlen(internalNodeMapping) + 1] = addedNode;
+							internalFullDPName[dynlen(internalFullDPName) + 1] = fullDPname;
 						}
+					}
 
-						// remember this node as parent at its level in case there are elements below this one
-						parentIds[elementLevel + 1] = addedNode; 
-						parentNodes[elementLevel + 1] = parentNodes[elementLevel] + "." + elementName;
-					} // element did not start with __
+					// remember this node as parent at its level in case there are elements below this one
+					parentIds[elementLevel + 1] = addedNode; 
+					parentNodes[elementLevel + 1] = parentNodes[elementLevel] + "." + elementName;
+				} // element did not start with __
 
-				} // for all elements of the DP
-			} // DP is not a systemname and has >1 elements
-		} // datapoint is enabled
+			} // for all elements of the DP
+		} // DP is not a systemname and has >1 elements
 
 		if (dynlen(internalNodeMapping) != 0) { 
 			// update g_datapoint2itemID and g_itemID2datapoint with all parts of the DP.
@@ -1077,7 +1073,6 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
 	for (int i = 2; i <= dynlen(tab); i++) {
 		tempDP = tab[i][1];
 		if (tempDP != "") {
-			strreplace(tempDP, "__enabled.", "");
 			if (checkDpPermit(tempDP)) {
 				if (tempDP != "") {
 					dynAppend(output, tempDP);
@@ -1103,8 +1098,7 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
 // Function getDpTypeStructure(datapoint)
 //      
 // Gets the type structure of a DP located on a local system or remote system
-// even if DP does not exists, if not exists than the __enabled DP will be used
-// if DPtype in the __enabled DP has no DP instance than a dummy DP will be created
+// even if DP does not exists a dummy DP will be created
 //
 // Params: dp - DP from which the typestructure is requested
 //              NOTE: The dp param may not contains element, config or attribute tags
@@ -1113,6 +1107,7 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
 ///////////////////////////////////////////////////////////////////////////
 dyn_string getDpTypeStructure(string dp)
 {
+
   LOG_DEBUG("getDpTypeStructure: ", dp);
 
   dyn_string typeStructure = makeDynString();
@@ -1123,28 +1118,16 @@ dyn_string getDpTypeStructure(string dp)
   }
   else {
     string systemName;
-    string dpType = getDpTypeFromEnabled(dp);
-    if (dpType != "-1") {      
-      systemName = dpSubStr(dp + "__enabled.", DPSUB_SYS);
-      if (dynlen(dpTypes(dpType, getSystemId(systemName))) == 1) {
-        dyn_string dps = dpNames(systemName + "*", dpType);      
-        if (dynlen(dps) == 0) {
-          LOG_INFO("Create a dummy DP '__dummy_" + dpType + 
-                    "' to get type info for DP '" + dp + 
-                    "' (Type: '" + dpType + "', Sys: '" + systemName + "')");
-          dp = "__dummy_" + dpType; // system name may not be included in name of the DP to be created
-          dpCreate(dp, dpType, getSystemId(systemName));
-          dp = systemName + dp;
-		  createdDummy = TRUE;
-        }
-        else {
-          dp = dps[1];
-        }
-        typeStructure = dpNames(dp + ".**");
-		if (createdDummy) {
-			// REO todo: dpDelete (dp); ????
-		} 
-      }
+    LOG_INFO("Create a dummy DP '__dummy_" + dpType + 
+             "' to get type info for DP '" + dp + 
+             "' (Type: '" + dpType + "', Sys: '" + systemName + "')");
+    dp = "__dummy_" + dpType; // system name may not be included in name of the DP to be created
+    dpCreate(dp, dpType, getSystemId(systemName));
+    dp = systemName + dp;
+    createdDummy = TRUE;
+    typeStructure = dpNames(dp + ".**");
+    if (createdDummy) {
+	// REO todo: dpDelete (dp); ???
     }
   }
 
@@ -1156,44 +1139,3 @@ dyn_string getDpTypeStructure(string dp)
   return typeStructure;
 }
 
-///////////////////////////////////////////////////////////////////////////
-//
-// Function getDpTypeFromEnabled(dpname_without__enabled) : type
-//
-// Retrieves information from an __enabled DP, these DPs contain a value
-// of the format: ???|DPtype
-//
-// Input: 1. Datapoint name, including systemName
-//
-// Output: Datapoint type, stored in the __enabled
-//         
-///////////////////////////////////////////////////////////////////////////
-string getDpTypeFromEnabled(string dp)
-{
-	LOG_DEBUG("getDpTypeFromEnabled: ", dp);
-
-	// first try normal DP
-	string retDpType = -1;
-	if (dpAccessable(dp)) {
-		retDpType = dpTypeName(dp);
-	}
-
-/*	if (strlen(retDpType) == 0) {
-		retDpType = "-1";
-		if (dpAccessable(dp + "__enabled.")) {		// try __enabled DP
-			// get value and split it on | to get the second part
-			string enabledValue;
-			dyn_string enabledValueSplit;
-			dpGet(dp + "__enabled.", enabledValue);		
-			enabledValueSplit = strsplit(enabledValue, "|");
-			if (dynlen(enabledValueSplit) == 2) {
-				retDpType = enabledValueSplit[2];
-			}
-			else {  
-				LOG_WARN("Erronous '" + dp + "__enabled' value: " + enabledValueSplit);
-			}
-		}
-	}
-*/
-	return retDpType;
-}

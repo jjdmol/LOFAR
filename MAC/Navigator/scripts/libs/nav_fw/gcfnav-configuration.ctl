@@ -30,7 +30,7 @@
 
 global string   DPNAME_NAVIGATOR                = "__navigator";
 global string   ELNAME_RESOURCEROOTS            = "resourceRoots";
-global string   ELNAME_IGNOREENABLEDROOTS       = "ignoreEnabledRoots";
+
 global string   ELNAME_ENVIRONMENTNAMES         = "environmentNames";
 global string   ELNAME_ENVIRONMENTGROUPS        = "environmentGroups";
 global string   ELNAME_SELECTEDELEMENT          = "selectedElement";
@@ -471,48 +471,7 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   /////////////////////////////////////////////////////////////
   LOG_DEBUG("All resources: ", dynlen(allResources));
 
-/*  dyn_string newCollection;
-  dyn_string checkCollection = allResources; // collection with DP's, which have no "__enabled" equivalent
-  dyn_string enabledCollection = dynPatternMatch("*__enabled", allResources);
-  int enabledCollectionLength = dynlen(enabledCollection);
-  int position;
-  for (int j = 1; j<= enabledCollectionLength; j++) {
-    string enabledCollectionItem = enabledCollection[j];
-    strreplace(enabledCollectionItem, "__enabled", "");
-    position = dynContains(checkCollection, enabledCollectionItem);
-    if (position > 0) {
-      LOG_DEBUG("Adding: ", enabledCollectionItem);
-      dynAppend(newCollection, enabledCollectionItem);
-      dynRemove(checkCollection, position);
-      dynRemove(checkCollection, dynContains(checkCollection, enabledCollectionItem + "__enabled"));
-    }
-    else if (0 == position) {
-      if (navPMLisTemporary(enabledCollectionItem)) {
-        LOG_DEBUG("Adding temp: ", enabledCollectionItem);
-        dynAppend(newCollection, enabledCollectionItem);
-      }
-    }
-  }
-  ///////////////////////////////////////////////////////////////
 
-  if (dynlen(checkCollection) > 0) {
-    dyn_string ignoreEnabledDPs;
-    dyn_errClass err;
-    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS, ignoreEnabledDPs);
-    // check the ignoreEnabledRoots field
-    err = getLastError();
-    if (dynlen(err) == 0) { 
-      dyn_string foundIgnoreItems;   
-      for (int n = 1; n <= dynlen(ignoreEnabledDPs); n++) {
-        foundIgnoreItems = dynPatternMatch(ignoreEnabledDPs[n] + "*", checkCollection);
-        dynAppend(newCollection, foundIgnoreItems);
-      }
-    }
-  }
-  ////////////////////////////////////////////////////////////////
-  allResources = newCollection;
-
-*/
 
   /////////////////////////////////////////////////////////////
   // strip everything below the requested level
@@ -609,12 +568,7 @@ string navConfigGetViewConfig(string datapointPath)
   dyn_string reference;
   
   checkForReference(dpNameTemp, reference, isReference);
-//  if (dpAccessable(dpNameTemp + "__enabled")) {
-//    datapointType = getDpTypeFromEnabled(dpNameTemp);
-//    // find __nav_<datapointType>_viewconfig datapoint
-//   dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointType + "_viewconfig";
-//  }
-//  else
+
   if (dpExists(dpNameTemp)) { // Explicit use op dpExist!!!
     datapointType = dpTypeName(datapointPath);
     dpViewConfig = "__nav" + navConfigGetEnvironment("", "") + "_" + datapointType + "_viewconfig";
@@ -1189,139 +1143,5 @@ void navConfigAddRemoveSubView()
   PanelOff();
 }
 
-///////////////////////////////////////////////////////////////////////////
-//
-// Function navConfigSubscribePSIndicationChange()
-// 
-// subscribes to the __pa_PSIndication DP of the datebase to monitor 
-// possible treechanges.
-//
-// Added 6-2-2007 A.Coolen
-//
-// REO: This function should not be in this sourcefile.
-//
-///////////////////////////////////////////////////////////////////////////
-void navConfigSubscribePSIndicationChange() {
 
-  // Routine to try to force a treeupdate everytime a datapoint is deleted or added
-  // this is indictaed by a line like: d|someDatapoint or e|somedatapoint
-  // in the __pa_PPSIndication DP in any of the stations or the mainCU's
-	
-  // query to trigger an action everytime such a point is changed
-  string query = "SELECT '_original.._value' FROM '__pa_PSIndication' REMOTE ALL";
-
-  dpQueryConnectAll("navConfigPSIndicationTriggered",false,"MainPSIndicationChange",query);
-}
-
-
-
-///////////////////////////////////////////////////////////////////////////
-//
-// EventHandler navConfigPSIndicationTriggered(identifier, dyn &result)
-// 
-// Callback where a trigger of __pa_PPSIndication is handled.
-//
-// Added 6-2-2007 A.Coolen
-//
-// REO: This function should not be in this sourcefile.
-//
-///////////////////////////////////////////////////////////////////////////
-void navConfigPSIndicationTriggered(string identifier, dyn_dyn_anytype result) {
-
-  // PSIndication was changed For now we only want to set the triggerUpdate DP in all 
-  // navigatorInstances to activate the treeUpdates.
-  // The info however also contains a d (=delete) or a e (=enable)  
-  // and the datapoint that was actually involved. I will save those now, they are not used, 
-  // but might come in handy in a later stage.
-
-  if (g_initializing) {
-    return;
-  }
-  int i,j;
-  string action    = "";
-  string datapoint = "";
-  string database  = "";
-  
-  for(i=2;i<=dynlen(result);i++) {
-	
-    database=dpSubStr(result[i][1],DPSUB_SYS);
-	  
-    dyn_string vals= strsplit(result[i][2],"|");
-    
-    if (dynlen(vals) > 1) {		
-      action = vals[1];
-      datapoint = database+vals[2];
-    }
-  }
-
-
-//  DebugTN("*******************************************");
-//  DebugTN("g_itemID2datapoint : ",g_itemID2datapoint);
-//  DebugTN("g_datapoint2itemID : ",g_datapoint2itemID);
-//  DebugTN("g_referenceList : ",g_referenceList);
-//  DebugTN("result in trigger : ", result);
-//  DebugTN("Navigator instance: ",DPNAME_NAVIGATOR+navConfigGetNavigatorID());
-//  DebugTN("TreenodeCount : ",fwTreeView_getNodeCount());
-//  DebugTN("*******************************************");
-
-  // Check if the datapoint contains a reference and if this is the case, change the datapoint to the
-  // full refered path.
-  dyn_string reference;
-  bool dpIsReference;
-  inRefList(datapoint, reference, dpIsReference);
-
-  // now we have the full datapoint path, and we need to determine what to do\
-  // based on the action 
-  // (e) there is a new enabled datapoint, we need to look if it is in the current active tree
-  // if it is, then nothing needs to be done. if it is not we need to reload that part of the tree.
-  //
-  // (d) a datapoint had been removed from the tree, we need to check if it was available in our tree,
-  // if not, then nothing needs to be done, if it was we need to collapse the tree from the datapoint that was
-  // removed
-
-
-  // first check if We have the point in our lists anyway
-  long nodeID = getNodeFromDatapoint(datapoint);
-//  DebugTN("Node found from datapoint : ", nodeID);
-
-  //Check if action is enable and if point is allready in tree or not
-  if (nodeID > 0  && action == "d" ) {
-
-
-  // check if action = delete and if point is still available in the tree.
-  } else if (nodeID <= 0  && action == "e"){
-
-
-  } else {
-//    DebugTN("Illegal action in combination with nodeID");
-  }
-
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-//
-// Function navConfigTriggerAllNavigatorRefresh()
-// 
-// Find out all navigator instances and trigger the triggerUpdate DP
-// causing an update of the navigator.
-//
-// Added 6-2-2007 A.Coolen
-//
-// REO: This function should not be in this sourcefile.
-//
-///////////////////////////////////////////////////////////////////////////
-void navConfigTriggerAllNavigatorRefresh() {
-
-  // Routine to find all Navigator Instances and set the triggerUpdate
-
-  dyn_dyn_anytype tab;
-  int i;
-  string query = "SELECT '_original.._value' FROM '__navigator*.triggerUpdate'";
-  dpQuery(query, tab);
-	 
-  for(i=2;i<=dynlen(tab);i++) {
-    dpSet(tab[i][1], 1);
-  }
-}
 

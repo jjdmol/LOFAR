@@ -28,7 +28,6 @@
 #uses "nav_fw/gcf-util.ctl"
 #uses "nav_fw/gcf-common.ctl"
 #uses "nav_fw/gcfnav-configuration.ctl"
-#uses "nav_fw/gcfnav-pmlinterface.ctl"
 #uses "nav_fw/gcfnav-tree.ctl"
 
 
@@ -404,10 +403,7 @@ void Navigator_HandleEventInitialize()
 	navConfigSetNavigatorID(navID); 
 	navConfigIncreaseUseCount();
 	navConfigSubscribeUpdateTrigger("Navigator_HandleUpdateTrigger"); // __navigator<x>.triggerUpdate 
-	navConfigSubscribePSIndicationChange();
-
-	navPMLinitialize();	// gcfInit + dpConnect(HandlePanelMessage, __navigator<x>.message)
-
+	
 	g_initializing = true;
 
 	// if ActiveX is supported use that treeObject otherwise use the 'normal' one.
@@ -474,8 +470,6 @@ void Navigator_HandleEventTerminate()
 void Navigator_HandleEventClose()
 {
   LOG_DEBUG("Navigator_HandleEventClose()");
-
-  navPMLterminate();
 
   navConfigDecreaseUseCount();
     
