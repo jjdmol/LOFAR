@@ -137,11 +137,11 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
       		REMOTESYSTEM = " REMOTE '" + strrtrim(dpSubStr(datapointPath, DPSUB_SYS), ":") + "'";
 		}
   	}
-  	//How many items must be retrieved (this __enabled and this is a DP-Type)
+  	//How many items must be retrieved (this is a DP-Type)
   	if (first > 0) {
   	  	firstXResults = " FIRST " + first;
   	}
-  	dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath + "__enabled' " + firstXResults + REMOTESYSTEM, tab);
+  	dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath  + firstXResults + REMOTESYSTEM, tab);
   	int maximumCount = dynlen(tab);
   	int maximumCounter = 0;
   	int i = 2;
@@ -154,7 +154,6 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
     	for (i = 2; i <= dynlen(tab); i++) {
       		int functionOk;
       		fullDpName = tab[i][1];
-      		strreplace(fullDpName, "__enabled.", "");
 
       		if ((dynlen(strsplit(fullDpName, "_")) <= (currentDepth + searchDepth)) || (searchDepth == 0)) {
         		dyn_string dpes = dpNames(fullDpName + ".**;");

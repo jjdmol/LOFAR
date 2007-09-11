@@ -230,7 +230,6 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints) {
   	if(start) {
     	for(int i=1; i<=dynlen(newDatapoints); i++) {
       		string dpToConnect = navViewPlotGetSplitPart(newDatapoints[i],2 );
-      		navPMLloadPropertySet(dpToConnect);
       		dpConnect("RecordSpectrum", FALSE, dpToConnect);
       		//Write file record info to disc
       		navViewPlotWriteRecordDesciptionFile(newDatapoints[i], TRUE);
@@ -238,7 +237,6 @@ navViewPlotRecordControl(bool start, dyn_string newDatapoints) {
   	}
   	else {
     	for(int i=1; i<=dynlen(newDatapoints); i++) {
-      		navPMLunloadPropertySet(newDatapoints[i]);
       		navViewPlotWriteRecordDesciptionFile(newDatapoints[i], FALSE);
       		dpDisconnect("RecordSpectrum", newDatapoints[i]);
     	}

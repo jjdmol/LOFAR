@@ -197,7 +197,6 @@ void navViewPlotWhenActive(string dp1, int active,
   	dyn_string dp1Split = strsplit(dp1, ".");
   	if (active==1) {
     	string dpToConnect = navViewRetrieveDpName($datapoint, dpName);
-    	navPMLloadPropertySet(dpToConnect);
     	dpConnect("navViewPlotMainPlotSequence" + dp1Split[2], dpToConnect);
   	}
   	else {
@@ -596,7 +595,6 @@ void clearListTable() {
   	dyn_string propNames;
   	dpGet($configDatapoint + ".queryResult", propNames);
   	for (int i = 1; i <= dynlen(propNames); i++) {
-    	navPMLunloadPropertySet(propNames[i]);
     	dpDisconnect("connectActualValue", propNames[i]);
   	}
   	TableProperties.deleteAllLines;
@@ -614,7 +612,6 @@ connectTable(dyn_string propNames) {
   	LOG_DEBUG("connectTable: ", propNames);
   	dpSet($configDatapoint + ".queryResult", propNames);
   	for(int i = 1; i <= dynlen(propNames); i++) {
-    	navPMLloadPropertySet(propNames[i]);
     	dpConnect("connectActualValue", propNames[i]);
   	}
 }
