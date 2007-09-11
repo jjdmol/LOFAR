@@ -38,7 +38,7 @@ namespace LOFAR
     {
     private:
       std::string  itsMS;
-      bool         itsFixed;
+      int          itsFixed;
       int          itsWindow;
       MS_File*              myMS;
       BandpassCorrector* itsCorrector;
