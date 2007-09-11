@@ -1246,6 +1246,20 @@ void Prediffer::generateBaseline(int threadnr, void *arguments,
                 tslot < offset.second + nTimeslots;
                 ++tslot)
             {
+                // Skip timeslot if flagged.
+                if(chunk->tslot_flag[basel][tslot])
+                {
+                    // Move pointers to the next timeslot.
+                    for(size_t idx = 0; idx < nUnknownsFound; ++idx)
+                    {
+                        threadContext.perturbedRe[idx] += nChannels;
+                        threadContext.perturbedIm[idx] += nChannels;
+                    }
+                    predictRe += nChannels;
+                    predictIm += nChannels;
+                    continue;
+                }
+
 /************** DEBUG DEBUG DEBUG **************/
 //                if (showd)
 //                {
