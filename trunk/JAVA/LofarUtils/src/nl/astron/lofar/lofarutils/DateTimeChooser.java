@@ -9,8 +9,12 @@ package nl.astron.lofar.lofarutils;
 import com.toedter.components.JSpinField;
 import java.awt.Component;
 import java.beans.PropertyChangeEvent;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 import javax.swing.JOptionPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -72,7 +76,7 @@ public class DateTimeChooser
         calendar.addPropertyChangeListener(this);
         calendar.getYearChooser().addPropertyChangeListener(this);
         
-        setDate (initialDate == null ? new Date() : initialDate);
+        setDate (initialDate == null ? new Date() : initialDate,true);
     }
     
     /** gets the current date from the date-time chooser */
@@ -86,19 +90,25 @@ public class DateTimeChooser
         return cal.getTime();
     }
     
-    /** sets the given date as a new value for the date-time chooser <p>
+        
+     /** sets the given date as a new value for the date-time chooser <p>
      *
      *@param newDate to be set into the chooser
      */
-    public void setDate(Date newDate) {
+    public void setDate(Date newDate,boolean isOld) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(newDate);
         calendar.setDate(newDate);
         hours.setValue(cal.get(Calendar.HOUR_OF_DAY));
         mins.setValue(cal.get(Calendar.MINUTE));
-        secs.setValue(cal.get(Calendar.SECOND));
+        if (!isOld) {
+          secs.setValue(0);
+        } else {
+          secs.setValue(cal.get(Calendar.SECOND));
+        }
     }
     
+
     /** Returns a date that was used to initiate this date-time chooser instance. 
      *  It can be null.
      */
@@ -162,7 +172,7 @@ public class DateTimeChooser
     public static Date showDialog (Component parent,
 				   String title,
 				   DateTimeChooser chooser) {
-	String[] buttons = new String[] { "OK", "Empty", "Cancel"};
+	String[] buttons = new String[] { "Cancel", "OK"};
 	int selected =
 	    JOptionPane.showOptionDialog (parent,
 					  chooser,
@@ -173,11 +183,10 @@ public class DateTimeChooser
 					  buttons,
 					  null);
 	if (selected == 0)
-	    return chooser.getDate();         // 'ok' selected
-	else if (selected == 1)
-	    return null;                      // 'empty' selected
-	else
 	    return chooser.getInitialDate();  // cancelled
+	else
+            return chooser.getDate();         // 'ok' selected
+	    
     }   
     
     
@@ -285,7 +294,18 @@ public class DateTimeChooser
     }//GEN-LAST:event_zeroActionPerformed
 
     private void nowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nowActionPerformed
-        DateTimeChooser.this.setDate(new Date());
+        SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MMM-d HH:mm");
+        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d HH:mm");
+        aGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
+        Date aD = new Date();
+        String  aS = aGMT.format(aD);
+        
+        try {
+            aD=aDate.parse(aS);
+        } catch (ParseException ex) {
+            ex.printStackTrace();
+        }
+        DateTimeChooser.this.setDate(aD,false);
     }//GEN-LAST:event_nowActionPerformed
    
 
