@@ -77,9 +77,13 @@ fi
 
 # Initialize auto tools if configure.in exists.
 if [ -r configure.in ]; then
+  libtoolcmd=libtoolize
+  if test `uname -s` = "Darwin"; then
+    libtoolcmd=glibtoolize
+  fi
   set -x
   aclocal -I ./autoconf_share \
-  && libtoolize --force --copy \
+  && $libtoolcmd --force --copy \
   && autoheader \
   && automake --foreign --add-missing --copy \
   && autoconf
