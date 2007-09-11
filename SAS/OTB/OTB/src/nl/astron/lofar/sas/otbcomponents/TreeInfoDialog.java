@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
@@ -108,21 +109,21 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             itsCampaign = itsTree.campaign;
             itsStarttime = itsTree.starttime;
             // try to set the dates
-            if (itsStarttime.length() > 0) {
+            if (itsStarttime.length() > 0 && !itsStarttime.equals("not-a-date-time")) {
                 try {
                     itsStartDate = id.parse(itsStarttime);
                 } catch (ParseException ex) {
-                    logger.debug("Error converting starttime");
+                    logger.debug("Error converting starttime "+itsStarttime);
                     itsStarttime="";
                     itsStartDate=null;
                 }
             }
             itsStoptime = itsTree.stoptime;
-            if (itsStoptime.length() > 0) {
+            if (itsStoptime.length() > 0 && !itsStoptime.equals("not-a-date-time")) {
                 try {
                     itsStopDate = id.parse(itsStoptime);
                 } catch (ParseException ex) {
-                    logger.debug("Error converting stoptime");
+                    logger.debug("Error converting stoptime " + itsStoptime);
                     itsStoptime="";
                     itsStopDate=null;
                 }
@@ -161,9 +162,18 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         // Set the dateformat OTDB takes
         SimpleDateFormat id = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
         if (time.equals("start")) {
-            startTimeInput.setText(id.format(itsStartDate));
+            if (itsStartDate != null) {
+              startTimeInput.setText(id.format(itsStartDate));
+            } else {
+                startTimeInput.setText("not-a-date-time");
+            }
+              
         } else if (time.equals("stop")) {
-            stopTimeInput.setText(id.format(itsStopDate));
+            if (itsStopDate != null) {
+                stopTimeInput.setText(id.format(itsStopDate));
+            } else {
+                stopTimeInput.setText("not-a-date-time");
+            }
         }
     }
 
@@ -173,9 +183,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         // the enddate needs to be further in the future then the starttime/.
 
         String anErrorMsg = "";
-        if (itsStartDate == null || startTimeInput.getText().length() == 0) {
+        if (itsStartDate == null || startTimeInput.getText().length() == 0 || startTimeInput.getText().equals("not-a-date-time")) {
             anErrorMsg = "Start time not set";
-        } else if (itsStopDate == null || stopTimeInput.getText().length() == 0) {
+        } else if (itsStopDate == null || stopTimeInput.getText().length() == 0 || stopTimeInput.getText().equals("not-a-date-time")) {
             anErrorMsg = "Stop time not set";
         } else {
             
@@ -183,22 +193,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                anErrorMsg = "Stop time BEFORE start time";
             }
             
-            // check if date is further away then now + 4minutes
-            Date now = new Date();
+            // check if date is further away then now(in GMT) + 4 minutes
+            Date now = getGMTTime(new Date());
             Calendar cal = Calendar.getInstance();
             cal.setTime(now);
             cal.set(Calendar.MINUTE,cal.get(Calendar.MINUTE)+4);
-            DateFormat idf = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
-            DateFormat odf = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
-            odf.setTimeZone(TimeZone.getTimeZone("GMT"));
-            String aGMTTime = odf.format(cal.getTime());
-            Date minTime = null;
-            try {
-                minTime = idf.parse(aGMTTime);
-            } catch (ParseException ex) {
-                logger.debug("Error converting date string: " + aGMTTime);
-                return false;
-            }
+            Date minTime = getGMTTime(cal.getTime());
             if (itsStartDate.before(minTime)) {
                 anErrorMsg = "Start time needs to be minimal 4 minutes away from now (GMT)";
             }
@@ -211,14 +211,9 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         }
         
         if (anErrorMsg.length() > 0) {
-            anErrorMsg +="\n Do you want to Continue?";
-
-            // create a warning popup.
-            if (JOptionPane.showConfirmDialog(this,anErrorMsg,"Warning",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION) {
-                return true;
-            } else {
-                return false;
-            }
+            // create an Info popup.
+            JOptionPane.showMessageDialog(this,anErrorMsg,"Warning",JOptionPane.WARNING_MESSAGE);
+            return false;
         }
         return true;
 
@@ -612,10 +607,28 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private Date getGMTTime(Date aDate) {
+        SimpleDateFormat aD   = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
+        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
+        aGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
+        String  aS = aGMT.format(aDate);
+        
+        Date aGMTDate = null;
+        try {
+            return aD.parse(aS);
+        } catch (ParseException ex) {
+            ex.printStackTrace();
+        }        
+        return aGMTDate;
+        
+    }
+    
     private void setStopDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStopDateButtonActionPerformed
-        Date initialDate = new Date();
-        if (itsStartDate != null | itsStartDate.after(initialDate)) {
-            initialDate=itsStartDate;
+        Date initialDate = getGMTTime(new Date());
+        if (itsStopDate != null) {
+            if (itsStopDate.after(initialDate)) {
+                initialDate=itsStopDate;
+            }
         }
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
         itsStopDate = DateTimeChooser.showDialog(this,"StopTime",chooser);
@@ -623,7 +636,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_setStopDateButtonActionPerformed
 
     private void setStartDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStartDateButtonActionPerformed
-        Date initialDate = new Date();
+        Date initialDate = getGMTTime(new Date());
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
         itsStartDate = DateTimeChooser.showDialog(this,"StartTime",chooser);
         composeTimeString("start");
