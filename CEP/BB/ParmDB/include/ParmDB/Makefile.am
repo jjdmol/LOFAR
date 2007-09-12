@@ -1,6 +1,6 @@
 INSTHDRS = \
 ParmValue.h ParmDomain.h ParmDBMeta.h \
-ParmDB.h ParmDBAIPS.h ParmDBPostgres.h
+ParmDB.h ParmDBAIPS.h ParmDBPostgres.h ParmDBPostgresTransactors.h
 
 NOINSTHDRS =
 
