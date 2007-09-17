@@ -1,15 +1,33 @@
-//#include <time.h>
+//#  ACcli.cc: commandline client to the ApplicationController
+//#
+//#  Copyright (C) 2004
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-//#include <Common/hexdump.h>
-//#include <myACClientFunctions.h>
 #include <ALC/ACSyncClient.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
 using namespace LOFAR::ACC::ALC;
 
-// This program is a commandline client to the ApplicationController
 
 void printUsage() {
   cout << "This program is a commandline client to ACC. It can be used from shell scripts." << endl;
@@ -26,12 +44,13 @@ void printUsage() {
   cout << "      run    " << endl;
   cout << "      cancel " << endl;
   cout << "      pause <condition>  tell the program to pause when the condition is true. The program itself must be able to recognize the string." << endl;
+  cout << "      release   " << endl;
   cout << "      stop   " << endl;
   cout << "    " << endl;
 }
 
 int main (int argc, char *argv[]) {
-  INIT_LOGGER ("ACcli");
+  INIT_VAR_LOGGER ("../etc/ACcli", basename(argv[0]));
 
   if (argc < 3) {
     printUsage();
@@ -87,6 +106,10 @@ int main (int argc, char *argv[]) {
       return 1;
     }
     returnValue = ACClient.pause(time(0), 30, argv[3]);
+
+  } else if (command == "release") {
+    // Cancel Command queue
+    returnValue = ACClient.release(time(0L));
 
   } else if (command == "stop") {
     // Quit: stop processes

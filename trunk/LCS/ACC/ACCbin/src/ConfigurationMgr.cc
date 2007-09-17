@@ -27,13 +27,13 @@
 //#  $Id$
 
 #include <Common/LofarLogger.h>
-#include <ACCbin/ConfigurationMgr.h>
 #include <APS/ParameterSet.h>
-#include <ACCbin/ParCollRecord.h>
-#include "database/PO_ParCollRecord.h"
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/Attrib.h>
+#include "ConfigurationMgr.h"
+#include "ParCollRecord.h"
+#include "database/PO_ParCollRecord.h"
 
 using namespace LOFAR::PL;
 

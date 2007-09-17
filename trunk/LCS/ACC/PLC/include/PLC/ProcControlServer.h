@@ -50,8 +50,8 @@ class ProcControlServer
 public:
 	// Note: default constructor is private
 	ProcControlServer(const string&			hostname,
-			  const uint16			portNr,
-			  ProcessControl*	PCimpl);
+					  const uint16			portNr,
+					  ProcessControl*		PCimpl);
 
 	// Destructor;
 	~ProcControlServer();
@@ -93,6 +93,7 @@ private:
 
 	ProcessControl*		itsPCImpl;
 	ProcControlComm*	itsCommChan;
+	bool				itsInRunState;
 };
 
 inline	DH_ProcControl*	ProcControlServer::getDataHolder() const {

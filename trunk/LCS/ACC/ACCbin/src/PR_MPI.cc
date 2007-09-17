@@ -24,10 +24,10 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
-#include<Common/lofar_fstream.h>
-#include<Common/SystemUtil.h>
-#include<ACCbin/PR_MPI.h>
+#include <Common/LofarLogger.h>
+#include <Common/lofar_fstream.h>
+#include <Common/SystemUtil.h>
+#include "PR_MPI.h"
 
 namespace LOFAR {
   namespace ACC {

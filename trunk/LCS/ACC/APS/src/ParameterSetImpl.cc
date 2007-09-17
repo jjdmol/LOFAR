@@ -207,6 +207,11 @@ void ParameterSetImpl::readFile(const	string&	theFilename,
 		       formatString("Unable to open file %s", theFilename.c_str()));
 	}
 
+	if (paramFile.eof()) {
+		THROW (APSException, 
+		       formatString("file %s is empty", theFilename.c_str()));
+	}
+
 	addStream(paramFile, prefix, merge);
 
 	paramFile.close();

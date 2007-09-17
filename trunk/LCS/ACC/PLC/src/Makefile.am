@@ -1,6 +1,7 @@
 lib_LTLIBRARIES           = libplc.la
 
 libplc_la_SOURCES 		  = DH_ProcControl.cc \
+							PCCmd.cc \
 							ProcControlComm.cc  \
 							ProcControlServer.cc \
 							ACCmain.cc

@@ -1,6 +1,6 @@
-//#  ParCollRecord.cc: ParameterCollection record for DB storage
+//#  lofarDirs.h: Definitions of some directories of LOFAR.
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,40 +20,9 @@
 //#
 //#  $Id$
 
-#include <lofar_config.h>
-#include "ParCollRecord.h"
+#ifndef ACCBIN_LOFARDIRS_H
+#define ACCBIN_LOFARDIRS_H
 
-namespace LOFAR {
-  namespace ACC {
+#define	LOFAR_SHARE_LOCATION		"/opt/lofar/share"
 
-ParCollRecord::ParCollRecord (const string&		aName,
-							  const string&		aVersion,
-							  const string&		aQualification,
-							  const string&		aContents) :
-	itsName(aName),
-	itsVersionNr(aVersion),
-	itsQualification(aQualification),
-	itsCollection(aContents)
-{
-}
-
-
-int32 ParCollRecord::getLine(string&		buffer, uint32*	offset)
-{
-	if (*offset >= itsCollection.size()) {		// reached end, reset
-		buffer = "";
-		*offset = itsCollection.size();
-		return (0);
-	}
-
-	int32 eol 		= itsCollection.find_first_of ('\n', *offset);
-	int32 resultLen = eol - *offset;
-	buffer = itsCollection.substr(*offset, resultLen);
-	*offset = eol+1;
-	return (resultLen);
-}
-
-
-
-  } // namespace ACC
-} // namespace LOFAR
+#endif

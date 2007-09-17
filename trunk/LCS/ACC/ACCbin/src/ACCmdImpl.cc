@@ -24,11 +24,11 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <time.h>
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
-#include <ACCbin/ACCmdImpl.h>
-#include <ACCbin/APAdminPool.h>
+#include <time.h>
+#include "ACCmdImpl.h"
+#include "APAdminPool.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -77,7 +77,14 @@ bool	ACCmdImpl::pause (const time_t		scheduleTime,
 {
 	LOG_DEBUG(formatString("pause(%s,%d,%s)", timeString(scheduleTime).c_str(),
 												waitTime, condition.c_str()));
-	APAdminPool::getInstance().writeToAll(PCCmdPause, "");
+	APAdminPool::getInstance().writeToAll(PCCmdPause, condition);
+	return (true);
+}
+
+bool	ACCmdImpl::release  (const time_t		scheduleTime) const
+{
+	LOG_DEBUG(formatString("release(%s)", timeString(scheduleTime).c_str()));
+	APAdminPool::getInstance().writeToAll(PCCmdRelease, "");
 	return (true);
 }
 

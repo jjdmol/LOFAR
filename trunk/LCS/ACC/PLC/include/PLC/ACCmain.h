@@ -31,33 +31,30 @@
 //# Includes
 #include <PLC/ProcessControl.h>
 
-namespace LOFAR 
-{
-  namespace ACC
-  {
-    namespace PLC 
-    {
+namespace LOFAR {
+  namespace ACC {
+    namespace PLC {
 
-      // \addtogroup PLC
-      // @{
+// \addtogroup PLC
+// @{
 
-      // This function is the main loop that can (or should) be used by ACC controlled
-      // programs. To use it do the following:
-      // Subclass ProcessControl and implement all functions.
-      // Implement a real main:
-      //
-      //   #include <libgen.h>
-      //   #include <PLC/ACCmain.h>
-      //   #include <SubClassOfProcessControl.h>
-      //
-      //   int main(int argc, char* argv[]) {
-      //     INIT_LOGGER(basename(argv[0]));
-      //     SubClassOfProcessControl myProcess;
-      //     return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
-      //   }
-      int ACCmain (int argc, char* argv[], ProcessControl* theProcess);
+// This function is the main loop that can (or should) be used by ACC controlled
+// programs. To use it do the following:
+// Subclass ProcessControl and implement all functions.
+// Implement a real main:
+//
+//   #include <libgen.h>
+//   #include <PLC/ACCmain.h>
+//   #include <DerivedClassOfProcessControl.h>
+//
+//   int main(int argc, char* argv[]) {
+//     INIT_LOGGER(basename(argv[0]));
+//     DerivedClassOfProcessControl myProcess;
+//     return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
+//   }
+int ACCmain (int argc, char* argv[], ProcessControl* theProcess);
 
-      // @}
+// @}
 
     } // namespace PLC
   } // namespace ACC

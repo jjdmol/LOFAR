@@ -127,6 +127,12 @@ public:
 							  const time_t		waitTime,
 							  const	string&		condition) 	  const = 0;
 
+	// During the \c release command the application has to free all used 
+	// resources and it may disconnect from several services. When the
+	// application has reached the \c release state it is in the same state
+	// as after executing the \c init  command.
+	virtual bool	release	 (const time_t		scheduleTime) const = 0;
+
 	// \c Quit stops all application processes and cleans up the parameterset
 	// of these processes. After reporting the result of this command to the
 	// ACuser the Application Controller starts a countdown timer to powerdown
@@ -162,17 +168,6 @@ public:
 	// application processes are constructed from the parameterset referred to
 	// by the \c configID argument.
 	virtual bool	reinit	 (const time_t		scheduleTime,
-							  const string&		configID)	  const = 0;
-
-	// The \c replace command is an extension on the \c reinit command. The 
-	// \c reinit command is always executed by \b all processes of an 
-	// application. The \c replace command on the other hand has processlists
-	// and node lists that tell the Application Controller what to do with each
-	// process and node. A process may continue running, may be paused or even
-	// rescheduled to another machine.
-	virtual bool	replace	 (const time_t		scheduleTime,
-							  const string&		processList,
-							  const string&		nodeList,
 							  const string&		configID)	  const = 0;
 
 	// with the \c cancelCmdQueue command the AC user can instruct the 

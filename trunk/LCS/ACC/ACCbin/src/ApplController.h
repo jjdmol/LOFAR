@@ -38,13 +38,13 @@
 #include <ALC/ApplControlServer.h>	//# communication stub
 #include <PLC/DH_ProcControl.h>
 #include <APS/ParameterSet.h>
-#include <ACCbin/ACCmdImpl.h>		//# the real implementation
-#include <ACCbin/ACDaemonComm.h>
-#include <ACCbin/CmdStack.h>
-#include <ACCbin/StateEngine.h>
-#include <ACCbin/APAdminPool.h>
-#include <ACCbin/ItemList.h>
-#include <ACCbin/ProcRuler.h>
+#include "ACCmdImpl.h"				//# the real implementation
+#include "ACDaemonComm.h"
+#include "CmdStack.h"
+#include "StateEngine.h"
+#include "APAdminPool.h"
+#include "ItemList.h"
+#include "ProcRuler.h"
 
 using namespace LOFAR::ACC::APS;
 using namespace LOFAR::ACC::ALC;

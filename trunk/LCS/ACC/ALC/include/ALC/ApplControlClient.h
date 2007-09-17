@@ -88,6 +88,7 @@ public:
 	bool	pause  	 (const time_t		scheduleTime,
 					  const time_t		maxWaitTime,
 					  const string&		condition)	 const ;
+	bool	release	 (const time_t		scheduleTime)const ;
 	bool	quit  	 (const time_t		scheduleTime)const ;
 	bool	shutdown (const time_t		scheduleTime)const ;
 	bool	snapshot (const time_t		scheduleTime,
@@ -96,10 +97,6 @@ public:
 					  const string&		source) 	 const ;
 
 	bool	reinit	 (const time_t		scheduleTime,
-					  const string&		configID) 	 const ;
-	bool	replace	 (const time_t		scheduleTime,
-					  const string&		processList,
-					  const string&		nodeList,
 					  const string&		configID) 	 const ;
 	bool	cancelCmdQueue () const;
 	// @}

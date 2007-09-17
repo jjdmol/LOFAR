@@ -38,13 +38,15 @@ namespace LOFAR {
 //
 // Setup (wait for an) connection with the PC client
 //
-ProcControlServer::ProcControlServer(const string& hostname, 
-				     const uint16 portnr,
-				     ProcessControl* PCImpl) :
-  itsPCImpl(PCImpl)
+ProcControlServer::ProcControlServer(const string&		hostname, 
+									 const uint16		portnr,
+									 ProcessControl*	PCImpl) :
+	itsPCImpl		(PCImpl),
+	itsCommChan		(0),
+	itsInRunState	(false)
 {
-  itsCommChan = new ProcControlComm(hostname, toString(portnr), false);
-  ASSERTSTR(itsCommChan, "Unable to allocate a communication channel");
+	itsCommChan = new ProcControlComm(hostname, toString(portnr), false);
+	ASSERTSTR(itsCommChan, "Unable to allocate a communication channel");
 }
 
 // Destructor
@@ -60,7 +62,7 @@ ProcControlServer::~ProcControlServer()
 //
 void	ProcControlServer::registerAtAC(const string&	aName) const
 {
-	itsCommChan->sendCmd (PCCmdStart, aName);
+	itsCommChan->sendCmd (PCCmdBoot, aName);
 }
 
 //
@@ -101,8 +103,8 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 	// get the information out of the command
 	int16	cmdType 	 = theMsg->getCommand();
 	string	options		 = theMsg->getOptions();
-	LOG_DEBUG_STR("cmd=" << cmdType <<
-				  ", options=[" << options << "]" << endl);
+	LOG_DEBUG_STR("handleMessage: calling " << PCCmdName(theMsg->getCommand()) <<
+				  "(" << options << ")" << endl);
 
 	// setup control defaults
 	bool	sendAnswer = true;		// assume that answer must be send
@@ -114,35 +116,52 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 		// TODO: make a real implementation.
 		sendResult(theMsg->getCommand(), PcCmdMaskOk, 
 					"ProcControlServer says:Not yet implemented");
-		return (true); 								
-	case PCCmdAnswer:	
+		return (true); 
+	case PCCmdAnswer:
 		sendAnswer = false; 
 		//TODO ???
 		break;
-	case PCCmdDefine:		
-		result = itsPCImpl->define();			
+	case PCCmdDefine:
+		result = itsPCImpl->define();
 		break;
-	case PCCmdInit:		
-		result = itsPCImpl->init();			
+	case PCCmdInit:	
+		result = itsPCImpl->init();
 		break;
-	case PCCmdRun:		
-		result = itsPCImpl->run();			
+	case PCCmdRun:
+		sendAnswer = !itsInRunState;
+		itsInRunState = true;
+		itsPCImpl->setRunState();
+		if (!(result = itsPCImpl->run())) {
+			itsPCImpl->clearRunState();
+		}
 		break;
-	case PCCmdPause:		
-		result = itsPCImpl->pause(options);	
+	case PCCmdPause:
+		itsPCImpl->setPauseCondition(options);	// register condition
+		if (options == PAUSE_OPTION_NOW) {		// if 'direct' clear runstate
+			itsPCImpl->clearRunState();
+		}
+		result = itsPCImpl->pause(options);		// let user evaluate the condition.
+		// when we are still in run-state we should not
+		// send an answer on the pause command yet.
+		if (itsPCImpl->inRunState()) {
+			sendAnswer = false;
+		}
 		break;
-	case PCCmdQuit:		
+	case PCCmdRelease:
+		result = itsPCImpl->release();
+		break;
+	case PCCmdQuit:
 		itsPCImpl->quit();
 		sendAnswer = false;			// user should used unregister.
 		break;
-	case PCCmdSnapshot:	
-		result = itsPCImpl->snapshot(options);	
+	case PCCmdSnapshot:
+		result = itsPCImpl->snapshot(options);
 		break;
-	case PCCmdRecover:	
-		result = itsPCImpl->recover (options);	
+	case PCCmdRecover:
+		result = itsPCImpl->recover (options);
 		break;
-	case PCCmdReinit:		
-		result = itsPCImpl->reinit (options);	
+	case PCCmdReinit:
+		result = itsPCImpl->reinit (options);
 		break;
 	default:
 		//TODO
@@ -150,8 +169,17 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 		break;
 	}
 
+	LOG_DEBUG_STR("sendAnswer:" << sendAnswer << ", itsInRunState: " << itsInRunState << ", pc->inRunState(): " << itsPCImpl->inRunState());
+
 	// send result to AC
-	if (sendAnswer) {
+	if (itsInRunState && !itsPCImpl->inRunState()) {		// just ended the runstate?
+		LOG_DEBUG("Sending pause-ack now condition is met");
+		itsInRunState = false;
+		itsPCImpl->setPauseCondition("");
+		sendResult(PCCmdPause, result ? PcCmdMaskOk : 
+						  indeterminate(result) ? PcCmdMaskNotSupported : 0);
+	}
+	else if (sendAnswer) {
 		sendResult(theMsg->getCommand(), result ? PcCmdMaskOk : 
 						  indeterminate(result) ? PcCmdMaskNotSupported : 0);
 	}

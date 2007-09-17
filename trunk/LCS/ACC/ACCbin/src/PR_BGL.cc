@@ -24,8 +24,8 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
-#include<ACCbin/PR_BGL.h>
+#include <Common/LofarLogger.h>
+#include "PR_BGL.h"
 
 namespace LOFAR {
   namespace ACC {

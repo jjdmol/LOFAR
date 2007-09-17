@@ -1,6 +1,6 @@
-//#  ParCollRecord.cc: ParameterCollection record for DB storage
+//#  ACCmd.cc: Names of the ALC commands.
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,42 +18,54 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#	 Abstract:
+//#	 This class implements the command protocol between an application manager
+//#	 (MAC for instance) and an Application Controller (=ACC package).
+//#	 The AM has the client role, the AC the server role.
+//#
 //#  $Id$
 
 #include <lofar_config.h>
-#include "ParCollRecord.h"
+
+//# Includes
+#include <ALC/ACCmd.h>
+
 
 namespace LOFAR {
   namespace ACC {
+    namespace ALC {
 
-ParCollRecord::ParCollRecord (const string&		aName,
-							  const string&		aVersion,
-							  const string&		aQualification,
-							  const string&		aContents) :
-	itsName(aName),
-	itsVersionNr(aVersion),
-	itsQualification(aQualification),
-	itsCollection(aContents)
-{
-}
+static	char*	AlcCmdNames[] = {
+		"No command",	"Boot",
+		"Quit", 		"Define",
+		"Init", 		"Pause",
+		"Run", 			"Release",
+		"Snapshot",		"Recover",
+		"Reinit",
+		"Info",			"Answer",
+		"Report",		"Async",
+		"CancelQueue"
+};
 
+string	ACCmdName (ACCmd		ACcmdValue) {
+	ACCmd		orgCmd(orgACCmd(ACcmdValue));
+	uint16		cmdValue((uint16)orgCmd);
 
-int32 ParCollRecord::getLine(string&		buffer, uint32*	offset)
-{
-	if (*offset >= itsCollection.size()) {		// reached end, reset
-		buffer = "";
-		*offset = itsCollection.size();
-		return (0);
+	if (cmdValue > sizeof (AlcCmdNames)) {
+		return ("Unknown command");
 	}
 
-	int32 eol 		= itsCollection.find_first_of ('\n', *offset);
-	int32 resultLen = eol - *offset;
-	buffer = itsCollection.substr(*offset, resultLen);
-	*offset = eol+1;
-	return (resultLen);
+	string	name("AC");
+	name += AlcCmdNames[cmdValue];
+	if (isALCresult(ACcmdValue)) {
+		name += "Result";
+	}
+
+	return (name);
 }
 
 
-
+    } // namespace ALC
   } // namespace ACC
 } // namespace LOFAR
+

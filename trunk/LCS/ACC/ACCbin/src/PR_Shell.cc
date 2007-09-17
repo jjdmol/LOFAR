@@ -24,9 +24,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
-#include<Common/SystemUtil.h>
-#include<ACCbin/PR_Shell.h>
+#include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
+#include "PR_Shell.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -38,7 +38,8 @@ PR_Shell::PR_Shell(const string&  aNodeName,
 	ProcRule(aNodeName, aProcName, aExecName, aParamFile)
 {
 	if (aNodeName != myHostname(false) &&
-		aNodeName != myHostname(true)) {
+		aNodeName != myHostname(true)  &&
+		aNodeName != "localhost") {
 		remoteCopy(aParamFile, aNodeName, aParamFile);
 
 		itsStartCmd = formatString("ssh %s \"( cd /opt/lofar/bin ; ./startAP.sh %s %s %s %s )\"", 

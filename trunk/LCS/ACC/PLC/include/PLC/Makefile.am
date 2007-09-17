@@ -1,5 +1,6 @@
 pkginclude_HEADERS = \
 	DH_ProcControl.h \
+	PCCmd.h \
 	ProcControlComm.h \
 	ProcControlServer.h \
 	ProcessControl.h \

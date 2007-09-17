@@ -36,30 +36,13 @@
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 #include <Transport/DataHolder.h>
+#include <ALC/ACCmd.h>
 
 namespace LOFAR {
   namespace ACC {
     namespace ALC {
 // \addtogroup ALC
 // @{
-
-
-// The ACCmd enumeration is a list of command(numbers) that are used to
-// tell the ApplControl server-side what command should be invoked.
-// In a result message the command value is OR'ed with the \c ACCmdResult
-// mask.
-enum ACCmd {    ACCmdNone = 0, ACCmdBoot, 
-				ACCmdQuit, 
-				ACCmdDefine,   ACCmdInit,
-				ACCmdPause,    ACCmdRun, 
-				ACCmdSnapshot, ACCmdRecover, 
-				ACCmdReinit,   ACCmdReplace,
-				ACCmdInfo,     ACCmdAnswer,
-				ACCmdReport,   ACCmdAsync,
-			    ACCmdCancelQueue,
-				ACCmdResult = 0x1000
-};
-
 
 //# Description of class.
 // The DH_ApplControl class is responsible for packing and unpacking

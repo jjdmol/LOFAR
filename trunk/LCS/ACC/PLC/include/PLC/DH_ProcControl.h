@@ -35,28 +35,13 @@
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 #include <Transport/DataHolder.h>
+#include <PLC/PCCmd.h>
 
 namespace LOFAR {
   namespace ACC {
     namespace PLC {
 // \addtogroup PLC
 // @{
-
-// The PCCmd enumeration is a list of command(numbers) that are used to tell 
-// the ProcControl server-side (= application process) what command should be
-// executed.
-enum PCCmd {    PCCmdNone = 0, 
-				PCCmdStart = 100, PCCmdQuit, 
-				PCCmdDefine,      PCCmdInit,
-				PCCmdPause,       PCCmdRun,
-				PCCmdSnapshot,    PCCmdRecover, 
-				PCCmdReinit, 
-				PCCmdInfo,        PCCmdAnswer,
-				PCCmdReport,      PCCmdParams,
-				PCCmdAsync,
-				PCCmdResult = 0x1000
-};
-
 
 //# Description of class.
 // The DH_ProcControl class is responsible for packing and unpacking
@@ -66,6 +51,7 @@ class DH_ProcControl : public DataHolder
 public:
 	// Constructor
 	DH_ProcControl();
+	DH_ProcControl(const PCCmd	aCommand);
 
 	// Destructor
 	virtual ~DH_ProcControl();

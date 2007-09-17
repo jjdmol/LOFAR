@@ -29,6 +29,7 @@
 //# Includes
 #include <Common/StringUtil.h>
 #include <Transport/TH_Socket.h>
+#include <ALC/ACCmd.h>
 #include <ALC/ApplControlServer.h>
 
 namespace LOFAR {
@@ -89,7 +90,8 @@ bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg)
 	string	options		 = theMsg->getOptions();
 	string	procList	 = theMsg->getProcList();
 	string	nodeList	 = theMsg->getNodeList();
-	LOG_DEBUG_STR("cmd=" << cmdType << ", time=" << timeString(scheduleTime) 
+	LOG_DEBUG_STR("cmd=" << ACCmdName((ACCmd)cmdType) 
+						 << ", time=" << timeString(scheduleTime) 
 						 << ", waittime=" << waitTime 
 				  		 << ", options=[" << options << "]"
 				  		 << ", options=[" << procList << "]"
@@ -120,6 +122,9 @@ bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg)
 		break;
 	case ACCmdPause:		
 		result = itsACImpl->pause(scheduleTime, waitTime, options);	
+		break;
+	case ACCmdRelease:		
+		result = itsACImpl->release(scheduleTime);			
 		break;
 	case ACCmdQuit:		
 		itsACImpl->quit(scheduleTime);

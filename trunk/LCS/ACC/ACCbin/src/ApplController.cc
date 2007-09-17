@@ -25,12 +25,15 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ACCbin/ApplController.h>
-#include <ACCbin/PR_Shell.h>			// TODO: factory!
-#include <ACCbin/PR_MPI.h>				// TODO: factory!
-#include <ACCbin/PR_BGL.h>				// TODO: factory!
-#include <ACCbin/ItemList.h>			// @@
+#include <Common/LofarLocators.h>
+#include <ALC/ACCmd.h>
 #include <PLC/ProcControlComm.h>
+#include "ApplController.h"
+#include "PR_Shell.h"			// TODO: factory!
+#include "PR_MPI.h"				// TODO: factory!
+#include "PR_BGL.h"				// TODO: factory!
+#include "ItemList.h"			// @@
+#include "lofarDirs.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -58,7 +61,10 @@ ApplController::ApplController(const string&	configID) :
 	LOG_TRACE_OBJ ("ApplController constructor");
 
 	// Read in the parameterfile with network parameters
-	itsBootParamSet->adoptFile(configID);			// May throw
+	ConfigLocator		CL;
+	string	bootPSname = CL.locate (configID+".param");
+	LOG_INFO_STR("Booting from " << bootPSname);
+	itsBootParamSet->adoptFile(bootPSname);			// May throw
 
 	// Get pointer to singleton APAdminPool
     itsAPAPool = &(APAdminPool::getInstance());
@@ -144,30 +150,35 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 
 	switch (command) {
 	case PCCmdInfo:
-		// TODO: AP ask for some info, we should answer this
+		// TODO: AP asks for some info, we should answer this
 		break;
-	case PCCmdAnswer:
 
+	case PCCmdAnswer:
 		// TODO: AP returns an answer on a question we have sent it
 		break;
-	case PCCmdStart:
-		// send by the AP as soon as it is on the air.
+
+	case PCCmdBoot:
+		// send by the AP as soon as it is on the air (registerAtAC).
 		anAP->setName(DHProcPtr->getOptions());	// register name
 		itsAPAPool->markAsOnline(anAP);			// mark it ready for reception
 		break;
+
 	case PCCmdReport:
 		// TODO: AM.report (.....);
 		break;
+
 	case PCCmdAsync:
 		// TODO: implement this
 		break;
+
 	case PCCmdParams: {
 		ParameterSet	resultParam;
 		resultParam.adoptBuffer(DHProcPtr->getOptions());
 		resultParam.writeFile(itsObsParamSet->getString("ApplCtrl.resultfile"), true);
 		break;
 		}
-	case PCCmdQuit:
+
+	case PCCmdQuit:	// send by UnregisterAtAC
 		LOG_TRACE_OBJ("PCCmdQuit received");
 		itsAPAPool->markAsOffline(anAP);		// don't send new commands
 		itsAPAPool->registerAck(command, anAP);
@@ -287,7 +298,7 @@ void ApplController::createParSubsets()
 		// The startstopType determines what information is put in the parsetfiles
 		// for the processes.
 		string startstopType = itsObsParamSet->getString(procPrefix+"._startstopType");
-		string fileName 	 = "/opt/lofar/share/" + procName + ".parset";
+		string fileName 	 = string(LOFAR_SHARE_LOCATION) + "/" + procName + ".parset";
 
 		LOG_DEBUG_STR("Creating parameterfile for process " << procName);
 
@@ -344,12 +355,12 @@ void ApplController::createParSubsets()
 					// copy the default PS and give it a new prefix
 //					myPS.adoptCollection(itsObsParamSet->makeSubset(procPrefix+".",
 //																	procPrefix+"."));
-					string fileName = pName + ".parsets";
+					fileName  = string(LOFAR_SHARE_LOCATION) + "/" + pName + ".parset";
 					writeParSubset(myPS, pName, fileName);
 
 					// note: nodes[] may be smaller than nrProcs. by taking the remainder
 					// of nodes.size() the nodes[] is made cyclic.
-					itsProcRuler.add(PR_Shell(myPS.getString(nodes[(p-1)%nodes.size()]),
+					itsProcRuler.add(PR_Shell(nodes[(p-1)%nodes.size()],
 											  pName,
 											  myPS.getString(procPrefix + "._executable"),
 											  fileName));
@@ -409,6 +420,8 @@ void ApplController::writeParSubset(ParameterSet ps, const string& procName, con
     
     // Finally write process paramset to a file.
     ps.writeFile(fileName);
+
+	LOG_DEBUG_STR("Create parameterfile " << fileName);
 }
 
 //
@@ -480,6 +493,7 @@ void ApplController::startCmdState()
 	case StateInitCmd:
     case StateRunCmd:
 	case StatePauseCmd:
+	case StateReleaseCmd:
 	case StateRecoverCmd:
 	case StateSnapshotCmd:
 	case StateReinitCmd:
@@ -532,7 +546,7 @@ void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg,
 		// some command is running, has new command overrule 'rights'?
 		if ((newCmd != ACCmdQuit) && (newCmd != ACCmdPause)){
 			// No overrule rights, reject new command
-			LOG_DEBUG(formatString("Command rejected: Previous command is still running. itsCurState:%d, newCmd:%d",itsCurState,newCmd));
+			LOG_DEBUG_STR("Command rejected: Previous command is still running. itsCurState:" << itsCurState << ", newCmd:" << ACCmdName(newCmd));
 			sendExecutionResult (0, "Previous command is still running");
 			return;
 		}

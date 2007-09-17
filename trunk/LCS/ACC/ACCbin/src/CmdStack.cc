@@ -26,7 +26,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 #include <Common/StringUtil.h>
-#include <ACCbin/CmdStack.h>
+#include "CmdStack.h"
+
 namespace LOFAR {
   namespace ACC {
 

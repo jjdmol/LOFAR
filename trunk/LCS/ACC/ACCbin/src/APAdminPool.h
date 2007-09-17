@@ -33,7 +33,7 @@
 //# Includes
 #include <Common/lofar_vector.h>
 #include <Common/Net/FdSet.h>
-#include <ACCbin/APAdmin.h>
+#include "APAdmin.h"
 
 namespace LOFAR {
   namespace ACC {

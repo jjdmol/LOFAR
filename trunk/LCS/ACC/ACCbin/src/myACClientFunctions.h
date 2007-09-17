@@ -47,7 +47,7 @@ class myACClientFunctions : public ACClientFunctions
 
 	void	handleAckMsg(ACCmd	cmd, uint16 result, const string& info)
 		{ cout << "myACClientFunctions::handleAckMessage was called" << endl; 
-		  cout << "command = " << cmd << ", result = " << result
+		  cout << "command = " << ACCmdName(cmd) << ", result = " << result
 				<< ", info = " << info << endl;
 		}
 

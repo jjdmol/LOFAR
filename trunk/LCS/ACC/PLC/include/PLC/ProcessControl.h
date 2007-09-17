@@ -87,6 +87,12 @@ public:
 	// number of a datasample.
 	virtual tribool	pause  	 (const	string&		condition) 	   = 0;
 
+	// The \c release command always comes before the quit command. The process
+	// can free the allocated buffers and might disconnect from some services
+	// already. After the \c release command the process is in the same state as
+	// after the \c define command.
+	virtual tribool	release	 ()	   = 0;
+
 	// \c Quit stops the process.
 	// The process \b must call \c unregisterAtAC at ProcControlServer during 
 	// the execution of this command to pass the final results to the 
@@ -113,16 +119,77 @@ public:
 	// Define a generic way to exchange info between client and server.
 	virtual string	askInfo   (const string& 	keylist)  = 0;
 
+	// Retrieve the pause condition.
+	string getPauseCondition() const;
+
+	// Routines for handling the runState;
+	void clearRunState();
+	bool inRunState() const;
+
 protected:
 	// Not default constructable
-	ProcessControl() {};
+	ProcessControl() : itsPauseCondition(""), itsInRunState(false) { };
 	// Copying is also not allowed
 	ProcessControl(const ProcessControl& that);
 	ProcessControl& 	operator=(const ProcessControl& that);
+
+private:
+	// Some flow control functions for the ProcControlServer;
+	friend class ProcControlServer;
+	void setPauseCondition(const string&		condition);
+	void setRunState();
+
+	// ----- Data members -----
+	string		itsPauseCondition;
+	bool		itsInRunState;
 };
 
-
 // @} addgroup
+
+//# ---------- inline functions ----------
+
+//
+// setPauseCondition(condition)
+//
+inline void ProcessControl::setPauseCondition(const string&		condition)
+{
+	itsPauseCondition = condition;
+}
+
+//
+// getPauseCondition()
+//
+inline string ProcessControl::getPauseCondition() const
+{
+	return (itsPauseCondition);
+}
+
+//
+// setRunState()
+//
+inline	void ProcessControl::setRunState()
+{
+	itsInRunState = true;
+	LOG_DEBUG("Runstate is active");
+}
+
+//
+// clearRunState()
+//
+inline	void ProcessControl::clearRunState()
+{
+	itsInRunState = false;
+	LOG_DEBUG("Runstate is cleared");
+}
+
+//
+// inRunState()
+//
+inline	bool ProcessControl::inRunState() const
+{
+	return (itsInRunState);
+}
+
     } // namespace PLC
   } // namespace ACC
 } // namespace LOFAR

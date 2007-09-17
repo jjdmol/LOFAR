@@ -24,13 +24,13 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <unistd.h>                     // gethostname
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
-#include <Common/hexdump.h>		// TEMP!!!
+#include <Common/SystemUtil.h>
 #include <ALC/ACRequest.h>
-#include <ACCbin/ACDaemon.h>
-#include <ACCbin/ACDaemonComm.h>
+#include "ACDaemon.h"
+#include "ACDaemonComm.h"
+#include "lofarDirs.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -59,9 +59,9 @@ ACDaemon::ACDaemon(const string&	progName) :
 
 	// Try to read in an old administration if it is available.
 	itsACPool = new ACRequestPool(itsParamSet->getInt32("ACDaemon.ACpoolport"),
-								  itsParamSet->getInt32("ACDaemon.ACpoolsize"),
-								  itsParamSet->getString("ACDaemon.ACnodeIP"));
-	itsACPool->load(itsParamSet->getString("ACDaemon.adminfile"));
+								  itsParamSet->getInt32("ACDaemon.ACpoolsize"));
+	itsAdminFile = "../etc/" + itsParamSet->getString("ACDaemon.adminfile");
+	itsACPool->load(itsAdminFile);
 
 }
 
@@ -83,7 +83,7 @@ void ACDaemon::doWork() throw (Exception)
 	itsConnSet.add(itsListener->getSid());
 	itsConnSet.add(itsPingSocket->getSid());
 
-	LOG_DEBUG ("ACDaemon: entering main loop");
+	LOG_INFO ("ACDaemon: entering main loop");
 
 	while (true) {
 		// wait for request or ping
@@ -115,7 +115,7 @@ void ACDaemon::doWork() throw (Exception)
 
 		// cleanup AC's that did not respond for 5 minutes.
 		if (itsACPool->cleanup(warnTime, cleanTime)) {
-			itsACPool->save(itsParamSet->getString("ACDaemon.adminfile"));
+			itsACPool->save(itsAdminFile);
 		}
 
 	} // while
@@ -149,7 +149,7 @@ void ACDaemon::handlePingMessage()
 	if (buffer[0] == AC_LEAVING_SIGN) {
 		LOG_DEBUG_STR(&buffer[1] << " leaves ACDaemon pool");
 		itsACPool->remove(&buffer[1]);
-		itsACPool->save(itsParamSet->getString("ACDaemon.adminfile"));
+		itsACPool->save(itsAdminFile);
 		return;
 	}
 
@@ -188,7 +188,7 @@ void ACDaemon::handleACRequest()
 	ACRequest*	existingACR;
 	bool		startAC = true;
 	if ((existingACR = itsACPool->search(aRequest.itsRequester))) {
-		LOG_TRACE_VAR_STR("Reconnect of " << aRequest.itsRequester);
+		LOG_DEBUG_STR("Reconnect of " << aRequest.itsRequester);
 		aRequest = *existingACR;			// copy old info
 		existingACR->itsState    = ACRnew;	// reset ping state and time
 		existingACR->itsPingtime = time(0);	// to prevent early removal
@@ -207,27 +207,26 @@ void ACDaemon::handleACRequest()
 			aRequest.itsPingtime = time(0);
 			aRequest.itsState    = ACRnew;
 			itsACPool->add(aRequest);
-			itsACPool->save(itsParamSet->getString("ACDaemon.adminfile"));
+			itsACPool->save(itsAdminFile);
 		}
 	}
 
 	if (startAC) {
 		// Try to launch the AC, if it is already running the
 		// new one will fail and the user will reconnect on the old one.
-		constructACFile(&aRequest, "AC.param");
-		string	sysCommand = itsParamSet->getString("ACDaemon.command");
+		constructACFile(&aRequest, string(LOFAR_SHARE_LOCATION) + "/" + aRequest.itsRequester+".param");
+		string	sysCommand = formatString(itsParamSet->getString("ACDaemon.command").c_str(), 
+										  aRequest.itsRequester);
+		LOG_DEBUG_STR("Executing '" << sysCommand << "'");
 		int32 result = system(sysCommand.c_str());
-		LOG_DEBUG_STR ("result="<< result <<", errno="<< errno <<":"<< 
-															strerror(errno));
+		LOG_DEBUG_STR ("result = " << result << ", errno = " << errno << ":" << strerror(errno));
 	}
 
 	// return the answer to the ACuser
-	uint32 btsWritten = dataSocket->write(static_cast<void*>(&aRequest), 
-																	reqSize);
+	uint32 btsWritten = dataSocket->write(static_cast<void*>(&aRequest), reqSize);
 	if (btsWritten != reqSize) {
 		LOG_WARN_STR ("REQUEST FOR " << aRequest.itsRequester << 
-					  " COULD NOT BE WRITTEN (" << btsWritten << " iso "  <<
-					  reqSize << ")");
+					  " COULD NOT BE WRITTEN (" << btsWritten << " iso "  << reqSize << ")");
 	}
 
 	delete dataSocket;
@@ -245,18 +244,15 @@ void ACDaemon::constructACFile(const ACRequest*		anACR,
 	
 	// TODO: Calculate processportnr
 
-	ACPS.add(KVpair("AC.backlog", backlog));
-	ACPS.add(KVpair("AC.node",	  itsParamSet->getString("ACDaemon.ACnodeIP")));
+	ACPS.add(KVpair("AC.backlog", 		backlog));
+	ACPS.add(KVpair("AC.node",	  		myHostname(false)));
 	ACPS.add(KVpair("AC.userportnr",    ntohs(anACR->itsPort)));
 	ACPS.add(KVpair("AC.processportnr", 100+ntohs(anACR->itsPort))); // TODO
 
-	char	myHostname[1024];
-	gethostname(myHostname, 1023);
-	ACPS.add("AC.pinghost",   myHostname);
-	ACPS.add("AC.pingportnr", itsParamSet->getString("ACDaemon.pingportnr"));
-	ACPS.add("AC.pinginterval", 
-							itsParamSet->getString("ACDaemon.aliveinterval"));
-	ACPS.add("AC.pingID", anACR->itsRequester);
+	ACPS.add("AC.pinghost",     myHostname(false));
+	ACPS.add("AC.pingportnr",   itsParamSet->getString("ACDaemon.pingportnr"));
+	ACPS.add("AC.pinginterval", itsParamSet->getString("ACDaemon.aliveinterval"));
+	ACPS.add("AC.pingID", 	    anACR->itsRequester);
 	
 	ACPS.writeFile (aFilename);
 }

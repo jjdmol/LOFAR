@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ACCbin/StateEngine.h>
+#include "StateEngine.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -41,23 +41,23 @@ static CmdSeq_t theirCmdSeqTable[] = {
 { ACCmdNone,	
 	{ StateNone,		   StateNone,		  StateNone,          StateNone } },
 { ACCmdBoot,	
-	{ StateInitController, StateCreatePSubset,StateNone,          StateNone } },
+	{ StateInitController, StateCreatePSubset,StateStartupAppl,   StateNone } },
 { ACCmdDefine,	
-	{ StateStartupAppl,	   StateDefineCmd,	  StateNone,          StateNone } },
+	{ StateDefineCmd,	   StateNone,		  StateNone,          StateNone } },
 { ACCmdInit,	
 	{ StateInitCmd,		   StateNone,		  StateNone,          StateNone } },
 { ACCmdRun,		
 	{ StateRunCmd,		   StateNone,		  StateNone,          StateNone } },
 { ACCmdPause,	
 	{ StatePauseCmd,	   StateNone,		  StateNone,          StateNone } },
+{ ACCmdRelease,	
+	{ StateReleaseCmd,	   StateNone,		  StateNone,          StateNone } },
 { ACCmdSnapshot,{ 
 	StateSnapshotCmd,	   StateNone,		  StateNone,          StateNone } },
 { ACCmdRecover,	
 	{ StateRecoverCmd,	   StateNone,		  StateNone,          StateNone } },
 { ACCmdReinit,	// TODO
 	{ StateReinitCmd,	   StateNone,		  StateNone,          StateNone } },
-{ ACCmdReplace,	// TODO
-	{ StateNone,		   StateNone,		  StateNone,          StateNone } },
 { ACCmdInfo,	
 	{ StateInfoCmd,		   StateNone,		  StateNone,          StateNone } },
 { ACCmdQuit,	
@@ -91,6 +91,7 @@ void StateEngine::init(const ParameterSet*	aPS)
 	StateLifeTime[StateInitCmd]		 = aPS->getTime("ApplCtrl.timeout_init");
     StateLifeTime[StateRunCmd]		 = aPS->getTime("ApplCtrl.timeout_run");
 	StateLifeTime[StatePauseCmd]	 = aPS->getTime("ApplCtrl.timeout_pause");
+	StateLifeTime[StateReleaseCmd]	 = aPS->getTime("ApplCtrl.timeout_release");
 	StateLifeTime[StateRecoverCmd]	 = aPS->getTime("ApplCtrl.timeout_recover");
 	StateLifeTime[StateSnapshotCmd]	 = aPS->getTime("ApplCtrl.timeout_snapshot");
 	StateLifeTime[StateReinitCmd]	 = aPS->getTime("ApplCtrl.timeout_reinit");
@@ -131,7 +132,7 @@ ACState StateEngine::startSequence(ACCmd	aStartPoint) throw (Exception)
 		}
 	}
 	
-	THROW (Exception, "No command sequences start with command " << aStartPoint);
+	THROW (Exception, "No command sequences start with command " << ACCmdName(aStartPoint));
 
 }
 
@@ -171,15 +172,16 @@ string StateEngine::stateStr(uint16	stateNr) const
 		"InitController",
 		"CreatePSubset",
 		"StartupAppl",
-		"DefineCmd",
-		"InitCmd",
-		"RunCmd",
-		"PauseCmd",
-		"RecoverCmd",
-		"SnapshotCmd",
-		"ReinitCmd",
-		"InfoCmd",
-		"QuitCmd",
+		"DefineState",
+		"InitState",
+		"RunState",
+		"PauseState",
+		"ReleaseState",
+		"RecoverState",
+		"SnapshotState",
+		"ReinitState",
+		"InfoState",
+		"QuitState",
 		"KillAppl"
 	};
 

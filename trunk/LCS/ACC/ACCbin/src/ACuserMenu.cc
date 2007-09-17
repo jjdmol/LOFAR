@@ -1,9 +1,34 @@
-#include <time.h>
+//#  ACUserMenu.cc: Menu-program for manual testing an ACC controlled application.
+//#
+//#  Copyright (C) 2004-2007
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+
+//# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
+
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <Common/hexdump.h>
-#include <myACClientFunctions.h>
 #include <ALC/ACSyncClient.h>
+#include <time.h>
+#include "myACClientFunctions.h"
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
@@ -96,7 +121,7 @@ void doBoot()
 		waitForAnswer();
 	}
 	if (result) {
-		cout << "Parameter subsets must have been made by now" << endl;
+		cout << "Application processes should be running now" << endl;
 	}
 	else {
 		cout << "ERROR during boot command" << endl;
@@ -114,7 +139,7 @@ void doDefine()
 		waitForAnswer();
 	}
 	if (result) {
-		cout << "Application processes must be running by now" << endl;
+		cout << "Application processes should have claimed the resources" << endl;
 	}
 	else {
 		cout << "ERROR during define command" << endl;
@@ -131,7 +156,7 @@ void doInit()
 		waitForAnswer();
 	}
 	if (result) {
-		cout << "Application processes must mutual connected by now" << endl;
+		cout << "Application processes should be in hot-standby mode" << endl;
 	}
 	else {
 		cout << "ERROR during init command" << endl;
@@ -165,7 +190,7 @@ void doCancel()
 		waitForAnswer();
 	}
 	if (result) {
-		cout << "Queue must be flushed by now." << endl;
+		cout << "Queue should be flushed by now." << endl;
 	}
 	else {
 		cout << "ERROR during cancelqueue command" << endl;
@@ -176,19 +201,65 @@ void doCancel()
 // Pause(condition,waitTime)
 void doPause()
 {
-	cout << "Sending pause command" << endl;
-	bool result = ACClient->pause(time(0)+delayTime,30,"");
+	string	answer;
+	string	option;
+
+	// ask user condition
+	answer.clear();
+	while (answer.empty()) {
+		cout << "What condition must be used? " << endl;
+		cout << "N	now -> immediately" << endl;
+		cout << "A	asap -> without corrupting anything" << endl;
+		cout << "T	timestamp -> at some defined time" << endl;
+		getline(cin, answer);
+		if (answer == "N") {
+			option="now";
+		}
+		else if (answer == "A") {
+			option = "asap";
+		}
+		else if (answer == "T") {
+			cout << "Over how many seconds should the application stop?" << endl;
+			cout << "  ( based on the timestamp off the datasamples)  : " << endl;
+			answer.clear();
+			getline(cin, answer);
+			uint32	sampleTime = time(0L) + atol(answer.c_str());
+			option = "timestamp=" + toString(sampleTime);
+		}
+	} 
+	
+	cout << "Sending pause(" << option << ") command" << endl;
+	bool result = ACClient->pause(time(0)+delayTime,30,option);
 	if (result) {
 		waitForAnswer();
 	}
 	if (result) {
-		cout << "Application processes must be paused by now" << endl;
+		cout << "Application processes should be paused by now" << endl;
 	}
 	else {
 		cout << "ERROR during pause command" << endl;
 		sleep (2);
 	}
 }
+
+// Release: free resources
+void doRelease()
+{
+	cout << "Sending release command" << endl;
+	bool result = ACClient->release(time(0)+delayTime);
+	if (result) {
+		waitForAnswer();
+	}
+	if (result) {
+		cout << "Application processes released their resources." << endl;
+	}
+	else {
+		cout << "ERROR during release command" << endl;
+		sleep (2);
+	}
+
+}
+
 
 // Quit: stop processes
 void doStop()
@@ -199,7 +270,7 @@ void doStop()
 		waitForAnswer();
 	}
 	if (result) {
-		cout << "Application processes must be killed by now" << endl;
+		cout << "Application processes should be killed by now" << endl;
 	}
 	else {
 		cout << "ERROR during quit command" << endl;
@@ -218,40 +289,56 @@ void showMenu()
 		
 	
 	cout << "Commands" << endl;
-	cout << "C		Connect to AC" << endl;
-	cout << "D		Disconnect from AC" << endl << endl;
+	if (!connected) {
+		cout << "c   Connect to AC" << endl << endl;
+	}
+	else {
+		cout << "D   Disconnect from AC" << endl << endl;
 	
-	cout << "T		Set delayTime for commands" << endl << endl;
+		cout << "T   Set delayTime for commands" << endl << endl;
 
-	cout << "b		Boot(parameterfile): start nodes" << endl;
-	cout << "d		Define : start processes" << endl;
-	cout << "i		Init: let AP connect to each other" << endl;
-	cout << "r		Run: do work" << endl;
-	cout << "c		Cancel Command Queue" << endl;
-	cout << "p		Pause(condition,waitTime)" << endl;
-	cout << "s		Quit: stop processes" << endl << endl;
+		cout << "b   Boot(parameterfile): start processes" << endl;
+		cout << "d   Define : allocate resources [CLAIM]" << endl;
+		cout << "i   Init   : Go to hot-standby  [PREPARE]" << endl;
+		cout << "r   Run    : do work            [RESUME]" << endl;
+		cout << "p   Pause(condition,waitTime)   [SUSPEND]" << endl;
+		cout << "R   Release: free resources     [RELEASE]" << endl;
+		cout << "s   Quit   : stop processes     [QUIT]" << endl << endl;
+		cout << "c   Cancel : Command Queue" << endl;
+	}
 
-	cout << "q		Quit this program" << endl << endl;
+	cout << "q   Quit this program" << endl << endl;
+
 	cout << "Enter letter of your choice: ";
 }
 
 int main (int argc, char *argv[]) {
-	INIT_LOGGER ("ACuserMenu");
+	ConfigLocator	aCL;
+	string			progName(basename(argv[0]));
+	string			logPropFile(progName + ".log_prop");
+	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName);
 
 	char		aChoice = ' ';
 	while (aChoice != 'q') {
 		showMenu();
 		cin >> aChoice;
 		switch (aChoice) {
-		case 'C':	doConnect();	 	break;
+		case 'C':
+		case 'c':	if (!connected) {
+						doConnect();
+					}
+					else {
+						doCancel();
+					}
+					break;
 		case 'D':	doDisconnect();		break;
 		case 'T':	doDelayTime();		break;
 		case 'b':	doBoot();			break;
 		case 'd':	doDefine();			break;
 		case 'i':	doInit();			break;
 		case 'r':	doRun();			break;
-		case 'c':	doCancel();			break;
 		case 'p':	doPause();			break;
+		case 'R':	doRelease();		break;
 		case 's':	doStop();			break;
 		}
 	}
