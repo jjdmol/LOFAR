@@ -65,6 +65,7 @@ namespace LOFAR
       virtual tribool define();
       virtual tribool init();
       virtual tribool run();
+      virtual tribool release();
       virtual tribool quit();
       virtual tribool pause(const string& condition);
       virtual tribool snapshot(const string& destination);

@@ -380,6 +380,13 @@ namespace LOFAR
     }
     
 
+    tribool GlobalProcessControl::release()
+    {
+      LOG_INFO("GlobalProcessControl::release()");
+      LOG_WARN("Not supported");
+      return false;
+    }
+
     tribool GlobalProcessControl::quit()
     {
       // Do we want to send a "finalize" command first? It might be a good

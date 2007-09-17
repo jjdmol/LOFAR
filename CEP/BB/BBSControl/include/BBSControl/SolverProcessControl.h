@@ -67,6 +67,7 @@ namespace BBS
             virtual tribool init();
             virtual tribool run();
             virtual tribool pause(const string& condition);
+            virtual tribool release();
             virtual tribool quit();
             virtual tribool snapshot(const string& destination);
             virtual tribool recover(const string& source);
