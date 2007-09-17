@@ -158,6 +158,14 @@ tribool SolverProcessControl::pause(const string& /*condition*/)
 }
 
 
+tribool SolverProcessControl::release()
+{
+    LOG_INFO("SolverProcessControl::release()");
+    LOG_WARN("Not supported");
+    return false;
+}
+
+
 tribool SolverProcessControl::quit()
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);

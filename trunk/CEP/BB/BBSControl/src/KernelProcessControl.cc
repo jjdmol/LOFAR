@@ -257,6 +257,14 @@ namespace BBS
     }
 
 
+    tribool KernelProcessControl::release()
+    {
+        LOG_INFO("KernelProcessControl::release()");
+        LOG_WARN("Not supported");
+        return false;
+    }
+
+
     tribool KernelProcessControl::quit()
     {
         LOG_DEBUG("KernelProcessControl::quit()");
