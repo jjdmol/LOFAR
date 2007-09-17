@@ -29,18 +29,17 @@
 #include <arpa/inet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
-#include <ACCbin/ACRequestPool.h>
+#include <Common/SystemUtil.h>
+#include "ACRequestPool.h"
 
 namespace LOFAR {
   namespace ACC {
 
 ACRequestPool::ACRequestPool(uint16			firstPortNr, 
-							 uint16			nrOfPorts,
-							 const string&	firstNodeIP) :
+							 uint16			nrOfPorts) :
 	itsFirstPort(firstPortNr),
 	itsLastPort (firstPortNr+nrOfPorts-1),
-	itsNextPort (firstPortNr),
-	itsFirstNodeIP(firstNodeIP)
+	itsNextPort (firstPortNr)
 {}
 
 ACRequestPool::~ACRequestPool()
@@ -151,7 +150,7 @@ bool	ACRequestPool::load (const string&		aFilename)
 	iFile.read((char*)&readVersion, sizeof(readVersion));// for future V. control
 	iFile.read((char*)&count, sizeof(count));			 // nr elements in file
 
-	LOG_TRACE_RTTI_STR("Loading " << count << " ACrequests from file "
+	LOG_INFO_STR("Loading " << count << " ACrequests from file "
 					   << aFilename);
 
 	while (count) {
@@ -160,9 +159,14 @@ bool	ACRequestPool::load (const string&		aFilename)
 		iFile.read((char*)&ACR, sizeof (ACRequest));
 		ACR.itsPingtime = time(0);				// reset pingtime
 		ACR.itsState = ACRloaded;
-
+	
+		// report what we loaded.
+		in_addr		IPaddr;
+		IPaddr.s_addr = ntohl(ACR.itsAddr);
+		LOG_INFO_STR("Application " << ACR.itsRequester << " was at " << 
+							inet_ntoa(IPaddr) << "," << ntohs(ACR.itsPort));
 		add (ACR);
-		count--;
+		--count;
 	}
 
 	iFile.close();
@@ -171,8 +175,8 @@ bool	ACRequestPool::load (const string&		aFilename)
 
 bool ACRequestPool::assignNewPort(ACRequest*	anACR) 
 {
-	// TODO: Assign a machine in a clever way.
-	anACR->itsAddr = inet_addr(itsFirstNodeIP.c_str());
+	// Controller always run on my own machine
+	anACR->itsAddr = myIPV4Address();
 
 	uint16	startingPort = itsNextPort;
 	uint16	freePort;
@@ -208,7 +212,7 @@ bool ACRequestPool::assignNewPort(ACRequest*	anACR)
 	// log assignment
 	in_addr		IPaddr;
 	IPaddr.s_addr = anACR->itsAddr;
-	LOG_DEBUG_STR (inet_ntoa(IPaddr) << ", " << freePort <<
+	LOG_INFO_STR (inet_ntoa(IPaddr) << ", " << freePort <<
 				   " assigned to " << anACR->itsRequester);
 
 	return (true);

@@ -95,6 +95,9 @@ public:
 	// Clear the set.
 	void clear();
 
+	// Size of the set.
+	int	size();
+
 	// \name Merging or appending collections
 	// An existing collection can be extended/merged with another collection.
 	// @{
@@ -299,9 +302,14 @@ inline KeyCompare::Mode	ParameterSet::keyCompareMode	() const
 	return itsSet->keyCompareMode();
 }
 
-inline void	ParameterSet::clear      ()
+inline void	ParameterSet::clear()
 {
 	itsSet->clear();
+}
+
+inline int	ParameterSet::size()
+{
+	return (itsSet->size());
 }
 
 inline void	ParameterSet::adoptFile	(const string& theFilename, const string& thePrefix)

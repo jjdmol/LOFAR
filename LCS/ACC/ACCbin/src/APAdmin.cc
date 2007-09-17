@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ACCbin/APAdmin.h>
+#include "APAdmin.h"
 
 namespace LOFAR {
   namespace ACC {

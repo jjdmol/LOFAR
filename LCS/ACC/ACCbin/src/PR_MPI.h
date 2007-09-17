@@ -32,7 +32,7 @@
 //# Includes
 
 #include <Common/lofar_map.h>
-#include <ACCbin/ProcRule.h>
+#include "ProcRule.h"
 
 namespace LOFAR {
   namespace ACC {

@@ -11,8 +11,8 @@
 # now all ACC processes expect to be started with "ACC" as first parameter
 
 # start process
-echo $3 ACC $4 >../log/$2.startup
-$3 ACC $4 & 
+echo $3 ACC $4 $2 >../log/$2.startup
+$3 ACC $4 $2 & 
 
 # get its pid
 pid=`echo $!`

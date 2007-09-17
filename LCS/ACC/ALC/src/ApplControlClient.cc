@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 #include <Common/StringUtil.h>
 #include <Common/Net/Socket.h>
+#include <ALC/ACCmd.h>
 #include <ALC/ApplControlClient.h>
 #include <ALC/ACRequest.h>
 #include <ALC/DH_ApplControl.h>
@@ -77,7 +78,7 @@ ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 
 	// Now build the connection to our own dedicated AC
 	in_addr		IPaddr;
-	IPaddr.s_addr = aRequest.itsAddr;
+	IPaddr.s_addr = ntohl(aRequest.itsAddr);
 	string	host = inet_ntoa(IPaddr);
 	uint16	port = ntohs(aRequest.itsPort);
 	LOG_DEBUG(formatString("Private ACserver is at %s:%d, trying to connect", 
@@ -125,6 +126,11 @@ bool	ApplControlClient::pause (const time_t	scheduleTime,
 	return(itsCommChan->doRemoteCmd (ACCmdPause, scheduleTime, maxWaitTime, condition));
 }
 
+bool	ApplControlClient::release  (const time_t	scheduleTime) const
+{
+	return(itsCommChan->doRemoteCmd (ACCmdRelease, scheduleTime, 0, ""));
+}
+
 bool	ApplControlClient::quit  (const time_t	scheduleTime) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdQuit, scheduleTime, 0, ""));
@@ -153,14 +159,6 @@ bool	ApplControlClient::reinit(const time_t	scheduleTime,
 	return(itsCommChan->doRemoteCmd (ACCmdReinit, scheduleTime, 0, configID));
 }
 
-bool	ApplControlClient::replace(const time_t	 scheduleTime,
-								   const string& processList,
-								   const string& nodeList,
-							  	   const string& configID) const
-{
-	return(itsCommChan->doRemoteCmd (ACCmdReplace, scheduleTime, 0, configID));
-}
-
 bool	ApplControlClient::cancelCmdQueue() const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdCancelQueue, 0, 0, ""));
@@ -183,7 +181,7 @@ void	ApplControlClient::handleAckMessage(ACCmd 			cmd,
 											uint16 			result,
 											const string&	info) const
 {
-	LOG_DEBUG_STR ("ApplControlClient:handleAckMessage(" << cmd 
+	LOG_DEBUG_STR ("ApplControlClient:handleAckMessage(" << ACCmdName(cmd) 
 									<< "," << result << "," << info << ")");
 }
 

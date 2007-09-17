@@ -28,7 +28,7 @@
 #include <unistd.h>                     // fork, basename
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
-#include <ACCbin/ACDaemon.h>
+#include "ACDaemon.h"
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
@@ -38,11 +38,15 @@ using namespace LOFAR::ACC;
 //
 int main (int /*argc*/, char* argv[]) {
 
-	// Always bring up he logger first
+	// Always bring up the logger first
 	ConfigLocator	aCL;
 	string		progName = basename(argv[0]);
+#ifdef HAVE_LOG4CPLUS
 	string		logPropFile(progName + ".log_prop");
-	INIT_LOGGER (aCL.locate(logPropFile).c_str());
+#else
+	string		logPropFile(progName + ".debug");
+#endif
+	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName);
 	LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
 	// Tell operator we are trying to start up.

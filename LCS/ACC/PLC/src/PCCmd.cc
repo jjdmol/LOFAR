@@ -1,6 +1,6 @@
-//#  ParCollRecord.cc: ParameterCollection record for DB storage
+//#  PCCmd.cc: Names of the PLC commands.
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,42 +18,56 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#	 Abstract:
+//#	 This class implements the command protocol between an application manager
+//#	 (MAC for instance) and an Application Controller (=ACC package).
+//#	 The AM has the client role, the AC the server role.
+//#
 //#  $Id$
 
 #include <lofar_config.h>
-#include "ParCollRecord.h"
+
+//# Includes
+#include <PLC/PCCmd.h>
+
 
 namespace LOFAR {
   namespace ACC {
+    namespace PLC {
 
-ParCollRecord::ParCollRecord (const string&		aName,
-							  const string&		aVersion,
-							  const string&		aQualification,
-							  const string&		aContents) :
-	itsName(aName),
-	itsVersionNr(aVersion),
-	itsQualification(aQualification),
-	itsCollection(aContents)
-{
-}
+static	char*	PlcCmdNames[] = {
+		"Boot",
+		"Quit", 		"Define",
+		"Init", 		"Pause",
+		"Run", 			"Release",
+		"Snapshot",		"Recover",
+		"Reinit",		"Params",
+		"Info",			"Answer",
+		"Report",		"Async"
+};
 
+//
+// PCCmdName(value)
+//
+string	PCCmdName (PCCmd		PCcmdValue) {
+	PCCmd		orgCmd(orgPCCmd(PCcmdValue));
+	uint16		cmdValue((uint16)orgCmd - (uint16)(PCCmdBoot));
 
-int32 ParCollRecord::getLine(string&		buffer, uint32*	offset)
-{
-	if (*offset >= itsCollection.size()) {		// reached end, reset
-		buffer = "";
-		*offset = itsCollection.size();
-		return (0);
+	if (cmdValue > sizeof (PlcCmdNames)) {
+		return ("Unknown command");
 	}
 
-	int32 eol 		= itsCollection.find_first_of ('\n', *offset);
-	int32 resultLen = eol - *offset;
-	buffer = itsCollection.substr(*offset, resultLen);
-	*offset = eol+1;
-	return (resultLen);
+	string	name("PC");
+	name += PlcCmdNames[cmdValue];
+	if (isPLCresult(PCcmdValue)) {
+		name += "Result";
+	}
+
+	return (name);
 }
 
 
-
+    } // namespace PLC
   } // namespace ACC
 } // namespace LOFAR
+

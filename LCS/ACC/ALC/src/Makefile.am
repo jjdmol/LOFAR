@@ -1,6 +1,7 @@
 lib_LTLIBRARIES           = libalc.la
 
-libalc_la_SOURCES 		  = DH_ApplControl.cc \
+libalc_la_SOURCES 		  = ACCmd.cc \
+							DH_ApplControl.cc \
 							ApplControlComm.cc \
 							ApplControlClient.cc \
 							ACSyncClient.cc  \

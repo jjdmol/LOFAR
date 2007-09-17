@@ -28,6 +28,7 @@
 #include <libgen.h>
 #include <stdlib.h>						/// srand
 #include <Common/LofarLogger.h>
+#include <Common/LofarLocators.h>
 #include <PLC/ProcControlServer.h>
 #include <APS/ParameterSet.h>
 #include <APCmdImpl.h>
@@ -51,11 +52,18 @@ using namespace LOFAR::ACC::PLC;
 //
 // Note: The structure of the program is conform the MAIN.cc template.
 //
+// argv[0] : name executable.
+// argv[1] : ACC.
+// argv[2] : full name of parset file.
+// argv[3] : uniq process-name. (equal to _processName key)
+//
 int main (int argc, char *argv[]) {
 
 	// Always bring up the logger first
-	string  progName = basename(argv[0]);
-	INIT_LOGGER(progName.c_str());
+	ConfigLocator	aCL;
+	string			progName(basename(argv[0]));
+	string			logPropFile(progName + ".log_prop");
+	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName + "-" + argv[3]);
 
 	// Check invocation syntax
 	if (argc < 3) {
@@ -84,7 +92,7 @@ int main (int argc, char *argv[]) {
 									 &itsAPCmdImpl);
 
 		// IMPLEMENT: do other launch activities like processing the ParamSet
-		// init random generator with some value for testing
+		// TEST: init random generator with some value for testing
 		uint32 seed = 0;
 		for (uint16 i = 0; i < itsProcID.length(); ++i) {
 			seed += itsProcID.data()[i];
@@ -96,15 +104,15 @@ int main (int argc, char *argv[]) {
 		itsPCcomm.registerAtAC(itsProcID);
 
 		// Main processing loop
-		bool itsIsRunning = true;
-		while (itsIsRunning) {
+		bool quiting(false);
+		while (!quiting) {
 			// [C] scan AC port to see if a new command was sent.
 			if (itsPCcomm.pollForMessage()) {
 				// get pointer to received data
 				DH_ProcControl* newMsg = itsPCcomm.getDataHolder();
 
 				// we can update our runstate here if we like
-				itsIsRunning = (newMsg->getCommand() != PCCmdQuit);
+				quiting = (newMsg->getCommand() == PCCmdQuit);
 
 				// TEST: simulate we are busy
 				sleep (rand()%4);
@@ -112,8 +120,15 @@ int main (int argc, char *argv[]) {
 				// [D] let PCcomm dispatch and handle the message
 				itsPCcomm.handleMessage(newMsg);
 			}
+			else {
+				// no new message was received, do another run if we are in
+				// the run state
+				if (itsAPCmdImpl.inRunState()) {
+					itsPCcomm.handleMessage(&DH_ProcControl(PCCmdRun));
+				}
+			}
 
-			// once in a while report some intermediate results
+			// TEST: once in a while report some intermediate results
 			if ((rand()%10) == 0) {
 				ParameterSet	resultSet;
 				string			resultBuffer;

@@ -24,8 +24,8 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
-#include<ACCbin/ProcRuler.h>
+#include <Common/LofarLogger.h>
+#include "ProcRuler.h"
 
 namespace LOFAR {
   namespace ACC {

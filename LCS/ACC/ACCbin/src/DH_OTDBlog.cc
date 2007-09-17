@@ -1,6 +1,6 @@
-//#  DH_ProcControl.cc: Implements the Application Controller command protocol.
+//#  DH_OTDBlog.cc: Implements the OTDB log command dataholder.
 //#
-//#  Copyright (C) 2004
+//#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -28,88 +28,107 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <PLC/DH_ProcControl.h>
+#include <ALC/DH_OTDBlog.h>
 
 
 namespace LOFAR {
   namespace ACC {
-    namespace PLC {
+    namespace ALC {
 
 // Constructor
-DH_ProcControl::DH_ProcControl() :
-	DataHolder      ("", "DH_ProcControl"),
+DH_OTDBlog::DH_OTDBlog() :
+	DataHolder ("", "DH_OTDBlog"),
 	itsVersionNumber(0),
-	itsCommand      (0),
-	itsResult       (0)
 {
+	LOG_TRACE_OBJ("DH_applControl()");
 	setExtraBlob ("Extra", 1);
-}
-
-
-DH_ProcControl::DH_ProcControl(const PCCmd	aCommand) :
-	DataHolder      ("", "DH_ProcControl"),
-	itsVersionNumber(0),
-	itsCommand      (0),
-	itsResult       (0)
-{
-	setExtraBlob ("Extra", 1);
-	this->init();
-	setCommand(aCommand);
 }
 
 
 // Destructor
-DH_ProcControl::~DH_ProcControl() 
-{ }
-
-// Copying is allowed.
-DH_ProcControl::DH_ProcControl(const DH_ProcControl& that) :
-	DataHolder      (that),
-	itsVersionNumber(that.itsVersionNumber),
-	itsCommand      (that.itsCommand),
-	itsResult       (that.itsResult)
-{ }
-
-DH_ProcControl*		DH_ProcControl::clone() const
+DH_OTDBlog::~DH_OTDBlog() 
 {
-	return new DH_ProcControl(*this);
+	LOG_TRACE_OBJ("~DH_applControl()");
 }
 
+// Copying is allowed.
+DH_OTDBlog::DH_OTDBlog(const DH_OTDBlog& that) :
+	DataHolder(that),
+	itsVersionNumber(that.itsVersionNumber),
+{
+	setExtraBlob ("Extra", 1);
+}
+
+DH_OTDBlog*		DH_OTDBlog::clone() const
+{
+	return new DH_OTDBlog(*this);
+}
+
+DH_OTDBlog*		DH_OTDBlog::makeDataCopy() const
+{
+	DH_OTDBlog*		newDHAC = new DH_OTDBlog;
+	newDHAC->init();
+	newDHAC->setMessages(getMessages());
+	newDHAC->pack();
+
+	return (newDHAC);
+}	
 
 // Redefines the init function.
-void 	DH_ProcControl::init()
+void 	DH_OTDBlog::init()
 {
-	LOG_TRACE_RTTI ("DH_ProcControl:init");
+	LOG_TRACE_FLOW("DH_OTDBlog:init()");
 
-	// Initialize the fieldset
 	initDataFields();
 
-	// Add the fields to the definition
 	addField ("VersionNumber", BlobField<uint16>(1));
-	addField ("Command", 	   BlobField<int16>(1));	// PCCmd
-	addField ("Result", 	   BlobField<uint16>(1));
 
-	// create the data blob (calls fillpointers).
 	createDataBlock();
 
+}
+
+// Redefine the pack function.
+void	DH_OTDBlog::pack()
+{
+	LOG_TRACE_RTTI("DH_OTDBlog:pack()");
+
+	BlobOStream&	bos = createExtraBlob();		// attached to dataholder
+
+	bos <<	itsOptions;
+	
+	DataHolder::pack();
+}
+
+// Redefine the unpack function.
+void	DH_OTDBlog::unpack()
+{
+	LOG_TRACE_RTTI("DH_OTDBlog:unpack()");
+
+	DataHolder::unpack();
+
+	int32			version;
+	bool			found;
+	BlobIStream&	bis = getExtraBlob(found, version);
+	ASSERTSTR (found, "DH_OTDBlog::read has no extra blob");
+
+	bis >>	itsOptions;
+	bis.getEnd();
 }
 
 
 //# ---------- private ----------
 
 // Implement the initialisation of the pointers
-void	DH_ProcControl::fillDataPointers() {
-	LOG_TRACE_RTTI ("DH_ProcControl:fillDataPointers");
+void	DH_OTDBlog::fillDataPointers() {
+	LOG_TRACE_FLOW("DH_OTDBlog:fillDataPointers()");
 
 	itsVersionNumber = getData<uint16>("VersionNumber");
-	itsCommand 		 = getData<int16> ("Command");
-	itsResult 		 = getData<uint16>("Result");
 
 	*itsVersionNumber = 0x0100;		// TODO define a constant WriteVersion
 }
 
 
-    } // namespace PLC
+    } // namespace ALC
   } // namespace ACC
 } // namespace LOFAR
 

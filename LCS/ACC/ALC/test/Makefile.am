@@ -1,7 +1,8 @@
-check_PROGRAMS				= tACServer tACClient
+check_PROGRAMS				= tACServer tACClient tACCmd
 
 tACServer_SOURCES			= tACServer.cc 
 tACClient_SOURCES			= tACClient.cc 
+tACCmd_SOURCES				= tACCmd.cc 
 
 noinst_HEADERS              = myACClientFunctions.h
 

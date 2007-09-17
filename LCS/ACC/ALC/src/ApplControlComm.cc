@@ -31,6 +31,7 @@
 #include <Transport/TH_Socket.h>
 #include <ALC/ApplControlComm.h>
 #include <ALC/DH_ApplControl.h>
+#include <ALC/ACCmd.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -152,7 +153,7 @@ void	ApplControlComm::sendCmd(const ACCmd		theCmd,
 						     const string&		theProcList,
 						     const string&		theNodeList) const
 {
-	LOG_DEBUG_STR("sendCmd(" << theCmd <<","<< timeString(theTime) <<","<< 
+	LOG_DEBUG_STR("sendCmd(" << ACCmdName(theCmd) <<","<< timeString(theTime) <<","<< 
 							theWaitTime <<","<< theOptions <<")");
 
 	itsDataHolder->setCommand 	   (theCmd);

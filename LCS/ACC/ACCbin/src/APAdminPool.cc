@@ -25,7 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <ACCbin/APAdminPool.h>
+#include "APAdminPool.h"
 
 namespace LOFAR {
   namespace ACC {
@@ -149,12 +149,12 @@ bool APAdminPool::registerAck(PCCmd			aCommand,
 	if (aCommand != itsLastCmd) {
 		if (itsLastCmd == PCCmdNone) {
 			LOG_DEBUG_STR("Process " << anAPAdmin->getName() <<
-					  " is late, Ack received for " << aCommand);
+					  " is late, Ack received for " << PCCmdName(aCommand));
 		}
 		else {
 			LOG_WARN_STR("Process " << anAPAdmin->getName() <<
-					  " is out of sync, Ack received for " << aCommand << 
-					  " iso " << itsLastCmd);
+					  " is out of sync, Ack received for " << PCCmdName(aCommand) << 
+					  " iso " << PCCmdName(itsLastCmd));
 		}
 		return (false);
 	}

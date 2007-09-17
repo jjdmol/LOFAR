@@ -34,6 +34,10 @@ public:
 		cout << "Pause function called with:" << scheduleTime << endl;
 		return (true);
 	}
+	bool	release(const time_t	scheduleTime) const {
+		cout << "Release function called with:" << scheduleTime << endl;
+		return (true);
+	}
 	bool	quit(const time_t	scheduleTime) const {
 		cout << "Quit function called with:" << scheduleTime << endl;
 		return (true);
@@ -52,11 +56,6 @@ public:
 	}
 	bool	reinit(const time_t	scheduleTime, const string& configID) const {
 		cout << "Reinit function called with:" << scheduleTime << endl;
-		return (true);
-	}
-	bool	replace(const time_t	scheduleTime, const string& processList,
-					const string&	nodeList,     const string& configID) const {
-		cout << "Replace function called with:" << scheduleTime << endl;
 		return (true);
 	}
 	bool	cancelCmdQueue() const {

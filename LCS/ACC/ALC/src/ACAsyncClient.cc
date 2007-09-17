@@ -28,6 +28,7 @@
 
 //# Includes
 #include <ALC/ACAsyncClient.h>
+#include <ALC/ACCmd.h>
 #include <Common/hexdump.h>
 
 namespace LOFAR {
@@ -70,7 +71,7 @@ bool	ACAsyncClient::processACmsgFromServer()	const
 
 	ACCmd	cmdType = DHPtr->getCommand();
 	LOG_TRACE_VAR_STR ("ACASyncClient:proccessACmsgFromServer:cmdType=" 
-					   << cmdType);
+					   << ACCmdName(cmdType));
 	switch (cmdType) {
 	case ACCmdInfo:		
 		itsCommChan->sendCmd(ACCmdAnswer, 0,0, supplyInfo(DHPtr->getOptions()));

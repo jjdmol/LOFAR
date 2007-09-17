@@ -54,7 +54,7 @@ int main (int argc, char *argv[]) {
 
 	// Always bring up the logger first
 	string  progName = basename(argv[0]);
-	INIT_LOGGER(progName.c_str());
+	INIT_VAR_LOGGER(progName.c_str(), progName+"-"+argv[2]);
 
 	// Check invocation syntax
 	if (argc < 2) {
@@ -88,19 +88,26 @@ int main (int argc, char *argv[]) {
 		itsPCcomm.registerAtAC(itsProcID);
 
 		// Main processing loop
-		bool itsIsRunning = true;
-		while (itsIsRunning) {
+		bool quiting(false);
+		while (!quiting) {
 			// [C] scan AC port to see if a new command was sent.
 			if (itsPCcomm.pollForMessage()) {
 				// get pointer to received data
 				DH_ProcControl* newMsg = itsPCcomm.getDataHolder();
 
 				// we can update our runstate here if we like
-				itsIsRunning = (newMsg->getCommand() != PCCmdQuit);
+				quiting = (newMsg->getCommand() == PCCmdQuit);
 
 				// [D] let PCcomm dispatch and handle the message
 				LOG_DEBUG_STR("Received messagetype: " << newMsg->getCommand());
 				itsPCcomm.handleMessage(newMsg);
+			}
+			else {
+				// no new message was received, do another run if we are in
+				// the run state.
+				if (itsAPCmdImpl.inRunState()) {
+					itsAPCmdImpl.run();
+				}
 			}
 
 			// IMPLEMENT: do other stuff

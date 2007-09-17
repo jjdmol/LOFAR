@@ -66,5 +66,6 @@ include/Makefile
 include/PLC/Makefile
 Makefile
 src/Makefile
+test/Makefile
 PLC.spec
 )
