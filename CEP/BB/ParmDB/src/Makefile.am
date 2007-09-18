@@ -11,7 +11,7 @@ ParmDB.cc ParmDBAIPS.cc ParmDBPostgres.cc ParmDBPostgresTransactors.cc
 
 bin_PROGRAMS = parmdb
 
-parmdb_SOURCES		= parmdb.cc
+parmdb_SOURCES		= parmdb_main.cc
 parmdb_LDADD		= libparmdb.la
 parmdb_DEPENDENCIES	= libparmdb.la $(LOFAR_DEPEND)
 
