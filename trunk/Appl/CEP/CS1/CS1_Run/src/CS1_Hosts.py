@@ -8,12 +8,12 @@ liifen.setSlavesByPattern('lii%03d', '10.162.0.%d', [1,2,3,4,5,6,7,8,9,10,11,12,
 
 listfen   = ClusterFEN(name = 'listfen'    ,
                        address = '129.125.99.50')
-listfen.setSlavesByPattern('list%03d', '10.181.0.%d', [1,3,5,7,2,4,6])
-listfen.slaves.append(ClusterSlave('lifs001', '10.182.0.1'))
-listfen.slaves.append(ClusterSlave('lifs002', '10.182.0.2'))
-listfen.slaves.append(ClusterSlave('lifs003', '10.182.0.3'))
-listfen.slaves.append(ClusterSlave('lifs004', '10.182.0.4'))
-listfen.slaves.append(ClusterSlave('lifs005', '10.182.0.5'))
+listfen.setSlavesByPattern('list%03d', '10.181.0.%d', [1,2])
+#listfen.slaves.append(ClusterSlave('lifs001', '10.182.0.1'))
+#listfen.slaves.append(ClusterSlave('lifs002', '10.182.0.2'))
+#listfen.slaves.append(ClusterSlave('lifs003', '10.182.0.3'))
+#listfen.slaves.append(ClusterSlave('lifs004', '10.182.0.4'))
+#listfen.slaves.append(ClusterSlave('lifs005', '10.182.0.5'))
 
 
 list001   = Host(name = 'list001'  , \
