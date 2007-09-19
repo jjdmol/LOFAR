@@ -61,6 +61,7 @@ AC_OUTPUT(
 	RTCCommon.spec
 	Makefile
 	src/Makefile
+	test/Makefile
 	include/Makefile
 	include/APL/Makefile
 	include/APL/RTCCommon/Makefile
