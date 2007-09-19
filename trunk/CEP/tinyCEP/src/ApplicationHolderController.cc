@@ -97,6 +97,10 @@ tribool ApplicationHolderController::pause    (const	string&	)
   itsIsRunning = false;
   return true;
 }
+tribool ApplicationHolderController::release    ()
+{
+  return true;
+}
 tribool ApplicationHolderController::quit  	 () 
 {
   LOG_TRACE_FLOW("Quit called by ACC");
