@@ -54,7 +54,6 @@ lofar_GENERAL
 lofar_MPI
 lofar_INTERNAL(LCS/Tools,Tools,,,,"")
 lofar_EXTERNAL(boost,0,boost/preprocessor/repetition.hpp,"")
-lofar_EXTERNAL(zoid,0,zoid_api.h,"",/cephome/romein/projects/zoid/glibc/sysdeps/blrts/zoid)
 dnl
 dnl Output Makefiles
 dnl
