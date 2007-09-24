@@ -12,8 +12,8 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+11)";
 include = '<sys/time.h>';
 include = '<linux/types.h>';
 include = '<net/ethernet.h>';
-include = '<bitset>';
 include = '<Common/LofarTypes.h>';
+include = '<Common/lofar_bitset.h>';
 include = '<APL/RSP_Protocol/MEPHeader.h>';
 include = '<APL/RSP_Protocol/MEPData.h>';
 
@@ -885,7 +885,7 @@ event = {
   };
   param = {
     name = "bandsel";
-    type = "std::bitset<MEPHeader::N_SUBBANDS>";
+    type = "bitset<MEPHeader::N_SUBBANDS>";
   };
 };
 

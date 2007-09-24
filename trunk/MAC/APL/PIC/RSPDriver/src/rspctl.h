@@ -25,6 +25,9 @@
 #ifndef RSPCTL_H_
 #define RSPCTL_H_
 
+#include <Common/lofar_bitset.h>
+#include <Common/lofar_list.h>
+
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
 #include <APL/RSP_Protocol/HBASettings.h>
@@ -33,8 +36,6 @@
 #endif
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
-#include <bitset>
-#include <list>
 
 #include <APL/RTCCommon/Timestamp.h>
 
@@ -76,9 +77,9 @@ namespace LOFAR {
       /**
        * Get the mask (MAX_N_RCUS bits).
        */
-      std::bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const
+      bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const
       {
-        std::bitset<MEPHeader::MAX_N_RCUS> mask;
+        bitset<MEPHeader::MAX_N_RCUS> mask;
       
         mask.reset();
         std::list<int>::const_iterator it;
@@ -95,9 +96,9 @@ namespace LOFAR {
       /**
        * Get the mask (MAX_N_RSPBOARDS bits).
        */
-      std::bitset<MAX_N_RSPBOARDS> getRSPMask() const
+      bitset<MAX_N_RSPBOARDS> getRSPMask() const
       {
-        std::bitset<MAX_N_RSPBOARDS> mask;
+        bitset<MAX_N_RSPBOARDS> mask;
       
         mask.reset();
         std::list<int>::const_iterator it;

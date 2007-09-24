@@ -228,6 +228,8 @@ RSPDriver::RSPDriver(string name)
   LOG_DEBUG("Registering protocols");
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
+  GCF::TM::registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+  GCF::TM::registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_STRINGS);
 
 #if 0
   // connect to clock

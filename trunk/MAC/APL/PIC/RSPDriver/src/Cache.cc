@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_bitset.h>
 
 #include "StationSettings.h"
 #include "Cache.h"

@@ -24,6 +24,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_bitset.h>
 
 #include <GCF/GCF_ServiceInfo.h>
 
@@ -975,10 +976,13 @@ GCFEvent::TResult TBBCommand::ack(GCFEvent& e)
 	if (getRCUMask()[rcuout])
         {
 	  cout << formatString("RCU[%02u].tbbsettings= ", rcuout);
-	  for (unsigned int ilong = 0; ilong < ack.settings()(0).size()/(sizeof(unsigned long) * BITSOFBYTE); ilong++) {
+//	  for (unsigned int ilong = 0; ilong < ack.settings()(0).size()/(sizeof(unsigned long) * BITSOFBYTE); ilong++) {
 
-	    cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & std::bitset<MEPHeader::N_SUBBANDS>(0xFFFFFFFF)).to_ulong()));
-	    ack.settings()(rcuin) >>= sizeof(unsigned long)*BITSOFBYTE;
+//	    cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & bitset<MEPHeader::N_SUBBANDS>(0xFFFFFFFF)).to_ulong()));
+//	    ack.settings()(rcuin) >>= sizeof(unsigned long)*BITSOFBYTE;
+	  for (unsigned int ilong = 0; ilong < ack.settings()(0).size()/(sizeof(uint32) * BITSOFBYTE); ilong++) {
+	    cout << formatString("%08lx ", htonl((ack.settings()(rcuin) & bitset<MEPHeader::N_SUBBANDS>(0xFFFFFFFF)).to_uint32()));
+	    ack.settings()(rcuin) >>= sizeof(uint32)*BITSOFBYTE;
 	  }
 	  cout << endl;
 
