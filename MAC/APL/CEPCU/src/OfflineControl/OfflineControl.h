@@ -23,27 +23,6 @@
 #ifndef OFFLINECONTROL_H
 #define OFFLINECONTROL_H
 
-//# Includes
-#include <boost/shared_ptr.hpp>
-
-//# GCF Includes
-#include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_ITCPort.h>
-#include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
-
-//# local includes
-#include <GCF/PAL/GCF_PropertySetAnswerHandlerInterface.h>
-#include <GCF/PAL/GCF_PropertySetAnswer.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
-#include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/ParentControl.h>
-#include <APL/APLCommon/CTState.h>
-
-#include <CEPApplicationManager.h>
-
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -52,6 +31,18 @@
 
 //# ACC Includes
 #include <APS/ParameterSet.h>
+
+//# GCF Includes
+#include <GCF/RTDB/RTDBPropertySet.h>
+#include <GCF/TM/GCF_Control.h>
+
+//# local includes
+#include <APL/APLCommon/APLCommonExceptions.h>
+#include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/APLCommon/ParentControl.h>
+#include <APL/APLCommon/CTState.h>
+
+#include <CEPApplicationManager.h>
 
 // forward declaration
 
@@ -68,15 +59,11 @@ using	APLCommon::ParentControl;
 
 
 class OfflineControl : public GCFTask,
-                      public GCF::PAL::GCFPropertySetAnswerHandlerInterface,
                       public CEPApplicationManagerInterface
 {
 public:
 	explicit OfflineControl(const string& cntlrName);
 	~OfflineControl();
-
-   	// PropertySetAnswerHandlerInterface method
-   	void handlePropertySetAnswer(GCFEvent& answer);
 
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state (GCFEvent& e, 
@@ -119,12 +106,8 @@ private:
    	void	 _disconnectedHandler(GCFPortInterface& port);
 	void	 setState(CTState::CTstateNr     newState);
 
-   	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
-	typedef boost::shared_ptr<CEPApplicationManager> CEPApplicationManagerPtr;
-
-    GCF::PAL::GCFPropertySetAnswer  itsPropertySetAnswer;
-   	GCFMyPropertySetPtr           	itsPropertySet;
-	bool						  	itsPropertySetInitialized;
+   	RTDBPropertySet*         	itsPropertySet;
+	bool					  	itsPropertySetInitialized;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;
@@ -132,11 +115,11 @@ private:
 
 	GCFTimerPort*			itsTimerPort;
 
-    map<string, CEPApplicationManagerPtr> itsCepApplications;
-    map<string, ACC::APS::ParameterSet>   itsCepAppParams;
-    ACC::APS::ParameterSet                itsResultParams;
-	map<string, vector<string> >          itsProcessDependencies;
-	map<string,time_t>		              itsCepAppStartTimes;
+    map<string, CEPApplicationManager*>	itsCepApplications;
+    map<string, ACC::APS::ParameterSet>	itsCepAppParams;
+    ACC::APS::ParameterSet				itsResultParams;
+	map<string, vector<string> >		itsProcessDependencies;
+	map<string, time_t>					itsCepAppStartTimes;
 
 	CTState::CTstateNr		itsState;
 

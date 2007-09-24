@@ -23,32 +23,30 @@
 #include <Common/LofarLogger.h>
 
 #include <signal.h>
-#include <boost/shared_array.hpp>
 #include <Common/StreamUtil.h>
 //#include <Common/lofar_vector.h>
 //#include <Common/lofar_string.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
 #include <GCF/GCF_PVTypes.h>
-#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/CTState.h>
+#include <GCF/RTDB/DP_Protocol.ph>
 
 #include "OnlineControl.h"
 #include "OnlineControlDefines.h"
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::PAL;
+using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
 namespace LOFAR {
@@ -65,9 +63,7 @@ static OnlineControl*	thisOnlineControl = 0;
 //
 OnlineControl::OnlineControl(const string&	cntlrName) :
 	GCFTask 			((State)&OnlineControl::initial_state,cntlrName),
-	GCFPropertySetAnswerHandlerInterface(),
-	itsPropertySetAnswer(*this),
-	itsPropertySet		(),
+	itsPropertySet		(0),
 	itsPropertySetInitialized (false),
 	itsParentControl	(0),
 	itsParentPort		(0),
@@ -116,7 +112,7 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 
 	// for debugging purposes
 	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (PA_PROTOCOL, 		PA_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
 
 	_setState(CTState::CREATED);
 }
@@ -276,57 +272,18 @@ void	OnlineControl::appSetStateResult(const string&			procName,
 
 
 //
-// handlePropertySetAnswer(answer)
+// _databaseEventHandler(event)
 //
-void OnlineControl::handlePropertySetAnswer(GCFEvent& answer)
+void OnlineControl::_databaseEventHandler(GCFEvent& event)
 {
-	LOG_DEBUG_STR ("handlePropertySetAnswer:" << evtstr(answer));
+	LOG_DEBUG_STR ("_databaseEventHandler:" << eventName(event));
 
-	switch(answer.signal) {
-	case F_MYPS_ENABLED: {
-		GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-		if(pPropAnswer->result != GCF_NO_ERROR) {
-			LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",
-										getName().c_str(), pPropAnswer->pScope));
-		}
-		// always let timer expire so main task will continue.
-		itsTimerPort->setTimer(1.0);
-		break;
-	}
+	switch(event.signal) {
 
-	case F_PS_CONFIGURED: {
-		GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
-		if(pConfAnswer->result == GCF_NO_ERROR) {
-			LOG_DEBUG(formatString("%s : apc %s Loaded",
-										getName().c_str(), pConfAnswer->pApcName));
-			//apcLoaded();
-		}
-		else {
-			LOG_ERROR(formatString("%s : apc %s NOT LOADED",
-										getName().c_str(), pConfAnswer->pApcName));
-		}
-		break;
-	}
-
-	case F_VGETRESP:
-	case F_VCHANGEMSG: {
-		// check which property changed
-		// GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-
+	case DP_CHANGED: {
 		// TODO: implement something usefull.
 		break;
 	}  
-
-//	case F_SUBSCRIBED:
-//	case F_UNSUBSCRIBED:
-//	case F_PS_CONFIGURED:
-//	case F_EXTPS_LOADED:
-//	case F_EXTPS_UNLOADED:
-//	case F_MYPS_ENABLED:
-//	case F_MYPS_DISABLED:
-//	case F_VGETRESP:
-//	case F_VCHANGEMSG:
-//	case F_SERVER_GONE:
 
 	default:
 		break;
@@ -354,37 +311,36 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 		// Get access to my own propertyset.
 		string	propSetName = formatString(ONC_PROPSET_NAME, itsInstanceNr);
 		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
-		itsPropertySet = GCFMyPropertySetPtr(new GCFMyPropertySet(propSetName.c_str(),
-																  ONC_PROPSET_TYPE,
-																  PS_CAT_TEMPORARY,
-																  &itsPropertySetAnswer));
-		itsPropertySet->enable();
-		// Wait for timer that is set in PropertySetAnswer on ENABLED event
+		itsPropertySet = new RTDBPropertySet(propSetName,
+											 ONC_PROPSET_TYPE,
+											 PSAT_WO,
+											 this);
 		}
 		break;
 
-	case F_TIMER:
-		if (!itsPropertySetInitialized) {
-			itsPropertySetInitialized = true;
-	
-			// First redirect signalHandler to our finishing state to leave PVSS
-			// in the right state when we are going down
-			thisOnlineControl = this;
-			signal (SIGINT,  OnlineControl::signalHandler);	// ctrl-c
-			signal (SIGTERM, OnlineControl::signalHandler);	// kill
+	case DP_CREATED: {
+		// NOTE: thsi function may be called DURING the construction of the PropertySet.
+		// Always exit this event in a way that GCF can end the construction.
+		DPCreatedEvent  dpEvent(event);
+		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(0.0);
+		}
+		break;
 
-			// update PVSS.
-			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("initial"));
-			itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
-		  
-			// Start ParentControl task
-			LOG_DEBUG ("Enabling ParentControl task");
-			itsParentPort = itsParentControl->registerTask(this);
-			// results in CONTROL_CONNECT
+	case F_TIMER: {	// must be timer that PropSet is online.
+		// update PVSS.
+		LOG_TRACE_FLOW ("Updateing state to PVSS");
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("initial"));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+	  
+		// Start ParentControl task
+		LOG_DEBUG ("Enabling ParentControl task");
+		itsParentPort = itsParentControl->registerTask(this);
+		// results in CONTROL_CONNECT
 
-			LOG_DEBUG ("Going to operational state");
-			TRAN(OnlineControl::active_state);				// go to next state.
+		LOG_DEBUG ("Going to operational state");
+		TRAN(OnlineControl::active_state);				// go to next state.
 		}
 		break;
 
@@ -419,8 +375,8 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_STATE),GCFPVString("active"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("active"));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 	}
 	break;
 
@@ -436,6 +392,10 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 		port.close();
 	}
 	break;
+
+	case DP_CHANGED:
+		_databaseEventHandler(event);
+		break;
 
 	case F_TIMER:  {
 //		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
@@ -498,9 +458,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	case CONTROL_RELEASE: {
 		CONTROLReleaseEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASE(" << msg.cntlrName << ")");
-		_setState(CTState::RELEASE);
-		sendControlResult(*itsParentPort, event.signal, getName(), 0);
-		_setState(CTState::RELEASED);
+		startNewState(CTState::RELEASE, ""/*options*/);
 		break;
 	}
 
@@ -544,8 +502,8 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE,GCFPVString("finished"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("finished"));
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 
 		itsTimerPort->setTimer(1.0);
 		break;
@@ -629,7 +587,8 @@ void OnlineControl::_doBoot()
 			// Finally start ApplController on the right host
 			LOG_INFO_STR("Starting controller for " << applName);
 			sleep(1);			 // sometimes we are too quick, wait a second.
-			CEPApplMgrPtr	accClient (new CEPApplMgr(*this, applName, accHost, paramFileName));
+			int32	expectedRuntime = time_duration(itsStopTime - itsStartTime).total_seconds();
+			CEPApplMgrPtr	accClient (new CEPApplMgr(*this, applName, expectedRuntime, accHost, paramFileName));
 			itsCEPapplications[applName] = accClient;
 		} 
 		catch (APSException &e) {

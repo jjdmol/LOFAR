@@ -82,6 +82,7 @@ class CEPApplicationManager : public ACC::ALC::ACClientFunctions,
     bool  pause    (const time_t    scheduleTime,
                     const time_t    maxWaitTime,
                     const string&   condition)     const;
+    bool  release  (const time_t    scheduleTime)  const;
     bool  quit     (const time_t    scheduleTime)  const;
     bool  shutdown (const time_t    scheduleTime)  const;
     bool  snapshot (const time_t    scheduleTime,
@@ -89,10 +90,6 @@ class CEPApplicationManager : public ACC::ALC::ACClientFunctions,
     bool  recover  (const time_t    scheduleTime,
                     const string&   source)        const;
     bool  reinit   (const time_t    scheduleTime,
-                    const string&   configID)      const;
-    bool  replace  (const time_t    scheduleTime,
-                    const string&   processList,
-                    const string&   nodeList,
                     const string&   configID)      const;
     string  askInfo (const string&  keylist)       const;    
     bool  cancelCmdQueue ()                        const;    
@@ -205,12 +202,9 @@ inline bool  CEPApplicationManager::reinit   (const time_t    scheduleTime,
   return _acClient.reinit(scheduleTime, configID);
 }
  
-inline bool  CEPApplicationManager::replace  (const time_t    scheduleTime,
-                                              const string&   processList,
-                                              const string&   nodeList,
-                                              const string&   configID)      const
+inline bool  CEPApplicationManager::release  (const time_t    scheduleTime) const
 {
-  return _acClient.replace(scheduleTime, processList, nodeList, configID);
+  return _acClient.release(scheduleTime);
 }
  
 inline bool  CEPApplicationManager::cancelCmdQueue ()                       const

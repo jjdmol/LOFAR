@@ -23,27 +23,6 @@
 #ifndef ONLINECONTROL_H
 #define ONLINECONTROL_H
 
-//# Includes
-#include <boost/shared_ptr.hpp>
-
-//# GCF Includes
-#include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_ITCPort.h>
-#include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
-
-//# local includes
-#include <GCF/PAL/GCF_PropertySetAnswerHandlerInterface.h>
-#include <GCF/PAL/GCF_PropertySetAnswer.h>
-#include <APL/APLCommon/APLCommonExceptions.h>
-#include <APL/APLCommon/Controller_Protocol.ph>
-#include <APL/APLCommon/ParentControl.h>
-#include <APL/APLCommon/CTState.h>
-
-#include <CEPApplMgr.h>
-
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -52,6 +31,17 @@
 
 //# ACC Includes
 #include <APS/ParameterSet.h>
+
+//# GCF Includes
+#include <GCF/TM/GCF_Control.h>
+#include <GCF/RTDB/RTDB_PropertySet.h>
+
+//# local includes
+#include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/APLCommon/ParentControl.h>
+#include <APL/APLCommon/CTState.h>
+
+#include <CEPApplMgr.h>
 
 // forward declaration
 
@@ -64,19 +54,16 @@ using	GCF::TM::GCFPort;
 using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
+using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
 
 
 class OnlineControl : public GCFTask,
-                      public GCF::PAL::GCFPropertySetAnswerHandlerInterface,
                       public CEPApplMgrInterface
 {
 public:
 	explicit OnlineControl(const string& cntlrName);
 	~OnlineControl();
-
-   	// PropertySetAnswerHandlerInterface method
-   	void handlePropertySetAnswer(GCFEvent& answer);
 
 	// During the initial state all connections with the other programs are made.
    	GCFEvent::TResult initial_state (GCFEvent& e, 
@@ -110,10 +97,11 @@ private:
 
 	void	_doBoot();
 	void	_doQuit();
-	void   	_finishController	(uint16_t result);
-   	void	_connectedHandler	(GCFPortInterface& port);
-   	void	_disconnectedHandler(GCFPortInterface& port);
-	void	_setState	  (CTState::CTstateNr		newState);
+	void   	_finishController	 (uint16_t 				result);
+   	void	_connectedHandler	 (GCFPortInterface& 	port);
+   	void	_disconnectedHandler (GCFPortInterface& 	port);
+	void	_setState	  		 (CTState::CTstateNr	newState);
+	void	_databaseEventHandler(GCFEvent&				event);
 
 	// Send a command to all (or the first) applications.
 	void	startNewState (CTState::CTstateNr		newState,
@@ -131,12 +119,9 @@ private:
 	bool	hasNextApplication();
 	void	noApplication();
 
-   	typedef boost::shared_ptr<GCF::PAL::GCFMyPropertySet> GCFMyPropertySetPtr;
-
 	// ----- datamembers -----
-   	GCF::PAL::GCFPropertySetAnswer	itsPropertySetAnswer;
-   	GCFMyPropertySetPtr           	itsPropertySet;
-	bool						  	itsPropertySetInitialized;
+   	RTDBPropertySet*           	itsPropertySet;
+	bool					  	itsPropertySetInitialized;
 
 	// pointer to parent control task
 	ParentControl*			itsParentControl;
