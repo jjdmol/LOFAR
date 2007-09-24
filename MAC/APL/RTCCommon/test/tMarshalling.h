@@ -56,7 +56,22 @@ public:
 	unsigned int	unpack(void* buffer);
 };
 
-//# --- Inline functions ---
+class	SubArrayNC
+{
+public:
+	int		someInt;
+	double	someDouble;
+	string	someString;
+
+	SubArrayNC(int i, double d, string s);
+	SubArrayNC() {};
+	unsigned int	getSize();
+	unsigned int	pack(void* buffer);
+	unsigned int	unpack(void* buffer);
+private:
+	// prevent copy
+	SubArrayNC(const SubArrayNC&);
+};
 
 } // namespace LOFAR
 

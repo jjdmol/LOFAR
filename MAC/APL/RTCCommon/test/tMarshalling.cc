@@ -37,7 +37,8 @@ namespace LOFAR {
 
 SubArray::SubArray(int i, double d, string s) :
 	someInt(i), someDouble(d), someString(s)
-{}
+{
+}
 
 unsigned int SubArray::getSize() {
 	return (sizeof(int) + sizeof(double) + MSH_STRING_SIZE(someString));
@@ -55,6 +56,36 @@ unsigned int SubArray::pack(void*	buffer) {
 }
 
 unsigned int SubArray::unpack(void*	buffer) {
+	unsigned int	offset = 0;
+	memcpy(&someInt, ((char*)(buffer))+offset, sizeof(int));
+	offset += sizeof(int);
+	memcpy(&someDouble, ((char*)(buffer))+offset, sizeof(double));
+	offset += sizeof(double);
+	MSH_UNPACK_STRING(buffer, offset, someString);
+	return (offset);
+}
+
+SubArrayNC::SubArrayNC(int i, double d, string s) :
+	someInt(i), someDouble(d), someString(s)
+{
+}
+
+unsigned int SubArrayNC::getSize() {
+	return (sizeof(int) + sizeof(double) + MSH_STRING_SIZE(someString));
+}
+
+unsigned int SubArrayNC::pack(void*	buffer) {
+	unsigned int	offset = 0;
+	memcpy(((char*)(buffer)+offset), &someInt, sizeof(int));
+	offset += sizeof (int);
+	memcpy(((char*)(buffer)+offset), &someDouble, sizeof(double));
+	offset += sizeof (double);
+	MSH_PACK_STRING(buffer, offset, someString);
+
+	return (offset);
+}
+
+unsigned int SubArrayNC::unpack(void*	buffer) {
 	unsigned int	offset = 0;
 	memcpy(&someInt, ((char*)(buffer))+offset, sizeof(int));
 	offset += sizeof(int);
@@ -151,9 +182,8 @@ int main (int	argc, char*	argv[])
 
 	// map<string, subArray>
 	map<string, SubArray>		ms1;
-	ms1["eerste_item"] = SA1;
-	SubArray		SA3(0, 32, "ejtegnirts");
-	ms1["tweede_item"] = SA3;
+	ms1["eerste_item"] = SubArray(25, 3.14, "stringetje");
+	ms1["tweede_item"] = SubArray(0, 32, "ejtegnirts");
 	cout << "Testing map<string, SubArray>: " << endl;
 	map<string, SubArray>::iterator	iter = ms1.begin();
 	map<string, SubArray>::iterator	end  = ms1.end();
@@ -184,6 +214,43 @@ int main (int	argc, char*	argv[])
 					iter2->second.someDouble << "," << iter2->second.someString << endl; 
 		iter2++;
 	}
+
+
+	// map<string, subArrayNC*>
+	map<string, SubArrayNC*>		msanc1;
+	msanc1["eerste_item"] = new SubArrayNC(25, 3.14, "stringetje");
+	msanc1["tweede_item"] = new SubArrayNC(0, 32, "ejtegnirts");
+	cout << "Testing map<string, SubArrayNC*>: " << endl;
+	map<string, SubArrayNC*>::iterator	iternc = msanc1.begin();
+	map<string, SubArrayNC*>::iterator	endnc  = msanc1.end();
+	while (iternc != endnc) {
+		cout << "map[" << iternc->first << "]:" << iternc->second->someInt << "," << 
+					iternc->second->someDouble << "," << iternc->second->someString << endl; 
+		iternc++;
+	}
+
+	unsigned int	mapncsize;
+	MSH_SIZE_MAP_STRING_CLASSPTR(mapncsize, msanc1, SubArrayNC);
+	cout << "size = " << mapncsize << endl;
+
+	bzero(buf, 4096);
+	offset = 0;
+	MSH_PACK_MAP_STRING_CLASSPTR(buf, offset, msanc1, SubArrayNC);
+	cout << "packed:" << endl;
+	hexdump(buf, mapncsize);
+
+	map<string, SubArrayNC*>		msanc2;
+	offset = 0;
+	MSH_UNPACK_MAP_STRING_CLASSPTR(buf, offset, msanc2, SubArrayNC);
+	cout << "Unpacked map<string, SubArrayNC*>: " << endl;
+	iternc = msanc2.begin();
+	endnc  = msanc2.end();
+	while (iternc != endnc) {
+		cout << "map[" << iternc->first << "]:" << iternc->second->someInt << "," << 
+					iternc->second->someDouble << "," << iternc->second->someString << endl; 
+		iternc++;
+	}
+
 
 	return (0);
 }

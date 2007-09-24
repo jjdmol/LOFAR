@@ -26,9 +26,12 @@
 #define MARSHALLING_H_
 
 #include <Common/LofarTypes.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_bitset.h>
+#include <Common/lofar_map.h>
 #include <blitz/array.h>
-#include <string.h>
-#include <string>
+//#include <string.h>
+//#include <string>
 
 // SIZE blitz::array<...>
 #define MSH_ARRAY_SIZE(array, datatype)	\
@@ -157,9 +160,52 @@ do {	\
 	for (int elem = 0; elem < nrElem; elem++) {	\
 		string	elem1; \
 		MSH_UNPACK_STRING(bufptr, offset, elem1);	\
-		datatype	elem2;	\
-		offset += elem2.unpack(bufptr + offset);	\
-		themap[elem1] = elem2; \
+		offset += themap[elem1].unpack(bufptr + offset);	\
+	}	\
+} while (0)
+
+// SIZE map<string, ptr2class_with_getSize>
+#define MSH_SIZE_MAP_STRING_CLASSPTR(sizevar, themap, datatype)	\
+do {	\
+	sizevar = sizeof(int32);	\
+	map<string, datatype*>::iterator	iter = themap.begin();	\
+	map<string, datatype*>::iterator	end  = themap.end();	\
+	while (iter != end) {	\
+		sizevar += MSH_STRING_SIZE(iter->first);	\
+		sizevar += iter->second->getSize();	\
+		iter++;	\
+	}	\
+} while (0)
+	
+
+// PACK map<string, ptr2class_with_pack>
+#define MSH_PACK_MAP_STRING_CLASSPTR(bufptr, offset, themap, datatype)	\
+do {	\
+	int32	nrElem = themap.size();	\
+	memcpy(((char*)(bufptr)) + (offset), &nrElem, sizeof(int32));	\
+	offset += sizeof(int32);	\
+	\
+	map<string, datatype*>::iterator	iter = themap.begin();	\
+	map<string, datatype*>::iterator	end  = themap.end();	\
+	while (iter != end) {	\
+		MSH_PACK_STRING(bufptr, offset, iter->first);	\
+		offset += iter->second->pack((char*)bufptr + offset);	\
+		iter++;	\
+	}	\
+} while (0)
+
+// UNPACK map<string, ptr2class_with_unpack>
+#define MSH_UNPACK_MAP_STRING_CLASSPTR(bufptr, offset, themap, datatype)	\
+do {	\
+	int32	nrElem = 0;	\
+	memcpy(&nrElem, ((char*)(bufptr)) + (offset), sizeof(nrElem));	\
+	offset += sizeof(nrElem);	\
+	\
+	for (int elem = 0; elem < nrElem; elem++) {	\
+		string	elem1; \
+		MSH_UNPACK_STRING(bufptr, offset, elem1);	\
+		themap[elem1] = new datatype; \
+		offset += themap[elem1]->unpack((char*)bufptr + offset);	\
 	}	\
 } while (0)
 
