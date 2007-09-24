@@ -11,8 +11,8 @@ id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+12)";
 // e.g.
 include = '<sys/time.h>';
 include = '<linux/types.h>';
-include = '<bitset>';
 include = '<Common/LofarTypes.h>';
+include = '<Common/lofar_bitset.h>';
 
 include = '<APL/RTCCommon/Timestamp.h>';
 include = '<APL/RSP_Protocol/AllRegisterState.h>';
@@ -170,7 +170,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "weights";
@@ -203,7 +203,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "cache";
@@ -243,7 +243,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "subbands";
@@ -276,7 +276,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "cache";
@@ -317,7 +317,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "period";
@@ -410,7 +410,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "settings";
@@ -443,7 +443,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "cache";
@@ -480,7 +480,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "period";
@@ -569,7 +569,7 @@ event = {
   };
   param = {
     name = "rspmask";
-    type = "std::bitset<MAX_N_RSPBOARDS>";
+    type = "bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "settings";
@@ -605,7 +605,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "settings";
@@ -638,7 +638,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "cache";
@@ -675,7 +675,7 @@ event = {
   };
   param = {
     name = "rspmask";
-    type = "std::bitset<MAX_N_RSPBOARDS>";
+    type = "bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "period";
@@ -761,7 +761,7 @@ event = {
   };
   param = {
     name = "rspmask";
-    type = "std::bitset<MAX_N_RSPBOARDS>";
+    type = "bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "cache";
@@ -798,7 +798,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "period";
@@ -892,7 +892,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "cache";
@@ -1361,7 +1361,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "settings";
@@ -1394,7 +1394,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "cache";
@@ -1431,7 +1431,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "period";
@@ -1517,7 +1517,7 @@ event = {
   };
   param = {
     name = "rspmask";
-    type = "std::bitset<MAX_N_RSPBOARDS>";
+    type = "bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "cache";
@@ -1554,7 +1554,7 @@ event = {
   };
   param = {
     name = "rspmask";
-    type = "std::bitset<MAX_N_RSPBOARDS>";
+    type = "bitset<MAX_N_RSPBOARDS>";
   };
   param = {
     name = "period";
@@ -1643,7 +1643,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "settings";
@@ -1676,7 +1676,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "cache";
@@ -1716,7 +1716,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "settings";
@@ -1749,7 +1749,7 @@ event = {
   };
   param = {
     name = "rcumask";
-    type = "std::bitset<MEPHeader::MAX_N_RCUS>";
+    type = "bitset<MEPHeader::MAX_N_RCUS>";
   };
   param = {
     name = "cache";

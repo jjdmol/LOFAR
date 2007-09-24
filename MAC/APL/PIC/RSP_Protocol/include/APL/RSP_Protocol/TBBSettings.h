@@ -42,7 +42,7 @@ namespace LOFAR {
       virtual ~TBBSettings() {}
 
       /* get TBB delay settings array */
-      blitz::Array<std::bitset<MEPHeader::N_SUBBANDS>, 1>& operator()();
+      blitz::Array<bitset<MEPHeader::N_SUBBANDS>, 1>& operator()();
 
     public:
 
@@ -57,10 +57,10 @@ namespace LOFAR {
 
     private:
       // one dimensional dimension1 = nRcus
-      blitz::Array<std::bitset<MEPHeader::N_SUBBANDS>, 1> m_bandsel;
+      blitz::Array<bitset<MEPHeader::N_SUBBANDS>, 1> m_bandsel;
     };
   
-    inline blitz::Array<std::bitset<MEPHeader::N_SUBBANDS>, 1>& TBBSettings::operator()() { return m_bandsel; }
+    inline blitz::Array<bitset<MEPHeader::N_SUBBANDS>, 1>& TBBSettings::operator()() { return m_bandsel; }
   };
 }; // namespace LOFAR
 
