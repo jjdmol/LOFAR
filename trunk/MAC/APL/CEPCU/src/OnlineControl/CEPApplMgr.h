@@ -72,6 +72,7 @@ class CEPApplMgr : public ACC::ALC::ACClientFunctions,
 public:
 	CEPApplMgr(CEPApplMgrInterface& 	interface, 
 			   const string& 			appName, 
+			   uint32					expectedRuntime,
 			   const string& 			acdHost,
 			   const string&			paramFile);
 	virtual ~CEPApplMgr();
@@ -88,6 +89,7 @@ public:
 	bool  pause    (const time_t    scheduleTime,
 					const time_t    maxWaitTime,
 					const string&   condition)     const;
+	bool  release  (const time_t    scheduleTime)  const;
 	bool  quit     (const time_t    scheduleTime)  const;
 	bool  shutdown (const time_t    scheduleTime)  const;
 	bool  snapshot (const time_t    scheduleTime,
@@ -95,10 +97,6 @@ public:
 	bool  recover  (const time_t    scheduleTime,
 					const string&   source)        const;
 	bool  reinit   (const time_t    scheduleTime,
-					const string&   configID)      const;
-	bool  replace  (const time_t    scheduleTime,
-					const string&   processList,
-					const string&   nodeList,
 					const string&   configID)      const;
 	string  askInfo (const string&  keylist)       const;    
 
@@ -171,6 +169,11 @@ inline bool  CEPApplMgr::pause (const time_t    scheduleTime,
 	return (itsACclient.pause(scheduleTime, maxWaitTime, condition));
 }
  
+inline bool  CEPApplMgr::release (const time_t    scheduleTime)  const
+{
+	return (itsACclient.release(scheduleTime));
+}
+ 
 inline bool  CEPApplMgr::quit (const time_t    scheduleTime)  const
 {
 	return (itsACclient.quit(scheduleTime));
@@ -197,14 +200,6 @@ inline bool  CEPApplMgr::reinit   (const time_t    scheduleTime,
 								   const string&   configID)      const
 {
 	return (itsACclient.reinit(scheduleTime, configID));
-}
- 
-inline bool  CEPApplMgr::replace  (const time_t    scheduleTime,
-								   const string&   processList,
-								   const string&   nodeList,
-								   const string&   configID)      const
-{
-	return (itsACclient.replace(scheduleTime, processList, nodeList, configID));
 }
  
 inline bool  CEPApplMgr::cancelCmdQueue ()                       const

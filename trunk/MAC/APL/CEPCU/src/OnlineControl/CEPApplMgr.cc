@@ -35,13 +35,14 @@ namespace LOFAR {
 //
 CEPApplMgr::CEPApplMgr(CEPApplMgrInterface& interface, 
 					   const string& 		appName,
+					   uint32				expRuntime,
 					   const string&		acdHost,
 					   const string&		paramFile) :
 	itsProcName	   (appName),
 	itsParamFile   (paramFile),
 	itsCAMInterface(interface),
 	//			   (nrProcs, expectedlifetime,activityLevel,architecture);
-	itsACclient	   (this, appName, 10, time(0)%100, 1, 0, acdHost),
+	itsACclient	   (this, appName, 10, expRuntime, 1, 0, acdHost),
 	itsReqState	   (CTState::NOSTATE),
 	itsCurState	   (CTState::NOSTATE),
 	itsContinuePoll(true)
@@ -117,6 +118,13 @@ void  CEPApplMgr::handleAckMsg(ACCmd         cmd,
 		itsCAMInterface.appSetStateResult(itsProcName, CTState::SUSPEND, MACresult);
 	break;
 
+	case ACCmdRelease:
+		if (ACCresult == AcCmdMaskOk) {
+			itsCurState = CTState::RELEASED;
+		}
+		itsCAMInterface.appSetStateResult(itsProcName, CTState::RELEASE, MACresult);
+	break;
+
 	case ACCmdQuit:
 		if (ACCresult == AcCmdMaskOk) {
 //			itsContinuePoll = false;
@@ -155,8 +163,8 @@ void CEPApplMgr::sendCommand (CTState::CTstateNr	newState, const string&		option
 	case CTState::SUSPEND:
 		itsACclient.pause(0, 0, options);
 		break;
-	case CTState::RELEASE:			// no ACC equivalent.
-		ASSERTSTR(false, "RELEASE has no ACC equivalent, programming error");
+	case CTState::RELEASE:
+		itsACclient.release(0);
 		break;
 	case CTState::QUIT:
 		itsACclient.quit(0);
