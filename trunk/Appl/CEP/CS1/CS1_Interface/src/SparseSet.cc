@@ -207,7 +207,7 @@ void SparseSet::read(BlobIStream &bis)
 
 ssize_t SparseSet::marshall(void *ptr, size_t maxSize) const
 {
-  size_t size = sizeof(uint32) + ranges.size() * sizeof(range) > maxSize;
+  size_t size = sizeof(uint32) + ranges.size() * sizeof(range);
 
   if (size > maxSize)
     return -1;
