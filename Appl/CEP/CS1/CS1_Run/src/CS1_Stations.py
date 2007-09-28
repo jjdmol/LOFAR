@@ -15,35 +15,71 @@ class Station(object):
 #Keep the antenna positions in ITRF coordinates.
 #Storing a position on earth given as (lon,lat,height)
 
-CS010_HBA10 = [Station('CS010_HBA10')]
-CS010_HBA17 = [Station('CS010_HBA17')]
-CS010_HBA25 = [Station('CS010_HBA25')]
-CS010_HBA29 = [Station('CS010_HBA29')]
-CS010_HBA = CS010_HBA10 + CS010_HBA17 + CS010_HBA25 + CS010_HBA29
+CS010_HBA0 = [Station('CS010_HBA0')]
+CS010_HBA1 = [Station('CS010_HBA1')]
+CS010_HBA2 = [Station('CS010_HBA2')]
+CS010_HBA3 = [Station('CS010_HBA3')]
+CS010_HBAs = CS010_HBA0 + CS010_HBA1 + CS010_HBA2 + CS010_HBA3
+
+CS008_HBA0 = [Station('CS008_HBA0')]
+CS008_HBA1 = [Station('CS008_HBA1')]
+CS008_HBA2 = [Station('CS008_HBA2')]
+CS008_HBA3 = [Station('CS008_HBA3')]
+CS008_HBAs = CS008_HBA0 + CS008_HBA1 + CS008_HBA2 + CS008_HBA3
+
+CS001_HBA0 = [Station('CS001_HBA0')]
+CS001_HBA1 = [Station('CS001_HBA1')]
+CS001_HBA2 = [Station('CS001_HBA2')]
+CS001_HBA3 = [Station('CS001_HBA3')]
+CS001_HBAs = CS001_HBA0 + CS001_HBA1 + CS001_HBA2 + CS001_HBA3
+
+CS016_HBA0 = [Station('CS016_HBA0')]
+CS016_HBA1 = [Station('CS016_HBA1')]
+CS016_HBA2 = [Station('CS016_HBA2')]
+CS016_HBA3 = [Station('CS016_HBA3')]
+CS016_HBAs = CS016_HBA0 + CS016_HBA1 + CS016_HBA2 + CS016_HBA3
 
 CS010_dipole0  = [Station('CS010_dipole0')]
 CS010_dipole4  = [Station('CS010_dipole4')]
 CS010_dipole8  = [Station('CS010_dipole8')]
 CS010_dipole12 = [Station('CS010_dipole12')]
-CS010_4dipoles = CS010_dipole0 + CS010_dipole4 + CS010_dipole8 + CS010_dipole12
+CS010_4dipoles0_4_8_12 = CS010_dipole0 + CS010_dipole4 + CS010_dipole8 + CS010_dipole12
 
 CS008_dipole0  = [Station('CS008_dipole0')]
 CS008_dipole4  = [Station('CS008_dipole4')]
 CS008_dipole8  = [Station('CS008_dipole8')]
 CS008_dipole12 = [Station('CS008_dipole12')]
-CS008_4dipoles = CS008_dipole0 + CS008_dipole4 + CS008_dipole8 + CS008_dipole12
+CS008_4dipoles0_4_8_12 = CS008_dipole0 + CS008_dipole4 + CS008_dipole8 + CS008_dipole12
+
+CS008_dipole2  = [Station('CS008_dipole2')]
+CS008_dipole6  = [Station('CS008_dipole6')]
+CS008_dipole10 = [Station('CS008_dipole10')]
+CS008_dipole14 = [Station('CS008_dipole14')]
+CS008_4dipoles2_6_10_14 = CS008_dipole2 + CS008_dipole6 + CS008_dipole10 + CS008_dipole14
 
 CS001_dipole0  = [Station('CS001_dipole0')]
 CS001_dipole4  = [Station('CS001_dipole4')]
 CS001_dipole8  = [Station('CS001_dipole8')]
 CS001_dipole12 = [Station('CS001_dipole12')]
-CS001_4dipoles = CS001_dipole0 + CS001_dipole4 + CS001_dipole8 + CS001_dipole12
+CS001_4dipoles0_4_8_12 = CS001_dipole0 + CS001_dipole4 + CS001_dipole8 + CS001_dipole12
+
+CS001_dipole2  = [Station('CS001_dipole2')]
+CS001_dipole6  = [Station('CS001_dipole6')]
+CS001_dipole10 = [Station('CS001_dipole10')]
+CS001_dipole14 = [Station('CS001_dipole14')]
+CS001_4dipoles2_6_10_14 = CS001_dipole2 + CS001_dipole6 + CS001_dipole10 + CS001_dipole14
 
 CS016_dipole0  = [Station('CS016_dipole0')]
 CS016_dipole4  = [Station('CS016_dipole4')]
 CS016_dipole8  = [Station('CS016_dipole8')]
 CS016_dipole12 = [Station('CS016_dipole12')]
-CS016_4dipoles = CS016_dipole0 + CS016_dipole4 + CS016_dipole8 + CS016_dipole12
+CS016_4dipoles0_4_8_12 = CS016_dipole0 + CS016_dipole4 + CS016_dipole8 + CS016_dipole12
+
+CS016_dipole2  = [Station('CS016_dipole2')]
+CS016_dipole6  = [Station('CS016_dipole6')]
+CS016_dipole10 = [Station('CS016_dipole10')]
+CS016_dipole14 = [Station('CS016_dipole14')]
+CS016_4dipoles2_6_10_14 = CS016_dipole2 + CS016_dipole6 + CS016_dipole10 + CS016_dipole14
 
 CS010_us0  = [Station('CS010_us0')]
 CS010_us1  = [Station('CS010_us1')]
@@ -70,5 +106,7 @@ CS016_us3 =  [Station('CS016_us3')]
 CS016_4us = CS016_us0 + CS016_us1 + CS016_us2 + CS016_us3
 
 AllMicroStations = CS010_4us + CS001_4us + CS008_4us + CS016_4us
-AllDipoles = CS010_4dipoles + CS001_4dipoles + CS008_4dipoles + CS016_4dipoles
+AllDipoles0_4_8_12 = CS010_4dipoles0_4_8_12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
+AllDipolesMixed = CS010_4dipoles0_4_8_12 + CS001_4dipoles2_6_10_14 + CS008_4dipoles2_6_10_14 + CS016_4dipoles2_6_10_14
 Mixed = CS010_us0 + CS010_dipole4 + CS010_dipole8 + CS010_dipole12 + CS001_4dipoles + CS008_4dipoles + CS016_4dipoles
+AllHBAs = CS010_HBAs + CS001_HBAs + CS008_HBAs + CS016_HBAs
