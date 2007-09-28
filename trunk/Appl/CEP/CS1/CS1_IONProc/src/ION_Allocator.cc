@@ -71,7 +71,7 @@ void ION_Allocator::deallocate(void *ptr)
   if (ptr != 0) {
     pthread_mutex_lock(&mutex);
     std::map<void *, size_t>::iterator index = sizes.find(ptr);
-    freeList.include((size_t) ptr, index->second);
+    freeList.include((size_t) ptr, (size_t) ptr + index->second);
     sizes.erase(index);
     pthread_mutex_unlock(&mutex);
   }
