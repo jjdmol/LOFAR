@@ -108,5 +108,4 @@ CS016_4us = CS016_us0 + CS016_us1 + CS016_us2 + CS016_us3
 AllMicroStations = CS010_4us + CS001_4us + CS008_4us + CS016_4us
 AllDipoles0_4_8_12 = CS010_4dipoles0_4_8_12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
 AllDipolesMixed = CS010_4dipoles0_4_8_12 + CS001_4dipoles2_6_10_14 + CS008_4dipoles2_6_10_14 + CS016_4dipoles2_6_10_14
-Mixed = CS010_us0 + CS010_dipole4 + CS010_dipole8 + CS010_dipole12 + CS001_4dipoles + CS008_4dipoles + CS016_4dipoles
 AllHBAs = CS010_HBAs + CS001_HBAs + CS008_HBAs + CS016_HBAs
