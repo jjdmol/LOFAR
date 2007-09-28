@@ -19,7 +19,7 @@ class Job(object):
         self.runlog = runlog
         self.runLogRetreived = False
         self.host.sput(parsetfile, '~/')
-	tmp = '~/LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop'
+	tmp = self.workingDir + '/LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop'
 	self.host.sput(tmp, '~/')
 	self.host.sput('OLAP.parset', '~/')
         if runCmd == None:
@@ -106,7 +106,8 @@ class BGLJob(Job):
 	self.host.sput(parsetfile, self.workingDir)
 	self.host.sput(parsetfile, self.workingDir + '/CS1.parset')
 	self.host.sput('OLAP.parset', self.workingDir)
-        Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
+        #Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
+        Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
 
 
 class BuildJob(Job):
