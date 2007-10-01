@@ -24,7 +24,7 @@ class Job(object):
 	self.host.sput('OLAP.parset', '~/')
         if runCmd == None:
             runCmd = self.executable
-        self.runCommand = self.host.executeAsync('( cd ~ ; ' + runCmd + ' ' + str(noRuns) + ') &> ' + self.remoteRunLog, timeout = timeOut)
+        self.runCommand = self.host.executeAsync('( cd ~ ; ' + runCmd + ' ' + parsetfile.split('/')[2] + ' ' + str(noRuns) + ') &> ' + self.remoteRunLog, timeout = timeOut)
     
     def isDone(self):
         ret = self.runCommand.isDone()
