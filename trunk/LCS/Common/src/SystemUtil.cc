@@ -25,6 +25,14 @@
 #include <Common/SystemUtil.h>
 #include <unistd.h>
 
+#if defined HAVE_BGL && !defined HAVE_ZOID
+// netdb is not available on BGL; all code using netdb will be 
+// conditionally included using the HAVE_BGL definition;
+#define OPTIMAL_CIOD_CHUNK_SIZE (64 * 1024)
+#else
+#include <netdb.h>
+#endif
+
 namespace LOFAR {
 
 //
@@ -168,6 +176,33 @@ string myHostname(bool	giveFullName)
 	}
 
 	return (fullhostname);
+}
+
+//
+// myIPaddress
+//
+uint32 myIPV4Address()
+{
+#if defined HAVE_BGL && !defined HAVE_ZOID
+	LOG_ERROR ("Function myIPV4Address not available for Blue Gene.");
+	return (0);
+#else
+	struct hostent*		hostEnt;
+	if (!(hostEnt = gethostbyname(myHostname(false).c_str()))) {
+		return (0);
+	}
+
+	if (hostEnt->h_length != 4) {
+		LOG_ERROR_STR ("Length of my IPaddress is " << hostEnt->h_length << " i.s.o. 4, ignoring result.");
+		return (0);
+	}
+
+	// copy info to save place.
+	uint32	address;
+	bcopy (hostEnt->h_addr_list[0], &address, hostEnt->h_length);
+
+	return (htonl(address));
+#endif
 }
 
 } // namespace LOFAR

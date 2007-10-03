@@ -121,6 +121,7 @@ int main (int, char *argv[]) {
 	// Read in the log-environment configuration
 	// We should always start with this.
 	//INIT_LOGGER_AND_WATCH("testLogger", 10000);
+	//INIT_VAR_LOGGER("testLogger", "testfile.log");
 	INIT_LOGGER("testLogger.in_log4cxx");
 
 	// Show operator were are on the air

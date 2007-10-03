@@ -50,7 +50,8 @@ using namespace std;
 
 bool testSplit()
 {
-  string s(",aa,bb,,dd,");
+  INIT_LOGGER("tStringUtil");
+  string s(",aa  , bb, ,dd,");
   vector<string> vs = StringUtil::split(s,',');
   cout << "Splitting string \"" << s << "\" using \',\' as seperator ..." 
        << endl;
