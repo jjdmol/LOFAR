@@ -22,19 +22,19 @@ void RTDBPerfResp::dpDeleted(const string& /*propName*/, PVSSresult /*result*/)
 	gDeleteCounter--;
 }
 
-void RTDBPerfResp::dpeSubscribed(const string& propName, PVSSresult /*result*/)
+void RTDBPerfResp::dpeSubscribed(const string& /*propName*/, PVSSresult /*result*/)
 {
 }
 
-void RTDBPerfResp::dpeUnsubscribed(const string& propName, PVSSresult /*result*/)
+void RTDBPerfResp::dpeUnsubscribed(const string& /*propName*/, PVSSresult /*result*/)
 {
 }
 
-void RTDBPerfResp::dpeValueGet(const string& propName, PVSSresult /*result*/, const GCFPValue& value)
+void RTDBPerfResp::dpeValueGet(const string& /*propName*/, PVSSresult /*result*/, const GCFPValue& /*value*/)
 {
 }
 
-void RTDBPerfResp::dpeValueChanged(const string& propName, PVSSresult /*result*/, const GCFPValue& /*value*/)
+void RTDBPerfResp::dpeValueChanged(const string& /*propName*/, PVSSresult /*result*/, const GCFPValue& /*value*/)
 {
 }
 
@@ -42,11 +42,11 @@ void RTDBPerfResp::dpeValueSet(const string& /*propName*/, PVSSresult /*result*/
 {
 }
 
-void RTDBPerfResp::dpeSubscriptionLost(const string& propName, PVSSresult /*result*/)
+void RTDBPerfResp::dpeSubscriptionLost(const string& /*propName*/, PVSSresult /*result*/)
 {
 }
 
-void RTDBPerfResp::dpQuerySubscribed(uint32 queryId, PVSSresult /*result*/)
+void RTDBPerfResp::dpQuerySubscribed(uint32 /*queryId*/, PVSSresult /*result*/)
 {
 }
 
