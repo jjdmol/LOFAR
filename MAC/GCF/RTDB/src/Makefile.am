@@ -31,6 +31,7 @@ lib_LTLIBRARIES 	= librtdb.la
 
 librtdb_la_SOURCES	= $(BUILT_SOURCES) \
 					  RTDB_PropertySet.cc \
+					  DPservice.cc \
 					  DPanswer.cc
 
 include $(top_srcdir)/Makefile.common
