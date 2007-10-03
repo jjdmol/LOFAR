@@ -56,6 +56,9 @@ string getTempFileName(const string&	format="");
 // or the full hostname containing the domainname also.
 string myHostname(bool	giveFullName);
 
+// Returns the IPaddress of this machine. If something goes wrong 0 is returned.
+uint32 myIPV4Address();
+
 } // namespace LOFAR
 
 #endif

@@ -3,7 +3,7 @@ CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert \
 			tFileLocator tStringUtil tStreamUtil \
 			tHexdump testSocket tComplex tProcess \
 			tRunOnNode tTimer tNumeric tSingleton \
-			tObjectFactory
+			tObjectFactory tSystemUtil
 
 check_PROGRAMS	=	$(CHECKTOOLPROGS)
 
@@ -90,5 +90,9 @@ tObjectFactory_SOURCES		= tObjectFactory.cc \
 				  Coordinates.h Coordinates.cc
 tObjectFactory_LDADD		= ../src/libcommon.la	
 tObjectFactory_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tSystemUtil_SOURCES		= tSystemUtil.cc
+tSystemUtil_LDADD		= ../src/libcommon.la	
+tSystemUtil_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
