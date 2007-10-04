@@ -76,9 +76,9 @@ namespace BBS
 
 
     //##----   P u b l i c   m e t h o d s   ----##//
-    KernelProcessControl::KernelProcessControl() :
-        ProcessControl(),
-        itsState(KernelProcessControl::INIT)
+    KernelProcessControl::KernelProcessControl()
+        :   ProcessControl(),
+            itsState(KernelProcessControl::INIT)
     {
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
@@ -103,9 +103,14 @@ namespace BBS
             char *user = getenv("USER");
             ASSERT(user);
             string userString(user);
+            
+            ostringstream socketName;
+            int id = globalParameterSet()->getInt32("SolverId");
+            socketName << "=Solver_" << userString << id;
+            
             itsSolverConnection.reset(new BlobStreamableConnection(
                 "localhost",
-                "=Solver_" + userString,
+                socketName.str(),
                 Socket::LOCAL));
         }
         catch(Exception& e)

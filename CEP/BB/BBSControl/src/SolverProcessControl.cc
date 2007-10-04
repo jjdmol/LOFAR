@@ -90,8 +90,12 @@ tribool SolverProcessControl::define()
         ASSERT(user);
         string userString(user);
 
+        ostringstream socketName;
+        int id = globalParameterSet()->getInt32("SolverId");
+        socketName << "=Solver_" << userString << id;
+
         itsKernelConnection.reset(new BlobStreamableConnection(
-            "=Solver_" + userString,
+            socketName.str(),
             Socket::LOCAL));
     }
     catch(Exception& e)

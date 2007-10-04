@@ -51,8 +51,6 @@ public:
     enum State
     {
         INIT,
-        FIRST_RUN,  // Temporary state (until we can insert command into the
-                    // command queue
         RUN,
         WAIT
     };
