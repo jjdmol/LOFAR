@@ -20,6 +20,17 @@
 //#
 //#  $Id$
 
+// \file
+// RealTime database service for accessing DataPoints without a PropertySet.
+//
+// Sometimes you need access to DataPointElements of several PropertySets. In stead
+// of creating all the PropertySet objects it is far more easy to use the DPservice.
+// The DPservice acts as a gateway to the database with almost no use of memory which
+// is very different from PropertySets that make a local copy of the DataPoints in
+// memory.
+// The use of DPservice is limited to getting and setting values. It is not possible 
+// to take a subscription on DataPoints which IS possible with PropertySets.
+
 #ifndef RTDB_DPSERVICE_H
 #define RTDB_DPSERVICE_H
 
@@ -45,48 +56,47 @@ namespace LOFAR {
 class DPservice
 {
 public:
-	// Constructor.
+	// A DPservice object is bound to a GCFtask because it must be able to deliver the
+	// DP protocol events to the task. One DPservice per task is normally enough. With the
+	// reportBack parameter use can set wether or not you like to receive the DP events.
 	explicit DPservice (TM::GCFTask*	clientTask, // must be a pointer
 						bool			reportBack = true);
 	~DPservice ();
 
-	// @param propName with or without the scope
-	// @param value can be of type GCFPValue or string (will be converted to 
-	//              GCFPValue content)
-	// @param wantAnswer setting this parameter to 'true' forces GCF to give an
-	//                   answer on this setValue operation. This is very useful
-	//                   in case the value must be set on a property of a remote system.
-	// @returns GCF_PROP_NOT_IN_SET,  GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
+	// There are two ways of setting a value, they differ in ease of use and performance.
+	//
+	// @param DPname with full scope.
+	// @param value can be of type GCFPValue or string. The string parameter will be 
+	//		  converted to a GCFPValue which takes time but is easier in use.
+	// @param type of the GCFPValue object that must be created.
+	// @param timestamp Optional parameter for attaching a timestamp to the value change.
+	// @returns PVSS_xxx result codes.
 	// <group>
-	PVSSresult setValue (const string&		propName, 
-						 const GCFPValue&	value);
+	PVSSresult setValue (const string&		DPname, 
+						 const GCFPValue&	value, 
+						 double 			timestamp = 0.0);
 
-	PVSSresult setValue (const string& 		propName,	// slower than previous function
-						 const string& 		value,
-						 TMACValueType		type);	// LPT_BOOL/CHAR/UNSIGNED/....
-
-	PVSSresult setValueTimed (const string&		propName, 
-							  const GCFPValue&	value, 
-							  double 			timestamp);
-
-	PVSSresult setValueTimed (const string& 	propName,	// slower than previous function
-							  const string&		value, 
-							  TMACValueType		type,	// LPT_BOOL/CHAR/UNSIGNED/....
-							  double 			timestamp);
+	PVSSresult setValue	(const string& 		DPname,	// slower than previous function
+						 const string&		value, 
+						 TMACValueType		type,	// LPT_BOOL/CHAR/UNSIGNED/....
+						 double 			timestamp = 0.0);
     // </group>
 
-	PVSSresult getValue(const string&		propName);
+	// Place a request for getting the value from a DataPoint from the database.
+	// The function will return directly and the result will be delivered in a
+	// DPGetEvent sometime later.
+	PVSSresult getValue(const string&		DPname);
 
 protected:
 	friend class DPresponse;
-	void dpCreated 			 (const string& propName, PVSSresult	result);
-	void dpDeleted	 		 (const string& propName, PVSSresult	result);
-	void dpeSubscribed 		 (const string& propName, PVSSresult	result);    
-	void dpeSubscriptionLost (const string& propName, PVSSresult	result);
-	void dpeUnsubscribed	 (const string& propName, PVSSresult	result);
-	void dpeValueGet		 (const string& propName, PVSSresult	result, const Common::GCFPValue& value);
-	void dpeValueChanged	 (const string& propName, PVSSresult	result, const Common::GCFPValue& value);
-	void dpeValueSet		 (const string& propName, PVSSresult	result);
+	void dpCreated 			 (const string& DPname, PVSSresult	result);
+	void dpDeleted	 		 (const string& DPname, PVSSresult	result);
+	void dpeSubscribed 		 (const string& DPname, PVSSresult	result);    
+	void dpeSubscriptionLost (const string& DPname, PVSSresult	result);
+	void dpeUnsubscribed	 (const string& DPname, PVSSresult	result);
+	void dpeValueGet		 (const string& DPname, PVSSresult	result, const Common::GCFPValue& value);
+	void dpeValueChanged	 (const string& DPname, PVSSresult	result, const Common::GCFPValue& value);
+	void dpeValueSet		 (const string& DPname, PVSSresult	result);
 	void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
 
 private:
@@ -103,23 +113,6 @@ private:
 	DPanswer*	          		itsExtResponse;		// callback to client
 	bool						itsPassResult;		// client wants result-events
 };
-
-//# ----- inline functions -----
-
-// setValue(propname, valueString immediately)
-inline PVSSresult DPservice::setValue (const string&	propName, 
-									   const string&	value,
-									   TMACValueType	type)
-{
-  return (setValueTimed(propName, value, type, 0.0));
-}
-
-// setValue(propname, value&, immediately)
-inline PVSSresult DPservice::setValue (const string&			propName, 
-									   const Common::GCFPValue&	value)
-{
-  return (setValueTimed(propName, value, 0.0));
-}
 
   } // namespace RTDB
  } // namespace GCF

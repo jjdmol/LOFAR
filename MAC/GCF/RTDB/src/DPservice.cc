@@ -69,22 +69,22 @@ DPservice::~DPservice()
 }
 
 //
-// setValueTimed(propName, value, timestamp)
+// setValue(DPname, value, timestamp)
 //
-PVSSresult DPservice::setValueTimed (const string& 		DPname, 
-									 const GCFPValue& 	value,
-									 double 			timestamp)
+PVSSresult DPservice::setValue (const string& 		DPname, 
+								const GCFPValue& 	value,
+								double 				timestamp)
 {
 	return (itsService->dpeSet(DPname, value, timestamp));
 }
 
 //
-// setValueTimed(string, value, timestamp)
+// setValue(string, value, timestamp)
 //
-PVSSresult DPservice::setValueTimed (const string&		DPname, 
-									 const string&		value,
-									 TMACValueType		type,
-									 double 			timestamp)
+PVSSresult DPservice::setValue (const string&		DPname, 
+								const string&		value,
+								TMACValueType		type,
+								double 				timestamp)
 {
 	// first create a GCFValue object of the right type.
 	GCFPValue*	valueObj = GCFPValue::createMACTypeObject(type);
@@ -115,28 +115,28 @@ PVSSresult	DPservice::getValue(const string&	DPname)
 //
 // dpeValueSet(result)
 //
-void DPservice::dpeValueSet(const string&		propName, PVSSresult	result)
+void DPservice::dpeValueSet(const string&		DPname, PVSSresult	result)
 {
 	if (result != SA_NO_ERROR) {
-		LOG_WARN_STR ("Setting new value to " << propName << " failed");
+		LOG_WARN_STR ("Setting new value to " << DPname << " failed");
 	}
 
 	if (itsPassResult) {
-		itsExtResponse->dpeValueSet(propName, result);
+		itsExtResponse->dpeValueSet(DPname, result);
 	}
 }
 
 //
 // dpeValueGet(result, value)
 //
-void DPservice::dpeValueGet(const string&		propName, PVSSresult	result, const GCFPValue&	value)
+void DPservice::dpeValueGet(const string&		DPname, PVSSresult	result, const GCFPValue&	value)
 {
-	LOG_DEBUG_STR("DPservice::dpeValueGet(" << propName << ")");
+	LOG_DEBUG_STR("DPservice::dpeValueGet(" << DPname << ")");
 
 	// notify user when he is interested in it.
 	if (itsPassResult) {
 		LOG_DEBUG("DPservice::dpeValueChanged:propagate");
-		itsExtResponse->dpeValueChanged(propName, result, value);
+		itsExtResponse->dpeValueGet(DPname, result, value);
 	}
 }
 
