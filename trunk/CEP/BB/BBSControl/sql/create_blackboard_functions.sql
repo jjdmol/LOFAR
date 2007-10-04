@@ -12,7 +12,7 @@
 -- checking the result table. NOTE: This is also not foolproof, if
 -- the first command modifies data/state (because it can be partly
 -- executed).
-CREATE OR REPLACE FUNCTION blackboard.is_new_run(global BOOL)
+CREATE OR REPLACE FUNCTION blackboard.is_new_run(global BOOL, _pid INTEGER)
 RETURNS BOOLEAN AS
 $$
     DECLARE
@@ -35,6 +35,7 @@ $$
                             SELECT 1
                                 FROM blackboard.result
                                 WHERE node = inet_client_addr()
+                                AND pid = _pid
                                 LIMIT 1
                         )
                         AS tmp
@@ -45,26 +46,8 @@ $$
 LANGUAGE plpgsql;
 
 
---CREATE OR REPLACE FUNCTION blackboard.command_queue_empty()
---RETURNS BOOL AS
---$$
---    SELECT
---        (
---            SELECT COUNT(1)
---                FROM
---                (
---                    SELECT 1
---                        FROM blackboard.command
---                        LIMIT 1
---                )
---                AS tmp
---        ) = 0;
---$$
---LANGUAGE SQL;
-
-
 -- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
-CREATE OR REPLACE FUNCTION blackboard.get_next_command_id()
+CREATE OR REPLACE FUNCTION blackboard.get_next_command_id(_pid INTEGER)
 RETURNS INTEGER AS
 $$
     DECLARE
@@ -78,6 +61,7 @@ $$
                     SELECT command_id
                         FROM blackboard.result
                         WHERE node = inet_client_addr()
+                        AND pid = _pid
                 )
             ORDER BY id
             LIMIT 1;
@@ -92,12 +76,12 @@ $$
 LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION blackboard.get_next_command()
+CREATE OR REPLACE FUNCTION blackboard.get_next_command(_pid INTEGER)
 RETURNS blackboard.command AS
 $$
     SELECT *
         FROM blackboard.command
-        WHERE id = blackboard.get_next_command_id();
+        WHERE id = blackboard.get_next_command_id($1);
 $$
 LANGUAGE SQL;
 
@@ -454,16 +438,17 @@ LANGUAGE SQL;
 -- ------ --
 CREATE OR REPLACE FUNCTION blackboard.add_result
     (_command_id INTEGER,
+    _pid INTEGER,
     _result_code INTEGER,
     _message TEXT)
 RETURNS BOOL AS
 $$
     BEGIN
         IF _command_id > 0
-            AND _command_id = blackboard.get_next_command_id()
+            AND _command_id = blackboard.get_next_command_id(_pid)
         THEN
-            INSERT INTO blackboard.result(command_id, result_code, message)
-                VALUES (_command_id, _result_code, _message);
+            INSERT INTO blackboard.result(command_id, pid, result_code, message)
+                VALUES (_command_id, _pid, _result_code, _message);
             
             RETURN FOUND;
         END IF;
@@ -489,7 +474,8 @@ $$
             UPDATE blackboard.result
                 SET read_flag = 'true'
                 WHERE command_id = _result.command_id
-                AND node = _result.node;
+                AND node = _result.node
+                AND pid = _result.pid;
                 
             RETURN NEXT _result;
         END LOOP;
@@ -514,7 +500,8 @@ $$
             UPDATE blackboard.result
                 SET read_flag = 'true'
                 WHERE command_id = _result.command_id
-                AND node = _result.node;
+                AND node = _result.node
+                AND pid = _result.pid;
                 
             RETURN NEXT _result;
         END LOOP;
@@ -542,14 +529,14 @@ LANGUAGE plpgsql;
 -- --- --
 CREATE OR REPLACE FUNCTION blackboard.log
     (_command_id INTEGER,
-    level INTEGER,
     pid INTEGER,
+    level INTEGER,
     scope TEXT,
     line_no INTEGER,
     message TEXT)
 RETURNS VOID AS
 $$
-    INSERT INTO blackboard.log(command_id, level, pid, scope, line_no, message)
+    INSERT INTO blackboard.log(command_id, pid, level, scope, line_no, message)
         VALUES ($1, $2, $3, $4, $5, $6);
 $$
 LANGUAGE SQL;

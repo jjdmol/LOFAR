@@ -40,19 +40,28 @@ namespace LOFAR
     // @{
 
     // Class representing the identifier for a local controller. It is stored
-    // internally as a string, but this may change in the future.
+    // internally as a string and an integer, but this may change in the future.
     class LocalControlId
     {
     public:
       // Construct a local controller id.
-      explicit LocalControlId(const string& id) : itsId(id) {}
+      explicit LocalControlId(const string& node, int pid)
+        :   itsNode(node),
+            itsProcessId(pid) 
+      {}
 
       // Get the local controller id as a string.
-      string asString() const { return itsId; }
+      string asString() const
+      {
+        ostringstream oss;
+        oss << itsNode << ":" << itsProcessId;
+        return oss.str();
+      }
 
     private:
       // Internal id.
-      string itsId;
+      string    itsNode;
+      int       itsProcessId;
 
       // Operator "less-than". Required when using LocalControlId key in a map.
       friend bool operator<(const LocalControlId& lhs, 
@@ -68,12 +77,13 @@ namespace LOFAR
     inline bool operator<(const LocalControlId& lhs, 
                           const LocalControlId& rhs)
     {
-      return lhs.itsId < rhs.itsId;
+      return (lhs.itsNode < rhs.itsNode) || (lhs.itsNode == rhs.itsNode
+        && lhs.itsProcessId < rhs.itsProcessId);
     }
 
     inline ostream& operator<<(ostream& os, const LocalControlId& id)
     {
-      return os << id.itsId;
+      return os << id.itsNode << ":" << id.itsProcessId;
     }
     
   } // namespace BBS

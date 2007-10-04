@@ -37,6 +37,9 @@
 #include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
 
+//# For getpid() and pid_t.
+#include <unistd.h>
+
 //# Now here's an ugly kludge: libpqxx defines four different top-level
 //# exception classes. In order to avoid a lot of code duplication we clumped
 //# together four catch blocks in order to catch all pqxx related exceptions.
@@ -133,19 +136,23 @@ namespace LOFAR
 
       // Get the next command from the command queue. This call will only
       // return the command type.
-      ParameterSet ps = 
-        execQuery("SELECT * FROM blackboard.get_next_command()");
+      ostringstream query;
+      query << "SELECT * FROM blackboard.get_next_command(" << getpid() << ")";
+
+      // Note the use of query.str(""): this clears the ostringstream so it can
+      // be reused later on.
+      ParameterSet ps = execQuery(query.str());
+      query.str("");
 
       // If command type is an empty string, then we've probably received an
       // empty result row; return a null pointer.
       string type = ps.getString("Type");
       if (type.empty()) return make_pair(shared_ptr<Command>(), CommandId());
 
-      // Get the command-id
+      // Get the command-id.
       CommandId id = ps.getInt32("id");
 
       // Retrieve the command parameters associated with the received command.
-      ostringstream query;
       query << "SELECT * FROM blackboard.get_" << toLower(type) << "_args"
             << "(" << id << ")";
 
@@ -248,6 +255,7 @@ namespace LOFAR
       ostringstream query;
       query << "SELECT * FROM blackboard.add_result(" 
             << commandId.asInt() << "," 
+            << getpid() << ","
             << result.asInt()    << ",'" 
             << result.message()  << "') AS result";
 
@@ -275,7 +283,8 @@ namespace LOFAR
         ostringstream prefix;
         prefix << "_row(" << row << ")."; 
         CommandId      cmdId (ps.getUint32(prefix.str() + "command_id"));
-        LocalControlId ctrlId(ps.getString(prefix.str() + "node"));
+        LocalControlId ctrlId(ps.getString(prefix.str() + "node"),
+                              ps.getInt32(prefix.str() + "pid"));
         CommandResult  cmdRes(ps.getUint32(prefix.str() + "result_code"),
                               ps.getString(prefix.str() + "message"));
         LOG_TRACE_CALC_STR("Row: " << row << " [" << cmdId << "],[[" 
@@ -311,7 +320,8 @@ namespace LOFAR
       for (uint row = 0; row < nRows; ++row) {
         ostringstream prefix;
         prefix << "_row(" << row << ").";
-        LocalControlId id(ps.getString(prefix.str() + "node"));
+        LocalControlId id(ps.getString(prefix.str() + "node"),
+                          ps.getInt32(prefix.str() + "pid"));
         CommandResult res(ps.getUint32(prefix.str() + "result_code"),
                           ps.getString(prefix.str() + "message"));
         LOG_TRACE_CALC_STR("Row: " << row << "[" << id << "],[" << res << "]");
@@ -330,9 +340,10 @@ namespace LOFAR
       // Compose the query.
       ostringstream query;
       query << "SELECT * FROM blackboard.is_new_run('"
-            << (isGlobalCtrl ? "TRUE" : "FALSE")
-            << "') AS result";
-      
+            << (isGlobalCtrl ? "TRUE" : "FALSE") << "',"
+            << getpid()
+            << ") AS result";
+            
       // Execute the query and return the result.
       return execQuery(query.str()).getBool("result");
     }

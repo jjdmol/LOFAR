@@ -84,11 +84,12 @@ CREATE TABLE blackboard.result
 
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node            INET                        DEFAULT inet_client_addr(),
+    pid             INTEGER                     NOT NULL,
     result_code     INTEGER                     DEFAULT -1,
     message         TEXT                        NOT NULL,
     read_flag       BOOL                        DEFAULT 'false',
     
-    UNIQUE (command_id, node)
+    UNIQUE (command_id, node, pid)
 );
 
 
@@ -101,8 +102,8 @@ CREATE TABLE blackboard.log
 
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node            INET                        DEFAULT inet_client_addr(),
-    level           INTEGER                     DEFAULT 7,
     pid             INTEGER                     ,
+    level           INTEGER                     DEFAULT 7,
     scope           TEXT                        NOT NULL,
     line_no         INTEGER                     NOT NULL,
     message         TEXT                        NOT NULL
