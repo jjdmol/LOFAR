@@ -46,7 +46,7 @@ class ION_Allocator: public Allocator
   private:
     static pthread_mutex_t	    mutex;
     static SparseSet<char *>	    freeList;
-    static std::map<void *, size_t> sizes;
+    static std::map<char *, size_t> sizes;
 };
 
 // @}

@@ -72,7 +72,7 @@ namespace LOFAR
       addField ("Delay", BlobField<float>(1, 2));
       addField ("TimeStamp", BlobField<TimeStamp>(1));
   
-      itsFlags = new SparseSet;
+      itsFlags = new SparseSet<unsigned>;
 
       // Create the data blob
       createDataBlock();

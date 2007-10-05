@@ -71,7 +71,7 @@ void DH_Subband::init()
   addField("Samples", BlobField<uint8>(1, nrSamples() * sizeof(SampleType)), 32);
   addField("Delays",  BlobField<float>(1, nrDelays() * sizeof(DelayIntervalType) / sizeof(float)));
 
-  itsFlags = new SparseSet[itsNrStations];
+  itsFlags = new SparseSet<unsigned>[itsNrStations];
 
   createDataBlock();
 }

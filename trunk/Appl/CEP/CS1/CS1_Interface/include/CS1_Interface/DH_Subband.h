@@ -79,12 +79,12 @@ class DH_Subband: public DataHolder
       return itsDelays[station];
     }
 
-    SparseSet &getFlags(unsigned station)
+    SparseSet<unsigned> &getFlags(unsigned station)
     {
       return itsFlags[station];
     }
 
-    const SparseSet &getFlags(unsigned station) const
+    const SparseSet<unsigned> &getFlags(unsigned station) const
     {
       return itsFlags[station];
     }
@@ -95,10 +95,10 @@ class DH_Subband: public DataHolder
     }
 
 #if defined HAVE_BOOST
-    typedef boost::multi_array_ref<SampleType, 3>	 Samples3Dtype;
-    typedef boost::multi_array_ref<SampleType, 4>	 Samples4Dtype;
-    typedef boost::multi_array_ref<DelayIntervalType, 1> DelaysType;
-    typedef boost::multi_array_ref<SparseSet, 1>	 FlagsType;
+    typedef boost::multi_array_ref<SampleType, 3>	   Samples3Dtype;
+    typedef boost::multi_array_ref<SampleType, 4>	   Samples4Dtype;
+    typedef boost::multi_array_ref<DelayIntervalType, 1>   DelaysType;
+    typedef boost::multi_array_ref<SparseSet<unsigned>, 1> FlagsType;
 
     Samples3Dtype getSamples3D() const
     {
@@ -136,7 +136,7 @@ class DH_Subband: public DataHolder
     unsigned		   itsNrStations, itsNrInputSamples;
 
     SampleType		   *itsSamples;
-    SparseSet		   *itsFlags;
+    SparseSet<unsigned>	   *itsFlags;
     DelayIntervalType	   *itsDelays;
 
     void fillDataPointers();
