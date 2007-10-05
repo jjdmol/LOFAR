@@ -34,8 +34,8 @@ namespace LOFAR
 {
 
 pthread_mutex_t		 ION_Allocator::mutex	 = PTHREAD_MUTEX_INITIALIZER;
-SparseSet		 ION_Allocator::freeList = SparseSet().include(0xA4002400, 0xB0000000);
-std::map<void *, size_t> ION_Allocator::sizes;
+SparseSet<char *>	 ION_Allocator::freeList = SparseSet<char *>().include((char *) 0xA4002400, (char *) 0xB0000000);
+std::map<char *, size_t> ION_Allocator::sizes;
 
 ION_Allocator *ION_Allocator::clone() const
 {
@@ -46,14 +46,14 @@ void *ION_Allocator::allocate(size_t nbytes, size_t alignment)
 {
   pthread_mutex_lock(&mutex);
 
-  const std::vector<struct SparseSet::range> &ranges = freeList.getRanges();
+  const std::vector<SparseSet<char *>::range> &ranges = freeList.getRanges();
 
-  for (std::vector<SparseSet::range>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
-    size_t begin = (it->begin + alignment - 1) & ~(alignment - 1);
+  for (SparseSet<char *>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
+    char *begin = (char *) (((size_t) it->begin + alignment - 1) & ~(alignment - 1));
 
-    if (it->end - begin >= nbytes) {
+    if (it->end - begin >= (ptrdiff_t) nbytes) {
       freeList.exclude(begin, begin + nbytes);
-      sizes[(void *) begin] = nbytes;
+      sizes[begin] = nbytes;
       std::clog << "ION_Allocator::allocate(" << nbytes << ", " << alignment << ") = " << (void *) begin << std::endl;
       pthread_mutex_unlock(&mutex);
       return (void *) begin;
@@ -70,8 +70,8 @@ void ION_Allocator::deallocate(void *ptr)
 
   if (ptr != 0) {
     pthread_mutex_lock(&mutex);
-    std::map<void *, size_t>::iterator index = sizes.find(ptr);
-    freeList.include((size_t) ptr, (size_t) ptr + index->second);
+    std::map<char *, size_t>::iterator index = sizes.find((char *) ptr);
+    freeList.include((char *) ptr, (char *) ptr + index->second);
     sizes.erase(index);
     pthread_mutex_unlock(&mutex);
   }

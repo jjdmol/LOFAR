@@ -9,7 +9,6 @@ libcs1_interface_la_SOURCES	= \
 	DH_Subband.cc \
 	DH_Visibilities.cc \
 	RSPTimeStamp.cc \
-	SparseSet.cc \
 	Stub_BGL.cc \
 	Stub_Delay.cc \
 	CS1_Parset.cc \

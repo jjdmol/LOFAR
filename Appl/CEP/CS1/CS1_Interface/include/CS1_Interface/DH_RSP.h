@@ -79,8 +79,8 @@ namespace LOFAR
       /// Reset the buffer
       void resetBuffer();
 
-      SparseSet &getFlags();
-      const SparseSet &getFlags() const;
+      SparseSet<unsigned> &getFlags();
+      const SparseSet<unsigned> &getFlags() const;
 
       /// (un)marshall flags into/from blob
       void getExtraData(), fillExtraData();
@@ -96,7 +96,7 @@ namespace LOFAR
       const CS1_Parset *itsCS1PS;
       
       BufferType*  itsBuffer;
-      SparseSet *itsFlags;
+      SparseSet<unsigned> *itsFlags;
       int* itsStationID;
       float* itsDelays;
       timestamp_t* itsTimeStamp;
@@ -123,10 +123,10 @@ namespace LOFAR
     inline void DH_RSP::resetBuffer()
     { memset(itsBuffer, 0, itsBufSize*sizeof(BufferType)); }
 
-    inline SparseSet &DH_RSP::getFlags()
+    inline SparseSet<unsigned> &DH_RSP::getFlags()
     { return *itsFlags; }
 
-    inline const SparseSet &DH_RSP::getFlags() const
+    inline const SparseSet<unsigned> &DH_RSP::getFlags() const
     { return *itsFlags; }
 
     inline float DH_RSP::getFineDelayAtBegin() const
