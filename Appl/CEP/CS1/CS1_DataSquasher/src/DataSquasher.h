@@ -42,20 +42,22 @@ namespace LOFAR
     private:
       int itsNumSamples;
       int itsNumChannels;
-      int itsNumPolarizations;
 
       TableIterator CreateDataIterator(MeasurementSet& myMS);
       void GetMSInfo(MeasurementSet& myMS);
       void SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData,
                              Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags,
-                             int Start, int Step, int NChan);
+                             int Start, int Step, int NChan, float threshold);
 
     public:
       DataSquasher(void);
       ~DataSquasher(void);
+      int itsNumBands;
+      int itsNumPolarizations;
 
-      void Squash(MeasurementSet& myMS, std::string OldData, std::string NewData,
-                  int Start, int Step, int NChan, bool UseFlags, Cube<Bool>& newFlags);
+      void Squash(MeasurementSet& inMS, MeasurementSet& outMS, std::string Data,
+                  int Start, int Step, int NChan, float threshold,
+                  bool UseFlags, Cube<Bool>& newFlags);
     };
   } //namespace CS1_Squasher
 }; //namespace LOFAR

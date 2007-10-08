@@ -17,6 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+//#include <casa/Arrays/ArrayLogical.h>
+
 #include "DataSquasher.h"
 namespace LOFAR
 {
@@ -38,52 +40,56 @@ namespace LOFAR
 
     //===============>>>  DataSquasher::GetMSInfo  <<<===============
 
-    void DataSquasher::GetMSInfo(MeasurementSet& myMS)
+    void DataSquasher::GetMSInfo(MeasurementSet& outMS)
     {
       //Number of samples
-      itsNumSamples                    = myMS.nrow();
+      itsNumSamples                    = outMS.nrow();
 
       //Number of channels in the Band
-      MSSpectralWindow spectral_window = myMS.spectralWindow();
+      MSSpectralWindow spectral_window = outMS.spectralWindow();
       ROScalarColumn<Int>              NUM_CHAN_col(spectral_window, "NUM_CHAN");
       itsNumChannels                   = NUM_CHAN_col(0);
 
+      //Number of Bands
+      itsNumBands                      = NUM_CHAN_col.nrow();
+
       //Number of polarizations
-      MSPolarization polarization      = myMS.polarization();
+      MSPolarization polarization      = outMS.polarization();
       ROScalarColumn<Int>              NUM_CORR_col(polarization, "NUM_CORR");
       itsNumPolarizations              = NUM_CORR_col(0);
     }
 
     //===============>>>  DataSquasher::CreateDataIterator  <<<===============
 
-    TableIterator DataSquasher::CreateDataIterator(MeasurementSet& myMS)
+    TableIterator DataSquasher::CreateDataIterator(MeasurementSet& outMS)
     {
-      Block<String> ms_iteration_variables(4);
-      ms_iteration_variables[0] = "TIME_CENTROID";
-      ms_iteration_variables[1] = "DATA_DESC_ID";
-      ms_iteration_variables[2] = "ANTENNA1";
-      ms_iteration_variables[3] = "ANTENNA2";
+      Block<String> ms_OutIteration_variables(4);
+      ms_OutIteration_variables[0] = "TIME_CENTROID";
+      ms_OutIteration_variables[1] = "DATA_DESC_ID";
+      ms_OutIteration_variables[2] = "ANTENNA1";
+      ms_OutIteration_variables[3] = "ANTENNA2";
 
-      return TableIterator(myMS, ms_iteration_variables);
+      return TableIterator(outMS, ms_OutIteration_variables);
     }
 
     //===============>>>  DataSquasher::SquashData  <<<===============
 
     void DataSquasher::SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData,
                                   Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags,
-                                  int Start, int Step, int NChan)
+                                  int Start, int Step, int NChan, float threshold)
     {
       int incounter  = 0;
       int outcounter = 0;
       bool flagrow   = true;
       Vector<Complex> values(itsNumPolarizations, 0);
+      //Vector<Float> temp(itsNumPolarizations, ); // a bit bigger to get rounding errors right
       while (incounter < NChan)
       {
-        for (int j = 0; j < itsNumPolarizations; j++)
+        for (int i = 0; i < itsNumPolarizations; i++)
         {
-          if (!oldFlags(j, Start + incounter))
+          if (!oldFlags(i, Start + incounter))
           { //weight is not handled here, maybe sometime in the future?
-            values(j) += oldData(j, Start + incounter);
+            values(i) += oldData(i, Start + incounter);
             flagrow = false;
           }
         }
@@ -91,6 +97,8 @@ namespace LOFAR
         if ((incounter) % Step == 0)
         {
           newData.column(outcounter)  = values;
+          for (int i = 0; i < itsNumPolarizations; i++) // I can't get anyGT or something like that to work
+          flagrow = flagrow || (threshold * 1.001 >= abs(values[i]));
           newFlags.column(outcounter) = flagrow;
           values = 0;
           outcounter++;
@@ -101,30 +109,33 @@ namespace LOFAR
 
     //===============>>>  DataSquasher::Squash  <<<===============
 
-    void DataSquasher::Squash(MeasurementSet& myMS, std::string OldData, std::string NewData,
-                              int Start, int Step, int NChan, bool UseFlags, Cube<Bool>& newFlags)
+    void DataSquasher::Squash(MeasurementSet& inMS, MeasurementSet& outMS, std::string Data,
+                              int Start, int Step, int NChan, float threshold,
+                              bool UseFlags, Cube<Bool>& newFlags)
     {
-      TableIterator iter = CreateDataIterator(myMS);
-      GetMSInfo(myMS);
-      int step = myMS.nrow() / 10 + 1; //not exact but it'll do
+      TableIterator inIter  = CreateDataIterator(inMS);
+      TableIterator outIter = CreateDataIterator(outMS);
+      GetMSInfo(outMS);
+      int step = outMS.nrow() / 10 + 1; //not exact but it'll do
       int row  = 0;
       bool rwFlags = newFlags.nrow() > 0;
       if (!rwFlags)
       { newFlags.resize(itsNumPolarizations, NChan/Step, itsNumSamples);
       }
 
-      while (!iter.pastEnd())
+      while (!outIter.pastEnd())
       {
         if (row++ % step == 0) // to tell the user how much % we have processed,
         { std::cout << 10*(row/step) << "%" << std::endl; //not very accurate for low numbers of timeslots
         }
-        Table         DataTable = iter.table();
-        ROArrayColumn<Complex> Old(DataTable, OldData);
-        ArrayColumn<Complex>   New(DataTable, NewData);
+        Table         InDataTable  = inIter.table();
+        Table         OutDataTable = outIter.table();
+        ROArrayColumn<Complex> Old(InDataTable, Data);
+        ArrayColumn<Complex>   New(OutDataTable, Data);
         Matrix<Complex>        myOldData(itsNumPolarizations, itsNumChannels);
         Matrix<Complex>        myNewData(itsNumPolarizations, NChan/Step);
 
-        ROArrayColumn<Bool>    Flags(DataTable, "FLAG");
+        ROArrayColumn<Bool>    Flags(OutDataTable, "FLAG");
         Matrix<Bool>           myOldFlags(itsNumPolarizations, itsNumChannels, false);
         Matrix<Bool>           myNewFlags(itsNumPolarizations, NChan/Step);
 
@@ -132,12 +143,13 @@ namespace LOFAR
         if (UseFlags)
         { Flags.get(0, myOldFlags);
         }
-        SquashData(myOldData, myNewData, myOldFlags, myNewFlags, Start, Step, NChan);
+        SquashData(myOldData, myNewData, myOldFlags, myNewFlags, Start, Step, NChan, threshold);
         New.put(0, myNewData);
         if (!rwFlags)
         { newFlags.xyPlane(row - 1) = myNewFlags;
         }
-        iter++;
+        outIter++;
+        inIter++;
       }
     }
   } //namespace CS1

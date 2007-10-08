@@ -28,7 +28,9 @@
 #include <CS1_DataSquasher/SquasherProcessControl.h>
 #include "DataSquasher.h"
 
-#define SQUASHER_VERSION "0.20"
+#define SQUASHER_VERSION "0.31"
+//0.20 Added handling MODEL and CORRECTED DATA
+//0.30 Added handling threshold and weights
 
 namespace LOFAR
 {
@@ -39,16 +41,12 @@ namespace LOFAR
     SquasherProcessControl::SquasherProcessControl()
     : ProcessControl()
     {
-      inMS        = NULL;
       itsSquasher = NULL;
     }
 
     //===============>>> SquasherProcessControl::~SquasherProcessControl  <<<==============
     SquasherProcessControl::~SquasherProcessControl()
     {
-      if (inMS)
-      { delete inMS;
-      }
       if (itsSquasher)
       { delete itsSquasher;
       }
@@ -58,13 +56,14 @@ namespace LOFAR
     tribool SquasherProcessControl::define()
     {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
-      itsInMS    = ParamSet->getString("inms");
-      itsOutMS   = ParamSet->getString("outms");
-      itsStart   = ParamSet->getInt32("start");
-      itsStep    = ParamSet->getInt32("step");
-      itsNChan   = ParamSet->getInt32("nchan");
-      itsSkip    = ParamSet->getBool("useflags"); //used to be called "skip flags", hence the name
-      itsColumns = ParamSet->getBool("allcolumns");
+      itsInMS      = ParamSet->getString("inms");
+      itsOutMS     = ParamSet->getString("outms");
+      itsStart     = ParamSet->getInt32("start");
+      itsStep      = ParamSet->getInt32("step");
+      itsNChan     = ParamSet->getInt32("nchan");
+      itsThreshold = ParamSet->getFloat("threshold");
+      itsSkip      = ParamSet->getBool("useflags"); //used to be called "skip flags", hence the name
+      itsColumns   = ParamSet->getBool("allcolumns");
       return true;
     }
 
@@ -73,18 +72,22 @@ namespace LOFAR
     {
       try{
         std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
-        inMS->deepCopy(itsOutMS, Table::NewNoReplace);
+        Table temptable = tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
+          string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,SCAN_NUMBER,") +
+          string("STATE_ID,TIME,TIME_CENTROID,WEIGHT_SPECTRUM,FLAG FROM ") + itsInMS);
+        temptable.deepCopy(itsOutMS, Table::NewNoReplace);
+
+        MeasurementSet inMS  = MeasurementSet(itsInMS);
         MeasurementSet outMS = MeasurementSet(itsOutMS, Table::Update);
 
         //some magic to create a new DATA column
-        TableDesc tdesc = outMS.tableDesc();
+        TableDesc tdesc = inMS.tableDesc();
         ColumnDesc desc = tdesc.rwColumnDesc("DATA");
         IPosition pos = desc.shape();
         Vector<Int> temp = pos.asVector();
         std::cout << "Old shape: " << temp(0) << ":" <<  temp(1) << std::endl;
         temp(1) = itsNChan/itsStep;
         std::cout << "New shape: " << temp(0) << ":" <<  temp(1) << std::endl;
-        outMS.renameColumn("OLDDATA", "DATA");
         IPosition pos2(temp);
         desc.setOptions(0);
         desc.setShape(pos2);
@@ -93,26 +96,26 @@ namespace LOFAR
 
         //do the actual data squashing
         Cube<Bool> NewFlags(0, 0, 0);
-        itsSquasher->Squash(outMS, "OLDDATA", "DATA",
-                            itsStart, itsStep, itsNChan, itsSkip, NewFlags);
-        outMS.removeColumn("OLDDATA");
+        itsSquasher->Squash(inMS, outMS, "DATA",
+                            itsStart, itsStep, itsNChan, itsThreshold,
+                            itsSkip, NewFlags);
 
         //if present handle the CORRECTED_DATA column
         if (tdesc.isColumn("CORRECTED_DATA"))
         {
           if (itsColumns)
           {
+            cout << "Processing CORRECTED_DATA" << endl;
             desc = tdesc.rwColumnDesc("CORRECTED_DATA");
-            outMS.renameColumn("OLDCORRECTED_DATA", "CORRECTED_DATA");
             desc.setOptions(0);
             desc.setShape(pos2);
             desc.setOptions(4);
             outMS.addColumn(desc);
 
             //do the actual data squashing
-            itsSquasher->Squash(outMS, "OLDCORRECTED_DATA", "CORRECTED_DATA",
-                                itsStart, itsStep, itsNChan, itsSkip, NewFlags);
-            outMS.removeColumn("OLDCORRECTED_DATA");
+            itsSquasher->Squash(inMS, outMS, "CORRECTED_DATA",
+                                itsStart, itsStep, itsNChan, itsThreshold,
+                                itsSkip, NewFlags);
           }
           else
           { outMS.removeColumn("CORRECTED_DATA");
@@ -124,20 +127,29 @@ namespace LOFAR
         {
           if (itsColumns)
           {
+            cout << "Processing MODEL_DATA" << endl;
             desc = tdesc.rwColumnDesc("MODEL_DATA");
-            outMS.renameColumn("OLDMODEL_DATA", "MODEL_DATA");
             desc.setOptions(0);
             desc.setShape(pos2);
             desc.setOptions(4);
+            desc.rwKeywordSet().removeField("CHANNEL_SELECTION"); //messes with the Imager if it's there.
+            Matrix<Int> selection;
+            selection.resize(2, itsSquasher->itsNumBands); //dirty hack with direct reference to itsSquasher
+            selection.row(0) = 0; //start
+            selection.row(1) = itsNChan/itsStep;
+            desc.rwKeywordSet().define("CHANNEL_SELECTION",selection); // #spw x [startChan, NumberChan] for the VisBuf in the Imager
+            // see code/msvis/implement/MSVis/VisSet.cc
             outMS.addColumn(desc);
+            outMS.addColumn(ArrayColumnDesc<Float>("IMAGING_WEIGHT","imaging weight", 1));
 
             //do the actual data squashing
-            itsSquasher->Squash(outMS, "OLDMODEL_DATA", "MODEL_DATA",
-                                itsStart, itsStep, itsNChan, itsSkip, NewFlags);
-            outMS.removeColumn("OLDMODEL_DATA");
+            itsSquasher->Squash(inMS, outMS, "MODEL_DATA",
+                                itsStart, itsStep, itsNChan, itsThreshold,
+                                itsSkip, NewFlags);
           }
           else
           { outMS.removeColumn("MODEL_DATA");
+            outMS.removeColumn("IMAGING_WEIGHT");
           }
         }
 
@@ -155,6 +167,9 @@ namespace LOFAR
         MSSpectralWindow SPW = outMS.spectralWindow();
         ScalarColumn<Int> channum(SPW, "NUM_CHAN");
         channum.fillColumn(itsNChan/itsStep);
+        ArrayColumn<Float> weight(outMS, "WEIGHT");
+        Vector<Float> temp2(itsSquasher->itsNumPolarizations, 1.0); //dirty hack with direct reference to itsSquasher
+        weight.fillColumn(temp2);
       }
       catch(casa::AipsError& err)
       {
@@ -181,7 +196,6 @@ namespace LOFAR
         cerr  << " Error missing input" << endl;
         return false;
       }
-      inMS        = new MeasurementSet(itsInMS);
       itsSquasher = new DataSquasher();
       }
       catch(casa::AipsError& err)
@@ -200,11 +214,6 @@ namespace LOFAR
     //===============>>> SquasherProcessControl::quit  <<<================================
     tribool SquasherProcessControl::quit()
     {
-      if (inMS)
-      {
-        delete inMS;
-        inMS = NULL;
-      }
       if (itsSquasher)
       {
         delete itsSquasher;
