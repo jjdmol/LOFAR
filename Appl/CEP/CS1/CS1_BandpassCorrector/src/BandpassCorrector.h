@@ -72,10 +72,10 @@ namespace LOFAR
         void ComputeBaselineLengths();
         void ProcessBaselineBand(Cube<Complex>* Timeslots,
                                  Matrix<Complex>* Data,
-                                 int Position, bool fixed);
+                                 int Position, int fixed);
         void ProcessTimeslot(casa::TableIterator* write_iter,
                              casa::TableIterator* data_iter,
-                             int Position, bool fixed);
+                             int Position, int fixed);
         bool UpdateTimeslotData(vector<int>* OldFields,
                                 vector<int>* OldBands,
                                 int* TimeCounter,
