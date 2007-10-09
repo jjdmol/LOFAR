@@ -55,6 +55,7 @@ namespace LOFAR
       int itsNumBands;
       int itsNumPolarizations;
 
+      void TableResize(TableDesc tdesc, IPosition ipos, std::string name, Table& table);
       void Squash(MeasurementSet& inMS, MeasurementSet& outMS, std::string Data,
                   int Start, int Step, int NChan, float threshold,
                   bool UseFlags, Cube<Bool>& newFlags);
