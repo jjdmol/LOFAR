@@ -11,49 +11,49 @@ PIC.Core.CS010_HBA1.position = [0.119888779622,  0.920265564336, 6364621.16629]
 PIC.Core.CS010_HBA2.position = [0.119879764027,  0.920262155263, 6364621.23847]
 PIC.Core.CS010_HBA3.position = [0.119885557551,  0.920264027099, 6364621.15694]
 
-PIC.Core.CS010_HBA0.port  = lii001:4346
-PIC.Core.CS010_HBA1.port  = lii001:4347
-PIC.Core.CS010_HBA2.port  = lii002:4348
-PIC.Core.CS010_HBA3.port  = lii003:4349
+PIC.Core.CS010_HBA0.port  = lii005:4346
+PIC.Core.CS010_HBA1.port  = lii005:4347
+PIC.Core.CS010_HBA2.port  = lii006:4348
+PIC.Core.CS010_HBA3.port  = lii006:4349
 
 PIC.Core.CS010_S30.position = [0.119892920416, 0.92026905084 , 6364619.58352]
 PIC.Core.CS010_S31.position = [0.119895877779, 0.920274150605, 6364619.46855]
 PIC.Core.CS010_S32.position = [0.119904798351, 0.920274053467, 6364619.47055]
 PIC.Core.CS010_S33.position = [0.119907416345, 0.920268856583, 6364619.62752]
 
-PIC.Core.CS010_S30.port  = lii001:4346
-PIC.Core.CS010_S31.port  = lii001:4347
-PIC.Core.CS010_S32.port  = lii002:4348
-PIC.Core.CS010_S33.port  = lii003:4349
+PIC.Core.CS010_S30.port  = lii005:4346
+PIC.Core.CS010_S31.port  = lii005:4347
+PIC.Core.CS010_S32.port  = lii006:4348
+PIC.Core.CS010_S33.port  = lii006:4349
 
 PIC.Core.CS008_HBA0.position = [0.11987012884 , 0.920289237881, 6364620.52801]
 PIC.Core.CS008_HBA1.position = [0.119874022864, 0.920293645541, 6364620.43728]
 PIC.Core.CS008_HBA2.position = [0.119898033261, 0.920287307739, 6364620.56774]
 PIC.Core.CS008_HBA3.position = [0.119894139238, 0.92028290008 , 6364620.65846]
 
-PIC.Core.CS008_HBA0.port  = lii004:4346
-PIC.Core.CS008_HBA1.port  = lii004:4347
-PIC.Core.CS008_HBA2.port  = lii005:4348
-PIC.Core.CS008_HBA3.port  = lii006:4349
+PIC.Core.CS008_HBA0.port  = lii003:4346
+PIC.Core.CS008_HBA1.port  = lii003:4347
+PIC.Core.CS008_HBA2.port  = lii004:4348
+PIC.Core.CS008_HBA3.port  = lii004:4349
 
 PIC.Core.CS001_HBA0.position = [0.119852973708, 0.920234762967, 6364622.31931]
 PIC.Core.CS001_HBA1.position = [0.119856867247, 0.920239170623, 6364622.22858]
 PIC.Core.CS001_HBA2.position = [0.119864144785, 0.920236812588, 6364622.27712]
 PIC.Core.CS001_HBA3.position = [0.119860251246, 0.920232404931, 6364622.36784]
 
-PIC.Core.CS001_HBA0.port  = lii007:4346
-PIC.Core.CS001_HBA1.port  = lii007:4347
-PIC.Core.CS001_HBA2.port  = lii008:4348
-PIC.Core.CS001_HBA3.port  = lii009:4349
+PIC.Core.CS001_HBA0.port  = lii001:4346
+PIC.Core.CS001_HBA1.port  = lii001:4347
+PIC.Core.CS001_HBA2.port  = lii002:4348
+PIC.Core.CS001_HBA3.port  = lii002:4349
 
 PIC.Core.CS016_HBA0.position = [0.119960298852, 0.920262342708, 6364621.17161]
 PIC.Core.CS016_HBA1.position = [0.11996419336 , 0.92026674988 , 6364621.08089]
 PIC.Core.CS016_HBA2.position = [0.119971470898, 0.920264391844, 6364621.12943]
 PIC.Core.CS016_HBA3.position = [0.11996757639 , 0.920259984186, 6364621.22015]
 
-PIC.Core.CS016_HBA0.port  = lii010:4346
-PIC.Core.CS016_HBA1.port  = lii010:4347
-PIC.Core.CS016_HBA2.port  = lii011:4348
+PIC.Core.CS016_HBA0.port  = lii011:4346
+PIC.Core.CS016_HBA1.port  = lii011:4347
+PIC.Core.CS016_HBA2.port  = lii012:4348
 PIC.Core.CS016_HBA3.port  = lii012:4349
 
 #PIC.Core.CS010_us0.position = [0.119880751593, 0.920263316053, 6364621.18657]
@@ -78,24 +78,24 @@ PIC.Core.CS016_us1.position = [0.119966018199, 0.92026729443 , 6364621.24368]
 PIC.Core.CS016_us2.position = [0.119972369258, 0.9202632865  , 6364621.33318]
 PIC.Core.CS016_us3.position = [0.119965751066, 0.920259440307, 6364621.42235]
 
-PIC.Core.CS010_us0.port  = lii001:4346
-PIC.Core.CS010_us1.port  = lii001:4347
-PIC.Core.CS010_us2.port  = lii002:4348
-PIC.Core.CS010_us3.port  = lii003:4349
+PIC.Core.CS010_us0.port  = lii005:4346
+PIC.Core.CS010_us1.port  = lii005:4347
+PIC.Core.CS010_us2.port  = lii006:4348
+PIC.Core.CS010_us3.port  = lii006:4349
 
-PIC.Core.CS008_us0.port  = lii004:4346
-PIC.Core.CS008_us1.port  = lii004:4347
-PIC.Core.CS008_us2.port  = lii005:4348
-PIC.Core.CS008_us3.port  = lii006:4349
+PIC.Core.CS008_us0.port  = lii003:4346
+PIC.Core.CS008_us1.port  = lii003:4347
+PIC.Core.CS008_us2.port  = lii004:4348
+PIC.Core.CS008_us3.port  = lii004:4349
 
-PIC.Core.CS001_us0.port  = lii007:4346
-PIC.Core.CS001_us1.port  = lii007:4347
-PIC.Core.CS001_us2.port  = lii008:4348
-PIC.Core.CS001_us3.port  = lii009:4349
+PIC.Core.CS001_us0.port  = lii001:4346
+PIC.Core.CS001_us1.port  = lii001:4347
+PIC.Core.CS001_us2.port  = lii002:4348
+PIC.Core.CS001_us3.port  = lii002:4349
 
-PIC.Core.CS016_us0.port  = lii010:4346
-PIC.Core.CS016_us1.port  = lii010:4347
-PIC.Core.CS016_us2.port  = lii011:4348
+PIC.Core.CS016_us0.port  = lii011:4346
+PIC.Core.CS016_us1.port  = lii011:4347
+PIC.Core.CS016_us2.port  = lii012:4348
 PIC.Core.CS016_us3.port  = lii012:4349
 
 PIC.Core.CS010_dipole0.position  = [0.119881248042,  0.920262545738, 6364621.18843]
@@ -133,37 +133,53 @@ PIC.Core.CS016_dipole6.position  = [0.119966926255,  0.920267283259, 6364621.243
 PIC.Core.CS016_dipole10.position = [0.119973277314,  0.920263274843, 6364621.33342]
 PIC.Core.CS016_dipole14.position = [0.119966659122,  0.920259428651, 6364621.42259]
 
-PIC.Core.CS010_dipole0.port  = lii001:4346
-PIC.Core.CS010_dipole4.port  = lii001:4347
-PIC.Core.CS010_dipole8.port  = lii002:4348
-PIC.Core.CS010_dipole12.port = lii003:4349
+PIC.Core.CS001_dipole0.port  = lii001:4346
+PIC.Core.CS001_dipole4.port  = lii001:4347
+PIC.Core.CS001_dipole8.port  = lii002:4348
+PIC.Core.CS001_dipole12.port = lii002:4349
 
-PIC.Core.CS008_dipole0.port  = lii004:4346
-PIC.Core.CS008_dipole4.port  = lii004:4347
-PIC.Core.CS008_dipole8.port  = lii005:4348
-PIC.Core.CS008_dipole12.port = lii006:4349
+PIC.Core.CS001_dipole2.port  = lii001:4346
+PIC.Core.CS001_dipole6.port  = lii001:4347
+PIC.Core.CS001_dipole10.port = lii002:4348
+PIC.Core.CS001_dipole14.port = lii002:4349
 
-PIC.Core.CS008_dipole2.port  = lii004:4346
-PIC.Core.CS008_dipole6.port  = lii004:4347
-PIC.Core.CS008_dipole10.port = lii005:4348
-PIC.Core.CS008_dipole14.port = lii006:4349
+PIC.Core.CS008_dipole0.port  = lii003:4346
+PIC.Core.CS008_dipole4.port  = lii003:4347
+PIC.Core.CS008_dipole8.port  = lii004:4348
+PIC.Core.CS008_dipole12.port = lii004:4349
 
-PIC.Core.CS001_dipole0.port  = lii007:4346
-PIC.Core.CS001_dipole4.port  = lii007:4347
-PIC.Core.CS001_dipole8.port  = lii008:4348
-PIC.Core.CS001_dipole12.port = lii009:4349
+PIC.Core.CS008_dipole2.port  = lii003:4346
+PIC.Core.CS008_dipole6.port  = lii003:4347
+PIC.Core.CS008_dipole10.port = lii004:4348
+PIC.Core.CS008_dipole14.port = lii004:4349
 
-PIC.Core.CS001_dipole2.port  = lii007:4346
-PIC.Core.CS001_dipole6.port  = lii007:4347
-PIC.Core.CS001_dipole10.port = lii008:4348
-PIC.Core.CS001_dipole14.port = lii009:4349
+PIC.Core.CS010_dipole0.port  = lii005:4346
+PIC.Core.CS010_dipole4.port  = lii005:4347
+PIC.Core.CS010_dipole8.port  = lii006:4348
+PIC.Core.CS010_dipole12.port = lii006:4349
 
-PIC.Core.CS016_dipole0.port  = lii010:4346
-PIC.Core.CS016_dipole4.port  = lii010:4347
-PIC.Core.CS016_dipole8.port  = lii011:4348
+PIC.Core.CS016_dipole0.port  = lii011:4346
+PIC.Core.CS016_dipole4.port  = lii011:4347
+PIC.Core.CS016_dipole8.port  = lii012:4348
 PIC.Core.CS016_dipole12.port = lii012:4349
 
-PIC.Core.CS016_dipole2.port  = lii010:4346
-PIC.Core.CS016_dipole6.port  = lii010:4347
-PIC.Core.CS016_dipole10.port = lii011:4348
+PIC.Core.CS016_dipole2.port  = lii011:4346
+PIC.Core.CS016_dipole6.port  = lii011:4347
+PIC.Core.CS016_dipole10.port = lii012:4348
 PIC.Core.CS016_dipole14.port = lii012:4349
+
+PIC.Core.CS030_dipole0.port  = lii005:4346
+PIC.Core.CS030_dipole4.port  = lii005:4347
+PIC.Core.CS030_dipole8.port  = lii006:4348
+PIC.Core.CS030_dipole12.port = lii006:4349
+
+PIC.Core.CS031_dipole0.port  = lii007:4346
+PIC.Core.CS031_dipole4.port  = lii007:4347
+PIC.Core.CS031_dipole8.port  = lii008:4348
+PIC.Core.CS031_dipole12.port = lii008:4349
+
+PIC.Core.CS032_dipole0.port  = lii009:4346
+PIC.Core.CS032_dipole4.port  = lii009:4347
+PIC.Core.CS032_dipole8.port  = lii010:4348
+PIC.Core.CS032_dipole12.port = lii010:4349
+
