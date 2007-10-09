@@ -72,6 +72,20 @@ namespace LOFAR
       return TableIterator(outMS, ms_OutIteration_variables);
     }
 
+    //===============>>>  DataSquasher::CreateDataIterator  <<<===============
+
+    void DataSquasher::TableResize(TableDesc tdesc, IPosition ipos, string name, Table& table)
+    {
+      ColumnDesc desc = tdesc.rwColumnDesc(name);
+      desc.setOptions(0);
+      desc.setShape(ipos);
+      desc.setOptions(4);
+      if (table.tableDesc().isColumn(name))
+      { table.removeColumn(name);
+      }
+      table.addColumn(desc);
+    }
+
     //===============>>>  DataSquasher::SquashData  <<<===============
 
     void DataSquasher::SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData,

@@ -28,9 +28,12 @@
 #include <CS1_DataSquasher/SquasherProcessControl.h>
 #include "DataSquasher.h"
 
-#define SQUASHER_VERSION "0.31"
+#define SQUASHER_VERSION "0.41"
 //0.20 Added handling MODEL and CORRECTED DATA
 //0.30 Added handling threshold and weights
+//0.31 Added handing MODEL_DATA and CORRECTED_DATA keywords for imager
+//0.40 Changed creation mechnism of the destination MS
+//0.41 Cleaned up the code for readability
 
 namespace LOFAR
 {
@@ -70,6 +73,7 @@ namespace LOFAR
     //===============>>> SquasherProcessControl::run  <<<=================================
     tribool SquasherProcessControl::run()
     {
+      //maybe most of this code should move to the DataSquasher module
       try{
         std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
         Table temptable = tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
@@ -83,16 +87,16 @@ namespace LOFAR
         //some magic to create a new DATA column
         TableDesc tdesc = inMS.tableDesc();
         ColumnDesc desc = tdesc.rwColumnDesc("DATA");
-        IPosition pos = desc.shape();
-        Vector<Int> temp = pos.asVector();
-        std::cout << "Old shape: " << temp(0) << ":" <<  temp(1) << std::endl;
-        temp(1) = itsNChan/itsStep;
-        std::cout << "New shape: " << temp(0) << ":" <<  temp(1) << std::endl;
-        IPosition pos2(temp);
-        desc.setOptions(0);
-        desc.setShape(pos2);
-        desc.setOptions(4);
-        outMS.addColumn(desc);
+        IPosition ipos = desc.shape();
+        Vector<Int> temp_pos = ipos.asVector();
+        std::cout << "Old shape: " << temp_pos(0) << ":" <<  temp_pos(1) << std::endl;
+        int old_nchan = temp_pos(1);
+        int new_nchan = itsNChan/itsStep;
+        temp_pos(1) = new_nchan;
+        std::cout << "New shape: " << temp_pos(0) << ":" <<  temp_pos(1) << std::endl;
+        IPosition data_ipos(temp_pos);
+
+        itsSquasher->TableResize(tdesc, data_ipos, "DATA", outMS);
 
         //do the actual data squashing
         Cube<Bool> NewFlags(0, 0, 0);
@@ -106,11 +110,7 @@ namespace LOFAR
           if (itsColumns)
           {
             cout << "Processing CORRECTED_DATA" << endl;
-            desc = tdesc.rwColumnDesc("CORRECTED_DATA");
-            desc.setOptions(0);
-            desc.setShape(pos2);
-            desc.setOptions(4);
-            outMS.addColumn(desc);
+            itsSquasher->TableResize(tdesc, data_ipos, "CORRECTED_DATA", outMS);
 
             //do the actual data squashing
             itsSquasher->Squash(inMS, outMS, "CORRECTED_DATA",
@@ -130,13 +130,13 @@ namespace LOFAR
             cout << "Processing MODEL_DATA" << endl;
             desc = tdesc.rwColumnDesc("MODEL_DATA");
             desc.setOptions(0);
-            desc.setShape(pos2);
+            desc.setShape(data_ipos);
             desc.setOptions(4);
-            desc.rwKeywordSet().removeField("CHANNEL_SELECTION"); //messes with the Imager if it's there.
+            desc.rwKeywordSet().removeField("CHANNEL_SELECTION"); //messes with the Imager if it's there but has wrong values
             Matrix<Int> selection;
             selection.resize(2, itsSquasher->itsNumBands); //dirty hack with direct reference to itsSquasher
-            selection.row(0) = 0; //start
-            selection.row(1) = itsNChan/itsStep;
+            selection.row(0) = 0; //start in Imager, will therefore only work if imaging whole SPW
+            selection.row(1) = new_nchan;
             desc.rwKeywordSet().define("CHANNEL_SELECTION",selection); // #spw x [startChan, NumberChan] for the VisBuf in the Imager
             // see code/msvis/implement/MSVis/VisSet.cc
             outMS.addColumn(desc);
@@ -154,22 +154,68 @@ namespace LOFAR
         }
 
         //fix the FLAGS column
-        desc = tdesc.rwColumnDesc("FLAG");
-        desc.setOptions(0);
-        desc.setShape(pos2);
-        desc.setOptions(4);
-        outMS.removeColumn("FLAG");
-        outMS.addColumn(desc);
+        itsSquasher->TableResize(tdesc, data_ipos, "FLAG", outMS);
         ArrayColumn<Bool> flags(outMS, "FLAG");
         flags.putColumn(NewFlags);
 
         //Fix the SpectralWindow values
-        MSSpectralWindow SPW = outMS.spectralWindow();
-        ScalarColumn<Int> channum(SPW, "NUM_CHAN");
-        channum.fillColumn(itsNChan/itsStep);
+        IPosition spw_ipos(1,new_nchan);
+        MSSpectralWindow inSPW = inMS.spectralWindow();
+        //ugly workaround MSSpectral window does no allow deleting and then recreating columns
+        Table outSPW = Table(itsOutMS + "/SPECTRAL_WINDOW", Table::Update);
+        ScalarColumn<Int> channum(outSPW, "NUM_CHAN");
+        channum.fillColumn(new_nchan);
+
+        TableDesc SPWtdesc = inSPW.tableDesc();
+        itsSquasher->TableResize(SPWtdesc, spw_ipos, "CHAN_FREQ", outMS);
+
+        itsSquasher->TableResize(SPWtdesc, spw_ipos, "CHAN_WIDTH", outMS);
+
+        itsSquasher->TableResize(SPWtdesc, spw_ipos, "EFFECTIVE_BW", outMS);
+
+        itsSquasher->TableResize(SPWtdesc, spw_ipos, "RESOLUTION", outMS);
+
+        ROArrayColumn<Double> inFREQ(inSPW, "CHAN_FREQ");
+        ROArrayColumn<Double> inWIDTH(inSPW, "CHAN_WIDTH");
+        ROArrayColumn<Double> inBW(inSPW, "EFFECTIVE_BW");
+        ROArrayColumn<Double> inRESOLUTION(inSPW, "RESOLUTION");
+
+        ArrayColumn<Double> outFREQ(outSPW, "CHAN_FREQ");
+        ArrayColumn<Double> outWIDTH(outSPW, "CHAN_WIDTH");
+        ArrayColumn<Double> outBW(outSPW, "EFFECTIVE_BW");
+        ArrayColumn<Double> outRESOLUTION(outSPW, "RESOLUTION");
+
+        Vector<Double> old_temp(old_nchan, 0.0);
+        Vector<Double> new_temp(new_nchan, 0.0);
+
+        for (unsigned int i = 0; i < inSPW.nrow(); i++)
+        {
+          for (int j = 0; j < new_nchan; j++)
+          { inFREQ.get(i, old_temp);
+            new_temp(j) = old_temp(itsStart + j*itsStep + itsNChan/2);
+            outFREQ.put(i, new_temp);
+          }
+          for (int j = 0; j < new_nchan; j++)
+          { inWIDTH.get(i, old_temp);
+            new_temp(j) = old_temp(0) * itsStep;
+            outWIDTH.put(i, new_temp);
+          }
+          for (int j = 0; j < new_nchan; j++)
+          { inBW.get(i, old_temp);
+            new_temp(j) = old_temp(0) * itsStep;
+            outBW.put(i, new_temp);
+          }
+          for (int j = 0; j < new_nchan; j++)
+          { inRESOLUTION.get(i, old_temp);
+            new_temp(j) = old_temp(0) * itsStep;
+            outRESOLUTION.put(i, new_temp);
+          }
+        }
+
+        //Fix WEIGHT
         ArrayColumn<Float> weight(outMS, "WEIGHT");
-        Vector<Float> temp2(itsSquasher->itsNumPolarizations, 1.0); //dirty hack with direct reference to itsSquasher
-        weight.fillColumn(temp2);
+        Vector<Float> temp_weight(itsSquasher->itsNumPolarizations, 1.0); //dirty hack with direct reference to itsSquasher
+        weight.fillColumn(temp_weight);
       }
       catch(casa::AipsError& err)
       {
@@ -189,7 +235,8 @@ namespace LOFAR
 
       cout  << string(SQUASHER_VERSION) + string(" data squasher by Adriaan Renting for LOFAR CS1\n") +
               string("This is experimental software, please report errors or requests to renting@astron.nl\n") +
-              string("Documentation can be found at: www.lofar.org/wiki/index.php/CS1/Software#Post_Processing_tools\n");
+              string("Documentation can be found at: www.lofar.org/operations/doku.php?id=engineering:software:postprocessing_software\n");
+
       cout << string("Squashing ") << itsInMS << string(" into ") << itsOutMS << endl;
       if (itsInMS == "" || itsOutMS == "")
       {
