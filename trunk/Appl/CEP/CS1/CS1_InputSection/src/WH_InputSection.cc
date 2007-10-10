@@ -205,7 +205,7 @@ void WH_InputSection::preprocess()
   }
 }
 
-void WH_InputSection::doInput(SparseSet &flags)
+void WH_InputSection::doInput(SparseSet<unsigned> &flags)
 {
   TimeStamp delayedStamp = itsSyncedStamp - itsNHistorySamples;
   itsSyncedStamp += itsNSamplesPerSec;
@@ -225,9 +225,9 @@ void WH_InputSection::doInput(SparseSet &flags)
 }
 
 
-void WH_InputSection::limitFlagsLength(SparseSet &flags)
+void WH_InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
 {
-  const std::vector<struct SparseSet::range> &ranges = flags.getRanges();
+  const std::vector<struct SparseSet<unsigned>::range> &ranges = flags.getRanges();
 
   if (ranges.size() > 16)
     flags.include(ranges[15].begin, ranges[ranges.size() - 1].end);
@@ -275,7 +275,7 @@ void WH_InputSection::transposeData()
 }
 
 
-void WH_InputSection::transposeMetaData(const SparseSet &flags)
+void WH_InputSection::transposeMetaData(const SparseSet<unsigned> &flags)
 {
 #if defined HAVE_MPI
   int nrNodes = TH_MPI::getNumberOfNodes();
@@ -359,7 +359,7 @@ void WH_InputSection::doOutput()
 void WH_InputSection::process() 
 { 
   itsProcessTimer.start();
-  SparseSet flags;
+  SparseSet<unsigned> flags;
 
   if (itsDoInput) {
     doInput(flags);

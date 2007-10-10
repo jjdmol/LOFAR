@@ -65,7 +65,7 @@ namespace LOFAR
       ~BeamletBuffer();
 
       void writeElements(Beamlet* data, TimeStamp begin, unsigned nElements);
-      void getElements(boost::multi_array_ref<SampleType, 3> &buffers, SparseSet &flags, TimeStamp begin, unsigned nElements);
+      void getElements(boost::multi_array_ref<SampleType, 3> &buffers, SparseSet<unsigned> &flags, TimeStamp begin, unsigned nElements);
 
       TimeStamp startBufferRead();
       TimeStamp startBufferRead(TimeStamp);
@@ -91,7 +91,7 @@ namespace LOFAR
       //# Datamembers
       //vector<Beamlet *> itsSBBuffers;
       mutex itsFlagsMutex;
-      SparseSet itsFlags;
+      SparseSet<unsigned> itsFlags;
       unsigned itsNSubbands;
       int itsSize;
 

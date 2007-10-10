@@ -143,7 +143,7 @@ void BeamletBuffer::writeElements(Beamlet *data, TimeStamp begin, unsigned nElem
   itsLockedRange.writeUnlock(end);
 }
 
-void BeamletBuffer::getElements(boost::multi_array_ref<SampleType, 3> &buffers, SparseSet &flags, TimeStamp begin, unsigned nElements)
+void BeamletBuffer::getElements(boost::multi_array_ref<SampleType, 3> &buffers, SparseSet<unsigned> &flags, TimeStamp begin, unsigned nElements)
 {
   //ASSERTSTR(buffers.size() == itsNSubbands, "BeamletBuffer received wrong number of buffers to write to (in getElements).");
   TimeStamp end = begin + nElements;
