@@ -44,6 +44,7 @@
 #include <casa/Containers/Record.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MBaseline.h>
+#include <measures/Measures/MCBaseline.h>
 #include <measures/Measures/Muvw.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/Stokes.h>
@@ -668,7 +669,7 @@ namespace LOFAR
             Array<Complex> dataArray(dShape, (Complex*)data, SHARE);
             IPosition start(2, 0, channelId);
             IPosition leng(2, shape[0], nrChannels);
-	    dataArray.apply(conj); // Temporary fix, necessary to prevent flipping of the sky, since
+	    dataArray.apply(std::conj); // Temporary fix, necessary to prevent flipping of the sky, since
 	                           // the UVW coordinates are reversed (20070515)
             itsMSCol->data().putSlice(rowNumber, Slicer(start, leng), dataArray);
           }
