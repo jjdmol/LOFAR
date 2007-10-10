@@ -1251,7 +1251,7 @@ void WH_BGL_Processing::preprocess()
 #endif
 
   itsSamples		= new itsSamplesType(boost::extents[NR_SUBBAND_CHANNELS][itsNrStations][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS]);
-  itsFlags		= new SparseSet[itsNrStations];
+  itsFlags		= new SparseSet<unsigned>[itsNrStations];
   itsNrValidSamples	= new unsigned[itsNrBaselines];
   itsCorrelationWeights = new float[itsNrSamplesPerIntegration + 1];
   itsRFIflags		= new bitset<NR_SUBBAND_CHANNELS>[itsNrStations];
@@ -1286,9 +1286,9 @@ void WH_BGL_Processing::computeFlags()
 
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     itsFlags[stat].reset();
-    const std::vector<SparseSet::range> &ranges = flags[stat].getRanges();
+    const std::vector<SparseSet<unsigned>::range> &ranges = flags[stat].getRanges();
 
-    for (std::vector<SparseSet::range>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
+    for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
       unsigned begin = std::max(0, (signed) it->begin / NR_SUBBAND_CHANNELS - NR_TAPS + 1);
       unsigned end   = std::min(itsNrSamplesPerIntegration, (it->end - 1) / NR_SUBBAND_CHANNELS + 1);
 
@@ -1436,8 +1436,8 @@ void WH_BGL_Processing::doPPF(double baseFrequency)
       computePhaseShifts(phaseShifts, delays[stat], baseFrequency);
     }
 
-    const std::vector<SparseSet::range> &ranges = itsFlags[stat].getRanges();
-    std::vector<SparseSet::range>::const_iterator it = ranges.begin();
+    const std::vector<SparseSet<unsigned>::range> &ranges = itsFlags[stat].getRanges();
+    SparseSet<unsigned>::const_iterator it = ranges.begin();
 
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
       bool good = it == ranges.end() || time < it->begin || (time == it->end && (++ it, true));

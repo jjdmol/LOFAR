@@ -189,7 +189,7 @@ class WH_BGL_Processing: public WorkHolder {
     itsSamplesType  *itsSamples;
     //[NR_SUBBAND_CHANNELS][itsNrStations][itsNrSamplesPerIntegration | 2][NR_POLARIZATIONS] CACHE_ALIGNED
 
-    SparseSet	    *itsFlags; //[itsNrStations]
+    SparseSet<unsigned> *itsFlags; //[itsNrStations]
     unsigned	    *itsNrValidSamples; //[itsNrBaselines]
     float	    *itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
 
