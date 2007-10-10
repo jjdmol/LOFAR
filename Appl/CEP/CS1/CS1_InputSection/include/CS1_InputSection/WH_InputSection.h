@@ -83,13 +83,13 @@ namespace LOFAR
       WH_InputSection (const WH_InputSection &that);
       WH_InputSection& operator= (const WH_InputSection &that);
 
-      void doInput(SparseSet &flags);
+      void doInput(SparseSet<unsigned> &flags);
       void doOutput();
 
-      void limitFlagsLength(SparseSet &flags);
+      void limitFlagsLength(SparseSet<unsigned> &flags);
 
       void transposeData();
-      void transposeMetaData(const SparseSet &flags);
+      void transposeMetaData(const SparseSet<unsigned> &flags);
       
       //# Datamembers
       bool itsDelayCompensation;
