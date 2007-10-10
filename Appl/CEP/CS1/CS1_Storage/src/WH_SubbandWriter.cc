@@ -182,7 +182,7 @@ namespace LOFAR
 #if defined HAVE_MPI
 	  msNames[TH_MPI::getCurrentRank() * itsWriters.size() + i].c_str(),
 #else
-	  msNames[0].c_str(),
+	  msNames[i].c_str(),
 #endif
 	  startTime, itsCS1PS->storageIntegrationTime(), itsNChannels,
 	  itsNPolSquared, itsNBeams, itsNStations, antPos,
