@@ -479,14 +479,15 @@ int32 Socket::connect (int32 waitMs)
 	}
 
 	if (::connect(itsSocketID, addrPtr, addrLen ) >= 0) {
-		LOG_DEBUG("Socket:connect() successful");
+		LOG_DEBUG(formatString("Socket:connect(%d) successful", itsSocketID));
 		itsIsConnected = true;
 		setBlocking (blockingMode);
 		return (itsErrno = SK_OK);
 	}
 
-	LOG_DEBUG(formatString("connect() failed: errno=%d (%s)", errno,
+	LOG_DEBUG(formatString("connect(%d) failed: errno=%d (%s)", itsSocketID, errno,
 														strerror(errno)));
+	
 
 	if (errno != EINPROGRESS && errno != EALREADY) {// real error
 		setBlocking (blockingMode);					// reinstall blocking mode
