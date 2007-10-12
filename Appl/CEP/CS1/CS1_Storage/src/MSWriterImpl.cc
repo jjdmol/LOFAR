@@ -201,7 +201,7 @@ namespace LOFAR
       // Most columns use the IncrStMan; some use others.
       SetupNewTable newTab(msName, td, Table::New);
       IncrementalStMan incrStMan("ISMData");
-      StandardStMan    stanStMan;
+      StandardStMan    stanStMan("SSMData",32768);
 
 
       //   TiledShapeStMan  tiledStMan("TiledData", IPosition(3,4,16,512));
@@ -216,9 +216,9 @@ namespace LOFAR
       // Store all pol and freq in a single tile.
       // In this way the data appear in separate files that can be mmapped.
       // Flags are stored as bits, so take care each tile has multiple of 8 flags.
-      TiledColumnStMan tiledData("TiledData", IPosition(3,itsNrCorr,itsNrFreq,1));
-      TiledColumnStMan tiledFlag("TiledFlag", IPosition(3,itsNrCorr,itsNrFreq,8));
-      TiledColumnStMan tiledUVW("TiledUVW", IPosition(3,128));
+      TiledColumnStMan tiledData("TiledData", IPosition(3,itsNrCorr,itsNrFreq,(itsNrAnt+1)/2));
+      TiledColumnStMan tiledFlag("TiledFlag", IPosition(3,itsNrCorr,itsNrFreq,(itsNrAnt+1)/2*8));
+      TiledColumnStMan tiledUVW("TiledUVW", IPosition(2,3,(itsNrAnt+1)/2*itsNrAnt));
       newTab.bindAll (incrStMan);
       newTab.bindColumn(MS::columnName(MS::ANTENNA1),stanStMan);
       newTab.bindColumn(MS::columnName(MS::ANTENNA2),stanStMan);
@@ -700,7 +700,9 @@ namespace LOFAR
           rowNumber++;
         }
       }
-    }
+      
+      itsMS->flush();
+     }
 
   } // namespace CS1
 
