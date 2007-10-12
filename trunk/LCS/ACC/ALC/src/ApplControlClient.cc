@@ -78,9 +78,9 @@ ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 
 	// Now build the connection to our own dedicated AC
 	in_addr		IPaddr;
-	IPaddr.s_addr = aRequest.itsAddr;	// network byte-order
-	string	host = inet_ntoa(IPaddr);
-	uint16	port = ntohs(aRequest.itsPort);
+	IPaddr.s_addr = htonl(aRequest.itsAddr);	// network byte-order
+	string	host  = inet_ntoa(IPaddr);			// why we have to swap the word is a mistery.
+	uint16	port  = ntohs(aRequest.itsPort);
 	LOG_DEBUG(formatString("Private ACserver is at %s:%d, trying to connect", 
 														host.c_str(), port));
 
