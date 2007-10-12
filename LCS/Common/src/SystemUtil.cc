@@ -201,7 +201,7 @@ uint32 myIPV4Address()
 	uint32	address;
 	bcopy (hostEnt->h_addr_list[0], &address, hostEnt->h_length);
 
-	return (htonl(address));
+	return (address);
 #endif
 }
 

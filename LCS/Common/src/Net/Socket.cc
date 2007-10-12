@@ -429,8 +429,9 @@ int32 Socket::initTCPSocket(bool	asServer)
 		return (setErrno(SOCKET));
 	}
 
-	LOG_DEBUG(formatString("Socket:Created %s socket, port %d, protocol %d",
-			       asServer ? "server" : "client",
+	LOG_DEBUG(formatString("Socket(%d):Created %s socket, host %s, port %d, protocol %d",
+			       itsSocketID, asServer ? "server" : "client",
+				   inet_ntoa(itsTCPAddr.sin_addr),
 			       ntohs((ushort)itsTCPAddr.sin_port), protocolType));
 
     // set default options
