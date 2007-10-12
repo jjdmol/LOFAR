@@ -25,6 +25,9 @@
 
 #include <Common/StringUtil.h>
 #include <Common/SystemUtil.h>
+#include <Common/hexdump.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 using namespace LOFAR;
 using namespace std;
@@ -33,7 +36,9 @@ int main()
 {
 	cout << "My short hostname is: " << myHostname(false) << endl;
 	cout << "My long hostname is : " << myHostname(true) << endl;
-	cout << formatString("My IPV4 address is  : %08lX", myIPV4Address());
+	uint32	address = myIPV4Address();
+	cout << formatString("My IPV4 address is  : %08lX\n", ntohl(address));
+	hexdump ((char*) &address, sizeof(uint32));
 	
 	return (0);
 }
