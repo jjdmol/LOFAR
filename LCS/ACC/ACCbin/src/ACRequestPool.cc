@@ -162,7 +162,7 @@ bool	ACRequestPool::load (const string&		aFilename)
 	
 		// report what we loaded.
 		in_addr		IPaddr;
-		IPaddr.s_addr = ntohl(ACR.itsAddr);
+		IPaddr.s_addr = ACR.itsAddr;
 		LOG_INFO_STR("Application " << ACR.itsRequester << " was at " << 
 							inet_ntoa(IPaddr) << "," << ntohs(ACR.itsPort));
 		add (ACR);
@@ -176,7 +176,7 @@ bool	ACRequestPool::load (const string&		aFilename)
 bool ACRequestPool::assignNewPort(ACRequest*	anACR) 
 {
 	// Controller always run on my own machine
-	anACR->itsAddr = myIPV4Address();
+	anACR->itsAddr = myIPV4Address();	// network byte order
 
 	uint16	startingPort = itsNextPort;
 	uint16	freePort;
