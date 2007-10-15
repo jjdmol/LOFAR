@@ -47,6 +47,7 @@ OLAP.IONProc.integrationSteps = 1
 
 OLAP.StorageProc.integrationSteps = 60
 OLAP.StorageProc.subbandsPerMS = 1
+Observation.MSNameMask = /data/L${YEAR}_${MSNUMBER}/SB${SUBBAND}.MS
 
 # Variables for the DelayCompensation
 OLAP.DelayComp.converterType = IMPL  # should be one of IMPL, CLIENT
