@@ -616,8 +616,8 @@ do
     echo "Uses package $pkg$tagstr"
   else
     echo "Full update of package $pkg$tagstr"
-    echo "$cvscomm update -dAP $rtag $updq $pkg" >> rub.log 2>&1
-    $cvscomm update -dAP $rtag $updq $pkg >> rub.log 2>&1
+    echo "$cvscomm update -dP $rtag $updq $pkg" >> rub.log 2>&1
+    $cvscomm update -dP $rtag $updq $pkg >> rub.log 2>&1
     status=$?
     if [ $status != 0 ]; then
       echo "Exiting; update/checkout returned with an error status ..."
