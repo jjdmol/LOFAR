@@ -137,27 +137,6 @@ namespace LOFAR
       };
 #endif
 
-      // create MSWriter object
-      vector<string> msNames = itsCS1PS->msNames();
-
-#if 0
-      // split name in base part and extension (if any)
-      string::size_type idx = msName.rfind('.');
-      pair<string,string> ms(msName.substr(0,idx),
-                             idx == string::npos ? "" : msName.substr(idx));
-      // insert subband-id into the name
-      ostringstream oss;
-      oss << '.' << setfill('0') << setw(3) << itsSubbandID;
-      // rebuild the MS name string
-      msName = ms.first + oss.str() + ms.second;
-#endif
-      
-#if defined HAVE_MPI
-      LOG_TRACE_VAR_STR("Creating MS-file \"" << msNames[TH_MPI::getCurrentRank()] << "\"");
-#else
-      LOG_TRACE_VAR_STR("Creating MS-file \"" << msNames[0] << "\"");
-#endif
-      
       double startTime = itsCS1PS->startTime();
       LOG_TRACE_VAR_STR("startTime = " << startTime);
       
@@ -173,17 +152,20 @@ namespace LOFAR
 
       itsNrSubbandsPerMS = itsCS1PS->getUint32("OLAP.StorageProc.subbandsPerMS");
       ASSERT(itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage") % itsNrSubbandsPerMS == 0);
-      itsWriters.resize(itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage") / itsNrSubbandsPerMS);
-      itsFieldIDs.resize(itsWriters.size());
+      unsigned mssesPerStorage = itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage") / itsNrSubbandsPerMS;
+      itsWriters.resize(mssesPerStorage);
+      itsFieldIDs.resize(mssesPerStorage);
   
-      for (unsigned i = 0; i < itsWriters.size(); i ++) {
-	itsWriters[i] = new MSWriter(
-
+      for (unsigned i = 0; i < mssesPerStorage; i ++) {
 #if defined HAVE_MPI
-	  msNames[TH_MPI::getCurrentRank() * itsWriters.size() + i].c_str(),
+	unsigned firstSubband = (TH_MPI::getCurrentRank() * mssesPerStorage + i) * itsNrSubbandsPerMS;
 #else
-	  msNames[i].c_str(),
+	unsigned firstSubband = i * itsNrSubbandsPerMS;
 #endif
+	unsigned lastSubband  = firstSubband + itsNrSubbandsPerMS - 1;
+
+	itsWriters[i] = new MSWriter(
+	  itsCS1PS->getMSname(firstSubband, lastSubband).c_str(),
 	  startTime, itsCS1PS->storageIntegrationTime(), itsNChannels,
 	  itsNPolSquared, itsNBeams, itsNStations, antPos,
 	  storageStationNames, itsTimesToIntegrate, itsNrSubbandsPerMS);

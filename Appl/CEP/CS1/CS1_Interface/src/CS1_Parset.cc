@@ -29,6 +29,12 @@
 //#include <APL/APLCommon/APLUtilities.h>
 #include <CS1_Interface/CS1_Parset.h>
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/format.hpp>
+
+
 namespace LOFAR {
 	using namespace ACC::APS;
 	namespace CS1 {
@@ -79,52 +85,34 @@ vector<double> CS1_Parset::refFreqs() const
   
   for (uint i = 0; i < nrSubbands(); i++)
   {
-   
     refFreqs.push_back((getUint32("Observation.nyquistZone")-1)*(getUint32("Observation.sampleClock")*1000000/2) + 
                         sampleRate()*subbandIDs[i]);
+
   }
   
   return refFreqs;
 }
 
-vector<string> CS1_Parset::msNames() const
+string CS1_Parset::getMSname(unsigned firstSB, unsigned lastSB) const
 {
-  uint32 first, last;
-  string msName;
-  vector<string> msNames;
-  char obsid[32];
-  char subbandID[32];
-  
-  if (!isDefined("Observation.MSNameMask"))
-  {
-    sprintf(obsid, "%05u", getUint32("Observation.treeID"));
-    string msNumber = "/data/L" + getString("Observation.year") + "_" + string(obsid);
-  
-    if (getUint32("OLAP.subbandsPerPset") == 1 )
-    {
-      for (uint i = 0; i < nrSubbands(); i++)
-      {
-        sprintf(subbandID, "_SB%u", i);
-        msName = msNumber + string(subbandID) + ".MS";
-        msNames.push_back(msName);
-      }  
-    }
-    else
-    {
-      for (uint i = 0; i < nrSubbands()/getUint32("OLAP.subbandsPerPset") ; i++)
-      {
-        first = i * getUint32("OLAP.subbandsPerPset");
-        last =  first + getUint32("OLAP.subbandsPerPset") -1;
-        sprintf(subbandID, "_SB%u-%u", first, last);
-        msName = msNumber + string(subbandID) + ".MS";
-       msNames.push_back(msName);
-      }
-    }
-  }
-  else
-    return getStringVector("Observation.MSNameMask");
- 
-  return (msNames);
+  using namespace boost;
+
+  string	 name	   = getString("Observation.MSNameMask");
+  string	 startTime = getString("Observation.startTime");
+  vector<string> splitStartTime;
+  split(splitStartTime, startTime, is_any_of("- :"));
+
+  replace_all(name, "${YEAR}", splitStartTime[0]);
+  replace_all(name, "${MONTH}", splitStartTime[1]);
+  replace_all(name, "${DAY}", splitStartTime[2]);
+  replace_all(name, "${HOURS}", splitStartTime[3]);
+  replace_all(name, "${MINUTES}", splitStartTime[4]);
+  replace_all(name, "${SECONDS}", splitStartTime[5]);
+
+  replace_all(name, "${MSNUMBER}", str(format("%05u") % getUint32("Observation.ObsId")));
+  replace_all(name, "${SUBBAND}", str(firstSB != lastSB ? format("%u-%u") % firstSB % lastSB : format("%d") % firstSB));
+
+  return name;
 }
 
 vector<string> CS1_Parset::delay_Ports() const

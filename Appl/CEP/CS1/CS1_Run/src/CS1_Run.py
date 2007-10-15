@@ -157,51 +157,35 @@ if __name__ == '__main__':
     runningNumberFile = '/log/nextMSNumber'
     MSdatabaseFile = '/log/MSList'
 
-    if not 'Observation.MSNameMask' in parset:
-        try:
-            inf = open(runningNumberFile, 'r')
-            measurementnumber = int(inf.readline())
-            inf.close()
-            
-            # MS name is L<yyyy>_<nnnnn>_<mmm>.MS
-            # the <mmm> is filled in by the subbandwriter
-	    
-	    #MSNumber = '/data/L' + parset.getString(Observation.year) + '_' + parset.getString('Observation.treeID')
-	    
-            year = str(time.gmtime()[0])
-            MSNumber = '/data/L' + year + '_' + '%05d' % measurementnumber
-	    MSName = MSNumber + '.MS'
-	    subbandsPerStorage = parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.psetsPerStorage')
-	    subbandsPerMS      = parset.getInt32('OLAP.StorageProc.subbandsPerMS')
-	    
-	    if (subbandsPerMS == 1):
-	        MSName = '\'' + MSNumber + '/SB%01d' % 0 + '.MS' + '\''
-	        for i in range(1, len(parset.getInt32Vector('Observation.subbandList'))):
-                    MSName = MSName + ', \\\n' + '\'' + MSNumber + '/SB%01d' % i + '.MS' + '\''
-	    else:
-		MSName = '\'' + MSNumber + '/SB%01d' % 0 + '-%01d' % (subbandsPerMS - 1) +'.MS' + '\''
-		for i in range(1, len(parset.getInt32Vector('Observation.subbandList')) / subbandsPerMS):
-		    first = i * subbandsPerMS
-		    last =  first + subbandsPerMS - 1
-		    MSName = MSName + ', \\\n' + '\'' + MSNumber + '/SB%01d' % first + '-%01d' % last +'.MS' + '\''
-            
-            outf = open(runningNumberFile, 'w')
-            outf.write(str(measurementnumber + 1) + '\n')
-            outf.close()
-            
-            dbfile = open(MSdatabaseFile, 'a')
-            nodesStr = str([1] * parset.getNCells() + [0] * (12 - parset.getNCells()))[1:-1]
-            dateStr = time.strftime('%Y %0m %0d', time.gmtime())
-            dbfile.write(MSNumber + '\t' + dateStr + '\t' + nodesStr + '\n')
-            dbfile.close()
-        except:
-            MSName = '/data/Test.MS'
-	    sys.exit(1)
+    try:
+	inf = open(runningNumberFile, 'r')
+	measurementnumber = int(inf.readline())
+	inf.close()
+	parset['Observation.ObsId'] = measurementnumber
+	outf = open(runningNumberFile, 'w')
+	outf.write(str(measurementnumber + 1) + '\n')
+	outf.close()
+	
+	dbfile = open(MSdatabaseFile, 'a')
+	nodesStr = str([1] * parset.getNCells() + [0] * (12 - parset.getNCells()))[1:-1]
+	dateStr = time.strftime('%Y %0m %0d %H %M %S', time.gmtime()).split()
+	MS = parset.getString('Observation.MSNameMask')
+	MS = MS.replace('${YEAR}', dateStr[0])
+	MS = MS.replace('${MONTH}', dateStr[1])
+	MS = MS.replace('${DAY}', dateStr[2])
+	MS = MS.replace('${HOURS}', dateStr[3])
+	MS = MS.replace('${MINUTES}', dateStr[4])
+	MS = MS.replace('${SECONDS}', dateStr[5])
+	MS = MS.replace('${MSNUMBER}', '%05d' % parset['Observation.ObsId'])
+	MS = MS.replace('${SUBBAND}', '*')
+	
+	dbfile.write(MS + '\t' + ' '.join(dateStr[0:3]) + '\t' + nodesStr + '\n')
+	dbfile.close()
+    except:
+	sys.exit(1)
 
-	parset['Observation.MSNameMask'] = '[' + MSName + ']'
- 
 
-    obsID = 'L' + year + '_' + '%05d' % measurementnumber
+    obsID = 'L' + dateStr[0] + '_' + '%05d' % measurementnumber
     
     # start the observation
     doObservation(obsID, parset)

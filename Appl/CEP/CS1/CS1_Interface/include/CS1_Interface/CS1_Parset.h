@@ -84,7 +84,6 @@ public:
 	double         timeInterval() const;
 	uint32         nrBGLNodesPerCell() const;
 	vector<double> refFreqs() const;
-	vector<string> msNames() const;
 	double         chanWidth() const;
 	vector<string> delay_Ports() const;
 	vector<string> getPortsOf(const string& aKey) const;
@@ -95,6 +94,7 @@ public:
 	bool	       useGather() const;
 	uint32	       nrOutputsPerInputNode() const;
 	uint32	       nrInputsPerStorageNode() const;
+	string	       getMSname(unsigned firstSB, unsigned lastSB) const;
 	
 	//# Datamembers
 	string	       name;
