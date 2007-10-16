@@ -402,12 +402,12 @@ void MeqParmFunklet::updateFromTable()
 
 void MeqParmFunklet::save()
 {
-  itsTable->lock();
+//  itsTable->lock();
   for (unsigned int i=0; i<itsFunklets.size(); i++) {
     LOFAR::ParmDB::ParmValue pval = itsFunklets[i]->getParmValue();
     itsTable->putValue (getName(), pval);
   }
-  itsTable->unlock();
+//  itsTable->unlock();
 }
 
 void MeqParmFunklet::update(size_t domain, const vector<double> &unknowns)
