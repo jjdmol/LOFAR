@@ -72,7 +72,7 @@ namespace LOFAR
       return TableIterator(outMS, ms_OutIteration_variables);
     }
 
-    //===============>>>  DataSquasher::CreateDataIterator  <<<===============
+    //===============>>>  DataSquasher::TableResize  <<<===============
 
     void DataSquasher::TableResize(TableDesc tdesc, IPosition ipos, string name, Table& table)
     {
