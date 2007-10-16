@@ -45,7 +45,7 @@ shift;
 # all profiling output goes into profile directory
 # find new name for this run
 #
-alldirs=`ls -1 | grep "^$binname.profile.dir.[[:digit:]]\+$" | cut -d. -f4 | sort -n | tail -1`;
+alldirs=`ls -1 | grep "^$binname.profile.dir.[0-9][0-9]*$" | cut -d. -f4 | sort -n | tail -1`;
 if test "$alldirs" = ""; then
     profdir="$binname.profile.dir.1";
 else
@@ -111,7 +111,7 @@ declare -i loopcount=0;
 while test \( $progpid -eq 0 \) -a \( $loopcount -lt 5 \); do
     sleep 1
 #    pstree -np $timepid 2> /dev/null
-    declare -i progpid=`pstree -np $timepid 2> /dev/null | sed -e "s/^.*$binname.*(\([[:digit:]]\+\)).*$/\1/"`;
+    declare -i progpid=`pstree -np $timepid 2> /dev/null | sed -e "s/^.*$binname.*(\([0-9][0-9]*\)).*$/\1/"`;
     loopcount=$loopcount+1;
 done
 

@@ -303,8 +303,8 @@ EOF
 
 # Not fully equal, check if equal except for numbers.
 # Replace for this purpose all numbers by x.
-  sed -e 's/[+-]\?\(\(\([0-9]\+\)\|\([0-9]*\.\?[0-9]*\)\)\(e[+-]\?[0-9]\+\)\?\)/x/g' ${PROG}_tmp.out > ${PROG}_tmp.out2
-  sed -e 's/[+-]\?\(\(\([0-9]\+\)\|\([0-9]*\.\?[0-9]*\)\)\(e[+-]\?[0-9]\+\)\?\)/x/g' ${PROG}_tmp_orig.out > ${PROG}_tmp_orig.out2
+  sed -e 's/[+-]\?\(\(\([0-9][0-9]*\)\|\([0-9]*\.\?[0-9]*\)\)\(e[+-]\?[0-9][0-9]*\)\?\)/x/g' ${PROG}_tmp.out > ${PROG}_tmp.out2
+  sed -e 's/[+-]\?\(\(\([0-9][0-9]*\)\|\([0-9]*\.\?[0-9]*\)\)\(e[+-]\?[0-9][0-9]*\)\?\)/x/g' ${PROG}_tmp_orig.out > ${PROG}_tmp_orig.out2
   diff ${PROG}_tmp.out2 ${PROG}_tmp_orig.out2 > /dev/null 2>&1
   diff ${PROG}_tmp.out2 ${PROG}_tmp_orig.out2 > /dev/null 2>&1
   if [ $? != 0 ]
