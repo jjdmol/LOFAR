@@ -28,13 +28,14 @@
 #include <CS1_DataSquasher/SquasherProcessControl.h>
 #include "DataSquasher.h"
 
-#define SQUASHER_VERSION "0.42"
+#define SQUASHER_VERSION "0.43"
 //0.20 Added handling MODEL and CORRECTED DATA
 //0.30 Added handling threshold and weights
 //0.31 Added handing MODEL_DATA and CORRECTED_DATA keywords for imager
 //0.40 Changed creation mechnism of the destination MS
 //0.41 Cleaned up the code for readability
 //0.42 Fixed the incorect weighting of partially flagged bands
+//0.43 Some code cleanup, and maybe small error fix
 
 namespace LOFAR
 {
@@ -79,7 +80,8 @@ namespace LOFAR
         std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
         Table temptable = tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
                                        string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,") +
-                                       string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID,WEIGHT_SPECTRUM FROM ") + itsInMS);
+                                       string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID,WEIGHT_SPECTRUM,FLAG FROM ") + itsInMS);
+        // Need FLAG to make it a valid MS
         temptable.deepCopy(itsOutMS, Table::NewNoReplace);
 
         MeasurementSet inMS  = MeasurementSet(itsInMS);
@@ -168,13 +170,13 @@ namespace LOFAR
         channum.fillColumn(new_nchan);
 
         TableDesc SPWtdesc = inSPW.tableDesc();
-        itsSquasher->TableResize(SPWtdesc, spw_ipos, "CHAN_FREQ", outMS);
+        itsSquasher->TableResize(SPWtdesc, spw_ipos, "CHAN_FREQ", outSPW);
 
-        itsSquasher->TableResize(SPWtdesc, spw_ipos, "CHAN_WIDTH", outMS);
+        itsSquasher->TableResize(SPWtdesc, spw_ipos, "CHAN_WIDTH", outSPW);
 
-        itsSquasher->TableResize(SPWtdesc, spw_ipos, "EFFECTIVE_BW", outMS);
+        itsSquasher->TableResize(SPWtdesc, spw_ipos, "EFFECTIVE_BW", outSPW);
 
-        itsSquasher->TableResize(SPWtdesc, spw_ipos, "RESOLUTION", outMS);
+        itsSquasher->TableResize(SPWtdesc, spw_ipos, "RESOLUTION", outSPW);
 
         ROArrayColumn<Double> inFREQ(inSPW, "CHAN_FREQ");
         ROArrayColumn<Double> inWIDTH(inSPW, "CHAN_WIDTH");
