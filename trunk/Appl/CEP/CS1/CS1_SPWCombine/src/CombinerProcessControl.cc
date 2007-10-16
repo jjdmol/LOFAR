@@ -29,7 +29,9 @@
 #include <CS1_SPWCombine/CombinerProcessControl.h>
 #include "SPWCombine.h"
 
-#define COMBINER_VERSION "0.10"
+#define COMBINER_VERSION "0.20"
+// 0.10 Initial version based on DataSquasher
+// 0.20 Ported additions and updates from DataSquasher
 
 namespace LOFAR
 {
@@ -62,45 +64,99 @@ namespace LOFAR
     {
       try{
         std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
-        Table TempTable = tableCommand(string("SELECT FROM ") + itsInMS[0] + string(" WHERE DATA_DESC_ID = 0"));
+        Table TempTable = tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
+                                       string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,") +
+                                       string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID,WEIGHT_SPECTRUM,FLAG FROM ")
+                                       + itsInMS[0] + string(" WHERE DATA_DESC_ID = 1"));
+        // Need FLAG to make it a valid MS
         TempTable.deepCopy(itsOutMS, Table::NewNoReplace, true);
         tableCommand(string("DELETE FROM ") + itsOutMS + string("/DATA_DESCRIPTION WHERE rownumber() > 1"));
         tableCommand(string("DELETE FROM ") + itsOutMS + string("/SPECTRAL_WINDOW WHERE rownumber() > 1"));
+
         MeasurementSet outMS = MeasurementSet(itsOutMS, Table::Update);
         int nchan = 0;
-        for (int i = 0; i < itsInMS.size(); i++)
+        for (unsigned int i = 0; i < itsInMS.size(); i++)
         {
           itsCombiner->GetMSInfo(*(inMS[i]));
           for (int j = 0; j < itsCombiner->itsNumBands; j++)
           { nchan += itsCombiner->itsNumChannels;
           }
         }
-        TableDesc tdesc = outMS.tableDesc();
-        ColumnDesc desc = tdesc.rwColumnDesc("DATA");
-        IPosition pos = desc.shape();
-        Vector<Int> temp = pos.asVector();
-        temp(1) = nchan;
+        TableDesc tdesc    = inMS[0]->tableDesc();
+        Vector<Int> temp(2);
+        temp(0)            = itsCombiner->itsNumPolarizations;
+        temp(1)            = nchan;
         std::cout << "New number of channels: " << nchan << std::endl;
-        IPosition pos2(temp);
-        desc.setOptions(0);
-        desc.setShape(pos2);
-        desc.setOptions(4);
-        outMS.removeColumn("DATA");
-        outMS.addColumn(desc);
+        IPosition data_ipos(temp);
+
+        itsCombiner->TableResize(tdesc, data_ipos, "DATA", outMS);
 
         //fix the FLAGS column
-        desc = tdesc.rwColumnDesc("FLAG");
-        desc.setOptions(0);
-        desc.setShape(pos2);
-        desc.setOptions(4);
-        outMS.removeColumn("FLAG");
-        outMS.addColumn(desc);
+        itsCombiner->TableResize(tdesc, data_ipos, "FLAG", outMS);
 
         //Fix the SpectralWindow values
-        MSSpectralWindow SPW = outMS.spectralWindow();
-        ScalarColumn<Int> channum(SPW, "NUM_CHAN");
+        IPosition spw_ipos(1, nchan);
+        //ugly workaround MSSpectral window does no allow deleting and then recreating columns
+        Table outSPW = Table(itsOutMS + "/SPECTRAL_WINDOW", Table::Update);
+        ScalarColumn<Int> channum(outSPW, "NUM_CHAN");
         channum.fillColumn(nchan);
 
+        TableDesc SPWtdesc = outSPW.tableDesc();
+        itsCombiner->TableResize(SPWtdesc, spw_ipos, "CHAN_FREQ", outSPW);
+        itsCombiner->TableResize(SPWtdesc, spw_ipos, "CHAN_WIDTH", outSPW);
+        itsCombiner->TableResize(SPWtdesc, spw_ipos, "EFFECTIVE_BW", outSPW);
+        itsCombiner->TableResize(SPWtdesc, spw_ipos, "RESOLUTION", outSPW);
+
+        ArrayColumn<Double> outFREQ(outSPW, "CHAN_FREQ");
+        ArrayColumn<Double> outWIDTH(outSPW, "CHAN_WIDTH");
+        ArrayColumn<Double> outBW(outSPW, "EFFECTIVE_BW");
+        ArrayColumn<Double> outRESOLUTION(outSPW, "RESOLUTION");
+
+        Vector<Double> new_FREQ(nchan, 0.0);
+        Vector<Double> new_WIDTH(nchan, 0.0);
+        Vector<Double> new_BW(nchan, 0.0);
+        Vector<Double> new_RESOLUTION(nchan, 0.0);
+        int total_channels = 0;
+
+        for (unsigned int i = 0; i < itsInMS.size(); i++)
+        {
+          itsCombiner->GetMSInfo(*(inMS[i]));
+          int old_nchan = itsCombiner->itsNumChannels;
+          Vector<Double> old_temp(old_nchan, 0.0);
+
+          MSSpectralWindow inSPW = inMS[i]->spectralWindow();
+
+          ROArrayColumn<Double> inFREQ(inSPW, "CHAN_FREQ");
+          ROArrayColumn<Double> inWIDTH(inSPW, "CHAN_WIDTH");
+          ROArrayColumn<Double> inBW(inSPW, "EFFECTIVE_BW");
+          ROArrayColumn<Double> inRESOLUTION(inSPW, "RESOLUTION");
+
+
+          for (unsigned int n = 0; n < inSPW.nrow(); n++)
+          {
+            for (int m = 0; m < old_nchan; m++)
+            {
+            inFREQ.get(n, old_temp);
+            new_FREQ(total_channels + m) = old_temp(m);
+
+            inWIDTH.get(n, old_temp);
+            new_WIDTH(total_channels + m) = old_temp(m);
+
+            inBW.get(n, old_temp);
+            new_WIDTH(total_channels + m) = old_temp(m);
+
+            inRESOLUTION.get(n, old_temp);
+            new_RESOLUTION(total_channels + m) = old_temp(m);
+            }
+            total_channels += old_nchan;
+          }
+          outFREQ.put(0, new_FREQ);
+          outWIDTH.put(0, new_WIDTH);
+          outBW.put(0, new_BW);
+          outRESOLUTION.put(0, new_RESOLUTION);
+        }
+
+        //Do the real stuff
         itsCombiner->Combine(inMS, outMS, "DATA");
       }
       catch(casa::AipsError& err)
@@ -121,20 +177,20 @@ namespace LOFAR
 
       cout  << string(COMBINER_VERSION) + string(" spw combine by Adriaan Renting for LOFAR CS1\n") +
               string("This is experimental software, please report errors or requests to renting@astron.nl\n") +
-              string("Documentation can be found at: www.lofar.org/wiki\n");
+              string("Documentation can be found at: www.lofar.org/operations/doku.php?id=engineering:software:postprocessing_software\n");
       cout << string("Combining ");
-      for (int i = 0; i < itsInMS.size(); i++)
+      for (unsigned int i = 0; i < itsInMS.size(); i++)
       {
         cout << itsInMS[i] << ", ";
       }
       cout << string(" into ") << itsOutMS << endl;
-      if (itsInMS[0] == "" || itsOutMS == "")
+      if (itsInMS.size() == 0 || itsOutMS == "")
       {
         cerr  << " Error missing input" << endl;
         return false;
       }
       inMS.resize(itsInMS.size());
-      for (int i = 0; i < itsInMS.size(); i++)
+      for (unsigned int i = 0; i < itsInMS.size(); i++)
       {
         inMS[i] = new MeasurementSet(itsInMS[i]);
       }

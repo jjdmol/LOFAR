@@ -74,7 +74,21 @@ namespace LOFAR
       return TableIterator(myMS, ms_iteration_variables);
     }
 
-    //===============>>>  SPWCombine::Squash  <<<===============
+    //===============>>>  SPWCombine::TableResize  <<<===============
+
+    void SPWCombine::TableResize(TableDesc tdesc, IPosition ipos, string name, Table& table)
+    {
+      ColumnDesc desc = tdesc.rwColumnDesc(name);
+      desc.setOptions(0);
+      desc.setShape(ipos);
+      desc.setOptions(4);
+      if (table.tableDesc().isColumn(name))
+      { table.removeColumn(name);
+      }
+      table.addColumn(desc);
+    }
+
+    //===============>>>  SPWCombine::Combine  <<<===============
 
     void SPWCombine::Combine(vector<MeasurementSet*> inMS, MeasurementSet& myMS, std::string Data)
     {
