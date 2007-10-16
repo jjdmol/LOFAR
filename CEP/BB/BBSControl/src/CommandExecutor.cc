@@ -561,6 +561,7 @@ void CommandExecutor::visit(const BBSSolveStep &command)
             << "%)";
         LOG_DEBUG(oss.str());
 
+/*
         LOG_DEBUG_STR("[START] Writing solutions into parameter"
             " databases...");
         timer.reset();
@@ -583,7 +584,27 @@ void CommandExecutor::visit(const BBSSolveStep &command)
 
         timer.stop();
         LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
+*/
     }
+
+    LOG_DEBUG_STR("[START] Writing solutions into parameter"
+        " databases...");
+    timer.reset();
+    timer.start();
+
+    NSTimer write_timer, unlock_timer;
+    itsKernel->lock();
+    itsKernel->writeParms();
+
+    unlock_timer.start();
+    itsKernel->unlock();
+    unlock_timer.stop();
+
+    LOG_DEBUG_STR("write timer: " << write_timer);
+    LOG_DEBUG_STR("unlock timer: " << unlock_timer);
+
+    timer.stop();
+    LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
