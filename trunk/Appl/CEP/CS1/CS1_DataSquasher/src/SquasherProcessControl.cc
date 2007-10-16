@@ -78,8 +78,8 @@ namespace LOFAR
       try{
         std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
         Table temptable = tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
-          string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,SCAN_NUMBER,") +
-          string("STATE_ID,TIME,TIME_CENTROID,WEIGHT_SPECTRUM,FLAG FROM ") + itsInMS);
+                                       string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,") +
+                                       string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID,WEIGHT_SPECTRUM FROM ") + itsInMS);
         temptable.deepCopy(itsOutMS, Table::NewNoReplace);
 
         MeasurementSet inMS  = MeasurementSet(itsInMS);
