@@ -96,7 +96,7 @@ namespace LOFAR
       int outcounter = 0;
       bool flagrow   = true;
       Vector<Complex> values(itsNumPolarizations, 0);
-      //Vector<Float> temp(itsNumPolarizations, ); // a bit bigger to get rounding errors right
+      Vector<Complex> weights(itsNumPolarizations, 0);
       while (incounter < NChan)
       {
         for (int i = 0; i < itsNumPolarizations; i++)
@@ -104,17 +104,22 @@ namespace LOFAR
           if (!oldFlags(i, Start + incounter))
           { //weight is not handled here, maybe sometime in the future?
             values(i) += oldData(i, Start + incounter);
+            weights(i) += 1;
             flagrow = false;
           }
         }
         incounter++;
         if ((incounter) % Step == 0)
         {
+          for (int i = 0; i < itsNumPolarizations; i++)
+          { values(i) = values(i) / weights(i);
+          }
           newData.column(outcounter)  = values;
           for (int i = 0; i < itsNumPolarizations; i++) // I can't get anyGT or something like that to work
           flagrow = flagrow || (threshold * 1.001 >= abs(values[i]));
           newFlags.column(outcounter) = flagrow;
           values = 0;
+          weights = 0;
           outcounter++;
           flagrow = true;
         }
@@ -133,7 +138,7 @@ namespace LOFAR
       int step = outMS.nrow() / 10 + 1; //not exact but it'll do
       int row  = 0;
       bool rwFlags = newFlags.nrow() > 0;
-      if (!rwFlags)
+      if (!rwFlags) //we are able to re-use the same flags
       { newFlags.resize(itsNumPolarizations, NChan/Step, itsNumSamples);
       }
 

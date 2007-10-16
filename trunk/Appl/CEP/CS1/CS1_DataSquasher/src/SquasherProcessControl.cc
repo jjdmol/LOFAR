@@ -28,12 +28,13 @@
 #include <CS1_DataSquasher/SquasherProcessControl.h>
 #include "DataSquasher.h"
 
-#define SQUASHER_VERSION "0.41"
+#define SQUASHER_VERSION "0.42"
 //0.20 Added handling MODEL and CORRECTED DATA
 //0.30 Added handling threshold and weights
 //0.31 Added handing MODEL_DATA and CORRECTED_DATA keywords for imager
 //0.40 Changed creation mechnism of the destination MS
 //0.41 Cleaned up the code for readability
+//0.42 Fixed the incorect weighting of partially flagged bands
 
 namespace LOFAR
 {
@@ -192,7 +193,13 @@ namespace LOFAR
         {
           for (int j = 0; j < new_nchan; j++)
           { inFREQ.get(i, old_temp);
-            new_temp(j) = old_temp(itsStart + j*itsStep + itsNChan/2);
+            if (itsStep % 2) //odd number of channels in step
+            { new_temp(j) = old_temp(itsStart + j*itsStep + (itsStep + 1)/2);
+            }
+            else //even number of channels in step
+            { new_temp(j) = 0.5 * (old_temp(itsStart + j*itsStep + itsStep/2 -1)
+                                   + old_temp(itsStart + j*itsStep + itsStep/2));
+            }
             outFREQ.put(i, new_temp);
           }
           for (int j = 0; j < new_nchan; j++)
