@@ -23,8 +23,8 @@
 # First replace all non-numeric characters and single e.+- by a blank.
 # Insert a blank if a - or + is preceeded by a digit.
 # Replace blanks by a newline.
-  sed -e 's/[^-+.e0-9]/ /g' $1 | sed -e 's/\(^\| \)[e.+-]\+\( \|$\)//g' | sed -e 's/^ \+//' -e 's/ \+$//' -e 's/\([0-9.]\)\([+-]\)/\1 \2/g' -e 's/ \+/\n/g' > /tmp/$pid.checkfloat_tmp.1
-  sed -e 's/[^-+.e0-9]/ /g' $2 | sed -e 's/\(^\| \)[e.+-]\+\( \|$\)//g' | sed -e 's/^ \+//' -e 's/ \+$//' -e 's/\([0-9.]\)\([+-]\)/\1 \2/g' -e 's/ \+/\n/g' > /tmp/$pid.checkfloat_tmp.2
+  sed -e 's/[^-+.e0-9]/ /g' $1 | sed -e 's/\(^\| \)[e.+-][e.+-]*\( \|$\)//g' | sed -e 's/^ *//' -e 's/ *$//' -e 's/\([0-9.]\)\([+-]\)/\1 \2/g' -e 's/  */\n/g' > /tmp/$pid.checkfloat_tmp.1
+  sed -e 's/[^-+.e0-9]/ /g' $2 | sed -e 's/\(^\| \)[e.+-][e.+-]*\( \|$\)//g' | sed -e 's/^ *//' -e 's/ *$//' -e 's/\([0-9.]\)\([+-]\)/\1 \2/g' -e 's/  */\n/g' > /tmp/$pid.checkfloat_tmp.2
 
 # Show the differences column-wise.
   diff -y --suppress-common-lines /tmp/$pid.checkfloat_tmp.1 /tmp/$pid.checkfloat_tmp.2 > /tmp/$pid.checkfloat_tmp.diff

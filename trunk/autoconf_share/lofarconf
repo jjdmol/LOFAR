@@ -79,7 +79,7 @@ fi
 
 # Get the default install directory.
 # It is the root of the build tree followed by installed/variant.
-lfr_back=`echo $lfr_pkg | sed -e "s%/[^/]\+%/..%g" -e "s%^[^/]\+%..%"`
+lfr_back=`echo $lfr_pkg | sed -e "s%/[^/][^/]*%/..%g" -e "s%^[^/][^/]*%..%"`
 lfr_install=`cd ../../$lfr_back && pwd`
 lfr_install=$lfr_install/installed/$lfr_cvdir
 
