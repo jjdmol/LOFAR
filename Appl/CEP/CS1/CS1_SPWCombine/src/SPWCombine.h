@@ -40,7 +40,6 @@ namespace LOFAR
     class SPWCombine
     {
     private:
-      int itsNumPolarizations;
       int itsNumAntennae;
       int itsNumPairs;
 
@@ -49,12 +48,14 @@ namespace LOFAR
     public:
       SPWCombine(void);
       ~SPWCombine(void);
+      int itsNumPolarizations;
       int itsNumChannels;
       int itsNumBands;
 
+      void TableResize(TableDesc tdesc, IPosition ipos, std::string name, Table& table);
       void GetMSInfo(MeasurementSet& myMS);
       void Combine(vector<MeasurementSet*> inMS, MeasurementSet& myMS, std::string Data);
     };
-  } //namespace CS1_Combiner
+  } //namespace CS1
 }; //namespace LOFAR
 #endif
