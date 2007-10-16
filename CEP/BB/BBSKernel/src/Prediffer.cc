@@ -860,7 +860,7 @@ void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
     // Initialize thread specific solvers.
     for(size_t domain = 0; domain < nDomains; ++domain)
     {
-    	solvers[domain].set(itsContext.unknownCount);
+    	solvers[domain].set(static_cast<int>(itsContext.unknownCount));
     	itsThreadContexts[0].solvers[domain] = &solvers[domain];
     	
     	for(size_t thread = 1; thread < itsThreadContexts.size(); ++thread)
