@@ -81,6 +81,24 @@ CS016_dipole10 = [Station('CS016_dipole10')]
 CS016_dipole14 = [Station('CS016_dipole14')]
 CS016_4dipoles2_6_10_14 = CS016_dipole2 + CS016_dipole6 + CS016_dipole10 + CS016_dipole14
 
+CS030_dipole0  = [Station('CS030_dipole0')]
+CS030_dipole7  = [Station('CS030_dipole7')]
+CS030_dipole10 = [Station('CS030_dipole10')]
+CS030_dipole14 = [Station('CS030_dipole14')]
+CS030_4dipoles = CS030_dipole0 + CS030_dipole7 + CS030_dipole10 + CS030_dipole14
+
+CS031_dipole16 = [Station('CS031_dipole16')]
+CS031_dipole22 = [Station('CS031_dipole22')]
+CS031_dipole24 = [Station('CS031_dipole24')]
+CS031_dipole31 = [Station('CS031_dipole31')]
+CS031_4dipoles = CS031_dipole16 + CS031_dipole22 + CS031_dipole24 + CS031_dipole31
+
+CS032_dipole34 = [Station('CS032_dipole34')]
+CS032_dipole37 = [Station('CS032_dipole37')]
+CS032_dipole42 = [Station('CS032_dipole42')]
+CS032_dipole46 = [Station('CS032_dipole46')]
+CS032_4dipoles = CS032_dipole34 + CS032_dipole37 + CS032_dipole42 + CS032_dipole46
+
 CS010_us0  = [Station('CS010_us0')]
 CS010_us1  = [Station('CS010_us1')]
 CS010_us2  = [Station('CS010_us2')]
@@ -109,3 +127,6 @@ AllMicroStations = CS010_4us + CS001_4us + CS008_4us + CS016_4us
 AllDipoles0_4_8_12 = CS010_4dipoles0_4_8_12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
 AllDipolesMixed = CS010_4dipoles0_4_8_12 + CS001_4dipoles2_6_10_14 + CS008_4dipoles2_6_10_14 + CS016_4dipoles2_6_10_14
 AllHBAs = CS010_HBAs + CS001_HBAs + CS008_HBAs + CS016_HBAs
+Mixed = CS010_us0 + CS010_dipole4 + CS010_dipole8 + CS010_dipole12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
+All24Dipoles = CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12 + CS030_4dipoles + CS031_4dipoles + CS032_4dipoles
+Test = CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
