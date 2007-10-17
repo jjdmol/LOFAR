@@ -25,7 +25,7 @@
 #define LOFAR_TRANSPORT_TH_ETHERNET_H
 
 #ifndef HAVE_BGL
-#ifndef USE_NOSOCKETS
+#ifndef USE_NO_TH_ETHERNET
 
 // \file
 // Transport mechanism for Ethernet 

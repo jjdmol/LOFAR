@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #ifndef HAVE_BGL
-#ifndef USE_NOSOCKETS
+#ifndef USE_NO_TH_ETHERNET
 
 #include <Transport/TH_Ethernet.h>
 #include <Transport/BaseSim.h>

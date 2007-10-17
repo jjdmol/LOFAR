@@ -23,7 +23,7 @@
 #ifndef LIBTRANSPORT_TEST_DH_ETHERNET_H
 #define LIBTRANSPORT_TEST_DH_ETHERNET_H
 
-#ifndef USE_NOSOCKETS
+#ifndef USE_NO_TH_ETHERNET
 
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
