@@ -24,7 +24,7 @@
 #
 # $Id$
 #
-VERSION="v1.2 20071017"		# solve mpi bug
+VERSION="v1.4 20071017"		# added possibility for custom scripts
 BINDIR=/opt/lofar/bin
 LOGDIR=/opt/lofar/log
 LEVELTABLE=${BINDIR}/../etc/swlevel.conf
@@ -61,12 +61,18 @@ start_prog()
 	withmpi=${3:1}
 
 	# check existance
-	[ -x $BINDIR/$prog ] || return
+	[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || return
+	
+	# if it is a shell script call the script
+	if [ -f $BINDIR/${prog}.sh ]; then
+		$BINDIR/${prog}.sh start
+		return
+	fi
 
-	ps -ef | grep -v grep | grep $prog 2>&1 >/dev/null
+	ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog 2>&1 >/dev/null
 	if [ $? -eq 0 ]; then
 		# program is running, show it
-		ps -ef | grep -v grep | grep $prog
+		ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog
 	else
 		echo Starting $prog
 		# PVSS needs special treatment
@@ -88,7 +94,7 @@ start_prog()
 			fi
 			sleep 1
 		fi
-		ps -ef | grep -v grep | grep $prog
+		ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog
 	fi
 }
 
@@ -104,10 +110,16 @@ stop_prog()
 	[ ! -z "$asroot" ] && asroot=sudo	
 
 	# check existance
-	[ -x $BINDIR/$prog ] || return
+	[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || return
+	
+	# if it is a shell script call the script
+	if [ -f $BINDIR/${prog}.sh ]; then
+		$BINDIR/${prog}.sh stop
+		return
+	fi
 
 	# get processlist
-	ps -ef | grep -v grep | grep $prog 2>&1 >/dev/null
+	ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog 2>&1 >/dev/null
 	if [ $? -ne 0 ]; then
 		return
 	fi
@@ -126,7 +138,7 @@ stop_prog()
 	fi
 
 	# first try normal kill
-	ps -ef | grep -v grep | grep $prog | awk '{ print $2 }' | while read pid
+	ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog | awk '{ print $2 }' | while read pid
 	do 
 		echo "Softly killing ${prog}(${pid})"
 		$asroot kill $pid
@@ -134,7 +146,7 @@ stop_prog()
 	done
 
 	# when normal kill did not work, kill is with -9
-	ps -ef | grep -v grep | grep $prog | awk '{ print $2 }' | while read pid
+	ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog | awk '{ print $2 }' | while read pid
 	do 
 		sleep 2
 		echo "Hard killing ${prog}(${pid})"
@@ -157,21 +169,28 @@ status_prog()
 		prog=`echo $line | cut -d":" -f6`
 
 		# check existance
-		[ -x $BINDIR/$prog ] || continue
-
+		[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || continue
+	
 		if [ $prevlevel -ne $levelnr ]; then
 			echo "---"
 			prevlevel=$levelnr
 		fi
-		ps -ef | grep -v grep | grep ${prog}" " 2>&1 >/dev/null
+
+		# if it is a shell script call the script
+		if [ -f $BINDIR/${prog}.sh ]; then
+			$BINDIR/${prog}.sh status $levelnr
+			continue
+		fi
+
+		ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep ${prog} 2>&1 >/dev/null
 		if [ $? -eq 0 ]; then
 			# program is running, show it
 #			pid=""
-#			ps -ef | grep -v grep | grep ${prog}" " | awk '{ print $2 }' | while read somepid
+#			ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep ${prog} | awk '{ print $2 }' | while read somepid
 #			do
 #				pid=${pid}" "${somepid}
 #			done
-			pid=`ps -ef | grep -v grep | grep ${prog}" " | awk '{ print $2 }'`
+			pid=`ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep ${prog} | awk '{ print $2 }'`
 		else
 			pid="DOWN"
 		fi
