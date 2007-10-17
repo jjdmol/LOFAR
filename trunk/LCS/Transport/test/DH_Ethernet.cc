@@ -20,7 +20,7 @@
 //
 //  $Id$
 
-#ifndef USE_NOSOCKETS
+#ifndef USE_NO_TH_ETHERNET
 
 #include "DH_Ethernet.h"
 

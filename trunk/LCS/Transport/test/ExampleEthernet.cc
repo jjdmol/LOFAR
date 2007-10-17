@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined(HAVE_BGL) || defined(USE_NOSOCKETS)
+#if defined(HAVE_BGL) || defined(USE_NO_TH_ETHERNET)
 // We can't use raw ethernet
 int main (int argc, const char** argv)
 {
