@@ -14,7 +14,7 @@ OLAP.DelayComp.hostname = list001
 # The ports for all (socket)connections
 
 OLAP.OLAP_Conn.AMCServerPort = 31337
-OLAP.DelayComp.ports = [7200..7220]
+OLAP.DelayComp.ports = [7200..7263]
 OLAP.OLAP_Conn.input_BGLProc_Ports = [8100..8163]
 OLAP.OLAP_Conn.BGLProc_Storage_Ports = [8300..8363]
 OLAP.firstInputPortnr = 4346
