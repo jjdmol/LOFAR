@@ -28,6 +28,7 @@
 #include <Common/LofarLogger.h>
 #include <cerrno>
 #include <unistd.h>    // for getpid() and sleep()
+#include <libgen.h>    // for basename()
 
 using namespace std;
 using namespace LOFAR;
