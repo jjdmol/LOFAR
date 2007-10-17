@@ -120,7 +120,7 @@ stop_prog()
 	fi
 
 	# first handle mpi programs
-	if [ ! -z "$withmpi"]; then
+	if [ ! -z "$withmpi" ]; then
 		$asroot cexec :0-11 killall -9 ${prog}
 		return
 	fi
