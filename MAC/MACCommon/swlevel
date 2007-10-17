@@ -194,7 +194,6 @@ goto_level()
 			asroot=`echo $line | cut -d":" -f4`
 			withmpi=`echo $line | cut -d":" -f5`
 			program=`echo $line | cut -d":" -f6`
-			echo stop_prog $program x$asroot x$withmpi
 			stop_prog $program x$asroot x$withmpi
 		done
 	done
