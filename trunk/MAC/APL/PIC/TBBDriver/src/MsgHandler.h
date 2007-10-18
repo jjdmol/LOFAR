@@ -65,7 +65,7 @@ namespace LOFAR {
 			private:
 				TbbSettings *TS;
 				
-				std::set<GCFPortInterface*> itsClientMsgList;  // list of clients witch receive messages
+				std::list<GCFPortInterface*> itsClientMsgList;  // list of clients witch receive messages
 				
 				TBBTriggerEvent			*itsTriggerE;
 				TBBErrorEvent				*itsErrorE;

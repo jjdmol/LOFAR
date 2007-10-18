@@ -85,6 +85,11 @@ void TrigCoefCmd::saveTbbEvent(GCFEvent& event)
 	boardmask = TS->activeBoardsMask();
 	setBoardMask(boardmask);
 	
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (TS->isBoardActive(boardnr) == false)
+			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+	}
+	
 	// select firt channel to handle
 	nextChannelNr();
 	

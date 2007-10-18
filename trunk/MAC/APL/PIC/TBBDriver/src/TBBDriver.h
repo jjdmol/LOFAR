@@ -70,6 +70,10 @@ namespace LOFAR{
 			// and transition to the busy state is made.
       GCFEvent::TResult init_state(GCFEvent& event, GCFPortInterface &port);
       
+      // The setup state. 
+			// This state is used to setup the boards after a new connection or 
+      // board reset, if completed an transition to the idle state is made.
+      GCFEvent::TResult setup_state(GCFEvent& event, GCFPortInterface &port);
       
       // The idle state. 
 			// This state is used to wait for events from the client
@@ -83,7 +87,7 @@ namespace LOFAR{
 			// All TPEvent will be transmittted imediallie
       GCFEvent::TResult busy_state(GCFEvent& event, GCFPortInterface &port);
 			
-			void undertaker();
+			//void undertaker();
 		
     private:
       // Copying is not allowed ??
@@ -105,6 +109,7 @@ namespace LOFAR{
 			bool							itsAliveCheck;
 			bool							itsSizeCheck;
 			uint32						itsActiveBoards;
+			uint32						itsNewBoards;
 			bool							itsActiveBoardsChange;
 			int32 						*itsResetCount;
 			
@@ -120,9 +125,8 @@ namespace LOFAR{
 			GCFTCPPort      itsAcceptor;     // listen for clients on this port
 			GCFETHRawPort*	itsBoard;        // array of ports, one for each TBB board
 			GCFTimerPort*		itsAliveTimer;
-			  
+			GCFTimerPort*		itsSetupTimer;
 			std::list<GCFPortInterface*> itsClientList;  // list of clients
-			std::list<GCFPortInterface*> itsDeadClients; // list of clients to cleanup
     };
 	} // end TBB namespace
 } // end LOFAR namespace

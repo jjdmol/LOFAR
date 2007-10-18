@@ -80,8 +80,8 @@ void RecordCmd::saveTbbEvent(GCFEvent& event)
 			if ((TS->getChState(channel) == 'A') || (TS->getChState(channel) == 'S')) {
 				itsChannelMask[board] |= (1 << board_channel);
 				TS->setChSelected(channel,true);
-				
-			} else {
+			}
+			if (TS->getChState(channel) == 'F') {
 				TS->setChStatus(channel,(uint16)(TBB_RCU_NOT_ALLOCATED >> 16));
 			}
 		}

@@ -198,6 +198,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 	itsBoardInfo = new BoardInfo[itsMaxBoards];
 	
 	for (int nr = 0;nr < itsMaxBoards; nr++) {
+		itsBoardInfo[nr].setupState = boardReset;
 		itsBoardInfo[nr].memorySize = 0;
 		itsBoardInfo[nr].srcIp = "";
 		itsBoardInfo[nr].dstIp = "";
@@ -206,8 +207,8 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 	}
 }
 
-//---- setActiveBoards ---------------------------
-void TbbSettings::setActiveBoards (uint32 activeboardsmask)
+//---- setActiveBoardsMask -----------------------
+void TbbSettings::setActiveBoardsMask (uint32 activeboardsmask)
 {
 	// clear rcu setting for boards not active anymore
 	uint32 mask;
@@ -220,6 +221,19 @@ void TbbSettings::setActiveBoards (uint32 activeboardsmask)
 	itsActiveBoardsMask = activeboardsmask;
 }
 
+//---- setActiveBoard ---------------------------
+void TbbSettings::setActiveBoard (int32 boardnr)
+{
+	itsActiveBoardsMask |= (1 << boardnr);
+}
+
+//---- resetActiveBoards ---------------------------
+void TbbSettings::resetActiveBoard (int32 boardnr)
+{
+	clearRcuSettings(boardnr);
+	itsActiveBoardsMask &= ~(1 << boardnr);
+}
+	
 //---- set Communication retries ----------------
 void TbbSettings::setMaxRetries(int32 retries)
 {

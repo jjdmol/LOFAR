@@ -175,8 +175,19 @@ void WritefCmd::sendTpEvent()
 				char info[256];
 				memset(info,0,256);
 				
-				char *tp_name = strstr(itsFileNameTp,"tp");
-				char *mp_name = strstr(itsFileNameMp,"mp");
+				char *tp_name = strrchr(itsFileNameTp,'/');
+				if (tp_name == 0) {
+					tp_name = itsFileNameTp;
+				} else {
+					tp_name += 1;
+				} 
+				
+				char *mp_name = strrchr(itsFileNameMp,'/');
+				if (mp_name == 0) {
+					mp_name = itsFileNameMp;
+				} else {
+					mp_name += 1;
+				}
 				
 				sprintf(info," %s %s",tp_name,mp_name);
 				LOG_DEBUG_STR(formatString("ImageInfo: %s",info));

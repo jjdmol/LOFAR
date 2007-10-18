@@ -88,9 +88,8 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 	
 	uint32 boardmask = 0;		
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr); 
-			
 		if (!TS->isBoardActive(boardnr)) { 
+			if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr);
 			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
 		}
 		

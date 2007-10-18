@@ -99,7 +99,7 @@ void ReadrCmd::saveTpAckEvent(GCFEvent& event)
 		itsTPackE = new TPReadrAckEvent(event);
 		
 		itsBoardStatus	= itsTPackE->status;
-		for (int32 an = 0; an < 512;an++) {
+		for (int32 an = 0; an < 256;an++) {
 			itsTBBackE->data[an]	= itsTPackE->data[an];
 		}
 		
