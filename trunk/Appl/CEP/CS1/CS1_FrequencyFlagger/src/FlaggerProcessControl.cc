@@ -28,7 +28,9 @@
 #include "MS_File.h"
 #include "FrequencyFlagger.h"
 
-#define FLAGGER_VERSION "0.10"
+#define FLAGGER_VERSION "0.20"
+// 0.10 initial version
+// 0.20 added more algorithms
 
 namespace LOFAR
 {
@@ -88,18 +90,8 @@ namespace LOFAR
 
       cout  << string(FLAGGER_VERSION) + string(" autoflagging by Adriaan Renting for LOFAR CS1 data\n") +
               string("This is experimental software, please report errors or requests to renting@astron.nl\n") +
-              string("Documentation can be found at: www.astron.nl/~renting\n");
+              string("Documentation can be found at: www.lofar.org/operations/doku.php?id=engineering:software:postprocessing_software\n");
       cout << itsMS << endl;
-      if (itsMS == "")
-      {
-        cerr  << "Usage: WSRT_flagger ms=test.MS crosspol=false window=13 min=5 max=5.5 flagrms=true flagdata=true existing=true" << endl
-              << "Where ms       [no default]    is the Measurementset" << endl
-              << "      existing [default true]  determines if existing flags are kept (no new flag cat. is created)" << endl << endl
-              << "Data at point window/2 will be flagged on:" << endl
-              << "      vis[window/2] - (median(Re(vis[])) + median(Im(vis[]))) " << endl
-              << "    > (min + (max-min)*baselinelength/maxbaselinelength)*sigma" << endl;
-        return false;
-      }
       myMS       = new MS_File(itsMS);
       itsFlagger = new FrequencyFlagger (myMS, itsThreshold);
       }
