@@ -62,9 +62,13 @@ int main (int argc, char *argv[]) {
 	// Always bring up the logger first
 	ConfigLocator	aCL;
 	string			progName(basename(argv[0]));
-	string			logPropFile(progName + ".log_prop");
+#ifdef HAVE_LOG4CPLUS
+        string			logPropFile(progName + ".log_prop");
 	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName + "-" + argv[3]);
-
+#else
+        string logPropFile(progName + ".debug");
+        INIT_LOGGER (aCL.locate(logPropFile).c_str());	
+#endif
 	// Check invocation syntax
 	if (argc < 3) {
 		LOG_FATAL_STR("Invocation error, syntax: " << progName << 

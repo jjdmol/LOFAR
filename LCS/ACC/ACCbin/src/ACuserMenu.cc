@@ -315,8 +315,13 @@ void showMenu()
 int main (int argc, char *argv[]) {
 	ConfigLocator	aCL;
 	string			progName(basename(argv[0]));
-	string			logPropFile(progName + ".log_prop");
-	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName);
+#ifdef HAVE_LOG4CPLUS
+        string			logPropFile(progName + ".log_prop");
+	INIT_LOGGER (aCL.locate(logPropFile).c_str());
+#else
+        string logPropFile(progName + ".debug");
+        INIT_LOGGER (aCL.locate(logPropFile).c_str());	
+#endif
 
 	char		aChoice = ' ';
 	while (aChoice != 'q') {
