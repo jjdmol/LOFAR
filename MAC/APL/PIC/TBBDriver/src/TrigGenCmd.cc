@@ -91,6 +91,12 @@ void TrigGenCmd::saveTbbEvent(GCFEvent& event)
 		if (itsChannelMask[boardnr] != 0)  boardmask |= (1 << boardnr);
 	}
 	setBoardMask(boardmask);
+	
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (TS->isBoardActive(boardnr) == false)
+			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+	}
+	
 	LOG_DEBUG_STR(formatString("boardmask = 0x%08X",boardmask));
 	
 	// select firt channel to handle

@@ -35,6 +35,8 @@
 namespace LOFAR {
   namespace TBB {
 
+enum SetupStateT {boardReset,boardCleared,boardFreed,boardReady};
+
 // info for all channels
 struct ChannelInfo
 {
@@ -61,11 +63,12 @@ struct ChannelInfo
 struct BoardInfo
 {
 	GCFPortInterface* port;
+	SetupStateT setupState; 
 	uint32	memorySize;
 	string	srcIp;
 	string	dstIp;
 	string	srcMac;
-	string	dstMac; 	
+	string	dstMac;
 };
 
 // forward declaration
@@ -120,6 +123,12 @@ public:
 	string getDstIp(int32 boardnr);
 	string getSrcMac(int32 boardnr);
 	string getDstMac(int32 boardnr);
+	SetupStateT getBoardState(int32 boardnr);
+	void setBoardState(int32 boardnr, SetupStateT setupstate);
+	void setActiveBoardsMask (uint32 activeboardsmask);
+	void setActiveBoard (int32 boardnr);
+	void resetActiveBoard (int32 boardnr);
+	
 
 	void setChSelected(int32 channelnr, bool selected);
 	void setChStatus(int32 channelnr, uint32 status);
@@ -134,6 +143,8 @@ public:
 	void setChDetectWindow(int32 channelnr, uint32 detect_window);
 	void setChTriggerDummy(int32 channelnr, uint32 dummy);
 	void setChFilterCoefficient(int32 channelnr, int32 coef_nr, uint32 coef);
+	
+	void clearRcuSettings(int32 boardnr);
 	
 	void convertRcu2Ch(int32 rcunr, int32 *boardnr, int32 *channelnr);
 	void convertCh2Rcu(int32 channelnr, int32 *rcunr);
@@ -150,11 +161,9 @@ protected:	// note TBBDriver must be able to set them
 	void getTbbSettings();
 	void setConversionTable(int32 rcu, int32 channel); 
 	void setMaxBoards (int32 maxboards);
-	void setActiveBoards (uint32 activeboardsmask);
 	void setMaxRetries(int32 retries);
 	void setTimeOut(double timeout);
 	void setBoardPorts(int board, GCFPortInterface* board_ports);
-	void clearRcuSettings(int32 boardnr);
 	
 private:
 	// Copying is not allowed
@@ -209,6 +218,9 @@ inline	int32 TbbSettings::maxRetries()	{ return (itsMaxRetries);   }
 inline	double TbbSettings::timeout()	{ return (itsTimeOut);   }
 //inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (itsBoardPorts[boardnr]); }
 inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (*itsBoardInfo[boardnr].port); }
+
+inline	void TbbSettings::setBoardState(int32 boardnr, SetupStateT setupstate) { itsBoardInfo[boardnr].setupState = setupstate; }
+inline	SetupStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].setupState); }
 
 //---- inline functions for channel information ------------
 inline	bool TbbSettings::isChSelected(int32 channelnr) { return (itsChannelInfo[channelnr].Selected); }

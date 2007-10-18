@@ -56,7 +56,30 @@ static const int FL_BLOCK_SIZE 			= FL_SIZE / FL_N_BLOCKS; // 1.024 bytes
 static const int FL_SECTORS_IN_PAGE	= FL_PAGE_SIZE / FL_SECTOR_SIZE; // 16 sectors per page
 static const int FL_BLOCKS_IN_PAGE	= FL_PAGE_SIZE / FL_BLOCK_SIZE; // 2048 blocks per page
 
-  	
+// register read/write table
+// 0 = not used, 1 = read only, 2 = write only, 3 = read/write
+static const int REG_NOT_USED = 0;
+static const int REG_READ_ONLY = 1;
+static const int REG_WRITE_ONLY = 2;
+static const int REG_READ_WRITE = 3;
+static const int REG_TABLE_3[8][8] = {
+	{2,2,2,2,2,2,2,2},
+	{2,2,2,2,2,2,0,0},
+	{2,2,2,2,1,1,1,0},
+	{2,2,2,2,1,1,1,0},
+	{2,2,2,2,1,1,1,0},
+	{2,2,2,2,1,1,1,0},
+	{2,2,0,3,1,0,0,0},	// 6-2, size 2048, to big for 100Mb/s
+	{1,1,1,3,3,3,3,1}};
+static const int REG_SIZE[8][8] = {
+	{1,1,1,1,1,1,1,1},
+	{1,1,1,1,1,1,0,0},
+	{1,1,1,1,2,1,2,0},
+	{1,1,1,1,2,1,2,0},
+	{1,1,1,1,2,1,2,0},
+	{1,1,1,1,2,1,2,0},
+	{1,1,0,2,1,0,0,0},	// 6-2, size 2048, to big for 100Mb/s
+	{1,1,1,8,4,16,4,16}};  	
 //-----------------------------------------------------------------------------
 // class Command :base class for control commands towards the TBBDriver.
 //
@@ -164,6 +187,18 @@ public:
 		return(itsCmdDone);
 	}
 	
+	//--------------------------------------------------------
+	void setCmdSendNext(bool next)
+	{
+		itsCmdSendNext = next;
+	}
+	
+	//--------------------------------------------------------
+	bool isCmdSendNext() const
+	{
+		return(itsCmdSendNext);
+	}
+	
 	//--selection is done-------------------------------------	
 	void setSelected(bool select)
 	{
@@ -171,7 +206,7 @@ public:
 	}
 	
 	//--check if selection is done----------------------------
-	bool getSelected(void) const
+	bool isSelectionDone(void) const
 	{
 		return itsSelected;	
 	}
@@ -236,6 +271,7 @@ protected:
   	itsPort(port),
   	itsSelected(false),
   	itsCmdDone(false),
+  	itsCmdSendNext(true),
 		itsCmdType(0)
 	{
 	}
@@ -246,6 +282,7 @@ protected:
 	GCFPortInterface& 			itsPort;
 	bool		itsSelected;
 	bool		itsCmdDone;
+	bool		itsCmdSendNext;
 	int			itsCmdType;
 	std::list<int>	itsSelection;
 		
@@ -364,15 +401,15 @@ class TrigCoefficientCmd : public Command
 		virtual ~TrigCoefficientCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
-		void setC0(int16 c0) { itsC0 = c0; }
-		void setC1(int16 c1) { itsC1 = c1; }
-		void setC2(int16 c2) { itsC2 = c2; }
-		void setC3(int16 c3) { itsC3 = c3; }
+		void setC0(uint16 c0) { itsC0 = c0; }
+		void setC1(uint16 c1) { itsC1 = c1; }
+		void setC2(uint16 c2) { itsC2 = c2; }
+		void setC3(uint16 c3) { itsC3 = c3; }
 	private:
-		int16 itsC0;
-		int16 itsC1;
-		int16 itsC2;
-		int16 itsC3;
+		uint16 itsC0;
+		uint16 itsC1;
+		uint16 itsC2;
+		uint16 itsC3;
 };
 
 //-----------------------------------------------------------------------------
@@ -384,6 +421,18 @@ class TrigInfoCmd : public Command
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
 	private:
+};
+
+//-----------------------------------------------------------------------------
+class ListenCmd : public Command
+{
+	public:
+		ListenCmd(GCFPortInterface& port);
+		virtual ~ListenCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+	private:
+		int32 itsCmdStage;
 };
 
 //-----------------------------------------------------------------------------
@@ -595,6 +644,8 @@ class TestDdrCmd : public Command
 		uint32	itsTestPatern;
 		uint32	itsWordLo;
 		uint32	itsWordHi;
+		int	itsAddrLineErrors;
+		int	itsDataLineErrors;
 };
 
 //-----------------------------------------------------------------------------
@@ -605,7 +656,14 @@ class ReadrCmd : public Command
 		virtual ~ReadrCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setMp(uint32 mp) {	itsMp = mp;	}
+		void setPid(uint32 pid) {	itsPid = pid;	}
+		void setRegId(uint32 regid) {	itsRegId = regid;	}
+		
 	private:
+		int32 itsMp;
+		int32 itsPid;
+		int32 itsRegId;
 };
 
 //-----------------------------------------------------------------------------
@@ -616,7 +674,15 @@ class WriterCmd : public Command
 		virtual ~WriterCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setMp(uint32 mp) {	itsMp = mp;	}
+		void setPid(uint32 pid) {	itsPid = pid;	}
+		void setRegId(uint32 regid) {	itsRegId = regid;	}
+		void setData(int data_nr, uint32 data) { itsData[data_nr] = data; }
 	private:
+		int32 itsMp;
+		int32 itsPid;
+		int32 itsRegId;
+		uint32 itsData[16];	// total of 4 x 16 = 64 bytes 
 };
 
 //-----------------------------------------------------------------------------
@@ -716,7 +782,7 @@ private:
 	std::list<int> strtolist(const char* str, int max);
   void logMessage(ostream& stream, const string& message);
 	
-	void help();
+	void commandHelp(int level);
 private:
   // ports
   GCFPort				itsServerPort;

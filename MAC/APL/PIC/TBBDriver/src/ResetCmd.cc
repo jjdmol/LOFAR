@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <unistd.h>
 
 #include "ResetCmd.h"
 
@@ -64,47 +65,37 @@ bool ResetCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ResetCmd::saveTbbEvent(GCFEvent& event)
 {
+	uint32	boardmask = 0;
+	
 	itsTBBE	= new TBBResetEvent(event);
 	itsTPE->opcode			= TPRESET;
 	itsTPE->status			=	0;
 		
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
 		if (itsTBBE->boardmask & (1 << boardnr)) {
-			if (TS->boardPort(boardnr).isConnected())
+			boardmask |= (1 << boardnr);
+			if (TS->boardPort(boardnr).isConnected()) {
 				TS->boardPort(boardnr).send(*itsTPE);
-			
-			// reset channel information for selected board	
-			for (int channelnr = (boardnr * 16); channelnr < ((boardnr * 16) + 16); channelnr++) {
-				TS->setChSelected(channelnr, false);
-				TS->setChState(channelnr, 'F');
-				TS->setChStartAddr(channelnr, 0);
-				TS->setChPageSize(channelnr, 0);				
 			}
 		} 
 	}
-	delete itsTBBE;	
+	TS->setActiveBoardsMask(boardmask);
 	setDone(true);
+	delete itsTBBE;	
 }
 
 // ----------------------------------------------------------------------------
 void ResetCmd::sendTpEvent()
 {
-	// sending reset is done in saveTbbEvent()
-	// because sendTpEvent() is only posible for active boards
+	// empty
 }
 
 // ----------------------------------------------------------------------------
 void ResetCmd::saveTpAckEvent(GCFEvent& event)
 {
-	// in case of a time-out, set error mask
-	if (event.signal == F_TIMER) {
-		;
-	}
-	else {
-		itsTPackE = new TPResetAckEvent(event);
-		
-		delete itsTPackE;
-	}
+	//itsTPackE = new TPResetAckEvent(event);
+	//delete itsTPackE;
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------
@@ -114,6 +105,6 @@ void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		if (itsTBBackE->status_mask[boardnr] == 0)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
-	
+	sleep(3);
 	clientport->send(*itsTBBackE);
 }

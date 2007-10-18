@@ -47,18 +47,16 @@ MsgHandler::~MsgHandler()
 //-----------------------------------------------------------------------------
 void MsgHandler::addClient(GCFPortInterface& port)
 {
-	itsClientMsgList.insert(&port);
-
-	//itsClientMsgList.push_back(&port);
-	//itsClientMsgList.sort();
-	//itsClientMsgList.unique();		
+	itsClientMsgList.push_back(&port);	// add client to list
+	
+	itsClientMsgList.sort();	// and remove double inputs
+	itsClientMsgList.unique();
 }
 
 //-----------------------------------------------------------------------------
 void MsgHandler::removeClient(GCFPortInterface& port)
 {
-	itsClientMsgList.erase(&port);
-	//itsClientMsgList.remove(&port);		
+	itsClientMsgList.remove(&port);	// remove client from list
 }
 
 //-----------------------------------------------------------------------------
@@ -66,7 +64,7 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 {
 	TPTriggerEvent	*TPE;
 	TPE	= new TPTriggerEvent(event);
-	int channel = TPE->trigger.channel + (boardnr * TS->maxBoards());	
+	int channel = TPE->trigger.channel + (boardnr * TS->nrChannelsOnBoard());	
 	TS->convertCh2Rcu(channel, &itsTriggerE->rcu);
 	itsTriggerE->sequence_nr			=	TPE->trigger.sequence_nr;
 	itsTriggerE->time							=	TPE->trigger.time;
@@ -105,7 +103,7 @@ void MsgHandler::sendBoardChange(uint32 activeboards)
 void MsgHandler::sendMessage(GCFEvent& event)
 {
   if (!itsClientMsgList.empty()) {
-    for (set<GCFPortInterface*>::iterator it = itsClientMsgList.begin();
+    for (list<GCFPortInterface*>::iterator it = itsClientMsgList.begin();
          it != itsClientMsgList.end();
          it++)
     {

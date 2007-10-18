@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <unistd.h>
 
 #include "ClearCmd.h"
 
@@ -93,27 +94,18 @@ void ClearCmd::sendTpEvent()
 // ----------------------------------------------------------------------------
 void ClearCmd::saveTpAckEvent(GCFEvent& event)
 {
-	// in case of a time-out, set error mask
-	if (event.signal == F_TIMER) {
-		;
-	}	else {
-		itsTPackE = new TPClearAckEvent(event);
-		
-		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
-		
-		// reset channel-information for selected board	
-		if (itsTPackE->status == 0) {
-			for (int channelnr = (getBoardNr() * 16); channelnr < ((getBoardNr() * 16) + 16); channelnr++) {
-				TS->setChSelected(channelnr, false);
-				TS->setChState(channelnr, 'F');
-				TS->setChStartAddr(channelnr, 0);
-				TS->setChPageSize(channelnr, 0);				
-			}
-		}
-		LOG_DEBUG_STR(formatString("Received ClearAck from boardnr[%d]", getBoardNr()));
-		delete itsTPackE;
+	itsTPackE = new TPClearAckEvent(event);
+	
+	if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
+		itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));	
+	
+	// reset channel-information for selected board	
+	if (itsTPackE->status == 0) {
+		TS->clearRcuSettings(getBoardNr());	
 	}
+	LOG_DEBUG_STR(formatString("Received ClearAck from boardnr[%d]", getBoardNr()));
+	delete itsTPackE;
+	
 	nextBoardNr();
 }
 
@@ -124,6 +116,6 @@ void ClearCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		if (itsTBBackE->status_mask[boardnr] == 0)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
-	
+	sleep(3);
 	clientport->send(*itsTBBackE);
 }
