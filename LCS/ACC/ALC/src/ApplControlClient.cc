@@ -78,14 +78,14 @@ ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 
 	// Now build the connection to our own dedicated AC
 	in_addr		IPaddr;
-	IPaddr.s_addr = htonl(aRequest.itsAddr);	// network byte-order
-	string	host  = inet_ntoa(IPaddr);			// why we have to swap the word is a mistery.
+	IPaddr.s_addr = aRequest.itsAddr;	// network byte-order
+	string	host  = inet_ntoa(IPaddr);
 	uint16	port  = ntohs(aRequest.itsPort);
 	LOG_DEBUG(formatString("Private ACserver is at %s:%d, trying to connect", 
 														host.c_str(), port));
 
-	LOG_DEBUG("Waiting 5 seconds before starting up the ApplController");
-	sleep (5);					// give AC a little time to start up.
+	LOG_DEBUG("Waiting 3 second before starting up the ApplController");
+	sleep (3);
 
 	itsCommChan = new ApplControlComm(host, toString(port), syncClient);
 	ASSERTSTR(itsCommChan, "Unable to allocate a communication channel");
