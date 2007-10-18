@@ -113,7 +113,12 @@ AC_CHECK_FILE([$mpich_prefix/bin/mpicc],
 
 		MPIBIN="$mpich_prefix/bin"
 		MPICH_CC="$MPIBIN/mpicc"
-		MPICH_CXX="$MPIBIN/mpiCC -CC=\"$CXX\""
+		case `uname -s` in
+		# Note that OS-X is case-insensitive, thus needs mpicxx.
+		# Also it looks as if -CCdoes not work there.
+    		  Darwin*) MPICH_CXX="$MPIBIN/mpicxx";;
+		  *)       MPICH_CXX="$MPIBIN/mpiCC -CC=\"$CXX\"";;
+		esac
 		LIBTOOL="$LIBTOOL "
 
 		if test "$mpi_profiler" = "yes"; then

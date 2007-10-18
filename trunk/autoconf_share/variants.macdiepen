@@ -9,3 +9,5 @@ shmem.var: --without-shmem
 boost.var: --with-boost=/Users/diepen/conrad/svnCONRAD/3rdparty/boost/tags/boost-1.34.1
 
 cppflags.var: --with-cppflags="-DUSE_NO_TH_ETHERNET"
+
+mpich.var: --with-mpich=/usr/local
