@@ -45,7 +45,7 @@
 //	- INIT_LOGGER_AND_WATCH
 //
 #define INIT_LOGGER(filename) \
-	::LOFAR::LFDebug::initLevels (::LOFAR::string(filename) + ".debug")
+	::LOFAR::LFDebug::initLevels (::LOFAR::string(filename))
 
 //# Note: 'watch' functionality not available
 #define INIT_LOGGER_AND_WATCH(filename,interval) \
