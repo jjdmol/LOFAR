@@ -215,44 +215,41 @@ namespace LOFAR
       vector<int>    RMSCounter(NumPolarizations, 0);
       bool           FlagCompleteRow = true;
       int            flagcount       = 0;
-      for (int i = NumChannels-1; i >= 0; i--) //calculata RMS of unflagged datapoints
-      {
-        for (int j = NumPolarizations-1; j >= 0; j--)
-        {
-          if (!ExistingFlags || !Flags(j, i))
-          {
-            MS[j] += pow(abs(Timeslots(j, i)), 2);
-            RMSCounter[j] += 1;
-          }
-        }
-      }
       for (int j = NumPolarizations-1; j >= 0; j--)
       {
+        for (int i = NumChannels-1; i >= 0; i--) //calculata RMS of unflagged datapoints
+        {
+          if (!ExistingFlags || !Flags(j, i))
+          { double temp = pow(abs(Timeslots(j, i)), 2);
+            if (!isNaN(temp))
+            {
+              MS[j] += temp;
+              RMSCounter[j] += 1;
+            }
+          }
+        }
         if (RMSCounter[j])
         { RMS[j] = sqrt(MS[j] /RMSCounter[j]);
-        }
-      }
-      for (int i = NumChannels-1; i >= 0; i--)
-      {
-        bool FlagAllPolarizations = false;
-        for (int j = NumPolarizations-1; j >= 0; j--)
-        { //we need to loop twice, once to determine FlagAllCorrelations
-          if (!FlagAllPolarizations || !Flags(j, i))
+          for (int i = NumChannels-1; i >= 0; i--)
           {
-            FlagAllPolarizations |= RMS[j] * FlagThreshold < abs(Timeslots(j, i));
+            if (!ExistingFlags || !Flags(j, i))
+            { double temp = abs(Timeslots(j, i));
+              bool flag   = isNaN(temp) || RMS[j] * FlagThreshold < temp;
+              //cout << RMS[j] << " " << (RMS[j] * FlagThreshold) << " " << temp << " " << (flag) << endl;
+              if (flag)
+              { flagcount++;
+              }
+              else
+              { FlagCompleteRow = false;
+              }
+              Flags(j, i) = flag || (ExistingFlags && Flags(j, i));
+            }
           }
         }
-        for (int j = NumPolarizations-1; j >= 0; j--)
-        { //the second loop we set the flags
-          if (FlagAllPolarizations)
-          { Flags(j, i) = true;
-            flagcount++;
-          }
-          else
-          {
-            FlagCompleteRow = false;
-            Flags(j, i)     = false; //this can set an existing flag to false if ExistingFlags == False, othewise RMS[j] == 0
-          }
+        else
+        {
+          flagcount += NumChannels;
+          Flags.row(j) = true;
         }
       }
       //these need to be separated out into a different function for clarity
