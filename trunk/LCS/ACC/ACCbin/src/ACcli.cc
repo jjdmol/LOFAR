@@ -50,7 +50,11 @@ void printUsage() {
 }
 
 int main (int argc, char *argv[]) {
+#ifdef HAVE_LOG4CPLUS
   INIT_VAR_LOGGER ("../etc/ACcli", basename(argv[0]));
+#else
+  INIT_LOGGER ("../etc/ACcli");	
+#endif
 
   if (argc < 3) {
     printUsage();

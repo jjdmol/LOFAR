@@ -46,7 +46,12 @@ int main (int /*argc*/, char* argv[]) {
 #else
 	string		logPropFile(progName + ".debug");
 #endif
+#ifdef HAVE_LOG4CPLUS
 	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName);
+#else
+        INIT_LOGGER (aCL.locate(logPropFile).c_str());	
+	
+#endif	
 	LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
 	// Tell operator we are trying to start up.

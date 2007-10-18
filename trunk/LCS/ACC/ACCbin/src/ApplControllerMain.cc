@@ -48,8 +48,13 @@ int main (int	argc, char*	argv[])
 	// Always bring up he logger first
 	ConfigLocator	aCL;
 	string			progName(basename(argv[0]));
-	string			logPropFile(progName + ".log_prop");
+#ifdef HAVE_LOG4CPLUS
+        string			logPropFile(progName + ".log_prop");
 	INIT_VAR_LOGGER (aCL.locate(logPropFile).c_str(), progName + "-" + argv[1]);
+#else
+        string logPropFile(progName + ".debug");
+        INIT_LOGGER (aCL.locate(logPropFile).c_str());	
+#endif
 	LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
 	// Check invocation syntax
