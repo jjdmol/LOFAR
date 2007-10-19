@@ -34,7 +34,7 @@
 
 using namespace LOFAR;
 
-#ifdef HAVE_MPI
+#if defined(HAVE_MPI)  &&  defined(HAVE_SHMEM)
 
 // This test program is meant for testing ShMem in an MPI environment.
 
