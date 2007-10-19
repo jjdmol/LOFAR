@@ -155,8 +155,16 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 			LOG_INFO("Connection lost to a not-registered LofarLogger client.");
 		}
 		else {
-			LOG_INFO_STR("Closing log-stream to " << iter->second.DPname << ", passed " 
+			if (iter->second.valid) {
+				LOG_INFO_STR("Closing log-stream to " << iter->second.DPname << ", passed " 
 							<< iter->second.msgCnt << " messages to the database");
+			}
+			else if (!iter->second.DPname.empty()) {
+				LOG_INFO_STR("Closing log-stream to " << iter->second.DPname);
+			}
+			else {
+				LOG_INFO("Closing unknown log-stream");
+			}
 		}
 		port.close();
 	}
@@ -222,19 +230,17 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 		kvlTimestamp.tv_sec  = l4pTimestamp.sec();
 		kvlTimestamp.tv_usec = l4pTimestamp.usec();
 
-		// log!
-		//TODO
-		// LOG_KEYVALUE_TS(PVSSdp[0], value, KVL_ORIGIN_MAC, kvlTimestamp);
-		//
+		LOG_KEYVALUE_TS(PVSSdp[0], value, KVL_ORIGIN_MAC, kvlTimestamp);
 #endif
+
 		// convert logger event to DP log msg
 		string plMsg = logEvent.getTimestamp().getFormattedTime("%d-%m-%y %H:%M:%S.%q") 
 						+ "|" + msg;
 
 		GCFPVString plValue(plMsg);
 		PVSSresult	result = itsDPservice->setValue(PVSSdp, plValue);
-		if (result != PVSS::SA_NO_ERROR) {
-			LOG_DEBUG_STR("setValue returned " << result);
+		if (result != PVSS::SA_NO_ERROR && result != PVSS::SA_SCADA_NOT_AVAILABLE) {
+			_registerFailure(port);
 		}
 	}
 	break;
@@ -268,17 +274,43 @@ bool LoggingProcessor::_readFromPortData(GCFPortInterface& port, SocketBuffer& b
 //
 // _seachClientDP(logEvent, port)
 //
+// Returns the name of the DP the message must be logged to.
+// When there is no DP connected yet to the port the message is analysed to
+// find the name of the DP. In order not the keep searching for DPnames
+// the DPname must be in one of the first ten messages otherwise the port
+// entry is marked 'invalid' and the messages or not processed anymore.
+// The 'valid' flag is also used when the DP does not exist in the database
+// or when database report more than 10 errors on that DP.
+//
 string LoggingProcessor::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
-								 GCFPortInterface&			port)
+									 	 GCFPortInterface&			port)
 {
-	// Known client with valid DP?
+	// Known client ?
 	LogClientMap::iterator iter = itsClients.find(&port);
-	if (iter != itsClients.end() && iter->second.valid) {
-		iter->second.msgCnt++;
-		return (iter->second.DPname);			// just pass its DPname
+	if (iter == itsClients.end()) {
+		itsClients[&port] = LogClient();	// no, new client
+		iter = itsClients.find(&port);
+	}
+	else {	// yes, known client
+		if (iter->second.valid) {			// valid DP name
+			iter->second.msgCnt++;
+			return (iter->second.DPname);	// return DPname [1][3]
+		}
 	}
 
-	// Unknown client, or known client without atry to find its DPname
+	// Filled DPname but invalid name? return failure.
+	if (!iter->second.valid && !iter->second.DPname.empty()) {
+		return ("");	// [2][4]
+	}
+
+	// DPname is not filled in yet, tried to find it if we are still
+	// within the first 10 messages.
+	if (++(iter->second.msgCnt) > 0) {
+		// when msgCnt reached 0 we could report that we tried it 10 times
+		// but we don't know the name of the log-stream, so just return
+		return ("");
+	}
+
 	// Level must be INFO
 	if (logEvent.getLogLevel() != INFO_LOG_LEVEL) {
 		return ("");
@@ -309,6 +341,23 @@ string LoggingProcessor::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 
 	return (DPname);
 }
+
+//
+// _registerFailure(port)
+//
+void LoggingProcessor::_registerFailure(GCFPortInterface&		port)
+{
+	LogClientMap::iterator iter = itsClients.find(&port);
+	if (iter == itsClients.end()) {
+		return;
+	}
+
+	if (++(iter->second.errCnt) > 10) {
+		iter->second.valid = false;
+		LOG_INFO_STR("Log-stream to " << iter->second.DPname << " keeps reporting errors, ignoring stream");
+	}
+}
+
 
   } // namespace RTDBDaemons
  } // namespace GCF

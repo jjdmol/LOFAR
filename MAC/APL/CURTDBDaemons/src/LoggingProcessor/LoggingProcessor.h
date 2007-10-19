@@ -56,7 +56,8 @@ private:
 	bool _readFromPortData(TM::GCFPortInterface& 				port, 
 						   log4cplus::helpers::SocketBuffer&	buf);
 	string _searchClientDP(log4cplus::spi::InternalLoggingEvent&	logEvent,
-						   GCFPortInterface&			port);
+						   GCFPortInterface&						port);
+	void _registerFailure (GCFPortInterface&	port);
 
 	// data members        
 	TM::GCFTCPPort*			itsListener;
@@ -66,9 +67,10 @@ private:
 	struct	LogClient {
 		string		DPname;
 		int32		msgCnt;
+		int32		errCnt;
 		bool		valid;
-		LogClient() : msgCnt(-10),valid(false) {};
-		explicit LogClient(const string& name) : DPname(name),msgCnt(-10),valid(false) {};
+		LogClient() : msgCnt(-10),errCnt(0),valid(false) {};
+		explicit LogClient(const string& name) : DPname(name),msgCnt(-10),errCnt(0),valid(false) {};
 	};
 
 	typedef map<TM::GCFPortInterface*, LogClient> 	LogClientMap;
