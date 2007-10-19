@@ -19,9 +19,9 @@ ServerName	  	  | id						| value
 ------------------+-------------------------+-------
 FSM					F_FSM_PROTOCOL		      1
 PORT				F_PORT_PROTOCOL		      2
-PML					F_GCF_PROTOCOL +  0       3
-PI					F_GCF_PROTOCOL +  1       4
-PA					F_GCF_PROTOCOL +  2	      5
+PML					F_GCF_PROTOCOL +  0       3		// Obsolete
+PI					F_GCF_PROTOCOL +  1       4		// Obsolete
+PA					F_GCF_PROTOCOL +  2	      5		// Obsolete
 SB					F_GCF_PROTOCOL +  3       6
 KVL					F_GCF_PROTOCOL +  4	      7
 
