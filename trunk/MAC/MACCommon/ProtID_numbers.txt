@@ -7,6 +7,8 @@
 // 			 in GCF. It is recommended to NOT use this 'id' in APL.
 // Note: The id's are specified in <ServerName>_Protocol.prot files. 
 
+// $Id$
+
 enum 
 { 
 	F_FSM_PROTOCOL = 1,		// state machine protocol (encoded in msb)
