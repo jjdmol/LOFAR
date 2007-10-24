@@ -28,6 +28,7 @@
 
 //# Includes
 #include <ParmDB/ParmDB.h>
+#include <casa/Containers/Record.h>
 #include <vector>
 #include <map>
 #include <set>
@@ -84,10 +85,18 @@ public:
   // The domain is given by the start and end values, while the grid is
   // given by nx and ny.
   // The vector values in the map are in fact 2-dim arrays with axes nx and ny.
+  // @{
   std::map<std::string, std::vector<double> >
     getValues (const std::string& parmNamePattern,
 	       double startx, double endx, int nx,
 	       double starty, double endy, int ny);
+
+  // The Record contains a map of parameter name to Array<double>.
+  casa::Record
+    getValuesRec (const std::string& parmNamePattern,
+		  double startx, double endx, int nx,
+		  double starty, double endy, int ny);
+  // @}
 
   // Get the parameter coefficients for the given given parameters and domain
   // which have been solved in the given time frame. Default is the
@@ -98,11 +107,20 @@ public:
   // The solutions are in order of timestamp.
   // A parameter can have multiple solve domains, so a domain name
   // (:domain<seqnr>) is added to the name to make it unique.
+  // @{
   std::map<std::string, std::vector<double> >
     getHistory (const std::string& parmNamePattern,
 		double startx, double endx,
 		double starty, double endy,
 		double startSolveTime=0, double endSolveTime=1e25);
+
+  // The Record contains a map of parameter name to Array<double>.
+  casa::Record
+    getHistoryRec (const std::string& parmNamePattern,
+		   double startx, double endx,
+		   double starty, double endy,
+		   double startSolveTime=0, double endSolveTime=1e25);
+  // @}
 
   // Get the expressions and the names of their children.
   const std::map<std::string,std::set<std::string> >& getExprs() const
@@ -113,6 +131,10 @@ private:
   // It is done recursively, so a child can be an expression.
   void processExpr (const std::map<std::string,ParmValueSet>& defValues, 
 		    const std::string& expr, std::set<std::string>& ch);
+
+  // Copy the values from a record to a map.
+  std::map<std::string, std::vector<double> >
+    record2Map (const casa::Record& rec) const;
 
   // Compare function for sorting ParmValues in time order.
   static bool pvLess (const ParmValue& left, const ParmValue& right);

@@ -18,7 +18,7 @@ AC_PROG_CXX
 AM_PROG_LEX
 AC_PROG_INSTALL
 AC_PROG_LN_S
-AC_DISABLE_SHARED
+dnl AC_DISABLE_SHARED
 AC_PROG_LIBTOOL
 
 dnl Checks for libraries.
@@ -47,16 +47,22 @@ AC_TYPE_SIZE_T
 dnl Checks for library functions.
 AC_FUNC_VPRINTF
 
+dnl Checks for Python
+AM_PATH_PYTHON
+
 dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(CEP/BB/BBSKernel,BBSKernel,,1,BBSKernel/MNS/MeqParmFunklet.h)
 lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
+lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 
+lofar_EXTERNAL(pyrap,1,pyrap/Converters/PycBasicData.h)
 lofar_AIPSPP(1,"-ltables -lscimath -lscimath_f -lcasa")
-#lofar_EXTERNAL(pq,,libpq-fe.h, pq, /usr/local/pgsql)
-#lofar_EXTERNAL(pqxx,2.5.5,pqxx/pqxx, pqxx)
+lofar_EXTERNAL(boost,1,boost/python.hpp,boost_python)
+lofar_PYTHON(1)
 
 dnl
 dnl Output Makefiles
