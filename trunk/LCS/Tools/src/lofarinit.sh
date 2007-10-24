@@ -28,7 +28,14 @@
 # The actual value is filled in by make install (see Makefile.am).
 lfr_root=. #filled in by install
 
-# First strip the current LOFARROOT from PATH and LD_LIBRARY_PATH
+# Get python version.
+a_pyv=`python --version 2>&1`
+a_pyvv=`echo $a_pyv | sed -e "s/Python \([0-9]\.[0-9]\).*/\1/"`
+if test "$a_pyv" = "$a_pyvv"; then
+  a_pyvv=2.4
+fi
+
+# First strip the current LOFARROOT from PATH, LD_LIBRARY_PATH, and PYTHONPATH.
 # Take care that a possible . is preceeded by a backslash (for the later sed).
 if [ "$LOFARROOT" != "" ]; then
     lfr_path=`echo $LOFARROOT | sed -e 's/\./\\\./g'`
@@ -38,6 +45,9 @@ if [ "$LOFARROOT" != "" ]; then
     lfr_lib="$lfr_path/lib"
     LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$lfr_lib:%:%g" -e "s%^$lfr_lib:%%"  -e "s%:$lfr_lib$%%" -e "s%^$lfr_lib$%%"`
     export LD_LIBRARY_PATH
+    lfr_pyt="$lfr_path/lib/python$a_pyvv/site-packages"
+    PYTHONPATH=`echo $PYTHONPATH | sed -e "s%:$lfr_pyt:%:%g" -e "s%^$lfr_pyt:%%"  -e "s%:$lfr_pyt$%%" -e "s%^$lfr_pyt$%%"`
+    export PYTHONPATH
 fi
 
 # Now define the new LOFARROOT (if possible)
@@ -57,6 +67,9 @@ else
     lfr_lib="$lfr_path/lib"
     LD_LIBRARY_PATH=`echo $LD_LIBRARY_PATH | sed -e "s%:$lfr_lib:%:%g" -e "s%^$lfr_lib:%%"  -e "s%:$lfr_lib$%%" -e "s%^$lfr_lib$%%"`
     export LD_LIBRARY_PATH
+    lfr_pyt="$lfr_path/lib/python$a_pyvv/site-packages"
+    PYTHONPATH=`echo $PYTHONPATH | sed -e "s%:$lfr_pyt:%:%g" -e "s%^$lfr_pyt:%%"  -e "s%:$lfr_pyt$%%" -e "s%^$lfr_pyt$%%"`
+    export PYTHONPATH
 fi
 
 # Add to the paths if the bin directory exsists.
@@ -76,6 +89,13 @@ else
         LD_LIBRARY_PATH=$LOFARROOT/lib:$LD_LIBRARY_PATH
     fi
     export LD_LIBRARY_PATH
+    a_pyt=$LOFARROOT/lib/python$a_pyvv/site-packages
+    if [ "$PYTHONPATH" = "" ]; then
+        PYTHONPATH=$a_pyt
+    else
+        PYTHONPATH=$a_pyt:$PYTHONPATH
+    fi
+    export PYTHONPATH
 fi
 
 # Now define the new LOFARDATAROOT (if possible).
@@ -104,4 +124,4 @@ fi
 echo "system.path.include := [system.path.include, '$LOFARROOT/libexec/glish']" > $HOME/.glishrc.post
 
 # Clean up
-unset lfr_root lfr_nroot lfr_bin lfr_lib lfr_path
+unset lfr_root lfr_nroot lfr_bin lfr_lib lfr_pyt a_pyv a_pyvv lfr_path

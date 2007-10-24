@@ -28,11 +28,18 @@
 # The actual value is filled in by make install (see Makefile.am).
 set a_root = . #filled in by install
 
+# Get python version.
+set a_pyv=`python --version 2>&1`
+set a_pyvv=`echo $a_pyv | sed -e "s/Python /([0.9]\.[0-9]\).*/\1/"`
+if test "$a_pyv" = "$a_pyvv" then
+  set a_pyvv=2.5
+endif
+
 # Only modify path variables if $a_root is an existing directory.
 if (! (-d $a_root) ) then
     echo "LOFAR root directory $a_root does not exist"
 else
-    # First strip the current LOFARROOT from PATH and LD_LIBRARY_PATH
+    # First strip the current LOFARROOT from PATH, LD_LIBRARY_PATH, PYTHONPATH.
     # Take care that a possible . is preceeded by a backslash.
     if ($?LOFARROOT) then
         set a_path = `echo $LOFARROOT | sed -e 's/\./\\\./g'`
@@ -40,6 +47,8 @@ else
         setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
         set a_lib = "$a_path/lib"
         setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
+        set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
+        setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
     endif
 
     # Now define the new LOFARROOT
@@ -52,6 +61,8 @@ else
     setenv PATH `echo $PATH | sed -e "s%:${a_bin}:%:%g" -e "s%^${a_bin}:%%"  -e "s%:${a_bin}"'$%%' -e "s%^${a_bin}"'$%%'`
     set a_lib = "$a_path/lib"
     setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | sed -e "s%:${a_lib}:%:%g" -e "s%^${a_lib}:%%"  -e "s%:${a_lib}"'$%%' -e "s%^${a_lib}"'$%%'`
+    set a_pyt = "$a_path/lib/python$a_pyvv/site-packages"
+    setenv PYTHONPATH `echo $PYTHONPATH | sed -e "s%:${a_pyt}:%:%g" -e "s%^${a_pyt}:%%"  -e "s%:${a_pyt}"'$%%' -e "s%^${a_pyt}"'$%%'`
     
     # Add the path to the standard paths.
     if (! $?PATH) then
@@ -63,6 +74,12 @@ else
         setenv LD_LIBRARY_PATH $LOFARROOT/lib
     else
         setenv LD_LIBRARY_PATH $LOFARROOT/lib:$LD_LIBRARY_PATH
+    endif
+    set a_pyt = "$LOFARROOT/lib/python$a_pyvv/site-packages"
+    if (! $?PYTHONPATH) then
+        setenv PYTHONPATH $a_pyt
+    else
+        setenv PYTHONPATH $a_pyt:$PYTHONPATH
     endif
 
     # Create a .glishrc.post in the HOME directory to append
