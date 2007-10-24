@@ -109,7 +109,7 @@ string CS1_Parset::getMSname(unsigned firstSB, unsigned lastSB) const
   replace_all(name, "${MINUTES}", splitStartTime[4]);
   replace_all(name, "${SECONDS}", splitStartTime[5]);
 
-  replace_all(name, "${MSNUMBER}", str(format("%05u") % getUint32("Observation.ObsId")));
+  replace_all(name, "${MSNUMBER}", str(format("%05u") % getUint32("Observation.ObsID")));
   replace_all(name, "${SUBBAND}", str(firstSB != lastSB ? format("%u-%u") % firstSB % lastSB : format("%d") % firstSB));
 
   return name;

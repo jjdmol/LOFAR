@@ -1,4 +1,4 @@
-//#  ACCmainInputSection.h: main loop that can be used by any ACC enabled program
+//#  ACCmain_InputSection.h: main loop that can be used by any ACC enabled program
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_CS1_INPUTSECTION_ACCMAININPUTSECTION_H
-#define LOFAR_CS1_INPUTSECTION_ACCMAININPUTSECTION_H
+#ifndef LOFAR_CS1_INPUTSECTION_ACCMAIN_INPUTSECTION_H
+#define LOFAR_CS1_INPUTSECTION_ACCMAIN_INPUTSECTION_H
 
 // \file
 // main loop that can be used by any ACC enabled program
@@ -35,7 +35,7 @@ namespace LOFAR
 {
   namespace CS1
   {
-    int ACCmainInputSection (int argc, char* argv[], ProcessControl* theProcess);
+    int ACCmain_InputSection (int argc, char* argv[], ACC::PLC::ProcessControl* theProcess);
   } // namespace CS1
 } // namespace LOFAR
 

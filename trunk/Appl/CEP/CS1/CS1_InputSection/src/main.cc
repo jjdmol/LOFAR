@@ -29,7 +29,7 @@
 #include <CS1_InputSection/AH_InputSection.h>
 #include <tinyCEP/Profiler.h>
 #include <tinyCEP/ApplicationHolderController.h>
-#include <CS1_InputSection/ACCmainInputSection.h>
+#include <CS1_InputSection/ACCmain_InputSection.h>
 
 #include <exception>
 
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
   AH_InputSection myAH;
   ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
-  return ACCmainInputSection(argc, argv, &myAHController);
+  return ACCmain_InputSection(argc, argv, &myAHController);
 }
 
 #else

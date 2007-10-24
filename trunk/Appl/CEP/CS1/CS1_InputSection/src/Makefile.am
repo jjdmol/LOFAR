@@ -7,7 +7,7 @@ lib_LTLIBRARIES         = libcs1_inputsection.la
 libcs1_inputsection_la_SOURCES        = Connector.cc \
 		 InputThread.cc \
 		 BeamletBuffer.cc \
-		 ACCmainInputSection.cc \
+		 ACCmain_InputSection.cc \
 		 AH_InputSection.cc \
 		 WH_InputSection.cc
 
