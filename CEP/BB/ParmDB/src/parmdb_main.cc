@@ -36,6 +36,7 @@
 #include <string>
 #include <pwd.h>
 #include <unistd.h>
+#include <libgen.h>
 
 using namespace std;
 using namespace casa;
