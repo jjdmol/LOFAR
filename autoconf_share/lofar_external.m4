@@ -286,6 +286,14 @@ else
   fi
 ## Put possible version into the library names.
   lfr_libsc=`echo $lfr_libs | sed -e "s%+vers%$lfr_ext_version%g"`
+## Test if a framework is given.
+## If so, no search for libraries needs to be done.
+  lfr_libfw=`echo $lfr_external_libdir | sed -e "s% *-framework .*%-framework%"`
+  lfr_libfwnm=
+  if test "$lfr_libfw" = "-framework"; then
+    lfr_libfwnm="$lfr_external_libdir"
+    lfr_libsc=
+  fi
 ## Search for header if given, otherwise for library (shared or static).
   lfr_searchfil=
   if test "$lfr_hdr" != ""; then
@@ -334,23 +342,27 @@ else
 # Now search for the libraries.
   lfr_depend=
   lfr_ext_lib=
-  if test "$lfr_external_libdir" != ""; then
-    for lib in $lfr_libsc
-    do
-      if test "$lfr_ext_lib" != "no" ; then
-        ]AC_CHECK_FILE([$lfr_external_libdir/lib$lib.so],
-			[lfr_ext_lib=$lfr_external_libdir],
-			[lfr_ext_lib=no])[
-        if test "$lfr_ext_lib" == "no" ; then
-          ]AC_CHECK_FILE([$lfr_external_libdir/lib$lib.a],
-			[lfr_ext_lib=$lfr_external_libdir],
-			[lfr_ext_lib=no])[
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
-        else
-          lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.so"
+  if test "$lfr_libfwnm" = ""; then
+    if test "$lfr_external_libdir" != ""; then
+      for lib in $lfr_libsc
+      do
+        if test "$lfr_ext_lib" != "no" ; then
+          ]AC_CHECK_FILE([$lfr_external_libdir/lib$lib.$lofar_shared_ext],
+	  		  [lfr_ext_lib=$lfr_external_libdir],
+			  [lfr_ext_lib=no])[
+          if test "$lfr_ext_lib" == "no" ; then
+            ]AC_CHECK_FILE([$lfr_external_libdir/lib$lib.a],
+			  [lfr_ext_lib=$lfr_external_libdir],
+			  [lfr_ext_lib=no])[
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.a"
+          else
+            lfr_depend="$lfr_depend $lfr_external_libdir/lib$lib.$lofar_shared_ext"
+          fi
         fi
-      fi
-    done
+      done
+    fi
+  else
+    lfr_ext_lib=$lfr_libfwnm
   fi
   if test "$lfr_ext_dir" != "no"  -a  "$lfr_ext_lib" != "no" ; then
     EXTERNAL_CPPFLAGS=
@@ -376,8 +388,14 @@ else
 
     EXTERNAL_CPPFLAGS="$EXTERNAL_CPPFLAGS $lfr_extra_cpp"
     EXTERNAL_CXXFLAGS="$EXTERNAL_CXXFLAGS $lfr_extra_cxx"
-    EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
-    EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    if test "$lfr_libfwnm" = ""; then
+      EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS $lfr_extra_ld"
+      EXTERNAL_LIBS="$EXTERNAL_LIBS $lfr_extra_libs"
+    else
+      # Only framework is needed when given.
+      EXTERNAL_LDFLAGS=$lfr_libfwnm
+      EXTERNAL_LIBS=
+    fi     
 
     echo ]LOFAR_EXT_SYM[ >> pkgext
     echo "$EXTERNAL_CPPFLAGS" >> pkgextcppflags
