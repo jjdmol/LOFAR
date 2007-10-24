@@ -30,7 +30,7 @@ using namespace LOFAR::GCF::RTDBDaemons;
 
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv);
+	GCFTask::init(argc, argv, "LoggingProcessor");
 
 	LoggingProcessor clp("LoggingProcessor"); 
 	clp.start(); // make initial transition
