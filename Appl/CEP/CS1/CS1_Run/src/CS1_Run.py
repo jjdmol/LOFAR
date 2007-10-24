@@ -161,7 +161,7 @@ if __name__ == '__main__':
 	inf = open(runningNumberFile, 'r')
 	measurementnumber = int(inf.readline())
 	inf.close()
-	parset['Observation.ObsId'] = measurementnumber
+	parset['Observation.ObsID'] = measurementnumber
 	outf = open(runningNumberFile, 'w')
 	outf.write(str(measurementnumber + 1) + '\n')
 	outf.close()
@@ -176,7 +176,7 @@ if __name__ == '__main__':
 	MS = MS.replace('${HOURS}', dateStr[3])
 	MS = MS.replace('${MINUTES}', dateStr[4])
 	MS = MS.replace('${SECONDS}', dateStr[5])
-	MS = MS.replace('${MSNUMBER}', '%05d' % parset['Observation.ObsId'])
+	MS = MS.replace('${MSNUMBER}', '%05d' % parset['Observation.ObsID'])
 	MS = MS.replace('${SUBBAND}', '*')
 	
 	dbfile.write(MS + '\t' + ' '.join(dateStr[0:3]) + '\t' + nodesStr + '\n')

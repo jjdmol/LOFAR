@@ -23,7 +23,7 @@ using namespace LOFAR;
 using namespace LOFAR::CS1;
 
 #if 1
-#include <PLC/ACCmain.h>
+#include <CS1_Storage/ACCmain_Storage.h>
 
 int main(int argc, char* argv[]) {
 
@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 
   AH_Storage myAH;
   ApplicationHolderController myAHC(myAH, 1); // listen to ACC Controller once every 1 runs.
-  return ACC::PLC::ACCmain(argc, argv, &myAHC);
+  return ACCmain_Storage(argc, argv, &myAHC);
 }
 
 #else
