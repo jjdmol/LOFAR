@@ -108,48 +108,53 @@ namespace LOFAR
     {
       // Calculate the delays for the epoch after the end of the current time
       // interval. Put the results in itsDelaysAtBegin and itsDelaysAfterEnd.
-      calculateDelays();
+      if (itsLoopCount < itsObservationEpoch.size()) {
+        calculateDelays();
 
-      // Incrementing the loop count
-      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_FLOW, "count = " << itsLoopCount);
-      itsLoopCount++;
+        // Incrementing the loop count
+        LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_FLOW, "count = " << itsLoopCount);
+        itsLoopCount++;
             
-      // The delays -- split into a coarse (sample) delay and a fine
-      // (subsample) delay -- need to be put into a DelayInfo struct.
-      vector<DH_Delay::DelayInfo> delayInfo(itsNrDelays);
-      for (uint i = 0; i < itsNrDelays; ++i) {
+        // The delays -- split into a coarse (sample) delay and a fine
+        // (subsample) delay -- need to be put into a DelayInfo struct.
+        vector<DH_Delay::DelayInfo> delayInfo(itsNrDelays);
+        for (uint i = 0; i < itsNrDelays; ++i) {
 
-	// Get delays "at begin" and "after end".
-	double db = itsDelaysAtBegin[i];
-	double de = itsDelaysAfterEnd[i];
+	  // Get delays "at begin" and "after end".
+	  double db = itsDelaysAtBegin[i];
+	  double de = itsDelaysAfterEnd[i];
 
-	// The coarse delay will be determined for the center of the current
-	// time interval and will be expressed in \e samples.
-	delayInfo[i].coarseDelay = 
-	  (int32)floor(0.5 * (db + de) * itsSampleRate + 0.5);
+	  // The coarse delay will be determined for the center of the current
+	  // time interval and will be expressed in \e samples.
+	  delayInfo[i].coarseDelay = 
+	    (int32)floor(0.5 * (db + de) * itsSampleRate + 0.5);
 	
-	// The fine delay will be determined for the boundaries of the current
-	// time interval and will be expressed in seconds.
-	double d = delayInfo[i].coarseDelay / itsSampleRate;
-	delayInfo[i].fineDelayAtBegin  = (float)(db - d);
-	delayInfo[i].fineDelayAfterEnd = (float)(de - d);
+	  // The fine delay will be determined for the boundaries of the current
+	  // time interval and will be expressed in seconds.
+	  double d = delayInfo[i].coarseDelay / itsSampleRate;
+	  delayInfo[i].fineDelayAtBegin  = (float)(db - d);
+	  delayInfo[i].fineDelayAfterEnd = (float)(de - d);
 
-	LOG_TRACE_CALC_STR("Beamlet #" << i << ":");
-	LOG_TRACE_CALC_STR(" coarseDelay       = " << 
-			   delayInfo[i].coarseDelay);
-	LOG_TRACE_CALC_STR(" fineDelayAtBegin  = " << 
-			   delayInfo[i].fineDelayAtBegin);
-	LOG_TRACE_CALC_STR(" fineDelayAfterEnd = " << 
-			   delayInfo[i].fineDelayAfterEnd);
+	  LOG_TRACE_CALC_STR("Beamlet #" << i << ":");
+	  LOG_TRACE_CALC_STR(" coarseDelay       = " << 
+	  		   delayInfo[i].coarseDelay);
+	  LOG_TRACE_CALC_STR(" fineDelayAtBegin  = " << 
+	  		   delayInfo[i].fineDelayAtBegin);
+	  LOG_TRACE_CALC_STR(" fineDelayAfterEnd = " << 
+			     delayInfo[i].fineDelayAfterEnd);
+        }
+
+        // We need to send the coarse and fine delay info to all RSP boards.
+        for (int rsp = 0; rsp < itsNoutputs; ++rsp) {
+	  DH_Delay* dh;
+	  ASSERT(dh = dynamic_cast<DH_Delay*>(getDataManager().getOutHolder(rsp)));
+	  for (uint i = 0; i < itsNrDelays; ++i) {
+  	    (*dh)[i] = delayInfo[i];
+	  }
+        }
       }
-
-      // We need to send the coarse and fine delay info to all RSP boards.
-      for (int rsp = 0; rsp < itsNoutputs; ++rsp) {
-	DH_Delay* dh;
-	ASSERT(dh = dynamic_cast<DH_Delay*>(getDataManager().getOutHolder(rsp)));
-	for (uint i = 0; i < itsNrDelays; ++i) {
-  	  (*dh)[i] = delayInfo[i];
-	}
+      else{
+	sleep(1);
       }
     }
 

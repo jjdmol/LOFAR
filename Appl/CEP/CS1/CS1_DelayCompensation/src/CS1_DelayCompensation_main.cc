@@ -20,7 +20,7 @@ using namespace LOFAR;
 using namespace LOFAR::CS1;
 
 #if 1
-#include <PLC/ACCmain.h>
+#include <CS1_DelayCompensation/ACCmain_DelayCompensation.h>
 
 int main(int argc, char* argv[]) {
 
@@ -32,7 +32,7 @@ int main(int argc, char* argv[]) {
 
   AH_DelayCompensation myAH;
   ApplicationHolderController myAHC(myAH, 1); // listen to ACC Controller once every 1 runs.
-  return ACC::PLC::ACCmain(argc, argv, &myAHC);
+  return ACCmain_DelayCompensation(argc, argv, &myAHC);
 }
 
 #else
