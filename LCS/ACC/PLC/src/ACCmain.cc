@@ -62,7 +62,8 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	MPI_Barrier(MPI_COMM_WORLD);
 
 	if (myRank != 0) {
-		argv = new char*[argc];
+	        argv = new char*[argc + 1];
+	        argv[argc] = 0;
 	} else {
 		char** argv = orig_argv;
 	}
@@ -148,14 +149,17 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 			// we are under control of ACC
 			// Note args are: ACC parsetfile UniqProcesName
 			string	procID(argv[3]);
+			string	prefix = globalParameterSet()->getString("_parsetPrefix");
+			
 			// connect to Application Controller
-			ProcControlServer pcServer(globalParameterSet()->getString("_ACnode"),
-									   globalParameterSet()->getUint16("_ACport"),
+			ProcControlServer pcServer(globalParameterSet()->getString(prefix+"_ACnode"),
+									   globalParameterSet()->getUint16(prefix+"_ACport"),
 									   theProcess);
 
 
 			// Tell AC who we are.
 			LOG_DEBUG_STR("Registering at ApplController as " << procID);
+			sleep(1);
 			pcServer.registerAtAC(procID);
 
 			// Main processing loop
