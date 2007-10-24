@@ -1,6 +1,7 @@
 lib_LTLIBRARIES				= libcs1_delaycompensation.la
 
 libcs1_delaycompensation_la_SOURCES	= AH_DelayCompensation.cc \
+                                          ACCmain_DelayCompensation.cc \
 					  WH_DelayCompensation.cc
 
 bin_PROGRAMS 				= CS1_DelayCompensation
