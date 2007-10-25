@@ -287,12 +287,11 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
 
     if(type == CORRECT)
     {
-        ASSERTSTR(mask[GAIN] || mask[DIRECTIONAL_GAIN] || mask[DIPOLE_BEAM],
-            "Need at least one of GAIN, DIRECTIONAL_GAIN, or DIPOLE_BEAM to"
+        ASSERTSTR(mask[GAIN] || mask[DIRECTIONAL_GAIN] || mask[BANDPASS],
+            "Need at least one of GAIN, DIRECTIONAL_GAIN, BANDPASS to"
             " correct for.");
             
         vector<MeqJonesExpr> inv_bandpass, inv_gain, inv_dir_gain;
-        MeqJonesExpr inv_dipole_beam;
         
         if(mask[BANDPASS])
         {
@@ -322,12 +321,6 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             }
         }
 
-        if(mask[DIPOLE_BEAM])
-        {
-            // Always correct for the first source (direction).
-            inv_dipole_beam = new MeqJonesInvert(dipole_beam[0]);
-        }
-
         for(set<baseline_t>::const_iterator it = baselines.begin();
             it != baselines.end();
             ++it)
@@ -353,11 +346,6 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
                     inv_dir_gain[baseline.second]);
             }
 
-            if(mask[DIPOLE_BEAM])
-            {
-                vis = new MeqJonesCMul3(inv_dipole_beam, vis, inv_dipole_beam);
-            }
-            
             itsEquations[baseline] = vis;
         }
     }

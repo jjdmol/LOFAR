@@ -106,7 +106,7 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
             strategy->parmDB().instrument,
             strategy->parmDB().history,
 //            strategy->readUVW()));
-            true));
+            false));
     }
     catch(Exception &ex)
     {
