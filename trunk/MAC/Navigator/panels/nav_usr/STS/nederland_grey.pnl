@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,267 159 960 750 N "_3DFace" 0
+PANEL,490 117 960 750 N "_3DFace" 0
 EEE E E 1 -1 -1 0  23 740
 "" 0 1
 EE 2
@@ -28,7 +28,7 @@ E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/STS/nederland2_gray.bmp" 13434828 E 2
 7 2
 "Ellipse1"
 ""
-1 528 504 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 528 504 E E E 1 E 1 E N "_WindowText" E N "Lofar_broken" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -84,7 +84,7 @@ E E 0 1 1 0 1 E U  1 E 610 520 10 10
 9 6
 "Arc1"
 ""
-1 766 287 E E E 1 E 1 E N "Lofar_background_dark" E N "_Transparent" E E
+1 766 287 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 7 0 0 0 0 0
 EE E
@@ -98,7 +98,7 @@ E E 0 4 1 0 1 E U  0 E 886 422 240 -270
 7 8
 "Ellipse5"
 ""
-1 617 472 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 617 472 E E E 1 E 1 E N "_WindowText" E N "Lofar_broken" E E
  E E
 9 0 0 0 0 0
 EE E

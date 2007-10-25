@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,450 141 950 124 N "_3DFace" 1
+PANEL,489 117 950 124 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -9,8 +9,6 @@ PANEL,450 141 950 124 N "_3DFace" 1
   
   
   baseDP = systemName + \"LOFAR_PermSW_DigBoardCtrl\";
-	// load propertyset from datapoint
-	navPMLloadPropertySet(baseDP);
 	
   // connect for childUpdates
   showChildState(baseDP);
@@ -53,11 +51,7 @@ updateInfo(string dp1, string action,
    }
 }
 " 0
-"main()
-{
-	navPMLunloadPropertySet(baseDP);
-}" 0
-E E E 1 0 0 0  10 100
+EE E E 1 0 0 0  10 100
 "" 0 1
 E"string baseDP=\"\";" 0
  2

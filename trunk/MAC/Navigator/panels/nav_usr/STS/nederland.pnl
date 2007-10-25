@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-4 76 908 687 N "_3DFace" 0
+PANEL,490 117 908 687 N "_3DFace" 0
 EEE E E 1 -1 -1 0  20 740
 "" 0 1
 EE 2
@@ -28,7 +28,7 @@ E E 0 1 1 0 1 E U  2 0 3 "pictures/nav_usr/STS/nederland2.bmp" 13434828 E 20 10 
 7 8
 "Ellipse4"
 ""
-1 490 180 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 490 180 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -144,7 +144,7 @@ E E 0 1 1 0 1 E U  0 E 400 440 455 460
 7 15
 "Ellipse5"
 ""
-1 411 477 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 411 477 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 16 0 0 0 0 0
 EE E
@@ -161,7 +161,7 @@ navConfigTriggerNavigatorRefreshWithDP(\"CCU1:PIC_Stations_STS1\");
 7 16
 "Ellipse6"
 ""
-1 527 503 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
+1 527 503 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 17 0 0 0 0 0
 EE E

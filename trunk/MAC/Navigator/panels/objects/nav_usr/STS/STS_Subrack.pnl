@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,482 108 233 272 N "_3DFace" 4
+PANEL,489 117 233 272 N "_3DFace" 4
 "$CabinetNr"
 "$SubrackNr"
 "$datapoint"
@@ -21,8 +21,6 @@ PANEL,482 108 233 272 N "_3DFace" 4
   //DebugTN(\"Subrack dpPrefix : \" , dpPrefix);
   setValue(\"Subrack_Txt\",\"text\",\"Subrack: \"+sNr);
 
-  navPMLloadPropertySet(dpPrefix);
-
   // connect for childUpdates
   showChildState(dpPrefix);
   // connect for selfUpdates
@@ -37,7 +35,6 @@ PANEL,482 108 233 272 N "_3DFace" 4
   	 sNr = $SubrackNr;
   }
   dpPrefix += \"_Subrack\"+ sNr;         
-  navPMLunloadPropertySet(dpPrefix);
 }" 0
 "main()
 {

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 12 CaptureStats
-PANEL,465 97 949 736 N "_3DFace" 1
+PANEL,489 117 949 736 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -9,7 +9,6 @@ PANEL,465 97 949 736 N "_3DFace" 1
   {
     LOG_WARN(\"$datapoint not defined! Using PIC_CaptureStats1\");
     datapoint=\"PIC_CaptureStats1\";
-    navPMLinitialize();
   }
   else
   {
@@ -17,7 +16,6 @@ PANEL,465 97 949 736 N "_3DFace" 1
   }
   LOG_DEBUG(\"CaptureStats using datapoint: \",datapoint);
 
-  navPMLloadPropertySet(datapoint);
   for(int i=0;i<10 && !dpAccessable(datapoint); i++)
   {
     delay(1);
@@ -30,13 +28,11 @@ PANEL,465 97 949 736 N "_3DFace" 1
 "main()
 {
   LOG_TRACE(\"Unloading propertyset: \",datapoint);
-  navPMLunloadPropertySet(datapoint);
 }" 0
 E E E 1 -1 -1 0  188 128
 "" 0 1
 E"#uses \"nav_usr/STS/STS-functions.ctl\"
 #uses \"nav_fw/gcf-common.ctl\"
-#uses \"nav_fw/gcfnav-pmlinterface.ctl\"
 #uses \"nav_fw/gcfnav-view.ctl\"
 
 string datapoint;
@@ -369,7 +365,6 @@ LANG:1 5 Start
     stations = strsplit(tempText,\",\");
     for(int i=1;i<=dynlen(stations);i++)
     {
-      navPMLloadPropertySet(stations[i] + \":\" + datapoint);
       for(int j=0;j<10 && !dpAccessable(stations[j] + \":\" + datapoint); j++)
       {
         delay(0,100);

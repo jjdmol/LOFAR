@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 14 19inch_Subrack
-PANEL,451 120 182 113 N "_3DFace" 5
+PANEL,490 117 182 113 N "_3DFace" 5
 "$RackNr"
 "$SubrackNr"
 "$configDatapoint"
@@ -86,30 +86,6 @@ EP_setBackColor()
 
 navViewPanelStationLoadSubRack()
 {
-  //Load the property set for the following dpNames:
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0_Maintenance.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU1.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU1_Maintenance.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU0.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU0_Maintenance.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU1.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU1_Maintenance.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU0.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU0_Maintenance.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU1.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU1_Maintenance.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU0.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU0_Maintenance.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU1.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU1_Maintenance.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_Maintenance.status:_online.._value\");
-  navPMLloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_online.._value\");
 }
 
 
@@ -376,36 +352,10 @@ EP_setBackColorCB(string dpSource1,  unsigned AP0_RCU0_stat, string dpSource2,  
 
 navViewPanelStationUnloadSubRack()
 {
-  //Unload the property set for the following dpNames:
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU0_Maintenance.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU1.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0_RCU1_Maintenance.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU0.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU0_Maintenance.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU1.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1_RCU1_Maintenance.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU0.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU0_Maintenance.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU1.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2_RCU1_Maintenance.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU0.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU0_Maintenance.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU1.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3_RCU1_Maintenance.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP0.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP1.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP2.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_AP3.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_BP.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board0_Maintenance.status:_online.._value\");
-  navPMLunloadPropertySet($datapoint + \"_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Maintenance.status:_online.._value\");
 }" 0
 E E E 1 -1 -1 0  25 85
 "" 0 1
-E"
-" 0
- 2
+EE 2
 "CBRef""1"
 "EClose"E
 ""

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,451 113 1007 801 N "_3DFace" 1
+PANEL,489 117 1007 801 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -19,9 +19,6 @@ PANEL,451 113 1007 801 N "_3DFace" 1
 	
 	setValue(\"Observation_txt\",\"text\",obsName);
 
-	// load propertyset from datapoint
-	navPMLloadPropertySet(baseDP);
-	
 	// connect for selfUpdates
   showSelfState(baseDP);
 	
@@ -140,11 +137,7 @@ initTable() {
 }
 
 " 0
-"main()
-{
-   navPMLunloadPropertySet(baseDP);
-}" 0
-E E E 1 0 0 0  10 10
+EE E E 1 0 0 0  10 10
 "" 0 1
 E"string baseDP=\"\";" 0
  2

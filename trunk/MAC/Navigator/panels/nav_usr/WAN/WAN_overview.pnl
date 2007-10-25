@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,465 97 950 740 N "_3DFace" 1
+PANEL,490 117 950 740 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  80 350
 "" 0 1
@@ -82,7 +82,7 @@ E E 0 1 1 0 1 E  810 350 710 250
 7 0
 "Ellipse1"
 ""
-1 810 346.023 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 810 346.023 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -267,7 +267,7 @@ LANG:1 4 Arm5
 6 30
 "Border2"
 ""
-1 190 160 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 190 160 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 30 0 0 0 0 0
 EE E
@@ -284,7 +284,7 @@ E "main()
 6 112
 "Border1"
 ""
-1 190 260 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 190 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 111 0 0 0 0 0
 EE E
@@ -301,7 +301,7 @@ E "main()
 6 113
 "Border3"
 ""
-1 190 360 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 190 360 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 112 0 0 0 0 0
 EE E
@@ -318,7 +318,7 @@ E "main()
 6 114
 "Border4"
 ""
-1 190 460 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 190 460 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 113 0 0 0 0 0
 EE E
@@ -335,7 +335,7 @@ E "main()
 6 115
 "Border5"
 ""
-1 190 560 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 190 560 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 114 0 0 0 0 0
 EE E
@@ -352,7 +352,7 @@ E "main()
 6 116
 "Border6"
 ""
-1 430 160 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 430 160 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 115 0 0 0 0 0
 EE E
@@ -369,7 +369,7 @@ E "main()
 6 117
 "Border7"
 ""
-1 430 260 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 430 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 116 0 0 0 0 0
 EE E
@@ -386,7 +386,7 @@ E "main()
 6 118
 "Border8"
 ""
-1 430 360 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 430 360 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 117 0 0 0 0 0
 EE E
@@ -403,7 +403,7 @@ E "main()
 6 119
 "Border9"
 ""
-1 430 460 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 430 460 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 118 0 0 0 0 0
 EE E
@@ -420,7 +420,7 @@ E "main()
 6 120
 "Border10"
 ""
-1 430 560 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 430 560 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 119 0 0 0 0 0
 EE E
@@ -437,7 +437,7 @@ E "main()
 6 121
 "Border11"
 ""
-1 640 160 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 640 160 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 120 0 0 0 0 0
 EE E
@@ -454,7 +454,7 @@ E "main()
 6 122
 "Border14"
 ""
-1 640 260 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 640 260 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 121 0 0 0 0 0
 EE E
@@ -471,7 +471,7 @@ E "main()
 6 123
 "Border15"
 ""
-1 640 360 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 640 360 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 122 0 0 0 0 0
 EE E
@@ -488,7 +488,7 @@ E "main()
 6 124
 "Border16"
 ""
-1 640 460 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 640 460 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 123 0 0 0 0 0
 EE E
@@ -505,7 +505,7 @@ E "main()
 6 125
 "Border17"
 ""
-1 640 560 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+1 640 560 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 124 0 0 0 0 0
 EE E

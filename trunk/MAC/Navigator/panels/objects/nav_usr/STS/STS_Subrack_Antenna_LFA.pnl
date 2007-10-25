@@ -1,15 +1,13 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,306 149 70 164 N "_3DFace" 3
+PANEL,490 117 70 164 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
 "main()
 {
   //Function: Set background color of the LFA antenna
-  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\");
-  navPMLloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance\");
   icon_maintenance.toolTipText = $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\";
   backGround.toolTipText       = $datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\";
 
@@ -28,13 +26,7 @@ PANEL,306 149 70 164 N "_3DFace" 3
     return;
   }
 }" 0
-"main()
-{
-navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance\");
-navPMLunloadPropertySet($datapoint + \"_Board0_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA\");
-
-}" 0
-E E E 1 -1 -1 0  28 79
+EE E E 1 -1 -1 0  28 79
 "" 0 1
 EE 2
 "CBRef""1"

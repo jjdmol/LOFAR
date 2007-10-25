@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 StationCtrlViewPanel
-PANEL,463 129 484 325 N "_3DFace" 2
+PANEL,450 141 484 325 N "_3DFace" 2
 "$Station"
 "$datapoint"
 "main()
@@ -15,12 +15,6 @@ PANEL,463 129 484 325 N "_3DFace" 2
 	DigBoardCtrlDP   = baseDP+\"_PermSW_DigBoardCtrl\";
 	StationCtrlDP    = baseDP+\"_PermSW_StationCtrl\";	
 	
-	// load propertysets from datapoints
-	navPMLloadPropertySet(BeamCtrlDP);
-	navPMLloadPropertySet(CalCtrlDP);
-	navPMLloadPropertySet(DigBoardCtrlDP);
-	navPMLloadPropertySet(StationCtrlDP);
-
 	//DebugTN(\"init entered\");
   logThreadID=startThread(\"connectLogDP\");  
   //DebugTN(\"ThreadId: \"+$Station+ \": \"+logThreadID);
@@ -139,14 +133,7 @@ updateStationCtrlTable(string dp1, string action,
 	StationCtrlTable.updateLine(1,\"Controller\",\"StationCtrl\",\"Action\",action,\"Error\",error);
 }
 " 0
-"main()
-{
-	navPMLunloadPropertySet(BeamCtrlDP);
-	navPMLunloadPropertySet(CalCtrlDP);
-	navPMLunloadPropertySet(DigBoardCtrlDP);
-	navPMLunloadPropertySet(StationCtrlDP);
-}" 0
-E E E 1 0 0 0  5 320
+EE E E 1 0 0 0  5 320
 "" 0 1
 E"#uses \"nav_fw/gcf-util.ctl\"
 

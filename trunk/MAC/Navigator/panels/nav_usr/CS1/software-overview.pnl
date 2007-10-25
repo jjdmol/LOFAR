@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,562 144 1026 741 N "_3DFace" 1
+PANEL,450 141 1026 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -18,14 +18,7 @@ PANEL,562 144 1026 741 N "_3DFace" 1
   }  
 }
 " 0
-"main()
-{
-	for(int i=0; i < TableObservations.lineCount; i++)
-	{
-		navPMLunloadPropertySet(\"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") + \"_ObsCtrl\");
-	}
-}" 0
-E E E 1 0 0 0  10 10
+EE E E 1 0 0 0  10 10
 "" 0 1
 E"#uses \"nav_fw/gcf-util.ctl\"
 #uses \"nav_fw/gcfnav-panel-util.ctl\"
@@ -41,18 +34,13 @@ updateObservationsTable(string dpe, dyn_string dpv,
 
 
 	if (!invalid){ 
-    for(int i=0; i < TableObservations.lineCount; i++)
-    {
-      navPMLunloadPropertySet(\"LOFAR_ObsSW_\" + TableObservations.cellValueRC(i,\"Observation\") + \"_ObsCtrl\");
-    }
+
     TableObservations.deleteAllLines();
     for(int i=1; i<=dynlen(dpv);i++)
     {
       TableObservations.appendLine(\"Observation\",dpv[i]);
       string dpPrefix = \"LOFAR_ObsSW_\" + dpv[i] + \"_ObsCtrl\";
 	
-      navPMLloadPropertySet(dpPrefix);
-		
       for(int i=0; i<10 && !dpAccessable(dpPrefix);i++)
       {
         delay(0,250);
@@ -102,19 +90,25 @@ showLogging()
 	  dpLog = \"LOFAR_PermSW_MACScheduler.logMsg\";
 	}	
 	// disconnect from logging
+	DebugN(\"Connected: \"+connected);
+	int err=0;
 	if(dpExists(\"LOFAR_PermSW_CQN\") && connected == \"CQN\")
 	{
-		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_CQN.logMsg\");
+		err=dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_CQN.logMsg\");
 	}
 	if(dpExists(\"LOFAR_PermSW_SHM\") && connected == \"SHM\")
 	{
-		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_SHM.logMsg\");
+		err=dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_SHM.logMsg\");
 	}
 	if(dpExists(\"LOFAR_PermSW_MACScheduler\") && connected == \"MAC\")
 	{
-		dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_MACScheduler.logMsg\");
+	  DebugTN(\"About to disconnnect : LOFAR_PermSW_MACScheduler.logMsg\");
+		err=dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_MACScheduler.logMsg\");
 	}
  
+  if (err == -1) {
+    DebugN(\"Error disconnecting \"+connected+\" - \"+getLastError());
+  }
 	table_logging.deleteAllLines();
   if(dpExists(dpLog))
   {
@@ -129,7 +123,8 @@ showLogging()
 		string query = \"SELECT ALL '_original.._value' FROM '\" + dpLog + \"' TIMERANGE(\\\"\" +
 			formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
 			formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
-		//DebugTN(\"Query: \",query);
+
+		DebugTN(\"Query: \",query);
 		dpQuery(query, tab);
 	 
 		for(z=2;z<dynlen(tab);z++)
@@ -145,8 +140,10 @@ showLogging()
 	  } else {
 		  connected = \"MAC\";
 		}
-		//DebugTN(\"Connected to: \", connected);
-		dpConnect(\"updateLogging\",dpLog);
+		DebugTN(\"Connecting to: \", dpLog);
+	  if (dpConnect(\"updateLogging\",dpLog) == -1) {
+	    DebugN(\"Error in dpconnect \" +getLastError());
+	  }
 	}
 }
 	

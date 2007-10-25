@@ -1,14 +1,12 @@
 V 10
 1
 LANG:1 15 SubRackSPUBoard
-PANEL,459 137 745 269 N "_3DFace" 1
+PANEL,489 117 745 269 N "_3DFace" 1
 "$datapoint"
 "main()
 {
   baseDP=$datapoint+\".SPU\";
-	// load propertysets from datapoints
-	navPMLloadPropertySet(baseDP);
-	
+
   // connect for selfUpdates
   showSelfState(baseDP);
   
@@ -20,6 +18,23 @@ PANEL,459 137 745 269 N "_3DFace" 1
  	} else {
     setValue(\"txt_temperature\", \"text\", \"x.x\");
   }	
+
+  if(!dpAccessable(baseDP + \".Vhba:_online.._value\") ||
+     !dpAccessable(baseDP + \".Vlba:_online.._value\") ||
+     !dpAccessable(baseDP + \".Vdig:_online.._value\"))
+  {
+    setValue(\"txt_Vhba\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_Vlba\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_Vdig\", \"backCol\", \"_dpdoesnotexist\");
+    return;
+  }
+  else
+  {
+    dpConnect(\"SubrackSPUDetails\", baseDP + \".Vhba:_online.._value\",
+																   baseDP + \".Vlba:_online.._value\",
+                                   baseDP + \".Vdig:_online.._value\",
+                                   baseDP + \".Vhba:_online.._invalid\");
+  }
 }
 
 
@@ -35,13 +50,19 @@ updateSubrackSPU(string dp1, float temperature,
     setValue(\"txt_temperature\",\"text\",temperature);
   }
 }" 0
-"main()
-{
-  navPMLunloadPropertySet(baseDP);
-}" 0
-E E E 1 0 0 0  50 250
+EE E E 1 0 0 0  50 250
 "" 0 1
-E"string baseDP=\"\";" 0
+E"string baseDP=\"\";
+
+SubrackSPUDetails(string dp1, float Vhba,
+                  string dp2, float Vlba,
+                  string dp3, float Vdig,
+                  string dp5, bool invalid)
+{
+    setValue(\"txt_Vhba\"        , \"text\", Vhba);
+    setValue(\"txt_Vlba\"        , \"text\", Vlba);
+    setValue(\"txt_Vdig\"        , \"text\", Vdig);
+}" 0
  2
 "CBRef""1"
 "EClose"E
@@ -357,89 +378,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 LANG:1 2 °C
 1 24 0 "" 1
 0
-20 19
-"detailButton"
-""
-1 453 76 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-20 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-451 74 522 95
-1
-T 
-1
-LANG:1 6 Detail
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
-1
-E E 
-E"main(int button, bool state)
-{
-  if (button == 0)
-  {
-    setValue(\"label_Vhba\", \"visible\", state);
-    setValue(\"label_Vlba\", \"visible\", state);
-    setValue(\"label_Vdig\", \"visible\", state);
-    setValue(\"txt_Vhba\"  , \"visible\", state);
-    setValue(\"txt_Vlba\"  , \"visible\", state);
-    setValue(\"txt_Vdig\"  , \"visible\", state);
-    setValue(\"txt_unitVhba\"  , \"visible\", state);
-    setValue(\"txt_unitVlba\"  , \"visible\", state);
-    setValue(\"txt_unitVdig\"  , \"visible\", state);
-
-    setValue(\"rect_Vhba\"  , \"visible\", state);
-    setValue(\"rect_Vlba\"  , \"visible\", state);
-    setValue(\"rect_Vdig\"  , \"visible\", state);
-
-    if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
-    {
-      if(!dpAccessable(baseDP + \".Vhba:_online.._value\") ||
-		     !dpAccessable(baseDP + \".Vlba:_online.._value\") ||
-		     !dpAccessable(baseDP + \".Vdig:_online.._value\"))
-      {
-        setValue(\"txt_Vhba\", \"visible\", FALSE);
-        setValue(\"txt_Vlba\", \"visible\", FALSE);
-        setValue(\"txt_Vdig\", \"visible\", FALSE);
-         return;
-      }
-      else
-      {
-        navPMLloadPropertySet(baseDP);
-        dpConnect(\"SubrackSPUDetails\", baseDP + \".Vhba:_online.._value\",
-																		   baseDP + \".Vlba:_online.._value\",
-                                       baseDP + \".Vdig:_online.._value\",
-                                       baseDP + \".Vhba:_online.._invalid\");
-      }
-    }
-    else   // if checkbox is NOT checked, disconnect datapoints and unload propertyset
-    {
-      dpDisconnect(\"SubrackSPUDetails\", baseDP + \".Vhba:_online.._value\",
-      																  baseDP + \".Vlba:_online.._value\",
-      																  baseDP + \".Vdig:_online.._value\",
-                                        baseDP + \".Vhba:_online.._invalid\");
-      navPMLunloadPropertySet(baseDP);
-    }
-   }
-}
-
-SubrackSPUDetails(string dp1, float Vhba,
-                  string dp2, float Vlba,
-                  string dp3, float Vdig,
-                  string dp5, bool invalid)
-{
-    setValue(\"txt_Vhba\"        , \"text\", Vhba);
-    setValue(\"txt_Vlba\"        , \"text\", Vlba);
-    setValue(\"txt_Vdig\"        , \"text\", Vdig);
-}" 0
 0
 LAYER, 1 
 1

@@ -12,7 +12,7 @@ afterLogin(string user, string password, string newLocale, int closeModules = 1)
 
   bool           usePT=true;
   unsigned       xResolution, yResolution, templateNumber,
-                 x=1000, y=600, i;
+                 x=1200, y=1024, i;
   dyn_string     panels;
   dyn_uint       xs=makeDynInt(1600,1280,1024),
                  ys=makeDynInt(1200,1024, 768);

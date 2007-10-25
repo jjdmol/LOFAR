@@ -141,7 +141,14 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
   	if (first > 0) {
   	  	firstXResults = " FIRST " + first;
   	}
-  	dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath  + firstXResults + REMOTESYSTEM, tab);
+        
+
+        string query = "SELECT '" + attribute + "' FROM '" + datapointPath  + firstXResults + REMOTESYSTEM + "'";
+        //DebugN("Query : " + query);
+  	dpQuery(query, tab);
+	//DebugN("Results : " + tab);
+        
+
   	int maximumCount = dynlen(tab);
   	int maximumCounter = 0;
   	int i = 2;
@@ -154,9 +161,13 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
     	for (i = 2; i <= dynlen(tab); i++) {
       		int functionOk;
       		fullDpName = tab[i][1];
+                //DebugN("fullDpName found: "+fullDpName);
+                //DebugN("currentDepth    : "+currentDepth);
+                //DebugN("searchDepth     : "+searchDepth);
 
       		if ((dynlen(strsplit(fullDpName, "_")) <= (currentDepth + searchDepth)) || (searchDepth == 0)) {
-        		dyn_string dpes = dpNames(fullDpName + ".**;");
+        		dyn_string dpes = dpNames(fullDpName);
+                	//DebugN(" dpes found     : "+dpes);
         		int dpesLen = dynlen(dpes);
         		for (int j = 1; j <= dpesLen; j++) {
           			if (dpElementType(dpes[j]) != DPEL_TYPEREF && dpElementType(dpes[j]) != DPEL_STRUCT) {
@@ -178,6 +189,7 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
     	progressBar(maximumCount, maximumCount);
   	}
   	dynSortAsc(output); //sort the dyn_string output (alphanumeric)
+        //DebugN("querydatabase returns: "+output);
   	return output;
 }
 
