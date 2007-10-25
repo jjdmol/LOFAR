@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,495 201 429 479 N "_3DFace" 3
+PANEL,489 117 429 479 N "_3DFace" 3
 "$RCUNr"
 "$datapoint"
 "$referenceDatapoint"
@@ -19,7 +19,6 @@ PANEL,495 201 429 479 N "_3DFace" 3
   RCUNr= (rsp*8)+rcu;
   setValue(\"text_RCUNr\", \"text\", \"RCU\" + RCUNr );
   string dpRCU = $datapoint + \"_RCU\"+ RCUNr;
-  navPMLloadPropertySet(dpRCU);
 
   // connect for childUpdates
   showChildState(dpRCU);
@@ -27,12 +26,7 @@ PANEL,495 201 429 479 N "_3DFace" 3
   showSelfState(dpRCU);
 }
 " 0
-"main()
-{
-  navPMLunloadPropertySet($datapoint +\"_RCU\"+ RCUNr);
-
-}" 0
-E E E 1 -1 -1 0  20 140
+EE E E 1 -1 -1 0  20 140
 "" 0 1
 E"int RCUNr = 0;" 0
  2

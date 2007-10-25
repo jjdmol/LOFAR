@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,562 144 1145 286 N "_3DFace" 1
+PANEL,489 117 1145 286 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -19,14 +19,7 @@ PANEL,562 144 1145 286 N "_3DFace" 1
   
   
 }" 0
-"main()
-{
-  for(int i=0; i < calControlTable.lineCount; i++)
-  {
-    navPMLunloadPropertySet(baseDP + \"_\" + calControlTable.cellValueRC(i,\"Observation\") + \"_CalCtrl\");
-  }
-}" 0
-E E E 1 0 0 0  10 280
+EE E E 1 0 0 0  10 280
 "" 0 1
 E"string systemName = \"\";  
 
@@ -54,12 +47,6 @@ updateCalCtrlTable(string dpe, dyn_dyn_anytype tab)
 	//empty table
 	calControlTable.deleteAllLines();
 
-  //unload old Observations in table
-  for(int i=0; i < calControlTable.lineCount; i++)
-  {
-    navPMLunloadPropertySet(baseDP + \"_\" + calControlTable.cellValueRC(i,\"Observation\") + \"_CalCtrl\");
-  }
-
   if (dynlen(tab) > 1) {
 	 	for (int z = 2; z <= dynlen(tab); z++)
 		{
@@ -67,8 +54,7 @@ updateCalCtrlTable(string dpe, dyn_dyn_anytype tab)
       calControlTable.appendLine(\"Observation\",obsName);
       string dpPrefix = baseDP + obsName + \"_CalCtrl\";
       //DebugTN(\"Prefix: \", dpPrefix);
-      // load property set
-      navPMLloadPropertySet(dpPrefix);
+
       for(int i=0; i<10 && !dpAccessable(dpPrefix);i++)
       {
         delay(0,250);

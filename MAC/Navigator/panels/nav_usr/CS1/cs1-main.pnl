@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,494 199 950 741 N "_3DFace" 2
+PANEL,489 117 950 741 N "_3DFace" 2
 "$datapoint"
 "$referenceDatapoint"
 "main()
@@ -23,14 +23,7 @@ PANEL,494 199 950 741 N "_3DFace" 2
 }
 
 " 0
-"main()
-{
-  for(int i=0; i < Observation_table.lineCount; i++)
-  {
-    navPMLunloadPropertySet(\"LOFAR_ObsSW_\" + Observation_table.cellValueRC(i,\"Observation\") + \"_ObsCtrl\");
-  }
-}" 0
-E E E 1 0 0 0  10 10
+EE E E 1 0 0 0  10 10
 "" 0 1
 E"#uses \"nav_fw/gcf-util.ctl\"
 #uses \"nav_fw/gcfnav-panel-util.ctl\"
@@ -63,17 +56,12 @@ string getResultValue(string aString) {
 
 updateObservationsTable(string dpe, dyn_string dpv)
 {
-  for(int i=0; i < Observation_table.lineCount; i++)
-  {
-    navPMLunloadPropertySet(\"LOFAR_ObsSW_\" + Observation_table.cellValueRC(i,\"Observation\") + \"_ObsCtrl\");
-  }
   Observation_table.deleteAllLines();
   for(int i=1; i<=dynlen(dpv);i++)
   {
     Observation_table.appendLine(\"Observation\",dpv[i]);
     string dpPrefix = \"LOFAR_ObsSW_\" + dpv[i] + \"_ObsCtrl\";
 	
-    navPMLloadPropertySet(dpPrefix);
 		
     for(int i=0; i<10 && !dpAccessable(dpPrefix);i++)
     {

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,443 109 950 164 N "_3DFace" 1
+PANEL,489 117 950 164 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -9,9 +9,7 @@ PANEL,443 109 950 164 N "_3DFace" 1
 
   baseDP = systemName + \"LOFAR_PermSW_StationCtrl\"; 
 
-	// load propertyset from datapoint
-	navPMLloadPropertySet(baseDP);
-	
+
 	if (!dpExists(baseDP) ){
 	  LOG_ERROR(\"StationCtrl does not exist\");
 	} 
@@ -44,11 +42,7 @@ updateInfo(string dp1, string action,
 }	
 	
 " 0
-"main()
-{
-	navPMLunloadPropertySet(baseDP);
-}" 0
-E E E 1 0 0 0  10 60
+EE E E 1 0 0 0  10 60
 "" 0 1
 E"string baseDP=\"\";" 0
  2

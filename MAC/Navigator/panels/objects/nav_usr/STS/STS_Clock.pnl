@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,527 189 509 267 N "_3DFace" 1
+PANEL,489 117 509 267 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -12,10 +12,6 @@ PANEL,527 189 509 267 N "_3DFace" 1
 
 	aDP = systemName + \"LOFAR_PIC_StationClock\";
 
-  //Load the property set for this datapoint
-	//DebugTN(\"set datapoint: \", orgDP);
-  navPMLloadPropertySet(aDP);
-  
   if(dpAccessable(aDP +\".clock:_online.._value\"))
   {
     dpConnect(\"setClock\", aDP +\".clock:_online.._value\",
@@ -40,11 +36,7 @@ void setClock(string dp1, int clock,
   	setValue(\"stationClockTxt\", \"text\", \"xxx\");
   }
 }" 0
-"main()
-{
-	navPMLunloadPropertySet(aDP);
-}" 0
-E E E 1 0 0 0  10 50
+EE E E 1 0 0 0  10 50
 "" 0 1
 E"string orgDP=\"\";
 string aDP=\"\";

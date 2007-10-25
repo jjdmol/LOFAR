@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,494 199 174 196 N "_3DFace" 3
+PANEL,489 117 174 196 N "_3DFace" 3
 "$Station"
 "$datapoint"
 "$referenceDatapoint"
@@ -10,19 +10,12 @@ PANEL,494 199 174 196 N "_3DFace" 3
 	txt_Station.text = $Station;
 	baseDP           = $Station+\":LOFAR\";
 	
-	// load propertysets from datapoints
-	navPMLloadPropertySet(baseDP);
-	
   // connect for childUpdates
   showChildState(baseDP);
   // connect for selfUpdates
   showSelfState(baseDP);
 }" 0
-"main()
-{
-	navPMLunloadPropertySet(baseDP);
-}" 0
-"main()
+E"main()
 {
   click();
 }" 0

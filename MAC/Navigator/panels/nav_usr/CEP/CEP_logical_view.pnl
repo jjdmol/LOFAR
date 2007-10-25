@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 SwitchRect2
-PANEL,341 112 958 778 N "_3DFace" 0
+PANEL,489 117 958 778 N "_3DFace" 0
 EEE E E 1 0 0 0  130 470
 "" 0 1
 E"#uses \"nav_fw/gcfnavigator.ctl\"" 0
@@ -16,7 +16,7 @@ LANG:1 6 Layer1
 6 0
 "SwitchRect1"
 ""
-1 72 480 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_Switch" E E
+1 72 480 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 1 0 0 0 0 0
 EE E
@@ -29,7 +29,7 @@ E E 0 1 1 0 1 E U  1 E 72 150 102 480
 6 2
 "SwitchRect2"
 ""
-1 256 480 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_Switch" E E
+1 256 480 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 3 0 0 0 0 0
 EE E
@@ -42,7 +42,7 @@ E E 0 1 1 0 1 E U  1 E 256 150 286 480
 6 8
 "AuxProcRect"
 ""
-1 60 570 E E E 1 E 1 E N "_WindowText" E N "Lofar_background_dark" E E
+1 60 570 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 9 0 0 0 0 0
 EE E
@@ -289,7 +289,7 @@ E E 0 1 1 0 1 E  108 468 113 460
 7 86
 "Stations"
 ""
-1 36 314 E E E 1 E 1 E N "_WindowText" E N "Lofar_background_dark" E E
+1 36 314 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 87 0 0 0 0 0
 EE E
@@ -342,7 +342,7 @@ LANG:1 27 Auxilary Processing Cluster
 6 110
 "Border1"
 ""
-1 302 190 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_BG" E E
+1 302 190 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 111 0 0 0 0 0
 EE E
@@ -355,7 +355,7 @@ E E 0 1 1 0 1 E U  1 E 302 150 553 190
 6 111
 "Border2"
 ""
-1 302 248 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_BG" E E
+1 302 248 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 112 0 0 0 0 0
 EE E
@@ -368,7 +368,7 @@ E E 0 1 1 0 1 E U  1 E 302 208 553 248
 6 112
 "Border3"
 ""
-1 302 307 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_BG" E E
+1 302 307 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 113 0 0 0 0 0
 EE E
@@ -381,7 +381,7 @@ E E 0 1 1 0 1 E U  1 E 302 267 553 307
 6 113
 "Border4"
 ""
-1 302 366 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_BG" E E
+1 302 366 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 114 0 0 0 0 0
 EE E
@@ -394,7 +394,7 @@ E E 0 1 1 0 1 E U  1 E 302 326 553 366
 6 114
 "Border5"
 ""
-1 302 424 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_BG" E E
+1 302 424 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 115 0 0 0 0 0
 EE E
@@ -407,7 +407,7 @@ E E 0 1 1 0 1 E U  1 E 302 384 553 424
 6 115
 "Border6"
 ""
-1 302 480 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_BG" E E
+1 302 480 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 116 0 0 0 0 0
 EE E
@@ -540,7 +540,7 @@ LANG:1 10 BG/L Rack6
 7 122
 "Ellipse1"
 ""
-1 573 40 E E E 1 E 1 E N "_WindowText" E N "Lofar_cep_Switch" E E
+1 573 40 E E E 1 E 1 E N "_WindowText" E N "Lofar_off" E E
  E E
 123 0 0 0 0 0
 EE E
@@ -1028,6 +1028,5 @@ LANG:1 6 Layer8
 "$FESNType""Aux"
 3 10 ""
 "objects\\nav_usr\\CEP\\CEP_internal_switch.pnl" 450 620 T 149 1 0 1  -326 -80  
-1
-"$switchType""Aux"
+0
 0

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,495 201 954 746 N "_3DFace" 3
+PANEL,396 103 954 746 N "_3DFace" 3
 "$CabinetNr"
 "$datapoint"
 "$referenceDatapoint"
@@ -13,19 +13,14 @@ PANEL,495 201 954 746 N "_3DFace" 3
 	//DebugTN(\"datapoint , cabinet \", $datapoint, cNr);
 	
 	setValue(\"aCabinetTXT\", \"text\", \"Cabinet: \" + cNr);
-  navPMLloadPropertySet(dpPrefix);
+
 
   // connect for childUpdates
   showChildState(dpPrefix);
   // connect for selfUpdates
   showSelfState(dpPrefix);
 }" 0
-"main()
-{
-  navPMLunloadPropertySet(dpPrefix);
-
-}" 0
-E E E 1 -1 -1 0  188 128
+EE E E 1 -1 -1 0  188 128
 "" 0 1
 E"#uses \"nav_usr/STS/STS-functions.ctl\"
 string cNr = \"\";

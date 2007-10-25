@@ -1,14 +1,11 @@
 V 10
 1
 LANG:1 17 SubrackClockBoard
-PANEL,459 137 735 210 N "_3DFace" 1
+PANEL,489 117 735 210 N "_3DFace" 1
 "$datapoint"
 "main()
 {
   baseDP=$datapoint+\".clockBoard\";
-	// load propertysets from datapoints
-	navPMLloadPropertySet(baseDP);
-	
 	
   // connect for selfUpdates
   showSelfState(baseDP);
@@ -24,6 +21,26 @@ PANEL,459 137 735 210 N "_3DFace" 1
  	} else {
     setValue(\"txt_temperature\", \"text\", \"x.x\");
     setValue(\"txt_freq\", \"text\", \"x.x\");
+  }
+  
+  if(!dpAccessable(baseDP + \".Vfsp:_online.._value\") ||
+     !dpAccessable(baseDP + \".Vclock:_online.._value\") ||
+     !dpAccessable(baseDP + \".lock160:_online.._value\") ||
+     !dpAccessable(baseDP + \".lock200:_online.._value\"))
+  {
+    setValue(\"txt_Vfsp\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"txt_Vclock\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"lock160\", \"backCol\", \"_dpdoesnotexist\");
+    setValue(\"lock200\", \"backCol\", \"_dpdoesnotexist\");
+    return;
+  }
+  else
+  {
+     dpConnect(\"SubrackSPUDetails\", baseDP + \".Vfsp:_online.._value\",
+																   baseDP + \".Vclock:_online.._value\",
+                                   baseDP + \".lock160:_online.._value\",
+                                   baseDP + \".lock200:_online.._value\",
+                                   baseDP + \".Vfsp:_online.._invalid\");
   }	
 }
 
@@ -41,13 +58,21 @@ updateSubrackClock(string dp1, float temperature,
     setValue(\"txt_freq\", \"text\", freq);    
   }
 }" 0
-"main()
-{
-  navPMLunloadPropertySet(baseDP);
-}" 0
-E E E 1 0 0 0  50 250
+EE E E 1 0 0 0  50 250
 "" 0 1
-E"string baseDP=\"\";" 0
+E"string baseDP=\"\";
+
+SubrackSPUDetails(string dp1, float Vfsp,
+                  string dp2, float Vclock,
+                  string dp3, bool  lock160,
+                  string dp4, bool  lock200,
+                  string dp5, bool  invalid)
+{
+    setValue(\"txt_Vfsp\"   , \"text\", Vfsp);
+    setValue(\"txt_Vclock\" , \"text\", Vclock);
+    setValue(\"lock160\"    , \"state\", 0, lock160);
+    setValue(\"lock200\"    , \"state\", 0, lock200);
+}" 0
  2
 "CBRef""1"
 "EClose"E
@@ -92,7 +117,7 @@ LANG:1 11 Clock Board
 2 4
 "label_Vfsp"
 ""
-1 107 116 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 107 116 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -112,7 +137,7 @@ LANG:1 4 Vfsp
 6 5
 "rect_Vfsp"
 ""
-1 148 134 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 148 134 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 6 0 0 0 0 0
 EE E
@@ -125,7 +150,7 @@ E E 0 1 1 0 1 E U  1 E 148 114 211 134
 2 6
 "txt_Vfsp"
 ""
-1 170 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 170 114 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 7 0 0 0 0 0
 EE E
@@ -145,7 +170,7 @@ LANG:1 4 0.00
 2 10
 "label_Vclock"
 ""
-1 233 116 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 233 116 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
 EE E
@@ -165,7 +190,7 @@ LANG:1 5 Clock
 6 11
 "rect_Vclock"
 ""
-1 284 134 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+1 284 134 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 12 0 0 0 0 0
 EE E
@@ -178,7 +203,7 @@ E E 0 1 1 0 1 E U  1 E 284 114 347 134
 2 12
 "txt_Vclock"
 ""
-1 306 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 306 114 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -231,7 +256,7 @@ LANG:1 4 0.00
 2 20
 "txt_unitVfsp"
 ""
-1 200 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 200 114 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 21 0 0 0 0 0
 EE E
@@ -251,7 +276,7 @@ LANG:1 1 V
 2 21
 "txt_unitVclock"
 ""
-1 336 114 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 336 114 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 22 0 0 0 0 0
 EE E
@@ -383,97 +408,10 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 LANG:1 3 Mhz
 1 29 0 "" 1
 0
-20 19
-"detailButton"
-""
-1 453 76 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-20 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-451 74 523 103
-1
-T 
-1
-LANG:1 6 Detail
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
-1
-E E 
-E"main(int button, bool state)
-{
-  if (button == 0)
-  {
-    setValue(\"label_Vfsp\", \"visible\", state);
-    setValue(\"label_Vclock\", \"visible\", state);
-    setValue(\"lock160\", \"visible\", state);
-    setValue(\"lock200\", \"visible\", state);
-    setValue(\"txt_Vfsp\"  , \"visible\", state);
-    setValue(\"txt_Vclock\"  , \"visible\", state);
-    setValue(\"txt_unitVfsp\"  , \"visible\", state);
-    setValue(\"txt_unitVclock\"  , \"visible\", state);
-
-    setValue(\"rect_Vfsp\"  , \"visible\", state);
-    setValue(\"rect_Vclock\"  , \"visible\", state);
-
-    if (state == TRUE)        // if checkbox is checked, show details and connect textbox to the datapoints
-    {
-      if(!dpAccessable(baseDP + \".Vfsp:_online.._value\") ||
-		     !dpAccessable(baseDP + \".Vclock:_online.._value\") ||
-		     !dpAccessable(baseDP + \".lock160:_online.._value\") ||
-		     !dpAccessable(baseDP + \".lock200:_online.._value\"))
-      {
-        setValue(\"txt_Vfsp\", \"visible\", FALSE);
-        setValue(\"txt_Vclock\", \"visible\", FALSE);
-        setValue(\"lock160\", \"visible\", FALSE);
-        setValue(\"lock200\", \"visible\", FALSE);
-         return;
-      }
-      else
-      {
-        navPMLloadPropertySet(baseDP);
-        dpConnect(\"SubrackSPUDetails\", baseDP + \".Vfsp:_online.._value\",
-																		   baseDP + \".Vclock:_online.._value\",
-                                       baseDP + \".lock160:_online.._value\",
-                                       baseDP + \".lock200:_online.._value\",
-                                       baseDP + \".Vfsp:_online.._invalid\");
-      }
-    }
-    else   // if checkbox is NOT checked, disconnect datapoints and unload propertyset
-    {
-      dpDisconnect(\"SubrackSPUDetails\", baseDP + \".Vfsp:_online.._value\",
-      																  baseDP + \".Vclock:_online.._value\",
-      																  baseDP + \".lock160:_online.._value\",
-      																  baseDP + \".lock200:_online.._value\",
-                                        baseDP + \".Vfsp:_online.._invalid\");
-      navPMLunloadPropertySet(baseDP);
-    }
-   }
-}
-
-SubrackSPUDetails(string dp1, float Vfsp,
-                  string dp2, float Vclock,
-                  string dp3, bool  lock160,
-                  string dp4, bool  lock200,
-                  string dp5, bool  invalid)
-{
-    setValue(\"txt_Vfsp\"   , \"text\", Vfsp);
-    setValue(\"txt_Vclock\" , \"text\", Vclock);
-    setValue(\"lock160\"    , \"state\", 0, lock160);
-    setValue(\"lock200\"    , \"state\", 0, lock200);
-}" 0
 20 29
 "lock160"
 ""
-1 393 114 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+1 393 114 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 29 0 0 0 0 0
 EE E
@@ -498,7 +436,7 @@ E E
 EE20 30
 "lock200"
 ""
-1 482 114 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+1 482 114 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 30 0 0 0 0 0
 EE E

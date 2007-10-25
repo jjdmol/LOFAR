@@ -1,13 +1,12 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,435 242 328 89 N "_3DFace" 1
+PANEL,489 117 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
 	string dpBP = $datapoint + \".BP\";
   //Load the property set for this datapoint
-  navPMLloadPropertySet(dpBP);
   childStateBorder.toolTipText = dpBP;
   if(dpAccessable(dpBP + \".state:_online.._value\"))
   {
@@ -23,11 +22,7 @@ PANEL,435 242 328 89 N "_3DFace" 1
 }
 
 " 0
-"main()
-{
-  navPMLunloadPropertySet($datapoint + \".BP\");
-}" 0
-E E E 1 -1 -1 0  20 60
+EE E E 1 -1 -1 0  20 60
 "" 0 1
 EE 2
 "CBRef""1"
