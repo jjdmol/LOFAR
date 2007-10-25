@@ -215,13 +215,15 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         if (evt.getActionCommand().equals("Delete")) {
             //Check  if the selected node isn't a leaf
             if (itsSelectedNode != null && !itsSelectedNode.leaf) {
-                try {
-                    if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteNode(itsSelectedNode)) {
-                        logger.debug("Node + children deleted");
-                        setNewRootNode();
+                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this node ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                    try {
+                        if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteNode(itsSelectedNode)) {
+                            logger.debug("Node + children deleted");
+                            setNewRootNode();
+                        }
+                    } catch (RemoteException ex) {
+                        logger.debug("Error during deletion of Node: "+ex);
                     }
-                } catch (RemoteException ex) {
-                    logger.debug("Error during deletion of Node: "+ex);
                 }
             }
         } else if (evt.getActionCommand().equals("Duplicate")) {
