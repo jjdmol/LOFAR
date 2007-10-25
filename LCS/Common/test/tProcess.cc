@@ -57,7 +57,7 @@ class MyProcess : public Process
 };
 
 
-int main (int /*argc*/, const char* argv[])
+int main (int /*argc*/, char* argv[])
 {
   string prog(basename(argv[0]));
   INIT_LOGGER (prog.c_str());
