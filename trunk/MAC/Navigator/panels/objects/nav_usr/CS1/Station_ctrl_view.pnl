@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 20 StationCtrlViewPanel
-PANEL,450 141 484 325 N "_3DFace" 2
+PANEL,-1 -1 484 325 N "_3DFace" 2
 "$Station"
 "$datapoint"
 "main()
@@ -16,6 +16,9 @@ PANEL,450 141 484 325 N "_3DFace" 2
 	StationCtrlDP    = baseDP+\"_PermSW_StationCtrl\";	
 	
 	//DebugTN(\"init entered\");
+  // because we want to change the logging depending on the button pushed we need to disconnect/connect to
+  // different dp's. disconnect can only be done in the same tread that started the connect, so we need to start
+  // a tread that does both for us.
   logThreadID=startThread(\"connectLogDP\");  
   //DebugTN(\"ThreadId: \"+$Station+ \": \"+logThreadID);
 
@@ -133,9 +136,9 @@ updateStationCtrlTable(string dp1, string action,
 	StationCtrlTable.updateLine(1,\"Controller\",\"StationCtrl\",\"Action\",action,\"Error\",error);
 }
 " 0
-EE E E 1 0 0 0  5 320
-"" 0 1
-E"#uses \"nav_fw/gcf-util.ctl\"
+ E E E E 1 0 0 0  5 320
+""0  1
+E "#uses \"nav_fw/gcf-util.ctl\"
 
 string obsName;
 string baseDP;
@@ -296,8 +299,8 @@ addLogMessage(string msg)
 }
 " 0
  2
-"CBRef""1"
-"EClose"E
+"CBRef" "1"
+"EClose" E
 ""
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
@@ -309,10 +312,11 @@ LANG:1 6 Layer1
 1 5 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 1 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 "main()
@@ -326,17 +330,17 @@ LANG:1 0
 1 12 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 14 12 110 38
-0 2 0 "s" 0 0 0 64 0 0  14 12
- 1
+0 2 0 "0s" 0 0 0 64 0 0  14 12 1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-160-100-100-*-*-iso8859-1|-19,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 87 -*-Arial-bold-r-normal-*-19-*-100-100-*-*-iso8859-1|-19,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 8 Station:
@@ -346,17 +350,17 @@ LANG:1 8 Station:
 1 95 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 97 14 183 30
-0 2 0 "s" 0 0 0 64 0 0  97 14
- 1
+0 2 0 "0s" 0 0 0 64 0 0  97 14 1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 87 -*-Arial-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 9 <Station>
@@ -366,10 +370,11 @@ LANG:1 9 <Station>
 1 17 58 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 6 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -383,10 +388,11 @@ E "main()
 1 17 74 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 7 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -400,10 +406,11 @@ E "main()
 1 17 90 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 8 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -417,10 +424,11 @@ E "main()
 1 17 106 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  E E
 9 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E "main()
@@ -434,17 +442,17 @@ E "main()
 1 10 125 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 11 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 127 121 146
-0 2 0 "s" 0 0 0 192 0 0  12 127
- 1
+E E 0 1 1 0 1 E U  0 E 12 127 121 147
+0 2 0 "0s" 0 0 0 192 0 0  12 127 1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 87 -*-Arial-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 13 Logging from:
@@ -454,17 +462,17 @@ LANG:1 13 Logging from:
 1 121 127 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 12 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 123 129 200 145
-0 2 0 "s" 0 0 0 192 0 0  123 129
- 1
+E E 0 1 1 0 1 E U  0 E 123 129 200 146
+0 2 0 "0s" 0 0 0 192 0 0  123 129 1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 12 <controller>
@@ -474,28 +482,36 @@ LANG:1 12 <controller>
 1 4 -305 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 3 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-23 34 467 122
-E E 1 0 1 3 4 "Controller" 0 1 0 "s" 1
+ 23 34 467 122
+EE 1 0 1 3 4 "Controller" 12 1 0 "s" 1
 LANG:1 10 Controller
-E1
+E
+1
 LANG:1 0 
- 140 "Action" 0 1 0 "s" 1
+
+140 "Action" 12 1 0 "s" 1
 LANG:1 6 Action
-E1
+E
+1
 LANG:1 0 
- 140 "Error" 0 1 0 "s" 1
+
+140 "Error" 12 1 0 "s" 1
 LANG:1 5 Error
-E1
+E
+1
 LANG:1 0 
- 140 16 16 "" 1 1
+
+140 
+16 16 "" 1 1
 LANG:1 2 #2
 "" 1 1
 LANG:1 2 #4
@@ -503,52 +519,66 @@ LANG:1 2 #4
 LANG:1 2 #3
 "" 1 1
 LANG:1 2 #4
-8 30 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+8 30
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 2 1 3 0
+0 2 1 1 7
 1 0
 25 9
 "table_logging"
 ""
-1 96 23 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 95 23 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 10 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-8 148 467 306
-E E 1 0 1 5 1 "time" 0 1 0 "s" 1
+ 7 148 466 306
+EE 1 0 1 5 1 "time" 12 1 0 "s" 1
 LANG:1 4 time
-E1
+E
+1
 LANG:1 0 
- 150 "level" 0 1 0 "s" 1
+
+150 "level" 5 1 0 "s" 1
 LANG:1 5 level
-E1
+E
+1
 LANG:1 0 
- 70 "source" 0 1 0 "s" 1
+
+70 "source" 17 1 0 "s" 1
 LANG:1 6 source
-E1
+E
+1
 LANG:1 0 
- 200 "message" 0 1 0 "s" 1
+
+200 "message" 90 1 0 "s" 1
 LANG:1 7 message
-E1
+E
+1
 LANG:1 0 
- 1000 "code" 0 1 0 "s" 1
+
+1000 "code" 17 1 0 "s" 1
 LANG:1 4 code
-E1
+E
+1
 LANG:1 0 
- 200 16 16 "" 1 1
+
+200 
+16 16 "" 1 1
 LANG:1 2 #1
-8 30 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+8 30
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 1 2 3 0
+0 1 2 1 7
 1 0
 0
 LAYER, 1 
