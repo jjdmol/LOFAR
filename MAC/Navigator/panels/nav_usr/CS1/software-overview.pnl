@@ -1,14 +1,21 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,450 141 1026 741 N "_3DFace" 1
+PANEL,-1 -1 1026 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
 	// check if this panel is placed on the right datapoint
 	checkDpType($datapoint,\"PermSW\");
 
+  // because we want to change the logging depending on the button pushed we need to disconnect/connect to
+  // different dp's. disconnect can only be done in the same tread that started the connect, so we need to start
+  // a tread that does both for us.
+  logThreadID=startThread(\"connectLogDP\");  
+  //DebugTN(\"ThreadId: \"+$Station+ \": \"+logThreadID);
+
   observationsDP = $datapoint+\"_MACScheduler\";	
+	selectedDP=observationsDP+\".logMsg\";
 
   if (dpAccessable(observationsDP + \".activeObservations\")) {
 	  dpConnect(\"updateObservationsTable\",observationsDP+\".activeObservations:_online.._value\",
@@ -18,14 +25,161 @@ PANEL,450 141 1026 741 N "_3DFace" 1
   }  
 }
 " 0
-EE E E 1 0 0 0  10 10
-"" 0 1
-E"#uses \"nav_fw/gcf-util.ctl\"
+ E E E E 1 0 0 0  10 10
+""0  1
+E "#uses \"nav_fw/gcf-util.ctl\"
 #uses \"nav_fw/gcfnav-panel-util.ctl\"
 
 string observationsDP=\"\";
 string OTDBDP=\"\";
 string connected=\"\";
+string selectedDP=\"MCU001:LOFAR_PermSW_MACScheduler.logMsg\";
+string previouslySelectedDP=\"\";
+int logThreadID;
+
+
+void connectLogDP()
+{
+	while(1)
+	{
+		delay(0,100);
+		if (selectedDP != previouslySelectedDP)
+		{
+			if(previouslySelectedDP != \"\" && dpExists(previouslySelectedDP))
+				dpDisconnect(\"updateLogging\",previouslySelectedDP);
+		 
+		 	if (dpExists(selectedDP)) {
+		 		dpConnect(\"updateLogging\",selectedDP);
+		 		showLogging();
+		 	}
+		 	previouslySelectedDP=selectedDP;
+		}
+	}
+}
+
+showLogging()
+{
+  //DebugTN(\"startLogging\");
+	dyn_string dp = strsplit(dpSubStr(selectedDP,DPSUB_DP),\"_\");
+		
+	//DebugTN(\"startLogging 2\");
+
+ 	// get the systemname and systemnameless part of the datapoint
+	string systemName = dpSubStr(selectedDP,DPSUB_SYS);
+  string bareDP     = dpSubStr(selectedDP,DPSUB_DP_EL_CONF_DET_ATT);
+ 
+ 	
+	//DebugTN(\"startLogging 3\");
+
+  // clear the table from the old logging
+  table_logging.deleteAllLines();
+
+
+	//DebugTN(\"startLogging 4 selectedDP: \" + selectedDP);
+  // if the datapoint exists, try to get some of the historical data on this point
+  // fill the table with it and do a dpConnect so that new changes will be added to the table 
+  if(dpExists(selectedDP))
+  {
+    
+  	//DebugTN(\"startLogging 5 selectedDP\");
+
+		// initialize the logging table with historical data:
+		dyn_dyn_anytype tab;
+		int z;
+		time tStart;
+		time tStop;
+		tStop = getCurrentTime();
+		tStart = tStop - 48*3600; // 2 days of history
+	
+		string query = \"SELECT ALL '_original.._value' FROM '\" + bareDP + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
+			formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+			formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
+			
+		//DebugTN(\"Query: \" + query);
+		dpQuery(query, tab);
+		LOG_DEBUG(\"Found: \" + tab + \" length: \" + dynlen(tab));
+	 	 
+	 	
+		for(z=2;z<dynlen(tab);z++)
+		{
+			addLogMessage(tab[z][2]);
+		}
+	}
+	else {
+	  //DebugTN(\"NOT FOUND: wanted to log from : \" + selectedDP);
+	}
+}
+
+updateLogging(string dpe, string dpv)
+{
+  //DebugTN(\"LogMsg: \", dpv);
+	addLogMessage(dpv);
+}
+
+//
+// Add logMsg to table, We assume the tablename is table_logging
+//
+addLogMessage(string msg)
+{
+  //split lines like:
+  // 13-11-06 10:06:00.519|INFO|MAC.GCF.PAL.SAL|Set value of property 'MCU001:LOFAR_PermSW_MACScheduler.OTDB.lastPoll'|GSA_Service.cc:661
+  // into relevant pieces
+
+  if (msg != \"\") {
+    //DebugTN(\"addLogMessage: \" + msg);
+
+    dyn_string msgParts;
+    string dateTime=\"\";
+    string level=\"\";
+    string source=\"\";
+    string logMsg=\"\";
+    string codeLine=\"\";
+    bool error=false;
+
+    msgParts = strsplit(msg,\"|\");
+
+    if (dynlen(msgParts) >=1) {
+      dateTime = msgParts[1];
+    } else {
+    	error=true;
+   	}
+    if (dynlen(msgParts) >=2) {
+      level    = msgParts[2];
+    } else {
+    	error=true;
+   	}
+    if (dynlen(msgParts) >=3) {
+      source   = msgParts[3];
+    } else {
+    	error=true;
+   	}
+
+    if (dynlen(msgParts) >=4) {
+      logMsg = msgParts[4];
+    } else {
+    	error=true;
+   	}
+
+    if (dynlen(msgParts) >=5) {
+      codeLine = msgParts[5];
+    } else {
+    	error=true;
+   	}
+	
+	
+    //DebugTN(\"dateTime: \" + dateTime);
+    //DebugTN(\"level: \" + level);
+    //DebugTN(\"source: \" + source);
+    //DebugTN(\"logMsg: \" + logMsg);
+    //DebugTN(\"codeLine: \" + codeLine);
+
+		if (!error && logMsg != \"\") {
+	    table_logging.appendLine(\"time\",dateTime,\"level\",level,\"source\",source,\"message\",logMsg,\"code\",codeLine);
+  	  table_logging.lineVisible(-1);
+  	 }
+  }
+}
+
 updateObservationsTable(string dpe, dyn_string dpv,
                         string dp1, int state,
 							          string dp2, string error,
@@ -79,94 +233,12 @@ updateObservationsTableValues(string dp1, string action,
   }
 }
 
-showLogging()
-{
-	string dpLog;
-  if(radio_logging.number == 1) {
-	  dpLog = \"LOFAR_PermSW_CQN.logMsg\";
-	} else if(radio_logging.number == 2) {
-	  dpLog = \"LOFAR_PermSW_SHM.logMsg\";
-	} else {
-	  dpLog = \"LOFAR_PermSW_MACScheduler.logMsg\";
-	}	
-	// disconnect from logging
-	DebugN(\"Connected: \"+connected);
-	int err=0;
-	if(dpExists(\"LOFAR_PermSW_CQN\") && connected == \"CQN\")
-	{
-		err=dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_CQN.logMsg\");
-	}
-	if(dpExists(\"LOFAR_PermSW_SHM\") && connected == \"SHM\")
-	{
-		err=dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_SHM.logMsg\");
-	}
-	if(dpExists(\"LOFAR_PermSW_MACScheduler\") && connected == \"MAC\")
-	{
-	  DebugTN(\"About to disconnnect : LOFAR_PermSW_MACScheduler.logMsg\");
-		err=dpDisconnect(\"updateLogging\",\"LOFAR_PermSW_MACScheduler.logMsg\");
-	}
- 
-  if (err == -1) {
-    DebugN(\"Error disconnecting \"+connected+\" - \"+getLastError());
-  }
-	table_logging.deleteAllLines();
-  if(dpExists(dpLog))
-  {
-		// initialize the logging table with historical data:
-		dyn_dyn_anytype tab;
-		int z;
-		time tStart;
-		time tStop;
-		tStop = getCurrentTime();
-		tStart = tStop - 3*3600; // three hours of history
-	
-		string query = \"SELECT ALL '_original.._value' FROM '\" + dpLog + \"' TIMERANGE(\\\"\" +
-			formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
-			formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
 
-		DebugTN(\"Query: \",query);
-		dpQuery(query, tab);
-	 
-		for(z=2;z<dynlen(tab);z++)
-		{
-			addLogMessage(tab[z][2]);
-		}
-	
-		// connect to logging
-  	if(radio_logging.number == 1) {
-		  connected = \"CQN\";
-	  } else if(radio_logging.number == 2) {
-		  connected = \"SHM\";
-	  } else {
-		  connected = \"MAC\";
-		}
-		DebugTN(\"Connecting to: \", dpLog);
-	  if (dpConnect(\"updateLogging\",dpLog) == -1) {
-	    DebugN(\"Error in dpconnect \" +getLastError());
-	  }
-	}
-}
-	
-updateLogging(string dpe, string dpv)
-{
-  //DebugTN(\"LogMsg: \", dpv);
-	addLogMessage(dpv);
-}
-
-addLogMessage(string msg)
-{
-	dyn_string msgParts = strsplit(msg,\"|\");
-
-  if ( dynlen(msgParts) > 0 ) {
- 	  table_logging.appendLine(\"time\",msgParts[1],\"level\",msgParts[2],\"source\",msgParts[3],\"message\",msgParts[4]);
-	  table_logging.lineVisible(-1);
-	}
-}
 
 " 0
  2
-"CBRef""1"
-"EClose"E
+"CBRef" "1"
+"EClose" E
 ""
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
@@ -178,17 +250,17 @@ LANG:1 6 Layer1
 1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 1 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 12 252 44
-0 2 0 "s" 0 0 0 192 0 0  12 12
- 1
+E E 0 1 1 0 1 E U  0 E 12 12 252 45
+0 2 0 "0s" 0 0 0 192 0 0  12 12 1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-240-100-100-*-*-iso8859-1|-27,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 87 -*-Arial-bold-r-normal-*-27-*-100-100-*-*-iso8859-1|-27,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 17 Software overview
@@ -198,17 +270,17 @@ LANG:1 17 Software overview
 1 325 237 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 327 239 361 257
-0 2 0 "s" 0 0 0 192 0 0  327 239
- 1
+E E 0 1 1 0 1 E U  0 E 327 239 361 258
+0 2 0 "0s" 0 0 0 192 0 0  327 239 1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 87 -*-Arial-bold-r-normal-*-15-*-100-100-*-*-iso8859-1|-15,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 3 CQN
@@ -218,17 +290,17 @@ LANG:1 3 CQN
 1 640 239 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 642 241 676 259
-0 2 0 "s" 0 0 0 192 0 0  642 241
- 1
+E E 0 1 1 0 1 E U  0 E 642 241 676 260
+0 2 0 "0s" 0 0 0 192 0 0  642 241 1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 87 -*-Arial-bold-r-normal-*-15-*-100-100-*-*-iso8859-1|-15,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 3 SHM
@@ -238,17 +310,17 @@ LANG:1 3 SHM
 1 10 70 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 12 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 72 108 90
-0 2 0 "s" 0 0 0 192 0 0  12 72
- 1
+E E 0 1 1 0 1 E U  0 E 12 72 108 91
+0 2 0 "0s" 0 0 0 192 0 0  12 72 1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-15,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 87 -*-Arial-bold-r-normal-*-15-*-100-100-*-*-iso8859-1|-15,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 12 Observations
@@ -258,10 +330,11 @@ LANG:1 12 Observations
 1 10 50 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 13 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E E 0 3 2 0 1 E  940 50 10 50
@@ -271,37 +344,47 @@ E E 0 3 2 0 1 E  940 50 10 50
 1 10 494 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 28 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 496 93 512
-0 2 0 "s" 0 0 0 192 0 0  12 496
- 1
+E E 0 1 1 0 1 E U  0 E 12 496 93 513
+0 2 0 "0s" 0 0 0 192 0 0  12 496 1
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 13 Show logging:
-1 29 0 "" 0
+1 30 0 "" 0
 0
-1 30 0 "" 1
+1 31 0 "" 1
 0
-1 31 0 "0" 1
+1 32 0 "0" 1
 0
-1 32 0 "1" 0
+1 33 0 "1" 0
 0
-1 33 0 "1" 1
+1 34 0 "1" 1
 0
-1 34 0 "1" 2
+1 35 0 "1" 2
 0
-1 35 0 "1" 3
+1 36 0 "1" 3
 0
-1 36 0 "" 12
+1 37 0 "1" 4
 0
-1 37 0 "" 13
+1 38 0 "1" 5
+0
+1 39 0 "1" 6
+0
+1 40 0 "" 12
+0
+1 41 0 "" 13
+0
+1 42 0 "" 3
+0
+1 43 0 "" 4
 0
 25 2
 "TableObservations"
@@ -309,52 +392,67 @@ LANG:1 13 Show logging:
 1 10 100 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 3 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-8 98 942 235
-E "main(int row, string column, string value)
+ 8 98 942 235
+E"main(int row, string column, string value)
 {
 //  DebugTN(\"ColumnCommand\",row,column,value);
 	string dp = \"LOFAR_ObsSW_\" + TableObservations.cellValueRC(row,\"Observation\")+\"_ObsCtrl\";
 	LOG_TRACE(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0
- 1 0 1 6 1 "Observation" 0 1 0 "s" 1
+ 1 0 1 6 1 "Observation" 19 1 0 "s" 1
 LANG:1 11 Observation
-E1
+E
+1
 LANG:1 0 
- 225 "ClaimPeriod" 0 1 0 "s" 1
+
+225 "ClaimPeriod" 8 1 0 "s" 1
 LANG:1 12 Claim period
-E1
+E
+1
 LANG:1 0 
- 100 "PreparePeriod" 0 1 0 "s" 1
+
+100 "PreparePeriod" 8 1 0 "s" 1
 LANG:1 14 Prepare period
-E1
+E
+1
 LANG:1 0 
- 100 "StartTime" 0 1 0 "s" 1
+
+100 "StartTime" 12 1 0 "s" 1
 LANG:1 10 Start time
-E1
+E
+1
 LANG:1 0 
- 150 "StopTime" 0 1 0 "s" 1
+
+150 "StopTime" 12 1 0 "s" 1
 LANG:1 9 Stop time
-E1
+E
+1
 LANG:1 0 
- 150 "Action" 0 1 0 "s" 1
+
+150 "Action" 16 1 0 "s" 1
 LANG:1 6 Action
-E1
+E
+1
 LANG:1 0 
- 187 16 16 "" 1 1
+
+187 
+16 16 "" 1 1
 LANG:1 2 #1
-8 30 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+8 30
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 2 1 3 0
+0 2 1 1 7
 1 0
 17 7
 "list_logCQN"
@@ -362,88 +460,100 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 1 325 260 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 8 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-323 258 622 467
+ 323 258 622 467
 0
+
 E
 E
 E
 
-3 1
+0 0
 17 8
 "list_logSHM"
 ""
 1 640 260 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 9 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-638 258 942 467
+ 638 258 942 467
 0
+
 E
 E
 E
 
-3 1
+0 0
 19 26
 "radio_logging"
 ""
 1 102 480 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 26 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-100 478 234 532
+ 100 478 234 532
 3
 T 
 1
 LANG:1 13 MAC Scheduler
- 1
+
+1 
 1
 LANG:1 0 
- E  E  0 0 0 0 0
+E E
+0 0 0 0 0
 T 
 1
 LANG:1 3 CQN
- 0
+
+0 
 1
 LANG:1 0 
- E  E  0 0 0 0 0
+E E
+0 0 0 0 0
 T 
 1
 LANG:1 3 SHM
- 0
+
+0 
 1
 LANG:1 0 
- E  E  0 0 0 0 0
- 1
-"main()
+E E
+0 0 0 0 0
+1
+E "main(int button)
 {
-  showLogging();
-}" 0
-
-"main(int button)
-{
-	showLogging();
+  if( button == 1) {
+	  selectedDP = \"LOFAR_PermSW_CQN.logMsg\";
+	} else if( button == 2) {
+	  selectedDP = \"LOFAR_PermSW_SHM.logMsg\";
+	} else {
+	  selectedDP = \"LOFAR_PermSW_MACScheduler.logMsg\";
+	}	
 }" 0
 
 25 29
@@ -452,48 +562,55 @@ LANG:1 0
 1 10 540 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 29 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-8 538 942 662
-E E 1 0 1 4 1 "time" 0 1 0 "s" 1
+ 8 538 942 662
+EE 1 0 1 5 1 "time" 12 1 0 "s" 1
 LANG:1 4 time
-E1
+E
+1
 LANG:1 0 
- 150 "level" 0 1 0 "s" 1
+
+150 "level" 5 1 0 "s" 1
 LANG:1 5 level
-E1
+E
+1
 LANG:1 0 
- 70 "source" 0 1 0 "s" 1
+
+70 "source" 17 1 0 "s" 1
 LANG:1 6 source
-E1
+E
+1
 LANG:1 0 
- 200 "message" 0 1 0 "s" 1
+
+200 "message" 90 1 0 "s" 1
 LANG:1 7 message
-E1
+E
+1
 LANG:1 0 
- 1000 16 16 "" 1 1
+
+1000 "code" 17 1 0 "s" 1
+LANG:1 4 code
+E
+1
+LANG:1 0 
+
+200 
+16 16 "" 1 1
 LANG:1 2 #1
-8 30 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+8 30
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 2 1 3 0
+0 2 1 1 7
 1 0
-1 38 0 "" 3
-0
-1 39 0 "" 4
-0
-1 40 0 "1" 4
-0
-1 41 0 "1" 5
-0
-1 42 0 "1" 6
-0
 0
 LAYER, 1 
 1
@@ -524,6 +641,6 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 ""
-"objects\\nav_usr\\CS1\\MACScheduler_status_small.pnl" 247 335 T 29 1 0 1  -227 -53  
+"objects\\nav_usr\\CS1\\MACScheduler_status_small.pnl" 247 335 T 29 1 0 1 -227 -53
 0
 0
