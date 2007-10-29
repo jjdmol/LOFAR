@@ -1117,18 +1117,7 @@ dyn_string getDpTypeStructure(string dp)
     typeStructure = dpNames(dp + ".**");
   }
   else {
-    string systemName;
-    LOG_INFO("Create a dummy DP '__dummy_" + dpType + 
-             "' to get type info for DP '" + dp + 
-             "' (Type: '" + dpType + "', Sys: '" + systemName + "')");
-    dp = "__dummy_" + dpType; // system name may not be included in name of the DP to be created
-    dpCreate(dp, dpType, getSystemId(systemName));
-    dp = systemName + dp;
-    createdDummy = TRUE;
-    typeStructure = dpNames(dp + ".**");
-    if (createdDummy) {
-	// REO todo: dpDelete (dp); ???
-    }
+    LOG_WARN("Error getDpTypeStructure: ", dp);
   }
 
   // the elements of the structure includes the dp name, so the dp has to be cut off here
