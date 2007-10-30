@@ -8,9 +8,9 @@ node  OnlineCtrl   1.0.0  development 'node constraint'  "Controller for the onl
 
 #    name               dir. type   unit   prun. vm   value                          constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _hostname          I    text   -      10    0    CS001T                            -     "Machine this controller should run on."
-par  applications       I    vtext  -      10    0    [CorrAppl,DelayAppl,InputAppl,StorageAppl]  -     "The applications the controller should manage."
-par  applOrder          I    vtext  -      10    0    []                                -     "The application depencies if any!"
+par  _hostname          I    text   -      10    0    MCU001                            -     "Machine this controller should run on."
+par  applications       I    vtext  -      10    0    [InputAppl,DelayAppl,CorrAppl,StorageAppl]  -     "The applications the controller should manage."
+par  applOrder          I    vtext  -      10    0    [CorrAppl,DelayAppl,InputAppl,StorageAppl]                                -     "The application depencies if any!"
 
 
 uses  ApplCtrl     1.0.0  development 1                  "The ACC controller"

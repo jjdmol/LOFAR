@@ -10,9 +10,9 @@
 node   DelayCompensation   	 1.0.1  development 'node constraint'  "DelayCompensation"
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
-par  _hostname               I    text   -      10    0    cs001t                        -     'The machine on which the start- and stop-script is executed.'
+par  _hostname               I    text   -      10    0    list001                        -     'The machine on which the start- and stop-script is executed.'
 par  _executable             I    text   -      10    0    CS1_DelayCompensation         -     'The name of the executable to start'
-par  _nodes                  I    vtext  -      10    0    '[cs001t]'                    -     'Nodes used by the (mpi)processes'
+par  _nodes                  I    vtext  -      10    0    '[list001]'                    -     'Nodes used by the (mpi)processes'
 par  _startstopType          I    ptext  -      10    0    "cmdline|mpirun|bgl;cmdline"  -     'Method of starting the proces'
 
 
