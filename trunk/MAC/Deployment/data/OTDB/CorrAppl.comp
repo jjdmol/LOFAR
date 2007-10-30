@@ -11,11 +11,11 @@ node   Correlator        	 1.0.0  development 'node constraint'  "Correlator"
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  _executable             I    text   -      10    0    'CS1_BGL_Processing'          -     'The name of the executable to start'
-par  _hostname               I    text   -      10    0    'cs001t'                      -     'The machine on which the start- and stop-script is executed.'
+par  _hostname               I    text   -      10    0    'bglfen0'                      -     'The machine on which the start- and stop-script is executed.'
 par  _nodes                  I    vtext  -      10    0    '[]'                          -     'Nodes used by the (mpi)processes'
 par  _startstopType          I    ptext  -      10    0    "cmdline|mpirun|bgl;bgl"      -     'Method of starting the proces'
-par  partition               I    text   -      10    0    ""						     -     'Blue Gene partition to use'
-par  workingdir              I    text   -      10    0    ""      						 -     'Directory to use.'
+par  partition               I    text   -      10    0    "R000_128_0Z"						     -     'Blue Gene partition to use'
+par  workingdir              I    text   -      10    0    "/cephome/lofar/bin/"      						 -     'Directory to use.'
 
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
@@ -27,4 +27,4 @@ uses   Correlator      	 1.0.0  development 'node constraint'  "Correlator"
 par  processes               I    vtext  -      10    0    '[Correlator]'				 -	   "list of processes that must be started"
 par  procesOrder             I    vtext  -      10    0    '[]'							 -	   "Order of the processes, if any! FOR FUTURE USE."
 par  extraInfo               I    vtext  -      10    0    '[OLAP,PIC,Correlator]'		 -	   "list of components that the application expects to be in the parsettfile."
-par  _hostname               I    text   -      10    0    'localhost'					 -	   "Hostname of the machine on which the ACDaemon is running".
+par  _hostname               I    text   -      10    0    'bglfen0'					 -	   "Hostname of the machine on which the ACDaemon is running".
