@@ -64,11 +64,12 @@ prelude = << PRELUDE_END
 	
 	typedef struct TbbTriggerSetup // setup variables for 1 channel
 	{
-		uint32 level;
-		uint32 td_mode;
-		uint32 filter_select;
-		uint32 window;
-		uint32 dummy;
+		uint16 level;
+		uint8  start_mode;
+		uint8  stop_mode;
+		uint8	 filter_select;
+		uint8  window;
+		uint16 dummy;
 	};
 	
 	typedef struct TbbTriggerCoef // setup variables for 1 channel
@@ -302,7 +303,11 @@ event = {
   signal = TRIG_RELEASE;
   dir = IN;
   param = {
-    name = "rcu_mask";
+    name = "rcu_stop_mask";
+		type = "std::bitset<MAX_N_RCUS>";
+  };
+  param = {
+    name = "rcu_start_mask";
 		type = "std::bitset<MAX_N_RCUS>";
   };
 };
@@ -367,6 +372,24 @@ event = {
 	param = {
 		name = "status_mask";
 		type = "uint32[MAX_N_TBBBOARDS]";
+	};
+};
+
+event = {
+	signal = TRIG_SETTINGS;
+	dir = IN;
+};
+
+event = {
+	signal = TRIG_SETTINGS_ACK;
+	dir = OUT;
+	param = {
+		name = "setup";
+		type = "TbbTriggerSetup[MAX_N_RCUS]";
+	};
+	param = {
+		name = "coefficients";
+		type = "TbbTriggerCoef[MAX_N_RCUS]";
 	};
 };
 
