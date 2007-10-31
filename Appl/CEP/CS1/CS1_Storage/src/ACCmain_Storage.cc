@@ -198,7 +198,7 @@ int ACCmain_Storage (int argc, char* orig_argv[], ACC::PLC::ProcessControl* theP
 					  
 					  totalRuns = totalRuns / itsCS1PS.IONintegrationSteps();
 					  
-					  uint nrRunsLeft = totalRuns - nRuns;
+					  int nrRunsLeft = totalRuns - nRuns;
 					  
 					  time_t now = time(0);
 					  char buf[26];
@@ -207,11 +207,13 @@ int ACCmain_Storage (int argc, char* orig_argv[], ACC::PLC::ProcessControl* theP
 					  
 					  cout << "time = " << buf << ", rank = " << TH_MPI::getCurrentRank() <<", nrRunsLeft = totalRuns - nRuns = " << totalRuns << " - " << nRuns << " = " << nrRunsLeft << endl;
 					  
-					  for (uint i=0; i<nrRunsLeft; i++) {
-					    if (!theProcess->run()) {
-		                              return (1);
-		                            }
-					  }
+					  if (totalRuns > nRuns){
+					    for (int i=0; i<nrRunsLeft; i++) {
+					      if (!theProcess->run()) {
+		                                return (1);
+		                              }
+					    }
+					  }  
 					}
 
 					if (newMsg->getCommand() == ACC::PLC::PCCmdQuit) {
