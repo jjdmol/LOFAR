@@ -43,6 +43,7 @@ StationClock	SCK			S	P	LOFAR_PIC_StationClock
 StnPermSW		-			S	P	LOFAR_PermSW
 DigBoardCtrl	DBC			S	P	LOFAR_PermSW_DigBoardCtrl
 StationCtrl		SC			S	P	LOFAR_PermSW_StationCtrl
+TempCtrl		TC			S	P	LOFAR_PermSW_TempCtrl
 HardwareMonitor	HWM			S	P	LOFAR_PermSW_HardwareMonitor
 StnObsSW		-			S	P	LOFAR_ObsSW
 StnObservation	OBS			S	O	LOFAR_ObsSW_@observation@
