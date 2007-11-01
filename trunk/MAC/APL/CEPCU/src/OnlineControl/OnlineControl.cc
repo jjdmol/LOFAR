@@ -40,6 +40,7 @@
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/CTState.h>
 #include <GCF/RTDB/DP_Protocol.ph>
+#include <PLC/PCCmd.h>
 
 #include "OnlineControl.h"
 #include "OnlineControlDefines.h"
@@ -160,7 +161,7 @@ void    OnlineControl::_setState(CTState::CTstateNr     newState)
 	// Update PVSS to inform operator.
 	if (itsPropertySet) {
 		CTState		cts;
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString(cts.name(newState)));
+		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString(cts.name(newState)));
 	}
 }   
 
@@ -181,6 +182,7 @@ void	OnlineControl::startNewState(CTState::CTstateNr		newState,
 			iter->second->sendCommand(newState, options);
 		}
 		itsOverallResult = 0;
+		itsOptions.clear();
 		itsNrOfAcks2Recv = itsCEPapplications.size();
 	}
 	else {
@@ -189,6 +191,7 @@ void	OnlineControl::startNewState(CTState::CTstateNr		newState,
 		iter->second->sendCommand(newState, options);
 		itsOverallResult = 0;
 		itsNrOfAcks2Recv = 1;
+		itsOptions = options;
 	}
 
 	// TODO: start timer???
@@ -255,7 +258,7 @@ void	OnlineControl::appSetStateResult(const string&			procName,
 			CAMiter		nextApp = nextApplication();
 			LOG_DEBUG_STR("Sending " << cts.name(itsState) << " to next application: "
 							<< nextApp->second->getName());
-			nextApp->second->sendCommand(itsState, "" /*options*/);
+			nextApp->second->sendCommand(itsState, itsOptions);
 			return;
 		}
 	}
@@ -309,7 +312,8 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 
     case F_INIT: {
 		// Get access to my own propertyset.
-		string	propSetName = formatString(ONC_PROPSET_NAME, itsInstanceNr);
+		uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
+		string	propSetName = formatString(ONC_PROPSET_NAME, obsID);
 		LOG_DEBUG_STR ("Activating PropertySet: "<< propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
 											 ONC_PROPSET_TYPE,
@@ -331,7 +335,7 @@ GCFEvent::TResult OnlineControl::initial_state(GCFEvent& event,
 	case F_TIMER: {	// must be timer that PropSet is online.
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("initial"));
+		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("initial"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 	  
 		// Start ParentControl task
@@ -375,7 +379,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("active"));
+		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("active"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 	}
 	break;
@@ -451,7 +455,7 @@ GCFEvent::TResult OnlineControl::active_state(GCFEvent& event, GCFPortInterface&
 	case CONTROL_SUSPEND: {
 		CONTROLSuspendEvent		msg(event);
 		LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
-		startNewState(CTState::SUSPEND, ""/*options*/);
+		startNewState(CTState::SUSPEND, PAUSE_OPTION_NOW);
 		break;
 	}
 
@@ -502,7 +506,7 @@ GCFEvent::TResult OnlineControl::finishing_state(GCFEvent& event, GCFPortInterfa
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(PVSSNAME_FSM_STATE, GCFPVString("finished"));
+		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("finished"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 
 		itsTimerPort->setTimer(1.0);
@@ -585,8 +589,8 @@ void OnlineControl::_doBoot()
 			APLCommon::APLUtilities::remoteCopy(paramFileName,accHost,LOFAR_SHARE_LOCATION);
 
 			// Finally start ApplController on the right host
-			LOG_INFO_STR("Starting controller for " << applName);
-			sleep(1);			 // sometimes we are too quick, wait a second.
+			LOG_INFO_STR("Starting controller for " << applName << " in 3 seconds ");
+			sleep(3);			 // sometimes we are too quick, wait a second.
 			int32	expectedRuntime = time_duration(itsStopTime - itsStartTime).total_seconds();
 			CEPApplMgrPtr	accClient (new CEPApplMgr(*this, applName, expectedRuntime, accHost, paramFileName));
 			itsCEPapplications[applName] = accClient;
@@ -762,6 +766,7 @@ OnlineControl::CAMiter OnlineControl::nextApplication()
 void OnlineControl::noApplication()
 {
 	itsCurrentAppl = "";
+	itsOptions.clear();
 }
 
 

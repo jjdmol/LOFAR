@@ -28,7 +28,7 @@ namespace LOFAR {
 
 #define ONC_TASKNAME					"OnlineCtrl"
 
-#define ONC_PROPSET_NAME				"LOFAR_ObsSW_ObsCtrl%d_OnlineCtrl"
+#define ONC_PROPSET_NAME				"LOFAR_ObsSW_Observation%d_OnlineCtrl"
 #define ONC_PROPSET_TYPE				"OnlineCtrl"
 #define ONC_OBSERVATIONSTATE			"observationState"
 
