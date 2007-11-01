@@ -195,8 +195,12 @@ bool ChildControl::startChild (uint16				aCntlrType,
 		// always add Observation and all its children to the Parset.
 		cntlrSet.adoptCollection(wholeSet.makeSubset(
 				wholeSet.locateModule("Observation")+"Observation","Observation"));
+		// extend Observation with Observation ID
+		cntlrSet.replace("Observation.ObsID", lexical_cast<string>(anObsID));
+		// add hardware info.
 		cntlrSet.adoptCollection(wholeSet.makeSubset(
 				wholeSet.locateModule("PIC")+"PIC","PIC"));
+		
 
 		// is there a duplicate of the controller info?
 //		string	nodePos(cntlrSet.locateModule(nodeName));

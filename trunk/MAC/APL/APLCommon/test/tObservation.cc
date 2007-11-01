@@ -42,6 +42,7 @@ int main (int	argc, char* argv[])
 	ps1 += "Observation.stopTime     = 2007-01-15 13:45:59\n";
 	ps1 += "Observation.nyquistZone  = 1\n";
 	ps1 += "Observation.subbandList  = [5,6,100..103]\n";
+	ps1 += "Observation.beamletList  = [0..5]\n";
 	ps1 += "Observation.bandFilter   = LBL_10_90\n";
 	ps1 += "Observation.antennaArray = CS1_LBA\n";
 	ps1 += "Observation.receiverList = [0..21,24,26]\n";
@@ -57,6 +58,8 @@ int main (int	argc, char* argv[])
 	cout << "Observation 1:" << endl;
     cout << "treeid       : " << obs1.treeID << endl;
     cout << "nyquistZone  : " << obs1.nyquistZone << endl;
+	cout << "size of beamletList : " << obs1.beamlets.size() << endl;
+	cout << "size of subbandList : " << obs1.subbands.size() << endl;
     cout << "subbandList  : [";
 	for (vector<int16>::iterator iter = obs1.subbands.begin(); iter != obs1.subbands.end(); ++iter) {
 		cout << *iter << ",";
