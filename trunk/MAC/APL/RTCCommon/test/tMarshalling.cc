@@ -252,5 +252,43 @@ int main (int	argc, char*	argv[])
 	}
 
 
+	// vector<string>
+	vector<string>		sv1;
+	sv1.push_back("piet hein");
+	sv1.push_back("nelson");
+	sv1.push_back("van Swieten");
+	cout << "Testing vector<string>" << endl;
+	vector<string>::iterator	itersv = sv1.begin();
+	vector<string>::iterator	endsv  = sv1.end();
+	int	i = 0;
+	while (itersv != endsv) {
+		cout << "vector[" << i << "]:" << *itersv << endl;
+		i++;
+		itersv++;
+	}
+
+	unsigned int	svsize;
+	MSH_SIZE_VECTOR_STRING(svsize, sv1);
+	cout << "size = " << svsize << endl;
+
+	bzero(buf, 4096);
+	offset = 0;
+	MSH_PACK_VECTOR_STRING(buf, offset, sv1);
+	cout << "packed:" << endl;
+	hexdump(buf, svsize);
+
+	vector<string>	sv2;
+	offset = 0;
+	MSH_UNPACK_VECTOR_STRING(buf, offset, sv2);
+	cout << "Unpacked vector<string>" << endl;
+	itersv = sv2.begin();
+	endsv  = sv2.end();
+	i = 0;
+	while (itersv != endsv) {
+		cout << "vector[" << i << "]:" << *itersv << endl;
+		i++;
+		itersv++;
+	}
+
 	return (0);
 }
