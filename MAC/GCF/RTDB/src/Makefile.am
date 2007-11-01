@@ -8,7 +8,6 @@ SUFFIXES 			= .ph
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 	cp $*.ph $(top_builddir)/include/GCF/RTDB/
 
-
 clean-local:
 	rm -f *.ph
 

@@ -115,12 +115,12 @@ RTDBProperty& RTDBPropertySet::operator[] (const string& propName)
 #endif
 
 //
-// setValueTimed(propName, value, timestamp, immediately)
+// setValue(propName, value, timestamp, immediately)
 //
-PVSSresult RTDBPropertySet::setValueTimed (const string& 	propName, 
-										   const GCFPValue& value,
-										   double 			timestamp,
-										   bool				immediately)
+PVSSresult RTDBPropertySet::setValue (const string& 	propName, 
+									  const GCFPValue&	value,
+									  double 			timestamp,
+									  bool				immediately)
 {
 	// search property
 	Property* propPtr = _getProperty(propName);
@@ -146,12 +146,12 @@ PVSSresult RTDBPropertySet::setValueTimed (const string& 	propName,
 }
 
 //
-// setValueTimed(string, value, timestamp, immediately)
+// setValue(string, value, timestamp, immediately)
 //
-PVSSresult RTDBPropertySet::setValueTimed (const string&	propName, 
-										   const string&	value,
-										   double 			timestamp,
-										   bool				immediately)
+PVSSresult RTDBPropertySet::setValue (const string&		propName, 
+									  const string&		value,
+									  double 			timestamp,
+									  bool				immediately)
 {
 	// search property
 	Property* propPtr = _getProperty(propName);
