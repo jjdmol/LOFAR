@@ -70,7 +70,8 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsStopTimer		(0),
 	itsForcedQuitTimer	(0),
 	itsHeartBeatTimer	(0),
-	itsHeartBeatItv		(0)
+	itsHeartBeatItv		(0),
+	itsForcedQuitDelay	(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -90,6 +91,12 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsTreePrefix   = globalParameterSet()->getString("prefix");
 	itsInstanceNr   = globalParameterSet()->getUint32("_treeID");	// !!!
 	itsHeartBeatItv = globalParameterSet()->getUint32("heartbeatInterval");
+
+	// The time I have to wait for the forced quit depends on the integration time of OLAP
+	string	OLAPpos = globalParameterSet()->locateModule("OLAP");
+	LOG_DEBUG(OLAPpos+"OLAP.IONProc.integrationSteps");
+	itsForcedQuitDelay = 15 + globalParameterSet()->getUint32(OLAPpos+"OLAP.IONProc.integrationSteps",0);
+	LOG_DEBUG_STR ("Timer for forcing quit is set to " << itsForcedQuitDelay);
 
 	// Inform Logging manager who we are
 	// TODO read this from the PARSET file!
@@ -431,7 +438,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 			itsBusyControllers = itsChildControl->countChilds(0, CNTLRTYPE_NO_TYPE);
 			// reschedule forced-quit timer for safety.
 			itsTimerPort->cancelTimer(itsForcedQuitTimer);
-			itsForcedQuitTimer = itsTimerPort->setTimer(5.0);
+			itsForcedQuitTimer = itsTimerPort->setTimer(1.0 * itsForcedQuitDelay);
 		}
 		else if (timerEvent.id == itsForcedQuitTimer) {
 			LOG_WARN("QUITING BEFORE ALL CHILDREN DIED.");
@@ -659,8 +666,8 @@ void ObservationControl::setObservationTimers()
 	if (itsState < CTState::RELEASE) { 				// not yet shutting down?
 		if (sec2stop > 0) {
 			itsStopTimer = itsTimerPort->setTimer(1.0 * sec2stop);
-			// make sure we go down 5 seconds after quit was requested.
-			itsForcedQuitTimer = itsTimerPort->setTimer(sec2stop + 5.0);
+			// make sure we go down 30 seconds after quit was requested.
+			itsForcedQuitTimer = itsTimerPort->setTimer(sec2stop + (1.0 * itsForcedQuitDelay));
 			LOG_DEBUG_STR ("Observation stops over " << sec2stop << " seconds");
 		}
 		else {
@@ -785,7 +792,7 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 		if (strstr(dpEvent.DPname.c_str(), PN_OC_CLAIM_PERIOD) != 0) {
 			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
 			LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod << " to " << newVal);
-				itsClaimPeriod = newVal;
+			itsClaimPeriod = newVal;
 		}
 		// Change of prepare_period?
 		else if (strstr(dpEvent.DPname.c_str(), PN_OC_PREPARE_PERIOD) != 0) {
@@ -815,9 +822,9 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 				itsStopTime = newTime;
 			}
 			setObservationTimers();
-			LOG_DEBUG("Sending all childs a RESCHEDULE event");
-			itsChildControl->rescheduleChilds(to_time_t(itsStartTime), 
-											  to_time_t(itsStopTime), "");
+			LOG_DEBUG("NOT  YET  Sending all childs a RESCHEDULE event");
+//			itsChildControl->rescheduleChilds(to_time_t(itsStartTime), 
+//											  to_time_t(itsStopTime), "");
 		}
 	}  
 	break;

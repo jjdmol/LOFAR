@@ -135,6 +135,7 @@ private:
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
 	uint32					itsHeartBeatItv;
+	uint32					itsForcedQuitDelay;
 	uint32					itsClaimPeriod;
 	uint32					itsPreparePeriod;
 	ptime					itsStartTime;
