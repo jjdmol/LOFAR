@@ -138,6 +138,7 @@ private:
 	vector<string>			itsApplOrder;		// startOrder of the applications.
 	string					itsCurrentAppl;		// current application we are handling.
 	CTState::CTstateNr		itsApplState;		// state currently handled by apps.
+	string					itsOptions;			// Current active option
 
 	uint16					itsOverallResult;
 	int16					itsNrOfAcks2Recv;
