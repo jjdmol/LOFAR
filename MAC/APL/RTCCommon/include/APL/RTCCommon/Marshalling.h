@@ -209,4 +209,46 @@ do {	\
 	}	\
 } while (0)
 
+// SIZE vector<string>>
+#define MSH_SIZE_VECTOR_STRING(sizevar, thevector)	\
+do {	\
+	sizevar = sizeof(int32);	\
+	vector<string>::iterator	iter = thevector.begin();	\
+	vector<string>::iterator	end  = thevector.end();	\
+	while (iter != end) {	\
+		sizevar += MSH_STRING_SIZE(*iter);	\
+		iter++;	\
+	}	\
+} while (0)
+	
+
+// PACK vector<string>
+#define MSH_PACK_VECTOR_STRING(bufptr, offset, thevector)	\
+do {	\
+	int32	nrElem = thevector.size();	\
+	memcpy(((char*)(bufptr)) + (offset), &nrElem, sizeof(int32));	\
+	offset += sizeof(int32);	\
+	\
+	vector<string>::iterator	iter = thevector.begin();	\
+	vector<string>::iterator	end  = thevector.end();	\
+	while (iter != end) {	\
+		MSH_PACK_STRING(bufptr, offset, *iter);	\
+		iter++;	\
+	}	\
+} while (0)
+
+// UNPACK vector<string>
+#define MSH_UNPACK_VECTOR_STRING(bufptr, offset, thevector)	\
+do {	\
+	int32	nrElem = 0;	\
+	memcpy(&nrElem, ((char*)(bufptr)) + (offset), sizeof(nrElem));	\
+	offset += sizeof(nrElem);	\
+	\
+	for (int elem = 0; elem < nrElem; elem++) {	\
+		string	elem1; \
+		MSH_UNPACK_STRING(bufptr, offset, elem1);	\
+		thevector.push_back(elem1); \
+	}	\
+} while (0)
+
 #endif /* MARSHALLING_H_ */
