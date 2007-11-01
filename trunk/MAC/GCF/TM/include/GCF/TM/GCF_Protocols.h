@@ -111,7 +111,7 @@ enum {
     F_TIMER_ID,         // timer expired
     F_DATAIN_ID,        // data available for reading
     F_DATAOUT_ID,       // space available to write
-    F_RAW_DATA_ID,           // no event!, only the data is sent (used with direct ports)
+    F_RAW_DATA_ID,      // no event!, only the data is sent (used with direct ports)
     F_ACCEPT_REQ_ID,    // indicatation of the port provider to the user about a client connect request (SAP)
 };
 
