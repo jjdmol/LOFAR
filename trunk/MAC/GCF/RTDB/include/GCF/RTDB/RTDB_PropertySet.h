@@ -75,22 +75,14 @@ public:
 	// @returns GCF_PROP_NOT_IN_SET,  GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
 	// <group>
 	PVSSresult setValue (const string&		propName, 
-						 const GCFPValue&	value,
+						 const GCFPValue&	value, 
+						 double 			timestamp = 0.0,
 						 bool				immediately = true);
 
 	PVSSresult setValue (const string& 		propName,
-						 const string& 		value,
+						 const string&		value, 
+						 double 			timestamp = 0.0,
 						 bool				immediately = true);
-
-	PVSSresult setValueTimed (const string&		propName, 
-							  const GCFPValue&	value, 
-							  double 			timestamp,
-							  bool				immediately = true);
-
-	PVSSresult setValueTimed (const string& 	propName,
-							  const string&		value, 
-							  double 			timestamp,
-							  bool				immediately = true);
     // </group>
 
 	PVSSresult getValue(const string&		propName,
@@ -161,22 +153,6 @@ private:
 };
 
 //# ----- inline functions -----
-
-// setValue(propname, valueString immediately)
-inline PVSSresult RTDBPropertySet::setValue (const string&	propName, 
-											 const string&	value,
-											 bool			immediately)
-{
-  return (setValueTimed(propName, value, 0.0, immediately));
-}
-
-// setValue(propname, value&, immediately)
-inline PVSSresult RTDBPropertySet::setValue (const string&				propName, 
-											 const Common::GCFPValue&	value,
-											 bool						immediately)
-{
-  return (setValueTimed(propName, value, 0.0, immediately));
-}
 
 // setSubscription(on)
 inline	void RTDBPropertySet::setSubscription(bool	on)

@@ -1,4 +1,5 @@
-INSTHDRS 			= RTDB_PropertySet.h
+INSTHDRS 			= DPservice.h \
+					  RTDB_PropertySet.h
 
 NOINSTHDRS 			=
 TCCHDRS 			=
