@@ -142,6 +142,8 @@ bool GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 	struct sockaddr_in serverAddr;
 	struct hostent *hostinfo;
 	hostinfo = gethostbyname(host.c_str());
+	ASSERTSTR(hostinfo, "Hostname " << host << " could not be resolved, error = " << errno);
+
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
 	serverAddr.sin_port = htons(portNumber);

@@ -40,20 +40,17 @@ using std::ifstream;
 #include <stdio.h>
 #include <stdlib.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+  namespace GCF {
+    namespace TM {
 
 // static member initialisation
-bool GCFTask::_doExit = false;
-GCFTask::THandlers GCFTask::_handlers;
-GCFTask::THandlers GCFTask::_tempHandlers;
-GCFTask::TProtocols GCFTask::_protocols;
-int GCFTask::_argc = 0;
-char** GCFTask::_argv = 0;
+bool				GCFTask::_doExit = false;
+GCFTask::THandlers	GCFTask::_handlers;
+GCFTask::THandlers	GCFTask::_tempHandlers;
+GCFTask::TProtocols	GCFTask::_protocols;
+int 				GCFTask::_argc = 0;
+char** 				GCFTask::_argv = 0;
 
 GCFTask::GCFTask(State initial, const string& name) :
   GCFFsm(initial), _name(name)
