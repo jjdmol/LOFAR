@@ -30,7 +30,7 @@
 
 //# Includes
 #include <APS/ParameterSet.h>
-#include <bitset>
+#include <Common/lofar_bitset.h>
 
 namespace LOFAR {
   namespace APLCommon {
@@ -52,7 +52,7 @@ public:
 	~Observation();
 	explicit	Observation (ACC::APS::ParameterSet*		aParSet);
 
-	typedef std::bitset<256> 	  RCUset_t;
+	typedef bitset<256> 	  RCUset_t;
 
 	//# Datamembers
 	string			name;
