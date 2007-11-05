@@ -79,8 +79,12 @@ beamctl::beamctl(string name,
     m_parent(parent), m_rcus(rcus), m_subbands(subbands), m_beamlets(beamlets),
     m_rcumode(rcumode), m_longitude(longitude), m_latitude(latitude), m_type(type)
 {
+  // depricated
   registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
   registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
+
+  GCF::TM::registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
+  GCF::TM::registerProtocol(BS_PROTOCOL, BS_PROTOCOL_STRINGS);
 
   m_calserver.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
   m_beamserver.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::SAP, BS_PROTOCOL);
@@ -161,7 +165,8 @@ GCFEvent::TResult beamctl::create_subarray(GCFEvent& e, GCFPortInterface& port)
 	start.rcumode().resize(1);
 	start.rcumode()(0) = m_rcumode()(0);
 	
-	LOG_INFO(formatString("Rcumode=%06X", start.rcumode()(0).getRaw()));
+	LOG_INFO(formatString("Rcumode(dec)=%06d", start.rcumode()(0).getRaw()));
+	LOG_INFO(formatString("Rcumode(hex)=%06X", start.rcumode()(0).getRaw()));
 	LOG_INFO_STR("Creating subarray: " << start.name);
 
 	m_calserver.send(start);
@@ -277,13 +282,13 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	  // then HPBW is 0.08333 or 1/12. Therefor we use 2.0/24.0 stepsize
 	  // to step through l and m
 	  double eps = 5.6e-16;
-	  for (double m = -1.0; m <= 1.0 + eps; m += 2.0/24.0) {
-	    for (double l = -1.0; l <= 1.0 + eps; l+= 2.0/24.0) {
+	  for (double m = -1.0; m <= 1.0 + eps; m += 2.0/10.0) {
+	    for (double l = -1.0; l <= 1.0 + eps; l+= 2.0/10.0) {
 	      if (l*l+m*m <= 1.0 + eps) {
 		pointto.pointing.setTime(time);
 		pointto.pointing.setDirection(l, m);
 		m_beamserver.send(pointto);
-		time = time + (long)1; // advance 1 second
+		time = time + (long)2; // advance 1 second
 	      }
 	    }
 	  }
@@ -343,7 +348,8 @@ void usage()
 "  --rcumode=0..7    # RCU mode to use\n"
 "  --subbands=<set>  # set of subbands to use for this beam\n"
 "  --beamlets=<list> # list of beamlets on which to allocate the subbands\n" 
-"  --direction=longitude,latitude[,type] # lat,lon are floating point values specified in radians\n"
+"  --direction=longitude,latitude[,type]\n"
+"                    # lon,lat are floating point values specified in radians\n"
 "                    # type is one of J2000 (default), AZEL, LOFAR_LMN, SKYSCAN\n"
 "                    # SKYSCAN will scan the sky with a 26 x 26 grid in the (l,m) plane\n"
 "  --help            # print this usage\n"

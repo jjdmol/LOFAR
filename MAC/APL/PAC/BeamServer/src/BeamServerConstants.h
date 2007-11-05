@@ -1,7 +1,6 @@
-//#  -*- mode: c++ -*-
-//#  SubArraySubscription.cc: class implementation
+//#  BeamServerConstants.h: Some constants used in several places of the BS code.
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,33 +20,21 @@
 //#
 //#  $Id$
 
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-#include <APL/CAL_Protocol/SubArray.h>
-#include "SubArraySubscription.h"
-#include <APL/CAL_Protocol/CAL_Protocol.ph>
+#ifndef BEAMSERVER_BEAMSERVERCONSTANTS_H
+#define BEAMSERVER_BEAMSERVERCONSTANTS_H
 
-using namespace LOFAR;
-using namespace CAL;
-using namespace RTC;
+#define SPEED_OF_LIGHT_MS 	299792458.0		// speed of light in meters/sec
 
-void SubArraySubscription::update(Subject* subject)
-{
-  ASSERT(subject == static_cast<Subject*>(m_subarray));
+#define LEADIN_TIME 	 	((long)10)		// time it take before pointing is active
+#define COMPUTE_INTERVAL 	((long)10)		// how often the weights are calculated
+#define UPDATE_INTERVAL  	5				// 
+//#define HBA_INTERVAL	 	2				// how often the HBA delays are calculated
 
-  AntennaGains* calibratedGains = 0;
+#define N_DIM 			 	3 				// x, y, z or l, m, n
 
-  // get gains from the FRONT buffer
-  if (m_subarray->getGains(calibratedGains, SubArray::FRONT)) {
+#define SCALE 			 	(1<<(16-2))		// 14 bits
 
-    CALUpdateEvent update;
-    update.timestamp.setNow(0);
-    update.status = SUCCESS;
-    update.handle = (uint32)this;
+#define SYSTEM_CLOCK_FREQ 	120e6 			// 120 MHz
 
-    update.gains = *calibratedGains;
-
-    if (m_port.isConnected()) m_port.send(update);
-  }
-}
+#endif
 

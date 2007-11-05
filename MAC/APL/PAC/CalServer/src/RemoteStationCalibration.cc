@@ -21,11 +21,12 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 #include "Source.h"
 #include "DipoleModel.h"
 #include "RemoteStationCalibration.h"
 
-#include <Common/LofarLogger.h>
 #include <blitz/array.h>
 #include <complex>
 #include <math.h>

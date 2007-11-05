@@ -82,8 +82,7 @@ namespace LOFAR {
       /**
        * Unlock the resource.
        */
-      inline void writeUnlock()
-      {
+      inline void writeUnlock() {
 	mutex_lock();
 	m_semaphore++;
 	if (m_semaphore > 0) {
@@ -94,8 +93,8 @@ namespace LOFAR {
 	}
 	mutex_unlock();
       }
-      inline void readUnlock()
-      {
+
+      inline void readUnlock() {
 	mutex_lock();
 	m_semaphore--;
 	if (m_semaphore < 0) {
@@ -114,8 +113,7 @@ namespace LOFAR {
        * reading or writing, or for reading
        * @return true if the resource is locked, false otherwise.
        */
-      bool isLocked()
-      {
+      bool isLocked() {
 	bool success;
 	mutex_lock();
 	success = (0 != m_semaphore);
@@ -123,8 +121,7 @@ namespace LOFAR {
 	return success;
       }
 
-      bool isWriteLocked()
-      {
+      bool isWriteLocked() {
 	mutex_lock();
 	bool success;
 	success = (m_semaphore < 0);
@@ -132,8 +129,7 @@ namespace LOFAR {
 	return success; 
       }
 
-      bool isReadLocked()
-      {
+      bool isReadLocked() {
 	mutex_lock();
 	bool success;
 	success = (m_semaphore > 0);

@@ -28,25 +28,22 @@
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarTypes.h>
-#include <bitset>
+#include <Common/lofar_bitset.h>
 
 namespace LOFAR {
-
   class RTC::Subject; // forward declaration
-
   namespace CAL {
-
     class SubArray; // forward declaration
 
-    class SubArraySubscription : public RTC::Observer
-      {
-      public:
-	SubArraySubscription(SubArray*                          subarray,
-			     std::bitset<MEPHeader::N_SUBBANDS> subbandset,
-			     GCFPortInterface&                  port) :
-	  m_subarray(subarray),
-	  m_subbandset(subbandset),
-	  m_port(port) {}
+class SubArraySubscription : public RTC::Observer
+{
+public:
+	SubArraySubscription(SubArray*							subarray,
+						 bitset<MEPHeader::N_SUBBANDS>		subbandset,
+						 GCFPortInterface&					port) :
+		m_subarray(subarray),
+		m_subbandset(subbandset),
+		m_port(port) {}
 
 	virtual ~SubArraySubscription() {}
 
@@ -55,12 +52,12 @@ namespace LOFAR {
 	 */
 	virtual void update(RTC::Subject* subject);
 
-      private:
+private:
 	SubArray* m_subarray; // the subject of this observer
 
-	std::bitset<MEPHeader::N_SUBBANDS> m_subbandset; // subset of subbands which to update
-	GCFPortInterface&                     m_port;       // port on which to send updates
-      };
+	bitset<MEPHeader::N_SUBBANDS>	m_subbandset; // subset of subbands which to update
+	GCFPortInterface&				m_port;       // port on which to send updates
+};
 
   }; // namespace CAL
 }; // namespace LOFAR

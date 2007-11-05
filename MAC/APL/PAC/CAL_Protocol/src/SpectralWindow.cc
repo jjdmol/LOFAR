@@ -63,7 +63,7 @@ bool SpectralWindow::isSuitable(int subband) const
   switch (m_rcucontrol) {
   case 0xB9: // LB_10_90
     {
-      if (1 == m_nyquist_zone) {
+      if (m_nyquist_zone == 1) {
 	if (is160) {
 	  // filter stopband < 10 MHz
 	  if (getSubbandFreq(subband) < 10e6) return false;
@@ -87,7 +87,7 @@ bool SpectralWindow::isSuitable(int subband) const
 
   case 0xC6: // HB_110_190
     {
-      if (2 == m_nyquist_zone) {
+      if (m_nyquist_zone == 2) {
 	if (is160) {
 	  // filter stopband < 110 MHz
 	  if (getSubbandFreq(subband) < 110e6) return false;
@@ -110,7 +110,7 @@ bool SpectralWindow::isSuitable(int subband) const
       
   case 0xCE: // HB_170_230
     {
-      if (3 == m_nyquist_zone) {
+      if (m_nyquist_zone == 3) {
 	if (is160) {
 	  // filter stopband < 170 MHz
 	  if (getSubbandFreq(subband) < 170e6) return false;
@@ -130,7 +130,7 @@ bool SpectralWindow::isSuitable(int subband) const
 
   case 0xD6: // HB_210_250
     {
-      if (3 == m_nyquist_zone) {
+      if (m_nyquist_zone == 3) {
 	if (is160) {
 	  // filter stopband < 210 MHz
 	  if (getSubbandFreq(subband) < 210e6) return false;
@@ -159,6 +159,37 @@ bool SpectralWindow::isSuitable(int subband) const
 
   return false; // assume that the subband is not suitable
 }
+
+//
+// isForHBA(): bool
+//
+bool SpectralWindow::isForHBA() const
+{
+	LOG_DEBUG (formatString("isForHBA(%06X)", m_rcucontrol));
+
+	switch (m_rcucontrol) {
+	case 0x017900:	// LB_10_90
+	case 0x057900:	// LB_30_80
+	case 0x037A00:	// LBH_10_90
+	case 0x077A00:	// LBH_30_80
+		return (false);
+		break;
+
+	case 0x07A400: // HB_110_190
+	case 0x079400: // HB_170_230
+	case 0x078400: // HB_210_250
+		return (true);
+		break;
+
+	default:
+		LOG_WARN(formatString("Unknown RCUcontrol setting (0x%X), assuming LBA array",
+							m_rcucontrol));
+		break;
+	}
+
+	return (false);		// assume LBA
+}
+
 
 unsigned int SpectralWindow::getSize() const
 {

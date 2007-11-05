@@ -1,5 +1,4 @@
-//#  -*- mode: c++ -*-
-//#  SubArraySubscription.cc: class implementation
+//#  Beamlets.h: interface of the Beamlet class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,33 +20,44 @@
 //#
 //#  $Id$
 
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-#include <APL/CAL_Protocol/SubArray.h>
-#include "SubArraySubscription.h"
-#include <APL/CAL_Protocol/CAL_Protocol.ph>
+#ifndef BEAMLETS_H_
+#define BEAMLETS_H_
 
-using namespace LOFAR;
-using namespace CAL;
-using namespace RTC;
+#include <APL/CAL_Protocol/SpectralWindow.h>
+#include <blitz/array.h>
+#include "Beamlet.h"
 
-void SubArraySubscription::update(Subject* subject)
-{
-  ASSERT(subject == static_cast<Subject*>(m_subarray));
+namespace LOFAR {
+  namespace BS {
 
-  AntennaGains* calibratedGains = 0;
+// Factory class for beamlets. It manages a fixed set of beamlet
+// instances.
+class Beamlets {
+public:
+	// Constructor
+	Beamlets(int nbeamlets);
 
-  // get gains from the FRONT buffer
-  if (m_subarray->getGains(calibratedGains, SubArray::FRONT)) {
+	// Destructor
+	virtual ~Beamlets();
 
-    CALUpdateEvent update;
-    update.timestamp.setNow(0);
-    update.status = SUCCESS;
-    update.handle = (uint32)this;
+	// return beamlet at specified index
+	// @param index
+	// @return Beamlet& the specified beamlet
+	Beamlet* get(int index) const;
 
-    update.gains = *calibratedGains;
+	// Calculate weights for all beamlets 
+	// for the specified number of time steps.
+	void calculate_weights(blitz::Array<std::complex<double>, 3>& weights);
 
-    if (m_port.isConnected()) m_port.send(update);
-  }
-}
+private:
+	// default constructor not allowed
+	Beamlets(); // no implementation
 
+	Beamlet*	m_beamlets;
+	int			m_nbeamlets;
+};
+
+  }; // namespace BS
+}; // namespace LOFAR
+
+#endif /* BEAMLETS_H_ */

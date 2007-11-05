@@ -21,6 +21,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 #include "Source.h"
 #include "SourceData.h"
 

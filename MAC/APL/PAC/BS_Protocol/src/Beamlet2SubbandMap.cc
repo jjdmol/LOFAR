@@ -82,6 +82,9 @@ unsigned int Beamlet2SubbandMap::unpack(void *buffer)
   return offset;
 }
 
+//
+// returns a bitset in which the bits represent the used subbands
+//
 bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> Beamlet2SubbandMap::getAsBitset() const
 {
   bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> result;

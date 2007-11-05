@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 
-#include "Beam.h"
+#include "Beams.h"
 #include "BSTest.h"
 #include <APL/RSP_Protocol/MEPHeader.h>
 #include <APL/RTCCommon/Timestamp.h>
@@ -69,293 +69,286 @@ using namespace CAL;
 
 namespace LOFAR {
 
-  class BeamServerTest : public Test {
+class BeamServerTest : public Test 
+{
+private:
+	Beams m_beams;
+	Beam* m_beamptr[TEST_N_BEAMLETS];
 
-  private:
-    Beams m_beams;
-    Beam* m_beamptr[TEST_N_BEAMLETS];
+public:
+	BeamServerTest() :
+		Test("BeamServerTest"),
+		m_beams(TEST_N_BEAMLETS,
+		MEPHeader::N_SUBBANDS)
+	{}
 
-  public:
-
-    BeamServerTest() :
-      Test("BeamServerTest"),
-      m_beams(TEST_N_BEAMLETS,
-	      MEPHeader::N_SUBBANDS)
-    {
-    }
-
-    void run()
-    {
+	void run() {
 #if 0
-      allocate();
-      deallocate();
-      subbandSelection();
-      oneTooManyBeam();
-      oneTooManyBeamlet();
-      emptyBeam();
-      pointing();
+		allocate();
+		deallocate();
+		subbandSelection();
+		oneTooManyBeam();
+		oneTooManyBeamlet();
+		emptyBeam();
+		pointing();
 #endif
-      convert_pointings();
-    }
-
-    void allocate()
-    {
-      Beamlet2SubbandMap allocation;
-
-      for (int bi = 0; bi < TEST_N_BEAMS; bi++) {
-	allocation().clear();
-	for (int si = 0; si < TEST_N_SUBBANDS_PER_BEAM; si++) {
-	  allocation()[si + (TEST_N_SUBBANDS_PER_BEAM * bi)] = si;
+		convert_pointings();
 	}
-	
-	char nodeid[32];
-	snprintf(nodeid, 32, "beam.%d", bi);
-    
-	TESTC(0 != (m_beamptr[bi] = m_beams.get(nodeid, "unspecified", allocation)));
-      }
-    }
 
-    void deallocate()
-    {
-      for (int i = 0; i < TEST_N_BEAMS; i++)
-	{
-	  TESTC(true == m_beams.destroy(m_beamptr[i]));
+	void allocate() {
+		Beamlet2SubbandMap allocation;
+
+		for (int bi = 0; bi < TEST_N_BEAMS; bi++) {
+			allocation().clear();
+			for (int si = 0; si < TEST_N_SUBBANDS_PER_BEAM; si++) {
+				allocation()[si + (TEST_N_SUBBANDS_PER_BEAM * bi)] = si;
+			}
+
+			char nodeid[32];
+			snprintf(nodeid, 32, "beam.%d", bi);
+
+			TESTC(0 != (m_beamptr[bi] = m_beams.create(nodeid, "unspecified", allocation)));
+		}
 	}
-    }
 
-    void subbandSelection()
-    {
-      START_TEST("subbandsSelection", "test subband selection");
+	void deallocate() {
+		for (int i = 0; i < TEST_N_BEAMS; i++) {
+			TESTC(true == m_beams.destroy(m_beamptr[i]));
+		}
+	}
 
-      allocate();
+	void subbandSelection() {
+		START_TEST("subbandsSelection", "test subband selection");
 
-      Beamlet2SubbandMap selection;
-      selection = m_beams.getSubbandSelection();
+		allocate();
 
-      TESTC(selection().size() == TEST_N_BEAMS * TEST_N_SUBBANDS_PER_BEAM);
+		Beamlet2SubbandMap selection;
+		selection = m_beams.getSubbandSelection();
 
-      deallocate();
+		TESTC(selection().size() == TEST_N_BEAMS * TEST_N_SUBBANDS_PER_BEAM);
 
-      STOP_TEST();
-    }
+		deallocate();
 
-    void oneTooManyBeam()
-    {
-      START_TEST("oneTooManyBeam", "test if allocation of one more beam than possible does indeed fail");
+		STOP_TEST();
+	}
 
-      allocate();
+	void oneTooManyBeam() {
+		START_TEST("oneTooManyBeam", "test if allocation of one more beam than possible does indeed fail");
 
-      // and allocate one more
-      Beam* beam = 0;
+		allocate();
 
-      Beamlet2SubbandMap allocation;
+		// and allocate one more
+		Beam* beam = 0;
 
-      for (int i = 0; i < TEST_N_SUBBANDS_PER_BEAM; i++) {
-	allocation()[i] = i;
-      }
+		Beamlet2SubbandMap allocation;
 
-      TESTC(0 == (beam = m_beams.get("beam.0", "unspecified", allocation)));
+		for (int i = 0; i < TEST_N_SUBBANDS_PER_BEAM; i++) {
+			allocation()[i] = i;
+		}
 
-      deallocate();
+		TESTC(0 == (beam = m_beams.create("beam.0", "unspecified", allocation)));
 
-      STOP_TEST();
-    }
+		deallocate();
 
-    void oneTooManyBeamlet()
-    {
-      START_TEST("oneTooManyBeamlet", "test if allocation of one more subband fails");
- 
-      Beamlet2SubbandMap allocation;
+		STOP_TEST();
+	}
 
-      for (int i = 0; i < TEST_N_BEAMLETS + 1; i++) {
-	allocation()[i] = i;
-      }
+	void oneTooManyBeamlet() {
+		START_TEST("oneTooManyBeamlet", "test if allocation of one more subband fails");
 
-      TESTC(0 == (m_beamptr[0] = m_beams.get("beam.100", "unspecified", allocation)));
+		Beamlet2SubbandMap allocation;
 
-      STOP_TEST();
-    }
+		for (int i = 0; i < TEST_N_BEAMLETS + 1; i++) {
+			allocation()[i] = i;
+		}
 
-    void emptyBeam()
-    {
-      START_TEST("emptyBeam", "check that empty beam allocation fails");
+		TESTC(0 == (m_beamptr[0] = m_beams.create("beam.100", "unspecified", allocation)));
 
-      Beamlet2SubbandMap allocation;
+		STOP_TEST();
+	}
 
-      TESTC(0 == (m_beamptr[0] = m_beams.get("beam.0", "unspecified", allocation)));
-      TESTC(false == m_beams.destroy(m_beamptr[0]));
+	void emptyBeam() {
+		START_TEST("emptyBeam", "check that empty beam allocation fails");
 
-      STOP_TEST();
-    }
+		Beamlet2SubbandMap allocation;
 
-    void pointing()
-    {
-      START_TEST("pointing", "check addPointing on allocated and deallocated beam");
+		TESTC(0 == (m_beamptr[0] = m_beams.create("beam.0", "unspecified", allocation)));
+		TESTC(false == m_beams.destroy(m_beamptr[0]));
 
-      Beamlet2SubbandMap allocation;
-      for (int i = 0; i < TEST_N_BEAMLETS; i++) {
-	allocation()[i] = i;
-      }
+		STOP_TEST();
+	}
 
-      // allocate beam, addPointing, should succeed
-      TESTC(0 != (m_beamptr[0] = m_beams.get("beam.0", "unspecified", allocation)));
-      if (m_beamptr[0]) {
-	m_beamptr[0]->addPointing(Pointing(0.0, 0.0, Timestamp::now(20), Pointing::J2000));
-      }
+	void pointing() {
+		START_TEST("pointing", "check addPointing on allocated and deallocated beam");
 
-      TESTC(true == m_beams.destroy(m_beamptr[0]));
+		Beamlet2SubbandMap allocation;
+		for (int i = 0; i < TEST_N_BEAMLETS; i++) {
+			allocation()[i] = i;
+		}
 
-      STOP_TEST();
-    }
+		// allocate beam, addPointing, should succeed
+		TESTC(0 != (m_beamptr[0] = m_beams.create("beam.0", "unspecified", allocation)));
+		if (m_beamptr[0]) {
+			m_beamptr[0]->addPointing(Pointing(0.0, 0.0, Timestamp::now(20), Pointing::J2000));
+		}
 
-    void convert_pointings()
-    {
-      START_TEST("convert_pointings", "convert pointings and calculate weights");
+		TESTC(true == m_beams.destroy(m_beamptr[0]));
 
-      Range all = Range::all();
+		STOP_TEST();
+	}
 
-      Beamlet2SubbandMap allocation;
+	void convert_pointings() {
+		START_TEST("convert_pointings", "convert pointings and calculate weights");
 
-      //       for (int i = 0; i < TEST_N_BEAMLETS; i++) {
-      // 	allocation()[i] = i;
-      //       }
+		Range all = Range::all();
 
-      Array<double, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
-      Array<bool, 2>            select(N_ELEMENTS, N_POLARIZATIONS);
-      Array<double, 1> loc(3);
+		Beamlet2SubbandMap allocation;
 
-      pos = 1.0; // x,y coordiante = 1
-      pos(all, all, 2) = 0.0; // z-coordinate = 0
-      
-      loc = 0.0, 0.0, 0.0;
-      select = true;
-      SubArray subarray("subarray", loc, pos, select, 160000000.0, 1, MEPHeader::N_SUBBANDS, 0xB0 /* LBA */);
+//       for (int i = 0; i < TEST_N_BEAMLETS; i++) {
+// 	allocation()[i] = i;
+//       }
+
+		Array<double, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
+		Array<bool, 2>            select(N_ELEMENTS, N_POLARIZATIONS);
+		Array<double, 1> loc(3);
+
+		pos = 1.0; // x,y coordiante = 1
+		pos(all, all, 2) = 0.0; // z-coordinate = 0
+
+		loc = 0.0, 0.0, 0.0;
+		select = true;
+		SubArray subarray("subarray", loc, pos, select, 160000000.0, 1, MEPHeader::N_SUBBANDS, 0xB0 /* LBA */);
 
 #ifdef CLIENT
-      AMC::ConverterClient* converter = 0;
-      try { converter = new AMC::ConverterClient("localhost"); }
-      catch (Exception e) {
-	LOG_FATAL("Failed to connect to amcserver on localhost");
-	exit(EXIT_FAILURE);
-      }
+		AMC::ConverterClient* converter = 0;
+		try { converter = new AMC::ConverterClient("localhost"); }
+		catch (Exception e) {
+			LOG_FATAL("Failed to connect to amcserver on localhost");
+			exit(EXIT_FAILURE);
+		}
 #else
-      AMC::ConverterImpl* converter = new AMC::ConverterImpl();
+		AMC::ConverterImpl* converter = new AMC::ConverterImpl();
 #endif
 
-      for (int nbeams = 1; nbeams <= MAX_N_BEAMS; nbeams *= 2) {
-	//if (nbeams > TEST_N_BEAMLETS) nbeams = TEST_N_BEAMLETS;
-	for (int compute_interval = 1; compute_interval <= MAX_COMPUTE_INTERVAL; compute_interval *= 2) {
+		for (int nbeams = 1; nbeams <= MAX_N_BEAMS; nbeams *= 2) {
+			//if (nbeams > TEST_N_BEAMLETS) nbeams = TEST_N_BEAMLETS;
+			for (int compute_interval = 1; compute_interval <= MAX_COMPUTE_INTERVAL; compute_interval *= 2) {
 
-	  int nsubbands_per_beam = TEST_N_BEAMLETS / nbeams;
+				int nsubbands_per_beam = TEST_N_BEAMLETS / nbeams;
 
-	  Array<complex<double>, 3> weights(compute_interval, N_ELEMENTS * N_POLARIZATIONS, TEST_N_BEAMLETS);
+				Array<complex<double>, 3> weights(compute_interval, N_ELEMENTS * N_POLARIZATIONS, TEST_N_BEAMLETS);
 
-	  // mark the time
-	  Timestamp now = Timestamp::now();
-	  
-	  bool alloc_ok = true;
-	  for (int bi = 0; bi < nbeams; bi++) {
-	    allocation().clear();
-	    for (int si = 0; si < nsubbands_per_beam; si++) {
-	      allocation()[si + (nsubbands_per_beam * bi)] = si;
-	    }
-	
-	    char nodeid[32];
-	    snprintf(nodeid, 32, "beam.%d", bi);
-    
-	    if (0 == (m_beamptr[bi] = m_beams.get(nodeid, "unspecified", allocation))) alloc_ok = false;
+				// mark the time
+				Timestamp now = Timestamp::now();
 
-	    // add a few pointings
-	
-	    //3C461 Cassiopeia A
-	    m_beamptr[bi]->addPointing(Pointing(6.123662, 1.026719, RTC::Timestamp::now(0), Pointing::J2000));
-	    // 3C405 Cygnus A
-	    m_beamptr[bi]->addPointing(Pointing(5.233748, 0.711018, RTC::Timestamp::now(3), Pointing::J2000));
-	    // 3C144 Crab nebula (NGC 1952)
-	    m_beamptr[bi]->addPointing(Pointing(1.459568, 0.384089, RTC::Timestamp::now(5), Pointing::J2000));
-	    // 3C274 Virgo NGC4486(M87)
-	    m_beamptr[bi]->addPointing(Pointing(3.276114, 0.216275, RTC::Timestamp::now(8), Pointing::J2000));
+				bool alloc_ok = true;
+				for (int bi = 0; bi < nbeams; bi++) {
+					allocation().clear();
+					for (int si = 0; si < nsubbands_per_beam; si++) {
+						allocation()[si + (nsubbands_per_beam * bi)] = si;
+					}
 
-	    m_beamptr[bi]->setSubarray(subarray);
-	  }
-	  TESTC(alloc_ok);
+					char nodeid[32];
+					snprintf(nodeid, 32, "beam.%d", bi);
 
-	  // start timer
-	  struct timeval start, delay;
-	  gettimeofday(&start, 0);
+					if (0 == (m_beamptr[bi] = m_beams.create(nodeid, "unspecified", allocation))) {
+						alloc_ok = false;
+					}
 
-	  printf("\n");
-	  int loop = 0;
-	  for (loop = 0; loop < TEST_N_LOOPS; loop ++) {
-	    // calculate_weights
-	    m_beams.calculate_weights(now + (long)loop, compute_interval, weights, converter);
+					// add a few pointings
 
-	    printf("\r%d/%d", loop, TEST_N_LOOPS); fflush(stdout);
-	  }
-	  printf("\r%d/%d done\n", loop, loop);
+					//3C461 Cassiopeia A
+					m_beamptr[bi]->addPointing(Pointing(6.123662, 1.026719, RTC::Timestamp::now(0), Pointing::J2000));
+					// 3C405 Cygnus A
+					m_beamptr[bi]->addPointing(Pointing(5.233748, 0.711018, RTC::Timestamp::now(3), Pointing::J2000));
+					// 3C144 Crab nebula (NGC 1952)
+					m_beamptr[bi]->addPointing(Pointing(1.459568, 0.384089, RTC::Timestamp::now(5), Pointing::J2000));
+					// 3C274 Virgo NGC4486(M87)
+					m_beamptr[bi]->addPointing(Pointing(3.276114, 0.216275, RTC::Timestamp::now(8), Pointing::J2000));
 
-	  // stop timer
-	  gettimeofday(&delay, 0);
-	  delay.tv_sec -= start.tv_sec;
-	  delay.tv_usec -= start.tv_usec;
-	  if (delay.tv_usec < 0) {
-	    delay.tv_sec -= 1;
-	    delay.tv_usec = 1000000 + delay.tv_usec;
-	  }
-	  
-	  // average over loop times
-	  delay.tv_usec += delay.tv_sec * 1000000;
-	  delay.tv_usec /= loop;
+					m_beamptr[bi]->setSubarray(subarray);
+				}
+				TESTC(alloc_ok);
 
-	  // convert back to sec.usec
-	  delay.tv_sec = delay.tv_usec / 1000000;
-	  delay.tv_usec -= (delay.tv_sec * 1000000);
-	  
-	  printf("\nnbeams\tnsubbands_per_beam\tcompute_interval\tavg. time\n");
-	  printf("%d\t\t%d\t\t\t%d\t\t%ld.%03ld\n", nbeams, nsubbands_per_beam, compute_interval, delay.tv_sec, delay.tv_usec/1000);
-	  printf("\n");
+				// start timer
+				struct timeval start, delay;
+				gettimeofday(&start, 0);
 
-	  bool destroy_ok = true;
-	  for (int i = 0; i < nbeams; i++) {
-	    if (!m_beams.destroy(m_beamptr[i])) destroy_ok = false;
-	  }
-	  TESTC(destroy_ok);
+				printf("\n");
+				int loop = 0;
+				for (loop = 0; loop < TEST_N_LOOPS; loop ++) {
+					// calculate_weights
+					m_beams.calculate_weights(now + (long)loop, compute_interval, converter, weights);
+
+					printf("\r%d/%d", loop, TEST_N_LOOPS); fflush(stdout);
+				}
+				printf("\r%d/%d done\n", loop, loop);
+
+				// stop timer
+				gettimeofday(&delay, 0);
+				delay.tv_sec -= start.tv_sec;
+				delay.tv_usec -= start.tv_usec;
+				if (delay.tv_usec < 0) {
+					delay.tv_sec -= 1;
+					delay.tv_usec = 1000000 + delay.tv_usec;
+				}
+
+				// average over loop times
+				delay.tv_usec += delay.tv_sec * 1000000;
+				delay.tv_usec /= loop;
+
+				// convert back to sec.usec
+				delay.tv_sec = delay.tv_usec / 1000000;
+				delay.tv_usec -= (delay.tv_sec * 1000000);
+
+				printf("\nnbeams\tnsubbands_per_beam\tcompute_interval\tavg. time\n");
+				printf("%d\t\t%d\t\t\t%d\t\t%ld.%03ld\n", nbeams, nsubbands_per_beam, compute_interval, delay.tv_sec, delay.tv_usec/1000);
+				printf("\n");
+
+				bool destroy_ok = true;
+				for (int i = 0; i < nbeams; i++) {
+					if (!m_beams.destroy(m_beamptr[i])) {
+						destroy_ok = false;
+					}
+				}
+				TESTC(destroy_ok);
+			}
+		}
+
+		if (converter) {
+			delete converter;
+		}
+
+		STOP_TEST();
 	}
-      }
 
-      if (converter) delete converter;
+};// class beamservertest
 
-      STOP_TEST();
-    }
-
-  };
-};
+};	// namespace LOFAR
 
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+	GCFTask::init(argc, argv);
 
-  LOG_INFO(formatString("Program %s has started", argv[0]));
+	LOG_INFO(formatString("Program %s has started", argv[0]));
 
-  try 
-  {
-    ConfigLocator cl;
-    globalParameterSet()->adoptFile(cl.locate("BeamServer.conf"));
-  }
-  catch (Exception e)
-  {
-    cerr << "Failed to load configuration files: " << e.text() << endl;
-    exit(EXIT_FAILURE);
-  }
+	try {
+		ConfigLocator cl;
+		globalParameterSet()->adoptFile(cl.locate("BeamServer.conf"));
+	}
+	catch (Exception e) {
+		cerr << "Failed to load configuration files: " << e.text() << endl;
+		exit(EXIT_FAILURE);
+	}
 
-  Suite s("Beam Server Test Suite", &cout);
+	Suite s("Beam Server Test Suite", &cout);
 
-  s.addTest(new BeamServerTest);
-  s.run();
-  long nFail = s.report();
-  s.free();
+	s.addTest(new BeamServerTest);
+	s.run();
+	long nFail = s.report();
+	s.free();
 
-  LOG_INFO(formatString("Normal termination of program %s", argv[0]));
+	LOG_INFO(formatString("Normal termination of program %s", argv[0]));
 
-  return nFail;
+	return nFail;
 }

@@ -28,7 +28,7 @@
 #include <APL/RTCCommon/PSAccess.h>
 
 #include <pthread.h>
-#include <APL/CAL_Protocol/SubArray.h>
+#include "SubArrays.h"
 #include "CalibrationThread.h"
 
 using namespace LOFAR;
