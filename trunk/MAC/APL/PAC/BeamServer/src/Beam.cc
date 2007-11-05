@@ -28,6 +28,7 @@
 #include <AMCBase/Position.h>
 
 #include <APL/RTCCommon/PSAccess.h>
+#include "BeamServerConstants.h"
 #include "Beam.h"
 
 #include <math.h>
@@ -51,7 +52,9 @@ using namespace RTC;
 // Beam(name, subarray, nrSubbands)
 //
 Beam::Beam(string name, string subarrayname, int nsubbands) :
-  m_name(name), m_subarrayname(subarrayname), m_nsubbands(nsubbands)
+	m_name			(name), 
+	m_subarrayname	(subarrayname), 
+	m_nsubbands		(nsubbands)
 {}
 
 //
@@ -59,45 +62,48 @@ Beam::Beam(string name, string subarrayname, int nsubbands) :
 //
 Beam::~Beam()
 {
-  deallocate();
+	deallocate();
 
-  // TODO: free beamlets
+	// TODO: free beamlets
 }
 
 //
 // allocate(beamletAllocation, beamlets, nrSubbands)
 //
+// Note: B2Smap = map <beamletnr, subbandnr>
+//
 bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubbands)
 {
-  if (   0 == allocation().size()
-      || allocation().size() > (unsigned)nsubbands) return false;
+	// check mapsize with number of subbands
+	if (allocation().size() == 0 || allocation().size() > (unsigned)nsubbands) {
+		return (false);
+	}
 
-  // set allocation
-  m_allocation = allocation;
+	m_allocation = allocation;	// copy allocation
+	m_beamlets.clear();			// clear the beamlet collection just to be sure
 
-  // clear the beamlet set just to be sure
-  m_beamlets.clear();
+	// create a Beamlet object for every Beamletnr in the Beamlets array
+	for (map<uint16,uint16>::iterator it = m_allocation().begin();
+									  it != m_allocation().end(); ++it) {
+		//									 vv beamletnumber
+		Beamlet* beamlet = beamlets.get((int)it->first);
 
-  for (map<uint16,uint16>::iterator it = m_allocation().begin();
-       it != m_allocation().end(); ++it) {
+		if (!beamlet) {
+			goto failure;
+		}
 
-    Beamlet* beamlet = beamlets.get((int)it->first);
+		m_beamlets.insert(beamlet); //vv subbandnr
+		if (beamlet->allocate(*this, it->second, nsubbands) < 0) {
+			goto failure;
+		}
+	} // for
 
-    if (!beamlet) goto failure;
+	return (true);
 
-    m_beamlets.insert(beamlet);
-    if (beamlet->allocate(*this, it->second, nsubbands) < 0) goto failure;
-  }
-
-  return true;
-
- failure:
-  //
-  // cleanup on failure
-  //
-  deallocate();
-
-  return false;
+failure:
+	// cleanup on failure
+	deallocate();
+	return (false);
 }
 
 //
@@ -105,21 +111,25 @@ bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubb
 //
 bool Beam::modify(BS_Protocol::Beamlet2SubbandMap allocation)
 {
-  // check for equal size
-  if (allocation().size() != m_allocation().size()) return false;
-  
-  // check that keys match
-  map<uint16,uint16>::iterator it1;
-  map<uint16,uint16>::iterator it2;
-  for (it1 = allocation().begin(), it2 = m_allocation().begin();
-       it1 != allocation().end(); ++it1, ++it2) {
-    if ((*it1).first != (*it2).first) return false;
-  }
+	// new and old size should match
+	if (allocation().size() != m_allocation().size()) {
+		return (false);
+	}
 
-  // all ok, replace m_allocation by allocation
-  m_allocation = allocation;
+	// check that beamletnumbers match
+	map<uint16,uint16>::iterator it1;
+	map<uint16,uint16>::iterator it2;
+	for (it1 = allocation().begin(), it2 = m_allocation().begin();
+										it1 != allocation().end(); ++it1, ++it2) {
+		if ((*it1).first != (*it2).first) {
+			return (false);
+		}
+	}
 
-  return true;
+	// all ok, replace m_allocation by allocation
+	m_allocation = allocation;
+
+	return (true);
 }
 
 //
@@ -127,7 +137,7 @@ bool Beam::modify(BS_Protocol::Beamlet2SubbandMap allocation)
 //
 Beamlet2SubbandMap Beam::getAllocation() const
 {
-  return m_allocation;
+	return (m_allocation);
 }
 
 //
@@ -135,22 +145,23 @@ Beamlet2SubbandMap Beam::getAllocation() const
 //
 void Beam::deallocate()
 {
-  // release beamlets
-  for (set<Beamlet*>::iterator bl = m_beamlets.begin();
-       bl != m_beamlets.end(); ++bl)
-  {
-    (*bl)->deallocate();
-  }
-  m_beamlets.clear();
+	// release beamlets
+	for (set<Beamlet*>::iterator bl = m_beamlets.begin();
+								 bl != m_beamlets.end(); ++bl) {
+		(*bl)->deallocate();
+	}
+	m_beamlets.clear();
 
-  // reset pointing to zenith
-  m_pointing = Pointing();
+	// reset pointing to zenith
+	m_pointing = Pointing();
 
-  // clear the pointing queue
-  while (!m_pointing_queue.empty()) m_pointing_queue.pop();
+	// clear the pointing queue
+	while (!m_pointing_queue.empty()) {
+		m_pointing_queue.pop();
+	}
 
-  // clear allocation
-  m_allocation().clear();
+	// clear allocation
+	m_allocation().clear();
 }
 
 //
@@ -158,7 +169,7 @@ void Beam::deallocate()
 //
 void Beam::addPointing(const Pointing& pointing)
 {
-  m_pointing_queue.push(pointing);
+	m_pointing_queue.push(pointing);
 }
 
 //
@@ -166,7 +177,7 @@ void Beam::addPointing(const Pointing& pointing)
 //
 void Beam::setSubarray(const CAL::SubArray& array)
 {
-  m_array = array;
+	m_array = array;
 }
 
 //
@@ -174,7 +185,7 @@ void Beam::setSubarray(const CAL::SubArray& array)
 //
 void Beam::setCalibration(const CAL::AntennaGains& gains)
 {
-  m_gains = gains;
+	m_gains = gains;
 }
 
 //
@@ -182,7 +193,7 @@ void Beam::setCalibration(const CAL::AntennaGains& gains)
 //
 const CAL::AntennaGains& Beam::getCalibration() const
 {
-  return m_gains;
+	return (m_gains);
 }
 
 #if 0
@@ -214,7 +225,7 @@ void Beam::logPointing(Pointing pointing)
   static string pipename = cl.locate("/indi_pipe");
   int retry = 0;
 
-  if (!GET_CONFIG("BeamServer.DISABLE_INDI", i)) {
+  if (GET_CONFIG("BeamServer.DISABLE_INDI", i) == 0) {
     /**
      * Write RaDec coordinates to the named pipe.
      * If there is no-one listening on the named pipe it
@@ -268,33 +279,38 @@ void Beam::logPointing(Pointing pointing)
 #endif
 
 //
-// convertPointings(begintime, interval, amcConverter)
+// calcNewTrack (begintime, interval, amcConverter)
 //
-int Beam::convertPointings(RTC::Timestamp begintime, 
-						   int compute_interval, 
-						   AMC::Converter* conv)
+// Note: for LBA antenna's every second a new pointing must be send to the
+// RSPboards. For HBA however the update interval is about 20 seconds so we
+// only have to calculate one pointing.
+//
+int Beam::calcNewTrack(RTC::Timestamp	begintime, 
+					   int				compute_interval, 
+					   AMC::Converter*	conv)
 {
+	int		nrPts2Calc = compute_interval;
+
 	// remember last pointing from previous call
 	Pointing current_pointing = m_pointing;
 
-	Pointing	track[compute_interval];
-	bool		pset [compute_interval];
-	for (int i = 0; i < compute_interval; i++) {
+	Pointing	track[nrPts2Calc];	// array with future directions
+	bool		pset [nrPts2Calc];	// track element calculated or not
+	for (int i = 0; i < nrPts2Calc; i++) {
 		pset[i] = false;
 	}
 
 	// reset lmns array
-	m_lmns.resize(compute_interval, 3);
+	m_lmns.resize(nrPts2Calc, 3);
 	m_lmns = 0.0;
 
-	LOG_INFO_STR("computing weights for interval [" << begintime 
+	LOG_DEBUG_STR("computing track for interval [" << begintime 
 					<< " : " << begintime + (long)(compute_interval - 1) << "]");
 
-	// for all pointing in the queue
+	// for all (user) pointings in the queue
 	while (!m_pointing_queue.empty()) {
 		Pointing pointing = m_pointing_queue.top();
-
-		LOG_INFO_STR("Process pointing for time " << pointing.time());
+		LOG_DEBUG_STR("Process pointing for time " << pointing.time());
 
 		// Deadline missed?
 		if (pointing.time() < begintime) {
@@ -305,10 +321,12 @@ int Beam::convertPointings(RTC::Timestamp begintime,
 
 			pointing.setTime(begintime);
 		}
+		// note: pointing.time() is now >= begintime
 
 		// within this period?
 		if (pointing.time() < begintime + (long)compute_interval) {
-			m_pointing_queue.pop(); // remove from queue
+			m_pointing_queue.pop(); // remove from queue because pointing
+									// will be stored in m_pointing.
 
 			// insert converted LM coordinate at correct 
 			// position in the m_lmns array
@@ -320,22 +338,28 @@ int Beam::convertPointings(RTC::Timestamp begintime,
 			}
 
 			track[tsec] = pointing;
-			pset[tsec] = true;
+			pset[tsec]  = true;
 
 			m_pointing = pointing; // remember current pointing
 		} else {
-			// done with this period
+			// pointing starts after calculation period
 			break;
 		}
 	}
 
-	//
+	// Get geographical location of subarray in WGS84 radians/meters
+	blitz::Array<double, 1> loc = getSubarray().getGeoLoc();
+	Position location((loc(0) * M_PI) / 180.0, 
+					  (loc(1) * M_PI) / 180.0,
+					   loc(2), Position::WGS84);
+	LOG_DEBUG_STR("Geographical location " << loc);
+
 	// track array will have unset values because
 	// there are not necessarily pointings at each second
+	// or if the pointingqueue was empty.
 	// these holes are fixed up in this loop
 	// and each pointing is converted to LMN coordinates
-	//
-	for (int t=0; t < compute_interval; ++t) {
+	for (int t = 0; t < nrPts2Calc; ++t) {
 		if (!pset[t]) {
 			track[t] = current_pointing;
 		} else {
@@ -344,14 +368,7 @@ int Beam::convertPointings(RTC::Timestamp begintime,
 
 		/* set time and convert to LMN */
 		track[t].setTime(begintime + (long)t);
-		blitz::Array<double, 1> loc = getSubarray().getGeoLoc();
-		// location must be in WGS84 radians/meters
-		Position location((loc(0) * M_PI) / 180.0, 
-						  (loc(1) * M_PI) / 180.0,
-						   loc(2), Position::WGS84);
-		LOG_DEBUG_STR("Geographical location " << loc);
-		Pointing lmn = track[t].convertToLMN(conv, &location);
-
+		Pointing lmn  = track[t].convert(conv, &location, Pointing::LOFAR_LMN);
 		/* store in m_lmns and calculate normalized n-coordinate */
 		m_lmns(t,0) = lmn.angle0();
 		m_lmns(t,1) = lmn.angle1();
@@ -370,177 +387,125 @@ int Beam::convertPointings(RTC::Timestamp begintime,
 
 		LOG_INFO_STR(formatString("direction=(%f,%f,%f) @ ",
 						m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)) << track[t].time());
-	}
+	} // for pointings in compute interval
 
-	LOG_DEBUG_STR("Current pointing (" << current_pointing.angle0() << ", " 
+	LOG_INFO_STR("Current pointing (" << current_pointing.angle0() << ", " 
 									   << current_pointing.angle1() <<
 										") @ time " << current_pointing.time());
 	//logPointing(current_pointing);
 
-	return 0;
+	return (0);
 }
 
 //
-// getLMNCoordinates()
+// calculateHBAdelays(timestamp, amcconverter, tileRelPosArray)
+// result is stored in itsHBAdelays
 //
-const Array<double,2>& Beam::getLMNCoordinates() const
+void Beam::calculateHBAdelays(RTC::Timestamp				timestamp,
+							  AMC::Converter*				conv,
+							  const blitz::Array<double,2>&	tileDeltas,
+							  const blitz::Array<double,1>&	elementDelays)
 {
-  return m_lmns;
+	LOG_DEBUG(formatString("current HBApointing=(%f,%f)",
+							getPointing().angle0(),
+							getPointing().angle1()));
+	
+	// calculate the mean of all posible delays to hold signal front in the midle of a tile
+	double meanElementDelay = blitz::mean(elementDelays);
+	LOG_DEBUG_STR("mean ElemnetDelay = " << meanElementDelay << " Sec"); 
+
+
+	// Calculate the current values of AzEl.
+	Pointing	curPointing(getPointing());
+	curPointing.setTime(timestamp);
+  // Get geographical location of subarray in WGS84 radians/meters
+	blitz::Array<double, 1> loc = getSubarray().getGeoLoc();
+	Position location((loc(0) * M_PI) / 180.0,
+					  (loc(1) * M_PI) / 180.0,
+					   loc(2), Position::WGS84);
+	// go to lmn coordinates
+	Pointing lmn	  = curPointing.convert(conv, &location, Pointing::LOFAR_LMN);
+	double itsHBA_L   = lmn.angle0();
+	double itsHBA_M   = lmn.angle1();
+	
+	// maybe not needed, but this code limits the max. posilble delay
+	if ((itsHBA_L*itsHBA_L + itsHBA_M*itsHBA_M) > 1) {
+		double modus = sqrt(itsHBA_L*itsHBA_L + itsHBA_M*itsHBA_M);
+		itsHBA_L = itsHBA_L / modus;
+		itsHBA_M = itsHBA_M / modus;
+	}
+	
+	LOG_INFO_STR("current HBA-pointing lmn=(" << itsHBA_L << "," << itsHBA_M << ") @" << curPointing.time());
+
+	// get position of antennas
+	// note: pos[antennes, polarisations, coordinates]
+	const Array<double,3>& pos  = getSubarray().getAntennaPos();
+	int nrAntennas = pos.extent(firstDim);
+	int nrPols     = pos.extent(secondDim);
+	LOG_DEBUG_STR("SA.n_ant="<<nrAntennas <<",SA.n_pols="<<nrPols);
+	LOG_DEBUG_STR("antennaPos="<<pos);
+	
+	// get contributing RCUs
+	CAL::SubArray::RCUmask_t		rcuMask(getSubarray().getRCUMask());
+	LOG_DEBUG_STR("rcumask="<<rcuMask);
+	
+	itsHBAdelays.resize(rcuMask.count(), MEPHeader::N_HBA_DELAYS);
+	itsHBAdelays = 0;	// set all delays to 0
+	
+	int		localrcu  = 0;
+	int		globalrcu = 0;
+	for (globalrcu = 0; globalrcu < MEPHeader::MAX_N_RCUS; globalrcu++) {
+		//LOG_DEBUG_STR("globalrcu=" << globalrcu);
+		if (!rcuMask.test(globalrcu)) {
+			continue;
+		}
+		// RCU is in RCUmask, do the calculations
+		int	antenna(globalrcu/2);
+		int pol	   (globalrcu%2);
+		for (int element = 0; element < MEPHeader::N_HBA_DELAYS; element++) {
+					
+			// calculate tile delay
+			double	delay =
+				( (itsHBA_L * tileDeltas(element,0)) + 
+				  (itsHBA_M * tileDeltas(element,1)) ) / 
+					SPEED_OF_LIGHT_MS;
+			
+			// signal front stays in midle of tile
+			delay += meanElementDelay;
+			
+			LOG_DEBUG_STR("antenna="<<antenna <<", pol="<<pol <<", element="<<element  <<", delay("<<localrcu<<","<<element<<")="<<delay);
+			
+			// calculate approximate DelayStepNr
+			int delayStepNr = static_cast<int>(delay / 0.5E-9);
+			
+			// look for nearest matching delay step in range "delayStepNr - 2 .. delayStepNr + 2"
+			double minDelayDiff = fabs(delay - elementDelays(delayStepNr));
+			double difference;
+			int minStepNr = delayStepNr;
+			for (int i = (delayStepNr - 2); i <= (delayStepNr + 2); i++){
+				if (i == delayStepNr) continue; // skip approximate nr
+				difference = fabs(delay - elementDelays(i));
+				if (difference < minDelayDiff)	{
+					minStepNr = i;
+					minDelayDiff = difference;
+				}
+			}
+			delayStepNr = minStepNr;
+			
+			// range check for delayStepNr, max. 32 steps (0..31) 
+			if (delayStepNr < 0) delayStepNr = 0;
+			if (delayStepNr > 31) delayStepNr = 31;
+				
+			itsHBAdelays(localrcu,element) = delayStepNr; // assign
+		} // elements in tile
+		localrcu++;	 // globalrcu
+	}
+		
+	// temporary array needed to LOG "itsHBAdelays"
+	blitz::Array<int,2>	HBAdelays;
+	HBAdelays.resize(rcuMask.count(), MEPHeader::N_HBA_DELAYS);
+	
+	HBAdelays = itsHBAdelays + 0; // copy to print values (uint8 are handled as chars)
+	LOG_DEBUG_STR("itsHBAdelays Nr = " << HBAdelays);
 }
 
-//
-// getSPW()
-//
-const CAL::SpectralWindow& Beam::getSPW() const
-{
-  return m_array.getSPW();
-}
-
-// -------------------- Beams --------------------
-//
-// Beams(nrBeamlets, nrSubbands)
-//
-Beams::Beams(int nbeamlets, int nsubbands) : m_beamlets(nbeamlets), m_nsubbands(nsubbands)
-{
-}
-
-//
-// ~Beams()
-//
-Beams::~Beams()
-{
-  for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
-  {
-    delete bi->first;
-  }
-  m_beams.clear();
-}
-
-//
-// get(nodeid, subarrayname, beamletAllocation)
-//
-Beam* Beams::get(string nodeid, string subarrayname, Beamlet2SubbandMap allocation)
-{
-  Beam* beam = new Beam(nodeid, subarrayname, m_nsubbands);
-
-  if (beam) {
-
-    if (!beam->allocate(allocation, m_beamlets, m_nsubbands)) {
-      LOG_DEBUG("Failed to allocate all required beamlets");
-      delete beam;
-      beam = 0;
-    } else {
-      // add to list of active beams with 0 calibration handle
-      m_beams[beam] = 0;
-    }
-  }
-  return beam;
-}
-
-//
-// setCalibrationHandle(beam, handle)
-//
-void Beams::setCalibrationHandle(Beam* beam, uint32 handle)
-{
-  m_handle2beam[handle] = beam;
-  m_beams[beam]         = handle;
-}
-
-//
-// findCalibrationHandle(beam)
-//
-uint32 Beams::findCalibrationHandle(Beam* beam) const
-{
-  map<Beam*,uint32>::const_iterator it = m_beams.find(beam);
-
-  if (it != m_beams.end()) {
-    return it->second;
-  }
-
-  return 0;
-}
-
-//
-// updateCalibration(handle, gains)
-//
-bool Beams::updateCalibration(uint32 handle, CAL::AntennaGains& gains)
-{
-  map<uint32,Beam*>::iterator it = m_handle2beam.find(handle);
-
-  if ( (it == m_handle2beam.end()) || (!it->second) ) return false;
-
-  it->second->setCalibration(gains);
-
-  return true;
-}
-
-//
-// exists(beam)
-//
-bool Beams::exists(Beam *beam)
-{
-  // if beam not found, return 0
-  map<Beam*,uint32>::iterator it = m_beams.find(beam);
-
-  if (it == m_beams.end()) return false;
-  
-  return true;
-}
-
-//
-// destroy(beam)
-//
-bool Beams::destroy(Beam* beam)
-{
-  // remove from handle2beam map
-  for (map<uint32,Beam*>::iterator it = m_handle2beam.begin();
-       it != m_handle2beam.end(); ++it) {
-    if (beam == it->second) m_handle2beam.erase(it);
-  }
-  
-  // if beam not found, return false
-  map<Beam*,uint32>::iterator it = m_beams.find(beam);
-
-  if (it != m_beams.end()) {
-    delete(it->first);
-    m_beams.erase(it);
-    return true;
-  }
-
-  return false;
-}
-
-//
-// calculate_weigths(time, interval, weights, AMCConverter)
-//
-void Beams::calculate_weights(Timestamp timestamp,
-			      int compute_interval,
-			      blitz::Array<std::complex<double>, 3>& weights,
-			      AMC::Converter* conv)
-{
-  // iterate over all beams
-  for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
-  {
-    bi->first->convertPointings(timestamp, compute_interval, conv);
-    LOG_DEBUG(formatString("current_pointing=(%f,%f)",
-			   bi->first->getPointing().angle0(),
-			   bi->first->getPointing().angle1()));
-  }
-
-  m_beamlets.calculate_weights(weights);
-}
-
-//
-// getSubbandSelection()
-//
-Beamlet2SubbandMap Beams::getSubbandSelection()
-{
-  Beamlet2SubbandMap selection;
-  for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi)
-  {
-    Beamlet2SubbandMap beammap = bi->first->getAllocation();
-    selection().insert(beammap().begin(), beammap().end());
-  }
-
-  return selection;
-}

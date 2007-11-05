@@ -25,13 +25,13 @@
 
 #include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
-#include "Beam.h"
-#include "Beamlet.h"
+#include "Beams.h"
 #include <APL/RTCCommon/Timestamp.h>
 
 #include <AMCBase/ConverterClient.h>
 
 #include <GCF/TM/GCF_Control.h>
+#include <GCF/TM/GCF_TimerPort.h>
 
 #include <set>
 #include <map>
@@ -40,207 +40,169 @@
 namespace LOFAR {
   namespace BS {
 
-    class BeamServer : public GCFTask
-      {
-      private:
-
-	/**
-	 * Class to maintain state on current beam
-	 * transaction (albeit Beamalloc or Beamfree)
-	 */
+class BeamServer : public GCFTask
+{
+private:
+	// Class to maintain state on current beam
+	// transaction (albeit Beamalloc or Beamfree)
 	class BeamTransaction
-	  {
-	  public:
-	    BeamTransaction() : m_port(0), m_beam(0) /*, event(0), calhandle(0)*/ {}
+	{
+	public:
+		BeamTransaction() : m_port(0), m_beam(0) /*, event(0), calhandle(0)*/ {}
 
-	    void set(GCFPortInterface* port, Beam* beam) { m_port = port; m_beam = beam; }
-	    inline void reset() { set(0,0); }
+		void set(GCFPortInterface* port, Beam* beam) { m_port = port; m_beam = beam; }
+		inline void reset() { set(0,0); }
 
-	    GCFPortInterface* getPort() const { return m_port; }
-	    Beam*             getBeam() const { return m_beam; }
+		GCFPortInterface* getPort() const { return m_port; }
+		Beam*             getBeam() const { return m_beam; }
 
-	  private:
-	    // Port on which the transaction is taking place.
-	    GCFPortInterface* m_port;
+	private:
+		// Port on which the transaction is taking place.
+		GCFPortInterface* m_port;
 
-	    // Beam that is the subject of the transaction
-	    Beam* m_beam;
-	  };
+		// Beam that is the subject of the transaction
+		Beam* m_beam;
+	};
 
-      public:
-	/**
-	 * The constructor of the BeamServer task.
-	 * @param name The name of the task. The name is used for looking
-	 * up connection establishment information using the GTMNameService and
-	 * GTMTopologyService classes.
-	 */
+public:
+	// The constructor of the BeamServer task.
+	// @param name The name of the task. The name is used for looking
+	// up connection establishment information using the GTMNameService and
+	// GTMTopologyService classes.
 	BeamServer(string name, int argc, char** argc);
 	virtual ~BeamServer();
 
-	/**
-	 * Parse the commandline options
-	 */
+	// Parse the commandline options
 	void parseOptions(int argc, char** argv);
 
 	// state methods
 
-	/**
-	 * Method to clean up disconnected client ports.
-	 */
+	// Method to clean up disconnected client ports.
 	void undertaker();
 
-	/**
-	 * Destroy all beams associated with port.
-	 */
+	// Destroy all beams associated with port.
 	void  destroyAllBeams(GCFPortInterface* port);
 
-	/**
-	 * Create new beam and update administration
-	 */
-	Beam* newBeam(BeamTransaction& bt, GCFPortInterface* port,
-		      std::string nodeid, std::string subarrayname,
-		      BS_Protocol::Beamlet2SubbandMap allocation);
+	// Create new beam and update administration
+	Beam*   newBeam(BeamTransaction& 				bt, 
+					GCFPortInterface* 				port,
+					std::string 					nodeid, 
+					std::string 					subarrayname,
+					BS_Protocol::Beamlet2SubbandMap allocation);
 
-	/**
-	 * Destroy beam of specified transaction.
-	 * @param bt the beamtransaction specifying the beam to destroy
-	 */
+	// Destroy beam of specified transaction.
+	// @param bt the beamtransaction specifying the beam to destroy
 	void deleteBeam(BeamTransaction& bt);
 
-	/**
-	 * @return true if ready to transition to the enabled
-	 * state.
-	 */
+	// @return true if ready to transition to the enabled
+	// state.
 	bool isEnabled();
 
-	/**
-	 * The initial state. This state is used to connect to
-	 * the RSPDriver and the CalibrationServer. When both 
-	 * are connected a transition to the enabled state is made.
-	 */
+	// The initial state. This state is used to connect to
+	// the RSPDriver and the CalibrationServer. When both 
+	// are connected a transition to the enabled state is made.
 	GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
 
-	/**
-	 * The enabled state. In this state the BeamServer can accept
-	 * client connections.
-	 */
+	// The enabled state. In this state the BeamServer can accept
+	// client connections.
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface& p);
 
-	/**
-	 * Cleanup state, when the rspdriver, the calserver or the
-	 * acceptor disconnects, then disconnect all clients and
-	 * return to the initial state.
-	 */
+	// Cleanup state, when the rspdriver, the calserver or the
+	// acceptor disconnects, then disconnect all clients and
+	// return to the initial state.
 	GCFEvent::TResult cleanup(GCFEvent& e, GCFPortInterface& p);
 
-	/**
-	 * The beamalloc state. In this state the complete process
-	 * of allocating a beam, registering with the calibration
-	 * server, and getting the antenna positions is handled.
-	 */
+	// The beamalloc state. In this state the complete process
+	// of allocating a beam, registering with the calibration
+	// server, and getting the antenna positions is handled.
 	GCFEvent::TResult beamalloc_state(GCFEvent& e, GCFPortInterface& p);
 
-	/**
-	 * The beamfree state. In this state the BeamServer unsubscribes
-	 * with the calibration server for the specified beam.
-	 */
+	// The beamfree state. In this state the BeamServer unsubscribes
+	// with the calibration server for the specified beam.
 	GCFEvent::TResult beamfree_state(GCFEvent& e, GCFPortInterface& p);
 
+	void getAllHBADeltas(string filename);
+	
+	void getAllHBAElementDelays(string filename);
+		
 	// action methods
 
-	/**
-	 * start allocation of a new beam
-	 */
-	bool beamalloc_start(BSBeamallocEvent& ba,
-			     GCFPortInterface& port);
+	// start allocation of a new beam
+	bool beamalloc_start(BSBeamallocEvent& ba, GCFPortInterface& port);
 
-	/**
-	 * free a beam
-	 */
-	bool beamfree_start(BSBeamfreeEvent& bf,
-			    GCFPortInterface& port);
+	// free a beam
+	bool beamfree_start(BSBeamfreeEvent& bf, GCFPortInterface& port);
 
-	/**
-	 * Change the direction of a beam.
-	 */
-	bool beampointto_action(BSBeampointtoEvent& pt,
-				GCFPortInterface& port);
+	// Change the direction of a beam.
+	bool beampointto_action(BSBeampointtoEvent& pt, GCFPortInterface& port);
 
-	/**
-	 * Time to compute some more weights.
-	 * @param current_seconds Time in seconds since 1 Jan 1970
-	 */
+	// Time to compute some more weights.
+	// @param current_seconds Time in seconds since 1 Jan 1970
 	void compute_weights(RTC::Timestamp time);
 
-	/**
-	 * Send weights to the board.
-	 */
+	// Send weights to the board.
 	void send_weights(RTC::Timestamp time);
 
-	/**
-	 * Send subbands selection to the board.
-	 */
+	// Time to compute the HBA delays
+	// @param current_seconds Time in seconds since 1 Jan 1970
+	void compute_HBAdelays(RTC::Timestamp time);
+
+	// Send HBAdelays to the board.
+	void send_HBAdelays(RTC::Timestamp	time);
+
+	// Send subbands selection to the board.
 	void send_sbselection();
 
-	/**
-	 * defer event
-	 */
+	// defer event
 	void defer(GCFEvent& e, GCFPortInterface& p);
 
-	/**
-	 * recall event
-	 */
+	// recall event
 	GCFEvent::TResult recall(GCFPortInterface& p);
 
-      private:
+private:
 	// member variables
 
-	/**
-	 * Current subband selection
-	 */
-	BS_Protocol::Beamlet2SubbandMap m_sbsel;
-
-	/**
-	 * Receptor positions in 3 dimensions (x, y and z)
-	 */
-	blitz::Array<double, 3> m_pos;
-
-	/**
-	 * Weight array
-	 */
+	// Weight array
 	blitz::Array<std::complex<double>,  3> m_weights;
 	blitz::Array<std::complex<int16_t>, 3> m_weights16;
 
-      private:
-	// ack events
-	//BS_Protocol::BeamallocackEvent m_beamallocack;
-	//BS_Protocol::BeamfreeackEvent  m_beamfreeack;
+	// Relative positions of the elements of the HBA tile.
+	blitz::Array<double, 2>		itsTileRelPos;	// [N_HBA_ELEMENTS,x|y] = [16,2]
+		
+	// Delay steps [0..31] of an element
+	blitz::Array<double, 1>		itsElementDelays; // [N_HBA_DELAYS] = [32,1] 	
 
 	// ports
-	GCFTCPPort       m_acceptor; // list for clients on this port
-	std::list<GCFPortInterface*> m_client_list; // list of currently connected clients
-	std::list<GCFPortInterface*> m_dead_clients; // list of disconnected clients to be removed
+	GCFTCPPort       			 m_acceptor; 	 // list for clients on this port
+	std::list<GCFPortInterface*> m_client_list;  // list of currently connected clients
+	std::list<GCFPortInterface*> m_dead_clients; // list of discon. clients to be removed
 
 	std::map<GCFPortInterface*, std::set<Beam*> >   m_client_beams; // mapping from client port to set of beams
 	std::list<std::pair<char*, GCFPortInterface*> > m_deferred_queue; // deferred events
 
-	BeamTransaction m_bt; // current beam transaction
+	BeamTransaction	m_bt; // current beam transaction
 
-	GCFPort  m_rspdriver;
-	GCFPort  m_calserver;  
-	bool     m_beams_modified;
+	GCFPort  		m_rspdriver;
+	GCFPort  		m_calserver;  
+	GCFTimerPort*  	itsUpdateTimer;  
+	bool     		m_beams_modified;
 
-	int      m_nrcus;
+	int      		m_nrcus;
 
-	int32    m_sampling_frequency;
-	int32    m_nyquist_zone;    
-	Beams    m_beams;
+	Beams    		m_beams;
 
 	AMC::ConverterClient m_converter;
 
-	int32	 m_instancenr;
-      };
-  };
+	int32	 		m_instancenr;
+	
+	long			itsUpdateInterval;
+	
+	long			itsComputeInterval;
+	
+	long			itsHbaInterval;
 };
-     
+
+  }; //# namespace BS
+}; //# namespace LOFAR
+
 #endif /* BEAMSERVER_H_ */

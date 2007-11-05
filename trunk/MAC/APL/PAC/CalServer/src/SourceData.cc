@@ -21,6 +21,7 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
 #include "SourceData.h"
 
 using namespace std;

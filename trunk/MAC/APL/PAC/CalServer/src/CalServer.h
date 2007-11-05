@@ -24,12 +24,11 @@
 #ifndef CALSERVER_H_
 #define CALSERVER_H_
 
-#include <APL/CAL_Protocol/SpectralWindow.h>
-#include <APL/CAL_Protocol/AntennaArray.h>
-#include "Source.h"
-#include "DipoleModel.h"
 #include <APL/CAL_Protocol/ACC.h>
 #include <APL/CAL_Protocol/SubArray.h>
+#include "Source.h"
+#include "DipoleModel.h"
+#include "SubArrays.h"
 
 #include <GCF/TM/GCF_Control.h>
 #include <AMCBase/ConverterClient.h>
@@ -53,7 +52,7 @@ namespace LOFAR {
        * @param accs Reference to the global ACC's. These ACC's are shared between
        * the calibration algorithm and the ACMProxy class.
        */
-      CalServer(string name, ACCs& accs, int argc, char** argv);
+      CalServer(const string& name, ACCs& accs, int argc, char** argv);
       virtual ~CalServer();
 
       /**
@@ -87,7 +86,7 @@ namespace LOFAR {
       GCFEvent::TResult handle_cal_stop       (GCFEvent& e, GCFPortInterface &port);
       GCFEvent::TResult handle_cal_subscribe  (GCFEvent& e, GCFPortInterface &port);
       GCFEvent::TResult handle_cal_unsubscribe(GCFEvent& e, GCFPortInterface &port);
-      //GCFEvent::TResult handle_cal_getsubarray(GCFEvent& e, GCFPortInterface &port);
+      GCFEvent::TResult handle_cal_getsubarray(GCFEvent& e, GCFPortInterface &port);
       /*@}*/
 
       /**

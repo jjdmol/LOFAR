@@ -53,9 +53,9 @@ ACMProxy::ACMProxy(string name, ACCs& accs)
     m_update_subband(0),
     m_nrcus(0)
 {
-  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+	GCF::TM::registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 
-  m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+	m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 ACMProxy::~ACMProxy()
@@ -63,183 +63,166 @@ ACMProxy::~ACMProxy()
 
 GCFEvent::TResult ACMProxy::initial(GCFEvent& e, GCFPortInterface& port)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-  switch(e.signal)
-    {
-    case F_ENTRY:
-      {
-	m_handle = 0;
-	m_starttime = Timestamp(0,0);
-	m_request_subband = 0;
-	m_update_subband = 0;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-	LOG_DEBUG("opening port: m_rspdriver");
-	m_rspdriver.open();
-	
-	//
-	// When TRAN(CalServer::initial) is done when handling F_DISCONNECTED
-	// in any of the other states, then F_ENTRY of ::initial will be followed
-	// by a port.close() in the GCF framework which cancels the open on the previous line.
-	// Setting this timer will make sure the port is opened again.
-	//
-	m_rspdriver.setTimer(0.0);
-      }
-      break;
+	switch(e.signal) {
+	case F_ENTRY: {
+		m_handle = 0;
+		m_starttime = Timestamp(0,0);
+		m_request_subband = 0;
+		m_update_subband = 0;
 
-    case F_INIT:
-      break;
+		LOG_DEBUG("opening port: m_rspdriver");
+		m_rspdriver.open();
 
-    case F_CONNECTED:
-      {
-	if (m_rspdriver.isConnected())
-	{
-	  RSPGetconfigEvent getconfig;
-	  m_rspdriver.send(getconfig);
+		//
+		// When TRAN(CalServer::initial) is done when handling F_DISCONNECTED
+		// in any of the other states, then F_ENTRY of ::initial will be followed
+		// by a port.close() in the GCF framework which cancels the open on the previous line.
+		// Setting this timer will make sure the port is opened again.
+		//
+		m_rspdriver.setTimer(0.0);
 	}
-      }
-      break;
+	break;
 
-    case RSP_GETCONFIGACK:
-      {
-	RSPGetconfigackEvent ack(e);
-	m_nrcus = ack.n_rcus;
-	m_nrspboards = ack.n_rspboards;
-	if (m_nrcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol())
-	{
-	  LOG_FATAL("CalServer.N_ANTENNAS does not match value from hardware");
-	  exit(EXIT_FAILURE);
+	case F_INIT:
+	break;
+
+	case F_CONNECTED: {
+		if (m_rspdriver.isConnected()) {
+			RSPGetconfigEvent getconfig;
+			m_rspdriver.send(getconfig);
+		}
 	}
-	TRAN(ACMProxy::idle);
-      }
-      break;
+	break;
 
-    case F_DISCONNECTED:
-      {
-	// if we get disconnected, but we're in test mode, simply continue to the idle state
-	if (GET_CONFIG("CalServer.ACCTestEnable", i))
-	{
-	  TRAN(ACMProxy::idle);
+	case RSP_GETCONFIGACK: {
+		RSPGetconfigackEvent ack(e);
+		m_nrcus = ack.n_rcus;
+		m_nrspboards = ack.n_rspboards;
+		if (m_nrcus != m_accs.getBack().getNAntennas() * m_accs.getBack().getNPol()) {
+			LOG_FATAL("CalServer.N_ANTENNAS does not match value from hardware");
+			exit(EXIT_FAILURE);
+		}
+		TRAN(ACMProxy::idle);
 	}
-	else
-	{  
-	  LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-	  port.close();
-	  port.setTimer(2.0);
+	break;
+
+	case F_DISCONNECTED: {
+		// if we get disconnected, but we're in test mode, simply continue to the idle state
+		if (GET_CONFIG("CalServer.ACCTestEnable", i)) {
+			TRAN(ACMProxy::idle);
+		}
+		else {  
+			LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+			port.close();
+			port.setTimer(2.0);
+		}
 	}
-      }
-      break;
+	break;
 
-    case F_TIMER:
-      {
-	if (!port.isConnected())
-	  {
-	    LOG_DEBUG(formatString("open port '%s'", port.getName().c_str()));
-	    port.open();
-	  }
-      }
-      break;
+	case F_TIMER: {
+		if (!port.isConnected()) {
+			LOG_DEBUG(formatString("open port '%s'", port.getName().c_str()));
+			port.open();
+		}
+	}
+	break;
 
-    case F_EXIT:
-      // stop timer, we're connected
-      m_rspdriver.cancelAllTimers();
-      break;
+	case F_EXIT:
+		// stop timer, we're connected
+		m_rspdriver.cancelAllTimers();
+	break;
 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-    }
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
 
-  return status;
+	return status;
 }
 
 GCFEvent::TResult ACMProxy::idle(GCFEvent& e, GCFPortInterface& port)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-    {
-    case F_ENTRY:
-      {
-	m_rspdriver.setTimer(2.0, 2.0); // check every two second
-      }
-      break;
-
-    case F_CONNECTED:
-      {
-	LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
-      }
-      break;
-
-    case F_TIMER:
-      {
-	/*GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);*/
-
-	//
-	// start collecting the next ACC if needed
-	//
-	if (m_accs.getBack().writeLock()) {
-	  LOG_INFO("collecting next batch of ACMs");
-
-	  if (GET_CONFIG("CalServer.ACCTestEnable", i)) {
-	    const char* testfilename = GET_CONFIG_STRING("CalServer.ACCTestFile");
-	    const char* dot          = strrchr(testfilename, '.');
-	    if (dot) {
-	      dot++;
-	      if (0 == strncmp(dot, "txt", 3)) {
-		if (0 != m_accs.getBack().getFromFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
-		  LOG_FATAL("Failed to get ACC.");
-		  exit(EXIT_FAILURE);
-		}
-	      } else if (0 == strncmp(dot, "bin", 3)) {
-		if (0 != m_accs.getBack().getFromBinaryFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
-		  LOG_FATAL("Failed to get ACC.");
-		  exit(EXIT_FAILURE);
-		}
-	      } else dot = 0;
-	    }
-
-	    if (!dot) {
-	      LOG_FATAL_STR("CalServer.ACCTestFile must end in '.txt' or '.dat': offending value:" <<
-			    GET_CONFIG_STRING("CalServer.ACCTestFile"));
-	      exit(EXIT_FAILURE);
-	    }
-	    finalize(true); // done reading from file
-	  } else {
-	    if (!GET_CONFIG("CalServer.DisableACMProxy", i)) {
-	      TRAN(ACMProxy::initializing);
-	    }
-	  }
-	} else {
-	  LOG_WARN("failed to get writeLock on ACC backbuffer");
+	switch (e.signal) {
+	case F_ENTRY: {
+		m_rspdriver.setTimer(2.0, 2.0); // check every two second
 	}
-      }
-      break;
+	break;
 
-    case F_DISCONNECTED:
-      {
-	LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
-	port.close();
+	case F_CONNECTED: {
+		LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
+	}
+	break;
 
-	finalize(false);
+	case F_TIMER: {
+		/*GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);*/
 
-	TRAN(ACMProxy::initial);
-      }
-      break;
+		//
+		// start collecting the next ACC if needed
+		//
+		if (m_accs.getBack().writeLock()) {
+			LOG_INFO("collecting next batch of ACMs");
 
-    case F_EXIT:
-      {
-	// stop timer, it is not needed in the next state
-	m_rspdriver.cancelAllTimers();
-      }
-      break;
+			if (GET_CONFIG("CalServer.ACCTestEnable", i)) {
+				const char* testfilename = GET_CONFIG_STRING("CalServer.ACCTestFile");
+				const char* dot          = strrchr(testfilename, '.');
+				if (dot) {
+					dot++;
+					if (0 == strncmp(dot, "txt", 3)) {
+						if (0 != m_accs.getBack().getFromFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
+							LOG_FATAL("Failed to get ACC.");
+							exit(EXIT_FAILURE);
+						}
+					} else if (0 == strncmp(dot, "bin", 3)) {
+						if (0 != m_accs.getBack().getFromBinaryFile(GET_CONFIG_STRING("CalServer.ACCTestFile"))) {
+							LOG_FATAL("Failed to get ACC.");
+							exit(EXIT_FAILURE);
+						}
+					} else dot = 0;
+				}
 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-    }
+				if (!dot) {
+					LOG_FATAL_STR("CalServer.ACCTestFile must end in '.txt' or '.dat': offending value:" <<
+					GET_CONFIG_STRING("CalServer.ACCTestFile"));
+					exit(EXIT_FAILURE);
+				}
+				finalize(true); // done reading from file
+			} else {
+				if (!GET_CONFIG("CalServer.DisableACMProxy", i)) {
+					TRAN(ACMProxy::initializing);
+				}
+			}
+		} else {
+			LOG_WARN("failed to get writeLock on ACC backbuffer");
+		}
+	}
+	break;
 
-  return status;
+	case F_DISCONNECTED: {
+		LOG_INFO(formatString("DISCONNECTED: port %s disconnected", port.getName().c_str()));
+		port.close();
+
+		finalize(false);
+
+		TRAN(ACMProxy::initial);
+	}
+	break;
+
+	case F_EXIT: {
+		// stop timer, it is not needed in the next state
+		m_rspdriver.cancelAllTimers();
+	}
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
 }
 
 /**

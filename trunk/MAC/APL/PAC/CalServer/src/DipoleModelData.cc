@@ -21,6 +21,8 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 #include "DipoleModelData.h"
 
 #include <complex>

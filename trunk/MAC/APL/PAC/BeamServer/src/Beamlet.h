@@ -1,4 +1,4 @@
-//#  ABSBeamlet.h: interface of the Beamlet class
+//#  Beamlet.h: interface of the Beamlet class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,130 +29,66 @@
 namespace LOFAR {
   namespace BS {
 
-    class Beam;
+//# forward declarations
+class Beam;
 
-    class Beamlet
-      {
-      public:
-	/**
-	 * Constructor
-	 */
+class Beamlet
+{
+public:
+	// Constructor
 	Beamlet();
 
-	/**
-	 * Destructor
-	 */
+	// Destructor
 	virtual ~Beamlet();
 
-	/**
-	 * Allocate the beamlet.
-	 * @param subband Index of the subband to allocate
-	 * @param nsubbands Maximum number of subbands
-	 * within the spectral window.
-	 * @return 0 if allocation succeeded, < 0 otherwise.
-	 */
+	// Allocate the beamlet.
+	// @param subband Index of the subband to allocate
+	// @param nsubbands Maximum number of subbands
+	// within the spectral window.
+	// @return 0 if allocation succeeded, < 0 otherwise.
 	int allocate(const Beam& beam, int subband, int nsubbands);
 
-	/**
-	 * Deallocate the beamlet
-	 */
+	// Deallocate the beamlet
 	int deallocate();
 
-	/**
-	 * If the beam is allocated return true,
-	 * otherwise return false.
-	 */
+	// If the beam is allocated return true,
+	// otherwise return false.
 	bool allocated() const;
 
-	/**
-	 * Get pointer to spectral window for this beamlet.
-	 */
+	// Get pointer to spectral window for this beamlet.
 	const CAL::SpectralWindow& getSPW() const;
 
-	/**
-	 * Get index (from 0) of the subband within the spectral window.
-	 */
+	// Get index (from 0) of the subband within the spectral window.
 	int subband() const;
 
-	/**
-	 * Get absolute index of this beamlet in the array
-	 * of all beamlets.
-	 */
+	// Get absolute index of this beamlet in the array
+	// of all beamlets.
 	int index() const;
 
-	/**
-	 * Get beam.
-	 */
+	// Get beam.
 	const Beam* getBeam() const;
 
-
-      private:
-	/** subband within the spectral window */
-	int m_subband;
-
-	// /** index of the beamlet in the total beamles array */
-	// int m_index;
-
-	/**
-	 * Index of the beam to which this beamlet belongs.
-	 * -1 means beamlet is not allocated.
-	 * >= 0 means beamlet is allocated to the beam
-	 * with the specified index.
-	 */
-	const Beam* m_beam;
-
-      private:
-	/**
-	 * Don't allow copying this object.
-	 */
+private:
+	// Don't allow copying this object.
 	Beamlet (const Beamlet&); // not implemented
 	Beamlet& operator= (const Beamlet&); // not implemented
-      };
 
-    inline bool  Beamlet::allocated() const                   { return m_beam != 0; }
-    inline int   Beamlet::subband()   const                   { return m_subband; }
-    //inline int  Beamlet::index()     const            { return m_index; }
+	//# --- datamembers ---
 
-    /**
-     * Factory class for beamlets. It manages a fixed set of beamlet
-     * instances.
-     */
-    class Beamlets {
+	// subband within the spectral window 
+	int m_subband;
 
-    public:
-
-      /**
-       * Constructor
-       */
-      Beamlets(int nbeamlets);
-
-      /**
-       * Destructor
-       */
-      virtual ~Beamlets();
-
-      /**
-       * return beamlet at specified index
-       * @param index
-       * @return Beamlet& the specified beamlet
-       */
-      Beamlet* get(int index) const;
-      
-      /**
-       * Calculate weights for all beamlets 
-       * for the specified number of time steps.
-       */
-      void calculate_weights(blitz::Array<std::complex<double>, 3>& weights);
-
-    private:
-      // default constructor not allowed
-      Beamlets(); // no implementation
-
-    private:
-      Beamlet* m_beamlets;
-      int      m_nbeamlets;
-    };
-  };
+	// Index of the beam to which this beamlet belongs.
+	// -1 means beamlet is not allocated.
+	// >= 0 means beamlet is allocated to the beam
+	// with the specified index.
+	const Beam* m_beam;
 };
-     
+
+inline bool	Beamlet::allocated() const	{ return m_beam != 0; }
+inline int	Beamlet::subband()   const	{ return m_subband; }
+
+  }; // namespace BS
+}; // namespace LOFAR
+
 #endif /* BEAMLET_H_ */

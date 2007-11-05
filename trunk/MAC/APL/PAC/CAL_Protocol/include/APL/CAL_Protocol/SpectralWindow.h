@@ -103,6 +103,9 @@ namespace LOFAR {
        */
       bool isSuitable(int subband) const;
 
+	  // Returns try if spectralWindow is ment for the HBA antennas.
+	  bool isForHBA() const;
+
     public:
       /*@{*/
       /**

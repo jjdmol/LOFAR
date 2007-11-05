@@ -1,4 +1,5 @@
 
+#AM_CPPFLAGS = -DUSE_CAL_THREAD
 AM_CPPFLAGS = -DUSE_CAL_THREAD
 
 #-fmessage-length=0 // needed for Eclipse
@@ -45,27 +46,30 @@ lib_LTLIBRARIES = libcaldevel.la
 libcaldevel_ladir = $(prefix)/include
 
 libcaldevel_la_SOURCES = \
-	Documentation.h \
-	Source.h \
-	Source.cc \
-	SourceData.h \
-	SourceData.cc \
+	CalibrationAlgorithm.h \
+	CalibrationAlgorithm.cc \
+	CalibrationThread.h \
+	CalibrationThread.cc \
 	DipoleModel.h \
 	DipoleModel.cc \
 	DipoleModelData.h \
 	DipoleModelData.cc \
-	SubArraySubscription.h \
-	SubArraySubscription.cc \
-	CalibrationAlgorithm.h \
-	CalibrationAlgorithm.cc \
+	Documentation.h \
 	RemoteStationCalibration.h \
 	RemoteStationCalibration.cc \
-	CalibrationThread.h \
-	CalibrationThread.cc
+	Source.h \
+	Source.cc \
+	SourceData.h \
+	SourceData.cc \
+	SubArrays.h \
+	SubArrays.cc \
+	SubArraySubscription.h \
+	SubArraySubscription.cc 
 
 bin_PROGRAMS = \
 	CalServer \
-	juggle_acc
+	juggle_acc \
+	calinfo
 
 CalServer_SOURCES = \
 	CalServer.h \
@@ -80,6 +84,9 @@ CalServer_LDADD = \
 
 juggle_acc_SOURCES = \
 	juggle_acc.cc
+
+calinfo_SOURCES = \
+	calinfo.cc
 
 CalServer_DEPEND = \
 	$(top_builddir)/src/libcaldevel.la \
