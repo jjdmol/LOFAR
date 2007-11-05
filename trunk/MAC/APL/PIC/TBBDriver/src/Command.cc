@@ -29,7 +29,8 @@ using namespace LOFAR;
 using namespace TBB;
 			
 Command::Command() : 
-	itsWaitAck(false), itsDone(false), itsAllPorts(false), itsBoard(-1), itsChannel(-1), itsBoardMask(0)
+	itsWaitAck(false), itsDone(false), itsAllPorts(false), itsBoard(-1), 
+	itsChannel(-1), itsBoardMask(0), itsSleepTime(0)
 {
 	TS = TbbSettings::instance();
 }
@@ -101,6 +102,18 @@ bool Command::waitAck()
 void Command::setWaitAck(bool waitack)
 {
 	itsWaitAck = waitack;
+}
+
+// ----------------------------------------------------------------------------
+void Command::setSleepTime(uint32 sleeptime)
+{
+	itsSleepTime = sleeptime;
+}
+
+// ----------------------------------------------------------------------------
+uint32 Command::getSleepTime()
+{
+	return (itsSleepTime);
 }
 
 // ----------------------------------------------------------------------------

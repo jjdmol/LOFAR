@@ -37,6 +37,9 @@
 #define BOARDCMDHANDLER_H_
 
 #include <GCF/TM/GCF_Control.h>
+#include <GCF/TM/GCF_ETHRawPort.h>
+#include <GCF/TM/GCF_DevicePort.h>
+#include <GCF/TM/GCF_TimerPort.h>
 
 #include "Command.h"
 #include "DriverSettings.h"
@@ -50,7 +53,7 @@ namespace LOFAR {
 			public:
 				// Constructors for a SyncAction object.
 				// Default direction is read.
-				BoardCmdHandler();
+				BoardCmdHandler(GCFTimerPort* port);
 
 				// Destructor for SyncAction. */
 				~BoardCmdHandler();
@@ -66,16 +69,17 @@ namespace LOFAR {
 			protected:
 
 			private:
-				TbbSettings 			*TS;
+				TbbSettings* 			TS;
 				bool							itsDone;
 				bool							itsFlashMode;
 				// variables
 				int32							 itsRetries;
-				GCFPortInterface  *itsClientPort; // return port of the actual commmand
-				Command						*itsCmd; // command to use			
+				GCFPortInterface* itsClientPort; // return port of the actual commmand
+				Command* itsCmd; // command to use
+				GCFTimerPort* itsSleepTimer;			
 				
 		};
 	} // end TBB namespace
 } // end LOFAR namespace
 
-#endif /* BOARDACTION_H_ */
+#endif

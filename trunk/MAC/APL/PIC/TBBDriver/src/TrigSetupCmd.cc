@@ -76,7 +76,8 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 		channel = (board * TS->nrChannelsOnBoard()) + board_channel;
 		
 		TS->setChTriggerLevel(channel, itsTBBE->setup[rcunr].level);
-		TS->setChTriggerMode(channel, itsTBBE->setup[rcunr].td_mode);
+		TS->setChTriggerStartMode(channel, (itsTBBE->setup[rcunr].start_mode));
+		TS->setChTriggerStopMode(channel, (itsTBBE->setup[rcunr].stop_mode));
 		TS->setChFilterSelect(channel, itsTBBE->setup[rcunr].filter_select);
 		TS->setChDetectWindow(channel, itsTBBE->setup[rcunr].window);
 		TS->setChTriggerDummy(channel, itsTBBE->setup[rcunr].dummy);
@@ -110,14 +111,11 @@ void TrigSetupCmd::sendTpEvent()
 		itsTPE->mp = TS->getChMpNr(getChannelNr());
 		for (int ch = 0; ch < 4; ch++) {
 			itsTPE->channel[ch].level = static_cast<uint32>(TS->getChTriggerLevel(getChannelNr() + ch));
-			itsTPE->channel[ch].td_mode = static_cast<uint32>(TS->getChTriggerMode(getChannelNr() + ch));
+			itsTPE->channel[ch].td_mode = static_cast<uint32>((TS->getChTriggerStartMode(getChannelNr() + ch) +
+																		(TS->getChTriggerStopMode(getChannelNr() + ch) << 4)));
 			itsTPE->channel[ch].filter_select = static_cast<uint32>(TS->getChFilterSelect(getChannelNr() + ch));
 			itsTPE->channel[ch].window = static_cast<uint32>(TS->getChDetectWindow(getChannelNr() + ch));
 			itsTPE->channel[ch].dummy = static_cast<uint32>(TS->getChTriggerDummy(getChannelNr() + ch));
-			
-			LOG_DEBUG_STR(formatString("TrigSetup --> board[%d],channel[%d],level[%08X],mode[%08X],filter[%08X],window[%08X],dummy[%08X]",
-			getBoardNr(), (getChannelNr() + ch), TS->getChTriggerLevel(getChannelNr() + ch), TS->getChTriggerMode(getChannelNr() + ch),
-			TS->getChFilterSelect(getChannelNr() + ch), TS->getChDetectWindow(getChannelNr() + ch), TS->getChTriggerDummy(getChannelNr() + ch)));
 		}
 		
 		TS->boardPort(getBoardNr()).send(*itsTPE);

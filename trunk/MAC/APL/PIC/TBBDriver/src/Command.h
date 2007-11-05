@@ -55,6 +55,10 @@ namespace LOFAR {
 			
 			void setWaitAck(bool waitack);
 			
+			void setSleepTime(uint32 sleeptime);
+			
+			uint32	getSleepTime();
+			
 			bool isDone();
 			
 			void setDone(bool done);
@@ -88,6 +92,7 @@ namespace LOFAR {
     	int32		itsBoard;
 			int32		itsChannel;
 			uint32	itsBoardMask;
+			uint32	itsSleepTime;
     };
 	} // end TBB namespace
 } // end LOFAR namespace

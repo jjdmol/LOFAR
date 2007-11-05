@@ -107,6 +107,9 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event)
 	delete itsTPackE;
 	
 	nextBoardNr();
+	if (isDone()) {
+		setSleepTime(3); // clearing the registers will last 3 seconds
+	}
 }
 
 // ----------------------------------------------------------------------------
@@ -116,6 +119,5 @@ void ClearCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		if (itsTBBackE->status_mask[boardnr] == 0)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
-	sleep(3);
 	clientport->send(*itsTBBackE);
 }

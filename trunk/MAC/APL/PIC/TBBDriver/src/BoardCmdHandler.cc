@@ -22,25 +22,35 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <GCF/TM/GCF_ETHRawPort.h>
+#include <GCF/TM/GCF_DevicePort.h>
+#include <GCF/TM/GCF_TimerPort.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "BoardCmdHandler.h"
+
+
 
 using namespace LOFAR;
 using namespace TBB_Protocol;
 using	namespace TBB;
 
-BoardCmdHandler::BoardCmdHandler()
+BoardCmdHandler::BoardCmdHandler(GCFTimerPort* port)
   : GCFFsm((State)&BoardCmdHandler::idle_state)
 {		
+	itsSleepTimer = port;
 	TS	= TbbSettings::instance();
 	itsDone = true;
 	itsRetries = 0;
 	itsClientPort	= 0;
-	itsCmd = 0;		
+	itsCmd = 0;
+			
 }
 
-BoardCmdHandler::~BoardCmdHandler() {  }
+BoardCmdHandler::~BoardCmdHandler()
+{
+	delete itsSleepTimer;
+}
 
 
 GCFEvent::TResult BoardCmdHandler::idle_state(GCFEvent& event, GCFPortInterface& port)
@@ -127,6 +137,11 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 		}	break;
 		    
 		case F_TIMER: {
+			if (&port == itsSleepTimer) {
+				TRAN(BoardCmdHandler::send_state);	
+				break;
+			}
+			
 			// time-out, retry
 			if ((itsRetries < TS->maxRetries()) && !itsCmd->isDone()) {
 				LOG_DEBUG("=TIME-OUT=");
@@ -135,7 +150,12 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 				LOG_DEBUG_STR(formatString("itsRetries[%d] = %d", itsCmd->getBoardNr(), itsRetries));	
 			}	else {
 				itsCmd->saveTpAckEvent(event); // max retries or done, save zero's
-				TRAN(BoardCmdHandler::send_state);
+				if (itsCmd->getSleepTime()) {
+					itsSleepTimer->setTimer((long)itsCmd->getSleepTime());
+					itsCmd->setSleepTime(0);
+				} else {
+					TRAN(BoardCmdHandler::send_state);
+				}
 			}
 		}	break;
 		
@@ -146,8 +166,12 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 			if (itsCmd->isValid(event)) {
 				port.cancelAllTimers();
 				itsCmd->saveTpAckEvent(event);
-				
-				TRAN(BoardCmdHandler::send_state);
+				if (itsCmd->getSleepTime()) {
+					itsSleepTimer->setTimer((long)itsCmd->getSleepTime());
+					itsCmd->setSleepTime(0);
+				} else {
+					TRAN(BoardCmdHandler::send_state);
+				}
 			}	else {
 				status = GCFEvent::NOT_HANDLED;
 			}
