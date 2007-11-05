@@ -52,7 +52,7 @@ TbbSettings* TbbSettings::instance()
 // Default constructor
 //
 TbbSettings::TbbSettings() :
-	itsDriverVersion(112),				// set cvs version of TBBDriver.c (now 1.12)
+	itsDriverVersion(DRIVER_VERSION),				// set cvs version of TBBDriver.c (now 1.13)
 	itsMaxBoards(0),							// max.number of boards on 1 driver 
 	itsMaxChannels(0),						// max.number of channels on 1 driver
 	itsMpsOnBoard(4),							// number of MPs on 1 board
@@ -185,7 +185,8 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsChannelInfo[ch].TriggerReleased = false;
 		itsChannelInfo[ch].Triggered = false;
 		itsChannelInfo[ch].TriggerLevel = 0;
-		itsChannelInfo[ch].TriggerMode = 0;
+		itsChannelInfo[ch].TriggerStartMode = 0;
+		itsChannelInfo[ch].TriggerStopMode = 0;
 		itsChannelInfo[ch].FilterSelect = 0;
 		itsChannelInfo[ch].DetectWindow = 0;
 		itsChannelInfo[ch].TriggerDummy = 0;

@@ -103,7 +103,7 @@ namespace LOFAR{
 			
 			// define some variables
 			TPAliveEvent			*itsAlive;
-	  	BoardCmdHandler		*cmdhandler;
+			BoardCmdHandler		*cmdhandler;
 			MsgHandler				*msghandler;
 			Command 					*cmd;
 			bool							itsAliveCheck;
@@ -126,6 +126,7 @@ namespace LOFAR{
 			GCFETHRawPort*	itsBoard;        // array of ports, one for each TBB board
 			GCFTimerPort*		itsAliveTimer;
 			GCFTimerPort*		itsSetupTimer;
+			GCFTimerPort*		itsCmdTimer;
 			std::list<GCFPortInterface*> itsClientList;  // list of clients
     };
 	} // end TBB namespace

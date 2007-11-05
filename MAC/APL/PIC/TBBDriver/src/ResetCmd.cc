@@ -81,6 +81,8 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 	}
 	TS->setActiveBoardsMask(boardmask);
 	setDone(true);
+	setSleepTime(3);  // full reset will take 3 seconds
+	
 	delete itsTBBE;	
 }
 
@@ -105,6 +107,5 @@ void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		if (itsTBBackE->status_mask[boardnr] == 0)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
-	sleep(3);
 	clientport->send(*itsTBBackE);
 }

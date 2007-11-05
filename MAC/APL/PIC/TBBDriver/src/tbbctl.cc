@@ -56,6 +56,8 @@ using namespace LOFAR;
 using namespace TBB_Protocol;
 using namespace TbbCtl;
 
+static const long DELAY = 1; 
+
 //---- ALLOC  ----------------------------------------------------------------
 AllocCmd::AllocCmd(GCFPortInterface& port) : Command(port)
 {
@@ -72,7 +74,7 @@ void AllocCmd::send()
 	if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
 	
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -124,7 +126,7 @@ void ChannelInfoCmd::send()
 {
 	TBBRcuInfoEvent event;
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -175,7 +177,7 @@ void FreeCmd::send()
 	if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
 	
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -229,7 +231,7 @@ void RecordCmd::send()
 	if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
 	
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -285,7 +287,7 @@ void StopCmd::send()
 	if (isSelectionDone()) event.rcu_mask = getRcuMask(); // if select cmd is used
 	
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -323,6 +325,49 @@ GCFEvent::TResult StopCmd::ack(GCFEvent& e)
 	return(GCFEvent::HANDLED);
 }
 
+//---- TRIGGERSETTINGS --------------------------------------------------------
+TriggerSettingsCmd::TriggerSettingsCmd(GCFPortInterface& port) : Command(port)
+{
+	cout << endl;
+	cout << "== TBB ===================================================== rcu info =======" << endl;
+	cout << endl;
+}
+
+//-----------------------------------------------------------------------------
+void TriggerSettingsCmd::send()
+{
+	TBBTrigSettingsEvent event;
+	itsPort.send(event);
+	itsPort.setTimer(DELAY);
+}
+
+//-----------------------------------------------------------------------------
+GCFEvent::TResult TriggerSettingsCmd::ack(GCFEvent& e)
+{
+	TBBTrigSettingsAckEvent ack(e);
+	
+	int32 bnr = 0;
+	int32 oldbnr = -1;
+	for (int rcu=0; rcu < getMaxSelections(); rcu++) {
+ 		bnr = static_cast<int32>(rcu / 16);
+		if (isSelected(rcu) ) {
+			if (bnr != oldbnr) {
+				cout << "Rcu  Board  level   start   stop    filter  window  c0      c1      c2      c3" << endl;
+				cout << "---  -----  ------  ------  ------  ------  ------  ------  ------  ------  ------" << endl;
+			}
+			cout << formatString("%3d  %5d  %6d  %6d  %6d  %6d  %6d  %6d  %6d  %6d  %6d",
+					rcu, bnr, ack.setup[rcu].level, ack.setup[rcu].start_mode, ack.setup[rcu].stop_mode,
+					ack.setup[rcu].filter_select, ack.setup[rcu].window, ack.coefficients[rcu].c0, 
+					ack.coefficients[rcu].c1, ack.coefficients[rcu].c2, ack.coefficients[rcu].c3) << endl;
+		}
+		oldbnr = bnr;
+	}
+	cout << endl;
+	
+	setCmdDone(true);
+	return(GCFEvent::HANDLED);
+}
+
 //---- TRIGRELEASE ------------------------------------------------------------
 TrigReleaseCmd::TrigReleaseCmd(GCFPortInterface& port) : Command(port)
 {
@@ -340,7 +385,7 @@ void TrigReleaseCmd::send()
 		event.rcu_start_mask = getRcuMask();
 	}
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -388,7 +433,7 @@ void TrigGenerateCmd::send()
 		event.rcu_mask = getRcuMask();
 	}	
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -415,7 +460,7 @@ GCFEvent::TResult TrigGenerateCmd::ack(GCFEvent& e)
 
 //---- TRIGSETUP --------------------------------------------------------------
 TrigSetupCmd::TrigSetupCmd(GCFPortInterface& port) : Command(port),
-	itsLevel(0), itsMode(0), itsFilter(0), itsWindow(0), itsDummy(0)
+	itsLevel(0), itsStartMode(0), itsStopMode(0),itsFilter(0), itsWindow(0), itsDummy(0)
 {
 	cout << endl;
 	cout << "== TBB ============================ trigger system setup for selected rcu's ====" << endl;
@@ -429,14 +474,15 @@ void TrigSetupCmd::send()
 	if (isSelectionDone()) {
 		for (int cnr=0; cnr < getMaxSelections(); cnr++) {	
 			event.setup[cnr].level = itsLevel;
-			event.setup[cnr].td_mode = itsMode;
+			event.setup[cnr].start_mode = itsStartMode;
+			event.setup[cnr].stop_mode = itsStopMode;
 			event.setup[cnr].filter_select = itsFilter;
 			event.setup[cnr].window = itsWindow;
 			event.setup[cnr].dummy = itsDummy + (cnr << 24);
 		}
 	}
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -487,7 +533,7 @@ void TrigCoefficientCmd::send()
 		}
 	}
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -530,7 +576,7 @@ void TrigInfoCmd::send()
 		event.rcu = getRcu();
 	}
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -605,7 +651,7 @@ void ListenCmd::send()
 		default: {
 		} break;
 	}
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -667,7 +713,7 @@ void ReadCmd::send()
 	event.prepages = itsPrePages;
 	event.postpages = itsPostPages;
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -707,7 +753,7 @@ void ModeCmd::send()
 	event.board = (uint32)getBoard();
 	event.rec_mode = itsRecMode;
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -741,7 +787,7 @@ void VersionCmd::send()
   TBBVersionEvent event;
   event.boardmask = getBoardMask();
   itsPort.send(event);
-  itsPort.setTimer((long)1);
+  itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -791,7 +837,7 @@ void SizeCmd::send()
   TBBSizeEvent event;
   event.boardmask = getBoardMask();
   itsPort.send(event);
-  itsPort.setTimer((long)1);
+  itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -832,7 +878,7 @@ void StatusCmd::send()
   TBBStatusEvent event;
   event.boardmask = getBoardMask();
   itsPort.send(event);
-  itsPort.setTimer((long)1);
+  itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -1129,7 +1175,7 @@ void ImageInfoCmd::send()
 	TBBImageInfoEvent event;
 	event.board = getBoard();
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -1159,7 +1205,8 @@ GCFEvent::TResult ImageInfoCmd::ack(GCFEvent& e)
 									 	t.tm_mday,t.tm_mon+1,t.tm_year+1900,
 										t.tm_hour,t.tm_min,t.tm_sec,
 										ack.tp_file_name[image],
-										ack.mp_file_name[image]) << endl;;
+										ack.mp_file_name[image]) << endl;
+				cout << "TP: " << ack.tp_file_name[image] <<  ",  MP: " << ack.mp_file_name[image] << endl;
 			}
 		}
 	}	else {	
@@ -1191,7 +1238,7 @@ void ReadwCmd::send()
 	event.mp = itsMp;
 	event.addr = itsAddr;
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -1239,7 +1286,7 @@ void WritewCmd::send()
 	event.wordlo = itsWordLo;
 	event.wordhi = itsWordHi;
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -1334,7 +1381,7 @@ void TestDdrCmd::send()
 		default: break;
 	}
 	
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -1465,7 +1512,7 @@ void ReadrCmd::send()
 	event.regid = itsRegId;
 	
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -1520,7 +1567,7 @@ void WriterCmd::send()
 		event.data[i] = itsData[i];
 	}
 	itsPort.send(event);
-	itsPort.setTimer((long)1);
+	itsPort.setTimer(DELAY);
 }
 
 //-----------------------------------------------------------------------------
@@ -1549,7 +1596,7 @@ GCFEvent::TResult WriterCmd::ack(GCFEvent& e)
 	return(GCFEvent::HANDLED);
 }
 
-//---- READPAGE ------------------------------------------------------------------
+//---- EADPAGE ------------------------------------------------------------------
 ReadPageCmd::ReadPageCmd(GCFPortInterface& port) : Command(port),
 	itsRcu(0),itsStartPage(0),itsPages(1),itsCmdStage(0),itsPage(0),itsTotalSize(0),itsStartAddr(0),itsSize(0),itsBoard(0),itsMp(0),
 	itsStationId(0),itsRspId(0),itsRcuId(0),itsSampleFreq(0),itsTime(0),itsSampleNr(0),itsSamplesPerFrame(0),
@@ -1569,14 +1616,14 @@ void ReadPageCmd::send()
 		case 0: {	// get info about allocated RCU's
 			TBBRcuInfoEvent send;
 			itsPort.send(send);
-			itsPort.setTimer((long)1);
+			itsPort.setTimer(DELAY);
 		} break;
 		
 		case 1: {	// get total memmory size
   		TBBSizeEvent send;
   		send.boardmask = (1 << itsBoard);
   		itsPort.send(send);
-  		itsPort.setTimer((long)1);
+  		itsPort.setTimer(DELAY);
 		} break;
 		
 		case 2: {	// write page address to board
@@ -1592,7 +1639,7 @@ void ReadPageCmd::send()
 			send.data[1] = 0; 
 			send.data[2] = 0;
 			itsPort.send(send);
-			itsPort.setTimer((long)1);
+			itsPort.setTimer(DELAY);
 			
 			LOG_DEBUG_STR(formatString("Writer[%x][%x][%x][%x]", 
 				send.mp,send.pid,send.regid,send.data[0]));
@@ -1608,7 +1655,7 @@ void ReadPageCmd::send()
 			send.data[1] = 0; 
 			send.data[2] = 0;
 			itsPort.send(send);
-			itsPort.setTimer((long)1);
+			itsPort.setTimer(DELAY);
 			
 			LOG_DEBUG_STR(formatString("Writer[%x][%x][%x][%x]", 
 				send.mp,send.pid,send.regid,send.data[0]));
@@ -1623,7 +1670,7 @@ void ReadPageCmd::send()
 			send.pagelength = 256;
 			send.pageaddr = 0;
 			itsPort.send(send);
-			itsPort.setTimer((long)1);
+			itsPort.setTimer(DELAY);
 			
 			LOG_DEBUG_STR(formatString("Readx[%x][%x][%x][%x][%x]", 
 				send.mp,send.pid,send.regid,send.pagelength,send.pageaddr));
@@ -1638,7 +1685,7 @@ void ReadPageCmd::send()
 			send.pagelength = 256;
 			send.pageaddr = 256;
 			itsPort.send(send);
-			itsPort.setTimer((long)1);
+			itsPort.setTimer(DELAY);
 			
 			LOG_DEBUG_STR(formatString("Readx[%x][%x][%x][%x][%x]", 
 				send.mp,send.pid,send.regid,send.pagelength,send.pageaddr));
@@ -1787,14 +1834,18 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			
 			// print size of progressbar on screen
 			bar_interval = itsPages / bar_size;
+			int recvtime = static_cast<int>((1043. / 262144.) * itsPages);  // measured 262144 pages in 1043 seconds
+			int hours = recvtime / (60 * 60);
+			int mins = (recvtime - (hours * 60 * 60)) / 60;
+			int secs = recvtime - (hours * 60 * 60) - (mins * 60) + 1; // 1 second for overhead
 			cout << endl;
-			cout <<   "Progress |";
+			cout << "          Estimated receive time " << formatString("%d:%02d:%02d",hours, mins, secs) << endl;
+			cout << "Progress |";
 			for (int i = 0; i < bar_size; i++) {
 				cout << "-";
 			}
 			cout << "|" << endl ;
-			cout <<   "         |";
-						
+			cout <<   "         |" << flush;
 			
 			snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsTotalBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
 		}
@@ -1964,6 +2015,7 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, " << endl;
 	cout << "                                                                    # use first --mode to setup UDP/IP header" << endl;   
 	cout << "______| TRIGGER |_________________________________________________________________________________________________________" << endl;
+	cout << " tbbctl --settings [--select=<set>]                                 # list trigger settings for selected rcu's" << endl;
 	cout << " tbbctl --release [--select=<set>]                                  # release trigger system for selected rcu's" << endl;
 	cout << " tbbctl --generate [--select=<set>]                                 # generate a trigger for selected rcu's" << endl;	
 	cout << " tbbctl --setup=level,start,stop,filter,window,x [--select=<set>]   # setup trigger system for selected rcu's, x = dummy" << endl;
@@ -2042,7 +2094,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
     case F_ENTRY: {
     	if (!itsServerPort.isConnected()) {
       	itsServerPort.open();
-      	itsServerPort.setTimer((long)1);
+      	itsServerPort.setTimer(DELAY);
       }
     } break;
 
@@ -2075,7 +2127,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 		} break;
 		
     case F_DISCONNECTED: {
-      //port.setTimer((long)1);
+      //port.setTimer(DELAY);
       port.close();
     } break;
 
@@ -2144,6 +2196,7 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case TBB_FREE_ACK:
     case TBB_RECORD_ACK:
     case TBB_STOP_ACK:
+    case TBB_TRIG_SETTINGS_ACK:	
     case TBB_TRIG_RELEASE_ACK:
     case TBB_TRIG_SETUP_ACK:	
     case TBB_TRIG_COEF_ACK:
@@ -2210,7 +2263,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 			{ "rcuinfo",		no_argument,				0,	'i' }, 
 			{ "free",				no_argument,				0,	'f' }, 
 		  { "record",			no_argument,				0,	'r' }, 
-		  { "stop",				no_argument,				0,	's' }, 
+		  { "stop",				no_argument,				0,	's' },
+		  { "settings",		no_argument,				0,	'b' }, 
 		  { "release",		no_argument,				0,	'e' }, 
 		  { "generate",		no_argument,				0,	'g' }, 
 		  { "setup",			required_argument,	0,	't' }, 
@@ -2242,7 +2296,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
     int option_index = 0;
     int c = getopt_long(argc, argv,
-												"l:afrsegt:c:I:LR:m:vzAp:CZS:1:2:3:8:4:5:9:6:7:hX",
+												"l:afrsbegt:c:I:LR:m:vzAp:CZS:1:2:3:8:4:5:9:6:7:hX",
 				long_options, &option_index);
 		
     if (c == -1) {
@@ -2310,6 +2364,13 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				command->setCmdType(RCUCMD);
 			}	break;
 			
+			case 'b': {
+				if (command) delete command;
+				TriggerSettingsCmd* trigsettingscmd = new TriggerSettingsCmd(itsServerPort);
+				command = trigsettingscmd;
+				command->setCmdType(RCUCMD);	
+			} break;
+			
 			case 'e': { 	// --trigrelease
 				if (command) delete command;
 				TrigReleaseCmd* trigreleasecmd = new TrigReleaseCmd(itsServerPort);
@@ -2361,11 +2422,12 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						exit(EXIT_FAILURE);
 					}
 					
-					trigsetupcmd->setLevel(static_cast<uint32>(level));
-					trigsetupcmd->setMode(static_cast<uint32>(start + (stop << 4)));
-					trigsetupcmd->setFilter(static_cast<uint32>(filter));
-					trigsetupcmd->setWindow(static_cast<uint32>(window));
-					trigsetupcmd->setDummy(static_cast<uint32>(dummy));
+					trigsetupcmd->setLevel(static_cast<uint16>(level));
+					trigsetupcmd->setStartMode(static_cast<uint8>(start));
+					trigsetupcmd->setStopMode(static_cast<uint8>(stop));
+					trigsetupcmd->setFilter(static_cast<uint8>(filter));
+					trigsetupcmd->setWindow(static_cast<uint8>(window));
+					trigsetupcmd->setDummy(static_cast<uint16>(dummy));
 				}
 				command->setCmdType(RCUCMD);
 			}	break;

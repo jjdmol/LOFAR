@@ -351,6 +351,17 @@ class StopCmd : public Command
 };
 
 //-----------------------------------------------------------------------------
+class TriggerSettingsCmd : public Command
+{
+	public:
+		TriggerSettingsCmd(GCFPortInterface& port);
+		virtual ~TriggerSettingsCmd() { }
+		virtual void send();
+		virtual GCFEvent::TResult ack(GCFEvent& e);
+	private:
+};
+
+//-----------------------------------------------------------------------------
 class TrigReleaseCmd : public Command
 {
 	public:
@@ -380,17 +391,19 @@ class TrigSetupCmd : public Command
 		virtual ~TrigSetupCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
-		void setLevel(uint32 level) { itsLevel = level; }
-		void setMode(uint32 mode) { itsMode = mode; }
-		void setFilter(uint32 filter) { itsFilter = filter; }
-		void setWindow(uint32 window) { itsWindow = window; }
-		void setDummy(uint32 dummy) { itsDummy = dummy; }
+		void setLevel(uint16 level) { itsLevel = level; }
+		void setStartMode(uint8 mode) { itsStartMode = mode; }
+		void setStopMode(uint8 mode) { itsStopMode = mode; }
+		void setFilter(uint8 filter) { itsFilter = filter; }
+		void setWindow(uint8 window) { itsWindow = window; }
+		void setDummy(uint16 dummy) { itsDummy = dummy; }
 	private:
-		uint32 itsLevel;
-		uint32 itsMode;
-		uint32 itsFilter;
-		uint32 itsWindow;
-		uint32 itsDummy;
+		uint16 itsLevel;
+		uint8 itsStartMode;
+		uint8 itsStopMode;
+		uint8 itsFilter;
+		uint8 itsWindow;
+		uint16 itsDummy;
 };
 
 //-----------------------------------------------------------------------------

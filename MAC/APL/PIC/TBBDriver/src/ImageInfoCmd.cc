@@ -117,7 +117,7 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 			char info[256];
 			memset(info,0,256);
 			memcpy(info,&itsTPackE->data,256);
-			LOG_DEBUG_STR(formatString("ImageInfoCmd: %s",info)); 
+			LOG_DEBUG_STR("ImageInfoCmd: " << info); 
 			
 			itsTBBackE->image_version[itsImage]= itsTPackE->data[0];	  
 			itsTBBackE->write_date[itsImage] = itsTPackE->data[1];	
@@ -126,7 +126,8 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 						 &itsTBBackE->tp_file_name[itsImage][0],
 						 &itsTBBackE->mp_file_name[itsImage][0]);
 						
-			
+			LOG_DEBUG_STR("tp_file_name: " << itsTBBackE->tp_file_name[itsImage]);
+			LOG_DEBUG_STR("mp_file_name: " << itsTBBackE->mp_file_name[itsImage]);
 			//itsTBBackE->image_version[itsImage]= itsTPackE->data[0];	  
 			//itsTBBackE->write_date[itsImage] = itsTPackE->data[1];		  		
 		
