@@ -1,5 +1,0 @@
-#
-# Configuration of the Tuner communication ports.
-#
-mac.ns.Tuner.server.type=TCP
-mac.top.Tuner.server.remoteservice=RSPDriver:acceptor_v2

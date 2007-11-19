@@ -1,5 +1,0 @@
-* RTC_package_list
-	File with a list of the RTC packages. This can be used to perform commands
-	on the RTC packages. For example:
-	
-	> for d in `cat RTC_package_list`; do cvs update $d; done
