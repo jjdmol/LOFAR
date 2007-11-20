@@ -25,6 +25,7 @@
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/PVSS/PVSSresult.h>
+#include <APL/CUDaemons/Log_Protocol.ph>
 #include <log4cplus/socketappender.h>
 #include "LoggingProcessor.h"
 
@@ -55,7 +56,7 @@ LoggingProcessor::LoggingProcessor(const string&	myName) :
 	ASSERTSTR(itsListener, "Can't allocate a listener port");
 	itsListener->setPortNumber(MAC_CODELOGGING_PORT);
 
-	itsDPservice = new DPservice(this, false);
+	itsDPservice = new DPservice(this);
 	ASSERTSTR(itsDPservice, "Can't allocate DataPoint service");
 
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
@@ -203,21 +204,21 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 		}
 
 		// Construct an InternalLoggingEvent from the buffer
-		spi::InternalLoggingEvent logEvent = readFromBuffer(buffer);           
+		spi::InternalLoggingEvent l4cpLogEvent = readFromBuffer(buffer);           
 
 		// Has client a known DP?
-		string 	PVSSdp(_searchClientDP(logEvent, port));
+		string 	PVSSdp(_searchClientDP(l4cpLogEvent, port));
 		if (PVSSdp.empty()) {
 			break;
 		}
 
 		// construct message: level|loggername|message|file:linenr
 		string msg(formatString("%s|%s|%s|%s:%d",
-					getLogLevelManager().toString(logEvent.getLogLevel()).c_str(),
-					logEvent.getLoggerName().c_str(),
-					logEvent.getMessage().c_str(),
-					basename(logEvent.getFile().c_str()),
-					logEvent.getLine()));
+					getLogLevelManager().toString(l4cpLogEvent.getLogLevel()).c_str(),
+					l4cpLogEvent.getLoggerName().c_str(),
+					l4cpLogEvent.getMessage().c_str(),
+					basename(l4cpLogEvent.getFile().c_str()),
+					l4cpLogEvent.getLine()));
 
 #if 0
 		// convert the logger event to the PVSSdp value
@@ -226,7 +227,7 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 
 		// timestamp conversion
 		timeval		kvlTimestamp;  
-		Time		l4pTimestamp(logEvent.getTimestamp());
+		Time		l4pTimestamp(l4cpLogEvent.getTimestamp());
 		kvlTimestamp.tv_sec  = l4pTimestamp.sec();
 		kvlTimestamp.tv_usec = l4pTimestamp.usec();
 
@@ -234,7 +235,7 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 #endif
 
 		// convert logger event to DP log msg
-		string plMsg = logEvent.getTimestamp().getFormattedTime("%d-%m-%y %H:%M:%S.%q") 
+		string plMsg = l4cpLogEvent.getTimestamp().getFormattedTime("%d-%m-%y %H:%M:%S.%q") 
 						+ "|" + msg;
 
 		GCFPVString plValue(plMsg);
@@ -244,6 +245,22 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 		}
 	}
 	break;
+
+	case LOG_SEND_MSG: {
+		LOGSendMsgEvent		logEvent(event);
+		LOGSendMsgAckEvent	answer;
+		answer.seqnr  = logEvent.seqnr;
+		answer.result = PVSS::SA_NO_ERROR;
+		PVSSresult	result = itsDPservice->setValue(logEvent.DPname, 
+													GCFPVString(logEvent.message));
+		if (result != PVSS::SA_NO_ERROR && result != PVSS::SA_SCADA_NOT_AVAILABLE) {
+			// _registerFailure(port);
+			answer.result = result;
+		}
+		port.send(answer);
+	}
+	break;
+		
 
 	default:
 		status = GCFEvent::NOT_HANDLED;
