@@ -29,11 +29,11 @@
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include <complex>
-#include <string>
-#include <map>
-#include <bitset>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_map.h>
+#include <Common/lofar_bitset.h>
 
 namespace LOFAR {
   namespace BS_Protocol {
@@ -66,7 +66,7 @@ namespace LOFAR {
 
     public:
       /* other methods */
-      std::bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> getAsBitset() const;
+      bitset<EPA_Protocol::MEPHeader::N_SUBBANDS> getAsBitset() const;
 
     private:
       /**
