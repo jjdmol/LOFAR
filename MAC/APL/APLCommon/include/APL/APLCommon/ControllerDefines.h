@@ -61,28 +61,12 @@ enum	{
 	CNTLRTYPE_DIGITALBOARDCTRL,			// DigitalBoardControl
 	CNTLRTYPE_BEAMCTRL,					// BeamControl
 	CNTLRTYPE_CALIBRATIONCTRL,			// CalibrationControl
+	CNTLRTYPE_TBBCTRL,					// TBBControl
 	CNTLRTYPE_STATIONINFRACTRL,			// StationInfraControl
 	CNTLRTYPE_TESTCTRL,					// StationControl
 	
 	CNTLRTYPE_NR_TYPES					// should always be the last
 };
-
-// Define numbers for the states/modes a controller/hwdevice can be.
-enum {
-	CT_MODE_OFF = 0,
-	CT_MODE_OPERATIONAL,
-	CT_MODE_MAINTENANCE,
-	CT_MODE_TEST,
-	CT_MODE_SUSPICIOUS,
-	CT_MODE_BROKEN,
-
-	CT_MODE_NR_MODES					// should always be the last
-};
-
-
-// Update the mode field in the PVSS database so that the colour of our
-// program correspondes with the mode we are in.
-void setControllerMode(const string&	propertyName, int16	modeNr);
 
 // Construct a uniq controllername from the controllerType, the instanceNr
 // of the controller and the observationID.

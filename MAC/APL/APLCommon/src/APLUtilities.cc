@@ -26,8 +26,8 @@
 //#include <Common/lofar_strstream.h>
 #include "APL/APLCommon/APLUtilities.h"
 
-using namespace LOFAR;
-using namespace APLCommon;
+namespace LOFAR {
+  namespace APLCommon {
 
 APLUtilities::APLUtilities()
 {
@@ -481,3 +481,28 @@ string APLUtilities::expandedArrayString(const string&	orgStr)
 
 	return (result+"]");
 }
+
+//
+// byteSize
+//
+string byteSize(double	nrBytes)
+{
+	double	giga (1024.0*1024.0*1024.0);
+	if (nrBytes >= giga) {
+		return (formatString ("%.1lfGB", nrBytes/giga));
+	}
+
+	if (nrBytes >= 1048576) {
+		return (formatString ("%.1fMB", (nrBytes*1.0/1048576)));
+	}
+
+	if (nrBytes >= 1024) {
+		return (formatString ("%.1fKB", (nrBytes*1.0/1024)));
+	}
+
+	return (formatString ("%.0fB", nrBytes));
+}
+
+  } // namespace APLCommon
+} // namespace LOFAR
+
