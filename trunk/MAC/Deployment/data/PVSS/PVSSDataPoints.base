@@ -39,6 +39,7 @@ Cabinet			CAB			S	P	LOFAR_PIC_@cabinet@
 SubRack			SRCK		S	P	LOFAR_PIC_@cabinet@_@subrack@
 RSPBoard		RSP			S	P	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@
 RCU				RCU			S	P	LOFAR_PIC_@cabinet@_@subrack@_@RSPBoard@_@rcu@
+TBBoard			TBB			S	P	LOFAR_PIC_@cabinet@_@subrack@_@TBBoard@
 StationClock	SCK			S	P	LOFAR_PIC_StationClock
 StnPermSW		-			S	P	LOFAR_PermSW
 DigBoardCtrl	DBC			S	P	LOFAR_PermSW_DigBoardCtrl
@@ -49,4 +50,5 @@ StnObsSW		-			S	P	LOFAR_ObsSW
 StnObservation	OBS			S	O	LOFAR_ObsSW_@observation@
 BeamCtrl		BC			S	O	LOFAR_ObsSW_@observation@_BeamCtrl
 CalCtrl			CC			S	O	LOFAR_ObsSW_@observation@_CalCtrl
+TBBCtrl			TBC			S	O	LOFAR_ObsSW_@observation@_TBBCtrl
 
