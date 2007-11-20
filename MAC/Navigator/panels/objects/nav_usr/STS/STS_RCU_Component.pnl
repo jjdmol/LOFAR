@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,333 126 150 96 N "_3DFace" 3
+PANEL,473 190 384 349 N "_3DFace" 3
 "$Caption"
 "$Component"
 "$datapoint"
@@ -10,13 +10,19 @@ PANEL,333 126 150 96 N "_3DFace" 3
   LOG_TRACE(\"DP: \" + $datapoint + \"  Component: \"+$Component);
   if (dpAccessable($datapoint + \".\" + $Component))
 	{
-	  setValue(\"txt_component\", \"text\", $Caption);
+	  setValue(\"txt_comp\", \"text\", $Caption);
 	  dpConnect(\"ControlComponent\", $datapoint + \".\" + $Component + \":_online.._value\",
 	                                $datapoint + \".\" + $Component + \":_online.._invalid\");
   }
   else
   {
     setValue(\"STS_RCU\", \"backCol\", \"_dpdoesnotexist\");
+    if ($Component == \"VlEnable\") {
+    	VlEnable=FALSE;
+    } else {
+      VhEnable=FALSE;
+    }
+    checkDataPath();
   }
   
   
@@ -26,34 +32,36 @@ PANEL,333 126 150 96 N "_3DFace" 3
 ControlComponent(string dp1, bool Status,
                  string dp2, bool invalid)
 {
-// For the maintime no control is active only a view
-  setValue(\"CheckButton1\", \"visible\", FALSE);
 
 	string SymbolCol; 
   if(!invalid)
   {
-    CheckButton1.enabled = TRUE;
     if (Status==TRUE)
     {
       SymbolCol=\"Lofar_operational\";
-      CheckButton1.state(0)=TRUE;
     }
     else 
     {
       SymbolCol=\"Lofar_off\";
-      CheckButton1.state(0)=FALSE;
     }
   }
   else
   {
-    CheckButton1.enabled = FALSE;
     SymbolCol=\"Lofar_invalid\";
   }
-  setValue(\"STS_RCU\", \"backCol\", SymbolCol);
+
+  if ($Component == \"VlEnable\") {
+  	VlEnable=Status;
+  } else {
+    VhEnable=Status;
+  }
+  setValue(\"status\", \"backCol\", SymbolCol);
+  checkDataPath();
 }" 0
 EE E E 1 -1 -1 0  10 41
 "" 0 1
-EE 2
+E"#uses \"nav_usr/STS/STS-functions.ctl\"" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
@@ -64,7 +72,7 @@ LANG:1 6 Layer1
 6 0
 "STS_RCU_Border"
 ""
-1 10 41 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 10 170 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -73,11 +81,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 10 11 130 41
+E E 0 1 1 0 1 E U  1 E 10 11 160 170
 2 2
-"txt_component"
+"txt_comp"
 ""
-1 33 16 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 50 16 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -86,8 +94,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 35 18 63 34
-0 2 0 "s" 0 0 0 192 0 0  35 18
+E E 0 1 1 0 1 E U  0 E 52 18 80 34
+0 2 0 "s" 0 0 0 192 0 0  52 18
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -95,7 +103,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 1
 LANG:1 7 .......
 7 3
-"STS_RCU"
+"status"
 ""
 1 21 26 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
@@ -107,32 +115,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 21 26 7 7
-20 1
-"CheckButton1"
-""
-1 85 42 E E E 0 E 1 E N "_3DText" E N {255,255,255} E E
- E E
-2 0 0 0 0 0
-EE E
 0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-83 40 131 74
-1
-T 
-1
-LANG:1 3 PWR
- 0
-1
-LANG:1 0 
- E  E  0 0 0 0 0
-1
-E E 
-EE0
 LAYER, 1 
 1
 LANG:1 6 Layer2

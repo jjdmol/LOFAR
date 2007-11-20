@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,489 117 130 549 N "_3DFace" 3
+PANEL,-999 -119 130 549 N "_3DFace" 3
 "$RSP"
 "$datapoint"
 "$referenceDatapoint"
@@ -29,8 +29,8 @@ PANEL,489 117 130 549 N "_3DFace" 3
   	}
   }
   
-  sscanf(sNr,\"%d\",subrackNr); 
-  sscanf($RSP,\"%d\",rspNr);	
+  subrackNr = sNr;
+  rspNr=$RSP;
 
   rspNr=rspNr+(subrackNr*4);	
   RSPBoard=\"RSPBoard\"+rspNr;
@@ -47,8 +47,8 @@ PANEL,489 117 130 549 N "_3DFace" 3
   }	
 
   if(!dpAccessable(baseDP + \".voltage12:_online.._value\") ||
-     !dpAccessable(baseDP + \".voltage12:_online.._value\") ||
-     !dpAccessable(baseDP + \".voltage25:_online.._value\"))
+     !dpAccessable(baseDP + \".voltage25:_online.._value\") ||
+     !dpAccessable(baseDP + \".voltage33:_online.._value\"))
   {
     setValue(\"txt_voltage12\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"txt_voltage25\", \"backCol\", \"_dpdoesnotexist\");
@@ -140,7 +140,9 @@ unloadRCU(int cnt,int rspNr) {
 }" 0
 E E E 1 0 0 0  20 560
 "" 0 1
-E"string baseDP = \"\";
+E"#uses \"nav_usr/STS/STS-functions.ctl\"
+
+string baseDP = \"\";
 string RSPBoard = \"\";
 string aDP=\"\";
 dyn_string dpAr;

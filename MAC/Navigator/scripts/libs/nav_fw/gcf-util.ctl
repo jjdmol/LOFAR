@@ -143,7 +143,7 @@ dyn_string queryDatabase(string attribute, string datapointPath, int first, int 
   	}
         
 
-        string query = "SELECT '" + attribute + "' FROM '" + datapointPath  + firstXResults + REMOTESYSTEM + "'";
+        string query = "SELECT '" + attribute + "' FROM '" + datapointPath  +"'"+ firstXResults + REMOTESYSTEM + "'";
         //DebugN("Query : " + query);
   	dpQuery(query, tab);
 	//DebugN("Results : " + tab);

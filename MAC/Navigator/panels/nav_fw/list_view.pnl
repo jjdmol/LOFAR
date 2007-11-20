@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 17 NavigatorListView
-PANEL,519 184 950 740 N "_3DFace" 2
+PANEL,-1135 -118 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -74,9 +74,12 @@ loadTable(string dp1, bool customList,
   if (!customList)
   {
     output = queryDatabase(attribute, datapointPath, first, searchDepth, showProgress);
+  
   }
   else
   {
+ 
+
     dyn_string outputTemp = queryDatabaseForDP(attribute, datapointPath + selectionQuery, TRUE);
     dyn_string elementsOutput;
     int maximumCount = dynlen(outputTemp);
@@ -84,6 +87,8 @@ loadTable(string dp1, bool customList,
     dpGet($configDatapoint + \".selectionQueryDPE\", selectionQueryDPE);
     for (int i = 1; i <= dynlen(outputTemp); i++)
     {
+ 
+
       elementsOutput = queryDatabaseForDpElements(outputTemp[i]);
       elementsOutput = dynPatternMatch(\"*.\" + selectionQueryDPE + \"*\", elementsOutput);
       for (int j = 1; j <= dynlen(elementsOutput); j++)
@@ -116,6 +121,7 @@ E E E 1 -1 -1 0  20 40
 "" 0 1
 E"#uses \"nav_fw/gcfnav-view.ctl\"
 #uses \"nav_fw/gcf-util.ctl\"
+#uses \"nav_fw/gcfnav-tree.ctl\"
 " 0
  2
 "CBRef""1"

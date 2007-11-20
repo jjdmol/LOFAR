@@ -28,8 +28,9 @@
 
 global dyn_int g_distributedSystems;
 global int g_distSysVarSem = 0;
-global dyn_string stateColor;
-global dyn_string stateName;
+global mapping stateColor;
+global mapping stateName;
+global mapping stateNumber;
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -97,6 +98,25 @@ void unlockDistSystemSemaphore() {
 ///////////////////////////////////////////////////////////////////////////
 void initLofarColors() {
   	// Set the global statecolors/colornames.
-  	stateColor = makeDynString("Lofar_off","Lofar_operational","Lofar_maintenance","Lofar_test","Lofar_suspicious","Lofar_broken");
-  	stateName = makeDynString("off","operational","maintenance","test","suspicious","broken");
+  	stateColor [0]  = "Lofar_off";
+    stateColor [10] = "Lofar_operational";
+    stateColor [20] = "Lofar_maintenance";
+    stateColor [30] = "Lofar_test";
+    stateColor [46] = "Lofar_suspicious";
+    stateColor [56] = "Lofar_broken";
+    
+  	stateName [0]  = "off";
+    stateName [10] = "operational";
+    stateName [20] = "maintenance";
+    stateName [30] = "test";
+    stateName [46] = "suspicious";
+    stateName [56] = "broken";
+    
+  	stateNumber ["off"]             = 0;
+    stateNumber ["operational"]     = 10;
+    stateNumber ["maintenance"]     = 20;
+    stateNumber ["test"]            = 30;
+    stateNumber ["suspicious"]      = 46;
+    stateNumber ["broken"]          = 56;
+    
 }
