@@ -246,6 +246,34 @@ substitute_Cabinet_SubRack_RSPBoard()
 }
 
 #
+# substitute_Cabinet_SubRack_TBBoard
+#
+# syntax of the lines must be: dp dpt
+#
+substitute_Cabinet_SubRack_TBBoard()
+{
+	awk -v nrBoards=${NRRSPBOARDS} '
+	{
+		hasCabSubBoard=index($1,"@cabinet@_@subrack@_@TBBoard@");
+		if (hasCabSubBoard > 0) {
+			for (board=0; board<nrBoards; board++) {
+				dpname=$1;
+				cabinet=int(board/8)
+				subrack=int(board/4)
+				tbNr=int(board/2)
+				if (board%2 == 0) {
+					sub("@cabinet@_@subrack@_@TBBoard@", "Cabinet"cabinet"_Subrack"subrack"_TBBoard"tbNr, dpname)
+					print dpname"	"$2;
+				}
+			}
+		}
+		else {
+			print $1"	"$2;
+		}
+	} '
+}
+
+#
 # substitute_Cabinet_SubRack
 #
 # syntax of the lines must be: dp dpt
@@ -614,6 +642,7 @@ create_dp_file()
 				substitute_wan  | \
 				substitute_Cabinet_SubRack_RSPBoard_RCU | \
 				substitute_Cabinet_SubRack_RSPBoard | \
+				substitute_Cabinet_SubRack_TBBoard | \
 				substitute_Cabinet_SubRack | \
 				substitute_Cabinet | \
 				substitute_cluster_node | \
