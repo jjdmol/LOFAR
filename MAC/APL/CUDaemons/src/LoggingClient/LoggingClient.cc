@@ -225,7 +225,7 @@ GCFEvent::TResult LoggingClient::operational(GCFEvent&			event,
 		
 		// cleanup the garbage of closed ports to master clients
 		GCFPortInterface* pPort;
-		for (TClients::iterator iter = itsClientsGarbage.begin();
+		for (ClientsList::iterator iter = itsClientsGarbage.begin();
 			iter != itsClientsGarbage.end(); ++iter) {
 			pPort = *iter;
 			delete pPort;
@@ -266,7 +266,7 @@ GCFEvent::TResult LoggingClient::operational(GCFEvent&			event,
 					basename(logEvent.getFile().c_str()),
 					logEvent.getLine()));
 
-		itsMsgBuffer[itsInSeqnr++] = msg;
+		itsMsgBuffer[itsInSeqnr++] = Message(PVSSdp, msg);
 		_activateBuffer();
 	}
 	break;
@@ -339,17 +339,19 @@ void LoggingClient::_activateBuffer()
 		LOGSendMsgPoolEvent		poolEvent;
 		poolEvent.seqnr    = itsOutSeqnr;
 		poolEvent.msgCount = itsChunkSize;
-		map<int32, string>::iterator	iter = itsMsgBuffer.begin();
+		MsgMap::iterator	iter = itsMsgBuffer.begin();
 		for (uint32 i = 0; i < itsChunkSize; i++) {
-			poolEvent.messagePool[i] = iter->second;
+			poolEvent.DPnames[i] = iter->second.DPname;
+			poolEvent.messages[i] = iter->second.message;
 			iter++;
 		}
 		itsCLmaster->send(poolEvent);
 	}
 	else { // send one message
 		LOGSendMsgEvent		logEvent;
-		logEvent.seqnr = itsOutSeqnr;
-		logEvent.message = itsMsgBuffer[itsOutSeqnr];
+		logEvent.seqnr   = itsOutSeqnr;
+		logEvent.DPname  = itsMsgBuffer[itsOutSeqnr].DPname;
+		logEvent.message = itsMsgBuffer[itsOutSeqnr].message;
 		itsCLmaster->send(logEvent);
 	}
 }
