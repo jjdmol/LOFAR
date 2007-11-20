@@ -82,8 +82,19 @@ private:
 	typedef map<TM::GCFPortInterface*, LogClient> 	LogClientMap;
 	LogClientMap 	 		itsClients;
 
-	typedef list<TM::GCFPortInterface*> TClients;
-	TClients        	itsClientsGarbage;
+	typedef list<TM::GCFPortInterface*> 			ClientsList;
+	ClientsList  	      	itsClientsGarbage;
+
+	// message administration
+	struct	Message {
+		string		DPname;
+		string		message;
+		Message() : DPname(""), message("") {};
+		Message(const string&	DP, const string&	msg) : 
+			DPname(DP), message(msg) {};
+	};
+	typedef map<int32, Message>		MsgMap;
+	MsgMap				itsMsgBuffer;
 
 	// startup parameters
 	string				itsAdminFile;
@@ -96,8 +107,7 @@ private:
 	string				itsDrainFile;
 	uint32				itsDrainLinenr;
 
-	// interim buffer and seqnr
-	map<int32, string>	itsMsgBuffer;
+	// sequencenumber for sending and receiving.
 	int32				itsInSeqnr;
 	int32				itsOutSeqnr;
 

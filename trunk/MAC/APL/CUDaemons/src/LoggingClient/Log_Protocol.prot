@@ -49,6 +49,10 @@ event = {
 		type = "unsigned short";
 	};
 	param = {
+		name = "DPname";
+		type = "string";
+	};
+	param = {
 		name = "message";
 		type = "string";
 	};
@@ -79,7 +83,11 @@ event = {
 		type = "unsigned short";
 	};
 	param = {
-		name = "messagePool";
+		name = "DPnames";
+		type = "vector<string>";
+	};
+	param = {
+		name = "messages";
 		type = "vector<string>";
 	};
 };
