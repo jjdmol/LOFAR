@@ -513,8 +513,9 @@ int16 ControllerMenu::_chooseController()
 	cout << " 7. DigitalBoardControl" << endl;
 	cout << " 8. BeamControl" << endl;
 	cout << " 9. CalibrationControl" << endl;
-//	cout << "10. StationInfraControl" << endl;
-	cout << "11. TestController" << endl;
+	cout << "10. TBBControl" << endl;
+//	cout << "11. StationInfraControl" << endl;
+	cout << "12. TestController" << endl;
 	cout << endl;
 	cout << " 0. stop" << endl;
 
@@ -523,7 +524,7 @@ int16 ControllerMenu::_chooseController()
 		cout << endl;
 		cout << "Type number of your choice: ";
 		cin >> CntlrType;
-		if (CntlrType < 0 || CntlrType > 11 || (CntlrType > 3 && CntlrType < 6)) {
+		if (CntlrType < 0 || CntlrType > 12 || (CntlrType > 3 && CntlrType < 6)) {
 			cout << endl << "Wrong number, please retry." << endl;
 			CntlrType = -1;
 		}
