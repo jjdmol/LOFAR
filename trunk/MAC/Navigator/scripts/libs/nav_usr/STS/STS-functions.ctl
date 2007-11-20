@@ -25,7 +25,122 @@
 //# And are NOT part of the MAC Navigator framework.
 //#
 
+// Define pathchoices to be able to check datapaths in RCU screen
+global bool InputEnable=FALSE;
+global bool LBLEnable=FALSE;
+global bool LBHEnable=FALSE;
+global bool HBAEnable=FALSE;
+global bool bandSelLblLbh=FALSE;
+global bool VlEnable=FALSE;
+global bool VhEnable=FALSE;
+global bool bandSelLbaHba=FALSE;
+global bool VddVccEnable=FALSE;
+
+
 #uses "nav_fw/gcfnav-view.ctl"
+
+//////////////////////////////////////////////////////////////////////////////////
+// Function: checkDataPath 
+//           check the dataflow to set dataFlowElement in the RCU panels on/off 
+//           
+///////////////////////////////////////////////////////////////////////////////////
+checkDataPath() {
+
+  bool lbaPath = TRUE;
+  bool hbaPath = TRUE;
+  bool path    = TRUE;
+
+
+  // check on LBL/LBH/HBA Enable level
+  if (!LBLEnable && !LBHEnable) {
+    lbaPath = FALSE;
+  }
+
+  if (!HBAEnable) {
+    hbaPath = FALSE;
+  }
+
+
+  // check on bandSelLblLbh level
+  if(lbaPath) {
+    if ((bandSelLblLbh && !LBHEnable) ||
+         (!bandSelLblLbh && !LBLEnable))  {
+      lbaPath = FALSE;
+    }
+  }
+
+  // Check on VlEnable and VhEnable Level
+  if (lbaPath) {
+    lbaPath = VlEnable;
+  }
+  if (hbaPath) {
+    hbaPath = VhEnable;
+  }
+
+  // set lba/hba line colors
+  if (lbaPath) {
+    setValue("line1_lba","foreCol","Lofar_operational");
+    setValue("line2_lba","foreCol","Lofar_operational");
+  } else {
+    setValue("line1_lba","foreCol","Lofar_off");
+    setValue("line2_lba","foreCol","Lofar_off");
+  }
+
+  if (hbaPath) {
+    setValue("line1_hba","foreCol","Lofar_operational");
+    setValue("line2_hba","foreCol","Lofar_operational");
+  } else {
+    setValue("line1_hba","foreCol","Lofar_off");
+    setValue("line2_hba","foreCol","Lofar_off");
+  }
+  
+
+  // determine remainder path based on the above
+
+
+  if (!lbaPath && !hbaPath) {
+    path = FALSE;
+  }
+
+  // check based on bandSelLbaHba
+  if (path) {
+    if ((bandSelLbaHba && !hbaPath) ||
+         (!bandSelLblLbh && !lbaPath))  {
+      path = FALSE;
+    }
+  }
+
+  if (path) {
+    setValue("line1_path","foreCol","Lofar_operational");
+  } else {
+    setValue("line1_path","foreCol","Lofar_off");
+  }
+
+  // check based on VddVccEnable
+  if (path) {
+    path = VddVccEnable;
+  }
+ 
+  if (path) {
+    setValue("line2_path","foreCol","Lofar_operational");
+  } else {
+    setValue("line2_path","foreCol","Lofar_off");
+  }
+
+  // check based on InputEnable
+  if (path) {
+    path = InputEnable;
+  }
+
+  if (path) {
+    setValue("line3_path","foreCol","Lofar_operational");
+  } else {
+    setValue("line3_path","foreCol","Lofar_off");
+  }
+}
+
+
+
 
 //////////////////////////////////////////////////////////////////////////////////
 // Function: aplViewNavigateTo. 

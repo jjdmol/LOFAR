@@ -21,7 +21,6 @@
 //#  $Id$
 #uses "nav_fw/gcf-common.ctl"
 
-
 // This script needs to run on every CSU, CCU and MainCU
 // it monitors the state changes in the database, and will update the childstates accordingly
 // 
@@ -51,9 +50,11 @@ void subscribeObjectStateChange() {
 
   LOG_TRACE("subscribeObjectStateChange");
   // ROutine to connnect to the __navObjectState point to trigger statechanges
-  // So that chilcState points can bes set/reset accordingly.
+  // So that childState points can be set/reset accordingly.
 
-  dpConnect("objectStateTriggered",true,"__navObjectState.");
+  dpConnect("objectStateTriggered",true,"__navObjectState.DPName",
+            "__navObjectState.stateNr",
+            "__navObjectState.message");
   
   //Find out the Database we are running on
   string database=getSystemName();
@@ -99,7 +100,6 @@ void connectMainPoints() {
 // 
 // Callback function that is triggered by the (dis)appearance of e Distributed system.
 //
-// Added 02-04-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 void distSystemTriggered(string dp1, dyn_int systemList) {
 
@@ -118,10 +118,17 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
   string queryObservation = "SELECT '_original.._value' FROM '{LOFAR_ObsSW_Observation*.state,LOFAR_ObsSW_Observation*.childState}' REMOTE ALL WHERE _DPT = \"StnObservation\" SORT BY 1 DESC";
 
 
+  LOG_DEBUG("isConnected: "+isConnected);
   if (isConnected) {
-    dpQueryDisconnect("stationStateTriggered","PermSW");
-    dpQueryDisconnect("stationStateTriggered","PIC");
-    dpQueryDisconnect("stationStateTriggered","Observation");
+    if (dpQueryDisconnect("stationStateTriggered","PermSW") < 0) {
+      LOG_DEBUG("disconnect PermSW: "+getLastError());
+    }
+    if (dpQueryDisconnect("stationStateTriggered","PIC") < 0) {
+      LOG_DEBUG("disconnect PIC: "+getLastError());
+    }
+    if (dpQueryDisconnect("stationStateTriggered","Observation") < 0) {
+      LOG_DEBUG("disconnect Observation: "+getLastError());
+    }
   }
 
   if (dynlen(systemList) > 0 ) {
@@ -129,7 +136,9 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
     dpQueryConnectSingle("stationStateTriggered",false,"PIC",queryPIC);
     dpQueryConnectSingle("stationStateTriggered",false,"Observation",queryObservation);
     isConnected=true;
-  }
+  } else {
+    isConnected=false;
+  }    
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -155,26 +164,28 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
     state = tab[z][2];
     string dp=tab[z][1];
     station = dpSubStr(dp,DPSUB_SYS);
+    strreplace(dp,station,"");
     strreplace(station,":","");
+
     // strip element name and datapoint
- 
-    dyn_string aS=strsplit(dp,".");
-    if (dynlen(aS) > 0 ) {	
-      datapoint = dpSubStr(aS[1],DPSUB_DP);
-    }
-    if (dynlen(aS) > 1 ) {	
-      element = aS[2];
-    }
+    datapoint = dpSubStr(dp,DPSUB_DP);
+  
+    // skip the point
+    element = substr(dp,strlen(datapoint)+1,((strlen(dp))-(strlen(datapoint)))); 
 
     // get the ArmName
-    armName=getArmFromStation(station);
+    armName=navFunct_getArmFromStation(station);
 
 
     LOG_DEBUG("station : ",station, " DP: " ,datapoint," element: ",element);
 
     // if all needed values are available we can start doing the major update.
-    if (state >-1 & datapoint != "" & station != "" & armName != "" & element != ""){
-      setStates(datapoint + "_"+ armName + "_" + station,element,state,true);
+    if (state >-1 && datapoint != "" && station != "" && armName != "" && element != ""){
+      if (ident == "PIC") {
+	      setStates(datapoint + "_"+ armName + "_" + station,element,state,"",true);
+      } else {
+	      setStates(datapoint,element,state,"",true);
+      }
     }
   }
 }
@@ -186,43 +197,40 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
 //
 // Added 26-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-void objectStateTriggered(string dp1, string trigger) {
+void objectStateTriggered(string dp1, string trigger,
+                          string dp2, int state,
+                          string dp3, string message) {
   // __navObjectState change.
   // This point should have points like:
-  // LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.state=bad
+  //
+  // LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.state
+  // 1 (= good)
+  // a msg indicating extra comments on the state
+  //                                     
   // This State should be set to childState=bad in all upper (LOFAR-PIC_Cabinet0_Subrack0_RSPBoard0) treenodes
   // ofcourse we need to monitor if this statechange is allowed.
 
 
-  LOG_TRACE("Entered StateChangeTriggered with trigger:", trigger);
+  if (trigger == "") return;
 
-  int i,j;
-  string state    = "";
+  LOG_TRACE("Entered ObjectStateTriggered with trigger:", trigger);
+
   string datapoint = "";
   string element   = "";
   
-  dyn_string vals= strsplit(trigger,"=");
-	
-  if (dynlen(vals) >1 ) {	
-    state = vals[2];
-    // strip element name and datapoint
-    dyn_string aS=strsplit(vals[1],".");
-    if (dynlen(aS) > 0 ) {	
-     datapoint = aS[1];
-    }
-    if (dynlen(aS) > 1 ) {	
-     element = aS[2];
-    }
+  // strip element name and datapoint
+  datapoint = dpSubStr(trigger,DPSUB_SYS_DP);
+  
+  // skip the point
+  element = substr(trigger,strlen(datapoint)+1,((strlen(trigger))-(strlen(datapoint))));
 
+  LOG_DEBUG("state:  " + state + " DP: " + datapoint + " Element: " + element + " Message: " + message);
+  // if all needed values are available we can start doing the major update.
+  if (state > 0 && datapoint != "" && element != "" && dpExists(datapoint+"."+element)){
 
-    LOG_DEBUG("state:  ",state," DP: " ,datapoint, " Element: ",element);
-    // if all needed values are available we can start doing the major update.
-    if (state != "" != "" & datapoint != "" & element != "" & dpExists(datapoint+"."+element)){
-
-      setStates(datapoint,element,getStateNumber(state),false);
-    } else {
-      LOG_ERROR("result: not complete command, or database could not be found.");
-    }
+    setStates(datapoint,element,state,message,false);
+  } else {
+    LOG_ERROR("result: not complete command, or database could not be found."+ getLastError());
   }
 }
 
@@ -235,15 +243,16 @@ void objectStateTriggered(string dp1, string trigger) {
 // datapoint      = the base datapoint that needs to be set
 // element        = state or childState needs 2b checked 
 // state          = new state
+// message        = message if applied by __navObjectState
 // stationTrigger = check if the stationTrigger fired this. In that case the state/childState
 //                  is a pure copy from the station to the MCU point, so childState should be 
 //                  treated as state and just be copied, not evaluated.
 //
 // Added 3-4-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-void setStates(string datapoint,string element,int state,bool stationTrigger) {
+void setStates(string datapoint,string element,int state,string message,bool stationTrigger) {
 
-  LOG_TRACE("SetStates reached, datapoint: ", datapoint," element: ", element, " state: ",state);
+  LOG_TRACE("SetStates reached, datapoint: "+ datapoint+" element: "+ element+ " state: "+state+" message: "+message);
 
   // If element is state just set the state (might have been done by the callerprocess, 
   // When this is done we have to strip the last treenode, 
@@ -256,9 +265,12 @@ void setStates(string datapoint,string element,int state,bool stationTrigger) {
     
     int aVal;
     dpGet(datapoint+"."+element,aVal);
-    if (aVal != state & state > -1) {
+    if (aVal != state && state > -1) {
       dpSet(datapoint+"."+element,state);
-           
+      
+      // set message if not empty
+      dpSet(datapoint+".message",message);
+      
       //strip the last _xxx from the datapoint
       dyn_string points=strsplit(datapoint,"_");
       datapoint="";
@@ -301,7 +313,7 @@ void setStates(string datapoint,string element,int state,bool stationTrigger) {
 ///////////////////////////////////////////////////////////////////////////
 bool setChildState(string Dp,int state) {
 
-  LOG_TRACE("setChildState reached with: ",Dp," stateVal: ", state);
+  LOG_TRACE("setChildState reached withDP: "+Dp+" stateVal: "+ state);
 
   if (state < 0 || Dp == "") return false;
 
@@ -358,7 +370,7 @@ bool setChildState(string Dp,int state) {
         state=(int)tab[z][2];
       }
       // check if state != oldVal
-      if (state != aVal & state > -1 ) {
+      if (state != aVal && state > -1 ) {
         LOG_INFO("state not equal oldstate(",aVal,") so set ",Dp+".childState to: ",state);
         dpSet(Dp+".childState",state);
         return true;
