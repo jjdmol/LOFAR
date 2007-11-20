@@ -90,7 +90,7 @@ enable-auto-props = yes
 ### Note that auto-props functionality must be enabled, which
 ### is typically done by setting the 'enable-auto-props' option.
 *.am = svn:eol-style=native;svn:keywords=Author Date Id Revision
-*.bat = svn:eol-style=native;svn:keywords=Author Date Id Revision
+*.bat = svn:eol-style=CRLF;svn:keywords=Author Date Id Revision
 *.bib = svn:eol-style=native
 *.bmp = svn:mime-type=image/bmp
 *.bz2 = svn:mime-type=application/x-bzip
