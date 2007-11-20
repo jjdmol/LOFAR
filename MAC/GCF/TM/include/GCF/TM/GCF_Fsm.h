@@ -138,6 +138,9 @@ class GCFFsm
     {
       return (this->*_state)(event, port);
     }
+
+	/// send F_QUIt signal
+	void quitFsm();
   
   protected:
   
