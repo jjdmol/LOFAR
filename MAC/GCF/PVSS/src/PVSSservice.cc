@@ -738,25 +738,20 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 			pWFA = new GSAWaitForAnswer(*this); 
 			pWFA->setDpName(dpeName);
 		}
-		PVSSboolean retVal, retValTS(PVSS_TRUE);
 
 		// Finally do the real SET of the parameter
-		retVal = Manager::dpSet(dpId, *pVar, pWFA);
-
+		PVSSboolean retVal;
 		if (timestamp > 0.0) {
 			TimeVar ts;
-			ts.setSeconds((time_t)timestamp);
-			ts.setMilli((time_t)(timestamp - ((time_t) timestamp)) * 1000);
-			string::size_type attrStart = pvssDpName.find(".._value");
-			if (attrStart < pvssDpName.length() && attrStart > 0) {
-				pvssDpName.replace(attrStart, string::npos, ".._stime");
-				if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR) {
-					retValTS = Manager::dpSet(dpId, ts);
-				}
-			}
+			ts.setSeconds(trunc(timestamp));
+			ts.setMilli((time_t)((timestamp - trunc(timestamp)) * 1000));
+			retVal = Manager::dpSetTimed(ts, dpId, *pVar, pWFA);
+		}
+		else {
+			retVal = Manager::dpSet(dpId, *pVar, pWFA);
 		}
 
-		if (retVal == PVSS_FALSE || retValTS == PVSS_FALSE) {
+		if (retVal == PVSS_FALSE) {
 			ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 						  ErrClass::ERR_PARAM,			// wrong name: blame others
 						  ErrClass::UNEXPECTEDSTATE,	// fits all
@@ -797,6 +792,131 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 
 	return (result);
 }
+
+//
+// dpeSetMultiple(dpeNames, values, timestamp, wantAnswer)
+//
+PVSSresult PVSSservice::dpeSetMultiple(const string&				dpName,
+									   vector<string>				dpeNames, 
+									   vector<Common::GCFPValue*>	values, 
+									   double						timestamp,
+									   bool   						wantAnswer)
+{
+	PVSSresult 		result(SA_NO_ERROR);
+	DpIdValueList	dpIdList;
+	DpIdentifier 	dpId;
+	Variable* 		pVar(0);
+	string 			pvssDpName;
+
+	LOG_TRACE_FLOW_STR ("Set value of properties " << dpName);
+
+	ASSERT(itsSCADAHandler);
+	// DB must be active
+	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
+		LOG_FATAL_STR("Database Down, unable to set value of property: " << dpName);
+		itsResponse->dpeValueSet(dpName, result);
+		return (result);
+	}
+
+	// Property must exist
+	if (!PVSSinfo::propExists(dpName)) {
+		LOG_WARN(formatString("Property: '%s' does not exists", dpName.c_str()));
+		itsResponse->dpeValueSet(dpName, (result = SA_PROP_DOES_NOT_EXIST));
+		return (result);
+	}
+
+	// construct the DpIdValueList
+	vector<string>::const_iterator	nameIter = dpeNames.begin();
+	vector<string>::const_iterator	nameEnd  = dpeNames.end();
+	vector<Common::GCFPValue*>::const_iterator	valIter = values.begin();
+	vector<Common::GCFPValue*>::const_iterator	valEnd  = values.end();
+	while (nameIter != nameEnd && valIter != valEnd) {
+		convPropToDpConfig(dpName+"."+*nameIter, pvssDpName, false);	// add .:_original.._value
+		if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR) {
+			LOG_ERROR(formatString("Property: '%s' is unknown", pvssDpName.c_str()));
+			itsResponse->dpeValueSet(dpName, result);
+			return (result);
+		}
+	
+		if ((result = convertMACToPVSS(**valIter, &pVar, dpId)) != SA_NO_ERROR) {
+			LOG_ERROR(formatString("Property: '%s' can not be converted to PVSS type", pvssDpName.c_str()));
+			itsResponse->dpeValueSet(dpName, result);
+			return (result);
+		}
+		if (!dpIdList.appendItem(dpId, *pVar)) {
+			LOG_ERROR_STR("Adding " << *nameIter << " to the argument list failed");
+			itsResponse->dpeValueSet(dpName, (result = SA_SETPROP_FAILED));
+			return (result);
+		}
+		if (pVar) {
+			delete pVar;
+			pVar = 0;
+		}
+		nameIter++;
+		valIter++;
+	}
+
+	GSAWaitForAnswer* pWFA(0);
+	if (wantAnswer) {
+		// Note: pWFA will be deleted by PVSS API
+		pWFA = new GSAWaitForAnswer(*this); 
+		pWFA->setDpName(dpName);
+	}
+
+	// Finally do the real SET of the parameter
+	PVSSboolean retVal;
+	if (timestamp > 0.0) {
+		TimeVar ts;
+		ts.setSeconds(trunc(timestamp));
+		ts.setMilli((time_t)((timestamp - trunc(timestamp)) * 1000));
+		retVal = Manager::dpSetTimed(ts, dpIdList, pWFA);
+	}
+	else {
+		retVal = Manager::dpSet(dpIdList, pWFA);
+	}
+
+	// check result of request
+	if (retVal == PVSS_FALSE) {
+		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
+					  ErrClass::ERR_PARAM,			// wrong name: blame others
+					  ErrClass::UNEXPECTEDSTATE,	// fits all
+					  "PVSSservice",					// our file name
+					  "dpeSet()",					// our function name
+					  CharString("Value of datapoint ") + dpName.c_str() + 
+					  CharString(" could not be set"));
+
+		LOG_ERROR(formatString (
+				"PVSS: Unable to set value of property: '%s' (with 'answer')",
+				dpName.c_str()));
+
+		result = SA_SETPROP_FAILED;
+		// default the PVSS API is configured to delete this object
+		// but if there is an error occured PVSS API will not do this
+		delete pWFA;
+	}
+	else {
+		if (wantAnswer) {
+			LOG_TRACE_FLOW(formatString (
+				"Setting the value of property '%s' is requested successful", 
+				dpName.c_str()));
+		}
+		else {
+			LOG_TRACE_FLOW(formatString ("Value of property '%s' is set successful", 
+					dpName.c_str()));
+		}
+	}
+
+	if (pVar) {
+		delete pVar; // constructed by convertMACToPVSS method
+	}
+
+	if (result != SA_NO_ERROR) {
+		itsResponse->dpeValueSet(dpName, result);
+	}
+
+	return (result);
+}
+
 
 //
 // dpQuerySubscribeSingle(queryWhere, queryFrom)

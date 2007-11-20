@@ -98,6 +98,9 @@ GCFEvent::TResult tGSAService::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 		if (PVSSinfo::propExists("testInt")) {
 			itsService->dpDelete("testInt");
 		}
+		if (PVSSinfo::propExists("testDP")) {
+			itsService->dpDelete("testDP");
+		}
 		itsTimerPort->setTimer(1.0);
 	}
 	break;
@@ -468,6 +471,144 @@ GCFEvent::TResult tGSAService::test10(GCFEvent& e, GCFPortInterface& p)
 		}
 		catch (Exception& except) {
 			LOG_INFO_STR ("Reading an unknown variable returned result: " 
+							<< PVSSerrstr(result));
+		}
+		itsTimerPort->setTimer(1.0);
+	}
+	break;
+
+	case F_TIMER:
+		TRAN(tGSAService::testCreateMdpe);
+		break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// testCreateMdpe (event, port)
+//
+GCFEvent::TResult tGSAService::testCreateMdpe(GCFEvent& e, GCFPortInterface& p)
+{
+	LOG_DEBUG_STR("testCreateMdpe:" << eventName(e) << "@" << p.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	PVSSresult		  result;
+
+	switch (e.signal) {
+	case F_INIT: 
+		break;
+
+	case F_ENTRY:
+		LOG_DEBUG("Creating a complex variable: testDP");
+		result = itsService->dpCreate("testDP", "TestPS");
+		ASSERTSTR(result == SA_NO_ERROR, "Creation of a complex variable returned result: " 
+					<< PVSSerrstr(result));
+		itsTimerPort->setTimer(1.0);
+		break;
+
+	case F_TIMER:
+		TRAN(tGSAService::testWriteMdpe);
+		break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// testWriteMdpe (event, port)
+//
+GCFEvent::TResult tGSAService::testWriteMdpe(GCFEvent& e, GCFPortInterface& p)
+{
+	LOG_DEBUG_STR("testWriteMdpe:" << eventName(e) << "@" << p.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	PVSSresult		  result;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		try {
+			LOG_DEBUG("Setting intVal=4056,bool=false,string='boskabouter'");
+			vector<string>	dpeNames;
+			dpeNames.push_back("intVal");
+			dpeNames.push_back("boolVal");
+			dpeNames.push_back("stringVal");
+			vector<GCFPValue*>	values;
+			GCFPVInteger	theInt(4056);
+			GCFPVBool		theBool(false);
+			GCFPVString		theString("boskabouter");
+			values.push_back(&theInt);
+			values.push_back(&theBool);
+			values.push_back(&theString);
+			result = itsService->dpeSetMultiple("testDP", dpeNames, values, 0.0, true);
+		}
+		catch (Exception& except) {
+			LOG_INFO_STR ("Writing multiple values at once returned result: " 
+							<< PVSSerrstr(result));
+		}
+		itsTimerPort->setTimer(1.0);
+	}
+	break;
+
+	case F_TIMER:
+		TRAN(tGSAService::testWriteMdpeTimed);
+		break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+
+//
+// testWriteMdpeTimed (event, port)
+//
+GCFEvent::TResult tGSAService::testWriteMdpeTimed(GCFEvent& e, GCFPortInterface& p)
+{
+	LOG_DEBUG_STR("testWriteMdpeTimed:" << eventName(e) << "@" << p.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	PVSSresult		  result;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		try {
+			LOG_DEBUG("Setting uintVal=30092,float=2.49473,time=1/1/2000 03:02:01.825");
+			vector<string>	dpeNames;
+			dpeNames.push_back("uintVal");
+			dpeNames.push_back("floatVal");
+			vector<GCFPValue*>	values;
+			GCFPVUnsigned	theInt(30092);
+			GCFPVDouble		theFloat(2.49473);
+			values.push_back(&theInt);
+			values.push_back(&theFloat);
+			struct tm	theTM;
+			theTM.tm_sec=1;
+			theTM.tm_min=2;
+			theTM.tm_hour=3;
+			theTM.tm_mday=1;
+			theTM.tm_mon=0;
+			theTM.tm_year=100;
+			theTM.tm_wday=0;
+			theTM.tm_yday=0;
+			theTM.tm_isdst=0;
+			double	theTime = 1.0*mktime(&theTM) + 0.825;
+			LOG_DEBUG(formatString("theTime = %15.4f", theTime));
+			result = itsService->dpeSetMultiple("testDP", dpeNames, values, theTime, true);
+		}
+		catch (Exception& except) {
+			LOG_INFO_STR ("Writing multiple values at once returned result: " 
 							<< PVSSerrstr(result));
 		}
 		itsTimerPort->setTimer(1.0);

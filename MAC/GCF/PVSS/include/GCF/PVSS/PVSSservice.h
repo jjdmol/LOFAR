@@ -59,10 +59,15 @@ public:
     PVSSresult dpeSubscribe	 (const string& dpeName);
     PVSSresult dpeUnsubscribe(const string& dpeName);
     PVSSresult dpeGet		 (const string& dpeName);
-    PVSSresult dpeSet		 (const string& 			dpeName, 
-							  const Common::GCFPValue&	value, 
-							  double					timestamp,
-							  bool   					wantAnswer = true);
+    PVSSresult dpeSet		 (const string& 				dpeName, 
+							  const Common::GCFPValue&		value, 
+							  double						timestamp = 0.0,
+							  bool   						wantAnswer = true);
+    PVSSresult dpeSetMultiple(const string&					dpName,
+							  vector<string>				dpeNames, 
+							  vector<Common::GCFPValue*>	values, 
+							  double						timestamp = 0.0,
+							  bool   						wantAnswer = true);
     PVSSresult dpQuerySubscribeSingle(const string& queryWhere, 
                                       const string& queryFrom);
     PVSSresult dpQueryUnsubscribe	(uint32 queryId);
