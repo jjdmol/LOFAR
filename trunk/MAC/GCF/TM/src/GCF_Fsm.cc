@@ -25,46 +25,56 @@
 #include <GCF/TM/GCF_Fsm.h>
 #include <GTM_Defines.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 // static data member initialisation
 GCFDummyPort GCFFsm::_gcfPort(0, "GCFFSM", F_FSM_PROTOCOL);
 
+//
+// initFsm()
+//
 void GCFFsm::initFsm()
 {
-  GCFEvent e;
-  e.signal = F_ENTRY;
-  (void)(this->*_state)(e, _gcfPort); // entry signal
-  e.signal = F_INIT;
-  if (GCFEvent::HANDLED != (this->*_state)(e, _gcfPort)) // initial transition
-  {
-    LOG_FATAL(LOFAR::formatString (
-        "Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT) not handled."));
-    exit(1);
-  }
+	GCFEvent e;
+	e.signal = F_ENTRY;
+	(void)(this->*_state)(e, _gcfPort); // entry signal
+	e.signal = F_INIT;
+	if (GCFEvent::HANDLED != (this->*_state)(e, _gcfPort)) { // initial transition
+		LOG_FATAL(LOFAR::formatString (
+			"Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT) not handled."));
+		exit(1);
+	}
 }
 
+//
+// tran(target, from, to)
+//
 void GCFFsm::tran(State target, const char* from, const char* to)
 {
-  GCFEvent e;
-  e.signal = F_EXIT;
-  (void)(this->*_state)(e, _gcfPort); // exit signal
+	GCFEvent e;
+	e.signal = F_EXIT;
+	(void)(this->*_state)(e, _gcfPort); // exit signal
 
-  LOG_DEBUG(LOFAR::formatString (
-      "State transition to %s <<== %s",
-      to,
-      from));
+	LOG_DEBUG(LOFAR::formatString ( "State transition to %s <<== %s", to, from));
 
-  _state = target; // state transition
-  
-  e.signal = F_ENTRY;
-  (void)(this->*_state)(e, _gcfPort); // entry signal
+	_state = target; // state transition
+
+	e.signal = F_ENTRY;
+	(void)(this->*_state)(e, _gcfPort); // entry signal
 }
+
+//
+// quitFsm()
+//
+void GCFFsm::quitFsm()
+{
+	GCFEvent	event;
+	event.signal = F_QUIT;
+	(void)(this->*_state)(event, _gcfPort);
+}
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR
