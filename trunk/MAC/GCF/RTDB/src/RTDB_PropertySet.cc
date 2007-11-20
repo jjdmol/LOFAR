@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 
+#include <Common/StreamUtil.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/PVSS/PVSSinfo.h>
@@ -92,6 +93,7 @@ RTDBPropertySet::~RTDBPropertySet()
 		itsService->doWork();		// force DBmanager to do its work
 		while (PVSSinfo::propExists(itsScope)) {
 			itsService->doWork();		// force DBmanager to do its work
+			usleep(10000);	// 10 ms
 		}
 	}
 
@@ -201,10 +203,39 @@ PVSSresult	RTDBPropertySet::getValue(const string&			propName,
 //
 PVSSresult	RTDBPropertySet::flush()
 {
+	PropertyMap_t::iterator PMiter(itsPropMap.begin());
+	PropertyMap_t::iterator PMend (itsPropMap.end());
 
+	// basictypes need special handling
+	if (PMiter->second->isBasicType) {
+		if (PMiter->second->dirty) {
+			return (itsService->dpeSet(itsScope, *(PMiter->second->value)));
+		}
+		LOG_DEBUG_STR("No flush needed");
+		return (SA_NO_ERROR);
+	}
 
+	// DP is a structure, collect dirty elements
+	vector<string>			dpeNames;
+	vector<GCFPValue*>		dpeValues;
+	while (PMiter!= PMend) {
+		if (PMiter->second->dirty) {
+			dpeNames.push_back(PMiter->first);
+			dpeValues.push_back(PMiter->second->value);
+			PMiter->second->dirty = false;	// assume update will be succesful
+		}
+		++PMiter;
+	}
 
+	// something to flush?
+	if (dpeNames.empty()) {
+		LOG_DEBUG_STR("No flush needed");
+		return (SA_NO_ERROR);
+	}
 
+	// write to database
+	LOG_DEBUG_STR("Updating: " << dpeNames);
+	return (itsService->dpeSetMultiple(itsScope, dpeNames, dpeValues));
 }
 
 

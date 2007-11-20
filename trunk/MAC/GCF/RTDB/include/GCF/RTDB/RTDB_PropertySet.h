@@ -103,12 +103,6 @@ protected:
 	void dpeValueChanged	 (const string& propName, PVSSresult	result, const Common::GCFPValue& value);
 	void dpeValueSet		 (const string& propName, PVSSresult	result);
 	void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
-#if 0	
-	void 	dpCreated		(PVSSresult	result);
-	void	valueGetAck		(const string&	propName, PVSSresult	result, const GCFPValue&	value);
-	void	valueChangedAck	(const string&	propName, PVSSresult	result, const GCFPValue&	value);
-	void	valueSetAck		(const string&	propName, PVSSresult	result);
-#endif
 
 private:
 	RTDBPropertySet();

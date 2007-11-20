@@ -41,12 +41,10 @@ namespace LOFAR {
 //
 // DPservice (clienttask, report_result_back)
 //
-DPservice::DPservice(GCFTask*		clientTask,
-					 bool			reportBack) :
+DPservice::DPservice(GCFTask*		clientTask) :
 	itsService	    (0),
 	itsOwnResponse  (0),
-	itsExtResponse  (new DPanswer(clientTask)),
-	itsPassResult	(reportBack)
+	itsExtResponse  (new DPanswer(clientTask))
 {
 	LOG_TRACE_FLOW_STR("DPservice()");
 
@@ -73,9 +71,10 @@ DPservice::~DPservice()
 //
 PVSSresult DPservice::setValue (const string& 		DPname, 
 								const GCFPValue& 	value,
-								double 				timestamp)
+								double 				timestamp,
+								bool				wantAnswer)
 {
-	return (itsService->dpeSet(DPname, value, timestamp));
+	return (itsService->dpeSet(DPname, value, timestamp, wantAnswer));
 }
 
 //
@@ -84,7 +83,8 @@ PVSSresult DPservice::setValue (const string& 		DPname,
 PVSSresult DPservice::setValue (const string&		DPname, 
 								const string&		value,
 								TMACValueType		type,
-								double 				timestamp)
+								double 				timestamp,	
+								bool				wantAnswer)
 {
 	// first create a GCFValue object of the right type.
 	GCFPValue*	valueObj = GCFPValue::createMACTypeObject(type);
@@ -98,8 +98,18 @@ PVSSresult DPservice::setValue (const string&		DPname,
 	}
 
 	// finally write value to the database.
-	return (itsService->dpeSet(DPname, *valueObj, timestamp));
+	return (itsService->dpeSet(DPname, *valueObj, timestamp, wantAnswer));
 }
+
+PVSSresult DPservice::setValue (const string&		DPname, 
+								vector<string>		dpeNames,
+								vector<GCFPValue*>	dpeValues,
+								double 				timestamp,
+								bool				wantAnswer)
+{
+	return (itsService->dpeSetMultiple(DPname, dpeNames, dpeValues, timestamp, wantAnswer));
+}
+
                              
 //
 // getValue(propname, GCFPValue)
@@ -117,13 +127,12 @@ PVSSresult	DPservice::getValue(const string&	DPname)
 //
 void DPservice::dpeValueSet(const string&		DPname, PVSSresult	result)
 {
+	LOG_DEBUG("DPservice::dpeValueSet");
 	if (result != SA_NO_ERROR) {
 		LOG_WARN_STR ("Setting new value to " << DPname << " failed");
 	}
 
-	if (itsPassResult) {
-		itsExtResponse->dpeValueSet(DPname, result);
-	}
+	itsExtResponse->dpeValueSet(DPname, result);
 }
 
 //
@@ -134,10 +143,8 @@ void DPservice::dpeValueGet(const string&		DPname, PVSSresult	result, const GCFP
 	LOG_DEBUG_STR("DPservice::dpeValueGet(" << DPname << ")");
 
 	// notify user when he is interested in it.
-	if (itsPassResult) {
-		LOG_DEBUG("DPservice::dpeValueChanged:propagate");
-		itsExtResponse->dpeValueGet(DPname, result, value);
-	}
+	LOG_DEBUG("DPservice::dpeValueChanged:propagate");
+	itsExtResponse->dpeValueGet(DPname, result, value);
 }
 
   } // namespace RTDB

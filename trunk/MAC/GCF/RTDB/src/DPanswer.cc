@@ -118,6 +118,10 @@ void DPanswer::dpQuerySubscribed (uint32 queryId, PVSSresult result)
 //
 void DPanswer::_dispatchEvent(GCFEvent&	event)
 {
+	if (!itsTask) {		// allow empty taskPointers
+		return;
+	}
+
 	// save signal from original event.
 	uint16			signal(event.signal);
 	const uint32	GCFEVENT_LEN = sizeof(GCFEvent);
