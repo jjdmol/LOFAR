@@ -2,7 +2,7 @@
 #
 # Component description of a TBBoard configuration setting
 #
-# $Id: Beam.comp,v 1.7 2007/04/23 09:09:03 overeem Exp $
+# $Id$
 #
 # name          name of the node
 # version       version of this node specification
