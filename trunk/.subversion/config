@@ -101,6 +101,8 @@ enable-auto-props = yes
 *.cc = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cfg = svn:eol-style=native
 *.cls = svn:eol-style=native
+*.comp = svn:eol-style=native;svn:keywords=Author Date Id Revision
+*.conf = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.cpp = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.csh = svn:eol-style=native;svn:executable;svn:keywords=Author Date Id Revision
 *.css = svn:eol-style=native
@@ -125,6 +127,7 @@ enable-auto-props = yes
 *.jpg = svn:mime-type=image/jpeg
 *.js = svn:eol-style=native
 *.ll = svn:eol-style=native;svn:keywords=Author Date Id Revision
+*.log_prop = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.m4 = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.m = svn:eol-style=native;svn:keywords=Author Date Id Revision
 *.out = svn:eol-style=native
