@@ -40,4 +40,5 @@ par  channelWidth            I    dbl    Hz     10    100    >>Observation.clock
 #--------------------------------------------------------------------------------------------------------
 uses  VirtualInstrument  1.0.0  development '1'		       "Virtual Instrument"
 uses  Beam				 1.0.0  development '1'		       "Beam specification"
+uses  TBB				 1.0.0  development '1'		       "TBB settings"
 uses  ObsCtrl			 1.0.0  development '1'		       "Observation Control"
