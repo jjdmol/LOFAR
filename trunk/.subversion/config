@@ -67,7 +67,7 @@
 [miscellany]
 ### Set global-ignores to a set of whitespace-delimited globs
 ### which Subversion will ignore in its 'status' output.
-global-ignores = *~ *.tmp \
+global-ignores = *~ *.log *.private *.result *.tmp installed \
                  aclocal.m4 autom4te.cache boot.md5 boot.md5-check \
                  build config.guess config.h.in config.sub configure \
                  depcomp install-sh ltmain.sh Makefile.in missing
