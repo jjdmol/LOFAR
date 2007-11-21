@@ -2,7 +2,7 @@
 A.b.C=7
 a.B.lange_naam="dit is een wat langere naam"
 
-a.B.c     = 700.3			# outlining around = sign is possible.
+a.B.c     = 700			# outlining around = sign is possible.
 A.c.a     = nog een afkorting
 a.b.DOUBLE= 3.1415926 \		# we may put comment here
 # and even here the multiline mode is not destroyed

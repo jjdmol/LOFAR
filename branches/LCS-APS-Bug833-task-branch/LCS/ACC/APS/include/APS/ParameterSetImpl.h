@@ -37,7 +37,9 @@
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
 #include <Common/StringUtil.h>
+#include <Common/LofarLogger.h>
 #include <APS/KVpair.h>
+#include <boost/lexical_cast.hpp>
 
 namespace LOFAR {
   namespace ACC {
@@ -198,36 +200,17 @@ public:
 	// Return the 'metadata' from the parameterCollection.
 //	string  getVersionNr     () const;
 
-	// Return scalar value.
-	// @{
-	bool	getBool  (const string& aKey) const;
-        bool	getBool  (const string& aKey, bool aValue) const;
-	int16	getInt16 (const string& aKey) const;
-        int16	getInt16 (const string& aKey, int16 aValue) const;
-	uint16	getUint16(const string& aKey) const;
-        uint16	getUint16(const string& aKey, uint16 aValue) const;
-	int32	getInt32 (const string& aKey) const;
-        int32	getInt32 (const string& aKey, int32 aValue) const;
-	uint32	getUint32(const string& aKey) const;
-        uint32	getUint32(const string& aKey, uint32 aValue) const;
-#if HAVE_LONG_LONG
-	int64	getInt64 (const string& aKey) const;
-        int64	getInt64 (const string& aKey, int64 aValue) const;
-	uint64	getUint64(const string& aKey) const;
-        uint64	getUint64(const string& aKey, uint64 aValue) const;
-#endif
-	float	getFloat (const string& aKey) const;
-        float	getFloat (const string& aKey, float aValue) const;
-	double	getDouble(const string& aKey) const;
-        double	getDouble(const string& aKey, double aValue) const;
-	string	getString(const string& aKey) const;
-        string	getString(const string& aKey, const string& aValue) const;
-	// Returns the value as a time value (seconds since 1970).
-	// @{
-	time_t	getTime  (const string& aKey) const;
-        time_t	getTime  (const string& aKey, const time_t& aValue) const;
-	// @}
-	// @}
+  template<typename T>
+  T get(const string& aKey) const;
+
+  template<typename T>
+  T get(const string& aKey, T aValue) const;
+
+  template<typename T>
+  vector<T> getVector(const string& aKey) const;
+
+  template<typename T>
+  vector<T> getVector(const string& aKey, const vector<T>& aValue) const;
 
 	// Return vector of values.
 	// @{
@@ -352,160 +335,68 @@ vector<char*>	splitVector(char*	target);
 time_t StringToTime_t (const string& aString);
 // @} addgroup
 
-//#	getBool(key)
-inline bool ParameterSetImpl::getBool(const string& aKey) const
+template<typename T>
+inline T ParameterSetImpl::get(const string& aKey) const
 {
-	return (StringToBool(findKV(aKey)->second));
+  return boost::lexical_cast<T>(findKV(aKey)->second);
 }
 
-//#	getBool(key, value)
-inline bool ParameterSetImpl::getBool(const string& aKey, bool aValue) const
+template<>
+inline time_t ParameterSetImpl::get(const string& aKey) const
+{
+  return StringToTime_t(findKV(aKey)->second);
+}
+
+template<typename T>
+inline T ParameterSetImpl::get(const string& aKey, T aValue) const
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-	else return StringToBool(it->second);
+	else return boost::lexical_cast<T>(it->second);
 }
 
-//#	getInt16(key)
-inline int16 ParameterSetImpl::getInt16(const string& aKey) const
-{
-	return (StringToInt16(findKV(aKey)->second));
-}
-
-//#	getInt16(key, value)
-inline int16 ParameterSetImpl::getInt16(const string& aKey, int16 aValue) const
+template<>
+inline time_t ParameterSetImpl::get(const string& aKey, time_t aValue) const
 {
         const_iterator it = findKV(aKey,false);
 	if (it == end()) return aValue;
-        else return StringToInt16(it->second);
+	else return StringToTime_t(it->second);
 }
 
-//#	getUint16(key)
-inline uint16 ParameterSetImpl::getUint16(const string& aKey) const
+template<typename T>
+inline vector<T> ParameterSetImpl::getVector(const string& aKey) const
 {
-	return (StringToUint16(findKV(aKey)->second));
+	// get destroyable copy of value part
+	string		value(findKV(aKey)->second.c_str());	
+
+	// parse value part as an array
+	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
+	vector<T>	result;
+	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
+		result.push_back(boost::lexical_cast<T>(string(elemPtrs[i])));
+	}
+
+	return (result);
 }
 
-//#	getUint16(key, value)
-inline uint16 ParameterSetImpl::getUint16(const string& aKey, uint16 aValue) const
+template<typename T>
+inline vector<T> ParameterSetImpl::getVector(const string& aKey, const vector<T>& aValue) const
 {
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToUint16(it->second);
-}
+        // Find key; if not found, return default value \a aValue
+        const_iterator it = findKV(aKey, false);
+        if (it == end()) return aValue;
 
-//#	getInt32(key)
-inline int32 ParameterSetImpl::getInt32(const string& aKey) const
-{
-	return (StringToInt32(findKV(aKey)->second));
-}
+	// get destroyable copy of value part
+	string		value(it->second.c_str());	
 
-//#	getInt32(key, value)
-inline int32 ParameterSetImpl::getInt32(const string& aKey, int32 aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToInt32(it->second);
-}
+	// parse value part as an array
+	vector<char*> elemPtrs = splitVector(const_cast<char*>(value.c_str()));
+	vector<T>	result;
+	for (uint32	i = 0; i < elemPtrs.size(); ++i) {
+		result.push_back(boost::lexical_cast<T>(string(elemPtrs[i])));
+	}
 
-//#	getUint32(key)
-inline uint32 ParameterSetImpl::getUint32(const string& aKey) const
-{
-	return (StringToUint32(findKV(aKey)->second));
-}
-
-//#	getUint32(key, value)
-inline uint32 ParameterSetImpl::getUint32(const string& aKey, uint32 aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToUint32(it->second);
-}
-
-#if HAVE_LONG_LONG
-//#	getInt64(key)
-inline int64 ParameterSetImpl::getInt64(const string& aKey) const
-{
-	return (StringToInt64(findKV(aKey)->second));
-}
-
-//#	getInt64(key, value)
-inline int64 ParameterSetImpl::getInt64(const string& aKey, int64 aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToInt64(it->second);
-}
-
-//#	getUint64(key)
-inline uint64 ParameterSetImpl::getUint64(const string& aKey) const
-{
-	return (StringToUint64(findKV(aKey)->second));
-}
-
-//#	getUint64(key, value)
-inline uint64 ParameterSetImpl::getUint64(const string& aKey, uint64 aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToUint64(it->second);
-}
-#endif
-
-//#	getFloat(key)
-inline float ParameterSetImpl::getFloat (const string& aKey) const
-{
-	return (StringToFloat(findKV(aKey)->second));
-}
-
-//#	getFloat(key, value)
-inline float ParameterSetImpl::getFloat (const string& aKey, float aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToFloat(it->second);
-}
-
-//#	getDouble(key)
-inline double ParameterSetImpl::getDouble(const string& aKey) const
-{
-	return (StringToDouble(findKV(aKey)->second));
-}
-
-//#	getDouble(key, value)
-inline double ParameterSetImpl::getDouble(const string& aKey, double aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToDouble(it->second);
-}
-
-//#	getString(key)
-inline string ParameterSetImpl::getString(const string& aKey) const
-{
-	return (findKV(aKey)->second);
-}
-
-//#	getString(key, value)
-inline string ParameterSetImpl::getString(const string& aKey, const string& aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return it->second;
-}
-
-//#	getTime(key)
-inline time_t ParameterSetImpl::getTime(const string& aKey) const
-{
-	return (StringToTime_t(findKV(aKey)->second));
-}
-
-//#	getTime(key, value)
-inline time_t ParameterSetImpl::getTime(const string& aKey, const time_t& aValue) const
-{
-        const_iterator it = findKV(aKey,false);
-	if (it == end()) return aValue;
-        else return StringToTime_t(it->second);
+	return (result);
 }
 
     } // namespace APS

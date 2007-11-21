@@ -156,7 +156,7 @@ int doIt(KeyCompare::Mode mode)
 
     cout << "\nShowing some values\n";
     cout << "a.b.c=" 			<< myPS.getInt32("a.b.c") << endl;
-    cout << "a.b=" 				<< myPS.getInt32("a.b") << endl;
+    cout << "a.b=" 				<< myPS.getString("a.b") << endl;
     cout.precision(20);
     cout << "a.b.double="		<< myPS.getDouble("a.b.double") << endl;
     cout << "a.b.lange_naam="	<< myPS.getString("a.b.lange_naam") << endl;
@@ -168,7 +168,7 @@ int doIt(KeyCompare::Mode mode)
 
     cout << "\nShowing the same keys again\n";
     cout << "a.b.c=" 			<< myPS.getInt32("a.b.c") << endl;
-    cout << "a.b=" 				<< myPS.getInt32("a.b") << endl;
+    cout << "a.b=" 				<< myPS.getString("a.b") << endl;
     cout.precision(20);
     cout << "a.b.double="		<< myPS.getDouble("a.b.double") << endl;
     cout << "a.b.lange_naam="	<< myPS.getString("a.b.lange_naam") << endl;

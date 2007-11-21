@@ -383,11 +383,7 @@ ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 //
 void ParameterSetImpl::add(const string& aKey, const string& aValue)
 {
-	pair< KeyValueMap::iterator, bool>		result;
-
-	result = insert(std::make_pair(aKey, aValue)); 
-
-	if (!result.second) {
+	if (!insert(make_pair(aKey, aValue)).second) {
 		THROW (APSException, formatString("add:Key %s double defined?", aKey.c_str()));
 	}
 }
@@ -405,10 +401,7 @@ void ParameterSetImpl::add(const KVpair&	aPair)
 //
 void ParameterSetImpl::replace(const string& aKey, const string& aValue)
 {
-	// remove any existed value
-	erase(aKey);
-
-	add (aKey, aValue);
+	(*this)[aKey] = aValue;
 }
 
 //

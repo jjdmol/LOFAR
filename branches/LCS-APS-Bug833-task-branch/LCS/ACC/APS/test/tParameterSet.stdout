@@ -15,7 +15,7 @@ Merging ParameterSet with file 'tParameterSet.in_merge_normal'
 
 Showing the same keys again
 a.b.c=700
-a.b=0
+a.b=0..3
 a.b.double=3.141592653589793116
 a.b.lange_naam=dit is een wat langere naam
 a.b.time1=15
@@ -24,7 +24,7 @@ a.b.time3=54000
 
 The main ParameterSet contains:
 [a.b],[0..3]
-[a.b.c],[700.3]
+[a.b.c],[700]
 [a.b.c.d.e.f.g.h],[tjee wat een levels!]
 [a.b.double],[3.1415926535897932384626433832795]
 [a.b.lange_naam],[dit is een wat langere naam]
@@ -48,7 +48,7 @@ isValidVersionNrRef(1.2.3.AndALotOfGarbageBehindTheLastNumberPart)  = 0
 Creating a subset 'a.b.'
 
 Subset a.b. contains:
-[c],[700.3]
+[c],[700]
 [c.d.e.f.g.h],[tjee wat een levels!]
 [double],[3.1415926535897932384626433832795]
 [lange_naam],[dit is een wat langere naam]
@@ -102,7 +102,7 @@ Merging ParameterSet with file 'tParameterSet.in_merge_nocase'
 
 Showing the same keys again
 a.b.c=700
-a.b=0
+a.b=0..3
 a.b.double=3.141592653589793116
 a.b.lange_naam=dit is een wat langere naam
 a.b.time1=15
@@ -111,7 +111,7 @@ a.b.time3=54000
 
 The main ParameterSet contains:
 [A.B],[0..3]
-[a.B.c],[700.3]
+[a.B.c],[700]
 [a.B.c.D.e.F.g.H],[tjee wat een levels!]
 [a.b.DOUBLE],[3.1415926535897932384626433832795]
 [a.B.lange_naam],[dit is een wat langere naam]
@@ -135,7 +135,7 @@ isValidVersionNrRef(1.2.3.AndALotOfGarbageBehindTheLastNumberPart)  = 0
 Creating a subset 'a.b.'
 
 Subset a.b. contains:
-[c],[700.3]
+[c],[700]
 [c.D.e.F.g.H],[tjee wat een levels!]
 [DOUBLE],[3.1415926535897932384626433832795]
 [lange_naam],[dit is een wat langere naam]
