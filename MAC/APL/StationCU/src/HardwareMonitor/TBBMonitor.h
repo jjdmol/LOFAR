@@ -64,8 +64,10 @@ private:
 
    	GCFEvent::TResult askVersion    		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askSizeInfo	  		 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult askFlashInfo	  		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askTBBinfo	  		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult askRCUinfo			 (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult askRCUSettings		 (GCFEvent& e, GCFPortInterface& p);
    	GCFEvent::TResult waitForNextCycle		 (GCFEvent& e, GCFPortInterface& p);
 
    	GCFEvent::TResult finish_state  		 (GCFEvent& e, GCFPortInterface& p);
