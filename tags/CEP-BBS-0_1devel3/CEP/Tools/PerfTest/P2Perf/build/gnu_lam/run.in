@@ -1,0 +1,9 @@
+define 
+	sources=1,
+	destinations=1,
+	destside=0,
+	fixedsize=102400
+;
+run 10000;
+dump;
+quit

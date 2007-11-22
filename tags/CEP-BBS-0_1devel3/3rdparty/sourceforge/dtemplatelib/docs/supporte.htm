@@ -1,0 +1,107 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type"
+content="text/html; charset=iso-8859-1">
+<meta name="GENERATOR" content="Microsoft FrontPage Express 2.0">
+<title>Supported C+</title>
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<p>Supported C++ data types and mappings (see ETI_Map::build() in
+bind_basics.cpp for details)</p>
+
+<table border="0">
+    <tr>
+        <td>C++ type</td>
+        <td>ODBC C Data Type</td>
+        <td>ODBC SQL Data Type</td>
+    </tr>
+    <tr>
+        <td>short</td>
+        <td>SQL_C_SSHORT</td>
+        <td>SQL_INTEGER</td>
+    </tr>
+    <tr>
+        <td>unsigned short</td>
+        <td>SQL_C_USHORT</td>
+        <td>SQL_INTEGER</td>
+    </tr>
+    <tr>
+        <td>int</td>
+        <td>SQL_C_SLONG</td>
+        <td>SQL_INTEGER</td>
+    </tr>
+    <tr>
+        <td>unsigned int</td>
+        <td>SQL_C_ULONG</td>
+        <td>SQL_INTEGER</td>
+    </tr>
+    <tr>
+        <td>long</td>
+        <td>SQL_C_SLONG</td>
+        <td>SQL_INTEGER</td>
+    </tr>
+    <tr>
+        <td>unsigned long</td>
+        <td>SQL_C_ULONG</td>
+        <td>SQL_INTEGER</td>
+    </tr>
+    <tr>
+        <td>double</td>
+        <td>SQL_C_DOUBLE</td>
+        <td>SQL_DOUBLE</td>
+    </tr>
+    <tr>
+        <td>float</td>
+        <td>SQL_C_FLOAT</td>
+        <td>SQL_FLOAT</td>
+    </tr>
+    <tr>
+        <td>char</td>
+        <td>SQL_C_CHAR</td>
+        <td>SQL_CHAR</td>
+    </tr>
+<tr>
+        <td>bool</td>
+        <td>SQL_C_USHORT</td>
+        <td>SQL_INTEGER</td>
+    </tr>
+
+  <tr>
+        <td>ODBC TIMESTAMP_STRUCT</td>
+        <td>SQL_C_TIMESTAMP</td>
+        <td>SQL_TIMESTAMP</td>
+    </tr>
+    <tr>
+        <td><a href="jtime_c.htm">jtime_c</a></td>
+        <td>SQL_C_TIMESTAMP</td>
+        <td>SQL_TIMESTAMP</td>
+    </tr>
+    <tr>
+        <td>char [xxx]</td>
+        <td>SQL_C_CHAR</td>
+        <td>SQL_VARCHAR</td>
+    </tr>
+ 
+    <tr>
+        <td>string &lt;--&gt; basic_string&lt;char&gt; \</td>
+        <td>SQL_C_CHAR</td>
+        <td>SQL_VARCHAR</td>
+    </tr>
+    <tr>
+        <td>wstring&lt;--&gt; basic_string&lt;wchar_t&gt;</td>
+        <td>SQL_C_WCHAR</td>
+        <td>SQL_WVARCHAR</td>
+    </tr>
+    <tr>
+        <td>Binary Data or blob &lt;--&gt; basic_string&lt;unsigned char&gt;</td>
+        <td>SQL_C_BINARY</td>
+        <td>SQL_VARBINARY</td>
+    </tr>
+    
+   
+</table>
+</body>
+</html>

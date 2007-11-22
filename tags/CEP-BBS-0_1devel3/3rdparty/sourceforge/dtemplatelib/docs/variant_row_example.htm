@@ -1,0 +1,48 @@
+<pre><code><span class="codeComment">// Manipulating fields in a variant_row</span>
+
+void variant_row_example(void) {
+
+	TIMESTAMP_STRUCT test_date = {1999, 9, 29, 0, 0, 0, 0};
+
+	vector&lt;TypeTranslation&gt; types;
+	vector&lt;string&gt; names;
+	int i;
+	string s;
+	TypeTranslation vt0=TypeTranslation(typeid(int).name(), C_INT, SQL_INTEGER, SQL_C_SLONG,
+				TypeTranslation::TYPE_PRIMITIVE, sizeof(int)), 
+			vt1=TypeTranslation(typeid(string).name(), C_STRING, SQL_VARCHAR, SQL_C_CHAR,
+				TypeTranslation::TYPE_COMPLEX, sizeof(string));
+
+	types.push_back(vt0);
+	names.push_back(&quot;int&quot;);
+
+	types.push_back(vt1);
+	names.push_back(&quot;string&quot;);
+
+	variant_row r(types, names);
+	
+	
+	r[&quot;int&quot;] = (int)r[&quot;int&quot;] + 5;
+	i = (int)r[&quot;int&quot;];
+	
+	s = (string) r[&quot;int&quot;];
+
+	r[&quot;int&quot;] = test_date;
+	s = (string) r[&quot;int&quot;];
+
+	<span class="codeComment">// Print out the column names</span>
+	vector&lt;string&gt; colNames = r.GetNames();
+	for (vector&lt;string&gt;::iterator name_it = colNames.begin(); name_it != colNames.end(); name_it++)
+	{
+		cout &lt;&lt; (*name_it) &lt;&lt; &quot; &quot;;
+	}
+	cout &lt;&lt; endl;
+
+	<span class="codeComment">// Print out all column values</span>
+	for (i = 0; i &lt; r.size(); i++)
+		cout &lt;&lt; r[i] &lt;&lt; &quot; &quot;;
+	cout &lt;&lt; endl;
+
+
+};
+</code></pre>

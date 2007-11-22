@@ -1,0 +1,35 @@
+<pre><code><span class="codeComment">// Execute an arbitrary query and prompt for any parameters</span>
+void ExecQuery(string sql)
+{
+	DynamicDBView&lt;&gt; view(sql, &quot;&quot;);
+	DynamicDBView&lt;&gt;::sql_iterator sql_it(view);
+
+	<span class="codeComment">// Show query</span>
+	cout &lt;&lt; sql &lt;&lt; &quot;\n\n&quot;;
+	
+	<span class="codeComment">// Prompt user for any parameters</span>
+	for (size_t i = 0; i &lt; sql_it.GetBoundParamCount(); i++)
+	{
+		cout &lt;&lt; &quot;Please enter the value for parameter number &quot; &lt;&lt; i &lt;&lt; &quot;\n&quot;;
+		string param;
+		cin &gt;&gt; param;
+
+		<span class="codeComment">// get param</span>
+		sql_it.Params()[i] = param;
+	}
+
+	<span class="codeComment">// Force an execute in case there is no result set, e.g. INSERT, DELETE</span>
+	*sql_it = view.GetDataObj();
+
+	<span class="codeComment">// Print results</span>
+	while (sql_it != view.end())
+	{
+		cout &lt;&lt; *sql_it &lt;&lt; &quot;\n&quot;;
+		++sql_it;
+	}
+}
+
+void ExecQueryExample() {
+	ExecQuery(&quot;SELECT * from DB_EXAMPLE WHERE INT_VALUE = (?)&quot;);
+}
+</pre></code>

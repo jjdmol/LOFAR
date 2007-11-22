@@ -1,0 +1,11 @@
+--- config/linux-i686-gcc.inc	2004-02-01 16:46:25.000000000 +1000
++++ config/linux-i686-gcc.inc.me	2004-03-23 18:00:48.000000000 +1000
+@@ -11,7 +11,7 @@
+ # - force all queries to be uppper case
+ # Also gcc 2.96 with MySQL does not seem to support bulk fetch operations with std::string
+ # correctly so disable these for now
+-CFLAGS += -DDTL_UC -DDTL_SINGLE_FETCH 
++CFLAGS += -DDTL_SINGLE_FETCH 
+ 
+ # For some of our internal projects we need to manually define UNIX
+ # Also, we need to tell unixODBC that gcc supports the "long long" data type

@@ -1,0 +1,8 @@
+shmem = 0,
+initial_size = 108,		# in bytes
+sources = 5,
+destinations = 10,
+grow_strategy = "exp",		# exp | fixed | lin
+grow_factor = 1.4142,
+packets_per_meas = 10,
+meas_per_step = 10

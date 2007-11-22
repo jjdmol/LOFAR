@@ -1,0 +1,449 @@
+<p><font size="2" face="Courier New">//--------------stuff below
+here is for our internal use for now
+--------------------------------//</font></p>
+
+<p>&nbsp;</p>
+
+<p><a name="1"></a><font size="2" face="Courier New"><i>(
+Operations labelled with * are guaranteed to return normally if
+all </i></font><a
+href="http://www.stlport.org/doc/exception_safety.html#basic_requirements"><font
+size="2" face="Courier New"><i>basic requirements</i></font></a><font
+size="2" face="Courier New"><i> have been met) </i></font></p>
+
+<ul>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>BoundIO </tt>public
+        member functions</font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>BoundIOs </tt>public
+        member functions plus the operations from map&lt;string,
+        BoundIO&gt; </font><font size="3" face="Courier New">which
+        provide the strong guarantee</font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>CountedPtr&lt;T&gt;
+        public </tt>member functions</font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New">DB_iterator&lt;DataObj,
+        ParamObj&gt; public member functions (all iterator
+        operations, including all members in the derived classes
+        of DB_iterator&lt;DataObj, ParamObj&gt;, are guaranteed
+        not to throw if the </font><font size="3"
+        face="Courier New"><tt>IOHandler </tt></font><font
+        size="2" face="Courier New">for that iterator always
+        returns dtl_ios_base::SUPPRESS_ERROR, see section on
+        IOHandler for further explanation. All iterator
+        guarantees assume that any IOHandler returns dtl_ios_base::THROW_EXCEPTION
+        as this worst case scenario defines what formal
+        guarantees we may have overall on iterators)</font></li>
+</ul>
+
+<ul>
+    <li><font size="2" face="Courier New"><tt>DBView&lt;DataObj,
+        ParamObj&gt;::select_iterator </tt>- all strong
+        guaranteed methods inherited from DB_iterator&lt;DataObj,
+        ParamObj&gt; and member functions: </font><ul>
+            <li><font size="2" face="Courier New"><tt>operator==(const
+                DBView&lt;DataObj&gt;::select_iterator &amp;other)</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New"><tt>operator!=(const
+                DBView&lt;DataObj&gt;::select_iterator &amp;other)</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New"><tt>operator*()</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New"><tt>operator-&gt;()</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New"><tt>operator++()</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New">swap(DBView&lt;DataObj,
+                ParamObj&gt;::select_iterator &amp;other)</font></li>
+            <li><font size="2" face="Courier New">operator=(const
+                <tt>DBView&lt;DataObj, ParamObj&gt;::select_iterator
+                &amp;other)</tt></font></li>
+        </ul>
+    </li>
+    <li><font size="2" face="Courier New"><tt>DBView&lt;DataObj,
+        ParamObj&gt;::insert_iterator </tt>- all strong
+        guaranteed methods inherited from DB_iterator&lt;DataObj,
+        ParamObj&gt; and member functions: </font><ul>
+            <li><font size="2" face="Courier New"><tt>operator=(const
+                DataObj &amp;data)</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New"><tt>operator++()
+                </tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New">operator=(<tt>DBView&lt;DataObj,
+                ParamObj&gt;::insert_iterator &amp;other)</tt></font></li>
+            <li><font size="2" face="Courier New">operator*()</font></li>
+            <li><font size="2" face="Courier New">swap(DBView&lt;DataObj,
+                ParamObj&gt;::insert_iterator &amp;other)</font></li>
+        </ul>
+    </li>
+    <li><font size="2" face="Courier New"><tt>DBView&lt;DataObj,
+        ParamObj&gt;::update_iterator </tt>- all strong
+        guaranteed methods inherited from DB_iterator&lt;DataObj,
+        ParamObj&gt; and member functions: </font><ul>
+            <li><font size="2" face="Courier New"><tt>operator=(const
+                DataObj &amp;data)</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New"><tt>operator++()</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New">operator=(<tt>DBView&lt;DataObj,
+                ParamObj&gt;::update_iterator &amp;other)</tt></font></li>
+            <li><font size="2" face="Courier New">operator*()</font></li>
+            <li><font size="2" face="Courier New">swap(DBView&lt;DataObj,
+                ParamObj&gt;::update_iterator &amp;other)</font></li>
+        </ul>
+    </li>
+    <li><font size="2" face="Courier New"><tt>DBView&lt;DataObj,
+        ParamObj&gt;::delete_iterator </tt>- </font><font
+        size="3">all strong guaranteed methods inherited from</font><font
+        size="3" face="Courier New"> </font><font size="2"
+        face="Courier New">DB_iterator&lt;DataObj, ParamObj&gt; </font><font
+        size="3">and member functions: </font><ul>
+            <li><font size="2" face="Courier New"><tt>operator=(const
+                DataObj &amp;data)</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New"><tt>operator++()</tt></font><a
+                href="http://www.stlport.org/doc/exception_safety.html#1"><font
+                size="3">* </font></a></li>
+            <li><font size="2" face="Courier New">operator=(<tt>DBView&lt;DataObj,
+                ParamObj&gt;::delete_iterator &amp;other)</tt></font></li>
+            <li><font size="2" face="Courier New">operator*()</font></li>
+            <li><font size="2" face="Courier New">swap(DBView&lt;DataObj,
+                ParamObj&gt;::delete_iterator &amp;other)</font></li>
+        </ul>
+    </li>
+    <li><font size="2" face="Courier New">DBConnection </font><font
+        size="3">public member functions</font><font size="3"
+        face="Courier New"> </font><font size="4"
+        face="Times New Roman"><tt>and all methods inherited from
+        </tt></font><font size="3" face="Courier New"><tt>ValidatedObject</tt></font><font
+        size="4" face="Times New Roman"><tt>:</tt></font><font
+        size="2" face="Courier New"> </font><ul>
+            <li><font size="2" face="Courier New"><tt>CommitAll()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>Connect()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>Connect(const
+                string &amp;DSN)</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>GetDefaultConnection()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>GetHDBC()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>GetHENV()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>RollbackAll()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>SetAutoCommit(bool
+                auto_commit)</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>GetAutoCommit()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>swap(DBConnection
+                &amp;other)</tt></font></li>
+        </ul>
+    </li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>DBEnvironment </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions</tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all public
+        member functions of </tt></font><font size="2"
+        face="Courier New">RootException </font><font size="3"
+        face="Courier New">and derived classes and all methods
+        inherited from </font><font size="2" face="Courier New">std::exception
+        </font><font size="3" face="Courier New">which carry the
+        strong guarantee</font></li>
+    <li><font size="2" face="Courier New">DBIndex&lt;View&gt; </font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions:</tt></font><ul>
+            <li><font size="2" face="Courier New"><tt>begin()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>empty()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>end()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>equal_range(const
+                DataObj &amp;data)</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>template&lt;class
+                DataField&gt; find(const DataField &amp;df)</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>find(const
+                DataObj &amp;data)</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>GetIndexFields()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>insert(const
+                DataObj &amp;data)</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>erase(const
+                DataObj &amp;data)</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>IsUnique()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>max_size()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>size()</tt></font></li>
+            <li><font size="2" face="Courier New"><tt>swap(const
+                DBIndex&lt;View&gt; &amp;idx)</tt></font></li>
+        </ul>
+    </li>
+</ul>
+
+<ul>
+    <li><font size="2" face="Courier New"><tt>DBStmt </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions and all methods inherited from </tt></font><font
+        size="3" face="Courier New"><tt>ValidatedObject</tt></font><font
+        size="4" face="Times New Roman"><tt>:</tt></font><ul>
+            <li><font size="2" face="Courier New">GetConnection()</font></li>
+            <li><font size="2" face="Courier New">GetHSTMT()</font></li>
+            <li><font size="2" face="Courier New">GetQuery()</font></li>
+            <li><font size="2" face="Courier New">Initialize()</font></li>
+            <li><font size="2" face="Courier New">IsAllocated()</font></li>
+            <li><font size="2" face="Courier New">IsReady()</font></li>
+            <li><font size="2" face="Courier New">SetConnection(const
+                DBConnection &amp;conn)</font></li>
+            <li><font size="2" face="Courier New">swap(DBStmt
+                &amp;other)</font></li>
+            <li><font size="2" face="Courier New">valid()</font></li>
+        </ul>
+    </li>
+    <li><font size="2" face="Courier New">DBView&lt;DataObj,
+        ParamObj&gt; </font><font size="4" face="Times New Roman"><tt>public
+        member functions:</tt></font><ul>
+            <li><font size="2" face="Courier New">begin()</font></li>
+            <li><font size="2" face="Courier New">end()</font></li>
+            <li><font size="2" face="Courier New">BuildQry(SQLQueryType
+                qryType)</font></li>
+            <li><font size="2" face="Courier New">GetBCA()</font></li>
+            <li><font size="2" face="Courier New">GetBoundParamCount()</font></li>
+            <li><font size="2" face="Courier New">GetBPA()</font></li>
+            <li><font size="2" face="Courier New">GetInsVal()</font></li>
+            <li><font size="2" face="Courier New">GetSelVal()</font></li>
+            <li><font size="2" face="Courier New">GetColNames()</font></li>
+            <li><font size="2" face="Courier New">GetColumnCount()</font></li>
+            <li><font size="2" face="Courier New">GetConnection()</font></li>
+            <li><font size="2" face="Courier New">GetPostfixClause()</font></li>
+            <li><font size="2" face="Courier New">GetTableNames()</font></li>
+            <li><font size="2" face="Courier New">operator=(const
+                DBView&lt;DataObj, ParamObj&gt; &amp;other)</font></li>
+            <li><font size="2" face="Courier New">Params()</font></li>
+            <li><font size="2" face="Courier New">ParsePostfixForParams()</font></li>
+            <li><font size="2" face="Courier New">ParseTableList(string
+                tableList)</font></li>
+            <li><font size="2" face="Courier New">set_io_handler(IOHandler&lt;DataObj,
+                ParamObj&gt; h)</font></li>
+            <li><font size="2" face="Courier New">template&lt;class
+                UserHandler&gt; get_io_handler(const UserHandler
+                *dummy)</font></li>
+            <li><font size="2" face="Courier New">swap(DBView&lt;DataObj,
+                ParamObj&gt; &amp;other)</font></li>
+        </ul>
+    </li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>dtl_iostate </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions</tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>dtl_ios_base </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions</tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>DynamicBCA&lt;DataObj,
+        BCA&gt; </tt></font><font size="4" face="Times New Roman"><tt>public
+        member functions</tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>DynamicDBView&lt;ParamObj,
+        BPA&gt; </tt></font><font size="4" face="Times New Roman"><tt>public
+        member functions</tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>DynamicIndexedDBView&lt;View&gt;
+        </tt></font><font size="4" face="Times New Roman"><tt>public
+        member functions</tt></font></li>
+    <li><font size="2" face="Courier New"><tt>DynamicRowBCA </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions:</tt></font><ul>
+            <li><font size="2" face="Courier New">operator=(const
+                DynamicRowBCA &amp;other)</font></li>
+            <li><font size="2" face="Courier New">swap(DynamicRowBCA
+                &amp;other)</font></li>
+        </ul>
+    </li>
+    <li><font size="2" face="Courier New">ETI_Map - same as
+        map&lt;string, TypeTranslation&gt;</font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New">IndexedDBView&lt;View&gt; </font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions except range </tt></font><font size="3"><tt>insert()</tt></font><font
+        size="4" face="Times New Roman"><tt> (Excludes call to </tt></font><font
+        size="3"><tt>fetch() </tt></font><font size="4"
+        face="Times New Roman"><tt>-- most members call </tt></font><font
+        size="3"><tt>fetch() </tt></font><font size="4"
+        face="Times New Roman"><tt>to initialize the object if it
+        is not already built from the database which technically
+        means the operation has a possibly non-atomic effect on
+        the object. We exclude </tt></font><font size="3"><tt>fetch()</tt></font><font
+        size="4" face="Times New Roman"><tt> effects for all
+        methods.)</tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>MemPtr </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions</tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>TypeTranslation </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions</tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>ValidatedObject</tt></font><font
+        size="4" face="Times New Roman"><tt> public member
+        functions</tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>variant_cc_t </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions </tt></font><a
+        href="http://www.stlport.org/doc/exception_safety.html#1"><font
+        size="2" face="Courier New">*</font></a><font size="2"
+        face="Courier New"> </font></li>
+    <li><font size="2" face="Courier New">all <tt>variant_field </tt></font><font
+        size="4" face="Times New Roman"><tt>member functions </tt></font></li>
+    <li><font size="4" face="Times New Roman"><tt>all </tt></font><font
+        size="2" face="Courier New"><tt>variant_row </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions</tt></font></li>
+    <li><font size="2" face="Courier New">all <tt>variant_row_fields
+        </tt></font><font size="4" face="Times New Roman"><tt>public
+        member functions</tt></font></li>
+    <li><font size="2" face="Courier New">all <tt>variant_t </tt></font><font
+        size="4" face="Times New Roman"><tt>public member
+        functions</tt></font></li>
+    <li><font size="3">all container</font><font size="2"
+        face="Courier New"> const </font><font size="3">member
+        functions </font><a
+        href="http://www.stlport.org/doc/exception_safety.html#1"><font
+        size="3">*</font></a><font size="2" face="Courier New"> </font></li>
+    <li><font size="3">all constructors, by language definition (included
+        for completeness)</font></li>
+    <li><font size="3">all destructors (no throw)</font><a
+        href="http://www.stlport.org/doc/exception_safety.html#1"><font
+        size="3">* </font></a></li>
+</ul>
+
+<h2><font size="2" face="Courier New">Basic Client Requirements</font></h2>
+
+<ul>
+    <li><font size="2" face="Courier New">DB_iterator&lt;DataObj,
+        ParamObj&gt;: </font><font size="3" face="Courier New">(</font><font
+        size="2" face="Courier New">all iterator operations,
+        including all members in the derived classes of
+        DB_iterator&lt;DataObj, ParamObj&gt;, are guaranteed not
+        to throw if the </font><font size="3"><tt>IOHandler </tt></font><font
+        size="2" face="Courier New">for that iterator always
+        returns dtl_ios_base::SUPPRESS_ERROR, see section on
+        IOHandler for further explanation. All basic client
+        requirements below for iterators assume that any
+        IOHandler returns dtl_ios_base::THROW_EXCEPTION as this
+        worst case scenario defines what formal requirements we
+        must have overall on iterators)</font></li>
+</ul>
+
+<ul>
+    <li><font size="2"><tt>DBView&lt;DataObj, ParamObj&gt;::select_iterator
+        </tt></font><font size="2" face="Courier New">member
+        functions: </font><ul>
+            <li><font size="2"><tt>operator*(), operator-&gt;(),
+                operator++()</tt></font><font size="3"><tt> - </tt></font><font
+                size="4"><tt>weak guarantee as object mutated -
+                only consistency maintained</tt></font></li>
+        </ul>
+    </li>
+</ul>
+
+<ul>
+    <li><font size="2"><tt>DBView&lt;DataObj, ParamObj&gt;::insert_iterator
+        </tt></font><font size="2" face="Courier New">member
+        functions: </font><ul>
+            <li><font size="2"><tt>operator=(const DataObj
+                &amp;data) </tt></font><font size="3"><tt>- </tt></font><font
+                size="4"><tt>weak guarantee as object mutated -
+                only consistency maintained - </tt><strong><tt>and
+                </tt></strong></font><font size="2"><tt>DataObj </tt></font><font
+                size="3" face="Courier New">guaranteed copyable</font></li>
+            <li><font size="2"><tt>operator++() </tt></font><font
+                size="3"><tt>- </tt></font><font size="4"><tt>weak
+                guarantee as object mutated - only consistency
+                maintained</tt></font></li>
+        </ul>
+    </li>
+    <li><font size="2"><tt>DBView&lt;DataObj, ParamObj&gt;::update_iterator
+        </tt></font><font size="2" face="Courier New">member
+        functions: </font><ul>
+            <li><font size="2"><tt>operator=(const DataObj
+                &amp;data) </tt></font><font size="3"><tt>- </tt></font><font
+                size="4"><tt>weak guarantee as object mutated -
+                only consistency maintained - </tt><strong><tt>and
+                </tt></strong></font><font size="2"><tt>DataObj </tt></font><font
+                size="3" face="Courier New">guaranteed copyable</font></li>
+            <li><font size="2"><tt>operator++() </tt></font><font
+                size="3"><tt>- </tt></font><font size="4"><tt>weak
+                guarantee as object mutated - only consistency
+                maintained</tt></font></li>
+        </ul>
+    </li>
+    <li><font size="2"><tt>DBView&lt;DataObj, ParamObj&gt;::delete_iterator
+        </tt></font><font size="2" face="Courier New">member
+        functions: </font><ul>
+            <li><font size="2"><tt>operator=(const DataObj
+                &amp;data) </tt></font><font size="3"><tt>- </tt></font><font
+                size="4"><tt>weak guarantee as object mutated -
+                only consistency maintained - </tt><strong><tt>and
+                </tt></strong></font><font size="2"><tt>DataObj </tt></font><font
+                size="3" face="Courier New">guaranteed copyable</font></li>
+            <li><font size="2"><tt>operator++() </tt></font><font
+                size="3"><tt>- </tt></font><font size="4"><tt>weak
+                guarantee as object mutated - only consistency
+                maintained</tt></font></li>
+        </ul>
+    </li>
+</ul>
+
+<ul>
+    <li><font size="4"><tt>all </tt></font><font size="2"><tt>variant_cc_t
+        </tt></font><font size="4"><tt>member functions -
+        guarantee is up to the client for function invokes,
+        otherwise strong guarantee</tt></font></li>
+    <li><font size="2" face="Courier New">all destructors (no
+        throw) - weak guarantee only as object mutated</font></li>
+</ul>
+
+<h3><a name="additional_requirements"></a><font size="5"
+face="Courier New"><b>Strong guarantee requirements for other
+mutating container operations</b></font></h3>
+
+<p><a name="2"></a><font size="2" face="Courier New"><i>Operations
+labelled with * are guaranteed to return normally if all
+additional requirements have been met) </i></font></p>
+
+<table border="2" cellpadding="2" width="80%">
+    <caption align="top"><font size="2" face="Courier New"><b>Definition
+    of terms</b></font></caption>
+    <font size="2" face="Courier New"><TBODY></font>
+    <tr>
+        <td valign="top"><font size="2" face="Courier New"><b><i>Term</i></b></font></td>
+        <td><font size="2" face="Courier New"><b><i>Meaning, when
+        applied to a type </i></b><b><i><tt>T<br>
+        </tt></i></b><i>(</i><i><tt>x</tt></i><i> and </i><i><tt>y</tt></i><i>of
+        type </i><i><tt>T</tt></i><i>)</i></font></td>
+    </tr>
+    <tr>
+        <td valign="top"><font size="2" face="Courier New">&quot;guaranteed
+        copyable&quot;</font></td>
+        <td valign="top"><font size="2" face="Courier New"><tt>T
+        z(x)</tt> and <tt>x = y</tt> may not exit via exception.</font></td>
+    </tr>
+    <tr>
+        <td><font size="2" face="Courier New">&quot;guaranteed
+        equality-comparable&quot;</font></td>
+        <td valign="top"><font size="2" face="Courier New"><tt>x
+        == y</tt> may not exit via exception.</font></td>
+    </tr>
+    <tr>
+        <td><font size="2" face="Courier New">&quot;guaranteed
+        comparable&quot;</font></td>
+        <td><font size="2" face="Courier New"><tt>x &lt; y</tt>
+        may not exit via exception.</font></td>
+    </tr>
+</table>
