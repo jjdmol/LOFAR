@@ -1,4 +1,0 @@
-#!/bin/sh
-
-# testSocket is run interactively, thus untested here.
-exit 3

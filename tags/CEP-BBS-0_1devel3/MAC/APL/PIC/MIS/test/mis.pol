@@ -1,8 +1,0 @@
-#Policy file all columns are divide by a '|' 
-#Component filter               				| diagnosis  	| conf.level low 	| conf.level high | Action
-PIC_Rack0_SubRack0_Board0_AP0_RCU0_HFA	| FAULTY		 	| 90							|									| AUTO
-PIC_Rack0_SubRack0_Board0_AP0_RCU0_HFA	| FAULTY			| 50 							|	90							| MANUAL
-PIC_Rack0_SubRack0_Board0_AP0_RCU0_HFA	| FAULTY			|   							| 50							| LOG
-PIC_Rack0_SubRack0_Board0_AP*_RCU*_LFA	| FAULTY			| 80							| 								| AUTO
-Type:TPicRcu														| FAULTY			| 40 							| 80		    			| MANUAL
-*																				| FAULTY			|									|	10000						| LOG
