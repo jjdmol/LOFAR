@@ -21,6 +21,7 @@
 //#  $Id: TBBMonitor.cc 10505 2007-09-07 17:14:57Z overeem $
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_datetime.h>
 
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
@@ -362,7 +363,7 @@ GCFEvent::TResult TBBMonitor::createPropertySets(GCFEvent& event, GCFPortInterfa
 //
 // askVersion(event, port)
 //
-// Set sampleclock from TBB driver
+// Ask the version of the firmware and the hardware.
 //
 GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port)
 {
@@ -448,7 +449,7 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 //
 // askSizeInfo(event, port)
 //
-// Set sampleclock from TBB driver
+// Ask how much RAM is installed on the TB boards
 //
 GCFEvent::TResult TBBMonitor::askSizeInfo(GCFEvent& event, GCFPortInterface& port)
 {
@@ -481,7 +482,7 @@ GCFEvent::TResult TBBMonitor::askSizeInfo(GCFEvent& event, GCFPortInterface& por
 
 		LOG_DEBUG_STR ("Size information updated, going to status information");
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
-		TRAN(TBBMonitor::askTBBinfo);				// go to next state.
+		TRAN(TBBMonitor::askFlashInfo);				// go to next state.
 		break;
 	}
 
@@ -498,6 +499,86 @@ GCFEvent::TResult TBBMonitor::askSizeInfo(GCFEvent& event, GCFPortInterface& por
 
 	default:
 		LOG_DEBUG_STR ("askSizeInfo, DEFAULT");
+		break;
+	}    
+
+	return (status);
+}
+
+//
+// askFlashInfo(event, port)
+//
+// Ask which flash images are available
+//
+GCFEvent::TResult TBBMonitor::askFlashInfo(GCFEvent& event, GCFPortInterface& port)
+{
+	static uint32	nrOfRequests = 0;
+
+	LOG_DEBUG_STR ("askFlashInfo:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+
+	case F_ENTRY: {
+		itsOwnPropertySet->setValue(PN_HWM_TBB_CURRENT_ACTION,GCFPVString("getting flash info"));
+		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
+		TBBImageInfoEvent	getFlash;
+		for (uint32 tbb = 0; tbb < itsNrTBboards; tbb++) {
+			if (itsBoardMask.test(tbb)) {
+				getFlash.board = tbb;
+				itsTBBDriver->send(getFlash);
+				nrOfRequests++;
+			}
+		}
+		LOG_DEBUG_STR("Waiting for " << nrOfRequests << " answer messages");
+	}
+	break;
+
+	case TBB_IMAGE_INFO_ACK: {
+		TBBImageInfoAckEvent		ack(event);
+		nrOfRequests--;
+		// move the information to the database.
+		if (ack.status_mask & TBB_SUCCESS) {
+			vector<string>		imageVersions;
+			vector<string>		writeDates;
+			vector<string>		TPfilenames;
+			vector<string>		MPfilenames;
+			for (int32	tbb = 0; tbb < MAX_N_IMAGES; tbb++) {
+				imageVersions.push_back(formatString("%d.%d", ack.image_version[tbb]/10, ack.image_version[tbb]%10));
+				ptime		theTime(from_time_t(ack.write_date[tbb]));
+				writeDates.push_back   (to_simple_string(theTime));
+				TPfilenames.push_back  (ack.tp_file_name[tbb]);
+				MPfilenames.push_back  (ack.mp_file_name[tbb]);
+//				itsTBBs[tbb]->setValue(PN_TBB_IMAGE_INFO_VERSION,    imageVersions);
+//				itsTBBs[tbb]->setValue(PN_TBB_IMAGE_INFO_WRITE_DATE, writeDates);
+//				itsTBBs[tbb]->setValue(PN_TBB_IMAGE_INFO_TP_FILE,    TPfilenames);
+//				itsTBBs[tbb]->setValue(PN_TBB_IMAGE_INFO_MP_FILE,    MPfilenames);
+			}
+			
+		}
+
+		if (--nrOfRequests == 0) {
+			LOG_DEBUG_STR ("Size information updated, going to status information");
+			itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
+			TRAN(TBBMonitor::askTBBinfo);				// go to next state.
+		}
+	}
+	break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect2TBB
+		break;
+
+	case DP_SET:
+		break;
+
+	case F_QUIT:
+		TRAN (TBBMonitor::finish_state);
+		break;
+
+	default:
+		LOG_DEBUG_STR ("askFlashInfo, DEFAULT");
 		break;
 	}    
 
@@ -593,7 +674,7 @@ GCFEvent::TResult TBBMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 
 	case F_ENTRY: {
 		// update PVSS
-		itsOwnPropertySet->setValue(PN_HWM_TBB_CURRENT_ACTION,GCFPVString("updating TBB info"));
+		itsOwnPropertySet->setValue(PN_HWM_TBB_CURRENT_ACTION,GCFPVString("updating RCU TBB info"));
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
 		TBBRcuInfoEvent	getStatus;
 		itsTBBDriver->send(getStatus);
@@ -617,7 +698,7 @@ GCFEvent::TResult TBBMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 
 		LOG_DEBUG ("Updated all RCU information, waiting for next cycle");
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
-		TRAN(TBBMonitor::waitForNextCycle);			// go to next state.
+		TRAN(TBBMonitor::askRCUSettings);			// go to next state.
 	}
 	break;
 
@@ -634,6 +715,76 @@ GCFEvent::TResult TBBMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 
 	default:
 		LOG_DEBUG("askRCUinfo, DEFAULT");
+		break;
+	}
+
+	return (status);
+}
+
+//
+// askRCUSettings(event, port)
+//
+// Ask TBB settings of all RCU's
+//
+GCFEvent::TResult TBBMonitor::askRCUSettings(GCFEvent& event, GCFPortInterface& port)
+{
+	if (eventName(event) != "DP_SET") {
+		LOG_DEBUG_STR ("askRCUSettings:" << eventName(event) << "@" << port.getName());
+	}
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+	case F_INIT:
+		break;
+
+	case F_ENTRY: {
+		// update PVSS
+		itsOwnPropertySet->setValue(PN_HWM_TBB_CURRENT_ACTION,GCFPVString("updating RCU trigger info"));
+		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
+		TBBTrigSettingsEvent	getSettings;
+		itsTBBDriver->send(getSettings);
+		break;
+	}
+
+	case TBB_TRIG_SETTINGS_ACK: {
+		TBBTrigSettingsAckEvent	ack(event);
+
+		// move the information to the database.
+		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
+			LOG_DEBUG_STR("Updating rcu " << rcu);
+			// update all RCU variables
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STARTLEVEL, GCFPVInteger(ack.setup[rcu].start_mode)),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_BASELEVEL,  GCFPVInteger(ack.setup[rcu].level)),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STOPLEVEL,  GCFPVInteger(ack.setup[rcu].stop_mode)),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER, 	  GCFPVInteger(ack.setup[rcu].filter_select)),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_WINDOW, 	  GCFPVInteger(ack.setup[rcu].window)),
+//			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_OPERATING_MODE, GCFPVInteger(ack.coefficients[rcu].xxx));
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF0, 		  GCFPVInteger(ack.coefficients[rcu].c0));
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF1, 		  GCFPVInteger(ack.coefficients[rcu].c1));
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF2, 		  GCFPVInteger(ack.coefficients[rcu].c2));
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF3, 		  GCFPVInteger(ack.coefficients[rcu].c3));
+		} // for all boards
+
+		LOG_DEBUG ("Updated all TriggerSetting information, waiting for next cycle");
+		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
+		TRAN(TBBMonitor::waitForNextCycle);			// go to next state.
+	}
+	break;
+
+	case F_DISCONNECTED:
+		_disconnectedHandler(port);		// might result in transition to connect2TBB
+		break;
+
+	case DP_SET:
+		break;
+
+	case F_QUIT:
+		TRAN (TBBMonitor::finish_state);
+		break;
+
+	default:
+		LOG_DEBUG("askRCUSettings, DEFAULT");
 		break;
 	}
 
