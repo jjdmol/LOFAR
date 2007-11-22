@@ -101,10 +101,13 @@ private:
 	GCFTask*					itsTask;
 	int32						itsInstanceNr;
 	APLCommon::Observation		itsObsPar;
+	bool						itsUsesTBB;
 	bool						itsBeamCntlrReady;
 	bool						itsCalCntlrReady;
+	bool						itsTBBCntlrReady;
 	string						itsBeamCntlrName;
 	string						itsCalCntlrName;
+	string						itsTBBCntlrName;
 	bool						itsReadyFlag;
 	CTState::CTstateNr			itsReqState;
 	CTState::CTstateNr			itsCurState;

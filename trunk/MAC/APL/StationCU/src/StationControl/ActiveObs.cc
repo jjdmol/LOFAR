@@ -65,16 +65,24 @@ ActiveObs::ActiveObs(const string&		name,
 	itsTask				(&task),
 	itsInstanceNr		(getInstanceNr(name)),
 	itsObsPar			(APLCommon::Observation(thePS)),
+	itsUsesTBB			(false),
 	itsBeamCntlrReady	(false),
 	itsCalCntlrReady	(false),
+	itsTBBCntlrReady	(false),
 	itsBeamCntlrName	(controllerName(CNTLRTYPE_BEAMCTRL, 
 						 itsInstanceNr, itsObsPar.treeID)),
 	itsCalCntlrName		(controllerName(CNTLRTYPE_CALIBRATIONCTRL, 
+						 itsInstanceNr, itsObsPar.treeID)),
+	itsTBBCntlrName		(controllerName(CNTLRTYPE_TBBCTRL, 
 						 itsInstanceNr, itsObsPar.treeID)),
 	itsReadyFlag		(false),
 	itsReqState			(CTState::NOSTATE),
 	itsCurState			(CTState::NOSTATE)
 {
+	if (thePS->isDefined("Observation.TBB.TBBSetting[1].C0")) {
+		LOG_INFO("Observation also uses the TB boards");
+		itsUsesTBB = true;
+	}
 }
 
 //
@@ -174,8 +182,18 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 											 itsObsPar.treeID,
 											 itsInstanceNr,
 											 myHostname(false));
-		itsCurState = CTState::CONNECT;
 		// Results in CONTROL_CONNECT in StationControl Task.
+
+		if (itsUsesTBB) {
+			LOG_DEBUG_STR("Starting controller " << itsTBBCntlrName);
+			ChildControl::instance()->startChild(CNTLRTYPE_TBBCTRL,
+												 itsObsPar.treeID,
+												 itsInstanceNr,
+												 myHostname(false));
+			// Results in CONTROL_CONNECT in StationControl Task.
+		}
+
+		itsCurState = CTState::CONNECT;
 	}
 	break;
 
@@ -189,12 +207,16 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 			itsBeamCntlrReady = true;
 			LOG_DEBUG("Connected to BeamController");
 		}
+		else if (msg.cntlrName == itsTBBCntlrName) {
+			itsTBBCntlrReady = true;
+			LOG_DEBUG("Connected to TBBController");
+		}
 		else {
 			ASSERTSTR(false, "Received Connect event for wrong controller: "
 																	<< msg.cntlrName);
 		}
-		if (itsBeamCntlrReady && itsCalCntlrReady) {
-			LOG_DEBUG_STR("Connected to both controllers, going to connected state");
+		if (itsBeamCntlrReady && itsCalCntlrReady && (itsUsesTBB == itsTBBCntlrReady)) {
+			LOG_DEBUG_STR("Connected to all controllers, going to connected state");
 			itsCurState = CTState::CONNECTED;
 			TRAN(ActiveObs::connected);
 		}
@@ -250,12 +272,18 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 		itsReqState = CTState::CLAIMED;
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
+		itsTBBCntlrReady  = false;
 		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to connect to CalServer");
 		ChildControl::instance()->
 				requestState(CTState::CLAIMED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		LOG_DEBUG_STR("Asking " << itsBeamCntlrName << " to connect to BeamServer");
 		ChildControl::instance()->
 				requestState(CTState::CLAIMED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		if (itsUsesTBB) {
+			LOG_DEBUG_STR("Asking " << itsTBBCntlrName << " to connect to TBBDriver");
+			ChildControl::instance()->
+					requestState(CTState::CLAIMED, itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		}
 		// will result in CONTROL_CLAIMED
 	}
 	break;
@@ -270,12 +298,16 @@ GCFEvent::TResult	ActiveObs::connected(GCFEvent&	event, GCFPortInterface&	port)
 			LOG_DEBUG("CalController is connected to CalServer");
 			itsCalCntlrReady = true;
 		}
+		else if (msg.cntlrName == itsTBBCntlrName) {
+			LOG_DEBUG("TBBController is connected to TBBDriver");
+			itsTBBCntlrReady = true;
+		}
 		else {
 			ASSERTSTR(false, "Received claimed event of unknown controller: " << 
 							 msg.cntlrName);
 		}
-		if (itsBeamCntlrReady && itsCalCntlrReady) {
-			LOG_DEBUG("Both controllers are ready, going to standby mode");
+		if (itsBeamCntlrReady && itsCalCntlrReady && (itsUsesTBB == itsTBBCntlrReady)) {
+			LOG_DEBUG("All controllers are ready, going to standby mode");
 			itsCurState = CTState::CLAIMED;
 			TRAN(ActiveObs::standby);
 		}
@@ -321,7 +353,8 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 		itsReqState 	  = CTState::PREPARED;
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
-		// Activate the BeamController
+		itsTBBCntlrReady  = false;
+		// Activate the CalController
 		LOG_DEBUG_STR("Asking " << itsCalCntlrName << " to calibrate the subarray");
 		ChildControl::instance()->
 				requestState(CTState::PREPARED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
@@ -347,15 +380,27 @@ GCFEvent::TResult	ActiveObs::standby(GCFEvent&	event, GCFPortInterface&	port)
 				LOG_ERROR_STR("Start of beam failed with error " << msg.result);	
 				break;
 			}
-			LOG_DEBUG_STR("BeamController has started the beam");
+			LOG_DEBUG_STR("BeamController has started the beam, asking TBBCtlr to prepare TBBs");
 			itsBeamCntlrReady = true;
+			ChildControl::instance()->requestState(CTState::PREPARED, 
+											itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		}
+		else if (msg.cntlrName == itsTBBCntlrName) {
+			if (msg.result != CT_RESULT_NO_ERROR) {
+				LOG_ERROR_STR("Start of TBB failed with error, " << msg.result << 
+								". CONTINUING OBSERVATION WITHOUT TBB.");	
+				itsUsesTBB = false;
+				break;
+			}
+			LOG_DEBUG_STR("TBBController has started the beam");
+			itsTBBCntlrReady = true;
 		}
 		else {
 			ASSERTSTR(false, "Received claimed event of unknown controller: " << 
 							 msg.cntlrName);
 		}
 
-		if (itsBeamCntlrReady && itsCalCntlrReady) {
+		if (itsBeamCntlrReady && itsCalCntlrReady && (itsUsesTBB == itsTBBCntlrReady)) {
 			LOG_DEBUG("Both controllers are ready, going to operational mode");
 			itsCurState = CTState::PREPARED;
 			TRAN(ActiveObs::operational);
@@ -407,10 +452,13 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 		itsReqState 	  = CTState::SUSPENDED;
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
+		itsTBBCntlrReady  = false;
 		ChildControl::instance()->
 				requestState(CTState::SUSPENDED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		ChildControl::instance()->
 				requestState(CTState::SUSPENDED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		ChildControl::instance()->
+				requestState(CTState::SUSPENDED, itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		// will result in CONTROL_RELEASED
 	}
 	break;
@@ -421,10 +469,13 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 		itsReqState 	  = CTState::RESUMED;
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
+		itsTBBCntlrReady  = false;
 		ChildControl::instance()->
 				requestState(CTState::RESUMED, itsBeamCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		ChildControl::instance()->
 				requestState(CTState::RESUMED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
+		ChildControl::instance()->
+				requestState(CTState::RESUMED, itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		// will result in CONTROL_RESUMED
 	}
 	break;
@@ -439,7 +490,10 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 		if (msg.cntlrName == itsCalCntlrName) {
 			itsCalCntlrReady = true;
 		}
-		if (itsBeamCntlrReady && itsBeamCntlrReady) {
+		if (msg.cntlrName == itsTBBCntlrName) {
+			itsTBBCntlrReady = true;
+		}
+		if (itsBeamCntlrReady && itsCalCntlrReady && (itsUsesTBB == itsTBBCntlrReady)) {
 			CTState		cts;
 			itsCurState == cts.signal2stateNr(event.signal);
 		}
@@ -469,7 +523,21 @@ GCFEvent::TResult	ActiveObs::operational(GCFEvent&	event, GCFPortInterface&	port
 		}
 		if (msg.cntlrName == itsCalCntlrName) {
 			itsCalCntlrReady  = true;
-			LOG_DEBUG_STR("Calibration is stopped, going to standby mode");
+			if (itsUsesTBB) {
+				LOG_DEBUG_STR("Calibration is stopped, Stopping TBB");
+				ChildControl::instance()->
+					requestState(CTState::RELEASED, itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
+			}
+			else {
+				LOG_DEBUG_STR("Calibration is stopped, going to standby mode");
+				itsCurState = CTState::RESUMED;
+				TRAN(ActiveObs::standby);
+			}
+			break;
+		}
+		if (msg.cntlrName == itsTBBCntlrName) {
+			itsTBBCntlrReady  = true;
+			LOG_DEBUG_STR("TBB is stopped, going to standby mode");
 			itsCurState = CTState::RESUMED;
 			TRAN(ActiveObs::standby);
 			break;
@@ -517,6 +585,7 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 		itsReqState 	  = CTState::QUITED;
 		itsBeamCntlrReady = false;
 		itsCalCntlrReady  = false;
+		itsTBBCntlrReady  = false;
 
 		// release beam at the BeamController
 		LOG_DEBUG_STR("Asking " << itsBeamCntlrName << " to quit");
@@ -528,6 +597,13 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 		ChildControl::instance()->
 				requestState(CTState::QUITED, itsCalCntlrName, 0, CNTLRTYPE_NO_TYPE);
 		// will result in CONTROL_QUITED
+
+		if (itsUsesTBB) {
+			LOG_DEBUG_STR("Asking " << itsTBBCntlrName << " to quit");
+			ChildControl::instance()->
+					requestState(CTState::QUITED, itsTBBCntlrName, 0, CNTLRTYPE_NO_TYPE);
+			// will result in CONTROL_QUITED
+		}
 
 		LOG_DEBUG_STR(itsName << ": in 'stopping-mode' until controllers are down");
 	}
@@ -543,12 +619,16 @@ GCFEvent::TResult	ActiveObs::stopping(GCFEvent&	event, GCFPortInterface&	/*port*
 			itsBeamCntlrReady = true;
 			LOG_DEBUG_STR("BeamController " << itsBeamCntlrName << " is down");
 		}
+		else if (msg.cntlrName == itsTBBCntlrName) {
+			itsTBBCntlrReady = true;
+			LOG_DEBUG_STR("TBBController " << itsTBBCntlrName << " is down");
+		}
 		else {
 			ASSERTSTR(false, "Received finished event for wrong controller: "
 																	<< msg.cntlrName);
 		}
-		if (itsBeamCntlrReady && itsCalCntlrReady) {
-			LOG_DEBUG_STR("Both controllers are down, informing stationControl task");
+		if (itsBeamCntlrReady && itsCalCntlrReady && (itsUsesTBB == itsTBBCntlrReady)) {
+			LOG_DEBUG_STR("All controllers are down, informing stationControl task");
 			itsCurState  = CTState::QUITED;
 			itsReadyFlag = true;
 		}
@@ -582,8 +662,14 @@ ostream& ActiveObs::print (ostream& os) const
 	os << "antennaArray      : " << itsObsPar.antennaArray << endl;
 	os << "BeamCntlr ready   : " << itsBeamCntlrReady << endl;
 	os << "CalCntlr ready    : " << itsCalCntlrReady << endl;
+	if (itsUsesTBB) {
+		os << "TBBCntlr ready    : " << itsTBBCntlrReady << endl;
+	}
 	os << "BeamControllerName: " << itsBeamCntlrName << endl;
 	os << "CalControllerName : " << itsCalCntlrName << endl;
+	if (itsUsesTBB) {
+		os << "TBBControllerName : " << itsTBBCntlrName << endl;
+	}
 	os << "Ready             : " << itsReadyFlag << endl;
 
 	return (os);
