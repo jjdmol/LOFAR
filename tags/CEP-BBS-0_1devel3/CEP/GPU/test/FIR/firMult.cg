@@ -1,0 +1,16 @@
+struct C2E2f_Output {
+	float4 color : COLOR;
+};
+
+C2E2f_Output fragmentMain(float2 filterPos: TEXCOORD0,
+						  float2 latchPos:  TEXCOORD1,
+						  uniform samplerRECT filterStream : TEXUNIT0,
+						  uniform samplerRECT latchStream  : TEXUNIT1)
+{
+	C2E2f_Output result;
+
+	result.color = texRECT(filterStream, filterPos) * 
+				   texRECT(latchStream,  latchPos);
+
+	return result;
+}

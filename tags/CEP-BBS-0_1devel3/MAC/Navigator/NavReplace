@@ -1,0 +1,84 @@
+# NavReplace orgname newname
+#
+# Copyright (C) 2006
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#
+# Replaces in all scripts and panels the orgname with the newname.
+#
+# $Id$
+#
+VERSION="v1.0"
+
+#
+# SyntaxError msg
+#
+SyntaxError()
+{
+    Msg=$1
+
+    [ -z "${Msg}" ] || echo "ERROR: ${Msg}"
+    echo ""
+    echo "Syntax: $(basename $0) orgname [newname]"
+    echo "        orgname   name to replace"
+    echo "        newname   replacement"
+    echo ""
+    exit 1
+}
+
+#
+# doReplacements orgname newname
+#
+doReplacements()
+{
+	find . -name '*pnl' -o -name '*ctl' | while read file
+	do
+		grep -e $orgName $file >/dev/null 2>&1
+		if [ $? -eq 0 ]; then
+			echo "Updating " $file
+			tmpfile=/tmp/NavReplace$$
+			sed -e "s/$orgName/$newName/g" $file >$tmpfile
+			mv $tmpfile $file
+		fi
+	done
+}
+
+#
+# showReplacements orgname
+#
+showReplacements()
+{
+	find . -name '*pnl' -o -name '*ctl' | xargs grep -e $orgName
+}
+
+
+#
+# MAIN
+#
+case $# in
+  1)	orgName=$1
+		showReplacements
+		;;
+  2)	orgName=$1
+		newName=$2
+		doReplacements
+		;;
+  *)	SyntaxError "Wrong number of arguments"
+		;;
+esac
+

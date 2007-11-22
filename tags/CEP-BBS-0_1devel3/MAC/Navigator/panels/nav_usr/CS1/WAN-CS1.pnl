@@ -1,0 +1,353 @@
+V 10
+1
+LANG:1 7 Station
+PANEL,469 105 954 746 N "_3DFace" 3
+"$configDatapoint"
+"$datapoint"
+"$referenceDatapoint"
+EEE E E 1 -1 -1 0  188 128
+"" 0 1
+E"#uses \"nav_usr/STS/STS-functions.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 2007
+"Text11"
+""
+1 10 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+815 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  setValue(\"\", \"text\", \"View: \" + $datapoint);
+}" 0
+ E 0 1 1 0 1 E U  0 E 12 2 44 17
+0 2 0 "s" 0 0 0 192 0 0  12 2
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 View: 
+4 2780
+"Line12"
+""
+1 436 251 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+850 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  220 150 148 150
+4 2781
+"Line13"
+""
+1 1020 10540 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+851 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  220 140 148 100
+4 2782
+"Line14"
+""
+1 1809 29730 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+852 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  230 130 148 50
+4 2783
+"Line15"
+""
+1 993 8001 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+853 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  148 200 230 170
+4 2836
+"Line20"
+""
+1 17888 1381 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+861 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 5 2 0 1 E  590 150 280 150
+1 2837 87 "" 59
+0
+1 2838 87 "" 56
+0
+1 2839 76 "" 0
+0
+1 2840 76 "" 2
+0
+1 2841 76 "" 3
+0
+1 2842 76 "" 4
+0
+1 2843 76 "" 55
+0
+1 2844 76 "" 1
+0
+1 2845 76 "" 56
+0
+1 2846 76 "" 57
+0
+1 2847 77 "" 0
+0
+1 2848 77 "" 2
+0
+1 2849 77 "" 3
+0
+1 2850 77 "" 4
+0
+1 2851 77 "" 55
+0
+1 2852 77 "" 1
+0
+1 2853 77 "" 56
+0
+1 2854 77 "" 57
+0
+1 2855 78 "" 0
+0
+1 2856 78 "" 2
+0
+1 2857 78 "" 3
+0
+1 2858 78 "" 4
+0
+1 2859 78 "" 55
+0
+1 2860 78 "" 1
+0
+1 2861 78 "" 56
+0
+1 2862 78 "" 57
+0
+1 2863 80 "" 0
+0
+1 2864 80 "" 2
+0
+1 2865 80 "" 3
+0
+1 2866 80 "" 4
+0
+1 2867 80 "" 55
+0
+1 2868 80 "" 1
+0
+1 2869 80 "" 56
+0
+1 2870 80 "" 57
+0
+4 2899
+"Line1"
+""
+1 1773 14935 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+891 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  670 110 720 70
+4 2900
+"Line2"
+""
+1 2443 7577 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+892 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  670 130 720 110
+4 2901
+"Line3"
+""
+1 3113 528 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+893 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  720 150 670 150
+4 2902
+"Line4"
+""
+1 3783 10730 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+894 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  720 190 670 170
+4 2903
+"Line5"
+""
+1 4453 21650 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+895 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 0 1 E  720 230 670 190
+1 2904 84 "" 0
+0
+1 2905 84 "" 2
+0
+1 2906 84 "" 3
+0
+1 2907 84 "" 4
+0
+1 2908 84 "" 55
+0
+1 2909 84 "" 1
+0
+1 2910 84 "" 56
+0
+1 2911 84 "" 57
+0
+1 2912 84 "" 58
+0
+1 2913 85 "" 1
+0
+1 2914 85 "" 2
+0
+1 2915 85 "" 3
+0
+1 2916 85 "" 5
+0
+1 2917 85 "" 6
+0
+1 2918 85 "" 7
+0
+1 2919 85 "" 8
+0
+1 2920 85 "" 10
+0
+1 2921 85 "" 11
+0
+1 2922 85 "" 12
+0
+1 2923 85 "0" 0
+0
+1 2924 85 "0" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 87 ""
+"objects\\nav_usr\\CS1\\WAN_concentratornode-CS1.pnl" 510 110 T 874 1 0 1  -305 65  
+3
+"$CnName""CoreCN"
+"$configDatapoint""$configDatapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 76 "Group56"
+"objects\\nav_usr\\CS1\\WAN_switch-small-CS1.pnl" 10 30 T 844 1 0 1  4 60  
+3
+"$Station""CS001"
+"$configDatapoint""$configDatapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 77 "Group58"
+"objects\\nav_usr\\CS1\\WAN_switch-small-CS1.pnl" 440 41 T 845 1 0 1  -426 99  
+3
+"$Station""CS008"
+"$configDatapoint""$configDatapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 78 "Group60"
+"objects\\nav_usr\\CS1\\WAN_switch-small-CS1.pnl" 440 91 T 846 1 0 1  -426 99  
+3
+"$Station""CS010"
+"$configDatapoint""$configDatapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 80 "Group64"
+"objects\\nav_usr\\CS1\\WAN_switch-small-CS1.pnl" 440 191 T 848 1 0 1  -426 49  
+3
+"$Station""CS016"
+"$configDatapoint""$configDatapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 84 "Group72"
+"objects\\nav_usr\\CS1\\WAN_switch-big-CS1.pnl" 570 270 T 858 1 0 1  4 -110  
+4
+"$SwitchName""SwitchCEP"
+"$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
+"$referenceDatapoint""$referenceDatapoint"
+3 85 "Group74"
+"objects\\nav_usr\\CEP\\Cep_logical_cluster.pnl" 113 150 T 873 1 0 1  597 210  
+1
+"$clusterType""Input"
+0

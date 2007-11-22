@@ -1,0 +1,40 @@
+<pre><code><span class="codeComment">//Simple use of cb_ptr_fun_w_ret() as a SelVal</span>
+
+
+
+<span class="codeComment">// a typical SelVal function that we want to use in DTL
+// an Example object is valid if all columns have a value</span>
+bool ExampleSelValidate(boundIOs &amp;boundIOs, Example &amp;rowbuf)
+{
+	for (BoundIOs::iterator b_it = boundIOs.begin();
+				b_it != boundIOs.end(); b_it++)
+	{
+		BoundIO &boundIO = (*b_it).second;
+		if (boundIO.IsColumn() && boundIO.IsNull())
+			return false;  <span class="codeComment">// found null column ... data is invalid</span>
+	}
+
+	return true;	<span class="codeComment">// no nulls found ... data is OK</span>
+}
+
+<span class="codeComment">// Read the contents of the DB_EXAMPLE table and return a vector of the
+// resulting rows</span>
+vector&lt;Example&gt; ReadData()
+{
+ vector&lt;Example&gt; results;
+
+ <span class="codeComment">// the call to cb_ptr_fun_w_ret() wraps ExampleSelValidate in a function object
+ // so DTL may use it as the SelVal for the DBView</span>
+ DBView&lt;Example&gt; view(&quot;DB_EXAMPLE&quot;, DefaultBCA&lt;Example&gt;(),
+	&quot;&quot;, DefaultBPA&lt;Example&gt;(), cb_ptr_fun_w_ret(ExampleSelValidate));
+
+ DBView&lt;Example&gt;::select_iterator read_it = view.begin();
+ for ( ; read_it != view.end(); ++read_it)
+ {
+  results.push_back(*read_it);
+ }
+
+ return results;
+}
+
+</code></pre>

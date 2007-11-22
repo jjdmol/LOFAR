@@ -1,0 +1,4 @@
+#! /bin/sh
+
+PVSS00ascii -proj MAC -log +stderr -in /usr/pvss/pvss2_v3.0/Lofar/MAC/dplist/alarmpies.dpl
+PVSS00ascii -proj MAC -log +stderr -in /usr/pvss/pvss2_v3.0/Lofar/MAC/dplist/lcu.pvss

@@ -1,0 +1,67 @@
+<h3>Example: Using a DynamicDBView to insert records into the database. Illustrates
+writing NULL values to the database.</h3> 
+<pre><code><span class="codeComment">// Using a DynamicDBView to insert records into the database.
+
+// this example also shows how to set NULL fields in a variant_row
+
+// Insert two rows into a table with unknown fields</span>
+void SimpleDynamicWrite() {
+	TIMESTAMP_STRUCT paramDate = {2012, 12, 23, 0, 0, 0, 0}; 
+	<span class="codeComment">// Mayan DOOMSDAY! End of the Mayan 5126 year long calendar cycle starting from May 1, 3094 B.C.
+	// Date is 13.13.13.0.0.0.0  4 Ahaw, 3 K'ank'in</span>
+	
+	DynamicDBView&lt;&gt; view(&quot;DB_EXAMPLE&quot;, &quot;*&quot;);
+
+	DynamicDBView&lt;&gt;::insert_iterator write_it = view;
+
+	<span class="codeComment">// NOTE: We need to construct r from the view itself since we
+	// don't know what fields the table will contain.
+	// We therefore make a call to the DataObj() function to have the
+	// table return us a template row with the correct number of fields
+	// and field types.</span>
+	variant_row r(view.GetDataObj());
+
+	<span class="codeComment">// Prepare the number of the beast!
+	// Set all fields to the value 6,
+	// except for the last column which is a date and cannot
+	// currently accept numeric values</span>
+	for (size_t i = 0; i &lt; r.size()-1; i++)
+	{
+		 r[i] = 6;
+	}
+	r[i] = paramDate;  <span class="codeComment">// set the Doomsdate</span>
+
+	<span class="codeComment">// insert the number</span>
+	*write_it = r;
+	write_it++;
+
+	<span class="codeComment">// Prepare the number of angels who stand before
+	// the throne of God!
+	// Set all fields to the value 7,
+	// except for the last column which is a date and cannot
+	// currently accept numeric values</span>
+	for (i = 0; i &lt; r.size()-1; i++)
+	{
+		 r[i] = 7;
+	}
+	r[i] = paramDate;
+
+	<span class="codeComment">// insert the number</span>
+	*write_it = r;
+	write_it++;
+
+	<span class="codeComment">// Insert Purgatory (the void) into the database.
+	// Set all fields to NULL</span>
+	for (i = 0; i &lt; r.size()-1; i++)
+	{
+		 r[i] = NullField();
+	}
+	r[i] = NullField();
+
+	<span class="codeComment">// insert the number</span>
+	*write_it = r;
+	write_it++;
+
+	// For more on this example - see the *REAL* <a href="http://www.dtl.org/">DTL</a> homepage!
+}
+</code></pre>

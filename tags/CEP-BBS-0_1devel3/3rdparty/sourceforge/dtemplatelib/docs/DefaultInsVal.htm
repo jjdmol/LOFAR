@@ -1,0 +1,19 @@
+
+<pre><code><span class="codeComment">//Default InsVal function
+
+// Insertion is by default, always valid.
+// If any RI constraints are violated,
+// DB will return errors when the actual insert is performed
+// which occurs after InsValidate returns.
+// If there are certain business rule constraints you wish to enforce, put them in
+// your own InsValidate functor.
+// You can also specialize this template if you wish to have different default behavior
+// for your data class.</span>
+template&lt;class DataObj&gt; class DefaultInsValidate {
+public:
+bool operator()(BoundIOs &amp;boundIOs, DataObj &amp;rowbuf)
+{
+	return true;
+}
+};
+</code></pre>
