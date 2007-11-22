@@ -47,6 +47,10 @@
 #define INIT_LOGGER(filename) \
 	::LOFAR::LFDebug::initLevels (::LOFAR::string(filename) + ".debug")
 
+//# Note: 'var' logger functionality not available
+#define INIT_VAR_LOGGER(filename,logfile) \
+	INIT_LOGGER(filename)
+
 //# Note: 'watch' functionality not available
 #define INIT_LOGGER_AND_WATCH(filename,interval) \
 	INIT_LOGGER(filename)
