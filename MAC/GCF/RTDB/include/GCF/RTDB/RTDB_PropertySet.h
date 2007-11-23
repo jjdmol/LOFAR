@@ -42,14 +42,14 @@ namespace LOFAR {
 #define PSAT_RD_MASK	0x0001
 #define PSAT_WR_MASK	0x0002
 #define PSAT_TMP_MASK	0x0004
+#define PSAT_CW_MASK	0x0008
 
-typedef enum PSAccessType {
+enum {
 	PSAT_RO = 1,		// read-only
 	PSAT_WO,			// write-only
 	PSAT_RW,			// read-write
-	PSAT_RO_TMP = 5,	// |
-	PSAT_WO_TMP,		//  > PS wil be created and delete on the fly.
-	PSAT_RW_TMP			// /
+	PSAT_TMP,			// PS wil be created and delete on the fly.
+	PSAT_CW = 8			// values are only written when they are changed.
 };
 
 class RTDBPropertySet
@@ -58,7 +58,7 @@ public:
 	// Constructor.
 	RTDBPropertySet (const string&	name,
 					 const string&	type, 
-					 PSAccessType	accessType,
+					 uint32			accessType,
 					 TM::GCFTask*	clientTask);	// must be pointer!
 	~RTDBPropertySet ();
 
@@ -135,7 +135,7 @@ private:
 	// data members
     string              		itsScope;			// with or without DBname:
     string              		itsType;			// PVSS typename
-	PSAccessType				itsAccessType;		// READ/WRITE/TEMP
+	uint32						itsAccessType;		// READ/WRITE/TEMP/CondWrite
 	PVSSservice*          		itsService;			// connection to database
 	PVSSresponse*          		itsOwnResponse;		// callback to myself
 	DPanswer*	          		itsExtResponse;		// callback to client

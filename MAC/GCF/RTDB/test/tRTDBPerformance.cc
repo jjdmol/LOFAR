@@ -193,7 +193,7 @@ GCFEvent::TResult tPerformance::test1create(GCFEvent& e, GCFPortInterface& p)
 		itsPSvector.resize(NR_OF_DPS);
 		for (int i = 0; i < NR_OF_DPS; i++) {
 			DPname = formatString ("Integer%04d", i);
-			itsPSvector[i] = new RTDBPropertySet(DPname, "ExampleDP_Int", PSAT_WO_TMP, this);
+			itsPSvector[i] = new RTDBPropertySet(DPname, "ExampleDP_Int", PSAT_WO | PSAT_TMP, this);
 			ASSERTSTR(itsPSvector[i], "Creation variable " << i << " went wrong");
 		}
 		timer.stop();

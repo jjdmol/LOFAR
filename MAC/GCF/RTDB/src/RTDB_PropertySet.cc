@@ -44,7 +44,7 @@ namespace LOFAR {
 //
 RTDBPropertySet::RTDBPropertySet (const string& 	name,
                                   const string& 	type,
-								  PSAccessType		accessType,
+								  uint32			accessType,
 								  GCFTask*			clientTask) :
 	itsScope	  	  (name),
 	itsType		  	  (type),
@@ -127,9 +127,14 @@ PVSSresult RTDBPropertySet::setValue (const string& 	propName,
 	// search property
 	Property* propPtr = _getProperty(propName);
 	if (!propPtr) {
+		dpeValueSet(propName, SA_PROP_DOES_NOT_EXIST);
 		return (SA_PROP_DOES_NOT_EXIST);
 	}
 
+	// if ConditionWrite=true and value not changed then we are ready.
+	if ((itsAccessType & PSAT_CW) && (*(propPtr->value) == value)) {
+		return (SA_NO_ERROR);
+	}
 	// adopt value
 	propPtr->value->copy(value);
 
@@ -161,6 +166,11 @@ PVSSresult RTDBPropertySet::setValue (const string&		propName,
 		dpeValueSet(propName, SA_PROP_DOES_NOT_EXIST);
 		return (SA_PROP_DOES_NOT_EXIST);
 	}
+
+	// if ConditionWrite=true and value not changed then we are ready.
+//	if ((itsAccessType & PSAT_CW) && propPtr->value->getValue() == value) {
+//		return (SA_NO_ERROR);
+//	}
 
 	// adopt value
 	if ((propPtr->value->setValue(value)) != GCF_NO_ERROR) {

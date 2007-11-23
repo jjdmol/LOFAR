@@ -84,8 +84,8 @@ GCFEvent::TResult tPropertySet::createPS(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	case F_ENTRY: {
 		gTestPassed = false;
-//		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PSAT_RO_TMP, this);
-//		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PSAT_WO_TMP, this);
+//		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PSAT_RO | PSAT_TMP, this);
+//		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PSAT_WO | PSAT_TMP, this);
 		itsPropSet	 = new RTDBPropertySet("myPS", "TestPS", PSAT_RW, this);
 		ASSERTSTR(itsPropSet, "Can't allocate PropertySet");
 		itsTimerPort->setTimer(1.0); // max time for this test.
