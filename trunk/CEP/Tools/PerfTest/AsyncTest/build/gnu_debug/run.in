@@ -1,6 +1,0 @@
-define
-        fixedsize=150,
-        synchronous=1
-;
-run 3;
-quit
