@@ -1,4 +1,4 @@
-INSTHDRS        = Connector.h \
+pkginclude_HEADERS        = Connector.h \
 	 InputThread.h \
 	 LockedRange.h \
 	 LockedRange.tcc \

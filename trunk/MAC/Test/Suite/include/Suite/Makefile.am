@@ -1,4 +1,4 @@
-INSTHDRS = \
+pkginclude_HEADERS = \
 	test.h \
 	suite.h
 
