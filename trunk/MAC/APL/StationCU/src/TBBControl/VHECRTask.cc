@@ -33,10 +33,23 @@ namespace LOFAR {
 	namespace StationCU {
 	
 //
+// [global] VHECRTask::instance()
+//
+VHECRTask* VHECRTask::instance()
+{
+	static	VHECRTask*		theirVHECRTask;
+
+	if (theirVHECRTask == 0) {
+		theirVHECRTask = new VHECRTask();
+	}
+	return (theirVHECRTask);
+}
+
+//
 // VHECRTask()
 //
-VHECRTask::VHECRTask(const string&	cntlrName) :
-	GCFTask 			((State)&VHECRTask::initial_state,cntlrName),
+VHECRTask::VHECRTask() :
+	GCFTask 			((State)&VHECRTask::initial_state,"VHECRTask"),
 	itsTimerPort		(0),
 	itsNrTriggers		(0),
 	itsInitialized		(false)
