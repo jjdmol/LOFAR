@@ -1,4 +1,4 @@
-INSTHDRS =    	\
+pkginclude_HEADERS =    	\
 AH_Storage.h	\
 WH_SubbandWriter.h   	\
 MSWriter.h     	\

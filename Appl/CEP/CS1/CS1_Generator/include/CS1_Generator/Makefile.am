@@ -1,4 +1,4 @@
-INSTHDRS   = 	StationData.h \
+pkginclude_HEADERS   = 	StationData.h \
 		DH_RSP.h \
 		AH_FakeStation.h \
 		AH_Recorder.h \

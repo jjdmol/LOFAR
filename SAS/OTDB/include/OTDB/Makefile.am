@@ -1,4 +1,4 @@
-INSTHDRS 	= 	Converter.h \
+pkginclude_HEADERS 	= 	Converter.h \
 				ClassifConv.h \
 				ParamTypeConv.h \
 				TreeStateConv.h \
