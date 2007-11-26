@@ -50,7 +50,7 @@ using namespace EPA_Protocol;
 AVTStub::AVTStub(string name)
   : GCFTask((State)&AVTStub::initial, name), Test("AVTStub")
 {
-  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
+  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_STRINGS);
 
   beam_server.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::SAP, BS_PROTOCOL);
 }
