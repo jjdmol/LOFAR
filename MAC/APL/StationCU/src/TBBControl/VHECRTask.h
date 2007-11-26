@@ -49,7 +49,7 @@ using	GCF::TM::GCFTask;
 class VHECRTask : public GCFTask
 {
 public:
-	explicit VHECRTask(const string& cntlrName);
+	static VHECRTask*	instance();
 	~VHECRTask();
 
 	// define responsefunctionType
