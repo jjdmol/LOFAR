@@ -715,7 +715,7 @@ do
 			shift 2
 			;;
 		-s) STNNAME=$2
-			DBTYPENAME=$2
+			DBTYPENAME=`echo $2 | tr '[a-z]' '[A-Z'`
 			DBTYPE=S
 			shift 2
 			;;
