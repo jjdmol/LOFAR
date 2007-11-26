@@ -1,14 +1,4 @@
-INSTHDRS = MeqCalibraterImpl.h
-
-NOINSTHDRS =
-
-TCCHDRS =
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
+pkginclude_HEADERS	= MeqCalibraterImpl.h
 
 lib_LTLIBRARIES         = libcal.la
 
