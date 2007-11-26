@@ -24,12 +24,4 @@ NOINSTHDRS 	= 	wSpaceSplit.h\
 				OTDBevent.h \
 				OTDBeventList.h
 
-TCCHDRS 					=
-
-nobase_pkginclude_HEADERS 	= $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS 				= $(NOINSTHDRS)
-
-DOCHDRS 					= $(INSTHDRS) $(NOINSTHDRS)
-
 include $(top_srcdir)/Makefile.common

@@ -1,4 +1,4 @@
-INSTHDRS = \
+pkginclude_HEADERS = \
 	MeqDomain.h \
 	MeqExpr.h \
 	MeqHist.h \
@@ -36,18 +36,6 @@ INSTHDRS = \
 	ParmTable.h \
 	ParmTableAIPS.h \
 	MeqParmHolder.h
-
-NOINSTHDRS = 
-
-TCCHDRS = 
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = \
-	$(INSTHDRS) \
-	$(NOINSTHDRS)
 
 lib_LTLIBRARIES   = libmns.la
 
@@ -91,11 +79,5 @@ libmns_la_SOURCES = \
 AM_YFLAGS               = -d -p KeyParse
 AM_LFLAGS               = -PKeyTokenize
 LEX_OUTPUT_ROOT         = lex.KeyTokenize
-
-#bin_PROGRAMS 		= parmdb
-
-#parmdb_SOURCES		= parmdb.cc
-#parmdb_LDADD		= ./libmns.la
-#parmdb_DEPENDENCIES	= ./libmns.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

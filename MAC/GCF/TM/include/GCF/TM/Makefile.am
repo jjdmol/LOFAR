@@ -1,5 +1,3 @@
-INSTHDRS =
-
 pkgincludedir = $(includedir)/GCF/TM
 pkginclude_HEADERS = \
 	GCF_Control.h \
@@ -17,16 +15,6 @@ pkginclude_HEADERS = \
 	GCF_TCPPort.h \
 	GCF_TimerPort.h \
 	EventPort.h 
-
-NOINSTHDRS =
-
-TCCHDRS = 
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 include $(top_srcdir)/Makefile.common
 
