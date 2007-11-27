@@ -473,7 +473,8 @@ GCFEvent::TResult TBBMonitor::askSizeInfo(GCFEvent& event, GCFPortInterface& por
 		// move the information to the database.
 		for (uint32	tbb = 0; tbb < itsNrTBboards; tbb++) {
 			if (ack.status_mask[tbb] & TBB_SUCCESS) {
-				itsTBBs[tbb]->setValue(PN_TBB_RAM_SIZE, GCFPVString(byteSize(ack.npages[tbb]*2048)));
+				LOG_DEBUG_STR("RAMSIZE board " << tbb << ": " << ack.npages[tbb] << " pages = " << 2048.0*(double)ack.npages[tbb] << " bytes");
+				itsTBBs[tbb]->setValue(PN_TBB_RAM_SIZE, GCFPVString(byteSize(2048.0*(double)ack.npages[tbb])));
 			}
 			else {	// board in error set ?.?
 				itsTBBs[tbb]->setValue(PN_TBB_RAM_SIZE, GCFPVString(""));
@@ -540,22 +541,28 @@ GCFEvent::TResult TBBMonitor::askFlashInfo(GCFEvent& event, GCFPortInterface& po
 		nrOfRequests--;
 		// move the information to the database.
 		if (ack.status_mask & TBB_SUCCESS) {
-			vector<string>		imageVersions;
-			vector<string>		writeDates;
-			vector<string>		TPfilenames;
-			vector<string>		MPfilenames;
+			vector<GCFPValue*>		imageVersions;
+			vector<GCFPValue*>		writeDates;
+			vector<GCFPValue*>		TPfilenames;
+			vector<GCFPValue*>		MPfilenames;
 			for (int32	tbb = 0; tbb < MAX_N_IMAGES; tbb++) {
-				imageVersions.push_back(formatString("%d.%d", ack.image_version[tbb]/10, ack.image_version[tbb]%10));
-				ptime		theTime(from_time_t(ack.write_date[tbb]));
-				writeDates.push_back   (to_simple_string(theTime));
-				TPfilenames.push_back  (ack.tp_file_name[tbb]);
-				MPfilenames.push_back  (ack.mp_file_name[tbb]);
-//				itsTBBs[tbb]->setValue(PN_TBB_IMAGE_INFO_VERSION,    imageVersions);
-//				itsTBBs[tbb]->setValue(PN_TBB_IMAGE_INFO_WRITE_DATE, writeDates);
-//				itsTBBs[tbb]->setValue(PN_TBB_IMAGE_INFO_TP_FILE,    TPfilenames);
-//				itsTBBs[tbb]->setValue(PN_TBB_IMAGE_INFO_MP_FILE,    MPfilenames);
+cout << "TIMESTAMP = " << ack.write_date[tbb] << endl;
+				if (ack.write_date[tbb] != -1L) {
+					imageVersions.push_back(new GCFPVString(formatString("%d.%d", ack.image_version[tbb]/10, ack.image_version[tbb]%10)));
+					ptime		theTime(from_time_t(ack.write_date[tbb]));
+					writeDates.push_back(new GCFPVString(to_simple_string(theTime)));
+				}
+				else {
+					imageVersions.push_back(new GCFPVString("free"));
+					writeDates.push_back(new GCFPVString("---"));
+				}
+				TPfilenames.push_back  (new GCFPVString(ack.tp_file_name[tbb]));
+				MPfilenames.push_back  (new GCFPVString(ack.mp_file_name[tbb]));
 			}
-			
+			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_VERSION,    GCFPVDynArr(LPT_DYNSTRING, imageVersions));
+			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_WRITE_DATE, GCFPVDynArr(LPT_DYNSTRING, writeDates));
+			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_TP_FILE,    GCFPVDynArr(LPT_DYNSTRING, TPfilenames));
+			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_MP_FILE,    GCFPVDynArr(LPT_DYNSTRING, MPfilenames));
 		}
 
 		if (--nrOfRequests == 0) {
@@ -686,13 +693,13 @@ GCFEvent::TResult TBBMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 
 		// move the information to the database.
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
-			LOG_DEBUG_STR("Updating rcu " << rcu);
-			if (ack.rcu_status[rcu] & TBB_SUCCESS) {
+			LOG_TRACE_FLOW_STR("Updating rcu " << rcu << ", status = " << ack.rcu_status[rcu]);
+			if (ack.rcu_status[rcu] == 0) {
 				// update all RCU variables
-				itsRCUs[rcu]->setValue(PN_RCU_TBB_ERROR, 	  GCFPVBool(ack.rcu_status[rcu])),
+				itsRCUs[rcu]->setValue(PN_RCU_TBB_ERROR, 	  GCFPVInteger(ack.rcu_status[rcu])),
 				itsRCUs[rcu]->setValue(PN_RCU_TBB_MODE, 	  GCFPVString(TBBRCUstate(ack.rcu_state[rcu])));
 				itsRCUs[rcu]->setValue(PN_RCU_TBB_START_ADDR, GCFPVString(formatString("0x%08d",ack.rcu_start_addr[rcu])));
-				itsRCUs[rcu]->setValue(PN_RCU_TBB_BUF_SIZE,   GCFPVString(byteSize(ack.rcu_pages[rcu]*2048)));
+				itsRCUs[rcu]->setValue(PN_RCU_TBB_BUF_SIZE,   GCFPVString(byteSize(2048.0*(double)ack.rcu_pages[rcu])));
 			}
 		} // for all boards
 
@@ -752,7 +759,7 @@ GCFEvent::TResult TBBMonitor::askRCUSettings(GCFEvent& event, GCFPortInterface& 
 
 		// move the information to the database.
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
-			LOG_DEBUG_STR("Updating rcu " << rcu);
+			LOG_TRACE_FLOW_STR("Updating rcu " << rcu);
 			// update all RCU variables
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STARTLEVEL, GCFPVInteger(ack.setup[rcu].start_mode)),
 			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_BASELEVEL,  GCFPVInteger(ack.setup[rcu].level)),
