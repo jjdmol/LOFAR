@@ -513,17 +513,12 @@ create_dpt_file()
 		fi
 		prevdpt=${dpt}
 
-
-	
-
-#
-# create PVSStypes
-#
+		# create PVSStypes
 		echo "TypeName"
 		echo "${dpt}.${dpt}	1#1"
 		echo "	state	21#2"
 		echo "	childState	21#3"
-                let count=4
+		let count=4
 		if [ ${prefix} != "-" ]; then
 			if [ ! -f ${dpt}.dpdef ]; then
 				echo "No definition file for ${dpt}" >> ${ERRORFILE}
@@ -533,7 +528,6 @@ create_dpt_file()
 			echo "	logMsg	25#6"
 			let count=7
 		fi
-
 
 		if [ -f ${dpt}.dpdef ]; then
 			let depth=1
@@ -587,26 +581,24 @@ create_dpt_file()
 		fi
 		echo ""
 
-#
-# Create MasterDataPoint
-#
+		# Create MasterDataPoint
 		echo "DpName	TypeName	ID"
 		echo "_mp_${dpt}	${dpt}	0"
 		echo ""
 
-#
-# if software then create an hourarchive for the logMsg in the MasterDataPoint
-#
+		# Create _DynamicDataPoints entry for each datapointType
+		echo "DpName    TypeName        ID"
+		echo "_dt_${dpt}        _DynamicDatapoints      0"
+		echo ""
+
+		# if software then create an hourarchive for the logMsg in the MasterDataPoint
 		if [ ${prefix} != "-" ]; then
 			echo "StampSec	StampMSec	ElementName	TypeName	DetailNr	_archive.._type	_archive.._archive	_archive.._class"
 			echo "0	0	_mp_${dpt}.logMsg	${dpt}		45	1"
 			echo "0	0	_mp_${dpt}.logMsg	${dpt}	1	15		_ValueArchive_2"
-		echo ""
+			echo ""
 		fi
 
-
-
-	
 	done >>${DESTDIR}/${DPT_FILE}
 	echo "created: ${DESTDIR}/${DPT_FILE}"
 
@@ -715,7 +707,7 @@ do
 			shift 2
 			;;
 		-s) STNNAME=$2
-			DBTYPENAME=`echo $2 | tr '[a-z]' '[A-Z'`
+			DBTYPENAME=`echo $2 | tr '[a-z]' '[A-Z]'`
 			DBTYPE=S
 			shift 2
 			;;
