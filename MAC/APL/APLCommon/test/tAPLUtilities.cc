@@ -84,13 +84,15 @@ int main (int	argc, char* argv[])
 	DO_EXPAND_TEST("[0..191]");
 	DO_EXPAND_TEST("[0,1,2,6,3,4,10..19,16]");
 
-	cout << "4.0GB : " << byteSize(4.0*1024*1024*1024) << endl;
-	cout << "2.5GB : " << byteSize(2.5*1024*1024*1024) << endl;
-	cout << "4.0MB : " << byteSize(4*1024*1024) << endl;
-	cout << "2.5MB : " << byteSize(2560*1024) << endl;
-	cout << "4.0KB : " << byteSize(4*1024) << endl;
-	cout << "2.5KB : " << byteSize(2560) << endl;
-	cout << "512B  : " << byteSize(512) << endl;
+	cout << "16.0GB : " << byteSize(16.0*1024*1024*1024) << endl;
+	cout << " 8.0GB : " << byteSize(8.0*1024*1024*1024) << endl;
+	cout << " 4.0GB : " << byteSize(4.0*1024*1024*1024) << endl;
+	cout << " 2.5GB : " << byteSize(2.5*1024*1024*1024) << endl;
+	cout << " 4.0MB : " << byteSize(4*1024*1024) << endl;
+	cout << " 2.5MB : " << byteSize(2560*1024) << endl;
+	cout << " 4.0KB : " << byteSize(4*1024) << endl;
+	cout << " 2.5KB : " << byteSize(2560) << endl;
+	cout << "  512B : " << byteSize(512) << endl;
 
 	return (0);
 }
