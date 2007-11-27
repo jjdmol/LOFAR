@@ -616,6 +616,48 @@ GCFEvent::TResult tGSAService::testWriteMdpeTimed(GCFEvent& e, GCFPortInterface&
 	break;
 
 	case F_TIMER:
+		TRAN(tGSAService::testWriteDynArray);
+		break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+
+//
+// testWriteDynArray (event, port)
+//
+GCFEvent::TResult tGSAService::testWriteDynArray(GCFEvent& e, GCFPortInterface& p)
+{
+	LOG_DEBUG_STR("testWriteDynArray:" << eventName(e) << "@" << p.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	PVSSresult		  result;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		try {
+			LOG_DEBUG("Setting stringArr='aap,noot,mies'");
+			GCFPValueArray		dpeValues;
+			dpeValues.push_back(new GCFPVString("aap"));
+			dpeValues.push_back(new GCFPVString("noot"));
+			dpeValues.push_back(new GCFPVString("mies"));
+			result = itsService->dpeSet("testDP.stringArr", 
+										GCFPVDynArr(LPT_DYNSTRING, dpeValues));
+		}
+		catch (Exception& except) {
+			LOG_INFO_STR ("Writing multiple values at once returned result: " 
+							<< PVSSerrstr(result));
+		}
+		itsTimerPort->setTimer(1.0);
+	}
+	break;
+
+	case F_TIMER:
 		TRAN(tGSAService::final);
 		break;
 

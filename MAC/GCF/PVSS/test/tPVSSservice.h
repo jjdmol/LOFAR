@@ -63,6 +63,7 @@ class tGSAService : public GCFTask
   GCFEvent::TResult testCreateMdpe		(GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult testWriteMdpe		(GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult testWriteMdpeTimed	(GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult testWriteDynArray	(GCFEvent& e, GCFPortInterface& p);
 
  private:
 
