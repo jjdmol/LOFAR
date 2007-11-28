@@ -29,10 +29,11 @@
 set a_root = . #filled in by install
 
 # Get python version.
-set a_pyv=`python --version 2>&1`
-set a_pyvv=`echo $a_pyv | sed -e "s/Python /([0.9]\.[0-9]\).*/\1/"`
-if test "$a_pyv" = "$a_pyvv" then
-  set a_pyvv=2.5
+set a_pyv=`python -V |& cat --`
+set a_pyvv=`echo $a_pyv | sed -e "s/Python \([0-9]\.[0-9]\).*/\1/"`
+# Fall-back: if python cannot be found assume Python 2.4
+if ("$a_pyv" == "$a_pyvv") then
+  set a_pyvv=2.4
 endif
 
 # Only modify path variables if $a_root is an existing directory.
@@ -79,7 +80,7 @@ else
     if (! $?PYTHONPATH) then
         setenv PYTHONPATH $a_pyt
     else
-        setenv PYTHONPATH $a_pyt:$PYTHONPATH
+        setenv PYTHONPATH ${a_pyt}:$PYTHONPATH
     endif
 
     # Create a .glishrc.post in the HOME directory to append
