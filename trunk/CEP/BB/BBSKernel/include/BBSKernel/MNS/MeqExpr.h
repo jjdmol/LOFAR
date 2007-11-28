@@ -51,7 +51,28 @@ class MeqExpr;
 // @{
 
 
-// This class is the (abstract) base class for an expression.
+// This class is the (abstract) base class for an expression. The classes
+// derived from it implement an expression which must be evaluated for
+// a given request.
+// 
+// There are a few virtual methods which must or can be implemented in derived
+// classes. They are:
+// <ul>
+//  <li> \b getResult calculates the main value and the
+//       perturbed values of the solvable parameters. 
+//       The default implementation uses getResultValue for all of them.
+//       Sometimes a derived class can do it in a better way by reusing
+//       intermediate results. In that case it might be better implement
+//       to implement getResult in the derived class.
+//  <li> \b getResultVec returns the result as a vector. Only in very
+//       exceptional cases it needs to be implemented in a derived class.
+//  <li> getResultValue calculates the value of the expression represented
+//       by the derived class. It must be implemented if <tt>getResult</tt>
+//       is not implemented.
+// </ul>
+// So in short: either <tt>getResultValue</tt> or <tt>getResult</tt> must be
+// implemented in a derived class. Usually the simpler <tt>getResultValue</tt>
+// will do.
 
 class MeqExprRep
 {
