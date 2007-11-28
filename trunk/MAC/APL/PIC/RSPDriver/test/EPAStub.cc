@@ -48,7 +48,7 @@ using namespace RSP_Test;
 EPAStub::EPAStub(string name)
   : GCFTask((State)&EPAStub::initial, name), Test(name)
 {
-  registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
+  registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_STRINGS);
 
   char addrstr[64];
   snprintf(addrstr, 64, "EPAStub.MAC_ADDR_RSPDRIVER");
