@@ -24,6 +24,7 @@
 #include <APS/ParameterSet.h>
 
 #include "VHECRTask.h"
+#include "TBBControl.h"
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
@@ -128,6 +129,19 @@ void VHECRTask::setSaveFunction(saveFunctionType	aSaveFunction)
 }
 
 //
+// setSaveTask
+//
+void VHECRTask::setSaveTask(TBBControl*	aSaveTask)
+{
+	itsSaveTask = aSaveTask;
+	itsInitialized   = true;
+
+	// wakeup statemachine
+	itsTimerPort->setTimer(0.0);
+}
+
+
+//
 // addTrigger(trigger)
 //
 void VHECRTask::addTrigger(const TBBTrigger&	trigger)
@@ -161,7 +175,7 @@ GCFEvent::TResult VHECRTask::operational(GCFEvent& event, GCFPortInterface& port
 		// its time to report the store-actions 
 		// All code for this event is [TEST] code
 		if (!itsCommandVector.empty()) {
-			itsSaveFunction(itsCommandVector);			// report that we want everything
+			itsSaveTask->readTBBdata(itsCommandVector);			// report that we want everything
 			itsCommandVector.clear();					// clear buffer
 		}
 		// calculate new waittime
