@@ -37,8 +37,11 @@
 
 // forward declaration
 
+
 namespace LOFAR {
 	namespace StationCU {
+
+class TBBControl;
 
 using	GCF::TM::GCFTimerPort;
 using	GCF::TM::GCFEvent;
@@ -57,7 +60,7 @@ public:
 
 	void	addTrigger(const TBBTrigger&	trigger);
 	void	setSaveFunction(saveFunctionType	saveFunction);
-
+	void	setSaveTask(TBBControl*	saveTask);
 private:
 	// Wait till maintask has installed my responsefunction
    	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
@@ -78,7 +81,7 @@ private:
 
 	// remote function to call for saving triggers
 	saveFunctionType		itsSaveFunction;
-
+	TBBControl*					itsSaveTask;
 	// [TEST] datamembers
 	uint32					itsMinResponseTime;		// for simulating varying behaviour
 	uint32					itsMaxResponseTime;

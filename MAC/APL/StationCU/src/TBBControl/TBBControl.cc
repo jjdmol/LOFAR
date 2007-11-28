@@ -19,6 +19,21 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+
+/*
+####################################
+// moeten nog in ControllerDefines.h
+CT_RESULT_NOBOARD_ERROR,
+CT_RESULT_MODE_ERROR,
+CT_RESULT_ALLOC_ERROR,
+CT_RESULT_TRIGSETUP_ERROR,
+CT_RESULT_TRIGCOEF_ERROR,
+CT_RESULT_RECORD_ERROR,
+
+CNTLRTYPE_TBBCTRL,					// TBBControl
+
+####################################
+*/
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
@@ -30,23 +45,27 @@
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
-#include <APL/APLCommon/Observation.h>
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 
+//# local includes
 #include "TBBControl.h"
 #include "TBBControlDefines.h"
+#include "TBBObservation.h"
+#include "TBBTrigger.h"
+#include "TBBReadCmd.h"
+#include "VHECRTask.h"
 
 using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
-namespace LOFAR {
-	using namespace APLCommon;
-	using namespace ACC::APS;
-	namespace StationCU {
+using namespace LOFAR;
+using namespace APLCommon;
+using namespace ACC::APS;
+using namespace StationCU;
 	
 // static pointer to this object for signal handler
 static TBBControl*	thisTBBControl = 0;
@@ -62,14 +81,15 @@ TBBControl::TBBControl(const string&	cntlrName) :
 	itsParentPort		(0),
 	itsTimerPort		(0),
 	itsTBBDriver		(0),
-	itsState			(CTState::NOSTATE),
-	itsTBBID			(0)
+	itsState			(CTState::NOSTATE)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
 	// First readin our observation related config file.
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);
 	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
+
+	itsObs = new TBBObservation(globalParameterSet());	// does all nasty conversions
 
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");
@@ -96,6 +116,10 @@ TBBControl::TBBControl(const string&	cntlrName) :
 	GCF::TM::registerProtocol (TBB_PROTOCOL, 		TBB_PROTOCOL_STRINGS);
 
 	setState(CTState::CREATED);
+	
+	itsCommandVector.clear();					// clear buffer
+	itsVHECRTask = VHECRTask::instance();
+	itsVHECRTask->setSaveTask(this);
 }
 
 
@@ -143,11 +167,11 @@ void    TBBControl::setState(CTState::CTstateNr     newState)
 }   
 
 
-//
+//==============================================================================
 // initial_state(event, port)
 //
 // Connect to PVSS and report state back to startdaemon
-//
+//==============================================================================
 GCFEvent::TResult TBBControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
@@ -156,108 +180,107 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-	case F_ENTRY:
-   		break;
-
-    case F_INIT: {
-		// Get access to my own propertyset.
-		string	propSetName(createPropertySetName(PSN_TBB_CTRL, getName()));
-		LOG_INFO_STR ("Activating PropertySet" << propSetName);
-		itsPropertySet = new RTDBPropertySet(propSetName,
-											 PST_TBB_CTRL,
-											 PSAT_RW,
-											 this);
-		// Wait for timer that is set on DP_CREATED event
-	}
-	break;
-
-	case DP_CREATED: {
-		// NOTE: thsi function may be called DURING the construction of the PropertySet.
-		// Always exit this event in a way that GCF can end the construction.
-		DPCreatedEvent	dpEvent(event);
-		LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
-		itsTimerPort->cancelAllTimers();
-		itsTimerPort->setTimer(0.0);
-	}
-	break;
-	  
-	case F_TIMER:
-		if (!itsPropertySetInitialized) {
-			itsPropertySetInitialized = true;
-
-			// Instruct codeloggingProcessor
-			// TODO: get this from a .h file
-			LOG_INFO_STR("MACProcessScope: LOFAR.PermSW.TBBCtrl");
-
-			// first redirect signalHandler to our quiting state to leave PVSS
-			// in the right state when we are going down
-			thisTBBControl = this;
-			signal (SIGINT,  TBBControl::sigintHandler);	// ctrl-c
-			signal (SIGTERM, TBBControl::sigintHandler);	// kill
-
-			// update PVSS.
-			LOG_TRACE_FLOW ("Updateing state to PVSS");
-// TODO TBB
-			itsPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("initial"));
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool  (false));
-			itsPropertySet->setValue(PN_BC_SUBBANDLIST,	GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_BEAMLETLIST,	GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_ANGLE1,		GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_SUBARRAY,	GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
-		  
-			// Start ParentControl task
-			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
-			itsParentPort = itsParentControl->registerTask(this);
-			// results in CONTROL_CONNECT
-		}
-		break;
-
-	case F_CONNECTED:
-		ASSERTSTR (&port == itsParentPort, 
-									"F_CONNECTED event from port " << port.getName());
-		break;
-
-	case F_DISCONNECTED:
-	case F_CLOSED:
-	case F_EXIT:
-		break;
+		case F_ENTRY: {
+		}	break;
 	
-	case CONTROL_CONNECT: {
-		CONTROLConnectEvent		msg(event);
-		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
-		setState(CTState::CONNECTED);
-		sendControlResult(port, CONTROL_CONNECTED, msg.cntlrName, CT_RESULT_NO_ERROR);
-
-		// let ParentControl watch over the start and stop times for extra safety.
-		ptime	startTime = time_from_string(globalParameterSet()->
-													getString("Observation.startTime"));
-		ptime	stopTime  = time_from_string(globalParameterSet()->
-													getString("Observation.stopTime"));
-		itsParentControl->activateObservationTimers(msg.cntlrName, startTime, stopTime);
-
-		LOG_INFO ("Going to started state");
-		TRAN(TBBControl::started_state);				// go to next state.
-		break;
-	}
-
-	default:
-		status = _defaultEventHandler(event, port);
-		break;
+	  case F_INIT: {
+			// Get access to my own propertyset.
+			string	propSetName(createPropertySetName(PSN_TBB_CTRL, getName()));
+			LOG_INFO_STR ("Activating PropertySet" << propSetName);
+			itsPropertySet = new RTDBPropertySet(propSetName,
+												 PST_TBB_CTRL,
+												 PSAT_RW,
+												 this);
+			// Wait for timer that is set on DP_CREATED event
+		}	break;
+	
+		case DP_CREATED: {
+			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// Always exit this event in a way that GCF can end the construction.
+			DPCreatedEvent	dpEvent(event);
+			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+			itsTimerPort->cancelAllTimers();
+			itsTimerPort->setTimer(0.0);
+		}	break;
+		  
+		case F_TIMER: {
+			if (!itsPropertySetInitialized) {
+				itsPropertySetInitialized = true;
+	
+				// Instruct codeloggingProcessor
+				// TODO: get this from a .h file
+				LOG_INFO_STR("MACProcessScope: LOFAR.PermSW.TBBCtrl");
+	
+				// first redirect signalHandler to our quiting state to leave PVSS
+				// in the right state when we are going down
+				thisTBBControl = this;
+				signal (SIGINT,  TBBControl::sigintHandler);	// ctrl-c
+				signal (SIGTERM, TBBControl::sigintHandler);	// kill
+	
+				// update PVSS.
+				LOG_TRACE_FLOW ("Updateing state to PVSS");
+	// TODO TBB
+				itsPropertySet->setValue(PVSSNAME_FSM_CURACT,	GCFPVString("initial"));
+				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,	GCFPVString(""));
+				itsPropertySet->setValue(PN_TBC_CONNECTED,	GCFPVBool(false));
+				
+				itsPropertySet->setValue(PN_TBC_TRIGGER_RCU_NR,	GCFPVInteger(0),0.0,false);			
+				itsPropertySet->setValue(PN_TBC_TRIGGER_SEQUENCE_NR,	GCFPVInteger(0),0.0,false);
+				itsPropertySet->setValue(PN_TBC_TRIGGER_TIME,	GCFPVInteger(0),0.0,false);
+				itsPropertySet->setValue(PN_TBC_TRIGGER_SAMPLE_NR,	GCFPVInteger(0),0.0,false);
+				itsPropertySet->setValue(PN_TBC_TRIGGER_SUM,	GCFPVInteger(0),0.0,false);
+				itsPropertySet->setValue(PN_TBC_TRIGGER_NR_SAMPLES,	GCFPVInteger(0),0.0,false);
+				itsPropertySet->setValue(PN_TBC_TRIGGER_PEAK_VALUE,	GCFPVInteger(0),0.0,false);
+				itsPropertySet->flush();
+			  
+				// Start ParentControl task
+				LOG_DEBUG ("Enabling ParentControl task and wait for my name");
+				itsParentPort = itsParentControl->registerTask(this);
+				// results in CONTROL_CONNECT
+			}
+		} break;
+	
+		case F_CONNECTED: {
+			ASSERTSTR (&port == itsParentPort, 
+										"F_CONNECTED event from port " << port.getName());
+		} break;
+	
+		case F_DISCONNECTED:
+		case F_CLOSED:
+		case F_EXIT: {
+		} break;
+		
+		case CONTROL_CONNECT: {
+			CONTROLConnectEvent		msg(event);
+			LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
+			setState(CTState::CONNECTED);
+			sendControlResult(port, CONTROL_CONNECTED, msg.cntlrName, CT_RESULT_NO_ERROR);
+	
+			// let ParentControl watch over the start and stop times for extra safety.
+			ptime	startTime = time_from_string(globalParameterSet()->
+														getString("Observation.startTime"));
+			ptime	stopTime  = time_from_string(globalParameterSet()->
+														getString("Observation.stopTime"));
+			itsParentControl->activateObservationTimers(msg.cntlrName, startTime, stopTime);
+	
+			LOG_INFO ("Going to started state");
+			TRAN(TBBControl::started_state);				// go to next state.
+		} break;
+	
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
 	}
 
 	return (status);
 }
 
 
-//
+//==============================================================================
 // started_state(event, port)
 //
 // wait for CLAIM event
-//
+//==============================================================================
 GCFEvent::TResult TBBControl::started_state(GCFEvent& event, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("started:" << eventName(event) << "@" << port.getName());
@@ -265,75 +288,72 @@ GCFEvent::TResult TBBControl::started_state(GCFEvent& event, GCFPortInterface& p
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_ENTRY: {
-		// update PVSS
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("started"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
-		itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool  (false)); //[TBB]
-		break;
-	}
-
-	case F_INIT:
-	case F_EXIT:
-		break;
-
-	case F_CONNECTED: {
-		ASSERTSTR (&port == itsTBBDriver, "F_CONNECTED event from port " 
-																	<< port.getName());
-		itsTimerPort->cancelAllTimers();
-		LOG_INFO ("Connected with TBBDriver, going to claimed state");
-		itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool(true));	// [TBB]
-		setState(CTState::CLAIMED);
-		sendControlResult(*itsParentPort, CONTROL_CLAIMED, getName(), CT_RESULT_NO_ERROR);
-		TRAN(TBBControl::claimed_state);				// go to next state.
-		break;
-	}
-
-	case F_DISCONNECTED: {
-		port.close();
-		ASSERTSTR (&port == itsTBBDriver, 
-								"F_DISCONNECTED event from port " << port.getName());
-		LOG_WARN ("Connection with TBBDriver failed, retry in 2 seconds");
-		itsTimerPort->setTimer(2.0);
-		break;
-	}
-
-	case F_CLOSED:
-		break;
-
-	case F_TIMER: 
-//		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-		LOG_DEBUG ("Trying to reconnect to TBBDriver");
-		itsTBBDriver->open();		// will result in F_CONN or F_DISCONN
-		break;
-
-	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
-	case CONTROL_CLAIM: {
-		CONTROLClaimEvent		msg(event);
-		LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
-		setState(CTState::CLAIM);
-		LOG_DEBUG ("Trying to connect to TBBDriver");
-		itsTBBDriver->open();		// will result in F_CONN or F_DISCONN
-		break;
-	}
-
-	case CONTROL_QUIT:
-		TRAN(TBBControl::quiting_state);
-		break;
-
-	default:
-		status = _defaultEventHandler(event, port);
-		break;
+		case F_ENTRY: {
+			// update PVSS
+	//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("started"));
+			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+			itsPropertySet->setValue(PN_TBC_CONNECTED,	GCFPVBool(false)); //[TBB]
+		} break;
+	
+		case F_INIT:
+		case F_EXIT: {
+		} break;
+	
+		case F_CONNECTED: {
+			ASSERTSTR (&port == itsTBBDriver, "F_CONNECTED event from port " 
+																		<< port.getName());
+			itsTimerPort->cancelAllTimers();
+			LOG_INFO ("Connected with TBBDriver, going to claimed state");
+			itsPropertySet->setValue(PN_TBC_CONNECTED,	GCFPVBool(true));	// [TBB]
+			setState(CTState::CLAIMED);
+			sendControlResult(*itsParentPort, CONTROL_CLAIMED, getName(), CT_RESULT_NO_ERROR);
+			TRAN(TBBControl::claimed_state);				// go to next state.
+		} break;
+	
+		case F_DISCONNECTED: {
+			port.close();
+			ASSERTSTR (&port == itsTBBDriver, 
+									"F_DISCONNECTED event from port " << port.getName());
+			LOG_WARN ("Connection with TBBDriver failed, retry in 2 seconds");
+			itsTimerPort->setTimer(2.0);
+		} break;
+	
+		case F_CLOSED: {
+		} break;
+	
+		case F_TIMER: { 
+	//		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+			LOG_DEBUG ("Trying to reconnect to TBBDriver");
+			itsTBBDriver->open();		// will result in F_CONN or F_DISCONN
+		} break;
+	
+		// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+		case CONTROL_CLAIM: {
+			CONTROLClaimEvent		msg(event);
+			LOG_DEBUG_STR("Received CLAIM(" << msg.cntlrName << ")");
+			setState(CTState::CLAIM);
+			LOG_DEBUG ("Trying to connect to TBBDriver");
+			itsTBBDriver->open();		// will result in F_CONN or F_DISCONN
+		} break;
+	
+		case CONTROL_QUIT: {
+			TRAN(TBBControl::quiting_state);
+		} break;
+	
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
 	}
 
 	return (status);
 }
 
-//
+
+//==============================================================================
 // claimed_state(event, port)
 //
 // wait for PREPARE event.
-//
+//==============================================================================
 GCFEvent::TResult TBBControl::claimed_state(GCFEvent& event, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("claimed:" << eventName(event) << "@" << port.getName());
@@ -341,86 +361,499 @@ GCFEvent::TResult TBBControl::claimed_state(GCFEvent& event, GCFPortInterface& p
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_ENTRY: {
-		// update PVSS
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("claimed"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
-		break;
-	}
-
-	case F_INIT:
-	case F_EXIT:
-		break;
-
-	case F_DISCONNECTED: {
-		port.close();
-		ASSERTSTR (&port == itsTBBDriver, 
-								"F_DISCONNECTED event from port " << port.getName());
-		LOG_WARN("Connection with TBBDriver lost, going to reconnect state.");
-		TRAN(TBBControl::started_state);
-		break;
-	}
-
-	case F_CLOSED:
-		break;
-
-	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
-	case CONTROL_PREPARE: {
-		CONTROLPrepareEvent		msg(event);
-		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
-		setState(CTState::PREPARE);
-		// try to send a BEAMALLOC event to the TBBDriver.
-		if (!doPrepare()) { // could not sent it?
-			LOG_WARN_STR("TBBallocation error: nr subbands != nr beamlets" << 
-						 ", staying in CLAIMED mode");	// [TBB]
-			setState(CTState::CLAIMED);
-			LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << 
-												CT_RESULT_CONFLICTING_ARGS << ")");
-			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), 
-															CT_RESULT_CONFLICTING_ARGS);
-		}
-		// else a BS_BEAMALLOCACK event will happen.
-		break;
-	}
-
-	case CONTROL_QUIT:
-		TRAN(TBBControl::quiting_state);
-		break;
-
-	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
-//TODO TBB
-	case BS_BEAMALLOCACK: {
-		BSTBBallocackEvent		msg(event);
-		uint16 result  = handleTBBAllocAck(event);
-		if (result == CT_RESULT_NO_ERROR) {
-			setState(CTState::PREPARED);
-			LOG_INFO("TBB allocated, going to active state");
-			TRAN(TBBControl::active_state);
-		}
-		else {
-			LOG_WARN_STR("TBBallocation failed with error " << result << 
-						 ", staying in CLAIMED mode");
-			setState(CTState::CLAIMED);
-		}
-
-		LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << result << ") event");
-		sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), result);
-		break;
-	}
-
-	default:
-		status = _defaultEventHandler(event, port);
-		break;
+		case F_ENTRY: {
+			// update PVSS
+			// itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("claimed"));
+			itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+		} break;
+	
+		case F_DISCONNECTED: {
+			port.close();
+			ASSERTSTR (&port == itsTBBDriver, 
+									"F_DISCONNECTED event from port " << port.getName());
+			LOG_WARN("Connection with TBBDriver lost, going to reconnect state.");
+			TRAN(TBBControl::started_state);
+		} break;
+	
+		// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+		case CONTROL_PREPARE: {
+			CONTROLPrepareEvent		msg(event);
+			LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
+			setState(CTState::PREPARE);
+			
+			// start setting up the observation
+			TRAN(TBBControl::doTBBmode);		
+		} break;
+	
+		case CONTROL_QUIT: {
+			TRAN(TBBControl::quiting_state);
+		} break;
+		
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
 	}
 
 	return (status);
 }
 
+
+//==============================================================================
+// doTBBmode(event, port)
 //
+// send TBB_MODE cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBmode(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBmode:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBModeEvent cmd;
+			
+			cmd.rec_mode = itsObs->operatingMode;
+			// info to pvss
+		
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_MODE_ACK: {
+			TBBModeAckEvent ack(event);
+			bool status_ok = true;
+			
+			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
+				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
+					}
+				}
+			}
+			
+			if (status_ok) {
+				TRAN(TBBControl::doTBBalloc);				// go to next state.
+			} else {
+				LOG_ERROR_STR ("Failed to set the operating mode for all the rcus");
+				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("operatingMode error"));
+				setState(CTState::CLAIMED);
+				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
+			}
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+//==============================================================================
+// doTBBalloc(event, port)
+//
+// send TBB_ALLOC cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBalloc(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBalloc:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBAllocEvent cmd;
+
+			for (int i = 0; i < MAX_N_RCUS; i++) {
+				cmd.rcu_mask.set(i,itsObs->allRCUset.test(i));
+			}    
+			// info to pvss
+		
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_ALLOC_ACK: {
+			TBBModeAckEvent ack(event);
+			bool status_ok = true;
+			
+			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
+				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
+					}
+				}
+			}
+			
+			if (status_ok) {
+				TRAN(TBBControl::doTBBtrigsetup);				// go to next state.
+			} else {
+				LOG_ERROR_STR ("Failed to allocate the memory for the selected rcus");
+				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("alloc error"));
+				setState(CTState::CLAIMED);
+				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
+			}
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+//==============================================================================
+// doTBBsetup(event, port)
+//
+// send TBB_TRIG_SETUP cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBtrigsetup(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBtrigsetup:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBTrigSetupEvent cmd;
+			
+			vector<TBBObservation::sTBBsetting>::iterator it;
+			for (it = itsObs->TBBsetting.begin(); it != itsObs->TBBsetting.end(); it++ ) {
+				for (int i = 0; i < MAX_N_RCUS; i++) {
+					if ((*it).RCUset.test(i)) {
+						cmd.setup[i].level				= (*it).triggerLevel;
+						cmd.setup[i].start_mode		= (*it).startLevel;
+						cmd.setup[i].stop_mode		= (*it).stopLevel;
+						cmd.setup[i].filter_select= (*it).filter;
+						cmd.setup[i].window				= (*it).detectWindow;
+					}    
+				}   
+			}
+			// info to pvss
+		
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_TRIG_SETUP_ACK: {
+			TBBTrigSetupAckEvent ack(event);
+			bool status_ok = true;
+			
+			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
+				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
+					}
+				}
+			}
+			
+			if (status_ok) {
+				TRAN(TBBControl::doTBBtrigcoef);				// go to next state.
+			} else {
+				LOG_ERROR_STR ("Failed to setup the trigger system for the selected rcus");
+				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("setup error"));
+				setState(CTState::CLAIMED);
+				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
+			}
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+
+//==============================================================================
+// doTBBcoef(event, port)
+//
+// send TBB_TRIG_COEF cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBtrigcoef(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBtrigcoef:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBTrigCoefEvent cmd;
+			
+			vector<TBBObservation::sTBBsetting>::iterator it;
+			for (it = itsObs->TBBsetting.begin(); it != itsObs->TBBsetting.end(); it++ ) {
+				for (int i = 0; i < MAX_N_RCUS; i++) {
+					if ((*it).RCUset.test(i)) {
+						cmd.coefficients[i].c0	= (*it).c0;
+						cmd.coefficients[i].c1	= (*it).c1;
+						cmd.coefficients[i].c2	= (*it).c2;
+						cmd.coefficients[i].c3	= (*it).c3;
+					}    
+				}   
+			}
+			// info to pvss
+		
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_TRIG_COEF_ACK: {
+			TBBTrigCoefAckEvent ack(event);
+			bool status_ok = true;
+			
+			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
+				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
+					}
+				}
+			}
+			
+			if (status_ok) {
+				TRAN(TBBControl::doTBBrecord);				// go to next state.
+			} else {
+				LOG_ERROR_STR ("Failed to setup the trigger coefficients for the selected rcus");
+				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("setup error"));
+				setState(CTState::CLAIMED);
+				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
+			}
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+
+//==============================================================================
+// doTBBrecord(event, port)
+//
+// send TBB_RECORD cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBrecord(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBrecord:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBRecordEvent cmd;
+			
+			for (int i = 0; i < MAX_N_RCUS; i++) {
+				cmd.rcu_mask.set(i,itsObs->allRCUset.test(i));
+			} 
+			// info to pvss
+		
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_RECORD_ACK: {
+			TBBTrigCoefAckEvent ack(event);
+			bool status_ok = true;
+			
+			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
+				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
+					}
+				}
+			}
+			
+			if (status_ok) {
+				TRAN(TBBControl::doTBBrelease);				// go to next state.
+			} else {
+				LOG_ERROR_STR ("Failed to start recording for the selected rcus");
+				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("record error"));
+				setState(CTState::CLAIMED);
+				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
+			}
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+
+//==============================================================================
+// doTBBsubscribe(event, port)
+//
+// send TBB_SUBSCRIBE cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBsubscribe(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBsubscribe:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBSubscribeEvent cmd;
+			// info to pvss
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_SUBSCRIBE_ACK: {
+			TBBSubscribeAckEvent ack(event);
+			
+			TRAN(TBBControl::doTBBrelease);				// go to next state.
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+//==============================================================================
+// doTBBrelease, port)
+//
+// send TBB_TRIG_RELEASE cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBrelease(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBrelease:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBTrigReleaseEvent cmd;
+			
+			for (int i = 0; i < MAX_N_RCUS; i++) {
+				cmd.rcu_stop_mask.set(i,itsObs->allRCUset.test(i));
+				cmd.rcu_start_mask.set(i,itsObs->allRCUset.test(i));
+			} 
+				
+			// info to pvss
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_TRIG_RELEASE_ACK: {
+			TBBTrigReleaseAckEvent ack(event);
+			bool status_ok = true;
+			
+			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
+				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
+					}
+				}
+			}
+			
+			if (status_ok) {
+				TRAN(TBBControl::prepared_state);				// go to next state.
+			} else {
+				LOG_ERROR_STR ("Failed to release the trigger system for the selected rcus");
+				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("release error"));
+				setState(CTState::CLAIMED);
+				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
+			}
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+
+
+//==============================================================================
+// prepared_state(event, port)
+//
+// wait for RESUME event.
+//==============================================================================
+GCFEvent::TResult TBBControl::prepared_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("prepared:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			// update PVSS
+			// itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("claimed"));
+			itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+		} break;
+		
+		case F_DISCONNECTED: {
+			port.close();
+			ASSERTSTR (&port == itsTBBDriver, 
+									"F_DISCONNECTED event from port " << port.getName());
+			LOG_WARN("Connection with TBBDriver lost, going to reconnect state.");
+			TRAN(TBBControl::started_state);
+		} break;
+	
+		// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+		case CONTROL_RESUME: {		// nothing to do, just send answer
+			CONTROLResumeEvent		msg(event);
+			LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
+			setState(CTState::RESUME);
+			sendControlResult(port, CONTROL_RESUMED, msg.cntlrName, CT_RESULT_NO_ERROR);
+			setState(CTState::RESUMED);
+			TRAN(TBBControl::active_state);
+		} break;
+			
+		case CONTROL_QUIT: {
+			TRAN(TBBControl::quiting_state);
+		} break;
+		
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+
+
+
+
+//==============================================================================
 // active_state(event, port)
 //
 // Normal operation state. 
-//
+//==============================================================================
 GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
@@ -428,106 +861,321 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_ENTRY: {
-		// update PVSS
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("active"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
-		break;
-	}
-
-	case F_INIT:
-	case F_EXIT:
-		break;
-
-	case F_DISCONNECTED: {
-		port.close();
-		ASSERTSTR (&port == itsTBBDriver, 
-								"F_DISCONNECTED event from port " << port.getName());
-		LOG_WARN("Connection with TBBDriver lost, going to reconnect");
-		TRAN(TBBControl::started_state);
-		break;
-	}
+		case F_ENTRY: {
+			// update PVSS
+			// itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("active"));
+			itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+		} break;
 	
-	case F_CLOSED:
-		break;
+		case F_INIT:
+		case F_EXIT: {
+		} break;
+	
+		case F_DISCONNECTED: {
+			port.close();
+			ASSERTSTR (&port == itsTBBDriver, 
+									"F_DISCONNECTED event from port " << port.getName());
+			LOG_WARN("Connection with TBBDriver lost, going to reconnect");
+			TRAN(TBBControl::started_state);
+		} break;
+		
+		case F_TIMER: {
+			// readCmd received from VHECRTask
+			TRAN(TBBControl::doTBBstop);
+		} break;
+				
+		case F_CLOSED: {
+		} break;
+	
+		// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+	
+		case CONTROL_SCHEDULE: {
+			CONTROLScheduledEvent		msg(event);
+			LOG_DEBUG_STR("Received SCHEDULE(" << msg.cntlrName << ")");
+			// TODO: do something usefull with this information!
+		} break;
+	
+		case CONTROL_RESUME: {		// nothing to do, just send answer
+			CONTROLResumeEvent		msg(event);
+			LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
+			setState(CTState::RESUME);
+			sendControlResult(port, CONTROL_RESUMED, msg.cntlrName, CT_RESULT_NO_ERROR);
+			setState(CTState::RESUMED);
+		} break;
+	
+		case CONTROL_SUSPEND: {		// nothing to do, just send answer
+			CONTROLSuspendEvent		msg(event);
+			LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
+			setState(CTState::SUSPEND);
+			sendControlResult(port, CONTROL_SUSPENDED, msg.cntlrName, CT_RESULT_NO_ERROR);
+			setState(CTState::SUSPENDED);
+		} break;
+	
+		case CONTROL_RELEASE: {
+			CONTROLReleaseEvent		msg(event);
+			LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
+			setState(CTState::RELEASE);
+			/*
+			if (!doRelease()) {
+				LOG_WARN_STR("Cannot release a beam that was not allocated, continuing");
+				setState(CTState::RELEASED);
+				sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
+																CT_RESULT_NO_ERROR);
+				TRAN(TBBControl::claimed_state);
+			}
+			*/
+			
+		} break;
+	
+		case CONTROL_QUIT: {
+			TRAN(TBBControl::quiting_state);
+		} break;
+	
+		// -------------------- EVENTS RECEIVED FROM TBBDRIVER --------------------
+	// TODO TBB
+		case TBB_TRIGGER:{
+			TBBTriggerEvent msg(event);
+			
+			TBBTrigger trigger(	static_cast<uint32>(msg.rcu),
+													msg.sequence_nr,
+													msg.time,
+													msg.sample_nr,
+													msg.trigger_sum,
+													msg.trigger_samples,
+													msg.peak_value,
+													0);
+			itsVHECRTask->addTrigger(trigger);
+			
+			LOG_TRACE_FLOW ("Sending trigger to PVSS");
+			
+			itsPropertySet->setValue(PN_TBC_TRIGGER_RCU_NR,	GCFPVInteger(msg.rcu),0.0,false);				
+			itsPropertySet->setValue(PN_TBC_TRIGGER_SEQUENCE_NR,	GCFPVInteger(msg.sequence_nr),0.0,false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_TIME,	GCFPVInteger(msg.time),0.0,false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_SAMPLE_NR,	GCFPVInteger(msg.sample_nr),0.0,false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_SUM,	GCFPVInteger(msg.trigger_sum),0.0,false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_NR_SAMPLES,	GCFPVInteger(msg.trigger_samples),0.0,false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_PEAK_VALUE,	GCFPVInteger(msg.peak_value),0.0,false);
+			itsPropertySet->flush();
+		} break;
+		
+		case TBB_STOP_ACK:{
+			TBBStopAckEvent ack;
+			bool status_ok = true;
+			
+			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
+				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
+					}
+				}
+			}
+			
+			if (!status_ok) {
+				LOG_ERROR_STR ("Failed to stop recording for selected rcus");
+				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("stop error"));
+			}
+			
+		} break;
+	
+		case TBB_READ_ACK: {
+			TBBReadAckEvent ack;
 
-	// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
-
-	case CONTROL_SCHEDULE: {
-		CONTROLScheduledEvent		msg(event);
-		LOG_DEBUG_STR("Received SCHEDULE(" << msg.cntlrName << ")");
-		// TODO: do something usefull with this information!
-		break;
-	}
-
-	case CONTROL_RESUME: {		// nothing to do, just send answer
-		CONTROLResumeEvent		msg(event);
-		LOG_DEBUG_STR("Received RESUME(" << msg.cntlrName << ")");
-		setState(CTState::RESUME);
-		sendControlResult(port, CONTROL_RESUMED, msg.cntlrName, CT_RESULT_NO_ERROR);
-		setState(CTState::RESUMED);
-		break;
-	}
-
-	case CONTROL_SUSPEND: {		// nothing to do, just send answer
-		CONTROLSuspendEvent		msg(event);
-		LOG_DEBUG_STR("Received SUSPEND(" << msg.cntlrName << ")");
-		setState(CTState::SUSPEND);
-		sendControlResult(port, CONTROL_SUSPENDED, msg.cntlrName, CT_RESULT_NO_ERROR);
-		setState(CTState::SUSPENDED);
-		break;
-	}
-
-	case CONTROL_RELEASE: {
-		CONTROLReleaseEvent		msg(event);
-		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
-		setState(CTState::RELEASE);
-		if (!doRelease()) {
-			LOG_WARN_STR("Cannot release a beam that was not allocated, continuing");
-			setState(CTState::RELEASED);
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_NO_ERROR);
-			TRAN(TBBControl::claimed_state);
-		}
-		// else a BS_BEAMFREEACK event will be sent
-		break;
-	}
-
-	case CONTROL_QUIT:
-		TRAN(TBBControl::quiting_state);
-		break;
-
-	// -------------------- EVENTS RECEIVED FROM TBBDRIVER --------------------
-// TODO TBB
-	case BS_BEAMFREEACK: {
-		if (!handleTBBFreeAck(event)) {
-			LOG_WARN("Error in freeing beam, staying in active_state");
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_BEAMFREE_FAILED);
-		}
-		else {
-			LOG_INFO("Released beam going back to 'claimed' mode");
-			setState(CTState::RELEASED);
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_NO_ERROR);
-			TRAN(TBBControl::claimed_state);
-		}
-	}
-	break;
-
-	default:
-		status = _defaultEventHandler(event, port);
-		break;
+		} break; 
+	
+		default: {
+			status = _defaultEventHandler(event, port);
+		}	break;
 	}
 
 	return (status);
 }
 
+//==============================================================================
+// doTBBstop(event, port)
 //
+// send TBB_STOP cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBstop(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBstop:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBStopEvent cmd;
+			
+			vector<TBBReadCmd>::iterator it;
+  		for ( it=itsCommandVector.begin() ; it < itsCommandVector.end(); it++ ) {
+  			cmd.rcu_mask.set((*it).itsRcuNr);
+  		}
+						
+			// info to pvss
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_STOP_ACK: {
+			TBBStopAckEvent ack(event);
+			
+			TRAN(TBBControl::doTBBread);				// go to next state.
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+//==============================================================================
+// doTBBread(event, port)
+//
+// send TBB_READ cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBread:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBReadCmd read;
+			TBBReadEvent cmd;
+			if (!itsCommandVector.empty()) {
+				read = itsCommandVector.back();
+				cmd.rcu 				= read.itsRcuNr;              
+			  cmd.secondstime	=	read.itsTime;      
+			  cmd.sampletime	=	read.itsSampleTime;
+			  cmd.prepages		= read.itsPrePages;  
+			  cmd. postpages	=	read.itsPostPages; 
+				itsTBBDriver->send(cmd);    
+			}
+			// info to pvss
+			
+		} break;
+
+		case TBB_READ_ACK: {
+			TBBReadAckEvent ack(event);
+			TBBReadCmd read;
+			TBBReadEvent cmd;
+			
+			itsCommandVector.pop_back();
+			
+			if (!itsCommandVector.empty()) {
+				read = itsCommandVector.back();
+				cmd.rcu 				= static_cast<int>(read.itsRcuNr);              
+			  cmd.secondstime	=	read.itsTime;      
+			  cmd.sampletime	=	read.itsSampleTime;
+			  cmd.prepages		= read.itsPrePages;  
+			  cmd. postpages	=	read.itsPostPages; 
+				itsTBBDriver->send(cmd);    
+			} else {
+				TRAN(TBBControl::active_state);		// go back to active state.
+			}
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+
+//==============================================================================
+// doTBBunsubscribe(event, port)
+//
+// send TBB_UNSUBSCRIBE cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBunsubscribe(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBunsubscribe:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBUnsubscribeEvent cmd;
+			// info to pvss
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_UNSUBSCRIBE_ACK: {
+			TBBUnsubscribeAckEvent ack(event);
+			
+			TRAN(TBBControl::doTBBfree);				// go to next state.
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+//==============================================================================
+// doTBBfree (event, port)
+//
+// send TBB_FREE cmd to the TBBDriver
+//==============================================================================
+GCFEvent::TResult TBBControl::doTBBfree(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("doTBBfree:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			TBBFreeEvent cmd;
+			
+			for (int i = 0; i < MAX_N_RCUS; i++) {
+				cmd.rcu_mask.set(i,itsObs->allRCUset.test(i));
+			} 
+		
+			// info to pvss
+			itsTBBDriver->send(cmd);
+		} break;
+
+		case TBB_FREE_ACK: {
+			TBBFreeAckEvent ack(event);
+			
+			TRAN(TBBControl::quiting_state);				// go to next state.
+		} break;
+	
+		case F_DISCONNECTED: {
+			_disconnectedHandler(port);
+		} break;
+					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+
+//==============================================================================
 // quiting_state(event, port)
 //
 // Quiting: send QUITED, wait for answer max 5 seconds, stop
-//
+//==============================================================================
 GCFEvent::TResult TBBControl::quiting_state(GCFEvent& event, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("quiting:" << eventName(event) << "@" << port.getName());
@@ -535,204 +1183,56 @@ GCFEvent::TResult TBBControl::quiting_state(GCFEvent& event, GCFPortInterface& p
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
 	switch (event.signal) {
-	case F_ENTRY: {
-		// update PVSS
-		setState(CTState::QUIT);
-		// tell Parent task we like to go down.
-		itsParentControl->nowInState(getName(), CTState::QUIT);
-
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("quiting"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
-		// disconnect from TBBDriver
-		itsTBBDriver->close();
-		break;
-	}
-
-	case F_INIT:
-	case F_EXIT:
-		break;
-
-	case F_DISCONNECTED:		// propably from beamserver
-		port.close();
-		// fall through!!! 
-	case F_CLOSED: {
-		ASSERTSTR (&port == itsTBBDriver, 
-								"F_DISCONNECTED event from port " << port.getName());
-		LOG_INFO("Connection with TBBDriver down, sending QUITED to parent");
-		CONTROLQuitedEvent		request;
-		request.cntlrName = getName();
-		request.result	  = CT_RESULT_NO_ERROR;
-		itsParentPort->send(request);
-		itsTimerPort->setTimer(1.0);		// wait 1 second to let message go away
-		break;
-	}
+		case F_ENTRY: {
+			// update PVSS
+			setState(CTState::QUIT);
+			// tell Parent task we like to go down.
+			itsParentControl->nowInState(getName(), CTState::QUIT);
 	
-	case F_TIMER:
-		GCFTask::stop();
-		break;
-
-	default:
-		status = _defaultEventHandler(event, port);
-		break;
+	//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("quiting"));
+			itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+			// disconnect from TBBDriver
+			itsTBBDriver->close();
+		} break;
+	
+		case F_INIT:
+		case F_EXIT: {
+		} break;
+	
+		case F_DISCONNECTED: 		// propably from beamserver
+			port.close();
+			// fall through!!! 
+		case F_CLOSED: {
+			ASSERTSTR (&port == itsTBBDriver, 
+									"F_DISCONNECTED event from port " << port.getName());
+			LOG_INFO("Connection with TBBDriver down, sending QUITED to parent");
+			CONTROLQuitedEvent		request;
+			request.cntlrName = getName();
+			request.result	  = CT_RESULT_NO_ERROR;
+			itsParentPort->send(request);
+			itsTimerPort->setTimer(1.0);		// wait 1 second to let message go away
+			
+		} break;
+		
+		case F_TIMER: {
+			GCFTask::stop();
+		} break;
+	
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
 	}
 
 	return (status);
 }
-
-
 //
-// doPrepare()
+// send data(see data info) to CEP from selected rcus
 //
-bool TBBControl::doPrepare()
+void TBBControl::readTBBdata(vector<TBBReadCmd> readCmd)
 {
-// TODO TBB
-	Observation		theObs(globalParameterSet());	// does all nasty conversions
-
-	if (theObs.subbands.size() != theObs.beamlets.size()) {
-		LOG_FATAL_STR("size of subbandList (" << theObs.subbands.size() << ") != " <<
-						"size of beamletList (" << theObs.beamlets.size() << ")");
-		return (false);
-	}
-
-	LOG_TRACE_VAR_STR("nr Subbands:" << theObs.subbands.size());
-	LOG_TRACE_VAR_STR("nr TBBlets:" << theObs.beamlets.size());
-
-	// contruct allocation event.
-	BSTBBallocEvent beamAllocEvent;
-	beamAllocEvent.name 		= getName();
-	beamAllocEvent.subarrayname = formatString("observation[%d]{%d}", getInstanceNr(getName()),
-																	getObservationNr(getName()));
-	LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
-
-	vector<int16>::iterator beamletIt = theObs.beamlets.begin();
-	vector<int16>::iterator subbandIt = theObs.subbands.begin();
-	while (beamletIt != theObs.beamlets.end() && subbandIt != theObs.subbands.end()) {
-		LOG_TRACE_VAR_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
-		beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
-	}
-
-	LOG_DEBUG_STR("Sending Alloc event to TBBDriver");
-	itsTBBDriver->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
-
-	// store values in PVSS for operator
-	itsPropertySet->setValue(PN_BC_SUBBANDLIST,	
-				GCFPVString(APLUtilities::compactedArrayString(globalParameterSet()->
-				getString("Observation.subbandList"))));
-	itsPropertySet->setValue(PN_BC_BEAMLETLIST,	
-				GCFPVString(APLUtilities::compactedArrayString(globalParameterSet()->
-				getString("Observation.beamletList"))));
-	itsPropertySet->setValue(PN_BC_ANGLE1,		
-				GCFPVString(globalParameterSet()->getString("Observation.TBB.angle1")));
-	itsPropertySet->setValue(PN_BC_ANGLE2,		
-				GCFPVString(globalParameterSet()->getString("Observation.TBB.angle2")));
-	itsPropertySet->setValue(PN_BC_ANGLETIMES,	
-				GCFPVString(globalParameterSet()->getString("Observation.TBB.angleTimes")));
-	itsPropertySet->setValue(PN_BC_SUBARRAY, GCFPVString(beamAllocEvent.subarrayname));
-
-	return (true);
-}
-
-//
-// handleTBBAllocAck(event);
-//
-uint16	TBBControl::handleTBBAllocAck(GCFEvent&	event)
-{
-// TODO TBB
-	// check the beam ID and status of the ACK message
-	BSTBBallocackEvent ackEvent(event);
-	if (ackEvent.status != 0) {
-		LOG_ERROR_STR("TBBlet allocation failed with errorcode: " << ackEvent.status);
-		return (CT_RESULT_BEAMALLOC_FAILED);
-	}
-	itsTBBID = ackEvent.handle;
-	itsPropertySet->setValue(PN_BC_BEAMID, GCFPVInteger(itsTBBID));
-
-	// read new angles from parameterfile.
-	vector<string>	sourceTimes;
-	vector<double>	angles1;
-	vector<double>	angles2;
-	string			beam(globalParameterSet()->locateModule("TBB")+"TBB.");
-	sourceTimes     = globalParameterSet()->getStringVector(beam+"angleTimes");
-	angles1    = globalParameterSet()->getDoubleVector(beam+"angle1");
-	angles2 = globalParameterSet()->getDoubleVector(beam+"angle2");
-
-	// point the new beam
-	BSTBBpointtoEvent beamPointToEvent;
-	beamPointToEvent.handle = itsTBBID;
-	beamPointToEvent.pointing.setType(static_cast<Pointing::Type>
-				(convertDirection(globalParameterSet()->getString(beam+"directionTypes"))));
-
-	// only 1 angle?
-	if (sourceTimes.size() == 0 || sourceTimes.size() != angles1.size() || 
-								  sourceTimes.size() != angles2.size()) {
-		// key sourceTimes not found: use one fixed angle
-		double	directionAngle1(0.0);
-		double	directionAngle2(0.0);
-		directionAngle1=globalParameterSet()->getDouble(beam+"angle1");
-		directionAngle2=globalParameterSet()->getDouble(beam+"angle2");
-
-		beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
-		beamPointToEvent.pointing.setDirection(directionAngle1,directionAngle2);
-		itsTBBDriver->send(beamPointToEvent);
-		// NB: will NOT result in an answer event of the beamserver.
-		return (CT_RESULT_NO_ERROR);
-	}
-
- 	// its a vecor with angles.
-	vector<double>::iterator angle1Iter    = angles1.begin();
-	vector<double>::iterator angle2Iter = angles2.begin();
-	for (vector<string>::iterator timesIt = sourceTimes.begin(); 
-								  timesIt != sourceTimes.end(); ++timesIt) { 
-		beamPointToEvent.pointing.setTime(RTC::Timestamp(
-										APLUtilities::decodeTimeString(*timesIt),0));
-		beamPointToEvent.pointing.setDirection(*angle1Iter++,*angle2Iter++);
-		itsTBBDriver->send(beamPointToEvent);
-		// NB: will NOT result in an answer event of the beamserver.
-	}
-	return (CT_RESULT_NO_ERROR);
-}
-
-//
-// doRelease(event)
-//
-bool TBBControl::doRelease()
-{
-// TODO TBB
-	if (!itsTBBID) {
-		return (false);
-	}
-
-	BSTBBfreeEvent		beamFreeEvent;
-	beamFreeEvent.handle = itsTBBID;
-	itsTBBDriver->send(beamFreeEvent);	// will result in BS_BEAMFREEACK event
-	return (true);
-}
-
-
-//
-// handleTBBFreeAck(event)
-//
-bool TBBControl::handleTBBFreeAck(GCFEvent&		event)
-{
-// TODO TBB
-	BSTBBfreeackEvent	ack(event);
-	if (ack.status != 0 || ack.handle != itsTBBID) {
-		LOG_ERROR_STR("TBBlet de-allocation failed with errorcode: " << ack.status);
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("De-allocation of the beamlet failed."));
-		return (false);	
-	}
-
-	// clear beam in PVSS
-	itsPropertySet->setValue(PN_BC_SUBBANDLIST,	GCFPVString(""));
-	itsPropertySet->setValue(PN_BC_BEAMLETLIST,	GCFPVString(""));
-	itsPropertySet->setValue(PN_BC_ANGLE1,		GCFPVString(""));
-	itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
-	itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
-	itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
-
-	itsTBBID = 0;
-
-	return (true);
+	itsCommandVector.clear();
+	itsCommandVector = readCmd;
+	itsTimerPort->setTimer(0.0);
 }
 
 // _defaultEventHandler(event, port)
@@ -801,8 +1301,47 @@ void TBBControl::_connectedHandler(GCFPortInterface& /*port*/)
 void TBBControl::_disconnectedHandler(GCFPortInterface& port)
 {
 	port.close();
+	if (&port == itsTBBDriver) {
+		LOG_DEBUG_STR("Connection with TBBDriver lost, going to started state");
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("connection lost"));
+		TRAN (TBBControl::started_state);
+	}
 }
 
 
-}; // StationCU
-}; // LOFAR
+/*
+case TBB_ALLOC_ACK: {
+
+			int16 result = handleTBBAllocAck(event);
+
+			if (result == CT_RESULT_NO_ERROR) {
+				
+				// Alloc OK, next try to send a TRIGSETUP event to the TBBDriver.
+				if (!doPrepare(TBB_TRIGSETUP_STAGE)) { // could not sent it?
+					LOG_WARN_STR("TBB trigsetup error: " << 
+								 ", staying in CLAIMED mode");	// [TBB]
+					setState(CTState::CLAIMED);
+					LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << 
+														CT_RESULT_CONFLICTING_ARGS << ")");
+					sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), 
+																	CT_RESULT_CONFLICTING_ARGS);
+				} 
+			} else {
+				LOG_WARN_STR("TBB allocation failed with error " << result << 
+							 ", staying in CLAIMED mode");
+				setState(CTState::CLAIMED);
+			}
+		} break;
+
+ // try to send a RSP TBBMODE event to the RSPDriver.
+			if (!doPrepare(RSP_SET_TBBMODE_STAGE)) { // could not sent it?
+				LOG_WARN_STR("RSP tbbmode error: " << 
+							 ", staying in CLAIMED mode");	// [TBB]
+				setState(CTState::CLAIMED);
+				LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << 
+													CT_RESULT_CONFLICTING_ARGS << ")");
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), 
+																CT_RESULT_CONFLICTING_ARGS);
+			}
+			
+*/
