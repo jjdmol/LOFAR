@@ -35,15 +35,15 @@ def doObservation(obsID, parset):
         print 'Invalid userId: ' + logname
 	sys.exit(1)
 
-    #BGLPartition = 'R000_128_0T'
-    BGLPartition = 'R000_128_3T'
+    BGLPartition = 'R000_128_0T'
+    #BGLPartition = 'R000_128_3T'
     #BGLPartition = 'R000_B06'
     #BGLPartition = 'R000_8'
 
     sections = [\
-        #DelayCompensationSection(parset, list003),
+        DelayCompensationSection(parset, list001),
         BGLProcSection(parset, userId.getHost(), BGLPartition),
-        #StorageSection(parset, listfen)
+        StorageSection(parset, listfen)
         #Flagger(parset, listfen)
         ]
     
