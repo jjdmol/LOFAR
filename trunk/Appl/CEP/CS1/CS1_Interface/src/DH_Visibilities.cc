@@ -20,6 +20,8 @@
 
 #include <lofar_config.h>
 
+#if defined HAVE_APS
+
 #include <CS1_Interface/DH_Visibilities.h>
 #include <Common/Timer.h>
 
@@ -30,7 +32,8 @@ DH_Visibilities::DH_Visibilities(const string &name, const CS1_Parset *pSet)
 : DataHolder(name, "DH_Visibilities"),
   itsCS1PS  (pSet),
   itsVisibilities(0),
-  itsNrValidSamples(0)
+  itsNrValidSamples(0),
+  itsCentroids(0)
 {
   itsNrChannels       = itsCS1PS->nrChannelsPerSubband();
   unsigned nrStations = itsCS1PS->nrStations();
@@ -44,7 +47,8 @@ DH_Visibilities::DH_Visibilities(const DH_Visibilities &that)
   itsNrBaselines(that.itsNrBaselines),
   itsNrChannels(that.itsNrChannels),
   itsVisibilities(0),
-  itsNrValidSamples(0)
+  itsNrValidSamples(0),
+  itsCentroids(0)
 {
 }
 
@@ -60,7 +64,8 @@ DataHolder* DH_Visibilities::clone() const
 void DH_Visibilities::init()
 {
   addField("Visibilities",   BlobField<fcomplex>(1, getNrVisibilities()), 32);
-  addField("NrValidSamples", BlobField<NrValidSamplesType>(1, itsNrBaselines * itsNrChannels));
+  addField("NrValidSamples", BlobField<NrValidSamplesType>(1, itsNrBaselines * itsNrChannels), 32);
+  //addField("Centroids",      BlobField<CentroidsType>(1, itsNrBaselines), 32);
 
   createDataBlock();  // calls fillDataPointers
 }
@@ -111,8 +116,8 @@ asm(
 
 DH_Visibilities &DH_Visibilities::operator += (const DH_Visibilities &dh)
 {
-  NSTimer timer("DH_Vis add", true);
-  timer.start();
+  //NSTimer timer("DH_Vis add", true);
+  //timer.start();
 
 #if 1
   for (unsigned i = 0; i < getNrVisibilities(); i ++)
@@ -120,11 +125,15 @@ DH_Visibilities &DH_Visibilities::operator += (const DH_Visibilities &dh)
 
   for (unsigned i = 0; i < itsNrBaselines * itsNrChannels; i ++)
     itsNrValidSamples[i] += dh.itsNrValidSamples[i];
+
+  for (unsigned i = 0; i < itsNrBaselines; i ++) {
+    // add centroids here
+  }
 #else
   do_add(itsVisibilities, dh.itsVisibilities, getNrVisibilities());
 #endif
 
-  timer.stop();
+  //timer.stop();
   return *this;
 }
 
@@ -132,7 +141,10 @@ void DH_Visibilities::fillDataPointers()
 {
   itsVisibilities   = (VisibilityType *)     getData<fcomplex>("Visibilities");
   itsNrValidSamples = (NrValidSamplesType *) getData<NrValidSamplesType>("NrValidSamples");
+  //itsCentroids      = (CentroidsType *)      getData<CentroidsType>("Centroids");
 }
 
 } // namespace CS1
 } // namespace LOFAR
+
+#endif // defined HAVE_APS

@@ -23,7 +23,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined HAVE_ZOID
+#if defined HAVE_ZOID && defined HAVE_BGL
 
 #include <Transport/DataHolder.h>
 #include <CS1_BGLProc/TH_ZoidClient.h>
@@ -32,16 +32,30 @@ extern "C" {
 #include <lofar.h>
 }
 
-namespace LOFAR
-{
+namespace LOFAR {
+namespace CS1 {
 
-bool TH_ZoidClient::recvBlocking(void *buf, int nbytes, int, int, DataHolder *)
+#if 0
+static unsigned checksum(const void *buf, size_t size)
 {
+  unsigned sum = 0;
+
+  for (int i = 0; i < (int) (size / sizeof(unsigned)); i ++)
+    sum ^= ((unsigned *) buf)[i];
+
+  return sum;
+}
+#endif
+
+bool TH_ZoidClient::recvBlocking(void *buf, int nbytes, int onecopy, int, DataHolder *)
+{
+  //std::clog << "TH_ZoidClient::recvBlocking(" << buf << ", " << nbytes << "...)" << std::endl;
+
   static size_t maxBytes = ~ (size_t) 0;
 
   for (size_t bytesRead = 0; bytesRead < (size_t) nbytes;) {
     size_t count = std::min(nbytes - bytesRead, maxBytes);
-    lofar_ion_to_cn((char *) buf + bytesRead, &count);
+    (onecopy ? lofar_ion_to_cn_onecopy : lofar_ion_to_cn_zerocopy)(static_cast<char *>(buf) + bytesRead, &count);
 
     switch (__zoid_error()) {
       case 0	  : bytesRead += count;
@@ -58,13 +72,16 @@ bool TH_ZoidClient::recvBlocking(void *buf, int nbytes, int, int, DataHolder *)
 }
 
 
-bool TH_ZoidClient::sendBlocking(void *buf, int nbytes, int, DataHolder *)
+bool TH_ZoidClient::sendBlocking(void *buf, int nbytes, int onecopy, DataHolder *)
 {
+  //std::clog << "TH_ZoidClient::sendBlocking(" << buf << ", " << nbytes << "...)" << std::endl;
+
   static size_t maxBytes = ~ (size_t) 0;
 
   for (size_t bytesWritten = 0; bytesWritten < (size_t) nbytes;) {
     size_t count = std::min(nbytes - bytesWritten, maxBytes);
-    lofar_cn_to_ion((char *) buf + bytesWritten, count);
+
+    count = (onecopy ? lofar_cn_to_ion_onecopy : lofar_cn_to_ion_zerocopy)(static_cast<char *>(buf) + bytesWritten, count);
 
     switch (__zoid_error()) {
       case 0	  : bytesWritten += count;
@@ -80,6 +97,7 @@ bool TH_ZoidClient::sendBlocking(void *buf, int nbytes, int, DataHolder *)
   return true;
 }
 
-}
+} // namespace CS1
+} // namespace LOFAR
 
 #endif

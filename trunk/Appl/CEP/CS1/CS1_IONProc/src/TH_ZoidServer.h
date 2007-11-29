@@ -44,10 +44,12 @@ class TH_ZoidServer : public TransportHolder
 
     virtual bool	     init();
 
-    virtual bool	     recvBlocking(void *, int, int, int, DataHolder *);
-    virtual bool	     sendBlocking(void *, int, int, DataHolder *);
+    // if doCopy == 0, Zoid's zero-copy protocol is used; memory must be
+    // obtained through __zoid_alloc and must be a multiple of 32
+    virtual bool	     recvBlocking(void *ptr, int size, int doCopy, int, DataHolder *);
+    virtual bool	     sendBlocking(void *ptr, int size, int doCopy, DataHolder *);
 
-    static  void	     sendCompleted(void *buf, void *arg);
+    static  void	     sendCompleted(void *ptr, void *arg);
 
     // functions below are not supported
     virtual int32	     recvNonBlocking(void *, int32, int, int32, DataHolder *);

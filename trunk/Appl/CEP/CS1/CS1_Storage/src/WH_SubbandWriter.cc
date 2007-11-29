@@ -32,6 +32,7 @@
 // Application specific includes
 #include <CS1_Storage/WH_SubbandWriter.h>
 #include <CS1_Interface/DH_Visibilities.h>
+#include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Storage/MSWriter.h>
 #include <tinyCEP/Sel_RoundRobin.h>
 #include <Transport/TH_MPI.h>
@@ -143,15 +144,15 @@ namespace LOFAR
       vector<double> antPos = itsCS1PS->positions();
       ASSERTSTR(antPos.size() == 3 * itsNStations,
                 antPos.size() << " == " << 3 * itsNStations);
-      itsNrSubbandsPerCell    = itsCS1PS->nrSubbandsPerCell();
-      itsNrSubbandsPerStorage = itsNrSubbandsPerCell * itsCS1PS->getUint32("OLAP.psetsPerStorage");
-      itsNrInputChannels      = itsCS1PS->useGather() ? itsCS1PS->getUint32("OLAP.BGLProc.psetsPerCell") : itsCS1PS->nrBGLNodesPerCell();
-      itsCurrentInputs.resize(itsNrSubbandsPerStorage / itsNrSubbandsPerCell, 0);
+      itsNrSubbandsPerPset	= itsCS1PS->nrSubbandsPerPset();
+      itsNrSubbandsPerStorage	= itsNrSubbandsPerPset * itsCS1PS->nrPsetsPerStorage();
+      itsNrInputChannelsPerPset = itsCS1PS->useGather() ? 1 : itsCS1PS->nrCoresPerPset();
+      itsCurrentInputs.resize(itsNrSubbandsPerStorage / itsNrSubbandsPerPset, 0);
       LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
       vector<string> storageStationNames = itsCS1PS->getStringVector("OLAP.storageStationNames");
 
       itsNrSubbandsPerMS = itsCS1PS->getUint32("OLAP.StorageProc.subbandsPerMS");
-      ASSERT(itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage") % itsNrSubbandsPerMS == 0);
+      ASSERT(itsCS1PS->nrSubbandsPerPset() * itsCS1PS->nrPsetsPerStorage() % itsNrSubbandsPerMS == 0);
       unsigned mssesPerStorage = itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage") / itsNrSubbandsPerMS;
       itsWriters.resize(mssesPerStorage);
       itsFieldIDs.resize(mssesPerStorage);
@@ -237,11 +238,16 @@ namespace LOFAR
       }
 #endif
 
-      // Write the visibilities for all subbands per cell.
+      // Write the visibilities for all subbands per pset.
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++ sb) {
         // find out from which input channel we should read
-	unsigned cell	      = sb / itsNrSubbandsPerCell;
-	unsigned inputChannel = itsCurrentInputs[cell] + cell * itsNrInputChannels;
+	unsigned pset = sb / itsNrSubbandsPerPset;
+	unsigned core = itsCurrentInputs[pset];
+
+	if (!itsCS1PS->useGather())
+	  core = BGL_Mapping::mapCoreOnPset(core, pset);
+
+	unsigned inputChannel = core + pset * itsNrInputChannelsPerPset;
 
 	DH_Visibilities			    *inputDH	= static_cast<DH_Visibilities *>(getDataManager().getInHolder(inputChannel));
         DH_Visibilities::NrValidSamplesType *valSamples = &inputDH->getNrValidSamples(0, 0);
@@ -301,8 +307,8 @@ namespace LOFAR
 	getDataManager().readyWithInHolder(inputChannel);
 
 	// select next channel
-	if (++ itsCurrentInputs[cell] == itsNrInputChannels)
-	  itsCurrentInputs[cell] = 0;
+	if (++ itsCurrentInputs[pset] == itsNrInputChannelsPerPset)
+	  itsCurrentInputs[pset] = 0;
       }
 
       // Update the time counter.

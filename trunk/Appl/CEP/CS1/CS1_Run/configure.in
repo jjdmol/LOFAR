@@ -59,10 +59,7 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
-include/Makefile
-include/CS1_Run/Makefile
 src/Makefile
-test/Makefile
 Makefile
 CS1_Run.spec
 )

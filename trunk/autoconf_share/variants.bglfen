@@ -2,7 +2,7 @@ xlc.compiler.conf: CC=blrts_xlc CXX=blrts_xlC
 blrts.compiler.conf: CC=blrts_xlc CXX=blrts_xlC
 gnubgl.compiler.conf: CC=/bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc CXX=/bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-g++
 
-bgl.variant.conf:         $(lofar_root) $(debugopt) $(nothreads) $(noshmem) $(bgl_cpp) $(bgl_ldd) --without-log4cplus --with-bglmpich $(bgl_searchpath)
+bgl.variant.conf:         $(lofar_root) $(debugopt) $(nothreads) $(noshmem) $(bgl_cpp) $(bgl_ldd) --without-tinycep --without-log4cplus --with-bglmpich $(bgl_searchpath)
 fpic.variant.conf:	  $(debugopt) $(threads) --without-log4cplus --with-optimize='-O2 -g -fPIC' $(ion_searchpath)
 
 lofar_root.var:

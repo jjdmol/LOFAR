@@ -23,6 +23,8 @@
 #ifndef LOFAR_CS1_INTERFACE_DH_VISIBILITIES_H
 #define LOFAR_CS1_INTERFACE_DH_VISIBILITIES_H
 
+#if defined HAVE_APS
+
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <CS1_Interface/CS1_Config.h>
@@ -40,6 +42,7 @@ class DH_Visibilities: public DataHolder
   public:
     typedef fcomplex	   VisibilityType;
     typedef unsigned short NrValidSamplesType;
+    typedef float	   CentroidType;
 
     explicit DH_Visibilities(const string& name,
 			     const CS1_Parset *pSet);
@@ -59,7 +62,6 @@ class DH_Visibilities: public DataHolder
       return station2 * (station2 + 1) / 2 + station1;
     }
 
-#if defined HAVE_BOOST
     typedef boost::multi_array_ref<VisibilityType, 4>	  VisibilitiesType;
     typedef boost::multi_array_ref<NrValidSamplesType, 2> AllNrValidSamplesType;
 
@@ -74,7 +76,6 @@ class DH_Visibilities: public DataHolder
       static boost::detail::multi_array::extent_gen<2u> extents = boost::extents[itsNrBaselines][itsNrChannels];
       return AllNrValidSamplesType(itsNrValidSamples, extents);
     }
-#endif
 
     VisibilityType &getVisibility(unsigned baseline, unsigned channel, unsigned pol1, unsigned pol2)
     {
@@ -91,17 +92,23 @@ class DH_Visibilities: public DataHolder
       return itsNrBaselines * itsNrChannels * NR_POLARIZATIONS * NR_POLARIZATIONS;
     }
 
+    CentroidType *getCentroids()
+    {
+      return itsCentroids;
+    }
+
     DH_Visibilities &operator += (const DH_Visibilities &);
 
   private:
     /// Forbid assignment.
     DH_Visibilities& operator= (const DH_Visibilities&);
 
-    const CS1_Parset  *itsCS1PS;
+    const CS1_Parset   *itsCS1PS;
     unsigned	       itsNrBaselines, itsNrChannels;
 
     VisibilityType     *itsVisibilities;
     NrValidSamplesType *itsNrValidSamples;
+    CentroidType       *itsCentroids;
 
     void fillDataPointers();
 };
@@ -109,4 +116,5 @@ class DH_Visibilities: public DataHolder
 } // namespace CS1
 } // namespace LOFAR
 
+#endif // defined HAVE_APS
 #endif 

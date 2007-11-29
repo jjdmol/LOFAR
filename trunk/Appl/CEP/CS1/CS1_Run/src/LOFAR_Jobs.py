@@ -14,6 +14,7 @@ class Job(object):
         self.executable = executable
         self.remoteRunLog = self.workingDir + '/run.' + name + '.log'
         self.runlog = None
+	self.BGLpartition = None
 
     def run(self, runlog, parsetfile, timeOut, noRuns, runCmd = None):
         self.runlog = runlog
@@ -22,6 +23,9 @@ class Job(object):
 	tmp = self.workingDir + '/LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop'
 	self.host.sput(tmp, '~/')
 	self.host.sput('OLAP.parset', '~/')
+	if (self.name == 'CS1_BGLProc'):
+	    self.BGLpartition = runCmd.split(' ')[2]
+
         if runCmd == None:
             runCmd = self.executable
         self.runCommand = self.host.executeAsync('( cd ~ ; ' + runCmd + ' ' + parsetfile.split('/')[2] + ' ' + str(noRuns) + ') &> ' + self.remoteRunLog, timeout = timeOut)
@@ -39,7 +43,12 @@ class Job(object):
     def isSuccess(self):
         self.waitForDone()
         if not self.runLogRetreived:
-	    
+	    if (self.name == 'CS1_BGLProc'):
+		interfaces = IONodes.get(self.BGLpartition)
+		for i in range(0, len(interfaces)):
+		    remoteRunLogIONProc = self.workingDir + '/run.CS1_IONProc.' + str(i)
+		    runlogIOProc = '/' + self.runlog.split('/')[1]+ '/' + self.runlog.split('/')[2]+ '/CS1_IONProc.' + str(i) + '.runlog'
+		    self.host.sget(remoteRunLogIONProc, runlogIOProc)
             self.host.sget(self.remoteRunLog, self.runlog)
             self.runLogRetreived = True
         return self.runCommand.isSuccess()

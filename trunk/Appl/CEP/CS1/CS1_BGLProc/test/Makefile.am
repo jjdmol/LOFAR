@@ -1,5 +1,5 @@
 
-check_PROGRAMS = tWH_BGL_Processing transpose
+check_PROGRAMS = tBGL_Processing transpose
 
 
 AM_CPPFLAGS = $(EXTRA_CPPFLAGS)
@@ -7,12 +7,13 @@ AM_CPPFLAGS = $(EXTRA_CPPFLAGS)
 AM_CXXFLAGS = \
 	-I../../../src
 
-tWH_BGL_Processing_SOURCES =			\
-tWH_BGL_Processing.cc				\
-../src/WH_BGL_Processing.cc			\
-../src/Correlator.S				\
-../src/FIR.S					\
-../src/FFT.S
+tBGL_Processing_SOURCES =			\
+tBGL_Processing.cc				\
+../src/Allocator.cc				\
+../src/BGL_Processing.cc			\
+../src/Correlator.cc				\
+../src/FIR.cc					\
+../src/PPF.cc
 
 transpose_SOURCES =				\
 transpose.cc					
@@ -22,7 +23,7 @@ CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 
 
 TESTS   = 					\
-tWH_BGL_Processing.sh
+tBGL_Processing.sh
 
 
 include $(top_srcdir)/Makefile.common

@@ -23,6 +23,8 @@
 #ifndef LOFAR_CS1_INTERFACE_STUB_DELAY_H
 #define LOFAR_CS1_INTERFACE_STUB_DELAY_H
 
+#if defined HAVE_TINYCEP && defined HAVE_APS
+
 #include <tinyCEP/TinyDataManager.h>
 #include <Common/lofar_vector.h>
 #include <CS1_Interface/CS1_Parset.h>
@@ -66,4 +68,5 @@ namespace LOFAR
 
 } // namespace LOFAR
 
+#endif // defined HAVE_TINYCEP && defined HAVE_APS
 #endif

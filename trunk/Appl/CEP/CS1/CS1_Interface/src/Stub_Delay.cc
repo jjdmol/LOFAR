@@ -20,6 +20,8 @@
 
 #include <lofar_config.h>
 
+#if defined HAVE_TINYCEP
+
 #include <CS1_Interface/Stub_Delay.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/TH_File.h>
@@ -97,7 +99,11 @@ namespace LOFAR
 	}
       } else if (transportType == "NULL") { 
 	th = new TH_Null();
+      } else {
+	std::cerr << "Unrecognized transport type for OLAP.OLAP_Conn.input_DelayComp_Transport" << std::endl;
+	exit(1);
       }
+
       
       itsTHs[RSP_nr] = th;
       if (itsIsInput) {
@@ -111,3 +117,4 @@ namespace LOFAR
   } // namespace CS1
 } //namespace LOFAR
 
+#endif // defined HAVE_TINYCEP
