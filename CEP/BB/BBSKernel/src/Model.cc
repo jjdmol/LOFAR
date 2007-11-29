@@ -77,7 +77,7 @@ Model::Model(const Instrument &instrument, MeqParmGroup &parmGroup,
 
 
 void Model::makeEquations(EquationType type, const vector<string> &components,
-    const set<baseline_t> &baselines, const vector<string> &sources,
+    const vector<baseline_t> &baselines, const vector<string> &sources,
     MeqParmGroup &parmGroup, ParmDB *instrumentDBase, MeqPhaseRef *phaseRef,
     VisData::Pointer buffer)
 {
@@ -321,7 +321,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             }
         }
 
-        for(set<baseline_t>::const_iterator it = baselines.begin();
+        for(vector<baseline_t>::const_iterator it = baselines.begin();
             it != baselines.end();
             ++it)
         {
@@ -351,7 +351,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
     }
     else
     {
-        for(set<baseline_t>::const_iterator it = baselines.begin();
+        for(vector<baseline_t>::const_iterator it = baselines.begin();
             it != baselines.end();
             ++it)
         {

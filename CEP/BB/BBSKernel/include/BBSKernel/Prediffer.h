@@ -78,7 +78,7 @@ struct ProcessingContext
             unknownCount(0)
     {}
 
-    set<baseline_t>                 baselines;
+    vector<baseline_t>              baselines;
     set<size_t>                     polarizations;
     string                          outputColumn;
 
@@ -115,6 +115,7 @@ struct ThreadContext
     vector<uint>            unknownIndex;
     vector<const double*>   perturbedRe, perturbedIm;
     vector<double>          partialRe, partialIm;
+    NSTimer                 evaluationTimer, operationTimer;
 };
 
 
@@ -249,6 +250,9 @@ private:
 //baseline,
 //        bool showd);
 
+    void resetTimers();
+    void printTimers(const string &operationName);
+
     string                              itsInputColumn;
     bool                                itsReadUVW;
     size_t                              itsChunkSize;
@@ -272,7 +276,7 @@ private:
     //# Thread private buffers.
     vector<ThreadContext>               itsThreadContexts;
 
-    NSTimer                             itsPredTimer, itsEqTimer;
+    NSTimer                             itsPrecalcTimer, itsProcessTimer;
 
     Measurement::Pointer                itsMeasurement;
     Model::Pointer                      itsModel;
