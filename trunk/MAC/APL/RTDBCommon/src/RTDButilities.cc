@@ -54,24 +54,32 @@ RTDBobjState_t	objStateTable[] = {
 // Every softwaremodule or hardwarecomponent has a color on the Navigator screens
 // that represents the state the object/module is in. With this function an object
 // can be given a new state.
-bool setObjectState(const string&	ObjectName,
+bool setObjectState(const string&	who,
+					const string&	objectName,
 				    uint32			newState)
 {
 	// check newState value
 	if (newState >= RTDB_OBJ_STATE_NR_OF_VALUES) {
-		LOG_ERROR_STR(newState << " is not a legal object-state, " << ObjectName 
+		LOG_ERROR_STR(newState << " is not a legal object-state, " << objectName 
 						<< " will be left unchanged");
 		return (false);
 	}
 
-	// Construct command and store it in the right place.
-	string	command(ObjectName+".state="+toString(objStateTable[newState].RTDBvalue));
-	LOG_DEBUG_STR("Setting state:" << command);
-	DPservice	aDPservice(0);
-	PVSSresult	result;
-	result = aDPservice.setValue("__navObjectState", GCFPVString(command), 0.0, false);
+	// the DP we must write to has three elements. Make a vector of the names and the new
+	// values and write them to the database at once.
+	DPservice			aDPservice(0);
+	vector<string>		fields;
+	vector<GCFPValue*>	values;
+	fields.push_back("DPName");
+	fields.push_back("stateNr");
+	fields.push_back("message");
+	values.push_back(new GCFPVString(objectName));
+	values.push_back(new GCFPVInteger(objStateTable[newState].RTDBvalue));
+	values.push_back(new GCFPVString(who));
 
-	return (result == SA_NO_ERROR);
+	LOG_DEBUG_STR(who << " is setting " << objectName << " to " << objStateTable[newState].name);
+
+	return (aDPservice.setValue("_navObjectState", fields, values, 0.0, false) == SA_NO_ERROR);
 }
 
 

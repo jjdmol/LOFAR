@@ -69,7 +69,7 @@ GCFEvent::TResult tRTDButil::doTest(GCFEvent& e, GCFPortInterface& /*p*/)
 	case F_ENTRY: {
 		// Good situation
 		gTestNr = 1;
-		setObjectState("testObject", RTDB_OBJ_STATE_TEST);
+		setObjectState("tRTDButil", "testObject", RTDB_OBJ_STATE_TEST);
 		itsTimerPort->setTimer(3.0); // max time for this test.
 	}
 	break;
@@ -77,13 +77,13 @@ GCFEvent::TResult tRTDButil::doTest(GCFEvent& e, GCFPortInterface& /*p*/)
 	case F_TIMER:
 		if (gTestNr == 1) {
 			// wrong statenr
-			setObjectState("testObject", 25);
+			setObjectState("tRTDButil", "testObject", 25);
 			gTestNr++;
 			itsTimerPort->setTimer(3.0);
 		}
 		else if (gTestNr == 2) {
 			// wrong DP
-			setObjectState("iserNiet", RTDB_OBJ_STATE_TEST);
+			setObjectState("tRTDButil", "iserNiet", RTDB_OBJ_STATE_TEST);
 			gTestNr++;
 			itsTimerPort->setTimer(3.0);
 		}
