@@ -21,6 +21,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
         elif self.clock == '200MHz':
 	    self['Observation.sampleClock'] = 200
 	    self['OLAP.BGLProc.integrationSteps'] = 768
+	    #self['OLAP.BGLProc.integrationSteps'] = 16
         self.updateSBValues()
         
     def getClockString(self):
@@ -45,9 +46,8 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	
 	for s in self.stationList:
 	    name = self.getString('PIC.Core.' + s.getName() + '.port')
-	    name=name.split(":")
-	    name=name[0].strip("lii")
-	    inputNodelist.append(int(name))
+	    name=name.split(":")[0]
+	    inputNodelist.append(name)
     
         return inputNodelist
 	
@@ -125,11 +125,10 @@ class CS1_Parset(LOFAR_Parset.Parset):
     def getMSName(self):
         return self['Observation.MSNameMask']
 
-    def getNCells(self):
+    def getNPsets(self):
         subbands = len(self.getInt32Vector('Observation.subbandList'))
-        psetspercell = self.getInt32('OLAP.BGLProc.psetsPerCell')
         subbandsperpset = self.getInt32('OLAP.subbandsPerPset')
-        return subbands / (psetspercell * subbandsperpset)
+        return subbands / subbandsperpset
 
     def updateSBValues(self):
         if self.clock == '160MHz':

@@ -7,7 +7,7 @@ class Station(object):
     """
     def __init__(self, name):
         self.name = name
-        stationNumber = int(name.split('_')[0].split('CS')[-1])
+        #stationNumber = int(name.split('_')[0].split('CS')[-1])
     def getName(self):
         return self.name
 
@@ -99,6 +99,18 @@ CS032_dipole42 = [Station('CS032_dipole42')]
 CS032_dipole46 = [Station('CS032_dipole46')]
 CS032_4dipoles = CS032_dipole34 + CS032_dipole37 + CS032_dipole42 + CS032_dipole46
 
+CS001T_dipole0 = [Station('CS001T_dipole0')]
+CS001T_dipole4 = [Station('CS001T_dipole4')]
+CS001T_dipole8 = [Station('CS001T_dipole8')]
+CS001T_dipole12 = [Station('CS001T_dipole12')]
+CS001T_4dipoles = CS001T_dipole0 + CS001T_dipole4 + CS001T_dipole8 + CS001T_dipole12
+
+CS010T_dipole0 = [Station('CS010T_dipole0')]
+CS010T_dipole4 = [Station('CS010T_dipole4')]
+CS010T_dipole8 = [Station('CS010T_dipole8')]
+CS010T_dipole12 = [Station('CS010T_dipole12')]
+CS010T_4dipoles = CS010T_dipole0 + CS010T_dipole4 + CS010T_dipole8 + CS010T_dipole12
+
 CS010_us0  = [Station('CS010_us0')]
 CS010_us1  = [Station('CS010_us1')]
 CS010_us2  = [Station('CS010_us2')]
@@ -123,10 +135,15 @@ CS016_us2  = [Station('CS016_us2')]
 CS016_us3 =  [Station('CS016_us3')]
 CS016_4us = CS016_us0 + CS016_us1 + CS016_us2 + CS016_us3
 
+B06_0 = [Station('B06_0')]
+
 AllMicroStations = CS010_4us + CS001_4us + CS008_4us + CS016_4us
 AllDipoles0_4_8_12 = CS010_4dipoles0_4_8_12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
 AllDipolesMixed = CS010_4dipoles0_4_8_12 + CS001_4dipoles2_6_10_14 + CS008_4dipoles2_6_10_14 + CS016_4dipoles2_6_10_14
 AllHBAs = CS010_HBAs + CS001_HBAs + CS008_HBAs + CS016_HBAs
 Mixed = CS010_us0 + CS010_dipole4 + CS010_dipole8 + CS010_dipole12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
 All24Dipoles = CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12 + CS030_4dipoles + CS031_4dipoles + CS032_4dipoles
-Test = CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
+Generator = CS010_HBA0 + CS010_HBA2 + CS010_HBA3 + CS008_HBA0 + CS008_HBA2 + CS008_HBA3 + CS001_HBA0 + CS001_HBA2 + CS001_HBA3 + CS016_HBA0 + CS016_HBA2 + CS016_HBA3
+#Test = CS001T_4dipoles + CS001_4dipoles0_4_8_12
+#Test = CS001T_4dipoles + CS010_4dipoles0_4_8_12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_dipole0 + CS016_dipole4 + CS016_dipole8
+Test = CS001T_4dipoles + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_dipole0 + CS016_dipole4 + CS016_dipole8

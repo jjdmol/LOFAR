@@ -4,6 +4,7 @@ import time
 import os
 import copy
 import sys
+from CS1_Hosts import *
 
 class Section(object):
     """
@@ -76,17 +77,17 @@ class InputSection(Section):
         self.nrsp = parset.getInt32('OLAP.nrRSPboards')
 	
         nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
-        nSubbandsPerCell = parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.BGLProc.psetsPerCell')
-        nCells = float(nSubbands) / float(nSubbandsPerCell)
-        if not nSubbands % nSubbandsPerCell == 0:
-            raise Exception('Not a integer number of compute cells (nSubbands = %d and nSubbandsPerCell = %d)' % (nSubbands, nSubbandsPerCell))
-        self.nCells = int(nCells)
+        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
+        nPsets = float(nSubbands) / float(nSubbandsPerPset)
+        if not nSubbands % nSubbandsPerPset == 0:
+            raise Exception('subbands cannot be evenly divided over psets (nSubbands = %d and nSubbandsPerPset = %d)' % (nSubbands, nSubbandsPerPset))
+        self.nPsets = int(nPsets)
 
         host = copy.deepcopy(myhost)
         slaves = host.getSlaves()
 
         inputNodes = parset.getInputNodes()
-        outputNodes = range(1, self.nCells + 1)
+        outputNodes = range(1, self.nPsets + 1)
         allNodes = inputNodes + [node for node in outputNodes if not node in inputNodes]
     
         inputIndices = range(len(inputNodes))
@@ -117,17 +118,17 @@ class StorageSection(Section):
     def __init__(self, parset, host):
 
         nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
-        nSubbandsPerCell = parset.getInt32('OLAP.subbandsPerPset')
+        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
         nPsetsPerStorage = parset.getInt32('OLAP.psetsPerStorage');
-        if not nSubbands % (nSubbandsPerCell * nPsetsPerStorage) == 0:
+        if not nSubbands % (nSubbandsPerPset * nPsetsPerStorage) == 0:
             raise Exception('Not a integer number of subbands per storage node!')
 
-        self.noProcesses = nSubbands / (nSubbandsPerCell * nPsetsPerStorage)
+        self.noProcesses = nSubbands / (nSubbandsPerPset * nPsetsPerStorage)
 
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_Storage', \
                          host = host, \
-                         buildvar = 'gnu32_openmpi-opt')
+                         buildvar = 'gnu_openmpi-opt')
 
         storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
         self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
@@ -143,14 +144,25 @@ class BGLProcSection(Section):
         self.partition = partition
 
         nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
-        nSubbandsPerCell = parset.getInt32('OLAP.subbandsPerPset') * parset.getInt32('OLAP.BGLProc.psetsPerCell')
+        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
 
-        if not nSubbands % nSubbandsPerCell == 0:
-            raise Exception('Not a integer number of compute cells!')
+        if not nSubbands % nSubbandsPerPset == 0:
+            raise Exception('subbands cannot be evenly divided over psets (nSubbands = %d and nSubbandsPerPset = %d)' % (nSubbands, nSubbandsPerPset))
 
-        nCells = nSubbands / nSubbandsPerCell
-        self.noProcesses = int(nCells) * parset.getInt32('OLAP.BGLProc.nodesPerPset') * parset.getInt32('OLAP.BGLProc.psetsPerCell')
+        nPsets = nSubbands / nSubbandsPerPset
+        self.noProcesses = int(nPsets) * parset.getInt32('OLAP.BGLProc.coresPerPset')
         self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
+
+        inputNodes = parset.getInputNodes()
+	interfaces = IONodes.get(partition)
+	inputPsets = [interfaces.index(i) for i in inputNodes]
+	outputPsets = range(nPsets)
+	parset['OLAP.BGLProc.inputPsets']  = inputPsets
+	parset['OLAP.BGLProc.outputPsets'] = outputPsets
+	print 'inputNodes = ', inputNodes
+	print 'interfaces = ', interfaces
+	print 'inputPsets = ', inputPsets
+	print 'outputPsets = ', outputPsets
 
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_BGLProc', \
@@ -162,10 +174,10 @@ class BGLProcSection(Section):
 	self.executable = 'CS1_BGL_Processing'
         
     def run(self, runlog, noRuns, runCmd = None):
-        nodesPerCell = self.parset.getInt32('OLAP.BGLProc.nodesPerPset') * self.parset.getInt32('OLAP.BGLProc.psetsPerCell')
-        subbandsPerCell = self.parset.getInt32('OLAP.subbandsPerPset') * self.parset.getInt32('OLAP.BGLProc.psetsPerCell')
-        actualRuns = int(noRuns * subbandsPerCell / nodesPerCell)
-        if not actualRuns * nodesPerCell == noRuns * subbandsPerCell:
+        coresPerPset = self.parset.getInt32('OLAP.BGLProc.coresPerPset')
+        subbandsPerPset = self.parset.getInt32('OLAP.subbandsPerPset')
+        actualRuns = int(noRuns * subbandsPerPset / coresPerPset)
+        if not actualRuns * coresPerPset == noRuns * subbandsPerPset:
             raise Exception('illegal number of runs')
         Section.run(self, runlog, actualRuns, runCmd)        
 

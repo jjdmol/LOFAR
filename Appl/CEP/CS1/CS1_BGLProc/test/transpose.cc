@@ -54,12 +54,12 @@ namespace LOFAR {
 namespace CS1 {
 
 
-class DH_Station : public DataHolder
+class DH_RSP : public DataHolder
 {
   public:
     typedef i4complex SampleType;
 
-    DH_Station(const string &name, const ACC::APS::ParameterSet &ps);
+    DH_RSP(const string &name, const ACC::APS::ParameterSet &ps);
 
     DataHolder	 *clone() const;
     virtual void init();
@@ -71,28 +71,28 @@ class DH_Station : public DataHolder
 };
 
 
-DH_Station::DH_Station(const string &name, const ACC::APS::ParameterSet &ps)
+DH_RSP::DH_RSP(const string &name, const ACC::APS::ParameterSet &ps)
 :
-  DataHolder(name, "DH_Station")
+  DataHolder(name, "DH_RSP")
 {
   itsNrSamples = ps.getUint32("Observation.NSubbandSamples") * ps.getUint32("Observation.NPolarisations");
 }
 
 
-DataHolder *DH_Station::clone() const
+DataHolder *DH_RSP::clone() const
 {
-  return new DH_Station(*this);
+  return new DH_RSP(*this);
 }
 
 
-void DH_Station::init()
+void DH_RSP::init()
 {
   addField("Samples", BlobField<uint8>(1, itsNrSamples * sizeof(SampleType)), 32);
   createDataBlock(); // calls fillDataPointers
 }
 
 
-void DH_Station::fillDataPointers()
+void DH_RSP::fillDataPointers()
 {
   itsSamples = (SampleType *) getData<uint8>("Samples");
 }

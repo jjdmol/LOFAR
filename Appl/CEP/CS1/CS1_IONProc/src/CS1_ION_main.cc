@@ -21,13 +21,21 @@
 #include <lofar_config.h>
 
 #include <PLC/ACCmain.h>
-#include <Common/LofarLogger.h>
 #include <tinyCEP/ApplicationHolderController.h>
-#include <CS1_IONProc/AH_ION_Scatter.h>
+#include <CS1_IONProc/AH_InputSection.h>
 #include <CS1_IONProc/AH_ION_Gather.h>
+#include <CS1_IONProc/BGL_Personality.h>
 #include <CS1_IONProc/TH_ZoidServer.h>
+#include <CS1_Interface/BGL_Command.h>
+#include <CS1_Interface/BGL_Configuration.h>
+#include <CS1_Interface/BGL_Mapping.h>
+#include <CS1_Interface/CS1_Parset.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <pthread.h>
+#include <unistd.h>
 
 extern "C" {
 #include <lofar.h>
@@ -38,40 +46,174 @@ using namespace LOFAR;
 using namespace LOFAR::CS1;
 
 
-static int  global_argc;
-static char **global_argv;
-
-#if 0
-static char *argv[] = {
-  "CS1_ION_Gather",
-  "9999999",	// FIXME get this from real argv
-  0,
-};
-#endif
+static int	  global_argc;
+static char	  **global_argv;
+static unsigned   nrCoresPerPset;
 
 
-void *scatter_thread(void *)
+static void configureCNs(const CS1_Parset &parset)
 {
-  INIT_LOGGER("CS1_ION_Scatter");
+  BGL_Command	    command(BGL_Command::PREPROCESS);
+  BGL_Configuration configuration;
 
-  std::clog << "starting scatter_thread" << std::endl;
-  AH_ION_Scatter myAH;
+  configuration.nrStations()              = parset.nrStations();
+  configuration.nrSamplesPerIntegration() = parset.BGLintegrationSteps();
+  configuration.nrSamplesToBGLProc()      = parset.nrSamplesToBGLProc();
+  configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
+  configuration.nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
+  configuration.delayCompensation()       = parset.getBool("OLAP.delayCompensation");
+  configuration.sampleRate()              = parset.sampleRate();
+  configuration.inputPsets()              = parset.getUint32Vector("OLAP.BGLProc.inputPsets");
+  configuration.outputPsets()             = parset.getUint32Vector("OLAP.BGLProc.outputPsets");
+  configuration.refFreqs()                = parset.refFreqs();
+
+  for (unsigned core = 0; core < parset.nrCoresPerPset(); core ++) {
+    std::clog << "configure core " << core << std::endl;
+    command.write(TH_ZoidServer::theirTHs[core]);
+    configuration.write(TH_ZoidServer::theirTHs[core]);
+  }
+}
+
+
+static void unconfigureCNs(CS1_Parset &parset)
+{
+  BGL_Command command(BGL_Command::POSTPROCESS);
+
+  for (unsigned core = 0; core < parset.nrCoresPerPset(); core ++) {
+    std::clog << "unconfigure core " << core << std::endl;
+    command.write(TH_ZoidServer::theirTHs[core]);
+  }
+}
+
+
+static void stopCNs()
+{
+  BGL_Command command(BGL_Command::STOP);
+
+  for (unsigned core = 0; core < nrCoresPerPset; core ++) {
+    std::clog << "stopping core " << core << std::endl;
+    command.write(TH_ZoidServer::theirTHs[core]);
+  }
+}
+
+
+void *input_thread(void *argv)
+{
+  std::clog << "starting input thread, nrRuns = " << ((char **) argv)[2] << std::endl;
+  AH_InputSection myAH;
   ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
-  ACC::PLC::ACCmain(global_argc, global_argv, &myAHController);
-  //ACC::PLC::ACCmain(sizeof argv / sizeof *argv - 1, argv, &myAHController);
+  ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
+  std::clog << "input thread finished" << std::endl;
   return 0;
 }
 
 
-void *gather_thread(void *)
+void *gather_thread(void *argv)
 {
-  INIT_LOGGER("CS1_ION_Gather");
-
-  std::clog << "starting gather_thread" << std::endl;
+  std::clog << "starting gather thread, nrRuns = " << ((char **) argv)[2] << std::endl;
   AH_ION_Gather myAH;
   ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
-  ACC::PLC::ACCmain(global_argc, global_argv, &myAHController);
-  //ACC::PLC::ACCmain(sizeof argv / sizeof *argv - 1, argv, &myAHController);
+  ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
+  std::clog << "gather thread finished" << std::endl;
+  return 0;
+}
+
+
+void *master_thread(void *)
+{
+  std::clog << "starting master_thread" << std::endl;
+
+  try {
+    pthread_t input_thread_id = 0, gather_thread_id = 0;
+
+    std::clog << "trying to use " << global_argv[1] << " as ParameterSet" << std::endl;
+    ACC::APS::ParameterSet parameterSet(global_argv[1]);
+    CS1_Parset cs1_parset(&parameterSet);
+
+    configureCNs(cs1_parset);
+
+    unsigned myPsetNumber = getBGLpersonality()->getPsetNum();
+
+    if (cs1_parset.inputPsetIndex(myPsetNumber) >= 0) {
+      static char nrRuns[16], *argv[] = {
+	global_argv[0],
+	global_argv[1],
+	nrRuns,
+	0
+      };
+
+      sprintf(nrRuns, "%u", atoi(global_argv[2]) * cs1_parset.nrCoresPerPset() / cs1_parset.nrSubbandsPerPset());
+
+      if (pthread_create(&input_thread_id, 0, input_thread, argv) != 0) {
+	perror("pthread_create");
+	exit(1);
+      }
+    }
+
+    if (cs1_parset.useGather() && cs1_parset.outputPsetIndex(myPsetNumber) >= 0) {
+      static char nrRuns[16], *argv[] = {
+	global_argv[0],
+	global_argv[1],
+	nrRuns,
+	0
+      };
+
+      sprintf(nrRuns, "%u", atoi(global_argv[2]) * cs1_parset.nrCoresPerPset());
+
+      if (pthread_create(&gather_thread_id, 0, gather_thread, argv) != 0) {
+	perror("pthread_create");
+	exit(1);
+      }
+    }
+
+    if (gather_thread_id != 0 && input_thread_id == 0) {
+      // quick hack to send PROCESS commands to CNs
+
+      BGL_Command command(BGL_Command::PROCESS);
+      unsigned	  nrRuns  = atoi(global_argv[2]);
+      unsigned	  nrCores = cs1_parset.nrCoresPerPset();
+
+      for (unsigned run = 0; run < nrRuns; run ++)
+	for (unsigned core = 0; core < nrCores; core ++)
+	  command.write(TH_ZoidServer::theirTHs[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
+    }
+
+    if (input_thread_id != 0) {
+      if (pthread_join(input_thread_id, 0) != 0) {
+	perror("pthread join");
+	exit(1);
+      }
+
+      std::clog << "lofar__fini: input thread joined" << std::endl;
+    }
+
+    unconfigureCNs(cs1_parset);
+    stopCNs();
+
+    if (gather_thread_id != 0) {
+      if (pthread_join(gather_thread_id, 0) != 0) {
+	perror("pthread join");
+	exit(1);
+      }
+
+      std::clog << "lofar__fini: gather thread joined" << std::endl;
+    }
+  } catch (std::exception &ex) {
+    std::cerr << "caught exception: " << ex.what() << std::endl;
+  }
+
+  if (pthread_detach(pthread_self()) != 0) {
+    std::cerr << "could not detach master thread" << std::endl;
+  }
+
+  if (global_argv != 0) {
+    for (int arg = 0; arg < global_argc; arg ++)
+      delete global_argv[arg];
+
+    delete global_argv;
+  }
+
+  std::clog << "master thread finishes" << std::endl;
   return 0;
 }
 
@@ -82,18 +224,29 @@ extern "C"
   void lofar__fini(void);
 }
 
-static pthread_t scatter_thread_id, gather_thread_id;
-
-void lofar__init(int nrComputeNodes)
+inline static void redirect_output()
 {
+  int  fd;
+  char file_name[32];
+
+  sprintf(file_name, "run.CS1_IONProc.%u", getBGLpersonality()->getPsetNum());
+
+  if ((fd = open(file_name, O_CREAT | O_TRUNC | O_RDWR, 0666)) < 0 || dup2(fd, 1) < 0 || dup2(fd, 2) < 0)
+      perror("redirecting stdout/stderr");
+}
+
+
+void lofar__init(int nrComputeCores)
+{
+  nrCoresPerPset = nrComputeCores;
+  redirect_output();
   std::clog << "begin of lofar__init" << std::endl;
 
-  TH_ZoidServer::createAllTH_ZoidServers(nrComputeNodes);
+  TH_ZoidServer::createAllTH_ZoidServers(nrComputeCores);
 
-  global_argv	    = 0;
-  scatter_thread_id = 0;
-  gather_thread_id  = 0;
+  global_argv = 0;
 }
+
 
 
 void lofar_init(char   **argv /* in:arr2d:size=+1 */,
@@ -117,26 +270,14 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
 
   global_argv[argc] = 0; // terminating zero pointer
 
-  try {
-    std::string fileName = std::string(basename(argv[0])) + ".parset";
-    std::clog << "trying to use " << fileName << " as ParameterSet" << std::endl;
-    ACC::APS::ParameterSet parameterSet(fileName);
+  if (argc != 3)
+    std::cerr << "unexpected number of arguments, expect trouble!" << std::endl;
 
-    if (parameterSet.getBool("OLAP.IONProc.useScatter")) {
-      if (pthread_create(&scatter_thread_id, 0, scatter_thread, 0) != 0) {
-	perror("pthread_create");
-	exit(1);
-      }
-    }
+  pthread_t master_thread_id;
 
-    if (parameterSet.getBool("OLAP.IONProc.useGather")) {
-      if (pthread_create(&gather_thread_id, 0, gather_thread, 0) != 0) {
-	perror("pthread_create");
-	exit(1);
-      }
-    }
-  } catch (std::exception &ex) {
-    std::cerr << "caught exception: " << ex.what() << std::endl;
+  if (pthread_create(&master_thread_id, 0, master_thread, 0) != 0) {
+    perror("pthread_create");
+    exit(1);
   }
 }
 
@@ -145,28 +286,7 @@ void lofar__fini(void)
 {
   std::clog << "begin of lofar__fini" << std::endl;
 
-  if (scatter_thread_id != 0) {
-    if (pthread_join(scatter_thread_id, 0) != 0) {
-      perror("pthread join");
-      exit(1);
-    }
-  }
-
-  if (gather_thread_id != 0) {
-    if (pthread_join(gather_thread_id, 0) != 0) {
-      perror("pthread join");
-      exit(1);
-    }
-  }
-
   TH_ZoidServer::deleteAllTH_ZoidServers();
-
-  if (global_argv != 0) {
-    for (int arg = 0; arg < global_argc; arg ++)
-      delete global_argv[arg];
-
-    delete global_argv;
-  }
 
   std::clog << "end of lofar__fini" << std::endl;
 }

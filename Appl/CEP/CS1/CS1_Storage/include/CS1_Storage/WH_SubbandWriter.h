@@ -85,9 +85,9 @@ namespace LOFAR
 
       vector <MSWriter *> itsWriters;
 
-      uint itsNrSubbandsPerCell; ///< Number of subbands per BG/L cell
+      uint itsNrSubbandsPerPset;
       uint itsNrSubbandsPerStorage;
-      uint itsNrInputChannels;
+      uint itsNrInputChannelsPerPset;
       uint itsNrSubbandsPerMS;
 
       vector<uint> itsCurrentInputs;

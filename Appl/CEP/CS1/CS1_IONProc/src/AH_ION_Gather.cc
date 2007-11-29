@@ -53,19 +53,23 @@ AH_ION_Gather::~AH_ION_Gather()
 void AH_ION_Gather::define(const KeyValueMap&)
 {
   itsCS1PS = new CS1_Parset(&itsParamSet);
-  itsWH = new WH_ION_Gather("ION_Gather", itsCS1PS);
+
+  unsigned myPsetNumber = getBGLpersonality()->getPsetNum();
+
+  itsWH = new WH_ION_Gather("ION_Gather", myPsetNumber, itsCS1PS);
   itsWH->runOnNode(0);
 
   DataManager *dm = new DataManager(itsWH->getDataManager());
   itsWH->setDataManager(dm);
   dm->setOutBuffer(0, false, 2);
 
-  unsigned nrPsetsPerStorage = itsCS1PS->getInt32("OLAP.psetsPerStorage");
-  unsigned pset		     = getBGLpersonality()->getPsetNum();
-  unsigned storage_host	     = pset / nrPsetsPerStorage;
-  unsigned storage_port	     = pset % nrPsetsPerStorage;
-
   itsVisibilitiesStub = new Stub_BGL(true, false, "BGLProc_Storage", itsCS1PS);
+
+  unsigned myPsetIndex	     = itsCS1PS->outputPsetIndex(myPsetNumber);
+  unsigned nrPsetsPerStorage = itsCS1PS->nrPsetsPerStorage();
+  unsigned storage_host	     = myPsetIndex / nrPsetsPerStorage;
+  unsigned storage_port      = myPsetIndex % nrPsetsPerStorage;
+
   itsVisibilitiesStub->connect(storage_host, storage_port, *dm, /*channel*/ 0);
 }
 
@@ -86,14 +90,12 @@ void AH_ION_Gather::prerun()
 
 void AH_ION_Gather::run(int steps)
 {
-  steps *= itsCS1PS->getUint32("OLAP.BGLProc.nodesPerPset");
-
   for (int i = 0; i < steps; i++) {
-    class NSTimer timer("baseProcess", true);
+    //class NSTimer timer("baseProcess", true);
 
-    timer.start();
+    //timer.start();
     itsWH->baseProcess();
-    timer.stop();
+    //timer.stop();
   }
 }
 

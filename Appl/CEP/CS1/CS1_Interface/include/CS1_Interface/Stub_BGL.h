@@ -23,6 +23,8 @@
 #ifndef LOFAR_CS1_INTERFACE_STUB_BGL_H
 #define LOFAR_CS1_INTERFACE_STUB_BGL_H
 
+#if defined HAVE_TINYCEP && defined HAVE_APS
+
 #include <tinyCEP/TinyDataManager.h>
 #include <Transport/Connection.h>
 #include <Transport/TransportHolder.h>
@@ -44,7 +46,7 @@ class Stub_BGL
     Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const CS1_Parset *pSet);
     ~Stub_BGL();
 
-    void connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel);
+    void connect(unsigned psetNr, unsigned coreNr, TinyDataManager &dm, unsigned channel);
 
   private:
     const CS1_Parset				     *itsCS1PS;
@@ -57,4 +59,5 @@ class Stub_BGL
 } // namespace CS1
 } // namespace LOFAR
 
+#endif // defined HAVE_TINYCEP && defined HAVE_APS
 #endif
