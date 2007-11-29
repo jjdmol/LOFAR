@@ -62,7 +62,12 @@ enum {
 // Every softwaremodule or hardwarecomponent has a color on the Navigator screens
 // that represents the state the object/module is in. With this function an object
 // can be given a new state.
-bool	setObjectState(const string&	ObjectName,
+// @param who	name of the program that changes the value.
+// @param objectname	name of the module you like to set the state of.
+// @param newState	the new state (use one of the enum values of above).
+//
+bool	setObjectState(const string&	who,
+					   const string&	objectName,
 					   uint32			newState);
 
 
