@@ -1,6 +1,7 @@
 import Hosts
 import time
 import os
+from CS1_Hosts import *
 
 class Job(object):
     """
