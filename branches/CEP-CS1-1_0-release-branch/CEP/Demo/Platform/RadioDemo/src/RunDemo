@@ -1,0 +1,6 @@
+#!/bin/sh
+
+cd $HOME/RadioDemo
+# 
+mpirun -np 4 ./RadioSim/Simulate 2>&1 > Simulate.out & 
+./start.csh

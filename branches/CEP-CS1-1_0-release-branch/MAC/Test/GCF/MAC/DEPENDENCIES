@@ -1,0 +1,5 @@
+Compiler version:
+Default compiler of RedHat 9 (gcc3.x)
+
+PACKAGES dependencies (see MAC/Test/GCF/MAC/configure.in)
+PVSS II 3.0.1 (see MAC/GCF)

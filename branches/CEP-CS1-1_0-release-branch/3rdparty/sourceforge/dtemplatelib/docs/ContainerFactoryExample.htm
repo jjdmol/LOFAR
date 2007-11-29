@@ -1,0 +1,40 @@
+
+<h3>Example: A customized ContainerFactory using a nonhashed IdxContainer type</h3>
+<pre><code><span class="codeComment">// ... classes as in <a href="IndexedDBViewExample.htm">IndexedDBView example</a> ....</span>
+typedef DBView&lt;Example, ParamObjExample&gt; ViewType;
+typedef CBFunctor2wRet&lt;const Example *, const Example *, bool&gt; IVCompare;
+typedef multiset&lt;Example *, IVCompare&gt; MultisetType; 
+typedef DBIndex&lt;ViewType. MultisetType, NO_HASH &gt; IdxType;
+
+<span class="codeComment">// reverse comparison on exampleStr</span>
+bool reverse_compare_strings(const Example *pData1, const Example *pData2)
+{
+	return pData1-&gt;GetExampleStr() &gt; pData2-&gt;GetExampleStr();
+}
+
+<span class="codeComment">
+// "specialized" ContainerFactory() tells the indices in the IndexedDBView
+// to use a custom container for indexing records
+// in this case, the container is a multiset which sorts in reverse order
+// for the Primary Index and normal for all other indices
+// assume the IndexedDBView&lt;ViewType, MultisetType, NO_HASH&gt; that uses this
+// specialization of ContainerFactory has the following indices:<br>// PrimaryIndex = nonunique key with fields: STRING_VALUE = we want sorted
+// based on reverse_compare_strings()
+// AlternateIndex = unique key with fields: EXAMPLE_LONG, EXAMPLE_DATE =
+// we want sorted based on the default DBIndex::lt() function
+</span>
+template&lt;&gt; class dtl::ContainerFactory&lt;IdxType&gt;
+{
+public:
+	MultisetType operator()(IdxType *pDBIndex, NO_HASH h) 
+	{
+		 <span class="codeComment">
+		 // for STRING_VALUE's, compare true if first exampleStr > second exampleStr
+		 </span>
+		 if (pDBIndex-&gt;GetName() == "PrimaryIndex")
+			return MultisetType(cb_ptr_fun_w_ret(reverse_compare_strings));
+		 else <span class="codeComment">// for all other indices, in this case, pDBIndex-&gt;GetName() == "AlternateIndex", use generic comparison</span>
+			return MultisetType(cb_ptr_fun_w_ret(*pDBIndex, &amp;IdxType::lt));
+	}
+};
+</code></pre>

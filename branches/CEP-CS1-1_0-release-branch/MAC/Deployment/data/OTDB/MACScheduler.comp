@@ -1,0 +1,13 @@
+# -- MACScheduler--
+#
+# $Id$
+#
+#      name        vers   qual        constr.            descr.
+#--------------------------------------------------------------------------------------------------------
+node  MACScheduler   1.0.0  development 'node constraint'  "Controller that starts the observations"
+
+#    name              dir. type   unit   prun. vm   value       constr.  descr.
+#----------------------------------------------------------------------------------------------------------------------------------
+par  OTDBpollInterval   I    time   -      10    0      5s           -      "Time between two polls in the database"
+par  QueuePeriod        I    time   -      10    0      15m          -      "The period length between startup of the observation software and the start of the observation"
+par  ClaimPeriod        I    time   -      10    0      2m           -      "The period length between 'going standby moment' of the observation software and the start of the observation"

@@ -1,0 +1,7 @@
+// these are the parameters that can be set (with their default values and explanations)
+// dataSize = 1024               // the size of 1 packet
+// flopsPerByte = 1              // the number of flops that should be done per byte
+// packetsPerMeasurement = 10    // the number of packets per measurement (higher means more accurate measurements)
+// numberOfRuns = 100            // the number of measurements * number of packets per measurement
+
+

@@ -1,0 +1,78 @@
+<h3><i>Mapping a Table to a User Defined Object in Four Easy Steps:</i></h3>
+<p><font face="Times Roman">1. Define an object to hold the rows from your query.</font></p>
+
+<p><font face="Times Roman">2. Define an association
+between fields in your query and fields in your object. This is
+what we call a 'BCA', which is short for Bind Column Addresses.
+In the example below, this is done via the functor &quot;BCAExample&quot;.
+The job of the BCA is to equate SQL fields with object fields via
+the '==' operator which will then establish ODBC bindings to move
+data to or from a user query.</font></p>
+
+<p><font face="Times Roman">3. Create a view to select
+records from. This view is built from the template DBView and
+establishes which table(s) you want to access, what fields you
+want to look at (via the BCA), and an optional where clause to
+further limit the set of records that you are working with.</font></p>
+
+<p><font face="Times Roman">4. Use the DBView container
+to obtain an iterator to SELECT, INSERT, UPDATE or DELETE records
+from your view. These iterators may be used to either populate
+STL containers or apply algorithms from the Standard Template
+library.<br></p>
+
+<pre><code><strong>
+In all the examples that follow we will assume that our database contains a table called DB_EXAMPLE of the form
+
+SQL&gt; desc db_example;
+Name                            Type
+------------------------------- --------
+INT_VALUE                       INTEGER
+STRING_VALUE                    VARCHAR
+DOUBLE_VALUE                    FLOAT
+EXAMPLE_LONG                    INTEGER
+EXAMPLE_DATE                    DATE
+
+<span class="codeComment">// STEP 1 ////
+// &quot;Example&quot; structure to hold rows from our database table</span>
+struct Example
+{
+                                        <span class="codeComment">// tablename.columnname:</span>
+	int exampleInt;                 <span class="codeComment">// DB_EXAMPLE.INT_VALUE</span>
+	string exampleStr;              <span class="codeComment">// DB_EXAMPLE.STRING_VALUE</span>
+	double exampleDouble;           <span class="codeComment">// DB_EXAMPLE.DOUBLE_VALUE</span>
+	long exampleLong;               <span class="codeComment">// DB_EXAMPLE.EXAMPLE_LONG</span>
+	TIMESTAMP_STRUCT exampleDate;   <span class="codeComment">// DB_EXAMPLE.EXAMPLE_DATE</span>
+};
+
+<span class="codeComment">// STEP 2 ////</span>
+<span class="codeComment">// Create an association between table columns and fields in our object</span>
+template&lt;&gt; class dtl::DefaultBCA&lt;Example&gt;
+{
+public:
+	void operator()(BoundIOs &amp;cols, Example &amp;rowbuf)
+    	{
+	   cols[&quot;INT_VALUE&quot;] == rowbuf.exampleInt;
+	   cols[&quot;STRING_VALUE&quot;] == rowbuf.exampleStr;
+	   cols[&quot;DOUBLE_VALUE&quot;] == rowbuf.exampleDouble;
+	   cols[&quot;EXAMPLE_LONG&quot;] == rowbuf.exampleLong;
+	   cols[&quot;EXAMPLE_DATE&quot;] == rowbuf.exampleDate;
+	}
+};
+
+<span class="codeComment">// STEP 3 &amp; 4
+// Read the contents of the DB_EXAMPLE table and return a vector of the
+// resulting rows</span>
+vector&lt;Example&gt; ReadData() {
+	// Read the data
+	vector&lt;Example&gt; results;
+	DBView&lt;Example&gt; view(&quot;DB_EXAMPLE&quot;);
+
+	DBView&lt;Example&gt;::select_iterator read_it = view.begin();
+	for ( ; read_it != view.end();  ++read_it)
+	{
+		results.push_back(*read_it);
+	}
+	return results;
+}
+</code></pre></strong>

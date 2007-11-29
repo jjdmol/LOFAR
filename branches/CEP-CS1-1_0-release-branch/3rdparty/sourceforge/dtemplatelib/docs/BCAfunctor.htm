@@ -1,0 +1,24 @@
+<pre><code><span class="codeComment">// Functor to bind SQL columns to a data object</span>
+class Example
+{
+  public:                                       <span class="codeComment">// tablename.columnname:</span>
+	int exampleInt;                         <span class="codeComment">// DB_EXAMPLE.INT_VALUE</span>
+	string exampleStr;                      <span class="codeComment">// DB_EXAMPLE.STRING_VALUE</span>
+	double exampleDouble;                   <span class="codeComment">// DB_EXAMPLE.DOUBLE_VALUE</span>
+	long exampleLong;                       <span class="codeComment">// DB_EXAMPLE.EXAMPLE_LONG</span>
+	TIMESTAMP_STRUCT exampleDate;           <span class="codeComment">// DB_EXAMPLE.EXAMPLE_DATE</span>
+};</pre>
+
+<pre>class BCAExampleObj
+{
+public:
+	void operator()(BoundIOs &amp;boundIOs, Example &amp;rowbuf)
+    	{
+	   boundIOs[&quot;INT_VALUE&quot;] 	&gt;&gt; rowbuf.exampleInt;
+	   boundIOs[&quot;STRING_VALUE&quot;]	&gt;&gt; rowbuf.exampleStr;
+	   boundIOs[&quot;DOUBLE_VALUE&quot;]	&gt;&gt; rowbuf.exampleDouble;
+	   boundIOs[&quot;EXAMPLE_LONG&quot;]	&gt;&gt; rowbuf.exampleLong;
+	   boundIOs[&quot;EXAMPLE_DATE&quot;]	&gt;&gt; rowbuf.exampleDate;
+	}
+};
+</code></pre>

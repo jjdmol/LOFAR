@@ -1,0 +1,107 @@
+ 
+<h3><font face="Times New Roman, Times, serif">Example: Reading a set of records
+ from an Oracle stored procedure.</font><br>
+  </h3>
+<pre><code>
+<span class="codeComment">// Oracle stored procedure we wish to test</span>
+<span class="codeComment">// for more information on this example, see the following <a href="OracleResultSets.htm">Oracle documentation</a></span>
+#if 0
+ Create or replace package ExampleInfo as
+
+   Type ExampleRec is record
+
+   (
+   INT_VALUE     integer,
+
+   STRING_VALUE   varchar2(50)
+
+   );
+
+   Type ExampleCursor is ref cursor return 
+
+   ExampleRec;
+
+   End ExampleInfo;
+
+   
+
+   Create or replace procedure ExampleInfoProc
+
+   (LONG_CRITERIA IN integer, empcursor IN OUT 
+
+   ExampleInfo.ExampleCursor)
+
+   As
+
+   Begin
+
+   Open empcursor For
+
+   select INT_VALUE, STRING_VALUE 
+
+   from db_example
+
+   where EXAMPLE_LONG = LONG_CRITERIA;
+
+   End;
+#endif
+
+class ProcBCA {
+public:
+ void operator()(BoundIOs &amp;cols, variant_row &amp;row)
+ {
+  cols["INT_VALUE"] &gt;&gt; row._int();
+  cols["STRING_VALUE"] &gt;&gt; row._string();
+  
+  cols.BindVariantRow(row);
+ }
+};
+
+class ProcParams {
+public:
+	long long_criteria;
+};
+
+class ProcBPA {
+public:
+ void operator()(BoundIOs &amp;cols, ProcParams &amp;row)
+ {
+  cols[0] &lt;&lt; row.long_criteria;
+ }
+};
+
+<span class="codeComment">// Read the contents of a table and print the resulting rows
+// *** you must have Oracle ODBC driver version 8.1.5.3.0 for this to work ***
+// The reason why is that the stored procedure shown above returns a "cursor"
+// to pass back multiple rows which is only supported in Oracle ODBC driver
+// version 8.1.5.3.0 or higher.  (Merant drivers for Oracle also support this syntax.)</span>
+void StoredProcReadData() {
+
+        <span class="codeComment">// Note: ExampleInfoProc takes an integer as an input parameter to determine
+        // what records to return, and returns a cursor to a set of rows as an
+        // output parameter. The output cursor is bound implicitly as a set of columns.</span>
+	DBView&lt;variant_row, ProcParams&gt; view("{call ExampleInfoProc(?)}", 
+		ProcBCA(), "", ProcBPA());
+
+	variant_row s(view.GetDataObj());
+
+	<span class="codeComment">// Print out the column names</span>
+	vector&lt;string&gt; colNames = s.GetNames();
+	for (vector&lt;string&gt;::iterator name_it = colNames.begin(); name_it != colNames.end(); ++name_it)
+		cout &lt;&lt; (*name_it) &lt;&lt; " ";
+	cout &lt;&lt; endl;
+
+	<span class="codeComment">// Print out all rows and columns from our query</span>
+	DBView&lt;variant_row, ProcParams&gt;::sql_iterator print_it = view.begin();
+	print_it.Params().long_criteria = 22;
+
+	for (; print_it != view.end(); ++print_it)
+	{
+		 variant_row r = *print_it;
+		 for (size_t i = 0; i < r.size(); ++i)
+		 	cout &lt;&lt; r[i] &lt;&lt; " ";
+		 cout &lt;&lt; endl;
+	}
+}
+
+</code></pre>

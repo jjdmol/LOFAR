@@ -1,0 +1,27 @@
+
+<pre><code><span class="codeComment">// Enforce business rule for inserted rows</span>
+
+class Example
+{
+  public:					<span class="codeComment">// tablename.columnname:</span>
+	int exampleInt;	    			<span class="codeComment">// DB_EXAMPLE.INT_VALUE</span>
+	string exampleStr;			<span class="codeComment">// DB_EXAMPLE.STRING_VALUE</span>
+	double exampleDouble;			<span class="codeComment">// DB_EXAMPLE.DOUBLE_VALUE</span>
+	long exampleLong;			<span class="codeComment">// DB_EXAMPLE.EXAMPLE_LONG</span>
+	TIMESTAMP_STRUCT exampleDate;		<span class="codeComment">// DB_EXAMPLE.EXAMPLE_DATE</span>
+};
+
+<span class="codeComment">// specialization of DefaultInsValidate for Example
+// can have any number of InsValidate functions for a single data class just as with
+// ParamObj's ... below is general business rule constraint we wish to enforce for all Examples</span>
+template&lt;&gt; class dtl::DefaultInsValidate&lt;Example&gt; {
+public: 
+bool operator()(BoundIOs &amp;boundIOs, Example &amp;rowbuf)
+{
+	<span class="codeComment">// data is valid if rowbuf.exampleStr is nonempty and rowbuf.exampleDouble is 
+	// between 0 and 100 (like a percentage)</span>
+	return (rowbuf.exampleStr.length() &gt; 0 &amp;&amp; rowbuf.exampleDouble &gt;= 0.0 &amp;&amp;
+		rowbuf.exampleLong &lt;= 100.0);
+}
+};
+</code></pre>
