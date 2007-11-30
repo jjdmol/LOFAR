@@ -141,7 +141,7 @@ void DH_Visibilities::fillDataPointers()
 {
   itsVisibilities   = (VisibilityType *)     getData<fcomplex>("Visibilities");
   itsNrValidSamples = (NrValidSamplesType *) getData<NrValidSamplesType>("NrValidSamples");
-  itsCentroids      = (CentroidsType *)      getData<CentroidType>("Centroids");
+  itsCentroids      = (CentroidType *)      getData<CentroidType>("Centroids");
 }
 
 } // namespace CS1
