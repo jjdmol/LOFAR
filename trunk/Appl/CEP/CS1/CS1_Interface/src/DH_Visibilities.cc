@@ -65,7 +65,7 @@ void DH_Visibilities::init()
 {
   addField("Visibilities",   BlobField<fcomplex>(1, getNrVisibilities()), 32);
   addField("NrValidSamples", BlobField<NrValidSamplesType>(1, itsNrBaselines * itsNrChannels), 32);
-  //addField("Centroids",      BlobField<CentroidsType>(1, itsNrBaselines), 32);
+  addField("Centroids",      BlobField<CentroidType>(1, itsNrBaselines), 32);
 
   createDataBlock();  // calls fillDataPointers
 }
@@ -141,7 +141,7 @@ void DH_Visibilities::fillDataPointers()
 {
   itsVisibilities   = (VisibilityType *)     getData<fcomplex>("Visibilities");
   itsNrValidSamples = (NrValidSamplesType *) getData<NrValidSamplesType>("NrValidSamples");
-  //itsCentroids      = (CentroidsType *)      getData<CentroidsType>("Centroids");
+  itsCentroids      = (CentroidsType *)      getData<CentroidType>("Centroids");
 }
 
 } // namespace CS1
