@@ -1,4 +1,4 @@
-//#  TH_ZoidServer.h: TransportHolder that does nothing
+//#  TH_ZoidServer.h: TransportHolder that implements ZOID protocol
 //#
 //#  Copyright (C) 2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
