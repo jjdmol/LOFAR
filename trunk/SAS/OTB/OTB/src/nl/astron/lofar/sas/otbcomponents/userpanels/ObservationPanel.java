@@ -128,7 +128,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         } catch (RemoteException ex) {
             logger.debug("Error during getComponentParam: "+ ex);
-            itsParamList=null;
             return;
         }
         
@@ -529,8 +528,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private void saveInput() {
-        boolean hasChanged = false;
-
         // Beam        
         if (itsAngleTimes != null && !inputAngleTimes.equals(itsAngleTimes.limits)) {  
             itsAngleTimes.limits = inputAngleTimes.getText();
@@ -1211,7 +1208,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode  itsNode = null;
     private MainFrame  itsMainFrame;
     private OtdbRmi    itsOtdbRmi;
-    private Vector<jOTDBparam> itsParamList;
     private jOTDBparam itsOldDescriptionParam;
     private String     itsOldTreeDescription;
     private String     itsTreeType="";

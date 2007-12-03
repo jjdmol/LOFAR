@@ -124,7 +124,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             }
         } catch (RemoteException ex) {
             logger.debug("Error during getComponentParam: "+ ex);
-            itsParamList=null;
             return;
         }
         
@@ -1621,7 +1620,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private MainFrame    itsMainFrame = null;
     private OtdbRmi      itsOtdbRmi   = null;
     private String       itsTreeType  = "";
-    private Vector<jOTDBparam> itsParamList;
     private jOTDBparam itsOldDescriptionParam;
     private JFileChooser fc           = null;  
     

@@ -23,6 +23,7 @@
 package nl.astron.lofar.sas.otbcomponents;
 
 import javax.swing.JTree;
+import javax.swing.tree.TreePath;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
 
@@ -39,7 +40,7 @@ import org.apache.log4j.Logger;
  *
  * @created 26-01-2006, 13:58
  *
- * @author  blaakmeer
+ * @author  coolen
  *
  * @version $Id$
  */
@@ -69,6 +70,11 @@ public class TreePanel extends javax.swing.JPanel {
      *  @param root  the new root of the tree
      */
     public void newRootNode(TreeNode root) {
+        
+        // try to save selection if any
+        int[] rows = jTree1.getSelectionRows();
+        TreePath path = jTree1.getSelectionPath();
+        
         jTree1 = null;
         
         jTree1 = new JTree(root);
@@ -92,11 +98,23 @@ public class TreePanel extends javax.swing.JPanel {
             }
         });
         jScrollPane1.setViewportView(jTree1);
-        jTree1.setSelectionRow(0);
+        if(rows != null && rows.length > 0) {
+            jTree1.setSelectionRows(rows);
+        } else {
+            jTree1.setSelectionRow(0);
+        }
     }
     
     public int[] getSelectedRows() {
         return jTree1.getSelectionRows();
+    }
+    
+    public TreePath getSelectionPath() {
+        return jTree1.getSelectionPath();
+    }
+
+    public void setSelectionPath(TreePath aPath) {
+        jTree1.setSelectionPath(aPath);
     }
     
     private void setSelection(java.awt.event.MouseEvent evt) {

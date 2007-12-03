@@ -29,11 +29,11 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.tree.TreePath;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.ConfigPanelHelper;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.UserAccount;
@@ -99,7 +99,12 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     
     public void checkChanged() {
         if (this.hasChanged()) {
-            this.setNewRootNode();
+            if (itsLastSelectedPath != null && itsLastSelectedPath.getPathCount()>0) {
+               this.setNewRootNode();
+               treePanel.setSelectionPath(itsLastSelectedPath);
+            } else {
+                this.setNewRootNode();
+            }
             this.setChanged(false);
         }
     }
@@ -110,7 +115,9 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
             
             itsMainFrame.setHourglassCursor();
             // and create a new root
+            TreePath aP=itsLastSelectedPath;
             treePanel.newRootNode(treeManager.getRootNode(itsTreeID));
+            itsLastSelectedPath=aP;
             itsMainFrame.setNormalCursor();
         } catch (Exception e) {
             logger.debug("Exception during setNewRootNode: " );
@@ -199,12 +206,13 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         logger.debug("treeSelectionEvent: " + evt);
         if (evt != null && evt.getNewLeadSelectionPath() != null &&
                 evt.getNewLeadSelectionPath().getLastPathComponent() != null) {
-            
+            if  (treePanel.getSelectionPath() != null){
+                itsLastSelectedPath = treePanel.getSelectionPath();
+            }
             TreeNode treeNode = (TreeNode)evt.getNewLeadSelectionPath().getLastPathComponent();
             
             if(treeNode.getUserObject() instanceof jOTDBnode){
-                changeTreeSelection((jOTDBnode)treeNode.getUserObject());
-                
+                changeTreeSelection((jOTDBnode)treeNode.getUserObject());    
             }
         }
     }//GEN-LAST:event_treePanelValueChanged
@@ -272,9 +280,10 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
      * @param  aTreeID  The ID of the chosen tree.
      */
     private boolean viewInfo() {
-        int [] id=null;
+        
+        int [] id=new int[1];
         id[0]=itsTreeID;
-          
+
         if (itsTreeID > -1) {
             // show treeInfo dialog
             treeInfoDialog = new TreeInfoDialog(true,id, itsMainFrame);
@@ -344,10 +353,15 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                 logger.debug("Skipping panel for: "+aPanelName);
             }
         }
-        if (treePanel.getSelectedRows()[0] ==  0) {
+        if (treePanel == null) {
             buttonPanel1.setButtonEnabled("Duplicate",false);
         } else {
-            buttonPanel1.setButtonEnabled("Duplicate",true);
+            int[] selectedRows =treePanel.getSelectedRows();
+            if (selectedRows == null || selectedRows.length <=0 ||selectedRows[0] ==  0 ) {
+                buttonPanel1.setButtonEnabled("Duplicate",false);
+            } else {
+                buttonPanel1.setButtonEnabled("Duplicate",true);
+            }
         }
         if (savedSelection > -1 && savedSelection < jTabbedPane1.getComponentCount()) {
             jTabbedPane1.setSelectedIndex(savedSelection);
@@ -372,7 +386,9 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
     
     private MainFrame itsMainFrame;
     private jOTDBnode itsSelectedNode = null;
-    private TreeInfoDialog treeInfoDialog = null;  
+    private TreeInfoDialog treeInfoDialog = null;
+    TreePath itsLastSelectedPath = null;
+
     // keep the TreeId that belongs to this panel
     private int itsTreeID = 0;
     private boolean changed = false;
