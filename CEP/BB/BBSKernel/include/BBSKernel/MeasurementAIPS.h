@@ -79,6 +79,7 @@ private:
         const;
 
     casa::MeasurementSet    itsMS;
+    bool                    itsSpectrumReversed;
 };
 
 } //# namespace BBS
