@@ -118,7 +118,7 @@
                                   <EmptySpace max="-2" attributes="0"/>
                                   <Component id="jPanel8" min="-2" max="-2" attributes="1"/>
                                   <EmptySpace max="-2" attributes="0"/>
-                                  <Component id="jPanel10" min="0" pref="279" max="32767" attributes="1"/>
+                                  <Component id="jPanel10" min="0" max="32767" attributes="1"/>
                               </Group>
                               <Component id="jPanel3" alignment="0" min="-2" max="-2" attributes="1"/>
                           </Group>
@@ -195,7 +195,7 @@
                                               </Group>
                                           </Group>
                                       </Group>
-                                      <EmptySpace pref="2" max="32767" attributes="0"/>
+                                      <EmptySpace pref="38" max="32767" attributes="0"/>
                                   </Group>
                                   <Component id="inputStorageStationNames" alignment="0" pref="471" max="32767" attributes="1"/>
                               </Group>
@@ -345,7 +345,7 @@
                               <EmptySpace max="32767" attributes="0"/>
                               <Group type="103" groupAlignment="1" max="-2" attributes="0">
                                   <Component id="buttonPanel1" alignment="0" max="32767" attributes="1"/>
-                                  <Component id="jPanel5" alignment="0" min="0" pref="938" max="32767" attributes="1"/>
+                                  <Component id="jPanel5" alignment="0" min="0" max="32767" attributes="1"/>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Component id="jPanel6" min="-2" max="-2" attributes="1"/>
                                       <EmptySpace max="-2" attributes="0"/>
@@ -412,20 +412,20 @@
                                                   <Component id="labelBGLProcStorageTransport" alignment="1" max="32767" attributes="1"/>
                                               </Group>
                                               <Group type="102" alignment="0" attributes="0">
-                                                  <Component id="labelInputBGLProcTransport" pref="187" max="32767" attributes="1"/>
+                                                  <Component id="labelInputBGLProcTransport" pref="195" max="32767" attributes="1"/>
                                                   <EmptySpace max="-2" attributes="0"/>
                                               </Group>
                                               <Group type="102" alignment="1" attributes="0">
                                                   <Group type="103" groupAlignment="1" attributes="0">
-                                                      <Component id="labelBGLProcStorageBaseFileName" alignment="0" pref="187" max="32767" attributes="1"/>
-                                                      <Component id="labelBGLProcStoragePorts" alignment="1" pref="187" max="32767" attributes="1"/>
+                                                      <Component id="labelBGLProcStorageBaseFileName" alignment="0" pref="195" max="32767" attributes="1"/>
+                                                      <Component id="labelBGLProcStoragePorts" alignment="1" pref="195" max="32767" attributes="1"/>
                                                   </Group>
                                                   <EmptySpace max="-2" attributes="0"/>
                                               </Group>
                                               <Group type="102" alignment="1" attributes="0">
                                                   <Group type="103" groupAlignment="1" attributes="0">
-                                                      <Component id="labelInputBGLProcPorts" alignment="0" pref="187" max="32767" attributes="1"/>
-                                                      <Component id="labelInputBGLProcBaseFileName" alignment="1" pref="187" max="32767" attributes="1"/>
+                                                      <Component id="labelInputBGLProcPorts" alignment="0" pref="195" max="32767" attributes="1"/>
+                                                      <Component id="labelInputBGLProcBaseFileName" alignment="1" pref="195" max="32767" attributes="1"/>
                                                   </Group>
                                                   <EmptySpace max="-2" attributes="0"/>
                                               </Group>
@@ -820,7 +820,7 @@
                                       <Component id="inputPositionType" min="-2" pref="122" max="-2" attributes="0"/>
                                       <Component id="inputPorts" min="-2" pref="369" max="-2" attributes="1"/>
                                   </Group>
-                                  <EmptySpace pref="7" max="32767" attributes="0"/>
+                                  <EmptySpace pref="42" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                         </DimensionLayout>
@@ -976,8 +976,8 @@
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" alignment="0" attributes="0">
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="labelUseScatter" pref="139" max="32767" attributes="1"/>
-                                          <Component id="labelUseGather" alignment="1" pref="139" max="32767" attributes="1"/>
+                                          <Component id="labelUseScatter" pref="144" max="32767" attributes="1"/>
+                                          <Component id="labelUseGather" alignment="1" pref="144" max="32767" attributes="1"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
@@ -996,7 +996,7 @@
                                           <Component id="inputIONProcIntegrationSteps" max="32767" attributes="1"/>
                                           <Component id="inputIONProcMaxConcurrentComm" alignment="0" pref="103" max="32767" attributes="1"/>
                                       </Group>
-                                      <EmptySpace pref="3" max="32767" attributes="0"/>
+                                      <EmptySpace pref="74" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
                           </Group>
@@ -1024,7 +1024,7 @@
                                   <Component id="labelUseScatter" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputUseScatter" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="59" max="32767" attributes="0"/>
+                              <EmptySpace pref="62" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>

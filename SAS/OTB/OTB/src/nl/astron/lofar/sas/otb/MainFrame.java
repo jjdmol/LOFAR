@@ -260,9 +260,10 @@ public class MainFrame extends javax.swing.JFrame {
             }
             
             // Check if panelname contains (), if not then change anyway
-            // if so check if treeid is wanted treeid, and if not the same name
+            // if so check if treeid is wanted treeid, 
             if (aKey.contains("(") && aKey.contains(")")) {
-                if (aKey.contains(aTreeID) && !aKey.equals(friendlyName)) {
+//                if (aKey.contains(aTreeID) && !aKey.equals(friendlyName)) {
+                if (aKey.contains(aTreeID)) {
                     ((IPluginPanel)ppi.panel).setChanged(flag);
                     logger.debug("Setting changed flag for: "+aKey+" to "+flag);
                 }
@@ -273,6 +274,29 @@ public class MainFrame extends javax.swing.JFrame {
         }
     }
     
+    /** calls checkChanged on a given panel
+     * @param friendlyName  name of the panel
+     * @param flag          state flag
+     */
+    public void checkChanged(String friendlyName) {
+        
+        Iterator it=itsPlugins.keySet().iterator();
+        while (it.hasNext()) {
+            String aKey=(String)it.next();
+            PluginPanelInfo ppi = itsPlugins.get(aKey);
+            if (ppi == null || ppi.panel == null ) {
+                return;
+            }
+            
+            if (aKey.equals(friendlyName)) {
+                // call checkchanged
+                ((IPluginPanel)ppi.panel).checkChanged();
+
+                logger.debug("Called changed for: "+aKey);
+            }
+        }
+    }
+
     /** Hides the current panel and shows the the panel with the given 
       *
       * @param friendlyName name of the panel

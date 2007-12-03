@@ -84,6 +84,18 @@ public class ButtonPanel extends javax.swing.JPanel {
         jPanelButtons.repaint();
     }
     
+    /** Sets the tooltiptext for a button
+     *
+     * @param   button     the Key identifying this button
+     * @param   tooltip    text to go to the tooltip
+     *
+     */
+    public void setButtonToolTip(String button, String toolTipText) {
+        buttons.get(button).setToolTipText(toolTipText);
+        jPanelButtons.repaint();
+    }
+    
+    
     /** remove one button and the actionListeners associated with it
      *
      * @param   key     the Key identifying this button
