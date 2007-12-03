@@ -57,7 +57,7 @@ import org.apache.log4j.Logger;
  *
  * Created on 21 november 2007, 10:53
  *
- * @version $Id:$
+ * @version $Id$
  */
 
 
@@ -752,8 +752,8 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
             itsSavedRCUs = "";
         
-            this.editConfigButton.setEnabled(true);
-            this.deleteConfigButton.setEnabled(true);
+            this.editConfigButton.setEnabled(false);
+            this.deleteConfigButton.setEnabled(false);
         
             // set back to default Button visible
             addConfigButton.setText("Add Configuration");
