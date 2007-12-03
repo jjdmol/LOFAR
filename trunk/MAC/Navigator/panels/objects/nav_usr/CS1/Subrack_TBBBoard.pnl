@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-831 -30 163 514 N "_3DFace" 3
+PANEL,385 113 163 514 N "_3DFace" 3
 "$TBB"
 "$datapoint"
 "$referenceDatapoint"
@@ -38,8 +38,8 @@ PANEL,-831 -30 163 514 N "_3DFace" 3
 	baseDP= aDP+\"_\"+TBBoard;
 
 	// check if the required datapoint for this view are enabled and accessible
-	if (dpExists(baseDP+\".SWversion\")) {
-    dpConnect(\"showVersion\", baseDP +\".SWversion:_online.._value\");
+	if (dpExists(baseDP+\".boardVersion\")) {
+    dpConnect(\"showVersion\", baseDP +\".boardVersion:_online.._value\");
   } else {
     setValue(\"txt_version\", \"text\", \"ver: x.x\");
   }	
