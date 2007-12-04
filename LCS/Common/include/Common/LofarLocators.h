@@ -30,8 +30,6 @@
 //# Includes
 #include <Common/FileLocator.h>
 
-// Avoid 'using namespace' in headerfiles
-
 namespace LOFAR {
 
 //# --- Forward Declarations ---

@@ -11,14 +11,14 @@
   last update: Sun Feb 25 18:38:11 2001  Doug Lea  (dl at gee)
 
   This header is for ANSI C/C++ only.  You can set either of
-  the following #defines before including:
+  the following \#defines before including:
 
   - If USE_DL_PREFIX is defined, it is assumed that malloc.c 
     was also compiled with this option, so all routines
     have names starting with "dl".
 
   - If HAVE_USR_INCLUDE_MALLOC_H is defined, it is assumed that this
-    file will be #included AFTER <malloc.h>. This is needed only if
+    file will be \#included AFTER <malloc.h>. This is needed only if
     your system defines a struct mallinfo that is incompatible with the
     standard one declared here.  Otherwise, you can include this file
     INSTEAD of your system system <malloc.h>.  At least on ANSI, all
@@ -108,7 +108,7 @@ void*  dlcalloc(size_t, size_t);
   ANSI) and p is NOT freed.
 
   if n is for fewer bytes than already held by p, the newly unused
-  space is lopped off and freed if possible.  Unless the #define
+  space is lopped off and freed if possible.  Unless the \#define
   REALLOC_ZERO_BYTES_FREES is set, realloc with a size argument of
   zero (re)allocates a minimum-sized chunk.
 
@@ -429,7 +429,7 @@ void     dlmalloc_stats();
   The original SVID version of this struct, defined on most systems
   with mallinfo, declares all fields as ints. But some others define
   as unsigned long. If your system defines the fields using a type of
-  different width than listed here, you should #include your system
+  different width than listed here, you should \#include your system
   version before including this file.  The struct declaration is
   suppressed if _MALLOC_H is defined (which is done in most system
   malloc.h files). You can also suppress it by defining
