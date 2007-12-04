@@ -65,7 +65,9 @@ void DH_Visibilities::init()
 {
   addField("Visibilities",   BlobField<fcomplex>(1, getNrVisibilities()), 32);
   addField("NrValidSamples", BlobField<NrValidSamplesType>(1, itsNrBaselines * itsNrChannels), 32);
-  addField("Centroids",      BlobField<CentroidType>(1, itsNrBaselines), 32);
+
+  unsigned alignedCentroidsSize = ((itsNrBaselines * sizeof(CentroidType) + 31) & ~31) / sizeof(CentroidType);
+  addField("Centroids",      BlobField<CentroidType>(1, alignedCentroidsSize), 32);
 
   createDataBlock();  // calls fillDataPointers
 }
