@@ -74,7 +74,7 @@ namespace LOFAR
   }
 
 #define SETNODE(processid, applid)       RunOnNode itsRON(processid,applid) 
-// todo: #define SETNODEPARM              RunOnNode itsRON(param(...),param(...))
+//# todo: #define SETNODEPARM              RunOnNode itsRON(param(...),param(...))
 
 #define RUNINPROCESS(processid, applid)  if(itsRON.mustExecute(processid,applid))
 #define RIP(processid,applid)            if(itsRON.mustExecute(processid,applid))
