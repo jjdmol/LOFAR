@@ -262,6 +262,7 @@ protected:
 	// @{
 	int32 initUnixSocket(bool	asServer);
 	int32 initTCPSocket (bool	asServer);
+	int32 openTCPSocket (bool	asServer);
 	// @}
 #endif
 	// Saves given errorcode and system errorcode
@@ -307,6 +308,7 @@ private:
         // Connected client address(UNIX)
         struct sockaddr_un              itsUnixAddr;
 #endif
+        int32                           itsProtocolType;
 
 	//# Support for sigpipes
 	const volatile int32*	sigpipeCounter;

@@ -392,7 +392,7 @@ int32 Socket::initTCPSocket(bool	asServer)
 			
 	// try to resolve the service
 #ifdef HAVE_BGL
-	int32		protocolType = 6;		// assume tcp
+	itsProtocolType = 6;		// assume tcp
 	if (!(itsTCPAddr.sin_port = htons((uint16)atoi(itsPort.c_str())))) {
 		LOG_ERROR(formatString("Socket:Portnr/service(%s) can not be resolved",
 													itsHost.c_str()));
@@ -418,24 +418,29 @@ int32 Socket::initTCPSocket(bool	asServer)
 	if (!(protoEnt = getprotobyname(protocol))) {
 	  return (itsErrno = PROTOCOL);
 	}
-	int32		protocolType = protoEnt->p_proto;
+	itsProtocolType = protoEnt->p_proto;
 #endif
 
 	// Finally time to open the real socket
+	return openTCPSocket (asServer);
+}
+
+int32 Socket::openTCPSocket (bool asServer)
+{
 	int32	socketType = (itsType == TCP) ? SOCK_STREAM : SOCK_DGRAM;
-	if ((itsSocketID = ::socket(PF_INET, socketType, protocolType)) < 0) {
+	if ((itsSocketID = ::socket(PF_INET, socketType, itsProtocolType)) < 0) {
 		LOG_ERROR(formatString("Socket:Can not get a socket(%d,%d), err=%d(%s)", 
-							socketType, protocolType, errno, strerror(errno)));
+							socketType, itsProtocolType, errno, strerror(errno)));
 		return (setErrno(SOCKET));
 	}
 
 	LOG_DEBUG(formatString("Socket(%d):Created %s socket, host %s, port %d, protocol %d",
 			       itsSocketID, asServer ? "server" : "client",
 				   inet_ntoa(itsTCPAddr.sin_addr),
-			       ntohs((ushort)itsTCPAddr.sin_port), protocolType));
+			       ntohs((ushort)itsTCPAddr.sin_port), itsProtocolType));
 
-    // set default options
-    if (setDefaults() < 0) {
+        // set default options
+	if (setDefaults() < 0) {
 		::close(itsSocketID);
 		itsSocketID = -1;
 		return (itsErrno);
@@ -464,34 +469,45 @@ int32 Socket::connect (int32 waitMs)
 	if (itsIsServer) {							// only clients can connect
 		return (itsErrno = INVOP);
 	}
-
 	bool	blockingMode = itsIsBlocking;
 	setBlocking(waitMs < 0 ? true : false);		// switch temp to non-blocking?
 
-	struct sockaddr*	addrPtr;				// get pointer to result struct
-	socklen_t addrLen;
-	if (itsType == UNIX) {
-		addrPtr = (struct sockaddr*) &itsUnixAddr;
-		addrLen = sizeof(itsUnixAddr);
-	}
-	else {
-		addrPtr = (struct sockaddr*) &itsTCPAddr;
-		addrLen = sizeof(itsTCPAddr);
-	}
+        struct sockaddr*        addrPtr;                // get pointer to result struct                                                        
+        socklen_t addrLen;                                                      
+        if (itsType == UNIX) {                                                  
+                addrPtr = (struct sockaddr*) &itsUnixAddr;                      
+                addrLen = sizeof(itsUnixAddr);                                  
+        }                                                                       
+        else {
+	  // On OS-X the Socket is closed after connect failed; so recreate.
+	        if (itsSocketID < 0) {
+		        int32 status = openTCPSocket (false);
+			if (status !=SK_OK) {
+			        return status;
+			}
+		}
+                addrPtr = (struct sockaddr*) &itsTCPAddr;                       
+                addrLen = sizeof(itsTCPAddr);                                   
+        }                                                                       
 
-	if (::connect(itsSocketID, addrPtr, addrLen ) >= 0) {
+        if (::connect(itsSocketID, addrPtr, addrLen ) >= 0) {
 		LOG_DEBUG(formatString("Socket:connect(%d) successful", itsSocketID));
 		itsIsConnected = true;
 		setBlocking (blockingMode);
 		return (itsErrno = SK_OK);
 	}
 
-	LOG_DEBUG(formatString("connect(%d) failed: errno=%d (%s)", itsSocketID, errno,
-														strerror(errno)));
-	
+	LOG_DEBUG(formatString("connect(%d) failed: errno=%d (%s)", itsSocketID, errno,														strerror(errno)));
 
 	if (errno != EINPROGRESS && errno != EALREADY) {// real error
-		setBlocking (blockingMode);					// reinstall blocking mode
+#if defined(__APPLE__)
+	// On OS-X a refused connection corrupts the block, so close it.
+	        ::close(itsSocketID);
+	        itsSocketID = -1;
+	        return (setErrno(CONNECT));
+#else
+		setBlocking (blockingMode);	  // reinstall blocking mode
+#endif
 		return (setErrno(CONNECT));
 	}
 
