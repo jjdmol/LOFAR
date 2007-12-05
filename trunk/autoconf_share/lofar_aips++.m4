@@ -174,7 +174,7 @@ if [ "$lfr_use_casa" = 1 ]; then
     AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_NO_TEMPLATE_SRC"
   fi
   # Check if we're on a x86-64 bit system.
-  if test "`arch`" = "x86_64"; then
+  if test "`uname -m`" = "x86_64"; then
     AIPSPP_CPPFLAGS="$AIPSPP_CPPFLAGS -DAIPS_64B"
   fi
 
