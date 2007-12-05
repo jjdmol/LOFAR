@@ -1826,7 +1826,7 @@ void Prediffer::printTimers(const string &operationName)
     else
     {
         double avg = sum_e / count_e;
-        double std = sqrt(max(sumsqr_e / count_e - avg * avg, 0.0));
+        double std = std::sqrt(std::max(sumsqr_e / count_e - avg * avg, 0.0));
         LOG_DEBUG_STR("-Model evaluation: count: " << count_e << ", total: "
             << sum_e << " ms, avg: " << avg << " ms, std: " << std << " ms");
     }
@@ -1838,7 +1838,7 @@ void Prediffer::printTimers(const string &operationName)
     else
     {
         double avg = sum_o / count_o;
-        double std = sqrt(max(sumsqr_o / count_o - avg * avg, 0.0));
+        double std = std::sqrt(std::max(sumsqr_o / count_o - avg * avg, 0.0));
         LOG_DEBUG_STR("-" << operationName << ": count: " << count_o
             << ", total: " << sum_o << " ms, avg: " << avg << " ms, std: "
             << std << " ms");
