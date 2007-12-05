@@ -36,6 +36,8 @@ skipbuilt=$1
 shift
 kopt=$1
 shift
+jobsopt=$1
+shift
 buildmake=$1
 shift
 conf=$1
@@ -147,7 +149,7 @@ for pkg in $pkgs
 do
   echo "" >> $logfile
   if [ $skipbuilt = 1 ]; then
-    fgrep "$pkg " $resfile >& /dev/null
+    fgrep "$pkg " $resfile 2>&1 > /dev/null
     if [ $? = 0 ]; then
       echo "  skipping package $pkg; already built in a previous run" | tee -a $logfile
       continue

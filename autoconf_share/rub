@@ -725,7 +725,7 @@ if [ $boot != 0 ]; then
   for pkg in $pkgs
   do
     if [ $skipbuilt = 1 ]; then
-      fgrep "$pkg " build.result >& /dev/null
+      fgrep "$pkg " build.result 2>&1 > /dev/null
       if [ $? = 0 ]; then
         echo "  package $pkg already bootstrapped in a previous run" | tee build.log
         continue

@@ -281,7 +281,7 @@ else
 
 ## Use different lib directory on 64 bit systems.
   lfr_libdext=lib
-  if test "`arch`" = "x86_64"; then
+  if test "`uname -m`" = "x86_64"; then
     lfr_libdext=lib64;
   fi
 ## Put possible version into the library names.
