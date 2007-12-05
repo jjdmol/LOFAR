@@ -111,6 +111,8 @@ private:
 	// free memory for selected rcus, if done got to quiting state
 	GCFEvent::TResult doTBBfree (GCFEvent& e, GCFPortInterface& p);
 	
+	// released state, unsubscribed and freed tbb memory
+	GCFEvent::TResult released_state(GCFEvent& event, GCFPortInterface& port);
 	// Quiting, shutdown connections, send FINISH and quit
    GCFEvent::TResult quiting_state (GCFEvent& e, GCFPortInterface& p);
 
