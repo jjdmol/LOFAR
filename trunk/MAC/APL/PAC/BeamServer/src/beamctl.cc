@@ -31,7 +31,6 @@
 
 #include <iostream>
 #include <sys/time.h>
-#include <string.h>
 #include <blitz/array.h>
 #include <getopt.h>
 #include <sys/types.h>
@@ -41,6 +40,9 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_bitset.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_list.h>
 
 #define BEAMCTL_ARRAY "beamctl_array"
 #define BEAMCTL_BEAM  "beamctl_beam"
@@ -79,9 +81,6 @@ beamctl::beamctl(string name,
     m_parent(parent), m_rcus(rcus), m_subbands(subbands), m_beamlets(beamlets),
     m_rcumode(rcumode), m_longitude(longitude), m_latitude(latitude), m_type(type)
 {
-  // depricated
-  registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
-  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
 
   GCF::TM::registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
   GCF::TM::registerProtocol(BS_PROTOCOL, BS_PROTOCOL_STRINGS);
@@ -229,8 +228,8 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	alloc.name = BEAMCTL_BEAM + formatString("_%d", getpid());
 	alloc.subarrayname = BEAMCTL_ARRAY + formatString("_%d", getpid());
 
-	std::list<int>::iterator its = m_subbands.begin();
-	std::list<int>::iterator itb = m_beamlets.begin();
+	list<int>::iterator its = m_subbands.begin();
+	list<int>::iterator itb = m_beamlets.begin();
 	for (; its != m_subbands.end() && itb != m_beamlets.end(); ++its, ++itb) {
 	  alloc.allocation()[(*itb)] = (*its);
 	}
@@ -361,12 +360,12 @@ void usage()
   << endl;
 }
 
-std::bitset<MEPHeader::MAX_N_RCUS> beamctl::getRCUMask() const
+bitset<MEPHeader::MAX_N_RCUS> beamctl::getRCUMask() const
 {
-  std::bitset<MEPHeader::MAX_N_RCUS> mask;
+  bitset<MEPHeader::MAX_N_RCUS> mask;
   
   mask.reset();
-  std::list<int>::const_iterator it;
+  list<int>::const_iterator it;
   int count = 0; // limit to ndevices
   for (it = m_rcus.begin(); it != m_rcus.end(); ++it, ++count) {
     if (count >= MEPHeader::MAX_N_RCUS) break;
@@ -377,7 +376,7 @@ std::bitset<MEPHeader::MAX_N_RCUS> beamctl::getRCUMask() const
   return mask;
 }
 
-static std::list<int> strtolist(const char* str, int max)
+static list<int> strtolist(const char* str, int max)
 {
   string inputstring(str);
   char* start = (char*)inputstring.c_str();

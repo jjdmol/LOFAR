@@ -27,6 +27,8 @@
 
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_bitset.h>
+#include <Common/lofar_list.h>
 #include <APL/RSP_Protocol/RCUSettings.h>
 
 namespace LOFAR
@@ -67,7 +69,7 @@ namespace LOFAR
 	  /**
 	   * Return the seleted rcus as bitset<MAX_N_RCUS>
 	   */
-	  std::bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const;
+	  bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const;
 
 	  void mainloop();
 

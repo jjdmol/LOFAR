@@ -79,7 +79,7 @@ Beam* Beams::create(string nodeid, string subarrayname, Beamlet2SubbandMap alloc
 	}
 
 	if (!beam->allocate(allocation, m_beamlets, m_nsubbands)) {
-		LOG_DEBUG("Failed to allocate all required beamlets");
+		LOG_ERROR("Failed to allocate all required beamlets");
 		delete beam;
 		return (0);
 	}
@@ -120,6 +120,7 @@ bool Beams::updateCalibration(uint32 handle, CAL::AntennaGains& gains)
 	map<uint32,Beam*>::iterator it = m_handle2beam.find(handle);
 
 	if ((it == m_handle2beam.end()) || (!it->second)) {
+		LOG_WARN_STR("No calibration found for " << handle);
 		return (false);
 	}
 
