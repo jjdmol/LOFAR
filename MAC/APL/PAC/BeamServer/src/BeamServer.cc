@@ -208,7 +208,7 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 	
 		itsHbaInterval = GET_CONFIG("BeamServer.HBA_INTERVAL", i);
 		if (itsHbaInterval < 2) {
-			cerr << "HBA_INTERVAL to small, must be greater or equal to 2 seconds" << endl;
+			LOG_FATAL("HBA_INTERVAL to small, must be greater or equal to 2 seconds");
 			exit(EXIT_FAILURE);
 		}
 		// needed for HBA testing
@@ -245,14 +245,14 @@ GCFEvent::TResult BeamServer::initial(GCFEvent& event, GCFPortInterface& port)
 	case F_CLOSED: {
 		// try connecting again in 2 seconds
 		port.setTimer((long)2);
-		LOG_DEBUG(formatString("port '%s' disconnected, retry in 2 seconds...", 
+		LOG_INFO(formatString("port '%s' disconnected, retry in 2 seconds...", 
 								port.getName().c_str()));
 	}
 	break;
 
 	case F_TIMER: {
 		if (port.getState() == GCFPortInterface::S_DISCONNECTED) {
-			LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
+			LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
 			port.open();
 		}
 	}
@@ -314,15 +314,15 @@ Beam* BeamServer::newBeam(BeamTransaction& 					bt,
 	// check for valid parameters
 	// returning 0 will result in a negative ACK
 	if (bt.getBeam() != 0 || bt.getPort() != 0) {
-		LOG_DEBUG("Previous alloc is still in progress");
+		LOG_ERROR("Previous alloc is still in progress");
 		 return (0);
 	}
 	if (name.length() == 0) {
-		LOG_DEBUG("Name of beam not set, cannot alloc new beam");
+		LOG_ERROR("Name of beam not set, cannot alloc new beam");
 		return (0);
 	}
 	if (subarrayname.length() == 0)  {
-		LOG_DEBUG("SubArrayName not set, cannot alloc new beam");
+		LOG_ERROR("SubArrayName not set, cannot alloc new beam");
 		return (0); 
 	}
 
@@ -438,7 +438,7 @@ GCFEvent::TResult BeamServer::enabled(GCFEvent& event, GCFPortInterface& port)
 	case BS_BEAMALLOC: {
 		BSBeamallocEvent 	allocEvent(event);
 		if (beamalloc_start(allocEvent, port)) {
-			LOG_DEBUG_STR("Beam allocation started, going to beamalloc_state");
+			LOG_INFO_STR("Beam allocation started, going to beamalloc_state");
 			TRAN(BeamServer::beamalloc_state);
 		}
 	}
@@ -634,7 +634,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			m_bt.getPort()->send(beamallocack);
 		} 
 		else {
-			LOG_INFO("Failed to subscribe to subarray");
+			LOG_ERROR("Failed to subscribe to subarray");
 
 			// failed to subscribe
 			beamallocack.status = ERR_BEAMALLOC;
@@ -655,7 +655,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 		defer(event, port); // process F_DISCONNECTED again in enabled state
 
 		if (&port == m_bt.getPort()) {
-			LOG_DEBUG("Lost connection, going back to 'enabled' state");
+			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
 	}
@@ -726,7 +726,7 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 		defer(event, port); // process F_DISCONNECTED again in enabled state
 
 		if (&port == m_bt.getPort()) {
-			LOG_DEBUG("Lost connection, going back to 'enabled' state");
+			LOG_WARN("Lost connection, going back to 'enabled' state");
 			TRAN(BeamServer::enabled);
 		}
 	}
@@ -820,7 +820,7 @@ bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
 	Beam* beam = newBeam(m_bt, &port, ba.name, ba.subarrayname, ba.allocation);
 
 	if (!beam) {
-		LOG_INFO("BEAMALLOC: failed to allocate beam");
+		LOG_FATAL_STR("BEAMALLOC: failed to allocate beam " << ba.name << " on " << ba.subarrayname);
 
 		BSBeamallocackEvent ack;
 		ack.handle = 0;
@@ -842,7 +842,7 @@ bool BeamServer::beamfree_start(BSBeamfreeEvent&  bf,
 	Beam* beam = (Beam*)bf.handle;
 
 	if (!m_beams.exists(beam)) { 
-		LOG_ERROR("BEAMFREE failed: beam does not exist");
+		LOG_FATAL_STR("BEAMFREE failed: beam " << (Beam*)bf.handle << " does not exist");
 
 		BSBeamfreeackEvent ack;
 		ack.handle = bf.handle;
@@ -1084,7 +1084,7 @@ int main(int argc, char** argv)
 		g_bf_gain = GET_CONFIG("BeamServer.BF_GAIN", i);
 	}
 	catch (Exception e) {
-		cerr << "Failed to load configuration files: " << e.text() << endl;
+		LOG_FATAL_STR("Failed to load configuration files: " << e.text());
 		exit(EXIT_FAILURE);
 	}
 
@@ -1096,7 +1096,7 @@ int main(int argc, char** argv)
 		GCFTask::run();
 	}
 	catch (Exception e) {
-		cerr << "Exception: " << e.text() << endl;
+		LOG_FATAL_STR("Exception: " << e.text());
 		exit(EXIT_FAILURE);
 	}
 

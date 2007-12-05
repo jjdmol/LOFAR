@@ -76,6 +76,8 @@ bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubb
 {
 	// check mapsize with number of subbands
 	if (allocation().size() == 0 || allocation().size() > (unsigned)nsubbands) {
+		LOG_ERROR_STR("Need " << nsubbands << " slots for mapping the beamlets, only " 
+							  << allocation().size() << " available");
 		return (false);
 	}
 
@@ -103,6 +105,7 @@ bool Beam::allocate(Beamlet2SubbandMap allocation, Beamlets& beamlets, int nsubb
 failure:
 	// cleanup on failure
 	deallocate();
+	LOG_ERROR("Overlap in beamlets, no allocation possible");
 	return (false);
 }
 
@@ -113,6 +116,7 @@ bool Beam::modify(BS_Protocol::Beamlet2SubbandMap allocation)
 {
 	// new and old size should match
 	if (allocation().size() != m_allocation().size()) {
+		LOG_ERROR ("The number of beamlets may no be changed during reallocation");
 		return (false);
 	}
 
@@ -122,6 +126,7 @@ bool Beam::modify(BS_Protocol::Beamlet2SubbandMap allocation)
 	for (it1 = allocation().begin(), it2 = m_allocation().begin();
 										it1 != allocation().end(); ++it1, ++it2) {
 		if ((*it1).first != (*it2).first) {
+			LOG_ERROR("Overlap in beamlets, no re-allocation possible");
 			return (false);
 		}
 	}
