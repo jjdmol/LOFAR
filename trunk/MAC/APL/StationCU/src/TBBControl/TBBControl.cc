@@ -20,20 +20,7 @@
 //#
 //#  $Id$
 
-/*
-####################################
-// moeten nog in ControllerDefines.h
-CT_RESULT_NOBOARD_ERROR,
-CT_RESULT_MODE_ERROR,
-CT_RESULT_ALLOC_ERROR,
-CT_RESULT_TRIGSETUP_ERROR,
-CT_RESULT_TRIGCOEF_ERROR,
-CT_RESULT_RECORD_ERROR,
 
-CNTLRTYPE_TBBCTRL,					// TBBControl
-
-####################################
-*/
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
@@ -90,7 +77,7 @@ TBBControl::TBBControl(const string&	cntlrName) :
 	globalParameterSet()->adoptFile(string(LOFAR_SHARE_LOCATION)+"/"+cntlrName);
 
 	itsObs = new TBBObservation(globalParameterSet());	// does all nasty conversions
-
+	LOG_DEBUG_STR(*itsObs);
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");
 	itsInstanceNr = globalParameterSet()->getUint32("_instanceNr");
@@ -266,7 +253,15 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 			LOG_INFO ("Going to started state");
 			TRAN(TBBControl::started_state);				// go to next state.
 		} break;
-	
+		
+		case CONTROL_RELEASE: {
+			CONTROLReleaseEvent		msg(event);
+			LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
+			sendControlResult(port, CONTROL_RELEASED, msg.cntlrName, CT_RESULT_NO_ERROR);
+			setState(CTState::RELEASED);
+			TRAN(TBBControl::released_state);
+		} break;
+		
 		default: {
 			status = _defaultEventHandler(event, port);
 		} break;
@@ -335,11 +330,15 @@ GCFEvent::TResult TBBControl::started_state(GCFEvent& event, GCFPortInterface& p
 			LOG_DEBUG ("Trying to connect to TBBDriver");
 			itsTBBDriver->open();		// will result in F_CONN or F_DISCONN
 		} break;
-	
-		case CONTROL_QUIT: {
-			TRAN(TBBControl::quiting_state);
+		
+		case CONTROL_RELEASE: {
+			CONTROLReleaseEvent		msg(event);
+			LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
+			sendControlResult(port, CONTROL_RELEASED, msg.cntlrName, CT_RESULT_NO_ERROR);
+			setState(CTState::RELEASED);
+			TRAN(TBBControl::released_state);
 		} break;
-	
+			
 		default: {
 			status = _defaultEventHandler(event, port);
 		} break;
@@ -380,15 +379,25 @@ GCFEvent::TResult TBBControl::claimed_state(GCFEvent& event, GCFPortInterface& p
 			CONTROLPrepareEvent		msg(event);
 			LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
 			setState(CTState::PREPARE);
-			
-			// start setting up the observation
-			TRAN(TBBControl::doTBBmode);		
-		} break;
-	
-		case CONTROL_QUIT: {
-			TRAN(TBBControl::quiting_state);
+			if (itsObs->TBBsetting.size() != 0) {
+				// start setting up the observation
+				TRAN(TBBControl::doTBBmode);		
+			} else {
+				// no observations to setup, go direct prepared state
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_NO_ERROR);
+				setState(CTState::PREPARED);
+				TRAN(TBBControl::prepared_state);				// go to prepared state.
+			}
 		} break;
 		
+		case CONTROL_RELEASE: {
+			CONTROLReleaseEvent		msg(event);
+			LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
+			sendControlResult(port, CONTROL_RELEASED, msg.cntlrName, CT_RESULT_NO_ERROR);
+			setState(CTState::RELEASED);
+			TRAN(TBBControl::released_state);
+		} break;
+			
 		default: {
 			status = _defaultEventHandler(event, port);
 		} break;
@@ -415,7 +424,7 @@ GCFEvent::TResult TBBControl::doTBBmode(GCFEvent& event, GCFPortInterface& port)
 			
 			cmd.rec_mode = itsObs->operatingMode;
 			// info to pvss
-		
+			LOG_DEBUG_STR("send TBB_MODE cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
@@ -423,9 +432,9 @@ GCFEvent::TResult TBBControl::doTBBmode(GCFEvent& event, GCFPortInterface& port)
 			TBBModeAckEvent ack(event);
 			bool status_ok = true;
 			
-			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
-				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
-					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+			for (int b = 0; b < MAX_N_TBBBOARDS; b++) {
+				if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (b * 16); i < ((b + 1) * 16); i++) {  // loop over rcu's on board[i]
 						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
 					}
 				}
@@ -436,6 +445,7 @@ GCFEvent::TResult TBBControl::doTBBmode(GCFEvent& event, GCFPortInterface& port)
 			} else {
 				LOG_ERROR_STR ("Failed to set the operating mode for all the rcus");
 				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("operatingMode error"));
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_PREPARE_FAILED);
 				setState(CTState::CLAIMED);
 				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
 			}
@@ -472,7 +482,7 @@ GCFEvent::TResult TBBControl::doTBBalloc(GCFEvent& event, GCFPortInterface& port
 				cmd.rcu_mask.set(i,itsObs->allRCUset.test(i));
 			}    
 			// info to pvss
-		
+			LOG_DEBUG_STR("send TBB_ALLOC cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
@@ -480,9 +490,9 @@ GCFEvent::TResult TBBControl::doTBBalloc(GCFEvent& event, GCFPortInterface& port
 			TBBModeAckEvent ack(event);
 			bool status_ok = true;
 			
-			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
-				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
-					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+			for (int b = 0; b < MAX_N_TBBBOARDS; b++) {
+				if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (b * 16); i < ((b + 1) * 16); i++) {  // loop over rcu's on board[b]
 						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
 					}
 				}
@@ -493,6 +503,7 @@ GCFEvent::TResult TBBControl::doTBBalloc(GCFEvent& event, GCFPortInterface& port
 			} else {
 				LOG_ERROR_STR ("Failed to allocate the memory for the selected rcus");
 				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("alloc error"));
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_PREPARE_FAILED);
 				setState(CTState::CLAIMED);
 				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
 			}
@@ -524,7 +535,7 @@ GCFEvent::TResult TBBControl::doTBBtrigsetup(GCFEvent& event, GCFPortInterface& 
 	switch (event.signal) {
 		case F_ENTRY: {
 			TBBTrigSetupEvent cmd;
-			
+
 			vector<TBBObservation::sTBBsetting>::iterator it;
 			for (it = itsObs->TBBsetting.begin(); it != itsObs->TBBsetting.end(); it++ ) {
 				for (int i = 0; i < MAX_N_RCUS; i++) {
@@ -533,12 +544,12 @@ GCFEvent::TResult TBBControl::doTBBtrigsetup(GCFEvent& event, GCFPortInterface& 
 						cmd.setup[i].start_mode		= (*it).startLevel;
 						cmd.setup[i].stop_mode		= (*it).stopLevel;
 						cmd.setup[i].filter_select= (*it).filter;
-						cmd.setup[i].window				= (*it).detectWindow;
+						cmd.setup[i].window				= (*it).detectWindow;						
 					}    
 				}   
 			}
 			// info to pvss
-		
+			LOG_DEBUG_STR("send TBB_TRIG_SETUP cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
@@ -546,9 +557,9 @@ GCFEvent::TResult TBBControl::doTBBtrigsetup(GCFEvent& event, GCFPortInterface& 
 			TBBTrigSetupAckEvent ack(event);
 			bool status_ok = true;
 			
-			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
-				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
-					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+			for (int b = 0; b < MAX_N_TBBBOARDS; b++) {
+				if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (b * 16); i < ((b + 1) * 16); i++) {  // loop over rcu's on board[b]
 						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
 					}
 				}
@@ -559,6 +570,7 @@ GCFEvent::TResult TBBControl::doTBBtrigsetup(GCFEvent& event, GCFPortInterface& 
 			} else {
 				LOG_ERROR_STR ("Failed to setup the trigger system for the selected rcus");
 				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("setup error"));
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_PREPARE_FAILED);
 				setState(CTState::CLAIMED);
 				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
 			}
@@ -604,7 +616,7 @@ GCFEvent::TResult TBBControl::doTBBtrigcoef(GCFEvent& event, GCFPortInterface& p
 				}   
 			}
 			// info to pvss
-		
+			LOG_DEBUG_STR("send TBB_TRIG_COEF cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
@@ -612,9 +624,9 @@ GCFEvent::TResult TBBControl::doTBBtrigcoef(GCFEvent& event, GCFPortInterface& p
 			TBBTrigCoefAckEvent ack(event);
 			bool status_ok = true;
 			
-			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
-				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
-					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+			for (int b = 0; b < MAX_N_TBBBOARDS; b++) {
+				if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (b * 16); i < ((b + 1) * 16); i++) {  // loop over rcu's on board[b]
 						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
 					}
 				}
@@ -625,6 +637,7 @@ GCFEvent::TResult TBBControl::doTBBtrigcoef(GCFEvent& event, GCFPortInterface& p
 			} else {
 				LOG_ERROR_STR ("Failed to setup the trigger coefficients for the selected rcus");
 				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("setup error"));
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_PREPARE_FAILED);
 				setState(CTState::CLAIMED);
 				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
 			}
@@ -662,7 +675,7 @@ GCFEvent::TResult TBBControl::doTBBrecord(GCFEvent& event, GCFPortInterface& por
 				cmd.rcu_mask.set(i,itsObs->allRCUset.test(i));
 			} 
 			// info to pvss
-		
+			LOG_DEBUG_STR("send TBB_RECORD cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
@@ -670,19 +683,20 @@ GCFEvent::TResult TBBControl::doTBBrecord(GCFEvent& event, GCFPortInterface& por
 			TBBTrigCoefAckEvent ack(event);
 			bool status_ok = true;
 			
-			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
-				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
-					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+			for (int b = 0; b < MAX_N_TBBBOARDS; b++) {
+				if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (b * 16); i < ((b + 1) * 16); i++) {  // loop over rcu's on board[b]
 						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
 					}
 				}
 			}
 			
 			if (status_ok) {
-				TRAN(TBBControl::doTBBrelease);				// go to next state.
+				TRAN(TBBControl::doTBBsubscribe);				// go to next state.
 			} else {
 				LOG_ERROR_STR ("Failed to start recording for the selected rcus");
 				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("record error"));
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_PREPARE_FAILED);
 				setState(CTState::CLAIMED);
 				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
 			}
@@ -716,12 +730,12 @@ GCFEvent::TResult TBBControl::doTBBsubscribe(GCFEvent& event, GCFPortInterface& 
 		case F_ENTRY: {
 			TBBSubscribeEvent cmd;
 			// info to pvss
+			LOG_DEBUG_STR("send TBB_SUBSCRIBE cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
 		case TBB_SUBSCRIBE_ACK: {
 			TBBSubscribeAckEvent ack(event);
-			
 			TRAN(TBBControl::doTBBrelease);				// go to next state.
 		} break;
 	
@@ -758,6 +772,7 @@ GCFEvent::TResult TBBControl::doTBBrelease(GCFEvent& event, GCFPortInterface& po
 			} 
 				
 			// info to pvss
+			LOG_DEBUG_STR("send TBB_RELEASE cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
@@ -765,20 +780,23 @@ GCFEvent::TResult TBBControl::doTBBrelease(GCFEvent& event, GCFPortInterface& po
 			TBBTrigReleaseAckEvent ack(event);
 			bool status_ok = true;
 			
-			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
-				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
-					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
+			for (int b = 0; b < MAX_N_TBBBOARDS; b++) {
+				if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (b * 16); i < ((b + 1) * 16); i++) {  // loop over rcu's on board[b]
 						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
 					}
 				}
 			}
 			
 			if (status_ok) {
-				TRAN(TBBControl::prepared_state);				// go to next state.
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_NO_ERROR);
+				setState(CTState::PREPARED);	
+				TRAN(TBBControl::prepared_state);				// go to prepared state.
 			} else {
 				LOG_ERROR_STR ("Failed to release the trigger system for the selected rcus");
 				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("release error"));
-				setState(CTState::CLAIMED);
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_PREPARE_FAILED);
+				setState(CTState::CLAIMED);		
 				TRAN(TBBControl::claimed_state);			// go to claimed_state state.
 			}
 		} break;
@@ -832,11 +850,15 @@ GCFEvent::TResult TBBControl::prepared_state(GCFEvent& event, GCFPortInterface& 
 			setState(CTState::RESUMED);
 			TRAN(TBBControl::active_state);
 		} break;
-			
-		case CONTROL_QUIT: {
-			TRAN(TBBControl::quiting_state);
-		} break;
 		
+		case CONTROL_RELEASE: {
+			CONTROLReleaseEvent		msg(event);
+			LOG_DEBUG_STR("Received RELEASE(" << msg.cntlrName << ")");
+			sendControlResult(port, CONTROL_RELEASED, msg.cntlrName, CT_RESULT_NO_ERROR);
+			setState(CTState::RELEASE);
+			TRAN(TBBControl::doTBBunsubscribe);
+		} break;
+				
 		default: {
 			status = _defaultEventHandler(event, port);
 		} break;
@@ -844,10 +866,6 @@ GCFEvent::TResult TBBControl::prepared_state(GCFEvent& event, GCFPortInterface& 
 
 	return (status);
 }
-
-
-
-
 
 //==============================================================================
 // active_state(event, port)
@@ -867,7 +885,6 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 			itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
 		} break;
 	
-		case F_INIT:
 		case F_EXIT: {
 		} break;
 	
@@ -909,27 +926,9 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 			setState(CTState::SUSPEND);
 			sendControlResult(port, CONTROL_SUSPENDED, msg.cntlrName, CT_RESULT_NO_ERROR);
 			setState(CTState::SUSPENDED);
+			TRAN(TBBControl::prepared_state);
 		} break;
-	
-		case CONTROL_RELEASE: {
-			CONTROLReleaseEvent		msg(event);
-			LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
-			setState(CTState::RELEASE);
-			/*
-			if (!doRelease()) {
-				LOG_WARN_STR("Cannot release a beam that was not allocated, continuing");
-				setState(CTState::RELEASED);
-				sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-																CT_RESULT_NO_ERROR);
-				TRAN(TBBControl::claimed_state);
-			}
-			*/
-			
-		} break;
-	
-		case CONTROL_QUIT: {
-			TRAN(TBBControl::quiting_state);
-		} break;
+		
 	
 		// -------------------- EVENTS RECEIVED FROM TBBDRIVER --------------------
 	// TODO TBB
@@ -948,39 +947,19 @@ GCFEvent::TResult TBBControl::active_state(GCFEvent& event, GCFPortInterface& po
 			
 			LOG_TRACE_FLOW ("Sending trigger to PVSS");
 			
-			itsPropertySet->setValue(PN_TBC_TRIGGER_RCU_NR,	GCFPVInteger(msg.rcu),0.0,false);				
-			itsPropertySet->setValue(PN_TBC_TRIGGER_SEQUENCE_NR,	GCFPVInteger(msg.sequence_nr),0.0,false);
-			itsPropertySet->setValue(PN_TBC_TRIGGER_TIME,	GCFPVInteger(msg.time),0.0,false);
-			itsPropertySet->setValue(PN_TBC_TRIGGER_SAMPLE_NR,	GCFPVInteger(msg.sample_nr),0.0,false);
-			itsPropertySet->setValue(PN_TBC_TRIGGER_SUM,	GCFPVInteger(msg.trigger_sum),0.0,false);
-			itsPropertySet->setValue(PN_TBC_TRIGGER_NR_SAMPLES,	GCFPVInteger(msg.trigger_samples),0.0,false);
-			itsPropertySet->setValue(PN_TBC_TRIGGER_PEAK_VALUE,	GCFPVInteger(msg.peak_value),0.0,false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_RCU_NR,	     GCFPVInteger(msg.rcu),            0.0, false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_SEQUENCE_NR, GCFPVInteger(msg.sequence_nr),    0.0, false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_TIME,	     GCFPVInteger(msg.time),           0.0, false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_SAMPLE_NR,	  GCFPVInteger(msg.sample_nr),      0.0, false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_SUM,	        GCFPVInteger(msg.trigger_sum),    0.0, false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_NR_SAMPLES,  GCFPVInteger(msg.trigger_samples),0.0, false);
+			itsPropertySet->setValue(PN_TBC_TRIGGER_PEAK_VALUE,  GCFPVInteger(msg.peak_value),     0.0, false);
+			// The Navigator also needs all values combined into one field
+			string collection(formatString("%d|%d|%d|%d|%d|%d|%d|0", msg.rcu, msg.sequence_nr, msg.time, 
+									msg.sample_nr, msg.trigger_sum, msg.trigger_samples, msg.peak_value));
+			itsPropertySet->setValue(PN_TBC_TRIGGER_TABLE,		  GCFPVString (collection),         0.0, false);
 			itsPropertySet->flush();
 		} break;
-		
-		case TBB_STOP_ACK:{
-			TBBStopAckEvent ack;
-			bool status_ok = true;
-			
-			for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
-				if (ack.status_mask[i] != TBB_SUCCESS) {  // if error, check if rcu is used
-					for (int i = (i * 16); i < ((i + 1) * 16); i++) {  // loop over rcu's on board[i]
-						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
-					}
-				}
-			}
-			
-			if (!status_ok) {
-				LOG_ERROR_STR ("Failed to stop recording for selected rcus");
-				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("stop error"));
-			}
-			
-		} break;
-	
-		case TBB_READ_ACK: {
-			TBBReadAckEvent ack;
-
-		} break; 
 	
 		default: {
 			status = _defaultEventHandler(event, port);
@@ -1011,12 +990,26 @@ GCFEvent::TResult TBBControl::doTBBstop(GCFEvent& event, GCFPortInterface& port)
   		}
 						
 			// info to pvss
+			LOG_DEBUG_STR("send TBB_STOP cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
 		case TBB_STOP_ACK: {
 			TBBStopAckEvent ack(event);
+			bool status_ok = true;
 			
+			for (int b = 0; b < MAX_N_TBBBOARDS; b++) {
+				if (ack.status_mask[b] != TBB_SUCCESS) {  // if error, check if rcu is used
+					for (int i = (b * 16); i < ((b + 1) * 16); i++) {  // loop over rcu's on board[b]
+						if (itsObs->allRCUset.test(i)) { status_ok = false;	} // check if rcu is selected
+					}
+				}
+			}
+			
+			if (!status_ok) {
+				LOG_ERROR_STR ("Failed to stop recording for selected rcus");
+				itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("stop error"));
+			}
 			TRAN(TBBControl::doTBBread);				// go to next state.
 		} break;
 	
@@ -1054,6 +1047,7 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 			  cmd.sampletime	=	read.itsSampleTime;
 			  cmd.prepages		= read.itsPrePages;  
 			  cmd. postpages	=	read.itsPostPages; 
+				LOG_DEBUG_STR("send TBB_READ cmd");		
 				itsTBBDriver->send(cmd);    
 			}
 			// info to pvss
@@ -1108,6 +1102,7 @@ GCFEvent::TResult TBBControl::doTBBunsubscribe(GCFEvent& event, GCFPortInterface
 		case F_ENTRY: {
 			TBBUnsubscribeEvent cmd;
 			// info to pvss
+			LOG_DEBUG_STR("send TBB_UNSUBSCRIBE cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
@@ -1149,19 +1144,62 @@ GCFEvent::TResult TBBControl::doTBBfree(GCFEvent& event, GCFPortInterface& port)
 			} 
 		
 			// info to pvss
+			LOG_DEBUG_STR("send TBB_FREE cmd");		
 			itsTBBDriver->send(cmd);
 		} break;
 
 		case TBB_FREE_ACK: {
 			TBBFreeAckEvent ack(event);
-			
-			TRAN(TBBControl::quiting_state);				// go to next state.
+			setState(CTState::RELEASED);
+			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
+																CT_RESULT_NO_ERROR);
+			TRAN(TBBControl::released_state);
 		} break;
 	
 		case F_DISCONNECTED: {
 			_disconnectedHandler(port);
 		} break;
 					
+		default: {
+			status = _defaultEventHandler(event, port);
+		} break;
+	}
+
+	return (status);
+}
+
+//==============================================================================
+// released_state(event, port)
+//
+// wait for PREPARE event.
+//==============================================================================
+GCFEvent::TResult TBBControl::released_state(GCFEvent& event, GCFPortInterface& port)
+{
+	LOG_DEBUG_STR ("released:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (event.signal) {
+		case F_ENTRY: {
+			// update PVSS
+			// itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("claimed"));
+			itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+		} break;
+	
+		case F_DISCONNECTED: {
+			port.close();
+			ASSERTSTR (&port == itsTBBDriver, 
+									"F_DISCONNECTED event from port " << port.getName());
+			LOG_WARN("Connection with TBBDriver lost, going to reconnect state.");
+			TRAN(TBBControl::started_state);
+		} break;
+	
+		// -------------------- EVENTS RECEIVED FROM PARENT CONTROL --------------------
+				
+		case CONTROL_QUIT: {
+			TRAN(TBBControl::quiting_state);
+		} break;
+		
 		default: {
 			status = _defaultEventHandler(event, port);
 		} break;
@@ -1247,6 +1285,7 @@ GCFEvent::TResult TBBControl::_defaultEventHandler(GCFEvent&			event,
 	GCFEvent::TResult	result(GCFEvent::NOT_HANDLED);
 
 	switch (event.signal) {
+		
 		case CONTROL_CONNECT:
 		case CONTROL_RESYNC:
 		case CONTROL_SCHEDULE:	// TODO: we should do something with this
@@ -1255,11 +1294,11 @@ GCFEvent::TResult TBBControl::_defaultEventHandler(GCFEvent&			event,
 		case CONTROL_RESUME:
 		case CONTROL_SUSPEND:
 		case CONTROL_RELEASE:
-		case CONTROL_QUIT:
-			 if (sendControlResult(port, event.signal, getName(), CT_RESULT_NO_ERROR)) {
+		case CONTROL_QUIT: {
+			if (sendControlResult(port, event.signal, getName(), CT_RESULT_NO_ERROR)) {
 				result = GCFEvent::HANDLED;
-			}
-			break;
+			}	break;
+		}
 		
 		case CONTROL_CONNECTED:
 		case CONTROL_RESYNCED:
@@ -1269,15 +1308,27 @@ GCFEvent::TResult TBBControl::_defaultEventHandler(GCFEvent&			event,
 		case CONTROL_RESUMED:
 		case CONTROL_SUSPENDED:
 		case CONTROL_RELEASED:
-		case CONTROL_QUITED:
+		case CONTROL_QUITED: {
 			result = GCFEvent::HANDLED;
-			break;
-
+		} break;
+		
 		case DP_CHANGED: {
 			LOG_DEBUG_STR("DP " << DPChangedEvent(event).DPname << " was changed"); 
 			result = GCFEvent::HANDLED;
 		}
 		break;
+		
+		case DP_SET: {
+			LOG_DEBUG_STR("DP " << DPSetEvent(event).DPname << " was set"); 
+			result = GCFEvent::HANDLED;
+		}
+		break;
+
+		case F_EXIT: {
+			result = GCFEvent::HANDLED;
+		}
+		break;
+		
 	}
 
 	if (result == GCFEvent::NOT_HANDLED) {
@@ -1310,6 +1361,11 @@ void TBBControl::_disconnectedHandler(GCFPortInterface& port)
 
 
 /*
+case CONTROL_QUIT: {
+			TRAN(TBBControl::quiting_state);
+		} break;
+
+
 case TBB_ALLOC_ACK: {
 
 			int16 result = handleTBBAllocAck(event);
