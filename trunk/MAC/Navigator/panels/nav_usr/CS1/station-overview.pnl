@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,251 109 950 741 N "_3DFace" 1
+PANEL,671 237 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -32,6 +32,7 @@ PANEL,251 109 950 741 N "_3DFace" 1
 EE E E 1 0 0 0  10 10
 "" 0 1
 E"//keep ringdetails
+#uses \"nav_fw/gcfnav-panel-util.ctl\"
 string ring=\"\";
 
 // keep callernode

@@ -219,14 +219,14 @@ void objectStateTriggered(string dp1, string trigger,
   string element   = "";
   
   // strip element name and datapoint
-  datapoint = dpSubStr(trigger,DPSUB_SYS_DP);
+  datapoint = dpSubStr(trigger,DPSUB_DP);
   
   // skip the point
   element = substr(trigger,strlen(datapoint)+1,((strlen(trigger))-(strlen(datapoint))));
 
   LOG_DEBUG("state:  " + state + " DP: " + datapoint + " Element: " + element + " Message: " + message);
   // if all needed values are available we can start doing the major update.
-  if (state > 0 && datapoint != "" && element != "" && dpExists(datapoint+"."+element)){
+  if (state >= 0 && datapoint != "" && element != "" && dpExists(datapoint+"."+element)){
 
     setStates(datapoint,element,state,message,false);
   } else {
