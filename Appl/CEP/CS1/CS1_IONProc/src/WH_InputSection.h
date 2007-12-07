@@ -76,6 +76,7 @@ class WH_InputSection: public WorkHolder {
 
     TransportHolder *itsInputTH;
     unsigned itsStationNr;
+    string   itsStationName;
     
     CS1_Parset *itsCS1PS;
     

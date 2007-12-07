@@ -53,6 +53,7 @@ WH_InputSection::WH_InputSection(const string &name,
   itsInputThread(0),
   itsInputTH(inputTH),
   itsStationNr(stationNumber),
+  itsStationName(ps->stationName(stationNumber)),
   itsCS1PS(ps),
   itsBBuffer(0),
   itsPrePostTimer("pre/post"),
@@ -181,7 +182,7 @@ void WH_InputSection::process()
   // set flags
   itsBBuffer->readFlags(itsIONtoCNdata.flags());
   limitFlagsLength(itsIONtoCNdata.flags());
-  std::clog << "RSP " << itsStationNr << ' ' << delayedStamp << " delay: " << samplesDelay << " flags: " << itsIONtoCNdata.flags() << " (" << (100.0 * itsIONtoCNdata.flags().count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl;
+  std::clog << itsStationName << ' ' << delayedStamp << " delay: " << samplesDelay << " flags: " << itsIONtoCNdata.flags() << " (" << (100.0 * itsIONtoCNdata.flags().count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl;
 
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
     unsigned	    core = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
