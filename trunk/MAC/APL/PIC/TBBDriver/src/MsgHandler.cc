@@ -45,19 +45,35 @@ MsgHandler::~MsgHandler()
 }
 
 //-----------------------------------------------------------------------------
-void MsgHandler::addClient(GCFPortInterface& port)
+void MsgHandler::addTriggerClient(GCFPortInterface& port)
 {
-	itsClientMsgList.push_back(&port);	// add client to list
+	itsClientTriggerMsgList.push_back(&port);	// add client to list
 	
-	itsClientMsgList.sort();	// and remove double inputs
-	itsClientMsgList.unique();
+	itsClientTriggerMsgList.sort();	// and remove double inputs
+	itsClientTriggerMsgList.unique();
 }
 
 //-----------------------------------------------------------------------------
-void MsgHandler::removeClient(GCFPortInterface& port)
+void MsgHandler::removeTriggerClient(GCFPortInterface& port)
 {
-	itsClientMsgList.remove(&port);	// remove client from list
+	itsClientTriggerMsgList.remove(&port);	// remove client from list
 }
+
+//-----------------------------------------------------------------------------
+void MsgHandler::addHardwareClient(GCFPortInterface& port)
+{
+	itsClientHardwareMsgList.push_back(&port);	// add client to list
+	
+	itsClientHardwareMsgList.sort();	// and remove double inputs
+	itsClientHardwareMsgList.unique();
+}
+
+//-----------------------------------------------------------------------------
+void MsgHandler::removeHardwareClient(GCFPortInterface& port)
+{
+	itsClientHardwareMsgList.remove(&port);	// remove client from list
+}
+
 
 //-----------------------------------------------------------------------------
 void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
@@ -73,8 +89,9 @@ void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 	itsTriggerE->trigger_samples	= TPE->trigger.samples;
 	itsTriggerE->peak_value 			= TPE->trigger.peak;
 				
-	sendMessage(*itsTriggerE);
+	sendTriggerMessage(*itsTriggerE);
 	TS->setChTriggered(channel, true);
+		
 	delete TPE;		
 }
 
@@ -86,7 +103,7 @@ void MsgHandler::sendError(GCFEvent& event)
 		
 	itsErrorE->code	= TPE->code;
 	
-	sendMessage(*itsErrorE);
+	sendHardwareMessage(*itsErrorE);
 	
 	delete TPE;		
 }
@@ -96,21 +113,35 @@ void MsgHandler::sendBoardChange(uint32 activeboards)
 {
 	itsBoardchangeE->activeboards = activeboards;
 	
-	sendMessage(*itsBoardchangeE);
+	sendHardwareMessage(*itsBoardchangeE);
 }
 
 //-----------------------------------------------------------------------------
-void MsgHandler::sendMessage(GCFEvent& event)
+void MsgHandler::sendTriggerMessage(GCFEvent& event)
 {
-  if (!itsClientMsgList.empty()) {
-    for (list<GCFPortInterface*>::iterator it = itsClientMsgList.begin();
-         it != itsClientMsgList.end();
+  if (!itsClientTriggerMsgList.empty()) {
+    for (list<GCFPortInterface*>::iterator it = itsClientTriggerMsgList.begin();
+         it != itsClientTriggerMsgList.end();
          it++)
     {
   		(*it)->send(event);
     }
   }
 }
+
+//-----------------------------------------------------------------------------
+void MsgHandler::sendHardwareMessage(GCFEvent& event)
+{
+  if (!itsClientHardwareMsgList.empty()) {
+    for (list<GCFPortInterface*>::iterator it = itsClientHardwareMsgList.begin();
+         it != itsClientHardwareMsgList.end();
+         it++)
+    {
+  		(*it)->send(event);
+    }
+  }
+}
+
 
 	} // end namespace TBB
 } // end namespace LOFAR

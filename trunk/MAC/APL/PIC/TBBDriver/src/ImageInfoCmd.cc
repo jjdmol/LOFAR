@@ -82,9 +82,9 @@ void ImageInfoCmd::saveTbbEvent(GCFEvent& event)
 	itsTBBE = new TBBImageInfoEvent(event);
 	
 	setBoardNr(itsTBBE->board);	
+	itsTBBackE->board = itsTBBE->board;	
 	
 	itsTBBackE->status_mask = 0;
-	
 	itsImage = 0;
 		
 	// initialize TP send frame
@@ -116,16 +116,35 @@ void ImageInfoCmd::saveTpAckEvent(GCFEvent& event)
 		if (itsTPackE->status == 0) {
 			char info[256];
 			memset(info,0,256);
-			memcpy(info,&itsTPackE->data,256);
+			memcpy(info,&itsTPackE->data[2],256);
+			
 			LOG_DEBUG_STR("ImageInfoCmd: " << info); 
 			
 			itsTBBackE->image_version[itsImage]= itsTPackE->data[0];	  
 			itsTBBackE->write_date[itsImage] = itsTPackE->data[1];	
 			
-			sscanf(&info[8],"%s %s",
-						 &itsTBBackE->tp_file_name[itsImage][0],
-						 &itsTBBackE->mp_file_name[itsImage][0]);
-						
+			memset(itsTBBackE->tp_file_name[itsImage],'\0',16);
+			memset(itsTBBackE->mp_file_name[itsImage],'\0',16);
+			//sscanf(info,"%s %s ",
+			//			 itsTBBackE->tp_file_name[itsImage],
+			//			 itsTBBackE->mp_file_name[itsImage]);
+			char* startptr;
+			char* stopptr;
+			int namesize;
+			
+			startptr = &info[1];
+			stopptr = strstr(startptr," ");
+			if (stopptr != 0) {
+				namesize = stopptr - startptr;
+				memcpy(itsTBBackE->tp_file_name[itsImage],startptr,namesize);
+				
+				startptr = stopptr + 1;
+				stopptr = strstr(startptr + 1," ");
+				if (stopptr != 0) {	
+					namesize = stopptr - startptr;
+					memcpy(itsTBBackE->mp_file_name[itsImage],startptr,namesize);
+				}
+			}			
 			LOG_DEBUG_STR("tp_file_name: " << itsTBBackE->tp_file_name[itsImage]);
 			LOG_DEBUG_STR("mp_file_name: " << itsTBBackE->mp_file_name[itsImage]);
 			//itsTBBackE->image_version[itsImage]= itsTPackE->data[0];	  
