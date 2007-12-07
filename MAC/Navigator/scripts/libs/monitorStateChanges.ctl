@@ -213,21 +213,41 @@ void objectStateTriggered(string dp1, string trigger,
 
   if (trigger == "") return;
 
-  LOG_TRACE("Entered ObjectStateTriggered with trigger:", trigger);
+  LOG_TRACE("Entered ObjectStateTriggered with trigger:" + trigger);
 
   string datapoint = "";
   string element   = "";
   
-  // strip element name and datapoint
-  datapoint = dpSubStr(trigger,DPSUB_DP);
   
-  // skip the point
-  element = substr(trigger,strlen(datapoint)+1,((strlen(trigger))-(strlen(datapoint))));
+  // the datapointname can hold _ and . seperated path elements.  however, after the last point there should be
+  // an element state, or an element childState
+  //
+  // we need to strip that last element from the rest of the pathname
+  
+  // strip the system name
+  trigger = dpSubStr(trigger,DPSUB_DP_EL);
 
+  int start=strpos(trigger,".state");
+  if (start >= 0) {
+  	element = "state";
+  } else {
+    start=strpos(trigger,".childState");
+    if (start >= 0) {
+   	  element = "childState";
+    } else {
+      LOG_DEBUG("ERROR: No state nor childState found in DPName");
+      return;
+    }
+  }
+  
+  // strip the last .state or .childState from the datapoint name.
+  // the remainder is used as path
+  datapoint = (substr(trigger,0,start));
+  
   LOG_DEBUG("state:  " + state + " DP: " + datapoint + " Element: " + element + " Message: " + message);
   // if all needed values are available we can start doing the major update.
   if (state >= 0 && datapoint != "" && element != "" && dpExists(datapoint+"."+element)){
-
+    
     setStates(datapoint,element,state,message,false);
   } else {
     LOG_ERROR("result: not complete command, or database could not be found."+ getLastError());
@@ -253,6 +273,7 @@ void objectStateTriggered(string dp1, string trigger,
 void setStates(string datapoint,string element,int state,string message,bool stationTrigger) {
 
   LOG_TRACE("SetStates reached, datapoint: "+ datapoint+" element: "+ element+ " state: "+state+" message: "+message);
+  string dp;
 
   // If element is state just set the state (might have been done by the callerprocess, 
   // When this is done we have to strip the last treenode, 
@@ -268,37 +289,25 @@ void setStates(string datapoint,string element,int state,string message,bool sta
     if (aVal != state && state > -1) {
       dpSet(datapoint+"."+element,state);
       
-      // set message if not empty
-      dpSet(datapoint+".message",message);
-      
-      //strip the last _xxx from the datapoint
-      dyn_string points=strsplit(datapoint,"_");
-      datapoint="";
-      for (int j=1; j < dynlen(points); j++ ) {
-        if (j>1) datapoint+="_";
-        datapoint+=points[j];
-      }
+      dp = getPathLessOne(datapoint);
+      datapoint=dp;
     } else {
+      LOG_DEBUG("Equal value or state < 0, no need to set new state");
       return;
     }
 
-  } else if (element != "childState") {
+  } else if (element == "childState") {
     LOG_ERROR("Error. unknown element in stateChange trigger: ", element);
     return;
   }
 
-  
+  LOG_DEBUG( "Continueing with setChildState passing path: "+datapoint);
   // set childState if needed, if succeeded set childState for one level less also
   // continue while true
   while ( setChildState(datapoint,state)) {
-
-    //strip the last _xxx from the datapoint
-    dyn_string points=strsplit(datapoint,"_");
-    datapoint="";
-    for (int j=1; j < dynlen(points); j++ ) {
-      if (j>1) datapoint+="_";
-      datapoint+=points[j];
-    }          
+      LOG_DEBUG( "Continueing with setChildState passing path: "+datapoint);
+      dp = getPathLessOne(datapoint);
+      datapoint=dp;
   }
 }
 
@@ -336,14 +345,14 @@ bool setChildState(string Dp,int state) {
   // is executed. This give an error. So for now we do the query two times.
   // the 2nd one only if the first one gives a result > 1;
  
-  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.childState,"+Dp+"_*.state}'";
+  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.childState,"+Dp+"_*.state,"+Dp+".*.childState,"+Dp+".*.state}'";
   int err = dpQuery(query, tab);
 
   if (err < 0 | dynlen(tab)< 2) {
     return true;
   }
 
-  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.childState,"+Dp+"_*.state}' SORT BY 1 DESC";
+  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.*.childState,"+Dp+"_*.childState,"+Dp+"_*.*.state,"+Dp+"_*.state}' SORT BY 1 DESC";
   LOG_DEBUG("Query: ",query);
   err = dpQuery(query, tab);
 
@@ -351,17 +360,39 @@ bool setChildState(string Dp,int state) {
 
    
   if (err < 0) {
+    LOG_ERROR("Error " + err + " while getting query.");
     return false;
   }
  
-  dyn_string aS=strsplit(Dp,"_");
-  int maxElements= dynlen(aS)+1; 
+  dyn_string aS1=strsplit(Dp,"_");
+  int maxElements= dynlen(aS1)+1; 
   int foundElements=0;
+  
+  LOG_DEBUG("max elements for DP  after _ split: "+maxElements);
+  
+  // first check if the last element still has . seperated elements
+  dyn_string aS2=strsplit(aS1[dynlen(aS1)],".");
+  if (dynlen(aS2) > 1) {
+    maxElements+=dynlen(aS2)-1; 
+  }
+
+  LOG_DEBUG("max elements for DP  after . split: "+maxElements);
 
 
   for(z=2;z<=dynlen(tab);z++) {
-    dyn_string aStr=strsplit((string)tab[z][1],"_");
-    foundElements=dynlen(aStr);
+    dyn_string aStr1=strsplit((string)tab[z][1],"_");
+    foundElements=dynlen(aStr1);
+    
+    LOG_DEBUG("Working with dp: " +(string)tab[z][1]+ " that has "+ foundElements +" elements");
+
+	// first check if the last element still has . seperated elements but skip the .state .childState
+  	dyn_string aStr2=strsplit(aStr1[dynlen(aStr1)],".");
+  	if (dynlen(aStr2) > 2) {
+      foundElements+=dynlen(aStr2)-2; 
+    }
+    
+    LOG_DEBUG("and after . check has " + foundElements +" elements");
+
     if(foundElements <= maxElements) {
       LOG_INFO("Have to check DP: ",tab[z][1], " state: ", tab[z][2]);
 
@@ -382,3 +413,54 @@ bool setChildState(string Dp,int state) {
   return false;
 }
 
+///////////////////////////////////////////////////////////////////////////
+//Function getPathLessOne
+// 
+// Returns the given path string less the last item. Paths can contain
+// _ and . seperated items Like in:
+// LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0.AP0 (In fact the . seperated members
+// are nested elements, but we need to tread them as a Path member since they
+// can contain states and or childStates
+//
+//
+// Added 07-12-2008 A.Coolen
+///////////////////////////////////////////////////////////////////////////
+string getPathLessOne(string path) {
+  LOG_TRACE("Entered getPathLessOne with: " + path);
+  
+  string returnVal="";
+  dyn_string aS;
+  
+  // look if there is a . in the pathname, 
+  // if so strip the last one plus point and return the result
+  // and we are done
+  
+  aS = strsplit(path,'.');
+  if (dynlen(aS) > 1) {
+  	returnVal = aS[1];
+  	for (int i=2; i< dynlen(aS);i++) {
+      returnVal += "."+aS[i];
+    }
+    LOG_DEBUG("getPathLessOne returns "+returnVal);
+    return returnVal;
+  }
+  
+  LOG_DEBUG("No . in Path found, continueing with _");
+  // if no . found then look if there is a _ in the pathname, 
+  // if so strip the last one plus _ and return the result
+  // and we are done
+  
+  aS = strsplit(path,'_');
+  if (dynlen(aS) > 1) {
+  	returnVal = aS[1];
+  	for (int i=2; i< dynlen(aS);i++) {
+      returnVal += "_"+aS[i];
+    }
+    LOG_DEBUG("getPathLessOne returns "+returnVal);
+    return returnVal;
+  }
+  
+  // otherwise return empty string
+  
+  return returnVal;
+}
