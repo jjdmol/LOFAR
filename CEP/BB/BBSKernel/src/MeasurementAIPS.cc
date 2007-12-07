@@ -391,7 +391,11 @@ void MeasurementAIPS::write(const VisSelection &selection,
         ++tslot;
         ++tslotIterator;
     }
+
+    // Flush data to disk. This is where most of the time is spent.
+    writeTimer.start();
     tab_selection.flush();
+    writeTimer.stop();
 
     if(mismatch)
     {
