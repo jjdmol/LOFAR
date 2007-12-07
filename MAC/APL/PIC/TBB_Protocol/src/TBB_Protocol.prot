@@ -173,6 +173,14 @@ event = {
 event = {
 	signal = SUBSCRIBE;
 	dir = IN;
+	param = {
+		name = "triggers";
+		type = "bool";
+	};
+	param = {
+		name = "hardware";
+		type = "bool";
+	};
 };
 
 event = {
