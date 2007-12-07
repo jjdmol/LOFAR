@@ -11,10 +11,10 @@ cd $BUILDROOT
 rm -rf LOFAR
 
 #check out LOFAR tree
-cvs co -P LOFAR
+svn co https://svn.astron.nl/LOFAR/trunk LOFAR
 
 #tag new tree with week[year][weeknr]
-cvs tag week`date +%g%W` LOFAR    
+#cvs tag week`date +%g%W` LOFAR    
 
 cd LOFAR
 
