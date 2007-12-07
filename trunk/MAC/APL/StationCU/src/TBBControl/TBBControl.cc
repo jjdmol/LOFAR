@@ -729,6 +729,8 @@ GCFEvent::TResult TBBControl::doTBBsubscribe(GCFEvent& event, GCFPortInterface& 
 	switch (event.signal) {
 		case F_ENTRY: {
 			TBBSubscribeEvent cmd;
+			cmd.triggers = true;
+			cmd.hardware = false;
 			// info to pvss
 			LOG_DEBUG_STR("send TBB_SUBSCRIBE cmd");		
 			itsTBBDriver->send(cmd);
@@ -1047,7 +1049,8 @@ GCFEvent::TResult TBBControl::doTBBread(GCFEvent& event, GCFPortInterface& port)
 			  cmd.sampletime	=	read.itsSampleTime;
 			  cmd.prepages		= read.itsPrePages;  
 			  cmd. postpages	=	read.itsPostPages; 
-				LOG_DEBUG_STR("send TBB_READ cmd");		
+				LOG_DEBUG_STR(formatString("send TBB_READ cmd: %u,%u,%u,%u,%u", 
+								read.itsRcuNr, read.itsTime, read.itsSampleTime, read.itsPrePages, read.itsPostPages));		
 				itsTBBDriver->send(cmd);    
 			}
 			// info to pvss
