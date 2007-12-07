@@ -51,13 +51,17 @@ namespace LOFAR {
 
 			virtual void sendTbbAckEvent(GCFPortInterface* clientport) = 0;
 			
+			bool retry();
+			
+			void setRetry(bool retry);
+	
 			bool waitAck();
 			
 			void setWaitAck(bool waitack);
 			
-			void setSleepTime(uint32 sleeptime);
+			void setSleepTime(double sleeptime);
 			
-			uint32	getSleepTime();
+			double	getSleepTime();
 			
 			bool isDone();
 			
@@ -86,13 +90,14 @@ namespace LOFAR {
     private:
     	TbbSettings *TS;
     	
-    	bool		itsWaitAck;		// true if an ack is expected
+    	bool		itsRetry;		// true if resending of a command is needed
+		bool		itsWaitAck;		// true if an ack is expected
     	bool		itsDone;			// true if the command is completed
     	bool		itsAllPorts;	// true if command must be send to all available ports
     	int32		itsBoard;
-			int32		itsChannel;
-			uint32	itsBoardMask;
-			uint32	itsSleepTime;
+		int32		itsChannel;
+		uint32	itsBoardMask;
+		double	itsSleepTime;
     };
 	} // end TBB namespace
 } // end LOFAR namespace

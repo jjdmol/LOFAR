@@ -108,7 +108,7 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event)
 	
 	nextBoardNr();
 	if (isDone()) {
-		setSleepTime(3); // clearing the registers will last 3 seconds
+		setSleepTime(3.0); // clearing the registers will last 3 seconds
 	}
 }
 

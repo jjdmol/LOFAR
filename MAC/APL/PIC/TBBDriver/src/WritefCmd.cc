@@ -147,7 +147,7 @@ void WritefCmd::sendTpEvent()
 				}
 				
 				TS->boardPort(getBoardNr()).send(*itsTPE);
-				TS->boardPort(getBoardNr()).setTimer(TS->timeout());
+				TS->boardPort(getBoardNr()).setTimer((long)1);
 			} break;
 			
 			// stage 3, verify flash
@@ -189,12 +189,15 @@ void WritefCmd::sendTpEvent()
 					mp_name += 1;
 				}
 				
-				sprintf(info," %s %s",tp_name,mp_name);
+				sprintf(info," %s %s ",tp_name,mp_name);
 				LOG_DEBUG_STR(formatString("ImageInfo: %s",info));
 				
 				itsTPE->data[0] = static_cast<uint32>(itsTBBE->version);
 				itsTPE->data[1] = static_cast<uint32>(write_time);
 				memcpy(&itsTPE->data[2],info,sizeof(info)); 
+				//memcpy(&itsTPE->data[10],tp_name,sizeof(tp_name)); 
+				//memcpy(&itsTPE->data[20],mp_name,sizeof(mp_name)); 
+				
 				
 				//memcpy(&itsTPE->data[0],write_time,sizeof(uint32));
 				//memcpy(&itsTPE->data[1],itsFileNameTp,sizeof(char) * 64);
@@ -369,7 +372,7 @@ void WritefCmd::readFiles()
 	// load Tp hex file
 	itsFile = fopen(itsFileNameTp,"r");
 	if (itsFile == 0) {
-		LOG_DEBUG_STR("Error on opening TP file");
+		LOG_INFO_STR("Error on opening TP file");
 		return;
 	}
 	
@@ -389,7 +392,7 @@ void WritefCmd::readFiles()
 	// load Mp hex file
 	itsFile = fopen(itsFileNameMp,"r");
 	if (itsFile == 0) {
-		LOG_DEBUG_STR("Error on opening MP file");
+		LOG_INFO_STR("Error on opening MP file");
 		return;
 	}
 	

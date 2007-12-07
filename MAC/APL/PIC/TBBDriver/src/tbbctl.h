@@ -740,10 +740,10 @@ class ReadPageCmd : public Command
 		int itsRcuId;
 		int itsSampleFreq;
 		time_t itsTime;
-		int itsSampleNr;
+		uint32 itsSampleNr;
 		int itsSamplesPerFrame;
 		int itsFreqBands;
-		int itsTotalSamples;
+		uint32 itsTotalSamples;
 		int itsTotalBands;
 		int itsBandNr;
 		int itsSliceNr;

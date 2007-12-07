@@ -40,7 +40,7 @@
 #include <ctype.h>
 #include <Common/lofar_set.h>
 #include <time.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 //#include <APL/RTCCommon/gnuplot_i.h>
 
@@ -586,12 +586,12 @@ GCFEvent::TResult TrigInfoCmd::ack(GCFEvent& e)
 	cout << "RCU  Info" << endl;
 	cout << "---  -------------------------------------------------------" << endl;  
 	if (ack.status_mask & TBB_SUCCESS) {
-		cout << formatString(" %2d  sequence   : %u",getRcu(),ack.sequence_nr) << endl;
-		cout << formatString("      time       : %u",ack.time) << endl;
-		cout << formatString("      sample     : %u",ack.sample_nr) << endl;
-		cout << formatString("      sum        : %u",ack.trigger_sum) << endl;
-		cout << formatString("      samples    : %u",ack.trigger_samples) << endl;
-		cout << formatString("      peak value : %u",ack.peak_value) << endl;
+		cout << formatString(" %2d  sequence   : %lu",getRcu(),ack.sequence_nr) << endl;
+		cout << formatString("      time       : %lu",ack.time) << endl;
+		cout << formatString("      sample     : %lu",ack.sample_nr) << endl;
+		cout << formatString("      sum        : %lu",ack.trigger_sum) << endl;
+		cout << formatString("      samples    : %lu",ack.trigger_samples) << endl;
+		cout << formatString("      peak value : %lu",ack.peak_value) << endl;
 		cout << formatString("      flags      : %08X",ack.trigger_flags) << endl;
 	}	else {	
 		cout << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
@@ -707,7 +707,7 @@ ReadCmd::ReadCmd(GCFPortInterface& port) : Command(port),
 void ReadCmd::send()
 {
 	TBBReadEvent event;
-	event.channel = (uint32)getRcu();
+	event.rcu = (uint32)getRcu();
 	event.secondstime = itsSecondsTime;
 	event.sampletime = itsSampleTime;
 	event.prepages = itsPrePages;
@@ -750,7 +750,6 @@ ModeCmd::ModeCmd(GCFPortInterface& port) : Command(port)
 void ModeCmd::send()
 {
 	TBBModeEvent event;
-	event.board = (uint32)getBoard();
 	event.rec_mode = itsRecMode;
 	itsPort.send(event);
 	itsPort.setTimer(DELAY);
@@ -762,10 +761,12 @@ GCFEvent::TResult ModeCmd::ack(GCFEvent& e)
 	TBBModeAckEvent ack(e);
 	cout << "TBB  Info" << endl;
 	cout << "---  -------------------------------------------------------" << endl;  
-	if (ack.status_mask & TBB_SUCCESS) {
-		cout << formatString(" %2d  mode set and UDP/IP configured", getBoard()) << endl;
-	}	else {			
-		cout << formatString(" %2d  %s",getBoard(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
+	for (int i = 0; i < MAX_N_TBBBOARDS; i++) {
+		if (ack.status_mask[i] & TBB_SUCCESS) {
+			cout << formatString(" %2d  mode set and UDP/IP configured", i) << endl;
+		}	else {			
+			cout << formatString(" %2d  %s",i, getDriverErrorStr(ack.status_mask[i]).c_str()) << endl;
+		}
 	}
 	
 	setCmdDone(true);
@@ -958,7 +959,7 @@ ResetCmd::ResetCmd(GCFPortInterface& port) : Command(port)
 {
 	cout << endl;
 	cout << "== TBB =============================================== reset in progress ====" << endl;
-	cout << " wait 5 seconds" << endl;
+	cout << " reset can take 20 seconds" << endl;
 	cout << endl;
 }
 
@@ -968,7 +969,7 @@ void ResetCmd::send()
 	TBBResetEvent event;
 	event.boardmask = getBoardMask();
 	itsPort.send(event);
-	itsPort.setTimer((long)5);
+	itsPort.setTimer(20.0);
 }
 
 //-----------------------------------------------------------------------------
@@ -986,6 +987,7 @@ GCFEvent::TResult ResetCmd::ack(GCFEvent& e)
 			}
 		}
 	}
+	cout << " setting up the boards can take 10 seconds" << endl;
 	
 	setCmdDone(true);
 
@@ -1184,13 +1186,13 @@ GCFEvent::TResult ImageInfoCmd::ack(GCFEvent& e)
 	TBBImageInfoAckEvent ack(e);
 	cout << formatString("Reading image information from TBB %d", getBoard()) << endl;
 	cout << endl;
-	cout << "IMAGE  SW      Flash date_time      TP file name    MP file name" << endl;
-	cout << "-----  ------  -------------------  --------------  --------------" << endl;  
+	cout << "IMAGE   SW       Flash date_time        TP file name       MP file name" << endl;
+	cout << "-----   ------   --------------------   ----------------   ----------------" << endl;  
 	if (ack.status_mask & TBB_SUCCESS) {
 		for (int image = 0; image < 32; image++) {	
 			if (ack.write_date[image] == 0xFFFFFFFF) {
 				//cout << formatString("  %2d   no information",image) << endl;
-				cout << formatString("  %2d   free",image) << endl;
+				cout << formatString("  %2d     free",image) << endl;
 			} else {
 				time_t write_time;
 				struct tm t;
@@ -1199,14 +1201,14 @@ GCFEvent::TResult ImageInfoCmd::ack(GCFEvent& e)
 				write_time = static_cast<time_t>(ack.write_date[image]);
 				t = *gmtime(&write_time);
 				version = static_cast<double>(ack.image_version[image] / 10.);
-				cout << formatString("  %2d   V%5.1lf  %02d-%02d-%4d %2d:%02d:%02d  %-14.14s  %-14.14s",
+				cout << formatString("  %2d    V%5.1lf   %02d-%02d-%4d  %2d:%02d:%02d   %-16.16s   %-16.16s",
 									 	image,
 										version, 
 									 	t.tm_mday,t.tm_mon+1,t.tm_year+1900,
 										t.tm_hour,t.tm_min,t.tm_sec,
 										ack.tp_file_name[image],
 										ack.mp_file_name[image]) << endl;
-				cout << "TP: " << ack.tp_file_name[image] <<  ",  MP: " << ack.mp_file_name[image] << endl;
+				//cout << "TP: " << ack.tp_file_name[image] <<  ",  MP: " << ack.mp_file_name[image] << endl;
 			}
 		}
 	}	else {	
@@ -1806,7 +1808,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			itsFreqBands = static_cast<int>((itsData[4] >> 16) & 0xFFFF);
 			
 			if (itsFreqBands == 0) {
-				itsSampleNr = static_cast<int>(itsData[3]);
+				itsSampleNr = static_cast<uint32>(itsData[3]);
 			} else {
 				itsBandNr = static_cast<int>(itsData[3] & 0x03FF);
 				itsSliceNr = static_cast<int>(itsData[3] >> 10);
@@ -1849,7 +1851,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			
 			snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsTotalBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
 		}
-		itsSamplesPerFrame = static_cast<int>(itsData[4] & 0xFFFF);
+		itsSamplesPerFrame = static_cast<uint32>(itsData[4] & 0xFFFF);
 		
 		// print receive progress on screen
 		if (bar_interval < 1.) {
@@ -1970,9 +1972,9 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 				fprintf(file,"Time of 1e sample/slice  : %s (%u)",timestring,(uint32)itsTime);
 			}
 			if (itsTotalBands > 0) {
-				fprintf(file,"Slice number of 1e slice : %u",itsSliceNr);
-				fprintf(file,"Band number of 1e sample : %u",itsBandNr);
-				fprintf(file,"Number of bands          : %u",itsTotalBands);
+				fprintf(file,"Slice number of 1e slice : %d",itsSliceNr);
+				fprintf(file,"Band number of 1e sample : %d",itsBandNr);
+				fprintf(file,"Number of bands          : %d",itsTotalBands);
 				fprintf(file,"Data file format         : binary complex(int16 Re, int16 Im)");
 			}	else {
 				fprintf(file,"Sample number of 1e sample : %u",itsSampleNr);
@@ -2011,7 +2013,7 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --free [--select=<set>]                                     # free memmory locations for selected rcu's" << endl;
 	cout << " tbbctl --record [--select=<set>]                                   # start recording on selected rcu's" << endl;
 	cout << " tbbctl --stop [--select=<set>]                                     # stop recording on selected rcu's" << endl;
-	cout << " tbbctl --mode=board,[transient | subbands]                         # set mode to configure UDP/IP header for CEP tranport" << endl;
+	cout << " tbbctl --mode=[transient | subbands]                               # set mode to configure UDP/IP header for CEP tranport" << endl;
 	cout << " tbbctl --read=rcunr,secondstime,sampletime,prepages,postpages      # transfer recorded data from rcunr to CEP, " << endl;
 	cout << "                                                                    # use first --mode to setup UDP/IP header" << endl;   
 	cout << "______| TRIGGER |_________________________________________________________________________________________________________" << endl;
@@ -2070,7 +2072,7 @@ TBBCtl::TBBCtl(string name, int argc, char** argv): GCFTask((State)&TBBCtl::init
 	for(int boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) {
 		itsMemory[boardnr] = 0;
 	}
-	registerProtocol(TBB_PROTOCOL, TBB_PROTOCOL_signalnames);
+  GCF::TM::registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
 	itsServerPort.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
 	itsCmdTimer = new GCFTimerPort(*this, "AliveTimer");
 }
@@ -2106,6 +2108,11 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
        }
     } break;
 
+		case TBB_DRIVER_BUSY_ACK: {
+    	cout << "DRIVER BUSY, try again" << endl << flush;
+    	GCFTask::stop();    
+    }
+
     case TBB_GET_CONFIG_ACK: {
       TBBGetConfigAckEvent ack(e);
       itsMaxBoards		= ack.max_boards;
@@ -2119,6 +2126,8 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 			
 			// send subscribe 
       TBBSubscribeEvent subscribe;
+		subscribe.triggers = true;
+		subscribe.hardware = true;
       itsServerPort.send(subscribe);
     } break;
 		
@@ -2190,6 +2199,11 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     
     case TBB_BOARDCHANGE: {
     } break;
+    
+    case TBB_DRIVER_BUSY_ACK: {
+    	cout << "DRIVER BUSY, try again" << endl << flush;
+    	GCFTask::stop();    
+    }
     		
     case TBB_ALLOC_ACK:
     case TBB_RCU_INFO_ACK:
@@ -2519,13 +2533,12 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				ModeCmd* modecmd = new ModeCmd(itsServerPort);
 				command = modecmd;
 				if (optarg) {
-					int board = 0;
 					char rec_mode[64];
-					int numitems = sscanf(optarg, "%d,%s",
-						&board, rec_mode);
-					if (numitems < 2 || numitems == EOF ||(strcmp(rec_mode,"transient") != 0 && strcmp(rec_mode,"subbands") != 0)) {
+					int numitems = sscanf(optarg, "%s",
+						rec_mode);
+					if (numitems < 1 || numitems == EOF ||(strcmp(rec_mode,"transient") != 0 && strcmp(rec_mode,"subbands") != 0)) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
-						cout << "       '--udp=board,rec_mode'" << endl;
+						cout << "       '--udp=rec_mode'" << endl;
 						cout << "       rec_mode=transient or subbands" << endl;  
 						exit(EXIT_FAILURE);
 					}
@@ -2534,10 +2547,6 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						modecmd->setRecMode(TBB_MODE_TRANSIENT);
 					if (strcmp(rec_mode,"subbands") == 0)
 						modecmd->setRecMode(TBB_MODE_SUBBANDS);
-							
-					select.clear();
-		  		select.push_back(board);
-					command->setSelected(true);
 				} 
 				command->setCmdType(BOARDCMD);
 			}	break;									
