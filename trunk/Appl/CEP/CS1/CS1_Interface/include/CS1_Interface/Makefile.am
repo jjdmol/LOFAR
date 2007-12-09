@@ -7,6 +7,7 @@ pkginclude_HEADERS = \
 	DH_Delay.h \
 	DH_Visibilities.h \
 	ION_to_CN.h \
+	PrintVector.h \
 	RSPTimeStamp.h \
 	SparseSet.h \
 	Stub_BGL.h \
