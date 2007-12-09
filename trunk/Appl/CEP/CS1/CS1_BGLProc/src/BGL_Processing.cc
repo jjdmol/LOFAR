@@ -30,6 +30,7 @@
 #include <Transport/TH_MPI.h>
 #include <CS1_Interface/BGL_Configuration.h>
 #include <CS1_Interface/BGL_Mapping.h>
+#include <CS1_Interface/PrintVector.h>
 
 #include <cassert>
 #include <complex>
@@ -47,7 +48,7 @@ extern "C" {
 #endif
 
 #if defined HAVE_MPI
-#define LOG_CONDITION	(itsPersonality.rankInPset() == 0)
+#define LOG_CONDITION	(itsRankInPset == 0)
 //#define LOG_CONDITION	(TH_MPI::getCurrentRank() == 0)
 #else
 #define LOG_CONDITION	1
@@ -104,6 +105,11 @@ BGL_Processing::~BGL_Processing()
 
 #if defined HAVE_BGL
 
+struct Location {
+  unsigned pset, rankInPset;
+};
+
+
 void BGL_Processing::getPersonality()
 {
   int retval = rts_get_personality(&itsPersonality, sizeof itsPersonality);
@@ -118,6 +124,27 @@ void BGL_Processing::getPersonality()
 	      << (itsPersonality.isTorusY() ? 'T' : 'F') << ','
 	      << (itsPersonality.isTorusZ() ? 'T' : 'F') << ')'
 	      << std::endl;
+
+  itsRankInPset = itsPersonality.rankInPset() + itsPersonality.numNodesInPset() * (TH_MPI::getCurrentRank() / itsPersonality.numComputeNodes());
+
+  Location myLocation = {
+    itsPersonality.getPsetNum(), itsRankInPset
+  };
+
+  std::vector<Location> allLocations(TH_MPI::getNumberOfNodes());
+
+  MPI_Gather(&myLocation, 2, MPI_INT, &allLocations[0], 2, MPI_INT, 0, MPI_COMM_WORLD);
+
+  if (TH_MPI::getCurrentRank() == 0) {
+    unsigned nrCoresPerPset = itsPersonality.numNodesInPset() * (itsPersonality.isVirtualNodeMode() ? 2 : 1);
+    std::vector<std::vector<unsigned> > cores(itsPersonality.numPsets(), std::vector<unsigned>(nrCoresPerPset));
+
+    for (unsigned rank = 0; rank < allLocations.size(); rank ++)
+      cores[allLocations[rank].pset][allLocations[rank].rankInPset] = rank;
+
+    for (unsigned pset = 0; pset < itsPersonality.numPsets(); pset ++)
+      std::clog << "pset " << pset << " contains cores " << cores[pset] << std::endl;
+  }
 }
 
 #endif
@@ -129,7 +156,7 @@ void BGL_Processing::initIONode() const
 {
   // one of the compute cores in each Pset has to initialize its I/O node
 
-  if (itsPersonality.rankInPset() == 0 && TH_MPI::getCurrentRank() / itsPersonality.numComputeNodes() == 0) {
+  if (itsRankInPset == 0) {
     std::vector<size_t> lengths;
 
     for (int arg = 0; original_argv[arg] != 0; arg ++) {
@@ -208,7 +235,7 @@ void BGL_Processing::preprocess(CS1_Parset *parset)
 #if defined HAVE_BGL
   unsigned usedCoresPerPset = parset->nrCoresPerPset();
   unsigned myPset	    = itsPersonality.getPsetNum();
-  unsigned myCore	    = BGL_Mapping::reverseMapCoreOnPset(BGLPersonality_rankInPset(&itsPersonality) + itsPersonality.numNodesInPset() * (TH_MPI::getCurrentRank() / itsPersonality.numComputeNodes()), myPset);;
+  unsigned myCore	    = BGL_Mapping::reverseMapCoreOnPset(itsRankInPset, myPset);
 #else
   unsigned usedCoresPerPset = 1;
   unsigned myPset	    = 0;
@@ -288,7 +315,7 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
 #if defined HAVE_BGL
   unsigned usedCoresPerPset = configuration.nrUsedCoresPerPset();
   unsigned myPset	    = itsPersonality.getPsetNum();
-  unsigned myCore	    = BGL_Mapping::reverseMapCoreOnPset(BGLPersonality_rankInPset(&itsPersonality) + itsPersonality.numNodesInPset() * (TH_MPI::getCurrentRank() / itsPersonality.numComputeNodes()), myPset);;
+  unsigned myCore	    = BGL_Mapping::reverseMapCoreOnPset(itsRankInPset, myPset);
 #else
   unsigned usedCoresPerPset = 1;
   unsigned myPset	    = 0;

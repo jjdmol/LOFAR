@@ -6,6 +6,7 @@
 #include <Common/Timer.h>
 #include <Transport/TH_MPI.h>
 #include <CS1_Interface/BGL_Mapping.h>
+#include <CS1_Interface/PrintVector.h>
 
 #if defined HAVE_BGL
 #include <rts.h>
@@ -105,14 +106,8 @@ void Transpose::getMPIgroups(unsigned nrCoresPerPset, const struct BGLPersonalit
     for (std::set<unsigned>::const_iterator pset = psets.begin(); pset != psets.end(); pset ++)
       ranks.push_back(remapOnTree(*pset, core, personality));
 
-    if (TH_MPI::getCurrentRank() == 0) {
-      std::clog << "group " << core << " contains cores [";
-      
-      for (unsigned i = 0; i < ranks.size(); i ++)
-	std::clog << ranks[i] << (i == ranks.size() - 1 ? ']' : ',');
-
-      std::clog << std::endl;
-    }
+    if (TH_MPI::getCurrentRank() == 0)
+      std::clog << "group " << core << " contains cores " << ranks << std::endl;
 
     if (MPI_Group_incl(all, ranks.size(), &ranks[0], &group) != MPI_SUCCESS) {
       std::cerr << "MPI_Group_incl() failed" << std::endl;

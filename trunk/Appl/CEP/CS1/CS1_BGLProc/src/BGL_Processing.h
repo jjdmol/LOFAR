@@ -110,6 +110,7 @@ class BGL_Processing {
 
 #if defined HAVE_BGL
     BGLPersonality	itsPersonality;
+    unsigned		itsRankInPset; // core number, not node number!
 #endif
 };
 
