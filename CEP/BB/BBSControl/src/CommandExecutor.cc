@@ -50,6 +50,7 @@
 #include <BBSKernel/Prediffer.h>
 
 #include <Common/LofarLogger.h>
+#include <BBSControl/StreamUtil.h>
 #include <Common/Timer.h>
 
 //#include <casa/Quanta/Quantum.h>

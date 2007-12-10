@@ -33,7 +33,7 @@
 #include <Blob/BlobStreamable.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
-#include <Common/StreamUtil.h>
+#include <BBSControl/StreamUtil.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_smartptr.h>
 
