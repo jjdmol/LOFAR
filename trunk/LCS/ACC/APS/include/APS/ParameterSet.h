@@ -135,6 +135,10 @@ public:
 	// Writes the Key-Values pair from the current ParCollection to the 
 	// string buffer.
 	void	writeBuffer (      string& theBuffer) const;
+
+	// Writes the Key-Values pair from the current ParCollection to the 
+	// output stream.
+	void	writeStream (      ostream& os) const;
 	//@}
 
 	// \name Handle subsets
@@ -335,6 +339,11 @@ inline void	ParameterSet::writeFile   (const string& theFilename, bool append) c
 inline void	ParameterSet::writeBuffer (      string& theBuffer) const
 {
 	itsSet->writeBuffer (theBuffer);
+}
+
+inline void	ParameterSet::writeStream (      ostream& os) const
+{
+	itsSet->writeStream (os);
 }
 
 inline ParameterSet	ParameterSet::makeSubset(const string& baseKey,
