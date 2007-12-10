@@ -75,11 +75,11 @@ class TH_ZoidServer : public TransportHolder
     static std::vector<TH_ZoidServer *> theirTHs;
 
     unsigned		     itsCore;
-    pthread_mutex_t	     mutex;
+    pthread_mutex_t	     sendMutex, receiveMutex;
     pthread_cond_t	     newSendDataAvailable, newReceiveBufferAvailable;
     pthread_cond_t	     dataReceived, dataSent;
-    char		     *sendBufferPtr, *receiveBufferPtr;
-    size_t		     bytesToSend, bytesToReceive;
+    char		     *volatile sendBufferPtr, *volatile receiveBufferPtr;
+    volatile size_t	     bytesToSend, bytesToReceive;
 };
 
 } // namespace CS1
