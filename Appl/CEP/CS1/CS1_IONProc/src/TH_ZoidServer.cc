@@ -61,7 +61,7 @@ void TH_ZoidServer::sendCompleted(void * /*buf*/, void *arg)
   if (th->bytesToSend == 0)
     pthread_cond_signal(&th->dataSent);
 
-  pthread_mutex_unlock(&th->mutex);
+  pthread_mutex_unlock(&th->sendMutex);
 }
 
 ssize_t lofar_ion_to_cn_zerocopy(void   * /*buf*/ /* out:arr:size=+1:zerocopy:userbuf */,
@@ -70,10 +70,10 @@ ssize_t lofar_ion_to_cn_zerocopy(void   * /*buf*/ /* out:arr:size=+1:zerocopy:us
   TH_ZoidServer *th = TH_ZoidServer::theirTHs[__zoid_calling_process_id()];
   //std::clog << "lofar_ion_to_cn_zerocopy(..., " << *count << "), __zoid_calling_process_id() = " << __zoid_calling_process_id() << std::endl;
 
-  pthread_mutex_lock(&th->mutex);
+  pthread_mutex_lock(&th->sendMutex);
 
   while (th->bytesToSend == 0)
-    pthread_cond_wait(&th->newSendDataAvailable, &th->mutex);
+    pthread_cond_wait(&th->newSendDataAvailable, &th->sendMutex);
 
   if (*count > th->bytesToSend)
     *count = th->bytesToSend;
@@ -92,10 +92,10 @@ ssize_t lofar_ion_to_cn_onecopy(void   *buf /* out:arr:size=+1 */,
   TH_ZoidServer *th = TH_ZoidServer::theirTHs[__zoid_calling_process_id()];
   //std::clog << "lofar_ion_to_cn_onecopy(..., " << *count << "), __zoid_calling_process_id() = " << __zoid_calling_process_id() << std::endl;
 
-  pthread_mutex_lock(&th->mutex);
+  pthread_mutex_lock(&th->sendMutex);
 
   while (th->bytesToSend == 0)
-    pthread_cond_wait(&th->newSendDataAvailable, &th->mutex);
+    pthread_cond_wait(&th->newSendDataAvailable, &th->sendMutex);
 
   if (*count > th->bytesToSend)
     *count = th->bytesToSend;
@@ -107,7 +107,7 @@ ssize_t lofar_ion_to_cn_onecopy(void   *buf /* out:arr:size=+1 */,
   if (th->bytesToSend == 0)
     pthread_cond_signal(&th->dataSent);
 
-  pthread_mutex_unlock(&th->mutex);
+  pthread_mutex_unlock(&th->sendMutex);
 
   return *count;
 }
@@ -116,10 +116,10 @@ ssize_t lofar_ion_to_cn_onecopy(void   *buf /* out:arr:size=+1 */,
 void *lofar_cn_to_ion_zerocopy_allocate_cb(int /*len*/)
 {
   TH_ZoidServer *th = TH_ZoidServer::theirTHs[__zoid_calling_process_id()];
-  pthread_mutex_lock(&th->mutex);
+  pthread_mutex_lock(&th->receiveMutex);
 
   while (th->bytesToReceive == 0)
-    pthread_cond_wait(&th->newReceiveBufferAvailable, &th->mutex);
+    pthread_cond_wait(&th->newReceiveBufferAvailable, &th->receiveMutex);
 
   return TH_ZoidServer::theirTHs[__zoid_calling_process_id()]->receiveBufferPtr;
   // still holding lock
@@ -142,7 +142,7 @@ ssize_t lofar_cn_to_ion_zerocopy(const void * /*buf*/ /* in:arr:size=+1:zerocopy
   if (th->bytesToReceive == 0)
     pthread_cond_signal(&th->dataReceived);
 
-  pthread_mutex_unlock(&th->mutex);
+  pthread_mutex_unlock(&th->receiveMutex);
   return count;
 }
 
@@ -152,10 +152,10 @@ ssize_t lofar_cn_to_ion_onecopy(const void *buf /* in:arr:size=+1 */,
 {
   TH_ZoidServer *th = TH_ZoidServer::theirTHs[__zoid_calling_process_id()];
 
-  pthread_mutex_lock(&th->mutex);
+  pthread_mutex_lock(&th->receiveMutex);
 
   while (th->bytesToReceive == 0)
-    pthread_cond_wait(&th->newReceiveBufferAvailable, &th->mutex);
+    pthread_cond_wait(&th->newReceiveBufferAvailable, &th->receiveMutex);
 
   if (count > th->bytesToReceive)
     count = th->bytesToReceive;
@@ -167,7 +167,7 @@ ssize_t lofar_cn_to_ion_onecopy(const void *buf /* in:arr:size=+1 */,
   if (th->bytesToReceive == 0)
     pthread_cond_signal(&th->dataReceived);
 
-  pthread_mutex_unlock(&th->mutex);
+  pthread_mutex_unlock(&th->receiveMutex);
   return count;
 }
 
@@ -175,13 +175,15 @@ ssize_t lofar_cn_to_ion_onecopy(const void *buf /* in:arr:size=+1 */,
 TH_ZoidServer::TH_ZoidServer(unsigned core)
 :
   itsCore(core),
-  bytesToSend(0)
+  bytesToSend(0),
+  bytesToReceive(0)
 {
   pthread_cond_init(&newSendDataAvailable, 0);
   pthread_cond_init(&newReceiveBufferAvailable, 0);
   pthread_cond_init(&dataSent, 0);
   pthread_cond_init(&dataReceived, 0);
-  pthread_mutex_init(&mutex, 0);
+  pthread_mutex_init(&sendMutex, 0);
+  pthread_mutex_init(&receiveMutex, 0);
 }
 
 
@@ -191,7 +193,8 @@ TH_ZoidServer::~TH_ZoidServer()
   pthread_cond_destroy(&newReceiveBufferAvailable);
   pthread_cond_destroy(&dataSent);
   pthread_cond_destroy(&dataReceived);
-  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&sendMutex);
+  pthread_mutex_destroy(&receiveMutex);
 }
 
 
@@ -222,16 +225,16 @@ bool TH_ZoidServer::init()
 bool TH_ZoidServer::sendBlocking(void *buf, int nbytes, int, DataHolder *)
 {
   //std::clog << "TH_ZoidServer::sendBlocking(" << buf << ", " << nbytes << ", ...)" << std::endl;
-  pthread_mutex_lock(&mutex);
+  pthread_mutex_lock(&sendMutex);
 
-  sendBufferPtr = static_cast<char *>(buf);
+  sendBufferPtr = static_cast<char *volatile>(buf);
   bytesToSend = nbytes;
   pthread_cond_signal(&newSendDataAvailable);
 
   while (bytesToSend > 0)
-    pthread_cond_wait(&dataSent, &mutex);
+    pthread_cond_wait(&dataSent, &sendMutex);
 
-  pthread_mutex_unlock(&mutex);
+  pthread_mutex_unlock(&sendMutex);
 
   return true;
 }
@@ -240,14 +243,14 @@ bool TH_ZoidServer::sendBlocking(void *buf, int nbytes, int, DataHolder *)
 bool TH_ZoidServer::recvBlocking(void *buf, int nbytes, int, int, DataHolder *)
 {
   //std::clog << "TH_ZoidServer::recvBlocking(" << buf << ", " << nbytes << ", ...)" << std::endl;
-  pthread_mutex_lock(&mutex);
-  receiveBufferPtr = static_cast<char *>(buf);
+  pthread_mutex_lock(&receiveMutex);
+  receiveBufferPtr = static_cast<char *volatile>(buf);
   pthread_cond_signal(&newReceiveBufferAvailable);
 
   for (bytesToReceive = nbytes; bytesToReceive > 0;)
-    pthread_cond_wait(&dataReceived, &mutex);
+    pthread_cond_wait(&dataReceived, &receiveMutex);
 
-  pthread_mutex_unlock(&mutex);
+  pthread_mutex_unlock(&receiveMutex);
 
   return true;
 }
