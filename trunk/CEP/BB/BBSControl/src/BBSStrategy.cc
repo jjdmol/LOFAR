@@ -29,7 +29,7 @@
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
-#include <Common/StreamUtil.h>
+#include <BBSControl/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR

@@ -40,6 +40,7 @@
 #include <BBSControl/BBSRefitStep.h>
 #include <BBSControl/Exceptions.h>
 #include <Common/LofarLogger.h>
+#include <BBSControl/StreamUtil.h>
 
 namespace LOFAR
 {

@@ -31,7 +31,7 @@
 #include <BBSControl/BBSSubtractStep.h>
 #include <BBSControl/BBSMultiStep.h>
 #include <BBSControl/Exceptions.h>
-#include <Common/StreamUtil.h>
+#include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
