@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,473 190 390 296 N "_3DFace" 1
+PANEL,649 156 390 296 N "_3DFace" 1
 "$datapoint"
 "//
 //RCU_LB_Filter (JjS)
@@ -28,25 +28,17 @@ ControlLBFilter(string dp1, unsigned filter,
 
   if(!invalid)
   {
-   	if (filter == 1)
+   	if (filter == 0)
    	{
-     	setValue(\"txt_state\"    , \"backCol\" , \"Lofar_operational\");
      	setValue(\"txt_filter\" , \"text\"    , \"10-80 MHz\" );
    	}
-   	else if (filter == 2)
+   	else if (filter == 1)
    	{
-     	setValue(\"txt_state\", \"backCol\", \"Lofar_operational\");
      	setValue(\"txt_filter\" , \"text\" , \"30-80 MHz\" );
-   	}
-   	else if (filter == 0)
-   	{
-     	setValue(\"txt_state\", \"backCol\", \"Lofar_off\");
-     	setValue(\"txt_filter\" , \"text\" , \"Filter OFF\" );
    	}
   }
   else
   {
-    setValue(\"txt_state\", \"backCol\", \"Lofar_invalid\");
    	setValue(\"txt_filter\" , \"text\" , \"\" );
   }
 }" 0
@@ -93,19 +85,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 14 Lowband filter
-7 7
-"txt_state"
-""
-1 23 23 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
- E E
-6 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 23 23 7 7
 14 9
 "txt_filter"
 ""

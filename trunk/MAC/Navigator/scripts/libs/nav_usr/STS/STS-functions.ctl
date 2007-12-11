@@ -104,7 +104,7 @@ checkDataPath() {
 
   // check based on bandSelLbaHba
   if (path) {
-    if ((bandSelLbaHba && !hbaPath) ||
+    if ((bandSelLbaHba && hbaPath) ||
          (!bandSelLblLbh && !lbaPath))  {
       path = FALSE;
     }
