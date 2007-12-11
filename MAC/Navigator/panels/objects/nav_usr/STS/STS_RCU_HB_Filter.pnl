@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,473 190 147 92 N "_3DFace" 1
+PANEL,649 156 147 92 N "_3DFace" 1
 "$datapoint"
 "
 main()
@@ -25,22 +25,22 @@ ControlHBFilter(string dp1, unsigned filter,
 
   if(!invalid)
   {
-   	if (filter == 1)
+   	if (filter == 2)
    	{
      	setValue(\"txt_state\"    , \"backCol\" , \"Lofar_operational\");
      	setValue(\"txt_filter\" , \"text\"    , \"110-190 MHz\" );
    	}
-   	else if (filter == 2)
+   	else if (filter == 1)
    	{
      	setValue(\"txt_state\", \"backCol\", \"Lofar_operational\");
      	setValue(\"txt_filter\" , \"text\" , \"170-230 MHz\" );
    	}
-   	else if (filter == 3)
+   	else if (filter == 0)
    	{
      	setValue(\"txt_state\", \"backCol\", \"Lofar_operational\");
      	setValue(\"txt_filter\" , \"text\" , \"210-240 MHz\" );
    	}
-   	else if (filter == 0)
+   	else if (filter == 3)
    	{
      	setValue(\"txt_state\", \"backCol\", \"Lofar_off\");
      	setValue(\"txt_filter\" , \"text\" , \"Filter OFF\" );

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 11 Subrack_RCU
-PANEL,489 117 429 479 N "_3DFace" 3
+PANEL,409 165 429 479 N "_3DFace" 3
 "$RCUNr"
 "$datapoint"
 "$referenceDatapoint"
@@ -20,8 +20,6 @@ PANEL,489 117 429 479 N "_3DFace" 3
   setValue(\"text_RCUNr\", \"text\", \"RCU\" + RCUNr );
   string dpRCU = $datapoint + \"_RCU\"+ RCUNr;
 
-  // connect for childUpdates
-  showChildState(dpRCU);
   // connect for selfUpdates
   showSelfState(dpRCU);
 }
@@ -38,7 +36,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 2
-"childStateBorder"
+"border1"
 ""
 1 40 110 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E "// SimpleCtrlScriptStart {valid}
 main(int iType)
@@ -85,7 +83,7 @@ E "main()
   //DebugTN(\"Navigate to: Dp: \" + $datapoint + \" RefDp: \" + $referenceDatapoint + \" Point: \" + \"_RCU\"+ RCUNr);
   aplViewNavigateTo($datapoint, $referenceDatapoint, \"_RCU\"+ RCUNr, \"Station_Subrack_RCU.pnl\");
 }" 0
- 0 2 1 0 1 E U  1 E 40 40 100 110
+ 0 1 1 0 1 E U  1 E 40 40 100 110
 2 5
 "text_RCUNr"
 ""

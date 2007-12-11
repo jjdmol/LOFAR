@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,378 112 507 438 N "_3DFace" 2
+PANEL,411 132 507 438 N "_3DFace" 2
 "$Component"
 "$datapoint"
 "
@@ -50,13 +50,13 @@ ShowBandSelLines(string dp1, bool highBandSel,
 		{  
     	if(highBandSel)
     	{ // Object setting
-    		setValue(\"Text1\"        , \"text\"    , \"HighBand Antenna\");
-      	setValue(\"line_lowband\"  , \"visible\", FALSE);
-      	setValue(\"line_highband\" , \"visible\", TRUE);
-    	} else {
     		setValue(\"Text1\"        , \"text\"    , \"LowBand Antenna\");
       	setValue(\"line_lowband\"  , \"visible\", TRUE);
       	setValue(\"line_highband\" , \"visible\", FALSE);
+    	} else {
+    		setValue(\"Text1\"        , \"text\"    , \"HighBand Antenna\");
+      	setValue(\"line_lowband\"  , \"visible\", FALSE);
+      	setValue(\"line_highband\" , \"visible\", TRUE);
     	}    
       bandSelLbaHba=highBandSel;
 		}    
