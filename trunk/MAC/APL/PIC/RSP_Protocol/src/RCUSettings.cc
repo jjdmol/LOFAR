@@ -32,7 +32,7 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 
 const uint32 RCUSettings::Control::m_mode[] = {
-  0x00000000, // MODE_OFF
+  0x00003000, // MODE_OFF
   0x00017900, // MODE_LBL_HPF10MHZ
   0x00057900, // MODE_LBL_HPF30MHZ
   0x00037A00, // MODE_LBH_HPF10MHZ
