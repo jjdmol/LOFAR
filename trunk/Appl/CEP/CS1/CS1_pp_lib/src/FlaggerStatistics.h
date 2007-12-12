@@ -17,87 +17,36 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef __FLAGGER_COMPLEXMEDIANFLAGGER_H__
-#define __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+#ifndef __CS1_PP_FLAGGER_STATISTICS_H__
+#define __CS1_PP_FLAGGER_STATISTICS_H__
 
 #include <casa/Arrays.h>
-#include <utility>
+#include <iostream>
 #include <vector>
-#include <list>
-#include <map>
-#include "MS_File.h"
 
-namespace WSRT
+namespace LOFAR
 {
   using casa::Cube;
-  using casa::Matrix;
-  using casa::Complex;
-  using casa::Int;
-  using casa::Double;
-  using casa::Bool;
-  using casa::Table;
-  using std::list;
+  using casa::String;
   using std::vector;
-  
-  typedef pair<int, int> pairii;
-  
-  class ComplexMedianFlagger
+  using std::ostream;
+
+  class FlaggerStatistics
   {
     public:
-       ComplexMedianFlagger(MS_File* MSfile, 
-                            int InputWindowSize, 
-                            bool UseOnlyXpolarizations, 
-                            double InputMinThreshold,
-                            double InputMaxThreshold);
-      ~ComplexMedianFlagger();
+       FlaggerStatistics(int Bands, int Antennae, vector<String> Names, int Norm);
+      ~FlaggerStatistics();
 
-      void FlagDataOrBaselines(bool flagDatapoints, 
-                               bool flagRMS,
-                               bool ExistingFlags);
-  
     protected:
-      int                     NumAntennae;
-      int                     NumPairs;
-      int                     NumBands;
-      int                     NumChannels;
-      int                     NumPolarizations;
-      int                     WindowSize;
-      int                     NumTimeslots;
-      double                  MinThreshold;
-      double                  MaxThreshold;
-      double                  MaxBaselineLength;
-      double                  NoiseLevel;
-      vector<double>          BaselineLengths;
-      vector<pairii>          PairsIndex;
-      map<pairii, int>        BaselineIndex;
-      vector< Cube<Complex> > TimeslotData;
-      vector< bool >          PolarizationsToCheck;
-      vector<casa::String>    AntennaNames;
-      Cube< int >             Statistics;
-      MS_File* MSfile;
-      
-      void DeterminePolarizationsToCheck(Bool UseOnlyXpolarizations);
-      void ComputeBaselineLengths();
-      void ProcessStatistics();
-      void FlagTimeslot(casa::TableIterator* flag_iter, 
-                        bool flagDatapoints,
-                        bool flagRMS,
-                        bool ExistingFlags,
-                        int Position);
-      bool   FlagBaselineBand(Matrix<Bool>* Flags, 
-                              Cube<Complex>* Timeslots, 
-                              vector<double>* rms,
-                              int* flagCounter,
-                              double FlagThreshold,
-                              int Position,
-                              bool flagRMS);
-      bool UpdateTimeslotData(vector<int>* OldFields,
-                              vector<int>* OldBands,
-                              int* TimeCounter,
-                              Table* TimeslotTable,
-                              double* Time);
-    private:
-  }; // ComplexMedianFlagger
-}; // namespace WSRT
+      void PrintStatistics(ostream& output);
 
-#endif //  __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+    private:
+      int                       NumAntennae;
+      int                       NumBands;
+      Cube< int >               Statistics;
+      int                       Normalizer;
+      std::vector<casa::String> AntennaNames;
+  }; // FlaggerStatistics
+}; // namespace LOFAR
+
+#endif //  __CS1_PP_FLAGGER_STATISTICS_H__

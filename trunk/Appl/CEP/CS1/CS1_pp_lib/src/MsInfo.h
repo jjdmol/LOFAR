@@ -61,7 +61,7 @@ namespace LOFAR
     std::string MsName;
     double      Interval;
     void        ComputeBaselineLengths(casa::MeasurementSet& MS);
-  }; // MsInfo
+  }; // class MsInfo
 }; // namespace LOFAR
 
 #endif // __CS1_PP_MS_INFO_H__
