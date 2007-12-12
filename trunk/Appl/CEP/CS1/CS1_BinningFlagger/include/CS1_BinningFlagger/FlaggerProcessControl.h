@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by Adriaan Renting                                 *
+ *   Copyright (C) 2007 by Adriaan Renting                                 *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -26,22 +26,22 @@
 /**
 @author Adriaan Renting
 */
-
 namespace LOFAR
 {
+  class MS_File; //foreward declaration
+  class BinningFlagger;
+
   namespace CS1
   {
-    class MS_File; //foreward declaration
-    class FrequencyFlagger;
-
     class FlaggerProcessControl : public LOFAR::ACC::PLC::ProcessControl
     {
     private:
       std::string  itsMS;
       bool         itsExisting;
-      double       itsThreshold;
-      MS_File*          myMS;
-      FrequencyFlagger* itsFlagger;
+      int          itsWindow;
+      bool         itsCrosspol;
+      MS_File*        myMS;
+      BinningFlagger* itsFlagger;
     public:
       FlaggerProcessControl(void);
 
