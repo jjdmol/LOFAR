@@ -202,7 +202,7 @@ LANG:1 6 Layer8
 1
 "$datapoint""$datapoint"
 3 5 "selfState"
-"objects\\nav_usr\\CS1\\.svn\\text-base\\lofar_self_state.pnl.svn-base" 45 590 T 7 1 0 1  -30 -575  
+"objects\\nav_usr\\CS1\\lofar_self_state.pnl" 45 590 T 7 1 0 1  -30 -575  
 1
 "$object""TBBoard"
 0
