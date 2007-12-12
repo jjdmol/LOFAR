@@ -1,12 +1,12 @@
-bin_PROGRAMS			= CS1_FrequencyFlagger
+bin_PROGRAMS			= CS1_BinningFlagger
 
-CS1_FrequencyFlagger_SOURCES 		= Flagger.cc \
-				  FrequencyFlagger.cc \
-				  FrequencyFlagger.h \
+CS1_BinningFlagger_SOURCES 		= Flagger.cc \
+				  BinningFlagger.cc \
+				  BinningFlagger.h \
 				  MS_File.cc \
 				  MS_File.h \
 				  FlaggerProcessControl.cc
-CS1_FrequencyFlagger_LDADD		=
-CS1_FrequencyFlagger_DEPENDENCIES	= $(LOFAR_DEPEND)
+CS1_BinningFlagger_LDADD		=
+CS1_BinningFlagger_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

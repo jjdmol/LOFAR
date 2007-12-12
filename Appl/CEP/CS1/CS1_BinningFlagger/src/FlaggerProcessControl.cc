@@ -24,13 +24,14 @@
 #include <casa/Inputs/Input.h>
 #include <ms/MeasurementSets.h>
 
-#include <CS1_FrequencyFlagger/FlaggerProcessControl.h>
+#include <CS1_BinningFlagger/FlaggerProcessControl.h>
 #include "MS_File.h"
-#include "FrequencyFlagger.h"
+#include "BinningFlagger.h"
 
-#define FLAGGER_VERSION "0.20"
-// 0.10 initial version
-// 0.20 added more algorithms
+#define FLAGGER_VERSION "0.21"
+// 0.10 Initial version
+// 0.20 Almost working version
+// 0.21 First working version
 
 namespace LOFAR
 {
@@ -59,9 +60,10 @@ namespace LOFAR
     tribool FlaggerProcessControl::define()
     {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
-      itsMS        = ParamSet->getString("ms");
-      itsExisting  = ParamSet->getBool("existing");
-      itsThreshold = ParamSet->getDouble("threshold");
+      itsMS       = ParamSet->getString("ms");
+      itsExisting = ParamSet->getBool("existing");
+      itsWindow   = ParamSet->getInt32("window");
+      itsCrosspol = ParamSet->getBool("crosspol");
       return true;
     }
 
@@ -93,7 +95,7 @@ namespace LOFAR
               string("Documentation can be found at: www.lofar.org/operations/doku.php?id=engineering:software:postprocessing_software\n");
       cout << itsMS << endl;
       myMS       = new MS_File(itsMS);
-      itsFlagger = new FrequencyFlagger (myMS, itsThreshold);
+      itsFlagger = new BinningFlagger (myMS, itsWindow, itsCrosspol);
       }
       catch(casa::AipsError& err)
       {
