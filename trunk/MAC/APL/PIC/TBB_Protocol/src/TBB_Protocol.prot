@@ -70,7 +70,7 @@ prelude = << PRELUDE_END
 		uint8  stop_mode;
 		uint8	 filter_select;
 		uint8  window;
-		uint16 dummy;
+		uint8	 operating_mode;
 	};
 	
 	typedef struct TbbTriggerCoef // setup variables for 1 channel
