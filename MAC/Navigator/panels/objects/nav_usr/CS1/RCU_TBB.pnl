@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 6 RCUTBB
-PANEL,473 190 257 122 N "_3DFace" 3
+PANEL,388 124 257 122 N "_3DFace" 3
 "$datapoint"
 "$rcuNr"
 "$referenceDatapoint"
@@ -42,11 +42,13 @@ PANEL,473 190 257 122 N "_3DFace" 3
    	
  		// check if the required datapoint for this view are enabled and accessible
   if(dpExists(baseDP + \"_RCU\"+rcu+\".TBB.error:_online.._value\")) {
-    dpConnect(\"updateTBBDetails\", baseDP+ \"_RCU\"+rcu + \".TBB.error:_online.._value\",
-							 baseDP + \"_RCU\"+rcu+ \".TBB.mode:_online.._value\",
-               baseDP + \"_RCU\"+rcu+ \".TBB.startAddr:_online.._value\",
-               baseDP + \"_RCU\"+rcu+ \".TBB.bufSize:_online.._value\",
-               baseDP + \"_RCU\"+rcu+ \".TBB.mode:_online.._invalid\");
+    if (dpConnect(\"updateTBBDetails\", baseDP+ \"_RCU\"+rcu + \".TBB.error:_online.._value\",
+				 			     baseDP + \"_RCU\"+rcu+ \".TBB.mode:_online.._value\",
+                   baseDP + \"_RCU\"+rcu+ \".TBB.startAddr:_online.._value\",
+                   baseDP + \"_RCU\"+rcu+ \".TBB.bufSize:_online.._value\",
+                   baseDP + \"_RCU\"+rcu+ \".TBB.mode:_online.._invalid\") < 0) {
+      LOG_DEBUG(\"Error connecting to: \" + baseDP+ \"_RCU\"+rcu+\".TBB.error\");
+    }
   } else {
     LOG_DEBUG(\"Error connecting to: \" + baseDP+ \"_RCU\"+rcu+\".TBB.error\");
     setValue(\"txt_error\"        , \"text\", \"\");
@@ -59,13 +61,12 @@ PANEL,473 190 257 122 N "_3DFace" 3
   showSelfState(baseDP+\"_RCU\"+rcu);
 }
 
-updateTBBDetails(string dp1, bool error,
-                 string dp2, int mode,
-                 string dp3, int startAddress,
-                 string dp4, int bufSize,
+updateTBBDetails(string dp1, int error,
+                 string dp2, string mode,
+                 string dp3, string startAddress,
+                 string dp4, string bufSize,
                  string dp5, bool invalid)
 {
-	string SymbolCol;
 	if (invalid) 
 	{
     setValue(\"txt_error\"        , \"text\", \"\");
@@ -203,7 +204,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 125 35 132 51
-0 2 0 "s" 0 0 0 192 0 0  125 35
+0 2 0 "11d" 11 0 0 192 0 0  125 35
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -223,7 +224,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 125 50 132 66
-0 2 0 "10d" 10 0 0 192 0 0  125 50
+0 2 0 "11s" 11 0 0 192 0 0  125 50
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -243,7 +244,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 125 65 132 81
-0 2 0 "10d" 10 0 0 192 0 0  125 65
+0 2 0 "11s" 11 0 0 192 0 0  125 65
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -263,7 +264,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 125 80 132 96
-0 2 0 "10d" 10 0 0 192 0 0  125 80
+0 2 0 "11s" 11 0 0 192 0 0  125 80
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial

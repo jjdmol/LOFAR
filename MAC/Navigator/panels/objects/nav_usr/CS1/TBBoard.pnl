@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-1135 -118 171 700 N "_3DFace" 1
+PANEL,388 124 171 700 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -15,8 +15,7 @@ PANEL,-1135 -118 171 700 N "_3DFace" 1
   
   setValue(\"txt_tbbnr\",\"text\",\"TBB-\"+aNr);
   
-  // connect for childUpdates
-  showChildState(baseDP);
+
   // connect for selfUpdates
   showSelfState(baseDP);
 }" 0
@@ -32,7 +31,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 42
-"childStateBorder"
+"border1"
 ""
 1 10 690 E E E 1 E 1 E N "_WindowText" E N {255,204,153} E E
  E E
