@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,816 120 956 700 N "_3DFace" 1
+PANEL,388 124 956 700 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -45,8 +45,6 @@ PANEL,816 120 956 700 N "_3DFace" 1
  
  	connectTBBoards();
  
-  // connect for childUpdates
-  showChildState(baseDP);
   // connect for selfUpdates
   showSelfState(baseDP);
 }
@@ -880,7 +878,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-140-100-100-*-*-iso8859-
 1
 LANG:1 7 Boards:
 6 33
-"childStateBorder"
+"border1"
 ""
 1 10 690 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
