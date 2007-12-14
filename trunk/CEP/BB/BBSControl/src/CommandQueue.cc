@@ -29,13 +29,15 @@
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/LocalControlId.h>
-#include <BBSControl/QueryBuilder/AddCommand.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/Exceptions.h>
+#include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
+#include <Common/lofar_typeinfo.h>
 
 //# For getpid() and pid_t.
 #include <unistd.h>
@@ -107,7 +109,7 @@ namespace LOFAR
       string opts("dbname=" + dbname  + " user=" + user + 
                   " host=" + host + " port=" + port);
       try {
-        LOG_DEBUG_STR("Connecting to database using options: " << opts);
+        LOG_DEBUG_STR("Connecting to database: " << opts);
         itsConnection.reset(new pqxx::connection(opts));
       } CATCH_PQXX_AND_RETHROW;
     }
@@ -117,16 +119,26 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // Create a query object that "knows" how to build a query for inserting
-      // \a aCommand into the command queue.
-      QueryBuilder::AddCommand query;
-
-      // Let \a aCommand accept the visiting query object, which, as a result,
-      // will build an insert query for the correct command type.
-      aCommand.accept(query);
+      ostringstream query;
+      query << "SELECT * FROM blackboard.add_command"
+            << "('"  << toLower(aCommand.type());
+      try {
+        // If \a aCommand is a BBSStep, then we should provide additional
+        // parameters.
+        const BBSStep& step = dynamic_cast<const BBSStep&>(aCommand);
+        LOG_TRACE_COND("Adding a BBSStep object");
+        ParameterSet ps;
+        ps << aCommand;
+        query << "','" << step.name()
+              << "','" << ps;
+      }
+      catch(bad_cast&) {
+        LOG_TRACE_COND("Not adding a BBSStep object");
+      }
+      query << "') AS result";
 
       // Execute the query.
-      return execQuery(query.getQuery()).getUint32("result");
+      return execQuery(query.str()).getUint32("result");
     }
 
 
@@ -139,8 +151,8 @@ namespace LOFAR
       ostringstream query;
       query << "SELECT * FROM blackboard.get_next_command(" << getpid() << ")";
 
-      // Note the use of query.str(""): this clears the ostringstream so it can
-      // be reused later on.
+      // Note the use of query.str(""): this clears the ostringstream so it
+      // can be reused later on.
       ParameterSet ps = execQuery(query.str());
       query.str("");
 
@@ -152,31 +164,26 @@ namespace LOFAR
       // Get the command-id.
       CommandId id = ps.getInt32("id");
 
-      // Retrieve the command parameters associated with the received command.
-      query << "SELECT * FROM blackboard.get_" << toLower(type) << "_args"
-            << "(" << id << ")";
+      // Get the command name. Only steps have names, so this is a way to
+      // differentiate between ordinary commands and steps.
+      string name = ps.getString("Name");
 
-      // Execute the query. Add the result to the ParameterSet \a ps.
-      ps.adoptCollection(execQuery(query.str()));
+      if (!name.empty()) {
+        // Name is not empty, so we must construct a BBSStep object.
+        // Get additional information needed to create the BBSStep.
+        string buf = ps.getString("ParameterSet");
 
-      try {
-        // If the ParameterSet \a ps contains a key "Name", then the command is
-        // a BBSStep. In that case we need to prefix all keys with
-        // "Step.<name>".  (Yeah, I know, it's kinda clunky).
-        string name = ps.getString("Name");
-
-        // Self-adopt is not supported on a ParameterSet; hence this detour.
-        string buf;
-        ps.writeBuffer(buf);
+        // The string \a buf now contains a string of key/value pairs. Turn it
+        // into a ParameterSet. Note that we can safely reuse \a ps.
         ps.clear();
-        ps.adoptBuffer(buf, "Step." + name + ".");
+        ps.adoptBuffer(buf);
 
         // Create a new BBSStep and return it.
         return make_pair(BBSStep::create(name, ps, 0), id);
-      } 
-      catch (APSException&) {
-        // In the catch clause we handle all other commands. They can be
-        // constructed using the CommandFactory and initialized using read().
+      }
+      else {
+        // Here we handle all other commands. They can be constructed using
+        // the CommandFactory and initialized using read().
         shared_ptr<Command> command(CommandFactory::instance().create(type));
         ASSERTSTR(command, "Failed to create a `" << type << 
                   "' command object");
@@ -190,16 +197,25 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // Create a query object that "knows" how to build a query for inserting
-      // \a aCommand into the command queue.
-      QueryBuilder::AddCommand query;
-
-      // Let \a aCommand accept the visiting query object, which, as a result,
-      // will build an insert query for the correct command type.
-      strategy.accept(query);
+      // Compose the query.
+      ostringstream query;
+      query << "SELECT * FROM blackboard.set_strategy"
+            << "('" << strategy.dataSet()                    << "'"
+            << ",'" << strategy.parmDB().localSky            << "'"
+            << ",'" << strategy.parmDB().instrument          << "'"
+            << ",'" << strategy.parmDB().history             << "'"
+            << ",'" << strategy.stations()                   << "'"
+            << ",'" << strategy.inputData()                  << "'"
+            << ",'" << strategy.regionOfInterest().frequency << "'"
+            << ",'" << strategy.regionOfInterest().time      << "'"
+            << ",'" << strategy.domainSize().bandWidth       << "'"
+            << ",'" << strategy.domainSize().timeInterval    << "'"
+            << ",'" << strategy.correlation().selection      << "'"
+            << ",'" << strategy.correlation().type           << "'"
+            << ") AS RESULT";
 
       // Execute the query. Throw exception if strategy was set already.
-      if (!execQuery(query.getQuery()).getBool("result")) {
+      if (!execQuery(query.str()).getBool("result")) {
         THROW (CommandQueueException, "Strategy can only be set once");
       }
     }
@@ -375,17 +391,19 @@ namespace LOFAR
       
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    string CommandQueue::ExecQuery::emptyString;
+    ParameterSet CommandQueue::ExecQuery::emptyResult;
+//     char   CommandQueue::ExecQuery::recordSeparator('\036');
 
     CommandQueue::ExecQuery::ExecQuery(const string& query) :
       pqxx::transactor<>("ExecQuery"),
       itsQuery(query),
-      itsResult(emptyString)
+      itsResult(emptyResult)
     {
     }
 
 
-    CommandQueue::ExecQuery::ExecQuery(const string& query, string& result) :
+    CommandQueue::ExecQuery::ExecQuery(const string& query, 
+                                       ParameterSet& result) :
       pqxx::transactor<>("ExecQuery"),
       itsQuery(query),
       itsResult(result)
@@ -402,19 +420,18 @@ namespace LOFAR
 
     void CommandQueue::ExecQuery::on_commit()
     {
-      ostringstream oss;
       uint rows(itsPQResult.size());
       uint cols(itsPQResult.columns());
 
-      oss << "_nrows = " << rows << endl;
+      itsResult.add("_nrows", toString(rows));
       for (uint row = 0; row < rows; ++row) {
+        string prefix = "_row(" + toString(row) + ").";
         for (uint col = 0; col < cols; ++col) {
-          oss << "_row(" << row << ")."
-              << itsPQResult[row][col].name() << " = "
-              << itsPQResult[row][col].c_str() << endl;
+          string key   = prefix + itsPQResult[row][col].name();
+          string value = itsPQResult[row][col].c_str(); 
+          itsResult.add(key, value);
         }
       }
-      itsResult = oss.str();
     }
 
 
@@ -456,23 +473,19 @@ namespace LOFAR
                                          bool doAlwaysPrefix) const
     {
       // Create a transactor object and execute the query. The result will be
-      // stored, as a string in \a result.
-      string result;
+      // stored in the ParameterSet \a result.
+      ParameterSet ps;
       try {
-        itsConnection->perform(ExecQuery(query, result));
-        LOG_TRACE_VAR_STR("Result of query: " << result);
+        itsConnection->perform(ExecQuery(query, ps));
+        LOG_TRACE_VAR_STR("Result of query: " << ps);
       } CATCH_PQXX_AND_RETHROW;
 
-      // Create an empty parameter set and add the result to it.
-      ParameterSet ps;
-      ps.adoptBuffer(result);
-
-      // If the result consists of only one row, and we do not always want to
-      // prefix, then strip off the prefix "_row(0)". 
+      // If the result consists of only one row, and if we do not always want
+      // to prefix, then strip off the prefix "_row(0)".
       if (ps.getUint32("_nrows") == 1 && !doAlwaysPrefix) {
         ps = ps.makeSubset("_row(0).");
       }
-      
+
       // Return the ParameterSet
       return ps;
     }

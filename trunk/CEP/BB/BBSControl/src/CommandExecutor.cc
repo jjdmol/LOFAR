@@ -483,7 +483,7 @@ void CommandExecutor::visit(const BBSSolveStep &command)
 /*
                     // Log the updated unknowns.
                     itsKernel->logIteration(
-                        command.getName(),
+                        command.name(),
                         startDomain + i,
                         result->getRank(),
                         result->getChiSquared(),

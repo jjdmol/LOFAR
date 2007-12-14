@@ -127,7 +127,7 @@ namespace LOFAR
           << endl << "ExclParms = " << itsExclParms
           << endl << "DomainSize.Freq = " << itsDomainSize.bandWidth
           << endl << "DomainSize.Time = " << itsDomainSize.timeInterval;
-      ps.adoptBuffer(oss.str(), "Step." + getName() + ".Solve.");
+      ps.adoptBuffer(oss.str(), "Step." + name() + ".Solve.");
     }
 
 
@@ -135,7 +135,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSSingleStep::read(ps);
-      ParameterSet pss(ps.makeSubset("Step." + getName() + ".Solve."));
+      ParameterSet pss(ps.makeSubset("Step." + name() + ".Solve."));
 //       ParameterSet pss(ps);
       itsMaxIter                 = pss.getInt32("MaxIter");
       itsEpsilon                 = pss.getDouble("Epsilon");

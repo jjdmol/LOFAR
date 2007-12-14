@@ -102,7 +102,7 @@ namespace LOFAR
       // @{
 
       // Return the name of this step.
-      string getName() const { return itsName; }
+      string name() const { return itsName; }
 
       // Return a pointer to the parent of this step.
       const BBSStep* getParent() const { return itsParent; }

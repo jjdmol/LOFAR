@@ -273,7 +273,7 @@ namespace LOFAR
       string AddCommand::argumentList(const BBSSingleStep& step) const
       {
         ostringstream oss;
-        oss << "'"  << step.getName()               << "'"
+        oss << "'"  << step.name()                  << "'"
             << ",'" << step.operation()             << "'"
             << ",'" << step.baselines().station1    << "'"
             << ",'" << step.baselines().station2    << "'"
