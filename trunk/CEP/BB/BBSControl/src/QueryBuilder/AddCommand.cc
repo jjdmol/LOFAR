@@ -39,14 +39,16 @@
 #include <BBSControl/BBSShiftStep.h>
 #include <BBSControl/BBSRefitStep.h>
 #include <BBSControl/Exceptions.h>
-#include <Common/LofarLogger.h>
 #include <BBSControl/StreamUtil.h>
+#include <APS/ParameterSet.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
     using LOFAR::operator<<;
+    using ACC::APS::ParameterSet;
 
     namespace QueryBuilder
     {
@@ -208,10 +210,7 @@ namespace LOFAR
 
       string AddCommand::selectClause(const Command& command) const
       {
-        return 
-          "SELECT * FROM blackboard.add_" + 
-          toLower(command.type())         +
-          "_command";
+        return "SELECT * FROM blackboard.add_command";
       }
 
 
@@ -227,29 +226,26 @@ namespace LOFAR
       }
 
 
-      string AddCommand::beginArgumentList(const BBSSingleStep&) const
-      {
-        return "(ROW(";
-      }
-
-
       string AddCommand::endArgumentList(const Command&) const
       {
         return ") AS result";
       }
 
 
-      string AddCommand::endArgumentList(const BBSSingleStep&) const
+      string AddCommand::argumentList(const Command& cmd) const
       {
-        return ")) AS result";
+        return "'" + toLower(cmd.type()) + "'";
       }
 
-
-      string AddCommand::argumentList(const Command&) const
+      string AddCommand::argumentList(const BBSStep& step) const
       {
-        return "";
+        ostringstream oss;
+        ParameterSet  ps;
+        oss << argumentList(static_cast<const Command&>(step))
+            << ",'" << step.name()                           << "'"
+            << ",'" << (ps << step)                          << "'";
+        return oss.str();
       }
-
 
       string AddCommand::argumentList(const BBSStrategy& strategy) const
       {
@@ -266,38 +262,6 @@ namespace LOFAR
             << ",'" << strategy.domainSize().timeInterval    << "'"
             << ",'" << strategy.correlation().selection      << "'"
             << ",'" << strategy.correlation().type           << "'";
-        return oss.str();
-      }
-
-
-      string AddCommand::argumentList(const BBSSingleStep& step) const
-      {
-        ostringstream oss;
-        oss << "'"  << step.name()                  << "'"
-            << ",'" << step.operation()             << "'"
-            << ",'" << step.baselines().station1    << "'"
-            << ",'" << step.baselines().station2    << "'"
-            << ",'" << step.correlation().selection << "'"
-            << ",'" << step.correlation().type      << "'"
-            << ",'" << step.sources()               << "'"
-            << ",'" << step.instrumentModels()      << "'"
-            << ",'" << step.outputData()            << "'";
-
-        return oss.str();
-      }
-
-
-      string AddCommand::argumentList(const BBSSolveStep& step) const
-      {
-        ostringstream oss;
-        oss << argumentList(static_cast<const BBSSingleStep&>(step)) 
-            << ",'" << step.maxIter()                  << "'"
-            << ",'" << step.epsilon()                  << "'"
-            << ",'" << step.minConverged()             << "'"
-            << ",'" << step.parms()                    << "'"
-            << ",'" << step.exclParms()                << "'"
-            << ",'" << step.domainSize().bandWidth     << "'"
-            << ",'" << step.domainSize().timeInterval  << "'";
         return oss.str();
       }
 

@@ -29,15 +29,13 @@
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/LocalControlId.h>
+#include <BBSControl/QueryBuilder/AddCommand.h>
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
-#include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
-#include <Common/StringUtil.h>
-#include <Common/lofar_typeinfo.h>
 
 //# For getpid() and pid_t.
 #include <unistd.h>
@@ -72,7 +70,6 @@
 namespace LOFAR
 {
   using ACC::APS::ParameterSet;
-  using ACC::APS::APSException;
 
   namespace BBS 
   {
@@ -119,26 +116,16 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      ostringstream query;
-      query << "SELECT * FROM blackboard.add_command"
-            << "('"  << toLower(aCommand.type());
-      try {
-        // If \a aCommand is a BBSStep, then we should provide additional
-        // parameters.
-        const BBSStep& step = dynamic_cast<const BBSStep&>(aCommand);
-        LOG_TRACE_COND("Adding a BBSStep object");
-        ParameterSet ps;
-        ps << aCommand;
-        query << "','" << step.name()
-              << "','" << ps;
-      }
-      catch(bad_cast&) {
-        LOG_TRACE_COND("Not adding a BBSStep object");
-      }
-      query << "') AS result";
+      // Create a query object that "knows" how to build a query for inserting
+      // \a aCommand into the command queue.
+      QueryBuilder::AddCommand query;
+
+      // Let \a aCommand accept the visiting query object, which, as a result,
+      // will build an insert query for the correct command type.
+      aCommand.accept(query);
 
       // Execute the query.
-      return execQuery(query.str()).getUint32("result");
+      return execQuery(query.getQuery()).getUint32("result");
     }
 
 
@@ -197,25 +184,16 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // Compose the query.
-      ostringstream query;
-      query << "SELECT * FROM blackboard.set_strategy"
-            << "('" << strategy.dataSet()                    << "'"
-            << ",'" << strategy.parmDB().localSky            << "'"
-            << ",'" << strategy.parmDB().instrument          << "'"
-            << ",'" << strategy.parmDB().history             << "'"
-            << ",'" << strategy.stations()                   << "'"
-            << ",'" << strategy.inputData()                  << "'"
-            << ",'" << strategy.regionOfInterest().frequency << "'"
-            << ",'" << strategy.regionOfInterest().time      << "'"
-            << ",'" << strategy.domainSize().bandWidth       << "'"
-            << ",'" << strategy.domainSize().timeInterval    << "'"
-            << ",'" << strategy.correlation().selection      << "'"
-            << ",'" << strategy.correlation().type           << "'"
-            << ") AS RESULT";
+      // Create a query object that "knows" how to build a query for inserting
+      // \a aCommand into the command queue.
+      QueryBuilder::AddCommand query;
+
+      // Let \a strategy accept the visiting query object, which, as a result,
+      // will build an insert query for the a strategy command type.
+      strategy.accept(query);
 
       // Execute the query. Throw exception if strategy was set already.
-      if (!execQuery(query.str()).getBool("result")) {
+      if (!execQuery(query.getQuery()).getBool("result")) {
         THROW (CommandQueueException, "Strategy can only be set once");
       }
     }
@@ -392,7 +370,6 @@ namespace LOFAR
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
     ParameterSet CommandQueue::ExecQuery::emptyResult;
-//     char   CommandQueue::ExecQuery::recordSeparator('\036');
 
     CommandQueue::ExecQuery::ExecQuery(const string& query) :
       pqxx::transactor<>("ExecQuery"),
@@ -473,7 +450,7 @@ namespace LOFAR
                                          bool doAlwaysPrefix) const
     {
       // Create a transactor object and execute the query. The result will be
-      // stored in the ParameterSet \a result.
+      // stored in the ParameterSet \a ps.
       ParameterSet ps;
       try {
         itsConnection->perform(ExecQuery(query, ps));
