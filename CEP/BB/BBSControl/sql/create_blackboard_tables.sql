@@ -29,49 +29,9 @@ CREATE SEQUENCE blackboard.command_id_seq;
 CREATE TABLE blackboard.command
 (
     id                      INTEGER             PRIMARY KEY,
-    "Type"                  TEXT                NOT NULL
-);
-
-
-CREATE TABLE blackboard.single_step_args
-(
-    command_id              INTEGER             UNIQUE
-                                                NOT NULL
-                                                REFERENCES
-                                                blackboard.command(id)
-                                                ON DELETE CASCADE,
-
-    "Name"                  TEXT                NOT NULL,
-    "Operation"             TEXT                NOT NULL,
-
-    "Baselines.Station1"    TEXT                DEFAULT '[]',
-    "Baselines.Station2"    TEXT                DEFAULT '[]',
-
-    "Correlation.Selection" TEXT                DEFAULT 'CROSS',
-    "Correlation.Type"      TEXT                DEFAULT '[]',
-
-    "Sources"               TEXT                DEFAULT '[]',
-    "InstrumentModel"       TEXT                DEFAULT '[]',
-
-    "OutputData"            TEXT                NOT NULL
-);
-
-
-CREATE TABLE blackboard.solve_args
-(
-    command_id              INTEGER             UNIQUE
-                                                NOT NULL
-                                                REFERENCES
-                                                blackboard.command (id)
-                                                ON DELETE CASCADE,
-
-    "MaxIter"               INTEGER             NOT NULL,
-    "Epsilon"               DOUBLE PRECISION    NOT NULL,
-    "MinConverged"          DOUBLE PRECISION    NOT NULL,
-    "Parms"                 TEXT                NOT NULL,
-    "ExclParms"             TEXT                DEFAULT '[]',
-    "DomainSize.Freq"       DOUBLE PRECISION    NOT NULL,
-    "DomainSize.Time"       DOUBLE PRECISION    NOT NULL
+    "Type"                  TEXT                NOT NULL,
+    "Name"                  TEXT                ,
+    "ParameterSet"          TEXT
 );
 
 

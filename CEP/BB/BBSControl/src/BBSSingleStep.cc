@@ -82,8 +82,8 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSStep::write(ps);
-      ps.replace("Step." + getName() + ".OutputData", itsOutputData);
-      ps.replace("Step." + getName() + ".Operation", toUpper(operation()));
+      ps.replace("Step." + name() + ".OutputData", itsOutputData);
+      ps.replace("Step." + name() + ".Operation", toUpper(operation()));
     }
 
 
@@ -91,7 +91,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       BBSStep::read(ps);
-      itsOutputData = ps.getString("Step." + getName() + ".OutputData");
+      itsOutputData = ps.getString("Step." + name() + ".OutputData");
     }
 
   } // namespace BBS

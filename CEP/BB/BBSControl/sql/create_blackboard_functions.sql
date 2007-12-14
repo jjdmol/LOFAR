@@ -173,8 +173,10 @@ LANGUAGE SQL;
 -- ------- --
 -- COMMAND --
 -- ------- --
--- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
-CREATE OR REPLACE FUNCTION blackboard.add_command(_type TEXT)
+CREATE OR REPLACE FUNCTION blackboard.add_command
+        (_type TEXT,
+        _name TEXT, 
+        _parset TEXT)
 RETURNS INTEGER AS
 $$
     DECLARE
@@ -182,8 +184,8 @@ $$
     BEGIN
         _id := nextval('blackboard.command_id_seq');
         INSERT
-            INTO blackboard.command(id, "Type")
-            VALUES (_id, _type);
+            INTO blackboard.command(id, "Type", "Name", "ParameterSet")
+            VALUES (_id, _type, _name, _parset);
 
         RETURN _id;
     END;
@@ -191,246 +193,14 @@ $$
 LANGUAGE plpgsql;
 
 
--- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
-CREATE OR REPLACE FUNCTION blackboard.add_single_step_args
-    (_command_id INTEGER,
-    args anyelement)
-RETURNS VOID AS
-$$
-    INSERT
-        INTO blackboard.single_step_args
-            (command_id,
-            "Name",
-            "Operation",
-            "Baselines.Station1",
-            "Baselines.Station2",
-            "Correlation.Selection",
-            "Correlation.Type",
-            "Sources",
-            "InstrumentModel",
-            "OutputData")
-        VALUES
-            ($1,
-            $2."Name",
-            $2."Operation",
-            $2."Baselines.Station1",
-            $2."Baselines.Station2",
-            $2."Correlation.Selection",
-            $2."Correlation.Type",
-            $2."Sources",
-            $2."InstrumentModel",
-            $2."OutputData");
-$$
-LANGUAGE SQL;
-
-
--- (PRIVATE FUNCTION, DO NOT CALL FROM C++)
-CREATE OR REPLACE FUNCTION blackboard.get_single_step_args
-    (_command_id INTEGER)
-RETURNS blackboard.iface_single_step_args AS
-$$
-    SELECT
-        "Name",
-        "Operation",
-        "Baselines.Station1",
-        "Baselines.Station2",
-        "Correlation.Selection",
-        "Correlation.Type",
-        "Sources",
-        "InstrumentModel",
-        "OutputData"
-        FROM blackboard.single_step_args
-        WHERE command_id = $1;
-$$
-LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_finalize_command()
+CREATE OR REPLACE FUNCTION blackboard.add_command(_type TEXT)
 RETURNS INTEGER AS
 $$
     BEGIN
-        RETURN blackboard.add_command('finalize');
+        RETURN blackboard.add_command(_type,'','');
     END;
 $$
 LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION blackboard.get_finalize_args(_command_id INTEGER)
-RETURNS VOID AS
-$$
-$$
-LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_initialize_command()
-RETURNS INTEGER AS
-$$
-    BEGIN
-        RETURN blackboard.add_command('initialize');
-    END;
-$$
-LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION blackboard.get_initialize_args(_command_id INTEGER)
-RETURNS VOID AS
-$$
-$$
-LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_nextchunk_command()
-RETURNS INTEGER AS
-$$
-    BEGIN
-        RETURN blackboard.add_command('nextchunk');
-    END;
-$$
-LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION blackboard.get_nextchunk_args(_command_id INTEGER)
-RETURNS VOID AS
-$$
-$$
-LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_predict_command
-    (command_args blackboard.iface_predict_args)
-RETURNS INTEGER AS
-$$
-    DECLARE
-        _command_id INTEGER;
-    BEGIN
-        _command_id := blackboard.add_command('predict');
-        command_args."Operation" := 'PREDICT';
-        PERFORM blackboard.add_single_step_args(_command_id, command_args);
-        RETURN _command_id;
-    END;
-$$
-LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION blackboard.get_predict_args(_command_id INTEGER)
-RETURNS blackboard.iface_predict_args
-AS
-$$
-    SELECT * FROM blackboard.get_single_step_args($1);
-$$
-LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_subtract_command
-    (command_args blackboard.iface_subtract_args)
-RETURNS INTEGER AS
-$$
-    DECLARE
-        _command_id INTEGER;
-    BEGIN
-        _command_id := blackboard.add_command('subtract');
-        command_args."Operation" := 'SUBTRACT';
-        PERFORM blackboard.add_single_step_args(_command_id, command_args);
-        RETURN _command_id;
-    END;
-$$
-LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION blackboard.get_subtract_args(_command_id INTEGER)
-RETURNS blackboard.iface_subtract_args
-AS
-$$
-    SELECT * FROM blackboard.get_single_step_args($1);
-$$
-LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_correct_command
-    (command_args blackboard.iface_correct_args)
-RETURNS INTEGER AS
-$$
-    DECLARE
-        _command_id INTEGER;
-    BEGIN
-        _command_id := blackboard.add_command('correct');
-        command_args."Operation" := 'CORRECT';
-        PERFORM blackboard.add_single_step_args(_command_id, command_args);
-        RETURN _command_id;
-    END;
-$$
-LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION blackboard.get_correct_args(_command_id INTEGER)
-RETURNS blackboard.iface_correct_args
-AS
-$$
-    SELECT * FROM blackboard.get_single_step_args($1);
-$$
-LANGUAGE SQL;
-
-
-CREATE OR REPLACE FUNCTION blackboard.add_solve_command
-    (command_args blackboard.iface_solve_args)
-RETURNS INTEGER AS
-$$
-    DECLARE
-        _command_id INTEGER;
-    BEGIN
-        _command_id := blackboard.add_command('solve');
-        command_args."Operation" := 'SOLVE';
-        PERFORM blackboard.add_single_step_args(_command_id, command_args);
-        INSERT
-            INTO blackboard.solve_args
-                (command_id,
-                "MaxIter",
-                "Epsilon",
-                "MinConverged",
-                "Parms",
-                "ExclParms",
-                "DomainSize.Freq",
-                "DomainSize.Time")
-            VALUES
-                (_command_id,
-                command_args."Solve.MaxIter",
-                command_args."Solve.Epsilon",
-                command_args."Solve.MinConverged",
-                command_args."Solve.Parms",
-                command_args."Solve.ExclParms",
-                command_args."Solve.DomainSize.Freq",
-                command_args."Solve.DomainSize.Time");
-        RETURN _command_id;
-    END;
-$$
-LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION blackboard.get_solve_args(_command_id INTEGER)
-RETURNS blackboard.iface_solve_args AS
-$$
-    SELECT
-            "Name",
-            "Operation",
-            "Baselines.Station1",
-            "Baselines.Station2",
-            "Correlation.Selection",
-            "Correlation.Type",
-            "Sources",
-            "InstrumentModel",
-            "OutputData",
-            "MaxIter",
-            "Epsilon",
-            "MinConverged",
-            "Parms",
-            "ExclParms",
-            "DomainSize.Freq",
-            "DomainSize.Time"
-        FROM blackboard.single_step_args, blackboard.solve_args
-        WHERE blackboard.single_step_args.command_id = $1
-        AND blackboard.solve_args.command_id = $1;
-$$
-LANGUAGE SQL;
 
 
 -- ------ --

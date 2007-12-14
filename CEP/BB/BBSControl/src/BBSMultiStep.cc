@@ -83,7 +83,7 @@ namespace LOFAR
 
     void BBSMultiStep::write(ParameterSet& ps) const
     {
-      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << getName());
+      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << name());
       BBSStep::write(ps);
       writeSteps(ps);
     }
@@ -91,7 +91,7 @@ namespace LOFAR
 
     void BBSMultiStep::read(const ParameterSet& ps)
     {
-      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << getName());
+      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << name());
       BBSStep::read(ps);
       readSteps(ps);
     }
@@ -109,10 +109,10 @@ namespace LOFAR
       ostringstream oss;
 
       // Write the "Steps" key/value pair
-      oss << "Step." << getName() << ".Steps = [ ";
+      oss << "Step." << name() << ".Steps = [ ";
       for (uint i = 0; i < itsSteps.size(); ++i) {
         if (i > 0) oss << ", ";
-        oss << itsSteps[i]->getName();
+        oss << itsSteps[i]->name();
       }
       oss << " ]";
       ps.adoptBuffer(oss.str());
@@ -144,17 +144,17 @@ namespace LOFAR
     }
     
 
-    void BBSMultiStep::infiniteRecursionCheck(const string& name) const
+    void BBSMultiStep::infiniteRecursionCheck(const string& nm) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      if (name == getName()) {
+      if (nm == name()) {
 	THROW (BBSControlException, 
 	       "Infinite recursion detected in defintion of BBSStep \""
-	       << name << "\". Please check your ParameterSet file.");
+	       << nm << "\". Please check your ParameterSet file.");
       }
       const BBSMultiStep* parent;
       if ((parent = dynamic_cast<const BBSMultiStep*>(getParent())) != 0) {
-	parent->infiniteRecursionCheck(name);
+	parent->infiniteRecursionCheck(nm);
       }
     }
 

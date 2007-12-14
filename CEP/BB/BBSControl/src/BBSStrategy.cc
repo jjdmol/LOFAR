@@ -267,7 +267,7 @@ namespace LOFAR
       oss << "Strategy.Steps = [ ";
       for (uint i = 0; i < itsSteps.size(); ++i) {
         if (i > 0) oss << ", ";
-        oss << itsSteps[i]->getName();
+        oss << itsSteps[i]->name();
       }
       oss << " ]";
       ps.adoptBuffer(oss.str());
