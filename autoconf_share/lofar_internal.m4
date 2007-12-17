@@ -38,5 +38,32 @@
 AC_DEFUN([lofar_INTERNAL],dnl
 [dnl
 AC_PREREQ(2.13)dnl
+lfr_pkgnam_intv=$2
 lofar_EXTERNAL($2,$4,$5,$6,$7,$8,$9,$10,$11)
+[
+  # If this package was configured in, add the statements to get the
+  # version of this package.
+  # The Tools package is special and not handled.
+  if [ "$enable_external" = "yes"  -a  "${lfr_pkgnam_intv}" != Tools ]; then
+    echo "#include \"${lfr_pkgnam_intv}/${lfr_pkgnam_intv}Version.h\"" >> fillversionInc.h
+    # If the current fillversionFunc.h is the same as the old one, copy the
+    # old one back, while preserving creation date and time.
+    diff fillversionInc.h fillversionInc.old-h > /dev/null 2>&1
+    if [ $? = 0 ]; then
+      cp -p fillversionInc.old-h fillversionInc.h
+    fi
+
+    echo "    ${lfr_pkgnam_intv}Version::fillVersion (v);" >> fillversionFunc.h-pkg
+    # Do the finalization.
+    cp fillversionFunc.h-pkg fillversionFunc.h
+    echo '  }' >> fillversionFunc.h
+    echo '}' >> fillversionFunc.h
+    # If the current fillversionFunc.h is the same as the old one, copy the
+    # old one back, while preserving creation date and time.
+    diff fillversionFunc.h fillversionFunc.old-h > /dev/null 2>&1
+    if [ $? = 0 ]; then
+      cp -p fillversionFunc.old-h fillversionFunc.h
+    fi
+  fi
+]
 ])
