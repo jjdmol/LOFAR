@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <cstring>
 
 extern "C" {
 #include <lofar.h>
@@ -228,8 +229,14 @@ inline static void redirect_output()
 {
   int  fd;
   char file_name[32];
+  char buffer[17];
+  
+  getBGLpersonality()->BlockID(buffer, 16);
 
-  sprintf(file_name, "run.CS1_IONProc.%u", getBGLpersonality()->getPsetNum());
+  if (memchr(buffer, '\0', 16) == 0)
+    buffer[16] = '\0';
+ 
+  sprintf(file_name, "run.CS1_IONProc.%s.%u", buffer, getBGLpersonality()->getPsetNum());
 
   if ((fd = open(file_name, O_CREAT | O_TRUNC | O_RDWR, 0666)) < 0 || dup2(fd, 1) < 0 || dup2(fd, 2) < 0)
       perror("redirecting stdout/stderr");
