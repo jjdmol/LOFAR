@@ -27,15 +27,16 @@ class CS1_Parset(LOFAR_Parset.Parset):
     def getClockString(self):
         return self.clock
 
-    def setSubbands(self, first, number):        
-        self.firstSB = int(1e6 * float((first.split('MHz')[0])))
-        self.nSubbands = number
-        self.updateSBValues()
-
     def setStations(self, stationList):
         self.stationList = stationList
         self['OLAP.nrRSPboards'] = len(stationList)
         self['OLAP.storageStationNames'] = [s.getName() for s in stationList]
+    
+    def setPartition(self, partition):
+        self.partition = partition
+	
+    def getPartition(self):
+        return self.partition
 	
     def setInputToMem(self):
         self.inputFromMemory = True
@@ -54,9 +55,6 @@ class CS1_Parset(LOFAR_Parset.Parset):
     def getNStations(self):
         return int(len(self.stationList))
         
-    def getFirstSubband(self):
-        return self.firstSB
-
     def setBeamdir(self):
 	ra = self.getStringVector('Observation.Beam.angle1')[0]
 	ra = ra.strip("[")
@@ -136,12 +134,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
         elif self.clock == '200MHz':
             subbandwidth = 195312.5
         
-        if not self.__dict__.has_key('nSubbands'):
-            return
-
 	subbandIDs = self.getInt32Vector('Observation.subbandList')
-	if len(subbandIDs) != self.nSubbands:
-	    raise Exception('Number of subbandList(%d) in parset file is not equal with command line option: --subbands(%d).' % (len(subbandIDs), self.nSubbands))
 
         if self.getInt32('Observation.nyquistZone') not in range(1,4):
 	    print 'Use nyquistZone 1, 2 or 3'
@@ -153,9 +146,9 @@ class CS1_Parset(LOFAR_Parset.Parset):
 
         # create the frequencies for all subbands
         self['Observation.RefFreqs'] = '[' + ', '.join(str(sb) for sb in sbs) + ']'
-        self['Observation.NSubbands'] = self.nSubbands
+        self['Observation.NSubbands'] = len(subbandIDs)
 	
         #the number of subbands should be dividable by the number of subbands per pset
-        if not self.nSubbands % self.getInt32('OLAP.subbandsPerPset') == 0:
-            raise Exception('Number of subbands(%d) in not dividable by the number of subbands per pset (%d).' % self.nSubbands, self['OLAP.subbandsPerPset'])
+        if not len(subbandIDs) % self.getInt32('OLAP.subbandsPerPset') == 0:
+            raise Exception('Number of subbandIDs(%d) in not dividable by the number of subbands per pset (%d).' % len(subbandIDs), self['OLAP.subbandsPerPset'])
             

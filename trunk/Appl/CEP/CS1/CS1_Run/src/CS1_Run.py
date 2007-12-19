@@ -28,25 +28,29 @@ def doObservation(obsID, parset):
 
     mapTable = dict({'gels': gels, 'lofarsystem': lofarsystem, 'romein': romein, 'broekema': broekema})
     logname = os.environ.get("LOGNAME", os.environ.get("USERNAME"))
-    
     if mapTable.has_key(logname):
         userId = mapTable.get(logname)
     else:
         print 'Invalid userId: ' + logname
 	sys.exit(1)
 
-    BGLPartition = 'R000_128_0T'
-    #BGLPartition = 'R000_128_3T'
-    #BGLPartition = 'R000_B06'
-    #BGLPartition = 'R000_8'
+    sectionTable = dict({\
+        'DelayCompensationSection': DelayCompensationSection(parset, list003),
+	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
+	'StorageSection': StorageSection(parset, listfen)
+	#Flagger(parset, listfen)
+        })
 
-    sections = [\
-        DelayCompensationSection(parset, list001),
-        BGLProcSection(parset, userId.getHost(), BGLPartition),
-        StorageSection(parset, listfen)
-        #Flagger(parset, listfen)
-        ]
-    
+    if sectionTable.has_key('DelayCompensationSection') and sectionTable.has_key('BGLProcSection'):
+	parset['OLAP.OLAP_Conn.input_DelayComp_Transport'] = 'TCP'
+    else:
+	parset['OLAP.OLAP_Conn.input_DelayComp_Transport'] = 'NULL'
+   
+    if sectionTable.has_key('BGLProcSection') and sectionTable.has_key('StorageSection'):
+	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'TCP'
+    else:
+	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'NULL'
+
     nSubbandSamples = float(parset['OLAP.BGLProc.integrationSteps']) * float(parset['Observation.channelsPerSubband'])
     stepTime = nSubbandSamples / (parset['Observation.sampleClock'] * 1000000.0 / 1024)
 
@@ -64,32 +68,32 @@ def doObservation(obsID, parset):
     parset.writeToFile(logdir +'/' + obsID + '/' + obsID + '.parset')
 
     try:
-        for section in sections:
-            print ('Starting ' + section.package)
-            runlog = logdir + obsID + '/' + section.getName() + '.runlog'
+        for section in sectionTable:
+            print ('Starting ' + sectionTable.get(section).package)
+            runlog = logdir + obsID + '/' + sectionTable.get(section).getName() + '.' + options.partition +'.runlog'
 
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
 
 	    noRuns = ((sz+15)&~15) + 16
 	    
-            if isinstance(section, StorageSection):
+            if isinstance(sectionTable.get(section), StorageSection):
 	        noRuns = (sz+15)&~15
 	        commandstr ='cexec mkdir ' + '/data/' + obsID
 	        if os.system(commandstr) != 0:
 	            print 'Failed to create directory: /data/' + obsID
 	    
-	    section.run(runlog, noRuns)
+	    sectionTable.get(section).run(runlog, noRuns)
 
-        for section in sections:
-            print ('Waiting for ' + section.package + ' to finish ...')
-            ret = section.isRunSuccess()
+        for section in sectionTable:
+            print ('Waiting for ' + sectionTable.get(section).package + ' to finish ...')
+            ret = sectionTable.get(section).isRunSuccess()
             print (ret)
             print
     except KeyboardInterrupt:
-        for s in section:
-            print ('Aborting ' + section.package)
-            s.abortRun()
+        for s in sectionTable:
+            print ('Aborting ' + sectionTable.get(s).package)
+            sectionTable.get(s).abortRun()
 
 if __name__ == '__main__':
 
@@ -97,13 +101,13 @@ if __name__ == '__main__':
 
     # do not use the callback actions of the OptionParser, because we must make sure we read the parset before adding any variables
     parser.add_option('--parset'         , dest='parset'         , default='CS1.parset', type='string', help='name of the parameterset [%default]')
+    parser.add_option('--partition'      , dest='partition'      , default='R000_128_0T',type='string', help='name of the BGL partion [%default]')
     parser.add_option('--clock'          , dest='clock'          , default='160MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
-    parser.add_option('--subbands'       , dest='subbands'       , default='60MHz,36'   , type='string', help='freq of first subband and number of subbands to use [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
     parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 90), type='int', help='start of measurement in UTC seconds [now + 90s]')
     parser.add_option('--integrationtime', dest='integrationtime', default='60'        , type='int'   , help='length of integration interval in seconds [%default]')
     parser.add_option('--msname'         , dest='msname'                               , type='string', help='name of the measurement set')
-    parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS10_4dipoles', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
+    parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS010_4dipoles0_4_8_12', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
     parser.add_option('--fakeinput'      , dest='fakeinput'      , action='count'                     , help='do not really read from the inputs, but from memory')
     # parse the options
     (options, args) = parser.parse_args()
@@ -114,15 +118,10 @@ if __name__ == '__main__':
     parset.readFromFile(options.parset)
 
     parset.setClock(options.clock)
-    parset.setIntegrationTime(options.integrationtime)
+    parset.setIntegrationTime(options.integrationtime) 
+    parset.setPartition(options.partition) 
     if options.msname:
         parset.setMSName(options.msname)
-
-    # read the subbands
-    parts = options.subbands.split(',')
-    nsb = int(parts[-1])
-    first = ','.join(parts[:-1])
-    parset.setSubbands(first, nsb)
 
     # read the runtime (optional start in utc and the length of the measurement)
     parset.setInterval(options.starttime, options.runtime)

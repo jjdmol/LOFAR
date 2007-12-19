@@ -8,14 +8,14 @@ class Job(object):
     Represents a run of some program.
 
     """
-    def __init__(self, name, host, executable, workingDir):
+    def __init__(self, name, host, executable, workingDir, partition):
         self.workingDir = workingDir
         self.name = name
         self.host = host
         self.executable = executable
-        self.remoteRunLog = self.workingDir + '/run.' + name + '.log'
+        self.remoteRunLog = self.workingDir + '/run.' + name + '.' + partition + '.log'
         self.runlog = None
-	self.BGLpartition = None
+	self.partition = partition
 
     def run(self, runlog, parsetfile, timeOut, noRuns, runCmd = None):
         self.runlog = runlog
@@ -24,8 +24,6 @@ class Job(object):
 	tmp = self.workingDir + '/LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop'
 	self.host.sput(tmp, '~/')
 	self.host.sput('OLAP.parset', '~/')
-	if (self.name == 'CS1_BGLProc'):
-	    self.BGLpartition = runCmd.split(' ')[2]
 
         if runCmd == None:
             runCmd = self.executable
@@ -45,10 +43,10 @@ class Job(object):
         self.waitForDone()
         if not self.runLogRetreived:
 	    if (self.name == 'CS1_BGLProc'):
-		interfaces = IONodes.get(self.BGLpartition)
+		interfaces = IONodes.get(self.partition)
 		for i in range(0, len(interfaces)):
-		    remoteRunLogIONProc = self.workingDir + '/run.CS1_IONProc.' + str(i)
-		    runlogIOProc = '/' + self.runlog.split('/')[1]+ '/' + self.runlog.split('/')[2]+ '/CS1_IONProc.' + str(i) + '.runlog'
+		    remoteRunLogIONProc = self.workingDir + '/run.CS1_IONProc.' + self.partition + '.'  + str(i)
+		    runlogIOProc = '/' + self.runlog.split('/')[1]+ '/' + self.runlog.split('/')[2]+ '/CS1_IONProc.' + self.partition + '.' + str(i) + '.runlog'
 		    self.host.sget(remoteRunLogIONProc, runlogIOProc)
             self.host.sget(self.remoteRunLog, self.runlog)
             self.runLogRetreived = True
@@ -67,9 +65,9 @@ class MPIJob(Job):
     '''
     This is a variation on a job that runs with MPI
     '''
-    def __init__(self, name, host, executable, noProcesses, workingDir):
+    def __init__(self, name, host, executable, noProcesses, workingDir, partition):
         self.noProcesses = noProcesses
-        Job.__init__(self, name, host, executable, workingDir)
+        Job.__init__(self, name, host, executable, workingDir, partition)
     def run(self, runlog, parsetfile, timeOut, noRuns, runCmd):
         self.createMachinefile()
         if runCmd == None:
@@ -106,7 +104,7 @@ class BGLJob(Job):
         self.noProcesses = noProcesses
 
         # this can overwrite the values that were set before this line
-        Job.__init__(self, name, host, executable, workingDir)
+        Job.__init__(self, name, host, executable, workingDir, partition)
         self.tmplog = 'CS1_Run.tmplog'
         self.jobID = '0'
 

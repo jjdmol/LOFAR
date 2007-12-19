@@ -18,6 +18,7 @@ class Section(object):
         self.host = host
         self.buildvar = buildvar
         self.executable = self.package.split('/')[-1]
+	self.partition = parset.getPartition()
         
     def getName(self):
         return self.package.split('/')[-1]
@@ -44,14 +45,16 @@ class Section(object):
             self.runJob = MPIJob(self.package.split('/')[-1], \
                                  self.host, \
                                  executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
-                                 noProcesses = self.noProcesses,
-                                 workingDir = self.workingDir)
+                                 noProcesses = self.noProcesses, \
+                                 workingDir = self.workingDir,
+				 partition = self.partition)
         else:   
             self.runJob = Job(self.package.split('/')[-1], \
                               self.host, \
-                              executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable,
-                              workingDir = self.workingDir)
-        
+                              executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                              workingDir = self.workingDir, \
+			      partition = self.partition)
+
         parsetfile = '/tmp/' + self.executable + '.parset'
         self.parset.writeToFile(parsetfile)
         # For now set the timeout on 100 times the number of seconds to process
