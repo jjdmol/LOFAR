@@ -205,7 +205,11 @@ int ACCmain_Storage (int argc, char* orig_argv[], ACC::PLC::ProcessControl* theP
 					  ctime_r(&now, buf);
 					  buf[24] = '\0';
 					  
-					  cout << "time = " << buf << ", rank = " << TH_MPI::getCurrentRank() <<", nrRunsLeft = totalRuns - nRuns = " << totalRuns << " - " << nRuns << " = " << nrRunsLeft << endl;
+					  cout << "time = " << buf 
+#ifdef HAVE_MPI					  
+					  << ", rank = "  << TH_MPI::getCurrentRank() 
+#endif					  
+					  <<", nrRunsLeft = totalRuns - nRuns = " << totalRuns << " - " << nRuns << " = " << nrRunsLeft << endl;
 					  
 					  if (totalRuns > nRuns){
 					    for (int i=0; i<nrRunsLeft; i++) {
