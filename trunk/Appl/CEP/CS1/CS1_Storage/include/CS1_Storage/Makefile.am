@@ -1,21 +1,9 @@
-# if HAVE_SHMEM
-# SUBDIRS = shmem .
-# endif
+pkginclude_HEADERS = CS1_StorageVersion.h
 
-INSTHDRS =    	\
-AH_Storage.h	\
-WH_SubbandWriter.h   	\
-MSWriter.h     	\
-MSWriterImpl.h
-
-NOINSTHDRS =
-
-TCCHDRS =
-
-nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
+noinst_HEADERS =		\
+	AH_Storage.h		\
+	WH_SubbandWriter.h	\
+	MSWriter.h		\
+	MSWriterImpl.h
 
 include $(top_srcdir)/Makefile.common
