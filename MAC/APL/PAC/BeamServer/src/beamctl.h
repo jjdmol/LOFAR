@@ -90,6 +90,9 @@ namespace LOFAR
 	  double m_longitude;
 	  double m_latitude;
 	  string m_type;
+	  int itsSkyScanTotalTime;
+	  int itsSkyScanPointTime;
+	  int itsSkyScanWaitTime;
 	};
 
     };

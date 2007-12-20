@@ -26,6 +26,8 @@
 #include <APL/BS_Protocol/BS_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
 #include <GCF/GCF_ServiceInfo.h>
+#include <Common/LofarLocators.h>
+#include <APS/ParameterSet.h>
 
 #include "beamctl.h"
 
@@ -65,6 +67,7 @@
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
+using namespace ACC::APS;
 using namespace BS;
 using namespace RTC;
 using namespace CAL_Protocol;
@@ -79,7 +82,8 @@ beamctl::beamctl(string name,
 		 double longitude, double latitude, string type)
   : GCFTask((State)&beamctl::initial, name), m_beamhandle(0),
     m_parent(parent), m_rcus(rcus), m_subbands(subbands), m_beamlets(beamlets),
-    m_rcumode(rcumode), m_longitude(longitude), m_latitude(latitude), m_type(type)
+    m_rcumode(rcumode), m_longitude(longitude), m_latitude(latitude), m_type(type),
+    itsSkyScanTotalTime(3600), itsSkyScanPointTime(2), itsSkyScanWaitTime(10)
 {
 
   GCF::TM::registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
@@ -87,6 +91,15 @@ beamctl::beamctl(string name,
 
   m_calserver.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
   m_beamserver.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::SAP, BS_PROTOCOL);
+  	
+  try { itsSkyScanTotalTime = globalParameterSet()->getInt32("beamctl.SKYSCAN_TOTAL_TIME"); }
+  catch (...) { LOG_INFO_STR(formatString("beamctl.SKYSCAN_TOTAL_TIME")); }
+  
+  try { itsSkyScanPointTime = globalParameterSet()->getInt32("beamctl.SKYSCAN_POINT_TIME"); }
+  catch (...) { LOG_INFO_STR(formatString("beamctl.SKYSCAN_POINT_TIME")); }
+  
+  try { itsSkyScanWaitTime = globalParameterSet()->getInt32("beamctl.SKYSCAN_WAIT_TIME"); }
+  catch (...) { LOG_INFO_STR(formatString("beamctl.SKYSCAN_WAIT_TIME")); }
 }
 
 beamctl::~beamctl()
@@ -273,24 +286,35 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	if ("SKYSCAN" != m_type) {
 	  m_beamserver.send(pointto);
 	} else {
-	  Timestamp time;
+	  Timestamp time, end_time;
 	  time.setNow(SKYSCAN_STARTDELAY); // start after appropriate delay
 	  pointto.pointing.setType(Pointing::LOFAR_LMN);
 
-	  // Assuming 5 meter wavelength (60MHz) and a station diameter of 60 m
-	  // then HPBW is 0.08333 or 1/12. Therefor we use 2.0/24.0 stepsize
-	  // to step through l and m
+	  // step through l and m
+	  int l_steps = static_cast<int>(m_longitude);
+	  int m_steps = static_cast<int>(m_latitude);
+	  end_time = time + static_cast<long>(itsSkyScanTotalTime);
+	  
+	  double m_increment = 2.0 / (m_steps - 1);
+	  double l_increment = 2.0 / (l_steps - 1);
 	  double eps = 5.6e-16;
-	  for (double m = -1.0; m <= 1.0 + eps; m += 2.0/10.0) {
-	    for (double l = -1.0; l <= 1.0 + eps; l+= 2.0/10.0) {
-	      if (l*l+m*m <= 1.0 + eps) {
-		pointto.pointing.setTime(time);
-		pointto.pointing.setDirection(l, m);
-		m_beamserver.send(pointto);
-		time = time + (long)2; // advance 1 second
-	      }
-	    }
-	  }
+	  
+	  do { 
+	  	for (double m = -1.0; m <= 1.0 + eps; m += m_increment) {
+	  	  for (double l = -1.0; l <= 1.0 + eps; l+= l_increment) {
+	  	    if (l*l+m*m <= 1.0 + eps) {
+						pointto.pointing.setTime(time);
+						pointto.pointing.setDirection(l, m);
+						m_beamserver.send(pointto);
+						time = time + (long)itsSkyScanPointTime; // advance seconds
+	  	    }
+	  	  }
+	  	}
+	  	pointto.pointing.setTime(time);
+			pointto.pointing.setDirection(0.0, 0.0);
+			m_beamserver.send(pointto);
+			time = time + (long)itsSkyScanWaitTime; // advance seconds
+		} while (time < end_time);
 	}
       }
       break;
@@ -350,7 +374,7 @@ void usage()
 "  --direction=longitude,latitude[,type]\n"
 "                    # lon,lat are floating point values specified in radians\n"
 "                    # type is one of J2000 (default), AZEL, LOFAR_LMN, SKYSCAN\n"
-"                    # SKYSCAN will scan the sky with a 26 x 26 grid in the (l,m) plane\n"
+"                    # SKYSCAN will scan the sky with a L x M grid in the (l,m) plane\n"
 "  --help            # print this usage\n"
 "\n"
 "This utility connects to the CalServer to create a subarray of --array\n"
@@ -473,7 +497,17 @@ int main(int argc, char** argv)
 
   // initialize rcumode
   rcumode().resize(1);
-
+	
+  cout << "Reading configuration files" << endl;
+  try {
+  	LOFAR::ConfigLocator cl;
+		LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("beamctl.conf"));
+	}
+	catch (LOFAR::Exception e) {
+		cerr << "Failed to load configuration files: " << e.text() << endl;
+		exit(EXIT_FAILURE);
+	}
+		
   // parse options
   optind = 0; // reset option parsing
   while (1) {
@@ -502,6 +536,7 @@ int main(int argc, char** argv)
 	  cerr << "Error: missing --array value" << endl;
 	} else {
 	  array=strdup(optarg);
+	  cout << "array=" << array << endl;
 	  presence |= ARRAY_FLAG;
 	}
       }
@@ -514,13 +549,13 @@ int main(int argc, char** argv)
 	} else {
 	  rcus = strtolist(optarg, MEPHeader::MAX_N_RCUS);
 	  presence |= RCUS_FLAG;
+	  cout << "rcus=" << optarg << endl;
 	}
       }
       break;
 
     case 'm':
       {
-	cout << "optarg=" << optarg << endl;
 	if (!optarg) {
 	  cerr << "Error: missing --rcumode value" << endl;
 	} else {
@@ -530,6 +565,7 @@ int main(int argc, char** argv)
 	  } else {
 	    rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)mode);
 	    presence |= RCUMODE_FLAG;
+	    cout << "rcumode=" << optarg << endl;
 	  }
 	}
       }
@@ -569,6 +605,7 @@ int main(int argc, char** argv)
 	} else {
 	  subbands = strtolist(optarg, MEPHeader::N_SUBBANDS);
 	  presence |= SUBBANDS_FLAG;
+	  cout << "subbands = " << optarg << endl;
 	}
       }
       break;
@@ -580,6 +617,7 @@ int main(int argc, char** argv)
 	} else {
 	  beamlets = strtolist(optarg, MEPHeader::N_BEAMLETS);
 	  presence |= BEAMLETS_FLAG;
+	  cout << "beamlets = " << optarg << endl;
 	}
       }
       break;
@@ -631,6 +669,7 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
+  cout << "Argument are ok, creating a task" << endl;
   GCFTask::init(argc, argv);
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
