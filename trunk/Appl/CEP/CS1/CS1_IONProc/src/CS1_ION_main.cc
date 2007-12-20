@@ -52,6 +52,15 @@ static char	  **global_argv;
 static unsigned   nrCoresPerPset;
 
 
+static void checkParset(const CS1_Parset &parset)
+{
+  BGLPersonality *personality = getBGLpersonality();
+
+  if (parset.nrPsets() > personality->numPsets())
+    std::cerr << "needs " << parset.nrPsets() << " psets; only " << personality->numPsets() << " available" << std::endl;
+}
+
+
 static void configureCNs(const CS1_Parset &parset)
 {
   BGL_Command	    command(BGL_Command::PREPROCESS);
@@ -131,6 +140,7 @@ void *master_thread(void *)
     ACC::APS::ParameterSet parameterSet(global_argv[1]);
     CS1_Parset cs1_parset(&parameterSet);
 
+    checkParset(cs1_parset);
     configureCNs(cs1_parset);
 
     unsigned myPsetNumber = getBGLpersonality()->getPsetNum();
