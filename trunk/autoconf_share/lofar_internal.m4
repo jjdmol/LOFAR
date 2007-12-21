@@ -45,24 +45,25 @@ lofar_EXTERNAL($2,$4,$5,$6,$7,$8,$9,$10,$11)
   # version of this package.
   # The Tools package is special and not handled.
   if [ "$enable_external" = "yes"  -a  "${lfr_pkgnam_intv}" != Tools ]; then
-    echo "#include \"${lfr_pkgnam_intv}/${lfr_pkgnam_intv}Version.h\"" >> fillversionInc.h
-    # If the current fillversionFunc.h is the same as the old one, copy the
+    echo "#include \"${lfr_pkgnam_intv}/PACKAGE__Version.h\"" >> FillPackage__VersionInc.h
+    # If the current FillPackage__VersionFunc.h is the same as the old one, copy the
     # old one back, while preserving creation date and time.
-    diff fillversionInc.h fillversionInc.old-h > /dev/null 2>&1
+    diff FillPackage__VersionInc.h FillPackage__VersionInc.old-h > /dev/null 2>&1
     if [ $? = 0 ]; then
-      cp -p fillversionInc.old-h fillversionInc.h
+      cp -p FillPackage__VersionInc.old-h FillPackage__VersionInc.h
     fi
 
-    echo "    ${lfr_pkgnam_intv}Version::fillVersion (v);" >> fillversionFunc.h-pkg
+    echo "    sameVers = sameVers && ${lfr_pkgnam_intv}Version::fillVersion (mainVersion, v);"  >> FillPackage__VersionFunc.h-pkg
     # Do the finalization.
-    cp fillversionFunc.h-pkg fillversionFunc.h
-    echo '  }' >> fillversionFunc.h
-    echo '}' >> fillversionFunc.h
-    # If the current fillversionFunc.h is the same as the old one, copy the
-    # old one back, while preserving creation date and time.
-    diff fillversionFunc.h fillversionFunc.old-h > /dev/null 2>&1
+    cp FillPackage__VersionFunc.h-pkg FillPackage__VersionFunc.h
+    echo '    return sameVers;' >> FillPackage__VersionFunc.h
+    echo '  }' >> FillPackage__VersionFunc.h
+    echo '}' >> FillPackage__VersionFunc.h
+    # If the current FillPackage__VersionFunc.h is the same as the old one,
+    # copy the old one back, while preserving creation date and time.
+    diff FillPackage__VersionFunc.h FillPackage__VersionFunc.old-h > /dev/null 2>&1
     if [ $? = 0 ]; then
-      cp -p fillversionFunc.old-h fillversionFunc.h
+      cp -p FillPackage__VersionFunc.old-h FillPackage__VersionFunc.h
     fi
   fi
 ]
