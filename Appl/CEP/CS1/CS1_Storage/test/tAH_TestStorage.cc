@@ -43,7 +43,7 @@ int main (int argc, const char** argv){
     test.setarg(argc,argv);
     test.baseDefine();
     test.basePrerun();
-    int nrRuns = ps.getInt32("General.NRuns");
+    int nrRuns = atoi(argv[argc - 1]);
     cout << "run " << nrRuns << " times" << endl;
     test.baseRun(nrRuns);
     test.basePostrun();
