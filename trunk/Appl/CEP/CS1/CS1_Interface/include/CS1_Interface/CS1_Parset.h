@@ -77,6 +77,7 @@ public:
 	uint32         nrHistorySamples() const;
 	uint32         nrSamplesToBGLProc() const;
 	uint32         nrSamplesToBuffer() const;
+	uint32	       maxNetworkDelay() const;
 	uint32         nrRSPboards() const;
 	uint32         nrRSPboardsPerStation() const;
 	uint32         subbandsToReadFromFrame() const;
@@ -200,6 +201,11 @@ inline uint32 CS1_Parset::nrSamplesToBGLProc() const
 inline uint32 CS1_Parset::nrSamplesToBuffer() const
 {
   return (uint32) (getDouble("OLAP.nrSecondsOfBuffer") * sampleRate()) & ~(32 / sizeof(INPUT_SAMPLE_TYPE[NR_POLARIZATIONS]) - 1);
+}
+
+inline uint32 CS1_Parset::maxNetworkDelay() const
+{
+  return (uint32) (getDouble("OLAP.maxNetworkDelay") * sampleRate());
 }
 
 inline uint32 CS1_Parset::nrRSPboards() const

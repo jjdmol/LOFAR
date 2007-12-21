@@ -22,14 +22,14 @@
 
 #include <PLC/ACCmain.h>
 #include <tinyCEP/ApplicationHolderController.h>
-#include <CS1_IONProc/AH_InputSection.h>
-#include <CS1_IONProc/AH_ION_Gather.h>
-#include <CS1_IONProc/BGL_Personality.h>
-#include <CS1_IONProc/TH_ZoidServer.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Configuration.h>
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/CS1_Parset.h>
+#include <AH_InputSection.h>
+#include <AH_ION_Gather.h>
+#include <BGL_Personality.h>
+#include <TH_ZoidServer.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>

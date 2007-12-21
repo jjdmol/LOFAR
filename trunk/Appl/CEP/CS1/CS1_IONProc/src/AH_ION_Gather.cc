@@ -24,11 +24,10 @@
 
 #include <Common/lofar_iostream.h>
 #include <Common/Timer.h>
-
-#include <CS1_IONProc/AH_ION_Gather.h>
-#include <CS1_IONProc/BGL_Personality.h>
-#include <CS1_IONProc/WH_ION_Gather.h>
 #include <CEPFrame/Step.h>
+#include <AH_ION_Gather.h>
+#include <BGL_Personality.h>
+#include <WH_ION_Gather.h>
 
 
 namespace LOFAR {

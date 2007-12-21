@@ -26,18 +26,18 @@
 //# Includes
 #include <Common/LofarLogger.h>
 //#include <AMCBase/Epoch.h>
-#include <CS1_IONProc/BGL_Personality.h>
-#include <CS1_IONProc/WH_InputSection.h>
-#include <CS1_IONProc/BeamletBuffer.h>
-#include <CS1_IONProc/InputThread.h>
-#include <CS1_IONProc/ION_Allocator.h>
-#include <CS1_IONProc/TH_ZoidServer.h>
+#include <BGL_Personality.h>
+#include <WH_InputSection.h>
+#include <BeamletBuffer.h>
+#include <InputThread.h>
+#include <ION_Allocator.h>
+#include <TH_ZoidServer.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/DH_Delay.h>
 #include <CS1_Interface/CS1_Parset.h>
-#include <Transport/TransportHolder.h>
 #include <CS1_Interface/RSPTimeStamp.h>
+#include <Transport/TransportHolder.h>
 //#include <tinyCEP/Sel_RoundRobin.h>
 
 
@@ -101,11 +101,13 @@ void WH_InputSection::startThread()
   args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
 
 
+#if 0
   if (itsInputTH->getType() == "TH_File" || itsInputTH->getType() == "TH_Null") {
     // if we are reading from file, overwriting the buffer should not be allowed
     // this way we can work with smaller files
     itsBBuffer->setAllowOverwrite(false);
   }
+#endif
 
   itsInputThread = new InputThread(args);
 }
@@ -120,12 +122,8 @@ void WH_InputSection::preprocess()
   itsPsetNumber		= getBGLpersonality()->getPsetNum();
 
   // create the buffer controller.
-  int cyclicBufferSize = itsCS1PS->nrSamplesToBuffer();
   int subbandsToReadFromFrame = itsCS1PS->subbandsToReadFromFrame();
   ASSERTSTR(subbandsToReadFromFrame <= itsCS1PS->getInt32("OLAP.nrSubbandsPerFrame"), subbandsToReadFromFrame << " < " << itsCS1PS->getInt32("OLAP.nrSubbandsPerFrame"));
-
-  itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, cyclicBufferSize/6, cyclicBufferSize/6);
-  startThread();
 
   itsDelayCompensation = itsCS1PS->getBool("OLAP.delayCompensation");
 
@@ -137,8 +135,13 @@ void WH_InputSection::preprocess()
 
   itsSyncedStamp = TimeStamp(seconds, samples);
 
-  std::clog << "Starting buffer at " << itsSyncedStamp << std::endl;
-  itsBBuffer->startBufferRead(itsSyncedStamp);
+  unsigned cyclicBufferSize = itsCS1PS->nrSamplesToBuffer();
+  bool	   synchronous	    = itsCS1PS->getString("OLAP.OLAP_Conn.station_Input_Transport") != "UDP";
+  unsigned maxNetworkDelay  = itsCS1PS->maxNetworkDelay();
+  std::clog << "maxNetworkDelay = " << maxNetworkDelay << std::endl;
+  itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, synchronous, maxNetworkDelay);
+
+  startThread();
 }
 
 

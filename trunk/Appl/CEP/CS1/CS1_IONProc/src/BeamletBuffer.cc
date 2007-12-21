@@ -23,199 +23,103 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-//# Includes
-#include <Common/LofarLogger.h>
-#include <Common/lofar_complex.h>
-#include <Common/Timer.h>
-#include <CS1_IONProc/ION_Allocator.h>
-#include <CS1_IONProc/BeamletBuffer.h>
-#include <CS1_Interface/RSPTimeStamp.h>
+#include <BeamletBuffer.h>
+#include <ION_Allocator.h>
+
 
 namespace LOFAR {
 namespace CS1 {
 
-BeamletBuffer::BeamletBuffer(int bufferSize, unsigned nSubbands, unsigned history, unsigned readWriteDelay):
-  itsNSubbands(nSubbands),
+BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrSubbands, unsigned history, bool isSynchronous, unsigned maxNetworkDelay)
+:
+  itsNSubbands(nrSubbands),
   itsSize(bufferSize),
-  itsSBBuffers(reinterpret_cast<SampleType *>(ION_Allocator().allocate(nSubbands * bufferSize * NR_POLARIZATIONS * sizeof(SampleType), 32)), boost::extents[nSubbands][bufferSize][NR_POLARIZATIONS]),
-  itsLockedRange(bufferSize, readWriteDelay, bufferSize - history, 0),
-  itsDroppedItems(0),
-  itsDummyItems(0),
-  itsSkippedItems(0),
-  itsReadTimer("read"),
-  itsWriteTimer("write")
+  itsHistorySize(history),
+  itsSBBuffers(reinterpret_cast<SampleType *>(ION_Allocator().allocate(nrSubbands * bufferSize * NR_POLARIZATIONS * sizeof(SampleType), 32)), boost::extents[nrSubbands][bufferSize][NR_POLARIZATIONS]),
+  itsReadTimer("buffer read", true),
+  itsWriteTimer("buffer write", true)
 {
-  pthread_mutex_init(&itsFlagsMutex, 0);
-  itsFlags.include(0, bufferSize);
+  pthread_mutex_init(&itsValidDataMutex, 0);
+
+  if (isSynchronous)
+    itsSynchronizedReaderWriter = new SynchronizedReaderAndWriter(bufferSize);
+  else
+    itsSynchronizedReaderWriter = new TimeSynchronizedReader(maxNetworkDelay);
 }
+
 
 BeamletBuffer::~BeamletBuffer()
 {      
-  pthread_mutex_destroy(&itsFlagsMutex);
+  delete itsSynchronizedReaderWriter;
+  pthread_mutex_destroy(&itsValidDataMutex);
   ION_Allocator().deallocate(itsSBBuffers.origin());
-  clog<<"BeamletBuffer did not receive "<<itsDummyItems<<" stamps and received "<<itsDroppedItems<<" items too late. "<<itsSkippedItems<<" items were skipped (but may be received later)."<<endl;
-  clog<<"BeamletBufferTimers:"<<endl;
-  clog<<itsReadTimer<<endl;
-  clog<<itsWriteTimer<<endl;
 }
 
-void BeamletBuffer::checkForSkippedData(TimeStamp writeBegin) {
-  // flag the data from itsHighestWritten to end
-  while ((writeBegin > itsHighestWritten) and (itsHighestWritten > TimeStamp())) {
-    // take only the first part, so the buffer won't block
-    TimeStamp flagEnd = itsHighestWritten + itsSize/4;
 
-    if (flagEnd > writeBegin)
-      flagEnd = writeBegin;
-
-    TimeStamp realBegin = itsLockedRange.writeLock(itsHighestWritten, flagEnd);
-
-    itsWriteTimer.start();
-    //cerr<<"BeamletBuffer: skipping "<<itsHighestWritten<<" - "<<flagEnd<<" ("<<flagEnd-itsHighestWritten<<")"<<endl;
-    itsSkippedItems += flagEnd - itsHighestWritten;
-    unsigned startI = mapTime2Index(realBegin), endI = mapTime2Index(flagEnd);
-
-    pthread_mutex_lock(&itsFlagsMutex);
-    if (endI < startI) {
-      itsFlags.include(0, endI).include(startI, itsSize);
-    } else {
-      itsFlags.include(startI, endI);
-    }
-    pthread_mutex_unlock(&itsFlagsMutex);
-
-    itsWriteTimer.stop();
-
-    if (itsHighestWritten < flagEnd)
-      itsHighestWritten = flagEnd;
-
-    itsLockedRange.writeUnlock(flagEnd);
-  }
-}
-
-void BeamletBuffer::writeElements(Beamlet *data, TimeStamp begin, unsigned nElements)
+void BeamletBuffer::writeElements(Beamlet *data, const TimeStamp &begin, unsigned nrElements)
 {
-  // if this part start beyond itsHighestWritten, there is a gap in the data in the buffer
-  // so set that data to zero and invalidate it.
-  //cerr<<"BeamletBuffer checking for skipped data"<<endl;
-  checkForSkippedData(begin);	
+  static TimeStamp previous;  // cache previous index, to avoid expensive
+  static unsigned  previousI; // mapTime2Index()
 
-  // Now write the normal data
-  //cerr<<"BeamletBuffer writing normal data"<<endl;
-  TimeStamp end = begin + nElements;
-  TimeStamp realBegin = itsLockedRange.writeLock(begin, end);
-  //cerr<<"BeamletBuffer writelock received"<<endl;
+  TimeStamp end = begin + nrElements;
+  itsWriteTimer.start();
 
-  if (realBegin < end) {
-    itsDroppedItems += realBegin - begin;
-    data += realBegin - begin;
-    itsWriteTimer.start();
+  unsigned startI = (begin == previous) ? previousI : mapTime2Index(begin);
+  unsigned endI   = startI + nrElements;
 
-    unsigned startI = mapTime2Index(realBegin), endI = mapTime2Index(end);
+  if (endI >= itsSize)
+    endI -= itsSize;
 
-    if (endI < startI) {
-      // the data wraps around the allocated memory, so do it in two parts
-      
-      unsigned chunk1 = itsSize - startI;
-      for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-	memcpy(itsSBBuffers[sb][startI].origin(), &data[0]     , sizeof(SampleType[chunk1][NR_POLARIZATIONS]));
-	memcpy(itsSBBuffers[sb][0].origin()     , &data[chunk1], sizeof(SampleType[endI][NR_POLARIZATIONS]));
-	data += nElements;		
-      }
+  previous  = end;
+  previousI = endI;
+  itsWriteTimer.stop();
 
-      pthread_mutex_lock(&itsFlagsMutex);
-      itsFlags.exclude(startI, itsSize).exclude(0, endI);
-      pthread_mutex_unlock(&itsFlagsMutex);
-    } else {
-      for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-	memcpy(itsSBBuffers[sb][startI].origin(), data, sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
-	data += nElements;		
-      }
-
-      pthread_mutex_lock(&itsFlagsMutex);
-      itsFlags.exclude(startI, endI);
-      pthread_mutex_unlock(&itsFlagsMutex);
-    }
-
-    itsWriteTimer.stop();
-
-    if (itsHighestWritten < end)
-      itsHighestWritten = end;
-  }
-
-  itsLockedRange.writeUnlock(end);
-}
-
-#if 0
-void BeamletBuffer::getElements(boost::multi_array_ref<SampleType, 3> &buffers, SparseSet &flags, TimeStamp begin, unsigned nElements)
-{
-  //ASSERTSTR(buffers.size() == itsNSubbands, "BeamletBuffer received wrong number of buffers to write to (in getElements).");
-  TimeStamp end = begin + nElements;
-  TimeStamp realBegin = itsLockedRange.readLock(begin, end);
-  
-  itsReadTimer.start();
-
-  unsigned nInvalid = realBegin - begin;
-  itsDummyItems += nInvalid * itsNSubbands;
-  flags.include(0, nInvalid); // set flags later
-
-  // copy the real data
-  unsigned startI = mapTime2Index(begin), endI = mapTime2Index(end);
+  // in synchronous mode, do not overrun tail of reader
+  itsSynchronizedReaderWriter->startWrite(begin, end);
+  // do not write in circular buffer section that is being read
+  itsLockedRanges.lock(startI, endI, itsSize);
 
   if (endI < startI) {
-    // the data wraps around the allocated memory, so copy in two parts
-    unsigned firstChunk = itsSize - startI;
-
+    // the data wraps around the allocated memory, so do it in two parts
+    
+    unsigned chunk1 = itsSize - startI;
     for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-      memcpy(buffers[sb].origin()	     , itsSBBuffers[sb][startI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]));
-      memcpy(buffers[sb][firstChunk].origin(), itsSBBuffers[sb][0].origin(),      sizeof(SampleType[endI][NR_POLARIZATIONS]));
+      memcpy(itsSBBuffers[sb][startI].origin(), &data[0]     , sizeof(SampleType[chunk1][NR_POLARIZATIONS]));
+      memcpy(itsSBBuffers[sb][0].origin()     , &data[chunk1], sizeof(SampleType[endI][NR_POLARIZATIONS]));
+      data += nrElements;		
     }
-
-    pthread_mutex_lock(&itsFlagsMutex);
-    flags |= (itsFlags.subset(0,      endI)    += firstChunk);
-    flags |= (itsFlags.subset(startI, itsSize) -= startI);
-    pthread_mutex_unlock(&itsFlagsMutex);
   } else {
     for (unsigned sb = 0; sb < itsNSubbands; sb ++) {
-      memcpy(buffers[sb].origin(), itsSBBuffers[sb][startI].origin(), sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
-    }	  
-
-    pthread_mutex_lock(&itsFlagsMutex);
-    flags |= (itsFlags.subset(startI, endI) -= startI);
-    pthread_mutex_unlock(&itsFlagsMutex);
+      memcpy(itsSBBuffers[sb][startI].origin(), data, sizeof(SampleType[endI - startI][NR_POLARIZATIONS]));
+      data += nrElements;		
+    }
   }
 
-  //cout<<"BeamletBuffer: getting elements "<<begin<<" - "<<begin+nElements<<": "<<flags<<endl;
- 
-  itsReadTimer.stop();
-  itsLockedRange.readUnlock(end);
-}
-#endif
+  // forget old ValidData; add new ValidData
+  pthread_mutex_lock(&itsValidDataMutex);
+  itsValidData.exclude(0, end - itsSize).include(begin, end);
+  pthread_mutex_unlock(&itsValidDataMutex);
 
-void BeamletBuffer::startReadTransaction(TimeStamp begin, unsigned nElements)
+  itsLockedRanges.unlock(startI, endI, itsSize);
+  itsSynchronizedReaderWriter->finishedWrite(end);
+}
+
+
+void BeamletBuffer::startReadTransaction(const TimeStamp &begin, unsigned nrElements)
 {
-  itsEnd = begin + nElements;
-  TimeStamp realBegin = itsLockedRange.readLock(begin, itsEnd);
-  itsNInvalid = realBegin - begin;
-  itsDummyItems += itsNInvalid * itsNSubbands;
+  itsReadTimer.start();
 
-  itsStartI = mapTime2Index(begin), itsEndI = mapTime2Index(itsEnd);
+  itsBegin  = begin;
+  itsEnd    = begin + nrElements;
+  itsStartI = mapTime2Index(begin);
+  itsEndI   = mapTime2Index(itsEnd);
+
+  // in synchronous mode, do not overrun writer
+  itsSynchronizedReaderWriter->startRead(begin, itsEnd);
+  // do not read from circular buffer section that is being written
+  itsLockedRanges.lock(itsStartI, itsEndI, itsSize);
 }
 
-#if 0
-void BeamletBuffer::readSubband(const boost::detail::multi_array::sub_array<SampleType, 2> &samples, unsigned subband)
-{
-  // copy the real data
-  if (itsEndI < itsStartI) {
-    // the data wraps around the allocated memory, so copy in two parts
-    unsigned firstChunk = itsSize - itsStartI;
-
-    memcpy((void *) samples.origin()	        , itsSBBuffers[subband][itsStartI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]));
-    memcpy((void *) samples[firstChunk].origin(), itsSBBuffers[subband][0].origin(),      sizeof(SampleType[itsEndI][NR_POLARIZATIONS]));
-  } else {
-    memcpy((void *) samples.origin(), itsSBBuffers[subband][itsStartI].origin(), sizeof(SampleType[itsEndI - itsStartI][NR_POLARIZATIONS]));
-  }
-}
-#endif
 
 void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband) /*const*/
 {
@@ -235,51 +139,29 @@ void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband) /*const*/
   }
 }
 
+
 void BeamletBuffer::readFlags(SparseSet<unsigned> &flags)
 {
-  flags.reset().include(0, itsNInvalid);
+  pthread_mutex_lock(&itsValidDataMutex);
+  SparseSet<TimeStamp> validTimes = itsValidData.subset(itsBegin, itsEnd);
+  pthread_mutex_unlock(&itsValidDataMutex);
 
-  if (itsEndI < itsStartI) {
-    // the data wraps around the allocated memory, so copy in two parts
-    pthread_mutex_lock(&itsFlagsMutex);
-    flags |= (itsFlags.subset(0,	 itsEndI) += itsSize - itsStartI);
-    flags |= (itsFlags.subset(itsStartI, itsSize) -= itsStartI);
-    pthread_mutex_unlock(&itsFlagsMutex);
-  } else {
-    pthread_mutex_lock(&itsFlagsMutex);
-    flags |= (itsFlags.subset(itsStartI, itsEndI) -= itsStartI);
-    pthread_mutex_unlock(&itsFlagsMutex);
-  }
+  flags.reset().include(0, static_cast<unsigned>(itsEnd - itsBegin));
+  const std::vector<SparseSet<TimeStamp>::range> &validRanges = validTimes.getRanges();
+
+  for (SparseSet<TimeStamp>::const_iterator it = validRanges.begin(); it != validRanges.end(); it ++)
+    flags.exclude(static_cast<unsigned>(it->begin - itsBegin),
+		  static_cast<unsigned>(it->end - itsBegin));
 }
 
 void BeamletBuffer::stopReadTransaction()
 {
-  itsLockedRange.readUnlock(itsEnd);
-}
+  itsLockedRanges.unlock(itsStartI, itsEndI, itsSize);
+  itsSynchronizedReaderWriter->finishedRead(itsEnd - (itsHistorySize + 16));
+  // subtract 16 extra; due to alignment restrictions and the changing delays,
+  // it is hard to predict where the next read will begin.
 
-
-#if 0
-TimeStamp BeamletBuffer::startBufferRead() {
-  TimeStamp oldest = itsLockedRange.getReadStart();
-  TimeStamp fixPoint(oldest.getSeqId() + 1, 0); 
- 
-  TimeStamp realBegin = itsLockedRange.readLock(fixPoint, fixPoint);
-  ASSERTSTR(realBegin == fixPoint, "Error in starting up buffer");
-  itsLockedRange.readUnlock(fixPoint);
-  return fixPoint;
-}
-#endif
-
-TimeStamp BeamletBuffer::startBufferRead(TimeStamp begin) {
-  TimeStamp oldest = itsLockedRange.getReadStart();
-  TimeStamp realBegin = itsLockedRange.readLock(begin, begin);
-  ASSERTSTR(realBegin == begin, "Error in starting up buffer");
-
-  // if begin is no longer in the buffer the oldest possible beginning is returned
-  // if begin is not yet in the buffer readLock waits for it
-
-  itsLockedRange.readUnlock(realBegin);
-  return realBegin;
+  itsReadTimer.stop();
 }
 
 } // namespace CS1

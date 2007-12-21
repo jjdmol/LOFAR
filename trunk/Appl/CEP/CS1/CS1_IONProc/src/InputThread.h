@@ -31,7 +31,7 @@
 //# Includes
 #include <Common/lofar_vector.h>
 #include <CS1_Interface/RSPTimeStamp.h>
-#include <CS1_IONProc/BeamletBuffer.h>
+#include <BeamletBuffer.h>
 
 #include <pthread.h>
 

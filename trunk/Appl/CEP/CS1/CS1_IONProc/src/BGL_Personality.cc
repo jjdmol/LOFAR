@@ -21,7 +21,7 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <CS1_IONProc/BGL_Personality.h>
+#include <BGL_Personality.h>
 
 #include <cstdio>
 #include <cstdlib>

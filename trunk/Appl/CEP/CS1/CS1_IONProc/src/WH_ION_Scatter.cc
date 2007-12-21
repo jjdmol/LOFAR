@@ -21,9 +21,9 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <CS1_IONProc/ION_Allocator.h>
-#include <CS1_IONProc/WH_ION_Scatter.h>
-#include <CS1_IONProc/TH_ZoidServer.h>
+#include <ION_Allocator.h>
+#include <WH_ION_Scatter.h>
+#include <TH_ZoidServer.h>
 
 #include <cstring>
 #include <string>

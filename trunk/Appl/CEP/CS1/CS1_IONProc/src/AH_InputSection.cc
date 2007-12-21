@@ -25,13 +25,12 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <CS1_IONProc/AH_InputSection.h>
-#include <CS1_IONProc/WH_InputSection.h>
-#include <CS1_IONProc/BGL_Personality.h>
-
-#include <CS1_IONProc/Connector.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CEPFrame/Step.h>
+#include <AH_InputSection.h>
+#include <WH_InputSection.h>
+#include <BGL_Personality.h>
+#include <Connector.h>
 
 //# Workholders
 

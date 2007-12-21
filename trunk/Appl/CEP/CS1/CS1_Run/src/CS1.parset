@@ -48,6 +48,7 @@ OLAP.nrTimesInFrame = 16
 OLAP.nrSubbandsPerFrame = 36
 OLAP.nrBitsPerSample=16
 OLAP.nrSecondsOfBuffer = 6
+OLAP.maxNetworkDelay = 2.0 # 1 second extra added to compensate for timestamp bug
 OLAP.delayCompensation = T
 
 Observation.sampleClock = 160
