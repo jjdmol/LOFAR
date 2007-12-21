@@ -13,8 +13,11 @@ InputThread.h			\
 InputThread.cc			\
 ION_Allocator.h			\
 ION_Allocator.cc		\
-LockedRange.h			\
-LockedRange.tcc			\
+LockedRanges.h			\
+ReaderWriterSynchronization.h	\
+ReaderWriterSynchronization.cc	\
+SlidingPointer.h		\
+WallClockTime.h			\
 AH_InputSection.h		\
 AH_InputSection.cc		\
 WH_InputSection.h		\
@@ -28,7 +31,7 @@ TH_ZoidServer.cc
 
 install-exec-local:
 	ln -sf .libs/liblofar_impl.so.0.0.0 lofar_impl.so
-#	cp lofar_impl.so /bgl/lofar-utils/zoid-test/lib
+	cp lofar_impl.so /bgl/lofar-utils/zoid-test/lib
 
 uninstall-local:
 	rm lofar_impl.so

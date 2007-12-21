@@ -26,11 +26,11 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>
-#include <CS1_IONProc/InputThread.h>
 #include <Common/DataConvert.h>
 #include <Common/Timer.h>
 #include <Transport/TransportHolder.h>
-#include <CS1_IONProc/BeamletBuffer.h>
+#include <BeamletBuffer.h>
+#include <InputThread.h>
 
 namespace LOFAR {
 namespace CS1 {

@@ -25,7 +25,6 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <CS1_IONProc/Connector.h>
 #include <Transport/TH_Mem.h>
 #include <Transport/TH_Ethernet.h>
 #include <Transport/TH_MPI.h>
@@ -33,6 +32,7 @@
 #include <Transport/TH_Null.h>
 #include <Transport/TH_Socket.h>
 #include <Transport/TH_ShMem.h>
+#include <Connector.h>
 
 namespace LOFAR {
   namespace CS1 {

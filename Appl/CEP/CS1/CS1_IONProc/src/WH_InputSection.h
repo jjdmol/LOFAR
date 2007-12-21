@@ -33,8 +33,8 @@
 #include <CS1_Interface/CS1_Parset.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/ION_to_CN.h>
-#include <CS1_IONProc/BeamletBuffer.h>
-#include <CS1_IONProc/InputThread.h>
+#include <BeamletBuffer.h>
+#include <InputThread.h>
 #include <Common/Timer.h>
 
 #include <boost/multi_array.hpp>
