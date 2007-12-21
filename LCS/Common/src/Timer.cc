@@ -103,24 +103,24 @@ void NSTimer::print_time(ostream &str, const char *which, double time) const
 
 ostream &NSTimer::print(ostream &str) const
 {
-    if (name == 0) {
-      str << "timer: ";
+    if (itsName.empty()) {
+        str << "timer: ";
     } else {
-      str << left << setw(25) << name << ": " << right;
+        str << left << setw(25) << itsName << ": " << right;
     }
-
-    if (CPU_speed_in_MHz == 0)
-	str << "could not determine CPU speed" << endl;
-    else if (count > 0) {
-	double total = static_cast<double>(total_time);
-
-	print_time(str, "avg", total / static_cast<double>(count));
-	print_time(str, ", total", total);
+    if (count == 0) {
+	str << "not used" << endl;
+    } else {
+        double total = static_cast<double>(total_time);
+	if (CPU_speed_in_MHz == 0) {
+	    str << "avg = " << total / static_cast<double>(count);
+	    str << ", total = " << total_time << " cycles";
+	} else if (count > 0) {
+	    print_time(str, "avg", total / static_cast<double>(count));
+	    print_time(str, ", total", total);
+	}
 	str << ", count = " << setw(9) << count << endl;
     }
-    else
-	str << "not used" << endl;
-
     return str;
 }
 
