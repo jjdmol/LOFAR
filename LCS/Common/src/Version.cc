@@ -24,11 +24,14 @@
 
 namespace LOFAR {
 
-  void Version::fillVersion (const std::string& package,
+  bool Version::fillVersion (const std::string& package,
 			     const std::string& version,
+			     const std::string& versionSuffix,
+			     const std::string& mainVersion,
 			     std::vector<std::string>& v)
   {
-    std::string pv = package + '/' + version;
+    bool sameVers = (version == mainVersion);
+    std::string pv = package + '/' + version + versionSuffix;
     // Only insert if not existing yet.
     // Later you might remove the existing one, so the dependencies are
     // shown in a somewhat better way.
@@ -36,10 +39,11 @@ namespace LOFAR {
 	 iter!=v.end();
 	 ++iter) {
       if (*iter == pv) {
-	return;
+	return sameVers;
       }
     }
     v.push_back (pv);
+    return sameVers;
   }
 
 }

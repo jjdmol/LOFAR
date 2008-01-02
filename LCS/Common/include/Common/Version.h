@@ -35,8 +35,11 @@ namespace LOFAR {
   {
   public:
     // Add package/version to vector if not existing yet.
-    static void fillVersion (const std::string& package,
+    // It returns false if the version differs from the main version.
+    static bool fillVersion (const std::string& package,
 			     const std::string& version,
+			     const std::string& versionSuffix,
+			     const std::string& mainVersion,
 			     std::vector<std::string>& v);
 
     // Show the package or application name and the versions of the packages
@@ -49,8 +52,26 @@ namespace LOFAR {
 					   std::ostream& os)
     {
       std::vector<std::string> v;
-      T::fillVersion(v);
-      os << name << ": versions " << v << endl;
+      bool sameVers = T::fillVersion (T::getVersion(), v);
+      os << name << ": main version = " << T::getVersion();
+      if (!sameVers) os << '*';
+      os << endl;
+      os << "  packages: " << v << endl;
+    }
+
+    // Get the main version and the individual package versions being used.
+    // It returns false if a package version differs from the main version.
+    // Use like:
+    // @code
+    //  std::string mainVersion;
+    //  std::vector<std::string> packageVersions;
+    //  Version::get<BlobVersion> (mainVersion, packageVersions);
+    // @endcode
+    template<typename T> static bool get (std::string& mainVersion,
+					  std::vector<std::string>& pkgVers)
+    {
+      mainVersion = T::getVersion();
+      return T::fillVersion (mainVersion, pkgVers);
     }
   };
 
