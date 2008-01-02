@@ -44,6 +44,7 @@
 #  lofar_gcc_major   major version of gcc compiler
 #  lofar_have_libg2c 1 = libg2c is available
 #  lofar_shared_ext  the extension name of a shared library (so, sl, dylib)
+#  lofar_libdirext   lib or lib64 depending on enable_lib64 setting
 #  lofar_no_rpath    1 = rpath cannot be used when linking
 #  LOFAR_DEPEND      all lofar libraries this package is dependent on
 #
@@ -91,6 +92,11 @@ AC_ARG_WITH(lofar-libdir,
   [  --with-lofar-libdir=PFX   specific tree for lofar libraries],
   [lofar_root_libdir="$withval"])
 
+AC_ARG_ENABLE(lib64,
+	[  --enable-lib64          use lib or lib64 (default is system dependent)],
+	[enable_lib64="$enableval"],
+	[enable_lib64="default"])dnl
+
 [
   # Determine the shared library extension.
   lofar_shared_ext=so
@@ -106,6 +112,17 @@ AC_ARG_WITH(lofar-libdir,
     Cray*) lofar_no_rpath=1;;
   esac
 
+  # Determine if lib64 has to be used.
+  lofar_libdirext=lib
+  if [ "$enable_lib64" = "yes" ]; then
+    lofar_libdirext=lib64
+  elif [ "$enable_lib64" = "default" ]; then
+    if test "`uname -m`" = "x86_64"; then
+      lofar_libdirext=lib64
+    fi
+  fi
+
+  # Handle lofar root
   LOFARROOT=$prefix  
   if test "$with_lofar" != ""  -a  "$with_lofar" != "no"  -a \
           "$with_lofar" != "yes"; then
@@ -159,7 +176,7 @@ AC_ARG_WITH(lofar-libdir,
   case "$lfr_curvar1" in
   */*)
     # root = something/build/variant
-    lfr_curroot=`pwd | sed -e "s%/build/.*%/build/$lfr_curvar%"`;
+    lfr_curroot=`pwd | sed -e "s%/build/.*%/build/$lfr_curvar%"`
     ;;
   *)
     # root = something
@@ -273,7 +290,7 @@ AC_ARG_WITH(lofar-libdir,
     *_*)
       ;;
     *)
-      lofar_variant=${lofar_compiler}_$lofar_variant;
+      lofar_variant=${lofar_compiler}_$lofar_variant
       ;;
     esac
   fi
@@ -287,18 +304,18 @@ AC_ARG_WITH(lofar-libdir,
   else
     case "$lofar_root" in
     ~*)
-      lofar_root=`echo $lofar_root | sed -e "s%~%$HOME%"`;
+      lofar_root=`echo $lofar_root | sed -e "s%~%$HOME%"`
       ;;
     */*)
       ;;
     ?*)
-      lofar_root=/data/LOFAR/installed/$lofar_root/$lofar_variant;
+      lofar_root=/data/LOFAR/installed/$lofar_root/$lofar_variant
       ;;
     esac
   fi
   LOFARROOT=$lofar_root
   if test "x$lfr_libdir" = "x"; then
-    lfr_libdir=$lofar_root/lib;
+    lfr_libdir=$lofar_root/$lofar_libdirext;
   fi
   if test "x$lofar_root_libdir" = "x"; then
     lofar_root_libdir=$lfr_libdir;
@@ -417,43 +434,24 @@ EOF
   srcdirx=`cd $srcdir && pwd`
   CPPFLAGS="$CPPFLAGS -I$lfr_curwd -I$srcdirx/include"
   LOFAR_DEPEND=
-]
-AC_CHECK_FILE([$lofar_root],
-			[lfr_root=yes],
-			[lfr_root=no])
-  [if test $lfr_root = no; then]
-    AC_MSG_WARN([Could not find LOFAR in $lofar_root])
-  [fi
 
   case $lofar_root_libdir in
   */build/*)
-    lfr_find=$lofar_root_libdir/LCS/Common;
-    lofar_root_libdir="$lofar_root_libdir/<package>";
+    lfr_find=$lofar_root_libdir/LCS/Common
+    lofar_root_libdir="$lofar_root_libdir/<package>"
     ;;
   *)
-    lfr_find=$lofar_root_libdir/LCS/Common/build/$lofar_variant;
-    lofar_root_libdir="$lofar_root_libdir/<package>/build/$lofar_variant";
+    lfr_find=$lofar_root_libdir/LCS/Common/build/$lofar_variant
+    lofar_root_libdir="$lofar_root_libdir/<package>/build/$lofar_variant"
     ;;
   esac
 
 ]
-AC_CHECK_FILE([$lfr_find], [lfr_var=yes], [lfr_var=no])
-  [if test $lfr_var = no; then]
-    AC_MSG_WARN([Could not find libdir $lfr_find]);
-    [
-    lofar_root_libdir="/home/lofar/stable/LOFAR/<package>/build/${lofar_compiler}_opt";
-    ]
-    AC_MSG_WARN([   set to /home/lofar/stable/LOFAR/${lofar_compiler}_opt])
-  [fi]
-
-  # Make sure that libraries are installed in lib64 on x86_64 architectures.
-  if test "`uname -m`" == "x86_64"; then
-    if test "$libdir" = '${exec_prefix}/lib'; then
-      libdir='${exec_prefix}/lib64'
-      AC_SUBST(libdir, "$libdir")
-    fi
+  # Make sure that, if needed, libraries are installed in lib64.
+  if test "$libdir" = '${exec_prefix}/lib'; then
+    libdir='${exec_prefix}/'$lofar_libdirext
+    AC_SUBST(libdir,"$libdir")
   fi
-
 
   AC_SUBST(lofar_root)
   AC_SUBST(lofar_root_libdir)
