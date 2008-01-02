@@ -137,7 +137,7 @@ EOF
 
 # Do not copy if existing version is the same,
 # so code is not rebuilt needlessly.
-if [ ! -e $incdir/PACKAGE__Version.h ]; then
+if [ ! -e $incdir/Package__Version.h ]; then
   echo "makeversion created $incdir/Package__Version.h"
   cp version.h.tmp $incdir/Package__Version.h
 elif [ $hassvn = 0 ]; then
