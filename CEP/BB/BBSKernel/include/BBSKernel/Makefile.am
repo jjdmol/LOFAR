@@ -8,6 +8,7 @@ pkginclude_HEADERS =		\
 	Measurement.h		\
 	MeasurementAIPS.h	\
 	Model.h			\
+	ParmData.h		\
 	Prediffer.h		\
 	VisData.h		\
 	VisSelection.h
