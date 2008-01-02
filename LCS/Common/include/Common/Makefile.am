@@ -4,7 +4,7 @@ endif
 
 pkginclude_Netdir = $(pkgincludedir)/Net
 
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	Allocator.h \
 	CheckConfig.h \
 	ComplexBuiltinFP.h \
@@ -57,7 +57,8 @@ pkginclude_HEADERS = \
 	SystemUtil.h \
 	Timer.h \
 	TypeNames.h \
-	TypeNames.tcc
+	TypeNames.tcc \
+	Version.h 
 
 pkginclude_Net_HEADERS = \
 	Net/FdSet.h \
