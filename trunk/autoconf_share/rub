@@ -734,7 +734,7 @@ if [ $boot != 0 ]; then
    (
     cd $curwd/$pkg
     # Determine new md5sum of files affecting the bootstrap.
-    md5sum configure.in $pgmpath/*.m4 > boot.md5
+    md5sum configure.in $pgmpath/*.m4 $pgmpath/makeversion > boot.md5
     # Check if boot.md5 has changed.
     chg=1
     if [ $boot = 2  -a  -f boot.md5-check ]; then

@@ -83,6 +83,7 @@ if [ -r configure.in ]; then
   fi
   set -x
   aclocal -I ./autoconf_share \
+  && autoconf_share/makeversion \
   && $libtoolcmd --force --copy \
   && autoheader \
   && automake --foreign --add-missing --copy \
