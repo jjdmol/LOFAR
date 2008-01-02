@@ -45,7 +45,7 @@ lofar_EXTERNAL($2,$4,$5,$6,$7,$8,$9,$10,$11)
   # version of this package.
   # The Tools package is special and not handled.
   if [ "$enable_external" = "yes"  -a  "${lfr_pkgnam_intv}" != Tools ]; then
-    echo "#include \"${lfr_pkgnam_intv}/PACKAGE__Version.h\"" >> FillPackage__VersionInc.h
+    echo "#include \"${lfr_pkgnam_intv}/Package__Version.h\"" >> FillPackage__VersionInc.h
     # If the current FillPackage__VersionFunc.h is the same as the old one, copy the
     # old one back, while preserving creation date and time.
     diff FillPackage__VersionInc.h FillPackage__VersionInc.old-h > /dev/null 2>&1
