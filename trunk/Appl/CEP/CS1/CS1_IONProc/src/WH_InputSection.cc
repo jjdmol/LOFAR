@@ -150,7 +150,7 @@ void WH_InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
   const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
   if (ranges.size() > 16)
-    flags.include(ranges[15].begin, ranges[ranges.size() - 1].end);
+    flags.include(ranges[15].begin, ranges.back().end);
 }
 
 
