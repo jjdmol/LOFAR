@@ -51,9 +51,7 @@ double Correlator::computeCentroidAndValidSamples(const SparseSet<unsigned> &fla
   unsigned sq	     = itsNrSamplesPerIntegration * itsNrSamplesPerIntegration;
   unsigned nrSamples = itsNrSamplesPerIntegration;
 
-  const std::vector<SparseSet<unsigned>::range> &ranges = flags.getRanges();
-
-  for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
+  for (SparseSet<unsigned>::const_iterator it = flags.getRanges().begin(); it != flags.getRanges().end(); it ++) {
     sq	      -= (it->end - it->begin) * (it->end + it->begin);
     nrSamples -= (it->end - it->begin);
   }
