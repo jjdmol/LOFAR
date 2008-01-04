@@ -147,7 +147,7 @@ void WH_InputSection::preprocess()
 
 void WH_InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
 {
-  const std::vector<SparseSet<unsigned>::range> &ranges = flags.getRanges();
+  const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
   if (ranges.size() > 16)
     flags.include(ranges[15].begin, ranges[ranges.size() - 1].end);

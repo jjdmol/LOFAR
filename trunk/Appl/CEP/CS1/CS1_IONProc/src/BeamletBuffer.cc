@@ -147,9 +147,8 @@ void BeamletBuffer::readFlags(SparseSet<unsigned> &flags)
   pthread_mutex_unlock(&itsValidDataMutex);
 
   flags.reset().include(0, static_cast<unsigned>(itsEnd - itsBegin));
-  const std::vector<SparseSet<TimeStamp>::range> &validRanges = validTimes.getRanges();
 
-  for (SparseSet<TimeStamp>::const_iterator it = validRanges.begin(); it != validRanges.end(); it ++)
+  for (SparseSet<TimeStamp>::const_iterator it = validTimes.getRanges().begin(); it != validTimes.getRanges().end(); it ++)
     flags.exclude(static_cast<unsigned>(it->begin - itsBegin),
 		  static_cast<unsigned>(it->end - itsBegin));
 }

@@ -34,9 +34,7 @@ Overlay::Overlay(const Heap &heap)
 
 void *Overlay::allocate(size_t size, int alignment)
 {
-  const std::vector<SparseSet<void *>::range> &ranges = freeList.getRanges();
-
-  for (SparseSet<void *>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
+  for (SparseSet<void *>::const_iterator it = freeList.getRanges().begin(); it != freeList.getRanges().end(); it ++) {
     void *begin = (void *) (((size_t) it->begin + alignment - 1) & ~(alignment - 1));
 
     if ((char *) it->end - (char *) begin >= (ptrdiff_t) size) {

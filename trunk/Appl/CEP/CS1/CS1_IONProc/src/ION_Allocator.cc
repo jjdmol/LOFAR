@@ -65,9 +65,7 @@ void *ION_Allocator::allocate(size_t nbytes, size_t alignment)
 #else
   pthread_mutex_lock(&mutex);
 
-  const std::vector<SparseSet<char *>::range> &ranges = freeList.getRanges();
-
-  for (SparseSet<char *>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
+  for (SparseSet<char *>::const_iterator it = ranges.getRanges().begin(); it != ranges.getRanges().end(); it ++) {
     char *begin = (char *) (((size_t) it->begin + alignment - 1) & ~(alignment - 1));
 
     if (it->end - begin >= (ptrdiff_t) nbytes) {

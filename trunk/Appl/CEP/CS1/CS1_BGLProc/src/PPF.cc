@@ -129,7 +129,7 @@ void PPF::computeFlags(const TransposedData *transposedData, FilteredData *filte
 #else
   for (unsigned stat = 0; stat < itsNrStations; stat ++) {
     filteredData->flags[stat].reset();
-    const std::vector<SparseSet<unsigned>::range> &ranges = transposedData->flags[stat].getRanges();
+    const SparseSet<unsigned>::Ranges &ranges = transposedData->flags[stat].getRanges();
 
     for (SparseSet<unsigned>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
       unsigned begin = std::max(0, (signed) it->begin / NR_SUBBAND_CHANNELS - NR_TAPS + 1);
@@ -277,7 +277,7 @@ void PPF::filter(double centerFrequency, const TransposedData *transposedData, F
       computePhaseShifts(phaseShifts, transposedData->delays[stat], baseFrequency);
     }
 
-    const std::vector<SparseSet<unsigned>::range> &ranges = filteredData->flags[stat].getRanges();
+    const SparseSet<unsigned>::Ranges &ranges = filteredData->flags[stat].getRanges();
     SparseSet<unsigned>::const_iterator it = ranges.begin();
 
     for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
