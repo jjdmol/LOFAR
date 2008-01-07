@@ -31,7 +31,7 @@
 #include <PLC/ProcessControl.h>
 #include <APS/ParameterSet.h>
 
-#include <ApplicationHolderController.h>
+#include <tinyCEP/ApplicationHolderController.h>
 
 // for strncmp
 #include <string.h>
