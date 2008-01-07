@@ -80,17 +80,23 @@ public:
     const casa::MDirection &getPhaseCenter() const
     { return itsPhaseCenter; }
 
-    pair<casa::MEpoch, casa::MEpoch> getTimeRange() const
-    { return itsTimeRange; }
-
-    const cell_centered_axis<regular_series> &getSpectrum() const
-    { return itsSpectrum; }
+    const cell_centered_axis<regular_series> &getFreqAxis() const
+    { return itsFreqAxis; }
 
     pair<double, double> getFreqRange() const
-    { return itsSpectrum.range(); }
+    { return itsFreqAxis.range(); }
 
     size_t getChannelCount() const
-    { return itsSpectrum.size(); }
+    { return itsFreqAxis.size(); }
+
+    const cell_centered_axis<irregular_series> &getTimeAxis() const
+    { return itsTimeAxis; }
+
+    pair<double, double> getTimeRange() const
+    { return itsTimeAxis.range(); }
+
+    size_t getTimeSlotCount() const
+    { return itsTimeAxis.size(); }
 
     const vector<string> &getPolarizations() const
     { return itsPolarizations; }
@@ -99,11 +105,11 @@ public:
     { return itsPolarizations.size(); }
 
 protected:
-    Instrument                          itsInstrument;
-    casa::MDirection                    itsPhaseCenter;
-    pair<casa::MEpoch, casa::MEpoch>    itsTimeRange;
-    cell_centered_axis<regular_series>  itsSpectrum;
-    vector<string>                      itsPolarizations;
+    Instrument                              itsInstrument;
+    casa::MDirection                        itsPhaseCenter;
+    cell_centered_axis<regular_series>      itsFreqAxis;
+    cell_centered_axis<irregular_series>    itsTimeAxis;
+    vector<string>                          itsPolarizations;
 };
 
 } //# namespace BBS

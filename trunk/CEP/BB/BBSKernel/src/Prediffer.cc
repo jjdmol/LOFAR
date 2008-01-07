@@ -169,10 +169,14 @@ Prediffer::Prediffer(const string &measurement, size_t subband,
         " measurement" : "ANTENNA2 - ANTENNA1 (AIPS++ convention)"));
 
     // Initialize model.
-    casa::MEpoch startTimeMeas = itsMeasurement->getTimeRange().first;
-    casa::Quantum<casa::Double> startTime = startTimeMeas.get("s");
+//    casa::MEpoch startTimeMeas = itsMeasurement->getTimeRange().first;
+//    casa::Quantum<casa::Double> startTime = startTimeMeas.get("s");
+//    itsPhaseRef = MeqPhaseRef(itsMeasurement->getPhaseCenter(),
+//        startTime.getValue("s"));
+
     itsPhaseRef = MeqPhaseRef(itsMeasurement->getPhaseCenter(),
-        startTime.getValue("s"));
+        itsMeasurement->getTimeRange().first);
+
     itsModel.reset(new Model(itsMeasurement->getInstrument(), itsParmGroup,
         itsSkyDBase.get(), &itsPhaseRef));
 

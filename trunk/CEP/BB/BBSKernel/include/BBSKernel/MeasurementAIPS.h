@@ -64,11 +64,12 @@ public:
         const string &column = "CORRECTED_DATA", bool writeFlags = true);
 
 private:
-    void initObservationInfo(const casa::ROMSObservationColumns &observation,
-        uint id);
+//    void initObservationInfo(const casa::ROMSObservationColumns &observation,
+//        uint id);
     void initInstrumentInfo(const casa::ROMSAntennaColumns &antenna,
         const casa::ROMSObservationColumns &observation, uint id);
-    void initSpectralInfo(const casa::ROMSSpWindowColumns &window, uint id);
+    void initTimeInfo();
+    void initFreqInfo(const casa::ROMSSpWindowColumns &window, uint id);
     void initPolarizationInfo(const casa::ROMSPolarizationColumns &polarization,
         uint id);
     void initFieldInfo(const casa::ROMSFieldColumns &field, uint id);
@@ -79,7 +80,7 @@ private:
         const;
 
     casa::MeasurementSet    itsMS;
-    bool                    itsSpectrumReversed;
+    bool                    itsFreqAxisReversed;
 };
 
 } //# namespace BBS

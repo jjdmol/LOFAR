@@ -1,4 +1,5 @@
-//# MeasurementAIPS.cc: 
+//# MeasurementAIPS.cc: Specialisation of Measurement that understands the
+//# AIPS++ measurement set format.
 //#
 //# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -70,6 +71,7 @@
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
 
+#include <casa/BasicMath/Math.h>
 #include <casa/Utilities/GenSort.h>
 
 #include <Common/lofar_iomanip.h>
@@ -87,7 +89,7 @@ MeasurementAIPS::MeasurementAIPS(string filename,
         uint dataDescriptionId,
         uint fieldId)
 {
-    itsSpectrumReversed = false;
+    itsFreqAxisReversed = false;
     itsMS = MeasurementSet(filename);
 
     ROMSAntennaColumns antenna(itsMS.antenna());
@@ -97,7 +99,7 @@ MeasurementAIPS::MeasurementAIPS(string filename,
     ROMSPolarizationColumns polarization(itsMS.polarization());
     ROMSSpWindowColumns window(itsMS.spectralWindow());
 
-    initObservationInfo(observation, observationId);
+//    initObservationInfo(observation, observationId);
     initInstrumentInfo(antenna, observation, observationId);
     initFieldInfo(field, fieldId);
 
@@ -108,7 +110,7 @@ MeasurementAIPS::MeasurementAIPS(string filename,
     Int windowId = description.spectralWindowId()(dataDescriptionId);
 
     initPolarizationInfo(polarization, polarizationId);
-    initSpectralInfo(window, windowId);
+    initFreqInfo(window, windowId);
 
     // Select all rows that match the specified observation.
     itsMS = itsMS(itsMS.col("OBSERVATION_ID") == static_cast<Int>(observationId)
@@ -118,6 +120,8 @@ MeasurementAIPS::MeasurementAIPS(string filename,
     // Sort MS on TIME.
     itsMS.sort("TIME");
 
+    initTimeInfo();
+    
     LOG_DEBUG_STR("Measurement " << observationId << " contains "
         << itsMS.nrow() << " row(s).");
 }
@@ -212,7 +216,7 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
 
         // Use multi_array_ref to ease transposing the data to per baseline
         // timeseries. This also accounts for reversed channels if necessary.
-        bool ascending[] = {true, !itsSpectrumReversed, true};
+        bool ascending[] = {true, !itsFreqAxisReversed, true};
         boost::multi_array_ref<sample_t, 3>::size_type order_data[] = {2, 1, 0};
         Complex *ptr_data = const_cast<Complex*>(aips_data.data());
         boost::multi_array_ref<sample_t, 3>
@@ -314,7 +318,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
     // channels. NOTE: Some performance can be gained by creating
     // a specialized implementation for the case where the channels
     // are in ascending order to avoid the extra copy.
-    bool ascending[] = {!itsSpectrumReversed, true};
+    bool ascending[] = {!itsFreqAxisReversed, true};
     boost::multi_array<sample_t, 2>::size_type order_data[] = {1, 0};
     boost::multi_array<sample_t, 2>
         visBuffer(boost::extents[nChannels][nPolarizations],
@@ -407,6 +411,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
 }
 
 
+/*
 void MeasurementAIPS::initObservationInfo
     (const ROMSObservationColumns &observation, uint id)
 {
@@ -416,7 +421,7 @@ void MeasurementAIPS::initObservationInfo
     const Vector<MEpoch> &range = observation.timeRangeMeas()(id);
     itsTimeRange = make_pair(range(0), range(1));
 }
-
+*/
 
 void MeasurementAIPS::initInstrumentInfo(const ROMSAntennaColumns &antenna,
     const ROMSObservationColumns &observation, uint id)
@@ -461,7 +466,7 @@ void MeasurementAIPS::initInstrumentInfo(const ROMSAntennaColumns &antenna,
 }
 
 
-void MeasurementAIPS::initSpectralInfo(const ROMSSpWindowColumns &window,
+void MeasurementAIPS::initFreqInfo(const ROMSSpWindowColumns &window,
     uint id)
 {
     ASSERT(window.nrow() > id);
@@ -490,11 +495,46 @@ void MeasurementAIPS::initSpectralInfo(const ROMSSpWindowColumns &window,
         // Correct upper and lower boundary.
         lower = frequency(nChannels - 1) - 0.5 * width(nChannels - 1);
         upper = frequency(0) + 0.5 * width(0);
-        itsSpectrumReversed = true;
+        itsFreqAxisReversed = true;
     }
 
     regular_series series(lower, (upper - lower) / nChannels);
-    itsSpectrum = cell_centered_axis<regular_series>(series, nChannels);
+    itsFreqAxis = cell_centered_axis<regular_series>(series, nChannels);
+}
+
+
+void MeasurementAIPS::initTimeInfo()
+{
+    // Extract time grid based on TIME column (mid-point of integration
+    // interval).
+    // TODO: Should use TIME_CENTROID here (centroid of exposure)?
+    // NOTE: UVW is given of the TIME_CENTROID, not for TIME!
+    // NOTE: TIME_CENTROID may be different for each baseline!
+    ROScalarColumn<Double> c_time(itsMS, "TIME");
+    Vector<Double> time = c_time.getColumn();
+
+    // Find all unique timeslots.
+    Vector<uInt> timeIndex;
+    uInt nTimeslots = GenSortIndirect<Double>::sort(timeIndex, time,
+        Sort::Ascending, Sort::InsSort + Sort::NoDuplicates);
+
+    // Initialize time axis.
+    ROScalarColumn<Double> c_interval(itsMS, "INTERVAL");
+    Vector<Double> interval = c_interval.getColumn();
+
+    vector<double> times(nTimeslots + 1);
+    for(uInt i = 0; i < nTimeslots; ++i)
+    {
+        // Compute _lower border_ of each integration cell.
+        times[i] = time[timeIndex[i]] - interval[timeIndex[i]] * 0.5;
+    }
+
+    // Compute upper border of last integration cell.
+    times[nTimeslots] = time[timeIndex[nTimeslots - 1]]
+        + interval[timeIndex[nTimeslots - 1]] * 0.5;
+
+    itsTimeAxis = cell_centered_axis<irregular_series>(irregular_series(times),
+        nTimeslots);
 }
 
 
@@ -542,23 +582,9 @@ void MeasurementAIPS::initFieldInfo(const ROMSFieldColumns &field, uint id)
 }
 
 
-/*
-void Measurement::readTimeInfo(const Table &selection)
-{
-    ROScalarColumn<double> time(selection, "TIME");
-    ROScalarColumn<double> interval(selection, "INTERVAL");
 
-    ASSERT(time.nrow() == interval.nrow() && time.nrow() > 0);
-
-    uint nTimes = time.nrow();
-    itsTimeRange[0] = time(0) - interval(0) / 2.0;
-    itsTimeRange[1] = time(nTimes - 1) + interval(nTimes - 1) / 2.0;
-}
-*/
-
-
-// OPTIMIZATION OPPORTUNITY: Cache implementation specific selection within
-// a specialization of VisSelection or VisData.
+// NOTE: OPTIMIZATION OPPORTUNITY: Cache implementation specific selection
+// within a specialization of VisSelection or VisData.
 TableExprNode
 MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
 {
@@ -631,7 +657,7 @@ MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
 }
 
 
-// NOTE: Optimization opportunity: when reading all channels, do not use a
+// NOTE: OPTIMIZATION OPPORTUNITY: when reading all channels, do not use a
 // slicer at all.
 Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
 {
@@ -662,7 +688,7 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
     IPosition start(2, 0, startChannel);
 	IPosition end(2, getPolarizationCount() - 1, endChannel);
     
-    if(itsSpectrumReversed)
+    if(itsFreqAxisReversed)
     {
         // Adjust range if channels are in reverse order.
         size_t lastChannelIndex = getChannelCount() - 1;
@@ -684,18 +710,63 @@ MeasurementAIPS::grid(const Table tab_selection, const Slicer slicer) const
     size_t nPolarizations = shape[0];
     size_t nChannels = shape[1];
 
-    // Extract time grid based on TIME column (mid-point of integration
-    // interval).
-    // TODO: Should use TIME_CENTROID here (centroid of exposure)?
-    // NOTE: UVW is given of the TIME_CENTROID, not for TIME!
-    // NOTE: TIME_CENTROID may be different for each baseline!
+    // Initialize frequency axis.
+    double lower, upper;    
+    if(itsFreqAxisReversed)
+    {
+        // Correct range if channels are in reverse order.
+        size_t lastChannelIndex = getChannelCount() - 1;
+        lower = itsFreqAxis.lower(lastChannelIndex - slicer.end()[1]);
+        upper = itsFreqAxis.upper(lastChannelIndex - slicer.start()[1]);
+    }
+    else
+    {
+        lower = itsFreqAxis.lower(slicer.start()[1]);
+        upper = itsFreqAxis.upper(slicer.end()[1]);
+    }    
+
+    grid.freq = cell_centered_axis<regular_series>(regular_series(lower,
+        (upper - lower) / nChannels), nChannels);
+
+    // Initialize time axis.
     ROScalarColumn<Double> c_time(tab_selection, "TIME");
     Vector<Double> time = c_time.getColumn();
-
+    
     // Find all unique timeslots.
     Vector<uInt> timeIndex;
     uInt nTimeslots = GenSortIndirect<double>::sort(timeIndex, time,
         Sort::Ascending, Sort::InsSort + Sort::NoDuplicates);
+
+    ROScalarColumn<Double> c_interval(tab_selection, "INTERVAL");
+    Vector<Double> interval = c_interval.getColumn();
+
+    // The following value may be kept in a register in extended precision. This
+    // implies we cannot just compare for equality, because the value may be
+    // slightly different than the one that is loaded from memory
+    // (itsTimeAxis.lower(offset)). Therefore, we decided to use casa::near() to
+    // test for 'equality'.
+    double lowerBorder = time[timeIndex[0]] - interval[timeIndex[0]] * 0.5;
+
+    // Find offset relative to the start of the measurement.
+    size_t offset = 0;
+    while(offset < itsTimeAxis.size() &&
+        !near(itsTimeAxis.lower(offset), lowerBorder))
+    {
+        offset++;
+    }
+    assert(near(itsTimeAxis.lower(offset), lowerBorder) && 
+        offset + nTimeslots <= itsTimeAxis.size());
+    
+    vector<double> times(nTimeslots + 1);
+    for(uInt i = 0; i < nTimeslots; ++i)
+    {
+        // Copy _lower border_ of each integration cell.
+        times[i] = itsTimeAxis.lower(offset + i);
+    }
+    times[nTimeslots] = itsTimeAxis.upper(offset + nTimeslots - 1);
+
+    grid.time = cell_centered_axis<irregular_series>(irregular_series(times),
+        nTimeslots);
 
     // Find all unique baselines.
     Block<String> sortColumns(2);
@@ -718,42 +789,6 @@ MeasurementAIPS::grid(const Table tab_selection, const Slicer slicer) const
     {
         grid.baselines.push_back(baseline_t(antenna1[i], antenna2[i]));
     }
-    
-    // Initialize time axis.
-    ROScalarColumn<Double> c_interval(tab_selection, "INTERVAL");
-    Vector<Double> interval = c_interval.getColumn();
-
-    vector<double> times(nTimeslots + 1);
-    for(uInt i = 0; i < nTimeslots; ++i)
-    {
-        // Compute _lower border_ of each integration cell.
-        times[i] = time[timeIndex[i]] - interval[timeIndex[i]] / 2.0;
-    }
-
-    times[nTimeslots] = time[timeIndex[nTimeslots - 1]]
-        + interval[timeIndex[nTimeslots - 1]] / 2.0;
-
-    grid.time = cell_centered_axis<irregular_series>(irregular_series(times),
-        nTimeslots);
-
-    // Initialize frequency axis.
-    double lower, upper;    
-    if(itsSpectrumReversed)
-    {
-        // Adjust range if channels are in reverse order.
-        size_t lastChannelIndex = getChannelCount() - 1;
-        lower = itsSpectrum.lower(lastChannelIndex - slicer.end()[1]);
-        upper = itsSpectrum.upper(lastChannelIndex - slicer.start()[1]);
-    }
-    else
-    {
-        lower = itsSpectrum.lower(slicer.start()[1]);
-        upper = itsSpectrum.upper(slicer.end()[1]);
-    }    
-
-    double delta = (upper - lower) / nChannels;
-    grid.freq = cell_centered_axis<regular_series>(regular_series(lower,
-        delta), nChannels);
 
     // Initialize polarization axis.
     for(size_t i = 0; i < itsPolarizations.size(); ++i)
