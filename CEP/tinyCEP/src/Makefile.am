@@ -1,17 +1,6 @@
 lib_LTLIBRARIES	= libtinycep.la
 
-pkginclude_HEADERS = 			\
-	ApplicationHolderController.h 	\
-	Profiler.h			\
-	Selector.h			\
-	Sel_Linked.h 			\
-	Sel_RoundRobin.h		\
-	SimulatorParseClass.h		\
-	TinyApplicationHolder.h		\
-	TinyDataManager.h		\
-	WorkHolder.h
-
-libtinycep_la_SOURCES = 		\
+libtinycep_la_SOURCES = Package__Version.cc  		\
 	ApplicationHolderController.cc	\
 	Profiler.cc			\
 	Selector.cc 			\
@@ -28,5 +17,11 @@ libtinycep_la_SOURCES = 		\
 AM_YFLAGS	= -d -p SimulatorParse
 AM_LFLAGS       = -PSimulatorTokenize
 LEX_OUTPUT_ROOT = lex.SimulatorTokenize
+
+bin_PROGRAMS = versiontinycep
+
+versiontinycep_SOURCES      = versiontinycep.cc
+versiontinycep_LDADD        = libtinycep.la
+versiontinycep_DEPENDENCIES = libtinycep.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
