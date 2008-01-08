@@ -25,7 +25,7 @@
 #include <Common/SystemUtil.h>
 #include <unistd.h>
 
-#if !defined(__LIB_CATAMOUNT__)
+#if !defined(USE_NOSOCKETS)
 // netdb is not available on Cray XT machines with Catamount.
 #if defined HAVE_BGL && !defined HAVE_ZOID
 // netdb is not available on BGL; all code using netdb will be 
@@ -189,8 +189,8 @@ uint32 myIPV4Address()
 #if defined HAVE_BGL && !defined HAVE_ZOID
 	LOG_ERROR ("Function myIPV4Address not available for Blue Gene.");
 	return (0);
-#elif defined __LIB_CATAMOUNT__
-	LOG_ERROR ("Function myIPV4Address not available for Cray Catamount.");
+#elif defined USE_NOSOCKETS
+	LOG_ERROR ("Function myIPV4Address not available.");
 	return (0);
 #else
 	struct hostent*		hostEnt;
