@@ -1,4 +1,4 @@
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	BaseSim.h \
 	BGLConnection.h \
 	Connection.h \
