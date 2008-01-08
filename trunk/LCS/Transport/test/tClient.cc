@@ -23,6 +23,14 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#ifdef USE_NOSOCKETS
+int main()
+{
+  return 3;
+}
+
+#else
+
 //# Includes
 #include <time.h>
 #include <libgen.h>
@@ -119,3 +127,4 @@ int main (int argc, char *argv[]) {
 	return (0);
 }
 
+#endif

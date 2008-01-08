@@ -31,6 +31,14 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#ifdef USE_NOSOCKETS
+int main()
+{
+  return 3;
+}
+
+#else
+
 //# Includes
 #include <Transport/DataHolder.h>
 #include <Transport/CSConnection.h>
@@ -123,3 +131,5 @@ int main(int argc, char* argv[])
   
   return 0;
 }
+
+#endif
