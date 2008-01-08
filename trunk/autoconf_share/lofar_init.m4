@@ -325,6 +325,11 @@ AC_ARG_ENABLE(lib64,
   \rm -f pkgext*
   touch pkgext pkgextcppflags pkgextcxxflags pkgextldflags pkgextobjs
 
+  # Create a symlink from the buld directory to srcdir/src in case
+  # header files are in src instead of include/PACKAGE.
+  # Note that the build directory is part of the -I path.
+  ln -s $srcdir/src ${PACKAGE}
+
   # We have to deal with creating a file lofar_config.h which is the
   # common include file to be used in LOFAR software.
   # It includes config.h.
