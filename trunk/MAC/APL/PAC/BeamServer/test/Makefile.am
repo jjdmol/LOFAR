@@ -16,11 +16,10 @@ TESTS = \
 	avtstub.sh \
 	BeamServerTest 
 
-bin_PROGRAMS = \
-	AVTStub \
-	EPATest \
-	SweepTest \
-	BeamServerTest
+#bin_PROGRAMS = BeamServerTest
+#	AVTStub 
+#	EPATest 
+#	SweepTest
 
 bin_SCRIPTS = \
 	beamctltest
@@ -28,50 +27,25 @@ bin_SCRIPTS = \
 #	BeamServerTest 
 #	CheckWeightsTest2 
 
-check_PROGRAMS = \
-	BeamServerTest
+#check_PROGRAMS = BeamServerTest
 
-BeamServerTest_SOURCES = \
-	BSTest.h \
-	BeamServerTest.cc
+#BeamServerTest_SOURCES	= BSTest.h  BeamServerTest.cc
+#BeamServerTest_LDADD 	= $(top_builddir)/src/libabsdevel.la
 
- BeamServerTest_LDADD = \
-	$(top_builddir)/src/libabsdevel.la
+#CheckWeightsTest_SOURCES = CheckWeightsTest.cc
+#CheckWeightsTest_LDADD = $(top_builddir)/src/libabs.la $(top_builddir)/src/libabsdevel.la
 
-#CheckWeightsTest_SOURCES = \
-#	CheckWeightsTest.cc
+#CheckWeightsTest2_SOURCES = CheckWeightsTest2.cc
+#CheckWeightsTest2_LDADD = $(top_builddir)/src/libabs.la $(top_builddir)/src/libabsdevel.la
 
-#CheckWeightsTest_LDADD = \
-#	$(top_builddir)/src/libabs.la \
-#	$(top_builddir)/src/libabsdevel.la
+#AVTStub_SOURCES 	= AVTStub.h AVTStub.cc
+#AVTStub_LDADD 		= $(top_builddir)/src/libabsdevel.la
 
-# CheckWeightsTest2_SOURCES = \
-# 	CheckWeightsTest2.cc
+#EPATest_SOURCES 	= EPATest.h EPATest.cc
+#EPATest_LDADD 		= $(top_builddir)/src/libabsdevel.la
 
-# CheckWeightsTest2_LDADD = \
-# 	$(top_builddir)/src/libabs.la \
-# 	$(top_builddir)/src/libabsdevel.la
-
-AVTStub_SOURCES = \
-	AVTStub.h \
-	AVTStub.cc
-
-AVTStub_LDADD = \
-	$(top_builddir)/src/libabsdevel.la
-
-EPATest_SOURCES = \
-	EPATest.h \
-	EPATest.cc
-
-EPATest_LDADD = \
-	$(top_builddir)/src/libabsdevel.la
-
-SweepTest_SOURCES = \
-	SweepTest.h \
-	SweepTest.cc
-
-SweepTest_LDADD = \
-	$(top_builddir)/src/libabsdevel.la
+#SweepTest_SOURCES 	=  SweepTest.h  SweepTest.cc
+#SweepTest_LDADD 	= $(top_builddir)/src/libabsdevel.la
 
 BUILT_SOURCES = \
 	AVTStub.conf \

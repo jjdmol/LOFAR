@@ -630,7 +630,7 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 
 			// send succesful ack
 			beamallocack.status = BS_Protocol::SUCCESS;
-			beamallocack.handle = (uint32)m_bt.getBeam();
+			beamallocack.handle = (BS_Protocol::memptr_t)m_bt.getBeam();
 			m_bt.getPort()->send(beamallocack);
 		} 
 		else {
@@ -709,7 +709,7 @@ GCFEvent::TResult BeamServer::beamfree_state(GCFEvent& event, GCFPortInterface& 
 
 		// send succesful ack
 		beamfreeack.status = BS_Protocol::SUCCESS;
-		beamfreeack.handle = (uint32)m_bt.getBeam();
+		beamfreeack.handle = (BS_Protocol::memptr_t)m_bt.getBeam();
 
 		m_bt.getPort()->send(beamfreeack);
 

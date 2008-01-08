@@ -191,7 +191,7 @@ bool Scheduler::syncHasCompleted()
 
 int Scheduler::pqueue_remove_commands(pqueue& pq,
 				      GCFPortInterface& port,
-				      uint32 handle)
+				      memptr_t handle)
 {
   int count = 0;
   
@@ -234,7 +234,7 @@ int Scheduler::cancel(GCFPortInterface& port)
   return count;
 }
 
-int Scheduler::remove_subscription(GCFPortInterface& port, uint32 handle)
+int Scheduler::remove_subscription(GCFPortInterface& port, memptr_t handle)
 {
   int count = 0;
 

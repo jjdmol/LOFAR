@@ -33,9 +33,11 @@ include = '<APL/RSP_Protocol/XCStatistics.h>';
 
 prelude = << PRELUDE_END
 
-  static const int MAX_N_RSPBOARDS = 24;
-  static const int SUCCESS         = 1;
-  static const int FAILURE         = 0;
+typedef	void*	memptr_t;
+
+static const int MAX_N_RSPBOARDS = 24;
+static const int SUCCESS         = 1;
+static const int FAILURE         = 0;
 
 // The protocol implements the following messages.
 // SETWEIGHTS			(timestamp,	rcumask,weights)
@@ -343,7 +345,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -361,7 +363,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
   param = {
     name = "subbands";
@@ -375,7 +377,7 @@ event = {
   dir = IN;
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -393,7 +395,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -502,7 +504,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -520,7 +522,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
   param = {
     name = "settings";
@@ -534,7 +536,7 @@ event = {
   dir = IN;
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -552,7 +554,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -697,7 +699,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -706,7 +708,7 @@ event = {
   dir = IN;
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -724,7 +726,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -742,7 +744,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
   param = {
     name = "sysstatus";
@@ -828,7 +830,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -837,7 +839,7 @@ event = {
   dir = IN;
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -855,7 +857,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -873,7 +875,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
   param = {
     name = "stats";
@@ -951,7 +953,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -960,7 +962,7 @@ event = {
   dir = IN;
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -978,7 +980,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -996,7 +998,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
   param = {
     name = "stats";
@@ -1184,7 +1186,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1202,7 +1204,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
   param = {
     name = "clock";
@@ -1215,7 +1217,7 @@ event = {
   dir = IN;
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1233,7 +1235,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1294,7 +1296,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1312,7 +1314,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
   param = {
     name = "state";
@@ -1326,7 +1328,7 @@ event = {
   dir = IN;
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1344,7 +1346,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1453,7 +1455,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1471,7 +1473,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
   param = {
     name = "settings";
@@ -1485,7 +1487,7 @@ event = {
   dir = IN;
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1503,7 +1505,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1576,7 +1578,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1594,7 +1596,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
   param = {
     name = "tdstatus";
@@ -1608,7 +1610,7 @@ event = {
   dir = IN;
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 
@@ -1626,7 +1628,7 @@ event = {
   };
   param = {
     name = "handle";
-    type = "uint32";
+    type = "memptr_t";
   };
 };
 

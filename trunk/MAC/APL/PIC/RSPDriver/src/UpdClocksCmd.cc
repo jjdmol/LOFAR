@@ -69,7 +69,7 @@ void UpdClocksCmd::complete(CacheBuffer& cache)
     
     ack.timestamp = getTimestamp();
     ack.status = SUCCESS;
-    ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
+    ack.handle = (memptr_t)this; // opaque pointer used to refer to the subscription
     ack.clock = cache.getClock();
 
     getPort()->send(ack);
