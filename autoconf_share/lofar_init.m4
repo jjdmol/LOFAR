@@ -107,10 +107,13 @@ AC_ARG_ENABLE(lib64,
 
   # Determine if -rpath cannot be given.
   lofar_no_rpath=0
-  case `uname -s` in
-    Darwin*) lofar_no_rpath=1;;
-    Cray*) lofar_no_rpath=1;;
-  esac
+  if test -n "$CATAMOUNT_DIR"; then
+    lofar_no_rpath=1       # Cray XT
+  else
+    case `uname -s` in
+      Darwin*) lofar_no_rpath=1;;
+    esac
+  fi
 
   # Determine if lib64 has to be used.
   lofar_libdirext=lib
