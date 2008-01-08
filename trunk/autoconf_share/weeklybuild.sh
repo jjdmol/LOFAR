@@ -49,7 +49,7 @@ autoconf_share/rub -system -noupdate -release=main -confopt "--prefix=$INSTALLDI
 #
 #source $INSTALLDIR/gnunew_nolog4cplus/lofarinit.sh
 rm -rf $INSTALLDIR/gnunew_nolog4cplus/*
-autoconf_share/rub -system -noupdate -release=main -confopt "--prefix=$INSTALLDIR/gnunew_nolog4cplus" -build "gnunew_nolog4cplus" Appl LCS CEP Demo Timba> $BUILDROOT/lofar17-week`date +%g%W`-gnunew_nolog4cplus.log 2>&1
+autoconf_share/rub -system -noupdate -release=main -confopt "--prefix=$INSTALLDIR/gnunew_nolog4cplus" -build "gnunew_nolog4cplus" Appl LCS CEP Demo > $BUILDROOT/lofar17-week`date +%g%W`-gnunew_nolog4cplus.log 2>&1
 
 # GNUNEW_DEBUG
 #
@@ -80,7 +80,7 @@ autoconf_share/rub -system -noupdate -release=main -confopt "--prefix=$INSTALLDI
 #source $INSTALLDIR/gnu_opt/lofarinit.sh
 rm -rf $INSTALLDIR/docxxhtml
 mkdir -p $INSTALLDIR/docxxhtml
-export DOXYGEN="/usr/local/doxygen/bin/doxygen";make docxx  PACKAGES="LCS CEP MAC SAS Timba  Demo" > $BUILDROOT/lofar17-week`date +%g%W`-docxx.log 2>&1
+export DOXYGEN="/usr/local/doxygen/bin/doxygen";make docxx  PACKAGES="LCS CEP MAC SAS Demo" > $BUILDROOT/lofar17-week`date +%g%W`-docxx.log 2>&1
 
 
 cd $BUILDROOT
