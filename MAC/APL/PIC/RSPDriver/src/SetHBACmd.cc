@@ -100,6 +100,6 @@ bool SetHBACmd::validate() const
   
   return ((m_event->rcumask.count() <= (unsigned int)StationSettings::instance()->nrRcus())
 	  	&& (2 == m_event->settings().dimensions())
-			&& (m_event->rcumask.count() == m_event->settings().extent(firstDim))		// check number off selected rcus
-			&& (MEPHeader::N_HBA_DELAYS == m_event->settings().extent(secondDim))); // check number of delays
+		&& (m_event->rcumask.count() == (unsigned int)m_event->settings().extent(firstDim))		// check number off selected rcus
+		&& (MEPHeader::N_HBA_DELAYS == (unsigned int)m_event->settings().extent(secondDim))); // check number of delays
 }

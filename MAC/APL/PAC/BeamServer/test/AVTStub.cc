@@ -499,7 +499,7 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
-  static uint32 beam_handle = 0;
+  static void* beam_handle = 0;
   
   switch (e.signal)
   {

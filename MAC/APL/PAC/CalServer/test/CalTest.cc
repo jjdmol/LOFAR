@@ -50,7 +50,7 @@ CalTest::CalTest(string name, string arrayname, string parentname, int nantennas
   : GCFTask((State)&CalTest::initial, name), Test(name), m_handle(0), m_counter1(0),
     m_arrayname(arrayname), m_parentname(parentname), m_nantennas(nantennas), m_nyquistzone(nyquistzone), m_rcucontrol(rcucontrol), m_subarrayid(subarrayid)
 {
-  registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_signalnames);
+  registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 
   m_server.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
 }

@@ -61,7 +61,7 @@ Beams::Beams(int 	nbeamlets, int 	nsubbands) :
 //
 Beams::~Beams()
 {
-	for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
+	for (map<Beam*,CAL_Protocol::memptr_t>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
 		delete bi->first;
 	}
 	m_beams.clear();
@@ -92,7 +92,7 @@ Beam* Beams::create(string nodeid, string subarrayname, Beamlet2SubbandMap alloc
 //
 // setCalibrationHandle(beam, handle)
 //
-void Beams::setCalibrationHandle(Beam* beam, uint32 handle)
+void Beams::setCalibrationHandle(Beam* beam, CAL_Protocol::memptr_t handle)
 {
 	m_handle2beam[handle] = beam;
 	m_beams[beam]         = handle;
@@ -101,9 +101,9 @@ void Beams::setCalibrationHandle(Beam* beam, uint32 handle)
 //
 // findCalibrationHandle(beam)
 //
-uint32 Beams::findCalibrationHandle(Beam* beam) const
+CAL_Protocol::memptr_t Beams::findCalibrationHandle(Beam* beam) const
 {
-	map<Beam*,uint32>::const_iterator it = m_beams.find(beam);
+	map<Beam*,CAL_Protocol::memptr_t>::const_iterator it = m_beams.find(beam);
 
 	if (it != m_beams.end()) {
 		return (it->second);
@@ -115,9 +115,9 @@ uint32 Beams::findCalibrationHandle(Beam* beam) const
 //
 // updateCalibration(handle, gains)
 //
-bool Beams::updateCalibration(uint32 handle, CAL::AntennaGains& gains)
+bool Beams::updateCalibration(CAL_Protocol::memptr_t handle, CAL::AntennaGains& gains)
 {
-	map<uint32,Beam*>::iterator it = m_handle2beam.find(handle);
+	map<CAL_Protocol::memptr_t,Beam*>::iterator it = m_handle2beam.find(handle);
 
 	if ((it == m_handle2beam.end()) || (!it->second)) {
 		LOG_WARN_STR("No calibration found for " << handle);
@@ -134,7 +134,7 @@ bool Beams::updateCalibration(uint32 handle, CAL::AntennaGains& gains)
 bool Beams::exists(Beam *beam)
 {
 	// if beam not found, return 0
-	map<Beam*,uint32>::iterator it = m_beams.find(beam);
+	map<Beam*,CAL_Protocol::memptr_t>::iterator it = m_beams.find(beam);
 
 	if (it == m_beams.end()) {
 		return (false);
@@ -149,7 +149,7 @@ bool Beams::exists(Beam *beam)
 bool Beams::destroy(Beam* beam)
 {
 	// remove from handle2beam map
-	for (map<uint32,Beam*>::iterator it = m_handle2beam.begin();
+	for (map<CAL_Protocol::memptr_t,Beam*>::iterator it = m_handle2beam.begin();
 									it != m_handle2beam.end(); ++it) {
 		if (beam == it->second) {
 			m_handle2beam.erase(it);
@@ -157,7 +157,7 @@ bool Beams::destroy(Beam* beam)
 	}
 
 	// if beam not found, return false
-	map<Beam*,uint32>::iterator it = m_beams.find(beam);
+	map<Beam*,CAL_Protocol::memptr_t>::iterator it = m_beams.find(beam);
 	if (it != m_beams.end()) {
 		delete(it->first);
 		m_beams.erase(it);
@@ -176,7 +176,7 @@ void Beams::calculate_weights(Timestamp								 timestamp,
 							  blitz::Array<std::complex<double>, 3>& weights)
 {
 	// iterate over all beams and fill m_lmns with new track of Pointings
-	for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
+	for (map<Beam*,CAL_Protocol::memptr_t>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
 		bi->first->calcNewTrack(timestamp, compute_interval, conv);
 		LOG_DEBUG(formatString("current_pointing=(%f,%f)",
 										bi->first->getPointing().angle0(),
@@ -194,7 +194,7 @@ void Beams::calculate_weights(Timestamp								 timestamp,
 Beamlet2SubbandMap Beams::getSubbandSelection()
 {
 	Beamlet2SubbandMap selection;
-	for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
+	for (map<Beam*,CAL_Protocol::memptr_t>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
 		Beamlet2SubbandMap beammap = bi->first->getAllocation();
 		selection().insert(beammap().begin(), beammap().end());
 	}
@@ -212,7 +212,7 @@ void Beams::calculateHBAdelays (RTC::Timestamp	 					timestamp,
 								const blitz::Array<double,1>&		elementDelays)
 {
 	// iterate over all beams and fill AzEl coordinates of HBA beams
-	for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
+	for (map<Beam*,CAL_Protocol::memptr_t>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
 		if (!bi->first->getSPW().isForHBA()) {
 			LOG_DEBUG_STR("Beam " << bi->first->getName() << " is LBA");
 			continue;
@@ -235,7 +235,7 @@ void Beams::sendHBAdelays(RTC::Timestamp				time,
 						  GCF::TM::GCFPortInterface&	port)
 {
 	// iterate over all beams and fill AzEl coordinates of HBA beams
-	for (map<Beam*,uint32>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
+	for (map<Beam*,CAL_Protocol::memptr_t>::iterator bi = m_beams.begin(); bi != m_beams.end(); ++bi) {
 		if (!bi->first->getSPW().isForHBA()) {
 			continue;
 		}

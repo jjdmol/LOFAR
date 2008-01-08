@@ -476,8 +476,8 @@ namespace LOFAR {
         return m_file[rcu];
       }
     protected:
-      uint32 m_subscriptionhandle;
-      uint32 m_duration;
+      memptr_t 	m_subscriptionhandle;
+      uint32 	m_duration;
       RTC::Timestamp m_endTime;
       int32  m_integration;
       uint32 m_nseconds;
@@ -664,7 +664,7 @@ namespace LOFAR {
       virtual GCFEvent::TResult ack(GCFEvent& e);
       void stop();
     protected:
-      uint32 m_subscriptionhandle;
+      memptr_t	 m_subscriptionhandle;
     private:
     };
 

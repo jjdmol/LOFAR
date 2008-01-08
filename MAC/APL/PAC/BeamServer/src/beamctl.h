@@ -30,6 +30,7 @@
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_list.h>
 #include <APL/RSP_Protocol/RCUSettings.h>
+#include <APL/BS_Protocol/BS_Protocol.ph>
 
 namespace LOFAR
 {
@@ -79,7 +80,7 @@ namespace LOFAR
 	  GCFPort m_beamserver;
 
 	  // handles
-	  uint32 m_beamhandle;
+	  BS_Protocol::memptr_t m_beamhandle;
 
 	  string                     m_parent; // name of the full array
 	  list<int>                  m_rcus;   // selection of rcus

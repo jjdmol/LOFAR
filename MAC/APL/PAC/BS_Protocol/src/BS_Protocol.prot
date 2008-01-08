@@ -16,6 +16,8 @@ include = '<APL/RTCCommon/Timestamp.h>';
 
 prelude = << PRELUDE_END
 
+typedef		void*		memptr_t;
+
 	enum {
 	     SUCCESS = 0,
 	     ERR_RANGE,     // range error in message parameters
@@ -80,7 +82,7 @@ event = {
       dir = OUT;
       param = {
 	    name = "handle";
-	    type = "uint32";
+	    type = "memptr_t";
       };
       param = {
 	    name = "status";
@@ -95,7 +97,7 @@ event = {
 	// handle to the beam, previously received in BEAMALLOCACK
 	param = {
 		name = "handle";
-		type = "uint32";
+		type = "memptr_t";
 	};
 	
 	// New mapping of beamlets to subbands, the left-hand side of
@@ -116,7 +118,7 @@ event = {
 	// handle
 	param = {
 		name = "handle";
-		type = "uint32";
+		type = "memptr_t";
 	};
 	param = {
 		name = "status";
@@ -129,7 +131,7 @@ event = {
       dir = IN;
       param = {
 	    name = "handle";
-	    type = "uint32";
+	    type = "memptr_t";
       };
 };
 
@@ -138,7 +140,7 @@ event = {
       dir = OUT;
       param = {
 	    name = "handle";
-	    type = "uint32";
+	    type = "memptr_t";
       };
       param = {
 	    name = "status";
@@ -151,7 +153,7 @@ event = {
       dir = IN;
       param = {
 	    name = "handle";
-	    type = "uint32";
+	    type = "memptr_t";
       };
       param = {
 	    name = "pointing";

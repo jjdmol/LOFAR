@@ -84,7 +84,7 @@ void UpdSubbandsCmd::complete(CacheBuffer& cache)
 
 	ack.timestamp = getTimestamp();
 	ack.status 	  = SUCCESS;
-	ack.handle 	  = (uint32)this; // opaque ptr used to refer to the subscr.
+	ack.handle 	  = (memptr_t)this; // opaque ptr used to refer to the subscr.
 
 	// Allocate room in subbands array
 	// Note: XLETS are allocated at the first 8 registers in the subbands
