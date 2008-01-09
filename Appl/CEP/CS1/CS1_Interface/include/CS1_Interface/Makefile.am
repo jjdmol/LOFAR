@@ -1,4 +1,4 @@
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	BGL_Command.h \
 	BGL_Configuration.h \
 	BGL_Mapping.h \
