@@ -359,7 +359,7 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
   // use -1 in the constructor (default) to leave it untouched.
   
   // BG/L doesn't implement setsockopt; also ignore if no sockets are used.
-#if !defined(HAVE_BGL) && defined(USE_NOSOCKETS)
+#if !defined(HAVE_BGL) && !defined(USE_NOSOCKETS)
   int socketFD; 
   if (itsIsServer && itsServerSocket != NULL) socketFD = itsServerSocket->getSid();
   else socketFD = itsDataSocket->getSid();
