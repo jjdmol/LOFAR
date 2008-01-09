@@ -30,6 +30,13 @@
 # to print the version.
 # Finally the Makefile.am files are changed to build the code.
 
+# Determine if the main program versionXXX has to be made.
+makevers=1
+if test $# = 1; then
+  makevers=$1
+  shift
+fi
+
 # Get the package name (also in lower and uppercase).
 pkg=`pwd`
 pkg=`basename $pkg`
@@ -204,30 +211,32 @@ EOF
   echo "makeversion added Package__Version.cc to src/Makefile.am"
 fi
 
-fgrep "version${lpkg}.cc" src/Makefile.am 2>&1  > /dev/null
-if [ $? != 0 ]; then
-  fgrep "bin_PROGRAMS" src/Makefile.am 2>&1 > /dev/null
+if [ $makevers = 1 ]; then
+  fgrep "version${lpkg}.cc" src/Makefile.am 2>&1  > /dev/null
   if [ $? != 0 ]; then
+    fgrep "bin_PROGRAMS" src/Makefile.am 2>&1 > /dev/null
+    if [ $? != 0 ]; then
 # To insert newlines, the expression has to be enclosed in single quotes.
 # However, that means that the env.var. are not replaced.
 # So do that in a second expression.
-    sed -e 's%\(include *\$(top_srcdir)/Makefile.common\)%bin_PROGRAMS = version${lpkg}\
+      sed -e 's%\(include *\$(top_srcdir)/Makefile.common\)%bin_PROGRAMS = version${lpkg}\
 \
 version${lpkg}_SOURCES      = version${lpkg}.cc\
 version${lpkg}_LDADD        = ${libnm}.la\
 version${lpkg}_DEPENDENCIES = ${libnm}.la \$(LOFAR_DEPEND)\
 \
 \1%' src/Makefile.am | sed -e "s%\${lpkg}%${lpkg}%g" -e "s%\${libnm}%${libnm}%g" > version.mf.tmp
-  else
-    sed -e "s%\(bin_PROGRAMS.*\)=%\1= version${lpkg}%" src/Makefile.am | \
-    sed -e 's%\(include *\$(top_srcdir)/Makefile.common\)%version${lpkg}_SOURCES      = version${lpkg}.cc\
+    else
+      sed -e "s%\(bin_PROGRAMS.*\)=%\1= version${lpkg}%" src/Makefile.am | \
+      sed -e 's%\(include *\$(top_srcdir)/Makefile.common\)%version${lpkg}_SOURCES      = version${lpkg}.cc\
 version${lpkg}_LDADD        = ${libnm}.la\
 version${lpkg}_DEPENDENCIES = ${libnm}.la \$(LOFAR_DEPEND)\
 \
 \1%' | sed -e "s%\${lpkg}%${lpkg}%g" -e "s%\${libnm}%${libnm}%g" > version.mf.tmp
+    fi
+    mv version.mf.tmp src/Makefile.am
+    echo "makeversion added version${lpkg}.cc to src/Makefile.am"
   fi
-  mv version.mf.tmp src/Makefile.am
-  echo "makeversion added version${lpkg}.cc to src/Makefile.am"
 fi
 
 \rm -f version.*.tmp

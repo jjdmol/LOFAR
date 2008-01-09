@@ -22,9 +22,12 @@
 #
 #  $Id$
 
-
-if test $# != 1; then
-  echo usage: bootstrap autoconf_share_dir
+makevers=1
+if test $# = 2; then
+  makevers=$2
+fi
+if test $# != 1 -a $# != 2; then
+  echo usage: bootstrap autoconf_share_dir [makevers]
   exit 1
 fi
 
@@ -83,7 +86,7 @@ if [ -r configure.in ]; then
   fi
   set -x
   aclocal -I ./autoconf_share \
-  && autoconf_share/makeversion \
+  && autoconf_share/makeversion $makevers \
   && $libtoolcmd --force --copy \
   && autoheader \
   && automake --foreign --add-missing --copy \
