@@ -38,10 +38,4 @@ install-exec-local:
 uninstall-local:
 	rm lofar_impl.so
 
-bin_PROGRAMS = versioncs1_ionproc
-
-versioncs1_ionproc_SOURCES      = versioncs1_ionproc.cc
-versioncs1_ionproc_LDADD        = liblofar_impl.la
-versioncs1_ionproc_DEPENDENCIES = liblofar_impl.la $(LOFAR_DEPEND)
-
 include $(top_srcdir)/Makefile.common
