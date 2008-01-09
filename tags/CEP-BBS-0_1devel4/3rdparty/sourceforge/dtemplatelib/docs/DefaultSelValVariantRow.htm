@@ -1,0 +1,23 @@
+<h3>Example: SelValidate for variant_row - copy the the BoundIO null
+data flags to the variant row null flag fields.</h3>
+<pre><code>
+<span class="codeComment">// This function is a specialized version of DefaultSelValidate to copy 
+// information about NULL columns from the BoundIOs structure to the variant_row class</span>
+template&lt;&gt; class DefaultSelValidate&lt;variant_row&gt; {
+public:
+	bool operator()(BoundIOs &amp;boundIOs, variant_row &amp;rowbuf)
+	{
+		rowbuf.ClearNulls(); 
+		for (BoundIOs::iterator b_it = boundIOs.begin();
+				b_it != boundIOs.end(); b_it++)
+		{
+			BoundIO &amp;boundIO = (*b_it).second;
+			if ((boundIO.IsColumn() || boundIO.GetParamType() == SQL_PARAM_OUTPUT  || boundIO.GetParamType() == SQL_PARAM_INPUT_OUTPUT) 
+				&amp;&amp; boundIO.IsNull())
+				rowbuf.SetNull(boundIO.GetName()); <span class="codeComment">// found null column ... record null status in rowbuf </span>
+		}
+
+		return true;	<span class="codeComment">// assume data is OK</span>
+	}
+};</code></pre>
+

@@ -1,0 +1,32 @@
+// exponent
+// input  expreim 10, 2048: red = real, green = imag
+// output eresult 10, 2048: red = real, green = imag
+
+struct C2E2f_Output {
+	float4 color : COLOR;
+};
+
+C2E2f_Output fragmentMain(float2 exppos: TEXCOORD0,
+						  float2 respos: TEXCOORD1,
+						  uniform samplerRECT expreim : TEXUNIT0,
+						  uniform samplerRECT eresult : TEXUNIT1)
+{
+	C2E2f_Output result;
+	float		resreal;
+	float		resimag;
+	float		stepre;
+	float		stepim;
+	float4		prevVals;
+
+	prevVals = texRECT (eresult, respos);
+	resreal = prevVals.r;
+	resimag = prevVals.g;
+	stepre  = prevVals.b;
+	stepim  = prevVals.a;
+
+	result.color.r = resreal * stepre - resimag * stepim;
+	result.color.g = resimag * stepre + resreal * stepim;
+	result.color.ba = prevVals.ba;
+
+	return result;
+}

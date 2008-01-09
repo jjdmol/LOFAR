@@ -1,0 +1,11 @@
+
+meqsolve.g:
+
+1. First,
+ln -s
+  /usr/local/PSS4/WH/ms/Haystack-Sim/2PointSourceNoiseless/0128_vis_ninterp.MS
+  test.ms
+  
+  
+2. For the first run, use glish -l meqsolve.g -filluvw
+

@@ -1,0 +1,249 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,234 168 644 338 N "_3DFace" 0
+EEE E E 1 -1 -1 0  290 80
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 2
+"Text1"
+""
+1 181 192 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 183 194 268 210
+0 2 0 "s" 0 0 0 192 0 0  183 194
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Station_Health
+13 1
+"Button1"
+""
+1 170 60 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+168 58 202 82
+T 
+1
+LANG:1 7 Button1
+"main()
+{
+	beep(400, 250); 
+}" 0
+ E E E
+14 3
+"Station_Health"
+""
+1 120 190 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+118 188 182 215
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+	float as ;
+	int RackNr;
+	int SubrackNr;
+	int i,j;
+	int Health_R1S1;
+	
+
+for (i=1; i<=6; i++)
+	{
+  RackNr = i;
+	for (j=1; j<=4; j++)
+		{
+    SubrackNr = j;
+	  dpConnect(\"CalculateHealth\", 
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP1_RCU1_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP1_RCU1_Maintenance_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP1_RCU2_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP1_RCU2_Maintenance_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP2_RCU1_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP2_RCU1_Maintenance_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP2_RCU2_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP2_RCU2_Maintenance_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP3_RCU1_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP3_RCU1_Maintenance_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP3_RCU2_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP3_RCU2_Maintenance_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP4_RCU1_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP4_RCU1_Maintenance_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP4_RCU2_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP4_RCU2_Maintenance_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP1_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP2_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP3_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_AP4_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_BP_status.:_online.._value\",
+            \"System1:PIC_Rack\"+ RackNr +\"_SubRack\"+ SubrackNr +\"_Board1_Maintenance_status.:_online.._value\");
+		}
+		}
+	}
+
+
+CalculateHealth(	string dpSource1,  unsigned AP1_RCU1_stat, string dpSource2,  unsigned AP1_RCU1_main,
+									string dpSource3,  unsigned AP1_RCU2_stat, string dpSource4,  unsigned AP1_RCU2_main,
+									string dpSource5,  unsigned AP2_RCU1_stat, string dpSource6,  unsigned AP2_RCU1_main,
+									string dpSource7,  unsigned AP2_RCU2_stat, string dpSource8,  unsigned AP2_RCU2_main,
+									string dpSource9,  unsigned AP3_RCU1_stat, string dpSource10, unsigned AP3_RCU1_main,
+									string dpSource11, unsigned AP3_RCU2_stat, string dpSource12, unsigned AP3_RCU2_main,
+									string dpSource13, unsigned AP4_RCU1_stat, string dpSource14, unsigned AP4_RCU1_main,
+									string dpSource15, unsigned AP4_RCU2_stat, string dpSource16, unsigned AP4_RCU2_main,
+									string dpSource17, unsigned AP1_stat, 		 string dpSource18, unsigned AP2_stat,
+									string dpSource19, unsigned AP3_stat, 		 string dpSource20, unsigned AP4_stat,
+									string dpSource21, unsigned BP_stat, 			 string dpSource22, unsigned BP_main)
+{
+	//Declaration of temporary variables
+	int AP1_RCU1_health;
+	int AP1_RCU2_health;
+	int AP2_RCU1_health;
+	int AP2_RCU2_health;
+	int AP3_RCU1_health;
+	int AP3_RCU2_health;
+	int AP4_RCU1_health;
+	int AP4_RCU2_health;
+	int AP1_health;
+	int AP2_health;
+	int AP3_health;
+	int AP4_health;
+	int BP_health;
+	int Subrack_health;
+
+	//Calculate the Error/Health value for each variable
+	if ((AP1_RCU1_stat + AP1_RCU1_main)<1) AP1_RCU1_health=1; else AP1_RCU1_health=0;
+	if ((AP1_RCU2_stat + AP1_RCU2_main)<1) AP1_RCU2_health=1; else AP1_RCU2_health=0;
+	if ((AP2_RCU1_stat + AP2_RCU1_main)<1) AP2_RCU1_health=1; else AP2_RCU1_health=0;
+	if ((AP2_RCU2_stat + AP2_RCU2_main)<1) AP2_RCU2_health=1; else AP2_RCU2_health=0;
+	if ((AP3_RCU1_stat + AP3_RCU1_main)<1) AP3_RCU1_health=1; else AP3_RCU1_health=0;
+	if ((AP3_RCU2_stat + AP3_RCU2_main)<1) AP3_RCU2_health=1; else AP3_RCU2_health=0;
+	if ((AP4_RCU1_stat + AP4_RCU1_main)<1) AP4_RCU1_health=1; else AP4_RCU1_health=0;
+	if ((AP4_RCU2_stat + AP4_RCU2_main)<1) AP4_RCU2_health=1; else AP4_RCU2_health=0;
+	
+	if (AP1_stat ==0 ) AP1_health=1; else AP1_health=0;
+	if (AP2_stat ==0 ) AP2_health=1; else AP2_health=0;
+	if (AP3_stat ==0 ) AP3_health=1; else AP3_health=0;
+	if (AP4_stat ==0 ) AP4_health=1; else AP4_health=0;
+		
+	if ((BP_stat + BP_main)==0) BP_health=1; else BP_health=0;
+
+	// Calculate the subtrack health value
+	Subrack_health =	(BP_health *	(	AP1_health * (AP1_RCU1_health + AP1_RCU2_health) +
+																	AP2_health * (AP2_RCU1_health + AP2_RCU2_health) +
+																	AP3_health * (AP3_RCU1_health + AP3_RCU2_health) +
+																	AP4_health * (AP4_RCU1_health + AP4_RCU2_health)
+																) * 100) / 8; 
+
+	setValue(\"\", \"text\", Subrack_health + \"%\");
+	DebugN(dpSource1+\" Health: \" + Subrack_health);
+	DebugN(\"Health_R\"+RackNr+\"S\"+ SubrackNr);
+	
+}
+" 0
+
+E
+21 31
+"Health1"
+""
+1 290 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+32 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+288 48 362 75
+0
+E
+E
+E
+
+N 0 100 1 0 0 1
+21 32
+"Health2"
+""
+1 290 80 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+33 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+288 78 362 105
+0
+E
+E
+E
+
+N 0 100 1 0 0 1
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

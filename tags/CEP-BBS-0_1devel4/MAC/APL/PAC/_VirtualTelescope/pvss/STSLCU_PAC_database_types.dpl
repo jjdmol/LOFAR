@@ -1,0 +1,46 @@
+# ascii dump of database
+
+# DpType
+TypeName
+TLcuPacLogicalDeviceScheduler.TLcuPacLogicalDeviceScheduler	1#1
+	command	25#2
+	status	25#3
+TLcuPacWaveformGenerator.TLcuPacWaveformGenerator	1#1
+	frequency	22#2
+	amplitude	20#3
+TLcuPacVT.TLcuPacVT	1#1
+	command	25#2
+	status	25#3
+	startTime	20#4
+	stopTime	20#5
+	srgName	25#6
+	bfName	25#7
+TLcuPacSR.TLcuPacSR	1#1
+	command	25#2
+	status	25#3
+	startTime	20#4
+	stopTime	20#5
+	filter	20#6
+	antenna	20#7
+	power	20#8
+	frequency	22#9
+TLcuPacSRG.TLcuPacSRG	1#1
+	command	25#2
+	status	25#3
+	startTime	20#4
+	stopTime	20#5
+	filter	20#6
+	antenna	20#7
+	power	20#8
+	frequency	22#9
+TLcuPacSBF.TLcuPacSBF	1#1
+	command	25#2
+	status	25#3
+	directionType	25#4
+	directionAngle1	22#5
+	directionAngle2	22#6
+	subbandStart	20#7
+	subbandEnd	20#8
+TLcuPac.TLcuPac	1#2
+	status	21#3
+

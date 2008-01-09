@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<LogicalDeviceScheduler>
+  <command> 
+  	<MACType> MACString  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</command>
+  <status> 
+  	<MACType> MACString  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</status>
+ 	<WaveFormGenerator>
+ 		<frequency>
+	  	<MACType>MACDouble</MACType> 
+	  	<MACDefault>1500000.0</MACDefault> 
+ 		</frequency>
+ 		<amplitude>
+	  	<MACType>MACUnsigned</MACType> 
+	  	<MACDefault>128</MACDefault> 
+ 		</amplitude>
+ 	</WaveFormGenerator>
+</LogicalDeviceScheduler>

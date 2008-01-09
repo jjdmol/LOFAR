@@ -1,0 +1,808 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,258 161 722 489 N "_3DFace" 1
+"$datapoint"
+"main()
+{
+
+}" 0
+EE E E 1 -1 -1 0  120 80
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"Border1"
+""
+1 19 76 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 19 16 89 76
+6 1
+"Border2"
+""
+1 19 76 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 19 56 39 76
+6 2
+"Border3"
+""
+1 69 76 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 69 56 89 76
+4 3
+"Line1"
+""
+1 79 86 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  79 106 79 86
+4 4
+"Line2"
+""
+1 79 106 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  109 106 79 106
+2 5
+"Text1"
+""
+1 119 96 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 121 98 227 114
+0 2 0 "s" 0 0 0 64 0 0  121 98
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 Link up/down
+4 6
+"Line3"
+""
+1 29 86 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  29 136 29 86
+4 7
+"Line4"
+""
+1 29 136 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  109 136 29 136
+2 8
+"Text2"
+""
+1 119 126 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 121 128 247 144
+0 2 0 "s" 0 0 0 64 0 0  121 128
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Speed 10/100/1000
+2 9
+"Text3"
+""
+1 16 160 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 18 162 103 178
+0 2 0 "s" 0 0 0 192 0 0  18 162
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 12 System name:
+2 10
+"Text4"
+""
+1 16 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 18 192 116 208
+0 2 0 "s" 0 0 0 192 0 0  18 192
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 16 System location:
+2 11
+"Text5"
+""
+1 16 220 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 18 222 114 238
+0 2 0 "s" 0 0 0 192 0 0  18 222
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 System contact:
+2 20
+"Text7"
+""
+1 107 24 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 109 26 239 42
+0 2 0 "s" 0 0 0 192 0 0  109 26
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 23 Legend for port 1 to 24
+1 21 7 "" 0
+0
+1 22 7 "" 1
+0
+1 23 7 "" 2
+0
+1 24 7 "" 3
+0
+1 25 8 "" 0
+0
+1 26 8 "" 1
+0
+1 27 8 "" 2
+0
+1 28 8 "" 3
+0
+1 29 9 "" 0
+0
+1 30 9 "" 1
+0
+1 31 9 "" 2
+0
+1 32 9 "" 3
+0
+1 33 10 "" 0
+0
+1 34 10 "" 1
+0
+1 35 10 "" 2
+0
+1 36 10 "" 3
+0
+1 37 11 "" 0
+0
+1 38 11 "" 1
+0
+1 39 11 "" 2
+0
+1 40 11 "" 3
+0
+1 41 12 "" 0
+0
+1 42 12 "" 1
+0
+1 43 12 "" 2
+0
+1 44 12 "" 3
+0
+1 45 13 "" 0
+0
+1 46 13 "" 1
+0
+1 47 13 "" 2
+0
+1 48 13 "" 3
+0
+1 49 14 "" 0
+0
+1 50 14 "" 1
+0
+1 51 14 "" 2
+0
+1 52 14 "" 3
+0
+1 53 15 "" 0
+0
+1 54 15 "" 1
+0
+1 55 15 "" 2
+0
+1 56 15 "" 3
+0
+1 57 16 "" 0
+0
+1 58 16 "" 1
+0
+1 59 16 "" 2
+0
+1 60 16 "" 3
+0
+1 61 17 "" 0
+0
+1 62 17 "" 1
+0
+1 63 17 "" 2
+0
+1 64 17 "" 3
+0
+1 65 18 "" 0
+0
+1 66 18 "" 1
+0
+1 67 18 "" 2
+0
+1 68 18 "" 3
+0
+1 69 19 "" 0
+0
+1 70 19 "" 1
+0
+1 71 19 "" 2
+0
+1 72 19 "" 3
+0
+1 73 20 "" 0
+0
+1 74 20 "" 1
+0
+1 75 20 "" 2
+0
+1 76 20 "" 3
+0
+1 77 21 "" 0
+0
+1 78 21 "" 1
+0
+1 79 21 "" 2
+0
+1 80 21 "" 3
+0
+1 81 22 "" 0
+0
+1 82 22 "" 1
+0
+1 83 22 "" 2
+0
+1 84 22 "" 3
+0
+1 85 23 "" 0
+0
+1 86 23 "" 1
+0
+1 87 23 "" 2
+0
+1 88 23 "" 3
+0
+1 89 24 "" 0
+0
+1 90 24 "" 1
+0
+1 91 24 "" 2
+0
+1 92 24 "" 3
+0
+1 93 25 "" 0
+0
+1 94 25 "" 1
+0
+1 95 25 "" 2
+0
+1 96 25 "" 3
+0
+1 97 26 "" 0
+0
+1 98 26 "" 1
+0
+1 99 26 "" 2
+0
+1 100 26 "" 3
+0
+1 101 27 "" 0
+0
+1 102 27 "" 1
+0
+1 103 27 "" 2
+0
+1 104 27 "" 3
+0
+1 105 28 "" 0
+0
+1 106 28 "" 1
+0
+1 107 28 "" 2
+0
+1 108 28 "" 3
+0
+1 109 29 "" 0
+0
+1 110 29 "" 1
+0
+1 111 29 "" 2
+0
+1 112 29 "" 3
+0
+1 113 30 "" 0
+0
+1 114 30 "" 1
+0
+1 115 30 "" 2
+0
+1 116 30 "" 3
+0
+6 117
+"Border4"
+""
+1 250 140 E E E 1 E 1 E N "_WindowText" E N {255,204,0} E E
+ E E
+55 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 250 130 260 140
+6 118
+"Border5"
+""
+1 270 140 E E E 1 E 1 E N "_WindowText" E N {255,255,0} E E
+ E E
+56 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 270 130 280 140
+6 119
+"Border6"
+""
+1 290 140 E E E 1 E 1 E N "_WindowText" E N {0,0,255} E E
+ E E
+57 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 290 130 300 140
+6 120
+"Border7"
+""
+1 210 110 E E E 1 E 1 E N "_WindowText" E N {0,255,51} E E
+ E E
+58 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 210 100 220 110
+6 121
+"Border8"
+""
+1 230 110 E E E 1 E 1 E N "_WindowText" E N {255,0,0} E E
+ E E
+59 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 230 100 240 110
+14 80
+"TextField1"
+""
+1 136 160 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+34 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+134 158 338 185
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+	dyn_errClass err;
+
+  if (!dpExists($datapoint + \".name:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            $datapoint + \".name:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, string sNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, sNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:_mp_switch24.name}
+// DPConfig {:_online.._value}
+// DPType {string}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+14 81
+"TextField2"
+""
+1 136 190 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+35 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+134 188 338 215
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( !dpExists( $datapoint+\".location:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            $datapoint+\".location:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, string sNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, sNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:_mp_switch24.location}
+// DPConfig {:_online.._value}
+// DPType {string}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+14 82
+"TextField3"
+""
+1 136 220 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+36 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+134 218 338 245
+3 "s" 0 0 0 0 0 0 
+E
+"// SimpleCtrlScriptStart {invalid}
+main()
+{
+  EP_textFieldIn();
+}
+
+EP_textFieldIn()
+{
+dyn_errClass err;
+
+  if( !dpExists( $datapoint+\".contact:_online.._value\"))
+  {
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+    return;
+  }
+
+  dpConnect(\"EP_textFieldInCB\",
+            $datapoint+\".contact:_online.._value\");
+  err = getLastError();
+  if (dynlen(err) > 0)
+    setValue(\"\", \"color\", \"_dpdoesnotexist\");
+
+}
+
+
+EP_textFieldInCB(string dp, string sNewValue)
+{
+  setValue(\"\", \"text\", dpValToString(dp, sNewValue, TRUE) );
+}
+
+// SimpleCtrlScript {EP_textFieldIn}
+// DP {System1:_mp_switch24.contact}
+// DPConfig {:_online.._value}
+// DPType {string}
+// UseDPUnit {TRUE}
+// UseDPFormat {TRUE}
+// SimpleCtrlScriptEnd {EP_textFieldIn}
+" 0
+
+E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 7 "port1"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 125 622 T 29 1 0 1  4 -292  
+2
+"$datapoint""$datapoint"
+"$port""1"
+3 8 "port2"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 233 637 T 30 1 0 1  -14 -307  
+2
+"$datapoint""$datapoint"
+"$port""2"
+3 9 "port3"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 319 637 T 31 1 0 1  -10 -307  
+2
+"$datapoint""$datapoint"
+"$port""3"
+3 10 "port4"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 402 641 T 32 1 0 1  -3 -311  
+2
+"$datapoint""$datapoint"
+"$port""4"
+3 11 "port5"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 470 355 T 33 1 0 1  19 -25  
+2
+"$datapoint""$datapoint"
+"$port""5"
+3 12 "port6"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 375 340 T 37 1 0 1  204 -10  
+2
+"$datapoint""$datapoint"
+"$port""6"
+3 13 "port7"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 37 1 0 1  119 -10  
+2
+"$datapoint""$datapoint"
+"$port""7"
+3 14 "port8"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 38 1 0 1  209 -10  
+2
+"$datapoint""$datapoint"
+"$port""8"
+3 15 "port9"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 39 1 0 1  -421 70  
+2
+"$datapoint""$datapoint"
+"$port""9"
+3 16 "port17"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 40 1 0 1  -421 150  
+2
+"$datapoint""$datapoint"
+"$port""17"
+3 17 "port10"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 41 1 0 1  -331 70  
+2
+"$datapoint""$datapoint"
+"$port""10"
+3 18 "port11"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 42 1 0 1  -241 70  
+2
+"$datapoint""$datapoint"
+"$port""11"
+3 19 "port18"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 43 1 0 1  -331 150  
+2
+"$datapoint""$datapoint"
+"$port""18"
+3 20 "port19"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 44 1 0 1  -241 150  
+2
+"$datapoint""$datapoint"
+"$port""19"
+3 21 "port12"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 45 1 0 1  -151 70  
+2
+"$datapoint""$datapoint"
+"$port""12"
+3 22 "port20"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 46 1 0 1  -151 150  
+2
+"$datapoint""$datapoint"
+"$port""20"
+3 23 "port13"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 47 1 0 1  -61 70  
+2
+"$datapoint""$datapoint"
+"$port""13"
+3 24 "port14"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 48 1 0 1  29 70  
+2
+"$datapoint""$datapoint"
+"$port""14"
+3 25 "port21"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 49 1 0 1  -61 150  
+2
+"$datapoint""$datapoint"
+"$port""21"
+3 26 "port22"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 50 1 0 1  29 150  
+2
+"$datapoint""$datapoint"
+"$port""22"
+3 27 "port15"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 51 1 0 1  119 70  
+2
+"$datapoint""$datapoint"
+"$port""15"
+3 28 "port23"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 52 1 0 1  119 150  
+2
+"$datapoint""$datapoint"
+"$port""23"
+3 29 "port16"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 53 1 0 1  209 70  
+2
+"$datapoint""$datapoint"
+"$port""16"
+3 30 "port24"
+"objects\\nav_usr\\WAN\\port_ref.pnl" 550 340 T 54 1 0 1  209 150  
+2
+"$datapoint""$datapoint"
+"$port""24"
+0
