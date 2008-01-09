@@ -56,7 +56,20 @@ if [ ! -d $incdir ]; then
 fi
 
 # Get the library name (if present).
-libnm=`grep 'lib_LTLIBRARIES.*=' src/Makefile.am | sed -e 's/.*=.*\(lib.*\)\.la.*/\1/'`
+# Get it from the Makefile.am, because sometimes it differs from the
+# package name (e.g. libbbms for BB/MS).
+# Make sure that the first library is taken unless one matches exactly.
+libnms=`grep 'lib_LTLIBRARIES.*=' src/Makefile.am | sed -e 's/lib_LTLIBRARIES.*=//' -e 's/\.la//g'`
+for libn in $libnms
+do
+  if test "$libnm" = ""; then
+    libnm=$libn
+  fi
+  if test "$libn" = "lib${lpkg}"; then
+    libnm=$libn
+    break
+  fi
+done 
 if [ "$libnm" = "" ]; then
   libnm=lib${lpkg}
 fi
