@@ -30,11 +30,18 @@
 # to print the version.
 # Finally the Makefile.am files are changed to build the code.
 
-# Determine if the main program versionXXX has to be made.
+# Determine which parts of the version info have to be made.
+# if the main program versionXXX has to be made.
+#   0 = do not add version<package> to the Makefile.am
+#   1 = make everything
+#   2 = do not create anything at all
 makevers=1
 if test $# = 1; then
   makevers=$1
   shift
+fi
+if test $makevers = 2; then
+  exit 0;
 fi
 
 # Get the package name (also in lower and uppercase).
