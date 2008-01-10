@@ -30,20 +30,22 @@
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
+#include <APL/APLCommon/Observation.h>
+#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 
 #include "ObservationControl.h"
 #include "ObservationControlDefines.h"
 
-using namespace LOFAR::GCF::Common;
-using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::RTDB;
-using namespace std;
 
 namespace LOFAR {
+	using namespace Deployment;
 	using namespace APLCommon;
 	using namespace ACC::APS;
+	using namespace GCF::Common;
+	using namespace GCF::TM;
+	using namespace GCF::RTDB;
 	namespace MainCU {
 
 // static pointer used for signal handler.
@@ -89,7 +91,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 
 	// My own parameters
 	itsTreePrefix   = globalParameterSet()->getString("prefix");
-	itsInstanceNr   = globalParameterSet()->getUint32("_treeID");	// !!!
+	itsTreeID		= globalParameterSet()->getUint32("_treeID");	// !!!
 	itsHeartBeatItv = globalParameterSet()->getUint32("heartbeatInterval");
 
 	// The time I have to wait for the forced quit depends on the integration time of OLAP
@@ -215,8 +217,8 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 	  
 	case F_TIMER: {		// must be timer that PropSet has set.
 		// update PVSS.
-		LOG_TRACE_FLOW ("top DP of observation created, going to starting state");
-		TRAN(ObservationControl::starting_state);				// go to next state.
+		LOG_TRACE_FLOW ("top DP of observation created, going to prepDB state");
+		TRAN(ObservationControl::prepDB_state);				// go to next state.
 		}
 		break;
 
@@ -228,6 +230,95 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 	
 	default:
 		LOG_DEBUG_STR ("initial, default");
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}    
+	return (status);
+}
+
+
+//
+// prepDB_state(event, port)
+//
+// Create top datapoint of this observation in PVSS.
+//
+// NOTE: This state becomes obsolete for Navigator 2
+//
+GCFEvent::TResult ObservationControl::prepDB_state(GCFEvent& event, 
+													GCFPortInterface& port)
+{
+	uint32	gNrStations = 0;
+
+	LOG_DEBUG_STR ("prepDB:" << eventName(event) << "@" << port.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+	switch (event.signal) {
+    case F_INIT:
+   		break;
+
+	case F_ENTRY: {
+		// Create 'Observation<nr>_<station>' datapoint for each station of the observation
+		Observation		theObs(globalParameterSet());
+		vector<string>		stations(theObs.stations);
+		vector<string>::iterator	iter = stations.begin();
+		vector<string>::iterator	end  = stations.end();
+		gNrStations = stations.size();
+		LOG_DEBUG_STR(gNrStations << " are used in this Observation.");
+		string	DPobsName(createPropertySetName(PSN_OBSERVATION, getName())+"_Core_");	// observation<nr>_
+		while (iter != end) {
+			string	stationName(PVSSDatabaseName(*iter));
+			LOG_DEBUG_STR ("Creating PropertySet: " << DPobsName+stationName);
+			itsStationDPs[stationName] = new RTDBPropertySet(DPobsName+stationName,
+															 PST_STATION,
+															 PSAT_RW | PSAT_TMP,
+															 this);
+			iter++;
+		}
+	}
+	break;
+	  
+	case DP_CREATED: {
+			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// Always exit this event in a way that GCF can end the construction.
+			DPCreatedEvent	dpEvent(event);
+			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
+			gNrStations--;
+			if (!gNrStations) {
+				itsTimerPort->cancelAllTimers();
+				itsTimerPort->setTimer(0.0);
+			}
+			else { 
+				LOG_DEBUG_STR("Still waiting for " << gNrStations << " stationDPs.");
+				itsTimerPort->setTimer(0.0);
+			}
+        }
+		break;
+	  
+	case F_TIMER: {		// must be timer that PropSet has set.
+		// update PVSS.
+		LOG_TRACE_FLOW ("Station DPs created, setting station reference values");
+		string	observationName(createPropertySetName(PSN_OBSERVATION, getName()));
+		map<string, RTDBPropertySet*>::iterator		iter = itsStationDPs.begin();
+		map<string, RTDBPropertySet*>::iterator		end  = itsStationDPs.end();
+		while (iter != end) {
+
+			// write station reference in Observation DP
+			iter->second->setValue("__childDp", iter->first+"="+iter->first+":"+observationName);
+			iter++;
+		}
+		TRAN(ObservationControl::starting_state);				// go to next state.
+	}
+	break;
+
+	case F_CONNECTED:
+		break;
+
+	case F_DISCONNECTED:
+		break;
+	
+	default:
+		LOG_DEBUG_STR ("prepDB, default");
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
@@ -330,7 +421,7 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControl task");
-		itsChildControl->openService(MAC_SVCMASK_OBSERVATIONCTRL, itsInstanceNr);
+		itsChildControl->openService(MAC_SVCMASK_OBSERVATIONCTRL, itsTreeID);
 		itsChildControl->registerCompletionPort(itsChildPort);
 
 		// Start ParentControl task
@@ -408,6 +499,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		else if (timerEvent.id == itsClaimTimer) {
 			setState(CTState::CLAIM);
 			itsChildResult   = CT_RESULT_NO_ERROR;
+			itsChildsInError = 0;
 			itsClaimTimer    = 0;
 			LOG_DEBUG("Requesting all childs to execute the CLAIM state");
 			itsChildControl->requestState(CTState::CLAIMED, "");
@@ -416,6 +508,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		else if (timerEvent.id == itsPrepareTimer) {
 			setState(CTState::PREPARE);
 			itsChildResult   = CT_RESULT_NO_ERROR;
+			itsChildsInError = 0;
 			itsPrepareTimer  = 0;
 			LOG_DEBUG("Requesting all childs to execute the PREPARE state");
 			itsChildControl->requestState(CTState::PREPARED, "");
@@ -424,6 +517,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		else if (timerEvent.id == itsStartTimer) {
 			setState(CTState::RESUME);
 			itsChildResult   = CT_RESULT_NO_ERROR;
+			itsChildsInError = 0;
 			itsStartTimer    = 0;
 			LOG_DEBUG("Requesting all childs to go operation state");
 			itsChildControl->requestState(CTState::RESUMED, "");
@@ -432,6 +526,7 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		else if (timerEvent.id == itsStopTimer) {
 			setState(CTState::QUIT);
 			itsChildResult   = CT_RESULT_NO_ERROR;
+			itsChildsInError = 0;
 			itsStopTimer     = 0;
 			LOG_DEBUG("Requesting all childs to quit");
 			itsChildControl->requestState(CTState::QUITED, "");
@@ -483,55 +578,61 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case CONTROL_SCHEDULED: {
 		CONTROLScheduledEvent		msg(event);
-		LOG_DEBUG_STR("Received SCHEDULED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received SCHEDULED(" << msg.cntlrName << "):" << msg.result);
 		// TODO: do something usefull with this information!
 		break;
 	}
 
 	case CONTROL_CLAIMED: {
 		CONTROLClaimedEvent		msg(event);
-		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received CLAIMED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
+		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		doHeartBeatTask();
 		break;
 	}
 
 	case CONTROL_PREPARED: {
 		CONTROLPreparedEvent		msg(event);
-		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received PREPARED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
+		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		doHeartBeatTask();
 		break;
 	}
 
 	case CONTROL_RESUMED: {
 		CONTROLResumedEvent		msg(event);
-		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received RESUMED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
+		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		doHeartBeatTask();
 		break;
 	}
 
 	case CONTROL_SUSPENDED: {
 		CONTROLSuspendedEvent		msg(event);
-		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received SUSPENDED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
+		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		doHeartBeatTask();
 		break;
 	}
 
 	case CONTROL_RELEASED: {
 		CONTROLReleasedEvent		msg(event);
-		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
+		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		doHeartBeatTask();
 		break;
 	}
 
 	case CONTROL_QUITED: {
 		CONTROLQuitedEvent		msg(event);
-		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << ")");
+		LOG_DEBUG_STR("Received QUITED(" << msg.cntlrName << "):" << msg.result);
 		itsChildResult |= msg.result;
+		itsChildsInError += (msg.result == CT_RESULT_NO_ERROR) ? 0 : 1;
 		doHeartBeatTask();
 		break;
 	}
@@ -809,7 +910,7 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 			try {
 				newTime = time_from_string(newVal);
 			}
-			catch (exception&	e) {
+			catch (std::exception&	e) {
 				LOG_DEBUG_STR(newVal << " is not a legal time!!!");
 				return;
 			}
