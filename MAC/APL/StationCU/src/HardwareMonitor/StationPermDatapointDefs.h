@@ -98,6 +98,7 @@
 #define PN_RCU_TRIGGER_STOPLEVEL	"Trigger.stoplevel"
 #define PN_RCU_TRIGGER_FILTER	"Trigger.filter"
 #define PN_RCU_TRIGGER_WINDOW	"Trigger.window"
+#define PN_RCU_TRIGGER_OPERATING_MODE	"Trigger.operatingMode"
 #define PN_RCU_TRIGGER_COEFF0	"Trigger.coeff0"
 #define PN_RCU_TRIGGER_COEFF1	"Trigger.coeff1"
 #define PN_RCU_TRIGGER_COEFF2	"Trigger.coeff2"
