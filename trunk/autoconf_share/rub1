@@ -323,13 +323,20 @@ else
     pkgs=`awk '{print $1 $2;}' $pkgname/$fnam | sed -e 's/^ *#.*//' -e 's/#$//' -e 's/#-$//' -e 's/#[^-].*$//' -e 's/#-[^v].*//'`
     for PKG in $pkgs
     do
+      # Get version number (if given).
       pkg=`echo $PKG | sed -e 's%#-v.*%%'`
-      vers=
       if [ "$pkg" != "$PKG" ]; then
         vers=`echo $PKG | sed -e 's%.*#-v%%'`
       fi
+      # If pkg starts with a slash, it is relative to LOFAR root.
+      pkgnm=$pkgname/$pkg
+      case $pkg in
+      /*)
+        pkgnm=`echo $pkg | sed 's%^/%%'`;;
+      esac
+      vers=
       # Check out the package.
-      $0 $pkgname/$pkg 1 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
+      $0 $pkgnm 1 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
     done
   fi
 fi
