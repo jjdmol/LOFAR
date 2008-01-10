@@ -427,7 +427,7 @@ GCFEvent::TResult tPropertySet::WriteDelayTest(GCFEvent& e, GCFPortInterface& /*
 	break;
 
 	case F_TIMER:
-		LOG_DEBUG_STR("First part of WriteDeleayTest " << (gTestPassed ? "was successful" : "FAILED"));
+		LOG_DEBUG_STR("First part of WriteDelayTest " << (gTestPassed ? "was successful" : "FAILED"));
 		if (gTestPassed) {
 			LOG_DEBUG_STR("Calling flush");
 			itsPropSet->flush();

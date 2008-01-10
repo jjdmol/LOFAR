@@ -52,7 +52,8 @@ RTDBPropertySet::RTDBPropertySet (const string& 	name,
 	itsService	  	  (0),
 	itsOwnResponse	  (0),
 	itsExtResponse	  (new DPanswer(clientTask)),
-	itsExtSubscription(false)
+	itsExtSubscription(false),
+	itsExtConfirmation(true)
 {
 	LOG_TRACE_FLOW_STR("RTDBPropertySet(" << name << "," << type << "," << accessType << ")");
 
@@ -398,7 +399,9 @@ void RTDBPropertySet::dpCreated(const string&	propName, PVSSresult		result)
 	_createAllProperties();
 
 	// Pass 'created' event to client.
-	itsExtResponse->dpCreated(itsScope, result);
+	if (itsExtConfirmation) {
+		itsExtResponse->dpCreated(itsScope, result);
+	}
 }
 
 //
@@ -406,7 +409,9 @@ void RTDBPropertySet::dpCreated(const string&	propName, PVSSresult		result)
 //
 void RTDBPropertySet::dpDeleted (const string& propName, PVSSresult	result)
 {
-	itsExtResponse->dpDeleted(propName, result);
+	if (itsExtConfirmation) {
+		itsExtResponse->dpDeleted(propName, result);
+	}
 }
 
 //
@@ -424,7 +429,9 @@ void RTDBPropertySet::dpeSubscribed (const string& propName, PVSSresult	result)
 //
 void RTDBPropertySet::dpeSubscriptionLost (const string& propName, PVSSresult	result)
 {
-	itsExtResponse->dpeSubscriptionLost(propName, result);
+	if (itsExtConfirmation) {
+		itsExtResponse->dpeSubscriptionLost(propName, result);
+	}
 }
 
 //
@@ -432,7 +439,9 @@ void RTDBPropertySet::dpeSubscriptionLost (const string& propName, PVSSresult	re
 //
 void RTDBPropertySet::dpeUnsubscribed (const string& propName, PVSSresult	result)
 {
-	itsExtResponse->dpeUnsubscribed(propName, result);
+	if (itsExtConfirmation) {
+		itsExtResponse->dpeUnsubscribed(propName, result);
+	}
 }
 
 //
@@ -440,7 +449,9 @@ void RTDBPropertySet::dpeUnsubscribed (const string& propName, PVSSresult	result
 //
 void RTDBPropertySet::dpQuerySubscribed	 (uint32 queryId, PVSSresult	result)
 {
-	itsExtResponse->dpQuerySubscribed(queryId, result);
+	if (itsExtConfirmation) {
+		itsExtResponse->dpQuerySubscribed(queryId, result);
+	}
 }
 
 //
@@ -453,8 +464,9 @@ void RTDBPropertySet::dpeValueSet(const string&		propName, PVSSresult	result)
 	}
 
 //	if (itsAccessType & PSAT_RD_MASK) {
+	if (itsExtConfirmation) {
 		itsExtResponse->dpeValueSet(propName, result);
-//	}
+	}
 }
 
 //

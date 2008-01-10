@@ -91,6 +91,7 @@ public:
 	PVSSresult flush();
 
 	void setSubscription(bool	on);
+	void setConfirmation(bool	on);
 
 protected:
 	friend class PropSetResponse;
@@ -140,6 +141,7 @@ private:
 	PVSSresponse*          		itsOwnResponse;		// callback to myself
 	DPanswer*	          		itsExtResponse;		// callback to client
 	bool						itsExtSubscription;	// client has subscription
+	bool						itsExtConfirmation;	// client want confirmation
 
 	// map with pointers to Property objects
     typedef map<string /*propName*/, Property*> PropertyMap_t;
@@ -152,6 +154,12 @@ private:
 inline	void RTDBPropertySet::setSubscription(bool	on)
 {
 	itsExtSubscription = on;
+}
+
+// setConfirmation(on)
+inline	void RTDBPropertySet::setConfirmation(bool	on)
+{
+	itsExtConfirmation = on;
 }
 
   } // namespace RTDB
