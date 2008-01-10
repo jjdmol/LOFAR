@@ -38,6 +38,7 @@
 	(((array).dimensions()*sizeof(int32)) + ((array).size() * sizeof(datatype)))
 
 // PACK blitz::array<...>
+// first copy the dimensions of the array, then the array itself.
 #define MSH_PACK_ARRAY(bufptr, offset, array, datatype)	\
 do {	\
 	for (int dim = blitz::firstDim; dim < blitz::firstDim + (array).dimensions(); dim++) {	\
@@ -46,13 +47,15 @@ do {	\
 		offset += sizeof(int32);	\
 	}	\
 	\
-	if ((array).isStorageContiguous()) {	\
-		memcpy(((char*)(bufptr)) + (offset), (array).data(), (array).size() * sizeof(datatype)); \
-		offset += (array).size() * sizeof(datatype);	\
-	}	\
-	else {	\
-		LOG_FATAL("array must be contiguous");	\
-		exit(EXIT_FAILURE);	\
+	if ((array).numElements() > 0) { \
+		if ((array).isStorageContiguous()) {	\
+			memcpy(((char*)(bufptr)) + (offset), (array).data(), (array).size() * sizeof(datatype)); \
+			offset += (array).size() * sizeof(datatype);	\
+		}	\
+		else {	\
+			LOG_FATAL("array must be contiguous");	\
+			exit(EXIT_FAILURE);	\
+		} \
 	}	\
 } while (0)
 
