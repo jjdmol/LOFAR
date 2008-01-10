@@ -1,4 +1,4 @@
-in_PROGRAMS 				= MACScheduler 
+bin_PROGRAMS 				= MACScheduler 
 
 MACScheduler_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -Wno-deprecated \

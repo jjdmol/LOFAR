@@ -2,6 +2,7 @@
 prefix				= LOFAR.PermSW.MACScheduler
 
 OTDBdatabasename	= overeem
+OTDBhostname		= dop50.astron.nl
 OTDBusername		= paulus
 OTDBpassword		= boskabouter
 OTDBpollInterval	= 5s
