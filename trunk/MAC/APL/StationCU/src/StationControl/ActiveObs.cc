@@ -35,6 +35,7 @@
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
+#include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "StationControlDefines.h"
 #include "ActiveObs.h"
@@ -49,6 +50,7 @@ namespace LOFAR {
 	using namespace GCF::TM;
 	using namespace GCF::Common;
 	using namespace GCF::RTDB;
+	using namespace Deployment;
 	namespace StationCU {
 
 //
@@ -79,9 +81,12 @@ ActiveObs::ActiveObs(const string&		name,
 	itsReqState			(CTState::NOSTATE),
 	itsCurState			(CTState::NOSTATE)
 {
-	if (thePS->isDefined("Observation.TBB.TBBSetting[1].C0")) {
+	if (thePS->isDefined("Observation.TBB.TBBsetting[1].C0")) {
 		LOG_INFO("Observation also uses the TB boards");
 		itsUsesTBB = true;
+	}
+	else {
+		LOG_INFO("Observation does not use the TB boards");
 	}
 }
 
@@ -135,7 +140,7 @@ GCFEvent::TResult ActiveObs::initial(GCFEvent& event,
 		break;
 
 	case DP_CREATED: {
-			// NOTE: thsi function may be called DURING the construction of the PropertySet.
+			// NOTE: this function may be called DURING the construction of the PropertySet.
 			// Always exit this event in a way that GCF can end the construction.
 			DPCreatedEvent	dpEvent(event);
 			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);

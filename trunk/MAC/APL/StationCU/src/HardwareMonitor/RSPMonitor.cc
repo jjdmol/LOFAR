@@ -25,6 +25,7 @@
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
+#include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 //#include <APL/APLCommon/StationInfo.h>
@@ -34,13 +35,13 @@
 #include "RCUConstants.h"
 #include "StationPermDatapointDefs.h"
 
-using namespace LOFAR::GCF::Common;
-using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::RTDB;
-using namespace std;
 
 namespace LOFAR {
 	using namespace APLCommon;
+	using namespace APL::RTDBCommon;
+	using namespace GCF::Common;
+	using namespace GCF::TM;
+	using namespace GCF::RTDB;
 	namespace StationCU {
 	
 //
@@ -186,6 +187,10 @@ GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event,
 		LOG_DEBUG("Connection with RSPDriver failed, retry in 2 seconds");
 		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR, GCFPVString("connection timeout"));
 		itsTimerPort->setTimer(2.0);
+		break;
+
+	case F_TIMER:
+		itsRSPDriver->open();	// results in F_COON or F_DISCON
 		break;
 
 	case DP_SET:
@@ -419,11 +424,15 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 			versionStr = formatString("%d.%d", ack.versions.bp()(rsp).rsp_version >> 4,
 											   ack.versions.bp()(rsp).rsp_version & 0xF);
 			itsRSPs[rsp]->setValue(PN_RSP_VERSION, GCFPVString(versionStr), double(ack.timestamp));
+			setObjectState(getName(), itsRSPs[rsp]->getFullScope(), (ack.versions.bp()(rsp).rsp_version) ? 
+															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 			
 			// BP version
 			versionStr = formatString("%d.%d", ack.versions.bp()(rsp).fpga_maj,
 											   ack.versions.bp()(rsp).fpga_min);
 			itsRSPs[rsp]->setValue(PN_RSP_BP_VERSION, GCFPVString(versionStr), double(ack.timestamp));
+			setObjectState(getName(), itsRSPs[rsp]->getFullScope()+".BP", (ack.versions.bp()(rsp).rsp_version) ? 
+															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 			
 			// APx versions
 			for (int ap = 0; ap < MEPHeader::N_AP; ap++) {
@@ -431,6 +440,10 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 												   ack.versions.ap()(rsp * MEPHeader::N_AP + ap).fpga_min);
 				DPEname = formatString (PN_RSP_AP_VERSION_MASK, ap);
 				itsRSPs[rsp]->setValue(DPEname, GCFPVString(versionStr), double(ack.timestamp));
+				setObjectState(getName(), formatString("%s.AP%d", itsRSPs[rsp]->getFullScope().c_str(), ap),
+										(ack.versions.ap()(rsp * MEPHeader::N_AP + ap).fpga_maj +
+										 ack.versions.ap()(rsp * MEPHeader::N_AP + ap).fpga_min) ? 
+										RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 			}
 		}
 
@@ -490,7 +503,7 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 		if (ack.status != SUCCESS) {
 			LOG_ERROR_STR ("Failed to get the status information, trying other information");
 			itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString("getStatus error"));
-#if 0
+#if 1
 			TRAN(RSPMonitor::askRCUinfo);				// go to next state.
 #else
 			LOG_WARN ("SKIPPING RCU INFO FOR A MOMENT");
@@ -572,7 +585,7 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 
 		LOG_DEBUG_STR ("RSPboard information updated, going to RCU information");
 		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
-#if 0
+#if 1
 		TRAN(RSPMonitor::askRCUinfo);				// go to next state.
 #else
 		LOG_WARN ("SKIPPING RCU INFO FOR A MOMENT");
@@ -622,11 +635,14 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		// update PVSS
 		itsOwnPropertySet->setValue(PN_HWM_RSP_CURRENT_ACTION,GCFPVString("updating RSP info"));
 		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		longlong	one(1);
 		RSPGetrcuEvent	getStatus;
 		getStatus.timestamp.setNow();
 		getStatus.cache = true;
-		getStatus.rcumask = bitset<MEPHeader::MAX_N_RCUS>((1<<itsNrRCUs)-1);
+		getStatus.rcumask = bitset<MEPHeader::MAX_N_RCUS>((one<<itsNrRCUs)-1);
 		itsRSPDriver->send(getStatus);
+		LOG_DEBUG(formatString("MAX_N_RCUS=%d", MEPHeader::MAX_N_RCUS));
+		LOG_DEBUG(formatString("itsRCUs=%d, rcumask=%08lX", itsNrRCUs, getStatus.rcumask.to_uint32()));
 		break;
 	}
 
@@ -638,49 +654,50 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
 			break;
 		}
-
+#if 1
 		// move the information to the database.
 		string		versionStr;
 		string		DPEname;
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
-			LOG_DEBUG_STR("Updating rcu " << rcu);
 			uint32		rawValue = ack.settings()(rcu).getRaw();
+			LOG_DEBUG(formatString("Updating rcu %d with %08lX", rcu, rawValue));
 			// update all RCU variables
 			itsRCUs[rcu]->setValue(PN_RCU_DELAY, 
 						GCFPVUnsigned(uint32(rawValue & DELAY_MASK)),
-						double(ack.timestamp));
+						double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_INPUT_ENABLE, 
 						GCFPVBool(rawValue & INPUT_ENABLE_MASK),
-						double(ack.timestamp));
+						double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_LBL_ENABLE, 
-						GCFPVBool(rawValue & LBL_ANT_POWER_MASK), double(ack.timestamp));
+						GCFPVBool(rawValue & LBL_ANT_POWER_MASK), double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_LBH_ENABLE, 
-						GCFPVBool(rawValue & LBH_ANT_POWER_MASK), double(ack.timestamp));
+						GCFPVBool(rawValue & LBH_ANT_POWER_MASK), double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_HBA_ENABLE, 
-						GCFPVBool(rawValue & HBA_ANT_POWER_MASK), double(ack.timestamp));
+						GCFPVBool(rawValue & HBA_ANT_POWER_MASK), double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_BAND_SEL_LBA_HBA, 
 						GCFPVBool(rawValue & USE_LB_MASK),
-						double(ack.timestamp));
+						double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_HBA_FILTER_SEL, 
 						GCFPVUnsigned((rawValue & HB_FILTER_MASK) >> HB_FILTER_OFFSET),
-						double(ack.timestamp));
+						double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_VL_ENABLE, 
-						GCFPVBool(rawValue & LB_POWER_MASK), double(ack.timestamp));
+						GCFPVBool(rawValue & LB_POWER_MASK), double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_VH_ENABLE, 
-						GCFPVBool(rawValue & HB_POWER_MASK), double(ack.timestamp));
+						GCFPVBool(rawValue & HB_POWER_MASK), double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_VDD_VCC_ENABLE, 
-						GCFPVBool(rawValue & ADC_POWER_MASK), double(ack.timestamp));
+						GCFPVBool(rawValue & ADC_POWER_MASK), double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_BAND_SEL_LBL_LBH, 
 						GCFPVBool(rawValue & USE_LBH_MASK),
-						double(ack.timestamp));
+						double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_LBA_FILTER_SEL, 
 						GCFPVUnsigned((rawValue & LB_FILTER_MASK) >> LB_FILTER_OFFSET),
-						double(ack.timestamp));
+						double(ack.timestamp), false);
 			itsRCUs[rcu]->setValue(PN_RCU_ATTENUATION, 
 						GCFPVUnsigned(uint32((rawValue & ATT_MASK) >> ATT_OFFSET)),
-						double(ack.timestamp));
+						double(ack.timestamp), false);
+			itsRCUs[rcu]->flush();
 		} // for all boards
-
+#endif
 		LOG_DEBUG ("Updated all RCU information, waiting for next cycle");
 		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.

@@ -27,6 +27,7 @@
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/APLUtilities.h>
+#include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 //#include <APL/APLCommon/StationInfo.h>
@@ -36,13 +37,13 @@
 #include "RCUConstants.h"
 #include "StationPermDatapointDefs.h"
 
-using namespace LOFAR::GCF::Common;
-using namespace LOFAR::GCF::TM;
-using namespace LOFAR::GCF::RTDB;
-using namespace std;
 
 namespace LOFAR {
+	using namespace GCF::Common;
+	using namespace GCF::TM;
+	using namespace GCF::RTDB;
 	using namespace APLCommon;
+	using namespace APL::RTDBCommon;
 	namespace StationCU {
 	
 //
@@ -191,6 +192,10 @@ GCFEvent::TResult TBBMonitor::connect2TBB(GCFEvent& event, GCFPortInterface& por
 		itsTimerPort->setTimer(2.0);
 		break;
 
+	case F_TIMER:
+		itsTBBDriver->open();		// results in F_CONN or F_DISCON
+		break;
+
 	case DP_SET:
 		break;
 
@@ -229,6 +234,17 @@ GCFEvent::TResult TBBMonitor::askConfiguration(GCFEvent& event, GCFPortInterface
 		_disconnectedHandler(port);		// might result in transition to connect2TBB
 		break;
 
+	case TBB_DRIVER_BUSY_ACK:
+		LOG_DEBUG("TBBDriver is busy, retry in 3 seconds");
+		itsTimerPort->setTimer(3.0);
+		break;
+
+	case F_TIMER: {
+		TBBGetConfigEvent	getconfig;
+		itsTBBDriver->send(getconfig);
+	}
+	break;
+		
 	case TBB_GET_CONFIG_ACK: {
 		TBBGetConfigAckEvent	ack(event);
 	
@@ -311,6 +327,7 @@ GCFEvent::TResult TBBMonitor::createPropertySets(GCFEvent& event, GCFPortInterfa
 				TBB++;
 				string	PSname(formatString(tbboardNameMask.c_str(), cabinet, subrack, TBB));
 				itsTBBs[TBB] = new RTDBPropertySet(PSname, PST_TB_BOARD, PSAT_WO, this);
+				itsTBBs[TBB]->setConfirmation(false);
 			}
 
 			// new RSPboard?
@@ -321,6 +338,7 @@ GCFEvent::TResult TBBMonitor::createPropertySets(GCFEvent& event, GCFPortInterfa
 			// allocate RCU PS
 			string	PSname(formatString(rcuNameMask.c_str(), cabinet, subrack, RSP, rcu));
 			itsRCUs[rcu] = new RTDBPropertySet(PSname, PST_RCU, PSAT_WO, this);
+			itsRCUs[rcu]->setConfirmation(false);
 		}
 		itsTimerPort->setTimer(5.0);	// give database some time to finish the job
 	}
@@ -376,13 +394,24 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 	case F_ENTRY: {
 		itsOwnPropertySet->setValue(PN_HWM_TBB_CURRENT_ACTION,GCFPVString("getting version info"));
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
+		itsTimerPort->setTimer(0.1);
+	}
+	break;
+
+	case TBB_DRIVER_BUSY_ACK:
+		LOG_DEBUG("TBBDriver is busy, retry in 3 seconds");
+		itsTimerPort->setTimer(3.0);
+		break;
+
+	case F_TIMER: {
 		TBBVersionEvent	getVersion;
 		getVersion.boardmask = itsBoardMask.to_uint32();
 		itsTBBDriver->send(getVersion);
 	}
 	break;
-
+		
 	case TBB_VERSION_ACK: {
+		itsTimerPort->cancelAllTimers();
 		TBBVersionAckEvent		ack(event);
 		// move the information to the database.
 		string		versionStr;
@@ -391,34 +420,39 @@ GCFEvent::TResult TBBMonitor::askVersion(GCFEvent& event, GCFPortInterface& port
 			if (ack.status_mask[tbb] & TBB_SUCCESS) {
 				// TBB board version
 				versionStr = formatString("%d.%d", ack.swversion[tbb] / 10, ack.swversion[tbb] % 10);
-				itsTBBs[tbb]->setValue(PN_TBB_SW_VERSION, GCFPVString(versionStr));
+				itsTBBs[tbb]->setValue(PN_TBB_SW_VERSION, GCFPVString(versionStr), 0.0, false);
 				versionStr = formatString("%d.%d", ack.boardversion[tbb] / 10, ack.boardversion[tbb] % 10);
-				itsTBBs[tbb]->setValue(PN_TBB_BOARD_VERSION, GCFPVString(versionStr));
-				itsTBBs[tbb]->setValue(PN_TBB_BOARDID, GCFPVUnsigned(ack.boardid[tbb]));
+				itsTBBs[tbb]->setValue(PN_TBB_BOARD_VERSION, GCFPVString(versionStr), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_BOARDID, GCFPVUnsigned(ack.boardid[tbb]), 0.0, false);
 			
 				// BP version
 				versionStr = formatString("%d.%d", ack.tpversion[tbb] / 10, ack.tpversion[tbb] % 10);
-				itsTBBs[tbb]->setValue(PN_TBB_TP_VERSION, GCFPVString(versionStr));
+				itsTBBs[tbb]->setValue(PN_TBB_TP_VERSION, GCFPVString(versionStr), 0.0, false);
 			
 				// MPx versions
 				versionStr = formatString("%d.%d", ack.mp0version[tbb] / 10, ack.mp0version[tbb] % 10);
-				itsTBBs[tbb]->setValue(PN_TBB_MP0_VERSION, GCFPVString(versionStr));
+				itsTBBs[tbb]->setValue(PN_TBB_MP0_VERSION, GCFPVString(versionStr), 0.0, false);
 				versionStr = formatString("%d.%d", ack.mp1version[tbb] / 10, ack.mp1version[tbb] % 10);
-				itsTBBs[tbb]->setValue(PN_TBB_MP1_VERSION, GCFPVString(versionStr));
+				itsTBBs[tbb]->setValue(PN_TBB_MP1_VERSION, GCFPVString(versionStr), 0.0, false);
 				versionStr = formatString("%d.%d", ack.mp2version[tbb] / 10, ack.mp2version[tbb] % 10);
-				itsTBBs[tbb]->setValue(PN_TBB_MP2_VERSION, GCFPVString(versionStr));
+				itsTBBs[tbb]->setValue(PN_TBB_MP2_VERSION, GCFPVString(versionStr), 0.0, false);
 				versionStr = formatString("%d.%d", ack.mp3version[tbb] / 10, ack.mp3version[tbb] % 10);
-				itsTBBs[tbb]->setValue(PN_TBB_MP3_VERSION, GCFPVString(versionStr));
+				itsTBBs[tbb]->setValue(PN_TBB_MP3_VERSION, GCFPVString(versionStr), 0.0, false);
 			}
 			else {	// board in error set ?.?
-				itsTBBs[tbb]->setValue(PN_TBB_BOARDID,		 GCFPVUnsigned(0));
-				itsTBBs[tbb]->setValue(PN_TBB_BOARD_VERSION, GCFPVString("?.?"));
-				itsTBBs[tbb]->setValue(PN_TBB_TP_VERSION,	 GCFPVString("?.?"));
-				itsTBBs[tbb]->setValue(PN_TBB_MP0_VERSION,	 GCFPVString("?.?"));
-				itsTBBs[tbb]->setValue(PN_TBB_MP1_VERSION,	 GCFPVString("?.?"));
-				itsTBBs[tbb]->setValue(PN_TBB_MP2_VERSION,	 GCFPVString("?.?"));
-				itsTBBs[tbb]->setValue(PN_TBB_MP3_VERSION,	 GCFPVString("?.?"));
+				itsTBBs[tbb]->setValue(PN_TBB_BOARDID,		 GCFPVUnsigned(0), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_BOARD_VERSION, GCFPVString("?.?"), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_TP_VERSION,	 GCFPVString("?.?"), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_MP0_VERSION,	 GCFPVString("?.?"), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_MP1_VERSION,	 GCFPVString("?.?"), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_MP2_VERSION,	 GCFPVString("?.?"), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_MP3_VERSION,	 GCFPVString("?.?"), 0.0, false);
 			}
+			itsTBBs[tbb]->flush();
+			
+			// set right color
+			setObjectState(getName(), itsTBBs[tbb]->getFullScope(), (ack.status_mask[tbb] & TBB_SUCCESS) ? 
+							RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 		}
 
 		LOG_DEBUG_STR ("Version information updated, going to status information");
@@ -462,6 +496,17 @@ GCFEvent::TResult TBBMonitor::askSizeInfo(GCFEvent& event, GCFPortInterface& por
 	case F_ENTRY: {
 		itsOwnPropertySet->setValue(PN_HWM_TBB_CURRENT_ACTION,GCFPVString("getting version info"));
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
+		itsTimerPort->setTimer(0.1);
+	}
+	break;
+
+	case TBB_DRIVER_BUSY_ACK:
+		LOG_DEBUG("TBBDriver is busy, retry in 3 seconds");
+		itsTimerPort->setTimer(3.0);
+		break;
+
+	case F_TIMER: {
+		LOG_DEBUG_STR("Asking size, boardmask=" << itsBoardMask.to_uint32());
 		TBBSizeEvent	getSize;
 		getSize.boardmask = itsBoardMask.to_uint32();
 		itsTBBDriver->send(getSize);
@@ -469,6 +514,7 @@ GCFEvent::TResult TBBMonitor::askSizeInfo(GCFEvent& event, GCFPortInterface& por
 	break;
 
 	case TBB_SIZE_ACK: {
+		itsTimerPort->cancelAllTimers();
 		TBBSizeAckEvent		ack(event);
 		// move the information to the database.
 		for (uint32	tbb = 0; tbb < itsNrTBboards; tbb++) {
@@ -540,13 +586,14 @@ GCFEvent::TResult TBBMonitor::askFlashInfo(GCFEvent& event, GCFPortInterface& po
 		TBBImageInfoAckEvent		ack(event);
 		nrOfRequests--;
 		// move the information to the database.
+		LOG_DEBUG_STR("ack.status_mask=" << ack.status_mask << ", board = " << ack.board);
+		
 		if (ack.status_mask & TBB_SUCCESS) {
 			vector<GCFPValue*>		imageVersions;
 			vector<GCFPValue*>		writeDates;
 			vector<GCFPValue*>		TPfilenames;
 			vector<GCFPValue*>		MPfilenames;
 			for (int32	tbb = 0; tbb < MAX_N_IMAGES; tbb++) {
-cout << "TIMESTAMP = " << ack.write_date[tbb] << endl;
 				if (ack.write_date[tbb] != -1L) {
 					imageVersions.push_back(new GCFPVString(formatString("%d.%d", ack.image_version[tbb]/10, ack.image_version[tbb]%10)));
 					ptime		theTime(from_time_t(ack.write_date[tbb]));
@@ -564,9 +611,12 @@ cout << "TIMESTAMP = " << ack.write_date[tbb] << endl;
 			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_TP_FILE,    GCFPVDynArr(LPT_DYNSTRING, TPfilenames));
 			itsTBBs[ack.board]->setValue(PN_TBB_IMAGE_INFO_MP_FILE,    GCFPVDynArr(LPT_DYNSTRING, MPfilenames));
 		}
+		else {
+			LOG_WARN_STR("Flashinfo of boardnr " << ack.board << " contains errors, no update of Flash");
+		}
 
-		if (--nrOfRequests == 0) {
-			LOG_DEBUG_STR ("Size information updated, going to status information");
+		if (nrOfRequests == 0) {
+			LOG_DEBUG_STR ("Flash information updated, going to status information");
 			itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
 			TRAN(TBBMonitor::askTBBinfo);				// go to next state.
 		}
@@ -612,10 +662,12 @@ GCFEvent::TResult TBBMonitor::askTBBinfo(GCFEvent& event, GCFPortInterface& port
 		TBBStatusEvent	getStatus;
 		getStatus.boardmask = itsBoardMask.to_uint32();
 		itsTBBDriver->send(getStatus);
+		itsTimerPort->setTimer(2.0);
 	}
 	break;
 
 	case TBB_STATUS_ACK: {
+		itsTimerPort->cancelAllTimers();
 		TBBStatusAckEvent		ack(event);
 		// move the information to the database.
 		string		versionStr;
@@ -623,21 +675,31 @@ GCFEvent::TResult TBBMonitor::askTBBinfo(GCFEvent& event, GCFPortInterface& port
 		for (uint32	tbb = 0; tbb < itsNrTBboards; tbb++) {
 			if (ack.status_mask[tbb] & TBB_SUCCESS) {
 				// board voltages
-				itsTBBs[tbb]->setValue(PN_TBB_VOLTAGE12, GCFPVDouble(double(ack.V12[tbb])*(2.5/192.0)));
-				itsTBBs[tbb]->setValue(PN_TBB_VOLTAGE25, GCFPVDouble(double(ack.V25[tbb])*(3.3/192.0)));
-				itsTBBs[tbb]->setValue(PN_TBB_VOLTAGE33, GCFPVDouble(double(ack.V33[tbb])*(5.0/192.0)));
+				itsTBBs[tbb]->setValue(PN_TBB_VOLTAGE12, GCFPVDouble(double(ack.V12[tbb])*(2.5/192.0)), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_VOLTAGE25, GCFPVDouble(double(ack.V25[tbb])*(3.3/192.0)), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_VOLTAGE33, GCFPVDouble(double(ack.V33[tbb])*(5.0/192.0)), 0.0, false);
 				// all temperatures
-				itsTBBs[tbb]->setValue(PN_TBB_TEMPPCB, GCFPVDouble(double(ack.Tpcb[tbb])));
-				itsTBBs[tbb]->setValue(PN_TBB_TEMPTP,  GCFPVDouble(double(ack.Ttp [tbb])));
-				itsTBBs[tbb]->setValue(PN_TBB_TEMPMP0, GCFPVDouble(double(ack.Tmp0[tbb])));
-				itsTBBs[tbb]->setValue(PN_TBB_TEMPMP1, GCFPVDouble(double(ack.Tmp1[tbb])));
-				itsTBBs[tbb]->setValue(PN_TBB_TEMPMP2, GCFPVDouble(double(ack.Tmp2[tbb])));
-				itsTBBs[tbb]->setValue(PN_TBB_TEMPMP3, GCFPVDouble(double(ack.Tmp3[tbb])));
+				itsTBBs[tbb]->setValue(PN_TBB_TEMPPCB, GCFPVDouble(double(ack.Tpcb[tbb])), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_TEMPTP,  GCFPVDouble(double(ack.Ttp [tbb])), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_TEMPMP0, GCFPVDouble(double(ack.Tmp0[tbb])), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_TEMPMP1, GCFPVDouble(double(ack.Tmp1[tbb])), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_TEMPMP2, GCFPVDouble(double(ack.Tmp2[tbb])), 0.0, false);
+				itsTBBs[tbb]->setValue(PN_TBB_TEMPMP3, GCFPVDouble(double(ack.Tmp3[tbb])), 0.0, false);
+				// flush to database
+				itsTBBs[tbb]->flush();
 			}
+			
 		} // for all boards
 
 		LOG_DEBUG_STR ("TBboard information updated, going to RCU information");
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
+		TRAN(TBBMonitor::askRCUinfo);				// go to next state.
+		break;
+	}
+
+	case F_TIMER: {
+		LOG_DEBUG_STR ("TBBDriver is not respondind, TBboard information is not available");
+		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString("TBBDriver is not respondind, TBboard information is not available"));
 		TRAN(TBBMonitor::askRCUinfo);				// go to next state.
 		break;
 	}
@@ -685,10 +747,12 @@ GCFEvent::TResult TBBMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
 		TBBRcuInfoEvent	getStatus;
 		itsTBBDriver->send(getStatus);
+		itsTimerPort->setTimer(2.0);
 		break;
 	}
 
 	case TBB_RCU_INFO_ACK: {
+		itsTimerPort->cancelAllTimers();
 		TBBRcuInfoAckEvent	ack(event);
 
 		// move the information to the database.
@@ -705,6 +769,13 @@ GCFEvent::TResult TBBMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 
 		LOG_DEBUG ("Updated all RCU information, waiting for next cycle");
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
+		TRAN(TBBMonitor::askRCUSettings);			// go to next state.
+	}
+	break;
+
+	case F_TIMER: {
+		LOG_DEBUG ("TBBDriver is not responding, RCU information is not available");
+		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString("TBBDriver is not responding, RCU information is not available"));
 		TRAN(TBBMonitor::askRCUSettings);			// go to next state.
 	}
 	break;
@@ -751,30 +822,41 @@ GCFEvent::TResult TBBMonitor::askRCUSettings(GCFEvent& event, GCFPortInterface& 
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
 		TBBTrigSettingsEvent	getSettings;
 		itsTBBDriver->send(getSettings);
+		itsTimerPort->setTimer(2.0);
 		break;
 	}
 
 	case TBB_TRIG_SETTINGS_ACK: {
+		itsTimerPort->cancelAllTimers();
 		TBBTrigSettingsAckEvent	ack(event);
 
 		// move the information to the database.
 		for (uint32	rcu = 0; rcu < itsNrRCUs; rcu++) {
 			LOG_TRACE_FLOW_STR("Updating rcu " << rcu);
 			// update all RCU variables
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STARTLEVEL, GCFPVInteger(ack.setup[rcu].start_mode)),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_BASELEVEL,  GCFPVInteger(ack.setup[rcu].level)),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STOPLEVEL,  GCFPVInteger(ack.setup[rcu].stop_mode)),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER, 	  GCFPVInteger(ack.setup[rcu].filter_select)),
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_WINDOW, 	  GCFPVInteger(ack.setup[rcu].window)),
-//			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_OPERATING_MODE, GCFPVInteger(ack.coefficients[rcu].xxx));
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF0, 		  GCFPVInteger(ack.coefficients[rcu].c0));
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF1, 		  GCFPVInteger(ack.coefficients[rcu].c1));
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF2, 		  GCFPVInteger(ack.coefficients[rcu].c2));
-			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF3, 		  GCFPVInteger(ack.coefficients[rcu].c3));
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STARTLEVEL, GCFPVInteger(ack.setup[rcu].start_mode), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_BASELEVEL,  GCFPVInteger(ack.setup[rcu].level), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_STOPLEVEL,  GCFPVInteger(ack.setup[rcu].stop_mode), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_FILTER, 	  GCFPVInteger(ack.setup[rcu].filter_select), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_WINDOW, 	  GCFPVInteger(ack.setup[rcu].window), 0.0, false),
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_OPERATING_MODE, 
+													GCFPVInteger(ack.setup[rcu].operating_mode), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF0, 	  GCFPVInteger(ack.coefficients[rcu].c0), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF1, 	  GCFPVInteger(ack.coefficients[rcu].c1), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF2, 	  GCFPVInteger(ack.coefficients[rcu].c2), 0.0, false);
+			itsRCUs[rcu]->setValue(PN_RCU_TRIGGER_COEFF3, 	  GCFPVInteger(ack.coefficients[rcu].c3), 0.0, false);
+			itsRCUs[rcu]->flush();
 		} // for all boards
 
 		LOG_DEBUG ("Updated all TriggerSetting information, waiting for next cycle");
 		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString(""));
+		TRAN(TBBMonitor::waitForNextCycle);			// go to next state.
+	}
+	break;
+
+	case F_TIMER: {
+		LOG_DEBUG ("TBBDriver is not responding, TriggerSetting are not available");
+		itsOwnPropertySet->setValue(PN_HWM_TBB_ERROR,GCFPVString("TBBDriver is not responding, TriggerSetting are not available"));
 		TRAN(TBBMonitor::waitForNextCycle);			// go to next state.
 	}
 	break;

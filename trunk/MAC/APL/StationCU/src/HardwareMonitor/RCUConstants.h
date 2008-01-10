@@ -40,8 +40,8 @@ static const uint32	LB_POWER_MASK		= 0x00004000;
 static const uint32	HB_POWER_MASK		= 0x00008000;
 static const uint32	ADC_POWER_MASK		= 0x00010000;
 static const uint32	USE_LBH_MASK		= 0x00020000;
-static const uint32	LB_FILTER_MASK		= 0x00060000;
-static const uint32	LB_FILTER_OFFSET	= 17;
+static const uint32	LB_FILTER_MASK		= 0x00040000;
+static const uint32	LB_FILTER_OFFSET	= 18;
 static const uint32	ATT_MASK			= 0x00F80000;
 static const uint32	ATT_OFFSET			= 19;
 
