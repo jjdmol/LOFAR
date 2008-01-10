@@ -62,6 +62,7 @@ public:
 	int16			nyquistZone;
 	vector<int16>	subbands;
 	vector<int16>	beamlets;
+	vector<string>	stations;
 	int32			sampleClock;
 	string			filter;
 	string			antennaArray;
