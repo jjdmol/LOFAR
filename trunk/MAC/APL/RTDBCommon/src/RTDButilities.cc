@@ -73,13 +73,13 @@ bool setObjectState(const string&	who,
 	fields.push_back("DPName");
 	fields.push_back("stateNr");
 	fields.push_back("message");
-	values.push_back(new GCFPVString(objectName));
+	values.push_back(new GCFPVString(objectName+".state"));
 	values.push_back(new GCFPVInteger(objStateTable[newState].RTDBvalue));
 	values.push_back(new GCFPVString(who));
 
 	LOG_DEBUG_STR(who << " is setting " << objectName << " to " << objStateTable[newState].name);
 
-	return (aDPservice.setValue("_navObjectState", fields, values, 0.0, false) == SA_NO_ERROR);
+	return (aDPservice.setValue("__navObjectState", fields, values, 0.0, false) == SA_NO_ERROR);
 }
 
 
