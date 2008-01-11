@@ -30,6 +30,7 @@ id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 1)";
 //include = '<sys/time.h>';
 include = '<GCF/GCF_PValue.h>';
 include = '<GCF/GCF_Defines.h>';
+include = '<APL/RTCCommon/StringVector.h>';
 
 prelude = << PRELUDE_END
 
@@ -84,11 +85,13 @@ event = {
 	};
 	param = {
 		name = "DPnames";
-		type = "vector<string>";
+		type = "RTC::StringVector";
+		userdefined;
 	};
 	param = {
 		name = "messages";
-		type = "vector<string>";
+		type = "RTC::StringVector";
+		userdefined;
 	};
 };
 

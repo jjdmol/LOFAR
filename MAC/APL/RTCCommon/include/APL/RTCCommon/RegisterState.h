@@ -28,7 +28,7 @@
 #include <lofar_config.h>
 #include <blitz/array.h>
 #include <Common/LofarLogger.h>
-#include <APL/RTCCommon/Marshalling.h>
+#include <APL/RTCCommon/MarshallBlitz.h>
 #include <iostream>
 
 namespace LOFAR {

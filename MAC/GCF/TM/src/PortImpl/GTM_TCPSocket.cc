@@ -149,7 +149,8 @@ bool GTMTCPSocket::connect(unsigned int portNumber, const string& host)
 	serverAddr.sin_port = htons(portNumber);
 	if (::connect(_fd, (struct sockaddr *)&serverAddr, sizeof(struct sockaddr_in)) != 0) {
 		if (errno != EISCONN) {		// already connected is OK
-			LOG_WARN(formatString ( "connect, error: %s", strerror(errno)));
+			LOG_WARN_STR("connect(" << host << "," << portNumber << "), error: " <<
+							strerror(errno));
 			close();
 			return (false);	
 		}
