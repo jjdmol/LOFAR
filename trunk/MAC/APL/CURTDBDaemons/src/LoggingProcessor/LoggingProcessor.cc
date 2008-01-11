@@ -26,6 +26,7 @@
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/PVSS/PVSSresult.h>
 #include <APL/CUDaemons/Log_Protocol.ph>
+#include <GCF/RTDB/DP_Protocol.ph>
 #include <log4cplus/socketappender.h>
 #include "LoggingProcessor.h"
 
@@ -44,17 +45,24 @@ namespace LOFAR {
 LoggingProcessor::LoggingProcessor(const string&	myName) :
 	GCFTask((State)&LoggingProcessor::initial, myName),
 	itsListener (0),
+	itsBackDoor (0),
 	itsDPservice(0),
 	itsTimerPort(0)
 {
 	LOG_DEBUG_STR("LoggingProcessor(" << myName << ")");
 
-	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	registerProtocol(LOG_PROTOCOL,   LOG_PROTOCOL_STRINGS);
+	registerProtocol(DP_PROTOCOL,	 DP_PROTOCOL_STRINGS);
 
 	// initialize the ports
 	itsListener = new GCFTCPPort(*this, "listener", GCFPortInterface::MSPP, 0, true);
 	ASSERTSTR(itsListener, "Can't allocate a listener port");
 	itsListener->setPortNumber(MAC_CODELOGGING_PORT);
+
+	itsBackDoor = new GCFTCPPort(*this, MAC_SVCMASK_LOGPROC, GCFPortInterface::MSPP, 
+																		LOG_PROTOCOL);
+	ASSERTSTR(itsBackDoor, "Can't allocate a backdoor listener");
 
 	itsDPservice = new DPservice(this);
 	ASSERTSTR(itsDPservice, "Can't allocate DataPoint service");
@@ -76,6 +84,9 @@ LoggingProcessor::~LoggingProcessor()
 	}
 	if (itsDPservice) {
 		delete itsDPservice;
+	}
+	if (itsBackDoor) {
+		delete itsBackDoor;
 	}
 	if (itsListener) {
 		delete itsListener;
@@ -99,10 +110,18 @@ GCFEvent::TResult LoggingProcessor::initial(GCFEvent& event, GCFPortInterface& p
 		if (!itsListener->isConnected()) {
 			itsListener->open();
 		}
+		else {
+			if (!itsBackDoor->isConnected()) {
+				itsBackDoor->open();
+			}
+		}
 	break;
 
 	case F_CONNECTED:
-		// We are on the air, go to operational state.
+		if (&port == itsListener) {		// application listener open?
+			itsBackDoor->open();		// also open listener for LogClients
+		}
+		// Backdoor is also open, go to operational state.
 		TRAN(LoggingProcessor::operational);
 	break;
 
@@ -119,7 +138,7 @@ GCFEvent::TResult LoggingProcessor::initial(GCFEvent& event, GCFPortInterface& p
 }
 
 //
-// oprational(event, port)
+// operational(event, port)
 //
 GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event, 
 												GCFPortInterface&	port)
@@ -141,8 +160,14 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 			LOG_ERROR("Can't allocate new socket for new client");
 			return (status);
 		}
-		client->init(*this, "newClient", GCFPortInterface::SPP, 0, true);
-		itsListener->accept(*client);
+		if (&port == itsListener) {
+			client->init(*this, "application", GCFPortInterface::SPP, 0, true);
+			itsListener->accept(*client);
+		}
+		if (&port == itsBackDoor) {
+			client->init(*this, "LogClient", GCFPortInterface::SPP, LOG_PROTOCOL);
+			itsBackDoor->accept(*client);
+		}
 	}
 	break;
 
@@ -253,14 +278,44 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 		answer.result = PVSS::SA_NO_ERROR;
 		PVSSresult	result = itsDPservice->setValue(logEvent.DPname, 
 													GCFPVString(logEvent.message));
-		if (result != PVSS::SA_NO_ERROR && result != PVSS::SA_SCADA_NOT_AVAILABLE) {
+		switch (result) {
+		case PVSS::SA_NO_ERROR:
+			break;
+		case PVSS::SA_SCADA_NOT_AVAILABLE:
+			answer.result = result;
+			break;
+		default:
 			// _registerFailure(port);
 			answer.result = result;
 		}
 		port.send(answer);
 	}
 	break;
-		
+
+	case LOG_SEND_MSG_POOL: {
+		LOGSendMsgPoolEvent		logEvent(event);
+		LOGSendMsgPoolAckEvent	answer;
+		answer.seqnr  = logEvent.seqnr;
+		answer.result = PVSS::SA_NO_ERROR;
+		for (int i = 0; i < logEvent.msgCount; i++) {
+			PVSSresult	result;
+// = itsDPservice->setValue(logEvent.DPnames.theVector[i], 
+//											GCFPVString(logEvent.messages.theVector[i]));
+			switch (result) {
+			case PVSS::SA_NO_ERROR:
+				break;
+			case PVSS::SA_SCADA_NOT_AVAILABLE:
+				answer.result = result;
+				i = logEvent.msgCount;		// don't try the others.
+				break;
+			default:
+				// _registerFailure(port);
+				answer.result |= result;
+			} // switch
+		} // for
+		port.send(answer);
+	}
+	break;
 
 	default:
 		status = GCFEvent::NOT_HANDLED;

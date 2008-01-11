@@ -27,9 +27,10 @@
 #include <Common/LofarLogger.h>
 #include "EventPort.h"
 #include <APL/APLCommon/StartDaemon_Protocol.ph>
-#include <APL/APLCommon/APL_Defines.h>
+#include <APL/APLCommon/ControllerDefines.h>
 
 using namespace LOFAR;
+using namespace LOFAR::APLCommon;
 using namespace LOFAR::CUdaemons;
 
 static	EventPort*		SDport = 0;
@@ -39,9 +40,8 @@ static	EventPort*		SDport = 0;
 //
 void doSchedule() {
 	STARTDAEMONCreateEvent		event;
-	event.cntlrType			= "OBS_CTRL";
+	event.cntlrType			= CNTLRTYPE_OBSERVATIONCTRL;
 	event.cntlrName			= "testObservation";
-	event.instanceNr		= 0;
 	event.parentHost 		= "localHost";
 	event.parentService 	= "MacScheduler:v1.0";
 

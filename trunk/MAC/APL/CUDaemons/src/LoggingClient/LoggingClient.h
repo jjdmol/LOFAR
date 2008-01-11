@@ -100,6 +100,7 @@ private:
 	string				itsAdminFile;
 	uint32				itsMaxLinesPerFile;
 	uint32				itsChunkSize;
+	string				itsMasterHost;
 
 	// contents of admin file
 	string				itsSurvivalFile;

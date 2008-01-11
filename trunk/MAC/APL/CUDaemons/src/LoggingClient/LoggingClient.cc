@@ -61,12 +61,14 @@ LoggingClient::LoggingClient(const string&	myName) :
 {
 	LOG_DEBUG_STR("LoggingClient(" << myName << ")");
 
-	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	registerProtocol(LOG_PROTOCOL,   LOG_PROTOCOL_STRINGS);
 
 	// First init my admin variables
 	itsAdminFile 	   = globalParameterSet()->getString("AdminFile", "LogClient.admin");
 	itsMaxLinesPerFile = globalParameterSet()->getUint32("MaxLinesPerFile", 1000);
 	itsChunkSize       = globalParameterSet()->getUint32("ChunkSize", 10);
+	itsMasterHost      = globalParameterSet()->getString("MasterHost", "rs002");
 	if (itsAdminFile.find("share") == string::npos) {
 		itsAdminFile.insert(0, LOFAR_SHARE_LOCATION);
 	}
@@ -79,7 +81,8 @@ LoggingClient::LoggingClient(const string&	myName) :
 	ASSERTSTR(itsListener, "Can't allocate a listener port");
 	itsListener->setPortNumber(MAC_CODELOGGING_PORT);
 
-	itsCLmaster = new GCFTCPPort(*this, "CLmaster", GCFPortInterface::SAP, 0);
+	itsCLmaster = new GCFTCPPort(*this, MAC_SVCMASK_LOGPROC, GCFPortInterface::SAP, LOG_PROTOCOL);
+	itsCLmaster->setHostName(itsMasterHost);
 	ASSERTSTR(itsCLmaster, "Can't allocate distribution port");
 
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
@@ -173,6 +176,7 @@ GCFEvent::TResult LoggingClient::operational(GCFEvent&			event,
 	case F_CONNECTED:
 		if (&port == itsCLmaster) {
 			itsConnected = true;
+			LOG_INFO ("Connected to LoggingProcessor");
 		}
 	break;
 
@@ -182,6 +186,7 @@ GCFEvent::TResult LoggingClient::operational(GCFEvent&			event,
 
 		// check for connection with LoggingProcessor
 		if (&port == itsCLmaster) {
+			port.close();
 			LOG_INFO("Still no connection with LoggingProcessor, retry over 10 seconds");
 			itsCLMtimerID = itsTimerPort->setTimer(10.0);
 			itsConnected = false;
@@ -266,6 +271,7 @@ GCFEvent::TResult LoggingClient::operational(GCFEvent&			event,
 					basename(logEvent.getFile().c_str()),
 					logEvent.getLine()));
 
+LOG_DEBUG_STR("Storing message " << itsInSeqnr);
 		itsMsgBuffer[itsInSeqnr++] = Message(PVSSdp, msg);
 		_activateBuffer();
 	}
@@ -325,6 +331,8 @@ bool LoggingClient::_readFromPortData(GCFPortInterface& port, SocketBuffer& buf)
 //
 void LoggingClient::_activateBuffer()
 {
+	LOG_TRACE_FLOW("_activateBuffer()");
+
 	// If the buffer is empty load next msg file is there is any
 	if (itsMsgBuffer.empty()) {
 		if (!_loadNextMessageFile()) {	// every thing done?
@@ -339,10 +347,14 @@ void LoggingClient::_activateBuffer()
 		LOGSendMsgPoolEvent		poolEvent;
 		poolEvent.seqnr    = itsOutSeqnr;
 		poolEvent.msgCount = itsChunkSize;
+		poolEvent.DPnames.theVector.resize (itsChunkSize);
+		poolEvent.messages.theVector.resize(itsChunkSize);
+LOG_DEBUG_STR("outSeq=" << itsOutSeqnr);
 		MsgMap::iterator	iter = itsMsgBuffer.begin();
 		for (uint32 i = 0; i < itsChunkSize; i++) {
-			poolEvent.DPnames[i] = iter->second.DPname;
-			poolEvent.messages[i] = iter->second.message;
+LOG_DEBUG_STR("PoolMsg " << i << ": " << iter->second.message);
+			poolEvent.DPnames.theVector[i] = iter->second.DPname;
+			poolEvent.messages.theVector[i] = iter->second.message;
 			iter++;
 		}
 		itsCLmaster->send(poolEvent);
@@ -364,6 +376,7 @@ void LoggingClient::_activateBuffer()
 //
 bool LoggingClient::_loadNextMessageFile()
 {
+	LOG_TRACE_FLOW("_loadNextMessageFile()");
 //	ifstream	admFile(filename.c_str(), ifstream::in);
 //	if (!admFile) {
 
