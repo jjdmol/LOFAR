@@ -484,7 +484,7 @@ void Sequencer::enableRCUs()
 GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	static bool	waitForEvenSecond(false);
+	static bool	waitForOddSecond(false);
 
 	switch (event.signal) {
 	case F_ENTRY: {
@@ -492,25 +492,27 @@ GCFEvent::TResult Sequencer::rcuenable_state(GCFEvent& event, GCFPortInterface& 
 		m_timer = 0;
 
 		// command may only be executed on even seconds for OLAP
-		if (time(0) % 2) {
-			waitForEvenSecond = true;
+		// since the timestamp is always one second ahead we have
+		// to wait of an odd second (to end in the even second).
+		if (time(0) % 2 == 0) {
+			waitForOddSecond = true;
 			LOG_INFO("Wait for even second before enabling RCUs");
 			break;
 		}
 
-		waitForEvenSecond = false;
+		waitForOddSecond = false;
 		LOG_INFO("Entry at even second, enabling RCUs immediately");
 		enableRCUs();
 	}
 	break;
 
 	case F_TIMER: {
-		if (waitForEvenSecond) {
-			if (time(0) % 2) {
+		if (waitForOddSecond) {
+			if (time(0) % 2 == 0) {
 				LOG_INFO("Still waiting for even second, missed pps?");
 				break;
 			}
-			waitForEvenSecond = false;
+			waitForOddSecond = false;
 			LOG_INFO("Enabling RCUs delayed till even second");
 			enableRCUs();
 			break;
