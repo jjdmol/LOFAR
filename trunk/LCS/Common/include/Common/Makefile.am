@@ -48,6 +48,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	lofar_vector.h \
 	Numeric.h \
 	ObjectFactory.h \
+	PrettyUnits.h \
 	Process.h \
 	RunOnNode.h \
 	Singleton.h \

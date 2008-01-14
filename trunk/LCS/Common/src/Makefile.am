@@ -14,6 +14,7 @@ libcommon_la_SOURCES 	= Package__Version.cc \
 	LofarLogCout.cc \
 	LofarLogger.cc \
 	Numeric.cc \
+	PrettyUnits.cc \
 	Process.cc \
 	RunOnNode.cc \
 	Stopwatch.cc \
