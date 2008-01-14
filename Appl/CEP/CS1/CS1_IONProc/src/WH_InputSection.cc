@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/PrettyUnits.h>
 //#include <AMCBase/Epoch.h>
 #include <BGL_Personality.h>
 #include <WH_InputSection.h>
@@ -39,6 +40,8 @@
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <Transport/TransportHolder.h>
 //#include <tinyCEP/Sel_RoundRobin.h>
+
+#include <sys/time.h>
 
 
 namespace LOFAR {
@@ -137,9 +140,11 @@ void WH_InputSection::preprocess()
 
   unsigned cyclicBufferSize = itsCS1PS->nrSamplesToBuffer();
   bool	   synchronous	    = itsCS1PS->getString("OLAP.OLAP_Conn.station_Input_Transport") != "UDP";
-  unsigned maxNetworkDelay  = itsCS1PS->maxNetworkDelay();
-  std::clog << "maxNetworkDelay = " << maxNetworkDelay << std::endl;
-  itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, synchronous, maxNetworkDelay);
+  itsMaxNetworkDelay  = itsCS1PS->maxNetworkDelay();
+  std::clog << "maxNetworkDelay = " << itsMaxNetworkDelay << std::endl;
+  itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, synchronous, itsMaxNetworkDelay);
+
+  itsSampleDuration = itsCS1PS->sampleDuration();
 
   startThread();
 }
@@ -185,7 +190,17 @@ void WH_InputSection::process()
   // set flags
   itsBBuffer->readFlags(itsIONtoCNdata.flags());
   limitFlagsLength(itsIONtoCNdata.flags());
-  std::clog << itsStationName << ' ' << delayedStamp << " delay: " << samplesDelay << " flags: " << itsIONtoCNdata.flags() << " (" << (100.0 * itsIONtoCNdata.flags().count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl;
+
+  struct timeval tv;
+  gettimeofday(&tv, 0);
+  double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
+  double expectedTime = (delayedStamp + (itsNSamplesPerSec + itsNHistorySamples + itsMaxNetworkDelay)) * itsSampleDuration;
+  
+  std::clog << itsStationName
+	    << ' ' << delayedStamp
+	    << " late: " << PrettyTime(currentTime - expectedTime)
+	    << ", delay: " << samplesDelay
+	    << ", flags: " << itsIONtoCNdata.flags() << " (" << (100.0 * itsIONtoCNdata.flags().count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl;
 
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
     unsigned	    core = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
