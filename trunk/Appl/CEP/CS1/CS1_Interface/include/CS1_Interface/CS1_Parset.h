@@ -64,6 +64,7 @@ public:
 	double         stopTime() const;
 	uint32	       nrStations() const;
 	double         sampleRate() const;
+	double         sampleDuration() const;
 	vector<double> positions() const;
 	vector<double> phaseCenters() const;
 	uint32	       BGLintegrationSteps() const;
@@ -151,6 +152,11 @@ inline uint32 CS1_Parset::nrStations() const
 inline double CS1_Parset::sampleRate() const
 {
   return getUint32("Observation.sampleClock") * 1000000.0 / 1024;
+} 
+
+inline double CS1_Parset::sampleDuration() const
+{
+  return 1.0 / sampleRate();
 } 
 
 inline uint32 CS1_Parset::BGLintegrationSteps() const
