@@ -83,6 +83,8 @@ class WH_InputSection: public WorkHolder {
     // synced stamp
     TimeStamp itsSyncedStamp;
    
+    double   itsSampleDuration;
+    unsigned itsMaxNetworkDelay;
     unsigned itsNSubbandsPerPset;
     unsigned itsNSamplesPerSec;
     unsigned itsNHistorySamples;
