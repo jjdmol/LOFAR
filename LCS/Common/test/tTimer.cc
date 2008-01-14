@@ -34,6 +34,13 @@ using namespace LOFAR;
 
 int main()
 {
+    {
+      NSTimer timer("second", true);
+
+      timer.start();
+      sleep(1);
+      timer.stop();
+    }
     class NSTimer timer("test");
 
     for (int i = 0; i < 100000; i ++) {
