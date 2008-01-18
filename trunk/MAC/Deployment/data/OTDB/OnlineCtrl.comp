@@ -16,7 +16,7 @@ par  applOrder          I    vtext  -      10    0    [CorrAppl,DelayAppl,InputA
 uses  ApplCtrl     1.0.0  development 1                  "The ACC controller"
 uses  InputAppl    1.0.1  development 1                  "InputSection Application"
 uses  DelayAppl    1.0.0  development 1                  "DelayCompensation Application"
-uses  CorrAppl     1.0.0  development 1                  "Blue Gene Application"
+uses  CorrAppl     1.0.1  development 1                  "Blue Gene Application"
 uses  StorageAppl  1.0.0  development 1                  "StorageSection Application"
-uses  OLAP         1.0.4  development 1                  "OLAP specific information"
+uses  OLAP         1.0.5  development 1                  "OLAP specific information"
 
