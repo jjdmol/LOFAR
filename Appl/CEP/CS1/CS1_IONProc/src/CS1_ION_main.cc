@@ -218,9 +218,9 @@ void *master_thread(void *)
 
   if (global_argv != 0) {
     for (int arg = 0; arg < global_argc; arg ++)
-      delete global_argv[arg];
+      delete [] global_argv[arg];
 
-    delete global_argv;
+    delete [] global_argv;
   }
 
   std::clog << "master thread finishes" << std::endl;
