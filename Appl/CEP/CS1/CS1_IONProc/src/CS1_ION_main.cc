@@ -110,9 +110,19 @@ static void stopCNs()
 void *input_thread(void *argv)
 {
   std::clog << "starting input thread, nrRuns = " << ((char **) argv)[2] << std::endl;
-  AH_InputSection myAH;
-  ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
-  ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
+
+  try {
+    AH_InputSection myAH;
+    ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
+    ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
+  } catch (Exception &ex) {
+    std::cerr << "input thread caught Exception: " << ex << std::endl;
+  } catch (std::exception &ex) {
+    std::cerr << "input thread caught std::exception: " << ex.what() << std::endl;
+  } catch (...) {
+    std::cerr << "input thread caught non-std::exception: " << std::endl;
+  }
+
   std::clog << "input thread finished" << std::endl;
   return 0;
 }
@@ -121,9 +131,19 @@ void *input_thread(void *argv)
 void *gather_thread(void *argv)
 {
   std::clog << "starting gather thread, nrRuns = " << ((char **) argv)[2] << std::endl;
-  AH_ION_Gather myAH;
-  ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
-  ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
+
+  try {
+    AH_ION_Gather myAH;
+    ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
+    ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
+  } catch (Exception &ex) {
+    std::cerr << "gather thread caught Exception: " << ex << std::endl;
+  } catch (std::exception &ex) {
+    std::cerr << "gather thread caught std::exception: " << ex.what() << std::endl;
+  } catch (...) {
+    std::cerr << "gather thread caught non-std::exception: " << std::endl;
+  }
+
   std::clog << "gather thread finished" << std::endl;
   return 0;
 }
@@ -209,8 +229,12 @@ void *master_thread(void *)
 
       std::clog << "lofar__fini: gather thread joined" << std::endl;
     }
+  } catch (Exception &ex) {
+    std::cerr << "main thread caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {
-    std::cerr << "caught exception: " << ex.what() << std::endl;
+    std::cerr << "main thread caught std::exception: " << ex.what() << std::endl;
+  } catch (...) {
+    std::cerr << "main thread caught non-std::exception: " << std::endl;
   }
 
   if (pthread_detach(pthread_self()) != 0) {
