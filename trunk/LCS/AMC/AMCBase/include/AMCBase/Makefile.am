@@ -1,4 +1,4 @@
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	BlobIO.h \
 	ConverterClient.h \
 	ConverterCommand.h \

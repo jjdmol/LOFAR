@@ -40,7 +40,7 @@ namespace LOFAR
 
     // This class represents a point in three-dimensional space. It is stored
     // using cartesian coordinates, and can be constructed from longitude,
-    // latitude and height, or from a vector containing cartesian coordinates
+    // latitude and radius, or from a vector containing cartesian coordinates
     // (x,y,z). It supports addition, subtraction, multiplication (which is
     // defined as the dot product).
     class Coord3D
@@ -68,10 +68,10 @@ namespace LOFAR
       { return itsXYZ[0] == 0 && itsXYZ[1] == 0 && itsXYZ[2] == 0; }
 
       // Return the longitude in radians.
-      double longitude() const;
+      double sphericalLongitude() const;
       
       // Return the latitude in radians.
-      double latitude() const;
+      double sphericalLatitude() const;
       
       // Return the radius, i.e. the distance to the origin.
       double radius() const;

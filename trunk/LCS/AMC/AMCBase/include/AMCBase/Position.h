@@ -75,18 +75,6 @@ namespace LOFAR
       // type \a typ.
       Position(const Coord3D& coord, Types typ = ITRF);
       
-      // Return the longitude in radians.
-      double longitude() const
-      { return itsCoord.longitude(); }
-      
-      // Return the latitude in radians.
-      double latitude() const
-      { return itsCoord.latitude(); }
-      
-      // Return the height in meters.
-      double height() const
-      { return itsCoord.radius(); }
-      
       // Return the position coordinates.
       const Coord3D& coord() const
       { return itsCoord; }
@@ -110,7 +98,7 @@ namespace LOFAR
       // Subtract Position \a that from \c this. 
       // \throw TypeException if the reference types of \c this and \a that
       // differ.
-     Position& operator-=(const Position& that);
+      Position& operator-=(const Position& that);
 
       // Multiply \c this with the scalar \a a.
       Position& operator*=(double a);
