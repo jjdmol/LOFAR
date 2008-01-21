@@ -36,6 +36,8 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <cstdlib>
+#include <cstring>
 
 extern "C" {
 #include <lofar.h>
@@ -46,9 +48,8 @@ using namespace LOFAR;
 using namespace LOFAR::CS1;
 
 
-static int	  global_argc;
-static char	  **global_argv;
-static unsigned   nrCoresPerPset;
+static char	 **global_argv;
+static unsigned  nrCoresPerPset;
 
 
 static void checkParset(const CS1_Parset &parset)
@@ -217,8 +218,8 @@ void *master_thread(void *)
   }
 
   if (global_argv != 0) {
-    for (int arg = 0; arg < global_argc; arg ++)
-      delete [] global_argv[arg];
+    for (char **arg = &global_argv[0]; *arg != 0; arg ++)
+      free(*arg);
 
     delete [] global_argv;
   }
@@ -264,7 +265,7 @@ void lofar__init(int nrComputeCores)
 
 
 void lofar_init(char   **argv /* in:arr2d:size=+1 */,
-		size_t *lengths /* in:arr:size=+1 */,
+		size_t * /*lengths*/ /* in:arr:size=+1 */,
 		int    argc /* in:obj */)
 
 {
@@ -274,13 +275,10 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
     std::clog << "lofar_init(): arg = " << argv[i] << std::endl;
 
   // copy argv
-  global_argc = argc;
   global_argv = new char * [argc + 1];
 
-  for (int arg = 0; arg < argc; arg ++) {
-    global_argv[arg] = new char[lengths[arg]];
-    memcpy(global_argv[arg], argv[arg], lengths[arg]);
-  }
+  for (int arg = 0; arg < argc; arg ++)
+    global_argv[arg] = strdup(argv[arg]);
 
   global_argv[argc] = 0; // terminating zero pointer
 
