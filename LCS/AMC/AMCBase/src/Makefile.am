@@ -1,6 +1,6 @@
 lib_LTLIBRARIES		= libamcbase.la
 
-libamcbase_la_SOURCES = \
+libamcbase_la_SOURCES = Package__Version.cc  \
 	BlobIO.cc \
 	ConverterClient.cc \
 	ConverterCommand.cc \
@@ -11,5 +11,11 @@ libamcbase_la_SOURCES = \
 	Direction.cc \
 	Epoch.cc \
 	Position.cc
+
+bin_PROGRAMS = versionamcbase
+
+versionamcbase_SOURCES      = versionamcbase.cc
+versionamcbase_LDADD        = libamcbase.la
+versionamcbase_DEPENDENCIES = libamcbase.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

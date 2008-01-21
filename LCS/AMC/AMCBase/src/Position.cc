@@ -28,25 +28,77 @@
 #include <AMCBase/Direction.h>
 #include <AMCBase/Exceptions.h>
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_math.h>
 
 namespace LOFAR
 {
   namespace AMC
   {
 
+    double flattening(Position::Types type)
+    {
+      switch(type) {
+      case Position::WGS84:
+        // GPS week 1150, realisation 2007
+        return 1.0 / 298.257223563;
+      case Position::ITRF:
+        // Model ITRF2005, realisation 2007
+        return 1.0 / 298.257222101;
+      default:
+        return 0;
+      }
+    }
+
+
+    // Equatorial radius in meters, WGS84 and ITRF as above.
+    double equatorialRadius()
+    {
+      return 6378137.0;
+    }
+
+
+    // Function C as defined in the Astronomical Almanac 2008, section K.12.
+    double functionC(double geographicalLatitude, double flattening)
+    {
+      double cosphi;       // Cosine of the geographical latitude.
+      double sinphi;       // Sine of the geographical latitude.
+      cosphi = cos(geographicalLatitude);
+      sinphi = sin(geographicalLatitude);
+      return 
+        1/sqrt(cosphi*cosphi+(1-flattening)*(1-flattening)*sinphi*sinphi);
+    }
+
+
+    // Function S as defined in the Astronomical Almanac 2008, section K.12.
+    double functionS(double flattening, 
+                     double c /* result of calling functionC */)
+    {
+      return (1-flattening)*(1-flattening)*c;
+    }
+    
+
     //## --------  Public member functions  -------- ##//
 
     Position::Position() : 
-      itsCoord(Coord3D()),
+      itsCoord(),
       itsType(ITRF)
     {
     }
     
 
     Position::Position (double lon, double lat, double h, Types typ) :
-      itsCoord(lon, lat, h),
+      itsCoord(),
       itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
     {
+      double c = functionC(lat, flattening(typ));
+      double s = functionS(flattening(typ), c);
+      double a = equatorialRadius();
+      vector<double> xyz(3);
+      // Equations according to Astronomical Almanac 2008, section K.12.
+      xyz[0] = (a*c + h) * cos(lat) * cos(lon);
+      xyz[1] = (a*c + h) * cos(lat) * sin(lon);
+      xyz[2] = (a*s + h) * sin(lat);
+      itsCoord = Coord3D(xyz);
     }
 
 
@@ -132,8 +184,7 @@ namespace LOFAR
       if (!pos.isValid()) 
         return os << pos.showType();
       else 
-        return os << "["  << pos.longitude() << ", " << pos.latitude() 
-                  << ", " << pos.height() << "] (" << pos.showType() << ")";
+        return os << pos.coord().get() << "(" << pos.showType() << ")";
     }
 
 
