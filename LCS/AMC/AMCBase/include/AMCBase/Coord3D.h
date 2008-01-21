@@ -68,10 +68,10 @@ namespace LOFAR
       { return itsXYZ[0] == 0 && itsXYZ[1] == 0 && itsXYZ[2] == 0; }
 
       // Return the longitude in radians.
-      double sphericalLongitude() const;
+      double longitude() const;
       
       // Return the latitude in radians.
-      double sphericalLatitude() const;
+      double latitude() const;
       
       // Return the radius, i.e. the distance to the origin.
       double radius() const;

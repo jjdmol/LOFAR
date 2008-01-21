@@ -61,13 +61,13 @@ namespace LOFAR
     }
 
 
-    double Coord3D::sphericalLongitude() const
+    double Coord3D::longitude() const
     {
       return atan2(itsXYZ[1], itsXYZ[0]);
     }
     
 
-    double Coord3D::sphericalLatitude() const
+    double Coord3D::latitude() const
     {
       if (isZero()) return 0;
       else return asin(itsXYZ[2] / radius());

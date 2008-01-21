@@ -78,11 +78,11 @@ namespace LOFAR
       
       // Return the longitude in radians.
       double longitude() const
-      { return itsCoord.sphericalLongitude(); }
+      { return itsCoord.longitude(); }
       
       // Return the latitude in radians.
       double latitude() const
-      { return itsCoord.sphericalLatitude(); }
+      { return itsCoord.latitude(); }
       
       // Return the direction coordinates.
       const Coord3D& coord() const
