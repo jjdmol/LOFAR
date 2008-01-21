@@ -60,8 +60,7 @@ namespace LOFAR
 
     BlobOStream& operator<<(BlobOStream& bos, const Position& pos)
     {
-      bos << pos.coord()
-          << static_cast<int32>(pos.type());
+      bos << pos.coord();
       return bos;
     }
 
@@ -123,10 +122,8 @@ namespace LOFAR
     BlobIStream& operator>>(BlobIStream& bis, Position& pos)
     {
       Coord3D coord;
-      int32 type;
-      bis >> coord >> type;
-      pos = Position(coord, static_cast<Position::Types>(type));
-      ASSERT(pos.isValid());
+      bis >> coord;
+      pos = Position(coord);
       return bis;
     }
 

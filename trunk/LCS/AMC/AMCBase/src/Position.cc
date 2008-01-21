@@ -35,99 +35,80 @@ namespace LOFAR
   namespace AMC
   {
 
-    double flattening(Position::Types type)
+    double Earth::flattening()
     {
-      switch(type) {
-      case Position::WGS84:
-        // GPS week 1150, realisation 2007
-        return 1.0 / 298.257223563;
-      case Position::ITRF:
-        // Model ITRF2005, realisation 2007
-        return 1.0 / 298.257222101;
-      default:
-        return 0;
-      }
+      return 1.0 / 298.257223563;
     }
 
 
-    // Equatorial radius in meters, WGS84 and ITRF as above.
-    double equatorialRadius()
+    double Earth::equatorialRadius()
     {
       return 6378137.0;
     }
 
 
-    // Function C as defined in the Astronomical Almanac 2008, section K.12.
-    double functionC(double geographicalLatitude, double flattening)
+    Coord3D wgs84ToItrf(double lon, double lat, double h)
     {
-      double cosphi;       // Cosine of the geographical latitude.
-      double sinphi;       // Sine of the geographical latitude.
-      cosphi = cos(geographicalLatitude);
-      sinphi = sin(geographicalLatitude);
-      return 
-        1/sqrt(cosphi*cosphi+(1-flattening)*(1-flattening)*sinphi*sinphi);
+      double f      = Earth::flattening();        // flattening
+      double a      = Earth::equatorialRadius();  // equatorial radius
+      double e2     = f*(2-f);                    // square of eccentricity
+      double sinlat = sin(lat);                   // sine of latitude
+      double coslat = cos(lat);                   // cosine of latitude
+
+      // Radius of curvature in the prime vertical
+      double rN = a / sqrt(1 - e2*sinlat*sinlat);
+
+      // Calculate geocentric coordinates
+      vector<double> xyz(3);
+      xyz[0] = (rN + h) * coslat * cos(lon);
+      xyz[1] = (rN + h) * coslat * sin(lon);
+      xyz[2] = ((1-e2)*rN + h) * sinlat;
+
+      return Coord3D(xyz);
     }
 
-
-    // Function S as defined in the Astronomical Almanac 2008, section K.12.
-    double functionS(double flattening, 
-                     double c /* result of calling functionC */)
-    {
-      return (1-flattening)*(1-flattening)*c;
-    }
-    
 
     //## --------  Public member functions  -------- ##//
 
     Position::Position() : 
-      itsCoord(),
-      itsType(ITRF)
+      itsCoord(Coord3D())
     {
     }
     
 
-    Position::Position (double lon, double lat, double h, Types typ) :
-      itsCoord(),
-      itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
+    Position::Position (double lon, double lat, double h, Types typ)
     {
-      double c = functionC(lat, flattening(typ));
-      double s = functionS(flattening(typ), c);
-      double a = equatorialRadius();
-      vector<double> xyz(3);
-      // Equations according to Astronomical Almanac 2008, section K.12.
-      xyz[0] = (a*c + h) * cos(lat) * cos(lon);
-      xyz[1] = (a*c + h) * cos(lat) * sin(lon);
-      xyz[2] = (a*s + h) * sin(lat);
-      itsCoord = Coord3D(xyz);
+      switch(typ) {
+      case ITRF:
+        itsCoord = Coord3D(lon, lat, h);
+        break;
+      case WGS84:
+        itsCoord = wgs84ToItrf(lon, lat, h);
+        break;
+      default:
+        THROW(TypeException, "Invalid type (typ=" << typ << ") specified");
+      }
     }
 
 
-    Position::Position(const Coord3D& coord, Types typ) :
-      itsCoord(coord),
-      itsType((INVALID < typ && typ < N_Types) ? typ : INVALID)
+    Position::Position(const Coord3D& coord, Types typ)
     {
-    }
-
-
-    const string& Position::showType() const
-    {
-      //# Caution: Always keep this array of strings in sync with the enum
-      //#          Types that is defined in the header file!
-      static const string types[N_Types+1] = {
-        "ITRF",
-        "WGS84",
-        "<INVALID>"
-      };
-      if (isValid()) return types[itsType];
-      else return types[N_Types];
+      switch(typ) {
+      case ITRF:
+        itsCoord = coord;
+        break;
+      case WGS84:
+        itsCoord = 
+          wgs84ToItrf(coord.longitude(), coord.latitude(), coord.radius());
+        break;
+      default:
+        THROW(TypeException, "Invalid type (typ=" << typ << ") specified");
+      }
     }
 
 
     Position& Position::operator+=(const Position& that)
     {
-      if (itsType != that.itsType) {
-        THROW (TypeException, showType() << " != " << that.showType());
-      }
       itsCoord += that.itsCoord;
       return *this;
     }
@@ -135,9 +116,6 @@ namespace LOFAR
 
     Position& Position::operator-=(const Position& that)
     {
-      if (itsType != that.itsType) {
-        THROW (TypeException, showType() << " != " << that.showType());
-      }
       itsCoord -= that.itsCoord;
       return *this;
     }
@@ -157,21 +135,16 @@ namespace LOFAR
     }
 
 
-    double Position::operator*(const Position& that)
+    double Position::operator*(const Position& that) const
     {
-      if (itsType != that.itsType) {
-        THROW (TypeException, showType() << " != " << that.showType());
-      }
       return itsCoord * that.coord();
     }
 
 
-    double Position::operator*(const Direction& that)
+    double Position::operator*(const Direction& that) const
     {
-      // Here we must convert the type to string before comparing, because
-      // we're comparing Position::Types with Direction::Types.
-      if (showType() != that.showType()) {
-        THROW (TypeException, showType() << " != " << that.showType());
+      if (that.type() != Direction::ITRF) {
+        THROW (TypeException, "Direction type must be ITRF");
       }
       return itsCoord * that.coord();
     }
@@ -181,19 +154,13 @@ namespace LOFAR
 
     ostream& operator<<(ostream& os, const Position& pos)
     {
-      if (!pos.isValid()) 
-        return os << pos.showType();
-      else 
-        return os << pos.coord().get() << "(" << pos.showType() << ")";
+      return os << pos.coord();
     }
 
 
     bool operator==(const Position& lhs, const Position& rhs)
     {
-      return 
-        lhs.isValid() && rhs.isValid() &&
-        lhs.type()    == rhs.type()    &&
-        lhs.coord()   == rhs.coord();
+      return lhs.coord() == rhs.coord();
     }
 
 
