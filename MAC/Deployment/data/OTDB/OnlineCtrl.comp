@@ -4,7 +4,7 @@
 #
 #      name        vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node  OnlineCtrl   1.0.0  development 'node constraint'  "Controller for the online datastream"
+node  OnlineCtrl   1.0.1  development 'node constraint'  "Controller for the online datastream"
 
 #    name               dir. type   unit   prun. vm   value                          constr.  descr.
 #--------------------------------------------------------------------------------------------------------

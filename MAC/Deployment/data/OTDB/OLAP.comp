@@ -40,7 +40,7 @@ node  DelayComp    1.0.1  development 'node constraint'  "Setting of the delayco
 #    name          	dir.    type    unit    prun.   vm      value                   constr. descr.
 #--------------------------------------------------------------------------------------------------------
 par converterType	I	ptext	-	10	0	'IMPL|Client;IMPL'	-	'Depends on whether of not AIPS++ is installed'
-par hostname      	I	text	-	10	0	'10.181.0.1'		-	'Machine the Delay Compensation-program runs on'
+par hostName      	I	text	-	10	0	'10.181.0.1'		-	'Machine the Delay Compensation-program runs on'
 par ports		I	vint	-	10	0	'[7200..7263]'		-	'The ports the Delay Compansation-program listens on'
 par positionType 	I	text	-	10	0	'ITRF'			-	'???'
 
