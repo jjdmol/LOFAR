@@ -656,17 +656,20 @@ void OnlineControl::setApplOrder(vector<string>&	anApplOrder)
 	itsUseApplOrder = true;			// assume everything is right.
 	itsApplOrder	= anApplOrder;
 
+	LOG_DEBUG_STR("setApplOrder: Checking " << itsApplOrder);
+
 	// every application must be in the order list.
 	ASSERTSTR(itsApplOrder.size() == itsCEPapplications.size(), 
 				"Application orderlist conflicts with length of applicationlist");
 
-	// check that all application exist 
+	// check that all applications exist 
 	CAMiter						applEnd   = itsCEPapplications.end();
 	vector<string>::iterator	orderIter = itsApplOrder.begin();
 	while (orderIter != itsApplOrder.end()) {
 		CAMiter		applIter = itsCEPapplications.begin();
 		while (applIter != applEnd) {
-			if (applIter->second->getName() == *orderIter) {
+			LOG_DEBUG_STR("compare: " << applIter->first << " with " << *orderIter);
+			if (applIter->first == *orderIter) {
 				break;
 			}
 			applIter++;
