@@ -688,7 +688,7 @@ demand a supercomputer.
 \fixme{Explain: input buffer \& station synchronization, transpose, delay
 compenstation, PPF, correlator}
 
-The input section receives all station data that are sent over the wide-area
+The input section receives all station data that are sent via the wide-area
 network.
 % I assume that the UDP packets have been introduced before
 Since UDP is an unreliable protocol, it handles duplicated, lost, and
@@ -702,15 +702,38 @@ The buffer serves three purposes.
 First, it synchronizes the station data, since the difference in path lengths
 between the stations and the correlator result in different travel times over
 the WAN link.
-Second, the stations do not receive a wave at the same time (see
-Figure~\ref{fig:delay}), and the bulk of the delay is compensated for
-by delaying the stream of station samples for each station differently.
-The delay depends on the physical locations of the stations, the observation
-direction, and the time.
-The rotation of the earth complicates these computations, since the orientation
-of the stations with respect to the observed sky is altered continuously.
+Second, the buffer is used to compensate for the bulk of the delay that
+is due to the fact that the stations receive a wave at a different time
+(see Figure~\ref{fig:delay}).
+%Figure~\ref{fig:delay}), and the bulk of the delay is compensated for
+%by delaying the stream of station samples for each station differently.
+%The delay depends on the physical locations of the stations, the observation
+%direction, and the time.
+%The rotation of the earth complicates these computations, since the orientation
+%of the stations with respect to the observed sky is altered continuously.
+% TODO: explain delays better
 Third, it provides some headroom to recover from small hiccups in the remainder
 of the processing pipeline, without data loss.
+
+Each input node receives data from up to 54~subbands from a single station.
+Unfortunately, this data distribution is not suitable for the correlator,
+because to correlate a subband, the data from all stations are needed.
+Also, we need hundreds of CPUs to correlate 54~subbands.
+The next step is to redistribute all data over the CPUs, using a fast
+interconnect.
+Initially, we did this on a separate input cluster connected by a high-speed
+infiniband network, but we found that the internal 3-D~torus network within
+the Blue Gene/L can do this job much faster.
+
+\ldots
+
+Next in the pipeline is the second-stage PolyPhase (PPF) filter, that splits
+each 195~KHz (resp.\ 156~KHz) subband into 256~channels of 763~Hz
+(resp.\ 610~Hz) wide.
+The PPF filter consists of 256~Finite Impulse Filters (FIR) filters, of which
+the outputs are fourier transformed.
+Each FIR filter is a 16-taps band pass filter.
+
 
 
 \ldots
