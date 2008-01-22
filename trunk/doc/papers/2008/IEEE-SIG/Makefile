@@ -2,7 +2,7 @@ TEX_SOURCES =	lofar.tex
 
 BIB_SOURCES =	lofar.bib
 
-FIG_SOURCES =	
+FIG_SOURCES =	flow.fig
 
 JGR_SOURCES =	
 
