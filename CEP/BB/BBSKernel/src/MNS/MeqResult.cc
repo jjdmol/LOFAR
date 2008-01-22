@@ -31,8 +31,8 @@ namespace LOFAR
 namespace BBS
 {
 
-Pool<MeqResultRep> MeqResultRep::theirPool;
-#pragma omp threadprivate(MeqResultRep::theirPool)
+Pool<MeqResultRep> theirPool;
+#pragma omp threadprivate(theirPool)
 
 void *MeqResultRep::operator new(size_t)
 {
