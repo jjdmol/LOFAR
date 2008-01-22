@@ -1,6 +1,6 @@
 lib_LTLIBRARIES 	= libblob.la
 
-libblob_la_SOURCES 	= \
+libblob_la_SOURCES 	= Package__Version.cc  \
 	BlobAipsIO.cc \
         BlobArray.cc \
         BlobField2.cc \
@@ -26,5 +26,11 @@ libblob_la_SOURCES 	= \
 AM_YFLAGS		= -d -p KeyParse
 AM_LFLAGS		= -PKeyTokenize
 LEX_OUTPUT_ROOT		= lex.KeyTokenize
+
+bin_PROGRAMS = versionblob
+
+versionblob_SOURCES      = versionblob.cc
+versionblob_LDADD        = libblob.la
+versionblob_DEPENDENCIES = libblob.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
