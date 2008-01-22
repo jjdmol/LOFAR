@@ -126,22 +126,23 @@
 % *** GRAPHICS RELATED PACKAGES ***
 %
 \ifCLASSINFOpdf
-  % \usepackage[pdftex]{graphicx}
+  \usepackage[pdftex]{graphicx}
   % declare the path(s) where your graphic files are
   % \graphicspath{{../pdf/}{../jpeg/}}
   % and their extensions so you won't have to specify these with
   % every instance of \includegraphics
+  \DeclareGraphicsExtensions{.pdf}
   % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
 \else
   % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
   % will default to the driver specified in the system graphics.cfg if no
   % driver is specified.
-  % \usepackage[dvips]{graphicx}
+  \usepackage[dvips]{graphicx}
   % declare the path(s) where your graphic files are
   % \graphicspath{{../eps/}}
   % and their extensions so you won't have to specify these with
   % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.eps}
+  \DeclareGraphicsExtensions{.eps}
 \fi
 % graphicx was written by David Carlisle and Sebastian Rahtz. It is
 % required if you want graphics, photos, etc. graphicx.sty is already
@@ -658,7 +659,7 @@ The antennas in the station form a phased array, producing one or many station b
 
 To form a phased array at station level, the analog antenna signals must be delayed and added to form a beam on the sky. Moreover the beamformer should be able to track sources on the sky and be flexible in exchanging beams for bandwidth. 
 
-The beamformer can be implemented by using true time delays or by applying phase shifts on narrow subbands. For the last solution an error is made at the edges of each subband (Figure 7), since the phase is frequency dependent and only one phase can be set per subband. 
+The beamformer can be implemented by using true time delays or by applying phase shifts on narrow subbands. For the last solution an error is made at the edges of each subband (Figure~\ref{fig:???}), since the phase is frequency dependent and only one phase can be set per subband. 
 
 %fig:phasebeamf caption: Illustration of 4 subbands and the error which is introduced by approximating the time delays by phase shifts per subband (the black line on the right hand side is the ideal phase)
 
@@ -683,7 +684,15 @@ The desire for a flexible and reconfigurable instrument demands a
 {\em software\/} solution, but the data rates and processing requirements
 demand a supercomputer.
 
+\fixme{Explain: BG/L characteristics}
+
 \ldots
+
+\begin{figure*}
+\includegraphics[width=\textwidth]{flow}
+\caption{Logical overview and data flow of the real-time filters on the Central Processor.}
+\label{fig:flow}
+\end{figure*}
 
 \fixme{Explain: input buffer \& station synchronization, transpose, delay
 compenstation, PPF, correlator}
@@ -691,8 +700,8 @@ compenstation, PPF, correlator}
 The input section receives all station data that are sent via the wide-area
 network.
 % I assume that the UDP packets have been introduced before
-Since UDP is an unreliable protocol, it handles duplicated, lost, and
-out-of-order packets.
+Since UDP is an unreliable protocol, the input section handles duplicated,
+lost, and out-of-order packets.
 Lost data is appropriately flagged as being "invalid", and the remainder
 of the processing pipeline takes this into account.
 The data are received into a circular buffer, that holds the most recent
@@ -730,9 +739,25 @@ the Blue Gene/L can do this job much faster.
 Next in the pipeline is the second-stage PolyPhase (PPF) filter, that splits
 each 195~KHz (resp.\ 156~KHz) subband into 256~channels of 763~Hz
 (resp.\ 610~Hz) wide.
-The PPF filter consists of 256~Finite Impulse Filters (FIR) filters, of which
+Splitting the subbands into narrow frequency channels allows flagging
+of narrow-band RFI without much data loss (see Section~{sec:RFI}).
+The PPF filter consists of 256~Finite Impulse Filters (FIR) filters and a
+Fast Fourier Transform (see Figure~\ref{fig:flow}).
+Each FIR filter is a 16-tap band pass filter.
+The incoming samples are round-robin distributed over the FIR filters;
 the outputs are fourier transformed.
-Each FIR filter is a 16-taps band pass filter.
+To achieve optimal performance, both the FIR filter and the FFT are implemented
+in assembly (although we maintain an equivalent C++ version for debugging
+and portability purposes).
+
+After the subbands are split into narrow channels, the remainder of the
+delays are compensated, by shifting the phase of each sample.
+The correction factor depends on time and frequency.
+The delays are computed exactly for the beginning and ending of each
+integration period (typically: one second), and interpolated both in time
+and (channel) frequency such that the phase of each sample is corrected by
+an accurate factor.
+
 
 
 
@@ -776,6 +801,7 @@ saving of \euro700,000.
 \section{Central Processing: Calibration}
 
 \subsection{Flagging of RFI}
+\label{sec:RFI}
 
 \subsection{Self-Calibration}
 
