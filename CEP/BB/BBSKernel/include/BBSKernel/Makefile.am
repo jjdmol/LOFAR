@@ -1,6 +1,6 @@
 pkginclude_MNSdir = $(pkgincludedir)/MNS
 
-pkginclude_HEADERS =		\
+pkginclude_HEADERS = Package__Version.h 		\
 	Axis.h			\
 	BBSKernelStructs.h	\
 	BBSStatus.h		\
