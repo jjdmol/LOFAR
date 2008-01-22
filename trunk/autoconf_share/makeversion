@@ -32,10 +32,10 @@
 
 # Determine which parts of the version info have to be made.
 # if the main program versionXXX has to be made.
-#   0 = make everything
-#   1 = do not change the Makefile.am (is the default)
+#   0 = do not change the Makefile.am (is the default)
+#   1 = make everything
 #   2 = do not create anything at all
-makevers=1
+makevers=0
 if test $# = 1; then
   makevers=$1
   shift
@@ -242,7 +242,7 @@ elif [ $hassvn = 0 ]; then
 fi
 
 # Exit if Makefile.am does not need to be changed.
-if [ $makevers = 1 ]; then
+if [ $makevers = 0 ]; then
 \rm -f version.*.tmp
   exit 0
 fi
@@ -313,14 +313,14 @@ ${versmainname}_SOURCES      = ${versmainname}.cc\
 ${versmainname}_LDADD        = ${libnm}.la\
 ${versmainname}_DEPENDENCIES = ${libnm}.la \$(LOFAR_DEPEND)\
 \
-\1%' src/Makefile.am | sed -e "s%\${lpkg}%${lpkg}%g" -e "s%\${libnm}%${libnm}%g" > version.mf.tmp
+\1%' src/Makefile.am | sed -e "s%\${versmainname}%${versmainname}%g" -e "s%\${libnm}%${libnm}%g" > version.mf.tmp
   else
     sed -e "s%\(bin_PROGRAMS.*\)=%\1= ${versmainname}%" src/Makefile.am | \
     sed -e 's%\(include *\$(top_srcdir)/Makefile.common\)%${versmainname}_SOURCES      = ${versmainname}.cc\
 ${versmainname}_LDADD        = ${libnm}.la\
 ${versmainname}_DEPENDENCIES = ${libnm}.la \$(LOFAR_DEPEND)\
 \
-\1%' | sed -e "s%\${lpkg}%${lpkg}%g" -e "s%\${libnm}%${libnm}%g" > version.mf.tmp
+\1%' | sed -e "s%\${versmainname}%${versmainname}%g" -e "s%\${libnm}%${libnm}%g" > version.mf.tmp
   fi
   mv version.mf.tmp src/Makefile.am
   echo "makeversion added ${versmainname}.cc to src/Makefile.am"
