@@ -1,10 +1,10 @@
 lib_LTLIBRARIES		= libbbms.la
 
-libbbms_la_SOURCES	= DH_MSMake.cc \
+libbbms_la_SOURCES	= Package__Version.cc  DH_MSMake.cc \
 			  MSCreate.cc \
 			  MSDesc.cc
 
-bin_PROGRAMS 		= MSSplit \
+bin_PROGRAMS 		= versionms MSSplit \
 			  makemsdesc \
 			  readmsdesc \
 			  makems\
@@ -34,6 +34,10 @@ dist_glish_SCRIPTS	= mssplit.g statconv.g
 
 scriptdir		= $(bindir)
 dist_script_SCRIPTS	= mssplit
+
+versionms_SOURCES      = versionms.cc
+versionms_LDADD        = libbbms.la
+versionms_DEPENDENCIES = libbbms.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
