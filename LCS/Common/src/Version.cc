@@ -44,10 +44,29 @@ namespace LOFAR {
       itsBuildMachine    (buildMachine)
   {}
 
+  std::vector<std::string> Version::doUsedPackages
+  (const std::vector<Version::PkgInfo>& vec)
+  {
+    std::vector<std::string> result;
+    std::vector<PkgInfo> vflat = flatten (vec);
+    result.reserve (vflat.size());
+    for (std::vector<PkgInfo>::const_iterator viter = vflat.begin();
+	 viter != vflat.end();
+	 ++viter) {
+      Version vers = viter->second();
+      if (vers.version() != "trunk") {
+	result.push_back (vers.packageName());
+      } else {
+	result.push_back (vers.packageName() + '-' + vers.version());
+      }
+    }
+    return result;
+  }
+
   void Version::doShow (const std::string& type,
 			const std::string& applName,
 			std::ostream& os,
-			const std::vector<PkgInfo>& vec)
+			const std::vector<Version::PkgInfo>& vec)
   {
     if (vec.empty()) {
       return;
@@ -56,7 +75,6 @@ namespace LOFAR {
     // Set name to given name.
     Version versRoot = vec[0].second();
     versRoot.setPackageName (applName);
-    std::string mainRevision = versRoot.revision();
     // Print tree if required.
     if (type == "tree") {
       doShowTree (versRoot, os, vec);
@@ -64,30 +82,18 @@ namespace LOFAR {
     }
     bool full = (type == "full");
     // Only keep a single package in the vector at the highest level.
-    // Map package to vector index.
-    bool sameRev = true;
+    std::vector<PkgInfo> vflat = flatten (vec);
+    // Determine the maximum level and if revision is the same everywhere.
     int maxLevel = 0;
-    std::vector<PkgInfo> vflat;
-    std::map<GetInfoFunc*, int> m;
-    for (std::vector<PkgInfo>::const_iterator iter = vec.begin();
-	 iter != vec.end();
-	 ++iter) {
-      int level = iter->first;
-      GetInfoFunc* func = iter->second;
-      std::map<GetInfoFunc*,int>::iterator mfnd = m.find(func);
-      if (mfnd == m.end()) {
-	m[func] = vflat.size();
-	vflat.push_back (*iter);
-	sameRev = sameRev && (func().revision() == mainRevision);
-      } else {
-	int index = mfnd->second;
-	if (level > vflat[index].first) {
-	  vflat[index].first= level;
-	}
+    bool sameRev = true;
+    const std::string& mainRevision = versRoot.revision();
+    for (std::vector<PkgInfo>::const_iterator viter = vflat.begin();
+	 viter != vflat.end();
+	 ++viter) {
+      if (viter->first > maxLevel) {
+	maxLevel = viter->first;
       }
-      if (level > maxLevel) {
-	maxLevel = level;
-      }
+      sameRev = sameRev && (viter->second().revision() == mainRevision);
     }
     versRoot.showAll (std::string(), sameRev, os);
     os << " packages: " << std::endl;
@@ -146,7 +152,7 @@ namespace LOFAR {
 
   void Version::doShowTree (const Version& versRoot,
 			    std::ostream& os,
-			    const std::vector<PkgInfo>& vec)
+			    const std::vector<Version::PkgInfo>& vec)
   {
     versRoot.showAll ("", true, os);
     std::vector<PkgInfo>::const_iterator viter = vec.begin();
@@ -166,6 +172,32 @@ namespace LOFAR {
       }
       os << std::endl;
     }
+  }
+
+  std::vector<Version::PkgInfo> Version::flatten
+  (const std::vector<Version::PkgInfo>& vec)
+  {
+    std::vector<PkgInfo> result;
+    // Only keep a single package in the vector at the highest level.
+    // Map package to vector index.
+    std::map<GetInfoFunc*, int> m;
+    for (std::vector<PkgInfo>::const_iterator iter = vec.begin();
+	 iter != vec.end();
+	 ++iter) {
+      int level = iter->first;
+      GetInfoFunc* func = iter->second;
+      std::map<GetInfoFunc*,int>::iterator mfnd = m.find(func);
+      if (mfnd == m.end()) {
+	m[func] = result.size();
+	result.push_back (*iter);
+      } else {
+	int index = mfnd->second;
+	if (level > result[index].first) {
+	  result[index].first = level;
+	}
+      }
+    }
+    return result;
   }
 
 }

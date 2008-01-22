@@ -90,21 +90,34 @@ namespace LOFAR {
       return vec;
     }
 
+    // Get all packages (and their versions) used by package T
+    // (including the package itself).
+    template<typename T>
+    static std::vector<std::string> usedPackages()
+      { return doUsedPackages (getPackages<T>()); }
+
     // Show the package or application name and the versions of the packages
     // being used.
     // Possible types are:
     // - tree:  show used packages as a tree (giving dependencies).
-    // - full:  show each paclage fully (but only once)
+    // - full:  show each package fully (but only once)
+    // - top:   show the top package only
     // - other: show each package briefly (name, version, revision, nrchanged)
     // Use like:
     // @code
-    //  Version::show<BlobVersion> ("applname", std::cout);
+    //  Version::show<BlobVersion> ("", "applname", std::cout);
     // @endcode
     template<typename T> static void show (const std::string& type,
 					   const std::string& applName,
 					   std::ostream& os)
     {
-      doShow (type, applName, os, getPackages<T>());
+      if (type == "top") {
+	Version vers = T::getInfo();
+	vers.setPackageName (applName);
+	vers.showAll (std::string(), true, os);
+      } else {
+	doShow (type, applName, os, getPackages<T>());
+      }
     }
 
     // Show all info. It is indented as given.
@@ -118,6 +131,10 @@ namespace LOFAR {
 		    std::ostream& os) const;
 
   private:
+    // Flatten the given vector and retrieve package name and version.
+    static std::vector<std::string> doUsedPackages
+    (const std::vector<PkgInfo>& vec);
+
     // Show the info as needed.
     static void doShow (const std::string& type,
 			const std::string& applName,
@@ -128,6 +145,11 @@ namespace LOFAR {
     static void doShowTree (const Version& versRoot,
 			    std::ostream& os,
 			    const std::vector<PkgInfo>& vec);
+
+    // Flatten the given vector into the result.
+    // It removes all duplicate entries and keeps the one with the highest
+    // level. The result is ordered by level.
+    static std::vector<PkgInfo> flatten (const std::vector<PkgInfo>& vec);
 
     //# Data members.
     std::string itsPackageName;
