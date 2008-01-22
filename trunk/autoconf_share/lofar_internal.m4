@@ -53,10 +53,9 @@ lofar_EXTERNAL($2,$4,$5,$6,$7,$8,$9,$10,$11)
       cp -p FillPackage__VersionInc.old-h FillPackage__VersionInc.h
     fi
 
-    echo "    sameVers = ${lfr_pkgnam_intv}Version::fillVersion (mainVersion, v)  &&  sameVers;"  >> FillPackage__VersionFunc.h-pkg
+    echo "    ${lfr_pkgnam_intv}Version::fillInfo (level+1, vec);"  >> FillPackage__VersionFunc.h-pkg
     # Do the finalization.
     cp FillPackage__VersionFunc.h-pkg FillPackage__VersionFunc.h
-    echo '    return sameVers;' >> FillPackage__VersionFunc.h
     echo '  }' >> FillPackage__VersionFunc.h
     echo '}' >> FillPackage__VersionFunc.h
     # If the current FillPackage__VersionFunc.h is the same as the old one,
