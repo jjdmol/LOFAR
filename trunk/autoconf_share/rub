@@ -760,6 +760,8 @@ if [ $boot != 0 ]; then
         exit 1
       fi
       # Keep the current md5sum.
+      # md5 again, because configure.in might be changed by makeversion.
+      md5sum configure.in $pgmpath/*.m4 $pgmpath/makeversion > boot.md5
       md5sum boot.md5 configure > boot.md5-check
       pwd >> $curwd/build.log
     fi
