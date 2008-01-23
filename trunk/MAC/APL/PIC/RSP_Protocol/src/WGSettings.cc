@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include <APL/RSP_Protocol/WGSettings.h>
-#include <APL/RTCCommon/Marshalling.h>
+#include <APL/RTCCommon/MarshallBlitz.h>
 #include "EPA_Protocol.ph"
 
 #include <math.h>
