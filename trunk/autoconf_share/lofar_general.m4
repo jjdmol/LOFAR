@@ -24,6 +24,9 @@
 #  lofar_general.m4 contains the following m4 functions:
 #    lofar_DEBUG_OPTIMIZE
 #    lofar_CHECK_PRETTY_FUNCTION
+#    lofar_CHECK_USHORT
+#    lofar_CHECK_UINT
+#    lofar_CHECK_ULONG
 #    lofar_CHECK_LONG_LONG
 #
 
@@ -44,6 +47,9 @@ dnl AM_CONDITIONAL(MAKE_RPMS, test x$make_rpms = xtrue)
 MAKE_RPMS=$make_rpms
 AC_SUBST(MAKE_RPMS)
 
+lofar_CHECK_USHORT([])
+lofar_CHECK_UINT([])
+lofar_CHECK_ULONG([])
 lofar_CHECK_LONG_LONG([])
 lofar_DEBUG_OPTIMIZE([])
 lofar_CHECK_PRETTY_FUNCTION([])
@@ -290,6 +296,87 @@ AC_DEFUN([lofar_CHECK_PRETTY_FUNCTION],[
       echo "FUNCTION" >> pkgext;
     fi
   fi
+])
+
+#
+# lofar_CHECK_USHORT
+#
+# If the sys/types.h supports `ushort' types,  define `HAVE_USHORT'.
+#
+# Based on ICE and DDD autoconf macros.
+#
+AC_DEFUN([lofar_CHECK_USHORT],[
+  AC_PREREQ(2.13)
+  AC_REQUIRE([AC_PROG_CXX])
+  AC_MSG_CHECKING(whether sys/types.h defines ushort)
+  AC_CACHE_VAL(lofar_cv_have_ushort,[
+    AC_LANG_PUSH(C++)
+    AC_TRY_COMPILE(
+      [#include <sys/types.h>],
+      [ushort a;],
+      lofar_cv_have_ushort=yes, 
+      lofar_cv_have_ushort=no)
+    AC_LANG_POP(C++)
+  ])
+  AC_MSG_RESULT($lofar_cv_have_ushort)
+  if test "$lofar_cv_have_ushort" = yes; then
+    AC_DEFINE(HAVE_USHORT,1,[Define if `ushort' is supported])
+  fi
+  echo "USHORT" >> pkgext;
+])
+
+#
+# lofar_CHECK_UINT
+#
+# If the sys/types.h supports `uint' types,  define `HAVE_UINT'.
+#
+# Based on ICE and DDD autoconf macros.
+#
+AC_DEFUN([lofar_CHECK_UINT],[
+  AC_PREREQ(2.13)
+  AC_REQUIRE([AC_PROG_CXX])
+  AC_MSG_CHECKING(whether sys/types.h defines uint)
+  AC_CACHE_VAL(lofar_cv_have_uint,[
+    AC_LANG_PUSH(C++)
+    AC_TRY_COMPILE(
+      [#include <sys/types.h>],
+      [uint a;],
+      lofar_cv_have_uint=yes, 
+      lofar_cv_have_uint=no)
+    AC_LANG_POP(C++)
+  ])
+  AC_MSG_RESULT($lofar_cv_have_uint)
+  if test "$lofar_cv_have_uint" = yes; then
+    AC_DEFINE(HAVE_UINT,1,[Define if `uint' is supported])
+  fi
+  echo "UINT" >> pkgext;
+])
+
+#
+# lofar_CHECK_ULONG
+#
+# If the sys/types.h supports `ulong' types,  define `HAVE_ULONG'.
+#
+# Based on ICE and DDD autoconf macros.
+#
+AC_DEFUN([lofar_CHECK_ULONG],[
+  AC_PREREQ(2.13)
+  AC_REQUIRE([AC_PROG_CXX])
+  AC_MSG_CHECKING(whether sys/types.h defines ulong)
+  AC_CACHE_VAL(lofar_cv_have_ulong,[
+    AC_LANG_PUSH(C++)
+    AC_TRY_COMPILE(
+      [#include <sys/types.h>],
+      [ulong a;],
+      lofar_cv_have_ulong=yes, 
+      lofar_cv_have_ulong=no)
+    AC_LANG_POP(C++)
+  ])
+  AC_MSG_RESULT($lofar_cv_have_ulong)
+  if test "$lofar_cv_have_ulong" = yes; then
+    AC_DEFINE(HAVE_ULONG,1,[Define if `ulong' is supported])
+  fi
+  echo "ULONG" >> pkgext;
 ])
 
 #
