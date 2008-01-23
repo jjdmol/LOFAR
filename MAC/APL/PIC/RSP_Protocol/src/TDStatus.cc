@@ -27,7 +27,7 @@
 #include <APL/RSP_Protocol/MEPHeader.h>
 #include <blitz/array.h>
 
-#include <APL/RTCCommon/Marshalling.h>
+#include <APL/RTCCommon/MarshallBlitz.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 using namespace std;
