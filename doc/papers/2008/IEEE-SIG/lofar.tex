@@ -673,6 +673,7 @@ To form beams, the antenna signals are combined in a complex weighted sum. This 
 
 In parallel with the filtering and beamforming the raw data can be stored in a transient buffer. Freezing of the buffer content can be controlled by internal or external triggers. The stored data or selections thereof can be sent to the central processing facility for further processing. This extension is primarily used for the transients and cosmic ray community.
 %referenties naar LBA paper, Stefan papers, ...
+\fixme{Say something about UDP packets, 16+16 bit samples, max 54 subband/RSP board}
 
 \section{Central Processing: the Correlator}
 
@@ -685,13 +686,22 @@ The desire for a flexible and reconfigurable instrument demands a
 demand a supercomputer.
 
 \fixme{Explain: BG/L characteristics}
+The heart of the Central Processor is a six-rack IBM Blue Gene/L supercomputer
+that provides 34~TFLOPS peak performance and has a fast internal interconnect:
+the 3-D~torus.
+A total of 768~Gigabit Ethernet interfaces are available for external I/O.
+Each processor is extended by two double-precision floating point units
+that are very suitable for signal processing, since a variety of operations
+on complex numbers are natively supported.
+
 
 \ldots
 
 \begin{figure*}
 \includegraphics[width=\textwidth]{flow}
 \caption{Real-time filters on the Central Processor.  For simplicity, the
-figure shows two stations, one subband, one polarization.}
+figure shows two stations, one subband, one polarization.  The numbers are
+valid for the 200~MHz mode.}
 \label{fig:flow}
 \end{figure*}
 
@@ -725,7 +735,8 @@ is due to the fact that the stations receive a wave at a different time
 Third, it provides some headroom to recover from small hiccups in the remainder
 of the processing pipeline, without data loss.
 
-Each input node receives data from up to 54~subbands from a single station.
+Each input node receives data from up to 54~subbands from a single RSP board
+of one station.
 Unfortunately, this data distribution is not suitable for the correlator,
 because to correlate a subband, the data from all stations are needed.
 Also, we need hundreds of CPUs to correlate 54~subbands.
@@ -759,6 +770,12 @@ integration period (typically: one second), and interpolated both in time
 and (channel) frequency such that the phase of each sample is corrected by
 an accurate factor.
 
+
+
+The PPF implicitly converts the 16-bit complex number to 32-bit floating-point
+numbers, since the BG/L performs floating point computations faster than
+integer operations.
+Also, the phase correction and the correlations are done in floating point.
 
 
 
