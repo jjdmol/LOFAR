@@ -1,4 +1,4 @@
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	ConverterImpl.h \
 	ConverterProcess.h \
 	ConverterServer.h

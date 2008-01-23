@@ -80,19 +80,6 @@ void checkJ2000ToAzelPreConditions(Converter* conv)
     count++;
   }
   ASSERT(count == 1);
-
-  // position types must be equal
-  request.direction = vector<Direction>(1, Direction());
-  request.position = vector<Position>(1, Position());
-  request.position.push_back(Position(0,0,0,Position::WGS84));
-  try {
-    conv->j2000ToAzel(result, request);
-  } catch (AssertError&) {
-    count++;
-  } catch (ConverterException&) {
-    count++;
-  }
-  ASSERT(count == 2);
 }
 
 
@@ -137,19 +124,6 @@ void checkAzelToJ2000PreConditions(Converter* conv)
     count++;
   }
   ASSERT(count == 3);
-
-  // position types must be equal
-  request.direction = vector<Direction>(2, Direction(0,0,Direction::AZEL));
-  request.position.push_back(Position(0,0,0,Position::WGS84));
-  request.epoch.push_back(Epoch());
-  try {
-    conv->azelToJ2000(result, request);
-  } catch (AssertError&) {
-    count++;
-  } catch (ConverterException&) {
-    count++;
-  }
-  ASSERT(count == 4);
 }
 
 
@@ -169,19 +143,6 @@ void checkJ2000ToItrfPreConditions(Converter* conv)
     count++;
   }
   ASSERT(count == 1);
-
-  // position types must be equal
-  request.direction = vector<Direction>(1, Direction());
-  request.position = vector<Position>(1, Position());
-  request.position.push_back(Position(0,0,0,Position::WGS84));
-  try {
-    conv->j2000ToItrf(result, request);
-  } catch (AssertError&) {
-    count++;
-  } catch (ConverterException&) {
-    count++;
-  }
-  ASSERT(count == 2);
 }
 
 
@@ -226,19 +187,6 @@ void checkItrfToJ2000PreConditions(Converter* conv)
     count++;
   }
   ASSERT(count == 3);
-
-  // position types must be equal
-  request.direction = vector<Direction>(2, Direction(0,0,Direction::ITRF));
-  request.position.push_back(Position(0,0,0,Position::WGS84));
-  request.epoch.push_back(Epoch());
-  try {
-    conv->itrfToJ2000(result, request);
-  } catch (AssertError&) {
-    count++;
-  } catch (ConverterException&) {
-    count++;
-  }
-  ASSERT(count == 4);
 }
 
 
