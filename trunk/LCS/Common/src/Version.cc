@@ -100,8 +100,7 @@ namespace LOFAR {
       sameRev = sameRev && (viter->second().revision() == mainRevision);
     }
     versRoot.showAll (os, std::string(), sameRev);
-    os << std::endl;
-    os << " packages: " << std::endl;
+    os << " packages used: " << std::endl;
     for (int level=1; level<=maxLevel; ++level) {
       for (std::vector<PkgInfo>::const_iterator viter = vflat.begin();
 	   viter != vflat.end();
@@ -109,8 +108,8 @@ namespace LOFAR {
 	if (viter->first == level) {
 	  Version vers = viter->second();
 	  if (full) {
-	    vers.showAll (os, "  ", true);
 	    os << std::endl;
+	    vers.showAll (os, "  ", true);
 	  } else {
 	    vers.showBrief (os, "  ");
 	  }
@@ -151,9 +150,9 @@ namespace LOFAR {
     }
     os << " (rev." << revision() << ')';
     if (nrChangedFiles() != "0") {
-      os << ' ' << nrChangedFiles()
-	 << " changed files" << std::endl;
+      os << ' ' << nrChangedFiles() << " changed files";
     }
+    os << std::endl;
   }
 
   void Version::doShowTree (std::ostream& os,
@@ -161,7 +160,7 @@ namespace LOFAR {
 			    const std::vector<Version::PkgInfo>& vec)
   {
     versRoot.showAll (os, "", true);
-    os << std::endl;
+    os << " tree of packages used: " << std::endl;
     std::vector<PkgInfo>::const_iterator viter = vec.begin();
     // Skip first one if name is the same as applName in versRoot.
     if (viter->second().packageName() == versRoot.packageName()) {
@@ -177,6 +176,7 @@ namespace LOFAR {
       if (vers.version() != "trunk") {
 	os << '-' << vers.version();
       }
+      os << " (rev." << vers.revision() << ')';
       os << std::endl;
     }
   }
