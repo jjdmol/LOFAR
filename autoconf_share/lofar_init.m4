@@ -420,6 +420,8 @@ AC_ARG_ENABLE(lib64,
 namespace LOFAR {
   std::string ${PACKAGE}Version::getBuildTime()
     { return "`date`"; }
+  std::string ${PACKAGE}Version::getBuildUser()
+    { return "`whoami`"; }
   std::string ${PACKAGE}Version::getBuildMachine()
     { return "`uname -n`"; }
 
