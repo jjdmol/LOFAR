@@ -139,6 +139,8 @@ namespace LOFAR {
     static std::string getNrChangedFiles();
     // Get the date/time the package was built (in fact, configured).
     static std::string getBuildTime();
+    // Get the name of the user who built the package.
+    static std::string getBuildUser();
     // Get the machine the package was built on.
     static std::string getBuildMachine();
 
@@ -165,7 +167,7 @@ namespace LOFAR {
 		    getVersion(), getConfVersion(),
 		    getRevision(), getPackageRevision(),
 		    getNrChangedFiles(),
-		    getBuildTime(), getBuildMachine());
+		    getBuildTime(), getBuildUser(), getBuildMachine());
   }
 
   std::string ${pkg}Version::getVersion()
@@ -200,7 +202,7 @@ int main (int argc, const char* argv[])
   if (argc > 1) {
     type = argv[1];
   }
-  Version::show<${pkg}Version> (type, "${pkg}", std::cout);
+  Version::show<${pkg}Version> (std::cout, "${pkg}", type);
   return 0;
 }
 EOF
