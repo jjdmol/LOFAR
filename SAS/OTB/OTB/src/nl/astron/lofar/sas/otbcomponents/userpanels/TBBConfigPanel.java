@@ -207,6 +207,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             int aTreeID=itsMainFrame.getSharedVars().getTreeID();
             if (fc == null) {
                 fc = new JFileChooser();
+                fc.setApproveButtonText("Save");
             }
             // try to get a new filename to write the parsetfile to
             if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
