@@ -25,7 +25,8 @@
 
 #include <string>
 #include <vector>
-#include <iosfwd>
+#include <ostream>
+#include <sstream>
 
 // Class to get info like version and revision of the package and the
 // packages it uses.
@@ -48,6 +49,7 @@ namespace LOFAR {
 	     const std::string& packageRevision,
 	     const std::string& nrChangedFiles,
 	     const std::string& buildTime,
+	     const std::string& buildUser,
 	     const std::string& buildMachine);
 
     // Get the package name.
@@ -73,6 +75,9 @@ namespace LOFAR {
     // Get the date/time the package was built (i.e. configured).
     const std::string& buildTime() const
       { return itsBuildTime; }
+    // Get the name of the user who built the package.
+    const std::string& buildUser() const
+      { return itsBuildUser; }
     // Get the name of the machine on which the package was built.
     const std::string& buildMachine() const
       { return itsBuildMachine; }
@@ -107,28 +112,45 @@ namespace LOFAR {
     // @code
     //  Version::show<BlobVersion> ("", "applname", std::cout);
     // @endcode
-    template<typename T> static void show (const std::string& type,
-					   const std::string& applName,
-					   std::ostream& os)
+    template<typename T>
+    static void show (std::ostream& os,
+		      const std::string& applName="",
+		      const std::string& type="top")
     {
       if (type == "top") {
 	Version vers = T::getInfo();
-	vers.setPackageName (applName);
-	vers.showAll (std::string(), true, os);
+	if (!applName.empty()) vers.setPackageName (applName);
+	vers.showAll (os, std::string(), true);
       } else {
-	doShow (type, applName, os, getPackages<T>());
+	doShow (os, applName, type, getPackages<T>());
       }
+    }
+
+    // Get the version and build info of the application package.
+    // Type <tt>type</tt> argument is the same as in function <tt>show</tt>.
+    // Use like:
+    // @code
+    //  std::string info = Version::getTopInfo<BlobVersion>();
+    // @endcode
+    template<typename T>
+    static std::string getInfo (const std::string& applName="",
+				const std::string& type="top")
+    {
+      std::ostringstream os;
+      show<T> (os, applName, type);
+      return os.str();
     }
 
     // Show all info. It is indented as given.
     // A warning is printed if sameRev is false, which indicates that some
     // package used have a different revision number.
-    void showAll (const std::string& indent,
-		  bool sameRev, std::ostream& os) const;
+    void showAll (std::ostream& os,
+		  const std::string& indent,
+		  bool sameRev) const;
 
     // Show brief info. It is indented as given.
-    void showBrief (const std::string& indent,
-		    std::ostream& os) const;
+    void showBrief (std::ostream& os,
+		    const std::string& indent) const;
 
   private:
     // Flatten the given vector and retrieve package name and version.
@@ -136,14 +158,14 @@ namespace LOFAR {
     (const std::vector<PkgInfo>& vec);
 
     // Show the info as needed.
-    static void doShow (const std::string& type,
+    static void doShow (std::ostream& os,
 			const std::string& applName,
-			std::ostream& os,
+			const std::string& type,
 			const std::vector<PkgInfo>&);
 
     // Show the info as a tree of all packages used.
-    static void doShowTree (const Version& versRoot,
-			    std::ostream& os,
+    static void doShowTree (std::ostream& os,
+			    const Version& versRoot,
 			    const std::vector<PkgInfo>& vec);
 
     // Flatten the given vector into the result.
@@ -159,6 +181,7 @@ namespace LOFAR {
     std::string itsPackageRevision;
     std::string itsNrChangedFiles;
     std::string itsBuildTime;
+    std::string itsBuildUser;
     std::string itsBuildMachine;
   };
 
