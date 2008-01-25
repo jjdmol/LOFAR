@@ -66,6 +66,11 @@ namespace LOFAR
     // coordinates, earth positions, and points in time. In the latter case,
     // the conversion routine will convert the input sky coordinates for the
     // given earth position and point in time.
+    //
+    // \note None of the member functions below can be made \c const, because
+    // the ConverterClient class that implements these functions has data
+    // members that cannot be \c const (e.g., DH_Request, DH_Result,
+    // TH_Socket, and Connection). Alas!
     class Converter
     {
     public:
