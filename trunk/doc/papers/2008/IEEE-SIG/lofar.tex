@@ -130,8 +130,8 @@
   % \graphicspath{{../pdf/}{../jpeg/}}
   % and their extensions so you won't have to specify these with
   % every instance of \includegraphics
-  \DeclareGraphicsExtensions{.pdf}
-  \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+  %\DeclareGraphicsExtensions{.pdf}
+  \DeclareGraphicsExtensions{.pdf,.jpeg,.jpg,.png}
 \else
   % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
   % will default to the driver specified in the system graphics.cfg if no
@@ -435,8 +435,8 @@ The Netherlands, www.astron.nl
 
 
 % The paper headers
-\markboth{Journal of \LaTeX\ Class Files,~Vol.~6, No.~1, January~2007}%
-{Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for Journals}
+\markboth{IEEE Journal of Selected Topics in Signal Processing,~Vol.~X, No.~Y, January~2008}%
+{Gunst \MakeLowercase{\textit{et al.}}: Overview of the LOFAR signal processing architecture}
 % The only time the second header will appear is for the odd numbered pages
 % after the title page when using the twoside option.
 % 
@@ -526,14 +526,14 @@ off-line calibration and imaging.
 % 
 % Here we have the typical use of a "T" for an initial drop letter
 % and "HIS" in caps to complete the first word.
-\IEEEPARstart{T}{his} demo file is intended to serve as a ``starter file''
-for IEEE journal papers produced under \LaTeX\ using
-IEEEtran.cls version 1.7 and later.
+%\IEEEPARstart{T}{his} demo file is intended to serve as a ``starter file''
+%for IEEE journal papers produced under \LaTeX\ using
+%IEEEtran.cls version 1.7 and later.
 % You must have at least 2 lines in the paragraph with the drop letter
 % (should never be an issue)
-I wish you the best of success.
+%I wish you the best of success.
 
-In the Netherlands a LO(w) Frequency ARray (LOFAR) is developed optimized for the low frequency band from 30 - 240 MHz. LOFAR is the first large scale radio telescope based fully on the phased array technique. This prevents the use of moving large constructions and enables multi-beaming. The total collecting area of LOFAR is achieved by many small dipoles which are grouped in stations to reduce the data rate to an acceptable level. The main reduction is achieved by selecting only a part of the sky by using the phased array technique. The number of stations installed in the Netherlands will be at least 36. Half of the number of stations will be core stations and the other half remote stations. The main difference between them is that the core stations can be split up in two independent arrays delivering the two fold of the remote station bandwidth.
+\IEEEPARstart{I}{n} the Netherlands a LO(w) Frequency ARray (LOFAR) is developed optimized for the low frequency band from 30 - 240 MHz. LOFAR is the first large scale radio telescope based fully on the phased array technique. This prevents the use of moving large constructions and enables multi-beaming. The total collecting area of LOFAR is achieved by many small dipoles which are grouped in stations to reduce the data rate to an acceptable level. The main reduction is achieved by selecting only a part of the sky by using the phased array technique. The number of stations installed in the Netherlands will be at least 36. Half of the number of stations will be core stations and the other half remote stations. The main difference between them is that the core stations can be split up in two independent arrays delivering the two fold of the remote station bandwidth.
 
 All data of the stations is transported to one central place via a Wide Area Network (WAN) and using owned and leased light paths. In Groningen all station data is processed. The processing is done by off the shelf hardware, varying from a supercomputer to clusters of computers. The processing done will vary from correlation for the standard imaging mode to tied-array beamforming for the transients and pulsar mode for example. However, also more sophisticated processing will be done to enable various energy cosmic ray modes of different intensities. 
 
@@ -541,18 +541,18 @@ The heart of LOFAR will be installed in the Northern part of the Netherlands. Th
 
 In this paper the LOFAR architecture will be discussed with a focus on the data flow.
 
-\hfill mds
+%\hfill mds
  
-\hfill January 11, 2007
+%\hfill January 11, 2007
 
-\subsection{Subsection Heading Here}
-Subsection text here.
+%\subsection{Subsection Heading Here}
+%Subsection text here.
 
 % needed in second column of first page if using \IEEEpubid
 %\IEEEpubidadjcol
 
-\subsubsection{Subsubsection Heading Here}
-Subsubsection text here.
+%\subsubsection{Subsubsection Heading Here}
+%Subsubsection text here.
 
 
 % An example of a floating figure using the graphicx package.
@@ -841,43 +841,21 @@ Once the interfering signals are removed from the data, the data may be further 
 
 Next an iterative loop, dubbed the ``Major Cycle'', is entered where we first estimate instrumental and source parameters using the visibility data, then image the data, and finally refine the estimation  of the source parameters using image data. Since the estimation algoritms are also iterative in nature, this loop will be traversed a number of times~\cite{Nijboer:07}. 
 
-After initial operation of the LOFAR instrument the parameters for the strongest sources will be known. From then on the strongest sources can be used in every observation to estimate ionospheric parameters, instrumental parameters, and to refine the estimate for the station beams that is available from the station calibration. Using these estimates the contributions for the strongest sources are removed from the data. The remaining residual visibility data is then imaged.
+After initial operation of the LOFAR instrument the parameters for the strongest sources will be known. From then on the strongest sources can be used in every observation to estimate ionospheric parameters, instrumental parameters, and to refine the estimate for the station beams that is available from the station calibration. Using these estimates the contributions from the strongest sources are removed from the data. The remaining residual visibility data is then corrected and imaged.
 
-\ldots
+The sky image is the Fourier transform of the visibility domain. Due to the fact that the visibility domain is only discretely sampled, sources in the sky image are convolved with a Point Spread Function (PSF). The contribution from sources that generate PSF far sidelobes that are higher than the image noise level should be subtracted from the visibility data.
 
-Assume strong sources known. Refine beam parameters from station cal. Fit ionospheric parameters. \\
-Subtract strong sources and fainter sources (with PSF far sidelobes above noise) \\
-Correct, Integrate and Image in facets, using w-projection. Facet size determined by beam and ionosphere. \\
-Update source parameters by source extraction. \\
-Re-enter Major Cycle. Do on increasing subset of the data (time, freq, baseline). In total maximal ``twice trhough all the data''.
+One visibility sample is the summation of contributions from all sources in the sky. Since LOFAR has a large Field of View (FoV), the contribution from different sources is distorted by different ionospheric and beam effects. When imaging the visibility data, however, it is only possible to correct the data for one direction in the sky. This would mean that the image would be sharp for the direction of correction and the image quality would degrade outwards. To overcome this problem LOFAR images will be made in facets, where we can correct the data for the center of each facet. 
 
+Facet imaging is a well known technique to overcome the problem related to the so-called ``w-term'', which are due to the fact that the baselines are non-coplanar~\cite{SIRAII:99}. However, the non-coplanar baseline problem is better solved by the w-projection algorithm~\cite{Cornwell:05}. Therefore, we will apply the w-projection technique per facet and the facet size will only be determined by the variability of the station beam and the ionosphere.
 
+Since we correct the data per facet, this means multiplying the total amount of data with the number of facets. Fortunately, the facet size will be far smaller then the total FoV. This allows us to shift the data to the center of the facet and then integrate the data in both time and frequency. Hence, the total amount of data will be more or less the same.
+  
+Once the image is produced, source finding and extraction algorithms may be used to estimate source parameters. This would then lead to an updated source model and we are ready to enter a new cycle of the Major Cycle. 
 
-\ldots
+By sampling the data in each iteration of the Major Cycle, doubling the sampling density in every cycle, and using only the full resolution data in the last cycle, we effectively have not more then twice the I/O that is needed for the full resolution data. We expect that will seriously inprove the total speed of the processing.
 
-The correlator produces visibility data on a 1 second and 0.62 kHz of 0.78 kHz resolution depending on the sampling frequency of the station processing. The frequency resolution is needed for excision of RFI signals. Strong RFI sources can in principle be suppressed on the station level by applying spatial filtering techniques~\cite{Veen1:04,Veen2:04,Boonstra:05}. However, applying these techniques on the station level would imply that all station beams will be different. That would mean that the number of station beam parameters to be estimated in the following self-calibration step would increase considerably. We foresee that this will be impractible in the initial LOFAR operations. However, in later upgrades these spatial filtering techniques may be incorporated. Initially, LOFAR processing will use traditional flagging techniques~\cite{Renting:07}.  
-
-\subsection{Opmerkingen}
-
-{\it focus on signal path}
-
-{\it we will be processing limited}
-
-\begin{itemize}
-\item Flag RFI: papers Boonstra?
-\item Take out the passband per subband
-\item Compress the data, but avoid time and freq smearing
-\item Major Cycle iteration
-\item Fit Ionosphere, fit beam, Cat I Peeling: Papers Tol/Veen \& Tol/Jeffs/Veen
-\item Cat II subtract
-\item Facet Corrected Imaging
-\item Shift the data per Facet
-\item Integrate the data
-\item Correct the data for the center of the Facet
-\item Image the data using w-projection: Paper Cornwell
-\item Extract sources from the image and update the source model
-\item New iteration of Major Cycle, while refining the RFI flagging. Iterations will probably use increased levels of data resolution
-\end{itemize}
+%The correlator produces visibility data on a 1 second and 0.62 kHz of 0.78 kHz resolution depending on the sampling frequency of the station processing. The frequency resolution is needed for excision of RFI signals. Strong RFI sources can in principle be suppressed on the station level by applying spatial filtering techniques~\cite{Veen1:04,Veen2:04,Boonstra:05}. However, applying these techniques on the station level would imply that all station beams will be different. That would mean that the number of station beam parameters to be estimated in the following self-calibration step would increase considerably. We foresee that this will be impractible in the initial LOFAR operations. However, in later upgrades these spatial filtering techniques may be incorporated. Initially, LOFAR processing will use traditional flagging techniques~\cite{Renting:07}.  
 
 \section{Current state and roll-out planning}
 
@@ -906,7 +884,7 @@ Meanwhile, construction of international stations will continue.
 The Blue Gene/L is capable of handling all foreseen future data rates.
 
 %\begin{figure*}
-%\includegraphics[width=\textwidth]{LBA_observed.jpg}
+%\includegraphics[width=\textwidth]{LBA_observed.png}
 %\caption{Real-time filters on the Central Processor.  For simplicity, the
 %figure shows two stations, one subband, one polarization.}
 %\label{fig:skymap}
