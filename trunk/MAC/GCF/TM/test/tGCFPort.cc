@@ -37,7 +37,7 @@ tServer::tServer(string name) :
 	itsTimeoutTimer (0),
 	itsFinished		(false)
 { 
-  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
+  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
 }
 
 tClient::tClient(string name) : 
@@ -46,7 +46,7 @@ tClient::tClient(string name) :
 	itsTimeoutTimer (0),
 	itsFinishedTimer(0)
 { 
-  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
+  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
 }
 
 void tServer::finishTest(uint32	testnr) 
@@ -80,7 +80,7 @@ void tClient::finishTest(uint32	testnr)
 GCFEvent::TResult tServer::test1(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Server@test1: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Server@test1: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:
@@ -158,7 +158,7 @@ GCFEvent::TResult tServer::test1(GCFEvent& event, GCFPortInterface& /*port*/)
 GCFEvent::TResult tClient::test1(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Client@test1: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Client@test1: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:
@@ -248,7 +248,7 @@ GCFEvent::TResult tClient::test1(GCFEvent& event, GCFPortInterface& port)
 GCFEvent::TResult tServer::test2(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Server@test2: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Server@test2: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:
@@ -326,7 +326,7 @@ GCFEvent::TResult tServer::test2(GCFEvent& event, GCFPortInterface& /*port*/)
 GCFEvent::TResult tClient::test2(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Client@test2: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Client@test2: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:
@@ -419,7 +419,7 @@ GCFEvent::TResult tClient::test2(GCFEvent& event, GCFPortInterface& port)
 GCFEvent::TResult tServer::test3(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Server@test3: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Server@test3: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:
@@ -496,7 +496,7 @@ GCFEvent::TResult tServer::test3(GCFEvent& event, GCFPortInterface& /*port*/)
 GCFEvent::TResult tClient::test3(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Client@test3: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Client@test3: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:
@@ -585,7 +585,7 @@ GCFEvent::TResult tClient::test3(GCFEvent& event, GCFPortInterface& port)
 GCFEvent::TResult tServer::test4(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Server@test4: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Server@test4: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:
@@ -662,7 +662,7 @@ GCFEvent::TResult tServer::test4(GCFEvent& event, GCFPortInterface& /*port*/)
 GCFEvent::TResult tClient::test4(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Client@test4: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Client@test4: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:
@@ -752,7 +752,7 @@ GCFEvent::TResult tClient::test4(GCFEvent& event, GCFPortInterface& port)
 GCFEvent::TResult tServer::test5(GCFEvent& event, GCFPortInterface& /*port*/)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Server@test5: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Server@test5: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:
@@ -831,7 +831,7 @@ GCFEvent::TResult tServer::test5(GCFEvent& event, GCFPortInterface& /*port*/)
 GCFEvent::TResult tClient::test5(GCFEvent& event, GCFPortInterface& port)
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
-	LOG_DEBUG_STR ("Client@test5: " << evtstr(event.signal));
+	LOG_DEBUG_STR ("Client@test5: " << eventName(event.signal));
 
 	switch (event.signal) {
 	case F_INIT:

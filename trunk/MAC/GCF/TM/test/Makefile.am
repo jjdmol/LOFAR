@@ -3,8 +3,9 @@ SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
-check_PROGRAMS 		= tmEcho tmPing tGCFPort tProtocol tEventPort tTimer \
+check_PROGRAMS 		= tmEcho tmPing tGCFPort tProtocol tTimer \
 						tGCFTask1 tGCFTask2 tGCFTask3 tGCFTask4 tGCFTask5
+# tEventPort
 
 tmEcho_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc Echo.cc Echo.h 
 tmEcho_LDADD		= ../src/libgcftm.la
@@ -25,11 +26,11 @@ tProtocol_SOURCES 		= testprotocol.ph testprotocol.cc \
 tProtocol_LDADD			= ../src/libgcftm.la
 tProtocol_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
 
-tEventPort_SOURCES 		= tEventPort.cc
-tEventPort_LDADD		= ../src/ServiceBroker/libeventport.la \
-						  $(libdir)/librsp_protocol.la \
-						  -L$(includedir)/APL/RSP_Protocol
-tEventPort_DEPENDENCIES	= ../src/ServiceBroker/libeventport.la $(LOFAR_DEPEND)
+#tEventPort_SOURCES 		= tEventPort.cc
+#tEventPort_LDADD		= ../src/ServiceBroker/libeventport.la \
+#						  $(libdir)/librsp_protocol.la \
+#						  -L$(includedir)/APL/RSP_Protocol
+#tEventPort_DEPENDENCIES	= ../src/ServiceBroker/libeventport.la $(LOFAR_DEPEND)
 
 tTimer_SOURCES 		= $(BUILT_SOURCES) tTimer.cc
 tTimer_LDADD		= ../src/libgcftm.la
