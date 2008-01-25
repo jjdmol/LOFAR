@@ -28,8 +28,6 @@ id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 0)";
 // specify extra include files
 // e.g.
 //include = '<sys/time.h>';
-include = '<GCF/GCF_PValue.h>';
-include = '<GCF/GCF_Defines.h>';
 include = '<APL/RTCCommon/StringVector.h>';
 
 prelude = << PRELUDE_END
@@ -47,7 +45,7 @@ event = {
 	dir = IN;
 	param = {
 		name = "seqnr";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "DPname";
@@ -64,11 +62,11 @@ event = {
 	dir = OUT;
 	param = {
 		name = "seqnr";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "result";
-		type = "unsigned short";
+		type = "uint32";
 	};
 };
 
@@ -77,11 +75,11 @@ event = {
 	dir = IN;
 	param = {
 		name = "seqnr";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "msgCount";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "DPnames";
@@ -100,11 +98,11 @@ event = {
 	dir = OUT;
 	param = {
 		name = "seqnr";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "result";
-		type = "unsigned short";
+		type = "uint32";
 	};
 };
 

@@ -112,15 +112,16 @@ EventPort::EventPort(const string&		aServiceMask,
 		LOG_DEBUG_STR ("Opening listener on port " << itsPort);
 		itsListenSocket = new Socket(serviceName, toString(itsPort), Socket::TCP);
 		itsSocket = itsListenSocket->accept(-1);
-		itsSocket->setBlocking(false);		// assume async.
+		itsSocket->setBlocking(true);		// assume sync. See note.
 	}
 	else {
 		LOG_DEBUG_STR ("Trying to make connection with " << serviceName);
 		itsSocket = new Socket(serviceName, itsHost, toString(itsPort), Socket::TCP);
 		itsSocket->connect(1000);
-		itsSocket->setBlocking(false);		// assume async.
+		itsSocket->setBlocking(true);		// assume sync. See note.
 	}
-
+	// Note: sockets are set to blocking. Setting them to non-blocking requires
+	//		 different code in receiveEvent().
 }
 
 //
