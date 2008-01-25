@@ -48,7 +48,7 @@ Ping::Ping(string name)
   : GCFTask((State)&Ping::initial, name), ping_timer(-1)
 {
   // register the port for debug tracing
-  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
+  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
 
   /**
    * Initialize the "client" port
