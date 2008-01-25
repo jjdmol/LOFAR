@@ -1,4 +1,3 @@
-
 %% bare_jrnl.tex
 %% V1.3
 %% 2007/01/11
@@ -132,7 +131,7 @@
   % and their extensions so you won't have to specify these with
   % every instance of \includegraphics
   \DeclareGraphicsExtensions{.pdf}
-  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+  \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
 \else
   % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
   % will default to the driver specified in the system graphics.cfg if no
@@ -814,19 +813,71 @@ directly through the WAN into the BG/L.
 Not having to build a separate input cluster results in an estimated cost
 saving of \euro700,000.
 
-
-
 \section{Central Processing: Calibration}
 
-\subsection{Flagging of RFI}
-\label{sec:RFI}
+The processing of LOFAR data has to deal with a number of challenges~\cite{Noordam:04,Nijboer:07}. First of all, the data volumes are huge and being able to process the data in finite time dictates the design of the data processing chain. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they yield a higher degree of instrumental polarization, and they have relatively high sidelobes. All these issues complicate the processing of the data. Especially, since a high dynamic range must be reached. The third category of challenges lies in the sky itself. At the low frequencies where LOFAR will observe there will be very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Finally, the Earths ionosphere seriously defocusses the images.
 
-\subsection{Self-Calibration}
+With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider exisiting processing strategies and algorithms and develop new strategies and algorithms. The processing therefore remains a work in progress of which we give an overview of the current status.
 
-\subsection{Imaging}
+\subsection{Processing large data volumes}
 
-\subsection{Processing Architecture}
+The total amount of data that is produced is detemined by the total number of stations that are used in the observation. This number is still uncertain and will be different in the Low Band and the High Band, since the High Band stations in the Core will be split in 2 half stations. Using 20 Core stations and 20 Remote stations as a working example this generates between 0.28 Gbyte/s for the LBA Core Array in 200 MHz sampling mode and 3.1 Gbyte/s for the HBA Full Array in 160 MHz sampling mode. After a typical observation of 4 hours between 3.3 Tbyte and 35 Tbyte will be collected.
 
+Since a permanent data storage is not part of the LOFAR telescope these data volumes have to be processed near real time. Fortunately, not all LOFAR applications are so data intense, so that for every 1 hour of observation we may have up to, say, 4 hours to further process the data. With this in mind data I/O becomes a serious problem. Obviously the data needs to be processed in a parallelized and distributed way minimizing the I/O that is needed~\cite{Loose:08,Diepen:08}.  
+ 
+Data can be distributed over a large number of processing nodes in a number of ways. Distribution over baselines is not very suitable for imaging, where data from all baselines must be combined to produce an image. Distribution over time has the disadvantage that up to sevaral Gbytes/s have to be sent to a single processing node. Frequency, therefore, seems to be the best way. This distribution scheme matches with the design of the correlator. It is also a convenient scheme for the imager, where images are created per (combined) frequency channel. 
+
+A consequence of distribution over frequency is that in the self-calibration step solver equations from different compute nodes may need to be combined. The combining of solver equations, however, involves far less data then the underlying visibility data.   
+
+Even though the processing of the data will be done on a large cluster of computers, the total amount of data can be such that we expect the quality of the final result to be processing limited. This means that for all the algorithms we have to weight accuracy against the amount of Flops needed. It also means that the LOFAR instrument can be improved by upgrading the processing cluster in the future. 
+
+\subsection{Processing steps}
+
+LOFAR calibration is a joint estimation problem for both instrumental parameters and source parameters. At its heart lies the ``Measurement Equation'' that is used to model the observed data~\cite{Hamaker:96}. A signal processing data model and a Cramer-Rao lower bound analysis are given in ~\cite{Tol:07}. The latter paper also provides a good introduction to the signal processing aspects of LOFAR Self-Calibration.   
+
+The final LOFAR calibration strategy is still under development. However, we foresee that the following steps and iterations will be part of it. The first step consists of removing bad data points, which are due to e.g. Radio Frequency Interference (RFI). After this step the contaminating contribution of a couple of very strong sources (like CasA, CygA, TauA, VirA) that enter through the station beam sidelobes needs to be removed. Since modelling the station beam sidelobes is infeasible due to the large number of parameters involved, the combined effect of the sources and the instrumental effects has to be estimated and subtracted from the data. 
+
+Once the interfering signals are removed from the data, the data may be further integrated. The high resolution in frequency is only needed for removing RFI. The final resolution is determined by bandwidth smearing requirements~\cite{SIRAII:99}. In the frequency direction the data may be reduced by a factor of 3 to 10, depending on the size of the array used for the observation {\bf CHECK}. In principle the data may also be integrated along the time axis. Here, however, we have to make sure that the effect of the ionosphere remains constant over a time sample. The maximal reduction factor determined by time-average smearing ranges from 3 tot 10, again depending on array size {\bf CHECK}.
+
+Next an iterative loop, dubbed the ``Major Cycle'', is entered where we first estimate instrumental and source parameters using the visibility data, then image the data, and finally refine the estimation  of the source parameters using image data. Since the estimation algoritms are also iterative in nature, this loop will be traversed a number of times~\cite{Nijboer:07}. 
+
+After initial operation of the LOFAR instrument the parameters for the strongest sources will be known. From then on the strongest sources can be used in every observation to estimate ionospheric parameters, instrumental parameters, and to refine the estimate for the station beams that is available from the station calibration. Using these estimates the contributions for the strongest sources are removed from the data. The remaining residual visibility data is then imaged.
+
+\ldots
+
+Assume strong sources known. Refine beam parameters from station cal. Fit ionospheric parameters. \\
+Subtract strong sources and fainter sources (with PSF far sidelobes above noise) \\
+Correct, Integrate and Image in facets, using w-projection. Facet size determined by beam and ionosphere. \\
+Update source parameters by source extraction. \\
+Re-enter Major Cycle. Do on increasing subset of the data (time, freq, baseline). In total maximal ``twice trhough all the data''.
+
+
+
+\ldots
+
+The correlator produces visibility data on a 1 second and 0.62 kHz of 0.78 kHz resolution depending on the sampling frequency of the station processing. The frequency resolution is needed for excision of RFI signals. Strong RFI sources can in principle be suppressed on the station level by applying spatial filtering techniques~\cite{Veen1:04,Veen2:04,Boonstra:05}. However, applying these techniques on the station level would imply that all station beams will be different. That would mean that the number of station beam parameters to be estimated in the following self-calibration step would increase considerably. We foresee that this will be impractible in the initial LOFAR operations. However, in later upgrades these spatial filtering techniques may be incorporated. Initially, LOFAR processing will use traditional flagging techniques~\cite{Renting:07}.  
+
+\subsection{Opmerkingen}
+
+{\it focus on signal path}
+
+{\it we will be processing limited}
+
+\begin{itemize}
+\item Flag RFI: papers Boonstra?
+\item Take out the passband per subband
+\item Compress the data, but avoid time and freq smearing
+\item Major Cycle iteration
+\item Fit Ionosphere, fit beam, Cat I Peeling: Papers Tol/Veen \& Tol/Jeffs/Veen
+\item Cat II subtract
+\item Facet Corrected Imaging
+\item Shift the data per Facet
+\item Integrate the data
+\item Correct the data for the center of the Facet
+\item Image the data using w-projection: Paper Cornwell
+\item Extract sources from the image and update the source model
+\item New iteration of Major Cycle, while refining the RFI flagging. Iterations will probably use increased levels of data resolution
+\end{itemize}
 
 \section{Current state and roll-out planning}
 
@@ -854,7 +905,12 @@ end of 2008, and the remaining 18~stations will be built in the course of 2009.
 Meanwhile, construction of international stations will continue.
 The Blue Gene/L is capable of handling all foreseen future data rates.
 
-
+%\begin{figure*}
+%\includegraphics[width=\textwidth]{LBA_observed.jpg}
+%\caption{Real-time filters on the Central Processor.  For simplicity, the
+%figure shows two stations, one subband, one polarization.}
+%\label{fig:skymap}
+%\end{figure*}
 
 \section{Conclusion}
 The conclusion goes here.
@@ -938,7 +994,7 @@ EZ/KOMPAS.
 %
 %\end{thebibliography}
 \bibliographystyle{IEEEtran}
-\bibliography{lofar}
+\bibliography{lofar,lofarRJN}
 
 % biography section
 % 
