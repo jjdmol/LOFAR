@@ -22,17 +22,21 @@
 
 autogen definitions protocol;
 
-description = "Protocol definition for sending LogMessages to a LoggingProcessor";
-prefix = "KVT"; // for the signal names
-id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 1)";
+description	= "Protocol for sending Key-Value-Time triples to the KeyValueLogger";
+prefix		= "KVT"; // for the signal names
+id 			= "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 1)";
+
 // specify extra include files
-// e.g.
-//include = '<sys/time.h>';
-//include = '<GCF/GCF_PValue.h>';
-//include = '<GCF/GCF_Defines.h>';
 include = '<APL/RTCCommon/StringVector.h>';
 
 prelude = << PRELUDE_END
+
+//	REGISTER 	  	 (uint obsID, string	name);
+//	REGISTER_ACK	 (uint obsID, string	name);
+//	SEND_MSG		 (uint seqnr, string key, string value);
+//	SEND_MSG_ACK	 (uint seqnr, uint result);
+//	SEND_MSG_POOL	 (uint seqnr, uint nrMsgs, strVector key, strVector value);
+//	SEND_MSG_POOL_ACK(uint seqnr, uint result);
 
 PRELUDE_END;
 
@@ -43,11 +47,37 @@ PRELUDE_END;
 //
 
 event = {
+	signal = REGISTER;
+	dir = IN;
+	param = {
+		name = "obsID";
+		type = "uint32";
+	};
+	param = {
+		name = "name";
+		type = "string";
+	};
+};
+
+event = {
+	signal = REGISTER_ACK;
+	dir = OUT;
+	param = {
+		name = "obsID";
+		type = "uint32";
+	};
+	param = {
+		name = "name";
+		type = "string";
+	};
+};
+
+event = {
 	signal = SEND_MSG;
 	dir = IN;
 	param = {
 		name = "seqnr";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "key";
@@ -64,11 +94,11 @@ event = {
 	dir = OUT;
 	param = {
 		name = "seqnr";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "result";
-		type = "unsigned short";
+		type = "uint32";
 	};
 };
 
@@ -77,11 +107,11 @@ event = {
 	dir = IN;
 	param = {
 		name = "seqnr";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "msgCount";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "keys";
@@ -100,11 +130,11 @@ event = {
 	dir = OUT;
 	param = {
 		name = "seqnr";
-		type = "unsigned short";
+		type = "uint32";
 	};
 	param = {
 		name = "result";
-		type = "unsigned short";
+		type = "uint32";
 	};
 };
 
