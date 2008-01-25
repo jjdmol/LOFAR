@@ -25,7 +25,7 @@
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/PVSS/PVSSresult.h>
-#include <APL/CUDaemons/Log_Protocol.ph>
+#include <APL/APLProtocol/LOG_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <log4cplus/socketappender.h>
 #include "LoggingProcessor.h"

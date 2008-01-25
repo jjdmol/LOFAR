@@ -1,19 +1,19 @@
 # Executables
-bin_PROGRAMS 				= LoggingProcessor
+bin_PROGRAMS 				= KeyValueLogger
 
-#LoggingProcessor_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
+#KeyValueLogger_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 #							  -Wno-deprecated \
 #							  -fmessage-length=0 \
 #							  -fdiagnostics-show-location=once
 
-LoggingProcessor_SOURCES	= LoggingProcessor.cc \
-							  LoggingProcessorMain.cc
-LoggingProcessor_LDADD		= $(LOFAR_DEPEND) $(libdir)/liblog_protocol.a
-LoggingProcessor_DEPENDENCIES=$(LOFAR_DEPEND)
+KeyValueLogger_SOURCES	= KeyValueLogger.cc \
+							  KeyValueLoggerMain.cc
+KeyValueLogger_LDADD		= $(LOFAR_DEPEND) $(libdir)/libkvt_protocol.a
+KeyValueLogger_DEPENDENCIES = $(LOFAR_DEPEND)
 
 bin_SCRIPTS					= 
 
-NOINSTHDRS 					= LoggingProcessor.h
+NOINSTHDRS 					= KeyValueLogger.h
 
 INSTHDRS 					= 
 
@@ -29,7 +29,7 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 configfilesdir				= $(bindir)
 configfiles_DATA 			= 
 
-sysconf_DATA				= LoggingProcessor.conf \
-							  LoggingProcessor.log_prop 
+sysconf_DATA				= KeyValueLogger.conf \
+							  KeyValueLogger.log_prop 
 
 include $(top_srcdir)/Makefile.common
