@@ -27,9 +27,9 @@
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/StationInfo.h>		// LOFAR_SHARE_LOCATION
+#include <APL/APLProtocol/LOG_Protocol.ph>
 #include <log4cplus/socketappender.h>
 #include "LoggingClient.h"
-#include "Log_Protocol.ph"
 
 using namespace log4cplus;
 using namespace log4cplus::helpers;
