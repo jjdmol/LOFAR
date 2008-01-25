@@ -21,24 +21,25 @@ ServerName     | id                   | value
 ---------------+----------------------+-------
 FSM             F_FSM_PROTOCOL          1
 PORT            F_PORT_PROTOCOL         2
-PML             F_GCF_PROTOCOL + 0      3    // Obsolete
-PI              F_GCF_PROTOCOL + 1      4    // Obsolete
-PA              F_GCF_PROTOCOL + 2      5    // Obsolete
+LOG             F_GCF_PROTOCOL + 0      3    // used to be PML
+KVT             F_GCF_PROTOCOL + 1      4    // used to be PI
+DP              F_GCF_PROTOCOL + 2      5    // used to be PA
 SB              F_GCF_PROTOCOL + 3      6
-KVL             F_GCF_PROTOCOL + 4      7
+...             F_GCF_PROTOCOL + 4      7	 // used to be KVL
 
-RTDB            F_APL_PROTOCOL + 1      11   // was LogicalDevice
+TST             F_APL_PROTOCOL + 0      10   // used for testing
+...             F_APL_PROTOCOL + 1      11   // was LogicalDevice
 StartDaemon     F_APL_PROTOCOL + 2      12
 Control         F_APL_PROTOCOL + 3      13   // used to be SAS
-THPVSSBridge    F_APL_PROTOCOL + 4      14
+THPVSSBridge    F_APL_PROTOCOL + 4      14	 // Obsolete?
 MIS             F_APL_PROTOCOL + 5      15
-ABS             F_APL_PROTOCOL + 10     20
+BS              F_APL_PROTOCOL + 10     20
 EPA             F_APL_PROTOCOL + 11     21
 RSP             F_APL_PROTOCOL + 12     22
 CAL             F_APL_PROTOCOL + 13     23
 TBB             F_APL_PROTOCOL + 14     24
 TP              F_APL_PROTOCOL + 15     25
-CC              F_APL_PROTOCOL + 16     26
+TC              F_APL_PROTOCOL + 16     26
 ADAM            F_APL_PROTOCOL + 17     27
 
-NM              F_APL_PROTOCOL + 20     30
+NM              F_APL_PROTOCOL + 20     30	 // Obsolete?
