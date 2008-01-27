@@ -533,11 +533,11 @@ off-line calibration and imaging.
 % (should never be an issue)
 %I wish you the best of success.
 
-\IEEEPARstart{I}{n} the Netherlands a LO(w) Frequency ARray (LOFAR) is developed optimized for the low frequency band from 30 - 240 MHz. LOFAR is the first large scale radio telescope based fully on the phased array technique. This prevents the use of moving large constructions and enables multi-beaming. The total collecting area of LOFAR is achieved by many small dipoles which are grouped in stations to reduce the data rate to an acceptable level. The main reduction is achieved by selecting only a part of the sky by using the phased array technique. The number of stations installed in the Netherlands will be at least 36. Half of the number of stations will be core stations and the other half remote stations. The main difference between them is that the core stations can be split up in two independent arrays delivering the two fold of the remote station bandwidth.
+\IEEEPARstart{I}{n} the Netherlands a LO(w) Frequency ARray (LOFAR) is developed optimized for the low frequency band from 30--240 MHz. LOFAR is the first large scale radio telescope based fully on the phased array technique. This prevents the use of moving large constructions and enables multi-beaming. The total collecting area of LOFAR is achieved by many small dipoles which are grouped in stations to reduce the data rate to an acceptable level. The main reduction is achieved by selecting only a part of the sky by using the phased array technique. The number of stations installed in the Netherlands will be at least 36. Half of the number of stations will be core stations and the other half remote stations. The main difference between them is that the core stations can be split up in two independent arrays delivering the two fold of the remote station bandwidth.
 
 All data of the stations is transported to one central place via a Wide Area Network (WAN) and using owned and leased light paths. In Groningen all station data is processed. The processing is done by off the shelf hardware, varying from a supercomputer to clusters of computers. The processing done will vary from correlation for the standard imaging mode to tied-array beamforming for the transients and pulsar mode for example. However, also more sophisticated processing will be done to enable various energy cosmic ray modes of different intensities. 
 
-The heart of LOFAR will be installed in the Northern part of the Netherlands. The maximum baseline of LOFAR including only the Dutch stations is about 100 km. Since, also other European institutes showed interest and are building LOFAR stations the maximal baseline of LOFAR is extended to at least xxx km.  
+The heart of LOFAR will be installed in the Northern part of the Netherlands. The maximum baseline of LOFAR including only the Dutch stations is about 100 km. Since, also other European institutes showed interest and are building LOFAR stations the maximal baseline of LOFAR will be extended to several hundreds kilometer.  
 
 In this paper the LOFAR architecture will be discussed with a focus on the data flow.
 
@@ -639,16 +639,17 @@ In this paper the LOFAR architecture will be discussed with a focus on the data 
 
 \section{Station processing}
 
-In the LOFAR stations the electromagnetic signals of interest are received by multiple dipoles and combined in such a way that only a part of the sky is selected. The main architecture is depicted in Figure~\ref{fig:stationarch}. 
+In the LOFAR stations the electromagnetic signals of interest are received by multiple dipoles and combined in such a way that only a part of the sky is selected. The main architecture is depicted in Figure~\ref{fig:stationarch}. Each subsystem will be discussed in subsections.
 
 %fig:stationarch LOFAR remote station architecture
 
 \subsection{Antennas}
 
-The remote station baseline design consists of 96 Low Band High (LBH) antennas optimized for the 30-80 MHz frequency range and 48 High Band compound Antenna arrays (HBA) optimized for the 120-240 MHz frequency range. One HBA is composed of 16 individual antenna elements, which are combined through analog beamforming with true time delays. Both the low band and combined high band antenna signals are pre-filtered and amplified near the antenna prior to transportation over coaxial cables to a central location within a station. The size of the low band array will be 70xxx m in diameter, while the HBA array will be more dense. 
+The station baseline design consists of 96 dual polarized Low Band High (LBH) antennas optimized for the 30-80 MHz frequency range and 48 dual polarized High Band compound Antenna arrays (HBA) optimized for the 120-240 MHz frequency range. One HBA is composed of 16 individual antenna elements, which are combined through analog beamforming with true time delays. Both the low band and combined high band antenna signals are pre-filtered and amplified near the antenna prior to transportation over coaxial cables to a central location within a station. The low band array will be a randomized and exponentially space tapered configuration~\cite{capp:06} with a size of about 70~m in diameter, while the HBA array will be installed as a dense and more regular array. 
 
 \subsection{Receiver}
-The receiver accomodates also for a third antenna input (Low Band Low) operating in the 10-30 MHz band. At the central station location the receiver unit selects one out of three antennas. After selecting an antenna, the signal is filtered with one of the integrated filters. These filters select one of the four available observing bands. After filtering, the signal is amplified and filtered again to reduce the out of band noise contribution. A pre-amplifier in front of the A/D converter converts the single ended signal into a differential signal prior to A/D conversion. For the receiver a wideband direct digital conversion architecture is adopted. This reduces the number of analog devices used in the signal path. Since the LOFAR stations are installed in civilized areas the dynamic range of the A/D converter must be sufficient to handle the Radio Frequency Interference (RFI) signals in the band of interest. Hence, the A/D converter converts the analog signal into a 12 bit digital signal. The maximum sampling rate is 200 MHz, which is sufficient to directly convert the analog signals preventing the use of analog mixers. To fill the gaps in between the Nyquist zones, a sample frequency of 160 MHz can be chosen as well. The Nyquist zones I to III of the A/D converter with a sample frequency of 200 MHz and 160 MHz respectively are depicted in~\ref{fig:nyquistzones}. 
+In a LOFAR station one receiver is used for one polarization of both the LBH and HBA. The receiver accomodates also for a third antenna input (Low Band Low) operating in the 10-30 MHz band. At the central station location the receiver unit selects one out of these three antennas. After selecting an antenna, the signal is filtered with one of the integrated filters. These filters select one of the four available observing bands. After filtering, the signal is amplified and filtered again to reduce the out of band noise contribution (anti-aliasing). A pre-amplifier in front of the A/D converter converts the single ended signal into a differential signal prior to A/D conversion. For the receiver a wideband direct digital conversion architecture is adopted. This reduces the number of analog devices used in the signal path. The maximum sampling rate is 200~MHz, which is sufficient to directly convert the analog signals. To fill the gaps in between the Nyquist zones, a sample frequency of 160 MHz can be chosen as well. The Nyquist zones I to III of the A/D converter with a sample frequency of 200 MHz and 160 MHz respectively are depicted in~\ref{fig:nyquistzones}. 
+Since the LOFAR stations are installed in civilized areas the dynamic range of the A/D converter must be sufficient to handle the Radio Frequency Interference (RFI) signals in the band of interest. Hence, the A/D converter converts the analog signal into a 12 bit digital signal. 
 
 %fig:nyquistzones caption: The supported modes in the LOFAR receiver based on the available Nyquist zones
 
@@ -658,21 +659,23 @@ The antennas in the station form a phased array, producing one or many station b
 
 To form a phased array at station level, the analog antenna signals must be delayed and added to form a beam on the sky. Moreover the beamformer should be able to track sources on the sky and be flexible in exchanging beams for bandwidth. 
 
-The beamformer can be implemented by using true time delays or by applying phase shifts on narrow subbands. For the last solution an error is made at the edges of each subband (Figure~\ref{fig:???}), since the phase is frequency dependent and only one phase can be set per subband. 
+The beamformer can be implemented by using true time delays or by applying phase shifts on narrow subbands. For the last solution an error is made at the edges of each subband (Figure~\ref{fig:phasebeamf}), since the phase is frequency dependent and only one phase can be set per subband. 
 
 %fig:phasebeamf caption: Illustration of 4 subbands and the error which is introduced by approximating the time delays by phase shifts per subband (the black line on the right hand side is the ideal phase)
 
-Since, the correlator in the LOFAR system is an FX correlator a certain frequency resolution is required for that. For the beamformer a certain (other) frequency resolution is required as well (if implemented by phase shifts). This led to the decision to implement the station beamforming with phase shifts after a first stage filterbank which realizes a frequency resolution sufficient for the beamforming operation. A second stage filterbank will make an even higher frequency resolution which is required before the correlator. Another reason to split the filter banks up is that the first stage filter bank is more expensive than the second stage filter bank because the first stage filter bank operates per antenna while the second stage filter bank operates on beams. Since no extra significant data reduction will be done after the second stage filterbank, that functionality will be implemented in the central systems.
+Since, the correlator in the LOFAR system is an FX correlator (first Fourier transform and then correlation) a certain frequency resolution is required for that. For the beamformer a certain (other) frequency resolution is required as well (if implemented by phase shifts). This led to the decision to implement the station beamforming with phase shifts after a first stage filterbank which realizes a frequency resolution sufficient for the beamforming operation. A second stage filterbank will make an even higher frequency resolution which is required before the correlator. Another reason to split the filter banks up is that the first stage filter bank is more expensive than the second stage filter bank because the first stage filter bank operates per antenna while the second stage filter bank operates on beams. Since no extra significant data reduction will be done after the second stage filterbank, that functionality will be implemented in the central systems.
 
 The first stage filter bank in the stations splits up the total band into 512 equidistant subbands. After the filtering operation, specific subbands can be selected. The selected subbands can be arbitrary and will add up to in total 32~MHz. This bandwidth is matched to the current capacity of the central processor.
 
-To form beams, the antenna signals are combined in a complex weighted sum. This is done with independent beamformers for each subband. In this way the number of pointings on the sky can be exchanged against the bandwidth per pointing, i.e. a user can choose between 1 beam of 32~MHz to a maximal of 8 beams of 4~MHz.
+To form beams, the antenna signals are combined in a complex weighted sum. This is done with independent beamformers for each subband. In this way the number of pointings on the sky can be exchanged against the bandwidth per pointing, i.e. a user can choose between 1 beam of 32~MHz to a maximal of 8 beams of 4~MHz. 
 
-%Additionally the station processing is able to calculate the full cross correlation matrix of all dipoles in the station for one subband. This information is used for the station calibration strategy. The goal of the station calibration is to calibrate individual antenna signals for gain and phase differences. 
+The station output signal is coded in 16 bit complex samples. Each second a timestamp is added to the output stream because the signal transported via UDP (User Datagram Protocol) packets. That means that the station signals are transported asynchronously. In the central processing facility the station signals will be synchronized with each other as is discussed in Section~\ref{central:xxx}.
 
-In parallel with the filtering and beamforming the raw data can be stored in a transient buffer. Freezing of the buffer content can be controlled by internal or external triggers. The stored data or selections thereof can be sent to the central processing facility for further processing. This extension is primarily used for the transients and cosmic ray community.
-%referenties naar LBA paper, Stefan papers, ...
-\fixme{Say something about UDP packets, 16+16 bit samples, max 54 subband/RSP board}
+Additionally the station processing is able to calculate the full cross correlation matrix of all dipoles in the station for one subband. This information is used for the station calibration~\cite{stefan:xxx}. The goal of the station calibration is to calibrate for gain and phase differences of the individual analog signal paths. 
+
+In parallel with the filtering and beamforming the raw data can be stored in a transient buffer as well. Freezing of the buffer content can be controlled by internal or external triggers. The stored data or selections thereof can be sent to the central processing facility for further processing. This extension is primarily used for the transients and cosmic ray community.
+
+\fixme{max 54 subband/RSP board ==> wil ik eigenlijk niet doen omdat ik het niet over implementatie heb ==> discuss}
 
 \section{Central Processing: the Correlator}
 
@@ -859,12 +862,12 @@ By sampling the data in each iteration of the Major Cycle, doubling the sampling
 
 \section{Current state and roll-out planning}
 
-Currently, four partially-built stations are functional: 3~stations with
+Currently~\cite{gunst:06}, four partially-built stations are functional: 3~stations with
 16~LBAs and 1~station with 48~LBAs.
-To create more baselines and achieve better UV coverage, we usually split each
-station into four {\em microstations}.
+To create more baselines and achieve better UV coverage, the stations each can be split into four {\em microstations}.
 This yields 16~microstations, which are treated the same as real stations in
 the online and offline processing pipelines.
+
 A consequence of quadrupling the number of stations is that the bandwidth
 is reduced to 36~subbands of 195~KHz or 48~subbands of 156~KHz.
 Alternatively, the station with 48~LBA can be split into 12~microstations,
@@ -874,6 +877,8 @@ but WAN restrictions limit the bandwidth to 12~resp.\ 16~subbands.
 The HBA units are currently being commissioned.
 A full LBA station in Effelsberg, Germany is also operational, and will soon
 be connected via a dedicated wide-area link to the Central Processor.
+
+In the course of this year 18 full stations (13~core + 5~remote) will be produced and installed in the field. Also the WAN infrastructure and Central Processor facility will be ready in the end of 2008 to handle the data of the 18 full stations and a couple of international stations as well. In the year thereafter another 18 stations will be produced and installed in the field.
 
 Construction of the full stations is planned as follows.
 \fixme{"station" should be consistent with HBA-core "double station"}
