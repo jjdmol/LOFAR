@@ -1,12 +1,12 @@
 TEX_SOURCES =	lofar.tex
 
-BIB_SOURCES =	lofar.bib
+BIB_SOURCES =	lofar.bib lofarRJN.bib
 
 FIG_SOURCES =	flow.fig processing.fig
 
-JGR_SOURCES =	speed.jgr
+JGR_SOURCES =	
 
-PNG_SOURCES =	LBA_observed.png
+PNG_SOURCES =	LBA_observed.png LBA_calibrated.png LBA_peeled.png
 
 STY_SOURCES =	
 
