@@ -6,7 +6,7 @@ FIG_SOURCES =	flow.fig processing.fig
 
 JGR_SOURCES =	
 
-PNG_SOURCES =	LBA_observed.png LBA_calibrated.png LBA_peeled.png
+PNG_SOURCES =	LBA_observed.png LBA_calibrated.png LBA_peeled.png telescope_overview.png stationoverview.png
 
 STY_SOURCES =	
 
