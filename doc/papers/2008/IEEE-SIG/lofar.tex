@@ -679,25 +679,40 @@ In parallel with the filtering and beamforming the raw data can be stored in a t
 
 \section{Central Processing: the Correlator}
 
-The station data are centrally received and combined in the
-correlator~\cite{Romein:06}.
-LOFAR uses an IBM Blue Gene/L supercomputer to correlate all data,
+\begin{figure*}
+\begin{center}
+\includegraphics[width=.8\textwidth]{processing}
+\end{center}
+\caption{Clusters in the Central Processor.}
+\label{fig:CEP}
+\end{figure*}
+
+The station data are sent over a dedicated Wide-Area Network to the Central
+Processor for further processing.
+Figure~\ref{fig:CEP} shows the processing steps that take place at the
+different computer clusters within the Central Processor.
+The Central Processor is divided in an online (real time) and offline part.
+The online part reduces the data volume to an amount that can be stored on
+a PetaByte-sized storage system, which provides space for three to five days
+of data.
+After the observation is finished, the data are further processed (see
+Section~\ref{sec:offline}).
+
+The main task in the online part is to correlate all data~\cite{Romein:06}.
+LOFAR uses a six-rack IBM Blue Gene/L supercomputer for this purpose,
 unlike traditional telescopes that typically use customized hardware.
 The desire for a flexible and reconfigurable instrument demands a
 {\em software\/} solution, but the data rates and processing requirements
-demand a supercomputer.
+compel a supercomputer.
 
-\fixme{Explain: BG/L characteristics}
-The heart of the Central Processor is a six-rack IBM Blue Gene/L supercomputer
-that provides 34~TFLOPS peak performance and has a fast internal interconnect:
-the 3-D~torus.
+The Blue Gene/L provides 34~TFLOPS peak performance and has a fast internal
+interconnect: the 3-D~torus.
 A total of 768~Gigabit Ethernet interfaces are available for external I/O.
 Each processor is extended by two double-precision floating point units
 that are very suitable for signal processing, since a variety of operations
 on complex numbers are natively supported.
+The Blue Gene/L is surrounded by an input cluster and a storage cluster.
 
-
-\ldots
 
 \begin{figure*}
 \includegraphics[width=\textwidth]{flow}
@@ -707,35 +722,24 @@ valid for the 200~MHz mode.}
 \label{fig:flow}
 \end{figure*}
 
-\fixme{Explain: input buffer \& station synchronization, transpose, delay
-compenstation, PPF, correlator}
-
 The input section receives all station data that are sent via the wide-area
 network.
-% I assume that the UDP packets have been introduced before
 Since UDP is an unreliable protocol, the input section handles duplicated,
 lost, and out-of-order packets.
-Lost data is appropriately flagged as being "invalid", and the remainder
-of the processing pipeline takes this into account.
+\fixme{Why UDP}
+Lost data are appropriately flagged as being "invalid", and the remainder
+of the processing pipeline handles this accordingly.
 The data are received into a circular buffer, that holds the most recent
 six seconds of data.
 
 The buffer serves three purposes.
-First, it synchronizes the station data, since the difference in path lengths
-between the stations and the correlator result in different travel times over
-the WAN link.
-Second, the buffer is used to compensate for the bulk of the delay that
-is due to the fact that the stations receive a wave at a different time
-(see Figure~\ref{fig:delay}).
-%Figure~\ref{fig:delay}), and the bulk of the delay is compensated for
-%by delaying the stream of station samples for each station differently.
-%The delay depends on the physical locations of the stations, the observation
-%direction, and the time.
-%The rotation of the earth complicates these computations, since the orientation
-%of the stations with respect to the observed sky is altered continuously.
-% TODO: explain delays better
-Third, it provides some headroom to recover from small hiccups in the remainder
-of the processing pipeline, without data loss.
+First, it is used to synchronize the station data, since the WAN links
+exhibit different travel times for different stations.
+Second, it provides some headroom to recover from small hiccups in the
+remainder of the processing pipeline, without data loss.
+Third, the buffer is used to form beams; the bulk of the delay is introduced
+by shifting the buffer's read pointer by an entire amount of samples
+(the remaining delay is corrected by a phase shift later).
 
 Each input node receives data from up to 54~subbands from a single RSP board
 of one station.
@@ -772,12 +776,37 @@ integration period (typically: one second), and interpolated both in time
 and (channel) frequency such that the phase of each sample is corrected by
 an accurate factor.
 
+\begin{figure}
+\begin{center}
+\includegraphics[width=53mm]{speed}
+\end{center}
+\caption{Execution times of the filters for different numbers of stations}.
+\label{fig:speed}
+\end{figure}
+
+After the phase correction, the data are correlated, by multiplying the
+samples of each station with the complex conjugate of all other stations.
+To reduce the output data rate, the correlations are typically integrated
+over one second.
+Since the cross correlation of station $A$ and $B$ is the complex conjugate
+of station $B$ and $A$, we compute it only once.
+Autocorrelations are computed as well, but treated separately since they
+require only half the amount of computations.
+The computational requirements of the correlator are squared in the number
+of stations, and dominate the total online processing demands (see
+Figure~\ref{fig:speed}).
+The correlator, which is also implemented in assembly, is extremely efficient:
+it achieves 98\% of the floating-point peak performance~\cite{Romein:06}.
+
+\fixme{Storage section}
 
 
 The PPF implicitly converts the 16-bit complex number to 32-bit floating-point
 numbers, since the BG/L performs floating point computations faster than
 integer operations.
 Also, the phase correction and the correlations are done in floating point.
+Internally, the BG/L only supports double-precision arithmetic, but the
+high precision is not necessary for our application.
 
 
 
@@ -821,6 +850,7 @@ saving of \euro700,000.
 The processing of LOFAR data has to deal with a number of challenges~\cite{Noordam:04,Nijboer:07}. First of all, the data volumes are huge and being able to process the data in finite time dictates the design of the data processing chain. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they yield a higher degree of instrumental polarization, and they have relatively high sidelobes. All these issues complicate the processing of the data. Especially, since a high dynamic range must be reached. The third category of challenges lies in the sky itself. At the low frequencies where LOFAR will observe there will be very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Finally, the Earths ionosphere seriously defocusses the images.
 
 With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider exisiting processing strategies and algorithms and develop new strategies and algorithms. The processing therefore remains a work in progress of which we give an overview of the current status.
+\label{sec:offline}
 
 \subsection{Processing large data volumes}
 
@@ -888,12 +918,12 @@ end of 2008, and the remaining 18~stations will be built in the course of 2009.
 Meanwhile, construction of international stations will continue.
 The Blue Gene/L is capable of handling all foreseen future data rates.
 
-%\begin{figure*}
-%\includegraphics[width=\textwidth]{LBA_observed.png}
-%\caption{Real-time filters on the Central Processor.  For simplicity, the
-%figure shows two stations, one subband, one polarization.}
-%\label{fig:skymap}
-%\end{figure*}
+\begin{figure}
+\includegraphics[width=\columnwidth]{LBA_observed.eps}
+\caption{Real-time filters on the Central Processor.  For simplicity, the
+figure shows two stations, one subband, one polarization.}
+\label{fig:skymap}
+\end{figure}
 
 \section{Conclusion}
 The conclusion goes here.

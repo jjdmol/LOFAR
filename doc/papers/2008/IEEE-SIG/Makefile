@@ -2,14 +2,16 @@ TEX_SOURCES =	lofar.tex
 
 BIB_SOURCES =	lofar.bib
 
-FIG_SOURCES =	flow.fig
+FIG_SOURCES =	flow.fig processing.fig
 
-JGR_SOURCES =	
+JGR_SOURCES =	speed.jgr
+
+PNG_SOURCES =	LBA_observed.png
 
 STY_SOURCES =	
 
 AUX_FILES =	$(TEX_SOURCES:%.tex=%.aux)
-GEN_EPS_FILES =	$(FIG_SOURCES:%.fig=%.eps) $(JGR_SOURCES:%.jgr=%.eps)
+GEN_EPS_FILES =	$(FIG_SOURCES:%.fig=%.eps) $(JGR_SOURCES:%.jgr=%.eps) $(PNG_SOURCES:%.png=%.eps)
 EPS_FILES =	$(GEN_EPS_FILES)
 
 GEN_EXT =	bbl blg dvi idx ilg ind lof log lot ps toc ps_pages
@@ -24,6 +26,9 @@ TEXFONTS =	:
 
 %.eps:		%.fig
 		fig2dev -L eps $< $@
+
+%.eps:		%.png
+		convert $< $@
 
 lofar.dvi:	$(TEX_SOURCES) $(STY_SOURCES) $(BIB_SOURCES) $(EPS_FILES)
 		TEXINPUTS=$(TEXINPUTS) TEXFONTS=$(TEXFONTS) latex lofar
