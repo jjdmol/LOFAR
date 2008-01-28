@@ -778,7 +778,7 @@ an accurate factor.
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=53mm]{speed}
+\includegraphics[width=53mm]{speed.eps}
 \end{center}
 \caption{Execution times of the filters for different numbers of stations}.
 \label{fig:speed}
@@ -904,6 +904,22 @@ Alternatively, the station with 48~LBA can be split into 12~microstations,
 so that together with the other $3\times4$ microstations a total of
 24~microstations can be formed,
 but WAN restrictions limit the bandwidth to 12~resp.\ 16~subbands.
+
+\begin{figure*}
+\centering
+\includegraphics[width=0.32\textwidth]{LBA_observed.eps}
+\includegraphics[width=0.32\textwidth]{LBA_calibrated.eps}
+\includegraphics[width=0.32\textwidth]{LBA_peeled.eps}
+\caption{Images from the LOFAR CS1 configuration using 48 hours and about 20 subbands of data. Observed: an image of the flagged, non-calibrated data. Calibrated: an image of the flagged, calibrated data showing CasA and CygA. Residual: an image of the flagged, calibrated data where CasA and CygA are removed from the data. Images courtesy of S.B. Yatawatta.}
+\label{fig:skymap}
+\end{figure*}
+
+Figure \ref{fig:skymap} shows a series of images there were made from data using the LOFAR CS1 configuration. 16 microstations, each consisting of a single dipole with essentially an all sky FoV, were used. The images are centered on the North Celestial Pole and contain 48 hours and about 20 subbands of data. First the data is flagged for RFI and an image of the flagged-only data is shown on the left (``observed''). 
+
+The following calibration is performed in two steps. In the first step, a point source model is used for both CasA and CygA, both at 20000 Jy flux and no polarization. An analytical beam shape is used and we solve for a single complex gain for the whole sky. In this way an estimate for the instrumental complex gains (due to e.g. clock drifts) and ionospheric phase differences is obtained. After correcting the data a second step is performed, where we estimate a complex gain in both the direction of CasA and CygA. In this second step no assumptions on the beam are made. For the middle image (``calibrated'') the data is corrected using the estimates for the direction of CasA. In this middle image CasA and CygA can be clearly seen as point sources. 
+
+CasA and CygA completely overshine the background sources, since they are at least 50 times stronger then the average background source. After subtracting the contributions from CasA and CygA from the data the other sources become visible. This is shown in the right panel (``residual''), where now some hundred other sources are visible. 
+
 The HBA units are currently being commissioned.
 A full LBA station in Effelsberg, Germany is also operational, and will soon
 be connected via a dedicated wide-area link to the Central Processor.
@@ -918,12 +934,7 @@ end of 2008, and the remaining 18~stations will be built in the course of 2009.
 Meanwhile, construction of international stations will continue.
 The Blue Gene/L is capable of handling all foreseen future data rates.
 
-\begin{figure}
-\includegraphics[width=\columnwidth]{LBA_observed.eps}
-\caption{Real-time filters on the Central Processor.  For simplicity, the
-figure shows two stations, one subband, one polarization.}
-\label{fig:skymap}
-\end{figure}
+
 
 \section{Conclusion}
 The conclusion goes here.
