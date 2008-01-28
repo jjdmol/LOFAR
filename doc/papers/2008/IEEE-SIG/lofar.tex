@@ -533,7 +533,7 @@ off-line calibration and imaging.
 % (should never be an issue)
 %I wish you the best of success.
 
-\IEEEPARstart{I}{n} the Netherlands a LO(w) Frequency ARray (LOFAR) is developed optimized for the low frequency band from 30--240 MHz. LOFAR will be the first large radio telescope system, wherein a huge amount of small sensors are used to achieve its sensitivity instead of a small number of big dishes. The main reasons for this are:
+\IEEEPARstart{I}{n} the Netherlands a LO(w) Frequency ARray (LOFAR) is developed optimized for the low frequency band from 30--240 MHz. LOFAR is the first large scale radio telescope based fully on the phased array technique. This prevents the use of moving large constructions and enables multi-beaming. The total collecting area of LOFAR is achieved by many small dipoles which are grouped in stations to reduce the data rate to an acceptable level. The main reduction is achieved by selecting only a part of the sky by using the phased array technique. The number of stations installed in the Netherlands will be at least 36. Half of the number of stations will be core stations and the other half remote stations. The main difference between them is that the core stations can be split up in two independent arrays delivering the two fold of the remote station bandwidth.
 \begin{itemize}
 \item For the low frequencies involved in LOFAR traditional telescopes would be very large and hence costly
 \item Pointing can be done electronically, without using moveable parts and hence saving on maintenance costs
@@ -888,20 +888,22 @@ saving of \euro700,000.
 
 \section{Central Processing: Calibration}
 
-The processing of LOFAR data has to deal with a number of challenges~\cite{Noordam:04,Nijboer:07}. First of all, the data volumes are huge and being able to process the data in finite time dictates the design of the data processing chain. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they yield a higher degree of instrumental polarization, and they have relatively high sidelobes. All these issues complicate the processing of the data. Especially, since a high dynamic range must be reached. The third category of challenges lies in the sky itself. At the low frequencies where LOFAR will observe there will be very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Finally, the Earths ionosphere seriously defocusses the images.
+The off-line processing of LOFAR data has to deal with a number of challenges~\cite{Noordam:04,Nijboer:07}. First of all, the data volumes are huge and being able to process the data in finite time dictates the design of the data processing chain. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they yield a higher degree of instrumental polarization, and they have relatively high sidelobes. All these issues complicate the processing of the data. Especially, since a high dynamic range must be reached. 
 
-With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider exisiting processing strategies and algorithms and develop new strategies and algorithms. The processing therefore remains a work in progress of which we give an overview of the current status.
+The third category of challenges lies in the sky itself. At the low frequencies where LOFAR will observe there will be very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Last, but not least, the Earths ionosphere seriously defocusses the images.
+
+An introduction to signal processing for radio astronomical arrays can be found in~\cite{Veen1:04,Veen2:04,Boonstra:05}. With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider exisiting processing strategies and algorithms and develop new strategies and algorithms. The off-line processing therefore remains a work in progress of which we give an overview of the current status.
 \label{sec:offline}
 
 \subsection{Processing large data volumes}
 
-The total amount of data that is produced is detemined by the total number of stations that are used in the observation. This number is still uncertain and will be different in the Low Band and the High Band, since the High Band stations in the Core will be split in 2 half stations. Using 20 Core stations and 20 Remote stations as a working example this generates between 0.28 Gbyte/s for the LBA Core Array in 200 MHz sampling mode and 3.1 Gbyte/s for the HBA Full Array in 160 MHz sampling mode. After a typical observation of 4 hours between 3.3 Tbyte and 35 Tbyte will be collected.
+The total amount of data that is produced is detemined by the total number of stations that are used in the observation. This number is still uncertain and will be different in the Low Band and the High Band, since the High Band stations in the Core will be split in 2 half stations. Using 20 Core stations and 20 Remote stations as a working example the correlator generates between 0.28 Gbyte/s for the LBA Core Array in 200 MHz sampling mode and 3.1 Gbyte/s for the HBA Full Array in 160 MHz sampling mode. After a typical observation of 4 hours between 3.3 Tbyte and 35 Tbyte will be collected, again depending on the exact mode of operation.
 
-Since a permanent data storage is not part of the LOFAR telescope these data volumes have to be processed near real time. Fortunately, not all LOFAR applications are so data intense, so that for every 1 hour of observation we may have up to, say, 4 hours to further process the data. With this in mind data I/O becomes a serious problem. Obviously the data needs to be processed in a parallelized and distributed way minimizing the I/O that is needed~\cite{Loose:08,Diepen:08}.  
+Since a permanent data storage is not part of the LOFAR telescope these data volumes have to be processed near real time. Fortunately, the non-imaging LOFAR applications are not so data intense, so that for every 1 hour of observation we may have up to, say, 4 hours to further process the data. With this in mind data I/O becomes a serious problem. Obviously the data needs to be processed in a parallelized and distributed way minimizing the I/O that is needed~\cite{Loose:08,Diepen:08}.  
  
 Data can be distributed over a large number of processing nodes in a number of ways. Distribution over baselines is not very suitable for imaging, where data from all baselines must be combined to produce an image. Distribution over time has the disadvantage that up to sevaral Gbytes/s have to be sent to a single processing node. Frequency, therefore, seems to be the best way. This distribution scheme matches with the design of the correlator. It is also a convenient scheme for the imager, where images are created per (combined) frequency channel. 
 
-A consequence of distribution over frequency is that in the self-calibration step solver equations from different compute nodes may need to be combined. The combining of solver equations, however, involves far less data then the underlying visibility data.   
+A consequence of distribution over frequency is that in the self-calibration step solver equations from different compute nodes may need to be combined. The combining of solver equations, however, involves far less data then the underlying observed visibility data.   
 
 Even though the processing of the data will be done on a large cluster of computers, the total amount of data can be such that we expect the quality of the final result to be processing limited. This means that for all the algorithms we have to weight accuracy against the amount of Flops needed. It also means that the LOFAR instrument can be improved by upgrading the processing cluster in the future. 
 
@@ -913,11 +915,30 @@ The final LOFAR calibration strategy is still under development. However, we for
 
 Once the interfering signals are removed from the data, the data may be further integrated. The high resolution in frequency is only needed for removing RFI. The final resolution is determined by bandwidth smearing requirements~\cite{SIRAII:99}. In the frequency direction the data may be reduced by a factor of 3 to 10, depending on the size of the array used for the observation {\bf CHECK}. In principle the data may also be integrated along the time axis. Here, however, we have to make sure that the effect of the ionosphere remains constant over a time sample. The maximal reduction factor determined by time-average smearing ranges from 3 tot 10, again depending on array size {\bf CHECK}.
 
-Next an iterative loop, dubbed the ``Major Cycle'', is entered where we first estimate instrumental and source parameters using the visibility data, then image the data, and finally refine the estimation  of the source parameters using image data. Since the estimation algoritms are also iterative in nature, this loop will be traversed a number of times~\cite{Nijboer:07}. 
+Next an iterative loop, dubbed the ``Major Cycle'', is entered where we first estimate instrumental and source parameters using the visibility data, then image the data, and finally refine the estimation  of the source parameters using image data. Since not all parameters are estimated jointly, the Major Cycle will be traversed a number of times~\cite{Nijboer:07}. 
 
-After initial operation of the LOFAR instrument the parameters for the strongest sources will be known. From then on the strongest sources can be used in every observation to estimate ionospheric parameters, instrumental parameters, and to refine the estimate for the station beams that is available from the station calibration. Using these estimates the contributions from the strongest sources are removed from the data. The remaining residual visibility data is then corrected and imaged.
+After initial operation of the LOFAR instrument the parameters for the strongest sources will be known. From then on the strongest sources can be used in every observation to estimate ionospheric parameters, instrumental parameters, and to refine the estimate for the station beams that is available from the station calibration. 
 
-The sky image is the Fourier transform of the visibility domain. Due to the fact that the visibility domain is only discretely sampled, sources in the sky image are convolved with a Point Spread Function (PSF). The contribution from sources that generate PSF far sidelobes that are higher than the image noise level should be subtracted from the visibility data.
+In~\cite{Tol:07} it is shown that the unconstrained direction dependent calibration problem is ambiguous. The authors, however, present three physical contraints to get an unambigous solution: 
+%
+\begin{enumerate}
+\item use a calibrated subarray to calibrate the rest of the array,
+\item use assumptions on the structural dependence of a certain corrupting effect, e.g. the ionosphere,
+\item use polynomial smoothing on larger time / frequency domains.
+\end{enumerate}
+% 
+
+In the first approach the LOFAR core is calibrated first, where use is made of the fact that the core stations all share the same ionosphere. This is a simpleer problem. Van der Tol et al. show that in this case the remote stations can be calibrated, provided the number of calibration sources is less then the number of core stations~\cite{Tol:07,Tol:05}. 
+
+In the second approach, use is made of the fact that the effect of the ionosphere has a predictable frequency dependence~\cite{Tol:05}. The number of parameters that need to be estimated may be further reduced by using suitable base functions for the spatial dependence of the ionosphere. The use of Karhunen-Loeve base functions seems very promosing in this respect~\cite{Tol2:07}.  
+
+In the third approach, multiple samples iin frequency and time are combined in a joint estimation, where the time and frequency dependence is modelled by e.g. polynomials and in this way the number of parameters that need to be estimated is reduced from 1 per individual sample to the polynomial coefficients for all samples together. In~\cite{Tol:07} it is reported however that this approach needs good initial estimates, since the continuous phase polynomial is ambiguous to integer multiples of $2\pi$.
+
+For LOFAR all three approaches will used and they will be combined with the so-called ``Peeling'' approach~\cite{Noordam:04,Tol:07}.
+
+\ldots {\bf Peeling} \ldots
+
+The sky image is the Fourier transform of the visibility domain. Due to the fact that the visibility domain is only discretely sampled, sources in the sky image are convolved with a Point Spread Function (PSF). The contribution from sources that generate PSF far sidelobes that are higher than the image noise level should be subtracted from the visibility data. Using the solutions to the parameter estimation problem on the visibility data the contributions from the strongest sources are removed from the visibility data. The remaining residual visibility data is then corrected and imaged.
 
 One visibility sample is the summation of contributions from all sources in the sky. Since LOFAR has a large Field of View (FoV), the contribution from different sources is distorted by different ionospheric and beam effects. When imaging the visibility data, however, it is only possible to correct the data for one direction in the sky. This would mean that the image would be sharp for the direction of correction and the image quality would degrade outwards. To overcome this problem LOFAR images will be made in facets, where we can correct the data for the center of each facet. 
 
@@ -1072,20 +1093,25 @@ EZ/KOMPAS.
 %\begin{biography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{mshell}}]{Michael Shell}
 % or if you just want to reserve a space for a photo:
 
-\begin{IEEEbiography}{Michael Shell}
+\begin{IEEEbiography}{Andr\'{e} W. Gunst}
 Biography text here.
 \end{IEEEbiography}
 
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{rnijboer.eps}}]{Ronald Nijboer}
+Blah blah blah.
+\end{IEEEbiography}
+
+
 % if you will not have a photo at all:
-\begin{IEEEbiographynophoto}{John Doe}
-Biography text here.
-\end{IEEEbiographynophoto}
+%\begin{IEEEbiographynophoto}{John Doe}
+%Biography text here.
+%\end{IEEEbiographynophoto}
 
 % insert where needed to balance the two columns on the last page with
 % biographies
 %\newpage
 
-\begin{IEEEbiographynophoto}{Jane Doe}
+\begin{IEEEbiographynophoto}{John W. Romein}
 Biography text here.
 \end{IEEEbiographynophoto}
 
