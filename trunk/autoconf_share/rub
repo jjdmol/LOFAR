@@ -689,6 +689,8 @@ fi
 
 echo "Created lofarconf.in.private containing all these packages"
 pkgs=`sed -e s/#.*$//g lofarconf.in.private`
+# Make sure no newlines in variable.
+pkgs=`echo $pkgs`
 
 # System build is a bit different.
 if [ "$system" != 0 ]; then
@@ -717,6 +719,10 @@ if [ $skipbuilt = 0 ]; then
 fi  
 touch build.log
 touch build.result
+
+echo "PACKAGES = $pkgs" >> build.log
+echo "VARIANTS = $variants" >> build.log
+echo >> build.log
 
 # Do bootstrap if needed.
 # Make sure bootstrap is executable; Eclipse does not set x bit.
