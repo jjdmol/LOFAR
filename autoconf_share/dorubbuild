@@ -86,7 +86,7 @@ touch $resfile
 echo "" >> $logfile
 echo "***** Building packages in $builddir $variant" >> $logfile
 echo "PACKAGES = $pkgs" >> $logfile
-echo "VARIANTS = $variant" >> build.log
+echo "VARIANTS = $variant" >> $logfile
 
 # See what kind of build we have to do (in source tree or separate tree).
 # If $builddir is ., it is a variant name in the source tree,
@@ -196,7 +196,7 @@ do
     # Instead variable confmsg1 is created from confmsgst prior to lofarconf.
     confmsgst=':::::: CONFIGURING VARIANT $variant FOR PACKAGE $pkg'
     confmsgend=':::::: FINISHED CONFIGURING VARIANT $variant FOR PACKAGE $pkg'
-    confcmd="(chg=1; if [ $conf = 2  -a  -f conf.md5-check ]; then md5sum --check conf.md5-check > /dev/null 2>&1; chg="'$?'"; fi; if [ "'$chg'" = 0 ]; then echo '  package '"$pkg"' needs no configuring; md5sum has not changed'; else rm -f conf.md5-check; echo "'$confmsg1'"; $srcdir/$pkg/lofarconf $confopt && md5sum conf.md5 > conf.md5-check; echo "'$confmsg2'"; fi) && "
+    confcmd="(stat=0; chg=1; if [ $conf = 2  -a  -f conf.md5-check ]; then md5sum --check conf.md5-check > /dev/null 2>&1; chg="'$?'"; fi; if [ "'$chg'" = 0 ]; then echo '  package '"$pkg"' needs no configuring; md5sum has not changed'; else rm -f conf.md5-check; echo "'$confmsg1'"; $srcdir/$pkg/lofarconf $confopt && md5sum conf.md5 > conf.md5-check; stat="'$?; echo $confmsg2; fi; exit $stat) && '
   fi
   buildmsgst=':::::: BUILDING VARIANT $variant FOR PACKAGE $pkg'
   buildmsgend=':::::: FINISHED BUILDING VARIANT $variant FOR PACKAGE $pkg'
@@ -207,22 +207,24 @@ do
   if [ $dist = 1 ]; then
     makecmd="$makecmd && mkdir -p $srcdir/installed/$variant/dist && cp $pkgb-*.tar.gz $srcdir/installed/$variant/dist"
   fi
-  if [ "$makecmd" != "" ]; then
-    makecmd="echo "'$buildmsg1'"; $makecmd; echo "'$buildmsg2'
-  fi
+  makecmd='(echo $buildmsg1; '"$makecmd"'; stat=$?; echo $buildmsg2; exit $stat)'
+  # Log and execute the command.
+  # Generate the correct configure and build messages.
   echo "($initcmd && $confcmd $makecmd;)" >> $logfile
   confmsg1=`eval echo $confmsgst`
   confmsg2=`eval echo $confmsgend`
   buildmsg1=`eval echo $buildmsgst`
   buildmsg2=`eval echo $buildmsgend`
   if [ $buildmake = 1 ]; then
-    eval "($initcmd && $confcmd $makecmd && echo $pkg '# built at' `date` >> $srcdir/$resfile;)" >> $logfile 2>&1
+    echo "($initcmd && $confcmd $makecmd && echo $pkg '# built at'"' `date`'" >> $srcdir/$resfile; exit "'$?)' >> ~/a.b
+    eval "($initcmd && $confcmd $makecmd && echo $pkg '# built at'"' `date`'" >> $srcdir/$resfile; exit "'$?)' >> $logfile 2>&1
     stat=$?
   else
-    eval "($initcmd && $confcmd $makecmd;)" >> $logfile 2>&1
+    eval "($initcmd && $confcmd $makecmd; exit "'$?)' >> $logfile 2>&1
     stat=$?
   fi
   # Stop if error and -k is not given.
+  echo "status=$stat" >> $logfile
   if [ "$stat" != 0 ]; then
     status=$stat
     [ $kopt = 0 ] && break
