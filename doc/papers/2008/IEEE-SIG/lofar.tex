@@ -780,9 +780,15 @@ valid for the 200~MHz mode.}
 
 The input section receives all station data that are sent via the wide-area
 network.
-Since UDP is an unreliable protocol, the input section handles duplicated,
-lost, and out-of-order packets.
-\fixme{Why UDP}
+We use the UDP datagram protocol over the WAN, which is an unreliable
+protocol.
+Using a reliable protocol like TCP would complicate the design of the
+processing boards at the stations significantly, because TCP requires
+bi-directional communication (unlike UDP) and needs buffering of large amounts
+of transmitted data (to be able to retransmit lost packets).
+Since in practice few (less than 0.001\%) packets are lost and occasional loss
+of data does not harm the astronomical quality of the data, we chose for UDP.
+The input section handles duplicated, missing, and out-of-order UDP packets.
 Lost data are appropriately flagged as being "invalid", and the remainder
 of the processing pipeline handles this accordingly.
 The data are received into a circular buffer, that holds the most recent
@@ -802,11 +808,11 @@ of one station.
 Unfortunately, this data distribution is not suitable for the correlator,
 because to correlate a subband, the data from all stations are needed.
 Also, we need hundreds of CPUs to correlate 54~subbands.
-The next step is to redistribute all data over the CPUs, using a fast
+Thus, the next step is to redistribute all data over the CPUs, using a fast
 interconnect.
 Initially, we did this on a separate input cluster connected by a high-speed
 infiniband network, but we found that the internal 3-D~torus network within
-the Blue Gene/L can do this job much faster.
+the Blue Gene/L can do this job much faster~\cite{Iskra:08}.
 
 \ldots
 
@@ -814,7 +820,7 @@ Next in the pipeline is the second-stage PolyPhase (PPF) filter, that splits
 each 195~KHz (resp.\ 156~KHz) subband into 256~channels of 763~Hz
 (resp.\ 610~Hz) wide.
 Splitting the subbands into narrow frequency channels allows flagging
-of narrow-band RFI without much data loss (see Section~{sec:RFI}).
+of narrow-band RFI without much data loss (see Section~\ref{sec:RFI}).
 The PPF filter consists of 256~Finite Impulse Filters (FIR) filters and a
 Fast Fourier Transform (see Figure~\ref{fig:flow}).
 Each FIR filter is a 16-tap band pass filter.
@@ -926,6 +932,7 @@ Even though the processing of the data will be done on a large cluster of comput
 
 LOFAR calibration is a joint estimation problem for both instrumental parameters and source parameters. At its heart lies the ``Measurement Equation'' that is used to model the observed data~\cite{Hamaker:96}. A signal processing data model and a Cramer-Rao lower bound analysis are given in ~\cite{Tol:07}. The latter paper also provides a good introduction to the signal processing aspects of LOFAR Self-Calibration.   
 
+\label{sec:RFI}
 The final LOFAR calibration strategy is still under development. However, we foresee that the following steps and iterations will be part of it. The first step consists of removing bad data points, which are due to e.g. Radio Frequency Interference (RFI). After this step the contaminating contribution of a couple of very strong sources (like CasA, CygA, TauA, VirA) that enter through the station beam sidelobes needs to be removed. Since modelling the station beam sidelobes is infeasible due to the large number of parameters involved, the combined effect of the sources and the instrumental effects has to be estimated and subtracted from the data. 
 
 Once the interfering signals are removed from the data, the data may be further integrated. The high resolution in frequency is only needed for removing RFI. The final resolution is determined by bandwidth smearing requirements~\cite{SIRAII:99}. In the frequency direction the data may be reduced by a factor of 3 to 10, depending on the size of the array used for the observation {\bf CHECK}. In principle the data may also be integrated along the time axis. Here, however, we have to make sure that the effect of the ionosphere remains constant over a time sample. The maximal reduction factor determined by time-average smearing ranges from 3 tot 10, again depending on array size {\bf CHECK}.
@@ -1108,7 +1115,7 @@ EZ/KOMPAS.
 %\begin{biography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{mshell}}]{Michael Shell}
 % or if you just want to reserve a space for a photo:
 
-\begin{IEEEbiography}{Andr\'{e} W. Gunst}
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{gunst.eps}}]{Andr\'{e} W. Gunst}
 Biography text here.
 \end{IEEEbiography}
 
@@ -1126,9 +1133,18 @@ Blah blah blah.
 % biographies
 %\newpage
 
-\begin{IEEEbiographynophoto}{John W. Romein}
-Biography text here.
-\end{IEEEbiographynophoto}
+\begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{romein.eps}}]{John W.\ Romein}
+John W.\ Romein is senior system engineer/researcher high-performance
+computing at ASTRON, where he is responsible for the online data processing
+of LOFAR.
+He obtained his Ph.D.\ on distributed board-game playing at the Vrije
+Universiteit, Amsterdam.
+As a postdoc, he solved the game of Awari using a large computer cluster,
+and did research on parallel algorithms for bio-informatics.
+His research interests include high-performance computing, parallel algorithms,
+networks, programming languages, and compiler construction.
+\end{IEEEbiography}
+%\end{IEEEbiographynophoto}
 
 % You can push biographies down or up by placing
 % a \vfill before or after them. The appropriate

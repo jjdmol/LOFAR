@@ -6,9 +6,9 @@ FIG_SOURCES =	flow.fig processing.fig
 
 JGR_SOURCES =	speed.jgr
 
-JPG_SOURCES =	phase_error.jpg rnijboer.jpg
+JPG_SOURCES =	gunst.jpg phase_error.jpg rnijboer.jpg romein.jpg
 
-PNG_SOURCES =	LBA_observed.png LBA_calibrated.png LBA_peeled.png telescope_overview.png stationoverview.png
+PNG_SOURCES =	LBA_observed.png LBA_calibrated.png LBA_peeled.png Nyquistzonesmodes.png telescope_overview.png stationoverview.png
 
 STY_SOURCES =	
 
@@ -51,7 +51,7 @@ lofar.pdf:	lofar.ps
 xdvi::		lofar.dvi
 		MFINPUTS=`pwd`/mf: xdvi -thorough -s 7 -paper a4 $<
 
-evince::	lofar.ps
+evince::	lofar.pdf
 		evince $<
 
 lpr::		lofar.ps
