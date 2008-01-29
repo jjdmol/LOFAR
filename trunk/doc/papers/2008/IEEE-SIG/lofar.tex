@@ -554,7 +554,7 @@ Since the concept of LOFAR is so different compared with the traditional radio t
 
 In LOFAR, the detector is composed of multiple sensors. Since these sensors convert electromagnetic radiation into electronic signals, the sensors are further referred to as antennas. Ideally, the number of detectors equals the number of antennas to accommodate all sky imaging. However, cost of data transport and processing power limits the number of detectors which can be afforded for a feasible design with a reasonable price. The analog processing shown in Figure~\ref{fig:concept} covers the (low noise) amplification, filtering, analog signal transport and further signal conditioning functions before the signal is converted into the digital domain (Analog/Digital (A/D) conversion block). From there, the signals are digitally conditioned before entering the correlator. Typical operations in LOFAR digital processing are filtering, frequency selection, and beamforming. In the correlator, all signals are correlated with each other to form the cross correlation matrix. Furthermore, the correlation results are calibrated for instrumental and environmental effects in the post processing stage. Additionally, known sources are subtracted to enhance the dynamic range. Another post processing task is to transform the correlation products into an image.
 
-For LOFAR, the sensors should be distributed over a large area to achieve an angular resolution of arcsec accuracy with an acceptable UV coverage. All data coming from the sensors should come together in the correlator. So, on the one hand the instrument should be distributed over a large area, while on the other hand all data should come together in a central location. To balance the hardware and operational costs between (1) the equipment in the field, (2) the transport network and (3) the volume of the central systems, multiple antennas (48) are grouped in so called stations. Within such a station the information of all individual antennas is weighted and summed. Such an array of antennas is often called a phased array. As a consequence a spatial selection on the sky is made, which reduces the instantaneous Field Of View (FOV) of each station. So the The main reason for having stations is to reduce the total data stream to the correlator.
+For LOFAR, the sensors should be distributed over a large area to achieve an angular resolution of arcsec accuracy with an acceptable UV coverage. All data coming from the sensors should come together in the correlator. So, on the one hand the instrument should be distributed over a large area, while on the other hand all data should come together in a central location. To balance the hardware and operational costs between (1) the equipment in the field, (2) the transport network and (3) the volume of the central systems, multiple antennas (48) are grouped in so called stations. Within such a station the information of all individual antennas is weighted and summed. Such an array of antennas is often called a phased array. As a consequence a spatial selection on the sky is made, which reduces the instantaneous Field Of View (FOV) of each station. So the main reason for having stations is to reduce the total data stream to the correlator.
 
 For at least two Key Science Projects (KSPs) a larger FOV is required in the core of the instrument (2 km in diameter) than at extended ranges. Since there is only a limited distance to bridge from the core to the central processing location, more beams, requiring more bandwidth, can be generated in the core. Hence, in LOFAR two types of stations are distinguished: the remote stations and the core stations. 
 The main difference between them is that the core stations can be split up in two independent arrays delivering the two fold of the remote station bandwidth.
@@ -756,7 +756,8 @@ of data.
 After the observation is finished, the data are further processed (see
 Section~\ref{sec:offline}).
 
-The main task in the online part is to correlate all data~\cite{Romein:06}.
+In the standard imaging mode, the main task in the online part is to
+correlate all data~\cite{Romein:06}.
 LOFAR uses a six-rack IBM Blue Gene/L supercomputer for this purpose,
 unlike traditional telescopes that typically use customized hardware.
 The desire for a flexible and reconfigurable instrument demands a
@@ -805,16 +806,15 @@ Third, the buffer is used to form beams; the bulk of the delay is introduced
 by shifting the buffer's read pointer by an entire amount of samples
 (the remaining delay is corrected by a phase shift later).
 
-Each input node receives data from up to 54~subbands from a single RSP board
-of one station.
+Each input node receives all subband data of one station.
 Unfortunately, this data distribution is not suitable for the correlator,
-because to correlate a subband, the data from all stations are needed.
-Also, we need hundreds of CPUs to correlate 54~subbands.
-Thus, the next step is to redistribute all data over the CPUs, using a fast
-interconnect.
-Initially, we did this on a separate input cluster connected by a high-speed
+because the correlator needs the data of one subband and all stations.
+Also, we need hundreds of CPUs to correlate all subbands.
+Thus, the next step is to redistribute (transpose) all data over the CPUs,
+using a fast interconnect.
+Initially, we did this on the input cluster, which is connected by a high-speed
 infiniband network, but we found that the internal 3-D~torus network within
-the Blue Gene/L can do this job much faster~\cite{Iskra:08}.
+the Blue Gene/L does this job much faster~\cite{Iskra:08}.
 
 \ldots
 
@@ -862,7 +862,12 @@ Figure~\ref{fig:speed}).
 The correlator, which is also implemented in assembly, is extremely efficient:
 it achieves 98\% of the floating-point peak performance~\cite{Romein:06}.
 
-\fixme{Storage section}
+The correlated data are sent to another cluster, the storage section, and
+are written to disk.
+This is where the real-time pipeline ends.
+Eventually, the storage section will be able to store about one Petabyte of
+data, so that after an observation, several days are available to calibrate
+and image the data.
 
 
 The PPF implicitly converts the 16-bit complex number to 32-bit floating-point
