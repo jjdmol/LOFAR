@@ -85,6 +85,8 @@ touch $logfile
 touch $resfile
 echo "" >> $logfile
 echo "***** Building packages in $builddir $variant" >> $logfile
+echo "PACKAGES = $pkgs" >> $logfile
+echo "VARIANTS = $variant" >> build.log
 
 # See what kind of build we have to do (in source tree or separate tree).
 # If $builddir is ., it is a variant name in the source tree,
@@ -184,24 +186,40 @@ do
     md5sum $srcdir/$pkg/boot.md5 >> $blddir/conf.md5
   fi
 
-  # 
+  # Create the various parts of the configure and make commands.
   if [ $conf != 0 ]; then
-    confcmd="(chg=1; if [ $conf = 2  -a  -f conf.md5-check ]; then md5sum --check conf.md5-check > /dev/null 2>&1; chg="'$?'"; fi; if [ "'$chg'" = 0 ]; then echo '  package '"$pkg"' needs no configuring; md5sum has not changed'; else rm -f conf.md5-check; $srcdir/$pkg/lofarconf $confopt && md5sum conf.md5 > conf.md5-check; fi) && "
+    # Each configure is started and ended with a special message which can
+    # is used by scanbuildlog.
+    # The message is not fully composed here, because:
+    #  1. the variant name is not known here.
+    #  2. the message is not shown by the echo command prior to lofarconf.
+    # Instead variable confmsg1 is created from confmsgst prior to lofarconf.
+    confmsgst=':::::: CONFIGURING VARIANT $variant FOR PACKAGE $pkg'
+    confmsgend=':::::: FINISHED CONFIGURING VARIANT $variant FOR PACKAGE $pkg'
+    confcmd="(chg=1; if [ $conf = 2  -a  -f conf.md5-check ]; then md5sum --check conf.md5-check > /dev/null 2>&1; chg="'$?'"; fi; if [ "'$chg'" = 0 ]; then echo '  package '"$pkg"' needs no configuring; md5sum has not changed'; else rm -f conf.md5-check; echo "'$confmsg1'"; $srcdir/$pkg/lofarconf $confopt && md5sum conf.md5 > conf.md5-check; echo "'$confmsg2'"; fi) && "
   fi
+  buildmsgst=':::::: BUILDING VARIANT $variant FOR PACKAGE $pkg'
+  buildmsgend=':::::: FINISHED BUILDING VARIANT $variant FOR PACKAGE $pkg'
   if [ $clean = 2 ]; then
     premake="make distclean && $srcdir/$pkg/lofarconf $confopt && "
   fi
+  makecmd="$premake $mainmake $postmake"
   if [ $dist = 1 ]; then
-    postmakex="$postmake && mkdir -p $srcdir/installed/$variant/dist && cp $pkgb-*.tar.gz $srcdir/installed/$variant/dist"
-  else
-    postmakex="$postmake"
+    makecmd="$makecmd && mkdir -p $srcdir/installed/$variant/dist && cp $pkgb-*.tar.gz $srcdir/installed/$variant/dist"
   fi
-  echo "($initcmd && $confcmd $premake $mainmake $postmakex;)" >> $logfile
+  if [ "$makecmd" != "" ]; then
+    makecmd="echo "'$buildmsg1'"; $makecmd; echo "'$buildmsg2'
+  fi
+  echo "($initcmd && $confcmd $makecmd;)" >> $logfile
+  confmsg1=`eval echo $confmsgst`
+  confmsg2=`eval echo $confmsgend`
+  buildmsg1=`eval echo $buildmsgst`
+  buildmsg2=`eval echo $buildmsgend`
   if [ $buildmake = 1 ]; then
-    eval "($initcmd && $confcmd $premake $mainmake $postmakex && echo $pkg '# built at' `date` >> $srcdir/$resfile;)" >> $logfile 2>&1
+    eval "($initcmd && $confcmd $makecmd && echo $pkg '# built at' `date` >> $srcdir/$resfile;)" >> $logfile 2>&1
     stat=$?
   else
-    eval "($initcmd && $confcmd $premake $mainmake $postmakex;)" >> $logfile 2>&1
+    eval "($initcmd && $confcmd $makecmd;)" >> $logfile 2>&1
     stat=$?
   fi
   # Stop if error and -k is not given.
