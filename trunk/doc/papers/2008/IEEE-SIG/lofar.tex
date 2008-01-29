@@ -533,7 +533,7 @@ off-line calibration and imaging.
 % (should never be an issue)
 %I wish you the best of success.
 
-\IEEEPARstart{I}{n} the Netherlands a LO(w) Frequency ARray (LOFAR) is developed for radio astronomy optimized for the frequency band from 30--240 MHz. LOFAR will be the first large radio telescope system, wherein a huge amount of small sensors are used to achieve its sensitivity instead of a small number of large dishes. The main reasons for this are:
+\IEEEPARstart{I}{n} the Netherlands a LOw Frequency ARray (LOFAR) is developed for radio astronomy optimized for the frequency band from 30--240 MHz. LOFAR will be the first large radio telescope system, wherein a huge amount of small sensors are used to achieve its sensitivity instead of a small number of large dishes. The main reasons for this are:
 
 \begin{itemize}
 \item For the low frequencies involved in LOFAR traditional telescopes would be very large and hence costly
@@ -705,7 +705,7 @@ The three types of antennas are all connected via coaxial cables to the receiver
 
 To form a phased array at station level, the analog antenna signals must be delayed and added which results in a beam on the sky. Moreover the beamformer should be able to track sources on the sky and be flexible in exchanging beams for bandwidth. 
 
-The beamformer can be implemented by using true time delays or by applying phase shifts on narrow subbands. The time resolution required for using true time delays is smaller than the time resolution available (one over 200~MHz). On the contrary phase shifts can be applied only if the subband width is narrow enough. The error which is made at the edges of each subband is shown in Figure~\ref{fig:phasebeamf}, since the phase is frequency dependent and only one phase can be set per subband. The choice between both depends also on the frequency resolution required further down the stream.
+The beamformer can be implemented by using true time delays or by applying phase shifts on narrow subbands. The time resolution required for using true time delays is smaller than the time resolution available (one over 200~MHz). On the contrary phase shifts can be applied only if the subband width is narrow enough. The error which is made at the edges of each subband is shown in Figure~\ref{fig:phasebeamf}, since the phase is frequency dependent and only one phase can be set per subband. The choice between true time delays or phase shifts depends also on the frequency resolution required further down the stream.
 
 \begin{figure}
 \begin{center}
@@ -725,7 +725,7 @@ To form beams, the antenna signals are combined in a complex weighted sum for ea
 
 The weights applied in the beamformer have a phase component and a gain component. Both are also used to correct for gain and phase differences in all the individual analog signal paths. The gain and phase differences are determined by a station calibration algorithm~\cite{stefan:06} which runs online with the observations. As an input to the station calibration algorithm the full cross correlation matrix of all dipoles in the stations is calculated for one subband each second. Each second another subband can be selected, so that the station calibration algorithm can tune over the complete band in about 512~seconds. Additionally the cross correlation algorithm will be used for Radio Frequency Interference (RFI) detection as well~\cite{Boonstra:05}.
 
-The station output signal is coded in 16 bit complex samples and will be in total 2.2~Gbps. Each second a timestamp is added to the output stream because the signal is partly transported over existing infrastructure. The protocol used is UDP (User Datagram Protocol), because it is not possble to do re-transmitts of packets. In the central processing facility the station signals will be synchronized with each other as is discussed in Section~\ref{section:corr}.
+The station output signal is coded in 16 bit complex samples and will be in total 2.2~Gbps. Each second a timestamp is added to the output stream because the signal is partly transported over existing infrastructure. The protocol used is UDP (User Datagram Protocol), because it is not possble to do re-transmitts of packets. In the central processing facility the station signals will be synchronized with each other as is discussed in Section~\ref{sec:corr}.
 
 In parallel with the data stream as discussed, a user can also store the raw data or (part of) the filtered data. This is especially done for the transients application and the cosmic ray applications. For those applications data need to be stored and freezed in a transient buffer, when for example a cosmic ray event is taking place. Freezing of the buffer content can be controlled by internal or external triggers.
 The internal trigger algorithms are running in parallel with the data stream. The stored data or selections thereof can be sent to the central processing facility for further processing.
