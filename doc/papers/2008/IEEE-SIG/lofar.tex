@@ -476,10 +476,7 @@ Its revolutionary design and unprecedented size enables observations in the
 hardly-explored 10--250~MHz frequency range, and allows the study of
 a vast amount of new science cases.
 
-This paper describes the LOFAR signal processing chain from the stations,
-where the signals are received to the Central 
-Processors. The Central processing is split in real-time correlation and 
-off-line calibration and imaging.
+This paper describes the LOFAR signal processing chain from the antennas in the field to the central processing. The central processing is split in real-time processing and off-line calibration and imaging.
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
 % This preserves the distinction between vectors and scalars. However,
@@ -546,7 +543,7 @@ Since the concept of LOFAR is so different compared with the traditional radio t
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=53mm]{telescope_overview.eps}
+\includegraphics[width=83mm]{telescope_overview.eps}
 \end{center}
 \caption{LOFAR remote station architecture.}
 \label{fig:concept}
@@ -554,9 +551,9 @@ Since the concept of LOFAR is so different compared with the traditional radio t
 
 In LOFAR, the detector is composed of multiple sensors. Since these sensors convert electromagnetic radiation into electronic signals, the sensors are further referred to as antennas. Ideally, the number of detectors equals the number of antennas to accommodate all sky imaging. However, cost of data transport and processing power limits the number of detectors which can be afforded for a feasible design with a reasonable price. The analog processing shown in Figure~\ref{fig:concept} covers the (low noise) amplification, filtering, analog signal transport and further signal conditioning functions before the signal is converted into the digital domain (Analog/Digital (A/D) conversion block). From there, the signals are digitally conditioned before entering the correlator. Typical operations in LOFAR digital processing are filtering, frequency selection, and beamforming. In the correlator, all signals are correlated with each other to form the cross correlation matrix. Furthermore, the correlation results are calibrated for instrumental and environmental effects in the post processing stage. Additionally, known sources are subtracted to enhance the dynamic range. Another post processing task is to transform the correlation products into an image.
 
-For LOFAR, the sensors should be distributed over a large area to achieve an angular resolution of arcsec accuracy with an acceptable UV coverage. All data coming from the sensors should come together in the correlator. So, on the one hand the instrument should be distributed over a large area, while on the other hand all data should come together in a central location. To balance the hardware and operational costs between (1) the equipment in the field, (2) the transport network and (3) the volume of the central systems, multiple antennas (48) are grouped in so called stations. Within such a station the information of all individual antennas is weighted and summed. Such an array of antennas is often called a phased array. As a consequence a spatial selection on the sky is made, which reduces the instantaneous Field Of View (FOV) of each station. So the main reason for having stations is to reduce the total data stream to the correlator.
+For LOFAR, the sensors should be distributed over a large area to achieve an angular resolution of arcsec accuracy with an acceptable UV coverage. All data coming from the sensors should come together in the correlator. So, on the one hand the instrument should be distributed over a large area, while on the other hand all data should come together in a central location. To balance the hardware and operational costs between (1) the equipment in the field, (2) the transport network and (3) the volume of the central systems, multiple antennas (48) are grouped in so called stations. Within such a station the information of all individual antennas is weighted and summed. Such an array of antennas is often called a phased array. As a consequence a spatial selection on the sky is made, which reduces the instantaneous Field of View (FoV) of each station. So the The main reason for having stations is to reduce the total data stream to the correlator.
 
-For at least two Key Science Projects (KSPs) a larger FOV is required in the core of the instrument (2 km in diameter) than at extended ranges. Since there is only a limited distance to bridge from the core to the central processing location, more beams, requiring more bandwidth, can be generated in the core. Hence, in LOFAR two types of stations are distinguished: the remote stations and the core stations. 
+For at least two Key Science Projects (KSPs) a larger FoV is required in the core of the instrument (2 km in diameter) than at extended ranges. Since there is only a limited distance to bridge from the core to the central processing location, more beams, requiring more bandwidth, can be generated in the core. Hence, in LOFAR two types of stations are distinguished: the remote stations and the core stations. 
 The main difference between them is that the core stations can be split up in two independent arrays delivering the two fold of the remote station bandwidth.
 
 The number of stations installed in the Netherlands will be at least 36. Half of the number of stations will be core stations and the other half remote stations. 
@@ -667,9 +664,9 @@ In the LOFAR stations the electromagnetic signals of interest are received by mu
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=53mm]{stationoverview.eps}
+\includegraphics[width=73mm]{stationoverview.eps}
 \end{center}
-\caption{LOFAR remote station architecture.}
+\caption{LOFAR remote station architecture. The third dimension represents the subbands made in the filterbank.}
 \label{fig:stationarch}
 \end{figure}
 
@@ -693,7 +690,7 @@ Since the LOFAR stations are installed in civilized areas the dynamic range of t
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=53mm]{Nyquistzonesmodes.eps}
+\includegraphics[width=93mm]{Nyquistzonesmodes.eps}
 \end{center}
 \caption{The supported modes in the LOFAR receiver based on the available Nyquist zones.}
 \label{fig:nyquistzones}
@@ -709,7 +706,7 @@ The beamformer can be implemented by using true time delays or by applying phase
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=53mm]{phase_error.eps}
+\includegraphics[width=106mm]{phase_error.eps}
 \end{center}
 \caption{Illustration of 4 subbands and the error which is introduced by approximating the time delays by phase shifts per subband (the black line on the right hand side is the ideal phase).}
 \label{fig:phasebeamf}
@@ -719,7 +716,9 @@ Since, the correlator in the LOFAR system is an FX correlator as is explained in
 
 The reason to split the filter banks instead of using one is because the first stage filter bank operates at antenna level, while the second stage filter bank operates on station beams (which are a factor 48 smaller). Since no extra significant data reduction will be done after the second stage filterbank, that functionality will be implemented in the central systems.
 
-The first stage filter bank in the stations splits up the total band into 512 equidistant subbands resulting in order 200~kHz subbands. After the filtering operation, a subset of the subbands can be selected. The selected subbands can be arbitrary over the band and will add up to in total 32~MHz. This bandwidth is matched to the current capacity of the central processor.
+The first stage filter bank in the stations splits up the total band into 512 equidistant subbands resulting in order 195~kHz subbands for the 200~MHz sample frequency and 156~kHz for the 160~MHz sample frequency. The filter bank is efficiently implemented as a Poly Phase Filter bank (PPF) on Field Programmable Gate Arrays (FPGA).
+
+After the filtering operation, a subset of the subbands can be selected. The selected subbands can be arbitrary over the band and will add up to in total 32~MHz. This bandwidth is matched to the current capacity of the central processor.
 
 To form beams, the antenna signals are combined in a complex weighted sum for each selected subband. Each subband gets its own phase shift and are treated independent of each other. In this way the number of pointings on the sky can be exchanged against the bandwidth per pointing, i.e. a user can choose between 1 beam of 32~MHz to a maximal of 8 beams of 4~MHz. This is limited by the processing power of the Local Control Unit (LCU) which is responsible to calculate the weights each second, given a certain direction on the sky. 
 
@@ -1025,7 +1024,7 @@ end of 2008, and the remaining 18~stations will be built in the course of 2009.
 Meanwhile, construction of international stations will continue.
 The Blue Gene/L is capable of handling all foreseen future data rates.
 
-
+\fixme{only standard imaging mode implemented}
 
 \section{Conclusion}
 The conclusion goes here.
