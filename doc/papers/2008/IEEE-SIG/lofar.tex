@@ -932,18 +932,16 @@ station design.
 
 \section{Central Processing: Calibration}
 
-The off-line processing of LOFAR data has to deal with a number of challenges~\cite{Noordam:04,Nijboer:07}. First of all, the data volumes are huge and being able to process the data in finite time dictates the design of the data processing chain. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they yield a higher degree of instrumental polarization, and they have relatively high sidelobes. All these issues complicate the processing of the data. Especially, since a high dynamic range must be reached. 
+The off-line processing of LOFAR data has to deal with a number of challenges~\cite{Noordam:04,Nijboer:07}. First of all, the data volumes are huge. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they yield a higher degree of instrumental polarization, and they have relatively high sidelobes. All these issues complicate the processing of the data, especially since a high dynamic range must be reached. 
 
-The third category of challenges lies in the sky itself. At the low frequencies where LOFAR will observe there will be very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Last, but not least, the Earths ionosphere seriously defocusses the images.
+The third category of challenges lies in the sky itself. At the low frequencies where LOFAR observes there are very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Last, but not least, the Earths ionosphere seriously defocusses the images.
 
 An introduction to signal processing for radio astronomical arrays can be found in~\cite{Veen1:04,Veen2:04,Boonstra:05}. With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider exisiting processing strategies and algorithms and develop new strategies and algorithms. The off-line processing therefore remains a work in progress of which we give an overview of the current status.
 \label{sec:offline}
 
 \subsection{Processing large data volumes}
 
-The total amount of data that is produced is detemined by the total number of stations that are used in the observation. This number is still uncertain and will be different in the Low Band and the High Band, since the High Band stations in the Core will be split in 2 half stations. Using 20 Core stations and 20 Remote stations as a working example the correlator generates between 0.28 Gbyte/s for the LBA Core Array in 200 MHz sampling mode and 3.1 Gbyte/s for the HBA Full Array in 160 MHz sampling mode. After a typical observation of 4 hours between 3.3 Tbyte and 35 Tbyte will be collected, again depending on the exact mode of operation.
-
-Since a permanent data storage is not part of the LOFAR telescope these data volumes have to be processed near real time. Fortunately, the non-imaging LOFAR applications are not so data intense, so that for every 1 hour of observation we may have up to, say, 4 hours to further process the data. With this in mind data I/O becomes a serious problem. Obviously the data needs to be processed in a parallelized and distributed way minimizing the I/O that is needed~\cite{Loose:08,Diepen:08}.  
+The total amount of data that is produced is determined by the total number of stations that are used in the observation. This number depends on the particular mode of observation. The correlator produces a data stream of the order of a few Gbyte / s, which yields of the order of several tens of Tbytes of data after a typical observation of four hours. Since a permanent data storage is not part of the LOFAR telescope these data volumes have to be processed near real time. Fortunately, the non-imaging LOFAR applications are not so data intense, so that for every 1 hour of observation approximately 4 hours are available to further process the data. With this in mind data I/O becomes an issue. Obviously the data needs to be processed in a parallelized and distributed way minimizing the I/O that is needed~\cite{Loose:08,Diepen:08}.  
  
 Data can be distributed over a large number of processing nodes in a number of ways. Distribution over baselines is not very suitable for imaging, where data from all baselines must be combined to produce an image. Distribution over time has the disadvantage that up to sevaral Gbytes/s have to be sent to a single processing node. Frequency, therefore, seems to be the best way. This distribution scheme matches with the design of the correlator. It is also a convenient scheme for the imager, where images are created per (combined) frequency channel. 
 
@@ -1079,13 +1077,15 @@ The conclusion goes here.
 \section*{Acknowledgment}
 
 
-The authors would like to thank the LOFAR team. ASTRON is a NWO institute.
+The authors would like to thank the LOFAR team. 
 
 LOFAR is funded by the Dutch government in the BSIK programme for
 interdisciplinary research for improvements of the knowledge infrastructure.
 Additional funding is provided by the European Union, European Regional
 Development Fund (EFRO) and by the ``Samenwerkingsverband Noord-Nederland,''
 EZ/KOMPAS.
+
+ASTRON is an institute of the Netherlands Foundation for Scientific Research (NWO).
 
 % Can use something like this to put references on a page
 % by themselves when using endfloat and the captionsoff option.
