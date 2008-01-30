@@ -473,7 +473,7 @@ LOFAR is the first of a new generation of phased-array radio telescopes,
 that combines the signals from many thousands of simple, omni-directional
 antennas, rather than from expensive dishes.
 Its revolutionary design and unprecedented size enables observations in the
-hardly-explored 10--250~MHz frequency range, and allows the study of
+hardly-explored 10--240~MHz frequency range, and allows the study of
 a vast amount of new science cases.
 
 This paper describes the LOFAR signal processing chain from the antennas in the field to the central processing. The central processing is split in real-time processing and off-line calibration and imaging.
@@ -530,13 +530,20 @@ This paper describes the LOFAR signal processing chain from the antennas in the 
 % (should never be an issue)
 %I wish you the best of success.
 
-\IEEEPARstart{I}{n} the Netherlands a LOw Frequency ARray (LOFAR) is developed for radio astronomy optimized for the frequency band from 30--240 MHz. LOFAR will be the first large radio telescope system, wherein a huge amount of small sensors are used to achieve its sensitivity instead of a small number of large dishes. The main reasons for this are:
+\fixme{science cases}
+\IEEEPARstart{L}{OFAR} is an acronym for {\em LO\/}w {\em F\/}requency
+{\em AR\/}ray, a phased-array radio telescope operating over the 10 to
+240~MHz frequency range.
+Its design breaks radically with conventional telescopes:
+rather than using large, expensive dishes, LOFAR is built as a distributed
+sensor network of simple antenna receivers~\cite{Butcher:04}.
+The main reasons to use a new design are:
 
 \begin{itemize}
 \item For the low frequencies involved in LOFAR traditional telescopes would be very large and hence costly
 \item Pointing can be done electronically, without using moveable parts and hence saving on maintenance costs
 \item Pointing is enabled in multiple directions at the same time
-\item  Operational flexibility is enhanced significantly (e.g. rapid switching between observations is possible
+\item  Operational flexibility is enhanced significantly (e.g., rapid switching between observations is possible
 \end{itemize}
 
 Since the concept of LOFAR is so different compared with the traditional radio telescopes, the astronomical science that can be done with it is completely different as well. Despite the new concept the processing steps of a radio telescope remain the same. The general data path for an aperture synthesis array is depicted in Figure~\ref{fig:concept}.
@@ -729,9 +736,6 @@ The station output signal is coded in 16 bit complex samples and will be in tota
 In parallel with the data stream as discussed, a user can also store the raw data or (part of) the filtered data. This is especially done for the transients application and the cosmic ray applications. For those applications data need to be stored and freezed in a transient buffer, when for example a cosmic ray event is taking place. Freezing of the buffer content can be controlled by internal or external triggers.
 The internal trigger algorithms are running in parallel with the data stream. The stored data or selections thereof can be sent to the central processing facility for further processing.
 
-\fixme{max 54 subband/RSP board ==> wil ik eigenlijk niet doen omdat ik het niet over implementatie heb ==> discuss}
-
-\fixme{Correlator choice: In classical radio telescopes an XF correlator was generally used, meaning that first the correlation and integration of the signals was done in time domain (X) where after the Fourier transform (F) was accomplished to get a cross power spectrum out of the correlator. This is still an economically attractive technique for radio telescopes with a limited number of antennas (input signals to the correlator). However, for LOFAR an FX correlator (first Fourier transform and then correlating the resulting channels) is favorable in terms of processing at the expense of data transport (the signals must be regrouped per channel instead of per antenna, resulting in a transpose operation). Using only a Fourier transform in the FX correlator leads to a significant amount of leakage between the channels. Therefore it was chosen to use filter banks before the correlator. This architecture is also known as an HFX (Hybrid FX correlator) architecture.} 
 
 \section{Central Processing: the Correlator}
 \label{sec:corr}
@@ -757,12 +761,24 @@ Section~\ref{sec:offline}).
 
 In the standard imaging mode, the main task in the online part is to
 correlate all data~\cite{Romein:06}.
-LOFAR uses a six-rack IBM Blue Gene/L supercomputer for this purpose,
+Classical radio telescopes use an XF correlator, meaning that first the
+correlation and integration of the signals was done in time domain (X),
+after which the Fourier transform (F) was accomplished to get a cross power
+spectrum out of the correlator.
+This is still an economically attractive technique for radio telescopes with
+a limited number of antennas (input signals to the correlator).
+However, for LOFAR an FX correlator (first Fourier transform and then
+correlating the resulting channels) is favorable in terms of processing
+requirements, at the expense of data transport (the signals must be regrouped
+per channel instead of per antenna, resulting in a collective transpose
+operation).
+
+LOFAR uses a 12,288-core IBM Blue Gene/L supercomputer for the real-time
+data processing,
 unlike traditional telescopes that typically use customized hardware.
 The desire for a flexible and reconfigurable instrument demands a
 {\em software\/} solution, but the data rates and processing requirements
 compel a supercomputer.
-
 The Blue Gene/L provides 34~TFLOPS peak performance and has a fast internal
 interconnect: the 3-D~torus.
 A total of 768~Gigabit Ethernet interfaces are available for external I/O.
@@ -811,25 +827,26 @@ because the correlator needs the data of one subband and all stations.
 Also, we need hundreds of CPUs to correlate all subbands.
 Thus, the next step is to redistribute (transpose) all data over the CPUs,
 using a fast interconnect.
+
 Initially, we did this on the input cluster, which is connected by a high-speed
 infiniband network, but we found that the internal 3-D~torus network within
 the Blue Gene/L does this job much faster~\cite{Iskra:08}.
 
-\ldots
-
-Next in the pipeline is the second-stage PolyPhase (PPF) filter, that splits
-each 195~KHz (resp.\ 156~KHz) subband into 256~channels of 763~Hz
+Next in the pipeline is the second-stage PolyPhase Filter (PPF), that splits
+each 195~kHz (resp.\ 156~kHz) subband into 256~channels of 763~Hz
 (resp.\ 610~Hz) wide.
 Splitting the subbands into narrow frequency channels allows flagging
 of narrow-band RFI without much data loss (see Section~\ref{sec:RFI}).
-The PPF filter consists of 256~Finite Impulse Filters (FIR) filters and a
+The PPF filter consists of 256~Finite Impulse Response (FIR) filters and a
 Fast Fourier Transform (see Figure~\ref{fig:flow}).
 Each FIR filter is a 16-tap band pass filter.
 The incoming samples are round-robin distributed over the FIR filters;
 the outputs are fourier transformed.
+Using a Fourier transform only would lead to a significant amount of leakage
+between the channels, therfore filter banks are used.
+%This architecture is also known as an HFX (Hybrid FX correlator) architecture.
 To achieve optimal performance, both the FIR filter and the FFT are implemented
-in assembly (although we maintain an equivalent C++ version for debugging
-and portability purposes).
+in assembly.
 
 After the subbands are split into narrow channels, the remainder of the
 delays are compensated, by shifting the phase of each sample.
@@ -843,7 +860,7 @@ an accurate factor.
 \begin{center}
 \includegraphics[width=53mm]{speed.eps}
 \end{center}
-\caption{Execution times of the filters for different numbers of stations}.
+\caption{Execution times of the filters for different numbers of stations.}
 \label{fig:speed}
 \end{figure}
 
@@ -869,12 +886,12 @@ data, so that after an observation, several days are available to calibrate
 and image the data.
 
 
-The PPF implicitly converts the 16-bit complex number to 32-bit floating-point
-numbers, since the BG/L performs floating point computations faster than
-integer operations.
-Also, the phase correction and the correlations are done in floating point.
-Internally, the BG/L only supports double-precision arithmetic, but the
-high precision is not necessary for our application.
+%The PPF implicitly converts the 16-bit complex number to 32-bit floating-point
+%numbers, since the BG/L performs floating point computations faster than
+%integer operations.
+%Also, the phase correction and the correlations are done in floating point.
+%Internally, the BG/L only supports double-precision arithmetic, but the
+%high precision is not necessary for our application.
 
 
 
@@ -889,29 +906,29 @@ practice and recognized that sufficient computational power was left,
 a considerable cost reduction was achieved by removing the PPF FPGAs from the
 station design.
 
-\ldots
+%\ldots
 
-Although the BG/L is computationally very efficient,
-streaming the station data into the machine at the required data rates
-turned out to be a major problem,
-despite the BG/L's atypical high number of I/O interfaces.
-For each 16~BG/L compute cores, there is one {\em I/O~node\/} that
-has one external gigabit-Ethernet interface and transparently handles all I/O
-calls initiated by its associated compute cores (see Figure~\ref{fig:IOnode}).
-We found that the stock network system software was not particularly optimized
-for high-throughput I/O, and that the obtained bandwidths were far from what
-theoretically should be achievable.
+%Although the BG/L is computationally very efficient,
+%streaming the station data into the machine at the required data rates
+%turned out to be a major problem,
+%despite the BG/L's atypical high number of I/O interfaces.
+%For each 16~BG/L compute cores, there is one {\em I/O~node\/} that
+%has one external gigabit-Ethernet interface and transparently handles all I/O
+%calls initiated by its associated compute cores (see Figure~\ref{fig:IOnode}).
+%We found that the stock network system software was not particularly optimized
+%for high-throughput I/O, and that the obtained bandwidths were far from what
+%theoretically should be achievable.
 
-The dissatisfaction about the performance and about the I/O model in general
-led to a joint effort to redesign the entire network software infrastructure,
-and resulted in a new environment called {\em ZOID\/}~\cite{Iskra:08}.
-ZOID does not only yield better performance, but it is much more flexible,
-since it allows application code to be run on the I/O~node.
-With ZOID, we were able to move the receipt of the station data from the input
-cluster nodes to the BG/L I/O~nodes, so that the station data are sent
-directly through the WAN into the BG/L.
-Not having to build a separate input cluster results in an estimated cost
-saving of \euro700,000.
+%The dissatisfaction about the performance and about the I/O model in general
+%led to a joint effort to redesign the entire network software infrastructure,
+%and resulted in a new environment called {\em ZOID\/}~\cite{Iskra:08}.
+%ZOID does not only yield better performance, but it is much more flexible,
+%since it allows application code to be run on the I/O~node.
+%With ZOID, we were able to move the receipt of the station data from the input
+%cluster nodes to the BG/L I/O~nodes, so that the station data are sent
+%directly through the WAN into the BG/L.
+%Not having to build a separate input cluster results in an estimated cost
+%saving of \euro700,000.
 
 \section{Central Processing: Calibration}
 
@@ -980,7 +997,7 @@ By sampling the data in each iteration of the Major Cycle, doubling the sampling
 
 %The correlator produces visibility data on a 1 second and 0.62 kHz of 0.78 kHz resolution depending on the sampling frequency of the station processing. The frequency resolution is needed for excision of RFI signals. Strong RFI sources can in principle be suppressed on the station level by applying spatial filtering techniques~\cite{Veen1:04,Veen2:04,Boonstra:05}. However, applying these techniques on the station level would imply that all station beams will be different. That would mean that the number of station beam parameters to be estimated in the following self-calibration step would increase considerably. We foresee that this will be impractible in the initial LOFAR operations. However, in later upgrades these spatial filtering techniques may be incorporated. Initially, LOFAR processing will use traditional flagging techniques~\cite{Renting:07}.  
 
-\section{Current state and roll-out planning}
+\section{Current state and future work}
 
 Currently~\cite{gunst:06}, four partially-built stations are functional: 3~stations with
 16~LBAs and 1~station with 48~LBAs.
@@ -989,7 +1006,7 @@ This yields 16~microstations, which are treated the same as real stations in
 the online and offline processing pipelines.
 
 A consequence of quadrupling the number of stations is that the bandwidth
-is reduced to 36~subbands of 195~KHz or 48~subbands of 156~KHz.
+is reduced to 36~subbands of 195~kHz or 48~subbands of 156~kHz.
 Alternatively, the station with 48~LBA can be split into 12~microstations,
 so that together with the other $3\times4$ microstations a total of
 24~microstations can be formed,
