@@ -536,14 +536,19 @@ This paper describes the LOFAR signal processing chain from the antennas in the 
 Its design breaks radically with conventional telescopes:
 rather than using large, expensive dishes, LOFAR is built as a distributed
 sensor network of simple antenna receivers~\cite{Butcher:04}.
-The main reasons to use a new design are:
 
-\begin{itemize}
-\item for the low frequencies involved in LOFAR traditional telescopes would be very large and hence costly,
-\item pointing can be done electronically, without using moveable parts which yields saving on maintenance costs,
-\item pointing is possible in multiple directions at the same time,
-\item operational flexibility is enhanced significantly (e.g., rapid switching between observations is possible.
-\end{itemize}
+This new design has important advantages.
+First, obtaining sufficient sensitivity at these low frequencies with
+traditional dishes requires prohibitively large dish sizes, while the costs
+of a sensor network are modest.
+Second, pointing is done electronically, and can be changed instantaneously.
+Third, multiple observations, even of different types, can be handled
+simultaneously.
+Forth, LOFAR is more flexible, because most of the processing is done in
+software, rather than using customized hardware.
+\fixme{Ik heb de zin over lagere onderhouds kosten als gevolg het niet
+hebben van bewegende delen weggelaten, omdat er bij LOFAR meer elektronica
+kapot kan gaan.}
 
 The heart of LOFAR will be installed in the Northern part of the Netherlands.
 The maximum baseline of the Dutch LOFAR Dutch stations is about 100 km.
@@ -596,8 +601,12 @@ At least 36~Dutch stations will be built, eighteen of which in the core.
 When the core stations are split, this yields 54~Dutch stations.
 
 All station data are transported to the central processing location via a
-Wide Area Network (WAN), which uses owned and leased light paths.
-At a central location all station data is processed. The processing is done by off the shelf hardware, varying from a supercomputer to clusters of computers. The processing will accommodate several pipelines, amongst them are pipelines for imaging modes, tied-array beamforming and more specialized modes.
+Wide-Area Network (WAN), which uses owned and leased light paths.
+At a central location, all station data are combined and processed.
+The processing is done by a supercomputer, surrounded by clusters of
+off-the-shelf computers.
+The processing will accommodate several pipelines, amongst them are pipelines
+for imaging modes, tied-array beamforming, and more specialized modes.
 
 
 %\hfill mds
@@ -754,7 +763,7 @@ Since the LOFAR stations are installed in populated areas the dynamic range of t
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=93mm]{Nyquistzonesmodes.eps}
+\includegraphics[width=\columnwidth]{Nyquistzonesmodes.eps}
 \end{center}
 \caption{The supported modes in the LOFAR receiver based on the available Nyquist zones (the bands indicated are larger than the optimized range).}
 \label{fig:nyquistzones}
@@ -770,7 +779,7 @@ The beamformer can be implemented by using true time delays or by applying phase
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=106mm]{phase_error.eps}
+\includegraphics[width=\columnwidth]{phase_error.eps}
 \end{center}
 \caption{Illustration of 4 subbands and the error which is introduced by approximating the time delays by phase shifts per subband (the black line on the right hand side is the ideal phase). The left picture shows the power spectrum, while the right picture shows the phase as function of frequency.}
 \label{fig:phasebeamf}
