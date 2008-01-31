@@ -1015,38 +1015,44 @@ By sampling the data in each iteration of the Major Cycle, doubling the sampling
 
 \section{Current state and future work}
 
-Currently~\cite{gunst:06}, four partially-built stations are functional: 3~stations with
-16~LBAs and 1~station with 48~LBAs.
+\subsection{Core Station 1}
+Currently~\cite{gunst:06}, four partially-built stations are functional, also refered to as Core Station 1 (CS1). One of those stations contain the hardware to observe with 48~LBAs or with 6 HBA tiles and 30 HBA elements. The other 3~stations are equipped with 16~LBAs and 4 HBA elements.
 To create more baselines and achieve better UV coverage, the stations each can be split into four {\em microstations}.
-This yields 16~microstations, which are treated the same as real stations in
-the online and offline processing pipelines.
+This yields 16~microstations, which are treated the same as real stations in the online and offline processing pipelines.
 
 A consequence of quadrupling the number of stations is that the bandwidth
 is reduced to 36~subbands of 195~kHz or 48~subbands of 156~kHz.
 Alternatively, the station with 48~LBA can be split into 12~microstations,
 so that together with the other $3\times4$ microstations a total of
-24~microstations can be formed,
-but WAN restrictions limit the bandwidth to 12~resp.\ 16~subbands.
+24~microstations can be formed. Currently WAN restrictions limit the bandwidth to 12~resp.\ 16~subbands.
+
+Furthermore the WAN infrastructure from the field towards the central location is realized for all four stations
+
+6 BG/L racks   
+12 input machines
+klein online cluster en offline cluster groeien mee met LOFAR
+
+A lot of LBA commissioning observations have been done so far, while the HBA commissioning lags behind and is currently ongoing.
+
+Figure \ref{fig:skymap} shows a series of images that were made from data using CS1. In total 16 microstations, each consisting of a single dipole with essentially an all sky FoV, were used. The images are centered on the North Celestial Pole and contain 48 hours and about 20 subbands of data. First the data is flagged for RFI and an image of the flagged-only data is shown on the left (``observed''). 
 
 \begin{figure*}
 \centering
 \includegraphics[width=0.32\textwidth]{LBA_observed.eps}
 \includegraphics[width=0.32\textwidth]{LBA_calibrated.eps}
 \includegraphics[width=0.32\textwidth]{LBA_peeled.eps}
-\caption{Images from the LOFAR CS1 configuration using 48 hours and about 20 subbands of data. Observed: an image of the flagged, non-calibrated data. Calibrated: an image of the flagged, calibrated data showing CasA and CygA. Residual: an image of the flagged, calibrated data where CasA and CygA are removed from the data. Images courtesy of S.B. Yatawatta.}
+\caption{Images from CS1 using 48 hours and about 20 subbands of data. Observed: an image of the flagged, non-calibrated data. Calibrated: an image of the flagged, calibrated data showing CasA and CygA. Residual: an image of the flagged, calibrated data where CasA and CygA are removed from the data. Images courtesy of S.B. Yatawatta.}
 \label{fig:skymap}
 \end{figure*}
 
-Figure \ref{fig:skymap} shows a series of images there were made from data using the LOFAR CS1 configuration. 16 microstations, each consisting of a single dipole with essentially an all sky FoV, were used. The images are centered on the North Celestial Pole and contain 48 hours and about 20 subbands of data. First the data is flagged for RFI and an image of the flagged-only data is shown on the left (``observed''). 
-
-The following calibration is performed in two steps. In the first step, a point source model is used for both CasA and CygA, both at 20000 Jy flux and no polarization. An analytical beam shape is used and we solve for a single complex gain for the whole sky. In this way an estimate for the instrumental complex gains (due to e.g. clock drifts) and ionospheric phase differences is obtained. After correcting the data a second step is performed, where we estimate a complex gain in both the direction of CasA and CygA. In this second step no assumptions on the beam are made. For the middle image (``calibrated'') the data is corrected using the estimates for the direction of CasA. In this middle image CasA and CygA can be clearly seen as point sources. 
+The following calibration is performed in two steps. In the first step, a point source model is used for both CasA and CygA, both at 20000 Jy flux and no polarization. An analytical beam shape is used and a solve is done for a single complex gain for the whole sky. In this way an estimate for the instrumental complex gains (due to e.g. clock drifts) and ionospheric phase differences is obtained. After correcting the data a second step is performed, where the complex gain is estimated in both the direction of CasA and CygA. In this second step no assumptions on the beam are made. For the middle image (``calibrated'') the data is corrected using the estimates for the direction of CasA. In this middle image CasA and CygA can be clearly seen as point sources. 
 
 CasA and CygA completely overshine the background sources, since they are at least 50 times stronger then the average background source. After subtracting the contributions from CasA and CygA from the data the other sources become visible. This is shown in the right panel (``residual''), where now some hundred other sources are visible. 
 
-The HBA units are currently being commissioned.
-A full LBA station in Effelsberg, Germany is also operational, and will soon
-be connected via a dedicated wide-area link to the Central Processor.
+\subsection{International stations}
+International stations showed interest in building stations as well and connecting with LOFAR. In this context the first LBA station, consisting of 96 antennas is currently operational in Effelsberg (Germany) and will be connected to the rest of the LOFAR system. For the international stations also stand alone modes will be supported. In this way those stations can participate in the full LOFAR configuration or operate in a local mode.
 
+\subsection{Scaling LOFAR}
 In the course of this year 18 full stations (13~core + 5~remote) will be produced and installed in the field. Also the WAN infrastructure and Central Processor facility will be ready in the end of 2008 to handle the data of the 18 full stations and a couple of international stations as well. In the year thereafter another 18 stations will be produced and installed in the field.
 
 Construction of the full stations is planned as follows.
