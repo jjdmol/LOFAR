@@ -1026,13 +1026,9 @@ Alternatively, the station with 48~LBA can be split into 12~microstations,
 so that together with the other $3\times4$ microstations a total of
 24~microstations can be formed. Currently WAN restrictions limit the bandwidth to 12~resp.\ 16~subbands.
 
-Furthermore the WAN infrastructure from the field towards the central location is realized for all four stations
+Furthermore the WAN infrastructure from the field towards the central location is realized for all four stations. At the central location part of the input cluster and off-line cluster are built, to match with the data streams coming from the field. These, clusters will be scaled up when more stations become available. Furthermore, six BG/L racks are available for the main part of the online processing. The Blue Gene/L is capable of handling all foreseen future data rates.
 
-6 BG/L racks   
-12 input machines
-klein online cluster en offline cluster groeien mee met LOFAR
-
-A lot of LBA commissioning observations have been done so far, while the HBA commissioning lags behind and is currently ongoing.
+A lot of LBA commissioning observations have been done so far. The development of the HBA was finished last year and the commissioning of the HBA tiles are still ongoing. Currently all the equipment in the field is operational.
 
 Figure \ref{fig:skymap} shows a series of images that were made from data using CS1. In total 16 microstations, each consisting of a single dipole with essentially an all sky FoV, were used. The images are centered on the North Celestial Pole and contain 48 hours and about 20 subbands of data. First the data is flagged for RFI and an image of the flagged-only data is shown on the left (``observed''). 
 
@@ -1050,26 +1046,14 @@ The following calibration is performed in two steps. In the first step, a point 
 CasA and CygA completely overshine the background sources, since they are at least 50 times stronger then the average background source. After subtracting the contributions from CasA and CygA from the data the other sources become visible. This is shown in the right panel (``residual''), where now some hundred other sources are visible. 
 
 \subsection{International stations}
-International stations showed interest in building stations as well and connecting with LOFAR. In this context the first LBA station, consisting of 96 antennas is currently operational in Effelsberg (Germany) and will be connected to the rest of the LOFAR system. For the international stations also stand alone modes will be supported. In this way those stations can participate in the full LOFAR configuration or operate in a local mode.
+International countries showed interest in building stations as well and connecting them with LOFAR. In this context the first LBA station, consisting of 96 antennas is currently operational in Effelsberg (Germany) and will be connected to the rest of the LOFAR system. Two additional German stations will be installed as well. Furthermore, negotiations are ongoing with other countries.
+
+For the international stations also stand alone modes will be supported. In this way those stations can participate in the full LOFAR configuration or operate in a local mode.
 
 \subsection{Scaling LOFAR}
-In the course of this year 18 full stations (13~core + 5~remote) will be produced and installed in the field. Also the WAN infrastructure and Central Processor facility will be ready in the end of 2008 to handle the data of the 18 full stations and a couple of international stations as well. In the year thereafter another 18 stations will be produced and installed in the field.
+In the course of this year 18 full stations (13~core + 5~remote) will be produced and installed in the field. Also the WAN infrastructure and central processor facility will be scaled up to handle the data of the 18 full stations and the international stations as well. 
 
-Construction of the full stations is planned as follows.
-\fixme{"station" should be consistent with HBA-core "double station"}
-The first 18 full stations (13~core + 5~remote) \fixme{to be confirmed}
-including the WAN links to the Central Processor will be operational by the
-end of 2008, and the remaining 18~stations will be built in the course of 2009.
-Meanwhile, construction of international stations will continue.
-The Blue Gene/L is capable of handling all foreseen future data rates.
-
-\fixme{only standard imaging mode implemented}
-
-\section{Conclusion}
-The conclusion goes here.
-
-
-
+The remainder of the stations will be produced and installed in 2009. Currently the software development is focused on the imaging mode. In the course of this year significant effort will be done in realizing the tied-array beamforming mode.
 
 
 % if have a single appendix:
@@ -1163,7 +1147,7 @@ ASTRON is an institute of the Netherlands Foundation for Scientific Research (NW
 % or if you just want to reserve a space for a photo:
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{gunst.eps}}]{Andr\'{e} W. Gunst}
-Biography text here.
+Andre\'{e} W. Gunst is a digital system engineer at ASTRON and currently responsible for the development of the LOFAR system. He obtained the degree in Electrical Engineering from the Twente University, Enschede, the Netherlands in 1999. Since, 2004 he worked on the development of the station systems in LOFAR. In 2006 he became responsible for the development of the overall LOFAR system for the astronomical applications. His research interests include (digital) system design and digital signal processing.
 \end{IEEEbiography}
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{rnijboer.eps}}]{Ronald Nijboer}
