@@ -783,19 +783,19 @@ requirements, at the expense of data transport (the signals must be regrouped
 per channel instead of per antenna, resulting in a collective transpose
 operation).
 
-LOFAR uses a 12,288-core IBM Blue Gene/L supercomputer for the real-time
+LOFAR uses a 12,288-core IBM Blue Gene/L (BG/L) supercomputer for the real-time
 data processing,
 unlike traditional telescopes that typically use customized hardware.
 The desire for a flexible and reconfigurable instrument demands a
 {\em software\/} solution, but the data rates and processing requirements
 compel a supercomputer.
-The Blue Gene/L provides 34~TFLOPS peak performance and has a fast internal
+The BG/L provides 34~TFLOPS peak performance and has a fast internal
 interconnect: the 3-D~torus.
 A total of 768~Gigabit Ethernet interfaces are available for external I/O.
 Each processor is extended by two double-precision floating point units
 that are very suitable for signal processing, since a variety of operations
 on complex numbers are natively supported.
-The Blue Gene/L is surrounded by an input cluster and a storage cluster.
+The BG/L is surrounded by an input cluster and a storage cluster.
 
 
 \begin{figure*}
@@ -806,8 +806,8 @@ valid for the 200~MHz mode.}
 \label{fig:flow}
 \end{figure*}
 
-The input section receives all station data that are sent via the wide-area
-network.
+The input section (see Figure~\ref{fig:CEP}) receives all station data that
+are sent via the wide-area network.
 We use the UDP datagram protocol over the WAN, which is an unreliable
 protocol.
 Using a reliable protocol like TCP would complicate the design of the
@@ -817,19 +817,23 @@ of transmitted data (to be able to retransmit lost packets).
 Since in practice few (less than 0.001\%) packets are lost and occasional loss
 of data does not harm the astronomical quality of the data, we chose for UDP.
 The input section handles duplicated, missing, and out-of-order UDP packets.
-Lost data are appropriately flagged as being "invalid", and the remainder
+Lost data are appropriately flagged as being ``invalid'', and the remainder
 of the processing pipeline handles this accordingly.
 The data are received into a circular buffer, that holds the most recent
 six seconds of data.
 
 The buffer serves three purposes.
-First, it is used to synchronize the station data, since the WAN links
-exhibit different travel times for different stations.
-Second, it provides some headroom to recover from small hiccups in the
+First, since a wave from a celestial source hits the stations at different
+times, we use the buffer to compensate for the time difference.
+The delay depends on the observation direction and the station positions,
+and changes continuously due to the rotation of the earth.
+The bulk of the delay is corrected by shifting the buffer's read pointer by
+an entire amount of samples (the remaining delay is corrected by a phase
+shift later).
+Second, the buffer is used to synchronize the station data, since data from
+different stations have different travel times over the WAN links.
+Third, it provides some headroom to recover from small hiccups in the
 remainder of the processing pipeline, without data loss.
-Third, the buffer is used to form beams; the bulk of the delay is introduced
-by shifting the buffer's read pointer by an entire amount of samples
-(the remaining delay is corrected by a phase shift later).
 
 Each input node receives all subband data of one station.
 Unfortunately, this data distribution is not suitable for the correlator,
@@ -838,13 +842,24 @@ Also, we need hundreds of CPUs to correlate all subbands.
 Thus, the next step is to redistribute (transpose) all data over the CPUs,
 using a fast interconnect.
 
-Initially, we did this on the input cluster, which is connected by a high-speed
-infiniband network, but we found that the internal 3-D~torus network within
-the Blue Gene/L does this job much faster~\cite{Iskra:08}.
+Currently, the input buffer and the transpose are performed on a small-scale
+input cluster, but in a prototype implementation, the input cluster is
+bypassed and its functionality is moved to the BG/L.
+A redesign of the network system software was required to be able to
+receive the station data directly on the BG/L, to achieve sufficient
+external I/O bandwidth, and to increase flexibility~\cite{Iskra:08}.
+The internal 3-D~torus network is used for the transpose, and is very well able
+to sustain the required switching rates.
+Not having to build a full input cluster when more LOFAR stations are added
+saves much money.
+%Initially, we did this on the input cluster, which is connected by a high-speed
+%infiniband network, but we found that the internal 3-D~torus network within
+%the Blue Gene/L does this job much faster~\cite{Iskra:08}.
 
-Next in the pipeline is the second-stage PolyPhase Filter (PPF), that splits
-each 195~kHz (resp.\ 156~kHz) subband into 256~channels of 763~Hz
-(resp.\ 610~Hz) wide.
+All compute-intensive operations are performed on the BG/L.
+The first compute-intensive operation is the second-stage PolyPhase Filter
+(PPF), that splits each 195~kHz (resp.\ 156~kHz) subband into 256~channels of
+763~Hz (resp.\ 610~Hz) wide.
 Splitting the subbands into narrow frequency channels allows flagging
 of narrow-band RFI without much data loss (see Section~\ref{sec:RFI}).
 The PPF filter consists of 256~Finite Impulse Response (FIR) filters and a
@@ -857,9 +872,22 @@ between the channels, therfore filter banks are used.
 %This architecture is also known as an HFX (Hybrid FX correlator) architecture.
 To achieve optimal performance, both the FIR filter and the FFT are implemented
 in assembly.
+The FIR filters implicitly convert the 16-bit complex numbers to 32-bit
+floating-point numbers, since the BG/L performs floating point computations
+faster than integer operations.
+Double (64-bit) precision is not required for these filters.
+
+An example that illustrates the benefits of a flexible software solution was
+the ease with which we could move the second-stage PPF, which was
+originally designed to run on FPGAs at the stations, to the BG/L.
+Once we saw that we could obtain really high performance from the BG/L
+in practice and recognized that sufficient computational power was left,
+a considerable cost reduction was achieved by removing the PPF FPGAs from the
+station design.
 
 After the subbands are split into narrow channels, the remainder of the
-delays are compensated, by shifting the phase of each sample.
+delays are compensated, by shifting the phase of each sample, also known as
+fringe stopping.
 The correction factor depends on time and frequency.
 The delays are computed exactly for the beginning and ending of each
 integration period (typically: one second), and interpolated both in time
@@ -870,7 +898,10 @@ an accurate factor.
 \begin{center}
 \includegraphics[width=53mm]{speed.eps}
 \end{center}
-\caption{Execution times of the filters for different numbers of stations.}
+\caption{Execution times to process of one second of subband data on one
+processor core, for different numbers of stations.  Multiple cores are
+necessary to process one subband in real time; consecutive seconds of subband
+data are round-robin distributed over the cores.}
 \label{fig:speed}
 \end{figure}
 
@@ -882,8 +913,8 @@ Since the cross correlation of station $A$ and $B$ is the complex conjugate
 of station $B$ and $A$, we compute it only once.
 Autocorrelations are computed as well, but treated separately since they
 require only half the amount of computations.
-The computational requirements of the correlator are squared in the number
-of stations, and dominate the total online processing demands (see
+The computational requirements of the correlator grow quadratically with the
+number of stations, and dominate the total online processing demands (see
 Figure~\ref{fig:speed}).
 The correlator, which is also implemented in assembly, is extremely efficient:
 it achieves 98\% of the floating-point peak performance~\cite{Romein:06}.
@@ -894,29 +925,6 @@ This is where the real-time pipeline ends.
 Eventually, the storage section will be able to store about one Petabyte of
 data, so that after an observation, several days are available to calibrate
 and image the data.
-
-
-%The PPF implicitly converts the 16-bit complex number to 32-bit floating-point
-%numbers, since the BG/L performs floating point computations faster than
-%integer operations.
-%Also, the phase correction and the correlations are done in floating point.
-%Internally, the BG/L only supports double-precision arithmetic, but the
-%high precision is not necessary for our application.
-
-
-
-\ldots
-
-\fixme{Maybe this paragraph should be moved to the IEEE Computer paper.}
-An example that illustrates the benefits of a flexible software solution was
-the ease with which we could move the second-stage PolyPhase Filter, which was
-originally designed to run on FPGAs at the stations, to the Blue Gene/L.
-Once we saw that we could obtain really high performance from the BG/L in
-practice and recognized that sufficient computational power was left,
-a considerable cost reduction was achieved by removing the PPF FPGAs from the
-station design.
-
-%\ldots
 
 %Although the BG/L is computationally very efficient,
 %streaming the station data into the machine at the required data rates
