@@ -541,19 +541,22 @@ The main reasons to use a new design are:
 \begin{itemize}
 \item for the low frequencies involved in LOFAR traditional telescopes would be very large and hence costly,
 \item pointing can be done electronically, without using moveable parts which yields saving on maintenance costs,
-\item pointing is enabled in multiple directions at the same time,
+\item pointing is possible in multiple directions at the same time,
 \item operational flexibility is enhanced significantly (e.g., rapid switching between observations is possible.
 \end{itemize}
 
-The heart of LOFAR will be installed in the Northern part of the Netherlands. The maximum baseline of LOFAR including only the Dutch stations is about 100 km. Since, also other European institutes show interest and are building LOFAR stations the maximal baseline of LOFAR will be extended, possibly to 1000~km.  
+The heart of LOFAR will be installed in the Northern part of the Netherlands.
+The maximum baseline of the Dutch LOFAR Dutch stations is about 100 km.
+Since other European institutes also show interest and are building LOFAR
+stations, the maximal baseline of LOFAR will be extended, possibly to 1000~km.  
 
 Since the concept of LOFAR is so different from traditional radio telescopes,
 new astronomical science can be done with it.
 Below, we list some of the key science projects.
-First, LOFAR should be able to detect the {\em Epoch of Reionization},
+First, LOFAR should be able to detect the {\em Epoch of Re-ionization},
 the time that the first star galaxies and quasars were formed.
-Second, LOFAR's large (Field of View) FoV makes it uniquely suited to study {\em transient
-sources}.
+Second, LOFAR's large Field of View (FoV) makes it uniquely suited to study
+{\em transient sources}.
 A galactic events triggers the dump of raw antenna data that can be examined
 afterward.
 Third, LOFAR offers a unique possibility in particle astrophysics for
@@ -577,14 +580,24 @@ Despite the new concept the overall processing steps of a radio telescope remain
 
 In LOFAR, the detector is composed of multiple sensors. Since these sensors convert electromagnetic radiation into electronic signals, the sensors are further referred to as antennas. Ideally, the number of detectors equals the number of antennas to accommodate all sky imaging. However, cost of data transport and processing power limits the number of detectors which can be afforded for a feasible design with a reasonable price. The analog processing shown in Figure~\ref{fig:concept} covers the (low noise) amplification, filtering, analog signal transport and further signal conditioning functions before the signal is converted into the digital domain (Analog/Digital (A/D) conversion block). From there, the signals are digitally conditioned before entering the correlator. Typical operations in LOFAR digital processing are filtering, frequency selection, and beamforming. In the correlator, all signals are correlated with each other to form the cross correlation matrix. Furthermore, the correlation results are calibrated for instrumental and environmental effects in the post processing stage. Additionally, known sources are subtracted to enhance the dynamic range. Another post processing task is to transform the correlation products into an image.
 
-For LOFAR, the sensors should be distributed over a large area to achieve an angular resolution of arcsec accuracy with an acceptable UV coverage. All data coming from the sensors should come together in the correlator. So, on the one hand the instrument should be distributed over a large area, while on the other hand all data should come together in a central location. To balance the hardware and operational costs between the equipment in the field, the transport network and the volume of the central systems, multiple antennas (48) are grouped in so called stations. Within such a station the information of all individual antennas is weighted and summed. Such an array of antennas is often called a phased array. As a consequence a spatial selection on the sky is made, which reduces the instantaneous FoV of each station. So the main reason for having stations is to reduce the total data stream to the correlator.
+The LOFAR sensors are distributed over a large area to achieve an angular
+resolution of arcseconds accuracy with an acceptable UV coverage.
+All data coming from the sensors should come together in the correlator. So, on the one hand the instrument should be distributed over a large area, while on the other hand all data should come together in a central location. To balance the hardware and operational costs between the equipment in the field, the transport network and the volume of the central systems, multiple antennas (48) are grouped in so called stations. Within such a station the information of all individual antennas is weighted and summed. Such an array of antennas is often called a phased array. As a consequence a spatial selection on the sky is made, which reduces the instantaneous FoV of each station. So the main reason for having stations is to reduce the total data stream to the correlator.
 
-For at least two applications a larger FoV is required. These applications only use the core of the instrument (diameter is 2~km). Since there is only a limited distance to bridge from the core to the central processing location, more beams, requiring more bandwidth, can be generated in the core. Hence, in LOFAR two types of stations are distinguished: the remote stations and the core stations. 
-The main difference between them is that the core stations can be split up in two independent arrays delivering effectively twice the number of stations in the core.
+For at least two applications (\fixme{EoR and ?}), a larger FoV is required.
+These applications only use the central core of the instrument, of which the
+diameter is 2~km.
+Since the distance over the Wide-Area Network between the core and the central
+processing location is limited, we can afford higher bandwidths from the
+core stations than from the remote stations.
+The extra bandwidth can be used to split a core station into two independent
+arrays, effectively doubling the number of (half)stations in the core.
+At least 36~Dutch stations will be built, eighteen of which in the core.
+When the core stations are split, this yields 54~Dutch stations.
 
-The number of stations installed in the Netherlands will be at least 36. Half of the number of stations will be core stations and the other half remote stations. 
-
-All data of the stations is transported to one central place via a Wide Area Network (WAN), which uses owned and leased light paths. At a central location all station data is processed. The processing is done by off the shelf hardware, varying from a supercomputer to clusters of computers. The processing will accomodate several pipelines, amongst them are pipelines for imaging modes, tied-array beamforming and more specialized modes.
+All station data are transported to the central processing location via a
+Wide Area Network (WAN), which uses owned and leased light paths.
+At a central location all station data is processed. The processing is done by off the shelf hardware, varying from a supercomputer to clusters of computers. The processing will accommodate several pipelines, amongst them are pipelines for imaging modes, tied-array beamforming and more specialized modes.
 
 
 %\hfill mds
@@ -697,19 +710,45 @@ In the LOFAR stations electromagnetic signals are received by multiple dipoles. 
 
 \subsection{Antennas}
 
-The operating frequency range of LOFAR is from 10 MHz to 240 MHz, while the antennas are optimized for the range 30--80 MHz and 120--240 MHz, skipping the FM radio band. Since, the optimized bandwidth of the operating frequency range spans 8 octaves at least two types of antennas are necessary in order to fulfill the sensitivity requirements. Therefore, two types of antennas are developed: the Low Band Antenna (LBA) and the High Band Antenna (HBA). To accommodate science below 30 MHz an extra provision is made for a third antenna, also referred to as the Low Band Low (LBL) antenna. In that context the LBA is also referred to as Low Band High (LBH) antenna. All antennas are designed for two polarizations. In total 96 LBAs and 48 HBA tiles will be installed in a station. 
+The operating frequency range of LOFAR is from 10 to 240~MHz, while the
+antennas are optimized for the 30--80~MHz and the 120--240~MHz ranges,
+skipping the FM radio band.
+Since the optimized bandwidth of the operating frequency range spans 8~octaves,
+\fixme{8 octaven?  Ik kom tot 5!}
+at least two types of antennas are necessary to fulfill the sensitivity
+requirements.
+Therefore, two types of antennas were developed: the Low Band Antenna (LBA) and the High Band Antenna (HBA).
+To accommodate science below 30~MHz, an extra provision is made for a
+third antenna, also referred to as the Low Band Low (LBL) antenna.
+In that context the LBA is also referred to as Low Band High (LBH) antenna.
+All antennas are designed for two polarizations.
+In total, 96~LBAs and 48~HBAs will be installed in a station. 
 
-The HBA is organized in tiles, wherein 16 antenne elements are combined via analog beamforming to yield a comparable effective area for both the low band and high band antennas. Analog beamforming for the HBA is used to combine the 16 antenna elements at tile level, which saves on costs. This processing step is done locally near the tile to reduce the number of cables necessary to connect to the central station location where the receivers are installed in cabinets.
+Each LBA consists of one dipole (per polarization), but
+each HBA is organized as a tile, wherein 16~antenna elements are combined using
+analog beamforming, to yield a comparable effective area for both the LBAs and
+HBAs.
+The use of an digital beamformer would be prohibitively expensive.
+The beamforming is done locally near the tile, to reduce the number of cables
+to the central station location, where the receivers are installed in cabinets.
+Both the LBA and HBA tile signals are pre-filtered and amplified near the
+antenna, prior to transportation over coaxial cables to the cabinets.
 
-Both the low band and combined high band antenna signals are pre-filtered and amplified near the antenna prior to transportation over coaxial cables to the cabinets.
-
-The low band array will be a randomized and exponentially space tapered configuration~\cite{capp:06} with a size of about 85~m in diameter, while the HBA array will be installed as a dense and regular array with a size of about xxx~m in diameter for the remote stations. In the core stations the HBA field will be split in two arrays with each a diamter of 38~m. 
+Within a station, the LBAs are placed in a randomized way, with exponentially
+increasing distances~\cite{capp:06}.
+The diameter of an LBA field is approximately 85~m.
+%Within a station, the low band array will be a randomized and exponentially space tapered
+%configuration~\cite{capp:06}, with a diameter size of about 85~m.
+The HBA tiles will be installed as a dense and regular array with a size of
+about \fixme{xxx}~m in diameter for the remote stations.
+In the core stations, the HBA field will be split in two arrays with a diameter
+of 38~m each. 
 
 \subsection{Receiver}
 
 In interferometry it is important to keep the signal paths equal in (electrical) characteristics (because differences between signals received are measured). This also applies to the signals before beamforming. Any difference in gain or phase introduced prior to the beamforming operation will degrade the signal to noise ratio (here defining "signal" as the signal of interest, the sky noise, and the "noise" as the noise generated by the system). For these reasons early sampling and digitization is preferred and therefore done prior to beamforming in the LOFAR stations (an exception are the HBA arrays, where an analog beamformer stage is used as well for cost reasons). 
 
-For the receiver a wideband direct digital conversion architecture is adopted. This reduces the number of analog devices used in the signal path. The maximum sampling rate is 200~MHz, which is sufficient to directly convert the analog signals. To fill the gaps in between the Nyquist zones, a sample frequency of 160 MHz can be chosen as well. The Nyquist zones I to III of the A/D converter with a sample frequency of 200 MHz and 160 MHz respectively are depicted in Figure~\ref{fig:nyquistzones}. 
+For the receiver a wide-band direct digital conversion architecture is adopted. This reduces the number of analog devices used in the signal path. The maximum sampling rate is 200~MHz, which is sufficient to directly convert the analog signals. To fill the gaps in between the Nyquist zones, a sample frequency of 160 MHz can be chosen as well. The Nyquist zones I to III of the A/D converter with a sample frequency of 200 MHz and 160 MHz respectively are depicted in Figure~\ref{fig:nyquistzones}. 
 
 Since the LOFAR stations are installed in populated areas the dynamic range of the A/D converter must be sufficient to handle the Radio Frequency Interference (RFI) signals in the band of interest. Hence, the A/D converter converts the analog signal into a 12 bit digital signal. 
 
@@ -739,7 +778,7 @@ The beamformer can be implemented by using true time delays or by applying phase
 
 The correlator in the LOFAR system is an FX correlator as is explained in Section~\ref{sec:corr}. The correlator requires a frequency resolution of order 1~kHz. This frequency resolution is sufficient for a beamformer implemented by phase shifts. However, implementing a filterbank with this resolution for each antenna signal path is extremely expensive. For a phase shift beamformer a frequency resolution of order 200~kHz is sufficient which is determined by the error made at the edges of each subband. Hence, it was chosen to use a first stage filter bank which operates at antenna level to result in a frequency resolution sufficient for the phase shift beamforming. The remainder of the required frequency resolution before the correlator is achieved by a second stage filter bank which operates on station beams (which are a factor 48 smaller than the number of antennas). Since no extra significant data reduction will be done after the second stage filterbank, that functionality is implemented in the central systems.
 
-The first stage filter bank in the stations splits up the total band into 512 equidistant subbands resulting in order 195~kHz subbands for the 200~MHz sample frequency and 156~kHz for the 160~MHz sample frequency. The filter bank is efficiently implemented as a Poly Phase Filter bank (PPF) on Field Programmable Gate Arrays (FPGA).
+The first stage filter bank in the stations splits up the total band into 512 equidistant subbands resulting in order 195~kHz subbands for the 200~MHz sample frequency and 156~kHz for the 160~MHz sample frequency. The filter bank is efficiently implemented as a Poly-Phase Filter bank (PPF) on Field Programmable Gate Arrays (FPGA).
 
 After the filtering operation, a subset of the subbands can be selected. The selected subbands can be arbitrary over the band and will add up to in total 32~MHz. This bandwidth is matched to the current capacity of the central processor.
 
@@ -857,7 +896,7 @@ saves much money.
 %the Blue Gene/L does this job much faster~\cite{Iskra:08}.
 
 All compute-intensive operations are performed on the BG/L.
-The first compute-intensive operation is the second-stage PolyPhase Filter
+The first compute-intensive operation is the second-stage Poly-Phase Filter
 (PPF), that splits each 195~kHz (resp.\ 156~kHz) subband into 256~channels of
 763~Hz (resp.\ 610~Hz) wide.
 Splitting the subbands into narrow frequency channels allows flagging
@@ -866,9 +905,9 @@ The PPF filter consists of 256~Finite Impulse Response (FIR) filters and a
 Fast Fourier Transform (see Figure~\ref{fig:flow}).
 Each FIR filter is a 16-tap band pass filter.
 The incoming samples are round-robin distributed over the FIR filters;
-the outputs are fourier transformed.
+the outputs are Fourier transformed.
 Using a Fourier transform only would lead to a significant amount of leakage
-between the channels, therfore filter banks are used.
+between the channels, therefore filter banks are used.
 %This architecture is also known as an HFX (Hybrid FX correlator) architecture.
 To achieve optimal performance, both the FIR filter and the FFT are implemented
 in assembly.
@@ -954,14 +993,14 @@ The off-line processing of LOFAR data has to deal with a number of challenges~\c
 
 The third category of challenges lies in the sky itself. At the low frequencies where LOFAR observes there are very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Last, but not least, the Earths ionosphere seriously defocusses the images.
 
-An introduction to signal processing for radio astronomical arrays can be found in~\cite{Veen1:04,Veen2:04,Boonstra:05}. With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider exisiting processing strategies and algorithms and develop new strategies and algorithms. The off-line processing therefore remains a work in progress of which we give an overview of the current status.
+An introduction to signal processing for radio astronomical arrays can be found in~\cite{Veen1:04,Veen2:04,Boonstra:05}. With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider existing processing strategies and algorithms and develop new strategies and algorithms. The off-line processing therefore remains a work in progress of which we give an overview of the current status.
 \label{sec:offline}
 
 \subsection{Processing large data volumes}
 
 The total amount of data that is produced is determined by the total number of stations that are used in the observation. This number depends on the particular mode of observation. The correlator produces a data stream of the order of a few Gbyte / s, which yields of the order of several tens of Tbytes of data after a typical observation of four hours. Since a permanent data storage is not part of the LOFAR telescope these data volumes have to be processed near real time. Fortunately, the non-imaging LOFAR applications are not so data intense, so that for every 1 hour of observation approximately 4 hours are available to further process the data. With this in mind data I/O becomes an issue. Obviously the data needs to be processed in a parallelized and distributed way minimizing the I/O that is needed~\cite{Loose:08,Diepen:08}.  
  
-Data can be distributed over a large number of processing nodes in a number of ways. Distribution over baselines is not very suitable for imaging, where data from all baselines must be combined to produce an image. Distribution over time has the disadvantage that up to sevaral Gbytes/s have to be sent to a single processing node. Frequency, therefore, seems to be the best way. This distribution scheme matches with the design of the correlator. It is also a convenient scheme for the imager, where images are created per (combined) frequency channel. 
+Data can be distributed over a large number of processing nodes in a number of ways. Distribution over baselines is not very suitable for imaging, where data from all baselines must be combined to produce an image. Distribution over time has the disadvantage that up to several Gbytes/s have to be sent to a single processing node. Frequency, therefore, seems to be the best way. This distribution scheme matches with the design of the correlator. It is also a convenient scheme for the imager, where images are created per (combined) frequency channel. 
 
 A consequence of distribution over frequency is that in the self-calibration step solver equations from different compute nodes may need to be combined. The combining of solver equations, however, involves far less data then the underlying observed visibility data.   
 
@@ -980,7 +1019,7 @@ Next an iterative loop, dubbed the ``Major Cycle'', is entered where we first es
 
 After initial operation of the LOFAR instrument the parameters for the strongest sources will be known. From then on the strongest sources can be used in every observation to estimate ionospheric parameters, instrumental parameters, and to refine the estimate for the station beams that is available from the station calibration. 
 
-In~\cite{Tol:07} it is shown that the unconstrained direction dependent calibration problem is ambiguous. The authors, however, present three physical contraints to get an unambigous solution: 
+In~\cite{Tol:07} it is shown that the unconstrained direction dependent calibration problem is ambiguous. The authors, however, present three physical constraints to get an unambiguous solution: 
 %
 \begin{enumerate}
 \item use a calibrated subarray to calibrate the rest of the array,
@@ -989,11 +1028,11 @@ In~\cite{Tol:07} it is shown that the unconstrained direction dependent calibrat
 \end{enumerate}
 % 
 
-In the first approach the LOFAR core is calibrated first, where use is made of the fact that the core stations all share the same ionosphere. This is a simpleer problem. Van der Tol et al. show that in this case the remote stations can be calibrated, provided the number of calibration sources is less then the number of core stations~\cite{Tol:07,Tol:05}. 
+In the first approach the LOFAR core is calibrated first, where use is made of the fact that the core stations all share the same ionosphere. This is a simpler problem. Van der Tol et al. show that in this case the remote stations can be calibrated, provided the number of calibration sources is less then the number of core stations~\cite{Tol:07,Tol:05}. 
 
-In the second approach, use is made of the fact that the effect of the ionosphere has a predictable frequency dependence~\cite{Tol:05}. The number of parameters that need to be estimated may be further reduced by using suitable base functions for the spatial dependence of the ionosphere. The use of Karhunen-Loeve base functions seems very promosing in this respect~\cite{Tol2:07}.  
+In the second approach, use is made of the fact that the effect of the ionosphere has a predictable frequency dependence~\cite{Tol:05}. The number of parameters that need to be estimated may be further reduced by using suitable base functions for the spatial dependence of the ionosphere. The use of Karhunen-Loeve base functions seems very promising in this respect~\cite{Tol2:07}.  
 
-In the third approach, multiple samples iin frequency and time are combined in a joint estimation, where the time and frequency dependence is modelled by e.g. polynomials and in this way the number of parameters that need to be estimated is reduced from 1 per individual sample to the polynomial coefficients for all samples together. In~\cite{Tol:07} it is reported however that this approach needs good initial estimates, since the continuous phase polynomial is ambiguous to integer multiples of $2\pi$.
+In the third approach, multiple samples in frequency and time are combined in a joint estimation, where the time and frequency dependence is modelled by e.g. polynomials and in this way the number of parameters that need to be estimated is reduced from 1 per individual sample to the polynomial coefficients for all samples together. In~\cite{Tol:07} it is reported however that this approach needs good initial estimates, since the continuous phase polynomial is ambiguous to integer multiples of $2\pi$.
 
 For LOFAR all three approaches will used and they will be combined with the so-called ``Peeling'' approach~\cite{Noordam:04,Tol:07}.
 
@@ -1009,14 +1048,14 @@ Since we correct the data per facet, this means multiplying the total amount of 
   
 Once the image is produced, source finding and extraction algorithms may be used to estimate source parameters. This would then lead to an updated source model and we are ready to enter a new cycle of the Major Cycle. 
 
-By sampling the data in each iteration of the Major Cycle, doubling the sampling density in every cycle, and using only the full resolution data in the last cycle, we effectively have not more then twice the I/O that is needed for the full resolution data. We expect that will seriously inprove the total speed of the processing.
+By sampling the data in each iteration of the Major Cycle, doubling the sampling density in every cycle, and using only the full resolution data in the last cycle, we effectively have not more then twice the I/O that is needed for the full resolution data. We expect that will seriously improve the total speed of the processing.
 
-%The correlator produces visibility data on a 1 second and 0.62 kHz of 0.78 kHz resolution depending on the sampling frequency of the station processing. The frequency resolution is needed for excision of RFI signals. Strong RFI sources can in principle be suppressed on the station level by applying spatial filtering techniques~\cite{Veen1:04,Veen2:04,Boonstra:05}. However, applying these techniques on the station level would imply that all station beams will be different. That would mean that the number of station beam parameters to be estimated in the following self-calibration step would increase considerably. We foresee that this will be impractible in the initial LOFAR operations. However, in later upgrades these spatial filtering techniques may be incorporated. Initially, LOFAR processing will use traditional flagging techniques~\cite{Renting:07}.  
+%The correlator produces visibility data on a 1 second and 0.62 kHz of 0.78 kHz resolution depending on the sampling frequency of the station processing. The frequency resolution is needed for excision of RFI signals. Strong RFI sources can in principle be suppressed on the station level by applying spatial filtering techniques~\cite{Veen1:04,Veen2:04,Boonstra:05}. However, applying these techniques on the station level would imply that all station beams will be different. That would mean that the number of station beam parameters to be estimated in the following self-calibration step would increase considerably. We foresee that this will be impractical in the initial LOFAR operations. However, in later upgrades these spatial filtering techniques may be incorporated. Initially, LOFAR processing will use traditional flagging techniques~\cite{Renting:07}.  
 
 \section{Current state and future work}
 
 \subsection{Core Station 1}
-Currently~\cite{gunst:06}, four partially-built stations are functional, also refered to as Core Station 1 (CS1). One of those stations contain the hardware to observe with 48~LBAs or with 6 HBA tiles and 30 HBA elements. The other 3~stations are equipped with 16~LBAs and 4 HBA elements.
+Currently~\cite{gunst:06}, four partially-built stations are functional, also referred to as Core Station 1 (CS1). One of those stations contain the hardware to observe with 48~LBAs or with 6 HBA tiles and 30 HBA elements. The other 3~stations are equipped with 16~LBAs and 4 HBA elements.
 To create more baselines and achieve better UV coverage, the stations each can be split into four {\em microstations}.
 This yields 16~microstations, which are treated the same as real stations in the online and offline processing pipelines.
 
