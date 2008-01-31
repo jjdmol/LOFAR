@@ -84,7 +84,8 @@ fi
 touch $logfile
 touch $resfile
 echo "" >> $logfile
-echo "***** Building packages in $builddir $variant" >> $logfile
+echo "***** Building packages in $builddir" >> $logfile
+echo "HOST     = `uname -n`" >> $logfile
 echo "PACKAGES = $pkgs" >> $logfile
 echo "VARIANTS = $variant" >> $logfile
 
