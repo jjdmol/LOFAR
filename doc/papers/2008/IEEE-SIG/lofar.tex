@@ -727,17 +727,15 @@ In the LOFAR stations electromagnetic signals are received by multiple dipoles. 
 
 \subsection{Antennas}
 
-\fixme{korter:}
-The operating frequency range of LOFAR is from 10 to 240~MHz, while the
-antennas are optimized for the 30--80~MHz and the 120--240~MHz ranges,
-skipping the FM radio band.
-Since the optimized bandwidth of the operating frequency range spans 5~octaves,
-at least two types of antennas are necessary to fulfill the sensitivity
-requirements.
-Therefore, two types of antennas were developed: the Low Band Antenna (LBA) and the High Band Antenna (HBA).
+LOFAR operates in the 10 to 240~MHz range, excluding the 87--108~MHz FM~radio
+band.
+Since the sensitivity range spans 5~octaves, two types of antennas were
+developed:
+the Low-Band Antenna (LBA) that is optimized for 30--80~MHz,
+and the High-Band Antenna (HBA) that is optimized for 120--240~Mhz.
 To accommodate science below 30~MHz, an extra provision is made for a
-third antenna, also referred to as the Low Band Low (LBL) antenna.
-In that context the LBA is also referred to as Low Band High (LBH) antenna.
+third antenna, also referred to as the Low-Band Low (LBL) antenna.
+In that context the LBA is also referred to as Low-Band High (LBH) antenna.
 All antennas are designed for two polarizations.
 In total, 96~LBAs and 48~HBAs will be installed in a station. 
 
@@ -1017,21 +1015,18 @@ between the channels, therefore filter banks are used.
 %This architecture is also known as an HFX (Hybrid FX correlator) architecture.
 To achieve optimal performance, both the FIR filter and the FFT are programmed
 in assembly.
-\fixme{even naar kijken}
-The FIR filters implicitly convert the 16+16-bit complex integer numbers from
-the stations to 32+32-bit
-floating-point numbers, since the BG/L performs floating point computations
-faster than integer operations.
+The FIR filters implicitly convert the station samples from 16+16-bit complex
+integers to 32+32-bit floating-point numbers, since the BG/L performs
+floating-point computations faster than integer operations.
 Double (64-bit) precision is not required for these filters.
 
-\fixme{twee bijzinnen; gebruik van "we"}
-An example that illustrates the benefits of a flexible software solution, was
-the ease with which the second-stage PPF, which was originally designed to
-run on FPGAs at the stations, could be moved to the BG/L.
-Once we saw that we could obtain really high performance from the BG/L
-in practice and recognized that sufficient computational power was left,
-a considerable cost reduction was achieved by removing the second-stage PPF
-from the station design.
+The second-stage PPF was originally designed to run on FPGAs at the stations.
+However, after appreciating the really high performance of the BG/L in
+practice, and after realizing that sufficient computational power was left, a
+considerable cost reduction was achieved by moving the second-stage PPF from
+the station design to the BG/L.
+The ease with which this was achieved illustrates the benefits of a flexible
+software telescope; customized hardware designs are much harder to adapt.
 
 After the subbands are split into narrow channels, the remainder of the
 delays are compensated, by shifting the phase of each sample, also known as
@@ -1194,15 +1189,25 @@ Calibration is performed in two steps. In the first step, a point source model i
 CasA and CygA completely dominate the background sources, since they are at least 50 times stronger then the average background source. After subtracting the contributions from CasA and CygA from the data some 100 other sources become visible. This is shown in the right panel (``residual''). 
 
 \subsection{International stations}
-\fixme{niet in een zin}
-There is a growing international interest in building stations as well in order to achieve longer baselines. In this context the first LBA station, consisting of 96 antennas is currently operational in Effelsberg (Germany) and will be connected to the rest of the LOFAR system. Two additional German stations will be installed in Garching and Tautenburg. Further stations are planned in Germany (Potsdam), Sweden, France, and the UK and interest is shown by Poland and Italy.
-
-For the international stations also stand-alone modes will be supported. In this way those stations can participate in the full LOFAR configuration or operate in a local mode.
+There is a growing international interest in building stations in other
+countries as well.
+With these stations, longer baselines can be established.
+The first international station, consisting of 96~LBA antennas, is currently
+operational in Effelsberg (Germany) and will be connected to the central
+processor soon.
+Two additional German stations will be installed in Garching and Tautenburg.
+More stations are planned in Germany (Potsdam), Sweden, France, and the
+United Kingdom, and interest is shown by Poland and Italy.
+The international stations can operate in stand-alone mode or participate
+in the full LOFAR configuration.
 
 \subsection{Scaling LOFAR}
-In the course of this year 18 full stations will be manufactured and installed in the field. Also the WAN infrastructure and central processor facility will be scaled up to handle the data of the 18 full stations and the international stations.
+In the course of this year, 18~stations will be manufactured and installed in the field. Also, the WAN infrastructure and central processor facility will be scaled up to handle the data from the 18 stations and the international stations.
+The remainder of the stations will be built in 2009.
 
-The remainder of the stations will be built in 2009. Currently the software development is focused on the imaging mode. In the course of this year significant effort will be put in realizing the tied-array beamforming mode.
+Currently the software development is focused on the imaging mode.
+In the course of this year significant effort will be put in realizing the
+tied-array beamforming mode.
 
 
 % if have a single appendix:
