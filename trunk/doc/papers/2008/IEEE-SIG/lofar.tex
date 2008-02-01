@@ -1093,12 +1093,13 @@ and image the data.
 
 \section{Central processing: calibration}
 
-The offline processing of LOFAR data has to deal with a number of challenges~\cite{Noordam:04,Nijboer:07}. First of all, the data volumes are huge. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they have a high degree of instrumental polarization that varies with scan angle, and they have relatively high sidelobes. All these issues complicate the processing of the data, especially since a high dynamic range must be reached. 
+With LOFAR calibration for radio astronomical instruments enters a new regime. The offline processing has to deal with a number of challenges~\cite{Noordam:04,Noordam:06,Nijboer:07}. First of all, the data volumes are huge. A typical observation in imaging mode produces tens of Tbytes of correlated data. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they have a high degree of instrumental polarization that varies with scan angle, and they have relatively high sidelobes. All these issues complicate the processing of the data, especially since a high dynamic range must be reached. 
 
 The third category of challenges lies in the sky itself. At the low frequencies where LOFAR observes there are very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Last, but not least, the Earths ionosphere seriously defocusses the images.
 
-\fixme{Ronald: 3x "we"}
-An introduction to signal processing for radio astronomical arrays can be found in~\cite{Veen1:04,Veen2:04,Boonstra:05}. With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider exisiting processing strategies and algorithms and develop new strategies and algorithms. Therefore, the offline processing is still a work in progress of which we give an overview of the current status.
+These challenges imply that for LOFAR exisiting processing strategies and algorithms mmust be reconsidered and new strategies and algorithms have to be developed. Therefore, the LOFAR offline processing is still a work in progress of which the current status is presented here.
+
+Note: in the radio astronomical community a correlated data sample is called a visibility and it is measured on a baseline: the vector between the two station locations from which the two signals that are correlated originate.
 \label{sec:offline}
 
 \subsection{Processing large data volumes}
@@ -1109,21 +1110,20 @@ Data can be distributed over a large number of processing nodes in a number of w
 
 A consequence of distribution over frequency is that in the self-calibration step solver equations from different compute nodes may need to be combined allowing estimation of parameters using data that is distributed over several nodes. The combining of solver equations, however, involves far less data I/O then the underlying observed visibility data.   
 
-\fixme{Ronald: 2x "we"}
-Even though the processing of the data will be done on a large cluster of computers, the total amount of data can be such that we expect the quality of the final result to be processing limited. This means that for all the algorithms we have to weight accuracy against the amount of FLOPS needed. It also means that the LOFAR instrument can be improved by upgrading the processing cluster in the future. 
+Even though the processing of the data will be done on a large cluster of computers, the total amount of data can be such that the quality of the final result is expected to be processing limited. This means that for all the algorithms accuracy has to be weighted against the amount of FLOPS needed. It also means that the LOFAR instrument can be improved by upgrading the processing cluster in the future. 
 
 \subsection{Processing steps}
 
-LOFAR calibration is a joint estimation problem for both instrumental parameters, environmental parameters, and source parameters. At its heart lies the ``Measurement Equation'' that is used to model the observed data~\cite{Hamaker:96}. A detailed description of all steps involved can be found in~\cite{Noordam:05}. A signal processing data model and a Cramer-Rao lower bound analysis are given in~\cite{Tol:07}. The latter paper also provides a good introduction to the signal processing aspects of LOFAR Self-Calibration.   
+LOFAR calibration is a joint estimation problem for both instrumental parameters, environmental (e.g. ionospheric) parameters, and parameters for celestial sources. At its heart lies the ``Measurement Equation'' that is used to model the observed data~\cite{Hamaker:96}. A detailed description of all steps involved can be found in~\cite{Noordam:06}. A signal processing data model and a Cramer-Rao lower bound analysis are given in~\cite{Tol:07}. The latter paper also provides a good introduction to the signal processing aspects of LOFAR Self-Calibration.   
 
 \label{sec:RFI}
 The current LOFAR calibration strategy consists of the following steps. The first step consists of removing bad data points, which are due to e.g. RFI. After this step the contaminating contribution of a couple of very strong sources (like CasA, CygA, TauA, VirA) that enter through the station beam sidelobes needs to be removed. Since modelling the station beam sidelobes is infeasible due to the large number of parameters involved, the combined effect of the sources and the instrumental effects has to be estimated and subtracted from the data. 
 
 Once the interfering signals are removed from the data, the data is further integrated. The final resolution is determined by bandwidth and time-average smearing requirements that follow from the desired FoV and the maximum baseline~\cite{SIRAII:99}. In the frequency direction the data may be reduced by maximal one order of magnitude. In principle the data is also integrated along the time axis. Here, however, the effect of the ionosphere has to remain constant over the integration period. The maximal reduction factor determined by time-average smearing is also maximally one order of magnitude.
 
-Next an iterative loop, dubbed the ``Major Cycle'', is entered where we first estimate instrumental, environmental, and source parameters using the visibility data, then image the data, and finally refine the estimation  of the source parameters using image data. Since not all parameters are estimated jointly, the Major Cycle will be traversed a number of times in order to iteratively refine the estimates~\cite{Nijboer:07}. 
+Next an iterative loop, dubbed the ``Major Cycle'', is entered where we first estimate instrumental, environmental, and parameters for the brightest celestial sources using the visibility data, then image the data, and finally estimate  the parameters of the faint celestial sources using image data. Since not all parameters are estimated jointly, the Major Cycle will be traversed a number of times in order to iteratively refine the estimates~\cite{Noordam:06,Nijboer:07}. 
 
-After initial operation of the LOFAR instrument the parameters for the strongest sources will be known. From then on the strongest sources can be used in every observation to estimate ionospheric parameters, instrumental parameters, and to refine the estimate for the station beams that is available from the station calibration. It is the direction dependent estimation of ionospheric parameters that is the most challenging part of this estimation problem. 
+After initial operation of the LOFAR instrument the parameters for the strongest sources will be known. From then on the strongest sources in the FoV can be used to estimate ionospheric parameters, instrumental parameters, and to refine the estimate for the station beams that is available from the station calibration. It is the direction dependent estimation of ionospheric parameters that is the most challenging part of this estimation problem. 
 
 In~\cite{Tol:07} it is shown that the unconstrained direction dependent calibration problem is ambiguous. However, three physical contraints to get an unambigous solution are presented: 
 %
@@ -1134,21 +1134,21 @@ In~\cite{Tol:07} it is shown that the unconstrained direction dependent calibrat
 \end{enumerate}
 % 
 
-In the first approach the LOFAR core is calibrated first, where use is made of the fact that the core stations all share the same ionosphere. This is a simpler problem. Van der Tol et al.~\cite{Tol:07,Tol:05} show that in this case the remote stations can be calibrated, provided the number of independent calibration directions is less then the number of core stations. 
+In the first approach the LOFAR core is calibrated first, where use is made of the fact that the core stations all share the same ionosphere. This is a simpler problem. Van der Tol {\it et al.}~\cite{Tol:07,Tol:05} show that in this case the remote stations can be calibrated, provided the number of independent calibration directions is less then the number of core stations. 
 
 In the second approach, use is made of the fact that the effect of the ionosphere has a predictable frequency dependence~\cite{Tol:05}. The number of parameters that need to be estimated may be further reduced by using suitable base functions for the spatial dependence of the ionosphere. The use of Karhunen-Loeve base functions seems very promising in this respect~\cite{Tol2:07}.  
 
 In the third approach, multiple samples in frequency and time are combined in a joint estimation, where the time and frequency dependence is modelled by e.g. polynomials and in this way the number of parameters that need to be estimated is reduced from 1 per individual sample to the polynomial coefficients for all samples together. Here use can be made from prior knowledge that not all parameters vary on the same time and frequency scales. In~\cite{Tol:07} it is reported however that this approach needs good initial estimates, since for instance the continuous phase polynomial is ambiguous to integer multiples of $2\pi$.
 
-The sky image is the Fourier transform of the visibility domain. Due to the fact that the visibility domain is only discretely sampled, sources in the sky image are convolved with a Point Spread Function (PSF). The contribution from sources that have PSF far sidelobes that are higher than the image noise level should be subtracted from the visibility data. Using the solutions to the parameter estimation problem the contributions from the strongest sources in the FoV are removed from the visibility data. The remaining residual visibility data is then corrected and imaged.
+The sky image is the Fourier transform of the visibility domain. Due to the fact that the visibility domain is only discretely sampled, sources in the sky image are convolved with a Point Spread Function (PSF). The contribution from sources that have PSF far sidelobes that are higher than the image noise level should be subtracted from the visibility data in order to improve the dynamic range of the image. Using the solutions to the parameter estimation problem the contributions from the strongest sources in the FoV are removed from the visibility data. The remaining residual visibility data is then corrected and imaged.
 
-One visibility sample contains the combined contribution from all sources in the sky. Since LOFAR has a large FoV, the contribution from different sources is distorted by different ionospheric and beam effects. When imaging the visibility data, however, it is only possible to correct the data for one direction in the sky. This would mean that the image would be sharp for the direction of correction and the image quality would degrade outwards. To overcome this problem LOFAR images will be made in facets, where we can correct the data for the center of each facet. 
+One visibility sample contains the combined contribution from all sources in the sky. Since LOFAR has a large FoV, the contribution from different sources is distorted by different ionospheric and beam effects. When imaging the visibility data, however, it is only possible to correct the data for one direction in the sky. This would mean that the image would be sharp for the direction of correction and the image quality would degrade outwards. To overcome this problem LOFAR images will be made in small facets, where we can correct the data for the center of each facet. 
 
-Facet imaging is a well known technique to overcome the problem related to the so-called ``w-term'', which are due to the fact that the baselines are non-coplanar~\cite{SIRAII:99}. However, the non-coplanar baseline problem is better solved by the w-projection algorithm~\cite{Cornwell:05}. Therefore, we will apply the w-projection technique per facet and the facet size will only be determined by the variability of the station beam and the ionosphere.
+Facet imaging is a well known technique to overcome smearing effects that are due to the fact that the baselines are non-coplanar~\cite{SIRAII:99}. However, the non-coplanar baseline problem is better solved by the w-projection algorithm~\cite{Cornwell:05}. Applying the w-projection technique per facet ensures that the maximum facet size is not restricted by the effect of the non-coplanar baselines, but the facet size will only be determined by the variability of the station beam and the ionosphere.
 
-Since we correct the data per facet, this means multiplying the total amount of data with the number of facets. Fortunately, the facet size will be far smaller then the total FoV. This allows us to shift the data to the center of the facet and then integrate the data in both time and frequency. Hence, the total amount of data will be more or less the same.
+The facet size is far smaller then the total FoV, which allows the data to be further integrated in both time and frequency. However, since this for every facet a new set of integrated, corrected data is constructed the total amount of data will be approximately the same as the full resolution, observed data.
   
-Once the image is produced, source finding and source extraction algorithms will be used to estimate source parameters. This would then lead to an updated source model and a new cycle of the Major Cycle is entered. 
+Once the image is produced, source finding and source extraction algorithms will be used to estimate source parameters for the faint sources and refine the parameter estimates for the bright sources. This results in an updated source model and a new cycle of the Major Cycle is entered. 
 
 \section{Current state and future work}
 
@@ -1173,7 +1173,7 @@ The WAN infrastructure from the field towards the central location is realized f
 
 Many LBA commissioning observations have been done so far. The development of the HBA was finished last year and the commissioning of the HBA tiles are still ongoing. Currently all the equipment in the field is operational.
 
-Figure \ref{fig:skymap} shows a series of images that were made from data using CS1. In total 16~microstations, each consisting of a single dipole with essentially an all sky FoV, were used. The images are centered on the North Celestial Pole and contain 48 hours and about 20 subbands of data. First the data is flagged for RFI and an image of the flagged-only data is shown on the left (``observed''). 
+Figure \ref{fig:skymap} shows a series of images that were made from data using CS1~\cite{Yatawatta:08}. In total 16~microstations, each consisting of a single dipole with essentially an all sky FoV, were used. The images are centered on the North Celestial Pole and contain 48 hours and about 20 subbands of data. First the data is flagged for RFI and an image of the flagged-only data is shown on the left (``observed''). 
 
 \begin{figure*}
 \centering
@@ -1184,9 +1184,9 @@ Figure \ref{fig:skymap} shows a series of images that were made from data using 
 \label{fig:skymap}
 \end{figure*}
 
-Calibration is performed in two steps. In the first step, a point source model is used for both CasA and CygA, both at 20000 Jy flux and no polarization. An analytical beam shape is used and we solve for a single complex gain per station for the whole sky. In this way an estimate for the instrumental complex gains (e.g. due to clock drifts) and ionospheric phase differences is obtained. After correcting the data, a second step is performed where we estimate the complex gains in both the direction of CasA and CygA. In this second step no assumptions on the beam are made. For the middle image (``calibrated'') the data is corrected using the estimates for the direction of CasA. In this middle image CasA and CygA can be clearly seen as point sources. 
+Calibration is performed in two steps. In the first step, a point source model is used for both CasA and CygA, both at 20000 Jy flux and no polarization. An analytical beam shape is used and a single complex gain per station for the whole sky is estimated. In this way an estimate for the instrumental complex gains (e.g. due to clock drifts) and ionospheric phase differences is obtained. After correcting the data, a second step is performed where the complex gains in both the direction of CasA and CygA are estimated. In this second step no assumptions on the beam are made. For the middle image (``calibrated'') the data is corrected using the estimates for the direction of CasA. In this middle image CasA and CygA can be clearly seen as point sources. 
 
-CasA and CygA completely dominate the background sources, since they are at least 50 times stronger then the average background source. After subtracting the contributions from CasA and CygA from the data some 100 other sources become visible. This is shown in the right panel (``residual''). 
+CasA and CygA completely dominate the background sources, since they are at least 50 times stronger then the strongest background source. After subtracting the contributions from CasA and CygA from the data some 100 other sources become visible. This is shown in the right panel (``residual''). 
 
 \subsection{International stations}
 There is a growing international interest in building stations in other
@@ -1247,7 +1247,7 @@ Additional funding is provided by the European Union, European Regional
 Development Fund (EFRO) and by the ``Samenwerkingsverband Noord-Nederland,''
 EZ/KOMPAS.
 
-ASTRON is an institute of the Netherlands Foundation for Scientific Research (NWO).
+ASTRON is part of the Netherlands Foundation for Scientific Research, NWO.
 
 % Can use something like this to put references on a page
 % by themselves when using endfloat and the captionsoff option.
@@ -1305,7 +1305,7 @@ is a digital system engineer at ASTRON and currently responsible for the develop
 \end{IEEEbiography}
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{rnijboer.eps}}]{Ronald Nijboer}
-Blah blah blah.
+is leading the Computing group at ASTRON. He obtained a degree in Mathematics from the Eindhoven University of Technology in 1994. His Ph.D. research on waves and instabilities of flowing  plasmas he performed at the FOM Institute for Plasma Physics ``Rijnhuizen''. He received the Ph.D. degree in 1998 from the Vrije Universiteit, Amsterdam. From 1998 till 2004 he worked in the field of aeroacoustics with the National Aerospace Laboratory (NLR). In 2004 he started working for ASTRON. His research interests include calibration and imaging algorithms.  
 \end{IEEEbiography}
 
 
