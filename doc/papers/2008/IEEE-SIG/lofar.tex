@@ -394,7 +394,7 @@
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{Overview of the LOFAR signal processing architecture}
+\title{Overview of the LOFAR Signal-Processing Architecture}
 %
 %
 % author names and IEEE memberships
@@ -412,7 +412,7 @@
 \thanks{A. W. Gunst, R. Nijboer, and J.W. Romein are with ASTRON, Dwingeloo, 
 The Netherlands, www.astron.nl
 }% <-this % stops a space
-\thanks{Manuscript received January 31, 2008; revised .}}
+\thanks{Manuscript received February 1, 2008; revised .}}
 
 % note the % following the last \IEEEmembership and also \thanks - 
 % these prevent an unwanted space from occurring between the last author name
@@ -435,8 +435,8 @@ The Netherlands, www.astron.nl
 
 
 % The paper headers
-\markboth{IEEE Journal of Selected Topics in Signal Processing,~Vol.~X, No.~Y, January~2008}%
-{Gunst \MakeLowercase{\textit{et al.}}: Overview of the LOFAR signal processing architecture}
+\markboth{IEEE Journal of Selected Topics in Signal Processing,~Vol.~X, No.~Y, February~2008}%
+{Gunst \MakeLowercase{\textit{et al.}}: Overview of the LOFAR Signal-Processing Architecture}
 % The only time the second header will appear is for the odd numbered pages
 % after the title page when using the twoside option.
 % 
@@ -476,7 +476,7 @@ Its revolutionary design and unprecedented size enables observations in the
 hardly-explored 10--240~MHz frequency range, and allows the study of
 a vast amount of new science cases.
 
-This paper describes the LOFAR signal processing chain from the antennas in the field to the central processing. The central processing is split in real-time processing and off-line calibration and imaging.
+This paper describes the LOFAR signal processing chain from the antennas in the field to the central processing. The central processing is split in real-time processing and offline calibration and imaging.
 \end{abstract}
 % IEEEtran.cls defaults to using nonbold math in the Abstract.
 % This preserves the distinction between vectors and scalars. However,
@@ -531,7 +531,7 @@ This paper describes the LOFAR signal processing chain from the antennas in the 
 %I wish you the best of success.
 
 \IEEEPARstart{L}{OFAR} is an acronym for {\em LO\/}w {\em F\/}requency
-{\em AR\/}ray, a phased-array radio telescope operating over the 10 to
+{\em AR\/}ray, a phased-array radio telescope operating in the 10 to
 240~MHz frequency range.
 Its design breaks radically with conventional telescopes:
 rather than using large, expensive dishes, LOFAR is built as a distributed
@@ -546,23 +546,20 @@ Third, multiple observations, even of different types, can be handled
 simultaneously.
 Forth, LOFAR is more flexible, because most of the processing is done in
 software, rather than using customized hardware.
-\fixme{Ik heb de zin over lagere onderhouds kosten als gevolg het niet
-hebben van bewegende delen weggelaten, omdat er bij LOFAR meer elektronica
-kapot kan gaan.}
 
 The heart of LOFAR will be installed in the Northern part of the Netherlands.
-The maximum baseline of the Dutch LOFAR Dutch stations is about 100 km.
+The maximum baseline (distance between two stations) of the Dutch LOFAR
+stations is about 100 km.
 Since other European institutes also show interest and are building LOFAR
 stations, the maximal baseline of LOFAR will be extended, possibly to 1000~km.  
 
 Since the concept of LOFAR is so different from traditional radio telescopes,
 new astronomical science can be done with it.
-Below, we list some of the key science projects.
-First, LOFAR should be able to detect the {\em Epoch of Re-ionization},
+First, LOFAR should be able to detect the {\em Epoch of Re-ionization (EoR)},
 the time that the first star galaxies and quasars were formed.
 Second, LOFAR's large Field of View (FoV) makes it uniquely suited to study
-{\em transient sources}.
-A galactic events triggers the dump of raw antenna data that can be examined
+{\em all-sky surveys\/} and {\em transient sources}.
+A galactic event triggers the dump of raw antenna data that can be examined
 afterward.
 Third, LOFAR offers a unique possibility in particle astrophysics for
 studying the origin of high-energy {\em cosmic rays}.
@@ -579,35 +576,46 @@ Despite the new concept the overall processing steps of a radio telescope remain
 \begin{center}
 \includegraphics[width=83mm]{telescope_overview.eps}
 \end{center}
-\caption{General datapath of an aperture synthesis array.}
+\caption{Datapath of an aperture synthesis array.}
 \label{fig:concept}
 \end{figure}
 
-In LOFAR, the detector is composed of multiple sensors. Since these sensors convert electromagnetic radiation into electronic signals, the sensors are further referred to as antennas. Ideally, the number of detectors equals the number of antennas to accommodate all sky imaging. However, cost of data transport and processing power limits the number of detectors which can be afforded for a feasible design with a reasonable price. The analog processing shown in Figure~\ref{fig:concept} covers the (low noise) amplification, filtering, analog signal transport and further signal conditioning functions before the signal is converted into the digital domain (Analog/Digital (A/D) conversion block). From there, the signals are digitally conditioned before entering the correlator. Typical operations in LOFAR digital processing are filtering, frequency selection, and beamforming. In the correlator, all signals are correlated with each other to form the cross correlation matrix. Furthermore, the correlation results are calibrated for instrumental and environmental effects in the post processing stage. Additionally, known sources are subtracted to enhance the dynamic range. Another post processing task is to transform the correlation products into an image.
+LOFAR is composed of multiple antennas, structured in a hierarchical way,
+to limit the costs of data transport and processing costs.
+The analog processing shown in Figure~\ref{fig:concept} covers the (low noise)
+amplification, filtering, analog signal transport, and further signal
+conditioning functions before the signal is converted into the digital domain
+(Analog/Digital (A/D) conversion block). From there, the signals are digitally conditioned before entering the correlator. Typical operations in LOFAR digital processing are filtering, frequency selection, and beamforming. In the correlator, all signals are correlated with each other to form the cross correlation matrix. Furthermore, the correlation results are calibrated for instrumental and environmental effects in the post processing stage. Additionally, known sources are subtracted to enhance the dynamic range. Another post processing task is to transform the correlation products into an image.
 
-The LOFAR sensors are distributed over a large area to achieve an angular
-resolution of arcseconds accuracy with an acceptable UV coverage.
-All data coming from the sensors should come together in the correlator. So, on the one hand the instrument should be distributed over a large area, while on the other hand all data should come together in a central location. To balance the hardware and operational costs between the equipment in the field, the transport network and the volume of the central systems, multiple antennas (48) are grouped in so called stations. Within such a station the information of all individual antennas is weighted and summed. Such an array of antennas is often called a phased array. As a consequence a spatial selection on the sky is made, which reduces the instantaneous FoV of each station. So the main reason for having stations is to reduce the total data stream to the correlator.
+\fixme{todo:}
+The LOFAR antennas are distributed over a large area to achieve an angular
+resolution of arcseconds accuracy with an acceptable spatial coverage.
+All data coming from the antennas comes together in the correlator.
+So, on the one hand the instrument is distributed over a large area,
+while on the other hand all data should come together in a central location. To balance the hardware and operational costs between the equipment in the field, the transport network and the volume of the central systems, multiple antennas (48) are grouped in so called stations. Within such a station the information of all individual antennas is weighted and summed. Such an array of antennas is often called a phased array. As a consequence a spatial selection on the sky is made, which reduces the instantaneous FoV of each station. So the main reason for having stations is to reduce the total data stream to the correlator.
 
-For at least two applications (\fixme{EoR and ?}), a larger FoV is required.
+\fixme{Andre: introduceer het begrip "central core" + een mooie aansluiting
+op de volgende paragraaf}
 These applications only use the central core of the instrument, of which the
 diameter is 2~km.
-Since the distance over the Wide-Area Network between the core and the central
-processing location is limited, we can afford higher bandwidths from the
-core stations than from the remote stations.
+Since the distance over the Wide-Area Network (WAN) between the core and the
+central processing location is limited, higher bandwidths can be afforded from
+the core stations than from the remote stations.
 The extra bandwidth can be used to split a core station into two independent
-arrays, effectively doubling the number of (half)stations in the core.
-At least 36~Dutch stations will be built, eighteen of which in the core.
-When the core stations are split, this yields 54~Dutch stations.
+arrays, effectively doubling the number of stations in the core.
+At least 36~Dutch stations will be built, eighteen of which are in the core.
 
 All station data are transported to the central processing location via a
-Wide-Area Network (WAN), which uses owned and leased light paths.
+WAN, which uses owned and leased light paths.
 At a central location, all station data are combined and processed.
 The processing is done by a supercomputer, surrounded by clusters of
 off-the-shelf computers.
-The processing will accommodate several pipelines, amongst them are pipelines
-for imaging modes, tied-array beamforming, and more specialized modes.
+The processing will accommodate several pipelines: for imaging modes,
+for tied-array beamforming, and for more specialized modes.
 
+The remainder of this paper decribes the station processing,
+the real-time correlator, the offline postprocessing, and a description
+of the current state.
 
 %\hfill mds
  
@@ -719,11 +727,11 @@ In the LOFAR stations electromagnetic signals are received by multiple dipoles. 
 
 \subsection{Antennas}
 
+\fixme{korter:}
 The operating frequency range of LOFAR is from 10 to 240~MHz, while the
 antennas are optimized for the 30--80~MHz and the 120--240~MHz ranges,
 skipping the FM radio band.
-Since the optimized bandwidth of the operating frequency range spans 8~octaves,
-\fixme{8 octaven?  Ik kom tot 5!}
+Since the optimized bandwidth of the operating frequency range spans 5~octaves,
 at least two types of antennas are necessary to fulfill the sensitivity
 requirements.
 Therefore, two types of antennas were developed: the Low Band Antenna (LBA) and the High Band Antenna (HBA).
@@ -733,11 +741,12 @@ In that context the LBA is also referred to as Low Band High (LBH) antenna.
 All antennas are designed for two polarizations.
 In total, 96~LBAs and 48~HBAs will be installed in a station. 
 
-Each LBA consists of one dipole (per polarization), but
+Each LBA consists of one dipole per polarization, but
 each HBA is organized as a tile, wherein 16~antenna elements are combined using
 analog beamforming, to yield a comparable effective area for both the LBAs and
 HBAs.
-The use of an digital beamformer would be prohibitively expensive.
+The use of a digital beamformer for the HBA tiles would be prohibitively
+expensive.
 The beamforming is done locally near the tile, to reduce the number of cables
 to the central station location, where the receivers are installed in cabinets.
 Both the LBA and HBA tile signals are pre-filtered and amplified near the
@@ -749,7 +758,7 @@ The diameter of an LBA field is approximately 85~m.
 %Within a station, the low band array will be a randomized and exponentially space tapered
 %configuration~\cite{capp:06}, with a diameter size of about 85~m.
 The HBA tiles will be installed as a dense and regular array with a size of
-about \fixme{xxx}~m in diameter for the remote stations.
+about 50~m in diameter for the remote stations.
 In the core stations, the HBA field will be split in two arrays with a diameter
 of 38~m each. 
 
@@ -855,7 +864,7 @@ on Field Programmable Gate Arrays (FPGA).
 The observer selects a subset of the 512~subbands from the first-stage PPF.
 The selected subbands can be arbitrary over the band and will add up to a
 total of 32~MHz.
-The capacity of the central processor matches this bandwidth.
+The capacity of the central correlator matches this bandwidth.
 
 To form beams, the antenna signals are combined in a complex weighted sum
 for each selected subband.
@@ -883,22 +892,22 @@ Additionally, the cross correlation algorithm will be used for
 Radio Frequency Interference (RFI) detection as well~\cite{Boonstra:05}.
 \fixme{Maar hier doen we nog niets mee.}
 
-\section{Central Processing: the Correlator}
+\section{Central processing: the correlator}
 \label{sec:corr}
 
 \begin{figure*}
 \begin{center}
 \includegraphics[width=.8\textwidth]{processing}
 \end{center}
-\caption{Clusters in the Central Processor.}
+\caption{Clusters in the central processor.}
 \label{fig:CEP}
 \end{figure*}
 
-The station data are sent over a dedicated Wide-Area Network to the Central
-Processor for further processing.
+The station data are sent over a dedicated WAN to the central processor for
+further processing.
 Figure~\ref{fig:CEP} shows the processing steps that take place at the
-different computer clusters within the Central Processor.
-The Central Processor is divided in an online (real time) and offline part.
+different computer clusters within the central processor.
+The central processor is divided in an online (real time) and offline part.
 The online part reduces the data volume to an amount that can be stored on
 a PetaByte-sized storage system, which provides space for three to five days
 of data.
@@ -908,11 +917,11 @@ Section~\ref{sec:offline}).
 In the standard imaging mode, the main task in the online part is to
 correlate all data~\cite{Romein:06}.
 Classical radio telescopes use an XF correlator, meaning that first the
-correlation and integration of the signals was done in time domain (X),
-after which the Fourier transform (F) was accomplished to get a cross power
+correlation and integration of the signals is done in time domain (X),
+after which the Fourier transform (F) is accomplished to get a cross power
 spectrum out of the correlator.
 This is still an economically attractive technique for radio telescopes with
-a limited number of antennas (input signals to the correlator).
+a limited number of input signals to the correlator.
 However, for LOFAR an FX correlator (first Fourier transform and then
 correlating the resulting channels) is favorable in terms of processing
 requirements, at the expense of data transport (the signals must be regrouped
@@ -936,22 +945,22 @@ The BG/L is surrounded by an input cluster and a storage cluster.
 
 \begin{figure*}
 \includegraphics[width=\textwidth]{flow}
-\caption{Real-time filters on the Central Processor.  For simplicity, the
+\caption{Real-time filters on the central processor.  For simplicity, the
 figure shows two stations, one subband, one polarization.  The numbers are
 valid for the 200~MHz mode.}
 \label{fig:flow}
 \end{figure*}
 
 The input section (see Figure~\ref{fig:CEP}) receives all station data that
-are sent via the wide-area network.
-We use the UDP datagram protocol over the WAN, which is an unreliable
+are sent via the WAN.
+LOFAR uses the UDP datagram protocol over the WAN, which is an unreliable
 protocol.
 Using a reliable protocol like TCP would complicate the design of the
 processing boards at the stations significantly, because TCP requires
 bi-directional communication (unlike UDP) and needs buffering of large amounts
 of transmitted data (to be able to retransmit lost packets).
 Since in practice few (less than 0.001\%) packets are lost and occasional loss
-of data does not harm the astronomical quality of the data, we chose for UDP.
+of data does not harm the astronomical quality of the data, UDP is used.
 The input section handles duplicated, missing, and out-of-order UDP packets.
 Lost data are appropriately flagged as being ``invalid'', and the remainder
 of the processing pipeline handles this accordingly.
@@ -959,12 +968,12 @@ The data are received into a circular buffer, that holds the most recent
 six seconds of data.
 
 The buffer serves three purposes.
-First, since a wave from a celestial source hits the stations at different
-times, we use the buffer to compensate for the time difference.
+First, since a wave from a celestial source is received by the stations at
+different times, the buffer is used to compensate for the time difference.
 The delay depends on the observation direction and the station positions,
 and changes continuously due to the rotation of the earth.
-The bulk of the delay is corrected by shifting the buffer's read pointer by
-an entire amount of samples (the remaining delay is corrected by a phase
+The bulk of the delay is corrected by shifting the read pointer of the buffer
+by an entire amount of samples (the remaining delay is corrected by a phase
 shift later).
 Second, the buffer is used to synchronize the station data, since data from
 different stations have different travel times over the WAN links.
@@ -974,7 +983,7 @@ remainder of the processing pipeline, without data loss.
 Each input node receives all subband data of one station.
 Unfortunately, this data distribution is not suitable for the correlator,
 because the correlator needs the data of one subband and all stations.
-Also, we need hundreds of CPUs to correlate all subbands.
+Also, hundreds of CPUs are necessary to correlate all subbands.
 Thus, the next step is to redistribute (transpose) all data over the CPUs,
 using a fast interconnect.
 
@@ -987,7 +996,7 @@ external I/O bandwidth, and to increase flexibility~\cite{Iskra:08}.
 The internal 3-D~torus network is used for the transpose, and is very well able
 to sustain the required switching rates.
 Not having to build a full input cluster when more LOFAR stations are added
-saves much money.
+yields a substantial cost saving.
 %Initially, we did this on the input cluster, which is connected by a high-speed
 %infiniband network, but we found that the internal 3-D~torus network within
 %the Blue Gene/L does this job much faster~\cite{Iskra:08}.
@@ -1006,20 +1015,23 @@ the outputs are Fourier transformed.
 Using a Fourier transform only would lead to a significant amount of leakage
 between the channels, therefore filter banks are used.
 %This architecture is also known as an HFX (Hybrid FX correlator) architecture.
-To achieve optimal performance, both the FIR filter and the FFT are implemented
+To achieve optimal performance, both the FIR filter and the FFT are programmed
 in assembly.
-The FIR filters implicitly convert the 16-bit complex numbers to 32-bit
+\fixme{even naar kijken}
+The FIR filters implicitly convert the 16+16-bit complex integer numbers from
+the stations to 32+32-bit
 floating-point numbers, since the BG/L performs floating point computations
 faster than integer operations.
 Double (64-bit) precision is not required for these filters.
 
-An example that illustrates the benefits of a flexible software solution was
-the ease with which we could move the second-stage PPF, which was
-originally designed to run on FPGAs at the stations, to the BG/L.
+\fixme{twee bijzinnen; gebruik van "we"}
+An example that illustrates the benefits of a flexible software solution, was
+the ease with which the second-stage PPF, which was originally designed to
+run on FPGAs at the stations, could be moved to the BG/L.
 Once we saw that we could obtain really high performance from the BG/L
 in practice and recognized that sufficient computational power was left,
-a considerable cost reduction was achieved by removing the PPF FPGAs from the
-station design.
+a considerable cost reduction was achieved by removing the second-stage PPF
+from the station design.
 
 After the subbands are split into narrow channels, the remainder of the
 delays are compensated, by shifting the phase of each sample, also known as
@@ -1034,7 +1046,7 @@ an accurate factor.
 \begin{center}
 \includegraphics[width=53mm]{speed.eps}
 \end{center}
-\caption{Execution times to process of one second of subband data on one
+\caption{Execution times to process one second of subband data on one
 processor core, for different numbers of stations.  Multiple cores are
 necessary to process one subband in real time; consecutive seconds of subband
 data are round-robin distributed over the cores.}
@@ -1046,7 +1058,7 @@ samples of each station with the complex conjugate of all other stations.
 To reduce the output data rate, the correlations are typically integrated
 over one second.
 Since the cross correlation of station $A$ and $B$ is the complex conjugate
-of station $B$ and $A$, we compute it only once.
+of station $B$ and $A$, only the former is computed.
 Autocorrelations are computed as well, but treated separately since they
 require only half the amount of computations.
 The computational requirements of the correlator grow quadratically with the
@@ -1084,24 +1096,26 @@ and image the data.
 %Not having to build a separate input cluster results in an estimated cost
 %saving of \euro700,000.
 
-\section{Central Processing: Calibration}
+\section{Central processing: calibration}
 
-The off-line processing of LOFAR data has to deal with a number of challenges~\cite{Noordam:04,Nijboer:07}. First of all, the data volumes are huge. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they have a high degree of instrumental polarization that varies with scan angle, and they have relatively high sidelobes. All these issues complicate the processing of the data, especially since a high dynamic range must be reached. 
+The offline processing of LOFAR data has to deal with a number of challenges~\cite{Noordam:04,Nijboer:07}. First of all, the data volumes are huge. Second, compared to traditional steel dishes, the phased array station beams are far more variable (in time, in frequency, as well as over the different stations), they have a high degree of instrumental polarization that varies with scan angle, and they have relatively high sidelobes. All these issues complicate the processing of the data, especially since a high dynamic range must be reached. 
 
 The third category of challenges lies in the sky itself. At the low frequencies where LOFAR observes there are very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Last, but not least, the Earths ionosphere seriously defocusses the images.
 
-An introduction to signal processing for radio astronomical arrays can be found in~\cite{Veen1:04,Veen2:04,Boonstra:05}. With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider exisiting processing strategies and algorithms and develop new strategies and algorithms. Therefore,the off-line processing is still a work in progress of which we give an overview of the current status.
+\fixme{Ronald: 3x "we"}
+An introduction to signal processing for radio astronomical arrays can be found in~\cite{Veen1:04,Veen2:04,Boonstra:05}. With LOFAR we enter a new regime in radio astronomical data processing.  The challenges imply that for LOFAR we have to reconsider exisiting processing strategies and algorithms and develop new strategies and algorithms. Therefore, the offline processing is still a work in progress of which we give an overview of the current status.
 \label{sec:offline}
 
 \subsection{Processing large data volumes}
 
-The total amount of data that is produced is determined by the total number of stations that are used in the observation. This number depends on the particular mode of observation. The correlator produces a data stream of the order of a few Gbyte / s, which yields of the order of several tens of Tbytes of data after a typical observation of four hours. Since a permanent data storage is not part of the LOFAR telescope these data volumes have to be processed near real time. Fortunately, the non-imaging LOFAR applications are not so data intense, so that for every 1 hour of observation approximately 4 hours are available to further process the data off-line. With this in mind data I/O becomes an issue. Obviously the data needs to be processed in a parallelized and distributed way minimizing the I/O that is needed~\cite{Loose:08,Diepen:08}.  
+The total amount of data that is produced is determined by the total number of stations that are used in the observation. This number depends on the particular mode of observation. The correlator produces a data stream of the order of a few Gbyte/s, which yields of the order of several tens of Tbytes of data after a typical observation of four hours. Since a permanent data storage is not part of the LOFAR telescope these data volumes have to be processed near real time. Fortunately, the non-imaging LOFAR applications are not so data intense, so that for every 1 hour of observation approximately 4 hours are available to further process the data offline. With this in mind data I/O becomes an issue. Obviously the data needs to be processed in a parallelized and distributed way minimizing the I/O that is needed~\cite{Loose:08,Diepen:08}.  
  
 Data can be distributed over a large number of processing nodes in a number of ways. Distribution over baselines is not very suitable for imaging, where data from all baselines must be combined to produce an image. Distribution over time has the disadvantage that up to sevaral Gbytes/s have to be sent to a single processing node. Frequency, therefore, seems to be the best way. This distribution scheme matches with the design of the correlator. It is also a convenient scheme for the imager, where images are created per (combined) frequency channel.
 
 A consequence of distribution over frequency is that in the self-calibration step solver equations from different compute nodes may need to be combined allowing estimation of parameters using data that is distributed over several nodes. The combining of solver equations, however, involves far less data I/O then the underlying observed visibility data.   
 
-Even though the processing of the data will be done on a large cluster of computers, the total amount of data can be such that we expect the quality of the final result to be processing limited. This means that for all the algorithms we have to weight accuracy against the amount of Flops needed. It also means that the LOFAR instrument can be improved by upgrading the processing cluster in the future. 
+\fixme{Ronald: 2x "we"}
+Even though the processing of the data will be done on a large cluster of computers, the total amount of data can be such that we expect the quality of the final result to be processing limited. This means that for all the algorithms we have to weight accuracy against the amount of FLOPS needed. It also means that the LOFAR instrument can be improved by upgrading the processing cluster in the future. 
 
 \subsection{Processing steps}
 
@@ -1144,21 +1158,27 @@ Once the image is produced, source finding and source extraction algorithms will
 \section{Current state and future work}
 
 \subsection{Core Station 1}
-Currently~\cite{gunst:06}, four partially-built stations are functional, also referred to as Core Station 1 (CS1). One of those stations contain the hardware to observe with 48~LBAs or with 6 HBA tiles and 30 HBA elements. The other 3~stations are equipped with 16~LBAs and 4 HBA elements.
-To create more baselines and achieve better UV coverage, the stations each can be split into four {\em microstations}.
-This yields 16~microstations, which are treated the same as real stations in the online and offline processing pipelines.
+Currently, four partially-built stations, also referred to as Core Station~1
+(CS1), are functional~\cite{gunst:06}.
+One of those stations contain the hardware to observe with 48~LBAs or with
+6~HBA tiles and 30~HBA elements.
+The other 3~stations are equipped with 16~LBAs and 4~HBA elements each.
+To create more baselines and achieve better spatial coverage, all stations
+can be split into four {\em microstations}.
+This yields 16~microstations, which are treated the same as real stations in
+the online and offline processing pipelines.
 
-A consequence of quadrupling the number of stations is that the bandwidth
-is reduced to 36~subbands of 195~kHz or 48~subbands of 156~kHz.
-Alternatively, the station with 48~LBA can be split into 12~microstations,
-so that together with the other $3\times4$ microstations a total of
-24~microstations can be formed. Currently WAN restrictions limit the bandwidth to 12~resp.\ 16~subbands.
+%A consequence of quadrupling the number of stations is that the bandwidth
+%is reduced to 36~subbands of 195~kHz or 48~subbands of 156~kHz.
+%Alternatively, the station with 48~LBA can be split into 12~microstations,
+%so that together with the other $3\times4$ microstations a total of
+%24~microstations can be formed. Currently WAN restrictions limit the bandwidth to 12~resp.\ 16~subbands.
 
-Furthermore the WAN infrastructure from the field towards the central location is realized for all four stations. At the central location part of the input cluster and off-line cluster are built, to match with the data streams coming from the field. These, clusters will be scaled up when more stations become available. Furthermore, six BG/L racks are available for the main part of the online processing. The Blue Gene/L is capable of handling all foreseen future data rates.
+The WAN infrastructure from the field towards the central location is realized for all four stations. At the central location, part of the input cluster and offline cluster are built, to match with the data streams coming from the field. These, clusters will be scaled up when more stations become available. Six BG/L racks are available for the main part of the online processing. The BG/L is capable of handling all foreseen future data rates.
 
-A lot of LBA commissioning observations have been done so far. The development of the HBA was finished last year and the commissioning of the HBA tiles are still ongoing. Currently all the equipment in the field is operational.
+Many LBA commissioning observations have been done so far. The development of the HBA was finished last year and the commissioning of the HBA tiles are still ongoing. Currently all the equipment in the field is operational.
 
-Figure \ref{fig:skymap} shows a series of images that were made from data using CS1. In total 16 microstations, each consisting of a single dipole with essentially an all sky FoV, were used. The images are centered on the North Celestial Pole and contain 48 hours and about 20 subbands of data. First the data is flagged for RFI and an image of the flagged-only data is shown on the left (``observed''). 
+Figure \ref{fig:skymap} shows a series of images that were made from data using CS1. In total 16~microstations, each consisting of a single dipole with essentially an all sky FoV, were used. The images are centered on the North Celestial Pole and contain 48 hours and about 20 subbands of data. First the data is flagged for RFI and an image of the flagged-only data is shown on the left (``observed''). 
 
 \begin{figure*}
 \centering
@@ -1169,21 +1189,20 @@ Figure \ref{fig:skymap} shows a series of images that were made from data using 
 \label{fig:skymap}
 \end{figure*}
 
-Figure \ref{fig:skymap} shows a series of images that were made from data using the LOFAR CS1 configuration. 16 Microstations, each consisting of a single dipole with essentially an all sky FoV, were used. The images are centered on the North Celestial Pole and contain 48 hours and about 20 subbands of data. First the data is flagged for RFI and an image of the flagged-only data is shown on the left (``observed''). 
-
-The following calibration is performed in two steps. In the first step, a point source model is used for both CasA and CygA, both at 20000 Jy flux and no polarization. An analytical beam shape is used and we solve for a single complex gain per station for the whole sky. In this way an estimate for the instrumental complex gains (e.g. due to clock drifts) and ionospheric phase differences is obtained. After correcting the data, a second step is performed where we estimate the complex gains in both the direction of CasA and CygA. In this second step no assumptions on the beam are made. For the middle image (``calibrated'') the data is corrected using the estimates for the direction of CasA. In this middle image CasA and CygA can be clearly seen as point sources. 
+Calibration is performed in two steps. In the first step, a point source model is used for both CasA and CygA, both at 20000 Jy flux and no polarization. An analytical beam shape is used and we solve for a single complex gain per station for the whole sky. In this way an estimate for the instrumental complex gains (e.g. due to clock drifts) and ionospheric phase differences is obtained. After correcting the data, a second step is performed where we estimate the complex gains in both the direction of CasA and CygA. In this second step no assumptions on the beam are made. For the middle image (``calibrated'') the data is corrected using the estimates for the direction of CasA. In this middle image CasA and CygA can be clearly seen as point sources. 
 
 CasA and CygA completely dominate the background sources, since they are at least 50 times stronger then the average background source. After subtracting the contributions from CasA and CygA from the data some 100 other sources become visible. This is shown in the right panel (``residual''). 
 
 \subsection{International stations}
-International countries have shown interest in building stations as well in order to achieve longer baselines. In this context the first LBA station, consisting of 96 antennas is currently operational in Effelsberg (Germany) and will be connected to the rest of the LOFAR system. Two additional German stations will be installed in installed in Garching and Tautenburg. Further stations are planned in Germany (Potsdam), Sweden, France and the UK and interest is shown by Poland and Italy.
+\fixme{niet in een zin}
+There is a growing international interest in building stations as well in order to achieve longer baselines. In this context the first LBA station, consisting of 96 antennas is currently operational in Effelsberg (Germany) and will be connected to the rest of the LOFAR system. Two additional German stations will be installed in Garching and Tautenburg. Further stations are planned in Germany (Potsdam), Sweden, France, and the UK and interest is shown by Poland and Italy.
 
-For the international stations also stand alone modes will be supported. In this way those stations can participate in the full LOFAR configuration or operate in a local mode.
+For the international stations also stand-alone modes will be supported. In this way those stations can participate in the full LOFAR configuration or operate in a local mode.
 
 \subsection{Scaling LOFAR}
-In the course of this year 18 full stations (13~core + 5~remote) will be produced and installed in the field. Also the WAN infrastructure and central processor facility will be scaled up to handle the data of the 18 full stations and the international stations as well. 
+In the course of this year 18 full stations will be manufactured and installed in the field. Also the WAN infrastructure and central processor facility will be scaled up to handle the data of the 18 full stations and the international stations.
 
-The remainder of the stations will be produced and installed in 2009. Currently the software development is focused on the imaging mode. In the course of this year significant effort will be done in realizing the tied-array beamforming mode.
+The remainder of the stations will be built in 2009. Currently the software development is focused on the imaging mode. In the course of this year significant effort will be put in realizing the tied-array beamforming mode.
 
 
 % if have a single appendix:
@@ -1215,7 +1234,7 @@ The remainder of the stations will be produced and installed in 2009. Currently 
 \section*{Acknowledgment}
 
 
-The authors would like to thank the LOFAR team. 
+This work reflects the effort of the whole LOFAR team.
 
 LOFAR is funded by the Dutch government in the BSIK programme for
 interdisciplinary research for improvements of the knowledge infrastructure.
@@ -1277,7 +1296,7 @@ ASTRON is an institute of the Netherlands Foundation for Scientific Research (NW
 % or if you just want to reserve a space for a photo:
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{gunst.eps}}]{Andr\'{e} W. Gunst}
-Andre\'{e} W. Gunst is a digital system engineer at ASTRON and currently responsible for the development of the LOFAR system. He obtained the degree in Electrical Engineering from the Twente University, Enschede, the Netherlands in 1999. Since, 2004 he worked on the development of the station systems in LOFAR. In 2006 he became responsible for the development of the overall LOFAR system for the astronomical applications. His research interests include (digital) system design and digital signal processing.
+is a digital system engineer at ASTRON and currently responsible for the development of the LOFAR system. He obtained a degree in Electrical Engineering from Twente University, Enschede, the Netherlands in 1999. Since, 2004 he worked on the development of the station systems in LOFAR. In 2006 he became responsible for the development of the overall LOFAR system for the astronomical applications. His research interests include (digital) system design and digital signal processing.
 \end{IEEEbiography}
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{rnijboer.eps}}]{Ronald Nijboer}
@@ -1295,7 +1314,7 @@ Blah blah blah.
 %\newpage
 
 \begin{IEEEbiography}[{\includegraphics[width=1in,height=1.25in,clip,keepaspectratio]{romein.eps}}]{John W.\ Romein}
-John W.\ Romein is senior system engineer/researcher high-performance
+is a senior system engineer/researcher high-performance
 computing at ASTRON, where he is responsible for the online data processing
 of LOFAR.
 He obtained his Ph.D.\ on distributed board-game playing at the Vrije
