@@ -605,16 +605,13 @@ transport, and further signal conditioning functions before the signal is
 converted into the digital domain (Analog/Digital (A/D) conversion block).
 From there, the signals are digitally conditioned before entering the correlator. Typical operations in LOFAR digital processing are filtering, frequency selection, and beamforming. In the correlator, all signals are correlated with each other to form the cross-correlation matrix. Furthermore, the correlation results are calibrated for instrumental and environmental effects in the post processing stage. Additionally, known sources are subtracted to enhance the dynamic range. Another post processing task is to transform the correlation products into an image.
 
-\fixme{Andre: introduceer het begrip "central core" + een mooie aansluiting
-op de volgende paragraaf}
-These applications only use the central core of the instrument, of which the
-diameter is 2~km.
+A total of at least 36 station fields are distributed along 5 log-spiral arms with a diameter of approximately 100~km. The sensor fields are centrally condensed, following a logarithmic distribution, resulting in an inner area of 2 km diameter where about 50\% of the stations are located This inner area (core) can be operated for dedicated experiments yielding more data per station than what is achievable with the outer stations. This makes the core suitable for all-sky monitoring programs. The core can also be used to calibrate the large ionospheric phase fluctuation that would otherwise lead to severe decorrelation when correlating remote stations. The adopted calibration scheme does not depend on this approach, but the core has sufficient sensitivity to leverage sensitivity of the much smaller remote stations for the calibration of the ionospheric phase screen.  
 Since the distance over the Wide-Area Network (WAN) between the core and the
 central processing location is limited, higher bandwidths can be afforded from
 the core stations than from the remote stations.
 The extra bandwidth can be used to split a core station into two independent
 arrays, effectively doubling the number of stations in the core.
-At least 36~Dutch stations will be built, eighteen of which are in the core.
+%At least 36~Dutch stations will be built, eighteen of which are in the core.
 
 All station data are transported to the central processing location via a
 WAN, which uses owned and leased light paths.
@@ -1167,7 +1164,16 @@ Once the image is produced, source finding and source extraction algorithms will
 Currently, four partially-built stations, also referred to as Core Station~1
 (CS1), are functional~\cite{gunst:06}.
 One of those stations contain the hardware to observe with 48~LBAs or with
-6~HBA tiles and 30~HBA elements.
+6~HBA tiles and 30~HBA elements. Figure~\ref{fig:cs1} shows this station.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=53mm]{cs1photo.eps}
+\end{center}
+\caption{Picture of the LBA antenna field at one of the stations currently build.}
+\label{fig:cs1}
+\end{figure}
+
 The other 3~stations are equipped with 16~LBAs and 4~HBA elements each.
 To create more baselines and achieve better spatial coverage, all stations
 can be split into four {\em microstations}.
