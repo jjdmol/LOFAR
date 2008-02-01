@@ -592,7 +592,7 @@ the processing requirements.
 \label{fig:concept}
 \end{figure}
 
-Figure~\ref{fig:concept} shows the processing chain of an apperture synthesis
+Figure~\ref{fig:concept} shows the processing chain of an aperture synthesis
 array.
 The analog part covers the (low noise) amplification, filtering, analog signal
 transport, and further signal conditioning functions before the signal is
@@ -617,7 +617,7 @@ off-the-shelf computers.
 The processing will accommodate several pipelines: for imaging modes,
 for tied-array beamforming, and for more specialized modes.
 
-The remainder of this paper decribes the station processing,
+The remainder of this paper describes the station processing,
 the real-time correlator, the offline postprocessing, and a description
 of the current state.
 
@@ -1099,7 +1099,7 @@ With LOFAR, calibration for radio astronomical instruments enters a new regime. 
 
 The third category of challenges lies in the sky itself. At the low frequencies where LOFAR observes there are very bright sources so that a high dynamic range and, hence, a high accuracy is needed to see the faint background sources. The sky will also be filled with a large number of sources, giving rise to confusion. Last, but not least, the Earths ionosphere seriously defocusses the images.
 
-These challenges imply that for LOFAR exisiting processing strategies and algorithms must be reconsidered and new strategies and algorithms have to be developed. Therefore, the LOFAR offline processing is still a work in progress of which the current status is presented here.
+These challenges imply that for LOFAR existing processing strategies and algorithms must be reconsidered and new strategies and algorithms have to be developed. Therefore, the LOFAR offline processing is still a work in progress of which the current status is presented here.
 
 Note: in the radio astronomical community a correlated data sample is called a visibility and it is measured on a baseline: the vector between the two station locations from which the two signals that are correlated originate.
 \label{sec:offline}
@@ -1108,7 +1108,7 @@ Note: in the radio astronomical community a correlated data sample is called a v
 
 The total amount of data that is produced is determined by the total number of stations that are used in the observation. This number depends on the particular mode of observation. The correlator produces a data stream of the order of a few Gbyte/s, which yields of the order of several tens of Tbytes of data after a typical observation of four hours. Since a permanent data storage is not part of the LOFAR telescope these data volumes have to be processed near real time. Fortunately, the non-imaging LOFAR applications are not so data intense, so that for every 1 hour of observation approximately 4 hours are available to further process the data offline. With this in mind data I/O becomes an issue. Obviously the data needs to be processed in a parallelized and distributed way minimizing the I/O that is needed~\cite{Loose:08,Diepen:08}.  
  
-Data can be distributed over a large number of processing nodes in a number of ways. Distribution over baselines is not very suitable for imaging, where data from all baselines must be combined to produce an image. Distribution over time has the disadvantage that up to sevaral Gbytes/s have to be sent to a single processing node. Frequency, therefore, seems to be the best way. This distribution scheme matches with the design of the correlator. It is also a convenient scheme for the imager, where images are created per (combined) frequency channel.
+Data can be distributed over a large number of processing nodes in a number of ways. Distribution over baselines is not very suitable for imaging, where data from all baselines must be combined to produce an image. Distribution over time has the disadvantage that up to several Gbytes/s have to be sent to a single processing node. Frequency, therefore, seems to be the best way. This distribution scheme matches with the design of the correlator. It is also a convenient scheme for the imager, where images are created per (combined) frequency channel.
 
 A consequence of distribution over frequency is that in the self-calibration step solver equations from different compute nodes may need to be combined allowing estimation of parameters using data that is distributed over several nodes. The combining of solver equations, however, involves far less data I/O then the underlying observed visibility data.   
 
@@ -1133,7 +1133,7 @@ Since not all parameters are estimated jointly, the Major Cycle will be traverse
 
 After initial operation of the LOFAR instrument the parameters for the strongest sources will be known. From then on the strongest sources in the FoV can be used to estimate ionospheric parameters, instrumental parameters, and to refine the estimate for the station beams that is available from the station calibration. It is the direction dependent estimation of ionospheric parameters that is the most challenging part of this estimation problem. 
 
-In~\cite{Tol:07} it is shown that the unconstrained direction dependent calibration problem is ambiguous. However, three physical contraints to get an unambigous solution are presented: 
+In~\cite{Tol:07} it is shown that the unconstrained direction dependent calibration problem is ambiguous. However, three physical constraints to get an unambiguous solution are presented: 
 %
 \begin{enumerate}
 \item use a calibrated subarray to calibrate the rest of the array,
