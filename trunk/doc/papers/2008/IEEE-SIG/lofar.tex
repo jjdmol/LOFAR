@@ -570,7 +570,26 @@ only be observed in LOFAR's low frequency range.
 For a more extensive description of the astronomical aspects of the LOFAR
 system, see de Bruyn et.~al.~\cite{Bruyn:02}.
 
-Despite the new concept the overall processing steps of a radio telescope remain the same. The general data path for an aperture synthesis array is depicted in Figure~\ref{fig:concept}.
+%Despite the new concept the overall processing steps of a radio telescope remain the same. The general data path for an aperture synthesis array is depicted in Figure~\ref{fig:concept}.
+
+LOFAR is composed of multiple antennas, structured in a hierarchical way,
+to limit the costs of data transport and processing costs.
+Thousands of antennas are necessary to obtain sufficient sensitivity.
+The antennas are distributed over a large area to achieve an angular
+resolution of arcseconds accuracy with an acceptable spatial coverage.
+However, combining the data of all individual antennas centrally would
+require too much network bandwidth an would result in excessive computational
+requirements.
+Therefore, multiple antennas are grouped and form a so-called station.
+Such an array of antennas is often called a phased array.
+Within such a station, the information of all individual antennas is weighted
+and summed.
+As a consequence, a spatial selection on the sky is made, which reduces the
+instantaneous FoV of each station. \fixme{In de vorige paragraaf zeggen we
+nog dat de FoV zo groot is.}
+The data of all stations are locally combined.
+This hierarchical structure significantly reduces the network bandwidth and
+the processing requirements.
 
 \begin{figure}
 \begin{center}
@@ -580,19 +599,11 @@ Despite the new concept the overall processing steps of a radio telescope remain
 \label{fig:concept}
 \end{figure}
 
-LOFAR is composed of multiple antennas, structured in a hierarchical way,
-to limit the costs of data transport and processing costs.
-The analog processing shown in Figure~\ref{fig:concept} covers the (low noise)
-amplification, filtering, analog signal transport, and further signal
-conditioning functions before the signal is converted into the digital domain
-(Analog/Digital (A/D) conversion block). From there, the signals are digitally conditioned before entering the correlator. Typical operations in LOFAR digital processing are filtering, frequency selection, and beamforming. In the correlator, all signals are correlated with each other to form the cross correlation matrix. Furthermore, the correlation results are calibrated for instrumental and environmental effects in the post processing stage. Additionally, known sources are subtracted to enhance the dynamic range. Another post processing task is to transform the correlation products into an image.
-
-\fixme{todo:}
-The LOFAR antennas are distributed over a large area to achieve an angular
-resolution of arcseconds accuracy with an acceptable spatial coverage.
-All data coming from the antennas comes together in the correlator.
-So, on the one hand the instrument is distributed over a large area,
-while on the other hand all data should come together in a central location. To balance the hardware and operational costs between the equipment in the field, the transport network and the volume of the central systems, multiple antennas (48) are grouped in so called stations. Within such a station the information of all individual antennas is weighted and summed. Such an array of antennas is often called a phased array. As a consequence a spatial selection on the sky is made, which reduces the instantaneous FoV of each station. So the main reason for having stations is to reduce the total data stream to the correlator.
+Figure~\ref{fig:concept} shows the processing chain in LOFAR.
+The analog part covers the (low noise) amplification, filtering, analog signal
+transport, and further signal conditioning functions before the signal is
+converted into the digital domain (Analog/Digital (A/D) conversion block).
+From there, the signals are digitally conditioned before entering the correlator. Typical operations in LOFAR digital processing are filtering, frequency selection, and beamforming. In the correlator, all signals are correlated with each other to form the cross-correlation matrix. Furthermore, the correlation results are calibrated for instrumental and environmental effects in the post processing stage. Additionally, known sources are subtracted to enhance the dynamic range. Another post processing task is to transform the correlation products into an image.
 
 \fixme{Andre: introduceer het begrip "central core" + een mooie aansluiting
 op de volgende paragraaf}
