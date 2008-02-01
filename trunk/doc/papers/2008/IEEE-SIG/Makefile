@@ -6,7 +6,7 @@ FIG_SOURCES =	flow.fig processing.fig
 
 JGR_SOURCES =	speed.jgr
 
-JPG_SOURCES =	gunst.jpg phase_error.jpg rnijboer.jpg romein.jpg
+JPG_SOURCES =	gunst.jpg phase_error.jpg rnijboer.jpg romein.jpg cs1photo.jpg
 
 PNG_SOURCES =	LBA_observed.png LBA_calibrated.png LBA_peeled.png Nyquistzonesmodes.png telescope_overview.png stationoverview.png
 
