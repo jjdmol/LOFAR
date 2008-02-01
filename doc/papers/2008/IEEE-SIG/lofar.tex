@@ -460,9 +460,6 @@ The Netherlands, www.astron.nl
 %\IEEEspecialpapernotice{(Invited Paper)}
 
 
-\newcommand{\fixme}[1]{{\bf\em #1}}
-
-
 % make the title area
 \maketitle
 
@@ -573,7 +570,7 @@ system, see de Bruyn et.~al.~\cite{Bruyn:02}.
 %Despite the new concept the overall processing steps of a radio telescope remain the same. The general data path for an aperture synthesis array is depicted in Figure~\ref{fig:concept}.
 
 LOFAR is composed of multiple antennas, structured in a hierarchical way,
-to limit the costs of data transport and processing costs.
+to limit the costs of data transport and processing.
 Thousands of antennas are necessary to obtain sufficient sensitivity.
 The antennas are distributed over a large area to achieve an angular
 resolution of arcseconds accuracy with an acceptable spatial coverage.
@@ -584,9 +581,9 @@ Therefore, multiple antennas are grouped and form a so-called station.
 Such an array of antennas is often called a phased array.
 Within such a station, the information of all individual antennas is weighted
 and summed.
-As a consequence, a spatial selection on the sky is made, which reduces the
-instantaneous FoV of each station. \fixme{In de vorige paragraaf zeggen we
-nog dat de FoV zo groot is.}
+As a consequence, a spatial selection on the sky is made.
+This reduces the instantaneous FoV of each station, which is still large
+compared to other telescopes.
 The data of all stations are locally combined.
 This hierarchical structure significantly reduces the network bandwidth and
 the processing requirements.
@@ -896,7 +893,6 @@ Each second, another subband is selected, so that the station calibration
 algorithm loops over the complete band in about 512~seconds.
 Additionally, the cross correlation algorithm will be used for
 Radio Frequency Interference (RFI) detection as well~\cite{Boonstra:05}.
-\fixme{Maar hier doen we nog niets mee.}
 
 \section{Central processing: the correlator}
 \label{sec:corr}
@@ -1150,7 +1146,7 @@ In the third approach, multiple samples in frequency and time are combined in a 
 
 The sky image is the Fourier transform of the visibility domain. Due to the fact that the visibility domain is only discretely sampled, sources in the sky image are convolved with a Point Spread Function (PSF). The contribution from sources that have PSF far sidelobes that are higher than the image noise level should be subtracted from the visibility data in order to improve the dynamic range of the image. Using the solutions to the parameter estimation problem the contributions from the strongest sources in the FoV are removed from the visibility data. The remaining residual visibility data is then corrected and imaged.
 
-One visibility sample contains the combined contribution from all sources in the sky. Since LOFAR has a large FoV, the contribution from different sources is distorted by different ionospheric and beam effects. When imaging the visibility data, however, it is only possible to correct the data for one direction in the sky. This would mean that the image would be sharp for the direction of correction and the image quality would degrade outwards. To overcome this problem LOFAR images will be made in small facets, where we can correct the data for the center of each facet. 
+One visibility sample contains the combined contribution from all sources in the sky. Since LOFAR has a large FoV, the contribution from different sources is distorted by different ionospheric and beam effects. When imaging the visibility data, however, it is only possible to correct the data for one direction in the sky. This would mean that the image would be sharp for the direction of correction and the image quality would degrade outwards. To overcome this problem LOFAR images will be made in small facets, where the data can be corrected for the center of each facet. 
 
 Facet imaging is a well known technique to overcome smearing effects that are due to the fact that the baselines are non-coplanar~\cite{SIRAII:99}. However, the non-coplanar baseline problem is better solved by the w-projection algorithm~\cite{Cornwell:05}. Applying the w-projection technique per facet ensures that the maximum facet size is not restricted by the effect of the non-coplanar baselines, but the facet size will only be determined by the variability of the station beam and the ionosphere.
 
@@ -1168,7 +1164,7 @@ One of those stations contain the hardware to observe with 48~LBAs or with
 
 \begin{figure}
 \begin{center}
-\includegraphics[width=53mm]{cs1photo.eps}
+\includegraphics[width=\columnwidth]{cs1photo.eps}
 \end{center}
 \caption{Picture of the LBA antenna field at one of the stations currently build.}
 \label{fig:cs1}
