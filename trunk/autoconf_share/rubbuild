@@ -61,11 +61,9 @@ do
   if [ "$1" = -k ]; then
     shift
     kopt=1
-    shift
   elif [ "$1" = -nok ]; then
     shift
     kopt=0
-    shift
   # parallel make option?
   elif [ "$1" = -j ]; then
     shift
