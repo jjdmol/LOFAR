@@ -63,7 +63,7 @@ namespace LOFAR {
 
       /**
        * Get the geographical location of the array.
-       * @return 1-d array with 3 values for latitude, longitude and height.
+       * @return 1-d array with 3 values for longitude, latitude and height.
        */
       const blitz::Array<double, 1>& getGeoLoc() const { return m_geoloc; }
 
