@@ -501,7 +501,8 @@ void Beam::calculateHBAdelays(RTC::Timestamp				timestamp,
 			if (delayStepNr < 0) delayStepNr = 0;
 			if (delayStepNr > 31) delayStepNr = 31;
 				
-			itsHBAdelays(localrcu,element) = delayStepNr; // assign
+			// bit1=0.25nS(not used), bit2=0.5nS, bit3=1nS, bit4=2nS, bit5=4nS, bit6=8nS 	
+			itsHBAdelays(localrcu,element) = (delayStepNr * 4) + (1 << 7); // assign
 		} // elements in tile
 		localrcu++;	 // globalrcu
 	}
