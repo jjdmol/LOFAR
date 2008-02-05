@@ -23,6 +23,7 @@ clean-generic:
 DISTCLEANFILES=\
       pkgext*\
       lofar_config.*\
+      FillPackage__Version* \
       .doxygenrc \
       *.spec \
       *.md5-check \
