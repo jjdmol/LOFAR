@@ -1,0 +1,211 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,245 109 359 141 N "_3DFace" 0
+"main()
+{
+  // main databasepoint for the MACScheduler
+	string aDP = \"MCU001:LOFAR_PermSW_MACScheduler.OTDB\";
+	
+	if (!dpExists(aDP) ){
+	  LOG_ERROR(\"MACSchedulerpoint.OTDB does not exist\");
+	} 
+	
+  // connect to update the txt fields of this object
+  if (dpAccessable(aDP + \".connected\")) {
+	  dpConnect(\"updateInfo\",aDP+\".connected:_online.._value\",
+	                         aDP+\".lastPoll:_online.._value\",
+	                         aDP+\".pollinterval:_online.._value\",
+	                         aDP+\".connected:_online.._invalid\");
+  } 
+}
+
+updateInfo(string dp1, bool connected ,
+           string dp2, string lastPoll,
+					 string dp3, int pollinterval,
+					 string dp4, bool invalid)
+{
+	if (!invalid){
+  	setValue(\"txt_OTDBconnected\", \"text\", dpValToString(dp1, connected, TRUE) );
+	  setValue(\"txt_OTDBlastPoll\", \"text\", lastPoll);
+	  setValue(\"txt_OTDBpollinterval\", \"text\", dpValToString(dp3, pollinterval, TRUE) );
+	} else {
+  	setValue(\"txt_OTDBconnected\", \"text\", \"\" );
+	  setValue(\"txt_OTDBlastPoll\", \"text\", \"\");
+	  setValue(\"txt_OTDBpollinterval\", \"text\", \"\" );
+	}
+}" 0
+EE E E 1 0 0 0  10 120
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+30 0
+"border_1"
+""
+1 10 120 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+0
+E E 0 1 1 0 1 E U  0 E 10 10 310 120
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 OTDB
+2 1
+"Text9"
+""
+1 20 31 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 33 88 49
+0 2 0 "s" 0 0 0 192 0 0  22 33
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 10 Connected:
+2 2
+"Text10"
+""
+1 25 361 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 63 92 79
+0 2 0 "s" 0 0 0 192 0 0  22 63
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Poll interval:
+2 3
+"Text11"
+""
+1 44 711 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 93 75 109
+0 2 0 "s" 0 0 0 192 0 0  22 93
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 10 Last poll:
+14 4
+"txt_OTDBconnected"
+""
+1 100 30 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+98 28 302 55
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 5
+"txt_OTDBpollinterval"
+""
+1 300 360 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+98 58 302 85
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+14 6
+"txt_OTDBlastPoll"
+""
+1 500 720 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+7 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+98 88 302 115
+2 "s" 0 0 0 0 0 0 
+E
+E
+E
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

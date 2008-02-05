@@ -1,0 +1,19 @@
+#ObservationControl.dpdef
+claimPeriod		int
+preparePeriod	int
+startTime		string
+stopTime		string
+subbandList		string
+beamletList		string
+bandFilter		string
+nyquistzone		int
+antennaArray	string
+receiverList	string
+sampleClock		int
+
+measurementSet	string
+
+stationList		string
+inputNodeList	string
+BGLNodeList		string
+storageNodeList	string

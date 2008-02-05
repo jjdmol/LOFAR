@@ -1,0 +1,85 @@
+<pre><code><span class="codeComment">// Range Transaction over a DBConnection: Updating in a IndexedDBView </span>
+
+const TIMESTAMP_STRUCT chrysalis = {2002, 4, 3, 0, 0, 0, 0};
+const TIMESTAMP_STRUCT mikero = {2001, 11, 2, 0, 0, 0, 0};
+const TIMESTAMP_STRUCT victory = {2001, 3, 10, 0, 0, 0, 0};
+
+<span class="codeComment">// range update</span>
+void RangeIndexUpdateExample()
+{
+	DBConnection conn;
+        conn.Connect("UID=example;PWD=example;DSN=example;");
+
+	typedef DBView&lt;Example&gt; DBV;
+
+	DBV view("DB_EXAMPLE", DefaultBCA&lt;Example&gt;(), 
+	   "", DefaultBPA&lt;DefaultParamObj&lt;Example&gt; &gt;(), DefaultSelValidate&lt;Example&gt;(),
+	   DefaultInsValidate&lt;Example&gt;(), conn);
+
+	view.set_io_handler(AlwaysThrowsHandler&lt;Example&gt;());
+
+	IndexedDBView&lt;DBV&gt; idxview(view, 
+		"PrimaryIndex; STRING_VALUE; UNIQUE AlternateIndex; EXAMPLE_LONG, EXAMPLE_DATE",
+		BOUND);
+
+	cout &lt;&lt; "Examples in view before attempted range insert:" &lt;&lt; endl;
+
+	copy(idxview.begin(), idxview.end(), ostream_iterator&lt;Example&gt;(cout, "\n"));
+
+	vector&lt;Example&gt; read_from_DB_before;
+
+	copy(idxview.begin(), idxview.end(), back_inserter(read_from_DB_before));
+
+	<span class="codeComment">// examples that we want to insert into the DB ...
+	// we want an all or nothing on these guys!
+	// string indicates key of element to replace, Example is object to replace the object
+	// to replace with</span>
+	map&lt;string, Example&gt; all_or_nothing_examples;
+
+	<span class="codeComment">// third element will fail to be updated, should force rollback</span>
+	all_or_nothing_examples["Bedazzled"] = Example(79, "FUBAR", 2.2, 99, mikero);
+	all_or_nothing_examples["Corwin"] = Example(81, "All Messed Up", 21.09, 75, chrysalis);
+	all_or_nothing_examples["Jordan"] = Example(85, "Bad Boy", -21.22, 11, victory);
+	all_or_nothing_examples["Mirror Image"] = Example(99, "Good One", 77.99, 41, victory);
+	
+	<span class="codeComment">// must update all the elements to succeed in the transaction
+	// else we rollback</span>
+
+	IndexedDBView&lt;DBV&gt; tmp(idxview); <span class="codeComment">// make copy so we can rollback to idxview on failure</span>
+
+	<span class="codeComment">// march through vector and replace elements appropriately</span>
+	try {
+	  map&lt;string, Example&gt;::iterator map_it;
+	  
+	  for (map_it = all_or_nothing_examples.begin(); 
+	       map_it != all_or_nothing_examples.end(); 
+		   map_it++)
+		  {	  
+		     IndexedDBView&lt;DBV&gt;::iterator find_it = idxview.find((*map_it).first);
+
+			 if (find_it != idxview.end())
+				 idxview.replace(find_it, (*map_it).second);
+		  }
+
+          conn.CommitAll(); <span class="codeComment">// we assume commit and rollback must always succeed to avoid two-phase commit type logic</span>
+	}
+        catch(RootException &ex) 
+	{ 
+	  cout &lt;&lt; ex &lt;&lt; endl;
+	  idxview.swap(tmp); <span class="codeComment">// this will rollback to original results in memory</span>
+          conn.RollbackAll(); 
+	}
+
+	cout &lt;&lt; "Examples in view after attempted range update:" &lt;&lt; endl;
+
+	copy(idxview.begin(), idxview.end(), ostream_iterator&lt;Example&lt;(cout, "\n"));
+
+	vector&lt;Example&lt; read_from_DB_after;
+
+	copy(idxview.begin(), idxview.end(), back_inserter(read_from_DB_after));
+
+	cout &lt;&lt; "Changes resulting from attempted range update:" &lt;&lt; endl;
+   
+        TableDiff(cout, read_from_DB_before, read_from_DB_after);
+}
+</code></pre>

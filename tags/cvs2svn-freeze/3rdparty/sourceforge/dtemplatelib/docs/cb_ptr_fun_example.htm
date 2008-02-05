@@ -1,0 +1,33 @@
+<pre><code><span class="codeComment">//Simple use of cb_ptr_fun() with a BCA
+
+
+// a BCA written as a simple function </span>
+void BCAExample(BoundIOs &amp;cols, Example &amp;row)
+{
+  cols[&quot;INT_VALUE&quot;]    == row.exampleInt;
+  cols[&quot;STRING_VALUE&quot;] == row.exampleStr;
+  cols[&quot;DOUBLE_VALUE&quot;] == row.exampleDouble;
+  cols[&quot;EXAMPLE_LONG&quot;] == row.exampleLong;
+  cols[&quot;EXAMPLE_DATE&quot;] == row.exampleDate;
+}
+
+<span class="codeComment">// Read the contents of the DB_EXAMPLE table and return a vector of the
+// resulting rows</span>
+vector&lt;Example&gt; ReadData()
+{
+ vector&lt;Example&gt; results;
+
+ <span class="codeComment">// the call to cb_ptr_fun() wraps BCAExample in a function object
+ // so DTL may use it as the BCA for the DBView</span>
+ DBView&lt;Example&gt; view(&quot;DB_EXAMPLE&quot;, cb_ptr_fun(BCAExample));
+
+ DBView&lt;Example&gt;::select_iterator read_it = view.begin();
+ for ( ; read_it != view.end(); ++read_it)
+ {
+  results.push_back(*read_it);
+ }
+
+ return results;
+}
+
+</code></pre>

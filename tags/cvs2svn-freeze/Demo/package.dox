@@ -1,0 +1,11 @@
+/**
+
+\ingroup LOFAR
+\defgroup Demo LOFAR Demo packages
+
+%LOFAR Demo packages contains several packages that demonstrate the use of
+other %LOFAR toplevel packages like MAC, CEP, and SAS. Most of the demo
+packages contain prototype-like software that will, sooner or later, find its
+way into the LOFAR Applications toplevel package.
+
+*/

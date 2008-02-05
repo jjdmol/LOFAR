@@ -1,0 +1,263 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,443 122 143 81 N "_3DFace" 1
+"$datapoint"
+"//
+//RCU_LB_Filter (JjS)
+
+
+main()
+{
+
+	// This version shows only the status
+  // no control setting is possible
+  // so the filtervalue will be shown via a txtfield.
+  // If control is possible TXT should be FALSE and Box should be TRUE
+	setValue(\"ComboBoxLB\"       , \"visible\", FALSE);
+	setValue(\"filterSettingTxt\" , \"visible\", TRUE);
+
+  if(dpAccessable($datapoint + \".filSel0\") && 
+     dpAccessable($datapoint + \".filSel1\"))
+	{
+    dpConnect(\"ControlLBFilter\", $datapoint + \".filSel0:_online.._value\",
+                                 $datapoint + \".filSel0:_online.._invalid\",
+                                 $datapoint + \".filSel1:_online.._value\",
+                                 $datapoint + \".filSel1:_online.._invalid\",
+	  														 $datapoint + \".bandSelLBA_HBA:_online.._value\",
+	                               $datapoint + \".bandSelLBA_HBA:_online.._invalid\");
+  }
+  else
+  {
+    setValue(\"rect_filterLB\", \"backCol\", \"_dpdoesnotexist\");
+  }
+}
+
+
+ControlLBFilter(string dp1, bool filSel0,
+                string dp2, bool invalid0,
+                string dp3, bool filSel1,
+                string dp4, bool invalid1,
+                string dp5, bool notLBL,
+                string dp6, bool bandSel_invalid                )
+{
+
+  if(!invalid0 && !invalid1 && !bandSel_invalid)
+  {
+  	if(!notLBL)
+		{
+			ComboBoxLB.enabled = TRUE;
+    	rect_filterLB.enabled = TRUE;
+    	if (!filSel1 && !filSel0)
+    	{
+      	ComboBoxLB.selectedPos=1;    //10-80MHz
+      	setValue(\"rect_filterLB\"    , \"backCol\" , \"Lofar_operational\");
+      	setValue(\"filterSettingTxt\" , \"text\"    , \"10-80 MHz\" );
+    	}
+    	else if (!filSel1 && filSel0)
+    	{
+      	ComboBoxLB.selectedPos=2;    //30-80MHz
+      	setValue(\"rect_filterLB\", \"backCol\", \"Lofar_operational\");
+      	setValue(\"filterSettingTxt\" , \"text\" , \"30-80 MHz\" );
+    	}
+    	else if (filSel1 && !filSel0)
+    	{
+      	ComboBoxLB.selectedPos=3;    //Filter OFF
+      	setValue(\"rect_filterLB\", \"backCol\", \"Lofar_broken\");
+      	setValue(\"filterSettingTxt\" , \"text\" , \"Filter OFF\" );
+    	}
+    	else if (filSel1 && filSel0)
+    	{
+      	ComboBoxLB.selectedPos=3;    //Filter OFF
+      	setValue(\"rect_filterLB\", \"backCol\", \"Lofar_broken\");
+      	setValue(\"filterSettingTxt\" , \"text\" , \"Filter OFF\" );
+    	}
+    }
+    else
+    {
+    	setValue(\"rect_filterLB\", \"backCol\", \"Lofar_off\");
+    }
+  }
+  else
+  {
+		ComboBoxLB.enabled = FALSE;
+    rect_filterLB.enabled = FALSE;
+    setValue(\"rect_filterLB\", \"backCol\", \"Lofar_invalid\");
+  }
+}" 0
+EE E E 1 -1 -1 0  10 70
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 0
+"rect_filterLBBorder"
+""
+1 10 70 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 10 130 70
+2 1
+"Text2"
+""
+1 43 16 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 45 18 124 34
+0 2 0 "s" 0 0 0 192 0 0  45 18
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 14 Lowband filter
+6 3
+"Border1"
+""
+1 20 60 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 40 120 60
+2 5
+"filterSettingTxt"
+""
+1 20 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+5 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 42 118 58
+0 2 0 "s" 0 0 0 66 0 0  22 42
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 10 notDefined
+7 6
+"rect_filterLB"
+""
+1 21 26 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 21 26 7 7
+22 2
+"ComboBoxLB"
+""
+1 15 40 E E E 0 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+13 38 127 65
+3
+1
+LANG:1 9 10-80 MHz
+ 1
+1
+LANG:1 9 30-80 MHz
+ 0
+1
+LANG:1 10 Filter off
+ 0
+E
+"main()
+{
+
+  ////////////////////////////////////////////////////////
+  //FILSEL_0   FILSEL_1   Filter     [Date: July 27  2005]
+  //   0          0         10-80MHz
+  //   0          1         30-80MHz
+  //   1          0       filter off
+  //   1          1       filter off
+  ////////////////////////////////////////////////////////
+  //DebugN(\"ComboBoxLB.selectedPos:\"+ComboBoxLB.selectedPos);
+  if (ComboBoxLB.selectedPos==1)          //10-80MHz
+  {
+    dpSet($datapoint + \".filSel1\", FALSE);
+    dpSet($datapoint + \".filSel0\", FALSE);
+  }
+  else if (ComboBoxLB.selectedPos==2)     //30-80MHz
+  {
+    dpSet($datapoint + \".filSel1\", FALSE);
+    dpSet($datapoint + \".filSel0\", TRUE);
+  }
+  else if (ComboBoxLB.selectedPos==3)     //Filter OFF
+  {
+    dpSet($datapoint + \".filSel1\", TRUE);
+    dpSet($datapoint + \".filSel0\", TRUE);
+  }
+
+}" 0
+
+E
+ 0 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

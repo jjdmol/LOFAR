@@ -1,0 +1,147 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 687 210 N "_3DFace" 2
+"$AppName"
+"$datapoint"
+"main()
+{
+  setValue(\"txt_AppName\", \"text\", $AppName);
+
+	dyn_string dpElements = splitDatapointPath($datapoint);
+	//string nodeDP = dpSubStr($datapoint,DPSUB_SYS) + \"LOFAR_CEP_\" + dpElements[dynlen(dpElements)] + \"_\" + $CEPnode;
+//	LOG_DEBUG(\"monitoring CEP node\",nodeDP);
+//  if(dpAccessable(nodeDP + \".currentAction:_online.._value\"))
+  {
+//    dpConnect(\"fillTextStatus\", nodeDP + \".currentAction\");
+  }
+//  rect.toolTipText = nodeDP;
+}
+
+
+fillTextStatus(string dp1, string value)
+{
+ setValue(\"txt_status\", \"text\", value);
+}
+
+
+" 0
+ E E E E 1 -1 -1 0  30 70
+""0  1
+E "#uses \"nav_fw/gcfnavigator.ctl\"
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 9
+"Border1"
+""
+1 10 150 E E E 1 E 1 E N "_WindowText" E N {255,255,204} E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 10 670 150
+2 6
+"txt_status"
+""
+1 487.438596491228 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 2.28070175438596 0 1 -789.754385964912 1 0 E 562 13 615 29
+0 2 0 "0s" 0 0 0 64 0 0  562 13 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 3 ...
+2 4
+"txt_AppName"
+""
+1 19.5977011494253 12 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 1.70114942528736 0 1 -14.4252873563218 2 0 E 22 12 192 28
+0 2 0 "0s" 0 0 0 65 0 0  22 12 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-15-*-100-100-*-*-iso8859-1|-15,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 .
+17 8
+"SelectionListLog"
+""
+1 20 40 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 18 38 662 142
+0
+
+E
+E
+E
+
+0 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
