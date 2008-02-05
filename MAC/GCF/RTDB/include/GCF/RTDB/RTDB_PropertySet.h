@@ -42,14 +42,14 @@ namespace LOFAR {
 #define PSAT_RD_MASK	0x0001
 #define PSAT_WR_MASK	0x0002
 #define PSAT_TMP_MASK	0x0004
-#define PSAT_CW_MASK	0x0008
 
-enum {
+typedef enum PSAccessType {
 	PSAT_RO = 1,		// read-only
 	PSAT_WO,			// write-only
 	PSAT_RW,			// read-write
-	PSAT_TMP,			// PS wil be created and delete on the fly.
-	PSAT_CW = 8			// values are only written when they are changed.
+	PSAT_RO_TMP = 5,	// |
+	PSAT_WO_TMP,		//  > PS wil be created and delete on the fly.
+	PSAT_RW_TMP			// /
 };
 
 class RTDBPropertySet
@@ -58,7 +58,7 @@ public:
 	// Constructor.
 	RTDBPropertySet (const string&	name,
 					 const string&	type, 
-					 uint32			accessType,
+					 PSAccessType	accessType,
 					 TM::GCFTask*	clientTask);	// must be pointer!
 	~RTDBPropertySet ();
 
@@ -91,7 +91,6 @@ public:
 	PVSSresult flush();
 
 	void setSubscription(bool	on);
-	void setConfirmation(bool	on);
 
 protected:
 	friend class PropSetResponse;
@@ -104,6 +103,12 @@ protected:
 	void dpeValueChanged	 (const string& propName, PVSSresult	result, const Common::GCFPValue& value);
 	void dpeValueSet		 (const string& propName, PVSSresult	result);
 	void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
+#if 0	
+	void 	dpCreated		(PVSSresult	result);
+	void	valueGetAck		(const string&	propName, PVSSresult	result, const GCFPValue&	value);
+	void	valueChangedAck	(const string&	propName, PVSSresult	result, const GCFPValue&	value);
+	void	valueSetAck		(const string&	propName, PVSSresult	result);
+#endif
 
 private:
 	RTDBPropertySet();
@@ -136,12 +141,11 @@ private:
 	// data members
     string              		itsScope;			// with or without DBname:
     string              		itsType;			// PVSS typename
-	uint32						itsAccessType;		// READ/WRITE/TEMP/CondWrite
+	PSAccessType				itsAccessType;		// READ/WRITE/TEMP
 	PVSSservice*          		itsService;			// connection to database
 	PVSSresponse*          		itsOwnResponse;		// callback to myself
 	DPanswer*	          		itsExtResponse;		// callback to client
 	bool						itsExtSubscription;	// client has subscription
-	bool						itsExtConfirmation;	// client want confirmation
 
 	// map with pointers to Property objects
     typedef map<string /*propName*/, Property*> PropertyMap_t;
@@ -154,12 +158,6 @@ private:
 inline	void RTDBPropertySet::setSubscription(bool	on)
 {
 	itsExtSubscription = on;
-}
-
-// setConfirmation(on)
-inline	void RTDBPropertySet::setConfirmation(bool	on)
-{
-	itsExtConfirmation = on;
 }
 
   } // namespace RTDB

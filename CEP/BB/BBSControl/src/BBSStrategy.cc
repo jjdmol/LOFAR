@@ -29,7 +29,7 @@
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
-#include <BBSControl/StreamUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -267,7 +267,7 @@ namespace LOFAR
       oss << "Strategy.Steps = [ ";
       for (uint i = 0; i < itsSteps.size(); ++i) {
         if (i > 0) oss << ", ";
-        oss << itsSteps[i]->name();
+        oss << itsSteps[i]->getName();
       }
       oss << " ]";
       ps.adoptBuffer(oss.str());

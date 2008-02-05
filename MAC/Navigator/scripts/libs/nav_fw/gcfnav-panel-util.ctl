@@ -1,4 +1,4 @@
-//# gcfnav-panel-util.ctl
+//# gcf-panel-util.ctl
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,12 +22,12 @@
 //#
 //# General panel util functions:
 
-const int OFF              = 0;
-const int OPERATIONAL      = 10;
-const int MAINTENANCE      = 20;
-const int TEST             = 30;
-const int SUSPICIOUS       = 46;
-const int BROKEN           = 56;
+const int OFF         = 0;
+const int OPERATIONAL = 1;
+const int MAINTENANCE = 2;
+const int TEST        = 3;
+const int SUSPICIOUS  = 4;
+const int BROKEN      = 5;
 
 
 
@@ -36,12 +36,13 @@ const int BROKEN           = 56;
 // Function getStateColor(stateNr) : colorName
 //
 // helper function to return the colorName based on a state
+// dyn_arrays start count at 1!!!
 //
 // Added 3-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 string getStateColor(int aState) {
-	if (mappingHasKey(stateColor,aState)) {
-    	return stateColor[aState];
+	if (aState < dynlen(stateColor) & aState >= 0) {
+    	return stateColor[aState+1];
   	} 
   	else { 
 		return "";
@@ -54,12 +55,13 @@ string getStateColor(int aState) {
 // Function getStateName(stateNr) : name
 //
 // helper function to return the stateName based on a state
+// dyn_arrays start count at 1!!!
 //
 // Added 3-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 string getStateName(int aState) {
- 	if (mappingHasKey(stateName,aState)) {
-    	return stateName[aState];
+ 	if (aState < dynlen(stateName) & aState >= 0) {
+    	return stateName[aState+1];
   	} 
   	else { 
     	return "";
@@ -71,13 +73,16 @@ string getStateName(int aState) {
 // Function getStateNumber(stateName) : stateNr
 //
 // helper function to return the stateNumber based on a stateName
+// dyn_arrays start count at 1!!!
 //
 // Added 20-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 int getStateNumber(string aState) {
   	if (aState != "") {
-    	if (mappingHasKey(stateNumber,aState)) {
-      	return stateNumber[aState];
+    	for (int i = 1; i <= dynlen(stateName); i++) {
+      		if (aState == stateName[i]) {
+        		return (i-1);
+      		}
     	}
   	}
   	return (-1);
@@ -93,7 +98,7 @@ int getStateNumber(string aState) {
 ///////////////////////////////////////////////////////////////////////////
 void showSelfState(string aDP) {
   	// check if the requiered datapoint for this view are accessible
-  	if (dpExists(aDP+".state")) {
+  	if (dpAccessable(aDP+".state")) {
     	dpConnect("updateSelfState",aDP + ".state", aDP + ".state:_online.._invalid");
   	} 
   	else {
@@ -111,7 +116,7 @@ void showSelfState(string aDP) {
 ///////////////////////////////////////////////////////////////////////////
 void showChildState(string aDP) {
   	// check if the requiered datapoint for this view are accessible
-  	if (dpExists(aDP+".childState")) {
+  	if (dpAccessable(aDP+".childState")) {
     	dpConnect("updateChildState",aDP + ".childState", aDP + ".childState:_online.._invalid");
   	} 
   	else {
@@ -150,8 +155,6 @@ updateChildState(string dp1, int state, string dp2, bool invalid) {
 ///////////////////////////////////////////////////////////////////////////
 updateSelfState(string dp1, int state, string dp2, bool invalid) {
   	string SymbolCol;
-
-	//DebugN("setState entered for: "+dp1+" state: "+state);
 
   	if (invalid) {
     	SymbolCol = "Lofar_invalid";

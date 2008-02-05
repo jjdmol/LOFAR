@@ -27,10 +27,7 @@
 
 #include <GCF/TM/GCF_Control.h>
 #include <Common/LofarTypes.h>
-#include <Common/lofar_bitset.h>
-#include <Common/lofar_list.h>
 #include <APL/RSP_Protocol/RCUSettings.h>
-#include <APL/BS_Protocol/BS_Protocol.ph>
 
 namespace LOFAR
 {
@@ -70,7 +67,7 @@ namespace LOFAR
 	  /**
 	   * Return the seleted rcus as bitset<MAX_N_RCUS>
 	   */
-	  bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const;
+	  std::bitset<MEPHeader::MAX_N_RCUS> getRCUMask() const;
 
 	  void mainloop();
 
@@ -80,7 +77,7 @@ namespace LOFAR
 	  GCFPort m_beamserver;
 
 	  // handles
-	  BS_Protocol::memptr_t m_beamhandle;
+	  uint32 m_beamhandle;
 
 	  string                     m_parent; // name of the full array
 	  list<int>                  m_rcus;   // selection of rcus
@@ -91,9 +88,6 @@ namespace LOFAR
 	  double m_longitude;
 	  double m_latitude;
 	  string m_type;
-	  int itsSkyScanTotalTime;
-	  int itsSkyScanPointTime;
-	  int itsSkyScanWaitTime;
 	};
 
     };

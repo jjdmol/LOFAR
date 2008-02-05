@@ -23,8 +23,6 @@ include = '<Common/LofarTypes.h>';
 
 prelude = << PRELUDE_END
 
-typedef	void*	memptr_t;
-
 enum {
 	SUCCESS = 0,
 	ERR_RANGE,       		// range error in message parameters
@@ -154,7 +152,7 @@ event = {
       };
       param = {
 	    name = "handle";
-	    type = "memptr_t";
+	    type = "uint32";
       };
       param = { // return the subarray class
 	    name = "subarray";
@@ -181,7 +179,7 @@ event = {
       };
       param = { // handle
 	    name = "handle";
-	    type = "memptr_t";
+	    type = "uint32";
       };
       // TODO: AntennaGains is not good name, since the gains are
       // computed for the complete signal path for a receiver.
@@ -201,7 +199,7 @@ event = {
       };
       param = {
 	    name = "handle";
-	    type = "memptr_t";
+	    type = "uint32";
       };
 };
 
@@ -218,7 +216,7 @@ event = {
       };
       param = {
 	    name = "handle";
-	    type = "memptr_t";
+	    type = "uint32";
       };
 };
 

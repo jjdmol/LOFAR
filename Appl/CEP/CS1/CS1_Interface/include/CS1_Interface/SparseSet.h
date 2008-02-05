@@ -44,9 +44,8 @@ template <typename T> class SparseSet {
       T begin, end;
     };
 
-    typedef typename std::vector<range>	    Ranges;
-    typedef typename Ranges::iterator	    iterator;
-    typedef typename Ranges::const_iterator const_iterator;
+    typedef typename std::vector<range>::iterator	iterator;
+    typedef typename std::vector<range>::const_iterator const_iterator;
 
     SparseSet<T> &include(T index);
     SparseSet<T> &include(T first /* inclusive */, T last /* exclusive */);
@@ -65,7 +64,7 @@ template <typename T> class SparseSet {
     SparseSet<T> &operator -= (size_t count);
     SparseSet<T> subset(T first, T last) const;
 
-    const Ranges &getRanges() const;
+    const std::vector<range> &getRanges() const;
 
     void write(BlobOStream &) const;
     void read(BlobIStream &);
@@ -74,7 +73,7 @@ template <typename T> class SparseSet {
     void    unmarshall(const void *ptr);
 
   private:
-    Ranges ranges;
+    std::vector<range> ranges;
 
     struct less {
       bool operator() (const range &x, const range &y)
@@ -126,8 +125,7 @@ template <typename T> inline SparseSet<T> SparseSet<T>::subset(T first, T last) 
 }
 
 
-//template <typename T> inline const std::vector<typename SparseSet<T>::range> &SparseSet<T>::getRanges() const
-template <typename T> inline const typename SparseSet<T>::Ranges &SparseSet<T>::getRanges() const
+template <typename T> inline const std::vector<typename SparseSet<T>::range> &SparseSet<T>::getRanges() const
 {
   return ranges;
 }

@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  Marshalling.h: Macros for packing/unpacking some classes
+//#  Marshalling.h: Macros for packing/unpacking blitz arrays.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,6 +29,51 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_bitset.h>
 #include <Common/lofar_map.h>
+#include <blitz/array.h>
+//#include <string.h>
+//#include <string>
+
+// SIZE blitz::array<...>
+#define MSH_ARRAY_SIZE(array, datatype)	\
+	(((array).dimensions()*sizeof(int32)) + ((array).size() * sizeof(datatype)))
+
+// PACK blitz::array<...>
+#define MSH_PACK_ARRAY(bufptr, offset, array, datatype)	\
+do {	\
+	for (int dim = blitz::firstDim; dim < blitz::firstDim + (array).dimensions(); dim++) {	\
+		int32 extent = (array).extent(dim);	\
+		memcpy(((char*)(bufptr)) + (offset), &extent, sizeof(int32));	\
+		offset += sizeof(int32);	\
+	}	\
+	\
+	if ((array).isStorageContiguous()) {	\
+		memcpy(((char*)(bufptr)) + (offset), (array).data(), (array).size() * sizeof(datatype)); \
+		offset += (array).size() * sizeof(datatype);	\
+	}	\
+	else {	\
+		LOG_FATAL("array must be contiguous");	\
+		exit(EXIT_FAILURE);	\
+	}	\
+} while (0)
+
+// UNPACK blitz::array<...>
+#define MSH_UNPACK_ARRAY(bufptr, offset, array, datatype, dims)	\
+do {	\
+	blitz::TinyVector<int, (dims)> extent;	\
+	\
+	for (int dim = blitz::firstDim; dim < blitz::firstDim + (dims); dim++) {	\
+		int32 extenttmp = array.extent(dim);	\
+		memcpy(&extenttmp, ((char*)(bufptr)) + (offset), sizeof(int32));	\
+		offset += sizeof(int32);	\
+		extent(dim - blitz::firstDim) = extenttmp;	\
+	}	\
+	\
+	/* resize the array to the correct size */	\
+	array.resize(extent);	\
+	\
+	memcpy(array.data(), ((char*)(bufptr)) + (offset), array.size() * sizeof(datatype)); \
+	offset += array.size() * sizeof(datatype);	\
+} while (0)
 
 // SIZE string
 #define MSH_STRING_SIZE(stdstring) \

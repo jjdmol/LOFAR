@@ -21,22 +21,20 @@ class CS1_Parset(LOFAR_Parset.Parset):
         elif self.clock == '200MHz':
 	    self['Observation.sampleClock'] = 200
 	    self['OLAP.BGLProc.integrationSteps'] = 768
-	    #self['OLAP.BGLProc.integrationSteps'] = 16
         self.updateSBValues()
         
     def getClockString(self):
         return self.clock
 
+    def setSubbands(self, first, number):        
+        self.firstSB = int(1e6 * float((first.split('MHz')[0])))
+        self.nSubbands = number
+        self.updateSBValues()
+
     def setStations(self, stationList):
         self.stationList = stationList
         self['OLAP.nrRSPboards'] = len(stationList)
         self['OLAP.storageStationNames'] = [s.getName() for s in stationList]
-    
-    def setPartition(self, partition):
-        self.partition = partition
-	
-    def getPartition(self):
-        return self.partition
 	
     def setInputToMem(self):
         self.inputFromMemory = True
@@ -47,14 +45,18 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	
 	for s in self.stationList:
 	    name = self.getString('PIC.Core.' + s.getName() + '.port')
-	    name=name.split(":")[0]
-	    inputNodelist.append(name)
+	    name=name.split(":")
+	    name=name[0].strip("lii")
+	    inputNodelist.append(int(name))
     
         return inputNodelist
 	
     def getNStations(self):
         return int(len(self.stationList))
         
+    def getFirstSubband(self):
+        return self.firstSB
+
     def setBeamdir(self):
 	ra = self.getStringVector('Observation.Beam.angle1')[0]
 	ra = ra.strip("[")
@@ -123,10 +125,11 @@ class CS1_Parset(LOFAR_Parset.Parset):
     def getMSName(self):
         return self['Observation.MSNameMask']
 
-    def getNPsets(self):
+    def getNCells(self):
         subbands = len(self.getInt32Vector('Observation.subbandList'))
+        psetspercell = self.getInt32('OLAP.BGLProc.psetsPerCell')
         subbandsperpset = self.getInt32('OLAP.subbandsPerPset')
-        return subbands / subbandsperpset
+        return subbands / (psetspercell * subbandsperpset)
 
     def updateSBValues(self):
         if self.clock == '160MHz':
@@ -134,7 +137,12 @@ class CS1_Parset(LOFAR_Parset.Parset):
         elif self.clock == '200MHz':
             subbandwidth = 195312.5
         
+        if not self.__dict__.has_key('nSubbands'):
+            return
+
 	subbandIDs = self.getInt32Vector('Observation.subbandList')
+	if len(subbandIDs) != self.nSubbands:
+	    raise Exception('Number of subbandList(%d) in parset file is not equal with command line option: --subbands(%d).' % (len(subbandIDs), self.nSubbands))
 
         if self.getInt32('Observation.nyquistZone') not in range(1,4):
 	    print 'Use nyquistZone 1, 2 or 3'
@@ -146,9 +154,9 @@ class CS1_Parset(LOFAR_Parset.Parset):
 
         # create the frequencies for all subbands
         self['Observation.RefFreqs'] = '[' + ', '.join(str(sb) for sb in sbs) + ']'
-        self['Observation.NSubbands'] = len(subbandIDs)
+        self['Observation.NSubbands'] = self.nSubbands
 	
         #the number of subbands should be dividable by the number of subbands per pset
-        if not len(subbandIDs) % self.getInt32('OLAP.subbandsPerPset') == 0:
-            raise Exception('Number of subbandIDs(%d) in not dividable by the number of subbands per pset (%d).' % len(subbandIDs), self['OLAP.subbandsPerPset'])
+        if not self.nSubbands % self.getInt32('OLAP.subbandsPerPset') == 0:
+            raise Exception('Number of subbands(%d) in not dividable by the number of subbands per pset (%d).' % self.nSubbands, self['OLAP.subbandsPerPset'])
             

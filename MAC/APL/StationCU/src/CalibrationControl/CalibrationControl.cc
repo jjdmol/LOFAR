@@ -183,7 +183,7 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		LOG_INFO_STR ("Activating PropertySet" << propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
 											 PST_CAL_CTRL,
-											 PSAT_RW | PSAT_TMP,
+											 PSAT_RW_TMP,
 											 this);
 		// Wait for timer that is set on DP_CREATED event
 	}

@@ -36,36 +36,24 @@ int main (int	argc, char*	argv[]) {
 
 	INIT_LOGGER ("logger.log_prop");
 
-	string	dbName, hostname, orderFile;
-
-	switch (argc) {
-		case 3:
-			dbName 	  = argv[1];
-			hostname  = "dop50.astron.nl";
-			orderFile = argv[2];
-			break;
-		case 4:
-			dbName 	  = argv[1];
-			hostname  = argv[2];
-			orderFile = argv[3];
-			break;
-		default:
-			cout << "Usage: load_all_comps databasename [hostname] orderFile" << endl;
-			cout << "       hostname defaults to dop50.astron.nl" << endl;
-			return (1);
+	// check invocation syntax
+	if (argc != 3) {
+		cout << "Usage: load_all_comps databasename orderFile" << endl;
+		return (1);
 	}
-	
+
 	// check if file can be opened
 	ifstream	inFile;
-	inFile.open(orderFile.c_str());
+	inFile.open(argv[2]);
 	if (!inFile) {
-		cout << "ERROR: can not open order-file: " << orderFile << endl;
+		cout << "ERROR: can not open order-file: " << argv[2] << endl;
 		return (1);
 	} 
 
 	// Open the database connection
-	cout << "### Using database " << dbName << " at " << hostname << " ###" << endl;
-	OTDBconnection conn("paulus", "boskabouter", dbName, hostname);
+	string		dbName(argv[1]);
+	cout << "### Using database " << dbName << " ###" << endl;
+	OTDBconnection conn("paulus", "boskabouter", dbName);
 
 	try {
 		if (!conn.connect()) {

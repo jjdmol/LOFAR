@@ -7,20 +7,20 @@
 
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   Correlator        	 1.0.1  development 'node constraint'  "Correlator"
+node   Correlator        	 1.0.0  development 'node constraint'  "Correlator"
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------
 par  _executable             I    text   -      10    0    'CS1_BGL_Processing'          -     'The name of the executable to start'
 par  _hostname               I    text   -      10    0    'bglfen0'                      -     'The machine on which the start- and stop-script is executed.'
 par  _nodes                  I    vtext  -      10    0    '[]'                          -     'Nodes used by the (mpi)processes'
 par  _startstopType          I    ptext  -      10    0    "cmdline|mpirun|bgl;bgl"      -     'Method of starting the proces'
-par  partition               I    text   -      10    0    "R000_128_0T"						     -     'Blue Gene partition to use'
-par  workingdir              I    text   -      10    0    "/cephome/lofar-prod/bin/"      						 -     'Directory to use.'
+par  partition               I    text   -      10    0    "R000_128_0Z"						     -     'Blue Gene partition to use'
+par  workingdir              I    text   -      10    0    "/cephome/lofar/bin/"      						 -     'Directory to use.'
 
 #      name              vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-node   CorrAppl        	 1.0.1  development 'node constraint'  "CorrAppl"
-uses   Correlator      	 1.0.1  development 'node constraint'  "Correlator"
+node   CorrAppl        	 1.0.0  development 'node constraint'  "CorrAppl"
+uses   Correlator      	 1.0.0  development 'node constraint'  "Correlator"
 
 #    name                    dir. type   unit   prun. vm   value                         constr.  descr.
 #--------------------------------------------------------------------------------------------------------

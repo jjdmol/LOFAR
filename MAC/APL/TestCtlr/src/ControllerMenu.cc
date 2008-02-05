@@ -72,7 +72,7 @@ ControllerMenu::ControllerMenu() :
 	// need port for timers
 	itsTimerPort = new GCFTimerPort(*this, "Timerport");
 
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
 }
 
 
@@ -91,7 +91,7 @@ ControllerMenu::~ControllerMenu()
 //
 GCFEvent::TResult ControllerMenu::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("initial_state:" << eventName(event));
+	LOG_DEBUG_STR ("initial_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -133,7 +133,7 @@ GCFEvent::TResult ControllerMenu::initial_state(GCFEvent& event, GCFPortInterfac
 //
 GCFEvent::TResult ControllerMenu::startup_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("startup_state:" << eventName(event));
+	LOG_DEBUG_STR ("startup_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -200,7 +200,7 @@ GCFEvent::TResult ControllerMenu::startup_state(GCFEvent& event, GCFPortInterfac
 //
 GCFEvent::TResult ControllerMenu::claim_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("claim_state:" << eventName(event));
+	LOG_DEBUG_STR ("claim_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -251,7 +251,7 @@ GCFEvent::TResult ControllerMenu::claim_state(GCFEvent& event, GCFPortInterface&
 //
 GCFEvent::TResult ControllerMenu::prepare_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("prepare_state:" << eventName(event));
+	LOG_DEBUG_STR ("prepare_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -301,7 +301,7 @@ GCFEvent::TResult ControllerMenu::prepare_state(GCFEvent& event, GCFPortInterfac
 //
 GCFEvent::TResult ControllerMenu::run_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("run_state:" << eventName(event));
+	LOG_DEBUG_STR ("run_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -351,7 +351,7 @@ GCFEvent::TResult ControllerMenu::run_state(GCFEvent& event, GCFPortInterface& /
 //
 GCFEvent::TResult ControllerMenu::suspend_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("suspend_state:" << eventName(event));
+	LOG_DEBUG_STR ("suspend_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -401,7 +401,7 @@ GCFEvent::TResult ControllerMenu::suspend_state(GCFEvent& event, GCFPortInterfac
 //
 GCFEvent::TResult ControllerMenu::release_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("release_state:" << eventName(event));
+	LOG_DEBUG_STR ("release_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -451,7 +451,7 @@ GCFEvent::TResult ControllerMenu::release_state(GCFEvent& event, GCFPortInterfac
 //
 GCFEvent::TResult ControllerMenu::finish_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-	LOG_DEBUG_STR ("finish_state:" << eventName(event));
+	LOG_DEBUG_STR ("finish_state:" << evtstr(event));
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -513,9 +513,8 @@ int16 ControllerMenu::_chooseController()
 	cout << " 7. DigitalBoardControl" << endl;
 	cout << " 8. BeamControl" << endl;
 	cout << " 9. CalibrationControl" << endl;
-	cout << "10. TBBControl" << endl;
-//	cout << "11. StationInfraControl" << endl;
-	cout << "12. TestController" << endl;
+//	cout << "10. StationInfraControl" << endl;
+	cout << "11. TestController" << endl;
 	cout << endl;
 	cout << " 0. stop" << endl;
 
@@ -524,7 +523,7 @@ int16 ControllerMenu::_chooseController()
 		cout << endl;
 		cout << "Type number of your choice: ";
 		cin >> CntlrType;
-		if (CntlrType < 0 || CntlrType > 12 || (CntlrType > 3 && CntlrType < 6)) {
+		if (CntlrType < 0 || CntlrType > 11 || (CntlrType > 3 && CntlrType < 6)) {
 			cout << endl << "Wrong number, please retry." << endl;
 			CntlrType = -1;
 		}

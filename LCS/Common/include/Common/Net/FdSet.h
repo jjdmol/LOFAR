@@ -52,9 +52,8 @@ public:
 	void clear ();
 
 	// Is bit fID set?
-	//# On some OS (e.g. OS-X Leopard) fd_set must be non-const!!
 	inline bool isSet (int32 fID) 	const
-          { return (FD_ISSET(fID, const_cast<fd_set*>(&itsSet))); }
+		{ return (FD_ISSET(fID, &itsSet)); }
 
 	// Return a pointer to the fd_set.
 	inline fd_set* getSet()	 		 	{ return (&itsSet);    }

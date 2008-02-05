@@ -1,3 +1,3 @@
-SUBDIRS	= CS1_BinningFlagger
+SUBDIRS	= CS1_FrequencyFlagger
 
 include $(top_srcdir)/Makefile.common

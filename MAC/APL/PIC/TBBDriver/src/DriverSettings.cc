@@ -151,19 +151,6 @@ void TbbSettings::setBoardPorts(int board, GCFPortInterface* board_ports)
 	itsBoardInfo[board].port = board_ports;
 }
 
-//---- getBoardNr ------------------------------
-int32 TbbSettings::port2Board(GCFPortInterface* port)
-{
-	for (int32 board = 0; board < itsMaxBoards; board++) {
-		if (itsBoardInfo[board].port == port) {
-			return(board);
-		}
-	}
-	return(-1); // not a board port	
-} 
-
-
-
 //---- setMaxBoards ------------------------------
 void TbbSettings::setMaxBoards (int32 maxboards)
 {

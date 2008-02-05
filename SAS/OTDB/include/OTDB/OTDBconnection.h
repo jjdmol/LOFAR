@@ -52,8 +52,7 @@ public:
 	// Just creates an object and registers the connection parameters.
 	OTDBconnection (const string&	username,
 					const string&	passwd,
-					const string&	database,
-					const string&	hostname);
+					const string&	database);
 
 	virtual ~OTDBconnection ();
 
@@ -101,7 +100,6 @@ private:
 	string		itsUser;
 	string		itsPassword;
 	string		itsDatabase;
-	string		itsHost;
 	bool		itsIsConnected;
 	connection*	itsConnection;
 	uint32		itsAuthToken;

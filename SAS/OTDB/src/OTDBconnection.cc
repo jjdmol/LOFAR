@@ -39,12 +39,10 @@ namespace LOFAR {
 // Just creates an object and registers the connection parameters.
 OTDBconnection::OTDBconnection (const string&	username,
 								const string&	passwd,
-								const string&	database,
-								const string&	hostname):
+								const string&	database):
 	itsUser		  (username),
 	itsPassword	  (passwd),
 	itsDatabase	  (database),
-	itsHost		  (hostname),
 	itsIsConnected(false),
 	itsConnection (0),
 	itsAuthToken  (0),
@@ -76,9 +74,8 @@ bool OTDBconnection::connect()
 
 	// Note: we connect to the database as user Lofar, the real DBaccess
 	// is implemented in the SP's we will call.
-	string	connectString("host=" + itsHost + 
-						  " dbname=" + itsDatabase +
-						  " user=postgres");
+	string	connectString("host=dop50.astron.nl dbname= " + itsDatabase
+						+ " user=postgres");
 
 	// try to make the connection to the database
 	itsConnection = new connection(connectString);

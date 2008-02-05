@@ -5,19 +5,11 @@ TBBControl_CPPFLAGS			= -Wno-deprecated \
 							  -fdiagnostics-show-location=once
 
 TBBControl_SOURCES			= TBBControl.cc \
-							  TBBTrigger.cc \
-							  TBBReadCmd.cc \
-							  VHECRTask.cc \
-							  TBBObservation.cc \
 							  TBBControlMain.cc 
 TBBControl_LDADD			= $(LOFAR_DEPEND)
 TBBControl_DEPENDENCIES		= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= TBBControl.h \
-							  TBBTrigger.h \
-							  TBBReadCmd.h \
-							  VHECRTask.h \
-							  TBBObservation.h  \
 							  TBBControlDefines.h
 
 INSTHDRS 					= 

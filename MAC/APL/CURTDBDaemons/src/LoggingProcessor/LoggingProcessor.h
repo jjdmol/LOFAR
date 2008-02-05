@@ -60,10 +60,9 @@ private:
 	void _registerFailure (GCFPortInterface&	port);
 
 	// data members        
-	TM::GCFTCPPort*			itsListener;	// application inpt
-	TM::GCFTCPPort*			itsBackDoor;	// logClient input
-	RTDB::DPservice*		itsDPservice;	// connection to DB
-	TM::GCFTimerPort*		itsTimerPort;	// timer
+	TM::GCFTCPPort*			itsListener;
+	RTDB::DPservice*		itsDPservice;
+	TM::GCFTimerPort*		itsTimerPort;
 
 	struct	LogClient {
 		string		DPname;

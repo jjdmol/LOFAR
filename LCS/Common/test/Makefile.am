@@ -3,7 +3,7 @@ CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert \
 			tFileLocator tStringUtil tStreamUtil \
 			tHexdump testSocket tComplex tProcess \
 			tRunOnNode tTimer tNumeric tSingleton \
-			tObjectFactory tSystemUtil tSaxpy
+			tObjectFactory tSystemUtil
 
 check_PROGRAMS	=	$(CHECKTOOLPROGS)
 
@@ -94,9 +94,5 @@ tObjectFactory_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 tSystemUtil_SOURCES		= tSystemUtil.cc
 tSystemUtil_LDADD		= ../src/libcommon.la	
 tSystemUtil_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
-
-tSaxpy_SOURCES			= tSaxpy.cc
-tSaxpy_LDADD			= ../src/libcommon.la	
-tSaxpy_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

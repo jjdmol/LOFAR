@@ -29,7 +29,7 @@ using namespace LOFAR;
 using namespace TBB;
 			
 Command::Command() : 
-	itsRetry(true), itsWaitAck(false), itsDone(false), itsAllPorts(false), itsBoard(-1), 
+	itsWaitAck(false), itsDone(false), itsAllPorts(false), itsBoard(-1), 
 	itsChannel(-1), itsBoardMask(0), itsSleepTime(0)
 {
 	TS = TbbSettings::instance();
@@ -93,18 +93,6 @@ bool Command::isDone()
 }
 
 // ----------------------------------------------------------------------------
-bool Command::retry()
-{
-	return(itsRetry);
-}
-
-// ----------------------------------------------------------------------------			
-void Command::setRetry(bool retry)
-{
-	itsRetry = retry;
-}
-
-// ----------------------------------------------------------------------------
 bool Command::waitAck()
 {
 	return(itsWaitAck);
@@ -117,13 +105,13 @@ void Command::setWaitAck(bool waitack)
 }
 
 // ----------------------------------------------------------------------------
-void Command::setSleepTime(double sleeptime)
+void Command::setSleepTime(uint32 sleeptime)
 {
 	itsSleepTime = sleeptime;
 }
 
 // ----------------------------------------------------------------------------
-double Command::getSleepTime()
+uint32 Command::getSleepTime()
 {
 	return (itsSleepTime);
 }

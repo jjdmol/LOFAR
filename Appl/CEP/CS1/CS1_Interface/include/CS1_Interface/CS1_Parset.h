@@ -23,21 +23,20 @@
 #ifndef LOFAR_CS1_INTERFACE_CS1_PARSET_H
 #define LOFAR_CS1_INTERFACE_CS1_PARSET_H
 
-#if defined HAVE_APS
-
 // \file
 // class/struct that holds the CS1_Parset information
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
+#include <bitset>
+#include <set>
 #include <APS/ParameterSet.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_datetime.h>
-#include <Common/LofarLogger.h> 
-#include <CS1_Interface/CS1_Config.h>
-
 #include <boost/date_time/c_local_time_adjustor.hpp>
+
+#include <Common/LofarLogger.h> 
 
 namespace LOFAR {
 namespace CS1 {
@@ -64,7 +63,6 @@ public:
 	double         stopTime() const;
 	uint32	       nrStations() const;
 	double         sampleRate() const;
-	double         sampleDuration() const;
 	vector<double> positions() const;
 	vector<double> phaseCenters() const;
 	uint32	       BGLintegrationSteps() const;
@@ -74,19 +72,17 @@ public:
 	double         IONintegrationTime() const;
 	double         storageIntegrationTime() const;
 	uint32         nrSubbandSamples() const;
-        uint32         nrSubbandsPerPset() const; 
-	uint32         nrHistorySamples() const;
 	uint32         nrSamplesToBGLProc() const;
+        uint32         nrSubbandsPerCell() const; 
+	uint32         nrHistorySamples() const;
 	uint32         nrSamplesToBuffer() const;
-	uint32	       maxNetworkDelay() const;
-	uint32         nrRSPboards() const;
-	uint32         nrRSPboardsPerStation() const;
-	uint32         subbandsToReadFromFrame() const;
-	uint32         nrPPFTaps() const;
+	int            subbandsToReadFromFrame() const;
+	uint32         nrPFFTaps() const;
 	uint32         nrChannelsPerSubband() const;
 	uint32         nrSubbands() const;
-	uint32         nrPsets() const;
-	uint32         nrCoresPerPset() const;
+	uint32         nrCells() const;
+	double         timeInterval() const;
+	uint32         nrBGLNodesPerCell() const;
 	vector<double> refFreqs() const;
 	double         chanWidth() const;
 	vector<string> delay_Ports() const;
@@ -96,13 +92,8 @@ public:
 	string         expandedArrayString(const string& orgStr) const;
 	bool	       useScatter() const;
 	bool	       useGather() const;
-	uint32	       nrPsetsPerStorage() const;
 	uint32	       nrOutputsPerInputNode() const;
 	uint32	       nrInputsPerStorageNode() const;
-	vector<uint32> inputPsets() const;
-	vector<uint32> outputPsets() const;
-	int	       inputPsetIndex(uint32 pset) const;
-	int	       outputPsetIndex(uint32 pset) const;
 	string	       getMSname(unsigned firstSB, unsigned lastSB) const;
 	
 	//# Datamembers
@@ -111,8 +102,7 @@ public:
 	
 private:
 	void           addPosition(string stName);
-	double	       getTime(const char *name) const;
-	static int     findIndex(uint32 pset, const vector<uint32> &psets);
+	double         getTime(const char *name) const;
 };
 
 // @}
@@ -154,11 +144,6 @@ inline double CS1_Parset::sampleRate() const
   return getUint32("Observation.sampleClock") * 1000000.0 / 1024;
 } 
 
-inline double CS1_Parset::sampleDuration() const
-{
-  return 1.0 / sampleRate();
-} 
-
 inline uint32 CS1_Parset::BGLintegrationSteps() const
 {
   return getUint32("OLAP.BGLProc.integrationSteps");
@@ -194,47 +179,32 @@ inline uint32 CS1_Parset::nrSubbandSamples() const
   return BGLintegrationSteps() * nrChannelsPerSubband();
 }
 
-inline uint32 CS1_Parset::nrHistorySamples() const
-{
-  return (nrPPFTaps() - 1) * nrChannelsPerSubband();
-}
-
 inline uint32 CS1_Parset::nrSamplesToBGLProc() const
 {
-  return nrSubbandSamples() + nrHistorySamples() + 32 / sizeof(INPUT_SAMPLE_TYPE[NR_POLARIZATIONS]);
+  return nrSubbandSamples() + ((nrPFFTaps() - 1) * nrChannelsPerSubband());
+}
+
+inline uint32 CS1_Parset::nrHistorySamples() const
+{
+  return (nrPFFTaps() - 1) * nrChannelsPerSubband();
 }
 
 inline uint32 CS1_Parset::nrSamplesToBuffer() const
 {
-  return (uint32) (getDouble("OLAP.nrSecondsOfBuffer") * sampleRate()) & ~(32 / sizeof(INPUT_SAMPLE_TYPE[NR_POLARIZATIONS]) - 1);
+  return getUint32("OLAP.nrSecondsOfBuffer") * nrSubbandSamples();
 }
 
-inline uint32 CS1_Parset::maxNetworkDelay() const
+inline int CS1_Parset::subbandsToReadFromFrame() const
 {
-  return (uint32) (getDouble("OLAP.maxNetworkDelay") * sampleRate());
+  return nrSubbands() * nrStations() / getInt32("OLAP.nrRSPboards");
 }
 
-inline uint32 CS1_Parset::nrRSPboards() const
+inline uint32 CS1_Parset::nrSubbandsPerCell() const
 {
-  return getUint32("OLAP.nrRSPboards");
+  return getUint32("OLAP.subbandsPerPset") * getUint32("OLAP.BGLProc.psetsPerCell");
 }
 
-inline uint32 CS1_Parset::nrRSPboardsPerStation() const
-{
-  return nrRSPboards() / nrStations();
-}
-
-inline uint32 CS1_Parset::subbandsToReadFromFrame() const
-{
-  return nrSubbands() * nrStations() / nrRSPboards();
-}
-
-inline uint32 CS1_Parset::nrSubbandsPerPset() const
-{
-  return getUint32("OLAP.subbandsPerPset");
-}
-
-inline uint32 CS1_Parset::nrPPFTaps() const
+inline uint32 CS1_Parset::nrPFFTaps() const
 {
   return getUint32("OLAP.BGLProc.nrPPFTaps");
 }
@@ -249,14 +219,19 @@ inline uint32 CS1_Parset::nrSubbands() const
   return getUint32Vector("Observation.subbandList").size();
 }
   
-inline uint32 CS1_Parset::nrPsets() const
+inline uint32 CS1_Parset::nrCells() const
 {
-  return nrSubbands() / nrSubbandsPerPset();
+  return nrSubbands() / nrSubbandsPerCell();
 }
 
-inline uint32 CS1_Parset::nrCoresPerPset() const
+inline double CS1_Parset::timeInterval() const
 {
-  return getUint32("OLAP.BGLProc.coresPerPset");
+  return nrSubbandSamples() / sampleRate() / nrSubbandsPerCell();
+}
+
+inline uint32 CS1_Parset::nrBGLNodesPerCell() const
+{
+  return getUint32("OLAP.BGLProc.nodesPerPset") * getUint32("OLAP.BGLProc.psetsPerCell");
 }  
  
 inline double CS1_Parset::chanWidth() const
@@ -274,43 +249,17 @@ inline bool CS1_Parset::useGather() const
   return getBool("OLAP.IONProc.useGather");
 }
 
-inline uint32 CS1_Parset::nrPsetsPerStorage() const
-{
-  return getUint32("OLAP.psetsPerStorage");
-}
-
 inline uint32 CS1_Parset::nrOutputsPerInputNode() const
 {
-  return useScatter() ? 1 : nrCoresPerPset();
+  return useScatter() ? getUint32("OLAP.BGLProc.psetsPerCell") : nrBGLNodesPerCell();
 }
 
 inline uint32 CS1_Parset::nrInputsPerStorageNode() const
 {
-  return (useGather() ? 1 : nrCoresPerPset()) * nrPsetsPerStorage();
-}
-
-inline vector<uint32> CS1_Parset::inputPsets() const
-{
-  return getUint32Vector("OLAP.BGLProc.inputPsets");
-}
-
-inline vector<uint32> CS1_Parset::outputPsets() const
-{
-  return getUint32Vector("OLAP.BGLProc.outputPsets");
-}
-
-inline int CS1_Parset::inputPsetIndex(uint32 pset) const
-{
-  return findIndex(pset, inputPsets());
-}
-
-inline int CS1_Parset::outputPsetIndex(uint32 pset) const
-{
-  return findIndex(pset, outputPsets());
+  return (useGather() ? getUint32("OLAP.BGLProc.psetsPerCell") : nrBGLNodesPerCell()) * getUint32("OLAP.psetsPerStorage");
 }
 
 } // namespace CS1
 } // namespace LOFAR
 
-#endif // defined HAVE_APS
 #endif

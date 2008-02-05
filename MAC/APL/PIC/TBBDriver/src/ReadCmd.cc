@@ -68,7 +68,7 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 	
 	int32 boardnr;
 	int32 channelnr;
-	TS->convertRcu2Ch(itsTBBE->rcu,&boardnr,&channelnr);
+	TS->convertRcu2Ch(itsTBBE->channel,&boardnr,&channelnr);
 		
 	setChannelNr(channelnr);
 	
@@ -104,17 +104,11 @@ void ReadCmd::saveTpAckEvent(GCFEvent& event)
 		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}	else {
 		itsTPackE = new TPReadAckEvent(event);
-		// check if busy
-		if (itsTPackE->status == 2) {
-			LOG_DEBUG_STR("TBB busy, trying until free");
-			setSleepTime(0.1);		
-		} else {
-			setDone(true);
-		}
+		
 		LOG_DEBUG_STR(formatString("Received ReadAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
 	}
-	
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------

@@ -128,6 +128,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         } catch (RemoteException ex) {
             logger.debug("Error during getComponentParam: "+ ex);
+            itsParamList=null;
             return;
         }
         
@@ -202,7 +203,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             int aTreeID=itsMainFrame.getSharedVars().getTreeID();
             if (fc == null) {
                 fc = new JFileChooser();
-                fc.setApproveButtonText("Save");
             }
             // try to get a new filename to write the parsetfile to
             if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -529,6 +529,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     }
     
     private void saveInput() {
+        boolean hasChanged = false;
+
         // Beam        
         if (itsAngleTimes != null && !inputAngleTimes.equals(itsAngleTimes.limits)) {  
             itsAngleTimes.limits = inputAngleTimes.getText();
@@ -1067,19 +1069,29 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 54, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
         );
 
+        buttonPanel1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonPanel1ActionPerformed(evt);
+            }
+        });
+
         org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel4Layout.createSequentialGroup()
-                .add(labelStationList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                    .add(buttonPanel1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(labelStationList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap(20, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel4Layout.createSequentialGroup()
                 .add(labelStationList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(44, 44, 44))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(buttonPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
@@ -1103,14 +1115,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jScrollPane1.setViewportView(jPanel2);
 
         add(jScrollPane1, java.awt.BorderLayout.CENTER);
-
-        buttonPanel1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                buttonPanel1ActionPerformed(evt);
-            }
-        });
-
-        add(buttonPanel1, java.awt.BorderLayout.SOUTH);
 
     }// </editor-fold>//GEN-END:initComponents
 
@@ -1207,6 +1211,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode  itsNode = null;
     private MainFrame  itsMainFrame;
     private OtdbRmi    itsOtdbRmi;
+    private Vector<jOTDBparam> itsParamList;
     private jOTDBparam itsOldDescriptionParam;
     private String     itsOldTreeDescription;
     private String     itsTreeType="";

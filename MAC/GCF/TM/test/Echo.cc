@@ -36,7 +36,7 @@ namespace LOFAR
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
   // register the protocol for debugging purposes
-  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
+  registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
 
   // initialize the port
   server.init(*this, "server", GCFPortInterface::SPP, ECHO_PROTOCOL);

@@ -25,15 +25,12 @@
 #include <Common/SystemUtil.h>
 #include <unistd.h>
 
-#if !defined(USE_NOSOCKETS)
-// netdb is not available on Cray XT machines with Catamount.
 #if defined HAVE_BGL && !defined HAVE_ZOID
 // netdb is not available on BGL; all code using netdb will be 
 // conditionally included using the HAVE_BGL definition;
 #define OPTIMAL_CIOD_CHUNK_SIZE (64 * 1024)
 #else
 #include <netdb.h>
-#endif
 #endif
 
 namespace LOFAR {
@@ -188,9 +185,6 @@ uint32 myIPV4Address()
 {
 #if defined HAVE_BGL && !defined HAVE_ZOID
 	LOG_ERROR ("Function myIPV4Address not available for Blue Gene.");
-	return (0);
-#elif defined USE_NOSOCKETS
-	LOG_ERROR ("Function myIPV4Address not available.");
 	return (0);
 #else
 	struct hostent*		hostEnt;

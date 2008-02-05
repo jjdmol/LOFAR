@@ -37,7 +37,8 @@ using LOFAR::ACC::APS::ParameterSet;
 using std::ifstream;
 
 #include <signal.h>
-#include <sys/time.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 namespace LOFAR {
   namespace GCF {
@@ -50,29 +51,24 @@ GCFTask::THandlers	GCFTask::_tempHandlers;
 GCFTask::TProtocols	GCFTask::_protocols;
 int 				GCFTask::_argc = 0;
 char** 				GCFTask::_argv = 0;
-bool				GCFTask::_delayedQuit = false;
 
-//
-// GCFTask(state, name)
-//
 GCFTask::GCFTask(State initial, const string& name) :
   GCFFsm(initial), _name(name)
 {
+  // framework protocols old-style registration
+  registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_names);
+  registerProtocol(F_PORT_PROTOCOL, F_PORT_PROTOCOL_names);
+
 	// new style registration
 	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 	TM::registerProtocol(F_PORT_PROTOCOL,F_PORT_PROTOCOL_STRINGS);
 }
 
-//
-// ~GCFTask()
-//
+
 GCFTask::~GCFTask()
 {
 }
 
-//
-// init(argc, argv, logfile)
-//
 void GCFTask::init(int argc, char** argv, const string&	logfile)
 {
 	_argc = argc;
@@ -115,124 +111,115 @@ void GCFTask::init(int argc, char** argv, const string&	logfile)
 	}
 }
 
-//
-// run(secondsToRun)
-//
-void GCFTask::run(double maxSecondsToRun)
+void GCFTask::run()
 {
-	// catch terminate signals
-	signal(SIGINT,  GCFTask::signalHandler);
-	signal(SIGTERM, GCFTask::signalHandler);
-	signal(SIGPIPE, SIG_IGN);
+  signal(SIGINT,  GCFTask::signalHandler);
+  signal(SIGTERM, GCFTask::signalHandler);
+  signal(SIGPIPE, SIG_IGN);
 
-	double	terminateTime(0.0);
-	struct timeval	TV;
-	if (maxSecondsToRun) {
-		LOG_INFO_STR("Program execution stops over " << maxSecondsToRun << " seconds");
-		gettimeofday(&TV, 0);
-		terminateTime = TV.tv_sec + (TV.tv_usec / 10000000) + maxSecondsToRun;
-	}
+  // THE MAIN LOOP OF THE MAC PROCESS
+  // can only be interrupted/stopped by calling stop or terminating the application
+  while (!_doExit)
+  {
+    // new handlers can be add during processing the workProc
+    // thus a temp handler map is used
+    _tempHandlers.clear();
+    _tempHandlers.insert(_handlers.begin(), _handlers.end()); 
 
-	// THE MAIN LOOP OF THE MAC PROCESS
-	// can only be interrupted/stopped by calling stop or terminating the application
-	while (!_doExit) {
-		// new handlers can be add during processing the workProc
-		// thus a temp handler map is used
-		_tempHandlers.clear();
-		_tempHandlers.insert(_handlers.begin(), _handlers.end()); 
-		for (THandlers::iterator iter = _tempHandlers.begin() ;
-				iter != _tempHandlers.end() && !_doExit; ++iter) {
-			if (iter->second) {
-				iter->first->workProc();
-			}
-		} // for
-
-		// time to quit?
-		if (maxSecondsToRun) {
-			gettimeofday(&TV, 0);
-			if ((TV.tv_sec + (TV.tv_usec / 10000000)) >= terminateTime) {
-				_doExit = true;
-			}
-		}
-	} // while
-
-	if (!_delayedQuit) {
-		stopHandlers();
-	}
-	else {
-		_delayedQuit = false;	// never delay twice
-		_doExit = false;		// we will run again
-	}
+    for (THandlers::iterator iter = _tempHandlers.begin() ;
+         iter != _tempHandlers.end() && !_doExit; ++iter)
+    {
+      if (!iter->second) continue;
+      iter->first->workProc();
+    }
+  }
+  stop();
 }
 
-//
-// stopHandlers()
-//
-// An application can be stopped in two ways, a task itself may call stop() or
-// the user may kill the program.
-//
-void GCFTask::stopHandlers()
+void GCFTask::stop()
 {
-	for (THandlers::iterator iter = _handlers.begin() ; iter != _handlers.end() ; ++iter) {
-		if (iter->second)  {	// if pointer is still valid
-			iter->first->stop();	// give handler a way of stopping in a neat way
-		}
-	} 
-
-	// STEP 2
-	LOG_INFO("Process is stopped! Possible reasons: 'stop' called or terminated");
-	GCFHandler* pHandler(0);
-	for (THandlers::iterator iter = _handlers.begin() ; iter != _handlers.end(); ++iter) {
-		if (!iter->second)  {
-			continue; // handler pointer is not valid anymore, 
-		}
-		// because this handler was deleted by the user
-		pHandler = iter->first;
-		pHandler->leave(); // "process" is also a handler user, see registerHandler
-		if (pHandler->mayDeleted())  { // no other object uses this handler anymore?
-			delete pHandler;
-		}
-	} 
-
-	_handlers.clear();
+  // stops the application in 2 steps
+  // first it stops the handlers and secondly it deletes the handler objects if
+  // they are not used anymore by other object followed by deleting the handlers list
+  GCFHandler* pHandler(0);
+  if (_doExit)
+  {
+    LOG_INFO("Process is stopped! Possible reasons: 'stop' called or terminated");
+    for (THandlers::iterator iter = _handlers.begin() ;
+         iter != _handlers.end(); ++iter)
+    {
+      if (!iter->second) continue; // handler pointer is not valid anymore, 
+                                   // because this handler was deleted by the user
+      pHandler = iter->first;
+      pHandler->leave(); // "process" is also a handler user, see registerHandler
+      if (pHandler->mayDeleted()) // no other object uses this handler anymore?
+      {
+        delete pHandler;
+      }
+    } 
+    _handlers.clear();
+  }
+  else
+  {
+    for (THandlers::iterator iter = _handlers.begin() ;
+          iter != _handlers.end() ; 
+          ++iter)
+    {
+      if (!iter->second) continue; // handler pointer is not valid anymore, 
+                                   // because this handler was deleted by the user
+      pHandler = iter->first;
+      pHandler->stop();
+    } 
+    _doExit = true;
+  }     
 }
 
-//
-// registerHandler(handler)
-//
-// NOTE: There are only a few handlers defined, timerHandler, fileHandler, PVSS Handler.
-//	Those handlers handle the work of all 'ports' of that type. E.g. the timerHandler handles
-// 	the decrement of all timers defined in all tasks!!!!
-//
 void GCFTask::registerHandler(GCFHandler& handler)
 {
-	_handlers[&handler] = true; // valid pointer
-	handler.use(); // released after stop
+  _handlers[&handler] = true; // valid pointer
+  handler.use(); // released after stop
 }
 
-//
-// deregisterHandler(handler)
-//
 void GCFTask::deregisterHandler(GCFHandler& handler)
 {
-	THandlers::iterator iter = _tempHandlers.find(&handler);
-	if (iter != _tempHandlers.end()) {
-		iter->second = false; 	// pointer will be made invalid because the user 
-								// deletes the handler by itself                          
-	}
-	_handlers.erase(&handler);
+  THandlers::iterator iter = _tempHandlers.find(&handler);
+  
+  if (iter != _tempHandlers.end())
+  {
+    iter->second = false; // pointer will be made invalid because the user 
+                          // deletes the handler by itself                          
+  }
+  _handlers.erase(&handler);
 }
 
 //
-// signalHandler(sig)
+// Old style registering ,will be obsolete.
+void GCFTask::registerProtocol(unsigned short protocolID,
+              const char* signal_names[])
+{
+  ASSERT((protocolID << 8) <= F_EVT_PROTOCOL_MASK);
+  _protocols[protocolID] = signal_names;
+}
+
 //
+// evtstr(event&)
+// Will also become obsolete
+//
+string GCFTask::evtstr(const GCFEvent& e)  const
+{
+	TProtocols::const_iterator iter = _protocols.find(F_EVT_PROTOCOL(e));
+	if (iter != _protocols.end()) {
+		return ((iter->second)[F_EVT_SIGNAL(e)]);
+	}
+
+	return (formatString("unknown signal(p=%d, s=%d)", F_EVT_PROTOCOL(e), F_EVT_SIGNAL(e)));
+}
+
 void GCFTask::signalHandler(int sig)
 {
-	if ((sig == SIGINT) || (sig == SIGTERM)) {
-		_doExit = true;
-	}
+  if ( (sig == SIGINT) || (sig == SIGTERM) )
+    _doExit = true;
 }                                            
-
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

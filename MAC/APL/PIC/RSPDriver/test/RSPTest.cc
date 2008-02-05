@@ -52,7 +52,7 @@ using namespace RSP_Test;
 RSPTest::RSPTest(string name)
     : GCFTask((State)&RSPTest::initial, name), Test(name)
 {
-  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
   m_server.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
 }

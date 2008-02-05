@@ -26,7 +26,6 @@
 #include <APL/BS_Protocol/Pointing.h>
 #include <APL/BS_Protocol/Beamlet2SubbandMap.h>
 #include <APL/RTCCommon/Timestamp.h>
-#include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/CAL_Protocol/SpectralWindow.h>
 #include <APL/CAL_Protocol/SubArray.h>
 #include <APL/CAL_Protocol/AntennaGains.h>
@@ -38,6 +37,7 @@
 #include <queue>
 #include <set>
 #include <map>
+#include <bitset>
 
 #include <blitz/array.h>
 
@@ -66,13 +66,13 @@ public:
 				 BS_Protocol::Beamlet2SubbandMap	allocation);
 
 	// Set calibration handle for a beam
-	void setCalibrationHandle(Beam* beam, CAL_Protocol::memptr_t handle);
+	void setCalibrationHandle(Beam* beam, uint32 handle);
 
 	// Find calibration handle.
-	CAL_Protocol::memptr_t findCalibrationHandle(Beam* beam) const;
+	uint32 findCalibrationHandle(Beam* beam) const;
 
 	// Update gains
-	bool updateCalibration(CAL_Protocol::memptr_t handle, CAL::AntennaGains& gains);
+	bool updateCalibration(uint32 handle, CAL::AntennaGains& gains);
 
 	// Check if a beam exists.
 	bool exists(Beam* beam);
@@ -109,11 +109,11 @@ private:
 	//# --- datamembers ---
 
 	// Registry of active beams with mapping to calibration handle.
-	std::map<Beam*, CAL_Protocol::memptr_t> 	m_beams;
+	std::map<Beam*, uint32> 	m_beams;
 
 	// Reverde map from handle to beam to find beam corresponding to
 	// calibration update.
-	std::map<CAL_Protocol::memptr_t, Beam*> 	m_handle2beam;
+	std::map<uint32, Beam*> 	m_handle2beam;
 
 	// Collection of all beamlets;
 	Beamlets					m_beamlets;

@@ -1,3 +1,5 @@
+INSTHDRS =
+
 pkgincludedir = $(includedir)/GCF/PAL
 pkginclude_HEADERS = \
 	GCF_Property.h \
@@ -13,5 +15,15 @@ pkginclude_HEADERS = \
 	GCF_PVSSPort.h \
 	GCF_PVSSInfo.h \
 	GCF_SysConnGuard.h
+	
+NOINSTHDRS =
+
+TCCHDRS = 
+
+nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 include $(top_srcdir)/Makefile.common

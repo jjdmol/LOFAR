@@ -51,34 +51,32 @@ GetRCUCmd::~GetRCUCmd()
   delete m_event;
 }
 
-//
-// ack(cache)
-//
 void GetRCUCmd::ack(CacheBuffer& cache)
 {
-	RSPGetrcuackEvent ack;
+  RSPGetrcuackEvent ack;
 
-	ack.timestamp = getTimestamp();
-	ack.status    = SUCCESS;
-	ack.settings().resize(m_event->rcumask.count());
+  ack.timestamp = getTimestamp();
+  ack.status = SUCCESS;
 
-	int result_rcu = 0;
-	for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
-		if (m_event->rcumask[cache_rcu]) {
-			if (cache_rcu < StationSettings::instance()->nrRcus()) {
-				ack.settings()(result_rcu) = cache.getRCUSettings()()(cache_rcu);
-			}
-			else {
-				LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's", cache_rcu, 
-				StationSettings::instance()->nrRcus()));
-			}
-
-			result_rcu++;
-		}
-	}
-	ASSERT(result_rcu == (int)m_event->rcumask.count());
-
-	getPort()->send(ack);
+  ack.settings().resize(m_event->rcumask.count());
+  
+  int result_rcu = 0;
+  for (int cache_rcu = 0; cache_rcu < StationSettings::instance()->nrRcus(); cache_rcu++) {
+    if (m_event->rcumask[cache_rcu]) {
+      if (cache_rcu < StationSettings::instance()->nrRcus()) {
+	ack.settings()(result_rcu) = cache.getRCUSettings()()(cache_rcu);
+      }
+      else {
+	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's", cache_rcu, 
+		StationSettings::instance()->nrRcus()));
+      }
+      
+      result_rcu++;
+    }
+  }
+  ASSERT(result_rcu == (int)m_event->rcumask.count());
+  
+  getPort()->send(ack);
 }
 
 void GetRCUCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)

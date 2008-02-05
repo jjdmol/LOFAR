@@ -108,18 +108,19 @@ namespace LOFAR{
 			Command 					*cmd;
 			bool							itsAliveCheck;
 			bool							itsSizeCheck;
-			//uint32						itsActiveBoards;
+			uint32						itsActiveBoards;
 			uint32						itsNewBoards;
 			bool							itsActiveBoardsChange;
 			int32 						*itsResetCount;
 			
 			struct TbbEvent{
+				//unsigned short		signal;
 				GCFPortInterface	*port;
 				uint32						length;
 				uint8							*event;
 			};
 			
-			std::deque<TbbEvent*> *itsTbbQueue;
+			std::deque<TbbEvent> *itsTbbQueue;
 			
 			GCFTCPPort      itsAcceptor;     // listen for clients on this port
 			GCFETHRawPort*	itsBoard;        // array of ports, one for each TBB board

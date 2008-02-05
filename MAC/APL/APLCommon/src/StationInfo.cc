@@ -114,12 +114,9 @@ string	stationTypeStr()
 //
 // PVSSDatabaseName
 //
-string	PVSSDatabaseName(const string&	someName)
+string	PVSSDatabaseName()
 {
-	string hostname(someName);
-	if (hostname.empty()) {
-		hostname = myHostname(false);
-	}
+	string hostname(myHostname(false));
 
 	// hostname is like <stationtype><arm><ring><CUtype>
 	// where CUtype = C or W

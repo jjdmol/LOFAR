@@ -28,87 +28,54 @@
 #include <AMCBase/Direction.h>
 #include <AMCBase/Exceptions.h>
 #include <Common/lofar_iostream.h>
-#include <Common/lofar_math.h>
 
 namespace LOFAR
 {
   namespace AMC
   {
 
-    double Earth::flattening()
-    {
-      return 1.0 / 298.257223563;
-    }
-
-
-    double Earth::equatorialRadius()
-    {
-      return 6378137.0;
-    }
-
-
-    Coord3D wgs84ToItrf(double lon, double lat, double h)
-    {
-      double f      = Earth::flattening();        // flattening
-      double a      = Earth::equatorialRadius();  // equatorial radius
-      double e2     = f*(2-f);                    // square of eccentricity
-      double sinlat = sin(lat);                   // sine of latitude
-      double coslat = cos(lat);                   // cosine of latitude
-
-      // Radius of curvature in the prime vertical
-      double rN = a / sqrt(1 - e2*sinlat*sinlat);
-
-      // Calculate geocentric coordinates
-      vector<double> xyz(3);
-      xyz[0] = (rN + h) * coslat * cos(lon);
-      xyz[1] = (rN + h) * coslat * sin(lon);
-      xyz[2] = ((1-e2)*rN + h) * sinlat;
-
-      return Coord3D(xyz);
-    }
-
-
     //## --------  Public member functions  -------- ##//
 
     Position::Position() : 
-      itsCoord(Coord3D())
+      itsCoord(Coord3D()),
+      itsType(ITRF)
     {
     }
     
 
-    Position::Position (double lon, double lat, double h, Types typ)
+    Position::Position (double lon, double lat, double h, Types typ) :
+      itsCoord(lon, lat, h),
+      itsType((INVALID < typ && typ < N_Types) ? typ : INVALID) 
     {
-      switch(typ) {
-      case ITRF:
-        itsCoord = Coord3D(lon, lat, h);
-        break;
-      case WGS84:
-        itsCoord = wgs84ToItrf(lon, lat, h);
-        break;
-      default:
-        THROW(TypeException, "Invalid type (typ=" << typ << ") specified");
-      }
     }
 
 
-    Position::Position(const Coord3D& coord, Types typ)
+    Position::Position(const Coord3D& coord, Types typ) :
+      itsCoord(coord),
+      itsType((INVALID < typ && typ < N_Types) ? typ : INVALID)
     {
-      switch(typ) {
-      case ITRF:
-        itsCoord = coord;
-        break;
-      case WGS84:
-        itsCoord = 
-          wgs84ToItrf(coord.longitude(), coord.latitude(), coord.radius());
-        break;
-      default:
-        THROW(TypeException, "Invalid type (typ=" << typ << ") specified");
-      }
+    }
+
+
+    const string& Position::showType() const
+    {
+      //# Caution: Always keep this array of strings in sync with the enum
+      //#          Types that is defined in the header file!
+      static const string types[N_Types+1] = {
+        "ITRF",
+        "WGS84",
+        "<INVALID>"
+      };
+      if (isValid()) return types[itsType];
+      else return types[N_Types];
     }
 
 
     Position& Position::operator+=(const Position& that)
     {
+      if (itsType != that.itsType) {
+        THROW (TypeException, showType() << " != " << that.showType());
+      }
       itsCoord += that.itsCoord;
       return *this;
     }
@@ -116,6 +83,9 @@ namespace LOFAR
 
     Position& Position::operator-=(const Position& that)
     {
+      if (itsType != that.itsType) {
+        THROW (TypeException, showType() << " != " << that.showType());
+      }
       itsCoord -= that.itsCoord;
       return *this;
     }
@@ -135,16 +105,21 @@ namespace LOFAR
     }
 
 
-    double Position::operator*(const Position& that) const
+    double Position::operator*(const Position& that)
     {
+      if (itsType != that.itsType) {
+        THROW (TypeException, showType() << " != " << that.showType());
+      }
       return itsCoord * that.coord();
     }
 
 
-    double Position::operator*(const Direction& that) const
+    double Position::operator*(const Direction& that)
     {
-      if (that.type() != Direction::ITRF) {
-        THROW (TypeException, "Direction type must be ITRF");
+      // Here we must convert the type to string before comparing, because
+      // we're comparing Position::Types with Direction::Types.
+      if (showType() != that.showType()) {
+        THROW (TypeException, showType() << " != " << that.showType());
       }
       return itsCoord * that.coord();
     }
@@ -154,13 +129,20 @@ namespace LOFAR
 
     ostream& operator<<(ostream& os, const Position& pos)
     {
-      return os << pos.coord();
+      if (!pos.isValid()) 
+        return os << pos.showType();
+      else 
+        return os << "["  << pos.longitude() << ", " << pos.latitude() 
+                  << ", " << pos.height() << "] (" << pos.showType() << ")";
     }
 
 
     bool operator==(const Position& lhs, const Position& rhs)
     {
-      return lhs.coord() == rhs.coord();
+      return 
+        lhs.isValid() && rhs.isValid() &&
+        lhs.type()    == rhs.type()    &&
+        lhs.coord()   == rhs.coord();
     }
 
 

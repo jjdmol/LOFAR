@@ -29,9 +29,8 @@
 lfr_root=. #filled in by install
 
 # Get python version.
-a_pyv=`python -V 2>&1`
+a_pyv=`python --version 2>&1`
 a_pyvv=`echo $a_pyv | sed -e "s/Python \([0-9]\.[0-9]\).*/\1/"`
-# Fall-back: if python cannot be found assume Python 2.4
 if test "$a_pyv" = "$a_pyvv"; then
   a_pyvv=2.4
 fi

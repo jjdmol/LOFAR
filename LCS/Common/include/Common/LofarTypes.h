@@ -34,8 +34,8 @@
 //# contain a number of typedefs for commonly used primitive data types. Some
 //# of these will clash with our typedefs -- more specifically ushort, uint,
 //# and ulong -- so we will use the ones in <sys/types.h> or <qglobal.h>
-//# On some platforms sys/types.h does not include all definitions.
-#ifdef HAVE_QT
+//# Note that the Apple OS-X does not define ulong.
+#if defined(HAVE_QT)
 # include <qglobal.h>    // contains typedef for uchar as well
 #else
 # include <sys/types.h>
@@ -45,34 +45,19 @@ namespace LOFAR
 {
   //# Make the type names defined in LofarTypedefs.h available in the
   //# namespace LOFAR. 
-  //# Note that QT defines ushort, uint, and ulong.
-  //# Otherwise check if it's there.
-#ifdef HAVE_QT
+
+#if defined(HAVE_QT)
   using ::uchar;
-  using ::uint;
-  using ::ulong;
-
 #else
-
   using TYPES::uchar;
-# ifdef HAVE_USHORT
-  using ::ushort;
-# else
-  using TYPES::ushort;
-# endif  
-# ifdef HAVE_UINT
-  using ::uint;
-# else
-  using TYPES::uint;
-# endif  
-# ifdef HAVE_ULONG
-  using ::ulong;
-# else
-  using TYPES::ulong;
-# endif  
-
 #endif
-
+  using ::ushort;
+  using ::uint;
+#if defined(__APPLE__)
+  using TYPES::ulong;
+#else
+  using ::ulong;
+#endif
   using TYPES::longlong;
   using TYPES::ulonglong;
   using TYPES::ldouble;

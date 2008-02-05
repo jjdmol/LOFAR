@@ -59,10 +59,11 @@ public:
 	// A DPservice object is bound to a GCFtask because it must be able to deliver the
 	// DP protocol events to the task. One DPservice per task is normally enough. With the
 	// reportBack parameter use can set wether or not you like to receive the DP events.
-	explicit DPservice (TM::GCFTask*	clientTask); // may be nilpointer
+	explicit DPservice (TM::GCFTask*	clientTask, // must be a pointer
+						bool			reportBack = true);
 	~DPservice ();
 
-	// There are three ways of setting a value, they differ in ease of use and performance.
+	// There are two ways of setting a value, they differ in ease of use and performance.
 	//
 	// @param DPname with full scope.
 	// @param value can be of type GCFPValue or string. The string parameter will be 
@@ -73,22 +74,12 @@ public:
 	// <group>
 	PVSSresult setValue (const string&		DPname, 
 						 const GCFPValue&	value, 
-						 double 			timestamp = 0.0,
-						 bool				wantAnswer = true);
+						 double 			timestamp = 0.0);
 
 	PVSSresult setValue	(const string& 		DPname,	// slower than previous function
 						 const string&		value, 
 						 TMACValueType		type,	// LPT_BOOL/CHAR/UNSIGNED/....
-						 double 			timestamp = 0.0,
-						 bool				wantAnswer = true);
-
-	// For setting multiple DPEs of the same DP at once
-	PVSSresult setValue (const string&		DPname, 
-						 vector<string>		dpeNames,
-						 vector<GCFPValue*>	dpeValues,
-						 double 			timestamp = 0.0,
-						 bool				wantAnswer = true);
-
+						 double 			timestamp = 0.0);
     // </group>
 
 	// Place a request for getting the value from a DataPoint from the database.

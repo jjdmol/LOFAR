@@ -30,6 +30,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_math.h>
+// #include <Common/Numeric.h>
 #include <limits>
 
 using namespace LOFAR;
@@ -46,169 +47,130 @@ bool compare(double x, double y,
 }
 
 
-bool compare(const Position& p1, const Position& p2, double eps)
-{
-  const vector<double>& v1 = p1.coord().get();
-  const vector<double>& v2 = p2.coord().get();
-  return 
-    compare(v1[0], v2[0], eps) && 
-    compare(v1[1], v2[1], eps) && 
-    compare(v1[2], v2[2], eps);
-}
-
-
 int main(int, const char* argv[])
 {
   INIT_LOGGER(argv[0]);
 
-  const double a   = Earth::equatorialRadius();
-  const double f   = Earth::flattening();
-  const double b   = a * (1 - f);
-  const double deg = M_PI/180;
-  const double eps = a * std::numeric_limits<double>::epsilon();
+  const double eps = 32 * std::numeric_limits<double>::epsilon();
 
   try {
 
     //## --  A couple of positions  -- ##//
 
-    Position pe0  (0,       0,  0, Position::WGS84); // Equator, lon=0, h=0
-    Position pe90 (90*deg,  0, 10, Position::WGS84); // Equator, lon=90, h=10
-    Position pe180(180*deg, 0,-20, Position::WGS84); // Equator, lon=180, h=-20
-    Position pe270(270*deg, 0, 30, Position::WGS84); // Equator, lon=270, h=30
-    Position pnp  (0,  90*deg,-40, Position::WGS84); // North pole, h=-40
-    Position psp  (0, -90*deg, 50, Position::WGS84); // South pole, h=50
-    Position pexl (6*deg, 53*deg, 50, Position::WGS84); // Near Exloo
+    // A default constructed position
+    Position pos0;
 
-    // Show the positions.
-    cout.precision(16);
-    cout << "====  A couple of positions  ====" << endl;
-    cout << "pe0   = " << pe0   << endl;
-    cout << "pe90  = " << pe90  << endl;
-    cout << "pe180 = " << pe180 << endl;
-    cout << "pe270 = " << pe270 << endl;
-    cout << "pnp   = " << pnp   << endl;
-    cout << "psp   = " << psp   << endl;
-    cout << "pexl  = " << pexl  << endl;
+    // A "normalized" position in ITRF
+    Position pos1(0.25*M_PI, -0.33*M_PI, 1);
+
+    // A "denormalized" position in ITRF; latitude angle is larger than
+    // pi/2. As a result, the "normalized" latitude should be pi - 0.75 pi,
+    // and the longitude should be -0.67 pi + pi.
+    Position pos2(-0.67*M_PI, 0.75*M_PI, 249.98, Position::ITRF);
+
+    // A "denormalized" position in WGS84; height is less than zero. As a
+    // result, the signs of longitude, latitude and height are swapped.
+    Position pos3(0.5*M_PI, 0.2*M_PI, -115.11, Position::WGS84);
+
+    // The same position, but now with an invalid coordinate type.
+    Position pos4(0.5*M_PI, 0.2*M_PI, -115.11, 
+                   static_cast<Position::Types>(1294));
+
+
+    //## --  Directions constructed from the above positions  -- ##//
+
+    // A default constructed direction.
+    Direction dir0;
+
+    // A "normalized" direction in J2000.
+    Direction dir1(pos1.coord());
+
+    // A "denormalized" direction in ITRF.
+    Direction dir2(pos2.coord(), Direction::ITRF);
+
+    // A "normalized" direction in AZEL.
+    Direction dir3(pos3.coord(), Direction::AZEL);
+
+    // The same direction, but now with an invalid coordinate type.
+    Direction dir4(pos4.coord(), static_cast<Direction::Types>(-4921));
+
+
+    // Vector for storing the cartesian coordinates.
+    vector<double> p;
+
+    cout << "pos0 = " << pos0 << endl;
+    cout << "pos1 = " << pos1 << endl;
+    cout << "pos2 = " << pos2 << endl;
+    cout << "pos3 = " << pos3 << endl;
+    cout << "pos4 = " << pos4 << endl;
     cout << endl;
+    cout << "dir0 = " << dir0 << endl;
+    cout << "dir1 = " << dir1 << endl;
+    cout << "dir2 = " << dir2 << endl;
+    cout << "dir3 = " << dir3 << endl;
+    cout << "dir4 = " << dir4 << endl;
 
-    // Compare WGS84 positions with their expected positions in ITRF.
-    vector<double> xyz(3);
-    xyz[0] = a; xyz[1] = 0; xyz[2] = 0;
-    ASSERT(compare(pe0, Position(xyz, Position::ITRF), eps));
-    xyz[0] = 0; xyz[1] = a+10; xyz[2] = 0;
-    ASSERT(compare(pe90, Position(xyz, Position::ITRF), eps));
-    xyz[0] = -(a-20); xyz[1] = 0; xyz[2] = 0;
-    ASSERT(compare(pe180, Position(xyz, Position::ITRF), eps));
-    xyz[0] = 0; xyz[1] = -(a+30); xyz[2] = 0;
-    ASSERT(compare(pe270, Position(xyz, Position::ITRF), eps));
-    xyz[0] = 0; xyz[1] = 0; xyz[2] = b-40;
-    ASSERT(compare(pnp, Position(xyz, Position::ITRF), eps));
-    xyz[0] = 0; xyz[1] = 0; xyz[2] = -(b+50);
-    ASSERT(compare(psp, Position(xyz, Position::ITRF), eps));
-    xyz[0] = 3825637.140852076; xyz[1] = 402090.6660932263; 
-    xyz[2] = 5070583.435129914;
-    ASSERT(compare(pexl, Position(xyz, Position::ITRF), eps));
+    p = pos0.coord().get();
+    ASSERT(pos0.isValid() &&
+           pos0.longitude() == 0 && 
+           pos0.latitude() == 0 && 
+           pos0.height() == 0 &&
+           pos0.type() == Position::ITRF);
+    ASSERT(p[0] == 0 &&
+           p[1] == 0 &&
+           p[2] == 0);
+    ASSERT(pos0 * pos0 == 0);
+    try { ASSERT(pos0 * dir0 == 0); } 
+    catch (TypeException&) {}
 
-    // Check inner products for same and opposite positions.
-    ASSERT(compare(pe0  *pe0  ,       a*a,      eps));
-    ASSERT(compare(pe90 *pe90 ,  (a+10)*(a+10), eps));
-    ASSERT(compare(pe180*pe180,  (a-20)*(a-20), eps));
-    ASSERT(compare(pe270*pe270,  (a+30)*(a+30), eps));
-    ASSERT(compare(pnp  *pnp  ,  (b-40)*(b-40), eps));
-    ASSERT(compare(psp  *psp  ,  (b+50)*(b+50), eps));
-    ASSERT(compare(pe0  *pe180,      -a*(a-20), eps));
-    ASSERT(compare(pe90 *pe270, -(a+10)*(a+30), eps));
-    ASSERT(compare(pnp  *psp  , -(b-40)*(b+50), eps));
+    p = pos1.coord().get();
+    ASSERT(pos1.isValid() &&
+           pos1.type() == Position::ITRF &&
+           compare(pos1.longitude(), 0.25*M_PI, eps) && 
+           compare(pos1.latitude(), -0.33*M_PI, eps) &&
+           compare(pos1.height(), 1, eps));
+    ASSERT(compare(p[0],  0.3599466369818881, eps) &&
+           compare(p[1],  0.3599466369818881, eps) &&
+           compare(p[2], -0.8607420270039436, eps));
+    ASSERT(compare(pos1 * pos1, 1 * 1, eps));
+    try { ASSERT(compare(pos1 * dir1, 1, eps)); } 
+    catch (TypeException&) {}
 
-    // Check inner products for perpendicular positions. 
-    // \note We need to increase the error margin to a*eps, because of 
-    // rounding errors in the sine and cosine functions.
-    ASSERT(compare(pe0  *pe90 , 0, a*eps));
-    ASSERT(compare(pe90 *pe180, 0, a*eps));
-    ASSERT(compare(pe180*pe270, 0, a*eps));
-    ASSERT(compare(pe270*pe0  , 0, a*eps));
-    ASSERT(compare(pe0  *pnp  , 0, a*eps));
-    ASSERT(compare(pe90 *pnp  , 0, a*eps));
-    ASSERT(compare(pe180*pnp  , 0, a*eps));
-    ASSERT(compare(pe270*pnp  , 0, a*eps));
-    ASSERT(compare(pe0  *psp  , 0, a*eps));
-    ASSERT(compare(pe90 *psp  , 0, a*eps));
-    ASSERT(compare(pe180*psp  , 0, a*eps));
-    ASSERT(compare(pe270*psp  , 0, a*eps));
+    p = pos2.coord().get();
+    ASSERT(pos2.isValid() &&
+           pos2.type() == Position::ITRF &&
+           compare(pos2.longitude(), 0.33*M_PI, eps) && 
+           compare(pos2.latitude(),  0.25*M_PI, eps) &&
+           compare(pos2.height(),  249.98,      eps));
+    ASSERT(compare(p[0],  89.97946031273241, eps) &&
+           compare(p[1], 152.1469583062028,  eps) &&
+           compare(p[2], 176.7625531610132,  eps));
+    ASSERT(compare(pos2 * pos2, 249.98 * 249.98, eps));
+    ASSERT(compare(pos2 * dir2, 249.98, eps));
 
+    p = pos3.coord().get();
+    ASSERT(pos3.isValid() &&
+           pos3.type() == Position::WGS84 &&
+           compare(pos3.longitude(), -0.5*M_PI, eps) && 
+           compare(pos3.latitude(),  -0.2*M_PI, eps) &&
+           compare(pos3.height(),   115.11,     eps));
+    ASSERT(compare(p[0],   0,                eps) &&
+           compare(p[1], -93.12594622250021, eps) &&
+           compare(p[2], -67.65996039138658, eps));
+    ASSERT(compare(pos3 * pos3, -115.11 * -115.11, eps));
+    try { ASSERT(compare(pos3 * dir3, 115.11, eps)); } 
+    catch (TypeException&) {}
 
-    //## --  A couple of directions  -- ##//
+    p = pos4.coord().get();
+    ASSERT(!pos4.isValid() && 
+           pos4.type() == Position::INVALID);
 
-    // Create directions from the (x,y,z) coordinates of our positions.
-    Direction de0  (pe0  .coord(), Direction::ITRF);
-    Direction de90 (pe90 .coord(), Direction::ITRF);
-    Direction de180(pe180.coord(), Direction::ITRF);
-    Direction de270(pe270.coord(), Direction::ITRF);
-    Direction dnp  (pnp  .coord(), Direction::ITRF);
-    Direction dsp  (psp  .coord(), Direction::ITRF);
-    Direction dexl (pexl .coord(), Direction::ITRF);
-
-    // Show the directions.
-    cout << "====  A couple of directions  ====" << endl;
-    cout << "de0   = " << de0   << endl;
-    cout << "de90  = " << de90  << endl;
-    cout << "de180 = " << de180 << endl;
-    cout << "de270 = " << de270 << endl;
-    cout << "dnp   = " << dnp   << endl;
-    cout << "dsp   = " << dsp   << endl;
-    cout << "dexl  = " << dexl  << endl;
-    cout << endl;
-
-    // Inner product of direction with associated position (and vice versa)
-    // should yield the norm of the position.
-    ASSERT(compare(pe0  *de0  ,    pe0.coord().radius(), eps));
-    ASSERT(compare(pe90 *de90 ,   pe90.coord().radius(), eps));
-    ASSERT(compare(pe180*de180,  pe180.coord().radius(), eps));
-    ASSERT(compare(pe270*de270,  pe270.coord().radius(), eps));
-    ASSERT(compare(pnp  *dnp  ,    pnp.coord().radius(), eps));
-    ASSERT(compare(psp  *dsp  ,    psp.coord().radius(), eps));
-    ASSERT(compare(pe0  *de180,   -pe0.coord().radius(), eps));
-    ASSERT(compare(pe90 *de270,  -pe90.coord().radius(), eps));
-    ASSERT(compare(pnp  *dsp  ,   -pnp.coord().radius(), eps));
-
-    ASSERT(compare(de0  *pe0  ,    pe0.coord().radius(), eps));
-    ASSERT(compare(de90 *pe90 ,   pe90.coord().radius(), eps));
-    ASSERT(compare(de180*pe180,  pe180.coord().radius(), eps));
-    ASSERT(compare(de270*pe270,  pe270.coord().radius(), eps));
-    ASSERT(compare(dnp  *pnp  ,    pnp.coord().radius(), eps));
-    ASSERT(compare(dsp  *psp  ,    psp.coord().radius(), eps));
-    ASSERT(compare(de0  *pe180, -pe180.coord().radius(), eps));
-    ASSERT(compare(de90 *pe270, -pe270.coord().radius(), eps));
-    ASSERT(compare(dnp  *psp  ,   -psp.coord().radius(), eps));
-
-
-    // Inner product of direction with perpendicular position (and vice versa)
-    // should yield zero.
-    ASSERT(compare(pe0  *de90 , 0, eps));
-    ASSERT(compare(pe90 *de180, 0, eps));
-    ASSERT(compare(pe180*de270, 0, eps));
-    ASSERT(compare(pe270*de0  , 0, eps));
-    ASSERT(compare(pe0  *dnp  , 0, eps));
-    ASSERT(compare(pe90 *dnp  , 0, eps));
-    ASSERT(compare(pe180*dnp  , 0, eps));
-    ASSERT(compare(pe270*dnp  , 0, eps));
-    ASSERT(compare(pe0  *dsp  , 0, eps));
-    ASSERT(compare(pe90 *dsp  , 0, eps));
-    ASSERT(compare(pe180*dsp  , 0, eps));
-    ASSERT(compare(pe270*dsp  , 0, eps));
-
-    ASSERT(compare(de0  *pe90 , 0, eps));
-    ASSERT(compare(de90 *pe180, 0, eps));
-    ASSERT(compare(de180*pe270, 0, eps));
-    ASSERT(compare(de270*pe0  , 0, eps));
-    ASSERT(compare(de0  *pnp  , 0, eps));
-    ASSERT(compare(de90 *pnp  , 0, eps));
-    ASSERT(compare(de180*pnp  , 0, eps));
-    ASSERT(compare(de270*pnp  , 0, eps));
-    ASSERT(compare(de0  *psp  , 0, eps));
-    ASSERT(compare(de90 *psp  , 0, eps));
-    ASSERT(compare(de180*psp  , 0, eps));
-    ASSERT(compare(de270*psp  , 0, eps));
+    ASSERT(pos0 * pos1 == pos1 * pos0 && pos0 * pos1 == 0);
+    ASSERT(pos0 * pos2 == pos2 * pos0 && pos0 * pos2 == 0);
+    ASSERT(compare(pos1 * pos2, pos2 * pos1, eps) && 
+           compare(pos1 * pos2, -64.9943681998483, eps));
+    try { pos1 * pos3; } catch (TypeException&) {}
+    try { pos2 * pos3; } catch (TypeException&) {}
 
   }
 

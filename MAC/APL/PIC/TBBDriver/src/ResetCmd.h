@@ -58,9 +58,6 @@ namespace LOFAR {
 				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
 				
 			private:
-				uint32	itsBoardMask;
-				int			itsBoardNr;
-				
 				TbbSettings *TS;
 				
 				TPResetEvent			*itsTPE;

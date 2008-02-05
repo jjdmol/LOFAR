@@ -9,17 +9,23 @@ AUTOGEN = autogen
 SUFFIXES = .ph
 %.cc: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	cp $*.ph $(top_builddir)/include/TBBDriver/TP_Protocol
 
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
 	cp $*.ph $(top_builddir)/include/TBBDriver/TP_Protocol
 	
 BUILT_SOURCES = \
-	TP_Protocol.ph \
-	TP_Protocol.cc 
+	TBBDriver.conf \
+	RemoteStation.conf \
+	tbbctl.conf \
+	TBBDriver.log_prop \
+	tbbctl.log_prop
 
 sysconf_DATA = \
 	TBBDriver.conf \
+	RemoteStation.conf \
+	tbbctl.conf \
 	TBBDriver.log_prop \
 	tbbctl.log_prop
 
@@ -77,8 +83,6 @@ libtbbdriver_la_SOURCES = \
 	ReadrCmd.cc \
 	WriterCmd.cc \
 	ReadxCmd.cc		
-
-pkginclude_HEADERS	= $(BUILT_SOURCES)
 
 noinst_HEADERS = \
 	DriverSettings.h \

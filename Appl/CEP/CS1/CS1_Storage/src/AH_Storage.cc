@@ -53,30 +53,30 @@ namespace LOFAR
 
       uint nrSubbands = itsCS1PS->nrSubbands();
       ASSERT(nrSubbands > 0);
-      uint nrSubbandsPerPset = itsCS1PS->nrSubbandsPerPset();
-      ASSERT(nrSubbandsPerPset > 0);
-      uint nrInputChannels = itsCS1PS->useGather() ? 1 : itsCS1PS->nrCoresPerPset();
+      uint nrSubbandsPerCell = itsCS1PS->nrSubbandsPerCell();
+      ASSERT(nrSubbandsPerCell > 0);
+      uint nrInputChannels = (itsCS1PS->useGather() ? 1 : itsCS1PS->getUint32("OLAP.BGLProc.nodesPerPset")) * itsCS1PS->getUint32("OLAP.BGLProc.psetsPerCell");
       ASSERT(nrInputChannels > 0);
       uint nrPsetsPerStorage = itsParamSet.getUint32("OLAP.psetsPerStorage");
-      ASSERT(nrSubbands % nrSubbandsPerPset == 0);
-      ASSERT(nrSubbands / nrSubbandsPerPset % nrPsetsPerStorage == 0);
+      ASSERT(nrSubbands % nrSubbandsPerCell == 0);
+      ASSERT(nrSubbands / nrSubbandsPerCell % nrPsetsPerStorage == 0);
 
       // We must derive how many WH_SubbandWriter objects we have to
-      // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerPset
+      // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerCell
       // to an AIPS++ Measurement Set.
-      uint nrWriters = nrSubbands / nrSubbandsPerPset / nrPsetsPerStorage;
+      uint nrWriters = nrSubbands / nrSubbandsPerCell / nrPsetsPerStorage;
       uint maxConcurrent = itsCS1PS->getInt32("OLAP.BGLProc.maxConcurrentComm");
       LOG_TRACE_VAR_STR("Creating " << nrWriters << " subband writers ...");
 
-      for (unsigned nw = 0; nw < nrWriters; ++nw)
+      for (uint nw = 0; nw < nrWriters; ++nw)
       {
         // For now, we'll assume that the subbands can be sorted and grouped
         // by ID. Hence, the first WH_SubbandWriter will write the first \a
-        // nrSubbandsPerPset subbands, the second will write the second \a
-        // nrSubbandsPerPset, etc.
-        vector<uint> sbIDs(nrSubbandsPerPset * nrPsetsPerStorage);
-        for (uint i = 0; i < nrSubbandsPerPset * nrPsetsPerStorage; ++i) {
-          sbIDs[i] = nrSubbandsPerPset * nrPsetsPerStorage * nw + i;         
+        // nrSubbandsPerCell subbands, the second will write the second \a
+        // nrSubbandsPerCell, etc.
+        vector<uint> sbIDs(nrSubbandsPerCell * nrPsetsPerStorage);
+        for (uint i = 0; i < nrSubbandsPerCell * nrPsetsPerStorage; ++i) {
+          sbIDs[i] = nrSubbandsPerCell * nrPsetsPerStorage * nw + i;         
 	  LOG_TRACE_LOOP_STR("Writer " << nw << ": sbIDs[" << i << "] = " 
                              << sbIDs[i]);
         }
@@ -108,7 +108,7 @@ namespace LOFAR
 	}
       }
 #ifdef HAVE_MPI
-      ASSERTSTR((unsigned) TH_MPI::getNumberOfNodes() == nrWriters,
+      ASSERTSTR (TH_MPI::getNumberOfNodes() ==  nrWriters,
                  TH_MPI::getNumberOfNodes() << " == " << nrWriters );
 #endif
     }

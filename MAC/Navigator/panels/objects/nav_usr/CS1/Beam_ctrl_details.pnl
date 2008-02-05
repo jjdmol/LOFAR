@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,296 208 1057 342 N "_3DFace" 1
+PANEL,489 117 1057 342 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -124,7 +124,7 @@ LANG:1 6 Layer1
 6 0
 "Border1"
 ""
-1 10 200 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 10 280 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -133,11 +133,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E U  1 E 10 10 940 200
+E E 0 2 1 0 1 E U  1 E 10 10 940 280
 2 1
 "Text4"
 ""
-1 10 19 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 19 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
 EE E
@@ -146,8 +146,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 21 141 47
-0 2 0 "s" 0 0 0 64 0 0  12 21
+E E 0 1 1 0 1 E U  0 E 19 21 148 47
+0 2 0 "s" 0 0 0 64 0 0  19 21
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|-16,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -157,7 +157,7 @@ LANG:1 14 Beam Control :
 25 15
 "beamControlTable"
 ""
-1 28 -167 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 28 -289 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 16 0 0 0 0 0
 EE E
@@ -168,11 +168,11 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-17 45 933 192
+17 45 933 272
 E "main(int row, string column, string value)
 {
  
-	string dp = \"LOFAR_ObsSW_\" + beamControlTable.cellValueRC(row,\"Observation\")+\"_BeamCtrl\";
+	string dp = \"LOFAR_ObsSW_\" + beamControlTable.cellValueRC(row,\"Observation\")+\"_ObsCtrl\";
 	DebugTN(\"ColumnCommand: trigger Navigator with datapoint=\",dp);
 	navConfigTriggerNavigatorRefreshWithDP(dp);
 }" 0

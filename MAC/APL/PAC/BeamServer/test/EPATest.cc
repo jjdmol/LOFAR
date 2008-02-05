@@ -47,7 +47,7 @@ using namespace EPA_Protocol;
 EPATest::EPATest(string name, char* subarrayname, int startbeamlet, int nbeamlets)
   : GCFTask((State)&EPATest::initial, name), Test("EPATest"), m_subarrayname(subarrayname), m_startbeamlet(startbeamlet), m_nbeamlets(nbeamlets)
 {
-  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_STRINGS);
+  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
 
   beam_server.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::SAP, BS_PROTOCOL);
 }

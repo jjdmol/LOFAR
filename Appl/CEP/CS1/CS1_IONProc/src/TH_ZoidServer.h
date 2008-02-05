@@ -1,4 +1,4 @@
-//#  TH_ZoidServer.h: TransportHolder that implements ZOID protocol
+//#  TH_ZoidServer.h: TransportHolder that does nothing
 //#
 //#  Copyright (C) 2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -44,12 +44,10 @@ class TH_ZoidServer : public TransportHolder
 
     virtual bool	     init();
 
-    // if doCopy == 0, Zoid's zero-copy protocol is used; memory must be
-    // obtained through __zoid_alloc and must be a multiple of 32
-    virtual bool	     recvBlocking(void *ptr, int size, int doCopy, int, DataHolder *);
-    virtual bool	     sendBlocking(void *ptr, int size, int doCopy, DataHolder *);
+    virtual bool	     recvBlocking(void *, int, int, int, DataHolder *);
+    virtual bool	     sendBlocking(void *, int, int, DataHolder *);
 
-    static  void	     sendCompleted(void *ptr, void *arg);
+    static  void	     sendCompleted(void *buf, void *arg);
 
     // functions below are not supported
     virtual int32	     recvNonBlocking(void *, int32, int, int32, DataHolder *);
@@ -75,11 +73,11 @@ class TH_ZoidServer : public TransportHolder
     static std::vector<TH_ZoidServer *> theirTHs;
 
     unsigned		     itsCore;
-    pthread_mutex_t	     sendMutex, receiveMutex;
+    pthread_mutex_t	     mutex;
     pthread_cond_t	     newSendDataAvailable, newReceiveBufferAvailable;
     pthread_cond_t	     dataReceived, dataSent;
-    char		     *volatile sendBufferPtr, *volatile receiveBufferPtr;
-    volatile size_t	     bytesToSend, bytesToReceive;
+    char		     *sendBufferPtr, *receiveBufferPtr;
+    size_t		     bytesToSend, bytesToReceive;
 };
 
 } // namespace CS1

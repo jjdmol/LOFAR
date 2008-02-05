@@ -89,15 +89,7 @@ public class ConfigPanelHelper {
         itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ObservationPanel");
         itsPanelMap.put("Observation",itsVector);
         
-        //TBB
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.TBBConfigPanel");
-        itsPanelMap.put("TBB",itsVector);
         
-        //Imager
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
-        itsPanelMap.put("Imager",itsVector);
     }
     
     

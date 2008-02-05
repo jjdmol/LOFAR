@@ -70,19 +70,20 @@ public:
 	~ObservationControl();
 
 	// During this state the top DP LOFAR_ObsSW_<observation> is created
-   	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
-	
-	// During this state station DP's wih references to the stations are created.
-   	GCFEvent::TResult prepDB_state (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult initial_state (GCFEvent& e, 
+									 GCFPortInterface& p);
 	
 	// During this state all connections with the other programs are made.
-   	GCFEvent::TResult starting_state (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult starting_state (GCFEvent& e, 
+									 GCFPortInterface& p);
 	
 	// Normal control mode. 
-   	GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult active_state  (GCFEvent& e, 
+									 GCFPortInterface& p);
 
 	// Terminating mode. 
-   	GCFEvent::TResult finishing_state(GCFEvent& e, GCFPortInterface& p);
+   	GCFEvent::TResult finishing_state(GCFEvent& e, 
+									  GCFPortInterface& p);
 
 	// Interrupt handler for switching to finishing_state when exiting program.
 	static void sigintHandler (int signum);
@@ -105,7 +106,6 @@ private:
 
    	RTDBPropertySet*		itsPropertySet;
 	RTDBPropertySet*		itsBootPS;
-	map <string, RTDBPropertySet*>	itsStationDPs;
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;
@@ -121,7 +121,6 @@ private:
 	uint32					itsNrControllers;
 	uint32					itsBusyControllers;
 	uint16					itsChildResult;
-	uint16					itsChildsInError;
 	uint16					itsQuitReason;
 	
 	// timers for the several stages.
@@ -134,7 +133,7 @@ private:
 
 	// ParameterSet variables
 	string					itsTreePrefix;
-	uint32					itsTreeID;
+	uint32					itsInstanceNr;
 	uint32					itsHeartBeatItv;
 	uint32					itsForcedQuitDelay;
 	uint32					itsClaimPeriod;

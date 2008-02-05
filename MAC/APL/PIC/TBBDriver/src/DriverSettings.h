@@ -37,7 +37,7 @@ namespace LOFAR {
 
 static const int DRIVER_VERSION = 113; // 1.13 in cvs
 
-enum SetupStateT {noBoard, boardReset, boardCleared, boardFreed, boardReady, boardError};
+enum SetupStateT {boardReset,boardCleared,boardFreed,boardReady};
 
 // info for all channels
 struct ChannelInfo
@@ -102,8 +102,7 @@ public:
 	int32 maxRetries();
 	double timeout();
 	GCFPortInterface& boardPort(int32 boardnr);
-	int32 port2Board(GCFPortInterface* port);
-		
+
 	uint32 getChStatus(int32 channelnr);
 	char getChState(int32 channelnr);
 	bool isChSelected(int32 channelnr);
@@ -133,6 +132,7 @@ public:
 	void setActiveBoardsMask (uint32 activeboardsmask);
 	void setActiveBoard (int32 boardnr);
 	void resetActiveBoard (int32 boardnr);
+	
 
 	void setChSelected(int32 channelnr, bool selected);
 	void setChStatus(int32 channelnr, uint32 status);

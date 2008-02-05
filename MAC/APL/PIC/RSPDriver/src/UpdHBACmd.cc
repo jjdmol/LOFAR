@@ -85,7 +85,7 @@ void UpdHBACmd::complete(CacheBuffer& cache)
 
   ack.timestamp = getTimestamp();
   ack.status 	  = SUCCESS;
-  ack.handle 	  = (memptr_t)this; // opaque ptr used to refer to the subscr.
+  ack.handle 	  = (uint32)this; // opaque ptr used to refer to the subscr.
 
   // Allocate room in subbands array
   ack.settings().resize(m_event->rcumask.count(), MEPHeader::N_HBA_DELAYS);

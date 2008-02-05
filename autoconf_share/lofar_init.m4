@@ -44,7 +44,6 @@
 #  lofar_gcc_major   major version of gcc compiler
 #  lofar_have_libg2c 1 = libg2c is available
 #  lofar_shared_ext  the extension name of a shared library (so, sl, dylib)
-#  lofar_libdirext   lib or lib64 depending on enable_lib64 setting
 #  lofar_no_rpath    1 = rpath cannot be used when linking
 #  LOFAR_DEPEND      all lofar libraries this package is dependent on
 #
@@ -92,11 +91,6 @@ AC_ARG_WITH(lofar-libdir,
   [  --with-lofar-libdir=PFX   specific tree for lofar libraries],
   [lofar_root_libdir="$withval"])
 
-AC_ARG_ENABLE(lib64,
-	[  --enable-lib64          use lib or lib64 (default is system dependent)],
-	[enable_lib64="$enableval"],
-	[enable_lib64="default"])dnl
-
 [
   # Determine the shared library extension.
   lofar_shared_ext=so
@@ -107,25 +101,11 @@ AC_ARG_ENABLE(lib64,
 
   # Determine if -rpath cannot be given.
   lofar_no_rpath=0
-  if test -n "$CATAMOUNT_DIR"; then
-    lofar_no_rpath=1       # Cray XT
-  else
-    case `uname -s` in
-      Darwin*) lofar_no_rpath=1;;
-    esac
-  fi
+  case `uname -s` in
+    Darwin*) lofar_no_rpath=1;;
+    Cray*) lofar_no_rpath=1;;
+  esac
 
-  # Determine if lib64 has to be used.
-  lofar_libdirext=lib
-  if [ "$enable_lib64" = "yes" ]; then
-    lofar_libdirext=lib64
-  elif [ "$enable_lib64" = "default" ]; then
-    if test "`uname -m`" = "x86_64"; then
-      lofar_libdirext=lib64
-    fi
-  fi
-
-  # Handle lofar root
   LOFARROOT=$prefix  
   if test "$with_lofar" != ""  -a  "$with_lofar" != "no"  -a \
           "$with_lofar" != "yes"; then
@@ -179,7 +159,7 @@ AC_ARG_ENABLE(lib64,
   case "$lfr_curvar1" in
   */*)
     # root = something/build/variant
-    lfr_curroot=`pwd | sed -e "s%/build/.*%/build/$lfr_curvar%"`
+    lfr_curroot=`pwd | sed -e "s%/build/.*%/build/$lfr_curvar%"`;
     ;;
   *)
     # root = something
@@ -293,7 +273,7 @@ AC_ARG_ENABLE(lib64,
     *_*)
       ;;
     *)
-      lofar_variant=${lofar_compiler}_$lofar_variant
+      lofar_variant=${lofar_compiler}_$lofar_variant;
       ;;
     esac
   fi
@@ -307,32 +287,40 @@ AC_ARG_ENABLE(lib64,
   else
     case "$lofar_root" in
     ~*)
-      lofar_root=`echo $lofar_root | sed -e "s%~%$HOME%"`
+      lofar_root=`echo $lofar_root | sed -e "s%~%$HOME%"`;
       ;;
     */*)
       ;;
     ?*)
-      lofar_root=/data/LOFAR/installed/$lofar_root/$lofar_variant
+      lofar_root=/data/LOFAR/installed/$lofar_root/$lofar_variant;
       ;;
     esac
   fi
   LOFARROOT=$lofar_root
   if test "x$lfr_libdir" = "x"; then
-    lfr_libdir=$lofar_root/$lofar_libdirext;
+    lfr_libdir=$lofar_root/lib;
   fi
   if test "x$lofar_root_libdir" = "x"; then
     lofar_root_libdir=$lfr_libdir;
   fi
 
-  # Create the pkgext files to remember configure settings.
+  # Create pkginc (used by lofar_package.m4) if not existing yet.
+  # Create a symlink to the source directory of the package being configured.
+  # Do the same for the build directory (for files created from e.g. idl).
+  if [ ! -d pkginc ]; then
+    mkdir pkginc;
+  fi
+  lfr_srcdir=`cd $srcdir && pwd`;
+  lfr_pkg=`basename $lfr_srcdir`;
+  \rm -f pkginc/$lfr_pkg;
+  ln -s $lfr_srcdir/src pkginc/$lfr_pkg;
+  if [ ! -d pkgbldinc ]; then
+    mkdir pkgbldinc;
+  fi
+  \rm -f pkgbldinc/$lfr_pkg;
+  ln -s $lfr_curwd/src pkgbldinc/$lfr_pkg;
   \rm -f pkgext*
   touch pkgext pkgextcppflags pkgextcxxflags pkgextldflags pkgextobjs
-
-  # Create a symlink from the buld directory to srcdir/src in case
-  # header files are in src instead of include/PACKAGE.
-  # Note that the build directory is part of the -I path.
-  \rm -f ${PACKAGE}
-  ln -s $srcdir/src ${PACKAGE}
 
   # We have to deal with creating a file lofar_config.h which is the
   # common include file to be used in LOFAR software.
@@ -350,7 +338,7 @@ AC_ARG_ENABLE(lib64,
   # 1. An #endif has to be inserted at the end.
   # 2. If the new lofar_config.h file is the same as the old one,
   #    the old one should be used to avoid recompilations.
-  # Both problems are tackled in lofar_init and lofar_package by
+  # Both problems are tackled in lofar_int and lofar_package by
   # having a lofar_config.old-h for the old lofar_config.h file
   # and a lofar_config.h-pkg to be added to.
 
@@ -370,9 +358,9 @@ AC_ARG_ENABLE(lib64,
   echo "#include <config.h>" >> lofar_config.h-pkg
   echo "#endif" >> lofar_config.h-pkg
   echo "" >> lofar_config.h-pkg
-  # PACKAGE is the package name which is defined by the auto tools.
   # Define a line for the package being configured.
-  lfr_upkg=`echo $PACKAGE | tr a-z A-Z`
+  # Strip after a -, which is added by make distcheck.
+  lfr_upkg=`echo $lfr_pkg | sed -e "s/-.*//" | tr a-z A-Z`
   echo "#define HAVE_LOFAR_$lfr_upkg 1" >> lofar_config.h-pkg
   echo "" >> lofar_config.h-pkg;
   # Define the package also for the lofarlogger.
@@ -390,81 +378,47 @@ AC_ARG_ENABLE(lib64,
     cp -p lofar_config.old-h lofar_config.h
   fi
 
-  # Similarly files FillPackage__VersionInc/Func.h are created to contain
-  # the body of the fillInfo function.
-  # It is included in Package__Version.cc created by the makeversion script.
-  touch FillPackage__VersionInc.old-h
-  if [ -f FillPackage__VersionInc.h ]; then
-    mv FillPackage__VersionInc.h FillPackage__VersionInc.old-h
-  fi
-  # Create the FillPackage__VersionInc.h file.
-  \rm -f FillPackage__VersionInc.h*
-  echo "/* Generated by lofar_init.m4 */" >> FillPackage__VersionInc.h
-  echo "" >> FillPackage__VersionInc.h
-  # If the current FillPackage__VersionInc.h is the same as the old one,
-  # copy the old one back, while preserving creation date and time.
-  diff FillPackage__VersionInc.h FillPackage__VersionInc.old-h > /dev/null 2>&1
-  if [ $? = 0 ]; then
-    cp -p FillPackage__VersionInc.old-h FillPackage__VersionInc.h
-  fi
-
-  touch FillPackage__VersionFunc.old-h
-  if [ -f FillPackage__VersionFunc.h ]; then
-    mv FillPackage__VersionFunc.h FillPackage__VersionFunc.old-h
-  fi
-  # Create the FillPackage__VersionFunc.h file.
-  \rm -f FillPackage__VersionFunc.h*
-  cat > FillPackage__VersionFunc.h-pkg <<EOF
-/* Generated by lofar_init.m4 */
-
-namespace LOFAR {
-  std::string ${PACKAGE}Version::getBuildTime()
-    { return "`date`"; }
-  std::string ${PACKAGE}Version::getBuildUser()
-    { return "`whoami`"; }
-  std::string ${PACKAGE}Version::getBuildMachine()
-    { return "`uname -n`"; }
-
-  void ${PACKAGE}Version::fillInfo
-                        (int level, std::vector<Version::PkgInfo>& vec)
-  {
-    // Add info of this package if needed.
-    vec.push_back (Version::PkgInfo(level, &getInfo));
-    // Add info of packages being used.
-EOF
-  # Do the finalization (in case no lofar_internal is used).
-  cp FillPackage__VersionFunc.h-pkg FillPackage__VersionFunc.h
-  echo '  }' >> FillPackage__VersionFunc.h
-  echo '}' >> FillPackage__VersionFunc.h
-  # If the current FillPackage__VersionFunc.h is the same as the old one,
-  # copy the old one back, while preserving creation date and time.
-  diff FillPackage__VersionFunc.h FillPackage__VersionFunc.old-h > /dev/null 2>&1
-  if [ $? = 0 ]; then
-    cp -p FillPackage__VersionFunc.old-h FillPackage__VersionFunc.h
-  fi
-
   # Use absolute path (make distcheck sets srcdir to ..).
   srcdirx=`cd $srcdir && pwd`
-  CPPFLAGS="$CPPFLAGS -I$lfr_curwd -I$srcdirx/include"
+  CPPFLAGS="$CPPFLAGS -I$lfr_curwd/pkginc -I$lfr_curwd/pkgbldinc -I$lfr_curwd -I$srcdirx/include"
   LOFAR_DEPEND=
+]
+AC_CHECK_FILE([$lofar_root],
+			[lfr_root=yes],
+			[lfr_root=no])
+  [if test $lfr_root = no; then]
+    AC_MSG_WARN([Could not find LOFAR in $lofar_root])
+  [fi
 
   case $lofar_root_libdir in
   */build/*)
-    lfr_find=$lofar_root_libdir/LCS/Common
-    lofar_root_libdir="$lofar_root_libdir/<package>"
+    lfr_find=$lofar_root_libdir/LCS/Common;
+    lofar_root_libdir="$lofar_root_libdir/<package>";
     ;;
   *)
-    lfr_find=$lofar_root_libdir/LCS/Common/build/$lofar_variant
-    lofar_root_libdir="$lofar_root_libdir/<package>/build/$lofar_variant"
+    lfr_find=$lofar_root_libdir/LCS/Common/build/$lofar_variant;
+    lofar_root_libdir="$lofar_root_libdir/<package>/build/$lofar_variant";
     ;;
   esac
 
 ]
-  # Make sure that, if needed, libraries are installed in lib64.
-  if test "$libdir" = '${exec_prefix}/lib'; then
-    libdir='${exec_prefix}/'$lofar_libdirext
-    AC_SUBST(libdir,"$libdir")
+AC_CHECK_FILE([$lfr_find], [lfr_var=yes], [lfr_var=no])
+  [if test $lfr_var = no; then]
+    AC_MSG_WARN([Could not find libdir $lfr_find]);
+    [
+    lofar_root_libdir="/home/lofar/stable/LOFAR/<package>/build/${lofar_compiler}_opt";
+    ]
+    AC_MSG_WARN([   set to /home/lofar/stable/LOFAR/${lofar_compiler}_opt])
+  [fi]
+
+  # Make sure that libraries are installed in lib64 on x86_64 architectures.
+  if test "`arch`" == "x86_64"; then
+    if test "$libdir" = '${exec_prefix}/lib'; then
+      libdir='${exec_prefix}/lib64'
+      AC_SUBST(libdir, "$libdir")
+    fi
   fi
+
 
   AC_SUBST(lofar_root)
   AC_SUBST(lofar_root_libdir)

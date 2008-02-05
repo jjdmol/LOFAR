@@ -40,20 +40,18 @@ static const uint32	LB_POWER_MASK		= 0x00004000;
 static const uint32	HB_POWER_MASK		= 0x00008000;
 static const uint32	ADC_POWER_MASK		= 0x00010000;
 static const uint32	USE_LBH_MASK		= 0x00020000;
-static const uint32	LB_FILTER_MASK		= 0x00040000;
-static const uint32	LB_FILTER_OFFSET	= 18;
+static const uint32	LB_FILTER_MASK		= 0x00060000;
+static const uint32	LB_FILTER_OFFSET	= 17;
 static const uint32	ATT_MASK			= 0x00F80000;
 static const uint32	ATT_OFFSET			= 19;
 
 
 // NOTE: THESE CONSTANTS SHOULD BE SOMEWHERE AT A GLOBAL PLACE
-static const uint32	NR_SUBRACKS_PER_CABINET	 = 2;
-static const uint32	NR_RSPBOARDS_PER_SUBRACK = 4;
-static const uint32	NR_TBBOARDS_PER_RSPBOARD = 2;
-static const uint32	NR_RCUS_PER_RSPBOARD	 = 8;
-static const uint32	NR_RCUS_PER_TBBOARD		 = (NR_TBBOARDS_PER_RSPBOARD * NR_RCUS_PER_RSPBOARD);
-static const uint32	NR_RCUS_PER_SUBRACK		 = (NR_RCUS_PER_RSPBOARD * NR_RSPBOARDS_PER_SUBRACK);
-static const uint32	NR_RCUS_PER_CABINET		 = (NR_RCUS_PER_SUBRACK  * NR_SUBRACKS_PER_CABINET);
+static const uint32	NR_SUBRACKS_PER_CABINET	= 2;
+static const uint32	NR_RSPBOARDS_PER_SUBRACK= 4;
+static const uint32	NR_RCUS_PER_RSPBOARD	= 8;
+static const uint32	NR_RCUS_PER_SUBRACK		= (NR_RCUS_PER_RSPBOARD * NR_RSPBOARDS_PER_SUBRACK);
+static const uint32	NR_RCUS_PER_CABINET		= (NR_RCUS_PER_SUBRACK  * NR_SUBRACKS_PER_CABINET);
 
 #define PN_RSP_AP_VERSION_MASK		"AP%d.version"
 

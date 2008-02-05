@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,437 199 1007 801 N "_3DFace" 1
+PANEL,489 117 1007 801 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -36,7 +36,7 @@ PANEL,437 199 1007 801 N "_3DFace" 1
 		                           		 baseDP + \".beamletList:_online.._value\",
 		                           		 baseDP + \".bandFilter:_online.._value\",
 		                           		 baseDP + \".nyquistzone:_online.._value\",
-		                           		 baseDP + \".antennaArray:_online.._value\",
+		                           		 baseDP + \".antenneArray:_online.._value\",
 		                           		 baseDP + \".receiverList:_online.._value\",
 		                           		 baseDP + \".sampleClock:_online.._value\",
 		                           		 baseDP + \".measurementSet:_online.._value\",
@@ -59,7 +59,7 @@ updateObservation( string dp1, int state,
                    string dp10, string beamletList,
                    string dp11, string bandFilter,
                    string dp12, int nyquistZone,
-                   string dp13, string antennaArray,
+                   string dp13, string antenneArray,
                    string dp14, string receiverList,
                    string dp15, string sampleClock,
                    string dp16, string measurementSet,
@@ -83,7 +83,7 @@ updateObservation( string dp1, int state,
 	setObsTableValue(\"beamletList\",beamletList); // Contents
 	setObsTableValue(\"bandFilter\",bandFilter); // Contents
 	setObsTableValue(\"nyquistZone\",nyquistZone); // Contents
-	setObsTableValue(\"antennaArray\",antennaArray); // Contents
+	setObsTableValue(\"antenneArray\",antenneArray); // Contents
 	setObsTableValue(\"receiverList\",receiverList); // Contents
 	setObsTableValue(\"sampleClock\",sampleClock); // Contents
 	setObsTableValue(\"measurementSet\",measurementSet); // Contents
@@ -120,7 +120,7 @@ initTable() {
   ObservationTable.cellBackCol(\"_3DFace\");
   ObservationTable.appendLine(\"Property\",\"nyquistZone\");
   ObservationTable.cellBackCol(\"_3DFace\");
-  ObservationTable.appendLine(\"Property\",\"antennaArray\");
+  ObservationTable.appendLine(\"Property\",\"antenneArray\");
   ObservationTable.cellBackCol(\"_3DFace\");
   ObservationTable.appendLine(\"Property\",\"receiverList\");
   ObservationTable.cellBackCol(\"_3DFace\");

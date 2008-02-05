@@ -22,19 +22,11 @@
 #
 #  $Id$
 
-if test $# != 1 -a $# != 2; then
-  echo usage: bootstrap autoconf_share_dir [makevers]
+
+if test $# != 1; then
+  echo usage: bootstrap autoconf_share_dir
   exit 1
 fi
-
-# The makevers argument passes an argument to makeversion.
-# The default is 0 (meaning create .h/.cc file if needed,
-# but do not change the files Makefile.am.
-makevers=0
-if test $# = 2; then
-  makevers=$2
-fi
-
 
 echo "Bootstrapping in `pwd`"
 
@@ -91,7 +83,6 @@ if [ -r configure.in ]; then
   fi
   set -x
   aclocal -I ./autoconf_share \
-  && autoconf_share/makeversion $makevers \
   && $libtoolcmd --force --copy \
   && autoheader \
   && automake --foreign --add-missing --copy \

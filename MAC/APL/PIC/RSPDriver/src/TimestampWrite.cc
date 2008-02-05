@@ -56,7 +56,7 @@ void TimestampWrite::sendrequest()
   // RSP uses it on CEP output
   // BLP's use it on TBB data output via the backplane
   ts.hdr.set(MEPHeader::RSR_TIMESTAMP_HDR, MEPHeader::DST_ALL, MEPHeader::WRITE);
-  ts.timestamp = m_scheduler.getCurrentTime().sec() + 1;
+  ts.timestamp = m_scheduler.getCurrentTime().sec();
   
   m_hdr = ts.hdr;
   getBoardPort().send(ts);

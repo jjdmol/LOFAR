@@ -51,35 +51,18 @@ namespace LOFAR
       Composite comp(0, 0, "topComposite");
       setComposite(comp); // tell the ApplicationHolder this is the top-level composite
 
-      itsCS1PS = new CS1_Parset(&itsParamSet);
-      
-      
-      int nrSubbands = itsCS1PS->nrSubbands();
-      
-      
-      uint nrSubbandsPerPset = itsCS1PS->nrSubbandsPerPset();
-      uint nrPsetsPerStorage = itsParamSet.getUint32("OLAP.psetsPerStorage");
-      uint nrWriters = nrSubbands / nrSubbandsPerPset / nrPsetsPerStorage;
-      ASSERT(nrSubbands % nrSubbandsPerPset == 0);
-      ASSERT(nrSubbands / nrSubbandsPerPset % nrPsetsPerStorage == 0);
-      LOG_TRACE_VAR_STR("Creating " << nrWriters << " subband writers ...");
-      
-      for (unsigned nw = 0; nw < nrWriters; ++nw)
-      {
-        vector<uint> sbIDs(nrSubbandsPerPset * nrPsetsPerStorage);
-	for (uint i = 0; i < nrSubbandsPerPset * nrPsetsPerStorage; ++i) {
-          sbIDs[i] = nrSubbandsPerPset * nrPsetsPerStorage * nw + i;     
-	  LOG_TRACE_LOOP_STR("Writer " << nw << ": sbIDs[" << i << "] = " 
-                             << sbIDs[i]);
-        }
+      int nrSubbands = itsParamSet.getInt32("Observation.NSubbands");
 
-        WH_SubbandWriter wh("storage1", sbIDs, itsCS1PS);
+      for (int subb=0; subb< nrSubbands; subb++)
+      {
+	vector<uint> subbands; subbands.push_back(subb);
+        WH_SubbandWriter wh("storage1", subbands, itsParamSet);
         Step step(wh);
         comp.addBlock(step);
       
         for (int nr=0; nr < step.getNrInputs(); nr++)
         {
-          DH_Visibilities* inDH = new DH_Visibilities("in_"+nr, itsCS1PS);
+          DH_Visibilities* inDH = new DH_Visibilities("in_"+nr, itsParamSet);
           itsInDHs.push_back(inDH);
 
           Connection* inConn = new Connection("in_"+nr, 
@@ -98,9 +81,9 @@ namespace LOFAR
     }
   
     void AH_TestStorage::setTestPattern(DH_Visibilities &dh, int factor) {
-      unsigned nrPolarizations = itsCS1PS->getUint32("Observation.nrPolarisations");
-      unsigned nrChannels      = itsCS1PS->nrChannelsPerSubband();
-      unsigned nrStations      = itsCS1PS->nrStations();
+      unsigned nrPolarizations = itsParamSet.getUint32("Observation.NPolarisations");
+      unsigned nrChannels      = itsParamSet.getUint32("Observation.NChannels");
+      unsigned nrStations      = itsParamSet.getUint32("Observation.NStations");
       unsigned nrBaselines     = (nrStations + 1) * nrStations / 2;
 
       for (unsigned bl = 0; bl < nrBaselines; bl++) {
@@ -158,7 +141,6 @@ namespace LOFAR
       }
       itsInDHs.clear();
       itsInConns.clear();
-      delete itsCS1PS; itsCS1PS = 0;
     }  
 
     void AH_TestStorage::quit() {

@@ -1,12 +1,9 @@
 APLCommon
-APLProtocol
+RTCCommon
 CEPCU
 CUDaemons
-CURTDBDaemons
 MainCU
-PAC
-PIC
-RTCCommon
-RTDBCommon
 StationCU
 TestCtlr
+PIC
+PAC

@@ -1,16 +1,17 @@
-pkginclude_HEADERS = Package__Version.h  \
-	BGL_Command.h \
-	BGL_Configuration.h \
-	BGL_Mapping.h \
+pkginclude_HEADERS = \
 	CS1_Config.h \
-	CS1_Parset.h \
+	bitset.h \
 	DH_Delay.h \
+	DH_RFI_Mitigation.h \
+	DH_RSP.h \
+	DH_RSPSync.h \
+	DH_Subband.h \
 	DH_Visibilities.h \
-	ION_to_CN.h \
-	PrintVector.h \
 	RSPTimeStamp.h \
 	SparseSet.h \
 	Stub_BGL.h \
-	Stub_Delay.h
+	Stub_Delay.h \
+	CS1_Parset.h \
+	Stub_RSP.h
 
 include $(top_srcdir)/Makefile.common

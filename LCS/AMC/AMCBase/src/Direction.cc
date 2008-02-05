@@ -117,8 +117,10 @@ namespace LOFAR
 
     double Direction::operator*(const Position& that)
     {
-      if (itsType != ITRF) {
-        THROW (TypeException, "Direction type must be ITRF");
+      // Here we must convert the type to string before comparing, because
+      // we're comparing Direction::Types with Position::Types.
+      if (showType() != that.showType()) {
+        THROW (TypeException, showType() << " != " << that.showType());
       }
       return itsCoord * that.coord();
     }

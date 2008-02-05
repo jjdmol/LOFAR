@@ -92,14 +92,6 @@ Observation::Observation(ParameterSet*		aParSet) :
 		beamlets = blParset.getInt16Vector("x");
 	}
 
-	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
-		string stString("x=" + APLUtilities::expandedArrayString(
-											aParSet->getString(prefix+"VirtualInstrument.stationList")));
-		ParameterSet	stParset;
-		stParset.adoptBuffer(stString);
-		stations = stParset.getStringVector("x");
-	}
-
 	if (aParSet->isDefined(prefix+"bandFilter")) {
 		filter = aParSet->getString(prefix+"bandFilter");
 	}

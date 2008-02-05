@@ -23,8 +23,6 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#if defined HAVE_APS
-
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
@@ -38,9 +36,8 @@
 
 
 namespace LOFAR {
-namespace CS1 {
-
-using namespace ACC::APS;
+	using namespace ACC::APS;
+	namespace CS1 {
 
 CS1_Parset::CS1_Parset() :
 	name()
@@ -138,14 +135,6 @@ vector<string> CS1_Parset::getPortsOf(const string& aKey) const
   return pParset.getStringVector("ports");
 }
 
-int CS1_Parset::findIndex(uint32 pset, const vector<uint32> &psets)
-{
-  unsigned index = std::find(psets.begin(), psets.end(), pset) - psets.begin();
-
-  return index != psets.size() ? (int) index : -1;
-}
-
-
 //
 // expandedArrayString(string)
 //
@@ -240,9 +229,5 @@ string CS1_Parset::expandedArrayString(const string& orgStr) const
 	return (result+"]");
 }
 
-
-
-} // namespace CS1
+  } // namespace CS1
 } // namespace LOFAR
-
-#endif // defined HAVE_APS

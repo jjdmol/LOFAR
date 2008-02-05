@@ -50,7 +50,7 @@
 #include <Blob/BlobStreamable.h>
 
 #include <Common/LofarLogger.h>
-#include <BBSControl/StreamUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/Timer.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_smartptr.h>
@@ -173,8 +173,8 @@ namespace BBS
                 {
                 if(!itsCommandQueue->isNewRun(false))
                 {
-                    LOG_ERROR("Need to recover from an aborted run, but "
-                        "recovery has not yet been implemented.");
+                    LOG_ERROR("Need to recover from an aborted run, but \
+                        recovery has not yet been implemented.");
                     return false;
                 }
 
@@ -245,8 +245,8 @@ namespace BBS
 
             default:
                 {
-                THROW(LocalControlException, "Unknown state identifier "
-                    "encountered");
+                THROW(LocalControlException, "Unknown state identifier \
+                    encountered");
                 }
         }
 

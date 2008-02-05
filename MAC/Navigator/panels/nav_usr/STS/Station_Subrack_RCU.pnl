@@ -1,192 +1,74 @@
 V 10
 1
 LANG:1 19 station_subrack_rcu
-PANEL,381 122 794 749 N "_3DFace" 1
+PANEL,490 117 794 749 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-  checkDpType($datapoint,\"RCU\");
+  navViewCheckDpType($datapoint,\"RCU\");
   string RcuNumber = substr($datapoint, strlen($datapoint)-1, strlen($datapoint));
-
-
-  // connect for selfUpdates
-  showSelfState($datapoint);
-
- 
-  if (dpExists($datapoint + \".InputEnable:_online.._value\"))
+  if (dpAccessable($datapoint + \".VddVccEn:_online.._value\") &&
+      dpAccessable($datapoint + \".nofOverflow:_online.._value\"))
 	{
-	  dpConnect(\"ShowInputLines\", $datapoint + \".InputEnable:_online.._value\",
-	                              $datapoint + \".InputEnable:_online.._invalid\");
-  }
-  
-  if (dpExists($datapoint + \".Delay:_online.._value\"))
-	{
-	  dpConnect(\"ShowDelay\", $datapoint + \".Delay:_online.._value\",
-	                         $datapoint + \".Delay:_online.._invalid\");
-  }
-
-  if (dpExists($datapoint + \".VddVccEnable:_online.._value\") &&
-      dpExists($datapoint + \".nofOverflow:_online.._value\"))
-	{
-	  setValue(\"txt_component\", \"text\", \"ADC\");
-	  dpConnect(\"ControlOverflow\", $datapoint + \".VddVccEnable:_online.._value\",
-	  													   $datapoint + \".nofOverflow:_online.._value\",
-	                               $datapoint + \".VddVccEnable:_online.._invalid\");
+	  dpConnect(\"ShownofOverflows\", $datapoint + \".VddVccEn:_online.._value\",
+	                                $datapoint + \".nofOverflow:_online.._value\",
+	                                $datapoint + \".nofOverflow:_online.._invalid\");
   }
   else
   {
     setValue(\"rect_overflow\", \"backCol\", \"_dpdoesnotexist\");
     setValue(\"txt_overflow\" , \"visible\", FALSE);    
   }
+
+  // connect for childUpdates
+  showChildState($datapoint);
+  // connect for selfUpdates
+  showSelfState($datapoint);
+
+
 }
 
-ControlOverflow(string dp1, bool Status,
-                string dp2, unsigned nofOverflow,
-                string dp3, bool invalid)
+ShownofOverflows(string dp1, bool Status,
+                 string dp2, unsigned nofOverflow,
+                 string dp3, bool invalid)
 {
-
-	string SymbolCol; 
   if(!invalid)
   {
-    if (Status==TRUE)
+    setValue(\"txt_overflow\", \"text\", nofOverflow );
+    setValue(\"txt_overflow\" , \"visible\", TRUE);
+    if(Status)
     {
-      SymbolCol=\"Lofar_operational\";
-      setValue(\"txt_overflow\", \"text\", nofOverflow );
-      setValue(\"txt_overflow\" , \"visible\", TRUE);
+      //setValue(\"rect_overflow\", \"backCol\", \"Lofar_operational\");
     }
     else 
     {
-      SymbolCol=\"Lofar_off\";
-      setValue(\"txt_overflow\" , \"visible\", FALSE);
+      //setValue(\"rect_overflow\", \"backCol\", \"Lofar_suspicious\");
     }
   }
   else
   {
-    SymbolCol=\"Lofar_invalid\";
+    //setValue(\"rect_overflow\", \"backCol\", \"Lofar_invalid\");
     setValue(\"txt_overflow\" , \"visible\", FALSE);
   }
 }
 
-
-ShowInputLines(string dp1, bool inputEnable,
-               string dp2, bool invalid)
-{
-  if(!invalid)
-  {
- 		InputEnable=inputEnable;
-
-		if(inputEnable)		
-   	{ 
-   		setValue(\"line_inputOn\"  , \"visible\"    , TRUE);
-   		setValue(\"line_inputOff\" , \"visible\"    , FALSE);
-   	} else {
-   		setValue(\"line_inputOn\"  , \"visible\"    , FALSE);
-   		setValue(\"line_inputOff\" , \"visible\"    , TRUE);
-   	}
-	}
-  else
-  {
-    setValue(\"line_inputOn\"  , \"visible\", FALSE);
-    setValue(\"line_inputOff\" , \"visible\", TRUE);
+navViewCheckDpType(string aDp, string aCheckType){
+  //DebugN(aCheckType);
+  //DebugN(dpTypeName($datapoint));
+  if (aCheckType != dpTypeName($datapoint)){
+    ChildPanelOnCentralModal(\"objects/nav_fw/warning_wrong_datatype.pnl\",
+		                         \"WRONG datapointtype\",
+		                         makeDynString(\"$datapointType:\" + aCheckType,
+		                                       \"$typeName:\" +dpTypeName($datapoint)));
+   
   }
-  checkDataPath();
- 
 }
-
-ShowDelay(string dp1, unsigned delayVal,
-          string dp2, bool invalid)
-{
-  if(!invalid)
-  {
- 		setValue(\"txt_delay\" , \"text\" , delayVal);
-	}
-  else
-  {
- 		setValue(\"txt_delay\" , \"text\" , \"?????\");
-  }
- 
-}
-
 
 " 0
 EE E E 1 -1 -1 0  130 290
 "" 0 1
 E"#uses \"nav_usr/STS/STS-functions.ctl\"
-
-
-
-
-
-void defineStateAntenna(string anAnt)
-{
-	string anAntDp = $datapoint + \".\" + anAnt;
-	
-  if (dpExists(anAntDp ))
-	{
-	  dpConnect(\"setStateAntenna\", anAntDp + \":_online.._value\",
-	                               anAntDp + \":_online.._invalid\");
-  }
-  else
-  {
-    setValue(\"\", \"backCol\", \"_dpdoesnotexist\");
-  }
-	
-}
-
-void setStateAntenna(string dp1, bool enabled,
-                string dp2, bool invalid)
-{
-  if(!invalid)
-  {
-    if (enabled) {
-      
-  	  setValue(\"\", \"backCol\",\"Lofar_operational\");
-  	  if (strpos(dp1,\"LBLEnable\") > -1)  {
-  	    LBLEnable=TRUE;
-    	  setValue(\"line1_lblpath\" , \"foreCol\" , \"Lofar_operational\");
-      	setValue(\"line2_lblpath\" , \"foreCol\" , \"Lofar_operational\");
-      } else if (strpos(dp1,\"LBHEnable\") > -1) {
-        LBHEnable=TRUE;
-      	setValue(\"line1_lbhpath\" , \"foreCol\" , \"Lofar_operational\");
-      	setValue(\"line2_lbhpath\" , \"foreCol\" , \"Lofar_operational\");
-      } else if (strpos(dp1,\"HBAEnable\") > -1) {
-        HBAEnable=TRUE;
-      	setValue(\"line1_hbapath\" , \"foreCol\" , \"Lofar_operational\");
-      }
-  	} else {
-  	  setValue(\"\", \"backCol\",\"Lofar_off\");
-  	  if (strpos(dp1,\"LBLEnable\") > -1)  {
-  	    LBLEnable=FALSE;
-  	    setValue(\"line1_lblpath\" , \"foreCol\" , \"Lofar_off\");
-        setValue(\"line2_lblpath\" , \"foreCol\" , \"Lofar_off\");
-      } else if (strpos(dp1,\"LBHEnable\") > -1) {
-        LBHEnable=FALSE;
-      	setValue(\"line1_lbhpath\" , \"foreCol\" , \"Lofar_off\");
-      	setValue(\"line2_lbhpath\" , \"foreCol\" , \"Lofar_off\");
-      } else if (strpos(dp1,\"HBAEnable\") > -1) {
-        HBAEnable=FALSE;
-      	setValue(\"line1_hbapath\" , \"foreCol\" , \"Lofar_off\");
-      }	
-  	}
-  }
-  else
-  {
-    setValue(\"\", \"backCol\", \"Lofar_invalid\");
- 	  if (strpos(dp1,\"LBLEnable\") > -1)  {
- 	    LBLEnable=FALSE;
- 	    setValue(\"line1_lblpath\" , \"foreCol\" , \"Lofar_off\");
-      setValue(\"line2_lblpath\" , \"foreCol\" , \"Lofar_off\");
-    } else if (strpos(dp1,\"LBHEnable\") > -1) {
-      LBHEnable=FALSE;
-    	setValue(\"line1_lbhpath\" , \"foreCol\" , \"Lofar_off\");
-     	setValue(\"line2_lbhpath\" , \"foreCol\" , \"Lofar_off\");
-    } else if (strpos(dp1,\"HBAEnable\") > -1) {
-      HBAEnable=FALSE;
-     	setValue(\"line1_hbapath\" , \"foreCol\" , \"Lofar_off\");
-    }	
-  }
-  checkDataPath();
-}
+//#uses \"nav_fw/gcfnav-view.ctl\"
 
 defineXYpolarization()
 {
@@ -222,7 +104,34 @@ defineXYpolarization()
     setValue(\"\", \"text\", \"Y\");
 }
 
-" 0
+defineStateAntenna(string anAnt)
+{
+	string anAntDp = $datapoint + \".\" + anAnt;
+	
+  if (dpAccessable(anAntDp + \".state\" ))
+	{
+	  dpConnect(\"setStateAntenna\", anAntDp + \".state:_online.._value\",
+	                               anAntDp + \".state:_online.._invalid\");
+  }
+  else
+  {
+    setValue(\"\", \"backCol\", \"_dpdoesnotexist\");
+  }
+	
+}
+
+setStateAntenna(string dp1, int state,
+                string dp2, bool invalid)
+{
+  if(!invalid)
+  {
+  	setValue(\"\", \"backCol\",getStateColor(state));
+  }
+  else
+  {
+    setValue(\"\", \"backCol\", \"Lofar_invalid\");
+  }
+}" 0
  2
 "CBRef""1"
 "EClose"E
@@ -232,54 +141,10 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-6 129
-"border1"
-""
-1 70 687 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
- E E
-48 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E U  1 E 70 110 770 690
-1 130 14 "" 0
-0
-1 131 14 "" 2
-0
-1 132 14 "" 3
-0
-1 133 44 "" 0
-0
-1 134 44 "" 2
-0
-1 135 44 "" 3
-0
-4 658
-"line1_lba"
-""
-1 251 180 E E E 1 E 1 E N "Lofar_off" E N {255,255,255} E E
- E E
-207 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  251 379 251 180
-1 659 15 "" 0
-0
-1 660 15 "" 2
-0
-1 661 15 "" 3
-0
 4 593
-"line3_path"
+"Line2"
 ""
-1 430 620 E E E 1 E 1 E N "Lofar_off" E N {255,255,255} E E
+1 430 665 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  E E
 192 0 0 0 0 0
 EE E
@@ -288,7 +153,20 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  430 720 430 620
+E E 0 2 1 0 1 E  430 718 430 665
+6 129
+"childStateBorder"
+""
+1 70 663 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E U  1 E 70 100 660 665
 4 36
 "Line1"
 ""
@@ -305,7 +183,7 @@ E E 0 3 1 0 1 E  590 720 270 720
 4 122
 "line1_hbapath"
 ""
-1 520 90 E E E 1 E 1 E N "Lofar_off" E N "_Transparent" E E
+1 520 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 41 0 0 0 0 0
 EE E
@@ -314,7 +192,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  520 191 520 90
+E E 0 2 1 0 1 E  520 436 520 100
 2 183
 "txt_polarization_HBA"
 ""
@@ -339,13 +217,21 @@ LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,
 0 ""
 1
 LANG:1 1 x
-1 662 13 "" 0
+1 594 13 "" 0
 0
-1 663 13 "" 4
+1 595 13 "" 4
 0
-1 664 13 "" 6
+1 596 13 "" 5
 0
-1 665 13 "" 7
+1 597 13 "" 6
+0
+1 598 13 "" 7
+0
+1 600 15 "" 0
+0
+1 601 15 "" 2
+0
+1 602 15 "" 3
 0
 2 230
 "Text1"
@@ -391,6 +277,63 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 9 Backplane
+6 242
+"rect_overflow"
+""
+1 429 630 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
+ E E
+120 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+
+}" 0
+ E 0 1 1 0 1 E U  1 E 429 600 569 630
+2 244
+"Text5"
+""
+1 510 612 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+122 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 538 614 590 630
+0 2 0 "s" 0 0 0 193 0 0  538 614
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 overflows
+2 243
+"Text4"
+""
+1 524 597 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+121 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 538 599 562 615
+0 2 0 "s" 0 0 0 193 0 0  538 599
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 nr of
 2 278
 "txt_polarization_LBL"
 ""
@@ -415,18 +358,20 @@ LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,
 0 ""
 1
 LANG:1 1 x
-1 666 21 "" 0
+1 604 21 "" 0
 0
-1 667 21 "" 4
+1 605 21 "" 4
 0
-1 668 21 "" 6
+1 606 21 "" 5
 0
-1 669 21 "" 7
+1 607 21 "" 6
+0
+1 608 21 "" 7
 0
 4 289
 "line2_lblpath"
 ""
-1 160 150 E E E 1 E 1 E N "Lofar_off" E N "_Transparent" E E
+1 160 198 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 155 0 0 0 0 0
 EE E
@@ -435,11 +380,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  221 150 160 150
+E E 0 2 1 0 1 E  220 198 160 198
 4 290
 "line1_lbhpath"
 ""
-1 342 90 E E E 1 E 1 E N "Lofar_off" E N "_Transparent" E E
+1 342 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 156 0 0 0 0 0
 EE E
@@ -448,11 +393,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  342 150 342 90
+E E 0 2 1 0 1 E  342 198 342 100
 4 292
 "line2_lbhpath"
 ""
-1 281 150 E E E 1 E 1 E N "Lofar_off" E N "_Transparent" E E
+1 283 198 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 158 0 0 0 0 0
 EE E
@@ -461,11 +406,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  342 150 281 150
+E E 0 2 1 0 1 E  342 198 283 198
 4 293
 "line1_lblpath"
 ""
-1 160 90 E E E 1 E 1 E N "Lofar_off" E N "_Transparent" E E
+1 160 100 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 159 0 0 0 0 0
 EE E
@@ -474,7 +419,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  160 150 160 90
+E E 0 2 1 0 1 E  160 198 160 100
 2 297
 "txt_polarization_LBH"
 ""
@@ -499,6 +444,12 @@ LANG:1 96 -adobe-helvetica-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-13,0,0,0,
 0 ""
 1
 LANG:1 1 x
+1 610 17 "" 0
+0
+1 611 17 "" 2
+0
+1 612 17 "" 3
+0
 2 308
 "Text3"
 ""
@@ -559,19 +510,185 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 3 HBA
-1 670 22 "" 0
+1 614 18 "" 0
 0
-1 671 22 "" 1
+1 615 18 "" 2
 0
-1 672 22 "" 7
+1 616 18 "" 3
 0
-1 674 41 "" 224
+1 618 10 "" 0
 0
-1 675 41 "" 225
+1 619 10 "" 1
 0
-1 676 41 "" 72
+1 620 10 "" 3
 0
-1 678 43 "" 1
+1 621 10 "" 5
+0
+1 622 10 "" 6
+0
+1 624 23 "" 0
+0
+1 625 23 "" 2
+0
+1 626 23 "" 3
+0
+4 583
+"line1_lbapath"
+""
+1 251 278 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+191 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  251 435 251 278
+4 584
+"line2_lbapath"
+""
+1 251 435 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+192 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  400 435 251 435
+1 628 14 "" 0
+0
+1 629 14 "" 2
+0
+1 630 14 "" 3
+0
+1 632 22 "" 0
+0
+1 633 22 "" 1
+0
+1 634 22 "" 3
+0
+1 635 22 "" 5
+0
+1 636 22 "" 6
+0
+4 591
+"line2_hbapath"
+""
+1 460 435 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+192 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  460 435 520 435
+4 37
+"line_bckpl_2_sw"
+""
+1 430 658 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+6 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  430 665 430 515
+1 638 41 "" 224
+0
+1 639 41 "" 227
+0
+1 640 41 "" 225
+0
+1 641 41 "" 72
+0
+1 642 41 "" 228
+0
+4 638
+"Line3"
+""
+1 520 90 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+193 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  520 100 520 90
+4 639
+"Line4"
+""
+1 342 90 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+194 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  342 100 342 90
+4 640
+"Line5"
+""
+1 160 89 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+195 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  160 99 160 89
+1 643 16 "" 0
+0
+1 644 16 "" 2
+0
+1 645 16 "" 3
+0
+6 260
+"Border4"
+""
+1 423 625 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+135 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 423 605 506 625
+2 261
+"txt_overflow"
+""
+1 493 606 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+136 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 502 608 509 624
+0 2 0 "s" 0 0 0 194 0 0  502 608
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 0
+1 647 43 "" 1
 0
 7 648
 "stateLBL"
@@ -587,7 +704,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  defineStateAntenna(\"LBLEnable\");
+  defineStateAntenna(\"LBL\");
 }" 0
  E 0 1 1 0 1 E U  1 E 135 76 7 7
 7 649
@@ -604,7 +721,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  defineStateAntenna(\"LBHEnable\");
+  defineStateAntenna(\"LBH\");
 }" 0
  E 0 1 1 0 1 E U  1 E 316 76 7 7
 7 650
@@ -621,300 +738,29 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-  defineStateAntenna(\"HBAEnable\");
+  defineStateAntenna(\"HBA\");
 }" 0
  E 0 1 1 0 1 E U  1 E 493 76 7 7
-6 651
-"rect_delay"
-""
-1 350 660 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
- E E
-200 0 0 0 0 0
-EE E
+1 599 13 "" 1
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 350 630 520 660
-2 655
-"Text6"
-""
-1 358 634 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-204 0 0 0 0 0
-EE E
+1 603 15 "" 1
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 360 636 393 652
-0 2 0 "s" 0 0 0 192 0 0  360 636
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 5 Delay
-4 656
-"line_inputOff"
-""
-1 430 619 E E E 1 E 0 E N "_3DText" E N {255,255,255} E E
- E E
-205 0 0 0 0 0
-EE E
+1 609 21 "" 1
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  430 619 450 599
-4 657
-"line_inputOn"
-""
-1 430 620 E E E 1 E 0 E N "_3DText" E N {255,255,255} E E
- E E
-206 0 0 0 0 0
-EE E
+1 613 17 "" 1
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  430 620 430 590
-4 659
-"line2_lba"
-""
-1 400 380 E E E 1 E 1 E N "Lofar_off" E N {255,255,255} E E
- E E
-208 0 0 0 0 0
-EE E
+1 617 18 "" 1
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  400 380 250 380
-4 661
-"line1_hba"
-""
-1 520 190 E E E 1 E 1 E N "Lofar_off" E N {255,255,255} E E
- E E
-210 0 0 0 0 0
-EE E
+1 623 10 "" 2
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  520 379 520 190
-4 663
-"line2_hba"
-""
-1 460 380 E E E 1 E 1 E N "Lofar_off" E N {255,255,255} E E
- E E
-212 0 0 0 0 0
-EE E
+1 627 23 "" 1
 0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  460 380 521 380
-1 679 10 "" 0
+1 631 14 "" 1
 0
-1 680 10 "" 1
+1 637 22 "" 2
 0
-1 681 10 "" 7
+1 646 16 "" 1
 0
-4 664
-"line1_path"
-""
-1 430 411 E E E 1 E 1 E N "Lofar_off" E N {255,255,255} E E
- E E
-213 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  430 470 430 411
-4 665
-"line2_path"
-""
-1 430 470 E E E 1 E 1 E N "Lofar_off" E N {255,255,255} E E
- E E
-214 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  430 590 430 470
-6 686
-"rect_overflow"
-""
-1 361 532 E E E 1 E 1 E N {0,0,0} E N "_3DFace" E E
- E E
-215 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-"main()
-{
-
-}" 0
- E 0 1 1 0 1 E U  1 E 361 502 501 532
-2 687
-"Text5"
-""
-1 442 514 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-216 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 470 516 522 532
-0 2 0 "s" 0 0 0 193 0 0  470 516
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 9 overflows
-2 688
-"Text4"
-""
-1 456 499 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-217 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 470 501 494 517
-0 2 0 "s" 0 0 0 193 0 0  470 501
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 5 nr of
-1 689 45 "" 1
-0
-1 690 45 "" 2
-0
-1 691 45 "" 3
-0
-1 692 45 "" 4
-0
-1 693 45 "" 6
-0
-1 694 45 "" 30
-0
-1 699 46 "" 1
-0
-1 700 46 "" 2
-0
-1 701 46 "" 3
-0
-1 702 46 "" 4
-0
-1 703 46 "" 6
-0
-1 704 46 "" 30
-0
-1 705 46 "" 31
-0
-1 706 46 "" 32
-0
-1 707 46 "" 33
-0
-1 708 46 "" 34
-0
-1 709 46 "" 43
-0
-1 673 22 "" 9
-0
-1 677 41 "" 229
-0
-1 682 10 "" 8
-0
-1 695 45 "" 31
-0
-1 696 45 "" 32
-0
-1 697 45 "" 33
-0
-1 698 45 "" 34
-0
-1 710 46 "" 47
-0
-1 711 46 "" 48
-0
-1 712 46 "" 49
-0
-1 713 46 "" 50
-0
-1 714 46 "" 51
-0
-1 715 46 "" 52
-0
-1 716 46 "" 53
-0
-1 717 46 "" 54
-0
-1 718 46 "" 55
-0
-14 734
-"txt_overflow"
-""
-1 367 508 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
- E E
-221 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-365 506 439 529
-2 "9d" 9 0 0 2 0 0 
-E
-E
-E
-14 735
-"txt_delay"
-""
-1 408 636 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
- E E
-222 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-406 634 510 657
-2 "9d" 9 0 0 2 0 0 
-E
-E
-E
 0
 LAYER, 1 
 1
@@ -944,54 +790,66 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 14 ""
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 81 654 T 103 1 0 1  93 -433  
-3
-"$Caption""LBAReceiver"
-"$Component""VlEnable"
-"$datapoint""$datapoint"
-3 44 ""
-"objects\\nav_usr\\STS\\STS_ADC_Component.pnl" 273 516 T 200 1 0 1  27 -16  
-1
+3 13 ""
+"objects\\nav_usr\\STS\\STS_RCU_bandSelection.pnl" 475 403 T 102 1 0 1  -45 62  
+2
+"$Component""bandSelLBA_HBA"
 "$datapoint""$datapoint"
 3 15 "Group11"
-"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 350 T 104 1 0 1  383 -129  
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 350 T 104 1 0 1  401 46  
 3
 "$Caption""HBAReceiver"
 "$Component""VhEnable"
 "$datapoint""$datapoint"
-3 13 ""
-"objects\\nav_usr\\STS\\STS_RCU_bandSelection.pnl" 475 403 T 102 1 0 1  -45 7  
-2
-"$Component""bandSelLbaHba"
-"$datapoint""$datapoint"
 3 21 "Group13"
-"objects\\nav_usr\\STS\\STS_RCU_bandSelection.pnl" 400 485 T 153 1 0 1  -149 -306  
+"objects\\nav_usr\\STS\\STS_RCU_bandSelection.pnl" 400 485 T 153 1 0 1  -149 -257  
 2
-"$Component""bandSelLblLbh"
+"$Component""bandSelLBL_LBH"
+"$datapoint""$datapoint"
+3 17 "Group15"
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 285 T 106 1 0 1  41 -124  
+3
+"$Caption""LBLAmplifier"
+"$Component""LBLEnable"
+"$datapoint""$datapoint"
+3 18 "Group17"
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 60 100 T 107 1 0 1  401 61  
+3
+"$Caption""HBAAmplifier"
+"$Component""HBAEnable"
+"$datapoint""$datapoint"
+3 10 "HighBandFilter"
+"objects\\nav_usr\\STS\\STS_RCU_HB_Filter.pnl" 314 200 T 96 1 0 1  147 140  
+1
+"$datapoint""$datapoint"
+3 23 "Group11"
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 203 247 T 169 1 0 1  80 -86  
+3
+"$Caption""LBHAmplifier"
+"$Component""LBHEnable"
+"$datapoint""$datapoint"
+3 14 ""
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 81 654 T 103 1 0 1  111 -260  
+3
+"$Caption""LBAReceiver"
+"$Component""VlEnable"
 "$datapoint""$datapoint"
 3 22 "LowBandFilter"
-"objects\\nav_usr\\STS\\STS_RCU_LB_Filter.pnl" 190 350 T 161 1 0 1  0 -53  
+"objects\\nav_usr\\STS\\STS_RCU_LB_Filter.pnl" 190 350 T 161 1 0 1  3 -10  
 1
 "$datapoint""$datapoint"
 3 41 ""
-"objects\\nav_usr\\STS\\STS_Subrack_RCU_Attenuating.pnl" 224 553 T 188 1 0 1  231 -97  
+"objects\\nav_usr\\STS\\STS_Subrack_RCU_Attenuating.pnl" 224 553 T 188 1 0 1  232 14  
 1
+"$datapoint""$datapoint"
+3 16 "Group13"
+"objects\\nav_usr\\STS\\STS_RCU_Component.pnl" 330 350 T 105 1 0 1  -21 280  
+3
+"$Caption""AD-Convertor"
+"$Component""VddVccEn"
 "$datapoint""$datapoint"
 3 43 "selfState"
 "objects\\nav_usr\\CS1\\lofar_self_state.pnl" 25 171 T 196 1 0 1  55 469  
 1
-"$object""RCU"
-3 10 "HighBandFilter"
-"objects\\nav_usr\\STS\\STS_RCU_HB_Filter.pnl" 314 200 T 96 1 0 1  145 97  
-1
-"$datapoint""$datapoint"
-3 45 ""
-"objects\\nav_usr\\CS1\\RCU_TBBInfo.pnl" 164 436 T 220 1 0 1  -61 64  
-1
-"$datapoint""$datapoint"
-3 46 ""
-"objects\\nav_usr\\CS1\\RCU_TriggerInfo.pnl" 599 454 T 221 1 0 1  -43 46  
-1
-"$datapoint""$datapoint"
+"$object""Subrack"
 0

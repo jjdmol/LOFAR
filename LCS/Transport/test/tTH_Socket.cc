@@ -20,14 +20,6 @@
 //#
 //#  $Id$
 
-#ifdef USE_NOSOCKETS
-int main()
-{
-  return 3;
-}
-
-#else
-
 #include <lofar_config.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_iostream.h>
@@ -205,4 +197,3 @@ int main (int32 argc, char*	argv[]) {
 	return (result);
 }
 
-#endif

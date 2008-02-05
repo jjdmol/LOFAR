@@ -1,3 +1,5 @@
+INSTHDRS =
+
 pkgincludedir = $(includedir)/GCF
 pkginclude_HEADERS = \
 	GCF_PValue.h \
@@ -16,6 +18,16 @@ pkginclude_HEADERS = \
 	GCF_ServiceInfo.h \
 	Thread.h \
 	Mutex.h
+
+NOINSTHDRS =
+
+TCCHDRS = 
+
+nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 include $(top_srcdir)/Makefile.common
 

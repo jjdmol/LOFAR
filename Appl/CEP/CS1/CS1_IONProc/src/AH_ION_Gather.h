@@ -22,8 +22,8 @@
 #define LOFAR_CS1_ION_PROC_AH_ION_GATHER_H
 
 #include <CEPFrame/ApplicationHolder.h>
+#include <CS1_IONProc/WH_ION_Gather.h>
 #include <CS1_Interface/Stub_BGL.h>
-#include <WH_ION_Gather.h>
 
 
 namespace LOFAR {

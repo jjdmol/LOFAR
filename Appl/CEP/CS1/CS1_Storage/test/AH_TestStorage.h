@@ -24,7 +24,6 @@
 #define LOFAR_CS1_AH_TESTSTORAGE_H
 
 #include <CEPFrame/ApplicationHolder.h>
-#include <CS1_Interface/CS1_Parset.h>
 
 namespace LOFAR
 {
@@ -54,7 +53,6 @@ namespace LOFAR
 
       vector<DH_Visibilities*> itsInDHs;
       vector<Connection*> itsInConns;
-      CS1_Parset       *itsCS1PS;
     };
 
   } // namespace CS1

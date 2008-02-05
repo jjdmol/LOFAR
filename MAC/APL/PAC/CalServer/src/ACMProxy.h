@@ -31,7 +31,6 @@
 #include <GCF/TM/GCF_Control.h>
 
 namespace LOFAR {
-typedef		void*		memptr_t;
   namespace CAL {
 
     class ACMProxy : public GCFTask
@@ -75,8 +74,8 @@ typedef		void*		memptr_t;
       /**
        * Port to the RSPDriver.
        */
-      GCFPort 	m_rspdriver;	// connection to the RSPDriver
-      memptr_t	m_handle; 		// handle for the UPDXCSTATS events
+      GCFPort m_rspdriver; // connection to the RSPDriver
+      uint32  m_handle; // handle for the UPDXCSTATS events
 
       RTC::Timestamp m_starttime; // first ACM will be received at this time
       int     m_request_subband;  // current index for request subband

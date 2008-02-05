@@ -27,7 +27,7 @@
 #include <BBSControl/CommandQueueTransactors.h>
 #include <BBSControl/Exceptions.h>
 #include <Common/LofarLogger.h>
-#include <BBSControl/StreamUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/lofar_typeinfo.h>
 
 namespace LOFAR

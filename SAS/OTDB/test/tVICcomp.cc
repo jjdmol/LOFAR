@@ -93,32 +93,24 @@ int main (int	argc, char*	argv[]) {
 	}
 
 	// try to resolve the database name
-	string 		dbName("otdbtest");
-	string		hostName("dop50.astron.nl");
+	string 		dbName;
 	char		line[64];
-	int32		sleeptime = 1;
+	int32		sleeptime = 0;
 	ifstream	inFile;
 	inFile.open("DATABASENAME");
-	if (!inFile || !inFile.getline(line, 40)) {
-		sleeptime	= 4;
+	if (!inFile || !inFile.getline(line, 20)) {
+		dbName = "otdbtest";
+		sleeptime = 4;
 	}
 	else {
-		char*	pos = strchr(line, ' ');
-		if (pos) {
-			hostName = pos+1;
-			*pos = '\0';		// place new EOL in 'line'
-			dbName = line;	
-		}
-		else {
-			dbName = line;
-		}
+		dbName = line;
 	}
 	inFile.close();
-	LOG_INFO_STR("### Using database " << dbName << " on host " << hostName << " ###");
+	LOG_INFO_STR("### Using database " << dbName << " ###");
 	sleep (sleeptime);
 
 	// Open the database connection
-	OTDBconnection conn("paulus", "boskabouter", dbName, hostName);
+	OTDBconnection conn("paulus", "boskabouter", dbName);
 
 	try {
 

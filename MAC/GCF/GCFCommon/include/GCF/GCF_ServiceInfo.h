@@ -45,14 +45,14 @@ namespace LOFAR {
 #define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3"
 #define	MAC_SVCMASK_CALSERVER			"CalServer%s:acceptor_v2"
 #define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v2"
-#define MAC_SVCMASK_TBBDRIVER			"TBBDriver%s:acceptor"
 #define MAC_SVCMASK_RSPCTLFE			"RSPCtlFE%s:acceptor"
+#define MAC_SVCMASK_PROPERTYAGENT		"GCF-PA%s:provider"
+#define MAC_SVCMASK_KVLDAEMON			"KVLDaemon%s:v1.0"
+#define MAC_SVCMASK_KVLMASTER			"KVLMaster%s:v1.0"
 
 // Define names for the daemons
 #define MAC_SVCMASK_SERVICEBROKER		"ServiceBroker%s:v1.0"
 #define MAC_SVCMASK_STARTDAEMON			"StartDaemon%s:v1.0"
-#define	MAC_SVCMASK_LOGPROC				"LogProcessor%s:v1.0"
-#define MAC_SVCMASK_KVTLOGGER			"KVTLogger%s:v1.0"
 
 // Define names for all controllers
 #define	MAC_SVCMASK_SCHEDULERCTRL		"MACScheduler%s:v1.0"
@@ -63,7 +63,6 @@ namespace LOFAR {
 #define	MAC_SVCMASK_DIGITALBOARDCTRL	"DigitalBoardCtrl%s:v1.0"
 #define	MAC_SVCMASK_BEAMCTRL			"BeamCtrl%s:v1.0"
 #define	MAC_SVCMASK_CALIBRATIONCTRL		"CalibrationCtrl%s:v1.0"
-#define	MAC_SVCMASK_TBBCTRL				"TBBCtrl%s:v1.0"
 #define	MAC_SVCMASK_STATIONINFRACTRL	"StationInfraCtrl%s:v1.0"
 
 

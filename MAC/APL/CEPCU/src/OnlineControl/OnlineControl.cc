@@ -32,6 +32,7 @@
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/TM/GCF_Protocols.h>
+#include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -111,8 +112,8 @@ OnlineControl::OnlineControl(const string&	cntlrName) :
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
 	// for debugging purposes
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
 
 	_setState(CTState::CREATED);
 }
@@ -591,9 +592,7 @@ void OnlineControl::_doBoot()
 			LOG_INFO_STR("Starting controller for " << applName << " in 3 seconds ");
 			sleep(3);			 // sometimes we are too quick, wait a second.
 			int32	expectedRuntime = time_duration(itsStopTime - itsStartTime).total_seconds();
-			uint32	obsID = globalParameterSet()->getUint32("Observation.ObsID");
-			CEPApplMgrPtr	accClient (new CEPApplMgr(*this, formatString("%s%d", applName.c_str(), obsID),
-													  expectedRuntime, accHost, paramFileName));
+			CEPApplMgrPtr	accClient (new CEPApplMgr(*this, applName, expectedRuntime, accHost, paramFileName));
 			itsCEPapplications[applName] = accClient;
 		} 
 		catch (APSException &e) {
@@ -656,20 +655,17 @@ void OnlineControl::setApplOrder(vector<string>&	anApplOrder)
 	itsUseApplOrder = true;			// assume everything is right.
 	itsApplOrder	= anApplOrder;
 
-	LOG_DEBUG_STR("setApplOrder: Checking " << itsApplOrder);
-
 	// every application must be in the order list.
 	ASSERTSTR(itsApplOrder.size() == itsCEPapplications.size(), 
 				"Application orderlist conflicts with length of applicationlist");
 
-	// check that all applications exist 
+	// check that all application exist 
 	CAMiter						applEnd   = itsCEPapplications.end();
 	vector<string>::iterator	orderIter = itsApplOrder.begin();
 	while (orderIter != itsApplOrder.end()) {
 		CAMiter		applIter = itsCEPapplications.begin();
 		while (applIter != applEnd) {
-			LOG_DEBUG_STR("compare: " << applIter->first << " with " << *orderIter);
-			if (applIter->first == *orderIter) {
+			if (applIter->second->getName() == *orderIter) {
 				break;
 			}
 			applIter++;

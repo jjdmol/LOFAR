@@ -68,7 +68,6 @@ namespace LOFAR {
 			    bool       operator != (const TimeStamp &) const;
 
 				       operator int64 () const;
-				       operator struct timespec () const;
 
       friend ostream &operator << (ostream &os, const TimeStamp &ss);
 
@@ -203,16 +202,6 @@ namespace LOFAR {
     inline TimeStamp::operator int64 () const
       {
 	return itsTime;
-      }
-
-    inline TimeStamp::operator struct timespec () const
-      {
-	struct timespec ts;
-
-	ts.tv_sec  = getSeqId();
-	ts.tv_nsec = (int) (getBlockId() * theirInvMaxBlockId * 1e9);
-
-	return ts;
       }
 
     inline bool TimeStamp::operator > (const TimeStamp &other) const

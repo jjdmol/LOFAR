@@ -169,20 +169,15 @@ Prediffer::Prediffer(const string &measurement, size_t subband,
         " measurement" : "ANTENNA2 - ANTENNA1 (AIPS++ convention)"));
 
     // Initialize model.
-//    casa::MEpoch startTimeMeas = itsMeasurement->getTimeRange().first;
-//    casa::Quantum<casa::Double> startTime = startTimeMeas.get("s");
-//    itsPhaseRef = MeqPhaseRef(itsMeasurement->getPhaseCenter(),
-//        startTime.getValue("s"));
-
+    casa::MEpoch startTimeMeas = itsMeasurement->getTimeRange().first;
+    casa::Quantum<casa::Double> startTime = startTimeMeas.get("s");
     itsPhaseRef = MeqPhaseRef(itsMeasurement->getPhaseCenter(),
-        itsMeasurement->getTimeRange().first);
-
+        startTime.getValue("s"));
     itsModel.reset(new Model(itsMeasurement->getInstrument(), itsParmGroup,
         itsSkyDBase.get(), &itsPhaseRef));
 
     // Allocate thread private buffers.
 #if defined _OPENMP
-    LOG_INFO_STR("Number of threads used: " << omp_get_max_threads());
     itsThreadContexts.resize(omp_get_max_threads());
 #else
     itsThreadContexts.resize(1);
@@ -209,7 +204,7 @@ void Prediffer::initPolarizationMap()
     // 2 - YX or RL
     // 3 - YY or RR
     // No assumptions can be made regarding the external polarization indices,
-    // which is why we need this map in the first place.
+    // which is why we need this table in the first place.
     
     const vector<string> &polarizations = itsMeasurement->getPolarizations();
         
@@ -394,7 +389,6 @@ bool Prediffer::setContext(const Context &context)
     }
 
     // Select baselines.
-    set<baseline_t> baselineSelection;
     if(context.baselines.station1.empty())
     {
         // If no baselines are speficied, use all baselines selected in the
@@ -413,7 +407,7 @@ bool Prediffer::setContext(const Context &context)
                 || (baseline.first != baseline.second
                     && context.correlation.selection == "CROSS"))
             {
-                baselineSelection.insert(baseline);
+                itsContext.baselines.insert(baseline);
             }
         }
     }
@@ -471,7 +465,7 @@ bool Prediffer::setContext(const Context &context)
 
                         if(itsChunkData->hasBaseline(baseline))
                         {
-                            baselineSelection.insert(baseline);
+                            itsContext.baselines.insert(baseline);
                         }
                     }
                 }
@@ -482,14 +476,11 @@ bool Prediffer::setContext(const Context &context)
         }
     }
 
-    if(baselineSelection.empty())
+    if(itsContext.baselines.empty())
     {
         LOG_ERROR("At least one baseline should be selected.");
         return false;
     }
-
-    itsContext.baselines.resize(baselineSelection.size());
-    copy(baselineSelection.begin(), baselineSelection.end(), itsContext.baselines.begin());
 
     return true;
 }
@@ -782,14 +773,10 @@ void Prediffer::initSolveDomains(pair<size_t, size_t> size)
 
 void Prediffer::predict()
 {
-    resetTimers();
-
-    itsProcessTimer.start();
     process(false, true, false, make_pair(0, 0),
         make_pair(itsChunkData->grid.freq.size() - 1,
             itsChunkData->grid.time.size() - 1),
         &Prediffer::copyBaseline, 0);
-    itsProcessTimer.stop();
 
     if(!itsContext.outputColumn.empty())
     {
@@ -797,20 +784,19 @@ void Prediffer::predict()
             itsContext.outputColumn, false);
     }
     
-    printTimers("Copy");
+    LOG_DEBUG_STR("Predict: " << itsPredTimer);
+    LOG_DEBUG_STR("Copy: " << itsEqTimer);
+    itsPredTimer.reset();
+    itsEqTimer.reset();
 }
 
 
 void Prediffer::subtract()
 {
-    resetTimers();
-    
-    itsProcessTimer.start();
     process(false, true, false, make_pair(0, 0),
         make_pair(itsChunkData->grid.freq.size() - 1,
             itsChunkData->grid.time.size() - 1),
         &Prediffer::subtractBaseline, 0);
-    itsProcessTimer.stop();
 
     if(!itsContext.outputColumn.empty())
     {
@@ -818,20 +804,19 @@ void Prediffer::subtract()
             itsContext.outputColumn, false);
     }
 
-    printTimers("Subtract");
+    LOG_DEBUG_STR("Predict: " << itsPredTimer);
+    LOG_DEBUG_STR("Subtract: " << itsEqTimer);
+    itsPredTimer.reset();
+    itsEqTimer.reset();
 }
 
 
 void Prediffer::correct()
 {
-    resetTimers();
-
-    itsProcessTimer.start();
     process(false, true, false, make_pair(0, 0),
         make_pair(itsChunkData->grid.freq.size() - 1,
             itsChunkData->grid.time.size() - 1),
         &Prediffer::copyBaseline, 0);
-    itsProcessTimer.stop();
 
     if(!itsContext.outputColumn.empty())
     {
@@ -839,15 +824,16 @@ void Prediffer::correct()
             itsContext.outputColumn, false);
     }
 
-    printTimers("Correct");
+    LOG_DEBUG_STR("Correct: " << itsEqTimer);
+    LOG_DEBUG_STR("Copy: " << itsPredTimer);
+    itsPredTimer.reset();
+    itsEqTimer.reset();
 }
 
 
 void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
     vector<casa::LSQFit> &solvers)
 {
-    resetTimers();
-
     ASSERT(start.first <= end.first
         && end.first < itsContext.domainCount.first);
     ASSERT(start.second <= end.second
@@ -904,9 +890,7 @@ void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
 //        << vstart.second << " - " << vend.first << ", " << vend.second <<
 //endl);
     // Generate equations.
-    itsProcessTimer.start();
     process(true, true, true, vstart, vend, &Prediffer::generateBaseline, 0);
-    itsProcessTimer.stop();
 
     // Merge thead specific solvers back into the main ones.
     for(size_t thread = 1; thread < itsThreadContexts.size(); ++thread)
@@ -919,7 +903,10 @@ void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
     	}
     }
     
-    printTimers("Generate");
+    LOG_DEBUG_STR("Predict: " << itsPredTimer);
+    LOG_DEBUG_STR("Construct equations: " << itsEqTimer);
+    itsPredTimer.reset();
+    itsEqTimer.reset();
 }
 
 
@@ -997,9 +984,7 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     // Precalculate if required.
     if(precalc)
     {
-        itsPrecalcTimer.start();
         itsModel->precalculate(request);
-        itsPrecalcTimer.stop();
     }
     
 /************** DEBUG DEBUG DEBUG **************/
@@ -1010,7 +995,7 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     cout << endl;
 
     cout << "Processing baselines:" << endl;
-    for(vector<baseline_t>::const_iterator it = itsContext.baselines.begin();
+    for(set<baseline_t>::const_iterator it = itsContext.baselines.begin();
         it != itsContext.baselines.end();
         ++it)
     {
@@ -1023,7 +1008,9 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     {
 #pragma omp for schedule(dynamic)
         // Process all selected baselines.
-        for(int i = 0; i < itsContext.baselines.size(); ++i)
+        for(set<baseline_t>::const_iterator it = itsContext.baselines.begin();
+            it != itsContext.baselines.end();
+            ++it)
         {
 #if defined _OPENMP
             size_t thread = omp_get_thread_num();
@@ -1032,27 +1019,22 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
 #endif
             // Process baseline.
             (this->*processor)
-                (thread, arguments, itsChunkData, start, request, itsContext.baselines[i], false);
+                (thread, arguments, itsChunkData, start, request, *it, false);
         }
     } // omp parallel
 }
 
 
-void Prediffer::copyBaseline(int threadnr, void*, VisData::Pointer chunk,
+void Prediffer::copyBaseline(int, void*, VisData::Pointer chunk,
     pair<size_t, size_t> offset, const MeqRequest& request, baseline_t baseline,
     bool showd)
 {
-    // Get thread context.
-    ThreadContext &threadContext = itsThreadContexts[threadnr];
-    
-    // Evaluate the model.
-    threadContext.evaluationTimer.start();
+    // Do the actual correct.
+    itsPredTimer.start();
     MeqJonesResult jresult = itsModel->evaluate(baseline, request);
-    threadContext.evaluationTimer.stop();
+    itsPredTimer.stop();
 
-    // Process the result.
-    threadContext.operationTimer.start();
-
+    itsEqTimer.start();
     // Put the results in a single array for easier handling.
     const double *resultRe[4], *resultIm[4];
     jresult.getResult11().getValue().dcomplexStorage(resultRe[0],
@@ -1101,25 +1083,20 @@ void Prediffer::copyBaseline(int threadnr, void*, VisData::Pointer chunk,
             resultIm[int_pol] += nChannels;
         }
     }
-    threadContext.operationTimer.stop();
+    itsEqTimer.stop();
 }
 
 
-void Prediffer::subtractBaseline(int threadnr, void*, VisData::Pointer chunk,
+void Prediffer::subtractBaseline(int, void*, VisData::Pointer chunk,
     pair<size_t, size_t> offset, const MeqRequest& request, baseline_t baseline,
     bool showd)
 {
-    // Get thread context.
-    ThreadContext &threadContext = itsThreadContexts[threadnr];
-    
-    // Evaluate the model.
-    threadContext.evaluationTimer.start();
+    // Do the actual correct.
+    itsPredTimer.start();
     MeqJonesResult jresult = itsModel->evaluate(baseline, request);
-    threadContext.evaluationTimer.stop();
+    itsPredTimer.stop();
 
-    // Process the result.
-    threadContext.operationTimer.start();
-
+    itsEqTimer.start();
     // Put the results in a single array for easier handling.
     const double *resultRe[4], *resultIm[4];
     jresult.getResult11().getValue().dcomplexStorage(resultRe[0],
@@ -1168,7 +1145,7 @@ void Prediffer::subtractBaseline(int threadnr, void*, VisData::Pointer chunk,
             resultIm[int_pol] += nChannels;
         }
     }
-    threadContext.operationTimer.stop();
+    itsEqTimer.stop();
 }
 
 
@@ -1180,17 +1157,16 @@ void Prediffer::generateBaseline(int threadnr, void *arguments,
     ASSERT(offset.first % itsContext.domainSize.first == 0);
     ASSERT(offset.second % itsContext.domainSize.second == 0);
 
+    // Do the actual predict.
+    itsPredTimer.start();
+    MeqJonesResult jresult = itsModel->evaluate(baseline, request);
+    itsPredTimer.stop();
+
+    itsEqTimer.start();
+    
     // Get thread context.
     ThreadContext &threadContext = itsThreadContexts[threadnr];
     
-    // Evaluate the model.
-    threadContext.evaluationTimer.start();
-    MeqJonesResult jresult = itsModel->evaluate(baseline, request);
-    threadContext.evaluationTimer.stop();
-
-    // Process the result.
-    threadContext.operationTimer.start();
-        
     // Put the results in a single array for easier handling.
     const MeqResult *predictResults[4];
     predictResults[0] = &(jresult.getResult11());
@@ -1384,7 +1360,7 @@ void Prediffer::generateBaseline(int threadnr, void *arguments,
         }
     }
 
-    threadContext.operationTimer.stop();
+    itsEqTimer.stop();
 }
 
 
@@ -1535,7 +1511,7 @@ void Prediffer::getMapBaseline (int, void* arguments, const fcomplex*,
 void Prediffer::testFlagsBaseline(int, void*, VisData::Pointer chunk,
     const MeqRequest& request, baseline_t baseline, bool showd)
 {
-    itsOperationTimer.start();
+    itsEqTimer.start();
     int nrchan = request.nx();
     int nrtime = request.ny();
 
@@ -1560,7 +1536,7 @@ void Prediffer::testFlagsBaseline(int, void*, VisData::Pointer chunk,
             }
        }
     }
-    itsOperationTimer.stop();
+    itsEqTimer.stop();
 }
 */
 
@@ -1784,71 +1760,6 @@ void Prediffer::writeExpressionGraph(const string &fileName,
     os << "}" << endl;
 }
 #endif
-
-
-void Prediffer::resetTimers()
-{
-    itsPrecalcTimer.reset();
-    itsProcessTimer.reset();
-    
-    for(size_t i = 0; i < itsThreadContexts.size(); ++i)
-    {
-        itsThreadContexts[i].evaluationTimer.reset();
-        itsThreadContexts[i].operationTimer.reset();
-    }
-}
-
-
-void Prediffer::printTimers(const string &operationName)
-{
-    LOG_DEBUG_STR("Process: " << itsProcessTimer);
-    LOG_DEBUG_STR("-Precalculation: " << itsPrecalcTimer);
-
-    // Merge thread local timers.
-    unsigned long long count_e = 0, count_o = 0;
-    double sum_e = 0.0, sum_o = 0.0, sumsqr_e = 0.0, sumsqr_o = 0.0;
-    for(size_t i = 0; i < itsThreadContexts.size(); ++i)
-    {
-        double time;
-        
-        time = itsThreadContexts[i].evaluationTimer.getElapsed() * 1000.0;
-        sum_e += time;
-        sumsqr_e += time * time;
-        count_e += itsThreadContexts[i].evaluationTimer.getCount();
-
-        time = itsThreadContexts[i].operationTimer.getElapsed() * 1000.0;
-        sum_o += time;
-        sumsqr_o += time * time;
-        count_o += itsThreadContexts[i].operationTimer.getCount();
-    }
-    
-    // Print merged timings.
-    if(count_e == 0)
-    {
-        LOG_DEBUG("-Model evaluation: timer not used");
-    }
-    else
-    {
-        double avg = sum_e / count_e;
-        double std = std::sqrt(std::max(sumsqr_e / count_e - avg * avg, 0.0));
-        LOG_DEBUG_STR("-Model evaluation: count: " << count_e << ", total: "
-            << sum_e << " ms, avg: " << avg << " ms, std: " << std << " ms");
-    }
-
-    if(count_o == 0)
-    {
-        LOG_DEBUG_STR("-" << operationName << ": timer not used");
-    }
-    else
-    {
-        double avg = sum_o / count_o;
-        double std = std::sqrt(std::max(sumsqr_o / count_o - avg * avg, 0.0));
-        LOG_DEBUG_STR("-" << operationName << ": count: " << count_o
-            << ", total: " << sum_o << " ms, avg: " << avg << " ms, std: "
-            << std << " ms");
-    }
-}
-
 
 } // namespace BBS
 } // namespace LOFAR

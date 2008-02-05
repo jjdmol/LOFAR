@@ -21,10 +21,9 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
-#include <CS1_Interface/BGL_Mapping.h>
-#include <ION_Allocator.h>
-#include <WH_ION_Gather.h>
-#include <TH_ZoidServer.h>
+#include <CS1_IONProc/ION_Allocator.h>
+#include <CS1_IONProc/WH_ION_Gather.h>
+#include <CS1_IONProc/TH_ZoidServer.h>
 
 #include <cstring>
 #include <string>
@@ -39,18 +38,18 @@
 namespace LOFAR {
 namespace CS1 {
 
-WH_ION_Gather::WH_ION_Gather(const string &name, unsigned psetNumber, const CS1_Parset *ps)
+
+WH_ION_Gather::WH_ION_Gather(const string &name, const CS1_Parset *ps)
 :
   WorkHolder(0, 1, name, "WH_ION_Gather"),
-  itsPsetNumber(psetNumber),
   itsPS(ps)
 {
   itsTmpDH		    = 0;
-  itsNrComputeCores	    = ps->nrCoresPerPset();
-  itsCurrentComputeCore	    = 0;
-  itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
+  itsNrComputeNodes	    = ps->getUint32("OLAP.BGLProc.nodesPerPset");
+  itsCurrentComputeNode	    = 0;
+  itsNrSubbandsPerPset	    = ps->getUint32("OLAP.subbandsPerPset");
   itsCurrentSubband	    = 0;
-  itsNrIntegrationSteps     = ps->IONintegrationSteps();
+  itsNrIntegrationSteps     = ps->getUint32("OLAP.IONProc.integrationSteps");
   itsCurrentIntegrationStep = 0;
 
   TinyDataManager &dm = getDataManager();
@@ -60,7 +59,7 @@ WH_ION_Gather::WH_ION_Gather(const string &name, unsigned psetNumber, const CS1_
   dm.setAutoTriggerOut(0, false);
 
 #if 0
-  for (unsigned i = 0; i < itsNrComputeCores; i ++) {
+  for (unsigned i = 0; i < itsNrComputeNodes; i ++) {
     dm.addInDataHolder(i, new DH_Visibilities("input", ps));
     dm.setAutoTriggerIn(i, false);
   }
@@ -83,7 +82,7 @@ WorkHolder* WH_ION_Gather::construct(const string &name, const ACC::APS::Paramet
 
 WH_ION_Gather* WH_ION_Gather::make(const string &name)
 {
-  return new WH_ION_Gather(name, itsPsetNumber, itsPS);
+  return new WH_ION_Gather(name, itsPS);
 }
 
 
@@ -129,13 +128,10 @@ void WH_ION_Gather::process()
   bool firstTime = itsCurrentIntegrationStep == 0;
   bool lastTime  = itsCurrentIntegrationStep == itsNrIntegrationSteps - 1;
 
-  //std::clog << "itsCurrentComputeCore = " << itsCurrentComputeCore << ", itsCurrentSubband = " << itsCurrentSubband << ", itsCurrentIntegrationStep = " << itsCurrentIntegrationStep << ", firstTime = " << firstTime << ", lastTime = " << lastTime << std::endl;
+  //std::clog << "itsCurrentComputeNode = " << itsCurrentComputeNode << ", itsCurrentSubband = " << itsCurrentSubband << ", itsCurrentIntegrationStep = " << itsCurrentIntegrationStep << ", firstTime = " << firstTime << ", lastTime = " << lastTime << std::endl;
   DH_Visibilities *dh = lastTime ? dynamic_cast<DH_Visibilities *>(getDataManager().getOutHolder(0)) : firstTime ? itsSumDHs[itsCurrentSubband] : itsTmpDH;
   
-  unsigned channel = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
-  //TH_ZoidServer::theirTHs[channel]->recvBlocking(dh->getDataPtr(), (dh->getDataSize() + 31) & ~31, 0, 0, dh);
-  TH_ZoidServer::theirTHs[channel]->recvBlocking(dh->getVisibilities().origin(), dh->getVisibilities().num_elements() * sizeof(fcomplex), 0, 0, 0);
-  TH_ZoidServer::theirTHs[channel]->recvBlocking(dh->getNrValidSamples().origin(), dh->getNrValidSamples().num_elements() * sizeof(unsigned short), 0, 0, 0);
+  TH_ZoidServer::theirTHs[itsCurrentComputeNode]->recvBlocking(dh->getDataPtr(), (dh->getDataSize() + 15) & ~15, 0, 0, dh);
 
   if (!firstTime)
     if (lastTime)
@@ -146,8 +142,8 @@ void WH_ION_Gather::process()
   if (lastTime)
     getDataManager().readyWithOutHolder(0);
 
-  if (++ itsCurrentComputeCore == itsNrComputeCores)
-    itsCurrentComputeCore = 0;
+  if (++ itsCurrentComputeNode == itsNrComputeNodes)
+    itsCurrentComputeNode = 0;
 
   if (++ itsCurrentSubband == itsNrSubbandsPerPset) {
     itsCurrentSubband = 0;

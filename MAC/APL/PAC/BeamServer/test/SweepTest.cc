@@ -51,7 +51,7 @@ using namespace EPA_Protocol;
 SweepTest::SweepTest(string name, int subband)
     : GCFTask((State)&SweepTest::initial, name), Test("SweepTest"), m_subband(subband)
 {
-  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_STRINGS);
+  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_signalnames);
 
   beam_server.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::SAP, BS_PROTOCOL);
 }

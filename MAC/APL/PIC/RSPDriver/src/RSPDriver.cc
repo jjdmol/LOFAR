@@ -226,8 +226,10 @@ RSPDriver::RSPDriver(string name)
 
   // Register protocols for debugging
   LOG_DEBUG("Registering protocols");
-  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
-  registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_STRINGS);
+  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+  registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
+  GCF::TM::registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+  GCF::TM::registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_STRINGS);
 
 #if 0
   // connect to clock
@@ -1514,7 +1516,7 @@ void RSPDriver::rsp_subsubbands(GCFEvent& event, GCFPortInterface& port)
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
-    ack.handle = (memptr_t)&(*command);
+    ack.handle = (uint32)&(*command);
     port.send(ack);
   }
 
@@ -1626,7 +1628,7 @@ void RSPDriver::rsp_subrcu(GCFEvent& event, GCFPortInterface& port)
 
   ack.timestamp = m_scheduler.getCurrentTime();
   ack.status = SUCCESS;
-  ack.handle = (memptr_t)&(*command);
+  ack.handle = (uint32)&(*command);
   port.send(ack);
 
   (void)m_scheduler.enter(Ptr<Command>(&(*command)),
@@ -1747,7 +1749,7 @@ void RSPDriver::rsp_subhba(GCFEvent& event, GCFPortInterface& port)
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
-    ack.handle = (memptr_t)&(*command);
+    ack.handle = (uint32)&(*command);
     port.send(ack);
   }
 
@@ -1896,7 +1898,7 @@ void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
-    ack.handle = (memptr_t)&(*command);
+    ack.handle = (uint32)&(*command);
     port.send(ack);
   }
 
@@ -1978,7 +1980,7 @@ void RSPDriver::rsp_substats(GCFEvent& event, GCFPortInterface& port)
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
-    ack.handle = (memptr_t)&(*command);
+    ack.handle = (uint32)&(*command);
     port.send(ack);
   }
 
@@ -2060,7 +2062,7 @@ void RSPDriver::rsp_subxcstats(GCFEvent& event, GCFPortInterface& port)
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
-    ack.handle = (memptr_t)&(*command);
+    ack.handle = (uint32)&(*command);
     port.send(ack);
   }
 
@@ -2251,7 +2253,7 @@ void RSPDriver::rsp_subclock(GCFEvent& event, GCFPortInterface& port)
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
-    ack.handle = (memptr_t)&(*command);
+    ack.handle = (uint32)&(*command);
     port.send(ack);
   }
 
@@ -2307,7 +2309,7 @@ void RSPDriver::rsp_subtdstatus(GCFEvent& event, GCFPortInterface& port)
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
-    ack.handle = (memptr_t)&(*command);
+    ack.handle = (uint32)&(*command);
     port.send(ack);
   }
 
@@ -2420,7 +2422,7 @@ void RSPDriver::rsp_subregisterstate(GCFEvent& event, GCFPortInterface& port)
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
-    ack.handle = (memptr_t)&(*command);
+    ack.handle = (uint32)&(*command);
     port.send(ack);
   }
 

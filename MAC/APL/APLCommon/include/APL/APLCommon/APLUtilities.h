@@ -26,7 +26,6 @@
 //# Includes
 #include <time.h>
 //# Common Includes
-#include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 
@@ -93,8 +92,6 @@ protected:
 
 private:
 };
-
-string	byteSize(double		nrBytes);
 
 };//APL
 };//LOFAR

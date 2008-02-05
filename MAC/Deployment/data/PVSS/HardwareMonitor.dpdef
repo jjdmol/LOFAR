@@ -1,11 +1,3 @@
-# HardwareMonitor
+# StationClock
 #
-RSP.connected		bool
-RSP.currentAction	string
-RSP.error			string
-RSP.logMsg			string
-
-TBB.connected		bool
-TBB.currentAction	string
-TBB.error			string
-TBB.logMsg			string
+RSPConnected		bool

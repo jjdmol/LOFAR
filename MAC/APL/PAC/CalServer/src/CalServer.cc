@@ -669,7 +669,7 @@ GCFEvent::TResult CalServer::handle_cal_subscribe(GCFEvent& e, GCFPortInterface 
 														subscribe.subbandset,
 														port);
 
-		ack.handle = (CAL_Protocol::memptr_t)subscription;
+		ack.handle = (uint32)subscription;
 		subarray->attach(subscription); // attach subscription to the subarray
 		ack.subarray = *subarray; 		// return subarray positions
 

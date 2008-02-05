@@ -209,14 +209,13 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		string username	= pParamSet->getString("OTDBusername");
 		string DBname 	= pParamSet->getString("OTDBdatabasename");
 		string password	= pParamSet->getString("OTDBpassword");
-		string hostname	= pParamSet->getString("OTDBhostname");
 
-		LOG_DEBUG_STR ("Trying to connect to the OTDB on " << hostname);
-		itsOTDBconnection= new OTDBconnection(username, password, DBname, hostname);
+		LOG_DEBUG ("Trying to connect to the OTDB");
+		itsOTDBconnection= new OTDBconnection(username, password, DBname);
 		ASSERTSTR (itsOTDBconnection, "Memory allocation error (OTDB)");
 		ASSERTSTR (itsOTDBconnection->connect(),
-					"Unable to connect to database " << DBname << " on " << hostname << 
-					" using " << username << "," << password);
+					"Unable to connect to database " << DBname << " using " <<
+					username << "," << password);
 		LOG_INFO ("Connected to the OTDB");
 		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED, GCFPVBool(true));
 

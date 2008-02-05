@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 
-#include <Common/StreamUtil.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/PVSS/PVSSinfo.h>
@@ -44,7 +43,7 @@ namespace LOFAR {
 //
 RTDBPropertySet::RTDBPropertySet (const string& 	name,
                                   const string& 	type,
-								  uint32			accessType,
+								  PSAccessType		accessType,
 								  GCFTask*			clientTask) :
 	itsScope	  	  (name),
 	itsType		  	  (type),
@@ -52,8 +51,7 @@ RTDBPropertySet::RTDBPropertySet (const string& 	name,
 	itsService	  	  (0),
 	itsOwnResponse	  (0),
 	itsExtResponse	  (new DPanswer(clientTask)),
-	itsExtSubscription(false),
-	itsExtConfirmation(true)
+	itsExtSubscription(false)
 {
 	LOG_TRACE_FLOW_STR("RTDBPropertySet(" << name << "," << type << "," << accessType << ")");
 
@@ -94,7 +92,6 @@ RTDBPropertySet::~RTDBPropertySet()
 		itsService->doWork();		// force DBmanager to do its work
 		while (PVSSinfo::propExists(itsScope)) {
 			itsService->doWork();		// force DBmanager to do its work
-			usleep(10000);	// 10 ms
 		}
 	}
 
@@ -128,14 +125,9 @@ PVSSresult RTDBPropertySet::setValue (const string& 	propName,
 	// search property
 	Property* propPtr = _getProperty(propName);
 	if (!propPtr) {
-		dpeValueSet(propName, SA_PROP_DOES_NOT_EXIST);
 		return (SA_PROP_DOES_NOT_EXIST);
 	}
 
-	// if ConditionWrite=true and value not changed then we are ready.
-	if ((itsAccessType & PSAT_CW) && (*(propPtr->value) == value)) {
-		return (SA_NO_ERROR);
-	}
 	// adopt value
 	propPtr->value->copy(value);
 
@@ -167,11 +159,6 @@ PVSSresult RTDBPropertySet::setValue (const string&		propName,
 		dpeValueSet(propName, SA_PROP_DOES_NOT_EXIST);
 		return (SA_PROP_DOES_NOT_EXIST);
 	}
-
-	// if ConditionWrite=true and value not changed then we are ready.
-//	if ((itsAccessType & PSAT_CW) && propPtr->value->getValue() == value) {
-//		return (SA_NO_ERROR);
-//	}
 
 	// adopt value
 	if ((propPtr->value->setValue(value)) != GCF_NO_ERROR) {
@@ -214,39 +201,10 @@ PVSSresult	RTDBPropertySet::getValue(const string&			propName,
 //
 PVSSresult	RTDBPropertySet::flush()
 {
-	PropertyMap_t::iterator PMiter(itsPropMap.begin());
-	PropertyMap_t::iterator PMend (itsPropMap.end());
 
-	// basictypes need special handling
-	if (PMiter->second->isBasicType) {
-		if (PMiter->second->dirty) {
-			return (itsService->dpeSet(itsScope, *(PMiter->second->value)));
-		}
-		LOG_DEBUG_STR("No flush needed");
-		return (SA_NO_ERROR);
-	}
 
-	// DP is a structure, collect dirty elements
-	vector<string>			dpeNames;
-	vector<GCFPValue*>		dpeValues;
-	while (PMiter!= PMend) {
-		if (PMiter->second->dirty) {
-			dpeNames.push_back(PMiter->first);
-			dpeValues.push_back(PMiter->second->value);
-			PMiter->second->dirty = false;	// assume update will be succesful
-		}
-		++PMiter;
-	}
 
-	// something to flush?
-	if (dpeNames.empty()) {
-		LOG_DEBUG_STR("No flush needed");
-		return (SA_NO_ERROR);
-	}
 
-	// write to database
-	LOG_DEBUG_STR("Updating: " << dpeNames);
-	return (itsService->dpeSetMultiple(itsScope, dpeNames, dpeValues));
 }
 
 
@@ -399,9 +357,7 @@ void RTDBPropertySet::dpCreated(const string&	propName, PVSSresult		result)
 	_createAllProperties();
 
 	// Pass 'created' event to client.
-	if (itsExtConfirmation) {
-		itsExtResponse->dpCreated(itsScope, result);
-	}
+	itsExtResponse->dpCreated(itsScope, result);
 }
 
 //
@@ -409,9 +365,7 @@ void RTDBPropertySet::dpCreated(const string&	propName, PVSSresult		result)
 //
 void RTDBPropertySet::dpDeleted (const string& propName, PVSSresult	result)
 {
-	if (itsExtConfirmation) {
-		itsExtResponse->dpDeleted(propName, result);
-	}
+	itsExtResponse->dpDeleted(propName, result);
 }
 
 //
@@ -429,9 +383,7 @@ void RTDBPropertySet::dpeSubscribed (const string& propName, PVSSresult	result)
 //
 void RTDBPropertySet::dpeSubscriptionLost (const string& propName, PVSSresult	result)
 {
-	if (itsExtConfirmation) {
-		itsExtResponse->dpeSubscriptionLost(propName, result);
-	}
+	itsExtResponse->dpeSubscriptionLost(propName, result);
 }
 
 //
@@ -439,9 +391,7 @@ void RTDBPropertySet::dpeSubscriptionLost (const string& propName, PVSSresult	re
 //
 void RTDBPropertySet::dpeUnsubscribed (const string& propName, PVSSresult	result)
 {
-	if (itsExtConfirmation) {
-		itsExtResponse->dpeUnsubscribed(propName, result);
-	}
+	itsExtResponse->dpeUnsubscribed(propName, result);
 }
 
 //
@@ -449,9 +399,7 @@ void RTDBPropertySet::dpeUnsubscribed (const string& propName, PVSSresult	result
 //
 void RTDBPropertySet::dpQuerySubscribed	 (uint32 queryId, PVSSresult	result)
 {
-	if (itsExtConfirmation) {
-		itsExtResponse->dpQuerySubscribed(queryId, result);
-	}
+	itsExtResponse->dpQuerySubscribed(queryId, result);
 }
 
 //
@@ -464,9 +412,8 @@ void RTDBPropertySet::dpeValueSet(const string&		propName, PVSSresult	result)
 	}
 
 //	if (itsAccessType & PSAT_RD_MASK) {
-	if (itsExtConfirmation) {
 		itsExtResponse->dpeValueSet(propName, result);
-	}
+//	}
 }
 
 //

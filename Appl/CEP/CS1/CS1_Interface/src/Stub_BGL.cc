@@ -20,8 +20,6 @@
 
 #include <lofar_config.h>
 
-#if defined HAVE_TINYCEP && defined HAVE_APS
-
 #include <CS1_Interface/Stub_BGL.h>
 #include <Transport/BGLConnection.h>
 #include <Transport/TH_File.h>
@@ -54,27 +52,27 @@ Stub_BGL::~Stub_BGL()
 }
 
 
-void Stub_BGL::connect(unsigned psetNr, unsigned coreNr, TinyDataManager &dm, unsigned channel)
+void Stub_BGL::connect(unsigned cellNr, unsigned nodeNr, TinyDataManager &dm, unsigned channel)
 {
-  pair<unsigned, unsigned> index(psetNr, coreNr);
+  pair<unsigned, unsigned> index(cellNr, nodeNr);
 
-  ASSERTSTR(itsTHs.find(index) == itsTHs.end(), "already connected: psetNr = " << psetNr << ", coreNr = " << coreNr);
+  ASSERTSTR(itsTHs.find(index) == itsTHs.end(), "already connected: cellNr = " << cellNr << ", nodeNr = " << nodeNr);
    
   TransportHolder *th;
   string transportType = itsCS1PS->getString(itsPrefix + "_Transport");
 
   if (transportType == "TCP") {
-    string server  = itsCS1PS->getStringVector(itsPrefix + "_ServerHosts")[psetNr];
-    string service = itsCS1PS->getPortsOf(itsPrefix)[coreNr];
+    string server  = itsCS1PS->getStringVector(itsPrefix + "_ServerHosts")[cellNr];
+    string service = itsCS1PS->getPortsOf(itsPrefix)[nodeNr];
     th = itsIAmOnBGL ? new TH_Socket(server, service, false, Socket::TCP, false) : new TH_Socket(service, false, Socket::TCP, 5, false);
   } else if (transportType == "FILE") {
     string baseFileName = itsCS1PS->getString(itsPrefix + "_BaseFileName");
     char fileName[baseFileName.size() + 32];
-    sprintf(fileName, "%s.%u.%u", baseFileName.c_str(), psetNr, coreNr);
+    sprintf(fileName, "%s.%u.%u", baseFileName.c_str(), cellNr, nodeNr);
     th = new TH_File(string(fileName), itsIsInput ? TH_File::Read : TH_File::Write);
 #if 0
   } else if (transportType == "ZOID") {
-    th = itsIAmOnBGL ? TH_ZoidClient() : TH_ZoidServer(coreNr);
+    th = itsIAmOnBGL ? TH_ZoidClient() : TH_ZoidServer(nodeNr);
 #endif
   } else if (transportType == "NULL") {
     th = new TH_Null();
@@ -97,5 +95,3 @@ void Stub_BGL::connect(unsigned psetNr, unsigned coreNr, TinyDataManager &dm, un
 
 } // namespace CS1
 } // namespace LOFAR
-
-#endif // defined HAVE_TINYCEP && defined HAVE_APS

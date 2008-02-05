@@ -51,7 +51,6 @@ class tPropertySet : public GCFTask
   GCFEvent::TResult Level1Test		(GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult Level2Test		(GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult WriteErrorTest	(GCFEvent& e, GCFPortInterface& p);
-  GCFEvent::TResult WriteDelayTest	(GCFEvent& e, GCFPortInterface& p);
 #if 0
   GCFEvent::TResult ReadErrorTest	(GCFEvent& e, GCFPortInterface& p);
   GCFEvent::TResult DeletePS		(GCFEvent& e, GCFPortInterface& p);

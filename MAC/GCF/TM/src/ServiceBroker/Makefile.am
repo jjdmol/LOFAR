@@ -4,9 +4,6 @@ DOCHDRS						= GSB_Controller.h \
 
 AUTOGEN = autogen
 SUFFIXES = .ph
-%.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
-
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
@@ -23,7 +20,7 @@ ServiceBroker_DEPENDENCIES	= $(top_builddir)/src/libgcftm.la $(LOFAR_DEPEND)
 	
 ServiceBroker_CXXFLAGS		= -fmessage-length=0
 
-BUILT_SOURCES 				= SB_Protocol.ph SB_Protocol.cc
+BUILT_SOURCES 				= SB_Protocol.ph
 
 EXTRA_DIST 					= $(sysconf_DATA)
 

@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 
 #include <APL/CAL_Protocol/AntennaGains.h>
-#include <APL/RTCCommon/MarshallBlitz.h>
+#include <APL/RTCCommon/Marshalling.h>
 #include <Common/LofarTypes.h>
 
 using namespace std;

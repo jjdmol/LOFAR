@@ -57,8 +57,12 @@ namespace LOFAR
 
       // Check pre-conditions.
       // -# direction type must be J2000
+      // -# position types must be equal
       for (uint i = 0; i < in.direction.size(); ++i) {
         ASSERT(in.direction[i].type() == Direction::J2000);
+      }
+      for (uint i = 1; i < in.position.size(); ++i) {
+        ASSERT(in.position[i].type() == in.position[0].type());
       }
 
       // If any of the input vectors has zero length, we can return
@@ -79,6 +83,20 @@ namespace LOFAR
         pos[i] = MVPosition(in.position[i].coord().get());
       }
 
+      // Determine the position reference.
+      MPosition::Types posref;
+      switch(in.position[0].type()) {
+      case Position::ITRF:  
+        posref = MPosition::ITRF;  
+        break;
+      case Position::WGS84: 
+        posref = MPosition::WGS84; 
+        break;
+      default: 
+        THROW(ConverterException, "Invalid Position type: " 
+              << in.position[0].type());
+      }
+
       try {
 
         // Create a container for the Measure frame.
@@ -88,8 +106,8 @@ namespace LOFAR
         frame.set(MEpoch(MVEpoch(in.epoch[0].getDay(),
                                  in.epoch[0].getFraction())));
         
-        // Set initial position for the frame.
-        frame.set(MPosition(pos[0], MPosition::ITRF));
+        // Set initial position for the frame, using the appropriate reference.
+        frame.set(MPosition(pos[0], posref));
         
         // Set-up the conversion engine, using reference direction AZEL.
         MDirection::Convert conv (MDirection::J2000, 
@@ -156,12 +174,16 @@ namespace LOFAR
       //    we only need to do one check, the other is implied by the first
       //    pre-condition.
       // -# direction type must be AZEL
+      // -# position types must be the equal
       ASSERT (in.position.size() == in.epoch.size());
       if (in.position.size() != 1) {
         ASSERT (in.position.size() == in.direction.size());
       }
       for (uint i = 0; i < in.direction.size(); ++i) {
         ASSERT (in.direction[i].type() == Direction::AZEL);
+      }
+      for (uint i = 1; i < in.position.size(); ++i) {
+        ASSERT (in.position[i].type() == in.position[0].type());
       }
 
       // If the direction input vector has zero length, we can return
@@ -177,6 +199,20 @@ namespace LOFAR
         pos[i] = MVPosition(in.position[i].coord().get());
       }
 
+      // Determine the position reference.
+      MPosition::Types posref;
+      switch(in.position[0].type()) {
+      case Position::ITRF:  
+        posref = MPosition::ITRF;  
+        break;
+      case Position::WGS84: 
+        posref = MPosition::WGS84; 
+        break;
+      default: 
+        THROW(ConverterException, "Invalid Position type: " 
+              << in.position[0].type());
+      }
+
       try {
 
         // Create a container for the Measure frame.
@@ -186,8 +222,8 @@ namespace LOFAR
         frame.set(MEpoch(MVEpoch(in.epoch[0].getDay(), 
                                  in.epoch[0].getFraction())));
 
-        // Set initial position for the frame.
-        frame.set(MPosition(pos[0], MPosition::ITRF));
+        // Set initial position for the frame, using the appropriate reference.
+        frame.set(MPosition(pos[0], posref));
 
         // Set-up the conversion engine, using reference direction J2000..
         MDirection::Convert conv(MDirection::AZEL,
@@ -265,8 +301,12 @@ namespace LOFAR
 
       // Check pre-conditions.
       // -# direction type must be J2000
+      // -# position types must be equal
       for (uint i = 0; i < in.direction.size(); ++i) {
         ASSERT(in.direction[i].type() == Direction::J2000);
+      }
+      for (uint i = 1; i < in.position.size(); ++i) {
+        ASSERT(in.position[i].type() == in.position[0].type());
       }
 
       // If any of the input vectors has zero length, we can return
@@ -287,6 +327,20 @@ namespace LOFAR
         pos[i] = MVPosition(in.position[i].coord().get());
       }
 
+      // Determine the position reference.
+      MPosition::Types posref;
+      switch(in.position[0].type()) {
+      case Position::ITRF:  
+        posref = MPosition::ITRF;  
+        break;
+      case Position::WGS84: 
+        posref = MPosition::WGS84; 
+        break;
+      default: 
+        THROW(ConverterException, "Invalid Position type: " 
+              << in.position[0].type());
+      }
+
       try {
 
         // Create a container for the Measure frame.
@@ -296,8 +350,8 @@ namespace LOFAR
         frame.set(MEpoch(MVEpoch(in.epoch[0].getDay(),
                                  in.epoch[0].getFraction())));
         
-        // Set initial position for the frame.
-        frame.set(MPosition(pos[0], MPosition::ITRF));
+        // Set initial position for the frame, using the appropriate reference.
+        frame.set(MPosition(pos[0], posref));
         
         // Set-up the conversion engine, using reference direction ITRF.
         MDirection::Convert conv (MDirection::J2000, 
@@ -364,12 +418,16 @@ namespace LOFAR
       //    we only need to do one check, the other is implied by the first
       //    pre-condition.
       // -# direction type must be ITRF
+      // -# position types must be the equal
       ASSERT (in.position.size() == in.epoch.size());
       if (in.position.size() != 1) {
         ASSERT (in.position.size() == in.direction.size());
       }
       for (uint i = 0; i < in.direction.size(); ++i) {
         ASSERT (in.direction[i].type() == Direction::ITRF);
+      }
+      for (uint i = 1; i < in.position.size(); ++i) {
+        ASSERT (in.position[i].type() == in.position[0].type());
       }
 
       // If the direction input vector has zero length, we can return
@@ -385,6 +443,20 @@ namespace LOFAR
         pos[i] = MVPosition(in.position[i].coord().get());
       }
 
+      // Determine the position reference.
+      MPosition::Types posref;
+      switch(in.position[0].type()) {
+      case Position::ITRF:  
+        posref = MPosition::ITRF;  
+        break;
+      case Position::WGS84: 
+        posref = MPosition::WGS84; 
+        break;
+      default: 
+        THROW(ConverterException, "Invalid Position type: " 
+              << in.position[0].type());
+      }
+
       try {
 
         // Create a container for the Measure frame.
@@ -394,8 +466,8 @@ namespace LOFAR
         frame.set(MEpoch(MVEpoch(in.epoch[0].getDay(), 
                                  in.epoch[0].getFraction())));
 
-        // Set initial position for the frame.
-        frame.set(MPosition(pos[0], MPosition::ITRF));
+        // Set initial position for the frame, using the appropriate reference.
+        frame.set(MPosition(pos[0], posref));
 
         // Set-up the conversion engine, using reference direction J2000..
         MDirection::Convert conv(MDirection::ITRF,

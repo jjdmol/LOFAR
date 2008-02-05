@@ -80,14 +80,12 @@ enum {
     F_ENTRY_ID = 1, // state entry; currently unused (encoded in lsb)
     F_EXIT_ID,      // state exit; currently unused
     F_INIT_ID,      // initial transition
-    F_QUIT_ID,      // final run
 };
 
 // convenience macros
 #define F_ENTRY F_SIGNAL(F_FSM_PROTOCOL, F_ENTRY_ID, F_IN)
 #define F_EXIT  F_SIGNAL(F_FSM_PROTOCOL, F_EXIT_ID,  F_IN)
 #define F_INIT  F_SIGNAL(F_FSM_PROTOCOL, F_INIT_ID,  F_IN)
-#define F_QUIT  F_SIGNAL(F_FSM_PROTOCOL, F_QUIT_ID,  F_IN)
 
 // structure for administration of signalnames and errornames.
 struct protocolStrings {

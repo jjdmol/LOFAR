@@ -279,6 +279,11 @@ else
 ## Assume that libraries are in similar directory structure as headers.
 ## (thus in lib subdirectory if header is in include subdirectory)
 
+## Use different lib directory on 64 bit systems.
+  lfr_libdext=lib
+  if test "`arch`" = "x86_64"; then
+    lfr_libdext=lib64;
+  fi
 ## Put possible version into the library names.
   lfr_libsc=`echo $lfr_libs | sed -e "s%+vers%$lfr_ext_version%g"`
 ## Test if a framework is given.
@@ -298,7 +303,7 @@ else
     if test "$lfr_libsc" != ""; then
       lfr_sfil=lib`echo "$lfr_libsc" | sed -e 's/ .*//'`
       lfr_searchfil="$lfr_sfil.$lofar_shared_ext $lfr_sfil.a"
-      lfr_searchext=$lofar_libdirext
+      lfr_searchext=$lfr_libdext
     fi
   fi
 ## Now do the actual search.
@@ -314,7 +319,7 @@ else
 			[lfr_ext_dir=no])[
       if test "$lfr_ext_dir" != "no" ; then
         if test "$lfr_external_libdir" = ""; then
-          lfr_external_libdir=$bdir/$lofar_libdirext;
+          lfr_external_libdir=$bdir/$lfr_libdext;
         fi
         break;
       fi

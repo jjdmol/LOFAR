@@ -136,6 +136,7 @@ private:
   MeqMatrix		           itsValue;
   map<int, MeqMatrix>*	           itsPerturbedValues;
   map<int, const MeqParmFunklet*>* itsPerturbedParms;
+  static Pool<MeqResultRep>        theirPool;
 };
 
 

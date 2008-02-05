@@ -104,7 +104,7 @@ GCFEvent::TResult BoardCmdHandler::send_state(GCFEvent& event, GCFPortInterface&
 				} else {
 					itsRetries = 0;
 					itsCmd->sendTpEvent();
-					TRAN(BoardCmdHandler::waitack_state);	
+					TRAN(BoardCmdHandler::waitack_state);
 				}
 			}
 		} break;
@@ -143,33 +143,26 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 			}
 			
 			// time-out, retry
-			if ((itsRetries < TS->maxRetries()) && (itsCmd->retry())) { 
+			if ((itsRetries < TS->maxRetries()) && !itsCmd->isDone()) {
 				LOG_DEBUG("=TIME-OUT=");
 				itsCmd->sendTpEvent();
 				itsRetries++;
 				LOG_DEBUG_STR(formatString("itsRetries[%d] = %d", itsCmd->getBoardNr(), itsRetries));	
 			}	else {
 				itsCmd->saveTpAckEvent(event); // max retries or done, save zero's
-				if (itsCmd->getSleepTime() > 0) {
+				if (itsCmd->getSleepTime()) {
 					itsSleepTimer->setTimer((long)itsCmd->getSleepTime());
-					itsCmd->setSleepTime(0.0);
+					itsCmd->setSleepTime(0);
 				} else {
 					TRAN(BoardCmdHandler::send_state);
 				}
-			}	
-			/*
-			if (itsCmd->isDone() && itsCmd->getSleepTime() == 0) {
-				TRAN(BoardCmdHandler::send_state);
 			}
-			*/
-			 
 		}	break;
 		
     case F_EXIT: {
 		} break;
       
     default: {
-    	LOG_DEBUG_STR("default cmd");
 			if (itsCmd->isValid(event)) {
 				port.cancelAllTimers();
 				itsCmd->saveTpAckEvent(event);

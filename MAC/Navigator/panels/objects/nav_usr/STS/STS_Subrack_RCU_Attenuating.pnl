@@ -1,34 +1,33 @@
 V 10
 1
 LANG:1 11 Attenuating
-PANEL,473 190 230 170 N "_3DFace" 1
+PANEL,495 201 230 170 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-  if(dpExists($datapoint + \".Attenuation\"))
+  if(dpAccessable($datapoint + \".Attenuating\"))
 	{
-    dpConnect(\"ShowAttenuation\", $datapoint + \".Attenuation:_original.._value\" ,
-	                               $datapoint + \".Attenuation:_online.._invalid\" );
+    dpConnect(\"ShowAttenuating\", $datapoint + \".Attenuating:_original.._value\" ,
+	                               $datapoint + \".Attenuating:_online.._invalid\" );
   }
   else
   {
-		setValue(\"rect_attenuation\", \"backCol\", \"_dpdoesnotexist\");
-  	setValue(\"txt_attValue\", \"visible\", FALSE );
+  	setValue(\"attValue\", \"visible\", FALSE );
   }
 }
 
-ShowAttenuation(string dp1, unsigned attenuation ,
+ShowAttenuating(string dp1, unsigned attenuating ,
                 string dp2, bool invalid)
 {
-  setValue(\"txt_attValue\", \"visible\", TRUE );
+  setValue(\"attValue\", \"visible\", TRUE );
 	if (!invalid)
 	{
-    setValue(\"txt_attValue\", \"text\", attenuation );
+    setValue(\"attValue\", \"text\", attenuating );
 	}
 	else
 	{
-    setValue(\"txt_attValue\", \"text\", \"\" );
-    setValue(\"txt_attValue\", \"visible\", FALSE );
+    setValue(\"attValue\", \"text\", \"\" );
+    setValue(\"attValue\", \"visible\", FALSE );
 	}
 }
 " 0
@@ -44,7 +43,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 224
-"rect_attenuation"
+"Border1"
 ""
 1 20 65 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
@@ -56,10 +55,23 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 20 35 190 65
+6 227
+"borderAttValue"
+""
+1 127 60 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+ E E
+4 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 127 40 157 60
 2 225
 "AttText"
 ""
-1 29 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 50 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -68,18 +80,18 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 31 43 97 59
-0 2 0 "s" 0 0 0 192 0 0  31 43
+E E 0 1 1 0 1 E U  0 E 52 43 118 59
+0 2 0 "s" 0 0 0 192 0 0  52 43
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 11 Attenuation
+LANG:1 11 Attenuating
 2 72
 "dBText"
 ""
-1 170 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 160 41 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
 EE E
@@ -88,33 +100,34 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 172 43 188 59
-0 2 0 "s" 0 0 0 192 0 0  172 43
+E E 0 1 1 0 1 E U  0 E 162 43 178 59
+0 2 0 "s" 0 0 0 192 0 0  162 43
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 2 dB
-14 229
-"txt_attValue"
+2 228
+"attValue"
 ""
-1 102 40 E E E 1 E 1 E N "_WindowText" E N {204,204,255} E E
+1 127 40 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 EE E
-1
+0
 1
 LANG:1 0 
-0
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 151 42 173 58
+0 2 0 "s" 0 0 0 194 0 0  151 42
+ 1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-100 38 167 61
-2 "9d" 9 0 0 2 0 0 
-E
-E
-E
+1
+LANG:1 4 Null
 0
 LAYER, 1 
 1

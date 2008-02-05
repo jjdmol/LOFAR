@@ -8,7 +8,7 @@ bin_PROGRAMS 				= LoggingProcessor
 
 LoggingProcessor_SOURCES	= LoggingProcessor.cc \
 							  LoggingProcessorMain.cc
-LoggingProcessor_LDADD		= $(LOFAR_DEPEND) $(libdir)/liblog_protocol.a
+LoggingProcessor_LDADD		= $(LOFAR_DEPEND) 
 LoggingProcessor_DEPENDENCIES=$(LOFAR_DEPEND)
 
 bin_SCRIPTS					= 

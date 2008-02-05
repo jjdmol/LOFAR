@@ -2290,10 +2290,13 @@ static void usage()
   cout << "  0x00008000 VH-EN        high band supply on (1) or off (0)" << endl;
   cout << endl;
   cout << "  0x00010000 VDIG-EN      ADC supply on (1) or off (0)" << endl;
-  cout << "  0x00020000 LBL-LBH-SEL  LB input selection 0=LBL, 1=LBH" << endl;
-  cout << "  0x00040000 LB-FILTER    LB filter selection" << endl;
-  cout << "                           0    10-90 MHz" << endl;
-  cout << "                           1    30-80 MHz" << endl;
+  cout << "  0x00020000 LB-SEL-0     LBA input selection" << endl;
+  cout << "  0x00040000 LB-SEL-1     HP filter selection" << endl;
+  cout << "                Options : LB-SEL-0 LB-SEL-1 Function" << endl;
+  cout << "                             0        0    10-90 MHz + 10 MHz HPF" << endl;
+  cout << "                             0        1    30-80 MHz + 10 MHz HPF" << endl;
+  cout << "                             1        0    10-90 MHz + 30 MHz HPF" << endl;
+  cout << "                             1        1    30-80 MHz + 30 MHz HPF" << endl;
   cout << "  0x00080000 ATT-CNT-4    on (1) is  1dB attenuation" << endl;
   cout << "  0x00100000 ATT-CNT-3    on (1) is  2dB attenuation" << endl;
   cout << "  0x00200000 ATT-CNT-2    on (1) is  4dB attenuation" << endl;

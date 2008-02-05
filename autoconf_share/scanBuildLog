@@ -522,7 +522,6 @@ def extendPackageArray(packageArray,allBuildablePackages):
 def usage():
   print "usage: "+sys.argv[0]+" [-h] [-n] [-b] [-d arg] [-f arg] [-s arg] [-t arg]"
   print "args:  -h,--help       - print usage"
-  print "       -l,--local      - local processing; do not copy files to server"
   print "       -n,--nocopy     - Do not copy thisWeek to lastWeek"
   print "       -b,--debug      - additional debug output"
   print "       -d,--directory  - LOFAR base directory"
@@ -537,22 +536,19 @@ def main(argv):
   fileBase = "None"
   lofarServer ="lofar@lofar0.nfra.nl"
   serverDir = "/usr/local/httpd/htdocs"
-  noCopy = 0
-  debug = 0
-  local = 0
+  noCopy=0
+  debug=0
   try:
-    opts, args = getopt.getopt(argv, "d:f:hlnbs:t:",
-                               ["directory=","filebase=","help","local",
-                                "nocopy","debug","serverdir=","testdir="])
+    opts, args = getopt.getopt(argv, "d:f:hnbs:t:",
+                               ["directory=","filebase=","help","nocopy"
+                                ,"debug","serverdir=","testdir="])
   except getopt.GetoptError:
     usage()
   for opt, arg in opts:
     if opt in ("-h", "--help"):
       usage()
     elif opt in ("-b", "--debug"):
-      debug = 1
-    elif opt in ("-l", "--local"):
-      local = 1
+      debug=1
     elif opt in ("-n", "--nocopy"):
       noCopy = 1
     elif opt in ("-f", "--filebase"):
@@ -565,7 +561,7 @@ def main(argv):
       lofarServer = arg
 
   if lofarServer.find('@') < 0:
-    print "Error in serverstring: "+ lofarServer
+    print "Error in serverstring: "+ server
     usage()
     
   server=str.split(lofarServer,'@')[1]
@@ -586,8 +582,7 @@ def main(argv):
   # print machine
   #
   print "This build took place on: " + machineName() + "\n\n"
-  if local == 0:
-    print "Using : " + serverDir + " on "+lofarServer+"\n\n"
+  print "Using : " + serverDir + " on "+lofarServer+"\n\n"
 
 
   #
@@ -1056,46 +1051,39 @@ def main(argv):
 
 
   #
-  # No local processing (local == 0) means:
-  #   copy generated files to the web server
+  # Copy the "old" files from this machine in thisWeek to lastWeek
   #
-  if local == 0:
-
-    #
-    # Copy the "old" files from this machine in thisWeek to lastWeek
-    #
-    if noCopy==0:
-      if remoteFileMove(lofarServer,serverDir) > 0:
-        print "Move new to old on server not done because of errors"
-      else:
-        print "Move new to old on server done"
-
-    #
-    # Copy createNewIndex.py to the server
-    #
-    if copyServerSideScript(lofarServer,serverDir,lofarDir) > 0:
-      print "Move script to server not done because of errors"
+  if noCopy==0:
+    if remoteFileMove(lofarServer,serverDir) > 0:
+      print "Move new to old on server not done because of errors"
     else:
-      print "Move script to server done"
+      print "Move new to old on server done"
 
-    #
-    # Copy the new generated html files to the Server
-    #
-    if copyFiles2Server(serverDir+"/BuildResults/thisWeek",
-                        lofarServer) > 0:
-      print "Copy html files not done because of errors"
-    else:
-      print "Copy html files to server done"
+  #
+  # Copy createNewIndex.py to the server
+  #
+  if copyServerSideScript(lofarServer,serverDir,lofarDir) > 0:
+    print "Move script to server not done because of errors"
+  else:
+    print "Move script to server done"
+
+  #
+  # Copy the new generated html files to the Server
+  #
+  if copyFiles2Server(serverDir+"/BuildResults/thisWeek",
+                      lofarServer) > 0:
+    print "Copy html files not done because of errors"
+  else:
+    print "Copy html files to server done"
 
 
-    #
-    # run server side script to generate new index files there
-    #
-    if runServerSideScript(lofarServer,serverDir,server) > 0:
-      print "Run script on server failed"
-    else:
-      print "Run script on server done"
-
+  #
+  # run server side script to generate new index files there
+  #
+  if runServerSideScript(lofarServer,serverDir,server) > 0:
+    print "Run script on server failed"
+  else:
+    print "Run script on server done"
 
   sys.exit(0)
 

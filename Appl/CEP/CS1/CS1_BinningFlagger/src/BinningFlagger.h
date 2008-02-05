@@ -17,8 +17,8 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef __FLAGGER_BINNINGFLAGGER_H__
-#define __FLAGGER_BINNINGFLAGGER_H__
+#ifndef __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+#define __FLAGGER_COMPLEXMEDIANFLAGGER_H__
 
 #include <casa/Arrays.h>
 #include <utility>
@@ -29,61 +29,66 @@
 
 namespace LOFAR
 {
-  using casa::Cube;
-  using casa::Matrix;
-  using casa::Complex;
-  using casa::Int;
-  using casa::Double;
-  using casa::Bool;
-  using casa::Table;
-  using std::list;
-  using std::vector;
-
-  typedef pair<int, int> pairii;
-
-  class BinningFlagger
+  namespace CS1
   {
-    public:
-       BinningFlagger(MS_File* MSfile,
-                      int InputWindowSize,
-                      bool UseOnlyXpolarizations);
-      ~BinningFlagger();
+    using casa::Cube;
+    using casa::Matrix;
+    using casa::Complex;
+    using casa::Int;
+    using casa::Double;
+    using casa::Bool;
+    using casa::Table;
+    using std::list;
+    using std::vector;
 
-      void FlagDataOrBaselines(bool ExistingFlags);
+    typedef pair<int, int> pairii;
 
-    protected:
-      int                     NumAntennae;
-      int                     NumPairs;
-      int                     NumBands;
-      int                     NumChannels;
-      int                     NumPolarizations;
-      int                     WindowSize;
-      int                     NumTimeslots;
-      vector<pairii>          PairsIndex;
-      map<pairii, int>        BaselineIndex;
-      vector< Cube<Complex> > TimeslotData;
-      vector< bool >          PolarizationsToCheck;
-      vector<casa::String>    AntennaNames;
-      Cube< int >             Statistics;
-      MS_File* MSfile;
+    class FrequencyFlagger
+    {
+      public:
+        FrequencyFlagger(MS_File* MSfile,
+                         double Threshold);
+        ~FrequencyFlagger();
 
-      void DeterminePolarizationsToCheck(Bool UseOnlyXpolarizations);
-      void ProcessStatistics();
-      vector<float> ComputeThreshold(Cube<Complex>* Timeslots);
-      bool   FlagBaselineBand(Matrix<Bool>* Flags,
-                              Cube<Complex>* Timeslots,
+        void FlagDataOrBaselines(bool ExistingFlags);
+
+      protected:
+        int                     NumAntennae;
+        int                     NumPairs;
+        int                     NumBands;
+        int                     NumChannels;
+        int                     NumPolarizations;
+        int                     NumTimeslots;
+        double                  Threshold;
+        double                  MaxBaselineLength;
+        double                  NoiseLevel;
+        bool ExistingFlags;
+        vector<double>          BaselineLengths;
+        vector<pairii>          PairsIndex;
+        map<pairii, int>        BaselineIndex;
+        Cube<Complex>           TimeslotData;
+        Cube<Bool>              Flags;
+        vector<casa::String>    AntennaNames;
+        Cube< int >             Statistics;
+        MS_File* MSfile;
+
+        void DeterminePolarizationsToCheck(Bool UseOnlyXpolarizations);
+        void ComputeBaselineLengths();
+        void ProcessStatistics();
+        bool FlagBaselineBand(Matrix<Bool> Flags,
+                              Matrix<Complex> Timeslots,
                               int* flagCounter,
-                              int Position);
-      void FlagTimeslot(casa::TableIterator* flag_iter,
-                        bool ExistingFlags,
-                        int Position);
-      bool UpdateTimeslotData(vector<int>* OldFields,
-                              vector<int>* OldBands,
-                              int* TimeCounter,
-                              Table* TimeslotTable,
-                              double* Time);
-    private:
-  }; // BinningFlagger
+                              double FlagThreshold);
+        void FlagTimeslot(casa::TableIterator* flag_iter,
+                          bool ExistingFlags);
+        bool UpdateTimeslotData(vector<int>* OldFields,
+                                vector<int>* OldBands,
+                                int* TimeCounter,
+                                Table* TimeslotTable,
+                                double* Time);
+      private:
+    }; // FrequencyFlagger
+  }; // namespace CS1
 }; // namespace LOFAR
 
-#endif //  __FLAGGER_BINNINGFLAGGER_H__
+#endif //  __FLAGGER_COMPLEXMEDIANFLAGGER_H__

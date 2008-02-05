@@ -87,18 +87,6 @@ public class ResultPanelHelper {
         itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.OlapPanel");
         itsPanelMap.put("OLAP",itsVector);        
         addParSetAndLogPanels();
-        
-        //TBB
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.TBBConfigPanel");
-        itsPanelMap.put("TBB",itsVector);
-        addParSetAndLogPanels();
-
-        //Imager
-        itsVector = new Vector<String>();
-        itsVector.add("nl.astron.lofar.sas.otbcomponents.userpanels.ImagerPanel");
-        itsPanelMap.put("Imager",itsVector);
-        addParSetAndLogPanels();
     }
     
     

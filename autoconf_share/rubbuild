@@ -38,7 +38,7 @@ pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 kopt=0
 jobsopt=
 buildmake=1
-conf=2
+conf=0
 confopt=
 clean=0
 distclean=0
@@ -61,9 +61,11 @@ do
   if [ "$1" = -k ]; then
     shift
     kopt=1
+    shift
   elif [ "$1" = -nok ]; then
     shift
     kopt=0
+    shift
   # parallel make option?
   elif [ "$1" = -j ]; then
     shift
@@ -188,10 +190,6 @@ do
     shift
   else
     case "$1" in
-    -j*)
-      jobsopt='-j'`echo $1 | sed -e 's/-j//'`
-      shift
-      ;;
     -*)
       echo "$1 is an unknown rubbuild option"
       exit 1
@@ -286,8 +284,8 @@ fi
 # dorubbuild writes the build output to a log file.
 if [ $bg = 1 ]; then
   echo "Building packages on `uname -n` in $buildvarpr in the background"
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$dist" "$distcheck" "$rpm" $pkgs >> /dev/null 2>&1 &
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$dist" "$distcheck" "$rpm" $pkgs >> /dev/null 2>&1 &
 else
   echo "Building packages in $buildvarpr ..."
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$dist" "$distcheck" "$rpm" $pkgs
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$dist" "$distcheck" "$rpm" $pkgs
 fi

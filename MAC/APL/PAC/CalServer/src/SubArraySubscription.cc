@@ -43,7 +43,7 @@ void SubArraySubscription::update(Subject* subject)
     CALUpdateEvent update;
     update.timestamp.setNow(0);
     update.status = SUCCESS;
-    update.handle = (memptr_t)this;
+    update.handle = (uint32)this;
 
     update.gains = *calibratedGains;
 

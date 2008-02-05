@@ -249,7 +249,7 @@ namespace LOFAR
 
         // Constructor for select-like queries. The result is returned as a
         // string.
-        ExecQuery(const string& query, ACC::APS::ParameterSet& result);
+        ExecQuery(const string& query, string& result);
 
         // This method will be invoked by the perform() method of your
         // pqxx::connection class to execute the query stored in itsQuery. The
@@ -258,23 +258,26 @@ namespace LOFAR
 
         // This method will be invoked by the perform() method of your
         // pqxx::connection class, when the transaction succeeded. The result
-        // of the query, stored in itsPQResult, will be converted to a
-        // ParameterSet and assigned to itsResult. Each key is uniquely
-        // defined as "_row(<row-number>).<column-name>", i.e. "_row(0)." for
-        // the first row, "_row(1)." for the second, etc. The key "_nrows"
-        // will contain the number of rows in the result.
+        // of the query, stored in itsPQResult, will be converted to a string
+        // and assigned to itsResult.
+        // 
+        // The result string will be formatted as a collection of key/value
+        // pairs, where each key is uniquely defined as
+        // "_row(<row-number>).<column-name>", i.e. "_row(0)." for the first
+        // row, "_row(1)." for the second, etc. The key "_nrows" will contain
+        // the number of rows in the result.
         void on_commit();
 
       private:
-        // Empty ParameterSet, used to initialize itsResult properly, when the
+        // Empty string, used to initialize itsResult properly, when the
         // one-argument constructor is used.
-        static ACC::APS::ParameterSet emptyResult;
+        static string emptyString;
 
         // String containing the query to be executed.
         const string itsQuery;
 
-        // Reference to the ParameterSet that will hold the query result.
-        ACC::APS::ParameterSet& itsResult;
+        // Reference to the string that will hold the query result.
+        string& itsResult;
 
         // The result of the executed query must be stored internally, because
         // it will be written in operator() and will be read in on_commit().

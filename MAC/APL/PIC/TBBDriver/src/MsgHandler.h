@@ -48,13 +48,9 @@ namespace LOFAR {
 				// Destructor for MsgHandler. */
 				~MsgHandler();
 				
-				void addTriggerClient(GCFPortInterface& port);
+				void addClient(GCFPortInterface& port);
 				
-				void addHardwareClient(GCFPortInterface& port);
-				
-				void removeTriggerClient(GCFPortInterface& port);
-				
-				void removeHardwareClient(GCFPortInterface& port);
+				void removeClient(GCFPortInterface& port);
 				
 				void sendTrigger(GCFEvent& event, int boardnr);
 				
@@ -62,17 +58,14 @@ namespace LOFAR {
 				
 				void sendBoardChange(uint32 activeboards);
 					
-				void sendTriggerMessage(GCFEvent& event);
-				
-				void sendHardwareMessage(GCFEvent& event);
+				void sendMessage(GCFEvent& event);
 
 			protected:
 				
 			private:
 				TbbSettings *TS;
 				
-				std::list<GCFPortInterface*> itsClientTriggerMsgList;  // list of clients witch receive messages
-				std::list<GCFPortInterface*> itsClientHardwareMsgList;  // list of clients witch receive messages
+				std::list<GCFPortInterface*> itsClientMsgList;  // list of clients witch receive messages
 				
 				TBBTriggerEvent			*itsTriggerE;
 				TBBErrorEvent				*itsErrorE;

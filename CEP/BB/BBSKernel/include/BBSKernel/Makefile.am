@@ -1,6 +1,6 @@
 pkginclude_MNSdir = $(pkgincludedir)/MNS
 
-pkginclude_HEADERS = Package__Version.h 		\
+pkginclude_HEADERS =		\
 	Axis.h			\
 	BBSKernelStructs.h	\
 	BBSStatus.h		\
@@ -8,7 +8,6 @@ pkginclude_HEADERS = Package__Version.h 		\
 	Measurement.h		\
 	MeasurementAIPS.h	\
 	Model.h			\
-	ParmData.h		\
 	Prediffer.h		\
 	VisData.h		\
 	VisSelection.h

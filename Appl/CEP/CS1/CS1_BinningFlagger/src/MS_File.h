@@ -28,37 +28,41 @@
 
 namespace LOFAR
 {
-  class MS_File
+  namespace CS1
   {
-  public:
-     MS_File(const std::string& msname);
-    ~MS_File();
+    class MS_File
+    {
+    public:
+      MS_File(const std::string& msname);
+      ~MS_File();
 
-    int                     itsNumSamples;
-    int                     itsNumAntennae;
-    int                     itsNumFields;
-    int                     itsNumBands;
-    int                     itsNumChannels;
-    int                     itsNumPolarizations;
-    int                     itsNumPairs;
-    int                     itsNumTimeslots;
-    std::vector<casa::String> itsAntennaNames;
-    casa::Vector<casa::Int>   itsPolarizations;
+      int                     itsNumSamples;
+      int                     itsNumAntennae;
+      int                     itsNumFields;
+      int                     itsNumBands;
+      int                     itsNumChannels;
+      int                     itsNumPolarizations;
+      int                     itsNumPairs;
+      int                     itsNumTimeslots;
+      double                  itsNoiseLevel;
+      std::vector<casa::String> itsAntennaNames;
+      casa::Vector<casa::Int>   itsPolarizations;
 
-    casa::TableIterator TimeslotIterator();
-    casa::TableIterator TimeAntennaIterator();
-    casa::MSAntenna     antenna();
-    void                WriteDataPointFlags(casa::TableIterator* flag_iter,
-                                            casa::Matrix<casa::Bool>* Flags,
-                                            bool FlagcompleteRow,
-                                            bool ExistingFlags);
+      casa::TableIterator TimeslotIterator();
+      casa::TableIterator TimeAntennaIterator();
+      casa::MSAntenna     antenna();
+      void                WriteDataPointFlags(casa::TableIterator* flag_iter,
+                                              casa::Matrix<casa::Bool>* Flags,
+                                              bool FlagcompleteRow,
+                                              bool ExistingFlags);
 
-  protected:
-    string                MSName;
-    casa::MeasurementSet* MS;
-    void init();
-  private:
-  }; // MS_File
+    protected:
+      string                MSName;
+      casa::MeasurementSet* MS;
+      void init();
+    private:
+    }; // MS_File
+  }; // namespace CS1
 }; // namespace LOFAR
 
 #endif // __FLAGGER_MS_FILE_H__

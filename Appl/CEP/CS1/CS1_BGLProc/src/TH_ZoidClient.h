@@ -33,52 +33,59 @@
 //# Includes
 #include <Transport/TransportHolder.h>
 
-namespace LOFAR {
-namespace CS1 {
-
-class TH_ZoidClient : public TransportHolder
+namespace LOFAR 
 {
-  public:
-    TH_ZoidClient(){};
-    virtual ~TH_ZoidClient(){};
+    // \addtogroup Transport
+    // @{
 
-    virtual bool init() {return true;};
+    //# Forward Declarations
 
-    // if doCopy == 0, Zoid's zero-copy protocol is used; memory must be
-    // obtained through __zoid_alloc and must be a multiple of 32
-    virtual bool recvBlocking(void *ptr, int size, int doCopy, int, DataHolder*);
-    virtual bool sendBlocking(void *ptr, int size, int doCopy, DataHolder*);
+    // Description of class.
+    class TH_ZoidClient : public TransportHolder
+    {
+    public:
+      TH_ZoidClient(){};
+      virtual ~TH_ZoidClient(){};
 
-    virtual int32 recvNonBlocking (void*, int32, int, int32, DataHolder*)
-    { return true; }
+      virtual bool init() {return true;};
 
-    virtual void waitForReceived(void*, int, int)
-    {}
+      virtual bool recvBlocking (void*, int, int, int, DataHolder*);
 
-    virtual bool sendNonBlocking (void*, int, int, DataHolder*)
-    { return true; }
+      virtual bool sendBlocking (void*, int, int, DataHolder*);
 
-    virtual void waitForSent(void*, int, int)
-    {}
+      virtual int32 recvNonBlocking (void*, int32, int, int32, DataHolder*)
+      { return true; }
 
-    virtual string getType() const
-    { return "TH_ZoidClient"; }
+      virtual void waitForReceived(void*, int, int)
+      {}
 
-    virtual bool isClonable() const
-    { return true; }
+      virtual bool sendNonBlocking (void*, int, int, DataHolder*)
+      { return true; }
 
-    virtual TransportHolder* clone() const
-    { return new TH_ZoidClient(); }
+      virtual void waitForSent(void*, int, int)
+      {}
 
-    virtual void reset()
-    {}
+      virtual string getType() const
+      { return "TH_ZoidClient"; }
 
-  private:
-    // Copying is not allowed
-    TH_ZoidClient(const TH_ZoidClient& that);
-    TH_ZoidClient& operator=(const TH_ZoidClient& that);
-  };
-} // namespace CS1
+      virtual bool isClonable() const
+      { return true; }
+
+      virtual TransportHolder* clone() const
+      { return new TH_ZoidClient(); }
+
+      virtual void reset()
+      {}
+
+    private:
+      // Copying is not allowed
+      TH_ZoidClient(const TH_ZoidClient& that);
+      TH_ZoidClient& operator=(const TH_ZoidClient& that);
+
+      //# Datamembers
+    };
+
+    // @}
 } // namespace LOFAR
 
 #endif

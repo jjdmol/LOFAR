@@ -1,2 +1,2 @@
 #!/bin/sh
-$lofar_sharedir/runtest.sh tPosition 2>&1 > tPosition.log
+$lofar_sharedir/runtest.sh -stdout tPosition 2>&1 > tPosition.log

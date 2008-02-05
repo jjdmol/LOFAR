@@ -32,7 +32,7 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
-#include <Common/lofar_iosfwd.h>
+#include <Common/StreamUtil.h>
 #include <APS/ParameterSet.h>
 #include <BBSKernel/BBSKernelStructs.h>
 

@@ -61,7 +61,6 @@ static cntlrDefinition_t controllerTable[] = {
 	{	"DigitalBoardControl", 	"DigBoardCtrl",	true	},
 	{	"BeamControl", 			"BeamCtrl",		false	},
 	{	"CalibrationControl", 	"CalCtrl",		false	},
-	{	"TBBControl",		 	"TBBCtrl",		false	},
 	{	"StationInfraControl", 	"StsInfraCtrl",	true	},
 	{	"TestController", 		"TestCtrl",		false	},
 	{	"",						"",				false	}
@@ -225,7 +224,6 @@ int32	getControllerType	(const string&	controllerName)
 //	@cabinet@
 //	@subrack@
 //	@RSPboard@
-//	@TBboard@
 //	@rcu@
 //
 string	createPropertySetName(const string&		propSetMask,
@@ -268,9 +266,6 @@ string	createPropertySetName(const string&		propSetMask,
 	}
 	if ((pos = psName.find("@RSPBoard@")) != string::npos) {
 		psName.replace(pos, 10, string("RSPBoard%d"));
-	}
-	if ((pos = psName.find("@TBBoard@")) != string::npos) {
-		psName.replace(pos, 9, string("TBBoard%d"));
 	}
 	if ((pos = psName.find("@rcu@")) != string::npos) {
 		psName.replace(pos, 5, string("RCU%d"));
@@ -370,6 +365,25 @@ bool sendControlResult(GCF::TM::GCFPortInterface&	port,
 			formatString("State %04X is not supported by 'sendControlResult'", signal));
 
 	}
+}
+
+//
+// setControllerMode(PSname, modeNr)
+//
+// TODO MOVE TO RTDBCommon or something like that.
+void setControllerMode(const string&	propertyName, int16	modeNr)
+{
+#if 0
+	ASSERTSTR (modeNr >= CT_MODE_OFF && modeNr < CT_MODE_NR_MODES,
+									"No mode defined with nr: " << modeNr);
+
+	// construct command and store that in __navObjectState, PVSS scripts will
+	// do the rest.
+	string	command(propertyName+".state="+modeNameTable[modeNr]);
+	LOG_DEBUG_STR("Setting state: " << command);
+	GCFPropertyProxy	pp;
+	pp.setPropValue("__navObjectState", command);
+#endif
 }
 
 

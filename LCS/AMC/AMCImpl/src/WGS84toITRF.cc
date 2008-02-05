@@ -2,7 +2,6 @@
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MeasFrame.h>
-#include <measures/Measures/MCPosition.h>
 #include <casa/Exceptions/Error.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_iomanip.h>

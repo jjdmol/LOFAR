@@ -20,7 +20,6 @@
 //#
 //#  $Id$
 
-
 #ifndef TBBCONTROLDEFINES_H
 #define TBBCONTROLDEFINES_H
 
@@ -29,26 +28,23 @@ namespace LOFAR {
 
 #define BC_TASKNAME					"TBBCtrl"
 
-#define PSN_TBB_CTRL   					"LOFAR_PermSW_TBBCtrl"
-#define PST_TBB_CTRL   					"TBBCtrl"
-
-#define PN_TBB_CONNECTED				"connected"
-#define PN_TBB_SEQUENCE_NR			"sequence_nr"
-#define PN_TBB_TIME							"time"
-#define PN_TBB_SAMPLE_NR				"sample_nr"		  
-#define PN_TBB_TRIGGER_SUM			"trigger_sum"		  
-#define PN_TBB_TRIGGER_SAMPLES	"trigger_samples"		  
-#define PN_TBB_PEAK_VALUE				"peak_value"		  
-//#define PN_TBB_ 			""		  
-
-#define PN_TBB_TBBID 						"TbbID"
+#define PSN_TBB_CTRL   				"LOFAR_PermSW_TBBCtrl"
+#define PST_TBB_CTRL   				"TBBCtrl"
+#define PN_BC_CONNECTED 			"connected"
+#define PN_BC_SUBBANDLIST 			"subbandList"
+#define PN_BC_TBBLETLIST 			"beamletList"
+#define PN_BC_SUBARRAY 				"subArray"
+#define PN_BC_ANGLE1 				"angle1"
+#define PN_BC_ANGLE2	 			"angle2"
+#define PN_BC_ANGLETIMES 			"angleTimes"
+#define PN_BC_TBBID 				"beamID"
 
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_CURACT			"currentAction"
 #define PVSSNAME_FSM_ERROR			"error"
 #define PVSSNAME_FSM_LOGMSG			"logMsg"
 #define PVSSNAME_FSM_STATE			"state"
-#define PVSSNAME_FSM_CHILDSTATE	"childState"
+#define PVSSNAME_FSM_CHILDSTATE		"childState"
 
 }; // StationCU
 }; // LOFAR

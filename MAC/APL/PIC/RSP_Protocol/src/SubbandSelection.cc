@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include <APL/RSP_Protocol/SubbandSelection.h>
-#include <APL/RTCCommon/MarshallBlitz.h>
+#include <APL/RTCCommon/Marshalling.h>
 
 #include <blitz/array.h>
 

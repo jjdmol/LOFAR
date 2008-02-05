@@ -33,8 +33,8 @@
 #include <BBSControl/BBSStep.h>
 #include <BBSControl/BBSStrategy.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
+#include <APS/Exceptions.h>
 #include <Common/LofarLogger.h>
 
 //# For getpid() and pid_t.
@@ -70,6 +70,7 @@
 namespace LOFAR
 {
   using ACC::APS::ParameterSet;
+  using ACC::APS::APSException;
 
   namespace BBS 
   {
@@ -106,7 +107,7 @@ namespace LOFAR
       string opts("dbname=" + dbname  + " user=" + user + 
                   " host=" + host + " port=" + port);
       try {
-        LOG_DEBUG_STR("Connecting to database: " << opts);
+        LOG_DEBUG_STR("Connecting to database using options: " << opts);
         itsConnection.reset(new pqxx::connection(opts));
       } CATCH_PQXX_AND_RETHROW;
     }
@@ -138,8 +139,8 @@ namespace LOFAR
       ostringstream query;
       query << "SELECT * FROM blackboard.get_next_command(" << getpid() << ")";
 
-      // Note the use of query.str(""): this clears the ostringstream so it
-      // can be reused later on.
+      // Note the use of query.str(""): this clears the ostringstream so it can
+      // be reused later on.
       ParameterSet ps = execQuery(query.str());
       query.str("");
 
@@ -151,26 +152,31 @@ namespace LOFAR
       // Get the command-id.
       CommandId id = ps.getInt32("id");
 
-      // Get the command name. Only steps have names, so this is a way to
-      // differentiate between ordinary commands and steps.
-      string name = ps.getString("Name");
+      // Retrieve the command parameters associated with the received command.
+      query << "SELECT * FROM blackboard.get_" << toLower(type) << "_args"
+            << "(" << id << ")";
 
-      if (!name.empty()) {
-        // Name is not empty, so we must construct a BBSStep object.
-        // Get additional information needed to create the BBSStep.
-        string buf = ps.getString("ParameterSet");
+      // Execute the query. Add the result to the ParameterSet \a ps.
+      ps.adoptCollection(execQuery(query.str()));
 
-        // The string \a buf now contains a string of key/value pairs. Turn it
-        // into a ParameterSet. Note that we can safely reuse \a ps.
+      try {
+        // If the ParameterSet \a ps contains a key "Name", then the command is
+        // a BBSStep. In that case we need to prefix all keys with
+        // "Step.<name>".  (Yeah, I know, it's kinda clunky).
+        string name = ps.getString("Name");
+
+        // Self-adopt is not supported on a ParameterSet; hence this detour.
+        string buf;
+        ps.writeBuffer(buf);
         ps.clear();
-        ps.adoptBuffer(buf);
+        ps.adoptBuffer(buf, "Step." + name + ".");
 
         // Create a new BBSStep and return it.
         return make_pair(BBSStep::create(name, ps, 0), id);
-      }
-      else {
-        // Here we handle all other commands. They can be constructed using
-        // the CommandFactory and initialized using read().
+      } 
+      catch (APSException&) {
+        // In the catch clause we handle all other commands. They can be
+        // constructed using the CommandFactory and initialized using read().
         shared_ptr<Command> command(CommandFactory::instance().create(type));
         ASSERTSTR(command, "Failed to create a `" << type << 
                   "' command object");
@@ -188,8 +194,8 @@ namespace LOFAR
       // \a aCommand into the command queue.
       QueryBuilder::AddCommand query;
 
-      // Let \a strategy accept the visiting query object, which, as a result,
-      // will build an insert query for the a strategy command type.
+      // Let \a aCommand accept the visiting query object, which, as a result,
+      // will build an insert query for the correct command type.
       strategy.accept(query);
 
       // Execute the query. Throw exception if strategy was set already.
@@ -369,18 +375,17 @@ namespace LOFAR
       
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    ParameterSet CommandQueue::ExecQuery::emptyResult;
+    string CommandQueue::ExecQuery::emptyString;
 
     CommandQueue::ExecQuery::ExecQuery(const string& query) :
       pqxx::transactor<>("ExecQuery"),
       itsQuery(query),
-      itsResult(emptyResult)
+      itsResult(emptyString)
     {
     }
 
 
-    CommandQueue::ExecQuery::ExecQuery(const string& query, 
-                                       ParameterSet& result) :
+    CommandQueue::ExecQuery::ExecQuery(const string& query, string& result) :
       pqxx::transactor<>("ExecQuery"),
       itsQuery(query),
       itsResult(result)
@@ -397,18 +402,19 @@ namespace LOFAR
 
     void CommandQueue::ExecQuery::on_commit()
     {
+      ostringstream oss;
       uint rows(itsPQResult.size());
       uint cols(itsPQResult.columns());
 
-      itsResult.add("_nrows", toString(rows));
+      oss << "_nrows = " << rows << endl;
       for (uint row = 0; row < rows; ++row) {
-        string prefix = "_row(" + toString(row) + ").";
         for (uint col = 0; col < cols; ++col) {
-          string key   = prefix + itsPQResult[row][col].name();
-          string value = itsPQResult[row][col].c_str(); 
-          itsResult.add(key, value);
+          oss << "_row(" << row << ")."
+              << itsPQResult[row][col].name() << " = "
+              << itsPQResult[row][col].c_str() << endl;
         }
       }
+      itsResult = oss.str();
     }
 
 
@@ -450,19 +456,23 @@ namespace LOFAR
                                          bool doAlwaysPrefix) const
     {
       // Create a transactor object and execute the query. The result will be
-      // stored in the ParameterSet \a ps.
-      ParameterSet ps;
+      // stored, as a string in \a result.
+      string result;
       try {
-        itsConnection->perform(ExecQuery(query, ps));
-        LOG_TRACE_VAR_STR("Result of query: " << ps);
+        itsConnection->perform(ExecQuery(query, result));
+        LOG_TRACE_VAR_STR("Result of query: " << result);
       } CATCH_PQXX_AND_RETHROW;
 
-      // If the result consists of only one row, and if we do not always want
-      // to prefix, then strip off the prefix "_row(0)".
+      // Create an empty parameter set and add the result to it.
+      ParameterSet ps;
+      ps.adoptBuffer(result);
+
+      // If the result consists of only one row, and we do not always want to
+      // prefix, then strip off the prefix "_row(0)". 
       if (ps.getUint32("_nrows") == 1 && !doAlwaysPrefix) {
         ps = ps.makeSubset("_row(0).");
       }
-
+      
       // Return the ParameterSet
       return ps;
     }

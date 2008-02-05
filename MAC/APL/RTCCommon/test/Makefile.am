@@ -1,12 +1,8 @@
-check_PROGRAMS				= tMarshalling tBlitz
+check_PROGRAMS				= tMarshalling 
 
 tMarshalling_SOURCES		= tMarshalling.cc
 tMarshalling_LDADD			= 
 tMarshalling_DEPENCIES		= $(LOFAR_DEPEND)
-
-tBlitz_SOURCES				= tBlitz.cc
-tBlitz_LDADD				= 
-tBlitz_DEPENCIES			= $(LOFAR_DEPEND)
 
 TESTSCRIPTS					= 
 

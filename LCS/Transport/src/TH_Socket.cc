@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Transport/TH_Socket.h>
 
-#if defined(__linux__) && !defined(USE_NOSOCKETS)
+#ifdef __linux__
 #include <sys/sysctl.h>
 #endif
 
@@ -358,8 +358,7 @@ bool TH_Socket::initBuffers(int recvBufferSize, int sendBufferSize) {
   // set the size of the kernel level socket buffer
   // use -1 in the constructor (default) to leave it untouched.
   
-  // BG/L doesn't implement setsockopt; also ignore if no sockets are used.
-#if !defined(HAVE_BGL) && !defined(USE_NOSOCKETS)
+#ifndef HAVE_BGL    // BG/L doesn't implement setsockopt
   int socketFD; 
   if (itsIsServer && itsServerSocket != NULL) socketFD = itsServerSocket->getSid();
   else socketFD = itsDataSocket->getSid();

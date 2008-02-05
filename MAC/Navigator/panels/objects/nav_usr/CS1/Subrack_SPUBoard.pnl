@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 SubRackSPUBoard
-PANEL,-1135 -118 745 269 N "_3DFace" 1
+PANEL,489 117 745 269 N "_3DFace" 1
 "$datapoint"
 "main()
 {

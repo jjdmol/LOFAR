@@ -68,7 +68,7 @@ void UpdXCStatsCmd::complete(CacheBuffer& cache)
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
-  ack.handle = (memptr_t)this; // opaque pointer used to refer to the subscription
+  ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
   ack.stats().resize(cache.getXCStats()().shape());
   ack.stats() = cache.getXCStats()();
 

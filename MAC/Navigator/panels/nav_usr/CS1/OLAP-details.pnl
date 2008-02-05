@@ -1,14 +1,10 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,311 124 950 741 N "_3DFace" 1
+PANEL,429 131 950 741 N "_3DFace" 1
 "$datapoint"
 "main()
 {
-
-	// check if this panel is placed on the right datapoint
-	checkDpType($datapoint,\"OnlineCtrl\");  
-	
 	string observation;
   dyn_string dpElements = splitDatapointPath($datapoint);
   if(dynlen(dpElements) >= 3)
@@ -168,21 +164,17 @@ LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-140-100-100-*-*-iso8859-1|
 0 ""
 1
 LANG:1 7 Storage
-1 175 22 "" 9
+1 196 22 "" 9
 0
-1 176 22 "" 6
+1 197 22 "" 6
 0
-1 177 22 "" 4
+1 198 22 "" 4
 0
-1 178 22 "0" 1
+1 200 23 "" 9
 0
-1 179 23 "" 9
+1 201 23 "" 6
 0
-1 180 23 "" 6
-0
-1 181 23 "" 4
-0
-1 182 23 "0" 1
+1 202 23 "" 4
 0
 4 204
 "Line2"
@@ -229,15 +221,11 @@ E E 0 3 1 0 1 E  240 340 90 340
 0
 1 209 24 "" 4
 0
-1 210 24 "0" 1
-0
 1 211 25 "" 9
 0
 1 212 25 "" 6
 0
 1 213 25 "" 4
-0
-1 214 25 "0" 1
 0
 4 215
 "Line5"
@@ -344,13 +332,13 @@ E
 E
 
 3 1
-1 221 22 "" 10
+1 199 22 "" 8
 0
-1 222 23 "" 10
+1 203 23 "" 8
 0
-1 223 24 "" 10
+1 210 24 "" 8
 0
-1 224 25 "" 10
+1 214 25 "" 8
 0
 0
 LAYER, 1 
@@ -383,26 +371,22 @@ LANG:1 6 Layer8
 0
 3 22 ""
 "objects\\nav_usr\\CS1\\OLAP_app.pnl" 381 154 T 72 1 0 1  -91 -34  
-3
-"$App""Delay"
+2
 "$AppName""CS1_DelayCompensation"
 "$datapoint""$datapoint"
 3 23 ""
 "objects\\nav_usr\\CS1\\OLAP_app.pnl" 469 368 T 73 1 0 1  -209 -58  
-3
-"$App""Input"
+2
 "$AppName""CS1_InputSection"
 "$datapoint""$datapoint"
 3 24 ""
 "objects\\nav_usr\\CS1\\OLAP_app.pnl" 209 475 T 77 1 0 1  -72 6  
-3
-"$App""BGL"
+2
 "$AppName""CS1_BGL_Processing"
 "$datapoint""$datapoint"
 3 25 ""
 "objects\\nav_usr\\CS1\\OLAP_app.pnl" 216 618 T 78 1 0 1  -176 32  
-3
-"$App""Storage"
+2
 "$AppName""CS1_Storage"
 "$datapoint""$datapoint"
 0

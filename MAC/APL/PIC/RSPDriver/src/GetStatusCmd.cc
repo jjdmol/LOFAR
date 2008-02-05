@@ -50,9 +50,6 @@ GetStatusCmd::~GetStatusCmd()
   delete m_event;
 }
 
-//
-// ack(cache)
-//
 void GetStatusCmd::ack(CacheBuffer& cache)
 {
   RSPGetstatusackEvent ack;
@@ -63,8 +60,10 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   ack.sysstatus.board().resize(m_event->rspmask.count());
 
   int result_rsp = 0;
-  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++) {
-    if (m_event->rspmask[cache_rsp]) {
+  for (int cache_rsp = 0; cache_rsp < StationSettings::instance()->nrRspBoards(); cache_rsp++)
+  {
+    if (m_event->rspmask[cache_rsp])
+    {
       ack.sysstatus.board()(result_rsp) = cache.getSystemStatus().board()(cache_rsp);
       result_rsp++;
     }
@@ -74,57 +73,36 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-//
-// apply(cache, modFlag)
-//
 void GetStatusCmd::apply(CacheBuffer& /*cache*/, bool /*setModFlag*/)
 {
   // no-op
 }
 
-//
-// complete(cache)
-//
 void GetStatusCmd::complete(CacheBuffer& cache)
 {
   ack(cache);
 }
 
-//
-// getTimeStamp()
-//
 const Timestamp& GetStatusCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-//
-// setTimeStamp(timestamp)
-//
 void GetStatusCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-//
-// validate()
-//
 bool GetStatusCmd::validate() const
 {
   return (m_event->rspmask.count() <= (unsigned int)StationSettings::instance()->nrRspBoards());
 }
 
-//
-// readFromCache()
-//
 bool GetStatusCmd::readFromCache() const
 {
   return m_event->cache;
 }
 
-//
-// ack_fail()
-//
 void GetStatusCmd::ack_fail()
 {
   RSPGetstatusackEvent ack;

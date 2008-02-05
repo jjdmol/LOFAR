@@ -65,7 +65,7 @@ void PageperiodCmd::saveTbbEvent(GCFEvent& event)
 	
 	int32 boardnr;
 	int32 channelnr;
-	TS->convertRcu2Ch(itsTBBE->rcu,&boardnr,&channelnr);
+	TS->convertRcu2Ch(itsTBBE->channel,&boardnr,&channelnr);
 		
 	setBoardNr(boardnr);
 			

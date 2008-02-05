@@ -26,7 +26,7 @@
 //# Includes
 #include <BBSControl/pqutil.h>
 #include <Common/lofar_sstream.h>
-#include <BBSControl/StreamUtil.h>
+#include <Common/StreamUtil.h>
 
 namespace LOFAR
 {

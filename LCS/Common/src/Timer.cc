@@ -29,7 +29,6 @@
 #include <fstream>
 #include <iomanip>
 
-#include <Common/PrettyUnits.h>
 #include <Common/Timer.h>
 
 
@@ -86,27 +85,42 @@ double NSTimer::getElapsed() const
 }
 
 
+void NSTimer::print_time(ostream &str, const char *which, double time) const
+{
+    static const char *units[] = { " ns", " us", " ms", "  s", " ks", 0 };
+    const char	      **unit   = units;
+
+    time = 1000.0 * time / CPU_speed_in_MHz;
+
+    while (time >= 999.5 && unit[1] != 0) {
+	time /= 1000.0;
+	++ unit;
+    }
+
+    str << which << " = " << setprecision(3) << setw(4) << time << *unit;
+}
+
+
 ostream &NSTimer::print(ostream &str) const
 {
-    if (itsName.empty()) {
-        str << "timer: ";
+    if (name == 0) {
+      str << "timer: ";
     } else {
-        str << left << setw(25) << itsName << ": " << right;
+      str << left << setw(25) << name << ": " << right;
     }
-    if (count == 0) {
-	str << "not used" << endl;
-    } else {
-        double total = static_cast<double>(total_time);
-	if (CPU_speed_in_MHz == 0) {
-	    str << "avg = " << total / static_cast<double>(count);
-	    str << ", total = " << total_time << " cycles";
-	} else {
-	    total /= 1e6 * CPU_speed_in_MHz;
-	    str << "avg = " << PrettyTime(total / static_cast<double>(count))
-		<< ", total = " << PrettyTime(total);
-	}
+
+    if (CPU_speed_in_MHz == 0)
+	str << "could not determine CPU speed" << endl;
+    else if (count > 0) {
+	double total = static_cast<double>(total_time);
+
+	print_time(str, "avg", total / static_cast<double>(count));
+	print_time(str, ", total", total);
 	str << ", count = " << setw(9) << count << endl;
     }
+    else
+	str << "not used" << endl;
+
     return str;
 }
 

@@ -109,7 +109,7 @@ private:
 	uint32					itsInstanceNr;
 	time_t					itsStartTime;		// timestamp the controller was started
 	uint32					itsClock;
-	void*					itsSubscription;
+	uint32					itsSubscription;
 };
 
   };//StationCU

@@ -64,7 +64,7 @@ TestController::TestController(const string&	cntlrName) :
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
 	// for debugging purposes
-	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_signalnames);
 }
 
 
@@ -85,7 +85,7 @@ TestController::~TestController()
 GCFEvent::TResult TestController::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("initial:" << evtstr(event) << "@" << port.getName());
 
 	switch (event.signal) {
 	case F_ENTRY: {
@@ -115,7 +115,7 @@ GCFEvent::TResult TestController::initial_state(GCFEvent& event,
 //
 GCFEvent::TResult TestController::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-	LOG_DEBUG_STR ("active:" << eventName(event) << "@" << port.getName());
+	LOG_DEBUG_STR ("active:" << evtstr(event) << "@" << port.getName());
 
 	switch (event.signal) {
 	case F_TIMER:  {

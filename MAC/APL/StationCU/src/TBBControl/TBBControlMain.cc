@@ -24,7 +24,6 @@
 #include <Common/LofarLogger.h>
 
 #include "TBBControl.h"
-#include "VHECRTask.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::StationCU;
@@ -39,9 +38,6 @@ int main(int argc, char* argv[])
 
 	TBBControl		tc(argv[1]);
 	tc.start(); 	// make initial transition
-
-	VHECRTask*		vt(VHECRTask::instance());
-	vt->start();
 
 	GCFTask::run();
 

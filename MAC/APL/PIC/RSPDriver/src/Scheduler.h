@@ -79,7 +79,7 @@ namespace LOFAR {
       /**
        * Remove commands matching the specified port and handle.
        */
-      int remove_subscription(GCFPortInterface& port, memptr_t handle);
+      int remove_subscription(GCFPortInterface& port, uint32 handle);
       
       /**
        * Add a synchronization action to be carried out
@@ -114,7 +114,7 @@ namespace LOFAR {
        */
       int pqueue_remove_commands(pqueue& p,
 				 GCFPortInterface& port,
-				 memptr_t handle = 0);
+				 uint32 handle = 0);
 
       /**
        * Constants from the config file converted to the correct type.

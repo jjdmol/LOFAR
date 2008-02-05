@@ -69,7 +69,13 @@ ParameterSetImpl::~ParameterSetImpl()
 //
 std::ostream&	operator<< (std::ostream& os, const ParameterSetImpl &thePS)
 {
-	thePS.writeStream(os);
+	KeyValueMap::const_iterator		iter = thePS.begin();
+
+	while (iter != thePS.end()) {
+		os << "[" << iter->first << "],[" << iter->second << "]" << endl;
+		iter++;
+	}
+
 	return os;
 }
 
@@ -206,7 +212,7 @@ void ParameterSetImpl::readFile(const	string&	theFilename,
 		       formatString("file %s is empty", theFilename.c_str()));
 	}
 
-	readStream(paramFile, prefix, merge);
+	addStream(paramFile, prefix, merge);
 
 	paramFile.close();
 }
@@ -223,20 +229,20 @@ void ParameterSetImpl::readBuffer(const	string&	theBuffer,
 {
 	istringstream		iss(theBuffer, istringstream::in);
 
-	readStream(iss, prefix, merge);
+	addStream(iss, prefix, merge);
 
 }
 
 //
-// readStream
+// addStream
 // (private)
 //
 // Disentangles the stream and adds the Key-Values pair to the current 
 // ParameterSetImpl.
 //
-void ParameterSetImpl::readStream(istream&	inputStream, 
-				  const string&	prefix,
-				  bool		merge)
+void ParameterSetImpl::addStream(istream&	inputStream, 
+				 const string&	prefix,
+				 bool		merge)
 {
 	char	paramLine[4096];
 	char*	keyStr;
@@ -1036,9 +1042,22 @@ void ParameterSetImpl::writeFile(const string&	theFilename,
 	}
 
 	// Write all the pairs to the file
-	writeStream(paramFile);
+	const_iterator		curPair = begin();
+	while (curPair != end()) {
+		// Key can always be written.
+		paramFile << curPair->first << "=";
 
-	// Close the file
+		//* value may begin or end in a space: use quotes
+		if (*(curPair->second.begin()) == ' ' || *(curPair->second.rbegin()) == ' ') {
+			paramFile << "\"" << curPair->second << "\"" << endl;
+		}
+		else {
+ 			paramFile << curPair->second << endl;
+		}
+
+		curPair++;
+	}
+
 	paramFile.close();
 }
 
@@ -1050,37 +1069,23 @@ void ParameterSetImpl::writeFile(const string&	theFilename,
 //
 void ParameterSetImpl::writeBuffer(string&	aBuffer) const
 {
-	ostringstream oss;
-	writeStream(oss);
-	aBuffer = oss.str();
-}
-
-//
-// writeStream
-//
-// Writes the Key-Value pairs from the current ParameterSetImpl to the given
-// output stream.
-//
-void ParameterSetImpl::writeStream(ostream&	os) const
-{
 	// Write all the pairs to the file
 	const_iterator		curPair = begin();
 	while (curPair != end()) {
 		// Key can always be written.
-		os << curPair->first << "=";
+		aBuffer += (curPair->first + "=");
 
 		//* value may begin or end in a space: use quotes
 		if (*(curPair->second.begin()) == ' ' || *(curPair->second.rbegin()) == ' ') {
-			os << "\"" << curPair->second << "\"" << endl;
+			aBuffer += ("\"" + curPair->second + "\"\n");
 		}
 		else {
- 			os << curPair->second << endl;
+ 			aBuffer += (curPair->second + "\n");
 		}
 
 		curPair++;
 	}
 }
-
 //-------------------------- global functions -----------------------------
 //
 // StringToTime_t (aString) 

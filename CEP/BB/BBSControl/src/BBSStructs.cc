@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBSControl/BBSStructs.h>
-#include <BBSControl/StreamUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/lofar_sstream.h>
 #include <APS/ParameterSet.h>
 

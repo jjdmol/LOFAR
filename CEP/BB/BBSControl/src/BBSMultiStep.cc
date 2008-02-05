@@ -26,7 +26,7 @@
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/CommandVisitor.h>
 #include <APS/ParameterSet.h>
-#include <BBSControl/StreamUtil.h>
+#include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -83,7 +83,7 @@ namespace LOFAR
 
     void BBSMultiStep::write(ParameterSet& ps) const
     {
-      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << name());
+      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << getName());
       BBSStep::write(ps);
       writeSteps(ps);
     }
@@ -91,7 +91,7 @@ namespace LOFAR
 
     void BBSMultiStep::read(const ParameterSet& ps)
     {
-      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << name());
+      LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << getName());
       BBSStep::read(ps);
       readSteps(ps);
     }
@@ -109,10 +109,10 @@ namespace LOFAR
       ostringstream oss;
 
       // Write the "Steps" key/value pair
-      oss << "Step." << name() << ".Steps = [ ";
+      oss << "Step." << getName() << ".Steps = [ ";
       for (uint i = 0; i < itsSteps.size(); ++i) {
         if (i > 0) oss << ", ";
-        oss << itsSteps[i]->name();
+        oss << itsSteps[i]->getName();
       }
       oss << " ]";
       ps.adoptBuffer(oss.str());
@@ -144,17 +144,17 @@ namespace LOFAR
     }
     
 
-    void BBSMultiStep::infiniteRecursionCheck(const string& nm) const
+    void BBSMultiStep::infiniteRecursionCheck(const string& name) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      if (nm == name()) {
+      if (name == getName()) {
 	THROW (BBSControlException, 
 	       "Infinite recursion detected in defintion of BBSStep \""
-	       << nm << "\". Please check your ParameterSet file.");
+	       << name << "\". Please check your ParameterSet file.");
       }
       const BBSMultiStep* parent;
       if ((parent = dynamic_cast<const BBSMultiStep*>(getParent())) != 0) {
-	parent->infiniteRecursionCheck(nm);
+	parent->infiniteRecursionCheck(name);
       }
     }
 

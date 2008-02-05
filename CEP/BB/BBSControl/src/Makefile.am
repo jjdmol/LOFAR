@@ -28,7 +28,6 @@ libbbscontrol_la_SOURCES	= \
 	pqutil.cc \
 	RecoverCommand.cc \
 	SolverProcessControl.cc \
-	StreamUtil.cc \
 	SynchronizeCommand.cc \
 	QueryBuilder/AddCommand.cc
 

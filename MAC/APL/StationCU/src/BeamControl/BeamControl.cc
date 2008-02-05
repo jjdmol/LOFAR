@@ -218,7 +218,7 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 			itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_SUBARRAY,	GCFPVString(""));
-//			itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
+			itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
 		  
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
@@ -655,7 +655,7 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 		return (CT_RESULT_BEAMALLOC_FAILED);
 	}
 	itsBeamID = ackEvent.handle;
-//	itsPropertySet->setValue(PN_BC_BEAMID, GCFPVInteger(itsBeamID));
+	itsPropertySet->setValue(PN_BC_BEAMID, GCFPVInteger(itsBeamID));
 
 	// read new angles from parameterfile.
 	vector<string>	sourceTimes;
@@ -736,7 +736,7 @@ bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 	itsPropertySet->setValue(PN_BC_ANGLE1,		GCFPVString(""));
 	itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
 	itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
-//	itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
+	itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
 
 	itsBeamID = 0;
 

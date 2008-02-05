@@ -1,4 +1,4 @@
-pkginclude_HEADERS = Package__Version.h  \
+pkginclude_HEADERS = \
 	BlobAipsIO.h \
         BlobArray.h \
 	BlobArray.tcc \

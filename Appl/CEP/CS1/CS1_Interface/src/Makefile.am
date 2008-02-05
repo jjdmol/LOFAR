@@ -1,21 +1,19 @@
 lib_LTLIBRARIES			= libcs1_interface.la
 
-libcs1_interface_la_SOURCES	= Package__Version.cc  \
-	BGL_Configuration.cc \
-	BGL_Mapping.cc \
-	CS1_Parset.cc \
+libcs1_interface_la_SOURCES	= \
+	bitset.cc \
 	DH_Delay.cc \
+	DH_RFI_Mitigation.cc \
+	DH_RSP.cc \
+	DH_RSPSync.cc \
+	DH_Subband.cc \
 	DH_Visibilities.cc \
 	RSPTimeStamp.cc \
 	Stub_BGL.cc \
-	Stub_Delay.cc
+	Stub_Delay.cc \
+	CS1_Parset.cc \
+	Stub_RSP.cc
 
 configfilesdir			= $(bindir)
-
-bin_PROGRAMS = versioncs1_interface
-
-versioncs1_interface_SOURCES      = versioncs1_interface.cc
-versioncs1_interface_LDADD        = libcs1_interface.la
-versioncs1_interface_DEPENDENCIES = libcs1_interface.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

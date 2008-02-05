@@ -17,7 +17,7 @@
 //
 //  [+ (base-name) +].[+ (suffix) +]: [+ description +]
 //
-//  Copyright (C) 2003-2008
+//  Copyright (C) 2003
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -53,7 +53,6 @@ const struct protocolStrings		LOFAR::[+ (base-name) +]::[+ protocol-name +]_STRI
 [+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
 #include <GCF/TM/GCF_Protocols.h>
-#include <Common/LofarTypes.h>
 #include <string>
 
 namespace LOFAR

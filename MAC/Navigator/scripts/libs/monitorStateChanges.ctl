@@ -21,6 +21,7 @@
 //#  $Id$
 #uses "nav_fw/gcf-common.ctl"
 
+
 // This script needs to run on every CSU, CCU and MainCU
 // it monitors the state changes in the database, and will update the childstates accordingly
 // 
@@ -50,11 +51,9 @@ void subscribeObjectStateChange() {
 
   LOG_TRACE("subscribeObjectStateChange");
   // ROutine to connnect to the __navObjectState point to trigger statechanges
-  // So that childState points can be set/reset accordingly.
+  // So that chilcState points can bes set/reset accordingly.
 
-  dpConnect("objectStateTriggered",true,"__navObjectState.DPName",
-            "__navObjectState.stateNr",
-            "__navObjectState.message");
+  dpConnect("objectStateTriggered",true,"__navObjectState.");
   
   //Find out the Database we are running on
   string database=getSystemName();
@@ -100,6 +99,7 @@ void connectMainPoints() {
 // 
 // Callback function that is triggered by the (dis)appearance of e Distributed system.
 //
+// Added 02-04-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 void distSystemTriggered(string dp1, dyn_int systemList) {
 
@@ -118,17 +118,10 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
   string queryObservation = "SELECT '_original.._value' FROM '{LOFAR_ObsSW_Observation*.state,LOFAR_ObsSW_Observation*.childState}' REMOTE ALL WHERE _DPT = \"StnObservation\" SORT BY 1 DESC";
 
 
-  LOG_DEBUG("isConnected: "+isConnected);
   if (isConnected) {
-    if (dpQueryDisconnect("stationStateTriggered","PermSW") < 0) {
-      LOG_DEBUG("disconnect PermSW: "+getLastError());
-    }
-    if (dpQueryDisconnect("stationStateTriggered","PIC") < 0) {
-      LOG_DEBUG("disconnect PIC: "+getLastError());
-    }
-    if (dpQueryDisconnect("stationStateTriggered","Observation") < 0) {
-      LOG_DEBUG("disconnect Observation: "+getLastError());
-    }
+    dpQueryDisconnect("stationStateTriggered","PermSW");
+    dpQueryDisconnect("stationStateTriggered","PIC");
+    dpQueryDisconnect("stationStateTriggered","Observation");
   }
 
   if (dynlen(systemList) > 0 ) {
@@ -136,9 +129,7 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
     dpQueryConnectSingle("stationStateTriggered",false,"PIC",queryPIC);
     dpQueryConnectSingle("stationStateTriggered",false,"Observation",queryObservation);
     isConnected=true;
-  } else {
-    isConnected=false;
-  }    
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -164,28 +155,26 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
     state = tab[z][2];
     string dp=tab[z][1];
     station = dpSubStr(dp,DPSUB_SYS);
-    strreplace(dp,station,"");
     strreplace(station,":","");
-
     // strip element name and datapoint
-    datapoint = dpSubStr(dp,DPSUB_DP);
-  
-    // skip the point
-    element = substr(dp,strlen(datapoint)+1,((strlen(dp))-(strlen(datapoint)))); 
+ 
+    dyn_string aS=strsplit(dp,".");
+    if (dynlen(aS) > 0 ) {	
+      datapoint = dpSubStr(aS[1],DPSUB_DP);
+    }
+    if (dynlen(aS) > 1 ) {	
+      element = aS[2];
+    }
 
     // get the ArmName
-    armName=navFunct_getArmFromStation(station);
+    armName=getArmFromStation(station);
 
 
     LOG_DEBUG("station : ",station, " DP: " ,datapoint," element: ",element);
 
     // if all needed values are available we can start doing the major update.
-    if (state >-1 && datapoint != "" && station != "" && armName != "" && element != ""){
-      if (ident == "PIC") {
-	      setStates(datapoint + "_"+ armName + "_" + station,element,state,"",true);
-      } else {
-	      setStates(datapoint,element,state,"",true);
-      }
+    if (state >-1 & datapoint != "" & station != "" & armName != "" & element != ""){
+      setStates(datapoint + "_"+ armName + "_" + station,element,state,true);
     }
   }
 }
@@ -197,60 +186,43 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
 //
 // Added 26-3-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-void objectStateTriggered(string dp1, string trigger,
-                          string dp2, int state,
-                          string dp3, string message) {
+void objectStateTriggered(string dp1, string trigger) {
   // __navObjectState change.
   // This point should have points like:
-  //
-  // LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.state
-  // 1 (= good)
-  // a msg indicating extra comments on the state
-  //                                     
+  // LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.state=bad
   // This State should be set to childState=bad in all upper (LOFAR-PIC_Cabinet0_Subrack0_RSPBoard0) treenodes
   // ofcourse we need to monitor if this statechange is allowed.
 
 
-  if (trigger == "") return;
+  LOG_TRACE("Entered StateChangeTriggered with trigger:", trigger);
 
-  LOG_TRACE("Entered ObjectStateTriggered with trigger:" + trigger);
-
+  int i,j;
+  string state    = "";
   string datapoint = "";
   string element   = "";
   
-  
-  // the datapointname can hold _ and . seperated path elements.  however, after the last point there should be
-  // an element state, or an element childState
-  //
-  // we need to strip that last element from the rest of the pathname
-  
-  // strip the system name
-  trigger = dpSubStr(trigger,DPSUB_DP_EL);
-
-  int start=strpos(trigger,".state");
-  if (start >= 0) {
-  	element = "state";
-  } else {
-    start=strpos(trigger,".childState");
-    if (start >= 0) {
-   	  element = "childState";
-    } else {
-      LOG_DEBUG("ERROR: No state nor childState found in DPName");
-      return;
+  dyn_string vals= strsplit(trigger,"=");
+	
+  if (dynlen(vals) >1 ) {	
+    state = vals[2];
+    // strip element name and datapoint
+    dyn_string aS=strsplit(vals[1],".");
+    if (dynlen(aS) > 0 ) {	
+     datapoint = aS[1];
     }
-  }
-  
-  // strip the last .state or .childState from the datapoint name.
-  // the remainder is used as path
-  datapoint = (substr(trigger,0,start));
-  
-  LOG_DEBUG("state:  " + state + " DP: " + datapoint + " Element: " + element + " Message: " + message);
-  // if all needed values are available we can start doing the major update.
-  if (state >= 0 && datapoint != "" && element != "" && dpExists(datapoint+"."+element)){
-    
-    setStates(datapoint,element,state,message,false);
-  } else {
-    LOG_ERROR("result: not complete command, or database could not be found."+ getLastError());
+    if (dynlen(aS) > 1 ) {	
+     element = aS[2];
+    }
+
+
+    LOG_DEBUG("state:  ",state," DP: " ,datapoint, " Element: ",element);
+    // if all needed values are available we can start doing the major update.
+    if (state != "" != "" & datapoint != "" & element != "" & dpExists(datapoint+"."+element)){
+
+      setStates(datapoint,element,getStateNumber(state),false);
+    } else {
+      LOG_ERROR("result: not complete command, or database could not be found.");
+    }
   }
 }
 
@@ -263,17 +235,15 @@ void objectStateTriggered(string dp1, string trigger,
 // datapoint      = the base datapoint that needs to be set
 // element        = state or childState needs 2b checked 
 // state          = new state
-// message        = message if applied by __navObjectState
 // stationTrigger = check if the stationTrigger fired this. In that case the state/childState
 //                  is a pure copy from the station to the MCU point, so childState should be 
 //                  treated as state and just be copied, not evaluated.
 //
 // Added 3-4-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-void setStates(string datapoint,string element,int state,string message,bool stationTrigger) {
+void setStates(string datapoint,string element,int state,bool stationTrigger) {
 
-  LOG_TRACE("SetStates reached, datapoint: "+ datapoint+" element: "+ element+ " state: "+state+" message: "+message);
-  string dp;
+  LOG_TRACE("SetStates reached, datapoint: ", datapoint," element: ", element, " state: ",state);
 
   // If element is state just set the state (might have been done by the callerprocess, 
   // When this is done we have to strip the last treenode, 
@@ -286,28 +256,37 @@ void setStates(string datapoint,string element,int state,string message,bool sta
     
     int aVal;
     dpGet(datapoint+"."+element,aVal);
-    if (aVal != state && state > -1) {
+    if (aVal != state & state > -1) {
       dpSet(datapoint+"."+element,state);
-      
-      dp = getPathLessOne(datapoint);
-      datapoint=dp;
+           
+      //strip the last _xxx from the datapoint
+      dyn_string points=strsplit(datapoint,"_");
+      datapoint="";
+      for (int j=1; j < dynlen(points); j++ ) {
+        if (j>1) datapoint+="_";
+        datapoint+=points[j];
+      }
     } else {
-      LOG_DEBUG("Equal value or state < 0, no need to set new state");
       return;
     }
 
-  } else if (element == "childState") {
+  } else if (element != "childState") {
     LOG_ERROR("Error. unknown element in stateChange trigger: ", element);
     return;
   }
 
-  LOG_DEBUG( "Continueing with setChildState passing path: "+datapoint);
+  
   // set childState if needed, if succeeded set childState for one level less also
   // continue while true
   while ( setChildState(datapoint,state)) {
-      LOG_DEBUG( "Continueing with setChildState passing path: "+datapoint);
-      dp = getPathLessOne(datapoint);
-      datapoint=dp;
+
+    //strip the last _xxx from the datapoint
+    dyn_string points=strsplit(datapoint,"_");
+    datapoint="";
+    for (int j=1; j < dynlen(points); j++ ) {
+      if (j>1) datapoint+="_";
+      datapoint+=points[j];
+    }          
   }
 }
 
@@ -322,7 +301,7 @@ void setStates(string datapoint,string element,int state,string message,bool sta
 ///////////////////////////////////////////////////////////////////////////
 bool setChildState(string Dp,int state) {
 
-  LOG_TRACE("setChildState reached withDP: "+Dp+" stateVal: "+ state);
+  LOG_TRACE("setChildState reached with: ",Dp," stateVal: ", state);
 
   if (state < 0 || Dp == "") return false;
 
@@ -345,14 +324,14 @@ bool setChildState(string Dp,int state) {
   // is executed. This give an error. So for now we do the query two times.
   // the 2nd one only if the first one gives a result > 1;
  
-  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.childState,"+Dp+"_*.state,"+Dp+".*.childState,"+Dp+".*.state}'";
+  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.childState,"+Dp+"_*.state}'";
   int err = dpQuery(query, tab);
 
   if (err < 0 | dynlen(tab)< 2) {
     return true;
   }
 
-  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.*.childState,"+Dp+"_*.childState,"+Dp+"_*.*.state,"+Dp+"_*.state}' SORT BY 1 DESC";
+  string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.childState,"+Dp+"_*.state}' SORT BY 1 DESC";
   LOG_DEBUG("Query: ",query);
   err = dpQuery(query, tab);
 
@@ -360,39 +339,17 @@ bool setChildState(string Dp,int state) {
 
    
   if (err < 0) {
-    LOG_ERROR("Error " + err + " while getting query.");
     return false;
   }
  
-  dyn_string aS1=strsplit(Dp,"_");
-  int maxElements= dynlen(aS1)+1; 
+  dyn_string aS=strsplit(Dp,"_");
+  int maxElements= dynlen(aS)+1; 
   int foundElements=0;
-  
-  LOG_DEBUG("max elements for DP  after _ split: "+maxElements);
-  
-  // first check if the last element still has . seperated elements
-  dyn_string aS2=strsplit(aS1[dynlen(aS1)],".");
-  if (dynlen(aS2) > 1) {
-    maxElements+=dynlen(aS2)-1; 
-  }
-
-  LOG_DEBUG("max elements for DP  after . split: "+maxElements);
 
 
   for(z=2;z<=dynlen(tab);z++) {
-    dyn_string aStr1=strsplit((string)tab[z][1],"_");
-    foundElements=dynlen(aStr1);
-    
-    LOG_DEBUG("Working with dp: " +(string)tab[z][1]+ " that has "+ foundElements +" elements");
-
-	// first check if the last element still has . seperated elements but skip the .state .childState
-  	dyn_string aStr2=strsplit(aStr1[dynlen(aStr1)],".");
-  	if (dynlen(aStr2) > 2) {
-      foundElements+=dynlen(aStr2)-2; 
-    }
-    
-    LOG_DEBUG("and after . check has " + foundElements +" elements");
-
+    dyn_string aStr=strsplit((string)tab[z][1],"_");
+    foundElements=dynlen(aStr);
     if(foundElements <= maxElements) {
       LOG_INFO("Have to check DP: ",tab[z][1], " state: ", tab[z][2]);
 
@@ -401,7 +358,7 @@ bool setChildState(string Dp,int state) {
         state=(int)tab[z][2];
       }
       // check if state != oldVal
-      if (state != aVal && state > -1 ) {
+      if (state != aVal & state > -1 ) {
         LOG_INFO("state not equal oldstate(",aVal,") so set ",Dp+".childState to: ",state);
         dpSet(Dp+".childState",state);
         return true;
@@ -413,54 +370,3 @@ bool setChildState(string Dp,int state) {
   return false;
 }
 
-///////////////////////////////////////////////////////////////////////////
-//Function getPathLessOne
-// 
-// Returns the given path string less the last item. Paths can contain
-// _ and . seperated items Like in:
-// LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0.AP0 (In fact the . seperated members
-// are nested elements, but we need to tread them as a Path member since they
-// can contain states and or childStates
-//
-//
-// Added 07-12-2008 A.Coolen
-///////////////////////////////////////////////////////////////////////////
-string getPathLessOne(string path) {
-  LOG_TRACE("Entered getPathLessOne with: " + path);
-  
-  string returnVal="";
-  dyn_string aS;
-  
-  // look if there is a . in the pathname, 
-  // if so strip the last one plus point and return the result
-  // and we are done
-  
-  aS = strsplit(path,'.');
-  if (dynlen(aS) > 1) {
-  	returnVal = aS[1];
-  	for (int i=2; i< dynlen(aS);i++) {
-      returnVal += "."+aS[i];
-    }
-    LOG_DEBUG("getPathLessOne returns "+returnVal);
-    return returnVal;
-  }
-  
-  LOG_DEBUG("No . in Path found, continueing with _");
-  // if no . found then look if there is a _ in the pathname, 
-  // if so strip the last one plus _ and return the result
-  // and we are done
-  
-  aS = strsplit(path,'_');
-  if (dynlen(aS) > 1) {
-  	returnVal = aS[1];
-  	for (int i=2; i< dynlen(aS);i++) {
-      returnVal += "_"+aS[i];
-    }
-    LOG_DEBUG("getPathLessOne returns "+returnVal);
-    return returnVal;
-  }
-  
-  // otherwise return empty string
-  
-  return returnVal;
-}

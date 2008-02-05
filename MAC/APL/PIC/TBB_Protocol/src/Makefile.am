@@ -6,6 +6,7 @@ AUTOGEN = autogen
 SUFFIXES = .ph
 %.cc: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	cp $*.ph $(top_builddir)/include/APL/TBB_Protocol
 
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<

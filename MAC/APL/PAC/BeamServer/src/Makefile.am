@@ -10,7 +10,6 @@ AUTOGEN 				= autogen
 SUFFIXES 				= .ph
 
 BUILT_SOURCES 			= BeamServer.conf \
-							beamctl.conf \
 						  BeamServer.log_prop \
 						  beamctl.log_prop \
 						  HBADeltas.conf \
@@ -19,7 +18,6 @@ BUILT_SOURCES 			= BeamServer.conf \
 EXTRA_DIST 				= $(BUILT_SOURCES)
 
 sysconf_DATA 			= BeamServer.conf \
-							beamctl.conf \
 						  BeamServer.log_prop \
 						  beamctl.log_prop \
 						  HBADeltas.conf \

@@ -78,7 +78,7 @@ public:
     void setStationUVW(const Instrument &instrument, VisData::Pointer buffer);
 
     void makeEquations(EquationType type, const vector<string> &components,
-        const vector<baseline_t> &baselines, const vector<string> &sources,
+        const set<baseline_t> &baselines, const vector<string> &sources,
         MeqParmGroup &parmGroup, ParmDB::ParmDB *instrumentDBase,
         MeqPhaseRef *phaseRef, VisData::Pointer buffer);
 

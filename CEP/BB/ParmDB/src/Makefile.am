@@ -1,6 +1,6 @@
 lib_LTLIBRARIES         = libparmdb.la
 
-libparmdb_la_SOURCES = Package__Version.cc  \
+libparmdb_la_SOURCES = \
 ParmValue.cc ParmDomain.cc ParmDBMeta.cc \
 ParmDB.cc ParmDBAIPS.cc ParmDBPostgres.cc ParmDBPostgresTransactors.cc
 
@@ -9,7 +9,7 @@ ParmDB.cc ParmDBAIPS.cc ParmDBPostgres.cc ParmDBPostgresTransactors.cc
 # AM_LFLAGS               = -PKeyTokenize
 # LEX_OUTPUT_ROOT         = lex.KeyTokenize
 
-bin_PROGRAMS = versionparmdb parmdb
+bin_PROGRAMS = parmdb
 
 parmdb_SOURCES		= parmdb_main.cc
 parmdb_LDADD		= libparmdb.la
@@ -23,9 +23,5 @@ dist_python_SCRIPTS =
 
 scriptdir = $(bindir)
 dist_script_SCRIPTS = lsm2db
-
-versionparmdb_SOURCES      = versionparmdb.cc
-versionparmdb_LDADD        = libparmdb.la
-versionparmdb_DEPENDENCIES = libparmdb.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

@@ -50,7 +50,7 @@ public class RSPMACTableModel extends javax.swing.table.AbstractTableModel {
     }
     
     
-    /** Fills the table */
+    /** Fills the table from the database */
     public boolean fillTable(String aNameList,String aList) {
         if (aNameList.length()<1 || aList.length() <1) {
             logger.error("No data to make a table from");

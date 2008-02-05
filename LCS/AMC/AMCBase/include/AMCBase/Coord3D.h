@@ -40,7 +40,7 @@ namespace LOFAR
 
     // This class represents a point in three-dimensional space. It is stored
     // using cartesian coordinates, and can be constructed from longitude,
-    // latitude and radius, or from a vector containing cartesian coordinates
+    // latitude and height, or from a vector containing cartesian coordinates
     // (x,y,z). It supports addition, subtraction, multiplication (which is
     // defined as the dot product).
     class Coord3D

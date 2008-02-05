@@ -1,10 +1,8 @@
 gnu3.compiler.conf: CXX="$CCACHE /usr/bin/g++32"
-#gnu3.compiler.aipspp.var: --with-aipspp=/lofarbuild/aips++/prod/linux_gnu
-gnu3.compiler.aipspp.var: --with-casacore=/usr/local/casacore/gnu --with-wcs=/usr/local/wcs
+gnu3.compiler.aipspp.var: --with-aipspp=/lofarbuild/aips++/prod/linux_gnu
 
 gnu.compiler.conf: CXX="$CCACHE /usr/bin/g++32"
-#gnu.compiler.aipspp.var: --with-aipspp=/lofarbuild/aips++/prod/linux_gnu
-gnu.compiler.aipspp.var: --with-casacore=/usr/local/casacore/gnu --with-wcs=/usr/local/wcs
+gnu.compiler.aipspp.var: --with-aipspp=/lofarbuild/aips++/prod/linux_gnu
 
 gnu34.compiler.conf: CXX="$CCACHE /usr/bin/g++"
 gnu34.compiler.aipspp.var: --with-aipspp=/lofarbuild/aips++/prod/linux_gnu34

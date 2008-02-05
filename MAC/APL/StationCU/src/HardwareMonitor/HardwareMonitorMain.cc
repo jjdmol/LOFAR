@@ -23,15 +23,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <APS/ParameterSet.h>
-#include <APL/RSP_Protocol/RSP_Protocol.ph>
-#include <GCF/RTDB/DP_Protocol.ph>
-#include "RSPMonitor.h"
-#include "TBBMonitor.h"
+#include "HardwareMonitor.h"
 
-using namespace LOFAR;
-using namespace LOFAR::ACC::APS;
-using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::StationCU;
 
@@ -40,52 +33,11 @@ int main(int argc, char* argv[])
 	// args: cntlrname, parentHost, parentService
 	GCFTask::init(argc, argv);
 
-	// TODO
-	LOG_INFO("MACProcessScope: LOFAR.PermSW.HWmonitor");
+	HardwareMonitor	hm("HWmonitor");
+	hm.start(); 	// make initial transition
 
-	// for debugging purposes
-	registerProtocol (RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
-	registerProtocol (TBB_PROTOCOL, TBB_PROTOCOL_STRINGS);
-	registerProtocol (DP_PROTOCOL,  DP_PROTOCOL_STRINGS);
+	GCFTask::run();
 
-	// Create tasks and call initial routines
-	RSPMonitor*		rsp(0);
-	TBBMonitor*		tbb(0);
-	// monitor RSP?
-	if (globalParameterSet()->getUint32("WatchRSPboards",0)) {
-		rsp = new RSPMonitor("RSPMonitor");
-		rsp->start();
-		LOG_INFO("Monitoring the RSP boards");
-	}
-
-	// monitor TBB?
-	if (globalParameterSet()->getUint32("WatchTBboards",0)) {
-		tbb = new TBBMonitor("TBBMonitor");
-		tbb->start();
-		LOG_INFO("Monitoring the TB boards");
-	}
-
-	// sanity check
-	if (!tbb && !rsp) {
-		LOG_FATAL_STR("Non of the monitortask (WatchRSPboards, WatchTBboards) was switched on "
-						"in the configfile, terminating program");
-		return (0);
-	}
-
-	// ok, we have something to do, do it.
-	GCFTask::setDelayedQuit(true);	// we need a clean shutdown
-	GCFTask::run();	// until stop was called
-
-	if (rsp) {
-		rsp->quit();		// let task quit nicely
-	}
-	if (tbb) {
-		tbb->quit();		// let task quit nicely
-	}
-
-	double	postRunTime = globalParameterSet()->getDouble("closingDelay", 1.5);
-	GCFTask::run(postRunTime);	// let processes die.
-
-	return (0);
+	return 0;
 }
 

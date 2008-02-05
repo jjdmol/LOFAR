@@ -34,7 +34,6 @@ pkginclude_HEADERS = \
 
 noinst_HEADERS = \
 	pqutil.h \
-	QueryBuilder/AddCommand.h \
-	StreamUtil.h
+	QueryBuilder/AddCommand.h
 
 include $(top_srcdir)/Makefile.common

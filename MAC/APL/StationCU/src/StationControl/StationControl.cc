@@ -201,7 +201,7 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			DPCreatedEvent	dpEvent(event);
 			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
 			itsTimerPort->cancelAllTimers();
-			itsTimerPort->setTimer(0.5);	// give RTDB time to get original value.
+			itsTimerPort->setTimer(0.0);
         }
 		break;
 	  
@@ -231,7 +231,7 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			LOG_DEBUG_STR ("Activating PropertySet " << clkPropSetName);
 			itsClockPropSet = new RTDBPropertySet(clkPropSetName,
 												  PST_STATION_CLOCK,
-												  PSAT_RW,
+												  PSAT_WO,
 												  this);
 		}
 		else {

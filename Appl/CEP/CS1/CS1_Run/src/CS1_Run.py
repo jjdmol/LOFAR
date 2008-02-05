@@ -28,29 +28,23 @@ def doObservation(obsID, parset):
 
     mapTable = dict({'gels': gels, 'lofarsystem': lofarsystem, 'romein': romein, 'broekema': broekema})
     logname = os.environ.get("LOGNAME", os.environ.get("USERNAME"))
+    
     if mapTable.has_key(logname):
         userId = mapTable.get(logname)
     else:
         print 'Invalid userId: ' + logname
 	sys.exit(1)
 
-    sectionTable = dict({\
-        'DelayCompensationSection': DelayCompensationSection(parset, list003),
-	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
-	'StorageSection': StorageSection(parset, listfen)
-	#Flagger(parset, listfen)
-        })
+    BGLPartition = ('R000_128_0', 'R000_128_0Z')[parset.getBool('OLAP.BGLProc.useZoid')]
 
-    if sectionTable.has_key('DelayCompensationSection') and sectionTable.has_key('BGLProcSection'):
-	parset['OLAP.OLAP_Conn.input_DelayComp_Transport'] = 'TCP'
-    else:
-	parset['OLAP.OLAP_Conn.input_DelayComp_Transport'] = 'NULL'
-   
-    if sectionTable.has_key('BGLProcSection') and sectionTable.has_key('StorageSection'):
-	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'TCP'
-    else:
-	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'NULL'
-
+    sections = [\
+        DelayCompensationSection(parset, list001),
+        InputSection(parset, liifen),
+        BGLProcSection(parset, userId.getHost(), BGLPartition),
+        StorageSection(parset, listfen)
+        #Flagger(parset, listfen)
+        ]
+    
     nSubbandSamples = float(parset['OLAP.BGLProc.integrationSteps']) * float(parset['Observation.channelsPerSubband'])
     stepTime = nSubbandSamples / (parset['Observation.sampleClock'] * 1000000.0 / 1024)
 
@@ -62,38 +56,35 @@ def doObservation(obsID, parset):
     logdir = '/log/'
     if not os.access(logdir, os.W_OK):
         logdir = './'
-    logdirCommand = 'mkdir ' + logdir + obsID
-    if os.system(logdirCommand) != 0:
-        print 'Failed to create directory: ' + logdirstr
-    parset.writeToFile(logdir +'/' + obsID + '/' + obsID + '.parset')
+    parset.writeToFile(logdir + obsID + '.parset')
 
     try:
-        for section in sectionTable:
-            print ('Starting ' + sectionTable.get(section).package)
-            runlog = logdir + obsID + '/' + sectionTable.get(section).getName() + '.' + options.partition +'.runlog'
+        for section in sections:
+            print ('Starting ' + section.package)
+            runlog = logdir + obsID + '.' + section.getName() + '.runlog'
 
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
 
 	    noRuns = ((sz+15)&~15) + 16
 	    
-            if isinstance(sectionTable.get(section), StorageSection):
+            if isinstance(section, StorageSection):
 	        noRuns = (sz+15)&~15
 	        commandstr ='cexec mkdir ' + '/data/' + obsID
 	        if os.system(commandstr) != 0:
 	            print 'Failed to create directory: /data/' + obsID
 	    
-	    sectionTable.get(section).run(runlog, noRuns)
+	    section.run(runlog, noRuns)
 
-        for section in sectionTable:
-            print ('Waiting for ' + sectionTable.get(section).package + ' to finish ...')
-            ret = sectionTable.get(section).isRunSuccess()
+        for section in sections:
+            print ('Waiting for ' + section.package + ' to finish ...')
+            ret = section.isRunSuccess()
             print (ret)
             print
     except KeyboardInterrupt:
-        for s in sectionTable:
-            print ('Aborting ' + sectionTable.get(s).package)
-            sectionTable.get(s).abortRun()
+        for s in section:
+            print ('Aborting ' + section.package)
+            s.abortRun()
 
 if __name__ == '__main__':
 
@@ -101,14 +92,17 @@ if __name__ == '__main__':
 
     # do not use the callback actions of the OptionParser, because we must make sure we read the parset before adding any variables
     parser.add_option('--parset'         , dest='parset'         , default='CS1.parset', type='string', help='name of the parameterset [%default]')
-    parser.add_option('--partition'      , dest='partition'      , default='R000_128_0T',type='string', help='name of the BGL partion [%default]')
     parser.add_option('--clock'          , dest='clock'          , default='160MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
+    parser.add_option('--subbands'       , dest='subbands'       , default='60MHz,8'   , type='string', help='freq of first subband and number of subbands to use [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
-    parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 90), type='int', help='start of measurement in UTC seconds [now + 90s]')
+    parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 80), type='int', help='start of measurement in UTC seconds [now + 80s]')
     parser.add_option('--integrationtime', dest='integrationtime', default='60'        , type='int'   , help='length of integration interval in seconds [%default]')
     parser.add_option('--msname'         , dest='msname'                               , type='string', help='name of the measurement set')
-    parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS010_4dipoles0_4_8_12', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
+    parser.add_option('--stationlist'    , dest='stationlist'	 , default='CS10_4dipoles', type='string', help='name of the station or stationconfiguration (see CS1_Stations.py) [%default]')
     parser.add_option('--fakeinput'      , dest='fakeinput'      , action='count'                     , help='do not really read from the inputs, but from memory')
+    parser.add_option('--zoid'		 , dest='zoid'		 , action='store_true', default=True, help='use ZOID (default)')
+    parser.add_option('--nozoid'	 , dest='zoid'		 , action='store_false', help='do not use ZOID')
+
     # parse the options
     (options, args) = parser.parse_args()
 
@@ -117,11 +111,24 @@ if __name__ == '__main__':
 
     parset.readFromFile(options.parset)
 
+    parset['OLAP.BGLProc.useZoid'] = 'FT'[options.zoid == True]
+
+    if not options.zoid: # override CS1.parset
+	parset['OLAP.IONProc.useScatter']	 = 'F'
+	parset['OLAP.IONProc.useGather']	 = 'F'
+	parset['OLAP.BGLProc.nodesPerPset']	 = 8
+	parset['OLAP.IONProc.maxConcurrentComm'] = 2
+
     parset.setClock(options.clock)
-    parset.setIntegrationTime(options.integrationtime) 
-    parset.setPartition(options.partition) 
+    parset.setIntegrationTime(options.integrationtime)
     if options.msname:
         parset.setMSName(options.msname)
+
+    # read the subbands
+    parts = options.subbands.split(',')
+    nsb = int(parts[-1])
+    first = ','.join(parts[:-1])
+    parset.setSubbands(first, nsb)
 
     # read the runtime (optional start in utc and the length of the measurement)
     parset.setInterval(options.starttime, options.runtime)
@@ -153,7 +160,6 @@ if __name__ == '__main__':
     try:
 	inf = open(runningNumberFile, 'r')
 	measurementnumber = int(inf.readline())
-	print 'MS =', measurementnumber
 	inf.close()
 	parset['Observation.ObsID'] = measurementnumber
 	outf = open(runningNumberFile, 'w')
@@ -161,6 +167,7 @@ if __name__ == '__main__':
 	outf.close()
 	
 	dbfile = open(MSdatabaseFile, 'a')
+	nodesStr = str([1] * parset.getNCells() + [0] * (12 - parset.getNCells()))[1:-1]
 	dateStr = time.strftime('%Y %0m %0d %H %M %S', time.gmtime()).split()
 	MS = parset.getString('Observation.MSNameMask')
 	MS = MS.replace('${YEAR}', dateStr[0])
@@ -172,11 +179,11 @@ if __name__ == '__main__':
 	MS = MS.replace('${MSNUMBER}', '%05d' % parset['Observation.ObsID'])
 	MS = MS.replace('${SUBBAND}', '*')
 	
-	dbfile.write(MS + '\t' + ' '.join(dateStr[0:3]) + '\n')
+	dbfile.write(MS + '\t' + ' '.join(dateStr[0:3]) + '\t' + nodesStr + '\n')
 	dbfile.close()
     except:
-	print 'caught exception'
 	sys.exit(1)
+
 
     obsID = 'L' + dateStr[0] + '_' + '%05d' % measurementnumber
     

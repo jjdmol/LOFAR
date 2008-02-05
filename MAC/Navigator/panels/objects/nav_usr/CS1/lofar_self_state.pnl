@@ -1,11 +1,10 @@
 V 10
 1
 LANG:1 16 Lofar Self State
-PANEL,648 132 95 86 N "_3DFace" 1
+PANEL,422 141 95 86 N "_3DFace" 1
 "$object"
 "main()
 {
-//  DebugTN(\"$object: \"+$object);
 	setValue(\"light\",\"toolTipText\",$object+\" state\");
 }" 0
 EE E E 1 0 0 0  10 10

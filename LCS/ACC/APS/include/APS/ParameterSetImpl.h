@@ -137,10 +137,6 @@ public:
 	// Writes the Key-Values pair from the current ParCollection to the 
 	// string buffer.
 	void	writeBuffer (      string& theBuffer) const;
-
-	// Write the Key-Value pairs from the current ParCollection to the
-	// output stream.
-	void	writeStream (ostream&	os)	const;
 	//@}
 
 	// \name Handle subsets
@@ -279,13 +275,13 @@ private:
 	// @}
 
 	// \name Implementation of the 'adopt' methods
-	// The 'adopt' methods are implemented in the readStream method. The 'read'
+	// The 'adopt' methods are implemented in the addStream method. The 'read'
 	// methods do some preprocessing so the 'adopt' method can use the
-	// \c readStream method.
+	// \c addStream method.
 	// @{
 	void	readFile   (const string& theFile, const string& prefix, const bool merge);
 	void	readBuffer (const string& theFile, const string& prefix, const bool merge);
-	void	readStream (istream&	inputStream, const string& prefix, const bool merge);
+	void	addStream  (istream&	inputStream, const string& prefix, const bool merge);
 	// @}
 
 	// Find the key \a aKey. If \a doThrow == \c true (the default) an exception

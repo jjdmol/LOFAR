@@ -42,28 +42,14 @@ namespace LOFAR
     // \addtogroup AMCBase
     // @{
 
-    // Convert the geodetic longitude, latitude and height in WGS84 to
-    // geocentric coordinates in ITRF.
-    // \see  Explanatory Supplement to the Astronomical Almanac (1992),
-    //       Section 4.22
-    Coord3D wgs84ToItrf(double lon, double lat, double h);
-
-    // Earth parameters needed when converting from geodetic to geocentric
-    // coordinates.
-    struct Earth
-    {
-      // Flattening
-      static double flattening();
-      // Equatorial radius
-      static double equatorialRadius();
-    };
-
-
-    // This class represents a position on earth. Internally, the position is
-    // stored in cartesian coordinates, relative to the geocentric ITRF frame,
-    // using class Coord3D. A position can be constructed from longitude,
-    // latitude and height, or from a vector containing cartesian coordinates
-    // (x,y,z). 
+    // This class represents a position on earth. The position is stored in
+    // cartesian coordinates, using class Coord3D. A position can be
+    // constructed from longitude, latitude and height, or from a vector
+    // containing cartesian coordinates (x,y,z). The context where the object
+    // is used defines the coordinate system and frame, so the class can be
+    // used in any kind of frame (like ITRF and geocentric). The correct
+    // interpretation of the coordinates should be done by the user of this
+    // class.
     class Position
     {
     public:
@@ -76,48 +62,55 @@ namespace LOFAR
         N_Types         ///< Number of reference types.
       };
 
-      // Default constructor creates a position at the origin of the ITRF
-      // reference frame.
+      // Default constructor uses 0 for longitude, latitude and height, and
+      // ITRF as reference type.
       Position();
 
       // Create a position by giving the longitude \a lon and latitude \a lat
       // in radians and the \a h in meters. Reference type can be either \c
-      // ITRF (default), or \c WGS84. The parameters \a lon, \a lat, and \a h
-      // are interpreted differently for different values of \a typ.
-      // - \a typ = \c ITRF: position is geocentric in spherical coordinates.
-      //   \param lon spherical longitude in radians
-      //   \param lat spherical latitude in radians
-      //   \param h   distance to the geocenter
-      // - \a typ = \c WGS84: position is geodetic, relative to the \c WGS84
-      //                      ellipsoid.
-      //   \param lon geodetic longitude in radians
-      //   \param lat geodetic latitude in radians
-      //   \param h   height above the \c WGS84 ellipsoid.
+      // ITRF (default), or \c WGS84.
       Position(double lon, double lat, double h, Types typ = ITRF);
 
       // Create a position from the 3D-coordinate \a coord and the reference
-      // type \a typ. Reference type can be either \c ITRF (default), or \c
-      // WGS84. The parameter \a coord is interpreted differently for
-      // different values of \a typ.
-      // - \a typ = \c ITRF: position is geocentric in cartesian coordinates.
-      //   \param coord represents the \a x, \a y, and \a z coordinates of the
-      //          position, relative to the ITRF.
-      // - \a typ = \c WGS84: position is geodetic, relative to the \c WGS84
-      //                      ellipsoid.
-      //   \param coord contains the direction cosines of the \e geodetical 
-      //          longitude and latitude. The norm of \a coord is taken as the
-      //          height above the WGS84 ellipsoid.
+      // type \a typ.
       Position(const Coord3D& coord, Types typ = ITRF);
       
-      // Return the position coordinates in the ITRF.
+      // Return the longitude in radians.
+      double longitude() const
+      { return itsCoord.longitude(); }
+      
+      // Return the latitude in radians.
+      double latitude() const
+      { return itsCoord.latitude(); }
+      
+      // Return the height in meters.
+      double height() const
+      { return itsCoord.radius(); }
+      
+      // Return the position coordinates.
       const Coord3D& coord() const
       { return itsCoord; }
 
+      // Return the reference type.
+      Types type() const
+      { return itsType; }
+
+      // Return whether position type is valid.
+      bool isValid() const
+      { return itsType != INVALID; }
+
+      // Return the position type as a string.
+      const string& showType() const;
+
       // Add Position \a that to \c this. 
+      // \throw TypeException if the reference types of \c this and \a that
+      // differ.
       Position& operator+=(const Position& that);
 
       // Subtract Position \a that from \c this. 
-      Position& operator-=(const Position& that);
+      // \throw TypeException if the reference types of \c this and \a that
+      // differ.
+     Position& operator-=(const Position& that);
 
       // Multiply \c this with the scalar \a a.
       Position& operator*=(double a);
@@ -126,23 +119,32 @@ namespace LOFAR
       Position& operator/=(double a);
 
       // Calculate the inner product of \c this and the Position \a that.
-      double operator*(const Position& that) const;
+      // \throw TypeException if the reference types of \c this and \a that
+      // differ.
+      double operator*(const Position& that);
 
       // Calculate the inner product of \c this and the Direction \a that.
-      // \throw TypeException if the reference types of the Direction \a that
-      // is not \c ITRF.
-      double operator*(const Direction& that) const;
+      // \throw TypeException if the reference types of \c this and \a that
+      // differ.
+      double operator*(const Direction& that);
 
     private:
-      // The position coordinates in the ITRF.
+      // The position coordinates.
       Coord3D itsCoord;
+
+      // Reference type of the position coordinates.
+      Types itsType;
     };
 
     // Calculate the sum of two Positions. 
+    // \throw TypeException if the reference types of \c this and \a that
+    // differ.
     inline Position operator+(const Position& lhs, const Position& rhs)
     { return Position(lhs) += rhs; }
 
     // Calculate the difference between two Positions. 
+    // \throw TypeException if the reference types of \c this and \a that
+    // differ.
     inline Position operator-(const Position& lhs, const Position& rhs)
     { return Position(lhs) -= rhs; }
 
@@ -162,6 +164,7 @@ namespace LOFAR
     ostream& operator<< (ostream&, const Position&);
 
     // Compare two positions for equality.
+    // \note Two invalid positions can \e never be equal.
     bool operator==(const Position& lhs, const Position& rhs);
 
     // @}

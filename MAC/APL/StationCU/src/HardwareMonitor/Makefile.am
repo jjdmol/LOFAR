@@ -4,15 +4,13 @@ HardwareMonitor_CPPFLAGS	= -Wno-deprecated \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-HardwareMonitor_SOURCES		= HardwareMonitorMain.cc \
-							  RSPMonitor.cc  \
-							  TBBMonitor.cc 
+HardwareMonitor_SOURCES		= HardwareMonitor.cc \
+							  HardwareMonitorMain.cc 
 
 HardwareMonitor_LDADD		= $(LOFAR_DEPEND)
 HardwareMonitor_DEPENDENCIES= $(LOFAR_DEPEND)
 
-NOINSTHDRS 					= RSPMonitor.h \
-							  TBBMonitor.h \
+NOINSTHDRS 					= HardwareMonitor.h \
 							  RCUConstants.h \
 							  StationPermDatapointDefs.h
 

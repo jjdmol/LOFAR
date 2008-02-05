@@ -1,4 +1,4 @@
-pkginclude_HEADERS 	= 	Converter.h \
+INSTHDRS 	= 	Converter.h \
 				ClassifConv.h \
 				ParamTypeConv.h \
 				TreeStateConv.h \
@@ -23,5 +23,13 @@ NOINSTHDRS 	= 	wSpaceSplit.h\
 				OTDBcontrol.h \
 				OTDBevent.h \
 				OTDBeventList.h
+
+TCCHDRS 					=
+
+nobase_pkginclude_HEADERS 	= $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS 				= $(NOINSTHDRS)
+
+DOCHDRS 					= $(INSTHDRS) $(NOINSTHDRS)
 
 include $(top_srcdir)/Makefile.common

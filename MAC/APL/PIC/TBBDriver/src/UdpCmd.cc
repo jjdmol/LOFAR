@@ -166,9 +166,7 @@ UdpCmd::UdpCmd():
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBModeAckEvent();
 	
-	for (int i = 0; i < TS->maxBoards(); i++) {
-		itsTBBackE->status_mask[i]	= 0;
-	}
+	itsTBBackE->status_mask	= 0;
 	setWaitAck(true);	
 }
 	  
@@ -193,21 +191,17 @@ void UdpCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE	= new TBBModeEvent(event);
 	
-	setBoardMask(0xFFF);
-	
-	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		if (!TS->isBoardActive(boardnr))
-			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
-	}
+	setBoardNr(itsTBBE->board);
+		
+	if (TS->isBoardActive(getBoardNr()) == false)
+		itsTBBackE->status_mask |= TBB_NO_BOARD;
 
 	itsMode = itsTBBE->rec_mode;
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPUDP;
 	itsTPE->status	=	0;
-	
-	nextBoardNr();	
-	
+		
 	delete itsTBBE;	
 }
 
@@ -237,28 +231,26 @@ void UdpCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		itsTBBackE->status_mask[getBoardNr()] |= TBB_COMM_ERROR;
+		itsTBBackE->status_mask |= TBB_COMM_ERROR;
 	}
 	else {
 		itsTPackE = new TPUdpAckEvent(event);
 		
 		if ((itsTPackE->status >= 0xF0) && (itsTPackE->status <= 0xF6)) 
-			itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (itsTPackE->status & 0x0F)));
+			itsTBBackE->status_mask |= (1 << (16 + (itsTPackE->status & 0x0F)));
 		
 		LOG_DEBUG_STR(formatString("Received UdpAck from boardnr[%d], status[0x%08X]", 
 									getBoardNr(), itsTPackE->status));
 		delete itsTPackE;
 	}
-	nextBoardNr();
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------
 void UdpCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 {
-	for (int i = 0; i < TS->maxBoards(); i++) {
-		if (itsTBBackE->status_mask[i] == 0)
-		itsTBBackE->status_mask[i] = TBB_SUCCESS;
-	}
+	if (itsTBBackE->status_mask == 0)
+		itsTBBackE->status_mask = TBB_SUCCESS;
 
 	clientport->send(*itsTBBackE);
 }

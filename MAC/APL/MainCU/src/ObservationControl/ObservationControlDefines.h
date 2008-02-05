@@ -60,7 +60,6 @@ namespace LOFAR {
 // Observation
 #define PSN_OBSERVATION	"LOFAR_ObsSW_@observation@"
 #define PST_OBSERVATION	"Observation"
-#define PST_STATION		"Station"
 
 }; // MCU
 }; // LOFAR

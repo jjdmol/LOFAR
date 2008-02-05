@@ -23,7 +23,7 @@
 #ifndef LOFAR_COMMON_TIMER_H
 #define LOFAR_COMMON_TIMER_H
 
-// \file
+// \fil
 // Very accurate timer for elapsed times.
 
 #include <cstdlib>
@@ -51,8 +51,7 @@ namespace LOFAR {
   public:
     // Construct.
     // The given name will be used when the timer is printed.
-    NSTimer (const std::string& name = std::string(),
-	     bool print_on_destruction = false);
+    NSTimer (const char *name = 0, bool print_on_destruction = false);
 
     // Destruct.
     // The time is printed on stderr if print_on_destruction is true.
@@ -103,8 +102,8 @@ namespace LOFAR {
     unsigned long long count;
 #endif
 
-    std::string itsName;
-    bool print_on_destruction;
+    char *const name;
+    const bool print_on_destruction;
 
     static double CPU_speed_in_MHz;
 
@@ -124,9 +123,9 @@ namespace LOFAR {
     return count;
   }
 
-  inline NSTimer::NSTimer(const std::string& name, bool print_on_destruction)
+  inline NSTimer::NSTimer(const char *name, bool print_on_destruction)
     :
-    itsName(name),
+    name(name != 0 ? strdup(name) : 0),
     print_on_destruction(print_on_destruction)
   {
     reset();
@@ -136,6 +135,9 @@ namespace LOFAR {
   {
     if (print_on_destruction) {
       print(std::clog);
+    }
+    if (name != 0) {
+      free(name);
     }
   }
 

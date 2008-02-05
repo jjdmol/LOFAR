@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 
 #include <APL/RSP_Protocol/TBBSettings.h>
-#include <APL/RTCCommon/MarshallBlitz.h>
+#include <APL/RTCCommon/Marshalling.h>
 
 using namespace std;
 using namespace blitz;

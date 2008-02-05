@@ -144,7 +144,7 @@ int main (int	argc, char*	argv[])
 			20, 21,
 			30, 31,
 			40, 41;
-	cout << "Testing blitz::Array<double, 2>" << ba1 << endl;
+	cout << "Testing blitz::Array<double, 2>>" << ba1 << endl;
 	
 	cout << "size = " << MSH_ARRAY_SIZE(ba1, double) << endl;
 
@@ -158,23 +158,6 @@ int main (int	argc, char*	argv[])
 	offset = 0;
 	MSH_UNPACK_ARRAY(buf, offset, ba2, double, 2);
 	cout << "unpacked: " << ba2 << endl;
-
-	// blitz array <int>
-	blitz::Array<int, 2>		emptyArr;
-	cout << "Testing EMPTY blitz::Array<int, 2>" << emptyArr << endl;
-	
-	cout << "size = " << MSH_ARRAY_SIZE(emptyArr, int) << endl;
-
-	bzero(buf, 4096);
-	offset = 0;
-	MSH_PACK_ARRAY(buf, offset, emptyArr, int);
-	cout << "packed:" << endl;
-	hexdump(buf, offset);
-
-	blitz::Array<int, 2>		empty2;
-	offset = 0;
-	MSH_UNPACK_ARRAY(buf, offset, empty2, int, 2);
-	cout << "unpacked: " << empty2 << endl;
 
 	// SubArray		
 	SubArray		SA1(25, 3.14, "stringetje");

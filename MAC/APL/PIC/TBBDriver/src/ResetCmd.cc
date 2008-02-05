@@ -32,8 +32,7 @@ using namespace TP_Protocol;
 using	namespace TBB;
 
 //--Constructors for a ResetCmd object.----------------------------------------
-ResetCmd::ResetCmd():
-	itsBoardMask(0), itsBoardNr(0)
+ResetCmd::ResetCmd()
 {
 	TS					= TbbSettings::instance();
 	itsTPE 			= new TPResetEvent();
@@ -41,11 +40,10 @@ ResetCmd::ResetCmd():
 	itsTBBE 		= 0;
 	itsTBBackE 	= new TBBResetAckEvent();
 	
-	for(int boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) { 
+	for(int boardnr = 0;boardnr < MAX_N_TBBBOARDS;boardnr++) { 
 		itsTBBackE->status_mask[boardnr]	= 0;
 	}
-	setWaitAck(true);	
-	setRetry(false);	
+	setWaitAck(false);		
 }
 	  
 //--Destructor for ResetCmd.---------------------------------------------------
@@ -67,26 +65,23 @@ bool ResetCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ResetCmd::saveTbbEvent(GCFEvent& event)
 {
+	uint32	boardmask = 0;
+	
 	itsTBBE	= new TBBResetEvent(event);
-	
-	itsBoardMask = itsTBBE->boardmask;
-	
 	itsTPE->opcode			= TPRESET;
 	itsTPE->status			=	0;
-	LOG_DEBUG_STR("boardMask= " << formatString("%08x",itsBoardMask));
-	
-	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
-		itsBoardNr++;
-		if (itsBoardNr >= TS->maxBoards()) { 
-			break;	
-		}
+		
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		if (itsTBBE->boardmask & (1 << boardnr)) {
+			boardmask |= (1 << boardnr);
+			if (TS->boardPort(boardnr).isConnected()) {
+				TS->boardPort(boardnr).send(*itsTPE);
+			}
+		} 
 	}
-	
-	if (itsBoardNr < TS->maxBoards()) {
-		setBoardNr(itsBoardNr);
-	} else {
-		setDone(true);
-	}
+	TS->setActiveBoardsMask(boardmask);
+	setDone(true);
+	setSleepTime(3);  // full reset will take 3 seconds
 	
 	delete itsTBBE;	
 }
@@ -94,38 +89,15 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ResetCmd::sendTpEvent()
 {
-	if (TS->boardPort(getBoardNr()).isConnected()) {
-			TS->boardPort(getBoardNr()).send(*itsTPE);
-			TS->boardPort(getBoardNr()).setTimer(1.0);
-	}
+	// empty
 }
 
 // ----------------------------------------------------------------------------
 void ResetCmd::saveTpAckEvent(GCFEvent& event)
 {
-	// in case of a time-out, set error mask
-	if (event.signal == F_TIMER) {
-		//itsTBBackE->status_mask[getBoardNr()] |= TBB_RCU_COMM_ERROR;
-	}	else {
-		itsTPackE = new TPResetAckEvent(event);
-	
-		delete itsTPackE;
-	}
-	
-	itsBoardNr++;
-	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
-		itsBoardNr++;
-		if (itsBoardNr >= TS->maxBoards()) { 
-			break;
-		}	
-	}
-	LOG_DEBUG_STR("boardnr=" << itsBoardNr);
-	if (itsBoardNr < TS->maxBoards()) {
-		setBoardNr(itsBoardNr);
-	} else {
-		setSleepTime(5.0);
-		setDone(true);
-	}
+	//itsTPackE = new TPResetAckEvent(event);
+	//delete itsTPackE;
+	setDone(true);
 }
 
 // ----------------------------------------------------------------------------

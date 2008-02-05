@@ -1005,7 +1005,7 @@ TreeView_OnSelect(unsigned pos)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Function queryForDpElements(DPname) : dyn elements
+// Function queryDatabaseForDpElements(DPname) : dyn elements
 //
 // Retrieve all elementnames from the given DP from the database,
 //
@@ -1044,7 +1044,7 @@ dyn_string queryDatabaseForDpElements(string datapointPath)
 dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool useProgressBar)
 {
 	LOG_DEBUG("queryDatabaseForDP: ", attribute, datapointPath, useProgressBar);
-    DebugN("!!!!!!!!!!!!!!!!");
+
 	string 			tempDP;
 	dyn_string 		output;
 	dyn_dyn_anytype tab;
@@ -1067,11 +1067,7 @@ dyn_string queryDatabaseForDP(string attribute, string datapointPath, bool usePr
 	}
 
 	// do the query
-	string aQuery= "SELECT '" + attribute + "' FROM '" + datapointPath + "'"  + REMOTESYSTEM;
-    
-//	DebugN("Query: "+ aQuery);
-//	DebugN("REMOTE: "+ REMOTESYSTEM);
-	dpQuery(aQuery, tab);
+	dpQuery("SELECT '" + attribute + "' FROM '" + datapointPath  + REMOTESYSTEM, tab);
 
 	int maximumCount = dynlen(tab);
 	for (int i = 2; i <= dynlen(tab); i++) {

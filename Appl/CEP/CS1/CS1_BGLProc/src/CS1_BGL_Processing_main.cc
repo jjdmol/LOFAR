@@ -20,76 +20,19 @@
 
 #include <lofar_config.h>
 
-#if 0
-#include <CS1_Interface/CS1_Parset.h>
-#else
-#include <Common/Exception.h>
-#include <CS1_Interface/BGL_Command.h>
-#include <CS1_Interface/BGL_Configuration.h>
-#include <Transport/TH_Null.h>
-#include <CS1_BGLProc/TH_ZoidClient.h>
-#endif
-#include <CS1_BGLProc/BGL_Processing.h>
-#include <Transport/TH_MPI.h>
-
-#include <boost/lexical_cast.hpp>
+#include <PLC/ACCmain.h>
+#include <Common/LofarLogger.h>
+#include <tinyCEP/ApplicationHolderController.h>
+#include <CS1_BGLProc/AH_BGL_Processing.h>
 
 using namespace LOFAR;
 using namespace LOFAR::CS1;
 
-int main(int argc, char **argv)
-{
-  try {
-    BGL_Processing::original_argv = argv;
+int main(int argc, char **argv) {
+  INIT_LOGGER("CS1_BGL_Processing");
 
-#if defined HAVE_MPI
-    TH_MPI::initMPI(argc, argv);
-#endif
-
-#if defined HAVE_ZOID && defined HAVE_BGL
-    TH_ZoidClient     th;
-#else
-    TH_Null	      th;
-#endif
-
-    BGL_Processing    proc(&th);
-    BGL_Command	      command;
-
-    do {
-      command.read(&th);
-
-      switch (command.value()) {
-	case BGL_Command::PREPROCESS :	{
-					  BGL_Configuration configuration;
-
-					  configuration.read(&th);
-					  proc.preprocess(configuration);
-					}
-					break;
-
-	case BGL_Command::PROCESS :	proc.process();
-					break;
-
-	case BGL_Command::POSTPROCESS :	proc.postprocess();
-					break;
-
-	default :			break;
-      }
-    } while (command.value() != BGL_Command::STOP);
-
-#if defined HAVE_MPI
-    TH_MPI::finalize();
-#endif
-
-    //abort(); // quickly release the partition
-    return 0;
-  } catch (Exception &ex) {
-    std::cerr << "Uncaught Exception: " << ex.what() << std::endl;
-    //abort(); // quickly release the partition
-    return 1;
-  } catch (std::exception &ex) {
-    std::cerr << "Uncaught exception: " << ex.what() << std::endl;
-    //abort(); // quickly release the partition
-    return 1;
-  }
+  AH_BGL_Processing::original_argv = argv;
+  AH_BGL_Processing myAH;
+  ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
+  return ACC::PLC::ACCmain(argc, argv, &myAHController);
 }

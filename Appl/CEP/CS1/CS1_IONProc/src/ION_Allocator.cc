@@ -30,23 +30,12 @@
 #include <cstdlib>
 #include <iostream>
 
-#define USE_ZOID_ALLOCATOR
-
-#if defined USE_ZOID_ALLOCATOR
-extern "C" {
-  void *__zoid_alloc(size_t);
-  void __zoid_free(void *);
-}
-#endif
-
-
 namespace LOFAR
 {
-#if !defined USE_ZOID_ALLOCATOR
+
 pthread_mutex_t		 ION_Allocator::mutex	 = PTHREAD_MUTEX_INITIALIZER;
 SparseSet<char *>	 ION_Allocator::freeList = SparseSet<char *>().include((char *) 0xA4002400, (char *) 0xB0000000);
 std::map<char *, size_t> ION_Allocator::sizes;
-#endif
 
 ION_Allocator *ION_Allocator::clone() const
 {
@@ -55,17 +44,11 @@ ION_Allocator *ION_Allocator::clone() const
 
 void *ION_Allocator::allocate(size_t nbytes, size_t alignment)
 {
-#if defined USE_ZOID_ALLOCATOR
-  void *ptr = __zoid_alloc(nbytes);
-
-  std::clog << "ION_Allocator::allocate(" << nbytes << ", " << alignment << ") = " << ptr << std::endl;
-
-  if (ptr != 0)
-    return ptr;
-#else
   pthread_mutex_lock(&mutex);
 
-  for (SparseSet<char *>::const_iterator it = ranges.getRanges().begin(); it != ranges.getRanges().end(); it ++) {
+  const std::vector<SparseSet<char *>::range> &ranges = freeList.getRanges();
+
+  for (SparseSet<char *>::const_iterator it = ranges.begin(); it != ranges.end(); it ++) {
     char *begin = (char *) (((size_t) it->begin + alignment - 1) & ~(alignment - 1));
 
     if (it->end - begin >= (ptrdiff_t) nbytes) {
@@ -76,7 +59,6 @@ void *ION_Allocator::allocate(size_t nbytes, size_t alignment)
       return (void *) begin;
     }
   }
-#endif
 
   std::cerr << "ION_Allocator::allocate(" << nbytes << ", " << alignment << ") : out of large-TLB memory" << std::endl;
   std::exit(1);
@@ -87,15 +69,11 @@ void ION_Allocator::deallocate(void *ptr)
   std::clog << "ION_Allocator::deallocate(" << ptr << ")" << std::endl;
 
   if (ptr != 0) {
-#if defined USE_ZOID_ALLOCATOR
-    __zoid_free(ptr);
-#else
     pthread_mutex_lock(&mutex);
     std::map<char *, size_t>::iterator index = sizes.find((char *) ptr);
     freeList.include((char *) ptr, (char *) ptr + index->second);
     sizes.erase(index);
     pthread_mutex_unlock(&mutex);
-#endif
   }
 }
 

@@ -182,8 +182,8 @@ void AllocCmd::saveTpAckEvent(GCFEvent& event)
 					itsTBBackE->status_mask[getBoardNr()] |= (1 << (16 + (sizeAckEvent->status & 0x0F)));	
 				}
 		
-				TS->setMemorySize(getBoardNr(),sizeAckEvent->npages);
-				//TS->setMemorySize(getBoardNr(),4194304);
+				//TS->setMemorySize(getBoardNr(),sizeAckEvent->npages);
+				TS->setMemorySize(getBoardNr(),4194304);
 				
 				if (!devideChannels(getBoardNr())) // calculate allocations
 					itsTBBackE->status_mask[getBoardNr()] |= TBB_ALLOC_ERROR;
@@ -291,8 +291,9 @@ uint32 getNrOfBits(uint32 mask)
 bool AllocCmd::devideChannels(int32 boardnr)
 {
 	struct sMP {
-		uint32 start_addr;
-		uint32 used_channels;
+		uint32 addr;
+		uint32 channels;
+		uint32 usedSize;
 	};
 	
 	// for 400 MHz mode there is only one ring, for 800 MHz there are 2 rings
@@ -301,12 +302,14 @@ bool AllocCmd::devideChannels(int32 boardnr)
 	uint32 totalChannels;
 	uint32 totalMemorySize;
 	uint32 mpMemorySize;
+	uint32 channelMemorySize;
+	uint32 channelAddr[16];
 	uint32 channelMask;
-	sMP		mp[TS->nrMpsOnBoard()];
+	sMP		mp[4];
 		
 	channelMask = itsChannelMask[boardnr];
 	totalMemorySize = TS->getMemorySize(boardnr);
-	mpMemorySize = totalMemorySize / TS->nrMpsOnBoard();
+	mpMemorySize = totalMemorySize / 4;
 	totalChannels = getNrOfBits(channelMask);
 
 	if (totalMemorySize == 0) return (false);
@@ -316,71 +319,98 @@ bool AllocCmd::devideChannels(int32 boardnr)
 		if (TS->getChState(ch + (boardnr * 16)) != 'F')
 			return (false);
 	}
+
 	
 	// setup mp struct
-	for (int i = 0; i < TS->nrMpsOnBoard(); i++) {
-		uint32 ui = static_cast<uint32>(i);
-		mp[i].start_addr = ui * mpMemorySize;
+	for (int i = 0; i < 4; i++) {
+		mp[i].addr = i * mpMemorySize;
 		uint32 mpChannelMask = itsChannelMask[boardnr] & (0x000F << (i * 4));
-		mp[i].used_channels = getNrOfBits(mpChannelMask);
-		LOG_DEBUG_STR("start MP" << i << " =" << formatString("%08x",mp[i].start_addr)); 
+		mp[i].channels = getNrOfBits(mpChannelMask);
+		mp[i].usedSize = 0;
 	}
 
-	if (totalChannels == 1) {
-		for (int ch = 0; ch < TS->nrChannelsOnBoard(); ch++) {
-			if (itsChannelMask[boardnr] & (1 << ch)) {
-				TS->setChStartAddr((ch + (boardnr * TS->nrChannelsOnBoard())),
-														mp[0].start_addr);
-				TS->setChPageSize( (ch + (boardnr * TS->nrChannelsOnBoard())),
-														totalMemorySize);
-				break;
-			}	
-		}		
-	} 
 	
-	if (totalChannels == 2) {
-		int last_mp = -1;
-		for (int ch = 0; ch < TS->nrChannelsOnBoard(); ch++) {
-			if (itsChannelMask[boardnr] & (1 << ch)) {
-				int mp_nr = ch / TS->nrChannelsOnMp();
-				if (mp_nr == last_mp) {
-					mp_nr++;
-					if (mp_nr == TS->nrMpsOnBoard()) {
-						mp_nr = 0;
-					}
-				}
-				TS->setChStartAddr((ch + (boardnr * TS->nrChannelsOnBoard())),
-														mp[mp_nr].start_addr);
-				TS->setChPageSize( (ch + (boardnr * TS->nrChannelsOnBoard())),
-														mpMemorySize);	
-				if (last_mp != -1) break; // 2 channels done
-				last_mp = mp_nr;
+	// check if channel request is valid
+	switch (totalChannels) {
+		case 1:
+		case 2:
+		case 16: 
+		{
+			success = true;
+		} break;
+		
+		case 4:
+		case 8:
+		{
+			if ((mp[0].channels <= 2) ||
+					(mp[1].channels <= 2) || 
+					(mp[2].channels <= 2) || 
+					(mp[3].channels <= 2)) {
+				success = true;
 			}
-		}	
+		} break;
+	
+		default : {
+			success = false;
+		} break;
+	}
+	// if not a valid request exit
+	if (!success) return (false);		
+
+
+	// calculate channelsize
+	switch (totalChannels) {
+		case 2: {
+			
+			if (rings == 2) {
+				channelMemorySize = totalMemorySize / 2;
+			} else {
+				channelMemorySize = totalMemorySize / 4; 
+			}
+		} break;
+		
+		case 4: {
+			if ((rings == 2) ||
+					(mp[0].channels == 1) || 
+					(mp[1].channels == 1) || 
+					(mp[2].channels == 1) || 
+					(mp[3].channels == 1)) {
+				channelMemorySize = totalMemorySize / 4;
+			} else {
+				channelMemorySize = totalMemorySize / 8; 
+			}
+		} break;
+
+		case 1:
+		case 8:
+		case 16: {
+			channelMemorySize = totalMemorySize / totalChannels;
+		} break;
+		
+		default: {
+		}	break;
 	}
 	
-	if (totalChannels > 2) {
-		uint32 use_nr;
-		for (int mpnr = 0; mpnr < TS->nrMpsOnBoard(); mpnr++) {
-			if (mp[mpnr].used_channels == 0) continue;
-			uint32 channelMemorySize = mpMemorySize / mp[mpnr].used_channels;
-			LOG_DEBUG_STR("channelMemorySize: " << channelMemorySize << " pages");
-			use_nr = 0;	
-			for (int chnr = 0; chnr < TS->nrChannelsOnMp(); chnr++) {
-				int ch = (mpnr * TS->nrChannelsOnMp()) + chnr;
-				if (itsChannelMask[boardnr] & (1 << ch)) {
-					LOG_DEBUG_STR("alloc settings: addr=" 
-											<< formatString("%08x",(mp[mpnr].start_addr + (use_nr * channelMemorySize)))
-											<< " pages=" << channelMemorySize);
-					TS->setChStartAddr((ch + (boardnr * TS->nrChannelsOnBoard())),
-															(mp[mpnr].start_addr + (use_nr * channelMemorySize)));
-					TS->setChPageSize( (ch + (boardnr * TS->nrChannelsOnBoard())),
-															channelMemorySize);
-					use_nr++;
-				}
+	uint32 mpNr;
+	for (int32 ch = 0; ch < 16; ch++) {
+		if (itsChannelMask[boardnr] & (1 << ch)) {
+			mpNr = ch / 4;
+			while (mp[mpNr].usedSize == mpMemorySize) {
+				mpNr += rings;
+				if (mpNr >= 4) mpNr -= 4;
 			}
+			channelAddr[ch] = mp[mpNr].addr + mp[mpNr].usedSize;
+			mp[mpNr].usedSize += channelMemorySize;
 		}
+	}	
+	    	
+	for (int32 ch = 0; ch < 16; ch++) {
+		if (TS->isChSelected(ch + (boardnr * 16))) {
+			TS->setChStartAddr((ch + (boardnr * 16)), channelAddr[ch]);
+			TS->setChPageSize((ch + (boardnr * 16)), channelMemorySize);		
+		}
+		//LOG_DEBUG_STR(formatString("channel %d = addr[%d] size[%d]",ch,channelAddr[ch],channelMemorySize));
 	}
-	LOG_DEBUG_STR("deviding done");
+	
 	return(true);
 }

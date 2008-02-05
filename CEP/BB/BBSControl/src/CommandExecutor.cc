@@ -50,7 +50,6 @@
 #include <BBSKernel/Prediffer.h>
 
 #include <Common/LofarLogger.h>
-#include <BBSControl/StreamUtil.h>
 #include <Common/Timer.h>
 
 //#include <casa/Quanta/Quantum.h>
@@ -483,7 +482,7 @@ void CommandExecutor::visit(const BBSSolveStep &command)
 /*
                     // Log the updated unknowns.
                     itsKernel->logIteration(
-                        command.name(),
+                        command.getName(),
                         startDomain + i,
                         result->getRank(),
                         result->getChiSquared(),

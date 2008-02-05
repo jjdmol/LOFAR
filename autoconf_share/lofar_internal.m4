@@ -38,32 +38,5 @@
 AC_DEFUN([lofar_INTERNAL],dnl
 [dnl
 AC_PREREQ(2.13)dnl
-lfr_pkgnam_intv=$2
 lofar_EXTERNAL($2,$4,$5,$6,$7,$8,$9,$10,$11)
-[
-  # If this package was configured in, add the statements to get the
-  # version of this package.
-  # The Tools package is special and not handled.
-  if [ "$enable_external" = "yes"  -a  "${lfr_pkgnam_intv}" != Tools ]; then
-    echo "#include \"${lfr_pkgnam_intv}/Package__Version.h\"" >> FillPackage__VersionInc.h
-    # If the current FillPackage__VersionFunc.h is the same as the old one, copy the
-    # old one back, while preserving creation date and time.
-    diff FillPackage__VersionInc.h FillPackage__VersionInc.old-h > /dev/null 2>&1
-    if [ $? = 0 ]; then
-      cp -p FillPackage__VersionInc.old-h FillPackage__VersionInc.h
-    fi
-
-    echo "    ${lfr_pkgnam_intv}Version::fillInfo (level+1, vec);"  >> FillPackage__VersionFunc.h-pkg
-    # Do the finalization.
-    cp FillPackage__VersionFunc.h-pkg FillPackage__VersionFunc.h
-    echo '  }' >> FillPackage__VersionFunc.h
-    echo '}' >> FillPackage__VersionFunc.h
-    # If the current FillPackage__VersionFunc.h is the same as the old one,
-    # copy the old one back, while preserving creation date and time.
-    diff FillPackage__VersionFunc.h FillPackage__VersionFunc.old-h > /dev/null 2>&1
-    if [ $? = 0 ]; then
-      cp -p FillPackage__VersionFunc.old-h FillPackage__VersionFunc.h
-    fi
-  fi
-]
 ])
