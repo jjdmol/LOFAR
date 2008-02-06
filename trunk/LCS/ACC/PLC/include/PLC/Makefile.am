@@ -1,4 +1,4 @@
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	DH_ProcControl.h \
 	PCCmd.h \
 	ProcControlComm.h \

@@ -1,10 +1,16 @@
 lib_LTLIBRARIES           = libplc.la
 
-libplc_la_SOURCES 		  = DH_ProcControl.cc \
+libplc_la_SOURCES 		  = Package__Version.cc  DH_ProcControl.cc \
 							PCCmd.cc \
 							ProcControlComm.cc  \
 							ProcControlServer.cc \
 							ACCmain.cc
+
+bin_PROGRAMS = versionplc
+
+versionplc_SOURCES      = versionplc.cc
+versionplc_LDADD        = libplc.la
+versionplc_DEPENDENCIES = libplc.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
