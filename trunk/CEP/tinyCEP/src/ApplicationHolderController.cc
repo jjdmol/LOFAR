@@ -61,6 +61,7 @@ tribool ApplicationHolderController::define   ()
     itsAH.baseDefine();
   } catch (Exception&	ex) {
     LOG_WARN_STR("Exception during define: " << ex.what());
+    std::cerr << "Exception during define: " << ex.what() << std::endl;
     return false;
   }
   return true;
@@ -73,6 +74,7 @@ tribool ApplicationHolderController::init     ()
     itsAH.basePrerun();
   } catch (Exception&	ex) {
     LOG_WARN_STR("Exception during init: " << ex.what());
+    std::cerr << "Exception during init: " << ex.what() << std::endl;
     return false;
   }
   return true;
@@ -87,6 +89,7 @@ tribool ApplicationHolderController::run      ()
     itsIsRunning = true;
   } catch (Exception&	ex) {
     LOG_WARN_STR("Exception during run: " << ex.what());
+    std::cerr << "Exception during run: " << ex.what() << std::endl;
     return false;
   }
   return true;
@@ -112,6 +115,7 @@ tribool ApplicationHolderController::quit  	 ()
     itsAH.baseQuit();
   } catch (Exception&	ex) {
     LOG_WARN_STR("Exception during quit: " << ex.what());
+    std::cerr << "Exception during quit: " << ex.what() << std::endl;
     return false;
   }
   LOG_TRACE_FLOW("Quit ready");
@@ -144,6 +148,7 @@ tribool ApplicationHolderController::reinit	 (const string&	)
     itsAH.basePrerun();
   } catch (Exception&	ex) {
     LOG_WARN_STR("Exception during reinit: " << ex.what());
+    std::cerr << "Exception during reinit: " << ex.what() << std::endl;
     return false;
   }
   return true;
@@ -224,6 +229,7 @@ int ApplicationHolderController::main (int& argc, char**& argv) {
   catch (Exception&	ex) {
     LOG_FATAL_STR("Caught exception: " << ex << endl);
     LOG_FATAL_STR(argv[0] << " terminated by exception!");
+    std::cerr << "Caught exception: " << ex.what() << std::endl;
     return(1);
   }
   
