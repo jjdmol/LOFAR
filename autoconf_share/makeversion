@@ -68,6 +68,7 @@ if [ ! -d $incdir ]; then
   incpath="$npkg/$pkg"
   if [ ! -d  $incdir ]; then
     incdir=src
+    incpath="$pkg"
   fi
 fi
 if [ ! -d $incdir ]; then
