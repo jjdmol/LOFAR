@@ -1,4 +1,4 @@
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 Semaphore.h					\
 DH_Example.h					\
 DH_Tester.h					\
@@ -22,7 +22,7 @@ CyclicBuffer.h
 
 lib_LTLIBRARIES 	= libcepframe.la
 
-libcepframe_la_SOURCES 	= $(pkginclude_HEADERS) \
+libcepframe_la_SOURCES 	= Package__Version.cc  $(pkginclude_HEADERS) \
 Semaphore.cc					\
 DH_Example.cc					\
 DH_Tester.cc					\
@@ -41,5 +41,11 @@ Block.cc					\
 BlockRep.cc					\
 Composite.cc					\
 CompositeRep.cc					
+
+bin_PROGRAMS = versioncepframe
+
+versioncepframe_SOURCES      = versioncepframe.cc
+versioncepframe_LDADD        = libcepframe.la
+versioncepframe_DEPENDENCIES = libcepframe.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
