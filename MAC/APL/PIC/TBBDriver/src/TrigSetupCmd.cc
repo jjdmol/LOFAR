@@ -80,8 +80,9 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 		TS->setChTriggerStopMode(channel, (itsTBBE->setup[rcunr].stop_mode));
 		TS->setChFilterSelect(channel, itsTBBE->setup[rcunr].filter_select);
 		TS->setChDetectWindow(channel, itsTBBE->setup[rcunr].window);
-		TS->setChTriggerDummy(channel, itsTBBE->setup[rcunr].dummy);
+		TS->setChOperatingMode(channel, itsTBBE->setup[rcunr].operating_mode);
 	}
+	TS->setTriggerMode(itsTBBE->trigger_mode);
 	
 	// Send only commands to boards installed
 	uint32 boardmask;
@@ -89,8 +90,10 @@ void TrigSetupCmd::saveTbbEvent(GCFEvent& event)
 	setBoardMask(boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		if (TS->isBoardActive(boardnr) == false)
+		itsTBBackE->status_mask[boardnr] = 0;
+		if (TS->isBoardActive(boardnr) == false) {
 			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		}
 	}
 	
 	// select firt channel to handle
@@ -115,7 +118,7 @@ void TrigSetupCmd::sendTpEvent()
 																		(TS->getChTriggerStopMode(getChannelNr() + ch) << 4)));
 			itsTPE->channel[ch].filter_select = static_cast<uint32>(TS->getChFilterSelect(getChannelNr() + ch));
 			itsTPE->channel[ch].window = static_cast<uint32>(TS->getChDetectWindow(getChannelNr() + ch));
-			itsTPE->channel[ch].dummy = static_cast<uint32>(TS->getChTriggerDummy(getChannelNr() + ch));
+			itsTPE->channel[ch].dummy = static_cast<uint32>(TS->getTriggerMode());
 		}
 		
 		TS->boardPort(getBoardNr()).send(*itsTPE);
@@ -152,5 +155,5 @@ void TrigSetupCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 	
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

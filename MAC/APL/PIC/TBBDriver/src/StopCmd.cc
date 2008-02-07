@@ -88,6 +88,7 @@ void StopCmd::saveTbbEvent(GCFEvent& event)
 	
 	uint32 boardmask = 0;		
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		itsTBBackE->status_mask[boardnr] = 0;
 		if (!TS->isBoardActive(boardnr)) { 
 			if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr);
 			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
@@ -182,6 +183,6 @@ void StopCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		LOG_DEBUG_STR(formatString("StopCmd sendtbb status[0x%x]", itsTBBackE->status_mask[boardnr]));		
 	}
 	
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }
 

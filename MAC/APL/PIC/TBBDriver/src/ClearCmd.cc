@@ -65,13 +65,15 @@ bool ClearCmd::isValid(GCFEvent& event)
 // ----------------------------------------------------------------------------
 void ClearCmd::saveTbbEvent(GCFEvent& event)
 {
-	itsTBBE 			= new TBBClearEvent(event);
+	itsTBBE	= new TBBClearEvent(event);
 		
 	setBoardMask(itsTBBE->boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		if (TS->isBoardActive(boardnr) == false)
+		itsTBBackE->status_mask[boardnr] = 0;
+		if (TS->isBoardActive(boardnr) == false) {
 			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		}
 	}
 	
 	// get first board
@@ -108,7 +110,7 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event)
 	
 	nextBoardNr();
 	if (isDone()) {
-		setSleepTime(3.0); // clearing the registers will last 3 seconds
+		setSleepTime(1.0); // clearing the registers will last 3 seconds
 	}
 }
 
@@ -119,5 +121,6 @@ void ClearCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		if (itsTBBackE->status_mask[boardnr] == 0)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
-	clientport->send(*itsTBBackE);
+	
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

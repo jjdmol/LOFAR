@@ -3,6 +3,12 @@
 #
 
 #
+# Write trigger message info to a file
+# see opt/lofar/log/ <date>_TRIGGER.dat
+# 
+TBBDriver.SAVE_TRIGGERS_TO_FILE=1
+
+#
 # Ethernet interface on which to contact the TBB boards.
 # This interface would normally be connected to the switch.
 #

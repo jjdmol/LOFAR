@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <time.h>
 
 #include "MsgHandler.h"
 
@@ -78,34 +79,43 @@ void MsgHandler::removeHardwareClient(GCFPortInterface& port)
 //-----------------------------------------------------------------------------
 void MsgHandler::sendTrigger(GCFEvent& event, int boardnr)
 {
-	TPTriggerEvent	*TPE;
-	TPE	= new TPTriggerEvent(event);
-	int channel = TPE->trigger.channel + (boardnr * TS->nrChannelsOnBoard());	
+	TPTriggerEvent	TPE(event);
+  
+	time_t timenow = time(NULL);	
+	if (timenow > (TPE.trigger.time + 1)) {
+		LOG_WARN_STR("trigger canceled dT=" << (timenow - TPE.trigger.time) << " sec");
+		return;
+	}
+	int channel = TPE.trigger.channel + (boardnr * TS->nrChannelsOnBoard());	
 	TS->convertCh2Rcu(channel, &itsTriggerE->rcu);
-	itsTriggerE->sequence_nr			=	TPE->trigger.sequence_nr;
-	itsTriggerE->time							=	TPE->trigger.time;
-	itsTriggerE->sample_nr				= TPE->trigger.sample_nr;
-	itsTriggerE->trigger_sum 			= TPE->trigger.sum;
-	itsTriggerE->trigger_samples	= TPE->trigger.samples;
-	itsTriggerE->peak_value 			= TPE->trigger.peak;
+	itsTriggerE->sequence_nr			=	TPE.trigger.sequence_nr;
+	itsTriggerE->time							=	TPE.trigger.time;
+	itsTriggerE->sample_nr				= TPE.trigger.sample_nr;
+	itsTriggerE->trigger_sum 			= TPE.trigger.sum;
+	itsTriggerE->trigger_samples	= TPE.trigger.samples;
+	itsTriggerE->peak_value 			= TPE.trigger.peak;
+	itsTriggerE->power_before			= TPE.trigger.pwr_bt_at & 0x0000FFFF;
+	itsTriggerE->power_after			= (TPE.trigger.pwr_bt_at & 0xFFFF0000) >> 16;
 				
 	sendTriggerMessage(*itsTriggerE);
+	
+	// save trigger messages to a file
+	if (TS->saveTriggersToFile()) { 
+		TriggerStruct* trig = new TriggerStruct;
+		memcpy(&trig->rcu,&itsTriggerE->rcu,sizeof(TriggerStruct));
+		itsTriggerList.push_back(trig);
+	}
 	TS->setChTriggered(channel, true);
-		
-	delete TPE;		
 }
 
 //-----------------------------------------------------------------------------
 void MsgHandler::sendError(GCFEvent& event)
 {
-	TPErrorEvent	*TPE;
-	TPE	= new TPErrorEvent(event);
+	TPErrorEvent	TPE(event);
 		
-	itsErrorE->code	= TPE->code;
+	itsErrorE->code	= TPE.code;
 	
 	sendHardwareMessage(*itsErrorE);
-	
-	delete TPE;		
 }
 
 //-----------------------------------------------------------------------------
@@ -124,24 +134,58 @@ void MsgHandler::sendTriggerMessage(GCFEvent& event)
          it != itsClientTriggerMsgList.end();
          it++)
     {
-  		(*it)->send(event);
+  		if ((*it)->isConnected()) { (*it)->send(event); }
     }
   }
 }
 
 //-----------------------------------------------------------------------------
-void MsgHandler::sendHardwareMessage(GCFEvent& event)
+void MsgHandler::saveTriggerMessage()
 {
+  if (!itsTriggerList.empty()) {  
+	  
+	  FILE* file;
+  	char filename[256];
+  	char timestring[12];
+  	time_t timenow;
+	  
+	  timenow = time(NULL);
+	  
+	  strftime(timestring, 255, "%Y-%m-%d", gmtime(&timenow));
+	  snprintf(filename, PATH_MAX, "/opt/lofar/log/%s_TRIGGER.dat",timestring);
+	  file = fopen(filename,"a");
+	  
+	  list<TriggerStruct*>::iterator it;
+	  for (it = itsTriggerList.begin(); it != itsTriggerList.end(); it++) {
+		  fprintf(file,"%d %u %u %u %u %u %u %u %u\n",
+		  	(*it)->rcu,
+		  	(*it)->sequence_nr,
+		  	(*it)->time,
+		  	(*it)->sample_nr,
+		  	(*it)->trigger_sum,
+		  	(*it)->trigger_samples,
+		  	(*it)->peak_value,
+		  	(*it)->power_before,
+		  	(*it)->power_after);
+		  	
+		  delete (*it);	
+	  }
+	  itsTriggerList.clear();
+	  fclose(file);
+	}
+} 
+  
+//-----------------------------------------------------------------------------
+void MsgHandler::sendHardwareMessage(GCFEvent& event)
+{ 
   if (!itsClientHardwareMsgList.empty()) {
     for (list<GCFPortInterface*>::iterator it = itsClientHardwareMsgList.begin();
          it != itsClientHardwareMsgList.end();
          it++)
     {
-  		(*it)->send(event);
+  		if ((*it)->isConnected()) { (*it)->send(event); }
     }
   }
 }
-
-
 	} // end namespace TBB
 } // end namespace LOFAR

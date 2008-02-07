@@ -88,6 +88,7 @@ void TrigReleaseCmd::saveTbbEvent(GCFEvent& event)
 	
 	uint32 boardmask = 0;	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		itsTBBackE->status_mask[boardnr] = 0;
 		if (TS->isBoardActive(boardnr)) {
 			if ((itsChannelStopMask[boardnr] != 0) || (itsChannelStartMask[boardnr] != 0)) {
 				boardmask |= (1 << boardnr);
@@ -258,5 +259,5 @@ void TrigReleaseCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 		
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

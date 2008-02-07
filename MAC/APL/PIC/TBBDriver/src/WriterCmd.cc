@@ -66,6 +66,7 @@ void WriterCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE	= new TBBWriterEvent(event);
 		
+	itsTBBackE->status_mask = 0;
 	if (TS->isBoardActive(itsTBBE->board)) {	
 		setBoardNr(itsTBBE->board);
 	} else {
@@ -119,5 +120,5 @@ void WriterCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	if (itsTBBackE->status_mask == 0)
 			itsTBBackE->status_mask = TBB_SUCCESS;
 	//LOG_DEBUG_STR(formatString("send Writer tbbackevent board %d [0x%08X]", getBoardNr(), itsTBBackE->status_mask)); 
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

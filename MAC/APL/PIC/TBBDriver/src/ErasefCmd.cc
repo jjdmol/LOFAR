@@ -139,5 +139,5 @@ void ErasefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	if (itsTBBackE->status_mask == 0) {
 		itsTBBackE->status_mask = TBB_SUCCESS;
 	}
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

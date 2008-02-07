@@ -78,8 +78,10 @@ void VersionCmd::saveTbbEvent(GCFEvent& event)
 	setBoardMask(itsTBBE->boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		if (!TS->isBoardActive(boardnr)) 
+		itsTBBackE->status_mask[boardnr] = 0;
+		if (!TS->isBoardActive(boardnr)) {
 			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		}
 	}
 	
 	itsTBBackE->driverversion = TS->driverVersion(); // set cvs version of TBBDriver.c
@@ -140,5 +142,5 @@ void VersionCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

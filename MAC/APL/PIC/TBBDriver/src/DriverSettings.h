@@ -35,9 +35,9 @@
 namespace LOFAR {
   namespace TBB {
 
-static const int DRIVER_VERSION = 113; // 1.13 in cvs
+static const int DRIVER_VERSION = 115; // 1.15 
 
-enum SetupStateT {noBoard, boardReset, boardCleared, boardFreed, boardReady, boardError};
+enum BoardStateT {noBoard, boardReset, boardCleared, boardFreed, boardReady, boardError};
 
 // info for all channels
 struct ChannelInfo
@@ -59,14 +59,14 @@ struct ChannelInfo
 	uint8	TriggerStopMode;
 	uint8	FilterSelect;
 	uint8	DetectWindow;
-	uint16	TriggerDummy;
+	uint8 OperatingMode;
 	uint16	Coefficient[4];
 };
 
 struct BoardInfo
 {
 	GCFPortInterface* port;
-	SetupStateT setupState; 
+	BoardStateT boardState; 
 	uint32	memorySize;
 	string	srcIp;
 	string	dstIp;
@@ -120,16 +120,19 @@ public:
 	uint8 getChTriggerStopMode(int32 channelnr);
 	uint8 getChFilterSelect(int32 channelnr);
 	uint8 getChDetectWindow(int32 channelnr);
-	uint16 getChTriggerDummy(int32 channelnr);
+	uint8 getChOperatingMode(int32 channelnr);
 	uint16 getChFilterCoefficient(int32 channelnr, int32 coef_nr);
+	uint16 getTriggerMode();
 	
 	string getIfName();
 	string getSrcIp(int32 boardnr);
 	string getDstIp(int32 boardnr);
 	string getSrcMac(int32 boardnr);
 	string getDstMac(int32 boardnr);
-	SetupStateT getBoardState(int32 boardnr);
-	void setBoardState(int32 boardnr, SetupStateT setupstate);
+	int32	 saveTriggersToFile();
+	
+	BoardStateT getBoardState(int32 boardnr);
+	void setBoardState(int32 boardnr, BoardStateT boardstate);
 	void setActiveBoardsMask (uint32 activeboardsmask);
 	void setActiveBoard (int32 boardnr);
 	void resetActiveBoard (int32 boardnr);
@@ -146,8 +149,9 @@ public:
 	void setChTriggerStopMode(int32 channelnr, uint8 mode);
 	void setChFilterSelect(int32 channelnr, uint8 filter_select);
 	void setChDetectWindow(int32 channelnr, uint8 detect_window);
-	void setChTriggerDummy(int32 channelnr, uint16 dummy);
+	void setChOperatingMode(int32 channelnr, uint8 operating_mode);
 	void setChFilterCoefficient(int32 channelnr, int32 coef_nr, uint16 coef);
+	void setTriggerMode(int16 trigger_mode);
 	
 	void clearRcuSettings(int32 boardnr);
 	
@@ -190,6 +194,7 @@ private:
 	int32 itsFlashPageBlockSize;
 	int32	itsMaxRetries;
 	double	itsTimeOut;
+	int32 itsSaveTriggersToFile;
 
 	// mask with active boards
 	uint32	itsActiveBoardsMask;
@@ -198,6 +203,7 @@ private:
 	int32				*itsCh2RcuTable;
 	BoardInfo		*itsBoardInfo;
 	ChannelInfo	*itsChannelInfo;
+	uint16			itsTriggerMode;
 	string			itsIfName;
 	
 	static TbbSettings	*theirTbbSettings;
@@ -224,8 +230,8 @@ inline	double TbbSettings::timeout()	{ return (itsTimeOut);   }
 //inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (itsBoardPorts[boardnr]); }
 inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (*itsBoardInfo[boardnr].port); }
 
-inline	void TbbSettings::setBoardState(int32 boardnr, SetupStateT setupstate) { itsBoardInfo[boardnr].setupState = setupstate; }
-inline	SetupStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].setupState); }
+inline	void TbbSettings::setBoardState(int32 boardnr, BoardStateT boardstate) { itsBoardInfo[boardnr].boardState = boardstate; }
+inline	BoardStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].boardState); }
 
 //---- inline functions for channel information ------------
 inline	bool TbbSettings::isChSelected(int32 channelnr) { return (itsChannelInfo[channelnr].Selected); }
@@ -244,13 +250,15 @@ inline	uint8 TbbSettings::getChTriggerStartMode(int32 channelnr) { return (itsCh
 inline	uint8 TbbSettings::getChTriggerStopMode(int32 channelnr) { return (itsChannelInfo[channelnr].TriggerStopMode); }
 inline	uint8 TbbSettings::getChFilterSelect(int32 channelnr) { return (itsChannelInfo[channelnr].FilterSelect); }
 inline	uint8 TbbSettings::getChDetectWindow(int32 channelnr) { return (itsChannelInfo[channelnr].DetectWindow); }
-inline	uint16 TbbSettings::getChTriggerDummy(int32 channelnr) { return (itsChannelInfo[channelnr].TriggerDummy); }
+inline	uint8 TbbSettings::getChOperatingMode(int32 channelnr) { return (itsChannelInfo[channelnr].OperatingMode); }
 inline	uint16 TbbSettings::getChFilterCoefficient(int32 channelnr, int32 coef_nr) { return (itsChannelInfo[channelnr].Coefficient[coef_nr]); }
+inline	uint16 TbbSettings::getTriggerMode() { return (itsTriggerMode); }
 inline	string TbbSettings::getIfName() { return(itsIfName); }
 inline	string TbbSettings::getSrcIp(int32 boardnr) { return(itsBoardInfo[boardnr].srcIp); }
 inline	string TbbSettings::getDstIp(int32 boardnr) { return(itsBoardInfo[boardnr].dstIp); }
 inline	string TbbSettings::getSrcMac(int32 boardnr) { return(itsBoardInfo[boardnr].srcMac); }
 inline	string TbbSettings::getDstMac(int32 boardnr) { return(itsBoardInfo[boardnr].dstMac); }
+inline  int32 TbbSettings::saveTriggersToFile() { return(itsSaveTriggersToFile); }
 
 inline	void TbbSettings::setChSelected(int32 channelnr, bool selected) { itsChannelInfo[channelnr].Selected = selected; }
 inline	void TbbSettings::setChStatus(int32 channelnr, uint32 status){ itsChannelInfo[channelnr].Status = status; }
@@ -264,9 +272,9 @@ inline	void TbbSettings::setChTriggerStartMode(int32 channelnr, uint8 mode){ its
 inline	void TbbSettings::setChTriggerStopMode(int32 channelnr, uint8 mode){ itsChannelInfo[channelnr].TriggerStopMode = mode; }
 inline	void TbbSettings::setChFilterSelect(int32 channelnr, uint8 select){ itsChannelInfo[channelnr].FilterSelect = select; }
 inline	void TbbSettings::setChDetectWindow(int32 channelnr, uint8 window){ itsChannelInfo[channelnr].DetectWindow = window; }
-inline	void TbbSettings::setChTriggerDummy(int32 channelnr, uint16 dummy){ itsChannelInfo[channelnr].TriggerDummy = dummy; }
+inline	void TbbSettings::setChOperatingMode(int32 channelnr, uint8 operating_mode){ itsChannelInfo[channelnr].OperatingMode = operating_mode; }
 inline	void TbbSettings::setChFilterCoefficient(int32 channelnr, int32 coef_nr, uint16 coef){ itsChannelInfo[channelnr].Coefficient[coef_nr] = coef; }
-
+inline	void TbbSettings::setTriggerMode(int16 triggermode){ itsTriggerMode = triggermode; }
 //---- inline functions for board information ------------
 inline	uint32 TbbSettings::getMemorySize(int32 boardnr) { return (itsBoardInfo[boardnr].memorySize); }
 inline	void TbbSettings::setMemorySize(int32 boardnr,uint32 pages) { itsBoardInfo[boardnr].memorySize = pages; }

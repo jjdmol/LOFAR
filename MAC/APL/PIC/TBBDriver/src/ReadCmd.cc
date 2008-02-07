@@ -71,7 +71,9 @@ void ReadCmd::saveTbbEvent(GCFEvent& event)
 	TS->convertRcu2Ch(itsTBBE->rcu,&boardnr,&channelnr);
 		
 	setChannelNr(channelnr);
+	setBoardNr(boardnr);
 	
+	itsTBBackE->status_mask = 0;
 	if (!TS->isBoardActive(getBoardNr())) {	
 		itsTBBackE->status_mask |= TBB_NO_BOARD ;
 		setDone(true);
@@ -123,5 +125,5 @@ void ReadCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	if (itsTBBackE->status_mask == 0)
 			itsTBBackE->status_mask = TBB_SUCCESS;
 	 
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) {clientport->send(*itsTBBackE); }
 }

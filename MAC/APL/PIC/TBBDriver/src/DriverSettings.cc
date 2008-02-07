@@ -66,6 +66,7 @@ TbbSettings::TbbSettings() :
 	itsFlashPageBlockSize(1024),	// size of 1 block in bytes
 	itsMaxRetries(5),							// max.number of retries for each command
 	itsTimeOut(0.2),							// response timeout
+	itsSaveTriggersToFile(0),			// save trigger info to a file
 	itsActiveBoardsMask(0),				// mask with active boards
 	itsRcu2ChTable(0),						// conversion table Rcu-number to Channnel-number
 	itsCh2RcuTable(0),						// conversion table Channel-number to Rcu-number
@@ -100,6 +101,9 @@ void TbbSettings::getTbbSettings()
   
   // setMaxBoards() must be set 2e
   setMaxBoards(MAX_N_TBBBOARDS);
+  
+  try { itsSaveTriggersToFile = globalParameterSet()->getInt32("TBBDriver.SAVE_TRIGGERS_TO_FILE"); }
+  catch (...) { LOG_INFO_STR(formatString("TBBDriver.SAVE_TRIGGERS_TO_FILE not found")); }
   
   try { itsTimeOut = globalParameterSet()->getDouble("TBBDriver.TP_TIMEOUT"); }
   catch (...) { LOG_INFO_STR(formatString("TBBDriver.TP_TIMEOUT not found")); configOK = false;}
@@ -202,17 +206,19 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsChannelInfo[ch].TriggerStopMode = 0;
 		itsChannelInfo[ch].FilterSelect = 0;
 		itsChannelInfo[ch].DetectWindow = 0;
-		itsChannelInfo[ch].TriggerDummy = 0;
+		itsChannelInfo[ch].OperatingMode = 0;
 		for (int i = 0; i < 4; i++) {
 			itsChannelInfo[ch].Coefficient[i] = 0;
 		}
 	}
 	
+	itsTriggerMode = 0;	
+		
 	if (itsBoardInfo) delete itsBoardInfo;
 	itsBoardInfo = new BoardInfo[itsMaxBoards];
 	
 	for (int nr = 0;nr < itsMaxBoards; nr++) {
-		itsBoardInfo[nr].setupState = boardReset;
+		itsBoardInfo[nr].boardState = boardReset;
 		itsBoardInfo[nr].memorySize = 0;
 		itsBoardInfo[nr].srcIp = "";
 		itsBoardInfo[nr].dstIp = "";

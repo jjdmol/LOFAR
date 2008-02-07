@@ -63,14 +63,14 @@ static const int REG_READ_ONLY = 1;
 static const int REG_WRITE_ONLY = 2;
 static const int REG_READ_WRITE = 3;
 static const int REG_TABLE_3[8][8] = {
-	{2,2,2,2,2,2,2,2},
-	{2,2,2,2,2,2,0,0},
-	{2,2,2,2,1,1,1,0},
-	{2,2,2,2,1,1,1,0},
-	{2,2,2,2,1,1,1,0},
-	{2,2,2,2,1,1,1,0},
-	{2,2,0,3,1,0,0,0},	// 6-2, size 2048, to big for 100Mb/s
-	{1,1,1,3,3,3,3,1}};
+	{3,3,3,3,3,3,3,3},
+	{3,3,3,3,3,3,3,3},
+	{3,3,3,3,3,3,3,3},
+	{3,3,3,3,3,3,3,3},
+	{3,3,3,3,3,3,3,3},
+	{3,3,3,3,3,3,3,3},
+	{3,3,0,3,3,3,3,3},	// 6-2, size 2048, to big for 100Mb/s
+	{3,3,3,3,3,3,3,3}};
 static const int REG_SIZE[8][8] = {
 	{1,1,1,1,1,1,1,1},
 	{1,1,1,1,1,1,0,0},
@@ -79,7 +79,10 @@ static const int REG_SIZE[8][8] = {
 	{1,1,1,1,2,1,2,0},
 	{1,1,1,1,2,1,2,0},
 	{1,1,0,2,1,0,0,0},	// 6-2, size 2048, to big for 100Mb/s
-	{1,1,1,8,4,16,4,16}};  	
+	{1,1,1,8,4,16,4,16}};
+		
+static const int TBB_LISTEN_ONE_SHOT = 0;
+static const int TBB_LISTEN_CONTINUES = 1;  	
 //-----------------------------------------------------------------------------
 // class Command :base class for control commands towards the TBBDriver.
 //
@@ -396,14 +399,16 @@ class TrigSetupCmd : public Command
 		void setStopMode(uint8 mode) { itsStopMode = mode; }
 		void setFilter(uint8 filter) { itsFilter = filter; }
 		void setWindow(uint8 window) { itsWindow = window; }
-		void setDummy(uint16 dummy) { itsDummy = dummy; }
+		void setOperatingMode(uint16 mode) { itsOperatingMode = mode; }
+		void setTriggerMode(uint16 mode) { itsTriggerMode = mode; }
 	private:
 		uint16 itsLevel;
 		uint8 itsStartMode;
 		uint8 itsStopMode;
 		uint8 itsFilter;
 		uint8 itsWindow;
-		uint16 itsDummy;
+		uint8 itsOperatingMode;
+		uint16 itsTriggerMode;
 };
 
 //-----------------------------------------------------------------------------
@@ -444,8 +449,10 @@ class ListenCmd : public Command
 		virtual ~ListenCmd() { }
 		virtual void send();
 		virtual GCFEvent::TResult ack(GCFEvent& e);
+		void setListenMode(int32 mode) { itsListenMode = mode; }	
 	private:
 		int32 itsCmdStage;
+		int32 itsListenMode;
 };
 
 //-----------------------------------------------------------------------------
