@@ -70,7 +70,7 @@ prelude = << PRELUDE_END
 		uint8  stop_mode;
 		uint8	 filter_select;
 		uint8  window;
-		uint8	 operating_mode;
+		uint8  operating_mode;
 	};
 	
 	typedef struct TbbTriggerCoef // setup variables for 1 channel
@@ -327,6 +327,14 @@ event = {
 		name = "peak_value";
 		type = "uint32";
 	};
+	param = {
+		name = "power_before";
+		type = "uint16";
+	};
+	param = {
+		name = "power_after";
+		type = "uint16";
+	};
 };
 
 event = {
@@ -375,6 +383,10 @@ event = {
 	param = {
 		name = "setup";
 		type = "TbbTriggerSetup[MAX_N_RCUS]";
+	};
+	param = {
+		name = "trigger_mode";
+		type = uint16;
 	};
 };
 
@@ -472,8 +484,12 @@ event = {
 		type = "uint32";
 	};
 	param = {
-		name = "trigger_flags";
-		type = "uint32";
+		name = "power_before";
+		type = "uint16";
+	};
+	param = {
+		name = "power_after";
+		type = "uint16";
 	};
 };
 
