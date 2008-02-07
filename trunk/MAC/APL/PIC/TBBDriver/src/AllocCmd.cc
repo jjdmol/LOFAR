@@ -86,6 +86,7 @@ void AllocCmd::saveTbbEvent(GCFEvent& event)
 	
 	uint32 boardmask = 0;	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		itsTBBackE->status_mask[boardnr] = 0;
 		if (itsChannelMask[boardnr] != 0) boardmask |= (1 << boardnr); 
 		
 		if (TS->isBoardActive(boardnr)) {
@@ -274,7 +275,7 @@ void AllocCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 	
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }
 
 // ----------------------------------------------------------------------------

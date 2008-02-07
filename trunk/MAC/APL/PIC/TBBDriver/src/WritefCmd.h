@@ -58,8 +58,8 @@ namespace LOFAR {
 				virtual void saveTpAckEvent(GCFEvent& event);
 
 				virtual void sendTbbAckEvent(GCFPortInterface* clientport);
-	
-				void readFiles();
+				
+				bool readFiles();
 							
 				uint8 charToHex(int ch);
 				      

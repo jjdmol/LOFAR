@@ -149,6 +149,9 @@ GCFEvent::TResult BoardCmdHandler::waitack_state(GCFEvent& event, GCFPortInterfa
 				itsRetries++;
 				LOG_DEBUG_STR(formatString("itsRetries[%d] = %d", itsCmd->getBoardNr(), itsRetries));	
 			}	else {
+				if (itsRetries == TS->maxRetries()) {
+					TS->setBoardState(itsCmd->getBoardNr(),boardError);
+				}
 				itsCmd->saveTpAckEvent(event); // max retries or done, save zero's
 				if (itsCmd->getSleepTime() > 0) {
 					itsSleepTimer->setTimer((long)itsCmd->getSleepTime());

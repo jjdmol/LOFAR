@@ -63,7 +63,8 @@ bool ReadxCmd::isValid(GCFEvent& event)
 void ReadxCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE	= new TBBReadxEvent(event);
-		
+	
+	itsTBBackE->status_mask = 0;	
 	if (TS->isBoardActive(itsTBBE->board)) {	
 		setBoardNr(itsTBBE->board);
 	} else {
@@ -122,5 +123,5 @@ void ReadxCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	if (itsTBBackE->status_mask == 0)
 			itsTBBackE->status_mask = TBB_SUCCESS;
 	 
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

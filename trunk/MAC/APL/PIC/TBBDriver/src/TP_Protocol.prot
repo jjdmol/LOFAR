@@ -67,7 +67,7 @@ prelude = << PRELUDE_END
 		uint32 sum;
 		uint32 samples;
 		uint32 peak;
-		uint32 flags;
+		uint32 pwr_bt_at;
 		uint32 end_code;
 	};
 

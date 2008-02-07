@@ -75,6 +75,10 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 	itsTPE->status			=	0;
 	LOG_DEBUG_STR("boardMask= " << formatString("%08x",itsBoardMask));
 	
+	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
+		itsTBBackE->status_mask[boardnr] = 0;
+	}
+	
 	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
 		itsBoardNr++;
 		if (itsBoardNr >= TS->maxBoards()) { 
@@ -123,7 +127,7 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 	if (itsBoardNr < TS->maxBoards()) {
 		setBoardNr(itsBoardNr);
 	} else {
-		setSleepTime(5.0);
+		setSleepTime(1.0);
 		setDone(true);
 	}
 }
@@ -135,5 +139,6 @@ void ResetCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 		if (itsTBBackE->status_mask[boardnr] == 0)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
-	clientport->send(*itsTBBackE);
+	
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

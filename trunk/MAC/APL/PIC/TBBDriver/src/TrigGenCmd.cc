@@ -93,8 +93,10 @@ void TrigGenCmd::saveTbbEvent(GCFEvent& event)
 	setBoardMask(boardmask);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		if (TS->isBoardActive(boardnr) == false)
+		itsTBBackE->status_mask[boardnr] = 0;
+		if (TS->isBoardActive(boardnr) == false) {
 			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		}
 	}
 	
 	LOG_DEBUG_STR(formatString("boardmask = 0x%08X",boardmask));
@@ -205,5 +207,5 @@ void TrigGenCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 	
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

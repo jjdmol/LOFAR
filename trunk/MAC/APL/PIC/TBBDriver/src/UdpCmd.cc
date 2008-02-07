@@ -196,11 +196,16 @@ void UdpCmd::saveTbbEvent(GCFEvent& event)
 	setBoardMask(0xFFF);
 	
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		if (!TS->isBoardActive(boardnr))
+		itsTBBackE->status_mask[boardnr] = 0;
+		if (!TS->isBoardActive(boardnr)) {
 			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		}
 	}
 
 	itsMode = itsTBBE->rec_mode;
+	for (int ch = 0; ch < TS->maxChannels(); ch++) {
+		TS->setChOperatingMode(ch,static_cast<uint8>(itsMode));
+	}
 	
 	// initialize TP send frame
 	itsTPE->opcode	= TPUDP;

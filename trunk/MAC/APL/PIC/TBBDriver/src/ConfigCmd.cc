@@ -69,8 +69,10 @@ void ConfigCmd::saveTbbEvent(GCFEvent& event)
 	//TBBConfigEvent itsTBBE(event);
 		
 	for (int boardnr = 0; boardnr < TS->maxBoards(); boardnr++) {
-		if (TS->isBoardActive(boardnr) == false) 
+		itsTBBackE->status_mask[boardnr] = 0;
+		if (TS->isBoardActive(boardnr) == false) { 
 			itsTBBackE->status_mask[boardnr] |= TBB_NO_BOARD;
+		}
 	}
 	
 	setBoardMask(itsTBBE->boardmask);
@@ -119,5 +121,5 @@ void ConfigCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 			itsTBBackE->status_mask[boardnr] = TBB_SUCCESS;
 	}
 	 
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

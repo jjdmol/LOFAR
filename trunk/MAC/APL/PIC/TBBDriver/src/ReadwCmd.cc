@@ -65,6 +65,7 @@ void ReadwCmd::saveTbbEvent(GCFEvent& event)
 {
 	itsTBBE	= new TBBReadwEvent(event);
 	
+	itsTBBackE->status_mask = 0;
 	if (TS->isBoardActive(itsTBBE->board)) {	
 		setBoardNr(itsTBBE->board);
 	} else {
@@ -113,5 +114,5 @@ void ReadwCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	if (itsTBBackE->status_mask == 0)
 			itsTBBackE->status_mask = TBB_SUCCESS;	
 	
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

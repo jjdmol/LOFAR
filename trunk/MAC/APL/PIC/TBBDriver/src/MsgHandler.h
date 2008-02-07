@@ -37,7 +37,19 @@
 
 namespace LOFAR {
 	namespace TBB {
-	
+		
+		typedef struct TriggerStruct {
+			int32 rcu;
+      uint32 sequence_nr;
+      uint32 time;
+      uint32 sample_nr;
+      uint32 trigger_sum;
+      uint32 trigger_samples;
+      uint32 peak_value;
+      uint16 power_before;
+      uint16 power_after;
+		};
+				
 		class MsgHandler
 		{
 	
@@ -64,6 +76,8 @@ namespace LOFAR {
 					
 				void sendTriggerMessage(GCFEvent& event);
 				
+				void saveTriggerMessage();
+				
 				void sendHardwareMessage(GCFEvent& event);
 
 			protected:
@@ -73,6 +87,7 @@ namespace LOFAR {
 				
 				std::list<GCFPortInterface*> itsClientTriggerMsgList;  // list of clients witch receive messages
 				std::list<GCFPortInterface*> itsClientHardwareMsgList;  // list of clients witch receive messages
+				std::list<TriggerStruct*> itsTriggerList;  // list of Received Trigger	
 				
 				TBBTriggerEvent			*itsTriggerE;
 				TBBErrorEvent				*itsErrorE;

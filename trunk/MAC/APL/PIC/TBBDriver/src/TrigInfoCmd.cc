@@ -78,6 +78,8 @@ void TrigInfoCmd::saveTbbEvent(GCFEvent& event)
 	boardmask = TS->activeBoardsMask();
 	setBoardMask(boardmask);
 	
+	itsTBBackE->status_mask = 0;
+	
 	nextSelectedChannelNr();
 	
 	// initialize TP send frame
@@ -119,7 +121,8 @@ void TrigInfoCmd::saveTpAckEvent(GCFEvent& event)
 		itsTBBackE->trigger_sum			= itsTPackE->trigger.sum;
 		itsTBBackE->trigger_samples	= itsTPackE->trigger.samples;
 		itsTBBackE->peak_value			= itsTPackE->trigger.peak;
-		itsTBBackE->trigger_flags		= itsTPackE->trigger.flags;
+		itsTBBackE->power_before		= itsTPackE->trigger.pwr_bt_at & 0x0000FFFF;
+		itsTBBackE->power_after		= (itsTPackE->trigger.pwr_bt_at & 0xFFFF0000) >> 16;
 		
 		LOG_DEBUG_STR(formatString("Received TrigInfoAck from boardnr[%d]", getBoardNr()));
 		delete itsTPackE;
@@ -133,5 +136,6 @@ void TrigInfoCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	if (itsTBBackE->status_mask == 0) {
 		itsTBBackE->status_mask = TBB_SUCCESS;
 	}
-	clientport->send(*itsTBBackE);
+	
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }

@@ -40,7 +40,6 @@
 #include <ctype.h>
 #include <Common/lofar_set.h>
 #include <time.h>
-//#include <unistd.h>
 
 //#include <APL/RTCCommon/gnuplot_i.h>
 
@@ -56,7 +55,7 @@ using namespace LOFAR;
 using namespace TBB_Protocol;
 using namespace TbbCtl;
 
-static const long DELAY = 1; 
+static const long DELAY = 5; 
 
 //---- ALLOC  ----------------------------------------------------------------
 AllocCmd::AllocCmd(GCFPortInterface& port) : Command(port)
@@ -400,6 +399,7 @@ GCFEvent::TResult TrigReleaseCmd::ack(GCFEvent& e)
 		bnr = static_cast<int32>(cnr / 16);
 		
 		if (bnr != oldbnr) {
+			//cout << formatString("status[%d]%08x",bnr, ack.status_mask[bnr]);
 			if (ack.status_mask[bnr] & TBB_SUCCESS) {
 				cout << formatString(" %2d  trigger detection released for selected rcu's",bnr ) << endl;
 			}	else {	
@@ -419,14 +419,18 @@ TrigGenerateCmd::TrigGenerateCmd(GCFPortInterface& port) : Command(port)
 	cout << endl;
 	cout << "== TBB ============================ generate trigger on selected rcu's ====" << endl;
 	cout << endl;
-	cout << "RCU   seq_nr      time        sample       sum          samples     peak" << endl;
-	cout << "---   ---------   ---------   ----------   ----------   ---------   ---------" << endl;  
+	cout << "RCU   seq_nr      time        sample       sum          samples     peak        pwr_before  pwr_after" << endl;
+	cout << "---   ---------   ---------   ----------   ----------   ---------   ---------   ---------   ---------" << endl;  
 }
 
 //-----------------------------------------------------------------------------
 void TrigGenerateCmd::send()
 {
 	setCmdSendNext(false);
+	TBBSubscribeEvent subscribe;
+	subscribe.triggers = true;
+	subscribe.hardware = true;
+  itsPort.send(subscribe);
 	
 	TBBTrigGenerateEvent event;
 	if (isSelectionDone()) {
@@ -442,16 +446,20 @@ GCFEvent::TResult TrigGenerateCmd::ack(GCFEvent& e)
 	if (e.signal == TBB_TRIG_GENERATE_ACK) {
 		TBBTrigGenerateAckEvent ack(e);
 	}
+	if (e.signal == TBB_SUBSCRIBE_ACK) {
+	}
 	if (e.signal == TBB_TRIGGER) {
 		TBBTriggerEvent trig(e);
-		cout << formatString(" %2d   %9u   %9u   %10u   %10u   %9u   %9u",
+		cout << formatString(" %2d   %9u   %9u   %10u   %10u   %9u   %9u   %9u   %9u",
 												 trig.rcu,
 												 trig.sequence_nr,
 												 trig.time,
 												 trig.sample_nr,
 												 trig.trigger_sum,
 												 trig.trigger_samples,
-												 trig.peak_value
+												 trig.peak_value,
+												 trig.power_before,
+												 trig.power_after
 												) << endl;
 	}
 	//setCmdDone(true);
@@ -460,7 +468,7 @@ GCFEvent::TResult TrigGenerateCmd::ack(GCFEvent& e)
 
 //---- TRIGSETUP --------------------------------------------------------------
 TrigSetupCmd::TrigSetupCmd(GCFPortInterface& port) : Command(port),
-	itsLevel(0), itsStartMode(0), itsStopMode(0),itsFilter(0), itsWindow(0), itsDummy(0)
+	itsLevel(0), itsStartMode(0), itsStopMode(0),itsFilter(0), itsWindow(0), itsOperatingMode(0), itsTriggerMode(0)
 {
 	cout << endl;
 	cout << "== TBB ============================ trigger system setup for selected rcu's ====" << endl;
@@ -478,7 +486,8 @@ void TrigSetupCmd::send()
 			event.setup[cnr].stop_mode = itsStopMode;
 			event.setup[cnr].filter_select = itsFilter;
 			event.setup[cnr].window = itsWindow;
-			event.setup[cnr].dummy = itsDummy + (cnr << 24);
+			event.setup[cnr].operating_mode = itsOperatingMode;
+			event.trigger_mode = itsTriggerMode;
 		}
 	}
 	itsPort.send(event);
@@ -592,7 +601,8 @@ GCFEvent::TResult TrigInfoCmd::ack(GCFEvent& e)
 		cout << formatString("      sum        : %lu",ack.trigger_sum) << endl;
 		cout << formatString("      samples    : %lu",ack.trigger_samples) << endl;
 		cout << formatString("      peak value : %lu",ack.peak_value) << endl;
-		cout << formatString("      flags      : %08X",ack.trigger_flags) << endl;
+		cout << formatString("      pwr before : %u",ack.power_before) << endl;
+		cout << formatString("      pwr after  : %u",ack.power_after) << endl;
 	}	else {	
 		cout << formatString(" %2d  %s",getRcu(), getDriverErrorStr(ack.status_mask).c_str()) << endl;
 	}
@@ -637,6 +647,13 @@ void ListenCmd::send()
 		} break;
 
 		case 3: {
+			TBBSubscribeEvent subscribe;
+			subscribe.triggers = true;
+			subscribe.hardware = true;
+      itsPort.send(subscribe);
+		} break;
+		
+		case 4: {
 			cout << "-released all trigger systems, and waiting  (STOP WAITING WITH CTRL-C)" << endl;
 			setCmdSendNext(false);
 			TBBTrigReleaseEvent release;
@@ -644,9 +661,12 @@ void ListenCmd::send()
 			release.rcu_start_mask = getRcuMask();
 			itsPort.send(release);
 			cout << endl;
-			cout << "RCU   seq_nr      time        sample       sum          samples     peak" << endl;
-			cout << "---   ---------   ---------   ----------   ----------   ---------   ---------" << endl; 
+	cout << "RCU   seq_nr      time         sample       sum          samples     peak        pwr_before  pwr_after" << endl;
+	cout << "---   ---------   ----------   ----------   ----------   ---------   ---------   ---------   ---------" << endl; 
 		} break;
+		
+		
+
 
 		default: {
 		} break;
@@ -657,38 +677,52 @@ void ListenCmd::send()
 //-----------------------------------------------------------------------------
 GCFEvent::TResult ListenCmd::ack(GCFEvent& e)
 {
+	static int nummer;
 	if (e.signal == TBB_STOP_ACK) {
 		TBBTrigReleaseAckEvent ack(e);
-		itsCmdStage = 2;
+		if (itsCmdStage == 1) { itsCmdStage = 2; }
 	}
 	if (e.signal == TBB_RECORD_ACK) {
 		TBBTrigReleaseAckEvent ack(e);
 		itsCmdStage = 3;
 	}
+	if (e.signal == TBB_SUBSCRIBE_ACK) {
+		itsCmdStage = 4;
+		nummer = 0;
+	}
 	if (e.signal == TBB_TRIG_RELEASE_ACK) {
 		TBBTrigReleaseAckEvent ack(e);
 		if (itsCmdStage == 0) itsCmdStage = 1;
-		if (itsCmdStage == 3) itsCmdStage = 4;	
+		if (itsCmdStage == 4) itsCmdStage = 5;
 	}
-
+		
 	if (e.signal == TBB_TRIGGER) {
 		
 			TBBTriggerEvent trig(e);
-			
-			TBBStopEvent event;
-			event.rcu_mask = (1 << trig.rcu);
-			itsPort.send(event);
-			
-			cout << formatString(" %2d   %9u   %9u   %10u   %10u   %9u   %9u  (stopped)",
-													 trig.rcu,
-													 trig.sequence_nr,
-													 trig.time,
-													 trig.sample_nr,
-													 trig.trigger_sum,
-													 trig.trigger_samples,
-													 trig.peak_value
-													) << endl;
-		
+			nummer++;	
+			cout << formatString(" %2d   %9u   %9u   %10u   %10u   %9u   %9u   %9u   %9u   (stopped) %6d",
+												 trig.rcu,
+												 trig.sequence_nr,
+												 trig.time,
+												 trig.sample_nr,
+												 trig.trigger_sum,
+												 trig.trigger_samples,
+												 trig.peak_value,
+												 trig.power_before,
+												 trig.power_after,
+												 nummer
+												) << endl;
+												
+			if (itsListenMode == TBB_LISTEN_ONE_SHOT) {
+				TBBStopEvent event;
+				event.rcu_mask.set(trig.rcu);
+				itsPort.send(event);
+			} else {
+				TBBTrigReleaseEvent release;
+				release.rcu_stop_mask.set(trig.rcu);
+				release.rcu_start_mask.set(trig.rcu);
+				itsPort.send(release);
+			}									
 	}	
 	//setCmdDone(true);
 	return(GCFEvent::HANDLED);
@@ -1824,10 +1858,10 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			} else {
 				cout << "Time of 1e sample/slice    : " << timestring << " (" << (uint32)itsTime << ")" << endl ;
 			}
-			if (itsTotalBands > 0) {
+			if (itsFreqBands > 0) {
 				cout << "Slice number of 1e slice   : " << itsSliceNr << endl;
 				cout << "Band number of 1e sample   : " << itsBandNr << endl;
-				cout << "Number of bands            : " << itsTotalBands << endl;
+				cout << "Number of bands            : " << itsFreqBands << endl;
 				cout << "Data file format           : binary complex(int16 Re, int16 Im)" << endl;
 			}	else {
 				cout << "Sample number of 1e sample : " << itsSampleNr << endl;
@@ -1849,7 +1883,7 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			cout << "|" << endl ;
 			cout <<   "         |" << flush;
 			
-			snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsTotalBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
+			snprintf(basefilename, PATH_MAX, "%s_%s_%02d%02d",(itsFreqBands == 0)?"rw":"sb",timestring,itsStationId,itsRcuId);
 		}
 		itsSamplesPerFrame = static_cast<uint32>(itsData[4] & 0xFFFF);
 		
@@ -1873,46 +1907,42 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 		
 		// extract payload
 		if (itsFreqBands > 0) {	// if itsFreqBands > 0 then it's SPECTRAL data
-			if (itsSamplesPerFrame < 975) {		
-				itsTotalSamples += itsSamplesPerFrame;
+			itsTotalSamples += itsSamplesPerFrame;
 
-				// convert uint32 to complex int16
-				while (sample_cnt < itsSamplesPerFrame) {
+			// convert uint32 to complex int16
+			while (sample_cnt < itsSamplesPerFrame) {
 					val[val_cnt++] = static_cast<int16>(itsData[data_cnt] & 0xFFFF);	// re part
 					val[val_cnt++] = static_cast<int16>((itsData[data_cnt++] >> 16) & 0xFFFF);	// im part
 					sample_cnt++;
-				}
 			}
 		}	else {	// if itsFreqBands = 0, it's RAW data
 
-			if (itsSamplesPerFrame < 1299) {		
-				uint32 data[3];
-				itsTotalSamples += itsSamplesPerFrame;
+			uint32 data[3];
+			itsTotalSamples += itsSamplesPerFrame;
 
-				// 1e convert uint32 to int12
-				while (sample_cnt < itsSamplesPerFrame) {
-					// get 96 bits from received data
-					data[0] = itsData[data_cnt++];
-					data[1] = itsData[data_cnt++];
-					data[2] = itsData[data_cnt++];
-					
-					// extract 8 values of 12 bit
-					val[val_cnt++] = static_cast<int16>(  data[0] & 0x00000FFF);
-					val[val_cnt++] = static_cast<int16>(( data[0] & 0x00FFF000) >> 12);
-					val[val_cnt++] = static_cast<int16>(((data[0] & 0xFF000000) >> 24) | ((data[1] & 0x0000000F) << 8));
-					val[val_cnt++] = static_cast<int16>(( data[1] & 0x0000FFF0) >> 4 );
-					val[val_cnt++] = static_cast<int16>(( data[1] & 0x0FFF0000) >> 16);
-					val[val_cnt++] = static_cast<int16>(((data[1] & 0xF0000000) >> 28) | ((data[2] & 0x000000FF) << 4));
-					val[val_cnt++] = static_cast<int16>(( data[2] & 0x000FFF00) >> 8);
-					val[val_cnt++] = static_cast<int16>(( data[2] & 0xFFF00000) >> 20);
-					
-					sample_cnt += 8;
-				}
+			// 1e convert uint32 to int12
+			while (sample_cnt < itsSamplesPerFrame) {
+				// get 96 bits from received data
+				data[0] = itsData[data_cnt++];
+				data[1] = itsData[data_cnt++];
+				data[2] = itsData[data_cnt++];
 				
-				// 2e convert all received samples from signed 12bit to signed 16bit
-				for (int cnt = 0; cnt < val_cnt; cnt++) {
-					if (val[cnt] & 0x0800) val[cnt] |= 0xF000;
-				}
+				// extract 8 values of 12 bit
+				val[val_cnt++] = static_cast<int16>(  data[0] & 0x00000FFF);
+				val[val_cnt++] = static_cast<int16>(( data[0] & 0x00FFF000) >> 12);
+				val[val_cnt++] = static_cast<int16>(((data[0] & 0xFF000000) >> 24) | ((data[1] & 0x0000000F) << 8));
+				val[val_cnt++] = static_cast<int16>(( data[1] & 0x0000FFF0) >> 4 );
+				val[val_cnt++] = static_cast<int16>(( data[1] & 0x0FFF0000) >> 16);
+				val[val_cnt++] = static_cast<int16>(((data[1] & 0xF0000000) >> 28) | ((data[2] & 0x000000FF) << 4));
+				val[val_cnt++] = static_cast<int16>(( data[2] & 0x000FFF00) >> 8);
+				val[val_cnt++] = static_cast<int16>(( data[2] & 0xFFF00000) >> 20);
+				
+				sample_cnt += 8;
+			}
+			
+			// 2e convert all received samples from signed 12bit to signed 16bit
+			for (int cnt = 0; cnt < val_cnt; cnt++) {
+				if (val[cnt] & 0x0800) val[cnt] |= 0xF000;
 			}
 		}
 		
@@ -1971,10 +2001,10 @@ GCFEvent::TResult ReadPageCmd::ack(GCFEvent& e)
 			} else {
 				fprintf(file,"Time of 1e sample/slice  : %s (%u)",timestring,(uint32)itsTime);
 			}
-			if (itsTotalBands > 0) {
+			if (itsFreqBands > 0) {
 				fprintf(file,"Slice number of 1e slice : %d",itsSliceNr);
 				fprintf(file,"Band number of 1e sample : %d",itsBandNr);
-				fprintf(file,"Number of bands          : %d",itsTotalBands);
+				fprintf(file,"Number of bands          : %d",itsFreqBands);
 				fprintf(file,"Data file format         : binary complex(int16 Re, int16 Im)");
 			}	else {
 				fprintf(file,"Sample number of 1e sample : %u",itsSampleNr);
@@ -2020,7 +2050,7 @@ void TBBCtl::commandHelp(int level)
 	cout << " tbbctl --settings [--select=<set>]                                 # list trigger settings for selected rcu's" << endl;
 	cout << " tbbctl --release [--select=<set>]                                  # release trigger system for selected rcu's" << endl;
 	cout << " tbbctl --generate [--select=<set>]                                 # generate a trigger for selected rcu's" << endl;	
-	cout << " tbbctl --setup=level,start,stop,filter,window,x [--select=<set>]   # setup trigger system for selected rcu's, x = dummy" << endl;
+	cout << " tbbctl --setup=level,start,stop,filter,window,mode [--select=<set>]# setup trigger system for selected rcu's, mode = 0/1" << endl;
 	cout << " tbbctl --coef=c0,c1,c2,c3 [--select=<set>]                         # set trigger coeffients for elected rcu's" << endl;
 	cout << " tbbctl --triginfo=rcu                                              # get trigger info for selected rcu" << endl;
 	cout << " tbbctl --listen                                                    # put in listen mode, all triggers will be listed" << endl;
@@ -2039,7 +2069,7 @@ void TBBCtl::commandHelp(int level)
 		cout << endl;
 		cout << "______| MP-REGISTER |_____________________________________________________________________________________________________" << endl;
 		cout << " tbbctl --readreg=board,mp,pid,regid                                # register read" << endl;
-		cout << " tbbctl --writereg=board,mp,pid,regid                               # register write" << endl;
+		cout << " tbbctl --writereg=board,mp,pid,regid,data(hex input)               # register write" << endl;
 		cout << endl;
 		cout << "______| FLASH |___________________________________________________________________________________________________________" << endl;
 		cout << " tbbctl --eraseimage=board,image                                    # erase image from flash" << endl;
@@ -2109,7 +2139,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
     } break;
 
 		case TBB_DRIVER_BUSY_ACK: {
-    	cout << "DRIVER BUSY, try again" << endl << flush;
+    	cout << endl << "=x=x=   DRIVER BUSY, try again   =x=x=" << endl << flush;
     	GCFTask::stop();    
     }
 
@@ -2126,8 +2156,8 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 			
 			// send subscribe 
       TBBSubscribeEvent subscribe;
-		subscribe.triggers = true;
-		subscribe.hardware = true;
+			subscribe.triggers = false;
+			subscribe.hardware = true;
       itsServerPort.send(subscribe);
     } break;
 		
@@ -2144,7 +2174,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
       // try again
       cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
       cout << "   =x=         TBBDriver is NOT responding           =x=" << endl;
-			cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
+		cout << "   =x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=x=" << endl;
       //itsServerPort.open();
       exit(EXIT_FAILURE);
     } break;
@@ -2160,6 +2190,7 @@ GCFEvent::TResult TBBCtl::initial(GCFEvent& e, GCFPortInterface& port)
 //-----------------------------------------------------------------------------
 GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
 {
+  //cout << "docommand signal:" << eventName(e) << endl;
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal) {
@@ -2233,7 +2264,8 @@ GCFEvent::TResult TBBCtl::docommand(GCFEvent& e, GCFPortInterface& port)
     case TBB_WRITEW_ACK:
     case TBB_READR_ACK:
     case TBB_WRITER_ACK:
-    case TBB_READX_ACK: {	
+    case TBB_READX_ACK:
+    case TBB_SUBSCRIBE_ACK: {	
     	itsServerPort.cancelAllTimers();
     	status = itsCommand->ack(e); // handle the acknowledgement
     	if (!itsCommand->isCmdDone() && itsCommand->isCmdSendNext()) {
@@ -2284,7 +2316,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 		  { "setup",			required_argument,	0,	't' }, 
 		  { "coef",				required_argument,	0,	'c' }, 
 		  { "triginfo",		required_argument,	0,	'I' }, 
-		  { "listen",     no_argument,				0,	'L' }, 
+		  { "listen",     optional_argument,	0,	'L' }, 
 			{ "read",				required_argument,	0,	'R' }, 
 			{ "mode",				required_argument,	0,	'm' }, 
 			{ "version",		no_argument,				0,	'v' }, 
@@ -2310,7 +2342,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 
     int option_index = 0;
     int c = getopt_long(argc, argv,
-												"l:afrsbegt:c:I:LR:m:vzAp:CZS:1:2:3:8:4:5:9:6:7:hX",
+												"l:afrsbegt:c:I:L::R:m:vzAp:CZS:1:2:3:8:4:5:9:6:7:hX",
 				long_options, &option_index);
 		
     if (c == -1) {
@@ -2416,33 +2448,52 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				if (command) delete command;
 				TrigSetupCmd* trigsetupcmd = new TrigSetupCmd(itsServerPort);
 				command = trigsetupcmd;
+				
 				if (optarg) {
 					uint32 level = 0;
 					uint32 start = 0;
 					uint32 stop = 0;
 					uint32 filter = 0;
 					uint32 window = 0;
-					uint32 dummy = 0;
-					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u",&level, &start, &stop, &filter, &window, &dummy);
-					if (numitems < 6 || numitems == EOF 
-						|| level < 1 || level > 4096 
-						|| start < 1 || start > 15 
-						|| stop < 1 || stop > 15 
-						|| window > 6) {
-							
+					uint32 triggermode = 0;
+					
+					int numitems = sscanf(optarg, "%u,%u,%u,%u,%u,%u",&level, &start, &stop, &filter, &window, &triggermode);
+					// check if valid arguments
+					if (	numitems < 6 || numitems == EOF 
+							|| level < 1 || level > 255 
+							|| start < 1 || start > 15 
+							|| stop < 1 || stop > 15 
+							|| window > 6
+							|| triggermode > 1)
+					{
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
-						cout << "       '--trigsetup=level,start,stop,filter,window,dummy' (use decimal values)" << endl;  
-						cout << "       level=1..4096, start/stop=1..15, filter=0..254, window=0..6"<< endl;
+						cout << "       '--trigsetup=level, start, stop, filter, window, mode' (use decimal values)" << endl;  
+						cout << "       level=1..255,  start=1..15,  stop=1..15,  filter=0(on) or 1(off)" << endl;
+						cout << "       window=0..6, mode=0(single shot) or 1(continues, don't use this mode)" << endl;
 						exit(EXIT_FAILURE);
 					}
 					
+					//================================================
+					// set triggermode to single shot, continues mode
+					// will give more than 6000 triggers per second per
+					// board, if level is chosen to low, the driver can't
+					// handle that amount of trigger per board.
+					if (triggermode == 1) {
+						cout << "mode=1 can generate to many triggers, auto corrected to mode=0(single-shot)" << endl;
+					}	
+					triggermode = 0;
+					//================================================
+					
+										
 					trigsetupcmd->setLevel(static_cast<uint16>(level));
 					trigsetupcmd->setStartMode(static_cast<uint8>(start));
 					trigsetupcmd->setStopMode(static_cast<uint8>(stop));
 					trigsetupcmd->setFilter(static_cast<uint8>(filter));
 					trigsetupcmd->setWindow(static_cast<uint8>(window));
-					trigsetupcmd->setDummy(static_cast<uint16>(dummy));
+					trigsetupcmd->setOperatingMode(0);
+					trigsetupcmd->setTriggerMode(static_cast<uint16>(triggermode));
 				}
+							
 				command->setCmdType(RCUCMD);
 			}	break;
 			
@@ -2458,8 +2509,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int numitems = sscanf(optarg, "%u,%u,%u,%u",&c0, &c1, &c2, &c3);
 					if (numitems < 4 || numitems == EOF) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
-						cout << "       '--trigcoef=c0,c1,c2,c3'   (use decimal values)" << endl;
-						cout << "       co,c1,c2,c3=16bit"<< endl; 
+						cout << "       '--trigcoef=c0, c1, c2, c3'   (use decimal values)" << endl;
+						cout << "       co, c1, c2, c3=16bit value"<< endl; 
 						exit(EXIT_FAILURE);
 					}
 					trigcoefficientcmd->setC0(static_cast<uint16>(c0));
@@ -2494,6 +2545,22 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 				if (command) delete command;
 				ListenCmd* listencmd = new ListenCmd(itsServerPort);
 				command = listencmd;
+				char listen_mode[64];
+				if (optarg) {
+					strcpy(listen_mode,"one_shot");
+					sscanf(optarg, "%s", listen_mode);
+					if ((strcmp(listen_mode,"one_shot") != 0 && strcmp(listen_mode,"continues") != 0)) {
+						cout << "Error: invalid argument. Should be of the format " << endl;
+						cout << "       '--listen=[one_shot | continues]'" << endl;
+						exit(EXIT_FAILURE);
+					}
+				}
+				if (strcmp(listen_mode,"one_shot") == 0) {
+					listencmd->setListenMode(TBB_LISTEN_ONE_SHOT);
+				}
+				if (strcmp(listen_mode,"continues") == 0) {
+					listencmd->setListenMode(TBB_LISTEN_CONTINUES);
+				}
 				command->setCmdType(RCUCMD);
 			}	break;
 			
@@ -2512,8 +2579,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 						&rcu, &secondstime, &sampletime, &prepages, &postpages);
 					if (numitems < 5 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
 						cout << "Error: invalid number of arguments. Should be of the format " << endl;
-						cout <<	"       '--read=rcu,secondstime,sampletime,prepages,postpages' " << endl;
-						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << ", time = secondstime + (sampletime * sample-interval) "<< endl;  
+						cout << "       '--read=rcu,secondstime,sampletime,prepages,postpages' " << endl;
+						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << ",  time = secondstime + (sampletime * sample-interval) "<< endl;  
 						exit(EXIT_FAILURE);
 					}
 					readcmd->setSecondsTime(secondstime);
@@ -2596,8 +2663,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int numitems = sscanf(optarg, "%d", &imagenr);
 					if (numitems == 0 || numitems == EOF || imagenr < 0 || imagenr > 31) {
 						cout << "Error: invalid image value. Should be of the format " << endl;
-						cout <<	"       '--config=value'" << endl;
-						cout << "       value=0..31" << endl; 
+						cout << "       '--config=imagenr'" << endl;
+						cout << "       imagenr=0..31" << endl; 
 						exit(EXIT_FAILURE);
 					}
 					configcmd->setImage((uint32)imagenr);
@@ -2620,7 +2687,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					
 					if (numitems < 3 || numitems == EOF || rcu < 0 || rcu >= MAX_N_RCUS) {
 						cout << "Error: invalid readpage value's. Should be of the format " << endl;
-						cout << "       '--readpage=rcu,startpage,pages'" << endl;
+						cout << "       '--readpage=rcu, startpage, pages'" << endl;
 						cout << "       rcu=0.." << (MAX_N_RCUS - 1) << endl; 
 						exit(EXIT_FAILURE);
 					}
@@ -2644,7 +2711,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					
 					if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_PAGES	|| board < 0 || board >= MAX_N_TBBBOARDS) {
 						cout << "Error: invalid page value. Should be of the format " << endl;
-						cout <<	"       '--eraseimage=board,page'" << endl;
+						cout <<	"       '--eraseimage=board, image'" << endl;
 						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ", image=0..31" << endl; 
 						exit(EXIT_FAILURE);
 					}
@@ -2667,7 +2734,7 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					
 					if (numitems < 2 || numitems == EOF || page < 0 || page >= FL_N_PAGES	|| board < 0 || board >= MAX_N_TBBBOARDS) {
 						cout << "Error: invalid image value. Should be of the format " << endl;
-						cout << "       '--readimage=board,image'"<< endl;
+						cout << "       '--readimage=board, image'"<< endl;
 						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ", image=0..31" << endl;  
 						exit(EXIT_FAILURE);
 					}
@@ -2695,10 +2762,11 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int numitems = sscanf(optarg, "%d,%d,%lf,%63[^,],%63[^,]", &board, &page, &version, filename_tp, filename_mp);
 					if (numitems < 5 || numitems == EOF || page < 0 || page >= FL_N_PAGES	|| board < 0 || board >= MAX_N_TBBBOARDS) {
 						cout << "Error: invalid values. Should be of the format " << endl;
-						cout << "       '--writeimage=board,page,file-tp,file-mp'"<< endl;
+						cout << "       '--writeimage=board, image, file-tp, file-mp'"<< endl;
 						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ", image=0..31" << endl;  
 						exit(EXIT_FAILURE);
 					}
+					
 					writefcmd->setPage(page);
 					writefcmd->setVersion(version);
 					writefcmd->setFileNameTp(filename_tp);
@@ -2746,8 +2814,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					
 					if (numitems < 3 || numitems == EOF || board < 0 || board >= MAX_N_TBBBOARDS || mp > 3) {
 						cout << "Error: invalid read ddr value. Should be of the format " << endl;
-						cout <<	"       '--readw=board,mp,addr'" << endl;
-						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ", mp=0..3, addr=0x.." << endl;  
+						cout <<	"       '--readw=board, mp, addr'" << endl;
+						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ",  mp=0..3,  addr=0x.." << endl;  
 						exit(EXIT_FAILURE);
 					}
 					readwcmd->setMp(mp);
@@ -2774,8 +2842,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					int numitems = sscanf(optarg, "%d,%d,%x,%x,%x", &board,&mp,&addr,&wordlo,&wordhi);
 					if (numitems < 5 || numitems == EOF || board < 0 || board >= MAX_N_TBBBOARDS || mp > 3) {
 						cout << "Error: invalid write ddr value. Should be of the format " << endl;
-						cout <<	"       '--writew=board,mp,addr,wordlo,wordhi'"<< endl; 
-						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ", mp=0..3, addr=0x.., wordlo=0x.., wordhi=0x.." << endl;  
+						cout <<	"       '--writew=board, mp, addr, wordlo, wordhi'"<< endl; 
+						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ",  mp=0..3,  addr=0x..,  wordlo=0x..,  wordhi=0x.." << endl;  
 						exit(EXIT_FAILURE);
 					}
 					writewcmd->setMp(mp);
@@ -2825,8 +2893,8 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					
 					if (numitems < 4 || numitems == EOF || board < 0 || board >= MAX_N_TBBBOARDS || mp > 3 || pid > 7 || regid > 7) {
 						cout << "Error: invalid read register value. Should be of the format" << endl;
-						cout << "       '--readreg=board,mp,pid,regid'" << endl;
-						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ", mp=0..3, pid=0..7, regid=0..7" << endl;  
+						cout << "       '--readreg=board, mp, pid, regid'" << endl;
+						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;  
 						exit(EXIT_FAILURE);
 					}
 					if ((REG_TABLE_3[pid][regid] == REG_WRITE_ONLY) || (REG_TABLE_3[pid][regid] == REG_NOT_USED)) {
@@ -2856,15 +2924,12 @@ Command* TBBCtl::parse_options(int argc, char** argv)
 					uint32 pid = 0;
 					uint32 regid = 0;
 					char datastr[256];
-					//uint32 data1 = 0;
-					//uint32 data2 = 0;
-					//uint32 data3 = 0;
 					
 					int numitems = sscanf(optarg, "%d,%u,%u,%u,%s", &board, &mp, &pid, &regid, datastr);
 					if (numitems < 5 || numitems == EOF || board < 0 || board >= MAX_N_TBBBOARDS || mp > 3 || pid > 7 || regid > 7) {
 						cout << "Error: invalid write register value. Should be of the format " << endl;
-						cout <<	"       '--writereg=board,mp,pid,regid,data1,data2 etc.'" << endl;
-						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ", mp=0..3, pid=0..7, regid=0..7" << endl;   
+						cout <<	"       '--writereg=board, mp, pid, regid, data1, data2 etc.'" << endl;
+						cout << "       board=0.." << (MAX_N_TBBBOARDS - 1) << ",  mp=0..3,  pid=0..7,  regid=0..7" << endl;   
 						exit(EXIT_FAILURE);
 					}
 					if ((REG_TABLE_3[pid][regid] == REG_READ_ONLY) || (REG_TABLE_3[pid][regid] == REG_NOT_USED)) {

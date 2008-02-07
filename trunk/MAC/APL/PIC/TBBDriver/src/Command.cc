@@ -144,7 +144,7 @@ void Command::nextBoardNr()
 		if (itsBoard < TS->maxBoards()) {
 			// see if board is active
 			if (TS->boardPort(itsBoard).isConnected() 
-						&& TS->isBoardActive(itsBoard) 
+						&& (TS->getBoardState(itsBoard) == boardReady)
 						&& (itsBoardMask & (1 << itsBoard))) 
 			{
 				validNr = true;
@@ -176,7 +176,7 @@ void Command::nextChannelNr()
 		if (itsBoard < TS->maxBoards()) {
 			// see if board is active 
 			if (	TS->boardPort(itsBoard).isConnected()
-						&& TS->isBoardActive(itsBoard)
+						&& (TS->getBoardState(itsBoard) == boardReady)
 						&& (itsChannel < TS->maxChannels())) 
 			{
 				validNr = true;
@@ -211,7 +211,7 @@ void Command::nextSelectedChannelNr()
 		if (itsBoard < TS->maxBoards()) {
 			// see if board is active and channel is selected
 			if (TS->boardPort(itsBoard).isConnected()
-						&& TS->isBoardActive(itsBoard)
+						&& (TS->getBoardState(itsBoard) == boardReady)
 						&& (itsChannel < TS->maxChannels()) 
 						&& TS->isChSelected(itsChannel)) 
 			{

@@ -97,6 +97,7 @@ namespace LOFAR{
 			void sendMessage(GCFEvent& event);
 			bool CheckAlive(GCFEvent& event, GCFPortInterface& port);
 			bool CheckSize(GCFEvent& event, GCFPortInterface& port);
+			bool sendInfo(GCFEvent& event, GCFPortInterface& port);
 			bool SetTbbCommand(unsigned short signal);
 			
 			TbbSettings *TS;
@@ -123,9 +124,10 @@ namespace LOFAR{
 			
 			GCFTCPPort      itsAcceptor;     // listen for clients on this port
 			GCFETHRawPort*	itsBoard;        // array of ports, one for each TBB board
-			GCFTimerPort*		itsAliveTimer;
-			GCFTimerPort*		itsSetupTimer;
-			GCFTimerPort*		itsCmdTimer;
+			GCFTimerPort*		itsAliveTimer;  // used to check precence and reset of the boards
+			GCFTimerPort*		itsSetupTimer;  // used in the setup state
+			GCFTimerPort*		itsCmdTimer;  // used by CommandHandler
+			GCFTimerPort*		itsSaveTimer;  // used to save triggers to a file
 			std::list<GCFPortInterface*> itsClientList;  // list of clients
     };
 	} // end TBB namespace

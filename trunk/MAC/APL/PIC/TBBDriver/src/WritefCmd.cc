@@ -103,8 +103,12 @@ void WritefCmd::saveTbbEvent(GCFEvent& event)
 	LOG_DEBUG_STR(formatString("TP file: %s",itsFileNameTp));
 	LOG_DEBUG_STR(formatString("MP file: %s",itsFileNameMp));
 	
-	readFiles();
-	LOG_DEBUG_STR("Image files are read");
+	if (readFiles()) {
+		LOG_DEBUG_STR("Image files are read");
+	} else {
+		itsTBBackE->status_mask |= TBB_FLASH_ERROR;
+		setDone(true);
+	}
 	
 	itsImage 	= itsTBBE->image;
 	itsSector	= (itsImage * FL_SECTORS_IN_PAGE);
@@ -359,10 +363,10 @@ void WritefCmd::sendTbbAckEvent(GCFPortInterface* clientport)
 	if (itsTBBackE->status_mask == 0)
 			itsTBBackE->status_mask = TBB_SUCCESS;
 	
-	clientport->send(*itsTBBackE);
+	if (clientport->isConnected()) { clientport->send(*itsTBBackE); }
 }
 
-void WritefCmd::readFiles()
+bool WritefCmd::readFiles()
 {
 	FILE 	*itsFile;
 	int dataPtr = 0;
@@ -373,7 +377,7 @@ void WritefCmd::readFiles()
 	itsFile = fopen(itsFileNameTp,"r");
 	if (itsFile == 0) {
 		LOG_INFO_STR("Error on opening TP file");
-		return;
+		return (false);
 	}
 	
 	LOG_DEBUG_STR("Getting TP file");
@@ -393,7 +397,7 @@ void WritefCmd::readFiles()
 	itsFile = fopen(itsFileNameMp,"r");
 	if (itsFile == 0) {
 		LOG_INFO_STR("Error on opening MP file");
-		return;
+		return (false);
 	}
 	
 	LOG_DEBUG_STR("Getting MP file");   
@@ -409,6 +413,7 @@ void WritefCmd::readFiles()
 	fclose(itsFile);
 	
 	itsImageSize = dataPtr;
+	return (true);
 }
 
 
