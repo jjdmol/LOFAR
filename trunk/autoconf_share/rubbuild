@@ -45,7 +45,8 @@ distclean=0
 bldtest=0
 check=0
 checktool=
-install=2
+memcheck=0
+install=1
 dist=0
 distcheck=0
 rpm=0
@@ -82,20 +83,10 @@ do
       ;;
     esac
     variants="$1"
-    if [ $install = 2 ]; then
-      install=1;
-    fi
     shift
   elif [ "$1" = -nobuild ]; then
     shift
     variants=
-    conf=0
-    clean=0
-    bldtest=0
-    check=0
-    if [ $install = 1 ]; then
-      install=0
-    fi
   elif [ "$1" = -make ]; then
     shift
     buildmake=1
@@ -139,6 +130,12 @@ do
   elif [ "$1" = -nocheck ]; then
     shift
     check=0
+  elif [ "$1" = -memcheck ]; then
+    shift
+    memcheck=1
+  elif [ "$1" = -nomemcheck ]; then
+    shift
+    memcheck=0
   elif [ "$1" = -checktool ]; then
     shift
     checktool="$1"
@@ -215,8 +212,8 @@ if test $# -lt 1; then
   echo 'Run as:'
   echo ' rubbuild [-srcdir] [-build variant] [-skipbuilt] [-bg]'
   echo '          [-conf] [-confopt string] [-k] [-j<option>]'
-  echo '          [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-install]'
-  echo '          [-dist] [-distcheck] [-rpm]'
+  echo '          [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-memcheck]'
+  echo '          [-install] [-dist] [-distcheck] [-rpm]'
   echo '          package1 ...'
   exit 1
 fi
@@ -286,8 +283,8 @@ fi
 # dorubbuild writes the build output to a log file.
 if [ $bg = 1 ]; then
   echo "Building packages on `uname -n` in $buildvarpr in the background"
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$dist" "$distcheck" "$rpm" $pkgs >> /dev/null 2>&1 &
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$memcheck" "$install" "$dist" "$distcheck" "$rpm" $pkgs >> /dev/null 2>&1 &
 else
   echo "Building packages in $buildvarpr ..."
-  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$install" "$dist" "$distcheck" "$rpm" $pkgs
+  $pgmpath/dorubbuild "$srcdir" "$builddir" "$variant" "$skipbuilt" "$kopt" "$jobsopt" "$buildmake" "$conf" "$confopt" "$clean" "$bldtest" "$check" "$checktool" "$memcheck" "$install" "$dist" "$distcheck" "$rpm" $pkgs
 fi

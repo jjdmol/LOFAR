@@ -52,6 +52,8 @@ check=$1
 shift
 checktool=$1
 shift
+memcheck=$1
+shift
 install=$1
 shift
 dist=$1
@@ -123,6 +125,9 @@ if [ $buildmake = 1 ]; then
     else
       postmake="$postmake && make $kstr CHECKTOOL='$checktool' check"
     fi
+  fi
+  if [ $memcheck = 1 ]; then
+    postmake="$postmake && make $kstr memcheck"
   fi
   if [ $install = 1 ]; then
     postmake="$postmake && make $kstr install"
