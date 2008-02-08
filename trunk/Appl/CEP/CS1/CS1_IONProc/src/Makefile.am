@@ -2,7 +2,7 @@ pkginclude_HEADERS = Package__Version.h
 
 lib_LTLIBRARIES		= liblofar_impl.la
 
-liblofar_impl_la_SOURCES = Package__Version.cc  $(DOCHDRS) \
+liblofar_impl_la_SOURCES = $(DOCHDRS) \
 BeamletBuffer.h			\
 BeamletBuffer.cc		\
 BGL_Personality.h		\
@@ -37,5 +37,10 @@ install-exec-local:
 
 uninstall-local:
 	rm lofar_impl.so
+
+bin_PROGRAMS = versioncs1_ionproc
+
+versioncs1_ionproc_SOURCES      = versioncs1_ionproc.cc Package__Version.cc 
+versioncs1_ionproc_DEPENDENCIES = $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
