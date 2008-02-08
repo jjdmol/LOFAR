@@ -77,6 +77,7 @@ distclean=0
 bldtest=0
 check=0
 checktool=
+memcheck=0
 install=2
 dist=0
 distcheck=0
@@ -162,20 +163,10 @@ do
       ;;
     esac
     variants="$1"
-    if [ $install = 2 ]; then
-      install=1;
-    fi
     shift
   elif [ "$1" = -nobuild ]; then
     shift
     variants=
-    conf=0
-    clean=0
-    bldtest=0
-    check=0
-    if [ $install = 1 ]; then
-      install=0
-    fi
   elif [ "$1" = -make ]; then
     shift
     buildmake=1
@@ -233,6 +224,12 @@ do
   elif [ "$1" = -nocheck ]; then
     shift
     check=0
+  elif [ "$1" = -memcheck ]; then
+    shift
+    memcheck=1
+  elif [ "$1" = -nomemcheck ]; then
+    shift
+    memcheck=0
   elif [ "$1" = -checktool ]; then
     shift
     checktool="$1"
@@ -282,6 +279,12 @@ do
   elif test "$1" = "-release=exact"; then
     shift
     verstype=e
+  elif test "$1" = "-release=majorexact"; then
+    shift
+    verstype=me
+  elif test "$1" = "-release=minorexact"; then
+    shift
+    verstype=mme
   elif test "$1" = "-release=latest"; then
     shift
     verstype=l
@@ -294,7 +297,7 @@ do
   else
     case "$1" in
     -release=*)
-      echo "$1 is invalid; valid options are max,exact,latest,main"
+      echo "$1 is invalid; valid options are max,exact,majorexact,minorexact,latest,main"
       exit 1
       ;;
     -r*)
@@ -353,8 +356,8 @@ if [ $help = 1 ]; then
   echo ' rub [-cvs cvs-command] [-svn svn-command] [-update] [-r<tag>]'
   echo '     [-recur[sive]] [-release=option] [-build variants]] [-skipbuilt]'
   echo '     [-system] [-boot] [-conf] [-confopt string] [-k] [-j<option>]'
-  echo '     [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-install]'
-  echo '     [-dist] [-distcheck] [-rpm]'
+  echo '     [-[dist]clean] [-make] [-test] [-check] [-checktool tool] [-memcheck]'
+  echo '     [-install] [-dist] [-distcheck] [-rpm]'
   echo '     package1 [-v<version>] [...]'
   echo ''
   echo '  -cvs cvs-command  is an optional cvs command making it possible to'
@@ -379,9 +382,14 @@ if [ $help = 1 ]; then
   echo '  -release=option   defines which release to check out depending on'
   echo '                    the version given in the LOFAR_INTERNAL macros in'
   echo '                    configure.in or the Requires line in PKG.spec.in.'
+  echo '                    LOFAR uses release numbers major.minor.patch.'
   echo '                    exact   Use the versions as given and check if they'
   echo '                            match if a package is used from multiple packages.'
-  echo '                    max     Use the maximum package version given if'
+  echo '                    majorexact  Check if the major version matches'
+  echo '                                and use the highest minor.patch.'
+  echo '                    minorexact  Check if the major.minor version matches'
+  echo '                                and use the highest patch.'
+  echo '                    max     Use the highest package version given if'
   echo '                            used from multiple packages.'
   echo '                    latest  Use latest package release version in repository.'
   echo '                    main    Always use the MAIN for all packages.'
@@ -441,6 +449,8 @@ if [ $help = 1 ]; then
   echo '  -checktool string Optional checking tool to use with make check.'
   echo '                    E.g. "valgrind --tool=memcheck --num-callers=50 \'
   echo '                                   --leak-check=yes --track-fds=yes"'
+  echo '  -memcheck         indicates that make memcheck (valgrind) should be done.'
+  echo '                    Default is -nomemcheck.'
   echo '  -install          indicates that a make install should be done.'
   echo '                    Default is -install if -build is given.'
   echo '                    Otherwise -noinstall.'
@@ -478,9 +488,11 @@ if [ $pkgfound != 1 ]; then
   echo "  Use 'rub -h' to get a description"
   exit 1
 fi
-if test $install = 1  -o  $clean != 0  -o  $check = 1  -o  $conf = 1  -o  $bldtest = 1  -o  $dist = 1  -o  $distcheck = 1  -o  $rpm = 1; then
+if test $install = 1  -o  $clean != 0  -o  $check = 1  -o  $memcheck = 1 \
+    -o  $conf = 1  -o  $bldtest = 1  -o  $dist = 1  -o  $distcheck = 1 \
+    -o  $rpm = 1; then
   if [ "$variants" = "" ]; then
-    echo "Error: -build variant is needed with -conf,-(dist)clean,-test,-check,-install,-dist(check),-rpm"
+    echo "Error: -build variant is needed with -conf,-(dist)clean,-test,-(mem)check,-install,-dist(check),-rpm"
     exit 1
   fi
 fi
@@ -504,6 +516,8 @@ fi
 pkg=
 vers=
 PKGS=
+nrpkg=0
+nrvers=0
 while [ $# != 0 ]
 do
   case "$1" in
@@ -536,14 +550,9 @@ do
       fi
       ;;
     esac
-    # Substitute . by _ on the version.
-    vers=`echo $vers | sed -e 's/\./_/g'`
-    # If needed, prepend by package name.
-    evers=`echo $vers | sed -e 's/[0-9_]*//g'`
-    if [ "$evers" = "" ]; then
-      vers=`echo $pkg | sed -e 's%/%-%g'`-$vers
-    fi
     PKGS="$PKGS $pkg#-v$vers"
+    nrpkg=`expr $nrpkg + 1`
+    nrvers=`expr $nrvers + 1`
     pkg=
     ;;
   -*)
@@ -554,6 +563,7 @@ do
     # A package name is given.
     if [ "$pkg" != "" ]; then
       PKGS="$PKGS $pkg#-v"
+      nrpkg=`expr $nrpkg + 1`
     fi
     if [ "$1" = "" ]; then
       echo "Error: empty package name given"
@@ -567,6 +577,13 @@ done
 # Add the possibly last package.
 if [ "$pkg" != "" ]; then
   PKGS="$PKGS $pkg#-v"
+  nrpkg=`expr $nrpkg + 1`
+fi
+
+# Check if all or no packages have a version.
+if [ $nrvers != 0  -a  $nrpkg != $nrvers ]; then
+  echo "Error: all or no packages must be given a version"
+  exit 1
 fi
 
 # Check if variant part is given.
@@ -817,7 +834,11 @@ else
       echo "  Packages will be checked with '$checktool'"
     fi
   fi
-  if [ $install = 1 ]; then
+  if [ $memcheck = 1 ]; then
+    bopt="$bopt -memcheck"
+    echo "  Packages will be memchecked"
+  fi
+  if [ $install != 0 ]; then
     bopt="$bopt -install"
     echo "  Packages will be installed"
   fi
