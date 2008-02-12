@@ -47,17 +47,16 @@ fi
 
 # Find package, lofar root, compiler, variant.
 # Exit if not found.
-lfr_result=`$lfr_base/findpkg "$lfr_srcdir" -l`
+$lfr_base/findpkg "$lfr_srcdir" -l 2>&1 > lofarconf_tmp.$$
 if [ $? != 0 ]; then
-  echo "Could not derive package from build directory $lfr_curdir";
-  echo "The build directory should be in the source tree like"
-  echo "      LOFAR/'package'/build/'variant'"
-  echo "or in another tree like"
-  echo "      something/build/'variant'/'package'"
-  echo "or    something/'package'/build/'variant'"
-  echo "where variant is, for example, gnu_opt."
+  echo "Error in findpkg:"
+  cat lofarconf_tmp.$$
+  rm -f lofarconf_tmp.$$
   exit 2
 fi
+lfr_result=`cat lofarconf_tmp.$$`
+rm -f lofarconf_tmp.$$
+
 lfr_cmp=`echo $lfr_result | awk '{print $1}'`
 lfr_var=`echo $lfr_result | awk '{print $2}'`
 lfr_cvdir=`echo $lfr_result | awk '{print $3}'`
