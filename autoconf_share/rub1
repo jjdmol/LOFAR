@@ -35,7 +35,7 @@
 #                     (is used for super-package like LCS)
 #                 2 = configure.in nor lofarconf.in needs to be present
 #                     (is used for autoconf_share)
-#     verstype    version type (e, m, l, t, tag)
+#     verstype    version type (e, m, l, t, me, mme, tag)
 #     version     version of package to check out
 #     cutag       tag of package to checkout/update (blank = no tag)
 #     checkout    1 = do actual checkout/update if not done yet
@@ -72,12 +72,29 @@ fi
 # Keep current working directory.
 curwd=`pwd`
 
+# The package name in a version is the first and last part of the package name.
+pkgnmvers=`echo $pkgname | sed -e 's%/.*%%'`
+if [ "$pkgnmvers" != "$pkgname" ]; then
+  pkgnmvers="$pkgnmvers-`echo $pkgname | sed -e 's%.*/%%'`"
+fi
+
 # Always use a specific tag if given.
 # Set version to blank for types t and l.
+# Remember if an explicit version is given.
+versgiven=0
 if [ "$cutag" != "" ]; then
   getvers=$cutag
 elif [ $verstype = t  -o  $verstype = l ]; then
   getvers=
+elif [ "$getvers" != "" ]; then
+  # Use the given version where . is subsituted by _.
+  getvers=`echo $getvers | sed -e 's/\./_/g'`
+  # If needed (i.e. if only numeric), prepend by package name.
+  evers=`echo $getvers | sed -e 's/[0-9_]*//g'`
+  if [ "$evers" = "" ]; then
+    getvers=$pkgnmvers-$getvers
+  fi
+  versgiven=1
 fi
 
 # See if this package was already updated. Take the last line.
@@ -107,8 +124,7 @@ if [ "$pkgline" = "" ]; then
       # Remove the part '-release-branch' leaving the CVS tag name.
       getvers=`cvs log $pkgname/configure.in 2>&1 | grep release-branch | head -1 | sed -e 's/[ \t]*\(.*\)-release-branch.*/\1/'`
     else
-      pkgnm1=`echo $pkgname | sed -e 's%/%-%g'`
-      getvers=`svn list $svnurl/tags 2>&1 | grep $pkgnm1 | grep release-root | tail -1 | sed -e 's/[ \t]*\(.*\)-release-root.*/\1/'`
+      getvers=`svn list $svnurl/tags 2>&1 | grep $pkgnmvers | grep release-root | tail -1 | sed -e 's/[ \t]*\(.*\)-release-root.*/\1/'`
     fi
   fi
 
@@ -131,15 +147,31 @@ else
         echo "Error: package $pkgname is used with different versions ($getvers and $curvers)"
         exit 1
       fi
-    elif [ $verstype = m ]; then
+    elif [ $verstype = m  -o  $verstype = me  -o  $verstype = mme ]; then
       # Use the maximum of the two versions.
       if [ "$curvers" != "" ]; then
 	if [ "$curvers" != "$getvers" ]; then
-	  echo "warning: version $curvers and $getvers needed of package $pkgname; using highest"
-          # Compare the versions by removing the package name from the tags.
-          # Find maximum version.
+          # Remove the package name from the tags.
           v1=`echo $getvers | sed -e 's/.*-\([0-9_]\)$/\1/'`
           v2=`echo $curvers | sed -e 's/.*-\([0-9_]\)$/\1/'`
+	  if [ $verstype = me  -o  $verstype = mme ]; then
+            # Check if major version is equal.
+            res=`echo "$v1 $v2" | awk '{ la1=split($1,a1,"_"); la2=split($2,a2,"_"); res=0; if (a1[1]!=a2[1]) {res=1;} print res; }'`
+            if [ $res != 0 ]; then
+              echo "Error: package $pkgname is used with different major versions ($getvers and $curvers)"
+              exit 1
+            fi
+	    if [ $verstype = mme ]; then
+              # Check if major version is equal.
+              res=`echo "$v1 $v2" | awk '{ la1=split($1,a1,"_"); la2=split($2,a2,"_"); res=0; if (a1[2]!=a2[2]) {res=1;} print res; }'`
+              if [ $res != 0 ]; then
+                echo "Error: package $pkgname is used with different major.minor versions ($getvers and $curvers)"
+                exit 1
+              fi
+            fi
+          fi
+	  echo "warning: version $curvers and $getvers needed of package $pkgname; using highest"
+          # Find maximum version.
           res=`echo "$v1 $v2" | awk '{ la1=split($1,a1,"_"); la2=split($2,a2,"_"); if (la1<la2) la1=la2; res=$1; for (i=1; i<=la1; i++) {if (a1[i]>a2[i]) {break;} else if (a1[i]<a2[i]) { res=$2; break;}} print res; }'`
           if [ "$res" = "$v2" ]; then
 	    # Current version is the highest, so no need to update.
@@ -257,14 +289,20 @@ if [ "$pkgline" = ""  -o  "$getvers" != "$curvers" ]; then
   fi
 fi
 
-# Find all packages used to get correct build order.
-if [ -f $pgkname/$pkgname.spec.in ]; then
+# Find all packages used.
+# The packages can be given in a configure.in, .spec or lofarconf.in file.
+if [ -f $pkgname/configure.in ]; then
+  if [ -f $pkgname/lofarconf.in  -o  -f $pkgname/lofarconf.in.private ]; then
+    echo "error: lofarconf.in cannot be used with a configure.in"
+    exit 1
+  fi
+  # Find them by looking in the configure.in file.
+  pkgs=`grep "^[ \t]*lofar_\(\(PACKAGE\)\|\(INTERNAL\)\)[ \t]*(.*)" $pkgname/configure.in | sed -e "s/.*lofar_\(PACKAGE\)\|\(INTERNAL\)//" -e "s/ //g" -e "s/.*(//" -e "s/).*//" | awk -F, '{print $1"="$3}'`
+elif [ -f $pgkname/$pkgname.spec.in ]; then
   if [ -f $pkgname/lofarconf.in  -o  -f $pkgname/lofarconf.in.private ]; then
     echo "error: lofarconf.in cannot be used with a .spec.in"
     exit 1
   fi
-  # Add (leaf) package to the file to get correct build order.
-  echo "$pkgname #-v$getvers" >> allpkg.tmp
   # Do it recursively for packages used by this package.
   # Find them by looking at the Requires tag in the .spec.in file.
   pkgs=`egrep -i " *requires:" $pkgname/$pkgname.spec.in | sed -e 's/ *requires: *//ig'`
@@ -275,40 +313,6 @@ if [ -f $pgkname/$pkgname.spec.in ]; then
   fi
   # Normalize the string.
   pkgs=`echo $pkg1 | sed 's/ *== */=/g' | sed 's/ //g' | sed 's/,/ /g'`
-  for pkg in $pkgs
-  do
-    # Extract package name and version.
-    # Before = is the package name.
-    nm=`echo $pkg | sed -e "s/=.*//"`
-    # Possible part after = is the version.
-    # Replace a . in the version by _.
-    vers=`echo $pkg | awk -F= '{ print $2 }' | sed -e 's/\./_/g'`
-    # Check out the package.
-    $0 $nm 0 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
-  done
-elif [ -f $pkgname/configure.in ]; then
-  if [ -f $pkgname/lofarconf.in  -o  -f $pkgname/lofarconf.in.private ]; then
-    echo "error: lofarconf.in cannot be used with a configure.in"
-    exit 1
-  fi
-  # Add (leaf) package to the file to get correct build order.
-  echo "$pkgname #-v$getvers" >> allpkg.tmp
-  if [ $recur != 0 ]; then
-    # Do it recursively for packages used by this package.
-    # Find them by looking in the configure.in file.
-    pkgs=`grep "^[ \t]*lofar_\(\(PACKAGE\)\|\(INTERNAL\)\)[ \t]*(.*)" $pkgname/configure.in | sed -e 's/ //g'`
-    for pkg in $pkgs
-    do
-      # Extract package name and tag.
-      nma=`echo $pkg | sed -e "s/.*lofar_\(PACKAGE\)\|\(INTERNAL\)//" -e "s/ //g" -e "s/.*(//" -e "s/).*//"`
-      # First name is the package.
-      nm=`echo $nma | sed -e "s/,.*//"`
-      # Possible third name is the version. Replace possible . by _.
-      vers=`echo $nma | awk -F, '{ print $3 }' | sed -e 's/\./_/g'`
-      # Check out the package.
-      $0 $nm 0 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
-    done
-  fi
 else
   # Do it for all packages in a possible lofarconf.in.
   fnam=
@@ -320,23 +324,29 @@ else
   if [ "$fnam" != "" ]; then
     # Get the packages out of the lofarconf.in file. They can optionally be
     # followed by a version as #-vversion. Remove other comments.
-    pkgs=`awk '{print $1 $2;}' $pkgname/$fnam | sed -e 's/^ *#.*//' -e 's/#$//' -e 's/#-$//' -e 's/#[^-].*$//' -e 's/#-[^v].*//'`
-    for PKG in $pkgs
-    do
-      # Get version number (if given).
-      pkg=`echo $PKG | sed -e 's%#-v.*%%'`
-      if [ "$pkg" != "$PKG" ]; then
-        vers=`echo $PKG | sed -e 's%.*#-v%%'`
-      fi
-      # If pkg starts with a slash, it is relative to LOFAR root.
-      pkgnm=$pkgname/$pkg
-      case $pkg in
-      /*)
-        pkgnm=`echo $pkg | sed 's%^/%%'`;;
-      esac
-      vers=
-      # Check out the package.
-      $0 $pkgnm 1 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
-    done
+    # Add pkgname if not starting with a slash.
+    pkgs=`awk '{print $1 $2;}' $pkgname/$fnam | sed -e 's/^ *#.*//' -e 's/#-v/=/' -e 's/#.*//' -e 's/ //g' -e "s%^\([^/]\)%$pkgname/\1%"`
   fi
+fi
+
+# Add (leaf) package to the file to get correct build order.
+echo "$pkgname #-v$getvers" >> allpkg.tmp
+# Check out all packages as needed.
+if [ $recur != 0 ]; then
+  for pkg in $pkgs
+  do
+    # Extract package name and version.
+    # Remove possible leading slash from package name.
+    pkgnm=`echo $pkg | awk -F= '{print $1}' | sed -e 's%^/%%'`
+    # Replace a . in the version by _.
+    vers=`echo $pkg | awk -F= '{print $2}' | sed -e 's/\./_/g'`
+    # If the parent package has a version, this one must have one as well.
+    # The only exception is package LCS/Tools.
+    if [ $versgiven = 1  -a  "$vers" = ""  -a  "$pkgnm" != "LCS/Tools" ]; then 
+     echo "Package $pkgnm used by $pkgname-$getvers must have a version as well"
+      exit 2
+    fi
+    # Check out the package.
+    $0 $pkgnm 0 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
+  done
 fi
