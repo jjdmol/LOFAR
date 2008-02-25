@@ -125,8 +125,9 @@ namespace LOFAR {
 	 *
 	 * 0x01000000 PRSG        pseudo random sequence generator on (1), off (0)
 	 * 0x02000000 RESET       on (1) hold board in reset
-	 * 0x04000000 free		  used to be SPEC_INV, SI now in DIAG/Bypass
-	 * 0xF8000000 TBD         reserved
+	 * 0x04000000 free				used to be SPEC_INV, SI now in DIAG/Bypass
+	 * 0x08000000 TBD         reserved
+	 * 0xF0000000 VERSION     RCU version  //PD
 	 */
 	void   setRaw(uint32 raw) { m_value = raw; m_modified = 0xFFFFFFFF; }
 	uint32 getRaw() const { return m_value; }
@@ -187,6 +188,17 @@ namespace LOFAR {
 	  m_modified |= ENABLE_MASK;
 	}
 	bool getEnable() const { return m_value & ENABLE_MASK; }
+	
+	/**
+	 * Set rcu version //PD
+	 */
+	void setVersion(uint8 value) {
+	  m_value &= ~VERSION_MASK; // clear VERSION bit
+	  if (value) m_value |= ((value & 0x0F) << (20 + 8));  // set VERSION bits
+	 
+	  m_modified |= VERSION_MASK;
+	}
+	uint8 getVersion() const { return (m_value & VERSION_MASK) >> (20 + 8); }
 
 	/*
 	 * Get RCU handler and RCU protocol settings separately
@@ -240,6 +252,7 @@ namespace LOFAR {
 	static const uint32 PRSG_MASK    = 0x01000000;
 	static const uint32 RESET_MASK   = 0x02000000;
 	static const uint32 SPECINV_MASK = 0x04000000;
+	static const uint32 VERSION_MASK = 0xF0000000; //PD
 
 	static const uint32 RCU_HANDLER_MASK  = 0x000000FF;
 	static const uint32 RCU_PROTOCOL_MASK = 0xFFFFFF00;
