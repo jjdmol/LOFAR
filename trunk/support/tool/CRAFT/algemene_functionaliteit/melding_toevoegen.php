@@ -201,7 +201,9 @@
 	else {
 		if ((isset($_GET['c']) && $_GET['c'] != 0) || (isset($_GET['b']))) {
 			//de tijdzone waarin we leven instellen, wordt dit niet gedaan dan klaagt PHP
-			date_default_timezone_set ("Europe/Amsterdam");
+			//date_default_timezone_set("Europe/Amsterdam");
+			putenv("TZ=Europe/Amsterdam");
+	
 ?>
 
     	<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); if(isset($_GET['c'])) echo("&c=" . $_GET['c']); if(isset($_GET['b'])) echo("&b=".$_GET['b']); ?>">

@@ -6,8 +6,9 @@
 			include_once("../includes/vars.php");
 
 			//de tijdzone waarin we leven instellen, wordt dit niet gedaan dan klaagt PHP
-			date_default_timezone_set ("Europe/Amsterdam");
-			
+			//date_default_timezone_set ("Europe/Amsterdam");
+			putenv("TZ=Europe/Amsterdam");
+
 			if (isset($_GET['c']) && $_GET['c'] != 0) {		
 			  $query = "SELECT Geleverd_Door FROM comp_type WHERE Comp_Type = '".$_GET['c']."'";
 				$resultaat = mysql_query($query);
