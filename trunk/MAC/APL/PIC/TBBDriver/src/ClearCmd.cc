@@ -103,14 +103,15 @@ void ClearCmd::saveTpAckEvent(GCFEvent& event)
 	
 	// reset channel-information for selected board	
 	if (itsTPackE->status == 0) {
-		TS->clearRcuSettings(getBoardNr());	
+		TS->clearRcuSettings(getBoardNr());
+		TS->setBoardState(getBoardNr(),boardCleared);	
 	}
 	LOG_DEBUG_STR(formatString("Received ClearAck from boardnr[%d]", getBoardNr()));
 	delete itsTPackE;
 	
 	nextBoardNr();
 	if (isDone()) {
-		setSleepTime(1.0); // clearing the registers will last 3 seconds
+		setSleepTime(3.0); // clearing the registers will last 3 seconds
 	}
 }
 
