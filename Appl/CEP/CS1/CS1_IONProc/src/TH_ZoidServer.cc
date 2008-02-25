@@ -27,8 +27,6 @@
 #include <Transport/DataHolder.h>
 #include <TH_ZoidServer.h>
 
-#include <cassert>
-
 namespace LOFAR {
 namespace CS1 {
 
@@ -38,18 +36,6 @@ extern "C"
   void *lofar_cn_to_ion_zerocopy_allocate_cb(int len);
 }
 
-
-#if 0
-static unsigned checksum(const void *buf, size_t size)
-{
-  unsigned sum = 0;
-
-  for (int i = 0; i < (int) (size / sizeof(unsigned)); i ++)
-    sum ^= ((unsigned *) buf)[i];
-
-  return sum;
-}
-#endif
 
 std::vector<TH_ZoidServer *> TH_ZoidServer::theirTHs;
 
