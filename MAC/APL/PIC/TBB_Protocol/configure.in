@@ -63,5 +63,7 @@ dnl
 AC_OUTPUT(
 src/Makefile
 Makefile
+include/Makefile
+include/APL/Makefile
 TBB_Protocol.spec
 )
