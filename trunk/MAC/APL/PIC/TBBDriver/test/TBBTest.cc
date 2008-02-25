@@ -45,7 +45,7 @@ using namespace TBB_Test;
 TBBTest::TBBTest(string name)
     : GCFTask((State)&TBBTest::initial, name), Test(name)
 {
-  registerProtocol(TBB_PROTOCOL, TBB_PROTOCOL_signalnames);
+  GCF::TM::registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
 
   itsClient.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
 	
@@ -386,7 +386,7 @@ GCFEvent::TResult TBBTest::test006(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBReadEvent sw;
 				
-			sw.channel = 1;
+			sw.rcu = 1;
 				
 			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
@@ -437,8 +437,6 @@ GCFEvent::TResult TBBTest::test007(GCFEvent& e, GCFPortInterface& port)
 			/* start of the test sequence */
 			TBBModeEvent sw;
 			
-			sw.board = itsboardmask; // boards tot test
-			
 			TESTC_ABORT(itsClient.send(sw), TBBTest::final);
 		}
 		break;
@@ -447,7 +445,9 @@ GCFEvent::TResult TBBTest::test007(GCFEvent& e, GCFPortInterface& port)
 		{
 			TBBModeAckEvent ack(e);
 
-			TESTC_ABORT(ack.status_mask == TBB_SUCCESS, TBBTest::final);
+			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) {
+				TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
+			}
 			LOG_INFO_STR("Udp test OK");
 
 			TRAN(TBBTest::test008);
@@ -510,7 +510,7 @@ GCFEvent::TResult TBBTest::test008(GCFEvent& e, GCFPortInterface& port)
 				LOG_INFO_STR(formatString("mp2version   = 0X%08X", ack.mp2version[cnt]));
 				LOG_INFO_STR(formatString("mp3version   = 0X%08X", ack.mp3version[cnt]));
 			}
-			LOG_INFO_STR(formatString	 ("Ack status = 0X%08X", ack.status_mask));
+			//LOG_INFO_STR(formatString	 ("Ack status = 0X%08X", ack.status_mask));
 			for (int boardnr = 0; boardnr < MAX_N_TBBBOARDS;boardnr++) {
 					TESTC_ABORT(ack.status_mask[boardnr] == TBB_SUCCESS, TBBTest::final);
 				}
