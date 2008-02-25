@@ -207,8 +207,22 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&			event,
 		answer.result = PVSS::SA_NO_ERROR;
 
 		int32	timeStamp = ACC::APS::indexValue(logEvent.key, "{}");
-		rtrim (logEvent.key, "{}01234565789");	 // cut off timestamp
-		replace(logEvent.key.begin(), logEvent.key.end(), '.', '_');
+		rtrim  (logEvent.key, "{}01234565789");	 // cut off timestamp
+		// replace all but last . with underscore.
+		string::reverse_iterator	riter	= logEvent.key.rbegin();
+		string::reverse_iterator	rend	= logEvent.key.rend();
+		bool	lastDot(true);
+		while (riter != rend) {
+			if (*riter == '.') {
+				if (lastDot) {
+					lastDot = false;
+				}
+				else {
+					*riter = '_';
+				}
+			}
+			riter++;
+		}
 		PVSSresult	result = itsDPservice->setValue(logEvent.key, 
 													GCFPVString(logEvent.value),
 													1.0 * timeStamp);
@@ -234,9 +248,28 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&			event,
 		answer.seqnr  = logEvent.seqnr;
 		answer.result = PVSS::SA_NO_ERROR;
 		for (uint32 i = 0; i < logEvent.msgCount; i++) {
-			PVSSresult	result;
-// = itsDPservice->setValue(logEvent.keys.theVector[i], 
-//											GCFPVString(logEvent.values.theVector[i]));
+			int32	timeStamp = ACC::APS::indexValue(logEvent.keys.theVector[i], "{}");
+			rtrim  (logEvent.keys.theVector[i], "{}01234565789");	 // cut off timestamp
+			// replace all but last . with underscore.
+			string::reverse_iterator	riter	= logEvent.keys.theVector[i].rbegin();
+			string::reverse_iterator	rend	= logEvent.keys.theVector[i].rend();
+			bool	lastDot(true);
+			while (riter != rend) {
+				if (*riter == '.') {
+					if (lastDot) {
+						lastDot = false;
+					}
+					else {
+						*riter = '_';
+					}
+				}
+				riter++;
+			}
+			PVSSresult	result = itsDPservice->setValue(logEvent.keys.theVector[i], 
+														GCFPVString(logEvent.values.theVector[i]),
+														1.0 * timeStamp);
+			itsClients[&port].msgCnt++;
+
 			switch (result) {
 			case PVSS::SA_NO_ERROR:
 				break;
@@ -248,7 +281,7 @@ GCFEvent::TResult KeyValueLogger::operational(GCFEvent&			event,
 				// _registerFailure(port);
 				answer.result |= result;
 			} // switch
-		} // for
+		} // for all msgs in the pool
 		port.send(answer);
 	}
 	break;
