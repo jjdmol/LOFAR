@@ -35,10 +35,10 @@
 namespace LOFAR {
   namespace TBB {
 
-static const int DRIVER_VERSION = 115; // 1.15 
+static const int DRIVER_VERSION = 200; // 2.00 
 
-enum BoardStateT {noBoard, boardReset, boardCleared, boardFreed, boardReady, boardError};
-
+//enum BoardStateT {noBoard, newBoard, boardReset, boardCleared, boardFreed, boardReady, boardError};
+enum BoardStateT {noBoard, resetBoard, boardReset, clearBoard, boardCleared, freeBoard, boardFreed, boardReady, boardError};
 // info for all channels
 struct ChannelInfo
 {
@@ -133,6 +133,8 @@ public:
 	
 	BoardStateT getBoardState(int32 boardnr);
 	void setBoardState(int32 boardnr, BoardStateT boardstate);
+	bool boardSetupNeeded();
+	void clearBoardSetup();
 	void setActiveBoardsMask (uint32 activeboardsmask);
 	void setActiveBoard (int32 boardnr);
 	void resetActiveBoard (int32 boardnr);
@@ -203,6 +205,7 @@ private:
 	int32				*itsCh2RcuTable;
 	BoardInfo		*itsBoardInfo;
 	ChannelInfo	*itsChannelInfo;
+	bool				itsBoardSetup;
 	uint16			itsTriggerMode;
 	string			itsIfName;
 	
@@ -230,8 +233,9 @@ inline	double TbbSettings::timeout()	{ return (itsTimeOut);   }
 //inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (itsBoardPorts[boardnr]); }
 inline	GCFPortInterface& TbbSettings::boardPort(int32 boardnr)	{ return (*itsBoardInfo[boardnr].port); }
 
-inline	void TbbSettings::setBoardState(int32 boardnr, BoardStateT boardstate) { itsBoardInfo[boardnr].boardState = boardstate; }
 inline	BoardStateT TbbSettings::getBoardState(int32 boardnr) { return (itsBoardInfo[boardnr].boardState); }
+inline  bool TbbSettings::boardSetupNeeded() { return (itsBoardSetup); }
+inline  void TbbSettings::clearBoardSetup() { itsBoardSetup = false; }
 
 //---- inline functions for channel information ------------
 inline	bool TbbSettings::isChSelected(int32 channelnr) { return (itsChannelInfo[channelnr].Selected); }

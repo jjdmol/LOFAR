@@ -79,6 +79,7 @@ void ResetCmd::saveTbbEvent(GCFEvent& event)
 		itsTBBackE->status_mask[boardnr] = 0;
 	}
 	
+	// look for first board in mask
 	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
 		itsBoardNr++;
 		if (itsBoardNr >= TS->maxBoards()) { 
@@ -109,14 +110,19 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 {
 	// in case of a time-out, set error mask
 	if (event.signal == F_TIMER) {
-		//itsTBBackE->status_mask[getBoardNr()] |= TBB_RCU_COMM_ERROR;
+		TS->setBoardState(getBoardNr(),noBoard);
 	}	else {
 		itsTPackE = new TPResetAckEvent(event);
-	
+		if (itsTPackE->status == 0) {
+			TS->setBoardState(getBoardNr(),boardReset);
+		} else {
+			TS->setBoardState(getBoardNr(),boardError);
+		}
 		delete itsTPackE;
 	}
 	
 	itsBoardNr++;
+	// look for next board in mask
 	while ((itsBoardMask & (1 << itsBoardNr)) == 0) {
 		itsBoardNr++;
 		if (itsBoardNr >= TS->maxBoards()) { 
@@ -127,7 +133,7 @@ void ResetCmd::saveTpAckEvent(GCFEvent& event)
 	if (itsBoardNr < TS->maxBoards()) {
 		setBoardNr(itsBoardNr);
 	} else {
-		setSleepTime(1.0);
+		setSleepTime(3.0);
 		setDone(true);
 	}
 }

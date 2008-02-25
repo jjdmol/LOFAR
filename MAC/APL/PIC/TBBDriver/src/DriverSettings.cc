@@ -52,7 +52,7 @@ TbbSettings* TbbSettings::instance()
 // Default constructor
 //
 TbbSettings::TbbSettings() :
-	itsDriverVersion(DRIVER_VERSION),				// set cvs version of TBBDriver.c (now 1.13)
+	itsDriverVersion(DRIVER_VERSION),				// set version of TBBDriver.cc
 	itsMaxBoards(0),							// max.number of boards on 1 driver 
 	itsMaxChannels(0),						// max.number of channels on 1 driver
 	itsMpsOnBoard(4),							// number of MPs on 1 board
@@ -212,6 +212,7 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		}
 	}
 	
+	itsBoardSetup  = false;
 	itsTriggerMode = 0;	
 		
 	if (itsBoardInfo) delete itsBoardInfo;
@@ -224,6 +225,14 @@ void TbbSettings::setMaxBoards (int32 maxboards)
 		itsBoardInfo[nr].dstIp = "";
 		itsBoardInfo[nr].srcMac = "";
 		itsBoardInfo[nr].dstMac = "";
+	}
+}
+
+void TbbSettings::setBoardState(int32 boardnr, BoardStateT boardstate)
+{
+	itsBoardInfo[boardnr].boardState = boardstate; 
+	if ((boardstate > noBoard) && (boardstate < boardReady)) {
+		itsBoardSetup = true;
 	}
 }
 
