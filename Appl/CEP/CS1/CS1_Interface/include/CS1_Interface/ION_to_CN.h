@@ -81,7 +81,9 @@ inline void ION_to_CN::read(TransportHolder *th)
 
 inline void ION_to_CN::write(TransportHolder *th)
 {
-  assert(itsFlags.marshall(&itsMarshalledData.flagsBuffer, sizeof itsMarshalledData.flagsBuffer) >= 0);
+  ssize_t size = itsFlags.marshall(&itsMarshalledData.flagsBuffer, sizeof itsMarshalledData.flagsBuffer);
+
+  assert(size >= 0);
   th->sendBlocking(&itsMarshalledData, sizeof itsMarshalledData, 1, 0);
 }
 
