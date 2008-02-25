@@ -71,6 +71,7 @@ static void usage();
 // Constants
 #define BITSOFBYTE 8
 
+
 //
 // Some handy macro's to iterate of RSP boards
 //
@@ -169,41 +170,62 @@ inline double blitz_angle(complex<double> val)
   return atan(val.imag() / val.real()) * 180.0 / M_PI;
 }
 
-WeightsCommand::WeightsCommand(GCFPortInterface& port) : Command(port), m_type(WeightsCommand::COMPLEX)
+WeightsCommand::WeightsCommand(GCFPortInterface& port) : Command(port), m_type(WeightsCommand::COMPLEX),
+	itsStage(0)
 {
 }
 
 void WeightsCommand::send()
 {
-  if (getMode())
+  switch (itsStage)
   {
+  //if (getMode())
+  //{
+  case 0: {
     // GET
     RSPGetweightsEvent getweights;
 
     getweights.timestamp = Timestamp(0,0);
-    getweights.rcumask = getRCUMask();
+   	getweights.rcumask = getRCUMask();
     getweights.cache = true;
 
     m_rspport.send(getweights);
-  }
-  else
-  {
+  } break;
+  
+  //else
+  case 1: {
     // SET
     RSPSetweightsEvent setweights;
     setweights.timestamp = Timestamp(0,0);
     setweights.rcumask = getRCUMask();
 
     logMessage(cerr,formatString("rcumask.count()=%d",setweights.rcumask.count()));
-
     setweights.weights().resize(1, setweights.rcumask.count(), MEPHeader::N_BEAMLETS);
-
+		
+		bitset<MEPHeader::N_BEAMLETS> beamlet_mask = getBEAMLETSMask();
+    
     // -1 < m_value <= 1
     complex<double> value = m_value;
     value *= (1<<14); // -.99999 should become -16383 and 1 should become 16384
-    setweights.weights() = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);
-
-    m_rspport.send(setweights);
-  }
+    setweights.weights() = itsWeights; 
+    int rcunr = 0;
+    for (int rcu = 0; rcu < MEPHeader::MAX_N_RCUS; rcu++) {
+	    if (setweights.rcumask.test(rcu)) {
+		    for (int beamlet = 0; beamlet < MEPHeader::N_BEAMLETS; beamlet++) {
+		    	if (beamlet_mask.test(beamlet)) {
+		    		setweights.weights()(0,rcunr,beamlet) = complex<int16>((int16)value.real(), (int16)value.imag()); // complex<int16>((int16)value,0);	
+		    	}
+		  	}
+		  	rcunr++;
+	  	}
+	  	
+	  }
+	  m_rspport.send(setweights);
+  } break;
+  
+  default:
+    break;
+	}
 }
 
 GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
@@ -216,64 +238,70 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
     {
       RSPGetweightsackEvent ack(e);
       bitset<MEPHeader::MAX_N_RCUS> mask = getRCUMask();
-
+			itsWeights.resize(1, mask.count(), MEPHeader::N_BEAMLETS);
+			itsWeights = complex<int16>(0,0);
+			itsWeights = ack.weights(); 
+			
       if (SUCCESS != ack.status) {
-	logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
-	GCFTask::stop();
-	return status;
+				logMessage(cerr,"Error: RSP_GETWEIGHTS command failed.");
+				GCFTask::stop();
+				return status;
       }
-
-      if (WeightsCommand::COMPLEX == m_type) {
-	int rcuin = 0;
-	for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
-	{
-	  if (mask[rcuout])
-	  {
-	    std::ostringstream logStream;
-	    logStream << ack.weights()(0, rcuin++, Range::all());
-	    logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
-	  }
-	}
-      } else {
-	blitz::Array<complex<double>, 3> ackweights;
-	ackweights.resize(ack.weights().shape());
-
-	// convert to amplitude and angle
-	ackweights = convert_to_amplphase_from_int16(ack.weights());
-
-	int rcuin = 0;
-	for (int rcuout = 0; rcuout < get_ndevices(); rcuout++)
-	{
-	  if (mask[rcuout])
-	  {
-	    std::ostringstream logStream;
-	    logStream << ackweights(0, rcuin++, Range::all());
-	    logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
-	  }
-	}
-      }
-    }
-    break;
+			
+			
+			if (getMode()) { 
+	      if (WeightsCommand::COMPLEX == m_type) {
+					int rcuin = 0;
+					for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
+		  			if (mask[rcuout]) {
+		    			std::ostringstream logStream;
+		    			logStream << ack.weights()(0, rcuin++, Range::all());
+		    			logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
+		  			}
+					}
+	      } else {
+					blitz::Array<complex<double>, 3> ackweights;
+					ackweights.resize(ack.weights().shape());
+	
+					// convert to amplitude and angle
+					ackweights = convert_to_amplphase_from_int16(ack.weights());
+	
+					int rcuin = 0;
+					for (int rcuout = 0; rcuout < get_ndevices(); rcuout++) {
+					  if (mask[rcuout]) {
+					    std::ostringstream logStream;
+					    logStream << ackweights(0, rcuin++, Range::all());
+					    logMessage(cout,formatString("RCU[%2d].weights=%s", rcuout,logStream.str().c_str()));
+					  }
+					}
+	      }
+	     
+	      GCFTask::stop();
+      	return status;
+	    } else {	
+      	itsStage = 1;
+      	send();
+    	}
+    } break;
 
     case RSP_SETWEIGHTSACK:
     {
       RSPSetweightsackEvent ack(e);
 
-      if (SUCCESS != ack.status)
-      {
+      if (SUCCESS != ack.status) {
         logMessage(cerr,"Error: RSP_SETWEIGHTS command failed.");
       }
-    }
-    break;
+      GCFTask::stop();
+      return status;
+    } break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
+      GCFTask::stop();
+      return status;
       break;
   }
-
-  GCFTask::stop();
-
-  return status;
+  
 }
 
 SubbandsCommand::SubbandsCommand(GCFPortInterface& port) : Command(port), m_type(0)
@@ -2263,7 +2291,7 @@ static void usage()
   cout << endl;
   cout << "rspctl --weights                    [--select=<set>]  # get weights as complex values" << endl;
   cout << "  Example --weights --select=1,2,4:7 or --select=1:3,5:7" << endl;
-  cout << "rspctl --weights=value.re[,value.im][--select=<set>]  # set weights as complex value" << endl;
+  cout << "rspctl --weights=value.re[,value.im][--select=<set>][--beamlets=<set>] # set weights as complex value" << endl;
   cout << "rspctl --aweights                   [--select=<set>]  # get weights as power and angle (in degrees)" << endl;
   cout << "rspctl --aweights=amplitude[,angle] [--select=<set>]  # set weights as amplitude and angle (in degrees)" << endl;
   cout << "rspctl --subbands                   [--select=<set>]  # get subband selection" << endl;
@@ -2302,8 +2330,9 @@ static void usage()
   cout << endl;
   cout << "  0x01000000 PRSG         pseudo random sequence generator on (1), off (0)" << endl;
   cout << "  0x02000000 RESET        on (1) hold board in reset" << endl;
-  cout << "  0x04000080 SPEC_INV     Enable spectral inversion (1) if needed." << endl;
-  cout << "  0xF8000000 TBD          reserved" << endl;
+  cout << "  0x04000000 SPEC_INV     Enable spectral inversion (1) if needed. see --specinv" << endl;
+  cout << "  0x08000000 TBD          reserved" << endl;
+  cout << "  0xF0000000 RCU VERSION  RCU version, read-only" << endl;
   cout << endl;
   cout << "rspctl [ --rcumode        |" << endl;
   cout << "         --rcuprsg        |" << endl;
@@ -2364,17 +2393,22 @@ Command* RSPCtl::parse_options(int argc, char** argv)
   RCUCommand* rcumodecommand = 0;
   HBACommand* hbacommand     = 0;
   list<int> select;
+  list<int> beamlets;
   bool xcangle = false;
 
   // select all by default
   select.clear();
   for (int i = 0; i < MEPHeader::MAX_N_RCUS; ++i) select.push_back(i);
 
+	beamlets.clear();
+  for (int i = 0; i < MEPHeader::N_BEAMLETS; ++i) beamlets.push_back(i);
+  	
   optind = 0; // reset option parsing
   //opterr = 0; // no error reporting to stderr
   while (1) {
       static struct option long_options[] = {
 	  { "select",         required_argument, 0, 'l' },
+	  { "beamlets",       required_argument, 0, 'b' },
 	  { "weights",        optional_argument, 0, 'w' },
 	  { "aweights",       optional_argument, 0, 'a' },
 	  { "subbands",       optional_argument, 0, 's' },
@@ -2384,7 +2418,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	  { "rcureset",       optional_argument, 0, 'e' },
 	  { "rcuattenuation", required_argument, 0, 'n' },
 	  { "rcudelay",       required_argument, 0, 'y' },
-      { "rcuenable",      optional_argument, 0, 'E' },
+    { "rcuenable",      optional_argument, 0, 'E' },
 	  { "wg",             optional_argument, 0, 'g' },
 	  { "wgmode",         required_argument, 0, 'G' },
 	  { "amplitude",      required_argument, 0, 'A' },
@@ -2417,7 +2451,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
       int option_index = 0;
       int c = getopt_long(argc, argv,
-			  "l:w::a::s::r::g::qQt::xz::vc::hf:d:i:I:", long_options, &option_index);
+			  "l:b:w::a::s::r::g::qQt::xz::vc::hf:d:i:I:", long_options, &option_index);
 
       if (c == -1)
 	break;
@@ -2440,6 +2474,25 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 	      logMessage(cerr,"Error: option '--select' requires an argument");
 	  }
 	  break;
+
+	case 'b': 	// --beamlets
+	  if (optarg) {
+	      if (!command || 0 == command->get_ndevices()) {
+		  logMessage(cerr,"Error: 'command' argument should come before --beamlets argument");
+		  exit(EXIT_FAILURE);
+	      }
+	      beamlets = strtolist(optarg, MEPHeader::N_BEAMLETS);
+	      if (beamlets.empty()) {
+		  logMessage(cerr,"Error: invalid or missing '--beamlets' option");
+		  exit(EXIT_FAILURE);
+	      }
+	      
+	  }
+	  else {
+	      logMessage(cerr,"Error: option '--beamlets' requires an argument");
+	  }
+	  break;
+
 
 	case 'w':	// --weights
 	  {
@@ -3013,6 +3066,7 @@ Command* RSPCtl::parse_options(int argc, char** argv)
 
   if (command) {
       command->setSelect(select);
+      command->setBeamlets(beamlets);
   }
 
   return command;

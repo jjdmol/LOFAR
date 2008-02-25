@@ -29,6 +29,7 @@
 #include <Common/lofar_list.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include <APL/RSP_Protocol/EPA_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
 #include <APL/RSP_Protocol/HBASettings.h>
 #ifdef ENABLE_RSPFE
@@ -39,11 +40,12 @@
 
 #include <APL/RTCCommon/Timestamp.h>
 
+#include <complex>
 #include <blitz/array.h>
 
 namespace LOFAR {
   namespace rspctl {
-
+		
     //
     // class Command :base class for control commands towards the RSPDriver.
     //
@@ -72,6 +74,14 @@ namespace LOFAR {
       void setSelect(std::list<int> select)
       {
         m_select = select;
+      }
+			
+			/**
+       * Set beamlets.
+       */
+      void setBeamlets(std::list<int> beamlets)
+      {
+        m_beamlets = beamlets;
       }
 
       /**
@@ -107,6 +117,23 @@ namespace LOFAR {
           if (count >= get_ndevices())
             break;
           if (*it < MAX_N_RSPBOARDS)
+            mask.set(*it);
+        }
+
+        return mask;
+      }
+
+			/**
+       * Get the mask (N_BEAMLETS bits).
+       */
+      bitset<MEPHeader::N_BEAMLETS> getBEAMLETSMask() const
+      {
+        bitset<MEPHeader::N_BEAMLETS> mask;
+      
+        mask.reset();
+        std::list<int>::const_iterator it;
+        for (it = m_beamlets.begin(); it != m_beamlets.end(); ++it) {
+          if (*it < MEPHeader::N_BEAMLETS)
             mask.set(*it);
         }
 
@@ -189,9 +216,10 @@ namespace LOFAR {
       GCFPortInterface& m_rspport;
 
     private:
-      std::list<int> m_select;
-      bool           m_get; // get or set
-      int            m_ndevices;
+      std::list<int> 	m_select;
+      std::list<int>	m_beamlets;	
+      bool           	m_get; // get or set
+      int            	m_ndevices;
     };
 
     //
@@ -286,6 +314,8 @@ namespace LOFAR {
     private:
       std::complex<double> m_value;
       int                  m_type;
+      int									 itsStage;
+      blitz::Array<std::complex<int16>, 3>	itsWeights;
     };
 
     //
