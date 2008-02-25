@@ -6,8 +6,8 @@
 
 	  require_once($_SESSION['pagina'] . 'includes/login_funcs.php');
 	  include("status_object.php");
-		date_default_timezone_set ("Europe/Amsterdam");
-
+		//date_default_timezone_set ("Europe/Amsterdam");
+		putenv("TZ=Europe/Amsterdam");
 	  $Objecten_Array = array();
 
 		function zet_timestamp_om($timestamp) {

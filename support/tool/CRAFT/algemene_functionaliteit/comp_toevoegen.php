@@ -351,8 +351,8 @@
 			//er mag niet opgeslagen worden, dus toon het formulier met invoervelden
 			else {
 				//de tijdzone waarin we leven instellen, wordt dit niet gedaan dan klaagt PHP
-				date_default_timezone_set ("Europe/Amsterdam");
-
+				//date_default_timezone_set("Europe/Amsterdam");
+				putenv("TZ=Europe/Amsterdam");
 		?>
 	
 		<form name="theForm" method="post" action="<?php echo($_SESSION['huidige_pagina']); ?>">

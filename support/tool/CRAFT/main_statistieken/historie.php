@@ -69,8 +69,8 @@
 
 	    	<h2>Historie</h2>
 					<?php
-						date_default_timezone_set ("Europe/Amsterdam");
-
+						//date_default_timezone_set ("Europe/Amsterdam");
+						putenv("TZ=Europe/Amsterdam");
 						//wanneer er een datum ingevuld is, dan een situatie reconstrueren
 						if(controleer_datum($_SESSION['type_overzicht'])) {
 							//de samengestelde datum splitten op de spatie (formaat is als volgt: 2007-08-26 12:01:56)
