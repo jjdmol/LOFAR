@@ -56,6 +56,29 @@ int main (int	argc, char*		argv[])
 
 	sleep(2);
 
+	// send a bunch of messages
+	for (int	i = 0; i < 20; i++) {
+		msgEvent.seqnr = i;
+		msgEvent.value = toString(25+i);
+		thePort.send(&msgEvent);
+		KVTSendMsgAckEvent		msgAck(thePort.receive());
+	}
+		
+	sleep(2);
+
+	// now send the same bunch as to pools
+	KVTSendMsgPoolEvent		poolEvent;
+	poolEvent.seqnr = 1;
+	poolEvent.msgCount = 20;
+	for (int i = 0; i < 20; i++) {
+		poolEvent.keys.theVector.push_back("LOFAR.ObsSW.ObsCtrl.OnlineCtrl.OLAP.InputAppl.packageLoss{1198368555}");
+		poolEvent.values.theVector.push_back(toString(50+i));
+	}
+	thePort.send(&poolEvent);
+	KVTSendMsgPoolAckEvent		poolAck(thePort.receive());
+
+	sleep (2);
+
 	return (0);
 }
 
