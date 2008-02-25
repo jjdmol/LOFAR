@@ -96,10 +96,25 @@ GCFEvent::TResult RCUResultRead::handleack(GCFEvent& event, GCFPortInterface& /*
     Cache::getInstance().getState().rcuprotocol().read_error(global_rcu);
     return GCFEvent::HANDLED;
   }
-
+  
+ 
+  
+  
   // reverse and copy control bytes into i2c_result
   RCUSettings::Control& rcucontrol = Cache::getInstance().getBack().getRCUSettings()()((global_rcu));
+  
+  //LOG_INFO_STR(formatString("rcucontrol 1= %08X", rcucontrol.getRaw()));
+  
+  // first add RCU version to cache  //PD
+  rcucontrol.setVersion((ack.result[1] & 0xF0) >> 4);
+  //LOG_INFO_STR(formatString("ack.result(%d)= %u %u %u",global_rcu, ack.result[1], ack.result[2], ack.result[3] ));
+  //LOG_INFO_STR(formatString("rcucontrol 2= %08X", rcucontrol.getRaw()));
+  
+  Cache::getInstance().getBack().getRCUSettings()()((global_rcu)) = rcucontrol;
+  Cache::getInstance().getFront().getRCUSettings()()((global_rcu)) = rcucontrol;
+   
   uint32 control = htonl(rcucontrol.getRaw());
+  //LOG_INFO_STR(formatString("control 1= %08X", control));
   memcpy(RCUProtocolWrite::i2c_result + 1, &control, 3);
 
   if (0 == memcmp(RCUProtocolWrite::i2c_result, ack.result, sizeof(RCUProtocolWrite::i2c_result))) {

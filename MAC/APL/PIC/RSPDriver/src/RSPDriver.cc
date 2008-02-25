@@ -1366,7 +1366,9 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
     {
       command->ack(Cache::getInstance().getFront());
     }
-        
+    
+	 //PD add base correction here
+	 //
     command->setWeights(sw_event->weights()(Range(timestep, timestep),
                                             Range::all(),
                                             Range::all()));
