@@ -23,7 +23,7 @@
 #ifndef MISSUBSCRIPTION_H
 #define MISSUBSCRIPTION_H
 
-#include <GCF/PAL/GCF_PropertyProxy.h>
+//#include <GCF/PAL/GCF_PropertyProxy.h>
 
 namespace LOFAR 
 {

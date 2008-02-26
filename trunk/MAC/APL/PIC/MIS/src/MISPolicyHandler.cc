@@ -24,9 +24,9 @@
 #include <Common/lofar_fstream.h>
 #include <Common/LofarLocators.h>
 
-#include <GCF/LogSys/GCF_KeyValueLogger.h>
-#include <GCF/GCF_PVInteger.h>
-#include <APL/APLCommon/APL_Defines.h>
+//#include <GCF/LogSys/GCF_KeyValueLogger.h>
+//#include <GCF/GCF_PVInteger.h>
+//#include <APL/APLCommon/APL_Defines.h>
 #include "MISDaemon.h"
 #include "MIS_Protocol.ph"
 #include "MISDefines.h"
@@ -39,7 +39,7 @@ using std::ifstream;
 namespace LOFAR 
 {
 using namespace GCF::Common;
-using namespace APLCommon;
+//using namespace APLCommon;
 
  namespace AMI
  {
@@ -47,13 +47,11 @@ using namespace APLCommon;
 string trim(string source)
 {  
   string::size_type pos = source.find_first_not_of(" \t");
-  if (pos != string::npos)
-  {
+  if (pos != string::npos) {
     source.erase(0, pos);
   }
   pos = source.find_first_of(" \t");
-  if (pos != string::npos)
-  {
+  if (pos != string::npos) {
     source.erase(pos);
   }
   return source;
@@ -147,6 +145,7 @@ void MISPolicyHandler::rereadPolicyFile()
 		lineNr));
 }
 
+#if 0
 string MISPolicyHandler::checkDiagnose(const MISDiagnosisNotificationEvent& diag, 
                                        GCFPVInteger& curResStateValue)
 {
@@ -235,6 +234,7 @@ string MISPolicyHandler::checkDiagnose(const MISDiagnosisNotificationEvent& diag
   
   return response;   
 }
+#endif
 
  } // namespace AMI
 } // namespace LOFAR

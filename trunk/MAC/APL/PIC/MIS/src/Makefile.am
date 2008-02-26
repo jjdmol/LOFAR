@@ -8,21 +8,23 @@ DOCHDRS	=	 $(BUILT_SOURCES) \
 	MISDaemon.h \
 	MISDefines.h \
 	MISSession.h \
-	MISSubscription.h \
-	PropertyProxy.h \
 	MISPolicyHandler.h \
 	XCStatistics.h 
+
+#	MISSubscription.h 
+#	PropertyProxy.h 
 
 noinst_LTLIBRARIES 	= libmis.la
 
 libmis_la_SOURCES	= $(DOCHDRS) \
 	MISDaemon.cc \
 	MISSession.cc \
-	MISSubscription.cc \
-	PropertyProxy.cc \
 	MISPolicyHandler.cc \
 	MIS_Protocol.cc \
 	XCStatistics.cc 
+
+#	MISSubscription.cc 
+#	PropertyProxy.cc 
 
 bin_PROGRAMS   		= MACInformationServer
   

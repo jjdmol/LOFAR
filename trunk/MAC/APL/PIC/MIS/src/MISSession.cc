@@ -25,14 +25,14 @@
 #include "MISSession.h"
 #include "MISDaemon.h"
 #include "MISDefines.h"
-#include "MISSubscription.h"
+//#include "MISSubscription.h"
 #include "XCStatistics.h"         //MAXMOD
-#include <GCF/PAL/GCF_PVSSInfo.h>
-#include <GCF/PAL/GCF_Answer.h>
-#include <APL/APLCommon/APL_Defines.h>
-#include <GCF/GCF_PVInteger.h>
+//#include <GCF/PAL/GCF_PVSSInfo.h>
+//#include <GCF/PAL/GCF_Answer.h>
+//#include <APL/APLCommon/APL_Defines.h>
+//#include <GCF/GCF_PVInteger.h>
 #include <APL/RTCCommon/PSAccess.h>
-#include <GCF/LogSys/GCF_KeyValueLogger.h>
+//#include <GCF/LogSys/GCF_KeyValueLogger.h>
 
 using namespace blitz;
 
@@ -41,9 +41,8 @@ namespace LOFAR
 {
 using namespace GCF::Common;
 using namespace GCF::TM;
-using namespace GCF::PAL;
 using namespace RTC;
-using namespace APLCommon;
+//using namespace APLCommon;
 
  namespace AMI
  {
@@ -94,7 +93,7 @@ using namespace APLCommon;
 MISSession::MISSession(MISDaemon& daemon) :
   GCFTask((State)&MISSession::initial_state, MISS_TASK_NAME),
   _daemon(daemon),
-  _propertyProxy(*this),
+//  _propertyProxy(*this),
   _curSeqNr(1),
   _curReplyNr(0),
   _pRememberedEvent(0),
@@ -107,11 +106,12 @@ MISSession::MISSession(MISDaemon& daemon) :
 
 MISSession::~MISSession () 
 {
+#if 0
   for (TSubscriptions::iterator iter = _subscriptions.begin();
-       iter != _subscriptions.end(); ++iter)
-  {
+       iter != _subscriptions.end(); ++iter) {
     delete iter->second;
   }
+#endif
 }
 
 GCFEvent::TResult MISSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/)
@@ -161,28 +161,26 @@ GCFEvent::TResult MISSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
       _missPort.cancelTimer(garbageTimerID);
       break;
       
-    case F_TIMER:
-    {
+    case F_TIMER: {
+#if 0
       GCFTimerEvent& timerEvent = static_cast<GCFTimerEvent&>(e);
       
-      if (timerEvent.id == garbageTimerID)
-      {
+      if (timerEvent.id == garbageTimerID) {
         // cleanup the garbage of obsolete subscriptions
         MISSubscription* pSubs;
         for (list<MISSubscription*>::iterator iter = _subscriptionsGarbage.begin();
-             iter != _subscriptionsGarbage.end(); ++iter)
-        {
+             iter != _subscriptionsGarbage.end(); ++iter) {
           pSubs = *iter;
           delete pSubs;
         }
         _subscriptionsGarbage.clear();
       }
-    
+#endif    
       break;
     }      
+
     case F_DISCONNECTED:
-      if (&_missPort == &p)
-      {
+      if (&_missPort == &p) {
         LOG_INFO("Connection lost to a MIS client.");
         TRAN(MISSession::closing_state);
       }
@@ -210,9 +208,9 @@ GCFEvent::TResult MISSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
       dispatch(e, p);
       break;
     
-    case MIS_PVSS_DP_SUBSCRIPTION_REQUEST:
-      subscribe(e);
-      break;
+//    case MIS_PVSS_DP_SUBSCRIPTION_REQUEST:
+//      subscribe(e);
+//      break;
     
     case MIS_SUBBAND_STATISTICS_REQUEST:
       getSubbandStatistics(e);
@@ -269,6 +267,7 @@ void MISSession::getGenericIdentity(GCFEvent& e)
 
 void MISSession::setDiagnosis(GCFEvent& e)
 {
+#if 0
   MISDiagnosisNotificationEvent* pIn(0);
   static string resourceStatusPropName = "";
 
@@ -280,35 +279,31 @@ void MISSession::setDiagnosis(GCFEvent& e)
 
   // first try to get the current status value of the component
   // for this purpose it is important that the component name contains ".status"
-  if (resourceStatusPropName.find(".status") == string::npos)
-  {
+  if (resourceStatusPropName.find(".status") == string::npos) {
     resourceStatusPropName += ".status";
   }
-  if (GCFPVSSInfo::propExists(resourceStatusPropName))
-  {
-    if (_propertyProxy.requestPropValue(resourceStatusPropName) != GCF_NO_ERROR)
-    {
+  if (GCFPVSSInfo::propExists(resourceStatusPropName)) {
+    if (_propertyProxy.requestPropValue(resourceStatusPropName) != GCF_NO_ERROR) {
       SEND_RESP_MSG((*pIn), DiagnosisResponse, "NAK (Error while requesting the current component status!)");
     }
-    else
-    {
+    else {
       _pRememberedEvent = pIn;      
       TRAN(MISSession::setDiagnosis_state);
     }
   }
-  else
-  {
+  else {
     SEND_RESP_MSG((*pIn), DiagnosisResponse, "NAK (Component has no status or does not exist!)");
   }
-  if (_pRememberedEvent == 0)
-  {
+  if (_pRememberedEvent == 0) {
     delete pIn;
   }
+#endif
 }
 
 GCFEvent::TResult MISSession::setDiagnosis_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
+#if 0
 
   static string resourceStatusPropName = "";
   
@@ -356,7 +351,7 @@ GCFEvent::TResult MISSession::setDiagnosis_state(GCFEvent& e, GCFPortInterface& 
       status = defaultHandling(e, p);
       break;
   }
-
+#endif
   return status;
 }
 
@@ -404,6 +399,7 @@ GCFEvent::TResult MISSession::getPICStructure_state(GCFEvent& e, GCFPortInterfac
 
 void MISSession::subscribe(GCFEvent& e)
 {
+#if 0
   MISPvssDpSubscriptionRequestEvent in(e);
   LOGMSGHDR(in);
   string response = "ACK";
@@ -412,27 +408,21 @@ void MISSession::subscribe(GCFEvent& e)
       "Subscription request (%s)",
       in.request.c_str()));
       
-  if (in.request == "UNSUBSCRIBE")
-  {
+  if (in.request == "UNSUBSCRIBE") {
     TSubscriptions::iterator iter = _subscriptions.find(in.dpname);
-    if (iter != _subscriptions.end())
-    {
+    if (iter != _subscriptions.end()) {
       iter->second->unsubscribe(in.seqnr);
     }
-    else
-    {
+    else {
       response = "NAK (not subscribed; ignored)";
     }
   }
-  else if (in.request == "SUBSCRIBE" || in.request == "SINGLE-SHOT")
-  {
+  else if (in.request == "SUBSCRIBE" || in.request == "SINGLE-SHOT") {
     TSubscriptions::iterator iter = _subscriptions.find(in.dpname);
-    if (iter != _subscriptions.end())
-    {
+    if (iter != _subscriptions.end()) {
       response = "NAK (subscription already made; ignored)";
     }
-    else
-    {
+    else {
       MISSubscription* pNewSubscription = new MISSubscription(*this, 
                                                             in.dpname, 
                                                             in.seqnr, 
@@ -443,10 +433,10 @@ void MISSession::subscribe(GCFEvent& e)
     }        
   }
   
-  if (response != "ACK")
-  {
+  if (response != "ACK") {
     SEND_RESP_MSG(in, PvssDpSubscriptionResponse, response);
   }
+#endif
 }
 
 GCFEvent::TResult MISSession::subscribe_state(GCFEvent& e, GCFPortInterface& p)
@@ -860,13 +850,11 @@ GCFEvent::TResult MISSession::closing_state(GCFEvent& e, GCFPortInterface& /*p*/
   switch (e.signal)
   {
     case F_ENTRY:
-      if (!_missPort.isConnected())
-      {
+      if (!_missPort.isConnected()) {
         LOG_INFO("Client gone. Stop all subsessions.");
         _missPort.close();
       }
-      else
-      {
+      else {
         _daemon.clientClosed(*this);
       }
       break;
@@ -890,8 +878,7 @@ GCFEvent::TResult MISSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_DISCONNECTED:
-      if (&p == &_missPort)
-      {
+      if (&p == &_missPort) {
         LOG_INFO("Connection lost to a MIS client.");
         TRAN(MISSession::closing_state);
       }
@@ -917,9 +904,9 @@ GCFEvent::TResult MISSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
       RETURN_NOACK_MSG(LofarStructureRequest, LofarStructureResponse, "BUSY");
       break;
 
-    case MIS_PVSS_DP_SUBSCRIPTION_REQUEST:
-      RETURN_NOACK_MSG(PvssDpSubscriptionRequest, PvssDpSubscriptionResponse, "BUSY");
-      break;
+//    case MIS_PVSS_DP_SUBSCRIPTION_REQUEST:
+//      RETURN_NOACK_MSG(PvssDpSubscriptionRequest, PvssDpSubscriptionResponse, "BUSY");
+//      break;
 
     case MIS_SUBBAND_STATISTICS_REQUEST:
       RETURN_NOACK_MSG(SubbandStatisticsRequest, SubbandStatisticsResponse, "BUSY");
@@ -952,11 +939,13 @@ void MISSession::valueChanged(MISPvssDpSubscriptionValueChangedAsyncEvent& e)
 
 void MISSession::mayDelete(const string& propName)
 {
+#if 0
   TSubscriptions::iterator iter = _subscriptions.find(propName);
   ASSERTSTR(iter != _subscriptions.end(), "Subscription should still exist here!");
   MISSubscription* pSubs = iter->second;
   _subscriptions.erase(propName);
   _subscriptionsGarbage.push_back(pSubs);
+#endif
 }
 
 void MISSession::setCurrentTime(int64& sec, uint32& nsec)
