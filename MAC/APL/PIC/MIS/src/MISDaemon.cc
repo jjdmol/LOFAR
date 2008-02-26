@@ -25,8 +25,8 @@
 #include <Common/LofarLocators.h>
 
 #include <APS/ParameterSet.h>
-#include <GCF/LogSys/GCF_KeyValueLogger.h>
-#include <GCF/PAL/GCF_PVSSInfo.h>
+//#include <GCF/LogSys/GCF_KeyValueLogger.h>
+//#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include "MISSession.h"
 #include "MIS_Protocol.ph"
@@ -37,7 +37,6 @@ namespace LOFAR
 {
 using namespace GCF::Common;
 using namespace GCF::TM;
-using namespace GCF::PAL;
 using namespace ACC::APS;
  namespace AMI
  {
@@ -46,8 +45,8 @@ MISDaemon::MISDaemon() :
 	GCFTask((State)&MISDaemon::initial, MISD_TASK_NAME)
 {
 	// register the protocol for debugging purposes
-	registerProtocol(MIS_PROTOCOL, MIS_PROTOCOL_signalnames);
-	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
+	registerProtocol(MIS_PROTOCOL, MIS_PROTOCOL_STRINGS);
+	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 
 	// initialize the port
 	_misdPortProvider.init(*this, MISD_PORT_NAME, GCFPortInterface::MSPP, MIS_PROTOCOL);
@@ -98,42 +97,37 @@ GCFEvent::TResult MISDaemon::accepting(GCFEvent& e, GCFPortInterface& p)
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static unsigned long garbageTimerID = 0;
   static unsigned long rereadPolicyTimerID = 0;
-  static bool hasPVSS = false; 
+//  static bool hasPVSS = false; 
 
-  switch (e.signal)
-  {
-    case F_ENTRY:
-    {
-      garbageTimerID = _misdPortProvider.setTimer(5.0, 5.0); 
+  switch (e.signal) {
+    case F_ENTRY: {
+      garbageTimerID      = _misdPortProvider.setTimer(5.0, 5.0); 
       rereadPolicyTimerID = _misdPortProvider.setTimer(60.0, 60.0); 
       break;
     }
+
     case F_DISCONNECTED:
       DBGFAILWHEN(&_misdPortProvider == &p && "MISD port provider may not be disconnected."); 
       break;
       
-    case F_TIMER:
-    {
+    case F_TIMER: {
       GCFTimerEvent& timerEvent = static_cast<GCFTimerEvent&>(e);
       
-      if (timerEvent.id == garbageTimerID)
-      {
+      if (timerEvent.id == garbageTimerID) {
         // cleanup the garbage of closed ports to master clients
         MISSession* pClient;
-        for (TSessions::iterator iter = _sessionsGarbage.begin();
-             iter != _sessionsGarbage.end(); ++iter)
-        {
+        for (TSessions::iterator iter = _sessionsGarbage.begin(); iter != _sessionsGarbage.end(); ++iter) {
           pClient = *iter;
           delete pClient;
         }
         _sessionsGarbage.clear();
       }
-      else if (timerEvent.id == rereadPolicyTimerID)
-      {
+      else if (timerEvent.id == rereadPolicyTimerID) {
         _policyHandler.rereadPolicyFile();
       }      
       break;
     }  
+
     case F_CLOSED:
       DBGFAILWHEN(&_misdPortProvider == &p);
       break;
@@ -142,20 +136,18 @@ GCFEvent::TResult MISDaemon::accepting(GCFEvent& e, GCFPortInterface& p)
       DBGFAILWHEN(&_misdPortProvider == &p);
       break;
       
-    case F_ACCEPT_REQ:
-    {
+    case F_ACCEPT_REQ: {
       LOG_INFO("New MIS client accepted!");
       MISSession* miss = new MISSession(*this);
       miss->start();
-      if (!hasPVSS)
-      {
+//      if (!hasPVSS) {
         // now we have PVSS connection
-        hasPVSS = true;        
+//        hasPVSS = true;        
         // the GCFPVSSInfo::getOwnManNum() method only returns a valid
         // man number if a PVSS connections has been established
         // is will be automatically done by the MISSession
-        SKIP_UPDATES_FROM(GCFPVSSInfo::getOwnManNum());
-      }
+//        SKIP_UPDATES_FROM(GCFPVSSInfo::getOwnManNum());
+//     }
       break;
     }
     

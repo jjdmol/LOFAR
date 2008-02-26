@@ -25,17 +25,13 @@
 
 #include <MIS_Protocol.ph>
 
-namespace LOFAR 
-{
- namespace GCF
- {
-   namespace Common
-   {
+namespace LOFAR {
+ namespace GCF {
+   namespace Common {
      class GCFPVInteger;
    }
  }
- namespace AMI 
- {  
+ namespace AMI {  
 
 class MISDaemon;
 

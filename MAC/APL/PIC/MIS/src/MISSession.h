@@ -23,14 +23,15 @@
 #ifndef NODEMANAGERCLIENT_H
 #define NODEMANAGERCLIENT_H
 
+#include <Common/lofar_bitset.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_TCPPort.h>
 //MAXMOD
 #include <GCF/GCF_ServiceInfo.h>
 
-#include <PropertyProxy.h>
-#include <MISSubscription.h>
+//#include <PropertyProxy.h>
+//#include <MISSubscription.h>
 
 #include <MIS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -45,7 +46,7 @@ namespace LOFAR
  {  
 
 class MISDaemon;
-class MISSubsciption;
+//class MISSubsciption;
 /**
 */
 
@@ -75,32 +76,32 @@ class MISSession : public GCF::TM::GCFTask
     GCF::TM::GCFEvent::TResult defaultHandling (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
   private: // helper methods
-    void genericPingpong (GCF::TM::GCFEvent& e);
-    void getGenericIdentity (GCF::TM::GCFEvent& e);
-    void setDiagnosis (GCF::TM::GCFEvent& e);
-    void subscribe (GCF::TM::GCFEvent& e);
+    void genericPingpong      (GCF::TM::GCFEvent& e);
+    void getGenericIdentity   (GCF::TM::GCFEvent& e);
+    void setDiagnosis         (GCF::TM::GCFEvent& e);
+    void subscribe            (GCF::TM::GCFEvent& e);
     void getSubbandStatistics (GCF::TM::GCFEvent& e);
     //MAXMOD
-    void getAntennaCorrelation (GCF::TM::GCFEvent& e);
+    void getAntennaCorrelation(GCF::TM::GCFEvent& e);
     
   private: // data members      
-    typedef map<string /*resource name*/, MISSubscription*> TSubscriptions;
+//    typedef map<string /*resource name*/, MISSubscription*> TSubscriptions;
     GCF::TM::GCFTCPPort _missPort;
     GCF::TM::GCFTCPPort _rspDriverPort;
     GCF::TM::GCFTCPPort _acmPort;
     MISDaemon&          _daemon;
-    TSubscriptions      _subscriptions;
-    PropertyProxy       _propertyProxy;
+//    TSubscriptions      _subscriptions;
+//    PropertyProxy       _propertyProxy;
 
   private: // admin members
     uint64                  _curSeqNr;
     uint64                  _curReplyNr;
     bool                    _busy;
-    list<MISSubscription*>  _subscriptionsGarbage;
+//    list<MISSubscription*>  _subscriptionsGarbage;
     GCF::TM::GCFEvent*      _pRememberedEvent;
     uint16                  _nrOfRCUs;
-    std::bitset<MEPHeader::MAX_N_RCUS> _allRCUSMask;    
-    std::bitset<MAX_N_RSPBOARDS> _allRSPSMask;    
+    bitset<MEPHeader::MAX_N_RCUS> _allRCUSMask;    
+    bitset<MAX_N_RSPBOARDS> _allRSPSMask;    
 };
  } // namespace AMI
 } // namespace LOFAR

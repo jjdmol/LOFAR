@@ -23,7 +23,7 @@
 #ifndef PROPERTYPROXY_H
 #define PROPERTYPROXY_H
 
-#include <GCF/PAL/GCF_PropertyProxy.h>
+//#include <GCF/PAL/GCF_PropertyProxy.h>
 #include <GCF/TM/GCF_Fsm.h>
 
 namespace LOFAR
