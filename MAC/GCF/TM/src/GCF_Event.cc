@@ -27,16 +27,15 @@
 
 using namespace std;
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 GCFEvent::~GCFEvent() 
 { 
-  if (_buffer) delete [] _buffer; 
+	if (_buffer)  {
+		delete [] _buffer; 
+	}
 }
 
 void* GCFEvent::pack(uint32& packsize) 
@@ -51,13 +50,11 @@ void* GCFEvent::pack(uint32& packsize)
 void GCFEvent::resizeBuf(uint32 requiredSize)
 {
   // resizes the buffer if needed
-  if (requiredSize > _upperbound && _buffer)
-  {
+  if (requiredSize > _upperbound && _buffer) {
     delete [] _buffer;
     _buffer = 0;
   }
-  if (!_buffer)
-  {
+  if (!_buffer) {
     _buffer = new char[requiredSize];
     _upperbound = requiredSize;
   }
@@ -78,8 +75,7 @@ uint32 GCFEvent::packMember(uint32 offset, const void* member, uint32 memberNOE,
   ASSERT(_buffer);
   memcpy(_buffer + offset, &memberNOE, sizeof(memberNOE));
   offset += sizeof(memberNOE);
-  if (memberNOE > 0)
-  {
+  if (memberNOE > 0) {
     memcpy(_buffer + offset, member, memberNOE * sizeofMemberType);
   }
   return (memberNOE * sizeofMemberType) + sizeof(memberNOE);

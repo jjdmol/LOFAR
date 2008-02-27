@@ -26,12 +26,9 @@
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 /**
  * This class is the base event data container to exchange messages between two 

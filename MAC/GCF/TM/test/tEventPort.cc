@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <GCF/TM/EventPort.h>
 #include <GCF/GCF_ServiceInfo.h>
-#include <APL/RSP_Protocol/RSP_Protocol.ph>
+#include "testprotocol.ph"
 
 using namespace LOFAR;
 using namespace LOFAR::GCF;
@@ -34,8 +34,9 @@ int main (int32	argc, char*argv[]) {
 
 	INIT_LOGGER("tEventPort");
 	
-	EventPort	rspPort(MAC_SVCMASK_RSPDRIVER, false, RSP_PROTOCOL);
+	EventPort	rspPort(MAC_SVCMASK_RSPDRIVER, false, TESTPROTOCOL);
 
+#if 0
 	RSPGetconfigEvent   getConfig;
 	rspPort.send(&getConfig);
 
@@ -43,6 +44,16 @@ int main (int32	argc, char*argv[]) {
 	cout << "NrRCUs       = " << ack.n_rcus << endl;
 	cout << "NrRSPboards  = " << ack.n_rspboards << endl;
 	cout << "MaxRSPboards = " << ack.max_rspboards << endl;
+#else
+	// note this code will not work but it compiles.
+	TEST_PTCTestInEvent		inEvent;
+	inEvent.seqnr = 25;
+	inEvent.question = "What time is it?";
+	rspPort.send(&inEvent);
+
+	TEST_PTCTestOutEvent ack(rspPort.receive());
+
+#endif
 
 	return (0);
 }
