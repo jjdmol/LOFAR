@@ -35,7 +35,6 @@
 #include <CS1_Interface/ION_to_CN.h>
 #include <BeamletBuffer.h>
 #include <InputThread.h>
-#include <Common/Timer.h>
 
 #include <boost/multi_array.hpp>
 #include <pthread.h>
@@ -76,7 +75,6 @@ class WH_InputSection: public WorkHolder {
 
     TransportHolder *itsInputTH;
     unsigned itsStationNr;
-    string   itsStationName;
     
     CS1_Parset *itsCS1PS;
     
@@ -93,8 +91,6 @@ class WH_InputSection: public WorkHolder {
     unsigned itsPsetNumber;
    
     BeamletBuffer *itsBBuffer;
-    
-    NSTimer itsPrePostTimer, itsProcessTimer, itsGetElemTimer;
     
     void startThread();
 };
