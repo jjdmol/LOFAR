@@ -82,6 +82,8 @@ private:
 	// connected to TBBDriver, waiting for PREPARE event
    GCFEvent::TResult claimed_state (GCFEvent& e, GCFPortInterface& p);
 	
+	// set boards in right mode, if done got to TBBmode state
+	GCFEvent::TResult doRSPtbbMode(GCFEvent& event, GCFPortInterface& port);
 	// set boards in right mode, if done got to alloc state
 	GCFEvent::TResult doTBBmode (GCFEvent& e, GCFPortInterface& p);
 	// allocate memory for selected rcus, if done got to trigsetup state
@@ -98,13 +100,11 @@ private:
 	GCFEvent::TResult doTBBrelease (GCFEvent& e, GCFPortInterface& p);
 
 	// TBB boards are setup, waiting for RESUME event
-   GCFEvent::TResult prepared_state  (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult prepared_state  (GCFEvent& e, GCFPortInterface& p);
 	// Normal control mode, handling of trigger messages is active
-   GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
-	// stop recording for selected rcus
-   GCFEvent::TResult doTBBstop  (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult active_state  (GCFEvent& e, GCFPortInterface& p);
 	// send data to CEP for selected rcus
-   GCFEvent::TResult doTBBread  (GCFEvent& e, GCFPortInterface& p);
+  GCFEvent::TResult doTBBread  (GCFEvent& e, GCFPortInterface& p);
 
 	// unsubscribe on tbb mesages, if done go to free state
 	GCFEvent::TResult doTBBunsubscribe (GCFEvent& e, GCFPortInterface& p);
@@ -121,11 +121,12 @@ private:
 	// avoid defaultconstruction and copying
 	TBBControl();
 	TBBControl(const TBBControl&);
-   TBBControl& operator=(const TBBControl&);
-
-   void	_connectedHandler		(GCFPortInterface& port);
-   void	_disconnectedHandler	(GCFPortInterface& port);
+  TBBControl& operator=(const TBBControl&);
+   
 	void	setState				(CTState::CTstateNr     newState);
+	
+	GCFEvent::TResult _triggerEventHandler(GCFEvent& event);
+	GCFEvent::TResult _triggerReleaseAckEventHandler(GCFEvent& event);
 	GCFEvent::TResult	_defaultEventHandler(GCFEvent&	event, GCFPortInterface&	port);
 
    	RTDBPropertySet*		itsPropertySet;
@@ -138,6 +139,7 @@ private:
 	GCFTimerPort*			itsTimerPort;
 
 	GCFTCPPort*				itsTBBDriver;
+	GCFTCPPort*				itsRSPDriver;
 
 	CTState::CTstateNr		itsState;
 	VHECRTask*		itsVHECRTask;				
@@ -145,7 +147,8 @@ private:
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
 	TBBObservation*	itsObs;
-	vector<TBBReadCmd>		itsCommandVector;
+	vector<TBBReadCmd>		itsStopCommandVector;
+	vector<TBBReadCmd>		itsReadCommandVector;
 };
 
   };//StationCU
