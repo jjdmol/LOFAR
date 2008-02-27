@@ -71,9 +71,12 @@ void *InputThread::logThread(void *)
       system("cat /proc/meminfo");
 #endif
 
-    std::clog <<
-	"received " << nrPacketsReceived << " packets, "
-	"rejected " << nrPacketsRejected << " packets" << std::endl;
+    std::clog << "received " << nrPacketsReceived << " packets";
+
+    if (nrPacketsRejected > 0)
+      std::clog << ", rejected " << nrPacketsRejected << " packets";
+
+    std::clog << std::endl;
     nrPacketsReceived = nrPacketsRejected = 0; // race conditions, but who cares
     sleep(1);
   }
@@ -125,17 +128,10 @@ void InputThread::mainLoop()
   std::clog << "InputThread::mainLoop() entering loop" << std::endl;
 
   while (!theirShouldStop) {
-retry: // until valid packet received
-
-    try {
-      receiveTimer.start();
-      itsArgs.th->recvBlocking((void *) totRecvframe, frameSize, 0);
-      receiveTimer.stop();
-      ++ nrPacketsReceived;
-    } catch (Exception &e) {
-      LOG_TRACE_FLOW_STR("WriteToBufferThread couldn't read from TransportHolder(" << e.what() << ", exiting");
-      exit(1);
-    }	
+    receiveTimer.start();
+    itsArgs.th->recvBlocking((void *) totRecvframe, frameSize, 0);
+    receiveTimer.stop();
+    ++ nrPacketsReceived;
 
     // get the actual timestamp of first EPApacket in frame
     if (dataShouldContainValidStamp) {
@@ -146,12 +142,11 @@ retry: // until valid packet received
       seqid   = byteSwap(seqid);
       blockid = byteSwap(blockid);
 #endif
-//std::clog << "InputThread::mainLoop: seqid = " << seqid << ", blockid = " << blockid << std::endl;
 
       //if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
       if (seqid == ~0U) {
 	++ nrPacketsRejected;
-	goto retry;
+	continue;
       }
 
       actualstamp.setStamp(seqid, blockid);
@@ -166,6 +161,7 @@ retry: // until valid packet received
   }
 
   std::clog << "InputThread::mainLoop() exiting loop" << std::endl;
+
   if (pthread_join(logThreadId, 0) != 0) {
     std::cerr << "could not join log thread" << std::endl;
     exit(1);
