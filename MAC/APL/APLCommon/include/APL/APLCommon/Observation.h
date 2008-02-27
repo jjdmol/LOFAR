@@ -31,6 +31,8 @@
 //# Includes
 #include <APS/ParameterSet.h>
 #include <Common/lofar_bitset.h>
+#include <Common/lofar_vector.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR {
   namespace APLCommon {
@@ -52,25 +54,59 @@ public:
 	~Observation();
 	explicit	Observation (ACC::APS::ParameterSet*		aParSet);
 
+	// global function for converting filtername to nyquist zone
+	static uint32 nyquistzoneFromFilter(const string&	filterName);
+
+	// get name of a beam (idx starts at 0)
+	string getBeamName(uint32	beamIdx) const;
+
+	// for operator <<
+	ostream& print (ostream&	os) const;
+
+	// data types
 	typedef bitset<256> 	  RCUset_t;
+
+	class Beam {
+	public:
+		Beam() {};
+		~Beam() {};
+
+		// NOTE: since not other sw in the signal chain supports switching the beam to another direction
+		//		 we only support 1 direction per beam for now.
+		double			angle1;
+		double			angle2;
+		string			directionType;
+//		string			angleTimes;
+		vector<int16>	subbands;
+		vector<int16>	beamlets;
+	};
 
 	//# Datamembers
 	string			name;
-	int32			treeID;
+	int32			obsID;
 	time_t			startTime;
 	time_t			stopTime;
 	int16			nyquistZone;
-	vector<int16>	subbands;
-	vector<int16>	beamlets;
 	vector<string>	stations;
 	int32			sampleClock;
 	string			filter;
 	string			antennaArray;
-	RCUset_t		RCUset;			// set with participating receivers
+	RCUset_t		RCUset;				// set with participating receivers
+	vector<Beam>	beams;
+	vector<int16>	beamlet2beams;		// to which beam each beamlet belongs
+	vector<int16>	beamlet2subbands;	// which subband each beamlet uses.
+
 };
 
-// @}
+//#
+//# operator <<
+//#
+inline ostream& operator<< (ostream&	os, const Observation&	anObs)
+{
+	return (anObs.print(os));
+}
 
+// @}
   } // namespace APLCommon
 } // namespace LOFAR
 

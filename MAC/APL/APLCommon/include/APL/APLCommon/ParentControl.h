@@ -118,9 +118,9 @@ private:
 	typedef list<ParentInfo_t>::const_iterator	const_PIiter;
 
 	// internal routines for managing the ParentInfo pool.
-	PIiter	findParent(GCFPortInterface*	port);
-	PIiter	findParent(uint32				timerID);
-	PIiter	findParent(const string&		name);
+	PIiter	findParentOnPort	(GCFPortInterface*	port);
+	PIiter	findParentOnTimerID	(uint32				timerID);
+	PIiter	findParentOnName	(const string&		name);
 	bool	isParent  (PIiter				parentPtr) 
 	{	return (parentPtr != itsParentList.end());	}
 	bool 				isLegalSignal (uint16	aSignal, PIiter	aParent);

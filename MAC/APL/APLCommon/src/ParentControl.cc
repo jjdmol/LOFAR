@@ -160,7 +160,7 @@ bool ParentControl::activateObservationTimers(const string&		cntlrName,
 	LOG_DEBUG_STR("activateObsTimers(" << cntlrName <<","<< to_simple_string(startTime) <<
 									","<< to_simple_string(stopTime) << ")");
 
-	PIiter		parent = findParent(cntlrName);
+	PIiter		parent = findParentOnName(cntlrName);
 	if (!isParent(parent)) {
 		LOG_ERROR_STR("Unknown controllername " << cntlrName << 
 					  ". Can not activate observation-timers.");
@@ -246,7 +246,7 @@ bool ParentControl::nowInState(const string&		cntlrName,
 	CTState		cts;
 	LOG_DEBUG_STR("nowInState(" << cntlrName <<","<< cts.name(newState) << ")");
 
-	PIiter		parent = findParent(cntlrName);
+	PIiter		parent = findParentOnName(cntlrName);
 	if (!isParent(parent)) {
 		LOG_ERROR_STR("Unknown controllername " << cntlrName << 
 					  ", can not register new state: " << cts.name(newState));
@@ -472,7 +472,7 @@ bool ParentControl::_confirmState(uint16			signal,
 								  const string&		cntlrName,
 								  uint16			result)
 {
-	PIiter		parent = findParent(cntlrName);
+	PIiter		parent = findParentOnName(cntlrName);
 	if (!isParent(parent)) {
 		LOG_WARN_STR ("Received answer for unknown parent " << cntlrName <<", ignoring");
 		return (false);
@@ -595,7 +595,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 
 	case F_CONNECTED: {
 			// search which connection is succesfull connected.
-			PIiter		parent = findParent(&port);
+			PIiter		parent = findParentOnPort(&port);
 			if (!isParent(parent)) {
 				LOG_DEBUG("F_CONNECTED on non-parent port");
 				break;
@@ -628,7 +628,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 			}
 
 			// Parent port? Might be temporarely problem, try to reconnect for a while.
-			PIiter	parent = findParent(&port);
+			PIiter	parent = findParentOnPort(&port);
 			if (isParent(parent)) {
 				// trying to make first contact?
 				if (parent->requestedState == CTState::CONNECTED &&
@@ -676,7 +676,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 	case F_TIMER: {
 			GCFTimerEvent&		timerEvent = static_cast<GCFTimerEvent&>(event);
 			LOG_TRACE_VAR_STR("timerID:" << timerEvent.id);
-			PIiter				parent = findParent(timerEvent.id);
+			PIiter				parent = findParentOnTimerID(timerEvent.id);
 			if (!isParent(parent)) {
 				LOG_DEBUG ("timerevent is not of a known parent, ignore");
 				break;
@@ -709,7 +709,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		STARTDAEMONNewparentEvent	NPevent(event);
 
 		// Attempt to start me up for the second time??? send resync
-		PIiter	oldParent = findParent(NPevent.cntlrName);
+		PIiter	oldParent = findParentOnName(NPevent.cntlrName);
 		if (isParent(oldParent)) {
 			LOG_DEBUG_STR ("Attempt to start me up twice, just sending RESYNC(" 
 				<< oldParent->name << "," << cts.name(oldParent->currentState) << ")");
@@ -758,7 +758,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		// is it the maintask? --> send CONNECT to parent controller.
 		if (&port == itsMainTaskPort) {
 			CONTROLConnectedEvent	inMsg(event);
-			PIiter	parent = findParent(inMsg.cntlrName);
+			PIiter	parent = findParentOnName(inMsg.cntlrName);
 			if (!isParent(parent)) {
 				LOG_ERROR_STR("Cannot forward CONNECTED event for " << inMsg.cntlrName);
 				break;
@@ -771,7 +771,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		}
 				
 		// should be a parentport
-		PIiter		parent = findParent(&port);
+		PIiter		parent = findParentOnPort(&port);
 		if (!isParent(parent)) {
 			CONTROLConnectedEvent	inMsg(event);
 			LOG_WARN_STR ("Received CONNECTED event from unknown parent (" <<
@@ -808,7 +808,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 	case CONTROL_QUIT:
 		{
 			// do we know this parent?
-			PIiter		parent = findParent(&port);
+			PIiter		parent = findParentOnPort(&port);
 			if (!isParent(parent)) {
 				LOG_WARN_STR ("Received " << eventName(event) << 
 								" event from unknown parent, ignoring");
@@ -855,7 +855,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		{
 			CONTROLClaimedEvent		msg(event);
 			// do we know this parent?
-			PIiter		parent = findParent(msg.cntlrName);
+			PIiter		parent = findParentOnName(msg.cntlrName);
 			if (!isParent(parent)) {
 				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
 								<< msg.cntlrName <<", ignoring");
@@ -870,7 +870,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		{
 			CONTROLPreparedEvent	msg(event);
 			// do we know this parent?
-			PIiter		parent = findParent(msg.cntlrName);
+			PIiter		parent = findParentOnName(msg.cntlrName);
 			if (!isParent(parent)) {
 				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
 								<< msg.cntlrName <<", ignoring");
@@ -885,7 +885,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		{
 			CONTROLResumedEvent	msg(event);
 			// do we know this parent?
-			PIiter		parent = findParent(msg.cntlrName);
+			PIiter		parent = findParentOnName(msg.cntlrName);
 			if (!isParent(parent)) {
 				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
 								<< msg.cntlrName <<", ignoring");
@@ -900,7 +900,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		{
 			CONTROLSuspendedEvent	msg(event);
 			// do we know this parent?
-			PIiter		parent = findParent(msg.cntlrName);
+			PIiter		parent = findParentOnName(msg.cntlrName);
 			if (!isParent(parent)) {
 				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
 								<< msg.cntlrName <<", ignoring");
@@ -915,7 +915,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		{
 			CONTROLReleasedEvent	msg(event);
 			// do we know this parent?
-			PIiter		parent = findParent(msg.cntlrName);
+			PIiter		parent = findParentOnName(msg.cntlrName);
 			if (!isParent(parent)) {
 				LOG_WARN_STR ("Received "<< eventName(event) <<" answer for unknown parent "
 								<< msg.cntlrName <<", ignoring");
@@ -930,7 +930,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		{
 			CONTROLResyncedEvent	msg(event);
 			// do we know this parent?
-			PIiter		parent = findParent(msg.cntlrName);
+			PIiter		parent = findParentOnName(msg.cntlrName);
 			if (isParent(parent)) {
 				// note do not register this state, it is not a real state
 				LOG_INFO_STR("Controller " << msg.cntlrName << " is resynced");
@@ -948,7 +948,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		{
 			CONTROLScheduledEvent	msg(event);
 			// do we know this parent?
-			PIiter		parent = findParent(msg.cntlrName);
+			PIiter		parent = findParentOnName(msg.cntlrName);
 			if (isParent(parent)) {
 				// note do not register this state, it is not a real state
 				LOG_DEBUG_STR("Passing SCHEDULED event to parent controller");
@@ -961,7 +961,7 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 		{
 			CONTROLQuitedEvent	msg(event);
 			// do we know this parent?
-			PIiter		parent = findParent(msg.cntlrName);
+			PIiter		parent = findParentOnName(msg.cntlrName);
 			if (!isParent(parent)) {
 				LOG_WARN_STR("Controller " << msg.cntlrName << " not in administration, ignoring QUIT message");
 				break;
@@ -990,11 +990,11 @@ GCFEvent::TResult	ParentControl::operational(GCFEvent&			event,
 }
 
 //
-// findParent(port)
+// findParentOnPort(port)
 //
-ParentControl::PIiter	ParentControl::findParent(GCFPortInterface*	aPort)
+ParentControl::PIiter	ParentControl::findParentOnPort(GCFPortInterface*	aPort)
 {
-	LOG_TRACE_COND_STR("findParent: " << aPort);
+	LOG_TRACE_COND_STR("findParentOnPort: " << aPort);
 	const_PIiter	end  = itsParentList.end();
 	PIiter			iter = itsParentList.begin();
 	while (iter != end && iter->port != aPort) {
@@ -1004,11 +1004,11 @@ ParentControl::PIiter	ParentControl::findParent(GCFPortInterface*	aPort)
 }
 
 //
-// findParent(timerID)
+// findParentOnTimerID(timerID)
 //
-ParentControl::PIiter	ParentControl::findParent(uint32	aTimerID)
+ParentControl::PIiter	ParentControl::findParentOnTimerID(uint32	aTimerID)
 {
-	LOG_TRACE_COND_STR("findParent: " << aTimerID);
+	LOG_TRACE_COND_STR("findParentOnTimerID: " << aTimerID);
 	const_PIiter	end  = itsParentList.end();
 	PIiter			iter = itsParentList.begin();
 	while (iter != end && iter->timerID != aTimerID) {
@@ -1018,11 +1018,11 @@ ParentControl::PIiter	ParentControl::findParent(uint32	aTimerID)
 }
 
 //
-// findParent(name)
+// findParentOnName(name)
 //
-ParentControl::PIiter	ParentControl::findParent(const string&		aName)
+ParentControl::PIiter	ParentControl::findParentOnName(const string&		aName)
 {
-	LOG_TRACE_COND_STR("findParent: " << aName);
+	LOG_TRACE_COND_STR("findParentOnName: " << aName);
 	const_PIiter	end  = itsParentList.end();
 	PIiter			iter = itsParentList.begin();
 	while (iter != end && iter->name != aName) {
