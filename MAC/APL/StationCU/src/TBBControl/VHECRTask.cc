@@ -100,6 +100,7 @@ GCFEvent::TResult VHECRTask::initial_state(GCFEvent& event, GCFPortInterface& po
 			LOG_ERROR("Received unexpected timer event, staying in init-state");
 		}
 		else {
+			itsTimerPort->setTimer(0.0);
 			TRAN (VHECRTask::operational);
 		}
 		break;
