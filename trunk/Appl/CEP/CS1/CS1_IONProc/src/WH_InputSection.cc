@@ -24,9 +24,8 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/LofarLogger.h>
+#include <Common/Timer.h>
 #include <Common/PrettyUnits.h>
-//#include <AMCBase/Epoch.h>
 #include <BGL_Personality.h>
 #include <WH_InputSection.h>
 #include <BeamletBuffer.h>
@@ -39,13 +38,22 @@
 #include <CS1_Interface/CS1_Parset.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <Transport/TransportHolder.h>
-//#include <tinyCEP/Sel_RoundRobin.h>
 
 #include <sys/time.h>
 
+#undef DUMP_RAW_DATA
+
+#if defined DUMP_RAW_DATA
+#include <Transport/TH_Socket.h>
+#endif
 
 namespace LOFAR {
 namespace CS1 {
+
+#if defined DUMP_RAW_DATA
+static TransportHolder *rawDataTH;
+#endif
+
 
 WH_InputSection::WH_InputSection(const string &name, 
 				 unsigned stationNumber,
@@ -56,19 +64,17 @@ WH_InputSection::WH_InputSection(const string &name,
   itsInputThread(0),
   itsInputTH(inputTH),
   itsStationNr(stationNumber),
-  itsStationName(ps->stationName(stationNumber)),
   itsCS1PS(ps),
-  itsBBuffer(0),
-  itsPrePostTimer("pre/post"),
-  itsProcessTimer("process"),
-  itsGetElemTimer("getElem")
+  itsBBuffer(0)
 {
-  LOG_TRACE_FLOW_STR("WH_InputSection constructor");    
-
   // get parameters
   itsNSubbandsPerPset = itsCS1PS->nrSubbandsPerPset();
   itsNSamplesPerSec   = itsCS1PS->nrSubbandSamples();
+#if defined DUMP_RAW_DATA
+  itsNHistorySamples  = 0;
+#else
   itsNHistorySamples  = itsCS1PS->nrHistorySamples();
+#endif
 
   // create incoming dataholder holding the delay information 
   getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay", itsCS1PS->nrStations()));
@@ -91,18 +97,16 @@ void WH_InputSection::startThread()
 {
   /* start up thread which writes RSP data from ethernet link
      into cyclic buffers */
-  LOG_TRACE_FLOW_STR("WH_InputSection starting thread");   
 
   ThreadArgs args;
+
   args.BBuffer            = itsBBuffer;
   args.th                 = itsInputTH;
   args.ipHeaderSize       = itsCS1PS->getInt32("OLAP.IPHeaderSize");
   args.frameHeaderSize    = itsCS1PS->getInt32("OLAP.EPAHeaderSize");
   args.nTimesPerFrame     = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
   args.nSubbandsPerFrame  = itsCS1PS->getInt32("OLAP.nrSubbandsPerFrame");
-
   args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
-
 
 #if 0
   if (itsInputTH->getType() == "TH_File" || itsInputTH->getType() == "TH_Null") {
@@ -118,8 +122,6 @@ void WH_InputSection::startThread()
 
 void WH_InputSection::preprocess()
 {
-  itsPrePostTimer.start();
-
   itsCurrentComputeCore = 0;
   itsNrCoresPerPset	= itsCS1PS->nrCoresPerPset();
   itsPsetNumber		= getBGLpersonality()->getPsetNum();
@@ -146,6 +148,20 @@ void WH_InputSection::preprocess()
 
   itsSampleDuration = itsCS1PS->sampleDuration();
 
+#if defined DUMP_RAW_DATA
+  vector<string> rawDataServers = itsCS1PS->getStringVector("OLAP.OLAP_Conn.rawDataServers");
+  vector<string> rawDataPorts = itsCS1PS->getStringVector("OLAP.OLAP_Conn.rawDataPorts");
+
+  if (itsStationNr >= rawDataServers.size() || itsStationNr >= rawDataPorts.size()) {
+    std::cerr << "too many stations for too few raw data servers/ports" << std::endl;
+    exit(1);
+  }
+
+  std::clog << "trying to connect raw data stream to " << rawDataServers[itsStationNr] << ':' << rawDataPorts[itsStationNr] << std::endl;
+  rawDataTH = new TH_Socket(rawDataServers[itsStationNr], std::string(rawDataPorts[itsStationNr]));
+  std::clog << "raw data stream connected" << std::endl;
+#endif
+
   startThread();
 }
 
@@ -160,10 +176,8 @@ void WH_InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
 
 
 void WH_InputSection::process() 
-{ 
+{
   BGL_Command command(BGL_Command::PROCESS);
-
-  itsProcessTimer.start();
 
   TimeStamp delayedStamp = itsSyncedStamp - itsNHistorySamples;
   itsSyncedStamp += itsNSamplesPerSec;
@@ -196,12 +210,72 @@ void WH_InputSection::process()
   double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
   double expectedTime = (delayedStamp + (itsNSamplesPerSec + itsNHistorySamples + itsMaxNetworkDelay)) * itsSampleDuration;
   
-  std::clog << itsStationName
-	    << ' ' << delayedStamp
+  std::clog << delayedStamp
 	    << " late: " << PrettyTime(currentTime - expectedTime)
 	    << ", delay: " << samplesDelay
-	    << ", flags: " << itsIONtoCNdata.flags() << " (" << (100.0 * itsIONtoCNdata.flags().count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl;
+	    << ", flags: " << itsIONtoCNdata.flags() << " (" << std::setprecision(3) << (100.0 * itsIONtoCNdata.flags().count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl;
 
+  NSTimer timer;
+  timer.start();
+
+#if defined DUMP_RAW_DATA
+  static bool fileHeaderWritten = false;
+
+  if (!fileHeaderWritten) {
+    struct FileHeader {
+      uint32	magic;		// 0x3F8304EC, also determines endianness
+      uint8	bitsPerSample;
+      uint8	nrPolarizations;
+      uint16	nrBeamlets;
+      uint32	nrSamplesPerBeamlet;
+      char	station[16];
+      double	sampleRate;	// 156250.0 or 195312.5
+      double	subbandFrequencies[54];
+      double	beamDirections[54][2];
+    } fileHeader;  
+
+    fileHeader.magic = 0x3F8304EC;
+    fileHeader.bitsPerSample = 16;
+    fileHeader.nrPolarizations = 2;
+    fileHeader.nrBeamlets = itsCS1PS->nrSubbands();
+    fileHeader.nrSamplesPerBeamlet = itsNSamplesPerSec;
+    strncpy(fileHeader.station, itsCS1PS->stationName(itsStationNr).c_str(), 16);
+    fileHeader.sampleRate = itsCS1PS->sampleRate();
+    memcpy(fileHeader.subbandFrequencies, &itsCS1PS->refFreqs()[0], itsCS1PS->nrSubbands() * sizeof(double));
+    
+    /* TODO: fill in beams/
+    for (unsigned subband = 0; subband < itsCS1PS->nrSubbands(); subband ++)
+      fileHeader.beamDirections[subband][0] = 
+      */
+
+    rawDataTH->sendBlocking(&fileHeader, sizeof fileHeader, 0, 0);
+    fileHeaderWritten = true;
+  }
+
+  struct BlockHeader {
+    uint32	magic; // 0x2913D852
+    int32	coarseDelayApplied;
+    double	fineDelayRemainingAtBegin, fineDelayRemainingAfterEnd;
+    int64	time; // compatible with TimeStamp class.
+    uint32      nrFlagsRanges;
+    struct range {
+      uint32    begin; // inclusive
+      uint32    end;   // exclusive
+    } flagsRanges[16];
+  } blockHeader;  
+
+  blockHeader.magic = 0x2913D852;
+  blockHeader.time = delayedStamp;
+  blockHeader.coarseDelayApplied = samplesDelay;
+  blockHeader.fineDelayRemainingAtBegin = itsIONtoCNdata.delayAtBegin();
+  blockHeader.fineDelayRemainingAfterEnd = itsIONtoCNdata.delayAfterEnd();
+  itsIONtoCNdata.flags().marshall(reinterpret_cast<char *>(&blockHeader.nrFlagsRanges), sizeof blockHeader.nrFlagsRanges + sizeof blockHeader.flagsRanges);
+
+  rawDataTH->sendBlocking(&blockHeader, sizeof blockHeader, 0, 0);
+
+  for (unsigned subband = 0; subband < itsCS1PS->nrSubbands(); subband ++)
+    itsBBuffer->sendUnalignedSubband(rawDataTH, subband);
+#else
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
     unsigned	    core = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
     TransportHolder *th  = TH_ZoidServer::theirTHs[core];
@@ -209,22 +283,21 @@ void WH_InputSection::process()
     command.write(th);
     itsIONtoCNdata.write(th);
 
-    itsGetElemTimer.start();
-
     for (unsigned pset = 0; pset < itsCS1PS->nrPsets(); pset ++) {
       unsigned subband = itsNSubbandsPerPset * pset + subbandBase;
 
       itsBBuffer->sendSubband(th, subband);
     }
 
-    itsGetElemTimer.stop();
-
     if (++ itsCurrentComputeCore == itsNrCoresPerPset)
       itsCurrentComputeCore = 0;
   }
+#endif
 
   itsBBuffer->stopReadTransaction();
-  itsProcessTimer.stop();
+
+  timer.stop();
+  std::clog << "ION->CN: " << PrettyTime(timer.getElapsed()) << std::endl;
 }
 
 
@@ -234,12 +307,6 @@ void WH_InputSection::postprocess()
 
   delete itsInputThread;	itsInputThread	= 0;
   delete itsBBuffer;		itsBBuffer	= 0;
-
-  itsPrePostTimer.stop();
-
-  itsPrePostTimer.print(clog);
-  itsProcessTimer.print(clog);
-  itsGetElemTimer.print(clog);
 }
 
 } // namespace CS1

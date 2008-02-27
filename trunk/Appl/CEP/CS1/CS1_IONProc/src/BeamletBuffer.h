@@ -62,6 +62,7 @@ class BeamletBuffer
 
     void     startReadTransaction(const TimeStamp &begin, unsigned nrElements);
     void     sendSubband(TransportHolder *, unsigned subband) /*const*/;
+    void     sendUnalignedSubband(TransportHolder *, unsigned subband) /*const*/;
     unsigned alignmentShift() const;
     void     readFlags(SparseSet<unsigned> &flags);
     void     stopReadTransaction();

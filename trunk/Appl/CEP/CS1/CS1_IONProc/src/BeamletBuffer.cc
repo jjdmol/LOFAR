@@ -140,6 +140,20 @@ void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband) /*const*/
 }
 
 
+void BeamletBuffer::sendUnalignedSubband(TransportHolder *th, unsigned subband) /*const*/
+{
+  if (itsEndI < itsStartI) {
+    // the data wraps around the allocated memory, so copy in two parts
+    unsigned firstChunk = itsSize - itsStartI;
+
+    th->sendBlocking(itsSBBuffers[subband][itsStartI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]), 0, 0);
+    th->sendBlocking(itsSBBuffers[subband][0].origin(),		sizeof(SampleType[itsEndI][NR_POLARIZATIONS]), 0, 0);
+  } else {
+    th->sendBlocking(itsSBBuffers[subband][itsStartI].origin(), sizeof(SampleType[itsEndI - itsStartI][NR_POLARIZATIONS]), 0, 0);
+  }
+}
+
+
 void BeamletBuffer::readFlags(SparseSet<unsigned> &flags)
 {
   pthread_mutex_lock(&itsValidDataMutex);
@@ -152,6 +166,7 @@ void BeamletBuffer::readFlags(SparseSet<unsigned> &flags)
     flags.exclude(static_cast<unsigned>(it->begin - itsBegin),
 		  static_cast<unsigned>(it->end - itsBegin));
 }
+
 
 void BeamletBuffer::stopReadTransaction()
 {
