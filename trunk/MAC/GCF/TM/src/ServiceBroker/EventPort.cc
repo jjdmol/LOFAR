@@ -41,7 +41,7 @@ namespace LOFAR {
 // Note: the difference with GCF-ports is that this port is only based on the
 // LCS/Common sockets and does therefor not depend on GCF_Tasks.
 
-static	char		receiveBuffer[24*4096];
+static char			receiveBuffer[24*4096];
 
 //
 // EventPort (name, type, protocol)
