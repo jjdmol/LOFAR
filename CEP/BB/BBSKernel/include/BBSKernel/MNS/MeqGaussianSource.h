@@ -1,4 +1,4 @@
-//# MeqJonesCMul3.h: Calculate left*mid*conj(right)
+//# MeqGaussianSource.h: Class holding a gaussian source
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,14 +20,15 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQJONESCMUL3_H
-#define MNS_MEQJONESCMUL3_H
+#ifndef MNS_MEQGAUSSIANSOURCE_H
+#define MNS_MEQGAUSSIANSOURCE_H
 
 // \file
-// Calculate left*mid*conj(transpose(right))
+// Class holding a gaussian source
 
 //# Includes
-#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/MNS/MeqSource.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -39,34 +40,48 @@ namespace BBS
 // @{
 
 
-// Calculate left*mid*conj(transpose(right)).
-
-class MeqJonesCMul3: public MeqJonesExprRep
+class MeqGaussianSource: public MeqSource
 {
 public:
-  MeqJonesCMul3 (const MeqJonesExpr& left,
-         const MeqJonesExpr& mid,
-         const MeqJonesExpr& right);
+  MeqGaussianSource(const string& name,
+		  const string& groupName,
+		  const MeqExpr& fluxI, const MeqExpr& fluxQ,
+		  const MeqExpr& fluxU, const MeqExpr& fluxV,
+		  const MeqExpr& ra, const MeqExpr& dec,
+		  const MeqExpr& major, const MeqExpr& minor,
+		  const MeqExpr& phi);
+  
 
-  ~MeqJonesCMul3();
+  virtual ~MeqGaussianSource();
 
-  // Get the result of the expression for the given domain.
-  MeqJonesResult getJResult (const MeqRequest&);
+  MeqExpr getI() const
+    { return itsI; }
+  MeqExpr getQ() const
+    { return itsQ; }
+  MeqExpr getU() const
+    { return itsU; }
+  MeqExpr getV() const
+    { return itsV; }
+  MeqExpr getMajor() const
+    { return itsMajor; }
+  MeqExpr getMinor() const
+    { return itsMinor; }
+  MeqExpr getPhi() const
+    { return itsPhi; }
 
 private:
-#ifdef EXPR_GRAPH
-  virtual std::string getLabel();
-#endif
-
-  MeqJonesExpr itsLeft;
-  MeqJonesExpr itsMid;
-  MeqJonesExpr itsRight;
+  MeqExpr itsI;
+  MeqExpr itsQ;
+  MeqExpr itsU;
+  MeqExpr itsV;
+  MeqExpr itsMajor;
+  MeqExpr itsMinor;
+  MeqExpr itsPhi;
 };
 
 // @}
 
 } // namespace BBS
 } // namespace LOFAR
-
 
 #endif

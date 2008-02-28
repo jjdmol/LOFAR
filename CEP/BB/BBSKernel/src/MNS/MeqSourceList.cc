@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 #include <BBSKernel/MNS/MeqSourceList.h>
 #include <BBSKernel/MNS/MeqPointSource.h>
-#include <BBSKernel/MNS/MeqGaussSource.h>
+#include <BBSKernel/MNS/MeqGaussianSource.h>
 #include <BBSKernel/MNS/MeqParmFunklet.h>
 #include <Common/LofarLogger.h>
 
@@ -106,14 +106,16 @@ MeqSourceList::MeqSourceList (LOFAR::ParmDB::ParmDB& parmTable, MeqParmGroup& gr
     if (std::find(gnams.begin(), gnams.end(), name) == gnams.end()) {
       add (new MeqPointSource(name, name, mi, mq, mu, mv, mr, md));
     } else {
+      LOG_DEBUG_STR("Found gaussian source: " << name);
+
       MeqExpr mmin = MeqParmFunklet::create ("Minor:"+name,
 					     group, &parmTable);
       MeqExpr mmaj = MeqParmFunklet::create ("Major:"+name,
 					     group, &parmTable);
       MeqExpr mphi = MeqParmFunklet::create ("Phi:"+name,
 					     group, &parmTable);
-      add (new MeqGaussSource(name, name, mi, mq, mu, mv, mr, md,
-			      mmin, mmaj, mphi));
+      add (new MeqGaussianSource(name, name, mi, mq, mu, mv, mr, md,
+			      mmaj, mmin, mphi));
     }
 //    cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
   }

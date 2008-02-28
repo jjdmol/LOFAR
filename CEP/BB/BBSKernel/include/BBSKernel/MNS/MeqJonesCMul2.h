@@ -23,7 +23,7 @@
 #define MNS_MEQJONESCMUL2_H
 
 // \file
-// Calculate left*conj(right)
+// Calculate left*conj(transpose(right))
 
 //# Includes
 #include <BBSKernel/MNS/MeqJonesExpr.h>
@@ -38,7 +38,7 @@ namespace BBS
 // @{
 
 
-// Calculate left*conj(right).
+// Calculate left*conj(transpose(right)).
 
 class MeqJonesCMul2: public MeqJonesExprRep
 {

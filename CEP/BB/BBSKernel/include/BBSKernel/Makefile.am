@@ -15,19 +15,19 @@ pkginclude_HEADERS = Package__Version.h 		\
 
 pkginclude_MNS_HEADERS	= 	\
 	MNS/MeqAzEl.h		\
-	MNS/MeqBaseDFTPS.h	\
-	MNS/MeqBaseLinPS.h	\
 	MNS/MeqDFTPS.h		\
 	MNS/MeqDiag.h		\
 	MNS/MeqDipoleBeam.h	\
 	MNS/MeqDomain.h		\
 	MNS/MeqExpr.h		\
 	MNS/MeqFunklet.h	\
-	MNS/MeqGaussSource.h	\
+	MNS/MeqGaussianCoherency.h	\
+	MNS/MeqGaussianSource.h	\
 	MNS/MeqJonesCMul2.h	\
 	MNS/MeqJonesCMul3.h	\
 	MNS/MeqJonesExpr.h	\
 	MNS/MeqJonesInvert.h	\
+	MNS/MeqJonesMul.h	\
 	MNS/MeqJonesMul2.h	\
 	MNS/MeqJonesMul3.h	\
 	MNS/MeqJonesNode.h	\
@@ -47,6 +47,8 @@ pkginclude_MNS_HEADERS	= 	\
 	MNS/MeqParm.h		\
 	MNS/MeqParmSingle.h	\
 	MNS/MeqPhaseRef.h	\
+	MNS/MeqPhaseShift.h	\
+	MNS/MeqPointCoherency.h	\
 	MNS/MeqPointSource.h	\
 	MNS/MeqPolc.h		\
 	MNS/MeqPolcLog.h	\

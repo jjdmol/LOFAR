@@ -51,13 +51,13 @@ public:
 
   virtual ~MeqPointSource();
 
-  MeqExpr& getI()
+  MeqExpr getI() const
     { return itsI; }
-  MeqExpr& getQ()
+  MeqExpr getQ() const
     { return itsQ; }
-  MeqExpr& getU()
+  MeqExpr getU() const
     { return itsU; }
-  MeqExpr& getV()
+  MeqExpr getV() const
     { return itsV; }
 
 private:
