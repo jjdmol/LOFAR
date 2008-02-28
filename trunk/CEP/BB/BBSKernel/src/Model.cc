@@ -30,8 +30,10 @@
 #include <BBSKernel/MNS/MeqParmSingle.h>
 #include <BBSKernel/MNS/MeqDiag.h>
 #include <BBSKernel/MNS/MeqJonesInvert.h>
-#include <BBSKernel/MNS/MeqBaseDFTPS.h>
-#include <BBSKernel/MNS/MeqBaseLinPS.h>
+#include <BBSKernel/MNS/MeqPhaseShift.h>
+#include <BBSKernel/MNS/MeqPointCoherency.h>
+#include <BBSKernel/MNS/MeqGaussianCoherency.h>
+#include <BBSKernel/MNS/MeqJonesMul.h>
 #include <BBSKernel/MNS/MeqJonesCMul3.h>
 #include <BBSKernel/MNS/MeqJonesSum.h>
 #include <BBSKernel/MNS/MeqJonesVisData.h>
@@ -362,14 +364,28 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             {
                 // Phase shift (incorporates geometry and fringe stopping).
                 MeqExpr shift
-                    (new MeqBaseDFTPS(dft[baseline.first * nSources + j],
-                    dft[baseline.second * nSources + j], itsLMNNodes[j]));
+                    (new MeqPhaseShift(dft[baseline.first * nSources + j],
+                    dft[baseline.second * nSources + j]));
 
-                // Point source.
+                MeqJonesExpr sourceExpr;
+
                 MeqPointSource *source =
                     dynamic_cast<MeqPointSource*>(itsSourceNodes[j]);
 
-                MeqJonesExpr sourceExpr = new MeqBaseLinPS(shift, source);
+                if(source)
+                {
+                    // Point source.
+                    sourceExpr = new MeqPointCoherency(source);
+                }
+                else
+                {
+                    MeqGaussianSource *source = dynamic_cast<MeqGaussianSource*>(itsSourceNodes[j]);
+                    ASSERT(source);
+                    sourceExpr = new MeqGaussianCoherency(source, itsUVWNodes[baseline.first].get(), itsUVWNodes[baseline.second].get());
+                }
+
+                // Phase shift the source coherency.
+                sourceExpr = new MeqJonesMul(sourceExpr, shift);
                 
                 // Apply image plane effects if required.
                 if(mask[DIPOLE_BEAM])

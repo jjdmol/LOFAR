@@ -1,4 +1,4 @@
-//# MeqBaseLinPS.h: Baseline prediction of a point source with linear polarisation
+//# MeqPointCoherency.h: Spatial coherence function of a point source.
 //#
 //# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,11 +20,11 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQBASELINPS_H
-#define MNS_MEQBASELINPS_H
+#ifndef MNS_MEQPOINTCOHERENCY_H
+#define MNS_MEQPOINTCOHENRECY_H
 
 // \file
-// Baseline prediction of a point source with linear polarisation.
+// Spatial coherence function of a point source.
 
 //# Includes
 #include <BBSKernel/MNS/MeqJonesExpr.h>
@@ -44,23 +44,21 @@ namespace BBS
 //# Forward Declarations
 
 
-class MeqBaseLinPS: public MeqJonesExprRep
+class MeqPointCoherency: public MeqJonesExprRep
 {
 public:
-  MeqBaseLinPS (const MeqExpr& dft, MeqPointSource* src);
-
-  ~MeqBaseLinPS();
+  MeqPointCoherency(const MeqPointSource *source);
+  ~MeqPointCoherency();
 
   // Calculate the results for the given domain.
-  virtual MeqJonesResult getJResult (const MeqRequest&);
+  virtual MeqJonesResult getJResult(const MeqRequest &request);
 
 private:
 #ifdef EXPR_GRAPH
   virtual std::string getLabel();
 #endif
 
-  MeqExpr         itsDFT;
-  MeqPointSource* itsSource;
+  const MeqPointSource *itsSource;
 };
 
 // @}

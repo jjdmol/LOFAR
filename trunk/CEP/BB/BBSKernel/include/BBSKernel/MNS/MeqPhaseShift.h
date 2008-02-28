@@ -1,6 +1,7 @@
-//# MeqGaussSource.h: Class holding a gaussian source
+//# MeqPhaseShift.h: Phase delay due to baseline geometry with respect to source
+//#     direction.
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2005
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,15 +21,14 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQGAUSSSOURCE_H
-#define MNS_MEQGAUSSSOURCE_H
+#ifndef MNS_MEQPHASESHIFT_H
+#define MNS_MEQPHASESHIFT_H
 
 // \file
-// Class holding a gaussian source
+// Phase delay due to baseline geometry with respect to source direction.
 
 //# Includes
-#include <BBSKernel/MNS/MeqSource.h>
-#include <Common/lofar_string.h>
+#include <BBSKernel/MNS/MeqExpr.h>
 
 namespace LOFAR
 {
@@ -39,44 +39,22 @@ namespace BBS
 // \addtogroup MNS
 // @{
 
-
-class MeqGaussSource: public MeqSource
+class MeqPhaseShift: public MeqExprRep
 {
 public:
-  MeqGaussSource (const string& name,
-		  const string& groupName,
-		  const MeqExpr& fluxI, const MeqExpr& fluxQ,
-		  const MeqExpr& fluxU, const MeqExpr& fluxV,
-		  const MeqExpr& ra, const MeqExpr& dec,
-		  const MeqExpr& minor, const MeqExpr& major,
-		  const MeqExpr& phi);
-  
+    MeqPhaseShift (const MeqExpr& left, const MeqExpr& right);
+    ~MeqPhaseShift();
 
-  virtual ~MeqGaussSource();
-
-  MeqExpr& getI()
-    { return itsI; }
-  MeqExpr& getQ()
-    { return itsQ; }
-  MeqExpr& getU()
-    { return itsU; }
-  MeqExpr& getV()
-    { return itsV; }
-  MeqExpr& getMinor()
-    { return itsMinor; }
-  MeqExpr& getMajor()
-    { return itsMajor; }
-  MeqExpr& getPhi()
-    { return itsPhi; }
+    // Calculate the results for the given domain.
+    virtual MeqResult getResult(const MeqRequest &request);
 
 private:
-  MeqExpr itsI;
-  MeqExpr itsQ;
-  MeqExpr itsU;
-  MeqExpr itsV;
-  MeqExpr itsMinor;
-  MeqExpr itsMajor;
-  MeqExpr itsPhi;
+    #ifdef EXPR_GRAPH
+    virtual std::string getLabel();
+    #endif
+
+    MeqExpr itsLeft;
+    MeqExpr itsRight;
 };
 
 // @}

@@ -9,19 +9,19 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	VisData.cc		\
 	VisSelection.cc		\
 	MNS/MeqAzEl.cc		\
-	MNS/MeqBaseDFTPS.cc	\
-	MNS/MeqBaseLinPS.cc	\
 	MNS/MeqDFTPS.cc		\
 	MNS/MeqDiag.cc		\
 	MNS/MeqDipoleBeam.cc	\
 	MNS/MeqDomain.cc	\
 	MNS/MeqExpr.cc		\
 	MNS/MeqFunklet.cc	\
-	MNS/MeqGaussSource.cc	\
+	MNS/MeqGaussianCoherency.cc	\
+	MNS/MeqGaussianSource.cc	\
 	MNS/MeqJonesCMul2.cc	\
 	MNS/MeqJonesCMul3.cc	\
 	MNS/MeqJonesExpr.cc	\
 	MNS/MeqJonesInvert.cc	\
+	MNS/MeqJonesMul.cc	\
 	MNS/MeqJonesMul2.cc	\
 	MNS/MeqJonesMul3.cc	\
 	MNS/MeqJonesNode.cc	\
@@ -40,6 +40,8 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	MNS/MeqParmFunklet.cc	\
 	MNS/MeqParmSingle.cc	\
 	MNS/MeqPhaseRef.cc	\
+	MNS/MeqPhaseShift.cc	\
+	MNS/MeqPointCoherency.cc	\
 	MNS/MeqPointSource.cc	\
 	MNS/MeqPolc.cc		\
 	MNS/MeqPolcLog.cc	\

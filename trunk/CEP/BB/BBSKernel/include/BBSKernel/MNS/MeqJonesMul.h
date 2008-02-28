@@ -1,6 +1,7 @@
-//# MeqBaseDFTPS.h: Baseline DFT of a point source
+//# MeqJonesMul.h: Multiply each component of a MeqJonesExpr with a single
+//#     MeqExpr.
 //#
-//# Copyright (C) 2005
+//# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,14 +21,14 @@
 //#
 //# $Id$
 
-#ifndef MNS_MEQBASEDFTPS_H
-#define MNS_MEQBASEDFTPS_H
+#ifndef MNS_MEQJONESMUL_H
+#define MNS_MEQJONESMUL_H
 
-// \file
-// Baseline DFT of a point source.
+// \file Multiply each component of a MeqJonesExpr with a single MeqExpr.
 
-//# Includes
 #include <BBSKernel/MNS/MeqExpr.h>
+#include <BBSKernel/MNS/MeqJonesExpr.h>
+#include <BBSKernel/MNS/MeqJonesResult.h>
 
 namespace LOFAR
 {
@@ -38,25 +39,25 @@ namespace BBS
 // \addtogroup MNS
 // @{
 
-class MeqBaseDFTPS: public MeqExprRep
+
+// Multiply each component of a MeqJonesExpr with a single MeqExpr.
+
+class MeqJonesMul: public MeqJonesExprRep
 {
 public:
-  MeqBaseDFTPS (const MeqExpr& left, const MeqExpr& right,
-        const MeqExpr& lmn);
+    MeqJonesMul(const MeqJonesExpr &left, const MeqExpr &right);
+    ~MeqJonesMul();
 
-  ~MeqBaseDFTPS();
-
-  // Calculate the results for the given domain.
-  virtual MeqResult getResult (const MeqRequest&);
+    // Get the result of the expression for the given domain.
+    MeqJonesResult getJResult(const MeqRequest &request);
 
 private:
 #ifdef EXPR_GRAPH
-  virtual std::string getLabel();
+    virtual std::string getLabel();
 #endif
 
-  MeqExpr itsLeft;
-  MeqExpr itsRight;
-  MeqExpr itsLMN;
+    MeqJonesExpr	itsLeft;
+    MeqExpr             itsRight;
 };
 
 // @}
