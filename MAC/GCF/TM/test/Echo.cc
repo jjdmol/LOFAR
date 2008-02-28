@@ -26,12 +26,9 @@
 #include "Echo_Protocol.ph"
 #include <Common/lofar_iostream.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
@@ -39,15 +36,14 @@ Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
   registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_STRINGS);
 
   // initialize the port
-  server.init(*this, "server", GCFPortInterface::SPP, ECHO_PROTOCOL);
+  server.init(*this, "EchoServer", GCFPortInterface::SPP, ECHO_PROTOCOL);
 }
 
 GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-    {
+  switch (e.signal) {
     case F_INIT:
       break;
 
@@ -58,22 +54,21 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       break;
 
     case F_CONNECTED:
-      if (server.isConnected())
-      {
+      if (server.isConnected()) {
         TRAN(Echo::connected);
       }
       break;
 
     case F_DISCONNECTED:
-      if (!server.isConnected())
+      if (!server.isConnected()) {
         server.setTimer(1.0); // try again after 1 second
+	  }
       break;
-
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-    }
+  }
 
   return status;
 }
@@ -82,8 +77,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal)
-  {
+  switch (e.signal) {
     case F_DISCONNECTED:
       cout << "Lost connection to client" << endl;
       p.close();
@@ -92,8 +86,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
       TRAN(Echo::initial);
       break;
       
-    case ECHO_PING:
-    {
+    case ECHO_PING: {
       EchoPingEvent ping(e);
       // for instance these 3 lines can force an interrupt on the parallele port if
       // the pin 9 and 10 are connected together. The interrupt can be seen by means of
@@ -116,8 +109,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
       break;
     }
     
-    case F_DATAIN:
-    {
+    case F_DATAIN: {
       cout << "Clock pulse: ";
       // always the recv has to be invoked. Otherwise this F_DATAIN keeps comming 
       // on each select
