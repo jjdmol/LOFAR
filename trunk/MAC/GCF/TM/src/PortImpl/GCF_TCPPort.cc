@@ -365,6 +365,10 @@ bool GCFTCPPort::close()
 	if (!itsFixedPortNr) {	// when portnumber was resolved clear it, so that on
 		_portNumber = 0;	// the next open it will be resolved again.
 	}
+	// make sure a single server port is unregistered to that is can be 'connect'ed again.
+	if (getType() == SPP) {
+		_broker->deletePort(*this);
+	}
 	schedule_close();
 
 	// return success when port is still connected

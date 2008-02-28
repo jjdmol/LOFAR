@@ -49,79 +49,28 @@ static char			receiveBuffer[24*4096];
 EventPort::EventPort(const string&		aServiceMask,
 					 bool				aServerSocket,
 					 int				aProtocol,
-					 const string&		aHostname) :
-	itsPort		   (0),
-	itsHost		   (aHostname),
-	itsSocket	   (0),
-	itsListenSocket(0),
-	itsBrokerSocket(0)
+					 const string&		aHostname,
+					 bool				syncCommunication) :
+	itsPort			(0),
+	itsHost			(aHostname),
+	itsServiceName	(_makeServiceName(aServiceMask, 0)),
+	itsSocket		(0),
+	itsListenSocket	(0),
+	itsBrokerSocket	(0),
+	itsStatus		(EP_CREATED),
+	itsSyncComm		(syncCommunication),
+	itsIsServer		(aServerSocket)
 {
 	if (itsHost.empty() || itsHost == "localhost") {
 		itsHost = Common::myHostname(false);
 	} 
 
-	// First make a connection with the servicebroker and ask the SB on which
-	// port the service is running.
-	LOG_DEBUG ("Trying to make connection with the ServiceBroker");
-
-	Socket*		itsBrokerSocket(new Socket("ServiceBroker", itsHost, toString(MAC_SERVICEBROKER_PORT)));
+	// We always need a socket to the serviceBroker for getting a portnumber we may use.
+	itsBrokerSocket = new Socket("ServiceBroker", itsHost, toString(MAC_SERVICEBROKER_PORT));
 	ASSERTSTR(itsBrokerSocket, "can't allocate socket to serviceBroker");
-	itsBrokerSocket->connect(-1);				// try to connect, wait forever
-	itsBrokerSocket->setBlocking(true);		// no other tasks, do rest blocking
+cout << "BS0=" << itsBrokerSocket << endl;
 
-	string	serviceName(makeServiceName(aServiceMask, 0));
-	// construct the question.
-	if (aServerSocket) {
-		SBRegisterServiceEvent	request;
-		request.seqnr		= 5;
-		request.servicename	= serviceName;
-
-		// send question
-		sendEvent(itsBrokerSocket, &request);
-
-		// wait for response
-		SBServiceRegisteredEvent response(receiveEvent(itsBrokerSocket));
-		ASSERTSTR(response.result == 0, "Service " << serviceName << " can not be used");
-		itsPort = response.portnumber;
-		LOG_DEBUG_STR("Service " << serviceName << " will be at port " << itsPort);
-
-		// note: keep connection with Broker so he knows we are in the air.
-	}
-	else {
-		SBGetServiceinfoEvent	request;
-		request.seqnr		= 5;
-		request.servicename	= serviceName;
-		request.hostname	= aHostname;
-
-		// send question
-		sendEvent(itsBrokerSocket, &request);
-
-		// wait for response
-		SBServiceInfoEvent response(receiveEvent(itsBrokerSocket));
-		ASSERTSTR(response.result == 0, "Service " << serviceName << " is unknown");
-		itsPort = response.portnumber;
-		LOG_DEBUG_STR("Service " << serviceName << " is at port " << itsPort);
-
-		// close connection with Broker.
-		itsBrokerSocket->shutdown();
-		itsBrokerSocket = 0;
-	}
-
-	// Finally we can make the real connection
-	if (aServerSocket) {
-		LOG_DEBUG_STR ("Opening listener on port " << itsPort);
-		itsListenSocket = new Socket(serviceName, toString(itsPort), Socket::TCP);
-		itsSocket = itsListenSocket->accept(-1);
-		itsSocket->setBlocking(true);		// assume sync. See note.
-	}
-	else {
-		LOG_DEBUG_STR ("Trying to make connection with " << serviceName);
-		itsSocket = new Socket(serviceName, itsHost, toString(itsPort), Socket::TCP);
-		itsSocket->connect(1000);
-		itsSocket->setBlocking(true);		// assume sync. See note.
-	}
-	// Note: sockets are set to blocking. Setting them to non-blocking requires
-	//		 different code in receiveEvent().
+	_setupConnection();
 }
 
 //
@@ -146,11 +95,212 @@ EventPort::~EventPort()
 }
 
 //
+// connect()
+//
+bool EventPort::connect()
+{
+cout << "BS1=" << itsBrokerSocket << endl;
+	return (_setupConnection());
+}
+
+//
+// _setupConnection()
+//
+// Depending of the stage that is already reached in the connection process, this
+// function tries to continue from there till a connection is made.
+//
+// Note: all error handling is in this 'overall' routine to keep the subroutines
+//		 that are called as easy as possible.
+//
+bool EventPort::_setupConnection()
+{
+	// test most likely state first for performance
+	if (itsStatus == EP_CONNECTED) {
+		return (true);
+	}
+
+	// not connected, so we left somewhere in the connection sequence, pick the sequence
+	// at the right place.
+
+	// No connection to the SB yet?
+	if (itsStatus == EP_CREATED) {
+		LOG_DEBUG ("Trying to make connection with the ServiceBroker");
+cout << "BS2=" << itsBrokerSocket << endl;
+		itsBrokerSocket->connect(itsSyncComm ? -1 : 500);	// try to connect, wait forever or 0.5 sec
+		if (!itsBrokerSocket->isConnected()) {	// failed?
+			if (itsSyncComm) {
+				ASSERTSTR(false, "Cannot connect to the ServiceBroker");
+			}
+			return (false);		// async socket allows failures.
+		}
+		itsStatus = EP_SEES_SB;
+		itsBrokerSocket->setBlocking(itsSyncComm);		// no other tasks, do rest blocking
+	}
+
+	// second step: ask service broker the portnumber
+	if (itsStatus == EP_SEES_SB) {
+		if (!_askBrokerThePortNumber()) {
+			if (itsSyncComm) {
+				ASSERTSTR(false, "Cannot contact the ServiceBroker");
+			}
+			return (false);		// async socket allows failures.
+		}
+		itsStatus = EP_WAIT_FOR_SB_ANSWER;
+	}
+
+	// third step: wait for the answer of the SB
+	if (itsStatus == EP_WAIT_FOR_SB_ANSWER) {
+		if (!_waitForSBAnswer()) {
+			if (itsSyncComm) {
+				ASSERTSTR(false, "Cannot contact the other party");
+			}
+			return (false);		// async socket allows failures.
+		}
+		itsStatus = EP_KNOWS_DEST;
+	}
+
+	// fourth step: try to connect to the real socket.
+	if (itsStatus == EP_KNOWS_DEST) {
+		if (!_startConnectionToPeer()) {
+			if (itsSyncComm) {
+				ASSERTSTR(false, "Cannot contact the other party");
+			}
+			return (false);		// async socket allows failures.
+		}
+		itsStatus = EP_CONNECTING;
+	}
+
+	// fifth step: wait for response of connection request
+	if (itsStatus == EP_CONNECTING) {
+		if (!_waitForPeerResponse()) {
+			if (itsSyncComm) {
+				ASSERTSTR(false, "Cannot contact the other party");
+			}
+			return (false);		// async socket allows failures.
+		}
+		itsStatus = EP_CONNECTED;
+	}
+
+	return (itsStatus == EP_CONNECTED);
+}
+
+//
+// send a message to the message broker requesting a portnumber
+//
+bool EventPort::_askBrokerThePortNumber()
+{
+	// construct the question.
+	if (itsIsServer) {
+		// tell SB the name of our service
+		SBRegisterServiceEvent	request;
+		request.seqnr		= 5;	// or any other number
+		request.servicename	= itsServiceName;
+
+		// send question
+		sendEvent(itsBrokerSocket, &request);
+	}
+	else {	// client socket
+		// ask SB the portnumber of the (operational) service.
+		SBGetServiceinfoEvent	request;
+		request.seqnr		= 5;	// or any other number
+		request.servicename	= itsServiceName;
+		request.hostname	= itsHost;
+
+		// send question
+		sendEvent(itsBrokerSocket, &request);
+	}
+
+	return (true);
+}
+
+//
+// waitForSBAnswer()
+//
+// Wait until we received a response from the service broker.
+//
+bool EventPort::_waitForSBAnswer()
+{
+	// wait for response
+	GCFEvent*	answerEventPtr(receiveEvent(itsBrokerSocket));
+	if (!answerEventPtr) {
+		return (false);
+	}
+
+	// a complete event was received, handle it.
+	if (itsIsServer) {
+		SBServiceRegisteredEvent response(*answerEventPtr);
+		if (response.result != 0) {
+			LOG_ERROR_STR("Service " << itsServiceName << " is already on the air.");
+			return (false);
+		}
+		itsPort = response.portnumber;
+		LOG_DEBUG_STR("Service " << itsServiceName << " will be at port " << itsPort);
+		// note: keep connection with Broker so he knows we are on the air.
+	}
+	else {	// client socket
+		SBServiceInfoEvent response(*answerEventPtr);
+		if (response.result != 0) {
+			LOG_ERROR_STR("Service " << itsServiceName << " is unknown");
+			return (false);
+		}
+		itsPort = response.portnumber;
+		LOG_DEBUG_STR("Service " << itsServiceName << " is at port " << itsPort);
+
+		// close connection with Broker.
+		itsBrokerSocket->shutdown();
+		itsBrokerSocket = 0;
+	}
+
+	return (true);
+}
+
+//
+// _startConnectionToPeer()
+//
+bool EventPort::_startConnectionToPeer()
+{
+	// Finally we can make the real connection
+	if (itsIsServer) {
+		LOG_DEBUG_STR ("Opening listener on port " << itsPort);
+		itsListenSocket = new Socket(itsServiceName, toString(itsPort), Socket::TCP);
+		itsSocket = itsListenSocket->accept(itsSyncComm ? -1 : 500);
+	}
+	else {
+		LOG_DEBUG_STR ("Trying to make connection with " << itsServiceName);
+		itsSocket = new Socket(itsServiceName, itsHost, toString(itsPort), Socket::TCP);
+		itsSocket->connect(itsSyncComm ? -1 : 500);	// try to connect, wait forever or 0.5 sec
+	}
+	return (true);
+}
+
+//
+// _waitForPeerResponse()
+//
+bool EventPort::_waitForPeerResponse()
+{
+	// connection (already) successful?
+	if (itsSocket->isConnected()) {
+		itsSocket->setBlocking(itsSyncComm);
+		return (true);
+	}
+
+	// do a retry
+	if (itsIsServer) {
+		itsSocket = itsListenSocket->accept(itsSyncComm ? -1 : 500);
+	}
+	else {
+		itsSocket->connect(itsSyncComm ? -1 : 500);	// try to connect, wait forever or 0.5 sec
+	}
+
+	return (false);
+}
+
+//
 // send(Event*)
 //
 bool EventPort::send(GCFEvent*	anEvent)
 {
-	if (!itsSocket->isConnected() && !itsSocket->connect()) {
+	if (!_setupConnection()) {
 		return (false);
 	}
 
@@ -161,15 +311,15 @@ bool EventPort::send(GCFEvent*	anEvent)
 //
 // receive() : Event
 //
-GCFEvent&	EventPort::receive()
+GCFEvent*	EventPort::receive()
 {
-	return (receiveEvent(itsSocket));
+	return (_setupConnection() ? receiveEvent(itsSocket) : 0L);
 }
 
 //
-// makeServiceName(mask, number)
+// _makeServiceName(mask, number)
 //
-string	EventPort::makeServiceName(const string&	aServiceMask, int32		aNumber)
+string	EventPort::_makeServiceName(const string&	aServiceMask, int32		aNumber)
 {
 	// NOTE: this code is copied from GCF/TM/Port/GCF_PortInterface.cc
 	string	instanceNrStr;
@@ -198,37 +348,67 @@ void EventPort::sendEvent(Socket*		aSocket,
 //
 // static receiveEvent(aSocket)
 //
-GCFEvent&	EventPort::receiveEvent(Socket*	aSocket)
+GCFEvent*	EventPort::receiveEvent(Socket*	aSocket)
 {
-	// First read header if answer:
-	// That is signal field + length field.
-	GCFEvent*	header = (GCFEvent*) &receiveBuffer[0];
-	int32		btsRead;
-	btsRead = aSocket->read((void*) &(header->signal), sizeof(header->signal));
-	ASSERTSTR(btsRead == sizeof(header->signal), "Only " << btsRead << " of " 
-						<< sizeof(header->signal) << " bytes of header read");
-	btsRead = aSocket->read((void*) &(header->length), sizeof(header->length));
-	ASSERTSTR(btsRead == sizeof(header->length), "Only " << btsRead << " of " 
-						<< sizeof(header->length) << " bytes of header read");
+	static int32	gBtsToRead(0);
+	static int32	gTotalBtsRead(0);
+	static int32	gReadState(0);
 
-	LOG_DEBUG("Header received");
+	GCFEvent*		header ((GCFEvent*) &receiveBuffer[0]);
+	int32			btsRead(0);
 
-	// Is there a payload in the message? This should be the case!
-	int32	remainingBytes = header->length;
-	LOG_DEBUG_STR(remainingBytes << " bytes to get next");
-	if (remainingBytes <= 0) {
-		return(*header);
+	// first read signal (= eventtype) field
+	if (gReadState == 0) {
+		btsRead = aSocket->read((void*) &(header->signal), sizeof(header->signal));
+		if (btsRead != sizeof(header->signal)) {
+			if (aSocket->isBlocking()) {
+				ASSERTSTR(false, "Event-type was not received");
+			}
+			return (0);		// async socket allows failures.
+		}
+		gReadState++;
 	}
 
-	// read remainder
-	btsRead = aSocket->read(&receiveBuffer[sizeof(GCFEvent)], remainingBytes);
-	ASSERTSTR(btsRead == remainingBytes,
-		  "Only " << btsRead << " bytes of msg read: " << remainingBytes);
+	// next read the length of the rest of the message
+	if (gReadState == 1) {
+		btsRead = aSocket->read((void*) &(header->length), sizeof(header->length));
+		if (btsRead != sizeof(header->length)) {
+			if (aSocket->isBlocking()) {
+				ASSERTSTR(false, "Event-length was not received");
+			}
+			return (0);		// async socket allows failures.
+		}
+		gReadState++;
+		gBtsToRead = header->length;		// get size of data part
+	}
 
-//	hexdump(receiveBuffer, sizeof(GCFEvent) + remainingBytes);
+	// finally read the datapart of the event
+	if (gReadState == 2) {
+		LOG_DEBUG_STR("Still " << gBtsToRead << " bytes of data to get");
 
-	// return Eventinformation
-	return (*header);
+		btsRead = 0;
+		if (gBtsToRead) {
+			btsRead = aSocket->read(&receiveBuffer[sizeof(GCFEvent) + gTotalBtsRead], gBtsToRead);
+			if (btsRead != gBtsToRead) {
+				if (aSocket->isBlocking()) {
+					ASSERTSTR(false, "Only " << btsRead << " bytes of msg read: " << gBtsToRead);
+				}
+				return (0);		// async socket allow failures
+			}
+		}
+
+		if (btsRead == gBtsToRead) {	// everything received?
+			// reset own admin
+			gReadState    = 0;
+			gTotalBtsRead = 0;
+			gBtsToRead    = 0;
+//			hexdump(receiveBuffer, sizeof(GCFEvent) + header->length);
+			return (header);
+		}
+	}
+
+	// not all information received yet
+	return (0L);
 }
 
  

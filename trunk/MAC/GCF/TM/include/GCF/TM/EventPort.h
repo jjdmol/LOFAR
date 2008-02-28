@@ -37,9 +37,20 @@ namespace LOFAR {
   namespace GCF {
     namespace TM {
 
-// \addtogroup package
+// \addtogroup TM
 // @{
 
+
+// Define states for the connection fases.
+enum {
+	EP_CREATED = 0,
+	EP_SEES_SB,
+	EP_WAIT_FOR_SB_ANSWER,
+	EP_KNOWS_DEST,
+	EP_CONNECTING,
+	EP_CONNECTED,
+	EP_DISCONNECTED
+};
 
 // The EventPort class is a LCS/Common Socket based TCP port to make it
 // possible for CEP applications to use the MAC protocols.
@@ -51,27 +62,36 @@ public:
 	EventPort::EventPort(const string&		aServiceMask,
 						 bool				aServerSocket,
 						 int				aProtocol,
-						 const string&		aHostname = "");
+						 const string&		aHostname = "",
+						 bool				syncCommunication = false);
 
 	// ~EventPort
 	EventPort::~EventPort();
+
+	// connect()
+	bool connect();
 
 	// send(Event*)
 	bool send(GCFEvent*	anEvent);
 
 	// receive() : Event
-	GCFEvent&	receive();
+	GCFEvent*	receive();
 
 private:
 	// static receiveEvent(aSocket)
-	static GCFEvent&	receiveEvent(Socket*	aSocket);
+	static GCFEvent*	receiveEvent(Socket*	aSocket);
 
 	// static sendEvent(Socket*, Event*)
 	static void sendEvent(Socket*		aSocket,
 						  GCFEvent*		anEvent);
 
-	// makeServiceName(mask, instanceNumber)
-	string	makeServiceName(const string&	aServiceMask, int32		aNumber);
+	// _internal routines: see source code for description
+	string	_makeServiceName(const string&	aServiceMask, int32		aNumber);
+	bool	_setupConnection();
+	bool	_askBrokerThePortNumber();
+	bool	_waitForSBAnswer();
+	bool	_startConnectionToPeer();
+	bool	_waitForPeerResponse();
 
 	EventPort();
 
@@ -82,9 +102,13 @@ private:
 	//# --- Datamembers ---
 	int32			itsPort;
 	string			itsHost;
+	string			itsServiceName;
 	Socket*			itsSocket;
 	Socket*			itsListenSocket;
 	Socket*			itsBrokerSocket;
+	int32			itsStatus;
+	bool			itsSyncComm;
+	bool			itsIsServer;
 };
 
 

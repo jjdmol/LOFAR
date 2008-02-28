@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <GCF/TM/EventPort.h>
 #include <GCF/GCF_ServiceInfo.h>
-#include "testprotocol.ph"
+#include "Echo_Protocol.ph"
 
 using namespace LOFAR;
 using namespace LOFAR::GCF;
@@ -34,7 +34,7 @@ int main (int32	argc, char*argv[]) {
 
 	INIT_LOGGER("tEventPort");
 	
-	EventPort	rspPort(MAC_SVCMASK_RSPDRIVER, false, TESTPROTOCOL);
+	EventPort	echoPort("ECHO:EchoServer", false, ECHO_PROTOCOL, "", true);	// syncComm
 
 #if 0
 	RSPGetconfigEvent   getConfig;
@@ -46,12 +46,24 @@ int main (int32	argc, char*argv[]) {
 	cout << "MaxRSPboards = " << ack.max_rspboards << endl;
 #else
 	// note this code will not work but it compiles.
-	TEST_PTCTestInEvent		inEvent;
-	inEvent.seqnr = 25;
-	inEvent.question = "What time is it?";
-	rspPort.send(&inEvent);
+	LOG_DEBUG("going to create an event");
+	EchoPingEvent		pingEvent;
+	pingEvent.seqnr = 25;
+	timeval		pingTime;
+	gettimeofday(&pingTime, 0);
+	pingEvent.ping_time = pingTime;
 
-	TEST_PTCTestOutEvent ack(rspPort.receive());
+	LOG_DEBUG("going to send the event");
+	echoPort.send(&pingEvent);
+
+	LOG_DEBUG("going to wait for the answer event");
+	EchoEchoEvent ack(*(echoPort.receive()));
+	LOG_DEBUG_STR("seqnr: " << ack.seqnr);
+	double	someTime;
+	someTime = 1.0 * ack.ping_time.tv_sec + (ack.ping_time.tv_usec / 1000000);
+	LOG_DEBUG_STR("ping : " << someTime);
+	someTime = 1.0 * ack.echo_time.tv_sec + (ack.echo_time.tv_usec / 1000000);
+	LOG_DEBUG_STR("pong : " << someTime);
 
 #endif
 
