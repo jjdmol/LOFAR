@@ -77,21 +77,25 @@ public:
 	// receive() : Event
 	GCFEvent*	receive();
 
+	// getStatus()
+	int getStatus() { return (itsStatus); }
+
 private:
 	// static receiveEvent(aSocket)
-	static GCFEvent*	receiveEvent(Socket*	aSocket);
+	GCFEvent*	receiveEvent(Socket*	aSocket);
 
 	// static sendEvent(Socket*, Event*)
-	static void sendEvent(Socket*		aSocket,
+	void sendEvent(Socket*		aSocket,
 						  GCFEvent*		anEvent);
 
 	// _internal routines: see source code for description
 	string	_makeServiceName(const string&	aServiceMask, int32		aNumber);
 	bool	_setupConnection();
-	bool	_askBrokerThePortNumber();
-	bool	_waitForSBAnswer();
-	bool	_startConnectionToPeer();
-	bool	_waitForPeerResponse();
+	int32	_askBrokerThePortNumber();
+	int32	_waitForSBAnswer();
+	int32	_startConnectionToPeer();
+	int32	_waitForPeerResponse();
+	void	_peerClosedConnection();
 
 	EventPort();
 

@@ -30,42 +30,72 @@ using namespace LOFAR;
 using namespace LOFAR::GCF;
 using namespace LOFAR::GCF::TM;
 
-int main (int32	argc, char*argv[]) {
+static	EchoPingEvent		pingEvent;
+static	EventPort*			echoPort;
+
+int main (int32	argc, char*argv[]) 
+{
+	bool	syncMode;
+	switch (argc) {
+	case 2:	
+		syncMode = (argv[1][0] == 's' || argv[1][0] == 'S');
+		break;
+	default:
+		cout << "Syntax: " << argv[0] << " a | s" << endl;
+		cout << "  the argument ('a' or 's') chooses the asynchrone or synchrone behaviour" << endl
+			 << "of the EventPort. The synchrone mode expects the ServiceBroker and the"  << endl
+			 << "Echo server running. If not it will assert. In this mode the EventPort" << endl
+			 << "wait forever for the answer." << endl 
+			 << "In asynchrone mode the EventPort will never complain and try forever to" << endl
+			 << "reach each of the connection stages and receive the messages. You can" << endl
+			 << "check the EventPort.status() to see in what state the port is." << endl;
+		return (1);
+	}
 
 	INIT_LOGGER("tEventPort");
-	
-	EventPort	echoPort("ECHO:EchoServer", false, ECHO_PROTOCOL, "", true);	// syncComm
 
-#if 0
-	RSPGetconfigEvent   getConfig;
-	rspPort.send(&getConfig);
+	// open port	
+	LOG_DEBUG_STR ("Operating in " << ((syncMode) ? "" : "a") << "synchrone mode.");
+	echoPort = new EventPort("ECHO:EchoServer", false, ECHO_PROTOCOL, "", syncMode);
 
-	RSPGetconfigackEvent ack(rspPort.receive());
-	cout << "NrRCUs       = " << ack.n_rcus << endl;
-	cout << "NrRSPboards  = " << ack.n_rspboards << endl;
-	cout << "MaxRSPboards = " << ack.max_rspboards << endl;
-#else
-	// note this code will not work but it compiles.
-	LOG_DEBUG("going to create an event");
-	EchoPingEvent		pingEvent;
+	// construct event
 	pingEvent.seqnr = 25;
 	timeval		pingTime;
 	gettimeofday(&pingTime, 0);
 	pingEvent.ping_time = pingTime;
 
-	LOG_DEBUG("going to send the event");
-	echoPort.send(&pingEvent);
+	LOG_DEBUG("sending the ping event");
+	if (syncMode) {
+		// NOTE: we could also use the while-loop of the asyncmode here.
+		echoPort->send(&pingEvent);
+	}
+	else {
+		while (!echoPort->send(&pingEvent)) {
+			cout << "state = " << echoPort->getStatus() << endl;
+			sleep (1);
+			;
+		}
+	}
 
 	LOG_DEBUG("going to wait for the answer event");
-	EchoEchoEvent ack(*(echoPort.receive()));
-	LOG_DEBUG_STR("seqnr: " << ack.seqnr);
-	double	someTime;
-	someTime = 1.0 * ack.ping_time.tv_sec + (ack.ping_time.tv_usec / 1000000);
-	LOG_DEBUG_STR("ping : " << someTime);
-	someTime = 1.0 * ack.echo_time.tv_sec + (ack.echo_time.tv_usec / 1000000);
-	LOG_DEBUG_STR("pong : " << someTime);
+	GCFEvent*	ackPtr;
+	if (syncMode) {
+		// NOTE: we could also use the while-loop of the asyncmode here.
+		ackPtr = echoPort->receive();
+	}
+	else {
+		while (!(ackPtr = echoPort->receive())) {
+			cout << "state = " << echoPort->getStatus() << endl;
+			sleep (1);
+			;
+		}
+	}
+	EchoEchoEvent	ack(*ackPtr);
 
-#endif
+	LOG_DEBUG_STR("seqnr: " << ack.seqnr);
+	double	delta =  (1.0 * ack.echo_time.tv_sec + (ack.echo_time.tv_usec / 1000000.0));
+			delta -= (1.0 * ack.ping_time.tv_sec + (ack.ping_time.tv_usec / 1000000.0));
+	LOG_DEBUG_STR("dTime: " << delta << " sec");
 
 	return (0);
 }
