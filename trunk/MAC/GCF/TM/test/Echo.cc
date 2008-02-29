@@ -26,6 +26,10 @@
 #include "Echo_Protocol.ph"
 #include <Common/lofar_iostream.h>
 
+static 	int		gDelay = 0;
+static	timeval	gTime;
+static	int		gSeqnr;
+
 namespace LOFAR {
  namespace GCF {
   namespace TM {
@@ -43,90 +47,104 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal) {
-    case F_INIT:
-      break;
+	switch (e.signal) {
+	case F_INIT:
+		break;
 
     case F_ENTRY:
     case F_TIMER:
-      if (!server.isConnected())
-        server.open();
-      break;
+		if (!server.isConnected())
+			server.open();
+		break;
 
     case F_CONNECTED:
-      if (server.isConnected()) {
-        TRAN(Echo::connected);
-      }
-      break;
+		if (server.isConnected()) {
+			TRAN(Echo::connected);
+		}
+		break;
 
     case F_DISCONNECTED:
-      if (!server.isConnected()) {
-        server.setTimer(1.0); // try again after 1 second
-	  }
-      break;
+		if (!server.isConnected()) {
+			server.setTimer(1.0); // try again after 1 second
+		}
+		break;
 
     default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
 
-  return status;
+	return (status);
 }
 
 GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 {
-  GCFEvent::TResult status = GCFEvent::HANDLED;
+	GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (e.signal) {
-    case F_DISCONNECTED:
-      cout << "Lost connection to client" << endl;
-      p.close();
-      break;
-    case F_CLOSED:
-      TRAN(Echo::initial);
-      break;
-      
-    case ECHO_PING: {
-      EchoPingEvent ping(e);
-      // for instance these 3 lines can force an interrupt on the parallele port if
-      // the pin 9 and 10 are connected together. The interrupt can be seen by means of
-      // the F_DATAIN signal (see below)
-      // Send a string, which starts with a 'S'|'s' means simulate an clock pulse interrupt 
-      // (in the case below only one character is even valid)
-      // otherwise an interrupt will be forced by means of setting the pin 9.
-      cout << "PING received (seqnr=" << ping.seqnr << ")" << endl;
-      
-      timeval echo_time;
-      gettimeofday(&echo_time, 0);
-      EchoEchoEvent echo;
-      echo.seqnr = ping.seqnr;
-      echo.ping_time = ping.ping_time;
-      echo.echo_time = echo_time;
-      
-      server.send(echo);
-      
-      cout << "ECHO sent" << endl;
-      break;
-    }
-    
-    case F_DATAIN: {
-      cout << "Clock pulse: ";
-      // always the recv has to be invoked. Otherwise this F_DATAIN keeps comming 
-      // on each select
-      char pulse[4096]; // size >= 1
-      p.recv(pulse, 4096); // will always return 1 if an interrupt was occured and 0 if not
-      pulse[1] = 0; // if interrupt occured the first char is filled with a '0' + number of occured interrupts 
-                    // in the driver sinds the last recv
-      cout << pulse << endl;
-      break;
-    }
-      
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
+	switch (e.signal) {
+	case F_DISCONNECTED:
+		cout << "Lost connection to client" << endl;
+		p.close();
+		break;
 
-  return status;
+	case F_CLOSED:
+		TRAN(Echo::initial);
+		break;
+
+	case ECHO_PING: {
+		EchoPingEvent ping(e);
+		// for instance these 3 lines can force an interrupt on the parallele port if
+		// the pin 9 and 10 are connected together. The interrupt can be seen by means of
+		// the F_DATAIN signal (see below)
+		// Send a string, which starts with a 'S'|'s' means simulate an clock pulse interrupt 
+		// (in the case below only one character is even valid)
+		// otherwise an interrupt will be forced by means of setting the pin 9.
+		cout << "PING received (seqnr=" << ping.seqnr << ")" << endl;
+		cout << "delay = " << gDelay << endl;
+		server.setTimer((gDelay < 0) ? -1.0 * gDelay : 1.0 * gDelay);
+		gSeqnr = ping.seqnr;
+		gTime  = ping.ping_time;
+		break;
+	}
+
+	case F_TIMER: {
+		if (gDelay < 0) {
+			p.close();
+			cout << "connection closed by me." << endl;
+			break;
+		}
+
+		timeval echo_time;
+		gettimeofday(&echo_time, 0);
+		EchoEchoEvent echo;
+		echo.seqnr = gSeqnr;
+		echo.ping_time = gTime;
+		echo.echo_time = echo_time;
+
+		server.send(echo);
+
+		cout << "ECHO sent" << endl;
+		break;
+	}
+
+	case F_DATAIN: {
+		cout << "Clock pulse: ";
+		// always the recv has to be invoked. Otherwise this F_DATAIN keeps comming 
+		// on each select
+		char pulse[4096]; // size >= 1
+		p.recv(pulse, 4096); // will always return 1 if an interrupt was occured and 0 if not
+		pulse[1] = 0; // if interrupt occured the first char is filled with a '0' + number of occured interrupts 
+		// in the driver sinds the last recv
+		cout << pulse << endl;
+		break;
+	}
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return (status);
 }
 
   } // namespace TM
@@ -134,16 +152,29 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
 } // namespace LOFAR
 
 using namespace LOFAR::GCF::TM;
+using namespace std;
 
 int main(int argc, char* argv[])
 {
-  GCFTask::init(argc, argv);
-  
-  Echo echo_task("ECHO");
+	GCFTask::init(argc, argv);
 
-  echo_task.start(); // make initial transition
+	switch (argc) {
+	case 1:		gDelay = 0;
+		break;
+	case 2:		gDelay = atoi(argv[1]);
+		break;
+	default:
+		cout << "Syntax: " << argv[0] << " [delay]" << endl;
+		cout << "  When delay is a positive value the server will wait that many seconds " << 
+				"before sending the respons." << endl;
+		cout << "  When delay is a negative value the server will disconnect after that " <<
+				"many seconds without sending the answer." << endl;
+		return (1);
+	}
 
-  GCFTask::run();
+	Echo echo_task("ECHO");
+	echo_task.start(); // make initial transition
+	GCFTask::run();
 
-  return 0;
+	return (0);
 }
