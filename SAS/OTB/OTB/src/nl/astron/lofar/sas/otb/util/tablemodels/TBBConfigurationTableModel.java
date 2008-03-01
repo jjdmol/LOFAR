@@ -26,7 +26,7 @@
  * @created 07-06-2006, 13:30
  *
  *
- * @version $Id:$
+ * @version $Id$
  *
  * @updated
  */
@@ -43,8 +43,10 @@ import org.apache.log4j.Logger;
  */
 public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableModel {
    
-    static Logger logger = Logger.getLogger(RSPMACTableModel.class);
+    static Logger logger = Logger.getLogger(TBBConfigurationTableModel.class);
     static String name = "TBBConfigurationTableModel";
+    
+    private String itsTreeType;
     
     
     /** Creates a new instance of TBBConfigurationTableModel */
@@ -79,12 +81,13 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
      *
      * @return True if succes else False
      */
-     public boolean fillTable(Vector<String> aMode,Vector<String> aBase,Vector<String> aStart, 
+     public boolean fillTable(String treeType,Vector<String> aMode,Vector<String> aBase,Vector<String> aStart, 
                              Vector<String> aStop, Vector<String> aFilter, Vector<String> aWindow, Vector<String> aC0, 
                              Vector<String> aC1, Vector<String> aC2, Vector<String> aC3, Vector<String> aRCUs) {
          
+        itsTreeType=treeType;
         // "clear" the table
-         setRowCount(0);
+        setRowCount(0);
         if (aMode==null||aBase==null||aStart==null||aStop==null||aFilter==null||aWindow==null||aC0==null||aC1==null||
                 aC2==null||aC3==null||aRCUs==null) {
             logger.error("Error in fillTable, null value in input found.");
@@ -92,19 +95,23 @@ public class TBBConfigurationTableModel extends javax.swing.table.DefaultTableMo
         }
         int length = aMode.size();
         
-        // need to skip first entry because it is the default (dummy) TBBsetting
-        for (int i=0; i<length-1; i++) {
-            String[]  newRow = { aMode.elementAt(i+1),
-                                 aBase.elementAt(i+1),
-                                 aStart.elementAt(i+1),
-                                 aStop.elementAt(i+1),
-                                 aFilter.elementAt(i+1),
-                                 aWindow.elementAt(i+1),
-                                 aC0.elementAt(i+1),
-                                 aC1.elementAt(i+1),
-                                 aC2.elementAt(i+1),
-                                 aC3.elementAt(i+1),
-                                 aRCUs.elementAt(i+1)};
+        // need to skip first entry because it is the default (dummy) TBBsetting in other then VHTree's
+        int offset=1;
+        if (itsTreeType.equals("VHtree")) {
+            offset=0;
+        }
+        for (int i=0; i<length-offset; i++) {
+            String[]  newRow = { aMode.elementAt(i+offset),
+                                 aBase.elementAt(i+offset),
+                                 aStart.elementAt(i+offset),
+                                 aStop.elementAt(i+offset),
+                                 aFilter.elementAt(i+offset),
+                                 aWindow.elementAt(i+offset),
+                                 aC0.elementAt(i+offset),
+                                 aC1.elementAt(i+offset),
+                                 aC2.elementAt(i+offset),
+                                 aC3.elementAt(i+offset),
+                                 aRCUs.elementAt(i+offset)};
             this.addRow(newRow);
         }
         fireTableDataChanged();

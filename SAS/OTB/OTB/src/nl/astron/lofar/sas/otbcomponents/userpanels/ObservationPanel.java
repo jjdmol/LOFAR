@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.BitSet;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.DefaultListModel;
@@ -37,6 +38,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
@@ -46,6 +48,8 @@ import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
 import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
+import nl.astron.lofar.sas.otb.util.tablemodels.BeamConfigurationTableModel;
+import nl.astron.lofar.sas.otbcomponents.BeamDialog;
 import org.apache.log4j.Logger;
 
 /**
@@ -120,7 +124,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aNode);
                     setField(itsNode,aParam,aNode);
                 //we need to get all the childs from the following nodes as well.
-                }else if (LofarUtils.keyName(aNode.name).equals("Beam")) {
+                }else if (LofarUtils.keyName(aNode.name).contains("Beam")) {
+                    itsBeams.addElement(aNode);
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 } else if (LofarUtils.keyName(aNode.name).equals("VirtualInstrument")) {
                     this.retrieveAndDisplayChildDataForNode(aNode);
@@ -278,10 +283,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         String parentName = LofarUtils.keyName(String.valueOf(parent.name));
         /* Set's the different fields in the GUI */
 
-        // Generic OLAP
-        if (aParam==null) {
-            return;
-        }
         logger.debug("setField for: "+ aNode.name);
         try {
             if (itsOtdbRmi.getRemoteTypes().getParamType(aParam.type).substring(0,1).equals("p")) {
@@ -323,21 +324,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     inputClockMode.setSelectedItem(aNode.limits);
                 }
                 itsClockMode=aNode;
-            } else if (aKeyName.equals("nyquistZone")) {        
-                inputNyquistZone.setToolTipText(aParam.description);
-                LofarUtils.setPopupComboChoices(inputNyquistZone,aParam.limits);
-                if (!aNode.limits.equals("")) {
-                  inputNyquistZone.setSelectedItem(aNode.limits);
-                }
-                itsNyquistZone=aNode;
-            } else if (aKeyName.equals("beamletList")) {        
-                inputBeamletList.setToolTipText(aParam.description);
-                itsBeamletList=aNode;
-                if (isRef && aParam != null) {
-                    inputBeamletList.setText(aNode.limits + " : " + aParam.limits);
-               } else {
-                    inputBeamletList.setText(aNode.limits);
-                }
             } else if (aKeyName.equals("receiverList")) {        
                 inputReceiverList.setToolTipText(aParam.description);
                 itsReceiverList=aNode;
@@ -345,49 +331,39 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                     inputReceiverList.setText(aNode.limits + " : " + aParam.limits);
                } else {
                     inputReceiverList.setText(aNode.limits);
-                }
-            } else if (aKeyName.equals("subbandList")) {        
-                inputSubbandList.setToolTipText(aParam.description);
-                itsSubbandList=aNode;
-                if (isRef && aParam != null) {
-                    inputSubbandList.setText(aNode.limits + " : " + aParam.limits);
-                } else {
-                    inputSubbandList.setText(aNode.limits);
-                }
+               }
+            } else if (aKeyName.equals("nrBeams")) {
+                itsNrBeams=aNode;
             }
-        } else if(parentName.equals("Beam")){        
+        } else if(parentName.contains("Beam")){        
             // Observation Beam parameters
             if (aKeyName.equals("angle1")) {        
-                inputAngle1.setToolTipText(aParam.description);
-                itsAngle1=aNode;
                 if (isRef && aParam != null) {
-                    inputAngle1.setText(aNode.limits + " : " + aParam.limits);
+                    itsAngle1.add(aNode.limits + " : " + aParam.limits);
                 } else {
-                    inputAngle1.setText(aNode.limits);
+                    itsAngle1.add(aNode.limits);
                 }
             } else if (aKeyName.equals("angle2")) {        
-                inputAngle2.setToolTipText(aParam.description);
-                itsAngle2=aNode;
                 if (isRef && aParam != null) {
-                    inputAngle2.setText(aNode.limits + " : " + aParam.limits);
+                    itsAngle2.add(aNode.limits + " : " + aParam.limits);
                 } else {
-                    inputAngle2.setText(aNode.limits);
+                    itsAngle2.add(aNode.limits);
                 }
-            } else if (aKeyName.equals("angleTimes")) {        
-                inputAngleTimes.setToolTipText(aParam.description);
-                itsAngleTimes=aNode;
+            } else if (aKeyName.equals("directionTypes")) { 
+                itsDirectionTypeChoices=aParam.limits;
+                itsDirectionTypes.add(aNode.limits);
+            } else if (aKeyName.equals("beamletList")) {        
                 if (isRef && aParam != null) {
-                    inputAngleTimes.setText(aNode.limits + " : " + aParam.limits);
+                    itsBeamletList.add(aNode.limits + " : " + aParam.limits);
+               } else {
+                    itsBeamletList.add(aNode.limits);
+               }
+            } else if (aKeyName.equals("subbandList")) {        
+                if (isRef && aParam != null) {
+                    itsSubbandList.add(aNode.limits + " : " + aParam.limits);
                 } else {
-                    inputAngleTimes.setText(aNode.limits);
-                }
-            } else if (aKeyName.equals("directionTypes")) {        
-                inputDirectionTypes.setToolTipText(aParam.description);
-                LofarUtils.setPopupComboChoices(inputDirectionTypes,aParam.limits);
-                if (!aNode.limits.equals("")) {
-                    inputDirectionTypes.setSelectedItem(aNode.limits);
-                }
-                itsDirectionTypes=aNode;
+                    itsSubbandList.add(aNode.limits);
+                }                
             }
         } else if(parentName.equals("VirtualInstrument")){        
             // Observation VirtualInstrument parameters
@@ -417,24 +393,29 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     /** Restore original Values in  panel
      */
     private void restore() {
+
       // Observation Specific parameters
       inputMSNameMask.setText(itsMSNameMask.limits);
       inputAntennaArray.setSelectedItem(itsAntennaArray.limits);
       inputBandFilter.setSelectedItem(itsBandFilter.limits);
       inputClockMode.setSelectedItem(itsClockMode.limits);
-      inputNyquistZone.setSelectedItem(itsNyquistZone.limits);
-      inputBeamletList.setText(itsBeamletList.limits);
       inputReceiverList.setText(itsReceiverList.limits);
-      inputSubbandList.setText(itsSubbandList.limits);
       inputDescription.setText("");
       inputTreeDescription.setText(itsOldTreeDescription);
     
-      // Observation Beam parameters
-      inputAngle1.setText(itsAngle1.limits);
-      inputAngle2.setText(itsAngle2.limits);
-      inputAngleTimes.setText(itsAngleTimes.limits);
-      inputDirectionTypes.setSelectedItem(itsDirectionTypes.limits);
-    
+      if (!itsTreeType.equals("VHtree")) {
+         // Observation Beam parameters
+         // create original Beamlet Bitset
+         fillBeamletBitset();
+      }
+
+      // set table back to initial values
+      itsBeamConfigurationTableModel.fillTable(itsTreeType,itsDirectionTypes,itsAngle1,itsAngle2,itsSubbandList,itsBeamletList);
+      
+     
+
+      buttonPanel1.setButtonEnabled("Restore",false);
+      buttonPanel1.setButtonEnabled("Save",false);    
   
       // Observation VirtualInstrument parameters
       //set the checkbox correctly when no stations are provided in the data
@@ -445,9 +426,36 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         aBorder.setTitle("Station Names");
         LofarUtils.fillList(stationsList,itsStationList.limits,false);
       }
+      
+      if (beamConfigurationPanel.getTableModel().getRowCount() == 8) {
+        this.addBeamButton.setEnabled(false);
+      } else {
+        this.addBeamButton.setEnabled(true);
+      }
     }
     
     
+    /** fill the Beamlet bitset to see what Beamlets have been set. To be able to determine later if a given Beamlet is indeed free.
+     */
+    private void fillBeamletBitset() {
+        itsUsedBeamlets.clear();
+        for (int i=1;i<itsBeamletList.size();i++) {
+            BitSet aNewBitSet=LofarUtils.beamletToBitSet(itsBeamletList.elementAt(i));
+            
+            // check if no duplication between the two bitsets
+            if (itsUsedBeamlets.intersects(aNewBitSet)) {
+                String errorMsg = "ERROR:  This BeamletList has beamlets defined that are allready used in a prior BeamConfiguration!!!!!  BeamNr: "+i;
+                JOptionPane.showMessageDialog(this,errorMsg,"BeamletError",JOptionPane.ERROR_MESSAGE);
+                logger.error(errorMsg );
+                return;
+            }
+            
+            // No intersection, both bitsets can be or
+            itsUsedBeamlets.or(aNewBitSet);
+        }
+    }
+    
+     
     private void initialize() {
         buttonPanel1.addButton("Restore");
         buttonPanel1.addButton("Save");
@@ -461,9 +469,22 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         this.modifyStationsCombobox.addItem("CS008");
         this.modifyStationsCombobox.addItem("CS010");
         this.modifyStationsCombobox.addItem("CS016");
+        
+        itsBeamConfigurationTableModel = new BeamConfigurationTableModel();
+        beamConfigurationPanel.setTableModel(itsBeamConfigurationTableModel);
+        beamConfigurationPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        beamConfigurationPanel.setColumnSize("dirtype",20);
+        beamConfigurationPanel.setColumnSize("angle 1",20);
+        beamConfigurationPanel.setColumnSize("angle 2",20);
+        beamConfigurationPanel.setColumnSize("subbands",250);
+        beamConfigurationPanel.setColumnSize("beamlets",250);
+        beamConfigurationPanel.repaint();
     }
     
     private void initPanel() {
+
+        itsMainFrame.setHourglassCursor();
+
         // check access
         UserAccount userAccount = itsMainFrame.getUserAccount();
 
@@ -492,6 +513,19 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }         } else {
             logger.debug("ERROR:  no node given");
         }
+        
+        // set defaults
+        // create initial beamletBitset
+        // create initial table
+        restore();
+        
+        if (itsTreeType.equals("VHtree")) {
+            this.setButtonsVisible(false);
+            this.setAllEnabled(false);
+        }
+
+        itsMainFrame.setNormalCursor();
+
     }
         
     /** saves the given node back to the database
@@ -512,6 +546,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   enabled     true/false enabled/disabled
      */
     public void enableButtons(boolean enabled) {
+        addBeamButton.setEnabled(enabled);
+        editBeamButton.setEnabled(enabled);
+        deleteBeamButton.setEnabled(enabled);
+        addStationButton.setEnabled(enabled);
+        deleteStationButton.setEnabled(enabled);
+        buttonPanel1.setButtonEnabled("Restore",enabled);
+        buttonPanel1.setButtonEnabled("Save",enabled);        
     }
     
     /** Sets the buttons visible/invisible
@@ -519,6 +560,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   visible     true/false visible/invisible
      */
     public void setButtonsVisible(boolean visible) {
+        addBeamButton.setVisible(visible);
+        editBeamButton.setVisible(visible);
+        deleteBeamButton.setVisible(visible);
+        addStationButton.setVisible(visible);
+        deleteStationButton.setVisible(visible);
+        buttonPanel1.setButtonVisible("Restore",visible);
+        buttonPanel1.setButtonVisible("Save",visible);
     }        
     
     /** Enables/disables the complete form
@@ -526,25 +574,82 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      * @param   enabled     true/false enabled/disabled
      */
     public void setAllEnabled(boolean enabled) {
+        this.inputAntennaArray.setEnabled(enabled);
+        this.inputBandFilter.setEnabled(enabled);
+        this.inputClockMode.setEnabled(enabled);
+        this.inputDescription.setEnabled(enabled);
+        this.inputMSNameMask.setEnabled(enabled);
+        this.inputReceiverList.setEnabled(enabled);
+        this.inputTreeDescription.setEnabled(enabled);
+        this.modifyStationsCombobox.setEnabled(enabled);
     }
     
-    private void saveInput() {
+    private boolean saveInput() {
         // Beam        
-        if (itsAngleTimes != null && !inputAngleTimes.equals(itsAngleTimes.limits)) {  
-            itsAngleTimes.limits = inputAngleTimes.getText();
-            saveNode(itsAngleTimes);
-        }
-        if (itsAngle1 != null && !inputAngle1.equals(itsAngle1.limits)) {  
-            itsAngle1.limits = inputAngle1.getText();
-            saveNode(itsAngle1);
-        }
-        if (itsAngle2 != null && !inputAngle2.equals(itsAngle2.limits)) {  
-            itsAngle2.limits = inputAngle2.getText();
-            saveNode(itsAngle2);
-        }
-        if (itsDirectionTypes != null && !inputDirectionTypes.getSelectedItem().toString().equals(itsDirectionTypes.limits)) {  
-            itsDirectionTypes.limits = inputDirectionTypes.getSelectedItem().toString();
-            saveNode(itsDirectionTypes);
+        int i=0;
+        //delete all Beams from the table (excluding the Default one); 
+        
+        // Keep the 1st one, it's the default Beam
+        try {
+            for (i=1; i< itsBeams.size(); i++) {
+                itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteNode(itsBeams.elementAt(i));  
+            }        
+        } catch (RemoteException ex) {
+            logger.error("Error during deletion of defaultNode: "+ex);
+            return false;
+        }  
+        
+        // now that all Nodes are deleted we should collect the tables input and create new Beams to save to the database.
+        itsBeamConfigurationTableModel.getTable(itsDirectionTypes,itsAngle1,itsAngle2,itsSubbandList,itsBeamletList);
+        // keep defaultTBBsetting save
+        jOTDBnode aDefaultNode= itsBeams.elementAt(0);
+        itsBeams.clear();        
+        try {
+            // for all elements
+            for (i=1; i < itsDirectionTypes.size();i++) {
+        
+                // make a dupnode from the default node, give it the next number in the count,get the elements and fill all values from the elements
+                // with the values from the set fields and save the elements again
+                //
+                // Duplicates the given node (and its parameters and children)
+                int aN = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().dupNode(itsNode.treeID(),aDefaultNode.nodeID(),(short)(i));
+                if (aN <= 0) {
+                    logger.error("Something went wrong with duplicating tree no ("+i+") will try to save remainder");
+                } else {
+                    // we got a new duplicate whos children need to be filled with the settings from the panel.
+                    jOTDBnode aNode = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getNode(itsNode.treeID(),aN);
+                    // store new duplicate in itsBeams.
+                    itsBeams.add(aNode);
+                
+                    Vector HWchilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+                    // get all the params per child
+                    Enumeration e1 = HWchilds.elements();
+                    while( e1.hasMoreElements()  ) {
+                        jOTDBnode aHWNode = (jOTDBnode)e1.nextElement();
+                        String aKeyName = LofarUtils.keyName(aHWNode.name);
+                        if (aKeyName.equals("directionTypes")) {
+                            aHWNode.limits=itsDirectionTypes.elementAt(i);
+                        } else if (aKeyName.equals("angle1")) {
+                            aHWNode.limits=itsAngle1.elementAt(i);
+                        } else if (aKeyName.equals("angle2")) {
+                            aHWNode.limits=itsAngle2.elementAt(i);
+                        } else if (aKeyName.equals("subbandList")) {
+                            aHWNode.limits=itsSubbandList.elementAt(i);
+                        } else if (aKeyName.equals("beamletList")) {
+                            aHWNode.limits=itsBeamletList.elementAt(i);
+                        }
+                        saveNode(aHWNode);
+                    }
+                }
+            }
+            
+            // store new number of instances in baseSetting
+            aDefaultNode.instances=(short)(itsDirectionTypes.size()-1); // - default at 0
+            saveNode(aDefaultNode);
+
+        } catch (RemoteException ex) {
+            logger.error("Error during duplication and save : " + ex);
+            return false;
         }
         
         //VirtualInstrument
@@ -559,17 +664,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsMSNameMask.limits = inputMSNameMask.getText();
             saveNode(itsMSNameMask);
         }
-        if (itsBeamletList != null && !inputBeamletList.equals(itsBeamletList.limits)) {  
-            itsBeamletList.limits = inputBeamletList.getText();
-            saveNode(itsBeamletList);
-        }
         if (itsReceiverList != null && !inputReceiverList.equals(itsReceiverList.limits)) {  
             itsReceiverList.limits = inputReceiverList.getText();
             saveNode(itsReceiverList);
-        }
-        if (itsSubbandList != null && !inputSubbandList.equals(itsSubbandList.limits)) {  
-            itsSubbandList.limits = inputSubbandList.getText();
-            saveNode(itsSubbandList);
         }
         if (itsAntennaArray != null && !inputAntennaArray.getSelectedItem().toString().equals(itsAntennaArray.limits)) {
             itsAntennaArray.limits = inputAntennaArray.getSelectedItem().toString();
@@ -582,10 +679,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         if (itsClockMode != null && !inputClockMode.getSelectedItem().toString().equals(itsClockMode.limits)) {
             itsClockMode.limits = inputClockMode.getSelectedItem().toString();
             saveNode(itsClockMode);
-        }
-        if (itsNyquistZone != null && !inputNyquistZone.getSelectedItem().toString().equals(itsNyquistZone.limits)) {
-            itsNyquistZone.limits = inputNyquistZone.getSelectedItem().toString();
-            saveNode(itsNyquistZone);
         }
         
         // treeDescription
@@ -601,7 +694,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsMainFrame.setChanged("Home",true);
         }
 
-        
+        // reset all buttons, flags and tables to initial start position. So the panel now reflects the new, saved situation
+        initPanel();
+            
+        itsMainFrame.setChanged("Template_Maintenance("+itsNode.treeID()+")" ,true);
+        itsMainFrame.checkChanged("Template_Maintenance("+itsNode.treeID()+")");        
+
+        return true;   
     }
     
     private void changeDescription(jOTDBnode aNode) {
@@ -631,7 +730,90 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             return;
         }
     }
+
+
     
+    private void deleteBeam() {
+        int row = beamConfigurationPanel.getSelectedRow();
+        // if removed then the old Beamlets's should be removed form the checklist also
+        String oldBeamlets = itsBeamConfigurationTableModel.getSelection(row)[4];
+        BitSet beamletSet = LofarUtils.beamletToBitSet(oldBeamlets);
+        
+        if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this Beam ?","Delete Beam",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+            if (row > -1) {
+                itsBeamConfigurationTableModel.removeRow(row);
+                itsUsedBeamlets.xor(beamletSet);
+                // No selection anymore after delete, so buttons disabled again
+                this.editBeamButton.setEnabled(false);
+                this.deleteBeamButton.setEnabled(false);
+
+                // something obviously changed, so enable restore and save buttons
+                buttonPanel1.setButtonEnabled("Restore",true);
+                buttonPanel1.setButtonEnabled("Save",true);
+
+            }
+        } 
+        
+      if (beamConfigurationPanel.getTableModel().getRowCount() == 8) {
+        this.addBeamButton.setEnabled(false);
+      } else {
+        this.addBeamButton.setEnabled(true);
+      }
+    }
+    
+    private void addBeam() {
+     
+        BitSet aBS=itsUsedBeamlets;
+        int index=0;
+        // set selection to defaults.
+        String [] selection = {itsDirectionTypes.elementAt(0),itsAngle1.elementAt(0),
+                               itsAngle2.elementAt(0),itsSubbandList.elementAt(0),itsBeamletList.elementAt(0)};
+        if (editting) {
+            index = beamConfigurationPanel.getSelectedRow();
+            selection = itsBeamConfigurationTableModel.getSelection(index);
+            BitSet oldBeamlets = LofarUtils.beamletToBitSet(selection[4]);
+            aBS.xor(oldBeamlets);
+            // if no row is selected, nothing to be done
+            if (selection == null || selection[0] == "") {
+                return;
+            }
+        }
+        beamDialog = new BeamDialog(itsMainFrame,true,aBS,selection,itsDirectionTypeChoices,editting);
+        beamDialog.setLocationRelativeTo(this);
+        if (editting) {
+            beamDialog.setBorderTitle("edit Beam");
+        } else {
+            beamDialog.setBorderTitle("add new Beam");            
+        }
+        beamDialog.setVisible(true);
+        
+        // check if something has changed 
+        if (beamDialog.hasChanged()) {
+            String[] newRow = beamDialog.getBeam();
+            itsUsedBeamlets=beamDialog.getBeamletList();
+            // check if we are editting an entry or adding a new entry
+            if (editting) {
+                itsBeamConfigurationTableModel.updateRow(newRow,itsSelectedRow);
+                // set editting = false
+                editting=false;
+            } else {            
+                itsBeamConfigurationTableModel.addRow(newRow);
+            }
+        }
+        
+        this.editBeamButton.setEnabled(false);
+        this.deleteBeamButton.setEnabled(false);
+        if (beamConfigurationPanel.getTableModel().getRowCount() == 8 ) {
+            this.addBeamButton.setEnabled(false);
+        } else {
+            this.addBeamButton.setEnabled(true);
+        }
+        
+        // something obviously changed, so enable restore and save buttons
+        buttonPanel1.setButtonEnabled("Restore",true);
+        buttonPanel1.setButtonEnabled("Save",true);
+
+    }
 
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -643,14 +825,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         jPanel2 = new javax.swing.JPanel();
         jPanel7 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
-        labelAngle1 = new javax.swing.JLabel();
-        inputAngle1 = new javax.swing.JTextField();
-        labelAngle2 = new javax.swing.JLabel();
-        inputAngle2 = new javax.swing.JTextField();
-        labelAngleTimes = new javax.swing.JLabel();
-        inputAngleTimes = new javax.swing.JTextField();
-        labelDirectionTypes = new javax.swing.JLabel();
-        inputDirectionTypes = new javax.swing.JComboBox();
+        beamConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
+        addBeamButton = new javax.swing.JButton();
+        editBeamButton = new javax.swing.JButton();
+        deleteBeamButton = new javax.swing.JButton();
         jPanel5 = new javax.swing.JPanel();
         stationsPanel = new javax.swing.JPanel();
         stationsScrollPane = new javax.swing.JScrollPane();
@@ -668,17 +846,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         labelBandFilter = new javax.swing.JLabel();
         inputBandFilter = new javax.swing.JComboBox();
         inputClockMode = new javax.swing.JComboBox();
-        labelNyquistZone = new javax.swing.JLabel();
-        inputNyquistZone = new javax.swing.JComboBox();
         labelClockMode = new javax.swing.JLabel();
-        jPanel4 = new javax.swing.JPanel();
         labelStationList = new javax.swing.JPanel();
-        labelBeamletList = new javax.swing.JLabel();
-        inputBeamletList = new javax.swing.JTextField();
         labelReceiverList = new javax.swing.JLabel();
         inputReceiverList = new javax.swing.JTextField();
-        labelSubbandList = new javax.swing.JLabel();
-        inputSubbandList = new javax.swing.JTextField();
         treeDescriptionScrollPane = new javax.swing.JScrollPane();
         inputTreeDescription = new javax.swing.JTextArea();
         descriptionScrollPane = new javax.swing.JScrollPane();
@@ -699,40 +870,36 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         add(jPanel1, java.awt.BorderLayout.NORTH);
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
-        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Beam Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
         jPanel3.setPreferredSize(new java.awt.Dimension(200, 125));
         jPanel3.setRequestFocusEnabled(false);
         jPanel3.setVerifyInputWhenFocusTarget(false);
-        labelAngle1.setText("Angle 1:");
-
-        inputAngle1.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                inputAngle1FocusGained(evt);
+        beamConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                beamConfigurationPanelMouseClicked(evt);
             }
         });
 
-        labelAngle2.setText("Angle 2 :");
-
-        inputAngle2.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                inputAngle2FocusGained(evt);
+        addBeamButton.setText("add beam");
+        addBeamButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addBeamButtonActionPerformed(evt);
             }
         });
 
-        labelAngleTimes.setText("AngleTimes :");
-
-        inputAngleTimes.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                inputAngleTimesFocusGained(evt);
+        editBeamButton.setText("edit beam");
+        editBeamButton.setEnabled(false);
+        editBeamButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                editBeamButtonActionPerformed(evt);
             }
         });
 
-        labelDirectionTypes.setText("DirectionTypes:");
-
-        inputDirectionTypes.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1" }));
-        inputDirectionTypes.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                inputDirectionTypesFocusGained(evt);
+        deleteBeamButton.setText("delete beam");
+        deleteBeamButton.setEnabled(false);
+        deleteBeamButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                deleteBeamButtonActionPerformed(evt);
             }
         });
 
@@ -743,38 +910,24 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             .add(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(labelDirectionTypes)
-                    .add(labelAngleTimes))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(inputDirectionTypes, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(inputAngleTimes, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 131, Short.MAX_VALUE))
-                .add(28, 28, 28)
-                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(labelAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(labelAngle1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 66, Short.MAX_VALUE))
-                .add(13, 13, 13)
-                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                    .add(inputAngle1)
-                    .add(inputAngle2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE))
-                .addContainerGap(31, Short.MAX_VALUE))
+                    .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 982, Short.MAX_VALUE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel3Layout.createSequentialGroup()
+                        .add(addBeamButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(editBeamButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(deleteBeamButton)
+                        .add(345, 345, 345))))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel3Layout.createSequentialGroup()
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(beamConfigurationPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 154, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelAngleTimes)
-                    .add(inputAngleTimes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(labelAngle1)
-                    .add(inputAngle1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(15, 15, 15)
-                .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelDirectionTypes)
-                    .add(inputDirectionTypes, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(labelAngle2)
-                    .add(inputAngle2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(46, 46, 46))
+                    .add(editBeamButton)
+                    .add(addBeamButton)
+                    .add(deleteBeamButton)))
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Virtual Instrument Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
@@ -857,14 +1010,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .add(stationsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 200, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(68, Short.MAX_VALUE))
+                .add(stationsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 217, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(40, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel5Layout.createSequentialGroup()
-                .add(stationsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(20, Short.MAX_VALUE))
+            .add(stationsPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 176, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
         );
 
         jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Generic Observation Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
@@ -901,15 +1052,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
         });
 
-        labelNyquistZone.setText("Nyquist Zone:");
-
-        inputNyquistZone.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        inputNyquistZone.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                inputNyquistZoneFocusGained(evt);
-            }
-        });
-
         labelClockMode.setText("Clock Mode:");
 
         org.jdesktop.layout.GroupLayout jPanel10Layout = new org.jdesktop.layout.GroupLayout(jPanel10);
@@ -919,27 +1061,18 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             .add(jPanel10Layout.createSequentialGroup()
                 .addContainerGap()
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel10Layout.createSequentialGroup()
-                        .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(labelAntennaArray, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(labelBandFilter, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(inputAntennaArray, 0, 143, Short.MAX_VALUE)
-                            .add(inputBandFilter, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .add(12, 12, 12)
-                        .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(labelClockMode, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(labelNyquistZone, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                        .add(18, 18, 18)
-                        .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
-                            .add(inputClockMode, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .add(inputNyquistZone, 0, 178, Short.MAX_VALUE)))
-                    .add(jPanel10Layout.createSequentialGroup()
-                        .add(labelMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 80, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 331, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-                .add(36, 36, 36))
+                    .add(labelAntennaArray, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 103, Short.MAX_VALUE)
+                    .add(labelClockMode)
+                    .add(labelBandFilter)
+                    .add(labelMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 103, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 490, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, inputBandFilter, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, inputClockMode, 0, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .add(org.jdesktop.layout.GroupLayout.LEADING, inputAntennaArray, 0, 213, Short.MAX_VALUE)))
+                .add(96, 96, 96))
         );
         jPanel10Layout.setVerticalGroup(
             jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -947,18 +1080,18 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelMSNameMask)
                     .add(inputMSNameMask, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 24, Short.MAX_VALUE)
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelAntennaArray)
-                    .add(inputAntennaArray, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(inputAntennaArray, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(12, 12, 12)
+                .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelClockMode)
                     .add(inputClockMode, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(13, 13, 13)
                 .add(jPanel10Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelBandFilter)
-                    .add(inputBandFilter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(labelNyquistZone)
-                    .add(inputNyquistZone, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(inputBandFilter, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .add(47, 47, 47))
         );
 
@@ -968,43 +1101,30 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel7Layout.createSequentialGroup()
                 .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 564, Short.MAX_VALUE)
-                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel10, 0, 564, Short.MAX_VALUE))
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel7Layout.createSequentialGroup()
+                        .add(jPanel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 1008, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .add(jPanel7Layout.createSequentialGroup()
-                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 125, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 213, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel10, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 128, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(jPanel7Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(jPanel10, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(jPanel5, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(13, Short.MAX_VALUE))
         );
 
         labelStationList.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Generic Observation Lists", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
-        labelBeamletList.setText("Beamlets :");
-
-        inputBeamletList.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                inputBeamletListFocusGained(evt);
-            }
-        });
-
         labelReceiverList.setText("Receivers :");
 
         inputReceiverList.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
                 inputReceiverListFocusGained(evt);
-            }
-        });
-
-        labelSubbandList.setText("Subbands :");
-
-        inputSubbandList.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent evt) {
-                inputSubbandListFocusGained(evt);
             }
         });
 
@@ -1024,81 +1144,46 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         labelStationList.setLayout(labelStationListLayout);
         labelStationListLayout.setHorizontalGroup(
             labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, labelStationListLayout.createSequentialGroup()
-                .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-                    .add(org.jdesktop.layout.GroupLayout.LEADING, descriptionScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 848, Short.MAX_VALUE)
-                    .add(treeDescriptionScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 848, Short.MAX_VALUE)
+            .add(labelStationListLayout.createSequentialGroup()
+                .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(treeDescriptionScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 982, Short.MAX_VALUE)
                     .add(labelStationListLayout.createSequentialGroup()
+                        .add(labelReceiverList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 75, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(inputReceiverList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 903, Short.MAX_VALUE))
+                    .add(org.jdesktop.layout.GroupLayout.TRAILING, labelStationListLayout.createSequentialGroup()
                         .addContainerGap()
-                        .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(labelStationListLayout.createSequentialGroup()
-                                .add(labelSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 93, Short.MAX_VALUE)
-                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED))
-                            .add(labelStationListLayout.createSequentialGroup()
-                                .add(labelReceiverList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 90, Short.MAX_VALUE)
-                                .add(7, 7, 7))
-                            .add(labelStationListLayout.createSequentialGroup()
-                                .add(labelBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 88, Short.MAX_VALUE)
-                                .add(9, 9, 9)))
-                        .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputBeamletList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 741, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputReceiverList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 741, Short.MAX_VALUE)
-                            .add(org.jdesktop.layout.GroupLayout.TRAILING, inputSubbandList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 741, Short.MAX_VALUE))))
+                        .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 972, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         labelStationListLayout.setVerticalGroup(
             labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(labelStationListLayout.createSequentialGroup()
-                .addContainerGap(24, Short.MAX_VALUE)
                 .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(labelReceiverList)
                     .add(inputReceiverList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(14, 14, 14)
-                .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelSubbandList)
-                    .add(inputSubbandList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .add(15, 15, 15)
-                .add(labelStationListLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(labelBeamletList)
-                    .add(inputBeamletList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(treeDescriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(treeDescriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 72, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(descriptionScrollPane, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 54, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-        );
-
-        org.jdesktop.layout.GroupLayout jPanel4Layout = new org.jdesktop.layout.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel4Layout.createSequentialGroup()
-                .add(labelStationList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(20, Short.MAX_VALUE))
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel4Layout.createSequentialGroup()
-                .add(labelStationList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .add(44, 44, 44))
         );
 
         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(jPanel7, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .add(jPanel2Layout.createSequentialGroup()
-                .add(jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel7, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .add(labelStationList, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(10, 10, 10))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel2Layout.createSequentialGroup()
                 .add(jPanel7, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(37, Short.MAX_VALUE))
+                .add(labelStationList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(525, Short.MAX_VALUE))
         );
         jScrollPane1.setViewportView(jPanel2);
 
@@ -1114,21 +1199,27 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
     }// </editor-fold>//GEN-END:initComponents
 
-    private void inputSubbandListFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputSubbandListFocusGained
-        changeDescription(itsSubbandList);
-    }//GEN-LAST:event_inputSubbandListFocusGained
+    private void deleteBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBeamButtonActionPerformed
+        deleteBeam();
+    }//GEN-LAST:event_deleteBeamButtonActionPerformed
+
+    private void editBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_editBeamButtonActionPerformed
+        editting=true;
+        addBeam();
+    }//GEN-LAST:event_editBeamButtonActionPerformed
+
+    private void addBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addBeamButtonActionPerformed
+        addBeam();
+    }//GEN-LAST:event_addBeamButtonActionPerformed
+
+    private void beamConfigurationPanelMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_beamConfigurationPanelMouseClicked
+        editBeamButton.setEnabled(true);
+        deleteBeamButton.setEnabled(true);
+    }//GEN-LAST:event_beamConfigurationPanelMouseClicked
 
     private void inputReceiverListFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputReceiverListFocusGained
         changeDescription(itsReceiverList);
     }//GEN-LAST:event_inputReceiverListFocusGained
-
-    private void inputBeamletListFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputBeamletListFocusGained
-        changeDescription(itsBeamletList);
-    }//GEN-LAST:event_inputBeamletListFocusGained
-
-    private void inputNyquistZoneFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputNyquistZoneFocusGained
-        changeDescription(itsNyquistZone);
-    }//GEN-LAST:event_inputNyquistZoneFocusGained
 
     private void inputClockModeFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputClockModeFocusGained
         changeDescription(itsClockMode);
@@ -1150,23 +1241,17 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         changeDescription(itsStationList);
     }//GEN-LAST:event_stationsListFocusGained
 
-    private void inputAngle2FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputAngle2FocusGained
-        changeDescription(itsAngle2);
-    }//GEN-LAST:event_inputAngle2FocusGained
-
-    private void inputDirectionTypesFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputDirectionTypesFocusGained
-        changeDescription(itsDirectionTypes);
-    }//GEN-LAST:event_inputDirectionTypesFocusGained
-
-    private void inputAngleTimesFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputAngleTimesFocusGained
-        changeDescription(itsAngleTimes);
-    }//GEN-LAST:event_inputAngleTimesFocusGained
-
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         if(evt.getActionCommand() == "Save") {
-            saveInput();
+            if (JOptionPane.showConfirmDialog(this,"This will throw away all old Beams from the database and rewrite the new ones. Are you sure you want to do this ","Write new configurations",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                itsMainFrame.setHourglassCursor();
+                saveInput();
+                itsMainFrame.setNormalCursor();
+            }
         } else if(evt.getActionCommand() == "Restore") {
+            itsMainFrame.setHourglassCursor();
             restore();
+            itsMainFrame.setNormalCursor();
         }
 
     }//GEN-LAST:event_buttonPanel1ActionPerformed
@@ -1199,82 +1284,77 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             this.deleteStationButton.setEnabled(false);
         }
     }//GEN-LAST:event_stationsListValueChanged
-
-    private void inputAngle1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputAngle1FocusGained
-        changeDescription(itsAngle1);
-    }//GEN-LAST:event_inputAngle1FocusGained
     
-    private jOTDBnode  itsNode = null;
-    private MainFrame  itsMainFrame;
-    private OtdbRmi    itsOtdbRmi;
-    private jOTDBparam itsOldDescriptionParam;
-    private String     itsOldTreeDescription;
-    private String     itsTreeType="";
-    private JFileChooser fc          = null;    
+    private jOTDBnode                   itsNode = null;
+    private MainFrame                   itsMainFrame;
+    private OtdbRmi                     itsOtdbRmi;
+    private jOTDBparam                  itsOldDescriptionParam;
+    private String                      itsDirectionTypeChoices;
+    private String                      itsOldTreeDescription;
+    private String                      itsTreeType="";
+    private BeamConfigurationTableModel itsBeamConfigurationTableModel = null;
+    private JFileChooser                fc = null;
+    private BeamDialog                  beamDialog = null;
     
     // Observation Specific parameters
     private jOTDBnode itsMSNameMask;
     private jOTDBnode itsAntennaArray;
     private jOTDBnode itsBandFilter;
     private jOTDBnode itsClockMode;
-    private jOTDBnode itsNyquistZone;
-    private jOTDBnode itsBeamletList;
     private jOTDBnode itsReceiverList;
-    private jOTDBnode itsSubbandList;
+    private jOTDBnode itsNrBeams;
   
     
+    // Beams
+    private Vector<jOTDBnode> itsBeams          = new Vector<jOTDBnode>();
     // Observation Beam parameters
-    private jOTDBnode itsAngle1;
-    private jOTDBnode itsAngle2;
-    private jOTDBnode itsAngleTimes;
-    private jOTDBnode itsDirectionTypes;
+    private Vector<String>    itsAngle1         = new Vector<String>();
+    private Vector<String>    itsAngle2         = new Vector<String>();
+    private Vector<String>    itsDirectionTypes = new Vector<String>();
+    private Vector<String>    itsSubbandList    = new Vector<String>();
+    private Vector<String>    itsBeamletList    = new Vector<String>();
     
+    // each beamlet has its bit in the bitset
+    private BitSet   itsUsedBeamlets = new BitSet(216);
+    private boolean  editting = false;
+    private boolean  isInitialized=false;
+    private int      itsSelectedRow = -1;
+    private String   itsSavedBeamlets = "";    
     // Observation Virtual Instrument parameters
     private jOTDBnode itsStationList;
 
 
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton addBeamButton;
     private javax.swing.JButton addStationButton;
+    private nl.astron.lofar.sas.otbcomponents.TablePanel beamConfigurationPanel;
     private nl.astron.lofar.sas.otbcomponents.ButtonPanel buttonPanel1;
+    private javax.swing.JButton deleteBeamButton;
     private javax.swing.JButton deleteStationButton;
     private javax.swing.JScrollPane descriptionScrollPane;
-    private javax.swing.JTextField inputAngle1;
-    private javax.swing.JTextField inputAngle2;
-    private javax.swing.JTextField inputAngleTimes;
+    private javax.swing.JButton editBeamButton;
     private javax.swing.JComboBox inputAntennaArray;
     private javax.swing.JComboBox inputBandFilter;
-    private javax.swing.JTextField inputBeamletList;
     private javax.swing.JComboBox inputClockMode;
     private javax.swing.JTextArea inputDescription;
-    private javax.swing.JComboBox inputDirectionTypes;
     private javax.swing.JTextField inputMSNameMask;
-    private javax.swing.JComboBox inputNyquistZone;
     private javax.swing.JTextField inputReceiverList;
-    private javax.swing.JTextField inputSubbandList;
     private javax.swing.JTextArea inputTreeDescription;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel7;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JLabel labelAngle1;
-    private javax.swing.JLabel labelAngle2;
-    private javax.swing.JLabel labelAngleTimes;
     private javax.swing.JLabel labelAntennaArray;
     private javax.swing.JLabel labelBandFilter;
-    private javax.swing.JLabel labelBeamletList;
     private javax.swing.JLabel labelClockMode;
-    private javax.swing.JLabel labelDirectionTypes;
     private javax.swing.JLabel labelMSNameMask;
-    private javax.swing.JLabel labelNyquistZone;
     private javax.swing.JLabel labelReceiverList;
     private javax.swing.JPanel labelStationList;
-    private javax.swing.JLabel labelSubbandList;
     private javax.swing.JComboBox modifyStationsCombobox;
     private javax.swing.JPanel stationsButtonPanel;
     private javax.swing.JList stationsList;
