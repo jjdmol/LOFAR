@@ -124,7 +124,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 // We need to keep all the nodes needed by this panel
                 if (aNode.leaf) {
                     //we need to get all the childs from the following nodes as well.
-                }else if (parentName.equals("TBBsetting")) {
+                }else if (parentName.contains("TBBsetting")) {
                     // we also need to set the defaults in the inputfields
                     this.retrieveAndDisplayChildDataForNode(aNode);
                 }
@@ -244,6 +244,12 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
      * @param   enabled     true/false enabled/disabled
      */
     public void enableButtons(boolean enabled) {
+        buttonPanel1.setButtonEnabled("Restore",enabled);
+        buttonPanel1.setButtonEnabled("Save",enabled);
+        editConfigButton.setEnabled(enabled);
+        deleteConfigButton.setEnabled(enabled);
+        addConfigButton.setEnabled(enabled);
+        cancelEditButton.setEnabled(enabled);
     }
     
     /** Sets the buttons visible/invisible
@@ -251,6 +257,12 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
      * @param   visible     true/false visible/invisible
      */
     public void setButtonsVisible(boolean visible) {
+        buttonPanel1.setButtonVisible("Restore",visible);
+        buttonPanel1.setButtonVisible("Save",visible);
+        editConfigButton.setVisible(visible);
+        deleteConfigButton.setVisible(visible);
+        addConfigButton.setVisible(visible);
+        cancelEditButton.setVisible(visible);
     }
     
     /** Enables/disables the complete form
@@ -258,6 +270,17 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
      * @param   enabled     true/false enabled/disabled
      */
     public void setAllEnabled(boolean enabled) {
+        inputOperatingMode.setEnabled(enabled);
+        inputBaselevel.setEnabled(enabled);
+        inputStartlevel.setEnabled(enabled);
+        inputStoplevel.setEnabled(enabled);
+        inputFilter.setEnabled(enabled);
+        inputWindow.setEnabled(enabled);
+        inputC0.setEnabled(enabled);
+        inputC1.setEnabled(enabled);
+        inputC2.setEnabled(enabled);
+        inputC3.setEnabled(enabled);
+        inputRCUs.setEnabled(enabled);
     }
     
     private void initialize() {
@@ -318,6 +341,12 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         // create initial RCUBitset
         // create initial table
         restore();
+
+        // if VHTree disable buttons, VHTree is view only mode, no changes possible anymore...
+        if (itsTreeType.equals("VHtree")) {
+            this.setButtonsVisible(false);
+            this.setAllEnabled(false);
+        }
     }
 
     /**
@@ -496,14 +525,16 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     /** Restores all settings back to default input screens and the table
      */
     private void restore() {
-        // set the default input fields back
-        setDefaultInput();
+        if (!itsTreeType.equals("VHtree")) {
+            // set the default input fields back
+            setDefaultInput();
 
-        // create original RCU Bitset
-        fillRCUBitset();
+            // create original RCU Bitset
+            fillRCUBitset();
+        }
 
         // set table back to initial values
-        itsTBBConfigurationTableModel.fillTable(itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs);
+        itsTBBConfigurationTableModel.fillTable(itsTreeType,itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs);
         
         buttonPanel1.setButtonEnabled("Restore",false);
         buttonPanel1.setButtonEnabled("Save",false);
@@ -1009,9 +1040,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         editConfigButton = new javax.swing.JButton();
         deleteConfigButton = new javax.swing.JButton();
         addConfigButton = new javax.swing.JButton();
-        TBBConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         cancelEditButton = new javax.swing.JButton();
         cancelEditButton.setVisible(false);
+        TBBConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
         setLayout(new java.awt.BorderLayout());
@@ -1060,7 +1091,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
         labelRCUs.setText("RCUs:");
 
-        inputOperatingMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        inputOperatingMode.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "1", "2" }));
         inputOperatingMode.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
@@ -1091,7 +1122,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
-        inputWindow.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        inputWindow.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "16B", "64B", "256B", "1K" }));
         inputWindow.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 inputActionPerformed(evt);
@@ -1172,17 +1203,17 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
-        TBBConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                TBBConfigurationPanelMouseClicked(evt);
-            }
-        });
-
         cancelEditButton.setText("Cancel edit Configuration");
         cancelEditButton.setToolTipText("sets Configuration  entries back to default");
         cancelEditButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelEditButtonActionPerformed(evt);
+            }
+        });
+
+        TBBConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                TBBConfigurationPanelMouseClicked(evt);
             }
         });
 
