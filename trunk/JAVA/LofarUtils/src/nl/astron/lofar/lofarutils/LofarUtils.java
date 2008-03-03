@@ -23,6 +23,7 @@
 
 package nl.astron.lofar.lofarutils;
 
+import java.util.BitSet;
 import javax.swing.DefaultListModel;
 import javax.swing.JComboBox;
 import javax.swing.JList;
@@ -298,5 +299,33 @@ public abstract class LofarUtils {
             aComboBox.setSelectedIndex(0);
         }
         aComboBox.validate();
-    }    
+    }  
+    
+    static public BitSet beamletToBitSet(String aS) {
+        
+        BitSet aBitSet = new BitSet(216);
+        
+        if (aS==null || aS.length() <= 2) {
+            return aBitSet;
+        }
+        //remove [] from string
+        String beamlets = aS.substring(aS.indexOf("[")+1,aS.lastIndexOf("]"));
+        
+        // split into seperate beamlet nr's
+        String[] beamletList=beamlets.split("[,]");
+        
+        //fill bitset
+        
+        for (int j=0; j< beamletList.length;j++) {
+            int val;
+            try {
+                val = Integer.parseInt(beamletList[j]);
+                aBitSet.set(val);
+            } catch (NumberFormatException ex) {
+                System.out.println("Error converting beamlet numbers");
+                
+            }
+        }
+        return aBitSet;
+    }
 }
