@@ -38,6 +38,7 @@
 #include <ALC/ApplControlServer.h>	//# communication stub
 #include <PLC/DH_ProcControl.h>
 #include <APS/ParameterSet.h>
+#include <GCF/TM/EventPort.h>
 #include "ACCmdImpl.h"				//# the real implementation
 #include "ACDaemonComm.h"
 #include "CmdStack.h"
@@ -80,6 +81,7 @@ private:
 	// it is only meant to avoid code duplication in createParSubsets
 	void writeParSubset(ParameterSet ps, const string& procName, const string& fileName);
 	void writeResultFile    ();
+	void sendToKVLogger		(ParameterSet&	aResultPS);
 
 	void checkForACCommands();
 	void checkForAPMessages();
@@ -101,6 +103,7 @@ private:
 	APAdminPool*		itsAPAPool;			// Communication with all AP's
 	ApplControlServer*	itsServerStub;		// Communication with AM
 	ACDaemonComm*		itsDaemonComm;    	// Communication with ACDaemon
+	GCF::TM::EventPort*	itsKVLogger;		// Connection to KeyValueLogger
 	time_t				itsCurTime;			// Current timestamp
 	bool				itsIsRunning;		// Alive or not
 
