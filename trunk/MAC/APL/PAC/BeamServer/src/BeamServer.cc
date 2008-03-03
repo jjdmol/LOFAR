@@ -629,8 +629,9 @@ GCFEvent::TResult BeamServer::beamalloc_state(GCFEvent& event, GCFPortInterface&
 			m_beams.setCalibrationHandle(m_bt.getBeam(), ack.handle);
 
 			// send succesful ack
-			beamallocack.status = BS_Protocol::SUCCESS;
-			beamallocack.handle = (BS_Protocol::memptr_t)m_bt.getBeam();
+			beamallocack.status 	  = BS_Protocol::SUCCESS;
+			beamallocack.subarrayname = ack.subarray.getName();
+			beamallocack.handle 	  = (BS_Protocol::memptr_t)m_bt.getBeam();
 			m_bt.getPort()->send(beamallocack);
 		} 
 		else {
@@ -823,8 +824,9 @@ bool BeamServer::beamalloc_start(BSBeamallocEvent& ba,
 		LOG_FATAL_STR("BEAMALLOC: failed to allocate beam " << ba.name << " on " << ba.subarrayname);
 
 		BSBeamallocackEvent ack;
-		ack.handle = 0;
-		ack.status = BS_Protocol::ERR_RANGE;
+		ack.handle 		 = 0;
+		ack.subarrayname = ba.subarrayname;
+		ack.status 		 = BS_Protocol::ERR_RANGE;
 		port.send(ack);
 
 		return (false);
