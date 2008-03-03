@@ -112,7 +112,8 @@ private:
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
-	void*					itsBeamID;				// returned from BeamServer
+	uint32					itsNrBeams;
+	map<string, void*>		itsBeamIDs;				// returned from BeamServer
 };
 
   };//StationCU

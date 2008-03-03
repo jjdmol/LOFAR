@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	ChildControl*	cc = ChildControl::instance();
 	cc->start();	// make initial transition
 
-	ControllerMenu	tc;
+	ControllerMenu	tc(argc == 2 ? atoi(argv[1]) : 0);
 	tc.start(); // make initial transition
 
 	GCFTask::run();

@@ -97,6 +97,7 @@ private:
 	GCFTimerPort*			itsTimerPort;		// general port for timers
 	GCFTCPPort*				itsCalServer;		// connection with CalServer
 	CTState::CTstateNr		itsState;			// 
+	map<string, bool>		itsBeams;			// beam active or not.
 
 	// ParameterSet variables
 	string					itsTreePrefix;

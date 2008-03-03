@@ -27,8 +27,8 @@ tProtocol_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
 
 tEventPort_SOURCES 		= Echo_Protocol.ph Echo_Protocol.cc \
 						  tEventPort.cc
-tEventPort_LDADD		= ../src/ServiceBroker/libeventport.la ../src/libgcftm.la 
-tEventPort_DEPENDENCIES	= ../src/ServiceBroker/libeventport.la $(LOFAR_DEPEND) ../src/libgcftm.la 
+tEventPort_LDADD		= ../src/ServiceBroker/libeventport.la
+tEventPort_DEPENDENCIES	= ../src/ServiceBroker/libeventport.la $(LOFAR_DEPEND)
 
 tTimer_SOURCES 		= $(BUILT_SOURCES) tTimer.cc
 tTimer_LDADD		= ../src/libgcftm.la

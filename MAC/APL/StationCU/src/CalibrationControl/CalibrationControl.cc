@@ -46,6 +46,7 @@ namespace LOFAR {
 	
 // static pointer to this object for signal handler
 static CalibrationControl*	thisCalibrationControl = 0;
+static uint16				gResult = CT_RESULT_NO_ERROR;
 
 //
 // CalibrationControl()
@@ -147,17 +148,12 @@ int32 CalibrationControl::convertFilterSelection(const string&	filterselection)
 	if (filterselection == "LBL_30_80")		{ return(2); }
 	if (filterselection == "LBH_10_80")		{ return(3); }
 	if (filterselection == "LBH_30_80")		{ return(4); }
-	if (filterselection == "HB_100_190") 	{ return(5); }
-	if (filterselection == "HB_170_230") 	{ return(6); }
-	if (filterselection == "HB_210_240") 	{ return(7); }
-
-	// those will become obsolete!
-	if (filterselection == "LBL_10_90")		{ return(1); }
-	if (filterselection == "LBH_10_90")		{ return(3); }
-	if (filterselection == "HB_210_250") 	{ return(7); }
+	if (filterselection == "HB_100_190")	{ return(5); }
+	if (filterselection == "HB_170_230")	{ return(6); }
+	if (filterselection == "HB_210_240")	{ return(7); }
 
 	LOG_WARN_STR ("filterselection value '" << filterselection << 
-											"' not recognized, using LBL_10_80");
+									"' not recognized, using LBL_10_80");
 	return (1);
 }
 
@@ -216,10 +212,11 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
+			GCFPValueArray		beamNameArr;
 			itsPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString ("initial"));
 			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString (""));
 			itsPropertySet->setValue(PN_CC_CONNECTED,	GCFPVBool   (false));
-			itsPropertySet->setValue(PN_CC_OBSNAME,		GCFPVString (""));
+			itsPropertySet->setValue(PN_CC_BEAMNAMES,	GCFPVDynArr (LPT_DYNSTRING, beamNameArr));
 			itsPropertySet->setValue(PN_CC_ANTENNAARRAY,GCFPVString (""));
 			itsPropertySet->setValue(PN_CC_FILTER,		GCFPVString (""));
 			itsPropertySet->setValue(PN_CC_NYQUISTZONE,	GCFPVInteger(0));
@@ -361,8 +358,9 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 
 	case F_ENTRY: {
 		// update PVSS
+		GCFPValueArray		beamNameArr;
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString (""));
-		itsPropertySet->setValue(PN_CC_OBSNAME,		 GCFPVString (""));
+		itsPropertySet->setValue(PN_CC_BEAMNAMES,	 GCFPVDynArr (LPT_DYNSTRING, beamNameArr));
 		itsPropertySet->setValue(PN_CC_ANTENNAARRAY, GCFPVString (""));
 		itsPropertySet->setValue(PN_CC_FILTER,		 GCFPVString (""));
 		itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 GCFPVInteger(0));
@@ -386,6 +384,7 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
 		setState(CTState::PREPARE);
+		gResult = CT_RESULT_NO_ERROR;
 		if (!startCalibration()) {	// will result in CAL_STARTACK event
 			sendControlResult(port, CONTROL_PREPARED, msg.cntlrName, 
 														CT_RESULT_CALSTART_FAILED);
@@ -401,18 +400,29 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 	// -------------------- EVENTS RECEIVED FROM CALSERVER --------------------
 	case CAL_STARTACK: {
 		CALStartackEvent		ack(event);
+		gResult |= ack.status;		// update overall result
 		if (ack.status == SUCCESS || ack.status == ERR_ALREADY_REGISTERED) {
-			LOG_INFO ("Start of calibration was succesful");
-			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(),
-																CT_RESULT_NO_ERROR);
-			setState(CTState::PREPARED);
-			TRAN(CalibrationControl::active_state);			// go to next state.
+			LOG_INFO_STR ("Start of the calibration of beam " << ack.name << " was succesful");
+			itsBeams[ack.name] = true;					// add to beammap
 		}
 		else {
-			LOG_ERROR("Start of calibration failed, staying in CLAIMED mode");
-			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(),
-															CT_RESULT_CALSTART_FAILED);
-			setState(CTState::CLAIMED);
+			LOG_ERROR_STR("Start of calibration of beam " << ack.name << 
+															" failed, staying in CLAIMED mode");
+			itsBeams[ack.name] = false;					// add to beammap
+		}
+
+		if (itsObsPar.beams.size() == itsBeams.size()) {	// answer for all beams received? report state
+			if (gResult == SUCCESS || gResult == ERR_ALREADY_REGISTERED) {
+				LOG_INFO("Calibration of all beams started sucesfully, going to active-mode");
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_NO_ERROR);
+				setState(CTState::PREPARED);
+				TRAN(CalibrationControl::active_state);			// go to next state.
+			}
+			else {
+				LOG_INFO("Not all beams were calibrated right, staying in claiming mode");
+				sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), CT_RESULT_CALSTART_FAILED);
+				setState(CTState::CLAIMED);
+			}
 		}
 	}
 	break;
@@ -481,6 +491,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 		CONTROLReleaseEvent		msg(event);
 		LOG_DEBUG_STR("Received RELEASED(" << msg.cntlrName << ")");
 		setState(CTState::RELEASE);
+		gResult = CT_RESULT_NO_ERROR;
 		if (!stopCalibration()) {	// will result in CAL_STOPACK event
 			sendControlResult(port,CONTROL_RELEASED, getName(), CT_RESULT_CALSTOP_FAILED);
 		}
@@ -496,18 +507,38 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case CAL_STOPACK: {
 		CALStopackEvent			ack(event);
+		gResult |= ack.status;
 		if (ack.status == SUCCESS) {
-			LOG_INFO ("Calibration successfully stopped");
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_NO_ERROR);
-			setState(CTState::RELEASED);
-			TRAN(CalibrationControl::claimed_state);			// go to next state.
+			LOG_INFO_STR ("Calibration of beam " << ack.name << " successfully stopped");
 		}
 		else {
-			LOG_ERROR("Stop of calibration failed, going to SUSPENDED mode");
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_CALSTOP_FAILED);
-			setState(CTState::SUSPENDED);
+			LOG_WARN_STR ("Calibration of beam " << ack.name << " stopped with ERRORs");
+		}
+
+		// remove beam from the map
+		map<string, bool>::iterator	iter = itsBeams.begin();
+		map<string, bool>::iterator	end  = itsBeams.end ();
+		while(iter != end) {
+			if (iter->first == ack.name) {
+				itsBeams.erase(iter);
+				break;
+			}
+			iter++;
+		}
+
+		if (itsBeams.empty()) {		// all beams stopped?
+			if (gResult == SUCCESS) {
+				LOG_INFO("All calibrations stopped, going to RELEASED state");
+				sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), CT_RESULT_NO_ERROR);
+				setState(CTState::RELEASED);
+				TRAN(CalibrationControl::claimed_state);			// go to next state.
+			}
+			else {
+				LOG_ERROR("Stop of some calibrations failed, staying in SUSPENDED mode");
+				sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
+																CT_RESULT_CALSTOP_FAILED);
+				setState(CTState::SUSPENDED);
+			}
 		}
 		break;
 	}
@@ -583,33 +614,40 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 //
 bool	CalibrationControl::startCalibration() 
 {
-	// construct and send CALStartEvent
-	string		obsName(formatString("observation[%d]{%d}", getInstanceNr(getName()), 
-															getObservationNr(getName())));
-	CALStartEvent calStartEvent;
-	calStartEvent.name   	   = obsName;
-	calStartEvent.parent 	   = itsObsPar.antennaArray;
-	calStartEvent.rcumode().resize(1);
-	calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
-										convertFilterSelection(itsObsPar.filter));
-//	calStartEvent.nyquist_zone = itsObsPar.nyquistZone;
-//	calStartEvent.rcumode()(0).setSpecinv(calStartEvent.rcumode()(0).getNyquistZone() == 2);
-	calStartEvent.subset 	   = itsObsPar.RCUset;
-	LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
-							obsName.c_str(), calStartEvent.parent.c_str(),
-							calStartEvent.rcumode()(0).getRaw()));
+	uint32	nrBeams = itsObsPar.beams.size();
+	LOG_DEBUG_STR("Calibrating " << nrBeams << " beams.");
 
-	itsCalServer->send(calStartEvent);
+	GCFPValueArray		beamNameArr;
+	for (uint32	i(0); i < nrBeams; i++) {
+		// construct and send CALStartEvent
+		string		beamName(itsObsPar.getBeamName(i));
+
+		CALStartEvent calStartEvent;
+		calStartEvent.name   	   = beamName;
+		calStartEvent.parent 	   = itsObsPar.antennaArray;
+		calStartEvent.rcumode().resize(1);
+		calStartEvent.rcumode()(0).setMode((RSP_Protocol::RCUSettings::Control::RCUMode)
+											convertFilterSelection(itsObsPar.filter));
+	//	calStartEvent.nyquist_zone = itsObsPar.nyquistZone;
+	//	calStartEvent.rcumode()(0).setSpecinv(calStartEvent.rcumode()(0).getNyquistZone() == 2);
+		calStartEvent.subset 	   = itsObsPar.RCUset;
+		LOG_DEBUG(formatString("Sending CALSTART(%s,%s,%08X)", 
+								beamName.c_str(), calStartEvent.parent.c_str(),
+								calStartEvent.rcumode()(0).getRaw()));
+
+		itsCalServer->send(calStartEvent);
+		beamNameArr.push_back(new GCFPVString(beamName));	// update array for PVSS
+
+	} // for all beams
 
 	// inform operator about these values.
-	itsPropertySet->setValue(PN_CC_OBSNAME,		GCFPVString(obsName));
+	itsPropertySet->setValue(PN_CC_BEAMNAMES,	GCFPVDynArr(LPT_DYNSTRING, beamNameArr));
 	itsPropertySet->setValue(PN_CC_ANTENNAARRAY,GCFPVString(itsObsPar.antennaArray));
 	itsPropertySet->setValue(PN_CC_FILTER,		GCFPVString(itsObsPar.filter));
 	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	GCFPVInteger(itsObsPar.nyquistZone));
 	itsPropertySet->setValue(PN_CC_RCUS,		GCFPVString(
-		APLUtilities::compactedArrayString(globalParameterSet()->
-		getString("Observation.receiverList"))));
-
+										APLUtilities::compactedArrayString(globalParameterSet()->
+										getString("Observation.receiverList"))));
 	return (true);
 }
 
@@ -619,13 +657,17 @@ bool	CalibrationControl::startCalibration()
 //
 bool	CalibrationControl::stopCalibration()
 {
-	// send CALStopEvent
-	string		obsName(formatString("observation[%d]{%d}", getInstanceNr(getName()), 
-															getObservationNr(getName())));
-	LOG_DEBUG_STR ("Sending CALSTOP(" << obsName << ") to CALserver");
-	CALStopEvent calStopEvent;
-	calStopEvent.name = obsName;
-	itsCalServer->send(calStopEvent);
+	uint32 nrBeams = itsObsPar.beams.size();
+	LOG_DEBUG_STR("Stopping calibration of " << nrBeams << " beams.");
+
+	for (uint32	i(0); i < nrBeams; i++) {
+		// send CALStopEvent
+		string		beamName(itsObsPar.getBeamName(i));
+		LOG_DEBUG_STR ("Sending CALSTOP(" << beamName << ") to CALserver");
+		CALStopEvent calStopEvent;
+		calStopEvent.name = beamName;
+		itsCalServer->send(calStopEvent);
+	}
 
 	return (true);
 }

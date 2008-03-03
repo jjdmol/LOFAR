@@ -49,7 +49,7 @@ namespace LOFAR {
 //
 // ControllerMenu()
 //
-ControllerMenu::ControllerMenu() :
+ControllerMenu::ControllerMenu(uint32	instanceNr) :
 	GCFTask 			((State)&ControllerMenu::initial_state,string("TestCtlr")),
 	itsTimerPort		(0),
 	itsChildControl		(0),
@@ -58,7 +58,8 @@ ControllerMenu::ControllerMenu() :
 	itsQueuePeriod		(0),
 	itsClaimPeriod		(0),
 	itsStartTime		(),
-	itsStopTime			()
+	itsStopTime			(),
+	itsInstanceNr		(instanceNr)
 {
 	LOG_TRACE_OBJ ("ControllerMenu construction");
 
@@ -102,7 +103,7 @@ GCFEvent::TResult ControllerMenu::initial_state(GCFEvent& event, GCFPortInterfac
     case F_INIT:
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControltask");
-		itsChildControl->openService(MAC_SVCMASK_APLTEST_CTLRMENU, 0);
+		itsChildControl->openService(MAC_SVCMASK_APLTEST_CTLRMENU, itsInstanceNr);
 		itsChildControl->registerCompletionPort(itsChildPort);
 		cout << "Waiting till other tasks are ready...";
 		itsTimerPort->setTimer(2.0);	// give other task some time.
@@ -144,10 +145,10 @@ GCFEvent::TResult ControllerMenu::startup_state(GCFEvent& event, GCFPortInterfac
 	case F_ENTRY: {
 			// Start ChildControl task
 			cout << "Starting up controller ... ";
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->startChild(itsCntlrType,
 											 itsObsNr,
-											 0,
+											 itsInstanceNr,
 											 myHostname(false))) {
 				cout << "Error during start of controller, bailing out" << endl;
 				stop();
@@ -211,7 +212,7 @@ GCFEvent::TResult ControllerMenu::claim_state(GCFEvent& event, GCFPortInterface&
 	case F_ENTRY: {
 			// Start ChildControl task
 			cout << "Requesting controller to goto CLAIM state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::CLAIMED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
 				stop();
@@ -262,7 +263,7 @@ GCFEvent::TResult ControllerMenu::prepare_state(GCFEvent& event, GCFPortInterfac
 	case F_ENTRY: {
 			// Start ChildControl task
 			cout << "Requesting controller to goto PREPARE state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::PREPARED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
 				stop();
@@ -312,7 +313,7 @@ GCFEvent::TResult ControllerMenu::run_state(GCFEvent& event, GCFPortInterface& /
 	case F_ENTRY: {
 			// Start ChildControl task
 			cout << "Requesting controller to goto RUN state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::RESUMED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
 				stop();
@@ -362,7 +363,7 @@ GCFEvent::TResult ControllerMenu::suspend_state(GCFEvent& event, GCFPortInterfac
 	case F_ENTRY: {
 			// Start ChildControl task
 			cout << "Requesting controller to goto SUSPEND state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::SUSPENDED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
 				stop();
@@ -412,7 +413,7 @@ GCFEvent::TResult ControllerMenu::release_state(GCFEvent& event, GCFPortInterfac
 	case F_ENTRY: {
 			// Start ChildControl task
 			cout << "Requesting controller to goto RELEASED state..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::RELEASED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
 				stop();
@@ -462,7 +463,7 @@ GCFEvent::TResult ControllerMenu::finish_state(GCFEvent& event, GCFPortInterface
 	case F_ENTRY: {
 			// Start ChildControl task
 			cout << "Telling controller we are FINISHED ..." << endl;;
-			string		cntlrName = controllerName(itsCntlrType, 0, itsObsNr);
+			string		cntlrName = controllerName(itsCntlrType, itsInstanceNr, itsObsNr);
 			if (!itsChildControl->requestState(CTState::QUITED, cntlrName, itsObsNr, itsCntlrType)) {
 				cout << "Error during state request, bailing out" << endl;
 				stop();

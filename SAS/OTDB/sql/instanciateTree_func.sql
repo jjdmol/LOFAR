@@ -234,6 +234,7 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 	  vDummy			VIChierarchy.nodeID%TYPE;
 	  vBasename			VIChierarchy.name%TYPE;
 	  vOwnname			VIChierarchy.name%TYPE;
+	  vSpecialisation	BOOL;
 
 	BEGIN
 --RAISE WARNING \'iVHst(%,%,%,%)\', $1,$2,$3,$4;
@@ -262,10 +263,13 @@ CREATE OR REPLACE FUNCTION instanciateVHsubTree(INT4, INT4, INT4, TEXT)
 		IF NOT FOUND THEN
 		  -- no specialisation, use master node (index=0)
 		  vNodeID := $1;
+		  vSpecialisation := FALSE;
+		ELSE
+		  vSpecialisation := TRUE;
 		END IF;
 
 		-- if there is only 1 instance tell VHleafnode this with index = 0
-		IF vNode.instances = 1 THEN
+		IF vNode.instances = 1 AND vSpecialisation = FALSE THEN
 		  vIndexnr := 0;
 		  vOwnname := vBasename || vNode.name;
 		ELSE

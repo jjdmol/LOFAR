@@ -64,7 +64,7 @@ using	APLCommon::ChildControl;
 class ControllerMenu : public GCFTask
 {
 public:
-	ControllerMenu();
+	ControllerMenu(uint32	instanceNr = 0);
 	~ControllerMenu();
 
    	GCFEvent::TResult initial_state (GCFEvent& e, GCFPortInterface& p);
@@ -105,6 +105,7 @@ private:
 
 	uint16				itsCntlrType;
 	uint32				itsObsNr;
+	uint32				itsInstanceNr;
 };
 
   };//Test

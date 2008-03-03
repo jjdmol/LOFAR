@@ -31,13 +31,11 @@ namespace LOFAR {
 #define PSN_CAL_CTRL				"LOFAR_ObsSW_@observation@_CalCtrl"
 #define PST_CAL_CTRL				"CalCtrl"
 #define PN_CC_CONNECTED				"connected"
-#define PN_CC_OBSNAME				"obsname"
+#define PN_CC_BEAMNAMES				"beamnames"
 #define PN_CC_ANTENNAARRAY			"antennaArray"
 #define PN_CC_FILTER				"filter"
 #define PN_CC_NYQUISTZONE			"nyquistzone"
 #define PN_CC_RCUS					"rcus"
-
-#define PROPNAME_FUNCTIONALITY		"functionality"
 
 // next lines should be defined somewhere in Common.
 #define PVSSNAME_FSM_CURACT			"currentAction"
