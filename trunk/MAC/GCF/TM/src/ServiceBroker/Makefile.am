@@ -13,7 +13,7 @@ SUFFIXES = .ph
 lib_LTLIBRARIES 			= libeventport.la
 
 libeventport_la_SOURCES		= GSB_Defines.h SB_Protocol.ph EventPort.h \
-							  SB_Protocol.cc EventPort.cc 
+							  SB_Protocol.cc EventPort.cc ../GCF_Event.cc
 
 bin_PROGRAMS		   		= ServiceBroker
   

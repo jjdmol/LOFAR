@@ -72,11 +72,11 @@ ActiveObs::ActiveObs(const string&		name,
 	itsCalCntlrReady	(false),
 	itsTBBCntlrReady	(false),
 	itsBeamCntlrName	(controllerName(CNTLRTYPE_BEAMCTRL, 
-						 itsInstanceNr, itsObsPar.treeID)),
+						 itsInstanceNr, itsObsPar.obsID)),
 	itsCalCntlrName		(controllerName(CNTLRTYPE_CALIBRATIONCTRL, 
-						 itsInstanceNr, itsObsPar.treeID)),
+						 itsInstanceNr, itsObsPar.obsID)),
 	itsTBBCntlrName		(controllerName(CNTLRTYPE_TBBCTRL, 
-						 itsInstanceNr, itsObsPar.treeID)),
+						 itsInstanceNr, itsObsPar.obsID)),
 	itsReadyFlag		(false),
 	itsReqState			(CTState::NOSTATE),
 	itsCurState			(CTState::NOSTATE)
@@ -177,14 +177,14 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		itsReqState = CTState::CREATED;
 		LOG_DEBUG_STR("Starting controller " << itsCalCntlrName);
 		ChildControl::instance()->startChild(CNTLRTYPE_CALIBRATIONCTRL,
-											 itsObsPar.treeID,
+											 itsObsPar.obsID,
 											 itsInstanceNr,
 											 myHostname(false));
 		// Results in CONTROL_CONNECT in StationControl Task.
 											
 		LOG_DEBUG_STR("Starting controller " << itsBeamCntlrName);
 		ChildControl::instance()->startChild(CNTLRTYPE_BEAMCTRL,
-											 itsObsPar.treeID,
+											 itsObsPar.obsID,
 											 itsInstanceNr,
 											 myHostname(false));
 		// Results in CONTROL_CONNECT in StationControl Task.
@@ -192,7 +192,7 @@ GCFEvent::TResult	ActiveObs::starting(GCFEvent&	event, GCFPortInterface&	port)
 		if (itsUsesTBB) {
 			LOG_DEBUG_STR("Starting controller " << itsTBBCntlrName);
 			ChildControl::instance()->startChild(CNTLRTYPE_TBBCTRL,
-												 itsObsPar.treeID,
+												 itsObsPar.obsID,
 												 itsInstanceNr,
 												 myHostname(false));
 			// Results in CONTROL_CONNECT in StationControl Task.
@@ -660,7 +660,7 @@ ostream& ActiveObs::print (ostream& os) const
 {
 	os << "ACTIVEOBS         : " << itsName << endl;
 	os << "instancenr        : " << itsInstanceNr << endl;
-	os << "treeid            : " << itsObsPar.treeID << endl;
+	os << "treeid            : " << itsObsPar.obsID << endl;
 	os << "nyquistZone       : " << itsObsPar.nyquistZone << endl;
 	os << "sampleClock       : " << itsObsPar.sampleClock << endl;
 	os << "filter            : " << itsObsPar.filter << endl;

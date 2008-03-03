@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <Common/StreamUtil.h>
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/Utils.h>
@@ -50,6 +51,7 @@ namespace LOFAR {
 	
 // static pointer to this object for signal handler
 static BeamControl*	thisBeamControl = 0;
+static uint16		gResult 		= CT_RESULT_NO_ERROR;
 
 //
 // BeamControl()
@@ -63,7 +65,7 @@ BeamControl::BeamControl(const string&	cntlrName) :
 	itsTimerPort		(0),
 	itsBeamServer		(0),
 	itsState			(CTState::NOSTATE),
-	itsBeamID			(0)
+	itsNrBeams			(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
 
@@ -209,16 +211,18 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("initial"));
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool  (false));
-			itsPropertySet->setValue(PN_BC_SUBBANDLIST,	GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_BEAMLETLIST,	GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_ANGLE1,		GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
-			itsPropertySet->setValue(PN_BC_SUBARRAY,	GCFPVString(""));
-//			itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
+			GCFPValueArray		dpeValues;
+			itsPropertySet->setValue(PVSSNAME_FSM_CURACT,	GCFPVString("initial"));
+			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,	GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_CONNECTED,		GCFPVBool  (false));
+			itsPropertySet->setValue(PN_BC_SUB_ARRAY,		GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
+			itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
+			itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, dpeValues));
+			itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, dpeValues));
+//			itsPropertySet->setValue(PN_BC_ANGLETIMES,		GCFPVDynArr(LPT_DYNUNSIGNED, dpeValues));
+			itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
+			itsPropertySet->setValue(PN_BC_BEAM_NAME,		GCFPVDynArr(LPT_DYNSTRING, dpeValues));
 		  
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
@@ -383,6 +387,8 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 		CONTROLPrepareEvent		msg(event);
 		LOG_DEBUG_STR("Received PREPARE(" << msg.cntlrName << ")");
 		setState(CTState::PREPARE);
+// TODO
+		gResult = CT_RESULT_NO_ERROR;
 		// try to send a BEAMALLOC event to the BeamServer.
 		if (!doPrepare()) { // could not sent it?
 			LOG_WARN_STR("Beamallocation error: nr subbands != nr beamlets" << 
@@ -393,7 +399,7 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), 
 															CT_RESULT_CONFLICTING_ARGS);
 		}
-		// else a BS_BEAMALLOCACK event will happen.
+		// else one or more BS_BEAMALLOCACK events will happen.
 		break;
 	}
 
@@ -404,20 +410,24 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
 	case BS_BEAMALLOCACK: {
 		BSBeamallocackEvent		msg(event);
-		uint16 result  = handleBeamAllocAck(event);
-		if (result == CT_RESULT_NO_ERROR) {
-			setState(CTState::PREPARED);
-			LOG_INFO("Beam allocated, going to active state");
-			TRAN(BeamControl::active_state);
+		gResult |= handleBeamAllocAck(event);
+		if (itsBeamIDs.size() == itsNrBeams) {	// answer on all beams received?
+			if (gResult == CT_RESULT_NO_ERROR) {
+				setState(CTState::PREPARED);
+				LOG_INFO("Beam allocated, going to active state");
+				TRAN(BeamControl::active_state);
+			}
+			else {
+				LOG_WARN_STR("Beamallocation failed with error " << gResult << 
+							 ", staying in CLAIMED mode");
+				setState(CTState::CLAIMED);
+			}
+			LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << gResult << ") event");
+			sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), gResult);
 		}
 		else {
-			LOG_WARN_STR("Beamallocation failed with error " << result << 
-						 ", staying in CLAIMED mode");
-			setState(CTState::CLAIMED);
+			LOG_DEBUG_STR("Still waiting for " << itsNrBeams - itsBeamIDs.size() << " alloc answers");
 		}
-
-		LOG_DEBUG_STR("Sending PREPARED(" << getName() << "," << result << ") event");
-		sendControlResult(*itsParentPort, CONTROL_PREPARED, getName(), result);
 		break;
 	}
 
@@ -513,12 +523,10 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	// -------------------- EVENTS RECEIVED FROM BEAMSERVER --------------------
 	case BS_BEAMFREEACK: {
 		if (!handleBeamFreeAck(event)) {
-			LOG_WARN("Error in freeing beam, staying in active_state");
-			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
-															CT_RESULT_BEAMFREE_FAILED);
+			LOG_WARN("Error in freeing beam, trusting on disconnect.");
 		}
-		else {
-			LOG_INFO("Released beam going back to 'claimed' mode");
+		if (itsBeamIDs.empty()) {	// answer on all beams received?
+			LOG_INFO("Released beam(s) going back to 'claimed' mode");
 			setState(CTState::RELEASED);
 			sendControlResult(*itsParentPort, CONTROL_RELEASED, getName(), 
 															CT_RESULT_NO_ERROR);
@@ -595,50 +603,71 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 //
 // doPrepare()
 //
+// Send an allocation event for every beam to the beamserver
+//
 bool BeamControl::doPrepare()
 {
 	Observation		theObs(globalParameterSet());	// does all nasty conversions
 
-	if (theObs.subbands.size() != theObs.beamlets.size()) {
-		LOG_FATAL_STR("size of subbandList (" << theObs.subbands.size() << ") != " <<
-						"size of beamletList (" << theObs.beamlets.size() << ")");
-		return (false);
+	GCFPValueArray		subbandArr;
+	GCFPValueArray		beamletArr;
+	GCFPValueArray		angle1Arr;
+	GCFPValueArray		angle2Arr;
+	GCFPValueArray		dirTypesArr;
+//	GCFPValueArray		angleTimesArr;
+	GCFPValueArray		beamIDArr;
+
+	itsNrBeams = theObs.beams.size();
+	LOG_DEBUG_STR("Controlling " << itsNrBeams << " beams.");
+
+	for (uint32	i(0); i < itsNrBeams; i++) {
+		if (theObs.beams[i].subbands.size() != theObs.beams[i].beamlets.size()) {
+			LOG_FATAL_STR("size of subbandList (" << theObs.beams[i].subbands.size() << ") != " <<
+							"size of beamletList (" << theObs.beams[i].beamlets.size() << ")");
+			return (false);
+		}
+
+		LOG_TRACE_VAR_STR("nr Subbands:" << theObs.beams[i].subbands.size());
+		LOG_TRACE_VAR_STR("nr Beamlets:" << theObs.beams[i].beamlets.size());
+
+		// contruct allocation event.
+		BSBeamallocEvent beamAllocEvent;
+		beamAllocEvent.name 		= getName();
+		beamAllocEvent.subarrayname = theObs.getBeamName(i);
+		LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
+
+		// construct subband to beamlet map
+		vector<int16>::iterator beamletIt = theObs.beams[i].beamlets.begin();
+		vector<int16>::iterator subbandIt = theObs.beams[i].subbands.begin();
+		while (beamletIt != theObs.beams[i].beamlets.end() && subbandIt != theObs.beams[i].subbands.end()) {
+			LOG_TRACE_VAR_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
+			beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
+		}
+
+		LOG_DEBUG_STR("Sending Alloc event to BeamServer");
+		itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
+
+// TODO
+		// store values in PVSS for operator
+		stringstream		os;
+		writeVector(os, theObs.beams[i].subbands);
+		subbandArr.push_back   (new GCFPVString  (os.str()));
+		os.clear();
+		writeVector(os, theObs.beams[i].beamlets);
+		beamletArr.push_back   (new GCFPVString  (os.str()));
+		angle1Arr.push_back	   (new GCFPVDouble  (theObs.beams[i].angle1));
+		angle2Arr.push_back	   (new GCFPVDouble  (theObs.beams[i].angle2));
+		dirTypesArr.push_back  (new GCFPVString  (theObs.beams[i].directionType));
+//		angleTimesArr.push_back(new GCFPVUnsigned(theObs.beams[i].angleTimes));
+		beamIDArr.push_back	   (new GCFPVString  (""));
 	}
 
-	LOG_TRACE_VAR_STR("nr Subbands:" << theObs.subbands.size());
-	LOG_TRACE_VAR_STR("nr Beamlets:" << theObs.beamlets.size());
-
-	// contruct allocation event.
-	BSBeamallocEvent beamAllocEvent;
-	beamAllocEvent.name 		= getName();
-	beamAllocEvent.subarrayname = formatString("observation[%d]{%d}", getInstanceNr(getName()),
-																	getObservationNr(getName()));
-	LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
-
-	vector<int16>::iterator beamletIt = theObs.beamlets.begin();
-	vector<int16>::iterator subbandIt = theObs.subbands.begin();
-	while (beamletIt != theObs.beamlets.end() && subbandIt != theObs.subbands.end()) {
-		LOG_TRACE_VAR_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
-		beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;
-	}
-
-	LOG_DEBUG_STR("Sending Alloc event to BeamServer");
-	itsBeamServer->send(beamAllocEvent);		// will result in BS_BEAMALLOCACK;
-
-	// store values in PVSS for operator
-	itsPropertySet->setValue(PN_BC_SUBBANDLIST,	
-				GCFPVString(APLUtilities::compactedArrayString(globalParameterSet()->
-				getString("Observation.subbandList"))));
-	itsPropertySet->setValue(PN_BC_BEAMLETLIST,	
-				GCFPVString(APLUtilities::compactedArrayString(globalParameterSet()->
-				getString("Observation.beamletList"))));
-	itsPropertySet->setValue(PN_BC_ANGLE1,		
-				GCFPVString(globalParameterSet()->getString("Observation.Beam.angle1")));
-	itsPropertySet->setValue(PN_BC_ANGLE2,		
-				GCFPVString(globalParameterSet()->getString("Observation.Beam.angle2")));
-	itsPropertySet->setValue(PN_BC_ANGLETIMES,	
-				GCFPVString(globalParameterSet()->getString("Observation.Beam.angleTimes")));
-	itsPropertySet->setValue(PN_BC_SUBARRAY, GCFPVString(beamAllocEvent.subarrayname));
+	itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(LPT_DYNSTRING, subbandArr));
+	itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVDynArr(LPT_DYNSTRING, beamletArr));
+	itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, angle1Arr));
+	itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, angle2Arr));
+//	itsPropertySet->setValue(PN_BC_ANGLETIMES,		GCFPVDynArr(LPT_DYNUINT,   angleTimesArr));
+	itsPropertySet->setValue(PN_BC_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dirTypesArr));
 
 	return (true);
 }
@@ -646,59 +675,41 @@ bool BeamControl::doPrepare()
 //
 // handleBeamAllocAck(event);
 //
+// When the allocation was succesfull send all pointing of that beam.
+//
 uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 {
 	// check the beam ID and status of the ACK message
 	BSBeamallocackEvent ackEvent(event);
 	if (ackEvent.status != 0) {
-		LOG_ERROR_STR("Beamlet allocation failed with errorcode: " << ackEvent.status);
+		LOG_ERROR_STR("Beamlet allocation for beam " << ackEvent.subarrayname 
+					  << " failed with errorcode: " << ackEvent.status);
+		itsBeamIDs[ackEvent.subarrayname] = 0;
 		return (CT_RESULT_BEAMALLOC_FAILED);
 	}
-	itsBeamID = ackEvent.handle;
-//	itsPropertySet->setValue(PN_BC_BEAMID, GCFPVInteger(itsBeamID));
+	itsBeamIDs[ackEvent.subarrayname] = ackEvent.handle;
+	LOG_INFO_STR("Beam " << ackEvent.subarrayname << " allocated succesful, sending pointings");
 
 	// read new angles from parameterfile.
-	vector<string>	sourceTimes;
-	vector<double>	angles1;
-	vector<double>	angles2;
-	string			beam(globalParameterSet()->locateModule("Beam")+"Beam.");
-	sourceTimes     = globalParameterSet()->getStringVector(beam+"angleTimes");
-	angles1    = globalParameterSet()->getDoubleVector(beam+"angle1");
-	angles2 = globalParameterSet()->getDoubleVector(beam+"angle2");
+	Observation		theObs(globalParameterSet());	// does all nasty conversions
+	uint32			beamIdx(indexValue(ackEvent.subarrayname, "[]")-1);
+	if (beamIdx >= theObs.beams.size()) {
+		LOG_FATAL_STR("Beamnr " << beamIdx+1 << " (=beam " << ackEvent.subarrayname << 
+						") is out of range: 1.." << theObs.beams.size());
+		return (CT_RESULT_BEAMALLOC_FAILED);
+	}
+	Observation::Beam*	theBeam = &theObs.beams[beamIdx];
 
 	// point the new beam
+	// NOTE: for the time being we don't support multiple pointings for a beam: no other sw supports it.
 	BSBeampointtoEvent beamPointToEvent;
-	beamPointToEvent.handle = itsBeamID;
+	beamPointToEvent.handle = ackEvent.handle;
 	beamPointToEvent.pointing.setType(static_cast<Pointing::Type>
-				(convertDirection(globalParameterSet()->getString(beam+"directionTypes"))));
+				(convertDirection(theBeam->directionType)));
 
-	// only 1 angle?
-	if (sourceTimes.size() == 0 || sourceTimes.size() != angles1.size() || 
-								  sourceTimes.size() != angles2.size()) {
-		// key sourceTimes not found: use one fixed angle
-		double	directionAngle1(0.0);
-		double	directionAngle2(0.0);
-		directionAngle1=globalParameterSet()->getDouble(beam+"angle1");
-		directionAngle2=globalParameterSet()->getDouble(beam+"angle2");
-
-		beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
-		beamPointToEvent.pointing.setDirection(directionAngle1,directionAngle2);
-		itsBeamServer->send(beamPointToEvent);
-		// NB: will NOT result in an answer event of the beamserver.
-		return (CT_RESULT_NO_ERROR);
-	}
-
- 	// its a vecor with angles.
-	vector<double>::iterator angle1Iter    = angles1.begin();
-	vector<double>::iterator angle2Iter = angles2.begin();
-	for (vector<string>::iterator timesIt = sourceTimes.begin(); 
-								  timesIt != sourceTimes.end(); ++timesIt) { 
-		beamPointToEvent.pointing.setTime(RTC::Timestamp(
-										APLUtilities::decodeTimeString(*timesIt),0));
-		beamPointToEvent.pointing.setDirection(*angle1Iter++,*angle2Iter++);
-		itsBeamServer->send(beamPointToEvent);
-		// NB: will NOT result in an answer event of the beamserver.
-	}
+	beamPointToEvent.pointing.setTime(RTC::Timestamp()); // asap
+	beamPointToEvent.pointing.setDirection(theBeam->angle1,theBeam->angle2);
+	itsBeamServer->send(beamPointToEvent);
 	return (CT_RESULT_NO_ERROR);
 }
 
@@ -707,13 +718,19 @@ uint16	BeamControl::handleBeamAllocAck(GCFEvent&	event)
 //
 bool BeamControl::doRelease()
 {
-	if (!itsBeamID) {
+	if (itsBeamIDs.empty()) {
+		LOG_DEBUG ("doRelease: beam-map is empty");
 		return (false);
 	}
 
 	BSBeamfreeEvent		beamFreeEvent;
-	beamFreeEvent.handle = itsBeamID;
-	itsBeamServer->send(beamFreeEvent);	// will result in BS_BEAMFREEACK event
+	map<string, void*>::iterator	iter = itsBeamIDs.begin();
+	map<string, void*>::iterator	end  = itsBeamIDs.end();
+	while (iter != end) {
+		beamFreeEvent.handle = iter->second;
+		itsBeamServer->send(beamFreeEvent);	// will result in BS_BEAMFREEACK event
+		iter++;
+	}
 	return (true);
 }
 
@@ -724,23 +741,32 @@ bool BeamControl::doRelease()
 bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 {
 	BSBeamfreeackEvent	ack(event);
-	if (ack.status != 0 || ack.handle != itsBeamID) {
-		LOG_ERROR_STR("Beamlet de-allocation failed with errorcode: " << ack.status);
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("De-allocation of the beamlet failed."));
+	if (ack.status != 0) {
+		LOG_ERROR_STR("Beam de-allocation failed with errorcode: " << ack.status);
+		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("De-allocation of the beam failed."));
 		return (false);	
 	}
 
-	// clear beam in PVSS
-	itsPropertySet->setValue(PN_BC_SUBBANDLIST,	GCFPVString(""));
-	itsPropertySet->setValue(PN_BC_BEAMLETLIST,	GCFPVString(""));
-	itsPropertySet->setValue(PN_BC_ANGLE1,		GCFPVString(""));
-	itsPropertySet->setValue(PN_BC_ANGLE2,		GCFPVString(""));
-	itsPropertySet->setValue(PN_BC_ANGLETIMES,	GCFPVString(""));
-//	itsPropertySet->setValue(PN_BC_BEAMID,		GCFPVInteger(0));
-
-	itsBeamID = 0;
-
-	return (true);
+	map<string, void*>::iterator	iter = itsBeamIDs.begin();
+	map<string, void*>::iterator	end  = itsBeamIDs.end();
+	while(iter != end) {
+		if (iter->second == ack.handle) {
+			// clear beam in PVSS
+#if 0
+			// TODO: those fields are dynArrays.
+			itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_BEAMLET_LIST,	GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_ANGLE1,			GCFPVString(""));
+			itsPropertySet->setValue(PN_BC_ANGLE2,			GCFPVString(""));
+		//	itsPropertySet->setValue(PN_BC_ANGLETIMES,		GCFPVString(""));
+#endif
+			LOG_INFO_STR("De-allocation of beam " << iter->first << " succesful");
+			itsBeamIDs.erase(iter);
+			return (true);
+		}
+		iter++;
+	}
+	return (false);
 }
 
 // _defaultEventHandler(event, port)

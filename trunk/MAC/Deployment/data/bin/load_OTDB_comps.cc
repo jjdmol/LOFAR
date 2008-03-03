@@ -64,7 +64,7 @@ int main (int	argc, char*	argv[]) {
 	} 
 
 	// Open the database connection
-	cout << "### Using database " << dbName << " at " << hostname << " ###" << endl;
+	LOG_INFO_STR("### Using database " << dbName << " at " << hostname << " ###");
 	OTDBconnection conn("paulus", "boskabouter", dbName, hostname);
 
 	try {
