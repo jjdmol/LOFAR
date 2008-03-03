@@ -261,7 +261,7 @@ GCFEvent::TResult beamctl::create_beam(GCFEvent& e, GCFPortInterface& port)
 	} else {
 
 	  m_beamhandle = ack.handle;
-	  LOG_DEBUG(formatString("got beam_handle=%d", m_beamhandle));
+	  LOG_DEBUG(formatString("got beam_handle=%d for %s", m_beamhandle, ack.subarrayname.c_str()));
 
 	}
 

@@ -21,6 +21,7 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/StreamUtil.h>
 
 #include <APS/ParameterSet.h>
 #include <GCF/GCF_PVTypes.h>
@@ -381,44 +382,60 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
+		Observation		theObs(globalParameterSet());
 		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("Initial"));
 		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,  GCFPVString(""));
-		itsPropertySet->setValue(PN_OC_CLAIM_PERIOD,  GCFPVInteger(itsClaimPeriod));
-		itsPropertySet->setValue(PN_OC_PREPARE_PERIOD,GCFPVInteger(itsPreparePeriod));
-		itsPropertySet->setValue(PN_OC_START_TIME,    GCFPVString(to_simple_string(itsStartTime)));
-		itsPropertySet->setValue(PN_OC_STOP_TIME,     GCFPVString(to_simple_string(itsStopTime)));
-		itsPropertySet->setValue(PN_OC_SUBBAND_LIST,  GCFPVString(
-						APLUtilities::compactedArrayString(globalParameterSet()->
-						getString("Observation.subbandList"))));
-		itsPropertySet->setValue(PN_OC_BEAMLET_LIST, GCFPVString(
-						APLUtilities::compactedArrayString(globalParameterSet()->
-						getString("Observation.beamletList"))));
-		itsPropertySet->setValue(PN_OC_BAND_FILTER, GCFPVString(
-						globalParameterSet()->getString("Observation.bandFilter")));
-		itsPropertySet->setValue(PN_OC_NYQUISTZONE, GCFPVInteger(
-						globalParameterSet()->getInt32("Observation.nyquistZone")));
-		itsPropertySet->setValue(PN_OC_ANTENNA_ARRAY, GCFPVString(
-						globalParameterSet()->getString("Observation.antennaArray")));
-		itsPropertySet->setValue(PN_OC_RECEIVER_LIST, GCFPVString(
+		itsPropertySet->setValue(PN_OBSCTRL_CLAIM_PERIOD,	GCFPVInteger(itsClaimPeriod));
+		itsPropertySet->setValue(PN_OBSCTRL_PREPARE_PERIOD,	GCFPVInteger(itsPreparePeriod));
+		itsPropertySet->setValue(PN_OBSCTRL_START_TIME,		GCFPVString(to_simple_string(itsStartTime)));
+		itsPropertySet->setValue(PN_OBSCTRL_STOP_TIME,		GCFPVString(to_simple_string(itsStopTime)));
+		itsPropertySet->setValue(PN_OBSCTRL_BAND_FILTER, 	GCFPVString(theObs.filter));
+		itsPropertySet->setValue(PN_OBSCTRL_NYQUISTZONE, 	GCFPVInteger(theObs.nyquistZone));
+		itsPropertySet->setValue(PN_OBSCTRL_ANTENNA_ARRAY,	GCFPVString(theObs.antennaArray));
+		itsPropertySet->setValue(PN_OBSCTRL_RECEIVER_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
 						getString("Observation.receiverList"))));
-		itsPropertySet->setValue(PN_OC_SAMPLE_CLOCK, GCFPVInteger(
-						globalParameterSet()->getUint32("Observation.sampleClock")));
-		itsPropertySet->setValue(PN_OC_MEASUREMENT_SET, GCFPVString(
+		itsPropertySet->setValue(PN_OBSCTRL_SAMPLE_CLOCK, GCFPVInteger(theObs.sampleClock));
+		itsPropertySet->setValue(PN_OBSCTRL_MEASUREMENT_SET, GCFPVString(
 						globalParameterSet()->getString("Observation.MSNameMask")));
-		itsPropertySet->setValue(PN_OC_STATION_LIST, GCFPVString(
+		itsPropertySet->setValue(PN_OBSCTRL_STATION_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.stationList"))));
-		itsPropertySet->setValue(PN_OC_INPUT_NODE_LIST, GCFPVString(
+		itsPropertySet->setValue(PN_OBSCTRL_INPUT_NODE_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.inputNodeList"))));
-		itsPropertySet->setValue(PN_OC_BGL_NODE_LIST, GCFPVString(
+		itsPropertySet->setValue(PN_OBSCTRL_BGL_NODE_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.BGLNodeList"))));
-		itsPropertySet->setValue(PN_OC_STORAGE_NODE_LIST, GCFPVString(
+		itsPropertySet->setValue(PN_OBSCTRL_STORAGE_NODE_LIST, GCFPVString(
 						APLUtilities::compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.storageNodeList"))));
-		
+
+		// for the beams we have to construct dyn arrays first.
+		GCFPValueArray		subbandArr;
+		GCFPValueArray		beamletArr;
+		GCFPValueArray		angle1Arr;
+		GCFPValueArray		angle2Arr;
+		GCFPValueArray		dirTypesArr;
+		for (uint32	i(0); i < theObs.beams.size(); i++) {
+			stringstream		os;
+			writeVector(os, theObs.beams[i].subbands);
+			subbandArr.push_back  (new GCFPVString(os.str()));
+			os.clear();
+			writeVector(os, theObs.beams[i].beamlets);
+			beamletArr.push_back  (new GCFPVString(os.str()));
+			angle1Arr.push_back	  (new GCFPVDouble(theObs.beams[i].angle1));
+			angle2Arr.push_back	  (new GCFPVDouble(theObs.beams[i].angle2));
+			dirTypesArr.push_back (new GCFPVString(theObs.beams[i].directionType));
+		}
+
+		// Finally we can write those value to PVSS as well.
+		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_SUBBAND_LIST,		GCFPVDynArr(LPT_DYNSTRING, subbandArr));
+		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_BEAMLET_LIST,		GCFPVDynArr(LPT_DYNSTRING, beamletArr));
+		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, angle1Arr));
+		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, angle2Arr));
+		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dirTypesArr));
+
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControl task");
 		itsChildControl->openService(MAC_SVCMASK_OBSERVATIONCTRL, itsTreeID);
@@ -890,21 +907,21 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 		}
  
 		// Change of claim_period?
-		if (strstr(dpEvent.DPname.c_str(), PN_OC_CLAIM_PERIOD) != 0) {
+		if (strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_CLAIM_PERIOD) != 0) {
 			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
 			LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod << " to " << newVal);
 			itsClaimPeriod = newVal;
 		}
 		// Change of prepare_period?
-		else if (strstr(dpEvent.DPname.c_str(), PN_OC_PREPARE_PERIOD) != 0) {
+		else if (strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_PREPARE_PERIOD) != 0) {
 			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
 			LOG_INFO_STR ("Changing PreparePeriod from " << itsPreparePeriod << " to " << newVal);
 			itsPreparePeriod = newVal;
 		}
 
 		// Change of start or stop time?
-		if ((strstr(dpEvent.DPname.c_str(), PN_OC_START_TIME) != 0)  || 
-		    (strstr(dpEvent.DPname.c_str(), PN_OC_STOP_TIME) != 0)) {
+		if ((strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_START_TIME) != 0)  || 
+		    (strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_STOP_TIME) != 0)) {
 			string  newVal = ((GCFPVString*) (dpEvent.value._pValue))->getValue();
 			ptime	newTime;
 			try {
@@ -914,7 +931,7 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 				LOG_DEBUG_STR(newVal << " is not a legal time!!!");
 				return;
 			}
-			if (strstr(dpEvent.DPname.c_str(), PN_OC_START_TIME) != 0) { 
+			if (strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_START_TIME) != 0) { 
 				LOG_INFO_STR ("Changing startTime from " << to_simple_string(itsStartTime) << " to " << newVal);
 				itsStartTime = newTime;
 			}

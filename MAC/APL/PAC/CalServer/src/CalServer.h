@@ -24,6 +24,9 @@
 #ifndef CALSERVER_H_
 #define CALSERVER_H_
 
+#include <Common/lofar_list.h>
+#include <Common/lofar_map.h>
+#include <Common/lofar_string.h>
 #include <APL/CAL_Protocol/ACC.h>
 #include <APL/CAL_Protocol/SubArray.h>
 #include "Source.h"
@@ -127,8 +130,8 @@ namespace LOFAR {
       /**
        * Client/Server management member variables.
        */
-      std::map<GCFPortInterface*, std::string> m_clients;      // list of clients with related subarray name
-      std::list<GCFPortInterface*>             m_dead_clients; // list of disconnected clients
+      map<string, GCFPortInterface*> 	m_clients;      // list of subarraynames with related clients
+      list<GCFPortInterface*>			m_dead_clients; // list of disconnected clients
 
 #ifdef USE_CAL_THREAD
       // CalibrationThread

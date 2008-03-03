@@ -375,7 +375,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 			}
 			OTDB::TreeMaintenance	tm(itsOTDBconnection);
 			TreeStateConv			tsc(itsOTDBconnection);
-			tm.setTreeState(theObs->treeID, tsc.get("queued"));
+			tm.setTreeState(theObs->obsID, tsc.get("queued"));
 			// ---
 		}
 		else {
@@ -405,7 +405,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
-		tm.setTreeState(theObs->treeID, tsc.get("queued"));
+		tm.setTreeState(theObs->obsID, tsc.get("queued"));
 		break;
 	}
 
@@ -424,10 +424,10 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
 		if (quitedEvent.result == CT_RESULT_NO_ERROR) {
-			tm.setTreeState(theObs->treeID, tsc.get("finished"));
+			tm.setTreeState(theObs->obsID, tsc.get("finished"));
 		}
 		else {
-			tm.setTreeState(theObs->treeID, tsc.get("aborted"));
+			tm.setTreeState(theObs->obsID, tsc.get("aborted"));
 		}
 
 		// update our administration
@@ -448,7 +448,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		}
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
-		tm.setTreeState(theObs->treeID, tsc.get("active"));
+		tm.setTreeState(theObs->obsID, tsc.get("active"));
 	}
 
 	// NOTE: ignore all other CONTROL events, we are not interested in the
@@ -570,19 +570,19 @@ void MACScheduler::_doOTDBcheck()
 		if (timediff > seconds(0)) {
 			// Let database construct the parset for the whole observation
 			OTDB::TreeMaintenance	tm(itsOTDBconnection);
-			OTDB::treeIDType		treeID = newTreeList[idx].treeID();
-			OTDBnode				topNode = tm.getTopNode(treeID);
+			OTDB::treeIDType		obsID = newTreeList[idx].treeID();
+			OTDBnode				topNode = tm.getTopNode(obsID);
 			// NOTE: this name must be the same as in the ChildControl.
 			string					filename = formatString("%s/Observation_%d", 
-														LOFAR_SHARE_LOCATION, treeID);
-			if (!tm.exportTree(treeID, topNode.nodeID(), filename)) {
+														LOFAR_SHARE_LOCATION, obsID);
+			if (!tm.exportTree(obsID, topNode.nodeID(), filename)) {
 				LOG_ERROR_STR ("Cannot create parset file " << filename << 
 							" for new observation. Observation CANNOT BE STARTED!");
 			}
 			else {
 				// fire request for new controller, will result in CONTROL_STARTED
 				itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
-											treeID, 
+											obsID, 
 											0,		// instanceNr
 											myHostname(true));
 				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
@@ -591,7 +591,7 @@ void MACScheduler::_doOTDBcheck()
 				ParameterSet	obsPS(filename);
 				Observation		newObs(&obsPS);
 				newObs.name   = cntlrName;
-				newObs.treeID = treeID;
+				newObs.obsID = obsID;
 				_addActiveObservation(newObs);
 				LOG_DEBUG_STR("Observation " << cntlrName << " added to active Observations");
 			}
@@ -659,7 +659,7 @@ void MACScheduler::_addActiveObservation(const Observation&	newObs)
 
 	// update own admin and PVSS datapoint
 	itsObservations.push_back(newObs);
-	itsPVSSObsList.push_back(new GCFPVString(formatString("Observation%d", newObs.treeID)));
+	itsPVSSObsList.push_back(new GCFPVString(formatString("Observation%d", newObs.obsID)));
 	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
 
 	LOG_DEBUG_STR("Added observation " << newObs.name << " to active observation-list");
@@ -673,14 +673,14 @@ void MACScheduler::_addActiveObservation(const Observation&	newObs)
 void MACScheduler::_removeActiveObservation(const string& name)
 {
 	// search observation.
-	OTDB::treeIDType		treeID;
+	OTDB::treeIDType		obsID;
 	vector<Observation>::iterator	end  = itsObservations.end();
 	vector<Observation>::iterator	iter = itsObservations.begin();
 	bool	found(false);
 	while (!found && (iter != end)) {
 		if (iter->name == name) {
 			found = true;
-			treeID = iter->treeID;
+			obsID = iter->obsID;
 			itsObservations.erase(iter);
 			LOG_DEBUG_STR("Removed observation " << name << " from active observationList");
 		}
@@ -691,7 +691,7 @@ void MACScheduler::_removeActiveObservation(const string& name)
 		return;
 	}
 
-	string		obsName(formatString("Observation%d", treeID));
+	string		obsName(formatString("Observation%d", obsID));
 	GCFPValueArray::iterator	pEnd  = itsPVSSObsList.end();
 	GCFPValueArray::iterator	pIter = itsPVSSObsList.begin();
 	while (pIter != pEnd) {

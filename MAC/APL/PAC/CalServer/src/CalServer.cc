@@ -170,20 +170,34 @@ void CalServer::undertaker()
 //
 // remove_client(port)
 //
+// A disconnect was received on the given port, stop all related subarrays.
+//
 void CalServer::remove_client(GCFPortInterface* port)
 {
-	ASSERT(0 != port);
+	ASSERT(port != 0);
 
-	map<GCFPortInterface*, string>::iterator p = m_clients.find(port);
-	ASSERT(p != m_clients.end());
+	map<string, GCFPortInterface*>::iterator	iter = m_clients.begin();
+	map<string, GCFPortInterface*>::iterator	end  = m_clients.end();
+	while (iter != end) {
+		if (iter->second == port) {
+			// stop subarray if it is still there.
+			SubArray* subarray = m_subarrays.getByName(iter->first);
+			if (subarray) {
+				m_subarrays.schedule_remove(subarray);
+			}
 
-	SubArray* subarray = m_subarrays.getByName(m_clients[port]);
-	if (subarray) {
-		m_subarrays.schedule_remove(subarray);
-	}
+			// add to dead list.
+			m_dead_clients.push_back(iter->second);	
 
-	m_clients.erase(port);
-	m_dead_clients.push_back(port);
+			// remove entry from the map we are searching.
+			string	subArrayName(iter->first);		
+			iter++;
+			m_clients.erase(subArrayName);
+		}
+		else {
+			iter++;
+		} // if port matches
+	} // while
 }
 
 //
@@ -349,11 +363,12 @@ GCFEvent::TResult CalServer::enabled(GCFEvent& e, GCFPortInterface& port)
 		client->init(*this, "client", GCFPortInterface::SPP, CAL_PROTOCOL);
 		if (!m_acceptor.accept(*client)) {
 			delete client;
+			LOG_ERROR ("Could not setup a connection with a niew client");
 		}
-		else {
-			m_clients[client] = ""; // empty string to indicate there is a connection, but no subarray yet
-			LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_clients.size()));
-		}
+//		else {
+//			m_clients[client] = ""; // empty string to indicate there is a connection, but no subarray yet
+//			LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_clients.size()));
+//		}
 	}
 	break;
 
@@ -507,11 +522,6 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 		LOG_ERROR_STR("A subarray with name='" << start.name << "' has already been registered.");
 		ack.status = ERR_ALREADY_REGISTERED;
 
-	} else if (m_clients[&port] != "") {
-		LOG_ERROR_STR("A subarray has already been registered: name=" << m_clients[&port]);
-		LOG_ERROR("Only one active subarray per client supported.");
-		ack.status = ERR_ONLY_ONE_SUBARRAY;
-
 	} else if (string(start.name) == "") {
 		LOG_ERROR("Empty subarray name.");
 		ack.status = ERR_NO_SUBARRAY_NAME;
@@ -528,7 +538,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 
 	} else {
 		// register because this is a cal_start
-		m_clients[&port] = string(start.name); // register subarray with port
+		m_clients[start.name] = &port;		// register subarray and port
 
 		const Array<double, 3>& positions = parent->getAntennaPos();
 		Array<bool, 2> select;
@@ -631,20 +641,25 @@ GCFEvent::TResult CalServer::handle_cal_stop(GCFEvent& e, GCFPortInterface &port
 {
 	GCFEvent::TResult status = GCFEvent::HANDLED;
 
+	// prepare and send a response
 	CALStopEvent stop(e);
 	CALStopackEvent ack;
 	ack.name = stop.name;
-	ack.status = CAL_Protocol::SUCCESS;
-
-	// destroy subarray, what do we do with the observers?
-	if (m_subarrays.schedule_remove(stop.name)) {
-		m_clients[&port] = ""; // unregister subarray name
-	} 
-	else {
-		ack.status = ERR_NO_SUBARRAY; // subarray not found
-	}
-
+	ack.status = CAL_Protocol::SUCCESS;		// return success: don't bother client with our admin
 	port.send(ack);
+
+	m_subarrays.schedule_remove(stop.name);	// stop calibration
+
+	// remove subarray-port entry from the map.
+	map<string, GCFPortInterface*>::iterator	iter = m_clients.begin();
+	map<string, GCFPortInterface*>::iterator	end  = m_clients.end();
+	while (iter != end) {
+		if (iter->second == &port) {
+			m_clients.erase(iter);
+			break;
+		}
+		iter++;
+	}
 
 	return status;
 }
