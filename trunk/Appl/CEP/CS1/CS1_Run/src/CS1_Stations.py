@@ -135,7 +135,40 @@ CS016_us2  = [Station('CS016_us2')]
 CS016_us3 =  [Station('CS016_us3')]
 CS016_4us = CS016_us0 + CS016_us1 + CS016_us2 + CS016_us3
 
+Effelsberg_0 = [Station('Effelsberg_0')]
+Effelsberg_1 = [Station('Effelsberg_1')]
+Effelsberg_2 = [Station('Effelsberg_2')]
+Effelsberg_3 = [Station('Effelsberg_3')]
+Effelsberg = Effelsberg_0 + Effelsberg_1 + Effelsberg_2 + Effelsberg_3
+
+I001_us0 = [Station('I001_us0')]
+
 B06_0 = [Station('B06_0')]
+B06_1 = [Station('B06_1')]
+B06_2 = [Station('B06_2')]
+B06_3 = [Station('B06_3')]
+B06 = B06_0 + B06_1 + B06_2 + B06_3
+
+T0_0 = [Station('T0_0')]
+T0_1 = [Station('T0_1')]
+T0_2 = [Station('T0_2')]
+T0_3 = [Station('T0_3')]
+T0_4 = [Station('T0_4')]
+T0_5 = [Station('T0_5')]
+T0_6 = [Station('T0_6')]
+T0_7 = [Station('T0_7')]
+T0_8 = [Station('T0_8')]
+T0_9 = [Station('T0_9')]
+T0_10 = [Station('T0_10')]
+T0_11 = [Station('T0_11')]
+T0_12 = [Station('T0_12')]
+T0_13 = [Station('T0_13')]
+T0_14 = [Station('T0_14')]
+T0_15 = [Station('T0_15')]
+T0 = T0_0 + T0_1 + T0_2 + T0_3 + T0_4 + T0_5 + T0_6 + T0_7 + T0_8 + T0_9 + T0_10 + T0_11 + T0_12 + T0_13 + T0_14 + T0_15
+
+I_43 = [Station('I_43')]
+I_91 = [Station('I_91')]
 
 AllMicroStations = CS010_4us + CS001_4us + CS008_4us + CS016_4us
 AllDipoles0_4_8_12 = CS010_4dipoles0_4_8_12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
@@ -143,7 +176,8 @@ AllDipolesMixed = CS010_4dipoles0_4_8_12 + CS001_4dipoles2_6_10_14 + CS008_4dipo
 AllHBAs = CS010_HBAs + CS001_HBAs + CS008_HBAs + CS016_HBAs
 Mixed = CS010_us0 + CS010_dipole4 + CS010_dipole8 + CS010_dipole12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
 All24Dipoles = CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12 + CS030_4dipoles + CS031_4dipoles + CS032_4dipoles
+All23Dipoles = CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_us0 + CS016_us1 + CS016_us2 + CS030_4dipoles + CS031_4dipoles + CS032_4dipoles
 Generator = CS010_HBA0 + CS010_HBA2 + CS010_HBA3 + CS008_HBA0 + CS008_HBA2 + CS008_HBA3 + CS001_HBA0 + CS001_HBA2 + CS001_HBA3 + CS016_HBA0 + CS016_HBA2 + CS016_HBA3
-#Test = CS001T_4dipoles + CS001_4dipoles0_4_8_12
+Test = CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_4dipoles0_4_8_12
 #Test = CS001T_4dipoles + CS010_4dipoles0_4_8_12 + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_dipole0 + CS016_dipole4 + CS016_dipole8
-Test = CS001T_4dipoles + CS001_4dipoles0_4_8_12 + CS008_4dipoles0_4_8_12 + CS016_dipole0 + CS016_dipole4 + CS016_dipole8
+Everything = All23Dipoles + B06_0 + B06_2
