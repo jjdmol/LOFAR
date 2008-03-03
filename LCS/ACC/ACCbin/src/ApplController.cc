@@ -28,6 +28,8 @@
 #include <Common/LofarLocators.h>
 #include <ALC/ACCmd.h>
 #include <PLC/ProcControlComm.h>
+#include <GCF/GCF_ServiceInfo.h>
+#include <APL/APLProtocol/KVT_Protocol.ph>
 #include "ApplController.h"
 #include "PR_Shell.h"			// TODO: factory!
 #include "PR_MPI.h"				// TODO: factory!
@@ -36,6 +38,7 @@
 #include "lofarDirs.h"
 
 namespace LOFAR {
+  using namespace GCF::TM;
   namespace ACC {
 
 //
@@ -52,6 +55,7 @@ ApplController::ApplController(const string&	configID) :
     itsAPAPool       (0),
 	itsServerStub	 (0),
 	itsDaemonComm	 (0),
+	itsKVLogger		 (0),
 	itsCurTime       (0),
 	itsIsRunning     (false),
 	itsStateEngine   (new StateEngine),
@@ -89,6 +93,7 @@ ApplController::~ApplController()
     if (itsAPAPool)        { delete itsAPAPool;        }
 	if (itsServerStub)     { delete itsServerStub;     }
 	if (itsDaemonComm)     { delete itsDaemonComm;     }
+	if (itsKVLogger)	   { delete itsKVLogger;	   }
 	if (itsCurACMsg)	   { delete itsCurACMsg; 	   }
 	if (itsStateEngine)	   { delete itsStateEngine;    }
 
@@ -121,6 +126,11 @@ void ApplController::startupNetwork()
 							itsBootParamSet->getString("AC.pinghost"),
 							itsBootParamSet->getString("AC.pingportnr"),
 							itsBootParamSet->getString("AC.pingID"));
+
+	// 												   client					synchrone
+	itsKVLogger = new EventPort(MAC_SVCMASK_KVTLOGGER, false, KVT_PROTOCOL, "", true);	
+	ASSERTSTR(itsKVLogger, "Can't connect to KeyValueLogger");
+
 	itsIsRunning = true;
 }
 
@@ -172,9 +182,11 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 		break;
 
 	case PCCmdParams: {
+		// TODO: Write this information to the >>>> KeyValueLogger <<<<
 		ParameterSet	resultParam;
 		resultParam.adoptBuffer(DHProcPtr->getOptions());
 		resultParam.writeFile(itsObsParamSet->getString("ApplCtrl.resultfile"), true);
+		sendToKVLogger(resultParam);
 		break;
 		}
 
@@ -439,6 +451,41 @@ void ApplController::writeResultFile()
 							true);
 	}
 }
+
+//
+// sendToKVLogger(parSet)
+//
+// Send the KV pairs to the KeyValueLogger
+//
+void ApplController::sendToKVLogger(ParameterSet&	aResultPS)
+{
+	// loop over PS and construct a msgpool event.
+	ParameterSet::iterator	iter = aResultPS.begin();
+	ParameterSet::iterator	end  = aResultPS.end();
+	KVTSendMsgPoolEvent		poolEvent;
+	poolEvent.seqnr = 1;
+	poolEvent.msgCount = 0;
+	while (iter != end) {
+		poolEvent.keys.theVector.push_back(iter->first);
+		poolEvent.values.theVector.push_back(iter->second);
+		poolEvent.msgCount++;
+		iter++;
+	}
+
+	// empty PS?
+	if (!poolEvent.msgCount) {
+		return;
+	}
+
+	// send message and wait for answer.
+	itsKVLogger->send(&poolEvent);
+	KVTSendMsgPoolAckEvent		poolAck(*(itsKVLogger->receive()));
+
+	if (poolAck.result != 0) {
+		LOG_ERROR_STR("Storing metadata in PVSS resulted in errorcode " << poolAck.result);
+	}
+}
+
 
 //
 // startState (newMsg)
