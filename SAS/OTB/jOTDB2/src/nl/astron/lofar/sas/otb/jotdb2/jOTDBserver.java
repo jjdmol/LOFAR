@@ -86,8 +86,8 @@ public class jOTDBserver {
                 if (args.length ==7){
                     Integer rmiObjectsPort = new Integer(args[6]);
                     logger.info("jOTDBserver setting up RMI server objects on port "+rmiObjectsPort+" ...");
-                    RMISocketFactory socketFactory = RMISocketFactory.getDefaultSocketFactory();
-                    socketFactory.createServerSocket(rmiObjectsPort);
+//                    RMISocketFactory socketFactory = RMISocketFactory.getDefaultSocketFactory();
+//                    socketFactory.createServerSocket(rmiObjectsPort);
                     objectPort = rmiObjectsPort;
                 }
             }
