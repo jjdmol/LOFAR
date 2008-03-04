@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,382 110 1145 286 N "_3DFace" 1
+PANEL,377 110 1145 286 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -62,7 +62,6 @@ updateCalCtrlTable(string dpe, dyn_dyn_anytype tab)
 
       dpConnect(\"updateCalCtrlTableValues\",dpPrefix + \".state:_online.._value\",
                                            dpPrefix + \".connected:_online.._value\",
-                                           dpPrefix + \".obsname:_online.._value\",
                                            dpPrefix + \".antennaArray:_online.._value\",
                                            dpPrefix + \".filter:_online.._value\",
                                            dpPrefix + \".nyquistzone:_online.._value\",
@@ -74,12 +73,11 @@ updateCalCtrlTable(string dpe, dyn_dyn_anytype tab)
 	
 updateCalCtrlTableValues(string dp1, int state,
                          string dp2, bool connected,
-                         string dp3, string obsname,
-                         string dp4, string antennaArray,
-                         string dp5, string filter,
-                         string dp6, int nyquistzone,
-                         string dp7, string rcus,
-                         string dp8, bool invalid)                              
+                         string dp3, string antennaArray,
+                         string dp4, string filter,
+                         string dp5, int nyquistzone,
+                         string dp6, string rcus,
+                         string dp7, bool invalid)                              
 {
   string stateCol=\"\";
   if (invalid) 
