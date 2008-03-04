@@ -1,0 +1,39 @@
+0 source records found
+casa  type=point  ra=12:34:56.700 dec=+012.34.56.700
+  spectralindex=1  domain: freq=all time=all
+Wrote new record for source casa
+casa  type=point  ra=12:34:56.700 dec=+012.34.56.700
+  spectralindex=1  domain: freq=all time=all
+casa  type=point  ra=12:34:56.700 dec=+012.34.56.700
+  spectralindex=2  domain: freq=all time=all
+Updated 1 source record(s)
+casa  type=point  ra=12:34:56.700 dec=+012.34.56.700
+  spectralindex=2  domain: freq=all time=all
+casb  type=point  ra=12:34:56.700 dec=+012.34.56.700
+  spectralindex=1.5  domain: freq=all time=all
+Wrote new record for source casb
+virb  type=point  ra=14:43:05.679 dec=-012.34.56.700
+  spectralindex=1.5  domain: freq=[20 MHz +20 KHz] time=[2008/02/25/04:15:13 +3600 sec]
+Wrote new record for source virb
+virb  type=point  ra=14:43:05.679 dec=-012.34.56.700
+  spectralindex=1.6  domain: freq=[20 MHz +20 KHz] time=[2008/02/25/05:15:13 +3600 sec]
+Wrote new record for source virb
+vira  type=point  ra=16:43:05.679 dec=-072.34.56.700
+  spectralindex=1.75  domain: freq=[20 MHz +20 KHz] time=all
+Wrote new record for source vira
+casa  type=point  ra=12:34:56.700 dec=+012.34.56.700
+  spectralindex=2  domain: freq=all time=all
+casb  type=point  ra=12:34:56.700 dec=+012.34.56.700
+  spectralindex=1.5  domain: freq=all time=all
+virb  type=point  ra=14:43:05.679 dec=-012.34.56.700
+  spectralindex=1.5  domain: freq=[20 MHz +20 KHz] time=[2008/02/25/04:15:13 +3600 sec]
+virb  type=point  ra=14:43:05.679 dec=-012.34.56.700
+  spectralindex=1.6  domain: freq=[20 MHz +20 KHz] time=[2008/02/25/05:15:13 +3600 sec]
+vira  type=point  ra=16:43:05.679 dec=-072.34.56.700
+  spectralindex=1.75  domain: freq=[20 MHz +20 KHz] time=all
+5 source records found
+virb  type=point  ra=14:43:05.679 dec=-012.34.56.700
+  spectralindex=1.5  domain: freq=[20 MHz +20 KHz] time=[2008/02/25/04:15:13 +3600 sec]
+virb  type=point  ra=14:43:05.679 dec=-012.34.56.700
+  spectralindex=1.6  domain: freq=[20 MHz +20 KHz] time=[2008/02/25/05:15:13 +3600 sec]
+2 source records found
