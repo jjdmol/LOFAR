@@ -61,13 +61,13 @@ public class jOTDBserver {
 //		  System.setSecurityManager (new RMISecurityManager ());
 //	       }
             
-            if (args.length < 4) {
-                System.out.println("Usage: java -jar jOTDBserver.jar <username> <password> <database> <hostname> <rmiportnumber-OPTIONAL> <rmi objects portnumber for firewall/tunneling purposes-OPTIONAL>");
+            if (args.length < 5) {
+                System.out.println("Usage: java -jar jOTDBserver.jar <username> <password> <database> <db-hostname> <hostname> <rmiportnumber-OPTIONAL> <rmi objects portnumber for firewall/tunneling purposes-OPTIONAL>");
                 System.exit(0);
             }
             
             
-            String aHostName = new String(args[3]);
+            String aHostName = new String(args[4]);
             
             logger.info("Running on: "+aHostName);
             System.setProperty("java.rmi.server.hostname", aHostName);
@@ -76,15 +76,15 @@ public class jOTDBserver {
             Registry localRegistry = null;
             int objectPort = 0;
             
-            if (args.length == 4){
+            if (args.length == 5){
                 logger.info("jOTDBserver creating a local RMI registry on port "+Registry.REGISTRY_PORT+" ...");
                 localRegistry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
-            }else if (args.length > 4) {
-                Integer rmiPort = new Integer(args[4]);
+            }else if (args.length > 5) {
+                Integer rmiPort = new Integer(args[5]);
                 logger.info("jOTDBserver creating a local RMI registry on port "+rmiPort+" ...");
                 localRegistry = LocateRegistry.createRegistry(rmiPort.intValue());
-                if (args.length ==6){
-                    Integer rmiObjectsPort = new Integer(args[5]);
+                if (args.length ==7){
+                    Integer rmiObjectsPort = new Integer(args[6]);
                     logger.info("jOTDBserver setting up RMI server objects on port "+rmiObjectsPort+" ...");
                     RMISocketFactory socketFactory = RMISocketFactory.getDefaultSocketFactory();
                     socketFactory.createServerSocket(rmiObjectsPort);
@@ -162,11 +162,11 @@ public class jOTDBserver {
             
             
             String statusmessage = "jOTDBserver is ready for incoming calls";
-            if (args.length > 4) {
-                Integer rmiPort = new Integer(args[4]);
+            if (args.length > 5) {
+                Integer rmiPort = new Integer(args[5]);
                 statusmessage += " on rmi registry port "+rmiPort;
-                if (args.length ==6){
-                    Integer rmiObjectsPort = new Integer(args[5]);
+                if (args.length ==7){
+                    Integer rmiObjectsPort = new Integer(args[6]);
                     statusmessage += " and rmi server object port "+rmiObjectsPort +". Please tunnel/forward both ports for your client to work";
                 }
             }
