@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <GCF/Utils.h>
 #include <SB_Protocol.ph>

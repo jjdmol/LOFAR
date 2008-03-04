@@ -21,6 +21,7 @@
 //#
 //#  $Id$
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <unistd.h>
 #include <GCF/TM/GCF_Task.h>

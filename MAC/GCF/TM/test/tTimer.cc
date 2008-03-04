@@ -22,6 +22,7 @@
 //  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 #include "tTimer.h"
 
 static	int	gTest = 0;

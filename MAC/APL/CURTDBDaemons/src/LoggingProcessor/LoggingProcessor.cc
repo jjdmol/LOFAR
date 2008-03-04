@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <GCF/PVSS/PVSSresult.h>
 #include <APL/APLProtocol/LOG_Protocol.ph>
@@ -36,6 +36,7 @@ namespace LOFAR {
   namespace GCF {
     using namespace Common;
     using namespace TM;
+    using namespace PVSS;
     using namespace RTDB;
     namespace RTDBDaemons {
 
@@ -297,7 +298,7 @@ GCFEvent::TResult LoggingProcessor::operational(GCFEvent&			event,
 		LOGSendMsgPoolAckEvent	answer;
 		answer.seqnr  = logEvent.seqnr;
 		answer.result = PVSS::SA_NO_ERROR;
-		for (int i = 0; i < logEvent.msgCount; i++) {
+		for (uint32 i = 0; i < logEvent.msgCount; i++) {
 			PVSSresult	result;
 // = itsDPservice->setValue(logEvent.DPnames.theVector[i], 
 //											GCFPVString(logEvent.messages.theVector[i]));

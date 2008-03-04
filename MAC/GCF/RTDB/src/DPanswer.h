@@ -28,7 +28,7 @@
 
 namespace LOFAR {
   namespace GCF {
-    class Common::GCFPValue;
+    using PVSS::GCFPValue;
 	using PVSS::PVSSresponse;
 	using PVSS::PVSSresult;
     namespace RTDB {
@@ -45,9 +45,9 @@ public:
 	virtual void dpeSubscriptionLost (const string& dpeName, PVSSresult result);
 	virtual void dpeUnsubscribed	 (const string& dpeName, PVSSresult result);
 	virtual void dpeValueGet		 (const string& dpeName, PVSSresult result, 
-									  const Common::GCFPValue& value);
+									  const GCFPValue& value);
 	virtual void dpeValueChanged	 (const string& dpeName, PVSSresult result, 
-									  const Common::GCFPValue& value);        
+									  const GCFPValue& value);        
 	virtual void dpeValueSet		 (const string& dpeName, PVSSresult result);
 	virtual void dpQuerySubscribed	 (uint32 queryId, 		 PVSSresult result);        
     

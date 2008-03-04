@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <GCF/TM/GCF_DevicePort.h>
 #include "GTM_Device.h"

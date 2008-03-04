@@ -27,6 +27,7 @@
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::MainCU;
+using namespace LOFAR::APLCommon;
 
 int main(int argc, char* argv[])
 {

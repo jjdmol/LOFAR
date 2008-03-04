@@ -25,13 +25,14 @@
 
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
-#include <GCF/GCF_PValue.h>
+#include <Common/lofar_string.h>
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/PVSS/GCF_PValue.h>
 #include <GCF/PVSS/PVSSresponse.h>
 
 namespace LOFAR {
   namespace GCF {
-	using Common::GCFPValue;
+	using PVSS::GCFPValue;
 	using PVSS::PVSSresponse;
 	using PVSS::PVSSservice;
 	using PVSS::PVSSresult;
@@ -100,8 +101,8 @@ protected:
 	void dpeSubscribed 		 (const string& propName, PVSSresult	result);    
 	void dpeSubscriptionLost (const string& propName, PVSSresult	result);
 	void dpeUnsubscribed	 (const string& propName, PVSSresult	result);
-	void dpeValueGet		 (const string& propName, PVSSresult	result, const Common::GCFPValue& value);
-	void dpeValueChanged	 (const string& propName, PVSSresult	result, const Common::GCFPValue& value);
+	void dpeValueGet		 (const string& propName, PVSSresult	result, const GCFPValue& value);
+	void dpeValueChanged	 (const string& propName, PVSSresult	result, const GCFPValue& value);
 	void dpeValueSet		 (const string& propName, PVSSresult	result);
 	void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
 

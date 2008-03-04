@@ -28,8 +28,7 @@
 #include <sys/uio.h>
 #include <string.h>
 
-#include <Common/lofar_string.h>
-#include <GCF/GCF_Defines.h>
+#include <Common/StringUtil.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_PortInterface.h>
 

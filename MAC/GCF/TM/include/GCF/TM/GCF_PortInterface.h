@@ -27,8 +27,8 @@
 #include <sys/uio.h>
 #include <string.h>
 
+#include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
-#include <GCF/GCF_Defines.h>
 
 namespace LOFAR {
  namespace GCF {

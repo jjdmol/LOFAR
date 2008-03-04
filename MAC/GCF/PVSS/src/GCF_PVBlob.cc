@@ -23,12 +23,12 @@
 
 #include <lofar_config.h>
 
-#include <GCF/GCF_PVBlob.h>
+#include <GCF/PVSS/GCF_PVBlob.h>
 #include <Common/DataConvert.h>
 
 namespace LOFAR {
  namespace GCF {
-  namespace Common {
+  namespace PVSS {
 
 //
 // GCFPVBlob(valbuf, length, clone)

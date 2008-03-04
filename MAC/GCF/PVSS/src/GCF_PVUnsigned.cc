@@ -23,14 +23,14 @@
 
 #include <lofar_config.h>
 
-#include <GCF/GCF_PVUnsigned.h>
+#include <GCF/PVSS/GCF_PVUnsigned.h>
 #include <Common/DataConvert.h>
 
 namespace LOFAR 
 {
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
 
 unsigned int GCFPVUnsigned::unpackConcrete(const char* valBuf)

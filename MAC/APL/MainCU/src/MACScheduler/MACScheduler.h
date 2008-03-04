@@ -25,7 +25,7 @@
 
 //# GCF Includes
 #include <GCF/RTDB/RTDB_PropertySet.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -52,17 +52,16 @@
 // forward declaration
 
 namespace LOFAR {
+	using	GCF::TM::GCFTimerPort;
+	using	GCF::TM::GCFITCPort;
+	using	GCF::TM::GCFPort;
+	using	GCF::TM::GCFEvent;
+	using	GCF::TM::GCFPortInterface;
+	using	GCF::TM::GCFTask;
+	using	GCF::RTDB::RTDBPropertySet;
+	using	APLCommon::ChildControl;
+	using	APLCommon::Observation;
 	namespace MainCU {
-
-using	GCF::TM::GCFTimerPort;
-using	GCF::TM::GCFITCPort;
-using	GCF::TM::GCFPort;
-using	GCF::TM::GCFEvent;
-using	GCF::TM::GCFPortInterface;
-using	GCF::TM::GCFTask;
-using	GCF::RTDB::RTDBPropertySet;
-using	APLCommon::ChildControl;
-using	APLCommon::Observation;
 
 
 class MACScheduler : public GCFTask
@@ -111,7 +110,7 @@ private:
 
 	// Information about the Observations. Not used yet.
 	vector<Observation>			itsObservations;
-	GCF::Common::GCFPValueArray	itsPVSSObsList;
+	GCF::PVSS::GCFPValueArray	itsPVSSObsList;
 
 	// Ports for StartDaemon and ObservationControllers.
    	GCFTimerPort*			itsTimerPort;			// for timers

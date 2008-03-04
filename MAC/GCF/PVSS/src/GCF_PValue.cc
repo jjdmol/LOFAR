@@ -22,20 +22,12 @@
 
 #include <lofar_config.h>
 
-#include <GCF/GCF_PValue.h>
-#include <GCF/GCF_PVBool.h>
-#include <GCF/GCF_PVDouble.h>
-#include <GCF/GCF_PVChar.h>
-#include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVInteger.h>
-#include <GCF/GCF_PVUnsigned.h>
-#include <GCF/GCF_PVDynArr.h>
-#include <GCF/GCF_PVBlob.h>
-#include <GCF/GCF_Defines.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
+//#include <GCF/GCF_Defines.h>
 
 namespace LOFAR {
  namespace GCF {
-  namespace Common {
+  namespace PVSS {
 
 //
 // createMACTypeObject(type)

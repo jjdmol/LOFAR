@@ -24,14 +24,13 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include "tPVSSservice.h"
 #include "Response.h"
 
 namespace LOFAR {
   namespace GCF {
-  using namespace Common;
   using namespace TM;
   namespace PVSS {
 

@@ -1,11 +1,11 @@
 #include <lofar_config.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include "DPresponse.h"
 
 namespace LOFAR {
   namespace GCF {
-    using namespace Common;
+	using namespace PVSS;
 	namespace RTDB {
    
 int		gCreateCounter = 0;

@@ -1,4 +1,4 @@
-//#  GCF_PVUnsigned.h: MAC unsigned integer property type
+//#  GCF_PVString.h: MAC string property type
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,48 +20,37 @@
 //#
 //#  $Id$
 
-#ifndef GCF_PVUNSIGNED_H
-#define GCF_PVUNSIGNED_H
+#ifndef GCF_PVSTRING_H
+#define GCF_PVSTRING_H
 
-#include <GCF/GCF_PValue.h>
-#include <Common/LofarTypes.h>
+#include <GCF/PVSS/GCF_PValue.h>
 
 namespace LOFAR 
 {
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
-
-using TYPES::uint32;
-
 /**
- * By means of this property type a unsigned integer (0 to 4,294,967,295) value 
- * can be used.
+ * By means of this property type a zero terminated string (max. length ~30.000 
+ * characters) value can be used.
  */
-class GCFPVUnsigned : public GCFPValue
+class GCFPVString : public GCFPValue
 {
   public:
-  	explicit GCFPVUnsigned(uint32 val = 0) : GCFPValue(LPT_UNSIGNED), _value(val) {;}
-    explicit GCFPVUnsigned(const GCFPVUnsigned& val) : GCFPValue(LPT_UNSIGNED), _value(val.getValue()) {;}
+  	explicit GCFPVString(string val = "") : GCFPValue(LPT_STRING), _value(val) {;}
+    explicit GCFPVString(const GCFPVString& val) : GCFPValue(LPT_STRING), _value(val.getValue()) {;}
 
-  	virtual ~GCFPVUnsigned() {;}
+  	virtual ~GCFPVString() {;}
     
     /** Changes the value of this object */
-    virtual void setValue( uint32 newVal) {_value = newVal;}
-
-    /** 
-     * Changes the value of this object by means of a stringbuffer, 
-     * which will be translated.
-     * @see GCFPValue::setValue(const string value)
-     */
     virtual TGCFResult setValue(const string& value);
 
     // Returns the value of this object in a string
     virtual string getValueAsString(const string& format = "") const;
 
     /** Returns the value of this object*/
-    virtual uint32 getValue() const {return _value;}
+    virtual const string& getValue() const {return _value;}
 
     /** @see GCFPValue::clone() */
     virtual GCFPValue* clone() const;
@@ -81,16 +70,16 @@ class GCFPVUnsigned : public GCFPValue
     unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    unsigned int getConcreteSize() const { return sizeof(uint32); }
+    unsigned int getConcreteSize() const { return sizeof(uint16) + _value.length(); }
     
   private: // Private attributes
-    /** The value */
-    uint32 _value;
+    /** The value*/
+    string _value;
 };
 
 //# ---------- inline functions ----------
-inline bool GCFPVUnsigned::operator==(const GCFPValue&	that) const {
-	return ((that.getType() == getType()) && (getValue() == ((GCFPVUnsigned *) &that)->getValue()));
+inline bool GCFPVString::operator==(const GCFPValue&	that) const {
+	return ((that.getType() == getType()) && (getValue() == ((GCFPVString *) &that)->getValue()));
 }
 
   } // namespace Common

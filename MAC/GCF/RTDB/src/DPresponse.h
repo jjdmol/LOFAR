@@ -32,7 +32,7 @@
 
 namespace LOFAR {
   namespace GCF {
-    class Common::GCFPValue;
+    class PVSS::GCFPValue;
 	using PVSS::PVSSresult;
 	using PVSS::PVSSresponse;
     namespace RTDB {
@@ -50,11 +50,11 @@ public:
 	virtual void dpeSubscriptionLost (const string& /*propName*/, PVSSresult	/*result*/) {};
 	virtual void dpeUnsubscribed	 (const string& /*propName*/, PVSSresult	/*result*/) {};
 	virtual void dpeValueChanged	 (const string& /*propName*/, PVSSresult	/*result*/, 
-									  const Common::GCFPValue& /*value*/) {};
+									  const GCFPValue& /*value*/) {};
 	virtual void dpQuerySubscribed	 (uint32 /*queryId*/, PVSSresult	/*result*/) {};        
 
 	// only those are used.
-	virtual void dpeValueGet		 (const string& propName, PVSSresult	result, const Common::GCFPValue& value);
+	virtual void dpeValueGet		 (const string& propName, PVSSresult	result, const GCFPValue& value);
 	virtual void dpeValueSet		 (const string& propName, PVSSresult	result);
 private:
 	DPservice*	itsDPservice;

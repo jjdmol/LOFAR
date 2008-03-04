@@ -50,18 +50,17 @@
 // forward declaration
 
 namespace LOFAR {
+	using	GCF::TM::GCFTimerPort;
+	using	GCF::TM::GCFITCPort;
+	using	GCF::TM::GCFPort;
+	using	GCF::TM::GCFEvent;
+	using	GCF::TM::GCFPortInterface;
+	using	GCF::TM::GCFTask;
+	using	GCF::RTDB::RTDBPropertySet;
+	using	APLCommon::ChildControl;
+	using	APLCommon::ParentControl;
+	using	APLCommon::CTState;
 	namespace MainCU {
-
-using	GCF::TM::GCFTimerPort;
-using	GCF::TM::GCFITCPort;
-using	GCF::TM::GCFPort;
-using	GCF::TM::GCFEvent;
-using	GCF::TM::GCFPortInterface;
-using	GCF::TM::GCFTask;
-using	GCF::RTDB::RTDBPropertySet;
-using	APLCommon::ChildControl;
-using	APLCommon::ParentControl;
-using	APLCommon::CTState;
 
 class ObservationControl : public GCFTask
 {

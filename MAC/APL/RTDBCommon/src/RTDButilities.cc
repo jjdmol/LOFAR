@@ -26,11 +26,10 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <GCF/RTDB/DPservice.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 
 namespace LOFAR {
-  using namespace GCF::Common;
   using namespace GCF::PVSS;
   using namespace GCF::RTDB;
   namespace APL {

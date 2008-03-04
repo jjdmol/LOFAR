@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
@@ -42,8 +42,8 @@
 #include "StationControl.h"
 #include "StationControlDefines.h"
 
-using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace std;
 
@@ -290,7 +290,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		itsChildControl->startChild(CNTLRTYPE_DIGITALBOARDCTRL,
 							   		0,			// treeID, 
 							   		0,			// instanceNr,
-							   		myHostname(false));
+							   		GCF::Common::myHostname(false));
 		// will result in CONTROL_STARTED (and CONTROL_CONNECTED if no error).
 		}
 		break;

@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #define LOFARLOGGER_SUBPACKAGE "Timer"
 

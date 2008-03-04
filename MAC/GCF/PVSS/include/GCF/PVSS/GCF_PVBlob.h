@@ -23,7 +23,7 @@
 #ifndef GCF_PVBLOB_H
 #define GCF_PVBLOB_H
 
-#include <GCF/GCF_PValue.h>
+#include <GCF/PVSS/GCF_PValue.h>
 #include <Common/LofarTypes.h>
 
 
@@ -32,7 +32,7 @@ namespace LOFAR
 using TYPES::uint16;
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
 
 /**

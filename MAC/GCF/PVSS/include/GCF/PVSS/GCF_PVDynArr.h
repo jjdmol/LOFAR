@@ -1,4 +1,4 @@
-//#  GCF_PVBool.h: MAC boolean property type
+//#  GCF_PVDynArr.h: MAC dynamic array property type
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,53 +20,58 @@
 //#
 //#  $Id$
 
-#ifndef GCF_PVBOOL_H
-#define GCF_PVBOOL_H
+#ifndef GCF_PVDYNARR_H
+#define GCF_PVDYNARR_H
 
-#include <GCF/GCF_PValue.h>
+#include <GCF/PVSS/GCF_PValue.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR 
 {
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
+typedef vector<GCFPValue*> GCFPValueArray;
 
 /**
-   By means of this property type a boolean (TRUE/FALSE or YES/NO) value can be 
-   used.
-*/
+ * By means of this complex property type a dynamic list of property values of 
+ * the same simple type can be managed.
+ */
 
-class GCFPVBool : public GCFPValue
+class GCFPVDynArr : public GCFPValue
 {
-  public: 
-  	explicit GCFPVBool (bool val = false) : GCFPValue(LPT_BOOL), _value(val) {;}
-    explicit GCFPVBool(const GCFPVBool& val) : GCFPValue(LPT_BOOL), _value(val.getValue()) {;}
+  public:
+  	explicit GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
+    explicit GCFPVDynArr(TMACValueType itemType);
+    explicit GCFPVDynArr (const GCFPVDynArr& valArray) : GCFPValue(valArray.getType())
+      { setValue(valArray.getValue()); }
 
-  	virtual ~GCFPVBool () {;}
-    
+  	virtual ~GCFPVDynArr();
+
     /** Changes the value of this object */
-    void setValue (const bool newVal) {_value = newVal;}
+    virtual void setValue(const GCFPValueArray& newVal);
 
     /** 
      * Changes the value of this object by means of a stringbuffer, 
      * which will be translated.
+     * NOT YET IMPLEMENTED
      * @see GCFPValue::setValue(const string value)
      */
-    virtual TGCFResult setValue (const string& value);
+    virtual TGCFResult setValue(const string& value);
 
     // Returns the value of this object in a string
     virtual string getValueAsString(const string& format = "") const;
 
     /** Returns the value of this object*/
-    bool getValue () const {return _value;};
+    virtual const GCFPValueArray& getValue() const {return _values;}
 
     /** @see GCFPValue::clone() */
-    virtual GCFPValue* clone () const;
+    virtual GCFPValue* clone() const;
 
     /** @see GCFPValue::copy() */
-    virtual TGCFResult copy (const GCFPValue& value);
-    
+    virtual TGCFResult copy(const GCFPValue& value);
+  
     /** @see GCFPValue::operator==() */
     virtual bool operator==(const GCFPValue& that) const;
     virtual bool operator!=(const GCFPValue& that) const { return (!(*this == that)); }
@@ -79,16 +84,20 @@ class GCFPVBool : public GCFPValue
     unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    unsigned int getConcreteSize() const { return 1; }
+    unsigned int getConcreteSize() const;
+    
+  private: // help members
+    /** cleanup the array item objects */
+    void cleanup();
     
   private: // Private attributes
-    /** The value */
-    volatile bool _value;
+    /**  The values*/
+    GCFPValueArray _values;
 };
 
 //# ---------- inline functions ----------
-inline bool GCFPVBool::operator==(const GCFPValue&	that) const {
-	return ((that.getType() == getType()) && (getValue() == ((GCFPVBool *) &that)->getValue()));
+inline bool GCFPVDynArr::operator==(const GCFPValue&	that) const {
+	return ((that.getType() == getType()) && (getValue() == ((GCFPVDynArr *) &that)->getValue()));
 }
 
   } // namespace Common

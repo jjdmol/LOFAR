@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
@@ -46,8 +46,8 @@
 #include "TBBReadCmd.h"
 #include "VHECRTask.h"
 
-using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace std;
 

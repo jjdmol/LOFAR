@@ -1,5 +1,5 @@
 #include <lofar_config.h>
-#include <GCF/GCF_PValue.h>
+#include <GCF/PVSS/GCF_PValue.h>
 #include "RTDBPerfResp.h"
 
 int		gDeleteCounter = 0;
@@ -10,7 +10,6 @@ int		NR_OF_DPS = 10;
 
 namespace LOFAR {
   namespace GCF {
-    using namespace Common;
 	namespace RTDB {
    
 void RTDBPerfResp::dpCreated(const string& /*propName*/, PVSSresult /*result*/)
@@ -30,11 +29,11 @@ void RTDBPerfResp::dpeUnsubscribed(const string& /*propName*/, PVSSresult /*resu
 {
 }
 
-void RTDBPerfResp::dpeValueGet(const string& /*propName*/, PVSSresult /*result*/, const GCFPValue& /*value*/)
+void RTDBPerfResp::dpeValueGet(const string& /*propName*/, PVSSresult /*result*/, const PVSS::GCFPValue& /*value*/)
 {
 }
 
-void RTDBPerfResp::dpeValueChanged(const string& /*propName*/, PVSSresult /*result*/, const GCFPValue& /*value*/)
+void RTDBPerfResp::dpeValueChanged(const string& /*propName*/, PVSSresult /*result*/, const PVSS::GCFPValue& /*value*/)
 {
 }
 

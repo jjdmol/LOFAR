@@ -36,7 +36,7 @@ using std::vector;
 
 namespace LOFAR {
  namespace GCF {
-  namespace Common {
+  namespace PVSS {
 
 // This header file will be included by each GCF API class header and provides
 // therefore a number of defines, structs or macro's. They can/must be used when

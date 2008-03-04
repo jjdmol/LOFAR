@@ -1,4 +1,4 @@
-//#  GCF_PVString.h: MAC string property type
+//#  GCF_PVBool.h: MAC boolean property type
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,44 +20,53 @@
 //#
 //#  $Id$
 
-#ifndef GCF_PVSTRING_H
-#define GCF_PVSTRING_H
+#ifndef GCF_PVBOOL_H
+#define GCF_PVBOOL_H
 
-#include <GCF/GCF_PValue.h>
+#include <GCF/PVSS/GCF_PValue.h>
 
 namespace LOFAR 
 {
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
-/**
- * By means of this property type a zero terminated string (max. length ~30.000 
- * characters) value can be used.
- */
-class GCFPVString : public GCFPValue
-{
-  public:
-  	explicit GCFPVString(string val = "") : GCFPValue(LPT_STRING), _value(val) {;}
-    explicit GCFPVString(const GCFPVString& val) : GCFPValue(LPT_STRING), _value(val.getValue()) {;}
 
-  	virtual ~GCFPVString() {;}
+/**
+   By means of this property type a boolean (TRUE/FALSE or YES/NO) value can be 
+   used.
+*/
+
+class GCFPVBool : public GCFPValue
+{
+  public: 
+  	explicit GCFPVBool (bool val = false) : GCFPValue(LPT_BOOL), _value(val) {;}
+    explicit GCFPVBool(const GCFPVBool& val) : GCFPValue(LPT_BOOL), _value(val.getValue()) {;}
+
+  	virtual ~GCFPVBool () {;}
     
     /** Changes the value of this object */
-    virtual TGCFResult setValue(const string& value);
+    void setValue (const bool newVal) {_value = newVal;}
+
+    /** 
+     * Changes the value of this object by means of a stringbuffer, 
+     * which will be translated.
+     * @see GCFPValue::setValue(const string value)
+     */
+    virtual TGCFResult setValue (const string& value);
 
     // Returns the value of this object in a string
     virtual string getValueAsString(const string& format = "") const;
 
     /** Returns the value of this object*/
-    virtual const string& getValue() const {return _value;}
+    bool getValue () const {return _value;};
 
     /** @see GCFPValue::clone() */
-    virtual GCFPValue* clone() const;
+    virtual GCFPValue* clone () const;
 
     /** @see GCFPValue::copy() */
-    virtual TGCFResult copy(const GCFPValue& value);
- 
+    virtual TGCFResult copy (const GCFPValue& value);
+    
     /** @see GCFPValue::operator==() */
     virtual bool operator==(const GCFPValue& that) const;
     virtual bool operator!=(const GCFPValue& that) const { return (!(*this == that)); }
@@ -70,16 +79,16 @@ class GCFPVString : public GCFPValue
     unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    unsigned int getConcreteSize() const { return sizeof(uint16) + _value.length(); }
+    unsigned int getConcreteSize() const { return 1; }
     
   private: // Private attributes
-    /** The value*/
-    string _value;
+    /** The value */
+    volatile bool _value;
 };
 
 //# ---------- inline functions ----------
-inline bool GCFPVString::operator==(const GCFPValue&	that) const {
-	return ((that.getType() == getType()) && (getValue() == ((GCFPVString *) &that)->getValue()));
+inline bool GCFPVBool::operator==(const GCFPValue&	that) const {
+	return ((that.getType() == getType()) && (getValue() == ((GCFPVBool *) &that)->getValue()));
 }
 
   } // namespace Common

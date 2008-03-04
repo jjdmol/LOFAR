@@ -40,7 +40,7 @@
 #include <AnyTypeVar.hxx>
 #include <DpIdentifierVar.hxx>
 
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/PVSS/PVSSresponse.h>
 #include <GCF/PVSS/PVSSresult.h>
@@ -51,7 +51,6 @@
 
 namespace LOFAR {
 	namespace GCF {
-		using namespace Common;
 		namespace PVSS {
 
 static char*	SALErrors[]  = {
@@ -743,7 +742,7 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 		PVSSboolean retVal;
 		if (timestamp > 0.0) {
 			TimeVar ts;
-			ts.setSeconds(trunc(timestamp));
+			ts.setSeconds((long)trunc(timestamp));
 			ts.setMilli((time_t)((timestamp - trunc(timestamp)) * 1000));
 			retVal = Manager::dpSetTimed(ts, dpId, *pVar, pWFA);
 		}
@@ -798,7 +797,7 @@ PVSSresult PVSSservice::dpeSet(const string& 	dpeName,
 //
 PVSSresult PVSSservice::dpeSetMultiple(const string&				dpName,
 									   vector<string>				dpeNames, 
-									   vector<Common::GCFPValue*>	values, 
+									   vector<GCFPValue*>			values, 
 									   double						timestamp,
 									   bool   						wantAnswer)
 {
@@ -828,8 +827,8 @@ PVSSresult PVSSservice::dpeSetMultiple(const string&				dpName,
 	// construct the DpIdValueList
 	vector<string>::const_iterator	nameIter = dpeNames.begin();
 	vector<string>::const_iterator	nameEnd  = dpeNames.end();
-	vector<Common::GCFPValue*>::const_iterator	valIter = values.begin();
-	vector<Common::GCFPValue*>::const_iterator	valEnd  = values.end();
+	vector<GCFPValue*>::const_iterator	valIter = values.begin();
+	vector<GCFPValue*>::const_iterator	valEnd  = values.end();
 	while (nameIter != nameEnd && valIter != valEnd) {
 		convPropToDpConfig(dpName+"."+*nameIter, pvssDpName, false);	// add .:_original.._value
 		if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR) {
@@ -867,7 +866,7 @@ PVSSresult PVSSservice::dpeSetMultiple(const string&				dpName,
 	PVSSboolean retVal;
 	if (timestamp > 0.0) {
 		TimeVar ts;
-		ts.setSeconds(trunc(timestamp));
+		ts.setSeconds((long)trunc(timestamp));
 		ts.setMilli((time_t)((timestamp - trunc(timestamp)) * 1000));
 		retVal = Manager::dpSetTimed(ts, dpIdList, pWFA);
 	}

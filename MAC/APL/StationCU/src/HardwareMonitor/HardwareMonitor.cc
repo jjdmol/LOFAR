@@ -22,7 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
@@ -34,8 +34,8 @@
 #include "RCUConstants.h"
 #include "StationPermDatapointDefs.h"
 
-using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 using namespace std;
 

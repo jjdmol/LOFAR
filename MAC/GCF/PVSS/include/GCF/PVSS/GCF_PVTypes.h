@@ -23,14 +23,14 @@
 #ifndef GCF_PVTYPES_H
 #define GCF_PVTYPES_H
 
-#include <GCF/GCF_PValue.h>
-#include <GCF/GCF_PVBlob.h>
-#include <GCF/GCF_PVBool.h>
-#include <GCF/GCF_PVChar.h>
-#include <GCF/GCF_PVDouble.h>
-#include <GCF/GCF_PVDynArr.h>
-#include <GCF/GCF_PVInteger.h>
-#include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVUnsigned.h>
+#include <GCF/PVSS/GCF_PValue.h>
+#include <GCF/PVSS/GCF_PVBlob.h>
+#include <GCF/PVSS/GCF_PVBool.h>
+#include <GCF/PVSS/GCF_PVChar.h>
+#include <GCF/PVSS/GCF_PVDouble.h>
+#include <GCF/PVSS/GCF_PVDynArr.h>
+#include <GCF/PVSS/GCF_PVInteger.h>
+#include <GCF/PVSS/GCF_PVString.h>
+#include <GCF/PVSS/GCF_PVUnsigned.h>
 
 #endif

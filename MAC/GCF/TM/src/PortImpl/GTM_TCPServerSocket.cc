@@ -21,9 +21,9 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "GTM_TCPServerSocket.h"
-#include <GCF/GCF_Defines.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <netinet/in.h>

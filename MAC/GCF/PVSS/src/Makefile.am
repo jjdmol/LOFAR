@@ -6,6 +6,15 @@ NODOCHDRS			= GSA_SCADAHandler.h \
 lib_LTLIBRARIES 	= libgcfpvss.la
 
 libgcfpvss_la_SOURCES=$(NODOCHDRS) \
+					  GCF_PValue.cc \
+					  GCF_PVChar.cc \
+					  GCF_PVBool.cc \
+					  GCF_PVDouble.cc \
+					  GCF_PVString.cc \
+					  GCF_PVInteger.cc \
+					  GCF_PVUnsigned.cc \
+					  GCF_PVDynArr.cc \
+					  GCF_PVBlob.cc \
 					  GSA_SCADAHandler.cc \
 					  GSA_PvssApi.cc \
 					  GSA_Resources.cc \

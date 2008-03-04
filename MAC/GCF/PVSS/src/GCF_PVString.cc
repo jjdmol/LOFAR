@@ -23,7 +23,7 @@
 
 #include <lofar_config.h>
 
-#include <GCF/GCF_PVString.h>
+#include <GCF/PVSS/GCF_PVString.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarTypes.h>
 
@@ -31,7 +31,7 @@ namespace LOFAR
 {
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
 
 using LOFAR::TYPES::uint16;
