@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection
  * Method:    initOTDBconnection
- * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection_initOTDBconnection
-  (JNIEnv *, jobject, jstring, jstring, jstring);
+  (JNIEnv *, jobject, jstring, jstring, jstring, jstring);
 
 /*
  * Class:     nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection
