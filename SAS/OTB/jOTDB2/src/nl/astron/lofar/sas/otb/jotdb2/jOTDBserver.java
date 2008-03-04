@@ -95,7 +95,7 @@ public class jOTDBserver {
             logger.info("jOTDBserver creating local object and remote adapter...");
             
             // Export jOTDBconnection
-            jOTDBconnAdaptee = new jOTDBconnection(args[0], args[1], args[2]);
+            jOTDBconnAdaptee = new jOTDBconnection(args[0], args[1], args[2], args[3]);
             jOTDBconnAdapter = new jOTDBadapter(jOTDBconnAdaptee);
             //A custom port was specified, export the object using the port specified
             if(objectPort!=0){

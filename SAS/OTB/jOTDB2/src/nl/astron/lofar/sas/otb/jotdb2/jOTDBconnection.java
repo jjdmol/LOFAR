@@ -26,10 +26,10 @@ import java.util.Vector;
 public class jOTDBconnection
 {
     // Just creates an object and registers the connection parameters.
-    public jOTDBconnection (String username, String passwd, String database)
+    public jOTDBconnection (String username, String passwd, String database, String hostname)
     {
         try {
-            initOTDBconnection (username, passwd, database);
+            initOTDBconnection (username, passwd, database, hostname);
         } catch (Exception ex) {
             System.out.println("Error during connection init :" + ex);
         }
@@ -38,7 +38,7 @@ public class jOTDBconnection
    public jOTDBconnection()
      {
         try {
-            initOTDBconnection("paulus", "boskabouter", "otdbtest");
+            initOTDBconnection("paulus", "boskabouter", "otdbtest" , "dop50.astron.nl");
         } catch (Exception ex) {
             System.out.println("Error during connection init :" + ex);
         }
@@ -46,7 +46,7 @@ public class jOTDBconnection
    
    
     // Create a OTDBconnection instance
-    private native void initOTDBconnection (String username, String passwd, String database) throws Exception;
+    private native void initOTDBconnection (String username, String passwd, String database, String hostname) throws Exception;
 
     // To test if we are (still) connected.
     public native boolean isConnected() throws Exception;
