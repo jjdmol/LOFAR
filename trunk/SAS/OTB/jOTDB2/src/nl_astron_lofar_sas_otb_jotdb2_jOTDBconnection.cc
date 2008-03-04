@@ -40,25 +40,29 @@ using namespace std;
 
 OTDBconnection* theirConn;
 
-JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection_initOTDBconnection(JNIEnv *env, jobject, jstring username, jstring passwd, jstring database) {
+JNIEXPORT void JNICALL Java_nl_astron_lofar_sas_otb_jotdb2_jOTDBconnection_initOTDBconnection(JNIEnv *env, jobject, jstring username, jstring passwd, jstring database, jstring hostname) {
   const char* user = env->GetStringUTFChars(username, 0);
   const char* pass = env->GetStringUTFChars(passwd, 0);
   const char* db = env->GetStringUTFChars(database, 0);
+  const char* hn = env->GetStringUTFChars(hostname, 0);
   const string u (user);
   const string p (pass);
   const string d (db);
+  const string h (hn);
 
   try {
-    theirConn = new OTDBconnection(u, p, d);
+    theirConn = new OTDBconnection(u, p, d, h);
     env->ReleaseStringUTFChars(username, user);
     env->ReleaseStringUTFChars(passwd, pass);
     env->ReleaseStringUTFChars(database, db);
+    env->ReleaseStringUTFChars(hostname, hn);
   } catch (exception &ex) {
-    cout << "Exception during new OTDBconnection(" << u << "," << p << "," << d <<") : "<< ex.what() << endl;
+    cout << "Exception during new OTDBconnection(" << u << "," << p << "," << d << "," << h << ") : "<< ex.what() << endl;
     
     env->ReleaseStringUTFChars(username, user);
     env->ReleaseStringUTFChars(passwd, pass);
     env->ReleaseStringUTFChars(database, db);
+    env->ReleaseStringUTFChars(hostname, hn);
     env->ThrowNew(env->FindClass("java/lang/Exception"),ex.what());
   }
 }
