@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,489 117 950 164 N "_3DFace" 1
+PANEL,377 112 950 164 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -56,7 +56,7 @@ LANG:1 6 Layer1
 6 0
 "childStateBorder"
 ""
-1 10 60 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+1 10 50 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -65,7 +65,7 @@ EE E
 LANG:1 18 Station Controller
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 10 10 940 60
+E E 0 3 1 0 1 E U  1 E 10 10 940 50
 2 1
 "Text4"
 ""
@@ -89,7 +89,7 @@ LANG:1 17 Station Control :
 2 2
 "Text8"
 ""
-1 213 17 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 183 25 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -98,8 +98,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 215 19 259 35
-0 2 0 "s" 0 0 0 192 0 0  215 19
+E E 0 1 1 0 1 E U  0 E 185 27 229 43
+0 2 0 "s" 0 0 0 192 0 0  185 27
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -109,7 +109,7 @@ LANG:1 7 Action:
 2 3
 "Text1"
 ""
-1 213 34 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 475 25 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -118,8 +118,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 215 36 311 52
-0 2 0 "s" 0 0 0 64 0 0  215 36
+E E 0 1 1 0 1 E U  0 E 477 27 523 43
+0 2 0 "s" 0 0 0 64 0 0  477 27
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -129,7 +129,7 @@ LANG:1 6 Error:
 2 4
 "txt_action"
 ""
-1 290 17 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+1 240 25 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -138,8 +138,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 292 19 937 37
-0 2 0 "s" 0 0 0 64 0 0  292 19
+E E 0 1 1 0 1 E U  0 E 242 27 438 43
+0 2 0 "s" 0 0 0 64 0 0  242 27
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -149,7 +149,7 @@ LANG:1 0
 2 8
 "txt_error"
 ""
-1 290 34 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+1 550 25 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -158,8 +158,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 292 36 937 54
-0 2 0 "s" 0 0 0 64 0 0  292 36
+E E 0 1 1 0 1 E U  0 E 552 27 788 43
+0 2 0 "s" 0 0 0 64 0 0  552 27
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
