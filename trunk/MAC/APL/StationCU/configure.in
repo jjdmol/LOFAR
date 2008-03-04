@@ -84,7 +84,6 @@ src/BeamControl/Makefile
 src/CalibrationControl/Makefile
 src/StationControl/Makefile
 src/TBBControl/Makefile
-src/TempControl/Makefile
 Makefile
 StationCU.spec
 )
