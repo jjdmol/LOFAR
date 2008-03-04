@@ -23,6 +23,7 @@
 #ifndef GSB_CONTROLLER_H
 #define GSB_CONTROLLER_H
 
+#include <Common/lofar_vector.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_SBTCPPort.h>
 #include "GSB_Defines.h"

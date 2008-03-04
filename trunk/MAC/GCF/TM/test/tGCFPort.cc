@@ -22,6 +22,8 @@
 //  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include "tGCFPort.h"
 #include "Echo_Protocol.ph"
 

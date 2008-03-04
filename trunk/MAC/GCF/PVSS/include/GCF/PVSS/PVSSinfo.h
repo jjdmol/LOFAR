@@ -23,7 +23,7 @@
 #ifndef PVSSINFO_H
 #define PVSSINFO_H
 
-#include <GCF/GCF_Defines.h>
+#include <GCF/PVSS/GCF_Defines.h>
 
 // forward declaration
 
@@ -39,7 +39,10 @@ class PVSSinfo
 public:
     static bool propExists (const string& dpeName);
     static bool typeExists (const string& dpTypeName);
-    static Common::TMACValueType getMACTypeId (const string& dpeName);
+    static TMACValueType getMACTypeId (const string& dpeName);
+//	static bool EventPort::_askBrokerThePortNumber();
+	static bool isValidPropName(const char* propName);
+	static bool isValidScope   (const char* propName);
 
     static const string getSystemName(int8 sysnr);
     static const string& getLocalSystemName();
@@ -55,9 +58,9 @@ public:
     static uint8 getOwnManNum();
     static uint8 getLastEventManType();
 
-    static Common::TGCFResult getTypeStruct(const string& typeName, 
-                                            list<Common::TPropertyInfo>& propInfo, 
-                                            int8 sysNr = getLocalSystemId());
+    static TGCFResult getTypeStruct(const string& 			typeName, 
+                                    list<TPropertyInfo>& 	propInfo, 
+                                    int8 					sysNr = getLocalSystemId());
 
     static void getAllProperties(const string& typeFilter, const string& dpFitler, 
                                  vector<string>& foundProperties);

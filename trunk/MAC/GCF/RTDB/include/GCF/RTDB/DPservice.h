@@ -36,15 +36,14 @@
 
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
-#include <GCF/GCF_PValue.h>
-#include <GCF/GCF_Defines.h>
+//#include <GCF/GCF_Defines.h>
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/PVSS/GCF_PValue.h>
 #include <GCF/PVSS/PVSSresponse.h>
 
 namespace LOFAR {
   namespace GCF {
-	using Common::GCFPValue;
-	using Common::TMACValueType;
+	using PVSS::GCFPValue;
 	using PVSS::PVSSresponse;
 	using PVSS::PVSSservice;
 	using PVSS::PVSSresult;
@@ -78,7 +77,7 @@ public:
 
 	PVSSresult setValue	(const string& 		DPname,	// slower than previous function
 						 const string&		value, 
-						 TMACValueType		type,	// LPT_BOOL/CHAR/UNSIGNED/....
+						 PVSS::TMACValueType		type,	// LPT_BOOL/CHAR/UNSIGNED/....
 						 double 			timestamp = 0.0,
 						 bool				wantAnswer = true);
 
@@ -103,8 +102,8 @@ protected:
 	void dpeSubscribed 		 (const string& DPname, PVSSresult	result);    
 	void dpeSubscriptionLost (const string& DPname, PVSSresult	result);
 	void dpeUnsubscribed	 (const string& DPname, PVSSresult	result);
-	void dpeValueGet		 (const string& DPname, PVSSresult	result, const Common::GCFPValue& value);
-	void dpeValueChanged	 (const string& DPname, PVSSresult	result, const Common::GCFPValue& value);
+	void dpeValueGet		 (const string& DPname, PVSSresult	result, const GCFPValue& value);
+	void dpeValueChanged	 (const string& DPname, PVSSresult	result, const GCFPValue& value);
 	void dpeValueSet		 (const string& DPname, PVSSresult	result);
 	void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
 

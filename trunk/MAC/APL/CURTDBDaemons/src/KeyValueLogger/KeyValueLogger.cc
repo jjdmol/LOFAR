@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <APL/APLProtocol/KVT_Protocol.ph>
@@ -34,6 +34,7 @@ namespace LOFAR {
   namespace GCF {
     using namespace Common;
     using namespace TM;
+    using namespace PVSS;
     using namespace RTDB;
     namespace RTDBDaemons {
 

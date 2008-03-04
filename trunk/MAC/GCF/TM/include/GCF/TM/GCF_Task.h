@@ -23,6 +23,7 @@
 #ifndef GCF_TASK_H
 #define GCF_TASK_H
 
+#include <Common/lofar_map.h>
 #include <GCF/TM/GCF_Fsm.h>
 
 namespace LOFAR {

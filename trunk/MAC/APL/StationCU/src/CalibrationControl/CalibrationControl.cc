@@ -23,7 +23,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
 
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -35,8 +35,8 @@
 #include "CalibrationControl.h"
 #include "CalibrationControlDefines.h"
 
-using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
+using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::RTDB;
 
 namespace LOFAR {

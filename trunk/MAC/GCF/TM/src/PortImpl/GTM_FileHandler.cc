@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "GTM_FileHandler.h"
 #include "GTM_File.h"

@@ -23,7 +23,7 @@
 #ifndef  PVSS_RESPONSE_H
 #define  PVSS_RESPONSE_H
 
-#include <GCF/GCF_PValue.h>
+#include <GCF/PVSS/GCF_PValue.h>
 #include <GCF/PVSS/PVSSresult.h>
 
 namespace LOFAR {
@@ -47,8 +47,8 @@ protected:
     virtual void dpeSubscribed 		 (const string& dpeName, PVSSresult result) = 0;    
     virtual void dpeSubscriptionLost (const string& dpeName, PVSSresult result) = 0;
     virtual void dpeUnsubscribed	 (const string& dpeName, PVSSresult result) = 0;
-    virtual void dpeValueGet		 (const string& dpeName, PVSSresult result, const Common::GCFPValue& value) = 0;
-    virtual void dpeValueChanged	 (const string& dpeName, PVSSresult result, const Common::GCFPValue& value) = 0;
+    virtual void dpeValueGet		 (const string& dpeName, PVSSresult result, const GCFPValue& value) = 0;
+    virtual void dpeValueChanged	 (const string& dpeName, PVSSresult result, const GCFPValue& value) = 0;
     virtual void dpeValueSet		 (const string& dpeName, PVSSresult result) = 0;
     virtual void dpQuerySubscribed	 (uint32 queryId,  		 PVSSresult result) = 0;        
 

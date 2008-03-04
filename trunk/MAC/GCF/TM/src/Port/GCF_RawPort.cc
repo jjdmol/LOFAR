@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_Port.h>

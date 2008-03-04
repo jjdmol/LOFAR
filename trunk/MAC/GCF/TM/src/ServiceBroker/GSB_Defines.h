@@ -25,8 +25,6 @@
 
 #define LOFARLOGGER_SUBPACKAGE "SB"
 
-#include <GCF/GCF_Defines.h>
-
 namespace LOFAR {
  namespace GCF {
   namespace SB {

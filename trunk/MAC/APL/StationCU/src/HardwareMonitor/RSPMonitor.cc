@@ -22,7 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/RTDBCommon/RTDButilities.h>
@@ -39,8 +39,8 @@
 namespace LOFAR {
 	using namespace APLCommon;
 	using namespace APL::RTDBCommon;
-	using namespace GCF::Common;
 	using namespace GCF::TM;
+	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;
 	namespace StationCU {
 	

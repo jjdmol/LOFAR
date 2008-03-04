@@ -23,7 +23,6 @@
 #ifndef GCF_ETHRAWPORT_H
 #define GCF_ETHRAWPORT_H
 
-#include <GCF/GCF_Defines.h>
 #include <GCF/TM/GCF_RawPort.h>
 
 #include <linux/if_packet.h>

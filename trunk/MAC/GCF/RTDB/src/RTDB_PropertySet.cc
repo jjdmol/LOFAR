@@ -23,8 +23,8 @@
 #include <lofar_config.h>
 
 #include <Common/StreamUtil.h>
-#include <GCF/Utils.h>
-#include <GCF/GCF_PValue.h>
+//#include <GCF/Utils.h>
+#include <GCF/PVSS/GCF_PValue.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
@@ -34,7 +34,7 @@
 
 namespace LOFAR {
   namespace GCF {
-	using namespace Common;
+//	using namespace Common;
 	using namespace TM;
 	using namespace PVSS;
 	namespace RTDB {
@@ -64,7 +64,7 @@ RTDBPropertySet::RTDBPropertySet (const string& 	name,
 	ASSERTSTR(itsService, "Can't connect to PVSS database for " << itsScope);
 
 	// check name convention of DP
-	if (!Common::isValidScope(itsScope.c_str())) {
+	if (!PVSSinfo::isValidScope(itsScope.c_str())) {
 		LOG_WARN_STR("Scope " << itsScope << " does not meet the nameconvention! Set to \"\"");
 		itsScope = "";
 	}
@@ -290,7 +290,7 @@ void RTDBPropertySet::_createAllProperties()
 	}
 
 	// allocate a list that can be fille with the PropInfo of all elements
-    typedef list<Common::TPropertyInfo> PropInfoList_t;
+    typedef list<TPropertyInfo> PropInfoList_t;
     PropInfoList_t 		itsPropInfoList;
 
 	// load structure of propSet into itsPropInfoList

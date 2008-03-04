@@ -24,7 +24,6 @@
 #include <Common/StreamUtil.h>
 
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_PVTypes.h>
 #include <GCF/Utils.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
@@ -33,6 +32,7 @@
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/Observation.h>
 #include <APL/APLCommon/StationInfo.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
 
@@ -44,8 +44,8 @@ namespace LOFAR {
 	using namespace Deployment;
 	using namespace APLCommon;
 	using namespace ACC::APS;
-	using namespace GCF::Common;
 	using namespace GCF::TM;
+	using namespace GCF::PVSS;
 	using namespace GCF::RTDB;
 	namespace MainCU {
 

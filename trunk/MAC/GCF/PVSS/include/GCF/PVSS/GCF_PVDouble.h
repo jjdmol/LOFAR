@@ -1,4 +1,4 @@
-//#  GCF_PVChar.h: MAC char property type 
+//#  GCF_PVDouble.h: MAC double property type 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,31 +20,32 @@
 //#
 //#  $Id$
 
-#ifndef GCF_PVCHAR_H
-#define GCF_PVCHAR_H
+#ifndef GCF_PVDOUBLE_H
+#define GCF_PVDOUBLE_H
 
-#include <GCF/GCF_PValue.h>
+#include <GCF/PVSS/GCF_PValue.h>
 
 namespace LOFAR 
 {
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
 /**
-   By means of this property type a character (0...255) value can be used.
-*/
-
-class GCFPVChar : public GCFPValue  
-{
-  public:
-  	explicit GCFPVChar (char val = 0) : GCFPValue(LPT_CHAR), _value(val) {;}
-    explicit GCFPVChar(const GCFPVChar& val) : GCFPValue(LPT_CHAR), _value(val.getValue()) {;}
+ * By means of this property type a double value (-3.4*10^38 to 3.4*10^38) can 
+ * be used.
+ */
  
-  	virtual ~GCFPVChar () {;}
+class GCFPVDouble : public GCFPValue
+{
+  public: 
+  	explicit GCFPVDouble (double val = 0.0) : GCFPValue(LPT_DOUBLE), _value(val) {;}
+    explicit GCFPVDouble(const GCFPVDouble& val) : GCFPValue(LPT_DOUBLE), _value(val.getValue()) {;}
 
+  	virtual ~GCFPVDouble () {;}
+    
     /** Changes the value of this object */
-    void setValue (const char newVal) {_value = newVal;}
+    void setValue ( const double newVal) {_value = newVal;};
 
     /** 
      * Changes the value of this object by means of a stringbuffer, 
@@ -57,14 +58,14 @@ class GCFPVChar : public GCFPValue
     virtual string getValueAsString(const string& format = "") const;
 
     /** Returns the value of this object*/
-    char getValue () const {return _value;}
+    double getValue () const {return _value;};
 
     /** @see GCFPValue::clone() */
     virtual GCFPValue* clone () const;
 
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy (const GCFPValue& value);
-  
+      
     /** @see GCFPValue::operator==() */
     virtual bool operator==(const GCFPValue& that) const;
     virtual bool operator!=(const GCFPValue& that) const { return (!(*this == that)); }
@@ -77,16 +78,16 @@ class GCFPVChar : public GCFPValue
     unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    unsigned int getConcreteSize() const { return sizeof(char); }
-
+    unsigned int getConcreteSize() const { return sizeof(double); }
+    
   private: // Private attributes
-    /** The value */
-    char _value;
+    ///  The value 
+    double _value;
 };
 
 //# ---------- inline functions ----------
-inline bool GCFPVChar::operator==(const GCFPValue&	that) const {
-	return ((that.getType() == getType()) && (getValue() == ((GCFPVChar *) &that)->getValue()));
+inline bool GCFPVDouble::operator==(const GCFPValue&	that) const {
+	return ((that.getType() == getType()) && (getValue() == ((GCFPVDouble *) &that)->getValue()));
 }
 
   } // namespace Common

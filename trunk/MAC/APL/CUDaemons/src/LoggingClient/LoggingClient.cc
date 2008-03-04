@@ -24,7 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/GCF_ServiceInfo.h>
 #include <APL/APLCommon/StationInfo.h>		// LOFAR_SHARE_LOCATION
 #include <APL/APLProtocol/LOG_Protocol.ph>

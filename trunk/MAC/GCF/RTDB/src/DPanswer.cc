@@ -77,7 +77,7 @@ void DPanswer::dpeUnsubscribed (const string& dpeName, PVSSresult result)
 	_dispatchEvent(DPEvent);
 }
 
-void DPanswer::dpeValueGet (const string& dpeName, PVSSresult result, const Common::GCFPValue& value)
+void DPanswer::dpeValueGet (const string& dpeName, PVSSresult result, const GCFPValue& value)
 {
 	DPGetEvent		DPEvent;
 	DPEvent.DPname  = dpeName;
@@ -86,7 +86,7 @@ void DPanswer::dpeValueGet (const string& dpeName, PVSSresult result, const Comm
 	_dispatchEvent(DPEvent);
 }
 
-void DPanswer::dpeValueChanged (const string& dpeName, PVSSresult result, const Common::GCFPValue& value)
+void DPanswer::dpeValueChanged (const string& dpeName, PVSSresult result, const GCFPValue& value)
 {
 	DPChangedEvent		DPEvent;
 	DPEvent.DPname  = dpeName;

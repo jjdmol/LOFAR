@@ -23,11 +23,11 @@
 
 #include <lofar_config.h>
 
-#include <GCF/GCF_PVBool.h>
+#include <GCF/PVSS/GCF_PVBool.h>
 
 namespace LOFAR {
  namespace GCF {
-  namespace Common {
+  namespace PVSS {
 
 //
 // unpackConcrete(buffer)

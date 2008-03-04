@@ -25,14 +25,13 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 #include <Common/Timer.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include "tPerformance.h"
 #include "PerformanceResponse.h"
 
 namespace LOFAR {
   namespace GCF {
-  using namespace Common;
   using namespace TM;
   namespace PVSS {
 

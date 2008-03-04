@@ -23,13 +23,13 @@
 
 #include <lofar_config.h>
 
-#include <GCF/GCF_PVChar.h>
+#include <GCF/PVSS/GCF_PVChar.h>
 
 namespace LOFAR 
 {
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
 
 unsigned int GCFPVChar::unpackConcrete(const char* valBuf)

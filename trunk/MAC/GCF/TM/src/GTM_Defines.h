@@ -23,8 +23,6 @@
 #ifndef GTM_DEFINES_H
 #define GTM_DEFINES_H
 
-#include <GCF/GCF_Defines.h>
-
 namespace LOFAR 
 {
  namespace GCF 
@@ -39,6 +37,7 @@ namespace LOFAR
 #define PARAM_ETH_IFNAME "mac.ns.%s.%s.ifname"
 #define PARAM_ETH_MACADDR "mac.ns.%s.%s.macAddr"
 #define PARAM_ETH_ETHERTYPE "mac.ns.%s.%s.ethertype"
+
   } // namespace TM
  } // namespace GCF
 } // namespace LOFAR

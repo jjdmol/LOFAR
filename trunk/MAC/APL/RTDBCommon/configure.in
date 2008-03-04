@@ -58,7 +58,6 @@ lofar_PVSS(1)
 lofar_INTERNAL(LCS/Common, common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/ACC/APS, APS, , 1, APS/ParameterSet.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, , 1, GCF/TM/GCF_Control.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, , 1, GCF/GCF_Defines.h,,)
 lofar_INTERNAL(MAC/GCF/PVSS, gcfpvss, , 1, GCF/PVSS/PVSSservice.h,,)
 lofar_INTERNAL(MAC/GCF/RTDB, rtdb, , 1, GCF/RTDB/RTDB_PropertySet.h,,)
 

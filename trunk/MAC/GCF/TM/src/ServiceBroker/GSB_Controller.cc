@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include <Common/lofar_fstream.h>
 #include <APS/ParameterSet.h>

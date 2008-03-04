@@ -22,8 +22,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
-
-#include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
 #include "GSA_SCADAHandler.h"
 #include <GSA_Resources.h>

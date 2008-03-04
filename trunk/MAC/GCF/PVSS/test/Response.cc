@@ -1,11 +1,10 @@
 #include <lofar_config.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include "Response.h"
 
 namespace LOFAR {
   namespace GCF {
-    using namespace Common;
 	namespace PVSS {
    
 void Response::dpCreated(const string& propName, PVSSresult		result)

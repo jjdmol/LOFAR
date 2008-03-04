@@ -23,7 +23,7 @@
 
 #include <lofar_config.h>
 
-#include <GCF/GCF_PVDynArr.h>
+#include <GCF/PVSS/GCF_PVDynArr.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarTypes.h>
 
@@ -33,7 +33,7 @@ namespace LOFAR
 {
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
 
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val) :

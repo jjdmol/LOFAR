@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
 #include <Common/Timer.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "tRTDBPerformance.h"
@@ -33,7 +33,6 @@
 
 namespace LOFAR {
   namespace GCF {
-  using namespace Common;
   using namespace TM;
   using namespace PVSS;
   namespace RTDB {

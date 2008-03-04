@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exception.h>
-#include <GCF/GCF_PVTypes.h>
+#include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/RTDB/DPservice.h>
@@ -34,7 +34,6 @@
 
 namespace LOFAR {
   namespace GCF {
-  using namespace Common;
   using namespace TM;
   using namespace PVSS;
   namespace RTDB {

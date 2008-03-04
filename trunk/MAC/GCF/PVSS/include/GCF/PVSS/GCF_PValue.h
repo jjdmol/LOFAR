@@ -23,12 +23,12 @@
 #ifndef GCF_PVALUE_H
 #define GCF_PVALUE_H
 
-#include <GCF/GCF_Defines.h>
+#include <GCF/PVSS/GCF_Defines.h>
 #include <Common/DataFormat.h>
 
 namespace LOFAR {
  namespace GCF {
-  namespace Common {
+  namespace PVSS {
 
 class GCFPVDynArr;
 

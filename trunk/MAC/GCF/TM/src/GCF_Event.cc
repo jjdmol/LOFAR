@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
+#include <Common/LofarLogger.h>
 #include <GCF/TM/GCF_Event.h>
-#include <GCF/GCF_Defines.h>
 
 using namespace std;
 

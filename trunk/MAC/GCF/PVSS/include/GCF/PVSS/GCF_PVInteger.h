@@ -1,4 +1,4 @@
-//#  GCF_PVDynArr.h: MAC dynamic array property type
+//#  GCF_PVInteger.h: MAC integer property type
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,58 +20,54 @@
 //#
 //#  $Id$
 
-#ifndef GCF_PVDYNARR_H
-#define GCF_PVDYNARR_H
+#ifndef GCF_PVINTEGER_H
+#define GCF_PVINTEGER_H
 
-#include <GCF/GCF_PValue.h>
-#include <Common/lofar_vector.h>
+#include <GCF/PVSS/GCF_PValue.h>
+#include <Common/LofarTypes.h>
+
+using LOFAR::TYPES::int32;
 
 namespace LOFAR 
 {
  namespace GCF 
  {
-  namespace Common 
+  namespace PVSS 
   {
-typedef vector<GCFPValue*> GCFPValueArray;
-
 /**
- * By means of this complex property type a dynamic list of property values of 
- * the same simple type can be managed.
+ * By means of this property type a integer (-2,147,483,648 to 2,147,483,647) 
+ * value can be used.
  */
-
-class GCFPVDynArr : public GCFPValue
+class GCFPVInteger : public GCFPValue
 {
   public:
-  	explicit GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
-    explicit GCFPVDynArr(TMACValueType itemType);
-    explicit GCFPVDynArr (const GCFPVDynArr& valArray) : GCFPValue(valArray.getType())
-      { setValue(valArray.getValue()); }
+  	explicit GCFPVInteger (int32 val = 0) : GCFPValue(LPT_INTEGER), _value(val) {;}
+    explicit GCFPVInteger(const GCFPVInteger& val) : GCFPValue(LPT_INTEGER), _value(val.getValue()) {;}
 
-  	virtual ~GCFPVDynArr();
-
+  	virtual ~GCFPVInteger () {;}
+    
     /** Changes the value of this object */
-    virtual void setValue(const GCFPValueArray& newVal);
+    virtual void setValue (const int32 newVal) {_value = newVal;}
 
     /** 
      * Changes the value of this object by means of a stringbuffer, 
      * which will be translated.
-     * NOT YET IMPLEMENTED
      * @see GCFPValue::setValue(const string value)
      */
-    virtual TGCFResult setValue(const string& value);
+    virtual TGCFResult setValue (const string& value);
 
     // Returns the value of this object in a string
     virtual string getValueAsString(const string& format = "") const;
 
     /** Returns the value of this object*/
-    virtual const GCFPValueArray& getValue() const {return _values;}
+    virtual int32 getValue () const {return _value;}
 
     /** @see GCFPValue::clone() */
-    virtual GCFPValue* clone() const;
+    virtual GCFPValue* clone () const;
 
     /** @see GCFPValue::copy() */
-    virtual TGCFResult copy(const GCFPValue& value);
-  
+    virtual TGCFResult copy (const GCFPValue& value);
+ 
     /** @see GCFPValue::operator==() */
     virtual bool operator==(const GCFPValue& that) const;
     virtual bool operator!=(const GCFPValue& that) const { return (!(*this == that)); }
@@ -84,20 +80,16 @@ class GCFPVDynArr : public GCFPValue
     unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    unsigned int getConcreteSize() const;
-    
-  private: // help members
-    /** cleanup the array item objects */
-    void cleanup();
+    unsigned int getConcreteSize() const { return sizeof(int32); }
     
   private: // Private attributes
-    /**  The values*/
-    GCFPValueArray _values;
+    /** The value */
+    int32 _value;
 };
 
 //# ---------- inline functions ----------
-inline bool GCFPVDynArr::operator==(const GCFPValue&	that) const {
-	return ((that.getType() == getType()) && (getValue() == ((GCFPVDynArr *) &that)->getValue()));
+inline bool GCFPVInteger::operator==(const GCFPValue&	that) const {
+	return ((that.getType() == getType()) && (getValue() == ((GCFPVInteger *) &that)->getValue()));
 }
 
   } // namespace Common

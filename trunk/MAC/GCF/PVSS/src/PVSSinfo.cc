@@ -33,7 +33,6 @@
 
 namespace LOFAR {
  namespace GCF {
-  using namespace Common;
   namespace PVSS {
 
 string 	PVSSinfo::_sysName 		= "";
@@ -356,7 +355,7 @@ void buildTypeStructTree(const string 			path,
 
 	if (elType != DPELEMENT_RECORD && elType != DPELEMENT_TYPEREFERENCE) {
 		if (macValueTypes[elType] != NO_LPT) {      
-			if (Common::isValidPropName(propName.c_str())) {
+			if (PVSSinfo::isValidPropName(propName.c_str())) {
 				TPropertyInfo propInfo;
 				propInfo.propName = propName;
 				propInfo.type 	  = macValueTypes[elType];
@@ -383,6 +382,79 @@ void buildTypeStructTree(const string 			path,
 		}
 	}
 }
+
+//
+// isValidPropName(name)
+//
+bool PVSSinfo::isValidPropName(const char* propName)
+{
+  bool valid(true);
+  ASSERT(propName);
+  char doubleSep[] = {GCF_PROP_NAME_SEP, GCF_PROP_NAME_SEP, 0};
+  unsigned int length = strlen(propName);
+  if (propName[0] == GCF_PROP_NAME_SEP || propName[length - 1] == GCF_PROP_NAME_SEP ) {
+    valid = false;
+  }
+  else if (strstr(propName, doubleSep) != 0) {
+    valid = false;
+  }
+  else {
+    char refInd[] = "__";
+    char* refIndPos = strstr(propName, refInd);
+    if (refIndPos != 0) {
+      if (refIndPos > propName) {
+        if (*(refIndPos - 1) != GCF_PROP_NAME_SEP) {
+          // ref indication may only found at begin or after a GCF_PROP_NAME_SEP
+          valid = false;
+        }
+      }
+      if (valid && strchr(refIndPos, GCF_PROP_NAME_SEP) > 0) {
+        // ref indication may not used in struct name
+        valid = false;
+      }
+    }
+    for (unsigned short i = 0; valid && i < length; i++) {
+      if (refIndPos > 0 && ((propName + i) == refIndPos)) {
+        i += 2; // skip the ref indicator
+      }
+      if (!isalnum(propName[i]) && propName[i] != GCF_PROP_NAME_SEP) {
+        valid = false;
+      }
+    }
+  }
+  return valid;
+}
+
+//
+// isValidScope(name)
+//
+bool PVSSinfo::isValidScope(const char* scopeName)
+{
+  bool valid(true);
+  ASSERT(scopeName);
+  char doubleSep[] = {GCF_SCOPE_NAME_SEP, GCF_SCOPE_NAME_SEP, 0};
+  unsigned int length = strlen(scopeName);
+  char* sysNameSep = strchr(scopeName, ':');
+  if (sysNameSep > 0) {
+    length -= (sysNameSep + 1 - scopeName);
+    scopeName = sysNameSep + 1;
+  }
+  if (scopeName[0] == GCF_SCOPE_NAME_SEP || scopeName[length - 1] == GCF_SCOPE_NAME_SEP ) {
+    valid = false;
+  }
+  else if (strstr(scopeName, doubleSep) != 0) {
+    valid = false;
+  }
+  else {
+    for(unsigned short i = 0; valid && i < length; i++) {
+      if (!isalnum(scopeName[i]) && scopeName[i] != GCF_SCOPE_NAME_SEP) {
+        valid = false;
+      }
+    }
+  }
+  return valid;
+}
+
 
   } // namespace PVSS
  } // namespace GCF

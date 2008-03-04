@@ -24,7 +24,7 @@
 #define  PVSS_SERVICE_H
 
 #include <GCF/PVSS/PVSSresult.h>
-#include <GCF/GCF_PValue.h>
+#include <GCF/PVSS/GCF_PValue.h>
 
 // PVSS forwards
 class DpMsgAnswer;
@@ -60,12 +60,12 @@ public:
     PVSSresult dpeUnsubscribe(const string& dpeName);
     PVSSresult dpeGet		 (const string& dpeName);
     PVSSresult dpeSet		 (const string& 				dpeName, 
-							  const Common::GCFPValue&		value, 
+							  const GCFPValue&				value, 
 							  double						timestamp = 0.0,
 							  bool   						wantAnswer = true);
     PVSSresult dpeSetMultiple(const string&					dpName,
 							  vector<string>				dpeNames, 
-							  vector<Common::GCFPValue*>	values, 
+							  vector<GCFPValue*>			values, 
 							  double						timestamp = 0.0,
 							  bool   						wantAnswer = true);
     PVSSresult dpQuerySubscribeSingle(const string& queryWhere, 
@@ -83,12 +83,12 @@ private:
   
     // helper methods to convert PVSS dpTypes to MAC types and visa versa
     PVSSresult convertPVSSToMAC (const Variable&		variable, 
-                                 Common::GCFPValue**	pMacValue) const;
+                                 GCFPValue**			pMacValue) const;
                           
-    PVSSresult convertMACToPVSS (const Common::GCFPValue&	macValue, 
+    PVSSresult convertMACToPVSS (const GCFPValue&			macValue, 
                                  Variable** 				pVar,
                                  const DpIdentifier&		dpId) const;
-    bool getPVSSType (Common::TMACValueType macType, 
+    bool getPVSSType (TMACValueType macType, 
                       CharString& 			pvssTypeName) const;
 
     // helper methods

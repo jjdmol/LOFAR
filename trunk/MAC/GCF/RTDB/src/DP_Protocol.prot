@@ -30,7 +30,7 @@ id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL+2)";
 // specify extra include files
 // e.g.
 // include = '<sys/time.h>';
-include = '<GCF/GCF_PValue.h>';
+include = '<GCF/PVSS/GCF_PValue.h>';
 
 prelude = << PRELUDE_END
 
@@ -53,7 +53,7 @@ class PValue : public GCF::TM::GCFTransportable
 {
   public:
     PValue() : _pValue(0), _unpacked(false) {};
-    PValue(const LOFAR::GCF::Common::GCFPValue& value) : _pValue(&value), _unpacked(false) {};
+    PValue(const LOFAR::GCF::PVSS::GCFPValue& value) : _pValue(&value), _unpacked(false) {};
 
     virtual ~PValue() 
     {
@@ -69,7 +69,7 @@ class PValue : public GCF::TM::GCFTransportable
     {
       assert(!_pValue);
       _unpacked = true;
-      _pValue = LOFAR::GCF::Common::GCFPValue::unpackValue(buffer);
+      _pValue = LOFAR::GCF::PVSS::GCFPValue::unpackValue(buffer);
       return _pValue->getSize();
     }
     unsigned int getSize()
@@ -78,7 +78,7 @@ class PValue : public GCF::TM::GCFTransportable
       return _pValue->getSize();
     }
 
-    const LOFAR::GCF::Common::GCFPValue* _pValue;
+    const LOFAR::GCF::PVSS::GCFPValue* _pValue;
 
   private:
     bool _unpacked;
