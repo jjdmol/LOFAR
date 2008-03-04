@@ -1,0 +1,15 @@
+create tablename='tsourcedb_tmp.sdb'
+show ab*c
+add casa ra=12:34:56.7, dec=12.34.56.7
+show
+close
+open tablename='tsourcedb_tmp.sdb'
+update casa spindex=2
+show c*
+add casb ra=12:34:56.7, dec=12.34.56.7, spindex=1.5
+add virb domain=[st=[20000000,'2008/02/25/04:15:13'],size=[20000,3600]], ra=-8:76:54.321, dec=-12.34.56.7, spindex=1.5
+add virb domain=[st=[20000000,'2008/02/25/05:15:13'],size=[20000,3600]], ra=-8:76:54.321, dec=-12.34.56.7, spindex=1.6
+add vira domain=[st=[20000000],size=[20000]], ra=-6:76:54.321, dec=-72.34.56.7, spindex=1.75
+show 
+show ra=-8:76:54.321, dec=-12.34.56.7
+quit
