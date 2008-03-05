@@ -52,8 +52,8 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
-lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
-lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h,,)
+lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h)
+lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
 lofar_AIPSPP(1,"-lmeasures -ltables -lscimath -lscimath_f -lcasa")
 
 lofar_EXTERNAL(pgsql,0,libpq-fe.h,pq)

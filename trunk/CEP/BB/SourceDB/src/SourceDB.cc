@@ -126,15 +126,15 @@ void SourceDB::createParmDB (ParmDB::ParmDB& parmdb)
 	     iter->getRA(), false); 
     putParm (parmdb, pv, iter->getName(), "DEC", iter->getDomain(),
 	     iter->getDEC(), false); 
-    putParm (parmdb, pv, iter->getName(), "SPINX", iter->getDomain(),
+    putParm (parmdb, pv, iter->getName(), "SpInx", iter->getDomain(),
 	     iter->getSpectralIndex(), false); 
-    putParm (parmdb, pv, iter->getName(), "FLUXI", iter->getDomain(),
+    putParm (parmdb, pv, iter->getName(), "StokesI", iter->getDomain(),
 	     iter->getFlux()[0], false); 
-    putParm (parmdb, pv, iter->getName(), "FLUXQ", iter->getDomain(),
+    putParm (parmdb, pv, iter->getName(), "StokesQ", iter->getDomain(),
 	     iter->getFlux()[1], false); 
-    putParm (parmdb, pv, iter->getName(), "FLUXU", iter->getDomain(),
+    putParm (parmdb, pv, iter->getName(), "StokesU", iter->getDomain(),
 	     iter->getFlux()[2], false); 
-    putParm (parmdb, pv, iter->getName(), "FLUXV", iter->getDomain(),
+    putParm (parmdb, pv, iter->getName(), "StokesV", iter->getDomain(),
 	     iter->getFlux()[3], false); 
   }
   parmdb.unlock();
