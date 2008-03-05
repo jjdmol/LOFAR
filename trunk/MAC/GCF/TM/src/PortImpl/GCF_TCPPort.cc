@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
@@ -37,7 +38,6 @@ namespace LOFAR {
   using namespace ACC::APS;
   namespace GCF {
     using namespace SB;
-    using namespace Common;
     namespace TM {
 
 
@@ -367,9 +367,12 @@ bool GCFTCPPort::close()
 		_portNumber = 0;	// the next open it will be resolved again.
 	}
 	// make sure a single server port is unregistered to that is can be 'connect'ed again.
-	if (getType() == SPP) {
-		_broker->deletePort(*this);
-	}
+	// NOTE: 050308 this is neccesary for EventPort but conflicts with the ServiceBroker
+	//				functionality in GSB_Controller.cc.	 this is than 0x0.
+//	if (getType() == SPP) {
+//		_broker->deletePort(*this);
+//	}
+
 	schedule_close();
 
 	// return success when port is still connected
