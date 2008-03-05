@@ -63,7 +63,11 @@ public:
   // The position and radius have to be given in radians.
   virtual std::list<SourceValue> getSources (double ra, double dec,
 					     double radius,
-					     const ParmDB::ParmDomain&);
+					     const ParmDB::ParmDomain&,
+					     double minFluxI = -1e30,
+					     double maxFluxI = -1e30,
+					     double minSpInx = -1e30,
+					     double maxSpInx = -1e30);
 
   // Add the given sources.
   virtual void addSources (const std::list<SourceValue>& values);

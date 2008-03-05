@@ -163,11 +163,25 @@ list<SourceValue> SourceDBAIPS::getSources (const vector<string>& sourceNames,
 
 list<SourceValue> SourceDBAIPS::getSources (double ra, double dec,
 					    double radius,
-					    const ParmDB::ParmDomain& domain)
+					    const ParmDB::ParmDomain& domain,
+					    double minFluxI, double maxFluxI,
+					    double minSpInx, double maxSpInx)
 {
   TableLocker locker(itsTable, FileLocker::Read);
   // Find all rows overlapping the requested domain.
   TableExprNode expr = makeExpr (itsTable, domain);
+  if (minFluxI != -1e30) {
+    andExpr (expr, itsTable.col("FLUXI") >= minFluxI);
+  }
+  if (maxFluxI != -1e30) {
+    andExpr (expr, itsTable.col("FLUXI") <= maxFluxI);
+  }
+  if (minSpInx != -1e30) {
+    andExpr (expr, itsTable.col("SPINX") >= minSpInx);
+  }
+  if (maxSpInx != -1e30) {
+    andExpr (expr, itsTable.col("SPINX") <= maxSpInx);
+  }
   Vector<Double> rdr(3);
   rdr[0] = ra;
   rdr[1] = dec;
