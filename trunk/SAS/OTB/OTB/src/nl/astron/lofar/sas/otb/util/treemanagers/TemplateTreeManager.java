@@ -26,8 +26,8 @@ import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
-import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
@@ -109,13 +109,13 @@ public class TemplateTreeManager extends GenericTreeManager implements ITreeMana
         
         try {
             Vector childs =
-                    SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(((jOTDBnode)aNode.getUserObject()).treeID(), ((jOTDBnode)aNode.getUserObject()).nodeID(), 1);
+                    OtdbRmi.getRemoteMaintenance().getItemList(((jOTDBnode)aNode.getUserObject()).treeID(), ((jOTDBnode)aNode.getUserObject()).nodeID(), 1);
             
             Enumeration e = childs.elements();
             while( e.hasMoreElements()  ) {
                 jOTDBnode item = (jOTDBnode)e.nextElement();
                 logger.trace("Node name selected :"+item.name);
-                TreeNode newNode = new TreeNode(this.instance,item,item.name);
+                TreeNode newNode = new TreeNode(TemplateTreeManager.instance,item,item.name);
                 aNode.add(newNode);
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
                 fireTreeInsertionPerformed(evt);
@@ -139,12 +139,12 @@ public class TemplateTreeManager extends GenericTreeManager implements ITreeMana
             otdbNode.name = "No TreeSelection";
         } else {
             try {
-                otdbNode = SharedVars.getOTDBrmi().getRemoteMaintenance().getTopNode(itsTreeID);
+                otdbNode = OtdbRmi.getRemoteMaintenance().getTopNode(itsTreeID);
             } catch (RemoteException ex) {
                 logger.fatal("The TemplateTreeManager could not build a root node! ",ex);
             }
         }
-        TreeNode newNode = new TreeNode(this.instance,otdbNode,otdbNode.name);
+        TreeNode newNode = new TreeNode(TemplateTreeManager.instance,otdbNode,otdbNode.name);
         
         return newNode;
     }

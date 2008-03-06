@@ -25,7 +25,6 @@ package nl.astron.lofar.sas.otb.util.treemanagers;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.jParmDBnode;
@@ -131,7 +130,7 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
             }
         }
         newPNode.setName(argumentArray[0]);
-        TreeNode parmDBnode = new TreeNode(this.instance,newPNode,newPNode.getName());
+        TreeNode parmDBnode = new TreeNode(ParmDBTreeManager.instance,newPNode,newPNode.getName());
         
         return parmDBnode;
     }
@@ -186,14 +185,14 @@ public class ParmDBTreeManager extends GenericTreeManager implements ITreeManage
                     
                     // Create a new jParmDBnode.
                     String parentID = pathUserRoot.getNodeID();
-                    jParmDBnode item = new jParmDBnode(parentID + this.PARMDB_TREENODE_SEPARATOR_CHAR + path[i], parentID);
+                    jParmDBnode item = new jParmDBnode(parentID + ParmDBTreeManager.PARMDB_TREENODE_SEPARATOR_CHAR + path[i], parentID);
                     item.setName(path[i]);
                     item.setLeaf(true);
                     item.setParmDBLocation(pathUserRoot.getParmDBLocation());
                     item.setParmDBIdentifier(pathUserRoot.getParmDBIdentifier());
                     
                     // Create a new TreeNode and add it to the current root.
-                    TreeNode newNode = new TreeNode(this.instance, item, item.getNodeID());
+                    TreeNode newNode = new TreeNode(ParmDBTreeManager.instance, item, item.getNodeID());
                     newNode.areChildrenDefined = true;
                     pathRoot.add(newNode);
                     

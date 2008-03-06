@@ -62,7 +62,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     public OlapPanel(MainFrame aMainFrame,jOTDBnode aNode) {
         initComponents();
         itsMainFrame = aMainFrame;
-        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         itsNode=aNode;
         initialize();
         initPanel();
@@ -77,7 +76,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         } else {
             logger.debug("No Mainframe supplied");
         }
@@ -93,7 +91,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         try {
            
             //we need to get all the childs from this node.    
-            Vector childs = itsOtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
             
             // get all the params per child
             Enumeration e = childs.elements();
@@ -105,7 +103,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
-                    aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aNode);
+                    aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode);
                     setField(itsNode,aParam,aNode);
                     
                                     
@@ -209,10 +207,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
                     
                     // write the parset
-                    itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
+                    OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
                     
                     //obtain the remote file
-                    byte[] dldata = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().downloadFile(aRemoteFileName);
+                    byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
 
                     BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
                     output.write(dldata,0,dldata.length);
@@ -238,7 +236,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private void retrieveAndDisplayChildDataForNode(jOTDBnode aNode){
         jOTDBparam aParam=null;
         try {
-            Vector HWchilds = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
             // get all the params per child
             Enumeration e1 = HWchilds.elements();
             while( e1.hasMoreElements()  ) {
@@ -247,7 +245,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 aParam=null;
                 // We need to keep all the params needed by this panel
                 if (aHWNode.leaf) {
-                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aHWNode);
+                    aParam = OtdbRmi.getRemoteMaintenance().getParam(aHWNode);
                 }
                 setField(aNode,aParam,aHWNode);
             }
@@ -278,9 +276,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         }
         logger.debug("setField for: "+ aNode.name);
         try {
-            if (itsOtdbRmi.getRemoteTypes().getParamType(aParam.type).substring(0,1).equals("p")) {
+            if (OtdbRmi.getRemoteTypes().getParamType(aParam.type).substring(0,1).equals("p")) {
                // Have to get new param because we need the unresolved limits field.
-               aParam = itsOtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
+               aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode.treeID(),aNode.paramDefID());                
             }
         } catch (RemoteException ex) {
             logger.debug("Error during getParam: "+ ex);
@@ -701,8 +699,8 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
          if (itsNode != null) {
             try {
                 //figure out the caller
-                jOTDBtree aTree = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
-                itsTreeType=itsOtdbRmi.getTreeType().get(aTree.type);
+                jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
+                itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
                 logger.debug("OlapPanel: Error getting treeInfo/treetype" + ex);
                 itsTreeType="";
@@ -719,7 +717,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             return;
         }
         try {
-            itsOtdbRmi.getRemoteMaintenance().saveNode(aNode); 
+            OtdbRmi.getRemoteMaintenance().saveNode(aNode); 
         } catch (RemoteException ex) {
             logger.debug("Error: saveNode failed : " + ex);
         } 
@@ -1556,18 +1554,16 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand() == "Save") {
+        if(evt.getActionCommand().equals("Save")) {
             saveInput();
-        } else if(evt.getActionCommand() == "Restore") {
+        } else if(evt.getActionCommand().equals("Restore")) {
             restore();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
     
     private jOTDBnode    itsNode      = null;
     private MainFrame    itsMainFrame = null;
-    private OtdbRmi      itsOtdbRmi   = null;
     private String       itsTreeType  = "";
-    private jOTDBparam itsOldDescriptionParam;
     private JFileChooser fc           = null;  
     
     //Olap specific parameters
@@ -1707,7 +1703,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
 
     /**
      * Registers ActionListener to receive events.
@@ -1715,10 +1711,10 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
 
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.ActionListener.class, listener);
+        myListenerList.add (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -1727,7 +1723,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
 
-        listenerList.remove (java.awt.event.ActionListener.class, listener);
+        myListenerList.remove (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -1737,8 +1733,8 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
 
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (event);

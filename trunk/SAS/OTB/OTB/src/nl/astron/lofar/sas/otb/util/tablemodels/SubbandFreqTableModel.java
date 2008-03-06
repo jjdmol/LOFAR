@@ -23,6 +23,7 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.SharedVars;
 import org.apache.log4j.Logger;
 
 /**
@@ -55,7 +56,7 @@ public class SubbandFreqTableModel extends javax.swing.table.AbstractTableModel 
     /** Fills the table from the database */
     public boolean fillTable(MainFrame aMainFrame) {
         
-        if (aMainFrame.getSharedVars().getOTDBrmi() == null) {
+        if (SharedVars.getOTDBrmi() == null) {
             logger.debug("No active otdbRmi connection");
             return false;
         }            
@@ -90,6 +91,7 @@ public class SubbandFreqTableModel extends javax.swing.table.AbstractTableModel 
      * @param    c   Column Number
      * @return  the name for this column     
      */
+    @Override
     public String getColumnName(int c) {
         try {
             return headers[c];

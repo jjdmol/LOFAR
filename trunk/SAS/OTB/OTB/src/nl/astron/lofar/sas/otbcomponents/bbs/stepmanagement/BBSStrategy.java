@@ -23,9 +23,7 @@
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
-import java.util.HashMap;
 import java.util.Vector;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 
 /**
  * Representation of the BBS Strategy to contain all BBS Strategy steps.

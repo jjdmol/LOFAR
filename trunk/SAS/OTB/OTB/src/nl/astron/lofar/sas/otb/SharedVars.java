@@ -92,7 +92,7 @@ public class SharedVars {
     /** sets the Current TreeState */
     public void setTreeState(int aTreeID) {
         try {
-            itsTreeState=itsOtdbRmi.getRemoteOTDB().getTreeInfo(aTreeID,false).state;
+            itsTreeState=OtdbRmi.getRemoteOTDB().getTreeInfo(aTreeID,false).state;
         } catch (RemoteException ex) {
             logger.debug("Exception during setTreeState(TreeID: "+aTreeID+")" );
             ex.printStackTrace();
@@ -126,10 +126,7 @@ public class SharedVars {
     
     public static jParmFacadeInterface getJParmFacade() {
         if(itsjParmFacade == null){
-            try {
-                String hostname = getOTDBrmi().RMIServerName;
-                int port = 10668;
-                    
+            try {                    
                 //LOAD XML CONFIG FILE
                 
                 HashMap<String,String> serverConfig = ParmDBConfigurationHelper.getInstance().getParmDBServerInformation();

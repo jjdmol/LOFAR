@@ -22,8 +22,6 @@
 
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
-import java.rmi.RemoteException;
-import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
@@ -103,7 +101,7 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
             
             for(BBSStep childStep : theStrategy.getChildSteps()){
                 BBSStepNode newChildStepNode = new BBSStepNode(childStep);
-                TreeNode newNode = new TreeNode(this.instance,newChildStepNode,newChildStepNode.getName());
+                TreeNode newNode = new TreeNode(BBSStepTreeManager.instance,newChildStepNode,newChildStepNode.getName());
                 aNode.add(newNode);
             }
         }else{
@@ -116,7 +114,7 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
                 BBSStepNode newPNode = new BBSStepNode(aStep);
                 newPNode.setName(aStep.getName());
                 newPNode.setRootNode(false);
-                TreeNode newNode = new TreeNode(this.instance,newPNode,newPNode.getName());
+                TreeNode newNode = new TreeNode(BBSStepTreeManager.instance,newPNode,newPNode.getName());
                 aNode.add(newNode);
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
                 fireTreeInsertionPerformed(evt);
@@ -138,7 +136,7 @@ public class BBSStepTreeManager extends GenericTreeManager implements ITreeManag
         newPNode.setName(title);
         newPNode.setOTDBNode(userObject);
         newPNode.leaf=false;
-        TreeNode bbsNode = new TreeNode(this.instance,newPNode,newPNode.getName());
+        TreeNode bbsNode = new TreeNode(BBSStepTreeManager.instance,newPNode,newPNode.getName());
         
         return bbsNode;
     }

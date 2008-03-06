@@ -381,17 +381,17 @@ public class ListPanel extends javax.swing.JPanel {
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
 
     /**
      * Registers ActionListener to receive events.
      * @param listener The listener to register.
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.ActionListener.class, listener);
+        myListenerList.add (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -399,7 +399,7 @@ public class ListPanel extends javax.swing.JPanel {
      * @param listener The listener to remove.
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
-        listenerList.remove (java.awt.event.ActionListener.class, listener);
+        myListenerList.remove (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -408,8 +408,8 @@ public class ListPanel extends javax.swing.JPanel {
      * @param event The event to be fired
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (event);

@@ -25,7 +25,6 @@ package nl.astron.lofar.sas.otb.util.plotter;
 
 import java.awt.event.ActionEvent;
 import java.util.LinkedList;
-import javax.swing.JComponent;
 import org.apache.log4j.Logger;
 
 /**
@@ -324,7 +323,7 @@ public class PlotSlotManager{
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
     
     /**
      * Registers ActionListener to receive events.
@@ -333,10 +332,10 @@ public class PlotSlotManager{
      */
     public void addActionListener(java.awt.event.ActionListener listener) {
         
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add(java.awt.event.ActionListener.class, listener);
+        myListenerList.add(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -346,7 +345,7 @@ public class PlotSlotManager{
      */
     public void removeActionListener(java.awt.event.ActionListener listener) {
         
-        listenerList.remove(java.awt.event.ActionListener.class, listener);
+        myListenerList.remove(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -358,8 +357,8 @@ public class PlotSlotManager{
      */
     private void fireSlotsUpdated(int id) {
         
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList();
         ActionEvent action = null;
         if(id == -1){
             action = new ActionEvent(this,id,this.REFRESH_FULL);

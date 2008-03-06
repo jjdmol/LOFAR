@@ -59,14 +59,14 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
     public boolean refreshRow(int row) {
         
         try {
-            if (! otdbRmi.getRemoteOTDB().isConnected()) {
+            if (! OtdbRmi.getRemoteOTDB().isConnected()) {
                 logger.debug("No open connection available");
                 return false;
             }
 
             // get TreeID that needs 2b refreshed
             int aNodeID=((Integer)data[row][0]).intValue();
-            jVICnodeDef tInfo=otdbRmi.getRemoteMaintenance().getComponentNode(aNodeID);
+            jVICnodeDef tInfo=OtdbRmi.getRemoteMaintenance().getComponentNode(aNodeID);
             if ( tInfo == null) {
                 logger.debug("Unable to get ComponentInfo for node with ID: " + aNodeID);
                 return false;
@@ -74,7 +74,7 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
             data[row][0]=new Integer(tInfo.nodeID());	   
             data[row][1]=new String(tInfo.name);
 	    data[row][2]=new Integer(tInfo.version);
-            data[row][3]=new String(otdbRmi.getClassif().get(tInfo.classif));
+            data[row][3]=new String(OtdbRmi.getClassif().get(tInfo.classif));
 	    data[row][4]=new String(tInfo.constraints);
 	    data[row][5]=new String(tInfo.description);
             fireTableDataChanged();
@@ -92,12 +92,12 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
             return false;
         }
         try {
-            if (otdbRmi.getRemoteOTDB() != null && ! otdbRmi.getRemoteOTDB().isConnected()) {
+            if (OtdbRmi.getRemoteOTDB() != null && ! OtdbRmi.getRemoteOTDB().isConnected()) {
                 logger.debug("No open connection available");
                 return false;
             }
             // Get a list of all available Components (topnode)
-            Vector aComponentList=otdbRmi.getRemoteMaintenance().getComponentList("%",false);
+            Vector aComponentList=OtdbRmi.getRemoteMaintenance().getComponentList("%",false);
             data = new Object[aComponentList.size()][headers.length];
             logger.debug("Componentlist downloaded. Size: "+aComponentList.size());
            
@@ -110,7 +110,7 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
                     data[k][0]=new Integer(tInfo.nodeID());	   
 	            data[k][1]=new String(tInfo.name);
 	            data[k][2]=new Integer(tInfo.version);
-                    data[k][3]=new String(otdbRmi.getClassif().get(tInfo.classif));
+                    data[k][3]=new String(OtdbRmi.getClassif().get(tInfo.classif));
 	            data[k][4]=new String(tInfo.constraints);
 	            data[k][5]=new String(tInfo.description);
                 }
@@ -137,6 +137,7 @@ public class ComponentTableModel extends javax.swing.table.AbstractTableModel {
      * @param    c   Column Number
      * @return  the name for this column     
      */
+    @Override 
     public String getColumnName(int c) {
         try {
             return headers[c];

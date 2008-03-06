@@ -101,7 +101,7 @@ public class MainFrame extends javax.swing.JFrame {
         itsPort=port;
         itsPlugins = new HashMap<String,PluginPanelInfo>();
         itsSharedVars = new SharedVars(this);
-        itsStorageLocation = new StorageLocation(getSharedVars().getOTDBrmi());
+        itsStorageLocation = new StorageLocation(SharedVars.getOTDBrmi());
         itsMACInteraction = new MACNavigatorInteraction(itsStorageLocation);
 
         initComponents();
@@ -449,29 +449,29 @@ public class MainFrame extends javax.swing.JFrame {
 
                 // create a useraccount object
                 try {
-                    itsUserAccount = new UserAccount(itsSharedVars.getOTDBrmi(), userName, password);
+                    itsUserAccount = new UserAccount(SharedVars.getOTDBrmi(), userName, password);
                     accessAllowed = true;
                     itsMACInteraction.setCurrentUser(userName,password);
                     
                     statusPanelMainFrame.setText(StatusPanel.MIDDLE,"User: "+userName);
                     String aC = "NO Main DB connection";
                     // Start the actual RMI connection
-                    if (! itsSharedVars.getOTDBrmi().isConnected()) {
-                        if (! itsSharedVars.getOTDBrmi().openConnections()) {
+                    if (! SharedVars.getOTDBrmi().isConnected()) {
+                        if (! SharedVars.getOTDBrmi().openConnections()) {
                             logger.debug("Error: failed to open RMI Connections");
                         } else {
-                            aC = "DB connection to: "+itsSharedVars.getOTDBrmi().RMIServerName+" Port: "+itsSharedVars.getOTDBrmi().RMIServerPort;
+                            aC = "DB connection to: "+OtdbRmi.getRMIServerName()+" Port: "+OtdbRmi.getRMIServerPort();
                         }
                     }
                     statusPanelMainFrame.setText(StatusPanel.LEFT,aC);
                     logger.debug("Trying to get DatabaseName");
-                    if (itsSharedVars == null || itsSharedVars.getOTDBrmi() == null || 
-                            itsSharedVars.getOTDBrmi().getRemoteOTDB() == null) {
+                    if (itsSharedVars == null || SharedVars.getOTDBrmi() == null || 
+                           OtdbRmi.getRemoteOTDB() == null) {
                         logger.info("Can't connect to Server. Session cancelled");
                         System.exit(0);
                     }
                     try {
-                         itsDBName=itsSharedVars.getOTDBrmi().getRemoteOTDB().getDBName();
+                         itsDBName=OtdbRmi.getRemoteOTDB().getDBName();
                     } catch (RemoteException ex) {
                         logger.error("Couldn't get DatabaseName"+ ex);
                     }

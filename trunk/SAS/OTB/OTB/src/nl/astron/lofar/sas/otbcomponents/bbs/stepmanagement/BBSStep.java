@@ -24,7 +24,6 @@
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
 import java.util.Vector;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 
 /**
  * The BBSStep represents an instance of a BBS Step with a given name. For each
@@ -138,6 +137,7 @@ public class BBSStep implements Cloneable, Comparable{
      * Prints the name of the BBS Step this object represents.
      * @return the name of the represented BBS Step
      */
+    @Override
     public String toString(){
         return getName();
     }
@@ -164,6 +164,7 @@ public class BBSStep implements Cloneable, Comparable{
      * 
      * @return complete clone of this BBSStep
      */
+    @Override
     public BBSStep clone(){
         BBSStep newStep = new BBSStep(getName());
         newStep.setParentStep(null);

@@ -53,14 +53,14 @@ public class OtdbRmi {
     static String name = "OtdbRmi";
     
     
-    public static String RMIServerName      = "lofar17.astron.nl";
-    public static String RMIServerPort      = "1099";
+    private static String RMIServerName      = "lofar17.astron.nl";
+    private static String RMIServerPort      = "1099";
 
-    public static String RMIRegistryName    = jOTDBinterface.SERVICENAME;
-    public static String RMIMaintenanceName = jTreeMaintenanceInterface.SERVICENAME;
-    public static String RMIValName         = jTreeValueInterface.SERVICENAME;
-    public static String RMIConverterName   = jConverterInterface.SERVICENAME; 
-    public static String RMIRemoteFileName  = remoteFileInterface.SERVICENAME;
+    private static String RMIRegistryName    = jOTDBinterface.SERVICENAME;
+    private static String RMIMaintenanceName = jTreeMaintenanceInterface.SERVICENAME;
+    private static String RMIValName         = jTreeValueInterface.SERVICENAME;
+    private static String RMIConverterName   = jConverterInterface.SERVICENAME; 
+    private static String RMIRemoteFileName  = remoteFileInterface.SERVICENAME;
     
     private static boolean isOpened         = false;
     private static boolean isConnected      = false;
@@ -100,91 +100,147 @@ public class OtdbRmi {
     }
     
     /**
+     * Getter for property RMIServerName.
+     * @return Value of property RMIServerName.
+     */
+    public static String getRMIServerName() {
+        return RMIServerName;
+    }
+
+    /**
+     * Getter for property RMIServerPort.
+     * @return Value of property RMIServerPort.
+     */
+    public static String getRMIServerPort() {
+        return RMIServerPort;
+    }
+
+    /**
+     * Getter for property RMIRegistryName.
+     * @return Value of property RMIRegistryName.
+     */
+    public static String getRMIRegistryName() {
+        return RMIRegistryName;
+    }
+
+        /**
+     * Getter for property RMIMaintenanceName.
+     * @return Value of property RMIMaintenanceName.
+     */
+    public static String getRMIMaintenanceName() {
+        return RMIMaintenanceName;
+    }
+
+        /**
+     * Getter for property RMIValName.
+     * @return Value of property RMIValName.
+     */
+    public static String getRMIValName() {
+        return RMIValName;
+    }
+
+    /**
+     * Getter for property RMIConverterName.
+     * @return Value of property RMIConverterName.
+     */
+    public static String getRMIConverterName() {
+        return RMIConverterName;
+    }
+
+        /**
+     * Getter for property RMIRemoteFileName.
+     * @return Value of property RMIRemoteFileName.
+     */
+    public static String getRMIRemoteFileName() {
+        return RMIRemoteFileName;
+    }
+
+    /**
      * Getter for property remoteMaintenance.
      * @return Value of property remoteMaintenance.
      */
-    public jTreeMaintenanceInterface getRemoteMaintenance() {
+    public static jTreeMaintenanceInterface getRemoteMaintenance() {
         return remoteMaintenance;
     }
     /**
      * Getter for property remoteOTDB.
      * @return Value of property remoteOTDB.
      */
-    public jOTDBinterface getRemoteOTDB() {
+    public static jOTDBinterface getRemoteOTDB() {
 
-        return this.remoteOTDB;
+        return OtdbRmi.remoteOTDB;
     }
 
     /**
      * Getter for property remoteValue.
      * @return Value of property remoteValue.
      */
-    public jTreeValueInterface getRemoteValue() {
+    public static jTreeValueInterface getRemoteValue() {
 
-        return this.remoteValue;
+        return OtdbRmi.remoteValue;
     }
 
     /**
      * Getter for property remoteFileTrans.
      * @return Value of property remoteValue.
      */
-    public remoteFileInterface getRemoteFileTrans() {
+    public static remoteFileInterface getRemoteFileTrans() {
 
-        return this.remoteFileTrans;
+        return OtdbRmi.remoteFileTrans;
     }
 
     /**
      * Getter for property remoteTypes.
      * @return Value of property remoteTypes.
      */
-    public jConverterInterface getRemoteTypes() {
+    public static jConverterInterface getRemoteTypes() {
 
-        return this.remoteTypes;
+        return OtdbRmi.remoteTypes;
     }
     
     /**
      * Getter for property itsClassifs.
      * @return Value of property itsClassifs.
      */
-    public TreeMap<Short,String> getClassif() {
+    public static TreeMap<Short,String> getClassif() {
 
-        return this.itsClassifs;
+        return OtdbRmi.itsClassifs;
     }
 
     /**
      * Getter for property itsParamTypes.
      * @return Value of property itsParamTypes.
      */
-    public TreeMap<Short,String> getParamType() {
+    public static TreeMap<Short,String> getParamType() {
 
-        return this.itsParamTypes;
+        return OtdbRmi.itsParamTypes;
     }
 
         /**
      * Getter for property itsTreeStates.
      * @return Value of property itsTreeStates.
      */
-    public TreeMap<Short,String> getTreeState() {
+    public static TreeMap<Short,String> getTreeState() {
 
-        return this.itsTreeStates;
+        return OtdbRmi.itsTreeStates;
     }
 
         /**
      * Getter for property itsTreeTypes.
      * @return Value of property itsTreeTypes.
      */
-    public TreeMap<Short,String> getTreeType() {
+    public static TreeMap<Short,String> getTreeType() {
 
-        return this.itsTreeTypes;
+        return OtdbRmi.itsTreeTypes;
     }
 
         /**
      * Getter for property itsUnits.
      * @return Value of property itsUnits.
      */
-    public TreeMap<Short,String> getUnit() {
+    public static TreeMap<Short,String> getUnit() {
 
-        return this.itsUnits;
+        return OtdbRmi.itsUnits;
     }
 
     public boolean isConnected() {
@@ -318,11 +374,11 @@ public class OtdbRmi {
     private boolean loadConversionTypes() {
         try {
             logger.debug("Get ConversionTypes");
-            itsClassifs   =new TreeMap<Short,String>(this.remoteTypes.getClassif());
-            itsParamTypes =new TreeMap<Short,String>(this.remoteTypes.getParamType());
-            itsTreeStates =new TreeMap<Short,String>(this.remoteTypes.getTreeState());
-            itsTreeTypes  =new TreeMap<Short,String>(this.remoteTypes.getTreeType());
-            itsUnits      =new TreeMap<Short,String>(this.remoteTypes.getUnit());
+            itsClassifs   =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getClassif());
+            itsParamTypes =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getParamType());
+            itsTreeStates =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getTreeState());
+            itsTreeTypes  =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getTreeType());
+            itsUnits      =new TreeMap<Short,String>(OtdbRmi.remoteTypes.getUnit());
             logger.debug("Got all conversiontypes");
             return true;
         } catch (Exception e) {

@@ -26,9 +26,9 @@ import java.rmi.RemoteException;
 import java.util.Enumeration;
 import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
-import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
 import org.apache.log4j.Logger;
@@ -105,7 +105,7 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
         try {
             
             
-            Vector<jVICnodeDef> nodes = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentList(aNodeName,false);
+            Vector<jVICnodeDef> nodes = OtdbRmi.getRemoteMaintenance().getComponentList(aNodeName,false);
             if (nodes.size() > 0) {
                 logger.debug("Found "+ nodes.size()+ " nr of matches for node "+aNodeName);
             } else {
@@ -113,11 +113,11 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
                 return;
             }
             
-            Vector<jOTDBparam> params = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentParams(((jVICnodeDef)nodes.elementAt(0)).nodeID());
+            Vector<jOTDBparam> params = OtdbRmi.getRemoteMaintenance().getComponentParams(((jVICnodeDef)nodes.elementAt(0)).nodeID());
             Enumeration e = params.elements();
             while( e.hasMoreElements()  ) {
                 jOTDBparam item = (jOTDBparam)e.nextElement();
-                TreeNode newNode = new TreeNode(this.instance,item,item.name);
+                TreeNode newNode = new TreeNode(OTDBParamTreeManager.instance,item,item.name);
                 aNode.add(newNode);
                 //testcode to add parmdb
                 TreeModelEvent evt = new TreeModelEvent(newNode,newNode.getPath());
@@ -145,11 +145,11 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
             aParam.name = "No ParamSelection";
         } else {
             try {
-                aVICnodeDef = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
+                aVICnodeDef = OtdbRmi.getRemoteMaintenance().getComponentNode(itsComponentID);
                 if (aVICnodeDef != null) {
                     // create a fake param to pass to componentTree, to simulate a node param
                     aParam = new jOTDBparam(0,itsComponentID,0);
-                    aParam.name=SharedVars.getOTDBrmi().getRemoteMaintenance().getFullComponentName(aVICnodeDef);
+                    aParam.name=OtdbRmi.getRemoteMaintenance().getFullComponentName(aVICnodeDef);
                     aParam.index=0;
                     aParam.limits="";
                     aParam.type=-1;
@@ -162,7 +162,7 @@ public class OTDBParamTreeManager extends GenericTreeManager implements ITreeMan
                 logger.fatal("The OTDBParamTreeManager could not build a root node! ",ex);
             }
         }
-        TreeNode newNode = new TreeNode(this.instance,aParam,aParam.name);
+        TreeNode newNode = new TreeNode(OTDBParamTreeManager.instance,aParam,aParam.name);
         return newNode;
     }
 }

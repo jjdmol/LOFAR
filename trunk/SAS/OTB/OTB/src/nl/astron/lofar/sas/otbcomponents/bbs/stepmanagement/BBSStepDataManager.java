@@ -29,9 +29,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Vector;
 import nl.astron.lofar.lofarutils.LofarUtils;
-import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
 
 /**
@@ -77,7 +77,7 @@ public class BBSStepDataManager{
      * @parm rootNode the BBS.Step 'Step Container' OTDBnode.
      */
     public synchronized void setStepContainerNode(jOTDBnode rootNode){
-        this.stepContainerNode = rootNode;
+        BBSStepDataManager.stepContainerNode = rootNode;
     }
     /**
      * Returns the unique names of every Step currently being managed.
@@ -226,7 +226,7 @@ public class BBSStepDataManager{
             if(strategySteps.size()>0){
                 Vector stepsVector;
                 try {
-                    stepsVector = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(rootNode.treeID(), rootNode.nodeID(), 1);
+                    stepsVector = OtdbRmi.getRemoteMaintenance().getItemList(rootNode.treeID(), rootNode.nodeID(), 1);
                     //loop through steps
                     for(String aStep : strategySteps){
                         Enumeration se = stepsVector.elements();
@@ -274,7 +274,7 @@ public class BBSStepDataManager{
         String newList = this.getStringFromVector(currentParentChildrenList,true);
         parentStepsNode.limits=newList;
         try{
-            SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(parentStepsNode);
+            OtdbRmi.getRemoteMaintenance().saveNode(parentStepsNode);
         } catch (RemoteException ex) {
             logger.error("persistStep() : Step could not be linked to its Parent Step/Strategy!",ex);
         }
@@ -294,7 +294,7 @@ public class BBSStepDataManager{
         jOTDBnode strategyStepsParameter=null;
         //retrieve 1 levels of parameters to locate Step.XXX.Steps
         
-        Vector HWchilds = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1);
+        Vector HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1);
         // get all the params per child
         Enumeration e1 = HWchilds.elements();
         while( e1.hasMoreElements()  ) {
@@ -389,7 +389,7 @@ public class BBSStepDataManager{
             
             if(strategySteps.size()>0){
                 //Get all the steps present in the BBS Step Container
-                Vector stepsVector = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.parentID(), 1);
+                Vector stepsVector = OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.parentID(), 1);
                 
                 for(String aStep : strategySteps){
                     Enumeration se = stepsVector.elements();
@@ -413,7 +413,7 @@ public class BBSStepDataManager{
         //another iteration to collect operation type attributes
         if(stepDataObject.getOperationName() !=null){
             
-            Vector HWchilds2 = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1);
+            Vector HWchilds2 = OtdbRmi.getRemoteMaintenance().getItemList(parentOTDBnode.treeID(), parentOTDBnode.nodeID(), 1);
             // get all the params per child
             Enumeration e2 = HWchilds2.elements();
             while( e2.hasMoreElements()  ) {
@@ -482,7 +482,7 @@ public class BBSStepDataManager{
             //delete the standard bbs step found in the template tree
             if(aHWNode.name.equals("DefaultBBSStep")){
                 try {
-                    SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                    OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                 } catch (RemoteException ex) {
                     logger.debug("PersistStep(): Unable to delete the default Template Step from the Step Container: "+aBBSStep.getName());
                 }
@@ -513,18 +513,18 @@ public class BBSStepDataManager{
                 
                 if(stepTemplateNodeId!=0){
                     //copy the template step tree
-                    int newStepNodeID = SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateNodeId,stepContainerNode.treeID(),stepContainerNode.nodeID(),aBBSStep.getName());
+                    int newStepNodeID = OtdbRmi.getRemoteMaintenance().addComponent(stepTemplateNodeId,stepContainerNode.treeID(),stepContainerNode.nodeID(),aBBSStep.getName());
                     
                     //fetch the generated node as the step node
-                    jOTDBnode newStepNode = SharedVars.getOTDBrmi().getRemoteMaintenance().getNode(stepContainerNode.treeID(),newStepNodeID);
+                    jOTDBnode newStepNode = OtdbRmi.getRemoteMaintenance().getNode(stepContainerNode.treeID(),newStepNodeID);
                     
                     //add the subcomponents for the step as well (correlation, integration, baselines, and operation if needed)
-                    SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateBaselinesNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
-                    SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateCorrelationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
-                    SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateIntegrationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
+                    OtdbRmi.getRemoteMaintenance().addComponent(stepTemplateBaselinesNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
+                    OtdbRmi.getRemoteMaintenance().addComponent(stepTemplateCorrelationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
+                    OtdbRmi.getRemoteMaintenance().addComponent(stepTemplateIntegrationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
                     if(stepTemplateStepOperationNodeId != -1){
                         
-                        int stepOperationNodeId = SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateStepOperationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
+                        int stepOperationNodeId = OtdbRmi.getRemoteMaintenance().addComponent(stepTemplateStepOperationNodeId,stepContainerNode.treeID(),newStepNode.nodeID(),"");
                         
                         //collect components that are part of the operation type...
                         if(currentDataForStep.getOperationAttributes() != null){
@@ -539,12 +539,12 @@ public class BBSStepDataManager{
                             }
                             for(String someOperationAttribute : toBeAddedSubComponents){
                                 int stepTemplateStepOperationTypeNodeId = this.getComponentForNode(someOperationAttribute);
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().addComponent(stepTemplateStepOperationTypeNodeId,stepContainerNode.treeID(),stepOperationNodeId,"");
+                                OtdbRmi.getRemoteMaintenance().addComponent(stepTemplateStepOperationTypeNodeId,stepContainerNode.treeID(),stepOperationNodeId,"");
                             }
                         }
                     }
                     
-                    newStepNode = SharedVars.getOTDBrmi().getRemoteMaintenance().getNode(stepContainerNode.treeID(),newStepNodeID);
+                    newStepNode = OtdbRmi.getRemoteMaintenance().getNode(stepContainerNode.treeID(),newStepNodeID);
                     Vector stepParametersVector = retrieveChildDataForNode(newStepNode);
                     Enumeration spe = stepParametersVector.elements();
                     
@@ -557,18 +557,18 @@ public class BBSStepDataManager{
                         if(aHWNode.name.equals("Sources")){
                             if ( currentDataForStep.getSources() != null){
                                 aHWNode.limits = this.getStringFromVector(currentDataForStep.getSources(),true);
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
                         //extra sources
                         else if(aHWNode.name.equals("ExtraSources")){
                             if ( currentDataForStep.getExtraSources() != null){
                                 aHWNode.limits = this.getStringFromVector(currentDataForStep.getExtraSources(),true);
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
                         
@@ -576,18 +576,18 @@ public class BBSStepDataManager{
                         else if(aHWNode.name.equals("OutputData")){
                             if ( currentDataForStep.getOutputDataColumn() != null){
                                 aHWNode.limits = currentDataForStep.getOutputDataColumn();
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
                         //instrument data model
                         else if(aHWNode.name.equals("InstrumentModel")){
                             if ( currentDataForStep.getInstrumentModel() != null){
                                 aHWNode.limits = this.getStringFromVector(currentDataForStep.getInstrumentModel(),true);
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
                         
@@ -605,10 +605,10 @@ public class BBSStepDataManager{
                                 if (aCENode.leaf && aCENode.name.equals("Time")) {
                                     if ( currentDataForStep.getIntegrationTime() != -1){
                                         aCENode.limits = ""+currentDataForStep.getIntegrationTime();
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
                                     }else{
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().deleteNode(aCENode);
                                     }
                                     
                                     //Frequency
@@ -616,16 +616,16 @@ public class BBSStepDataManager{
                                 } else if (aCENode.leaf && aCENode.name.equals("Freq")) {
                                     if ( currentDataForStep.getIntegrationFrequency() != -1){
                                         aCENode.limits = ""+currentDataForStep.getIntegrationFrequency();
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
                                     }else{
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().deleteNode(aCENode);
                                     }
                                 }
                             }
                             //no params inside Integration are present, delete this node as well
                             if(presentParams==0){
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
                         
@@ -643,10 +643,10 @@ public class BBSStepDataManager{
                                 if (aCENode.leaf && aCENode.name.equals("Type")) {
                                     if ( currentDataForStep.getCorrelationType() != null){
                                         aCENode.limits = this.getStringFromVector(currentDataForStep.getCorrelationType(),true);
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
                                     }else{
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().deleteNode(aCENode);
                                     }
                                     
                                     //Selection
@@ -654,16 +654,16 @@ public class BBSStepDataManager{
                                 } else if (aCENode.leaf && aCENode.name.equals("Selection")) {
                                     if ( currentDataForStep.getCorrelationSelection() != null){
                                         aCENode.limits = currentDataForStep.getCorrelationSelection();
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
                                     }else{
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().deleteNode(aCENode);
                                     }
                                 }
                             }
                             //no params inside Correlation are present, delete this node as well
                             if(presentParams==0){
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
                         //Baseline Selection
@@ -680,10 +680,10 @@ public class BBSStepDataManager{
                                 if (aCENode.leaf && aCENode.name.equals("Station1")) {
                                     if ( currentDataForStep.getStation1Selection() != null){
                                         aCENode.limits = getStringFromVector(currentDataForStep.getStation1Selection(),true);
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
                                     }else{
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().deleteNode(aCENode);
                                     }
                                     
                                     //Frequency
@@ -691,16 +691,16 @@ public class BBSStepDataManager{
                                 } else if (aCENode.leaf && aCENode.name.equals("Station2")) {
                                     if ( currentDataForStep.getStation2Selection() != null){
                                         aCENode.limits = getStringFromVector(currentDataForStep.getStation2Selection(),true);
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                         presentParams++;
                                     }else{
-                                        SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                        OtdbRmi.getRemoteMaintenance().deleteNode(aCENode);
                                     }
                                 }
                             }
                             //no params inside Baseline are present, delete this node as well
                             if(presentParams==0){
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
                         //Operation
@@ -708,9 +708,9 @@ public class BBSStepDataManager{
                         else if(aHWNode.name.equals("Operation")){
                             if ( currentDataForStep.getOperationName() != null){
                                 aHWNode.limits = String.valueOf(currentDataForStep.getOperationName()).toUpperCase();
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
                         //persist all the specific operation attributes
@@ -732,10 +732,10 @@ public class BBSStepDataManager{
                                     if (aCENode.leaf ){
                                         if ( toBeInsertedValue != null){
                                             aCENode.limits = toBeInsertedValue;
-                                            SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCENode);
+                                            OtdbRmi.getRemoteMaintenance().saveNode(aCENode);
                                             presentParams++;
                                         }else{
-                                            SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                            OtdbRmi.getRemoteMaintenance().deleteNode(aCENode);
                                         }
                                         //parameter node inside Operation
                                     } else if (!aCENode.leaf){
@@ -747,22 +747,22 @@ public class BBSStepDataManager{
                                             String toBeInsertedSubValue = currentDataForStep.getOperationAttribute(LofarUtils.keyName(aCENode.name)+"."+LofarUtils.keyName(aCSENode.name));
                                             if ( toBeInsertedSubValue != null){
                                                 aCSENode.limits = toBeInsertedSubValue;
-                                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aCSENode);
+                                                OtdbRmi.getRemoteMaintenance().saveNode(aCSENode);
                                                 presentSubParams++;
                                             }else{
-                                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCSENode);
+                                                OtdbRmi.getRemoteMaintenance().deleteNode(aCSENode);
                                             }
                                         }
                                         //no params inside Operation folder are present, delete this node as well
                                         if(presentSubParams==0){
-                                            SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aCENode);
+                                            OtdbRmi.getRemoteMaintenance().deleteNode(aCENode);
                                         }
                                     }
                                 }
                             }
                             //no params inside Operation are present, delete this node as well
                             if(presentParams==0){
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                             
                         }
@@ -776,9 +776,9 @@ public class BBSStepDataManager{
                                     childStepNames.add(aChildStep.getName());
                                 }
                                 aHWNode.limits = this.getStringFromVector(childStepNames,true);
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().saveNode(aHWNode);
                             }else{
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
                             }
                         }
                     }
@@ -807,7 +807,7 @@ public class BBSStepDataManager{
         //remove all references to steps from the strategy
         try{
             parentStepsNode.limits="[]";
-            SharedVars.getOTDBrmi().getRemoteMaintenance().saveNode(parentStepsNode);
+            OtdbRmi.getRemoteMaintenance().saveNode(parentStepsNode);
         } catch (RemoteException ex) {
             logger.error("deleteAllSteps() : Strategy steps could not be cleaned!",ex);
         }
@@ -819,7 +819,7 @@ public class BBSStepDataManager{
         while( ppe.hasMoreElements()  ) {
             jOTDBnode aHWNode = (jOTDBnode)ppe.nextElement();
             try {
-                SharedVars.getOTDBrmi().getRemoteMaintenance().deleteNode(aHWNode);
+                OtdbRmi.getRemoteMaintenance().deleteNode(aHWNode);
             } catch (RemoteException ex) {
                 logger.error("deleteAllSteps() : Step could not be deleted!",ex);
             }
@@ -976,7 +976,7 @@ public class BBSStepDataManager{
     private Vector retrieveChildDataForNode(jOTDBnode aNode){
         Vector HWchilds = new Vector();
         try {
-            HWchilds = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
+            HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(aNode.treeID(), aNode.nodeID(), 1);
             // get all the params per child
         } catch (RemoteException ex) {
             logger.error("Error during retrieveChildDataForNode!", ex);
@@ -993,7 +993,7 @@ public class BBSStepDataManager{
         jOTDBnode strategyStepsParameter=null;
         try {
             Vector HWchilds = null;
-            HWchilds = SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(stepContainerNode.treeID(), stepContainerNode.parentID(), 2);
+            HWchilds = OtdbRmi.getRemoteMaintenance().getItemList(stepContainerNode.treeID(), stepContainerNode.parentID(), 2);
             // get all the params per child
             Enumeration e1 = HWchilds.elements();
             while( e1.hasMoreElements()  ) {
@@ -1022,8 +1022,8 @@ public class BBSStepDataManager{
         
         int returnId = 0;
         try {
-            if(this.OTDBcomponentCache==null){
-                OTDBcomponentCache = SharedVars.getOTDBrmi().getRemoteMaintenance().getComponentList("%",false);
+            if(BBSStepDataManager.OTDBcomponentCache==null){
+                OTDBcomponentCache = OtdbRmi.getRemoteMaintenance().getComponentList("%",false);
             }
             Enumeration ce = OTDBcomponentCache.elements();
             while (ce.hasMoreElements()){
@@ -1043,6 +1043,6 @@ public class BBSStepDataManager{
      * @return the BBS.Step 'Step Container' node.
      */
     private synchronized jOTDBnode getStepContainerNode(){
-        return this.stepContainerNode;
+        return BBSStepDataManager.stepContainerNode;
     }
 }

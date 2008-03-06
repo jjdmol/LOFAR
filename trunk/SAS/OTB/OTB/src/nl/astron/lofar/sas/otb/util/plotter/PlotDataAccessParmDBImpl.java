@@ -71,6 +71,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
      *
      */
     
+    @Override
     public void finalize() throws Throwable {
         parmDB = null;
     }
@@ -105,7 +106,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     @SuppressWarnings("unchecked")
     public HashMap<String,Object> retrieveData(Object constraints) throws PlotterDataAccessException{
         if(parmDB == null){
-            this.initiateConnectionToParmDB(constraints);
+            PlotDataAccessParmDBImpl.initiateConnectionToParmDB(constraints);
         }
         
         HashMap<String,Object> parameterConstraints = (HashMap<String,Object>)constraints;
@@ -114,7 +115,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
         HashMap<String,Object> returnMap = new HashMap<String, Object>();
 
         if(parmDB != null){
-            if(constraintsArray.length == this.requiredDataConstraints){
+            if(constraintsArray.length == PlotDataAccessParmDBImpl.requiredDataConstraints){
                 String tableName = constraintsArray[7];
 
                 LinkedList<HashMap<String,Object>> values = null;
@@ -130,7 +131,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     returnMap.put(PlotConstants.DATASET_NAME,"ParmDB dataset '"+constraintsArray[0]+"'");
 
                     TimeZone utcZone = TimeZone.getTimeZone("UTC");
-                    utcZone.setDefault(utcZone);
+                    TimeZone.setDefault(utcZone);
                     Calendar aCalendar = Calendar.getInstance(utcZone);
                     Date utcDate = aCalendar.getTime();
 
@@ -167,7 +168,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 }
                     
             }else{
-                throw new PlotterDataAccessException("An invalid amount of parameters (" +constraintsArray.length+" instead of " +this.requiredDataConstraints+") were passed to the ParmDB Data Access Interface");
+                throw new PlotterDataAccessException("An invalid amount of parameters (" +constraintsArray.length+" instead of " +PlotDataAccessParmDBImpl.requiredDataConstraints+") were passed to the ParmDB Data Access Interface");
             }
         }
         return returnMap;
@@ -216,7 +217,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
     public HashMap<String,Object> updateData(HashMap<String,Object> currentData, Object constraints) throws PlotterDataAccessException{
         
         if(parmDB == null){
-            this.initiateConnectionToParmDB(constraints);
+            PlotDataAccessParmDBImpl.initiateConnectionToParmDB(constraints);
         }
 
         try{
@@ -227,7 +228,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                 HashMap<String,Object> addDataSet = (HashMap<String,Object>)operatorsOnDataset.get(PlotConstants.DATASET_OPERATOR_ADD);
                 String[] constraintsArray = (String[])addDataSet.get("PARMDBCONSTRAINTS");
 
-                if(constraintsArray.length == this.requiredDataConstraints){
+                if(constraintsArray.length == PlotDataAccessParmDBImpl.requiredDataConstraints){
                     String tableName = constraintsArray[7];
 
                     LinkedList<HashMap<String,Object>> newParmValues = null;
@@ -260,7 +261,7 @@ public class PlotDataAccessParmDBImpl implements IPlotDataAccess{
                     }
                     
                 }else{
-                    throw new PlotterDataAccessException("An invalid amount of parameters (" +constraintsArray.length+" instead of " +this.requiredDataConstraints+") were passed to the ParmDB Data Access Interface");
+                    throw new PlotterDataAccessException("An invalid amount of parameters (" +constraintsArray.length+" instead of " +PlotDataAccessParmDBImpl.requiredDataConstraints+") were passed to the ParmDB Data Access Interface");
                 }
             } else if(operatorsOnDataset.containsKey(PlotConstants.DATASET_OPERATOR_MODIFY)){
                 

@@ -60,7 +60,6 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
         initComponents();
         itsMainFrame = aMainFrame;
         itsNode = aNode;
-        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         initComboLists();
         initPanel();
     }
@@ -73,7 +72,6 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
             initComboLists();
         } else {
             logger.debug("No Mainframe supplied");
@@ -146,7 +144,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
     
     private void initComboLists() {
         DefaultComboBoxModel aClassifModel = new DefaultComboBoxModel();
-        TreeMap aClassifMap = itsOtdbRmi.getClassif();
+        TreeMap aClassifMap = OtdbRmi.getClassif();
         Iterator classifIt = aClassifMap.keySet().iterator();
         while (classifIt.hasNext()) {
             aClassifModel.addElement((String)aClassifMap.get(classifIt.next()));
@@ -210,7 +208,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
     
     private void setClassif(String aS) {
         try {
-            this.ClassificationText.setSelectedItem(itsOtdbRmi.getRemoteTypes().getClassif(aS));
+            this.ClassificationText.setSelectedItem(OtdbRmi.getRemoteTypes().getClassif(aS));
         } catch (RemoteException e) {
             logger.debug("Error: GetParamType failed " + e);
         }
@@ -296,8 +294,8 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
                 }
 
                 if (hasChanged) {
-                    if (!itsOtdbRmi.getRemoteMaintenance().saveComponentNode(itsNode)) {
-                        logger.error("Saving node failed: "+ itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                    if (!OtdbRmi.getRemoteMaintenance().saveComponentNode(itsNode)) {
+                        logger.error("Saving node failed: "+ OtdbRmi.getRemoteMaintenance().errorMsg());
                     }
                     
                     ActionEvent evt = new ActionEvent(this,-1,"VICnodeChanged");
@@ -452,7 +450,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
     
     private jVICnodeDef itsNode = null;
     private MainFrame   itsMainFrame;
-    private OtdbRmi     itsOtdbRmi;   
+
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel ClassificationLabel;
@@ -472,7 +470,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
 
     /**
      * Registers ActionListener to receive events.
@@ -480,10 +478,10 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
 
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.ActionListener.class, listener);
+        myListenerList.add (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -492,7 +490,7 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
 
-        listenerList.remove (java.awt.event.ActionListener.class, listener);
+        myListenerList.remove (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -502,8 +500,8 @@ public class VICnodeDefViewPanel extends javax.swing.JPanel implements IViewPane
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
 
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (event);

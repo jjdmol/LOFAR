@@ -62,21 +62,21 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
     public boolean refreshRow(int row) {
         
         try {
-            if (! otdbRmi.getRemoteOTDB().isConnected()) {
+            if (! OtdbRmi.getRemoteOTDB().isConnected()) {
                 logger.debug("No open connection available");
                 return false;
             }
 
             // get TreeID that needs 2b refreshed
             int aTreeID=((Integer)data[row][0]).intValue();
-            jOTDBtree tInfo=otdbRmi.getRemoteOTDB().getTreeInfo(aTreeID, false);
+            jOTDBtree tInfo=OtdbRmi.getRemoteOTDB().getTreeInfo(aTreeID, false);
             if ( tInfo == null) {
                 logger.debug("Unable to get treeInfo for tree with ID: " + aTreeID);
                 return false;
             }
             data[row][0]=new Integer(tInfo.treeID());	   
-            data[row][1]=new String(otdbRmi.getTreeState().get(tInfo.state));
-            data[row][2]=new String(otdbRmi.getClassif().get(tInfo.classification));
+            data[row][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
+            data[row][2]=new String(OtdbRmi.getClassif().get(tInfo.classification));
 	    data[row][3]=new String(tInfo.creator);
 	    data[row][4]=new String(tInfo.starttime);
 	    data[row][5]=new String(tInfo.stoptime);
@@ -96,12 +96,12 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
             return false;
         }
         try {
-            if (otdbRmi.getRemoteOTDB() != null && ! otdbRmi.getRemoteOTDB().isConnected()) {
+            if (OtdbRmi.getRemoteOTDB() != null && ! OtdbRmi.getRemoteOTDB().isConnected()) {
                 logger.debug("No open connection available");
                 return false;
             }
             // Get a Treelist of all available PIC's
-            Vector aTreeList=otdbRmi.getRemoteOTDB().getTreeList(otdbRmi.getRemoteTypes().getTreeType("hardware"),(short)0);
+            Vector aTreeList=OtdbRmi.getRemoteOTDB().getTreeList(OtdbRmi.getRemoteTypes().getTreeType("hardware"),(short)0);
             data = new Object[aTreeList.size()][headers.length];
             logger.debug("Treelist downloaded. Size: "+aTreeList.size());
            
@@ -112,8 +112,8 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
                 } else {
                     logger.debug("Gathered info for ID: "+tInfo.treeID());
                     data[k][0]=new Integer(tInfo.treeID());	   
-	            data[k][1]=new String(otdbRmi.getTreeState().get(tInfo.state));
-                    data[k][2]=new String(otdbRmi.getClassif().get(tInfo.classification));
+	            data[k][1]=new String(OtdbRmi.getTreeState().get(tInfo.state));
+                    data[k][2]=new String(OtdbRmi.getClassif().get(tInfo.classification));
 	            data[k][3]=new String(tInfo.creator);
 	            data[k][4]=new String(tInfo.starttime);
 	            data[k][5]=new String(tInfo.stoptime);
@@ -140,8 +140,9 @@ public class PICtableModel extends javax.swing.table.AbstractTableModel {
 
     /** Returns the column names 
      * @param    c   Column Number
-     * @return  the name for this column     
+     * @return  the name for this column    
      */
+    @Override 
     public String getColumnName(int c) {
         try {
             return headers[c];
