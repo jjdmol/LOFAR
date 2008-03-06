@@ -680,6 +680,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsClockMode.limits = inputClockMode.getSelectedItem().toString();
             saveNode(itsClockMode);
         }
+        if (itsNrBeams != null && !Integer.toString(beamConfigurationPanel.getTableModel().getRowCount()).equals(itsNrBeams.limits)) {
+            itsNrBeams.limits = Integer.toString(beamConfigurationPanel.getTableModel().getRowCount());
+            saveNode(itsNrBeams);
+        }
         
         // treeDescription
         if (itsOldTreeDescription != null && !inputTreeDescription.getText().equals(itsOldTreeDescription)) {
@@ -774,7 +778,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             BitSet oldBeamlets = LofarUtils.beamletToBitSet(selection[4]);
             aBS.xor(oldBeamlets);
             // if no row is selected, nothing to be done
-            if (selection == null || selection[0] == "") {
+            if (selection == null || selection[0].equals("")) {
                 return;
             }
         }
@@ -1242,13 +1246,13 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_stationsListFocusGained
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand() == "Save") {
+        if(evt.getActionCommand().equals("Save")) {
             if (JOptionPane.showConfirmDialog(this,"This will throw away all old Beams from the database and rewrite the new ones. Are you sure you want to do this ","Write new configurations",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                 itsMainFrame.setHourglassCursor();
                 saveInput();
                 itsMainFrame.setNormalCursor();
             }
-        } else if(evt.getActionCommand() == "Restore") {
+        } else if(evt.getActionCommand().equals("Restore")) {
             itsMainFrame.setHourglassCursor();
             restore();
             itsMainFrame.setNormalCursor();
