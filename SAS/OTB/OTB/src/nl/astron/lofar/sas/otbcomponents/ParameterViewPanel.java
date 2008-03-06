@@ -33,6 +33,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.AccessRights;
@@ -62,7 +63,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         initComponents();
         itsMainFrame = aMainFrame;
         itsParam = aParam;
-        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
+        itsOtdbRmi=SharedVars.getOTDBrmi();
         initComboLists();
         initPanel();
     }
@@ -77,7 +78,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         itsMainFrame = aMainFrame;
         itsNode = aNode;
         getParam(itsNode);
-        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
+        itsOtdbRmi=SharedVars.getOTDBrmi();
         initComboLists();
         initPanel();
     }
@@ -94,7 +95,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
+            itsOtdbRmi=SharedVars.getOTDBrmi();
             initComboLists();
         } else {
             logger.debug("No Mainframe supplied");
@@ -209,9 +210,9 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         itsNode=aNode;
         try {
             if (itsNode.leaf) {
-                itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsNode);
+                itsParam = OtdbRmi.getRemoteMaintenance().getParam(itsNode);
             } else {
-                itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
+                itsParam = OtdbRmi.getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
             }
         } catch (RemoteException ex) {
             logger.debug("Error during getParam: "+ ex);
@@ -222,7 +223,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     private void initComboLists() {
         DefaultComboBoxModel aTypeModel = new DefaultComboBoxModel();
-        TreeMap aTypeMap = itsOtdbRmi.getParamType();
+        TreeMap aTypeMap = OtdbRmi.getParamType();
         Iterator typeIt = aTypeMap.keySet().iterator();
         while (typeIt.hasNext()) {
             aTypeModel.addElement((String)aTypeMap.get(typeIt.next()));
@@ -230,7 +231,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         ParamTypeText.setModel(aTypeModel);
         
         DefaultComboBoxModel aUnitModel = new DefaultComboBoxModel();
-        TreeMap aUnitMap=itsOtdbRmi.getUnit();
+        TreeMap aUnitMap=OtdbRmi.getUnit();
         Iterator unitIt = aUnitMap.keySet().iterator();
         while (unitIt.hasNext()) {
             aUnitModel.addElement((String)aUnitMap.get(unitIt.next()));
@@ -267,7 +268,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
             if (this.getType().substring(0,1).equals("p")) {
                 try {
                     // Have to get new param because we need the unresolved limits field.
-                    itsParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
+                    itsParam = OtdbRmi.getRemoteMaintenance().getParam(itsNode.treeID(),itsNode.paramDefID());                
                 } catch (RemoteException ex) {
                      logger.debug("Error during getParam: "+ ex);
                 }
@@ -332,7 +333,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     private void setType(short aS) {
         try {
-            this.ParamTypeText.setSelectedItem(itsOtdbRmi.getRemoteTypes().getParamType(aS));
+            this.ParamTypeText.setSelectedItem(OtdbRmi.getRemoteTypes().getParamType(aS));
         } catch (RemoteException e) {
             logger.debug("Error: GetParamType failed " + e);
        }
@@ -349,7 +350,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     
     private void setUnit(short aS) {
         try {
-            this.ParamUnitText.setSelectedItem(itsOtdbRmi.getRemoteTypes().getUnit(aS));
+            this.ParamUnitText.setSelectedItem(OtdbRmi.getRemoteTypes().getUnit(aS));
         } catch (RemoteException e) {
             logger.debug("ERROR: getUnit failed " + e);
         }
@@ -507,13 +508,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
         boolean paramHasChanged = false;
         if (itsParam != null) {
             try {
-                if (itsParam.type != itsOtdbRmi.getRemoteTypes().getParamType(getType())) { 
-                    itsParam.type=itsOtdbRmi.getRemoteTypes().getParamType(getType());
+                if (itsParam.type != OtdbRmi.getRemoteTypes().getParamType(getType())) { 
+                    itsParam.type=OtdbRmi.getRemoteTypes().getParamType(getType());
                     paramHasChanged=true;
                 }
 
-                if (itsParam.unit != itsOtdbRmi.getRemoteTypes().getUnit(getUnit())) { 
-                    itsParam.unit=itsOtdbRmi.getRemoteTypes().getUnit(getUnit());
+                if (itsParam.unit != OtdbRmi.getRemoteTypes().getUnit(getUnit())) { 
+                    itsParam.unit=OtdbRmi.getRemoteTypes().getUnit(getUnit());
                     paramHasChanged=true;
                 }
 
@@ -543,13 +544,13 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
                 }
                 
                 if (paramHasChanged) {
-                    if (!itsOtdbRmi.getRemoteMaintenance().saveParam(itsParam)) {
-                        logger.error("Saving param "+itsParam.nodeID()+","+itsParam.paramID()+"failed: "+ itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                    if (!OtdbRmi.getRemoteMaintenance().saveParam(itsParam)) {
+                        logger.error("Saving param "+itsParam.nodeID()+","+itsParam.paramID()+"failed: "+ OtdbRmi.getRemoteMaintenance().errorMsg());
                     }
                 } 
                 if (nodeHasChanged) {
-                    if (!itsOtdbRmi.getRemoteMaintenance().saveNode(itsNode)) {
-                        logger.error("Saving node "+itsNode.nodeID()+"failed: "+ itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                    if (!OtdbRmi.getRemoteMaintenance().saveNode(itsNode)) {
+                        logger.error("Saving node "+itsNode.nodeID()+"failed: "+ OtdbRmi.getRemoteMaintenance().errorMsg());
                     }
                 } 
                
@@ -819,7 +820,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
 
     /**
      * Registers ActionListener to receive events.
@@ -827,10 +828,10 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
 
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.ActionListener.class, listener);
+        myListenerList.add (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -839,7 +840,7 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
 
-        listenerList.remove (java.awt.event.ActionListener.class, listener);
+        myListenerList.remove (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -849,8 +850,8 @@ public class ParameterViewPanel extends javax.swing.JPanel implements IViewPanel
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
 
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (event);

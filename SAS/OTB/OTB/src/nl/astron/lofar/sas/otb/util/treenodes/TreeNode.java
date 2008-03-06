@@ -78,6 +78,7 @@ public class TreeNode extends DefaultMutableTreeNode {
         this.treeManager = (ITreeManager)treeManager;
     }
     
+    @Override
     public boolean isLeaf() {
         return treeManager.isNodeLeaf(this);
     }
@@ -86,6 +87,7 @@ public class TreeNode extends DefaultMutableTreeNode {
      * Called by the JTree
      * Adds childs if they are not defined and returns the number of childs
      */
+    @Override
     public int getChildCount() {
         logger.trace("Entry - getChildCount("+toString()+")");
         
@@ -101,6 +103,7 @@ public class TreeNode extends DefaultMutableTreeNode {
      * Called by the JTree
      * @return the human readable name of the node
      */
+    @Override
     public String toString() {
         return ((ITreeManager)treeManager).getNameForNode(this);
     }

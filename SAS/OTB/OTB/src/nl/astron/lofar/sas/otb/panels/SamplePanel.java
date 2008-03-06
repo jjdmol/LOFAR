@@ -369,7 +369,7 @@ public class SamplePanel extends javax.swing.JPanel
     private void buttonPanelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanelActionPerformed
         logger.debug("actionPerformed: " + evt);
         
-        if(evt.getActionCommand() == "New Tree") {
+        if(evt.getActionCommand().equals("New Tree")) {
             // initialize the tree
             // create a sample root node. This should be retrieved from the OTDB of course.
             jOTDBnode otdbNode = new jOTDBnode(0,0,0,0);
@@ -381,7 +381,7 @@ public class SamplePanel extends javax.swing.JPanel
             // and create a new root
             treePanel.newRootNode(otdbTreeNode);
         }
-        else if(evt.getActionCommand() == "Back to Main") {
+        else if(evt.getActionCommand().equals("Back to Main")) {
             itsMainFrame.showPanel(MainPanel.getFriendlyNameStatic());
         }
     }//GEN-LAST:event_buttonPanelActionPerformed

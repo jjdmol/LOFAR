@@ -22,17 +22,9 @@
 
 package nl.astron.lofar.sas.otb.util.treemanagers;
 
-import java.rmi.RemoteException;
-import java.util.Enumeration;
-import java.util.Vector;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
-import nl.astron.lofar.sas.otb.SharedVars;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.util.UserAccount;
-import nl.astron.lofar.sas.otb.util.jParmDBnode;
-import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
-import org.apache.log4j.Logger;
 
 /**
  * Base GenericTreeManager Class
@@ -48,23 +40,23 @@ import org.apache.log4j.Logger;
 public abstract class GenericTreeManager{
     
     protected static UserAccount anAccount;
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
     
     /**
      * default constructor, protected by a singleton pattern
      */
     public GenericTreeManager(UserAccount anAccount) {
-        this.anAccount = anAccount;
+        GenericTreeManager.anAccount = anAccount;
     }
     /**
      * Registers ActionListener to receive events.
      * @param listener The listener to register.
      */
     public synchronized void addTreeModelListener(TreeModelListener listener) {
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add(TreeModelListener.class, listener);
+        myListenerList.add(TreeModelListener.class, listener);
     }
     
     /**
@@ -72,7 +64,7 @@ public abstract class GenericTreeManager{
      * @param listener The listener to remove.
      */
     public synchronized void removeTreeModelListener(TreeModelListener listener) {
-        listenerList.remove(TreeModelListener.class, listener);
+        myListenerList.remove(TreeModelListener.class, listener);
     }
     
     /**
@@ -81,8 +73,8 @@ public abstract class GenericTreeManager{
      * @param event The event to be fired
      */
     protected void fireTreeInsertionPerformed(TreeModelEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==TreeModelListener.class) {
                 ((TreeModelListener)listeners[i+1]).treeNodesInserted(event);
@@ -95,8 +87,8 @@ public abstract class GenericTreeManager{
      * @param event The event to be fired
      */
     protected void fireTreeRemovalPerformed(TreeModelEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==TreeModelListener.class) {
                 ((TreeModelListener)listeners[i+1]).treeNodesRemoved(event);
@@ -109,8 +101,8 @@ public abstract class GenericTreeManager{
      * @param event The event to be fired
      */
     protected void fireTreeChangePerformed(TreeModelEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==TreeModelListener.class) {
                 ((TreeModelListener)listeners[i+1]).treeNodesChanged(event);
@@ -123,8 +115,8 @@ public abstract class GenericTreeManager{
      * @param event The event to be fired
      */
     protected void fireTreeStructureChanged(TreeModelEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==TreeModelListener.class) {
                 ((TreeModelListener)listeners[i+1]).treeStructureChanged(event);

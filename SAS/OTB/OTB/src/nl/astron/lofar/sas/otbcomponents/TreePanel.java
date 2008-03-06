@@ -87,12 +87,15 @@ public class TreePanel extends javax.swing.JPanel {
             }
         });
         jTree1.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jTree1MouseClicked(evt);
             }
+            @Override
             public void mousePressed(java.awt.event.MouseEvent evt) {
                 jTree1MousePressed(evt);
             }
+            @Override
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 jTree1MouseReleased(evt);
             }
@@ -199,7 +202,7 @@ public class TreePanel extends javax.swing.JPanel {
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
 
     /**
      * Registers TreeSelectionListener to receive events.
@@ -207,10 +210,10 @@ public class TreePanel extends javax.swing.JPanel {
      */
     public synchronized void addTreeSelectionListener(javax.swing.event.TreeSelectionListener listener) {
 
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (javax.swing.event.TreeSelectionListener.class, listener);
+        myListenerList.add (javax.swing.event.TreeSelectionListener.class, listener);
     }
 
     /**
@@ -219,7 +222,7 @@ public class TreePanel extends javax.swing.JPanel {
      */
     public synchronized void removeTreeSelectionListener(javax.swing.event.TreeSelectionListener listener) {
 
-        listenerList.remove (javax.swing.event.TreeSelectionListener.class, listener);
+        myListenerList.remove (javax.swing.event.TreeSelectionListener.class, listener);
     }
 
     /**
@@ -229,8 +232,8 @@ public class TreePanel extends javax.swing.JPanel {
      */
     private void fireTreeSelectionListenerValueChanged(javax.swing.event.TreeSelectionEvent event) {
 
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==javax.swing.event.TreeSelectionListener.class) {
                 ((javax.swing.event.TreeSelectionListener)listeners[i+1]).valueChanged (event);
@@ -242,19 +245,21 @@ public class TreePanel extends javax.swing.JPanel {
      * Registers MouseListener to receive events.
      * @param listener The listener to register.
      */
+    @Override
     public synchronized void addMouseListener(java.awt.event.MouseListener listener) {
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.MouseListener.class, listener);
+        myListenerList.add (java.awt.event.MouseListener.class, listener);
     }
 
     /**
      * Removes MouseListener from the list of listeners.
      * @param listener The listener to remove.
      */
+    @Override
     public synchronized void removeMouseListener(java.awt.event.MouseListener listener) {
-        listenerList.remove (java.awt.event.MouseListener.class, listener);
+        myListenerList.remove (java.awt.event.MouseListener.class, listener);
     }
 
     /**
@@ -263,8 +268,8 @@ public class TreePanel extends javax.swing.JPanel {
      * @param event The event to be fired
      */
     private void fireMouseListenerMouseClicked(java.awt.event.MouseEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.MouseListener.class) {
                 ((java.awt.event.MouseListener)listeners[i+1]).mouseClicked (event);
@@ -278,8 +283,8 @@ public class TreePanel extends javax.swing.JPanel {
      * @param event The event to be fired
      */
     private void fireMouseListenerMousePressed(java.awt.event.MouseEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.MouseListener.class) {
                 ((java.awt.event.MouseListener)listeners[i+1]).mousePressed (event);
@@ -293,8 +298,8 @@ public class TreePanel extends javax.swing.JPanel {
      * @param event The event to be fired
      */
     private void fireMouseListenerMouseReleased(java.awt.event.MouseEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.MouseListener.class) {
                 ((java.awt.event.MouseListener)listeners[i+1]).mouseReleased (event);
@@ -308,8 +313,8 @@ public class TreePanel extends javax.swing.JPanel {
      * @param event The event to be fired
      */
     private void fireMouseListenerMouseEntered(java.awt.event.MouseEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.MouseListener.class) {
                 ((java.awt.event.MouseListener)listeners[i+1]).mouseEntered (event);
@@ -323,8 +328,8 @@ public class TreePanel extends javax.swing.JPanel {
      * @param event The event to be fired
      */
     private void fireMouseListenerMouseExited(java.awt.event.MouseEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.MouseListener.class) {
                 ((java.awt.event.MouseListener)listeners[i+1]).mouseExited (event);

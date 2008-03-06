@@ -21,7 +21,6 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 import java.util.BitSet;
-import java.util.Vector;
 import javax.swing.JOptionPane;
 import javax.swing.border.TitledBorder;
 import nl.astron.lofar.lofarutils.LofarUtils;

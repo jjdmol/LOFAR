@@ -29,8 +29,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.StringTokenizer;
-import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
@@ -67,7 +65,6 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
         initComponents();
         itsMainFrame = aMainFrame;
         itsNode=aNode;
-        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         initPanel();
     }
     
@@ -79,7 +76,6 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     public void setMainFrame(MainFrame aMainFrame) {
         if (aMainFrame != null) {
             itsMainFrame=aMainFrame;
-            itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
         } else {
             logger.debug("No Mainframe supplied");
         }
@@ -177,10 +173,10 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
                 String aRemoteFileName="/tmp/"+aTreeID+"-"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
                     
                 // write the parset
-                itsOtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
+                OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
                     
                 //obtain the remote file
-                byte[] dldata = itsOtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+                byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
 
                 BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(aFile));
                 output.write(dldata,0,dldata.length);
@@ -215,8 +211,8 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
          if (itsNode != null) {
             try {
                 //figure out the caller
-                jOTDBtree aTree = itsOtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
-                itsTreeType=itsOtdbRmi.getTreeType().get(aTree.type);
+                jOTDBtree aTree = OtdbRmi.getRemoteOTDB().getTreeInfo(itsNode.treeID(),false);
+                itsTreeType=OtdbRmi.getTreeType().get(aTree.type);
             } catch (RemoteException ex) {
                 logger.debug("ParSetViewPanel: Error getting treeInfo/treetype" + ex);
                 itsTreeType="";
@@ -270,10 +266,10 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
             String aRemoteFileName="/tmp/"+aTreeID+"_"+itsNode.name+"_"+itsMainFrame.getUserAccount().getUserName()+".ParSet";
                     
             // write the parset
-            itsOtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
+            OtdbRmi.getRemoteMaintenance().exportTree(aTreeID,itsNode.nodeID(),aRemoteFileName,2,false); 
                     
             //obtain the remote file
-            byte[] dldata = itsOtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
+            byte[] dldata = OtdbRmi.getRemoteFileTrans().downloadFile(aRemoteFileName);
              
             String aParSet=new String(dldata);
             
@@ -376,7 +372,6 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     
     private jOTDBnode itsNode        = null;
     private MainFrame  itsMainFrame  = null;
-    private OtdbRmi    itsOtdbRmi    = null;  
     private String    itsTreeType    = "";
     private JFileChooser fc          = null;
     
@@ -390,7 +385,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
 
     /**
      * Registers ActionListener to receive events.
@@ -398,10 +393,10 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
 
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.ActionListener.class, listener);
+        myListenerList.add (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -410,7 +405,7 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
 
-        listenerList.remove (java.awt.event.ActionListener.class, listener);
+        myListenerList.remove (java.awt.event.ActionListener.class, listener);
     }
 
     /**
@@ -420,8 +415,8 @@ public class ParSetViewPanel extends javax.swing.JPanel implements IViewPanel{
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
 
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed (event);

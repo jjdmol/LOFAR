@@ -21,13 +21,11 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 import java.rmi.RemoteException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
@@ -65,7 +63,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         itsTreeIDs = treeIDs;
         try {
             // set selected Tree to first in the list
-            itsTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
+            itsTree=OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
         } catch (RemoteException e) {
             logger.debug("Error getting the Treeinfo " + e);
             itsTree=null;
@@ -83,7 +81,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         }
         try {
             // set selected Tree to first in the list
-            itsTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
+            itsTree=OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeIDs[0], false);
         } catch (RemoteException e) {
             logger.debug("Error getting the Treeinfo " + e);
             itsTree=null;
@@ -99,13 +97,13 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         } else {
             topLabel.setText("Tree Meta Data");
         }
-        itsOtdbRmi=itsMainFrame.getSharedVars().getOTDBrmi();
+        
         isAdministrator=itsMainFrame.getUserAccount().isAdministrator();
         if (itsTree != null) {
-            itsTreeType=itsOtdbRmi.getTreeType().get(itsTree.type);
+            itsTreeType=OtdbRmi.getTreeType().get(itsTree.type);
             // keep the fields that can be changed
-            itsTreeState=itsOtdbRmi.getTreeState().get(itsTree.state);
-            itsClassification = itsOtdbRmi.getClassif().get(itsTree.classification);
+            itsTreeState=OtdbRmi.getTreeState().get(itsTree.state);
+            itsClassification = OtdbRmi.getClassif().get(itsTree.classification);
             itsCampaign = itsTree.campaign;
             itsStarttime = itsTree.starttime;
             // try to set the dates
@@ -279,7 +277,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     private void initComboLists() {
         DefaultComboBoxModel aClassifModel = new DefaultComboBoxModel();
-        TreeMap aClassifMap=itsOtdbRmi.getClassif();
+        TreeMap aClassifMap=OtdbRmi.getClassif();
         Iterator classifIt = aClassifMap.keySet().iterator();
         while (classifIt.hasNext()) {
             aClassifModel.addElement((String)aClassifMap.get(classifIt.next()));
@@ -287,7 +285,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         classificationInput.setModel(aClassifModel);
         
         DefaultComboBoxModel aStateModel = new DefaultComboBoxModel();
-        TreeMap aStateMap=itsOtdbRmi.getTreeState();
+        TreeMap aStateMap=OtdbRmi.getTreeState();
         Iterator stateIt = aStateMap.keySet().iterator();
         while (stateIt.hasNext()) {
             aStateModel.addElement((String)aStateMap.get(stateIt.next()));
@@ -316,7 +314,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         classificationInput.setSelectedItem(itsClassification);
         creatorInput.setText(itsTree.creator);
         creationDateInput.setText(itsTree.creationDate);
-        typeInput.setText((String)itsOtdbRmi.getTreeType().get(itsTree.type));
+        typeInput.setText((String)OtdbRmi.getTreeType().get(itsTree.type));
         stateInput.setSelectedItem(itsTreeState);
         originalTreeIDInput.setText(String.valueOf(itsTree.originalTree));
         campaignInput.setText(itsTree.campaign);
@@ -339,25 +337,25 @@ public class TreeInfoDialog extends javax.swing.JDialog {
             // if multiple selections have been made, then the changes should be set to all the selected trees
             if (itsMultiple) {
                 for (int i=0; i < itsTreeIDs.length; i++) {
-                    jOTDBtree aTree=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(itsTreeIDs[i], false); 
-                    String aTreeState=itsOtdbRmi.getTreeState().get(aTree.state);
-                    String aClassification = itsOtdbRmi.getClassif().get(aTree.classification);
+                    jOTDBtree aTree=OtdbRmi.getRemoteOTDB().getTreeInfo(itsTreeIDs[i], false); 
+                    String aTreeState=OtdbRmi.getTreeState().get(aTree.state);
+                    String aClassification = OtdbRmi.getClassif().get(aTree.classification);
                     
                     // Check treeState and alter in DB when changed
                     if (!aTreeState.equals(stateInput.getSelectedItem().toString())) {
                         hasChanged=true;
-                        aTree.state=itsOtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
-                        if (!itsOtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state)) {
-                            logger.debug("Error during setTreeState: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                      
+                        aTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
+                        if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTree.treeID(), aTree.state)) {
+                            logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());                      
                         }
                     }
 
                     // Check treeClassification and alter in DB when changed
                     if ( !aClassification.equals(classificationInput.getSelectedItem().toString())) {
                         hasChanged=true;
-                        aTree.classification=itsOtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
-                        if (!itsOtdbRmi.getRemoteMaintenance().setClassification(aTree.treeID(), aTree.classification)) {
-                            logger.debug("Error during setClassification: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                        aTree.classification=OtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
+                        if (!OtdbRmi.getRemoteMaintenance().setClassification(aTree.treeID(), aTree.classification)) {
+                            logger.debug("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
                         }
                     }
                     
@@ -366,8 +364,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                         hasChanged=true;
                         aTree.starttime = startTimeInput.getText();
                         aTree.stoptime = stopTimeInput.getText();
-                        if (itsOtdbRmi.getRemoteMaintenance().setSchedule(aTree.treeID(),aTree.starttime,aTree.stoptime)) {
-                            logger.debug("Error during setSchedule: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                        if (OtdbRmi.getRemoteMaintenance().setSchedule(aTree.treeID(),aTree.starttime,aTree.stoptime)) {
+                            logger.debug("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());                        
                         }
                     }
                 }
@@ -376,23 +374,23 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                 // changable settings for PIC/VIC and templates
                 if ( !itsClassification.equals(classificationInput.getSelectedItem().toString())) {
                     hasChanged=true;
-                    itsTree.classification=itsOtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
-                    if (!itsOtdbRmi.getRemoteMaintenance().setClassification(itsTree.treeID(), itsTree.classification)) {
-                        logger.debug("Error during setClassification: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());
+                    itsTree.classification=OtdbRmi.getRemoteTypes().getClassif(classificationInput.getSelectedItem().toString());
+                    if (!OtdbRmi.getRemoteMaintenance().setClassification(itsTree.treeID(), itsTree.classification)) {
+                        logger.debug("Error during setClassification: "+OtdbRmi.getRemoteMaintenance().errorMsg());
                     }
                 }
                 if (!itsTreeState.equals(stateInput.getSelectedItem().toString())) {
                     hasChanged=true;
-                    itsTree.state=itsOtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
-                    if (!itsOtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
-                        logger.debug("Error during setTreeState: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                      
+                    itsTree.state=OtdbRmi.getRemoteTypes().getTreeState(stateInput.getSelectedItem().toString());
+                    if (!OtdbRmi.getRemoteMaintenance().setTreeState(itsTree.treeID(), itsTree.state)) {
+                        logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());                      
                     }
                 }
                 if (!itsDescription.equals(descriptionInput.getText())) {
                     hasChanged=true;
                     itsTree.description = descriptionInput.getText();
-                    if (!itsOtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
-                        logger.debug("Error during setDescription: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                    if (!OtdbRmi.getRemoteMaintenance().setDescription(itsTree.treeID(), itsTree.description)) {
+                        logger.debug("Error during setDescription: "+OtdbRmi.getRemoteMaintenance().errorMsg());                        
                     }
                 }
                 // Next for VIC and Templates only
@@ -400,8 +398,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                     if (!itsCampaign.equals(campaignInput.getText()) && itsTree.momID() > 0) {
                         hasChanged=true;
                         itsTree.campaign = campaignInput.getText();
-                        if (!itsOtdbRmi.getRemoteMaintenance().setMomInfo(itsTree.treeID(), itsTree.momID(),itsTree.campaign)) {
-                            logger.debug("Error during setCampaign: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                        if (!OtdbRmi.getRemoteMaintenance().setMomInfo(itsTree.treeID(), itsTree.momID(),itsTree.campaign)) {
+                            logger.debug("Error during setCampaign: "+OtdbRmi.getRemoteMaintenance().errorMsg());                        
                         }
                     }
                     // Next for VIC only
@@ -411,8 +409,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
                                hasChanged=true;
                                itsTree.starttime = startTimeInput.getText();
                                itsTree.stoptime = stopTimeInput.getText();
-                               if (itsOtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
-                                   logger.debug("Error during setSchedule: "+itsOtdbRmi.getRemoteMaintenance().errorMsg());                        
+                               if (OtdbRmi.getRemoteMaintenance().setSchedule(itsTree.treeID(),itsTree.starttime,itsTree.stoptime)) {
+                                   logger.debug("Error during setSchedule: "+OtdbRmi.getRemoteMaintenance().errorMsg());                        
                                }
                             }
                         }
@@ -656,7 +654,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
 
     private MainFrame itsMainFrame = null;
-    private OtdbRmi   itsOtdbRmi = null;
     private jOTDBtree itsTree = null;
     private int []    itsTreeIDs=null;
     private boolean   isAdministrator;

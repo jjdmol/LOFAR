@@ -188,26 +188,28 @@ public class TablePanel extends javax.swing.JPanel {
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
 
 
     /**
      * Registers MouseListener to receive events.
      * @param listener The listener to register.
      */
+    @Override
     public synchronized void addMouseListener(java.awt.event.MouseListener listener) {
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add (java.awt.event.MouseListener.class, listener);
+        myListenerList.add (java.awt.event.MouseListener.class, listener);
     }
 
     /**
      * Removes MouseListener from the list of listeners.
      * @param listener The listener to remove.
      */
+    @Override
     public synchronized void removeMouseListener(java.awt.event.MouseListener listener) {
-        listenerList.remove (java.awt.event.MouseListener.class, listener);
+        myListenerList.remove (java.awt.event.MouseListener.class, listener);
     }
 
     /**
@@ -216,8 +218,8 @@ public class TablePanel extends javax.swing.JPanel {
      * @param event The event to be fired
      */
     private void fireMouseListenerMouseClicked(java.awt.event.MouseEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList ();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList ();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.MouseListener.class) {
                 ((java.awt.event.MouseListener)listeners[i+1]).mouseClicked (event);

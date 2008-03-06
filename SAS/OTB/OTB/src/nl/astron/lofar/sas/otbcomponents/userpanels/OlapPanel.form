@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<Form version="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+<Form version="1.3" maxVersion="1.3" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
   <NonVisualComponents>
     <Container class="javax.swing.JPanel" name="jPanel9">
 
@@ -24,7 +24,9 @@
     </Property>
   </Properties>
   <AuxValues>
+    <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_layoutCodeTarget" type="java.lang.Integer" value="1"/>
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
@@ -148,7 +150,7 @@
                                   <Component id="jPanel11" min="-2" max="-2" attributes="0"/>
                                   <EmptySpace max="-2" attributes="0"/>
                               </Group>
-                              <Component id="jPanel6" pref="282" max="32767" attributes="1"/>
+                              <Component id="jPanel6" max="32767" attributes="1"/>
                           </Group>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="jPanel5" min="-2" max="-2" attributes="0"/>
@@ -685,21 +687,21 @@
                                   </Group>
                                   <Group type="102" alignment="0" attributes="0">
                                       <Group type="103" groupAlignment="1" attributes="0">
-                                          <Component id="labelCoresPerPset" alignment="0" pref="124" max="32767" attributes="0"/>
-                                          <Component id="labelBGLIntegrationSteps" alignment="0" pref="124" max="32767" attributes="1"/>
-                                          <Component id="labelPsetsPerCell" alignment="0" pref="124" max="32767" attributes="1"/>
-                                          <Component id="labelNodesPerPset" alignment="0" pref="124" max="32767" attributes="1"/>
-                                          <Component id="labelNrPPFTaps" alignment="0" pref="124" max="32767" attributes="1"/>
-                                          <Component id="labelMaxConcurrentComm" alignment="0" pref="124" max="32767" attributes="1"/>
+                                          <Component id="labelCoresPerPset" alignment="0" pref="119" max="32767" attributes="0"/>
+                                          <Component id="labelBGLIntegrationSteps" alignment="0" pref="119" max="32767" attributes="1"/>
+                                          <Component id="labelPsetsPerCell" alignment="0" pref="119" max="32767" attributes="1"/>
+                                          <Component id="labelNodesPerPset" alignment="0" pref="119" max="32767" attributes="1"/>
+                                          <Component id="labelNrPPFTaps" alignment="0" pref="119" max="32767" attributes="1"/>
+                                          <Component id="labelMaxConcurrentComm" alignment="0" pref="119" max="32767" attributes="1"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="inputCoresPerPset" pref="205" max="32767" attributes="0"/>
-                                          <Component id="inputBGLIntegrationSteps" pref="205" max="32767" attributes="1"/>
-                                          <Component id="inputPsetsPerCell" pref="205" max="32767" attributes="1"/>
-                                          <Component id="inputNodesPerPset" pref="205" max="32767" attributes="1"/>
-                                          <Component id="inputNrPPFTaps" pref="205" max="32767" attributes="1"/>
-                                          <Component id="inputMaxConcurrentComm" alignment="0" pref="205" max="32767" attributes="1"/>
+                                          <Component id="inputCoresPerPset" pref="200" max="32767" attributes="0"/>
+                                          <Component id="inputBGLIntegrationSteps" pref="200" max="32767" attributes="1"/>
+                                          <Component id="inputPsetsPerCell" pref="200" max="32767" attributes="1"/>
+                                          <Component id="inputNodesPerPset" pref="200" max="32767" attributes="1"/>
+                                          <Component id="inputNrPPFTaps" pref="200" max="32767" attributes="1"/>
+                                          <Component id="inputMaxConcurrentComm" alignment="0" pref="200" max="32767" attributes="1"/>
                                       </Group>
                                   </Group>
                               </Group>
@@ -857,7 +859,7 @@
                                   <Component id="inputSubbandsPerMS" max="32767" attributes="1"/>
                                   <Component id="inputStorageProcIntegrationSteps" alignment="0" pref="198" max="32767" attributes="1"/>
                               </Group>
-                              <EmptySpace pref="30" max="32767" attributes="0"/>
+                              <EmptySpace pref="20" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -931,7 +933,7 @@
                                       <Component id="inputPositionType" min="-2" pref="122" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
-                              <EmptySpace pref="33" max="32767" attributes="0"/>
+                              <EmptySpace pref="23" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>

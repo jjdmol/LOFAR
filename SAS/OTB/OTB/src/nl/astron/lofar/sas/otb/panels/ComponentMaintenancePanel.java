@@ -26,6 +26,7 @@ import java.rmi.RemoteException;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.jotdb2.jVICnodeDef;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.treemanagers.OTDBParamTreeManager;
 import nl.astron.lofar.sas.otb.util.treenodes.TreeNode;
@@ -119,7 +120,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
         itsSelectedParam=aParam;
         if (treePanel.getSelectedRows()[0] == 0) {
             try {
-                jVICnodeDef aVICnodeDef = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getComponentNode(itsComponentID);
+                jVICnodeDef aVICnodeDef = OtdbRmi.getRemoteMaintenance().getComponentNode(itsComponentID);
                 VICnodeDefViewPanel1.setContent(aVICnodeDef);
                 jSplitPane1.remove(componentPanel1);
                 jSplitPane1.setRightComponent(VICnodeDefViewPanel1);
@@ -242,7 +243,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
     
     /**
      * Registers ActionListener to receive events.
@@ -250,10 +251,10 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
         
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add(java.awt.event.ActionListener.class, listener);
+        myListenerList.add(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -262,7 +263,7 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
         
-        listenerList.remove(java.awt.event.ActionListener.class, listener);
+        myListenerList.remove(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -272,8 +273,8 @@ public class ComponentMaintenancePanel extends javax.swing.JPanel
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
         
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed(event);

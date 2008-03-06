@@ -60,10 +60,10 @@ public class PlotSlot extends JPanel{
     private double offset;
     private boolean isViewedExternally;
     private JLabel rightClickFacade;
-    private LinkedList<PlotSlotListener> listenerList =  null;
+    private LinkedList<PlotSlotListener> myListenerList =  null;
     private MouseAdapter plotMouseListener;
     
-    /** Creates a new instance of PlotSlot */
+    /** Creates a new instance of PlotSlot */    
     public PlotSlot() {
         itsPlotGroup = null;
         itsPlot = null;
@@ -71,6 +71,7 @@ public class PlotSlot extends JPanel{
         offset = 0.0;
         setBackground(Color.WHITE);
         plotMouseListener = new MouseAdapter(){
+            @Override
             public void mouseReleased(MouseEvent evt){
                 fireContextMenuEvent(evt);
             }
@@ -370,10 +371,10 @@ public class PlotSlot extends JPanel{
      */
     public void addSlotListener(PlotSlotListener listener) {
         
-        if (listenerList == null ) {
-            listenerList = new LinkedList<PlotSlotListener>();
+        if (myListenerList == null ) {
+            myListenerList = new LinkedList<PlotSlotListener>();
         }
-        listenerList.add(listener);
+        myListenerList.add(listener);
     }
     
     /**
@@ -383,7 +384,7 @@ public class PlotSlot extends JPanel{
      */
     public void removeSlotListener(PlotSlotListener listener) {
         
-        listenerList.remove(listener);
+        myListenerList.remove(listener);
     }
     
     /**
@@ -392,9 +393,9 @@ public class PlotSlot extends JPanel{
      * @param event The event to be fired
      */
     private void fireContextMenuEvent(MouseEvent evt) {
-        if (listenerList != null) {
+        if (myListenerList != null) {
             if(SwingUtilities.isRightMouseButton(evt)){
-                for(PlotSlotListener listener : listenerList){
+                for(PlotSlotListener listener : myListenerList){
                     ((PlotSlotListener)listener).slotContextMenuTriggered(this,evt);
                 }
             }

@@ -69,7 +69,7 @@ public class PlotSlotViewFrame extends JDialog{
             }
         }
         
-        this.setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
+        this.setDefaultCloseOperation(PlotSlotViewFrame.DISPOSE_ON_CLOSE);
         
     }
 }

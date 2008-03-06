@@ -22,7 +22,6 @@
 
 package nl.astron.lofar.sas.otbcomponents;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.rmi.RemoteException;
 import java.util.Enumeration;
@@ -35,6 +34,7 @@ import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import org.apache.log4j.Logger;
 
@@ -88,7 +88,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
         jOTDBparam aParam=null;
         try {
             //we need to get all the childs from this node.
-            Vector childs = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
+            Vector childs = OtdbRmi.getRemoteMaintenance().getItemList(itsNode.treeID(), itsNode.nodeID(), 1);
             
             // get all the params per child
             Enumeration e = childs.elements();
@@ -99,7 +99,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
                 // We need to keep all the nodes needed by this panel
                 // if the node is a leaf we need to get the pointed to value via Param.
                 if (aNode.leaf) {
-                    aParam = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getParam(aNode);
+                    aParam = OtdbRmi.getRemoteMaintenance().getParam(aNode);
                     setField(itsNode,aParam,aNode);
                 }
             }
@@ -238,7 +238,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
             return;
         }
         try {
-            itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().saveNode(aNode);
+           OtdbRmi.getRemoteMaintenance().saveNode(aNode);
         } catch (RemoteException ex) {
             logger.debug("Error: saveNode failed : " + ex);
         }
@@ -379,7 +379,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_configurationRevertButtonActionPerformed
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand() == "Save Settings") {
+        if(evt.getActionCommand().equals("Save Settings")) {
             saveInput();
         }
     }//GEN-LAST:event_buttonPanel1ActionPerformed
@@ -415,7 +415,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
     
     /**
      * Registers ActionListener to receive events.
@@ -423,10 +423,10 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
         
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add(java.awt.event.ActionListener.class, listener);
+        myListenerList.add(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -435,7 +435,7 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
         
-        listenerList.remove(java.awt.event.ActionListener.class, listener);
+        myListenerList.remove(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -445,8 +445,8 @@ public class ParmDBConfigPanel extends javax.swing.JPanel implements IViewPanel{
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
         
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed(event);

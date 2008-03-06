@@ -37,11 +37,10 @@ import javax.swing.event.TreeModelListener;
 import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBparam;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
 import nl.astron.lofar.sas.otb.util.IViewPanel;
+import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.util.ResultPanelHelper;
 import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otb.util.jParmDBnode;
@@ -103,7 +102,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                         
                         //add the parmdb nodes
                         Vector childs =
-                                SharedVars.getOTDBrmi().getRemoteMaintenance().getItemList(((jOTDBnode)item.getUserObject()).treeID(), ((jOTDBnode)item.getUserObject()).nodeID(), 1);
+                                OtdbRmi.getRemoteMaintenance().getItemList(((jOTDBnode)item.getUserObject()).treeID(), ((jOTDBnode)item.getUserObject()).nodeID(), 1);
                         
                         Enumeration parmdbparms = childs.elements();
                         while( parmdbparms.hasMoreElements()  ) {
@@ -379,9 +378,9 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
         logger.debug("actionPerformed: " + evt);
         
-        if(evt.getActionCommand() == "Query Panel") {
+        if(evt.getActionCommand().equals("Query Panel")) {
             // ToDo
-        } else if(evt.getActionCommand() == "Info") {
+        } else if(evt.getActionCommand().equals("Info")) {
             if (itsTreeID > 0) {
                 if (viewInfo() ) {
                     logger.debug("Tree has been changed, reloading table line");
@@ -389,7 +388,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
                     itsMainFrame.setChanged(this.getFriendlyName(),true);
                 }
             }
-        } else if(evt.getActionCommand() == "Exit") {
+        } else if(evt.getActionCommand().equals("Exit")) {
             ResultTreeManager treeManager = ResultTreeManager.getInstance(itsMainFrame.getUserAccount());
             treeManager.removeTreeModelListener(parmDBTreelistener);
             
@@ -422,17 +421,17 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
     
     /**
      * Registers ActionListener to receive events.
      * @param listener The listener to register.
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add(java.awt.event.ActionListener.class, listener);
+        myListenerList.add(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -440,7 +439,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
      * @param listener The listener to remove.
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
-        listenerList.remove(java.awt.event.ActionListener.class, listener);
+        myListenerList.remove(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -449,8 +448,8 @@ public class ResultBrowserPanel extends javax.swing.JPanel
      * @param event The event to be fired
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed(event);

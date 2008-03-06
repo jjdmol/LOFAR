@@ -24,6 +24,7 @@ package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.util.Vector;
 import nl.astron.lofar.sas.otb.MainFrame;
+import nl.astron.lofar.sas.otb.SharedVars;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBvalue;
 import nl.astron.lofar.sas.otb.util.*;
 import org.apache.log4j.Logger;
@@ -56,13 +57,13 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
     /** Fills the table from the database */
     public boolean fillTable(MainFrame aMainFrame,int aNodeID,String aStartTime, String anEndTime,boolean setMostRecent) {
         
-        if (aMainFrame.getSharedVars().getOTDBrmi() == null) {
+        if (SharedVars.getOTDBrmi() == null) {
             logger.debug("No active otdbRmi connection");
             return false;
         }            
         try {
-            aMainFrame.getSharedVars().getOTDBrmi().getRemoteValue().setTreeID(aMainFrame.getSharedVars().getTreeID());
-            Vector aLogList=aMainFrame.getSharedVars().getOTDBrmi().getRemoteValue().searchInPeriod(aNodeID,1,aStartTime,anEndTime,setMostRecent);
+            OtdbRmi.getRemoteValue().setTreeID(aMainFrame.getSharedVars().getTreeID());
+            Vector aLogList=OtdbRmi.getRemoteValue().searchInPeriod(aNodeID,1,aStartTime,anEndTime,setMostRecent);
             if (aLogList==null || aLogList.size()<1 ) {
                 logger.debug("Failed to get searchInPeriod Match");
                 return false;
@@ -96,6 +97,7 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
      * @param    c   Column Number
      * @return  the name for this column     
      */
+    @Override
     public String getColumnName(int c) {
         try {
             return headers[c];

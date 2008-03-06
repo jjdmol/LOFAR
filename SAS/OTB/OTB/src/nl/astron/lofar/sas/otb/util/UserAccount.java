@@ -23,7 +23,6 @@
 package nl.astron.lofar.sas.otb.util;
 
 import org.apache.log4j.Logger;
-import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import nl.astron.lofar.sas.otb.exceptions.NoAccessException;
 
 /**

@@ -151,14 +151,14 @@ public class MainPanel extends javax.swing.JPanel
      * contains the data for the table in the tab
      */
     public void initializeTabs() {
-        PICtableModel PICmodel = new PICtableModel(itsMainFrame.getSharedVars().getOTDBrmi());
+        PICtableModel PICmodel = new PICtableModel(SharedVars.getOTDBrmi());
         PICPanel.setTableModel(PICmodel);
         PICPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         PICPanel.setColumnSize("ID",35);
         PICPanel.setColumnSize("Description",700);
         
 
-        VICtableModel VICmodel = new VICtableModel(itsMainFrame.getSharedVars().getOTDBrmi());
+        VICtableModel VICmodel = new VICtableModel(SharedVars.getOTDBrmi());
         VICPanel.setTableModel(VICmodel);
         VICPanel.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         VICPanel.setColumnSize("ID",35);
@@ -168,7 +168,7 @@ public class MainPanel extends javax.swing.JPanel
         VICPanel.setColumnSize("StopTime",175);
         VICPanel.setColumnSize("Description",700);
         
-        TemplatetableModel Templatemodel = new TemplatetableModel(itsMainFrame.getSharedVars().getOTDBrmi());
+        TemplatetableModel Templatemodel = new TemplatetableModel(SharedVars.getOTDBrmi());
         TemplatesPanel.setTableModel(Templatemodel);
         TemplatesPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         TemplatesPanel.setColumnSize("ID",35);
@@ -176,7 +176,7 @@ public class MainPanel extends javax.swing.JPanel
         TemplatesPanel.setColumnSize("MoMID",50);
         TemplatesPanel.setColumnSize("Description",700);
         
-        ComponentTableModel Componentmodel = new ComponentTableModel(itsMainFrame.getSharedVars().getOTDBrmi());
+        ComponentTableModel Componentmodel = new ComponentTableModel(SharedVars.getOTDBrmi());
         ComponentsPanel.setTableModel(Componentmodel);
         ComponentsPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         ComponentsPanel.setColumnSize("ID",35);
@@ -527,10 +527,10 @@ public class MainPanel extends javax.swing.JPanel
                        input.read(uldata,0,uldata.length);
                        input.close();
                        String aFileName= "/tmp/"+itsMainFrame.getUserAccount().getUserName()+"_"+itsNewFile.getName();
-                       if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().uploadFile(uldata,aFileName)) {
+                       if (OtdbRmi.getRemoteFileTrans().uploadFile(uldata,aFileName)) {
                            logger.debug("upload finished");                       
                            // Create a new Tree from the found file.
-                           int aTreeID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadMasterFile(aFileName);
+                           int aTreeID=OtdbRmi.getRemoteMaintenance().loadMasterFile(aFileName);
                            if (aTreeID < 1) {
                                logger.debug("Error on fileLoad: " + aFileName);
                            } else {
@@ -540,14 +540,14 @@ public class MainPanel extends javax.swing.JPanel
                                itsMainFrame.getSharedVars().setTreeID(aTreeID);
                                checkChanged();
                                if (!itsFileDescription.equals("")) {
-                                  if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().setDescription(aTreeID,itsFileDescription)) {
-                                     logger.debug("Error during setDescription in Tree "+itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                                  if (!OtdbRmi.getRemoteMaintenance().setDescription(aTreeID,itsFileDescription)) {
+                                     logger.debug("Error during setDescription in Tree "+OtdbRmi.getRemoteMaintenance().errorMsg());
                                   }
                                }
                                   
                                if (!itsFileStatus.equals("")) {
-                                  if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().setTreeState(aTreeID,itsMainFrame.getSharedVars().getOTDBrmi().getRemoteTypes().getTreeState(itsFileStatus))) {
-                                     logger.debug("Error during setStatus in Tree "+itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                                  if (!OtdbRmi.getRemoteMaintenance().setTreeState(aTreeID,OtdbRmi.getRemoteTypes().getTreeState(itsFileStatus))) {
+                                     logger.debug("Error during setStatus in Tree "+OtdbRmi.getRemoteMaintenance().errorMsg());
                                   }
                                }                               
                            }
@@ -568,7 +568,7 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("Delete")) {
                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
-                        if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteTree(treeID)) {
+                        if (OtdbRmi.getRemoteMaintenance().deleteTree(treeID)) {
                             itsMainFrame.setHourglassCursor();
                             ((PICtableModel)PICPanel.getTableModel()).fillTable();
                             itsMainFrame.setNormalCursor();
@@ -610,7 +610,7 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("Delete")) {
                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
-                        if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteTree(treeID)) {
+                        if (OtdbRmi.getRemoteMaintenance().deleteTree(treeID)) {
                             itsMainFrame.setHourglassCursor();
                             ((VICtableModel)VICPanel.getTableModel()).fillTable();
                             itsMainFrame.setNormalCursor();
@@ -647,8 +647,8 @@ public class MainPanel extends javax.swing.JPanel
             if (treeID > 0) {
                 itsMainFrame.getSharedVars().setTreeID(treeID);
                 try {
-                    aTree =    itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(treeID,false);
-                    aTreeState=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteTypes().getTreeState(aTree.state);
+                    aTree =    OtdbRmi.getRemoteOTDB().getTreeInfo(treeID,false);
+                    aTreeState=OtdbRmi.getRemoteTypes().getTreeState(aTree.state);
                 } catch (RemoteException ex) {
                     logger.debug("Error during Remote treeMaintenance");
                 }
@@ -667,7 +667,7 @@ public class MainPanel extends javax.swing.JPanel
                         JOptionPane.WARNING_MESSAGE);
                 } else {
                     try {
-                        int newTreeID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().copyTemplateTree(itsMainFrame.getSharedVars().getTreeID());
+                        int newTreeID=OtdbRmi.getRemoteMaintenance().copyTemplateTree(itsMainFrame.getSharedVars().getTreeID());
                         if (newTreeID > 0) {
                             JOptionPane.showMessageDialog(null,"New Tree created with ID: "+newTreeID,
                                 "New Tree Message",
@@ -696,7 +696,7 @@ public class MainPanel extends javax.swing.JPanel
                         JOptionPane.WARNING_MESSAGE);
                 } else {
                     try {
-                        if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteTree(itsMainFrame.getSharedVars().getTreeID())) {
+                        if (OtdbRmi.getRemoteMaintenance().deleteTree(itsMainFrame.getSharedVars().getTreeID())) {
                             JOptionPane.showMessageDialog(null,"Template Tree Deleted",
                                 "Delete Tree Message",
                                 JOptionPane.INFORMATION_MESSAGE);
@@ -705,7 +705,7 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                         } else {
-                            logger.debug("Template Tree not deleted!!! : "+ itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                            logger.debug("Template Tree not deleted!!! : "+ OtdbRmi.getRemoteMaintenance().errorMsg());
                         }
            
                     } catch (RemoteException ex) {
@@ -720,7 +720,7 @@ public class MainPanel extends javax.swing.JPanel
                         JOptionPane.WARNING_MESSAGE);
                 } else {
                     try {
-                        int newTreeID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().instanciateTree(itsMainFrame.getSharedVars().getTreeID());
+                        int newTreeID=OtdbRmi.getRemoteMaintenance().instanciateTree(itsMainFrame.getSharedVars().getTreeID());
                         if (newTreeID > 0) {
                             JOptionPane.showMessageDialog(null,"New VICTree created with ID: "+newTreeID,
                                 "New Tree Message",
@@ -730,7 +730,7 @@ public class MainPanel extends javax.swing.JPanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
                         } else {
-                            logger.debug("No VIC Tree created!!! : "+ itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                            logger.debug("No VIC Tree created!!! : "+ OtdbRmi.getRemoteMaintenance().errorMsg());
                         }
            
                     } catch (RemoteException ex) {
@@ -761,20 +761,20 @@ public class MainPanel extends javax.swing.JPanel
                         input.read(uldata,0,uldata.length);
                         input.close();
                         String aFileName= "/tmp/"+itsMainFrame.getUserAccount().getUserName()+"_"+itsNewFile.getName();
-                        if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteFileTrans().uploadFile(uldata,aFileName)) {
+                        if (OtdbRmi.getRemoteFileTrans().uploadFile(uldata,aFileName)) {
                             logger.debug("upload finished");
                             // Create a new Tree from the found file.
-                            int anID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().loadComponentFile(aFileName);
+                            int anID=OtdbRmi.getRemoteMaintenance().loadComponentFile(aFileName);
                             if (anID < 1) {
                                 logger.debug("Error on ComponentfileLoad: " + itsNewFile.getPath());
                             } else {
                                 // set the new created fill description stuff if needed
                                 itsMainFrame.getSharedVars().setComponentID(anID);
                                 if (!itsFileDescription.equals("")) {
-                                    jVICnodeDef aND=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().getComponentNode(anID);
+                                    jVICnodeDef aND=OtdbRmi.getRemoteMaintenance().getComponentNode(anID);
                                     aND.description=itsFileDescription;
-                                    if (!itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().saveComponentNode(aND)) {
-                                        logger.debug("Error during setDescription in Component "+itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().errorMsg());
+                                    if (!OtdbRmi.getRemoteMaintenance().saveComponentNode(aND)) {
+                                        logger.debug("Error during setDescription in Component "+OtdbRmi.getRemoteMaintenance().errorMsg());
                                     }
                                 }
                                 // set changed flag to reload mainpanel
@@ -805,9 +805,9 @@ public class MainPanel extends javax.swing.JPanel
                 int nodeID=itsMainFrame.getSharedVars().getComponentID();
                 short classifID;
                 try {
-                    classifID = itsMainFrame.getSharedVars().getOTDBrmi().getRemoteTypes().getClassif("operational");
-                    if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().isTopComponent(nodeID)) {
-                        int newTreeID=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().buildTemplateTree(nodeID,classifID);
+                    classifID = OtdbRmi.getRemoteTypes().getClassif("operational");
+                    if (OtdbRmi.getRemoteMaintenance().isTopComponent(nodeID)) {
+                        int newTreeID=OtdbRmi.getRemoteMaintenance().buildTemplateTree(nodeID,classifID);
                         if (newTreeID > 0) {
                             JOptionPane.showMessageDialog(null,"New Tree created with ID: "+newTreeID,
                                 "New Tree Message",
@@ -826,7 +826,7 @@ public class MainPanel extends javax.swing.JPanel
             } else if (aButton.equals("Delete")) {
                 int nodeID=itsMainFrame.getSharedVars().getComponentID();
                 try {
-                    if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().deleteComponentNode(nodeID)) {
+                    if (OtdbRmi.getRemoteMaintenance().deleteComponentNode(nodeID)) {
                         // set changed flag to reload mainpanel
                        itsMainFrame.setChanged(this.getFriendlyName(),true);
                        checkChanged();
@@ -938,9 +938,9 @@ public class MainPanel extends javax.swing.JPanel
         logger.debug("Selected Tree: "+treeID);
         if (treeID > 0) {
             try {
-                aTree =    itsMainFrame.getSharedVars().getOTDBrmi().getRemoteOTDB().getTreeInfo(treeID,false);
-                aTreeState=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteTypes().getTreeState(aTree.state);
-                aClassif=itsMainFrame.getSharedVars().getOTDBrmi().getRemoteTypes().getClassif(aTree.classification);
+                aTree      = OtdbRmi.getRemoteOTDB().getTreeInfo(treeID,false);
+                aTreeState = OtdbRmi.getRemoteTypes().getTreeState(aTree.state);
+                aClassif   = OtdbRmi.getRemoteTypes().getClassif(aTree.classification);
             } catch (RemoteException ex) {
                 logger.debug("Couldn't get Tree");
                 return;
@@ -1018,7 +1018,7 @@ public class MainPanel extends javax.swing.JPanel
                 buttonPanel1.setButtonEnabled("Modify",true);
                 buttonPanel1.setButtonEnabled("Delete",true);
                 try {
-                    if (itsMainFrame.getSharedVars().getOTDBrmi().getRemoteMaintenance().isTopComponent(componentID)) {
+                    if (OtdbRmi.getRemoteMaintenance().isTopComponent(componentID)) {
                         buttonPanel1.setButtonEnabled("Build TemplateTree",true);                    
                     } else {
                         buttonPanel1.setButtonEnabled("Build TemplateTree",false);                                        

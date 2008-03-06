@@ -56,6 +56,7 @@ public class ResultPanelHelper {
         return ref;
     }
     
+    @Override
     public Object clone() throws CloneNotSupportedException {
         throw new CloneNotSupportedException();
     }

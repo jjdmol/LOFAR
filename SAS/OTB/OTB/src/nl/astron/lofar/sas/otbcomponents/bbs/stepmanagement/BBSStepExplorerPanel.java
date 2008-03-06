@@ -23,21 +23,16 @@
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.util.HashMap;
 import java.util.Vector;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.table.DefaultTableModel;
 import nl.astron.lofar.sas.otb.MainFrame;
 import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
-import nl.astron.lofar.sas.otb.util.IViewPanel;
-import nl.astron.lofar.sas.otb.util.UserAccount;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStep;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepData;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepDataManager;
@@ -848,6 +843,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
                 java.lang.String.class, java.lang.String.class
             };
             
+            @Override
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
@@ -1818,7 +1814,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     }//GEN-LAST:event_stepExplorerRevertButtonActionPerformed
     
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand() == "Save step and close") {
+        if(evt.getActionCommand().equals("Save step and close")) {
             
             boolean inputOK = validateInput();
             
@@ -1902,7 +1898,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
                 fireActionListenerActionPerformed(closeEvt);
             }
         }
-        if(evt.getActionCommand() == "Close"){
+        if(evt.getActionCommand().equals("Close")){
             //tell parents that panel is ready to close...
             ActionEvent closeEvt = new ActionEvent(this,1,"ReadyToClose");
             fireActionListenerActionPerformed(closeEvt);
@@ -1976,7 +1972,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
     /**
      * Utility field used by event firing mechanism.
      */
-    private javax.swing.event.EventListenerList listenerList =  null;
+    private javax.swing.event.EventListenerList myListenerList =  null;
     
     /**
      * Registers ActionListener to receive events.
@@ -1984,10 +1980,10 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
      */
     public synchronized void addActionListener(java.awt.event.ActionListener listener) {
         
-        if (listenerList == null ) {
-            listenerList = new javax.swing.event.EventListenerList();
+        if (myListenerList == null ) {
+            myListenerList = new javax.swing.event.EventListenerList();
         }
-        listenerList.add(java.awt.event.ActionListener.class, listener);
+        myListenerList.add(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -1996,7 +1992,7 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
      */
     public synchronized void removeActionListener(java.awt.event.ActionListener listener) {
         
-        listenerList.remove(java.awt.event.ActionListener.class, listener);
+        myListenerList.remove(java.awt.event.ActionListener.class, listener);
     }
     
     /**
@@ -2006,8 +2002,8 @@ public class BBSStepExplorerPanel extends javax.swing.JPanel{
      */
     private void fireActionListenerActionPerformed(java.awt.event.ActionEvent event) {
         
-        if (listenerList == null) return;
-        Object[] listeners = listenerList.getListenerList();
+        if (myListenerList == null) return;
+        Object[] listeners = myListenerList.getListenerList();
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i]==java.awt.event.ActionListener.class) {
                 ((java.awt.event.ActionListener)listeners[i+1]).actionPerformed(event);

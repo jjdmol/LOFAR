@@ -24,7 +24,6 @@
 package nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.operations;
 
 import java.util.HashMap;
-import javax.swing.JPanel;
 import nl.astron.lofar.sas.otbcomponents.bbs.stepmanagement.BBSStepData;
 
 /**

@@ -22,7 +22,6 @@
 
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
-import nl.astron.lofar.sas.otb.MainFrame;
 import org.apache.log4j.Logger;
 
 /**
@@ -100,6 +99,7 @@ public class InputNodeMACTableModel extends javax.swing.table.AbstractTableModel
      * @param    c   Column Number
      * @return  the name for this column     
      */
+    @Override
     public String getColumnName(int c) {
         try {
             return headers[c];

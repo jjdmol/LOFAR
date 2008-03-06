@@ -20,12 +20,7 @@
  */
 
 package nl.astron.lofar.sas.otbcomponents;
-import java.util.Iterator;
-import java.util.TreeMap;
-import javax.swing.DefaultComboBoxModel;
 import nl.astron.lofar.sas.otb.MainFrame;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBtree;
-import nl.astron.lofar.sas.otb.util.OtdbRmi;
 import org.apache.log4j.Logger;
 
 

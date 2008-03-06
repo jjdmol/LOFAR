@@ -34,7 +34,6 @@
 package nl.astron.lofar.sas.otb.util.tablemodels;
 
 import java.util.Vector;
-import nl.astron.lofar.sas.otb.jotdb2.jOTDBnode;
 import org.apache.log4j.Logger;
 
 /**
@@ -204,6 +203,7 @@ public class BeamConfigurationTableModel extends javax.swing.table.DefaultTableM
      *
      * @return  true if the asked cell is editable
      */
+    @Override
     public boolean isCellEditable(int row, int column) {
         return false;
     }
