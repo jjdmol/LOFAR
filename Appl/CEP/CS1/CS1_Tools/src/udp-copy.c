@@ -30,7 +30,7 @@
 #include <unistd.h>
 
 
-enum proto { UDP, TCP, File };
+enum proto { UDP, TCP, File } input_proto, output_proto;
 
 int  sk_in, sk_out;
 char *source, *destination;
@@ -123,23 +123,21 @@ int create_file(char *arg, int is_output)
 }
 
 
-int create_socket(char *arg, int is_output)
+int create_fd(char *arg, int is_output, enum proto *proto)
 {
-  enum proto proto;
-
   if (strncmp(arg, "udp:", 4) == 0 || strncmp(arg, "UDP:", 4) == 0) {
-    proto = UDP;
+    *proto = UDP;
     arg += 4;
   } else if (strncmp(arg, "tcp:", 4) == 0 || strncmp(arg, "TCP:", 4) == 0) {
-    proto = TCP;
+    *proto = TCP;
     arg += 4;
   } else if (strncmp(arg, "file:", 5) == 0 || strncmp(arg, "FILE:", 5) == 0) {
-    proto = File;
+    *proto = File;
     arg += 5;
   } else if (strchr(arg, ':') != 0) {
-    proto = UDP;
+    *proto = UDP;
   } else {
-    proto = File;
+    *proto = File;
   }
 
   if (is_output)
@@ -147,9 +145,9 @@ int create_socket(char *arg, int is_output)
   else
     source	= arg;
 
-  switch (proto) {
+  switch (*proto) {
     case UDP  :
-    case TCP  : return create_IP_socket(arg, is_output, proto);
+    case TCP  : return create_IP_socket(arg, is_output, *proto);
 
     case File : return create_file(arg, is_output);
   }
@@ -163,8 +161,8 @@ void init(int argc, char **argv)
     exit(1);
   }
 
-  sk_in  = create_socket(argv[1], 0);
-  sk_out = create_socket(argv[2], 1);
+  sk_in  = create_fd(argv[1], 0, &input_proto);
+  sk_out = create_fd(argv[2], 1, &output_proto);
 
   setlinebuf(stdout);
 }
@@ -173,30 +171,33 @@ void init(int argc, char **argv)
 int main(int argc, char **argv)
 {
   time_t   previous_time = 0, current_time;
-  unsigned i, forwarded = 0;
+  unsigned i, nr_packets = 0, nr_bytes = 0;
+  char	   buffer[1024 * 1024];
+  int      size;
 
   init(argc, argv);
 
-  while (1) {
-    char buffer[9000];
-    int  size;
+  while ((size = read(sk_in, buffer, 1024 * 1024)) != 0) {
+    if (size < 0) {
+      perror("read");
+      sleep(1);
+    } else if (write(sk_out, buffer, size) < size) {
+      perror("write");
+      sleep(1);
+    } else {
+      nr_bytes += size;
+    }
 
-    while ((size = read(sk_in, buffer, 9000)) != 0) {
-      if (size < 0) {
-	perror("read");
-	sleep(1);
-      } else if (write(sk_out, buffer, size) < size) {
-	perror("write");
-	sleep(1);
-      }
+    ++ nr_packets;
 
-      ++ forwarded;
+    if ((current_time = time(0)) != previous_time) {
+      previous_time = current_time;
 
-      if ((current_time = time(0)) != previous_time) {
-	previous_time = current_time;
-	printf("forwarded %u packets from %s to %s\n", forwarded, source, destination);
-	forwarded = 0;
-      }
+      if (input_proto == UDP)
+	printf("copied %u bytes (= %u packets) from %s to %s\n", nr_bytes, nr_packets, source, destination);
+      else
+	printf("copied %u bytes from %s to %s\n", nr_bytes, source, destination);
+      nr_packets = nr_bytes = 0;
     }
   }
 
