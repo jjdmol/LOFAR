@@ -2,7 +2,7 @@ AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
-	cp $*.ph $(top_builddir)/include/APLProtocol/
+	cp $*.ph $(top_builddir)/include/MACIO/
 
 %.cc: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
@@ -19,7 +19,7 @@ BUILT_SOURCES				= LOG_Protocol.cc \
 							  KVT_Protocol.cc \
 							  KVT_Protocol.ph
 
-pkgincludedir				= $(includedir)/APLProtocol
+pkgincludedir				= $(includedir)/MACIO
 pkginclude_HEADERS 			= $(NOINSTHDRS) $(INSTHDRS)
 DOCHDRS						= $(pkginclude_HEADERS) $(BUILT_SOURCES)
 EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)

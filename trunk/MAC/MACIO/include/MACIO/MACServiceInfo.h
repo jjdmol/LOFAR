@@ -1,4 +1,4 @@
-//#  GCF_ServiceInfo.h: Contains all information about the MAC services.
+//#  MACServiceInfo.h: Contains all information about the MAC services.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #ifndef GCFCOMMON_SERVICEINFO_H
 #define GCFCOMMON_SERVICEINFO_H
 
-// \file GCF_ServiceInfo.h
+// \file MACServiceInfo.h
 // Contains all information about the MAC services.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
@@ -32,9 +32,8 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  namespace GCFCommon {
 
-// \addtogroup gcfcommon
+// \addtogroup MAC
 // @{
 
 // The two only well-known ports of whole MAC.
@@ -73,7 +72,6 @@ namespace LOFAR {
 #define MAC_SVCMASK_APLTEST_CTLRMENU	"ControllerTestMenu%s:v1.0"
 
 // @}
-  } // namespace GCFCommon
 } // namespace LOFAR
 
 #endif
