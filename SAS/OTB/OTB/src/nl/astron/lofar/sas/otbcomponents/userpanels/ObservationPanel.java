@@ -727,6 +727,8 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             }
             itsOldDescriptionParam=aParam;
             inputDescription.setText(aParam.description);
+            buttonPanel1.setButtonEnabled("Restore",true);
+            buttonPanel1.setButtonEnabled("Save",true);
         } catch (RemoteException ex) {
             logger.debug("Error during getParam: "+ ex);
             return;
@@ -1263,7 +1265,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         DefaultListModel theStationModel = (DefaultListModel)stationsList.getModel();
         if(!theStationModel.contains(toBeAddedStation)){
             theStationModel.addElement(toBeAddedStation);
-        }
+            // something obviously changed, so enable restore and save buttons
+            buttonPanel1.setButtonEnabled("Restore",true);
+            buttonPanel1.setButtonEnabled("Save",true);        }
+
     }//GEN-LAST:event_addStationButtonActionPerformed
 
     private void deleteStationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteStationButtonActionPerformed
@@ -1276,6 +1281,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         if(theStationModel.size()==0){
             this.deleteStationButton.setEnabled(false);
         }
+        // something obviously changed, so enable restore and save buttons
+        buttonPanel1.setButtonEnabled("Restore",true);
+        buttonPanel1.setButtonEnabled("Save",true);
     }//GEN-LAST:event_deleteStationButtonActionPerformed
 
     private void stationsListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stationsListValueChanged
@@ -1285,6 +1293,9 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }else{
             this.deleteStationButton.setEnabled(false);
         }
+        // something obviously changed, so enable restore and save buttons
+        buttonPanel1.setButtonEnabled("Restore",true);
+        buttonPanel1.setButtonEnabled("Save",true);
     }//GEN-LAST:event_stationsListValueChanged
     
     private jOTDBnode                   itsNode = null;
