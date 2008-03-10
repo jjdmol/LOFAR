@@ -54,7 +54,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_INTERNAL(CEP/BB/BBSKernel,BBSKernel,,1,BBSKernel/MNS/MeqParmFunklet.h)
+lofar_INTERNAL(CEP/BB/BBSKernel,BBSKernel,,1,BBSKernel/BBSStatus.h)
 lofar_INTERNAL(CEP/BB/ParmDB,ParmDB,,1,ParmDB/ParmDB.h)
 lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
