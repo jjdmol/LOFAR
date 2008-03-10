@@ -291,6 +291,7 @@ fi
 
 # Find all packages used.
 # The packages can be given in a configure.in, .spec or lofarconf.in file.
+conftype=0
 if [ -f $pkgname/configure.in ]; then
   if [ -f $pkgname/lofarconf.in  -o  -f $pkgname/lofarconf.in.private ]; then
     echo "error: lofarconf.in cannot be used with a configure.in"
@@ -322,6 +323,7 @@ else
     fnam='lofarconf.in'
   fi
   if [ "$fnam" != "" ]; then
+    conftype=1
     # Get the packages out of the lofarconf.in file. They can optionally be
     # followed by a version as #-vversion. Remove other comments.
     # Add pkgname if not starting with a slash.
@@ -347,6 +349,6 @@ if [ $recur != 0 ]; then
       exit 2
     fi
     # Check out the package.
-    $0 $pkgnm 0 "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
+    $0 $pkgnm $conftype "$verstype" "$vers" "$cutag" $checkout $recur "$usesvn" "$command"  ||  exit 1
   done
 fi
