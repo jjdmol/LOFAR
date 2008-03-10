@@ -93,10 +93,10 @@ void ParmDBAIPS::createTables (const string& tableName)
   td.addColumn (ScalarColumnDesc<String>("TYPE"));
   td.addColumn (ScalarColumnDesc<String>("EXPRESSION"));
   td.addColumn (ArrayColumnDesc<double> ("CONSTANTS", 1));
-  td.addColumn (ScalarColumnDesc<double> ("STARTX", 1));
-  td.addColumn (ScalarColumnDesc<double> ("ENDX", 1));
-  td.addColumn (ScalarColumnDesc<double> ("STARTY", 1));
-  td.addColumn (ScalarColumnDesc<double> ("ENDY", 1));
+  td.addColumn (ScalarColumnDesc<double> ("STARTX"));
+  td.addColumn (ScalarColumnDesc<double> ("ENDX"));
+  td.addColumn (ScalarColumnDesc<double> ("STARTY"));
+  td.addColumn (ScalarColumnDesc<double> ("ENDY"));
   td.addColumn (ArrayColumnDesc<double> ("START", 1));
   td.addColumn (ArrayColumnDesc<double> ("END", 1));
   td.addColumn (ArrayColumnDesc <double>("VALUES"));
@@ -741,7 +741,7 @@ TableExprNode ParmDBAIPS::makeExpr (const Table& table,
       andExpr (expr,
 	       domain.getStart()[1] < table.col("ENDY")  &&
 	       domain.getEnd()[1]   > table.col("STARTY"));
-      if (domain.getStart().size() > 0) {
+      if (domain.getStart().size() > 2) {
 	andExpr (expr,
 	     nelements(table.col("START")) == int(domain.getStart().size())  &&
 	     all(fromVector(domain.getStart()) < table.col("END"))  &&
