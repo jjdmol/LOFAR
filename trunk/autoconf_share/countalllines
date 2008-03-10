@@ -61,6 +61,10 @@ if [ $topone = 1 -a $sloc = 1 ]; then
   mkdir "$slocdir"
 fi
 
+if [ $topone = 1 ]; then
+  echo "Lines: total        code          comment"
+fi
+
 # Find all directories.
 # Replace blanks in a dirname by something special and remove newlines.
 dirs=`ls -F | egrep '/$' | sed -e 's/ /_-blank-_/g'`
@@ -89,7 +93,7 @@ if [ "$dirs" != "" ]; then
   do
     NM=`echo $NM | sed -e 's/_-blank-_/ /g'`
     dnm=`basename "$NM"`
-    if [ "$dnm" != "CVS" -a "$dnm" != "build" ]; then
+    if [ "$dnm" != "CVS" -a "$dnm" != ".svn" -a "$dnm" != "build" -a "$dnm" != "stage" ]; then
       cd "$NM" > /dev/null
       $edir/countalllines -r "$indnew" "$sloc" "$slocdir"
       countlines_total=`cat $totfilnm`
@@ -116,9 +120,9 @@ else
   indnew="$indent"
 fi
 # Count lines in all headers.
-ls *.h > /dev/null 2>&1
-if [ $? = 0 ]; then
-  clin=`$edir/countlines -t *.h`
+allhdr=`ls *.h *.hpp 2> /dev/null`
+if [ "$allhdr" != "" ]; then
+  clin=`$edir/countlines -t $allhdr`
   nrh_a=`echo $clin | awk '{print $1}'`
   nrh_b=`echo $clin | awk '{print $2}'`
   nrh_c=`echo $clin | awk '{print $4}'`
@@ -133,10 +137,10 @@ if [ $? = 0 ]; then
     cp $cntlinnm/*.h "$slocdir"
   fi
 fi
-# Count lines in all sources.
-ls *cc > /dev/null 2>&1
-if [ $? = 0 ]; then
-  clin=`$edir/countlines -t *cc`
+# Count lines in all cc sources.
+allsrc=`ls *.cc *.tcc *.c *.cpp *.l *.ll *.y *.yy 2> /dev/null`
+if [ "$allsrc" != "" ]; then
+  clin=`$edir/countlines -t $allsrc`
   nrc_a=`echo $clin | awk '{print $1}'`
   nrc_b=`echo $clin | awk '{print $2}'`
   nrc_c=`echo $clin | awk '{print $4}'`
@@ -163,6 +167,9 @@ if [ $fnddir = 1 ]; then
   fi
 fi
 echo "$toth_a $toth_b $toth_c $toth_f $totc_a $totc_b $totc_c $totc_f" > $totfilnm
+if [ $topone = 1 ]; then
+  echo "Lines: total        code          comment"
+fi
 
 # Do the sloccount and remove temporary files.
 if [ $topone = 1 ]; then
