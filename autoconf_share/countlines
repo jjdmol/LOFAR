@@ -72,8 +72,8 @@ done
 # Print the totals and an ending line.
 # Avoid division by 0.
 tot_a1=$tot_a
-if [ $tot_a1 = 0 ]; then
-  tot_a1 = 1
+if [ "$tot_a1" = 0  -o  "$tot_a1" = "" ]; then
+  tot_a1=1
 fi
 echo "$tot_a $tot_b $tot_c $tot_f $tot_a1" | awk '{ printf "%12d%8d%6.1f%%%8d%6.1f%%    total %d files\n", $1, $2, 100*$2/$5, $3-$2, 100*($3-$2)/$5, $4 }'
 if [ $totonly = 0 ]; then
