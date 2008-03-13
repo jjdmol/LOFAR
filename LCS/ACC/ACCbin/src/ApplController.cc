@@ -26,6 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/StringUtil.h>
 #include <ALC/ACCmd.h>
 #include <PLC/ProcControlComm.h>
 #include <GCF/GCF_ServiceInfo.h>
@@ -292,11 +293,25 @@ void ApplController::createParSubsets()
 		}
 		else if (procPrefix == "StorageAppl.StorageProg") {
 			LOG_DEBUG("CS1_SPECIAL: for StorageAppl.StorageProg");
-			vector<int>	subbands = itsObsParamSet->getInt32Vector("Observation.subbandList");
+			// NOTE: next code-fragment should be replaced with coe based on 'Observation' class.
+			int32	nrSubbands(0);
+			int32	nrBeams = itsObsParamSet->getUint32("Observation.nrBeams");
+			for (int32 beam(1); beam <= nrBeams; beam++) {
+				string	beamPrefix(formatString("Observation.Beam[%d].", beam));
+				string	sbString("x=" + expandedArrayString(itsObsParamSet->getString(beamPrefix+"subbandList","[]")));
+				ParameterSet	sbParset;
+				sbParset.adoptBuffer(sbString);
+				vector<int16>	subbands = sbParset.getInt16Vector("x");
+				nrSubbands += subbands.size();
+			}
+			// end fragment
+
+//			vector<int>	subbands = itsObsParamSet->getInt32Vector("Observation.subbandList");
+//			nrSubbands = subbands.size();
 			int			psetsPerStorage = itsObsParamSet->getInt32("OLAP.psetsPerStorage");
 			int			subbandsPerPset = itsObsParamSet->getInt32("OLAP.subbandsPerPset");
-			nrProcs = subbands.size() / (psetsPerStorage * subbandsPerPset);
-			LOG_DEBUG_STR("nrOfProcesses = " << subbands.size() << "/(" << psetsPerStorage << "*" << 
+			nrProcs = nrSubbands / (psetsPerStorage * subbandsPerPset);
+			LOG_DEBUG_STR("nrOfProcesses = " << nrSubbands << "/(" << psetsPerStorage << "*" << 
 							subbandsPerPset << ")=" << nrProcs);
 		}
         
