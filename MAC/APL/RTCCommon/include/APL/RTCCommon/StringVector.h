@@ -48,9 +48,9 @@ public:
 	StringVector() {};
 	~StringVector() {};
 
-	unsigned int StringVector::getSize();
-	unsigned int StringVector::pack  (void	*buffer);
-	unsigned int StringVector::unpack(void	*buffer);
+	unsigned int getSize();
+	unsigned int pack  (void	*buffer);
+	unsigned int unpack(void	*buffer);
 
 	//# --- PUBLIC Datamember ---
 	vector<string>	theVector;
