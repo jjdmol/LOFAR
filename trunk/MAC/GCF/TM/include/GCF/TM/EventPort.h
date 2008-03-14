@@ -59,14 +59,14 @@ class EventPort
 public:
 
 	// EventPort (servicename, type, protocol, hostname)
-	EventPort::EventPort(const string&		aServiceMask,
-						 bool				aServerSocket,
-						 int				aProtocol,
-						 const string&		aHostname = "",
-						 bool				syncCommunication = false);
+	EventPort(const string&		aServiceMask,
+			  bool				aServerSocket,
+			  int				aProtocol,
+			  const string&		aHostname = "",
+			  bool				syncCommunication = false);
 
 	// ~EventPort
-	EventPort::~EventPort();
+	~EventPort();
 
 	// connect()
 	bool connect();
