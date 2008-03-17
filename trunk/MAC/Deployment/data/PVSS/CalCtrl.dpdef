@@ -1,7 +1,7 @@
 # CalCtlr
 #
 connected		bool
-beamnames		stringArr
+beamNames		stringArr
 antennaArray	string
 filter			string
 nyquistzone		int
