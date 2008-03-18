@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef GCFCOMMON_SERVICEINFO_H
-#define GCFCOMMON_SERVICEINFO_H
+#ifndef MACIO_SERVICEINFO_H
+#define MACIO_SERVICEINFO_H
 
 // \file MACServiceInfo.h
 // Contains all information about the MAC services.

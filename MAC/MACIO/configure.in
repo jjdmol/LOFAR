@@ -54,13 +54,16 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_COMPILETOOLS
-lofar_INTERNAL(MAC/APL/RTCCommon, rtccommon, , 1, APL/RTCCommon/Marshalling.h,,)
+lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
+dnl lofar_INTERNAL(MAC/APL/RTCCommon, rtccommon, , 1, APL/RTCCommon/Marshalling.h,,)
 
 dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
+autogen/Makefile
 src/Makefile
+test/Makefile
 include/Makefile
 include/MACIO/Makefile
 Makefile
