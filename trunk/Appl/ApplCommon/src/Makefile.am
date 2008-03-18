@@ -1,7 +1,7 @@
 
-lib_LTLIBRARIES 		= libaplcommon.la
+lib_LTLIBRARIES 		= libapplcommon.la
 
-libaplcommon_la_SOURCES =  Observation.cc
+libapplcommon_la_SOURCES =  Observation.cc
 
 BUILT_SOURCES 			= 
 
