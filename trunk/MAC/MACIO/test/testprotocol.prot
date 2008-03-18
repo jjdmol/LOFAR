@@ -1,6 +1,6 @@
-//#  LOG_Protocol.prot: Protocol for sending LogMessages to a LoggingProcessor
+//#  testprotocol.prot: Protocol definition to test the base functions
 //#
-//#  Copyright (C) 2007
+//#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -18,91 +18,68 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id: Log_Protocol.prot 10814 2008-01-11 19:45:48Z overeem $
+//#  $Id$
 
 autogen definitions protocol;
 
-description = "Protocol definition for sending LogMessages to a LoggingProcessor";
-prefix = "LOG"; // for the signal names
-id = "(LOFAR::MACIO::F_GCF_PROTOCOL + 0)";
+description = "Protocol for testing the prtocol-programs";
+prefix = "TEST_PTC"; // for the signal names
+id = "63";
+
 // specify extra include files
-// e.g.
-//include = '<sys/time.h>';
-include = '<MACIO/StringVector.h>';
 
 prelude = << PRELUDE_END
 
+// The following messages are defined in the servicebroker protocol
+//
+// TEST_IN   (uint16 seqnr, string question);
+// TEST_OUT  (uint16 seqnr, string answer);
+//
+
 PRELUDE_END;
 
+//
 // An "event" has a "signal" and a "dir" (direction)
 // and zero or more "param"s.
 // "dir" can be one of "IN" or "OUT".
 // A "param" has a "name" and a "type".
 //
-
 event = {
-	signal = SEND_MSG;
+	signal = TEST_IN;
 	dir = IN;
 	param = {
 		name = "seqnr";
-		type = "uint32";
+		type = "uint16";
 	};
 	param = {
-		name = "DPname";
-		type = "string";
-	};
-	param = {
-		name = "message";
+		name = "question";
 		type = "string";
 	};
 };
 
 event = {
-	signal = SEND_MSG_ACK;
+	signal = TEST_OUT;
 	dir = OUT;
 	param = {
 		name = "seqnr";
-		type = "uint32";
+		type = "uint16";
 	};
 	param = {
-		name = "result";
-		type = "uint32";
+		name = "answer";
+		type = "string";
 	};
 };
 
-event = {
-	signal = SEND_MSG_POOL;
-	dir = IN;
-	param = {
-		name = "seqnr";
-		type = "uint32";
-	};
-	param = {
-		name = "msgCount";
-		type = "uint32";
-	};
-	param = {
-		name = "DPnames";
-		type = "MACIO::StringVector";
-		userdefined;
-	};
-	param = {
-		name = "messages";
-		type = "MACIO::StringVector";
-		userdefined;
-	};
+error = {
+	id = NO;
+	msg = "No errors";
 };
-
-event = {
-	signal = SEND_MSG_POOL_ACK;
-	dir = OUT;
-	param = {
-		name = "seqnr";
-		type = "uint32";
-	};
-	param = {
-		name = "result";
-		type = "uint32";
-	};
+error = {
+	id = RANGE;
+	msg = "Illegal range specified";
+};
+error = {
+	id = WINDOWS;
+	msg = "You are using Windows";
 };
 

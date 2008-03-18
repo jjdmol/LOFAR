@@ -24,10 +24,10 @@ autogen definitions protocol;
 
 description	= "Protocol for sending Key-Value-Time triples to the KeyValueLogger";
 prefix		= "KVT"; // for the signal names
-id 			= "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 1)";
+id 			= "(LOFAR::MACIO::F_GCF_PROTOCOL + 1)";
 
 // specify extra include files
-include = '<APL/RTCCommon/StringVector.h>';
+include = '<MACIO/StringVector.h>';
 
 prelude = << PRELUDE_END
 
@@ -115,12 +115,12 @@ event = {
 	};
 	param = {
 		name = "keys";
-		type = "RTC::StringVector";
+		type = "MACIO::StringVector";
 		userdefined;
 	};
 	param = {
 		name = "values";
-		type = "RTC::StringVector";
+		type = "MACIO::StringVector";
 		userdefined;
 	};
 };
