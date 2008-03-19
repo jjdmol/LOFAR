@@ -9,6 +9,6 @@ node   Cluster     1.0.1  development 'node constraint'  "Cluster Settings"
 #      name        		  vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
 uses   BGLSection         1.0.0  development 1                  "BGL Nodes"
-uses   StorageSection     1.0.0  development 1                  "Storage Nodes"
+uses   StorageSection     1.0.1  development 1                  "Storage Nodes"
 uses   ImagingSection     1.0.0  development 1                  "Imaging Nodes"
 
