@@ -8,5 +8,5 @@ node   Connection         1.0.1  development 'node constraint'  "Connections bet
 
 #      name             	vers   qual        constr.            descr.
 #--------------------------------------------------------------------------------------------------------
-uses   BGL-Storage			1.0.0  development -                  "Connection between BGL and storage node"
+uses   BGL-Storage			1.0.1  development -                  "Connection between BGL and storage node"
 uses   Storage-Imaging 		1.0.1  development -                  "Connection between storage and imaging node"
