@@ -409,20 +409,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     }
                 }
                 inputUseGather.setSelected(aSelection);
-            } else if (aKeyName.equals("useScatter")) {
-                inputUseScatter.setToolTipText(aParam.description);
-                itsUseScatter=aNode;
-                boolean aSelection = false;
-                if (isRef && aParam != null) {
-                    if (aParam.limits.equals("true")||aParam.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                } else {
-                    if (aNode.limits.equals("true")||aNode.limits.equals("TRUE")) {
-                        aSelection = true;
-                    }
-                }
-                inputUseScatter.setSelected(aSelection);
             } else if (aKeyName.equals("maxConcurrentComm")) {
                 inputIONProcMaxConcurrentComm.setToolTipText(aParam.description);
                 itsIONProcMaxConcurrentComm=aNode;
@@ -587,12 +573,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
           aB=true;
       }
       inputUseGather.setSelected(aB);
-      aB=false;
-      if (itsUseScatter.limits.equals("true")||itsUseScatter.limits.equals("TRUE")) {
-          aB=true;
-      }
-      inputUseScatter.setSelected(aB);
-      
+     
       //OLAP StorageProc
       inputStorageProcIntegrationSteps.setText(itsStorageProcIntegrationSteps.limits);
       inputSubbandsPerMS.setText(itsSubbandsPerMS.limits);
@@ -812,19 +793,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             itsUseGather.limits = aS;
             saveNode(itsUseGather);
         }
-        if ((!inputUseScatter.isSelected() &  
-                (itsUseScatter.limits.equals("TRUE") ||itsUseScatter.limits.equals("true") )) ||
-                (inputUseScatter.isSelected() &  
-                (itsUseScatter.limits.equals("FALSE") ||itsUseScatter.limits.equals("false") )))        
-        {  
-            String aS="true";
-            if (!inputUseScatter.isSelected()) {
-                aS="false";
-            }
-            itsUseScatter.limits = aS;
-            saveNode(itsUseScatter);
-        }
-
 
         //OLAP-StorageProc
         if (itsStorageProcIntegrationSteps != null && !inputStorageProcIntegrationSteps.equals(itsStorageProcIntegrationSteps.limits)) {  
@@ -877,7 +845,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         inputIONProcIntegrationSteps = new javax.swing.JTextField();
         labelUseGather = new javax.swing.JLabel();
         inputUseGather = new javax.swing.JCheckBox();
-        inputUseScatter = new javax.swing.JCheckBox();
         labelIONProcMaxConcurrentConn = new javax.swing.JLabel();
         inputIONProcMaxConcurrentComm = new javax.swing.JTextField();
         jPanel6 = new javax.swing.JPanel();
@@ -988,21 +955,19 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                                 .addGap(13, 13, 13)
                                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(labelEPAHeaderSize)
-                                    .addComponent(labelPsetsPerStorage))
-                                .addGap(32, 32, 32)
-                                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(inputEPAHeaderSize, javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(inputPsetsPerStorage, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 152, Short.MAX_VALUE)))
+                                    .addComponent(labelPsetsPerStorage)))
                             .addGroup(jPanel8Layout.createSequentialGroup()
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                                     .addComponent(labelMaxNetworkDelay, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addComponent(labelNrSecondsOfBuffer, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addGap(28, 28, 28)
-                                .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(inputMaxNetworkDelay, javax.swing.GroupLayout.DEFAULT_SIZE, 154, Short.MAX_VALUE)
-                                    .addComponent(inputNrSecondsOfBuffer, javax.swing.GroupLayout.DEFAULT_SIZE, 154, Short.MAX_VALUE))))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 38, Short.MAX_VALUE))
+                                    .addComponent(labelNrSecondsOfBuffer, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addGap(30, 30, 30)
+                        .addGroup(jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(inputMaxNetworkDelay)
+                            .addComponent(inputNrSecondsOfBuffer)
+                            .addComponent(inputEPAHeaderSize)
+                            .addComponent(inputPsetsPerStorage, javax.swing.GroupLayout.DEFAULT_SIZE, 152, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 78, Short.MAX_VALUE))
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addComponent(labelDelayCompensation)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -1010,7 +975,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                     .addGroup(jPanel8Layout.createSequentialGroup()
                         .addComponent(labelStorageStationNames)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(inputStorageStationNames, javax.swing.GroupLayout.DEFAULT_SIZE, 471, Short.MAX_VALUE)))
+                        .addComponent(inputStorageStationNames, javax.swing.GroupLayout.DEFAULT_SIZE, 511, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel8Layout.setVerticalGroup(
@@ -1062,10 +1027,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
         inputUseGather.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
         inputUseGather.setMargin(new java.awt.Insets(0, 0, 0, 0));
 
-        inputUseScatter.setSelected(true);
-        inputUseScatter.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 0));
-        inputUseScatter.setMargin(new java.awt.Insets(0, 0, 0, 0));
-
         labelIONProcMaxConcurrentConn.setText("maxConcurrentComm:");
 
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
@@ -1076,11 +1037,9 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addContainerGap()
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel10Layout.createSequentialGroup()
-                        .addComponent(labelUseGather, javax.swing.GroupLayout.DEFAULT_SIZE, 65, Short.MAX_VALUE)
+                        .addComponent(labelUseGather, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(inputUseGather)
-                            .addComponent(inputUseScatter))
+                        .addComponent(inputUseGather)
                         .addGap(251, 251, 251))
                     .addGroup(jPanel10Layout.createSequentialGroup()
                         .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
@@ -1105,9 +1064,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(labelUseGather)
                     .addComponent(inputUseGather))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(inputUseScatter)
-                .addContainerGap(57, Short.MAX_VALUE))
+                .addContainerGap(76, Short.MAX_VALUE))
         );
 
         jPanel6.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Olap Conn", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
@@ -1127,11 +1084,11 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(labelStationInputTransport, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(labelBGLProcStoragePorts))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGap(18, 18, 18)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(inputBGLProcStoragePorts)
-                    .addComponent(inputStationInputTransport, 0, 202, Short.MAX_VALUE))
-                .addContainerGap(204, Short.MAX_VALUE))
+                    .addComponent(inputStationInputTransport, 0, 191, Short.MAX_VALUE))
+                .addGap(241, 241, 241))
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1184,20 +1141,21 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                         .addComponent(inputUseZoid))
                     .addGroup(jPanel7Layout.createSequentialGroup()
                         .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(labelCoresPerPset, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)
-                            .addComponent(labelBGLIntegrationSteps, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)
-                            .addComponent(labelPsetsPerCell, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)
-                            .addComponent(labelNodesPerPset, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)
-                            .addComponent(labelNrPPFTaps, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE)
-                            .addComponent(labelMaxConcurrentComm, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 119, Short.MAX_VALUE))
+                            .addComponent(labelCoresPerPset, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                            .addComponent(labelBGLIntegrationSteps, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                            .addComponent(labelPsetsPerCell, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                            .addComponent(labelNodesPerPset, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                            .addComponent(labelNrPPFTaps, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                            .addComponent(labelMaxConcurrentComm, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(inputCoresPerPset, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                            .addComponent(inputBGLIntegrationSteps, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                            .addComponent(inputPsetsPerCell, 0, 200, Short.MAX_VALUE)
-                            .addComponent(inputNodesPerPset, 0, 200, Short.MAX_VALUE)
-                            .addComponent(inputNrPPFTaps, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
-                            .addComponent(inputMaxConcurrentComm, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE))))
+                        .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(inputCoresPerPset)
+                            .addComponent(inputBGLIntegrationSteps)
+                            .addComponent(inputPsetsPerCell, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(inputNodesPerPset, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(inputNrPPFTaps)
+                            .addComponent(inputMaxConcurrentComm, javax.swing.GroupLayout.DEFAULT_SIZE, 148, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
@@ -1230,7 +1188,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(labelCoresPerPset)
                     .addComponent(inputCoresPerPset, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(94, Short.MAX_VALUE))
+                .addContainerGap(99, Short.MAX_VALUE))
         );
 
         jPanel11.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Storage Proc", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
@@ -1252,7 +1210,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(inputSubbandsPerMS)
                     .addComponent(inputStorageProcIntegrationSteps, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE))
-                .addGap(203, 203, 203))
+                .addGap(243, 243, 243))
         );
         jPanel11Layout.setVerticalGroup(
             jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1287,7 +1245,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(inputPositionType)
                     .addComponent(inputConverterType, 0, 192, Short.MAX_VALUE))
-                .addContainerGap(203, Short.MAX_VALUE))
+                .addContainerGap(243, Short.MAX_VALUE))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1307,16 +1265,17 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel6, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, 608, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, 648, Short.MAX_VALUE)
+                    .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jPanel6, 0, 648, Short.MAX_VALUE)
+                        .addComponent(jPanel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel10, 0, 306, Short.MAX_VALUE)
                     .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -1331,7 +1290,7 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jPanel5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel11, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jPanel11, javax.swing.GroupLayout.DEFAULT_SIZE, 81, Short.MAX_VALUE))
                     .addComponent(jPanel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -1342,13 +1301,13 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(3438, Short.MAX_VALUE))
+                .addContainerGap(3474, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(2731, Short.MAX_VALUE))
+                .addContainerGap(2721, Short.MAX_VALUE))
         );
 
         jScrollPane1.setViewportView(jPanel2);
@@ -1414,7 +1373,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private jOTDBnode itsIONProcIntegrationSteps=null;
     private jOTDBnode itsIONProcMaxConcurrentComm=null;
     private jOTDBnode itsUseGather=null;
-    private jOTDBnode itsUseScatter=null;
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -1444,7 +1402,6 @@ public class OlapPanel extends javax.swing.JPanel implements IViewPanel{
     private javax.swing.JTextField inputSubbandsPerMS;
     private javax.swing.JTextField inputSubbandsPerPset;
     private javax.swing.JCheckBox inputUseGather;
-    private javax.swing.JCheckBox inputUseScatter;
     private javax.swing.JCheckBox inputUseZoid;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
