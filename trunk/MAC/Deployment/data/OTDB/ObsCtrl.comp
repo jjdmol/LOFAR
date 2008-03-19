@@ -7,9 +7,9 @@
 # -- ObsCtrl--
 #      name        vers   qual        constr.     descr.
 #---------------------------------------------------------------------------------------
-node  ObsCtrl      1.0.1  development ''          "Observation Controller"
+node  ObsCtrl      1.0.2  development ''          "Observation Controller"
 uses  OfflineCtrl  1.0.0  development 1           "Controller for the offline datastream"
-uses  OnlineCtrl   1.0.1  development 1           "Controller for the online datastream"
+uses  OnlineCtrl   1.0.2  development 1           "Controller for the online datastream"
 uses  StationCtrl  1.0.0  development 1           "All the station Controllers"
 
 

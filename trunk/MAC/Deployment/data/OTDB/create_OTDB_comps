@@ -209,12 +209,6 @@ do
 		expand_marker "BGLNode" "@BGLNode@" "10.20.100.@" >${outputname}
 	fi
 
-	grep @InputNode@ $file >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		cleanlist $file | \
-		expand_marker "InputNode" "@InputNode@" "10.20.150.@" >${outputname}
-	fi
-
 	grep @StorageNode@ $file >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
 		cleanlist $file | \
@@ -245,12 +239,6 @@ do
 		substitute_marker "../PVSS/Rings" "@ring@" >${outputname}
 	fi
 
-	grep @Station-Input@ $file >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		cleanlist $file | \
-		expand_connection "Station-Input" "@Station-Input@" >>${outputname}
-	fi
-
 	grep @BGL-Storage@ $file >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
 		cleanlist $file | \
@@ -261,18 +249,6 @@ do
 	if [ $? -eq 0 ]; then
 		cleanlist $file | \
 		expand_connection "Storage-Imaging" "@Storage-Imaging@" >>${outputname}
-	fi
-
-	grep @Input-BGL@ $file >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		cleanlist $file | \
-		expand_connection "Input-BGL" "@Input-BGL@" >>${outputname}
-		cleanlist $file | \
-		substitute_marker "Station-Input" "@Station-Input@" | \
-		substitute_marker "Input-BGL" "@Input-BGL@" | \
-		substitute_marker "Storage-Imaging" "@Storage-Imaging@" | \
-		substitute_marker "BGL-Storage" "@BGL-Storage@" >>${outputname}
-
 	fi
 
 done
