@@ -51,7 +51,16 @@ void CDOWrite::string2mac(const char* macstring, uint8 mac[ETH_ALEN])
   for (int i = 0; i < ETH_ALEN; i++) mac[i] = (uint8)(hx[i] & 0xFF);
 }
 
-uint32 CDOWrite::string2ip(const char* ipstring)
+void CDOWrite::string2ip(const char* ipstring, uint8 ip[IP_ALEN])
+{
+  unsigned int hx[IP_ALEN] = { 0x00, 0x00, 0x00, 0x00 };
+
+  sscanf(ipstring, "%d.%d.%d.%d", &hx[0], &hx[1], &hx[2], &hx[3]);
+
+  for (int i = 0; i < IP_ALEN; i++) ip[i] = (uint8)(hx[i] & 0xFF);
+}
+
+uint32 CDOWrite::string2ip_uint32(const char* ipstring)
 {
   uint32 result;
   unsigned int hx[sizeof(uint32)] = { 0x00, 0x00, 0x00, 0x00 };
@@ -185,28 +194,36 @@ void CDOWrite::sendrequest()
 	snprintf(dstmac, 64, "RSPDriver.LANE_%d_DSTMAC", output_lane);
 	snprintf(srcip,  64, "RSPDriver.LANE_%d_SRCIP", output_lane);
 	snprintf(dstip,  64, "RSPDriver.LANE_%d_DSTIP", output_lane);
-	l_srcip = string2ip(GET_CONFIG_STRING(srcip));
-	l_dstip = string2ip(GET_CONFIG_STRING(dstip));
+	l_srcip = string2ip_uint32(GET_CONFIG_STRING(srcip));
+	l_dstip = string2ip_uint32(GET_CONFIG_STRING(dstip));
 
 	LOG_INFO(formatString("CDO: lane=%d, src=[%s,%s], dst=[%s,%s]",
 			      output_lane,
 			      srcmac, GET_CONFIG_STRING(srcip),
 			      GET_CONFIG_STRING(dstmac), GET_CONFIG_STRING(dstip)));
-
+			
 	// settings
-	cdo.control.enable = 1;
-	cdo.control.lane   = output_lane;
+	cdo.control.enable     = 1;
+	cdo.control.lane       = output_lane;
+	cdo.control.fb_enable  = GET_CONFIG("RSPDriver.FB_ENABLE", i);
+	cdo.control.arp_enable = 1;
 
 	// set source and destination MAC address
 	string2mac(srcmac, cdo.src_mac);
 	string2mac(GET_CONFIG_STRING(dstmac), cdo.dst_mac);
-
+	
+	// set source and destination IP address
+	string2ip(GET_CONFIG_STRING(srcip), cdo.src_ip);
+	string2ip(GET_CONFIG_STRING(dstip), cdo.dst_ip);
+		
 	// setup UDP/IP header
 	setup_udpip_header(l_srcip, l_dstip);
 
       } else {
-	cdo.control.enable = 0;
-	cdo.control.lane   = 0;
+	cdo.control.enable     = 0;
+	cdo.control.lane       = 0;
+	cdo.control.fb_enable  = 0;
+	cdo.control.arp_enable = 0;
 
 	memset(cdo.src_mac, 0, ETH_ALEN);
 	memset(cdo.dst_mac, 0, ETH_ALEN);

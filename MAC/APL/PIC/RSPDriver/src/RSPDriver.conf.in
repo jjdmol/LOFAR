@@ -172,6 +172,7 @@ RSPDriver.IGNORE_REMOTE_DATA=0
 RSPDriver.CDO_ENABLE=1
 RSPDriver.CDO_N_BLOCKS=16
 RSPDriver.CDO_N_BEAMLETS=40
+RSPDriver.FB_ENABLE=1
 
 #
 # Specify the absolute backplane index of the first
