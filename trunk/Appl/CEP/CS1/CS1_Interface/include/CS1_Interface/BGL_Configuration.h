@@ -35,6 +35,7 @@ class BGL_Configuration
 {
   public:
     unsigned		  &nrStations();
+    unsigned		  &nrBeams();
     unsigned		  &nrSamplesPerIntegration();
     unsigned		  &nrSamplesToBGLProc();
     unsigned		  &nrUsedCoresPerPset();
@@ -43,6 +44,8 @@ class BGL_Configuration
     double		  &sampleRate();
     std::vector<unsigned> &inputPsets(), &outputPsets();
     std::vector<double>	  &refFreqs();
+    std::vector<signed>   &beamlet2beams();
+    std::vector<unsigned> &subband2Index();
 
     void		  read(TransportHolder *);
     void		  write(TransportHolder *);
@@ -53,10 +56,14 @@ class BGL_Configuration
   private:
     std::vector<unsigned> itsInputPsets, itsOutputPsets;
     std::vector<double>	  itsRefFreqs;
+    std::vector<signed>   itsBeamlet2beams;
+    std::vector<unsigned> itsSubband2Index;
 
     struct MarshalledData
     {
       unsigned		  itsNrStations;
+      unsigned            itsNrBeams;
+      
       unsigned		  itsNrSamplesPerIntegration;
       unsigned		  itsNrSamplesToBGLProc;
       unsigned		  itsNrUsedCoresPerPset;
@@ -65,8 +72,12 @@ class BGL_Configuration
       double		  itsSampleRate;
       unsigned		  itsInputPsetsSize, itsOutputPsetsSize;
       unsigned		  itsRefFreqsSize;
+      unsigned		  itsBeamlet2beamsSize;
+      unsigned		  itsSubband2IndexSize;
       unsigned		  itsInputPsets[MAX_PSETS], itsOutputPsets[MAX_PSETS];
       double		  itsRefFreqs[MAX_SUBBANDS];
+      signed              itsBeamlet2beams[MAX_SUBBANDS]; // to which beam each beamlet belongs
+      unsigned            itsSubband2Index[MAX_SUBBANDS]; // to which beam each beamlet belongs      
     } itsMarshalledData;
 };
 
@@ -74,6 +85,11 @@ class BGL_Configuration
 inline unsigned &BGL_Configuration::nrStations()
 {
   return itsMarshalledData.itsNrStations;
+}
+
+inline unsigned &BGL_Configuration::nrBeams()
+{
+  return itsMarshalledData.itsNrBeams;
 }
 
 inline unsigned &BGL_Configuration::nrSamplesPerIntegration()
@@ -119,6 +135,16 @@ inline std::vector<unsigned> &BGL_Configuration::outputPsets()
 inline std::vector<double> & BGL_Configuration::refFreqs()
 {
   return itsRefFreqs;
+}
+
+inline std::vector<signed> & BGL_Configuration::beamlet2beams()
+{
+  return itsBeamlet2beams;
+}
+
+inline std::vector<unsigned> & BGL_Configuration::subband2Index()
+{
+  return itsSubband2Index;
 }
 
 } // namespace CS1

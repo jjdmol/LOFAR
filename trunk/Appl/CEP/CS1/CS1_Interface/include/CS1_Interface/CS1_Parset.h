@@ -36,6 +36,7 @@
 #include <Common/lofar_datetime.h>
 #include <Common/LofarLogger.h> 
 #include <CS1_Interface/CS1_Config.h>
+#include <ApplCommon/Observation.h>
 
 #include <boost/date_time/c_local_time_adjustor.hpp>
 
@@ -56,8 +57,9 @@ class CS1_Parset: public ACC::APS::ParameterSet
 public:
 	CS1_Parset();
 	~CS1_Parset();
-	explicit CS1_Parset (const ACC::APS::ParameterSet* aParSet)
-	: ACC::APS::ParameterSet(*aParSet)
+	explicit CS1_Parset (ACC::APS::ParameterSet* aParSet)
+	: ACC::APS::ParameterSet(*aParSet),
+	itsObservation(aParSet)
          {}
 	 
 	double         startTime() const;
@@ -66,7 +68,8 @@ public:
 	double         sampleRate() const;
 	double         sampleDuration() const;
 	vector<double> positions() const;
-	vector<double> phaseCenters() const;
+	vector<double> getRefPhaseCentres() const;
+	vector<double> getPhaseCentresOf(const string& name) const;	
 	uint32	       BGLintegrationSteps() const;
 	uint32	       IONintegrationSteps() const;
 	uint32	       storageIntegrationSteps() const;
@@ -87,13 +90,13 @@ public:
 	uint32         nrSubbands() const;
 	uint32         nrPsets() const;
 	uint32         nrCoresPerPset() const;
-	vector<double> refFreqs() const;
+	vector<double> refFreqs(uint32 rspid=0) const;
 	double         chanWidth() const;
-	vector<string> delay_Ports() const;
 	vector<string> getPortsOf(const string& aKey) const;
 	string         inputPortnr(const string& aKey) const;
 	string         stationName(const int index) const;
-	string         expandedArrayString(const string& orgStr) const;
+	uint32         rspID(const int index) const;
+	static string  expandedArrayString(const string& orgStr);
 	bool	       useScatter() const;
 	bool	       useGather() const;
 	uint32	       nrPsetsPerStorage() const;
@@ -103,8 +106,16 @@ public:
 	vector<uint32> outputPsets() const;
 	int	       inputPsetIndex(uint32 pset) const;
 	int	       outputPsetIndex(uint32 pset) const;
-	string	       getMSname(unsigned firstSB, unsigned lastSB) const;
+	string	       getMSname(unsigned sb) const;
+	uint32         nrBeams() const;
+	vector<int32>  beamlet2beams(uint32 rspid=0) const;
+	vector<int32>  beamlet2subbands(uint32 rspid=0) const;
+	vector<uint32> subband2Index(uint32 rspid=0) const;
+	int32          nrSubbandsPerFrame(uint32 rspid=0) const;
 	
+	vector<double> getBeamDirection(const unsigned currentBeam) const;
+	string         getBeamDirectionType(const unsigned currentBeam) const;
+
 	//# Datamembers
 	string	       name;
 	vector<double> itsStPositions;
@@ -113,6 +124,8 @@ private:
 	void           addPosition(string stName);
 	double	       getTime(const char *name) const;
 	static int     findIndex(uint32 pset, const vector<uint32> &psets);
+	
+	Observation    itsObservation;
 };
 
 // @}
@@ -130,13 +143,6 @@ inline double CS1_Parset::startTime() const
 inline double CS1_Parset::stopTime() const
 {
   return getTime("Observation.stopTime");
-}
-
-inline string CS1_Parset::inputPortnr(const string& aKey) const
-{
-  string rst = getString("PIC.Core." + aKey + ".port");
-  int index = rst.find(":");
-  return rst.substr(index+1,4);
 }
 
 inline string CS1_Parset::stationName(const int index) const
@@ -244,11 +250,6 @@ inline uint32 CS1_Parset::nrChannelsPerSubband() const
   return getUint32("Observation.channelsPerSubband");
 }
 
-inline uint32 CS1_Parset::nrSubbands() const
-{
-  return getUint32Vector("Observation.subbandList").size();
-}
-  
 inline uint32 CS1_Parset::nrPsets() const
 {
   return nrSubbands() / nrSubbandsPerPset();
@@ -307,6 +308,11 @@ inline int CS1_Parset::inputPsetIndex(uint32 pset) const
 inline int CS1_Parset::outputPsetIndex(uint32 pset) const
 {
   return findIndex(pset, outputPsets());
+}
+
+inline uint32 CS1_Parset::nrBeams() const
+{
+  return getUint32("Observation.nrBeams");
 }
 
 } // namespace CS1
