@@ -95,6 +95,10 @@ class BGL_Processing {
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool		itsIsTransposeInput, itsIsTransposeOutput;
+    
+    std::vector<signed>   itsBeamlet2beams;
+    std::vector<unsigned> itsSubband2Index;
+    unsigned            itsNrBeams;
 
     Heap		*itsHeaps[2];
     InputData		*itsInputData;

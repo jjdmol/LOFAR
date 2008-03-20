@@ -321,7 +321,6 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
   unsigned myPset	    = 0;
   unsigned myCore	    = 0;
 #endif
-
   std::vector<unsigned> &inputPsets  = configuration.inputPsets();
   std::vector<unsigned> &outputPsets = configuration.outputPsets();
 
@@ -335,7 +334,12 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
   itsIsTransposeInput  = inputPsetIndex  != inputPsets.end();
   itsIsTransposeOutput = outputPsetIndex != outputPsets.end();
 
-  unsigned nrStations		   = configuration.nrStations();
+  unsigned nrStations	                = configuration.nrStations();
+  
+  itsBeamlet2beams = configuration.beamlet2beams();
+  itsSubband2Index = configuration.subband2Index();
+  itsNrBeams       = configuration.nrBeams();
+  
   unsigned nrBaselines		   = nrStations * (nrStations + 1) / 2;
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesToBGLProc	   = configuration.nrSamplesToBGLProc();
@@ -380,7 +384,7 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
 
 #if defined HAVE_MPI
   if (itsIsTransposeInput || itsIsTransposeOutput) {
-    itsTranspose = new Transpose(itsIsTransposeInput, itsIsTransposeOutput, myCore, nrStations);
+    itsTranspose = new Transpose(itsIsTransposeInput, itsIsTransposeOutput, myCore, nrStations, itsNrBeams);
     itsTranspose->setupTransposeParams(inputPsets, outputPsets, itsInputData, itsTransposedData);
   }
 #endif
@@ -392,7 +396,6 @@ void BGL_Processing::process()
 {
   NSTimer totalTimer("total", LOG_CONDITION);
   totalTimer.start();
-
   if (itsIsTransposeInput) {
 #if defined HAVE_MPI
     if (LOG_CONDITION)
@@ -401,7 +404,7 @@ void BGL_Processing::process()
 
     static NSTimer readTimer("receive timer", true);
     readTimer.start();
-    itsInputData->read(itsTransportHolder);
+    itsInputData->read(itsTransportHolder, itsNrBeams);
     readTimer.stop();
   }
 
@@ -418,7 +421,7 @@ MPI_Barrier(itsTransposeGroup);
     NSTimer transposeTimer("one transpose", LOG_CONDITION);
     transposeTimer.start();
     itsTranspose->transpose(itsInputData, itsTransposedData);
-    itsTranspose->transposeMetaData(itsInputData, itsTransposedData);
+    itsTranspose->transposeMetaData(itsInputData, itsTransposedData, itsBeamlet2beams[itsSubband2Index[itsCurrentSubband]] - 1);
     transposeTimer.stop();
 #endif
   }
@@ -431,8 +434,7 @@ MPI_Barrier(itsTransposeGroup);
 
     computeTimer.start();
     itsPPF->computeFlags(itsTransposedData, itsFilteredData);
-    itsPPF->filter(itsCenterFrequencies[itsCurrentSubband], itsTransposedData, itsFilteredData);
-
+    itsPPF->filter(itsCenterFrequencies[itsSubband2Index[itsCurrentSubband]], itsTransposedData, itsFilteredData);
     itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
     itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
 
@@ -465,7 +467,6 @@ MPI_Barrier(itsTransposeGroup);
     for (double time = MPI_Wtime() + 4.0; MPI_Wtime() < time;)
       ;
 #endif
-
   totalTimer.stop();
 }
 

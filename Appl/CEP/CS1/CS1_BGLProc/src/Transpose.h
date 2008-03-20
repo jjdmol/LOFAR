@@ -24,7 +24,7 @@ namespace CS1 {
 
 class Transpose {
   public:
-    Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore, unsigned nrStations);
+    Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore, unsigned nrStations,unsigned nrBeams);
     ~Transpose();
 
     void setupTransposeParams(const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData *, TransposedData *);
@@ -35,11 +35,12 @@ class Transpose {
 #endif
 
     void transpose(const InputData *, TransposedData *);
-    void transposeMetaData(/*const*/ InputData *, TransposedData *);
+    void transposeMetaData(/*const*/ InputData *, TransposedData *, const unsigned currentBeam);
 
   private:
     bool     itsIsTransposeInput, itsIsTransposeOutput;
     unsigned itsNrStations;
+    unsigned itsNrBeams;
 
     // All cores at the same position within a pset form a group.  The
     // transpose is done between members of this group.
@@ -53,9 +54,12 @@ class Transpose {
       float    delayAtBegin, delayAfterEnd;
       unsigned alignmentShift;
       char     flagsBuffer[132]; // enough for 16 flag ranges
-    } itsInputMetaData;
+    };
 
-    std::vector<struct metaData> itsOutputMetaData;
+    boost::multi_array<struct metaData, 2> itsOutputMetaData; // [station][beam]
+
+    std::vector<struct metaData> itsInputMetaData; // [beam]
+    
     MPI_Comm			 itsTransposeGroup;
 
     static std::vector<MPI_Comm> allTransposeGroups;
