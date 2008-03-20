@@ -1,5 +1,5 @@
 
-pkginclude_HEADERS = Observation.h
+pkginclude_HEADERS = Package__Version.h  Observation.h
 
 noinst_HEADERS =
 

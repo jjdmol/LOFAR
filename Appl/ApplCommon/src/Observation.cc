@@ -35,8 +35,10 @@ namespace LOFAR {
 Observation::Observation() :
 	name(),
 	obsID(0),
+#if 0	
 	startTime(0),
 	stopTime(0),
+#endif	
 	nyquistZone(0),
 	sampleClock(0)
 {
@@ -45,8 +47,10 @@ Observation::Observation() :
 Observation::Observation(ParameterSet*		aParSet) :
 	name(),
 	obsID(0),
+#if 0
 	startTime(0),
 	stopTime(0),
+#endif
 	nyquistZone(0),
 	sampleClock(0)
 {
@@ -56,14 +60,14 @@ Observation::Observation(ParameterSet*		aParSet) :
 
 	name  = aParSet->getString(prefix+"name", "");
 	obsID = aParSet->getInt32("_treeID", 0);
-
+#if 0
 	if (aParSet->isDefined(prefix+"startTime")) {
 		startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
 	}
 	if (aParSet->isDefined(prefix+"stopTime")) {
 		stopTime = to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
 	}
-
+#endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		string stString("x=" + expandedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList")));
 		ParameterSet	stParset;
@@ -81,7 +85,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 		string	rcuString("x=" + expandedArrayString( aParSet->getString(prefix+"receiverList")));
 		ParameterSet	rcuParset;
 		rcuParset.adoptBuffer(rcuString);
-		vector<uint16> RCUnumbers(rcuParset.getUint16Vector("x"));
+		vector<uint32> RCUnumbers(rcuParset.getUint32Vector("x"));
 		if (RCUnumbers.empty()) {			// No receivers in the list?
 			RCUset.set();					// assume all receivers.
 		}
@@ -100,7 +104,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 
 	// allocate beamlet 2 beam mapping and reset to 0
 	beamlet2beams.resize(4*54, 0);
-	beamlet2subbands.resize(4*54, 0);
+	beamlet2subbands.resize(4*54, -1);
 
 	// loop over al beams
 	for (int32 beam(1) ; beam <= nrBeams; beam++) {
@@ -115,12 +119,12 @@ Observation::Observation(ParameterSet*		aParSet) :
 		string sbString("x=" + expandedArrayString(aParSet->getString(beamPrefix+"subbandList","[]")));
 		ParameterSet	sbParset;
 		sbParset.adoptBuffer(sbString);
-		newBeam.subbands = sbParset.getInt16Vector("x");
+		newBeam.subbands = sbParset.getInt32Vector("x");
 		// beamletList
 		string blString("x=" + expandedArrayString(aParSet->getString(beamPrefix+"beamletList", "[]")));
 		ParameterSet	blParset;
 		blParset.adoptBuffer(blString);
-		newBeam.beamlets = blParset.getInt16Vector("x");
+		newBeam.beamlets = blParset.getInt32Vector("x");
 	
 		// add beam to vector
 		beams.push_back(newBeam);
@@ -177,8 +181,10 @@ ostream& Observation::print (ostream&	os) const
 	os << endl;
 	os << "Observation  : " << name << endl;
     os << "ObsID        : " << obsID << endl;
+#if 0
     os << "starttime    : " << to_simple_string(from_time_t(startTime)) << endl;
     os << "stoptime     : " << to_simple_string(from_time_t(stopTime)) << endl;
+#endif
 //    os << "stations     : " << stations << endl;
     os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
     os << "antennaArray : " << antennaArray << endl;
