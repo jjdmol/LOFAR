@@ -35,59 +35,68 @@ namespace CS1 {
 class ION_to_CN
 {
   public:
-    SparseSet<unsigned> &flags();
-    double		&delayAtBegin(), &delayAfterEnd();
-    unsigned		&alignmentShift();
+    SparseSet<unsigned> &flags(const unsigned beam);
+    float		&delayAtBegin(const unsigned beam), &delayAfterEnd(const unsigned beam);
+    unsigned		&alignmentShift(const unsigned beam);
 
-    void		read(TransportHolder *);
-    void		write(TransportHolder *);
+    void		read(TransportHolder *, const unsigned nrBeams);
+    void		write(TransportHolder *, const unsigned nrBeams);
+    
+    static const unsigned MAX_BEAMLETS    = 8;
 
   private:
-    SparseSet<unsigned>	itsFlags;
+    std::vector<SparseSet<unsigned> >	itsFlags;
 
     struct MarshalledData
     {
-      double		delayAtBegin, delayAfterEnd;
+      float		delayAtBegin, delayAfterEnd;
       unsigned		alignmentShift;
       unsigned char	flagsBuffer[132];
-    } itsMarshalledData;
-};
+    };
+    
+    std::vector<struct MarshalledData> itsMarshalledData;
+   public:
+      ION_to_CN(){itsMarshalledData.resize(MAX_BEAMLETS);
+                  itsFlags.resize(MAX_BEAMLETS);};
+ };
 
-inline SparseSet<unsigned> &ION_to_CN::flags()
+inline SparseSet<unsigned> &ION_to_CN::flags(const unsigned beam)
 {
-  return itsFlags;
+  return itsFlags[beam];
 }
 
-inline double &ION_to_CN::delayAtBegin()
+inline float &ION_to_CN::delayAtBegin(const unsigned beam)
 {
-  return itsMarshalledData.delayAtBegin;
+  return itsMarshalledData[beam].delayAtBegin;
 }
 
-inline double &ION_to_CN::delayAfterEnd()
+inline float &ION_to_CN::delayAfterEnd(const unsigned beam)
 {
-  return itsMarshalledData.delayAfterEnd;
+  return itsMarshalledData[beam].delayAfterEnd;
 }
 
-inline unsigned &ION_to_CN::alignmentShift()
+inline unsigned &ION_to_CN::alignmentShift(const unsigned beam)
 {
-  return itsMarshalledData.alignmentShift;
+  return itsMarshalledData[beam].alignmentShift;
 }
 
-inline void ION_to_CN::read(TransportHolder *th)
+inline void ION_to_CN::read(TransportHolder *th, const unsigned nrBeams)
 {
-  th->recvBlocking(&itsMarshalledData, sizeof itsMarshalledData, 1, 0, 0);
-  itsFlags.unmarshall(itsMarshalledData.flagsBuffer);
+  th->recvBlocking(&itsMarshalledData[0], sizeof(struct MarshalledData) * nrBeams, 1, 0, 0);
+  for(unsigned beam = 0; beam < nrBeams; beam++){
+    itsFlags[beam].unmarshall(itsMarshalledData[beam].flagsBuffer);
+  }  
 }
 
-inline void ION_to_CN::write(TransportHolder *th)
+inline void ION_to_CN::write(TransportHolder *th, const unsigned nrBeams)
 {
-  ssize_t size = itsFlags.marshall(&itsMarshalledData.flagsBuffer, sizeof itsMarshalledData.flagsBuffer);
-
-  assert(size >= 0);
-  th->sendBlocking(&itsMarshalledData, sizeof itsMarshalledData, 1, 0);
+  for(unsigned beam = 0; beam < nrBeams; beam++){
+    ssize_t size = itsFlags[beam].marshall(&itsMarshalledData[beam].flagsBuffer, sizeof itsMarshalledData[beam].flagsBuffer);
+    
+    assert(size >= 0);
+  }  
+  th->sendBlocking(&itsMarshalledData[0], sizeof(struct MarshalledData) * nrBeams, 1, 0);
 }
-
-
 
 } // namespace CS1
 } // namespace LOFAR
