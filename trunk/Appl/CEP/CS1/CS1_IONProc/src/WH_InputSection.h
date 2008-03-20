@@ -34,6 +34,7 @@
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/ION_to_CN.h>
 #include <BeamletBuffer.h>
+#include <WH_DelayCompensation.h>
 #include <InputThread.h>
 
 #include <boost/multi_array.hpp>
@@ -58,7 +59,7 @@ class WH_InputSection: public WorkHolder {
     virtual void preprocess();
     virtual void process();
     virtual void postprocess();
-      
+    
   private:
     // Copying is not allowed
     WH_InputSection (const WH_InputSection &that);
@@ -67,6 +68,8 @@ class WH_InputSection: public WorkHolder {
     void limitFlagsLength(SparseSet<unsigned> &flags);
 
     bool itsDelayCompensation;
+    std::vector<int32>  itsBeamlet2beams;
+    std::vector<uint32> itsSubband2Index;
 
     ION_to_CN itsIONtoCNdata;
 
@@ -80,8 +83,16 @@ class WH_InputSection: public WorkHolder {
     
     // synced stamp
     TimeStamp itsSyncedStamp;
+    TimeStamp itsDelaySyncedStamp;
    
     double   itsSampleDuration;
+    std::vector<double> itsDelaysAtBegin;
+    std::vector<double> itsDelaysAfterEnd;
+    std::vector<double> itsNrCalcDelaysForEachTimeNrDirections;
+    std::vector<double> itsNrCalcIntTimes;
+    unsigned            itsNrCalcDelays;
+    unsigned            itsCounter;
+    
     unsigned itsMaxNetworkDelay;
     unsigned itsNSubbandsPerPset;
     unsigned itsNSamplesPerSec;
@@ -90,7 +101,11 @@ class WH_InputSection: public WorkHolder {
     unsigned itsCurrentComputeCore, itsNrCoresPerPset;
     unsigned itsPsetNumber;
    
-    BeamletBuffer *itsBBuffer;
+    BeamletBuffer        *itsBBuffer;
+    WH_DelayCompensation *itsDelayComp;
+    const double          itsSampleRate;
+    
+    NSTimer itsDelayTimer;
     
     void startThread();
 };

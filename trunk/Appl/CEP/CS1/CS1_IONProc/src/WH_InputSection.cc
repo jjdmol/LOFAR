@@ -29,12 +29,12 @@
 #include <BGL_Personality.h>
 #include <WH_InputSection.h>
 #include <BeamletBuffer.h>
+#include <WH_DelayCompensation.h>
 #include <InputThread.h>
 #include <ION_Allocator.h>
 #include <TH_ZoidServer.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Mapping.h>
-#include <CS1_Interface/DH_Delay.h>
 #include <CS1_Interface/CS1_Parset.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <Transport/TransportHolder.h>
@@ -42,6 +42,7 @@
 #include <sys/time.h>
 
 #undef DUMP_RAW_DATA
+//#define DUMP_RAW_DATA
 
 #if defined DUMP_RAW_DATA
 #include <Transport/TH_Socket.h>
@@ -60,12 +61,15 @@ WH_InputSection::WH_InputSection(const string &name,
 				 CS1_Parset *ps,
 				 TransportHolder *inputTH)
 :
-  WorkHolder(1, 0, name, "WH_InputSection"),
+  WorkHolder(0, 0, name, "WH_InputSection"),
   itsInputThread(0),
   itsInputTH(inputTH),
   itsStationNr(stationNumber),
   itsCS1PS(ps),
-  itsBBuffer(0)
+  itsBBuffer(0),
+  itsDelayComp(0),
+  itsSampleRate(itsCS1PS->sampleRate()),
+  itsDelayTimer("delay")
 {
   // get parameters
   itsNSubbandsPerPset = itsCS1PS->nrSubbandsPerPset();
@@ -75,9 +79,6 @@ WH_InputSection::WH_InputSection(const string &name,
 #else
   itsNHistorySamples  = itsCS1PS->nrHistorySamples();
 #endif
-
-  // create incoming dataholder holding the delay information 
-  getDataManager().addInDataHolder(0, new DH_Delay("DH_Delay", itsCS1PS->nrStations()));
 }
 
 
@@ -105,7 +106,7 @@ void WH_InputSection::startThread()
   args.ipHeaderSize       = itsCS1PS->getInt32("OLAP.IPHeaderSize");
   args.frameHeaderSize    = itsCS1PS->getInt32("OLAP.EPAHeaderSize");
   args.nTimesPerFrame     = itsCS1PS->getInt32("OLAP.nrTimesInFrame");
-  args.nSubbandsPerFrame  = itsCS1PS->getInt32("OLAP.nrSubbandsPerFrame");
+  args.nSubbandsPerFrame  = itsCS1PS->nrSubbandsPerFrame();
   args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
 
 #if 0
@@ -125,12 +126,17 @@ void WH_InputSection::preprocess()
   itsCurrentComputeCore = 0;
   itsNrCoresPerPset	= itsCS1PS->nrCoresPerPset();
   itsPsetNumber		= getBGLpersonality()->getPsetNum();
+  itsSampleDuration     = itsCS1PS->sampleDuration();
 
   // create the buffer controller.
   int subbandsToReadFromFrame = itsCS1PS->subbandsToReadFromFrame();
-  ASSERTSTR(subbandsToReadFromFrame <= itsCS1PS->getInt32("OLAP.nrSubbandsPerFrame"), subbandsToReadFromFrame << " < " << itsCS1PS->getInt32("OLAP.nrSubbandsPerFrame"));
+  ASSERTSTR(subbandsToReadFromFrame <= itsCS1PS->nrSubbandsPerFrame(), subbandsToReadFromFrame << " < " << itsCS1PS->nrSubbandsPerFrame());
 
   itsDelayCompensation = itsCS1PS->getBool("OLAP.delayCompensation");
+  itsBeamlet2beams = itsCS1PS->beamlet2beams();
+  itsSubband2Index = itsCS1PS->subband2Index();
+  
+  itsNrCalcDelays = itsCS1PS->getUint32("OLAP.DelayComp.nrCalcDelays");
 
   double startTime = itsCS1PS->startTime(); // UTC
 
@@ -139,14 +145,40 @@ void WH_InputSection::preprocess()
   int samples	 = (int) ((startTime - floor(startTime)) * sampleFreq);
 
   itsSyncedStamp = TimeStamp(seconds, samples);
+  itsDelaySyncedStamp = itsSyncedStamp;
+ 
+  if (itsDelayCompensation) {
+    itsDelaysAtBegin.resize(itsCS1PS->nrBeams());
+    itsDelaysAfterEnd.resize(itsCS1PS->nrBeams());
+    itsNrCalcDelaysForEachTimeNrDirections.resize(itsNrCalcDelays*itsCS1PS->nrBeams());
+    itsNrCalcIntTimes.resize(itsNrCalcDelays);
+    
+    itsDelayComp = new WH_DelayCompensation(itsCS1PS, itsCS1PS->stationName(itsStationNr));
+    
+    double startIntegrationTime = static_cast <int64>(itsDelaySyncedStamp)*itsSampleDuration;
+    
+    for (uint i = 0; i < itsNrCalcDelays; i++) {
+      itsNrCalcIntTimes[i] = startIntegrationTime;
+      itsDelaySyncedStamp += itsNSamplesPerSec;
+      startIntegrationTime = static_cast<int64>(itsDelaySyncedStamp) * itsSampleDuration;   
+    }
 
+    itsNrCalcDelaysForEachTimeNrDirections = itsDelayComp->calcDelaysForEachTimeNrDirections(itsNrCalcIntTimes);
+    
+    itsCounter = 0;
+    
+    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+      itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[beam];
+    }
+    
+    itsDelaysAtBegin = itsDelaysAfterEnd;
+  }
+   
   unsigned cyclicBufferSize = itsCS1PS->nrSamplesToBuffer();
   bool	   synchronous	    = itsCS1PS->getString("OLAP.OLAP_Conn.station_Input_Transport") != "UDP";
   itsMaxNetworkDelay  = itsCS1PS->maxNetworkDelay();
   std::clog << "maxNetworkDelay = " << itsMaxNetworkDelay << std::endl;
   itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, synchronous, itsMaxNetworkDelay);
-
-  itsSampleDuration = itsCS1PS->sampleDuration();
 
 #if defined DUMP_RAW_DATA
   vector<string> rawDataServers = itsCS1PS->getStringVector("OLAP.OLAP_Conn.rawDataServers");
@@ -178,42 +210,99 @@ void WH_InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
 void WH_InputSection::process() 
 {
   BGL_Command command(BGL_Command::PROCESS);
-
-  TimeStamp delayedStamp = itsSyncedStamp - itsNHistorySamples;
+  
+  std::vector<TimeStamp> delayedStamp(itsCS1PS->nrBeams());
+  
+  for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+    delayedStamp[beam] = itsSyncedStamp - itsNHistorySamples;
+  }
+  
   itsSyncedStamp += itsNSamplesPerSec;
-  int samplesDelay;
+  std::vector<int> samplesDelay(itsCS1PS->nrBeams());
 
   // set delay
-  if (itsDelayCompensation) {
-    DH_Delay *dh = static_cast<DH_Delay *>(getDataManager().getInHolder(0));
-    struct DH_Delay::DelayInfo &delay = (*dh)[itsStationNr];
-    delayedStamp -= delay.coarseDelay;
-    samplesDelay		   = -delay.coarseDelay;
-    itsIONtoCNdata.delayAtBegin()  = delay.fineDelayAtBegin;
-    itsIONtoCNdata.delayAfterEnd() = delay.fineDelayAfterEnd;
+  if (itsDelayCompensation) {    
+    
+    itsCounter++;
+    itsDelaysAtBegin = itsDelaysAfterEnd; // from previous integration
+    
+    if (itsCounter > itsNrCalcDelays-1) {
+      itsDelaySyncedStamp = itsSyncedStamp;
+      double stopIntegrationTime = static_cast<int64>(itsDelaySyncedStamp) * itsSampleDuration;
+
+      for (uint i = 0; i < itsNrCalcDelays; i++) {
+        itsNrCalcIntTimes[i] = stopIntegrationTime;
+        itsDelaySyncedStamp += itsNSamplesPerSec;
+        stopIntegrationTime = static_cast<int64>(itsDelaySyncedStamp) * itsSampleDuration;   
+      }
+      
+      itsDelayTimer.start();
+      itsNrCalcDelaysForEachTimeNrDirections = itsDelayComp->calcDelaysForEachTimeNrDirections(itsNrCalcIntTimes);
+      itsDelayTimer.stop();
+     
+      itsCounter = 0;
+      
+      for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+	itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[beam];
+      }	
+    }
+    else 
+    {
+      unsigned firstBeam = itsCounter * itsCS1PS->nrBeams();
+      for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+	itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[firstBeam++];
+      }	
+    }
+   
+    std::vector<int32> coarseDelay(itsCS1PS->nrBeams());
+    std::vector<double> d(itsCS1PS->nrBeams());
+    std::vector<float> fineDelayAtBegin(itsCS1PS->nrBeams()), fineDelayAfterEnd(itsCS1PS->nrBeams());
+    
+    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+      // The coarse delay will be determined for the center of the current
+      // time interval and will be expressed in \e samples.
+      coarseDelay[beam] = (int32)floor(0.5 * (itsDelaysAtBegin[beam] + itsDelaysAfterEnd[beam]) * itsSampleRate + 0.5);
+    
+      // The fine delay will be determined for the boundaries of the current
+      // time interval and will be expressed in seconds.
+      d[beam] = coarseDelay[beam] * itsSampleDuration;
+    
+      fineDelayAtBegin[beam] = (float)(itsDelaysAtBegin[beam] - d[beam]);
+      fineDelayAfterEnd[beam]= (float)(itsDelaysAfterEnd[beam] - d[beam]);
+    
+      delayedStamp[beam] -= coarseDelay[beam];
+      samplesDelay[beam]  = -coarseDelay[beam];
+      itsIONtoCNdata.delayAtBegin(beam)  = fineDelayAtBegin[beam];
+      itsIONtoCNdata.delayAfterEnd(beam) = fineDelayAfterEnd[beam];
+    }
   } else {
-    samplesDelay		   = 0;
-    itsIONtoCNdata.delayAtBegin()  = 0;
-    itsIONtoCNdata.delayAfterEnd() = 0;
+    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+      itsIONtoCNdata.delayAtBegin(beam)  = 0;
+      itsIONtoCNdata.delayAfterEnd(beam) = 0;
+      samplesDelay[beam] = 0;
+    }  
   }
-
   itsBBuffer->startReadTransaction(delayedStamp, itsNSamplesPerSec + itsNHistorySamples);
-
-  itsIONtoCNdata.alignmentShift() = itsBBuffer->alignmentShift();
-
-  // set flags
-  itsBBuffer->readFlags(itsIONtoCNdata.flags());
-  limitFlagsLength(itsIONtoCNdata.flags());
-
+  for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+    itsIONtoCNdata.alignmentShift(beam) = itsBBuffer->alignmentShift(beam);
+ 
+    // set flags
+    itsBBuffer->readFlags(itsIONtoCNdata.flags(beam), beam);
+    limitFlagsLength(itsIONtoCNdata.flags(beam));
+  }  
   struct timeval tv;
   gettimeofday(&tv, 0);
   double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
-  double expectedTime = (delayedStamp + (itsNSamplesPerSec + itsNHistorySamples + itsMaxNetworkDelay)) * itsSampleDuration;
+  double expectedTime;
   
-  std::clog << delayedStamp
-	    << " late: " << PrettyTime(currentTime - expectedTime)
-	    << ", delay: " << samplesDelay
-	    << ", flags: " << itsIONtoCNdata.flags() << " (" << std::setprecision(3) << (100.0 * itsIONtoCNdata.flags().count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl;
+  for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+    expectedTime = (delayedStamp[beam] + (itsNSamplesPerSec + itsNHistorySamples + itsMaxNetworkDelay)) * itsSampleDuration;
+  
+    std::clog << delayedStamp[beam]
+	      << " late: " << PrettyTime(currentTime - expectedTime)
+	      << ", delay: " << PrettyTime(samplesDelay[beam] * itsSampleDuration)
+	      << ", flags: " << itsIONtoCNdata.flags(beam) << " (" << std::setprecision(3) << (100.0 * itsIONtoCNdata.flags(beam).count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl;
+  }
 
   NSTimer timer;
   timer.start();
@@ -228,10 +317,12 @@ void WH_InputSection::process()
       uint8	nrPolarizations;
       uint16	nrBeamlets;
       uint32	nrSamplesPerBeamlet;
-      char	station[16];
-      double	sampleRate;	// 156250.0 or 195312.5
+      char	station[20];
+      double	sampleRate;	// 155648 or 196608
       double	subbandFrequencies[54];
-      double	beamDirections[54][2];
+      double	beamDirections[8][2];
+      int16     beamlet2beams[54];
+      
     } fileHeader;  
 
     fileHeader.magic = 0x3F8304EC;
@@ -240,13 +331,18 @@ void WH_InputSection::process()
     fileHeader.nrBeamlets = itsCS1PS->nrSubbands();
     fileHeader.nrSamplesPerBeamlet = itsNSamplesPerSec;
     strncpy(fileHeader.station, itsCS1PS->stationName(itsStationNr).c_str(), 16);
-    fileHeader.sampleRate = itsCS1PS->sampleRate();
-    memcpy(fileHeader.subbandFrequencies, &itsCS1PS->refFreqs()[0], itsCS1PS->nrSubbands() * sizeof(double));
-    
-    /* TODO: fill in beams/
-    for (unsigned subband = 0; subband < itsCS1PS->nrSubbands(); subband ++)
-      fileHeader.beamDirections[subband][0] = 
-      */
+    fileHeader.sampleRate = itsSampleRate;
+    memcpy(fileHeader.subbandFrequencies, &itsCS1PS->refFreqs()[0], 54 * sizeof(double));
+ 
+    for (unsigned beam = 1; beam < itsCS1PS->nrBeams()+1; beam ++){
+      vector<double> beamDir = itsCS1PS->getBeamDirection(beam);
+   
+      fileHeader.beamDirections[beam][0] = beamDir[0];
+      fileHeader.beamDirections[beam][1] = beamDir[1];
+    }
+     
+    for (unsigned beam = 0; beam < itsBeamlet2beams.size(); beam ++)
+      fileHeader.beamlet2beams[beam] = itsBeamlet2beams[beam];
 
     rawDataTH->sendBlocking(&fileHeader, sizeof fileHeader, 0, 0);
     fileHeaderWritten = true;
@@ -254,39 +350,43 @@ void WH_InputSection::process()
 
   struct BlockHeader {
     uint32	magic; // 0x2913D852
-    int32	coarseDelayApplied;
-    double	fineDelayRemainingAtBegin, fineDelayRemainingAfterEnd;
-    int64	time; // compatible with TimeStamp class.
-    uint32      nrFlagsRanges;
+    int32	coarseDelayApplied[8];
+    double	fineDelayRemainingAtBegin[8], fineDelayRemainingAfterEnd[8];
+    int64	time[8]; // compatible with TimeStamp class.
+    uint32      nrFlagsRanges[8];
     struct range {
       uint32    begin; // inclusive
       uint32    end;   // exclusive
-    } flagsRanges[16];
+    } flagsRanges[8][16]; 
   } blockHeader;  
 
   blockHeader.magic = 0x2913D852;
-  blockHeader.time = delayedStamp;
-  blockHeader.coarseDelayApplied = samplesDelay;
-  blockHeader.fineDelayRemainingAtBegin = itsIONtoCNdata.delayAtBegin();
-  blockHeader.fineDelayRemainingAfterEnd = itsIONtoCNdata.delayAfterEnd();
-  itsIONtoCNdata.flags().marshall(reinterpret_cast<char *>(&blockHeader.nrFlagsRanges), sizeof blockHeader.nrFlagsRanges + sizeof blockHeader.flagsRanges);
-
+  for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+    blockHeader.time[beam] = delayedStamp[beam];
+    blockHeader.coarseDelayApplied[beam] = samplesDelay[beam];
+    blockHeader.fineDelayRemainingAtBegin[beam] = itsIONtoCNdata.delayAtBegin(beam);
+    blockHeader.fineDelayRemainingAfterEnd[beam] = itsIONtoCNdata.delayAfterEnd(beam);
+    itsIONtoCNdata.flags(beam).marshall(reinterpret_cast<char *>(&blockHeader.nrFlagsRanges[beam]), sizeof blockHeader.nrFlagsRanges[beam] + sizeof blockHeader.flagsRanges[beam][0]);
+  }
+  
   rawDataTH->sendBlocking(&blockHeader, sizeof blockHeader, 0, 0);
 
   for (unsigned subband = 0; subband < itsCS1PS->nrSubbands(); subband ++)
-    itsBBuffer->sendUnalignedSubband(rawDataTH, subband);
+    itsBBuffer->sendUnalignedSubband(rawDataTH, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);
+
 #else
+
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
     unsigned	    core = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
     TransportHolder *th  = TH_ZoidServer::theirTHs[core];
 
     command.write(th);
-    itsIONtoCNdata.write(th);
+    itsIONtoCNdata.write(th, itsCS1PS->nrBeams());
 
     for (unsigned pset = 0; pset < itsCS1PS->nrPsets(); pset ++) {
       unsigned subband = itsNSubbandsPerPset * pset + subbandBase;
 
-      itsBBuffer->sendSubband(th, subband);
+      itsBBuffer->sendSubband(th, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);
     }
 
     if (++ itsCurrentComputeCore == itsNrCoresPerPset)
@@ -307,6 +407,9 @@ void WH_InputSection::postprocess()
 
   delete itsInputThread;	itsInputThread	= 0;
   delete itsBBuffer;		itsBBuffer	= 0;
+  delete itsDelayComp;		itsDelayComp	= 0;
+
+  itsDelayTimer.print(clog);
 }
 
 } // namespace CS1

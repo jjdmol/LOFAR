@@ -44,7 +44,6 @@ namespace CS1 {
 
 AH_InputSection::AH_InputSection() :
   itsCS1PS(0),
-  itsDelayStub(0),
   itsWH(0)
 {
 }
@@ -82,9 +81,6 @@ void AH_InputSection::define(const LOFAR::KeyValueMap&)
   setComposite(comp); // tell the ApplicationHolder this is the top-level compisite
   comp.addBlock(step);
 
-  itsDelayStub  = new Stub_Delay(true, itsCS1PS);
-  itsDelayStub->connect(stationNumber, step->getInDataManager(0), 0);
-
   LOG_TRACE_FLOW_STR("Finished define()");
 }
 
@@ -102,7 +98,6 @@ void AH_InputSection::run(int steps)
 void AH_InputSection::undefine()
 {
   delete itsWH;		itsWH        = 0;
-  delete itsDelayStub;	itsDelayStub = 0;
   delete itsCS1PS;	itsCS1PS     = 0;
 }
 

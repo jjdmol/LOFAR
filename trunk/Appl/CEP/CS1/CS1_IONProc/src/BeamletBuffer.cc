@@ -44,7 +44,10 @@ BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrSubbands, unsigned 
   if (isSynchronous)
     itsSynchronizedReaderWriter = new SynchronizedReaderAndWriter(bufferSize);
   else
-    itsSynchronizedReaderWriter = new TimeSynchronizedReader(maxNetworkDelay);
+    itsSynchronizedReaderWriter = new TimeSynchronizedReader(maxNetworkDelay);  
+    itsEnd.reserve(MAX_BEAMLETS);
+    itsStartI.reserve(MAX_BEAMLETS);
+    itsEndI.reserve(MAX_BEAMLETS);
 }
 
 
@@ -105,29 +108,37 @@ void BeamletBuffer::writeElements(Beamlet *data, const TimeStamp &begin, unsigne
 }
 
 
-void BeamletBuffer::startReadTransaction(const TimeStamp &begin, unsigned nrElements)
+void BeamletBuffer::startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements)
 {
   itsReadTimer.start();
 
+  TimeStamp minBegin, maxEnd;
   itsBegin  = begin;
-  itsEnd    = begin + nrElements;
-  itsStartI = mapTime2Index(begin);
-  itsEndI   = mapTime2Index(itsEnd);
 
+  for (unsigned beam = 0; beam < begin.size(); beam++) {
+    itsEnd.push_back(begin[beam] + nrElements);
+    itsStartI.push_back(mapTime2Index(begin[beam]));
+    itsEndI.push_back(mapTime2Index(itsEnd[beam]));
+  }
+ 
+  maxEnd = *std::max_element(itsEnd.begin(), itsEnd.end());
+  itsMinEnd = *std::min_element(itsEnd.begin(), itsEnd.end());
+  itsMinStartI = *std::min_element(itsStartI.begin(), itsStartI.end());
+  itsMaxEndI = *std::max_element(itsEndI.begin(), itsEndI.end());
   // in synchronous mode, do not overrun writer
-  itsSynchronizedReaderWriter->startRead(begin, itsEnd);
+  itsSynchronizedReaderWriter->startRead(minBegin, maxEnd);
   // do not read from circular buffer section that is being written
-  itsLockedRanges.lock(itsStartI, itsEndI, itsSize);
+  itsLockedRanges.lock(itsMinStartI, itsMaxEndI, itsMaxEndI - itsMinStartI);
 }
 
 
-void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband) /*const*/
+void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband, const unsigned currentBeam) /*const*/
 {
   // Align to 32 bytes and make multiple of 32 bytes by prepending/appending
   // extra data.  Always send 32 bytes extra, even if data was already aligned.
-  unsigned startI = itsStartI & ~(32 / sizeof(Beamlet) - 1); // round down
-  unsigned endI   = (itsEndI + 32 / sizeof(Beamlet)) & ~(32 / sizeof(Beamlet) - 1); // round up, possibly adding 32 bytes
-
+  unsigned startI = itsStartI[currentBeam] & ~(32 / sizeof(Beamlet) - 1); // round down
+  unsigned endI   = (itsEndI[currentBeam] + 32 / sizeof(Beamlet)) & ~(32 / sizeof(Beamlet) - 1); // round up, possibly adding 32 bytes
+  
   if (endI < startI) {
     // the data wraps around the allocated memory, so copy in two parts
     unsigned firstChunk = itsSize - startI;
@@ -140,40 +151,42 @@ void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband) /*const*/
 }
 
 
-void BeamletBuffer::sendUnalignedSubband(TransportHolder *th, unsigned subband) /*const*/
+void BeamletBuffer::sendUnalignedSubband(TransportHolder *th, unsigned subband, const unsigned currentBeam) /*const*/
 {
-  if (itsEndI < itsStartI) {
+  if (itsEndI[currentBeam] < itsStartI[currentBeam]) {
     // the data wraps around the allocated memory, so copy in two parts
-    unsigned firstChunk = itsSize - itsStartI;
+    unsigned firstChunk = itsSize - itsStartI[currentBeam];
 
-    th->sendBlocking(itsSBBuffers[subband][itsStartI].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]), 0, 0);
-    th->sendBlocking(itsSBBuffers[subband][0].origin(),		sizeof(SampleType[itsEndI][NR_POLARIZATIONS]), 0, 0);
+    th->sendBlocking(itsSBBuffers[subband][itsStartI[currentBeam]].origin(), sizeof(SampleType[firstChunk][NR_POLARIZATIONS]), 0, 0);
+    th->sendBlocking(itsSBBuffers[subband][0].origin(),		sizeof(SampleType[itsEndI[currentBeam]][NR_POLARIZATIONS]), 0, 0);
   } else {
-    th->sendBlocking(itsSBBuffers[subband][itsStartI].origin(), sizeof(SampleType[itsEndI - itsStartI][NR_POLARIZATIONS]), 0, 0);
+    th->sendBlocking(itsSBBuffers[subband][itsStartI[currentBeam]].origin(), sizeof(SampleType[itsEndI[currentBeam] - itsStartI[currentBeam]][NR_POLARIZATIONS]), 0, 0);
   }
 }
 
-
-void BeamletBuffer::readFlags(SparseSet<unsigned> &flags)
+void BeamletBuffer::readFlags(SparseSet<unsigned> &flags,unsigned beam)
 {
   pthread_mutex_lock(&itsValidDataMutex);
-  SparseSet<TimeStamp> validTimes = itsValidData.subset(itsBegin, itsEnd);
+  SparseSet<TimeStamp> validTimes = itsValidData.subset(itsBegin[beam], itsEnd[beam]);
   pthread_mutex_unlock(&itsValidDataMutex);
 
-  flags.reset().include(0, static_cast<unsigned>(itsEnd - itsBegin));
-
+  flags.reset().include(0, static_cast<unsigned>(itsEnd[beam] - itsBegin[beam]));
+  
   for (SparseSet<TimeStamp>::const_iterator it = validTimes.getRanges().begin(); it != validTimes.getRanges().end(); it ++)
-    flags.exclude(static_cast<unsigned>(it->begin - itsBegin),
-		  static_cast<unsigned>(it->end - itsBegin));
+    flags.exclude(static_cast<unsigned>(it->begin - itsBegin[beam]),
+		  static_cast<unsigned>(it->end - itsBegin[beam]));
 }
-
 
 void BeamletBuffer::stopReadTransaction()
 {
-  itsLockedRanges.unlock(itsStartI, itsEndI, itsSize);
-  itsSynchronizedReaderWriter->finishedRead(itsEnd - (itsHistorySize + 16));
+  itsLockedRanges.unlock(itsMinStartI, itsMaxEndI, itsMaxEndI - itsMinStartI);
+  itsSynchronizedReaderWriter->finishedRead(itsMinEnd - (itsHistorySize + 16));
   // subtract 16 extra; due to alignment restrictions and the changing delays,
   // it is hard to predict where the next read will begin.
+  
+  itsStartI.clear();
+  itsEndI.clear();
+  itsEnd.clear();
 
   itsReadTimer.stop();
 }

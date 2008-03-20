@@ -24,16 +24,20 @@ AH_InputSection.h		\
 AH_InputSection.cc		\
 WH_InputSection.h		\
 WH_InputSection.cc		\
+WH_DelayCompensation.h         \
+WH_DelayCompensation.cc         \
 AH_ION_Gather.h			\
 AH_ION_Gather.cc		\
 WH_ION_Gather.h			\
 WH_ION_Gather.cc		\
 TH_ZoidServer.h			\
-TH_ZoidServer.cc
+TH_ZoidServer.cc                \
+Package__Version.h              \
+Package__Version.cc
 
 install-exec-local:
 	ln -sf .libs/liblofar_impl.so.0.0.0 lofar_impl.so
-	cp lofar_impl.so /bgl/lofar-utils/zoid-test/lib
+	cp lofar_impl.so /cephome/gels/LOFAR/lib
 
 uninstall-local:
 	rm lofar_impl.so

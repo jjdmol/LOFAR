@@ -60,12 +60,14 @@ class BeamletBuffer
 
     void     writeElements(Beamlet *data, const TimeStamp &begin, unsigned nrElements);
 
-    void     startReadTransaction(const TimeStamp &begin, unsigned nrElements);
-    void     sendSubband(TransportHolder *, unsigned subband) /*const*/;
-    void     sendUnalignedSubband(TransportHolder *, unsigned subband) /*const*/;
-    unsigned alignmentShift() const;
-    void     readFlags(SparseSet<unsigned> &flags);
+    void     startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements);
+    void     sendSubband(TransportHolder *, unsigned subband, const unsigned currentBeam) /*const*/;
+    void     sendUnalignedSubband(TransportHolder *, unsigned subband, const unsigned currentBeam) /*const*/;
+    unsigned alignmentShift(const unsigned beam) const;
+    void     readFlags(SparseSet<unsigned> &flags, unsigned beam);
     void     stopReadTransaction();
+    
+    static const unsigned MAX_BEAMLETS    = 8;
 
   private:
     unsigned mapTime2Index(TimeStamp time) const;
@@ -79,16 +81,18 @@ class BeamletBuffer
     boost::multi_array_ref<SampleType, 3> itsSBBuffers;
 
     // read internals
-    TimeStamp				  itsBegin, itsEnd;
-    size_t				  itsStartI, itsEndI;
+    std::vector<TimeStamp>		  itsBegin, itsEnd;
+    std::vector<size_t>			  itsStartI, itsEndI;
+    size_t                                itsMinStartI, itsMaxEndI;
+    TimeStamp                             itsMinEnd;
 
     NSTimer				  itsReadTimer, itsWriteTimer;
 };
 
 
-inline unsigned BeamletBuffer::alignmentShift() const
+inline unsigned BeamletBuffer::alignmentShift(const unsigned beam) const
 {
-  return itsStartI % (32 / sizeof(Beamlet));
+  return itsStartI[beam] % (32 / sizeof(Beamlet));
 }
 
 inline unsigned BeamletBuffer::mapTime2Index(TimeStamp time) const

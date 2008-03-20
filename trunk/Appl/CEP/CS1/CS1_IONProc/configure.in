@@ -53,6 +53,8 @@ dnl
 lofar_GENERAL
 dnl lofar_BLITZ
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
+lofar_INTERNAL(LCS/AMC/AMCBase,AMCBase,,1,AMCBase/Converter.h)
+lofar_INTERNAL(LCS/AMC/AMCImpl,AMCImpl,,1,AMCImpl/ConverterImpl.h)
 lofar_INTERNAL(LCS/Transport,Transport,,1,Transport/DataHolder.h,,)
 lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h,,)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
@@ -60,6 +62,7 @@ lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/ACCmain.h,,)
 lofar_INTERNAL(CEP/tinyCEP,tinyCEP,,1,tinyCEP/TinyDataManager.h,,)
 lofar_INTERNAL(CEP/CEPFrame,CEPFrame,,1,CEPFrame/DataManager.h,,)
 lofar_INTERNAL(Appl/CEP/CS1/CS1_Interface,CS1_Interface,,1,CS1_Interface/CS1_Config.h,,)
+lofar_INTERNAL(Appl/ApplCommon,ApplCommon,,1,ApplCommon/Observation.h,,)
 lofar_EXTERNAL(bglpersonality,1,bglpersonality.h,"",/bgl/BlueLight/ppcfloor/bglsys)
 lofar_EXTERNAL(zoid_lofar,1,lofar.h,"",/cephome/romein/projects/zoid/zoid/lofar)
 lofar_EXTERNAL(zoid,1,zoid_api.h,"",/cephome/romein/projects/zoid/zoid)

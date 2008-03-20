@@ -30,6 +30,7 @@
 #include <AH_ION_Gather.h>
 #include <BGL_Personality.h>
 #include <TH_ZoidServer.h>
+#include <Package__Version.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -58,6 +59,12 @@ static void checkParset(const CS1_Parset &parset)
 
   if (parset.nrPsets() > personality->numPsets())
     std::cerr << "needs " << parset.nrPsets() << " psets; only " << personality->numPsets() << " available" << std::endl;
+#if 0
+  if (parset.sizeBeamletAndSubbandList);
+    std::cerr << "size of the beamletlist must be equal to the size of subbandlist." << std::endl;
+
+  parset.parseBeamletList();
+#endif 
 }
 
 
@@ -67,6 +74,7 @@ static void configureCNs(const CS1_Parset &parset)
   BGL_Configuration configuration;
 
   configuration.nrStations()              = parset.nrStations();
+  configuration.nrBeams()                 = parset.nrBeams();
   configuration.nrSamplesPerIntegration() = parset.BGLintegrationSteps();
   configuration.nrSamplesToBGLProc()      = parset.nrSamplesToBGLProc();
   configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
@@ -76,6 +84,8 @@ static void configureCNs(const CS1_Parset &parset)
   configuration.inputPsets()              = parset.getUint32Vector("OLAP.BGLProc.inputPsets");
   configuration.outputPsets()             = parset.getUint32Vector("OLAP.BGLProc.outputPsets");
   configuration.refFreqs()                = parset.refFreqs();
+  configuration.beamlet2beams()           = parset.beamlet2beams();
+  configuration.subband2Index()           = parset.subband2Index();
 
   for (unsigned core = 0; core < parset.nrCoresPerPset(); core ++) {
     std::clog << "configure core " << core << std::endl;
@@ -151,6 +161,9 @@ void *gather_thread(void *argv)
 
 void *master_thread(void *)
 {
+  std::string type = "brief";
+  Version::show<CS1_IONProcVersion> (std::cout, "CS1_IONProc", type);
+  
   std::clog << "starting master_thread" << std::endl;
 
   try {
