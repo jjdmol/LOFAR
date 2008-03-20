@@ -22,7 +22,7 @@ class InputData
     InputData(const Heap &, unsigned nrSubbands, unsigned nrSamplesToBGLProc);
     ~InputData();
 
-    void read(TransportHolder *th);
+    void read(TransportHolder *th, const unsigned nrBeams);
 
     static size_t requiredSize(unsigned nrSubbands, unsigned nrSamplesToBGLProc);
 
@@ -58,9 +58,9 @@ inline InputData::~InputData()
 }
 
 
-inline void InputData::read(TransportHolder *th)
+inline void InputData::read(TransportHolder *th, const unsigned nrBeams)
 {
-  metaData.read(th);
+  metaData.read(th, nrBeams);
 
   // now read all subbands using one recvBlocking call, even though the ION
   // sends all subbands one at a time

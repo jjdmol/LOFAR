@@ -28,11 +28,12 @@ static NSTimer transposeTimer("transpose()", true);
 std::vector<MPI_Comm> Transpose::allTransposeGroups;
 
 
-Transpose::Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore, unsigned nrStations)
+Transpose::Transpose(bool isTransposeInput, bool isTransposeOutput, unsigned myCore, unsigned nrStations, unsigned nrBeams)
 :
   itsIsTransposeInput(isTransposeInput),
   itsIsTransposeOutput(isTransposeOutput),
   itsNrStations(nrStations),
+  itsNrBeams(nrBeams),
   itsTransposeGroup(allTransposeGroups[myCore])
 {
 }
@@ -139,7 +140,6 @@ void Transpose::setupTransposeParams(const std::vector<unsigned> &inputPsets, co
   unsigned		       nrPsetsUsed = psets.size();
   std::map<unsigned, unsigned> psetToGroupIndex;
   unsigned		       groupIndex  = 0;
-
   for (std::set<unsigned>::const_iterator pset = psets.begin(); pset != psets.end(); pset ++, groupIndex ++)
     psetToGroupIndex[*pset] = groupIndex;
 
@@ -156,8 +156,9 @@ void Transpose::setupTransposeParams(const std::vector<unsigned> &inputPsets, co
   itsTransposeMetaParams.receive.counts.resize(nrPsetsUsed, 0);
   itsTransposeMetaParams.receive.displacements.resize(nrPsetsUsed);
 
-  itsOutputMetaData.resize(inputPsets.size());
-
+  itsOutputMetaData.resize(boost::extents[inputPsets.size()][itsNrBeams]);
+  itsInputMetaData.resize(itsNrBeams);
+  
   if (itsIsTransposeInput) {
     for (unsigned psetIndex = 0; psetIndex < outputPsets.size(); psetIndex ++) {
       unsigned pset  = outputPsets[psetIndex];
@@ -169,7 +170,7 @@ void Transpose::setupTransposeParams(const std::vector<unsigned> &inputPsets, co
 	itsTransposeParams.send.counts[index] = slice.num_elements() * sizeof(InputData::SampleType);
 	itsTransposeParams.send.displacements[index] = reinterpret_cast<const char *>(slice.origin()) - reinterpret_cast<const char *>(inputData->samples.origin());
 
-	itsTransposeMetaParams.send.counts[index] = sizeof itsInputMetaData;
+	itsTransposeMetaParams.send.counts[index] = itsNrBeams * sizeof(struct metaData);
 	itsTransposeMetaParams.send.displacements[index] = 0;
       }
     }
@@ -184,8 +185,8 @@ void Transpose::setupTransposeParams(const std::vector<unsigned> &inputPsets, co
       itsTransposeParams.receive.counts[index] = slice.num_elements() * sizeof(TransposedData::SampleType);
       itsTransposeParams.receive.displacements[index] = reinterpret_cast<const char *>(slice.origin()) - reinterpret_cast<const char *>(transposedData->samples.origin());
 
-      itsTransposeMetaParams.receive.counts[index] = sizeof itsInputMetaData;
-      itsTransposeMetaParams.receive.displacements[index] = psetIndex * sizeof itsInputMetaData;
+      itsTransposeMetaParams.receive.counts[index] = itsNrBeams * sizeof(struct metaData);
+      itsTransposeMetaParams.receive.displacements[index] = psetIndex * itsNrBeams * sizeof(struct metaData);
     }
 
 #if 0
@@ -249,21 +250,23 @@ void Transpose::transpose(const InputData *inputData, TransposedData *transposed
 }
 
 
-void Transpose::transposeMetaData(/*const*/ InputData *inputData, TransposedData *transposedData)
+void Transpose::transposeMetaData(/*const*/ InputData *inputData, TransposedData *transposedData, const unsigned currentBeam)
 {
   if (itsIsTransposeInput) {
-    itsInputMetaData.delayAtBegin   = inputData->metaData.delayAtBegin();
-    itsInputMetaData.delayAfterEnd  = inputData->metaData.delayAfterEnd();
-    itsInputMetaData.alignmentShift = inputData->metaData.alignmentShift();
-    assert(inputData->metaData.flags().marshall(&itsInputMetaData.flagsBuffer, sizeof itsInputMetaData.flagsBuffer) >= 0);
+    for (unsigned beam = 0; beam < itsNrBeams; beam++) {
+      itsInputMetaData[beam].delayAtBegin   = inputData->metaData.delayAtBegin(beam);
+      itsInputMetaData[beam].delayAfterEnd  = inputData->metaData.delayAfterEnd(beam);
+      itsInputMetaData[beam].alignmentShift = inputData->metaData.alignmentShift(beam);
+      assert(inputData->metaData.flags(beam).marshall(&itsInputMetaData[beam].flagsBuffer, sizeof itsInputMetaData[beam].flagsBuffer) >= 0);
+    }
   }
 
   if (MPI_Alltoallv(
-	&itsInputMetaData,
+	&itsInputMetaData[0],
 	&itsTransposeMetaParams.send.counts[0],
 	&itsTransposeMetaParams.send.displacements[0],
 	MPI_BYTE,
-	&itsOutputMetaData[0],
+	&itsOutputMetaData[0][0],
 	&itsTransposeMetaParams.receive.counts[0],
 	&itsTransposeMetaParams.receive.displacements[0],
 	MPI_BYTE,
@@ -272,13 +275,13 @@ void Transpose::transposeMetaData(/*const*/ InputData *inputData, TransposedData
     std::cerr << "MPI_Alltoallv() failed" << std::endl;
     exit(1);
   }
-
+  
   if (itsIsTransposeOutput) {
     for (unsigned station = 0; station < itsNrStations; station ++) {
-      transposedData->delays[station].delayAtBegin  = itsOutputMetaData[station].delayAtBegin;
-      transposedData->delays[station].delayAfterEnd = itsOutputMetaData[station].delayAfterEnd;
-      transposedData->alignmentShifts[station]      = itsOutputMetaData[station].alignmentShift;
-      transposedData->flags[station].unmarshall(itsOutputMetaData[station].flagsBuffer);
+      transposedData->delays[station].delayAtBegin  = itsOutputMetaData[station][currentBeam].delayAtBegin;
+      transposedData->delays[station].delayAfterEnd = itsOutputMetaData[station][currentBeam].delayAfterEnd;
+      transposedData->alignmentShifts[station]      = itsOutputMetaData[station][currentBeam].alignmentShift;
+      transposedData->flags[station].unmarshall(itsOutputMetaData[station][currentBeam].flagsBuffer);
     }
   }
 }
