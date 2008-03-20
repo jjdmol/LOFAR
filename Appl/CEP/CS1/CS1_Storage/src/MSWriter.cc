@@ -38,19 +38,16 @@ namespace LOFAR
     using namespace casa;
 
     MSWriter::MSWriter (const char* msName, double startTime, double timeStep,
-                        int nChan, int nPol, uint nBeams,
-                        uint nAntennas, const vector<double>& antPos,
+                        int nChan, int nPol, uint nAntennas, const vector<double>& antPos,
 			const vector<string>& storageStationNames,
-			uint timesToIntegrate, uint subbandsPerPset)
+			uint timesToIntegrate)
       : itsWriter (0)
     {
       ASSERTSTR(antPos.size() == 3*nAntennas, antPos.size() << " == " << 3*nAntennas <<
                 "Antenna position vector does not have the right size!");
       try {
         itsWriter = new MSWriterImpl (msName, startTime, timeStep, nChan, nPol, 
-                                      nBeams, nAntennas,
-                                      antPos, storageStationNames, timesToIntegrate,
-				      subbandsPerPset);
+                                      nAntennas, antPos, storageStationNames, timesToIntegrate);
       } catch (AipsError x) {
         cerr << "MSWriter exception: " << x.getMesg() << endl;
         exit(0);
@@ -99,11 +96,10 @@ namespace LOFAR
       return res;
     }
 
-    int MSWriter::addField (double RA, double DEC)
+    void MSWriter::addField (double RA, double DEC, unsigned beamIndex)
     {
-      int res;
       try {
-        res = itsWriter->addField (RA, DEC);
+        itsWriter->addField (RA, DEC, beamIndex);
       } catch (AipsError x) {
         cerr << "AIPS exception in MSWriterImpl: " << x.getMesg() << endl;
         exit(0);
@@ -111,16 +107,15 @@ namespace LOFAR
         cerr << "Unexpected MSWriter exception during addField" << endl;
         exit(0);
       }
-      return res;
     }
 
-    void MSWriter::write (int bandId, int fieldId, int channelId, 
+    void MSWriter::write (int bandId, int channelId, 
                           int nrChannels, int timeCounter, int nrdata, 
                           const fcomplex* data, const bool* flags,
                           const float* weights)
     {
       try {
-        itsWriter->write (bandId, fieldId, channelId, nrChannels, timeCounter,
+        itsWriter->write (bandId, channelId, nrChannels, timeCounter,
                           nrdata, data, flags, weights);
       } catch (AipsError x) {
         cerr << "AIPS exception in MSWriterImpl: " << x.getMesg() << endl;

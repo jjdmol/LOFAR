@@ -47,10 +47,9 @@ namespace LOFAR
       // The WSRT is taken as the center of the array.
       // Thus antPos must have shape [2,nantennas].
       MSWriter (const char* msName, double startTime, double timeStep, 
-                int nChan, int nPol, uint nBeams, uint nAntennas,
-                const vector<double>& antPos,
+                int nChan, int nPol, uint nAntennas, const vector<double>& antPos,
 		const vector<std::string>& storageStationNames,
-		uint timesToIntegrate, uint subbandsPerPset);
+		uint timesToIntegrate);
 
       // Destructor
       ~MSWriter();
@@ -77,8 +76,7 @@ namespace LOFAR
 
       // Add the definition of the next field (i.e. beam).
       // The angles have to be given in radians.
-      // <br>It returns the id (0-relative seqnr) of the field.
-      int addField (double RA, double DEC);
+      void addField (double RA, double DEC, unsigned beamIndex);
 
       // Write a data array for the given band, field and frequency channel.
       // The data array is a (3D complex) array with axes polarization, 
@@ -90,9 +88,8 @@ namespace LOFAR
       // All data will be written with sigma=0 
       // <br>The number of data points (nrdata) given should match the
       // number of antennas, bands, and polarizations for this bandId.
-      void write (int bandId, int fieldId, int channelId, 
-                  int nrChannels, int timeCounter, int nrdata,
-                  const fcomplex* data, const bool* flags,
+      void write (int bandId, int channelId, int nrChannels, int timeCounter, 
+                  int nrdata, const fcomplex* data, const bool* flags,
                   const float* weights);
 
       // Get the number of antennas.

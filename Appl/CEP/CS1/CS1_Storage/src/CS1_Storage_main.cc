@@ -18,6 +18,7 @@
 
 #include <tinyCEP/ApplicationHolderController.h>
 #include <CS1_Storage/AH_Storage.h>
+#include <CS1_Storage/Package__Version.h>
 
 using namespace LOFAR;
 using namespace LOFAR::CS1;
@@ -26,7 +27,10 @@ using namespace LOFAR::CS1;
 #include <CS1_Storage/ACCmain_Storage.h>
 
 int main(int argc, char* argv[]) {
-
+  
+  std::string type = "brief";
+  Version::show<CS1_StorageVersion> (std::cout, "CS1_Storage", type);  
+  
   ConfigLocator aCL;
   string        progName = basename(argv[0]);
   string        logPropFile(progName + ".log_prop");

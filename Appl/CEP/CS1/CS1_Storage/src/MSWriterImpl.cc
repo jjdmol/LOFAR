@@ -70,21 +70,19 @@ namespace LOFAR
     using namespace casa;
 
     MSWriterImpl::MSWriterImpl (const char* msName, double startTime, double timeStep,
-                                int nfreq, int ncorr, int nbeams,
-                                int nantennas, const vector<double>& antPos,
+                                int nfreq, int ncorr, int nantennas, const vector<double>& antPos,
 				const vector<string>& storageStationNames,
-				int timesToIntegrate, int subbandsPerPset)
+				int timesToIntegrate)
       : itsNrBand   (0),
         itsNrField  (0),
         itsNrAnt    (nantennas),
         itsNrFreq   (nfreq),
         itsNrCorr   (ncorr),
 	itsNrTimes  (0),
-	itsSubbandsPerPset(subbandsPerPset),
         itsTimeStep (timeStep),
 	itsTimesToIntegrate(timesToIntegrate),
 	itsStartTime(0),
-	itsField(nbeams),
+	itsField    (),
         itsNrPol    (0),
         itsNrChan   (0),
         itsPolnr    (0),
@@ -307,7 +305,7 @@ namespace LOFAR
       msspw.addRow();
       msspwCol.numChan().put (rownr, nchannels);
 #if defined HAVE_MPI
-      int nrSubband = TH_MPI::getCurrentRank()*itsSubbandsPerPset + (rownr);
+      int nrSubband = TH_MPI::getCurrentRank() + (rownr);
       msspwCol.name().put (rownr, "SB-" + String::toString(nrSubband));
 #else
       msspwCol.name().put (rownr, "SB-0");     
@@ -366,20 +364,20 @@ namespace LOFAR
       return rownr;
     }
 
-    int MSWriterImpl::addField (double RA, double DEC)
+    void MSWriterImpl::addField (double RA, double DEC, unsigned beamIndex)
     {
       MVDirection radec (Quantity(RA,"rad"), Quantity(DEC,"rad"));
       MDirection indir(radec, MDirection::J2000);
       Vector<MDirection> outdir(1);
       outdir(0) = indir;
-      itsField[itsNrField] = indir;
+      itsField = indir;
       // Put the direction into the FIELD subtable.
       {
         MSField msfield = itsMS->field();
         MSFieldColumns msfieldCol(msfield);
         uInt rownr = msfield.nrow();
         msfield.addRow();
-        msfieldCol.name().put (rownr, "BEAM_" + String::toString(rownr));
+        msfieldCol.name().put (rownr, "BEAM_" + String::toString(beamIndex));
         msfieldCol.code().put (rownr, "");
         msfieldCol.time().put (rownr, itsStartTime);
         msfieldCol.numPoly().put (rownr, 0);
@@ -409,7 +407,6 @@ namespace LOFAR
         }
       }
       itsNrField++;
-      return itsNrField-1;
     }
 
     void MSWriterImpl::fillAntenna (const Block<MPosition>& antPos,
@@ -571,13 +568,12 @@ namespace LOFAR
       }
     }
 
-    void MSWriterImpl::write (int bandId, int fieldId, int channelId, 
+    void MSWriterImpl::write (int bandId, int channelId, 
                               int nrChannels, int timeCounter, int nrdata, 
                               const fcomplex* data, const bool* flags,
                               const float* weights)
     {
       ASSERT(bandId >= 0  &&  bandId < itsNrBand);
-      ASSERT(fieldId >= 0  &&  fieldId < itsNrField);
       ASSERT(data != 0);
 
       if (timeCounter >= itsNrTimes)
@@ -616,9 +612,9 @@ namespace LOFAR
       // First store time in frame.
       Quantity qtime(time, "s");
       itsFrame->set (MEpoch(qtime, MEpoch::UTC));
-      itsFrame->set (itsField[fieldId]);
-
-      MVDirection MVd = itsField[fieldId].getValue();
+      
+      itsFrame->set (itsField);
+      MVDirection MVd = itsField.getValue();
       Vector<Double> uvw(3);
       const Cube<Double>& basel = *itsBaselines;
 
@@ -649,7 +645,7 @@ namespace LOFAR
           itsMSCol->feed2().put (rowNumber, 0);
           itsMSCol->dataDescId().put (rowNumber, bandId);
           itsMSCol->processorId().put (rowNumber, 0);
-          itsMSCol->fieldId().put (rowNumber, fieldId);
+          itsMSCol->fieldId().put (rowNumber, 0);
           itsMSCol->interval().put (rowNumber, itsTimeStep);
           itsMSCol->exposure().put (rowNumber, itsTimeStep);
           itsMSCol->timeCentroid().put (rowNumber, time);

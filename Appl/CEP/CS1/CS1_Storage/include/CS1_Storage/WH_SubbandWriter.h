@@ -88,11 +88,9 @@ namespace LOFAR
       uint itsNrSubbandsPerPset;
       uint itsNrSubbandsPerStorage;
       uint itsNrInputChannelsPerPset;
-      uint itsNrSubbandsPerMS;
 
       vector<uint> itsCurrentInputs;
       vector<uint> itsBandIDs;   ///< MS IDs of the frequency bands
-      vector<uint> itsFieldIDs;  ///< MS IDs of the field, i.e. the beam.
       uint itsTimeCounter;       ///< Counts the time
       uint itsTimesToIntegrate;  ///< Number of timeSteps to integrate
       bool *itsFlagsBuffers;//[NR_SUBBANDS][NR_BASELINES][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS];

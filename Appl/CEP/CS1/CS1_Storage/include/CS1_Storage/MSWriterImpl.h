@@ -62,10 +62,9 @@ namespace LOFAR
       // relative to the center (which is set to Westerbork). So antPos
       // must have shape [3,nantennas].
       MSWriterImpl (const char* msName, double startTime, double timeStep,
-                    int nfreq, int ncorr, int nbeams,
-                    int nantennas, const vector<double>& antPos,
+                    int nfreq, int ncorr, int nantennas, const vector<double>& antPos,
 		    const vector<std::string>& storageStationNames, 
-		    int timesToIntegrate, int subbandsPerPset);
+		    int timesToIntegrate);
 
       // Destructor
       ~MSWriterImpl();
@@ -84,14 +83,14 @@ namespace LOFAR
 
       // Add the definition of the next field (i.e. beam).
       // The angles have to be given in radians.
-      int addField (double RA, double DEC);
+      void addField (double RA, double DEC, unsigned beamIndex);
 
       // Write a data array for the given band, field and frequency channel.
       // The flag array has the same shape as the data array. Flag==True
       // means the the corresponding data point is flagged as invalid.
       // The flag array is optional. If not given, all flags are False.
       // All data will be written with sigma=0 and weight=1.
-      void write (int bandId, int fieldId, int channelId, 
+      void write (int bandId, int channelId, 
                   int nrChannels, int timeCounter, int nrdata,
                   const fcomplex* data, const bool* flags,
                   const float* weights);
@@ -156,11 +155,10 @@ namespace LOFAR
       int itsNrFreq;                     ///< Fixed nr of frequencies (channels)
       int itsNrCorr;                     ///< Fixed nr of correlations (polar.)
       int itsNrTimes;                    ///< nr of exposures
-      int itsSubbandsPerPset;            ///< nr of subbands per Pset
       double itsTimeStep;                ///< duration of each exposure (sec)
       uint itsTimesToIntegrate;          ///< Number of timeSteps to integrate (sec)
       double itsStartTime;               ///< start time of observation (sec)
-      casa::Block<casa::MDirection> itsField;  ///< field (beam) directions
+      casa::MDirection itsField;         ///< field directions
       casa::Block<casa::Int>* itsNrPol;  ///< nr of polarizations for each band
       casa::Block<casa::Int>* itsNrChan; ///< nr of channels for each band
       casa::Block<casa::Int>* itsPolnr;  ///< rownr in POL subtable for each band
