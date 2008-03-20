@@ -76,24 +76,26 @@ public:
 		double			angle2;
 		string			directionType;
 //		string			angleTimes;
-		vector<int16>	subbands;
-		vector<int16>	beamlets;
+		vector<int32>	subbands;
+		vector<int32>	beamlets;
 	};
 
 	//# Datamembers
 	string			name;
 	int32			obsID;
+#if 0
 	time_t			startTime;
 	time_t			stopTime;
-	int16			nyquistZone;
+#endif	
+	uint32			nyquistZone;
 	vector<string>	stations;
 	int32			sampleClock;
 	string			filter;
 	string			antennaArray;
 	RCUset_t		RCUset;				// set with participating receivers
 	vector<Beam>	beams;
-	vector<int16>	beamlet2beams;		// to which beam each beamlet belongs
-	vector<int16>	beamlet2subbands;	// which subband each beamlet uses.
+	vector<int32>	beamlet2beams;		// to which beam each beamlet belongs
+	vector<int32>	beamlet2subbands;	// which subband each beamlet uses.
 
 };
 

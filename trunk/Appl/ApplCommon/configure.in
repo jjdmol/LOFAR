@@ -52,7 +52,7 @@ dnl Check for LOFAR general things
 dnl
 lofar_GENERAL
 lofar_MPI
-lofar_INTERNAL(LCS/Common, common, , 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/ACC/APS, APS, , 1, APS/ParameterSet.h,,)
 dnl
 dnl Output Makefiles
