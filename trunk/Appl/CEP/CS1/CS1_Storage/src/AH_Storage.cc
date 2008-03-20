@@ -18,6 +18,8 @@
 #include <CS1_Storage/WH_SubbandWriter.h>
 #include <CEPFrame/Step.h>
 
+#include <Common/LofarLocators.h>
+
 namespace LOFAR
 {
   namespace CS1
@@ -39,6 +41,8 @@ namespace LOFAR
     void AH_Storage::define(const LOFAR::KeyValueMap&)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,"");
+      
+      ConfigLocator aCL;
 
       LOG_TRACE_FLOW_STR("Create the top-level composite");
       Composite comp(0, 0, "topComposite");
@@ -47,8 +51,18 @@ namespace LOFAR
       setComposite(comp);
 
       itsCS1PS = new CS1_Parset(&itsParamSet);
-      itsCS1PS->adoptFile("OLAP.parset");
       
+      string configFile(aCL.locate("OLAP.parset"));
+      
+      if (!configFile.empty()) {
+		LOG_DEBUG_STR ("Using OLAP.parset file: " << configFile);
+		itsCS1PS->adoptFile(configFile);
+      }
+      else {
+	LOG_DEBUG_STR ("NO DEFAULT OLAP.PARSET FOUND");
+      }
+	
+      //itsCS1PS->adoptFile(configFile);
       itsStub = new Stub_BGL(false, true, "BGLProc_Storage", itsCS1PS);
 
       uint nrSubbands = itsCS1PS->nrSubbands();

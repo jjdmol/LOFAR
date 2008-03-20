@@ -78,10 +78,6 @@ namespace LOFAR
       // itsWeightFactor = the inverse of maximum number of valid samples
       itsWeightFactor = 1.0 / (pset->BGLintegrationSteps() * pset->IONintegrationSteps() * pset->storageIntegrationSteps());
       
-      vector<double> refFreqs= itsCS1PS->refFreqs();
-      unsigned nrSubbands = itsCS1PS->nrSubbands();
-      ASSERTSTR(refFreqs.size() >= nrSubbands, "Wrong number of refFreqs specified!");
-
       itsNVisibilities = itsNBaselines * itsNChannels * itsNPolSquared;
 
       char str[32];
@@ -151,33 +147,26 @@ namespace LOFAR
       LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
       vector<string> storageStationNames = itsCS1PS->getStringVector("OLAP.storageStationNames");
 
-      itsNrSubbandsPerMS = itsCS1PS->getUint32("OLAP.StorageProc.subbandsPerMS");
-      ASSERT(itsCS1PS->nrSubbandsPerPset() * itsCS1PS->nrPsetsPerStorage() % itsNrSubbandsPerMS == 0);
-      unsigned mssesPerStorage = itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage") / itsNrSubbandsPerMS;
+      unsigned mssesPerStorage = itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage");
       itsWriters.resize(mssesPerStorage);
-      itsFieldIDs.resize(mssesPerStorage);
-  
+      
+      vector<int32>  bl2beams = itsCS1PS->beamlet2beams();
+      vector<uint32> sb2Index = itsCS1PS->subband2Index();
+      
       for (unsigned i = 0; i < mssesPerStorage; i ++) {
 #if defined HAVE_MPI
-	unsigned firstSubband = (TH_MPI::getCurrentRank() * mssesPerStorage + i) * itsNrSubbandsPerMS;
+	unsigned currentSubband = (TH_MPI::getCurrentRank() * mssesPerStorage + i);
 #else
-	unsigned firstSubband = i * itsNrSubbandsPerMS;
+	unsigned currentSubband = i;
 #endif
-	unsigned lastSubband  = firstSubband + itsNrSubbandsPerMS - 1;
-
 	itsWriters[i] = new MSWriter(
-	  itsCS1PS->getMSname(firstSubband, lastSubband).c_str(),
+	  itsCS1PS->getMSname(currentSubband).c_str(),
 	  startTime, itsCS1PS->storageIntegrationTime(), itsNChannels,
-	  itsNPolSquared, itsNBeams, itsNStations, antPos,
-	  storageStationNames, itsTimesToIntegrate, itsNrSubbandsPerMS);
-			       
-	//## TODO: add support for more than 1 beam ##//
-	ASSERT(itsCS1PS->getDoubleVector("Observation.Beam.angle1").size() == itsNBeams);
-	ASSERT(itsCS1PS->getDoubleVector("Observation.Beam.angle2").size() == itsNBeams);
-	double RA = itsCS1PS->getDoubleVector("Observation.Beam.angle1")[0];
-	double DEC = itsCS1PS->getDoubleVector("Observation.Beam.angle2")[0];
-	// For nr of beams
-	itsFieldIDs[i] = itsWriters[i]->addField(RA, DEC);
+	  itsNPolSquared, itsNStations, antPos,
+	  storageStationNames, itsTimesToIntegrate);
+
+        vector<double> beamDir = itsCS1PS->getBeamDirection(bl2beams[sb2Index[currentSubband]]);
+	itsWriters[i]->addField(beamDir[0], beamDir[1], bl2beams[sb2Index[currentSubband]]);
       }
 
       vector<double> refFreqs= itsCS1PS->refFreqs();
@@ -191,8 +180,8 @@ namespace LOFAR
 
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++sb) {
 	// compensate for the half-channel shift introduced by the PPF
-	double refFreq = refFreqs[itsSubbandIDs[sb]] - chanWidth / 2;
-	itsBandIDs[sb] = itsWriters[sb / itsNrSubbandsPerMS]->addBand(itsNPolSquared, itsNChannels, refFreq, chanWidth);
+	double refFreq = refFreqs[sb2Index[itsSubbandIDs[sb]]] - chanWidth / 2;
+	itsBandIDs[sb] = itsWriters[sb]->addBand(itsNPolSquared, itsNChannels, refFreq, chanWidth);
       }
       
       // Allocate buffers
@@ -275,9 +264,8 @@ namespace LOFAR
 
 	  if ((itsTimeCounter + 1) % itsTimesToIntegrate == 0) {
 	    itsWriteTimer.start();
-	    itsWriters[sb / itsNrSubbandsPerMS]->write(itsBandIDs[sb],
-	      itsFieldIDs[sb / itsNrSubbandsPerMS], 0, itsNChannels,
-	      itsTimeCounter, itsNVisibilities,
+	    itsWriters[sb]->write(itsBandIDs[sb],
+	      0, itsNChannels, itsTimeCounter, itsNVisibilities,
 	      &itsVisibilities[sb * itsNVisibilities],
 	      &itsFlagsBuffers[sb * itsNVisibilities], 
 	      &itsWeightsBuffers[sb * itsNBaselines * itsNChannels]);
@@ -294,12 +282,9 @@ namespace LOFAR
 	  }
 
 	  itsWriteTimer.start();
-	  itsWriters[sb / itsNrSubbandsPerMS]->write(itsBandIDs[sb],
-	    itsFieldIDs[sb / itsNrSubbandsPerMS], 0, itsNChannels,
-	    itsTimeCounter, itsNVisibilities,
-	    newVis,
-	    itsFlagsBuffers,
-	    itsWeightsBuffers);
+	  itsWriters[sb]->write(itsBandIDs[sb],
+	    0, itsNChannels, itsTimeCounter, itsNVisibilities,
+	    newVis, itsFlagsBuffers, itsWeightsBuffers);
 	  itsWriteTimer.stop();
 	}
 #endif
