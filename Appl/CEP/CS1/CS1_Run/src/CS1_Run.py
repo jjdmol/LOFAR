@@ -35,17 +35,11 @@ def doObservation(obsID, parset):
 	sys.exit(1)
 
     sectionTable = dict({\
-        'DelayCompensationSection': DelayCompensationSection(parset, list003),
 	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
 	'StorageSection': StorageSection(parset, listfen)
 	#Flagger(parset, listfen)
         })
 
-    if sectionTable.has_key('DelayCompensationSection') and sectionTable.has_key('BGLProcSection'):
-	parset['OLAP.OLAP_Conn.input_DelayComp_Transport'] = 'TCP'
-    else:
-	parset['OLAP.OLAP_Conn.input_DelayComp_Transport'] = 'NULL'
-   
     if sectionTable.has_key('BGLProcSection') and sectionTable.has_key('StorageSection'):
 	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'TCP'
     else:
@@ -126,9 +120,6 @@ if __name__ == '__main__':
     # read the runtime (optional start in utc and the length of the measurement)
     parset.setInterval(options.starttime, options.runtime)
 
-    # convert beamdirections from RA and Dec to Radians
-    #parset.setBeamdir()
-    
     # read the stations from CS1_Stations.py
     # todo: WARNING this is very dangerous, because there could be any code in the station string
     # the exec should probably be replaced by something safer, but this is only a temporary script
@@ -140,7 +131,7 @@ if __name__ == '__main__':
         sys.exit(1)
     
     parset.setStations(stationList)
-
+    
     # see if we are using fake input
     if options.fakeinput > 0:
         parset.setInterval(1, options.runtime+10)

@@ -65,6 +65,9 @@ class Parset(object):
 
     def getBool(self, key):
         return self.parameters[key] == 'T'
+   
+    def isDefined(self, key):
+        return key in self.parameters
 
     def __contains__(self, key):
         return key in self.parameters
