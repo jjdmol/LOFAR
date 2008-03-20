@@ -74,53 +74,10 @@ class Section(object):
     def isRunSuccess(self):
         return self.runJob.isSuccess()
 
-class InputSection(Section):
-    def __init__(self, parset, myhost):
-
-        self.nrsp = parset.getInt32('OLAP.nrRSPboards')
-	
-        nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
-        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
-        nPsets = float(nSubbands) / float(nSubbandsPerPset)
-        if not nSubbands % nSubbandsPerPset == 0:
-            raise Exception('subbands cannot be evenly divided over psets (nSubbands = %d and nSubbandsPerPset = %d)' % (nSubbands, nSubbandsPerPset))
-        self.nPsets = int(nPsets)
-
-        host = copy.deepcopy(myhost)
-        slaves = host.getSlaves()
-
-        inputNodes = parset.getInputNodes()
-        outputNodes = range(1, self.nPsets + 1)
-        allNodes = inputNodes + [node for node in outputNodes if not node in inputNodes]
-    
-        inputIndices = range(len(inputNodes))
-        outputIndices = [allNodes.index(node) for node in outputNodes]
-
-        print("slaves %d"  % len(slaves))
-        print("allNodes %d" % len(allNodes))
-        
-        newslaves = [slaves[ind - 1] for ind in allNodes]
-        host.setSlaves(newslaves)
-        self.noProcesses = len(newslaves)
-
-        Section.__init__(self, parset, \
-                         'Appl/CEP/CS1/CS1_InputSection', \
-                         host = host, \
-                         buildvar = 'gnu64_mpich-opt')
-
-        self.parset['Input.InputNodes'] = inputIndices
-        self.parset['Input.OutputNodes'] = outputIndices
-
-        bglprocIPs = [newslaves[j].getExtIP() for j in outputIndices]
-        self.parset['OLAP.OLAP_Conn.input_BGLProc_ServerHosts'] = '[' + ','.join(bglprocIPs) + ']'
-
-    def run(self, runlog, noRuns, runCmd = None):
-        Section.run(self, runlog, noRuns, runCmd)
-
 class StorageSection(Section):
     def __init__(self, parset, host):
 
-        nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
+        nSubbands = parset.getNrSubbands()
         nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
         nPsetsPerStorage = parset.getInt32('OLAP.psetsPerStorage');
         if not nSubbands % (nSubbandsPerPset * nPsetsPerStorage) == 0:
@@ -131,7 +88,7 @@ class StorageSection(Section):
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_Storage', \
                          host = host, \
-                         buildvar = 'gnu32_openmpi-opt')
+                         buildvar = 'gnu_openmpi-opt')
 
         storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
         self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
@@ -146,7 +103,7 @@ class BGLProcSection(Section):
     def __init__(self, parset, host, partition):
         self.partition = partition
 
-        nSubbands = len(parset.getInt32Vector('Observation.subbandList'))
+        nSubbands = parset.getNrSubbands()
         nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
 
         if not nSubbands % nSubbandsPerPset == 0:
@@ -158,6 +115,7 @@ class BGLProcSection(Section):
 
         inputNodes = parset.getInputNodes()
 	interfaces = IONodes.get(partition)
+
 	inputPsets = [interfaces.index(i) for i in inputNodes]
 	outputPsets = range(nPsets)
 	parset['OLAP.BGLProc.inputPsets']  = inputPsets
@@ -190,13 +148,6 @@ class GeneratorSection(Section):
                          'Demo/CEP/TFlopCorrelator/TFC_Generator', \
                          host = host, \
                          buildvar = 'gnu_opt')
-
-class DelayCompensationSection(Section):
-    def __init__(self, parset, host):
-        Section.__init__(self, parset, \
-                         'Appl/CEP/CS1/CS1_DelayCompensation', \
-                         host = host, \
-                         buildvar = 'gnu_debug')
 
 class Flagger(Section):
     def __init__(self, parset, host):

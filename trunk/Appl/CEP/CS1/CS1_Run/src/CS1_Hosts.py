@@ -34,7 +34,7 @@ CS10LCU   = Host(name = 'lcu', \
 localhost = Host(name = 'localhost', \
                  address = 'localhost')
 
-gels        = UserId(bglfen1,'gels')
+gels        = UserId(bglfen0,'gels')
 romein      = UserId(bglfen2,'romein')
 lofarsystem = UserId(bglfen3,'lofarsystem')
 broekema    = UserId(bglfen2,'broekema')
