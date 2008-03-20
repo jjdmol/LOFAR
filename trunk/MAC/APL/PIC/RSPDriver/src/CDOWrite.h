@@ -69,11 +69,17 @@ namespace LOFAR {
        */
       void string2mac(const char* macstring, uint8 mac[ETH_ALEN]);
 
-      /**
+			/**
        * Convert a string containing an IP address
-       * to an array of 6 bytes.
+       * to an array of 4 bytes.
        */
-      uint32 string2ip(const char* ipstring);
+			void string2ip(const char* ipstring, uint8 ip[IP_ALEN]);
+			
+			/**
+       * Convert a string containing an IP address
+       * to an uint32.
+       */
+      uint32 string2ip_uint32(const char* ipstring);
 
       /**
        * Setup an appropriate UDP/IP header
