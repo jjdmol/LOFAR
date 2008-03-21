@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 
@@ -53,7 +53,7 @@ ACMProxy::ACMProxy(string name, ACCs& accs)
     m_update_subband(0),
     m_nrcus(0)
 {
-	GCF::TM::registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 
 	m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
 }

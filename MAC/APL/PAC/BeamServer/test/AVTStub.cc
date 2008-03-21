@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 
 #include <Suite/suite.h>
 #include <APL/RSP_Protocol/MEPHeader.h>

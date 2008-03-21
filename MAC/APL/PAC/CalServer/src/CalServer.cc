@@ -32,7 +32,7 @@
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 
 #include "CalServer.h"
 #include "SubArrays.h"
@@ -136,10 +136,10 @@ CalServer::CalServer(const string& name, ACCs& accs, int argc, char** argv)
 		instanceID = formatString("(%d)", m_instancenr);
 	}
 
-	GCF::TM::registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
+	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 	m_acceptor.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::MSPP, CAL_PROTOCOL);
 
-	GCF::TM::registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 	m_rspdriver.init(*this, MAC_SVCMASK_RSPDRIVER,  GCFPortInterface::SAP,  RSP_PROTOCOL);
 }
 

@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include "calinfo.h" 
 
 namespace LOFAR {
@@ -38,7 +38,7 @@ calinfo::calinfo(const string&	name) :
 	GCFTask((State)&calinfo::initial, "calinfo"),
 	itsSAname(name)
 {
-	GCF::TM::registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
+	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 
 	itsCalPort.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
 }

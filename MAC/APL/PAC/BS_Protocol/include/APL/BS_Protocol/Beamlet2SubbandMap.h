@@ -25,11 +25,9 @@
 #ifndef BEAMLET2SUBBANDMAP_H_
 #define BEAMLET2SUBBANDMAP_H_
 
-#include <APL/RTCCommon/Marshalling.h>
+#include <MACIO/Marshalling.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
-#include <complex>
-#include <blitz/array.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
