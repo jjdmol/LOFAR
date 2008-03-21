@@ -23,10 +23,10 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
+#include <Common/SystemUtil.h>
 
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_ServiceInfo.h>
-#include <GCF/Utils.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
@@ -38,9 +38,7 @@
 using namespace std;
 
 namespace LOFAR {
-	using namespace GCFCommon;
 	using namespace APLCommon;
-	using namespace GCF::Common;
 	using namespace GCF::TM;
 	using namespace Deployment;
 	using namespace ACC::APS;

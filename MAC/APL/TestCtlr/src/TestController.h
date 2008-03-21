@@ -27,11 +27,7 @@
 #include <Common/LofarLogger.h>
 
 //# GCF Includes
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_ITCPort.h>
-#include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
+#include <GCF/TM/GCF_Control.h>
 
 //# local includes
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -43,10 +39,10 @@
 namespace LOFAR {
 	namespace Test {
 
+using	MACIO::GCFEvent;
 using	GCF::TM::GCFTimerPort;
 using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
-using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	APLCommon::ParentControl;
 
