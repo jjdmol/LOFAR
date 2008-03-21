@@ -28,7 +28,7 @@
 
 //# Includes
 #include <BBSControl/Command.h>
-#include <BBSControl/BBSStructs.h>
+#include <BBSControl/Structs.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>

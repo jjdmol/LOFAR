@@ -1,4 +1,4 @@
-//# BBSStructs.h: Some global structs.
+//# Structs.h: Some global structs.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)

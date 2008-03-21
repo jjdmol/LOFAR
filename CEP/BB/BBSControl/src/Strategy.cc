@@ -24,7 +24,7 @@
 
 #include <BBSControl/Strategy.h>
 #include <BBSControl/Step.h>
-#include <BBSControl/BBSStructs.h>
+#include <BBSControl/Structs.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>

@@ -28,7 +28,7 @@
 
 //# Includes
 #include <BBSControl/SingleStep.h>
-#include <BBSControl/BBSStructs.h>
+#include <BBSControl/Structs.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
