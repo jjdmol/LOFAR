@@ -4,7 +4,6 @@
 
 INSTHDRS = \
 	gnuplot_i.h \
-	Marshalling.h \
 	MarshallBlitz.h \
 	Observer.h \
 	PSAccess.h \
@@ -12,8 +11,7 @@ INSTHDRS = \
 	TestSuite.h \
 	Timestamp.h \
 	daemonize.h \
-	RegisterState.h \
-	StringVector.h 
+	RegisterState.h 
 
 NOINSTHDRS =
 
