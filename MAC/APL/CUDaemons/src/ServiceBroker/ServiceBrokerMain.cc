@@ -1,6 +1,6 @@
-//#  LoggingClientMain.cc: main loop of LoggingClient
+//#  ServiceBrokerMain.cc: 
 //#
-//#  Copyright (C) 2007
+//#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,21 +21,26 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarLogger.h>
 
+#include <ServiceBroker.h>
 #include <GCF/TM/GCF_Control.h>
-#include "LoggingClient.h"
 
+using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::CUDaemons;
 
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv, "LoggingClient");
+  GCFTask::init(argc, argv);
+  
+  LOG_INFO("MACProcessScope: GCF.SB");
 
-	LoggingClient LC("LoggingClient"); 
-	LC.start(); // make initial transition
+  ServiceBroker	 sb; 
+  
+  sb.start(); // make initial transition
+  
+  GCFTask::run();
 
-	GCFTask::run();
-
-	return (0);
+  return 0;
 }

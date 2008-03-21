@@ -37,10 +37,10 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
-  namespace GCF {  
+	using namespace GCF::TM;
     namespace CUDaemons {
 
-class LoggingClient : public TM::GCFTask
+class LoggingClient : public GCFTask
 {
 public:
 	explicit LoggingClient (const string&	name);
@@ -48,11 +48,11 @@ public:
 
 private: 
 	// state methods
-	TM::GCFEvent::TResult initial     (TM::GCFEvent& e, TM::GCFPortInterface& p);
-	TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
+	GCFEvent::TResult initial     (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
 
 	// helper methods
-	bool _readFromPortData(TM::GCFPortInterface& 				port, 
+	bool _readFromPortData(GCFPortInterface& 				port, 
 						   log4cplus::helpers::SocketBuffer&	buf);
 	string _searchClientDP(log4cplus::spi::InternalLoggingEvent&	logEvent,
 						   GCFPortInterface&						port);
@@ -64,11 +64,11 @@ private:
 	void _processMessage(const string&	message);
 
 	// data members        
-	TM::GCFTimerPort*		itsTimerPort;
-	TM::GCFTCPPort*			itsListener;
-	TM::GCFTCPPort*			itsCLmaster;
-	bool					itsConnected;	// to CLmaster
-	uint32					itsCLMtimerID;	// timeout timer for messages.
+	GCFTimerPort*		itsTimerPort;
+	GCFTCPPort*			itsListener;
+	GCFTCPPort*			itsCLmaster;
+	bool				itsConnected;	// to CLmaster
+	uint32				itsCLMtimerID;	// timeout timer for messages.
 
 	// client adminsitration
 	struct	LogClient {
@@ -79,10 +79,10 @@ private:
 		LogClient() : msgCnt(-10),errCnt(0),valid(false) {};
 		explicit LogClient(const string& name) : DPname(name),msgCnt(-10),errCnt(0),valid(false) {};
 	};
-	typedef map<TM::GCFPortInterface*, LogClient> 	LogClientMap;
+	typedef map<GCFPortInterface*, LogClient> 	LogClientMap;
 	LogClientMap 	 		itsClients;
 
-	typedef list<TM::GCFPortInterface*> 			ClientsList;
+	typedef list<GCFPortInterface*> 			ClientsList;
 	ClientsList  	      	itsClientsGarbage;
 
 	// message administration
@@ -115,7 +115,6 @@ private:
 };
 
     } // namespace CUDaemons
-  } // namespace GCF
 } // namespace LOFAR
 
 #endif
