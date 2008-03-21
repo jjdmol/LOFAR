@@ -12,9 +12,9 @@ AM_CPPFLAGS = \
 #	CheckWeightsTest 
 #	CheckWeightsTest2 
 
-TESTS = \
-	avtstub.sh \
-	BeamServerTest 
+TESTS = 
+#	avtstub.sh 
+#	BeamServerTest 
 
 #bin_PROGRAMS = BeamServerTest
 #	AVTStub 
