@@ -55,11 +55,11 @@ dnl
 lofar_GENERAL
 lofar_COMPILETOOLS
 lofar_PVSS(1)
-lofar_INTERNAL(LCS/Common, common, , 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/ACC/APS, APS, , 1, APS/ParameterSet.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, , 1, GCF/TM/GCF_Control.h,,)
-lofar_INTERNAL(MAC/GCF/PVSS, gcfpvss, , 1, GCF/PVSS/PVSSservice.h,,)
-lofar_INTERNAL(MAC/GCF/RTDB, rtdb, , 1, GCF/RTDB/RTDB_PropertySet.h,,)
+lofar_INTERNAL(MAC/GCF/PVSS, GCFPVSS, , 1, GCF/PVSS/PVSSservice.h,,)
+lofar_INTERNAL(MAC/GCF/RTDB, GCFRTDB, , 1, GCF/RTDB/RTDB_PropertySet.h,,)
 
 dnl
 dnl Output Makefiles

@@ -55,7 +55,6 @@ dnl
 lofar_GENERAL
 lofar_COMPILETOOLS
 lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
-dnl lofar_INTERNAL(MAC/APL/RTCCommon, rtccommon, , 1, APL/RTCCommon/Marshalling.h,,)
 
 dnl
 dnl Output Makefiles

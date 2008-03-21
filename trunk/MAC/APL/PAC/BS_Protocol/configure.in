@@ -53,7 +53,7 @@ dnl
 lofar_GENERAL
 dnl lofar_BLITZ
 dnl lofar_MPI
-lofar_INTERNAL(LCS/Common, common, , 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/AMC/AMCBase, AMCBase, , 1, AMCBase/Converter.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, , 1, GCF/TM/GCF_Control.h,,)
 lofar_INTERNAL(MAC/MACIO, MACIO, , 1, MACIO/MACServiceInfo.h,"",)

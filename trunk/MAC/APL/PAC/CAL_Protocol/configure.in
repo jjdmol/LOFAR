@@ -51,7 +51,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
-lofar_INTERNAL(LCS/Common, common, , 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
 lofar_INTERNAL(MAC/MACIO, MACIO, , 1, MACIO/MACServiceInfo.h,"",)
 lofar_INTERNAL(MAC/APL/RTCCommon, RTCCommon, , 1, APL/RTCCommon/MarshallBlitz.h,,)
 lofar_INTERNAL(MAC/APL/PIC/RSP_Protocol, RSP_Protocol, , 1, APL/RSP_Protocol/RCUSettings.h,,)
