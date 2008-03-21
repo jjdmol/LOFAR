@@ -2,7 +2,7 @@ AUTOGEN = autogen
 SUFFIXES = .ph
 
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 
 DOCHDRS	=	 $(BUILT_SOURCES) \
 	MISDaemon.h \

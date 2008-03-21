@@ -24,11 +24,8 @@
 #define NODEMANAGERCLIENT_H
 
 #include <Common/lofar_bitset.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_TCPPort.h>
-//MAXMOD
-#include <GCF/GCF_ServiceInfo.h>
+#include <GCF/TM/GCF_Control.h>
+#include <MACIO/MACServiceInfo.h>
 
 //#include <PropertyProxy.h>
 //#include <MISSubscription.h>
@@ -42,6 +39,7 @@ namespace blitz
 }
 namespace LOFAR 
 {
+ using MACIO::GCFEvent;
  namespace AMI
  {  
 
@@ -63,26 +61,26 @@ class MISSession : public GCF::TM::GCFTask
     static void setCurrentTime(int64& sec, uint32& nsec);
   
   private: // state methods
-    GCF::TM::GCFEvent::TResult initial_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult waiting_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult setDiagnosis_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult reconfigure_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult getPICStructure_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult subscribe_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult getSubbandStatistics_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult getAntennaCorrelation_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult closing_state (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult initial_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult waiting_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult setDiagnosis_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult reconfigure_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult getPICStructure_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult subscribe_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult getSubbandStatistics_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult getAntennaCorrelation_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult closing_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
         
-    GCF::TM::GCFEvent::TResult defaultHandling (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult defaultHandling (GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
   private: // helper methods
-    void genericPingpong      (GCF::TM::GCFEvent& e);
-    void getGenericIdentity   (GCF::TM::GCFEvent& e);
-    void setDiagnosis         (GCF::TM::GCFEvent& e);
-    void subscribe            (GCF::TM::GCFEvent& e);
-    void getSubbandStatistics (GCF::TM::GCFEvent& e);
+    void genericPingpong      (GCFEvent& e);
+    void getGenericIdentity   (GCFEvent& e);
+    void setDiagnosis         (GCFEvent& e);
+    void subscribe            (GCFEvent& e);
+    void getSubbandStatistics (GCFEvent& e);
     //MAXMOD
-    void getAntennaCorrelation(GCF::TM::GCFEvent& e);
+    void getAntennaCorrelation(GCFEvent& e);
     
   private: // data members      
 //    typedef map<string /*resource name*/, MISSubscription*> TSubscriptions;
@@ -98,7 +96,7 @@ class MISSession : public GCF::TM::GCFTask
     uint64                  _curReplyNr;
     bool                    _busy;
 //    list<MISSubscription*>  _subscriptionsGarbage;
-    GCF::TM::GCFEvent*      _pRememberedEvent;
+    GCFEvent*      _pRememberedEvent;
     uint16                  _nrOfRCUs;
     bitset<MEPHeader::MAX_N_RCUS> _allRCUSMask;    
     bitset<MAX_N_RSPBOARDS> _allRSPSMask;    

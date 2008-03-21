@@ -25,8 +25,8 @@
 #include "MISSubscription.h"
 #include "MISSession.h"
 #include <MIS_Protocol.ph>
-#include <GCF/PAL/GCF_PVSSInfo.h>
-#include <GCF/GCF_PValue.h>
+#include <GCF/PVSS/PVSSInfo.h>
+#include <GCF/PVSS/GCF_PValue.h>
 
 namespace LOFAR
 {

@@ -23,7 +23,7 @@
 #ifndef MISDEFINES_H
 #define MISDEFINES_H
 
-#include <GCF/GCF_Defines.h>
+//#include <GCF/GCF_Defines.h>
 
 namespace LOFAR 
 {

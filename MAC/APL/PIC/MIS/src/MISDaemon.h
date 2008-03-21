@@ -23,9 +23,8 @@
 #ifndef MISDAEMON_H
 #define MISDAEMON_H
 
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_TCPPort.h>
+#include <MACIO/GCF_Event.h>
+#include <GCF/TM/GCF_Control.h>
 #include <MISPolicyHandler.h>
 
 namespace LOFAR 
@@ -50,8 +49,8 @@ class MISDaemon : public GCF::TM::GCFTask
     void clientClosed(MISSession& client);
   
   private: // state methods
-    GCF::TM::GCFEvent::TResult initial   (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCF::TM::GCFEvent::TResult accepting (GCF::TM::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    MACIO::GCFEvent::TResult initial   (MACIO::GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    MACIO::GCFEvent::TResult accepting (MACIO::GCFEvent& e, GCF::TM::GCFPortInterface& p);
         
   private: // helper methods
     
