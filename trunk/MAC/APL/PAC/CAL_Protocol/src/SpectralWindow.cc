@@ -29,7 +29,8 @@
 #include <blitz/array.h>
 #include <sstream>
 
-#include <APL/RTCCommon/Marshalling.h>
+#include <MACIO/Marshalling.h>
+#include <APL/RTCCommon/MarshallBlitz.h>
 
 #include <math.h>
 

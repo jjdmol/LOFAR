@@ -25,7 +25,7 @@
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 #include <APL/BS_Protocol/BS_Protocol.ph>
 #include <APL/RSP_Protocol/RCUSettings.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <Common/LofarLocators.h>
 #include <APS/ParameterSet.h>
 
@@ -86,8 +86,8 @@ beamctl::beamctl(string name,
     itsSkyScanTotalTime(3600), itsSkyScanPointTime(2), itsSkyScanWaitTime(10)
 {
 
-  GCF::TM::registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
-  GCF::TM::registerProtocol(BS_PROTOCOL, BS_PROTOCOL_STRINGS);
+  registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
+  registerProtocol(BS_PROTOCOL, BS_PROTOCOL_STRINGS);
 
   m_calserver.init(*this, MAC_SVCMASK_CALSERVER, GCFPortInterface::SAP, CAL_PROTOCOL);
   m_beamserver.init(*this, MAC_SVCMASK_BEAMSERVER, GCFPortInterface::SAP, BS_PROTOCOL);

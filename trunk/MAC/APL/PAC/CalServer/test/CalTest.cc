@@ -24,7 +24,7 @@
 // this include needs to be first!
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
 
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 
 #include <APL/RTCCommon/TestSuite.h>
 #include "CalTest.h"

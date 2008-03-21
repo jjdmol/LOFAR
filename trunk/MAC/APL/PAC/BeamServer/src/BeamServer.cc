@@ -26,7 +26,7 @@
 #include <Common/LofarLocators.h>
 #include <APS/ParameterSet.h>
 
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 
 #include <APL/RTCCommon/daemonize.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
@@ -117,9 +117,9 @@ BeamServer::BeamServer(string name, int argc, char** argv)
 	// adopt commandline switches
 	parseOptions(argc, argv);
 
-	GCF::TM::registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
+	registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_STRINGS);
+	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+	registerProtocol(CAL_PROTOCOL, CAL_PROTOCOL_STRINGS);
 
 	string instanceID;
 	if (m_instancenr >= 0) {

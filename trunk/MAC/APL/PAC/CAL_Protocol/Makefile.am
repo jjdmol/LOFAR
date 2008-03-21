@@ -5,7 +5,6 @@ pkgext_DATA   = pkgext pkgextcppflags pkgextcxxflags pkgextldflags
 
 DISTCHECK_CONFIGURE_FLAGS=\
 	--with-common=$(prefix) \
-	--with-gcfcommon=$(prefix) \
 	--with-gcftm=$(prefix) \
 	--with-rtccommon=$(prefix)
 

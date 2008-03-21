@@ -8,7 +8,6 @@ DISTCHECK_CONFIGURE_FLAGS=\
 	--with-common=$(prefix)\
 	--with-suite=$(prefix)\
 	--with-gcftm=$(prefix)\
-	--with-gcfcommon=$(prefix) \
 	--with-rsp=$(prefix)
 
 EXTRA_DIST = \
