@@ -23,12 +23,12 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <APS/ParameterSet.h>
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <APS/ParameterSet.h>
 #include <GTM_Defines.h>
 
 #include <GCF/TM/GCF_TCPPort.h>

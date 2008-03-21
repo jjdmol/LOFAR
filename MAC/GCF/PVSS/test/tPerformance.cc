@@ -42,7 +42,7 @@ tPerformance::tPerformance(const string& name) :
 	itsResponse(0),
 	itsTimerPort(0)
 {
-	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 	itsResponse  = new PerformanceResponse;
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
 }

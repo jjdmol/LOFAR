@@ -23,19 +23,17 @@
 #ifndef GCF_FSM_H
 #define GCF_FSM_H
 
-#include <GCF/TM/GCF_Event.h>
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_PortInterface.h>
 
 #include <iostream>
 #include <cstdlib>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+  using MACIO::GCFEvent;
+  namespace GCF {
+	namespace TM {
 
 #define TRAN(_target_) \
   { \
@@ -119,7 +117,7 @@ class GCFDummyPort : public GCFPortInterface
 class GCFFsm
 {
   protected: // constructors && destructors
-    typedef GCFEvent::TResult (GCFFsm::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
+    typedef MACIO::GCFEvent::TResult (GCFFsm::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
     
     explicit  GCFFsm (State initial) : _state(initial) {;} 
 
@@ -133,7 +131,7 @@ class GCFFsm
     void initFsm ();
   
     /// dispatch incomming signals to the adapted task in the current state
-    GCFEvent::TResult dispatch (GCFEvent& event, 
+    MACIO::GCFEvent::TResult dispatch (GCFEvent& event, 
                                 GCFPortInterface& port)
     {
       return (this->*_state)(event, port);

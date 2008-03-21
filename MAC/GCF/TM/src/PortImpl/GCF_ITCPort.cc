@@ -23,12 +23,13 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
 #include <GCF/TM/GCF_ITCPort.h>
 
 namespace LOFAR {
+  using MACIO::GCFEvent;
   namespace GCF {
     namespace TM {
 

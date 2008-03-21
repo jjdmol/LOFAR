@@ -28,13 +28,14 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
+  using MACIO::GCFEvent;
   using GCF::TM::GCFTimerPort;
-  using GCF::TM::GCFEvent;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPortInterface;
   namespace GCF {

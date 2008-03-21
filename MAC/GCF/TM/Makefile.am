@@ -1,4 +1,4 @@
-SUBDIRS=autogen src test include
+SUBDIRS=src test include
 
 pkgextdir     = $(prefix)/config/$(PACKAGE)
 pkgext_DATA   = pkgext pkgextcppflags pkgextcxxflags pkgextldflags

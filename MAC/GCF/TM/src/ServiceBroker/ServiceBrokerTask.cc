@@ -1,4 +1,4 @@
-//#  GTM_ServiceBroker.cc: 
+//#  ServiceBrokerTask.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,17 +22,16 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 
-#include <GCF/Utils.h>
-#include <SB_Protocol.ph>
+#include <MACIO/SB_Protocol.ph>
 #include <GTM_Defines.h>
-#include "GTM_ServiceBroker.h"
+#include "ServiceBrokerTask.h"
 #include <unistd.h>
 
 namespace LOFAR {
  namespace GCF {
   using namespace TM;
-  using namespace Common;
   namespace SB {
 
 //
@@ -48,29 +47,28 @@ GTMSBHandler::GTMSBHandler()
 }
 
 //
-// GTMServiceBroker()
+// ServiceBrokerTask()
 //
-GTMServiceBroker::GTMServiceBroker() :
-	GCFTask((State)&GTMServiceBroker::operational, sSBTaskName),
+ServiceBrokerTask::ServiceBrokerTask() :
+	GCFTask((State)&ServiceBrokerTask::operational, sSBTaskName),
 	itsMaxResponse (15),
 	itsTimerPort   (*this, "timerport")
 {
 	// register the protocol for debugging purposes
-//	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_signalnames);
-	TM::registerProtocol(SB_PROTOCOL, SB_PROTOCOL_STRINGS);
+	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_STRINGS);
 }
 
 //
-// ~GTMServiceBroker()
+// ~ServiceBrokerTask()
 //
-GTMServiceBroker::~GTMServiceBroker()
+ServiceBrokerTask::~ServiceBrokerTask()
 {
 }
 
 //
 // instance(temp)
 //
-GTMServiceBroker* GTMServiceBroker::instance(bool temporary)
+ServiceBrokerTask* ServiceBrokerTask::instance(bool temporary)
 {
 	if (!GTMSBHandler::_pInstance) {    
 		GTMSBHandler::_pInstance = new GTMSBHandler();
@@ -88,7 +86,7 @@ GTMServiceBroker* GTMServiceBroker::instance(bool temporary)
 //
 // release()
 //
-void GTMServiceBroker::release()
+void ServiceBrokerTask::release()
 {
 	ASSERT(GTMSBHandler::_pInstance);
 	ASSERT(!GTMSBHandler::_pInstance->mayDeleted());
@@ -103,7 +101,7 @@ void GTMServiceBroker::release()
 //
 // registerService(servicePort)
 //
-void GTMServiceBroker::registerService(GCFTCPPort& servicePort)
+void ServiceBrokerTask::registerService(GCFTCPPort& servicePort)
 {
 	string	servicename = servicePort.makeServiceName();
 
@@ -128,7 +126,7 @@ void GTMServiceBroker::registerService(GCFTCPPort& servicePort)
 //
 // unregisterService(servicePort)
 //
-void GTMServiceBroker::unregisterService(GCFTCPPort& servicePort)
+void ServiceBrokerTask::unregisterService(GCFTCPPort& servicePort)
 {
 	string	servicename = servicePort.makeServiceName();
 	SBUnregisterServiceEvent request;
@@ -152,7 +150,7 @@ void GTMServiceBroker::unregisterService(GCFTCPPort& servicePort)
 //
 // getServiceinfo(clientPort, remoteServiceName);
 //
-void GTMServiceBroker::getServiceinfo(GCFTCPPort& 	clientPort, 
+void ServiceBrokerTask::getServiceinfo(GCFTCPPort& 	clientPort, 
 									  const string& remoteServiceName,
 									  const string&	hostname)
 {  
@@ -178,7 +176,7 @@ void GTMServiceBroker::getServiceinfo(GCFTCPPort& 	clientPort,
 //
 // deletePort(port)
 //
-void GTMServiceBroker::deletePort(GCFTCPPort& aPort)
+void ServiceBrokerTask::deletePort(GCFTCPPort& aPort)
 {
 	// clean up all action that refer to this port
 	ALiter		end  = itsActionList.end();
@@ -203,7 +201,7 @@ void GTMServiceBroker::deletePort(GCFTCPPort& aPort)
 //
 // _deleteBroker(Brokerport)
 //
-void GTMServiceBroker::_deleteBroker(GTMSBTCPPort&	aPort)
+void ServiceBrokerTask::_deleteBroker(GTMSBTCPPort&	aPort)
 {
 	// remove port from admin
 	BMiter	end  = itsBrokerMap.end();
@@ -221,7 +219,7 @@ void GTMServiceBroker::_deleteBroker(GTMSBTCPPort&	aPort)
 //
 // _deleteService(aClientPort)
 //
-void GTMServiceBroker::_deleteService(GCFTCPPort&	aPort)
+void ServiceBrokerTask::_deleteService(GCFTCPPort&	aPort)
 {
 	// its there a service registered at this port?
 	SMiter	service = itsServiceMap.find(&aPort);
@@ -234,7 +232,7 @@ void GTMServiceBroker::_deleteService(GCFTCPPort&	aPort)
 //
 // _actionName(type)
 //
-string GTMServiceBroker::_actionName(uint16		type) const
+string ServiceBrokerTask::_actionName(uint16		type) const
 {
 	switch (type) {
 		case SB_REGISTER_SERVICE:	 return ("RegisterService");
@@ -247,7 +245,7 @@ string GTMServiceBroker::_actionName(uint16		type) const
 //
 // _logResult
 //
-void GTMServiceBroker::_logResult(uint16	 	result, 
+void ServiceBrokerTask::_logResult(uint16	 	result, 
 								  const string& servicename, 
 								  const string& hostname) const
 {
@@ -288,7 +286,7 @@ void GTMServiceBroker::_logResult(uint16	 	result,
 //
 // _registerAction(action)
 //
-unsigned short GTMServiceBroker::_registerAction(Action action)
+unsigned short ServiceBrokerTask::_registerAction(Action action)
 {
 	// reset number when list is empty
 	if (itsActionList.empty()) {
@@ -304,7 +302,7 @@ unsigned short GTMServiceBroker::_registerAction(Action action)
 //
 // _reRegisterServices(hostname)
 //
-void GTMServiceBroker::_reRegisterServices(GCFPortInterface*	brokerPort)
+void ServiceBrokerTask::_reRegisterServices(GCFPortInterface*	brokerPort)
 {
 	// nothing to do?
 	if (itsServiceMap.empty()) {
@@ -327,7 +325,7 @@ void GTMServiceBroker::_reRegisterServices(GCFPortInterface*	brokerPort)
 //
 // _doActionList(hostname)
 //
-void GTMServiceBroker::_doActionList(const string&	hostname)
+void ServiceBrokerTask::_doActionList(const string&	hostname)
 {
 	// nothing to do?
 	if (itsActionList.empty()) {
@@ -368,7 +366,7 @@ void GTMServiceBroker::_doActionList(const string&	hostname)
 //
 // _getBroker(hostname)
 //
-GTMServiceBroker::BMiter	GTMServiceBroker::_getBroker(const string&	hostname)
+ServiceBrokerTask::BMiter	ServiceBrokerTask::_getBroker(const string&	hostname)
 {
 	// do we have a connection to this broker already?
 	BMiter	serviceBroker = itsBrokerMap.find(hostname);
@@ -393,7 +391,7 @@ GTMServiceBroker::BMiter	GTMServiceBroker::_getBroker(const string&	hostname)
 //
 // _findAction(seqnr)
 //
-GTMServiceBroker::ALiter	GTMServiceBroker::_findAction(uint16	seqnr)
+ServiceBrokerTask::ALiter	ServiceBrokerTask::_findAction(uint16	seqnr)
 {
 	ALiter	end  = itsActionList.end();
 	ALiter	iter = itsActionList.begin();
@@ -410,7 +408,7 @@ GTMServiceBroker::ALiter	GTMServiceBroker::_findAction(uint16	seqnr)
 //
 // _reconnectBrokers()
 //
-void GTMServiceBroker::_reconnectBrokers()
+void ServiceBrokerTask::_reconnectBrokers()
 {
 	BMiter	end  = itsBrokerMap.end();
 	BMiter	iter = itsBrokerMap.begin();
@@ -434,7 +432,7 @@ void GTMServiceBroker::_reconnectBrokers()
 //
 // _checkActionList(hostname);
 //
-void GTMServiceBroker::_checkActionList(const string&	hostname)
+void ServiceBrokerTask::_checkActionList(const string&	hostname)
 {
 	LOG_TRACE_FLOW_STR("_checkActionList(" << hostname <<")");
 
@@ -473,7 +471,7 @@ void GTMServiceBroker::_checkActionList(const string&	hostname)
 //
 // operational(event, port)
 //
-GCFEvent::TResult GTMServiceBroker::operational(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult ServiceBrokerTask::operational(GCFEvent& event, GCFPortInterface& port)
 {
 	LOG_DEBUG_STR ("operational:" << eventName(event) << "@" << port.getName());
 

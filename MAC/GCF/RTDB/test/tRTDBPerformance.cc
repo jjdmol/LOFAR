@@ -44,8 +44,8 @@ tPerformance::tPerformance(const string& name) :
 	itsResponse(0),
 	itsTimerPort(0)
 {
-	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
-	TM::registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
+	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
 	itsResponse  = new RTDBPerfResp;
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
 }

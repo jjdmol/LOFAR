@@ -25,12 +25,9 @@
 
 #include <GCF/TM/GCF_PortInterface.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ namespace GCF {
+  namespace TM {
 
 // forward declaration
 class GCFTask;
@@ -92,7 +89,7 @@ class GCFPort : public GCFPortInterface
     /**
     * send/recv methods
     */
-    virtual ssize_t send (GCFEvent& event);
+    virtual ssize_t send (LOFAR::MACIO::GCFEvent& event);
     virtual ssize_t recv (void* buf, 
                           size_t count);
     

@@ -23,35 +23,13 @@
 #ifndef GCF_PROTOCOLS_H
 #define GCF_PROTOCOLS_H
 
-#include <GCF/TM/GCF_Event.h>
+#include <MACIO/ProtocolDefs.h>
+#include <MACIO/GCF_Event.h>
 
 namespace LOFAR {
+ using namespace MACIO;
  namespace GCF {
   namespace TM {
-
-/**
- * Macro to encode an event's signal from the signal id, protocal an in/out direction
- */
-#define F_SIGNAL(prot, sig, inout) (   (((unsigned short)(inout) & 0x3) << 14) \
-				     | (((unsigned short)(prot) & 0x3f) << 8)  \
-				     | ((unsigned short)(sig) & 0xff)          \
-				   )
-
-// Macros for encoding and decoding errornumbers
-#define F_ERROR(prot, num) ( (((unsigned short)(prot) & 0x3f) * 100) + (num) )
-#define F_ERR_PROTOCOL(errID) ( ((unsigned short)(errID) / 100) & 0x3f )
-#define F_ERR_NR(errID) ( (unsigned short)(errID) % 100 )
-
-/**
- * Define different types of signals
- */
-#define F_IN    0x01
-#define F_OUT   0x02
-#define F_INOUT (F_IN | F_OUT)
-
-// Macros for getting  the direction from a signal
-#define F_INDIR(signal)  ( ((unsigned short)signal >> 14) & F_IN)
-#define F_OUTDIR(signal) ( ((unsigned short)signal >> 14) & F_OUT)
 
 /**
  * This enum lists all framework protocols. The application protocols should
@@ -66,12 +44,6 @@ namespace LOFAR {
  * enum to guarantee application global uniqueness.
  *
  */
-enum { 
-    F_FSM_PROTOCOL = 1,     // state machine protocol (encoded in msb)
-    F_PORT_PROTOCOL,        	// port connection protocol
-    F_GCF_PROTOCOL, 			// GCF specific protocol numbers start here
-    F_APL_PROTOCOL = 10, 	// APPlication specific protocol numbers start here
-};
 
 /**
  * F_FSM_PROTOCOL signals
@@ -89,15 +61,6 @@ enum {
 #define F_INIT  F_SIGNAL(F_FSM_PROTOCOL, F_INIT_ID,  F_IN)
 #define F_QUIT  F_SIGNAL(F_FSM_PROTOCOL, F_QUIT_ID,  F_IN)
 
-// structure for administration of signalnames and errornames.
-struct protocolStrings {
-	unsigned short		nrSignals;
-	unsigned short		nrErrors;
-	const char**		signalNames;
-	const char**		errorNames;
-};
-
-// defined in GCF_Protocols.cc
 extern const char* F_FSM_PROTOCOL_names[]; 
 extern const struct protocolStrings F_FSM_PROTOCOL_STRINGS; 
 
@@ -127,10 +90,12 @@ enum {
 #define F_RAW_DATA      F_SIGNAL(F_PORT_PROTOCOL, F_RAW_DATA_ID,      F_INOUT)
 #define F_ACCEPT_REQ    F_SIGNAL(F_PORT_PROTOCOL, F_ACCEPT_REQ_ID,    F_IN)
 
-// defined in GCF_Protocols.cc
 extern const char* F_PORT_PROTOCOL_names[];
 extern const struct protocolStrings F_PORT_PROTOCOL_STRINGS; 
 
+//
+// Define GCFTimerEvent
+//
 struct GCFTimerEvent : public GCFEvent
 {
   GCFTimerEvent() : GCFEvent(F_TIMER)
@@ -143,11 +108,6 @@ struct GCFTimerEvent : public GCFEvent
   unsigned long id;
   void* arg;
 };
-
-void registerProtocol (unsigned short					protID, 
-					   const struct protocolStrings&	protDef);
-string eventName (const GCFEvent& 	e);
-string errorName (unsigned short	errorID);
 
   } // namespace TM
  } // namespace GCF

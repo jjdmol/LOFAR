@@ -26,16 +26,13 @@
 #include <GCF/TM/GCF_RawPort.h>
 #include <Common/lofar_string.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ class MACIO::GCFEvent;
+ namespace GCF {
+  namespace TM {
 
 // forward declaration
 class GCFTask;
-class GCFEvent;
 class GTMDevice;
 
 /**

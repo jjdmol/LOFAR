@@ -24,14 +24,12 @@
 #define GTM_FILE_H
 
 #include <unistd.h>
-#include <GCF/TM/GCF_Event.h>
+#include <MACIO/GCF_Event.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+	using namespace MACIO;
+	namespace GCF {
+		namespace TM {
 
 // forward declaration
 class GTMFileHandler;
@@ -88,7 +86,7 @@ class GTMFile
 
 using namespace LOFAR::GCF::TM;
 
-inline GCFEvent::TResult GTMFile::dispatch (GCFEvent& event) 
+inline LOFAR::MACIO::GCFEvent::TResult GTMFile::dispatch (LOFAR::MACIO::GCFEvent& event) 
 {
   return _port.dispatch(event);
 }

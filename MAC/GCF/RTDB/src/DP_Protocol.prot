@@ -25,7 +25,7 @@ autogen definitions protocol;
 
 description = "Protocol for passing PVSSresponses to GCF-tasks";
 prefix = "DP"; // for the signal names
-id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL+2)";
+id = "(LOFAR::MACIO::F_GCF_PROTOCOL+2)";
 
 // specify extra include files
 // e.g.
@@ -49,7 +49,7 @@ prelude = << PRELUDE_END
 // LOST_SERVER		 (string DPname)
 //
 
-class PValue : public GCF::TM::GCFTransportable
+class PValue : public MACIO::GCFTransportable
 {
   public:
     PValue() : _pValue(0), _unpacked(false) {};

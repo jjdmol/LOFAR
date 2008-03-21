@@ -51,8 +51,8 @@ tDPservice::tDPservice(const string& name) :
 {
 	LOG_DEBUG_STR("tDPservice(" << name << ")");
 
-	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
-	TM::registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
+	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	registerProtocol(DP_PROTOCOL, DP_PROTOCOL_STRINGS);
 
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
 	ASSERTSTR(itsTimerPort, "Can't allocate GCFTimerPort");

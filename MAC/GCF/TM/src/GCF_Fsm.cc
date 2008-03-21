@@ -27,6 +27,7 @@
 #include <GTM_Defines.h>
 
 namespace LOFAR {
+ using MACIO::GCFEvent;
  namespace GCF {
   namespace TM {
 
