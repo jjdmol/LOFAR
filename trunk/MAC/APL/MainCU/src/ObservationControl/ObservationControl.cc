@@ -24,13 +24,13 @@
 #include <Common/StreamUtil.h>
 
 #include <APS/ParameterSet.h>
-#include <GCF/Utils.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <Common/SystemUtil.h>
+#include <ApplCommon/Observation.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
-#include <APL/APLCommon/Observation.h>
 #include <APL/APLCommon/StationInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
@@ -123,8 +123,8 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
-	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
+	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
  
 	// we cannot use setState right now, wait for propertysets to come online
 	//	setState(CTState::CREATED);
@@ -265,7 +265,7 @@ GCFEvent::TResult ObservationControl::prepDB_state(GCFEvent& event,
 		vector<string>::iterator	iter = stations.begin();
 		vector<string>::iterator	end  = stations.end();
 		gNrStations = stations.size();
-		LOG_DEBUG_STR(gNrStations << " are used in this Observation.");
+		LOG_DEBUG_STR(gNrStations << " stations are used in this Observation.");
 		string	DPobsName(createPropertySetName(PSN_OBSERVATION, getName())+"_Core_");	// observation<nr>_
 		while (iter != end) {
 			string	stationName(PVSSDatabaseName(*iter));
@@ -393,22 +393,22 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		itsPropertySet->setValue(PN_OBSCTRL_NYQUISTZONE, 	GCFPVInteger(theObs.nyquistZone));
 		itsPropertySet->setValue(PN_OBSCTRL_ANTENNA_ARRAY,	GCFPVString(theObs.antennaArray));
 		itsPropertySet->setValue(PN_OBSCTRL_RECEIVER_LIST, GCFPVString(
-						APLUtilities::compactedArrayString(globalParameterSet()->
+						compactedArrayString(globalParameterSet()->
 						getString("Observation.receiverList"))));
 		itsPropertySet->setValue(PN_OBSCTRL_SAMPLE_CLOCK, GCFPVInteger(theObs.sampleClock));
 		itsPropertySet->setValue(PN_OBSCTRL_MEASUREMENT_SET, GCFPVString(
 						globalParameterSet()->getString("Observation.MSNameMask")));
 		itsPropertySet->setValue(PN_OBSCTRL_STATION_LIST, GCFPVString(
-						APLUtilities::compactedArrayString(globalParameterSet()->
+						compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.stationList"))));
 		itsPropertySet->setValue(PN_OBSCTRL_INPUT_NODE_LIST, GCFPVString(
-						APLUtilities::compactedArrayString(globalParameterSet()->
+						compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.inputNodeList"))));
 		itsPropertySet->setValue(PN_OBSCTRL_BGL_NODE_LIST, GCFPVString(
-						APLUtilities::compactedArrayString(globalParameterSet()->
+						compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.BGLNodeList"))));
 		itsPropertySet->setValue(PN_OBSCTRL_STORAGE_NODE_LIST, GCFPVString(
-						APLUtilities::compactedArrayString(globalParameterSet()->
+						compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.storageNodeList"))));
 
 		// for the beams we have to construct dyn arrays first.
@@ -582,14 +582,16 @@ GCFEvent::TResult ObservationControl::active_state(GCFEvent& event, GCFPortInter
 		break;
 	}
 
-	case CONTROL_CONNECT: {
-		CONTROLConnectEvent		msg(event);
-		LOG_DEBUG_STR("Received CONNECT(" << msg.cntlrName << ")");
+	case CONTROL_CONNECTED: {
+		CONTROLConnectedEvent		msg(event);
+		LOG_DEBUG_STR("Received CONNECTED(" << msg.cntlrName << ")");
 		// TODO: do something usefull with this information!
-		CONTROLConnectedEvent	answer;
-		answer.cntlrName = msg.cntlrName;
-		answer.result = CT_RESULT_NO_ERROR;
-		itsParentPort->send(answer);
+//		CONTROLConnectedEvent	answer;
+//		answer.cntlrName = msg.cntlrName;
+//		answer.result = CT_RESULT_NO_ERROR;
+//		itsParentPort->send(answer);
+		msg.cntlrName = getName();
+		itsParentPort->send(msg);
 		break;
 	}
 

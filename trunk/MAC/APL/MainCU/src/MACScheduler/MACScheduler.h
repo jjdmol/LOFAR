@@ -24,24 +24,21 @@
 #define MACScheduler_H
 
 //# GCF Includes
-#include <GCF/RTDB/RTDB_PropertySet.h>
+#include <MACIO/GCF_Event.h>
+#include <GCF/TM/GCF_Control.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_ITCPort.h>
-#include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
+#include <GCF/RTDB/RTDB_PropertySet.h>
 
 //# local includes
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/CTState.h>
-#include <APL/APLCommon/Observation.h>
 
 //# Common Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
+#include <ApplCommon/Observation.h>
 
 //# ACC Includes
 #include <OTDB/OTDBconnection.h>
@@ -52,15 +49,14 @@
 // forward declaration
 
 namespace LOFAR {
+	using	MACIO::GCFEvent;
 	using	GCF::TM::GCFTimerPort;
 	using	GCF::TM::GCFITCPort;
 	using	GCF::TM::GCFPort;
-	using	GCF::TM::GCFEvent;
 	using	GCF::TM::GCFPortInterface;
 	using	GCF::TM::GCFTask;
 	using	GCF::RTDB::RTDBPropertySet;
 	using	APLCommon::ChildControl;
-	using	APLCommon::Observation;
 	namespace MainCU {
 
 
