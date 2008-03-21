@@ -60,8 +60,8 @@ GCFTask::GCFTask(State initial, const string& name) :
   GCFFsm(initial), _name(name)
 {
 	// new style registration
-	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
-	TM::registerProtocol(F_PORT_PROTOCOL,F_PORT_PROTOCOL_STRINGS);
+	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	registerProtocol(F_PORT_PROTOCOL,F_PORT_PROTOCOL_STRINGS);
 }
 
 //

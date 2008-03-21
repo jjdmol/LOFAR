@@ -1,9 +1,4 @@
-SUBDIRS	= . ServiceBroker
-
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: ServiceBroker/%.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
+SUBDIRS	= . 
 
 DOCHDRS = \
   GTM_Defines.h \
@@ -16,7 +11,7 @@ DOCHDRS = \
   PortImpl/GTM_ETHSocket.h \
   PortImpl/GTM_Device.h \
   ServiceBroker/GTM_SBTCPPort.h \
-  ServiceBroker/GTM_ServiceBroker.h \
+  ServiceBroker/ServiceBrokerTask.h \
   $(BUILT_SOURCES)
     
 lib_LTLIBRARIES 	= libgcftm.la
@@ -25,7 +20,6 @@ libgcftm_la_SOURCES= $(DOCHDRS) \
   GCF_Fsm.cc \
   GCF_Protocols.cc \
   GCF_Task.cc \
-  GCF_Event.cc \
   Port/GCF_PortInterface.cc \
   Port/GCF_Port.cc \
   Port/GCF_RawPort.cc \
@@ -42,25 +36,17 @@ libgcftm_la_SOURCES= $(DOCHDRS) \
   PortImpl/GTM_TCPServerSocket.cc \
   PortImpl/GTM_TCPSocket.cc \
   ServiceBroker/GTM_SBTCPPort.cc \
-  ServiceBroker/GTM_ServiceBroker.cc \
-	SB_Protocol.cc
+  ServiceBroker/ServiceBrokerTask.cc 
 
 libgcftm_la_CPPFLAGS=-I$(top_srcdir)/src/ServiceBroker
 
 libgcftm_la_CXXFLAGS=-fmessage-length=0
 
-BUILT_SOURCES = SB_Protocol.ph
+BUILT_SOURCES 		= 
 
-EXTRA_DIST = $(sysconf_DATA)
+EXTRA_DIST 			= $(sysconf_DATA)
 	
-sysconf_DATA = \
-	mac.log_prop
+sysconf_DATA 		= mac.log_prop
 
-%.log_prop: %.log_prop.in
-	cp $< $@
-
-clean-local:
-	rm -f *.ph
-	
 include $(top_srcdir)/Makefile.common
 

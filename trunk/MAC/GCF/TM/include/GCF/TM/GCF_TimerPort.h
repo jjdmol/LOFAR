@@ -23,12 +23,13 @@
 #ifndef GCF_TIMERPORT_H
 #define GCF_TIMERPORT_H
 
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_RawPort.h>
-#include <GCF/TM/GCF_Event.h>
 #include <GCF/TM/GCF_Task.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR {
+ using MACIO::GCFEvent;
  namespace GCF {
   namespace TM {
 

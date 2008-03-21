@@ -1,10 +1,13 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
+	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 
-check_PROGRAMS 		= tmEcho tmPing tGCFPort tProtocol tTimer \
-						tGCFTask1 tGCFTask2 tGCFTask3 tGCFTask4 tGCFTask5 tEventPort
+%.cc: %.prot
+	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
+
+check_PROGRAMS 		= tmEcho tmPing tGCFPort tTimer \
+						tGCFTask1 tGCFTask2 tGCFTask3 tGCFTask4 tGCFTask5
 
 tmEcho_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc Echo.cc Echo.h 
 tmEcho_LDADD		= ../src/libgcftm.la
@@ -18,17 +21,6 @@ tGCFPort_SOURCES 		= $(BUILT_SOURCES) Echo_Protocol.cc \
 						  tGCFPort.cc tGCFPort.h 
 tGCFPort_LDADD			= ../src/libgcftm.la
 tGCFPort_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
-
-tProtocol_SOURCES 		= testprotocol.ph testprotocol.cc \
-						  Echo_Protocol.ph Echo_Protocol.cc \
-						  tProtocol.cc 
-tProtocol_LDADD			= ../src/libgcftm.la
-tProtocol_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
-
-tEventPort_SOURCES 		= Echo_Protocol.ph Echo_Protocol.cc \
-						  tEventPort.cc
-tEventPort_LDADD		= ../src/ServiceBroker/libeventport.la
-tEventPort_DEPENDENCIES	= ../src/ServiceBroker/libeventport.la $(LOFAR_DEPEND)
 
 tTimer_SOURCES 		= $(BUILT_SOURCES) tTimer.cc
 tTimer_LDADD		= ../src/libgcftm.la
@@ -54,13 +46,12 @@ tGCFTask5_SOURCES 		= $(BUILT_SOURCES) tGCFTask5.cc testTask.cc
 tGCFTask5_LDADD			= ../src/libgcftm.la
 tGCFTask5_DEPENDENCIES	= ../src/libgcftm.la $(LOFAR_DEPEND)
 
-BUILT_SOURCES = Echo_Protocol.ph testprotocol.ph
+BUILT_SOURCES = Echo_Protocol.ph 
 
 EXTRA_DIST = \
 	tmEcho.conf \
 	tmPing.conf \
-	tGCFPort.conf \
-	tProtocol.log_prop
+	tGCFPort.conf
 	
 %.conf:	tm-test.conf.in
 	ln -sf $< $@

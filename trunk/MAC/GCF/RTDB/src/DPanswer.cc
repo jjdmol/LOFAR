@@ -21,15 +21,15 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <Common/LofarLogger.h>	// REO
+#include <Common/LofarLogger.h>	
 
-#include <GCF/TM/GCF_Event.h>
+#include <MACIO/GCF_Event.h>
 #include <DP_Protocol.ph>
 #include "DPanswer.h"
 
 namespace LOFAR {
+  using namespace MACIO;
   namespace GCF {
-	using TM::GCFEvent;
     namespace RTDB {
 
 // initialise static datamember

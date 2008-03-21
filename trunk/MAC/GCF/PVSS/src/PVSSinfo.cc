@@ -22,7 +22,6 @@
 
 #include <lofar_config.h>
 
-#include <GCF/Utils.h>
 #include <GCF/PVSS/PVSSinfo.h>
 #include <GCF/PVSS/PVSSservice.h>
 #include <GCF/PVSS/PVSSresult.h>

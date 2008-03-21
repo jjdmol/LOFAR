@@ -24,7 +24,7 @@
 #define GTM_DEVICE_H
 
 #include <unistd.h>
-#include <GCF/TM/GCF_Event.h>
+//#include <MACIO/GCF_Event.h>
 #include "GTM_File.h"
 #include <Common/lofar_string.h>
 

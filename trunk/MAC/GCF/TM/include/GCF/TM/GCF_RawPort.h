@@ -23,18 +23,16 @@
 #ifndef GCF_RAWPORT_H
 #define GCF_RAWPORT_H
 
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_PortInterface.h>
-#include <GCF/TM/GCF_Event.h>
 #include <GCF/TM/GCF_Task.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
-namespace LOFAR 
-{
- namespace GCF 
- {
-  namespace TM 
-  {
+namespace LOFAR {
+ using MACIO::GCFEvent;
+ namespace GCF {
+  namespace TM {
 
 // forward declaration
 class GCFPort;

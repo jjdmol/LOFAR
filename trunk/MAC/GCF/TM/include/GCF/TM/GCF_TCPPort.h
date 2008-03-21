@@ -23,22 +23,21 @@
 #ifndef GCF_TCPPORT_H
 #define GCF_TCPPORT_H
 
+#include <Common/SystemUtil.h>
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/Utils.h>
 
 namespace LOFAR {
+ class MACIO::GCFEvent;
  namespace GCF {
-
   namespace SB {
-class GTMServiceBroker;
+	class ServiceBrokerTask;
   }
   
   namespace TM {
 
 // forward declaration
 class GCFTask;
-class GCFEvent;
 class GTMTCPSocket;
 
 /**
@@ -105,7 +104,7 @@ public: // GCFTCPPort specific methods
     unsigned int getPortNumber();
 
 private: // helper methods
-    friend class SB::GTMServiceBroker;
+    friend class SB::ServiceBrokerTask;
     void serviceRegistered(unsigned int result, unsigned int portNumber);
     void serviceUnregistered();
     void serviceInfo(unsigned int result, unsigned int portNumber, const string& host);
@@ -120,14 +119,14 @@ private:
     string					_host;
     unsigned int			_portNumber;
 	bool					itsFixedPortNr;
-    SB::GTMServiceBroker*	_broker;
+    SB::ServiceBrokerTask*	_broker;
 };
 
 inline void GCFTCPPort::setHostName(const string& hostname)
 {
 	// assure that hostname is never filled with localname.
 	if (hostname.empty() || hostname == "localhost") {
-		_host = Common::myHostname(false);
+		_host = myHostname(false);
 	}
 	else {
 		_host = hostname;

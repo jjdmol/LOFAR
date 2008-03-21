@@ -29,6 +29,7 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
+#include <MACIO/GCF_Event.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -36,7 +37,6 @@ namespace LOFAR {
 
 // forward declacations
 class GCFTask;
-class GCFEvent;
 
 /**
  * This is the abstract base class for all port implementations like TCP or shared 
@@ -72,7 +72,7 @@ public:
     /**
     * send/recv functions
     */
-    virtual ssize_t send (GCFEvent& event) = 0;
+    virtual ssize_t send (LOFAR::MACIO::GCFEvent& event) = 0;
     
     virtual ssize_t recv (void* buf, 
                           size_t count) = 0;

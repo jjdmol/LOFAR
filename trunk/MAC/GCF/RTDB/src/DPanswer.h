@@ -23,8 +23,9 @@
 #ifndef RTDB_DP_ANSWER_H
 #define RTDB_DP_ANSWER_H
 
-#include <GCF/PVSS/PVSSresponse.h>
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/PVSS/PVSSresponse.h>
 
 namespace LOFAR {
   namespace GCF {
@@ -58,7 +59,7 @@ private:
 	DPanswer& operator= (const DPanswer&);  
 	// </group>
 
-	void _dispatchEvent(TM::GCFEvent&	event);
+	void _dispatchEvent(MACIO::GCFEvent&	event);
 
 	// ----- datamembers -----
 	TM::GCFTask*				itsTask;

@@ -26,7 +26,6 @@
 #include <GCF/GCF_PVTypes.h>
 
 using namespace LOFAR;
-using namespace LOFAR::GCF::Common;
 
 int main(int argc, char* argv[]) {
 	INIT_LOGGER(argv[0]);

@@ -2,10 +2,10 @@ AM_CPPFLAGS			= -I$(top_builddir)/include
 AUTOGEN 			= autogen
 SUFFIXES 			= .ph
 %.cc: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 	cp $*.ph $(top_builddir)/include/GCF/RTDB/
 
 clean-local:

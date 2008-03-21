@@ -3,7 +3,6 @@ pkginclude_HEADERS = \
 	GCF_Control.h \
 	GCF_DevicePort.h \
 	GCF_ETHRawPort.h \
-	GCF_Event.h \
 	GCF_Fsm.h \
 	GCF_Handler.h \
 	GCF_ITCPort.h \
@@ -13,8 +12,7 @@ pkginclude_HEADERS = \
 	GCF_RawPort.h \
 	GCF_Task.h \
 	GCF_TCPPort.h \
-	GCF_TimerPort.h \
-	EventPort.h 
+	GCF_TimerPort.h
 
 include $(top_srcdir)/Makefile.common
 

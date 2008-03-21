@@ -24,13 +24,14 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 
+#include <MACIO/SB_Protocol.ph>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <APS/ParameterSet.h>
 #include "GTM_TCPServerSocket.h"
-#include <ServiceBroker/GTM_ServiceBroker.h>
-#include <ServiceBroker/GSB_Defines.h>
+#include <ServiceBroker/ServiceBrokerTask.h>
+//#include <ServiceBroker/GSB_Defines.h>
 #include <GTM_Defines.h>
 #include <errno.h>
 
@@ -93,7 +94,7 @@ GCFTCPPort::~GCFTCPPort()
 
 	if (_broker) {
 		_broker->deletePort(*this);
-		GTMServiceBroker::release();
+		ServiceBrokerTask::release();
 		_broker = 0;
 	}
 }
@@ -185,7 +186,7 @@ bool GCFTCPPort::open()
 
 		// Service name is set, use it to resolve host+port and connect.
 		if (!_broker) {
-			_broker = GTMServiceBroker::instance();
+			_broker = ServiceBrokerTask::instance();
 		}
 		ASSERT(_broker);
 		_broker->getServiceinfo(*this, remoteServiceName, _host);
@@ -206,7 +207,7 @@ bool GCFTCPPort::open()
 		// Note: service is NOT registered at service broker!!!
 	}
 	else {	// portnumber not overruled by user so ask SB for a portnumber
-		_broker = GTMServiceBroker::instance();
+		_broker = ServiceBrokerTask::instance();
 		ASSERT(_broker);
 		_broker->registerService(*this);
 		// a (dis)connect event will be scheduled
@@ -220,7 +221,7 @@ bool GCFTCPPort::open()
 // serviceRegistered(resultToReturn, portNr)
 //
 // Log what port we use and try to open and connect to that port.
-// Note: Is also called by the GTM_ServiceBroker
+// Note: Is also called by the ServiceBrokerTask
 //
 void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
 {
@@ -251,7 +252,7 @@ void GCFTCPPort::serviceRegistered(unsigned int result, unsigned int portNumber)
 //
 // Ask servicebroker for a portnumber and try to open the port(listener)
 //
-// Note: Is also called by the GTM_ServiceBroker
+// Note: Is also called by the ServiceBrokerTask
 void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const string& host)
 {
 	ASSERT(SAP == getType());
@@ -285,7 +286,7 @@ void GCFTCPPort::serviceInfo(unsigned int result, unsigned int portNumber, const
 	}
 }
 
-// Note: Is also called by the GTM_ServiceBroker
+// Note: Is also called by the ServiceBrokerTask
 void GCFTCPPort::serviceGone()
 {
 	_host = myHostname(false);
@@ -368,7 +369,7 @@ bool GCFTCPPort::close()
 	}
 	// make sure a single server port is unregistered to that is can be 'connect'ed again.
 	// NOTE: 050308 this is neccesary for EventPort but conflicts with the ServiceBroker
-	//				functionality in GSB_Controller.cc.	 this is than 0x0.
+	//				functionality in GSB_Controller.cc.	 this is then 0x0.
 //	if (getType() == SPP) {
 //		_broker->deletePort(*this);
 //	}

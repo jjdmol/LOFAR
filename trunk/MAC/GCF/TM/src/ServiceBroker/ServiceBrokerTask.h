@@ -1,4 +1,4 @@
-//#  GTM_ServiceBroker.h: singleton class; bridge between controller application 
+//#  ServiceBrokerTask.h: singleton class; bridge between controller application 
 //#                    and Property Agent
 //#
 //#  Copyright (C) 2002-2003
@@ -26,11 +26,13 @@
 
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Task.h>
 #include "GTM_SBTCPPort.h"
 #include <GCF/TM/GCF_Handler.h>
 
 namespace LOFAR {
+ using MACIO::GCFEvent;
  namespace GCF {  
   namespace SB {
 
@@ -39,11 +41,11 @@ namespace LOFAR {
 
 class GTMSBHandler;
 
-class GTMServiceBroker : public TM::GCFTask
+class ServiceBrokerTask : public TM::GCFTask
 {
 public:
-    ~GTMServiceBroker ();
-    static GTMServiceBroker* instance(bool temporary = false);
+    ~ServiceBrokerTask ();
+    static ServiceBrokerTask* instance(bool temporary = false);
     static void release();
 
 	// member functions
@@ -56,10 +58,10 @@ public:
   
 private:
     friend class GTMSBHandler;
-    GTMServiceBroker ();
+    ServiceBrokerTask ();
 
 	// state methods
-    GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
+    GCFEvent::TResult operational (GCFEvent& e, TM::GCFPortInterface& p);
         
 	// helper structures and classes
     typedef struct action_t {
@@ -126,11 +128,11 @@ public:
     void stop () {}
     
 private:
-    friend class GTMServiceBroker;
+    friend class ServiceBrokerTask;
     GTMSBHandler();
 
     static GTMSBHandler* _pInstance;
-    GTMServiceBroker _controller;
+    ServiceBrokerTask _controller;
 };
   } // namespace SB
  } // namespace GCF

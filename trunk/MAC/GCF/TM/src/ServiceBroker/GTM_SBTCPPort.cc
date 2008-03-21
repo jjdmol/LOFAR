@@ -25,8 +25,8 @@
 
 #include "GTM_SBTCPPort.h"
 #include <GTM_Defines.h>
-#include "GSB_Defines.h"
-#include <GCF/GCF_ServiceInfo.h>
+//#include "GSB_Defines.h"
+#include <MACIO/MACServiceInfo.h>
 #include <PortImpl/GTM_TCPServerSocket.h>
 #include <APS/ParameterSet.h>
 

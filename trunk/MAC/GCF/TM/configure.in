@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(include/GCF/TM/GCF_Event.h)
+AC_INIT(include/GCF/TM/GCF_Task.h)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(GCFTM, 6.1, no-define)
 
@@ -37,16 +37,14 @@ dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common, Common, , 1, Common/LofarTypes.h,,)
-lofar_INTERNAL(LCS/ACC/APS, APS, ,1, APS/ParameterSet.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, , 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(LCS/ACC/APS, APS, , 1, APS/ParameterSet.h,,)
+lofar_INTERNAL(MAC/MACIO, MACIO, , 1, MACIO/MACServiceInfo.h,,)
 
 dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
-autogen/Makefile
 src/Makefile
-src/ServiceBroker/Makefile
 test/Makefile
 include/Makefile
 include/GCF/TM/Makefile

@@ -25,6 +25,7 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <unistd.h>			// sleep
 #include "testTask.h"
