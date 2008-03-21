@@ -25,8 +25,7 @@
 #include <Common/LofarLocators.h>
 
 #include <APS/ParameterSet.h>
-#include <GCF/Utils.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ControllerDefines.h>
@@ -34,7 +33,6 @@
 
 #include "TestController.h"
 
-using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 
 namespace LOFAR {
