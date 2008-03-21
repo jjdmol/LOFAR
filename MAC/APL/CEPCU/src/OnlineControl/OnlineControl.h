@@ -48,10 +48,10 @@
 namespace LOFAR {
 	namespace CEPCU {
 
+using	MACIO::GCFEvent;
 using	GCF::TM::GCFTimerPort;
 using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
-using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
 using	GCF::RTDB::RTDBPropertySet;
