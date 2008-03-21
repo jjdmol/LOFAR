@@ -9,7 +9,6 @@ pkginclude_HEADERS = \
 	ControllerInfo.h \
 	ControllerAdmin.h \
 	ChildControl.h \
-	ParentControl.h \
-	Observation.h
+	ParentControl.h
 
 include $(top_srcdir)/Makefile.common

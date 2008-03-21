@@ -25,7 +25,7 @@
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
-#include <GCF/Utils.h>
+#include <Common/SystemUtil.h>
 #include <APL/APLCommon/StationInfo.h>
 
 #include <boost/config.hpp>
@@ -33,7 +33,6 @@
 using namespace boost;
 
 namespace LOFAR {
-  using namespace GCF::Common;
   namespace Deployment {
 
 static	char*	stationTypeTable[] = { "CS", "RS", "ES" };

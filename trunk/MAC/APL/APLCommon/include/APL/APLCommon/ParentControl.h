@@ -31,7 +31,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_datetime.h>
 #include <Common/lofar_list.h>
-#include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_ITCPort.h>
 #include <GCF/TM/GCF_TimerPort.h>
@@ -41,10 +41,10 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
+  using MACIO::GCFEvent;
   using GCF::TM::GCFTCPPort;
   using GCF::TM::GCFITCPort;
   using GCF::TM::GCFTimerPort;
-  using GCF::TM::GCFEvent;
   using GCF::TM::GCFTask;
   using GCF::TM::GCFPortInterface;
   using APLCommon::CTState;

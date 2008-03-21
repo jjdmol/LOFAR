@@ -25,10 +25,10 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 #include <APS/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/GCF_ServiceInfo.h>
-#include <GCF/Utils.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/ParentControl.h>
 #include <APL/APLCommon/StationInfo.h>
@@ -38,7 +38,6 @@
 namespace LOFAR {
   using namespace Deployment;
   using namespace GCF::TM;
-  using namespace GCF::Common;
   using namespace ACC::APS;
   namespace APLCommon {
 
@@ -101,8 +100,8 @@ ParentControl::ParentControl() :
 	itsControllerName()
 {
 	// Log the protocols I use.
-	GCF::TM::registerProtocol(CONTROLLER_PROTOCOL,  CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_STRINGS);
+	registerProtocol(CONTROLLER_PROTOCOL,  CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_STRINGS);
 
 }
 

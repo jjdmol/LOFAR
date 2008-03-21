@@ -1,7 +1,7 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	$(AUTOGEN) --writable -L $(datadir)/MACIO  $<
 
 %.conf: %.conf.in
 	cp $< $@
@@ -25,8 +25,7 @@ libaplcommon_la_SOURCES  =  $(DOCHDRS) \
 							CTState.cc \
 							ControllerAdmin.cc \
 							ChildControl.cc \
-							ParentControl.cc \
-							Observation.cc
+							ParentControl.cc 
 
 
 BUILT_SOURCES 			= $(ph_HEADERS) swlevel swlevel.conf

@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>					// rtrim
-#include <GCF/Utils.h>							// myHostname
+#include <Common/SystemUtil.h>
 #include <APS/ParameterSet.h>					// indexValue
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
@@ -38,7 +38,6 @@ using namespace boost;
 
 namespace LOFAR {
   using namespace Deployment;
-  using namespace GCF::Common;
   namespace APLCommon {
 
 typedef struct cntlrDefinition {
