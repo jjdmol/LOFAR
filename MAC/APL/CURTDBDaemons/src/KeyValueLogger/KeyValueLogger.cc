@@ -23,16 +23,17 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/GCF_Event.h>
+#include <MACIO/MACServiceInfo.h>
+#include <MACIO/KVT_Protocol.ph>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/RTDB/DP_Protocol.ph>
-#include <APL/APLProtocol/KVT_Protocol.ph>
 #include "KeyValueLogger.h"
 
 namespace LOFAR {
+  using namespace MACIO;
   namespace GCF {
-    using namespace Common;
     using namespace TM;
     using namespace PVSS;
     using namespace RTDB;

@@ -23,9 +23,10 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/GCF_Event.h>
+#include <MACIO/MACServiceInfo.h>
+#include <MACIO/LOG_Protocol.ph>
 #include <GCF/PVSS/PVSSresult.h>
-#include <APL/APLProtocol/LOG_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <log4cplus/socketappender.h>
 #include "LoggingProcessor.h"
@@ -33,8 +34,8 @@
 using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
+  using namespace MACIO;
   namespace GCF {
-    using namespace Common;
     using namespace TM;
     using namespace PVSS;
     using namespace RTDB;

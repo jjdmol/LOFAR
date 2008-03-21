@@ -31,6 +31,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/DPservice.h>
 #include <log4cplus/helpers/socketbuffer.h>
@@ -38,6 +39,7 @@
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
+  using namespace MACIO;
   namespace GCF {  
     namespace RTDBDaemons {
 
@@ -49,8 +51,8 @@ public:
 
 private: 
 	// state methods
-	TM::GCFEvent::TResult initial     (TM::GCFEvent& e, TM::GCFPortInterface& p);
-	TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
+	GCFEvent::TResult initial     (GCFEvent& e, TM::GCFPortInterface& p);
+	GCFEvent::TResult operational (GCFEvent& e, TM::GCFPortInterface& p);
 
 	// helper methods
 	bool _readFromPortData(TM::GCFPortInterface& 				port, 
