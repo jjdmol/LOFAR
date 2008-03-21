@@ -28,7 +28,7 @@
 #include <GCF/GCF_PVTypes.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <GCF/Protocols/PA_Protocol.ph>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
@@ -40,7 +40,6 @@
 #include "OfflineControl.h"
 #include "OfflineControlDefines.h"
 
-using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PAL;
 using namespace std;
