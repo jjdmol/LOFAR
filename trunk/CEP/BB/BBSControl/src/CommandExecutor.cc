@@ -38,14 +38,14 @@
 #include <BBSControl/RecoverCommand.h>
 #include <BBSControl/SynchronizeCommand.h>
 
-#include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSMultiStep.h>
-#include <BBSControl/BBSPredictStep.h>
-#include <BBSControl/BBSSubtractStep.h>
-#include <BBSControl/BBSCorrectStep.h>
-#include <BBSControl/BBSSolveStep.h>
-#include <BBSControl/BBSShiftStep.h>
-#include <BBSControl/BBSRefitStep.h>
+#include <BBSControl/Strategy.h>
+#include <BBSControl/MultiStep.h>
+#include <BBSControl/PredictStep.h>
+#include <BBSControl/SubtractStep.h>
+#include <BBSControl/CorrectStep.h>
+#include <BBSControl/SolveStep.h>
+#include <BBSControl/ShiftStep.h>
+#include <BBSControl/RefitStep.h>
 
 #include <BBSKernel/Prediffer.h>
 
@@ -93,7 +93,7 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
 
     LOG_DEBUG("Handling an InitializeCommand");
 
-    shared_ptr<const BBSStrategy> strategy(itsCommandQueue->getStrategy());
+    shared_ptr<const Strategy> strategy(itsCommandQueue->getStrategy());
     ASSERT(strategy);
 
     try
@@ -209,31 +209,31 @@ void CommandExecutor::visit(const SynchronizeCommand &/*command*/)
 }
 
 
-void CommandExecutor::visit(const BBSStrategy &command)
+void CommandExecutor::visit(const Strategy &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-    LOG_DEBUG("Handling a BBSStrategy");
+    LOG_DEBUG("Handling a Strategy");
     LOG_DEBUG_STR("Command: " << endl << command);
 
     ASSERTSTR(false, "Should not get here...");
 }
 
 
-void CommandExecutor::visit(const BBSMultiStep &command)
+void CommandExecutor::visit(const MultiStep &command)
 {
-    LOG_DEBUG("Handling a BBSMultiStep");
+    LOG_DEBUG("Handling a MultiStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
     ASSERTSTR(false, "Should not get here...");
 }
 
 
-void CommandExecutor::visit(const BBSPredictStep &command)
+void CommandExecutor::visit(const PredictStep &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-    LOG_DEBUG("Handling a BBSPredictStep");
+    LOG_DEBUG("Handling a PredictStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
     ASSERTSTR(itsKernel, "No kernel available.");
@@ -259,11 +259,11 @@ void CommandExecutor::visit(const BBSPredictStep &command)
 }
 
 
-void CommandExecutor::visit(const BBSSubtractStep &command)
+void CommandExecutor::visit(const SubtractStep &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-    LOG_DEBUG("Handling a BBSSubtractStep");
+    LOG_DEBUG("Handling a SubtractStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
     ASSERTSTR(itsKernel, "No kernel available.");
@@ -289,11 +289,11 @@ void CommandExecutor::visit(const BBSSubtractStep &command)
 }
 
 
-void CommandExecutor::visit(const BBSCorrectStep &command)
+void CommandExecutor::visit(const CorrectStep &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
-    LOG_DEBUG("Handling a BBSCorrectStep");
+    LOG_DEBUG("Handling a CorrectStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
     ASSERTSTR(itsKernel, "No kernel available.");
@@ -319,10 +319,10 @@ void CommandExecutor::visit(const BBSCorrectStep &command)
 }
 
 
-void CommandExecutor::visit(const BBSSolveStep &command)
+void CommandExecutor::visit(const SolveStep &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    LOG_DEBUG("Handling a BBSSolveStep");
+    LOG_DEBUG("Handling a SolveStep");
     LOG_DEBUG_STR("Command: " << endl << command);
     ASSERTSTR(itsKernel, "No kernel available.");
 
@@ -611,18 +611,18 @@ void CommandExecutor::visit(const BBSSolveStep &command)
 }
 
 
-void CommandExecutor::visit(const BBSShiftStep &command)
+void CommandExecutor::visit(const ShiftStep &command)
 {
-    LOG_DEBUG("Handling a BBSShiftStep");
+    LOG_DEBUG("Handling a ShiftStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
     itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
 
-void CommandExecutor::visit(const BBSRefitStep &command)
+void CommandExecutor::visit(const RefitStep &command)
 {
-    LOG_DEBUG("Handling a BBSRefitStep");
+    LOG_DEBUG("Handling a RefitStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
     itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");

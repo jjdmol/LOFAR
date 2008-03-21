@@ -1,23 +1,13 @@
 pkginclude_HEADERS = \
-	BBSCorrectStep.h \
-	BBSMultiStep.h \
-	BBSPredictStep.h \
-	BBSRefitStep.h \
-	BBSShiftStep.h \
-	BBSSingleStep.h \
-	BBSSolveStep.h \
-	BBSStep.h \
-	BBSStrategy.h \
-	BBSStructs.h \
-	BBSSubtractStep.h \
 	BlobStreamableConnection.h \
 	BlobStreamableVector.h \
-	Command.h \
 	CommandExecutor.h \
+	Command.h \
 	CommandId.h \
 	CommandQueue.h \
 	CommandResult.h \
 	CommandVisitor.h \
+	CorrectStep.h \
 	DomainRegistrationRequest.h \
 	Exceptions.h \
 	FinalizeCommand.h \
@@ -27,9 +17,19 @@ pkginclude_HEADERS = \
 	IterationResult.h \
 	KernelProcessControl.h \
 	LocalControlId.h \
+	MultiStep.h \
 	NextChunkCommand.h \
+	PredictStep.h \
 	RecoverCommand.h \
+	RefitStep.h \
+	ShiftStep.h \
+	SingleStep.h \
 	SolverProcessControl.h \
+	SolveStep.h \
+	Step.h \
+	Strategy.h \
+	Structs.h \
+	SubtractStep.h \
 	SynchronizeCommand.h
 
 noinst_HEADERS = \

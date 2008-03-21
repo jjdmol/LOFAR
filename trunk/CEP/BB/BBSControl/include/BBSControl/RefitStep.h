@@ -1,4 +1,4 @@
-//# BBSPredictStep.h: Derived leaf class of the BBSStep composite pattern.
+//# RefitStep.h: Derived leaf class of the Step composite pattern.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_BBSPREDICTSTEP_H
-#define LOFAR_BBSCONTROL_BBSPREDICTSTEP_H
+#ifndef LOFAR_BBSCONTROL_BBSREFITSTEP_H
+#define LOFAR_BBSCONTROL_BBSREFITSTEP_H
 
 // \file
-// Derived leaf class of the BBSStep composite pattern.
+// Derived leaf class of the Step composite pattern.
 
 //# Includes
-#include <BBSControl/BBSSingleStep.h>
+#include <BBSControl/SingleStep.h>
 
 namespace LOFAR
 {
@@ -36,22 +36,22 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
-    // This is a so-called \e leaf class in the BBSStep composite pattern (see
+    // This is a so-called \e leaf class in the Step composite pattern (see
     // Gamma, 1995).
-    // \note Currently, a %BBSPredictStep is in fact identical to a
-    // BBSSingleStep. Only the classType() method is overridden.
-    class BBSPredictStep : public BBSSingleStep
+    // \note Currently, a %RefitStep is in fact identical to a
+    // SingleStep. Only the classType() method is overridden.
+    class RefitStep : public SingleStep
     {
     public:
-      BBSPredictStep(const BBSStep* parent = 0) : 
-        BBSSingleStep(parent)
+      RefitStep(const Step* parent = 0) : 
+        SingleStep(parent)
       {
       }
 
-      BBSPredictStep(const string& name, 
-		     const ACC::APS::ParameterSet& parSet,
-		     const BBSStep* parent) :
-        BBSSingleStep(name, parSet, parent)
+      RefitStep(const string& name, 
+		   const ACC::APS::ParameterSet& parSet,
+		   const Step* parent) :
+        SingleStep(name, parSet, parent)
       {
       }
 

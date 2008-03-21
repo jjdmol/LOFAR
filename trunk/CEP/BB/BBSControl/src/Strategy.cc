@@ -1,4 +1,4 @@
-//#  BBSStrategy.cc: 
+//#  Strategy.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSStep.h>
+#include <BBSControl/Strategy.h>
+#include <BBSControl/Step.h>
 #include <BBSControl/BBSStructs.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/Exceptions.h>
@@ -41,19 +41,19 @@ namespace LOFAR
   {
     using LOFAR::operator<<;
 
-    // Register BBSStrategy with the CommandFactory. Use an anonymous
+    // Register Strategy with the CommandFactory. Use an anonymous
     // namespace. This ensures that the variable `dummy' gets its own private
     // storage area and is only visible in this compilation unit.
     namespace
     {
       bool dummy = CommandFactory::instance().
-	registerClass<BBSStrategy>("BBSStrategy");
+	registerClass<Strategy>("Strategy");
     }
 
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    BBSStrategy::BBSStrategy(const ParameterSet& aParSet) :
+    Strategy::Strategy(const ParameterSet& aParSet) :
       itsWriteSteps(false)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -107,25 +107,25 @@ namespace LOFAR
 
         // Create a new step for each name in \a steps.
         for (uint i = 0; i < steps.size(); ++i) {
-          itsSteps.push_back(BBSStep::create(steps[i], aParSet, 0));
+          itsSteps.push_back(Step::create(steps[i], aParSet, 0));
         }
       } catch (APSException&) {}
     }
 
 
-    BBSStrategy::~BBSStrategy()
+    Strategy::~Strategy()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
-    void BBSStrategy::accept(CommandVisitor &visitor) const
+    void Strategy::accept(CommandVisitor &visitor) const
     {
       visitor.visit(*this);
     }
 
 
-    void BBSStrategy::print(ostream& os) const
+    void Strategy::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       os << endl << indent << "Measurement Set: " << itsDataSet
@@ -144,12 +144,12 @@ namespace LOFAR
     }
  
 
-    vector< shared_ptr<const BBSStep> > BBSStrategy::getAllSteps() const
+    vector< shared_ptr<const Step> > Strategy::getAllSteps() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      vector< shared_ptr<const BBSStep> > steps;
+      vector< shared_ptr<const Step> > steps;
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	vector< shared_ptr<const BBSStep> > substeps =
+	vector< shared_ptr<const Step> > substeps =
           itsSteps[i]->getAllSteps();
 	steps.insert(steps.end(), substeps.begin(), substeps.end());
       }
@@ -159,7 +159,7 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    void BBSStrategy::write(ACC::APS::ParameterSet& ps) const
+    void Strategy::write(ACC::APS::ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -194,13 +194,13 @@ namespace LOFAR
           << itsIntegration.deltaTime;
       ps.adoptBuffer(oss.str());
 
-      LOG_TRACE_COND_STR("Write the BBSStep objects as well?  " <<
+      LOG_TRACE_COND_STR("Write the Step objects as well?  " <<
                          (itsWriteSteps ? "Yes" : "No"));
       if (itsWriteSteps) writeSteps(ps);
     }
 
 
-    void BBSStrategy::read(const ACC::APS::ParameterSet& ps)
+    void Strategy::read(const ACC::APS::ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -226,22 +226,22 @@ namespace LOFAR
       itsIntegration.deltaFreq   = ps.getDouble("Strategy.Integration.Freq");
       itsIntegration.deltaTime   = ps.getDouble("Strategy.Integration.Time");
 
-      // Read back the BBSStep objects? Set \c itsWriteSteps to \c false, if
+      // Read back the Step objects? Set \c itsWriteSteps to \c false, if
       // no steps were specified in the parameter set.
       itsWriteSteps = readSteps(ps);
-      LOG_TRACE_COND_STR("Read the BBSStep objects as well?  " <<
+      LOG_TRACE_COND_STR("Read the Step objects as well?  " <<
                          (itsWriteSteps ? "Yes" : "No"));
     }
 
 
-    const string& BBSStrategy::type() const
+    const string& Strategy::type() const
     {
       static const string theType("Strategy");
       return theType;
     }
 
 
-    bool BBSStrategy::readSteps(const ParameterSet& ps)
+    bool Strategy::readSteps(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -250,7 +250,7 @@ namespace LOFAR
         steps = ps.getStringVector("Strategy.Steps");
         LOG_TRACE_COND_STR("Strategy.Steps = " << steps);
         for (uint i = 0; i < steps.size(); ++i) {
-          itsSteps.push_back(BBSStep::create(steps[i], ps, 0));
+          itsSteps.push_back(Step::create(steps[i], ps, 0));
         }
         return true;
       } catch (APSException&) {
@@ -259,7 +259,7 @@ namespace LOFAR
     }
 
 
-    void BBSStrategy::writeSteps(ParameterSet& ps) const
+    void Strategy::writeSteps(ParameterSet& ps) const
     {
       ostringstream oss;
 
@@ -272,7 +272,7 @@ namespace LOFAR
       oss << " ]";
       ps.adoptBuffer(oss.str());
 
-      // Write the BBSStep objects, one by one.
+      // Write the Step objects, one by one.
       for (uint i = 0; i < itsSteps.size(); ++i) {
         itsSteps[i]->write(ps);
       }
@@ -281,7 +281,7 @@ namespace LOFAR
 
     //##--------   G l o b a l   m e t h o d s   --------##//
 
-    ostream& operator<<(ostream& os, const BBSStrategy& bs)
+    ostream& operator<<(ostream& os, const Strategy& bs)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bs.print(os); 

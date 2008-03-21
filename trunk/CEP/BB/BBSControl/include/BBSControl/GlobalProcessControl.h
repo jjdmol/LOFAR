@@ -42,8 +42,8 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations.
-    class BBSStrategy;
-    class BBSStep;
+    class Strategy;
+    class Step;
     class CommandQueue;
 
     // \addtogroup BBSControl
@@ -118,17 +118,17 @@ namespace LOFAR
       ResultMapType itsResults;
 
       // The strategy that will be executed by this controller.
-      scoped_ptr<BBSStrategy> itsStrategy;
+      scoped_ptr<Strategy> itsStrategy;
 
       // Vector containing all the separate steps, in sequential order, that
       // the strategy consists of.
-      vector< shared_ptr<const BBSStep> >  itsSteps;
+      vector< shared_ptr<const Step> >  itsSteps;
 
       // Iterator for keeping track where we left while traversing the vector
       // \c itsSteps. We need this iterator, because the run() method will be
       // invoked several times by ACCmain. In each call to run() we must
-      // execute one BBSStep.
-      vector< shared_ptr<const BBSStep> >::const_iterator itsStepsIterator;
+      // execute one Step.
+      vector< shared_ptr<const Step> >::const_iterator itsStepsIterator;
 
       // CommandQueue where strategies and steps can be "posted".
       scoped_ptr<CommandQueue> itsCommandQueue;

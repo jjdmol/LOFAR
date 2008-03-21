@@ -29,17 +29,17 @@
 //#include <BBSControl/Command.h>
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/CommandId.h>
-#include <BBSControl/BBSStep.h>
+#include <BBSControl/Step.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
-#include <BBSControl/BBSStrategy.h>
+#include <BBSControl/Strategy.h>
 /*
-#include <BBSControl/BBSPredictStep.h>
-#include <BBSControl/BBSSubtractStep.h>
-#include <BBSControl/BBSCorrectStep.h>
-#include <BBSControl/BBSSolveStep.h>
-#include <BBSControl/BBSSubtractStep.h>
+#include <BBSControl/PredictStep.h>
+#include <BBSControl/SubtractStep.h>
+#include <BBSControl/CorrectStep.h>
+#include <BBSControl/SolveStep.h>
+#include <BBSControl/SubtractStep.h>
 */
 #include <BBSControl/Exceptions.h>
 
@@ -187,7 +187,7 @@ namespace BBS
 /*
             case KernelProcessControl::FIRST_RUN:
                 {
-                shared_ptr<const BBSStrategy>strategy(
+                shared_ptr<const Strategy>strategy(
                     itsCommandQueue->getStrategy());
 
                 if(!strategy)
@@ -312,7 +312,7 @@ namespace BBS
     bool KernelProcessControl::dispatch(const BlobStreamable *message)
     {
         // If the message contains a `strategy', handle the `strategy'.
-        const BBSStrategy *strategy = dynamic_cast<const BBSStrategy*>(message);
+        const Strategy *strategy = dynamic_cast<const Strategy*>(message);
         if(strategy)
         {
             if(handle(strategy))
@@ -328,7 +328,7 @@ return false;            }
         }
 
         // If the message contains a `step', handle the `step'.
-        const BBSStep *step = dynamic_cast<const BBSStep*>(message);
+        const Step *step = dynamic_cast<const Step*>(message);
         if(step)
         {
             if(handle(step))

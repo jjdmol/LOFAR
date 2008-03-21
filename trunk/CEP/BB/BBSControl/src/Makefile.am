@@ -1,22 +1,12 @@
 lib_LTLIBRARIES			= libbbscontrol.la
 
 libbbscontrol_la_SOURCES	= \
-	BBSCorrectStep.cc \
-	BBSMultiStep.cc \
-	BBSPredictStep.cc \
-	BBSRefitStep.cc \
-	BBSShiftStep.cc \
-	BBSSingleStep.cc \
-	BBSSolveStep.cc \
-	BBSStep.cc \
-	BBSStrategy.cc \
-	BBSStructs.cc \
-	BBSSubtractStep.cc \
 	BlobStreamableConnection.cc \
 	Command.cc \
 	CommandExecutor.cc \
 	CommandQueue.cc \
 	CommandResult.cc \
+	CorrectStep.cc \
 	DomainRegistrationRequest.cc \
 	FinalizeCommand.cc \
 	GlobalProcessControl.cc \
@@ -24,13 +14,23 @@ libbbscontrol_la_SOURCES	= \
 	IterationRequest.cc \
 	IterationResult.cc \
 	KernelProcessControl.cc \
+	MultiStep.cc \
 	NextChunkCommand.cc \
 	pqutil.cc \
+	PredictStep.cc \
+	QueryBuilder/AddCommand.cc \
 	RecoverCommand.cc \
+	RefitStep.cc \
+	ShiftStep.cc \
+	SingleStep.cc \
 	SolverProcessControl.cc \
+	SolveStep.cc \
+	Step.cc \
+	Strategy.cc \
 	StreamUtil.cc \
-	SynchronizeCommand.cc \
-	QueryBuilder/AddCommand.cc
+	Structs.cc \
+	SubtractStep.cc \
+	SynchronizeCommand.cc
 
 bin_PROGRAMS			= GlobalControl KernelControl SolverControl
 
