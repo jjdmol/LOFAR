@@ -48,7 +48,7 @@ using namespace TBB_Test;
 TPStub::TPStub(string name)
   : GCFTask((State)&TPStub::initial, name), Test(name)
 {
-  GCF::TM::registerProtocol (TP_PROTOCOL,      TP_PROTOCOL_STRINGS);
+  registerProtocol (TP_PROTOCOL,      TP_PROTOCOL_STRINGS);
 	 
   char addrstr[64];
   snprintf(addrstr, 64, "TPStub.MAC_ADDR_TBBDRIVER");

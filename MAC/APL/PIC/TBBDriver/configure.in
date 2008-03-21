@@ -56,7 +56,7 @@ dnl lofar_MPI
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(MAC/Test/Suite, suite, , 1, Suite/test.h,,)
 lofar_INTERNAL(MAC/GCF/TM, GCFTM, , 1, GCF/TM/GCF_Control.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, , 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/MACIO, MACIO, , 1, MACIO/MACServiceInfo.h,,)
 lofar_INTERNAL(MAC/APL/PIC/TBB_Protocol,TBB_Protocol,,1,APL/TBB_Protocol/TBB_Protocol.ph,,)
 lofar_INTERNAL(LCS/ACC/APS,aps,,1,APS/ParameterSet.h)
 

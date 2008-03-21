@@ -5,7 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol for the TBB driver interface";
 prefix = "TP"; // for the signal names
-id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+15)"; 
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+15)"; 
 
 // specify extra include files
 // e.g.
