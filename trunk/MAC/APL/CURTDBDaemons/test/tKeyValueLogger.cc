@@ -26,9 +26,9 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
+#include <MACIO/KVT_Protocol.ph>
 #include <GCF/TM/EventPort.h>
-#include <APL/APLProtocol/KVT_Protocol.ph>
 
 using namespace LOFAR;
 using namespace LOFAR::GCF::TM;
