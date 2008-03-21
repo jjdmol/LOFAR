@@ -28,14 +28,13 @@
 #include <Common/LofarLocators.h>
 
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StartDaemon_Protocol.ph>
 #include "CTStartDaemon.h"
 
-using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 
 namespace LOFAR {
@@ -62,7 +61,7 @@ CTStartDaemon::CTStartDaemon(const string& name) :
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 	ASSERTSTR(itsTimerPort, "Unable to allocate timer port");
 
-	GCF::TM::registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_STRINGS);
+	registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_STRINGS);
 }
 
 
@@ -419,7 +418,12 @@ GCFEvent::TResult CTStartDaemon::operational_state (GCFEvent& event,
 
 		// is controller already known?
 		CTiter	controller = itsActiveCntlrs.find(adminName);
-		if (!isController(controller)) {		// no, controller is not active
+		if (isController(controller)) {		// yes, do not start it again
+			
+			LOG_DEBUG_STR("NOT starting controller " << adminName << 
+							". It should already be running");
+		}
+		else {
 			// Ask starter Object to start the controller.
 			createdEvent.result = startController(createEvent.cntlrType,
 												  adminName, 

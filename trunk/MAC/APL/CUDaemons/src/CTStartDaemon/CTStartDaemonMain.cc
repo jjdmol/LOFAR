@@ -26,7 +26,6 @@
 #include "CTStartDaemon.h"
 
 using namespace LOFAR;
-using namespace LOFAR::GCF::Common;
 
 int main(int argc, char* argv[])
 {

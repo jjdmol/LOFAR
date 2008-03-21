@@ -26,14 +26,13 @@
 //# Includes
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
-#include <GCF/TM/GCF_TCPPort.h>
-#include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
+#include <MACIO/GCF_Event.h>
+#include <GCF/TM/GCF_Control.h>
 #include <APL/APLCommon/APL_Defines.h>
 
 
 namespace LOFAR {
+  using namespace MACIO;
   using namespace GCF::TM;
   using namespace APLCommon;
   namespace CUDaemons {

@@ -25,19 +25,17 @@
 #include <Common/lofar_fstream.h>
 #include <APS/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
+#include <MACIO/LOG_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>		// LOFAR_SHARE_LOCATION
-#include <APL/APLProtocol/LOG_Protocol.ph>
 #include <log4cplus/socketappender.h>
 #include "LoggingClient.h"
 
 using namespace log4cplus;
 using namespace log4cplus::helpers;
 namespace LOFAR {
-  using namespace ACC::APS;
-  namespace GCF {
-    using namespace Common;
-    using namespace TM;
+	using namespace ACC::APS;
+	using namespace GCF::TM;
     namespace CUDaemons {
 
 #define		MAX_ADMINLINE_LEN	1024
@@ -558,5 +556,4 @@ void LoggingClient::_saveAdmin(const string&	filename)
 }
 
   } // namespace CUDaemons
- } // namespace GCF
 } // namespace LOFAR

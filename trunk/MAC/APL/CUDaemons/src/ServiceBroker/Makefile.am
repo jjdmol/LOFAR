@@ -1,19 +1,19 @@
 # Executables
-bin_PROGRAMS 				= CTStartDaemon
+bin_PROGRAMS 				= ServiceBroker
 
-CTStartDaemon_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
+ServiceBroker_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -Wno-deprecated \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-CTStartDaemon_SOURCES		= CTStartDaemon.cc \
-							  CTStartDaemonMain.cc
-CTStartDaemon_LDADD			= $(LOFAR_DEPEND) 
-CTStartDaemon_DEPENDENCIES	= $(LOFAR_DEPEND)
+ServiceBroker_SOURCES		= ServiceBroker.cc \
+							  ServiceBrokerMain.cc
+ServiceBroker_LDADD			= $(LOFAR_DEPEND)
+ServiceBroker_DEPENDENCIES	= $(LOFAR_DEPEND)
 
-bin_SCRIPTS					= startController.sh
+bin_SCRIPTS					= 
 
-NOINSTHDRS 					= CTStartDaemon.h
+NOINSTHDRS 					= ServiceBroker.h
 
 INSTHDRS 					= 
 
@@ -29,7 +29,7 @@ EXTRA_DIST 					= $(configfiles_DATA) $(sysconf_DATA)
 configfilesdir=$(bindir)
 configfiles_DATA 	= 
 
-sysconf_DATA		= CTStartDaemon.conf \
-					  CTStartDaemon.log_prop 
+sysconf_DATA		= ServiceBroker.conf \
+					  ServiceBroker.log_prop 
 
 include $(top_srcdir)/Makefile.common
