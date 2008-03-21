@@ -1,4 +1,4 @@
-//#  BBSRefitStep.cc: 
+//#  SubtractStep.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,32 +21,34 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/BBSRefitStep.h>
+#include <BBSControl/SubtractStep.h>
 #include <BBSControl/CommandVisitor.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    void BBSRefitStep::accept(CommandVisitor &visitor) const
+    void SubtractStep::accept(CommandVisitor &visitor) const
     {
       visitor.visit(*this);
     }
 
 
-    const string& BBSRefitStep::type() const 
+    const string& SubtractStep::type() const 
     {
-      static const string theType("Refit");
+      static const string theType("Subtract");
       return theType;
     }
 
 
-    const string& BBSRefitStep::operation() const
+    const string& SubtractStep::operation() const
     {
-      static string theOperation("Refit");
+      static string theOperation("Subtract");
       return theOperation;
     }
 
   } // namespace BBS
 
 } // namespace LOFAR
+    
+    

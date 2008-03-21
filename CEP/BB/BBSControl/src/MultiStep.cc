@@ -1,4 +1,4 @@
-//#  BBSMultiStep.cc: 
+//#  MultiStep.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/BBSMultiStep.h>
+#include <BBSControl/MultiStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/CommandVisitor.h>
 #include <APS/ParameterSet.h>
@@ -38,10 +38,10 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    BBSMultiStep::BBSMultiStep(const string& name,
+    MultiStep::MultiStep(const string& name,
 			       const ParameterSet& parset,
-			       const BBSStep* parent) :
-      BBSStep(name, parset, parent)
+			       const Step* parent) :
+      Step(name, parset, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -51,27 +51,27 @@ namespace LOFAR
       // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
 	infiniteRecursionCheck(steps[i]);
-	itsSteps.push_back(BBSStep::create(steps[i], parset, this));
+	itsSteps.push_back(Step::create(steps[i], parset, this));
       }
     }
 
 
-    BBSMultiStep::~BBSMultiStep()
+    MultiStep::~MultiStep()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
-    void BBSMultiStep::accept(CommandVisitor &visitor) const
+    void MultiStep::accept(CommandVisitor &visitor) const
     {
       visitor.visit(*this);
     }
 
 
-    void BBSMultiStep::print(ostream& os) const
+    void MultiStep::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      BBSStep::print(os);
+      Step::print(os);
       Indent id;
       for (uint i = 0; i < itsSteps.size(); ++i) {
 	os << endl << indent << *itsSteps[i];
@@ -81,30 +81,30 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    void BBSMultiStep::write(ParameterSet& ps) const
+    void MultiStep::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << name());
-      BBSStep::write(ps);
+      Step::write(ps);
       writeSteps(ps);
     }
 
 
-    void BBSMultiStep::read(const ParameterSet& ps)
+    void MultiStep::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << name());
-      BBSStep::read(ps);
+      Step::read(ps);
       readSteps(ps);
     }
 
 
-    const string& BBSMultiStep::type() const 
+    const string& MultiStep::type() const 
     {
       static const string theType("MultiStep");
       return theType;
     }
 
 
-    void BBSMultiStep::writeSteps(ParameterSet& ps) const
+    void MultiStep::writeSteps(ParameterSet& ps) const
     {
       ostringstream oss;
 
@@ -117,43 +117,43 @@ namespace LOFAR
       oss << " ]";
       ps.adoptBuffer(oss.str());
 
-      // Write the BBSStep objects, one by one.
+      // Write the Step objects, one by one.
       for (uint i = 0; i < itsSteps.size(); ++i) {
         itsSteps[i]->write(ps);
       }
     }
 
 
-    void BBSMultiStep::readSteps(const ParameterSet& ps)
+    void MultiStep::readSteps(const ParameterSet& ps)
     {
       vector<string> steps = ps.getStringVector("Strategy.Steps");
       for (uint i = 0; i < steps.size(); ++i) {
-        itsSteps.push_back(BBSStep::create(steps[i], ps, 0));
+        itsSteps.push_back(Step::create(steps[i], ps, 0));
       }
     }
 
 
     void
-    BBSMultiStep::doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const
+    MultiStep::doGetAllSteps(vector< shared_ptr<const Step> >& steps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       for (uint i = 0; i < itsSteps.size(); ++i) {
-	vector< shared_ptr<const BBSStep> > substeps = itsSteps[i]->getAllSteps();
+	vector< shared_ptr<const Step> > substeps = itsSteps[i]->getAllSteps();
 	steps.insert(steps.end(), substeps.begin(), substeps.end());
       }
     }
     
 
-    void BBSMultiStep::infiniteRecursionCheck(const string& nm) const
+    void MultiStep::infiniteRecursionCheck(const string& nm) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       if (nm == name()) {
 	THROW (BBSControlException, 
-	       "Infinite recursion detected in defintion of BBSStep \""
+	       "Infinite recursion detected in defintion of Step \""
 	       << nm << "\". Please check your ParameterSet file.");
       }
-      const BBSMultiStep* parent;
-      if ((parent = dynamic_cast<const BBSMultiStep*>(getParent())) != 0) {
+      const MultiStep* parent;
+      if ((parent = dynamic_cast<const MultiStep*>(getParent())) != 0) {
 	parent->infiniteRecursionCheck(nm);
       }
     }

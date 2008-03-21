@@ -1,4 +1,4 @@
-//#  BBSCorrectStep.cc: 
+//#  PredictStep.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,32 +21,30 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/BBSCorrectStep.h>
+#include <BBSControl/PredictStep.h>
 #include <BBSControl/CommandVisitor.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    void BBSCorrectStep::accept(CommandVisitor &visitor) const
+    void PredictStep::accept(CommandVisitor &visitor) const
     {
         visitor.visit(*this);
     }
 
 
-    const string& BBSCorrectStep::operation() const
+    const string& PredictStep::type() const 
     {
-      static string theOperation("Correct");
-      return theOperation;
-    }
-
-
-    const string& BBSCorrectStep::type() const 
-    {
-      static const string theType("Correct");
+      static const string theType("Predict");
       return theType;
     }
 
+    const string& PredictStep::operation() const
+    {
+      static string theOperation("Predict");
+      return theOperation;
+    }
 
   } // namespace BBS
 

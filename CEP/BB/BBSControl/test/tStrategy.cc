@@ -1,4 +1,4 @@
-//#  tBBSStrategy.cc: test program for the BBSStrategy class
+//#  tStrategy.cc: test program for the Strategy class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,9 +21,9 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSStep.h>
-#include <BBSControl/BBSMultiStep.h>
+#include <BBSControl/Strategy.h>
+#include <BBSControl/Step.h>
+#include <BBSControl/MultiStep.h>
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
@@ -44,7 +44,7 @@ bool compareFiles(const char* f1, const char* f2)
 
 int main()
 {
-  const string progName("tBBSStrategy");
+  const string progName("tStrategy");
   INIT_LOGGER(progName.c_str());
 
   try {
@@ -54,11 +54,11 @@ int main()
     const char* outFile = "tBBSControl.parset.out";
 
     ParameterSet ps(psFile);
-    BBSStrategy writtenStrategy(ps);
+    Strategy writtenStrategy(ps);
     writtenStrategy.shouldWriteSteps(true);
 
     {
-      BBSStrategy dummy(writtenStrategy);
+      Strategy dummy(writtenStrategy);
     }
 
     ps.clear();
@@ -68,7 +68,7 @@ int main()
 
     ps.clear();
     ps.adoptFile(refFile);
-    BBSStrategy readStrategy;
+    Strategy readStrategy;
     ps >> readStrategy;
 
     ps.clear();

@@ -1,4 +1,4 @@
-//#  BBSStep.cc: 
+//#  Step.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,14 +22,14 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/BBSStep.h>
-#include <BBSControl/BBSCorrectStep.h>
-#include <BBSControl/BBSPredictStep.h>
-#include <BBSControl/BBSRefitStep.h>
-#include <BBSControl/BBSShiftStep.h>
-#include <BBSControl/BBSSolveStep.h>
-#include <BBSControl/BBSSubtractStep.h>
-#include <BBSControl/BBSMultiStep.h>
+#include <BBSControl/Step.h>
+#include <BBSControl/CorrectStep.h>
+#include <BBSControl/PredictStep.h>
+#include <BBSControl/RefitStep.h>
+#include <BBSControl/ShiftStep.h>
+#include <BBSControl/SolveStep.h>
+#include <BBSControl/SubtractStep.h>
+#include <BBSControl/MultiStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
@@ -47,13 +47,13 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    BBSStep::~BBSStep()
+    Step::~Step()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
-    string BBSStep::fullName() const
+    string Step::fullName() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       string name;
@@ -63,27 +63,27 @@ namespace LOFAR
     }
 
 
-    vector< shared_ptr<const BBSStep> > BBSStep::getAllSteps() const
+    vector< shared_ptr<const Step> > Step::getAllSteps() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      vector< shared_ptr<const BBSStep> > steps;
+      vector< shared_ptr<const Step> > steps;
       doGetAllSteps(steps);
       return steps;
     }
 
 
-    shared_ptr<BBSStep> BBSStep::create(const string& name,
+    shared_ptr<Step> Step::create(const string& name,
                                         const ParameterSet& parset,
-                                        const BBSStep* parent)
+                                        const Step* parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      shared_ptr<BBSStep> step;
+      shared_ptr<Step> step;
 
       // If \a parset contains a key <tt>Step.<em>name</em>.Steps</tt>, then
-      // \a name is a BBSMultiStep, otherwise it is a SingleStep.
+      // \a name is a MultiStep, otherwise it is a SingleStep.
       if (parset.isDefined("Step." + name + ".Steps")) {
 	LOG_TRACE_COND_STR(name << " is a MultiStep");
-	step.reset(new BBSMultiStep(name, parset, parent));
+	step.reset(new MultiStep(name, parset, parent));
       } else {
 	LOG_TRACE_COND_STR(name << " is a SingleStep");
 	// We'll have to figure out what kind of SingleStep we must
@@ -93,17 +93,17 @@ namespace LOFAR
             toUpper(parset.getString("Step." + name + ".Operation"));
           LOG_TRACE_COND_STR("Creating a " << oper << " step ...");
           if      (oper == "SOLVE")
-            step.reset(new BBSSolveStep(name, parset, parent));
+            step.reset(new SolveStep(name, parset, parent));
           else if (oper == "SUBTRACT")
-            step.reset(new BBSSubtractStep(name, parset, parent));
+            step.reset(new SubtractStep(name, parset, parent));
           else if (oper == "CORRECT")
-            step.reset(new BBSCorrectStep(name, parset, parent));
+            step.reset(new CorrectStep(name, parset, parent));
           else if (oper == "PREDICT")
-            step.reset(new BBSPredictStep(name, parset, parent));
+            step.reset(new PredictStep(name, parset, parent));
           else if (oper == "SHIFT")
-            step.reset(new BBSShiftStep(name, parset, parent));
+            step.reset(new ShiftStep(name, parset, parent));
           else if (oper == "REFIT")
-            step.reset(new BBSRefitStep(name, parset, parent));
+            step.reset(new RefitStep(name, parset, parent));
           else THROW (BBSControlException, "Operation \"" << oper << 
                       "\" is not a valid Step operation");
         } catch (APSException& e) {
@@ -116,9 +116,9 @@ namespace LOFAR
 
     //##--------   P r o t e c t e d   m e t h o d s   --------##//
 
-    BBSStep::BBSStep(const string& name, 
+    Step::Step(const string& name, 
 		     const ParameterSet& parset,
-		     const BBSStep* parent)
+		     const Step* parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -131,14 +131,14 @@ namespace LOFAR
       itsName = name;
       itsParent = parent;
 
-      // Overrride default values for data members of the current BBSStep, if
+      // Overrride default values for data members of the current Step, if
       // they're specified in \a parset.
       read(parset.makeSubset("Step." + name + "."));
 
     }
 
 
-    void BBSStep::write(ParameterSet& ps) const
+    void Step::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << itsName);
       ostringstream oss;
@@ -156,7 +156,7 @@ namespace LOFAR
     }
 
 
-    void BBSStep::read(const ParameterSet& ps)
+    void Step::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -197,7 +197,7 @@ namespace LOFAR
     }
 
 
-    void BBSStep::print(ostream& os) const
+    void Step::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       os << "Step: " << type();
@@ -216,7 +216,7 @@ namespace LOFAR
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
     void 
-    BBSStep::doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const
+    Step::doGetAllSteps(vector< shared_ptr<const Step> >& steps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       steps.push_back(shared_from_this());
@@ -225,7 +225,7 @@ namespace LOFAR
 
     //##--------   G l o b a l   m e t h o d s   --------##//
 
-    ostream& operator<<(ostream& os, const BBSStep& bs)
+    ostream& operator<<(ostream& os, const Step& bs)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       bs.print(os);

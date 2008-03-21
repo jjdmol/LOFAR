@@ -1,4 +1,4 @@
-//# BBSMultiStep.h: Derived composite class of the BBSStep composite pattern.
+//# MultiStep.h: Derived composite class of the Step composite pattern.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,10 +24,10 @@
 #define LOFAR_BBSCONTROL_BBSMULTISTEP_H
 
 // \file
-// Derived composite class of the BBSStep composite pattern.
+// Derived composite class of the Step composite pattern.
 
 //# Includes
-#include <BBSControl/BBSStep.h>
+#include <BBSControl/Step.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
@@ -39,26 +39,26 @@ namespace LOFAR
 
     // This is the so-called \e composite class in the composite pattern (see
     // Gamma, 1995). The composite class contains pointers to zero or more
-    // BBSStep (component) objects.
-    class BBSMultiStep : public BBSStep
+    // Step (component) objects.
+    class MultiStep : public Step
     {
     public:
-      // Construct a BBSMultiStep. \a name identifies the step name in the
+      // Construct a MultiStep. \a name identifies the step name in the
       // parameter set file. It does \e not uniquely identify the step \e
       // object being created. The third argument is used to pass a
-      // backreference to the parent BBSStep object.
-      BBSMultiStep(const string& name,
+      // backreference to the parent Step object.
+      MultiStep(const string& name,
 		   const ACC::APS::ParameterSet& parset,
-		   const BBSStep* parent);
+		   const Step* parent);
 
-      // Default constructor. Construct an empty BBSMultiStep object and make
-      // it a child of the BBSStep object \a parent.
-      BBSMultiStep(const BBSStep* parent = 0) :
-        BBSStep(parent)
+      // Default constructor. Construct an empty MultiStep object and make
+      // it a child of the Step object \a parent.
+      MultiStep(const Step* parent = 0) :
+        Step(parent)
       {
       }
 
-      virtual ~BBSMultiStep();
+      virtual ~MultiStep();
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;
@@ -77,28 +77,28 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this.
       virtual void read(const ACC::APS::ParameterSet& ps);
 
-      // Write the individual BBSStep objects in \a itsSteps, which make up
-      // this BBSMultiStep, to the ParameterSet \a ps.
+      // Write the individual Step objects in \a itsSteps, which make up
+      // this MultiStep, to the ParameterSet \a ps.
       void writeSteps(ACC::APS::ParameterSet& ps) const;
 
-      // Read the individual BBSStep objects, which make up this BBSMultiStep,
+      // Read the individual Step objects, which make up this MultiStep,
       // from the ParameterSet \a ps and store them in \a itsSteps.
       void readSteps(const ACC::APS::ParameterSet& ps);
 
-      // Implementation of getAllSteps() for BBSMultiStep. It retrieves all
+      // Implementation of getAllSteps() for MultiStep. It retrieves all
       // steps by calling getAllSteps() on all steps that comprise this
       // multistep.
       virtual void 
-      doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const;
+      doGetAllSteps(vector< shared_ptr<const Step> >& steps) const;
 
       // Check to see if there's an infinite recursion present in the
-      // definition of a BBSMultiStep. This can happen when one of the steps
-      // (identified by the argument \a name) defining the BBSMultiStep refers
-      // directly or indirectly to that same BBSMultiStep. 
+      // definition of a MultiStep. This can happen when one of the steps
+      // (identified by the argument \a name) defining the MultiStep refers
+      // directly or indirectly to that same MultiStep. 
       void infiniteRecursionCheck(const string& name) const;
 
-      // Vector holding a sequence of BBSSteps.
-      vector< shared_ptr<const BBSStep> > itsSteps;
+      // Vector holding a sequence of Steps.
+      vector< shared_ptr<const Step> > itsSteps;
     };
 
     // @}

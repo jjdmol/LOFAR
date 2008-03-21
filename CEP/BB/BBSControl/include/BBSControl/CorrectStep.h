@@ -1,4 +1,4 @@
-//# BBSSubtractStep.h: Derived leaf class of the BBSStep composite pattern.
+//# CorrectStep.h: Derived leaf class of the Step composite pattern.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,14 +20,14 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_BBSSUBTRACTSTEP_H
-#define LOFAR_BBSCONTROL_BBSSUBTRACTSTEP_H
+#ifndef LOFAR_BBSCONTROL_BBSCORRECTSTEP_H
+#define LOFAR_BBSCONTROL_BBSCORRECTSTEP_H
 
 // \file
-// Derived leaf class of the BBSStep composite pattern.
+// Derived leaf class of the Step composite pattern.
 
 //# Includes
-#include <BBSControl/BBSSingleStep.h>
+#include <BBSControl/SingleStep.h>
 
 namespace LOFAR
 {
@@ -36,28 +36,32 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
-    // This is a so-called \e leaf class in the BBSStep composite pattern (see
+    // This is a so-called \e leaf class in the Step composite pattern (see
     // Gamma, 1995).
-    // \note Currently, a %BBSSubtractStep is in fact identical to a
-    // BBSSingleStep. Only the classType() method is overridden.
-    class BBSSubtractStep : public BBSSingleStep
+    // \note Currently, a %CorrectStep is in fact identical to a
+    // SingleStep. Only the classType() method is overridden.
+    class CorrectStep : public SingleStep
     {
     public:
-      BBSSubtractStep(const BBSStep* parent = 0) : 
-	BBSSingleStep(parent) {}
+      CorrectStep(const Step* parent = 0) : 
+        SingleStep(parent)
+      {
+      }
 
-      BBSSubtractStep(const string& name, 
-		      const ACC::APS::ParameterSet& parSet,
-		      const BBSStep* parent) :
-	BBSSingleStep(name, parSet, parent) {}
+      CorrectStep(const string& name, 
+		     const ACC::APS::ParameterSet& parSet,
+		     const Step* parent) :
+        SingleStep(name, parSet, parent)
+      {
+      }
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;
 
-       // Return the operation type of \c *this as a string.
+      // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
 
-     // Return the command type of \c *this as a string.
+      // Return the command type of \c *this as a string.
       virtual const string& type() const;
     };
 

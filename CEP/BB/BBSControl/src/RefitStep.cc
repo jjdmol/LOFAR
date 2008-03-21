@@ -1,4 +1,4 @@
-//#  BBSShiftStep.cc: 
+//#  RefitStep.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,29 +21,29 @@
 //#  $Id$
 
 #include <lofar_config.h>
-#include <BBSControl/BBSShiftStep.h>
+#include <BBSControl/RefitStep.h>
 #include <BBSControl/CommandVisitor.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
-    void BBSShiftStep::accept(CommandVisitor &visitor) const
+    void RefitStep::accept(CommandVisitor &visitor) const
     {
       visitor.visit(*this);
     }
 
 
-    const string& BBSShiftStep::type() const 
+    const string& RefitStep::type() const 
     {
-      static const string theType("Shift");
+      static const string theType("Refit");
       return theType;
     }
 
 
-    const string& BBSShiftStep::operation() const
+    const string& RefitStep::operation() const
     {
-      static string theOperation("Shift");
+      static string theOperation("Refit");
       return theOperation;
     }
 

@@ -36,7 +36,7 @@ namespace LOFAR
     // @{
 
     // Concrete \c finalize command. This command is sent to the local
-    // controllers when a BBS run has been completed; i.e. the BBSStrategy was
+    // controllers when a BBS run has been completed; i.e. the Strategy was
     // executed by every local controller for every chunk of data.
     class FinalizeCommand : public Command
     {

@@ -1,4 +1,4 @@
-//# BBSSingleStep.h: Derived leaf class of the BBSStep composite pattern.
+//# SingleStep.h: Derived leaf class of the Step composite pattern.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,10 +24,10 @@
 #define LOFAR_BBSCONTROL_BBSSINGLESTEP_H
 
 // \file
-// Derived leaf class of the BBSStep composite pattern.
+// Derived leaf class of the Step composite pattern.
 
 //# Includes
-#include <BBSControl/BBSStep.h>
+#include <BBSControl/Step.h>
 
 namespace LOFAR
 {
@@ -36,15 +36,15 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
-    // This is a so-called \e leaf class in the BBSStep composite pattern (see
+    // This is a so-called \e leaf class in the Step composite pattern (see
     // Gamma, 1995).
-    // \note %BBSSingleStep not implemented as a leaf class; it contains a
-    // number of data members that are common to "real" BBSStep leaf classes,
-    // like BBSSolveStep.
-    class BBSSingleStep : public BBSStep
+    // \note %SingleStep not implemented as a leaf class; it contains a
+    // number of data members that are common to "real" Step leaf classes,
+    // like SolveStep.
+    class SingleStep : public Step
     {
     public:
-      virtual ~BBSSingleStep();
+      virtual ~SingleStep();
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
@@ -57,17 +57,17 @@ namespace LOFAR
       string outputData() const { return itsOutputData; }
 
     protected:
-      // Default constructor. Construct an empty BBSSingleStep object and make
-      // it a child of the BBSStep object \a parent.
-      BBSSingleStep(const BBSStep* parent = 0);
+      // Default constructor. Construct an empty SingleStep object and make
+      // it a child of the Step object \a parent.
+      SingleStep(const Step* parent = 0);
 
-      // Construct a BBSSingleStep having the name \a name. Configuration
+      // Construct a SingleStep having the name \a name. Configuration
       // information for this step can be retrieved from the parameter set \a
       // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
-      // is a pointer to the BBSStep object that is the parent of \c *this.
-      BBSSingleStep(const string& name,
+      // is a pointer to the Step object that is the parent of \c *this.
+      SingleStep(const string& name,
                     const ACC::APS::ParameterSet& parset,
-                    const BBSStep* parent);
+                    const Step* parent);
 
       // Write the contents of \c *this into the ParameterSet \a ps.
       virtual void write(ACC::APS::ParameterSet& ps) const;

@@ -1,4 +1,4 @@
-//#  BBSSolveStep.cc: 
+//#  SolveStep.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/BBSSolveStep.h>
+#include <BBSControl/SolveStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/StreamUtil.h>
@@ -39,23 +39,23 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    BBSSolveStep::BBSSolveStep(const BBSStep* parent) : 
-      BBSSingleStep(parent),
+    SolveStep::SolveStep(const Step* parent) : 
+      SingleStep(parent),
       itsMaxIter(0), itsEpsilon(0), itsMinConverged(0)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
-    BBSSolveStep::BBSSolveStep(const string& name, 
+    SolveStep::SolveStep(const string& name, 
 			       const ParameterSet& parset,
-			       const BBSStep* parent) :
-      BBSSingleStep(name, parset, parent)
+			       const Step* parent) :
+      SingleStep(name, parset, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Create a subset of \a parset, containing only the relevant keys for
-      // the current BBSSingleStep.
+      // the current SingleStep.
       ParameterSet ps(parset.makeSubset("Step." + name + ".Solve."));
 
       // Get the relevant parameters from the Parameter Set \a parset. 
@@ -70,22 +70,22 @@ namespace LOFAR
     }
 
 
-    BBSSolveStep::~BBSSolveStep()
+    SolveStep::~SolveStep()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
-    void BBSSolveStep::accept(CommandVisitor &visitor) const
+    void SolveStep::accept(CommandVisitor &visitor) const
     {
       visitor.visit(*this);
     }
 
 
-    void BBSSolveStep::print(ostream& os) const
+    void SolveStep::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      BBSSingleStep::print(os);
+      SingleStep::print(os);
       Indent id;
       os << endl << indent << "Solve: ";
       {
@@ -100,14 +100,14 @@ namespace LOFAR
     }
 
 
-    const string& BBSSolveStep::type() const
+    const string& SolveStep::type() const
     {
       static const string theType("Solve");
       return theType;
     }
 
 
-    const string& BBSSolveStep::operation() const
+    const string& SolveStep::operation() const
     {
       static string theOperation("Solve");
       return theOperation;
@@ -115,10 +115,10 @@ namespace LOFAR
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    void BBSSolveStep::write(ParameterSet& ps) const
+    void SolveStep::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      BBSSingleStep::write(ps);
+      SingleStep::write(ps);
       ostringstream oss;
       oss << endl << "MaxIter = " << itsMaxIter
           << endl << "Epsilon = " << itsEpsilon
@@ -131,10 +131,10 @@ namespace LOFAR
     }
 
 
-    void BBSSolveStep::read(const ParameterSet& ps)
+    void SolveStep::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      BBSSingleStep::read(ps);
+      SingleStep::read(ps);
       ParameterSet pss(ps.makeSubset("Step." + name() + ".Solve."));
 //       ParameterSet pss(ps);
       itsMaxIter                 = pss.getInt32("MaxIter");

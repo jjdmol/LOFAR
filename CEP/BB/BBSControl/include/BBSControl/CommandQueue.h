@@ -51,8 +51,8 @@ namespace LOFAR
   {
     //# Forward Declarations
     class Command;
-    class BBSStep;
-    class BBSStrategy;
+    class Step;
+    class Strategy;
     class CommandResult;
     class CommandId;
     class LocalControlId;
@@ -172,7 +172,7 @@ namespace LOFAR
 
       // Forward this call to setStrategy(), in order to avoid the risk that
       // the return value of the stored procedure being called is ignored.
-      void addCommand(const BBSStrategy& cmd) const
+      void addCommand(const Strategy& cmd) const
       { setStrategy(cmd); }
 
       // Get the next Command from the command queue. When this command is
@@ -188,20 +188,20 @@ namespace LOFAR
       // multiple queries are \e not executed as one transaction. So beware!
       //
       // \todo Wrap multiple queries (needed for, e.g., reconstructing a
-      // BBSSolveStep) in one transaction.
+      // SolveStep) in one transaction.
       pair<shared_ptr<const Command>, const CommandId> getNextCommand() const;
 
-      // Set the BBSStrategy in the command queue. All information, \e except
-      // the BBSStep objects within the BBSStrategy are stored in the
+      // Set the Strategy in the command queue. All information, \e except
+      // the Step objects within the Strategy are stored in the
       // database. This "meta data" is needed to (re)start a BBS run. This
       // method is typically used by the global controller.
-      void setStrategy(const BBSStrategy&) const;
+      void setStrategy(const Strategy&) const;
 
-      // Retrieve the BBSStrategy for this BBS run. The information in the
-      // database consists of the "meta data" of a BBSStrategy object
-      // (i.e. all information \e except the BBSStep objects). This method is
+      // Retrieve the Strategy for this BBS run. The information in the
+      // database consists of the "meta data" of a Strategy object
+      // (i.e. all information \e except the Step objects). This method is
       // typically called by the local controller.
-      shared_ptr<const BBSStrategy> getStrategy() const;
+      shared_ptr<const Strategy> getStrategy() const;
 
       // Add the result \a result for the command (identified by) \a commandId
       // to the blackboard result table. \a commandId must be the ID of the

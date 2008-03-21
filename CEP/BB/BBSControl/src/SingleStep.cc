@@ -1,4 +1,4 @@
-//#  BBSSingleStep.cc: 
+//#  SingleStep.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/BBSSingleStep.h>
+#include <BBSControl/SingleStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/StreamUtil.h>
@@ -38,16 +38,16 @@ namespace LOFAR
 
     //##--------   P u b l i c   m e t h o d s   --------##//
 
-    BBSSingleStep::~BBSSingleStep()
+    SingleStep::~SingleStep()
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
-    void BBSSingleStep::print(ostream& os) const
+    void SingleStep::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      BBSStep::print(os);
+      Step::print(os);
       Indent id;
       os << endl << indent << "Output data: " << itsOutputData;
     }
@@ -55,22 +55,22 @@ namespace LOFAR
 
     //##--------   P r o t e c t e d   m e t h o d s   --------##//
 
-    BBSSingleStep::BBSSingleStep(const BBSStep* parent) :
-      BBSStep(parent)
+    SingleStep::SingleStep(const Step* parent) :
+      Step(parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
 
 
-    BBSSingleStep::BBSSingleStep(const string& name, 
+    SingleStep::SingleStep(const string& name, 
 				 const ParameterSet& parset,
-				 const BBSStep* parent) :
-      BBSStep(name, parset, parent)
+				 const Step* parent) :
+      Step(name, parset, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Create a subset of \a parset, containing only the relevant keys for
-      // the current BBSSingleStep.
+      // the current SingleStep.
       ParameterSet ps(parset.makeSubset("Step." + name + "."));
 
       // Get the name of the data column to write to
@@ -78,19 +78,19 @@ namespace LOFAR
     }
 
 
-    void BBSSingleStep::write(ParameterSet& ps) const
+    void SingleStep::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      BBSStep::write(ps);
+      Step::write(ps);
       ps.replace("Step." + name() + ".OutputData", itsOutputData);
       ps.replace("Step." + name() + ".Operation", toUpper(operation()));
     }
 
 
-    void BBSSingleStep::read(const ParameterSet& ps)
+    void SingleStep::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      BBSStep::read(ps);
+      Step::read(ps);
       itsOutputData = ps.getString("Step." + name() + ".OutputData");
     }
 

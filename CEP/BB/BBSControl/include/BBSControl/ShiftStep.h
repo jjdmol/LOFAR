@@ -1,4 +1,4 @@
-//# BBSShiftStep.h: Derived leaf class of the BBSStep composite pattern.
+//# ShiftStep.h: Derived leaf class of the Step composite pattern.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,10 +24,10 @@
 #define LOFAR_BBSCONTROL_BBSSHIFTSTEP_H
 
 // \file
-// Derived leaf class of the BBSStep composite pattern.
+// Derived leaf class of the Step composite pattern.
 
 //# Includes
-#include <BBSControl/BBSSingleStep.h>
+#include <BBSControl/SingleStep.h>
 
 namespace LOFAR
 {
@@ -36,22 +36,22 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
-    // This is a so-called \e leaf class in the BBSStep composite pattern (see
+    // This is a so-called \e leaf class in the Step composite pattern (see
     // Gamma, 1995).
-    // \note Currently, a %BBSShiftStep is in fact identical to a
-    // BBSSingleStep. Only the classType() method is overridden.
-    class BBSShiftStep : public BBSSingleStep
+    // \note Currently, a %ShiftStep is in fact identical to a
+    // SingleStep. Only the classType() method is overridden.
+    class ShiftStep : public SingleStep
     {
     public:
-      BBSShiftStep(const BBSStep* parent = 0) :
-        BBSSingleStep(parent)
+      ShiftStep(const Step* parent = 0) :
+        SingleStep(parent)
       {
       }
 
-      BBSShiftStep(const string& name, 
+      ShiftStep(const string& name, 
 		   const ACC::APS::ParameterSet& parSet,
-		   const BBSStep* parent) :
-        BBSSingleStep(name, parSet, parent)
+		   const Step* parent) :
+        SingleStep(name, parSet, parent)
       {
       }
 
