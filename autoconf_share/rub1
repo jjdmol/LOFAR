@@ -332,7 +332,9 @@ else
 fi
 
 # Add (leaf) package to the file to get correct build order.
-echo "$pkgname #-v$getvers" >> allpkg.tmp
+if test $conftype = 0; then
+  echo "$pkgname #-v$getvers" >> allpkg.tmp
+fi
 # Check out all packages as needed.
 if [ $recur != 0 ]; then
   for pkg in $pkgs
