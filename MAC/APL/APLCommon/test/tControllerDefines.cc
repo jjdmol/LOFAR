@@ -25,14 +25,13 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
-#include <GCF/Utils.h>		// myHostname
+#include <Common/SystemUtil.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
 
 using namespace LOFAR;
 using namespace LOFAR::APLCommon;
 using namespace LOFAR::Deployment;
-using namespace LOFAR::GCF::Common;
 
 int main (int	argc, char* argv[]) 
 {
@@ -87,8 +86,8 @@ int main (int	argc, char* argv[])
 	LOG_INFO_STR("Sharedname of shared name   = " << sharedControllerName(sharedName));
 
 
-	LOG_INFO_STR("myHostname(short) = " << GCF::Common::myHostname(false));
-	LOG_INFO_STR("myHostname(long)  = " << GCF::Common::myHostname(true));
+	LOG_INFO_STR("myHostname(short) = " << myHostname(false));
+	LOG_INFO_STR("myHostname(long)  = " << myHostname(true));
 	LOG_INFO_STR("ringNumber = " << stationRingNr());
 	LOG_INFO_STR("armNumber  = " << stationArmNr());
 	LOG_INFO_STR("PVSSDBname = " << PVSSDatabaseName());

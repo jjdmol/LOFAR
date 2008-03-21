@@ -26,10 +26,10 @@
 //# Includes
 #include <sys/stat.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 #include <APS/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/GCF_ServiceInfo.h>
-#include <GCF/Utils.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
@@ -42,7 +42,6 @@ using namespace boost;
 namespace LOFAR {
   using namespace Deployment;
   using namespace GCF::TM;
-  using namespace GCF::Common;
   using namespace ACC::APS;
   namespace APLCommon {
 
@@ -77,8 +76,8 @@ ChildControl::ChildControl() :
 	itsCompletionPort		(0)
 {
 	// Log the protocols I use.
-	GCF::TM::registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol(STARTDAEMON_PROTOCOL,STARTDAEMON_PROTOCOL_STRINGS);
+	registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol(STARTDAEMON_PROTOCOL,STARTDAEMON_PROTOCOL_STRINGS);
 
 	// adopt optional redefinition of startup-retry settings
 	if (globalParameterSet()->isDefined("ChildControl.StartupRetryInterval")) {
@@ -219,8 +218,8 @@ bool ChildControl::startChild (uint16				aCntlrType,
 		cntlrSet.writeFile (cntlrSetName);
 
 		// When program must run on another system scp file to that system
-		if (hostname != GCF::Common::myHostname(false)  && 
-			hostname != GCF::Common::myHostname(true)) {
+		if (hostname != myHostname(false)  && 
+			hostname != myHostname(true)) {
 			APLUtilities::remoteCopy(cntlrSetName, hostname, cntlrSetName);
 			APLUtilities::remoteCopy(baseSetName, hostname, baseSetName);
 		}
@@ -661,7 +660,7 @@ void ChildControl::_processActionList()
 					STARTDAEMONCreateEvent		startRequest;
 					startRequest.cntlrType 	   = action->cntlrType;
 					startRequest.cntlrName 	   = action->cntlrName;
-					startRequest.parentHost	   = GCF::Common::myHostname(true);
+					startRequest.parentHost	   = myHostname(true);
 					startRequest.parentService = itsListener->makeServiceName();
 					startDaemon->second->send(startRequest);
 
