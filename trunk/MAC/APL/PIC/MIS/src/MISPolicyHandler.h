@@ -23,6 +23,7 @@
 #ifndef MISPOLICYHANDLER_H
 #define MISPOLICYHANDLER_H
 
+#include <Common/lofar_list.h>
 #include <MIS_Protocol.ph>
 
 namespace LOFAR {

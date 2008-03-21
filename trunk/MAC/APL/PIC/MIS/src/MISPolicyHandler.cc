@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/lofar_fstream.h>
+#include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 
 //#include <GCF/LogSys/GCF_KeyValueLogger.h>
