@@ -15,7 +15,7 @@ DOCHDRS				= RTDB_PropertySet.h \
 					  PropSetResponse.h \
 					  DPanswer.h
    
-librtdb_la_CPPFLAGS	= -I$(top_srcdir)/PVSS/src
+libgcfrtdb_la_CPPFLAGS	= -I$(top_srcdir)/PVSS/src
 
 BUILT_SOURCES 		= DP_Protocol.ph \
 					  DP_Protocol.cc
@@ -26,9 +26,9 @@ EXTRA_DIST 			= DP_Protocol.prot \
 pkgincludedir		= $(includedir)/GCF/RTDB
 pkginclude_HEADERS	= $(BUILT_SOURCES)
 
-lib_LTLIBRARIES 	= librtdb.la
+lib_LTLIBRARIES 	= libgcfrtdb.la
 
-librtdb_la_SOURCES	= $(BUILT_SOURCES) \
+libgcfrtdb_la_SOURCES	= $(BUILT_SOURCES) \
 					  RTDB_PropertySet.cc \
 					  DPservice.cc \
 					  DPanswer.cc
