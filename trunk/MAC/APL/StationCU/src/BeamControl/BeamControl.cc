@@ -636,8 +636,8 @@ bool BeamControl::doPrepare()
 		LOG_DEBUG_STR("subarrayName:" << beamAllocEvent.subarrayname);
 
 		// construct subband to beamlet map
-		vector<int16>::iterator beamletIt = theObs.beams[i].beamlets.begin();
-		vector<int16>::iterator subbandIt = theObs.beams[i].subbands.begin();
+		vector<int32>::iterator beamletIt = theObs.beams[i].beamlets.begin();
+		vector<int32>::iterator subbandIt = theObs.beams[i].subbands.begin();
 		while (beamletIt != theObs.beams[i].beamlets.end() && subbandIt != theObs.beams[i].subbands.end()) {
 			LOG_TRACE_VAR_STR("alloc[" << *beamletIt << "]=" << *subbandIt);
 			beamAllocEvent.allocation()[*beamletIt++] = *subbandIt++;

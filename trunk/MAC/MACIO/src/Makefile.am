@@ -1,11 +1,11 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
+	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 	cp $*.ph $(top_builddir)/include/MACIO/
 
 %.cc: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
+	$(AUTOGEN) --writable -L $(top_srcdir)/autogen $<
 
 clean-local:
 	rm -f *.ph
