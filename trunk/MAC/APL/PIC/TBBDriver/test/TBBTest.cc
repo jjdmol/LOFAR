@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include <APL/RTCCommon/TestSuite.h>
@@ -45,7 +45,7 @@ using namespace TBB_Test;
 TBBTest::TBBTest(string name)
     : GCFTask((State)&TBBTest::initial, name), Test(name)
 {
-  GCF::TM::registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
+  registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
 
   itsClient.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
 	

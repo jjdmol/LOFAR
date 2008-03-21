@@ -26,7 +26,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 
@@ -2102,7 +2102,7 @@ TBBCtl::TBBCtl(string name, int argc, char** argv): GCFTask((State)&TBBCtl::init
 	for(int boardnr = 0; boardnr < MAX_N_TBBBOARDS; boardnr++) {
 		itsMemory[boardnr] = 0;
 	}
-  GCF::TM::registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
+  registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
 	itsServerPort.init(*this, MAC_SVCMASK_TBBDRIVER, GCFPortInterface::SAP, TBB_PROTOCOL);
 	itsCmdTimer = new GCFTimerPort(*this, "AliveTimer");
 }

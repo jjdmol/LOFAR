@@ -29,7 +29,7 @@
 
 #include <Common/LofarTypes.h>
 #include <GCF/TM/GCF_Control.h>
-#include <Common/lofar_set.h>
+#include <Common/lofar_list.h>
 
 #include <APL/TBB_Protocol/TBB_Protocol.ph>
 #include "TP_Protocol.ph"
@@ -85,9 +85,9 @@ namespace LOFAR {
 			private:
 				TbbSettings *TS;
 				
-				std::list<GCFPortInterface*> itsClientTriggerMsgList;  // list of clients witch receive messages
-				std::list<GCFPortInterface*> itsClientHardwareMsgList;  // list of clients witch receive messages
-				std::list<TriggerStruct*> itsTriggerList;  // list of Received Trigger	
+				list<GCFPortInterface*> itsClientTriggerMsgList;  // list of clients witch receive messages
+				list<GCFPortInterface*> itsClientHardwareMsgList;  // list of clients witch receive messages
+				list<TriggerStruct*> itsTriggerList;  // list of Received Trigger	
 				
 				TBBTriggerEvent			*itsTriggerE;
 				TBBErrorEvent				*itsErrorE;

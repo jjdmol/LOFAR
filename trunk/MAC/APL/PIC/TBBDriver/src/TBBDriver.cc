@@ -26,7 +26,7 @@
 #include <Common/LofarLocators.h>
 #include <APL/RTCCommon/daemonize.h>
 #include <APS/ParameterSet.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <Common/hexdump.h>
 
 #include <getopt.h>
@@ -68,7 +68,6 @@
 #define ETHERTYPE_TP 0x7BB0			// letters of TBB
 
 using namespace LOFAR;
-using namespace GCFCommon;
 using namespace ACC::APS;
 using namespace TBB;
 
@@ -133,8 +132,8 @@ TBBDriver::TBBDriver(string name)
   // tell broker we are here
   LOG_DEBUG_STR("Registering protocols");
 
-	GCF::TM::registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (TP_PROTOCOL,      TP_PROTOCOL_STRINGS);
+	registerProtocol (TBB_PROTOCOL,      TBB_PROTOCOL_STRINGS);
+	registerProtocol (TP_PROTOCOL,      TP_PROTOCOL_STRINGS);
 	
   // open client port
   LOG_DEBUG_STR("Opening listener for clients");

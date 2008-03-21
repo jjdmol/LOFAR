@@ -26,7 +26,7 @@
 #include <Common/LofarLocators.h>
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <DriverSettings.h>
 
 using namespace LOFAR;
