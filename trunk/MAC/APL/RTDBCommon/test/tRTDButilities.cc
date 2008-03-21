@@ -43,7 +43,7 @@ tRTDButil::tRTDButil(const string& name) :
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
 	ASSERTSTR(itsTimerPort, "Can't allocate GCFTimerPort");
 
-	TM::registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
+	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 }
 
 //
