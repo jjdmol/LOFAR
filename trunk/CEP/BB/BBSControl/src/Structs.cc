@@ -1,4 +1,4 @@
-//#  BBSStructs.cc: 
+//#  Structs.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/BBSStructs.h>
+#include <BBSControl/Structs.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/lofar_sstream.h>
 #include <APS/ParameterSet.h>

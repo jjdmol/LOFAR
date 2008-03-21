@@ -27,7 +27,7 @@
 // The properties for solvable parameters
 
 //# Includes
-#include <BBSControl/BBSStructs.h>
+#include <BBSControl/Structs.h>
 #include <BBSControl/Command.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>

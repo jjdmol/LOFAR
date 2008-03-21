@@ -24,7 +24,7 @@
 #include <BBSControl/CommandExecutor.h>
 
 #include <BBSControl/CommandQueue.h>
-#include <BBSControl/BBSStructs.h>
+#include <BBSControl/Structs.h>
 
 #include <BBSControl/BlobStreamableVector.h>
 #include <BBSControl/BlobStreamableConnection.h>
