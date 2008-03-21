@@ -28,6 +28,7 @@
 #include <Common/lofar_complex.h>
 #include <Common/lofar_math.h>
 #include <Common/LofarLogger.h>
+#include <casa/BasicSL/Constants.h>
 
 using namespace casa;
 
