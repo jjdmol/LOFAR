@@ -24,12 +24,9 @@
 #define ObservationControl_H
 
 //# GCF Includes
+#include <MACIO/GCF_Event.h>
+#include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_ITCPort.h>
-#include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
 
 //# local includes
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -50,10 +47,10 @@
 // forward declaration
 
 namespace LOFAR {
+	using	MACIO::GCFEvent;
 	using	GCF::TM::GCFTimerPort;
 	using	GCF::TM::GCFITCPort;
 	using	GCF::TM::GCFPort;
-	using	GCF::TM::GCFEvent;
 	using	GCF::TM::GCFPortInterface;
 	using	GCF::TM::GCFTask;
 	using	GCF::RTDB::RTDBPropertySet;

@@ -21,12 +21,12 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 
 #include <APS/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/Utils.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/StationInfo.h>
@@ -38,7 +38,6 @@
 #include "MACSchedulerDefines.h"
 #include "MACScheduler.h"
 
-using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDB;
@@ -93,8 +92,8 @@ MACScheduler::MACScheduler() :
 
 	itsObservations.reserve(10);		// already reserve memory for 10 observations.
 
-	GCF::TM::registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol(DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
+	registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol(DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
 }
 
 
@@ -365,6 +364,9 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		if (msg.successful) {
 			LOG_DEBUG_STR("Start of " << msg.cntlrName << 
 						  " was successful, waiting for connection.");
+#if 0
+// TODO: this code became obsolete because the Obscontroller now sends
+// CONTROL_CONNECTED events.
 			// ---
 			// Ok, controller is really up, update SAS so that obs will not appear in
 			// in the SAS list again.
@@ -378,6 +380,7 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 			TreeStateConv			tsc(itsOTDBconnection);
 			tm.setTreeState(theObs->obsID, tsc.get("queued"));
 			// ---
+#endif
 		}
 		else {
 			LOG_ERROR_STR("Observation controller " << msg.cntlrName <<
@@ -389,11 +392,9 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		break;
 	}
 
-// TODO: the ObsControls don't send the CONTROL_CONNECT yet.
-// so the code is copied to the CONTROL STARTED event for now.
-	case CONTROL_CONNECT: {
+	case CONTROL_CONNECTED: {
 		// The observationController has registered itself at childControl.
-		CONTROLConnectEvent conEvent(event);
+		CONTROLConnectedEvent conEvent(event);
 		LOG_DEBUG_STR(conEvent.cntlrName << " is connected, updating SAS)");
 
 		// Ok, controller is really up, update SAS so that obs will not appear in
