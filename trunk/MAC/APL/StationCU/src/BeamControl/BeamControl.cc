@@ -21,17 +21,16 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
 #include <Common/StreamUtil.h>
+#include <ApplCommon/Observation.h>
+
 #include <APS/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/Utils.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <Common/SystemUtil.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
-#include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
-#include <APL/APLCommon/Observation.h>
 #include <APL/BS_Protocol/BS_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <signal.h>
@@ -93,9 +92,9 @@ BeamControl::BeamControl(const string&	cntlrName) :
 	ASSERTSTR(itsBeamServer, "Cannot allocate TCPport to BeamServer");
 
 	// for debugging purposes
-	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (BS_PROTOCOL, 		BS_PROTOCOL_STRINGS);
+	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
+	registerProtocol (BS_PROTOCOL, 		BS_PROTOCOL_STRINGS);
 
 	setState(CTState::CREATED);
 }

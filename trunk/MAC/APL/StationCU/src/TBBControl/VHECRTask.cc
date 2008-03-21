@@ -26,7 +26,6 @@
 #include "VHECRTask.h"
 #include "TBBControl.h"
 
-using namespace LOFAR::GCF::Common;
 using namespace LOFAR::GCF::TM;
 
 namespace LOFAR {

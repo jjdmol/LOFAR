@@ -25,11 +25,11 @@
 //
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 
 #include <APS/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/Utils.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -97,8 +97,8 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
 	// for debugging purposes
-	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
+	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
 }
 
 
@@ -290,7 +290,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
 		itsChildControl->startChild(CNTLRTYPE_DIGITALBOARDCTRL,
 							   		0,			// treeID, 
 							   		0,			// instanceNr,
-							   		GCF::Common::myHostname(false));
+							   		myHostname(false));
 		// will result in CONTROL_STARTED (and CONTROL_CONNECTED if no error).
 		}
 		break;

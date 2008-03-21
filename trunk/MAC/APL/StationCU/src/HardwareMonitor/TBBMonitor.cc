@@ -24,7 +24,7 @@
 #include <Common/lofar_datetime.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/RTDBCommon/RTDButilities.h>

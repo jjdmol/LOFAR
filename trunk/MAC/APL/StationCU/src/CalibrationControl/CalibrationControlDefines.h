@@ -31,7 +31,7 @@ namespace LOFAR {
 #define PSN_CAL_CTRL				"LOFAR_ObsSW_@observation@_CalCtrl"
 #define PST_CAL_CTRL				"CalCtrl"
 #define PN_CC_CONNECTED				"connected"
-#define PN_CC_BEAMNAMES				"beamnames"
+#define PN_CC_BEAMNAMES				"beamNames"
 #define PN_CC_ANTENNAARRAY			"antennaArray"
 #define PN_CC_FILTER				"filter"
 #define PN_CC_NYQUISTZONE			"nyquistzone"

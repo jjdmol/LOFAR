@@ -23,7 +23,7 @@
 #include <Common/LofarLogger.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>

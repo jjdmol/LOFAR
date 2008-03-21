@@ -23,8 +23,8 @@
 #include <Common/LofarLogger.h>
 
 #include <APS/ParameterSet.h>
-#include <GCF/Utils.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <Common/SystemUtil.h>
+#include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -90,9 +90,9 @@ itsClock = globalParameterSet()->getUint32(itsTreePrefix + "sampleClock");
 	itsParentPort->open();		// will result in F_CONNECTED
 
 	// for debugging purposes
-	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (RSP_PROTOCOL, 	    RSP_PROTOCOL_STRINGS);
+	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
+	registerProtocol (RSP_PROTOCOL, 	    RSP_PROTOCOL_STRINGS);
 }
 
 

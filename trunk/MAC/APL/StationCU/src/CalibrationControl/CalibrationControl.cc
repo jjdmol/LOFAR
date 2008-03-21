@@ -24,8 +24,7 @@
 #include <Common/lofar_datetime.h>
 
 #include <GCF/PVSS/GCF_PVTypes.h>
-#include <GCF/GCF_ServiceInfo.h>
-#include <APL/APLCommon/APLUtilities.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
@@ -88,9 +87,9 @@ CalibrationControl::CalibrationControl(const string&	cntlrName) :
 	ASSERTSTR(itsCalServer, "Cannot allocate TCPport to CalServer");
 
 	// for debugging purposes
-	GCF::TM::registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
-	GCF::TM::registerProtocol (CAL_PROTOCOL,		CAL_PROTOCOL_STRINGS);
+	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
+	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
+	registerProtocol (CAL_PROTOCOL,		CAL_PROTOCOL_STRINGS);
 
 	setState(CTState::CREATED);
 }
@@ -646,7 +645,7 @@ bool	CalibrationControl::startCalibration()
 	itsPropertySet->setValue(PN_CC_FILTER,		GCFPVString(itsObsPar.filter));
 	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	GCFPVInteger(itsObsPar.nyquistZone));
 	itsPropertySet->setValue(PN_CC_RCUS,		GCFPVString(
-										APLUtilities::compactedArrayString(globalParameterSet()->
+										compactedArrayString(globalParameterSet()->
 										getString("Observation.receiverList"))));
 	return (true);
 }

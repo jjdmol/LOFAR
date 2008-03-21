@@ -28,20 +28,17 @@
 #include <Common/lofar_vector.h>
 
 //# GCF Includes
+#include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
-#include <GCF/TM/GCF_TCPPort.h>
-#include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
 
 // forward declaration
 
 namespace LOFAR {
 	namespace StationCU {
 
+using	MACIO::GCFEvent;
 using	GCF::TM::GCFTimerPort;
 using	GCF::TM::GCFTCPPort;
-using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::TM::GCFTask;
 using	GCF::RTDB::RTDBPropertySet;
