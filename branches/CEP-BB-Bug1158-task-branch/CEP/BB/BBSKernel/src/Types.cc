@@ -1,6 +1,6 @@
-//# BBSKernelStructs.h: some global structs used in the kernel.
+//# Types.cc: Types used in the kernel.
 //#
-//# Copyright (C) 2006
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSKernel/BBSKernelStructs.h>
+#include <BBSKernel/Types.h>
 #include <BBSKernel/MNS/MeqDomain.h>
 #include <Common/StreamUtil.h>
 #include <Common/lofar_iostream.h>

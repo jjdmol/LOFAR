@@ -67,7 +67,7 @@ public:
 
     enum EquationType
     {
-        PREDICT = 0,
+        SIMULATE = 0,
         CORRECT,
         N_EquationType
     };

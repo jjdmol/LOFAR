@@ -34,7 +34,7 @@ namespace BBS
 MeqJonesVisData::MeqJonesVisData(VisData::Pointer vdata, baseline_t baseline)
     : itsVisData(vdata)
 {
-    itsBaselineIndex = itsVisData->getBaselineIndex(baseline);
+    itsBaselineIndex = itsVisData->dims.getBaselineIndex(baseline);
 }
 
 MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
@@ -48,7 +48,6 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     range timeRange(offset.second, offset.second + nTimeslots);
 
     // Allocate the result matrices.
-    size_t pol;
     double *re, *im;
     MeqJonesResult result(request.nspid());
     MeqMatrix& m11 = result.result11().getValueRW();
@@ -61,87 +60,61 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     m22.setDCMat(nChannels, nTimeslots);
 
     // Copy 11 elements if available.
-    if(itsVisData->hasPolarization("XX") || itsVisData->hasPolarization("LL"))
+    try
     {
+        size_t polarizationIndex = itsVisData->dims.getPolarizationIndex("XX");
+        
         m11.dcomplexStorage(re, im);
-
-        try
-        {
-            pol = itsVisData->getPolarizationIndex("XX");
-        }
-        catch(BBSKernelException &ex)
-        {
-            pol = itsVisData->getPolarizationIndex("LL");
-        }
-
         copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
-            [timeRange][freqRange][pol]]);
+            [timeRange][freqRange][polarizationIndex]]);
     }
-    else
+    catch(BBSKernelException &ex)
+    {
         m11 = MeqMatrix(makedcomplex(0,0), nChannels, nTimeslots);
-
+    }
 
     // Copy 12 elements if available.
-    if(itsVisData->hasPolarization("XY") || itsVisData->hasPolarization("LR"))
+    try
     {
+        size_t polarizationIndex = itsVisData->dims.getPolarizationIndex("XY");
+        
         m12.dcomplexStorage(re, im);
-
-        try
-        {
-            pol = itsVisData->getPolarizationIndex("XY");
-        }
-        catch(BBSKernelException &ex)
-        {
-            pol = itsVisData->getPolarizationIndex("LR");
-        }
-
         copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
-            [timeRange][freqRange][pol]]);
+            [timeRange][freqRange][polarizationIndex]]);
     }
-    else
+    catch(BBSKernelException &ex)
+    {
         m12 = MeqMatrix(makedcomplex(0,0), nChannels, nTimeslots);
-
+    }
 
     // Copy 21 elements if available.
-    if(itsVisData->hasPolarization("YX") || itsVisData->hasPolarization("RL"))
+    try
     {
+        size_t polarizationIndex = itsVisData->dims.getPolarizationIndex("YX");
+        
         m21.dcomplexStorage(re, im);
-
-        try
-        {
-            pol = itsVisData->getPolarizationIndex("YX");
-        }
-        catch(BBSKernelException &ex)
-        {
-            pol = itsVisData->getPolarizationIndex("RL");
-        }
-
         copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
-            [timeRange][freqRange][pol]]);
+            [timeRange][freqRange][polarizationIndex]]);
     }
-    else
+    catch(BBSKernelException &ex)
+    {
         m21 = MeqMatrix(makedcomplex(0,0), nChannels, nTimeslots);
+    }
 
 
     // Copy 22 elements if available.
-    if(itsVisData->hasPolarization("YY") || itsVisData->hasPolarization("RR"))
+    try
     {
+        size_t polarizationIndex = itsVisData->dims.getPolarizationIndex("YY");
+        
         m22.dcomplexStorage(re, im);
-
-        try
-        {
-            pol = itsVisData->getPolarizationIndex("YY");
-        }
-        catch(BBSKernelException &ex)
-        {
-            pol = itsVisData->getPolarizationIndex("RR");
-        }
-
         copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
-            [timeRange][freqRange][pol]]);
+            [timeRange][freqRange][polarizationIndex]]);
     }
-    else
+    catch(BBSKernelException &ex)
+    {
         m22 = MeqMatrix(makedcomplex(0,0), nChannels, nTimeslots);
+    }
 
     return result;
 }

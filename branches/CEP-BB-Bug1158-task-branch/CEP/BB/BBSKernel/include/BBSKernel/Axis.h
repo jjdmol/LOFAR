@@ -1,6 +1,6 @@
 //# Axis.h:
 //#
-//# Copyright (C) 2007
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,136 +20,188 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_GRID_H
-#define LOFAR_BBS_BBSKERNEL_GRID_H
+#ifndef LOFAR_BBS_BBSKERNEL_AXIS_H
+#define LOFAR_BBS_BBSKERNEL_AXIS_H
 
 #include <Common/lofar_vector.h>
-#include <Common/lofar_algorithm.h>
-#include <functional>
-#include <utility>
+#include <Common/lofar_smartptr.h>
+#include <BBSKernel/Types.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-using std::unary_function;
 using std::pair;
 using std::make_pair;
 using std::max;
 using std::min;
 
-class regular_series: public unary_function<size_t, double>
+template <typename T>
+class Axis
 {
 public:
-    regular_series()
-        :   m_begin(0.0),
-            m_delta(1.0)
+    typedef shared_ptr<Axis<T> >    Pointer;
+    
+    virtual ~Axis()
     {}
+    
+    virtual T center(size_t n) const = 0;
+    virtual T lower(size_t n) const = 0;
+    virtual T upper(size_t n) const = 0;
+    virtual T width(size_t n) const = 0;
+    virtual size_t size() const = 0;
+    virtual pair<T, T> range() const = 0;
+    virtual size_t locate(T x, bool open) const = 0;
+};
 
-    regular_series(result_type begin, result_type delta)
-        :   m_begin(begin),
-            m_delta(delta)
+
+template <typename T>
+class RegularAxis: public Axis<T>
+{
+public:
+    typedef shared_ptr<RegularAxis<T> > Pointer;
+    
+    RegularAxis()
+        :   itsBegin(0),
+            itsDelta(0),
+            itsCount(0)
     {}
-
-    result_type operator()(argument_type n) const
-    { return m_begin + n * m_delta; }
+    
+    RegularAxis(const T &begin, const T &delta, size_t count)
+        :   itsBegin(begin),
+            itsDelta(delta),
+            itsCount(count)
+    {}
+    
+    ~RegularAxis()
+    {}
+    
+    T center(size_t n) const
+    { return itsBegin + (2 * n * itsDelta + itsDelta) / 2; }
  
-private:
-    result_type    m_begin, m_delta;
-};
+    T lower(size_t n) const
+    { return itsBegin + n * itsDelta; }
 
+    T upper(size_t n) const
+    { return (itsBegin + itsDelta) + n * itsDelta; }
 
-class irregular_series: public unary_function<size_t, double>
-{
-public:
-    irregular_series()
-    {}
-
-    irregular_series(const vector<result_type> &terms)
-        : m_terms(terms)
-    {}
-
-    result_type operator()(argument_type n) const
-    { return m_terms[n]; }
-
-private:
-    vector<result_type>    m_terms;
-};
-
-
-template <typename SeriesType>
-class cell_centered_axis
-{
-public:
-    cell_centered_axis()
-        :   m_series(SeriesType()),
-            m_size(0)
-    {}
-
-    cell_centered_axis(SeriesType series, size_t size)
-        :   m_series(series),
-            m_size(size)
-    {}
-
-    double operator()(size_t n) const
-    { return 0.5 * (m_series(n) + m_series(n + 1)); }
-
-    double lower(size_t n) const
-    { return m_series(n); }
-
-    double upper(size_t n) const
-    { return m_series(n + 1); }
-
-    double width(size_t n) const
-    { return m_series(n + 1) - m_series(n); }
+    T width(size_t n) const
+    { return itsDelta; }
 
     size_t size() const
-    { return m_size; }
+    { return (itsCount ? itsCount - 1 : 0); }
 
-    pair<double, double> range() const
-    { return make_pair(lower(0), upper(size() - 1)); }
+    pair<T, T> range() const
+    { return make_pair(lower(0), (size() ? upper(size() - 1) : upper(0))); }
 
+    size_t locate(T x, bool open) const
+    {
+        // Try to find x in the list of cell borders. This will return the index i
+        // of the first border that is greater than or equal to x.
+        // The upper border of a cell is open by convention. Therefore, if x is
+        // located precisely on a cell border, it is located in the cell of which
+        // that border is the _lower_ border. Equality is tested with casa::near(),
+        // i.e. values of x that are 'very near' to a cell border are assumed to lie
+        // on the cell border.
+
+        size_t index =
+            static_cast<size_t>(max(0.0, ceil(static_cast<double>(x - itsBegin) / itsDelta)));
+    
+        if(index > 0 && is_near<T>::eval(x, lower(index - 1)))
+        {
+            --index;
+        }
+    
+        if(!is_near<T>::eval(x, lower(index)) || !open)
+        {
+            --index;
+        }
+    
+        // If x was located outside of the range of the axis, size() will be
+        // returned.
+        if(index > size())
+        {
+            index = size();
+        }
+    
+        return index;
+    }
+    
 private:
-    SeriesType         m_series;
-    size_t             m_size;
+    T       itsBegin, itsDelta;
+    size_t  itsCount;
 };
 
 
-template <typename SeriesType>
-class node_centered_axis
+template <typename T>
+class IrregularAxis: public Axis<T>
 {
 public:
-    node_centered_axis()
-        :   m_series(SeriesType()),
-            m_size(0)
+    typedef shared_ptr<IrregularAxis<T> >   Pointer;
+    
+    IrregularAxis()
     {}
 
-    node_centered_axis(SeriesType series, size_t size)
-        :   m_series(series),
-            m_size(size)
+    IrregularAxis(const vector<T> &borders)
+        :   itsBorders(borders)
+    {}
+    
+    ~IrregularAxis()
     {}
 
-    double operator()(size_t n) const
-    { return m_series(n); }
+    T center(size_t n) const
+    { return 0.5 * (itsBorders[n] + itsBorders[n + 1]); }
+ 
+    T lower(size_t n) const
+    { return itsBorders[n]; }
 
-    double lower(size_t n) const
-    { return m_series(n); }
+    T upper(size_t n) const
+    { return itsBorders[n + 1]; }
 
-    double upper(size_t n) const
-    { return m_series(n); }
-
-    double width(size_t n) const
-    { return 0.0; }
+    T width(size_t n) const
+    { return upper(n) - lower(n); }
 
     size_t size() const
-    { return m_size; }
+    { return (itsBorders.size() ? itsBorders.size() - 1 : 0); }
 
-    pair<double, double> range() const
-    { return make_pair(lower(0), upper(size() - 1)); }
+    pair<T, T> range() const
+    { return make_pair(lower(0), (size() ? upper(size() - 1) : upper(0))); }
+
+    size_t locate(T x, bool open) const
+    {
+        // Try to find x in the list of cell borders. This will return the index i
+        // of the first border that is greater than or equal to x.
+        // The upper border of a cell is open by convention. Therefore, if x is
+        // located precisely on a cell border, it is located in the cell of which
+        // that border is the _lower_ border. Equality is tested with casa::near(),
+        // i.e. values of x that are 'very near' to a cell border are assumed to lie
+        // on the cell border.
+
+        size_t index = lower_bound(itsBorders.begin(), itsBorders.end(), x)
+            - itsBorders.begin();
+    
+        if(index > 0 && is_near<T>::eval(x, lower(index - 1)))
+        {
+            --index;
+        }
+    
+        if(!is_near<T>::eval(x, lower(index)) || !open)
+        {
+            --index;
+        }
+    
+        // If x was located outside of the range of the axis, size() will be
+        // returned.
+        if(index > size())
+        {
+            index = size();
+        }
+    
+        return index;
+    }
 
 private:
-    SeriesType         m_series;
-    size_t             m_size;
+    vector<T>   itsBorders;
 };
 
 } //# namespace BBS

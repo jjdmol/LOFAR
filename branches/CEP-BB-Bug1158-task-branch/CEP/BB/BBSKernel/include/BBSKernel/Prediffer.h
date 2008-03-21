@@ -29,12 +29,13 @@
 //#include <casa/BasicSL/Complex.h>
 //#include <casa/Arrays/Matrix.h>
 
+#include <BBSKernel/Grid.h>
 #include <BBSKernel/Measurement.h>
 #include <BBSKernel/Model.h>
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisData.h>
 
-#include <BBSKernel/BBSKernelStructs.h>
+#include <BBSKernel/Types.h>
 //#include <BBSKernel/ParmData.h>
 #include <BBSKernel/MNS/MeqDomain.h>
 #include <BBSKernel/MNS/MeqJonesExpr.h>
@@ -65,6 +66,9 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
+//typedef Grid<CellCenteredAxis<RegularSeries>,
+//    CellCenteredAxis<IrregularSeries> >         SolutionGrid;
+    
 // Prediffer calculates the equations for the solver.
 // It reads the measured data and predicts the data from the model.
 // It subtracts them from each other and calculates the derivatives.
@@ -73,27 +77,18 @@ namespace BBS
 struct ProcessingContext
 {
     ProcessingContext()
-        :   domainSize(0, 0),
-            domainCount(0, 0),
-            unknownCount(0)
+        :   unknownCount(0)
     {}
 
-    vector<baseline_t>              baselines;
-    set<size_t>                     polarizations;
-    string                          outputColumn;
 
     // 
     // Information for the SOLVE operation (valid if unknownCount > 0).
     //     
-
-    // Nominal solve domain size along each axis in #channels, #timeslots.
-    std::pair<size_t, size_t>       domainSize;
-    // Number of solve domains along each axis.
-    std::pair<size_t, size_t>       domainCount;
-    // Solve domains.
-    vector<MeqDomain>               domains;
-//    boost::multi_array<MeqDomain, 2>    domains;
+    Grid<double>                    solutionGrid;
+    Grid<size_t>                    cellGrid;
     
+    Location                        chunkStart, chunkEnd;
+
     // Sum of the maximal number (over all solve domains) of unknowns of each
     // parameter.
     size_t                          unknownCount;
@@ -119,106 +114,115 @@ struct ThreadContext
 };
 
 
+struct Selection
+{
+    vector<baseline_t>      baselines;
+    set<size_t>             polarizations;
+};
+
+
+struct ModelConfiguration
+{
+    vector<string>          components;
+    vector<string>          sources;
+};
+
+
 class Prediffer
 {
 public:
-    Prediffer(const string &measurement, size_t subband,
-        const string &inputColumn,
-        const string &skyDBase, const string &instrumentDBase,
-        const string &historyDBase, bool readUVW);
+    enum Operation
+    {
+        SIMULATE,
+        SUBTRACT,
+        CORRECT,
+        CONSTRUCT,
+        N_Operation        
+    };
+    
+    Prediffer(Measurement::Pointer measurement,
+        ParmDB::ParmDB sky,
+        ParmDB::ParmDB instrument);
 
-    // Destructor
     ~Prediffer();
 
-    // Lock and unlock the parm database tables.
-    // The user does not need to lock/unlock, but it can increase performance
-    // if many small accesses have to be done.
+    // Attach/detach the chunk of data to process.
     // <group>
-    void lock(bool lockForWrite = true)
-    {
-        itsInstrumentDBase->lock(lockForWrite);
-        itsSkyDBase->lock(lockForWrite);
-    }
-
-    void unlock()
-    {
-        itsInstrumentDBase->unlock();
-        itsSkyDBase->unlock();
-    }
+    void attachChunk(VisData::Pointer chunk);
+    void detachChunk();
     // </group>
 
-    void setSelection(VisSelection selection);
-    void setChunkSize(size_t time);
-    bool nextChunk();
-
-    bool setContext(const PredictContext &context);
-    bool setContext(const SubtractContext &context);
-    bool setContext(const CorrectContext &context);
-    bool setContext(const GenerateContext &context);
-
-    void predict();
+    // Select a subset of the data for processing. An empty vector matches
+    // anything. A selection remains active until it is changed or until
+    // attachChunk() is called.
+    bool setSelection(const string &filter,
+        const vector<string> &stations1,
+        const vector<string> &stations2,
+        const vector<string> &polarizations);
+    
+    void setModelConfiguration(const vector<string> &components,
+        const vector<string> &sources);
+        
+    // Operations that can be performed on the data.
+    // <group>
+    void setOperation(Operation type);
+/*
+    void simulate();
     void subtract();
     void correct();
-    void generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
-        vector<casa::LSQFit> &solvers);
-
-    // Get the actual work domain for this MS (after a setStrategy).
-    const MeqDomain &getWorkDomain() const
-        { return itsWorkDomain; }
-
-    // Get the local data domain.
-//    MeqDomain getLocalDataDomain() const;
-
-    // There are three ways to update the solvable parms after the solver
-    // found a new solution.
+*/    
+    // </group>
+    
+    // Solving....
     // <group>
-    // Update the values of solvable parms.
-    // Using its spid index each parm takes its values from the vector.
-//    void updateSolvableParms (const vector<double>& values);
+    bool setSolutionGrid(const Grid<double> &solutionGrid);
 
-    // Update the given values (for the current domain) of solvable parms
-    // matching the corresponding parm name in the vector.
-    // Vector values with a name matching no solvable parm are ignored.
-//    void updateSolvableParms (const ParmDataInfo& parmData);
+    bool setParameterSelection(const vector<string> &include,
+        const vector<string> &exclude);
+        
+    void clearParameterSelection();
 
-    // Update the solvable parm values (reread from table).
-    void updateSolvableParms();
-    void updateUnknowns(size_t domain, const vector<double> &unknowns);
+/*
+    void getParameterIndex(ParameterIndex &parameters) const;
+    void setParameterIndex(const ParameterIndex &parameters);
 
-    // Log the updated values of a single solve domain.
-    //void logIteration(const string &stepName, size_t solveDomainIndex,
-    //    double rank, double chiSquared, double LMFactor);
+    void getCoefficientIndices(vector<CoefficientIndex> &indices) const;
+    void setCoefficientIndices(const vector<CoefficientIndex> &indices);
 
-    // Write the solved parms.
-    void writeParms();
-    void writeParms(size_t solveDomainIndex);
+    void getCoefficients(const GridLocation &start,
+        const GridLocation &end, vector<Coefficients> &coefficients);
+    void setCoefficients(const vector<Coefficients> &coefficients,
+        bool useIndex);
+*/
+//    void construct(const Location &start, const Location &end,
+//        vector<Equations> &equations);
+    // </group>
 
-    const vector<vector<double > > &getUnknowns() const
-    { return itsContext.unknowns; }
-
-    pair<size_t, size_t> getSolveDomainGridSize() const
-    { return itsContext.domainCount; }
+/*
+    // Commit cached parameter values to the parameter database.
+    void storeParameterValues();
 
 #ifdef EXPR_GRAPH
     void writeExpressionGraph(const string &fileName, baseline_t baseline);
 #endif
-
+*/
 private:
-    // Copy constructor and assignment are not allowed.
+    // Copy construction and assignment are not allowed.
     // <group>
-    Prediffer (const Prediffer& other);
-    Prediffer& operator= (const Prediffer& other);
+    Prediffer(const Prediffer& other);
+    Prediffer &operator=(const Prediffer& other);
     // </group>
 
-    bool setContext(const Context &context);
-    void initSolveDomains(std::pair<size_t, size_t> size);
     void initPolarizationMap();
-    
-    // Make all parameters non-solvable.
-    void clearSolvableParms();
 
-    // Read the polcs for all parameters for the current work domain.
-    void readParms();
+/*  
+    void initSolveDomains(std::pair<size_t, size_t> size);
+    
+    // Get all parameter values that intersect the current chunk.
+    void fetchParameterValues();
+
+    void resetTimers();
+    void printTimers(const string &operationName);
 
     // Define the signature of a function processing a baseline.
     typedef void (Prediffer::*BaselineProcessor) (int threadnr, void* arguments,
@@ -230,60 +234,52 @@ private:
         pair<size_t, size_t> start, pair<size_t, size_t> end,
         BaselineProcessor processor, void *arguments);
 
-    // Write the predicted data of a baseline.
-    void copyBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
+    // Copy the predicted visibilities of a single baseline.
+    void copyBL(int threadnr, void* arguments, VisData::Pointer chunk,
         pair<size_t, size_t> offset, const MeqRequest& request,
         baseline_t baseline, bool showd = false);
 
-    // Subtract the data of a baseline.
-    void subtractBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
+    // Subtract the predicted visibilities from the observed data of a
+    // single baseline.
+    void subtractBL(int threadnr, void* arguments, VisData::Pointer chunk,
         pair<size_t, size_t> offset, const MeqRequest& request,
         baseline_t baseline, bool showd = false);
 
-    // Generate equations for a baseline.
-    void generateBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
+    // Construct equations for a single baseline.
+    void constructBL(int threadnr, void* arguments, VisData::Pointer chunk,
         pair<size_t, size_t> offset, const MeqRequest& request,
         baseline_t baseline, bool showd = false);
-
-//    void testFlagsBaseline(int threadnr, void* arguments,
-//        VisData::Pointer chunk, const MeqRequest& request, baseline_t
-//baseline,
-//        bool showd);
-
-    void resetTimers();
-    void printTimers(const string &operationName);
-
-    string                              itsInputColumn;
-    bool                                itsReadUVW;
-    size_t                              itsChunkSize;
-    size_t                              itsChunkPosition;
-
-    vector<int>                         itsPolarizationMap;
-
-    scoped_ptr<ParmDB::ParmDB>          itsInstrumentDBase;
-    scoped_ptr<ParmDB::ParmDB>          itsSkyDBase;
-    scoped_ptr<ParmDB::ParmDB>          itsHistoryDBase;
-
-    //# Container for all parameters.
-    MeqParmGroup                        itsParmGroup;
-    //# All parm values in current work domain.
-    map<string, ParmDB::ParmValueSet>   itsParmValues;
-
-    //# Phase reference position in J2000 coordinates.
-    MeqPhaseRef                         itsPhaseRef;
-    MeqDomain                           itsWorkDomain;
-
-    //# Thread private buffers.
-    vector<ThreadContext>               itsThreadContexts;
-
-    NSTimer                             itsPrecalcTimer, itsProcessTimer;
+*/
 
     Measurement::Pointer                itsMeasurement;
+    VisData::Pointer                    itsChunk;
+    //# Mapping from internal polarization (XX,XY,YX,YY) to polarizations
+    //# found in the chunk (which may be a subset, and in a different order).
+    vector<int>                         itsPolarizationMap;
+
+    ParmDB::ParmDB                      itsInstrumentDb;
+    ParmDB::ParmDB                      itsSkyDb;
+    //# All parameter values that intersect the chunk.
+    map<string, ParmDB::ParmValueSet>   itsParameterValues;
+
     Model::Pointer                      itsModel;
-    VisGrid                             itsGrid;
-    VisSelection                        itsChunkSelection;
-    VisData::Pointer                    itsChunkData;
+    //# Container for the model parameters (the leaf nodes of the model).
+    MeqParmGroup                        itsParameters;
+
+    Selection                           itsSelection;
+    ModelConfiguration                  itsModelConfiguration;
+    Operation                           itsOperation;
+    //# TODO: Remove this.
     ProcessingContext                   itsContext;
+
+    vector<ThreadContext>               itsThreadContexts;
+
+    //# Timers for performance measurement.
+    NSTimer                             itsPrecalcTimer, itsProcessTimer;
+    
+    //# TODO: Remove this.
+    //# Phase reference position in J2000 coordinates.
+    MeqPhaseRef                         itsPhaseRef;
 };
 
 // @}

@@ -1,6 +1,6 @@
-//# BBSKernelStructs.h: some global structs used in the kernel.
+//# Types.h: Types used in the kernel.
 //#
-//# Copyright (C) 2006
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,17 +20,22 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSKERNEL_BBSKERNELSTRUCTS_H
-#define LOFAR_BBSKERNEL_BBSKERNELSTRUCTS_H
+#ifndef LOFAR_BBSKERNEL_TYPES_H
+#define LOFAR_BBSKERNEL_TYPES_H
 
+#include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_iosfwd.h>
 #include <utility>
+#include <limits>
+#include <casa/BasicMath/Math.h>
+
 
 namespace LOFAR
 {
   using std::pair;
+  using std::numeric_limits;
 
   //# Forward declarations
   class BlobIStream;
@@ -38,6 +43,53 @@ namespace LOFAR
 
   namespace BBS
   {
+    typedef fcomplex                sample_t;
+    typedef bool                    flag_t;
+    typedef uint8                   tslot_flag_t;
+    typedef pair<uint32, uint32>    baseline_t;
+
+    enum AxisName
+    {
+        FREQ = 0,
+        TIME,
+        N_AxisName
+    };
+    
+    typedef pair<size_t, size_t>    Location;
+
+    template <typename T>
+    struct Point
+    {
+        Point(T a, T b)
+            : first(a),
+              second(b)
+        {}
+                      
+        T   first, second;
+    };
+
+
+    template <typename T, bool is_integer = std::numeric_limits<T>::is_integer>
+    struct is_near
+    {
+        static bool eval(T a, T b);
+    };
+
+    template <typename T>
+    struct is_near<T, true>
+    {
+        static bool eval(T a, T b)
+        { return (a == b); }
+    };
+
+    template <typename T>
+    struct is_near<T, false>
+    {
+        static bool eval(T a, T b)
+        { return casa::near(a, b); }
+    };
+
+
     class MeqDomain;
 
     // Information about which correlation products (auto, cross, or both),

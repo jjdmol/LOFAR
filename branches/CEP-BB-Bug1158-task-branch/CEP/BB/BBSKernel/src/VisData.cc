@@ -32,19 +32,21 @@ namespace LOFAR
 namespace BBS 
 {
 
-VisData::VisData(const VisGrid &visGrid)
-    :   grid(visGrid),
-        uvw(boost::extents[grid.baselines.size()][grid.time.size()][3]),
-        tslot_flag(boost::extents[grid.baselines.size()][grid.time.size()]),
-        vis_flag(boost::extents[grid.baselines.size()][grid.time.size()]
-            [grid.freq.size()][grid.polarizations.size()]),
-        vis_data(boost::extents[grid.baselines.size()][grid.time.size()]
-            [grid.freq.size()][grid.polarizations.size()])
+VisData::VisData(const VisDimensions &dims)
+    :   dims(dims),
+        uvw(boost::extents[dims.getBaselineCount()][dims.getTimeSlotCount()]
+            [3]),
+        tslot_flag(boost::extents[dims.getBaselineCount()]
+            [dims.getTimeSlotCount()]),
+        vis_flag(boost::extents[dims.getBaselineCount()][dims.getTimeSlotCount()]
+            [dims.getChannelCount()][dims.getPolarizationCount()]),
+        vis_data(boost::extents[dims.getBaselineCount()][dims.getTimeSlotCount()]
+            [dims.getChannelCount()][dims.getPolarizationCount()])
 {
-    size_t nTimeslots = grid.time.size();
-    size_t nBaselines = grid.baselines.size();
-    size_t nChannels = grid.freq.size();
-    size_t nPolarizations = grid.polarizations.size();
+    const size_t nChannels = dims.getChannelCount();
+    const size_t nTimeslots = dims.getTimeSlotCount();
+    const size_t nBaselines = dims.getBaselineCount();
+    const size_t nPolarizations = dims.getPolarizationCount();
 
     LOG_DEBUG_STR("Size: "
         << (nBaselines * nTimeslots * 3 * sizeof(double)
@@ -58,33 +60,11 @@ VisData::VisData(const VisGrid &visGrid)
 
     // Initially flag all timeslots as UNAVAILABLE.
     for(size_t i = 0; i < nBaselines; ++i)
+    {
         for(size_t j = 0; j < nTimeslots; ++j)
-    {
-        tslot_flag[i][j] = VisData::UNAVAILABLE;
-    }
-
-    size_t index;
-
-    // Initialize baseline index.
-    index = 0;
-    for(vector<baseline_t>::const_iterator it = grid.baselines.begin(),
-        end = grid.baselines.end();
-        it != end;
-        ++it)
-    {
-        baseline_idx[*it] = index;
-        ++index;
-    }
-
-    // Initialize polarizations index.
-    index = 0;
-    for(vector<string>::const_iterator it = grid.polarizations.begin(),
-        end = grid.polarizations.end();
-        it != end;
-        ++it)
-    {
-        polarization_idx[*it] = index;
-        ++index;
+        {
+            tslot_flag[i][j] = VisData::UNAVAILABLE;
+        }
     }
 }
 
@@ -92,44 +72,6 @@ VisData::VisData(const VisGrid &visGrid)
 VisData::~VisData()
 {
     LOG_DEBUG("VisData destructor called.");
-}
-
-
-bool VisData::hasBaseline(baseline_t baseline) const
-{
-    map<baseline_t, size_t>::const_iterator it = baseline_idx.find(baseline);
-    return it != baseline_idx.end();
-}
-
-
-size_t VisData::getBaselineIndex(baseline_t baseline) const
-{
-    map<baseline_t, size_t>::const_iterator it = baseline_idx.find(baseline);
-    if(it != baseline_idx.end())
-    {
-        return it->second;
-    }
-    THROW(BBSKernelException, "Request for index of unknown baseline "
-        << baseline.first << " - " << baseline.second);
-}
-
-
-bool VisData::hasPolarization(const string &polarization) const
-{
-    map<string, size_t>::const_iterator it = polarization_idx.find(polarization);
-    return it != polarization_idx.end();
-}
-
-
-size_t VisData::getPolarizationIndex(const string &polarization) const
-{
-    map<string, size_t>::const_iterator it = polarization_idx.find(polarization);
-    if(it != polarization_idx.end())
-    {
-        return it->second;
-    }
-    THROW(BBSKernelException, "Request for index of unknown polarization "
-        << polarization);
 }
 
 } //# namespace BBS

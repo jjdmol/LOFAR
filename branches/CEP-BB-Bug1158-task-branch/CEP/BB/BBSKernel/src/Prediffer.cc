@@ -75,14 +75,13 @@ using LOFAR::operator<<;
 using LOFAR::ParmDB::ParmDB;
 using LOFAR::ParmDB::ParmDBMeta;
 
-Prediffer::Prediffer(const string &measurement, size_t subband,
-    const string &inputColumn, const string &skyDBase,
-    const string &instrumentDBase, const string &historyDBase, bool readUVW)
-    :   itsInputColumn          (inputColumn),
-        itsReadUVW              (readUVW),
-        itsChunkSize            (0),
-        itsChunkPosition        (0)
-{
+Prediffer::Prediffer(Measurement::Pointer measurement,
+        ParmDB::ParmDB sky,
+        ParmDB::ParmDB instrument)
+    :   itsMeasurement(measurement),
+        itsSkyDb(sky),
+        itsInstrumentDb(instrument)
+{        
     LOG_INFO("Compile time options:");
 
 #ifdef __SSE2__
@@ -103,71 +102,11 @@ Prediffer::Prediffer(const string &measurement, size_t subband,
     LOG_INFO("  EXPR_GRAPH: no");
 #endif
 
-    // Open measurement.
-    try
-    {
-        LOG_INFO_STR("Input: " << measurement << "::" << itsInputColumn);
-        itsMeasurement.reset(new MeasurementAIPS(measurement, 0, subband, 0));
-        
-        // Initialize the polarization map.
-        initPolarizationMap();
-    }
-    catch(casa::AipsError &_ex)
-    {
-        THROW(BBSKernelException, "Failed to open measurement: "
-            << measurement << endl << "(AipsError: "
-            << _ex.what() << ")");
-    }
+//    LOG_INFO_STR("UVW source: " << (readUVW ? "read" : "computed"));
+//    LOG_INFO_STR("UVW convention: " << (readUVW ? "as recorded in the input"
+//        " measurement" : "ANTENNA2 - ANTENNA1 (AIPS++ convention)"));
 
-    // Open sky model parmdb.
-    try
-    {
-        ParmDBMeta skyDBaseMeta("aips", skyDBase);
-        LOG_INFO_STR("Sky model database: " << skyDBaseMeta.getTableName());
-        itsSkyDBase.reset(new ParmDB(skyDBaseMeta));
-    }
-    catch(casa::AipsError &_ex)
-    {
-        THROW(BBSKernelException, "Failed to open sky parameter db: "
-            << skyDBase << endl << "(AipsError: " << _ex.what() << ")");
-    }
-
-    // Open instrument model parmdb.
-    try
-    {
-        ParmDBMeta instrumentDBaseMeta("aips", instrumentDBase);
-        LOG_INFO_STR("Instrument model database: "
-            << instrumentDBaseMeta.getTableName());
-        itsInstrumentDBase.reset(new ParmDB(instrumentDBaseMeta));
-    }
-    catch(casa::AipsError &_ex)
-    {
-        THROW(BBSKernelException, "Failed to open instrument parameter db: "
-            << instrumentDBase << endl << "(AipsError: " << _ex.what() << ")");
-    }
-
-    // Open history db.
-    if(!historyDBase.empty())
-    {
-        try
-        {
-            ParmDBMeta historyDBaseMeta("aips", historyDBase);
-            LOG_INFO_STR("History DB: " << historyDBaseMeta.getTableName());
-            itsHistoryDBase.reset(new ParmDB(historyDBaseMeta));
-        }
-        catch (casa::AipsError &_ex)
-        {
-            THROW(BBSKernelException, "Failed to open history db: "
-                << historyDBase << endl << "(AipsError: " << _ex.what() << ")");
-        }
-    }
-    else
-        LOG_INFO_STR("History DB: -");
-
-    LOG_INFO_STR("UVW source: " << (readUVW ? "read" : "computed"));
-    LOG_INFO_STR("UVW convention: " << (readUVW ? "as recorded in the input"
-        " measurement" : "ANTENNA2 - ANTENNA1 (AIPS++ convention)"));
-
+   
     // Initialize model.
 //    casa::MEpoch startTimeMeas = itsMeasurement->getTimeRange().first;
 //    casa::Quantum<casa::Double> startTime = startTimeMeas.get("s");
@@ -175,10 +114,10 @@ Prediffer::Prediffer(const string &measurement, size_t subband,
 //        startTime.getValue("s"));
 
     itsPhaseRef = MeqPhaseRef(itsMeasurement->getPhaseCenter(),
-        itsMeasurement->getTimeRange().first);
+        measurement->getTimeRange().first);
 
-    itsModel.reset(new Model(itsMeasurement->getInstrument(), itsParmGroup,
-        itsSkyDBase.get(), &itsPhaseRef));
+    itsModel.reset(new Model(itsMeasurement->getInstrument(), itsParameters,
+        &itsSkyDb, &itsPhaseRef));
 
     // Allocate thread private buffers.
 #if defined _OPENMP
@@ -194,7 +133,7 @@ Prediffer::~Prediffer()
 {
     LOG_TRACE_FLOW( "Prediffer destructor" );
 
-    // clear up the matrix pool
+    // Clean up the matrix allocation pool.
     MeqMatrixComplexArr::poolDeactivate();
     MeqMatrixRealArr::poolDeactivate();
 }
@@ -204,31 +143,31 @@ void Prediffer::initPolarizationMap()
 {
     // Create a lookup table that maps external (measurement) polarization
     // indices to internal polarization indices. The internal indices are:
-    // 0 - XX or LL
-    // 1 - XY or LR
-    // 2 - YX or RL
-    // 3 - YY or RR
+    // 0 - XX
+    // 1 - XY
+    // 2 - YX
+    // 3 - YY
     // No assumptions can be made regarding the external polarization indices,
     // which is why we need this map in the first place.
     
-    const vector<string> &polarizations = itsMeasurement->getPolarizations();
+    const vector<string> &polarizations = itsChunk->dims.getPolarizations();
         
     itsPolarizationMap.resize(polarizations.size());
     for(size_t i = 0; i < polarizations.size(); ++i)
     {
-        if(polarizations[i] == "XX" || polarizations[i] == "LL")
+        if(polarizations[i] == "XX")
         {
             itsPolarizationMap[i] = 0;
         }
-        else if(polarizations[i] == "XY" || polarizations[i] == "LR")
+        else if(polarizations[i] == "XY")
         {
             itsPolarizationMap[i] = 1;
         }
-        else if(polarizations[i] == "YX" || polarizations[i] == "RL")
+        else if(polarizations[i] == "YX")
         {
             itsPolarizationMap[i] = 2;
         }
-        else if(polarizations[i] == "YY" || polarizations[i] == "RR")
+        else if(polarizations[i] == "YY")
         {
             itsPolarizationMap[i] = 3;
         }
@@ -242,178 +181,66 @@ void Prediffer::initPolarizationMap()
 }
 
 
-void Prediffer::setSelection(VisSelection selection)
+void Prediffer::attachChunk(VisData::Pointer chunk)
 {
-    itsChunkSelection = selection;
-    itsGrid = itsMeasurement->grid(selection);
-}
+    // Check preconditions.
+    DBGASSERT(chunk);
 
+    // Set chunk.
+    itsChunk = chunk;
 
-void Prediffer::setChunkSize(size_t size)
-{
-    itsChunkSize = size;
-    itsChunkPosition = 0;
-}
+    // Initialize the polarization map.
+    initPolarizationMap();
 
-
-bool Prediffer::nextChunk()
-{
-    // Exit if the MS has no overlap in frequency with the specified work
-    // domain.
-//    if(startChannel >= itsMeasurement->getChannelCount())
-//        return false;
-    ASSERT(itsChunkPosition <= itsGrid.time.size());
-
-    if(itsChunkPosition == itsGrid.time.size())
-        return false;
-
-    if(itsChunkSize == 0)
-    {
-        itsChunkPosition = itsGrid.time.size();
-    }
-    else
-    {
-        // Clear time selection.
-        itsChunkSelection.clear(VisSelection::TIME_START);
-        itsChunkSelection.clear(VisSelection::TIME_END);
-
-        double start = itsGrid.time.lower(itsChunkPosition);
-        itsChunkPosition += itsChunkSize;
-        if(itsChunkPosition > itsGrid.time.size())
-        {
-            itsChunkPosition = itsGrid.time.size();
-        }
-        double end = itsGrid.time.upper(itsChunkPosition - 1);
-        itsChunkSelection.setTimeRange(start, end);
-    }
-
-    // Clear equations.
+    // Reset the model and copy UVW coordinates.
+    itsModelConfiguration = ModelConfiguration();
     itsModel->clearEquations();
+    itsModel->setStationUVW(itsMeasurement->getInstrument(), itsChunk);
 
-    // Deallocate chunk.
-    ASSERTSTR(itsChunkData.use_count() == 0 || itsChunkData.use_count() == 1,
-        "itsChunkData shoud be unique (or uninitialized) by now.");
-    itsChunkData.reset();
-
-    // Read data.
-    LOG_DEBUG("Reading chunk...");
-    itsChunkData = 
-        itsMeasurement->read(itsChunkSelection, itsInputColumn, itsReadUVW);
-    if(itsReadUVW)
-        itsModel->setStationUVW(itsMeasurement->getInstrument(), itsChunkData);
-
-/*
-    LOG_DEBUG_STR("Times:");
-    for(size_t i = 0; i < itsChunkData->grid.time.size(); ++i)
-        LOG_DEBUG_STR("i: " << i << " " << setprecision(15) <<
-        itsChunkData->grid.time(i));
-*/
-
-    // Set work domain.
-    pair<double, double> freqRange = itsChunkData->grid.freq.range();
-    pair<double, double> timeRange = itsChunkData->grid.time.range();
-    itsWorkDomain = MeqDomain(freqRange.first, freqRange.second,
-        timeRange.first, timeRange.second);
-
-    // Read all parameter values that are part of the work domain.
-    readParms();
-
-    // Display chunk meta data.
-    LOG_INFO_STR("Chunk: ");
-    LOG_INFO_STR("  Frequency: "
-        << setprecision(3) << freqRange.first / 1000.0 << " kHz"
-        << " - "
-        << setprecision(3) << freqRange.second / 1000.0 << " kHz");
-    LOG_INFO_STR("  Bandwidth: "
-        << setprecision(3) << (freqRange.second - freqRange.first) / 1000.0
-        << "kHz (" << itsChunkData->grid.freq.size() << " channels of "
-        << setprecision(3)
-        << (freqRange.second - freqRange.first) / itsChunkData->grid.freq.size()
-        << " Hz)");
-    LOG_INFO_STR("  Time:      "
-        << casa::MVTime::Format(casa::MVTime::YMD, 6)
-        << casa::MVTime(casa::Quantum<casa::Double>(timeRange.first, "s"))
-        << " - "
-        << casa::MVTime::Format(casa::MVTime::YMD, 6)
-        << casa::MVTime(casa::Quantum<casa::Double>(timeRange.second, "s")));
-    LOG_INFO_STR("  Duration:  "
-        << setprecision(3) << (timeRange.second - timeRange.first) / 3600.0
-        << " hours (" << itsChunkData->grid.time.size() << " samples of "
-        << setprecision(3)
-        << (timeRange.second - timeRange.first) / itsChunkData->grid.time.size()
-        << " s on average)");
-
-    return true;
+    // Reset the data selection.
+    itsSelection = Selection();
+    
+    // Fetch all parameter values that are valid for the chunk from the sky and
+    // instrument parameter databases.
+//    fetchParameterValues();
 }
 
 
-bool Prediffer::setContext(const Context &context)
+void Prediffer::detachChunk()
 {
-    // Clear context.
-    itsContext = ProcessingContext();
+    itsChunk.reset();
+}
 
-    // Select polarizations.
-    if(context.correlation.type.empty())
-    {
-        for(size_t i = 0; i < itsPolarizationMap.size(); ++i)
-        {
-            if(itsPolarizationMap[i] >= 0)
-            {
-                itsContext.polarizations.insert(i);
-            }
-        }
-    }
-    else
-    {
-        const vector<string> &requested = context.correlation.type;
-        const vector<string> &available = itsMeasurement->getPolarizations();
 
-        for(size_t i = 0; i < available.size(); ++i)
-        {
-            // Skip all unknown polarizations.
-            if(itsPolarizationMap[i] >= 0)
-            {
-                // Check if this polarization needs to be processed.
-                for(size_t j = 0; j < requested.size(); ++j)
-                {
-                    if(available[i] == requested[j])
-                    {
-                        itsContext.polarizations.insert(i);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    // Verify that at least one polarization is selected.
-    if(itsContext.polarizations.empty())
-    {
-        LOG_ERROR("At least one polarization should be selected.");
-        return false;
-    }
-
+bool Prediffer::setSelection(const string &filter,
+    const vector<string> &stations1,
+    const vector<string> &stations2,
+    const vector<string> &polarizations)
+{
+    // Check preconditions.
+    DBGASSERT(itsChunk);
+    DBGASSERT(stations1.size() == stations2.size());
+    
+    // Clear baseline selection.
+    itsSelection.baselines.clear();
+    
     // Select baselines.
-    set<baseline_t> baselineSelection;
-    if(context.baselines.station1.empty())
+    set<baseline_t> selection;
+    if(stations1.empty())
     {
-        // If no baselines are speficied, use all baselines selected in the
-        // strategy that match the correlation selection of this context.
-        for(vector<baseline_t>::const_iterator it =
-            itsChunkData->grid.baselines.begin(),
-            end = itsChunkData->grid.baselines.end();
+        // If no station groups are speficied, select all the baselines
+        // available in the chunk that match the baseline filter.
+        const vector<baseline_t> &baselines = itsChunk->dims.getBaselines();
+        for(vector<baseline_t>::const_iterator it = baselines.begin(),
+            end = baselines.end();
             it != end;
             ++it)
         {
-            const baseline_t &baseline = *it;
-
-            if(context.correlation.selection == "ALL"
-                || (baseline.first == baseline.second
-                    && context.correlation.selection == "AUTO")
-                || (baseline.first != baseline.second
-                    && context.correlation.selection == "CROSS"))
+            if(filter.empty()
+                || (it->first == it->second && filter == "AUTO")
+                || (it->first != it->second && filter == "CROSS"))
             {
-                baselineSelection.insert(baseline);
+                selection.insert(*it);
             }
         }
     }
@@ -421,12 +248,10 @@ bool Prediffer::setContext(const Context &context)
     {
         const Instrument &instrument = itsMeasurement->getInstrument();
 
-        vector<string>::const_iterator baseline_it1 =
-            context.baselines.station1.begin();
-        vector<string>::const_iterator baseline_it2 =
-            context.baselines.station2.begin();
+        vector<string>::const_iterator baseline_it1 = stations1.begin();
+        vector<string>::const_iterator baseline_it2 = stations2.begin();
 
-        while(baseline_it1 != context.baselines.station1.end())
+        while(baseline_it1 != stations1.end())
         {
             // Find the indices of all the stations of which the name matches
             // the regex specified in the context.
@@ -450,9 +275,8 @@ bool Prediffer::setContext(const Context &context)
             }
 
             // Generate all possible baselines (pairs) from the two groups of
-            // station indices. If a baseline is selected in the current
-            // strategy _and_ matches the correlation selection of this context,
-            // select it for processing.
+            // station indices. If a baseline is available in the chunk _and_
+            // matches the baseline filter, select it for processing.
             for(set<size_t>::const_iterator it1 = stationGroup1.begin();
                 it1 != stationGroup1.end();
                 ++it1)
@@ -461,17 +285,15 @@ bool Prediffer::setContext(const Context &context)
                 it2 != stationGroup2.end();
                 ++it2)
                 {
-                    if(context.correlation.selection == "ALL"
-                        || ((*it1 == *it2)
-                            && (context.correlation.selection == "AUTO"))
-                        || ((*it1 != *it2)
-                            && context.correlation.selection == "CROSS"))
+                    if(filter.empty()
+                        || (*it1 == *it2 && filter == "AUTO")
+                        || (*it1 != *it2 && filter == "CROSS"))
                     {
                         baseline_t baseline(*it1, *it2);
 
-                        if(itsChunkData->hasBaseline(baseline))
+                        if(itsChunk->dims.hasBaseline(baseline))
                         {
-                            baselineSelection.insert(baseline);
+                            selection.insert(baseline);
                         }
                     }
                 }
@@ -482,129 +304,260 @@ bool Prediffer::setContext(const Context &context)
         }
     }
 
-    if(baselineSelection.empty())
+    itsSelection.baselines.resize(selection.size());
+    copy(selection.begin(), selection.end(), itsSelection.baselines.begin());
+
+    // Verify that at least one baseline is selected.
+    if(selection.empty())
     {
-        LOG_ERROR("At least one baseline should be selected.");
+        LOG_ERROR("Baseline selection did not match any baselines in the"
+            " observation");
         return false;
     }
 
-    itsContext.baselines.resize(baselineSelection.size());
-    copy(baselineSelection.begin(), baselineSelection.end(), itsContext.baselines.begin());
+    // Clear polarization selection.
+    itsSelection.polarizations.clear();
+
+    // Select polarizations on name.
+    if(polarizations.empty())
+    {
+        for(size_t i = 0; i < itsPolarizationMap.size(); ++i)
+        {
+            if(itsPolarizationMap[i] >= 0)
+            {
+                itsSelection.polarizations.insert(i);
+            }
+        }
+    }
+    else
+    {
+        const vector<string> &available = itsMeasurement->getPolarizations();
+        for(size_t i = 0; i < available.size(); ++i)
+        {
+            // Only consider known polarizations.
+            if(itsPolarizationMap[i] >= 0)
+            {
+                // Check if this polarization needs to be processed.
+                for(size_t j = 0; j < polarizations.size(); ++j)
+                {
+                    if(available[i] == polarizations[j])
+                    {
+                        itsSelection.polarizations.insert(i);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Verify that at least one polarization is selected.
+    if(itsSelection.polarizations.empty())
+    {
+        LOG_ERROR("Polarization selection did not match any polarizations in"
+            " the obervation.");
+        return false;
+    }
 
     return true;
 }
 
 
-bool Prediffer::setContext(const PredictContext &context)
+void Prediffer::setModelConfiguration(const vector<string> &components,
+        const vector<string> &sources)
 {
-    if(!setContext(dynamic_cast<const Context &>(context)))
+    itsModelConfiguration.components = components;
+    itsModelConfiguration.sources = sources;
+}
+
+
+void Prediffer::setOperation(Operation type)
+{
+    // Initialize model.
+    switch(type)
+    {
+    case SIMULATE:
+    case SUBTRACT:
+    case CONSTRUCT:
+        itsModel->makeEquations(Model::SIMULATE,
+            itsModelConfiguration.components, itsSelection.baselines,
+            itsModelConfiguration.sources, itsParameters, &itsInstrumentDb,
+            &itsPhaseRef, itsChunk);
+        break;
+    case CORRECT:
+        itsModel->makeEquations(Model::CORRECT,
+            itsModelConfiguration.components, itsSelection.baselines,
+            itsModelConfiguration.sources, itsParameters, &itsInstrumentDb,
+            &itsPhaseRef, itsChunk);
+        break;
+    default:
+        THROW(BBSKernelException, "Attempt to set unknown operation type.");
+    }
+    
+    itsOperation = type;
+    
+    // Initialize model parameters.
+    for(MeqParmGroup::iterator it = itsParameters.begin();
+        it != itsParameters.end();
+        ++it)
+    {
+        it->second.fillFunklets(itsParameterValues, MeqDomain());
+    }
+}   
+
+
+bool Prediffer::setSolutionGrid(const Grid<double> &solutionGrid)
+{
+    const Grid<double> &chunkGrid = itsChunk->dims.getGrid();
+    Box<double> bbox =
+        chunkGrid.getBoundingBox() & solutionGrid.getBoundingBox();
+
+    if(bbox.empty())
     {
         return false;
     }
 
-    // Create the measurement equation for each interferometer (baseline).
-    itsModel->makeEquations(Model::PREDICT, context.instrumentModel,
-        itsContext.baselines, context.sources, itsParmGroup,
-        itsInstrumentDBase.get(), &itsPhaseRef, itsChunkData);
+    LOG_DEBUG_STR("BBox: (" << setprecision(15) << bbox.start.first << ","
+        << bbox.start.second << ") - (" << bbox.end.first << ","
+        << bbox.end.second << ")");
+        
+    itsContext.solutionGrid = solutionGrid;
 
-    // Put funklets in parms which are not filled yet. (?)
+    pair<Location, bool> result;
+    result = solutionGrid.locate(bbox.start, true);
+    DBGASSERT(result.second);
+    Location start = result.first;
+
+    result = solutionGrid.locate(bbox.end, false);
+    DBGASSERT(result.second);
+    Location end = result.first;
+
+    itsContext.chunkStart = start;
+    itsContext.chunkEnd = end;
+
+    LOG_DEBUG_STR("Chunk start: (" << start.first << "," << start.second << ")");
+    LOG_DEBUG_STR("Chunk end  : (" << end.first << "," << end.second << ")");
+
+    const size_t nFreqCells = (end.first - start.first + 1);
+    const size_t nTimeCells = (end.second - start.second + 1);
+    const size_t nCells = nFreqCells * nTimeCells;
+
+    LOG_DEBUG_STR("Cell count: " << nCells);
+
+    // Map cell boundaries to sample boundaries (frequency axis).
+    Axis<double>::Pointer cellAxis, sampleAxis;
+
+    cellAxis = solutionGrid[FREQ];
+    sampleAxis = chunkGrid[FREQ];
+
+    vector<size_t> boundaries(nFreqCells + 1);
+    boundaries.front() = sampleAxis->locate(bbox.start.first, true);
+    DBGASSERT(boundaries.front() < samplesAxis->size());
+    boundaries.back() = sampleAxis->locate(bbox.end.first, true);
+    DBGASSERT(boundaries.back() > boundaries.front() &&
+        boundaries.back() <= samplesAxis->size());
+
+    for(size_t cell = 1; cell < nFreqCells; ++cell)
+    {
+        boundaries[cell] =
+            sampleAxis->locate(cellAxis->lower(start.first + cell), true);
+        DBGASSERT(boundaries[i] < samplesAxis->size());
+    }
+    LOG_DEBUG_STR("Boundaries FREQ: " << boundaries);
+    Axis<size_t>::Pointer fAxis(new IrregularAxis<size_t>(boundaries));
+
+    cellAxis = solutionGrid[TIME];
+    sampleAxis = chunkGrid[TIME];
+    boundaries.resize(nTimeCells + 1);
+    boundaries.front() = sampleAxis->locate(bbox.start.second, true);
+    DBGASSERT(boundaries.front() < samplesAxis->size());
+    boundaries.back() = sampleAxis->locate(bbox.end.second, true);
+    DBGASSERT(boundaries.back() > boundaries.front() &&
+        boundaries.back() <= samplesAxis->size());
+
+    for(size_t cell = 1; cell < nTimeCells; ++cell)
+    {
+        boundaries[cell] =
+            sampleAxis->locate(cellAxis->lower(start.second + cell), true);
+        DBGASSERT(boundaries[i] < samplesAxis->size());
+    }
+    LOG_DEBUG_STR("Boundaries TIME: " << boundaries);
+    Axis<size_t>::Pointer tAxis(new IrregularAxis<size_t>(boundaries));
+
+    itsContext.cellGrid = Grid<size_t>(fAxis, tAxis);
+
+/*
+    vector<MeqDomain> domains;
+    for(size_t tcell = start.second; tcell <= end.second; ++tcell)
+    {
+        for(size_t fcell = start.first; fcell <= end.first; ++fcell)
+        {
+            Box cell = solutionGrid.getCell(Location(fcell, tcell));
+            domains.push_back(MeqDomain(cell.start.first, cell.end.first,
+                cell.start.second, cell.end.second));
+        }
+    }
+
+    // Initialize meta data needed for processing.
+    int nUnknowns = 0;
+    
+    // Temporary vector (required by MeqParmFunklet::initDomain() but not
+    // needed here).
+//    vector<int> tmp(nDomains, 0);
+    itsContext.cellCoefficientCount.resize(nDomains);
+    fill(itsContext.cellCoefficientCount.begin(),
+        itsContext.cellCoefficientCount.end(), 0);
+    
+// TEST TEST TEST        
+    uint32 parameterIndex = 0;
+// TEST TEST TEST        
     for(MeqParmGroup::iterator it = itsParmGroup.begin();
         it != itsParmGroup.end();
         ++it)
     {
-        it->second.fillFunklets(itsParmValues, itsWorkDomain);
-    }
+        // Determine maximal number of unknowns over all solve domains for this
+        // parameter.
+//        it->second.initDomain(domains, nUnknowns, tmp);
+        int nCoeff = it->second.initDomain(domains, nUnknowns,
+            itsContext.cellCoefficientCount);
 
-    itsContext.outputColumn = context.outputColumn;
+// TEST TEST TEST        
+        if(it->second.isSolvable())
+        {
+            for(size_t i = 0; i < nCoeff; ++i)
+            {
+                itsContext.perturbedIndex.push_back(parameterIndex);
+            }
+            ++parameterIndex; 
+        }
+// TEST TEST TEST        
+    }
+    itsContext.unknownCount = nUnknowns;
+
+    LOG_DEBUG_STR("nDerivatives: " << nUnknowns);
+    LOG_DEBUG_STR("CellCoefficientCount: " << itsContext.cellCoefficientCount);
+    ASSERT(nUnknowns > 0);
+// TEST TEST TEST        
+    LOG_DEBUG_STR("perturbedIndex: " << itsContext.perturbedIndex);
+    ASSERT(itsContext.perturbedIndex.size() == nUnknowns);
+// TEST TEST TEST 
+*/       
     return true;
 }
 
 
-bool Prediffer::setContext(const SubtractContext &context)
+bool Prediffer::setParameterSelection(const vector<string> &include,
+        const vector<string> &exclude)
 {
-    if(!setContext(dynamic_cast<const Context &>(context)))
-    {
-        return false;
-    }
-
-    // Create the measurement equation for each interferometer (baseline).
-    itsModel->makeEquations(Model::PREDICT, context.instrumentModel,
-        itsContext.baselines, context.sources, itsParmGroup,
-        itsInstrumentDBase.get(), &itsPhaseRef, itsChunkData);
-
-    // Put funklets in parms which are not filled yet. (?)
-    for(MeqParmGroup::iterator it = itsParmGroup.begin();
-        it != itsParmGroup.end();
-        ++it)
-    {
-        it->second.fillFunklets(itsParmValues, itsWorkDomain);
-    }
-
-    itsContext.outputColumn = context.outputColumn;
-    return true;
-}
-
-
-bool Prediffer::setContext(const CorrectContext &context)
-{
-    if(!setContext(dynamic_cast<const Context &>(context)))
-    {
-        return false;
-    }
-
-    // Create the measurement equation for each interferometer (baseline).
-    itsModel->makeEquations(Model::CORRECT, context.instrumentModel,
-        itsContext.baselines, context.sources, itsParmGroup,
-        itsInstrumentDBase.get(), &itsPhaseRef, itsChunkData);
-
-    // Put funklets in parms which are not filled yet. (?)
-    for(MeqParmGroup::iterator it = itsParmGroup.begin();
-        it != itsParmGroup.end();
-        ++it)
-    {
-        it->second.fillFunklets(itsParmValues, itsWorkDomain);
-    }
-
-    itsContext.outputColumn = context.outputColumn;
-    return true;
-}
-
-
-bool Prediffer::setContext(const GenerateContext &context)
-{
-    if(!setContext(dynamic_cast<const Context &>(context)))
-    {
-        return false;
-    }
-
-    // Create the measurement equation for each interferometer (baseline).
-    itsModel->makeEquations(Model::PREDICT, context.instrumentModel,
-        itsContext.baselines, context.sources, itsParmGroup,
-        itsInstrumentDBase.get(), &itsPhaseRef, itsChunkData);
-
-    // Put funklets in parms which are not filled yet. (?)
-    for(MeqParmGroup::iterator it = itsParmGroup.begin();
-        it != itsParmGroup.end();
-        ++it)
-    {
-        it->second.fillFunklets(itsParmValues, itsWorkDomain);
-    }
-
-    // Clear the solvable flag on all parameters (may still be set from the
-    // previous step.
-    clearSolvableParms();
-
     // Convert patterns to AIPS++ regular expression objects.
-    vector<casa::Regex> included(context.unknowns.size());
-    vector<casa::Regex> excluded(context.excludedUnknowns.size());
+    vector<casa::Regex> includeRegex(include.size());
+    vector<casa::Regex> excludeRegex(exclude.size());
 
     try
     {
-        transform(context.unknowns.begin(), context.unknowns.end(),
-            included.begin(), ptr_fun(casa::Regex::fromPattern));
+        transform(include.begin(), include.end(), includeRegex.begin(),
+            ptr_fun(casa::Regex::fromPattern));
 
-        transform(context.excludedUnknowns.begin(),
-            context.excludedUnknowns.end(), excluded.begin(),
+        transform(exclude.begin(), exclude.end(), excludeRegex.begin(),
             ptr_fun(casa::Regex::fromPattern));
     }
     catch(std::exception &_ex)
@@ -616,35 +569,35 @@ bool Prediffer::setContext(const GenerateContext &context)
 
     // Find all parameters matching context.unknowns, exclude those that
     // match context.excludedUnknowns.
-    for(MeqParmGroup::iterator parameter_it = itsParmGroup.begin();
-        parameter_it != itsParmGroup.end();
+    for(MeqParmGroup::iterator parameter_it = itsParameters.begin();
+        parameter_it != itsParameters.end();
         ++parameter_it)
     {
         casa::String name(parameter_it->second.getName());
 
         // Loop through all regex-es until a match is found.
-        for(vector<casa::Regex>::iterator included_it = included.begin();
-            included_it != included.end();
-            ++included_it)
+        for(vector<casa::Regex>::iterator include_it = includeRegex.begin();
+            include_it != includeRegex.end();
+            ++include_it)
         {
-            if(name.matches(*included_it))
+            if(name.matches(*include_it))
             {
-                bool include = true;
+                bool includeFlag = true;
 
                 // Test if excluded.
-                for(vector<casa::Regex>::const_iterator excluded_it =
-                    excluded.begin();
-                    excluded_it != excluded.end();
-                    ++excluded_it)
+                for(vector<casa::Regex>::const_iterator exclude_it =
+                    excludeRegex.begin();
+                    exclude_it != excludeRegex.end();
+                    ++exclude_it)
                 {
-                    if(name.matches(*excluded_it))
+                    if(name.matches(*exclude_it))
                     {
-                        include = false;
+                        includeFlag = false;
                         break;
                     }
                 }
 
-                if(include)
+                if(includeFlag)
                 {
                     parameter_it->second.setSolvable(true);
                 }
@@ -653,132 +606,24 @@ bool Prediffer::setContext(const GenerateContext &context)
             }
         }
     }
-
-    // Initialize solve domain grid.
-    pair<size_t, size_t> domainSize(context.domainSize);
-    if(domainSize.first == 0
-        || domainSize.first > itsChunkData->grid.freq.size())
-    {
-        domainSize.first = itsChunkData->grid.freq.size();
-    }
     
-    if(domainSize.second == 0
-        || domainSize.second > itsChunkData->grid.time.size())
-    {
-        domainSize.second = itsChunkData->grid.time.size();
-    }
-
-    LOG_DEBUG_STR("Nominal solve domain size: " << domainSize.first
-        << " channels by " << domainSize.second << " timeslots.");
-
-    initSolveDomains(domainSize);
-
-    return (itsContext.unknownCount > 0);
+    return true;
 }
 
 
-void Prediffer::initSolveDomains(pair<size_t, size_t> size)
+void Prediffer::clearParameterSelection()
 {
-    size_t nFreqDomains =
-        ceil(itsChunkData->grid.freq.size() / static_cast<double>(size.first));
-    size_t nTimeDomains =
-        ceil(itsChunkData->grid.time.size() / static_cast<double>(size.second));
-    size_t nSolveDomains = nFreqDomains * nTimeDomains;
-
-//    cout << "freq.size(): " << itsChunkData->grid.freq.size() << " #domains: "
-//        << nFreqDomains << endl;
-//    cout << "time.size(): " << itsChunkData->grid.time.size() << " #domains: "
-//        << nTimeDomains << endl;
-
-    itsContext.domainSize = size;
-    itsContext.domainCount = make_pair(nFreqDomains, nTimeDomains);
-    itsContext.domains.resize(nSolveDomains);
-
-    // Determine solve domains.
-    size_t idx = 0, tstart = 0;
-    for(size_t tdomain = 0; tdomain < nTimeDomains; ++tdomain)
-    {
-        size_t tend = tstart + size.second - 1;
-        if(tend >= itsChunkData->grid.time.size())
-            tend = itsChunkData->grid.time.size() - 1;
-
-        size_t fstart = 0;
-        for(size_t fdomain = 0; fdomain < nFreqDomains; ++fdomain)
-        {
-            size_t fend = fstart + size.first - 1;
-            if(fend >= itsChunkData->grid.freq.size())
-                fend = itsChunkData->grid.freq.size() - 1;
-
-            itsContext.domains[idx] =
-                MeqDomain(itsChunkData->grid.freq.lower(fstart),
-                    itsChunkData->grid.freq.upper(fend),
-                    itsChunkData->grid.time.lower(tstart),
-                    itsChunkData->grid.time.upper(tend));
-
-            fstart += size.first;
-            ++idx;
-        }
-        tstart += size.second;
-    }
-
-    // Initialize meta data needed for processing.
-    int nUnknowns = 0;
-    // Temporary vector (required by MeqParmFunklet::initDomain() but not
-    // needed here).
-    vector<int> tmp(nSolveDomains, 0);
-    
-    for(MeqParmGroup::iterator it = itsParmGroup.begin();
-        it != itsParmGroup.end();
+    for (MeqParmGroup::iterator it = itsParameters.begin();
+        it != itsParameters.end();
         ++it)
     {
-        // Determine maximal number of unknowns over all solve domains for this
-        // parameter.
-        it->second.initDomain(itsContext.domains, nUnknowns, tmp);
+        it->second.setSolvable(false);
     }
-    itsContext.unknownCount = nUnknowns;
-
-    // Initialize unknowns.
-    itsContext.unknowns.resize(nSolveDomains);
-    for(size_t i = 0; i < nSolveDomains; ++i)
-    {
-    	itsContext.unknowns[i].resize(nUnknowns);
-    	fill(itsContext.unknowns[i].begin(), itsContext.unknowns[i].end(), 0.0);
-    }
-    
-    // Copy unknowns (we need the unknowns of all parameters for each domain,
-    // instead of the unknowns of all domains for each parameter).
-    for(MeqParmGroup::iterator it = itsParmGroup.begin();
-        it != itsParmGroup.end();
-        ++it)
-    {
-        if(it->second.isSolvable())
-        {
-            // TODO: Create method on MeqParmFunklet to do what follows.
-            const vector<MeqFunklet*> &funklets = it->second.getFunklets();
-            ASSERT(funklets.size() == nSolveDomains);
-
-            for(size_t domain = 0; domain < nSolveDomains; ++domain)
-            {
-                size_t offset = funklets[domain]->scidInx();            
-                const MeqMatrix &coeff = funklets[domain]->getCoeff();
-                const vector<bool> &mask = funklets[domain]->getSolvMask();
-
-                for(size_t i = 0; i < coeff.nelements(); ++i)
-                {
-                    if(mask[i])
-                    {
-                        itsContext.unknowns[domain][i + offset] =
-                            coeff.doubleStorage()[i];
-                        ++offset;
-                    }
-                }
-            }
-        }
-    }
-
-    LOG_DEBUG_STR("nDerivatives: " << nUnknowns);
 }
 
+
+
+/*
 
 void Prediffer::predict()
 {
@@ -786,17 +631,10 @@ void Prediffer::predict()
 
     itsProcessTimer.start();
     process(false, true, false, make_pair(0, 0),
-        make_pair(itsChunkData->grid.freq.size() - 1,
-            itsChunkData->grid.time.size() - 1),
+        make_pair(itsChunk->grid.freq.size() - 1,
+            itsChunk->grid.time.size() - 1),
         &Prediffer::copyBaseline, 0);
     itsProcessTimer.stop();
-
-    if(!itsContext.outputColumn.empty())
-    {
-        itsMeasurement->write(itsChunkSelection, itsChunkData,
-            itsContext.outputColumn, false);
-    }
-    
     printTimers("Copy");
 }
 
@@ -807,17 +645,10 @@ void Prediffer::subtract()
     
     itsProcessTimer.start();
     process(false, true, false, make_pair(0, 0),
-        make_pair(itsChunkData->grid.freq.size() - 1,
-            itsChunkData->grid.time.size() - 1),
+        make_pair(itsChunk->grid.freq.size() - 1,
+            itsChunk->grid.time.size() - 1),
         &Prediffer::subtractBaseline, 0);
     itsProcessTimer.stop();
-
-    if(!itsContext.outputColumn.empty())
-    {
-        itsMeasurement->write(itsChunkSelection, itsChunkData,
-            itsContext.outputColumn, false);
-    }
-
     printTimers("Subtract");
 }
 
@@ -828,17 +659,10 @@ void Prediffer::correct()
 
     itsProcessTimer.start();
     process(false, true, false, make_pair(0, 0),
-        make_pair(itsChunkData->grid.freq.size() - 1,
-            itsChunkData->grid.time.size() - 1),
+        make_pair(itsChunk->grid.freq.size() - 1,
+            itsChunk->grid.time.size() - 1),
         &Prediffer::copyBaseline, 0);
     itsProcessTimer.stop();
-
-    if(!itsContext.outputColumn.empty())
-    {
-        itsMeasurement->write(itsChunkSelection, itsChunkData,
-            itsContext.outputColumn, false);
-    }
-
     printTimers("Correct");
 }
 
@@ -891,14 +715,14 @@ void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
     pair<size_t, size_t> vend
         ((end.first + 1) * itsContext.domainSize.first - 1,
         (end.second + 1) * itsContext.domainSize.second - 1);
-    ASSERT(vstart.first < itsChunkData->grid.freq.size());
-    ASSERT(vstart.second < itsChunkData->grid.time.size());
+    ASSERT(vstart.first < itsChunk->grid.freq.size());
+    ASSERT(vstart.second < itsChunk->grid.time.size());
 
     // Clip against data boundary.
-    if(vend.first >= itsChunkData->grid.freq.size())
-        vend.first = itsChunkData->grid.freq.size() - 1;
-    if(vend.second >= itsChunkData->grid.time.size())
-        vend.second = itsChunkData->grid.time.size() - 1;
+    if(vend.first >= itsChunk->grid.freq.size())
+        vend.first = itsChunk->grid.freq.size() - 1;
+    if(vend.second >= itsChunk->grid.time.size())
+        vend.second = itsChunk->grid.time.size() - 1;
 
 //    LOG_DEBUG_STR("Processing visbility domain: " << vstart.first << ", "
 //        << vstart.second << " - " << vend.first << ", " << vend.second <<
@@ -935,8 +759,8 @@ void Prediffer::readParms()
     // Get all parameters that intersect the work domain.
     LOFAR::ParmDB::ParmDomain pdomain(itsWorkDomain.startX(),
         itsWorkDomain.endX(), itsWorkDomain.startY(), itsWorkDomain.endY());
-    itsInstrumentDBase->getValues(itsParmValues, emptyvec, pdomain);
-    itsSkyDBase->getValues(itsParmValues, emptyvec, pdomain);
+    itsInstrumentDb.getValues(itsParmValues, emptyvec, pdomain);
+    itsSkyDb.getValues(itsParmValues, emptyvec, pdomain);
 
     // Remove the funklets from all parms.
     for (MeqParmGroup::iterator it = itsParmGroup.begin();
@@ -975,8 +799,8 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     // NOTE: Temporary vector; should be removed after MNS overhaul.
     vector<double> timeAxis(nTimeslots + 1);
     for(size_t i = 0; i < nTimeslots; ++i)
-        timeAxis[i] = itsChunkData->grid.time.lower(start.second + i);
-    timeAxis[nTimeslots] = itsChunkData->grid.time.upper(end.second);
+        timeAxis[i] = itsChunk->grid.time.lower(start.second + i);
+    timeAxis[nTimeslots] = itsChunk->grid.time.upper(end.second);
 
     // Initialize the ComplexArr pool with the most frequently used size.
     uint64 defaultPoolSize = itsMeasurement->getChannelCount() * nTimeslots;
@@ -986,10 +810,10 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
     MeqMatrixRealArr::poolActivate(defaultPoolSize);
 
     // Create a request.
-    MeqDomain domain(itsChunkData->grid.freq.lower(start.first),
-        itsChunkData->grid.freq.upper(end.first),
-        itsChunkData->grid.time.lower(start.second),
-        itsChunkData->grid.time.upper(end.second));
+    MeqDomain domain(itsChunk->grid.freq.lower(start.first),
+        itsChunk->grid.freq.upper(end.first),
+        itsChunk->grid.time.lower(start.second),
+        itsChunk->grid.time.upper(end.second));
 
     MeqRequest request(domain, nChannels, timeAxis, nPerturbedValues);
     request.setOffset(start);
@@ -1002,23 +826,6 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
         itsPrecalcTimer.stop();
     }
     
-/************** DEBUG DEBUG DEBUG **************/
-/*
-    cout << "Processing correlations: ";
-    copy(itsContext.correlations.begin(), itsContext.correlations.end(),
-        ostream_iterator<size_t>(cout, " "));
-    cout << endl;
-
-    cout << "Processing baselines:" << endl;
-    for(vector<baseline_t>::const_iterator it = itsContext.baselines.begin();
-        it != itsContext.baselines.end();
-        ++it)
-    {
-        cout << it->first << " - " << it->second << endl;
-    }
-*/
-/************** DEBUG DEBUG DEBUG **************/
-
 #pragma omp parallel
     {
 #pragma omp for schedule(dynamic)
@@ -1032,7 +839,7 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
 #endif
             // Process baseline.
             (this->*processor)
-                (thread, arguments, itsChunkData, start, request, itsContext.baselines[i], false);
+                (thread, arguments, itsChunk, start, request, itsContext.baselines[i], false);
         }
     } // omp parallel
 }
@@ -1284,13 +1091,6 @@ void Prediffer::generateBaseline(int threadnr, void *arguments,
                     continue;
                 }
 
-/************** DEBUG DEBUG DEBUG **************/
-//                if (showd)
-//                {
-//                    showData(corr, sdch, inc, nrchan, cflags, cdata,
-//                        realVals, imagVals);
-//                }
-/************** DEBUG DEBUG DEBUG **************/
 
                 size_t domainIdxTime = tslot / itsContext.domainSize.second;
                 size_t solverIdxTime = domainIdxTime - relDomainOffset.second;
@@ -1388,197 +1188,6 @@ void Prediffer::generateBaseline(int threadnr, void *arguments,
 }
 
 
-/*
-void Prediffer::getData (bool useTree,
-             Array<Complex>& dataArr, Array<Bool>& flagArr)
-{
-  int nrusedbl = itsBaselineInx.size();
-  int nrchan   = itsLastChan-itsFirstChan+1;
-  dataArr.resize (IPosition(4, itsNCorr, nrchan, nrusedbl, itsNrTimes));
-  flagArr.resize (IPosition(4, itsNCorr, nrchan, nrusedbl, itsNrTimes));
-  pair<Complex*,bool*> p;
-  p.first = dataArr.data();
-  p.second = flagArr.data();
-  if (!useTree) {
-    process (true, false, false, &Prediffer::getBaseline, &p);
-    return;
-  }
-  vector<MeqJonesExpr> expr(nrusedbl);
-  for (int i=0; i<nrusedbl; ++i) {
-    expr[i] = new MeqJonesMMap (itsMSMapInfo, itsBaselinenInx[i]);
-  }
-  pair<pair<Complex*,bool*>*, vector<MeqJonesExpr>*> p1;
-  p1.first = &p;
-  p1.second = &expr;
-  process (true, false, false, &Prediffer::getMapBaseline, &p1);
-}
-*/
-
-
-/*
-vector<MeqResult> Prediffer::getResults(bool calcDeriv)
-{
-  // Find all nodes to be precalculated.
-  setPrecalcNodes (itsExpr);
-  // Allocate result vector.
-  vector<MeqResult> results;
-  int nrchan = itsLastChan-itsFirstChan+1;
-  double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
-  double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
-  for (unsigned int tStep=0; tStep<itsNrTimes; tStep++)
-  {
-    double time = itsMSDesc.times[itsTimeIndex+tStep];
-    double interv = itsMSDesc.exposures[itsTimeIndex+tStep];
-    MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
-    MeqRequest request(domain, nrchan, 1, 0);
-    if (calcDeriv) {
-      request = MeqRequest(domain, nrchan, 1, itsContext.unknownCount);
-    }
-    // Loop through expressions to be precalculated.
-    // We can parallellize them at each level.
-    // Level 0 is formed by itsExpr which are not calculated here.
-    for (int level = itsPrecalcNodes.size(); -- level > 0;) {
-      vector<MeqExprRep*> exprs = itsPrecalcNodes[level];
-      int nrExprs = exprs.size();
-      if (nrExprs > 0) {
-#pragma omp parallel for schedule(dynamic)
-    for (int i = 0; i < nrExprs; i ++) {
-      exprs[i]->precalculate (request);
-    }
-      }
-    }
-    // Evaluate for all selected baselines.
-    for (uint blindex=0; blindex<itsBaselineInx.size(); ++blindex) {
-      // Get the result for this baseline.
-      MeqJonesExpr& expr = itsExpr[blindex];
-      // This is the actual predict.
-      MeqJonesResult result = expr.getResult (request);
-      results.push_back (result.getResult11());
-      results.push_back (result.getResult12());
-      results.push_back (result.getResult21());
-      results.push_back (result.getResult22());
-    }
-  }
-  return results;
-}
-*/
-
-
-/*
-void Prediffer::getBaseline(int, void* arguments, const fcomplex* data,
-    fcomplex*, const bool* flags, const MeqRequest&, int blindex, bool)
-{
-  Complex* datap = static_cast<pair<Complex*,bool*>*>(arg)->first;
-  bool*    flagp = static_cast<pair<Complex*,bool*>*>(arg)->second;
-  int nrchan = itsLastChan-itsFirstChan+1;
-  memcpy (datap+blindex*nrchan*itsNCorr, data,
-      nrchan*itsNCorr*sizeof(Complex));
-  memcpy (flagp+blindex*nrchan*itsNCorr, flags,
-      nrchan*itsNCorr*sizeof(bool));
-}
-*/
-
-/*
-void Prediffer::getMapBaseline (int, void* arguments, const fcomplex*,
-    fcomplex*, const bool* flags, const MeqRequest& request, int blindex, bool)
-{
-  pair<pair<Complex*,bool*>*, vector<MeqJonesExpr>*>* p1 =
-    static_cast<pair<pair<Complex*,bool*>*, vector<MeqJonesExpr>*>*>(arg);
-  Complex* datap = p1->first->first;
-  bool*    flagp = p1->first->second;
-  vector<MeqJonesExpr>& expr = *p1->second;
-  int nrchan = itsLastChan-itsFirstChan+1;
-  datap += blindex*nrchan*itsNCorr;
-  memcpy (flagp+blindex*nrchan*itsNCorr, flags,
-      nrchan*itsNCorr*sizeof(bool));
-  MeqJonesResult jresult = expr[blindex].getResult (request);
-  const double *r1, *i1, *r2, *i2, *r3, *i3, *r4, *i4;
-  jresult.result11().getValue().dcomplexStorage (r1, i1);
-  jresult.result12().getValue().dcomplexStorage (r2, i2);
-  jresult.result21().getValue().dcomplexStorage (r3, i3);
-  jresult.result22().getValue().dcomplexStorage (r4, i4);
-  int nx = jresult.result11().getValue().nx();
-  for (int iy=0; iy<jresult.result11().getValue().ny(); ++iy) {
-    if (itsReverseChan) {
-      for (int ix=nx; ix>0;) {
-    ix--;
-    int i = iy*nx + ix;
-    *datap++ = Complex(r1[i], i1[i]);
-    if (itsNCorr > 2) {
-      *datap++ = Complex(r2[i], i2[i]);
-      *datap++ = Complex(r3[i], i3[i]);
-    }
-    if (itsNCorr > 1) {
-      *datap++ = Complex(r4[i], i4[i]);
-    }
-      }
-    } else {
-      for (int ix=0; ix<nx; ++ix) {
-    int i = iy*nx + ix;
-    *datap++ = Complex(r1[i], i1[i]);
-    if (itsNCorr > 2) {
-      *datap++ = Complex(r2[i], i2[i]);
-      *datap++ = Complex(r3[i], i3[i]);
-    }
-    if (itsNCorr > 1) {
-      *datap++ = Complex(r4[i], i4[i]);
-    }
-      }
-    }
-  }
-}
-*/
-
-
-
-/*
-void Prediffer::testFlagsBaseline(int, void*, VisData::Pointer chunk,
-    const MeqRequest& request, baseline_t baseline, bool showd)
-{
-    itsOperationTimer.start();
-    int nrchan = request.nx();
-    int nrtime = request.ny();
-
-    map<baseline_t, size_t>::iterator it = chunk->baselines.find(baseline);
-    ASSERT(it != chunk->baselines.end());
-    size_t basel = it->second;
-
-    // Loop through the times and correlations.
-    for(size_t tslot = 0; tslot < nrtime; ++tslot)
-    {
-        for(set<size_t>::const_iterator it = itsContext.correlations.begin();
-            it != itsContext.correlations.end();
-            ++it)
-        {
-            size_t correlation = *it;
-
-            for(size_t ch=0; ch < nrchan; ++ch)
-            {
-                chunk->vis_data[basel][tslot][ch][correlation] =
-                    (chunk->vis_flag[basel][tslot][ch][correlation] ?
-                        makefcomplex(0.0, 0.0) : makefcomplex(1.0, 1.0));
-            }
-       }
-    }
-    itsOperationTimer.stop();
-}
-*/
-
-
-/*
-void Prediffer::updateSolvableParms(const vector<double>& values)
-{
-  // Iterate through all parms.
-  for (MeqParmGroup::iterator iter = itsParmGroup.begin();
-       iter != itsParmGroup.end();
-       ++iter)
-  {
-    if (iter->second.isSolvable()) {
-      iter->second.update (values);
-    }
-  }
-}
-*/
 
 void Prediffer::updateUnknowns(size_t domain, const vector<double> &unknowns)
 {
@@ -1594,7 +1203,6 @@ void Prediffer::updateUnknowns(size_t domain, const vector<double> &unknowns)
 }
 
 
-/*
 void Prediffer::updateSolvableParms (const ParmDataInfo& parmDataInfo)
 {
   const vector<ParmData>& parmData = parmDataInfo.parms();
@@ -1618,7 +1226,6 @@ void Prediffer::updateSolvableParms (const ParmDataInfo& parmDataInfo)
     }
   }
 }
-*/
 
 void Prediffer::updateSolvableParms()
 {
@@ -1639,95 +1246,6 @@ void Prediffer::updateSolvableParms()
   }
 }
 
-// Log the values of the solvable parameters and the quality indicators of the
-// last iteration to a ParmDB. The type of the parameters is set to 'history'
-// to ensure that they cannot accidentily be used as input for BBSkernel. Also,
-// ParmFacade::getHistory() checks on this type.
-/*
-void Prediffer::logIteration(const string &stepName, size_t solveDomainIndex,
-    double rank, double chiSquared, double LMFactor)
-{
-    if(!itsHistoryDBase)
-        return;
-
-    ostringstream os;
-    os << setfill('0');
-
-    // Default values for the coefficients (every parameters of the history
-    // type has exactly one coefficient, and only solvable parameters are
-    // logged).
-    bool solvable = false;
-    vector<int> shape(2, 1);
-
-    const SolveDomainDescriptor &descriptor =
-        itsContext.domains[solveDomainIndex];
-
-    // For each solve domain, log the solver quality indicators and the values of the
-    // coefficients of each solvable parameter.
-    LOFAR::ParmDB::ParmValue value;
-    LOFAR::ParmDB::ParmValueRep &valueRep = value.rep();
-
-    valueRep.setType("history");
-    valueRep.setDomain(LOFAR::ParmDB::ParmDomain(
-        descriptor.domain.startX(),
-        descriptor.domain.endX(),
-        descriptor.domain.startY(),
-        descriptor.domain.endY()));
-
-    string stepPrefix = stepName + ":";
-    string domainSuffix;
-    if(itsContext.domains.size() > 1)
-    {
-        os.str("");
-        os << ":domain"
-            << setw(((int) log10(double(itsContext.domains.size())) + 1))
-            << solveDomainIndex;
-        domainSuffix = os.str();
-    }
-
-    value.setNewParm();
-    valueRep.setCoeff(&rank, &solvable, shape);
-    itsHistoryDBase->putValue(stepPrefix + "solver:rank" + domainSuffix, value);
-
-    value.setNewParm();
-    valueRep.setCoeff(&chiSquared, &solvable, shape);
-    itsHistoryDBase->putValue(stepPrefix + "solver:chi_squared" + domainSuffix,
-value);
-
-    value.setNewParm();
-    valueRep.setCoeff(&LMFactor, &solvable, shape);
-    itsHistoryDBase->putValue(stepPrefix + "solver:lm_factor" + domainSuffix,
-value);
-
-    // Log each solvable parameter. Each combinaton of coefficient
-    // and solve domain is logged separately. Otherwise, one would
-    // currently not be able to view coefficients separately in the
-    // plotter.
-    for(size_t i = 0; i < descriptor.parameters.size(); ++i)
-    {
-        const MeqFunklet *funklet = descriptor.parameters[i].getFunklets()[solveDomainIndex];
-        const vector<bool> &mask = funklet->getSolvMask();
-        const MeqMatrix &coeff = funklet->getCoeff();
-        const double *data = coeff.doubleStorage();
-
-        int indexWidth = ((int) log10(double(mask.size()))) + 1;
-
-        // Log each coefficient of the current parameter.
-        for(size_t j = 0; j < mask.size(); ++j)
-        {
-            // Only log solvable coefficients.
-            if(mask[j])
-            {
-                value.setNewParm();
-                valueRep.setCoeff(&data[j], &solvable, shape);
-                os.str("");
-                os << stepPrefix << descriptor.parameters[i].getName() << ":c" << setw(indexWidth) << j << domainSuffix;
-                itsHistoryDBase->putValue(os.str(), value);
-            }
-        }
-    }
-}
-*/
 
 void Prediffer::writeParms(size_t domain)
 {
@@ -1741,13 +1259,6 @@ void Prediffer::writeParms(size_t domain)
         }
     }
 
-/*
-    SolveDomainDescriptor &descriptor = itsContext.domains[solveDomainIndex];
-    for(size_t i = 0; i < descriptor.parameters.size(); ++i)
-    {
-        descriptor.parameters[i].save(solveDomainIndex);
-    }
-*/
 }
 
 
@@ -1848,7 +1359,7 @@ void Prediffer::printTimers(const string &operationName)
             << std << " ms");
     }
 }
-
+*/
 
 } // namespace BBS
 } // namespace LOFAR

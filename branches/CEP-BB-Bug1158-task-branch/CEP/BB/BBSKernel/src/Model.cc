@@ -562,18 +562,21 @@ void Model::makeSourceNodes(const vector<string> &names, MeqPhaseRef *phaseRef)
 
 void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
 {
-    size_t nStations = instrument.getStationCount();
+    const size_t nStations = instrument.getStationCount();
     vector<bool> statDone(nStations);
     vector<double> statUVW(3 * nStations);
 
+    const Grid<double> grid = buffer->dims.getGrid();
+    const vector<baseline_t> baselines = buffer->dims.getBaselines();
+    
     // Step through the MS by timeslot.
-    for (size_t tslot = 0; tslot < buffer->grid.time.size(); ++tslot)
+    for (size_t tslot = 0; tslot < grid[TIME]->size(); ++tslot)
     {
-        double time = buffer->grid.time(tslot);
+        const double time = grid[TIME]->center(tslot);
         fill(statDone.begin(), statDone.end(), false);
 
         // Set UVW of first station used to 0 (UVW coordinates are relative!).
-        size_t station0 = buffer->grid.baselines[0].first;
+        size_t station0 = baselines[0].first;
         statUVW[3 * station0] = 0.0;
         statUVW[3 * station0 + 1] = 0.0;
         statUVW[3 * station0 + 2] = 0.0;
@@ -584,7 +587,7 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
         do
         {
             nDone = 0;
-            for(size_t idx = 0; idx < buffer->grid.baselines.size(); ++idx)
+            for(size_t idx = 0; idx < baselines.size(); ++idx)
             {
                 // If the contents of the UVW column is uninitialized, skip
                 // it.
@@ -593,8 +596,8 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
                     continue;
                 }
                 
-                size_t statA = buffer->grid.baselines[idx].first;
-                size_t statB = buffer->grid.baselines[idx].second;
+                size_t statA = baselines[idx].first;
+                size_t statB = baselines[idx].second;
                 if(statDone[statA] && !statDone[statB])
                 {
                     statUVW[3 * statB] =

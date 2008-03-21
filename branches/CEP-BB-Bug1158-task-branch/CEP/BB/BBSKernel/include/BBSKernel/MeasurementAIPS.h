@@ -55,7 +55,7 @@ public:
 
     ~MeasurementAIPS();
 
-    virtual VisGrid grid(const VisSelection &selection) const;
+    virtual VisDimensions getDimensions(const VisSelection &selection) const;
 
     virtual VisData::Pointer read(const VisSelection &selection,
         const string &column = "DATA", bool readUVW = true) const;
@@ -76,8 +76,8 @@ private:
 
     casa::TableExprNode getTAQLExpression(const VisSelection &selection) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
-    VisGrid grid(const casa::Table tab_selection, const casa::Slicer slicer)
-        const;
+    VisDimensions getDimensionsImpl(const casa::Table tab_selection,
+        const casa::Slicer slicer) const;
 
     casa::MeasurementSet    itsMS;
     bool                    itsFreqAxisReversed;

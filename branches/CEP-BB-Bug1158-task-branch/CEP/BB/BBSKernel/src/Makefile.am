@@ -1,12 +1,13 @@
 lib_LTLIBRARIES = libbbskernel.la
 
 libbbskernel_la_SOURCES = Package__Version.cc  	\
-	BBSKernelStructs.cc	\
 	BBSStatus.cc		\
 	MeasurementAIPS.cc	\
 	Model.cc		\
 	Prediffer.cc		\
+	Types.cc		\
 	VisData.cc		\
+	VisDimensions.cc	\
 	VisSelection.cc		\
 	MNS/MeqAzEl.cc		\
 	MNS/MeqBaseDFTPS.cc	\

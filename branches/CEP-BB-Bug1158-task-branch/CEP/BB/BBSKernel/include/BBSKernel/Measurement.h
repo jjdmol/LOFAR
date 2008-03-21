@@ -23,8 +23,9 @@
 #ifndef LOFAR_BBS_BBSKERNEL_MEASUREMENT_H
 #define LOFAR_BBS_BBSKERNEL_MEASUREMENT_H
 
-#include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisData.h>
+#include <BBSKernel/VisDimensions.h>
+#include <BBSKernel/VisSelection.h>
 
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -65,7 +66,8 @@ public:
     virtual ~Measurement()
     {}
 
-    virtual VisGrid grid(const VisSelection &selection) const = 0;
+    virtual VisDimensions
+        getDimensions(const VisSelection &selection) const = 0;
 
     virtual VisData::Pointer read(const VisSelection &selection,
         const string &column = "DATA", bool readUVW = true) const = 0;
@@ -80,23 +82,23 @@ public:
     const casa::MDirection &getPhaseCenter() const
     { return itsPhaseCenter; }
 
-    const cell_centered_axis<regular_series> &getFreqAxis() const
+    const Axis<double>::Pointer &getFreqAxis() const
     { return itsFreqAxis; }
 
     pair<double, double> getFreqRange() const
-    { return itsFreqAxis.range(); }
+    { return itsFreqAxis->range(); }
 
     size_t getChannelCount() const
-    { return itsFreqAxis.size(); }
+    { return itsFreqAxis->size(); }
 
-    const cell_centered_axis<irregular_series> &getTimeAxis() const
+    const Axis<double>::Pointer &getTimeAxis() const
     { return itsTimeAxis; }
 
     pair<double, double> getTimeRange() const
-    { return itsTimeAxis.range(); }
+    { return itsTimeAxis->range(); }
 
     size_t getTimeSlotCount() const
-    { return itsTimeAxis.size(); }
+    { return itsTimeAxis->size(); }
 
     const vector<string> &getPolarizations() const
     { return itsPolarizations; }
@@ -105,11 +107,10 @@ public:
     { return itsPolarizations.size(); }
 
 protected:
-    Instrument                              itsInstrument;
-    casa::MDirection                        itsPhaseCenter;
-    cell_centered_axis<regular_series>      itsFreqAxis;
-    cell_centered_axis<irregular_series>    itsTimeAxis;
-    vector<string>                          itsPolarizations;
+    Instrument              itsInstrument;
+    casa::MDirection        itsPhaseCenter;
+    Axis<double>::Pointer   itsFreqAxis, itsTimeAxis;
+    vector<string>          itsPolarizations;
 };
 
 } //# namespace BBS
