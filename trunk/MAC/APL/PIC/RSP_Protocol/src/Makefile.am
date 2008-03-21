@@ -5,11 +5,11 @@ AM_CPPFLAGS = \
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.cc: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 	cp $*.ph $(top_builddir)/include/APL/RSP_Protocol
 
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(datadir)/GCF/TM $<
+	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
 	cp $*.ph $(top_builddir)/include/APL/RSP_Protocol
 
 EXTRA_DIST = \

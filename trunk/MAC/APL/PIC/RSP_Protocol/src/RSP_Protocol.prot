@@ -5,7 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol for the RSP driver interface";
 prefix = "RSP"; // for the signal names
-id = "(LOFAR::GCF::TM::F_APL_PROTOCOL+12)";
+id = "(LOFAR::MACIO::F_APL_PROTOCOL+12)";
 
 // specify extra include files
 // e.g.

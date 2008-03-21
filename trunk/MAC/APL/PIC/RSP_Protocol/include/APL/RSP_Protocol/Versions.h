@@ -25,7 +25,7 @@
 #ifndef VERSIONS_H_
 #define VERSIONS_H_
 
-#include <APL/RTCCommon/Marshalling.h>
+#include <APL/RTCCommon/MarshallBlitz.h>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
 
 #include <complex>
