@@ -28,20 +28,17 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <GCF/TM/GCF_Fsm.h>
-#include <GCF/TM/GCF_Event.h>
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_TimerPort.h>
-#include <APL/APLCommon/Observation.h>
-#include <APL/APLCommon/CTState.h>
+#include <ApplCommon/Observation.h>
+#include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
+#include <APL/APLCommon/CTState.h>
 
 
 // Avoid 'using namespace' in headerfiles
 
 namespace LOFAR {
+	using MACIO::GCFEvent;
 	using GCF::TM::GCFFsm;
-	using GCF::TM::GCFEvent;
 	using GCF::TM::GCFPortInterface;
 	using GCF::TM::GCFTask;
 	using GCF::TM::GCFTimerPort;
@@ -74,7 +71,7 @@ public:
 	bool					inSync()	const { return (itsCurState == itsReqState); }
 	CTState::CTstateNr		curState()	const { return (itsCurState); }
 	string					getName()	const { return (itsName); }
-	APLCommon::Observation*	obsPar()	{ return (&itsObsPar); }
+	Observation*			obsPar()	{ return (&itsObsPar); }
 
 	ostream& print (ostream& os) const;
 
@@ -100,7 +97,7 @@ private:
 	string						itsName;
 	GCFTask*					itsTask;
 	int32						itsInstanceNr;
-	APLCommon::Observation		itsObsPar;
+	Observation					itsObsPar;
 	bool						itsUsesTBB;
 	bool						itsBeamCntlrReady;
 	bool						itsCalCntlrReady;

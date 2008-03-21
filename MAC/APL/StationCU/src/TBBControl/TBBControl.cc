@@ -27,7 +27,7 @@
 #include <APS/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/Utils.h>
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 #include <APL/APLCommon/APL_Defines.h>
 #include <APL/APLCommon/APLUtilities.h>
 #include <APL/APLCommon/Controller_Protocol.ph>

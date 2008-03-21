@@ -23,29 +23,29 @@
 #ifndef CALIBRATIONCONTROL_H
 #define CALIBRATIONCONTROL_H
 
+//# Common Includes
+#include <Common/lofar_string.h>
+#include <ApplCommon/Observation.h>
+
 //# GCF Includes
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_ITCPort.h>
-#include <GCF/TM/GCF_TimerPort.h>
+#include <MACIO/GCF_Event.h>
+#include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
 
 //# local includes
 #include <APL/APLCommon/ParentControl.h>
-#include <APL/APLCommon/Observation.h>
 #include <APL/APLCommon/CTState.h>
 
-//# Common Includes
-#include <Common/lofar_string.h>
 
 // forward declaration
 
 namespace LOFAR {
 	namespace StationCU {
 
+using	MACIO::GCFEvent;
 using	GCF::TM::GCFTimerPort;
 using	GCF::TM::GCFITCPort;
 using	GCF::TM::GCFPort;
-using	GCF::TM::GCFEvent;
 using	GCF::TM::GCFPortInterface;
 using	GCF::RTDB::RTDBPropertySet;
 using	APLCommon::ParentControl;
@@ -102,7 +102,7 @@ private:
 	// ParameterSet variables
 	string					itsTreePrefix;
 	uint32					itsInstanceNr;
-	APLCommon::Observation	itsObsPar;
+	Observation				itsObsPar;
 };
 
   };//StationCU

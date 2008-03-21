@@ -30,8 +30,8 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <GCF/Utils.h>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ControllerDefines.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -47,8 +47,8 @@
 namespace LOFAR {
 	using ACC::APS::ParameterSet;
 	using namespace APLCommon;
+	using namespace MACIO;
 	using namespace GCF::TM;
-	using namespace GCF::Common;
 	using namespace GCF::RTDB;
 	using namespace Deployment;
 	namespace StationCU {
@@ -66,7 +66,7 @@ ActiveObs::ActiveObs(const string&		name,
 	itsName				(name),
 	itsTask				(&task),
 	itsInstanceNr		(getInstanceNr(name)),
-	itsObsPar			(APLCommon::Observation(thePS)),
+	itsObsPar			(Observation(thePS)),
 	itsUsesTBB			(false),
 	itsBeamCntlrReady	(false),
 	itsCalCntlrReady	(false),

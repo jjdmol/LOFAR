@@ -27,23 +27,20 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/LofarLogger.h>
+#include <ApplCommon/Observation.h>
 
 //# ACC Includes
 #include <APS/ParameterSet.h>
 
 //# GCF Includes
+#include <MACIO/GCF_Event.h>
+#include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
-#include <GCF/TM/GCF_Port.h>
-#include <GCF/TM/GCF_ITCPort.h>
-#include <GCF/TM/GCF_TimerPort.h>
-#include <GCF/TM/GCF_Task.h>
-#include <GCF/TM/GCF_Event.h>
 
 //# Application includes
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/ChildControl.h>
 #include <APL/APLCommon/ParentControl.h>
-#include <APL/APLCommon/Observation.h>
 #include <APL/APLCommon/CTState.h>
 
 //# local includes
@@ -56,10 +53,10 @@ namespace LOFAR {
 	using APLCommon::ParentControl;
 
 	namespace StationCU {
+	using	MACIO::GCFEvent;
 	using	GCF::TM::GCFTimerPort;
 	using	GCF::TM::GCFITCPort;
 	using	GCF::TM::GCFPort;
-	using	GCF::TM::GCFEvent;
 	using	GCF::TM::GCFPortInterface;
 	using	GCF::TM::GCFTask;
 
