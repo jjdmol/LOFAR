@@ -178,6 +178,7 @@ bool testToString()
 
 bool testCompactArray()
 {
+  cout << "\n*** Testing compacting of Array-strings ***\n";
   try {
 	DO_COMPACT_TEST("[ a,b,c ]");
 	DO_COMPACT_TEST("[ aa01,aa06 ]");
@@ -210,6 +211,7 @@ bool testCompactArray()
 
 bool testExpandArray()
 {	
+  cout << "\n*** Testing expanding of Array-strings ***\n";
   try {
 	DO_EXPAND_TEST("[ a,b,c ]");
 	DO_EXPAND_TEST("[ aa01,aa06 ]");
