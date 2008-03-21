@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_bitset.h>
 
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <APL/RSP_Protocol/EPA_Protocol.ph>
@@ -56,7 +56,6 @@
 using namespace std;
 using namespace blitz;
 using namespace LOFAR;
-using namespace GCFCommon;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace rspctl;
@@ -301,6 +300,7 @@ GCFEvent::TResult WeightsCommand::ack(GCFEvent& e)
       return status;
       break;
   }
+  return status;
   
 }
 
@@ -2076,9 +2076,9 @@ RSPCtl::RSPCtl(string name, int argc, char** argv)
 //    exit(EXIT_FAILURE);
 //  }
 
-  GCF::TM::registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
 #ifdef ENABLE_RSPFE
-  GCF::TM::registerProtocol(RSPFE_PROTOCOL, RSPFE_PROTOCOL_STRINGS);
+  registerProtocol(RSPFE_PROTOCOL, RSPFE_PROTOCOL_STRINGS);
 #endif
 
   string	instanceID;

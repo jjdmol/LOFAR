@@ -26,11 +26,14 @@
 #define RSPTEST_H_
 
 #include <Suite/test.h>
+#include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/TM/GCF_ETHRawPort.h>
 
-namespace RSP_Test
-{
+using LOFAR::MACIO::GCFEvent;
+
+namespace LOFAR {
+  namespace RSP_Test {
   class RSPTest : public GCFTask, public Test
   {
     public:
@@ -49,8 +52,8 @@ namespace RSP_Test
        * The initial and final state.
        */
       /*@{*/
-      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
-      GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
+      MACIO::GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+      MACIO::GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
       /*@}*/
 
       /**
@@ -85,6 +88,7 @@ namespace RSP_Test
       GCFPort m_server;
   };
 
-};
+ }; // namespace RSP_Test
+}; // namespace LOFAR
      
 #endif /* RSPTEST_H_ */

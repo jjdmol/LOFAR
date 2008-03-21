@@ -33,7 +33,7 @@ namespace EPA_Protocol
   class RawEvent
   {
     public:
-      static LOFAR::GCF::TM::GCFEvent::TResult dispatch(LOFAR::GCF::TM::GCFTask& task,
+      static LOFAR::MACIO::GCFEvent::TResult dispatch(LOFAR::GCF::TM::GCFTask& task,
 					LOFAR::GCF::TM::GCFPortInterface& port);
   };
 };

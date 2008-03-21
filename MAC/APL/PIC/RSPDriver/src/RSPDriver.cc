@@ -25,7 +25,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 
-#include <GCF/GCF_ServiceInfo.h>
+#include <MACIO/MACServiceInfo.h>
 
 #include <APL/RTCCommon/PSAccess.h>
 #include <APL/RTCCommon/daemonize.h>
@@ -137,7 +137,6 @@
 using namespace blitz;
 using namespace std;
 using namespace LOFAR;
-using namespace GCFCommon;
 using namespace RSP;
 using namespace RTC;
 
