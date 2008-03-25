@@ -71,8 +71,6 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
-include/Makefile
-include/CS1_BGLProc/Makefile
 src/Makefile
 test/Makefile
 Makefile
