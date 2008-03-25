@@ -239,11 +239,11 @@ do
 		substitute_marker "../PVSS/Rings" "@ring@" >${outputname}
 	fi
 
-	grep @BGL-Storage@ $file >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		cleanlist $file | \
-		expand_connection "BGL-Storage" "@BGL-Storage@" >>${outputname}
-	fi
+#	grep @BGL-Storage@ $file >/dev/null 2>&1
+#	if [ $? -eq 0 ]; then
+#		cleanlist $file | \
+#		expand_connection "BGL-Storage" "@BGL-Storage@" >>${outputname}
+#	fi
 
 	grep @Storage-Imaging@ $file >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
