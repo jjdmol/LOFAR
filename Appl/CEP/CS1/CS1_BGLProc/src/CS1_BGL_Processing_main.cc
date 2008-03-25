@@ -30,6 +30,7 @@
 #include <CS1_BGLProc/TH_ZoidClient.h>
 #endif
 #include <CS1_BGLProc/BGL_Processing.h>
+#include <Package__Version.h>
 #include <Transport/TH_MPI.h>
 
 #include <boost/lexical_cast.hpp>
@@ -45,6 +46,11 @@ int main(int argc, char **argv)
 #if defined HAVE_MPI
     TH_MPI::initMPI(argc, argv);
 #endif
+
+    if (TH_MPI::getCurrentRank() == 0) {
+      std::string type = "brief";
+      Version::show<CS1_BGLProcVersion> (std::cout, "CS1_BGLProc", type);
+    }
 
 #if defined HAVE_ZOID && defined HAVE_BGL
     TH_ZoidClient     th;

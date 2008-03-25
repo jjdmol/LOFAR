@@ -1,4 +1,5 @@
 INSTHDRS         	=\
+Package__Version.h      \
 Allocator.h		\
 CorrelatorAsm.h		\
 FFT_Asm.h		\
@@ -32,6 +33,7 @@ CCAS			= $(CC)
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 
 CS1_BGL_Processing_SOURCES	= $(DOCHDRS) \
+Package__Version.cc             \
 Allocator.cc			\
 CorrelatorAsm.S			\
 FIR_Asm.S			\
