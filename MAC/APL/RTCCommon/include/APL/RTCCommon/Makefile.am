@@ -1,3 +1,5 @@
+pkginclude_HEADERS = Package__Version.h
+
 # if HAVE_SHMEM
 # SUBDIRS = shmem .
 # endif
