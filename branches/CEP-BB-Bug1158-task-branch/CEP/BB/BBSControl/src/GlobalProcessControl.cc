@@ -24,8 +24,8 @@
 
 #include <BBSControl/GlobalProcessControl.h>
 #include <BBSControl/Exceptions.h>
-#include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSStep.h>
+#include <BBSControl/Strategy.h>
+#include <BBSControl/Step.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
 #include <BBSControl/SynchronizeCommand.h>
@@ -78,7 +78,7 @@ namespace LOFAR
       
       try {
 	// Retrieve the strategy from the parameter set.
-	itsStrategy.reset(new BBSStrategy(*globalParameterSet()));
+	itsStrategy.reset(new Strategy(*globalParameterSet()));
 
 	// Retrieve the steps in the strategy in sequential order.
         itsSteps = itsStrategy->getAllSteps();

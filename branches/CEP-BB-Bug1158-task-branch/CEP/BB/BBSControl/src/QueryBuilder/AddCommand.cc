@@ -30,14 +30,14 @@
 #include <BBSControl/NextChunkCommand.h>
 #include <BBSControl/RecoverCommand.h>
 #include <BBSControl/SynchronizeCommand.h>
-#include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSMultiStep.h>
-#include <BBSControl/BBSPredictStep.h>
-#include <BBSControl/BBSSubtractStep.h>
-#include <BBSControl/BBSCorrectStep.h>
-#include <BBSControl/BBSSolveStep.h>
-#include <BBSControl/BBSShiftStep.h>
-#include <BBSControl/BBSRefitStep.h>
+#include <BBSControl/Strategy.h>
+#include <BBSControl/MultiStep.h>
+#include <BBSControl/PredictStep.h>
+#include <BBSControl/SubtractStep.h>
+#include <BBSControl/CorrectStep.h>
+#include <BBSControl/SolveStep.h>
+#include <BBSControl/ShiftStep.h>
+#include <BBSControl/RefitStep.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
@@ -115,7 +115,7 @@ namespace LOFAR
       }
 
 
-      void AddCommand::visit(const BBSStrategy &command)
+      void AddCommand::visit(const Strategy &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         itsQuery = 
@@ -126,7 +126,7 @@ namespace LOFAR
       }
 
 
-      void AddCommand::visit(const BBSMultiStep &command)
+      void AddCommand::visit(const MultiStep &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         THROW (CommandQueueException, 
@@ -134,7 +134,7 @@ namespace LOFAR
       }
 
 
-      void AddCommand::visit(const BBSPredictStep &command)
+      void AddCommand::visit(const PredictStep &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         itsQuery = 
@@ -145,7 +145,7 @@ namespace LOFAR
       }
 
 
-      void AddCommand::visit(const BBSSubtractStep &command)
+      void AddCommand::visit(const SubtractStep &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         itsQuery = 
@@ -156,7 +156,7 @@ namespace LOFAR
       }
 
 
-      void AddCommand::visit(const BBSCorrectStep &command)
+      void AddCommand::visit(const CorrectStep &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         itsQuery = 
@@ -167,7 +167,7 @@ namespace LOFAR
       }
 
 
-      void AddCommand::visit(const BBSSolveStep &command)
+      void AddCommand::visit(const SolveStep &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         itsQuery = 
@@ -178,7 +178,7 @@ namespace LOFAR
       }
 
 
-      void AddCommand::visit(const BBSShiftStep &command)
+      void AddCommand::visit(const ShiftStep &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         itsQuery = 
@@ -189,7 +189,7 @@ namespace LOFAR
       }
 
 
-      void AddCommand::visit(const BBSRefitStep &command)
+      void AddCommand::visit(const RefitStep &command)
       {
         LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, command.type());
         itsQuery = 
@@ -214,7 +214,7 @@ namespace LOFAR
       }
 
 
-      string AddCommand::selectClause(const BBSStrategy&) const
+      string AddCommand::selectClause(const Strategy&) const
       {
         return "SELECT * FROM blackboard.set_strategy";
       }
@@ -237,7 +237,7 @@ namespace LOFAR
         return "'" + toLower(cmd.type()) + "'";
       }
 
-      string AddCommand::argumentList(const BBSStep& step) const
+      string AddCommand::argumentList(const Step& step) const
       {
         ostringstream oss;
         ParameterSet  ps;
@@ -247,7 +247,7 @@ namespace LOFAR
         return oss.str();
       }
 
-      string AddCommand::argumentList(const BBSStrategy& strategy) const
+      string AddCommand::argumentList(const Strategy& strategy) const
       {
         ostringstream oss;
         oss << "'"  << strategy.dataSet()                    << "'"

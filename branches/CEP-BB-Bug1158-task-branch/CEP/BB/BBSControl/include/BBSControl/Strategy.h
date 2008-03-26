@@ -1,4 +1,4 @@
-//# BBSStrategy.h: The properties for solvable parameters
+//# Strategy.h: The properties for solvable parameters
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,7 +27,7 @@
 // The properties for solvable parameters
 
 //# Includes
-#include <BBSControl/BBSStructs.h>
+#include <BBSControl/Structs.h>
 #include <BBSControl/Command.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
@@ -42,23 +42,23 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward declarations
-    class BBSStep;
+    class Step;
 
     // \addtogroup BBSControl
     // @{
 
-    class BBSStrategy : public Command
+    class Strategy : public Command
     {
     public:
       // Default constructor. Create an empty strategy, which is useful when
-      // deserializing a BBSStrategy object.
-      BBSStrategy() {}
+      // deserializing a Strategy object.
+      Strategy() {}
 
       // Create a solve strategy for the given work domain.
-      BBSStrategy(const ACC::APS::ParameterSet& aParamSet);
+      Strategy(const ACC::APS::ParameterSet& aParamSet);
 
       // Destructor.
-      ~BBSStrategy();
+      ~Strategy();
 
       // Return the command type of \c *this as a string.
       virtual const string& type() const;
@@ -80,9 +80,9 @@ namespace LOFAR
       // done in pre-order, depth-first.
       // \todo Do we really want to implement such "iterator-like behaviour"
       // in this class?
-      vector< shared_ptr<const BBSStep> > getAllSteps() const;
+      vector< shared_ptr<const Step> > getAllSteps() const;
 
-      // Indicate whether the BBSSteps contained in \c itsSteps should also be
+      // Indicate whether the Steps contained in \c itsSteps should also be
       // written when write(ParameterSet&) is called.
       void shouldWriteSteps(bool doSteps) { itsWriteSteps = doSteps; }
 
@@ -99,20 +99,20 @@ namespace LOFAR
       // @}
 
     private:
-      // Read the BBSStep objects from the parameter set \a ps and store them
+      // Read the Step objects from the parameter set \a ps and store them
       // in \a itsSteps.
       bool readSteps(const ACC::APS::ParameterSet& ps);
 
-      // Write the BBSStep objects in \a itsSteps to parameter set \a ps.
+      // Write the Step objects in \a itsSteps to parameter set \a ps.
       void writeSteps(ACC::APS::ParameterSet& ps) const;
 
-//       // Write the contents of a BBSStrategy to a ParameterSet.
+//       // Write the contents of a Strategy to a ParameterSet.
 //       friend ACC::APS::ParameterSet& 
-//       operator<<(ACC::APS::ParameterSet&, const BBSStrategy&);
+//       operator<<(ACC::APS::ParameterSet&, const Strategy&);
 
-//       // Read the contents of a ParameterSet into a BBSStrategy.
+//       // Read the contents of a ParameterSet into a Strategy.
 //       friend ACC::APS::ParameterSet& 
-//       operator>>(ACC::APS::ParameterSet&, BBSStrategy&);
+//       operator>>(ACC::APS::ParameterSet&, Strategy&);
 
       // Name of the Measurement Set
       string                 itsDataSet;
@@ -141,15 +141,15 @@ namespace LOFAR
       Integration            itsIntegration;
 
       // Sequence of steps that comprise this solve strategy.
-      vector< shared_ptr<const BBSStep> > itsSteps;
+      vector< shared_ptr<const Step> > itsSteps;
 
-      // Flag indicating whether the BBSStep objects in \c itsSteps should
+      // Flag indicating whether the Step objects in \c itsSteps should
       // also be written when write(ParameterSet&) is called.
       bool                   itsWriteSteps;
     };
 
-    // Write the contents of a BBSStrategy to an output stream.
-    ostream& operator<<(ostream&, const BBSStrategy&);
+    // Write the contents of a Strategy to an output stream.
+    ostream& operator<<(ostream&, const Strategy&);
 
     // @}
 

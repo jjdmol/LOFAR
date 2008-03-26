@@ -1,4 +1,4 @@
-//# BBSSolveStep.h: The properties for solvable parameters
+//# SolveStep.h: The properties for solvable parameters
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,8 +27,8 @@
 // The properties for solvable parameters
 
 //# Includes
-#include <BBSControl/BBSSingleStep.h>
-#include <BBSControl/BBSStructs.h>
+#include <BBSControl/SingleStep.h>
+#include <BBSControl/Structs.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -40,22 +40,22 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
-    class BBSSolveStep : public BBSSingleStep
+    class SolveStep : public SingleStep
     {
     public:
-      // Default constructor. Construct an empty BBSSolveStep object and make
-      // it a child of the BBSStep object \a parent.
-      BBSSolveStep(const BBSStep* parent = 0);
+      // Default constructor. Construct an empty SolveStep object and make
+      // it a child of the Step object \a parent.
+      SolveStep(const Step* parent = 0);
 
-      // Construct a BBSSolveStep having the name \a name. Configuration
+      // Construct a SolveStep having the name \a name. Configuration
       // information for this step can be retrieved from the parameter set \a
       // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
-      // is a pointer to the BBSStep object that is the parent of \c *this.
-      BBSSolveStep(const string& name,
+      // is a pointer to the Step object that is the parent of \c *this.
+      SolveStep(const string& name,
                    const ACC::APS::ParameterSet& parset,
-                   const BBSStep* parent);
+                   const Step* parent);
 
-      virtual ~BBSSolveStep();
+      virtual ~SolveStep();
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;

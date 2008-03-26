@@ -67,14 +67,14 @@ namespace LOFAR
       virtual void visit(const NextChunkCommand &command);
       virtual void visit(const RecoverCommand &command);
       virtual void visit(const SynchronizeCommand &command);
-      virtual void visit(const BBSStrategy &command);
-      virtual void visit(const BBSMultiStep &command);
-      virtual void visit(const BBSPredictStep &command);
-      virtual void visit(const BBSSubtractStep &command);
-      virtual void visit(const BBSCorrectStep &command);
-      virtual void visit(const BBSSolveStep &command);
-      virtual void visit(const BBSShiftStep &command);
-      virtual void visit(const BBSRefitStep &command);
+      virtual void visit(const Strategy &command);
+      virtual void visit(const MultiStep &command);
+      virtual void visit(const PredictStep &command);
+      virtual void visit(const SubtractStep &command);
+      virtual void visit(const CorrectStep &command);
+      virtual void visit(const SolveStep &command);
+      virtual void visit(const ShiftStep &command);
+      virtual void visit(const RefitStep &command);
       // @}
 
       // Get result of the last executed command.

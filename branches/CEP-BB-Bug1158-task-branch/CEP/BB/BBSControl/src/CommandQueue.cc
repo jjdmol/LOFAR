@@ -30,8 +30,8 @@
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/LocalControlId.h>
 #include <BBSControl/QueryBuilder/AddCommand.h>
-#include <BBSControl/BBSStep.h>
-#include <BBSControl/BBSStrategy.h>
+#include <BBSControl/Step.h>
+#include <BBSControl/Strategy.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
@@ -156,8 +156,8 @@ namespace LOFAR
       string name = ps.getString("Name");
 
       if (!name.empty()) {
-        // Name is not empty, so we must construct a BBSStep object.
-        // Get additional information needed to create the BBSStep.
+        // Name is not empty, so we must construct a Step object.
+        // Get additional information needed to create the Step.
         string buf = ps.getString("ParameterSet");
 
         // The string \a buf now contains a string of key/value pairs. Turn it
@@ -165,8 +165,8 @@ namespace LOFAR
         ps.clear();
         ps.adoptBuffer(buf);
 
-        // Create a new BBSStep and return it.
-        return make_pair(BBSStep::create(name, ps, 0), id);
+        // Create a new Step and return it.
+        return make_pair(Step::create(name, ps, 0), id);
       }
       else {
         // Here we handle all other commands. They can be constructed using
@@ -180,7 +180,7 @@ namespace LOFAR
     }
 
 
-    void CommandQueue::setStrategy(const BBSStrategy& strategy) const
+    void CommandQueue::setStrategy(const Strategy& strategy) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -211,7 +211,7 @@ namespace LOFAR
     }
 
 
-    shared_ptr<const BBSStrategy> CommandQueue::getStrategy() const
+    shared_ptr<const Strategy> CommandQueue::getStrategy() const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -225,18 +225,18 @@ namespace LOFAR
       // If DataSet is an empty string, then we've probably received an empty
       // result row; return a null pointer.
       if (ps.getString("DataSet").empty()) {
-        return shared_ptr<const BBSStrategy>();
+        return shared_ptr<const Strategy>();
       }
 
-      // Create a new BBSStrategy object.
-      BBSStrategy* strategy = dynamic_cast<BBSStrategy*>
-        (CommandFactory::instance().create("BBSStrategy"));
+      // Create a new Strategy object.
+      Strategy* strategy = dynamic_cast<Strategy*>
+        (CommandFactory::instance().create("Strategy"));
 
-      // Initialize the BBSStrategy object with the parameters just retrieved.
+      // Initialize the Strategy object with the parameters just retrieved.
       strategy->read(ps);
 
-      // Wrap the new BBSStrategy object in a managed pointer and return it.
-      return shared_ptr<const BBSStrategy>(strategy);
+      // Wrap the new Strategy object in a managed pointer and return it.
+      return shared_ptr<const Strategy>(strategy);
     }
 
 

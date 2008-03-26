@@ -1,4 +1,4 @@
-//# BBSStep.h: Base component class of the BBSStep composite pattern.
+//# Step.h: Base component class of the Step composite pattern.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,11 +24,11 @@
 #define LOFAR_BBSCONTROL_BBSSTEP_H
 
 // \file
-// Base component class of the BBSStep composite pattern.
+// Base component class of the Step composite pattern.
 
 //# Includes
 #include <BBSControl/Command.h>
-#include <BBSControl/BBSStructs.h>
+#include <BBSControl/Structs.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
@@ -43,31 +43,31 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations.
-    class BBSMultiStep;
+    class MultiStep;
     class StrategyController;
 
     // \addtogroup BBSControl
     // @{
 
-    // This is the so-called \e component class in the BBSStep composite
-    // pattern (see Gamma, 1995). It is the base class for all BBSStep
+    // This is the so-called \e component class in the Step composite
+    // pattern (see Gamma, 1995). It is the base class for all Step
     // classes, both composite and leaf classes. It has data members that are
-    // common to all BBSStep classes.
+    // common to all Step classes.
     //
-    // \todo Make the BBSStep class family exception safe. Currently, methods
-    // like BBSStep::create and BBSStep::deserialize operate on and return raw
+    // \todo Make the Step class family exception safe. Currently, methods
+    // like Step::create and Step::deserialize operate on and return raw
     // pointers. When an exception occurs within these methods, memory will be
     // leaked. The solution is to use, e.g., boost::shared_ptr. We must be
     // careful though, not to create circular dependencies, since that will
-    // cause the pointer to never be freed. This can happen since a BBSStep
+    // cause the pointer to never be freed. This can happen since a Step
     // stores a pointer to its parent as backreference. Here, we should
     // probably use a boost::weak_ptr. See Bug #906
-    class BBSStep : public Command,
-                    public enable_shared_from_this<BBSStep>
+    class Step : public Command,
+                    public enable_shared_from_this<Step>
     {
     public:
       // Destructor.
-      virtual ~BBSStep();
+      virtual ~Step();
 
       // Return the full name of this step. The full name consists of the name
       // of this step, preceeded by that of its parent, etc., separated by
@@ -78,21 +78,21 @@ namespace LOFAR
       // containing pointers to all steps, sorted pre-order depth-first.
       //
       // \todo Instead of making getAllSteps() a member function, returning a
-      // vector of BBSStep*, it would be better to have a BBSStepIterator
+      // vector of Step*, it would be better to have a StepIterator
       // class that can be used to iterate over the all steps. I had some
       // trouble getting that thingy working, so, due to time constraints, I
       // implemented things the ugly way.
-      vector< shared_ptr<const BBSStep> > getAllSteps() const;
+      vector< shared_ptr<const Step> > getAllSteps() const;
 
-      // Create a new step object. The new step can either be a BBSSingleStep
-      // or a BBSMultiStep object. This is determined by examining the
+      // Create a new step object. The new step can either be a SingleStep
+      // or a MultiStep object. This is determined by examining the
       // parameter set \a parSet. If this set contains a key
-      // <tt>Step.<em>name</em>.Steps</tt>, then \a aName is a BBSMultiStep,
+      // <tt>Step.<em>name</em>.Steps</tt>, then \a aName is a MultiStep,
       // otherwise it is a SingleStep. The third, optional, argument is used
-      // to pass a backreference to the parent BBSStep object.
-      static shared_ptr<BBSStep> create(const string& name,
+      // to pass a backreference to the parent Step object.
+      static shared_ptr<Step> create(const string& name,
                                         const ACC::APS::ParameterSet& parSet,
-                                        const BBSStep* parent = 0);
+                                        const Step* parent = 0);
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
@@ -105,10 +105,10 @@ namespace LOFAR
       string name() const { return itsName; }
 
       // Return a pointer to the parent of this step.
-      const BBSStep* getParent() const { return itsParent; }
+      const Step* getParent() const { return itsParent; }
 
       // Make \a parent the parent of this step.
-      void setParent(const BBSStep* parent) { itsParent = parent; }
+      void setParent(const Step* parent) { itsParent = parent; }
 
       // Return the selection of baselines for this step.
       Baselines baselines() const { return itsBaselines; }
@@ -139,33 +139,33 @@ namespace LOFAR
       virtual void read(const ACC::APS::ParameterSet& ps);
 
     protected:
-      // Default constructor. Construct an empty BBSStep object and make it a
-      // child of the BBSStep object \a parent.
-      BBSStep(const BBSStep* parent = 0) : itsParent(parent) {}
+      // Default constructor. Construct an empty Step object and make it a
+      // child of the Step object \a parent.
+      Step(const Step* parent = 0) : itsParent(parent) {}
 
-      // Construct a BBSStep. \a name identifies the step name in the
+      // Construct a Step. \a name identifies the step name in the
       // parameter set file. It does \e not uniquely identify the step \e
       // object being created. The third argument is used to pass a
-      // backreference to the parent BBSStep object.
-      BBSStep(const string& name, 
+      // backreference to the parent Step object.
+      Step(const string& name, 
 	      const ACC::APS::ParameterSet& parSet,
-	      const BBSStep* parent);
+	      const Step* parent);
 
     private:
       // Implementation of getAllSteps(). The default implementation adds \c
       // this to the vector \a steps.
-      // \note This method must be overridden by BBSMultiStep.
+      // \note This method must be overridden by MultiStep.
       virtual void
-      doGetAllSteps(vector< shared_ptr<const BBSStep> >& steps) const;
+      doGetAllSteps(vector< shared_ptr<const Step> >& steps) const;
 
       // Name of this step.
       string                 itsName;
 
-      // Pointer to the parent of \c *this. All BBSStep objects have a parent,
-      // except the top-level BBSStep object. The parent reference is used,
+      // Pointer to the parent of \c *this. All Step objects have a parent,
+      // except the top-level Step object. The parent reference is used,
       // among other things, to initialize the data members of the child
       // object with those of its parent.
-      const BBSStep*         itsParent;
+      const Step*         itsParent;
 
       // Selection of baselines for this step.
       Baselines              itsBaselines;
@@ -190,8 +190,8 @@ namespace LOFAR
       // A list of instrument models to be used for this step.
       vector<string>         itsInstrumentModels;
 
-      // Write the contents of a BBSStep to an output stream.
-      friend ostream& operator<<(ostream&, const BBSStep&);
+      // Write the contents of a Step to an output stream.
+      friend ostream& operator<<(ostream&, const Step&);
 
     };
 

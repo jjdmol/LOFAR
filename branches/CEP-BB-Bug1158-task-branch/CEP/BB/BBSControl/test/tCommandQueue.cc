@@ -28,13 +28,13 @@
 #include <BBSControl/CommandId.h>
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/InitializeCommand.h>
-#include <BBSControl/BBSStrategy.h>
-#include <BBSControl/BBSSolveStep.h>
-#include <BBSControl/BBSSubtractStep.h>
-#include <BBSControl/BBSCorrectStep.h>
-#include <BBSControl/BBSPredictStep.h>
-#include <BBSControl/BBSShiftStep.h>
-#include <BBSControl/BBSRefitStep.h>
+#include <BBSControl/Strategy.h>
+#include <BBSControl/SolveStep.h>
+#include <BBSControl/SubtractStep.h>
+#include <BBSControl/CorrectStep.h>
+#include <BBSControl/PredictStep.h>
+#include <BBSControl/ShiftStep.h>
+#include <BBSControl/RefitStep.h>
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
@@ -61,11 +61,11 @@ int main(int /*argc*/, char* argv[])
 
     // Initialize strategy and command queue.
     ParameterSet parset(parsetFile);
-    BBSStrategy strategy(parset);
+    Strategy strategy(parset);
 //     CommandQueue queue(getenv("USER"));
     CommandQueue queue("bbs");
     CommandQueue::Trigger insert_trig(queue, CommandQueue::Trigger::Command);
-    vector< shared_ptr<const BBSStep> > steps = strategy.getAllSteps();
+    vector< shared_ptr<const Step> > steps = strategy.getAllSteps();
     ofstream ofs;
 
     // Create data; store into command queue and write to reference file.

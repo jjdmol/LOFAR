@@ -44,7 +44,7 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations
-    class BBSSingleStep;
+    class SingleStep;
 
     // \addtogroup BBSControl
     // @{

@@ -36,21 +36,21 @@ namespace LOFAR
     class NextChunkCommand;
     class RecoverCommand;
     class SynchronizeCommand;
-    class BBSStrategy;
-    class BBSMultiStep;
-    class BBSPredictStep;
-    class BBSSubtractStep;
-    class BBSCorrectStep;
-    class BBSSolveStep;
-    class BBSShiftStep;
-    class BBSRefitStep;
+    class Strategy;
+    class MultiStep;
+    class PredictStep;
+    class SubtractStep;
+    class CorrectStep;
+    class SolveStep;
+    class ShiftStep;
+    class RefitStep;
 
     // \addtogroup BBSControl
     // @{
 
     // Abstract Visitor class, declares visit() operations for each concrete
     // Command class. It helps to retrieve lost type information when handling
-    // Command or BBSStep references. Concrete visitor classes must implement
+    // Command or Step references. Concrete visitor classes must implement
     // a visit() method for each concrete Command class.
     //
     // \see Gamma e.a., <em>Design Patterns: Elements of Reusable
@@ -67,14 +67,14 @@ namespace LOFAR
       virtual void visit(const NextChunkCommand &command) = 0;
       virtual void visit(const RecoverCommand &command) = 0;
       virtual void visit(const SynchronizeCommand &command) = 0;
-      virtual void visit(const BBSStrategy &command) = 0;
-      virtual void visit(const BBSMultiStep &command) = 0;
-      virtual void visit(const BBSPredictStep &command) = 0;
-      virtual void visit(const BBSSubtractStep &command) = 0;
-      virtual void visit(const BBSCorrectStep &command) = 0;
-      virtual void visit(const BBSSolveStep &command) = 0;
-      virtual void visit(const BBSShiftStep &command) = 0;
-      virtual void visit(const BBSRefitStep &command) = 0;
+      virtual void visit(const Strategy &command) = 0;
+      virtual void visit(const MultiStep &command) = 0;
+      virtual void visit(const PredictStep &command) = 0;
+      virtual void visit(const SubtractStep &command) = 0;
+      virtual void visit(const CorrectStep &command) = 0;
+      virtual void visit(const SolveStep &command) = 0;
+      virtual void visit(const ShiftStep &command) = 0;
+      virtual void visit(const RefitStep &command) = 0;
     };
 
     //# Pure virtual destructor has to be defined...
