@@ -6,7 +6,8 @@ bin_PROGRAMS 				= KeyValueLogger
 #							  -fmessage-length=0 \
 #							  -fdiagnostics-show-location=once
 
-KeyValueLogger_SOURCES	= KeyValueLogger.cc \
+KeyValueLogger_SOURCES		= ../Package__Version.cc \
+							  KeyValueLogger.cc \
 							  KeyValueLoggerMain.cc
 KeyValueLogger_LDADD		= $(LOFAR_DEPEND) $(libdir)/libkvt_protocol.a
 KeyValueLogger_DEPENDENCIES = $(LOFAR_DEPEND)

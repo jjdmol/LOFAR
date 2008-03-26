@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Version.h>
 #include <APS/ParameterSet.h>
 #include <MACIO/GCF_Event.h>
 #include <MACIO/MACServiceInfo.h>
@@ -30,6 +31,7 @@
 #include <GCF/PVSS/PVSSresult.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "KeyValueLogger.h"
+#include "../Package__Version.h"
 
 namespace LOFAR {
   using namespace MACIO;
@@ -49,6 +51,7 @@ KeyValueLogger::KeyValueLogger(const string&	myName) :
 	itsTimerPort(0)
 {
 	LOG_DEBUG_STR("KeyValueLogger(" << myName << ")");
+	LOG_INFO(Version::getInfo<CURTDBDaemonsVersion>("KeyValueLogger"));
 
 	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 	registerProtocol(DP_PROTOCOL,	 DP_PROTOCOL_STRINGS);
