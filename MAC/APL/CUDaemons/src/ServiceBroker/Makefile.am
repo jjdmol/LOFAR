@@ -6,7 +6,8 @@ ServiceBroker_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-ServiceBroker_SOURCES		= ServiceBroker.cc \
+ServiceBroker_SOURCES		= ../Package__Version.cc \
+							  ServiceBroker.cc \
 							  ServiceBrokerMain.cc
 ServiceBroker_LDADD			= $(LOFAR_DEPEND)
 ServiceBroker_DEPENDENCIES	= $(LOFAR_DEPEND)

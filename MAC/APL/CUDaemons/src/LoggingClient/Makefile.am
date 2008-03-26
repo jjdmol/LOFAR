@@ -1,7 +1,8 @@
 # Executables
 bin_PROGRAMS 				= LoggingClient
 
-LoggingClient_SOURCES		= LoggingClient.cc \
+LoggingClient_SOURCES		= ../Package__Version.cc \
+							  LoggingClient.cc \
 							  LoggingClientMain.cc
 
 bin_SCRIPTS					= 

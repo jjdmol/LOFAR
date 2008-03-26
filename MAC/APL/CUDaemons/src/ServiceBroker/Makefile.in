@@ -68,7 +68,8 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" \
 	"$(DESTDIR)$(pkgincludedir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_ServiceBroker_OBJECTS = ServiceBroker-ServiceBroker.$(OBJEXT) \
+am_ServiceBroker_OBJECTS = ServiceBroker-Package__Version.$(OBJEXT) \
+	ServiceBroker-ServiceBroker.$(OBJEXT) \
 	ServiceBroker-ServiceBrokerMain.$(OBJEXT)
 ServiceBroker_OBJECTS = $(am_ServiceBroker_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -252,7 +253,8 @@ ServiceBroker_CPPFLAGS = -DBOOST_DISABLE_THREADS \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-ServiceBroker_SOURCES = ServiceBroker.cc \
+ServiceBroker_SOURCES = ../Package__Version.cc \
+							  ServiceBroker.cc \
 							  ServiceBrokerMain.cc
 
 ServiceBroker_LDADD = $(LOFAR_DEPEND)
@@ -399,6 +401,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ServiceBroker-Package__Version.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ServiceBroker-ServiceBroker.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ServiceBroker-ServiceBrokerMain.Po@am__quote@
 
@@ -422,6 +425,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
+
+ServiceBroker-Package__Version.o: ../Package__Version.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ServiceBroker_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ServiceBroker-Package__Version.o -MD -MP -MF "$(DEPDIR)/ServiceBroker-Package__Version.Tpo" -c -o ServiceBroker-Package__Version.o `test -f '../Package__Version.cc' || echo '$(srcdir)/'`../Package__Version.cc; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/ServiceBroker-Package__Version.Tpo" "$(DEPDIR)/ServiceBroker-Package__Version.Po"; else rm -f "$(DEPDIR)/ServiceBroker-Package__Version.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='../Package__Version.cc' object='ServiceBroker-Package__Version.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ServiceBroker_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ServiceBroker-Package__Version.o `test -f '../Package__Version.cc' || echo '$(srcdir)/'`../Package__Version.cc
+
+ServiceBroker-Package__Version.obj: ../Package__Version.cc
+@am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ServiceBroker_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ServiceBroker-Package__Version.obj -MD -MP -MF "$(DEPDIR)/ServiceBroker-Package__Version.Tpo" -c -o ServiceBroker-Package__Version.obj `if test -f '../Package__Version.cc'; then $(CYGPATH_W) '../Package__Version.cc'; else $(CYGPATH_W) '$(srcdir)/../Package__Version.cc'; fi`; \
+@am__fastdepCXX_TRUE@	then mv -f "$(DEPDIR)/ServiceBroker-Package__Version.Tpo" "$(DEPDIR)/ServiceBroker-Package__Version.Po"; else rm -f "$(DEPDIR)/ServiceBroker-Package__Version.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='../Package__Version.cc' object='ServiceBroker-Package__Version.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ServiceBroker_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o ServiceBroker-Package__Version.obj `if test -f '../Package__Version.cc'; then $(CYGPATH_W) '../Package__Version.cc'; else $(CYGPATH_W) '$(srcdir)/../Package__Version.cc'; fi`
 
 ServiceBroker-ServiceBroker.o: ServiceBroker.cc
 @am__fastdepCXX_TRUE@	if $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(ServiceBroker_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT ServiceBroker-ServiceBroker.o -MD -MP -MF "$(DEPDIR)/ServiceBroker-ServiceBroker.Tpo" -c -o ServiceBroker-ServiceBroker.o `test -f 'ServiceBroker.cc' || echo '$(srcdir)/'`ServiceBroker.cc; \

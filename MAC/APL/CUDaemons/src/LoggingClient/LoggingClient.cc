@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
+#include <Common/Version.h>
 #include <APS/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/MACServiceInfo.h>
@@ -30,6 +31,7 @@
 #include <APL/APLCommon/StationInfo.h>		// LOFAR_SHARE_LOCATION
 #include <log4cplus/socketappender.h>
 #include "LoggingClient.h"
+#include "../Package__Version.h"
 
 using namespace log4cplus;
 using namespace log4cplus::helpers;
@@ -58,6 +60,7 @@ LoggingClient::LoggingClient(const string&	myName) :
 	itsOutSeqnr			(1)
 {
 	LOG_DEBUG_STR("LoggingClient(" << myName << ")");
+	LOG_INFO(Version::getInfo<CUDaemonsVersion>("LoggingClient"));
 
 	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 	registerProtocol(LOG_PROTOCOL,   LOG_PROTOCOL_STRINGS);

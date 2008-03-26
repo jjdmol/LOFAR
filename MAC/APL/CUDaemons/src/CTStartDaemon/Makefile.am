@@ -6,7 +6,8 @@ CTStartDaemon_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-CTStartDaemon_SOURCES		= CTStartDaemon.cc \
+CTStartDaemon_SOURCES		= ../Package__Version.cc \
+							  CTStartDaemon.cc \
 							  CTStartDaemonMain.cc
 CTStartDaemon_LDADD			= $(LOFAR_DEPEND) 
 CTStartDaemon_DEPENDENCIES	= $(LOFAR_DEPEND)
