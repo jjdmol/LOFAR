@@ -9,8 +9,14 @@ pkginclude_HEADERS			= $(BUILT_SOURCES)
 
 lib_LTLIBRARIES 			= librtdbcommon.la
 
-librtdbcommon_la_SOURCES	= $(BUILT_SOURCES) \
+librtdbcommon_la_SOURCES	= Package__Version.cc  $(BUILT_SOURCES) \
 							  RTDButilities.cc
+
+bin_PROGRAMS = versionaplcommon
+
+versionaplcommon_SOURCES      = versionaplcommon.cc
+versionaplcommon_LDADD        = librtdbcommon.la
+versionaplcommon_DEPENDENCIES = librtdbcommon.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
