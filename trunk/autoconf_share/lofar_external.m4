@@ -128,6 +128,7 @@ fi
 ## Also determine the given search path.
 ##
 lfr_ext_name=]LOFAR_EXT_LIB[
+external_search=
 enable_external=no
 if test "$lfr_option" = "1"; then
   enable_external=yes
@@ -140,14 +141,11 @@ if test "$with_external" = "no"; then
   fi
 else
   if test "$with_external" = ""; then
-    external_search=
     if test "$lfr_external_libdir" != ""; then
       enable_external=yes
     fi
   else
-    if test "$with_external" = "yes"; then
-      external_search=
-    else
+    if test "$with_external" != "yes"; then
       external_search=$with_external
     fi
     enable_external=yes

@@ -28,24 +28,33 @@
 # internal and external packages.
 #
 # lofar_INTERNAL(package-path, package, [cvs-versiontag],
-#            [option], headerfile, [libraries], [searchpath].
+#            [option], headerfile, [libraries], [searchpath],
 #            [extra_cppflags],[extra_cxxflags],[extra_ldflags],[extra_libs])
 #
 # E.g.
 #   lofar_INTERNAL(LCS/Common, Common, 1.3,, Common/LofarLogger.h)
+#   lofar_INTERNAL(MAC/GCF/TM, GCFTM, 0.9,, GCF/TM/file.h)
 #
 #
 AC_DEFUN([lofar_INTERNAL],dnl
 [dnl
 AC_PREREQ(2.13)dnl
 lfr_pkgnam_intv=$2
+lfr_hdrfile=$5
 lofar_EXTERNAL($2,$4,$5,$6,$7,$8,$9,$10,$11)
 [
+  # Get the include path of the header file.
+  # This will be used for the include path of Package_Version.h.
+  if test "$lfr_hdrfile" = ""; then
+    lfr_hdrpath=$lfr_pkgnam_intv
+  else
+    lfr_hdrpath=`dirname $lfr_hdrfile`
+  fi
   # If this package was configured in, add the statements to get the
   # version of this package.
   # The Tools package is special and not handled.
   if [ "$enable_external" = "yes"  -a  "${lfr_pkgnam_intv}" != Tools ]; then
-    echo "#include \"${lfr_pkgnam_intv}/Package__Version.h\"" >> FillPackage__VersionInc.h
+    echo "#include \"${lfr_hdrpath}/Package__Version.h\"" >> FillPackage__VersionInc.h
     # If the current FillPackage__VersionFunc.h is the same as the old one, copy the
     # old one back, while preserving creation date and time.
     diff FillPackage__VersionInc.h FillPackage__VersionInc.old-h > /dev/null 2>&1
