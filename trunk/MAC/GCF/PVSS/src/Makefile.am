@@ -5,7 +5,7 @@ NODOCHDRS			= GSA_SCADAHandler.h \
     
 lib_LTLIBRARIES 	= libgcfpvss.la
 
-libgcfpvss_la_SOURCES=$(NODOCHDRS) \
+libgcfpvss_la_SOURCES= Package__Version.cc $(NODOCHDRS) \
 					  GCF_PValue.cc \
 					  GCF_PVChar.cc \
 					  GCF_PVBool.cc \
@@ -24,5 +24,11 @@ libgcfpvss_la_SOURCES=$(NODOCHDRS) \
 
 AM_CPPFLAGS 		= -DLOFARLOGGER_SUBPACKAGE=\"PVSS\"
 		
+bin_PROGRAMS = versiongcfpvss
+
+versiongcfpvss_SOURCES      = versiongcfpvss.cc
+versiongcfpvss_LDADD        = libgcfpvss.la
+versiongcfpvss_DEPENDENCIES = libgcfpvss.la $(LOFAR_DEPEND)
+
 include $(top_srcdir)/Makefile.common
 

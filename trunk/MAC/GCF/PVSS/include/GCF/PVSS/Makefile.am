@@ -1,5 +1,5 @@
 pkgincludedir 			= $(includedir)/GCF/PVSS
-pkginclude_HEADERS 		= GCF_PValue.h \
+pkginclude_HEADERS 		= Package__Version.h  GCF_PValue.h \
 						  GCF_PVChar.h \
 						  GCF_PVBool.h \
 						  GCF_PVDouble.h \
