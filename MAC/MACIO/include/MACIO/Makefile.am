@@ -1,5 +1,5 @@
 pkgincludedir 		= $(includedir)/MACIO
-pkginclude_HEADERS	= EventPort.h \
+pkginclude_HEADERS	= Package__Version.h  EventPort.h \
 					  GCF_Event.h \
 					  MACServiceInfo.h \
 					  Marshalling.h \
