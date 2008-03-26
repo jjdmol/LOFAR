@@ -24,7 +24,7 @@
 #
 # $Id$
 #
-VERSION="v1.0"
+VERSION="v1.4 20071017"		# added possibility for custom scripts
 BINDIR=/opt/lofar/bin
 LOGDIR=/opt/lofar/log
 LEVELTABLE=${BINDIR}/../etc/swlevel.conf
@@ -57,15 +57,22 @@ start_prog()
 {
 	# make arguments readable
 	prog=$1
-	asroot=$2
+	asroot=${2:1}
+	withmpi=${3:1}
 
 	# check existance
-	[ -x $BINDIR/$prog ] || return
+	[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || return
+	
+	# if it is a shell script call the script
+	if [ -f $BINDIR/${prog}.sh ]; then
+		$BINDIR/${prog}.sh start
+		return
+	fi
 
-	ps -ef | grep -v grep | grep $prog 2>&1 >/dev/null
+	ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog 2>&1 >/dev/null
 	if [ $? -eq 0 ]; then
 		# program is running, show it
-		ps -ef | grep -v grep | grep $prog
+		ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog
 	else
 		echo Starting $prog
 		# PVSS needs special treatment
@@ -87,7 +94,7 @@ start_prog()
 			fi
 			sleep 1
 		fi
-		ps -ef | grep -v grep | grep $prog
+		ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog
 	fi
 }
 
@@ -98,13 +105,21 @@ stop_prog()
 {
 	# make arguments readable
 	prog=$1
-	asroot=$2
+	asroot=${2:1}
+	withmpi=${3:1}
 	[ ! -z "$asroot" ] && asroot=sudo	
 
 	# check existance
-	[ -x $BINDIR/$prog ] || return
+	[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || return
+	
+	# if it is a shell script call the script
+	if [ -f $BINDIR/${prog}.sh ]; then
+		$BINDIR/${prog}.sh stop
+		return
+	fi
 
-	ps -ef | grep -v grep | grep $prog 2>&1 >/dev/null
+	# get processlist
+	ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog 2>&1 >/dev/null
 	if [ $? -ne 0 ]; then
 		return
 	fi
@@ -116,8 +131,14 @@ stop_prog()
 		return
 	fi
 
+	# first handle mpi programs
+	if [ ! -z "$withmpi" ]; then
+		$asroot cexec :0-11 killall -9 ${prog}
+		return
+	fi
+
 	# first try normal kill
-	ps -ef | grep -v grep | grep $prog | awk '{ print $2 }' | while read pid
+	ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog | awk '{ print $2 }' | while read pid
 	do 
 		echo "Softly killing ${prog}(${pid})"
 		$asroot kill $pid
@@ -125,7 +146,7 @@ stop_prog()
 	done
 
 	# when normal kill did not work, kill is with -9
-	ps -ef | grep -v grep | grep $prog | awk '{ print $2 }' | while read pid
+	ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep $prog | awk '{ print $2 }' | while read pid
 	do 
 		sleep 2
 		echo "Hard killing ${prog}(${pid})"
@@ -145,19 +166,31 @@ status_prog()
 	cat $LEVELTABLE | cut -d"#" -f1 | awk '{ if (NF>0) print $0 }' | while read line
 	do
 		levelnr=`echo $line | cut -d":" -f1`
-		prog=`echo $line | cut -d":" -f5`
+		prog=`echo $line | cut -d":" -f6`
 
 		# check existance
-		[ -x $BINDIR/$prog ] || continue
-
+		[ -x $BINDIR/$prog ] || [ -x $BINDIR/${prog}.sh ] || continue
+	
 		if [ $prevlevel -ne $levelnr ]; then
 			echo "---"
 			prevlevel=$levelnr
 		fi
-		ps -ef | grep -v grep | grep $prog 2>&1 >/dev/null
+
+		# if it is a shell script call the script
+		if [ -f $BINDIR/${prog}.sh ]; then
+			$BINDIR/${prog}.sh status $levelnr
+			continue
+		fi
+
+		ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep ${prog} 2>&1 >/dev/null
 		if [ $? -eq 0 ]; then
 			# program is running, show it
-			pid=`ps -ef | grep -v grep | grep $prog | awk '{ print $2 }'`
+#			pid=""
+#			ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep ${prog} | awk '{ print $2 }' | while read somepid
+#			do
+#				pid=${pid}" "${somepid}
+#			done
+			pid=`ps -ef | grep -v grep | grep -v ${prog}[^\ ] | grep ${prog} | awk '{ print $2 }'`
 		else
 			pid="DOWN"
 		fi
@@ -178,8 +211,9 @@ goto_level()
 		grep "^${l}:" | grep ":d:" |  while read line
 		do
 			asroot=`echo $line | cut -d":" -f4`
-			program=`echo $line | cut -d":" -f5`
-			stop_prog $program $asroot
+			withmpi=`echo $line | cut -d":" -f5`
+			program=`echo $line | cut -d":" -f6`
+			stop_prog $program x$asroot x$withmpi
 		done
 	done
 
@@ -190,8 +224,9 @@ goto_level()
 		grep "^${l}:" | grep ":u:" |  while read line
 		do
 			asroot=`echo $line | cut -d":" -f4`
-			program=`echo $line | cut -d":" -f5`
-			start_prog $program $asroot
+			withmpi=`echo $line | cut -d":" -f5`
+			program=`echo $line | cut -d":" -f6`
+			start_prog $program x$asroot x$withmpi
 		done
 	done
 }
