@@ -49,7 +49,6 @@ AC_OUTPUT(
 src/Makefile
 test/Makefile
 include/Makefile
-include/GCF/Makefile
 include/GCF/RTDB/Makefile
 Makefile
 GCFRTDB.spec
