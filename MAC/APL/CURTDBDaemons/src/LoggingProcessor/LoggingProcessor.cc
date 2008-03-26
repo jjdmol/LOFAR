@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Version.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <MACIO/GCF_Event.h>
 #include <MACIO/MACServiceInfo.h>
@@ -30,6 +31,7 @@
 #include <GCF/RTDB/DP_Protocol.ph>
 #include <log4cplus/socketappender.h>
 #include "LoggingProcessor.h"
+#include "../Package__Version.h"
 
 using namespace log4cplus;
 using namespace log4cplus::helpers;
@@ -52,6 +54,7 @@ LoggingProcessor::LoggingProcessor(const string&	myName) :
 	itsTimerPort(0)
 {
 	LOG_DEBUG_STR("LoggingProcessor(" << myName << ")");
+	LOG_INFO(Version::getInfo<CURTDBDaemonsVersion>("LoggingProcessor"));
 
 	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 	registerProtocol(LOG_PROTOCOL,   LOG_PROTOCOL_STRINGS);

@@ -6,7 +6,8 @@ bin_PROGRAMS 				= LoggingProcessor
 #							  -fmessage-length=0 \
 #							  -fdiagnostics-show-location=once
 
-LoggingProcessor_SOURCES	= LoggingProcessor.cc \
+LoggingProcessor_SOURCES	= ../Package__Version.cc \
+							  LoggingProcessor.cc \
 							  LoggingProcessorMain.cc
 LoggingProcessor_LDADD		= $(LOFAR_DEPEND) $(libdir)/liblog_protocol.a
 LoggingProcessor_DEPENDENCIES=$(LOFAR_DEPEND)
