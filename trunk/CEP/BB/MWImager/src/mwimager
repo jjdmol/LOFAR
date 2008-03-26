@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if test $# != 1; then
+  echo "run as:   mwimager parset-file"
+  exit 1
+fi
+
+# Convert parset file from SAS format to cimager format.
+convertimagerparset $1 $1.cvt
+
+# Run the imager.
+~/askapsoft/Code/Components/Synthesis/synthesis/trunk/apps/cimager.sh -inputs $1.cvt
+
+# Convert to FITS.
+## image2fits 
