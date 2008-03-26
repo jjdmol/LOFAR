@@ -63,6 +63,5 @@ AC_OUTPUT(
 	src/Makefile
 	test/Makefile
 	include/Makefile
-	include/APL/Makefile
 	include/APL/RTCCommon/Makefile
 )

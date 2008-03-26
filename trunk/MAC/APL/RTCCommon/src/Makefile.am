@@ -23,7 +23,7 @@ sysconf_DATA =
 
 lib_LTLIBRARIES = librtccommon.la libgnuplot_i.la
 
-librtccommon_la_SOURCES = \
+librtccommon_la_SOURCES = Package__Version.cc  \
 	Timestamp.cc \
 	Subject.cc \
 	daemonize.c \
@@ -46,5 +46,11 @@ libgnuplot_i_la_SOURCES = \
 
 %.top: %.top.in
 	cp $< $@
+
+bin_PROGRAMS = versionrtccommon
+
+versionrtccommon_SOURCES      = versionrtccommon.cc
+versionrtccommon_LDADD        = librtccommon.la
+versionrtccommon_DEPENDENCIES = librtccommon.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
