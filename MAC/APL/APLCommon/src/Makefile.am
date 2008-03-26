@@ -16,7 +16,7 @@ libaplcommon_la_CPPFLAGS =  -DBOOST_DISABLE_THREADS \
 							-fmessage-length=0 \
 							-fdiagnostics-show-location=once
 
-libaplcommon_la_SOURCES  =  $(DOCHDRS) \
+libaplcommon_la_SOURCES  = Package__Version.cc   $(DOCHDRS) \
 							StartDaemon_Protocol.cc \
 							Controller_Protocol.cc \
 							APLUtilities.cc \
@@ -43,6 +43,12 @@ ph_HEADERS 				= StartDaemon_Protocol.ph \
 
 clean-local:
 	rm -f *.ph
+
+bin_PROGRAMS = versionaplcommon
+
+versionaplcommon_SOURCES      = versionaplcommon.cc
+versionaplcommon_LDADD        = libaplcommon.la
+versionaplcommon_DEPENDENCIES = libaplcommon.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 

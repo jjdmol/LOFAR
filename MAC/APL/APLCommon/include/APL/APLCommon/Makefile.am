@@ -1,5 +1,5 @@
 pkgincludedir = $(includedir)/APL/APLCommon
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	APLCommonExceptions.h \
 	APL_Defines.h \
 	APLUtilities.h \
