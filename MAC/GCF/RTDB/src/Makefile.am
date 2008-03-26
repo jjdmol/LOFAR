@@ -28,10 +28,16 @@ pkginclude_HEADERS	= $(BUILT_SOURCES)
 
 lib_LTLIBRARIES 	= libgcfrtdb.la
 
-libgcfrtdb_la_SOURCES	= $(BUILT_SOURCES) \
+libgcfrtdb_la_SOURCES	= Package__Version.cc  $(BUILT_SOURCES) \
 					  RTDB_PropertySet.cc \
 					  DPservice.cc \
 					  DPanswer.cc
+
+bin_PROGRAMS = versiongcfrtdb
+
+versiongcfrtdb_SOURCES      = versiongcfrtdb.cc
+versiongcfrtdb_LDADD        = libgcfrtdb.la
+versiongcfrtdb_DEPENDENCIES = libgcfrtdb.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
