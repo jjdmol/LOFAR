@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 #include <Common/lofar_fstream.h>
+#include <Common/Version.h>
 
 #include <APS/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
@@ -31,6 +32,7 @@
 #include <MACIO/GCF_Event.h>
 //#include <GCF/TM/GCF_Protocols.h>
 #include "ServiceBroker.h"
+#include "../Package__Version.h"
 
 namespace LOFAR {
     using namespace MACIO;
@@ -52,6 +54,8 @@ ServiceBroker::ServiceBroker() :
 	itsNrPorts(0),
 	itsNrFreePorts(0)
 {
+	LOG_INFO(Version::getInfo<CUDaemonsVersion>("ServiceBroker"));
+
 	// register the protocol for debugging purposes
 	TM::registerProtocol(SB_PROTOCOL, SB_PROTOCOL_STRINGS);
 
