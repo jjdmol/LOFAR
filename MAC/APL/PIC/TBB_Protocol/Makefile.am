@@ -1,5 +1,5 @@
 
-SUBDIRS	= src
+SUBDIRS	= src include
 
 pkgextdir     = $(prefix)/config/$(PACKAGE)
 pkgext_DATA   = pkgext pkgextcppflags pkgextcxxflags pkgextldflags

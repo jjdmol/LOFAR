@@ -1,4 +1,4 @@
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 					ACCmd.h \
 					ACAsyncClient.h \
 					ACRequest.h \

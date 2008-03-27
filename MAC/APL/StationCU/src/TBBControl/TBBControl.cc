@@ -23,6 +23,7 @@
 
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Version.h>
 
 #include <APS/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -45,6 +46,7 @@
 #include "TBBTrigger.h"
 #include "TBBReadCmd.h"
 #include "VHECRTask.h"
+#include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -74,6 +76,7 @@ TBBControl::TBBControl(const string&	cntlrName) :
 	itsState			(CTState::NOSTATE)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
+	LOG_INFO(Version::getInfo<StationCUVersion>("TBBControl"));
 
 	// First readin our observation related config file.
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);

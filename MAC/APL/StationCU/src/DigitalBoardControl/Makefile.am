@@ -4,7 +4,8 @@ DigitalBoardControl_CPPFLAGS		= -Wno-deprecated \
 								  -fmessage-length=0 \
 								  -fdiagnostics-show-location=once
 
-DigitalBoardControl_SOURCES		= DigitalBoardControl.cc \
+DigitalBoardControl_SOURCES		= ../Package__Version.cc \
+								  DigitalBoardControl.cc \
 								  DigitalBoardControlMain.cc 
 
 DigitalBoardControl_LDADD		= $(LOFAR_DEPEND)

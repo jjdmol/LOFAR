@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/Version.h>
 #include <APS/ParameterSet.h>
 
 #include <MACIO/MACServiceInfo.h>
@@ -37,6 +38,7 @@
 #include "BeamServerConstants.h"
 #include "Beam.h"
 #include "Beamlet.h"
+#include "Package__Version.h"
 
 //#include <APS/ParameterSet.h>
 #include <iostream>
@@ -116,6 +118,8 @@ BeamServer::BeamServer(string name, int argc, char** argv)
 {
 	// adopt commandline switches
 	parseOptions(argc, argv);
+
+	LOG_INFO(Version::getInfo<BeamServerVersion>("BeamServer"));
 
 	registerProtocol(BS_PROTOCOL,  BS_PROTOCOL_STRINGS);
 	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);

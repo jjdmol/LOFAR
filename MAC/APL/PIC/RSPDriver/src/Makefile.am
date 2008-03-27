@@ -1,3 +1,5 @@
+pkginclude_HEADERS = Package__Version.h
+
 
 #
 # Define ENABLE_RSPFE to enable the rspctl frontend
@@ -53,14 +55,14 @@ lib_LTLIBRARIES = libepa.la
 
 include_HEADERS =
 
-libepa_la_SOURCES = \
+libepa_la_SOURCES = Package__Version.cc  \
 	RawEvent.h \
 	RawEvent.cc
 
 bin_SCRIPTS = \
 	rspdriver
 
-bin_PROGRAMS = \
+bin_PROGRAMS = versionrspdriver \
 	RSPDriver \
 	rspctl \
 	geni2c
@@ -233,5 +235,9 @@ geni2c_SOURCES = \
 rspctl_LDADD = -lgnuplot_i
 
 #	$(RTCCOMMON_LDADD)
+
+versionrspdriver_SOURCES      = versionrspdriver.cc
+versionrspdriver_LDADD        = libepa.la
+versionrspdriver_DEPENDENCIES = libepa.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

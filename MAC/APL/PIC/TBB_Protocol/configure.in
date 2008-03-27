@@ -64,6 +64,6 @@ AC_OUTPUT(
 src/Makefile
 Makefile
 include/Makefile
-include/APL/Makefile
+include/APL/TBB_Protocol/Makefile
 TBB_Protocol.spec
 )

@@ -28,6 +28,7 @@
 #include <APS/ParameterSet.h>
 #include <MACIO/MACServiceInfo.h>
 #include <Common/hexdump.h>
+#include <Common/Version.h>
 
 #include <getopt.h>
 //#include <string>
@@ -63,6 +64,7 @@
 #include "ReadrCmd.h"
 #include "WriterCmd.h"
 #include "ReadxCmd.h"
+#include "Package__Version.h"
 
 
 #define ETHERTYPE_TP 0x7BB0			// letters of TBB
@@ -118,6 +120,8 @@ void parseOptions(int argc, char** argv)
 TBBDriver::TBBDriver(string name)
   : GCFTask((State)&TBBDriver::init_state, name)
 {
+	LOG_INFO(Version::getInfo<TBBDriverVersion>("TBBDriver"));
+
 	// use TS->getXXX() tot get settings of the driver
 	TS	= TbbSettings::instance();
 	

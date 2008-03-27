@@ -24,6 +24,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
+#include <Common/Version.h>
 
 #include <MACIO/MACServiceInfo.h>
 
@@ -118,6 +119,7 @@
 #include "Cache.h"
 #include "RawEvent.h"
 #include "Sequencer.h"
+#include "Package__Version.h"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -200,6 +202,8 @@ RSPDriver::RSPDriver(string name)
 #ifdef HAVE_SYS_TIMEPPS_H
   memset(&m_ppsinfo, 0, sizeof(pps_info_t));
 #endif
+
+	LOG_INFO(Version::getInfo<RSPDriverVersion>("RSPDriver"));
 
   // first initialize the global settins
   LOG_DEBUG("Setting up station settings");

@@ -64,8 +64,6 @@ dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
-include/Makefile
-include/TBBDriver/Makefile
 src/Makefile
 test/Makefile
 Makefile

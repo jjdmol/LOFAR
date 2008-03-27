@@ -21,7 +21,7 @@ NOINSTHDRS =
 TCCHDRS =
 
 pkgincludedir = $(includedir)/APL/RSP_Protocol
-pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+pkginclude_HEADERS = Package__Version.h  $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS = $(NOINSTHDRS)
 

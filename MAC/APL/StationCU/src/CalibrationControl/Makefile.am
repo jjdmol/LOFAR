@@ -4,7 +4,8 @@ CalibrationControl_CPPFLAGS		= -Wno-deprecated \
 								  -fmessage-length=0 \
 								  -fdiagnostics-show-location=once
 
-CalibrationControl_SOURCES		= CalibrationControl.cc \
+CalibrationControl_SOURCES		= ../Package__Version.cc \
+							  	  CalibrationControl.cc \
 								  CalibrationControlMain.cc 
 
 CalibrationControl_LDADD		= $(LOFAR_DEPEND)

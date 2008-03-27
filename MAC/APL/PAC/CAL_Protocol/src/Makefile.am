@@ -24,7 +24,7 @@ pkginclude_HEADERS = \
 lib_LTLIBRARIES = \
 	libcal_protocol.la
 
-libcal_protocol_la_SOURCES = \
+libcal_protocol_la_SOURCES = Package__Version.cc \
 	$(BUILT_SOURCES) \
 	CAL_Protocol.cc \
 	AntennaArray.cc \
@@ -36,5 +36,11 @@ libcal_protocol_la_SOURCES = \
 
 clean-local:
 	rm -f *.ph
+
+bin_PROGRAMS = versioncal_protocol
+
+versioncal_protocol_SOURCES      = versioncal_protocol.cc
+versioncal_protocol_LDADD        = libcal_protocol.la
+versioncal_protocol_DEPENDENCIES = libcal_protocol.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

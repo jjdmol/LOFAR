@@ -4,7 +4,8 @@ HardwareMonitor_CPPFLAGS	= -Wno-deprecated \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-HardwareMonitor_SOURCES		= HardwareMonitorMain.cc \
+HardwareMonitor_SOURCES		= ../Package__Version.cc \
+							  HardwareMonitorMain.cc \
 							  RSPMonitor.cc  \
 							  TBBMonitor.cc 
 

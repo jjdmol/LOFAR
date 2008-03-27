@@ -26,6 +26,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <Common/Version.h>
 
 #include <APS/ParameterSet.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
@@ -41,6 +42,7 @@
 #include "ActiveObs.h"
 #include "StationControl.h"
 #include "StationControlDefines.h"
+#include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -71,6 +73,7 @@ StationControl::StationControl(const string&	cntlrName) :
 	itsTimerPort		(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
+	LOG_INFO(Version::getInfo<StationCUVersion>("StationControl"));
 
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");

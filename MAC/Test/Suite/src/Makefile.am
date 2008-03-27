@@ -17,7 +17,7 @@ libaplcommon_la_CPPFLAGS= \
 	-fmessage-length=0 \
         -fdiagnostics-show-location=once
 
-libsuite_la_SOURCES= $(DOCHDRS) \
+libsuite_la_SOURCES= Package__Version.cc  $(DOCHDRS) \
         suite.cpp \
         test.cpp
 
@@ -27,6 +27,12 @@ EXTRA_DIST =
 
 clean-local:
 	rm -f *.ph
+
+bin_PROGRAMS = versionsuite
+
+versionsuite_SOURCES      = versionsuite.cc
+versionsuite_LDADD        = libsuite.la
+versionsuite_DEPENDENCIES = libsuite.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
