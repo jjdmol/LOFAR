@@ -1,8 +1,4 @@
-pkginclude_HEADERS = Package__Version.h
-
-# if HAVE_SHMEM
-# SUBDIRS = shmem .
-# endif
+pkginclude_HEADERS = Package__Version.h $(INSTHDRS)
 
 INSTHDRS = \
 	gnuplot_i.h \
