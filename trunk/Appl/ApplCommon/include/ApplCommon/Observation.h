@@ -83,16 +83,21 @@ public:
 	//# Datamembers
 	string			name;
 	int32			obsID;
-#if 0
 	time_t			startTime;
 	time_t			stopTime;
-#endif	
 	uint32			nyquistZone;
 	vector<string>	stations;
 	int32			sampleClock;
 	string			filter;
+
+	// old way of specifying antennas
 	string			antennaArray;
 	RCUset_t		RCUset;				// set with participating receivers
+
+	// new way of selecting antennas
+	string			antennaSet;
+	bool			useLongBaselines;
+
 	vector<Beam>	beams;
 	vector<int32>	beamlet2beams;		// to which beam each beamlet belongs
 	vector<int32>	beamlet2subbands;	// which subband each beamlet uses.

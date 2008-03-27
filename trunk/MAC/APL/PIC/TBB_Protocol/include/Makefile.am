@@ -1,2 +1,2 @@
-SUBDIRS	= APL
+SUBDIRS	= APL/TBB_Protocol
 

@@ -1,3 +1,0 @@
-
-SUBDIRS	= TBB_Protocol
-

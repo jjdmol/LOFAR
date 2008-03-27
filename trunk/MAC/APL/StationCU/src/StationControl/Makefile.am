@@ -4,7 +4,8 @@ StationControl_CPPFLAGS		= -Wno-deprecated \
 								  -fmessage-length=0 \
 								  -fdiagnostics-show-location=once
 
-StationControl_SOURCES		= StationControl.cc \
+StationControl_SOURCES		= ../Package__Version.cc \
+							  StationControl.cc \
 							  ActiveObs.cc \
 							  StationControlMain.cc 
 

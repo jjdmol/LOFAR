@@ -22,12 +22,14 @@
 //#
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/Version.h>
 
 #include <APS/ParameterSet.h>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
 #include "RSPMonitor.h"
 #include "TBBMonitor.h"
+#include "../Package__Version.h"
 
 using namespace LOFAR;
 using namespace LOFAR::ACC::APS;
@@ -39,6 +41,8 @@ int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
 	GCFTask::init(argc, argv);
+
+	LOG_INFO(Version::getInfo<StationCUVersion>("HardwareMonitor"));
 
 	// TODO
 	LOG_INFO("MACProcessScope: LOFAR.PermSW.HWmonitor");

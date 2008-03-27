@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
+#include <Common/Version.h>
 #include <ApplCommon/Observation.h>
 
 #include <APS/ParameterSet.h>
@@ -37,6 +38,7 @@
 
 #include "BeamControl.h"
 #include "BeamControlDefines.h"
+#include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -67,6 +69,7 @@ BeamControl::BeamControl(const string&	cntlrName) :
 	itsNrBeams			(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
+	LOG_INFO(Version::getInfo<StationCUVersion>("BeamControl"));
 
 	// First readin our observation related config file.
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);

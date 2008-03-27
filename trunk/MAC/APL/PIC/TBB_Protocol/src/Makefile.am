@@ -24,10 +24,16 @@ pkginclude_HEADERS = \
 
 lib_LTLIBRARIES         = libtbb_protocol.la
 
-libtbb_protocol_la_SOURCES = \
+libtbb_protocol_la_SOURCES = Package__Version.cc  \
 	$(BUILT_SOURCES) 
 
 clean-local:
 	rm -f *.ph
+
+bin_PROGRAMS = versiontbb_protocol
+
+versiontbb_protocol_SOURCES      = versiontbb_protocol.cc
+versiontbb_protocol_LDADD        = libtbb_protocol.la
+versiontbb_protocol_DEPENDENCIES = libtbb_protocol.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

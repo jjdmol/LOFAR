@@ -4,10 +4,11 @@ BeamControl_CPPFLAGS		= -Wno-deprecated \
 								  -fmessage-length=0 \
 								  -fdiagnostics-show-location=once
 
-BeamControl_SOURCES		= BeamControl.cc \
-								  BeamControlMain.cc 
+BeamControl_SOURCES			= ../Package__Version.cc \
+							  BeamControl.cc \
+							  BeamControlMain.cc 
 
-BeamControl_LDADD		= $(LOFAR_DEPEND)
+BeamControl_LDADD			= $(LOFAR_DEPEND)
 BeamControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= BeamControl.h \

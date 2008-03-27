@@ -1,7 +1,3 @@
-# if HAVE_SHMEM
-# SUBDIRS = shmem .
-# endif
-# SUBDIRS = test
 AM_CPPFLAGS = \
 	-I$(top_builddir)/include
 	
@@ -37,15 +33,7 @@ EXTRA_DIST = \
 	$(BUILT_SOURCES) \
 	TP_Protocol.prot 
 
-	
-libtp_protocol_la_SOURCES = \
-	TP_Protocol.ph \
-	TP_Protocol.cc \
-	RawEvent.h \
-	RawEvent.cc
-
-libtbbdriver_la_SOURCES = \
-	$(noinst_HEADERS) \
+libtbbdriver_la_SOURCES = Package__Version.cc \
 	DriverSettings.cc \
 	Command.cc \
 	AllocCmd.cc \
@@ -78,7 +66,13 @@ libtbbdriver_la_SOURCES = \
 	WriterCmd.cc \
 	ReadxCmd.cc		
 
-pkginclude_HEADERS	= $(BUILT_SOURCES)
+libtp_protocol_la_SOURCES = \
+	TP_Protocol.ph \
+	TP_Protocol.cc \
+	RawEvent.h \
+	RawEvent.cc
+
+pkginclude_HEADERS = Package__Version.h  $(BUILT_SOURCES)
 
 noinst_HEADERS = \
 	DriverSettings.h \
@@ -123,7 +117,7 @@ noinst_HEADERS = \
 # libtbbdriver_la_LIBADD     = shmem/libshmem.la
 # endif
 
-bin_PROGRAMS = \
+bin_PROGRAMS = versiontbbdriver \
 	TBBDriver \
 	tbbctl
 
@@ -132,22 +126,16 @@ bin_PROGRAMS = \
 #prg_LDADD		= libtbbdriver.la
 #prg_DEPENDENCIES	= libtbbdriver.la $(LOFAR_DEPEND)
 
-tbbctl_SOURCES = \
-	tbbctl.h \
-	tbbctl.cc
+tbbctl_SOURCES 			= tbbctl.h tbbctl.cc
 
-TBBDriver_SOURCES = \
-	TBBDriver.h \
-	TBBDriver.cc
+TBBDriver_SOURCES 		= TBBDriver.h TBBDriver.cc
+TBBDriver_LDADD 		= libtbbdriver.la libtp_protocol.la
+TBBDriver_DEPENDENCIES  = libtbbdriver.la libtp_protocol.la $(LOFAR_DEPEND)
 
-TBBDriver_LDADD = \
-	libtbbdriver.la \
-	libtp_protocol.la
-	
-TBBDriver_DEPENDENCIES = \
-	libtbbdriver.la \
-	libtp_protocol.la \
-	$(LOFAR_DEPEND)
+versiontbbdriver_SOURCES      = versiontbbdriver.cc
+versiontbbdriver_LDADD        = libtbbdriver.la
+versiontbbdriver_DEPENDENCIES = libtbbdriver.la $(LOFAR_DEPEND)
+
 
 glishdir = $(libexecdir)/glish
 dist_glish_SCRIPTS = 

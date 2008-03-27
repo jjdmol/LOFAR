@@ -1,6 +1,5 @@
 
-AM_CPPFLAGS = \
-	-I$(top_builddir)/include
+AM_CPPFLAGS = -I$(top_builddir)/include
 
 AUTOGEN = autogen
 SUFFIXES = .ph
@@ -24,7 +23,7 @@ pkginclude_HEADERS = \
 lib_LTLIBRARIES = \
 	libbs_protocol.la
 
-libbs_protocol_la_SOURCES = \
+libbs_protocol_la_SOURCES = Package__Version.cc \
 	$(BUILT_SOURCES) \
 	BS_Protocol.cc \
 	Beamlet2SubbandMap.cc \
@@ -32,5 +31,11 @@ libbs_protocol_la_SOURCES = \
 
 clean-local:
 	rm -f *.ph
+
+bin_PROGRAMS = versionbs_protocol
+
+versionbs_protocol_SOURCES      = versionbs_protocol.cc
+versionbs_protocol_LDADD        = libbs_protocol.la
+versionbs_protocol_DEPENDENCIES = libbs_protocol.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

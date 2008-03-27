@@ -1,3 +1,5 @@
+pkginclude_HEADERS = Package__Version.h
+
 
 #AM_CPPFLAGS = -DUSE_CAL_THREAD
 AM_CPPFLAGS = -DUSE_CAL_THREAD
@@ -45,7 +47,7 @@ lib_LTLIBRARIES = libcaldevel.la
 
 libcaldevel_ladir = $(prefix)/include
 
-libcaldevel_la_SOURCES = \
+libcaldevel_la_SOURCES = Package__Version.cc  \
 	CalibrationAlgorithm.h \
 	CalibrationAlgorithm.cc \
 	CalibrationThread.h \
@@ -66,7 +68,7 @@ libcaldevel_la_SOURCES = \
 	SubArraySubscription.h \
 	SubArraySubscription.cc 
 
-bin_PROGRAMS = \
+bin_PROGRAMS = versioncalserver \
 	CalServer \
 	juggle_acc \
 	calinfo
@@ -98,5 +100,9 @@ bin_SCRIPTS = \
 
 clean-local:
 	rm -f *.ph
+
+versioncalserver_SOURCES      = versioncalserver.cc
+versioncalserver_LDADD        = libcaldevel.la
+versioncalserver_DEPENDENCIES = libcaldevel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

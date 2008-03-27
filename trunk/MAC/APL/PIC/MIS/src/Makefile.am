@@ -1,3 +1,5 @@
+pkginclude_HEADERS = Package__Version.h
+
 AUTOGEN = autogen
 SUFFIXES = .ph
 
@@ -16,7 +18,8 @@ DOCHDRS	=	 $(BUILT_SOURCES) \
 
 noinst_LTLIBRARIES 	= libmis.la
 
-libmis_la_SOURCES	= $(DOCHDRS) \
+libmis_la_SOURCES	= Package__Version.cc \
+	$(DOCHDRS) \
 	MISDaemon.cc \
 	MISSession.cc \
 	MISPolicyHandler.cc \
@@ -26,7 +29,7 @@ libmis_la_SOURCES	= $(DOCHDRS) \
 #	MISSubscription.cc 
 #	PropertyProxy.cc 
 
-bin_PROGRAMS   		= MACInformationServer
+bin_PROGRAMS   		= versionmis MACInformationServer
   
 MACInformationServer_SOURCES		  = MISMain.cc
 MACInformationServer_LDADD		    = libmis.la $(LOFAR_DEPEND)
@@ -46,5 +49,9 @@ sysconf_DATA= \
 clean-local:
 	rm -f *.ph
 	
+versionmis_SOURCES      = versionmis.cc
+versionmis_LDADD        = libmis.la
+versionmis_DEPENDENCIES = libmis.la $(LOFAR_DEPEND)
+
 include $(top_srcdir)/Makefile.common
 

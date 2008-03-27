@@ -1,3 +1,5 @@
+pkginclude_HEADERS = Package__Version.h
+
 #
 # if USE_CAL_THREAD is defined in Calibration/src/Makefile.am it should be
 # defined here as well and vice versa
@@ -26,7 +28,8 @@ sysconf_DATA 			= BeamServer.conf \
 						  HBADelays.conf 
 
 lib_LTLIBRARIES 		= libabsdevel.la
-libabsdevel_la_SOURCES 	= Beam.h \
+libabsdevel_la_SOURCES 	= Package__Version.cc \
+						  Beam.h \
 						  Beam.cc \
 						  Beamlet.h \
 						  Beamlet.cc \
@@ -35,7 +38,7 @@ libabsdevel_la_SOURCES 	= Beam.h \
 						  Beamlets.h \
 						  Beamlets.cc
 
-bin_PROGRAMS 			= BeamServer beamctl
+bin_PROGRAMS 			= versionbeamserver BeamServer beamctl
 
 BeamServer_SOURCES 		= BeamServer.h BeamServerConstants.h BeamServer.cc
 BeamServer_LDADD 		= $(top_builddir)/src/libabsdevel.la
@@ -62,5 +65,9 @@ bin_SCRIPTS 			= beamserver
 
 clean-local:
 	rm -f *.ph
+
+versionbeamserver_SOURCES      = versionbeamserver.cc
+versionbeamserver_LDADD        = libabsdevel.la
+versionbeamserver_DEPENDENCIES = libabsdevel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

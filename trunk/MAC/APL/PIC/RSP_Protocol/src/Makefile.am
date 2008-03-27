@@ -31,7 +31,7 @@ pkginclude_HEADERS = \
 
 lib_LTLIBRARIES         = librsp_protocol.la
 
-librsp_protocol_la_SOURCES = \
+librsp_protocol_la_SOURCES = Package__Version.cc  \
 	$(BUILT_SOURCES) \
 	AllRegisterState.cc \
 	BeamletWeights.cc \
@@ -52,5 +52,11 @@ librsp_protocol_la_SOURCES = \
 
 clean-local:
 	rm -f *.ph
+
+bin_PROGRAMS = versionrsp_protocol
+
+versionrsp_protocol_SOURCES      = versionrsp_protocol.cc
+versionrsp_protocol_LDADD        = librsp_protocol.la
+versionrsp_protocol_DEPENDENCIES = librsp_protocol.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

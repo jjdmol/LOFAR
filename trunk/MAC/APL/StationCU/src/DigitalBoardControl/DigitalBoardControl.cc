@@ -21,9 +21,10 @@
 //#  $Id$
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <Common/SystemUtil.h>
+#include <Common/Version.h>
 
 #include <APS/ParameterSet.h>
-#include <Common/SystemUtil.h>
 #include <MACIO/MACServiceInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/APLCommon/APL_Defines.h>
@@ -35,6 +36,7 @@
 
 #include "DigitalBoardControl.h"
 #include "DigitalBoardControlDefines.h"
+#include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::PVSS;
@@ -63,6 +65,7 @@ DigitalBoardControl::DigitalBoardControl(const string&	cntlrName) :
 	itsRSPDriver		(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
+	LOG_INFO(Version::getInfo<StationCUVersion>("DigitalBoardControl"));
 
 	// Readin some parameters from the ParameterSet.
 	itsTreePrefix = globalParameterSet()->getString("prefix");

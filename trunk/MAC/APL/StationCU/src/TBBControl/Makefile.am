@@ -4,7 +4,8 @@ TBBControl_CPPFLAGS			= -Wno-deprecated \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-TBBControl_SOURCES			= TBBControl.cc \
+TBBControl_SOURCES			= ../Package__Version.cc \
+							  TBBControl.cc \
 							  TBBTrigger.cc \
 							  TBBReadCmd.cc \
 							  VHECRTask.cc \

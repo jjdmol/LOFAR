@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/lofar_bitset.h>
+#include <Common/Version.h>
 
 #include <APL/RTCCommon/daemonize.h>
 #include <APL/CAL_Protocol/CAL_Protocol.ph>
@@ -39,6 +40,7 @@
 #include "SubArraySubscription.h"
 #include "RemoteStationCalibration.h"
 #include "CalibrationAlgorithm.h"
+#include "Package__Version.h"
 
 #ifdef USE_CAL_THREAD
 #include "CalibrationThread.h"
@@ -122,6 +124,8 @@ CalServer::CalServer(const string& name, ACCs& accs, int argc, char** argv)
 #ifdef USE_CAL_THREAD
 	pthread_mutex_init(&m_globallock, 0);
 #endif
+
+	LOG_INFO(Version::getInfo<CalServerVersion>("CalServer"));
 
 	// adopt commandline switches
 	parseOptions (argc, argv);

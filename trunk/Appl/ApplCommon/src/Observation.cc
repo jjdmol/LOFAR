@@ -35,10 +35,8 @@ namespace LOFAR {
 Observation::Observation() :
 	name(),
 	obsID(0),
-#if 0	
 	startTime(0),
 	stopTime(0),
-#endif	
 	nyquistZone(0),
 	sampleClock(0)
 {
@@ -47,10 +45,8 @@ Observation::Observation() :
 Observation::Observation(ParameterSet*		aParSet) :
 	name(),
 	obsID(0),
-#if 0
 	startTime(0),
 	stopTime(0),
-#endif
 	nyquistZone(0),
 	sampleClock(0)
 {
@@ -60,14 +56,14 @@ Observation::Observation(ParameterSet*		aParSet) :
 
 	name  = aParSet->getString(prefix+"name", "");
 	obsID = aParSet->getInt32("_treeID", 0);
-#if 0
+
 	if (aParSet->isDefined(prefix+"startTime")) {
 		startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
 	}
 	if (aParSet->isDefined(prefix+"stopTime")) {
 		stopTime = to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
 	}
-#endif
+
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		string stString("x=" + expandedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList")));
 		ParameterSet	stParset;
@@ -79,6 +75,10 @@ Observation::Observation(ParameterSet*		aParSet) :
 	filter 		= aParSet->getString(prefix+"bandFilter", "");
 	antennaArray= aParSet->getString(prefix+"antennaArray", "");
 	nyquistZone = nyquistzoneFromFilter(filter);
+
+	// new way of specifying the receivers and choosing the antenna array.
+	antennaSet  	 = aParSet->getString(prefix+"antennaSet", "");
+	useLongBaseLines = aParSet->getBool  (prefix+"longBaselines", false);
 
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
@@ -181,10 +181,8 @@ ostream& Observation::print (ostream&	os) const
 	os << endl;
 	os << "Observation  : " << name << endl;
     os << "ObsID        : " << obsID << endl;
-#if 0
     os << "starttime    : " << to_simple_string(from_time_t(startTime)) << endl;
     os << "stoptime     : " << to_simple_string(from_time_t(stopTime)) << endl;
-#endif
 //    os << "stations     : " << stations << endl;
     os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
     os << "antennaArray : " << antennaArray << endl;
