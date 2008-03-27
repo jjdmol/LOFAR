@@ -182,7 +182,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 		// 
 		LOG_DEBUG(formatString("%s receives '%s' on port '%s'",
 							task.getName().c_str(),
-							eventName(buf.event),
+							eventName(buf.event).c_str(),
 							port.getName().c_str()));
 				
 		//
