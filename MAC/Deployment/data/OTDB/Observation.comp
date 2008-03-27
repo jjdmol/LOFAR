@@ -26,6 +26,10 @@ par  channelsPerSubband      I    int    -      10    100    256                
 par  nrBeams                 I    int    -      10    100    1                                         - 'Number of simultaneous beams in this observation'
 par  nrPolarisations         I    pint   -      10    100    '1|2;2'                                   - 'Number of polarisations to use in this observation'
 
+# new way of selection the receivers and the antennaArray at once
+par  antennaSet		         I    ptext  -      10    0      'LBA inner|LBA middle|LBA outer|HBA;-'    - 'Which part of the antennas should be used'
+par  longBaselines           I    pbool  -      10    0      'Yes|No;No'                               - 'Number of polarisations to use in this observation'
+
 # clock related info
 par  clockMode               I    pnode  -      10    0      '<<Clock160|<<Clock200;<<Clock160'        - 'Mode in which clock is running'
 par  sampleClock             I    dbl    MHz    10    100    >>Observation.clockMode.systemClock       - 'SampleClock'
