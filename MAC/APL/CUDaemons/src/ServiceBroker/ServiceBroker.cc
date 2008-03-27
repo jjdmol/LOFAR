@@ -57,7 +57,7 @@ ServiceBroker::ServiceBroker() :
 	LOG_INFO(Version::getInfo<CUDaemonsVersion>("ServiceBroker"));
 
 	// register the protocol for debugging purposes
-	TM::registerProtocol(SB_PROTOCOL, SB_PROTOCOL_STRINGS);
+	registerProtocol(SB_PROTOCOL, SB_PROTOCOL_STRINGS);
 
 	// allocate the listener port
 	itsListener.init(*this, MAC_SVCMASK_SERVICEBROKER, GCFPortInterface::MSPP, SB_PROTOCOL);
