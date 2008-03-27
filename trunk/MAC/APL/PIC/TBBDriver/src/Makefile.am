@@ -8,7 +8,8 @@ SUFFIXES = .ph
 
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(datadir)/MACIO $<
-	cp $*.ph $(top_builddir)/include/TBBDriver/TP_Protocol
+
+#	cp $*.ph $(top_builddir)/include/APL/TBBDriver/
 	
 BUILT_SOURCES = \
 	TP_Protocol.ph \
