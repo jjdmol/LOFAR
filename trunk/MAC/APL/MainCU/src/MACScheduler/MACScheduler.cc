@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <Common/Version.h>
 
 #include <APS/ParameterSet.h>
 #include <GCF/TM/GCF_Protocols.h>
@@ -37,6 +38,7 @@
 
 #include "MACSchedulerDefines.h"
 #include "MACScheduler.h"
+#include "../Package__Version.h"
 
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
@@ -74,6 +76,7 @@ MACScheduler::MACScheduler() :
 	LOG_TRACE_OBJ ("MACscheduler construction");
 
 	LOG_INFO_STR("MACProcessScope: " << globalParameterSet()->getString("prefix"));
+	LOG_INFO(Version::getInfo<MainCUVersion>("MACScheduler"));
 
 	// Readin some parameters from the ParameterSet.
 	itsOTDBpollInterval = globalParameterSet()->getTime("OTDBpollInterval");

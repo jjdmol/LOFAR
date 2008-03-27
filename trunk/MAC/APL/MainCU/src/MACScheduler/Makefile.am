@@ -5,7 +5,8 @@ MACScheduler_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 							  -fmessage-length=0 \
 							  -fdiagnostics-show-location=once
 
-MACScheduler_SOURCES		= MACScheduler.cc \
+MACScheduler_SOURCES		= ../Package__Version.cc \
+							  MACScheduler.cc \
 							  MACSchedulerMain.cc
 
 MACScheduler_LDADD			= -lpqxx $(LOFAR_DEPEND)
