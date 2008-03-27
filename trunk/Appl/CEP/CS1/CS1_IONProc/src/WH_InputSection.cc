@@ -351,6 +351,7 @@ void WH_InputSection::process()
   struct BlockHeader {
     uint32	magic; // 0x2913D852
     int32	coarseDelayApplied[8];
+    int32       pad;
     double	fineDelayRemainingAtBegin[8], fineDelayRemainingAfterEnd[8];
     int64	time[8]; // compatible with TimeStamp class.
     uint32      nrFlagsRanges[8];
