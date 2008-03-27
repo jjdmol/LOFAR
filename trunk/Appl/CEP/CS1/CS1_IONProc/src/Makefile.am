@@ -37,7 +37,7 @@ Package__Version.cc
 
 install-exec-local:
 	ln -sf .libs/liblofar_impl.so.0.0.0 lofar_impl.so
-	cp lofar_impl.so /bgl/lofar-utils/zoid-test/lib
+	cp lofar_impl.so $(HOME)/LOFAR/lib
 
 uninstall-local:
 	rm lofar_impl.so
