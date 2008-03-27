@@ -1,25 +1,14 @@
-pkginclude_HEADERS = Package__Version.h $(INSTHDRS)
+pkgincludedir = $(includedir)/APL/RTCCommon
 
-INSTHDRS = \
-	gnuplot_i.h \
-	MarshallBlitz.h \
-	Observer.h \
-	PSAccess.h \
-	Subject.h \
-	TestSuite.h \
-	Timestamp.h \
-	daemonize.h \
-	RegisterState.h 
-
-NOINSTHDRS =
-
-TCCHDRS =
-
-apldir = $(includedir)/APL/RTCCommon
-apl_HEADERS = $(INSTHDRS) $(TCCHDRS)
-
-noinst_HEADERS = $(NOINSTHDRS)
-
-DOCHDRS = $(INSTHDRS) $(NOINSTHDRS)
+pkginclude_HEADERS = Package__Version.h  \
+					 gnuplot_i.h \
+					 MarshallBlitz.h \
+					 Observer.h \
+					 PSAccess.h \
+					 Subject.h \
+					 TestSuite.h \
+					 Timestamp.h \
+					 daemonize.h \
+					 RegisterState.h 
 
 include $(top_srcdir)/Makefile.common
