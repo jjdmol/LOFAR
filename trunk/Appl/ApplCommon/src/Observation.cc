@@ -78,7 +78,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 
 	// new way of specifying the receivers and choosing the antenna array.
 	antennaSet  	 = aParSet->getString(prefix+"antennaSet", "");
-	useLongBaseLines = aParSet->getBool  (prefix+"longBaselines", false);
+	useLongBaselines = aParSet->getBool  (prefix+"longBaselines", false);
 
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
