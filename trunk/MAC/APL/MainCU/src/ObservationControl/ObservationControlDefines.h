@@ -43,7 +43,6 @@ namespace LOFAR {
 #define PN_OBSCTRL_SAMPLE_CLOCK			"sampleClock"
 #define PN_OBSCTRL_MEASUREMENT_SET		"measurementSet"
 #define PN_OBSCTRL_STATION_LIST			"stationList"
-#define PN_OBSCTRL_INPUT_NODE_LIST		"inputNodeList"
 #define PN_OBSCTRL_BGL_NODE_LIST		"BGLNodeList"
 #define PN_OBSCTRL_STORAGE_NODE_LIST	"storageNodeList"
 #define PN_OBSCTRL_BEAMS_ANGLE1			"Beams.angle1"

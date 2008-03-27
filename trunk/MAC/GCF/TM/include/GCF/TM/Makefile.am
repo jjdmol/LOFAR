@@ -1,5 +1,5 @@
 pkgincludedir = $(includedir)/GCF/TM
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	GCF_Control.h \
 	GCF_DevicePort.h \
 	GCF_ETHRawPort.h \
