@@ -1,4 +1,4 @@
-pkginclude_HEADERS 	= 	Converter.h \
+pkginclude_HEADERS 	= Package__Version.h  	Converter.h \
 				ClassifConv.h \
 				ParamTypeConv.h \
 				TreeStateConv.h \
