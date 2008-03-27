@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
+#include <Common/Version.h>
 
 #include <APS/ParameterSet.h>
 #include <Common/SystemUtil.h>
@@ -38,6 +39,7 @@
 
 #include "ObservationControl.h"
 #include "ObservationControlDefines.h"
+#include "../Package__Version.h"
 
 
 namespace LOFAR {
@@ -77,6 +79,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsForcedQuitDelay	(0)
 {
 	LOG_TRACE_OBJ_STR (cntlrName << " construction");
+	LOG_INFO(Version::getInfo<MainCUVersion>("ObservationControl"));
 
 	// First readin our observation related config file.
 	LOG_DEBUG_STR("Reading parset file:" << LOFAR_SHARE_LOCATION << "/" << cntlrName);

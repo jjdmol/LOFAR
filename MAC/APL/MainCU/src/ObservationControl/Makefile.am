@@ -4,7 +4,8 @@ ObservationControl_CPPFLAGS		= -Wno-deprecated \
 								  -fmessage-length=0 \
 								  -fdiagnostics-show-location=once
 
-ObservationControl_SOURCES		= ObservationControl.cc \
+ObservationControl_SOURCES		= ../Package__Version.cc \
+							 	  ObservationControl.cc \
 								  ObservationControlMain.cc 
 
 ObservationControl_LDADD		= $(LOFAR_DEPEND)
