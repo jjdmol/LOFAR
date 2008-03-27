@@ -401,9 +401,9 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		itsPropertySet->setValue(PN_OBSCTRL_STATION_LIST, GCFPVString(
 						compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.stationList"))));
-		itsPropertySet->setValue(PN_OBSCTRL_INPUT_NODE_LIST, GCFPVString(
-						compactedArrayString(globalParameterSet()->
-						getString("Observation.VirtualInstrument.inputNodeList"))));
+//		itsPropertySet->setValue(PN_OBSCTRL_INPUT_NODE_LIST, GCFPVString(
+//						compactedArrayString(globalParameterSet()->
+//						getString("Observation.VirtualInstrument.inputNodeList"))));
 		itsPropertySet->setValue(PN_OBSCTRL_BGL_NODE_LIST, GCFPVString(
 						compactedArrayString(globalParameterSet()->
 						getString("Observation.VirtualInstrument.BGLNodeList"))));

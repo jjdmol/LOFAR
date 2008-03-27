@@ -16,7 +16,7 @@ DOCHDRS = \
     
 lib_LTLIBRARIES 	= libgcftm.la
 
-libgcftm_la_SOURCES= $(DOCHDRS) \
+libgcftm_la_SOURCES= Package__Version.cc  $(DOCHDRS) \
   GCF_Fsm.cc \
   GCF_Protocols.cc \
   GCF_Task.cc \
@@ -47,6 +47,12 @@ BUILT_SOURCES 		=
 EXTRA_DIST 			= $(sysconf_DATA)
 	
 sysconf_DATA 		= mac.log_prop
+
+bin_PROGRAMS = versiongcftm
+
+versiongcftm_SOURCES      = versiongcftm.cc
+versiongcftm_LDADD        = libgcftm.la
+versiongcftm_DEPENDENCIES = libgcftm.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
 
