@@ -100,7 +100,11 @@ void BeamletBuffer::writeElements(Beamlet *data, const TimeStamp &begin, unsigne
 
   // forget old ValidData; add new ValidData
   pthread_mutex_lock(&itsValidDataMutex);
-  itsValidData.exclude(0, end - itsSize).include(begin, end);
+  itsValidData.exclude(0, end - itsSize);
+
+  //if (itsValidData.getRanges().size() < 64) // avoid long computations on too long range list
+    itsValidData.include(begin, end);
+
   pthread_mutex_unlock(&itsValidDataMutex);
 
   itsLockedRanges.unlock(startI, endI, itsSize);
@@ -112,8 +116,7 @@ void BeamletBuffer::startReadTransaction(const std::vector<TimeStamp> &begin, un
 {
   itsReadTimer.start();
 
-  TimeStamp minBegin, maxEnd;
-  itsBegin  = begin;
+  itsBegin = begin;
 
   for (unsigned beam = 0; beam < begin.size(); beam++) {
     itsEnd.push_back(begin[beam] + nrElements);
@@ -121,7 +124,8 @@ void BeamletBuffer::startReadTransaction(const std::vector<TimeStamp> &begin, un
     itsEndI.push_back(mapTime2Index(itsEnd[beam]));
   }
  
-  maxEnd = *std::max_element(itsEnd.begin(), itsEnd.end());
+  TimeStamp minBegin = *std::min_element(itsBegin.begin(), itsBegin.end());
+  TimeStamp maxEnd = *std::max_element(itsEnd.begin(), itsEnd.end());
   itsMinEnd = *std::min_element(itsEnd.begin(), itsEnd.end());
   itsMinStartI = *std::min_element(itsStartI.begin(), itsStartI.end());
   itsMaxEndI = *std::max_element(itsEndI.begin(), itsEndI.end());
