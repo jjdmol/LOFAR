@@ -34,10 +34,13 @@ namespace LOFAR {
 PrettyUnits::PrettyUnits(double value, const char *unit, unsigned precision)
 {
   static const char *prefixes = "yzafpnum kMGTPEZY";
-  const char	    *prefix   = prefixes;
+  const char	    *prefix;
 
-  for (value *= 1e24; value >= 999.5 && prefix[1] != '\0'; prefix ++)
-    value /= 1000.0;
+  if (value == 0.0)
+    prefix = " ";
+  else
+    for (value *= 1e24, prefix = prefixes; fabs(value) >= 999.5 && prefix[1] != '\0'; prefix ++)
+      value /= 1000.0;
 
   std::stringstream stream;
   stream << std::setprecision(precision) << std::setw(precision + 1) << value;

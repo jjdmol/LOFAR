@@ -3,7 +3,7 @@ CHECKTOOLPROGS	=	testLogger tAllocator tDataConvert \
 			tFileLocator tStringUtil tStreamUtil \
 			tHexdump testSocket tComplex tProcess \
 			tRunOnNode tTimer tNumeric tSingleton \
-			tObjectFactory tSystemUtil tSaxpy
+			tObjectFactory tSystemUtil tSaxpy tPrettyUnits
 
 check_PROGRAMS	=	$(CHECKTOOLPROGS)
 
@@ -11,7 +11,7 @@ TESTSCRIPTS	= 	testLogger.sh tAllocator.sh tDataConvert.sh \
 			tFileLocator.sh tStringUtil.sh tStreamUtil.sh \
 			tHexdump.sh testSocket.sh tComplex.sh tProcess.sh \
 			tRunOnNode.sh tTimer.sh tNumeric.sh tSingleton.sh \
-			tObjectFactory.sh
+			tObjectFactory.sh tPrettyUnits.sh
 
 TESTS		=	$(TESTSCRIPTS)
 
@@ -27,7 +27,7 @@ EXTRA_DIST	=	$(TESTSCRIPTS) \
 			tProcess.log_prop tProcess.run tProcess.stdout \
 			tRunOnNode.log_prop tRunOnNode.stdout \
 			tNumeric.run tNumeric.stdout \
-			tObjectFactory.stdout
+			tObjectFactory.stdout tPrettyUnits.stdout
 
 testLogger_SOURCES		= testLogger.cc
 testLogger_LDADD		= ../src/libcommon.la	
@@ -98,5 +98,9 @@ tSystemUtil_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 tSaxpy_SOURCES			= tSaxpy.cc
 tSaxpy_LDADD			= ../src/libcommon.la	
 tSaxpy_DEPENDENCIES		= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tPrettyUnits_SOURCES		= tPrettyUnits.cc
+tPrettyUnits_LDADD		= ../src/libcommon.la	
+tPrettyUnits_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
