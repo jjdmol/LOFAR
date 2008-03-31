@@ -40,6 +40,7 @@ OLAP.DelayComp.nrCalcDelays = 16
 OLAP.IPHeaderSize = 32
 OLAP.EPAHeaderSize = 16
 OLAP.nrTimesInFrame = 16
+OLAP.nrSubbandsPerFrame = 18
 OLAP.nrBitsPerSample=16
 OLAP.nrSecondsOfBuffer = 6
 OLAP.maxNetworkDelay = 2.0 # 1 second extra added to compensate for timestamp bug
