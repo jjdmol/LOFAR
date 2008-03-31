@@ -111,7 +111,7 @@ public:
 	vector<int32>  beamlet2beams(uint32 rspid=0) const;
 	vector<int32>  beamlet2subbands(uint32 rspid=0) const;
 	vector<uint32> subband2Index(uint32 rspid=0) const;
-	int32          nrSubbandsPerFrame(uint32 rspid=0) const;
+	int32          nrSubbandsPerFrame() const;
 	
 	vector<double> getBeamDirection(const unsigned currentBeam) const;
 	string         getBeamDirectionType(const unsigned currentBeam) const;
@@ -314,6 +314,12 @@ inline uint32 CS1_Parset::nrBeams() const
 {
   return getUint32("Observation.nrBeams");
 }
+
+inline int32  CS1_Parset::nrSubbandsPerFrame() const
+{
+  return getInt32("OLAP.nrSubbandsPerFrame");
+}
+
 
 } // namespace CS1
 } // namespace LOFAR
