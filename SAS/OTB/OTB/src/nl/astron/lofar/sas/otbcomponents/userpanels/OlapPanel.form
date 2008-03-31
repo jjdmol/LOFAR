@@ -117,9 +117,9 @@
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="jPanel11" pref="648" max="32767" attributes="1"/>
+                              <Component id="jPanel11" pref="659" max="32767" attributes="1"/>
                               <Group type="103" alignment="0" groupAlignment="0" max="-2" attributes="0">
-                                  <Component id="jPanel6" alignment="0" min="0" pref="648" max="32767" attributes="1"/>
+                                  <Component id="jPanel6" alignment="0" min="0" pref="659" max="32767" attributes="1"/>
                                   <Component id="jPanel8" alignment="0" max="32767" attributes="1"/>
                                   <Component id="jPanel5" alignment="0" max="32767" attributes="1"/>
                               </Group>
@@ -176,53 +176,59 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" alignment="0" attributes="0">
-                                      <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                          <Component id="labelNrTimesInFrame" alignment="0" min="-2" max="-2" attributes="0"/>
-                                          <Component id="labelNrBitsPerSample" alignment="0" min="-2" max="-2" attributes="1"/>
-                                          <Component id="labelSubbandsPerPset" alignment="0" max="32767" attributes="1"/>
-                                          <Component id="labelIPHeaderSize" alignment="0" min="-2" max="-2" attributes="0"/>
-                                      </Group>
-                                      <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
-                                      <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                          <Component id="inputNrBitsPerSample" alignment="0" max="32767" attributes="1"/>
-                                          <Component id="inputNrTimesInFrame" alignment="0" max="32767" attributes="1"/>
-                                          <Component id="inputIPHeaderSize" alignment="0" max="32767" attributes="1"/>
-                                          <Component id="inputSubbandsPerPset" alignment="1" pref="144" max="32767" attributes="1"/>
-                                      </Group>
+                                      <Component id="labelStorageStationNames" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="inputStorageStationNames" pref="522" max="32767" attributes="1"/>
+                                  </Group>
+                                  <Group type="102" attributes="0">
                                       <Group type="103" groupAlignment="0" attributes="0">
                                           <Group type="102" alignment="0" attributes="0">
-                                              <EmptySpace min="-2" pref="13" max="-2" attributes="0"/>
+                                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                                  <Component id="labelNrTimesInFrame" alignment="0" min="-2" max="-2" attributes="0"/>
+                                                  <Component id="labelNrBitsPerSample" alignment="0" min="-2" max="-2" attributes="1"/>
+                                                  <Component id="labelSubbandsPerPset" alignment="0" max="32767" attributes="1"/>
+                                                  <Component id="labelIPHeaderSize" alignment="0" min="-2" max="-2" attributes="0"/>
+                                              </Group>
+                                              <EmptySpace min="-2" pref="6" max="-2" attributes="0"/>
+                                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                                  <Component id="inputNrBitsPerSample" alignment="0" max="32767" attributes="1"/>
+                                                  <Component id="inputNrTimesInFrame" alignment="0" max="32767" attributes="1"/>
+                                                  <Component id="inputIPHeaderSize" alignment="0" max="32767" attributes="1"/>
+                                                  <Component id="inputSubbandsPerPset" alignment="1" pref="144" max="32767" attributes="1"/>
+                                              </Group>
                                               <Group type="103" groupAlignment="0" attributes="0">
-                                                  <Component id="labelEPAHeaderSize" alignment="0" min="-2" max="-2" attributes="0"/>
-                                                  <Component id="labelPsetsPerStorage" alignment="0" min="-2" max="-2" attributes="1"/>
+                                                  <Group type="102" alignment="0" attributes="0">
+                                                      <EmptySpace min="-2" pref="13" max="-2" attributes="0"/>
+                                                      <Group type="103" groupAlignment="0" attributes="0">
+                                                          <Component id="labelEPAHeaderSize" alignment="0" min="-2" max="-2" attributes="0"/>
+                                                          <Component id="labelPsetsPerStorage" alignment="0" min="-2" max="-2" attributes="1"/>
+                                                      </Group>
+                                                  </Group>
+                                                  <Group type="102" alignment="0" attributes="0">
+                                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                                                      <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                                          <Component id="labelMaxNetworkDelay" alignment="0" max="32767" attributes="1"/>
+                                                          <Component id="labelNrSecondsOfBuffer" alignment="0" max="32767" attributes="1"/>
+                                                          <Component id="labelNrSubbandsPerFrame" alignment="0" max="32767" attributes="1"/>
+                                                      </Group>
+                                                  </Group>
                                               </Group>
                                           </Group>
                                           <Group type="102" alignment="0" attributes="0">
+                                              <Component id="labelDelayCompensation" min="-2" max="-2" attributes="1"/>
                                               <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                              <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                                  <Component id="labelMaxNetworkDelay" alignment="0" max="32767" attributes="1"/>
-                                                  <Component id="labelNrSecondsOfBuffer" alignment="0" max="32767" attributes="1"/>
-                                              </Group>
+                                              <Component id="inputDelayCompensation" min="-2" max="-2" attributes="0"/>
                                           </Group>
                                       </Group>
                                       <EmptySpace min="-2" pref="30" max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                                          <Component id="inputNrSubbandsPerFrame" max="32767" attributes="1"/>
                                           <Component id="inputMaxNetworkDelay" max="32767" attributes="1"/>
                                           <Component id="inputNrSecondsOfBuffer" alignment="0" max="32767" attributes="1"/>
                                           <Component id="inputEPAHeaderSize" alignment="0" max="32767" attributes="1"/>
                                           <Component id="inputPsetsPerStorage" alignment="0" pref="152" max="32767" attributes="1"/>
                                       </Group>
                                       <EmptySpace pref="78" max="32767" attributes="0"/>
-                                  </Group>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="labelDelayCompensation" min="-2" max="-2" attributes="1"/>
-                                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
-                                      <Component id="inputDelayCompensation" min="-2" max="-2" attributes="0"/>
-                                  </Group>
-                                  <Group type="102" alignment="0" attributes="0">
-                                      <Component id="labelStorageStationNames" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="inputStorageStationNames" pref="511" max="32767" attributes="1"/>
                                   </Group>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
@@ -254,19 +260,29 @@
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
-                                  <Group type="103" alignment="0" groupAlignment="3" attributes="0">
-                                      <Component id="labelMaxNetworkDelay" alignment="3" min="-2" max="-2" attributes="0"/>
-                                      <Component id="inputMaxNetworkDelay" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Group type="102" alignment="1" attributes="0">
+                                      <Group type="103" groupAlignment="3" attributes="0">
+                                          <Component id="labelMaxNetworkDelay" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputMaxNetworkDelay" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      </Group>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Group type="103" groupAlignment="3" attributes="0">
+                                          <Component id="labelNrSubbandsPerFrame" alignment="3" min="-2" max="-2" attributes="0"/>
+                                          <Component id="inputNrSubbandsPerFrame" alignment="3" min="-2" max="-2" attributes="0"/>
+                                      </Group>
                                   </Group>
-                                  <Group type="102" alignment="0" attributes="0">
+                                  <Group type="102" alignment="1" attributes="0">
                                       <Group type="103" groupAlignment="3" attributes="0">
                                           <Component id="labelNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
                                           <Component id="inputNrBitsPerSample" alignment="3" min="-2" max="-2" attributes="0"/>
                                       </Group>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="inputDelayCompensation" alignment="0" min="-2" max="-2" attributes="0"/>
                                           <Component id="labelDelayCompensation" alignment="0" min="-2" max="-2" attributes="0"/>
+                                          <Group type="102" alignment="0" attributes="0">
+                                              <EmptySpace min="-2" pref="1" max="-2" attributes="0"/>
+                                              <Component id="inputDelayCompensation" min="-2" max="-2" attributes="0"/>
+                                          </Group>
                                       </Group>
                                   </Group>
                               </Group>
@@ -364,6 +380,16 @@
                     </Component>
                     <Component class="javax.swing.JTextField" name="inputMaxNetworkDelay">
                     </Component>
+                    <Component class="javax.swing.JLabel" name="labelNrSubbandsPerFrame">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="# SubbandsPerFrame:"/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JTextField" name="inputNrSubbandsPerFrame">
+                      <Properties>
+                        <Property name="toolTipText" type="java.lang.String" value=""/>
+                      </Properties>
+                    </Component>
                   </SubComponents>
                 </Container>
                 <Container class="javax.swing.JPanel" name="jPanel10">
@@ -422,7 +448,7 @@
                                   <Component id="labelUseGather" min="-2" max="-2" attributes="0"/>
                                   <Component id="inputUseGather" min="-2" max="-2" attributes="0"/>
                               </Group>
-                              <EmptySpace pref="76" max="32767" attributes="0"/>
+                              <EmptySpace pref="82" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -488,7 +514,7 @@
                                   <Component id="inputBGLProcStoragePorts" max="32767" attributes="1"/>
                                   <Component id="inputStationInputTransport" alignment="0" pref="191" max="32767" attributes="1"/>
                               </Group>
-                              <EmptySpace min="-2" pref="241" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="252" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -736,7 +762,7 @@
                                   <Component id="inputSubbandsPerMS" max="32767" attributes="1"/>
                                   <Component id="inputStorageProcIntegrationSteps" alignment="0" pref="192" max="32767" attributes="1"/>
                               </Group>
-                              <EmptySpace min="-2" pref="243" max="-2" attributes="0"/>
+                              <EmptySpace min="-2" pref="254" max="-2" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
@@ -799,7 +825,7 @@
                                   <Component id="inputPositionType" max="32767" attributes="1"/>
                                   <Component id="inputConverterType" alignment="0" pref="192" max="32767" attributes="1"/>
                               </Group>
-                              <EmptySpace pref="243" max="32767" attributes="0"/>
+                              <EmptySpace pref="254" max="32767" attributes="0"/>
                           </Group>
                       </Group>
                     </DimensionLayout>
