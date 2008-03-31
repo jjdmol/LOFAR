@@ -208,20 +208,6 @@ vector<uint32>  CS1_Parset::subband2Index(uint32 rspid) const
   return subband2Index;
 }
 
-int32  CS1_Parset::nrSubbandsPerFrame(uint32 rspid) const
-{
-  int32 nrBeamLets = 0;
-  vector<int32> b2b = beamlet2beams(rspid);
-  
-  for (uint i = 0; i < b2b.size(); i++) {
-    if (b2b[i] != 0)
-      nrBeamLets++;
-  }
-  
-  return nrBeamLets;
-}
-
-
 vector<double> CS1_Parset::positions() const
 {
   vector<string> stNames = getStringVector("OLAP.storageStationNames");
