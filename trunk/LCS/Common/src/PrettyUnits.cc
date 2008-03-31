@@ -27,6 +27,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <cmath>
 
 
 namespace LOFAR {
