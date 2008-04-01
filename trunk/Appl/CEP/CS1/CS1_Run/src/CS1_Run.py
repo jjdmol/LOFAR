@@ -111,6 +111,8 @@ if __name__ == '__main__':
 
     parset.readFromFile(options.parset)
 
+    parset.checkCS1Parset()
+
     parset.setClock(options.clock)
     parset.setIntegrationTime(options.integrationtime) 
     parset.setPartition(options.partition) 
