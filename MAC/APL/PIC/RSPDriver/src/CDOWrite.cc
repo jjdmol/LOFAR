@@ -55,7 +55,7 @@ void CDOWrite::string2ip(const char* ipstring, uint8 ip[IP_ALEN])
 {
   unsigned int hx[IP_ALEN] = { 0x00, 0x00, 0x00, 0x00 };
 
-  sscanf(ipstring, "%d.%d.%d.%d", &hx[0], &hx[1], &hx[2], &hx[3]);
+  sscanf(ipstring, "%d.%d.%d.%d", &hx[3], &hx[2], &hx[1], &hx[0]);
 
   for (int i = 0; i < IP_ALEN; i++) ip[i] = (uint8)(hx[i] & 0xFF);
 }
