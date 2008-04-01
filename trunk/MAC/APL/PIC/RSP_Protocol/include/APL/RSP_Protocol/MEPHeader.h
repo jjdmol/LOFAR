@@ -304,7 +304,7 @@ namespace LOFAR {
        * allow setting the UDP/IP header and some
        * settings to set interleaving of beamlets.
        */
-      static const uint16 CDO_SETTINGS_SIZE     = 22;
+      static const uint16 CDO_SETTINGS_SIZE     = 30;
       static const uint16 CDO_HEADER_SIZE       = 32;
 
       static const uint16 BS_NOF_SAMPLES_PER_SYNC_SIZE = 4;
