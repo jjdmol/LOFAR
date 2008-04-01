@@ -322,6 +322,7 @@ void WH_InputSection::process()
       double	subbandFrequencies[54];
       double	beamDirections[8][2];
       int16     beamlet2beams[54];
+      int32     pad;
       
     } fileHeader;  
 
