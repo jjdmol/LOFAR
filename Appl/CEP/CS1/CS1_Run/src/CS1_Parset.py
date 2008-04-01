@@ -18,6 +18,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	self.bl2subbands = list()
 	self.sb2index = list()
 	self.nrSubbands = 0
+	self.doObservation =False
 
     def setClock(self, clock):
         self.clock = clock
@@ -165,26 +166,27 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	return  result + ']'  	       
 
     def getBeamlet2beams(self):
-        if len(self.bl2beams) == 0:
+        if not self.doObservation:
 	    self.observation()
 	return self.bl2beams
         	        
     def getBeamlet2subbands(self):
-        if len(self.bl2subbands) == 0:
+        if not self.doObservation:
 	    self.observation()
 	return self.bl2subbands    
 
     def getSubband2Index(self):
-        if len(self.sb2index) == 0:
+        if not self.doObservation:
 	    self.observation()
 	return self.sb2index    
 
     def getNrSubbands(self):
-        if self.nrSubbands == 0:
+        if not self.doObservation:
 	    self.observation()
 	return self.nrSubbands   
 	
     def observation(self):
+        self.doObservation = True
         bl2beamsArray = zeros(4*54)
 	bl2subbandsArray = zeros(4*54)
 	sb2indexArray = list()
@@ -203,6 +205,10 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    self.__setitem__('x',blString);
 	    beamlets = self.getInt32Vector('x')
 	    
+	    if len(subbands) != len(beamlets):
+	        print 'NrBeamlets(%d)' % len(beamlets) + ' and nrSubbands(%d)' % len(subbands) + ' are not equal'
+	        sys.exit(0)
+		
 	    for b in range(0, len(beamlets)):
 	        # finally update beamlet 2 beam mapping.
 		if bl2beamsArray[beamlets[b]] != 0:
@@ -250,6 +256,23 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	print 'filterselection value "' + filterName + '" not recognized, using LBL_10_80'
 	return 1
     
+    def checkCS1Parset(self):
+        if not self.isDefined('Observation.Beam[1].beamletList') and self.getInt32('Observation.nrBeams') == 1:
+	    sbString = self.expandedArrayString(self.getString('Observation.Beam[1].subbandList'))
+	    self.__setitem__('x',sbString);
+	    subbands = self.getInt32Vector('x')
+	    self['Observation.Beam[1].beamletList'] = '[0..%s]' % str(len(subbands) - 1)
+		    
+	b2b = self.getBeamlet2beams()
+        nBeamlets = 0
+	for i in range(0,53):
+	    if b2b[i] != 0:
+	        nBeamlets += 1
+
+	if nBeamlets > self.getInt32('OLAP.nrSubbandsPerFrame'):
+	    print 'NrBeamlets(%d)' % nBeamlets + ' > OLAP.nrSubbandsPerFrame(%d)' %  self.getInt32('OLAP.nrSubbandsPerFrame')
+	    sys.exit(0)
+	
     def updateSBValues(self):
         if self.clock == '160MHz':
             subbandwidth = 156250
