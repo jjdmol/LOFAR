@@ -305,12 +305,13 @@ PIC.Core.CS001T_4.usNames      = ["CS001T_4.us0"]
 PIC.Core.CS010T_RSP.dest.ports = [10.170.0.106:4346,10.170.0.105:4347,10.170.0.108:4348,10.170.0.107:4349]
 PIC.Core.CS010T_1.usNames      = ["CS010T_1.dipole0","CS010T_1.dipole4","CS010T_1.dipole8","CS010T_1.dipole12"]
 
-# Effelsberg position/phase center is not correct!
-PIC.Core.Effelsberg.phaseCenter = [0.119884530715, 0.920263520535, 6364621.19236]
-PIC.Core.Effelsberg_1.0.position  = [0.119884530715, 0.920263520535, 6364621.19236]
-PIC.Core.Effelsberg_1.1.position  = [0.119884530715, 0.920263520535, 6364621.19236]
-PIC.Core.Effelsberg_1.2.position  = [0.119884530715, 0.920263520535, 6364621.19236]
-PIC.Core.Effelsberg_1.3.position  = [0.119884530715, 0.920263520535, 6364621.19236]
+PIC.Core.Effelsberg.phaseCenter = [0.120147767576, 0.878499804006, 6365797.64809]
+
+PIC.Core.Effelsberg_1.0.position  = [0.120147767576, 0.878499804006, 6365797.64809]
+PIC.Core.Effelsberg_1.1.position  = [0.120147767576, 0.878499804006, 6365797.64809]
+PIC.Core.Effelsberg_1.2.position  = [0.120147767576, 0.878499804006, 6365797.64809]
+PIC.Core.Effelsberg_1.3.position  = [0.120147767576, 0.878499804006, 6365797.64809]
+
 
 PIC.Core.Effelsberg_RSP.dest.ports = [10.170.0.178:4346,10.170.0.177:4347,10.170.0.180:4348,10.170.0.179:4349]
 PIC.Core.Effelsberg_1.usNames      = ["Effelsberg_1.0","Effelsberg_1.1","Effelsberg_1.2","Effelsberg_1.3"]
