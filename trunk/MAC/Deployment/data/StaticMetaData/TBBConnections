@@ -1,0 +1,8 @@
+#
+# Connections
+#
+# $Id: $
+#
+# station	board	nr	nodes
+CS001		TBB		0	BGL001, LIST004
+CS001		TBB		1	BGL002, LIST005

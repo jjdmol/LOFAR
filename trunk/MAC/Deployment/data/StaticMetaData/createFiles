@@ -1,0 +1,55 @@
+#!/usr/bin/env python
+#
+# $Id: $
+#
+# Syntax: createFiles ( -a | stationname [stationame ...])
+#
+import re, sys
+
+def findDestNodes(stationName):
+    """Creates from RSPDriver.conf, MAC+IP and RSPConnections
+    a new RSPDriver.conf file for the given station.
+    """
+    kijk=re.compile(stationName+"[ \t]*RSP_([0-9]+)[ \t]*(.*)", re.IGNORECASE)
+    rspDestNode = {}
+    for setje in kijk.finditer(open("RSPConnections").read()):
+        rspDestNode[setje.group(1)] = setje.group(2)
+    return rspDestNode
+
+def findIPandMAC(nodeName):
+    """Creates from RSPDriver.conf, MAC+IP and RSPConnections
+    a new RSPDriver.conf file for the given station.
+    """
+    kijk=re.compile("^"+nodeName+"[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)", re.IGNORECASE | re.MULTILINE)
+    ipAndMac = ()
+    ipAndMac = kijk.search(open("MAC+IP").read())
+    return ipAndMac.group(1), ipAndMac.group(2)
+
+def findStationInfo(stationName):
+    """Creates from RSPDriver.conf, MAC+IP and RSPConnections
+    a new RSPDriver.conf file for the given station.
+    """
+    kijk=re.compile("^"+stationName+"[ \t].*", re.IGNORECASE | re.MULTILINE)
+    return kijk.search(open("StationInfo").read()).group().split()
+
+# MAIN
+for stationName in sys.argv[1:]:
+    # Find connections of the RSPBoards of the station
+    rspDestNode = findDestNodes(stationName)
+    print stationName,"matches:",rspDestNode
+
+    # Substitute MAC and IP address of destination nodes
+    RSPfile = open("RSPDriver.conf")
+    RSPconfig = RSPfile.read()
+    RSPfile.close()
+    for rspNr in range(0,4):
+        (ip, mac) = findIPandMAC(rspDestNode[str(rspNr)])
+        RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_MAC@", mac)
+        RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_IP@",  ip)
+
+    # substitute StationInfo
+    (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBScal ) = findStationInfo(stationName)
+    hexStationID = str("%02x" % int(stationID))
+    RSPconfig = RSPconfig.replace("@STATION_ID@", hexStationID)
+
+    print RSPconfig
