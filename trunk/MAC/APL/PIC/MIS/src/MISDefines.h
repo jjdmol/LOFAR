@@ -30,7 +30,7 @@ namespace LOFAR
  namespace AMI
  {
 const uint8 MIS_MAJOR_VER = 1; 
-const uint8 MIS_MIDOR_VER = 0;
+const uint8 MIS_MIDOR_VER = 1;
 const uint8 MIS_MINOR_VER = 0;
 
 const string MIS_TASK_NAME("APL-MIS");

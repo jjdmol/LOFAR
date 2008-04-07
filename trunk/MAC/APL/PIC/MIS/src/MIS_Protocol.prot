@@ -10,6 +10,7 @@ include = '<Common/LofarTypes.h>';
 
 //MAXMOD
 include = '<XCStatistics.h>';
+include = '<RspStatus.h>';
 //include = '<XCSubbandSelection.h>';  MAXMOD-TEST removal
 
 // The "MIS" (MAC Information Server) protocol describes all possible
@@ -648,12 +649,12 @@ event = {
     // e.g. if an RSP board cannot be reached, this may be != 0.
     param = {
         name = "invalid";
-        type = "uint8[]";
+        type = "uint32[]";
     };
     // see LOFAR/MAC/APL/PIC/RSP_Protocol/include/APL/RSP_Protocol/RCUSettings.h
     param = {
       name = "rcu_settings";
-        type = "uint8[]";
+        type = "uint32[]";
     };
     // a big matrix of all subband data for a certain station...
     param = {
@@ -733,12 +734,16 @@ event = {
     // e.g. if an RSP board cannot be reached, this may be != 0.
     param = {
         name = "invalid";
-        type = "uint8[]";
+        type = "uint32[]";
     };
     // see LOFAR/MAC/APL/PIC/RSP_Protocol/include/APL/RSP_Protocol/RCUSettings.h
     param = {
       name = "rcu_settings";
-        type = "uint8[]";
+        type = "uint32[]";
+    };
+    param = {
+      name = "subband_selection";
+        type = "uint16";
     };
     param = {
         // I cannot figure out how arrays automatically get arrayNOE class members
@@ -751,6 +756,75 @@ event = {
         name = "acmdata"; // antenna correlation matrix
         //type = "double[]"; // *** FORMAT TO BE DEFINED ***
 	type = "XCStatistics"; // *** FORMAT TO BE DEFINED ***
+	userdefined;
+    };
+};
+
+
+event = {
+    signal = "RSP_STATUS_REQUEST";
+    dir = IN; // SHM -> MAC
+    param = {
+        name = "seqnr";
+        type = "uint64";
+    };
+    param = {
+        name = "replynr"; // always zero
+        type = "uint64";
+    };
+    param = {
+        name = "timestamp_sec";
+        type = "int64";
+    };
+    param = {
+        name = "timestamp_nsec";
+        type = "uint32";
+    };
+};
+
+event = {
+    signal = "RSP_STATUS_RESPONSE";
+    dir = OUT; // MAC -> SHM
+    param = {
+        name = "seqnr";
+        type = "uint64";
+    };
+    param = {
+        name = "replynr";  // Equal to the seqnr of the ANTENNA_CORRELATION_MATRIX_REQUEST
+        type = "uint64";
+    };
+    param = {
+        name = "timestamp_sec";
+        type = "int64";
+    };
+    param = {
+        name = "timestamp_nsec";
+        type = "uint32";
+    };
+    param = {
+        name = "response";
+        type = "string"; // "ACK", "BUSY", "NAK [(reason)]"
+    };
+    param = {
+        name = "payload_timestamp_sec";
+        type = "int64";
+    };
+    param = {
+        name = "payload_timestamp_nsec";
+        type = "uint32";
+    };
+    /*
+    param = {
+        // I cannot figure out how arrays automatically get arrayNOE class members
+        // I cannot get the acmdata blitz array to behave similarly.
+        // So I will hard-code it here.
+        name = "acmdataNOE"; // antenna correlation matrix
+	type = "uint32"; //on SHM recv I expect to peel 4 bytes off as size
+    };
+    */
+    param = {
+        name = "statusdata"; // struct of RSP board status values
+	type = "RspStatus"; // See EPA_Protocol.h: struct BoardStatus
 	userdefined;
     };
 };

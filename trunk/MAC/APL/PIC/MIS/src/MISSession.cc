@@ -27,6 +27,7 @@
 #include "MISDefines.h"
 //#include "MISSubscription.h"
 #include "XCStatistics.h"         //MAXMOD
+#include "RspStatus.h"            //MAXMOD
 //#include <GCF/PAL/GCF_PVSSInfo.h>
 //#include <GCF/PAL/GCF_Answer.h>
 //#include <APL/APLCommon/APL_Defines.h>
@@ -219,6 +220,13 @@ GCFEvent::TResult MISSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
     case MIS_ANTENNA_CORRELATION_MATRIX_REQUEST:
       //MAXMOD
       getAntennaCorrelation(e);
+      //      TRAN(MISSession::getAntennaCorrelation_state);
+      //dispatch(e, p);
+      break;
+
+    case MIS_RSP_STATUS_REQUEST:
+      //MAXMOD
+      getRspStatus(e);
       //      TRAN(MISSession::getAntennaCorrelation_state);
       //dispatch(e, p);
       break;
@@ -454,6 +462,143 @@ GCFEvent::TResult MISSession::subscribe_state(GCFEvent& e, GCFPortInterface& p)
 }
 
 //
+// getRspStatus(event)
+//
+void MISSession::getRspStatus(GCFEvent& e)
+{
+	assert(_pRememberedEvent == 0);
+	MISRspStatusRequestEvent* pIn = new MISRspStatusRequestEvent(e);
+	LOGMSGHDR((*pIn));
+
+	if (_nrOfRCUs == 0) {
+		try {
+		  //MAXMOD
+		  //_nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+		  _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * MEPHeader::N_POL;
+		  LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
+		  _allRCUSMask.reset(); // init all bits to false value
+		  _allRCUSMask.flip(); // flips all bits to the true value
+		  // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
+		  for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
+		    _allRCUSMask.set(i, false);
+		  }
+		  // idem for RSP mask [reo]
+		  _allRSPSMask.reset();
+		  _allRSPSMask.flip();
+		  for (int b = GET_CONFIG("RS.N_RSPBOARDS",i); b < MAX_N_RSPBOARDS; b++) {
+		    _allRSPSMask.set(b,false);
+		  }
+		}
+		catch (...) {
+			SEND_RESP_MSG((*pIn), RspStatusResponse, "NAK (no RSP configuration available)");
+			delete pIn;
+			return;
+		}    
+	}
+
+	if (_rspDriverPort.isConnected()) {
+		RSPGetstatusEvent 		getstatus;
+		getstatus.timestamp = Timestamp(0, 0);
+		getstatus.cache 	= true;
+		getstatus.rspmask 	= _allRSPSMask;
+		_rspDriverPort.send(getstatus);
+	}
+	else    {
+		_rspDriverPort.open();
+	}
+
+	_pRememberedEvent = pIn;
+	TRAN(MISSession::getRspStatus_state);
+}
+
+GCFEvent::TResult MISSession::getRspStatus_state(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  static MISRspStatusResponseEvent ackout;
+  static MISRspStatusRequestEvent* pIn(0);
+  //MAXMOD
+  ssize_t maxsend;
+
+  switch (e.signal)
+    {
+    case F_ENTRY:
+      /*
+	if (ackout.rcu_settings == 0) {
+        ackout.rcu_settingsNOE = _nrOfRCUs;
+	ackout.rcu_settings = new uint32[_nrOfRCUs];
+        ackout.dataNOE = _nrOfRCUs * 512;
+        ackout.data = new double[_nrOfRCUs * 512];
+	}
+      */
+      assert(_pRememberedEvent);
+      pIn = (MISRspStatusRequestEvent*) _pRememberedEvent;
+      break;
+
+    case F_CONNECTED:
+    case F_DISCONNECTED:
+      if (&_rspDriverPort == &p) {
+        RSPGetstatusEvent 		getstatus;
+        getstatus.timestamp = Timestamp(0, 0);
+        getstatus.cache 	= true;
+        getstatus.rspmask 	= _allRSPSMask;
+        
+        if (!_rspDriverPort.send(getstatus)) {
+          SEND_RESP_MSG((*pIn), RspStatusResponse, "NAK (connection to rsp driver could not be established or is lost)");
+          if (e.signal == F_DISCONNECTED)
+	    {
+	      p.close();
+	    }
+          TRAN(MISSession::waiting_state);
+        }
+      }
+      else {
+        status = defaultHandling(e, p);
+      }  
+      break;
+      
+    case RSP_GETSTATUSACK: {
+      RSPGetstatusackEvent ack(e);
+      
+      if (SUCCESS != ack.status) {
+        SEND_RESP_MSG((*pIn), RspStatusResponse, "NAK (error in ack of rspdriver)");
+        TRAN(MISSession::waiting_state);      
+        break;
+      }
+      
+      //have to resize blitz array before access
+      ackout.statusdata.board().resize(ack.sysstatus.board().shape());
+      //blitz arrays don't like memcpy
+      ackout.statusdata.board() = ack.sysstatus.board();
+      LOG_DEBUG(formatString("MAXMOD %d response of ack.sysstatus.board().size() ",ack.sysstatus.board().size()));
+      LOG_DEBUG(formatString("MAXMOD %d response of ackout.statusdata.board().size() ",ackout.statusdata.board().size()));
+
+      ackout.seqnr = _curSeqNr++;
+      ackout.replynr = pIn->seqnr;
+
+      ackout.response = "ACK";
+      LOG_DEBUG(formatString(
+          "RSP Timestamp: %lu.%06lu",
+          ack.timestamp.sec(),
+          ack.timestamp.usec()));
+      ackout.payload_timestamp_sec = ack.timestamp.sec();
+      ackout.payload_timestamp_nsec = ack.timestamp.usec() * 1000;
+      setCurrentTime(ackout.timestamp_sec, ackout.timestamp_nsec);
+      maxsend = _missPort.send(ackout);
+      LOG_DEBUG(formatString("MAXMOD %d response of _missPort.send(ackout).size",maxsend));
+      TRAN(MISSession::waiting_state);
+      break;
+    }
+
+    default:
+      status = defaultHandling(e, p);
+      break;
+  }
+
+  return status;
+}
+
+
+//
 // getSubbandStatistics(event)
 //
 void MISSession::getSubbandStatistics(GCFEvent& e)
@@ -517,9 +662,11 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
     case F_ENTRY:
       if (ackout.rcu_settings == 0) {
         ackout.rcu_settingsNOE = _nrOfRCUs;
-        ackout.rcu_settings = new uint8[_nrOfRCUs];
+        //ackout.rcu_settings = new uint8[_nrOfRCUs];
+	ackout.rcu_settings = new uint32[_nrOfRCUs];
         ackout.invalidNOE = _nrOfRCUs;
-        ackout.invalid = new uint8[_nrOfRCUs];
+        //ackout.invalid = new uint8[_nrOfRCUs];
+	ackout.invalid = new uint32[_nrOfRCUs];
         ackout.dataNOE = _nrOfRCUs * 512;
         ackout.data = new double[_nrOfRCUs * 512];
       }
@@ -559,7 +706,16 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
       }
 
       //memcpy(ackout.invalid, ack.sysstatus.rcu().data(), nrOfRCUs * sizeof(ackout.invalid[0]));
-     
+      // There is no member systatus.rcu (anymore). There is a systatus.board (for RSP boards)
+      //  which I am using in get_RSPStatus above.
+      // I should remove the "invalid" elements but will require restructuring SHM database too.
+      // For the time being, set to 0.
+      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++)
+        {
+	  ackout.invalid[rcuout] = 0;
+	}
+      
+
       RSPGetrcuEvent getrcu;
       
       getrcu.timestamp = Timestamp(0, 0);
@@ -581,7 +737,12 @@ GCFEvent::TResult MISSession::getSubbandStatistics_state(GCFEvent& e, GCFPortInt
         break;
       }
 
-      memcpy(ackout.rcu_settings, ack.settings().data(), _nrOfRCUs * sizeof(ackout.rcu_settings[0]));
+      //memcpy(ackout.rcu_settings, ack.settings().data(), _nrOfRCUs * sizeof(ackout.rcu_settings[0]));
+      //MAXMOD do as rspctl does
+      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++)
+        {
+	  ackout.rcu_settings[rcuout] = ack.settings()(rcuout).getRaw();
+	}
 
       // subscribe to statistics updates
       RSPGetstatsEvent getstats;
@@ -725,9 +886,11 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
     case F_ENTRY:
       if (ackout.rcu_settings == 0) {
         ackout.rcu_settingsNOE = _nrOfRCUs;
-        ackout.rcu_settings = new uint8[_nrOfRCUs];
+        //ackout.rcu_settings = new uint8[_nrOfRCUs];
+	ackout.rcu_settings = new uint32[_nrOfRCUs];
         ackout.invalidNOE = _nrOfRCUs;
-        ackout.invalid = new uint8[_nrOfRCUs];
+        //ackout.invalid = new uint8[_nrOfRCUs];
+	ackout.invalid = new uint32[_nrOfRCUs];
         ackout.acmdataNOE = _nrOfRCUs * _nrOfRCUs;
         //ackout.data = new double[_nrOfRCUs * 512];
       }
@@ -735,49 +898,101 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       pIn = (MISAntennaCorrelationMatrixRequestEvent*) _pRememberedEvent;
       break;
 
+    //MAXMOD cases CONNECTED & DISCONNECTED copied from SubbandStatistics example
     case F_CONNECTED:
-      if (&_rspDriverPort == &p){
-	// SET subbands for XC
-	RSPSetsubbandsEvent  setsubbands;
-
-	setsubbands.timestamp = Timestamp(0,0);
-	setsubbands.rcumask = _allRCUSMask;
-	//MAXMOD the constant SubbandSelection::XLET is defined in LOFAR/MAC/APL/PIC/RSP_Protocol/include/APL/RSP_Protocol/SubbandSelection.h
-	//LOG_DEBUG(formatString("MAXMOD SubbandSelection::XLET is %d",SubbandSelection::XLET));
-	setsubbands.subbands.setType(SubbandSelection::XLET);
-
-	setsubbands.subbands().resize(1,1);
-	list<int> subbandlist;
-	for (int rcu = 0; rcu < _nrOfRCUs / MEPHeader::N_POL; rcu++)
-	  {
-	    subbandlist.push_back(pIn->subband_selector);
-	  }
-	std::list<int>::iterator it = subbandlist.begin();
-	setsubbands.subbands() = (*it);
-
-	if (!_rspDriverPort.send(setsubbands)) {
-	  SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
-	  TRAN(MISSession::waiting_state);      
-	}
-      }
-      break;
-      
     case F_DISCONNECTED:
       if (&_rspDriverPort == &p) {
-
-	SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (connection to rsp driver could not be established or is lost)");
-	p.close();
-	TRAN(MISSession::waiting_state);
+        RSPGetstatusEvent 		getstatus;
+        getstatus.timestamp = Timestamp(0, 0);
+        getstatus.cache 	= true;
+        getstatus.rspmask 	= _allRSPSMask;
+        
+        if (!_rspDriverPort.send(getstatus)) {
+          SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (connection to rsp driver could not be established or is lost)");
+          if (e.signal == F_DISCONNECTED)
+          {
+            p.close();
+          }
+          TRAN(MISSession::waiting_state);
+        }
       }
       else {
         status = defaultHandling(e, p);
       }  
       break;
       
+    case RSP_GETSTATUSACK: {       //MAXMOD Now get rcu_settings
+      // BTW RSPGetstatusEvent is what I want to add for getting voltages and temps
+      RSPGetstatusackEvent ack(e);
+
+      if (SUCCESS != ack.status) {
+        SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
+        TRAN(MISSession::waiting_state);      
+        break;
+      }
+
+      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++)
+        {
+	  ackout.invalid[rcuout] = 0;
+	}
+
+      RSPGetrcuEvent getrcu;
+      
+      getrcu.timestamp = Timestamp(0, 0);
+      getrcu.rcumask = _allRCUSMask;
+      getrcu.cache = true;
+      if (!_rspDriverPort.send(getrcu)) {
+        SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
+        TRAN(MISSession::waiting_state);      
+      }
+      break;
+    }
+
+    case RSP_GETRCUACK: {  //MAXMOD save the rcu settings, then set xcsubband choice
+      RSPGetrcuackEvent ack(e);
+      
+      if (SUCCESS != ack.status) {
+        SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
+        TRAN(MISSession::waiting_state);      
+        break;
+      }
+      
+      //MAXMOD do as rspctl does
+      for (int rcuout = 0; rcuout < _nrOfRCUs; rcuout++){
+	ackout.rcu_settings[rcuout] = ack.settings()(rcuout).getRaw();
+      }
+      
+      // SET subbands for XC
+      RSPSetsubbandsEvent  setsubbands;
+
+      setsubbands.timestamp = Timestamp(0,0);
+      setsubbands.rcumask = _allRCUSMask;
+      //MAXMOD the constant SubbandSelection::XLET is defined in LOFAR/MAC/APL/PIC/RSP_Protocol/include/APL/RSP_Protocol/SubbandSelection.h
+      //LOG_DEBUG(formatString("MAXMOD SubbandSelection::XLET is %d",SubbandSelection::XLET));
+      setsubbands.subbands.setType(SubbandSelection::XLET);
+
+      setsubbands.subbands().resize(1,1);
+      list<int> subbandlist;
+      for (int rcu = 0; rcu < _nrOfRCUs / MEPHeader::N_POL; rcu++){
+	subbandlist.push_back(pIn->subband_selector);
+	LOG_DEBUG(formatString("MAXMOD rcu = %d", rcu));
+      }
+      
+      std::list<int>::iterator it = subbandlist.begin();
+      setsubbands.subbands() = (*it);
+      
+      //LOG_DEBUG_STR(setsubbands);
+      
+      if (!_rspDriverPort.send(setsubbands)) {
+	SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (lost connection to rsp driver)");
+	TRAN(MISSession::waiting_state);      
+      }
+      break;
+    }
       
     case RSP_SETSUBBANDSACK: {
       RSPGetxcstatsEvent 	getxcstats;
-      
+
       RSPSetsubbandsackEvent ack(e);
       if (SUCCESS != ack.status) {
         SEND_RESP_MSG((*pIn), AntennaCorrelationMatrixResponse, "NAK (error in ack of rspdriver)");
@@ -811,6 +1026,7 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
       //Number of complex elements is nRCUs^2
       ackout.acmdata().resize(ack.stats().shape());
       ackout.acmdata() = ack.stats();
+      ackout.subband_selection = pIn->subband_selector;
       ackout.acmdataNOE = _nrOfRCUs * _nrOfRCUs * 2;
       //MAXMOD
       LOG_DEBUG(formatString("MAXMOD %d response of ack.stats().size",ack.stats().size()));
@@ -916,6 +1132,10 @@ GCFEvent::TResult MISSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
       RETURN_NOACK_MSG(AntennaCorrelationMatrixRequest, AntennaCorrelationMatrixResponse, "BUSY");
       break;
     
+    case MIS_RSP_STATUS_REQUEST:
+      RETURN_NOACK_MSG(RspStatusRequest, RspStatusResponse, "BUSY");
+      break;
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
