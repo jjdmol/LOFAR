@@ -11,7 +11,8 @@ DOCHDRS	=	 $(BUILT_SOURCES) \
 	MISDefines.h \
 	MISSession.h \
 	MISPolicyHandler.h \
-	XCStatistics.h 
+	XCStatistics.h \
+	RspStatus.h
 
 #	MISSubscription.h 
 #	PropertyProxy.h 
@@ -24,7 +25,8 @@ libmis_la_SOURCES	= Package__Version.cc \
 	MISSession.cc \
 	MISPolicyHandler.cc \
 	MIS_Protocol.cc \
-	XCStatistics.cc 
+	XCStatistics.cc \
+	RspStatus.cc
 
 #	MISSubscription.cc 
 #	PropertyProxy.cc 

@@ -61,17 +61,18 @@ class MISSession : public GCF::TM::GCFTask
     static void setCurrentTime(int64& sec, uint32& nsec);
   
   private: // state methods
-    GCFEvent::TResult initial_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCFEvent::TResult waiting_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCFEvent::TResult setDiagnosis_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCFEvent::TResult reconfigure_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCFEvent::TResult getPICStructure_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCFEvent::TResult subscribe_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCFEvent::TResult getSubbandStatistics_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCFEvent::TResult getAntennaCorrelation_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
-    GCFEvent::TResult closing_state (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult initial_state                (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult waiting_state                (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult setDiagnosis_state           (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult reconfigure_state            (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult getPICStructure_state        (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult subscribe_state              (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult getSubbandStatistics_state   (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult getAntennaCorrelation_state  (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult getRspStatus_state           (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult closing_state                (GCFEvent& e, GCF::TM::GCFPortInterface& p);
         
-    GCFEvent::TResult defaultHandling (GCFEvent& e, GCF::TM::GCFPortInterface& p);
+    GCFEvent::TResult defaultHandling              (GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
   private: // helper methods
     void genericPingpong      (GCFEvent& e);
@@ -81,7 +82,7 @@ class MISSession : public GCF::TM::GCFTask
     void getSubbandStatistics (GCFEvent& e);
     //MAXMOD
     void getAntennaCorrelation(GCFEvent& e);
-    
+    void getRspStatus         (GCFEvent& e);
   private: // data members      
 //    typedef map<string /*resource name*/, MISSubscription*> TSubscriptions;
     GCF::TM::GCFTCPPort _missPort;
