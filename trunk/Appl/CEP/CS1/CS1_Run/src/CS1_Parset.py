@@ -54,27 +54,10 @@ class CS1_Parset(LOFAR_Parset.Parset):
         inputNodelist = list()
 	
 	for s in self.stationList:
-	    uNames = self.getString('PIC.Core.' + s.getName().split('.')[0] + '.usNames')
-	    uNames = uNames.strip('[').rstrip(']')
-	
-	    uNameList = string.split(uNames, ',')
-	    ls = list()
-	
-	    for i in range(0, len(uNameList)):
-	        ls.append(uNameList[i].strip().strip('"'))
-	
-	    for index in range(0, len(ls)):
-	        if ls[index] == s.getName():
-	            break
-	        index += 1
-	
-	    name = self.getString('PIC.Core.' + s.getName().split('_')[0] + '_RSP.dest.ports').strip('[').rstrip(']')
-	    nameList = string.split(name, ',')
-	    
-	    n = nameList[index]
-	    name = n.split(":")[0]
-	    inputNodelist.append(name)
-	
+	    destPorts = self.getStringVector('PIC.Core.' + string.split(s.getName(), '_')[0] + '_RSP.dest.ports')[self.getInt32('PIC.Core.' + s.getName() + '.RSP')]
+	    destPorts =  destPorts.strip().strip('[').rstrip(']')
+	    dest = string.split(destPorts, ':')[0]
+	    inputNodelist.append(string.split(destPorts, ':')[0])
 	return inputNodelist    
 	
     def getNStations(self):
