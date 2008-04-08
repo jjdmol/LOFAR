@@ -65,43 +65,18 @@ uint32 CS1_Parset::nrSubbands() const
   return nrSubbands;
 }
 
-uint32 CS1_Parset::rspID(const int index) const
+uint32 CS1_Parset::rspId(const string& stationName) const
 {
-  string name = getStringVector("OLAP.storageStationNames")[index];
-  uint32 i_substr = name.find(".");
-  vector<string> uNames = getStringVector("PIC.Core." + name.substr(0, i_substr) + ".usNames");
-  uint32 rspid = 0;
-  
-  for (uint  i = 0; i < uNames.size(); i++) {
-    if (name == uNames[i]) {
-      break;
-  }
-    rspid++;
-  }
-
-  return rspid;
+  return(getUint32("PIC.Core." + stationName + ".RSP"));
 }
 
 string CS1_Parset::inputPortnr(const string& s) const
 {
-  uint32 i_substr = s.find(".");
-  uint32 index = 0;
+  uint32 index = s.find("_");
+  string destPorts = getStringVector("PIC.Core." + s.substr(0, index) + "_RSP.dest.ports")[rspId(s)];
+  uint32 i = destPorts.find(":");
   
-  vector<string> uNames = getStringVector("PIC.Core." + s.substr(0, i_substr) + ".usNames");
-  
-  for (uint  i = 0; i < uNames.size(); i++) {
-    if (s == uNames[i]) {
-      break;
-    }
-    index++;
-  }
-  
-  vector<string> pNames = getStringVector("PIC.Core." + s.substr(0, i_substr-1) + "RSP.dest.ports");
-  
-  uint32 i_port = 0;
-  i_port = pNames[index].find(":");
-  
-  return pNames[index].substr(i_port+1,4);
+  return destPorts.substr(i+1, 4);  
 }
 
 vector<int32>  CS1_Parset::beamlet2beams(uint32 rspid) const

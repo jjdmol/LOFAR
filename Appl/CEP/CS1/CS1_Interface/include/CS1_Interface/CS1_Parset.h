@@ -95,7 +95,7 @@ public:
 	vector<string> getPortsOf(const string& aKey) const;
 	string         inputPortnr(const string& aKey) const;
 	string         stationName(const int index) const;
-	uint32         rspID(const int index) const;
+	uint32         rspId(const string& stationName) const;
 	static string  expandedArrayString(const string& orgStr);
 	bool	       useScatter() const;
 	bool	       useGather() const;
