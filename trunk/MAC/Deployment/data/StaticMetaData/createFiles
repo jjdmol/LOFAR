@@ -5,51 +5,161 @@
 # Syntax: createFiles ( -a | stationname [stationame ...])
 #
 import re, sys
+warnings = []
 
-def findDestNodes(stationName):
-    """Creates from RSPDriver.conf, MAC+IP and RSPConnections
-    a new RSPDriver.conf file for the given station.
+#
+# setWarning(message)
+#
+def setWarning(message):
     """
-    kijk=re.compile(stationName+"[ \t]*RSP_([0-9]+)[ \t]*(.*)", re.IGNORECASE)
+    Adds the give warning to the list of warnings.
+    """
+    warnings.append(message)
+
+
+#
+# findRSPDestNodes(stationName)
+#
+def findRSPDestNodes(stationName):
+    """
+    Collects the destination nodes from each rspboard of the given station.
+    Expected format of the RSPConnection file is:
+    station		board	destinationnode
+    CS001		RSP_0	BGL001
+    """
+    pattern=re.compile(stationName+"[ \t]*RSP_([0-9]+)[ \t]*(.*)", re.IGNORECASE)
     rspDestNode = {}
-    for setje in kijk.finditer(open("RSPConnections").read()):
-        rspDestNode[setje.group(1)] = setje.group(2)
+    for match in pattern.finditer(open("RSPConnections").read()):
+        rspDestNode[match.group(1)] = match.group(2)
+    if len(rspDestNode) == 0:
+        setWarning(stationName+" not found in file 'TBBConnections'")
     return rspDestNode
 
-def findIPandMAC(nodeName):
-    """Creates from RSPDriver.conf, MAC+IP and RSPConnections
-    a new RSPDriver.conf file for the given station.
+#
+# findTBBDestNodes(stationName)
+#
+def findTBBDestNodes(stationName):
     """
-    kijk=re.compile("^"+nodeName+"[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)", re.IGNORECASE | re.MULTILINE)
+    Collects the destination nodes from each tbbboard of the given station.
+    Expected format of the TBBConnection file is:
+    station		board	destinationnode
+    CS001		TBB_0	BGL001, LIST004
+    """
+    # NOTE: for now we always take the first nodename
+    pattern=re.compile(stationName+"[ \t]*TBB_([0-9]+)[ \t]*([a-zA-Z0-9]*)[, ]?.*", re.IGNORECASE)
+    tbbDestNode = {}
+    for match in pattern.finditer(open("TBBConnections").read()):
+        tbbDestNode[match.group(1)] = match.group(2)
+    if len(tbbDestNode) == 0:
+        setWarning(stationName+" not found in file 'TBBConnections'")
+    return tbbDestNode
+
+#
+# findIPandMAC(node)
+#
+def findIPandMAC(nodeName):
+    """
+    Translates the given nodename to an MAC address and and IP address.
+    """
+    pattern=re.compile("^"+nodeName+"[ \t]*([0-9\.]*)[ \t]*([0-9a-fA-F:]*)", re.IGNORECASE | re.MULTILINE)
     ipAndMac = ()
-    ipAndMac = kijk.search(open("MAC+IP").read())
+    ipAndMac = pattern.search(open("MAC+IP").read())
+    if not ipAndMac:
+        raise "\nFatal error: "+nodeName+" is not defined in file 'MAC+IP'"
     return ipAndMac.group(1), ipAndMac.group(2)
 
+#
+# findStationInfo(stationName)
+#
 def findStationInfo(stationName):
-    """Creates from RSPDriver.conf, MAC+IP and RSPConnections
-    a new RSPDriver.conf file for the given station.
     """
-    kijk=re.compile("^"+stationName+"[ \t].*", re.IGNORECASE | re.MULTILINE)
-    return kijk.search(open("StationInfo").read()).group().split()
+    Return all basic station info (eg. nr RSPboards) from a station.
+    """
+    pattern=re.compile("^"+stationName+"[ \t].*", re.IGNORECASE | re.MULTILINE)
+    match = pattern.search(open("StationInfo").read())
+    if not match:
+        raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
+    return match.group().split()
 
-# MAIN
-for stationName in sys.argv[1:]:
+def createRSPDriverFile(stationName):
+    """
+    Fills in the markers in the RSPDriver.conf file to match the values for the given station.
+    """
     # Find connections of the RSPBoards of the station
-    rspDestNode = findDestNodes(stationName)
-    print stationName,"matches:",rspDestNode
+    rspDestNode = findRSPDestNodes(stationName)
+    #print stationName,"matches:",rspDestNode
 
     # Substitute MAC and IP address of destination nodes
     RSPfile = open("RSPDriver.conf")
     RSPconfig = RSPfile.read()
     RSPfile.close()
     for rspNr in range(0,4):
-        (ip, mac) = findIPandMAC(rspDestNode[str(rspNr)])
-        RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_MAC@", mac)
-        RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_IP@",  ip)
+        if str(rspNr) in rspDestNode.keys():
+            (ip, mac) = findIPandMAC(rspDestNode[str(rspNr)])
+            RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_MAC@", mac+"   # "+rspDestNode[str(rspNr)])
+            RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_IP@",  ip +"   # "+rspDestNode[str(rspNr)])
 
     # substitute StationInfo
-    (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBScal ) = findStationInfo(stationName)
+    (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
     hexStationID = str("%02x" % int(stationID))
-    RSPconfig = RSPconfig.replace("@STATION_ID@", hexStationID)
+    RSPconfig = RSPconfig.replace("@STATION_HID@", hexStationID)
+    RSPconfig = RSPconfig.replace("@STATION_ID@",  stationID)
 
     print RSPconfig
+
+def createTBBDriverFile(stationName):
+    """
+    Fills in the markers in the TBBDriver.conf file to match the values for the given station.
+    """
+    # Find connections of the TBBBoards of the station
+    tbbDestNode = findTBBDestNodes(stationName)
+    #print stationName,"matches:",tbbDestNode
+
+    # Substitute MAC and IP address of destination nodes
+    TBBfile = open("TBBDriver.conf")
+    TBBconfig = TBBfile.read()
+    TBBfile.close()
+    for tbbNr in range(0,11):
+        if str(tbbNr) in tbbDestNode.keys():
+            (ip, mac) = findIPandMAC(tbbDestNode[str(tbbNr)])
+            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_MAC@", mac+"   # "+tbbDestNode[str(tbbNr)])
+            TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip +"   # "+tbbDestNode[str(tbbNr)])
+
+    # substitute StationInfo
+    (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
+    hexStationID = str("%02x" % int(stationID))
+    TBBconfig = TBBconfig.replace("@STATION_HID@", hexStationID)
+    TBBconfig = TBBconfig.replace("@STATION_ID@",  stationID)
+
+    print TBBconfig
+
+def createRemoteStationFile(stationName):
+    """
+    Fills in the markers in the RemoteStation.conf file to match the values for the given station.
+    """
+    (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
+    RSconfig = open("RemoteStation.conf").read()
+    RSconfig = RSconfig.replace("@STATION_ID@", stationID)
+    RSconfig = RSconfig.replace("@NR_RSP@",    nrRSP)
+    RSconfig = RSconfig.replace("@NR_TBB@",    nrTBB)
+    RSconfig = RSconfig.replace("@NR_LBA@",    nrLBA)
+    RSconfig = RSconfig.replace("@NR_HBA@",    nrHBA)
+    RSconfig = RSconfig.replace("@HBA_SPLIT@", HBAsplit)
+    RSconfig = RSconfig.replace("@LBA_WIDE@",  LBAcal)
+
+    print RSconfig
+
+
+
+# MAIN
+for stationName in sys.argv[1:]:
+    createRSPDriverFile(stationName)
+    createTBBDriverFile(stationName)
+    createRemoteStationFile(stationName)
+
+if len(warnings) > 0:
+    print "To following warnings occured:"
+    print warnings
+
+
+

@@ -3,6 +3,9 @@
 #
 # $Id: $
 #
-# station	board	nr	nodes
-CS001		TBB		0	BGL001, LIST004
-CS001		TBB		1	BGL002, LIST005
+# station	board	nodes
+CS001		TBB_0	BGL001, LIST004
+CS001		TBB_1	BGL002, LIST005
+
+CS010		TBB_0	BGL004
+CS010		TBB_2	BGL009
