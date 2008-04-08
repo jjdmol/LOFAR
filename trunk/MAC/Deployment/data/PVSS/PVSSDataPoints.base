@@ -31,8 +31,8 @@ ObsCtrl			OBSCTRL		C	O	LOFAR_ObsSW_@observation@_ObsCtrl
 OnlineCtrl		ONLCTRL		C	O	LOFAR_ObsSW_@observation@_OnlineCtrl
 Correlator		COR			C	O	LOFAR_ObsSW_@observation@_OnlineCtrl_Correlator
 StorageAppl		STRAPPL		C	O	LOFAR_ObsSW_@observation@_OnlineCtrl_StorageAppl
-OfflineCtrl		OFFLCTRL	C	O	LOFAR_ObsSW_@observation@_OfflineCtrl
-CImager			CIMG		C	O	LOFAR_ObsSW_@observation@_OfflineCtrl_CImager
+#OfflineCtrl		OFFLCTRL	C	O	LOFAR_ObsSW_@observation@_OfflineCtrl
+#CImager			CIMG		C	O	LOFAR_ObsSW_@observation@_OfflineCtrl_CImager
 Ring			-			C	O	LOFAR_ObsSW_@observation@_@ring@
 Station			-			C	O	LOFAR_ObsSW_@observation@_@ring@_@station@
 #
