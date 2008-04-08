@@ -90,7 +90,7 @@ def createRSPDriverFile(stationName):
     #print stationName,"matches:",rspDestNode
 
     # Substitute MAC and IP address of destination nodes
-    RSPfile = open("RSPDriver.conf")
+    RSPfile = open("station/RSPDriver.conf")
     RSPconfig = RSPfile.read()
     RSPfile.close()
     for rspNr in range(0,4):
@@ -102,8 +102,9 @@ def createRSPDriverFile(stationName):
     # substitute StationInfo
     (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
     hexStationID = str("%02x" % int(stationID))
-    RSPconfig = RSPconfig.replace("@STATION_HID@", hexStationID)
-    RSPconfig = RSPconfig.replace("@STATION_ID@",  stationID)
+    RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
+    RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
+    RSPconfig = RSPconfig.replace("@STATION_ID@",   stationID)
 
     print RSPconfig
 
@@ -116,7 +117,7 @@ def createTBBDriverFile(stationName):
     #print stationName,"matches:",tbbDestNode
 
     # Substitute MAC and IP address of destination nodes
-    TBBfile = open("TBBDriver.conf")
+    TBBfile = open("station/TBBDriver.conf")
     TBBconfig = TBBfile.read()
     TBBfile.close()
     for tbbNr in range(0,11):
@@ -128,8 +129,9 @@ def createTBBDriverFile(stationName):
     # substitute StationInfo
     (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
     hexStationID = str("%02x" % int(stationID))
-    TBBconfig = TBBconfig.replace("@STATION_HID@", hexStationID)
-    TBBconfig = TBBconfig.replace("@STATION_ID@",  stationID)
+    TBBconfig = TBBconfig.replace("@STATION_NAME@", stationName)
+    TBBconfig = TBBconfig.replace("@STATION_HID@",  hexStationID)
+    TBBconfig = TBBconfig.replace("@STATION_ID@",   stationID)
 
     print TBBconfig
 
@@ -138,14 +140,15 @@ def createRemoteStationFile(stationName):
     Fills in the markers in the RemoteStation.conf file to match the values for the given station.
     """
     (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
-    RSconfig = open("RemoteStation.conf").read()
-    RSconfig = RSconfig.replace("@STATION_ID@", stationID)
-    RSconfig = RSconfig.replace("@NR_RSP@",    nrRSP)
-    RSconfig = RSconfig.replace("@NR_TBB@",    nrTBB)
-    RSconfig = RSconfig.replace("@NR_LBA@",    nrLBA)
-    RSconfig = RSconfig.replace("@NR_HBA@",    nrHBA)
-    RSconfig = RSconfig.replace("@HBA_SPLIT@", HBAsplit)
-    RSconfig = RSconfig.replace("@LBA_WIDE@",  LBAcal)
+    RSconfig = open("station/RemoteStation.conf").read()
+    RSconfig = RSconfig.replace("@STATION_NAME@", stationName)
+    RSconfig = RSconfig.replace("@STATION_ID@",   stationID)
+    RSconfig = RSconfig.replace("@NR_RSP@",       nrRSP)
+    RSconfig = RSconfig.replace("@NR_TBB@",       nrTBB)
+    RSconfig = RSconfig.replace("@NR_LBA@",       nrLBA)
+    RSconfig = RSconfig.replace("@NR_HBA@",       nrHBA)
+    RSconfig = RSconfig.replace("@HBA_SPLIT@",    HBAsplit)
+    RSconfig = RSconfig.replace("@LBA_WIDE@",     LBAcal)
 
     print RSconfig
 
