@@ -92,11 +92,11 @@ void GCFTask::init(int argc, char** argv, const string&	logfile)
 
 	if (logfile.empty()) {
 		INIT_LOGGER(aCL.locate(logPropFile).c_str());
-		LOG_DEBUG_STR ("Initialized logsystem with: " << aCL.locate(logPropFile));
+		LOG_INFO_STR ("Initialized logsystem with: " << aCL.locate(logPropFile));
 	}
 	else {
 		INIT_VAR_LOGGER(aCL.locate(logPropFile).c_str(), logfile);
-		LOG_DEBUG_STR ("Initialized logsystem with: " << aCL.locate(logPropFile) <<
+		LOG_INFO_STR ("Initialized logsystem with: " << aCL.locate(logPropFile) <<
 						"," << logfile);
 	}
 
@@ -104,11 +104,11 @@ void GCFTask::init(int argc, char** argv, const string&	logfile)
 	ParameterSet*	pParamSet = ACC::APS::globalParameterSet();
 	string			configFile(aCL.locate(procName + ".conf"));
 	if (!configFile.empty()) {
-		LOG_DEBUG_STR ("Using parameterfile: " << configFile);
+		LOG_INFO_STR ("Using parameterfile: " << configFile);
 		pParamSet->adoptFile(configFile);
 	}
 	else {
-		LOG_DEBUG_STR ("NO DEFAULT PARAMETERSET FOUND");
+		LOG_INFO_STR ("NO DEFAULT PARAMETERSET FOUND");
 	}
 
 	if (_doExit) {
