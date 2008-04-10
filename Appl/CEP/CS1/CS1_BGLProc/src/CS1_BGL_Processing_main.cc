@@ -45,9 +45,10 @@ int main(int argc, char **argv)
 
 #if defined HAVE_MPI
     TH_MPI::initMPI(argc, argv);
-#endif
 
-    if (TH_MPI::getCurrentRank() == 0) {
+    if (TH_MPI::getCurrentRank() == 0)
+#endif
+    {
       std::string type = "brief";
       Version::show<CS1_BGLProcVersion> (std::cout, "CS1_BGLProc", type);
     }
