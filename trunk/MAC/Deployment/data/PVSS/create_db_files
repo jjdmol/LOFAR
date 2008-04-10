@@ -75,13 +75,18 @@ concatfile()
 #
 create_ring_station_list()
 {
-	cleanlist ${RINGFILE} | while read ring
-	do 
-		cleanlist ${ring}Stations.list | awk -v RING=${ring} \
-		'{ 
-			print RING"_"$1 
-		}'
-	done	>>/tmp/rslist
+	# stationname ID stationType ...
+	cleanlist ${STATIONINFOFILE} | awk '{ 
+		if ($3 == "C") {
+			print "Core_"$1
+		}
+		else if ($3 == "R") {
+			print "Remote_"$1
+		}
+		else {
+			print "European_"$1
+		}
+	} ' >>/tmp/rslist
 	concatfile /tmp/rslist
 	rm -f /tmp/rslist
 }
@@ -110,34 +115,6 @@ labelize()
 {
 	echo $1 | sed "s/[A-Z][a-z]/_&/g" | sed "s/^_//" | sed "s/\./_/g" | \
 		awk '{ print toupper($1) }'
-}
-
-#
-# substitute_arm
-#
-# replaces all lines containing the marker @arm@ with the arm names
-#
-# syntax of the lines must be: dp dpt
-#
-substitute_arm()
-{
-	awk -v ARMLIST=${ARMLIST} '
-	BEGIN {
-		nrArms=split(ARMLIST, armname, ":");
-	};
-	{
-		hasArm=index($1,"@arm@");
-		if (hasArm > 0) {
-			for (arm in armname) {
-				dpname=$1;
-				sub("@arm@", armname[arm], dpname)
-				print dpname"	"$2;
-			}
-		}
-		else {
-			print $1"	"$2;
-		}
-	} '
 }
 
 #
@@ -384,14 +361,14 @@ substitute_ring_station()
 {
 	awk -v RINGSTATIONLIST=${RINGSTATIONLIST} '
 	BEGIN {
-		nrRings=split(RINGSTATIONLIST, ringname, ":");
+		nrRings=split(RINGSTATIONLIST, ringstationname, ":");
 	};
 	{
-		hasRing=index($1,"@ring@_@station@");
-		if (hasRing > 0) {
-			for (ring in ringname) {
+		hasRingStation=index($1,"@ring@_@station@");
+		if (hasRingStation > 0) {
+			for (ringstation in ringstationname) {
 				dpname=$1;
-				sub("@ring@_@station@", ringname[ring], dpname)
+				sub("@ring@_@station@", ringstationname[ringstation], dpname)
 				print dpname"	"$2;
 			}
 		}
@@ -629,7 +606,6 @@ create_dp_file()
 		} }' | \
 				substitute_ring_station  | \
 				substitute_ring | \
-				substitute_arm | \
 				substitute_wan_switch  | \
 				substitute_wan  | \
 				substitute_Cabinet_SubRack_RSPBoard_RCU | \
@@ -725,8 +701,7 @@ shift				# remove '--'
 
 
 # define the input files
-ARMFILE=Arms.list
-BOARDFILE=RSPBoards.list
+STATIONINFOFILE=../StaticMetaData/StationInfo
 CLUSTERFILE=Clusters.list
 RINGFILE=Rings.list
 WANFILE=Wan.list
@@ -739,13 +714,12 @@ DP_FILE=${DBTYPENAME}${DPTYPENAME}Datapoints.dpl
 DPT_FILE=${DBTYPENAME}Datapointtypes.dpl
 
 # construct some lists
-ARMLIST=`concatfile $ARMFILE`
 CLUSTERLIST=`concatfile $CLUSTERFILE`
 RINGLIST=`concatfile $RINGFILE`
 RINGSTATIONLIST=`create_ring_station_list`
 WANLIST=`concatfile $WANFILE`
 WANSWITCHLIST=`create_wan_switch_list`
-NRRSPBOARDS=`grep -s ${STNNAME} ${BOARDFILE} | awk '{ print $2 }'`
+NRRSPBOARDS=`grep -s ${STNNAME} ${STATIONINFOFILE} | awk '{ print $6 }'`
 
 # create the desired files
 create_dpt_file ${INPUTFILE} ${DBTYPE} 

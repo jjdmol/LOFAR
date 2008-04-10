@@ -6,9 +6,7 @@
 #--------------------------------------------------------------------------------------------------------
 node  Core               1.0.0  development 'node constraint'  "Central Core"
 uses  @CoreStation@      1.0.0  development 1..25              "Station in this ring"		 
-node  InRing             1.0.0  development 'node constraint'  "InnerRing"
-uses  @InRingStation@    1.0.0  development 1..25              "Station in this ring"		 
-node  OutRing            1.0.0  development 'node constraint'  "OuterRing"
-uses  @OutRingStation@   1.0.0  development 1..25              "Station in this ring"		 
-node  ExtRing            1.0.0  development 'node constraint'  "External Ring"
-uses  @ExtRingStation@   1.0.0  development 1..25              "Station in this ring"		 
+node  Remote             1.0.0  development 'node constraint'  "Remote Stations"
+uses  @RemoteStation@    1.0.0  development 1..25              "Station in this ring"		 
+node  European           1.0.0  development 'node constraint'  "European stations"
+uses  @EuropeanStation@  1.0.0  development 1..25              "Station in this ring"		 

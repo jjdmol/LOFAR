@@ -100,7 +100,7 @@ def createRSPDriverFile(stationName):
             RSPconfig = RSPconfig.replace("@LANE_"+str(rspNr)+"_IP@",  ip +"   # "+rspDestNode[str(rspNr)])
 
     # substitute StationInfo
-    (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
     hexStationID = str("%02x" % int(stationID))
     RSPconfig = RSPconfig.replace("@STATION_NAME@", stationName)
     RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
@@ -127,7 +127,7 @@ def createTBBDriverFile(stationName):
             TBBconfig = TBBconfig.replace("@TBB_"+str(tbbNr)+"_DST_IP@",  ip +"   # "+tbbDestNode[str(tbbNr)])
 
     # substitute StationInfo
-    (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
     hexStationID = str("%02x" % int(stationID))
     TBBconfig = TBBconfig.replace("@STATION_NAME@", stationName)
     TBBconfig = TBBconfig.replace("@STATION_HID@",  hexStationID)
@@ -139,7 +139,7 @@ def createRemoteStationFile(stationName):
     """
     Fills in the markers in the RemoteStation.conf file to match the values for the given station.
     """
-    (name, stationID, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
+    (name, stationID, stnType, long, lat, height, nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = findStationInfo(stationName)
     RSconfig = open("station/RemoteStation.conf").read()
     RSconfig = RSconfig.replace("@STATION_NAME@", stationName)
     RSconfig = RSconfig.replace("@STATION_ID@",   stationID)
