@@ -193,7 +193,7 @@ bool Prediffer::setSelection(const string &filter,
     itsSelection.baselines.clear();
     
     // Select baselines.
-    set<baseline_t> selection;
+    set<baseline_t> blSelection;
     if(stations1.empty())
     {
         // If no station groups are speficied, select all the baselines
@@ -208,7 +208,7 @@ bool Prediffer::setSelection(const string &filter,
                 || (it->first == it->second && filter == "AUTO")
                 || (it->first != it->second && filter == "CROSS"))
             {
-                selection.insert(*it);
+                blSelection.insert(*it);
             }
         }
     }
@@ -261,7 +261,7 @@ bool Prediffer::setSelection(const string &filter,
 
                         if(itsChunk->dims.hasBaseline(baseline))
                         {
-                            selection.insert(baseline);
+                            blSelection.insert(baseline);
                         }
                     }
                 }
@@ -272,28 +272,31 @@ bool Prediffer::setSelection(const string &filter,
         }
     }
 
-    itsSelection.baselines.resize(selection.size());
-    copy(selection.begin(), selection.end(), itsSelection.baselines.begin());
-
     // Verify that at least one baseline is selected.
-    if(selection.empty())
+    if(blSelection.empty())
     {
         LOG_ERROR("Baseline selection did not match any baselines in the"
             " observation");
         return false;
     }
 
+    // Copy selected baselines.
+    itsSelection.baselines.resize(blSelection.size());
+    copy(blSelection.begin(), blSelection.end(),
+        itsSelection.baselines.begin());
+
     // Clear polarization selection.
     itsSelection.polarizations.clear();
 
-    // Select polarizations on name.
+    // Select polarizations by name.
+    set<size_t> polSelection;
     if(polarizations.empty())
     {
         for(size_t i = 0; i < itsPolarizationMap.size(); ++i)
         {
             if(itsPolarizationMap[i] >= 0)
             {
-                itsSelection.polarizations.insert(i);
+                polSelection.insert(i);
             }
         }
     }
@@ -310,7 +313,7 @@ bool Prediffer::setSelection(const string &filter,
                 {
                     if(available[i] == polarizations[j])
                     {
-                        itsSelection.polarizations.insert(i);
+                        polSelection.insert(i);
                         break;
                     }
                 }
@@ -319,12 +322,17 @@ bool Prediffer::setSelection(const string &filter,
     }
 
     // Verify that at least one polarization is selected.
-    if(itsSelection.polarizations.empty())
+    if(polSelection.empty())
     {
         LOG_ERROR("Polarization selection did not match any polarizations in"
             " the obervation.");
         return false;
     }
+
+    // Copy selected polarizations.
+    itsSelection.polarizations.resize(polSelection.size());
+    copy(polSelection.begin(), polSelection.end(),
+        itsSelection.polarizations.begin());
 
     return true;
 }
@@ -334,8 +342,9 @@ void Prediffer::setModelConfig(OperationType operation,
     const vector<string> &components,
     const vector<string> &sources)
 {
-    Model::EquationType type = Model::UNSET;
+    itsOperation = operation;
     
+    Model::EquationType type = Model::UNSET;
     switch(operation)
     {
         case SIMULATE:
@@ -354,9 +363,11 @@ void Prediffer::setModelConfig(OperationType operation,
 
     DBGASSERT(type != Model::UNSET);
 
+    // Construct the model equations.
     itsModel->makeEquations(type, components, itsSelection.baselines, sources,
         itsParameters, &itsInstrumentDb, &itsPhaseRef, itsChunk);
 
+    // Initialize all funklets that intersect the chunk.
     const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
     Box<double> bbox = sampleGrid.getBoundingBox();
     MeqDomain domain(bbox.start.first, bbox.end.first, bbox.start.second,
@@ -449,7 +460,7 @@ bool Prediffer::setSolutionGrid(const Grid<double> &solutionGrid)
     LOG_DEBUG_STR("Boundaries TIME: " << boundaries);
     Axis<size_t>::Pointer tAxis(new IrregularAxis<size_t>(boundaries));
 
-    itsContext.domainGrid = Grid<size_t>(fAxis, tAxis);
+    itsContext.cellGrid = Grid<size_t>(fAxis, tAxis);
 
     // Initialize model parameters marked for fitting.
     vector<MeqDomain> domains;
@@ -463,10 +474,9 @@ bool Prediffer::setSolutionGrid(const Grid<double> &solutionGrid)
         }
     }
 
-    int nCoefficients = 0;
-
     // Temporary vector (required by MeqParmFunklet::initDomain() but not
     // needed here).
+    int nCoeff = 0;
     vector<int> tmp(nDomains, 0);
     for(MeqParmGroup::iterator it = itsParameters.begin();
         it != itsParameters.end();
@@ -474,22 +484,12 @@ bool Prediffer::setSolutionGrid(const Grid<double> &solutionGrid)
     {
         // Determine maximal number of coefficients over all solution
         // domains for this parameter.
-        it->second.initDomain(domains, nCoefficients, tmp);
-
-/*
-        if(it->second.isSolvable())
-        {
-            for(size_t i = 0; i < nDomains; ++i)
-            {
-                ....
-            }
-        }
-*/        
+        it->second.initDomain(domains, nCoeff, tmp);
     }
-    itsContext.coefficientCount = nCoefficients;
+    itsContext.coeffCount = nCoeff;
 
-    LOG_DEBUG_STR("nCoefficients: " << nCoefficients);
-    return nCoefficients > 0;
+    LOG_DEBUG_STR("nCoeff: " << nCoeff);
+    return (nCoeff > 0);
 }
 
 
@@ -583,17 +583,17 @@ CoeffIndexMsg::Pointer Prediffer::getCoefficientIndex() const
     
     Location localCell;
     for(localCell.second = 0;
-        localCell.second < itsContext.domainGrid[TIME]->size();
+        localCell.second < itsContext.cellGrid[TIME]->size();
         ++localCell.second)
     {
         for(localCell.first = 0;
-            localCell.first < itsContext.domainGrid[FREQ]->size();
+            localCell.first < itsContext.cellGrid[FREQ]->size();
             ++localCell.first)
         {
             Location globalCell(localCell.first + itsContext.chunkStart.first,
                 localCell.second + itsContext.chunkStart.second);
                 
-            const size_t localId = itsContext.domainGrid.getCellId(localCell);
+            const size_t localId = itsContext.cellGrid.getCellId(localCell);
             const size_t globalId =
                 itsContext.solutionGrid.getCellId(globalCell);
 
@@ -723,7 +723,7 @@ CoefficientMsg::Pointer Prediffer::getCoefficients(const Location &start,
                 t - itsContext.chunkStart.second);
 
             const uint32 localCellId =
-                itsContext.domainGrid.getCellId(location);
+                itsContext.cellGrid.getCellId(location);
         
             for(size_t i = 0; i < itsContext.localParmSelection.size(); ++i)
             {
@@ -770,8 +770,8 @@ void Prediffer::setCoefficients(CoefficientMsg::Pointer msg)
         location.first -= itsContext.chunkStart.first;
         location.second -= itsContext.chunkStart.second;
         
-        const uint32 localCellId = itsContext.domainGrid.getCellId(location);
-        DBGASSERT(localCellId < itsContext.domainGrid.getCellCount());
+        const uint32 localCellId = itsContext.cellGrid.getCellId(location);
+        DBGASSERT(localCellId < itsContext.cellGrid.getCellCount());
 
         // TODO: Change this into look-up on local cell id.
         const CellCoefficientIndex &local =
@@ -826,7 +826,7 @@ CoefficientSet::Pointer Prediffer::getCoefficients(const Location &start,
                 t - itsContext.chunkStart.second);
 
             const uint32 localCellId =
-                itsContext.domainGrid.getCellId(location);
+                itsContext.cellGrid.getCellId(location);
         
             for(size_t i = 0; i < itsContext.localParmSelection.size(); ++i)
             {
@@ -871,8 +871,8 @@ void Prediffer::setCoefficients(CoefficientSet::Pointer coeffSet)
         location.first -= itsContext.chunkStart.first;
         location.second -= itsContext.chunkStart.second;
         
-        const uint32 localCellId = itsContext.domainGrid.getCellId(location);
-        DBGASSERT(localCellId < itsContext.domainGrid.getCellCount());
+        const uint32 localCellId = itsContext.cellGrid.getCellId(location);
+        DBGASSERT(localCellId < itsContext.cellGrid.getCellCount());
 
         // TODO: Change this into look-up on local cell id.
         const CellCoefficientIndex &local =
@@ -895,18 +895,22 @@ void Prediffer::setCoefficients(CoefficientSet::Pointer coeffSet)
 
 void Prediffer::simulate()
 {
-//    resetTimers();
-//    itsProcessTimer.start();
-    
     DBGASSERT(itsOperation == SIMULATE);
 
-//    process(false, true, false, make_pair(0, 0),
-//        make_pair(itsChunk->grid.freq.size() - 1,
-//            itsChunk->grid.time.size() - 1),
-//        &Prediffer::copyBaseline, 0);
+    resetTimers();
+
+    Point<size_t> start(0, 0);
+    Point<size_t> end(itsChunk->dims.getChannelCount(),
+        itsChunk->dims.getTimeSlotCount());
+
+    LOG_DEBUG_STR("Processing visbility domain: [ (" << start.first << ","
+        << start.second << "), (" << end.first << "," << end.second << ") ]");
+
+    itsProcessTimer.start();
+    process(false, true, start, end, &Prediffer::copyBl);
+    itsProcessTimer.stop();
     
-//    itsProcessTimer.stop();
-//    printTimers("Copy");
+    printTimers("SIMULATE");
 }
 
 
@@ -943,9 +947,7 @@ void Prediffer::correct()
 //    printTimers("Correct");
 }
 
-/*
-EquationMsg::Pointer Prediffer::construct(const Location &start,
-    const Location &end)
+EquationMsg::Pointer Prediffer::construct(Location start, Location end)
 {
     DBGASSERT(itsOperation == CONSTRUCT);
 
@@ -955,68 +957,70 @@ EquationMsg::Pointer Prediffer::construct(const Location &start,
     DBGASSERT(start.second <= itsContext.chunkEnd.second
         && end.second >= itsContext.chunkStart.second);
 
-//    resetTimers();
+    resetTimers();
 
-    // Clip request against chunk grid.
-    Location clipStart, clipEnd;
-    clipStart.first = max(start.first, itsContext.chunkStart.first);
-    clipStart.second = max(start.second, itsContext.chunkStart.second);
-    clipEnd.first = min(end.first, itsContext.chunkEnd.first);
-    clipEnd.second = min(end.second, itsContext.chunkEnd.second);
+    // Clip request against chunk.
+    start.first = max(start.first, itsContext.chunkStart.first);
+    start.second = max(start.second, itsContext.chunkStart.second);
+    end.first = min(end.first, itsContext.chunkEnd.first);
+    end.second = min(end.second, itsContext.chunkEnd.second);
 
-    size_t nCells = (clipEnd.first - clipStart.first + 1)
-        * (clipEnd.second - clipStart.second + 1);
+    size_t nCells = (end.first - start.first + 1)
+        * (end.second - start.second + 1);
 
     LOG_DEBUG_STR("Constructing equations for " << nCells << " cells.");
 
+    itsThreadContexts[0].equations.resize(nCells);
+    itsThreadContexts[0].coeffIndex.resize(itsContext.coeffCount);
+    itsThreadContexts[0].perturbedRe.resize(itsContext.coeffCount);
+    itsThreadContexts[0].perturbedIm.resize(itsContext.coeffCount);
+    itsThreadContexts[0].partialRe.resize(itsContext.coeffCount);
+    itsThreadContexts[0].partialIm.resize(itsContext.coeffCount);
 
-    // Compute local cell id of start and end cell.
-    Location localStart, localEnd;
-    localStart.first = clipStart.first - itsContext.chunkStart.first;
-    localStart.second = clipStart.second - itsContext.chunkStart.second; 
-    localEnd.first = clipEnd.first - itsContext.chunkStart.first;
-    localEnd.second = clipEnd.second - itsContext.chunkStart.second;
+    EquationMsg::Pointer result(new EquationMsg(itsId));
+    vector<CellEquation> &equations = result->getContents();
+    equations.resize(nCells);
 
+    Location cell;
+    size_t idx = 0;
+    for(cell.second = start.second; cell.second <= end.second; ++cell.second)
+    {
+        for(cell.first = start.first; cell.first <= end.first; ++cell.first)
+            {
+                equations[idx].id = itsContext.solutionGrid.getCellId(cell);
+                equations[idx].equation.set(itsContext.coeffCount);
+                itsThreadContexts[0].equations[idx] = &equations[idx].equation;
+                
+                ++idx;
+            }
+    }
+        
+    // Compute local start and end cell.
+    Location local[2];
+    local[0].first = start.first - itsContext.chunkStart.first;
+    local[0].second = start.second - itsContext.chunkStart.second;
+    local[1].first = end.first - itsContext.chunkStart.first;
+    local[1].second = end.second - itsContext.chunkStart.second;
 
-    uint32 localStartId = localStart.second
-        * (itsContext.chunkEnd.first - itsContext.chunkStart.first + 1)
-        + localStart.first;
+    // Compute bounding box in sample coordinates.
+    const Box<size_t> visBox =
+        itsContext.cellGrid.getBoundingBox(local[0], local[1]);
 
-    uint32 localEndId = localEnd.second
-        * (itsContext.chunkEnd.first - itsContext.chunkStart.first + 1)
-        + localEnd.first;
+    LOG_DEBUG_STR("Processing visbility domain: [ (" << visBox.start.first
+        << "," << visBox.start.second << "), (" << visBox.end.first << ","
+        << visBox.end.second << ") ]");
 
-    DBGASSERT(localStartId < itsContext.solutionCells.size()
-        && localEndId < itsContext.solutionCells.size());
+    // Generate equations.
+    itsProcessTimer.start();
+    process(true, true, visBox.start, visBox.end, &Prediffer::constructBl,
+        static_cast<void*>(&local[0]));
+    itsProcessTimer.stop();
+    
+    printTimers("CONSTRUCT");
+    return result;
+}
 
-
-
-    // TODO: introduce Box class template.
-    Location vstart(itsContext.domainGrid[FREQ]->lower(localStart.first),
-        itsContext.domainGrid[TIME]->lower(localStart.second));
-    Location vend(itsContext.domainGrid[FREQ]->upper(localEnd.first),
-        itsContext.domainGrid[TIME]->upper(localEnd.second));
-
-    itsContext.domainGrid[FREQ]->lower(localEnd.first);
-    Location startCell = 
-    const pair<GridLocation, GridLocation> &startCell = itsContext.solutionCells[localStartId];
-    const pair<GridLocation, GridLocation> &endCell = itsContext.solutionCells[localEndId];
-    Location vstart(startCell.first.first, startCell.first.second);
-    Location vend(endCell.second.first, endCell.second.second);
-
-    LOG_DEBUG_STR("Processing visbility domain: [ (" << vstart.first << ","
-        << vstart.second << "), (" << vend.first << "," << vend.second << ") ]"
-        << endl);
-
-
-
-    // CONVERT TO LOCAL
-    GridLocation *startend[2];
-    startend[0] = new GridLocation();
-    startend[1] = new GridLocation();
-    *startend[0] = localStart;
-    *startend[1] = localEnd;
-
+/*
     // Allocate contexts for multi-threaded execution.
     for(size_t thread = 0; thread < itsThreadContexts.size(); ++thread)
     {
@@ -1083,14 +1087,8 @@ EquationMsg::Pointer Prediffer::construct(const Location &start,
             ++i;
     	}
     }
-    
-    printTimers("Generate");
-
-    EquationMsg::Pointer msg(new EquationMsg(itsId));
-    return msg;
-}
-
 */
+
 
 /*
 void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
@@ -1209,40 +1207,44 @@ void Prediffer::clearSolvableParms()
     }
 }
 
-
+*/
 //-----------------------[ Computation ]-----------------------//
-void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
-    pair<size_t, size_t> start, pair<size_t, size_t> end,
-    BaselineProcessor processor, void *arguments)
+void Prediffer::process(bool checkFlags, bool precalc,
+    const Point<size_t> &start, const Point<size_t> &end, BlProcessor processor,
+    void *arguments)
 {
-    // Determine if perturbed values have to be calculated.
-    int nPerturbedValues = derivatives ? itsContext.unknownCount : 0;
-
     // Get frequency / time grid information.
-    int nChannels = end.first - start.first + 1;
-    int nTimeslots = end.second - start.second + 1;
+    const size_t nChannels = end.first - start.first;
+    const size_t nTimeslots = end.second - start.second;
+
+    // Determine if perturbed values have to be calculated.
+    const int nPerturbedValues =
+        (itsOperation == CONSTRUCT) ? itsContext.coeffCount : 0;
 
     // NOTE: Temporary vector; should be removed after MNS overhaul.
+    const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
     vector<double> timeAxis(nTimeslots + 1);
     for(size_t i = 0; i < nTimeslots; ++i)
-        timeAxis[i] = itsChunk->grid.time.lower(start.second + i);
-    timeAxis[nTimeslots] = itsChunk->grid.time.upper(end.second);
+    {
+        timeAxis[i] = sampleGrid[TIME]->lower(start.second + i);
+    }
+    timeAxis[nTimeslots] = sampleGrid[TIME]->upper(end.second - 1);
 
     // Initialize the ComplexArr pool with the most frequently used size.
-    uint64 defaultPoolSize = itsMeasurement->getChannelCount() * nTimeslots;
+    uint64 defaultPoolSize = nChannels * nTimeslots;
     MeqMatrixComplexArr::poolDeactivate();
     MeqMatrixRealArr::poolDeactivate();
     MeqMatrixComplexArr::poolActivate(defaultPoolSize);
     MeqMatrixRealArr::poolActivate(defaultPoolSize);
 
     // Create a request.
-    MeqDomain domain(itsChunk->grid.freq.lower(start.first),
-        itsChunk->grid.freq.upper(end.first),
-        itsChunk->grid.time.lower(start.second),
-        itsChunk->grid.time.upper(end.second));
+    MeqDomain bbox(sampleGrid[FREQ]->lower(start.first),
+        sampleGrid[FREQ]->upper(end.first - 1),
+        sampleGrid[TIME]->lower(start.second),
+        sampleGrid[TIME]->upper(end.second - 1));
 
-    MeqRequest request(domain, nChannels, timeAxis, nPerturbedValues);
-    request.setOffset(start);
+    MeqRequest request(bbox, nChannels, timeAxis, nPerturbedValues);
+    request.setOffset(pair<size_t, size_t>(start.first, start.second));
 
     // Precalculate if required.
     if(precalc)
@@ -1252,6 +1254,15 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
         itsPrecalcTimer.stop();
     }
     
+    // Process all selected baselines.
+    for(size_t i = 0; i < itsSelection.baselines.size(); ++i)
+    {
+        (this->*processor)(0, itsSelection.baselines[i], start, request,
+            arguments);
+    }
+}
+
+/*
 #pragma omp parallel
     {
 #pragma omp for schedule(dynamic)
@@ -1268,76 +1279,76 @@ void Prediffer::process(bool useFlags, bool precalc, bool derivatives,
                 (thread, arguments, itsChunk, start, request, itsContext.baselines[i], false);
         }
     } // omp parallel
-}
+*/
 
 
-void Prediffer::copyBaseline(int threadnr, void*, VisData::Pointer chunk,
-    pair<size_t, size_t> offset, const MeqRequest& request, baseline_t baseline,
-    bool showd)
+void Prediffer::copyBl(size_t threadNr, const baseline_t &baseline,
+    const Point<size_t> &offset, const MeqRequest &request, void *arguments)
 {
     // Get thread context.
-    ThreadContext &threadContext = itsThreadContexts[threadnr];
+    ThreadContext &context = itsThreadContexts[threadNr];
     
     // Evaluate the model.
-    threadContext.evaluationTimer.start();
+    context.timers[ThreadContext::MODEL_EVALUATION].start();
     MeqJonesResult jresult = itsModel->evaluate(baseline, request);
-    threadContext.evaluationTimer.stop();
+    context.timers[ThreadContext::MODEL_EVALUATION].stop();
 
     // Process the result.
-    threadContext.operationTimer.start();
+    context.timers[ThreadContext::PROCESS].start();
 
     // Put the results in a single array for easier handling.
-    const double *resultRe[4], *resultIm[4];
-    jresult.getResult11().getValue().dcomplexStorage(resultRe[0],
-        resultIm[0]);
-    jresult.getResult12().getValue().dcomplexStorage(resultRe[1],
-        resultIm[1]);
-    jresult.getResult21().getValue().dcomplexStorage(resultRe[2],
-        resultIm[2]);
-    jresult.getResult22().getValue().dcomplexStorage(resultRe[3],
-        resultIm[3]);
+    const double *modelVisRe[4], *modelVisIm[4];
+    jresult.getResult11().getValue().dcomplexStorage(modelVisRe[0],
+        modelVisIm[0]);
+    jresult.getResult12().getValue().dcomplexStorage(modelVisRe[1],
+        modelVisIm[1]);
+    jresult.getResult21().getValue().dcomplexStorage(modelVisRe[2],
+        modelVisIm[2]);
+    jresult.getResult22().getValue().dcomplexStorage(modelVisRe[3],
+        modelVisIm[3]);
 
     // Get information about request grid.
     size_t nChannels = request.nx();
     size_t nTimeslots = request.ny();
 
+    // Update statistics.
+    context.visCount += nChannels * nTimeslots;
+    
     // Check preconditions.
-    ASSERT(offset.first + nChannels <= chunk->grid.freq.size());
-    ASSERT(offset.second + nTimeslots <= chunk->grid.time.size());
+    ASSERT(offset.first + nChannels <= itsChunk->dims.getChannelCount());
+    ASSERT(offset.second + nTimeslots <= itsChunk->dims.getTimeSlotCount());
 
     // Get baseline index.
-    size_t basel = chunk->getBaselineIndex(baseline);
+    const size_t bl = itsChunk->dims.getBaselineIndex(baseline);
 
     // Copy the data to the right location.
-    for(size_t tslot = offset.second;
-        tslot < offset.second + nTimeslots;
-        ++tslot)
+    for(size_t ts = offset.second; ts < offset.second + nTimeslots; ++ts)
     {
-        for(set<size_t>::const_iterator it = itsContext.polarizations.begin();
-            it != itsContext.polarizations.end();
-            ++it)
+        for(size_t pol = 0; pol < itsSelection.polarizations.size(); ++pol)
         {
             // External (Measurement) polarization index.
-            size_t ext_pol = *it;
+            size_t ext_pol = itsSelection.polarizations[pol];
+
             // Internal (MNS) polarization index.
             int int_pol = itsPolarizationMap[ext_pol];
 
-            const double *re = resultRe[int_pol];
-            const double *im = resultIm[int_pol];
-            for(size_t chan = 0; chan < nChannels; ++chan)
+            const double *re = modelVisRe[int_pol];
+            const double *im = modelVisIm[int_pol];
+            for(size_t ch = 0; ch < nChannels; ++ch)
             {
-                chunk->vis_data[basel][tslot][offset.first + chan][ext_pol] =
-                    makefcomplex(re[chan], im[chan]);
+                itsChunk->vis_data[bl][ts][offset.first + ch][ext_pol] =
+                    makefcomplex(re[ch], im[ch]);
             }
 
-            resultRe[int_pol] += nChannels;
-            resultIm[int_pol] += nChannels;
+            modelVisRe[int_pol] += nChannels;
+            modelVisIm[int_pol] += nChannels;
         }
     }
-    threadContext.operationTimer.stop();
+
+    context.timers[ThreadContext::PROCESS].stop();
 }
 
-
+/*
 void Prediffer::subtractBaseline(int threadnr, void*, VisData::Pointer chunk,
     pair<size_t, size_t> offset, const MeqRequest& request, baseline_t baseline,
     bool showd)
@@ -1403,218 +1414,205 @@ void Prediffer::subtractBaseline(int threadnr, void*, VisData::Pointer chunk,
     }
     threadContext.operationTimer.stop();
 }
+*/
 
-
-void Prediffer::generateBaseline(int threadnr, void *arguments,
-    VisData::Pointer chunk, pair<size_t, size_t> offset,
-    const MeqRequest& request, baseline_t baseline, bool showd)
+void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
+    const Point<size_t> &offset, const MeqRequest &request, void *arguments)
 {
-    // Check precondition.
-    ASSERT(offset.first % itsContext.domainSize.first == 0);
-    ASSERT(offset.second % itsContext.domainSize.second == 0);
-
     // Get thread context.
-    ThreadContext &threadContext = itsThreadContexts[threadnr];
-    
+    ThreadContext &context = itsThreadContexts[threadNr];
+
     // Evaluate the model.
-    threadContext.evaluationTimer.start();
+    context.timers[ThreadContext::MODEL_EVALUATION].start();
     MeqJonesResult jresult = itsModel->evaluate(baseline, request);
-    threadContext.evaluationTimer.stop();
+    context.timers[ThreadContext::MODEL_EVALUATION].stop();
 
     // Process the result.
-    threadContext.operationTimer.start();
+    context.timers[ThreadContext::PROCESS].start();
         
-    // Put the results in a single array for easier handling.
-    const MeqResult *predictResults[4];
-    predictResults[0] = &(jresult.getResult11());
-    predictResults[1] = &(jresult.getResult12());
-    predictResults[2] = &(jresult.getResult21());
-    predictResults[3] = &(jresult.getResult22());
+    // Get cells to process.
+    const Location &start = static_cast<Location*>(arguments)[0];
+    const Location &end = static_cast<Location*>(arguments)[1];
 
-    // Get information about request grid.
-    size_t nChannels = request.nx();
-    size_t nTimeslots = request.ny();
-
-    // Check preconditions.
-    ASSERT(offset.first + nChannels <= chunk->grid.freq.size());
-    ASSERT(offset.second + nTimeslots <= chunk->grid.time.size());
-
-    pair<size_t, size_t> relDomainOffset = make_pair
-        (offset.first / itsContext.domainSize.first,
-        offset.second / itsContext.domainSize.second);
-
-    pair<size_t, size_t> relDomainCount = make_pair
-        (ceil(nChannels / static_cast<double>(itsContext.domainSize.first)),
-        ceil(nTimeslots / static_cast<double>(itsContext.domainSize.second)));
-
-//    LOG_DEBUG_STR("relDomainOffset: " << relDomainOffset.first << ", "
-//        << relDomainOffset.second);
-//    LOG_DEBUG_STR("relDomainCount: " << relDomainCount.first << ", "
-//        << relDomainCount.second);
+//    LOG_DEBUG_STR("Processing cells (" << start.first << "," << start.second
+//        << ") - (" << end.first << "," << end.second << ")");
 
     // Get baseline index.
-    size_t basel = chunk->getBaselineIndex(baseline);
+    const size_t bl = itsChunk->dims.getBaselineIndex(baseline);
 
-    // To avoid having to use large temporary arrays, step through the
-    // data by timeslot and correlation.
-    for(set<size_t>::const_iterator it = itsContext.polarizations.begin();
-        it != itsContext.polarizations.end();
-        ++it)
+    // Get information about request grid.
+    const size_t nChannels = request.nx();
+    const size_t nTimeslots = request.ny();
+    
+    // Put the results in a single array for easier handling.
+    const MeqResult *modelVis[4];
+    modelVis[0] = &(jresult.getResult11());
+    modelVis[1] = &(jresult.getResult12());
+    modelVis[2] = &(jresult.getResult21());
+    modelVis[3] = &(jresult.getResult22());
+
+    // Pre-allocate memory for inverse perturbations.
+    vector<double> invDelta(itsContext.coeffCount);
+
+    // Construct equations.
+    for(size_t pol = 0; pol < itsSelection.polarizations.size(); ++pol)
     {
         // External (Measurement) polarization index.
-        size_t ext_pol = *it;
+        size_t ext_pol = itsSelection.polarizations[pol];
+        
         // Internal (MNS) polarization index.
         int int_pol = itsPolarizationMap[ext_pol];
 
         // Get the result for this polarization.
-        const MeqResult &result = *predictResults[int_pol];
-
+        const MeqResult &result = *modelVis[int_pol];
+        
         // Get pointers to the main value.
         const double *predictRe, *predictIm;
-        const MeqMatrix &predict = result.getValue();
-        predict.dcomplexStorage(predictRe, predictIm);
+        result.getValue().dcomplexStorage(predictRe, predictIm);
 
-        // Determine which parameters have derivatives and keep that info.
-        // E.g. when solving for station parameters, only a few parameters
-        // per baseline have derivatives.
-        // Note that this is the same for the entire work domain.
-        // Also get pointers to the perturbed values.
-        int nUnknownsFound = 0;
-        for(size_t idx = 0; idx < itsContext.unknownCount; ++idx)
+        // Determine which parameters have perturbed values (e.g. when
+        // solving for station-bound parameters, only a few parameters
+        // per baseline are relevant). Note that this information could be
+        // different for each solution cell. However, for the moment, we will
+        // assume it is the same for every cell.
+        context.timers[ThreadContext::BUILD_INDEX].start();
+
+        size_t nCoeff = 0;
+        for(size_t i = 0; i < itsContext.coeffCount; ++i)
         {
-            if(result.isDefined(idx))
+            // TODO: Remove log(N) look-up in isDefined()!
+            if(result.isDefined(i))
             {
-                threadContext.unknownIndex[nUnknownsFound] = idx;
+                context.coeffIndex[nCoeff] = i;
                 
-                const MeqMatrix &perturbed = result.getPerturbedValue(idx);
-                perturbed.dcomplexStorage
-                    (threadContext.perturbedRe[nUnknownsFound],
-                    threadContext.perturbedIm[nUnknownsFound]);
+                const MeqMatrix &perturbed = result.getPerturbedValue(i);
+                perturbed.dcomplexStorage(context.perturbedRe[nCoeff],
+                    context.perturbedIm[nCoeff]);
                     
-                ++nUnknownsFound;
-            }        	
-        }
-
-//        LOG_DEBUG_STR("nUnknownsFound: " << nUnknownsFound);
-
-        if(nUnknownsFound > 0)
-        {
-            for(size_t tslot = offset.second;
-                tslot < offset.second + nTimeslots;
-                ++tslot)
-            {
-                // Skip timeslot if flagged.
-                if(chunk->tslot_flag[basel][tslot])
-                {
-                    // Move pointers to the next timeslot.
-                    for(size_t idx = 0; idx < nUnknownsFound; ++idx)
-                    {
-                        threadContext.perturbedRe[idx] += nChannels;
-                        threadContext.perturbedIm[idx] += nChannels;
-                    }
-                    predictRe += nChannels;
-                    predictIm += nChannels;
-                    continue;
-                }
-
-
-                size_t domainIdxTime = tslot / itsContext.domainSize.second;
-                size_t solverIdxTime = domainIdxTime - relDomainOffset.second;
-                domainIdxTime *= itsContext.domainCount.first;
-                solverIdxTime *= relDomainCount.first;
-
-                // Construct two equations for each unflagged visibility.
-                for(int ch = offset.first;
-                    ch < offset.first + nChannels;
-                    ++ch)
-                {
-                    if(!chunk->vis_flag[basel][tslot][ch][ext_pol])
-                    {
-                        size_t domainIdx = ch / itsContext.domainSize.first;
-                        size_t solverIdx = domainIdx - relDomainOffset.first;
-                        domainIdx += domainIdxTime;
-                        solverIdx += solverIdxTime;
-                            
-                        // Compute right hand side of the equation pair.
-                        sample_t vis =
-                            chunk->vis_data[basel][tslot][ch][ext_pol];
-
-                        double diffRe = real(vis) - *predictRe;
-                        double diffIm = imag(vis) - *predictIm;
-
-//                        LOG_DEBUG_STR("ch: " << ch);
-//                        LOG_DEBUG_STR("predictRe: " << *predictRe << " diffRe: "
-//                            << diffRe);
-//                        LOG_DEBUG_STR("predictIm: " << *predictIm << " diffIm: "
-//                            << diffIm);
-
-                        // Approximate partial derivatives (forward
-                        // differences).
-                        for(int idx = 0; idx < nUnknownsFound; ++idx)
-                        {
-                            double invPerturbation = 1.0 /
-                                result.getPerturbation
-                                    (threadContext.unknownIndex[idx],
-                                    domainIdx);
-                                
-                            threadContext.partialRe[idx] =
-                                (*(threadContext.perturbedRe[idx]) - *predictRe)
-                                    * invPerturbation;
-                            threadContext.partialIm[idx] =
-                                (*(threadContext.perturbedIm[idx]) - *predictIm)
-                                    * invPerturbation;
-                        }
-
-                        // Add condition equations to the solver.
-                        if(nUnknownsFound != itsContext.unknownCount)
-                        {
-//                            LOG_DEBUG_STR("solverIdx: " << solverIdx);
-                            threadContext.solvers[solverIdx]->makeNorm
-                                (nUnknownsFound,
-                                &(threadContext.unknownIndex[0]),
-                                &(threadContext.partialRe[0]),
-                                1.0,
-                                diffRe);
-                                
-                            threadContext.solvers[solverIdx]->makeNorm
-                                (nUnknownsFound,
-                                &(threadContext.unknownIndex[0]),
-                                &(threadContext.partialIm[0]),
-                                1.0,
-                                diffIm);
-                        }
-                        else
-                        {
-                            threadContext.solvers[solverIdx]->makeNorm
-                                (&(threadContext.partialRe[0]),
-                                1.0,
-                                diffRe);
-                                
-                            threadContext.solvers[solverIdx]->makeNorm
-                                (&(threadContext.partialIm[0]),
-                                1.0,
-                                diffIm);
-                        }
-                    } // !chunk->vis_flag[basel][tslot][ch][ext_pol]
-
-                    // Move pointers to the next channel.
-                    for(size_t idx = 0; idx < nUnknownsFound; ++idx)
-                    {
-                        ++threadContext.perturbedRe[idx];
-                        ++threadContext.perturbedIm[idx];
-                    }
-                    ++predictRe;
-                    ++predictIm;
-                }
+                ++nCoeff;
             }
         }
-    }
 
-    threadContext.operationTimer.stop();
+        context.timers[ThreadContext::BUILD_INDEX].stop();
+
+        if(nCoeff == 0)
+        {
+            continue;
+        }
+
+        // Loop over all solution cells.
+        Location cell;
+        size_t eqIndex = 0;
+        for(cell.second = start.second; cell.second <= end.second; ++cell.second)
+        {
+            for(cell.first = start.first; cell.first <= end.first; ++cell.first)
+            {
+                context.timers[ThreadContext::GRID_LOOKUP].start();
+                
+                const size_t cellId =
+                    itsContext.cellGrid.getCellId(cell);
+                const size_t chStart =
+                    itsContext.cellGrid[FREQ]->lower(cell.first);
+                const size_t chEnd =
+                    itsContext.cellGrid[FREQ]->upper(cell.first);
+                const size_t tsStart =
+                    itsContext.cellGrid[TIME]->lower(cell.second);
+                const size_t tsEnd =
+                    itsContext.cellGrid[TIME]->upper(cell.second);
+                
+                size_t visOffset = tsStart * nChannels + chStart;
+
+                // Pre-compute inverse perturbations (cell specific).
+                for(size_t i = 0; i < nCoeff; ++i)
+                {
+                    // TODO: Remove log(N) look-up in getPerturbation()!
+                    invDelta[i] =  1.0 / 
+                        result.getPerturbation(context.coeffIndex[i],
+                            cellId);
+                }
+                
+                context.timers[ThreadContext::GRID_LOOKUP].stop();
+
+                casa::LSQFit *equation = context.equations[eqIndex];
+
+                for(size_t ts = tsStart; ts < tsEnd; ++ts)
+                {
+                    // Skip timeslot if flagged.
+                    if(itsChunk->tslot_flag[bl][ts])
+                    {
+                        visOffset += nChannels;
+                        continue;
+                    }
+
+                    // Construct two equations for each unflagged visibility.
+                    for(size_t ch = chStart; ch < chEnd; ++ch)
+                    {
+                        if(!itsChunk->vis_flag[bl][ts][ch][ext_pol])
+                        {
+                            // Update statistics.
+                            ++context.visCount;
+
+                            context.timers[ThreadContext::DERIVATIVES].start();
+                            // Compute right hand side of the equation pair.
+                            const sample_t obsVis =
+                                itsChunk->vis_data[bl][ts][ch][ext_pol];
+
+                            const double modelVisRe = predictRe[visOffset];
+                            const double modelVisIm = predictIm[visOffset];
+
+                            // Approximate partial derivatives (forward
+                            // differences).
+                            // TODO: Remove this transpose.
+                            
+                            for(size_t i = 0; i < nCoeff; ++i)
+                            {
+                                context.partialRe[i] = 
+                                    (context.perturbedRe[i][visOffset] -
+                                        modelVisRe) * invDelta[i];
+                                
+                                context.partialIm[i] = 
+                                    (context.perturbedIm[i][visOffset] -
+                                        modelVisIm) * invDelta[i];
+                            }
+
+                            context.timers[ThreadContext::DERIVATIVES].stop();
+
+                            context.timers[ThreadContext::MAKE_NORM].start();
+
+                            equation->makeNorm(nCoeff,
+                                &(context.coeffIndex[0]),
+                                &(context.partialRe[0]),
+                                1.0,
+                                real(obsVis) - modelVisRe);
+                                
+                            equation->makeNorm(nCoeff,
+                                &(context.coeffIndex[0]),
+                                &(context.partialIm[0]),
+                                1.0,
+                                imag(obsVis) - modelVisIm);
+
+                            context.timers[ThreadContext::MAKE_NORM].stop();
+                        } // !itsChunk->vis_flag[bl][ts][ch][ext_pol]
+
+                        // Move to next channel.
+                        ++visOffset;
+                    } // for(size_t ch = chStart; ch < chEnd; ++ch)
+                    
+                    // Move to next timeslot.
+                    visOffset += nChannels - (chEnd - chStart);
+                } // for(size_t ts = tsStart; ts < tsEnd; ++ts) 
+                
+                // Move to next solution cell.
+                ++eqIndex;
+            } // for(cell.first = ...; cell.first < ...; ++cell.first)
+        } // cell.second = ...; cell.second < ...; ++cell.second
+    } // for(size_t pol = 0; pol < itsSelection.polarizations.size(); ++pol)
+
+    context.timers[ThreadContext::PROCESS].stop();
 }
 
 
-
+/*
 void Prediffer::updateUnknowns(size_t domain, const vector<double> &unknowns)
 {
     for(MeqParmGroup::iterator it = itsParmGroup.begin();
@@ -1721,6 +1719,7 @@ void Prediffer::writeExpressionGraph(const string &fileName,
     os << "}" << endl;
 }
 #endif
+*/
 
 
 void Prediffer::resetTimers()
@@ -1730,62 +1729,58 @@ void Prediffer::resetTimers()
     
     for(size_t i = 0; i < itsThreadContexts.size(); ++i)
     {
-        itsThreadContexts[i].evaluationTimer.reset();
-        itsThreadContexts[i].operationTimer.reset();
+        for(size_t j = 0; j < ThreadContext::N_Timer; ++j)
+        {
+            itsThreadContexts[i].visCount = 0;
+            itsThreadContexts[i].timers[j].reset();
+        }
     }
 }
 
 
-void Prediffer::printTimers(const string &operationName)
+void Prediffer::printTimers(const string &operation)
 {
-    LOG_DEBUG_STR("Process: " << itsProcessTimer);
-    LOG_DEBUG_STR("-Precalculation: " << itsPrecalcTimer);
+    LOG_DEBUG_STR("Timings for " << operation);
 
-    // Merge thread local timers.
-    unsigned long long count_e = 0, count_o = 0;
-    double sum_e = 0.0, sum_o = 0.0, sumsqr_e = 0.0, sumsqr_o = 0.0;
+    unsigned long long count = 0;
     for(size_t i = 0; i < itsThreadContexts.size(); ++i)
     {
-        double time;
-        
-        time = itsThreadContexts[i].evaluationTimer.getElapsed() * 1000.0;
-        sum_e += time;
-        sumsqr_e += time * time;
-        count_e += itsThreadContexts[i].evaluationTimer.getCount();
-
-        time = itsThreadContexts[i].operationTimer.getElapsed() * 1000.0;
-        sum_o += time;
-        sumsqr_o += time * time;
-        count_o += itsThreadContexts[i].operationTimer.getCount();
+        count += itsThreadContexts[i].visCount;
     }
+    LOG_DEBUG_STR("Processing speed: " << (count / itsProcessTimer.getElapsed())
+        << " vis/s");
+
+    LOG_DEBUG_STR("Total time: " << itsProcessTimer.getElapsed() << " s");
+    LOG_DEBUG_STR("> Precalculation: " << itsPrecalcTimer.getElapsed() * 1000.0
+        << " ms");
+
+    for(size_t j = 0; j < ThreadContext::N_Timer; ++j)
+    {
+        unsigned long long count = 0;
+        double sum = 0.0;
+
+        // Merge thread-local timers.
+        for(size_t i = 0; i < itsThreadContexts.size(); ++i)
+        {
+            double msec = itsThreadContexts[i].timers[j].getElapsed() * 1000.0;
+            sum += msec;
+            count += itsThreadContexts[i].timers[j].getCount();
+        }
     
-    // Print merged timings.
-    if(count_e == 0)
-    {
-        LOG_DEBUG("-Model evaluation: timer not used");
-    }
-    else
-    {
-        double avg = sum_e / count_e;
-        double std = std::sqrt(std::max(sumsqr_e / count_e - avg * avg, 0.0));
-        LOG_DEBUG_STR("-Model evaluation: count: " << count_e << ", total: "
-            << sum_e << " ms, avg: " << avg << " ms, std: " << std << " ms");
-    }
-
-    if(count_o == 0)
-    {
-        LOG_DEBUG_STR("-" << operationName << ": timer not used");
-    }
-    else
-    {
-        double avg = sum_o / count_o;
-        double std = std::sqrt(std::max(sumsqr_o / count_o - avg * avg, 0.0));
-        LOG_DEBUG_STR("-" << operationName << ": count: " << count_o
-            << ", total: " << sum_o << " ms, avg: " << avg << " ms, std: "
-            << std << " ms");
+        if(count == 0)
+        {
+            LOG_DEBUG_STR("> " << ThreadContext::timerNames[j]
+                << ": timer not used.");
+        }
+        else
+        {
+            LOG_DEBUG_STR("> " << ThreadContext::timerNames[j] << ": count: "
+                << count << ", total: " << sum << " ms, avg: " 
+                << sum / count << " ms");
+        }
     }
 }
-*/
+
 
 void Prediffer::initPolarizationMap()
 {

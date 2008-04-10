@@ -89,7 +89,7 @@ public:
     { return itsDelta; }
 
     size_t size() const
-    { return (itsCount ? itsCount - 1 : 0); }
+    { return itsCount; }
 
     pair<T, T> range() const
     { return make_pair(lower(0), (size() ? upper(size() - 1) : upper(0))); }

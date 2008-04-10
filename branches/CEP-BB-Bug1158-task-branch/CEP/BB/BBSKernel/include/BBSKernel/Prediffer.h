@@ -82,7 +82,7 @@ namespace BBS
 struct ProcessingContext
 {
     ProcessingContext()
-        :   coefficientCount(0)
+        :   coeffCount(0)
     {}
 
 
@@ -90,13 +90,13 @@ struct ProcessingContext
     // Information for the SOLVE operation (valid if unknownCount > 0).
     //     
     Grid<double>                        solutionGrid;
-    Grid<size_t>                        domainGrid;
+    Grid<size_t>                        cellGrid;
     
     Location                            chunkStart, chunkEnd;
 
     // Sum of the maximal number (over all solve domains) of unknowns of each
     // parameter.
-    size_t                              coefficientCount;
+    size_t                              coeffCount;
     vector<MeqPExpr>                    localParmSelection;
     map<uint32, CellCoeffIndex>         localCoeffIndices;
     
@@ -120,16 +120,17 @@ struct ThreadContext
         PROCESS,
         GRID_LOOKUP,
         BUILD_INDEX,
-        PARTIAL_DERIVATIVES,
+        DERIVATIVES,
         MAKE_NORM,
         N_Timer
     } Timer;
 
     static string           timerNames[N_Timer];
     NSTimer                 timers[N_Timer];
+    unsigned long long      visCount;
 
     vector<casa::LSQFit*>   equations;
-    vector<uint>            unknownIndex;
+    vector<size_t>          coeffIndex;
     vector<const double*>   perturbedRe, perturbedIm;
     vector<double>          partialRe, partialIm;
 };
@@ -138,7 +139,7 @@ struct ThreadContext
 struct Selection
 {
     vector<baseline_t>      baselines;
-    set<size_t>             polarizations;
+    vector<size_t>          polarizations;
 };
 
 
@@ -193,16 +194,16 @@ public:
     void simulate();
     void subtract();
     void correct();
-    EquationMsg::Pointer construct(const Location &start, const Location &end);
+    EquationMsg::Pointer construct(Location start, Location end);
     // </group>
     
     // (Distributed) solving.
     // <group>
-    bool setSolutionGrid(const Grid<double> &grid);
-
     bool setParameterSelection(const vector<string> &include,
         const vector<string> &exclude);        
     void clearParameterSelection();
+
+    bool setSolutionGrid(const Grid<double> &grid);
 
     CoeffIndexMsg::Pointer getCoefficientIndex() const;
     void setCoefficientIndex(CoeffIndexMsg::Pointer msg);
@@ -233,18 +234,32 @@ private:
     //# Get all parameter values that intersect the current chunk.
     void loadParameterValues();
 
-/*  
-    void initSolveDomains(std::pair<size_t, size_t> size);
-    
-
     void resetTimers();
-    void printTimers(const string &operationName);
+    void printTimers(const string &operation);
 
-    // Define the signature of a function processing a baseline.
-    typedef void (Prediffer::*BaselineProcessor) (int threadnr, void* arguments,
-        VisData::Pointer chunk, pair<size_t, size_t> offset,
-        const MeqRequest& request, baseline_t baseline, bool showd);
+    // Define the signature for a function that processes the data of a single
+    // baseline.
+    typedef void (Prediffer::*BlProcessor) (size_t threadNr,
+        const baseline_t &baseline,
+        const Point<size_t> &offset,
+        const MeqRequest &request,
+        void *arguments);
 
+    // Process (a subset of) the observed data.
+    void process(bool checkFlags, bool precalc, const Point<size_t> &start,
+        const Point<size_t> &end, BlProcessor processor, void *arguments = 0);
+
+    // Copy the simulated visibilities for a single baseline.
+    void copyBl(size_t threadNr, const baseline_t &baseline,
+        const Point<size_t> &offset, const MeqRequest &request,
+        void *arguments = 0);
+
+    // Construct equations for a single baseline.
+    void constructBl(size_t threadNr, const baseline_t &baseline,
+        const Point<size_t> &offset, const MeqRequest &request,
+        void *arguments = 0);
+
+/*
     // Loop through all data and process each baseline by ProcessFuncBL.
     void process(bool useFlags, bool precalc, bool derivatives,
         pair<size_t, size_t> start, pair<size_t, size_t> end,
@@ -258,11 +273,6 @@ private:
     // Subtract the predicted visibilities from the observed data of a
     // single baseline.
     void subtractBL(int threadnr, void* arguments, VisData::Pointer chunk,
-        pair<size_t, size_t> offset, const MeqRequest& request,
-        baseline_t baseline, bool showd = false);
-
-    // Construct equations for a single baseline.
-    void constructBL(int threadnr, void* arguments, VisData::Pointer chunk,
         pair<size_t, size_t> offset, const MeqRequest& request,
         baseline_t baseline, bool showd = false);
 */

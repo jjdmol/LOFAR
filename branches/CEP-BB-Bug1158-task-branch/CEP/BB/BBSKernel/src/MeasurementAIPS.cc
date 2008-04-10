@@ -504,7 +504,7 @@ void MeasurementAIPS::initFreqInfo(const ROMSSpWindowColumns &window,
     }
 
     itsFreqAxis = Axis<double>::Pointer(new RegularAxis<double>(lower,
-        (upper - lower) / nChannels, nChannels + 1));
+        (upper - lower) / nChannels, nChannels));
 }
 
 
@@ -731,7 +731,7 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     }    
 
     Axis<double>::Pointer fAxis(new RegularAxis<double>(lower, (upper - lower)
-        / nChannels, nChannels + 1));
+        / nChannels, nChannels));
 
     // Initialize time axis.
     ROScalarColumn<Double> c_time(tab_selection, "TIME");
