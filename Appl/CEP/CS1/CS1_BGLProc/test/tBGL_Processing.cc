@@ -81,17 +81,17 @@ void setSubbandTestPattern(TransposedData *transposedData, unsigned nrStations, 
     transposedData->alignmentShifts[stat]	= 0;
   }
 
-  for (unsigned time = 0; time < transposedData->samples3D[0].size(); time ++) {
+  for (unsigned time = 0; time < transposedData->samples[0].size(); time ++) {
     double phi = 2 * M_PI * signalFrequency * time / sampleRate;
     TransposedData::SampleType sample = toComplex(phi);
 
     for (unsigned stat = 0; stat < nrStations; stat ++) {
-      transposedData->samples3D[stat][time][0] = sample;
-      transposedData->samples3D[stat][time][1] = sample;
+      transposedData->samples[stat][time][0] = sample;
+      transposedData->samples[stat][time][1] = sample;
     }
 
     if (NR_POLARIZATIONS >= 2 && nrStations > 2) {
-      transposedData->samples3D[1][time][1]     = toComplex(phi + phaseShift);
+      transposedData->samples[1][time][1]     = toComplex(phi + phaseShift);
       transposedData->delays[1].delayAtBegin  = distance / signalFrequency;
       transposedData->delays[1].delayAfterEnd = distance / signalFrequency;
     }
@@ -102,7 +102,7 @@ void setSubbandTestPattern(TransposedData *transposedData, unsigned nrStations, 
   }
 
 #if 1
-  if (transposedData->samples3D[0].size() > 17000 && nrStations >= 6) {
+  if (transposedData->samples[0].size() > 17000 && nrStations >= 6) {
     transposedData->flags[4].include(14000);
     transposedData->flags[5].include(17000);
   }
@@ -112,7 +112,7 @@ void setSubbandTestPattern(TransposedData *transposedData, unsigned nrStations, 
 
 #if 0 && defined WORDS_BIGENDIAN
   std::clog << "swap bytes" << std::endl;
-  dataConvert(LittleEndian, transposedData->samples3D.data(), transposedData->samples3D.num_elements());
+  dataConvert(LittleEndian, transposedData->samples.data(), transposedData->samples.num_elements());
 #endif
 
   timer.stop();
@@ -226,6 +226,7 @@ void doWork()
   configuration.sampleRate()		  = 156250.0;
   configuration.inputPsets()		  = std::vector<unsigned>();
   configuration.outputPsets()		  = std::vector<unsigned>(1, 0);
+  configuration.subband2Index()		  = std::vector<unsigned>(1, 0);
   configuration.refFreqs()		  = std::vector<double>(1, 384 * configuration.sampleRate());
 
   double     signalFrequency = configuration.refFreqs()[0] + 73 * configuration.sampleRate() / NR_SUBBAND_CHANNELS; // channel 73
