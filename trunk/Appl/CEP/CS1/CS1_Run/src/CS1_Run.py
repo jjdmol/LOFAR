@@ -35,8 +35,8 @@ def doObservation(obsID, parset):
 	sys.exit(1)
 
     sectionTable = dict({\
-	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
-	#'StorageSection': StorageSection(parset, listfen)
+	#'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
+	'StorageSection': StorageSection(parset, listfen)
 	#Flagger(parset, listfen)
         })
 
@@ -72,11 +72,20 @@ def doObservation(obsID, parset):
 	    noRuns = ((sz+15)&~15) + 16
 	    
             if isinstance(sectionTable.get(section), StorageSection):
-	        noRuns = (sz+15)&~15
-	        commandstr ='cexec mkdir ' + '/data/' + obsID
-	        if os.system(commandstr) != 0:
+	        
+		s = ':'
+		for slave in listfen.getSlaves():
+		    machineNr = int(slave.getIntName()[len(slave.getIntName())-1])-1
+		    if len(listfen.getSlaves())-1 != listfen.getSlaves().index(slave):
+			s = s + '%d' % int(machineNr) + ','
+	            else:
+		        s = s + '%d' % int(machineNr)
+			
+		noRuns = (sz+15)&~15
+	        commandstr ='cexec ' + s + ' mkdir /data/' + obsID
+		if os.system(commandstr) != 0:
 	            print 'Failed to create directory: /data/' + obsID
-	    
+
 	    sectionTable.get(section).run(runlog, noRuns)
 
         for section in sectionTable:
