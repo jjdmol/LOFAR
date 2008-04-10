@@ -416,16 +416,16 @@ bool Prediffer::setSolutionGrid(const Grid<double> &solutionGrid)
     domainAxis = solutionGrid[FREQ];
     sampleAxis = sampleGrid[FREQ];
     boundaries.front() = sampleAxis->locate(bbox.start.first, true);
-    DBGASSERT(boundaries.front() < samplesAxis->size());
+    DBGASSERT(boundaries.front() < sampleAxis->size());
     boundaries.back() = sampleAxis->locate(bbox.end.first, true);
     DBGASSERT(boundaries.back() > boundaries.front() &&
-        boundaries.back() <= samplesAxis->size());
+        boundaries.back() <= sampleAxis->size());
 
     for(size_t i = 1; i < nFreqDomains; ++i)
     {
         boundaries[i] =
             sampleAxis->locate(domainAxis->lower(start.first + i), true);
-        DBGASSERT(boundaries[i] < samplesAxis->size());
+        DBGASSERT(boundaries[i] < sampleAxis->size());
     }
     LOG_DEBUG_STR("Boundaries FREQ: " << boundaries);
     Axis<size_t>::Pointer fAxis(new IrregularAxis<size_t>(boundaries));
@@ -435,16 +435,16 @@ bool Prediffer::setSolutionGrid(const Grid<double> &solutionGrid)
     sampleAxis = sampleGrid[TIME];
     boundaries.resize(nTimeDomains + 1);
     boundaries.front() = sampleAxis->locate(bbox.start.second, true);
-    DBGASSERT(boundaries.front() < samplesAxis->size());
+    DBGASSERT(boundaries.front() < sampleAxis->size());
     boundaries.back() = sampleAxis->locate(bbox.end.second, true);
     DBGASSERT(boundaries.back() > boundaries.front() &&
-        boundaries.back() <= samplesAxis->size());
+        boundaries.back() <= sampleAxis->size());
 
     for(size_t i = 1; i < nTimeDomains; ++i)
     {
         boundaries[i] =
             sampleAxis->locate(domainAxis->lower(start.second + i), true);
-        DBGASSERT(boundaries[i] < samplesAxis->size());
+        DBGASSERT(boundaries[i] < sampleAxis->size());
     }
     LOG_DEBUG_STR("Boundaries TIME: " << boundaries);
     Axis<size_t>::Pointer tAxis(new IrregularAxis<size_t>(boundaries));
