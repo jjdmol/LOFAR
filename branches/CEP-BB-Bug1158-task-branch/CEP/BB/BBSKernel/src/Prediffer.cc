@@ -75,10 +75,20 @@ using LOFAR::operator<<;
 using LOFAR::ParmDB::ParmDB;
 using LOFAR::ParmDB::ParmDBMeta;
 
-Prediffer::Prediffer(Measurement::Pointer measurement,
+string ThreadContext::timerNames[ThreadContext::N_Timer] = {"Model evaluation",
+    "Process",
+    "Grid look-up",
+    "Build coefficient index",
+    "Compute partial derivatives",
+    "casa::LSQFit::makeNorm()"};
+
+
+Prediffer::Prediffer(uint32 id,
+        Measurement::Pointer measurement,
         ParmDB::ParmDB sky,
         ParmDB::ParmDB instrument)
-    :   itsMeasurement(measurement),
+    :   itsId(id),
+        itsMeasurement(measurement),
         itsSkyDb(sky),
         itsInstrumentDb(instrument)
 {        
@@ -139,48 +149,6 @@ Prediffer::~Prediffer()
 }
 
 
-void Prediffer::initPolarizationMap()
-{
-    // Create a lookup table that maps external (measurement) polarization
-    // indices to internal polarization indices. The internal indices are:
-    // 0 - XX
-    // 1 - XY
-    // 2 - YX
-    // 3 - YY
-    // No assumptions can be made regarding the external polarization indices,
-    // which is why we need this map in the first place.
-    
-    const vector<string> &polarizations = itsChunk->dims.getPolarizations();
-        
-    itsPolarizationMap.resize(polarizations.size());
-    for(size_t i = 0; i < polarizations.size(); ++i)
-    {
-        if(polarizations[i] == "XX")
-        {
-            itsPolarizationMap[i] = 0;
-        }
-        else if(polarizations[i] == "XY")
-        {
-            itsPolarizationMap[i] = 1;
-        }
-        else if(polarizations[i] == "YX")
-        {
-            itsPolarizationMap[i] = 2;
-        }
-        else if(polarizations[i] == "YY")
-        {
-            itsPolarizationMap[i] = 3;
-        }
-        else
-        {
-            LOG_WARN_STR("Don't know how to process polarization "
-                << polarizations[i] << "; will be skipped.");
-            itsPolarizationMap[i] = -1;
-        }
-    }
-}
-
-
 void Prediffer::attachChunk(VisData::Pointer chunk)
 {
     // Check preconditions.
@@ -193,7 +161,7 @@ void Prediffer::attachChunk(VisData::Pointer chunk)
     initPolarizationMap();
 
     // Reset the model and copy UVW coordinates.
-    itsModelConfiguration = ModelConfiguration();
+    itsOperation = UNSET;
     itsModel->clearEquations();
     itsModel->setStationUVW(itsMeasurement->getInstrument(), itsChunk);
 
@@ -202,7 +170,7 @@ void Prediffer::attachChunk(VisData::Pointer chunk)
     
     // Fetch all parameter values that are valid for the chunk from the sky and
     // instrument parameter databases.
-//    fetchParameterValues();
+    loadParameterValues();
 }
 
 
@@ -362,54 +330,52 @@ bool Prediffer::setSelection(const string &filter,
 }
 
 
-void Prediffer::setModelConfiguration(const vector<string> &components,
-        const vector<string> &sources)
+void Prediffer::setModelConfig(OperationType operation,
+    const vector<string> &components,
+    const vector<string> &sources)
 {
-    itsModelConfiguration.components = components;
-    itsModelConfiguration.sources = sources;
-}
-
-
-void Prediffer::setOperation(Operation type)
-{
-    // Initialize model.
-    switch(type)
+    Model::EquationType type = Model::UNSET;
+    
+    switch(operation)
     {
-    case SIMULATE:
-    case SUBTRACT:
-    case CONSTRUCT:
-        itsModel->makeEquations(Model::SIMULATE,
-            itsModelConfiguration.components, itsSelection.baselines,
-            itsModelConfiguration.sources, itsParameters, &itsInstrumentDb,
-            &itsPhaseRef, itsChunk);
-        break;
-    case CORRECT:
-        itsModel->makeEquations(Model::CORRECT,
-            itsModelConfiguration.components, itsSelection.baselines,
-            itsModelConfiguration.sources, itsParameters, &itsInstrumentDb,
-            &itsPhaseRef, itsChunk);
-        break;
-    default:
-        THROW(BBSKernelException, "Attempt to set unknown operation type.");
+        case SIMULATE:
+        case SUBTRACT:
+        case CONSTRUCT:
+            type = Model::SIMULATE;
+            break;
+
+        case CORRECT:
+            type = Model::CORRECT;
+            break;
+
+        default:
+            break;
     }
-    
-    itsOperation = type;
-    
-    // Initialize model parameters.
+
+    DBGASSERT(type != Model::UNSET);
+
+    itsModel->makeEquations(type, components, itsSelection.baselines, sources,
+        itsParameters, &itsInstrumentDb, &itsPhaseRef, itsChunk);
+
+    const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
+    Box<double> bbox = sampleGrid.getBoundingBox();
+    MeqDomain domain(bbox.start.first, bbox.end.first, bbox.start.second,
+        bbox.end.second);
+            
     for(MeqParmGroup::iterator it = itsParameters.begin();
         it != itsParameters.end();
         ++it)
     {
-        it->second.fillFunklets(itsParameterValues, MeqDomain());
+        it->second.fillFunklets(itsParameterValues, domain);
     }
 }   
 
 
 bool Prediffer::setSolutionGrid(const Grid<double> &solutionGrid)
 {
-    const Grid<double> &chunkGrid = itsChunk->dims.getGrid();
+    const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
     Box<double> bbox =
-        chunkGrid.getBoundingBox() & solutionGrid.getBoundingBox();
+        sampleGrid.getBoundingBox() & solutionGrid.getBoundingBox();
 
     if(bbox.empty())
     {
@@ -437,117 +403,101 @@ bool Prediffer::setSolutionGrid(const Grid<double> &solutionGrid)
     LOG_DEBUG_STR("Chunk start: (" << start.first << "," << start.second << ")");
     LOG_DEBUG_STR("Chunk end  : (" << end.first << "," << end.second << ")");
 
-    const size_t nFreqCells = (end.first - start.first + 1);
-    const size_t nTimeCells = (end.second - start.second + 1);
-    const size_t nCells = nFreqCells * nTimeCells;
+    const size_t nFreqDomains = (end.first - start.first + 1);
+    const size_t nTimeDomains = (end.second - start.second + 1);
+    const size_t nDomains = nFreqDomains * nTimeDomains;
 
-    LOG_DEBUG_STR("Cell count: " << nCells);
+    LOG_DEBUG_STR("Domain count: " << nDomains);
 
-    // Map cell boundaries to sample boundaries (frequency axis).
-    Axis<double>::Pointer cellAxis, sampleAxis;
+    // Map domain boundaries to sample boundaries (frequency axis).
+    Axis<double>::Pointer domainAxis, sampleAxis;
+    vector<size_t> boundaries(nFreqDomains + 1);
 
-    cellAxis = solutionGrid[FREQ];
-    sampleAxis = chunkGrid[FREQ];
-
-    vector<size_t> boundaries(nFreqCells + 1);
+    domainAxis = solutionGrid[FREQ];
+    sampleAxis = sampleGrid[FREQ];
     boundaries.front() = sampleAxis->locate(bbox.start.first, true);
     DBGASSERT(boundaries.front() < samplesAxis->size());
     boundaries.back() = sampleAxis->locate(bbox.end.first, true);
     DBGASSERT(boundaries.back() > boundaries.front() &&
         boundaries.back() <= samplesAxis->size());
 
-    for(size_t cell = 1; cell < nFreqCells; ++cell)
+    for(size_t i = 1; i < nFreqDomains; ++i)
     {
-        boundaries[cell] =
-            sampleAxis->locate(cellAxis->lower(start.first + cell), true);
+        boundaries[i] =
+            sampleAxis->locate(domainAxis->lower(start.first + i), true);
         DBGASSERT(boundaries[i] < samplesAxis->size());
     }
     LOG_DEBUG_STR("Boundaries FREQ: " << boundaries);
     Axis<size_t>::Pointer fAxis(new IrregularAxis<size_t>(boundaries));
 
-    cellAxis = solutionGrid[TIME];
-    sampleAxis = chunkGrid[TIME];
-    boundaries.resize(nTimeCells + 1);
+    // Map domain boundaries to sample boundaries (time axis).
+    domainAxis = solutionGrid[TIME];
+    sampleAxis = sampleGrid[TIME];
+    boundaries.resize(nTimeDomains + 1);
     boundaries.front() = sampleAxis->locate(bbox.start.second, true);
     DBGASSERT(boundaries.front() < samplesAxis->size());
     boundaries.back() = sampleAxis->locate(bbox.end.second, true);
     DBGASSERT(boundaries.back() > boundaries.front() &&
         boundaries.back() <= samplesAxis->size());
 
-    for(size_t cell = 1; cell < nTimeCells; ++cell)
+    for(size_t i = 1; i < nTimeDomains; ++i)
     {
-        boundaries[cell] =
-            sampleAxis->locate(cellAxis->lower(start.second + cell), true);
+        boundaries[i] =
+            sampleAxis->locate(domainAxis->lower(start.second + i), true);
         DBGASSERT(boundaries[i] < samplesAxis->size());
     }
     LOG_DEBUG_STR("Boundaries TIME: " << boundaries);
     Axis<size_t>::Pointer tAxis(new IrregularAxis<size_t>(boundaries));
 
-    itsContext.cellGrid = Grid<size_t>(fAxis, tAxis);
+    itsContext.domainGrid = Grid<size_t>(fAxis, tAxis);
 
-/*
+    // Initialize model parameters marked for fitting.
     vector<MeqDomain> domains;
-    for(size_t tcell = start.second; tcell <= end.second; ++tcell)
+    for(size_t t = start.second; t <= end.second; ++t)
     {
-        for(size_t fcell = start.first; fcell <= end.first; ++fcell)
+        for(size_t f = start.first; f <= end.first; ++f)
         {
-            Box cell = solutionGrid.getCell(Location(fcell, tcell));
-            domains.push_back(MeqDomain(cell.start.first, cell.end.first,
-                cell.start.second, cell.end.second));
+            Box<double> domain = solutionGrid.getCell(Location(f, t));
+            domains.push_back(MeqDomain(domain.start.first, domain.end.first,
+                domain.start.second, domain.end.second));
         }
     }
 
-    // Initialize meta data needed for processing.
-    int nUnknowns = 0;
-    
+    int nCoefficients = 0;
+
     // Temporary vector (required by MeqParmFunklet::initDomain() but not
     // needed here).
-//    vector<int> tmp(nDomains, 0);
-    itsContext.cellCoefficientCount.resize(nDomains);
-    fill(itsContext.cellCoefficientCount.begin(),
-        itsContext.cellCoefficientCount.end(), 0);
-    
-// TEST TEST TEST        
-    uint32 parameterIndex = 0;
-// TEST TEST TEST        
-    for(MeqParmGroup::iterator it = itsParmGroup.begin();
-        it != itsParmGroup.end();
+    vector<int> tmp(nDomains, 0);
+    for(MeqParmGroup::iterator it = itsParameters.begin();
+        it != itsParameters.end();
         ++it)
     {
-        // Determine maximal number of unknowns over all solve domains for this
-        // parameter.
-//        it->second.initDomain(domains, nUnknowns, tmp);
-        int nCoeff = it->second.initDomain(domains, nUnknowns,
-            itsContext.cellCoefficientCount);
+        // Determine maximal number of coefficients over all solution
+        // domains for this parameter.
+        it->second.initDomain(domains, nCoefficients, tmp);
 
-// TEST TEST TEST        
+/*
         if(it->second.isSolvable())
         {
-            for(size_t i = 0; i < nCoeff; ++i)
+            for(size_t i = 0; i < nDomains; ++i)
             {
-                itsContext.perturbedIndex.push_back(parameterIndex);
+                ....
             }
-            ++parameterIndex; 
         }
-// TEST TEST TEST        
+*/        
     }
-    itsContext.unknownCount = nUnknowns;
+    itsContext.coefficientCount = nCoefficients;
 
-    LOG_DEBUG_STR("nDerivatives: " << nUnknowns);
-    LOG_DEBUG_STR("CellCoefficientCount: " << itsContext.cellCoefficientCount);
-    ASSERT(nUnknowns > 0);
-// TEST TEST TEST        
-    LOG_DEBUG_STR("perturbedIndex: " << itsContext.perturbedIndex);
-    ASSERT(itsContext.perturbedIndex.size() == nUnknowns);
-// TEST TEST TEST 
-*/       
-    return true;
+    LOG_DEBUG_STR("nCoefficients: " << nCoefficients);
+    return nCoefficients > 0;
 }
 
 
 bool Prediffer::setParameterSelection(const vector<string> &include,
         const vector<string> &exclude)
 {
+    DBGASSERT(itsOperation == CONSTRUCT);
+    
     // Convert patterns to AIPS++ regular expression objects.
     vector<casa::Regex> includeRegex(include.size());
     vector<casa::Regex> excludeRegex(exclude.size());
@@ -560,20 +510,23 @@ bool Prediffer::setParameterSelection(const vector<string> &include,
         transform(exclude.begin(), exclude.end(), excludeRegex.begin(),
             ptr_fun(casa::Regex::fromPattern));
     }
-    catch(std::exception &_ex)
+    catch(std::exception &ex)
     {
         LOG_ERROR_STR("Error parsing Parms/ExclParms pattern (exception: "
-            << _ex.what() << ")");
+            << ex.what() << ")");
         return false;
     }
 
+    // Clear the list of parameters selected for fitting.
+    itsContext.localParmSelection.clear();
+    
     // Find all parameters matching context.unknowns, exclude those that
     // match context.excludedUnknowns.
-    for(MeqParmGroup::iterator parameter_it = itsParameters.begin();
-        parameter_it != itsParameters.end();
-        ++parameter_it)
+    for(MeqParmGroup::iterator parm_it = itsParameters.begin();
+        parm_it != itsParameters.end();
+        ++parm_it)
     {
-        casa::String name(parameter_it->second.getName());
+        casa::String name(parm_it->first);
 
         // Loop through all regex-es until a match is found.
         for(vector<casa::Regex>::iterator include_it = includeRegex.begin();
@@ -599,7 +552,8 @@ bool Prediffer::setParameterSelection(const vector<string> &include,
 
                 if(includeFlag)
                 {
-                    parameter_it->second.setSolvable(true);
+                    itsContext.localParmSelection.push_back(parm_it->second);
+                    parm_it->second.setSolvable(true);
                 }
                 
                 break;
@@ -622,51 +576,523 @@ void Prediffer::clearParameterSelection()
 }
 
 
+CoeffIndexMsg::Pointer Prediffer::getCoefficientIndex() const
+{
+    CoeffIndexMsg::Pointer msg(new CoeffIndexMsg(itsId));
+    CoefficientIndex &dest = msg->getContents();
+    
+    Location localCell;
+    for(localCell.second = 0;
+        localCell.second < itsContext.domainGrid[TIME]->size();
+        ++localCell.second)
+    {
+        for(localCell.first = 0;
+            localCell.first < itsContext.domainGrid[FREQ]->size();
+            ++localCell.first)
+        {
+            Location globalCell(localCell.first + itsContext.chunkStart.first,
+                localCell.second + itsContext.chunkStart.second);
+                
+            const size_t localId = itsContext.domainGrid.getCellId(localCell);
+            const size_t globalId =
+                itsContext.solutionGrid.getCellId(globalCell);
+
+            // Note: log(N) look-up.
+            CellCoeffIndex &cell = dest[globalId];
+
+            for(MeqParmGroup::const_iterator it = itsParameters.begin(),
+                end = itsParameters.end();
+                it != end;
+                ++it)
+            {
+                if(it->second.isSolvable())
+                {
+                    // Note: log(N) look-up.
+                    const uint32 parmId = (dest.insertParm(it->first)).first;
+                    const MeqFunklet *funklet =
+                        it->second.getFunklets()[localId];
+                        
+                    cell.setInterval(parmId, CoeffInterval(funklet->scidInx(),
+                        funklet->ncoeff()));
+                }
+            }
+        }
+    }
+    
+    return msg;
+}
+
+
+void Prediffer::setCoefficientIndex(CoeffIndexMsg::Pointer msg)
+{
+    CoefficientIndex &index = msg->getContents();
+
+    vector<bool> parmMask(index.getParmCount(), false);
+    vector<uint32> parmMapping(index.getParmCount(), 0);
+    for(size_t i = 0; i < itsContext.localParmSelection.size(); ++i)
+    {
+        const MeqPExpr &parm = itsContext.localParmSelection[i];
+        
+        // Note: log(N) look-up.
+        pair<uint32, bool> result = index.findParm(parm.getName());
+        parmMask[result.first] = result.second;
+        parmMapping[result.first] = i;
+    }
+    cout << "Parameter mapping: " << parmMapping << endl;
+    
+    itsContext.localCoeffIndices.clear();
+    for(CoefficientIndex::CoeffIndexType::const_iterator it = index.begin(),
+        end = index.end();
+        it != end;
+        ++it)
+    {
+        const uint32 cellId = it->first;
+
+        Location location = itsContext.solutionGrid.getCellLocation(cellId);
+        if(location.first >= itsContext.chunkStart.first
+            && location.first <= itsContext.chunkEnd.first
+            && location.second >= itsContext.chunkStart.second
+            && location.second <= itsContext.chunkEnd.second)
+        {
+            const CellCoeffIndex &global = it->second;
+            // Note: log(N) look-up.
+            CellCoeffIndex &local = itsContext.localCoeffIndices[cellId];
+
+            for(CellCoeffIndex::const_iterator intIt = global.begin(),
+                intEnd = global.end();
+                intIt != intEnd;
+                ++intIt)
+            {
+                DBGASSERT(intIt->first < index.getParmCount());
+                if(parmMask[intIt->first])
+                {
+                    local.setInterval(parmMapping[intIt->first], intIt->second);
+                }
+            }
+        }
+    }    
+}
+
+CoefficientMsg::Pointer Prediffer::getCoefficients(const Location &start,
+    const Location &end) const
+{
+    return CoefficientMsg::Pointer(new CoefficientMsg(itsId));
+}    
+
+void Prediffer::setCoefficients(SolutionMsg::Pointer msg)
+{
+}
+
+void Prediffer::storeParameterValues()
+{
+}
 
 /*
+CoefficientMsg::Pointer Prediffer::getCoefficients(const Location &start,
+    const Location &end) const
+{    
+    // Check preconditions.
+    DBGASSERT(start.first <= end.first && start.second <= end.second);
+    DBGASSERT(start.first >= itsContext.chunkStart.first
+        && start.first <= itsContext.chunkEnd.first
+        && start.second >= itsContext.chunkStart.second
+        && start.second <= itsContext.chunkEnd.second);
+    DBGASSERT(end.first >= itsContext.chunkStart.first
+        && end.first <= itsContext.chunkEnd.first
+        && end.second >= itsContext.chunkStart.second
+        && end.second <= itsContext.chunkEnd.second);
 
-void Prediffer::predict()
+    size_t nCells = (end.second - start.second + 1)
+        * (end.first - start.first + 1);
+        
+    CoefficientMsg::Pointer result(new CoefficientMsg(itsId));
+    vector<CellCoeff> &cells = result->getContents();
+
+    cells.resize(nCells);
+    size_t index = 0;
+    for(size_t t = start.second; t <= end.second; ++t)
+    {
+        for(size_t f = start.first; f <= end.first; ++f)
+        {
+            const uint32 cellId =
+                itsContext.solutionGrid.getCellId(Location(f, t));
+
+            cells[index].id = cellId;
+
+            const Location location(f - itsContext.chunkStart.first,
+                t - itsContext.chunkStart.second);
+
+            const uint32 localCellId =
+                itsContext.domainGrid.getCellId(location);
+        
+            for(size_t i = 0; i < itsContext.localParmSelection.size(); ++i)
+            {
+                const MeqPExpr &parm = itsContext.localParmSelection[i];
+                DBGASSERT(localCellId < parm.getFunklets().size());
+
+                const MeqFunklet *funklet = parm.getFunklets()[localCellId];
+                const MeqMatrix &localCoeff = funklet->getCoeff();
+                const double *localCoeffValues = localCoeff.doubleStorage();
+                const vector<bool> &localMask = funklet->getSolvMask();
+                
+                cells[index].coeff.reserve(funklet->nscid());
+                for(size_t j = 0; j < localCoeff.nelements(); ++j)
+                {
+                    if(localMask[j])
+                    {
+                        cells[index].coeff.push_back(localCoeffValues[j]);
+                    }
+                }
+            }
+
+            ++index;
+        }            
+    }
+    
+    return result;
+}
+
+
+void Prediffer::setCoefficients(CoefficientMsg::Pointer msg)
 {
-    resetTimers();
+    const vector<CellCoeff> &cells = msg->getContents();
 
-    itsProcessTimer.start();
-    process(false, true, false, make_pair(0, 0),
-        make_pair(itsChunk->grid.freq.size() - 1,
-            itsChunk->grid.time.size() - 1),
-        &Prediffer::copyBaseline, 0);
-    itsProcessTimer.stop();
-    printTimers("Copy");
+    for(vector<CellCoeff>::const_iterator cellIt = cells.begin(),
+        cellEnd = cells.end();
+        cellIt != cellEnd;
+        ++cellIt)
+    {        
+        const uint32 cellId = cellIt->id;
+        Location location = itsContext.solutionGrid.getCellLocation(cellId);
+
+        DBGASSERT(location.first >= itsContext.chunkStart.first
+            && location.second >= itsContext.chunkStart.second);
+        location.first -= itsContext.chunkStart.first;
+        location.second -= itsContext.chunkStart.second;
+        
+        const uint32 localCellId = itsContext.domainGrid.getCellId(location);
+        DBGASSERT(localCellId < itsContext.domainGrid.getCellCount());
+
+        // TODO: Change this into look-up on local cell id.
+        const CellCoefficientIndex &local =
+            itsContext.localCoeffIndices[cellId];
+            
+        for(CellCoefficientIndex::const_iterator it = local.begin(),
+            end = local.end();
+            it != end;
+            ++it)
+        {
+            DBGASSERT(it->first < itsContext.localParmSelection.size());
+
+            const MeqPExpr &funklet = itsContext.localParmSelection[it->first];
+//            funklet.update(localCellId, it->second.start,
+//                srcCoeff.itsCoefficients);
+        }
+    }
+}
+*/
+
+/*
+CoefficientSet::Pointer Prediffer::getCoefficients(const Location &start,
+    const Location &end) const
+{    
+    // Check preconditions.
+    DBGASSERT(start.first <= end.first && start.second <= end.second);
+    DBGASSERT(start.first >= itsContext.chunkStart.first
+        && start.first <= itsContext.chunkEnd.first
+        && start.second >= itsContext.chunkStart.second
+        && start.second <= itsContext.chunkEnd.second);
+    DBGASSERT(end.first >= itsContext.chunkStart.first
+        && end.first <= itsContext.chunkEnd.first
+        && end.second >= itsContext.chunkStart.second
+        && end.second <= itsContext.chunkEnd.second);
+
+    size_t nCells = (end.second - start.second + 1)
+        * (end.first - start.first + 1);
+        
+    CoefficientSet::Pointer result(new CoefficientSet(itsId, nCells));
+    CoefficientSet::iterator cellIt = result->begin();
+
+    for(size_t t = start.second; t <= end.second; ++t)
+    {
+        for(size_t f = start.first; f <= end.first; ++f)
+        {
+            const uint32 cellId =
+                itsContext.solutionGrid.getCellId(Location(f, t));
+
+            cellIt->id = cellId;
+
+            const Location location(f - itsContext.chunkStart.first,
+                t - itsContext.chunkStart.second);
+
+            const uint32 localCellId =
+                itsContext.domainGrid.getCellId(location);
+        
+            for(size_t i = 0; i < itsContext.localParmSelection.size(); ++i)
+            {
+                const MeqPExpr &parm = itsContext.localParmSelection[i];
+                DBGASSERT(localCellId < parm.getFunklets().size());
+
+                const MeqFunklet *funklet = parm.getFunklets()[localCellId];
+                const MeqMatrix &localCoeff = funklet->getCoeff();
+                const double *localCoeffValues = localCoeff.doubleStorage();
+                const vector<bool> &localMask = funklet->getSolvMask();
+                
+                cellIt->coeff.reserve(funklet->nscid());
+                for(size_t j = 0; j < localCoeff.nelements(); ++j)
+                {
+                    if(localMask[j])
+                    {
+                        cellIt->coeff.push_back(localCoeffValues[j]);
+                    }
+                }
+            }
+
+            ++cellIt;
+        }            
+    }
+    
+    return result;
+}
+
+
+void Prediffer::setCoefficients(CoefficientSet::Pointer coeffSet)
+{
+    for(CoefficientSet::iterator cellIt = coeffSet->begin(),
+        cellEnd = coeffSet->end();
+        cellIt != cellEnd;
+        ++cellIt)
+    {        
+        const uint32 cellId = cellIt->id;
+        Location location = itsContext.solutionGrid.getCellLocation(cellId);
+
+        DBGASSERT(location.first >= itsContext.chunkStart.first
+            && location.second >= itsContext.chunkStart.second);
+        location.first -= itsContext.chunkStart.first;
+        location.second -= itsContext.chunkStart.second;
+        
+        const uint32 localCellId = itsContext.domainGrid.getCellId(location);
+        DBGASSERT(localCellId < itsContext.domainGrid.getCellCount());
+
+        // TODO: Change this into look-up on local cell id.
+        const CellCoefficientIndex &local =
+            itsContext.localCoeffIndices[cellId];
+            
+        for(CellCoefficientIndex::const_iterator it = local.begin(),
+            end = local.end();
+            it != end;
+            ++it)
+        {
+            DBGASSERT(it->first < itsContext.localParmSelection.size());
+
+            const MeqPExpr &funklet = itsContext.localParmSelection[it->first];
+//            funklet.update(localCellId, it->second.start,
+//                srcCoeff.itsCoefficients);
+        }
+    }
+}
+*/
+
+void Prediffer::simulate()
+{
+//    resetTimers();
+//    itsProcessTimer.start();
+    
+    DBGASSERT(itsOperation == SIMULATE);
+
+//    process(false, true, false, make_pair(0, 0),
+//        make_pair(itsChunk->grid.freq.size() - 1,
+//            itsChunk->grid.time.size() - 1),
+//        &Prediffer::copyBaseline, 0);
+    
+//    itsProcessTimer.stop();
+//    printTimers("Copy");
 }
 
 
 void Prediffer::subtract()
 {
-    resetTimers();
+//    resetTimers();
+//    itsProcessTimer.start();
+
+    DBGASSERT(itsOperation == SUBTRACT);
     
-    itsProcessTimer.start();
-    process(false, true, false, make_pair(0, 0),
-        make_pair(itsChunk->grid.freq.size() - 1,
-            itsChunk->grid.time.size() - 1),
-        &Prediffer::subtractBaseline, 0);
-    itsProcessTimer.stop();
-    printTimers("Subtract");
+//    process(false, true, false, make_pair(0, 0),
+//        make_pair(itsChunk->grid.freq.size() - 1,
+//            itsChunk->grid.time.size() - 1),
+//        &Prediffer::subtractBaseline, 0);
+    
+//    itsProcessTimer.stop();
+//    printTimers("Subtract");
 }
 
 
 void Prediffer::correct()
 {
-    resetTimers();
-
-    itsProcessTimer.start();
-    process(false, true, false, make_pair(0, 0),
-        make_pair(itsChunk->grid.freq.size() - 1,
-            itsChunk->grid.time.size() - 1),
-        &Prediffer::copyBaseline, 0);
-    itsProcessTimer.stop();
-    printTimers("Correct");
+//    resetTimers();
+//    itsProcessTimer.start();
+    
+    DBGASSERT(itsOperation == CORRECT);
+    
+//    process(false, true, false, make_pair(0, 0),
+//        make_pair(itsChunk->grid.freq.size() - 1,
+//            itsChunk->grid.time.size() - 1),
+//        &Prediffer::copyBaseline, 0);
+    
+//    itsProcessTimer.stop();
+//    printTimers("Correct");
 }
 
+/*
+EquationMsg::Pointer Prediffer::construct(const Location &start,
+    const Location &end)
+{
+    DBGASSERT(itsOperation == CONSTRUCT);
 
+    DBGASSERT(start.first <= end.first && start.second <= end.second);
+    DBGASSERT(start.first <= itsContext.chunkEnd.first
+        && end.first >= itsContext.chunkStart.first);
+    DBGASSERT(start.second <= itsContext.chunkEnd.second
+        && end.second >= itsContext.chunkStart.second);
+
+//    resetTimers();
+
+    // Clip request against chunk grid.
+    Location clipStart, clipEnd;
+    clipStart.first = max(start.first, itsContext.chunkStart.first);
+    clipStart.second = max(start.second, itsContext.chunkStart.second);
+    clipEnd.first = min(end.first, itsContext.chunkEnd.first);
+    clipEnd.second = min(end.second, itsContext.chunkEnd.second);
+
+    size_t nCells = (clipEnd.first - clipStart.first + 1)
+        * (clipEnd.second - clipStart.second + 1);
+
+    LOG_DEBUG_STR("Constructing equations for " << nCells << " cells.");
+
+
+    // Compute local cell id of start and end cell.
+    Location localStart, localEnd;
+    localStart.first = clipStart.first - itsContext.chunkStart.first;
+    localStart.second = clipStart.second - itsContext.chunkStart.second; 
+    localEnd.first = clipEnd.first - itsContext.chunkStart.first;
+    localEnd.second = clipEnd.second - itsContext.chunkStart.second;
+
+
+    uint32 localStartId = localStart.second
+        * (itsContext.chunkEnd.first - itsContext.chunkStart.first + 1)
+        + localStart.first;
+
+    uint32 localEndId = localEnd.second
+        * (itsContext.chunkEnd.first - itsContext.chunkStart.first + 1)
+        + localEnd.first;
+
+    DBGASSERT(localStartId < itsContext.solutionCells.size()
+        && localEndId < itsContext.solutionCells.size());
+
+
+
+    // TODO: introduce Box class template.
+    Location vstart(itsContext.domainGrid[FREQ]->lower(localStart.first),
+        itsContext.domainGrid[TIME]->lower(localStart.second));
+    Location vend(itsContext.domainGrid[FREQ]->upper(localEnd.first),
+        itsContext.domainGrid[TIME]->upper(localEnd.second));
+
+    itsContext.domainGrid[FREQ]->lower(localEnd.first);
+    Location startCell = 
+    const pair<GridLocation, GridLocation> &startCell = itsContext.solutionCells[localStartId];
+    const pair<GridLocation, GridLocation> &endCell = itsContext.solutionCells[localEndId];
+    Location vstart(startCell.first.first, startCell.first.second);
+    Location vend(endCell.second.first, endCell.second.second);
+
+    LOG_DEBUG_STR("Processing visbility domain: [ (" << vstart.first << ","
+        << vstart.second << "), (" << vend.first << "," << vend.second << ") ]"
+        << endl);
+
+
+
+    // CONVERT TO LOCAL
+    GridLocation *startend[2];
+    startend[0] = new GridLocation();
+    startend[1] = new GridLocation();
+    *startend[0] = localStart;
+    *startend[1] = localEnd;
+
+    // Allocate contexts for multi-threaded execution.
+    for(size_t thread = 0; thread < itsThreadContexts.size(); ++thread)
+    {
+        ThreadContext &context = itsThreadContexts[thread];
+
+        context.equations.resize(nCells);
+        size_t i = 0;
+        for(uint32 tcell = clipStart.second; tcell <= clipEnd.second; ++tcell)
+        {
+            for(uint32 fcell = clipStart.first; fcell <= clipEnd.first; ++fcell)
+            {
+//                uint32 cellId = itsContext.globalGrid.getCellId(GridLocation(fcell, tcell));
+                const uint32 localCellId =
+                    (tcell - itsContext.chunkStart.second)
+                    * (itsContext.chunkEnd.first - itsContext.chunkStart.first + 1)
+                    + fcell - itsContext.chunkStart.first;
+
+                cout << "Init local cell " << localCellId << " " << itsContext.cellCoefficientCount[localCellId] << endl;
+                context.equations[i].set(itsContext.cellCoefficientCount[localCellId]);
+//            context.equations[i].set(static_cast<int>(itsContext.unknownCount));
+                ++i;
+            }
+        }
+        
+        context.unknownIndex.resize(itsContext.unknownCount);
+        context.perturbedRe.resize(itsContext.unknownCount);
+        context.perturbedIm.resize(itsContext.unknownCount);
+        context.partialRe.resize(itsContext.unknownCount);
+        context.partialIm.resize(itsContext.unknownCount);
+    }
+    
+    // Generate equations.
+    itsProcessTimer.start();
+    process(true, true, true, vstart, vend, &Prediffer::generateBaseline, &startend);
+    itsProcessTimer.stop();
+
+    delete startend[0];
+    delete startend[1];
+    	
+    // Merge thread equations into main equations.
+    // TODO: Re-implement the following in O(log(N)) steps.
+    ThreadContext &main = itsThreadContexts[0];
+    	for(size_t thread = 1; thread < itsThreadContexts.size(); ++thread)
+    	{
+        ThreadContext &context = itsThreadContexts[thread];
+            
+        for(size_t i = 0; i < context.equations.size(); ++i)
+        {
+            main.equations[i].merge(context.equations[i]);
+    }
+
+    	context.equations.clear();
+    }
+
+    size_t i = 0;
+    equations.resize(nCells);
+    for(uint32 tcell = clipStart.second; tcell <= clipEnd.second; ++tcell)
+    {
+        for(uint32 fcell = clipStart.first; fcell <= clipEnd.first; ++fcell)
+        {
+            equations[i].itsCellId = 
+                itsContext.globalGrid.getCellId(GridLocation(fcell, tcell));
+            equations[i].itsEquations = main.equations[i];
+            ++i;
+    	}
+    }
+    
+    printTimers("Generate");
+
+    EquationMsg::Pointer msg(new EquationMsg(itsId));
+    return msg;
+}
+
+*/
+
+/*
 void Prediffer::generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
     vector<casa::LSQFit> &solvers)
 {
@@ -1360,6 +1786,73 @@ void Prediffer::printTimers(const string &operationName)
     }
 }
 */
+
+void Prediffer::initPolarizationMap()
+{
+    // Create a lookup table that maps external (measurement) polarization
+    // indices to internal polarization indices. The internal indices are:
+    // 0 - XX
+    // 1 - XY
+    // 2 - YX
+    // 3 - YY
+    // No assumptions can be made regarding the external polarization indices,
+    // which is why we need this map in the first place.
+    
+    const vector<string> &polarizations = itsChunk->dims.getPolarizations();
+        
+    itsPolarizationMap.resize(polarizations.size());
+    for(size_t i = 0; i < polarizations.size(); ++i)
+    {
+        if(polarizations[i] == "XX")
+        {
+            itsPolarizationMap[i] = 0;
+        }
+        else if(polarizations[i] == "XY")
+        {
+            itsPolarizationMap[i] = 1;
+        }
+        else if(polarizations[i] == "YX")
+        {
+            itsPolarizationMap[i] = 2;
+        }
+        else if(polarizations[i] == "YY")
+        {
+            itsPolarizationMap[i] = 3;
+        }
+        else
+        {
+            LOG_WARN_STR("Don't know how to process polarization "
+                << polarizations[i] << "; will be skipped.");
+            itsPolarizationMap[i] = -1;
+        }
+    }
+}
+
+
+void Prediffer::loadParameterValues()
+{
+    vector<string> empty;
+
+    // Clear all cached parameter values.
+    itsParameterValues.clear();
+
+    // Get all parameters that intersect the chunk.
+    const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
+    const Box<double> bbox = sampleGrid.getBoundingBox();
+    LOFAR::ParmDB::ParmDomain domain(bbox.start.first, bbox.end.first,
+        bbox.start.second, bbox.end.second);
+
+    itsInstrumentDb.getValues(itsParameterValues, empty, domain);
+    itsSkyDb.getValues(itsParameterValues, empty, domain);
+
+    // Remove the funklets from all parameters.
+    for (MeqParmGroup::iterator it = itsParameters.begin();
+        it != itsParameters.end();
+        ++it)
+    {
+        it->second.removeFunklets();
+    }
+}
 
 } // namespace BBS
 } // namespace LOFAR

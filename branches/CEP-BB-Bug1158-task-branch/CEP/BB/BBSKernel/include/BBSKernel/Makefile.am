@@ -4,13 +4,16 @@ pkginclude_HEADERS = Package__Version.h 		\
 	Axis.h			\
 	Box.h			\
 	BBSStatus.h		\
+	CoefficientIndex.h	\
 	Exceptions.h		\
 	Grid.h			\
 	Measurement.h		\
 	MeasurementAIPS.h	\
+	Messages.h		\
 	Model.h			\
 	ParmData.h		\
 	Prediffer.h		\
+	Solver.h		\
 	Types.h			\
 	VisData.h		\
 	VisDimensions.h		\

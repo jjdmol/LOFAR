@@ -67,6 +67,7 @@ using std::max;
 
 Model::Model(const Instrument &instrument, MeqParmGroup &parmGroup,
     ParmDB *skyDBase, MeqPhaseRef *phaseRef)
+    :   itsEquationType(UNSET)
 {
     // Construct source list.
     itsSourceList.reset(new MeqSourceList(*skyDBase, parmGroup));
@@ -119,7 +120,8 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
     }
 
     // Clear all equations.
-    itsEquations.clear();
+    clearEquations();
+    itsEquationType = type;
 
     // Make nodes for all specified sources (use all if none specified).
     if(sources.empty())
@@ -417,6 +419,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
 void Model::clearEquations()
 {
     itsEquations.clear();
+    itsEquationType = UNSET;
 }
 
 

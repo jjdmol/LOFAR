@@ -1,6 +1,6 @@
-//# Solver.cc: Calculate parameter values using a least squares fitter
+//# Solver.cc: 
 //#
-//# Copyright (C) 2004
+//# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,23 +21,25 @@
 //# $Id$
 
 #include <lofar_config.h>
-
 #include <BBSKernel/Solver.h>
+
+#include <Common/lofar_iostream.h>
+#include <Common/LofarTypes.h>
 #include <Common/StreamUtil.h>
-#include <Common/LofarLogger.h>
 #include <Common/Timer.h>
 
-#include <ParmDB/ParmValue.h>
-#include <ParmDB/ParmDomain.h>
+#if 0
+    #define NONREADY        casa::LSQFit::NONREADY
+    #define N_ReadyCode     casa::LSQFit::N_ReadyCode
+    #define SUMLL           casa::LSQFit::SUMLL
+    #define NC              casa::LSQFit::NC
+#else
+    #define NONREADY        0
+    #define N_ReadyCode     999
+    #define NC              0
+    #define SUMLL           2
+#endif
 
-#include <iostream>
-#include <fstream>
-#include <stdexcept>
-#include <iomanip>
-#include <cmath>
-
-using namespace std;
-using namespace casa;
 
 namespace LOFAR
 {
@@ -45,306 +47,511 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
-Solver::Solver ()
-: itsDoSet  (true)
+
+ostream &operator<<(ostream &out, const casa::LSQFit &eq)
 {
-  LOG_TRACE_FLOW( "Solver constructor" );
-}
-
-Solver::~Solver()
-{
-  LOG_TRACE_FLOW( "Solver destructor" );
-}
-
-void Solver::solve (bool useSVD)
-{
-  //LOG_INFO_STR( "solve using file ");
-  ASSERT (!itsDoSet);
-  //BBSTest::ScopedTimer timer("S:solver");
-  vector<ParmData>& globalParms = itsParmInfo.parms();
-  for (uint i=0; i<itsFitters.size(); ++i) {
-    FitterData& fitObj = itsFitters[i];
-    //  timer.start();
-    ASSERT (fitObj.solvableValues.size() > 0);
-    // Solve the equation.
-    uint rank;
-    double fit;
-    LOG_DEBUG_STR( "Solution before: " << fitObj.solvableValues);
-    rank = 0;
-    ///    BBSTest::Logger::log("Before: ", itsParmInfo);
-    bool solFlag = fitObj.fitter.solveLoop (fit, rank,
-                        &(fitObj.solvableValues[0]),
-                        useSVD);
-    ///    BBSTest::Logger::log("After: ", itsParmInfo);
-    LOG_DEBUG_STR( "Solution after:  " << fitObj.solvableValues);
-
-    fitObj.quality.init();
-    fitObj.quality.itsSolFlag = solFlag;
-    fitObj.quality.itsRank    = rank;
-    fitObj.quality.itsFit     = fit;
-    fitObj.quality.itsMu      = fitObj.fitter.getWeightedSD();
-    fitObj.quality.itsStddev  = fitObj.fitter.getSD();
-    fitObj.quality.itsChi     = fitObj.fitter.getChi();
-
-    // Store the new values in the ParmData vector.
-    for (uint j=0; j<globalParms.size(); ++j) {
-      // Update the values of each parm for this solve domain.
-      int nr = globalParms[j].update (i, fitObj.solvableValues);
-      DBGASSERT (nr = globalParms[j].info()[i].nscid);
-    }
-  }
-  //  timer.stop();
-  //  BBSTest::Logger::log("solver", timer);
-  itsDoSet = false;
-  return;
-}
-
-
-// Log the values of the solvable parameters and the quality indicators of the
-// last iteration to a ParmDB. The type of the parameters is set to 'history'
-// to ensure that they cannot accidentily be used as input for BBSkernel. Also,
-// ParmFacade::getHistory() checks on this type.
-void Solver::log(LOFAR::ParmDB::ParmDB &table, const string &stepName)
-{
-    ostringstream os;
-    os << setfill('0');
-
-    // Get parameters and solve domains.
-    const vector<ParmData> &parms = itsParmInfo.parms();
-    const vector<MeqDomain> &domains = itsParmInfo.getDomains();
-
-    // Default values for the coefficients (every parameters of the history
-    // type has exactly one coefficient, and only solvable parameters are
-    // logged).
-    bool solvable = true;
-    vector<int> shape(2, 1);
-
-    // For each solve domain, log the solver quality indicators and the values of the
-    // coefficients of each solvable parameter.
-    for(size_t i = 0; i < itsFitters.size(); ++i)
+    casa::uInt rank, nun, np, ncon, ner, *piv;
+    casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
+    eq.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er, piv, sEq, sol,
+        prec, nonlin);
+    
+    for(size_t i = 0; i < nun; ++i)
     {
-        LOFAR::ParmDB::ParmValue value;
-        LOFAR::ParmDB::ParmValueRep &valueRep = value.rep();
+        size_t idx = ((2*nun+1-i)*i)/2;
+    	for(size_t j = 0; j < nun - i; ++j)
+    	{
+    		cout << nEq[idx+j] << "  ";
+    	}
+    	cout << endl;
+    }
+    
+    return out;
+}
 
-        valueRep.setType("history");
-        valueRep.setDomain(LOFAR::ParmDB::ParmDomain(domains[i].startX(), domains[i].endX(), domains[i].startY(), domains[i].endY()));
+//Solver::Solver()
+//{
+//    itsCoefficientIndex.reset(new CoefficientIndex());
+//}
 
-        // Log quality indicators.
-        FitterData &fitter = itsFitters[i];
+/*
+void Solver::setParameterIndex(uint32 kernelId, const vector<string> &index)
+{
+    vector<uint32> &parameterMapping = itsParameterMapping[kernelId];
+    parameterMapping.resize(index.size());
 
-        string stepPrefix = stepName + ":";
-        string domainSuffix;
-        if(itsFitters.size() > 1)
+    for(uint32 i = 0; i < index.size(); ++i)
+    {
+        pair<map<string, uint32>::iterator, bool> result =
+            itsParameters.insert(make_pair(index[i], itsParameters.size()));
+
+        parameterMapping[i] = (result.first)->second;
+    }
+
+    cout << "Mapping (" << kernelId << "): " << parameterMapping << endl;
+}
+
+
+void Solver::getParameterIndex(vector<string> &index) const
+{
+    index.reserve(itsParameters.size());
+    for(map<string, uint32>::const_iterator it = itsParameters.begin(),
+        end = itsParameters.end();
+        it != end;
+        ++it)
+    {
+        index.push_back(it->first);
+    }
+}
+*/
+
+CoeffIndexMsg::Pointer Solver::getCoefficientIndex() const
+{
+    CoeffIndexMsg::Pointer msg(new CoeffIndexMsg(0));
+    msg->getContents() = itsCoefficientIndex;
+
+    return msg;
+}
+
+void Solver::setCoefficientIndex(CoeffIndexMsg::Pointer msg)
+{
+    const uint32 kernelId = msg->getKernelId();
+    const CoefficientIndex &index = msg->getContents();
+
+    // Construct a mapping from local parameter id to global parameter id
+    // based on name.
+    vector<uint32> pMapping(index.getParmCount());
+    for(CoefficientIndex::ParmIndexType::const_iterator it = index.beginParm(),
+        end = index.endParm();
+        it != end;
+        ++it)
+    {
+        const pair<uint32, bool> result =
+            itsCoefficientIndex.insertParm(it->first);
+            
+        pMapping[it->second] = result.first;
+    }
+    cout << "Parameter mapping (" << kernelId << "): " << pMapping << endl;
+    
+    for(CoefficientIndex::CoeffIndexType::const_iterator it =
+        index.begin(), end = index.end();
+        it != end;
+        ++it)
+    {
+        const uint32 cellId = it->first;
+        const CellCoeffIndex &local = it->second;
+        CellCoeffIndex &global = itsCoefficientIndex[cellId];
+        
+        vector<uint32> &cMapping = itsCoeffMapping[kernelId][cellId];
+        cMapping.resize(local.getCount());
+        for(CellCoeffIndex::const_iterator intIt = local.begin(),
+            intEnd = local.end();
+            intIt != intEnd;
+            ++intIt)
         {
-            os.str("");
-            os << ":domain" << setw(((int) log10(double(itsFitters.size())) + 1)) << i;
-            domainSuffix = os.str();
-        }
+            const CoeffInterval &interval =
+                global.setInterval(pMapping[intIt->first],
+                    (intIt->second).length);
 
-        value.setNewParm();
-        double rank = fitter.quality.itsRank;
-        valueRep.setCoeff(&rank, &solvable, shape);
-        table.putValue(stepPrefix + "solver:rank" + domainSuffix, value);
-
-        value.setNewParm();
-        valueRep.setCoeff(&fitter.quality.itsFit, &solvable, shape);
-        table.putValue(stepPrefix + "solver:fit" + domainSuffix, value);
-
-        value.setNewParm();
-        valueRep.setCoeff(&fitter.quality.itsMu, &solvable, shape);
-        table.putValue(stepPrefix + "solver:mu" + domainSuffix, value);
-
-        value.setNewParm();
-        valueRep.setCoeff(&fitter.quality.itsStddev, &solvable, shape);
-        table.putValue(stepPrefix + "solver:stddev" + domainSuffix, value);
-
-        value.setNewParm();
-        valueRep.setCoeff(&fitter.quality.itsChi, &solvable, shape);
-        table.putValue(stepPrefix + "solver:chi" + domainSuffix, value);
-
-        // Log each solvable parameter. Each combinaton of coefficient
-        // and solve domain is logged separately. Otherwise, one would
-        // currently not be able to view coefficients separately in the
-        // plotter.
-        for(size_t j = 0; j < parms.size(); ++j)
-        {
-            const vector<bool> &mask = parms[j].getSolvMask(i);
-            const MeqMatrix &coeff = parms[j].getCoeff(i);
-            const double *data = coeff.doubleStorage();
-
-            int indexWidth = ((int) log10(double(mask.size()))) + 1;
-
-            // Log each coefficient of the current parameter.
-            for(size_t k = 0; k < mask.size(); k++)
+            for(size_t i = 0; i < interval.length; ++i)
             {
-                // Only log solvable coefficients.
-                if(mask[k])
-                {
-                    value.setNewParm();
-                    valueRep.setCoeff(&data[k], &solvable, shape);
-                    os.str("");
-                    os << stepPrefix << parms[j].getName() << ":c" << setw(indexWidth) << k << domainSuffix;
-                    table.putValue(os.str(), value);
-                }
+                cMapping[(intIt->second).start + i] = interval.start + i;
             }
         }
     }
+}    
+
+
+void setCoefficients(CoefficientMsg::Pointer msg)
+{
 }
 
-void Solver::mergeFitters (const vector<LSQFit>& fitters, int prediffer)
+void setEquations(EquationMsg::Pointer msg)
 {
-  ASSERT (uint(prediffer) < itsPredInfo.size());
-  // Initialize the solvers (needed after a setSolvable).
-  if (itsDoSet) {
-    for (uint i=0; i<itsFitters.size(); ++i) {
-      itsFitters[i].fitter.set ((uInt)itsFitters[i].solvableValues.size());
-      itsFitters[i].nused = 0;
-      itsFitters[i].nflagged = 0;
+}
+
+bool iterate(SolutionMsg::Pointer msg)
+{
+    return true;
+}
+
+/*
+void Solver::getCoefficientIndices(vector<CoefficientIndex> &index) const
+{
+    index.clear();
+    
+    for(map<uint32, CoefficientIndex>::const_iterator it =
+        itsCoefficientIndex.begin(),
+        end = itsCoefficientIndex.end();
+        it != end;
+        ++it)
+    {
+        index.push_back(it->second);        
     }
-    itsDoSet = false;
-  }
-  // Merge all fitters from the given prediffer with the global fitters.
-  // Check if things are ok.
-  PredifferInfo& predInfo = itsPredInfo[prediffer];
-  ASSERT (fitters.size() == predInfo.solveDomainIndices.size());
-  for (uint i=0; i<fitters.size(); ++i) {
-    // Get index of the corresponding global fitter.
-    int fitInx = predInfo.solveDomainIndices[i];
-    // Get the mapping to unknowns in global fitter.
-    vector<uint>& scidInx = predInfo.scidMap[fitInx];
-    // Check if given nr of unknowns matches the index length.
-    ASSERT (fitters[i].nUnknowns() == scidInx.size());
-    ASSERT (itsFitters[fitInx].fitter.merge (fitters[i],
-                         scidInx.size(), &scidInx[0]));
-  }
 }
+*/
 
-void Solver::initSolvableParmData (int nrPrediffers,
-                   const vector<MeqDomain>& solveDomains,
-                   const MeqDomain& workDomain)
+/*
+void Solver::setCoefficientIndex(uint32 kernelId, uint32 cellId,
+    const CoefficientIndex &index)
 {
-  // Initialize the parm name map.
-  itsNameMap.clear();
-  // The number of fitters is equal to the number of solve domains.
-  itsFitters.resize (solveDomains.size());
-  // Set the domain info.
-  itsParmInfo.set (solveDomains, workDomain);
-  // Check if the work domain contains all solve domains.
-  ASSERT (itsParmInfo.getDomains().size() == solveDomains.size());
-  // Initialize the info for each Prediffer.
-  itsPredInfo.resize (nrPrediffers);
-  itsDoSet = true;
-}
+    // Update global CoefficientIndex.
+    vector<uint32> &parameterMapping = itsParameterMapping[kernelId];
+    vector<uint32> &coefficientMapping =
+        itsCoefficientMapping[kernelId][cellId];
+    coefficientMapping.resize(index.getCount());
 
-// The solvable parameters coming from the prediffers have to be collected
-// and put into a single solver collection.
-void Solver::setSolvableParmData (const ParmDataInfo& data,
-                  int prediffer)
-{
-  if (data.empty()) {
-    return;
-  }
-  itsDoSet = true;
-  PredifferInfo& predInfo = itsPredInfo[prediffer];
-  // Keep the solve domain indices of this Prediffer.
-  // It maps the Prediffer solve domains to the global solve domains.
-  predInfo.solveDomainIndices = data.getDomainIndices();
-  // Initialize the map of scids from prediffer to global fitters.
-  predInfo.scidMap.resize (predInfo.solveDomainIndices.size());
-  int totnDom = itsParmInfo.getDomainIndices().size();
-  // Handle all parms of the given prediffer.
-  const vector<ParmData>& predParms = data.parms();
-  vector<ParmData>& globalParms = itsParmInfo.parms();
-  // Loop through all parm entries and see if already used.
-  for (uint i=0; i<predParms.size(); ++i) {
-    const ParmData& predParm = predParms[i];
-    uint parminx = itsNameMap.size();       // index for new parms
-    map<string,int>::const_iterator value =
-                                       itsNameMap.find (predParm.getName());
-    if (value == itsNameMap.end()) {
-      // Not in use yet; so add it to the map and global parminfo.
-      DBGASSERT (parminx == globalParms.size());
-      itsNameMap[predParm.getName()] = parminx;
-      globalParms.push_back (ParmData(predParm.getName(),
-                      predParm.getParmDBSeqNr()));
-      globalParms[parminx].info().resize (totnDom);
-    } else {
-      // The parameter has already been used. Get its index.
-      parminx = value->second;
-      ASSERT (globalParms[parminx] == predParm);
+    CoefficientIndex &globalIndex = itsCoefficientIndex[cellId];
+
+    for(CoefficientIndex::const_iterator it = index.begin(), end = index.end();
+        it != end;
+        ++it)
+    {
+        const CoefficientInterval &result =
+            globalIndex.setInterval(parameterMapping[it->first],
+                (it->second).length);
+
+        for(size_t i = 0; i < result.length; ++i)
+        {
+            coefficientMapping[(it->second).start + i] = result.start + i;
+        }
     }
-    // Loop through all solve domains of this parm.
-    // If already handled, check if equal nscid, otherwise set nscid.
-    ParmData& globParm = globalParms[parminx];
-    for (uint j=0; j<predInfo.solveDomainIndices.size(); ++j) {
-      int domInx = predInfo.solveDomainIndices[j];
-      int fScid  = 0;
-      if (globParm.info()[domInx].coeff.isNull()) {
-    // This domain is new for this parm.
-    // Copy the ParmData domain info.
-    globParm.info()[domInx] = predParm.info()[j];
-    fScid = itsFitters[domInx].solvableValues.size();
-    // Append the coeff values to the solvable values of this domain.
-    globParm.setValues (domInx, itsFitters[domInx].solvableValues);
-      } else {
-    ASSERT (globParm.info()[domInx].nscid == predParm.info()[j].nscid);
-    fScid = globParm.info()[domInx].firstScid;
-      }
-      // Map the prediffer scids to the global ones.
-      vector<uint>& scidInx = predInfo.scidMap[j];
-      int nrs = predParm.info()[j].nscid;
-      scidInx.reserve (scidInx.size() + nrs);
-      for (int sc=0; sc<nrs; ++sc) {
-    scidInx.push_back (fScid+sc);
-      }
+}
+*/
+
+/*
+void Solver::setCoefficientIndex(size_t kernelId,
+    const CoefficientIndex &index)
+{
+    NSTimer t1, t2, t3;
+    
+    // Merge the kernel's coefficient index with the solver's coefficient index.
+    t1.start();
+    itsCoefficientIndex->merge(index);
+    t1.stop();
+    
+    // Construct a look-up table from parameter indices in index to
+    // parameter indices in itsCoefficientIndex. Parameter indices are matched 
+    // by matching the corresponding parameter names.
+    t2.start();
+    const std::map<string, uint> &kernelParameters = index.getParameters();
+
+    vector<uint> lut;
+    lut.resize(kernelParameters.size());
+
+    for(map<string, uint>::const_iterator it = kernelParameters.begin(),
+        end = kernelParameters.end();
+        it != end;
+        ++it)
+    {
+        lut[it->second] = itsCoefficientIndex->getParameterIndex(it->first);
     }
-  }
-}
+    t2.stop();
+   
+//    cout << lut << endl;
+    
+    // Build index look-up table for all solve domains of this kernel.
+    t3.start();
+    map<uint, vector<uint> > &kernelIndexLut = itsIndexLut[kernelId];
 
-const vector<double>& Solver::getSolvableValues (uint fitterIndex) const
-{
-  ASSERT (fitterIndex < itsFitters.size());
-  return itsFitters[fitterIndex].solvableValues;
-}
-
-const Quality& Solver::getQuality (uint fitterIndex) const
-{
-  ASSERT (fitterIndex < itsFitters.size());
-  return itsFitters[fitterIndex].quality;
-}
-
-void Solver::show (ostream& os)
-{
-  os << "Solver Names:" << endl;
-  for (map<string,int>::iterator iter = itsNameMap.begin();
-       iter != itsNameMap.end();
-       iter++) {
-    os << ' ' << iter->first << ' ' << iter->second << endl;
-  }
-  os << "Solver ParmInfo: " << endl;
-  itsParmInfo.show (os);
-  
-  os << "Solver Fitter Values:" << endl;
-  for (uint i=0; i<itsFitters.size(); ++i) {
-    os << ' ' << itsFitters[i].solvableValues << endl;
-  }
-  
-  os << "Solver PredInfo:" << endl;
-  for (uint i=0; i<itsPredInfo.size(); ++i) {
-    os << " sdindices " << itsPredInfo[i].solveDomainIndices << endl;
-    os << " scids    ";
-    for (uint j=0; j<itsPredInfo[i].scidMap.size(); ++j) {
-      os << " " << itsPredInfo[i].scidMap[j];
+    const map<uint, uint> &kernelDomains = index.getDomains();
+    for(map<uint, uint>::const_iterator itDomain = kernelDomains.begin(),
+        endDomain = kernelDomains.end();
+        itDomain != endDomain;
+        ++itDomain)
+    {
+        // Get the global domain identifier.
+        uint domainId = itDomain->first;
+        
+        // Get the index of this domain in the kernel's coefficient index.
+        uint kernelDomainIndex = itDomain->second;
+        
+        // Get the index of this domain in the solver's coefficient index.
+        uint domainIndex = itsCoefficientIndex->getDomainIndex(domainId);
+        
+        // Allocate the index lookup-table for this (kernel, domain).
+        vector<uint> &indexLut = kernelIndexLut[domainId];
+        indexLut.resize(index.getCoefficientCount(kernelDomainIndex));
+        
+        // Construct the index lookup-table.
+        const map<uint, CoefficientInterval> &kernelIntervals =
+            index.getCoefficientIntervals(kernelDomainIndex);
+        for(map<uint, CoefficientInterval>::const_iterator itInterval = kernelIntervals.begin(),
+            endParameter = kernelIntervals.end();
+            itInterval != endParameter;
+            ++itInterval)
+        {
+            DBGASSERT(itInterval->first < lut.size());
+            
+            CoefficientInterval interval =
+                itsCoefficientIndex->getCoefficientInterval(domainIndex,
+                    lut[itInterval->first]);
+                
+            for(uint i = 0; i < interval.length; ++i)
+            {
+                indexLut[itInterval->second.start + i] = interval.start + i;
+            }
+        }
     }
-    os << endl;
+    t3.stop();
+    
+//    cout << itsCoefficientIndex << endl;
+    cout << t1 << endl;
+    cout << t2 << endl;
+    cout << t3 << endl;
+}
+*/
+
+/*
+void Solver::setCoefficients(uint32 kernelId, const vector<Coefficients> &src)
+{
+    map<uint32, vector<uint32> > &cMapping = itsCoefficientMapping[kernelId];
+
+    for(size_t i = 0; i < src.size(); ++i)
+    {
+        const uint32 cellId = src[i].itsCellId;
+
+        Cell &cell = itsCells[cellId];
+        const CellCoefficientIndex &index = itsCoefficientIndex[cellId];
+
+        if(cell.solver.nUnknowns() == 0)
+        {
+            cout << "Initializing cell: " << cellId << endl;
+            cout << "Coefficient count: " << index.getCount() << endl;
+
+            cell.coefficients.resize(index.getCount());
+            cell.solver.set(index.getCount());
+            // Set new value solution test
+            cell.solver.setEpsValue(1e-9);
+            // Set new 'derivative' test (actually, the inf norm of the known
+            // vector is checked).
+            cell.solver.setEpsDerivative(1e-9);
+            // Set maximum number of iterations
+            cell.solver.setMaxIter(20);
+            // Set new factors (collinearity factor, and Levenberg-Marquardt LMFactor)
+            cell.solver.set(1e-9, 1.0);
+            cell.solver.setBalanced(true);
+        }
+
+        const vector<uint32> &mapping = cMapping[cellId];            
+        cout << "Look-up table: " << mapping << endl;
+        
+        ASSERT(mapping.size() == src[i].itsCoefficients.size());
+    
+        for(size_t j = 0; j < src[i].itsCoefficients.size(); ++j)
+        {
+            cell.coefficients[mapping[j]] = src[i].itsCoefficients[j];
+        }
+        cout << "Coefficients: " << cell.coefficients << endl;
+    }
+}
+*/
+
+/*
+void Solver::setEquations(uint32 kernelId, const vector<Equation> &equations)
+{
+//    map<uint, map<uint, vector<uint> > >::const_iterator kernelIt =
+//        itsIndexLut.find(kernelId);        
+//    ASSERT(kernelIt != itsIndexLut.end());
+
+//    map<uint, vector<uint> >::const_iterator indexIt =
+//        kernelIt->second.find(domainId);
+//    ASSERT(indexIt != kernelIt->second.end());
+        
+//    const vector<uint> &lut = indexIt->second;
+    map<uint32, vector<uint32> > &cmap = itsCoefficientMapping[kernelId];
+
+    for(size_t i = 0; i < equations.size(); ++i)
+    {
+        const uint32 cellId = equations[i].itsCellId;
+        const vector<uint> &mapping = cmap[cellId];
+
+        Cell &cell = itsCells[cellId];
+        cout << "Check: " <<  equations[i].itsEquations.nUnknowns() << " "
+            << mapping.size() << endl;
+            
+        ASSERT(equations[i].itsEquations.nUnknowns() == mapping.size());
+        bool result = cell.solver.merge(equations[i].itsEquations,
+            mapping.size(), const_cast<uint*>(&mapping[0]));
+        ASSERT(result);
+
+        ASSERT(cell.count >= 1);
+        cell.count--;
+
+        if(cell.count == 0)
+        {
+            cout << "Cell " << cellId << " ready for iteration." << endl;
+    }
+//        cout << cell.solver << endl;
   }
 }
+
+
+void Solver::iterate(vector<Solution> &solutions)
+{
+    for(map<uint, Cell>::iterator it = itsCells.begin(), end = itsCells.end();
+        it != end;
+        ++it)
+    {
+        Cell &cell = it->second;
+
+        if(cell.count != 0)
+        {
+            continue;
+        }
+        
+        cell.count = itsGroupSize;
+        
+        // Get some statistics from the solver. Note that the chi squared is
+        // valid for the _previous_ iteration. The solver cannot compute the
+        // chi squared directly after an iteration, because it needs the new
+        // condition equations for that and these are computed by the kernel.
+        casa::uInt rank, nun, np, ncon, ner, *piv;
+        casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
+        cell.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
+            piv, sEq, sol, prec, nonlin);
+        DBGASSERT(er && ner > SUMLL);
+
+        double lmFactor = nonlin;
+        double chiSquared = er[SUMLL] / std::max(er[NC] + nun, 1.0);
+
+        // Solve the normal equations.
+        cell.solver.solveLoop(rank, &(cell.coefficients[0]), true);
+
+    //    cout << "Coefficients: " << cell.coefficients << endl;
+
+        // Construct a result.
+        Solution solution;
+        solution.itsCellId = it->first;
+        solution.itsCoefficients = cell.coefficients;
+        solution.itsResultCode = cell.solver.isReady();
+        solution.itsResultText = cell.solver.readyText();
+        solution.itsRank = rank;
+        solution.itsChiSquared = chiSquared;
+        solution.itsLMFactor = lmFactor;
+
+        solutions.push_back(solution);
+
+        // If we're done with this domain, unregister it.
+        if(cell.solver.isReady() != NONREADY)
+        {
+            // remove solver
+            cout << "Done with cell " << it->first << endl;
+        }
+    }
+}
+*/
+
+/*
+void Solver::setCoefficients(uint kernelId, uint domainId, const vector<double> &coefficients)
+{
+    Domain &domain = itsDomains[domainId];
+
+    if(domain.solver.nUnknowns() == 0)
+    {
+        uint domainIndex = itsCoefficientIndex->getDomainIndex(domainId);
+        
+        cout << "Initializing domain" << endl;
+        cout << "Coefficient count: " << itsCoefficientIndex->getCoefficientCount(domainIndex) << endl;
+
+        domain.coefficients.resize(itsCoefficientIndex->getCoefficientCount(domainIndex));
+        domain.solver.set(itsCoefficientIndex->getCoefficientCount(domainIndex));
+        // Set new value solution test
+        domain.solver.setEpsValue(1e-9);
+        // Set new 'derivative' test (actually, the inf norm of the known
+        // vector is checked).
+        domain.solver.setEpsDerivative(1e-9);
+        // Set maximum number of iterations
+        domain.solver.setMaxIter(20);
+        // Set new factors (collinearity factor, and Levenberg-Marquardt LMFactor)
+        domain.solver.set(1e-9, 1.0);
+        domain.solver.setBalanced(true);
+    }
+            
+    const map<uint, map<uint, vector<uint> > >::const_iterator kernelIt =
+        itsIndexLut.find(kernelId);        
+    ASSERT(kernelIt != itsIndexLut.end());
+
+    const map<uint, vector<uint> >::const_iterator indexIt =
+        kernelIt->second.find(domainId);
+    ASSERT(indexIt != kernelIt->second.end());
+        
+    const vector<uint> &lut = indexIt->second;
+//    cout << "Look-up table: " << lut << endl;
+    ASSERT(lut.size() == coefficients.size());
+    
+    for(size_t i = 0; i < coefficients.size(); ++i)
+    {
+        domain.coefficients[lut[i]] = coefficients[i];
+    }
+    
+//    cout << "Coefficients: " << domain.coefficients << endl;
+}
+
+
+void Solver::setEquations(uint kernelId, uint domainId,
+    const casa::LSQFit &equations)
+{
+    map<uint, map<uint, vector<uint> > >::const_iterator kernelIt =
+        itsIndexLut.find(kernelId);        
+    ASSERT(kernelIt != itsIndexLut.end());
+
+    map<uint, vector<uint> >::const_iterator indexIt =
+        kernelIt->second.find(domainId);
+    ASSERT(indexIt != kernelIt->second.end());
+        
+    const vector<uint> &lut = indexIt->second;
+
+    ASSERT(equations.nUnknowns() == lut.size());
+    ASSERT(itsDomains[domainId].solver.nUnknowns() == lut.size());
+    bool result = itsDomains[domainId].solver.merge(equations, lut.size(),
+        const_cast<uint*>(&lut[0]));
+    ASSERT(result);
+
+    cout << itsDomains[domainId].solver << endl;
+}
+
+
+IterationResult Solver::iterate(uint domainId)
+{
+    Domain &domain = itsDomains[domainId];
+    ASSERT(domain.solver.nUnknowns() > 0);
+
+    // Get some statistics from the solver. Note that the chi squared is
+    // valid for the _previous_ iteration. The solver cannot compute the
+    // chi squared directly after an iteration, because it needs the new
+    // condition equations for that and these are computed by the kernel.
+    casa::uInt rank, nun, np, ncon, ner, *piv;
+    casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
+    domain.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
+        piv, sEq, sol, prec, nonlin);
+    ASSERT(er && ner > SUMLL);
+
+    double lmFactor = nonlin;
+    double chiSquared = er[SUMLL] / std::max(er[NC] + nun, 1.0);
+
+    // Solve the normal equations.
+    domain.solver.solveLoop(rank, &(domain.coefficients[0]), true);
+
+//    cout << "Coefficients: " << domain.coefficients << endl;
+
+    // Construct a result.
+    IterationResult result(domainId,
+        domain.solver.isReady(),
+        domain.solver.readyText(),
+        domain.coefficients,
+        rank,
+        chiSquared,
+        lmFactor);
+
+    // If we're done with this domain, unregister it.
+    if(domain.solver.isReady() != NONREADY)
+    {
+        // remove solver
+    }
+
+    return result;
+}
+*/
 
 } // namespace BBS
 } // namespace LOFAR
-
-//# Instantiate the makeNorm template.
-#ifdef AIPS_NO_TEMPLATE_SRC
-#include <scimath/Fitting/LSQFit2.cc>
-template void casa::LSQFit::makeNorm<double, double*, int*>(unsigned, int* const&, double* const&, double const&, double const&, bool, bool);
-#endif

@@ -29,8 +29,10 @@
 //#include <casa/BasicSL/Complex.h>
 //#include <casa/Arrays/Matrix.h>
 
+#include <BBSKernel/CoefficientIndex.h>
 #include <BBSKernel/Grid.h>
 #include <BBSKernel/Measurement.h>
+#include <BBSKernel/Messages.h>
 #include <BBSKernel/Model.h>
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisData.h>
@@ -53,11 +55,17 @@
 #include <Common/lofar_map.h>
 
 #include <utility>
+#include <scimath/Fitting/LSQFit.h>
 
+
+#include <Blob/BlobStreamable.h>
+
+/*
 namespace casa
 {
     class LSQFit;
 }
+*/
 
 namespace LOFAR
 {
@@ -66,9 +74,6 @@ namespace BBS
 // \addtogroup BBSKernel
 // @{
 
-//typedef Grid<CellCenteredAxis<RegularSeries>,
-//    CellCenteredAxis<IrregularSeries> >         SolutionGrid;
-    
 // Prediffer calculates the equations for the solver.
 // It reads the measured data and predicts the data from the model.
 // It subtracts them from each other and calculates the derivatives.
@@ -77,23 +82,26 @@ namespace BBS
 struct ProcessingContext
 {
     ProcessingContext()
-        :   unknownCount(0)
+        :   coefficientCount(0)
     {}
 
 
     // 
     // Information for the SOLVE operation (valid if unknownCount > 0).
     //     
-    Grid<double>                    solutionGrid;
-    Grid<size_t>                    cellGrid;
+    Grid<double>                        solutionGrid;
+    Grid<size_t>                        domainGrid;
     
-    Location                        chunkStart, chunkEnd;
+    Location                            chunkStart, chunkEnd;
 
     // Sum of the maximal number (over all solve domains) of unknowns of each
     // parameter.
-    size_t                          unknownCount;
+    size_t                              coefficientCount;
+    vector<MeqPExpr>                    localParmSelection;
+    map<uint32, CellCoeffIndex>         localCoeffIndices;
+    
     // The set of unknowns for each solve domain.
-    vector<vector<double> >         unknowns;
+//    vector<vector<double> >         unknowns;
 //    boost::multi_array<double, 3>   unknowns;
 
     // The set of parameters included in the SOLVE operation.
@@ -106,11 +114,24 @@ struct ProcessingContext
 
 struct ThreadContext
 {
-    vector<casa::LSQFit*>   solvers;
+    enum
+    {
+        MODEL_EVALUATION = 0,
+        PROCESS,
+        GRID_LOOKUP,
+        BUILD_INDEX,
+        PARTIAL_DERIVATIVES,
+        MAKE_NORM,
+        N_Timer
+    } Timer;
+
+    static string           timerNames[N_Timer];
+    NSTimer                 timers[N_Timer];
+
+    vector<casa::LSQFit*>   equations;
     vector<uint>            unknownIndex;
     vector<const double*>   perturbedRe, perturbedIm;
     vector<double>          partialRe, partialIm;
-    NSTimer                 evaluationTimer, operationTimer;
 };
 
 
@@ -121,26 +142,21 @@ struct Selection
 };
 
 
-struct ModelConfiguration
-{
-    vector<string>          components;
-    vector<string>          sources;
-};
-
-
 class Prediffer
 {
 public:
-    enum Operation
+    enum OperationType
     {
+        UNSET = 0,
         SIMULATE,
         SUBTRACT,
         CORRECT,
         CONSTRUCT,
-        N_Operation        
+        N_OperationType        
     };
     
-    Prediffer(Measurement::Pointer measurement,
+    Prediffer(uint32 id,
+        Measurement::Pointer measurement,
         ParmDB::ParmDB sky,
         ParmDB::ParmDB instrument);
 
@@ -153,59 +169,58 @@ public:
     // </group>
 
     // Select a subset of the data for processing. An empty vector matches
-    // anything. A selection remains active until it is changed or until
+    // anything. The selection remains active until it is changed or until
     // attachChunk() is called.
     bool setSelection(const string &filter,
         const vector<string> &stations1,
         const vector<string> &stations2,
         const vector<string> &polarizations);
     
-    void setModelConfiguration(const vector<string> &components,
+    void setModelConfig(OperationType operation,
+        const vector<string> &components,
         const vector<string> &sources);
         
-    // Operations that can be performed on the data.
+    // Operations that can be performed on the data. The setModelConfig()
+    // function should be called prior to calling any of these functions. This
+    // ensures the model is properly initialized. Of course, the operation
+    // function called should match the operation specified in the call to
+    // setModelConfig().
+    //
+    // NOTE: Prior to calling construct(), a solution grid should be set and
+    // the parameters to solve for should be selected (see setSolutionGrid()
+    // and setParameterSelection() below).
     // <group>
-    void setOperation(Operation type);
-/*
     void simulate();
     void subtract();
     void correct();
-*/    
+    EquationMsg::Pointer construct(const Location &start, const Location &end);
     // </group>
     
-    // Solving....
+    // (Distributed) solving.
     // <group>
-    bool setSolutionGrid(const Grid<double> &solutionGrid);
+    bool setSolutionGrid(const Grid<double> &grid);
 
     bool setParameterSelection(const vector<string> &include,
-        const vector<string> &exclude);
-        
+        const vector<string> &exclude);        
     void clearParameterSelection();
 
-/*
-    void getParameterIndex(ParameterIndex &parameters) const;
-    void setParameterIndex(const ParameterIndex &parameters);
+    CoeffIndexMsg::Pointer getCoefficientIndex() const;
+    void setCoefficientIndex(CoeffIndexMsg::Pointer msg);
 
-    void getCoefficientIndices(vector<CoefficientIndex> &indices) const;
-    void setCoefficientIndices(const vector<CoefficientIndex> &indices);
-
-    void getCoefficients(const GridLocation &start,
-        const GridLocation &end, vector<Coefficients> &coefficients);
-    void setCoefficients(const vector<Coefficients> &coefficients,
-        bool useIndex);
-*/
-//    void construct(const Location &start, const Location &end,
-//        vector<Equations> &equations);
+    CoefficientMsg::Pointer getCoefficients(const Location &start,
+        const Location &end) const;
+    void setCoefficients(SolutionMsg::Pointer msg);
     // </group>
 
-/*
     // Commit cached parameter values to the parameter database.
     void storeParameterValues();
 
+/*
 #ifdef EXPR_GRAPH
     void writeExpressionGraph(const string &fileName, baseline_t baseline);
 #endif
 */
+
 private:
     // Copy construction and assignment are not allowed.
     // <group>
@@ -215,11 +230,12 @@ private:
 
     void initPolarizationMap();
 
+    //# Get all parameter values that intersect the current chunk.
+    void loadParameterValues();
+
 /*  
     void initSolveDomains(std::pair<size_t, size_t> size);
     
-    // Get all parameter values that intersect the current chunk.
-    void fetchParameterValues();
 
     void resetTimers();
     void printTimers(const string &operationName);
@@ -251,14 +267,15 @@ private:
         baseline_t baseline, bool showd = false);
 */
 
+    uint32                              itsId;
     Measurement::Pointer                itsMeasurement;
     VisData::Pointer                    itsChunk;
     //# Mapping from internal polarization (XX,XY,YX,YY) to polarizations
     //# found in the chunk (which may be a subset, and in a different order).
     vector<int>                         itsPolarizationMap;
 
-    ParmDB::ParmDB                      itsInstrumentDb;
     ParmDB::ParmDB                      itsSkyDb;
+    ParmDB::ParmDB                      itsInstrumentDb;
     //# All parameter values that intersect the chunk.
     map<string, ParmDB::ParmValueSet>   itsParameterValues;
 
@@ -267,8 +284,8 @@ private:
     MeqParmGroup                        itsParameters;
 
     Selection                           itsSelection;
-    ModelConfiguration                  itsModelConfiguration;
-    Operation                           itsOperation;
+    OperationType                       itsOperation;
+
     //# TODO: Remove this.
     ProcessingContext                   itsContext;
 

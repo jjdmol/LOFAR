@@ -67,7 +67,8 @@ public:
 
     enum EquationType
     {
-        SIMULATE = 0,
+        UNSET = 0,
+        SIMULATE,
         CORRECT,
         N_EquationType
     };
@@ -83,6 +84,9 @@ public:
         MeqPhaseRef *phaseRef, VisData::Pointer buffer);
 
     void clearEquations();
+    
+    EquationType getEquationType()
+    { return itsEquationType; }
 
     void precalculate(const MeqRequest& request);
 
@@ -100,6 +104,7 @@ private:
     vector<MeqSource*>                  itsSourceNodes;
     vector<MeqLMN*>                     itsLMNNodes;
     map<baseline_t, MeqJonesExpr>       itsEquations;
+    EquationType                        itsEquationType;
 };
 
 } //# namespace BBS

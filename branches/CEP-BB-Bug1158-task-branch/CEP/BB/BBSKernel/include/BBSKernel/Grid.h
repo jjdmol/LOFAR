@@ -53,6 +53,9 @@ public:
     pair<size_t, size_t> size() const
     { return make_pair(itsAxes[0]->size(), itsAxes[1]->size()); }
     
+    size_t getCellCount() const
+    { return itsAxes[0]->size() * itsAxes[1]->size(); }
+    
     uint getCellId(const Location &location) const
     { return location.second * itsAxes[0]->size() + location.first; }
     
@@ -98,7 +101,7 @@ pair<Location, bool> Grid<T>::locate(const Point<T> &point, bool open) const
 template <typename T>
 Box<T> Grid<T>::getCell(const Location &location) const
 {
-    DBGASSERT(location.first < itsAxes[0]->size() && location.second < itsAxes[1]->size());
+//    DBGASSERT(location.first < itsAxes[0]->size() && location.second < itsAxes[1]->size());
     return Box<T>(Point<T>(itsAxes[0]->lower(location.first), itsAxes[1]->lower(location.second)),
         Point<T>(itsAxes[0]->upper(location.first), itsAxes[1]->upper(location.second)));
 }
