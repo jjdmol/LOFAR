@@ -1,0 +1,136 @@
+#!/usr/bin/env python
+#
+# $Id: $
+#
+# Syntax: createFiles ( -a | stationname [stationame ...])
+#
+import re, sys
+
+def expandRCUMarker(dataPoint, nrRSP):
+    """
+	Expands the lines that only contain markers up to @rcu@.
+    """
+    for rcu in range(0, nrRSP * 8):
+        rsp = rcu / 8 
+        subrack = rsp / 4
+        cabinet = rsp / 8
+        print >> outputFile, \
+                "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet)) \
+                               .replace("@subrack@","Subrack"+str(subrack)) \
+                               .replace("@RSPBoard@", "RSPBoard"+str(rsp)) \
+                               .replace("@rcu@", "RCU"+str(rcu))+".state"
+
+def expandRSPBoardMarker(dataPoint, nrRSP):
+    """
+	Expands the lines that only contain markers up to @rcu@.
+    """
+    for rsp in range(0, nrRSP):
+        subrack = rsp / 4
+        cabinet = rsp / 8
+        print >> outputFile, \
+                "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet)) \
+                               .replace("@subrack@","Subrack"+str(subrack)) \
+                               .replace("@RSPBoard@", "RSPBoard"+str(rsp))+".state"
+
+def expandTBBoardMarker(dataPoint, nrTBB):
+    """
+	Expands the lines that only contain markers up to @rcu@.
+    """
+    for tbb in range(0, nrTBB):
+        subrack = tbb / 2
+        cabinet = tbb / 4
+        print >> outputFile, \
+                "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet)) \
+                               .replace("@subrack@","Subrack"+str(subrack)) \
+                               .replace("@TBBoard@", "TBBoard"+str(tbb))+".state"
+
+def expandSubrackMarker(dataPoint, nrRSP):
+    """
+	Expands the lines that only contain markers up to @rcu@.
+    """
+    nrSubracks = nrRSP / 4
+    if nrRSP % 4: nrSubracks += 1
+    for subrack in range(0, nrSubracks):
+        cabinet = subrack / 2
+        print >> outputFile, \
+                "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet)) \
+                               .replace("@subrack@","Subrack"+str(subrack))+".state"
+
+def expandCabinetMarker(dataPoint, nrRSP):
+	"""
+	Expands the lines that only contain the @cabinet@ marker with all cabinet numbers
+	"""
+	nrCabinets = nrRSP / 8
+	if nrRSP % 8: nrCabinets += 1
+	for cabinet in range(0, nrCabinets):
+		print >> outputFile, \
+                "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet))+".state"
+
+
+
+# MAIN
+# all the files we are uisng
+PVSSbasefile= "../PVSS/PVSSDataPoints.base"
+StationFile = "../StaticMetaData/StationInfo"
+RingFile    = "../PVSS/Rings.list"
+ResultFile  = "./PVSSDatapoints.out"
+filledLine  = re.compile("^[^#].*", re.MULTILINE)
+
+# construct a dictionary from the rings file: key is first character, value is ringname
+ringDict = {}
+for line in filledLine.findall(open(RingFile).read()):
+    ringDict[line[0]] = line
+
+# construct a list with all ring_station combinations
+ringStations = []
+for line in filledLine.findall(open(StationFile).read()):
+    (name, stationID, stnType, long, lat, height, \
+        nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
+    ringStations.append(ringDict[stnType]+"_"+name)
+    
+# open outputfile and write top-node
+outputFile = open(ResultFile, "w")
+print >> outputFile, "21 PIC.state"
+
+# construct the station-view from the central database
+# ???	???  	C	P	???_PIC_@???@
+ringStationMask=""
+central=re.compile("^\w+[ \t]+[^ \t]+[ \t]+C[ \t]+P[ \t]([A-Za-z_]+_PIC_@.*)", \
+                        re.IGNORECASE | re.MULTILINE)
+for line in central.findall(open(PVSSbasefile).read()):
+    if line.find("@station@") >= 0:
+        ringStationMask=line.replace("LOFAR_","")
+        for RS in ringStations:
+            print >> outputFile, \
+                  "21 "+line.replace("LOFAR_","").replace("@ring@_@station@", RS)+".state"
+    elif line.find("@ring@") >= 0:
+        for ring in ringDict.keys():
+            print >> outputFile, \
+                  "21 "+line.replace("LOFAR_","").replace("@ring@", ringDict[ring])+".state"# for all expandable lines
+
+# generate the hardware on each station
+for line in filledLine.findall(open(StationFile).read()):
+    (name, stationID, stnType, long, lat, height, \
+        nrRSP, nrTBB, nrLBA, nrHBA, HBAsplit, LBAcal ) = line.split()
+
+    # Find all expandable hardware elements on a station. The line syntax is:
+    # ???	???  	S	P	???_PIC_@???@
+    # we are only interested in the @???@ part.
+    station=re.compile("^\w+[ \t]+[^ \t]+[ \t]+S[ \t]+P[ \t][A-Za-z_]+_PIC(_@.*)", \
+                        re.IGNORECASE | re.MULTILINE)
+    for line in station.findall(open(PVSSbasefile).read()):
+        prefix = ringStationMask.replace("@ring@", ringDict[stnType]). \
+                                 replace("@station@", name)
+        if line.find("@rcu@") >= 0:
+            expandRCUMarker(prefix+line, int(nrRSP))
+        elif line.find("@RSPBoard@") >= 0:
+            expandRSPBoardMarker(prefix+line, int(nrRSP))
+        elif line.find("@TBBoard@") >= 0:
+            expandTBBoardMarker(prefix+line, int(nrTBB))
+        elif line.find("@subrack@") >= 0:
+            expandSubrackMarker(prefix+line, int(nrRSP))
+        elif line.find("@cabinet@") >= 0:
+            expandCabinetMarker(prefix+line, int(nrRSP))
+#   for all expandable lines
+#for all stations
+outputFile.close()
