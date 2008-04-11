@@ -1,4 +1,4 @@
-pkginclude_HEADERS = Package__Version.h  \
+pkginclude_HEADERS = \
 	Exceptions.h \
 	KeyPrefix.h \
 	KVpair.h \
