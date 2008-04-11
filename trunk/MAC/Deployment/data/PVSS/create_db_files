@@ -84,7 +84,7 @@ create_ring_station_list()
 			print "Remote_"$1
 		}
 		else {
-			print "European_"$1
+			print "Europe_"$1
 		}
 	} ' >>/tmp/rslist
 	concatfile /tmp/rslist
