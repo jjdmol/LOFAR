@@ -77,6 +77,9 @@ public:
 	ParameterSet& 	operator=(const ParameterSet& that);
 	//@}
 
+        // Get the number of parameters.
+        int size() const;
+
 	// Iteration.
 	//@{
 	iterator begin();
@@ -91,6 +94,9 @@ public:
 
 	// Clear the set.
 	void clear();
+
+	// Size of the set.
+	int	size();
 
 	// \name Merging or appending collections
 	// An existing collection can be extended/merged with another collection.
@@ -129,6 +135,10 @@ public:
 	// Writes the Key-Values pair from the current ParCollection to the 
 	// string buffer.
 	void	writeBuffer (      string& theBuffer) const;
+
+	// Writes the Key-Values pair from the current ParCollection to the 
+	// output stream.
+	void	writeStream (      ostream& os) const;
 	//@}
 
 	// \name Handle subsets
@@ -270,6 +280,10 @@ ParameterSet* 	globalParameterSet();
 //#
 //# ---------- inline functions ----------
 //#
+inline int ParameterSet::size() const
+{
+	return itsSet->size();
+}
 inline ParameterSet::iterator	ParameterSet::begin      ()
 {
 	return itsSet->begin();
@@ -292,9 +306,14 @@ inline KeyCompare::Mode	ParameterSet::keyCompareMode	() const
 	return itsSet->keyCompareMode();
 }
 
-inline void	ParameterSet::clear      ()
+inline void	ParameterSet::clear()
 {
 	itsSet->clear();
+}
+
+inline int	ParameterSet::size()
+{
+	return (itsSet->size());
 }
 
 inline void	ParameterSet::adoptFile	(const string& theFilename, const string& thePrefix)
@@ -320,6 +339,11 @@ inline void	ParameterSet::writeFile   (const string& theFilename, bool append) c
 inline void	ParameterSet::writeBuffer (      string& theBuffer) const
 {
 	itsSet->writeBuffer (theBuffer);
+}
+
+inline void	ParameterSet::writeStream (      ostream& os) const
+{
+	itsSet->writeStream (os);
 }
 
 inline ParameterSet	ParameterSet::makeSubset(const string& baseKey,

@@ -69,13 +69,7 @@ ParameterSetImpl::~ParameterSetImpl()
 //
 std::ostream&	operator<< (std::ostream& os, const ParameterSetImpl &thePS)
 {
-	KeyValueMap::const_iterator		iter = thePS.begin();
-
-	while (iter != thePS.end()) {
-		os << "[" << iter->first << "],[" << iter->second << "]" << endl;
-		iter++;
-	}
-
+	thePS.writeStream(os);
 	return os;
 }
 
@@ -207,7 +201,12 @@ void ParameterSetImpl::readFile(const	string&	theFilename,
 		       formatString("Unable to open file %s", theFilename.c_str()));
 	}
 
-	addStream(paramFile, prefix, merge);
+	if (paramFile.eof()) {
+		THROW (APSException, 
+		       formatString("file %s is empty", theFilename.c_str()));
+	}
+
+	readStream(paramFile, prefix, merge);
 
 	paramFile.close();
 }
@@ -224,31 +223,32 @@ void ParameterSetImpl::readBuffer(const	string&	theBuffer,
 {
 	istringstream		iss(theBuffer, istringstream::in);
 
-	addStream(iss, prefix, merge);
+	readStream(iss, prefix, merge);
 
 }
 
 //
-// addStream
+// readStream
 // (private)
 //
 // Disentangles the stream and adds the Key-Values pair to the current 
 // ParameterSetImpl.
 //
-void ParameterSetImpl::addStream(istream&	inputStream, 
-				 const string&	prefix,
-				 bool		merge)
+void ParameterSetImpl::readStream(istream&	inputStream, 
+				  const string&	prefix,
+				  bool		merge)
 {
-	char	paramLine[1024];
+	char	paramLine[4096];
 	char*	keyStr;
 	char*	valueStr;
 	bool	multiLine = false;			// current line is multiline
 	bool	addToPrev = false;			// previous line was multiline
 	string	lineColl;					// Collects multiline values
 	string	keyCopy;					// Saved key in multiline
+	string	prefixedKey;					// Key with added prefix (which may be an empty string)
 
 	// Read the file line by line and convert it to Key Value pairs.
-	while (inputStream.getline (paramLine, 1024)) {
+	while (inputStream.getline (paramLine, 4096)) {
 		LOG_TRACE_LOOP(formatString("data:>%s<", paramLine));
 	
 		if (!paramLine[0] || paramLine[0] == '#') {		// skip empty lines
@@ -272,11 +272,8 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 			// skip leading and trailing spaces from key (allowing spaces before = sign)
 			rtrim(keyStr = ltrim(paramLine));
 
-			// add prefix if it is not empty
-			// I really hate these const_casts (GML)
-			if (!prefix.empty()) {
-				keyStr = const_cast<char*>(string(prefix + keyStr).c_str());
-			}
+			// add prefix
+			prefixedKey = prefix + string(keyStr);
 		}
 
 		// skip leading spaces from value (allowing space afer = sign)
@@ -309,7 +306,7 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 			valueStr[valLen] = '\0';
 			valLen = rtrim(valueStr, valLen) - 1;
 			if (!addToPrev) {			// first multiline?
-				keyCopy = keyStr;		// save copy of key
+				keyCopy = prefixedKey;
 			}
 		}
 		else {
@@ -334,19 +331,19 @@ void ParameterSetImpl::addStream(istream&	inputStream,
 		if (!multiLine) {
 			if (addToPrev) {	// result in tmp strings?
 				valueStr = const_cast<char*>(lineColl.c_str());
-				keyStr   = const_cast<char*>(keyCopy.c_str());
+				keyStr   = const_cast<char*>(prefixedKey.c_str());
 			}
-			LOG_TRACE_VAR(formatString("pair:[%s][%s]", keyStr, valueStr));
+			LOG_TRACE_VAR(formatString("pair:[%s][%s]", prefixedKey.c_str(), valueStr));
 
 			// remove any existed value and insert this value
-			if ((erase(keyStr) > 0) && !merge) {
+			if ((erase(prefixedKey) > 0) && !merge) {
 				LOG_WARN (
 				formatString("Key %s is defined twice. Ignoring first value.", 
-																  keyStr));
+																  prefixedKey.c_str()));
 			}
 			// Finally add to map
 			pair< KeyValueMap::iterator, bool>		result;
-			result = insert(std::make_pair(keyStr, valueStr)); 
+			result = insert(std::make_pair(prefixedKey, valueStr)); 
 			if (!result.second) {
 				THROW (APSException, 
 					   formatString("Key %s double defined?", keyStr));
@@ -1032,22 +1029,9 @@ void ParameterSetImpl::writeFile(const string&	theFilename,
 	}
 
 	// Write all the pairs to the file
-	const_iterator		curPair = begin();
-	while (curPair != end()) {
-		// Key can always be written.
-		paramFile << curPair->first << "=";
+	writeStream(paramFile);
 
-		//* value may begin or end in a space: use quotes
-		if (*(curPair->second.begin()) == ' ' || *(curPair->second.rbegin()) == ' ') {
-			paramFile << "\"" << curPair->second << "\"" << endl;
-		}
-		else {
- 			paramFile << curPair->second << endl;
-		}
-
-		curPair++;
-	}
-
+	// Close the file
 	paramFile.close();
 }
 
@@ -1059,23 +1043,37 @@ void ParameterSetImpl::writeFile(const string&	theFilename,
 //
 void ParameterSetImpl::writeBuffer(string&	aBuffer) const
 {
+	ostringstream oss;
+	writeStream(oss);
+	aBuffer = oss.str();
+}
+
+//
+// writeStream
+//
+// Writes the Key-Value pairs from the current ParameterSetImpl to the given
+// output stream.
+//
+void ParameterSetImpl::writeStream(ostream&	os) const
+{
 	// Write all the pairs to the file
 	const_iterator		curPair = begin();
 	while (curPair != end()) {
 		// Key can always be written.
-		aBuffer += (curPair->first + "=");
+		os << curPair->first << "=";
 
 		//* value may begin or end in a space: use quotes
 		if (*(curPair->second.begin()) == ' ' || *(curPair->second.rbegin()) == ' ') {
-			aBuffer += ("\"" + curPair->second + "\"\n");
+			os << "\"" << curPair->second << "\"" << endl;
 		}
 		else {
- 			aBuffer += (curPair->second + "\n");
+ 			os << curPair->second << endl;
 		}
 
 		curPair++;
 	}
 }
+
 //-------------------------- global functions -----------------------------
 //
 // StringToTime_t (aString) 
