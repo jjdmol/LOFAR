@@ -1152,38 +1152,39 @@ _clear_correlation:
 .global	_weigh_visibilities
 _weigh_visibilities:
 
-	srwi	6,6,1
+	srwi	7,7,1
 	li	8,8
-	mtctr	6
-	li	7,SIZEOF_NR_VALID_SAMPLES
-	sub	3,3,8
-	sub	4,4,7
-	mr	6,3
+	mtctr	7
+	li	11,SIZEOF_NR_VALID_SAMPLES
+	sub	7,3,8
+	sub	4,4,11
+	li	12,0
 
 #if SIZEOF_NR_VALID_SAMPLES == 1
-	lbzux	9,4,7
-	lbzux	10,4,7
+	lbzux	9,4,11
+	lbzux	10,4,11
 #elif SIZEOF_NR_VALID_SAMPLES == 2
-	lhzux	9,4,7
-	lhzux	10,4,7
+	lhzux	9,4,11
+	lhzux	10,4,11
 #elif SIZEOF_NR_VALID_SAMPLES == 4
-	lwzux	9,4,7
-	lwzux	10,4,7
+	lwzux	9,4,11
+	lwzux	10,4,11
 #endif
 
-	lfpsux	0,3,8
+	lfpsx	9,0,6
+	lfpsx	0,3,8
 	lfpsux	1,3,8
 	lfpsux	2,3,8
 	lfpsux	3,3,8
 
 loop5:	
-	slwi	9,9,2
-	lfsx	8,5,9
+	fxpmul	0,9,0		; slwi	9,9,2
+	fxpmul	1,9,1		; lfsx	8,5,9
 
-	lfpsux	4,3,8
-	lfpsux	5,3,8
-	lfpsux	6,3,8
-	lfpsux	7,3,8
+	fxpmul	2,9,2		; lfpsux 4,3,8
+	fxpmul	3,9,3		; lfpsux 5,3,8
+				; lfpsux 6,3,8
+				; lfpsux 7,3,8
 
 	fxpmul	0,8,0
 	fxpmul	1,8,1
@@ -1191,42 +1192,42 @@ loop5:
 	fxpmul	3,8,3
 
 #if SIZEOF_NR_VALID_SAMPLES == 1
-	lbzux	9,4,7
+	lbzux	9,4,11
 #elif SIZEOF_NR_VALID_SAMPLES == 2
-	lhzux	9,4,7
+	lhzux	9,4,11
 #else
-	lwzux	9,4,7
+	lwzux	9,4,11
 #endif
 
-	stfpsux	0,6,8
-	stfpsux	1,6,8
-	stfpsux	2,6,8
-	stfpsux	3,6,8
+	addi	12,12,8		; stfpsux 0,7,8
+	andi.	12,12,4*NR_SUBBAND_CHANNELS-1 ; stfpsux 1,7,8
+				; stfpsux 2,7,8
+				; stfpsux 3,7,8
 
-	slwi	10,10,2
-	lfsx	8,5,10
+	fxsmul	4,9,4		; slwi	10,10,2
+	fxsmul	5,9,5		; lfsx	8,5,10
 
-	lfpsux	0,3,8
-	fxpmul	4,8,4
-	lfpsux	1,3,8
+	fxsmul	6,9,6		; lfpsux 0,3,8
+	fxsmul	7,9,7		; lfpsux 1,3,8
+				; lfpsux 2,3,8
+				; lfpsux 3,3,8
+	fxpmul	4,8,4		; lfpsx	 9,6,12
 	fxpmul	5,8,5
-	lfpsux	2,3,8
 	fxpmul	6,8,6
-	lfpsux	3,3,8
 	fxpmul	7,8,7
 
 #if SIZEOF_NR_VALID_SAMPLES == 1
-	lbzux	10,4,7
+	lbzux	10,4,11
 #elif SIZEOF_NR_VALID_SAMPLES == 2
-	lhzux	10,4,7
+	lhzux	10,4,11
 #elif SIZEOF_NR_VALID_SAMPLES == 4
-	lwzux	10,4,7
+	lwzux	10,4,11
 #endif
 
-	stfpsux	4,6,8
-	stfpsux	5,6,8
-	stfpsux	6,6,8
-	stfpsux	7,6,8
+				; stfpsux 4,7,8
+				; stfpsux 5,7,8
+				; stfpsux 6,7,8
+				; stfpsux 7,7,8
 
 	bdnz	loop5
 	blr

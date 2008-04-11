@@ -5,6 +5,7 @@
 
 #include <Correlator.h>
 #include <CorrelatorAsm.h>
+#include <FIR.h>
 
 #include <map>
 
@@ -123,7 +124,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
 	      for (unsigned time = 0; time < itsNrSamplesPerIntegration; time ++) {
 		sum += filteredData->samples[ch][stat1][time][pol1] * conj(filteredData->samples[ch][stat2][time][pol2]);
 	      }
-	      sum *= itsCorrelationWeights[nrValid];
+	      sum *= itsCorrelationWeights[nrValid] * FIR::bandPassCorrectionFactors[ch];
 	      correlatedData->visibilities[bl][ch][pol1][pol2] = sum;
 	    }
 	  }
@@ -263,7 +264,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     }
   }
 #else
-  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, itsNrBaselines * NR_SUBBAND_CHANNELS);
+  _weigh_visibilities(correlatedData->visibilities.origin(), correlatedData->nrValidSamples.origin(), itsCorrelationWeights, FIR::bandPassCorrectionFactors, itsNrBaselines * NR_SUBBAND_CHANNELS);
 #endif
   weightTimer.stop();
 #endif  

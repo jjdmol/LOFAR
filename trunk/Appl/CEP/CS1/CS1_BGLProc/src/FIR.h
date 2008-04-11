@@ -24,6 +24,7 @@ class FIR {
 #endif
 
     static const float weights[NR_SUBBAND_CHANNELS][NR_TAPS];
+    static const float bandPassCorrectionFactors[NR_SUBBAND_CHANNELS];
 };
 
 } // namespace CS1
