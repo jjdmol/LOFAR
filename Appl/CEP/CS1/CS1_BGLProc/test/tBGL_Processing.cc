@@ -37,7 +37,8 @@
 #include <Common/Exception.h>
 #include <Common/Timer.h>
 #include <Transport/TH_Null.h>
-#include <BGL_Processing.h>
+#include <PPF.h>
+#include <Correlator.h>
 #include <cmath>
 #include <cstring>
 #include <exception>
@@ -110,7 +111,7 @@ void setSubbandTestPattern(TransposedData *transposedData, unsigned nrStations, 
 
   std::clog << "done." << std::endl;;
 
-#if 0 && defined WORDS_BIGENDIAN
+#if 1 && defined WORDS_BIGENDIAN
   std::clog << "swap bytes" << std::endl;
   dataConvert(LittleEndian, transposedData->samples.data(), transposedData->samples.num_elements());
 #endif
@@ -167,15 +168,14 @@ void checkCorrelatorTestPattern(const CorrelatedData *correlatedData, unsigned n
   std::cout << "newgraph newcurve linetype solid marktype none pts\n";
   float max = 0.0;
 
-  for (int ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++) {
-    if (abs(visibilities[0][ch][1][1]) > max) {
+  for (int ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++)
+    if (abs(visibilities[0][ch][1][1]) > max)
       max = abs(visibilities[0][ch][1][1]);
-    }
-  }
 
-  for (int ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++) {
+  std::clog << "max = " << max << std::endl;
+
+  for (int ch = 1; ch < NR_SUBBAND_CHANNELS; ch ++)
     std::cout << ch << ' ' << (10 * std::log10(abs(visibilities[0][ch][1][1]) / max)) << '\n';
-  }
 }
 
 
@@ -185,69 +185,55 @@ void doWork()
   // only test on the one or two cores of the first compute node
 
   struct BGLPersonality personality;
-  int retval = rts_get_personality(&personality, sizeof personality);
-  ASSERTSTR(retval == 0, "Could not get personality");
 
-  if (personality.getXcoord() != 0 || personality.getYcoord() != 0 || personality.getZcoord() != 0) {
-    return;
+  if (rts_get_personality(&personality, sizeof personality) != 0) {
+    std::cerr << "Could not get personality" << std::endl;
+    exit(1);
   }
+
+  if (personality.getXcoord() == 0 && personality.getYcoord() == 0 && personality.getZcoord() == 0)
 #endif
+  {
+    unsigned   nrStations	= 37;
+    unsigned   nrSamplesPerIntegration = 768;
+    double     sampleRate	= 195312.5;
+    double     refFreq		= 384 * sampleRate;
+    double     signalFrequency	= refFreq + 73 * sampleRate / NR_SUBBAND_CHANNELS; // channel 73
+    unsigned   nrSamplesToBGLProc = NR_SUBBAND_CHANNELS * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(TransposedData::SampleType[NR_POLARIZATIONS]);
+    unsigned   nrBaselines	= nrStations * (nrStations + 1) / 2;
 
-#if 0
-  ACC::APS::ParameterSet parameterSet("../../test/test.parset");
-  CS1_Parset ps(&parameterSet);
-  double     signalFrequency = ps.refFreqs()[0] + 73 * ps.chanWidth(); // channel 73
-  const char *env;
+    const char *env;
 
-  if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
-    signalFrequency = atof(env);
+    if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
+      signalFrequency = atof(env);
+    }
+
+    std::clog << "base frequency = " << refFreq << std::endl;
+    std::clog << "signal frequency = " << signalFrequency << std::endl;
+
+    size_t transposedDataSize = TransposedData::requiredSize(nrStations, nrSamplesToBGLProc);
+    size_t filteredDataSize   = FilteredData::requiredSize(nrStations, nrSamplesPerIntegration);
+    size_t correlatedDataSize = CorrelatedData::requiredSize(nrBaselines);
+
+    Heap heap0(filteredDataSize, 32);
+    Heap heap1(std::max(transposedDataSize, correlatedDataSize), 32);
+
+    TransposedData transposedData(heap1, nrStations, nrSamplesToBGLProc);
+    FilteredData   filteredData(heap0, nrStations, nrSamplesPerIntegration);
+    CorrelatedData correlatedData(heap1, nrBaselines);
+
+    PPF		   ppf(nrStations, nrSamplesPerIntegration, sampleRate / NR_SUBBAND_CHANNELS, true);
+    Correlator     correlator(nrStations, nrSamplesPerIntegration);
+
+    setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
+    ppf.computeFlags(&transposedData, &filteredData);
+    ppf.filter(refFreq, &transposedData, &filteredData);
+
+    correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
+    correlator.correlate(&filteredData, &correlatedData);
+
+    checkCorrelatorTestPattern(&correlatedData, nrStations);
   }
-
-  std::clog << "base frequency = " << ps.refFreqs()[0] << std::endl;
-  std::clog << "channel bandwidth = " << ps.chanWidth() << std::endl;
-  std::clog << "signal frequency = " << signalFrequency << std::endl;
-
-  BGL_Processing proc;
-  proc.preprocess(&ps);
-  setSubbandTestPattern(proc.itsTransposedData, ps.nrStations(), signalFrequency, ps.sampleRate());
-  proc.process();
-
-  checkCorrelatorTestPattern(proc.itsCorrelatedData, ps.nrStations());
-  proc.postprocess();
-#else
-  BGL_Configuration configuration;
-
-  configuration.nrStations()		  = 6;
-  configuration.nrSamplesPerIntegration() = 608;
-  configuration.nrSamplesToBGLProc()	  = NR_SUBBAND_CHANNELS * (configuration.nrSamplesPerIntegration() + NR_TAPS - 1) + 32 / sizeof(TransposedData::SampleType[NR_POLARIZATIONS]);
-  configuration.nrUsedCoresPerPset()	  = 1;
-  configuration.nrSubbandsPerPset()	  = 1;
-  configuration.delayCompensation()	  = true;
-  configuration.sampleRate()		  = 156250.0;
-  configuration.inputPsets()		  = std::vector<unsigned>();
-  configuration.outputPsets()		  = std::vector<unsigned>(1, 0);
-  configuration.subband2Index()		  = std::vector<unsigned>(1, 0);
-  configuration.refFreqs()		  = std::vector<double>(1, 384 * configuration.sampleRate());
-
-  double     signalFrequency = configuration.refFreqs()[0] + 73 * configuration.sampleRate() / NR_SUBBAND_CHANNELS; // channel 73
-  const char *env;
-
-  if ((env = getenv("SIGNAL_FREQUENCY")) != 0) {
-    signalFrequency = atof(env);
-  }
-
-  std::clog << "base frequency = " << configuration.refFreqs()[0] << std::endl;
-  std::clog << "signal frequency = " << signalFrequency << std::endl;
-
-  TH_Null	 th;
-  BGL_Processing proc(&th);
-  proc.preprocess(configuration);
-  setSubbandTestPattern(proc.itsTransposedData, configuration.nrStations(), signalFrequency, configuration.sampleRate());
-  proc.process();
-
-  checkCorrelatorTestPattern(proc.itsCorrelatedData, configuration.nrStations());
-  proc.postprocess();
-#endif
 }
 
 
