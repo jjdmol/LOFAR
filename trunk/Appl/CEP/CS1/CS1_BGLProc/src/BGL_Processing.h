@@ -73,8 +73,7 @@ class BGL_Processing {
 
     static char		**original_argv;
 
-  //private:
-    // TODO: make test program friend of itsTransposedData
+  private:
 #if 0
     void		checkConsistency(CS1_Parset *) const;
 #endif
