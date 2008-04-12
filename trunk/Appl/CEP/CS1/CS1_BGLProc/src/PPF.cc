@@ -52,7 +52,7 @@ PPF::PPF(unsigned nrStations, unsigned nrSamplesPerIntegration, double channelBa
   itsFFToutData(boost::extents[2][NR_POLARIZATIONS][NR_SUBBAND_CHANNELS])
 #endif
 
-#if defined HAVE_BGL
+#if defined HAVE_BGL && !defined PPF_C_IMPLEMENTATION
 , mutex(rts_allocate_mutex())
 #endif
 {
@@ -203,12 +203,12 @@ void PPF::filter(double centerFrequency, const TransposedData *transposedData, F
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {
       for (unsigned chan = 0; chan < NR_SUBBAND_CHANNELS; chan ++) {
 	for (unsigned time = 0; time < NR_TAPS - 1 + itsNrSamplesPerIntegration; time ++) {
-#if 0
-	  fcomplex sample = makefcomplex(transposedData->samples[stat][NR_SUBBAND_CHANNELS * time + chan + alignmentShift][pol]);
-#else
 	  i16complex tmp = transposedData->samples[stat][NR_SUBBAND_CHANNELS * time + chan + alignmentShift][pol];
-	  fcomplex sample = makefcomplex(real(tmp), imag(tmp));
+
+#if defined WORDS_BIGENDIAN
+	  dataConvert(LittleEndian, &tmp, 1);
 #endif
+	  fcomplex sample = makefcomplex(real(tmp), imag(tmp));
 	  itsFFTinData[time][pol][chan] = itsFIRs[stat][pol][chan].processNextSample(sample, FIR::weights[chan]);
 	}
       }
