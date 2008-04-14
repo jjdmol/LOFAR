@@ -719,7 +719,7 @@ RINGLIST=`concatfile $RINGFILE`
 RINGSTATIONLIST=`create_ring_station_list`
 WANLIST=`concatfile $WANFILE`
 WANSWITCHLIST=`create_wan_switch_list`
-NRRSPBOARDS=`grep -s ${STNNAME} ${STATIONINFOFILE} | awk '{ print $6 }'`
+NRRSPBOARDS=`grep -s ${STNNAME} ${STATIONINFOFILE} | awk '{ print $7 }'`
 
 # create the desired files
 create_dpt_file ${INPUTFILE} ${DBTYPE} 
