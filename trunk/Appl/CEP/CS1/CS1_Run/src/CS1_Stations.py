@@ -149,11 +149,11 @@ CS032_TILE3 = [Station('CS032_TILE3')]
 CS032_TILE4 = [Station('CS032_TILE4')]
 CS032_4Tiles = CS032_TILE1 + CS032_TILE2 + CS032_TILE3 + CS032_TILE4
 
-CS001T_1_dipole0  = [Station('CS001T_1.dipole0')]
-CS001T_1_dipole4  = [Station('CS001T_1.dipole4')]
-CS001T_1_dipole8  = [Station('CS001T_1.dipole8')]
-CS001T_1_dipole12 = [Station('CS001T_1.dipole12')]
-CS001T_1_4dipoles = CS001T_1_dipole0 + CS001T_1_dipole4 + CS001T_1_dipole8 + CS001T_1_dipole12
+CS001T_dipole0  = [Station('CS001T_dipole0')]
+CS001T_dipole4  = [Station('CS001T_dipole4')]
+CS001T_dipole8  = [Station('CS001T_dipole8')]
+CS001T_dipole12 = [Station('CS001T_dipole12')]
+CS001T_4dipoles = CS001T_dipole0 + CS001T_dipole4 + CS001T_dipole8 + CS001T_dipole12
 
 CS010T_dipole0  = [Station('CS010T_dipole0')]
 CS010T_dipole4  = [Station('CS010T_dipole4')]
