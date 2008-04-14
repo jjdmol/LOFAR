@@ -177,16 +177,30 @@ void MeqFunklet::update (const MeqMatrix& value)
   }
 }
 
-void MeqFunklet::update (const vector<double>& values)
+void MeqFunklet::update (const vector<double>& coeff)
 {
-  double* coeff = itsCoeff.doubleStorage();
-  int inx = itsScidInx;
+  double* dest = itsCoeff.doubleStorage();
+  int offset = itsScidInx;
   for (int i=0; i<itsCoeff.nelements(); i++) {
     if (isCoeffSolvable(i)) {
-      DBGASSERT (inx < int(values.size()));
-      coeff[i] = values[inx];
-      itsParmValue.rep().itsCoeff[i] = values[inx];
-      inx++;
+      DBGASSERT (offset < int(coeff.size()));
+      dest[i] = coeff[offset];
+      itsParmValue.rep().itsCoeff[i] = coeff[offset];
+      ++offset;
+    }
+  }
+}
+
+void MeqFunklet::update (const vector<double>& coeff, size_t offset)
+{
+  double* dest = itsCoeff.doubleStorage();
+
+  for (int i=0; i<itsCoeff.nelements(); i++) {
+    if (isCoeffSolvable(i)) {
+      DBGASSERT (offset < int(coeff.size()));
+      dest[i] = coeff[offset];
+      itsParmValue.rep().itsCoeff[i] = coeff[offset];
+      ++offset;
     }
   }
 }

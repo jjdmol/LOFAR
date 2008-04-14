@@ -183,12 +183,12 @@ namespace BBS
     
     void SolutionMsg::write(BlobOStream& bos) const
     {
-        bos << itsKernelId << itsContents;
+        bos << itsContents;
     }
 
     void SolutionMsg::read(BlobIStream& bis)
     {
-        bis >> itsKernelId >> itsContents;
+        bis >> itsContents;
     }
 
     const string& SolutionMsg::classType() const

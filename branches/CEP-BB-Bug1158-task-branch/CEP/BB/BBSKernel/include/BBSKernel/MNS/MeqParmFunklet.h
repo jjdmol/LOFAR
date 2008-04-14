@@ -112,7 +112,8 @@ public:
   // The vector contains all solvable values; it picks out the values
   // at the spid index of this parameter.
   virtual void update(const vector<double>& value);
-  virtual void update(size_t domain, const vector<double> &unknowns);
+  virtual void update(size_t cell, const vector<double> &coeff);
+  virtual void update(size_t cell, const vector<double> &coeff, size_t offset);
 
   // Update the solvable parameter coefficients with the new values
   // in the table.

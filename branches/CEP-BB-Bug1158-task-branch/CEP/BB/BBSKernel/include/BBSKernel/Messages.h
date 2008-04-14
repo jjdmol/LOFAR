@@ -108,6 +108,11 @@ namespace BBS
             : itsKernelId(kernelId)
         {}
 
+        CoefficientMsg(uint32 kernelId, size_t count)
+            :   itsKernelId(kernelId),
+                itsContents(count)
+        {}
+
         uint32 getKernelId() const
         { return itsKernelId; }
         
@@ -168,6 +173,11 @@ namespace BBS
             : itsKernelId(kernelId)
         {}
 
+        EquationMsg(uint32 kernelId, size_t count)
+            :   itsKernelId(kernelId),
+                itsContents(count)
+        {}
+
         uint32 getKernelId() const
         { return itsKernelId; }
         
@@ -226,16 +236,12 @@ namespace BBS
         typedef shared_ptr<SolutionMsg> Pointer;
 
         SolutionMsg()
-            : itsKernelId(0)
         {}
 
-        SolutionMsg(uint32 kernelId)
-            : itsKernelId(kernelId)
+        SolutionMsg(size_t count)
+            : itsContents(count)
         {}
 
-        uint32 getKernelId() const
-        { return itsKernelId; }
-        
         vector<CellSolution> &getContents()
         { return itsContents; }
         
@@ -243,7 +249,6 @@ namespace BBS
         { return itsContents; }
         
     private:
-        uint32                  itsKernelId;
         vector<CellSolution>    itsContents;
     
         //# -------- BlobStreamable interface implementation -------- 

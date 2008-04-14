@@ -1,4 +1,4 @@
-//# Prediffer.h: Read and predict read visibilities
+//# Prediffer.h: Calibrate observed data.
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,10 +24,7 @@
 #define LOFAR_BB_BBS_PREDIFFER_H
 
 // \file
-// Read and predict read visibilities
-
-//#include <casa/BasicSL/Complex.h>
-//#include <casa/Arrays/Matrix.h>
+// Calibrate observed data.
 
 #include <BBSKernel/CoefficientIndex.h>
 #include <BBSKernel/Grid.h>
@@ -36,15 +33,15 @@
 #include <BBSKernel/Model.h>
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisData.h>
-
 #include <BBSKernel/Types.h>
-//#include <BBSKernel/ParmData.h>
+
 #include <BBSKernel/MNS/MeqDomain.h>
 #include <BBSKernel/MNS/MeqJonesExpr.h>
 #include <BBSKernel/MNS/MeqMatrix.h>
 #include <BBSKernel/MNS/MeqParm.h>
 #include <BBSKernel/MNS/MeqPhaseRef.h>
 #include <BBSKernel/MNS/MeqRequest.h>
+
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/ParmDomain.h>
@@ -54,18 +51,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
 
-#include <utility>
 #include <scimath/Fitting/LSQFit.h>
-
-
-#include <Blob/BlobStreamable.h>
-
-/*
-namespace casa
-{
-    class LSQFit;
-}
-*/
 
 namespace LOFAR
 {
@@ -78,69 +64,6 @@ namespace BBS
 // It reads the measured data and predicts the data from the model.
 // It subtracts them from each other and calculates the derivatives.
 // These results can be sent to the solver to find better parameter values.
-
-struct ProcessingContext
-{
-    ProcessingContext()
-        :   coeffCount(0)
-    {}
-
-
-    // 
-    // Information for the SOLVE operation (valid if unknownCount > 0).
-    //     
-    Grid<double>                        solutionGrid;
-    Grid<size_t>                        cellGrid;
-    
-    Location                            chunkStart, chunkEnd;
-
-    // Sum of the maximal number (over all solve domains) of unknowns of each
-    // parameter.
-    size_t                              coeffCount;
-    vector<MeqPExpr>                    localParmSelection;
-    map<uint32, CellCoeffIndex>         localCoeffIndices;
-    
-    // The set of unknowns for each solve domain.
-//    vector<vector<double> >         unknowns;
-//    boost::multi_array<double, 3>   unknowns;
-
-    // The set of parameters included in the SOLVE operation.
-//    vector<MeqPExpr>                parameters;
-    // Index into the unknown vector of the first (solvable) coefficient of a
-    // given parameter.
-//    vector<size_t>                  parameterOffset;
-};
-
-
-struct ThreadContext
-{
-    enum
-    {
-        MODEL_EVALUATION = 0,
-        PROCESS,
-        GRID_LOOKUP,
-        BUILD_INDEX,
-        DERIVATIVES,
-        MAKE_NORM,
-        N_Timer
-    } Timer;
-
-    static string           timerNames[N_Timer];
-    NSTimer                 timers[N_Timer];
-    unsigned long long      visCount;
-
-    vector<casa::LSQFit*>   equations;
-    vector<size_t>          coeffIndex;
-    vector<const double*>   perturbedRe, perturbedIm;
-    vector<double>          partialRe, partialIm;
-};
-
-
-struct Selection
-{
-    vector<baseline_t>      baselines;
-    vector<size_t>          polarizations;
-};
 
 
 class Prediffer
@@ -155,13 +78,11 @@ public:
         CONSTRUCT,
         N_OperationType        
     };
-    
+
     Prediffer(uint32 id,
         Measurement::Pointer measurement,
         ParmDB::ParmDB sky,
         ParmDB::ParmDB instrument);
-
-    ~Prediffer();
 
     // Attach/detach the chunk of data to process.
     // <group>
@@ -187,9 +108,9 @@ public:
     // function called should match the operation specified in the call to
     // setModelConfig().
     //
-    // NOTE: Prior to calling construct(), a solution grid should be set and
-    // the parameters to solve for should be selected (see setSolutionGrid()
-    // and setParameterSelection() below).
+    // NOTE: Prior to calling construct(), the parameters to solve for should be
+    // selected and a solution cell grid should be set (see
+    // setParameterSelection() and setCellGrid() below).
     // <group>
     void simulate();
     void subtract();
@@ -199,17 +120,16 @@ public:
     
     // (Distributed) solving.
     // <group>
-    bool setParameterSelection(const vector<string> &include,
+    void setParameterSelection(const vector<string> &include,
         const vector<string> &exclude);        
     void clearParameterSelection();
 
-    bool setSolutionGrid(const Grid<double> &grid);
+    bool setCellGrid(const Grid<double> &grid);
 
     CoeffIndexMsg::Pointer getCoefficientIndex() const;
     void setCoefficientIndex(CoeffIndexMsg::Pointer msg);
 
-    CoefficientMsg::Pointer getCoefficients(const Location &start,
-        const Location &end) const;
+    CoefficientMsg::Pointer getCoefficients(Location start, Location end) const;
     void setCoefficients(SolutionMsg::Pointer msg);
     // </group>
 
@@ -223,59 +143,71 @@ public:
 */
 
 private:
-    // Copy construction and assignment are not allowed.
-    // <group>
+    
+    struct ThreadContext
+    {
+        enum
+        {
+            MODEL_EVALUATION = 0,
+            PROCESS,
+            GRID_LOOKUP,
+            INV_DELTA,
+            BUILD_INDEX,
+            DERIVATIVES,
+            MAKE_NORM,
+            N_Timer
+        } Timer;
+
+        static string           timerNames[N_Timer];
+        NSTimer                 timers[N_Timer];
+        unsigned long long      visCount;
+
+        vector<casa::LSQFit*>   equations;
+        vector<size_t>          coeffIndex;
+        vector<const double*>   perturbedRe, perturbedIm;
+        vector<double>          partialRe, partialIm;
+    };
+    
+    //# Copy construction and assignment are not allowed.
     Prediffer(const Prediffer& other);
     Prediffer &operator=(const Prediffer& other);
-    // </group>
 
+    //# Define the signature for a function that processes the data of a single
+    //# baseline.
+    typedef void (Prediffer::*BlProcessor) (size_t threadNr,
+        const baseline_t &baseline,
+        const Location &offset,
+        const MeqRequest &request,
+        void *arguments);
+
+    //# Process (a subset of) the observed data.
+    void process(bool checkFlags, bool precalc, const Location &start,
+        const Location &end, BlProcessor processor, void *arguments = 0);
+
+    //# Copy the simulated visibilities for a single baseline.
+    void copyBl(size_t threadNr, const baseline_t &baseline,
+        const Location &offset, const MeqRequest &request, void *arguments = 0);
+
+    //# Subtract the simulated visibilities from the observed data for a
+    //# single baseline.
+    void subtractBl(size_t threadNr, const baseline_t &baseline,
+        const Location &offset, const MeqRequest &request, void *arguments = 0);
+
+    //# Construct equations for a single baseline.
+    void constructBl(size_t threadNr, const baseline_t &baseline,
+        const Location &offset, const MeqRequest &request, void *arguments = 0);
+
+    //# Create a look-up table that maps external (measurement) polarization
+    //# indices to internal polarization indices.
     void initPolarizationMap();
 
     //# Get all parameter values that intersect the current chunk.
     void loadParameterValues();
 
+    //# Reset and/or print various timers and statistics.
     void resetTimers();
     void printTimers(const string &operation);
 
-    // Define the signature for a function that processes the data of a single
-    // baseline.
-    typedef void (Prediffer::*BlProcessor) (size_t threadNr,
-        const baseline_t &baseline,
-        const Point<size_t> &offset,
-        const MeqRequest &request,
-        void *arguments);
-
-    // Process (a subset of) the observed data.
-    void process(bool checkFlags, bool precalc, const Point<size_t> &start,
-        const Point<size_t> &end, BlProcessor processor, void *arguments = 0);
-
-    // Copy the simulated visibilities for a single baseline.
-    void copyBl(size_t threadNr, const baseline_t &baseline,
-        const Point<size_t> &offset, const MeqRequest &request,
-        void *arguments = 0);
-
-    // Construct equations for a single baseline.
-    void constructBl(size_t threadNr, const baseline_t &baseline,
-        const Point<size_t> &offset, const MeqRequest &request,
-        void *arguments = 0);
-
-/*
-    // Loop through all data and process each baseline by ProcessFuncBL.
-    void process(bool useFlags, bool precalc, bool derivatives,
-        pair<size_t, size_t> start, pair<size_t, size_t> end,
-        BaselineProcessor processor, void *arguments);
-
-    // Copy the predicted visibilities of a single baseline.
-    void copyBL(int threadnr, void* arguments, VisData::Pointer chunk,
-        pair<size_t, size_t> offset, const MeqRequest& request,
-        baseline_t baseline, bool showd = false);
-
-    // Subtract the predicted visibilities from the observed data of a
-    // single baseline.
-    void subtractBL(int threadnr, void* arguments, VisData::Pointer chunk,
-        pair<size_t, size_t> offset, const MeqRequest& request,
-        baseline_t baseline, bool showd = false);
-*/
 
     uint32                              itsId;
     Measurement::Pointer                itsMeasurement;
@@ -293,11 +225,22 @@ private:
     //# Container for the model parameters (the leaf nodes of the model).
     MeqParmGroup                        itsParameters;
 
-    Selection                           itsSelection;
     OperationType                       itsOperation;
+    vector<baseline_t>                  itsBaselineSelection;
+    vector<size_t>                      itsPolarizationSelection;
 
-    //# TODO: Remove this.
-    ProcessingContext                   itsContext;
+    //# Information required for the CONSTRUCT operation.
+    //# ------------------------------------------------------------------------
+    Grid<double>                        itsGlobalCellGrid;
+    Grid<size_t>                        itsCellGrid;
+    Location                            itsStartCell, itsEndCell;
+
+    //# Sum of the maximal number (over all solution cells) of coefficients of
+    //# each parameter.
+    size_t                              itsCoeffCount;
+    vector<MeqPExpr>                    itsParameterSelection;
+    map<uint32, CellCoeffIndex>         itsCellCoeffIndices;
+    //# ------------------------------------------------------------------------
 
     vector<ThreadContext>               itsThreadContexts;
 

@@ -61,7 +61,7 @@ public:
     
     Location getCellLocation(uint id) const
     {
-        return Location(id % itsAxes[0]->size(), id / itsAxes[1]->size());
+        return Location(id % itsAxes[0]->size(), id / itsAxes[0]->size());
     }
 
     Box<T> getCell(const Location &location) const;

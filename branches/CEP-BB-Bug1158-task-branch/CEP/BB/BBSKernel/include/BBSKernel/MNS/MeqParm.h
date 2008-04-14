@@ -106,7 +106,8 @@ public:
   // <group>
   virtual void update(const ParmData& values);
   virtual void update(const vector<double>& value);
-  virtual void update(size_t domain, const vector<double> &unknowns);
+  virtual void update(size_t cell, const vector<double> &coeff);
+  virtual void update(size_t cell, const vector<double> &coeff, size_t offset);
   virtual void updateFromTable();
   // </group>
 
@@ -167,8 +168,11 @@ public:
     { itsParmPtr->update (values); }
   void update (const vector<double>& value)
     { itsParmPtr->update (value); }
-  void update(size_t domain, const vector<double> &unknowns)
-    { itsParmPtr->update (domain, unknowns); }
+  void update(size_t cell, const vector<double> &coeff)
+    { itsParmPtr->update (cell, coeff); }
+  void update(size_t cell, const vector<double> &coeff, size_t offset)
+    { itsParmPtr->update (cell, coeff, offset); }
+    
   void updateFromTable()
     { itsParmPtr->updateFromTable(); }
   // </group>

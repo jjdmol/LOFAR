@@ -381,6 +381,19 @@ void MeqParmFunklet::update (const vector<double>& value)
   }
 }
 
+void MeqParmFunklet::update(size_t cell, const vector<double> &coeff)
+{
+    ASSERT(cell < itsFunklets.size());
+    itsFunklets[cell]->update(coeff);
+}
+
+void MeqParmFunklet::update(size_t cell, const vector<double> &coeff,
+    size_t offset)
+{
+    ASSERT(cell < itsFunklets.size());
+    itsFunklets[cell]->update(coeff, offset);
+}
+
 void MeqParmFunklet::updateFromTable()
 {
   uint nDomain = itsFunklets.size();
@@ -408,12 +421,6 @@ void MeqParmFunklet::save()
     itsTable->putValue (getName(), pval);
   }
 //  itsTable->unlock();
-}
-
-void MeqParmFunklet::update(size_t domain, const vector<double> &unknowns)
-{
-    ASSERT(domain < itsFunklets.size());
-    itsFunklets[domain]->update(unknowns);
 }
 
 void MeqParmFunklet::save(size_t domainIndex)

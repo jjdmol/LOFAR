@@ -80,8 +80,8 @@ public:
     return new (nx, ny) MeqMatrixComplexArr(nx, ny);
   }
 
-  static void poolActivate(int nelements);
-  static void poolDeactivate();
+//  static void poolActivate(int nelements);
+//  static void poolDeactivate();
 
   virtual MeqMatrixRep* add      (MeqMatrixRep& right, bool rightTmp);
   virtual MeqMatrixRep* subtract (MeqMatrixRep& right, bool rightTmp);

@@ -78,9 +78,15 @@ void MeqParm::update (const vector<double>&)
   throw Exception("MeqParm::update(vector<double>) should not be called");
 }
 
-void MeqParm::update(size_t domain, const vector<double> &unknowns)
+void MeqParm::update(size_t cell, const vector<double> &coeff)
 {
   throw Exception("MeqParm::update(size_t, vector<double>) should not be called");
+}
+
+void MeqParm::update(size_t cell, const vector<double> &coeff, size_t offset)
+{
+  throw Exception("MeqParm::update(size_t, vector<double>, size_t) should not"
+    " be called");
 }
 
 void MeqParm::updateFromTable()
