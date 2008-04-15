@@ -28,7 +28,14 @@
 
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/CommandResult.h>
+
 #include <BBSKernel/Prediffer.h>
+#include <BBSKernel/Measurement.h>
+#include <BBSKernel/VisSelection.h>
+#include <BBSKernel/VisData.h>
+
+#include <ParmDB/ParmDB.h>
+
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
@@ -42,7 +49,6 @@ namespace LOFAR
   {
     //# Forward declations
     class CommandQueue;
-    class Prediffer;
     class BlobStreamableConnection;
 
     // \addtogroup BBSControl
@@ -53,7 +59,9 @@ namespace LOFAR
     public:
       CommandExecutor(shared_ptr<CommandQueue> &queue,
                       shared_ptr<BlobStreamableConnection> &solver)
-        :   itsCommandQueue(queue),
+        :   itsChunkSize(0),
+            itsChunkPosition(0),
+            itsCommandQueue(queue),
             itsSolverConnection(solver)
       {
       }
@@ -85,6 +93,24 @@ namespace LOFAR
     private:
       // Kernel.
       scoped_ptr<Prediffer>                   itsKernel;
+      
+      // Measurement.
+      Measurement::Pointer                    itsMeasurement;
+      string                                  itsInputColumn;
+
+      // Visibility selection.
+      VisSelection                            itsRoiSelection;
+      VisDimensions                           itsRoiDimensions;
+
+      // Chunk size in time slots.
+      size_t                                  itsChunkSize;
+      size_t                                  itsChunkPosition;
+      VisSelection                            itsChunkSelection;
+      VisData::Pointer                        itsChunk;
+      
+      // Model parameter databases.
+      scoped_ptr<ParmDB::ParmDB>              itsSkyDb;
+      scoped_ptr<ParmDB::ParmDB>              itsInstrumentDb;
 
       // CommandQueue.
       shared_ptr<CommandQueue>                itsCommandQueue;

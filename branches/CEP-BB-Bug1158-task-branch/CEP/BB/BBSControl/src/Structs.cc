@@ -26,6 +26,9 @@
 #include <BBSControl/StreamUtil.h>
 #include <Common/lofar_sstream.h>
 #include <APS/ParameterSet.h>
+#include <Blob/BlobArray.h>
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobOStream.h>
 
 namespace LOFAR
 {
@@ -89,6 +92,62 @@ namespace LOFAR
       return os;
     }
 
+
+    ostream& operator<<(ostream& os, const Correlation& obj)
+    {
+      os << "Correlation:";
+      Indent id;
+      os << endl << indent << "Selection: " << obj.selection
+	 << endl << indent << "Type: "      << obj.type;
+      return os;
+    }
+
+
+    ostream& operator<<(ostream& os, const Baselines& obj)
+    {
+      os << "Baselines:";
+      Indent id;
+      os << endl << indent << "Station1: " << obj.station1
+	 << endl << indent << "Station2: " << obj.station2;
+      return os;
+    }
+
+
+    //# -------  BlobOStream operators  ------- #//
+
+    BlobOStream& operator<<(BlobOStream& bos, const Correlation& obj)
+    {
+      bos << obj.selection
+	  << obj.type;
+      return bos;
+    }
+
+
+    BlobOStream& operator<<(BlobOStream& bos, const Baselines& obj)
+    {
+      bos << obj.station1
+	  << obj.station2;
+      return bos;
+    }
+
+
+    //# -------  BlobIStream operators  ------- #//
+
+    BlobIStream& operator>>(BlobIStream& bis, Correlation& obj)
+    {
+      int32 selection;
+      bis >> obj.selection;
+      bis >> obj.type;
+      return bis;
+    }
+
+
+    BlobIStream& operator>>(BlobIStream& bis, Baselines& obj)
+    {
+      bis >> obj.station1
+	  >> obj.station2;
+      return bis;
+    }
 
   } // namespace BBS
 
