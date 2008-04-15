@@ -1,15 +1,14 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,671 237 687 210 N "_3DFace" 3
-"$App"
+PANEL,243 141 1057 273 N "_3DFace" 2
 "$AppName"
 "$datapoint"
 "main()
 {
-  setValue(\"txt_AppName\", \"text\", $AppName);
+  setValue(\"txt_AppName\", \"text\", \"CS1_\"+$AppName);
   
-  baseDP=$datapoint+\"_\"+$App;
+  baseDP=$datapoint+\"_OnlineCtrl_\"+$AppName;
   selectedDP=baseDP + \".logMsg\";
 
   if (dpExists(selectedDP)) {
@@ -186,7 +185,7 @@ LANG:1 6 Layer1
 6 9
 "childStateBorder"
 ""
-1 10 150 E E E 1 E 1 E N "_WindowText" E N {255,255,204} E E
+1 10 170 E E E 1 E 1 E N "_WindowText" E N {255,255,204} E E
  E E
 8 0 0 0 0 0
 EE E
@@ -195,7 +194,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 3 1 0 1 E U  1 E 10 10 670 150
+E E 0 3 1 0 1 E U  1 E 10 10 950 170
 2 6
 "txt_status"
 ""
@@ -252,12 +251,12 @@ LANG:1 0
 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-18 30 661 149
-E E 1 0 1 5 5 "time" 0 1 0 "s" 1
+18 30 942 162
+E E 1 0 1 5 6 "time" 0 1 0 "s" 1
 LANG:1 4 time
 E1
 LANG:1 0 
- 150 "level" 0 1 0 "s" 1
+ 125 "level" 0 1 0 "s" 1
 LANG:1 5 level
 E1
 LANG:1 0 
@@ -265,7 +264,7 @@ LANG:1 0
 LANG:1 6 source
 E1
 LANG:1 0 
- 200 "message" 0 1 0 "s" 1
+ 175 "message" 0 1 0 "s" 1
 LANG:1 7 message
 E1
 LANG:1 0 
@@ -273,7 +272,7 @@ LANG:1 0
 LANG:1 4 code
 E1
 LANG:1 0 
- 200 18 16 "" 1 1
+ 200 16 16 "" 1 1
 LANG:1 2 #1
 "" 1 1
 LANG:1 2 #2
@@ -283,6 +282,8 @@ LANG:1 2 #3
 LANG:1 2 #4
 "" 1 1
 LANG:1 2 #5
+"" 1 1
+LANG:1 2 #6
 8 30 1
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
@@ -320,5 +321,5 @@ LANG:1 6 Layer8
 3 0 "selfState"
 "objects\\nav_usr\\CS1\\lofar_self_state.pnl" 27 24 T 10 1 0 1  -14 -11  
 1
-"$object""$datapoint+\"_\"+$App"
+"$object""$datapoint+\"_OnlineCtrl_\"+$AppName"
 0
