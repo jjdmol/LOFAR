@@ -48,7 +48,7 @@ if [ $# -ne 1 ]; then
 	SyntaxError
 fi
 
-RESULTFILE=PVSSDatapoints.out
+RESULTFILE=OTDBDatapoints.out
 
 rm -f ${RESULTFILE}
 echo "Creating PIC file..."
