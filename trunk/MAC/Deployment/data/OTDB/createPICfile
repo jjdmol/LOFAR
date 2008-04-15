@@ -73,7 +73,7 @@ def expandCabinetMarker(dataPoint, nrRSP):
 PVSSbasefile= "../PVSS/PVSSDataPoints.base"
 StationFile = "../StaticMetaData/StationInfo"
 RingFile    = "../PVSS/Rings.list"
-ResultFile  = "./PVSSDatapoints.out"
+ResultFile  = "./OTDBDatapoints.out"
 filledLine  = re.compile("^[^#].*", re.MULTILINE)
 
 # construct a dictionary from the rings file: key is first character, value is ringname
