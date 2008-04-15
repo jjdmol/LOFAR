@@ -26,7 +26,6 @@
 #include <lofar_config.h>
 
 #include <BBSControl/KernelProcessControl.h>
-//#include <BBSControl/Command.h>
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/CommandId.h>
 #include <BBSControl/Step.h>
@@ -34,23 +33,13 @@
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
 #include <BBSControl/Strategy.h>
-/*
-#include <BBSControl/PredictStep.h>
-#include <BBSControl/SubtractStep.h>
-#include <BBSControl/CorrectStep.h>
-#include <BBSControl/SolveStep.h>
-#include <BBSControl/SubtractStep.h>
-*/
 #include <BBSControl/Exceptions.h>
-
-//#include <BBSKernel/Solver.h>
-#include <BBSKernel/BBSStatus.h>
+#include <BBSControl/StreamUtil.h>
 
 #include <APS/ParameterSet.h>
 #include <Blob/BlobStreamable.h>
 
 #include <Common/LofarLogger.h>
-#include <BBSControl/StreamUtil.h>
 #include <Common/Timer.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_smartptr.h>
@@ -65,292 +54,228 @@ using namespace LOFAR::ACC::APS;
 
 namespace LOFAR 
 {
-namespace BBS 
-{
+  namespace BBS 
+  {
+    // Forces registration with Object Factory.
     namespace
     {
-        InitializeCommand cmd1;
-        FinalizeCommand cmd2;
-        NextChunkCommand cmd3;
+      InitializeCommand cmd1;
+      FinalizeCommand cmd2;
+      NextChunkCommand cmd3;
     }
 
 
     //##----   P u b l i c   m e t h o d s   ----##//
     KernelProcessControl::KernelProcessControl()
-        :   ProcessControl(),
-            itsState(KernelProcessControl::INIT)
+      :   ProcessControl(),
+          itsState(KernelProcessControl::INIT)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
 
 
     KernelProcessControl::~KernelProcessControl()
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     }
 
 
     tribool KernelProcessControl::define()
     {
-        LOG_DEBUG("KernelProcessControl::define()");
+      LOG_DEBUG("KernelProcessControl::define()");
 
-        try {
-/*
-            itsControllerConnection.reset(new BlobStreamableConnection(
-                    globalParameterSet()->getString("Controller.Host"),
-                    globalParameterSet()->getString("Controller.Port")));
-*/
-            char *user = getenv("USER");
-            ASSERT(user);
-            string userString(user);
-            
-            ostringstream socketName;
-            int id = globalParameterSet()->getInt32("SolverId");
-            socketName << "=Solver_" << userString << id;
-            
-            itsSolverConnection.reset(new BlobStreamableConnection(
-                "localhost",
-                socketName.str(),
-                Socket::LOCAL));
+      try
+      {
+        ParameterSet* ps(globalParameterSet());
+        ASSERT(ps);
+
+        string host;
+        string port;
+
+        // Should we connect to a global solver?
+        bool isGlobal(ps->getBool("Solver.Global"));
+
+        if (isGlobal) {
+          host = ps->getString("Solver.Host");
+          port = ps->getString("Solver.Port");
         }
-        catch(Exception& e)
-        {
-            LOG_ERROR_STR(e);
-            return false;
+        else {
+          ostringstream oss;
+          oss << "=Solver_" << getenv("USER") << ps->getInt32("SolverId");
+          host = "localhost";
+          port = oss.str();
         }
 
-        return true;
+        LOG_DEBUG_STR("Defining connection: solver@" << host << ":" << port);
+        itsSolverConnection.reset
+          (new BlobStreamableConnection
+           (host, port, (isGlobal ? Socket::TCP : Socket::LOCAL)));
+
+      }
+      catch(Exception& e) {
+        LOG_ERROR_STR(e);
+        return false;
+      }
+
+      return true;
     }
 
 
     tribool KernelProcessControl::init()
     {
-        LOG_DEBUG("KernelProcessControl::init()");
+      LOG_DEBUG("KernelProcessControl::init()");
 
-        try {
-            // Create a new CommandQueue. This will open a connection to the
-            // blackboard database.
-            itsCommandQueue.reset(new CommandQueue(
-                globalParameterSet()->getString("BBDB.DBName"),
-                globalParameterSet()->getString("BBDB.UserName"),
-                globalParameterSet()->getString("BBDB.Host"),
-                globalParameterSet()->getString("BBDB.Port")));
+      try {
+        // Create a new CommandQueue. This will open a connection to the
+        // blackboard database.
+        itsCommandQueue.reset
+          (new CommandQueue(globalParameterSet()->getString("BBDB.DBName"),
+                            globalParameterSet()->getString("BBDB.UserName"),
+                            globalParameterSet()->getString("BBDB.Host"),
+                            globalParameterSet()->getString("BBDB.Port")));
 
-            // Register for the "command" trigger, which fires when a new
-            // command is posted to the blackboard database.
-            itsCommandQueue->registerTrigger(CommandQueue::Trigger::Command);
+        // Register for the "command" trigger, which fires when a new
+        // command is posted to the blackboard database.
+        itsCommandQueue->registerTrigger(CommandQueue::Trigger::Command);
 
-
-            LOG_DEBUG("Trying to connect to solver@localhost");
-            if(!itsSolverConnection->connect())
-            {
-                LOG_ERROR("+ could not connect to solver");
-                return false;
-            }
-            LOG_DEBUG("+ ok");
-
-            itsCommandExecutor.reset(new CommandExecutor(itsCommandQueue,
-                itsSolverConnection));
-        }
-        catch(Exception& e)
+        LOG_DEBUG("Trying to connect to solver");
+        if(!itsSolverConnection->connect())
         {
-            LOG_ERROR_STR(e);
-            return false;
+          LOG_ERROR("+ could not connect to solver");
+          return false;
         }
+        LOG_DEBUG("+ ok");
 
-        // All went well.
-        return true;
+        itsCommandExecutor.reset
+          (new CommandExecutor(itsCommandQueue, itsSolverConnection));
+      }
+      catch(Exception& e)
+      {
+        LOG_ERROR_STR(e);
+        return false;
+      }
+      // All went well.
+      return true;
     }
 
 
     tribool KernelProcessControl::run()
     {
-        LOG_DEBUG("KernelProcessControl::run()");
+      LOG_DEBUG("KernelProcessControl::run()");
 
-        switch(itsState)
+      switch(itsState)
+      {
+      case KernelProcessControl::INIT:
         {
-            case KernelProcessControl::INIT:
-                {
-                if(!itsCommandQueue->isNewRun(false))
-                {
-                    LOG_ERROR("Need to recover from an aborted run, but "
-                        "recovery has not yet been implemented.");
-                    return false;
-                }
+          if(!itsCommandQueue->isNewRun(false))
+          {
+            LOG_ERROR("Need to recover from an aborted run, but "
+                      "recovery has not yet been implemented.");
+            return false;
+          }
 
-                LOG_DEBUG("New run, entering RUN state.");
-//                itsState = KernelProcessControl::FIRST_RUN;
-                itsState = KernelProcessControl::RUN;
-                break;
-                }
-
-/*
-            case KernelProcessControl::FIRST_RUN:
-                {
-                shared_ptr<const Strategy>strategy(
-                    itsCommandQueue->getStrategy());
-
-                if(!strategy)
-                {
-                    sleep(3);
-                    break;
-                }
-
-                {
-                    LOG_DEBUG("Executing an implicit INITIALIZE command.");
-                    InitializeCommand cmd;
-                    cmd.accept(*itsCommandExecutor);
-                }
-                {
-                    LOG_DEBUG("Executing an implicit NEXT_CHUNK command.");
-                    NextChunkCommand cmd;
-                    cmd.accept(*itsCommandExecutor);
-                }
-                itsState = KernelProcessControl::RUN;
-                break;
-                }
-*/
-
-            case KernelProcessControl::RUN:
-                {
-                NextCommandType cmd(itsCommandQueue->getNextCommand());
-
-                if(cmd.first)
-                {
-                    cmd.first->accept(*itsCommandExecutor);
-                    itsCommandQueue->addResult(cmd.second,
-                        itsCommandExecutor->getResult());
-
-                    if(cmd.first->type() == "Finalize")
-                        return false;
-                }
-                else
-                    itsState = KernelProcessControl::WAIT;
-
-                break;
-                }
-
-            case KernelProcessControl::WAIT:
-                {
-                LOG_DEBUG("Waiting from next Command...");
-
-                if(itsCommandQueue->
-                    waitForTrigger(CommandQueue::Trigger::Command))
-                {
-                    itsState = KernelProcessControl::RUN;
-                }
-                break;
-                }
-
-
-            default:
-                {
-                THROW(LocalControlException, "Unknown state identifier "
-                    "encountered");
-                }
+          LOG_DEBUG("New run, entering RUN state.");
+          //                itsState = KernelProcessControl::FIRST_RUN;
+          itsState = KernelProcessControl::RUN;
+          break;
         }
 
-        return true;
+      case KernelProcessControl::RUN:
+        {
+          NextCommandType cmd(itsCommandQueue->getNextCommand());
+
+          if(cmd.first)
+          {
+            cmd.first->accept(*itsCommandExecutor);
+            itsCommandQueue->addResult(cmd.second,
+                                       itsCommandExecutor->getResult());
+
+            if(cmd.first->type() == "Finalize")
+              return false;
+          }
+          else
+            itsState = KernelProcessControl::WAIT;
+
+          break;
+        }
+
+      case KernelProcessControl::WAIT:
+        {
+          LOG_DEBUG("Waiting from next Command...");
+
+          if(itsCommandQueue->
+             waitForTrigger(CommandQueue::Trigger::Command))
+          {
+            itsState = KernelProcessControl::RUN;
+          }
+          break;
+        }
+
+
+      default:
+        {
+          THROW(LocalControlException, "Unknown state identifier "
+                "encountered");
+        }
+      }
+
+      return true;
     }
 
 
     tribool KernelProcessControl::pause(const string& /*condition*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        LOG_WARN("Not supported");
-        return false;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return false;
     }
 
 
     tribool KernelProcessControl::release()
     {
-        LOG_INFO("KernelProcessControl::release()");
-        LOG_WARN("Not supported");
-        return false;
+      LOG_INFO("KernelProcessControl::release()");
+      LOG_WARN("Not supported");
+      return false;
     }
 
 
     tribool KernelProcessControl::quit()
     {
-        LOG_DEBUG("KernelProcessControl::quit()");
-        return true;
+      LOG_DEBUG("KernelProcessControl::quit()");
+      return true;
     }
 
 
     tribool KernelProcessControl::snapshot(const string& /*destination*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        LOG_WARN("Not supported");
-        return false;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return false;
     }
 
 
     tribool KernelProcessControl::recover(const string& /*source*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        LOG_WARN("Not supported");
-        return false;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return false;
     }
 
 
     tribool KernelProcessControl::reinit(const string& /*configID*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        LOG_WARN("Not supported");
-        return false;
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      LOG_WARN("Not supported");
+      return false;
     }
 
 
-    std::string KernelProcessControl::askInfo(const string& /*keylist*/)
+    string KernelProcessControl::askInfo(const string& /*keylist*/)
     {
-        LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-        return std::string("");
+      LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
+      return string("");
     }
 
-/*
-    //##----   P r i v a t e   m e t h o d s   ----##//
-    bool KernelProcessControl::dispatch(const BlobStreamable *message)
-    {
-        // If the message contains a `strategy', handle the `strategy'.
-        const Strategy *strategy = dynamic_cast<const Strategy*>(message);
-        if(strategy)
-        {
-            if(handle(strategy))
-            {
-                itsControllerConnection->sendObject(BBSStatus(BBSStatus::OK));
-                return true;
-            }
-            else
-            {
-                
-itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR));                
-return false;            }
-        }
+  } // namespace BBS
 
-        // If the message contains a `step', handle the `step'.
-        const Step *step = dynamic_cast<const Step*>(message);
-        if(step)
-        {
-            if(handle(step))
-            {
-                itsControllerConnection->sendObject(BBSStatus(BBSStatus::OK));
-                return true;
-            }
-            else
-            {
-                
-itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR));                
-return false;            }
-        }
-
-        // We received a message we can't handle
-        ostringstream oss;
-        oss << "Received message of unsupported type";
-//            << itsControllerConnection.itsDataHolder->classType() << "'. 
-Skipped.";        LOG_WARN(oss.str());
-        itsControllerConnection->sendObject(BBSStatus(BBSStatus::ERROR, 
-oss.str()));        return false;
-    }
-*/
-} // namespace BBS
 } // namespace LOFAR
