@@ -8,7 +8,6 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	Model.cc		\
 	Prediffer.cc		\
 	Solver.cc		\
-	Types.cc		\
 	VisData.cc		\
 	VisDimensions.cc	\
 	VisSelection.cc		\

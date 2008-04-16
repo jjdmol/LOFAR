@@ -27,159 +27,68 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_iosfwd.h>
+
 #include <utility>
 #include <limits>
+
 #include <casa/BasicMath/Math.h>
 
 
 namespace LOFAR
 {
-  using std::pair;
-  using std::numeric_limits;
+    using std::pair;
+    using std::numeric_limits;
 
-  //# Forward declarations
-  class BlobIStream;
-  class BlobOStream;
-
-  namespace BBS
-  {
-    typedef fcomplex                sample_t;
-    typedef bool                    flag_t;
-    typedef uint8                   tslot_flag_t;
-    typedef pair<uint32, uint32>    baseline_t;
-
-    enum AxisName
+    namespace BBS
     {
-        FREQ = 0,
-        TIME,
-        N_AxisName
-    };
-    
-    typedef pair<size_t, size_t>    Location;
+        typedef fcomplex                sample_t;
+        typedef bool                    flag_t;
+        typedef uint8                   tslot_flag_t;
+        typedef pair<uint32, uint32>    baseline_t;
 
-    template <typename T>
-    struct Point
-    {
-        Point(T a, T b)
-            : first(a),
-              second(b)
-        {}
-                      
-        T   first, second;
-    };
+        enum AxisName
+        {
+            FREQ = 0,
+            TIME,
+            N_AxisName
+        };
 
+        typedef pair<size_t, size_t>    Location;
 
-    template <typename T, bool is_integer = std::numeric_limits<T>::is_integer>
-    struct is_near
-    {
-        static bool eval(T a, T b);
-    };
+        template <typename T>
+        class Point
+        {
+        public:
+            Point(T a, T b)
+                : first(a),
+                    second(b)
+            {}
+                            
+            T   first, second;
+        };
 
-    template <typename T>
-    struct is_near<T, true>
-    {
-        static bool eval(T a, T b)
-        { return (a == b); }
-    };
+        template <typename T,
+            bool is_integer = std::numeric_limits<T>::is_integer>
+        struct is_near
+        {
+            static bool eval(T a, T b);
+        };
 
-    template <typename T>
-    struct is_near<T, false>
-    {
-        static bool eval(T a, T b)
-        { return casa::near(a, b); }
-    };
+        template <typename T>
+        struct is_near<T, true>
+        {
+            static bool eval(T a, T b)
+            { return (a == b); }
+        };
 
+        template <typename T>
+        struct is_near<T, false>
+        {
+            static bool eval(T a, T b)
+            { return casa::near(a, b); }
+        };
 
-    class MeqDomain;
-
-    // Information about which correlation products (auto, cross, or both),
-    // and which polarizations should be used.
-    struct Correlation
-    {
-      Correlation() : selection("NONE") {}
-      string selection;     ///< Valid values: "NONE", "AUTO", "CROSS", "ALL"
-      vector<string> type;  ///< E.g., ["XX", "XY", "YX", "YY"]
-    };
-
-    // Two vectors of stations names, which, when paired element-wise, define
-    // the baselines to be used in the current step. Names may contain
-    // wildcards, like \c * and \c ?. If they do, then all possible baselines
-    // will be constructed from the expanded names. Expansion of wildcards
-    // will be done in the BBS kernel.
-    // 
-    // For example, suppose that: 
-    // \verbatim 
-    // station1 = ["CS*", "RS1"]
-    // station2 = ["CS*", "RS2"] 
-    // \endverbatim
-    // Furthermore, suppose that \c CS* expands to \c CS1, \c CS2, and \c
-    // CS3. Then, in the BBS kernel, seven baselines will be constructed:
-    // \verbatim
-    // [ CS1:CS1, CS1:CS2, CS1:CS3, CS2:CS2, CS2:CS3, CS3:CS3, RS1:RS2 ]
-    // \endverbatim
-    // 
-    // \note Station names are \e not expanded by matching with all existing
-    // %LOFAR stations, but only with those that took part in a particular
-    // observation; i.e., only those stations that are mentioned in the \c
-    // ANTENNA table in the Measurement Set.
-    struct Baselines
-    {
-      vector<string> station1;
-      vector<string> station2;
-    };
-
-
-    struct Context
-    {
-      Baselines         baselines;
-      Correlation       correlation;
-      vector<string>    sources;
-      vector<string>    instrumentModel;
-    };
-
-
-    struct PredictContext: Context
-    {
-      string            outputColumn;
-    };
-
-
-    struct SubtractContext: Context
-    {
-      string            outputColumn;
-    };
-
-
-    struct CorrectContext: Context
-    {
-      string            outputColumn;
-    };
-
-
-    struct GenerateContext: Context
-    {
-      vector<string>        unknowns;
-      vector<string>        excludedUnknowns;
-      pair<size_t, size_t>  domainSize;
-    };
-
-    // I/O stream methods
-    // @{
-    ostream& operator<<(ostream&, const Correlation&);
-    ostream& operator<<(ostream&, const Baselines&);
-    // @}
-
-    // Blob I/O stream methods
-    // @{
-    BlobOStream& operator<<(BlobOStream&, const Correlation&);
-    BlobOStream& operator<<(BlobOStream&, const Baselines&);
-
-    BlobIStream& operator>>(BlobIStream&, Correlation&);
-    BlobIStream& operator>>(BlobIStream&, Baselines&);
-    // @}
-
-  } // namespace BBS
-
+    } // namespace BBS
 } // namespace LOFAR
 
 #endif

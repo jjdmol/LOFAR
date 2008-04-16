@@ -492,9 +492,14 @@ void Model::precalculate(const MeqRequest& request)
         {
             vector<MeqExprRep*> &nodes = precalcNodes[level];
             if(!nodes.empty())
+            {
+                ASSERT(nodes.size() <= numeric_limits<int>::max());
 #pragma omp for schedule(dynamic)
-                for(size_t i=0; i < nodes.size(); ++i)
+                for(int i = 0; i < static_cast<int>(nodes.size()); ++i)
+                {
                     nodes[i]->precalculate(request);
+                }
+            }
         }
     } // omp parallel
 }

@@ -995,12 +995,13 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     }
 #endif
 
+    printTimers("CONSTRUCT");
+
     for(size_t i = 0; i < nThreads; ++i)
     {
         itsThreadContexts[i] = ThreadContext();
     }
     
-    printTimers("CONSTRUCT");
     return result;
 }
 
@@ -1058,6 +1059,7 @@ void Prediffer::process(bool, bool precalc, const Location &start,
     
     // Process all selected baselines.
     ASSERT(itsBaselineSelection.size() <= numeric_limits<int>::max());
+
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < static_cast<int>(itsBaselineSelection.size()); ++i)
     {
@@ -1419,6 +1421,183 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
 
     context.timers[ThreadContext::PROCESS].stop();
 }
+
+
+/*
+// NOTE: Experimental version, only works for 256 x 1 cells.
+void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
+    const Location &offset, const MeqRequest &request, void *arguments)
+{
+    // Get thread context.
+    ThreadContext &context = itsThreadContexts[threadNr];
+
+    // Evaluate the model.
+    context.timers[ThreadContext::MODEL_EVALUATION].start();
+    MeqJonesResult jresult = itsModel->evaluate(baseline, request);
+    context.timers[ThreadContext::MODEL_EVALUATION].stop();
+
+    // Process the result.
+    context.timers[ThreadContext::PROCESS].start();
+        
+    // Get cells to process.
+    const Location &start = static_cast<Location*>(arguments)[0];
+    const Location &end = static_cast<Location*>(arguments)[1];
+
+//    LOG_DEBUG_STR("Offset: (" << offset.first << "," << offset.second << ")");
+//    LOG_DEBUG_STR("Processing cells (" << start.first << "," << start.second
+//        << ") - (" << end.first << "," << end.second << ")");
+
+    // Get baseline index.
+    const size_t bl = itsChunk->dims.getBaselineIndex(baseline);
+
+    // Get information about request grid.
+    const size_t nChannels = request.nx();
+    const size_t nTimeslots = request.ny();
+    
+    // Put the results in a single array for easier handling.
+    const MeqResult *modelVis[4];
+    modelVis[0] = &(jresult.getResult11());
+    modelVis[1] = &(jresult.getResult12());
+    modelVis[2] = &(jresult.getResult21());
+    modelVis[3] = &(jresult.getResult22());
+
+    // Construct equations.
+    for(size_t pol = 0; pol < itsPolarizationSelection.size(); ++pol)
+    {
+        // External (Measurement) polarization index.
+        size_t ext_pol = itsPolarizationSelection[pol];
+        
+        // Internal (MNS) polarization index.
+        int int_pol = itsPolarizationMap[ext_pol];
+
+        // Get the result for this polarization.
+        const MeqResult &result = *modelVis[int_pol];
+        
+        // Get pointers to the main value.
+        const double *predictRe, *predictIm;
+        result.getValue().dcomplexStorage(predictRe, predictIm);
+
+        // Determine which parameters have perturbed values (e.g. when
+        // solving for station-bound parameters, only a few parameters
+        // per baseline are relevant). Note that this information could be
+        // different for each solution cell. However, for the moment, we will
+        // assume it is the same for every cell.
+        context.timers[ThreadContext::BUILD_INDEX].start();
+
+        size_t nCoeff = 0;
+        for(size_t i = 0; i < itsCoeffCount; ++i)
+        {
+            // TODO: Remove log(N) look-up in isDefined()!
+            if(result.isDefined(i))
+            {
+                context.coeffIndex[nCoeff] = i;
+                
+                const MeqMatrix &perturbed = result.getPerturbedValue(i);
+                perturbed.dcomplexStorage(context.perturbedRe[nCoeff],
+                    context.perturbedIm[nCoeff]);
+                    
+                ++nCoeff;
+            }
+        }
+
+        context.timers[ThreadContext::BUILD_INDEX].stop();
+
+        if(nCoeff == 0)
+        {
+            continue;
+        }
+
+        size_t visOffset = 0;
+        for(size_t ts = offset.second; ts < offset.second + nTimeslots; ++ts)
+        {
+            // Skip timeslot if flagged.
+            if(itsChunk->tslot_flag[bl][ts])
+            {
+                visOffset += nChannels;
+                continue;
+            }
+
+            size_t cellIdTime = ts;
+            size_t solverIdTime = ts - offset.second;
+            cellIdTime *= 256;
+            solverIdTime *= 256;
+
+            // Construct two equations for each unflagged visibility.
+            for(size_t ch = offset.first; ch < offset.first + nChannels; ++ch)
+            {
+                if(!itsChunk->vis_flag[bl][ts][ch][ext_pol])
+                {
+                    size_t cellId = ch;
+                    size_t solverId = ch - offset.first;
+                    cellId += cellIdTime;
+                    solverId += solverIdTime;
+
+                    // Update statistics.
+                    ++context.visCount;
+
+                    context.timers[ThreadContext::DERIVATIVES].start();
+                    // Compute right hand side of the equation pair.
+                    const sample_t obsVis =
+                        itsChunk->vis_data[bl][ts][ch][ext_pol];
+
+                    const double modelVisRe = predictRe[visOffset];
+                    const double modelVisIm = predictIm[visOffset];
+
+                    const double diffRe = real(obsVis) - modelVisRe;
+                    const double diffIm = imag(obsVis) - modelVisIm;
+
+//                            sumRe += abs(real(obsVis) - modelVisRe);
+//                            sumIm += abs(imag(obsVis) - modelVisIm);
+                    
+                    // Approximate partial derivatives (forward
+                    // differences).
+                    // TODO: Remove this transpose.                            
+                    for(size_t i = 0; i < nCoeff; ++i)
+                    {
+                        double invDelta = 1.0 /
+                            result.getPerturbation(context.coeffIndex[i],
+                                cellId);
+
+                        context.partialRe[i] = 
+                            (context.perturbedRe[i][visOffset] -
+                                modelVisRe) * invDelta;
+                        
+                        context.partialIm[i] = 
+                            (context.perturbedIm[i][visOffset] -
+                                modelVisIm) * invDelta;
+                    }
+
+                    context.timers[ThreadContext::DERIVATIVES].stop();
+
+                    context.timers[ThreadContext::MAKE_NORM].start();
+
+                    context.equations[solverId]->makeNorm(nCoeff,
+                        &(context.coeffIndex[0]),
+                        &(context.partialRe[0]),
+                        1.0,
+                        diffRe);
+                        
+                    context.equations[solverId]->makeNorm(nCoeff,
+                        &(context.coeffIndex[0]),
+                        &(context.partialIm[0]),
+                        1.0,
+                        diffIm);
+
+                    context.timers[ThreadContext::MAKE_NORM].stop();
+                } // !itsChunk->vis_flag[bl][ts][ch][ext_pol]
+
+                // Move to next channel.
+                ++visOffset;
+            } // for(size_t ch = chStart; ch < chEnd; ++ch)
+
+            // Move to next timeslot.
+            //visOffset += nChannels - (chEnd - chStart);
+        } // for(size_t ts = tsStart; ts < tsEnd; ++ts) 
+    } // for(size_t pol = 0; pol < itsPolarizationSelection.size(); ++pol)
+
+    context.timers[ThreadContext::PROCESS].stop();
+}
+*/
 
 
 /*
