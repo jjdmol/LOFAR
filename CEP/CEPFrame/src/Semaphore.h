@@ -31,8 +31,8 @@ class Semaphore
     Semaphore(unsigned level = 0);
     ~Semaphore();
 
-    void up(unsigned count = 1);
-    void down(unsigned count = 1);
+    void up();
+    void down();
     
   private:
     pthread_mutex_t mutex;
