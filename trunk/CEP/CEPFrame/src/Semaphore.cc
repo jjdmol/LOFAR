@@ -41,27 +41,22 @@ Semaphore::~Semaphore()
 }
 
 
-void Semaphore::up(unsigned count)
+void Semaphore::up()
 {
     pthread_mutex_lock(&mutex);
-    level += count;
-
-    if (count == 1)
-	pthread_cond_signal(&condition);
-    else
-	pthread_cond_broadcast(&condition);
-
+    ++ level;
+    pthread_cond_signal(&condition);
     pthread_mutex_unlock(&mutex);
 }
 
 
-void Semaphore::down(unsigned count)
+void Semaphore::down()
 {
     pthread_mutex_lock(&mutex);
 
-    while (level < count)
+    while (level == 0)
 	pthread_cond_wait(&condition, &mutex);
 
-    level -= count;
+    -- level;
     pthread_mutex_unlock(&mutex);
 }
