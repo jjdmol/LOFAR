@@ -113,6 +113,9 @@ void InputThread::mainLoop()
   char totRecvframe[frameSize + itsArgs.ipHeaderSize];
   char *recvframe = totRecvframe;
 
+  unsigned previousSeqid = 0;
+  bool previousSeqidIsAccepted = false;
+  
   if (itsArgs.th->getType() == "TH_Ethernet") {
     // only with TH_Ethernet there is an IPHeader
     // but also when we have recorded it from the rsp boards!
@@ -145,10 +148,23 @@ void InputThread::mainLoop()
 
       //if the seconds counter is 0xFFFFFFFF, the data cannot be trusted.
       if (seqid == ~0U) {
-	++ nrPacketsRejected;
-	continue;
+        ++ nrPacketsRejected;
+        continue;
       }
 
+      // Sanity check on seqid. Note, that seqid is in seconds,
+      // so a value which is greater than the previous one with more 
+      // than (say) 10 seconds probably means that the sequence number 
+      // in the packet is wrong. This can happen, since we use UDP.
+      if ((seqid >= previousSeqid + 10) && (previousSeqidIsAccepted)) {
+      	previousSeqidIsAccepted = false;
+      	++ nrPacketsRejected;
+      	continue;
+	  }
+      // accept seqid
+      previousSeqidIsAccepted = true;
+	  previousSeqid = seqid;
+	  
       actualstamp.setStamp(seqid, blockid);
     } else {
       actualstamp += itsArgs.nTimesPerFrame; 
