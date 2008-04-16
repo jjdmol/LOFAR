@@ -142,10 +142,10 @@ string	toLower(string str)
 bool	StringToBool(const string& aString) throw(Exception)
 {
 	char	firstChar = aString.c_str()[0];
-	if ((firstChar == 't') || (firstChar == 'T') || (firstChar == 1))
+	if ((firstChar == 't') || (firstChar == 'T') || (firstChar == '1'))
 		return (true);
 
-	if ((firstChar == 'f') || (firstChar == 'F') || (firstChar == 0))
+	if ((firstChar == 'f') || (firstChar == 'F') || (firstChar == '0'))
 		return (false);
 
 	THROW (Exception, aString + " is not a boolean value");

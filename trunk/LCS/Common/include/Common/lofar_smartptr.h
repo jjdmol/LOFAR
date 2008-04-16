@@ -46,6 +46,9 @@ namespace LOFAR
   using boost::weak_ptr;
   using boost::intrusive_ptr;
   using boost::enable_shared_from_this;
+  using boost::static_pointer_cast;
+  using boost::const_pointer_cast;
+  using boost::dynamic_pointer_cast;
 }
 
 #endif
