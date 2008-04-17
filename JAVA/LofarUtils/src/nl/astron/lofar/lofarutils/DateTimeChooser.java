@@ -9,7 +9,6 @@ package nl.astron.lofar.lofarutils;
 import com.toedter.components.JSpinField;
 import java.awt.Component;
 import java.beans.PropertyChangeEvent;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
