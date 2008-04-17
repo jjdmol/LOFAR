@@ -24,10 +24,12 @@
 
 package nl.astron.lofar.sas.otb;
 
+import java.awt.Color;
 import java.awt.Cursor;
 import java.rmi.RemoteException;
 import java.util.*;
 import javax.swing.*;
+import nl.astron.lofar.lofarutils.LofarUtils;
 import org.apache.log4j.Logger;
 import nl.astron.lofar.sas.otb.exceptions.*;
 import nl.astron.lofar.sas.otb.panels.*;
@@ -107,6 +109,23 @@ public class MainFrame extends javax.swing.JFrame {
         initComponents();
 
         login();
+        
+
+        // Since the default disabledForegroundColor might be a bit unreadable
+        // we set it to black for all object in this look and feel.
+        
+        UIManager.put("TextArea.inactiveForeground",Color.gray);
+        UIManager.put("TextField.inactiveForeground",Color.gray);
+        UIManager.put("FormattedTextField.inactiveForeground",Color.gray);
+        UIManager.put("ComboBox.disabledForeground",Color.gray);
+        UIManager.put("CheckBoxMenuItem.disabledForeground",Color.gray);
+        UIManager.put("RadioButtonMenuItem.disabledForeground",Color.gray);
+        UIManager.put("Menu.disabledForeground",Color.gray);
+        UIManager.put("MenuItem.disabledForeground",Color.gray);
+        
+
+        
+        
         
         showPanel(MainPanel.getFriendlyNameStatic());
     }

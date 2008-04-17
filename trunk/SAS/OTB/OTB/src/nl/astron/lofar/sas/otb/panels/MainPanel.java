@@ -79,6 +79,8 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.addButton("View");
             buttonPanel1.setButtonEnabled("View",false);
+            buttonPanel1.addButton("Info");
+            buttonPanel1.setButtonEnabled("Info",false);
         } else if (itsTabFocus.equals("VIC")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("Delete");
@@ -86,6 +88,8 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.addButton("View");
             buttonPanel1.setButtonEnabled("View",false);
+            buttonPanel1.addButton("Schedule");
+            buttonPanel1.setButtonEnabled("Schedule",false);
         } else if (itsTabFocus.equals("Templates")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("Duplicate");
@@ -97,6 +101,8 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Modify",false);
             buttonPanel1.setButtonEnabled("Delete",false);
             buttonPanel1.setButtonEnabled("Build VIC tree",false);
+            buttonPanel1.addButton("Change Status");
+            buttonPanel1.setButtonEnabled("Change Status",false);            
         } else if (itsTabFocus.equals("Components")) {
             buttonPanel1.addButton("Query Panel");
             buttonPanel1.addButton("New");
@@ -109,10 +115,6 @@ public class MainPanel extends javax.swing.JPanel
             buttonPanel1.setButtonEnabled("Build TemplateTree",false);
         } else if (itsTabFocus.equals("Query Results")) {
         
-        }
-        if (!itsTabFocus.equals("Components")) {
-            buttonPanel1.addButton("Info");
-            buttonPanel1.setButtonEnabled("Info",false);
         }
         buttonPanel1.addButton("Quit");
         buttonsInitialized=true;
@@ -626,7 +628,7 @@ public class MainPanel extends javax.swing.JPanel
                 if (aP != null) {
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
-            } else if (aButton.equals("Info")) {
+            } else if (aButton.equals("Schedule")) {
                 
                 // in case of VICtree we have the possibility of changing a multiple selection
                 // so things like start and/or stoptimes can be set for a few entries at once
@@ -672,6 +674,15 @@ public class MainPanel extends javax.swing.JPanel
                             JOptionPane.showMessageDialog(null,"New Tree created with ID: "+newTreeID,
                                 "New Tree Message",
                                 JOptionPane.INFORMATION_MESSAGE);
+                            // set back treestate to being specified
+                            jOTDBtree aT=OtdbRmi.getRemoteOTDB().getTreeInfo(newTreeID, false); 
+                            String aState=OtdbRmi.getTreeState().get(aT.state);
+                            if (aT.state != OtdbRmi.getRemoteTypes().getTreeState("being specified") ) {
+                                aT.state=OtdbRmi.getRemoteTypes().getTreeState("being specified");
+                                if (!OtdbRmi.getRemoteMaintenance().setTreeState(aT.treeID(), aT.state)) {
+                                    logger.debug("Error during setTreeState: "+OtdbRmi.getRemoteMaintenance().errorMsg());                      
+                                }
+                            }
                             itsMainFrame.getSharedVars().setTreeID(newTreeID);
                             // set changed flag to reload mainpanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
@@ -738,7 +749,7 @@ public class MainPanel extends javax.swing.JPanel
                     }
                 }
                 
-            } else if (aButton.equals("Info")) {
+            } else if (aButton.equals("Change Status")) {
                 if (itsMainFrame.getSharedVars().getTreeID() > 0) {
                     int [] id = new int[1];
                     id[0]=itsMainFrame.getSharedVars().getTreeID();
@@ -981,11 +992,11 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Refresh",false);
                     buttonPanel1.setButtonEnabled("View",false);
                 }
-                buttonPanel1.setButtonEnabled("Info",true);
+                buttonPanel1.setButtonEnabled("Schedule",true);
             } else {
                 buttonPanel1.setButtonEnabled("Delete",false);
                 buttonPanel1.setButtonEnabled("View",false);
-                buttonPanel1.setButtonEnabled("Info",false);
+                buttonPanel1.setButtonEnabled("Schedule",false);
             }
         } else if (itsTabFocus.equals("Templates")) {
             if (treeID > 0) {
@@ -1004,13 +1015,13 @@ public class MainPanel extends javax.swing.JPanel
                     buttonPanel1.setButtonEnabled("Duplicate",false);
                     buttonPanel1.setButtonEnabled("Modify",false);                                        
                 }
-                buttonPanel1.setButtonEnabled("Info",true);
+                buttonPanel1.setButtonEnabled("Change Status",true);
                 buttonPanel1.setButtonEnabled("Delete",true);                
             } else {
                 buttonPanel1.setButtonEnabled("Duplicate",false);
                 buttonPanel1.setButtonEnabled("Modify",false);
                 buttonPanel1.setButtonEnabled("Delete",false);                
-                buttonPanel1.setButtonEnabled("Info",false);  
+                buttonPanel1.setButtonEnabled("Change Status",false);  
                 buttonPanel1.setButtonEnabled("Build VIC tree",false);
             }
         } else if (itsTabFocus.equals("Components")) {

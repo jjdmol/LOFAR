@@ -255,10 +255,10 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
                     logger.debug("Error during duplication of Node: "+ex);
               }
             }
-        } else if (evt.getActionCommand().equals("Info")) {
+        } else if (evt.getActionCommand().equals("Change Status")) {
             int answer=JOptionPane.showConfirmDialog(this,"Altering the info wil automaticly close this Maintainance window. Do you want to continue ?","alert",JOptionPane.YES_NO_OPTION);
-            if (itsTreeID > 0) {
-                if (viewInfo() && JOptionPane.YES_OPTION == answer) {
+            if (itsTreeID > 0 && JOptionPane.YES_OPTION == answer ) {
+                if (viewInfo()) {
                     logger.debug("Tree has been changed, reloading table line");
                     // flag has to be set that ppl using this treeid should be able to see that it's info has been changed
                     itsMainFrame.setChanged(this.getFriendlyName(),true);
@@ -377,7 +377,7 @@ public class TemplateMaintenancePanel extends javax.swing.JPanel
         treePanel.setTitle("Template List");
         buttonPanel1.addButton("Delete");
         buttonPanel1.addButton("Duplicate");
-        buttonPanel1.addButton("Info");
+        buttonPanel1.addButton("Change Status");
         buttonPanel1.addButton("Exit");
         
         nodeViewPanel1.enableButtons(true);

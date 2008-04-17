@@ -413,7 +413,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      
 
       buttonPanel1.setButtonEnabled("Restore",false);
-      buttonPanel1.setButtonEnabled("Save",false);    
+      buttonPanel1.setButtonEnabled("Apply",false);    
   
       // Observation VirtualInstrument parameters
       //set the checkbox correctly when no stations are provided in the data
@@ -438,7 +438,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private void fillBeamletBitset() {
         itsUsedBeamlets.clear();
         for (int i=1;i<itsBeamletList.size();i++) {
-            BitSet aNewBitSet=LofarUtils.beamletToBitSet(itsBeamletList.elementAt(i));
+            BitSet aNewBitSet=LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(itsBeamletList.elementAt(i)));
             
             // check if no duplication between the two bitsets
             if (itsUsedBeamlets.intersects(aNewBitSet)) {
@@ -456,7 +456,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
      
     private void initialize() {
         buttonPanel1.addButton("Restore");
-        buttonPanel1.addButton("Save");
+        buttonPanel1.addButton("Apply");
         this.stationsList.setModel(new DefaultListModel());
 
         
@@ -550,7 +550,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         addStationButton.setEnabled(enabled);
         deleteStationButton.setEnabled(enabled);
         buttonPanel1.setButtonEnabled("Restore",enabled);
-        buttonPanel1.setButtonEnabled("Save",enabled);        
+        buttonPanel1.setButtonEnabled("Apply",enabled);        
     }
     
     /** Sets the buttons visible/invisible
@@ -564,7 +564,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         addStationButton.setVisible(visible);
         deleteStationButton.setVisible(visible);
         buttonPanel1.setButtonVisible("Restore",visible);
-        buttonPanel1.setButtonVisible("Save",visible);
+        buttonPanel1.setButtonVisible("Apply",visible);
     }        
     
     /** Enables/disables the complete form
@@ -728,7 +728,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
             itsOldDescriptionParam=aParam;
             inputDescription.setText(aParam.description);
             buttonPanel1.setButtonEnabled("Restore",true);
-            buttonPanel1.setButtonEnabled("Save",true);
+            buttonPanel1.setButtonEnabled("Apply",true);
         } catch (RemoteException ex) {
             logger.debug("Error during getParam: "+ ex);
             return;
@@ -741,7 +741,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         int row = beamConfigurationPanel.getSelectedRow();
         // if removed then the old Beamlets's should be removed form the checklist also
         String oldBeamlets = itsBeamConfigurationTableModel.getSelection(row)[4];
-        BitSet beamletSet = LofarUtils.beamletToBitSet(oldBeamlets);
+        BitSet beamletSet = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(oldBeamlets));
         
         if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this Beam ?","Delete Beam",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
             if (row > -1) {
@@ -753,7 +753,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
                 // something obviously changed, so enable restore and save buttons
                 buttonPanel1.setButtonEnabled("Restore",true);
-                buttonPanel1.setButtonEnabled("Save",true);
+                buttonPanel1.setButtonEnabled("Apply",true);
 
             }
         } 
@@ -768,14 +768,15 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     private void addBeam() {
      
         BitSet aBS=itsUsedBeamlets;
-        int index=0;
+        itsSelectedRow=-1;
         // set selection to defaults.
         String [] selection = {itsDirectionTypes.elementAt(0),itsAngle1.elementAt(0),
                                itsAngle2.elementAt(0),itsSubbandList.elementAt(0),itsBeamletList.elementAt(0)};
         if (editting) {
-            index = beamConfigurationPanel.getSelectedRow();
-            selection = itsBeamConfigurationTableModel.getSelection(index);
-            BitSet oldBeamlets = LofarUtils.beamletToBitSet(selection[4]);
+            itsSelectedRow = beamConfigurationPanel.getSelectedRow();
+            selection = itsBeamConfigurationTableModel.getSelection(itsSelectedRow);
+                       
+            BitSet oldBeamlets = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(selection[4]));
             aBS.xor(oldBeamlets);
             // if no row is selected, nothing to be done
             if (selection == null || selection[0].equals("")) {
@@ -815,11 +816,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         
         // something obviously changed, so enable restore and save buttons
         buttonPanel1.setButtonEnabled("Restore",true);
-        buttonPanel1.setButtonEnabled("Save",true);
+        buttonPanel1.setButtonEnabled("Apply",true);
 
     }
 
-    // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
 
@@ -862,10 +863,10 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         setLayout(new java.awt.BorderLayout());
 
-        jPanel1.setLayout(new java.awt.BorderLayout());
-
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
         jPanel1.setPreferredSize(new java.awt.Dimension(100, 25));
+        jPanel1.setLayout(new java.awt.BorderLayout());
+
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11));
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Observation Details");
@@ -874,10 +875,12 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         add(jPanel1, java.awt.BorderLayout.NORTH);
 
         jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+
         jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Beam Configuration", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
         jPanel3.setPreferredSize(new java.awt.Dimension(200, 125));
         jPanel3.setRequestFocusEnabled(false);
         jPanel3.setVerifyInputWhenFocusTarget(false);
+
         beamConfigurationPanel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 beamConfigurationPanelMouseClicked(evt);
@@ -935,10 +938,11 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         );
 
         jPanel5.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Virtual Instrument Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
-        stationsPanel.setLayout(new java.awt.BorderLayout());
 
         stationsPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Station Names", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 0, 11), new java.awt.Color(0, 0, 0)));
         stationsPanel.setToolTipText("Identifiers of the participating stations.");
+        stationsPanel.setLayout(new java.awt.BorderLayout());
+
         stationsList.setModel(new javax.swing.AbstractListModel() {
             String[] strings = { "1", "2", "3", "4", "5" };
             public int getSize() { return strings.length; }
@@ -955,7 +959,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 stationsListValueChanged(evt);
             }
         });
-
         stationsScrollPane.setViewportView(stationsList);
 
         stationsPanel.add(stationsScrollPane, java.awt.BorderLayout.CENTER);
@@ -964,18 +967,17 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
         stationsButtonPanel.setLayout(new java.awt.GridBagLayout());
 
-        deleteStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif")));
+        deleteStationButton.setText("Delete");
         deleteStationButton.setToolTipText("Remove the selected Station from the list");
         deleteStationButton.setEnabled(false);
-        deleteStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        deleteStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        deleteStationButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        deleteStationButton.setMaximumSize(new java.awt.Dimension(79, 23));
+        deleteStationButton.setMinimumSize(new java.awt.Dimension(79, 23));
+        deleteStationButton.setPreferredSize(new java.awt.Dimension(79, 23));
         deleteStationButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 deleteStationButtonActionPerformed(evt);
             }
         });
-
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 1;
@@ -983,17 +985,16 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         gridBagConstraints.insets = new java.awt.Insets(2, 2, 2, 2);
         stationsButtonPanel.add(deleteStationButton, gridBagConstraints);
 
-        addStationButton.setIcon(new javax.swing.ImageIcon(getClass().getResource("/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif")));
+        addStationButton.setText("Add");
         addStationButton.setToolTipText("Add the station entered to the list");
-        addStationButton.setMaximumSize(new java.awt.Dimension(30, 25));
-        addStationButton.setMinimumSize(new java.awt.Dimension(30, 25));
-        addStationButton.setPreferredSize(new java.awt.Dimension(30, 25));
+        addStationButton.setMaximumSize(new java.awt.Dimension(79, 23));
+        addStationButton.setMinimumSize(new java.awt.Dimension(79, 23));
+        addStationButton.setPreferredSize(new java.awt.Dimension(79, 23));
         addStationButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 addStationButtonActionPerformed(evt);
             }
         });
-
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 1;
@@ -1023,6 +1024,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         );
 
         jPanel10.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Generic Observation Input", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+
         labelMSNameMask.setText("MSNameMask:");
 
         inputMSNameMask.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -1124,6 +1126,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         );
 
         labelStationList.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Generic Observation Lists", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+
         labelReceiverList.setText("Receivers :");
 
         inputReceiverList.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -1133,12 +1136,14 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         });
 
         treeDescriptionScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Observation Tree Description", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+
         inputTreeDescription.setColumns(20);
         inputTreeDescription.setRows(5);
         inputTreeDescription.setToolTipText("The description set here will go to the Tree Description");
         treeDescriptionScrollPane.setViewportView(inputTreeDescription);
 
         descriptionScrollPane.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Field Descriptions.", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Tahoma", 1, 11), new java.awt.Color(0, 0, 0)));
+
         inputDescription.setColumns(20);
         inputDescription.setEditable(false);
         inputDescription.setRows(5);
@@ -1189,6 +1194,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 .add(labelStationList, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(525, Short.MAX_VALUE))
         );
+
         jScrollPane1.setViewportView(jPanel2);
 
         add(jScrollPane1, java.awt.BorderLayout.CENTER);
@@ -1198,9 +1204,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
                 buttonPanel1ActionPerformed(evt);
             }
         });
-
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
-
     }// </editor-fold>//GEN-END:initComponents
 
     private void deleteBeamButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBeamButtonActionPerformed
@@ -1246,7 +1250,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
     }//GEN-LAST:event_stationsListFocusGained
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Save")) {
+        if(evt.getActionCommand().equals("Apply")) {
             if (JOptionPane.showConfirmDialog(this,"This will throw away all old Beams from the database and rewrite the new ones. Are you sure you want to do this ","Write new configurations",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                 itsMainFrame.setHourglassCursor();
                 saveInput();
@@ -1260,17 +1264,6 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
 
     }//GEN-LAST:event_buttonPanel1ActionPerformed
 
-    private void addStationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addStationButtonActionPerformed
-        String toBeAddedStation = (String)this.modifyStationsCombobox.getSelectedItem();
-        DefaultListModel theStationModel = (DefaultListModel)stationsList.getModel();
-        if(!theStationModel.contains(toBeAddedStation)){
-            theStationModel.addElement(toBeAddedStation);
-            // something obviously changed, so enable restore and save buttons
-            buttonPanel1.setButtonEnabled("Restore",true);
-            buttonPanel1.setButtonEnabled("Save",true);        }
-
-    }//GEN-LAST:event_addStationButtonActionPerformed
-
     private void deleteStationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteStationButtonActionPerformed
         DefaultListModel theStationModel = (DefaultListModel)stationsList.getModel();
         int[] selectedIndices = stationsList.getSelectedIndices();
@@ -1283,7 +1276,7 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
         // something obviously changed, so enable restore and save buttons
         buttonPanel1.setButtonEnabled("Restore",true);
-        buttonPanel1.setButtonEnabled("Save",true);
+        buttonPanel1.setButtonEnabled("Apply",true);
     }//GEN-LAST:event_deleteStationButtonActionPerformed
 
     private void stationsListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_stationsListValueChanged
@@ -1295,8 +1288,18 @@ public class ObservationPanel extends javax.swing.JPanel implements IViewPanel{
         }
         // something obviously changed, so enable restore and save buttons
         buttonPanel1.setButtonEnabled("Restore",true);
-        buttonPanel1.setButtonEnabled("Save",true);
+        buttonPanel1.setButtonEnabled("Apply",true);
     }//GEN-LAST:event_stationsListValueChanged
+
+    private void addStationButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addStationButtonActionPerformed
+        String toBeAddedStation = (String)this.modifyStationsCombobox.getSelectedItem();
+        DefaultListModel theStationModel = (DefaultListModel)stationsList.getModel();
+        if(!theStationModel.contains(toBeAddedStation)){
+            theStationModel.addElement(toBeAddedStation);
+            // something obviously changed, so enable restore and save buttons
+            buttonPanel1.setButtonEnabled("Restore",true);
+            buttonPanel1.setButtonEnabled("Apply",true);        }
+    }//GEN-LAST:event_addStationButtonActionPerformed
     
     private jOTDBnode                   itsNode = null;
     private MainFrame                   itsMainFrame;

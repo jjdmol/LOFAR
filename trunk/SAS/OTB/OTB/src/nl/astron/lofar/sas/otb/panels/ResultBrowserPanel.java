@@ -84,7 +84,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         
         treePanel.setTitle("Observation Tree");
         buttonPanel1.addButton("Query Panel");
-        buttonPanel1.addButton("Info");
+        buttonPanel1.addButton("Schedule");
         buttonPanel1.addButton("Exit");
         
         //Sample code to have ParmDB in the tree.
@@ -380,7 +380,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
         
         if(evt.getActionCommand().equals("Query Panel")) {
             // ToDo
-        } else if(evt.getActionCommand().equals("Info")) {
+        } else if(evt.getActionCommand().equals("Schedule")) {
             if (itsTreeID > 0) {
                 if (viewInfo() ) {
                     logger.debug("Tree has been changed, reloading table line");

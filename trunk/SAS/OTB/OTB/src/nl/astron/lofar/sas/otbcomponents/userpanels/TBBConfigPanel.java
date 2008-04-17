@@ -205,7 +205,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             int aTreeID=itsMainFrame.getSharedVars().getTreeID();
             if (fc == null) {
                 fc = new JFileChooser();
-                fc.setApproveButtonText("Save");
+                fc.setApproveButtonText("Apply");
             }
             // try to get a new filename to write the parsetfile to
             if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -243,7 +243,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
      */
     public void enableButtons(boolean enabled) {
         buttonPanel1.setButtonEnabled("Restore",enabled);
-        buttonPanel1.setButtonEnabled("Save",enabled);
+        buttonPanel1.setButtonEnabled("Apply",enabled);
         editConfigButton.setEnabled(enabled);
         deleteConfigButton.setEnabled(enabled);
         addConfigButton.setEnabled(enabled);
@@ -256,7 +256,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
      */
     public void setButtonsVisible(boolean visible) {
         buttonPanel1.setButtonVisible("Restore",visible);
-        buttonPanel1.setButtonVisible("Save",visible);
+        buttonPanel1.setButtonVisible("Apply",visible);
         editConfigButton.setVisible(visible);
         deleteConfigButton.setVisible(visible);
         addConfigButton.setVisible(visible);
@@ -284,10 +284,10 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private void initialize() {
         buttonPanel1.addButton("Restore");
         buttonPanel1.setButtonToolTip("Restore","Restores the complete table to it's initial state");
-        buttonPanel1.addButton("Save");
-        buttonPanel1.setButtonToolTip("Save","Deleted all old TBBsetting instances from the Database and will write all new instances");
+        buttonPanel1.addButton("Apply");
+        buttonPanel1.setButtonToolTip("Apply","Deleted all old TBBsetting instances from the Database and will write all new instances");
         buttonPanel1.setButtonEnabled("Restore",false);
-        buttonPanel1.setButtonEnabled("Save",false);
+        buttonPanel1.setButtonEnabled("Apply",false);
     }
     
     private void initPanel() {
@@ -535,7 +535,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         itsTBBConfigurationTableModel.fillTable(itsTreeType,itsOperatingModes,itsBaselevels,itsStartlevels,itsStoplevels,itsFilters,itsWindows,itsC0s,itsC1s,itsC2s,itsC3s,itsRCUs);
         
         buttonPanel1.setButtonEnabled("Restore",false);
-        buttonPanel1.setButtonEnabled("Save",false);
+        buttonPanel1.setButtonEnabled("Apply",false);
     }
     
     
@@ -592,7 +592,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
     private void fillRCUBitset() {
         itsUsedRCUList.clear();
         for (int i=1;i<itsRCUs.size();i++) {
-            BitSet aNewBitSet=rcuToBitSet(itsRCUs.elementAt(i));
+            BitSet aNewBitSet=rcuToBitSet(LofarUtils.expandedArrayString(itsRCUs.elementAt(i)));
             
             // check if no duplication between the two bitsets
             if (itsUsedRCUList.intersects(aNewBitSet)) {
@@ -712,7 +712,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             return false;
         }
         
-        BitSet aBitSet = this.rcuToBitSet(inputRCUs.getText());
+        BitSet aBitSet = this.rcuToBitSet(LofarUtils.expandedArrayString(inputRCUs.getText()));
         if(itsUsedRCUList.intersects(aBitSet)) {
             return false;
         } else {
@@ -738,7 +738,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
         BitSet savedBitSet=itsUsedRCUList;
         
-        BitSet oldRCUs = rcuToBitSet(itsSavedRCUs);
+        BitSet oldRCUs = rcuToBitSet(LofarUtils.expandedArrayString(itsSavedRCUs));
         
         if (editting) {
             // remove old RCU's from list
@@ -794,7 +794,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         
         // something obviously changed, so enable restore and save buttons
         buttonPanel1.setButtonEnabled("Restore",true);
-        buttonPanel1.setButtonEnabled("Save",true);
+        buttonPanel1.setButtonEnabled("Apply",true);
 
     }
   
@@ -960,7 +960,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         this.deleteConfigButton.setEnabled(false);
         
         // set back to default Button visible
-        addConfigButton.setText("Save Changes");
+        addConfigButton.setText("Apply Changes");
         cancelEditButton.setVisible(true);
         
     }
@@ -969,7 +969,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         int row = TBBConfigurationPanel.getSelectedRow();
         // if removed then the old RCU's should be removed form the checklist also
         String oldRCUs = itsTBBConfigurationTableModel.getSelection(row)[10];
-        BitSet rcuSet = rcuToBitSet(oldRCUs);
+        BitSet rcuSet = rcuToBitSet(LofarUtils.expandedArrayString(oldRCUs));
         
         if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this configuration ?","Delete Configuration",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
             if (row > -1) {
@@ -981,7 +981,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
 
                 // something obviously changed, so enable restore and save buttons
                 buttonPanel1.setButtonEnabled("Restore",true);
-                buttonPanel1.setButtonEnabled("Save",true);
+                buttonPanel1.setButtonEnabled("Apply",true);
 
             }
         }
@@ -999,8 +999,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
      * WARNING: Do NOT modify this code. The content of this method is
      * always regenerated by the Form Editor.
      */
-    // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
@@ -1043,9 +1044,9 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
         TBBConfigurationPanel = new nl.astron.lofar.sas.otbcomponents.TablePanel();
         buttonPanel1 = new nl.astron.lofar.sas.otbcomponents.ButtonPanel();
 
+        setMinimumSize(new java.awt.Dimension(800, 400));
         setLayout(new java.awt.BorderLayout());
 
-        setMinimumSize(new java.awt.Dimension(800, 400));
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 12));
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Configure TBB settings");
@@ -1063,13 +1064,14 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
+
         add(jPanel1, java.awt.BorderLayout.NORTH);
 
         jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
         labelOperatingMode.setText("operating Mode:");
 
         labelBaselevel.setText("baselevel:");
-        labelBaselevel.getAccessibleContext().setAccessibleName("labelBaselevel");
 
         labelStartlevel.setText("startlevel:");
 
@@ -1193,7 +1195,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
-        addConfigButton.setText("Add Configuration");
+        addConfigButton.setText("Apply Configuration");
         addConfigButton.setToolTipText("add composed Configuration to table");
         addConfigButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1259,7 +1261,7 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                                     .addComponent(limitsStoplevel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(limitsFilter, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                                     .addComponent(limitsC0, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 33, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
                                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addGroup(jPanel2Layout.createSequentialGroup()
                                         .addGap(246, 246, 246)
@@ -1269,12 +1271,12 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                                     .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(TBBConfigurationPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 787, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
-                            .addComponent(inputRCUs, javax.swing.GroupLayout.DEFAULT_SIZE, 939, Short.MAX_VALUE)))
+                            .addComponent(inputRCUs, javax.swing.GroupLayout.DEFAULT_SIZE, 949, Short.MAX_VALUE)))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(addConfigButton)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cancelEditButton)))
+                        .addComponent(cancelEditButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(addConfigButton)))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -1343,10 +1345,13 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                     .addComponent(inputRCUs, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(addConfigButton)
-                    .addComponent(cancelEditButton))
+                    .addComponent(cancelEditButton)
+                    .addComponent(addConfigButton))
                 .addContainerGap(33, Short.MAX_VALUE))
         );
+
+        labelBaselevel.getAccessibleContext().setAccessibleName("labelBaselevel");
+
         add(jPanel2, java.awt.BorderLayout.CENTER);
 
         buttonPanel1.addActionListener(new java.awt.event.ActionListener() {
@@ -1354,13 +1359,11 @@ public class TBBConfigPanel extends javax.swing.JPanel implements IViewPanel {
                 buttonPanel1ActionPerformed(evt);
             }
         });
-
         add(buttonPanel1, java.awt.BorderLayout.SOUTH);
-
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Save")) {
+        if(evt.getActionCommand().equals("Apply")) {
             if (JOptionPane.showConfirmDialog(this,"This will throw away all old TBBsettings from the database and rewrite the new ones. Are you sure you want to do this ","Write new configurations",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                 save();
             }
