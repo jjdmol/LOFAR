@@ -23,11 +23,22 @@
 #include <lofar_config.h>
 #include <BBSControl/CorrectStep.h>
 #include <BBSControl/CommandVisitor.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
+
+    CorrectStep::CorrectStep(const string& name, 
+                             const ACC::APS::ParameterSet& parSet,
+                             const Step* parent) :
+      SingleStep(name, parent)
+    {
+      read(parSet.makeSubset("Step." + name + "."));
+    }
+
+
     void CorrectStep::accept(CommandVisitor &visitor) const
     {
         visitor.visit(*this);

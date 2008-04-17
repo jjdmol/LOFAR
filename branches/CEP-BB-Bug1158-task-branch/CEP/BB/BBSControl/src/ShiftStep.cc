@@ -23,11 +23,22 @@
 #include <lofar_config.h>
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/CommandVisitor.h>
+#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
   namespace BBS
   {
+
+    ShiftStep::ShiftStep(const string& name, 
+                         const ACC::APS::ParameterSet& parSet,
+                         const Step* parent) :
+      SingleStep(name, parent)
+    {
+      read(parSet.makeSubset("Step." + name + "."));
+    }
+
+
     void ShiftStep::accept(CommandVisitor &visitor) const
     {
       visitor.visit(*this);

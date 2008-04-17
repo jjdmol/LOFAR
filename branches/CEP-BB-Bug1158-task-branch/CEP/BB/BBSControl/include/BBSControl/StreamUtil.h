@@ -38,6 +38,14 @@ namespace LOFAR
                     const char* separator,
                     const char* prefix, const char* postfix);
 
+  template<typename T>
+  string toString(const vector<T>& vec)
+  {
+    ostringstream oss;
+    oss << vec;
+    return oss.str();
+  } 
+
 } // namespace LOFAR
 
 #endif

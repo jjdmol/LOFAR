@@ -36,6 +36,14 @@
 # error libpqxx, the C++ API to PostgreSQL, is required
 #endif
 
+//# The following #includes are not really necessary to compile the code,
+//# but it avoids the need to #include them whenever any of the public
+//# typedefs \c NextCommandType, \c ResultType, or \a ResultMapType are used.
+#include <BBSControl/Command.h>
+#include <BBSControl/CommandId.h>
+#include <BBSControl/CommandResult.h>
+#include <BBSControl/LocalControlId.h>
+
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_smartptr.h>
@@ -50,12 +58,8 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations
-    class Command;
     class Step;
     class Strategy;
-    class CommandResult;
-    class CommandId;
-    class LocalControlId;
 
     // \addtogroup BBSControl
     // @{
@@ -189,7 +193,7 @@ namespace LOFAR
       //
       // \todo Wrap multiple queries (needed for, e.g., reconstructing a
       // SolveStep) in one transaction.
-      pair<shared_ptr<const Command>, const CommandId> getNextCommand() const;
+      NextCommandType getNextCommand() const;
 
       // Set the Strategy in the command queue. All information, \e except
       // the Step objects within the Strategy are stored in the

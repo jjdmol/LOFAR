@@ -47,17 +47,16 @@ namespace LOFAR
 	SingleStep(parent) {}
 
       SubtractStep(const string& name, 
-		      const ACC::APS::ParameterSet& parSet,
-		      const Step* parent) :
-	SingleStep(name, parSet, parent) {}
+                   const ACC::APS::ParameterSet& parSet,
+                   const Step* parent);
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;
 
-       // Return the operation type of \c *this as a string.
+      // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
 
-     // Return the command type of \c *this as a string.
+      // Return the command type of \c *this as a string.
       virtual const string& type() const;
     };
 

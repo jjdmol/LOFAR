@@ -41,14 +41,14 @@ namespace LOFAR
   {
     using LOFAR::operator<<;
 
-    // Register Strategy with the CommandFactory. Use an anonymous
-    // namespace. This ensures that the variable `dummy' gets its own private
-    // storage area and is only visible in this compilation unit.
-    namespace
-    {
-      bool dummy = CommandFactory::instance().
-	registerClass<Strategy>("Strategy");
-    }
+                           // Register Strategy with the CommandFactory. Use an anonymous
+                           // namespace. This ensures that the variable `dummy' gets its own private
+                           // storage area and is only visible in this compilation unit.
+                           namespace
+                           {
+                             bool dummy = CommandFactory::instance().
+                               registerClass<Strategy>("Strategy");
+                           }
 
 
     //##--------   P u b l i c   m e t h o d s   --------##//
@@ -77,39 +77,33 @@ namespace LOFAR
       itsInputData = ps.getString("InputData");
 
       // Get the region of interest (optional)
-      try {
-        itsRegionOfInterest.frequency =
-          ps.getInt32Vector("RegionOfInterest.Freq");
-      } catch (APSException&) {}
-
-      try {
-        itsRegionOfInterest.time =
-          ps.getStringVector("RegionOfInterest.Time");
-      } catch (APSException&) {}
+      itsRegionOfInterest.frequency =
+        ps.getInt32Vector("RegionOfInterest.Freq", vector<int32>());
+      itsRegionOfInterest.time =
+        ps.getStringVector("RegionOfInterest.Time", vector<string>());
 
       // Get the work domain size for this strategy
       itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");      
       itsDomainSize.timeInterval = ps.getDouble("WorkDomainSize.Time");
 
       // Get the correlation product selection (ALL, AUTO, or CROSS)
-      itsCorrelation.selection = ps.getString("Correlation.Selection");
-      itsCorrelation.type = ps.getStringVector("Correlation.Type");
+      itsCorrelation.selection = 
+        ps.getString("Correlation.Selection");
+      itsCorrelation.type = 
+        ps.getStringVector("Correlation.Type", vector<string>());
 
-      // Get the integration intervals in frequency (Hz) and time (s).
-      try {
-        itsIntegration.deltaFreq = ps.getDouble("Integration.Freq");
-        itsIntegration.deltaTime = ps.getDouble("Integration.Time");
-      } catch (APSException&) {}
+      // Get the integration intervals in frequency (Hz) and time (s)
+      // (optional).
+      itsIntegration.deltaFreq = ps.getDouble("Integration.Freq", 0);
+      itsIntegration.deltaTime = ps.getDouble("Integration.Time", 0);
 
       // This strategy consists of the following steps.
-      try {
-        vector<string> steps(ps.getStringVector("Steps"));
+      vector<string> steps(ps.getStringVector("Steps"));
 
-        // Create a new step for each name in \a steps.
-        for (uint i = 0; i < steps.size(); ++i) {
-          itsSteps.push_back(Step::create(steps[i], aParSet, 0));
-        }
-      } catch (APSException&) {}
+      // Create a new step for each name in \a steps.
+      for (uint i = 0; i < steps.size(); ++i) {
+        itsSteps.push_back(Step::create(steps[i], aParSet, 0));
+      }
     }
 
 
@@ -162,38 +156,24 @@ namespace LOFAR
     void Strategy::write(ACC::APS::ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      ostringstream oss;
-      oss << endl << "DataSet = " 
-          << itsDataSet 
-          << endl << "ParmDB.Instrument = " 
-          << itsParmDB.instrument
-          << endl << "ParmDB.LocalSky = " 
-          << itsParmDB.localSky
-          << endl << "ParmDB.History = " 
-          << itsParmDB.history
-          << endl << "Strategy.Stations = " 
-          << itsStations
-          << endl << "Strategy.InputData = "
-          << itsInputData
-          << endl << "Strategy.WorkDomainSize.Freq = "
-          << itsDomainSize.bandWidth
-          << endl << "Strategy.WorkDomainSize.Time = "
-          << itsDomainSize.timeInterval
-          << endl << "Strategy.RegionOfInterest.Freq = "
-          << itsRegionOfInterest.frequency
-          << endl << "Strategy.RegionOfInterest.Time = "
-          << itsRegionOfInterest.time
-          << endl << "Strategy.Correlation.Selection = "
-          << itsCorrelation.selection
-          << endl << "Strategy.Correlation.Type = "
-          << itsCorrelation.type
-          << endl << "Strategy.Integration.Freq = "
-          << itsIntegration.deltaFreq
-          << endl << "Strategy.Integration.Time = "
-          << itsIntegration.deltaTime;
-      ps.adoptBuffer(oss.str());
-
+      ps.add("DataSet", itsDataSet);
+      ps.add("ParmDB.Instrument", itsParmDB.instrument);
+      ps.add("ParmDB.LocalSky", itsParmDB.localSky);
+      ps.add("ParmDB.History", itsParmDB.history);
+      ps.add("Strategy.Stations", toString(itsStations));
+      ps.add("Strategy.InputData", itsInputData);
+      ps.add("Strategy.WorkDomainSize.Freq", 
+             toString(itsDomainSize.bandWidth));
+      ps.add("Strategy.WorkDomainSize.Time", 
+             toString(itsDomainSize.timeInterval));
+      ps.add("Strategy.RegionOfInterest.Freq", 
+             toString(itsRegionOfInterest.frequency));
+      ps.add("Strategy.RegionOfInterest.Time",
+                 toString(itsRegionOfInterest.time));
+      ps.add("Strategy.Correlation.Selection", itsCorrelation.selection);
+      ps.add("Strategy.Correlation.Type", toString(itsCorrelation.type));
+      ps.add("Strategy.Integration.Freq", toString(itsIntegration.deltaFreq));
+      ps.add("Strategy.Integration.Time", toString(itsIntegration.deltaTime));
       LOG_TRACE_COND_STR("Write the Step objects as well?  " <<
                          (itsWriteSteps ? "Yes" : "No"));
       if (itsWriteSteps) writeSteps(ps);

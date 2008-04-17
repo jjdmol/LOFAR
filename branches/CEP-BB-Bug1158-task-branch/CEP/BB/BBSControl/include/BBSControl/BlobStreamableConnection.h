@@ -49,14 +49,22 @@ namespace LOFAR
     {
     public:
       // Create a server connection end-point.
-      BlobStreamableConnection(const string& port, int32 protocol = Socket::TCP);
+      BlobStreamableConnection(const string& port, 
+                               int32 protocol = Socket::TCP,
+                               bool blocking = true);
 
       // Create a client connection end-point.
-      BlobStreamableConnection(const string& server, const string& port, int32 protocol = Socket::TCP);
+      BlobStreamableConnection(const string& server, 
+                               const string& port, 
+                               int32 protocol = Socket::TCP,
+                               bool blocking = true);
+
+      // Create a connection using an existing data socket.
+      BlobStreamableConnection(Socket* socket);
 
       // Try to connection to the other side.
       bool connect();
-      
+
       // Send the BlobStreamable object \a obj.
       bool sendObject(const BlobStreamable& obj);
 

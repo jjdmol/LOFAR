@@ -33,12 +33,14 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
-#include <APS/ParameterSet.h>
+//#include <BBSKernel/Types.h>
+//#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
   //# Forward declarations
-  namespace ACC { namespace APS { class ParameterSet; } }
+//   namespace ACC { namespace APS { class ParameterSet; } }
+
   class BlobIStream;
   class BlobOStream;
 
@@ -51,29 +53,29 @@ namespace LOFAR
     struct BBDB
     {
       BBDB() : port(0) {}
-      string host;          ///< Host name or IP address of the BB DBMS
-      uint16 port;          ///< Port used by BB DBMS
-      string dbName;        ///< Name of the BB database
-      string username;      ///< Username for accessing the DBMS
-      string password;      ///< Password for accessing the DBMS
+      // Write the contents 
+//       void write(ACC::APS::ParameterSet& ps, const string& prefix);
+      string host;           ///< Host name or IP address of the BB DBMS
+      uint16 port;           ///< Port used by BB DBMS
+      string dbName;         ///< Name of the BB database
+      string username;       ///< Username for accessing the DBMS
+      string password;       ///< Password for accessing the DBMS
     };
 
     // Information about the parameter database.
     // \note These are currently AIPS++ MS tables.
     struct ParmDB
     {
-      string instrument;    ///< Instrument parameters (MS table)
-      string localSky;	    ///< Local sky parameters (MS table)
-      string history;       ///< History (MS table)
+      string instrument;     ///< Instrument parameters (MS table)
+      string localSky;	     ///< Local sky parameters (MS table)
+      string history;        ///< History (MS table)
     };
 
     // Selection of the data domain that is to be processed.
     struct RegionOfInterest
     {
-      vector<int32>   frequency;
-      //        uint                stepChannel;
-      vector<string>  time;
-      //        vector<string>      stations;
+      vector<int32>  frequency; 
+      vector<string> time;
     };    
     
     // Domain size is defined by two parameters: bandwidth f(Hz), and time
@@ -81,8 +83,8 @@ namespace LOFAR
     struct DomainSize
     {
       DomainSize() : bandWidth(0), timeInterval(0) {}
-      double bandWidth;	    ///< Bandwidth in Hz.
-      double timeInterval;  ///< Time interval is seconds.
+      double bandWidth;	     ///< Bandwidth in Hz.
+      double timeInterval;   ///< Time interval is seconds.
     };
 
     // Sizes of the integration intervals, when applied. Integration can be
@@ -90,8 +92,24 @@ namespace LOFAR
     struct Integration
     {
       Integration() : deltaFreq(0), deltaTime(0) {}
-      double deltaFreq;     ///< frequency integration interval: f(Hz)
-      double deltaTime;     ///< time integration interval: t(s)
+      double deltaFreq;      ///< frequency integration interval: f(Hz)
+      double deltaTime;      ///< time integration interval: t(s)
+    };
+
+    // Options for the solver.
+    struct SolverOptions
+    {
+      SolverOptions() : maxIter(0), epsValue(0), epsDerivative(0),
+                        minConverged(0), collFactor(0), lmFactor(0),
+                        balancedEqs(false), useSVD(false) {}
+      uint32 maxIter;        ///< Maximum number of iterations
+      double epsValue;       ///< Value convergence threshold
+      double epsDerivative;  ///< Derivative convergence threshold
+      double minConverged;   ///< Fraction that must have converged
+      double collFactor;     ///< Collinearity factor
+      double lmFactor;       ///< Levenberg-Marquardt factor
+      bool   balancedEqs;    ///< Indicates well-balanced normal equations
+      bool   useSVD;         ///< Use singular value decomposition.
     };
 
     // Information about which correlation products (auto, cross, or both),
@@ -137,6 +155,7 @@ namespace LOFAR
     ostream& operator<<(ostream&, const DomainSize&);
     ostream& operator<<(ostream&, const RegionOfInterest&);
     ostream& operator<<(ostream&, const Integration&);
+    ostream& operator<<(ostream&, const SolverOptions&);
     ostream& operator<<(ostream&, const Correlation&);
     ostream& operator<<(ostream&, const Baselines&);
     // @}

@@ -25,7 +25,7 @@
 #include <BBSControl/Structs.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/lofar_sstream.h>
-#include <APS/ParameterSet.h>
+#include <Common/lofar_iomanip.h>
 #include <Blob/BlobArray.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
@@ -35,7 +35,6 @@ namespace LOFAR
   namespace BBS
   {
     using LOFAR::operator<<;
-    using ACC::APS::ParameterSet;
 
     //# -------  ostream operators  ------- #//
 
@@ -43,9 +42,9 @@ namespace LOFAR
     {
       os << "Blackboard database:";
       Indent id;
-      os << endl << indent << "Host: " << obj.host
-	 << endl << indent << "Port: " << obj.port
-	 << endl << indent << "DBName: " << obj.dbName
+      os << endl << indent << "Host: "     << obj.host
+	 << endl << indent << "Port: "     << obj.port
+	 << endl << indent << "DBName: "   << obj.dbName
 	 << endl << indent << "Username: " << obj.username
 	 << endl << indent << "Password: " << obj.password;
       return os;
@@ -57,8 +56,8 @@ namespace LOFAR
       os << "Parameter database:";
       Indent id;
       os << endl << indent << "Instrument table: " << obj.instrument
-	 << endl << indent << "Local sky table: " << obj.localSky
-	 << endl << indent << "History table: " << obj.history;
+	 << endl << indent << "Local sky table: "  << obj.localSky
+	 << endl << indent << "History table: "    << obj.history;
       return os;
     }
 
@@ -68,7 +67,7 @@ namespace LOFAR
       os << "Region of interest:";
       Indent id;
       os << endl << indent << "Frequency: " << obj.frequency
-         << endl << indent << "Time: " << obj.time;
+         << endl << indent << "Time: "      << obj.time;
       return os;
     }
     
@@ -77,7 +76,7 @@ namespace LOFAR
     {
       os << "Domain size:";
       Indent id;
-      os << endl << indent << "Bandwidth: " << obj.bandWidth << " (Hz)"
+      os << endl << indent << "Bandwidth: "     << obj.bandWidth    << " (Hz)"
 	 << endl << indent << "Time interval: " << obj.timeInterval << " (s)";
       return os;
     }
@@ -88,10 +87,27 @@ namespace LOFAR
       os << "Integration:";
       Indent id;
       os << endl << indent << "Delta frequency: " << obj.deltaFreq << " (Hz)"
-	 << endl << indent << "Delta time: " << obj.deltaTime << " (s)";
+	 << endl << indent << "Delta time: "      << obj.deltaTime << " (s)";
       return os;
     }
 
+
+    ostream& operator<<(ostream& os, const SolverOptions& obj)
+    {
+      os << "Solver options:";
+      Indent id;
+      os << endl << indent << "Max nr. of iterations: "  << obj.maxIter
+         << endl << indent << "Epsilon value: "          << obj.epsValue
+         << endl << indent << "Epsilon derivative: "     << obj.epsDerivative
+         << endl << indent << "Min fraction converged: " << obj.minConverged
+         << endl << indent << "Collinearity factor: "    << obj.collFactor
+         << endl << indent << "LM factor: "              << obj.lmFactor
+         << boolalpha
+         << endl << indent << "Balanced equations: "     << obj.balancedEqs
+         << endl << indent << "Use SVD: "                << obj.useSVD
+         << noboolalpha;
+      return os;
+    }
 
     ostream& operator<<(ostream& os, const Correlation& obj)
     {

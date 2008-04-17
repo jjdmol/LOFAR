@@ -51,14 +51,21 @@ Strategy:
 . . . Instrument models: ["Bandpass","Phase"]
 . . . Output data: OUTDATA1
 . . . Solve: 
-. . . . Max nr. of iterations: 10
-. . . . Convergence threshold: 1e-07
-. . . . Min fraction converged: 0.95
 . . . . Solvable parameters: ["GAIN:{11,22}:*"]
 . . . . Excluded parameters: []
+. . . . Kernel groups: []
 . . . . Domain size:
 . . . . . Bandwidth: 1000 (Hz)
 . . . . . Time interval: 1 (s)
+. . . . Solver options:
+. . . . . Max nr. of iterations: 10
+. . . . . Epsilon value: 1e-07
+. . . . . Epsilon derivative: 1e-07
+. . . . . Min fraction converged: 0.95
+. . . . . Collinearity factor: 0.99
+. . . . . LM factor: 0.001
+. . . . . Balanced equations: true
+. . . . . Use SVD: false
 . . Step: Correct
 . . . Name: sl2
 . . . Full name: xyz1.sl2
@@ -107,14 +114,21 @@ Strategy:
 . . . Instrument models: ["Bandpass","Phase"]
 . . . Output data: OUTDATA1
 . . . Solve: 
-. . . . Max nr. of iterations: 10
-. . . . Convergence threshold: 1e-07
-. . . . Min fraction converged: 0.95
 . . . . Solvable parameters: ["GAIN:{11,22}:*"]
 . . . . Excluded parameters: []
+. . . . Kernel groups: []
 . . . . Domain size:
 . . . . . Bandwidth: 1000 (Hz)
 . . . . . Time interval: 1 (s)
+. . . . Solver options:
+. . . . . Max nr. of iterations: 10
+. . . . . Epsilon value: 1e-07
+. . . . . Epsilon derivative: 1e-07
+. . . . . Min fraction converged: 0.95
+. . . . . Collinearity factor: 0.99
+. . . . . LM factor: 0.001
+. . . . . Balanced equations: true
+. . . . . Use SVD: false
 . . Step: Predict
 . . . Name: sl3
 . . . Full name: xyz2.sl3

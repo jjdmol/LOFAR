@@ -62,19 +62,10 @@ namespace LOFAR
     }
 
 
-    SingleStep::SingleStep(const string& name, 
-				 const ParameterSet& parset,
-				 const Step* parent) :
-      Step(name, parset, parent)
+    SingleStep::SingleStep(const string& name, const Step* parent) :
+      Step(name, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-
-      // Create a subset of \a parset, containing only the relevant keys for
-      // the current SingleStep.
-      ParameterSet ps(parset.makeSubset("Step." + name + "."));
-
-      // Get the name of the data column to write to
-      itsOutputData = ps.getString("OutputData");
     }
 
 
@@ -82,8 +73,10 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::write(ps);
-      ps.replace("Step." + name() + ".OutputData", itsOutputData);
-      ps.replace("Step." + name() + ".Operation", toUpper(operation()));
+      const string prefix("Step." + name() + ".");
+      ps.replace(prefix + "OutputData", itsOutputData);
+      ps.replace(prefix + "Operation",  toUpper(operation()));
+      LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
 
@@ -91,7 +84,7 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       Step::read(ps);
-      itsOutputData = ps.getString("Step." + name() + ".OutputData");
+      itsOutputData = ps.getString("OutputData");
     }
 
   } // namespace BBS

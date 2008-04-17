@@ -576,7 +576,7 @@ void CommandExecutor::visit(const SolveStep &command)
         Location start(chunkStart.first, ts);
         Location end(chunkEnd.first, ts);
 
-        for(size_t it = 0; it < command.maxIter(); ++it)
+        for(size_t it = 0; it < command.solverOptions().maxIter; ++it)
         {
             EquationMsg::Pointer eq = itsKernel->construct(start, end);
         }

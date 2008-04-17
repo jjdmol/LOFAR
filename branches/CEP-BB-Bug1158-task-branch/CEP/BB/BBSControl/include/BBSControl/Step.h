@@ -63,7 +63,7 @@ namespace LOFAR
     // stores a pointer to its parent as backreference. Here, we should
     // probably use a boost::weak_ptr. See Bug #906
     class Step : public Command,
-                    public enable_shared_from_this<Step>
+                 public enable_shared_from_this<Step>
     {
     public:
       // Destructor.
@@ -91,8 +91,8 @@ namespace LOFAR
       // otherwise it is a SingleStep. The third, optional, argument is used
       // to pass a backreference to the parent Step object.
       static shared_ptr<Step> create(const string& name,
-                                        const ACC::APS::ParameterSet& parSet,
-                                        const Step* parent = 0);
+                                     const ACC::APS::ParameterSet& parSet,
+                                     const Step* parent = 0);
 
       // Print the contents of \c *this in human readable form into the output
       // stream \a os.
@@ -147,9 +147,10 @@ namespace LOFAR
       // parameter set file. It does \e not uniquely identify the step \e
       // object being created. The third argument is used to pass a
       // backreference to the parent Step object.
-      Step(const string& name, 
-	      const ACC::APS::ParameterSet& parSet,
-	      const Step* parent);
+//       Step(const string& name, 
+//            const ACC::APS::ParameterSet& parSet,
+//            const Step* parent);
+      Step(const string& name, const Step* parent);
 
     private:
       // Implementation of getAllSteps(). The default implementation adds \c

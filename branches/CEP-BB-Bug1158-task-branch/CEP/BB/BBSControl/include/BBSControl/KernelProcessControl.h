@@ -32,6 +32,7 @@
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandExecutor.h>
+#include <BBSControl/SolveStep.h>
 
 #include <Common/lofar_smartptr.h>
 #include <PLC/ProcessControl.h>
