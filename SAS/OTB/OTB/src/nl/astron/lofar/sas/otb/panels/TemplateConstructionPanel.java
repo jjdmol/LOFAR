@@ -52,7 +52,7 @@ public class TemplateConstructionPanel extends javax.swing.JPanel
         buttonPanel1.addButton("Duplicate");
         buttonPanel1.addButton("Info");
         buttonPanel1.addButton("Cancel");
-        buttonPanel1.addButton("Save");
+        buttonPanel1.addButton("Apply");
         buttonPanel1.addButton("Exit");
     }
 

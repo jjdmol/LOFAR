@@ -49,7 +49,9 @@
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
                   <JTabbedPaneConstraints tabName="Node">
-                    <Property name="tabTitle" type="java.lang.String" value="Node"/>
+                    <Property name="tabTitle" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+                      <PlainString value="Node"/>
+                    </Property>
                   </JTabbedPaneConstraints>
                 </Constraint>
               </Constraints>
@@ -58,7 +60,9 @@
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
                   <JTabbedPaneConstraints tabName="Param">
-                    <Property name="tabTitle" type="java.lang.String" value="Param"/>
+                    <Property name="tabTitle" type="java.lang.String" editor="org.netbeans.modules.i18n.form.FormI18nStringEditor">
+                      <PlainString value="Param"/>
+                    </Property>
                   </JTabbedPaneConstraints>
                 </Constraint>
               </Constraints>

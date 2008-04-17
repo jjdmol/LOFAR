@@ -194,7 +194,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
             int aTreeID=itsMainFrame.getSharedVars().getTreeID();
             if (fc == null) {
                 fc = new JFileChooser();
-                fc.setApproveButtonText("Save");
+                fc.setApproveButtonText("Apply");
             }
             // try to get a new filename to write the parsetfile to
             if (fc.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
@@ -481,7 +481,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
     
     private void initialize() {
         buttonPanel1.addButton("Restore");
-        buttonPanel1.addButton("Save");
+        buttonPanel1.addButton("Apply");
     }
     
     private void initPanel() {
@@ -885,7 +885,7 @@ public class ImagerPanel extends javax.swing.JPanel implements IViewPanel{
     }// </editor-fold>//GEN-END:initComponents
 
     private void buttonPanel1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonPanel1ActionPerformed
-        if(evt.getActionCommand().equals("Save")) {
+        if(evt.getActionCommand().equals("Apply")) {
             saveInput();
         } else if(evt.getActionCommand().equals("Restore")) {
             restore();

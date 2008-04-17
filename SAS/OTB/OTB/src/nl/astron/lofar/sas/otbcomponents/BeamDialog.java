@@ -75,7 +75,7 @@ public class BeamDialog extends javax.swing.JDialog {
             return false;
         }
         
-        BitSet aBitSet = LofarUtils.beamletToBitSet(inputBeamletList.getText());
+        BitSet aBitSet = LofarUtils.beamletToBitSet(LofarUtils.expandedArrayString(inputBeamletList.getText()));
         if(itsUsedBeamlets.intersects(aBitSet)) {
             return false;
         } else {

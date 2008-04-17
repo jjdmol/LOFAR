@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
-<Form version="1.0" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
+<Form version="1.2" maxVersion="1.2" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
   <Properties>
     <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
       <Dimension value="[540, 180]"/>
@@ -13,7 +13,9 @@
     </Property>
   </Properties>
   <AuxValues>
+    <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_generateMnemonicsCode" type="java.lang.Boolean" value="false"/>
+    <AuxValue name="FormSettings_i18nAutoMode" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_listenerGenerationStyle" type="java.lang.Integer" value="0"/>
     <AuxValue name="FormSettings_variablesLocal" type="java.lang.Boolean" value="false"/>
     <AuxValue name="FormSettings_variablesModifier" type="java.lang.Integer" value="2"/>
@@ -278,9 +280,7 @@
                       <SubComponents>
                         <Component class="javax.swing.JButton" name="deleteSolvableParmButton">
                           <Properties>
-                            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                              <Image iconType="3" name="/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif"/>
-                            </Property>
+                            <Property name="text" type="java.lang.String" value="Delete"/>
                             <Property name="toolTipText" type="java.lang.String" value="Remove the selected Station from the list"/>
                             <Property name="enabled" type="boolean" value="false"/>
                             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -290,7 +290,7 @@
                               <Dimension value="[30, 25]"/>
                             </Property>
                             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                              <Dimension value="[30, 25]"/>
+                              <Dimension value="[65, 23]"/>
                             </Property>
                           </Properties>
                           <Events>
@@ -304,9 +304,7 @@
                         </Component>
                         <Component class="javax.swing.JButton" name="addSolvableParmButton">
                           <Properties>
-                            <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                              <Image iconType="3" name="/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif"/>
-                            </Property>
+                            <Property name="text" type="java.lang.String" value="Add"/>
                             <Property name="toolTipText" type="java.lang.String" value="Add the station entered to the list"/>
                             <Property name="enabled" type="boolean" value="false"/>
                             <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -316,7 +314,7 @@
                               <Dimension value="[30, 25]"/>
                             </Property>
                             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                              <Dimension value="[30, 25]"/>
+                              <Dimension value="[55, 23]"/>
                             </Property>
                           </Properties>
                           <Events>
@@ -448,9 +446,7 @@
                   <SubComponents>
                     <Component class="javax.swing.JButton" name="deleteExcludedParmButton">
                       <Properties>
-                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                          <Image iconType="3" name="/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Delete16.gif"/>
-                        </Property>
+                        <Property name="text" type="java.lang.String" value="Delete"/>
                         <Property name="toolTipText" type="java.lang.String" value="Remove the selected Station from the list"/>
                         <Property name="enabled" type="boolean" value="false"/>
                         <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -460,7 +456,7 @@
                           <Dimension value="[30, 25]"/>
                         </Property>
                         <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                          <Dimension value="[30, 25]"/>
+                          <Dimension value="[65, 23]"/>
                         </Property>
                       </Properties>
                       <Events>
@@ -474,9 +470,7 @@
                     </Component>
                     <Component class="javax.swing.JButton" name="addExcludedParmButton">
                       <Properties>
-                        <Property name="icon" type="javax.swing.Icon" editor="org.netbeans.modules.form.editors2.IconEditor">
-                          <Image iconType="3" name="/nl/astron/lofar/sas/otbcomponents/bbs/icons/general/Add16.gif"/>
-                        </Property>
+                        <Property name="text" type="java.lang.String" value="Add"/>
                         <Property name="toolTipText" type="java.lang.String" value="Add the station entered to the list"/>
                         <Property name="enabled" type="boolean" value="false"/>
                         <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
@@ -486,7 +480,7 @@
                           <Dimension value="[30, 25]"/>
                         </Property>
                         <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                          <Dimension value="[30, 25]"/>
+                          <Dimension value="[55, 23]"/>
                         </Property>
                       </Properties>
                       <Events>

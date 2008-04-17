@@ -137,9 +137,9 @@
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace max="-2" attributes="0"/>
-                          <Component id="addConfigButton" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace max="-2" attributes="0"/>
                           <Component id="cancelEditButton" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <Component id="addConfigButton" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                   <EmptySpace max="-2" attributes="0"/>
@@ -227,8 +227,8 @@
                   </Group>
                   <EmptySpace min="-2" pref="18" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="addConfigButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="cancelEditButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="addConfigButton" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace pref="33" max="32767" attributes="0"/>
               </Group>
@@ -434,7 +434,7 @@
         </Component>
         <Component class="javax.swing.JButton" name="addConfigButton">
           <Properties>
-            <Property name="text" type="java.lang.String" value="Add Configuration"/>
+            <Property name="text" type="java.lang.String" value="Apply Configuration"/>
             <Property name="toolTipText" type="java.lang.String" value="add composed Configuration to table"/>
           </Properties>
           <Events>

@@ -195,7 +195,9 @@ public class NodeViewPanel extends javax.swing.JPanel implements IViewPanel{
         // for now:
         enableInstances(true);
         enableLimits(true);
-        enableDescription(true);
+        enableDescription(false);
+        enableNodeName(false);
+        this.enableIndex(false);
         
         if(userAccount.isAdministrator()) {
             // enable/disable certain controls
