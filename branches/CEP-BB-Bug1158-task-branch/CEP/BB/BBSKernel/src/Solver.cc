@@ -132,7 +132,7 @@ void Solver::setCoefficients(CoefficientMsg::Pointer msg)
     for(size_t i = 0; i < cellCoeff.size(); ++i)
     {
         const uint32 cellId = cellCoeff[i].id;
-        const size_t coeffCount = itsCoefficientIndex[cellId].getCount();
+        const uint32 coeffCount = itsCoefficientIndex[cellId].getCount();
 
         pair<map<uint32, Cell>::iterator, bool> result =
             itsCells.insert(make_pair(cellId, Cell()));

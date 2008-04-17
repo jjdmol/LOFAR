@@ -237,7 +237,7 @@ private:
 
     //# Sum of the maximal number (over all solution cells) of coefficients of
     //# each parameter.
-    size_t                              itsCoeffCount;
+    uint32                              itsCoeffCount;
     vector<MeqPExpr>                    itsParameterSelection;
     map<uint32, CellCoeffIndex>         itsCellCoeffIndices;
     //# ------------------------------------------------------------------------
