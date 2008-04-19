@@ -145,40 +145,34 @@ void WH_InputSection::preprocess()
   int samples	 = (int) ((startTime - floor(startTime)) * sampleFreq);
 
   itsSyncedStamp = TimeStamp(seconds, samples);
-  itsDelaySyncedStamp = itsSyncedStamp;
  
   if (itsDelayCompensation) {
     itsDelaysAtBegin.resize(itsCS1PS->nrBeams());
     itsDelaysAfterEnd.resize(itsCS1PS->nrBeams());
-    itsNrCalcDelaysForEachTimeNrDirections.resize(itsNrCalcDelays*itsCS1PS->nrBeams());
-    itsNrCalcIntTimes.resize(itsNrCalcDelays);
+    itsNrCalcDelaysForEachTimeNrDirections.resize(itsNrCalcDelays * itsCS1PS->nrBeams());
     
     itsDelayComp = new WH_DelayCompensation(itsCS1PS, itsCS1PS->stationName(itsStationNr));
-    
-    double startIntegrationTime = static_cast <int64>(itsDelaySyncedStamp)*itsSampleDuration;
-    
-    for (uint i = 0; i < itsNrCalcDelays; i++) {
-      itsNrCalcIntTimes[i] = startIntegrationTime;
-      itsDelaySyncedStamp += itsNSamplesPerSec;
-      startIntegrationTime = static_cast<int64>(itsDelaySyncedStamp) * itsSampleDuration;   
-    }
 
-    itsNrCalcDelaysForEachTimeNrDirections = itsDelayComp->calcDelaysForEachTimeNrDirections(itsNrCalcIntTimes);
+    std::vector<double> startTimes(itsNrCalcDelays);
+
+    for (uint i = 0; i < itsNrCalcDelays; i ++)
+      startTimes[i] = static_cast<int64>(itsSyncedStamp + i * itsNSamplesPerSec) * itsSampleDuration;
+
+    itsNrCalcDelaysForEachTimeNrDirections = itsDelayComp->calcDelaysForEachTimeNrDirections(startTimes);
     
     itsCounter = 0;
     
-    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
+    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++)
       itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[beam];
-    }
     
     itsDelaysAtBegin = itsDelaysAfterEnd;
   }
    
   unsigned cyclicBufferSize = itsCS1PS->nrSamplesToBuffer();
-  bool	   synchronous	    = itsCS1PS->getString("OLAP.OLAP_Conn.station_Input_Transport") != "UDP";
+  itsIsSynchronous    = itsCS1PS->getString("OLAP.OLAP_Conn.station_Input_Transport") != "UDP";
   itsMaxNetworkDelay  = itsCS1PS->maxNetworkDelay();
   std::clog << "maxNetworkDelay = " << itsMaxNetworkDelay << std::endl;
-  itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, synchronous, itsMaxNetworkDelay);
+  itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, itsIsSynchronous, itsMaxNetworkDelay);
 
 #if defined DUMP_RAW_DATA
   vector<string> rawDataServers = itsCS1PS->getStringVector("OLAP.OLAP_Conn.rawDataServers");
@@ -217,61 +211,51 @@ void WH_InputSection::process()
     delayedStamp[beam] = itsSyncedStamp - itsNHistorySamples;
   }
   
-  itsSyncedStamp += itsNSamplesPerSec;
   std::vector<int> samplesDelay(itsCS1PS->nrBeams());
 
   // set delay
   if (itsDelayCompensation) {    
-    
-    itsCounter++;
+    itsCounter ++;
     itsDelaysAtBegin = itsDelaysAfterEnd; // from previous integration
     
-    if (itsCounter > itsNrCalcDelays-1) {
-      itsDelaySyncedStamp = itsSyncedStamp;
-      double stopIntegrationTime = static_cast<int64>(itsDelaySyncedStamp) * itsSampleDuration;
+    if (itsCounter > itsNrCalcDelays - 1) {
+      std::vector<double> stopTimes(itsNrCalcDelays);
 
-      for (uint i = 0; i < itsNrCalcDelays; i++) {
-        itsNrCalcIntTimes[i] = stopIntegrationTime;
-        itsDelaySyncedStamp += itsNSamplesPerSec;
-        stopIntegrationTime = static_cast<int64>(itsDelaySyncedStamp) * itsSampleDuration;   
-      }
-      
+      for (uint i = 0; i < itsNrCalcDelays; i ++)
+        stopTimes[i] = static_cast<int64>(itsSyncedStamp + (i + 1) * itsNSamplesPerSec) * itsSampleDuration;
+
       itsDelayTimer.start();
-      itsNrCalcDelaysForEachTimeNrDirections = itsDelayComp->calcDelaysForEachTimeNrDirections(itsNrCalcIntTimes);
+      itsNrCalcDelaysForEachTimeNrDirections = itsDelayComp->calcDelaysForEachTimeNrDirections(stopTimes);
       itsDelayTimer.stop();
-     
+
       itsCounter = 0;
       
       for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
 	itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[beam];
       }	
-    }
-    else 
-    {
+    } else {
       unsigned firstBeam = itsCounter * itsCS1PS->nrBeams();
       for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
 	itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[firstBeam++];
       }	
     }
    
-    std::vector<int32> coarseDelay(itsCS1PS->nrBeams());
-    std::vector<double> d(itsCS1PS->nrBeams());
     std::vector<float> fineDelayAtBegin(itsCS1PS->nrBeams()), fineDelayAfterEnd(itsCS1PS->nrBeams());
     
     for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
       // The coarse delay will be determined for the center of the current
       // time interval and will be expressed in \e samples.
-      coarseDelay[beam] = (int32)floor(0.5 * (itsDelaysAtBegin[beam] + itsDelaysAfterEnd[beam]) * itsSampleRate + 0.5);
+      int coarseDelay = (int) floor(0.5 * (itsDelaysAtBegin[beam] + itsDelaysAfterEnd[beam]) * itsSampleRate + 0.5);
     
       // The fine delay will be determined for the boundaries of the current
       // time interval and will be expressed in seconds.
-      d[beam] = coarseDelay[beam] * itsSampleDuration;
+      double d = coarseDelay * itsSampleDuration;
     
-      fineDelayAtBegin[beam] = (float)(itsDelaysAtBegin[beam] - d[beam]);
-      fineDelayAfterEnd[beam]= (float)(itsDelaysAfterEnd[beam] - d[beam]);
+      fineDelayAtBegin[beam] = (float)(itsDelaysAtBegin[beam] - d);
+      fineDelayAfterEnd[beam]= (float)(itsDelaysAfterEnd[beam] - d);
     
-      delayedStamp[beam] -= coarseDelay[beam];
-      samplesDelay[beam]  = -coarseDelay[beam];
+      delayedStamp[beam] += coarseDelay;
+      samplesDelay[beam]  = +coarseDelay;
       itsIONtoCNdata.delayAtBegin(beam)  = fineDelayAtBegin[beam];
       itsIONtoCNdata.delayAfterEnd(beam) = fineDelayAfterEnd[beam];
     }
@@ -282,7 +266,9 @@ void WH_InputSection::process()
       samplesDelay[beam] = 0;
     }  
   }
+
   itsBBuffer->startReadTransaction(delayedStamp, itsNSamplesPerSec + itsNHistorySamples);
+
   for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
     itsIONtoCNdata.alignmentShift(beam) = itsBBuffer->alignmentShift(beam);
  
@@ -290,19 +276,28 @@ void WH_InputSection::process()
     itsBBuffer->readFlags(itsIONtoCNdata.flags(beam), beam);
     limitFlagsLength(itsIONtoCNdata.flags(beam));
   }  
-  struct timeval tv;
-  gettimeofday(&tv, 0);
-  double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
-  double expectedTime;
   
-  for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++) {
-    expectedTime = (delayedStamp[beam] + (itsNSamplesPerSec + itsNHistorySamples + itsMaxNetworkDelay)) * itsSampleDuration;
-  
-    std::clog << delayedStamp[beam]
-	      << " late: " << PrettyTime(currentTime - expectedTime)
-	      << ", delay: " << PrettyTime(samplesDelay[beam] * itsSampleDuration)
-	      << ", flags: " << itsIONtoCNdata.flags(beam) << " (" << std::setprecision(3) << (100.0 * itsIONtoCNdata.flags(beam).count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl;
+  std::clog << itsSyncedStamp;
+
+  if (!itsIsSynchronous) {
+    struct timeval tv;
+
+    gettimeofday(&tv, 0);
+
+    double currentTime  = tv.tv_sec + tv.tv_usec / 1e6;
+    double expectedTime = (itsSyncedStamp + itsNSamplesPerSec + itsMaxNetworkDelay) * itsSampleDuration;
+
+    std::clog << " late: " << PrettyTime(currentTime - expectedTime);
   }
+
+  if (itsDelayCompensation) {
+    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++)
+      std::clog << (beam == 0 ? ", delays: [" : ", ") << PrettyTime(itsDelaysAtBegin[beam], 7);
+
+    std::clog << "]";
+  }
+
+  std::clog << ", flags: " << itsIONtoCNdata.flags(0) << " (" << std::setprecision(3) << (100.0 * itsIONtoCNdata.flags(0).count() / (itsNSamplesPerSec + itsNHistorySamples)) << "%)" << std::endl; // not really correct; beam(0) may be shifted
 
   NSTimer timer;
   timer.start();
@@ -318,7 +313,7 @@ void WH_InputSection::process()
       uint16	nrBeamlets;
       uint32	nrSamplesPerBeamlet;
       char	station[20];
-      double	sampleRate;	// 155648 or 196608
+      double	sampleRate;	// typically 156250 or 195312.5
       double	subbandFrequencies[54];
       double	beamDirections[8][2];
       int16     beamlet2beams[54];
@@ -397,6 +392,7 @@ void WH_InputSection::process()
 #endif
 
   itsBBuffer->stopReadTransaction();
+  itsSyncedStamp += itsNSamplesPerSec;
 
   timer.stop();
   std::clog << "ION->CN: " << PrettyTime(timer.getElapsed()) << std::endl;

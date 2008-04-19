@@ -61,9 +61,9 @@ class BeamletBuffer
     void     writeElements(Beamlet *data, const TimeStamp &begin, unsigned nrElements);
 
     void     startReadTransaction(const std::vector<TimeStamp> &begin, unsigned nrElements);
-    void     sendSubband(TransportHolder *, unsigned subband, const unsigned currentBeam) /*const*/;
-    void     sendUnalignedSubband(TransportHolder *, unsigned subband, const unsigned currentBeam) /*const*/;
-    unsigned alignmentShift(const unsigned beam) const;
+    void     sendSubband(TransportHolder *, unsigned subband, unsigned currentBeam) /*const*/;
+    void     sendUnalignedSubband(TransportHolder *, unsigned subband, unsigned currentBeam) /*const*/;
+    unsigned alignmentShift(unsigned beam) const;
     void     readFlags(SparseSet<unsigned> &flags, unsigned beam);
     void     stopReadTransaction();
     
@@ -90,7 +90,7 @@ class BeamletBuffer
 };
 
 
-inline unsigned BeamletBuffer::alignmentShift(const unsigned beam) const
+inline unsigned BeamletBuffer::alignmentShift(unsigned beam) const
 {
   return itsStartI[beam] % (32 / sizeof(Beamlet));
 }

@@ -67,7 +67,7 @@ class WH_InputSection: public WorkHolder {
 
     void limitFlagsLength(SparseSet<unsigned> &flags);
 
-    bool itsDelayCompensation;
+    bool itsDelayCompensation, itsIsSynchronous;
     std::vector<int32>  itsBeamlet2beams;
     std::vector<uint32> itsSubband2Index;
 
@@ -83,13 +83,12 @@ class WH_InputSection: public WorkHolder {
     
     // synced stamp
     TimeStamp itsSyncedStamp;
-    TimeStamp itsDelaySyncedStamp;
    
     double   itsSampleDuration;
     std::vector<double> itsDelaysAtBegin;
     std::vector<double> itsDelaysAfterEnd;
     std::vector<double> itsNrCalcDelaysForEachTimeNrDirections;
-    std::vector<double> itsNrCalcIntTimes;
+    //std::vector<double> itsNrCalcIntTimes;
     unsigned            itsNrCalcDelays;
     unsigned            itsCounter;
     
