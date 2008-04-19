@@ -674,13 +674,13 @@ loop3:	# loop over time
 	fpmadd	 3,13,13,3	; lfpsux	 18,4,11
 
 	# S0 * ~S1, phase 1
-	fxcpnsma 4,12,14,4	; lfpsux	 19,4,11
+	fxcpnsma 4,12,14,4
 	fxcpnsma 5,12,15,5
 	fxcpnsma 6,13,14,6
 	fxcpnsma 7,13,15,7
 
 	# S1 * ~S1, phase 1
-	fpmadd	 8,14,14,8
+	fpmadd	 8,14,14,8	; lfpsux	 19,4,11
 	fxcpnsma 9,14,15,9
 	fpmadd	 11,15,15,11
 
@@ -697,13 +697,13 @@ loop3:	# loop over time
 	fxcxma   9,14,15,9	; lfpsux	 14,4,11
 
 	# S0 * ~S0, phase 1
-	fpmadd	 0,16,16,0	; lfpsux	 15,4,11
+	fpmadd	 0,16,16,0
 	fxcpnsma 1,16,17,1
 	fpmadd	 3,17,17,3
 
 	# S0 * ~S1, phase 1
 	fxcpnsma 4,16,18,4
-	fxcpnsma 5,16,19,5
+	fxcpnsma 5,16,19,5	; lfpsux	 15,4,11
 	fxcpnsma 6,17,18,6
 	fxcpnsma 7,17,19,7
 
@@ -863,18 +863,18 @@ loop7:	# loop over time
 	fxcpnsma 0,18,20,0	; lfpsux	 24,3,11
 	fxcpnsma 1,18,21,1	; lfpsux	 25,3,11
 	fxcpnsma 2,19,20,2	; lfpsux	 26,4,11
-	fxcpnsma 3,19,21,3	; lfpsux	 27,4,11
+	fxcpnsma 3,19,21,3
 
 	# S0 * ~S2, phase 1
-	fxcpnsma 4,18,22,4	; lfpsux	 28,5,11
-	fxcpnsma 5,18,23,5	; lfpsux	 29,5,11
+	fxcpnsma 4,18,22,4
+	fxcpnsma 5,18,23,5
 	fxcpnsma 6,19,22,6
 	fxcpnsma 7,19,23,7
 
 	# S1 * ~S1, phase 1
-	fpmadd	 8,20,20,8
-	fxcpnsma 9,20,21,9
-	fpmadd	 10,21,21,10
+	fpmadd	 8,20,20,8	; lfpsux	 27,4,11
+	fxcpnsma 9,20,21,9	; lfpsux	 28,5,11
+	fpmadd	 10,21,21,10	; lfpsux	 29,5,11
 
 	# S1 * ~S2, phase 1
 	fxcpnsma 11,20,22,11
@@ -915,18 +915,18 @@ loop7:	# loop over time
 	fxcpnsma 0,24,26,0	; lfpsux	 18,3,11
 	fxcpnsma 1,24,27,1	; lfpsux	 19,3,11
 	fxcpnsma 2,25,26,2	; lfpsux	 20,4,11
-	fxcpnsma 3,25,27,3	; lfpsux	 21,4,11
+	fxcpnsma 3,25,27,3
 
 	# S0 * ~S2, phase 1
-	fxcpnsma 4,24,28,4	; lfpsux	 22,5,11
-	fxcpnsma 5,24,29,5	; lfpsux	 23,5,11
+	fxcpnsma 4,24,28,4
+	fxcpnsma 5,24,29,5
 	fxcpnsma 6,25,28,6
 	fxcpnsma 7,25,29,7
 
 	# S1 * ~S1, phase 1
-	fpmadd	 8,26,26,8
-	fxcpnsma 9,26,27,9
-	fpmadd	 10,27,27,10
+	fpmadd	 8,26,26,8	; lfpsux	 21,4,11
+	fxcpnsma 9,26,27,9	; lfpsux	 22,5,11
+	fpmadd	 10,27,27,10	; lfpsux	 23,5,11
 
 	# S1 * ~S2, phase 1
 	fxcpnsma 11,26,28,11
