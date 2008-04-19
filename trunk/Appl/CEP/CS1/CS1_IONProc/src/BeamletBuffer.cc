@@ -45,9 +45,10 @@ BeamletBuffer::BeamletBuffer(unsigned bufferSize, unsigned nrSubbands, unsigned 
     itsSynchronizedReaderWriter = new SynchronizedReaderAndWriter(bufferSize);
   else
     itsSynchronizedReaderWriter = new TimeSynchronizedReader(maxNetworkDelay);  
-    itsEnd.reserve(MAX_BEAMLETS);
-    itsStartI.reserve(MAX_BEAMLETS);
-    itsEndI.reserve(MAX_BEAMLETS);
+
+  itsEnd.reserve(MAX_BEAMLETS);
+  itsStartI.reserve(MAX_BEAMLETS);
+  itsEndI.reserve(MAX_BEAMLETS);
 }
 
 
@@ -136,7 +137,7 @@ void BeamletBuffer::startReadTransaction(const std::vector<TimeStamp> &begin, un
 }
 
 
-void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband, const unsigned currentBeam) /*const*/
+void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband, unsigned currentBeam) /*const*/
 {
   // Align to 32 bytes and make multiple of 32 bytes by prepending/appending
   // extra data.  Always send 32 bytes extra, even if data was already aligned.
@@ -155,7 +156,7 @@ void BeamletBuffer::sendSubband(TransportHolder *th, unsigned subband, const uns
 }
 
 
-void BeamletBuffer::sendUnalignedSubband(TransportHolder *th, unsigned subband, const unsigned currentBeam) /*const*/
+void BeamletBuffer::sendUnalignedSubband(TransportHolder *th, unsigned subband, unsigned currentBeam) /*const*/
 {
   if (itsEndI[currentBeam] < itsStartI[currentBeam]) {
     // the data wraps around the allocated memory, so copy in two parts
@@ -168,7 +169,7 @@ void BeamletBuffer::sendUnalignedSubband(TransportHolder *th, unsigned subband, 
   }
 }
 
-void BeamletBuffer::readFlags(SparseSet<unsigned> &flags,unsigned beam)
+void BeamletBuffer::readFlags(SparseSet<unsigned> &flags, unsigned beam)
 {
   pthread_mutex_lock(&itsValidDataMutex);
   SparseSet<TimeStamp> validTimes = itsValidData.subset(itsBegin[beam], itsEnd[beam]);

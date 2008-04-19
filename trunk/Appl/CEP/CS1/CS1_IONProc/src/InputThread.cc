@@ -155,15 +155,17 @@ void InputThread::mainLoop()
       // Sanity check on seqid. Note, that seqid is in seconds,
       // so a value which is greater than the previous one with more 
       // than (say) 10 seconds probably means that the sequence number 
-      // in the packet is wrong. This can happen, since we use UDP.
-      if ((seqid >= previousSeqid + 10) && (previousSeqidIsAccepted)) {
+      // in the packet is wrong. This can happen, since communication is not
+      // reliable.
+      if (seqid >= previousSeqid + 10 && previousSeqidIsAccepted) {
       	previousSeqidIsAccepted = false;
       	++ nrPacketsRejected;
       	continue;
-	  }
+      }
+
       // accept seqid
       previousSeqidIsAccepted = true;
-	  previousSeqid = seqid;
+      previousSeqid	      = seqid;
 	  
       actualstamp.setStamp(seqid, blockid);
     } else {
