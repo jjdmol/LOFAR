@@ -162,7 +162,7 @@ void *gather_thread(void *argv)
 void *master_thread(void *)
 {
   std::string type = "brief";
-  Version::show<CS1_IONProcVersion> (std::cout, "CS1_IONProc", type);
+  Version::show<CS1_IONProcVersion> (std::clog, "CS1_IONProc", type);
   
   std::clog << "starting master_thread" << std::endl;
 
