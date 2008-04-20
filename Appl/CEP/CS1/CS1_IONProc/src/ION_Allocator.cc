@@ -42,8 +42,8 @@ namespace LOFAR {
 namespace CS1 {
 
 #if !defined USE_ZOID_ALLOCATOR
-FixedArena	   ION_Allocator::arena(0xA4002400, 0xBFFDC00);
-SparseSetAllocator ION_Allocator::allocator;
+FixedArena	   ION_Allocator::arena((void *) 0xA4002400, 0xBFFDC00);
+SparseSetAllocator ION_Allocator::allocator(ION_Allocator::arena);
 #endif
 
 ION_Allocator *ION_Allocator::clone() const
