@@ -3,8 +3,10 @@ INSTHDRS			= Address.h \
 					  FileAddress.h \
 					  InetAddress.h \
 					  ServiceAccessPoint.h \
-					  Socket.h \
-					  File.h
+					  SocketSAP.h \
+					  File.h \
+					  SocketStream.h \
+					  SocketConnector.h
 
 NOINSTHDRS			=
 

@@ -26,7 +26,7 @@
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <LACE/File.h>
-#include <LACE/Socket.h>
+#include <LACE/SocketSAP.h>
 
 using namespace LOFAR;
 using namespace LOFAR::LACE;
@@ -44,9 +44,9 @@ bool SocketTest()
 	cout << "DeviceName : " << myIA1.deviceName() << endl;
 
 	cout << "\nOpening socket" << endl;
-	Socket		mySock;
-	mySock.open(myIA1);
-	mySock.close();
+	SocketSAP		mySock;
+	mySock.doOpen(myIA1);
+	mySock.doClose();
 
 
 	cout << "\nTesting the 'open' function of a TCP Socket...\n";
@@ -56,8 +56,8 @@ bool SocketTest()
 	cout << "DeviceName : " << myIA2.deviceName() << endl;
 
 	cout << "\nOpening socket" << endl;
-	mySock.open(myIA2);
-	mySock.close();
+	mySock.doOpen(myIA2);
+	mySock.doClose();
 
 	return (true);
 }

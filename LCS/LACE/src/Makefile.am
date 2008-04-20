@@ -3,8 +3,10 @@ lib_LTLIBRARIES         = liblace.la
 liblace_la_SOURCES 		= FileAddress.cc \
 						  InetAddress.cc \
 						  ServiceAccessPoint.cc \
-						  Socket.cc \
-						  File.cc
+						  SocketSAP.cc \
+						  File.cc \
+						  SocketStream.cc \
+						  SocketConnector.cc
 
 bin_PROGRAMS 			=
 

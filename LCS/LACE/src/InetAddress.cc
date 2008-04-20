@@ -72,10 +72,11 @@ int InetAddress::set(uint16			portNr,
 
 	// Preinit part of TCP address structure
 	memset (&itsTCPAddr, 0, sizeof(itsTCPAddr));
-	itsTCPAddr.sin_family = AF_INET;
+	itsTCPAddr.sin_family 	   = AF_INET;
 	itsTCPAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	itsTCPAddr.sin_port 	   = htons(itsPortNr);
 
-	// Try to resolve the hostname
+	// Make sure the hostname is filled.
 	if (itsHostname.empty()) {
 		char	namebuffer[MAXHOSTNAMELEN+1];
 		if (gethostname(namebuffer, MAXHOSTNAMELEN) != 0) {
@@ -85,32 +86,31 @@ int InetAddress::set(uint16			portNr,
 		}
 		itsHostname = namebuffer;
 	}
-	else { // is the hostname an IP address??
-		uint32	IPbytes;
-		if ((IPbytes = inet_addr(itsHostname.c_str())) != INADDR_NONE) {
-			// found the IPv4 number
-			memcpy ((char*) &itsTCPAddr.sin_addr.s_addr, 
-					(char*) &IPbytes, sizeof(IPbytes));
-			setStatus(true);
-			return (0);	
+
+	// Try to resolve the hostname, is the hostname an IP address??
+	uint32	IPbytes;
+	if ((IPbytes = inet_addr(itsHostname.c_str())) != INADDR_NONE) {
+		// found the IPv4 number
+		memcpy ((char*) &itsTCPAddr.sin_addr.s_addr, 
+				(char*) &IPbytes, sizeof(IPbytes));
+	}
+	else {
+		// hostname is not an IPv4 address try to resolve it as a hostname
+		struct hostent*       hostEnt;        // server host entry
+		if (!(hostEnt = gethostbyname(itsHostname.c_str()))) {
+			LOG_ERROR_STR("InetAddress: Hostname '" << itsHostname << 
+						  "' can not be resolved");
+			return (ENODEV);
 		}
-	}
 
-	// hostname is not an IPv4 address try to resolve it as a hostname
-	struct hostent*       hostEnt;        // server host entry
-	if (!(hostEnt = gethostbyname(itsHostname.c_str()))) {
-		LOG_ERROR_STR("InetAddress: Hostname '" << itsHostname << 
-					  "' can not be resolved");
-		return (ENODEV);
+		// Check type
+		if (hostEnt->h_addrtype != AF_INET) {
+			LOG_ERROR_STR("InetAddress: Hostname '" << itsHostname << 
+						  "' is not of the type AF_INET");
+			return (ENODEV);
+		}
+		memcpy ((char*) &itsTCPAddr.sin_addr.s_addr, hostEnt->h_addr, sizeof(int32));
 	}
-
-	// Check type
-	if (hostEnt->h_addrtype != AF_INET) {
-		LOG_ERROR_STR("InetAddress: Hostname '" << itsHostname << 
-					  "' is not of the type AF_INET");
-		return (ENODEV);
-	}
-	memcpy ((char*) &itsTCPAddr.sin_addr.s_addr, hostEnt->h_addr, sizeof(int32));
 
 	// Finally try to map protocol name to protocol number
 	struct protoent*    protoEnt;
@@ -128,7 +128,7 @@ int InetAddress::set(uint16			portNr,
 //
 // set(service, hostname)
 //
-// Resolve service and hostname
+// Resolve servicename like ssh, ftp, ...
 //
 int InetAddress::set(const string&	service, 
 					 const string&	hostname,
@@ -143,13 +143,6 @@ int InetAddress::set(const string&	service,
 	if ((servEnt = getservbyname(service.c_str(), protocol.c_str()))) {
 		itsTCPAddr.sin_port = servEnt->s_port;	// network byte order.
 		itsPortNr = ntohs(servEnt->s_port);		// human readable format.
-	}
-	else {
-		if (!(itsTCPAddr.sin_port = htons((uint16)atoi(service.c_str())))) {
-			LOG_ERROR_STR("InetAddress: Service'" << itsHostname << 
-						  "' can not be resolved");
-			return (ENODEV);
-		}
 	}
 
 	// The rest of the resolving is implemented by the other 'set' function

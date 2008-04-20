@@ -1,4 +1,4 @@
-//#  Socket.h: Abstract base class for all kind of different sockets.
+//#  SocketConnector.h: Class that make connects a SAP to an addres.
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,17 +20,16 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_LACE_SOCKET_H
-#define LOFAR_LACE_SOCKET_H
+#ifndef LOFAR_LACE_SOCKETCONNECTOR_H
+#define LOFAR_LACE_SOCKETCONNECTOR_H
 
-// \file Socket.h
-// Abstract base class for all kind of different sockets.
+// \file SocketConnector.h
+// Class that make connects a SAP to an addres.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
-#include <Common/LofarTypes.h>
-#include <LACE/InetAddress.h>
-#include <LACE/ServiceAccessPoint.h>
+#include <LACE/SocketStream.h>
+#include <LACE/Address.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -42,43 +41,30 @@ namespace LOFAR {
 
 //# --- Forward Declarations ---
 //# classes mentioned as parameter or returntype without virtual functions.
+//#class ...;
+
 
 
 // class_description
 // ...
-class Socket : public ServiceAccessPoint
+class SocketConnector
 {
 public:
-	Socket();
-	virtual ~Socket();
+	SocketConnector();
+	~SocketConnector();
+	
+	int		connect (SocketStream*			aStream,
+					 const Address&			anAddress);
+	int		complete(SocketStream*			aStream,
+					 int					waitMs);
+	void	cancel  (ServiceAccessPoint*	aStream) { itsSAP = 0; }
 
-	void close();
-	int  open (const InetAddress&	anAddress, bool reuseAddres = true);
-	
-	int  setOption(int	option, const void*	value, socklen_t	valueLen) const;
-	int  getOption(int	option, void*		value, socklen_t*	valueLen) const;
-	
-	int	 read (void*		buffer, size_t	nrBytes);
-	int	 write(const void*	buffer, size_t	nrBytes);
-	
 protected:
 
 private:
 	//# --- Datamembers ---
-	InetAddress		itsAddress;		// installed after succesful 'open'
+	ServiceAccessPoint*		itsSAP;
 };
-
-
-//# ----- inline functions -----
-inline int	Socket::setOption(int	option, const void*	value, socklen_t	valueLen) const
-{
-	return (setsockopt(getHandle(), SOL_SOCKET, option, (char *) value, valueLen));
-}
-
-inline int	Socket::getOption(int	option, void*	value, socklen_t*	valueLen) const
-{
-	return (getsockopt(getHandle(), SOL_SOCKET, option, (char *) value, valueLen));
-}
 
 
 // @}
