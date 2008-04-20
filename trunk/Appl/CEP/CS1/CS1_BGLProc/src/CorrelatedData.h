@@ -3,9 +3,9 @@
 
 #include <Common/lofar_complex.h>
 #include <CS1_Interface/CS1_Config.h>
+#include <CS1_Interface/Allocator.h>
 #include <Transport/TH_Null.h>
 
-#include <Allocator.h>
 #include <TH_ZoidClient.h>
 
 #include <boost/multi_array.hpp>
@@ -17,14 +17,14 @@ namespace CS1 {
 class CorrelatedData
 {
   public:
-    CorrelatedData(const Heap &heap, unsigned nrBaselines);
+    CorrelatedData(const Arena &, unsigned nrBaselines);
     ~CorrelatedData();
 
     static size_t requiredSize(unsigned nrBaselines);
     void	  write(TransportHolder *) /*const*/;
 
   private:
-    Overlay	  overlay;
+    SparseSetAllocator	  allocator;
     unsigned	  itsNrBaselines;
 
   public:
@@ -64,22 +64,22 @@ inline size_t CorrelatedData::requiredSize(unsigned nrBaselines)
 }
 
 
-inline CorrelatedData::CorrelatedData(const Heap &heap, unsigned nrBaselines)
+inline CorrelatedData::CorrelatedData(const Arena &arena, unsigned nrBaselines)
 :
-  overlay(heap),
+  allocator(arena),
   itsNrBaselines(nrBaselines),
-  visibilities(static_cast<fcomplex *>(overlay.allocate(visibilitiesSize(nrBaselines), 32)), boost::extents[nrBaselines][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS]),
-  nrValidSamples(static_cast<unsigned short *>(overlay.allocate(nrValidSamplesSize(nrBaselines), 32)), boost::extents[nrBaselines][NR_SUBBAND_CHANNELS]),
-  centroids(static_cast<float *>(overlay.allocate(centroidSize(nrBaselines), 32)))
+  visibilities(static_cast<fcomplex *>(allocator.allocate(visibilitiesSize(nrBaselines), 32)), boost::extents[nrBaselines][NR_SUBBAND_CHANNELS][NR_POLARIZATIONS][NR_POLARIZATIONS]),
+  nrValidSamples(static_cast<unsigned short *>(allocator.allocate(nrValidSamplesSize(nrBaselines), 32)), boost::extents[nrBaselines][NR_SUBBAND_CHANNELS]),
+  centroids(static_cast<float *>(allocator.allocate(centroidSize(nrBaselines), 32)))
 {
 }
 
 
 inline CorrelatedData::~CorrelatedData()
 {
-  overlay.deallocate(visibilities.origin());
-  overlay.deallocate(nrValidSamples.origin());
-  overlay.deallocate(centroids);
+  allocator.deallocate(visibilities.origin());
+  allocator.deallocate(nrValidSamples.origin());
+  allocator.deallocate(centroids);
 }
 
 

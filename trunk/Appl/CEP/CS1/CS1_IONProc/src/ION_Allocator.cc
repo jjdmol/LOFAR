@@ -25,12 +25,10 @@
 #include <lofar_config.h>
 
 #include <ION_Allocator.h>
-#include <CS1_Interface/SparseSet.h>
 
 #include <cstdlib>
 #include <iostream>
 
-#define USE_ZOID_ALLOCATOR
 
 #if defined USE_ZOID_ALLOCATOR
 extern "C" {
@@ -40,12 +38,12 @@ extern "C" {
 #endif
 
 
-namespace LOFAR
-{
+namespace LOFAR {
+namespace CS1 {
+
 #if !defined USE_ZOID_ALLOCATOR
-pthread_mutex_t		 ION_Allocator::mutex	 = PTHREAD_MUTEX_INITIALIZER;
-SparseSet<char *>	 ION_Allocator::freeList = SparseSet<char *>().include((char *) 0xA4002400, (char *) 0xB0000000);
-std::map<char *, size_t> ION_Allocator::sizes;
+FixedArena	   ION_Allocator::arena(0xA4002400, 0xBFFDC00);
+SparseSetAllocator ION_Allocator::allocator;
 #endif
 
 ION_Allocator *ION_Allocator::clone() const
@@ -57,29 +55,18 @@ void *ION_Allocator::allocate(size_t nbytes, size_t alignment)
 {
 #if defined USE_ZOID_ALLOCATOR
   void *ptr = __zoid_alloc(nbytes);
+#else
+  void *ptr = allocator.allocate(nbytes, alignment);
+#endif
 
   std::clog << "ION_Allocator::allocate(" << nbytes << ", " << alignment << ") = " << ptr << std::endl;
 
-  if (ptr != 0)
-    return ptr;
-#else
-  pthread_mutex_lock(&mutex);
-
-  for (SparseSet<char *>::const_iterator it = ranges.getRanges().begin(); it != ranges.getRanges().end(); it ++) {
-    char *begin = (char *) (((size_t) it->begin + alignment - 1) & ~(alignment - 1));
-
-    if (it->end - begin >= (ptrdiff_t) nbytes) {
-      freeList.exclude(begin, begin + nbytes);
-      sizes[begin] = nbytes;
-      std::clog << "ION_Allocator::allocate(" << nbytes << ", " << alignment << ") = " << (void *) begin << std::endl;
-      pthread_mutex_unlock(&mutex);
-      return (void *) begin;
-    }
+  if (ptr == 0) {
+    std::cerr << "ION_Allocator::allocate(" << nbytes << ", " << alignment << ") : out of large-TLB memory" << std::endl;
+    std::exit(1);
   }
-#endif
 
-  std::cerr << "ION_Allocator::allocate(" << nbytes << ", " << alignment << ") : out of large-TLB memory" << std::endl;
-  std::exit(1);
+  return ptr;
 }
 
 void ION_Allocator::deallocate(void *ptr)
@@ -90,13 +77,10 @@ void ION_Allocator::deallocate(void *ptr)
 #if defined USE_ZOID_ALLOCATOR
     __zoid_free(ptr);
 #else
-    pthread_mutex_lock(&mutex);
-    std::map<char *, size_t>::iterator index = sizes.find((char *) ptr);
-    freeList.include((char *) ptr, (char *) ptr + index->second);
-    sizes.erase(index);
-    pthread_mutex_unlock(&mutex);
+    allocator.deallocate(ptr);
 #endif
   }
 }
 
+} // end namespace CS1
 } // end namespace LOFAR

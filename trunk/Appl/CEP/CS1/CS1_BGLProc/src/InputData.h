@@ -7,7 +7,7 @@
 #include <CS1_Interface/ION_to_CN.h>
 #include <Transport/TH_Null.h>
 
-#include <Allocator.h>
+#include <CS1_Interface/Allocator.h>
 #include <TH_ZoidClient.h>
 
 #include <boost/multi_array.hpp>
@@ -19,7 +19,7 @@ namespace CS1 {
 class InputData
 {
   public:
-    InputData(const Heap &, unsigned nrSubbands, unsigned nrSamplesToBGLProc);
+    InputData(const Arena &, unsigned nrSubbands, unsigned nrSamplesToBGLProc);
     ~InputData();
 
     void read(TransportHolder *th, const unsigned nrBeams);
@@ -29,7 +29,7 @@ class InputData
     typedef INPUT_SAMPLE_TYPE		  SampleType;
 
   private:
-    Overlay				  overlay;
+    SparseSetAllocator			  allocator;
 
   public:
     boost::multi_array_ref<SampleType, 3> samples; //[outputPsets.size()][itsCS1PS->nrSamplesToBGLProc()][NR_POLARIZATIONS]
@@ -44,17 +44,17 @@ inline size_t InputData::requiredSize(unsigned nrSubbands, unsigned nrSamplesToB
 }
 
 
-inline InputData::InputData(const Heap &heap, unsigned nrSubbands, unsigned nrSamplesToBGLProc)
+inline InputData::InputData(const Arena &arena, unsigned nrSubbands, unsigned nrSamplesToBGLProc)
 :
-  overlay(heap),
-  samples(static_cast<SampleType *>(overlay.allocate(requiredSize(nrSubbands, nrSamplesToBGLProc), 32)), boost::extents[nrSubbands][nrSamplesToBGLProc][NR_POLARIZATIONS])
+  allocator(arena),
+  samples(static_cast<SampleType *>(allocator.allocate(requiredSize(nrSubbands, nrSamplesToBGLProc), 32)), boost::extents[nrSubbands][nrSamplesToBGLProc][NR_POLARIZATIONS])
 {
 }
 
 
 inline InputData::~InputData()
 {
-  overlay.deallocate(samples.origin());
+  allocator.deallocate(samples.origin());
 }
 
 

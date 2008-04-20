@@ -25,32 +25,28 @@
 #define LOFAR_CS1_ION_PROC_ION_ALLOCATOR_H
 
 #include <Common/Allocator.h>
-#include <CS1_Interface/SparseSet.h>
-#include <map>
-#include <pthread.h>
+#include <CS1_Interface/Allocator.h>
+
+#define USE_ZOID_ALLOCATOR
+
 
 namespace LOFAR {
+namespace CS1 {
 
 class ION_Allocator: public Allocator
 {
   public:
-    // Clone the allocator.
-    virtual ION_Allocator *clone() const;
-    
-    // Allocate memory.
-    virtual void *allocate(size_t nbytes, size_t alignment = 1);
-    
-    // Deallocate memory.
-    virtual void deallocate(void *);
+    virtual void	      *allocate(size_t nbytes, size_t alignment = 1);
+    virtual void	      deallocate(void *);
 
+    virtual ION_Allocator     *clone() const;
+    
   private:
-    static pthread_mutex_t	    mutex;
-    static SparseSet<char *>	    freeList;
-    static std::map<char *, size_t> sizes;
+    static FixedArena	      arena;
+    static SparseSetAllocator allocator;
 };
 
-// @}
-
+} // end namespace CS1
 } // end namespace LOFAR
 
 #endif

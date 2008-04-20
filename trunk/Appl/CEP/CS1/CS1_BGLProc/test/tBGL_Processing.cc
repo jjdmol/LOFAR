@@ -194,7 +194,7 @@ void doWork()
   if (personality.getXcoord() == 0 && personality.getYcoord() == 0 && personality.getZcoord() == 0)
 #endif
   {
-    unsigned   nrStations	= 37;
+    unsigned   nrStations	= 77;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
