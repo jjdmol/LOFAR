@@ -1,4 +1,4 @@
-//#  Socket.cc: Abstract base class for several kinds of sockets
+//#  SocketSAP.cc: Abstract base class for several kinds of sockets
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,31 +28,35 @@
 #include <netinet/in.h>				// IPPROTO
 //#include <netdb.h>					// fileStat
 #include <Common/LofarLogger.h>
-#include <LACE/Socket.h>
+#include <LACE/SocketSAP.h>
 
 namespace LOFAR {
   namespace LACE {
 
 //
-// Socket()
+// SocketSAP()
 //
-Socket::Socket()
+SocketSAP::SocketSAP()
 {}
 
 
 //
-// ~Socket()
+// ~SocketSAP()
 //
-Socket::~Socket()
-{}
+SocketSAP::~SocketSAP()
+{
+	doClose();
+}
 
 
 //
-// close()
+// doClose()
 //
-void Socket::close()
+void SocketSAP::doClose()
 {
 	if (getHandle() != 0) {
+		LOG_DEBUG_STR("Shutdown and close of socket: " << getHandle());
+		::shutdown(getHandle(), 2);
 		::close(getHandle());
 		setHandle(0);
 	}
@@ -62,24 +66,34 @@ void Socket::close()
 //
 // open(address, reuseAddress)
 //
-int Socket::open(const InetAddress&		anAddress,
-				 bool					reuseAddress)
+int SocketSAP::doOpen(const Address&	anAddress,
+					  bool				reuseAddress)
 {
+	LOG_DEBUG_STR("SocketSAP::doOpen(" << anAddress.deviceName() << ")");
+
+	ASSERTSTR(anAddress.getType() == INET_TYPE, 
+			  "Only addresses of the type Inet are allowed");
+	// check for (non fatal) programming errors
+	if (getHandle()) {
+		LOG_WARN(formatString("Socket(%d) is already open!!", getHandle()));
+		return (0);		// it wrong, but not a failure.
+	}
+
 	// check protocol type
-	int	protocolNr = anAddress.protocolNr();
+	int	protocolNr = dynamic_cast<const InetAddress&>(anAddress).protocolNr();
 	ASSERTSTR(protocolNr == IPPROTO_UDP || protocolNr == IPPROTO_TCP, 
-				"Socket only supports UDP and TCP connections");
+				"SocketSAP only supports UDP and TCP connections");
 
 	// first create the underlaying socket
 	int	socketType = (protocolNr == IPPROTO_TCP) ? SOCK_STREAM : SOCK_DGRAM;
 	setHandle(::socket(PF_INET, socketType, protocolNr));
 	if (!getHandle()) {
-		LOG_ERROR(formatString("Socket:Can not allocate a socket(%d,%d), err=%d(%s)", 
+		LOG_ERROR(formatString("SocketSAP:Can not allocate a socket(%d,%d), err=%d(%s)", 
 					socketType, protocolNr, errno, strerror(errno)));
 		return (-1);
 	}
 
-	LOG_DEBUG(formatString("Socket:Created socket(%d) for protocol %d",
+	LOG_DEBUG(formatString("SocketSAP:Created socket(%d) for protocol %d",
 				getHandle(), protocolNr));
 
 	// set the socket options we consider default
@@ -89,11 +103,12 @@ int Socket::open(const InetAddress&		anAddress,
 	if ((setOption(SO_REUSEADDR, &optVal,sizeof(optVal)) < 0) ||
 		(setOption(SO_KEEPALIVE, &one, 	 sizeof(one)) < 0) ||
 		(setOption(SO_LINGER,    &lin, 	 sizeof(lin)) < 0)) {
-		close();
+		LOG_ERROR("Setting socket options failed, closing just opened socket");
+		doClose();
 		return (-1);
 	}
 
-	itsAddress = anAddress;
+	itsAddress = dynamic_cast<const InetAddress&>(anAddress);
 
 	return (0);
 }
@@ -101,16 +116,16 @@ int Socket::open(const InetAddress&		anAddress,
 //
 // read (buffer, nrBytes)
 //
-int Socket::read(void*	buffer, size_t	nrBytes)
+int SocketSAP::read(void*	buffer, size_t	nrBytes)
 {
 	// socket must be open ofcourse
 	if (!getHandle()) {
-		LOG_ERROR("Socket::read: socket not opened yet.");
+		LOG_ERROR("SocketSAP::read: socket not opened yet.");
 		return (-1);
 	}
 
 	// check arguments
-	ASSERTSTR (buffer, "Socket::read:null buffer");
+	ASSERTSTR (buffer, "SocketSAP::read:null buffer");
 	if (!nrBytes)  {
 		return (nrBytes);
 	}
@@ -124,7 +139,7 @@ int Socket::read(void*	buffer, size_t	nrBytes)
 		if ((bytesRead = recvfrom (getHandle(), (char*) buffer, nrBytes, 0,
 									(sockaddr*) itsAddress.getAddress(),
 									&alen) <= 0) || errno) {
-			LOG_DEBUG(formatString("Socket(%d):read(%d)=%d, errno=%d(%s)", 
+			LOG_DEBUG(formatString("SocketSAP(%d):read(%d)=%d, errno=%d(%s)", 
 						getHandle(), bytesLeft, bytesRead, 
 						errno, strerror(errno)));
 			return (-1);
@@ -137,7 +152,7 @@ int Socket::read(void*	buffer, size_t	nrBytes)
 	errno = 0;								// reset system errno
 	while (bytesLeft > 0 && !errno) {
 		bytesRead = ::recv (getHandle(), (char*)buffer, bytesLeft, 0);
-		LOG_DEBUG(formatString("Socket(%d):read(%d)=%d%s, errno=%d(%s)", 
+		LOG_DEBUG(formatString("SocketSAP(%d):read(%d)=%d%s, errno=%d(%s)", 
 					getHandle(), bytesLeft, bytesRead, 
 					errno, strerror(errno)));
 
@@ -151,7 +166,7 @@ int Socket::read(void*	buffer, size_t	nrBytes)
 		}
 
 		if (bytesRead == 0) {					// conn reset by peer?
-			close();
+			doClose();
 			return (0);
 		}
 
@@ -171,16 +186,16 @@ int Socket::read(void*	buffer, size_t	nrBytes)
 //				>= 0 != nrBytes		intr. occured or socket is nonblocking
 //				>= 0 == nrBytes		everthing went OK.
 //
-int Socket::write(const void*	buffer, size_t	nrBytes)
+int SocketSAP::write(const void*	buffer, size_t	nrBytes)
 {
 	// socket must be open ofcourse
 	if (!getHandle()) {
-		LOG_ERROR("Socket::write: socket not opened yet.");
+		LOG_ERROR("SocketSAP::write: socket not opened yet.");
 		return (-1);
 	}
 
 	// check arguments
-	ASSERTSTR (buffer, "Socket::write:null buffer");
+	ASSERTSTR (buffer, "SocketSAP::write:null buffer");
 	if (!nrBytes)  {
 		return (nrBytes);
 	}
@@ -193,7 +208,7 @@ int Socket::write(const void*	buffer, size_t	nrBytes)
 		if ((bytesWritten = sendto (getHandle(), (char*) buffer, nrBytes, 0,
 									(sockaddr*) itsAddress.getAddress(),
 									itsAddress.getAddressSize()) <= 0) || errno) {
-			LOG_ERROR_STR(formatString("Socket::write: Error during write, errno=%d(%s)",
+			LOG_ERROR_STR(formatString("SocketSAP::write: Error during write, errno=%d(%s)",
 							errno, strerror(errno)));
 			return (-1);
 		}
@@ -216,7 +231,7 @@ int Socket::write(const void*	buffer, size_t	nrBytes)
 
 		// connection closed by peer?
 		if (bytesWritten == 0) {
-			close();
+			doClose();
 			return (0);
 		}
 

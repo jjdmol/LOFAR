@@ -1,4 +1,4 @@
-check_PROGRAMS        = tAddress tSAP
+check_PROGRAMS        = tAddress tSAP tConnector
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS        = $(check_PROGRAMS)
@@ -21,5 +21,9 @@ tAddress_DEPENDENCIES	= ../src/liblace.la $(LOFAR_DEPEND)
 tSAP_SOURCES			= tSAP.cc
 tSAP_LDADD				= ../src/liblace.la	
 tSAP_DEPENDENCIES		= ../src/liblace.la $(LOFAR_DEPEND)
+
+tConnector_SOURCES		= tConnector.cc
+tConnector_LDADD		= ../src/liblace.la	
+tConnector_DEPENDENCIES	= ../src/liblace.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common
