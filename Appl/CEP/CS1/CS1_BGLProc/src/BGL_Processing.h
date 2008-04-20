@@ -33,7 +33,7 @@
 #include <CS1_Interface/BGL_Configuration.h>
 #endif
 
-#include <Allocator.h>
+#include <CS1_Interface/Allocator.h>
 #include <InputData.h>
 #include <FilteredData.h>
 #include <TransposedData.h>
@@ -99,7 +99,7 @@ class BGL_Processing {
     std::vector<unsigned> itsSubband2Index;
     unsigned            itsNrBeams;
 
-    Heap		*itsHeaps[2];
+    Arena		*itsArenas[2];
     InputData		*itsInputData;
     TransposedData	*itsTransposedData;
     FilteredData	*itsFilteredData;

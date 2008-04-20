@@ -86,7 +86,7 @@ BGL_Processing::BGL_Processing(TransportHolder *th)
   itsPPF(0),
   itsCorrelator(0)
 {
-  memset(itsHeaps, 0, sizeof itsHeaps);
+  memset(itsArenas, 0, sizeof itsArenas);
 
 #if defined HAVE_BGL
   getPersonality();
@@ -344,16 +344,24 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesToBGLProc	   = configuration.nrSamplesToBGLProc();
 
+  // Each phase (e.g., transpose, PPF, correlator) reads from an input data
+  // set and writes to an output data set.  To save memory, two memory buffers
+  // are used, and consecutive phases alternately use one of them as input
+  // buffer and the other as output buffer.
+  // Since each buffer (arena) in used multiple times, we use multiple
+  // Allocators for a single arena, but the Allocators are hidden in the
+  // implementations of InputData, TransposedData, etc.
+
   size_t inputDataSize      = itsIsTransposeInput  ? InputData::requiredSize(outputPsets.size(), nrSamplesToBGLProc) : 0;
   size_t transposedDataSize = itsIsTransposeOutput ? TransposedData::requiredSize(nrStations, nrSamplesToBGLProc) : 0;
   size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(nrStations, nrSamplesPerIntegration) : 0;
   size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines) : 0;
 
-  itsHeaps[0] = new Heap(std::max(inputDataSize, filteredDataSize), 32);
-  itsHeaps[1] = new Heap(std::max(transposedDataSize, correlatedDataSize), 32);
+  itsArenas[0] = new MallocedArena(std::max(inputDataSize, filteredDataSize), 32);
+  itsArenas[1] = new MallocedArena(std::max(transposedDataSize, correlatedDataSize), 32);
 
   if (itsIsTransposeInput) {
-    itsInputData = new InputData(*itsHeaps[0], outputPsets.size(), nrSamplesToBGLProc);
+    itsInputData = new InputData(*itsArenas[0], outputPsets.size(), nrSamplesToBGLProc);
   }
 
   if (itsIsTransposeOutput) {
@@ -374,9 +382,9 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
     printSubbandList();
 #endif
 
-    itsTransposedData = new TransposedData(*itsHeaps[1], nrStations, nrSamplesToBGLProc);
-    itsFilteredData   = new FilteredData(*itsHeaps[0], nrStations, nrSamplesPerIntegration);
-    itsCorrelatedData = new CorrelatedData(*itsHeaps[1], nrBaselines);
+    itsTransposedData = new TransposedData(*itsArenas[1], nrStations, nrSamplesToBGLProc);
+    itsFilteredData   = new FilteredData(*itsArenas[0], nrStations, nrSamplesPerIntegration);
+    itsCorrelatedData = new CorrelatedData(*itsArenas[1], nrBaselines);
 
     itsPPF	      = new PPF(nrStations, nrSamplesPerIntegration, configuration.sampleRate() / NR_SUBBAND_CHANNELS, configuration.delayCompensation());
     itsCorrelator     = new Correlator(nrStations, nrSamplesPerIntegration);
@@ -490,8 +498,8 @@ void BGL_Processing::postprocess()
     delete itsCorrelator;
     delete itsCorrelatedData;
 
-    delete itsHeaps[0];
-    delete itsHeaps[1];
+    delete itsArenas[0];
+    delete itsArenas[1];
   }
 }
 
