@@ -1,4 +1,4 @@
-//#  WH_InputSection.h: Catch RSP ethernet frames and synchronize RSP inputs 
+//#  InputSection.h: Catch RSP ethernet frames and synchronize RSP inputs 
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_CS1_INPUTSECTION_WH_INPUTSECTION_H
-#define LOFAR_CS1_INPUTSECTION_WH_INPUTSECTION_H
+#ifndef LOFAR_CS1_INPUTSECTION_INPUTSECTION_H
+#define LOFAR_CS1_INPUTSECTION_INPUTSECTION_H
 
 // \file
 // Catch RSP ethernet frames and synchronize RSP inputs 
@@ -46,25 +46,16 @@ namespace CS1 {
 
 // This class is the workholder that receives data from the RSP boards
 // and distributes it per subband to the Blue Gene/L
-class WH_InputSection: public WorkHolder {
+class InputSection {
   public:
-    explicit WH_InputSection(const string &name, 
-			     unsigned stationNumber,
-			     CS1_Parset *ps,
-			     TransportHolder *inputTH);
-    virtual ~WH_InputSection();
+    InputSection(const CS1_Parset *ps);
+    ~InputSection();
   
-    virtual WH_InputSection *make(const string &name);
-   
-    virtual void preprocess();
-    virtual void process();
-    virtual void postprocess();
+    void preprocess();
+    void process();
+    void postprocess();
     
   private:
-    // Copying is not allowed
-    WH_InputSection (const WH_InputSection &that);
-    WH_InputSection& operator= (const WH_InputSection &that);
-
     void limitFlagsLength(SparseSet<unsigned> &flags);
 
     bool itsDelayCompensation, itsIsSynchronous;
@@ -79,7 +70,7 @@ class WH_InputSection: public WorkHolder {
     TransportHolder *itsInputTH;
     unsigned itsStationNr;
     
-    CS1_Parset *itsCS1PS;
+    const CS1_Parset *itsCS1PS;
     
     // synced stamp
     TimeStamp itsSyncedStamp;

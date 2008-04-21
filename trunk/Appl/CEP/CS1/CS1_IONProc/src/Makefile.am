@@ -20,12 +20,10 @@ ReaderWriterSynchronization.h	\
 ReaderWriterSynchronization.cc	\
 SlidingPointer.h		\
 WallClockTime.h			\
-AH_InputSection.h		\
-AH_InputSection.cc		\
-WH_InputSection.h		\
-WH_InputSection.cc		\
-WH_DelayCompensation.h         \
-WH_DelayCompensation.cc         \
+InputSection.h			\
+InputSection.cc			\
+WH_DelayCompensation.h		\
+WH_DelayCompensation.cc		\
 AH_ION_Gather.h			\
 AH_ION_Gather.cc		\
 WH_ION_Gather.h			\

@@ -26,7 +26,7 @@
 #include <CS1_Interface/BGL_Configuration.h>
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/CS1_Parset.h>
-#include <AH_InputSection.h>
+#include <InputSection.h>
 #include <AH_ION_Gather.h>
 #include <BGL_Personality.h>
 #include <TH_ZoidServer.h>
@@ -51,6 +51,7 @@ using namespace LOFAR::CS1;
 
 static char	 **global_argv;
 static unsigned  nrCoresPerPset;
+static unsigned  nrInputSectionRuns;
 
 
 static void checkParset(const CS1_Parset &parset)
@@ -117,14 +118,19 @@ static void stopCNs()
 }
 
 
-void *input_thread(void *argv)
+void *input_thread(void *parset)
 {
-  std::clog << "starting input thread, nrRuns = " << ((char **) argv)[2] << std::endl;
+  std::clog << "starting input thread" << std::endl;
 
   try {
-    AH_InputSection myAH;
-    ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
-    ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
+    InputSection inputSection(static_cast<CS1_Parset *>(parset));
+
+    inputSection.preprocess();
+
+    for (unsigned run = 0; run < nrInputSectionRuns; run ++)
+      inputSection.process();
+
+    inputSection.postprocess();
   } catch (Exception &ex) {
     std::cerr << "input thread caught Exception: " << ex << std::endl;
   } catch (std::exception &ex) {
@@ -173,12 +179,14 @@ void *master_thread(void *)
     ACC::APS::ParameterSet parameterSet(global_argv[1]);
     CS1_Parset cs1_parset(&parameterSet);
 
+    cs1_parset.adoptFile("OLAP.parset");
     checkParset(cs1_parset);
     configureCNs(cs1_parset);
 
     unsigned myPsetNumber = getBGLpersonality()->getPsetNum();
 
     if (cs1_parset.inputPsetIndex(myPsetNumber) >= 0) {
+#if 0
       static char nrRuns[16], *argv[] = {
 	global_argv[0],
 	global_argv[1],
@@ -192,6 +200,15 @@ void *master_thread(void *)
 	perror("pthread_create");
 	exit(1);
       }
+#else
+      // Passing this via a global variable is a real hack
+      nrInputSectionRuns = atoi(global_argv[2]) * cs1_parset.nrCoresPerPset() / cs1_parset.nrSubbandsPerPset();
+
+      if (pthread_create(&input_thread_id, 0, input_thread, static_cast<void *>(&cs1_parset)) != 0) {
+	perror("pthread_create");
+	exit(1);
+      }
+#endif
     }
 
     if (cs1_parset.useGather() && cs1_parset.outputPsetIndex(myPsetNumber) >= 0) {

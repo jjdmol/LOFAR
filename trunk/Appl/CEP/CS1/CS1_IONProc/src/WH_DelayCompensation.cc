@@ -46,7 +46,7 @@ namespace LOFAR
 
     //##----------------  Public methods  ----------------##//
 
-    WH_DelayCompensation::WH_DelayCompensation(CS1_Parset *ps,
+    WH_DelayCompensation::WH_DelayCompensation(const CS1_Parset *ps,
                                                const string &stationName) :      
       itsCS1PS     (ps),
       itsNrBeams   (ps->getUint32("Observation.nrBeams")),

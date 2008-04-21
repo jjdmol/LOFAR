@@ -1,4 +1,4 @@
-//#  WH_InputSection.cc: Catch RSP ethernet frames and synchronize RSP inputs 
+//#  InputSection.cc: Catch RSP ethernet frames and synchronize RSP inputs 
 //#
 //#  Copyright (C) 2006
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,8 +27,9 @@
 #include <Common/Timer.h>
 #include <Common/PrettyUnits.h>
 #include <BGL_Personality.h>
-#include <WH_InputSection.h>
+#include <InputSection.h>
 #include <BeamletBuffer.h>
+#include <Connector.h>
 #include <WH_DelayCompensation.h>
 #include <InputThread.h>
 #include <ION_Allocator.h>
@@ -56,45 +57,41 @@ static TransportHolder *rawDataTH;
 #endif
 
 
-WH_InputSection::WH_InputSection(const string &name, 
-				 unsigned stationNumber,
-				 CS1_Parset *ps,
-				 TransportHolder *inputTH)
+InputSection::InputSection(const CS1_Parset *ps)
 :
-  WorkHolder(0, 0, name, "WH_InputSection"),
   itsInputThread(0),
-  itsInputTH(inputTH),
-  itsStationNr(stationNumber),
+  // itsCS1PS(new CS1_Parset(ps)),
   itsCS1PS(ps),
   itsBBuffer(0),
   itsDelayComp(0),
-  itsSampleRate(itsCS1PS->sampleRate()),
+  itsSampleRate(ps->sampleRate()),
   itsDelayTimer("delay")
 {
-  // get parameters
-  itsNSubbandsPerPset = itsCS1PS->nrSubbandsPerPset();
-  itsNSamplesPerSec   = itsCS1PS->nrSubbandSamples();
+  TimeStamp::setMaxBlockId(ps->sampleRate());
+
+  itsStationNr = ps->inputPsetIndex(getBGLpersonality()->getPsetNum());
+  std::string stationName = ps->stationName(itsStationNr);
+  std::clog << "station " << itsStationNr << " = " << stationName << std::endl;
+
+  itsInputTH	      = Connector::readTH(ps, stationName);
+  itsNSubbandsPerPset = ps->nrSubbandsPerPset();
+  itsNSamplesPerSec   = ps->nrSubbandSamples();
+
 #if defined DUMP_RAW_DATA
   itsNHistorySamples  = 0;
 #else
-  itsNHistorySamples  = itsCS1PS->nrHistorySamples();
+  itsNHistorySamples  = ps->nrHistorySamples();
 #endif
 }
 
 
-WH_InputSection::~WH_InputSection() 
+InputSection::~InputSection() 
 {
-  std::clog << "WH_InputSection::~WH_InputSection" << std::endl;
+  std::clog << "InputSection::~InputSection" << std::endl;
 }
 
 
-WH_InputSection *WH_InputSection::make(const string& name)
-{
-  return new WH_InputSection(name, itsStationNr, itsCS1PS, itsInputTH);
-}
-
-
-void WH_InputSection::startThread()
+void InputSection::startThread()
 {
   /* start up thread which writes RSP data from ethernet link
      into cyclic buffers */
@@ -121,7 +118,7 @@ void WH_InputSection::startThread()
 }
 
 
-void WH_InputSection::preprocess()
+void InputSection::preprocess()
 {
   itsCurrentComputeCore = 0;
   itsNrCoresPerPset	= itsCS1PS->nrCoresPerPset();
@@ -192,7 +189,7 @@ void WH_InputSection::preprocess()
 }
 
 
-void WH_InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
+void InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
 {
   const SparseSet<unsigned>::Ranges &ranges = flags.getRanges();
 
@@ -201,7 +198,7 @@ void WH_InputSection::limitFlagsLength(SparseSet<unsigned> &flags)
 }
 
 
-void WH_InputSection::process() 
+void InputSection::process() 
 {
   BGL_Command command(BGL_Command::PROCESS);
   
@@ -399,9 +396,9 @@ void WH_InputSection::process()
 }
 
 
-void WH_InputSection::postprocess()
+void InputSection::postprocess()
 {
-  std::clog << "WH_InputSection::postprocess" << std::endl;
+  std::clog << "InputSection::postprocess" << std::endl;
 
   delete itsInputThread;	itsInputThread	= 0;
   delete itsBBuffer;		itsBBuffer	= 0;
