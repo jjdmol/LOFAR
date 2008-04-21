@@ -82,7 +82,7 @@ namespace LOFAR
     class WH_DelayCompensation
     {
     public:
-      WH_DelayCompensation(CS1_Parset *ps,
+      WH_DelayCompensation(const CS1_Parset *ps,
                            const string &stationName);
 
       ~WH_DelayCompensation();
@@ -130,7 +130,7 @@ namespace LOFAR
       // The parameter set, containing all configurable variables.
       // \note Unfortunately we must keep a copy here, because (!@#$%!)
       // make() needs it. Hopefully, we can get rid of it, some day.
-      CS1_Parset                   *itsCS1PS;
+      const CS1_Parset              *itsCS1PS;
 
       // Number of beams.
       const uint                    itsNrBeams;
