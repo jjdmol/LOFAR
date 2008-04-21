@@ -470,6 +470,7 @@ static BGLQuad* recv_data_cb(void *priv, BGLQuad *softheader) {
 	ret = (BGLQuad*)cnproc->current_buf;
     }
 
+#if 0
     /* Allocate L1 cache lines that we are going to write entirely,
        so that they are not needlessly read from main memory */
     dummy = ret;
@@ -484,6 +485,7 @@ static BGLQuad* recv_data_cb(void *priv, BGLQuad *softheader) {
 	"\tdcbz 0,%0\n"
 	: "+b" (dummy)
     );
+#endif
 
     return ret;
 }
@@ -522,13 +524,32 @@ static int receive_packet(void) {
 }
 
 
+static void sigusr1(int sig)
+{
+  syscall(268, 0);
+  fprintf(stderr, "signal USR1 caught ... moved to 1st core and go asleep\n");
+  pause();
+  fprintf(stderr, "resuming from signal handler, going back to 2nd core\n");
+  syscall(268, 1);
+}
+
+
 void bglco_loop() {
     struct zoid_buffer *buffer;
     BGLTreeStatusRegister status;
 
-    syscall(268);
+    if (signal(SIGUSR1, sigusr1) == SIG_ERR)
+	perror("signal");
 
+#if defined L1_CONSISTENCY_IN_SOFTWARE
     flush_L1_all();
+#endif
+
+    syscall(268, 1);
+
+#if defined L1_CONSISTENCY_IN_SOFTWARE
+    flush_L1_all();
+#endif
 
     enter_critical_section(&tree_locks);
 
@@ -537,7 +558,7 @@ void bglco_loop() {
 	
 	if(status.recpktcnt > 0)  {
 	    if(receive_packet()) {
-		int r = syscall(270, 1); /* bglco_fast_sem */
+		int r = syscall(269, 1); /* bglco_fast_sem */
 		if(r) {
 		  perror("bglco_fast_sem failed");
 		  exit(-1);
@@ -549,17 +570,17 @@ void bglco_loop() {
 
 	if(status.injpktcnt < 8) {
 	    if(!currently_receiving_large_message &&
-	       ((volatile zoid_buf_pipe*)ack_queue)->first) {
+	       ack_queue->first) {
 		buffer = dequeue_zoid_buf(ack_queue);
 		if(buffer) {
 		    high_priority_send(buffer);
 		    currently_receiving_large_message = 1;
 		}
-	    } else if(((volatile zoid_buf_pipe*)high_priority_send_queue)->first) {
+	    } else if(high_priority_send_queue->first) {
 		buffer = dequeue_zoid_buf(high_priority_send_queue);
 		if(buffer)
 		    high_priority_send(buffer);
-	    } else if(((volatile zoid_buf_pipe*)send_queue)->first) {
+	    } else /*if(((volatile zoid_buf_pipe*)send_queue)->first)*/ {
 		send_packet();
 	    }
 	}
@@ -572,7 +593,7 @@ void bglco_loop() {
 
     leave_critical_section(&tree_locks);
 
-    syscall(269);
+    syscall(268, 0);
 }
 
 
@@ -596,10 +617,8 @@ static void send_packet(void) {
     char* data_buf;
 
     if (!buffer) {
-
-	enter_critical_section(send_queue->locks);
-	buffer = ((volatile zoid_buf_pipe*)send_queue)->first;
-	leave_critical_section(send_queue->locks);
+	if (send_queue->first)
+	    buffer = dequeue_zoid_buf(send_queue);
 
 	if (!buffer)
 	    return;
@@ -683,12 +702,12 @@ static void send_packet(void) {
 	    result_remaining += buffer->total_len - buffer->result_len;
 	    copying_userbuf = 1;
 	} else {
-	    dequeue_zoid_buf(send_queue);
+	    /*dequeue_zoid_buf(send_queue);*/
 
 	    /* We are done with the current message.  Clean up.  */
 	    if (buffer->userbuf_out) {
 		enqueue_zoid_buf(recv_queue, buffer);
-		int r = syscall(270, 1); /* bglco_fast_sem */
+		int r = syscall(269, 1); /* bglco_fast_sem */
 		if(r) {
 		  perror("bglco_fast_sem failed");
 		  exit(-1);
@@ -778,7 +797,7 @@ worker_thread_body(void* arg)
 	char *result = NULL;
 	int result_len, total_len;
 	
-	int r = syscall(270, -1); /* bglco_fast_sem */
+	int r = syscall(269, -1); /* bglco_fast_sem */
 	if(r) {
 	  perror("bglco_fast_sem failed");
 	  exit(-1);
