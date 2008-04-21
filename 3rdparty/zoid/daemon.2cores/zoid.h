@@ -34,6 +34,7 @@
 
 #include <pthread.h>
 
+#undef L1_CONSISTENCY_IN_SOFTWARE
 
 struct CNProc
 {
@@ -185,9 +186,11 @@ extern void enqueue_zoid_buf(zoid_buf_pipe*, struct zoid_buffer*);
 extern struct zoid_buffer *dequeue_zoid_buf(zoid_buf_pipe*);
 
 
+#if defined L1_CONSISTENCY_IN_SOFTWARE
 extern char l1flusher[32768];
 extern void flush_L1_all();
 extern void flush_L1_region(void *addr, unsigned int size);
 extern void flush_zoid_buf(struct zoid_buffer *buffer);
+#endif
 
 #endif

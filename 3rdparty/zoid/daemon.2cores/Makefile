@@ -22,7 +22,7 @@
 # ZEPTOOS:zepto-gpl
 #***************************************************************************
 
-CC = gcc
+CC = /usr/bin/gcc
 CFLAGS = -pthread -Wall -g -O2 -I/bgl/BlueLight/ppcfloor/bglsys/include -I../include
 
 ifdef ZEPTO_VERSION

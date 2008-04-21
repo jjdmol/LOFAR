@@ -598,7 +598,9 @@ main(int argc, char* argv[])
     init_lock_pair(&pending_exit_locks);
     init_lock_pair(&tree_locks);
 
+#if defined L1_CONSISTENCY_IN_SOFTWARE
     memset(l1flusher, 0, sizeof(l1flusher));
+#endif
 
     /*XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
 
@@ -829,7 +831,7 @@ main(int argc, char* argv[])
 		    entry->init_func(pset_proc_count);
 	}
 
-	int r = syscall(270, 0); /* bglco_fast_sem */
+	int r = syscall(269, 0); /* bglco_fast_sem */
 	if(r) {
 	    perror("bglco_fast_sem failed");
 	    exit(-1);
@@ -854,7 +856,18 @@ main(int argc, char* argv[])
 		return 1;
 	    }
 
+	{
+	    /* Can we do without this ??? */
+	    volatile char *ptr;
+	    extern char __data_start, _end;
+
+	    for (ptr = &__data_start; ptr < &_end; ptr += 4096)
+	      *ptr = *ptr;
+	}
+
+#if defined L1_CONSISTENCY_IN_SOFTWARE
 	flush_L1_all();
+#endif
 
 	child_pid = fork();
 	if(child_pid == 0) {
@@ -876,7 +889,7 @@ main(int argc, char* argv[])
 	
 	/* HACK */
 	for(i = 0; i < pset_proc_count; i++) {
-	    int r = syscall(270, 1); /* bglco_fast_sem */
+	    int r = syscall(269, 1); /* bglco_fast_sem */
 	    if(r) {
 		perror("bglco_fast_sem failed");
 		exit(-1);

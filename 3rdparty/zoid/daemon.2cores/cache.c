@@ -34,9 +34,8 @@ void flush_L1_region(void *addr, unsigned int size)
 
 void flush_zoid_buf(struct zoid_buffer *buffer)
 {
-    int total_size;
+    int total_size = sizeof(struct zoid_buffer) + buffer->size;
 
-    total_size = sizeof(struct zoid_buffer) + buffer->size;
     if(buffer->userbuf_in)
 	total_size += buffer->userbuf_in_len;
     // XXX: why is there no such line for userbuf_out?
@@ -46,6 +45,7 @@ void flush_zoid_buf(struct zoid_buffer *buffer)
     } else {
 	if(buffer->userbuf_in)
 	    flush_L1_region(buffer->userbuf_in, buffer->userbuf_in_len);
+
 	if(buffer->userbuf_out)
 	    flush_L1_region(buffer->userbuf_out, buffer->total_len - 
 			    buffer->result_len);
