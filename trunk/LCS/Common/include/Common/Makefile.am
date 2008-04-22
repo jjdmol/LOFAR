@@ -21,6 +21,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	i4complex.h \
 	lofar_algorithm.h \
 	lofar_bitset.h \
+	LofarConstants.h \
 	lofar_complex.h \
 	lofar_datetime.h \
 	lofar_deque.h \
