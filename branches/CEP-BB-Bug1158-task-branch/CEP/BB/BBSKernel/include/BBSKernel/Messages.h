@@ -34,12 +34,39 @@
 
 namespace LOFAR
 {
-    class BlobIStream;
-    class BlobOStream;
+  //# Forward declarations.
+  class BlobIStream;
+  class BlobOStream;
 
 namespace BBS
 {
-    class CoeffIndexMsg: public BlobStreamable
+  //# Forward declarations.
+  class MessageHandler;
+
+  // Abstract base class for messages that will be exchanged between kernel
+  // (prediffer) and solver. Message are handled by the MessageHandler, which
+  // implements a double-dispatch mechanism for the Message class, using the
+  // the Visitor pattern (Gamma, 1995).
+  //
+  // Messages are exchanged as Blobs using the Transport library, hence
+  // derived classes must implement the BlobStreamable interface.
+  class Message : public BlobStreamable
+  {
+  public:
+    // Destructor.
+    virtual ~Message() {}
+
+    // Pass the message to the "visiting" MessageHandler. Derived classes must
+    // implement this method such that it will make a callback to
+    // handler.handle() passing themselves as argument.
+    // \code
+    //   handler.handle(*this);
+    // \endcode
+    virtual void passTo(MessageHandler &handler) const = 0;
+    
+  };
+
+    class CoeffIndexMsg: public Message
     {
     public:
         typedef shared_ptr<CoeffIndexMsg>   Pointer;
@@ -60,7 +87,10 @@ namespace BBS
         
         const CoefficientIndex &getContents() const
         { return itsContents; }
-        
+
+      //# -------- Message interface implementation --------
+      virtual void passTo(MessageHandler &handler) const;
+
     private:
         uint32              itsKernelId;
         CoefficientIndex    itsContents;
@@ -95,7 +125,7 @@ namespace BBS
         vector<double>  coeff;
     };
 
-    class CoefficientMsg: public BlobStreamable
+    class CoefficientMsg: public Message
     {
     public:
         typedef shared_ptr<CoefficientMsg>  Pointer;
@@ -122,6 +152,9 @@ namespace BBS
         const vector<CellCoeff> &getContents() const
         { return itsContents; }
         
+      //# -------- Message interface implementation --------
+      virtual void passTo(MessageHandler &handler) const;
+
     private:
         uint32              itsKernelId;
         vector<CellCoeff>   itsContents;
@@ -160,7 +193,7 @@ namespace BBS
         casa::LSQFit    equation;
     };
 
-    class EquationMsg: public BlobStreamable
+    class EquationMsg: public Message
     {
     public:
         typedef shared_ptr<EquationMsg> Pointer;
@@ -187,6 +220,9 @@ namespace BBS
         const vector<CellEquation> &getContents() const
         { return itsContents; }
         
+      //# -------- Message interface implementation --------
+      virtual void passTo(MessageHandler &handler) const;
+
     private:
         uint32                  itsKernelId;
         vector<CellEquation>    itsContents;
@@ -230,7 +266,7 @@ namespace BBS
         double          lmFactor;
     };
 
-    class SolutionMsg: public BlobStreamable
+    class SolutionMsg: public Message
     {
     public:
         typedef shared_ptr<SolutionMsg> Pointer;
@@ -248,6 +284,9 @@ namespace BBS
         const vector<CellSolution> &getContents() const
         { return itsContents; }
         
+      //# -------- Message interface implementation --------
+      virtual void passTo(MessageHandler &handler) const;
+
     private:
         vector<CellSolution>    itsContents;
     
@@ -270,7 +309,7 @@ namespace BBS
 
 
 // -------------------------------------------------------------------------- //
-    class ChunkDoneMsg: public BlobStreamable
+    class ChunkDoneMsg: public Message
     {
     public:
         typedef shared_ptr<ChunkDoneMsg> Pointer;
@@ -286,6 +325,9 @@ namespace BBS
         uint32 getKernelId() const
         { return itsKernelId; }
         
+      //# -------- Message interface implementation --------
+      virtual void passTo(MessageHandler &handler) const;
+
     private:
         uint32  itsKernelId;
     

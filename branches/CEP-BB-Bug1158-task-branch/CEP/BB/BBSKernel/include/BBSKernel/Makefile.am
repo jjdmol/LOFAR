@@ -10,8 +10,8 @@ pkginclude_HEADERS = Package__Version.h 		\
 	Measurement.h		\
 	MeasurementAIPS.h	\
 	Messages.h		\
+	MessageHandler.h	\
 	Model.h			\
-	ParmData.h		\
 	Prediffer.h		\
 	Solver.h		\
 	Types.h			\

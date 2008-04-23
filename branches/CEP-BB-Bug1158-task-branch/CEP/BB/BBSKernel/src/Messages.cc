@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/Messages.h>
+#include <BBSKernel/MessageHandler.h>
 #include <BBSKernel/Exceptions.h>
 
 #include <Blob/BlobOStream.h>
@@ -62,6 +63,11 @@ namespace BBS
 
 
 // -------------------------------------------------------------------------- //
+  void CoeffIndexMsg::passTo(MessageHandler &handler) const
+  {
+    handler.handle(*this);
+  }
+
     void CoeffIndexMsg::write(BlobOStream& bos) const
     {
         bos << itsKernelId << itsContents;
@@ -88,6 +94,11 @@ namespace BBS
         return (out << obj.id << obj.coeff);
     }
     
+  void CoefficientMsg::passTo(MessageHandler &handler) const
+  {
+    handler.handle(*this);
+  }
+  
     void CoefficientMsg::write(BlobOStream& bos) const
     {
         bos << itsKernelId << itsContents;
@@ -142,6 +153,11 @@ namespace BBS
         return out;
     }
     
+  void EquationMsg::passTo(MessageHandler &handler) const
+  {
+    handler.handle(*this);
+  }
+  
     void EquationMsg::write(BlobOStream& bos) const
     {
         bos << itsKernelId << itsContents;
@@ -181,6 +197,11 @@ namespace BBS
             << obj.lmFactor);
     }
     
+  void SolutionMsg::passTo(MessageHandler &handler) const
+  {
+    handler.handle(*this);
+  }
+  
     void SolutionMsg::write(BlobOStream& bos) const
     {
         bos << itsContents;
@@ -198,6 +219,12 @@ namespace BBS
 
 
 // -------------------------------------------------------------------------- //
+
+  void ChunkDoneMsg::passTo(MessageHandler &handler) const
+  {
+    handler.handle(*this);
+  }
+
     void ChunkDoneMsg::write(BlobOStream& bos) const
     {
         bos << itsKernelId;
