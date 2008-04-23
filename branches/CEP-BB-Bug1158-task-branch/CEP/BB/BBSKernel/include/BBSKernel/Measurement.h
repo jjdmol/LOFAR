@@ -82,7 +82,7 @@ public:
     const casa::MDirection &getPhaseCenter() const
     { return itsPhaseCenter; }
 
-    const Axis<double>::Pointer &getFreqAxis() const
+    const Axis<double>::Pointer getFreqAxis() const
     { return itsFreqAxis; }
 
     pair<double, double> getFreqRange() const
@@ -91,7 +91,7 @@ public:
     size_t getChannelCount() const
     { return itsFreqAxis->size(); }
 
-    const Axis<double>::Pointer &getTimeAxis() const
+    const Axis<double>::Pointer getTimeAxis() const
     { return itsTimeAxis; }
 
     pair<double, double> getTimeRange() const

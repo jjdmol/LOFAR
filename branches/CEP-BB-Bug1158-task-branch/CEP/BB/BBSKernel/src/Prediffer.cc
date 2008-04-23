@@ -1769,6 +1769,12 @@ void Prediffer::loadParameterValues()
 
 void Prediffer::storeParameterValues()
 {
+    // TODO: Following code is not exception safe. Could create a Lock object
+    // that unlocks in the destructor.
+    
+    itsSkyDb.lock(true);
+    itsInstrumentDb.lock(true);
+        
     for (MeqParmGroup::iterator it = itsParameters.begin(),
         end = itsParameters.end();
         it != end;
@@ -1779,6 +1785,9 @@ void Prediffer::storeParameterValues()
             it->second.save();
         }
     }
+
+    itsSkyDb.unlock();
+    itsInstrumentDb.unlock();
 }
 
 } // namespace BBS
