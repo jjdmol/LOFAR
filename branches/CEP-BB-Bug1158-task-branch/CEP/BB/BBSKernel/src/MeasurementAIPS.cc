@@ -746,7 +746,7 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     Vector<Double> interval = c_interval.getColumn();
 
     const double start = time[timeIndex[0]] - interval[timeIndex[0]] * 0.5;
-    const size_t offset = itsTimeAxis->locate(start, true);
+    const size_t offset = itsTimeAxis->locate(start);
     DBGASSERT(offset + nTimeslots <= itsTimeAxis->size());
 
     LOG_DEBUG_STR("Chunk offset: " << offset);

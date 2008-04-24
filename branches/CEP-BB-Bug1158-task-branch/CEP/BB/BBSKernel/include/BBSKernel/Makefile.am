@@ -2,7 +2,6 @@ pkginclude_MNSdir = $(pkgincludedir)/MNS
 
 pkginclude_HEADERS = Package__Version.h 		\
 	Axis.h			\
-	Box.h			\
 	BBSStatus.h		\
 	CoefficientIndex.h	\
 	Exceptions.h		\

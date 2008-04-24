@@ -124,7 +124,7 @@ public:
         const vector<string> &exclude);        
     void clearParameterSelection();
 
-    bool setCellGrid(const Grid<double> &grid);
+    bool setCellGrid(const Grid<double> &cellGrid);
 
     CoeffIndexMsg::Pointer getCoefficientIndex() const;
     void setCoefficientIndex(CoeffIndexMsg::Pointer msg);
@@ -232,7 +232,7 @@ private:
     //# Information required for the CONSTRUCT operation.
     //# ------------------------------------------------------------------------
     Grid<double>                        itsGlobalCellGrid;
-    Grid<size_t>                        itsCellGrid;
+    Grid<uint32>                        itsCellGrid;
     Location                            itsStartCell, itsEndCell;
 
     //# Sum of the maximal number (over all solution cells) of coefficients of

@@ -1,4 +1,4 @@
-//# Axis.h:
+//# Axis.h: Class templates that represent a regular or irregular axis.
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,9 +23,14 @@
 #ifndef LOFAR_BBS_BBSKERNEL_AXIS_H
 #define LOFAR_BBS_BBSKERNEL_AXIS_H
 
+#include <Common/lofar_algorithm.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_smartptr.h>
-#include <BBSKernel/Types.h>
+
+#include <limits>
+#include <utility>
+
+#include <casa/BasicMath/Math.h>
 
 namespace LOFAR
 {
@@ -33,9 +38,34 @@ namespace BBS
 {
 using std::pair;
 using std::make_pair;
-using std::max;
-using std::min;
+using std::numeric_limits;
 
+
+// Class template that encapsulates the comparison of two values for equality.
+// For floating point types, values 'very near' to each other are assumed to be
+// equal. The notion of 'very near' is captured by casa::near().
+template <typename T, bool is_integer = std::numeric_limits<T>::is_integer>
+struct is_equal
+{
+    static bool eval(const T &a, const T &b);
+};
+
+template <typename T>
+struct is_equal<T, true>
+{
+    static bool eval(const T &a, const T &b)
+    { return (a == b); }
+};
+
+template <typename T>
+struct is_equal<T, false>
+{
+    static bool eval(const T &a, const T &b)
+    { return casa::near(a, b); }
+};
+
+
+// Abstract base class for a cell centered axis.
 template <typename T>
 class Axis
 {
@@ -51,10 +81,11 @@ public:
     virtual T width(size_t n) const = 0;
     virtual size_t size() const = 0;
     virtual pair<T, T> range() const = 0;
-    virtual size_t locate(T x, bool open) const = 0;
+    virtual size_t locate(const T &x) const = 0;
 };
 
 
+// Regularly strided cell centered axis.
 template <typename T>
 class RegularAxis: public Axis<T>
 {
@@ -85,38 +116,57 @@ public:
     T upper(size_t n) const
     { return (itsBegin + itsDelta) + n * itsDelta; }
 
-    T width(size_t n) const
+    T width(size_t) const
     { return itsDelta; }
 
     size_t size() const
     { return itsCount; }
 
     pair<T, T> range() const
-    { return make_pair(lower(0), (size() ? upper(size() - 1) : upper(0))); }
+    { 
+        if(size() == 0)
+        {
+            return make_pair(0, 0);
+        }
+        
+        return make_pair(lower(0), upper(size() - 1));
+    }
 
-    size_t locate(T x, bool open) const
+    size_t locate(const T &x) const
     {
-        // Try to find x in the list of cell borders. This will return the index i
-        // of the first border that is greater than or equal to x.
-        // The upper border of a cell is open by convention. Therefore, if x is
-        // located precisely on a cell border, it is located in the cell of which
-        // that border is the _lower_ border. Equality is tested with casa::near(),
-        // i.e. values of x that are 'very near' to a cell border are assumed to lie
-        // on the cell border.
+        // Find the cell that contains x. The upper border of a cell is open by
+        // convention. Therefore, if x is located precisely on a cell border,
+        // it is located in the cell of which that border is the _lower_ border.
+        // Equality is tested with is_equal<T>, which does a fuzzy comparison
+        // for floating point types. Values of x that are 'very near' to a cell
+        // border are assumed to lie on the cell border.
 
-        size_t index =
-            static_cast<size_t>(max(0.0, ceil(static_cast<double>(x - itsBegin) / itsDelta)));
-    
-        if(index > 0 && is_near<T>::eval(x, lower(index - 1)))
+        // T may be unsigned. If x < itsBegin, this will create a problem when
+        // evaluating x - itsBegin. For floating point types, even though
+        // x < itsBegin, x may still be 'very close' to the lower border of cell
+        // 0, in which case it should be attributed to cell 0.
+        if(x < itsBegin)
         {
-            --index;
-        }
-    
-        if(!is_near<T>::eval(x, lower(index)) || !open)
+            if(is_equal<T>::eval(x, itsBegin))
+            {
+                return 0;
+            }                
+            else
+            {
+                return size();
+            }
+        }        
+
+        // Find the index of the cell that contains x.
+        size_t index = static_cast<size_t>(floor((x - itsBegin) / itsDelta));
+
+        // If T is a floating point type, x could be 'very close' to the upper
+        // cell border, in which case it should be attributed to the next cell.
+        if(is_equal<T>::eval(x, upper(index)))
         {
-            --index;
+            ++index;
         }
-    
+
         // If x was located outside of the range of the axis, size() will be
         // returned.
         if(index > size())
@@ -133,6 +183,7 @@ private:
 };
 
 
+// Irregularly strided cell centered axis.
 template <typename T>
 class IrregularAxis: public Axis<T>
 {
@@ -150,7 +201,7 @@ public:
     {}
 
     T center(size_t n) const
-    { return 0.5 * (itsBorders[n] + itsBorders[n + 1]); }
+    { return (itsBorders[n] + itsBorders[n + 1]) / 2; }
  
     T lower(size_t n) const
     { return itsBorders[n]; }
@@ -165,31 +216,39 @@ public:
     { return (itsBorders.size() ? itsBorders.size() - 1 : 0); }
 
     pair<T, T> range() const
-    { return make_pair(lower(0), (size() ? upper(size() - 1) : upper(0))); }
+    { 
+        if(size() == 0)
+        {
+            return make_pair(0, 0);
+        }
 
-    size_t locate(T x, bool open) const
+        return make_pair(lower(0), upper(size() - 1));
+    }
+
+    size_t locate(const T &x) const
     {
-        // Try to find x in the list of cell borders. This will return the index i
-        // of the first border that is greater than or equal to x.
-        // The upper border of a cell is open by convention. Therefore, if x is
-        // located precisely on a cell border, it is located in the cell of which
-        // that border is the _lower_ border. Equality is tested with casa::near(),
-        // i.e. values of x that are 'very near' to a cell border are assumed to lie
-        // on the cell border.
+        // Try to find x in the list of cell borders. This will return the index
+        // of the first border that is greater than or equal to x. The upper
+        // border of a cell is open by convention. Therefore, if x is located
+        // precisely on a cell border, it is located in the cell of which that
+        // border is the _lower_ border.
+        // Equality is tested with is_equal<T>, which does a fuzzy comparison
+        // for floating point types. Values of x that are 'very near' to a cell
+        // border are assumed to lie on the cell border.
 
-        size_t index = lower_bound(itsBorders.begin(), itsBorders.end(), x)
-            - itsBorders.begin();
-    
-        if(index > 0 && is_near<T>::eval(x, lower(index - 1)))
+        size_t index = upper_bound(itsBorders.begin(), itsBorders.end(), x) -
+            itsBorders.begin();
+
+        if(index == itsBorders.size())
+        {
+            return size();
+        }
+
+        if(!is_equal<T>::eval(x, lower(index)))
         {
             --index;
         }
-    
-        if(!is_near<T>::eval(x, lower(index)) || !open)
-        {
-            --index;
-        }
-    
+           
         // If x was located outside of the range of the axis, size() will be
         // returned.
         if(index > size())
@@ -203,6 +262,7 @@ public:
 private:
     vector<T>   itsBorders;
 };
+
 
 } //# namespace BBS
 } //# namespace LOFAR

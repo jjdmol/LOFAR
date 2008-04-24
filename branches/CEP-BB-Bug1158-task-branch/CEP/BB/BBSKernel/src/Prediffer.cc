@@ -383,98 +383,91 @@ void Prediffer::setModelConfig(OperationType operation,
 }   
 
 
-bool Prediffer::setCellGrid(const Grid<double> &grid)
+bool Prediffer::setCellGrid(const Grid<double> &cellGrid)
 {
     DBGASSERT(itsOperation == CONSTRUCT);
 
     // Compute intersection of the global cell grid and the current chunk.
     const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
-    Box<double> bbox = sampleGrid.getBoundingBox() & grid.getBoundingBox();
+    Box<double> intersection = sampleGrid.getBoundingBox()
+        & cellGrid.getBoundingBox();
 
-    if(bbox.empty())
+    if(intersection.empty())
     {
         return false;
     }
 
-    LOG_DEBUG_STR("BBox: (" << setprecision(15) << bbox.start.first << ","
-        << bbox.start.second << ") - (" << bbox.end.first << ","
-        << bbox.end.second << ")");
+    LOG_DEBUG_STR("Intersection: (" << setprecision(15)
+        << intersection.start.first << "," << intersection.start.second
+        << ") - (" << intersection.end.first << "," << intersection.end.second
+        << ")");
         
     // Keep a copy of the global cell grid.
-    itsGlobalCellGrid = grid;
+    itsGlobalCellGrid = cellGrid;
 
     // Find the first and last solution cell that intersect the current chunk.
-    pair<Location, bool> result;
-    result = itsGlobalCellGrid.locate(bbox.start, true);
-    DBGASSERT(result.second);
-    Location start = result.first;
+    itsStartCell = itsGlobalCellGrid.locate(intersection.start);
+    itsEndCell = itsGlobalCellGrid.locate(intersection.end);
 
-    result = itsGlobalCellGrid.locate(bbox.end, false);
-    DBGASSERT(result.second);
-    Location end = result.first;
+    LOG_DEBUG_STR("Local start: (" << itsStartCell.first << ","
+        << itsStartCell.second << ")");
+    LOG_DEBUG_STR("Local end  : (" << itsEndCell.first << ","
+        << itsEndCell.second << ")");
 
-    // Set (local) start and end cell.
-    itsStartCell = start;
-    itsEndCell = end;
-
-    LOG_DEBUG_STR("Local start: (" << start.first << "," << start.second
-        << ")");
-    LOG_DEBUG_STR("Local end  : (" << end.first << "," << end.second << ")");
-
-    const size_t nFreqCells = (end.first - start.first + 1);
-    const size_t nTimeCells = (end.second - start.second + 1);
+    const size_t nFreqCells = itsEndCell.first - itsStartCell.first;
+    const size_t nTimeCells = itsEndCell.second - itsStartCell.second;
     const size_t nCells = nFreqCells * nTimeCells;
 
     LOG_DEBUG_STR("Cell count: " << nCells);
 
     // Map cell boundaries to sample boundaries (frequency axis).
     Axis<double>::Pointer cellAxis, sampleAxis;
-    vector<size_t> boundaries(nFreqCells + 1);
+    vector<uint32> boundaries(nFreqCells + 1);
 
     cellAxis = itsGlobalCellGrid[FREQ];
     sampleAxis = sampleGrid[FREQ];
-    boundaries.front() = sampleAxis->locate(bbox.start.first, true);
+    boundaries.front() = sampleAxis->locate(intersection.start.first);
     DBGASSERT(boundaries.front() < sampleAxis->size());
-    boundaries.back() = sampleAxis->locate(bbox.end.first, true);
+    boundaries.back() = sampleAxis->locate(intersection.end.first);
     DBGASSERT(boundaries.back() > boundaries.front() &&
         boundaries.back() <= sampleAxis->size());
 
     for(size_t i = 1; i < nFreqCells; ++i)
     {
-        boundaries[i] =
-            sampleAxis->locate(cellAxis->lower(start.first + i), true);
+        boundaries[i] = 
+            sampleAxis->locate(cellAxis->lower(itsStartCell.first + i));
         DBGASSERT(boundaries[i] < sampleAxis->size());
     }
     LOG_DEBUG_STR("Boundaries FREQ: " << boundaries);
-    Axis<size_t>::Pointer fAxis(new IrregularAxis<size_t>(boundaries));
+    Axis<uint32>::Pointer fAxis(new IrregularAxis<size_t>(boundaries));
 
     // Map cell boundaries to sample boundaries (time axis).
     cellAxis = itsGlobalCellGrid[TIME];
     sampleAxis = sampleGrid[TIME];
     boundaries.resize(nTimeCells + 1);
-    boundaries.front() = sampleAxis->locate(bbox.start.second, true);
+    boundaries.front() = sampleAxis->locate(intersection.start.second);
     DBGASSERT(boundaries.front() < sampleAxis->size());
-    boundaries.back() = sampleAxis->locate(bbox.end.second, true);
+    boundaries.back() = sampleAxis->locate(intersection.end.second);
     DBGASSERT(boundaries.back() > boundaries.front() &&
         boundaries.back() <= sampleAxis->size());
 
     for(size_t i = 1; i < nTimeCells; ++i)
     {
         boundaries[i] =
-            sampleAxis->locate(cellAxis->lower(start.second + i), true);
+            sampleAxis->locate(cellAxis->lower(itsStartCell.second + i));
         DBGASSERT(boundaries[i] < sampleAxis->size());
     }
     LOG_DEBUG_STR("Boundaries TIME: " << boundaries);
-    Axis<size_t>::Pointer tAxis(new IrregularAxis<size_t>(boundaries));
+    Axis<uint32>::Pointer tAxis(new IrregularAxis<size_t>(boundaries));
 
     // Set local cell grid.
-    itsCellGrid = Grid<size_t>(fAxis, tAxis);
+    itsCellGrid = Grid<uint32>(fAxis, tAxis);
 
     // Initialize model parameters marked for fitting.
     vector<MeqDomain> domains;
-    for(size_t t = start.second; t <= end.second; ++t)
+    for(size_t t = itsStartCell.second; t < itsEndCell.second; ++t)
     {
-        for(size_t f = start.first; f <= end.first; ++f)
+        for(size_t f = itsStartCell.first; f < itsEndCell.first; ++f)
         {
             Box<double> domain = itsGlobalCellGrid.getCell(Location(f, t));
             domains.push_back(MeqDomain(domain.start.first, domain.end.first,
@@ -659,9 +652,9 @@ void Prediffer::setCoefficientIndex(CoeffIndexMsg::Pointer msg)
 
         Location location = itsGlobalCellGrid.getCellLocation(cellId);
         if(location.first >= itsStartCell.first
-            && location.first <= itsEndCell.first
+            && location.first < itsEndCell.first
             && location.second >= itsStartCell.second
-            && location.second <= itsEndCell.second)
+            && location.second < itsEndCell.second)
         {
             const CellCoeffIndex &global = it->second;
             // Note: log(N) look-up.
@@ -690,16 +683,16 @@ CoefficientMsg::Pointer Prediffer::getCoefficients(Location start, Location end)
 
     // Check preconditions.
     DBGASSERT(start.first <= end.first && start.second <= end.second);
-    DBGASSERT(start.first <= itsEndCell.first
+    DBGASSERT(start.first < itsEndCell.first
         && end.first >= itsStartCell.first);
-    DBGASSERT(start.second <= itsEndCell.second
+    DBGASSERT(start.second < itsEndCell.second
         && end.second >= itsStartCell.second);
 
     // Clip against chunk.
     start.first = max(start.first, itsStartCell.first);
     start.second = max(start.second, itsStartCell.second);
-    end.first = min(end.first, itsEndCell.first);
-    end.second = min(end.second, itsEndCell.second);
+    end.first = min(end.first, itsEndCell.first - 1);
+    end.second = min(end.second, itsEndCell.second - 1);
 
     size_t nCells = (end.first - start.first + 1)
         * (end.second - start.second + 1);
@@ -773,9 +766,9 @@ void Prediffer::setCoefficients(SolutionMsg::Pointer msg)
         cout << "globalId: " << globalId << endl;
 
         Location cellLoc = itsGlobalCellGrid.getCellLocation(globalId);
-        if(cellLoc.first > itsEndCell.first
+        if(cellLoc.first >= itsEndCell.first
             || cellLoc.first < itsStartCell.first
-            || cellLoc.second > itsEndCell.second
+            || cellLoc.second >= itsEndCell.second
             || cellLoc.second < itsStartCell.second)
         {
             continue;
@@ -880,9 +873,9 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     DBGASSERT(itsOperation == CONSTRUCT);
 
     DBGASSERT(start.first <= end.first && start.second <= end.second);
-    DBGASSERT(start.first <= itsEndCell.first
+    DBGASSERT(start.first < itsEndCell.first
         && end.first >= itsStartCell.first);
-    DBGASSERT(start.second <= itsEndCell.second
+    DBGASSERT(start.second < itsEndCell.second
         && end.second >= itsStartCell.second);
 
     resetTimers();
@@ -890,13 +883,13 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     // Clip request against chunk.
     start.first = max(start.first, itsStartCell.first);
     start.second = max(start.second, itsStartCell.second);
-    end.first = min(end.first, itsEndCell.first);
-    end.second = min(end.second, itsEndCell.second);
+    end.first = min(end.first, itsEndCell.first - 1);
+    end.second = min(end.second, itsEndCell.second - 1);
 
     const size_t nCells = (end.first - start.first + 1)
         * (end.second - start.second + 1);
 
-    LOG_DEBUG_STR("Constructing equations for " << nCells << " cells.");
+    LOG_DEBUG_STR("Constructing equations for " << nCells << " cell(s).");
 
     // Allocate the result.
     EquationMsg::Pointer result(new EquationMsg(itsId));
@@ -968,7 +961,7 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     
     LOG_DEBUG_STR("Processing visbility domain: [ (" << visBox.start.first
         << "," << visBox.start.second << "), (" << visBox.end.first << ","
-        << visBox.end.second << ") ]");
+        << visBox.end.second << ") )");
 
     // Generate equations.
     itsProcessTimer.start();
@@ -1058,7 +1051,8 @@ void Prediffer::process(bool, bool precalc, const Location &start,
     }
     
     // Process all selected baselines.
-    ASSERT(itsBaselineSelection.size() <= numeric_limits<int>::max());
+    ASSERT(itsBaselineSelection.size()
+        <= static_cast<size_t>(numeric_limits<int>::max()));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < static_cast<int>(itsBaselineSelection.size()); ++i)
@@ -1769,8 +1763,8 @@ void Prediffer::loadParameterValues()
 
 void Prediffer::storeParameterValues()
 {
-    // TODO: Following code is not exception safe. Could create a Lock object
-    // that unlocks in the destructor.
+    // TODO: The following code is not exception safe. Could create a Lock
+    // object that unlocks in the destructor.
     
     itsSkyDb.lock(true);
     itsInstrumentDb.lock(true);

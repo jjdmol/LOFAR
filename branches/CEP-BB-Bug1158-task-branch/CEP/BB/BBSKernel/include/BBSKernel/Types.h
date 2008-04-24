@@ -29,66 +29,26 @@
 #include <Common/lofar_iosfwd.h>
 
 #include <utility>
-#include <limits>
-
-#include <casa/BasicMath/Math.h>
-
 
 namespace LOFAR
 {
-    using std::pair;
-    using std::numeric_limits;
+namespace BBS
+{
+using std::pair;
 
-    namespace BBS
+    typedef fcomplex                sample_t;
+    typedef bool                    flag_t;
+    typedef uint8                   tslot_flag_t;
+    typedef pair<uint32, uint32>    baseline_t;
+
+    enum AxisName
     {
-        typedef fcomplex                sample_t;
-        typedef bool                    flag_t;
-        typedef uint8                   tslot_flag_t;
-        typedef pair<uint32, uint32>    baseline_t;
+        FREQ = 0,
+        TIME,
+        N_AxisName
+    };
 
-        enum AxisName
-        {
-            FREQ = 0,
-            TIME,
-            N_AxisName
-        };
-
-        typedef pair<size_t, size_t>    Location;
-
-        template <typename T>
-        class Point
-        {
-        public:
-            Point(T a, T b)
-                : first(a),
-                    second(b)
-            {}
-                            
-            T   first, second;
-        };
-
-        template <typename T,
-            bool is_integer = std::numeric_limits<T>::is_integer>
-        struct is_near
-        {
-            static bool eval(T a, T b);
-        };
-
-        template <typename T>
-        struct is_near<T, true>
-        {
-            static bool eval(T a, T b)
-            { return (a == b); }
-        };
-
-        template <typename T>
-        struct is_near<T, false>
-        {
-            static bool eval(T a, T b)
-            { return casa::near(a, b); }
-        };
-
-    } // namespace BBS
+} // namespace BBS
 } // namespace LOFAR
 
 #endif
