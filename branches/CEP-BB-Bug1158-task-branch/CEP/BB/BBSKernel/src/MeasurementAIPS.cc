@@ -30,11 +30,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 
-//#include <casa/Arrays/Slicer.h>
-//#include <casa/Arrays/Vector.h>
-// Vector2.cc: necessary to instantiate .tovector()
-//#include <casa/Arrays/Vector2.cc>
-
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCPosition.h>
 #include <measures/Measures/MeasTable.h>
@@ -47,13 +42,9 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
 
-//#include <tables/Tables/TableDesc.h>
-//#include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/TiledColumnStMan.h>
 
-//#include <tables/Tables/ArrColDesc.h>
-//#include <tables/Tables/TiledColumnStMan.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
@@ -99,7 +90,6 @@ MeasurementAIPS::MeasurementAIPS(string filename,
     ROMSPolarizationColumns polarization(itsMS.polarization());
     ROMSSpWindowColumns window(itsMS.spectralWindow());
 
-//    initObservationInfo(observation, observationId);
     initInstrumentInfo(antenna, observation, observationId);
     initFieldInfo(field, fieldId);
 
@@ -110,20 +100,18 @@ MeasurementAIPS::MeasurementAIPS(string filename,
     Int windowId = description.spectralWindowId()(dataDescriptionId);
 
     initPolarizationInfo(polarization, polarizationId);
-    initFreqInfo(window, windowId);
+    initFreqTimeInfo(window, windowId);
 
     // Select all rows that match the specified observation.
     itsMS = itsMS(itsMS.col("OBSERVATION_ID") == static_cast<Int>(observationId)
         && itsMS.col("DATA_DESC_ID") == static_cast<Int>(dataDescriptionId)
         && itsMS.col("FIELD_ID") == static_cast<Int>(fieldId));
 
-    // Sort MS on TIME.
-    itsMS.sort("TIME");
-
-    initTimeInfo();
+    initBaselineInfo();
     
     LOG_DEBUG_STR("Measurement " << observationId << " contains "
         << itsMS.nrow() << " row(s).");
+    LOG_DEBUG_STR("Measurement dimensions: " << endl << itsDimensions); 
 }
 
 
@@ -159,17 +147,16 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
     VisDimensions visDims(getDimensionsImpl(tab_selection, slicer));
     VisData::Pointer buffer(new VisData(visDims));
     
-//    const Grid<double> visGrid = visDims.getGrid();
-
-    size_t nChannels = buffer->dims.getChannelCount();
-    size_t nPolarizations = buffer->dims.getPolarizationCount();
+    const VisDimensions &dims = buffer->getDimensions();    
+    const size_t nChannels = dims.getChannelCount();
+    const size_t nPolarizations = dims.getPolarizationCount();
 
     Table tab_tslot;
     size_t tslot = 0;
     TableIterator tslotIterator(tab_selection, "TIME");
     while(!tslotIterator.pastEnd())
     {
-        ASSERT(tslot < buffer->dims.getTimeSlotCount());
+        ASSERTSTR(tslot < dims.getTimeslotCount(), "Timeslot out of range!");
 
         // Get next timeslot.
         tab_tslot = tslotIterator.table();
@@ -237,8 +224,7 @@ VisData::Pointer MeasurementAIPS::read(const VisSelection &selection,
         for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
-            size_t basel = 
-                buffer->dims.getBaselineIndex(baseline_t(aips_antenna1[i],
+            size_t basel = dims.getBaselineIndex(baseline_t(aips_antenna1[i],
                     aips_antenna2[i]));
 
             // Flag timeslot as available.
@@ -315,9 +301,10 @@ void MeasurementAIPS::write(const VisSelection &selection,
     Table tab_selection = itsMS(taqlExpr);
     ASSERTSTR(tab_selection.nrow() > 0, "Data selection empty!");
 
-    const size_t nChannels = buffer->dims.getChannelCount();
-    const size_t nPolarizations = buffer->dims.getPolarizationCount();
-    const Grid<double> grid = buffer->dims.getGrid();
+    const VisDimensions &dims = buffer->getDimensions();
+    const size_t nChannels = dims.getChannelCount();
+    const size_t nPolarizations = dims.getPolarizationCount();
+    const Grid<double> &grid = dims.getGrid();
 
     // Allocate temporary buffers to be able to reverse frequency
     // channels. NOTE: Some performance can be gained by creating
@@ -340,8 +327,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
     TableIterator tslotIterator(tab_selection, "TIME");
     while(!tslotIterator.pastEnd())
     {
-        ASSERTSTR(tslot < buffer->dims.getTimeSlotCount(),
-            "Timeslot out of range!");
+        ASSERTSTR(tslot < dims.getTimeslotCount(), "Timeslot out of range!");
 
         // Extract next timeslot.
         tab_tslot = tslotIterator.table();
@@ -369,8 +355,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
         for(uInt i = 0; i < nRows; ++i)
         {
             // Get time sequence for this baseline.
-            size_t basel =
-                buffer->dims.getBaselineIndex(baseline_t(aips_antenna1[i],
+            size_t basel = dims.getBaselineIndex(baseline_t(aips_antenna1[i],
                     aips_antenna2[i]));
 
             if(writeFlags)
@@ -416,18 +401,6 @@ void MeasurementAIPS::write(const VisSelection &selection,
 }
 
 
-/*
-void MeasurementAIPS::initObservationInfo
-    (const ROMSObservationColumns &observation, uint id)
-{
-    ASSERT(observation.nrow() > id);
-    ASSERT(!observation.flagRow()(id));
-
-    const Vector<MEpoch> &range = observation.timeRangeMeas()(id);
-    itsTimeRange = make_pair(range(0), range(1));
-}
-*/
-
 void MeasurementAIPS::initInstrumentInfo(const ROMSAntennaColumns &antenna,
     const ROMSObservationColumns &observation, uint id)
 {
@@ -471,7 +444,7 @@ void MeasurementAIPS::initInstrumentInfo(const ROMSAntennaColumns &antenna,
 }
 
 
-void MeasurementAIPS::initFreqInfo(const ROMSSpWindowColumns &window,
+void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
     uint id)
 {
     ASSERT(window.nrow() > id);
@@ -503,13 +476,9 @@ void MeasurementAIPS::initFreqInfo(const ROMSSpWindowColumns &window,
         itsFreqAxisReversed = true;
     }
 
-    itsFreqAxis = Axis<double>::Pointer(new RegularAxis<double>(lower,
+    Axis<double>::Pointer freqAxis(new RegularAxis<double>(lower,
         (upper - lower) / nChannels, nChannels));
-}
 
-
-void MeasurementAIPS::initTimeInfo()
-{
     // Extract time grid based on TIME column (mid-point of integration
     // interval).
     // TODO: Should use TIME_CENTROID here (centroid of exposure)?
@@ -538,7 +507,34 @@ void MeasurementAIPS::initTimeInfo()
     times[nTimeslots] = time[timeIndex[nTimeslots - 1]]
         + interval[timeIndex[nTimeslots - 1]] * 0.5;
 
-    itsTimeAxis = Axis<double>::Pointer(new IrregularAxis<double>(times));
+    Axis<double>::Pointer timeAxis(new IrregularAxis<double>(times));
+    itsDimensions.setGrid(Grid<double>(freqAxis, timeAxis));
+}
+
+
+void MeasurementAIPS::initBaselineInfo()
+{
+    // Find all unique baselines.
+    Block<String> sortColumns(2);
+    sortColumns[0] = "ANTENNA1";
+    sortColumns[1] = "ANTENNA2";
+    Table tab_baselines = itsMS.sort(sortColumns, Sort::Ascending,
+        Sort::QuickSort + Sort::NoDuplicates);
+    uInt nBaselines = tab_baselines.nrow();
+
+    // Initialize baseline axis.
+    ROScalarColumn<Int> c_antenna1(tab_baselines, "ANTENNA1");
+    ROScalarColumn<Int> c_antenna2(tab_baselines, "ANTENNA2");
+    Vector<Int> antenna1 = c_antenna1.getColumn();
+    Vector<Int> antenna2 = c_antenna2.getColumn();
+
+    vector<baseline_t> baselines(nBaselines);
+    for(uInt i = 0; i < nBaselines; ++i)
+    {
+        baselines[i] = baseline_t(antenna1[i], antenna2[i]);
+    }    
+
+    itsDimensions.setBaselines(baselines);
 }
 
 
@@ -550,11 +546,13 @@ void MeasurementAIPS::initPolarizationInfo
 
     Vector<Int> products = polarization.corrType()(id);
 
-    itsPolarizations.resize(products.nelements());
+    vector<string> pols(products.nelements());
     for(size_t i = 0; i < products.nelements(); ++i)
     {
-        itsPolarizations[i] = Stokes::name(Stokes::type(products(i)));
+        pols[i] = Stokes::name(Stokes::type(products(i)));
     }
+    
+    itsDimensions.setPolarizations(pols);
 }
 
 
@@ -669,7 +667,7 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
     pair<size_t, size_t> range = selection.getChannelRange();
 
     size_t startChannel = 0;
-    size_t endChannel = getChannelCount() - 1;
+    size_t endChannel = itsDimensions.getChannelCount() - 1;
 
     if(selection.isSet(VisSelection::CHANNEL_START))
     {
@@ -690,14 +688,14 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
     }
 
     IPosition start(2, 0, startChannel);
-	IPosition end(2, getPolarizationCount() - 1, endChannel);
+	IPosition end(2, itsDimensions.getPolarizationCount() - 1, endChannel);
     
     if(itsFreqAxisReversed)
     {
         // Adjust range if channels are in reverse order.
-        size_t lastChannelIndex = getChannelCount() - 1;
+        size_t lastChannelIndex = itsDimensions.getChannelCount() - 1;
         start = IPosition(2, 0, lastChannelIndex - endChannel);
-        end = IPosition(2, getPolarizationCount() - 1,
+        end = IPosition(2, itsDimensions.getPolarizationCount() - 1,
             lastChannelIndex - startChannel);
     }
 
@@ -715,19 +713,21 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     size_t nPolarizations = shape[0];
     size_t nChannels = shape[1];
 
+    const Grid<double> &rootGrid = itsDimensions.getGrid();
+
     // Initialize frequency axis.
     double lower, upper;    
     if(itsFreqAxisReversed)
     {
         // Correct range if channels are in reverse order.
-        const size_t lastChannelIndex = getChannelCount() - 1;
-        lower = itsFreqAxis->lower(lastChannelIndex - slicer.end()[1]);
-        upper = itsFreqAxis->upper(lastChannelIndex - slicer.start()[1]);
+        const size_t lastChannelIndex = itsDimensions.getChannelCount() - 1;
+        lower = rootGrid[FREQ]->lower(lastChannelIndex - slicer.end()[1]);
+        upper = rootGrid[FREQ]->upper(lastChannelIndex - slicer.start()[1]);
     }
     else
     {
-        lower = itsFreqAxis->lower(slicer.start()[1]);
-        upper = itsFreqAxis->upper(slicer.end()[1]);
+        lower = rootGrid[FREQ]->lower(slicer.start()[1]);
+        upper = rootGrid[FREQ]->upper(slicer.end()[1]);
     }    
 
     Axis<double>::Pointer fAxis(new RegularAxis<double>(lower, (upper - lower)
@@ -746,8 +746,8 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     Vector<Double> interval = c_interval.getColumn();
 
     const double start = time[timeIndex[0]] - interval[timeIndex[0]] * 0.5;
-    const size_t offset = itsTimeAxis->locate(start);
-    DBGASSERT(offset + nTimeslots <= itsTimeAxis->size());
+    const size_t offset = rootGrid[TIME]->locate(start);
+    DBGASSERT(offset + nTimeslots <= rootGrid[TIME]->size());
 
     LOG_DEBUG_STR("Chunk offset: " << offset);
 
@@ -755,9 +755,9 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     for(uInt i = 0; i < nTimeslots; ++i)
     {
         // Copy _lower border_ of each integration cell.
-        times[i] = itsTimeAxis->lower(offset + i);
+        times[i] = rootGrid[TIME]->lower(offset + i);
     }
-    times[nTimeslots] = itsTimeAxis->upper(offset + nTimeslots - 1);
+    times[nTimeslots] = rootGrid[TIME]->upper(offset + nTimeslots - 1);
 
     Axis<double>::Pointer tAxis(new IrregularAxis<double>(times));
     dims.setGrid(Grid<double>(fAxis, tAxis));
@@ -788,7 +788,7 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     dims.setBaselines(baselines);
 
     // Initialize polarization axis.
-    dims.setPolarizations(itsPolarizations);
+    dims.setPolarizations(itsDimensions.getPolarizations());
         
     return dims;
 }

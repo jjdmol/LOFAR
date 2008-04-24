@@ -34,7 +34,8 @@ namespace BBS
 MeqJonesVisData::MeqJonesVisData(VisData::Pointer vdata, baseline_t baseline)
     : itsVisData(vdata)
 {
-    itsBaselineIndex = itsVisData->dims.getBaselineIndex(baseline);
+    const VisDimensions &dims = itsVisData->getDimensions();
+    itsBaselineIndex = dims.getBaselineIndex(baseline);
 }
 
 MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
@@ -59,10 +60,12 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     m21.setDCMat(nChannels, nTimeslots);
     m22.setDCMat(nChannels, nTimeslots);
 
+    const VisDimensions &dims = itsVisData->getDimensions();
+
     // Copy 11 elements if available.
     try
     {
-        size_t polarizationIndex = itsVisData->dims.getPolarizationIndex("XX");
+        size_t polarizationIndex = dims.getPolarizationIndex("XX");
         
         m11.dcomplexStorage(re, im);
         copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
@@ -76,7 +79,7 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     // Copy 12 elements if available.
     try
     {
-        size_t polarizationIndex = itsVisData->dims.getPolarizationIndex("XY");
+        size_t polarizationIndex = dims.getPolarizationIndex("XY");
         
         m12.dcomplexStorage(re, im);
         copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
@@ -90,7 +93,7 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     // Copy 21 elements if available.
     try
     {
-        size_t polarizationIndex = itsVisData->dims.getPolarizationIndex("YX");
+        size_t polarizationIndex = dims.getPolarizationIndex("YX");
         
         m21.dcomplexStorage(re, im);
         copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]
@@ -105,7 +108,7 @@ MeqJonesResult MeqJonesVisData::getJResult (const MeqRequest& request)
     // Copy 22 elements if available.
     try
     {
-        size_t polarizationIndex = itsVisData->dims.getPolarizationIndex("YY");
+        size_t polarizationIndex = dims.getPolarizationIndex("YY");
         
         m22.dcomplexStorage(re, im);
         copy(re, im, itsVisData->vis_data[boost::indices[itsBaselineIndex]

@@ -47,6 +47,7 @@ struct Station
     casa::MPosition     position;
 };
 
+
 class Instrument
 {
 public:
@@ -57,6 +58,7 @@ public:
     casa::MPosition     position;
     vector<Station>     stations;
 };
+
 
 class Measurement
 {
@@ -81,36 +83,14 @@ public:
 
     const casa::MDirection &getPhaseCenter() const
     { return itsPhaseCenter; }
-
-    const Axis<double>::Pointer getFreqAxis() const
-    { return itsFreqAxis; }
-
-    pair<double, double> getFreqRange() const
-    { return itsFreqAxis->range(); }
-
-    size_t getChannelCount() const
-    { return itsFreqAxis->size(); }
-
-    const Axis<double>::Pointer getTimeAxis() const
-    { return itsTimeAxis; }
-
-    pair<double, double> getTimeRange() const
-    { return itsTimeAxis->range(); }
-
-    size_t getTimeSlotCount() const
-    { return itsTimeAxis->size(); }
-
-    const vector<string> &getPolarizations() const
-    { return itsPolarizations; }
-
-    size_t getPolarizationCount() const
-    { return itsPolarizations.size(); }
+    
+    const VisDimensions &getDimensions() const
+    { return itsDimensions; }
 
 protected:
     Instrument              itsInstrument;
     casa::MDirection        itsPhaseCenter;
-    Axis<double>::Pointer   itsFreqAxis, itsTimeAxis;
-    vector<string>          itsPolarizations;
+    VisDimensions           itsDimensions;
 };
 
 } //# namespace BBS

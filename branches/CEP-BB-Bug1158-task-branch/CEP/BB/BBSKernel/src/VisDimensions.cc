@@ -25,16 +25,24 @@
 #include <BBSKernel/VisDimensions.h>
 #include <BBSKernel/Exceptions.h>
 #include <Common/LofarLogger.h>
+#include <Common/StreamUtil.h>
+#include <Common/lofar_iomanip.h>
+
+#include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/MVTime.h>
 
 namespace LOFAR
 {
 namespace BBS 
 {
+using LOFAR::operator<<;
+
 
 void VisDimensions::setGrid(const Grid<double> &grid)
 {
     itsGrid = grid;
 }
+
 
 void VisDimensions::setBaselines(const vector<baseline_t> &baselines)
 {
@@ -99,6 +107,42 @@ size_t VisDimensions::getPolarizationIndex(const string &polarization) const
     THROW(BBSKernelException, "Request for index of unknown polarization "
         << polarization);
 }
+
+
+ostream &operator<<(ostream &out, const VisDimensions &obj)
+{
+    const Grid<double> &grid = obj.getGrid();
+    pair<double, double> freqRange = obj.getFreqRange();
+    pair<double, double> timeRange = obj.getTimeRange();
+
+    out << "Frequency      : "
+        << setprecision(3) << freqRange.first / 1e6 << " MHz"
+        << " - "
+        << setprecision(3) << freqRange.second / 1e6 << " MHz" << endl;
+    out << "Bandwidth      : "
+        << setprecision(3) << (freqRange.second - freqRange.first) / 1e3
+        << " kHz (" << obj.getChannelCount() << " channel(s) of "
+        << setprecision(3)
+        << (freqRange.second - freqRange.first) / obj.getChannelCount()
+        << " Hz)" << endl;
+    out << "Time           : "
+        << casa::MVTime::Format(casa::MVTime::YMD, 6)
+        << casa::MVTime(casa::Quantum<casa::Double>(timeRange.first, "s"))
+        << " - "
+        << casa::MVTime::Format(casa::MVTime::YMD, 6)
+        << casa::MVTime(casa::Quantum<casa::Double>(timeRange.second, "s"))
+        << endl;
+    out << "Duration       : "
+        << setprecision(3) << (timeRange.second - timeRange.first) / 3600.0
+        << " hour (" << obj.getTimeslotCount() << " sample(s) of "
+        << setprecision(3)
+        << (timeRange.second - timeRange.first) / obj.getTimeslotCount()
+        << " s on average)" << endl;
+    out << "Baseline count : " << obj.getBaselineCount() << endl;
+    out << "Polarization(s): " << obj.getPolarizations();
+    
+    return out;
+}    
 
 } //# namespace BBS
 } //# namespace LOFAR

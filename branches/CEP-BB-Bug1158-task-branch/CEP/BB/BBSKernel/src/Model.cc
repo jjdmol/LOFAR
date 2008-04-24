@@ -574,8 +574,9 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
     vector<bool> statDone(nStations);
     vector<double> statUVW(3 * nStations);
 
-    const Grid<double> grid = buffer->dims.getGrid();
-    const vector<baseline_t> baselines = buffer->dims.getBaselines();
+    const VisDimensions &dims = buffer->getDimensions();
+    const Grid<double> &grid = dims.getGrid();
+    const vector<baseline_t> &baselines = dims.getBaselines();
     
     // Step through the MS by timeslot.
     for (size_t tslot = 0; tslot < grid[TIME]->size(); ++tslot)

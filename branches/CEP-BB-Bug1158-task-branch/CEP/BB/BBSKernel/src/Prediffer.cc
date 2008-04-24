@@ -126,8 +126,9 @@ Prediffer::Prediffer(uint32 id,
 //    itsPhaseRef = MeqPhaseRef(itsMeasurement->getPhaseCenter(),
 //        startTime.getValue("s"));
 
+    const VisDimensions &dims = itsMeasurement->getDimensions();
     itsPhaseRef = MeqPhaseRef(itsMeasurement->getPhaseCenter(),
-        measurement->getTimeRange().first);
+        dims.getTimeRange().first);
 
     itsModel.reset(new Model(itsMeasurement->getInstrument(), itsParameters,
         &itsSkyDb, &itsPhaseRef));
@@ -192,7 +193,8 @@ bool Prediffer::setSelection(const string &filter,
     {
         // If no station groups are speficied, select all the baselines
         // available in the chunk that match the baseline filter.
-        const vector<baseline_t> &baselines = itsChunk->dims.getBaselines();
+        const VisDimensions &dims = itsChunk->getDimensions();
+        const vector<baseline_t> &baselines = dims.getBaselines();
         for(vector<baseline_t>::const_iterator it = baselines.begin(),
             end = baselines.end();
             it != end;
@@ -208,6 +210,7 @@ bool Prediffer::setSelection(const string &filter,
     }
     else
     {
+        const VisDimensions &dims = itsChunk->getDimensions();
         const Instrument &instrument = itsMeasurement->getInstrument();
 
         vector<string>::const_iterator baseline_it1 = stations1.begin();
@@ -253,7 +256,7 @@ bool Prediffer::setSelection(const string &filter,
                     {
                         baseline_t baseline(*it1, *it2);
 
-                        if(itsChunk->dims.hasBaseline(baseline))
+                        if(dims.hasBaseline(baseline))
                         {
                             blSelection.insert(baseline);
                         }
@@ -295,7 +298,9 @@ bool Prediffer::setSelection(const string &filter,
     }
     else
     {
-        const vector<string> &available = itsMeasurement->getPolarizations();
+        const VisDimensions &dims = itsMeasurement->getDimensions();
+        const vector<string> &available = dims.getPolarizations();
+
         for(size_t i = 0; i < available.size(); ++i)
         {
             // Only consider known polarizations.
@@ -369,7 +374,8 @@ void Prediffer::setModelConfig(OperationType operation,
         itsParameters, &itsInstrumentDb, &itsPhaseRef, itsChunk);
 
     // Initialize all funklets that intersect the chunk.
-    const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const Grid<double> &sampleGrid = dims.getGrid();
     Box<double> bbox = sampleGrid.getBoundingBox();
     MeqDomain domain(bbox.start.first, bbox.end.first, bbox.start.second,
         bbox.end.second);
@@ -388,7 +394,8 @@ bool Prediffer::setCellGrid(const Grid<double> &cellGrid)
     DBGASSERT(itsOperation == CONSTRUCT);
 
     // Compute intersection of the global cell grid and the current chunk.
-    const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const Grid<double> &sampleGrid = dims.getGrid();
     Box<double> intersection = sampleGrid.getBoundingBox()
         & cellGrid.getBoundingBox();
 
@@ -808,9 +815,9 @@ void Prediffer::simulate()
 
     resetTimers();
 
+    const VisDimensions &dims = itsChunk->getDimensions();
     Location visStart(0, 0);
-    Location visEnd(itsChunk->dims.getChannelCount(),
-        itsChunk->dims.getTimeSlotCount());
+    Location visEnd(dims.getChannelCount(), dims.getTimeslotCount());
 
     LOG_DEBUG_STR("Processing visbility domain: [ (" << visStart.first << ","
         << visStart.second << "), (" << visEnd.first << "," << visEnd.second
@@ -830,9 +837,9 @@ void Prediffer::subtract()
     
     resetTimers();
 
+    const VisDimensions &dims = itsChunk->getDimensions();
     Location visStart(0, 0);
-    Location visEnd(itsChunk->dims.getChannelCount(),
-        itsChunk->dims.getTimeSlotCount());
+    Location visEnd(dims.getChannelCount(), dims.getTimeslotCount());
 
     LOG_DEBUG_STR("Processing visbility domain: [ (" << visStart.first << ","
         << visStart.second << "), (" << visEnd.first << "," << visEnd.second
@@ -852,9 +859,9 @@ void Prediffer::correct()
     
     resetTimers();
 
+    const VisDimensions &dims = itsChunk->getDimensions();
     Location visStart(0, 0);
-    Location visEnd(itsChunk->dims.getChannelCount(),
-        itsChunk->dims.getTimeSlotCount());
+    Location visEnd(dims.getChannelCount(), dims.getTimeslotCount());
 
     LOG_DEBUG_STR("Processing visbility domain: [ (" << visStart.first << ","
         << visStart.second << "), (" << visEnd.first << "," << visEnd.second
@@ -1017,7 +1024,8 @@ void Prediffer::process(bool, bool precalc, const Location &start,
         (itsOperation == CONSTRUCT) ? itsCoeffCount : 0;
 
     // NOTE: Temporary vector; should be removed after MNS overhaul.
-    const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const Grid<double> &sampleGrid = dims.getGrid();
     vector<double> timeAxis(nTimeslots + 1);
     for(size_t i = 0; i < nTimeslots; ++i)
     {
@@ -1101,11 +1109,12 @@ void Prediffer::copyBl(size_t threadNr, const baseline_t &baseline,
     context.visCount += nChannels * nTimeslots;
     
     // Check preconditions.
-    DBGASSERT(offset.first + nChannels <= itsChunk->dims.getChannelCount());
-    DBGASSERT(offset.second + nTimeslots <= itsChunk->dims.getTimeSlotCount());
+    const VisDimensions &dims = itsChunk->getDimensions();
+    DBGASSERT(offset.first + nChannels <= dims.getChannelCount());
+    DBGASSERT(offset.second + nTimeslots <= dims.getTimeSlotCount());
 
     // Get baseline index.
-    const size_t bl = itsChunk->dims.getBaselineIndex(baseline);
+    const size_t bl = dims.getBaselineIndex(baseline);
 
     // Copy visibilities.
     for(size_t ts = offset.second; ts < offset.second + nTimeslots; ++ts)
@@ -1169,11 +1178,12 @@ void Prediffer::subtractBl(size_t threadNr, const baseline_t &baseline,
     context.visCount += nChannels * nTimeslots;
     
     // Check preconditions.
-    DBGASSERT(offset.first + nChannels <= itsChunk->dims.getChannelCount());
-    DBGASSERT(offset.second + nTimeslots <= itsChunk->dims.getTimeSlotCount());
+    const VisDimensions &dims = itsChunk->getDimensions();
+    DBGASSERT(offset.first + nChannels <= dims.getChannelCount());
+    DBGASSERT(offset.second + nTimeslots <= dims.getTimeSlotCount());
 
     // Get baseline index.
-    const size_t bl = itsChunk->dims.getBaselineIndex(baseline);
+    const size_t bl = dims.getBaselineIndex(baseline);
     
     // Subtract visibilities.
     for(size_t ts = offset.second; ts < offset.second + nTimeslots; ++ts)
@@ -1226,7 +1236,8 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
 //        << ") - (" << end.first << "," << end.second << ")");
 
     // Get baseline index.
-    const size_t bl = itsChunk->dims.getBaselineIndex(baseline);
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const size_t bl = dims.getBaselineIndex(baseline);
 
     // Get information about request grid.
     const size_t nChannels = request.nx();
@@ -1704,7 +1715,8 @@ void Prediffer::initPolarizationMap()
     // No assumptions can be made regarding the external polarization indices,
     // which is why we need this map in the first place.
     
-    const vector<string> &polarizations = itsChunk->dims.getPolarizations();
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const vector<string> &polarizations = dims.getPolarizations();
         
     itsPolarizationMap.resize(polarizations.size());
     for(size_t i = 0; i < polarizations.size(); ++i)
@@ -1743,7 +1755,8 @@ void Prediffer::loadParameterValues()
     itsParameterValues.clear();
 
     // Get all parameters that intersect the chunk.
-    const Grid<double> &sampleGrid = itsChunk->dims.getGrid();
+    const VisDimensions &dims = itsChunk->getDimensions();
+    const Grid<double> &sampleGrid = dims.getGrid();
     const Box<double> bbox = sampleGrid.getBoundingBox();
     LOFAR::ParmDB::ParmDomain domain(bbox.start.first, bbox.end.first,
         bbox.start.second, bbox.end.second);

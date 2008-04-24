@@ -55,14 +55,18 @@ public:
     VisData(const VisDimensions &dims);
     ~VisData();
 
-    // Description of the four dimensions (freq, time, baseline, polarization).
-    VisDimensions                           dims;
+    const VisDimensions &getDimensions() const
+    { return itsDimensions; }
 
     // Data
     boost::multi_array<double, 3>           uvw;
     boost::multi_array<tslot_flag_t, 2>     tslot_flag;
     boost::multi_array<flag_t, 4>           vis_flag;
     boost::multi_array<sample_t, 4>         vis_data;
+
+private:
+    // Description of the four dimensions (freq, time, baseline, polarization).
+    VisDimensions                           itsDimensions;    
 };
 
 } //# namespace BBS

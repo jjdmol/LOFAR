@@ -33,18 +33,17 @@ namespace BBS
 {
 
 VisData::VisData(const VisDimensions &dims)
-    :   dims(dims),
-        uvw(boost::extents[dims.getBaselineCount()][dims.getTimeSlotCount()]
-            [3]),
+    :   uvw(boost::extents[dims.getBaselineCount()][dims.getTimeslotCount()][3]),
         tslot_flag(boost::extents[dims.getBaselineCount()]
-            [dims.getTimeSlotCount()]),
-        vis_flag(boost::extents[dims.getBaselineCount()][dims.getTimeSlotCount()]
+            [dims.getTimeslotCount()]),
+        vis_flag(boost::extents[dims.getBaselineCount()][dims.getTimeslotCount()]
             [dims.getChannelCount()][dims.getPolarizationCount()]),
-        vis_data(boost::extents[dims.getBaselineCount()][dims.getTimeSlotCount()]
-            [dims.getChannelCount()][dims.getPolarizationCount()])
+        vis_data(boost::extents[dims.getBaselineCount()][dims.getTimeslotCount()]
+            [dims.getChannelCount()][dims.getPolarizationCount()]),
+        itsDimensions(dims)
 {
     const size_t nChannels = dims.getChannelCount();
-    const size_t nTimeslots = dims.getTimeSlotCount();
+    const size_t nTimeslots = dims.getTimeslotCount();
     const size_t nBaselines = dims.getBaselineCount();
     const size_t nPolarizations = dims.getPolarizationCount();
 
