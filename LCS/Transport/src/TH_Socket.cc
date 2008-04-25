@@ -136,11 +136,15 @@ TH_Socket::~TH_Socket()
 
 	// Only delete the sockets if we created them
 	if (itsIsOwner) {
+		bool isSameSocket = itsDataSocket == itsServerSocket;
+
 		LOG_TRACE_LOOP("TH_Socket:shutdown datasocket");
 		shutdown(itsDataSocket);
 
-		LOG_TRACE_LOOP("TH_Socket:shutdown listensocket");
-		shutdown(itsServerSocket);
+		if (!isSameSocket) {
+			LOG_TRACE_LOOP("TH_Socket:shutdown listensocket");
+			shutdown(itsServerSocket);
+		}
 	}
 }
 
