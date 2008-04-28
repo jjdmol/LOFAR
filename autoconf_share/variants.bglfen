@@ -3,8 +3,8 @@ blrts.compiler.conf: CC=blrts_xlc CXX=blrts_xlC
 gnubgl.compiler.conf: CC=/bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-gcc CXX=/bgl/BlueLight/ppcfloor/blrts-gnu/bin/powerpc-bgl-blrts-gnu-g++
 gnu.compiler.aipspp.var: --with-casacore=/cephome/lofarsystem/casacore/casacore-0.1.2 --without-wcs
 
-bgl.variant.conf:         $(lofar_root) $(debugopt) $(nothreads) $(noshmem) $(bgl_cpp) $(bgl_ldd) --without-tinycep --without-log4cplus --with-bglmpich $(bgl_searchpath)
-fpic.variant.conf:	  $(debugopt) $(threads) $(aipspp) --without-log4cplus --with-optimize='-O2 -g -fPIC' $(ion_searchpath) --with-ldflags='-L/bgl/lofar-utils/mass/lib -lmass'
+bgl.variant.conf:         $(lofar_root) $(debugopt) $(nothreads) $(noshmem) $(bgl_cpp) $(bgl_ldd) --without-tinycep --without-log4cplus --with-bglmpich --with-zoid=/cephome/romein/projects/zoid/glibc/sysdeps/blrts/zoid $(bgl_searchpath)
+fpic.variant.conf:	  $(debugopt) $(threads) $(aipspp) --without-log4cplus --with-optimize='-O2 -g -fPIC' $(ion_searchpath) --with-zoid_api=/cephome/romein/projects/zoid/zoid --with-zoid=/cephome/romein/projects/zoid/zoid/lofar --with-ldflags='-L/bgl/lofar-utils/mass/lib -lmass'
 
 lofar_root.var:
 
