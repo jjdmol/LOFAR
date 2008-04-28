@@ -51,6 +51,7 @@ TH_Socket::TH_Socket (const string& service,
     itsServerSocket(0),
     itsDataSocket  (0),
     itsIsOwner     (true),
+    itsIsShutDown  (false),
     itsReadOffset  (0),
     itsHostName    (),
     itsService     (service),
@@ -83,6 +84,7 @@ TH_Socket::TH_Socket (const string&	hostName,
     itsServerSocket(0),
     itsDataSocket  (0),
     itsIsOwner     (true),
+    itsIsShutDown  (false),
     itsReadOffset  (0),
     itsHostName    (hostName),
     itsService     (service),
@@ -109,6 +111,7 @@ TH_Socket::TH_Socket (Socket*		aDataSocket) :
     itsServerSocket(0),
     itsDataSocket  (0),
     itsIsOwner     (false),
+    itsIsShutDown  (false),
     itsReadOffset  (0),
     itsHostName    (),
     itsService     (),
@@ -134,18 +137,12 @@ TH_Socket::~TH_Socket()
 {
 	LOG_TRACE_OBJ("~TH_Socket");
 
-	// Only delete the sockets if we created them
-	if (itsIsOwner) {
-		bool isSameSocket = itsDataSocket == itsServerSocket;
+	// Shutdown sockets.
+	LOG_TRACE_LOOP("TH_Socket:shutdown datasocket");
+	shutdown(itsDataSocket);
 
-		LOG_TRACE_LOOP("TH_Socket:shutdown datasocket");
-		shutdown(itsDataSocket);
-
-		if (!isSameSocket) {
-			LOG_TRACE_LOOP("TH_Socket:shutdown listensocket");
-			shutdown(itsServerSocket);
-		}
-	}
+	LOG_TRACE_LOOP("TH_Socket:shutdown listensocket");
+	shutdown(itsServerSocket);
 }
 
 //
@@ -178,12 +175,7 @@ bool TH_Socket::recvBlocking (void*	buf, int32	nrBytes, int32	/*tag*/,
 
 	if (btsRead == Socket::PEERCLOSED) {	// peer closed connection.
 		LOG_DEBUG("TH_Socket:shutdown datasocket after read-error");
-		if (itsIsOwner) {			// are we the owner?
-			shutdown(itsDataSocket);	// completely delete datasocket
-		}
-		else {							// client role
-			itsDataSocket->shutdown();	// just close connection
-		}
+		shutdown(itsDataSocket);
 		itsLastCmd    = CmdNone;
 		itsReadOffset = 0;						// it's a total mess
 		return (false);
@@ -241,12 +233,7 @@ int32 TH_Socket::recvNonBlocking(void*	buf, int32	nrBytes, int32 /*tag*/,
 		// It's a total mess, anything could have happend. Bail out.
 		LOG_DEBUG_STR("TH_Socket: serious read-error, result=" << bytesRead);
 		perror("Socket");
-		if (itsIsOwner) {			// are we the owner?
-			shutdown(itsDataSocket);	// completely delete datasocket
-		}
-		else {							// client role
-			itsDataSocket->shutdown();	// just close connection
-		}
+		shutdown(itsDataSocket);
 		itsLastCmd    = CmdNone;
 		itsReadOffset = 0;						// it's a total mess
 		return (false);
@@ -336,6 +323,11 @@ bool TH_Socket::init()
         bool result;
 
 	LOG_TRACE_RTTI("TH_Socket::init()");
+
+	if (itsIsShutDown) {
+		LOG_WARN("TH_Socket::init() called after socket shutdown");
+		return false;
+	}
 
 	if (!openSocket()) {
 	  return false;
@@ -507,8 +499,12 @@ void TH_Socket::shutdown(Socket*& aSocket)
 
 	if (aSocket) {
 		aSocket->shutdown();
-		delete aSocket;
-		aSocket = 0;
+		itsIsShutDown = true;
+		if (itsIsOwner) {
+			LOG_TRACE_OBJ("TH_Socket::shutdown: deleting owned socket object");
+			delete aSocket;
+			aSocket = 0;
+		}
 	}
 }
 
