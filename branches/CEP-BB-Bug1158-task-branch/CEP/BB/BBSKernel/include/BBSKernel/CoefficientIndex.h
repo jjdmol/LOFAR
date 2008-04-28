@@ -21,8 +21,8 @@
 //# $Id$
 
 
-#ifndef LOFAR_BB_BBSKERNEL_COEFFICIENTINDEX_H
-#define LOFAR_BB_BBSKERNEL_COEFFICIENTINDEX_H
+#ifndef LOFAR_BB_BBSKERNEL_COEFFINDEX_H
+#define LOFAR_BB_BBSKERNEL_COEFFINDEX_H
 
 #include <Common/lofar_map.h>
 #include <Common/lofar_vector.h>
@@ -63,130 +63,56 @@ namespace BBS
     };
 
 
-    class CellCoeffIndex
+    class CoeffIndex
     {
     private:
-        typedef map<uint32, CoeffInterval> IndexType;
-
+        typedef map<string, CoeffInterval>  IndexType;
+    
     public:
-        typedef IndexType::const_iterator const_iterator;
+        typedef IndexType::const_iterator   const_iterator;
 
-        CellCoeffIndex()
-//            :   itsCellId(0),
+        CoeffIndex()
             : itsCount(0)
-        {
-        }
-/*
-        CellCoeffIndex(uint32 cellId)
-            :   itsCellId(cellId),
-                itsCount(0)
-        {
-        }
-*/
-        const CoeffInterval &setInterval(uint32 parmId, uint32 length);
-        void setInterval(uint32 parmId, const CoeffInterval &interval);
-
-/*
-        uint32 getCellId() const
-        {
-            return itsCellId;
-        }
-*/
-        uint32 getCount() const
-        {
-            return itsCount;
-        }
-
-        const_iterator begin() const
-        {
-            return itsIntervals.begin();
-        }
-
-        const_iterator end() const
-        {
-            return itsIntervals.end();
-        }
-
-        // iostream I/O
-        friend ostream &operator<<(ostream &out,
-            const CellCoeffIndex &obj);
-
-        // BlobStream I/O
-        friend BlobIStream &operator>>(BlobIStream &in,
-            CellCoeffIndex &obj);
-        friend BlobOStream &operator<<(BlobOStream &out,
-            const CellCoeffIndex &obj);
-
-    private:
-//        uint32                              itsCellId;
-        uint32                              itsCount;
-        IndexType                           itsIntervals;
-    };
-
-
-    class CoefficientIndex
-    {
-    public:
-        typedef shared_ptr<CoefficientIndex>    Pointer;
-        typedef map<string, uint32>             ParmIndexType;
-        typedef map<uint32, CellCoeffIndex>     CoeffIndexType;
-        
-        CoefficientIndex()
         {}
 
-        pair<uint32, bool> insertParm(const string &name);
-        pair<uint32, bool> findParm(const string &name) const;
+        void clear()
+        {
+            itsCount = 0;
+            itsIntervals.clear();
+        }
+        
+        const CoeffInterval &insert(const string &parm, uint32 length);
+        void set(const string &parm, const CoeffInterval &interval);
+        void set(const string &parm, uint32 start, uint32 length);
+
+        const_iterator find(const string &parm) const
+        { return itsIntervals.find(parm); }
+        const_iterator begin() const
+        { return itsIntervals.begin(); }
+        const_iterator end() const
+        { return itsIntervals.end(); }
+
         size_t getParmCount() const
-        { return itsParameters.size(); }
+        { return itsIntervals.size(); }
         
-        ParmIndexType::const_iterator beginParm() const
-        { return itsParameters.begin(); }
-        ParmIndexType::const_iterator endParm() const
-        { return itsParameters.end(); }
-
-//        pair<CellCoeffIndex&, bool> insertCell(uint32 id);
-//        pair<CellCoeffIndex&, bool> findCell(uint32 id);
-        size_t getCellCount() const
-        { return itsCellCoeffIndices.size(); }
-
-        CellCoeffIndex &operator[](uint32 id)
-        { return itsCellCoeffIndices[id]; }
-        
-        CoeffIndexType::const_iterator begin() const
-        { return itsCellCoeffIndices.begin(); }
-        CoeffIndexType::const_iterator end() const
-        { return itsCellCoeffIndices.end(); }
-         
-
-        // iostream I/O
-        friend ostream &operator<<(ostream &out, const CoefficientIndex &obj);
-
-        // BlobStream I/O
-        friend BlobIStream &operator>>(BlobIStream &in, CoefficientIndex &obj);
-        friend BlobOStream &operator<<(BlobOStream &out,
-            const CoefficientIndex &obj);
+        size_t getCoeffCount() const
+        { return itsCount; }
 
     private:
-        // Forbid copying.
-        // <group>
-//        CoefficientIndex(const CoefficientIndex &other);
-//        CoefficientIndex &operator=(const CoefficientIndex &other);
-        // </group>
+        friend BlobIStream &operator>>(BlobIStream &in, CoeffIndex &obj);
+        friend BlobOStream &operator<<(BlobOStream &out, const CoeffIndex &obj);
 
-        ParmIndexType   itsParameters;
-        CoeffIndexType  itsCellCoeffIndices;
+        uint32      itsCount;
+        IndexType   itsIntervals;
     };
 
 
     // iostream I/O
-    ostream &operator<<(ostream &out, const CoefficientIndex &obj);
-    ostream &operator<<(ostream &out, const CellCoeffIndex &obj);
+    ostream &operator<<(ostream &out, const CoeffIndex &obj);
 
     // BlobStream I/O
-    BlobIStream &operator>>(BlobIStream &in, CoefficientIndex &obj);
-    BlobOStream &operator<<(BlobOStream &out, const CoefficientIndex &obj);
-    BlobIStream &operator>>(BlobIStream &in, CellCoeffIndex &obj);
-    BlobOStream &operator<<(BlobOStream &out, const CellCoeffIndex &obj);
+    BlobIStream &operator>>(BlobIStream &in, CoeffIndex &obj);
+    BlobOStream &operator<<(BlobOStream &out, const CoeffIndex &obj);
     BlobIStream &operator>>(BlobIStream &in, CoeffInterval &obj);
     BlobOStream &operator<<(BlobOStream &out, const CoeffInterval &obj);
 

@@ -50,12 +50,13 @@ namespace BBS
             size_t maxIter = 10, double colFactor = 1e-9, double lmFactor = 1.0,
             bool balanced = false, bool useSvd = true);
 
-        void setCoefficientIndex(CoeffIndexMsg::Pointer msg);
-        CoeffIndexMsg::Pointer getCoefficientIndex() const;
+        void setCoeffIndex(CoeffIndexMsg::Pointer msg);
+        CoeffIndexMsg::Pointer getCoeffIndex() const;
 
-        void setCoefficients(CoefficientMsg::Pointer msg);
+        void setCoeff(CoeffMsg::Pointer msg);
 
         void setEquations(EquationMsg::Pointer msg);
+        EquationMsg::Pointer getEquations() const;
 
         bool iterate(SolutionMsg::Pointer msg);
 
@@ -64,17 +65,15 @@ namespace BBS
         {
         public:
             Cell()
-                : iteration(0)
             {}
                             
             casa::LSQFit    solver;
             vector<double>  coeff;
-            size_t          iteration;
         };
 
         map<uint32, Cell>                           itsCells;
-        CoefficientIndex                            itsCoefficientIndex;
-        map<uint32, map<uint32, vector<uint32> > >  itsCoeffMapping;
+        CoeffIndex                                  itsCoeffIndex;
+        map<uint32, vector<uint32> >                itsCoeffMapping;
         
         double                                      itsEpsValue;
         double                                      itsEpsDerivative;

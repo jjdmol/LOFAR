@@ -40,32 +40,33 @@ namespace LOFAR
 
 namespace BBS
 {
-  //# Forward declarations.
-  class MessageHandler;
+    //# Forward declarations.
+    class MessageHandler;
 
-  // Abstract base class for messages that will be exchanged between kernel
-  // (prediffer) and solver. Message are handled by the MessageHandler, which
-  // implements a double-dispatch mechanism for the Message class, using the
-  // the Visitor pattern (Gamma, 1995).
-  //
-  // Messages are exchanged as Blobs using the Transport library, hence
-  // derived classes must implement the BlobStreamable interface.
-  class Message : public BlobStreamable
-  {
-  public:
-    // Destructor.
-    virtual ~Message() {}
+    // Abstract base class for messages that will be exchanged between kernel
+    // (prediffer) and solver. Message are handled by the MessageHandler, which
+    // implements a double-dispatch mechanism for the Message class, using the
+    // the Visitor pattern (Gamma, 1995).
+    //
+    // Messages are exchanged as Blobs using the Transport library, hence
+    // derived classes must implement the BlobStreamable interface.
+    class Message : public BlobStreamable
+    {
+    public:
+        // Destructor.
+        virtual ~Message() {}
 
-    // Pass the message to the "visiting" MessageHandler. Derived classes must
-    // implement this method such that it will make a callback to
-    // handler.handle() passing themselves as argument.
-    // \code
-    //   handler.handle(*this);
-    // \endcode
-    virtual void passTo(MessageHandler &handler) const = 0;
-    
-  };
+        // Pass the message to the "visiting" MessageHandler. Derived classes
+        // must implement this method such that it will make a callback to
+        // handler.handle() passing themselves as argument.
+        // \code
+        //   handler.handle(*this);
+        // \endcode
+        virtual void passTo(MessageHandler &handler) const = 0;
+    };
 
+
+// -------------------------------------------------------------------------- //
     class CoeffIndexMsg: public Message
     {
     public:
@@ -82,18 +83,18 @@ namespace BBS
         uint32 getKernelId() const
         { return itsKernelId; }
         
-        CoefficientIndex &getContents()
+        CoeffIndex &getContents()
         { return itsContents; }
         
-        const CoefficientIndex &getContents() const
+        const CoeffIndex &getContents() const
         { return itsContents; }
 
-      //# -------- Message interface implementation --------
-      virtual void passTo(MessageHandler &handler) const;
+        //# -------- Message interface implementation --------
+        virtual void passTo(MessageHandler &handler) const;
 
     private:
-        uint32              itsKernelId;
-        CoefficientIndex    itsContents;
+        uint32      itsKernelId;
+        CoeffIndex  itsContents;
     
         //# -------- BlobStreamable interface implementation -------- 
         static const string theirClassType;
@@ -125,20 +126,20 @@ namespace BBS
         vector<double>  coeff;
     };
 
-    class CoefficientMsg: public Message
+    class CoeffMsg: public Message
     {
     public:
-        typedef shared_ptr<CoefficientMsg>  Pointer;
+        typedef shared_ptr<CoeffMsg>  Pointer;
 
-        CoefficientMsg()
+        CoeffMsg()
             : itsKernelId(0)
         {}
 
-        CoefficientMsg(uint32 kernelId)
+        CoeffMsg(uint32 kernelId)
             : itsKernelId(kernelId)
         {}
 
-        CoefficientMsg(uint32 kernelId, size_t count)
+        CoeffMsg(uint32 kernelId, size_t count)
             :   itsKernelId(kernelId),
                 itsContents(count)
         {}
@@ -152,8 +153,8 @@ namespace BBS
         const vector<CellCoeff> &getContents() const
         { return itsContents; }
         
-      //# -------- Message interface implementation --------
-      virtual void passTo(MessageHandler &handler) const;
+        //# -------- Message interface implementation --------
+        virtual void passTo(MessageHandler &handler) const;
 
     private:
         uint32              itsKernelId;
@@ -220,8 +221,8 @@ namespace BBS
         const vector<CellEquation> &getContents() const
         { return itsContents; }
         
-      //# -------- Message interface implementation --------
-      virtual void passTo(MessageHandler &handler) const;
+        //# -------- Message interface implementation --------
+        virtual void passTo(MessageHandler &handler) const;
 
     private:
         uint32                  itsKernelId;
@@ -284,8 +285,8 @@ namespace BBS
         const vector<CellSolution> &getContents() const
         { return itsContents; }
         
-      //# -------- Message interface implementation --------
-      virtual void passTo(MessageHandler &handler) const;
+        //# -------- Message interface implementation --------
+        virtual void passTo(MessageHandler &handler) const;
 
     private:
         vector<CellSolution>    itsContents;
@@ -325,8 +326,8 @@ namespace BBS
         uint32 getKernelId() const
         { return itsKernelId; }
         
-      //# -------- Message interface implementation --------
-      virtual void passTo(MessageHandler &handler) const;
+        //# -------- Message interface implementation --------
+        virtual void passTo(MessageHandler &handler) const;
 
     private:
         uint32  itsKernelId;

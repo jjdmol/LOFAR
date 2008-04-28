@@ -59,94 +59,64 @@ void Solver::reset(double epsValue, double epsDerivative, size_t maxIter,
     itsUseSvd = useSvd;
     
     itsCells.clear();
-    itsCoefficientIndex = CoefficientIndex();
+    itsCoeffIndex.clear();
     itsCoeffMapping.clear();
 }
 
     
-CoeffIndexMsg::Pointer Solver::getCoefficientIndex() const
+void Solver::setCoeffIndex(CoeffIndexMsg::Pointer msg)
+{
+    const CoeffIndex &local = msg->getContents();
+    vector<uint32> &mapping = itsCoeffMapping[msg->getKernelId()];
+
+    mapping.resize(local.getCoeffCount());
+    for(CoeffIndex::const_iterator it = local.begin(), end = local.end();
+        it != end;
+        ++it)
+    {
+        const CoeffInterval &interval =
+            itsCoeffIndex.insert(it->first, it->second.length);
+
+        for(size_t i = 0; i < interval.length; ++i)
+        {
+            mapping[it->second.start + i] = interval.start + i;
+        }
+    }        
+}    
+
+
+CoeffIndexMsg::Pointer Solver::getCoeffIndex() const
 {
     CoeffIndexMsg::Pointer msg(new CoeffIndexMsg(0));
-    msg->getContents() = itsCoefficientIndex;
+    msg->getContents() = itsCoeffIndex;
 
     return msg;
 }
 
 
-void Solver::setCoefficientIndex(CoeffIndexMsg::Pointer msg)
+void Solver::setCoeff(CoeffMsg::Pointer msg)
 {
-    const uint32 kernelId = msg->getKernelId();
-    const CoefficientIndex &index = msg->getContents();
+    const vector<CellCoeff> &local = msg->getContents();
 
-    // Construct a mapping from local parameter id to global parameter id
-    // based on name.
-    vector<uint32> pMapping(index.getParmCount());
-    for(CoefficientIndex::ParmIndexType::const_iterator it = index.beginParm(),
-        end = index.endParm();
-        it != end;
-        ++it)
+    const vector<uint32> &mapping = itsCoeffMapping[msg->getKernelId()];
+    LOG_DEBUG_STR("Look-up table: " << mapping);
+
+    const uint32 nCoeff = itsCoeffIndex.getCoeffCount();
+    LOG_DEBUG_STR("Global coefficient count: " << nCoeff);
+
+    for(size_t i = 0; i < local.size(); ++i)
     {
-        const pair<uint32, bool> result =
-            itsCoefficientIndex.insertParm(it->first);
-            
-        pMapping[it->second] = result.first;
-    }
-    cout << "Parameter mapping (" << kernelId << "): " << pMapping << endl;
-    
-    for(CoefficientIndex::CoeffIndexType::const_iterator it =
-        index.begin(), end = index.end();
-        it != end;
-        ++it)
-    {
-        const uint32 cellId = it->first;
-        const CellCoeffIndex &local = it->second;
-        CellCoeffIndex &global = itsCoefficientIndex[cellId];
-        
-        vector<uint32> &cMapping = itsCoeffMapping[kernelId][cellId];
-        cMapping.resize(local.getCount());
-        for(CellCoeffIndex::const_iterator intIt = local.begin(),
-            intEnd = local.end();
-            intIt != intEnd;
-            ++intIt)
-        {
-            const CoeffInterval &interval =
-                global.setInterval(pMapping[intIt->first],
-                    (intIt->second).length);
-
-            for(size_t i = 0; i < interval.length; ++i)
-            {
-                cMapping[(intIt->second).start + i] = interval.start + i;
-            }
-        }
-    }
-}    
-
-
-void Solver::setCoefficients(CoefficientMsg::Pointer msg)
-{
-    map<uint32, vector<uint32> > &cMapping =
-        itsCoeffMapping[msg->getKernelId()];
-
-    const vector<CellCoeff> &cellCoeff = msg->getContents();
-
-    for(size_t i = 0; i < cellCoeff.size(); ++i)
-    {
-        const uint32 cellId = cellCoeff[i].id;
-        const uint32 coeffCount = itsCoefficientIndex[cellId].getCount();
-
         pair<map<uint32, Cell>::iterator, bool> result =
-            itsCells.insert(make_pair(cellId, Cell()));
+            itsCells.insert(make_pair(local[i].id, Cell()));
         Cell &cell = (result.first)->second;
-
-        ASSERT(cell.iteration == 0);
-
-        if(cell.solver.nUnknowns() == 0)
+        
+        if(result.second)
         {
-            cout << "Initializing cell: " << cellId << endl;
-            cout << "Coefficient count: " << coeffCount << endl;
+            ASSERT(cell.solver.nUnknowns() == 0);
+            LOG_DEBUG_STR("Initializing cell: " << local[i].id);
 
-            cell.coeff.resize(coeffCount);
-            cell.solver.set(coeffCount);
+            cell.coeff.resize(nCoeff);
+            cell.solver.set(nCoeff);
             cell.solver.setEpsValue(itsEpsValue);
             cell.solver.setEpsDerivative(itsEpsDerivative);
             cell.solver.setMaxIter(itsMaxIter);
@@ -154,43 +124,57 @@ void Solver::setCoefficients(CoefficientMsg::Pointer msg)
             cell.solver.setBalanced(itsBalanced);
         }
 
-        const vector<uint32> &mapping = cMapping[cellId];            
-        cout << "Look-up table: " << mapping << endl;
-        
-        ASSERT(mapping.size() == cellCoeff[i].coeff.size());
-    
-        for(size_t j = 0; j < cellCoeff[i].coeff.size(); ++j)
+        const vector<double> &localCoeff = local[i].coeff;
+        ASSERT(mapping.size() == localCoeff.size());
+
+        for(size_t j = 0; j < localCoeff.size(); ++j)
         {
-            cell.coeff[mapping[j]] = cellCoeff[i].coeff[j];
+            cell.coeff[mapping[j]] = localCoeff[j];
         }
-        cout << "Coefficients: " << cell.coeff << endl;
+
+        LOG_DEBUG_STR("Global coefficients: " << cell.coeff);
     }
 }
 
 
 void Solver::setEquations(EquationMsg::Pointer msg)
 {
-    map<uint32, vector<uint32> > &cMapping =
-        itsCoeffMapping[msg->getKernelId()];
+    const vector<CellEquation> &local = msg->getContents();
+    const vector<uint32> &mapping = itsCoeffMapping[msg->getKernelId()];
 
-    const vector<CellEquation> &equations = msg->getContents();
-
-    for(size_t i = 0; i < equations.size(); ++i)
+    for(size_t i = 0; i < local.size(); ++i)
     {
-        const uint32 cellId = equations[i].id;
-        map<uint32, Cell>::iterator it = itsCells.find(cellId);
+        map<uint32, Cell>::iterator it = itsCells.find(local[i].id);
         if(it == itsCells.end())
         {
             continue;
         }
 
         Cell &cell = it->second;
-        const vector<uint32> &mapping = cMapping[cellId];
-        ASSERT(equations[i].equation.nUnknowns() == mapping.size());
-        const bool ok = cell.solver.merge(equations[i].equation,
+        ASSERT(local[i].equation.nUnknowns() == mapping.size());
+        const bool ok = cell.solver.merge(local[i].equation,
             mapping.size(), const_cast<uint32*>(&mapping[0]));
         ASSERT(ok);
     }
+}
+
+
+EquationMsg::Pointer Solver::getEquations() const
+{
+    EquationMsg::Pointer msg(new EquationMsg(0, itsCells.size()));
+    vector<CellEquation> &eq = msg->getContents();
+    
+    size_t i = 0;
+    for(map<uint32, Cell>::const_iterator it = itsCells.begin(),
+        end = itsCells.end();
+        it != end;
+        ++it)
+    {
+        eq[i].id = it->first;
+        eq[i].equation = it->second.solver;
+        ++i;
+    }
+    return msg;
 }
 
 
@@ -224,9 +208,7 @@ bool Solver::iterate(SolutionMsg::Pointer msg)
         cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSvd);
         cout << "Coefficients: " << cell.coeff << endl;
 
-        // Increase iteration counter.
-        ++cell.iteration;
-
+        // Record solution and statistics.
         CellSolution solution(cellId);
         solution.coeff = cell.coeff;
         solution.result = cell.solver.isReady();

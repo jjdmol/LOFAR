@@ -44,7 +44,7 @@ namespace BBS
 
 // -------------------------------------------------------------------------- //
     const string CoeffIndexMsg::theirClassType = "CoeffIndexMsg";
-    const string CoefficientMsg::theirClassType = "CoefficientMsg";
+    const string CoeffMsg::theirClassType = "CoeffMsg";
     const string EquationMsg::theirClassType = "EquationMsg";
     const string SolutionMsg::theirClassType = "SolutionMsg";
     const string ChunkDoneMsg::theirClassType = "ChunkDoneMsg";
@@ -55,7 +55,7 @@ namespace BBS
     namespace
     {
         bool dummy1 = BlobStreamableFactory::instance().registerClass<CoeffIndexMsg>("CoeffIndexMsg");
-        bool dummy2 = BlobStreamableFactory::instance().registerClass<CoefficientMsg>("CoefficientMsg");
+        bool dummy2 = BlobStreamableFactory::instance().registerClass<CoeffMsg>("CoeffMsg");
         bool dummy3 = BlobStreamableFactory::instance().registerClass<EquationMsg>("EquationMsg");
         bool dummy4 = BlobStreamableFactory::instance().registerClass<SolutionMsg>("SolutionMsg");
         bool dummy5 = BlobStreamableFactory::instance().registerClass<ChunkDoneMsg>("ChunkDoneMsg");
@@ -63,10 +63,10 @@ namespace BBS
 
 
 // -------------------------------------------------------------------------- //
-  void CoeffIndexMsg::passTo(MessageHandler &handler) const
-  {
-    handler.handle(*this);
-  }
+    void CoeffIndexMsg::passTo(MessageHandler &handler) const
+    {
+        handler.handle(*this);
+    }
 
     void CoeffIndexMsg::write(BlobOStream& bos) const
     {
@@ -94,24 +94,24 @@ namespace BBS
         return (out << obj.id << obj.coeff);
     }
     
-  void CoefficientMsg::passTo(MessageHandler &handler) const
-  {
-    handler.handle(*this);
-  }
+    void CoeffMsg::passTo(MessageHandler &handler) const
+    {
+        handler.handle(*this);
+    }
   
-    void CoefficientMsg::write(BlobOStream& bos) const
+    void CoeffMsg::write(BlobOStream& bos) const
     {
         bos << itsKernelId << itsContents;
     }
 
-    void CoefficientMsg::read(BlobIStream& bis)
+    void CoeffMsg::read(BlobIStream& bis)
     {
         bis >> itsKernelId >> itsContents;
     }
 
-    const string& CoefficientMsg::classType() const
+    const string& CoeffMsg::classType() const
     {
-        return CoefficientMsg::theirClassType;
+        return CoeffMsg::theirClassType;
     }
 
 // -------------------------------------------------------------------------- //
@@ -153,10 +153,10 @@ namespace BBS
         return out;
     }
     
-  void EquationMsg::passTo(MessageHandler &handler) const
-  {
-    handler.handle(*this);
-  }
+    void EquationMsg::passTo(MessageHandler &handler) const
+    {
+        handler.handle(*this);
+    }
   
     void EquationMsg::write(BlobOStream& bos) const
     {
@@ -197,10 +197,10 @@ namespace BBS
             << obj.lmFactor);
     }
     
-  void SolutionMsg::passTo(MessageHandler &handler) const
-  {
-    handler.handle(*this);
-  }
+    void SolutionMsg::passTo(MessageHandler &handler) const
+    {
+        handler.handle(*this);
+    }
   
     void SolutionMsg::write(BlobOStream& bos) const
     {
@@ -220,10 +220,10 @@ namespace BBS
 
 // -------------------------------------------------------------------------- //
 
-  void ChunkDoneMsg::passTo(MessageHandler &handler) const
-  {
-    handler.handle(*this);
-  }
+    void ChunkDoneMsg::passTo(MessageHandler &handler) const
+    {
+        handler.handle(*this);
+    }
 
     void ChunkDoneMsg::write(BlobOStream& bos) const
     {

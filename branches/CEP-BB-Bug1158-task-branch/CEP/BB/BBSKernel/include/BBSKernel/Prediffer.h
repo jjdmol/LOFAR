@@ -126,11 +126,11 @@ public:
 
     bool setCellGrid(const Grid<double> &cellGrid);
 
-    CoeffIndexMsg::Pointer getCoefficientIndex() const;
-    void setCoefficientIndex(CoeffIndexMsg::Pointer msg);
+    CoeffIndexMsg::Pointer getCoeffIndex() const;
+    void setCoeffIndex(CoeffIndexMsg::Pointer msg);
 
-    CoefficientMsg::Pointer getCoefficients(Location start, Location end) const;
-    void setCoefficients(SolutionMsg::Pointer msg);
+    CoeffMsg::Pointer getCoeff(Location start, Location end) const;
+    void setCoeff(SolutionMsg::Pointer msg);
     // </group>
 
     // Commit cached parameter values to the parameter database.
@@ -235,11 +235,9 @@ private:
     Grid<uint32>                        itsCellGrid;
     Location                            itsStartCell, itsEndCell;
 
-    //# Sum of the maximal number (over all solution cells) of coefficients of
-    //# each parameter.
-    uint32                              itsCoeffCount;
+    CoeffIndex                          itsCoeffIndex;
     vector<MeqPExpr>                    itsParameterSelection;
-    map<uint32, CellCoeffIndex>         itsCellCoeffIndices;
+    vector<CoeffInterval>               itsCoeffMapping;
     //# ------------------------------------------------------------------------
 
     vector<ThreadContext>               itsThreadContexts;

@@ -29,7 +29,7 @@ namespace LOFAR
   {
     //# Forward declarations
     class CoeffIndexMsg;
-    class CoefficientMsg;
+    class CoeffMsg;
     class EquationMsg;
     class SolutionMsg;
     class ChunkDoneMsg;
@@ -48,7 +48,7 @@ namespace LOFAR
       virtual ~MessageHandler() {}
 
       virtual void handle(const CoeffIndexMsg &message) = 0;
-      virtual void handle(const CoefficientMsg &message) = 0;
+      virtual void handle(const CoeffMsg &message) = 0;
       virtual void handle(const EquationMsg &message) = 0;
       virtual void handle(const SolutionMsg &message) = 0;
       virtual void handle(const ChunkDoneMsg &message) = 0;

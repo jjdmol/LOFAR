@@ -111,7 +111,6 @@ size_t VisDimensions::getPolarizationIndex(const string &polarization) const
 
 ostream &operator<<(ostream &out, const VisDimensions &obj)
 {
-    const Grid<double> &grid = obj.getGrid();
     pair<double, double> freqRange = obj.getFreqRange();
     pair<double, double> timeRange = obj.getTimeRange();
 
