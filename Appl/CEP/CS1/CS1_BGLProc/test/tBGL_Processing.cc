@@ -215,12 +215,13 @@ void doWork()
     size_t filteredDataSize   = FilteredData::requiredSize(nrStations, nrSamplesPerIntegration);
     size_t correlatedDataSize = CorrelatedData::requiredSize(nrBaselines);
 
-    Heap heap0(filteredDataSize, 32);
-    Heap heap1(std::max(transposedDataSize, correlatedDataSize), 32);
+    std::clog << transposedDataSize << " " << filteredDataSize << " " << correlatedDataSize << std::endl;
+    MallocedArena arena0(filteredDataSize, 32);
+    MallocedArena arena1(std::max(transposedDataSize, correlatedDataSize), 32);
 
-    TransposedData transposedData(heap1, nrStations, nrSamplesToBGLProc);
-    FilteredData   filteredData(heap0, nrStations, nrSamplesPerIntegration);
-    CorrelatedData correlatedData(heap1, nrBaselines);
+    TransposedData transposedData(arena1, nrStations, nrSamplesToBGLProc);
+    FilteredData   filteredData(arena0, nrStations, nrSamplesPerIntegration);
+    CorrelatedData correlatedData(arena1, nrBaselines);
 
     PPF		   ppf(nrStations, nrSamplesPerIntegration, sampleRate / NR_SUBBAND_CHANNELS, true);
     Correlator     correlator(nrStations, nrSamplesPerIntegration);
