@@ -9,6 +9,7 @@ libgcfpvss_la_SOURCES= Package__Version.cc $(NODOCHDRS) \
 					  GCF_PValue.cc \
 					  GCF_PVChar.cc \
 					  GCF_PVBool.cc \
+					  GCF_PVDateTime.cc \
 					  GCF_PVDouble.cc \
 					  GCF_PVString.cc \
 					  GCF_PVInteger.cc \
@@ -18,7 +19,6 @@ libgcfpvss_la_SOURCES= Package__Version.cc $(NODOCHDRS) \
 					  GSA_SCADAHandler.cc \
 					  GSA_PvssApi.cc \
 					  GSA_Resources.cc \
-					  GSA_WaitForAnswer.cc \
 					  PVSSinfo.cc \
 					  PVSSservice.cc
 

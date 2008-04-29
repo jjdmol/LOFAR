@@ -1,6 +1,6 @@
 //#  PVSSservice.h: 
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -68,8 +68,10 @@ public:
 							  vector<GCFPValue*>			values, 
 							  double						timestamp = 0.0,
 							  bool   						wantAnswer = true);
-    PVSSresult dpQuerySubscribeSingle(const string& queryWhere, 
-                                      const string& queryFrom);
+    PVSSresult dpQuerySubscribeSingle(const string& queryFrom, 
+                                      const string& queryWhere);
+    PVSSresult dpQuerySubscribeAll   (const string& queryFrom, 
+                                      const string& queryWhere);
     PVSSresult dpQueryUnsubscribe	(uint32 queryId);
 
 	void doWork();
@@ -79,6 +81,9 @@ private:
     // interface for GSAWaitForAnswer
     void handleHotLink (const DpMsgAnswer&	answer, const GSAWaitForAnswer& wait);
     void handleHotLink (const DpHLGroup& 	group,  const GSAWaitForAnswer& wait);
+	void _processQueryResult(Variable*	firstVar,	
+							 Variable*	secondVar,
+							 bool		passSeperate);
     friend class GSAWaitForAnswer;
   
     // helper methods to convert PVSS dpTypes to MAC types and visa versa

@@ -23,10 +23,13 @@
 //
 
 #include <GCF/PVSS/PVSSresponse.h>
+#include <GCF/PVSS/GCF_PVDynArr.h>
 
 namespace LOFAR {
  namespace GCF {
   namespace PVSS {
+
+extern uint32	gQueryID;
 
 class Response : public PVSSresponse
 {
@@ -44,6 +47,11 @@ protected:
     virtual void dpeValueChanged	(const string& propName, PVSSresult		result, const GCFPValue& value);
     virtual void dpeValueSet		(const string& propName, PVSSresult		result);
     virtual void dpQuerySubscribed	(uint32 queryId, PVSSresult		result);
+    virtual void dpQueryUnsubscribed(uint32 queryId, PVSSresult		result);
+    virtual void dpQueryChanged		(uint32 queryId, PVSSresult		result,
+									 const GCFPVDynArr&	DPnames,
+									 const GCFPVDynArr&	DPvalues,
+									 const GCFPVDynArr&	DPtimes);
 };
 
   } // namespace PVSS

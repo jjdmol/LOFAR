@@ -27,6 +27,7 @@
 #include <GCF/PVSS/GCF_PVBlob.h>
 #include <GCF/PVSS/GCF_PVBool.h>
 #include <GCF/PVSS/GCF_PVChar.h>
+#include <GCF/PVSS/GCF_PVDateTime.h>
 #include <GCF/PVSS/GCF_PVDouble.h>
 #include <GCF/PVSS/GCF_PVDynArr.h>
 #include <GCF/PVSS/GCF_PVInteger.h>

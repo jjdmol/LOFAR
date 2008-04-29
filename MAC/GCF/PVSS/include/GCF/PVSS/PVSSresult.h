@@ -46,6 +46,7 @@ typedef enum PVSSresult
   SA_PROP_DOES_NOT_EXIST,		// 14
   SA_PROP_ALREADY_EXIST,		// 15
   SA_MACTYPE_MISMATCH,			// 16
+  SA_ELEMENTS_MISSING			// 17
 };
 
   } // namespace PVSS

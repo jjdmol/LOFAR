@@ -33,6 +33,7 @@
 namespace LOFAR {
   namespace GCF {
     class PVSS::GCFPValue;
+    using PVSS::GCFPVDynArr;
 	using PVSS::PVSSresult;
 	using PVSS::PVSSresponse;
     namespace RTDB {
@@ -51,11 +52,16 @@ public:
 	virtual void dpeUnsubscribed	 (const string& /*propName*/, PVSSresult	/*result*/) {};
 	virtual void dpeValueChanged	 (const string& /*propName*/, PVSSresult	/*result*/, 
 									  const GCFPValue& /*value*/) {};
-	virtual void dpQuerySubscribed	 (uint32 /*queryId*/, PVSSresult	/*result*/) {};        
 
 	// only those are used.
 	virtual void dpeValueGet		 (const string& propName, PVSSresult	result, const GCFPValue& value);
 	virtual void dpeValueSet		 (const string& propName, PVSSresult	result);
+	virtual void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
+	virtual void dpQueryUnsubscribed (uint32 queryId, PVSSresult	result);        
+	virtual void dpQueryChanged		 (uint32 queryId, 		 PVSSresult result,
+									  const GCFPVDynArr&	DPnames,
+									  const GCFPVDynArr&	DPvalues,
+									  const GCFPVDynArr&	DPtimes);
 private:
 	DPservice*	itsDPservice;
 };
@@ -70,6 +76,23 @@ inline void DPresponse::dpeValueGet(const string& propName, PVSSresult	result, c
 inline void DPresponse::dpeValueSet(const string& propName, PVSSresult	result)
 {
 	itsDPservice->dpeValueSet(propName, result);
+}
+
+inline void DPresponse::dpQuerySubscribed  (uint32 queryID, PVSSresult	result)        
+{
+	itsDPservice->dpQuerySubscribed(queryID, result);
+}
+
+inline void DPresponse::dpQueryUnsubscribed(uint32 queryID, PVSSresult	result)        
+{
+	itsDPservice->dpQueryUnsubscribed(queryID, result);
+}
+inline void DPresponse::dpQueryChanged(uint32 queryID, 		 PVSSresult result,
+									  const GCFPVDynArr&	DPnames,
+									  const GCFPVDynArr&	DPvalues,
+									  const GCFPVDynArr&	DPtimes)
+{
+	itsDPservice->dpQueryChanged(queryID, result, DPnames, DPvalues, DPtimes);
 }
 
     } // namespace RTDB

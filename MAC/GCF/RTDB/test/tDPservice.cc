@@ -301,6 +301,66 @@ GCFEvent::TResult tDPservice::ReadErrorTest(GCFEvent& e, GCFPortInterface& /*p*/
 	break;
 
 	case F_TIMER:
+		TRAN(tDPservice::QueryTest);
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// QueryTest (event, port)
+//
+GCFEvent::TResult tDPservice::QueryTest(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	LOG_DEBUG_STR("QueryTest:" << eventName(e));
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		LOG_DEBUG_STR("Taking a subscription on the state-field of all RCU's");
+		gQryCounter = 1;
+		itsDPservice->query("'LOFAR_PIC_*.state'", "_DPT=\"RCU\"");
+		itsTimerPort->setTimer(2.0);
+	}
+	break;
+
+	case F_TIMER:
+		LOG_DEBUG_STR("QueryTest " << ((gQryCounter == 0) ? "was successful" : "FAILED"));
+		TRAN(tDPservice::CancelQueryTest);
+	break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// CancelQueryTest (event, port)
+//
+GCFEvent::TResult tDPservice::CancelQueryTest(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+	LOG_DEBUG_STR("CancelQueryTest:" << eventName(e));
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		LOG_DEBUG_STR("Stopping subscription " << gQueryID << " on the state-field of all RCU's");
+		gQryCounter = 1;
+		itsDPservice->cancelQuery(gQueryID);
+		itsTimerPort->setTimer(2.0);
+	}
+	break;
+
+	case F_TIMER:
+		LOG_DEBUG_STR("CancelQueryTest " << ((gQryCounter == 0) ? "was successful" : "FAILED"));
 		TRAN(tDPservice::final);
 	break;
 

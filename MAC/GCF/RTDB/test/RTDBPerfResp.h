@@ -31,6 +31,7 @@ extern int	NR_OF_DPS;
 
 namespace LOFAR {
  namespace GCF {
+	using PVSS::GCFPVDynArr;
 	using PVSS::PVSSresponse;
 	using PVSS::PVSSresult;
   namespace RTDB {
@@ -51,6 +52,11 @@ protected:
     virtual void dpeValueChanged	(const string& propName, PVSSresult result, const PVSS::GCFPValue& value);
     virtual void dpeValueSet		(const string& propName, PVSSresult result);
     virtual void dpQuerySubscribed	(uint32 queryId, PVSSresult result);
+    virtual void dpQueryUnsubscribed(uint32 queryId, PVSSresult result);
+	virtual void dpQueryChanged		(uint32 queryId, 		 PVSSresult result,
+									 const GCFPVDynArr&	DPnames,
+									 const GCFPVDynArr&	DPvalues,
+									 const GCFPVDynArr&	DPtypes);
 };
 
   } // namespace RTDB

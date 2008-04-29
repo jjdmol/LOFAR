@@ -62,6 +62,19 @@ void PerformanceResponse::dpQuerySubscribed(uint32 queryId, PVSSresult /*result*
 	LOG_DEBUG(formatString("RESPONSE:dpQuerySubscribed: id=", queryId));
 }
 
+void PerformanceResponse::dpQueryUnsubscribed(uint32 queryId, PVSSresult /*result*/)
+{
+	LOG_DEBUG(formatString("RESPONSE:dpQueryUnsubscribed: id=", queryId));
+}
+
+void PerformanceResponse::dpQueryChanged (uint32 queryId, PVSSresult result,
+										  const GCFPVDynArr&	DPnames,
+										  const GCFPVDynArr&	DPvalues,
+										  const GCFPVDynArr&	DPtimes)
+{
+	LOG_DEBUG(formatString("RESPONSE:dpQueryChanges: id=%d (err=%d)", queryId, result));
+}
+
   } // namespace PVSS
  } // namespace GCF
 } // namespace LOFAR

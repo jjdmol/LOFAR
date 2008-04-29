@@ -45,6 +45,9 @@ prelude = << PRELUDE_END
 // SUBSCRIBED		 (string DPname, uint16 result)
 // UNSUBSCRIBED		 (string DPname, uint16 result)
 // QUERYSUBSCRIBED	 (uint16 QryID,  uint16 result)
+// QUERYUNSUBSCRIBED (uint16 QryID,  uint16 result)
+// QUERYCHANGED		 (uint16 QryID,  uint16 result, 
+//					 GCFValueArray DPnames, GCFValueArray DPvalues, GCFValueArray DPtimes)
 // LOST_SUBSCRIPTION (string DPname)
 // LOST_SERVER		 (string DPname)
 //
@@ -245,6 +248,53 @@ event = {
 	param = {
 		name = "result";
 		type = "uint16";
+	};
+};
+
+//
+// QUERY_UNSUBSCRIBED
+//
+event = {
+	signal = QUERY_UNSUBSCRIBED;
+	dir = IN;
+	param = {
+		name = "QryID";
+		type = "uint16";
+	};
+	param = {
+		name = "result";
+		type = "uint16";
+	};
+};
+
+//
+// QUERY_CHANGED
+//
+event = {
+	signal = QUERY_CHANGED;
+	dir = IN;
+	param = {
+		name = "QryID";
+		type = "uint16";
+	};
+	param = {
+		name = "result";
+		type = "uint16";
+	};
+	param = {
+		name = "DPnames";
+		type = "PValue";
+		userdefined;
+	};
+	param = {
+		name = "DPvalues";
+		type = "PValue";
+		userdefined;
+	};
+	param = {
+		name = "DPtimes";
+		type = "PValue";
+		userdefined;
 	};
 };
 

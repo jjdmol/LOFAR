@@ -119,6 +119,25 @@ PVSSresult	DPservice::getValue(const string&	DPname)
 	return (itsService->dpeGet(DPname));
 }
 
+//
+// query(from, where)
+//
+PVSSresult DPservice::query(const string&	from, const string&		where)
+{
+	return (itsService->dpQuerySubscribeSingle(from, where));
+}
+
+
+//
+// cancelQuery(queryID)
+//
+PVSSresult DPservice::cancelQuery(uint32	queryID)
+{
+	return (itsService->dpQueryUnsubscribe(queryID));
+}
+
+
+
 
 // -------------------- Callback routines for PVSS --------------------
 
@@ -145,6 +164,45 @@ void DPservice::dpeValueGet(const string&		DPname, PVSSresult	result, const GCFP
 	// notify user when he is interested in it.
 	LOG_DEBUG("DPservice::dpeValueChanged:propagate");
 	itsExtResponse->dpeValueGet(DPname, result, value);
+}
+
+//
+// dpQuerySubscribed(result, value)
+//
+void DPservice::dpQuerySubscribed(uint32	queryID, PVSSresult	result)
+{
+	LOG_DEBUG_STR("DPservice::dpQuerySubscribed(" << queryID << ")");
+
+	// notify user when he is interested in it.
+	LOG_DEBUG("DPservice::dpQuerySubscribed:propagate");
+	itsExtResponse->dpQuerySubscribed(queryID, result);
+}
+
+//
+// dpQueryUnsubscribed(result, value)
+//
+void DPservice::dpQueryUnsubscribed(uint32	queryID, PVSSresult	result)
+{
+	LOG_DEBUG_STR("DPservice::dpQueryUnsubscribed(" << queryID << ")");
+
+	// notify user when he is interested in it.
+	LOG_DEBUG("DPservice::dpQueryUnsubscribed:propagate");
+	itsExtResponse->dpQueryUnsubscribed(queryID, result);
+}
+
+//
+// dpQueryChanged(QueryID, result, DPnames, DPvalues, DPtypes)
+//
+void DPservice::dpQueryChanged(uint32 queryID,		PVSSresult result,
+							  const GCFPVDynArr&	DPnames,
+							  const GCFPVDynArr&	DPvalues,
+							  const GCFPVDynArr&	DPtypes)
+{
+	LOG_DEBUG_STR("DPservice::dpQueryChanged(" << queryID << ")");
+
+	// notify user when he is interested in it.
+	LOG_DEBUG("DPservice::dpQueryChanged:propagate");
+	itsExtResponse->dpQueryChanged(queryID, result, DPnames, DPvalues, DPtypes);
 }
 
   } // namespace RTDB

@@ -133,11 +133,15 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 	CharString	pvssTypeName;
 	TimeVar 	ts(answer.getOriginTime());
 
+	LOG_DEBUG_STR("handleHotLink(" << Msg::getMsgName(answer.isAnswerOn()) << ")");
+
 	PVSSinfo::_lastTimestamp.tv_sec  = ts.getSeconds();
 	PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
 
+	LOG_TRACE_FLOW_STR("Answer has " << answer.getNumberOfGroups() << " groups");
 	for (AnswerGroup *pGrItem = answer.getFirstGroup();
 								pGrItem; pGrItem = answer.getNextGroup()) {
+		LOG_TRACE_FLOW_STR("Group has " << pGrItem->getNrOfItems() << " items");
 		for (AnswerItem *pAnItem = pGrItem->getFirstItem(); pAnItem;
 											pAnItem = pGrItem->getNextItem()) {
 			PVSSinfo::_lastSysNr = pAnItem->getDpIdentifier().getSystem();
@@ -155,19 +159,24 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 			else { 
 				DPEConfigName = pvssDPEConfigName;
 				convDpConfigToProp(DPEConfigName, dpName);
+//				LOG_DEBUG_STR("dpIdentifier = " << pAnItem->getDpIdentifier());
+//				LOG_DEBUG_STR("dpName = " << dpName);
 				handled = true;
 				switch (answer.isAnswerOn()) {
 				case DP_MSG_CONNECT:
+					// called after dpeSubscribe
 					LOG_TRACE_FLOW(formatString("DPE %s was subscribed successful", dpName.c_str()));
 					itsResponse->dpeSubscribed(dpName, SA_NO_ERROR);
 					break;
 
-				case DP_MSG_REQ_NEW_DP:
+				case DP_MSG_DP_REQ:
+					// called after dpCreate
 					LOG_TRACE_FLOW(formatString("DP %s was created successful", dpName.c_str()));
 					itsResponse->dpCreated(dpName, SA_NO_ERROR);
 					break;
 
 				case DP_MSG_SIMPLE_REQUEST:
+					// called after dpGet
 					pVar = pAnItem->getValuePtr();
 					if (pVar) {		// could be NULL !!
 						if (convertPVSSToMAC(*pVar, &pPropertyValue) != SA_NO_ERROR) {
@@ -184,18 +193,36 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 					}
 					break;
 
-				case DP_MSG_FILTER_CONNECT:
-					pVar = pAnItem->getValuePtr();
-					if (pVar) {		// could be NULL !!
-						if (pVar->isA() == UINTEGER_VAR) {
-							uint32		queryID = ((UIntegerVar *)pVar)->getValue();
-							LOG_TRACE_FLOW(formatString (
-								"Query subscription is performed successful (with queryid %d)", 
-								queryID));
-							itsResponse->dpQuerySubscribed(queryID, SA_NO_ERROR);
-						}
+				case DP_MSG_FILTER_REQUEST:
+				case DP_MSG_FILTER_CONNECT: {
+					// hotlink as result of query subscriptions. First item contains the query id 
+					// received in the answer of the query request. The second item is a dyndynanytype
+					// containingh all the changes.
+					LOG_DEBUG("handleHotLinkAnswer: query subscriptions");
+					if (pGrItem->getNrOfItems() != 2) {
+						unsigned int	queryID(((UIntegerVar*)pAnItem->getValuePtr())->getValue());
+						itsResponse->dpQuerySubscribed (queryID, 
+										(pGrItem->getError()) ? SA_SUBSCRIBEPROP_FAILED : SA_NO_ERROR);
+						break;
 					}
-					break;
+
+					// process the answer. A query result is returned as an array
+					// a result of a queryConnect as seperate values.
+					Variable*	firstVar  = pAnItem->getValuePtr();
+					pAnItem 			  = pGrItem->getNextItem();
+					Variable*	secondVar = pAnItem->getValuePtr();
+					_processQueryResult(firstVar, secondVar, 
+										(answer.isAnswerOn() != DP_MSG_FILTER_CONNECT));
+				}
+				break;
+
+				case DP_MSG_FILTER_DISCONNECT: {
+					// called after dpQueryDisconnect
+					unsigned int	queryID(((UIntegerVar*)pAnItem->getValuePtr())->getValue());
+					itsResponse->dpQueryUnsubscribed (queryID, 
+									(pGrItem->getError()) ? SA_UNSUBSCRIBEPROP_FAILED : SA_NO_ERROR);
+				}
+				break;
 
 				default:
 					LOG_TRACE_FLOW_STR("Event " << answer.isAnswerOn() << " unhandled");
@@ -204,7 +231,7 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 				}
 			}
 			PVSSinfo::_lastSysNr = 0;
-		} // for AnserItem
+		} // for all AnserItems in group
 
 		if (!handled) {
 			if (pGrItem->wasOk() == PVSS_TRUE) {
@@ -213,6 +240,7 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 					LOG_TRACE_FLOW_STR("dpe " << wait.getDpName() << " was set");
 					itsResponse->dpeValueSet(wait.getDpName(), SA_NO_ERROR);
 					handled = true;
+					break;		// and for-loop, all groups are empty.
 				}
 			}
 			else {
@@ -231,7 +259,14 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 	PVSSinfo::_lastTimestamp.tv_usec = 0;
 }
 
-const Variable* extractArrayValue(Variable& var, uint8 index);
+void _showDynDynVar(Variable*	pVar) 
+{
+	ASSERT(pVar->isDynDynVar());
+	LOG_DEBUG_STR("DynDynVars type =  " << ((DynVar*)pVar)->getType());
+	LOG_DEBUG_STR("DynDynVars first dimension has " << ((DynVar*)pVar)->getArrayLength() << " elements");
+	LOG_DEBUG_STR(pVar->formatValue(""));
+}
+
 
 //
 // handleHotLink(group, wait)
@@ -242,106 +277,48 @@ void PVSSservice::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& 
 {
 	ErrClass* 	pErr(0);
 	TimeVar 	ts(group.getOriginTime());
+
+	LOG_DEBUG("handleHotLinkGroup");
 	
 	if ((pErr = group.getErrorPtr()) != 0) {
 		// The only error, which can occur here means always that the subscriptions 
 		// to the DPE is lost
-		itsResponse->dpeSubscriptionLost(wait.getDpName(), SA_NO_ERROR);
+		LOG_DEBUG_STR("getDpName = " << wait.getDpName());
+		uint32	queryID	= atoi(wait.getDpName().c_str());
+		itsResponse->dpQueryUnsubscribed(queryID, SA_NO_ERROR);
+		return;
 	}
 
-	// A group consists of pairs of DpIdentifier and values called items.
-	// There is exactly one item for all configs we are connected.
-	if (group.getIdentifier() == 0) { 
-		PVSSinfo::_lastTimestamp.tv_sec = ts.getSeconds();
+	// When the group.getIdentifier is set the group contains the result of a query or a
+	// query subscription. The identifier is than the ID of the query that was returned
+	// when the query was send. When the identifier is 0 the group contains a couple of changed DPs.
+	if (group.getNumberOfItems() != 2) {
+//	if (group.getIdentifier() == 0) { 
+		// A group consists of pairs of DpIdentifier and values called items.
+		// There is exactly one item for all configs we are connected.
+		PVSSinfo::_lastTimestamp.tv_sec  = ts.getSeconds();
 		PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
-		PVSSinfo::_lastManNum = group.getOriginManager().getManNum();
-		PVSSinfo::_lastManType = group.getOriginManager().getManType();
-		PVSSinfo::_lastSysNr = group.getOriginManager().getSystem();
+		PVSSinfo::_lastManNum 			 = group.getOriginManager().getManNum();
+		PVSSinfo::_lastManType 			 = group.getOriginManager().getManType();
+		PVSSinfo::_lastSysNr 			 = group.getOriginManager().getSystem();
 		// normal subscription (with dpeSubscribe)
 		for (DpVCItem *pItem = group.getFirstItem(); pItem; pItem = group.getNextItem()) {
 			Variable *pVar = pItem->getValuePtr();
 			if (pVar) {	// could be NULL !!
+//				LOG_DEBUG_STR("formatValue=" << pVar->formatValue(""));
 				convAndForwardValueChange(pItem->getDpIdentifier(), *pVar);
 			}
 		}
 	}
 	else {
-		// hotlink as result of query subscriptions
-		// first item contains the query id received in the answer of the query
-		// request
-		DpVCItem* pItem = group.getFirstItem();
-		ASSERT(pItem);
-		Variable* pVar = pItem->getValuePtr();
-		ASSERT(pVar);
-		ASSERT(pVar->isA() == UINTEGER_VAR);
-		ASSERT(((UIntegerVar*)pVar)->getValue() == group.getIdentifier());
-
-		// second (and last) item contains the changed property and its new value
-		// it is received in a dyndynanytype variable with the following construction:
-		// Note that indexing starts in this case at 1!!!
-		// [ 
-		//   1: [ (this first item describes always the structure of the remaining items,
-		//          its like a header of a table with columns)
-		//        1: this header of the first column is empty because it points 
-		//           always to the DP name
-		//        2: header of the second column, it points to the result value for
-		//           the first "SELECT" field in the query
-		//        3: header of the third column for the second field
-		//        4: ....
-		//      ]
-		//   2: [ 
-		//        1: DP ID of the changed value (used to get the DP name),
-		//        2: value for the first "SELECT" field in the query 
-		//        3: value for the second "SELECT" field in the query 
-		//        4: ...
-		//      ]
-		// ]
-		pItem = group.getNextItem();
-		ASSERT(pItem);
-		pVar = pItem->getValuePtr();
-		ASSERT(pVar);
-		ASSERT(pVar->isDynDynVar());
-
-		const Variable* pTempVar;
-
-		// extrat the DPID of the changed DP (column 1)
-		if ((pTempVar = extractArrayValue(*pVar, 1)) == 0) 
-			return;
-		else if (pTempVar->isA() != DPIDENTIFIER_VAR) 
-			return;
-
-		DpIdentifierVar* pDpId = (DpIdentifierVar*) pTempVar;
-
-		// extrat the timestamp of the changed DP (column 3)
-		if ((pTempVar = extractArrayValue(*pVar, 3)) == 0) 
-			return;
-		else if (pTempVar->isA() != TIME_VAR) 
-			return;
-
-		ts = *(TimeVar*) pTempVar;
-
-		PVSSinfo::_lastTimestamp.tv_sec = ts.getSeconds();
-		PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
-
-		// extract the originator mananger ID of the changed DP (column 4)
-		if ((pTempVar = extractArrayValue(*pVar, 4)) == 0) 
-			return;
-		else if (pTempVar->isA() != UINTEGER_VAR) 
-			return;
-
-		UIntegerVar* pManIdInt = (UIntegerVar*) pTempVar;
-
-		ManagerIdentifier manId;
-		manId.convFromInt(pManIdInt->getValue());
-		PVSSinfo::_lastManNum = manId.getManNum();
-		PVSSinfo::_lastManType = manId.getManType();
-		PVSSinfo::_lastSysNr = manId.getSystem();
-
-		// extract the new value of the changed DP (column 2)
-		if ((pTempVar = extractArrayValue(*pVar, 2)) == 0) 
-			return;
-
-		convAndForwardValueChange(pDpId->getValue(), *pTempVar);
+		// hotlink as result of query subscriptions. First item contains the query id 
+		// received in the answer of the query request. The second item is a dyndynanytype
+		// containingh all the changes.
+		DpVCItem*	pItem     = group.getFirstItem();
+		Variable*	firstVar  = pItem->getValuePtr();
+		pItem 				  = group.getNextItem();
+		Variable*	secondVar = pItem->getValuePtr();
+		_processQueryResult(firstVar, secondVar, false);	// return all at once
 	}
 
 	PVSSinfo::_lastTimestamp.tv_sec = 0;
@@ -352,12 +329,12 @@ void PVSSservice::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& 
 }
 
 //
-// extractArrayValue(Variable, index)
+// extractArrayValue(Variable, row, column)
 //
-const Variable* extractArrayValue(Variable& var, uint8 index)
+const Variable* extractArrayValue(Variable& var, int	row, int	column)
 {
 	Variable* pRetVar(0);
-	Variable* pVar = ((DynVar&)*((DynVar&)var)[2])[index];
+	Variable* pVar = ((DynVar&)*((DynVar&)var)[row])[column];
 	if (pVar) {
 		if (pVar->isA() == ANYTYPE_VAR) {
 			pRetVar = ((AnyTypeVar*) pVar)->getVar();
@@ -372,28 +349,186 @@ const Variable* extractArrayValue(Variable& var, uint8 index)
 void PVSSservice::convAndForwardValueChange(const DpIdentifier& dpId, const Variable& pvssVar)
 {
 	static CharString pvssDPEConfigName = "";
-	static string DPEConfigName = "";
-	static string dpName = "";
-	static GCFPValue* pPropertyValue = 0;
+	static string 	  DPEConfigName     = "";
+	static string 	  dpName            = "";
+	static GCFPValue* pPropertyValue    = 0;
 
 	if (dpId.convertToString(pvssDPEConfigName) == PVSS_FALSE) {
 		LOG_FATAL(formatString("PVSS: Could not convert dpIdentifier '%d'", 
 					dpId.getDp()));
+		return;
+	}
+
+	DPEConfigName = pvssDPEConfigName;
+	convDpConfigToProp(DPEConfigName, dpName);
+	if (convertPVSSToMAC(pvssVar, &pPropertyValue) != SA_NO_ERROR) {
+		LOG_ERROR(formatString("Could not convert PVSS DP(%s) to MAC property", 
+				dpName.c_str()));
 	}
 	else {
-		DPEConfigName = pvssDPEConfigName;
-		convDpConfigToProp(DPEConfigName, dpName);
-		if (convertPVSSToMAC(pvssVar, &pPropertyValue) != SA_NO_ERROR) {
-			LOG_ERROR(formatString("Could not convert PVSS DP to MAC property (%s)", 
-					dpName.c_str()));
+		LOG_TRACE_FLOW(formatString("Value of '%s' has been changed", dpName.c_str()));
+		itsResponse->dpeValueChanged(dpName, SA_NO_ERROR, *pPropertyValue);
+	}
+	if (pPropertyValue) {
+		delete pPropertyValue; // constructed by convertPVSSToMAC method
+	}
+}
+
+//
+// _processQueryResult(firstVarPtr, secondVarPtr, passSeperate)
+//
+void PVSSservice::_processQueryResult(Variable*		firstVar, 
+									  Variable*		secondVar,
+									  bool			passSeperate)
+{
+	ASSERT(firstVar->isA()  == UINTEGER_VAR);
+	ASSERT(secondVar->isDynDynVar());
+
+	unsigned int	queryID(((UIntegerVar*)firstVar)->getValue());
+	LOG_DEBUG_STR("processQueryResult of query " << queryID << (passSeperate ? " separate" : " compacted"));
+
+	// second item contains the changed property and its new value
+	// it is received in a dyndynanytype variable with the following construction:
+	// Note that indexing starts in this case at 1!!!
+	// [ 
+	//   1: [ (this first item describes always the structure of the remaining items,
+	//          its like a header of a table with columns)
+	//        1: this header of the first column is empty because it points 
+	//           always to the DP name
+	//        2: header of the second column, it points to the result value for
+	//           the first "SELECT" field in the query
+	//        3: header of the third column for the second field
+	//        4: ....
+	//      ]
+	//   2: [ 
+	//        1: DP ID of the changed value (used to get the DP name),
+	//        2: value for the first "SELECT" field in the query 
+	//        3: value for the second "SELECT" field in the query 
+	//        4: ...
+	//      ]
+	// ]
+	//
+	// Since we constructed the queries hard-coded the columns returned are:
+	// 1: DP identifier
+	// 2: online.._value
+	// 3: online.._stime
+	// 4: online.._managerID	[ REO: whare do we need this for???? ]
+
+//	_showDynDynVar(secondVar);
+
+	const Variable* pTempVar;
+	int			 	nrOfRows = ((DynVar*)secondVar)->getArrayLength();
+	LOG_DEBUG_STR("Queryresult contains " << nrOfRows-1 << " DPs");
+	GCFPValueArray	DPnames;
+	GCFPValueArray	DPvalues;
+	GCFPValueArray	DPtimes;
+	PVSSresult		result(SA_NO_ERROR);
+
+	for (int row = 2; row <= nrOfRows; row++) {
+		// --- extract the DPID of the changed DP (column 1)
+		if ((pTempVar = extractArrayValue(*secondVar, row, 1)) == 0) {
+			LOG_ERROR_STR("Extracting DpID from row " << row << " failed");
+			return;
 		}
-		else {
-			LOG_TRACE_FLOW(formatString("Value of '%s' has been changed", dpName.c_str()));
-			itsResponse->dpeValueChanged(dpName, SA_NO_ERROR, *pPropertyValue);
+		if (pTempVar->isA() != DPIDENTIFIER_VAR) {
+			LOG_ERROR_STR("Column 1 on row " << row << 
+						  " is not an DpID type but has VarType " <<
+						  Variable::getTypeName(pTempVar->isA()));
+			return;
 		}
-		if (pPropertyValue)
-			delete pPropertyValue; // constructed by convertPVSSToMAC method
+		DpIdentifierVar* pDpId = (DpIdentifierVar*) pTempVar;
+		CharString		 DPname;
+		if (pDpId->getValue().convertToString(DPname) == PVSS_FALSE) {
+			DPname = "";
 		}
+		LOG_TRACE_VAR_STR("DpIdentifier = " << DPname);
+
+		// --- extract the value of the changed DP (column 2)
+		if ((pTempVar = extractArrayValue(*secondVar, row, 2)) == 0)  {
+			LOG_ERROR_STR("Extracting Value from row " << row << " failed");
+			return;
+		}
+
+		// Pass each rresult seperate of as a bunch of vectors?
+		if (passSeperate) {
+			convAndForwardValueChange(pDpId->getValue(), *pTempVar);
+			continue;
+		}
+
+		// Add DPname, value and time to the vectors we are going to return.
+		GCFPValue*	valuePtr;
+		GCFPValue*	timePtr;
+		if (convertPVSSToMAC(*pTempVar, &valuePtr) != SA_NO_ERROR) {
+			result = SA_ELEMENTS_MISSING;
+			continue;	// ERROR was logged in converPVSSToMac, skip in answer.
+		}
+
+		// --- extract the timestamp of the changed DP (column 3) also
+		if ((pTempVar = extractArrayValue(*secondVar, row, 3)) == 0) {
+			LOG_ERROR_STR("Extracting timestamp from row " << row << " failed");
+			continue;	// skip this DP in the answer.
+		}
+		if (pTempVar->isA() != TIME_VAR) {
+			LOG_ERROR_STR("Column 3 on row " << row << 
+						  " is not an TimeVar type but has VarType " <<
+						  Variable::getTypeName(pTempVar->isA()));
+			return;
+		}
+		if (convertPVSSToMAC(*pTempVar, &timePtr) != SA_NO_ERROR) {
+			result = SA_ELEMENTS_MISSING;
+			continue;	// ERROR was logged in converPVSSToMac, skip in answer.
+		}
+
+		DPnames.push_back (new GCFPVString(string(DPname)));
+		DPvalues.push_back(valuePtr);
+		DPtimes.push_back (timePtr);
+		valuePtr = 0;
+		timePtr = 0;
+
+#if 0
+		// ---------- REO: Not the faintest ideas where we need to next code for ----------
+		TimeVar	ts = *(TimeVar*) pTempVar;
+		LOG_TRACE_VAR_STR("TimeStamp = " << pTempVar->formatValue(""));
+
+		PVSSinfo::_lastTimestamp.tv_sec = ts.getSeconds();
+		PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
+
+		// extract the originator mananger ID of the changed DP (column 4)
+		if ((pTempVar = extractArrayValue(*secondVar, row, 4)) == 0)  {
+			LOG_ERROR_STR("Extracting Manager from row " << row << " failed");
+			return;
+		}
+		if (pTempVar->isA() != UINTEGER_VAR)  {
+			LOG_ERROR_STR("Column 4 on row " << row << 
+						  " is not an IntegerVar type but has VarType " << 
+						  Variable::getTypeName(pTempVar->isA()));
+			return;
+		}
+		UIntegerVar* pManIdInt = (UIntegerVar*) pTempVar;
+		LOG_TRACE_VAR_STR("ManagerID = " << pTempVar->formatValue(""));
+
+		ManagerIdentifier manId;
+		manId.convFromInt(pManIdInt->getValue());
+		PVSSinfo::_lastManNum  = manId.getManNum();
+		PVSSinfo::_lastManType = manId.getManType();
+		PVSSinfo::_lastSysNr   = manId.getSystem();
+		// ---------- REO: end of obscure code ----------
+#endif
+	} // for row
+
+	if (!passSeperate) {
+		itsResponse->dpQueryChanged(queryID, result, 
+									GCFPVDynArr(LPT_DYNSTRING, DPnames),
+									GCFPVDynArr(DPvalues[0]->getType(), DPvalues),
+									GCFPVDynArr(LPT_DYNDATETIME, DPtimes));
+		// free used memory
+		int		nrElems = DPnames.size();
+		for (int i = 0; i < nrElems; ++i) {
+			delete DPnames[i];
+			delete DPvalues[i];
+			delete DPtimes[i];
+		}
+	}
 }
 
 //
@@ -918,23 +1053,27 @@ PVSSresult PVSSservice::dpeSetMultiple(const string&				dpName,
 
 
 //
-// dpQuerySubscribeSingle(queryWhere, queryFrom)
+// dpQuerySubscribeSingle(queryFrom, queryWhere)
 //
-PVSSresult PVSSservice::dpQuerySubscribeSingle(const string& queryWhere, const string& queryFrom)
+PVSSresult PVSSservice::dpQuerySubscribeSingle(const string& queryFrom, const string& queryWhere)
 {
 	PVSSresult result(SA_NO_ERROR);
-	const char queryFormat[] = "SELECT '_online.._value', '_online.._stime','_online.._manager' FROM %s WHERE %s";
+	const char queryFormat[] = "SELECT '_online.._value', '_online.._stime' FROM %s WHERE '_online.._online_bad' = \"FALSE\" ";
 
 	CharString query;
-	query.format(queryFormat, queryWhere.c_str(), queryFrom.c_str());
+	query.format(queryFormat, queryFrom.c_str());
+	if (!queryWhere.empty()) {
+		query += "AND ";
+		query += queryWhere.c_str();
+	}
 
-	LOG_TRACE_FLOW(formatString("Subscription on queried properties '%s'", (const char*)query));
+	LOG_TRACE_FLOW(formatString("dpQuery(%s)", (const char*)query));
 
 	ASSERT(itsSCADAHandler);
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
 		LOG_FATAL(formatString("Unable to query subscriptions:'%s'",(const char*) query));
 	}
-	else if (!Manager::dpQueryConnectSingle(query, PVSS_FALSE, itsWFA, PVSS_FALSE)) {
+	else if (!Manager::dpQueryConnectSingle(query, PVSS_TRUE, itsWFA, PVSS_FALSE)) { // complete
 		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
@@ -961,12 +1100,59 @@ PVSSresult PVSSservice::dpQuerySubscribeSingle(const string& queryWhere, const s
 }
 
 //
+// dpQuerySubscribeAll(queryFrom, queryWhere)
+//
+PVSSresult PVSSservice::dpQuerySubscribeAll(const string& queryFrom, const string& queryWhere)
+{
+	PVSSresult result(SA_NO_ERROR);
+	const char queryFormat[] = "SELECT '_online.._value', '_online.._stime' FROM %s WHERE '_online.._online_bad' = \"FALSE\" ";
+
+	CharString query;
+	query.format(queryFormat, queryFrom.c_str());
+	if (!queryWhere.empty()) {
+		query += "AND ";
+		query += queryWhere.c_str();
+	}
+
+	LOG_TRACE_FLOW(formatString("dpQuery(%s)", (const char*)query));
+
+	ASSERT(itsSCADAHandler);
+	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
+		LOG_FATAL(formatString("Unable to query subscriptions:'%s'",(const char*) query));
+	}
+	else if (!Manager::dpQueryConnectAll(query, PVSS_TRUE, itsWFA, PVSS_FALSE)) {
+		ErrHdl::error(ErrClass::PRIO_SEVERE,		// It is a severe error
+					  ErrClass::ERR_PARAM,			// wrong name: blame others
+					  ErrClass::UNEXPECTEDSTATE,	// fits all
+					  "PVSSservice",					// our file name
+					  "dpQuerySubscribeAll()",	// our function name
+					  CharString("Query subscription (") + query + 
+					  CharString(") could not be requested!"));
+
+		LOG_ERROR(formatString("PVSS: Unable to perform dpQueryConnectAll: '%s'",
+					(const char*) query));
+
+		result = SA_QUERY_SUBSC_FAILED;
+	}
+	else {
+		LOG_TRACE_FLOW(formatString ( "Query subscription (%s) was requested succesful", 
+					(const char*) query));
+	}
+
+	if (result != SA_NO_ERROR) {
+		itsResponse->dpQuerySubscribed(0, result);
+	}
+
+	return result;
+}
+
+//
 // dpQueryUnscubscribe(queryID)
 //
 PVSSresult PVSSservice::dpQueryUnsubscribe(uint32 queryId)
 {
 	PVSSresult result(SA_NO_ERROR);
-	LOG_TRACE_FLOW (formatString("Unsubscription from queried properties '%d'", queryId));
+	LOG_TRACE_FLOW (formatString("Unsubscription from query '%d'", queryId));
 
 	ASSERT(itsSCADAHandler);
 	if ((result = itsSCADAHandler->isOperational()) != SA_NO_ERROR) {
@@ -977,7 +1163,7 @@ PVSSresult PVSSservice::dpQueryUnsubscribe(uint32 queryId)
 					  ErrClass::ERR_PARAM,			// wrong name: blame others
 					  ErrClass::UNEXPECTEDSTATE,	// fits all
 					  "PVSSservice",					// our file name
-					  "dpQuerySubscribeSingle()",	// our function name
+					  "dpQueryUnsubScribe()",	// our function name
 					  CharString("Query unsubscription (") + queryId + 
 					  CharString(") could not be requested!"));
 
@@ -987,12 +1173,11 @@ PVSSresult PVSSservice::dpQueryUnsubscribe(uint32 queryId)
 	}
 	else {
 		LOG_TRACE_FLOW(formatString (
-				"Unsubscription of queried properties (%d) was requested succesful", 
-				queryId));
+				"Unsubscription of query (%d) was requested succesful", queryId));
 	}
 
 	if (result != SA_NO_ERROR) {
-		itsResponse->dpQuerySubscribed(queryId, result);
+		itsResponse->dpQueryUnsubscribed(queryId, result);
 	}
 
 	return result;
@@ -1034,9 +1219,10 @@ PVSSresult PVSSservice::convertPVSSToMAC(const Variable& variable,
 //	case BIT32_VAR: 
 //		*pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue()); 
 //		break;
-//	case TIME_VAR: 
-//		*pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getValue()); 
-//		break;
+	case TIME_VAR: 
+		*pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getSeconds(), 
+									   ((TimeVar *)&variable)->getMilli()); 
+		break;
 	case DYNBIT_VAR: 
 	case DYNCHAR_VAR: 
 	case DYNUINTEGER_VAR: 
@@ -1099,8 +1285,8 @@ PVSSresult PVSSservice::convertPVSSToMAC(const Variable& variable,
 		break;
 	default:
 		result = SA_DPTYPE_UNKNOWN;
-		LOG_ERROR(formatString("DPE type not supported (yet)! (%d) see in Variable.hxx", 
-				variable.isA()));
+		LOG_ERROR(formatString("DPE type %s not supported (yet)!", 
+				Variable::getTypeName(variable.isA())));
 		break;
 	}
 
@@ -1155,10 +1341,11 @@ PVSSresult PVSSservice::convertMACToPVSS(const GCFPValue& macValue,
 								((GCFPVBlob*)&macValue)->getLen(), PVSS_TRUE);
 		}
 		break;
-//	case LPT_DATETIME:
-//		if (elTypeId == DPELEMENT_TIME) 
-//			*pVar = new TimeVar(((GCFPVDateTime*)&macValue)->getValue());
-//		break;
+	case LPT_DATETIME:
+		if (elTypeId == DPELEMENT_TIME) 
+			*pVar = new TimeVar(((GCFPVDateTime*)&macValue)->getSeconds(),
+								((GCFPVDateTime*)&macValue)->getMilli());
+		break;
 //	case LPT_BIT32:
 //		if (elTypeId == DPELEMENT_BIT32) 
 //			*pVar = new Bit32Var(((GCFPVBit32 *)&macValue)->getValue());
@@ -1364,6 +1551,9 @@ void PVSSservice::convPropToDpConfig(const string& propName, string& pvssDpName,
 
 //
 // convDpConfigToProp(pvssDPEConfigName, propName)
+//
+// DPname has the form: SYS:DP.EL:_xxx or likewise.
+// Stripoff the last part so that the DP name remains.
 //
 void PVSSservice::convDpConfigToProp(const string& pvssDPEConfigName, string& propName)
 {

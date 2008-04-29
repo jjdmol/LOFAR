@@ -49,6 +49,17 @@ void RTDBPerfResp::dpQuerySubscribed(uint32 /*queryId*/, PVSSresult /*result*/)
 {
 }
 
+void RTDBPerfResp::dpQueryUnsubscribed(uint32 /*queryId*/, PVSSresult /*result*/)
+{
+}
+
+void RTDBPerfResp::dpQueryChanged(uint32 /*queryId*/, 	 PVSSresult /*result*/,
+								  const GCFPVDynArr&	/*DPnames*/,
+								  const GCFPVDynArr&	/*DPvalues*/,
+								  const GCFPVDynArr&	/*DPtypes*/)
+{
+}
+
   } // namespace RTDB
  } // namespace GCF
 } // namespace LOFAR
