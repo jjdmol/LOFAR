@@ -35,44 +35,49 @@ int main (int	argc, char* argv[])
 {
 	INIT_LOGGER(argv[0]);
 
-	string	ps1;
-	ps1 += "_treeID                  = 25\n";
-	ps1 += "Observation.name         = observation1\n";
-	ps1 += "Observation.startTime    = 2007-01-15 12:20:00\n";
-	ps1 += "Observation.stopTime     = 2007-01-15 13:45:59\n";
-	ps1 += "Observation.bandFilter   = LBL_10_90\n";
-	ps1 += "Observation.antennaArray = CS1_LBA\n";
-	ps1 += "Observation.receiverList = [0..21,24,26]\n";
-	ps1 += "Observation.sampleClock  = 160\n";
-	ps1 += "Observation.nrBeams      = 1\n";
-	ps1 += "Observation.Beam[1].angle1  = 1.57079632679\n";
-	// do not specify angle2!
-	ps1 += "Observation.Beam[1].directionType= J2000\n";
-	ps1 += "Observation.Beam[1].subbandList  = [5,6,100..103]\n";
-	ps1 += "Observation.Beam[1].beamletList  = [0..2,20,21,215]\n";
+	try {
+		string	ps1;
+		ps1 += "_treeID                  = 25\n";
+		ps1 += "Observation.name         = observation1\n";
+		ps1 += "Observation.startTime    = 2007-01-15 12:20:00\n";
+		ps1 += "Observation.stopTime     = 2007-01-15 13:45:59\n";
+		ps1 += "Observation.bandFilter   = LBL_10_90\n";
+		ps1 += "Observation.antennaArray = CS1_LBA\n";
+		ps1 += "Observation.receiverList = [0..21,24,26]\n";
+		ps1 += "Observation.sampleClock  = 160\n";
+		ps1 += "Observation.nrBeams      = 1\n";
+		ps1 += "Observation.Beam[1].angle1  = 1.57079632679\n";
+		// do not specify angle2!
+		ps1 += "Observation.Beam[1].directionType= J2000\n";
+		ps1 += "Observation.Beam[1].subbandList  = [5,6,100..103]\n";
+		ps1 += "Observation.Beam[1].beamletList  = [0..2,20,21,215]\n";
 
-	ParameterSet	parSet1;
-	parSet1.adoptBuffer(ps1);
+		ParameterSet	parSet1;
+		parSet1.adoptBuffer(ps1);
 
-	cout << "ParameterSet 1:" << endl;
-	cout << parSet1;
+		cout << "ParameterSet 1:" << endl;
+		cout << parSet1;
 
-	Observation	obs1(&parSet1);
-	cout << obs1 << endl;
+		Observation	obs1(&parSet1);
+		cout << obs1 << endl;
 
-	// add an extra beam
-	ps1 += "Observation.nrBeams      = 2\n";
-	ps1 += "Observation.Beam[2].angle1  = 0.23456789\n";
-	ps1 += "Observation.Beam[2].angle2  = 0.123456789\n";
-	ps1 += "Observation.Beam[2].directionType= AZEL\n";
-	ps1 += "Observation.Beam[2].subbandList  = [4,3,102]\n";
-	ps1 += "Observation.Beam[2].beamletList  = [15,16,18]\n";
+		// add an extra beam
+		ps1 += "Observation.nrBeams      = 2\n";
+		ps1 += "Observation.Beam[2].angle1  = 0.23456789\n";
+		ps1 += "Observation.Beam[2].angle2  = 0.123456789\n";
+		ps1 += "Observation.Beam[2].directionType= AZEL\n";
+		ps1 += "Observation.Beam[2].subbandList  = [4,3,102]\n";
+		ps1 += "Observation.Beam[2].beamletList  = [15,16,18]\n";
 
-	ParameterSet	parSet2;
-	parSet2.adoptBuffer(ps1);
+		ParameterSet	parSet2;
+		parSet2.adoptBuffer(ps1);
 
-	Observation	obs2(&parSet2);
-	cout << obs2 << endl;
+		Observation	obs2(&parSet2);
+		cout << obs2 << endl;
+	}
+	catch (Exception&	e) {
+		cout << "Exception: " << e.what() << endl;
+	}
 
 	return (0);
 }

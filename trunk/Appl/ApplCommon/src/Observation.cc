@@ -97,10 +97,7 @@ Observation::Observation(ParameterSet*		aParSet) :
 	}
 
 	// get the beams info
-	int32	nrBeams;
-	if (aParSet->isDefined(prefix+"nrBeams")) {
-		nrBeams = aParSet->getUint32(prefix+"nrBeams");
-	}
+	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
 
 	// allocate beamlet 2 beam mapping and reset to 0
 	beamlet2beams.resize(4*54, 0);
@@ -125,14 +122,21 @@ Observation::Observation(ParameterSet*		aParSet) :
 		ParameterSet	blParset;
 		blParset.adoptBuffer(blString);
 		newBeam.beamlets = blParset.getInt32Vector("x");
+
+		if (newBeam.subbands.size() != newBeam.beamlets.size()) {
+			THROW (Exception, "Number of subbands(" << newBeam.subbands.size() << 
+							  ") != number of beamlets(" << newBeam.beamlets.size() << 
+							  ") in beam " << beam);
+		}
 	
 		// add beam to vector
 		beams.push_back(newBeam);
 
 		// finally update beamlet 2 beam mapping.
 		for (int  i = newBeam.beamlets.size()-1 ; i >= 0; i--) {
-			ASSERTSTR (beamlet2beams[newBeam.beamlets[i]] == 0, 
-				"beamlet " << i << " of beam " << beam << " clashes with beamlet of other beam");
+			if (beamlet2beams[newBeam.beamlets[i]] != 0) {
+				THROW (Exception, "beamlet " << i << " of beam " << beam << " clashes with beamlet of other beam"); 
+			}
 			beamlet2beams   [newBeam.beamlets[i]] = beam;
 			beamlet2subbands[newBeam.beamlets[i]] = newBeam.subbands[i];
 		}
