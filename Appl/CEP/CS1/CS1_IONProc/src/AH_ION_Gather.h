@@ -23,6 +23,7 @@
 
 #include <CEPFrame/ApplicationHolder.h>
 #include <CS1_Interface/Stub_BGL.h>
+#include <Transport/TransportHolder.h>
 #include <WH_ION_Gather.h>
 
 
@@ -32,7 +33,7 @@ namespace CS1 {
 class AH_ION_Gather : public ApplicationHolder
 {
   public:
-		 AH_ION_Gather();
+		 AH_ION_Gather(const std::vector<TransportHolder *> &clientTHs);
     virtual	 ~AH_ION_Gather();
     virtual void undefine();
     virtual void define(const KeyValueMap&);
@@ -44,6 +45,8 @@ class AH_ION_Gather : public ApplicationHolder
     CS1_Parset	  *itsCS1PS;
     WH_ION_Gather *itsWH;
     Stub_BGL	  *itsVisibilitiesStub;
+
+    const std::vector<TransportHolder *> &itsClientTHs;
 };
 
 } // namespace CS1

@@ -39,11 +39,12 @@
 namespace LOFAR {
 namespace CS1 {
 
-WH_ION_Gather::WH_ION_Gather(const string &name, unsigned psetNumber, const CS1_Parset *ps)
+WH_ION_Gather::WH_ION_Gather(const string &name, unsigned psetNumber, const CS1_Parset *ps, const std::vector<TransportHolder *> &clientTHs)
 :
   WorkHolder(0, 1, name, "WH_ION_Gather"),
   itsPsetNumber(psetNumber),
-  itsPS(ps)
+  itsPS(ps),
+  itsClientTHs(clientTHs)
 {
   itsTmpDH		    = 0;
   itsNrComputeCores	    = ps->nrCoresPerPset();
@@ -83,7 +84,7 @@ WorkHolder* WH_ION_Gather::construct(const string &name, const ACC::APS::Paramet
 
 WH_ION_Gather* WH_ION_Gather::make(const string &name)
 {
-  return new WH_ION_Gather(name, itsPsetNumber, itsPS);
+  return new WH_ION_Gather(name, itsPsetNumber, itsPS, itsClientTHs);
 }
 
 
@@ -133,9 +134,9 @@ void WH_ION_Gather::process()
   DH_Visibilities *dh = lastTime ? dynamic_cast<DH_Visibilities *>(getDataManager().getOutHolder(0)) : firstTime ? itsSumDHs[itsCurrentSubband] : itsTmpDH;
   
   unsigned channel = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
-  //TH_ZoidServer::theirTHs[channel]->recvBlocking(dh->getDataPtr(), (dh->getDataSize() + 31) & ~31, 0, 0, dh);
-  TH_ZoidServer::theirTHs[channel]->recvBlocking(dh->getVisibilities().origin(), dh->getVisibilities().num_elements() * sizeof(fcomplex), 0, 0, 0);
-  TH_ZoidServer::theirTHs[channel]->recvBlocking(dh->getNrValidSamples().origin(), dh->getNrValidSamples().num_elements() * sizeof(unsigned short), 0, 0, 0);
+  //itsClientTHs[channel]->recvBlocking(dh->getDataPtr(), (dh->getDataSize() + 31) & ~31, 0, 0, dh);
+  itsClientTHs[channel]->recvBlocking(dh->getVisibilities().origin(), dh->getVisibilities().num_elements() * sizeof(fcomplex), 0, 0, 0);
+  itsClientTHs[channel]->recvBlocking(dh->getNrValidSamples().origin(), dh->getNrValidSamples().num_elements() * sizeof(unsigned short), 0, 0, 0);
 
   if (!firstTime)
     if (lastTime)

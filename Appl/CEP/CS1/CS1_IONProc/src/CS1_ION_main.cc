@@ -29,6 +29,7 @@
 #include <InputSection.h>
 #include <AH_ION_Gather.h>
 #include <BGL_Personality.h>
+#include <Transport/TH_Null.h>
 #include <TH_ZoidServer.h>
 #include <Package__Version.h>
 
@@ -40,9 +41,11 @@
 #include <cstdlib>
 #include <cstring>
 
+#if defined HAVE_ZOID
 extern "C" {
 #include <lofar.h>
 }
+#endif
 
 
 using namespace LOFAR;
@@ -52,20 +55,44 @@ using namespace LOFAR::CS1;
 static char	 **global_argv;
 static unsigned  nrCoresPerPset;
 static unsigned  nrInputSectionRuns;
+static std::vector<TransportHolder *> clientTHs;
 
 
 static void checkParset(const CS1_Parset &parset)
 {
+#if defined HAVE_BGLPERSONALITY
   BGLPersonality *personality = getBGLpersonality();
 
   if (parset.nrPsets() > personality->numPsets())
     std::cerr << "needs " << parset.nrPsets() << " psets; only " << personality->numPsets() << " available" << std::endl;
+#endif
+
 #if 0
   if (parset.sizeBeamletAndSubbandList);
     std::cerr << "size of the beamletlist must be equal to the size of subbandlist." << std::endl;
 
   parset.parseBeamletList();
 #endif 
+}
+
+
+void createClientTHs(unsigned nrClients)
+{
+  clientTHs.resize(nrClients);
+
+  for (unsigned core = 0; core < nrClients; core ++)
+#if defined HAVE_ZOID
+    clientTHs[core] = new TH_ZoidServer(core);
+#else
+    clientTHs[core] = new TH_Null;
+#endif
+}
+
+
+void deleteClientTHs()
+{
+  for (unsigned core = 0; core < clientTHs.size(); core ++)
+    delete clientTHs[core];
 }
 
 
@@ -90,8 +117,8 @@ static void configureCNs(const CS1_Parset &parset)
 
   for (unsigned core = 0; core < parset.nrCoresPerPset(); core ++) {
     std::clog << "configure core " << core << std::endl;
-    command.write(TH_ZoidServer::theirTHs[core]);
-    configuration.write(TH_ZoidServer::theirTHs[core]);
+    command.write(clientTHs[core]);
+    configuration.write(clientTHs[core]);
   }
 }
 
@@ -102,7 +129,7 @@ static void unconfigureCNs(CS1_Parset &parset)
 
   for (unsigned core = 0; core < parset.nrCoresPerPset(); core ++) {
     std::clog << "unconfigure core " << core << std::endl;
-    command.write(TH_ZoidServer::theirTHs[core]);
+    command.write(clientTHs[core]);
   }
 }
 
@@ -113,7 +140,7 @@ static void stopCNs()
 
   for (unsigned core = 0; core < nrCoresPerPset; core ++) {
     std::clog << "stopping core " << core << std::endl;
-    command.write(TH_ZoidServer::theirTHs[core]);
+    command.write(clientTHs[core]);
   }
 }
 
@@ -123,9 +150,9 @@ void *input_thread(void *parset)
   std::clog << "starting input thread" << std::endl;
 
   try {
-    InputSection inputSection(static_cast<CS1_Parset *>(parset));
+    InputSection inputSection(clientTHs);
 
-    inputSection.preprocess();
+    inputSection.preprocess(static_cast<CS1_Parset *>(parset));
 
     for (unsigned run = 0; run < nrInputSectionRuns; run ++)
       inputSection.process();
@@ -149,7 +176,7 @@ void *gather_thread(void *argv)
   std::clog << "starting gather thread, nrRuns = " << ((char **) argv)[2] << std::endl;
 
   try {
-    AH_ION_Gather myAH;
+    AH_ION_Gather myAH(clientTHs);
     ApplicationHolderController myAHController(myAH, 1); //listen to ACC every 1 runs
     ACC::PLC::ACCmain(3, (char **) argv, &myAHController);
   } catch (Exception &ex) {
@@ -181,9 +208,19 @@ void *master_thread(void *)
 
     cs1_parset.adoptFile("OLAP.parset");
     checkParset(cs1_parset);
+
+#if !defined HAVE_ZOID
+    nrCoresPerPset = cs1_parset.nrCoresPerPset();
+    createClientTHs(nrCoresPerPset);
+#endif
+
     configureCNs(cs1_parset);
 
+#if defined HAVE_BGLPERSONALITY
     unsigned myPsetNumber = getBGLpersonality()->getPsetNum();
+#else
+    unsigned myPsetNumber = 0;
+#endif
 
     if (cs1_parset.inputPsetIndex(myPsetNumber) >= 0) {
 #if 0
@@ -236,7 +273,7 @@ void *master_thread(void *)
 
       for (unsigned run = 0; run < nrRuns; run ++)
 	for (unsigned core = 0; core < nrCores; core ++)
-	  command.write(TH_ZoidServer::theirTHs[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
+	  command.write(clientTHs[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
     }
 
     if (input_thread_id != 0) {
@@ -271,12 +308,14 @@ void *master_thread(void *)
     std::cerr << "could not detach master thread" << std::endl;
   }
 
+#if defined HAVE_ZOID
   if (global_argv != 0) {
     for (char **arg = &global_argv[0]; *arg != 0; arg ++)
       free(*arg);
 
     delete [] global_argv;
   }
+#endif
 
   std::clog << "master thread finishes" << std::endl;
   return 0;
@@ -292,6 +331,7 @@ extern "C"
 
 inline static void redirect_output()
 {
+#if defined HAVE_BGLPERSONALITY
   int  fd;
   char file_name[64], block_id[17];
   
@@ -302,8 +342,11 @@ inline static void redirect_output()
 
   if ((fd = open(file_name, O_CREAT | O_TRUNC | O_RDWR, 0666)) < 0 || dup2(fd, 1) < 0 || dup2(fd, 2) < 0)
       perror("redirecting stdout/stderr");
+#endif
 }
 
+
+#if defined HAVE_ZOID
 
 void lofar__init(int nrComputeCores)
 {
@@ -311,7 +354,7 @@ void lofar__init(int nrComputeCores)
   redirect_output();
   std::clog << "begin of lofar__init" << std::endl;
 
-  TH_ZoidServer::createAllTH_ZoidServers(nrComputeCores);
+  createClientTHs(nrComputeCores);
 
   global_argv = 0;
 }
@@ -336,8 +379,10 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
 
   global_argv[argc] = 0; // terminating zero pointer
 
-  if (argc != 3)
-    std::cerr << "unexpected number of arguments, expect trouble!" << std::endl;
+  if (argc != 3) {
+    std::cerr << "unexpected number of arguments" << std::endl;
+    exit(1);
+  }
 
   pthread_t master_thread_id;
 
@@ -351,8 +396,24 @@ void lofar_init(char   **argv /* in:arr2d:size=+1 */,
 void lofar__fini(void)
 {
   std::clog << "begin of lofar__fini" << std::endl;
-
-  TH_ZoidServer::deleteAllTH_ZoidServers();
-
+  deleteClientTHs();
   std::clog << "end of lofar__fini" << std::endl;
 }
+
+#else
+
+int main(int argc, char **argv)
+{
+  global_argv = argv;
+
+  if (argc != 3) {
+    std::cerr << "unexpected number of arguments" << std::endl;
+    exit(1);
+  }
+
+  master_thread(0);
+  deleteClientTHs();
+  return 0;
+}
+
+#endif

@@ -23,6 +23,8 @@
 #ifndef LOFAR_TRANSPORTTH_ZOID_SERVER_H
 #define LOFAR_TRANSPORTTH_ZOID_SERVER_H
 
+#if defined HAVE_ZOID
+
 // \file
 // TransportHolder that does nothing
 
@@ -39,8 +41,10 @@ namespace CS1 {
 class TH_ZoidServer : public TransportHolder
 {
   public:
+#if 0
     static  void	     createAllTH_ZoidServers(unsigned nrCoresPerPset);
     static  void	     deleteAllTH_ZoidServers();
+#endif
 
     virtual bool	     init();
 
@@ -61,7 +65,7 @@ class TH_ZoidServer : public TransportHolder
     virtual TransportHolder* clone() const;
     virtual void	     reset();
 
-  private:
+  //private:
     // create via createAllTH_ZoidServers(...)
 			     TH_ZoidServer(unsigned core);
     virtual		     ~TH_ZoidServer();
@@ -85,4 +89,5 @@ class TH_ZoidServer : public TransportHolder
 } // namespace CS1
 } // namespace LOFAR
 
+#endif
 #endif

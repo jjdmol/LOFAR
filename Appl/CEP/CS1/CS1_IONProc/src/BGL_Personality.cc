@@ -21,6 +21,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#if defined HAVE_BGLPERSONALITY
+
 #include <BGL_Personality.h>
 
 #include <cstdio>
@@ -72,3 +74,5 @@ struct BGLPersonality *getBGLpersonality()
 
 }
 }
+
+#endif

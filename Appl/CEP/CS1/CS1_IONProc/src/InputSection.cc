@@ -57,30 +57,19 @@ static TransportHolder *rawDataTH;
 #endif
 
 
-InputSection::InputSection(const CS1_Parset *ps)
+InputSection::InputSection(const std::vector<TransportHolder *> &clientTHs)
 :
   itsInputThread(0),
-  // itsCS1PS(new CS1_Parset(ps)),
-  itsCS1PS(ps),
+  itsInputTH(0),
+  itsClientTHs(clientTHs),
   itsBBuffer(0),
   itsDelayComp(0),
-  itsSampleRate(ps->sampleRate()),
   itsDelayTimer("delay")
 {
-  TimeStamp::setMaxBlockId(ps->sampleRate());
-
-  itsStationNr = ps->inputPsetIndex(getBGLpersonality()->getPsetNum());
-  std::string stationName = ps->stationName(itsStationNr);
-  std::clog << "station " << itsStationNr << " = " << stationName << std::endl;
-
-  itsInputTH	      = Connector::readTH(ps, stationName);
-  itsNSubbandsPerPset = ps->nrSubbandsPerPset();
-  itsNSamplesPerSec   = ps->nrSubbandSamples();
-
-#if defined DUMP_RAW_DATA
-  itsNHistorySamples  = 0;
+#if defined HAVE_BGLPERSONALITY
+  itsPsetNumber	= getBGLpersonality()->getPsetNum();
 #else
-  itsNHistorySamples  = ps->nrHistorySamples();
+  itsPsetNumber	= 0;
 #endif
 }
 
@@ -106,49 +95,61 @@ void InputSection::startThread()
   args.nSubbandsPerFrame  = itsCS1PS->nrSubbandsPerFrame();
   args.frameSize          = args.frameHeaderSize + args.nSubbandsPerFrame * args.nTimesPerFrame * sizeof(Beamlet);
 
-#if 0
-  if (itsInputTH->getType() == "TH_File" || itsInputTH->getType() == "TH_Null") {
-    // if we are reading from file, overwriting the buffer should not be allowed
-    // this way we can work with smaller files
-    itsBBuffer->setAllowOverwrite(false);
-  }
-#endif
-
   itsInputThread = new InputThread(args);
 }
 
 
-void InputSection::preprocess()
+void InputSection::preprocess(const CS1_Parset *ps)
 {
+  itsCS1PS = ps;
+  itsSampleRate = ps->sampleRate();
+  TimeStamp::setMaxBlockId(itsSampleRate);
+  itsStationNr = ps->inputPsetIndex(itsPsetNumber);
+
+  std::string stationName = ps->stationName(itsStationNr);
+  std::clog << "station " << itsStationNr << " = " << stationName << std::endl;
+
+  itsInputTH		= Connector::readTH(ps, stationName);
+  itsNSubbandsPerPset	= ps->nrSubbandsPerPset();
+  itsNSamplesPerSec	= ps->nrSubbandSamples();
+
+#if defined DUMP_RAW_DATA
+  itsNHistorySamples	= 0;
+#else
+  itsNHistorySamples	= ps->nrHistorySamples();
+#endif
+
   itsCurrentComputeCore = 0;
-  itsNrCoresPerPset	= itsCS1PS->nrCoresPerPset();
-  itsPsetNumber		= getBGLpersonality()->getPsetNum();
-  itsSampleDuration     = itsCS1PS->sampleDuration();
+  itsNrCoresPerPset	= ps->nrCoresPerPset();
+  itsSampleDuration     = ps->sampleDuration();
 
   // create the buffer controller.
-  int subbandsToReadFromFrame = itsCS1PS->subbandsToReadFromFrame();
-  ASSERTSTR(subbandsToReadFromFrame <= itsCS1PS->nrSubbandsPerFrame(), subbandsToReadFromFrame << " < " << itsCS1PS->nrSubbandsPerFrame());
+  int subbandsToReadFromFrame = ps->subbandsToReadFromFrame();
+  std::clog << "nrSubbands = "<< ps->nrSubbands() << std::endl;
+  std::clog << "nrStations = "<< ps->nrStations() << std::endl;
+  std::clog << "nrRSPboards = "<< ps->nrRSPboards() << std::endl;
+  ASSERTSTR(subbandsToReadFromFrame <= ps->nrSubbandsPerFrame(), subbandsToReadFromFrame << " < " << ps->nrSubbandsPerFrame());
 
-  itsDelayCompensation = itsCS1PS->getBool("OLAP.delayCompensation");
-  itsBeamlet2beams = itsCS1PS->beamlet2beams();
-  itsSubband2Index = itsCS1PS->subband2Index();
+  itsDelayCompensation = ps->getBool("OLAP.delayCompensation");
+  itsBeamlet2beams = ps->beamlet2beams();
+  itsSubband2Index = ps->subband2Index();
   
-  itsNrCalcDelays = itsCS1PS->getUint32("OLAP.DelayComp.nrCalcDelays");
+  itsNrCalcDelays = ps->getUint32("OLAP.DelayComp.nrCalcDelays");
 
-  double startTime = itsCS1PS->startTime(); // UTC
+  double startTime = itsInputTH->getType() == "TH_Null" ? 0 : ps->startTime(); // UTC
 
-  int sampleFreq = (int) itsCS1PS->sampleRate();
+  int sampleFreq = (int) ps->sampleRate();
   int seconds	 = (int) floor(startTime);
   int samples	 = (int) ((startTime - floor(startTime)) * sampleFreq);
 
   itsSyncedStamp = TimeStamp(seconds, samples);
  
   if (itsDelayCompensation) {
-    itsDelaysAtBegin.resize(itsCS1PS->nrBeams());
-    itsDelaysAfterEnd.resize(itsCS1PS->nrBeams());
-    itsNrCalcDelaysForEachTimeNrDirections.resize(itsNrCalcDelays * itsCS1PS->nrBeams());
+    itsDelaysAtBegin.resize(ps->nrBeams());
+    itsDelaysAfterEnd.resize(ps->nrBeams());
+    itsNrCalcDelaysForEachTimeNrDirections.resize(itsNrCalcDelays * ps->nrBeams());
     
-    itsDelayComp = new WH_DelayCompensation(itsCS1PS, itsCS1PS->stationName(itsStationNr));
+    itsDelayComp = new WH_DelayCompensation(ps, ps->stationName(itsStationNr));
 
     std::vector<double> startTimes(itsNrCalcDelays);
 
@@ -159,21 +160,21 @@ void InputSection::preprocess()
     
     itsCounter = 0;
     
-    for (unsigned beam = 0; beam < itsCS1PS->nrBeams(); beam ++)
+    for (unsigned beam = 0; beam < ps->nrBeams(); beam ++)
       itsDelaysAfterEnd[beam] = itsNrCalcDelaysForEachTimeNrDirections[beam];
     
     itsDelaysAtBegin = itsDelaysAfterEnd;
   }
    
-  unsigned cyclicBufferSize = itsCS1PS->nrSamplesToBuffer();
-  itsIsSynchronous    = itsCS1PS->getString("OLAP.OLAP_Conn.station_Input_Transport") != "UDP";
-  itsMaxNetworkDelay  = itsCS1PS->maxNetworkDelay();
+  unsigned cyclicBufferSize = ps->nrSamplesToBuffer();
+  itsIsSynchronous    = ps->getString("OLAP.OLAP_Conn.station_Input_Transport") != "UDP";
+  itsMaxNetworkDelay  = ps->maxNetworkDelay();
   std::clog << "maxNetworkDelay = " << itsMaxNetworkDelay << std::endl;
   itsBBuffer = new BeamletBuffer(cyclicBufferSize, subbandsToReadFromFrame, itsNHistorySamples, itsIsSynchronous, itsMaxNetworkDelay);
 
 #if defined DUMP_RAW_DATA
-  vector<string> rawDataServers = itsCS1PS->getStringVector("OLAP.OLAP_Conn.rawDataServers");
-  vector<string> rawDataPorts = itsCS1PS->getStringVector("OLAP.OLAP_Conn.rawDataPorts");
+  vector<string> rawDataServers = ps->getStringVector("OLAP.OLAP_Conn.rawDataServers");
+  vector<string> rawDataPorts = ps->getStringVector("OLAP.OLAP_Conn.rawDataPorts");
 
   if (itsStationNr >= rawDataServers.size() || itsStationNr >= rawDataPorts.size()) {
     std::cerr << "too many stations for too few raw data servers/ports" << std::endl;
@@ -372,7 +373,7 @@ void InputSection::process()
 
   for (unsigned subbandBase = 0; subbandBase < itsNSubbandsPerPset; subbandBase ++) {
     unsigned	    core = BGL_Mapping::mapCoreOnPset(itsCurrentComputeCore, itsPsetNumber);
-    TransportHolder *th  = TH_ZoidServer::theirTHs[core];
+    TransportHolder *th  = itsClientTHs[core];
 
     command.write(th);
     itsIONtoCNdata.write(th, itsCS1PS->nrBeams());
@@ -401,10 +402,11 @@ void InputSection::postprocess()
   std::clog << "InputSection::postprocess" << std::endl;
 
   delete itsInputThread;	itsInputThread	= 0;
+  delete itsInputTH;		itsInputTH	= 0;
   delete itsBBuffer;		itsBBuffer	= 0;
   delete itsDelayComp;		itsDelayComp	= 0;
 
-  itsDelayTimer.print(clog);
+  itsDelayTimer.print(std::clog);
 }
 
 } // namespace CS1

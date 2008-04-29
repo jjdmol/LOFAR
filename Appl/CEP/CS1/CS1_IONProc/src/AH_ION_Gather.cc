@@ -34,11 +34,12 @@ namespace LOFAR {
 namespace CS1 {
 
 
-AH_ION_Gather::AH_ION_Gather() 
+AH_ION_Gather::AH_ION_Gather(const std::vector<TransportHolder *> &clientTHs) 
 :
   itsCS1PS(0),
   itsWH(0),
-  itsVisibilitiesStub(0)
+  itsVisibilitiesStub(0),
+  itsClientTHs(clientTHs)
 {
 }
 
@@ -53,9 +54,13 @@ void AH_ION_Gather::define(const KeyValueMap&)
 {
   itsCS1PS = new CS1_Parset(&itsParamSet);
 
+#if defined HAVE_BGLPERSONALITY
   unsigned myPsetNumber = getBGLpersonality()->getPsetNum();
+#else
+  unsigned myPsetNumber = 0;
+#endif
 
-  itsWH = new WH_ION_Gather("ION_Gather", myPsetNumber, itsCS1PS);
+  itsWH = new WH_ION_Gather("ION_Gather", myPsetNumber, itsCS1PS, itsClientTHs);
   itsWH->runOnNode(0);
 
   DataManager *dm = new DataManager(itsWH->getDataManager());

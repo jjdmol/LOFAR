@@ -26,6 +26,7 @@
 #include <CS1_Interface/RSPTimeStamp.h>
 
 #include <pthread.h>
+#include <errno.h>
 
 
 namespace LOFAR {

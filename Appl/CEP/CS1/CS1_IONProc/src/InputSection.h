@@ -29,10 +29,10 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
-#include <tinyCEP/WorkHolder.h>
 #include <CS1_Interface/CS1_Parset.h>
 #include <CS1_Interface/RSPTimeStamp.h>
 #include <CS1_Interface/ION_to_CN.h>
+#include <Transport/TransportHolder.h>
 #include <BeamletBuffer.h>
 #include <WH_DelayCompensation.h>
 #include <InputThread.h>
@@ -48,10 +48,10 @@ namespace CS1 {
 // and distributes it per subband to the Blue Gene/L
 class InputSection {
   public:
-    InputSection(const CS1_Parset *ps);
+    InputSection(const std::vector<TransportHolder *> &);
     ~InputSection();
   
-    void preprocess();
+    void preprocess(const CS1_Parset *ps);
     void process();
     void postprocess();
     
@@ -68,6 +68,7 @@ class InputSection {
     InputThread *itsInputThread;
 
     TransportHolder *itsInputTH;
+    const std::vector<TransportHolder *> &itsClientTHs;
     unsigned itsStationNr;
     
     const CS1_Parset *itsCS1PS;
@@ -93,7 +94,7 @@ class InputSection {
    
     BeamletBuffer        *itsBBuffer;
     WH_DelayCompensation *itsDelayComp;
-    const double          itsSampleRate;
+    double	          itsSampleRate;
     
     NSTimer itsDelayTimer;
     
