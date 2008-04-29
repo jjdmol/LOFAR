@@ -5,6 +5,16 @@ AM_CPPFLAGS = \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
+CHECKTOOLPROGS		  = Example \
+			    TestBidirectional \
+			    ExampleMem \
+		    	    ExampleBlMem \
+			    ExampleNonBlocking \
+			    ExampleVarBuf \
+			    ExampleShMem \
+			    ExampleMPI \
+			    ExampleSocket
+
 check_PROGRAMS		  = Example \
 			    TestBidirectional \
 			    ExampleMem \

@@ -119,7 +119,8 @@ private:
 	bool            itsIsServer;
     Socket*		itsServerSocket;		// Listener socket (server only)
     Socket*		itsDataSocket;			// The transport channel.
-	bool		itsIsOwner;				// Owner of socket(s).
+	bool		itsIsOwner;			// Owner of socket(s).
+	bool		itsIsShutDown;			// Has shutdown been called?
 	int32		itsReadOffset;			// For partial reads.
 
 	string itsHostName;
