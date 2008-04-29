@@ -23,6 +23,7 @@
 #ifndef LOFAR_CS1_ION_PROC_BGL_PERSONALITY_H
 #define LOFAR_CS1_ION_PROC_BGL_PERSONALITY_H
 
+#if defined HAVE_BGLPERSONALITY
 #include <bglpersonality.h>
 
 namespace LOFAR {
@@ -33,4 +34,5 @@ struct BGLPersonality *getBGLpersonality();
 } // end namespace CS1
 } // end namespace LOFAR
 
+#endif
 #endif

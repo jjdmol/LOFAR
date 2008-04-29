@@ -1,37 +1,37 @@
-pkginclude_HEADERS = Package__Version.h
-
-lib_LTLIBRARIES		= liblofar_impl.la
-
-liblofar_impl_la_SOURCES = $(DOCHDRS) \
+pkginclude_HEADERS = Package__Version.h \
 BeamletBuffer.h			\
-BeamletBuffer.cc		\
 BGL_Personality.h		\
-BGL_Personality.cc		\
-CS1_ION_main.h		 	\
-CS1_ION_main.cc		 	\
 Connector.h			\
-Connector.cc			\
 InputThread.h			\
-InputThread.cc			\
 ION_Allocator.h			\
-ION_Allocator.cc		\
 LockedRanges.h			\
 ReaderWriterSynchronization.h	\
-ReaderWriterSynchronization.cc	\
 SlidingPointer.h		\
 WallClockTime.h			\
 InputSection.h			\
-InputSection.cc			\
 WH_DelayCompensation.h		\
-WH_DelayCompensation.cc		\
 AH_ION_Gather.h			\
-AH_ION_Gather.cc		\
 WH_ION_Gather.h			\
+TH_ZoidServer.h	
+
+liblofar_impl_la_SOURCES = $(pkginclude_HEADERS) \
+BeamletBuffer.cc		\
+BGL_Personality.cc		\
+CS1_ION_main.cc		 	\
+Connector.cc			\
+InputThread.cc			\
+ION_Allocator.cc		\
+ReaderWriterSynchronization.cc	\
+InputSection.cc			\
+WH_DelayCompensation.cc		\
+AH_ION_Gather.cc		\
 WH_ION_Gather.cc		\
-TH_ZoidServer.h			\
 TH_ZoidServer.cc                \
-Package__Version.h              \
 Package__Version.cc
+
+#if HAVE_ZOID
+lib_LTLIBRARIES			= liblofar_impl.la
+bin_PROGRAMS			= versioncs1_ionproc
 
 install-exec-local:
 	ln -sf .libs/liblofar_impl.so.0.0.0 lofar_impl.so
@@ -39,8 +39,12 @@ install-exec-local:
 
 uninstall-local:
 	rm lofar_impl.so
+#else
+#IONProc_SOURCES			= $(liblofar_impl_la_SOURCES)
+#IONProc_DEPENDENCIES		= $(LOFAR_DEPEND)
 
-bin_PROGRAMS = versioncs1_ionproc
+#bin_PROGRAMS			= versioncs1_ionproc IONProc
+#endif
 
 versioncs1_ionproc_SOURCES      = versioncs1_ionproc.cc Package__Version.cc 
 versioncs1_ionproc_DEPENDENCIES = $(LOFAR_DEPEND)

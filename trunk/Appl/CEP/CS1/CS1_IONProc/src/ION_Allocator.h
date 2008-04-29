@@ -26,8 +26,11 @@
 
 #include <Common/Allocator.h>
 #include <CS1_Interface/Allocator.h>
+#include <Common/Allocator.h>
 
+#if defined HAVE_ZOID
 #define USE_ZOID_ALLOCATOR
+#endif
 
 
 namespace LOFAR {
@@ -36,14 +39,20 @@ namespace CS1 {
 class ION_Allocator: public Allocator
 {
   public:
-    virtual void	      *allocate(size_t nbytes, size_t alignment = 1);
+    virtual void	      *allocate(size_t nbytes, unsigned alignment = 1);
     virtual void	      deallocate(void *);
 
     virtual ION_Allocator     *clone() const;
     
   private:
+#if !defined USE_ZOID_ALLOCATOR
+#if defined HAVE_ZOID
     static FixedArena	      arena;
     static SparseSetAllocator allocator;
+#else
+    static HeapAllocator      allocator;
+#endif
+#endif
 };
 
 } // end namespace CS1

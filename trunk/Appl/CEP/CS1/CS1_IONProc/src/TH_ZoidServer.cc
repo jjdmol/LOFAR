@@ -23,9 +23,14 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+#if defined HAVE_ZOID
+
 #include <Common/Timer.h>
 #include <Transport/DataHolder.h>
 #include <TH_ZoidServer.h>
+
+#include <algorithm>
+
 
 namespace LOFAR {
 namespace CS1 {
@@ -37,6 +42,7 @@ extern "C"
 }
 
 
+//std::vector<TH_ZoidServer *> TH_ZoidServer::theirTHs;
 std::vector<TH_ZoidServer *> TH_ZoidServer::theirTHs;
 
 
@@ -164,6 +170,11 @@ TH_ZoidServer::TH_ZoidServer(unsigned core)
   bytesToSend(0),
   bytesToReceive(0)
 {
+  if (theirTHs.size() <= core)
+    theirTHs.resize(core + 1);
+
+  theirTHs[core] = this;
+
   pthread_cond_init(&newSendDataAvailable, 0);
   pthread_cond_init(&newReceiveBufferAvailable, 0);
   pthread_cond_init(&dataSent, 0);
@@ -175,6 +186,8 @@ TH_ZoidServer::TH_ZoidServer(unsigned core)
 
 TH_ZoidServer::~TH_ZoidServer()
 {
+  *std::find(theirTHs.begin(), theirTHs.end(), this) = 0;
+
   pthread_cond_destroy(&newSendDataAvailable);
   pthread_cond_destroy(&newReceiveBufferAvailable);
   pthread_cond_destroy(&dataSent);
@@ -184,6 +197,7 @@ TH_ZoidServer::~TH_ZoidServer()
 }
 
 
+#if 0
 void TH_ZoidServer::createAllTH_ZoidServers(unsigned nrCoresPerPset)
 {
   theirTHs.resize(nrCoresPerPset);
@@ -200,6 +214,7 @@ void TH_ZoidServer::deleteAllTH_ZoidServers()
 
   theirTHs.clear();
 }
+#endif
 
 
 bool TH_ZoidServer::init()
@@ -290,3 +305,5 @@ void TH_ZoidServer::reset()
 
 } // namespace CS1
 } // namespace LOFAR
+
+#endif

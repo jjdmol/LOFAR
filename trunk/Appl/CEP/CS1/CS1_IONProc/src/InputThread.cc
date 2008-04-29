@@ -38,7 +38,9 @@ namespace CS1 {
 volatile bool InputThread::theirShouldStop = false;
 volatile unsigned InputThread::nrPacketsReceived, InputThread::nrPacketsRejected;
 
-InputThread::InputThread(const ThreadArgs &args) : itsArgs(args)
+InputThread::InputThread(const ThreadArgs &args)
+:
+  itsArgs(args)
 {
   std::clog << "InputThread::InputThread(...)" << std::endl;
   if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
