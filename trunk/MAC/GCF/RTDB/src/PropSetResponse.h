@@ -33,6 +33,7 @@
 namespace LOFAR {
   namespace GCF {
     class PVSS::GCFPValue;
+	using PVSS::GCFPVDynArr;
 	using PVSS::PVSSresult;
 	using PVSS::PVSSresponse;
     namespace RTDB {
@@ -52,7 +53,14 @@ public:
 	virtual void dpeValueGet		 (const string& propName, PVSSresult	result, const GCFPValue& value);
 	virtual void dpeValueChanged	 (const string& propName, PVSSresult	result, const GCFPValue& value);
 	virtual void dpeValueSet		 (const string& propName, PVSSresult	result);
-	virtual void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
+
+	// Next functions are not used.
+	virtual void dpQuerySubscribed	 (uint32 /*queryId*/, PVSSresult	/*result*/) {};
+	virtual void dpQueryUnsubscribed (uint32 /*queryId*/, PVSSresult	/*result*/) {};
+	virtual void dpQueryChanged		 (uint32 /*queryId*/, PVSSresult 	/*result*/,
+									  const GCFPVDynArr&	/*DPnames*/,
+									  const GCFPVDynArr&	/*DPvalues*/,
+									  const GCFPVDynArr&	/*DPtimes*/) {};
 
 private:
 	RTDBPropertySet*	itsPropertySet;
@@ -96,11 +104,6 @@ inline void PropSetResponse::dpeValueSet(const string& propName, PVSSresult	resu
 inline void PropSetResponse::dpeSubscriptionLost(const string& propName, PVSSresult	result)
 {
 	itsPropertySet->dpeSubscriptionLost(propName.empty() ? "value" : propName, result);
-}
-
-inline void PropSetResponse::dpQuerySubscribed(uint32 queryId, PVSSresult	result)
-{
-	itsPropertySet->dpQuerySubscribed(queryId, result);
 }
 
     } // namespace RTDB

@@ -1,6 +1,6 @@
 //#  PVSSresponse.h: 
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -25,6 +25,7 @@
 
 #include <GCF/PVSS/GCF_PValue.h>
 #include <GCF/PVSS/PVSSresult.h>
+#include <GCF/PVSS/GCF_PVDynArr.h>
 
 namespace LOFAR {
  namespace GCF {
@@ -51,6 +52,11 @@ protected:
     virtual void dpeValueChanged	 (const string& dpeName, PVSSresult result, const GCFPValue& value) = 0;
     virtual void dpeValueSet		 (const string& dpeName, PVSSresult result) = 0;
     virtual void dpQuerySubscribed	 (uint32 queryId,  		 PVSSresult result) = 0;        
+    virtual void dpQueryUnsubscribed (uint32 queryId,  		 PVSSresult result) = 0;        
+    virtual void dpQueryChanged		 (uint32 queryId,  		 PVSSresult result,
+									  const GCFPVDynArr&	DPnames,
+									  const GCFPVDynArr&	DPvalues,
+									  const GCFPVDynArr&	DPtimes) = 0;        
 
 private: 
 	// data members    

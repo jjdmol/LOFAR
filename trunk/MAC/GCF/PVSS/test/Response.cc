@@ -6,6 +6,8 @@
 namespace LOFAR {
   namespace GCF {
 	namespace PVSS {
+
+uint32	gQueryID = 0;
    
 void Response::dpCreated(const string& propName, PVSSresult		result)
 {
@@ -64,6 +66,30 @@ void Response::dpQuerySubscribed(uint32 queryId, PVSSresult		result)
 {
 	LOG_DEBUG(formatString("RESPONSE:dpQuerySubscribed: id=%d (err=%d)", 
 				queryId, result));
+	gQueryID = queryId;
+}
+
+void Response::dpQueryUnsubscribed(uint32 queryId, PVSSresult		result)
+{
+	LOG_DEBUG(formatString("RESPONSE:dpQueryUnsubscribed: id=%d (err=%d)", 
+				queryId, result));
+	gQueryID = 0;
+}
+
+void Response::dpQueryChanged(uint32 queryId, PVSSresult result,
+							  const GCFPVDynArr&	DPnames,
+							  const GCFPVDynArr&	DPvalues,
+							  const GCFPVDynArr&	DPtimes)
+{
+	gQueryID = queryId;
+	LOG_DEBUG(formatString("RESPONSE:dpQueryChanges: id=%d (err=%d)", queryId, result));
+	int		nrElems = DPnames.getValue().size();
+	for (int idx = 0; idx < nrElems; ++idx) {
+		LOG_DEBUG_STR(formatString("%s | %s | %s", 
+						DPnames.getValue() [idx]->getValueAsString().c_str(), 
+						DPvalues.getValue()[idx]->getValueAsString().c_str(), 
+						DPtimes.getValue() [idx]->getValueAsString().c_str()));
+	}
 }
 
   } // namespace PVSS

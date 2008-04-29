@@ -455,6 +455,20 @@ void RTDBPropertySet::dpQuerySubscribed	 (uint32 queryId, PVSSresult	result)
 }
 
 //
+// dpQueryChanged(propName, result, names, values, times)
+//
+void RTDBPropertySet::dpQueryChanged (uint32 queryId, 		 PVSSresult result,
+									  const GCFPVDynArr&	DPnames,
+									  const GCFPVDynArr&	DPvalues,
+									  const GCFPVDynArr&	DPtypes)
+{
+	// highly unlikely we ever need this, but you never know.
+	if (itsExtConfirmation) {
+		itsExtResponse->dpQueryChanged(queryId, result, DPnames, DPvalues, DPtypes);
+	}
+}
+
+//
 // dpeValueSet(result)
 //
 void RTDBPropertySet::dpeValueSet(const string&		propName, PVSSresult	result)

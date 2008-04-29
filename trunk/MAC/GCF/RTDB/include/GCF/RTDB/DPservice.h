@@ -1,4 +1,4 @@
-//#  DPservice.h: class for accessing a datapoinst directly (w/o a PropertySet).
+//#  DPservice.h: class for accessing a datapoints directly (w/o a PropertySet).
 //#
 //#  Copyright (C) 2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -44,6 +44,7 @@
 namespace LOFAR {
   namespace GCF {
 	using PVSS::GCFPValue;
+	using PVSS::GCFPVDynArr;
 	using PVSS::PVSSresponse;
 	using PVSS::PVSSservice;
 	using PVSS::PVSSresult;
@@ -95,6 +96,28 @@ public:
 	// DPGetEvent sometime later.
 	PVSSresult getValue(const string&		DPname);
 
+	// Do a query on the database. The 'from' and the 'where' arguments are conform the 
+	// documentation of PVSS.
+	// 
+	// @param from	Defines the selection of DPs or DPEs.
+	// @param where	Optional extra conditions the DP(E)s should match.
+	//
+	// The query only returns DP(E)s that have a 'valid' value. From all DP(E)s that
+	// match the DPname, value and timestamp are returned in a DP_QUERY_RESULT messages.
+	//
+	// After the query is passed to the database a DP_QUERY_RESULT message is create containing
+	// all matching DP(E)s and a unique ID for this query. As long as the query is not stopped 
+	// with cancelQuery DP_VALUE_CHANGED messages are genereated every time the changes in the 
+	// database contents would change the previous delivered result. The DP_VALUE_CHANGED messages 
+	// only contain the 'deltas' on the original returned DP_QUERY_RESULT message.
+	//
+	// Example: query("LOFAR_PIC_*.state", "DPT=\"RCU\"");
+	//
+	PVSSresult query(const string&	from, const string&	 where);
+
+	// Stop sending the updates from the given query.
+	PVSSresult cancelQuery(uint32	queryID);
+
 protected:
 	friend class DPresponse;
 	void dpCreated 			 (const string& DPname, PVSSresult	result);
@@ -106,6 +129,11 @@ protected:
 	void dpeValueChanged	 (const string& DPname, PVSSresult	result, const GCFPValue& value);
 	void dpeValueSet		 (const string& DPname, PVSSresult	result);
 	void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
+	void dpQueryUnsubscribed (uint32 queryId, PVSSresult	result);        
+	void dpQueryChanged		 (uint32 queryId,		PVSSresult result,
+							  const GCFPVDynArr&	DPnames,
+							  const GCFPVDynArr&	DPvalues,
+							  const GCFPVDynArr&	DPtypes);
 
 private:
 	DPservice();

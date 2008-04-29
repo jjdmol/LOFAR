@@ -11,6 +11,8 @@ namespace LOFAR {
 int		gCreateCounter = 0;
 int		gSetCounter = 0;
 int		gGetCounter = 0;
+int		gQryCounter = 0;
+int		gQueryID = 0;
 
 void DPresponse::dpCreated(const string& propName, PVSSresult		result)
 {
@@ -72,6 +74,27 @@ void DPresponse::dpQuerySubscribed(uint32 queryId, PVSSresult		result)
 {
 	LOG_DEBUG(formatString("RESPONSE:dpQuerySubscribed: id=%d (err=%d)", 
 				queryId, result));
+	gQueryID = queryId;
+	gQryCounter--;
+}
+
+void DPresponse::dpQueryUnsubscribed(uint32 queryId, PVSSresult		result)
+{
+	LOG_DEBUG(formatString("RESPONSE:dpQueryUnsubscribed: id=%d (err=%d)", 
+				queryId, result));
+	gQueryID = 0;
+	gQryCounter--;
+}
+
+void DPresponse::dpQueryChanged(uint32 queryId, PVSSresult		result,
+									  const GCFPVDynArr&	/*DPnames*/,
+									  const GCFPVDynArr&	/*DPvalues*/,
+									  const GCFPVDynArr&	/*DPtypes*/)
+{
+	LOG_DEBUG(formatString("RESPONSE:dpQueryChanged: id=%d (err=%d)", 
+				queryId, result));
+	gQueryID = queryId;
+	gQryCounter--;
 }
 
   } // namespace RTDB

@@ -33,6 +33,7 @@
 namespace LOFAR {
   namespace GCF {
 	using PVSS::GCFPValue;
+	using PVSS::GCFPVDynArr;
 	using PVSS::PVSSresponse;
 	using PVSS::PVSSservice;
 	using PVSS::PVSSresult;
@@ -105,6 +106,10 @@ protected:
 	void dpeValueChanged	 (const string& propName, PVSSresult	result, const GCFPValue& value);
 	void dpeValueSet		 (const string& propName, PVSSresult	result);
 	void dpQuerySubscribed	 (uint32 queryId, PVSSresult	result);        
+	void dpQueryChanged		 (uint32 queryId, 		 PVSSresult result,
+							  const GCFPVDynArr&	DPnames,
+							  const GCFPVDynArr&	DPvalues,
+							  const GCFPVDynArr&	DPtypes);
 
 private:
 	RTDBPropertySet();

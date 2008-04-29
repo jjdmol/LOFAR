@@ -73,7 +73,7 @@ GCFEvent::TResult tGSAService::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 		break;
 
 	case F_INIT:  {
-		LOG_DEBUG("Creating a Service Class");
+		LOG_DEBUG("===> Creating a Service Class");
 		itsService = new PVSSservice(itsResponse);
 
 		// test PVSSInfo class
@@ -126,7 +126,7 @@ GCFEvent::TResult tGSAService::final(GCFEvent& e, GCFPortInterface& /*p*/)
 
 	switch (e.signal) {
 	case F_ENTRY:
-		LOG_DEBUG("Creating a Service Class");
+		LOG_DEBUG("===> Creating a Service Class");
 		if (itsService) {
 			itsService->dpDelete("testBit");
 			itsService->dpDelete("testInt");
@@ -161,7 +161,7 @@ GCFEvent::TResult tGSAService::test1(GCFEvent& e, GCFPortInterface& p)
 		break;
 
 	case F_ENTRY:
-		LOG_DEBUG("Creating a bit variable: testBit");
+		LOG_DEBUG("===> Creating a bit variable: testBit");
 		result = itsService->dpCreate("testBit", "ExampleDP_Bit");
 		ASSERTSTR(result == SA_NO_ERROR, "Creation of a bit variable returned result: " 
 					<< PVSSerrstr(result));
@@ -195,7 +195,7 @@ GCFEvent::TResult tGSAService::test2(GCFEvent& e, GCFPortInterface& p)
 		break;
 
 	case F_ENTRY:
-		LOG_DEBUG("Creating a integer variable: testInt");
+		LOG_DEBUG("===> Creating a integer variable: testInt");
         result = itsService->dpCreate("testInt", "ExampleDP_Int");
 		ASSERTSTR(result == SA_NO_ERROR, "Creation of a int variable returned result: "
 					<< PVSSerrstr(result));
@@ -226,7 +226,7 @@ GCFEvent::TResult tGSAService::test3(GCFEvent& e, GCFPortInterface& p)
 
 	switch (e.signal) {
 	case F_ENTRY:
-		LOG_DEBUG("Taking a subscription on testBit");
+		LOG_DEBUG("===> Taking a subscription on testBit");
         result = itsService->dpeSubscribe("testBit");
 		ASSERTSTR(result == SA_NO_ERROR, 
 				"Taking a subscription on testBit returned result: " << PVSSerrstr(result));
@@ -257,7 +257,7 @@ GCFEvent::TResult tGSAService::test4(GCFEvent& e, GCFPortInterface& p)
 
 	switch (e.signal) {
 	case F_ENTRY:
-		LOG_DEBUG("Taking a subscription on testInt");
+		LOG_DEBUG("===> Taking a subscription on testInt");
         result = itsService->dpeSubscribe("testInt");
 		ASSERTSTR(result == SA_NO_ERROR, 
 				"Taking a subscription on testInt returned result: " << PVSSerrstr(result));
@@ -289,7 +289,7 @@ GCFEvent::TResult tGSAService::test5(GCFEvent& e, GCFPortInterface& p)
 	switch (e.signal) {
 	case F_ENTRY: {
 		try {
-			LOG_DEBUG("Writing a bool to the integer var");
+			LOG_DEBUG("===> Writing a bool to the integer var");
 			GCFPVBool wrongTestVal(true);
 			result = itsService->dpeSet("testInt", wrongTestVal, 0.0, true);
 		}
@@ -325,7 +325,7 @@ GCFEvent::TResult tGSAService::test6(GCFEvent& e, GCFPortInterface& p)
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		LOG_DEBUG("Writing 1000 to the integer var");
+		LOG_DEBUG("===> Writing 1000 to the integer var");
 		GCFPVInteger goodTestVal(1000);
 		result = itsService->dpeSet("testInt", goodTestVal, 0.0, true);
 		ASSERTSTR(result == SA_NO_ERROR, "Writing an integer to the testInt returned result: " << PVSSerrstr(result));
@@ -357,7 +357,7 @@ GCFEvent::TResult tGSAService::test7(GCFEvent& e, GCFPortInterface& p)
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		LOG_DEBUG("Reading back the integer variable");
+		LOG_DEBUG("===> Reading back the integer variable");
         result = itsService->dpeGet("testInt");
 		ASSERTSTR(result == SA_NO_ERROR, "Reading the integer testInt returned result: " << PVSSerrstr(result));
 		itsTimerPort->setTimer(1.0);
@@ -388,7 +388,7 @@ GCFEvent::TResult tGSAService::test8(GCFEvent& e, GCFPortInterface& p)
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		LOG_DEBUG("Unsubscribing from the variables");
+		LOG_DEBUG("===> Unsubscribing from the variables");
 		result = itsService->dpeUnsubscribe("testInt");
 		ASSERTSTR(result == SA_NO_ERROR, "Unsubscribing from testInt returned result: " << PVSSerrstr(result));
 		result = itsService->dpeUnsubscribe("testBit");
@@ -427,7 +427,7 @@ GCFEvent::TResult tGSAService::test9(GCFEvent& e, GCFPortInterface& p)
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		LOG_DEBUG("Subscribe, unsubscribe and dpSet on the testInt");
+		LOG_DEBUG("===> Subscribe, unsubscribe and dpSet on the testInt");
 		result = itsService->dpeSubscribe("testInt");
 		ASSERTSTR(result == SA_NO_ERROR, "Subscribing from testInt returned result: " << PVSSerrstr(result));
 		result = itsService->dpeUnsubscribe("testInt");
@@ -463,7 +463,7 @@ GCFEvent::TResult tGSAService::test10(GCFEvent& e, GCFPortInterface& p)
 
 	switch (e.signal) {
 	case F_ENTRY: {
-		LOG_DEBUG("Reading back a non existant variable");
+		LOG_DEBUG("===> Reading back a non existant variable");
 		try {
 			result = itsService->dpeGet("UnknownVariable");
 			ASSERTSTR(result == SA_NO_ERROR, "Reading an unknown variable should return an error!");
@@ -503,7 +503,7 @@ GCFEvent::TResult tGSAService::testCreateMdpe(GCFEvent& e, GCFPortInterface& p)
 		break;
 
 	case F_ENTRY:
-		LOG_DEBUG("Creating a complex variable: testDP");
+		LOG_DEBUG("===> Creating a complex variable: testDP");
 		result = itsService->dpCreate("testDP", "TestPS");
 		ASSERTSTR(result == SA_NO_ERROR, "Creation of a complex variable returned result: " 
 					<< PVSSerrstr(result));
@@ -535,7 +535,7 @@ GCFEvent::TResult tGSAService::testWriteMdpe(GCFEvent& e, GCFPortInterface& p)
 	switch (e.signal) {
 	case F_ENTRY: {
 		try {
-			LOG_DEBUG("Setting intVal=4056,bool=false,string='boskabouter'");
+			LOG_DEBUG("===> Setting intVal=4056,bool=false,string='boskabouter'");
 			vector<string>	dpeNames;
 			dpeNames.push_back("intVal");
 			dpeNames.push_back("boolVal");
@@ -583,7 +583,7 @@ GCFEvent::TResult tGSAService::testWriteMdpeTimed(GCFEvent& e, GCFPortInterface&
 	switch (e.signal) {
 	case F_ENTRY: {
 		try {
-			LOG_DEBUG("Setting uintVal=30092,float=2.49473,time=1/1/2000 03:02:01.825");
+			LOG_DEBUG("===> Setting uintVal=30092,float=2.49473,time=1/1/2000 03:02:01.825");
 			vector<string>	dpeNames;
 			dpeNames.push_back("uintVal");
 			dpeNames.push_back("floatVal");
@@ -640,7 +640,7 @@ GCFEvent::TResult tGSAService::testWriteDynArray(GCFEvent& e, GCFPortInterface& 
 	switch (e.signal) {
 	case F_ENTRY: {
 		try {
-			LOG_DEBUG("Setting stringArr='aap,noot,mies'");
+			LOG_DEBUG("===> Setting stringArr='aap,noot,mies'");
 			GCFPValueArray		dpeValues;
 			dpeValues.push_back(new GCFPVString("aap"));
 			dpeValues.push_back(new GCFPVString("noot"));
@@ -651,6 +651,78 @@ GCFEvent::TResult tGSAService::testWriteDynArray(GCFEvent& e, GCFPortInterface& 
 		catch (Exception& except) {
 			LOG_INFO_STR ("Writing multiple values at once returned result: " 
 							<< PVSSerrstr(result));
+		}
+		itsTimerPort->setTimer(1.0);
+	}
+	break;
+
+	case F_TIMER:
+		TRAN(tGSAService::testQuerySingle);
+		break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+//
+// testQuerySingle (event, port)
+//
+GCFEvent::TResult tGSAService::testQuerySingle(GCFEvent& e, GCFPortInterface& p)
+{
+	LOG_DEBUG_STR("testQuerySingle:" << eventName(e) << "@" << p.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	PVSSresult		  result;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		try {
+			LOG_DEBUG("===> Taking subscribtion: FROM 'state' WHERE _DP='LOFAR_PIC_*'");
+			result = itsService->dpQuerySubscribeSingle("'LOFAR_PIC_*.state'", "_DPT=\"RCU\"");
+		}
+		catch (Exception& except) {
+			LOG_INFO_STR ("Taking subscription went wrong:" 
+							<< PVSSerrstr(result));
+		}
+		itsTimerPort->setTimer(1.0);
+	}
+	break;
+
+	case F_TIMER:
+		TRAN(tGSAService::testQueryUnsubscribe);
+		break;
+
+	default:
+		status = GCFEvent::NOT_HANDLED;
+		break;
+	}
+
+	return status;
+}
+
+
+//
+// testQueryUnsubscribe (event, port)
+//
+GCFEvent::TResult tGSAService::testQueryUnsubscribe(GCFEvent& e, GCFPortInterface& p)
+{
+	LOG_DEBUG_STR("testQueryUnsubscribe:" << eventName(e) << "@" << p.getName());
+
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	PVSSresult		  result;
+
+	switch (e.signal) {
+	case F_ENTRY: {
+		try {
+			LOG_DEBUG("===> Releasing subscription");
+			result = itsService->dpQueryUnsubscribe(gQueryID);
+		}
+		catch (Exception& except) {
+			LOG_INFO_STR ("Unsubscribing from query went wrong:" << PVSSerrstr(result));
 		}
 		itsTimerPort->setTimer(1.0);
 	}

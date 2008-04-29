@@ -111,6 +111,28 @@ void DPanswer::dpQuerySubscribed (uint32 queryId, PVSSresult result)
 	_dispatchEvent(DPEvent);
 }
 
+void DPanswer::dpQueryUnsubscribed (uint32 queryId, PVSSresult result)
+{
+	DPQueryUnsubscribedEvent		DPEvent;
+	DPEvent.QryID  = queryId;
+	DPEvent.result = result;
+	_dispatchEvent(DPEvent);
+}
+
+void DPanswer::dpQueryChanged(uint32 queryId,		PVSSresult result,
+							  const GCFPVDynArr&	DPnames,
+							  const GCFPVDynArr&	DPvalues,
+							  const GCFPVDynArr&	DPtimes)
+{
+	DPQueryChangedEvent		DPEvent;
+	DPEvent.QryID    = queryId;
+	DPEvent.result   = result;
+	DPEvent.DPnames  = DPnames;
+	DPEvent.DPvalues = DPvalues;
+	DPEvent.DPtimes  = DPtimes;
+	_dispatchEvent(DPEvent);
+}
+
 //
 // _dispatchEvent(event)
 //

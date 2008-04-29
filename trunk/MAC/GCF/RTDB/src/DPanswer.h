@@ -26,10 +26,12 @@
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/PVSS/PVSSresponse.h>
+#include <GCF/PVSS/GCF_PVDynArr.h>
 
 namespace LOFAR {
   namespace GCF {
     using PVSS::GCFPValue;
+    using PVSS::GCFPVDynArr;
 	using PVSS::PVSSresponse;
 	using PVSS::PVSSresult;
     namespace RTDB {
@@ -42,15 +44,20 @@ public:
 
 	virtual void dpCreated 			 (const string& dpName,  PVSSresult result);
 	virtual void dpDeleted	 		 (const string& dpName,  PVSSresult result);
-	virtual void dpeSubscribed 		 (const string& dpeName, PVSSresult result);    
+	virtual void dpeSubscribed 		 (const string& dpeName, PVSSresult result);
 	virtual void dpeSubscriptionLost (const string& dpeName, PVSSresult result);
 	virtual void dpeUnsubscribed	 (const string& dpeName, PVSSresult result);
 	virtual void dpeValueGet		 (const string& dpeName, PVSSresult result, 
 									  const GCFPValue& value);
 	virtual void dpeValueChanged	 (const string& dpeName, PVSSresult result, 
-									  const GCFPValue& value);        
+									  const GCFPValue& value);
 	virtual void dpeValueSet		 (const string& dpeName, PVSSresult result);
-	virtual void dpQuerySubscribed	 (uint32 queryId, 		 PVSSresult result);        
+	virtual void dpQuerySubscribed	 (uint32 queryId, 		 PVSSresult result);
+	virtual void dpQueryUnsubscribed (uint32 queryId, 		 PVSSresult result);
+	virtual void dpQueryChanged		 (uint32 queryId, 		 PVSSresult result,
+									  const GCFPVDynArr&	DPnames,
+									  const GCFPVDynArr&	DPvalues,
+									  const GCFPVDynArr&	DPtimes);
     
 private:
 	// Don't allow copying this object.

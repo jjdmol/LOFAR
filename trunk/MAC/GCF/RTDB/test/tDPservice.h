@@ -38,13 +38,15 @@ public:
 	tDPservice (const string& name);
 	virtual ~tDPservice();
 
-	GCFEvent::TResult final			(GCFEvent& e, GCFPortInterface& p);
-	GCFEvent::TResult createDPS		(GCFEvent& e, GCFPortInterface& p);
-	GCFEvent::TResult WriteTest		(GCFEvent& e, GCFPortInterface& p);
-	GCFEvent::TResult ReadTest		(GCFEvent& e, GCFPortInterface& p);
-	GCFEvent::TResult WriteTest2		(GCFEvent& e, GCFPortInterface& p);
-	GCFEvent::TResult WriteErrorTest	(GCFEvent& e, GCFPortInterface& p);
-	GCFEvent::TResult ReadErrorTest	(GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult final			 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult createDPS		 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult WriteTest		 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult ReadTest		 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult WriteTest2	 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult WriteErrorTest (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult ReadErrorTest	 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult QueryTest		 (GCFEvent& e, GCFPortInterface& p);
+	GCFEvent::TResult CancelQueryTest(GCFEvent& e, GCFPortInterface& p);
 #if 0
 	GCFEvent::TResult DeletePS		(GCFEvent& e, GCFPortInterface& p);
 #endif
