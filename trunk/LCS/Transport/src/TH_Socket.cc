@@ -137,12 +137,16 @@ TH_Socket::~TH_Socket()
 {
 	LOG_TRACE_OBJ("~TH_Socket");
 
+	bool isSameSocket = itsDataSocket == itsServerSocket;
+
 	// Shutdown sockets.
 	LOG_TRACE_LOOP("TH_Socket:shutdown datasocket");
 	shutdown(itsDataSocket);
 
-	LOG_TRACE_LOOP("TH_Socket:shutdown listensocket");
-	shutdown(itsServerSocket);
+	if (!isSameSocket) {
+		LOG_TRACE_LOOP("TH_Socket:shutdown listensocket");
+		shutdown(itsServerSocket);
+	}
 }
 
 //
