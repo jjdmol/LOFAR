@@ -207,7 +207,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	
 	# nrSubbands, check the number of subbands of each RSP
 	nSubbands = 0
-	for i in range(0,53):
+	for i in range(0,54):
 	    if bl2subbandsArray[i] != -1:
 	        nSubbands += 1
 	
@@ -220,7 +220,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
         sbList = list()
         
 	b2s = self.getBeamlet2subbands()
-	for i in range(0,53):
+	for i in range(0,54):
 	    if b2s[i] != -1:
 	        sbList.append(b2s[i])
 	    
