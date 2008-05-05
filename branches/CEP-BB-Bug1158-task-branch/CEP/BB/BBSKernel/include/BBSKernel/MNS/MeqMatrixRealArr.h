@@ -28,6 +28,7 @@
 
 //# Includes
 #include <BBSKernel/MNS/MeqMatrixRep.h>
+#include <cstring>
 
 namespace LOFAR
 {

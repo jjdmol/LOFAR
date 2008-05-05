@@ -24,11 +24,12 @@
 #include <BBSKernel/MNS/MeqParmFunklet.h>
 #include <BBSKernel/MNS/MeqParmExpr.h>
 #include <BBSKernel/MNS/MeqPolc.h>
-#include <BBSKernel/ParmData.h>
+//#include <BBSKernel/ParmData.h>
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/LofarLogger.h>
 #include <casa/BasicMath/Math.h>
+#include <Common/lofar_algorithm.h>
 
 using namespace casa;
 using namespace std;
@@ -366,6 +367,7 @@ const vector<MeqFunklet*>& MeqParmFunklet::getFunklets() const
   return itsFunklets;
 }
 
+/*
 void MeqParmFunklet::update (const ParmData& values)
 {
   ASSERT(values.size() == int(itsFunklets.size()));
@@ -373,6 +375,7 @@ void MeqParmFunklet::update (const ParmData& values)
     itsFunklets[i]->update (values.getCoeff(i));
   }
 }
+*/
 
 void MeqParmFunklet::update (const vector<double>& value)
 {

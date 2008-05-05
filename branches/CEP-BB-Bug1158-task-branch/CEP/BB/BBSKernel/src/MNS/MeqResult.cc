@@ -23,14 +23,17 @@
 #include <lofar_config.h>
 #include <BBSKernel/MNS/MeqResult.h>
 #include <BBSKernel/MNS/MeqMatrixTmp.h>
-#include <BBSKernel/MNS/Pool.h>
+//#include <BBSKernel/MNS/Pool.h>
 #include <BBSKernel/MNS/MeqParmFunklet.h>
+
+#include <Common/lofar_algorithm.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
 
+/*
 Pool<MeqResultRep> theirPool;
 #pragma omp threadprivate(theirPool)
 
@@ -43,90 +46,106 @@ void MeqResultRep::operator delete(void *rep)
 {
   theirPool.deallocate((MeqResultRep *) rep);
 }
+*/
 
 
-MeqResultRep::MeqResultRep (int nspid)
-: itsCount           (0),
-  itsNspid	     (nspid),
-  itsPerturbedValues (0),
-  itsPerturbedParms  (0)
-{}
+MeqResultRep::MeqResultRep(int nspid)
+    :   itsCount            (0),
+        itsSpidCount        (nspid),
+        itsPerturbedValues  (nspid),
+        itsPerturbedParms   (nspid)
+{
+    fill(itsPerturbedParms.begin(), itsPerturbedParms.end(),
+        static_cast<const MeqParmFunklet*>(0));
+}
+
 
 MeqResultRep::~MeqResultRep()
 {
-  clear();
 }
 
 
 void MeqResultRep::clear()
 {
-  delete itsPerturbedValues;
-  itsPerturbedValues = 0;
-  delete itsPerturbedParms;
-  itsPerturbedParms = 0;
+    itsPerturbedValues.clear();
+    itsPerturbedValues.resize(itsSpidCount);
+
+    fill(itsPerturbedParms.begin(), itsPerturbedParms.end(),
+        static_cast<const MeqParmFunklet*>(0));
 }
 
   
-double MeqResultRep::getPerturbation (int i, int j) const
+double MeqResultRep::getPerturbation(int i, int j) const
 {
-  const MeqParmFunklet* parm = getPerturbedParm(i);
-  int coeffInx = i - parm->getPertInx();
-  return parm->getFunklets()[j]->getPerturbation (coeffInx);
+    const MeqParmFunklet *parm = getPerturbedParm(i);
+    DBGASSERT(parm != 0);
+    
+    int coeffInx = i - parm->getPertInx();
+    DBGASSERT(coeffInx >= 0 && coeffInx < parm->getFunklets()[j]->ncoeff());
+
+    return parm->getFunklets()[j]->getPerturbation(coeffInx);
 }
 
-void MeqResultRep::setPerturbedValue (int i, const MeqMatrix& value)
+
+void MeqResultRep::setPerturbedValue(int i, const MeqMatrix &value)
 {
-  if (itsPerturbedValues == 0) {
-    itsPerturbedValues = new map<int, MeqMatrix>;
-  }
-  (*itsPerturbedValues)[i] = value;
+    DBGASSERT(i < itsPerturbedValues.size());
+    itsPerturbedValues[i] = value;
 }
 
-void MeqResultRep::setPerturbedParm (int i, const MeqParmFunklet* parm)
+
+void MeqResultRep::setPerturbedParm(int i, const MeqParmFunklet *parm)
 {
-  if (itsPerturbedParms == 0) {
-    itsPerturbedParms = new map<int, const MeqParmFunklet*>;
-  }
-  (*itsPerturbedParms)[i] = parm;
+    DBGASSERT(i < itsPerturbedValues.size());
+    itsPerturbedParms[i] = parm;
 }
+
 
 void MeqResultRep::show (ostream& os) const
 {
-  os << "Value: " << itsValue << endl;
-  for (int i=0; i<itsNspid; i++) {
-    if (isDefined(i)) {
-      os << "deriv parm " << i << endl;
-      os << "   " << ((*itsPerturbedValues)[i] - itsValue) << endl;
+    os << "Value: " << itsValue << endl;
+    
+    for(int i = 0; i < itsSpidCount; ++i)
+    {
+        if(isDefined(i))
+        {
+            os << "Perturbed parm: " << i << endl;
+            os << "   " << (itsPerturbedValues[i] - itsValue) << endl;
+        }
     }
-  }
 }
 
 
-
-
-MeqResult::MeqResult (int nspid)
-: itsRep (new MeqResultRep(nspid))
+// -----------------------------------------------------------------------------
+MeqResult::MeqResult(int nspid)
+    :   itsRep(new MeqResultRep(nspid))
 {
-  itsRep->link();
-}
-
-MeqResult::MeqResult (const MeqResult& that)
-: itsRep (that.itsRep)
-{
-  if (itsRep != 0) {
     itsRep->link();
-  }
 }
-MeqResult& MeqResult::operator= (const MeqResult& that)
+
+
+MeqResult::MeqResult(const MeqResult &that)
+    :   itsRep(that.itsRep)
 {
-  if (this != &that) {
-    MeqResultRep::unlink (itsRep);
-    itsRep = that.itsRep;
-    if (itsRep != 0) {
-      itsRep->link();
+    if(itsRep != 0)
+    {
+        itsRep->link();
     }
-  }
-  return *this;
+}
+
+
+MeqResult& MeqResult::operator=(const MeqResult &that)
+{
+    if(this != &that)
+    {
+        MeqResultRep::unlink(itsRep);
+        itsRep = that.itsRep;
+        if(itsRep != 0)
+        {
+            itsRep->link();
+        }
+    }
+    return *this;
 }
 
 } // namespace BBS

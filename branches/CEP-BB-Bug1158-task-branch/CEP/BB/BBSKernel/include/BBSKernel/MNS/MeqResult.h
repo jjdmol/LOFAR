@@ -28,9 +28,9 @@
 
 //# Includes
 #include <BBSKernel/MNS/MeqMatrix.h>
-#include <BBSKernel/MNS/Pool.h>
+//#include <BBSKernel/MNS/Pool.h>
 #include <Common/LofarLogger.h>
-#include <Common/lofar_map.h>
+#include <Common/lofar_vector.h>
 #include <Common/lofar_iostream.h>
 
 // This class represents a result of a domain for which an expression
@@ -44,98 +44,100 @@ namespace BBS
 //# Forward Declarations
 class MeqParmFunklet;
 
+
 // \ingroup BBSKernel
 // \addtogroup MNS
 // @{
-
-
 class MeqResultRep
 {
 public:
-  // Create a time,frequency result for the given number of spids.
-  explicit MeqResultRep (int nspid);
+    // Create a time, frequency result for the given number of spids.
+    explicit MeqResultRep(int nspid);
 
-  ~MeqResultRep();
+    ~MeqResultRep();
 
-  MeqResultRep* link()
-    { itsCount++; return this; }
+    MeqResultRep* link()
+    { ++itsCount; return this; }
 
-  static void unlink (MeqResultRep* rep)
-    { if (rep != 0 && --rep->itsCount == 0) delete rep; }
+    static void unlink(MeqResultRep* rep)
+    { if(rep != 0 && --rep->itsCount == 0) delete rep; }
 
-  static void *operator new(size_t size);
-  static void operator delete(void *rep);
+//    static void *operator new(size_t size);
+//    static void operator delete(void *rep);
 
-  // Get the value.
-  const MeqMatrix& getValue() const
+    // Get the value.
+    const MeqMatrix& getValue() const
     { return itsValue; }
-  MeqMatrix& getValueRW()
+    MeqMatrix& getValueRW()
     { return itsValue; }
 
-  // Is the i-th perturbed value defined?
-  bool isDefined (int i) const
-    { return itsPerturbedValues != 0 && /*i<itsNspid &&*/ itsPerturbedValues->find(i) != itsPerturbedValues->end(); }
-
-  // Get the i-th perturbed value.
-  const MeqMatrix& getPerturbedValue (int i) // const
+    // Is the i-th perturbed value defined?
+    bool isDefined(int i) const
     {
-      if (itsPerturbedValues == 0) return itsValue;
-      map<int, MeqMatrix>::iterator it = itsPerturbedValues->find(i);
-      return it == itsPerturbedValues->end() ? itsValue : it->second;
+        DBGASSERT(itsPerturbedValues.empty() || i < itsPerturbedValues.size());
+        return !itsPerturbedValues.empty() && !itsPerturbedValues[i].isNull();            
     }
 
-  MeqMatrix& getPerturbedValueRW (int i)
+    // Get the i-th perturbed value.
+    const MeqMatrix& getPerturbedValue(int i) const
     {
-      if (itsPerturbedValues == 0) itsPerturbedValues = new map<int,MeqMatrix>;
-      return (*itsPerturbedValues)[i];
+        DBGASSERT(i < itsPerturbedValues.size());
+        const MeqMatrix &pertValue = itsPerturbedValues[i];
+        return (pertValue.isNull() ? itsValue : pertValue);
     }
 
-  // Get the i-th parameter perturbation info.
-  const MeqParmFunklet* getPerturbedParm (int i) const
+    MeqMatrix& getPerturbedValueRW(int i)
     {
-      DBGASSERT (itsPerturbedParms != 0);
-      map<int,const MeqParmFunklet*>::iterator it = itsPerturbedParms->find(i);
-      DBGASSERT (it != itsPerturbedParms->end());
-      return it->second;
+        DBGASSERT(i < itsPerturbedValues.size());
+        return itsPerturbedValues[i];
     }
 
-  // Get the perturbation for j-th domain in the i-th perturbed value.
-  double getPerturbation (int i, int j) const;
+    // Get the i-th parameter perturbation info.
+    const MeqParmFunklet* getPerturbedParm(int i) const
+    {
+        DBGASSERT(i < itsPerturbedParms.size() && !itsPerturbedParms[i] != 0);
+        return itsPerturbedParms[i];
+    }
 
-  // Set the value.
-  // The current value is replaced by the new one.
-  void setValue (const MeqMatrix& value)
+    // Get the perturbation for j-th domain in the i-th perturbed value.
+    double getPerturbation(int i, int j) const;
+
+    // Set the value.
+    // The current value is replaced by the new one.
+    void setValue(const MeqMatrix &value)
     { itsValue = value; }
 
-  // Set the value with a given type and shape.
-  // It won't change if the current value type and shape match.
-  double* setDoubleFormat (int nx, int ny)
+    // Set the value with a given type and shape.
+    // It won't change if the current value type and shape match.
+    double* setDoubleFormat(int nx, int ny)
     { return itsValue.setDoubleFormat (nx, ny); }
 
-  // Remove all perturbed values.
-  void clear();
+    // Remove all perturbed values.
+    void clear();
 
-  int nperturbed() const
-    { return itsNspid; }
+    int nperturbed() const
+    { return itsSpidCount; }
 
-  // Set the i-th perturbed value.
-  void setPerturbedValue (int i, const MeqMatrix&);
+    // Set the i-th perturbed value.
+    void setPerturbedValue(int i, const MeqMatrix&);
 
-  // Set the i-th perturbed parameter.
-  void setPerturbedParm (int i, const MeqParmFunklet* parm);
+    // Set the i-th perturbed parameter.
+    void setPerturbedParm(int i, const MeqParmFunklet* parm);
 
-  void show (ostream&) const;
-
+    void show(ostream&) const;
+    
 private:
-  // Forbid copy and assignment.
-  MeqResultRep (const MeqResultRep&);
-  MeqResultRep& operator= (const MeqResultRep&);
+    // Forbid copy and assignment.
+    MeqResultRep(const MeqResultRep&);
+    MeqResultRep &operator=(const MeqResultRep&);
 
-  int			           itsCount;
-  int			           itsNspid;
-  MeqMatrix		           itsValue;
-  map<int, MeqMatrix>*	           itsPerturbedValues;
-  map<int, const MeqParmFunklet*>* itsPerturbedParms;
+    //# Reference count.
+    int                                 itsCount;
+
+    int                                 itsSpidCount;
+    MeqMatrix                           itsValue;
+    vector<MeqMatrix>                   itsPerturbedValues;
+    vector<const MeqParmFunklet*>       itsPerturbedParms;
 };
 
 

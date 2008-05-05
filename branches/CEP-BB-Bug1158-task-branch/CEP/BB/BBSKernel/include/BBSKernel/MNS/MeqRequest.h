@@ -64,7 +64,7 @@ public:
   // </group>
 
   // Create a partial request for the given domain and values.
-  MeqRequest (const MeqRequest&, uint stx, uint nrx, uint sty, uint nry);
+  MeqRequest (const MeqRequest&, unsigned int stx, unsigned int nrx, unsigned int sty, unsigned int nry);
 
   // Copy constructor.
   MeqRequest (const MeqRequest&);

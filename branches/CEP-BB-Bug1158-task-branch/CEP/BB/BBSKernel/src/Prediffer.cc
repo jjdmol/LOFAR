@@ -60,7 +60,7 @@
 #include <functional>
 #include <stdexcept>
 
-#if defined _OPENMP
+#ifdef _OPENMP
 #include <omp.h>
 #endif
 
@@ -854,10 +854,10 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
 
 #ifdef _OPENMP
     boost::multi_array<casa::LSQFit, 2> threadEquations;
+
     if(nThreads > 1)
     {
-        threadEquations = boost::multi_array<casa::LSQFit, 2>
-            (boost::extents[nThreads][nCells]);
+        threadEquations.resize(boost::extents[nThreads][nCells]);
 
         for(size_t i = 1; i < nThreads; ++i)
         {
@@ -866,6 +866,7 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
             for(size_t j = 0; j < nCells; ++j)
             {
                 context.equations[j] = &(threadEquations[i][j]);
+                context.equations[j]->set(nCoeff);
             }        
         }
     }
@@ -904,11 +905,11 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
 
       	for(size_t i = 1; i < nThreads; ++i)
     	{
-            ThreadContext &context = itsThreadContexts[thread];
+            ThreadContext &context = itsThreadContexts[i];
             
             for(size_t j = 0; j < nCells; ++j)
             {
-                main.equations[j].merge(context.equations[j]);
+                main.equations[j]->merge(*context.equations[j]);
             }
         }
     }
@@ -1030,7 +1031,7 @@ void Prediffer::copyBl(size_t threadNr, const baseline_t &baseline,
     // Check preconditions.
     const VisDimensions &dims = itsChunk->getDimensions();
     DBGASSERT(offset.first + nChannels <= dims.getChannelCount());
-    DBGASSERT(offset.second + nTimeslots <= dims.getTimeSlotCount());
+    DBGASSERT(offset.second + nTimeslots <= dims.getTimeslotCount());
 
     // Get baseline index.
     const size_t bl = dims.getBaselineIndex(baseline);
@@ -1099,7 +1100,7 @@ void Prediffer::subtractBl(size_t threadNr, const baseline_t &baseline,
     // Check preconditions.
     const VisDimensions &dims = itsChunk->getDimensions();
     DBGASSERT(offset.first + nChannels <= dims.getChannelCount());
-    DBGASSERT(offset.second + nTimeslots <= dims.getTimeSlotCount());
+    DBGASSERT(offset.second + nTimeslots <= dims.getTimeslotCount());
 
     // Get baseline index.
     const size_t bl = dims.getBaselineIndex(baseline);
@@ -1198,7 +1199,7 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
         size_t nCoeff = 0;
         for(size_t i = 0; i < itsCoeffIndex.getCoeffCount(); ++i)
         {
-            // TODO: Remove log(N) look-up in isDefined()!
+            // O(1) look-up.
             if(result.isDefined(i))
             {
                 context.coeffIndex[nCoeff] = i;
@@ -1254,7 +1255,7 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
                 // Pre-compute inverse perturbations (cell specific).
                 for(size_t i = 0; i < nCoeff; ++i)
                 {
-                    // TODO: Remove log(N) look-up in getPerturbation()!
+                    // O(1) look-up.
                     invDelta[i] =  1.0 / 
                         result.getPerturbation(context.coeffIndex[i],
                             cellId);
