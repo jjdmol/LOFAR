@@ -54,9 +54,12 @@ public:
 	int	 read (void*		buffer, size_t	nrBytes);
 	int	 write(const void*	buffer, size_t	nrBytes);
 	
+	void close() { SocketSAP::close(); }
+	bool isConnected()	{ return(itsIsConnected); }
+
 protected:
 	friend class SocketConnector;
-	void close() { doClose(); }
+	friend class SocketAcceptor;
 	int  open (const InetAddress&	anAddress, bool reuseAddress = true)
 		{ return (doOpen(anAddress, reuseAddress)); }
 

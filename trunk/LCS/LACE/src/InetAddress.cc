@@ -23,6 +23,8 @@
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
 
+//#include <Common/hexdump.h>
+
 //# Includes
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -147,6 +149,20 @@ int InetAddress::set(const string&	service,
 
 	// The rest of the resolving is implemented by the other 'set' function
 	return(set(itsPortNr, itsHostname, protocol));
+}
+
+//
+// set (sockaddr*, len)
+//
+int	InetAddress::set(const sockaddr_in*	sockAddr,
+					 int					len)
+{
+	memcpy ((char*) &itsTCPAddr, (char*) sockAddr, len);
+	itsPortNr   = ntohs(itsTCPAddr.sin_port);
+	itsHostname = inet_ntoa(itsTCPAddr.sin_addr);
+	LOG_DEBUG_STR("InetAddress.set(struct): " << itsPortNr << "@" << itsHostname);
+	setStatus(true);
+	return (0);
 }
 
 //

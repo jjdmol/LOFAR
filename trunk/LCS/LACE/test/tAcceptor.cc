@@ -1,4 +1,4 @@
-//#  tConnector.cc: test program for the DeviceAddress class
+//#  tAcceptor.cc: test program for the DeviceAddress class
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -26,7 +26,7 @@
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
 #include <LACE/File.h>
-#include <LACE/SocketConnector.h>
+#include <LACE/SocketAcceptor.h>
 //#include <LACE/InetAddress.h>
 
 using namespace LOFAR;
@@ -40,14 +40,28 @@ bool SocketTest()
 	cout << "\nOpening socket" << endl;
 	InetAddress		myIA;
 	SocketStream	myStream;
-	SocketConnector	myConnector;
+	SocketAcceptor	myAcceptor;
 
+	cout << "setting address ..." << endl;
 	if (myIA.set(2313, "localhost", "tcp") != 0) {
 		THROW(Exception, "set Address failed");
 	}
-	if (myConnector.connect(myStream, myIA) != 0) {
-		THROW(Exception, "Connect failed");
+	cout << "opening listener ..." << endl;
+	if (myAcceptor.open(myIA) != 0) {
+		THROW(Exception, "Opening listener failed");
 	}
+	cout << "accepting connections ..." << endl;
+	if (myAcceptor.accept(myStream) != 0) {
+		THROW(Exception, "Accept failed");
+	}
+
+	sleep (4);
+//	myStream.read/write(...);
+
+	myStream.close();
+
+
+	myAcceptor.close();
 
 	return (true);
 }
@@ -63,7 +77,7 @@ bool FileTest()
 
 int main()
 {
-  INIT_LOGGER("tConnector");
+  INIT_LOGGER("tAcceptor");
 
   bool result = 
     FileTest() 		&&

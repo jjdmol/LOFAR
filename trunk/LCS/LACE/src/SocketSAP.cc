@@ -45,14 +45,14 @@ SocketSAP::SocketSAP()
 //
 SocketSAP::~SocketSAP()
 {
-	doClose();
+	this->close();
 }
 
 
 //
-// doClose()
+// close()
 //
-void SocketSAP::doClose()
+void SocketSAP::close()
 {
 	if (getHandle() != 0) {
 		LOG_DEBUG_STR("Shutdown and close of socket: " << getHandle());
@@ -104,7 +104,7 @@ int SocketSAP::doOpen(const Address&	anAddress,
 		(setOption(SO_KEEPALIVE, &one, 	 sizeof(one)) < 0) ||
 		(setOption(SO_LINGER,    &lin, 	 sizeof(lin)) < 0)) {
 		LOG_ERROR("Setting socket options failed, closing just opened socket");
-		doClose();
+		this->close();
 		return (-1);
 	}
 
@@ -152,7 +152,7 @@ int SocketSAP::read(void*	buffer, size_t	nrBytes)
 	errno = 0;								// reset system errno
 	while (bytesLeft > 0 && !errno) {
 		bytesRead = ::recv (getHandle(), (char*)buffer, bytesLeft, 0);
-		LOG_DEBUG(formatString("SocketSAP(%d):read(%d)=%d%s, errno=%d(%s)", 
+		LOG_DEBUG(formatString("SocketSAP(%d):read(%d)=%d, errno=%d(%s)", 
 					getHandle(), bytesLeft, bytesRead, 
 					errno, strerror(errno)));
 
@@ -166,7 +166,7 @@ int SocketSAP::read(void*	buffer, size_t	nrBytes)
 		}
 
 		if (bytesRead == 0) {					// conn reset by peer?
-			doClose();
+			this->close();
 			return (0);
 		}
 
@@ -200,6 +200,7 @@ int SocketSAP::write(const void*	buffer, size_t	nrBytes)
 		return (nrBytes);
 	}
 
+	LOG_DEBUG_STR("SocketSAP::Write(...)");
 	// lets try to write something
 	int32	bytesLeft = nrBytes;
 	int32	bytesWritten = 0;
@@ -231,7 +232,7 @@ int SocketSAP::write(const void*	buffer, size_t	nrBytes)
 
 		// connection closed by peer?
 		if (bytesWritten == 0) {
-			doClose();
+			this->close();
 			return (0);
 		}
 

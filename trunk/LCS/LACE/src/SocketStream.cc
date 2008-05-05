@@ -58,7 +58,7 @@ int SocketStream::read(void*	buffer, size_t	nrBytes)
 		LOG_ERROR ("SocketStream in not yet connected");
 		return (-1);
 	}
-	return (read(buffer, nrBytes));
+	return (SocketSAP::read(buffer, nrBytes));
 }
 
 //
@@ -74,7 +74,7 @@ int SocketStream::write(const void*	buffer, size_t	nrBytes)
 		LOG_ERROR ("SocketStream in not yet connected");
 		return (-1);
 	}
-	return (write(buffer, nrBytes));
+	return (SocketSAP::write(buffer, nrBytes));
 }
 
 
