@@ -6,7 +6,8 @@ liblace_la_SOURCES 		= FileAddress.cc \
 						  SocketSAP.cc \
 						  File.cc \
 						  SocketStream.cc \
-						  SocketConnector.cc
+						  SocketConnector.cc \
+						  SocketAcceptor.cc
 
 bin_PROGRAMS 			=
 

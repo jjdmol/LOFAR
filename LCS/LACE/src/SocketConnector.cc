@@ -53,66 +53,50 @@ SocketConnector::~SocketConnector()
 //  0 : OK, connection is made
 //  1 : call complete to complete the connect
 //
-int SocketConnector::connect(SocketStream*		aStream,
-					   const Address&		anAddress)
+int SocketConnector::connect(SocketStream&		aStream,
+					   		 const Address&		anAddress,
+							 int				waitMs)
 {
 	// first check arguments
-	ASSERTSTR(aStream, "ServiceAccessPoint may not be null");
+//	ASSERTSTR(aStream, "ServiceAccessPoint may not be null");
 	ASSERTSTR(anAddress.getType() == INET_TYPE, 
 						"Address must be of the type InetAddress");
 
 	// allocate the SAP
-	if (aStream->open(dynamic_cast<const InetAddress&>(anAddress), true) < 0) {
+	if (aStream.open(dynamic_cast<const InetAddress&>(anAddress), true) < 0) {
 		return (-1);
 	}
 
 	// do the connect.
-	if (::connect(aStream->getHandle(), 
+	if (::connect(aStream.getHandle(), 
 				  reinterpret_cast<const sockaddr *> (anAddress.getAddress()) ,
 				  anAddress.getAddressSize()) >= 0) {
-		LOG_DEBUG(formatString("SocketConnector:connect(%d) successful", aStream->getHandle()));
-		aStream->itsIsConnected = true;
+		LOG_DEBUG(formatString("SocketConnector:connect(%d) successful", aStream.getHandle()));
+		aStream.itsIsConnected = true;
 		return (0);
 	}
 	LOG_DEBUG(formatString("SocketConnector:connect(%d) failed: errno=%d(%s)", 
-							aStream->getHandle(), errno, strerror(errno)));
+							aStream.getHandle(), errno, strerror(errno)));
 
 	// When failure is not due to a timeout, close the socket
 	if (errno != EINPROGRESS && errno != EALREADY) {	// real error
-		aStream->close();
+		aStream.close();
 		return (-1);
 	}
 
-	return (1);	// user must call 'complete' to finish the connect
-}
-
-
-//
-// complete()
-//
-// Return value:
-// -1 : real error
-//  0 : OK, connection is made
-//  1 : call complete again to complete the 'connect'
-//
-int SocketConnector::complete(SocketStream*		aStream,
-							  int				waitMs)
-{
-	ASSERTSTR(aStream, "ServiceAccessPoint may not be null");
-	ASSERTSTR(aStream->isOpen(), "SocketStream in not opened yet, call 'connect' first'");
-
-	bool	orgBlockMode  = aStream->getBlocking();
+	// connect failed wit a timeout, give it a retry.
+	bool	orgBlockMode  = aStream.getBlocking();
 	bool	pollBlockMode = (waitMs < 0) ? true : false;
 	
 	// wait 'waitMs' seconds for the connect to complete
 	struct pollfd	pollInfo;
-	pollInfo.fd		= aStream->getHandle();
+	pollInfo.fd		= aStream.getHandle();
 	pollInfo.events = POLLWRNORM;
 	LOG_TRACE_CALC(formatString("Socket(%d):going into a poll for %d ms",
-								aStream->getHandle(), waitMs));
-	aStream->setBlocking (pollBlockMode);
+								aStream.getHandle(), waitMs));
+	aStream.setBlocking (pollBlockMode);
 	int	pollRes = poll(&pollInfo, 1, waitMs);
-	aStream->setBlocking (orgBlockMode);
+	aStream.setBlocking (orgBlockMode);
 	
 	// proces the result of the poll
 	switch (pollRes) {
@@ -123,14 +107,14 @@ int SocketConnector::complete(SocketStream*		aStream,
 	// after the poll the error is somewhere deep down under in the socket.
 	int32		connRes;
 	socklen_t	resLen = sizeof(connRes);
-	if (aStream->getOption(SO_ERROR, &connRes, &resLen)) {
+	if (aStream.getOption(SO_ERROR, &connRes, &resLen)) {
 		return (-1);			// getOption call failed, assume connection failed
 	}
 	errno = connRes;			// put error where it belongs
 
 	if (errno != 0) {			// not yet connected
 		LOG_DEBUG(formatString("Socket(%d):delayed connect failed also, err=%d(%s)",
-									aStream->getHandle(), errno, strerror(errno)));
+									aStream.getHandle(), errno, strerror(errno)));
 		if (errno == EINPROGRESS || errno == EALREADY) {
 			return (1);			// timeout on poll
 		}
@@ -138,8 +122,8 @@ int SocketConnector::complete(SocketStream*		aStream,
 	}
 
 	LOG_DEBUG(formatString("Socket(%d):delayed connect() succesful", 
-														aStream->getHandle()));
-	aStream->itsIsConnected = true;
+														aStream.getHandle()));
+	aStream.itsIsConnected = true;
 
 	return (0);					// no errors
 }

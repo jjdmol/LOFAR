@@ -53,7 +53,7 @@ public:		// only for testing
 	SocketSAP();
 	virtual ~SocketSAP();
 
-	void doClose ();
+	void close ();
 	int  doOpen  (const Address&	anAddress, bool reuseAddres = true);
 	bool isOpen() { return (itsAddress.getType() != UNDEFINED); }
 	
@@ -63,7 +63,7 @@ public:		// only for testing
 	int	 read (void*		buffer, size_t	nrBytes);
 	int	 write(const void*	buffer, size_t	nrBytes);
 
-	friend class Connector;
+	friend class SocketAcceptor;
 	
 private:
 	//# --- Datamembers ---

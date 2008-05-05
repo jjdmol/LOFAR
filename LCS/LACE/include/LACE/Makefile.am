@@ -6,7 +6,8 @@ INSTHDRS			= Address.h \
 					  SocketSAP.h \
 					  File.h \
 					  SocketStream.h \
-					  SocketConnector.h
+					  SocketConnector.h \
+					  SocketAcceptor.h
 
 NOINSTHDRS			=
 

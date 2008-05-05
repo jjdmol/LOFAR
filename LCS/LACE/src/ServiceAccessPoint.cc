@@ -55,8 +55,9 @@ int	 ServiceAccessPoint::setBlocking(bool	blocking)
 
 	itsIsBlocking = blocking;
 
-	int		block = itsIsBlocking ? 1 : 0;
-	return ioctl (itsHandle, FIONBIO, &block);
+	int		block = itsIsBlocking ? 0 : 1;
+//	return (fcntl (itsSocketID, F_SETFL, block ? 0 : O_NONBLOCK));
+	return (ioctl (itsHandle, FIONBIO, &block));
 }
 
 

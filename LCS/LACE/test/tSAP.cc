@@ -46,7 +46,7 @@ bool SocketTest()
 	cout << "\nOpening socket" << endl;
 	SocketSAP		mySock;
 	mySock.doOpen(myIA1);
-	mySock.doClose();
+	mySock.close();
 
 
 	cout << "\nTesting the 'open' function of a TCP Socket...\n";
@@ -57,7 +57,7 @@ bool SocketTest()
 
 	cout << "\nOpening socket" << endl;
 	mySock.doOpen(myIA2);
-	mySock.doClose();
+	mySock.close();
 
 	return (true);
 }

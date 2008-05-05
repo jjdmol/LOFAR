@@ -1,4 +1,4 @@
-//#  SocketConnector.h: Class that make connects a SAP to an addres.
+//#  SocketAcceptor.h: Class that make connects a SAP to an addres.
 //#
 //#  Copyright (C) 2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,16 +20,16 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_LACE_SOCKETCONNECTOR_H
-#define LOFAR_LACE_SOCKETCONNECTOR_H
+#ifndef LOFAR_LACE_SOCKETACCEPTOR_H
+#define LOFAR_LACE_SOCKETACCEPTOR_H
 
-// \file SocketConnector.h
+// \file SocketAcceptor.h
 // Class that make connects a SAP to an addres.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <LACE/SocketStream.h>
-#include <LACE/Address.h>
+#include <LACE/InetAddress.h>
 
 // Avoid 'using namespace' in headerfiles
 
@@ -47,20 +47,25 @@ namespace LOFAR {
 
 // class_description
 // ...
-class SocketConnector
+class SocketAcceptor : public SocketSAP
 {
 public:
-	SocketConnector();
-	~SocketConnector();
+	SocketAcceptor();
+	~SocketAcceptor();
 	
-	int		connect (SocketStream&			aStream,
-					 const Address&			anAddress,
+	int		open	(const Address&			anAddress, int backlog = 5);
+	void	close	() { return (SocketSAP::close()); }
+
+	// -1 : blocking
+	// >= 0 : async, wait max n milliseconds
+	int		accept	(SocketStream&			aStream,
 					 int					waitMs = -1);
 
 protected:
 
 private:
 	//# --- Datamembers ---
+	SocketSAP		itsListener;
 };
 
 

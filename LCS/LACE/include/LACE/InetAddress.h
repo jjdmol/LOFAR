@@ -65,8 +65,11 @@ public:
 	int		set(const string&	service, 
 				const string&	hostname = "",
 				const string&	protocol = "tcp");
+	int		set(const sockaddr_in*	sockAddr,
+				int					len);
 
 	int		protocolNr() const 	{ return(itsProtocolNr); }
+	int		portNr() 	 const 	{ return(itsPortNr); }
 
 	// operators for comparison.
 	bool		 operator==(const InetAddress&	that);
