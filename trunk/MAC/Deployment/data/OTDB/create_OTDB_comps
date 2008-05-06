@@ -239,7 +239,7 @@ do
 		cleanlist $file | \
 		substitute_station "C" "@CoreStation@"     "10.151.@@@.1" |\
 		substitute_station "R" "@RemoteStation@"   "10.151.1@@.1" |\
-		substitute_station "E" "@EuropeanStation@" "10.151.@@@.1"
+		substitute_station "E" "@EuropeStation@" "10.151.@@@.1"
 		) >${outputname}
 	fi
 
