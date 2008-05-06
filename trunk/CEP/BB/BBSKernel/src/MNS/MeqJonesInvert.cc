@@ -47,6 +47,12 @@ namespace LOFAR
 namespace BBS
 {
 
+MeqJonesInvert::MeqJonesInvert (const MeqJonesExpr& expr)
+    : itsExpr(expr)
+{
+  addChild(itsExpr);
+}
+
 MeqJonesInvert::~MeqJonesInvert()
 {}
 
