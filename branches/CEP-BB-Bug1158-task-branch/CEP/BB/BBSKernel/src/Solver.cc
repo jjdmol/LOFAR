@@ -206,7 +206,7 @@ bool Solver::iterate(SolutionMsg::Pointer msg)
 
         // Solve the normal equations.
         cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSvd);
-        cout << "Coefficients: " << cell.coeff << endl;
+//        cout << "Coefficients: " << cell.coeff << endl;
 
         // Record solution and statistics.
         CellSolution solution(cellId);

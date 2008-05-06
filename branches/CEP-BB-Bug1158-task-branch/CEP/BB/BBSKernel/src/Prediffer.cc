@@ -937,7 +937,7 @@ void Prediffer::process(bool, bool precalc, const Location &start,
     const size_t nChannels = end.first - start.first;
     const size_t nTimeslots = end.second - start.second;
 
-    cout << "nChannels: " << nChannels << " nTimeslots: " << nTimeslots << endl;
+//    cout << "nChannels: " << nChannels << " nTimeslots: " << nTimeslots << endl;
 
     // Determine if perturbed values have to be calculated.
     const int nPerturbedValues =
@@ -1199,7 +1199,7 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
         size_t nCoeff = 0;
         for(size_t i = 0; i < itsCoeffIndex.getCoeffCount(); ++i)
         {
-            // O(1) look-up.
+            // TODO: Remove O(log(N)) look-up.
             if(result.isDefined(i))
             {
                 context.coeffIndex[nCoeff] = i;
@@ -1255,7 +1255,7 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
                 // Pre-compute inverse perturbations (cell specific).
                 for(size_t i = 0; i < nCoeff; ++i)
                 {
-                    // O(1) look-up.
+                    // TODO: Remove O(log(N)) look-up.
                     invDelta[i] =  1.0 / 
                         result.getPerturbation(context.coeffIndex[i],
                             cellId);
@@ -1604,8 +1604,8 @@ void Prediffer::printTimers(const string &operation)
         // Merge thread-local timers.
         for(size_t i = 0; i < itsThreadContexts.size(); ++i)
         {
-            double msec = itsThreadContexts[i].timers[j].getElapsed() * 1000.0;
-            sum += msec;
+            // Convert from s to ms.
+            sum += itsThreadContexts[i].timers[j].getElapsed() * 1000.0;
             count += itsThreadContexts[i].timers[j].getCount();
         }
     
