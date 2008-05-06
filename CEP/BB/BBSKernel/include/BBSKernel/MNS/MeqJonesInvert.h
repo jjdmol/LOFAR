@@ -45,10 +45,7 @@ class MeqJonesInvert : public MeqJonesExprRep
 {
 public:
   // The default constructor.
-  MeqJonesInvert (const MeqJonesExpr& expr)
-    : itsExpr (expr)
-    {}
-
+  MeqJonesInvert (const MeqJonesExpr& expr);
   virtual ~MeqJonesInvert();
 
   // Calculate the result of its members.
