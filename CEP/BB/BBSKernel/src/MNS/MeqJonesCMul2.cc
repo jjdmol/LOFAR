@@ -125,14 +125,14 @@ MeqJonesResult MeqJonesCMul2::getJResult (const MeqRequest& request)
       eval22 = true;
     }
     if (eval11 || eval12 || eval21 || eval22) {
-      const MeqMatrix& ml11 = l11.getValue();
-      const MeqMatrix& ml12 = l12.getValue();
-      const MeqMatrix& ml21 = l21.getValue();
-      const MeqMatrix& ml22 = l22.getValue();
-      const MeqMatrix& mr11 = r11.getValue();
-      const MeqMatrix& mr12 = r12.getValue();
-      const MeqMatrix& mr21 = r21.getValue();
-      const MeqMatrix& mr22 = r22.getValue();
+      const MeqMatrix& ml11 = l11.getPerturbedValue(spinx);
+      const MeqMatrix& ml12 = l12.getPerturbedValue(spinx);
+      const MeqMatrix& ml21 = l21.getPerturbedValue(spinx);
+      const MeqMatrix& ml22 = l22.getPerturbedValue(spinx);
+      const MeqMatrix& mr11 = r11.getPerturbedValue(spinx);
+      const MeqMatrix& mr12 = r12.getPerturbedValue(spinx);
+      const MeqMatrix& mr21 = r21.getPerturbedValue(spinx);
+      const MeqMatrix& mr22 = r22.getPerturbedValue(spinx);
       if (eval11) { 
 	result11.setPerturbedParm (spinx, perturbedParm);
 	result11.setPerturbedValue (spinx, ml11*conj(mr11) + ml12*conj(mr12));
