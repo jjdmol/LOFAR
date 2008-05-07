@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.swing.DefaultComboBoxModel;
@@ -90,7 +91,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }
     
     private void init() {
-        SimpleDateFormat id = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
+        SimpleDateFormat id = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
         if (itsMultiple) {
             topLabel.setText("Tree Meta Data  -- MULTIPLE SELECTION -- Only first Tree's info is shown \n" +
                              "                Changes will be applied to all selections");            
@@ -158,10 +159,11 @@ public class TreeInfoDialog extends javax.swing.JDialog {
      */
     public void composeTimeString(String time) {
         // Set the dateformat OTDB takes
-        SimpleDateFormat id = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
+        SimpleDateFormat id = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
         if (time.equals("start")) {
             if (itsStartDate != null) {
               startTimeInput.setText(id.format(itsStartDate));
+              stopTimeInput.setText(id.format(itsStartDate));
             } else {
                 startTimeInput.setText("not-a-date-time");
             }
@@ -179,7 +181,6 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         // start the checking. Both dates need to be set.
         // the startdate needs to be at least 4 minutes away from NOW
         // the enddate needs to be further in the future then the starttime/.
-
         String anErrorMsg = "";
         if (itsStartDate == null || startTimeInput.getText().length() == 0 || startTimeInput.getText().equals("not-a-date-time")) {
             anErrorMsg = "Start time not set";
@@ -327,7 +328,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         
         // make sure that if a VICtree is selected we check the start-end time first. If they are not correct, pop up a dialog.
         
-        if (itsTreeType.equals("VHtree")) {
+        if (itsTreeType.equals("VHtree") && itsTreeState.equals("Scheduled")) {
             if ( ! checkTimes()) {
                 return false;
             }
@@ -530,12 +531,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         getContentPane().add(stopTimeLabel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 350, -1, 20));
 
         startTimeInput.setEditable(false);
-        startTimeInput.setToolTipText("Start Time in GMT (YYYY-MMM-DD hh:mm:ss)");
+        startTimeInput.setToolTipText("Start Time in GMT (YYYY-MMM-DD hh:mm)");
         startTimeInput.setDragEnabled(true);
         getContentPane().add(startTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 320, 270, -1));
 
         stopTimeInput.setEditable(false);
-        stopTimeInput.setToolTipText("Stop Time in GMT (YYYY-MMM-DD hh:mm:ss)");
+        stopTimeInput.setToolTipText("Stop Time in GMT (YYYY-MMM-DD hh:mm)");
         getContentPane().add(stopTimeInput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 350, 270, -1));
 
         momIDLabel.setText("MoMID:");
@@ -575,13 +576,14 @@ public class TreeInfoDialog extends javax.swing.JDialog {
         jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 
         topLabel.setColumns(20);
+        topLabel.setEditable(false);
         topLabel.setFont(new java.awt.Font("Tahoma", 1, 11));
         topLabel.setRows(2);
         topLabel.setText("Tree Meta Data");
         topLabel.setOpaque(false);
         jScrollPane1.setViewportView(topLabel);
 
-        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 480, 40));
+        getContentPane().add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 450, 40));
 
         setStartDateButton.setText("set");
         setStartDateButton.setToolTipText("set Start Date");
@@ -604,8 +606,8 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private Date getGMTTime(Date aDate) {
-        SimpleDateFormat aD   = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
-        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d HH:mm:ss");
+        SimpleDateFormat aD   = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
+        SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
         aGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
         String  aS = aGMT.format(aDate);
         
@@ -666,6 +668,7 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     private String    itsDescription = "";
     private Date      itsStartDate = null;
     private Date      itsStopDate = null;
+    private Locale    itsLocale = new Locale("en");
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField campaignInput;
