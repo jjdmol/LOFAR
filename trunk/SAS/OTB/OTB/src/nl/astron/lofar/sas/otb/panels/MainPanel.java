@@ -158,6 +158,7 @@ public class MainPanel extends javax.swing.JPanel
         PICPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         PICPanel.setColumnSize("ID",35);
         PICPanel.setColumnSize("Description",700);
+        PICPanel.setAutoCreateRowSorter(true);
         
 
         VICtableModel VICmodel = new VICtableModel(SharedVars.getOTDBrmi());
@@ -169,6 +170,7 @@ public class MainPanel extends javax.swing.JPanel
         VICPanel.setColumnSize("StartTime",175);
         VICPanel.setColumnSize("StopTime",175);
         VICPanel.setColumnSize("Description",700);
+        VICPanel.setAutoCreateRowSorter(true);
         
         TemplatetableModel Templatemodel = new TemplatetableModel(SharedVars.getOTDBrmi());
         TemplatesPanel.setTableModel(Templatemodel);
@@ -177,12 +179,14 @@ public class MainPanel extends javax.swing.JPanel
         TemplatesPanel.setColumnSize("OriginalTree",75);
         TemplatesPanel.setColumnSize("MoMID",50);
         TemplatesPanel.setColumnSize("Description",700);
+        TemplatesPanel.setAutoCreateRowSorter(true);
         
         ComponentTableModel Componentmodel = new ComponentTableModel(SharedVars.getOTDBrmi());
         ComponentsPanel.setTableModel(Componentmodel);
         ComponentsPanel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         ComponentsPanel.setColumnSize("ID",35);
         ComponentsPanel.setColumnSize("Description",700);
+        ComponentsPanel.setAutoCreateRowSorter(true);
         
         //TODO: do the same for the other tabs
     }
@@ -511,7 +515,7 @@ public class MainPanel extends javax.swing.JPanel
         if (itsTabFocus.equals("PIC")) {
             if (treeID > 0) {
                 itsMainFrame.getSharedVars().setTreeID(treeID);
-            } else {
+            } else if (!aButton.equals("New")) {
                 JOptionPane.showMessageDialog(null,"You didn't select a tree",
                         "Tree selection warning",
                         JOptionPane.WARNING_MESSAGE);
@@ -568,7 +572,7 @@ public class MainPanel extends javax.swing.JPanel
                 }  
 
             } else if (aButton.equals("Delete")) {
-                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree: ?"+treeID,"Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
                         if (OtdbRmi.getRemoteMaintenance().deleteTree(treeID)) {
                             itsMainFrame.setHourglassCursor();
@@ -587,10 +591,11 @@ public class MainPanel extends javax.swing.JPanel
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
             } else if (aButton.equals("Info")) {
-                if (itsMainFrame.getSharedVars().getTreeID() > 0) {
+                if (treeID > 0) {
                     int [] id=new int[1];
-                    id[0]=itsMainFrame.getSharedVars().getTreeID();
+                    id[0]=treeID;
                     if (viewInfo(id)) {
+                        
                         logger.debug("Tree has been changed, reloading tableline");
                           itsMainFrame.setChanged(this.getFriendlyName(),true);
                           checkChanged();
@@ -610,7 +615,7 @@ public class MainPanel extends javax.swing.JPanel
                 // TODO open Query Panel
                 itsMainFrame.ToDo();
             } else if (aButton.equals("Delete")) {
-                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree ?","Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree: ?"+treeID,"Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
                     try {
                         if (OtdbRmi.getRemoteMaintenance().deleteTree(treeID)) {
                             itsMainFrame.setHourglassCursor();
@@ -663,13 +668,13 @@ public class MainPanel extends javax.swing.JPanel
             if (aButton.equals("Query Panel")) {
                 itsMainFrame.ToDo();
             } else if (aButton.equals("Duplicate")) {
-                if (itsMainFrame.getSharedVars().getTreeID() < 1) {
+                if (treeID < 1) {
                     JOptionPane.showMessageDialog(null,"Select a tree to duplicate first",
                         "No Tree Selected",
                         JOptionPane.WARNING_MESSAGE);
                 } else {
                     try {
-                        int newTreeID=OtdbRmi.getRemoteMaintenance().copyTemplateTree(itsMainFrame.getSharedVars().getTreeID());
+                        int newTreeID=OtdbRmi.getRemoteMaintenance().copyTemplateTree(treeID);
                         if (newTreeID > 0) {
                             JOptionPane.showMessageDialog(null,"New Tree created with ID: "+newTreeID,
                                 "New Tree Message",
@@ -701,31 +706,35 @@ public class MainPanel extends javax.swing.JPanel
                     itsMainFrame.showPanel(aP.getFriendlyName());
                 }
             } else if (aButton.equals("Delete")) {
-                if (itsMainFrame.getSharedVars().getTreeID() < 1) {
-                    JOptionPane.showMessageDialog(null,"Select a tree to delete first",
-                        "No Tree Selected",
-                        JOptionPane.WARNING_MESSAGE);
+               if (treeID < 1) {
+                 JOptionPane.showMessageDialog(null,"Select a tree to delete first",
+                     "No Tree Selected",
+                     JOptionPane.WARNING_MESSAGE);
                 } else {
-                    try {
-                        if (OtdbRmi.getRemoteMaintenance().deleteTree(itsMainFrame.getSharedVars().getTreeID())) {
+                 if (JOptionPane.showConfirmDialog(this,"Are you sure you want to delete this tree: ?"+treeID,"Delete Tree",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == JOptionPane.YES_OPTION ) {
+                      try {
+                          if (OtdbRmi.getRemoteMaintenance().deleteTree(treeID)) {
                             JOptionPane.showMessageDialog(null,"Template Tree Deleted",
                                 "Delete Tree Message",
                                 JOptionPane.INFORMATION_MESSAGE);
-                            itsMainFrame.getSharedVars().setTreeID(-1);
+                            itsMainFrame.getSharedVars().setTreeID(-1);                              
+                            itsMainFrame.setHourglassCursor();
+                            ((VICtableModel)VICPanel.getTableModel()).fillTable();
+                            itsMainFrame.setNormalCursor();
                             // set changed flag to reload mainpanel
                             itsMainFrame.setChanged(this.getFriendlyName(),true);
                             checkChanged();
-                        } else {
-                            logger.debug("Template Tree not deleted!!! : "+ OtdbRmi.getRemoteMaintenance().errorMsg());
-                        }
-           
-                    } catch (RemoteException ex) {
-                        logger.debug("Remote error during Delete Template Tree: "+ ex);
-                    }
+                          } else {
+                            logger.debug("Failed to delete tree");
+                          }
+                      } catch (RemoteException ex) {
+                          logger.debug("Remote error during deleteTree: "+ ex);
+                      }
+                  }
                 }
                 
             } else if (aButton.equals("Build VIC tree")) {
-                if (itsMainFrame.getSharedVars().getTreeID() < 1) {
+                if (treeID < 1) {
                     JOptionPane.showMessageDialog(null,"Select a tree to build first",
                         "No Tree Selected",
                         JOptionPane.WARNING_MESSAGE);

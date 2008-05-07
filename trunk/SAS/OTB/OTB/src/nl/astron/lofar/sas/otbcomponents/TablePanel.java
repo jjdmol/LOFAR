@@ -33,6 +33,10 @@ public class TablePanel extends javax.swing.JPanel {
         jTable1.updateUI();
     }
     
+    public void setAutoCreateRowSorter(boolean aFlag) {
+        jTable1.setAutoCreateRowSorter(aFlag);
+    }
+    
     /** Return the model from this table
      *
      * @return The abstract TableModel
@@ -51,7 +55,15 @@ public class TablePanel extends javax.swing.JPanel {
      * @return the seledcted Row
      */
     public int getSelectedRow() {
-        return jTable1.getSelectedRow();
+        if (jTable1.getAutoCreateRowSorter()) {
+          if (jTable1.getSelectedRow() > -1) {
+            return jTable1.convertRowIndexToModel(jTable1.getSelectedRow());
+          } else {
+            return -1;
+          }
+        } else {
+          return jTable1.getSelectedRow();
+        }
     }
     
     /** get the selected Rows
@@ -59,7 +71,20 @@ public class TablePanel extends javax.swing.JPanel {
      * @return the selected Rows
      */
     public int[] getSelectedRows() {
+        
+      if (jTable1.getAutoCreateRowSorter()) {
+        int i[] = jTable1.getSelectedRows();
+        for (int j=0; j<i.length;j++) {
+            if (i[j] > -1) {
+              i[j] = jTable1.convertRowIndexToModel(i[j]);
+            } else {
+                i[j]=-1;
+            }
+        }
+        return i;
+      } else {
         return jTable1.getSelectedRows();
+      }
     }
 
     /** get the nr of selected Rows
@@ -72,7 +97,7 @@ public class TablePanel extends javax.swing.JPanel {
 
     /** set the selected Row
      *
-     * @param aRow the seledcted Row
+     * @param aRow the selected Row
      */
     public void setSelectedID(int anID) {
         int IDcol=-1;
