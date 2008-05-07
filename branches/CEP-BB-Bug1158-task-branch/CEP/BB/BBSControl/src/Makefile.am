@@ -28,9 +28,9 @@ libbbscontrol_la_SOURCES	= \
 	Step.cc \
 	Strategy.cc \
 	StreamUtil.cc \
-	Structs.cc \
 	SubtractStep.cc \
-	SynchronizeCommand.cc
+	SynchronizeCommand.cc \
+	Types.cc
 
 #bin_PROGRAMS			= GlobalControl KernelControl SolverControl
 

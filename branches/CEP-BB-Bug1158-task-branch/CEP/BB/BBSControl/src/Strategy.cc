@@ -24,7 +24,7 @@
 
 #include <BBSControl/Strategy.h>
 #include <BBSControl/Step.h>
-#include <BBSControl/Structs.h>
+#include <BBSControl/Types.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/Exceptions.h>
 #include <APS/ParameterSet.h>
@@ -41,14 +41,14 @@ namespace LOFAR
   {
     using LOFAR::operator<<;
 
-                           // Register Strategy with the CommandFactory. Use an anonymous
-                           // namespace. This ensures that the variable `dummy' gets its own private
-                           // storage area and is only visible in this compilation unit.
-                           namespace
-                           {
-                             bool dummy = CommandFactory::instance().
-                               registerClass<Strategy>("Strategy");
-                           }
+    // Register Strategy with the CommandFactory. Use an anonymous
+    // namespace. This ensures that the variable `dummy' gets its own private
+    // storage area and is only visible in this compilation unit.
+    namespace
+    {
+      bool dummy = CommandFactory::instance().
+        registerClass<Strategy>("Strategy");
+    }
 
 
     //##--------   P u b l i c   m e t h o d s   --------##//

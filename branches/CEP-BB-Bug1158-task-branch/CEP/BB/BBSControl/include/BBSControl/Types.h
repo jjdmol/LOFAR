@@ -1,4 +1,4 @@
-//# Structs.h: Some global structs.
+//# Types.h: Some global types.
 //#
 //# Copyright (C) 2006
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,12 +20,12 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBSCONTROL_BBSSTRUCTS_H
-#define LOFAR_BBSCONTROL_BBSSTRUCTS_H
+#ifndef LOFAR_BBSCONTROL_BBSTYPES_H
+#define LOFAR_BBSCONTROL_BBSTYPES_H
 
 // \file
-// Some global structs. The main purpose of these structs is to bundle data
-// that are logically related. Most of these structs are used in more than one
+// Some global types. The main purpose of these types is to bundle data
+// that are logically related. Most of these types are used in more than one
 // class, which justifies them being defined here, outside these classes.
 
 //# Includes
@@ -38,9 +38,6 @@
 
 namespace LOFAR
 {
-  //# Forward declarations
-//   namespace ACC { namespace APS { class ParameterSet; } }
-
   class BlobIStream;
   class BlobOStream;
 
@@ -49,12 +46,17 @@ namespace LOFAR
     // \addtogroup BBSControl
     // @{
 
+    // Typedefs
+    // @{
+    typedef uint CommandId;
+    typedef int KernelId;
+    typedef int KernelGroupId;
+    // @}
+
     // Information about the Blackboard database.
     struct BBDB
     {
       BBDB() : port(0) {}
-      // Write the contents 
-//       void write(ACC::APS::ParameterSet& ps, const string& prefix);
       string host;           ///< Host name or IP address of the BB DBMS
       uint16 port;           ///< Port used by BB DBMS
       string dbName;         ///< Name of the BB database
@@ -148,7 +150,7 @@ namespace LOFAR
       vector<string> station2;
     };
 
-    // Write the contents of these structs in human readable form.
+    // Write the contents of these types in human readable form.
     // @{
     ostream& operator<<(ostream&, const BBDB&);
     ostream& operator<<(ostream&, const ParmDB&);

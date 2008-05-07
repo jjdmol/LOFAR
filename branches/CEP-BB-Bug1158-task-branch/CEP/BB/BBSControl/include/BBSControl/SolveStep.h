@@ -28,7 +28,7 @@
 
 //# Includes
 #include <BBSControl/SingleStep.h>
-#include <BBSControl/Structs.h>
+#include <BBSControl/Types.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -71,6 +71,7 @@ namespace LOFAR
       // @{
       vector<string> parms()         const { return itsParms; }
       vector<string> exclParms()     const { return itsExclParms; }
+      vector<uint32> kernelGroups()  const { return itsKernelGroups; }
       DomainSize     domainSize()    const { return itsDomainSize; }
       SolverOptions  solverOptions() const { return itsSolverOptions; }
       // @}

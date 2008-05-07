@@ -38,6 +38,7 @@
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/SolveStep.h>
+#include <BBSControl/KernelGroup.h>
 
 #include <Common/lofar_smartptr.h>
 #include <PLC/ProcessControl.h>
@@ -88,20 +89,81 @@ namespace LOFAR
       enum RunState {
         UNDEFINED = 0,
         IDLE,
-        WAITING,
-        INDEXING,
-        INITIALZING,
-        ITERATING,
+        SOLVING,
         N_States
       };
 
+      // Returns whether the current solver control process controls a global
+      // solver or not. 
+      // \note For the time being we will assume that, when the number of
+      // kernels that will connect to the solver control process is more than
+      // one, the solver control process controls a global solver.
+      bool isGlobal() const;
+
+      // Set kernel groups. The argument \a groups should be interpreted as
+      // follows:
+      // - The size of the vector determines the number of groups.
+      // - The sum of the elements determines the total number of kernels.
+      // - Each element determines the number of kernels per group.
+      void setKernelGroups(const vector<uint>& groups);
+
+      // Return a reference to the kernel group of the kernel with id \a
+      // kernelId.
+      KernelGroup& kernelGroup(const KernelId& id);
+
+
+#if 0
       struct Kernel
       {
-        Kernel() : id(0), group_id(0) {}
+        KernelId id;
+        KernelGroupId groupId;
         shared_ptr<BlobStreamableConnection> connection;
-        uint id;
-        uint group_id;
       };
+
+      // A kernel group is a collection of kernels that connect to the same
+      // solver. The state of the group as a whole depends on the state of
+      // each individual kernel in the group.
+      struct KernelGroup
+      {
+        shared_ptr<SolverState> state;
+        vector<Kernel> kernels;
+      };
+
+      class SolverState
+      {
+      public:
+        virtual void handle() = 0;
+      protected:
+        shared_ptr<Message> recvMessage() const;
+        void setState(const KernelGroup&);
+      };
+
+      class SolverIndexing : public SolverState
+      {
+      public:
+        virtual void handle();
+      };
+
+      class SolverInitializing : public SolverState
+      {
+      public:
+        virtual void handle();
+      };
+
+      class SolverIterating : public SolverState
+      {
+      public:
+        virtual void handle();
+      };
+#endif
+
+//       enum SolverState {
+//         UNDEFINED = 0,
+//         INDEXING,
+//         INITIALZING,
+//         ITERATING,
+//         N_States
+//       };
 
       // (Run) state of the solver control process
       RunState itsState;
@@ -111,13 +173,6 @@ namespace LOFAR
 
       // Connection to the command queue.
       scoped_ptr<CommandQueue> itsCommandQueue;
-
-      // Returns whether the current solver control process controls a global
-      // solver or not. 
-      // \note For the time being we will assume that, when the number of
-      // kernels that will connect to the solver control process is more than
-      // one, the solver control process controls a global solver.
-      bool isGlobal() const;
 
       bool dispatch(const BlobStreamable *message);
       bool handle(const DomainRegistrationRequest *request);
@@ -131,16 +186,23 @@ namespace LOFAR
       // Vector of kernels.
       vector< shared_ptr<BlobStreamableConnection> > itsKernels;
 //       vector<Kernel> itsKernels;
+      
+      // Container of kernel groups. 
+      vector<KernelGroup> itsKernelGroups;
+
+      // Vector used for look-up of kernel group-id given a kernel-id. This is
+      // just one way of solving the look-up. It's not the most memory
+      // efficient, but that's not really an issue, since the number of
+      // kernels is not large. Besides, this type of look-up is constant time.
+      vector<uint> itsKernelGroupIds;
 
       // Current solve command. We need to keep track of it, because we need
       // the information in it between different calls to the run() method.
       shared_ptr<const SolveStep> itsSolveStep;
       
-      // Vector of kernel groups. It is organized as follows:
-      // - The size of the vector determines the number of groups.
-      // - The sum of the elements determines the total number of kernels.
-      // - Each element determines the number of kernels per group.
-      // Note that it is assumed that 
+//       // The Message handler is responsible for handling the messages coming
+//       // from the kernel.
+//       KernelMessageHandler itsMessageHandler;
 
       map<uint32, Domain> itsRegisteredDomains;
     };

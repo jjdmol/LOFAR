@@ -1,9 +1,8 @@
 pkginclude_HEADERS = \
 	BlobStreamableConnection.h \
 	BlobStreamableVector.h \
-	CommandExecutor.h \
 	Command.h \
-	CommandId.h \
+	CommandExecutor.h \
 	CommandQueue.h \
 	CommandResult.h \
 	CommandVisitor.h \
@@ -15,6 +14,7 @@ pkginclude_HEADERS = \
 	InitializeCommand.h \
 	IterationRequest.h \
 	IterationResult.h \
+	KernelGroup.h \
 	KernelProcessControl.h \
 	LocalControlId.h \
 	MultiStep.h \
@@ -28,9 +28,9 @@ pkginclude_HEADERS = \
 	SolveStep.h \
 	Step.h \
 	Strategy.h \
-	Structs.h \
 	SubtractStep.h \
-	SynchronizeCommand.h
+	SynchronizeCommand.h \
+	Types.h
 
 noinst_HEADERS = \
 	pqutil.h \

@@ -24,10 +24,13 @@
 #include <BBSControl/CommandExecutor.h>
 
 #include <BBSControl/CommandQueue.h>
-#include <BBSControl/Structs.h>
+#include <BBSControl/Types.h>
 
 #include <BBSControl/BlobStreamableVector.h>
 #include <BBSControl/BlobStreamableConnection.h>
+#include <BBSControl/DomainRegistrationRequest.h>
+#include <BBSControl/IterationRequest.h>
+#include <BBSControl/IterationResult.h>
 
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
@@ -44,19 +47,14 @@
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
 
-#include <BBSKernel/Grid.h>
-#include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/Prediffer.h>
 
 #include <Common/LofarLogger.h>
 #include <BBSControl/StreamUtil.h>
-#include <Common/lofar_iomanip.h>
 #include <Common/Timer.h>
 
-#include <ParmDB/ParmDBMeta.h>
-
-#include <casa/Quanta/Quantum.h>
-#include <casa/Quanta/MVTime.h>
+//#include <casa/Quanta/Quantum.h>
+//#include <casa/Quanta/MVTime.h>
 
 #if 0
 #define NONREADY        casa::LSQFit::NONREADY
@@ -73,8 +71,6 @@
 
 namespace LOFAR
 {
-//using ParmDB::ParmDB;
-//using ParmDB::ParmDBMeta;
 
 namespace BBS 
 {
@@ -82,9 +78,9 @@ using LOFAR::operator<<;
 
 
 //# Ensure classes are registered with the ObjectFactory.
-//template class BlobStreamableVector<DomainRegistrationRequest>;
-//template class BlobStreamableVector<IterationRequest>;
-//template class BlobStreamableVector<IterationResult>;
+template class BlobStreamableVector<DomainRegistrationRequest>;
+template class BlobStreamableVector<IterationRequest>;
+template class BlobStreamableVector<IterationResult>;
 
 
 CommandExecutor::~CommandExecutor()
@@ -101,109 +97,70 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     shared_ptr<const Strategy> strategy(itsCommandQueue->getStrategy());
     ASSERT(strategy);
 
+#if 0
     try
     {
-        // Open measurement.
-        LOG_INFO_STR("Input: " << strategy->dataSet() << "::"
-            << strategy->inputData());
-        itsInputColumn = strategy->inputData();
-        itsMeasurement.reset(new MeasurementAIPS(strategy->dataSet()));
+        // Create a new kernel.
+        itsKernel.reset(new Prediffer(strategy->dataSet(),
+//            strategy->subband(),
+            0,
+            strategy->inputData(),
+            strategy->parmDB().localSky,
+            strategy->parmDB().instrument,
+            strategy->parmDB().history,
+//            strategy->readUVW()));
+            false));
     }
     catch(Exception &ex)
     {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Failed to open observation.");
-        return;
-    }        
-
-    try
-    {
-        // Open sky model parmdb.
-        LOFAR::ParmDB::ParmDBMeta skyDbMeta("aips", strategy->parmDB().localSky);
-        LOG_INFO_STR("Sky model database: " << skyDbMeta.getTableName());
-        itsSkyDb.reset(new LOFAR::ParmDB::ParmDB(skyDbMeta));
+        // TODO: get exception msg and put into result msg.
+        itsResult = CommandResult(CommandResult::ERROR, "Could not create"
+            " kernel.");
     }
-    catch(Exception &ex)
-    {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Failed to open sky model parameter database.");
-        return;
-    }        
 
-
-    try
-    {
-        // Open instrument model parmdb.
-        LOFAR::ParmDB::ParmDBMeta instrumentDbMeta("aips",
-            strategy->parmDB().instrument);
-        LOG_INFO_STR("Instrument model database: "
-            << instrumentDbMeta.getTableName());
-        itsInstrumentDb.reset(new LOFAR::ParmDB::ParmDB(instrumentDbMeta));
-    }
-    catch(Exception &ex)
-    {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Failed to open instrument model parameter database.");
-        return;
-    }        
-
-    // TODO: Determine kernel id.
-    const uint32 kernelId = 0; 
-
-    // Create kernel.
-    itsKernel.reset(new Prediffer(kernelId, itsMeasurement, *itsSkyDb.get(),
-        *itsInstrumentDb.get()));
-
-    // Initialize the Region Of Interest selection from information in strategy.
+    // Create selection from information in strategy.
+    VisSelection selection;
     if(!strategy->stations().empty())
-        itsRoiSelection.setStations(strategy->stations());
+        selection.setStations(strategy->stations());
 
-    const Correlation &correlation = strategy->correlation();
+    Correlation correlation = strategy->correlation();
     if(!correlation.type.empty())
-    {
-        itsRoiSelection.setPolarizations(correlation.type);
-    }
-    
+        selection.setPolarizations(correlation.type);
+
     if(correlation.selection == "AUTO")
     {
-        itsRoiSelection.setBaselineFilter(VisSelection::AUTO);
+        selection.setBaselineFilter(VisSelection::AUTO);
     }
     else if(correlation.selection == "CROSS")
     {
-        itsRoiSelection.setBaselineFilter(VisSelection::CROSS);
+        selection.setBaselineFilter(VisSelection::CROSS);
     }
 
-    const RegionOfInterest &roi = strategy->regionOfInterest();
+    RegionOfInterest roi = strategy->regionOfInterest();
     if(!roi.frequency.empty())
     {
-        itsRoiSelection.setStartChannel(roi.frequency[0]);
+        selection.setStartChannel(roi.frequency[0]);
     }
     if(roi.frequency.size() > 1)
     {
-        itsRoiSelection.setEndChannel(roi.frequency[1]);
+        selection.setEndChannel(roi.frequency[1]);
     }
     if(!roi.time.empty())
     {
-        itsRoiSelection.setStartTime(roi.time[0]);
+        selection.setStartTime(roi.time[0]);
     }
     if(roi.time.size() > 1)
     {
-        itsRoiSelection.setEndTime(roi.time[1]);
+        selection.setEndTime(roi.time[1]);
     }
 
-    itsRoiDimensions = itsMeasurement->getDimensions(itsRoiSelection);
+    itsKernel->setSelection(selection);
 
-    itsChunkSize = static_cast<size_t>(strategy->domainSize().timeInterval);
-    if(itsChunkSize > 0)
-    {
-        LOG_DEBUG_STR("Chunk size: " << itsChunkSize << " time slot(s)");
-    }
-    else
-    {
-        LOG_DEBUG_STR("Chunk size: all time slot(s)");
-        itsChunkSize = itsRoiDimensions.getTimeSlotCount();
-    }
+    size_t size = strategy->domainSize().timeInterval;
+    LOG_DEBUG_STR("Chunk size: " << size << " timeslot(s)");
+    itsKernel->setChunkSize(size);
 
+#endif
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -225,80 +182,19 @@ void CommandExecutor::visit(const NextChunkCommand &/*command*/)
 
     LOG_DEBUG("Handling a NextChunkCommand");
 
-    if(itsChunkPosition == itsRoiDimensions.getTimeSlotCount())
+#if 0
+    if(itsKernel->nextChunk())
+    {
+        itsResult = CommandResult(CommandResult::OK, "Ok.");
+    }
+    else
     {
         LOG_DEBUG_STR("NextChunk: OUT_OF_DATA");
         itsResult = CommandResult(CommandResult::OUT_OF_DATA);
-        return;
     }
-
-    // Create chunk selection.
-    itsChunkSelection = itsRoiSelection;
-    itsChunkSelection.clear(VisSelection::TIME_START);
-    itsChunkSelection.clear(VisSelection::TIME_END);
-
-    const Grid<double> &grid = itsRoiDimensions.getGrid();
-
-    double start = grid[TIME]->lower(itsChunkPosition);
-    itsChunkPosition += itsChunkSize;
-    if(itsChunkPosition > itsRoiDimensions.getTimeSlotCount())
-    {
-        itsChunkPosition = itsRoiDimensions.getTimeSlotCount();
-    }
-    double end = grid[TIME]->upper(itsChunkPosition - 1);
-    itsChunkSelection.setTimeRange(start, end);
-    
-    // Deallocate chunk.
-    itsKernel->detachChunk();
-    ASSERTSTR(itsChunk.use_count() == 0 || itsChunk.use_count() == 1,
-        "itsChunk shoud be unique (or uninitialized) by now.");
-    itsChunk.reset();
-
-    LOG_DEBUG("Reading chunk...");
-    try
-    {
-        itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn,
-            true);
-    }
-    catch(Exception &ex)
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to read"
-            " chunk.");
-        return;                
-    }
-
-    itsKernel->attachChunk(itsChunk);
-
-    // Display information about chunk.
-    const Grid<double> &chunkGrid = itsChunk->dims.getGrid();
-    pair<double, double> freqRange = chunkGrid[FREQ]->range();
-    pair<double, double> timeRange = chunkGrid[TIME]->range();
-
-    LOG_INFO_STR("Chunk: ");
-    LOG_INFO_STR("  Frequency: "
-        << setprecision(3) << freqRange.first / 1e6 << " MHz"
-        << " - "
-        << setprecision(3) << freqRange.second / 1e6 << " MHz");
-    LOG_INFO_STR("  Bandwidth: "
-        << setprecision(3) << (freqRange.second - freqRange.first) / 1e3
-        << "kHz (" << chunkGrid[FREQ]->size() << " channels of "
-        << setprecision(3)
-        << (freqRange.second - freqRange.first) / chunkGrid[FREQ]->size()
-        << " Hz)");
-    LOG_INFO_STR("  Time:      "
-        << casa::MVTime::Format(casa::MVTime::YMD, 6)
-        << casa::MVTime(casa::Quantum<casa::Double>(timeRange.first, "s"))
-        << " - "
-        << casa::MVTime::Format(casa::MVTime::YMD, 6)
-        << casa::MVTime(casa::Quantum<casa::Double>(timeRange.second, "s")));
-    LOG_INFO_STR("  Duration:  "
-        << setprecision(3) << (timeRange.second - timeRange.first) / 3600.0
-        << " hours (" << chunkGrid[TIME]->size() << " samples of "
-        << setprecision(3)
-        << (timeRange.second - timeRange.first) / chunkGrid[TIME]->size()
-        << " s on average)");
-
+#else
     itsResult = CommandResult(CommandResult::OK, "Ok.");
+#endif
 }
 
 
@@ -349,39 +245,25 @@ void CommandExecutor::visit(const PredictStep &command)
 
     ASSERTSTR(itsKernel, "No kernel available.");
 
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
-    {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
-        return;
-    }        
-        
-    // Initialize model.
-    itsKernel->setModelConfig(Prediffer::SIMULATE, command.instrumentModels(),
-        command.sources());    
+#if 0
+    PredictContext context;
+    context.baselines = command.baselines();
+    context.correlation = command.correlation();
+    context.sources = command.sources();
+    context.instrumentModel = command.instrumentModels();
+    context.outputColumn = command.outputData();
 
-    // Simulate visibilities.
-    itsKernel->simulate();
-    
-    // Write visibilities if required.
-    if(!command.outputData().empty())
+    // Set context.
+    if(!itsKernel->setContext(context))
     {
-        try
-        {
-            itsMeasurement->write(itsChunkSelection, itsChunk,
-                command.outputData(), false);
-        }
-        catch(Exception &ex)
-        {
-            itsResult = CommandResult(CommandResult::ERROR, "Failed to write"
-                " chunk.");
-            return;                
-        }
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Could not set context.");
+        return;
     }
-    
+
+    // Execute predict.
+    itsKernel->predict();
+#endif
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -395,39 +277,25 @@ void CommandExecutor::visit(const SubtractStep &command)
 
     ASSERTSTR(itsKernel, "No kernel available.");
 
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
-    {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
-        return;
-    }        
-        
-    // Initialize model.
-    itsKernel->setModelConfig(Prediffer::SUBTRACT, command.instrumentModels(),
-        command.sources());    
+#if 0
+    SubtractContext context;
+    context.baselines = command.baselines();
+    context.correlation = command.correlation();
+    context.sources = command.sources();
+    context.instrumentModel = command.instrumentModels();
+    context.outputColumn = command.outputData();
 
-    // Subtract visibilities.
-    itsKernel->subtract();
-
-    // Write visibilities if required.
-    if(!command.outputData().empty())
+    // Set context.
+    if(!itsKernel->setContext(context))
     {
-        try
-        {
-            itsMeasurement->write(itsChunkSelection, itsChunk,
-                command.outputData(), false);
-        }
-        catch(Exception &ex)
-        {
-            itsResult = CommandResult(CommandResult::ERROR, "Failed to write"
-                " chunk.");
-            return;                
-        }
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Could not set context.");
+        return;
     }
 
+    // Execute subtract.
+    itsKernel->subtract();
+#endif
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -441,39 +309,25 @@ void CommandExecutor::visit(const CorrectStep &command)
 
     ASSERTSTR(itsKernel, "No kernel available.");
 
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
-    {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
-        return;
-    }        
-        
-    // Initialize model.
-    itsKernel->setModelConfig(Prediffer::CORRECT, command.instrumentModels(),
-        command.sources());    
+#if 0
+    CorrectContext context;
+    context.baselines = command.baselines();
+    context.correlation = command.correlation();
+    context.sources = command.sources();
+    context.instrumentModel = command.instrumentModels();
+    context.outputColumn = command.outputData();
 
-    // Correct visibilities.
-    itsKernel->correct();
-
-    // Write visibilities if required.
-    if(!command.outputData().empty())
+    // Set context.
+    if(!itsKernel->setContext(context))
     {
-        try
-        {
-            itsMeasurement->write(itsChunkSelection, itsChunk,
-                command.outputData(), false);
-        }
-        catch(Exception &ex)
-        {
-            itsResult = CommandResult(CommandResult::ERROR, "Failed to write"
-                " chunk.");
-            return;                
-        }
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Could not set context.");
+        return;
     }
 
+    // Execute correct.
+    itsKernel->correct();
+#endif
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -483,107 +337,9 @@ void CommandExecutor::visit(const SolveStep &command)
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     LOG_DEBUG("Handling a SolveStep");
     LOG_DEBUG_STR("Command: " << endl << command);
-
+#if 0
     ASSERTSTR(itsKernel, "No kernel available.");
 
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
-    {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
-        return;
-    }        
-        
-    // Initialize model.
-    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
-        command.sources());    
-
-    itsKernel->setParameterSelection(command.parms(), command.exclParms());
-    
-    // Construct solution grid.
-    const pair<size_t, size_t> cellSize(command.domainSize().bandWidth,
-        command.domainSize().timeInterval);
-
-    // Construct frequency axis.
-    Axis<double>::Pointer faxis = itsMeasurement->getFreqAxis();
-    LOG_DEBUG_STR("Frequency axis: " << faxis->size() << " channels.");
-    
-    if(faxis->size() % cellSize.first == 0)
-    {
-        LOG_DEBUG_STR("Frequency axis: regular");
-        const pair<double, double> range = faxis->range();
-        const size_t count = faxis->size() / cellSize.first;
-        const double delta = (range.second - range.first) / count;
-
-        faxis.reset(new RegularAxis<double>(range.first, delta, count));
-    }
-    else
-    {
-        size_t i = 0;
-        vector<double> fborders;
-
-        while(i < faxis->size())
-        {
-            fborders.push_back(faxis->lower(i));
-            i += cellSize.first;
-        }        
-        fborders.push_back(faxis->range().second);
-        
-        faxis.reset(new IrregularAxis<double>(fborders));
-    }        
-
-
-    // Construct time axis.
-    Axis<double>::Pointer taxis = itsMeasurement->getTimeAxis();
-
-    size_t i = 0;
-    vector<double> tborders;
-    while(i < taxis->size())
-    {
-        tborders.push_back(taxis->lower(i));
-        i += cellSize.second;
-    }        
-    tborders.push_back(taxis->range().second);
-    taxis.reset(new IrregularAxis<double>(tborders));
-
-    // Set solution grid.
-    Grid<double> grid(faxis, taxis);
-    itsKernel->setCellGrid(grid);
-    
-    const Grid<double> &chunkGrid = itsChunk->dims.getGrid();
-    Box<double> bbox = chunkGrid.getBoundingBox() & grid.getBoundingBox();
-    ASSERT(!bbox.empty());
-
-    // Find the first and last solution cell that intersect the current chunk.
-    pair<Location, bool> result;
-    result = grid.locate(bbox.start, true);
-    ASSERT(result.second);
-    Location chunkStart = result.first;
-
-    result = grid.locate(bbox.end, false);
-    ASSERT(result.second);
-    Location chunkEnd = result.first;
-
-    LOG_DEBUG_STR("Cells in chunk: [(" << chunkStart.first << ","
-        << chunkStart.second << "), (" << chunkEnd.first << ","
-        << chunkEnd.second << ")]");
-        
-    // Temporary stub for testing purposes.
-    for(size_t ts = chunkStart.second; ts <= chunkEnd.second; ++ts)
-    {
-        Location start(chunkStart.first, ts);
-        Location end(chunkEnd.first, ts);
-
-        for(size_t it = 0; it < command.solverOptions().maxIter; ++it)
-        {
-            EquationMsg::Pointer eq = itsKernel->construct(start, end);
-        }
-    }
-
-    
-/*
     NSTimer timer;
 
     // Construct context.
@@ -738,7 +494,7 @@ void CommandExecutor::visit(const SolveStep &command)
                     // Update cached values of the unknowns.
                     itsKernel->updateUnknowns(result->getDomainIndex(),
                         result->getUnknowns());
-
+/*
                     // Log the updated unknowns.
                     itsKernel->logIteration(
                         command.name(),
@@ -746,6 +502,7 @@ void CommandExecutor::visit(const SolveStep &command)
                         result->getRank(),
                         result->getChiSquared(),
                         result->getLMFactor());
+*/
 
 #ifdef LOG_SOLVE_DOMAIN_STATS
                     LOG_DEBUG_STR("Domain: " << result->getDomainIndex()
@@ -819,6 +576,7 @@ void CommandExecutor::visit(const SolveStep &command)
             << "%)";
         LOG_DEBUG(oss.str());
 
+/*
         LOG_DEBUG_STR("[START] Writing solutions into parameter"
             " databases...");
         timer.reset();
@@ -841,6 +599,7 @@ void CommandExecutor::visit(const SolveStep &command)
 
         timer.stop();
         LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
+*/
     }
 
     LOG_DEBUG_STR("[START] Writing solutions into parameter"
@@ -861,7 +620,9 @@ void CommandExecutor::visit(const SolveStep &command)
 
     timer.stop();
     LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
-*/
+#endif
+
+    itsSolverConnection->sendObject(CoeffIndexMsg());
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }

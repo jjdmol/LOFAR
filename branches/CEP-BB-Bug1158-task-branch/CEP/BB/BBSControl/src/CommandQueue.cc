@@ -25,7 +25,6 @@
 
 //# Includes
 #include <BBSControl/Command.h>
-#include <BBSControl/CommandId.h>
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/LocalControlId.h>
@@ -149,7 +148,7 @@ namespace LOFAR
       if (type.empty()) return make_pair(shared_ptr<Command>(), CommandId());
 
       // Get the command-id.
-      CommandId id = ps.getInt32("id");
+      CommandId id = ps.getUint32("id");
 
       // Get the command name. Only steps have names, so this is a way to
       // differentiate between ordinary commands and steps.
@@ -248,10 +247,10 @@ namespace LOFAR
       // Compose the query.
       ostringstream query;
       query << "SELECT * FROM blackboard.add_result(" 
-            << commandId.asInt() << "," 
-            << getpid() << ","
-            << result.asInt()    << ",'" 
-            << result.message()  << "') AS result";
+            << commandId        << "," 
+            << getpid()         << ","
+            << result.asInt()   << ",'" 
+            << result.message() << "') AS result";
 
       // Execute the query and return the result
       return execQuery(query.str()).getBool("result");

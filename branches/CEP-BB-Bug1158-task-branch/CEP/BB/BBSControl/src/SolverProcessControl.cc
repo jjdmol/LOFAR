@@ -29,6 +29,7 @@
 #include <BBSControl/SolverProcessControl.h>
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandQueue.h>
+#include <BBSControl/InitializeCommand.h>
 #include <BBSControl/StreamUtil.h>
 
 #include <APS/ParameterSet.h>
@@ -52,13 +53,17 @@ namespace LOFAR
   namespace BBS
   {
     using LOFAR::operator<<;
-//     using boost::scoped_ptr;
 
     //# Ensure classes are registered with the ObjectFactory.
     template class BlobStreamableVector<DomainRegistrationRequest>;
     template class BlobStreamableVector<IterationRequest>;
     template class BlobStreamableVector<IterationResult>;
 
+    namespace
+    {
+      InitializeCommand initCmd;
+      CoeffIndexMsg     coeffIndexMsg;
+    }
 
     //##----   P u b l i c   m e t h o d s   ----##//
 
@@ -176,57 +181,90 @@ namespace LOFAR
         switch(itsState) {
 
         case UNDEFINED: {
-          LOG_WARN("RunState is UNDEFINED; init() must be called first!");
+          LOG_WARN("ProcessState UNDEFINED; init() must be called first!");
           return false;
         }
 
         case IDLE: {
-          LOG_TRACE_FLOW("RunState::IDLE");
+          LOG_TRACE_FLOW("ProcessState::IDLE");
+
           LOG_DEBUG("Waiting for command trigger ...");
-          if (itsCommandQueue->waitForTrigger(CommandQueue::Trigger::Command)) {
-            // Get the next command. If it's a SolveStep, we can change state.
-            shared_ptr<const Command> cmd = 
-              itsCommandQueue->getNextCommand().first;
-            LOG_DEBUG_STR("Received a `" << cmd->type() << "' command");
+          if (itsCommandQueue->
+              waitForTrigger(CommandQueue::Trigger::Command)) {
+            // Get the next command.
+            const NextCommandType& nextCmd = itsCommandQueue->getNextCommand();
+            shared_ptr<const Command> cmd = nextCmd.first;
+            const CommandId cmdId = nextCmd.second;
+
             itsSolveStep = dynamic_pointer_cast<const SolveStep>(cmd);
-            if (itsSolveStep) itsState = INDEXING;
+            if (itsSolveStep) {
+              // It's a SolveStep, we can change state.
+              itsState = SOLVING;
+              setKernelGroups(itsSolveStep->kernelGroups());
+            }
+            else {
+              // Not a SolveStep, send "Ok" result to command queue
+              // immediately.
+              itsCommandQueue->addResult(cmdId, CommandResult::OK);
+            }
           }
           break;
         }
+          
+        case SOLVING: {
+          LOG_TRACE_FLOW("ProcessState::SOLVING");
 
-        case INDEXING: {
-          LOG_TRACE_FLOW("RunState::INDEXING");
+          // switch (SolverState)
+          // case INDEXING:
+          //   for each kernel group
+          //     for each kernel in the group
+          //       poll for coeffindex
+          //     if received all coeffindices 
+          //       change to state INITIALIZING
 
-          // Set-up map that maps kernel-id to kernel group-id
-//           vector<uint> kernelGroups = globalParameterSet()->getVector<
-
-          // Get the coefficient indices from our kernel(s).
+          // Receive messages from our kernel(s); for the time being we'll use
+          // a round-robin "polling". Every message is handed over to the
+          // kernel group that currently "holds" the kernel identified by the
+          // kernel-id in the received message.
+          // Note that the current implementation assumes blocking I/O. 
+          for (uint i = 0; i < itsNrKernels; ++i) {
+            LOG_TRACE_STAT_STR("Kernel #" << i << ": recvObject()");
+            shared_ptr<const KernelMessage> 
+              msg(dynamic_cast<const KernelMessage*>
+                  (itsKernels[i]->recvObject()));
+            if (msg) {
+              LOG_DEBUG_STR("Received a `" << msg->classType() << "' message");
+              msg->passTo(kernelGroup(msg->getKernelId()));
+            }
+          }
 
           // Send indices back to all kernels.
 
           break;
         }
 
-        case INITIALZING: {
-          LOG_TRACE_FLOW("RunState::INITIALZING");
+          //         case INITIALZING: {
+          //           LOG_TRACE_FLOW("RunState::INITIALZING");
 
-          // Set initial coefficients
+          //           // Set initial coefficients
 
-          break;
-        }
+          //           LOG_DEBUG("Switching to ITERATING state");
+          //           itsState = ITERATING;
+          //           break;
+          //         }
 
-        case ITERATING: {
-          LOG_TRACE_FLOW("RunState::ITERATING");
+          //         case ITERATING: {
+          //           LOG_TRACE_FLOW("RunState::ITERATING");
 
-          // While not converged:
-          //   Set equations
-          //   iterate
-
-          break;
-        }
+          //           // While not converged:
+          //           //   Set equations
+          //           //   iterate
+          //           if (converged) {
+          //           break;
+          //         }
 
         default: {
-          LOG_ERROR("RunState is UNKNOWN: this is a program logic error!");
+          LOG_ERROR("ProcessState UNKNOWN: this is a program logic error!");
           return false;
         }
 
@@ -242,11 +280,13 @@ namespace LOFAR
 #endif
 
       }
-      catch(Exception& e)
-      {
+
+      catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
       }
+
+      return true;
     }
 
 
@@ -261,8 +301,12 @@ namespace LOFAR
     tribool SolverProcessControl::release()
     {
       LOG_INFO("SolverProcessControl::release()");
-      LOG_WARN("Not supported");
-      return false;
+      itsState = UNDEFINED;
+      /* Here we should properly close all connections to the outside world.
+         I.e. our connection to the command queue, and the connections
+         that we've accepted from the kernels.
+      */
+      return true;
     }
 
 
@@ -310,6 +354,27 @@ namespace LOFAR
     bool SolverProcessControl::isGlobal() const
     {
       return itsNrKernels > 1;
+    }
+
+
+    void SolverProcessControl::setKernelGroups(const vector<uint>& groups)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      LOG_TRACE_VAR_STR("Kernel groups: " << groups);
+      itsKernelGroups.clear();
+      itsKernelGroupIds.clear();
+      for (uint i = 0; i < groups.size(); ++i) {
+        itsKernelGroups.push_back(KernelGroup(groups[i]));
+        for (uint j = 0; j < groups[i]; ++j) {
+          itsKernelGroupIds.push_back(i);
+        }
+      }
+    }
+
+
+    KernelGroup& SolverProcessControl::kernelGroup(const KernelId& id)
+    {
+      return itsKernelGroups[itsKernelGroupIds[id]];
     }
 
 

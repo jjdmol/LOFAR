@@ -27,7 +27,6 @@
 
 #include <BBSControl/KernelProcessControl.h>
 #include <BBSControl/CommandQueue.h>
-#include <BBSControl/CommandId.h>
 #include <BBSControl/Step.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
@@ -234,8 +233,9 @@ namespace LOFAR
     tribool KernelProcessControl::release()
     {
       LOG_INFO("KernelProcessControl::release()");
-      LOG_WARN("Not supported");
-      return false;
+      LOG_WARN("Not implemented yet");
+      /* Here we should properly clean-up; i.e. close open sockets, etc. */
+      return true;
     }
 
 

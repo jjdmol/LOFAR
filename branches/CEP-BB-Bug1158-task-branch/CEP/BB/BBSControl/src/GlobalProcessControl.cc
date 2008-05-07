@@ -34,7 +34,6 @@
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
 
-#include <BBSControl/CommandId.h>
 #include <BBSControl/LocalControlId.h>
 
 #include <unistd.h>    // for sleep()

@@ -27,7 +27,7 @@
 // The properties for solvable parameters
 
 //# Includes
-#include <BBSControl/Structs.h>
+#include <BBSControl/Types.h>
 #include <BBSControl/Command.h>
 #include <Common/lofar_iosfwd.h>
 #include <Common/lofar_string.h>
@@ -105,14 +105,6 @@ namespace LOFAR
 
       // Write the Step objects in \a itsSteps to parameter set \a ps.
       void writeSteps(ACC::APS::ParameterSet& ps) const;
-
-//       // Write the contents of a Strategy to a ParameterSet.
-//       friend ACC::APS::ParameterSet& 
-//       operator<<(ACC::APS::ParameterSet&, const Strategy&);
-
-//       // Read the contents of a ParameterSet into a Strategy.
-//       friend ACC::APS::ParameterSet& 
-//       operator>>(ACC::APS::ParameterSet&, Strategy&);
 
       // Name of the Measurement Set
       string                 itsDataSet;

@@ -30,7 +30,6 @@
 #include <PLC/ProcessControl.h>
 #include <Common/lofar_smartptr.h>
 
-#include <BBSControl/CommandId.h>
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/LocalControlId.h>

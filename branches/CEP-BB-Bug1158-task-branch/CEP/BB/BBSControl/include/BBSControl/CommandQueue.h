@@ -40,9 +40,9 @@
 //# but it avoids the need to #include them whenever any of the public
 //# typedefs \c NextCommandType, \c ResultType, or \a ResultMapType are used.
 #include <BBSControl/Command.h>
-#include <BBSControl/CommandId.h>
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/LocalControlId.h>
+#include <BBSControl/Types.h>
 
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>

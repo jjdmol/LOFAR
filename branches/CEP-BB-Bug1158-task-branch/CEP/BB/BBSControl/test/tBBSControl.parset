@@ -1,4 +1,8 @@
 NrLocalCtrls            = 2                 # number of local controllers
+Solver.nrKernels        = 2
+Solver.Global           = true
+Solver.Host             = localhost
+Solver.Port             = 11111
 
 DataSet                 = test.ms           # name of Measurement Set
 

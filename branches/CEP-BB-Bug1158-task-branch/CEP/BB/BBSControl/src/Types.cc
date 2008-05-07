@@ -1,4 +1,4 @@
-//#  Structs.cc: 
+//#  Types.cc: 
 //#
 //#  Copyright (C) 2002-2007
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include <lofar_config.h>
 
-#include <BBSControl/Structs.h>
+#include <BBSControl/Types.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/lofar_sstream.h>
 #include <Common/lofar_iomanip.h>
@@ -151,9 +151,8 @@ namespace LOFAR
 
     BlobIStream& operator>>(BlobIStream& bis, Correlation& obj)
     {
-      int32 selection;
-      bis >> obj.selection;
-      bis >> obj.type;
+      bis >> obj.selection
+          >> obj.type;
       return bis;
     }
 
