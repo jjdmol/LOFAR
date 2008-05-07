@@ -369,9 +369,11 @@ else
       fi
     fi
     if test "$lfr_ext_lib" != "" ; then
-      EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
-      if test "$lofar_no_rpath" = 0; then
-        EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+      if test "$lfr_ext_lib" != "/usr/$lofar_libdirext" ; then
+        EXTERNAL_LDFLAGS="-L$lfr_ext_lib"
+        if test "$lofar_no_rpath" = 0; then
+          EXTERNAL_LDFLAGS="$EXTERNAL_LDFLAGS -Wl,-rpath,$lfr_ext_lib"
+        fi
       fi
     fi
     for lib in $lfr_libsc
