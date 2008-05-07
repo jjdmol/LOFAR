@@ -94,6 +94,25 @@ namespace LOFAR
     bs.getEnd();
   }
 
+  template<typename T>
+  void sequenceFromBlob (BlobIStream& bs, std::set<T>& s)
+  {
+    bs.getStart (LOFAR::typeName((const T**)0));
+    bool fortranOrder;
+    uint16 ndim;
+    uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
+    ASSERT(ndim == 1);
+    uint32 size;
+    getBlobArrayShape (bs, &size, 1, false, nalign);
+    T t;
+    s.clear();
+    for (uint32 i=0; i<size; ++i) {
+      bs >> t;
+      s.insert (t);
+    }
+    bs.getEnd();
+  }
+
 } // end namespace LOFAR
 
 #endif

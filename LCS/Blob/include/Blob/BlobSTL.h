@@ -70,7 +70,10 @@ namespace LOFAR
 
   // \name Read back a sequence.
   template<typename Seq>
-  void sequenceFromBlob (BlobOStream&, const Seq&);
+  void sequenceFromBlob (BlobOStream&, Seq&);
+  // Specialize for a set.
+  template<typename T>
+  void sequenceFromBlob (BlobOStream&, std::set<T>&);
   //   </group>
 
 
