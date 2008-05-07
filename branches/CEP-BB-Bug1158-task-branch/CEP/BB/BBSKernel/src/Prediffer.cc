@@ -73,6 +73,8 @@ namespace LOFAR
 namespace BBS
 {
 using LOFAR::operator<<;
+using LOFAR::max;
+using LOFAR::min;
 using LOFAR::ParmDB::ParmDB;
 using LOFAR::ParmDB::ParmDBMeta;
 
@@ -362,7 +364,7 @@ void Prediffer::setModelConfig(OperationType operation,
 
     // Reset state.
     itsGlobalCellGrid = Grid<double>();
-    itsCellGrid = Grid<size_t>();
+    itsCellGrid = Grid<uint32>();
     itsStartCell = Location();
     itsEndCell = Location();
     itsCoeffIndex.clear();
@@ -446,7 +448,7 @@ bool Prediffer::setCellGrid(const Grid<double> &cellGrid)
         DBGASSERT(boundaries[i] < sampleAxis->size());
     }
     LOG_DEBUG_STR("Boundaries FREQ: " << boundaries);
-    Axis<uint32>::Pointer fAxis(new IrregularAxis<size_t>(boundaries));
+    Axis<uint32>::Pointer fAxis(new IrregularAxis<uint32>(boundaries));
 
     // Map cell boundaries to sample boundaries (time axis).
     cellAxis = itsGlobalCellGrid[TIME];
@@ -465,7 +467,7 @@ bool Prediffer::setCellGrid(const Grid<double> &cellGrid)
         DBGASSERT(boundaries[i] < sampleAxis->size());
     }
     LOG_DEBUG_STR("Boundaries TIME: " << boundaries);
-    Axis<uint32>::Pointer tAxis(new IrregularAxis<size_t>(boundaries));
+    Axis<uint32>::Pointer tAxis(new IrregularAxis<uint32>(boundaries));
 
     // Set local cell grid.
     itsCellGrid = Grid<uint32>(fAxis, tAxis);
@@ -820,7 +822,7 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     vector<CellEquation> &equations = result->getContents();
     equations.resize(nCells);
 
-    const size_t nCoeff = itsCoeffIndex.getCoeffCount();
+    const uint32 nCoeff = itsCoeffIndex.getCoeffCount();
 
     size_t idx = 0;
     for(size_t t = start.second; t <= end.second; ++t)
@@ -880,7 +882,7 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     local[1].second = end.second - itsStartCell.second;
 
     // Compute bounding box in sample coordinates.
-    const Box<size_t> visBox =
+    const Box<uint32> visBox =
         itsCellGrid.getBoundingBox(local[0], local[1]);
 
     Location visStart(visBox.start.first, visBox.start.second);
