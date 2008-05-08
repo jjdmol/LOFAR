@@ -1,13 +1,11 @@
 lib_LTLIBRARIES = libbbskernel.la
 
 libbbskernel_la_SOURCES = Package__Version.cc  	\
-	BBSStatus.cc			\
-	CoefficientIndex.cc		\
 	MeasurementAIPS.cc		\
-	Messages.cc			\
 	Model.cc			\
 	Prediffer.cc			\
 	Solver.cc			\
+	SolverInterfaceTypes.cc		\
 	VisData.cc			\
 	VisDimensions.cc		\
 	VisSelection.cc			\

@@ -23,8 +23,7 @@
 #ifndef LOFAR_BB_BBSKERNEL_SOLVER_H
 #define LOFAR_BB_BBSKERNEL_SOLVER_H
 
-#include <BBSKernel/CoefficientIndex.h>
-#include <BBSKernel/Messages.h>
+#include <BBSKernel/SolverInterfaceTypes.h>
 #include <Common/LofarTypes.h>
 
 #include <scimath/Fitting/LSQFit.h>
@@ -50,23 +49,19 @@ namespace BBS
             size_t maxIter = 10, double colFactor = 1e-9, double lmFactor = 1.0,
             bool balanced = false, bool useSvd = true);
 
-        void setCoeffIndex(CoeffIndexMsg::Pointer msg);
-        CoeffIndexMsg::Pointer getCoeffIndex() const;
+        void setCoeffIndex(uint32 kernelId, const CoeffIndex &local);
+        void getCoeffIndex(CoeffIndex &global) const;
 
-        void setCoeff(CoeffMsg::Pointer msg);
+        void setCoeff(uint32 kernelId, const vector<CellCoeff> &local);
 
-        void setEquations(EquationMsg::Pointer msg);
-        EquationMsg::Pointer getEquations() const;
+        void setEquations(uint32 kernelId, const vector<CellEquation> &local);
+        void getEquations(vector<CellEquation> &global);
 
-        bool iterate(SolutionMsg::Pointer msg);
+        bool iterate(vector<CellSolution> &global);
 
     private:
-        class Cell
+        struct Cell
         {
-        public:
-            Cell()
-            {}
-                            
             casa::LSQFit    solver;
             vector<double>  coeff;
         };

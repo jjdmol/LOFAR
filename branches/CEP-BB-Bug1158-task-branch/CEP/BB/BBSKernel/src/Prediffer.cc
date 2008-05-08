@@ -75,8 +75,6 @@ namespace BBS
 using LOFAR::operator<<;
 using LOFAR::max;
 using LOFAR::min;
-using LOFAR::ParmDB::ParmDB;
-using LOFAR::ParmDB::ParmDBMeta;
 
 string Prediffer::ThreadContext::timerNames[ThreadContext::N_Timer] =
     {"Model evaluation",
@@ -88,12 +86,10 @@ string Prediffer::ThreadContext::timerNames[ThreadContext::N_Timer] =
     "casa::LSQFit::makeNorm()"};
 
 
-Prediffer::Prediffer(uint32 id,
-        Measurement::Pointer measurement,
+Prediffer::Prediffer(Measurement::Pointer measurement,
         ParmDB::ParmDB sky,
         ParmDB::ParmDB instrument)
-    :   itsId(id),
-        itsMeasurement(measurement),
+    :   itsMeasurement(measurement),
         itsSkyDb(sky),
         itsInstrumentDb(instrument)
 {        
@@ -590,21 +586,16 @@ void Prediffer::clearParameterSelection()
 }
 
 
-CoeffIndexMsg::Pointer Prediffer::getCoeffIndex() const
+void Prediffer::getCoeffIndex(CoeffIndex &local) const
 {
     DBGASSERT(itsOperation == CONSTRUCT);
-
-    CoeffIndexMsg::Pointer msg(new CoeffIndexMsg(itsId));
-    msg->getContents() = itsCoeffIndex;
-    return msg;
+    local = itsCoeffIndex;
 }
 
 
-void Prediffer::setCoeffIndex(CoeffIndexMsg::Pointer msg)
+void Prediffer::setCoeffIndex(const CoeffIndex &global)
 {
     DBGASSERT(itsOperation == CONSTRUCT);
-
-    const CoeffIndex &global = msg->getContents();
 
     itsCoeffMapping.resize(itsParameterSelection.size());
     for(size_t i = 0; i < itsParameterSelection.size(); ++i)
@@ -620,9 +611,9 @@ void Prediffer::setCoeffIndex(CoeffIndexMsg::Pointer msg)
 }
 
 
-CoeffMsg::Pointer Prediffer::getCoeff(Location start, Location end)
+void Prediffer::getCoeff(Location start, Location end, vector<CellCoeff> &local)
     const
-{
+{    
     DBGASSERT(itsOperation == CONSTRUCT);
 
     // Check preconditions.
@@ -641,8 +632,7 @@ CoeffMsg::Pointer Prediffer::getCoeff(Location start, Location end)
     size_t nCells = (end.first - start.first + 1)
         * (end.second - start.second + 1);
         
-    CoeffMsg::Pointer msg(new CoeffMsg(itsId, nCells));
-    vector<CellCoeff> &cells = msg->getContents();
+    local.resize(nCells);
 
     // Loop over all requested cells and copy the coefficient values for
     // each parameter.
@@ -656,7 +646,7 @@ CoeffMsg::Pointer Prediffer::getCoeff(Location start, Location end)
         {
             // Get global cell id.
             const uint32 globalId = itsGlobalCellGrid.getCellId(globalLoc);
-            cells[idx].id = globalId;
+            local[idx].id = globalId;
 
             // Get local cell id.
             const Location localLoc(globalLoc.first - itsStartCell.first,
@@ -675,13 +665,13 @@ CoeffMsg::Pointer Prediffer::getCoeff(Location start, Location end)
                 const double *coeffValues = coeff.doubleStorage();
                 const vector<bool> &mask = funklet->getSolvMask();
                 
-                cells[idx].coeff.reserve(funklet->nscid());
+                local[idx].coeff.reserve(funklet->nscid());
                 for(size_t j = 0; j < static_cast<size_t>(coeff.nelements());
                     ++j)
                 {
                     if(mask[j])
                     {
-                        cells[idx].coeff.push_back(coeffValues[j]);
+                        local[idx].coeff.push_back(coeffValues[j]);
                     }
                 }
             }
@@ -690,20 +680,16 @@ CoeffMsg::Pointer Prediffer::getCoeff(Location start, Location end)
             ++idx;
         }            
     }
-
-    return msg;
 }    
 
 
-void Prediffer::setCoeff(SolutionMsg::Pointer msg)
+void Prediffer::setCoeff(const vector<CellSolution> &global)
 {
     DBGASSERT(itsOperation == CONSTRUCT);
 
-    const vector<CellSolution> &solutions = msg->getContents();
-
-    for(size_t i = 0; i < solutions.size(); ++i)
+    for(size_t i = 0; i < global.size(); ++i)
     {
-        const CellSolution &cell = solutions[i];
+        const CellSolution &cell = global[i];
 
         Location cellLoc = itsGlobalCellGrid.getCellLocation(cell.id);
         if(cellLoc.first >= itsEndCell.first
@@ -794,7 +780,8 @@ void Prediffer::correct()
 }
 
 
-EquationMsg::Pointer Prediffer::construct(Location start, Location end)
+void Prediffer::construct(Location start, Location end,
+    vector<CellEquation> &local)
 {
     DBGASSERT(itsOperation == CONSTRUCT);
 
@@ -818,9 +805,7 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     LOG_DEBUG_STR("Constructing equations for " << nCells << " cell(s).");
 
     // Allocate the result.
-    EquationMsg::Pointer result(new EquationMsg(itsId));
-    vector<CellEquation> &equations = result->getContents();
-    equations.resize(nCells);
+    local.resize(nCells);
 
     const uint32 nCoeff = itsCoeffIndex.getCoeffCount();
 
@@ -829,8 +814,8 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     {
         for(size_t f = start.first; f <= end.first; ++f)
         {
-            equations[idx].id = itsGlobalCellGrid.getCellId(Location(f, t));
-            equations[idx].equation.set(nCoeff);
+            local[idx].id = itsGlobalCellGrid.getCellId(Location(f, t));
+            local[idx].equation.set(nCoeff);
             ++idx;
         }
     }
@@ -851,7 +836,7 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
 
     for(size_t i = 0; i < nCells; ++i)
     {
-        itsThreadContexts[0].equations[i] = &(equations[i].equation);
+        itsThreadContexts[0].equations[i] = &(local[i].equation);
     }
 
 #ifdef _OPENMP
@@ -875,15 +860,17 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
 #endif
 
     // Compute local start and end cell.
-    Location local[2];
-    local[0].first = start.first - itsStartCell.first;
-    local[0].second = start.second - itsStartCell.second;
-    local[1].first = end.first - itsStartCell.first;
-    local[1].second = end.second - itsStartCell.second;
+    Box<uint32> cellBox;
+    cellBox.start.first = start.first - itsStartCell.first;
+    cellBox.start.second = start.second - itsStartCell.second;
+    cellBox.end.first = end.first - itsStartCell.first;
+    cellBox.end.second = end.second - itsStartCell.second;
 
     // Compute bounding box in sample coordinates.
     const Box<uint32> visBox =
-        itsCellGrid.getBoundingBox(local[0], local[1]);
+        itsCellGrid.getBoundingBox
+            (Location(cellBox.start.first, cellBox.start.second),
+            Location(cellBox.end.first, cellBox.end.second));
 
     Location visStart(visBox.start.first, visBox.start.second);
     Location visEnd(visBox.end.first, visBox.end.second);
@@ -895,7 +882,7 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     // Generate equations.
     itsProcessTimer.start();
     process(true, true, visStart, visEnd, &Prediffer::constructBl,
-        static_cast<void*>(&local[0]));
+        static_cast<void*>(&cellBox));
     itsProcessTimer.stop();
     
 #ifdef _OPENMP
@@ -923,8 +910,6 @@ EquationMsg::Pointer Prediffer::construct(Location start, Location end)
     {
         itsThreadContexts[i] = ThreadContext();
     }
-    
-    return result;
 }
 
 
@@ -1150,8 +1135,9 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
     context.timers[ThreadContext::PROCESS].start();
         
     // Get cells to process.
-    const Location &start = static_cast<Location*>(arguments)[0];
-    const Location &end = static_cast<Location*>(arguments)[1];
+    const Box<uint32> *cellBox = static_cast<Box<uint32>*>(arguments);
+    const Point<uint32> &start = cellBox->start;
+    const Point<uint32> &end = cellBox->end;
 
 //    LOG_DEBUG_STR("Offset: (" << offset.first << "," << offset.second << ")");
 //    LOG_DEBUG_STR("Processing cells (" << start.first << "," << start.second

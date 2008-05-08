@@ -1,4 +1,4 @@
-//# CoefficientIndex.h:
+//# SolverInterfaceTypes.h: 
 //#
 //# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,21 +20,21 @@
 //#
 //# $Id$
 
+#ifndef LOFAR_BB_BBSKERNEL_SOLVERINTERFACETYPES_H
+#define LOFAR_BB_BBSKERNEL_SOLVERINTERFACETYPES_H
 
-#ifndef LOFAR_BB_BBSKERNEL_COEFFINDEX_H
-#define LOFAR_BB_BBSKERNEL_COEFFINDEX_H
-
+#include <Common/LofarTypes.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
-#include <Common/lofar_smartptr.h>
-#include <Common/LofarTypes.h>
-#include <Common/LofarLogger.h>
 
+#include <scimath/Fitting/LSQFit.h>
+
+    
 namespace LOFAR
 {
-class BlobIStream;
-class BlobOStream;
+    class BlobIStream;
+    class BlobOStream;
 
 namespace BBS
 {
@@ -106,7 +106,6 @@ namespace BBS
         IndexType   itsIntervals;
     };
 
-
     // iostream I/O
     ostream &operator<<(ostream &out, const CoeffIndex &obj);
 
@@ -116,7 +115,76 @@ namespace BBS
     BlobIStream &operator>>(BlobIStream &in, CoeffInterval &obj);
     BlobOStream &operator<<(BlobOStream &out, const CoeffInterval &obj);
 
+
+// -----------------------------------------------------------------------------
+    class CellCoeff
+    {
+    public:
+        CellCoeff()
+            : id(0)
+        {}
+        
+        CellCoeff(uint32 id)
+            : id(id)
+        {}
+
+        uint32          id;
+        vector<double>  coeff;
+    };
+
+    // BlobStream I/O
+    BlobIStream &operator>>(BlobIStream &in, CellCoeff &obj);
+    BlobOStream &operator<<(BlobOStream &out, const CellCoeff &obj);
+
+
+// -----------------------------------------------------------------------------
+    class CellEquation
+    {
+    public:
+        CellEquation()
+            : id(0)
+        {}
+        
+        CellEquation(uint32 id)
+            : id(id)
+        {}
+
+        uint32          id;
+        casa::LSQFit    equation;
+    };
+
+    // BlobStream I/O
+    BlobIStream &operator>>(BlobIStream &in, CellEquation &obj);
+    BlobOStream &operator<<(BlobOStream &out, const CellEquation &obj);
+
+
+// -----------------------------------------------------------------------------
+    class CellSolution
+    {
+    public:
+        CellSolution()
+            : id(0)
+        {}
+        
+        CellSolution(uint32 id)
+            : id(id)
+        {}
+
+        uint32          id;
+        vector<double>  coeff;
+        uint32          result;
+        string          resultText;
+        uint32          rank;
+        double          chiSqr;
+        double          lmFactor;
+    };
+
+    // BlobStream I/O
+    BlobIStream &operator>>(BlobIStream &in, CellSolution &obj);
+    BlobOStream &operator<<(BlobOStream &out, const CellSolution &obj);
+
 } // namespace BBS
 } // namespace LOFAR
 
 #endif
+

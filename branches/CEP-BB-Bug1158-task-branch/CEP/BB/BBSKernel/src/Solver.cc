@@ -23,10 +23,11 @@
 #include <lofar_config.h>
 #include <BBSKernel/Solver.h>
 
-#include <Common/lofar_iostream.h>
 #include <Common/LofarTypes.h>
+#include <Common/LofarLogger.h>
 #include <Common/StreamUtil.h>
 #include <Common/Timer.h>
+#include <Common/lofar_iostream.h>
 
 #if 0
     #define NONREADY        casa::LSQFit::NONREADY
@@ -64,11 +65,9 @@ void Solver::reset(double epsValue, double epsDerivative, size_t maxIter,
 }
 
     
-void Solver::setCoeffIndex(CoeffIndexMsg::Pointer msg)
+void Solver::setCoeffIndex(uint32 kernelId, const CoeffIndex &local)
 {
-    const CoeffIndex &local = msg->getContents();
-    vector<uint32> &mapping = itsCoeffMapping[msg->getKernelId()];
-
+    vector<uint32> &mapping = itsCoeffMapping[kernelId];
     mapping.resize(local.getCoeffCount());
     for(CoeffIndex::const_iterator it = local.begin(), end = local.end();
         it != end;
@@ -85,20 +84,15 @@ void Solver::setCoeffIndex(CoeffIndexMsg::Pointer msg)
 }    
 
 
-CoeffIndexMsg::Pointer Solver::getCoeffIndex() const
+void Solver::getCoeffIndex(CoeffIndex &global) const
 {
-    CoeffIndexMsg::Pointer msg(new CoeffIndexMsg(0));
-    msg->getContents() = itsCoeffIndex;
-
-    return msg;
+    global = itsCoeffIndex;
 }
 
 
-void Solver::setCoeff(CoeffMsg::Pointer msg)
+void Solver::setCoeff(uint32 kernelId, const vector<CellCoeff> &local)
 {
-    const vector<CellCoeff> &local = msg->getContents();
-
-    const vector<uint32> &mapping = itsCoeffMapping[msg->getKernelId()];
+    const vector<uint32> &mapping = itsCoeffMapping[kernelId];
     LOG_DEBUG_STR("Look-up table: " << mapping);
 
     const uint32 nCoeff = itsCoeffIndex.getCoeffCount();
@@ -137,11 +131,9 @@ void Solver::setCoeff(CoeffMsg::Pointer msg)
 }
 
 
-void Solver::setEquations(EquationMsg::Pointer msg)
+void Solver::setEquations(uint32 kernelId, const vector<CellEquation> &local)
 {
-    const vector<CellEquation> &local = msg->getContents();
-    const vector<uint32> &mapping = itsCoeffMapping[msg->getKernelId()];
-
+    const vector<uint32> &mapping = itsCoeffMapping[kernelId];
     for(size_t i = 0; i < local.size(); ++i)
     {
         map<uint32, Cell>::iterator it = itsCells.find(local[i].id);
@@ -159,29 +151,25 @@ void Solver::setEquations(EquationMsg::Pointer msg)
 }
 
 
-EquationMsg::Pointer Solver::getEquations() const
+void Solver::getEquations(vector<CellEquation> &global)
 {
-    EquationMsg::Pointer msg(new EquationMsg(0, itsCells.size()));
-    vector<CellEquation> &eq = msg->getContents();
-    
+    global.resize(itsCells.size());
+
     size_t i = 0;
     for(map<uint32, Cell>::const_iterator it = itsCells.begin(),
         end = itsCells.end();
         it != end;
         ++it)
     {
-        eq[i].id = it->first;
-        eq[i].equation = it->second.solver;
+        global[i].id = it->first;
+        global[i].equation = it->second.solver;
         ++i;
     }
-    return msg;
 }
 
 
-bool Solver::iterate(SolutionMsg::Pointer msg)
+bool Solver::iterate(vector<CellSolution> &global)
 {
-    vector<CellSolution> &solutions = msg->getContents();
-
     bool done = true;
     map<uint32, Cell>::iterator it = itsCells.begin();
     while(it != itsCells.end())
@@ -217,7 +205,7 @@ bool Solver::iterate(SolutionMsg::Pointer msg)
         solution.chiSqr = chiSqr;
         solution.lmFactor = lmFactor;
 
-        solutions.push_back(solution);
+        global.push_back(solution);
 
         if(cell.solver.isReady() == NONREADY)
         {

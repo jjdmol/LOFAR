@@ -2,17 +2,14 @@ pkginclude_MNSdir = $(pkgincludedir)/MNS
 
 pkginclude_HEADERS = Package__Version.h 		\
 	Axis.h			\
-	BBSStatus.h		\
-	CoefficientIndex.h	\
 	Exceptions.h		\
 	Grid.h			\
 	Measurement.h		\
 	MeasurementAIPS.h	\
-	Messages.h		\
-	MessageHandler.h	\
 	Model.h			\
 	Prediffer.h		\
 	Solver.h		\
+	SolverInterfaceTypes.h	\
 	Types.h			\
 	VisData.h		\
 	VisDimensions.h		\

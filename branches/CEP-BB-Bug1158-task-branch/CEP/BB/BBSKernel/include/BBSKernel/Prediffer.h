@@ -26,14 +26,13 @@
 // \file
 // Calibrate observed data.
 
-#include <BBSKernel/CoefficientIndex.h>
 #include <BBSKernel/Grid.h>
 #include <BBSKernel/Measurement.h>
-#include <BBSKernel/Messages.h>
 #include <BBSKernel/Model.h>
-#include <BBSKernel/VisSelection.h>
-#include <BBSKernel/VisData.h>
+#include <BBSKernel/SolverInterfaceTypes.h>
 #include <BBSKernel/Types.h>
+#include <BBSKernel/VisData.h>
+#include <BBSKernel/VisSelection.h>
 
 #include <BBSKernel/MNS/MeqDomain.h>
 #include <BBSKernel/MNS/MeqJonesExpr.h>
@@ -79,8 +78,7 @@ public:
         N_OperationType        
     };
 
-    Prediffer(uint32 id,
-        Measurement::Pointer measurement,
+    Prediffer(Measurement::Pointer measurement,
         ParmDB::ParmDB sky,
         ParmDB::ParmDB instrument);
 
@@ -115,7 +113,7 @@ public:
     void simulate();
     void subtract();
     void correct();
-    EquationMsg::Pointer construct(Location start, Location end);
+    void construct(Location start, Location end, vector<CellEquation> &local);
     // </group>
     
     // (Distributed) solving.
@@ -126,11 +124,11 @@ public:
 
     bool setCellGrid(const Grid<double> &cellGrid);
 
-    CoeffIndexMsg::Pointer getCoeffIndex() const;
-    void setCoeffIndex(CoeffIndexMsg::Pointer msg);
+    void getCoeffIndex(CoeffIndex &local) const;
+    void setCoeffIndex(const CoeffIndex &global);
 
-    CoeffMsg::Pointer getCoeff(Location start, Location end) const;
-    void setCoeff(SolutionMsg::Pointer msg);
+    void getCoeff(Location start, Location end, vector<CellCoeff> &local) const;
+    void setCoeff(const vector<CellSolution> &global);
     // </group>
 
     // Commit cached parameter values to the parameter database.
@@ -142,8 +140,7 @@ public:
 #endif
 */
 
-private:
-    
+private:    
     struct ThreadContext
     {
         enum
@@ -209,7 +206,6 @@ private:
     void printTimers(const string &operation);
 
 
-    uint32                              itsId;
     Measurement::Pointer                itsMeasurement;
     VisData::Pointer                    itsChunk;
     //# Mapping from internal polarization (XX,XY,YX,YY) to polarizations
