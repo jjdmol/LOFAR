@@ -44,10 +44,10 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
 		case LPT_DOUBLE:	pResult = new GCFPVDouble();	break;
 		case LPT_STRING:	pResult = new GCFPVString();	break;
 		case LPT_BLOB:		pResult = new GCFPVBlob();		break;      
+		case LPT_DATETIME:	pResult = new GCFPVDateTime();	break;
 		/* 
 		case LPT_REF: 		pResult = new GCFPVRef(); 		break;
 		case LPT_BIT32:		pResult = new GCFPVBit32(); 	break;    
-		case LPT_DATETIME:	pResult = new GCFPVDateTime();	break;
 		*/
 		default:
 			if (type > LPT_DYNARR && type < END_DYNLPT) {
