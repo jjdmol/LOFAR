@@ -59,6 +59,9 @@ string	stationTypeStr();									// "", CS, RS, ES
 string	PVSSDatabaseName(const string&	someName = "");		// hostname w/o CUtype
 string	realHostname(const string&	someName);				// adds 'C' when it is missing.
 
+string  PVSS2SASname(const string& PVSSname);				// convert PVSS DPname to SAS DPname
+string  SAS2PVSSname(const string& SASname);				// convert SAS DPname to PVSS DPname
+
 
 // @}
   } // namespace Deployment
