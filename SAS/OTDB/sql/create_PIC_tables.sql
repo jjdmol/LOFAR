@@ -97,7 +97,9 @@ CREATE TABLE PIChierarchy (
 CREATE TABLE PICkvt (
 	paramID		INT4			NOT NULL REFERENCES PICparamref(paramID), 
 	value		TEXT			NOT NULL,
-	time		TIMESTAMP		DEFAULT now()
+	time		TIMESTAMP		DEFAULT now(),
+
+	CONSTRAINT	pickvt_uniq		UNIQUE(paramID, timestamp)
 ) WITHOUT OIDS;
 
 CREATE INDEX PIC_kvt_id   ON PICkvt(paramID);
