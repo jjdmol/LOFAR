@@ -163,7 +163,9 @@ CREATE TABLE VICkvt (
 	treeID		INT4			NOT NULL REFERENCES OTDBtree(treeID),
 	paramName	VARCHAR(150)	DEFAULT NULL, -- for shared applications
 	value		TEXT			NOT NULL,
-	time		TIMESTAMP		DEFAULT now()
+	time		TIMESTAMP		DEFAULT now(),
+
+	CONSTRAINT	vickvt_uniq		UNIQUE(treeID, paramName, time)
 ) WITHOUT OIDS;
 
 CREATE INDEX VIC_kvt_name ON VICkvt(paramName);

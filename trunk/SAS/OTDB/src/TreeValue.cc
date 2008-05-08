@@ -90,8 +90,10 @@ bool TreeValue::addKVT (const string&	key,
 		return (insertResult);
 	}
 	catch (std::exception&	ex) {
+		// [080508] tables now have constraints on duplicate keys. Don't report the errors
+		// to the operator anymore, only to the DEBUGger.
 		itsError = string("Exception during insert of KVT:") + ex.what();
-		LOG_FATAL(itsError);
+		LOG_DEBUG(itsError);
 		return (false);
 	}
 
