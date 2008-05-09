@@ -275,8 +275,7 @@ public class ResultBrowserPanel extends javax.swing.JPanel
     }
     
     private boolean viewInfo() {
-        int [] id=null;
-        id[0]=itsTreeID;
+        int [] id={itsTreeID};
            
         if (itsTreeID > -1) {
             // show treeInfo dialog

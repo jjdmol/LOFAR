@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 import nl.astron.lofar.lofarutils.DateTimeChooser;
@@ -623,9 +624,12 @@ public class TreeInfoDialog extends javax.swing.JDialog {
     
     private void setStopDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStopDateButtonActionPerformed
         Date initialDate = getGMTTime(new Date());
-        if (itsStopDate != null) {
-            if (itsStopDate.after(initialDate)) {
-                initialDate=itsStopDate;
+       if (stopTimeInput.getText().equals("")  || stopTimeInput.getText().equals("not-a-date-time") ) {
+            try {
+                SimpleDateFormat aD = new SimpleDateFormat("yyyy-MMM-d HH:mm", itsLocale);
+                initialDate = aD.parse(stopTimeInput.getText());
+            } catch (ParseException ex) {
+                ex.printStackTrace();
             }
         }
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
@@ -635,6 +639,14 @@ public class TreeInfoDialog extends javax.swing.JDialog {
 
     private void setStartDateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_setStartDateButtonActionPerformed
         Date initialDate = getGMTTime(new Date());
+        if (startTimeInput.getText().equals("")  || startTimeInput.getText().equals("not-a-date-time") ) {
+            try {
+                SimpleDateFormat aD = new SimpleDateFormat("yyyy-MMM-d HH:mm", itsLocale);
+                initialDate = aD.parse(startTimeInput.getText());
+            } catch (ParseException ex) {
+                ex.printStackTrace();
+            }
+        }
         DateTimeChooser chooser = new DateTimeChooser(initialDate);
         itsStartDate = DateTimeChooser.showDialog(this,"StartTime",chooser);
         composeTimeString("start");
