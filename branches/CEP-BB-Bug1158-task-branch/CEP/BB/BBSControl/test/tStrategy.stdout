@@ -53,7 +53,7 @@ Strategy:
 . . . Solve: 
 . . . . Solvable parameters: ["GAIN:{11,22}:*"]
 . . . . Excluded parameters: []
-. . . . Kernel groups: []
+. . . . Kernel groups: [1,1]
 . . . . Domain size:
 . . . . . Bandwidth: 1000 (Hz)
 . . . . . Time interval: 1 (s)
@@ -116,7 +116,7 @@ Strategy:
 . . . Solve: 
 . . . . Solvable parameters: ["GAIN:{11,22}:*"]
 . . . . Excluded parameters: []
-. . . . Kernel groups: []
+. . . . Kernel groups: [1,1]
 . . . . Domain size:
 . . . . . Bandwidth: 1000 (Hz)
 . . . . . Time interval: 1 (s)

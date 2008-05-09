@@ -13,7 +13,9 @@ libbbscontrol_la_SOURCES	= \
 	InitializeCommand.cc \
 	IterationRequest.cc \
 	IterationResult.cc \
+	KernelGroup.cc \
 	KernelProcessControl.cc \
+	Messages.cc \
 	MultiStep.cc \
 	NextChunkCommand.cc \
 	pqutil.cc \
@@ -32,18 +34,18 @@ libbbscontrol_la_SOURCES	= \
 	SynchronizeCommand.cc \
 	Types.cc
 
-#bin_PROGRAMS			= GlobalControl KernelControl SolverControl
+bin_PROGRAMS			= GlobalControl KernelControl SolverControl
 
-#GlobalControl_SOURCES		= GlobalControl.cc
-#GlobalControl_LDADD		= libbbscontrol.la
-#GlobalControl_DEPENDENCIES	= libbbscontrol.la $(LOFAR_DEPEND)
+GlobalControl_SOURCES		= GlobalControl.cc
+GlobalControl_LDADD		= libbbscontrol.la
+GlobalControl_DEPENDENCIES	= libbbscontrol.la $(LOFAR_DEPEND)
 
-#KernelControl_SOURCES		= KernelControl.cc
-#KernelControl_LDADD		= libbbscontrol.la
-#KernelControl_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
+KernelControl_SOURCES		= KernelControl.cc
+KernelControl_LDADD		= libbbscontrol.la
+KernelControl_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
 
-#SolverControl_SOURCES		= SolverControl.cc
-#SolverControl_LDADD		= libbbscontrol.la
-#SolverControl_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
+SolverControl_SOURCES		= SolverControl.cc
+SolverControl_LDADD		= libbbscontrol.la
+SolverControl_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

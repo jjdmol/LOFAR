@@ -24,6 +24,7 @@
 #include <BBSControl/CommandExecutor.h>
 
 #include <BBSControl/CommandQueue.h>
+#include <BBSControl/Messages.h>
 #include <BBSControl/Types.h>
 
 #include <BBSControl/BlobStreamableVector.h>
@@ -243,9 +244,9 @@ void CommandExecutor::visit(const PredictStep &command)
     LOG_DEBUG("Handling a PredictStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
+#if 0
     ASSERTSTR(itsKernel, "No kernel available.");
 
-#if 0
     PredictContext context;
     context.baselines = command.baselines();
     context.correlation = command.correlation();
@@ -275,9 +276,9 @@ void CommandExecutor::visit(const SubtractStep &command)
     LOG_DEBUG("Handling a SubtractStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
+#if 0
     ASSERTSTR(itsKernel, "No kernel available.");
 
-#if 0
     SubtractContext context;
     context.baselines = command.baselines();
     context.correlation = command.correlation();
@@ -307,9 +308,9 @@ void CommandExecutor::visit(const CorrectStep &command)
     LOG_DEBUG("Handling a CorrectStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
+#if 0
     ASSERTSTR(itsKernel, "No kernel available.");
 
-#if 0
     CorrectContext context;
     context.baselines = command.baselines();
     context.correlation = command.correlation();
@@ -622,7 +623,10 @@ void CommandExecutor::visit(const SolveStep &command)
     LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
 #endif
 
-    itsSolverConnection->sendObject(CoeffIndexMsg());
+    static int count(0);
+    LOG_INFO_STR("Sending CoeffIndexMsg(" << count << ")");
+    itsSolverConnection->sendObject(CoeffIndexMsg(count));
+    count++;
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }

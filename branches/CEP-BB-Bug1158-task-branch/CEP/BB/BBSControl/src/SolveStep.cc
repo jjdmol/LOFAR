@@ -147,7 +147,7 @@ namespace LOFAR
       itsExclParms                   = 
         pss.getStringVector("ExclParms",    vector<string>());
       itsKernelGroups                = 
-        pss.getUint32Vector("KernelGroups", vector<uint32>());
+        pss.getUint32Vector("KernelGroups");//, vector<uint32>());
       itsDomainSize.bandWidth        = 
         pss.getDouble      ("DomainSize.Freq");
       itsDomainSize.timeInterval     = 

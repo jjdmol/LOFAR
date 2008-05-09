@@ -200,7 +200,7 @@ namespace LOFAR
 
       case KernelProcessControl::WAIT:
         {
-          LOG_DEBUG("Waiting from next Command...");
+          LOG_DEBUG("Waiting for next Command...");
 
           if(itsCommandQueue->
              waitForTrigger(CommandQueue::Trigger::Command))

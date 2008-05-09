@@ -17,6 +17,8 @@ pkginclude_HEADERS = \
 	KernelGroup.h \
 	KernelProcessControl.h \
 	LocalControlId.h \
+	Messages.h \
+	MessageHandlers.h \
 	MultiStep.h \
 	NextChunkCommand.h \
 	PredictStep.h \

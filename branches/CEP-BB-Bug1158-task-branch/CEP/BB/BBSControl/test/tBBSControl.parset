@@ -65,6 +65,7 @@ Step.sl1.Solve.Parms    = ["GAIN:{11,22}:*"] # names of solvable parameters
 Step.sl1.Solve.ExclParms = []               # parameters excluded from solve
 Step.sl1.Solve.DomainSize.Freq = 1000       # f(Hz)
 Step.sl1.Solve.DomainSize.Time = 1          # t(s)
+Step.sl1.Solve.KernelGroups = [1, 1]
 Step.sl1.InstrumentModel = [ Bandpass, Phase ]
 
 Step.sl2.Operation      = CORRECT         \ # one of SOLVE, SUBTRACT, CORRECT,

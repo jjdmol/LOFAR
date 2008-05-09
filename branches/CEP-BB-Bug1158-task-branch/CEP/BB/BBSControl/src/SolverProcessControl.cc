@@ -29,8 +29,10 @@
 #include <BBSControl/SolverProcessControl.h>
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandQueue.h>
+#include <BBSControl/Messages.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/StreamUtil.h>
+#include <BBSControl/Exceptions.h>
 
 #include <APS/ParameterSet.h>
 #include <Blob/BlobStreamable.h>
@@ -62,7 +64,7 @@ namespace LOFAR
     namespace
     {
       InitializeCommand initCmd;
-      CoeffIndexMsg     coeffIndexMsg;
+      // CoeffIndexMsg     coeffIndexMsg;
     }
 
     //##----   P u b l i c   m e t h o d s   ----##//
@@ -198,9 +200,9 @@ namespace LOFAR
 
             itsSolveStep = dynamic_pointer_cast<const SolveStep>(cmd);
             if (itsSolveStep) {
-              // It's a SolveStep, we can change state.
-              itsState = SOLVING;
+              // It's a SolveStep. Setup kernel groups and change state.
               setKernelGroups(itsSolveStep->kernelGroups());
+              itsState = SOLVING;
             }
             else {
               // Not a SolveStep, send "Ok" result to command queue
@@ -233,7 +235,6 @@ namespace LOFAR
               msg(dynamic_cast<const KernelMessage*>
                   (itsKernels[i]->recvObject()));
             if (msg) {
-              LOG_DEBUG_STR("Received a `" << msg->classType() << "' message");
               msg->passTo(kernelGroup(msg->getKernelId()));
             }
           }
@@ -353,6 +354,7 @@ namespace LOFAR
 
     bool SolverProcessControl::isGlobal() const
     {
+      return true;
       return itsNrKernels > 1;
     }
 
@@ -360,7 +362,7 @@ namespace LOFAR
     void SolverProcessControl::setKernelGroups(const vector<uint>& groups)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      LOG_TRACE_VAR_STR("Kernel groups: " << groups);
+      LOG_DEBUG_STR("Kernel groups: " << groups);
       itsKernelGroups.clear();
       itsKernelGroupIds.clear();
       for (uint i = 0; i < groups.size(); ++i) {
@@ -369,11 +371,21 @@ namespace LOFAR
           itsKernelGroupIds.push_back(i);
         }
       }
+      // The sum of the number of kernels in each group must match the total
+      // number of kernels.
+      if (itsKernelGroupIds.size() != itsNrKernels) {
+        THROW (SolverControlException, "Number of kernels in kernel groups ("
+               << itsKernelGroupIds.size() 
+               << ") does not match total number of kernels (" 
+               << itsNrKernels << ")");
+      }
     }
 
 
     KernelGroup& SolverProcessControl::kernelGroup(const KernelId& id)
     {
+      LOG_INFO_STR("Kernel-id: " << id << "; Kernel group-id: " 
+                   << itsKernelGroupIds[id]);
       return itsKernelGroups[itsKernelGroupIds[id]];
     }
 

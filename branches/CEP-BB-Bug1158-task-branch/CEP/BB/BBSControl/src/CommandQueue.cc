@@ -147,6 +147,8 @@ namespace LOFAR
       string type = ps.getString("Type");
       if (type.empty()) return make_pair(shared_ptr<Command>(), CommandId());
 
+      LOG_DEBUG_STR("Next command: " << type);
+
       // Get the command-id.
       CommandId id = ps.getUint32("id");
 
