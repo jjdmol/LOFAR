@@ -64,6 +64,20 @@ public:		// only for testing
 	int	 write(const void*	buffer, size_t	nrBytes);
 
 	friend class SocketAcceptor;
+
+	enum {
+		SK_OK			= 0,
+		SK_SYS_ERROR	= -1,
+		SK_ALLOC		= -2,
+		SK_NOT_OPENED	= -3,
+		SK_PEER_CLOSED	= -4,
+		SK_BIND			= -5,
+		SK_LISTEN		= -6,
+		SK_TIMEOUT		= -7,
+//		SK_CONNECT,
+//		SK_ACCEPT,
+//		SK_INCOMPLETE,
+	};
 	
 private:
 	//# --- Datamembers ---

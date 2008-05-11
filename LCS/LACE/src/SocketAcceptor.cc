@@ -46,14 +46,14 @@ SocketAcceptor::SocketAcceptor()
 //
 SocketAcceptor::~SocketAcceptor()
 {
-	itsListener.close();
+	close();
 }
 
 //
 // open(Address)
 //
 // return value:
-// -1 : real error
+// real error : SK_ALLOC, SK_BIND, SK_LISTEN, SK_SYS_ERROR
 //  0 : OK, listener is opened
 //
 int SocketAcceptor::open(const Address&		anAddress, int	backlog)
@@ -63,37 +63,37 @@ int SocketAcceptor::open(const Address&		anAddress, int	backlog)
 						"Address must be of the type InetAddress");
 	const InetAddress*	theAddr = dynamic_cast<const InetAddress*>(&anAddress);
 
-	if (itsListener.doOpen(anAddress) != 0) {
+	int	error;
+	if ((error = doOpen(anAddress)) != SK_OK) {
 		LOG_DEBUG("allocating listen-socket failed");
-		return(-1);
+		return(error);
 	}
 
 	// bind the address and the socket
-	if (::bind(itsListener.getHandle(), 
+	if (::bind(getHandle(), 
 				  reinterpret_cast<const sockaddr *> (anAddress.getAddress()) ,
 				  anAddress.getAddressSize()) < 0) {
 		LOG_DEBUG(formatString("SocketAcceptor:bind(%d) failed: errno=%d(%s)", 
-								itsListener.getHandle(), errno, strerror(errno)));
-		itsListener.close();
-		return (-1);
+								getHandle(), errno, strerror(errno)));
+		close();
+		return (SK_BIND);
 	}
 	LOG_DEBUG(formatString("Socket(%d) bound to address %s", 
-				itsListener.getHandle(), anAddress.deviceName().c_str()));
+				getHandle(), anAddress.deviceName().c_str()));
 
 	if (theAddr->protocolNr() == IPPROTO_TCP) { // TODO or UNIX
-		if ((::listen(itsListener.getHandle(), backlog)) < 0) {
+		if ((::listen(getHandle(), backlog)) < 0) {
 			LOG_DEBUG(formatString("Socket(%d):Listen error for port %d, err = %d(%s)",
-					  itsListener.getHandle(), theAddr->portNr(), 
+					  getHandle(), theAddr->portNr(), 
 					  errno, strerror(errno)));
-			itsListener.close();
-			return (-1);
+			close();
+			return (SK_LISTEN);
 		}
 		LOG_DEBUG(formatString("Socket(%d):Listener started at port %d",
-					itsListener.getHandle(), theAddr->portNr()));
+					getHandle(), theAddr->portNr()));
 	}
 	itsAddress = *(dynamic_cast<const InetAddress*>(&anAddress));
-
-	return (0);	
+	return (SK_OK);	
 }
 
 
@@ -101,62 +101,62 @@ int SocketAcceptor::open(const Address&		anAddress, int	backlog)
 // accept(SocketStream,	waitMs)
 //
 // Return value:
-// -1 : real error
-//  0 : OK, connection is made
-//  1 : call complete again to complete the 'connect'
+//  SK_SYS_ERROR : real error
+//  SK_OK		 : OK, connection is made
+//  SK_TIMEOUT	 : call complete again to complete the 'connect'
 //
 int SocketAcceptor::accept(SocketStream&		aStream,
 						   int					waitMs)
 {
-	ASSERTSTR(itsListener.isOpen(), "Listener is not opened yet, call 'open' first'");
+	ASSERTSTR(isOpen(), "Listener is not opened yet, call 'open' first'");
 
 	bool			acceptBlockMode = (waitMs < 0) ? true : false;
-	bool			orgBlockMode    = itsListener.getBlocking();
+	bool			orgBlockMode    = getBlocking();
 	int				acceptErrno		= 0;
 	struct sockaddr	sockAddr;
 	socklen_t		sockAddrLen 	= itsAddress.getAddressSize();
-	itsListener.setBlocking(acceptBlockMode);
+	setBlocking(acceptBlockMode);
 	do {
 		errno = 0;
-		int	deviceID = ::accept(itsListener.getHandle(),
+		int	deviceID = ::accept(getHandle(),
 							  &sockAddr,
 							  &sockAddrLen);
 		acceptErrno = errno;
 		if (deviceID > 0) {
 			aStream.setHandle(deviceID);
-			itsListener.setBlocking(acceptBlockMode);
+			setBlocking(acceptBlockMode);
 			LOG_DEBUG(formatString("StreamSocket(%d) successful connected",
 						aStream.getHandle()));
 			aStream.itsAddress.set((struct sockaddr_in *)(&sockAddr), sockAddrLen);
 			aStream.itsIsConnected = true;
-			return (0);
+			return (SK_OK);
 		}
 	} while ((acceptErrno == EINTR) && acceptBlockMode);
 
 	// Show why we left the accept-call
 	LOG_TRACE_COND(formatString("Socket(%d):accept() failed: errno=%d(%s)",
-						itsListener.getHandle(), acceptErrno, strerror(acceptErrno)));
+						getHandle(), acceptErrno, strerror(acceptErrno)));
 
     // In non-blocking mode the errno's:EWOULDBLOCK, EALREADY and EINTR are
     // legal errorcode. In blocking mode we should never come here at all!
     if ((acceptErrno != EWOULDBLOCK) && (acceptErrno != EALREADY)
                                      && (acceptErrno != EINTR)) {
         // real error
-		itsListener.setBlocking(orgBlockMode);
+		setBlocking(orgBlockMode);
         LOG_TRACE_COND(formatString("Socket(%d):accept():REAL ERROR!",
-													 itsListener.getHandle()));
-        return(-1);
+													 getHandle()));
+        return(SK_SYS_ERROR);
     }
 	
 	// wait 'waitMs' seconds for the accept to complete
 	struct pollfd	pollInfo;
 	pollInfo.fd		= aStream.getHandle();
-	pollInfo.events = POLLWRNORM;
+	pollInfo.events = POLLIN;
 	LOG_TRACE_CALC(formatString("Socket(%d):going into a poll for %d ms",
 								aStream.getHandle(), waitMs));
-	itsListener.setBlocking (true);			// we want to wait!
+	setBlocking (true);			// we want to wait!
 	int	pollRes = poll(&pollInfo, 1, waitMs);
-	itsListener.setBlocking (orgBlockMode);
+	setBlocking (orgBlockMode);
 	
 	// proces the result of the poll
 	switch (pollRes) {
@@ -164,28 +164,28 @@ int SocketAcceptor::accept(SocketStream&		aStream,
 		// Note: when an interrupt occured we just return that there was no
 		// connection yet. The user will sure try it again some time later.
 		// No effort is taken to do a re-poll for the remaining time.
-		return ((errno == EINTR) ? 1 : -1);	// timeout or error on poll
-	case  0:	return (1);		// timeout on poll
+		return ((errno == EINTR) ? SK_TIMEOUT : SK_SYS_ERROR);	// timeout or error on poll
+	case  0:	return (SK_TIMEOUT);		// timeout on poll
 	}
 
 	// after the poll the error is somewhere deep down under in the socket.
 	int32		connRes;
 	socklen_t	resLen = sizeof(connRes);
 	if (aStream.getOption(SO_ERROR, &connRes, &resLen)) {
-		return (-1);			// getOption call failed, assume connection failed
+		return (SK_SYS_ERROR);	// getOption call failed, assume connection failed
 	}
 	errno = connRes;			// put error where it belongs
 
 	if (errno != 0) {			// not yet connected
 		LOG_DEBUG(formatString("Socket(%d):delayed accept failed also, err=%d(%s)",
-									itsListener.getHandle(), errno, strerror(errno)));
+									getHandle(), errno, strerror(errno)));
 		if (errno == EINPROGRESS || errno == EALREADY) {
-			return (1);			// timeout on poll
+			return (SK_TIMEOUT);// timeout on poll
 		}
-		return (-1);			// real problem
+		return (SK_SYS_ERROR);	// real problem
 	}
 
-	aStream.setHandle(::accept(itsListener.getHandle(),
+	aStream.setHandle(::accept(getHandle(),
 							  &sockAddr,
 							  &sockAddrLen));
 	ASSERT(aStream.getHandle() > 0);
@@ -194,7 +194,7 @@ int SocketAcceptor::accept(SocketStream&		aStream,
 	aStream.itsAddress.set((struct sockaddr_in *)(&sockAddr), sockAddrLen);
 	aStream.itsIsConnected = true;
 
-	return (0);					// no errors
+	return (SK_OK);					// no errors
 }
 
   } // namespace LACE

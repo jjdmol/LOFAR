@@ -65,7 +65,7 @@ protected:
 
 private:
 	//# --- Datamembers ---
-	SocketSAP		itsListener;
+//	SocketSAP		itsListener;
 };
 
 

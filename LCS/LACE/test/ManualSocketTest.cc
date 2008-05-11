@@ -50,26 +50,26 @@ void doConnect()
 	cout << "Wait how many millisecs: ";
 	cin >> waitMs;
 
+	int		error;
 	if (serverRole) {
-		if (theAcceptor.open(theAddress) != 0) {
-			LOG_INFO("Opening listener failed");
+		if ((error = theAcceptor.open(theAddress)) != 0) {
+			LOG_INFO_STR("Opening listener failed with error=" << error << " and errno=" << errno);
 		}
-		int	accResult = theAcceptor.accept(dataStream, waitMs);
 		do {
-			if (accResult < 0) {
-				LOG_INFO("Accept failed");
+			error = theAcceptor.accept(dataStream, waitMs);
+			if (error < 0) {
+				LOG_INFO_STR("Accept failed with error=" << error << " and errno=" << errno);
 			}
-		} while (accResult != 0);
+		} while (error != 0);
 	}
 	else {
 		// open client socket
-		int	connResult;
 		do {
-			connResult = theConnector.connect(dataStream, theAddress, waitMs);
-			if (connResult < 0) {
-				LOG_INFO("Connect failed");
+			error = theConnector.connect(dataStream, theAddress, waitMs);
+			if (error < 0) {
+				LOG_INFO_STR("Connect failed with error=" << error << " and errno=" << errno);
 			}
-		} while (connResult != 0);
+		} while (error != 0);
 	}
 }
 

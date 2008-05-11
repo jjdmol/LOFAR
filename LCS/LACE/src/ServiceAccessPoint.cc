@@ -24,7 +24,8 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <sys/ioctl.h>
+//#include <sys/ioctl.h>
+#include <sys/fcntl.h>
 #include <Common/LofarLogger.h>
 #include <LACE/ServiceAccessPoint.h>
 
@@ -54,10 +55,12 @@ int	 ServiceAccessPoint::setBlocking(bool	blocking)
 	ASSERTSTR(itsHandle, "Handle must be initialized before setting (non)blocking mode");
 
 	itsIsBlocking = blocking;
+	LOG_DEBUG_STR("setBlocking(" << itsHandle << "," << ((blocking) ? "true" : "false") << ")");
+
 
 	int		block = itsIsBlocking ? 0 : 1;
-//	return (fcntl (itsSocketID, F_SETFL, block ? 0 : O_NONBLOCK));
-	return (ioctl (itsHandle, FIONBIO, &block));
+	return (fcntl (itsHandle, F_SETFL, itsIsBlocking ? 0 : O_NONBLOCK));
+//	return (ioctl (itsHandle, FIONBIO, &block));
 }
 
 

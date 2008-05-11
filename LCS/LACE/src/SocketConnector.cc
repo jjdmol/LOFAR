@@ -49,9 +49,9 @@ SocketConnector::~SocketConnector()
 // connect(blocking)
 //
 // return value:
-// -1 : real error
-//  0 : OK, connection is made
-//  1 : call complete to complete the connect
+// SK_NOT_OPENED, SK_SYS_ERROR : real error
+// SK_OK		 : OK, connection is made
+// SK_TIMEOUT	 : call complete to complete the connect
 //
 int SocketConnector::connect(SocketStream&		aStream,
 					   		 const Address&		anAddress,
@@ -64,7 +64,7 @@ int SocketConnector::connect(SocketStream&		aStream,
 
 	// allocate the SAP
 	if (aStream.open(dynamic_cast<const InetAddress&>(anAddress), true) < 0) {
-		return (-1);
+		return (SocketSAP::SK_NOT_OPENED);
 	}
 
 	// do the connect.
@@ -73,7 +73,7 @@ int SocketConnector::connect(SocketStream&		aStream,
 				  anAddress.getAddressSize()) >= 0) {
 		LOG_DEBUG(formatString("SocketConnector:connect(%d) successful", aStream.getHandle()));
 		aStream.itsIsConnected = true;
-		return (0);
+		return (SocketSAP::SK_OK);
 	}
 	LOG_DEBUG(formatString("SocketConnector:connect(%d) failed: errno=%d(%s)", 
 							aStream.getHandle(), errno, strerror(errno)));
@@ -81,7 +81,7 @@ int SocketConnector::connect(SocketStream&		aStream,
 	// When failure is not due to a timeout, close the socket
 	if (errno != EINPROGRESS && errno != EALREADY) {	// real error
 		aStream.close();
-		return (-1);
+		return (SocketSAP::SK_SYS_ERROR);
 	}
 
 	// connect failed wit a timeout, give it a retry.
@@ -100,15 +100,15 @@ int SocketConnector::connect(SocketStream&		aStream,
 	
 	// proces the result of the poll
 	switch (pollRes) {
-	case -1:	return (-1);	// error on poll
-	case  0:	return (1);		// timeout on poll
+	case -1:	return (SocketSAP::SK_SYS_ERROR);	// error on poll
+	case  0:	return (SocketSAP::SK_TIMEOUT);	// timeout on poll
 	}
 
 	// after the poll the error is somewhere deep down under in the socket.
 	int32		connRes;
 	socklen_t	resLen = sizeof(connRes);
 	if (aStream.getOption(SO_ERROR, &connRes, &resLen)) {
-		return (-1);			// getOption call failed, assume connection failed
+		return (SocketSAP::SK_SYS_ERROR);	// getOption call failed, assume connection failed
 	}
 	errno = connRes;			// put error where it belongs
 
@@ -116,16 +116,16 @@ int SocketConnector::connect(SocketStream&		aStream,
 		LOG_DEBUG(formatString("Socket(%d):delayed connect failed also, err=%d(%s)",
 									aStream.getHandle(), errno, strerror(errno)));
 		if (errno == EINPROGRESS || errno == EALREADY) {
-			return (1);			// timeout on poll
+			return (SocketSAP::SK_TIMEOUT);// timeout on poll
 		}
-		return (-1);			// real problem
+		return (SocketSAP::SK_SYS_ERROR);			// real problem
 	}
 
 	LOG_DEBUG(formatString("Socket(%d):delayed connect() succesful", 
 														aStream.getHandle()));
 	aStream.itsIsConnected = true;
 
-	return (0);					// no errors
+	return (SocketSAP::SK_OK);					// no errors
 }
 
   } // namespace LACE
