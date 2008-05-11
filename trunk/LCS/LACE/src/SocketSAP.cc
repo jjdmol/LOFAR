@@ -58,13 +58,15 @@ void SocketSAP::close()
 		LOG_DEBUG_STR("Shutdown and close of socket: " << getHandle());
 		::shutdown(getHandle(), 2);
 		::close(getHandle());
-		setHandle(0);
+		setHandle(SK_OK);
 	}
 }
 
 
 //
 // open(address, reuseAddress)
+//
+// Returns: SK_OK, SK_ALLOC, SK_SYS_ERROR
 //
 int SocketSAP::doOpen(const Address&	anAddress,
 					  bool				reuseAddress)
@@ -76,7 +78,7 @@ int SocketSAP::doOpen(const Address&	anAddress,
 	// check for (non fatal) programming errors
 	if (getHandle()) {
 		LOG_WARN(formatString("Socket(%d) is already open!!", getHandle()));
-		return (0);		// it wrong, but not a failure.
+		return (SK_OK);		// it wrong, but not a failure.
 	}
 
 	// check protocol type
@@ -90,7 +92,7 @@ int SocketSAP::doOpen(const Address&	anAddress,
 	if (!getHandle()) {
 		LOG_ERROR(formatString("SocketSAP:Can not allocate a socket(%d,%d), err=%d(%s)", 
 					socketType, protocolNr, errno, strerror(errno)));
-		return (-1);
+		return (SK_ALLOC);
 	}
 
 	LOG_DEBUG(formatString("SocketSAP:Created socket(%d) for protocol %d",
@@ -105,23 +107,26 @@ int SocketSAP::doOpen(const Address&	anAddress,
 		(setOption(SO_LINGER,    &lin, 	 sizeof(lin)) < 0)) {
 		LOG_ERROR("Setting socket options failed, closing just opened socket");
 		this->close();
-		return (-1);
+		return (SK_SYS_ERROR);
 	}
 
 	itsAddress = dynamic_cast<const InetAddress&>(anAddress);
 
-	return (0);
+	return (SK_OK);
 }
 
 //
 // read (buffer, nrBytes)
+//
+// Returns: SK_NOT_OPENED, SK_PEER_CLOSED, SK_SYS_ERROR
+// >0 = number of bytes received
 //
 int SocketSAP::read(void*	buffer, size_t	nrBytes)
 {
 	// socket must be open ofcourse
 	if (!getHandle()) {
 		LOG_ERROR("SocketSAP::read: socket not opened yet.");
-		return (-1);
+		return (SK_NOT_OPENED);
 	}
 
 	// check arguments
@@ -142,10 +147,17 @@ int SocketSAP::read(void*	buffer, size_t	nrBytes)
 			LOG_DEBUG(formatString("SocketSAP(%d):read(%d)=%d, errno=%d(%s)", 
 						getHandle(), bytesLeft, bytesRead, 
 						errno, strerror(errno)));
-			return (-1);
+			if (bytesRead < 0) { 					// error?
+				return (errno == EWOULDBLOCK ? 0 : SK_SYS_ERROR);
+			}
+
+			if (bytesRead == 0) {					// conn reset by peer?
+				this->close();
+				return (SK_PEER_CLOSED);
+			}
 		}
 
-		return (nrBytes);
+		return (bytesRead);
 	}
 
 	// ----- UNIX and TCP sockets -----
@@ -157,17 +169,12 @@ int SocketSAP::read(void*	buffer, size_t	nrBytes)
 					errno, strerror(errno)));
 
 		if (bytesRead < 0) { 					// error?
-			if (errno == EWOULDBLOCK) { 
-				return (nrBytes - bytesLeft);
-			}
-			else {								// else a real error
-				return (-1);
-			}
+			return ((errno == EWOULDBLOCK) ? ((int)nrBytes - bytesLeft) : SK_SYS_ERROR);
 		}
 
 		if (bytesRead == 0) {					// conn reset by peer?
 			this->close();
-			return (0);
+			return (SK_PEER_CLOSED);
 		}
 
 		buffer = bytesRead + (char*)buffer;
@@ -182,7 +189,7 @@ int SocketSAP::read(void*	buffer, size_t	nrBytes)
 //
 // write (buffer, nrBytes)
 //
-// Returnvalue: < 0					error occured
+// Returnvalue: < 0					SK_NOT_OPENED, SK_PEER_CLOSED, SK_SYS_ERROR
 //				>= 0 != nrBytes		intr. occured or socket is nonblocking
 //				>= 0 == nrBytes		everthing went OK.
 //
@@ -191,7 +198,7 @@ int SocketSAP::write(const void*	buffer, size_t	nrBytes)
 	// socket must be open ofcourse
 	if (!getHandle()) {
 		LOG_ERROR("SocketSAP::write: socket not opened yet.");
-		return (-1);
+		return (SK_NOT_OPENED);
 	}
 
 	// check arguments
@@ -211,7 +218,15 @@ int SocketSAP::write(const void*	buffer, size_t	nrBytes)
 									itsAddress.getAddressSize()) <= 0) || errno) {
 			LOG_ERROR_STR(formatString("SocketSAP::write: Error during write, errno=%d(%s)",
 							errno, strerror(errno)));
-			return (-1);
+			if (errno == EWOULDBLOCK) {
+				return (0);		// nr of bytes written
+			}
+
+			if (errno == ECONNRESET) {					// conn reset by peer?
+				this->close();
+				return (SK_PEER_CLOSED);
+			}
+			return (SK_SYS_ERROR);
 		}
 		return (nrBytes);
 	}
@@ -226,14 +241,14 @@ int SocketSAP::write(const void*	buffer, size_t	nrBytes)
 				return (nrBytes - bytesLeft);
 			}
 			else  {// else a real error
-				return (-1);
+				return (SK_SYS_ERROR);
 			} 
 		}
 
 		// connection closed by peer?
 		if (bytesWritten == 0) {
 			this->close();
-			return (0);
+			return (SK_PEER_CLOSED);
 		}
 
 		// bytesWritten > 0
