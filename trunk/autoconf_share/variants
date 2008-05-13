@@ -1,4 +1,5 @@
 gnu.compiler.conf: CXX=/usr/bin/g++
+gnum32.compiler.conf: CXX="/usr/bin/g++ -m32" CC="/usr/bin/gcc -m32" --disable-lib64
 kcc.compiler.conf:
 icc.compiler.conf:
 
