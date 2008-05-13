@@ -75,6 +75,12 @@ public class SharedVars {
     // holds the jParmFacade Object (JNI access for ParmDB)
     private static jParmFacadeInterface      itsjParmFacade;
     
+    //LogParam
+    private String itsLogParamStartTime="";
+    private String itsLogParamEndTime = "";
+    private boolean setLogParamMostRecent=false;
+    private int itsLogParamLevel=0;
+    
     /*
      * PACKAGE SAS
      */
@@ -142,6 +148,40 @@ public class SharedVars {
         }
         return itsjParmFacade;
     }
+    
+    //LogParam
+    public String getLogParamStartTime() {
+        return itsLogParamStartTime;
+    }
+
+    public void setLogParamStartTime(String aTime){
+        itsLogParamStartTime = aTime;
+    }
+    
+    public String getLogParamEndTime() {
+        return itsLogParamEndTime;
+    }
+
+    public void setLogParamEndTime(String aTime){
+        itsLogParamEndTime = aTime;
+    }
+    
+    public boolean getLogParamMostRecent() {
+        return setLogParamMostRecent;
+    }
+    
+    public void setLogParamMostRecent(boolean aMostRecent ) {
+        setLogParamMostRecent = aMostRecent;
+    }
+    
+    public int getLogParamLevel() {
+        return itsLogParamLevel;
+    }
+    
+    public void setLogParamLevel(int  aLevel ) {
+        itsLogParamLevel = aLevel;
+    }
+    private int itsLevel=0;
     /**
      * Creates a new instance of SharedVars
      */
@@ -153,7 +193,12 @@ public class SharedVars {
         //
         itsOtdbRmi = new OtdbRmi(mainFrame);
         
-        //ParmDB
+        //LogParam
+        itsLogParamStartTime = "";
+        itsLogParamEndTime = "";
+        setLogParamMostRecent=false;
+        itsLogParamLevel=0;
+                
         
         
         

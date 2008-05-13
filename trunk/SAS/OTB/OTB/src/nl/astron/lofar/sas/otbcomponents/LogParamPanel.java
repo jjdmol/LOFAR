@@ -170,6 +170,9 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
             LogParamNameText.setText(itsNode.name);
         }
         setTime();
+        String aS = Integer.toString(itsMainFrame.getSharedVars().getLogParamLevel());
+        LogParamLevelComboBox.setSelectedItem(aS);
+        LogParamRecentOnlyCheckbox.setSelected(itsMainFrame.getSharedVars().getLogParamMostRecent());
         fillTable();
     }
     
@@ -434,7 +437,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         LogParamNameText.setText(itsNode.name);
         composeTimeString("start");
         composeTimeString("stop");
-        LogParamRecentOnlyCheckbox.setSelected(setMostRecent);
+        LogParamRecentOnlyCheckbox.setSelected(itsMainFrame.getSharedVars().getLogParamMostRecent());
     }//GEN-LAST:event_logParamCancelButtonActionPerformed
 
     private void logParamRefreshButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logParamRefreshButtonActionPerformed
@@ -443,15 +446,13 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     }//GEN-LAST:event_logParamRefreshButtonActionPerformed
 
     private void fillTable() {
-        String aStartTime = LogParamStartTimeText.getText();
-        String aStopTime = LogParamEndTimeText.getText();
-        setMostRecent=LogParamRecentOnlyCheckbox.isSelected();
-        int aLevel = Integer.parseInt((String)LogParamLevelComboBox.getSelectedItem());
-        // For now set 7 as maximum level
-        if (aLevel < 0) aLevel=0;
-        if (aLevel > 7) aLevel=7;
+        itsMainFrame.getSharedVars().setLogParamStartTime(LogParamStartTimeText.getText());
+        itsMainFrame.getSharedVars().setLogParamEndTime(LogParamEndTimeText.getText());
+        itsMainFrame.getSharedVars().setLogParamMostRecent(LogParamRecentOnlyCheckbox.isSelected());
+        itsMainFrame.getSharedVars().setLogParamLevel(Integer.parseInt((String)LogParamLevelComboBox.getSelectedItem()));
+
         itsMainFrame.setHourglassCursor();
-        if (!((LogParamTableModel)tablePanel1.getTableModel()).fillTable(itsMainFrame,itsNode.nodeID(),aStartTime,aStopTime,setMostRecent,aLevel)) {
+        if (!((LogParamTableModel)tablePanel1.getTableModel()).fillTable(itsMainFrame,itsNode.nodeID())) {
             logger.debug("Error filling LogParamTableMode");
         }
         itsMainFrame.setNormalCursor();        
@@ -519,17 +520,34 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         }
     }   
     private void setTime() {
+        
         SimpleDateFormat aDate = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
         SimpleDateFormat aGMT = new SimpleDateFormat("yyyy-MMM-d HH:mm",itsLocale);
         aGMT.setTimeZone(TimeZone.getTimeZone("GMT"));
         Calendar aC = Calendar.getInstance(itsLocale);
-        Date endDate = aC.getTime();
-        aC.add(Calendar.MONTH, -1);
-        Date startDate = aC.getTime();
-        String  aS = aGMT.format(endDate);
-        LogParamEndTimeText.setText(aS);
-        aS = aGMT.format(startDate);
-        LogParamStartTimeText.setText(aS);
+        try {
+            if (itsMainFrame.getSharedVars().getLogParamEndTime().equals("")) {
+                Date endDate = aC.getTime();
+                aC.add(Calendar.MONTH, -1);
+                String  aS = aGMT.format(endDate);
+                LogParamEndTimeText.setText(aS);
+            } else {
+                String  aS = itsMainFrame.getSharedVars().getLogParamEndTime();
+                LogParamEndTimeText.setText(aS); 
+                itsStopTime = aDate.parse(LogParamEndTimeText.getText());
+            }
+            if (itsMainFrame.getSharedVars().getLogParamStartTime().equals("")) {
+                Date startDate = aC.getTime();
+                String aS = aGMT.format(startDate);
+                LogParamStartTimeText.setText(aS);
+            } else {
+                String  aS = itsMainFrame.getSharedVars().getLogParamStartTime();
+                LogParamStartTimeText.setText(aS); 
+                itsStartTime = aDate.parse(LogParamStartTimeText.getText());
+            }
+        } catch (ParseException ex) {
+            ex.printStackTrace();
+        }
     }
     
     private jOTDBnode  itsNode = null;
@@ -538,7 +556,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     private Date       itsStartTime = null;
     private Date       itsStopTime = null;
     private Locale     itsLocale = new Locale("en");
-    private boolean    setMostRecent = false;
+
     
     
     
