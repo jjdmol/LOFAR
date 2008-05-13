@@ -55,7 +55,7 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
     
     
     /** Fills the table from the database */
-    public boolean fillTable(MainFrame aMainFrame,int aNodeID,String aStartTime, String anEndTime,boolean setMostRecent) {
+    public boolean fillTable(MainFrame aMainFrame,int aNodeID,String aStartTime, String anEndTime,boolean setMostRecent,int aLevel) {
         
         if (SharedVars.getOTDBrmi() == null) {
             logger.debug("No active otdbRmi connection");
@@ -63,16 +63,14 @@ public class LogParamTableModel extends javax.swing.table.AbstractTableModel {
         }            
         try {
             OtdbRmi.getRemoteValue().setTreeID(aMainFrame.getSharedVars().getTreeID());
-            Vector aLogList=OtdbRmi.getRemoteValue().searchInPeriod(aNodeID,1,aStartTime,anEndTime,setMostRecent);
+            Vector aLogList=OtdbRmi.getRemoteValue().searchInPeriod(aNodeID,aLevel,aStartTime,anEndTime,setMostRecent);
             if (aLogList==null || aLogList.size()<1 ) {
                 logger.debug("Failed to get searchInPeriod Match");
                 return false;
             }
             data = new Object[aLogList.size()][headers.length];
             for (int k=0; k< aLogList.size();k++) {
-               String [] aS=((jOTDBvalue)aLogList.elementAt(k)).name.split("[.]");
-               String aName=aS[aS.length-1];
-               data[k][0]=aName;
+               data[k][0]=((jOTDBvalue)aLogList.elementAt(k)).name;
                data[k][1]=((jOTDBvalue)aLogList.elementAt(k)).value;
                data[k][2]=((jOTDBvalue)aLogList.elementAt(k)).time;
             }
