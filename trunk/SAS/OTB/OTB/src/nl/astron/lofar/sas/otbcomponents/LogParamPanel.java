@@ -29,7 +29,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.logging.Level;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
@@ -171,6 +170,7 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
             LogParamNameText.setText(itsNode.name);
         }
         setTime();
+        fillTable();
     }
     
     /** Sets the buttons visible/invisible
@@ -261,6 +261,8 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         logParamRefreshButton = new javax.swing.JButton();
         setStartDateButton = new javax.swing.JButton();
         setStopDateButton = new javax.swing.JButton();
+        LogParamLevelComboBox = new javax.swing.JComboBox();
+        LogParamLevelLabel = new javax.swing.JLabel();
 
         titleText.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         titleText.setText("no Title");
@@ -322,45 +324,57 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
             }
         });
 
+        LogParamLevelComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "0", "1", "2", "3", "4", "5", "6", "7" }));
+
+        LogParamLevelLabel.setText("Level");
+        LogParamLevelLabel.setToolTipText("Level to descent ");
+
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
                     .add(jPanel1Layout.createSequentialGroup()
-                        .add(14, 14, 14)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(LogParamStartTimeLabel)
-                            .add(LogParamNameLabel)
-                            .add(LogParamEndTimeLabel))
-                        .add(29, 29, 29)
-                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                            .add(LogParamNameText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 851, Short.MAX_VALUE)
-                            .add(jPanel1Layout.createSequentialGroup()
-                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
-                                    .add(org.jdesktop.layout.GroupLayout.LEADING, LogParamEndTimeText)
-                                    .add(org.jdesktop.layout.GroupLayout.LEADING, LogParamStartTimeText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 275, Short.MAX_VALUE))
-                                .add(18, 18, 18)
-                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                                    .add(setStopDateButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                                    .add(setStartDateButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))))
-                    .add(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
                         .add(logParamCancelButton)
                         .add(10, 10, 10)
                         .add(logParamApplyButton)
                         .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-                        .add(logParamRefreshButton))
+                        .add(logParamRefreshButton)
+                        .addContainerGap(729, Short.MAX_VALUE))
                     .add(jPanel1Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .add(LogParamRecentOnlyCheckbox)))
-                .addContainerGap())
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(LogParamStartTimeLabel)
+                            .add(LogParamNameLabel)
+                            .add(LogParamEndTimeLabel)
+                            .add(LogParamLevelLabel))
+                        .add(29, 29, 29)
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                    .add(LogParamNameText, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 851, Short.MAX_VALUE)
+                                    .add(jPanel1Layout.createSequentialGroup()
+                                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING, false)
+                                            .add(org.jdesktop.layout.GroupLayout.LEADING, LogParamEndTimeText)
+                                            .add(org.jdesktop.layout.GroupLayout.LEADING, LogParamStartTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 275, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                                            .add(setStopDateButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                            .add(setStartDateButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 60, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                                        .add(51, 51, 51)))
+                                .add(14, 14, 14))
+                            .add(jPanel1Layout.createSequentialGroup()
+                                .add(LogParamLevelComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 45, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                                .addContainerGap())))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(LogParamRecentOnlyCheckbox)
+                        .addContainerGap(829, Short.MAX_VALUE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jPanel1Layout.createSequentialGroup()
-                .add(14, 14, 14)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(LogParamNameLabel)
                     .add(LogParamNameText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
@@ -374,9 +388,13 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
                     .add(LogParamEndTimeLabel)
                     .add(LogParamEndTimeText, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(setStopDateButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 20, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
+                .add(7, 7, 7)
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
+                    .add(LogParamLevelLabel)
+                    .add(LogParamLevelComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(LogParamRecentOnlyCheckbox)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 21, Short.MAX_VALUE)
+                .add(29, 29, 29)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(logParamCancelButton)
                     .add(logParamApplyButton)
@@ -428,8 +446,12 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
         String aStartTime = LogParamStartTimeText.getText();
         String aStopTime = LogParamEndTimeText.getText();
         setMostRecent=LogParamRecentOnlyCheckbox.isSelected();
+        int aLevel = Integer.parseInt((String)LogParamLevelComboBox.getSelectedItem());
+        // For now set 7 as maximum level
+        if (aLevel < 0) aLevel=0;
+        if (aLevel > 7) aLevel=7;
         itsMainFrame.setHourglassCursor();
-        if (!((LogParamTableModel)tablePanel1.getTableModel()).fillTable(itsMainFrame,itsNode.nodeID(),aStartTime,aStopTime,setMostRecent)) {
+        if (!((LogParamTableModel)tablePanel1.getTableModel()).fillTable(itsMainFrame,itsNode.nodeID(),aStartTime,aStopTime,setMostRecent,aLevel)) {
             logger.debug("Error filling LogParamTableMode");
         }
         itsMainFrame.setNormalCursor();        
@@ -523,6 +545,8 @@ public class LogParamPanel extends javax.swing.JPanel implements IViewPanel {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel LogParamEndTimeLabel;
     private javax.swing.JTextField LogParamEndTimeText;
+    private javax.swing.JComboBox LogParamLevelComboBox;
+    private javax.swing.JLabel LogParamLevelLabel;
     private javax.swing.JLabel LogParamNameLabel;
     private javax.swing.JTextField LogParamNameText;
     private javax.swing.JCheckBox LogParamRecentOnlyCheckbox;

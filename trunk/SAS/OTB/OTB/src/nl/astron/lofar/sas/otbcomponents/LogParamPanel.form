@@ -57,51 +57,61 @@
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
               <Group type="102" attributes="0">
+                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
-                      <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace min="14" pref="14" max="14" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="LogParamStartTimeLabel" min="-2" max="-2" attributes="0"/>
-                              <Component id="LogParamNameLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                              <Component id="LogParamEndTimeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
-                          </Group>
-                          <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
-                          <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="LogParamNameText" alignment="0" pref="851" max="32767" attributes="1"/>
-                              <Group type="102" alignment="0" attributes="0">
-                                  <Group type="103" groupAlignment="1" max="-2" attributes="0">
-                                      <Component id="LogParamEndTimeText" alignment="0" max="32767" attributes="1"/>
-                                      <Component id="LogParamStartTimeText" alignment="0" pref="275" max="32767" attributes="1"/>
-                                  </Group>
-                                  <EmptySpace type="separate" max="-2" attributes="0"/>
-                                  <Group type="103" groupAlignment="0" attributes="0">
-                                      <Component id="setStopDateButton" min="-2" pref="60" max="-2" attributes="0"/>
-                                      <Component id="setStartDateButton" alignment="0" min="-2" pref="60" max="-2" attributes="0"/>
-                                  </Group>
-                              </Group>
-                          </Group>
-                      </Group>
-                      <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace max="-2" attributes="0"/>
+                      <Group type="102" attributes="0">
                           <Component id="logParamCancelButton" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
                           <Component id="logParamApplyButton" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="logParamRefreshButton" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace pref="729" max="32767" attributes="0"/>
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
-                          <EmptySpace max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Component id="LogParamStartTimeLabel" min="-2" max="-2" attributes="0"/>
+                              <Component id="LogParamNameLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="LogParamEndTimeLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                              <Component id="LogParamLevelLabel" alignment="0" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="0" attributes="0">
+                              <Group type="102" attributes="0">
+                                  <Group type="103" groupAlignment="0" attributes="0">
+                                      <Component id="LogParamNameText" alignment="0" pref="851" max="32767" attributes="1"/>
+                                      <Group type="102" alignment="0" attributes="0">
+                                          <Group type="103" groupAlignment="1" max="-2" attributes="0">
+                                              <Component id="LogParamEndTimeText" alignment="0" max="32767" attributes="1"/>
+                                              <Component id="LogParamStartTimeText" alignment="0" min="-2" pref="275" max="-2" attributes="1"/>
+                                          </Group>
+                                          <EmptySpace max="-2" attributes="0"/>
+                                          <Group type="103" groupAlignment="0" attributes="0">
+                                              <Component id="setStopDateButton" min="-2" pref="60" max="-2" attributes="0"/>
+                                              <Component id="setStartDateButton" alignment="0" min="-2" pref="60" max="-2" attributes="0"/>
+                                          </Group>
+                                          <EmptySpace min="-2" pref="51" max="-2" attributes="0"/>
+                                      </Group>
+                                  </Group>
+                                  <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
+                              </Group>
+                              <Group type="102" attributes="0">
+                                  <Component id="LogParamLevelComboBox" min="-2" pref="45" max="-2" attributes="0"/>
+                                  <EmptySpace max="-2" attributes="0"/>
+                              </Group>
+                          </Group>
+                      </Group>
+                      <Group type="102" alignment="0" attributes="0">
                           <Component id="LogParamRecentOnlyCheckbox" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace pref="829" max="32767" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" attributes="0">
-                  <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
+              <Group type="102" alignment="1" attributes="0">
+                  <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="LogParamNameLabel" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="LogParamNameText" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -118,9 +128,14 @@
                       <Component id="LogParamEndTimeText" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="setStopDateButton" alignment="3" min="-2" pref="20" max="-2" attributes="0"/>
                   </Group>
+                  <EmptySpace min="-2" pref="7" max="-2" attributes="0"/>
+                  <Group type="103" groupAlignment="1" attributes="0">
+                      <Component id="LogParamLevelLabel" min="-2" max="-2" attributes="0"/>
+                      <Component id="LogParamLevelComboBox" min="-2" max="-2" attributes="0"/>
+                  </Group>
                   <EmptySpace type="unrelated" max="-2" attributes="0"/>
                   <Component id="LogParamRecentOnlyCheckbox" min="-2" max="-2" attributes="0"/>
-                  <EmptySpace pref="21" max="32767" attributes="0"/>
+                  <EmptySpace min="-2" pref="29" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="logParamCancelButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="logParamApplyButton" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -213,6 +228,28 @@
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="setStopDateButtonActionPerformed"/>
           </Events>
+        </Component>
+        <Component class="javax.swing.JComboBox" name="LogParamLevelComboBox">
+          <Properties>
+            <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+              <StringArray count="8">
+                <StringItem index="0" value="0"/>
+                <StringItem index="1" value="1"/>
+                <StringItem index="2" value="2"/>
+                <StringItem index="3" value="3"/>
+                <StringItem index="4" value="4"/>
+                <StringItem index="5" value="5"/>
+                <StringItem index="6" value="6"/>
+                <StringItem index="7" value="7"/>
+              </StringArray>
+            </Property>
+          </Properties>
+        </Component>
+        <Component class="javax.swing.JLabel" name="LogParamLevelLabel">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Level"/>
+            <Property name="toolTipText" type="java.lang.String" value="Level to descent "/>
+          </Properties>
         </Component>
       </SubComponents>
     </Container>
