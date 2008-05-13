@@ -48,7 +48,10 @@ StnPermSW		-			S	P	LOFAR_PermSW
 DigBoardCtrl	DBC			S	P	LOFAR_PermSW_DigBoardCtrl
 StationCtrl		SC			S	P	LOFAR_PermSW_StationCtrl
 TempCtrl		TC			S	P	LOFAR_PermSW_TempCtrl
+LoggingProcessor LGP		S	P	LOFAR_PermSW_LoggingProcessor
 HardwareMonitor	HWM			S	P	LOFAR_PermSW_HardwareMonitor
+SoftwareMonitor	SWM			S	P	LOFAR_PermSW_SoftwareMonitor
+MACInfoServer	MIS			S	P	LOFAR_PermSW_MACInfoServer
 StnObsSW		-			S	P	LOFAR_ObsSW
 StnObservation	OBS			S	O	LOFAR_ObsSW_@observation@
 BeamCtrl		BC			S	O	LOFAR_ObsSW_@observation@_BeamCtrl
