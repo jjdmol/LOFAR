@@ -59,6 +59,7 @@
 
 #include <functional>
 #include <stdexcept>
+#include <limits>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -975,7 +976,7 @@ void Prediffer::process(bool, bool precalc, const Location &start,
     
     // Process all selected baselines.
     ASSERT(itsBaselineSelection.size()
-        <= static_cast<size_t>(numeric_limits<int>::max()));
+           <= static_cast<size_t>(std::numeric_limits<int>::max()));
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < static_cast<int>(itsBaselineSelection.size()); ++i)

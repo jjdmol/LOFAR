@@ -47,7 +47,7 @@ namespace BBS
 
 
     RegularAxis::RegularAxis(const double &begin, const double &delta,
-        size_t count)
+        uint32 count)
         :   itsBegin(begin),
             itsDelta(delta),
             itsCount(count)

@@ -27,6 +27,7 @@
 #include <Common/lofar_algorithm.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_smartptr.h>
+#include <Common/LofarTypes.h>
 
 #include <limits>
 #include <utility>
@@ -71,7 +72,7 @@ public:
             itsCount(1)
     {}     
     
-    RegularAxis(const double &begin, const double &delta, size_t count);
+    RegularAxis(const double &begin, const double &delta, uint32 count);
     
     ~RegularAxis()
     {}
@@ -151,7 +152,7 @@ private:
     //# -------- BlobStreamable interface implementation -------- 
 
     double  itsBegin, itsDelta;
-    size_t  itsCount;
+    uint32  itsCount;
 };
 
 
