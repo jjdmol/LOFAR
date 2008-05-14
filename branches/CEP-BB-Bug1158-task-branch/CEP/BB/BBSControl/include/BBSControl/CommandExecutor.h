@@ -30,6 +30,7 @@
 #include <BBSControl/CommandResult.h>
 
 #include <BBSKernel/Prediffer.h>
+#include <BBSKernel/MetaMeasurement.h>
 #include <BBSKernel/Measurement.h>
 #include <BBSKernel/VisSelection.h>
 #include <BBSKernel/VisData.h>
@@ -58,11 +59,11 @@ namespace LOFAR
     {
     public:
       CommandExecutor(shared_ptr<CommandQueue> &queue,
-                      shared_ptr<BlobStreamableConnection> &solver)
-        :   itsChunkSize(0),
-            itsChunkPosition(0),
-            itsCommandQueue(queue),
-            itsSolverConnection(solver)
+                      shared_ptr<BlobStreamableConnection> &global,
+                      shared_ptr<BlobStreamableConnection> &local)
+        :   itsCommandQueue(queue),
+            itsGlobalSolver(global),
+            itsSolver(local)
       {
       }
 
@@ -93,18 +94,14 @@ namespace LOFAR
     private:
       // Kernel.
       scoped_ptr<Prediffer>                   itsKernel;
+      uint32                                  itsKernelId;
       
       // Measurement.
+      MetaMeasurement                         itsMetaMeasurement;
       Measurement::Pointer                    itsMeasurement;
       string                                  itsInputColumn;
 
-      // Visibility selection.
-      VisSelection                            itsRoiSelection;
-      VisDimensions                           itsRoiDimensions;
-
-      // Chunk size in time slots.
-      size_t                                  itsChunkSize;
-      size_t                                  itsChunkPosition;
+      // Chunk.
       VisSelection                            itsChunkSelection;
       VisData::Pointer                        itsChunk;
       
@@ -116,7 +113,8 @@ namespace LOFAR
       shared_ptr<CommandQueue>                itsCommandQueue;
 
       // Connection to the solver.
-      shared_ptr<BlobStreamableConnection>    itsSolverConnection;
+      shared_ptr<BlobStreamableConnection>    itsGlobalSolver;
+      shared_ptr<BlobStreamableConnection>    itsSolver;
 
       // Result of the last executed command.
       CommandResult                           itsResult;

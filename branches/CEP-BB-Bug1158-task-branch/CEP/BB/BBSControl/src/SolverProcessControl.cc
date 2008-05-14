@@ -63,6 +63,12 @@ namespace LOFAR
 
     namespace
     {
+      bool dummy = CommandFactory::instance().
+        registerClass<NextChunkCommand>("nextchunk");
+    }
+
+    namespace
+    {
       InitializeCommand initCmd;
       // CoeffIndexMsg     coeffIndexMsg;
     }

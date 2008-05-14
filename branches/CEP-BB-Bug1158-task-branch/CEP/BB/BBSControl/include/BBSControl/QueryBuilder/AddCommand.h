@@ -89,6 +89,7 @@ namespace LOFAR
         // Return the argument list.
         // @{
         string argumentList(const Command& command) const;
+        string argumentList(const NextChunkCommand& command) const;
         string argumentList(const Step& command) const;
         string argumentList(const Strategy& command) const;
         // @}

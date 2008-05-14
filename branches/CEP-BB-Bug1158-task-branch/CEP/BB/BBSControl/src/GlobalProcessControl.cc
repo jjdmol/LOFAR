@@ -31,12 +31,21 @@
 #include <BBSControl/SynchronizeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/CommandQueue.h>
+//#include <BBSControl/CommandId.h>
+//#include <BBSControl/LocalControlId.h>
+
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufStream.h>
 #include <Common/LofarLogger.h>
 #include <Common/Exceptions.h>
+#include <Common/lofar_fstream.h>
+#include <Common/lofar_algorithm.h>
 
-#include <BBSControl/LocalControlId.h>
+#include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/MVTime.h>
 
 #include <unistd.h>    // for sleep()
+
 
 using namespace LOFAR::ACC::APS;
 
@@ -52,6 +61,9 @@ namespace LOFAR
 
       // ID of the last "next chunk" command (if any).
       CommandId nextChunkId(0);
+      
+      bool dummy1 = BlobStreamableFactory::instance().registerClass<RegularAxis>("RegularAxis");
+      bool dummy2 = BlobStreamableFactory::instance().registerClass<IrregularAxis>("IrregularAxis");      
     }
 
 
@@ -59,7 +71,12 @@ namespace LOFAR
 
     GlobalProcessControl::GlobalProcessControl() :
       ProcessControl(),
-      itsState(UNDEFINED)
+      itsState(UNDEFINED),
+      itsFreqStart(0.0),
+      itsFreqEnd(0.0),
+      itsTimeStart(0),
+      itsTimeEnd(0),
+      itsChunkStart(0)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
     }
@@ -76,12 +93,18 @@ namespace LOFAR
       LOG_INFO("GlobalProcessControl::define()");
       
       try {
-	// Retrieve the strategy from the parameter set.
-	itsStrategy.reset(new Strategy(*globalParameterSet()));
+    	// Retrieve the strategy from the parameter set.
+    	itsStrategy.reset(new Strategy(*globalParameterSet()));
 
-	// Retrieve the steps in the strategy in sequential order.
+    	// Retrieve the steps in the strategy in sequential order.
         itsSteps = itsStrategy->getAllSteps();
-	LOG_DEBUG_STR("# of steps in strategy: " << itsSteps.size());
+    	LOG_DEBUG_STR("# of steps in strategy: " << itsSteps.size());
+
+        // Read MetaMeasurement file.	
+        ifstream fin(itsStrategy->dataSet().c_str());
+        BlobIBufStream bufs(fin);
+        BlobIStream ins(bufs);
+        ins >> itsMetaMeasurement;
       }
       catch (Exception& e) {
 	LOG_ERROR_STR(e);
@@ -169,6 +192,48 @@ namespace LOFAR
         // should do is send a "next chunk" command.
         itsState = NEXT_CHUNK;
 
+        // Determine ROI in frequency.
+        const RegionOfInterest &roi = itsStrategy->regionOfInterest();
+        pair<double, double> range = itsMetaMeasurement.getFreqRange();
+        itsFreqStart = range.first;
+        itsFreqEnd = range.second;
+//        itsFreqStart = max(range.first, roi.frequency[0]);
+//        itsFreqEnd = min(range.second, roi.frequency[1]);
+//        ASSERT(itsFreqStart < itsFreqEnd);
+
+        // Determine ROI in time.
+        const Axis::Pointer timeAxis = itsMetaMeasurement.getTimeAxis();
+
+        itsTimeStart = 0;
+        itsTimeEnd = timeAxis->size();
+        casa::Quantity time;
+        if(!roi.time.empty() && casa::MVTime::read(time, roi.time[0]))
+        {
+            const size_t tslot = timeAxis->locate(time.getValue("s"));
+            if(tslot < timeAxis->size())
+            {
+                itsTimeStart = tslot;
+            }
+        }
+
+        if(roi.time.size() > 1 && casa::MVTime::read(time, roi.time[1]))
+        {
+            itsTimeEnd = timeAxis->locate(time.getValue("s"));
+        }
+
+        itsChunkStart = itsTimeStart;
+        itsChunkSize = itsStrategy->domainSize().timeInterval;
+        if(itsChunkSize == 0)
+        {
+            // If chunk size equals 0, take the whole region of interest
+            // as a single chunk.
+            itsChunkSize = itsTimeEnd;
+        }
+
+        LOG_DEBUG_STR("Time range: [" << itsTimeStart << "," << itsTimeEnd
+            << ")");
+        LOG_DEBUG_STR("Chunk size: " << itsChunkSize << " time slot(s)");
+
         // Only return true if none of the local controllers returned an error
         // status.
         return notOk == 0;
@@ -192,7 +257,18 @@ namespace LOFAR
           // Send a "next chunk" command. 
           LOG_TRACE_FLOW("RunState::NEXT_CHUNK");
 
-          nextChunkId = itsCommandQueue->addCommand(NextChunkCommand());
+          const Axis::Pointer timeAxis = itsMetaMeasurement.getTimeAxis();
+          const double start = timeAxis->lower(itsChunkStart);
+          
+          itsChunkStart += itsChunkSize;
+          if(itsChunkStart > itsTimeEnd)
+          {
+            itsChunkStart = itsTimeEnd;
+          }
+          const double end = timeAxis->upper(itsChunkStart - 1);
+          
+          NextChunkCommand cmd(itsFreqStart, itsFreqEnd, start, end);          
+          nextChunkId = itsCommandQueue->addCommand(cmd);
           LOG_DEBUG_STR("Next-chunk command has ID: " << nextChunkId);
 
           itsState = NEXT_CHUNK_WAIT;
@@ -274,6 +350,9 @@ namespace LOFAR
             itsCommandQueue->addCommand(**itsStepsIterator++);
 //             LOG_DEBUG("Switching to WAIT state");
 //             itsState = WAIT;
+          } else if(itsChunkStart == itsTimeEnd) {
+            LOG_DEBUG("Switching to FINALIZE state");
+            itsState = FINALIZE;
           } else {
             LOG_DEBUG("Switching to NEXT_CHUNK state");
             itsState = NEXT_CHUNK;

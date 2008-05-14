@@ -83,38 +83,39 @@ namespace LOFAR
     {
       LOG_DEBUG("KernelProcessControl::define()");
 
-      try
-      {
-        ParameterSet* ps(globalParameterSet());
-        ASSERT(ps);
+      ParameterSet* ps(globalParameterSet());
+      ASSERT(ps);
 
-        string host;
-        string port;
-
-        // Should we connect to a global solver?
-        bool isGlobal(ps->getBool("Solver.Global"));
-
-        if (isGlobal) {
-          host = ps->getString("Solver.Host");
-          port = ps->getString("Solver.Port");
-        }
-        else {
-          ostringstream oss;
-          oss << "=Solver_" << getenv("USER") << ps->getInt32("SolverId");
-          host = "localhost";
-          port = oss.str();
-        }
+      string host, port;
+      try {
+        host = ps->getString("Solver.Global.Host");
+        port = ps->getString("Solver.Global.Port");
 
         LOG_DEBUG_STR("Defining connection: solver@" << host << ":" << port);
-        itsSolverConnection.reset
-          (new BlobStreamableConnection
-           (host, port, (isGlobal ? Socket::TCP : Socket::LOCAL)));
+        itsGlobalSolver.reset(new BlobStreamableConnection(host, port,
+        Socket::TCP));
+      }
+      catch(Exception &e) {
+        itsGlobalSolver.reset();
+        LOG_WARN("No global solver specified in parset; Global solver will be"
+            " unavailable.");
+      }
+  
+/*
+        ostringstream oss;
+        oss << "=Solver_" << getenv("USER") << ps->getInt32("Solver.Local.Id");
+        host = "localhost";
+        port = oss.str();
 
+        LOG_DEBUG_STR("Defining connection: solver@" << host << ":" << port);
+        itsSolver.reset(new BlobStreamableConnection(host, port,
+            Socket::LOCAL));
       }
       catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
       }
+*/            
 
       return true;
     }
@@ -137,16 +138,20 @@ namespace LOFAR
         // command is posted to the blackboard database.
         itsCommandQueue->registerTrigger(CommandQueue::Trigger::Command);
 
-        LOG_DEBUG("Trying to connect to solver");
-        if(!itsSolverConnection->connect())
-        {
-          LOG_ERROR("+ could not connect to solver");
+        if(itsGlobalSolver && !itsGlobalSolver->connect()) {
           return false;
         }
-        LOG_DEBUG("+ ok");
+        LOG_DEBUG("Connected to global solver.");
 
+/*
+        if(!itsSolver->connect())
+        {
+          return false;
+        }
+        LOG_DEBUG("Connected to local solver.");
+*/
         itsCommandExecutor.reset
-          (new CommandExecutor(itsCommandQueue, itsSolverConnection));
+          (new CommandExecutor(itsCommandQueue, itsGlobalSolver, itsSolver));
       }
       catch(Exception& e)
       {
@@ -174,7 +179,6 @@ namespace LOFAR
           }
 
           LOG_DEBUG("New run, entering RUN state.");
-          //                itsState = KernelProcessControl::FIRST_RUN;
           itsState = KernelProcessControl::RUN;
           break;
         }

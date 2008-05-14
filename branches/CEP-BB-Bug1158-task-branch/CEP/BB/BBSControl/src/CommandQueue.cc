@@ -156,16 +156,16 @@ namespace LOFAR
       // differentiate between ordinary commands and steps.
       string name = ps.getString("Name");
 
+      // Name is not empty, so we must construct a Step object.
+      // Get additional information needed to create the Step.
+      string buf = ps.getString("ParameterSet");
+
+      // The string \a buf now contains a string of key/value pairs. Turn it
+      // into a ParameterSet. Note that we can safely reuse \a ps.
+      ps.clear();
+      ps.adoptBuffer(buf);
+
       if (!name.empty()) {
-        // Name is not empty, so we must construct a Step object.
-        // Get additional information needed to create the Step.
-        string buf = ps.getString("ParameterSet");
-
-        // The string \a buf now contains a string of key/value pairs. Turn it
-        // into a ParameterSet. Note that we can safely reuse \a ps.
-        ps.clear();
-        ps.adoptBuffer(buf);
-
         // Create a new Step and return it.
         return make_pair(Step::create(name, ps, 0), id);
       }

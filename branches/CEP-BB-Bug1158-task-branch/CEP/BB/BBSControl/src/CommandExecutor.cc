@@ -48,7 +48,14 @@
 #include <BBSControl/ShiftStep.h>
 #include <BBSControl/RefitStep.h>
 
+#include <BBSKernel/MeasurementAIPS.h>
 #include <BBSKernel/Prediffer.h>
+#include <BBSKernel/Solver.h>
+
+#include <Blob/BlobIStream.h>
+#include <Blob/BlobIBufStream.h>
+
+#include <APS/ParameterSet.h>
 
 #include <Common/LofarLogger.h>
 #include <BBSControl/StreamUtil.h>
@@ -72,11 +79,9 @@
 
 namespace LOFAR
 {
-
 namespace BBS 
 {
 using LOFAR::operator<<;
-
 
 //# Ensure classes are registered with the ObjectFactory.
 template class BlobStreamableVector<DomainRegistrationRequest>;
@@ -98,19 +103,34 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     shared_ptr<const Strategy> strategy(itsCommandQueue->getStrategy());
     ASSERT(strategy);
 
-#if 0
+    // Read MetaMeasurement file.
     try
     {
-        // Create a new kernel.
-        itsKernel.reset(new Prediffer(strategy->dataSet(),
-//            strategy->subband(),
-            0,
-            strategy->inputData(),
-            strategy->parmDB().localSky,
-            strategy->parmDB().instrument,
-            strategy->parmDB().history,
-//            strategy->readUVW()));
-            false));
+        ifstream fin(strategy->dataSet().c_str());
+        BlobIBufStream bufs(fin);
+        BlobIStream ins(bufs);
+        ins >> itsMetaMeasurement;
+    }
+    catch(Exception &ex)
+    {
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Failed to read meta measurement.");
+        return;
+    }        
+
+    // TODO: Determine kernel id.
+    ASSERT(LOFAR::ACC::APS::globalParameterSet());
+    itsKernelId = LOFAR::ACC::APS::globalParameterSet()->getUint32("KernelId");
+    ASSERT(itsKernelId < itsMetaMeasurement.getPartCount());    
+    
+    try
+    {
+        string path = itsMetaMeasurement.getPath(itsKernelId);
+        
+        // Open measurement.
+        LOG_INFO_STR("Input: " << path << "::" << strategy->inputData());
+        itsInputColumn = strategy->inputData();
+        itsMeasurement.reset(new MeasurementAIPS(path));
     }
     catch(Exception &ex)
     {
@@ -119,49 +139,64 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
             " kernel.");
     }
 
-    // Create selection from information in strategy.
-    VisSelection selection;
-    if(!strategy->stations().empty())
-        selection.setStations(strategy->stations());
+    try
+    {
+        // Open sky model parmdb.
+        LOFAR::ParmDB::ParmDBMeta skyDbMeta("aips",
+            strategy->parmDB().localSky);
+        LOG_INFO_STR("Sky model database: "
+            << skyDbMeta.getTableName());
+        itsSkyDb.reset(new LOFAR::ParmDB::ParmDB(skyDbMeta));
+    }
+    catch(Exception &ex)
+    {
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Failed to open sky model parameter database.");
+        return;
+    }        
 
+    try
+    {
+        // Open instrument model parmdb.
+        LOFAR::ParmDB::ParmDBMeta instrumentDbMeta("aips",
+            strategy->parmDB().instrument);
+        LOG_INFO_STR("Instrument model database: "
+            << instrumentDbMeta.getTableName());
+        itsInstrumentDb.reset(new LOFAR::ParmDB::ParmDB(instrumentDbMeta));
+    }
+    catch(Exception &ex)
+    {
+        itsResult = CommandResult(CommandResult::ERROR,
+            "Failed to open instrument model parameter database.");
+        return;
+    }        
+
+    // Create kernel.
+    itsKernel.reset(new Prediffer(itsMeasurement, *itsSkyDb.get(),
+        *itsInstrumentDb.get()));
+
+    // Initialize the chunk selection from information in strategy.
+
+    if(!strategy->stations().empty())
+    {
+        itsChunkSelection.setStations(strategy->stations());
+    }
+    
     Correlation correlation = strategy->correlation();
     if(!correlation.type.empty())
-        selection.setPolarizations(correlation.type);
-
+    {
+        itsChunkSelection.setPolarizations(correlation.type);
+    }
+    
     if(correlation.selection == "AUTO")
     {
-        selection.setBaselineFilter(VisSelection::AUTO);
+        itsChunkSelection.setBaselineFilter(VisSelection::AUTO);
     }
     else if(correlation.selection == "CROSS")
     {
-        selection.setBaselineFilter(VisSelection::CROSS);
+        itsChunkSelection.setBaselineFilter(VisSelection::CROSS);
     }
 
-    RegionOfInterest roi = strategy->regionOfInterest();
-    if(!roi.frequency.empty())
-    {
-        selection.setStartChannel(roi.frequency[0]);
-    }
-    if(roi.frequency.size() > 1)
-    {
-        selection.setEndChannel(roi.frequency[1]);
-    }
-    if(!roi.time.empty())
-    {
-        selection.setStartTime(roi.time[0]);
-    }
-    if(roi.time.size() > 1)
-    {
-        selection.setEndTime(roi.time[1]);
-    }
-
-    itsKernel->setSelection(selection);
-
-    size_t size = strategy->domainSize().timeInterval;
-    LOG_DEBUG_STR("Chunk size: " << size << " timeslot(s)");
-    itsKernel->setChunkSize(size);
-
-#endif
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -177,25 +212,53 @@ void CommandExecutor::visit(const FinalizeCommand &/*command*/)
 }
 
 
-void CommandExecutor::visit(const NextChunkCommand &/*command*/)
+void CommandExecutor::visit(const NextChunkCommand &command)
 {
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
     LOG_DEBUG("Handling a NextChunkCommand");
 
-#if 0
-    if(itsKernel->nextChunk())
+    // Create chunk selection.
+    itsChunkSelection.clear(VisSelection::TIME_START);
+    itsChunkSelection.clear(VisSelection::TIME_END);
+
+    pair<double, double> range = command.getTimeRange();
+    itsChunkSelection.setTimeRange(range.first, range.second);
+
+    // Deallocate chunk.
+    itsKernel->detachChunk();
+    ASSERTSTR(itsChunk.use_count() == 0 || itsChunk.use_count() == 1,
+        "itsChunk shoud be unique (or uninitialized) by now.");
+    itsChunk.reset();
+
+    LOG_DEBUG("Reading chunk...");
+    try
     {
-        itsResult = CommandResult(CommandResult::OK, "Ok.");
+        itsChunk = itsMeasurement->read(itsChunkSelection, itsInputColumn,
+            true);
     }
-    else
+    catch(Exception &ex)
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to read"
+            " chunk.");
+        return;                
+    }
+
+/*
+    if(<CHUNK EMPTY>)
     {
         LOG_DEBUG_STR("NextChunk: OUT_OF_DATA");
         itsResult = CommandResult(CommandResult::OUT_OF_DATA);
+        return;
     }
-#else
+*/
+
+    itsKernel->attachChunk(itsChunk);
+
+    // Display information about chunk.
+    LOG_INFO_STR("Chunk dimensions: " << endl << itsChunk->getDimensions());
+
     itsResult = CommandResult(CommandResult::OK, "Ok.");
-#endif
 }
 
 
@@ -338,9 +401,185 @@ void CommandExecutor::visit(const SolveStep &command)
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     LOG_DEBUG("Handling a SolveStep");
     LOG_DEBUG_STR("Command: " << endl << command);
-#if 0
-    ASSERTSTR(itsKernel, "No kernel available.");
 
+    ASSERTSTR(itsKernel, "No kernel available.");
+    ASSERTSTR(itsGlobalSolver, "No global solver available.");
+
+    // Set visibility selection.
+    if(!itsKernel->setSelection(command.correlation().selection,
+        command.baselines().station1, command.baselines().station2,
+        command.correlation().type))
+    {        
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
+        return;
+    }        
+        
+    // Initialize model.
+    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
+        command.sources());
+
+    itsKernel->setParameterSelection(command.parms(), command.exclParms());
+    
+    // Construct solution grid.
+    pair<size_t, size_t> cellSize(command.domainSize().bandWidth,
+        command.domainSize().timeInterval);
+
+    // Get measurement dimensions.
+    const VisDimensions &dims = itsMeasurement->getDimensions();
+
+    // Construct frequency axis.
+    Axis::Pointer faxis = dims.getFreqAxis();
+    LOG_DEBUG_STR("Frequency axis: " << faxis->size() << " channels.");
+    
+    if(cellSize.first == 0)
+    {
+        // If cell size in frequency is specified as 0, take all channels as
+        // a single cell.
+        cellSize.first = faxis->size();
+    }
+
+    ASSERT(faxis->size() % cellSize.first == 0);
+//    if(faxis->size() % cellSize.first == 0)
+//    {
+//    LOG_DEBUG_STR("Frequency axis: regular");
+    const pair<double, double> range = faxis->range();
+    const size_t count = faxis->size() / cellSize.first;
+    const double delta = (range.second - range.first) / count;
+
+    faxis.reset(new RegularAxis(range.first, delta, count));
+//    }
+/*
+    else
+    {
+        size_t i = 0;
+        vector<double> fborders;
+
+        while(i < faxis->size())
+        {
+            fborders.push_back(faxis->lower(i));
+            i += cellSize.first;
+        }        
+        fborders.push_back(faxis->range().second);
+        
+        faxis.reset(new IrregularAxis<double>(fborders));
+    }        
+*/
+
+    // Construct time axis.
+    Axis::Pointer taxis = dims.getTimeAxis();
+
+    size_t i = 0;
+    vector<double> tcenters;
+    vector<double> twidths;
+    while(i < taxis->size())
+    {
+        tcenters.push_back(taxis->center(i));
+        twidths.push_back(taxis->width(i));
+        i += cellSize.second;
+    }        
+    taxis.reset(new IrregularAxis(tcenters, twidths));
+
+    // Set solution grid.
+    Grid grid(faxis, taxis);
+    itsKernel->setCellGrid(grid);
+    
+    CoeffIndexMsg msg(itsKernelId);
+    itsKernel->getCoeffIndex(msg.getContents());
+    itsGlobalSolver->sendObject(msg);
+
+/*
+    
+    const Grid<double> &chunkGrid = itsChunk->getDimensions().getGrid();
+    Box<double> bbox = chunkGrid.getBoundingBox() & grid.getBoundingBox();
+    ASSERT(!bbox.empty());
+
+    // Find the first and last solution cell that intersect the current chunk.
+    Location chunkStart = grid.locate(bbox.start);
+    Location chunkEnd = grid.locate(bbox.end);
+
+    LOG_DEBUG_STR("Cells in chunk: [(" << chunkStart.first << ","
+        << chunkStart.second << "), (" << chunkEnd.first << ","
+        << chunkEnd.second << "))");
+        
+    Solver solver;
+    solver.reset(1e-9, 1e-9, command.solverOptions().maxIter);
+
+    // Exchange coefficient index.
+    CoeffIndex coeffIndex;
+    itsKernel->getCoeffIndex(coeffIndex);
+    solver.setCoeffIndex(itsKernelId, coeffIndex);
+
+    solver.getCoeffIndex(coeffIndex);
+    itsKernel->setCoeffIndex(coeffIndex);
+    
+    vector<CellSolution> sol;
+    for(size_t ts = chunkStart.second; ts < chunkEnd.second; ++ts)
+    {
+        Location start(chunkStart.first, ts);
+        Location end(chunkEnd.first, ts);
+        
+        if(!sol.empty())
+        {
+//            LOG_DEBUG("COPYING SOLUTIONS");
+            size_t idx = 0;
+            Location loc(start.first, start.second);
+            for(loc.first = start.first; loc.first < end.first; ++loc.first)
+            {
+//                LOG_DEBUG_STR("Copy [" << cellSol[idx].id << "] -> ["
+//                    << grid.getCellId(loc) << "] Coefficients: "
+//                    << cellSol[idx].coeff);
+                sol[idx++].id = grid.getCellId(loc);
+            }
+
+            itsKernel->setCoeff(sol);
+        }
+
+        vector<CellCoeff> coeff;
+        itsKernel->getCoeff(start, end, coeff);
+        
+//        LOG_DEBUG("INITIALIZING SOLUTION CELL");
+//        for(size_t i = 0; i < msg->getContents().size(); ++i)
+//        {
+//            LOG_DEBUG_STR("[" << msg->getContents()[i].id << "] Coefficients: "
+//                << setprecision(20) << msg->getContents()[i].coeff);
+//        }
+
+        solver.setCoeff(itsKernelId, coeff);
+
+        bool done = false;
+        while(!done)
+        {
+            vector<CellEquation> equations;
+            itsKernel->construct(start, end, equations);
+            solver.setEquations(itsKernelId, equations);
+
+            vector<CellSolution> tmp;
+            done = solver.iterate(tmp);
+
+            if(!done)
+            {
+                sol = tmp;
+    
+                LOG_DEBUG_STR("#Solutions: " << sol.size());
+                for(size_t i = 0; i < sol.size(); ++i)
+                {
+                    LOG_DEBUG_STR("[" << sol[i].id << "] Result: "
+                        << sol[i].resultText
+                        << " ChiSqr: " << sol[i].chiSqr << " lmFactor: "
+                        << sol[i].lmFactor);
+//                    LOG_DEBUG_STR("[" << cells[i].id << "] Coefficients: "
+//                        << setprecision(20) << cells[i].coeff);
+                }
+
+                itsKernel->setCoeff(sol);
+            }                
+        }
+    }
+
+    itsKernel->storeParameterValues();
+*/    
+/*
     NSTimer timer;
 
     // Construct context.
@@ -495,7 +734,7 @@ void CommandExecutor::visit(const SolveStep &command)
                     // Update cached values of the unknowns.
                     itsKernel->updateUnknowns(result->getDomainIndex(),
                         result->getUnknowns());
-/*
+
                     // Log the updated unknowns.
                     itsKernel->logIteration(
                         command.name(),
@@ -503,7 +742,6 @@ void CommandExecutor::visit(const SolveStep &command)
                         result->getRank(),
                         result->getChiSquared(),
                         result->getLMFactor());
-*/
 
 #ifdef LOG_SOLVE_DOMAIN_STATS
                     LOG_DEBUG_STR("Domain: " << result->getDomainIndex()
@@ -577,7 +815,6 @@ void CommandExecutor::visit(const SolveStep &command)
             << "%)";
         LOG_DEBUG(oss.str());
 
-/*
         LOG_DEBUG_STR("[START] Writing solutions into parameter"
             " databases...");
         timer.reset();
@@ -600,7 +837,6 @@ void CommandExecutor::visit(const SolveStep &command)
 
         timer.stop();
         LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
-*/
     }
 
     LOG_DEBUG_STR("[START] Writing solutions into parameter"
@@ -621,12 +857,12 @@ void CommandExecutor::visit(const SolveStep &command)
 
     timer.stop();
     LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
-#endif
 
     static int count(0);
     LOG_INFO_STR("Sending CoeffIndexMsg(" << count << ")");
     itsSolverConnection->sendObject(CoeffIndexMsg(count));
     count++;
+*/
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }

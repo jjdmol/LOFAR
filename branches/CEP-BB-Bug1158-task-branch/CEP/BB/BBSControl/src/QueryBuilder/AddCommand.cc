@@ -237,6 +237,17 @@ namespace LOFAR
         return "'" + toLower(cmd.type()) + "'";
       }
 
+
+      string AddCommand::argumentList(const NextChunkCommand& cmd) const
+      {
+        ostringstream oss;
+        ParameterSet  ps;
+        oss << argumentList(static_cast<const Command&>(cmd))
+            << ",''"
+            << ",'" << (ps << cmd) << "'";
+        return oss.str();
+      }
+
       string AddCommand::argumentList(const Step& step) const
       {
         ostringstream oss;

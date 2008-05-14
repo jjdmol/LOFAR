@@ -27,12 +27,14 @@
 // Implementation of ACC/PLC ProcessControl class
 
 //# Includes
-#include <PLC/ProcessControl.h>
-#include <Common/lofar_smartptr.h>
-
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/LocalControlId.h>
+
+#include <BBSKernel/Axis.h>
+#include <BBSKernel/MetaMeasurement.h>
+
+#include <PLC/ProcessControl.h>
 
 #include <Common/lofar_smartptr.h>
 
@@ -131,7 +133,11 @@ namespace LOFAR
 
       // CommandQueue where strategies and steps can be "posted".
       scoped_ptr<CommandQueue> itsCommandQueue;
-
+      
+      MetaMeasurement       itsMetaMeasurement;
+      double                itsFreqStart, itsFreqEnd;
+      size_t                itsTimeStart, itsTimeEnd;
+      size_t                itsChunkStart, itsChunkSize;
     };
 
     // @}
