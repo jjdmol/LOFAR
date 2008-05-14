@@ -1,12 +1,9 @@
-#check_PROGRAMS = tBBSStatus tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
+#check_PROGRAMS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
 #tMeqParm tParmMerge tPredSolv tPredict tSubtract tCorrect tPerturbed tMSData \
 #tShift tDFT
 
-check_PROGRAMS = tBBSStatus tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
+check_PROGRAMS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
 tMeqParm tShift tDFT
-
-tBBSStatus_SOURCES = tBBSStatus.cc
-tBBSStatus_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 tFillRow_SOURCES = tFillRow.cc
 tFillRow_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
@@ -52,11 +49,11 @@ tDFT_DEPENDENCIES = ../src/libbbskernel.la $(LOFAR_DEPEND)
 
 LDADD				= ../src/libbbskernel.la 
 
-#TESTS = tBBSStatus.sh tFillRow.sh tMeqPolc.sh tMeqPolcLog.sh tMeqTabular.sh \
+#TESTS = tFillRow.sh tMeqPolc.sh tMeqPolcLog.sh tMeqTabular.sh \
 #tMeqParm.sh tParmMerge.sh tMSData.sh tPredict.sh tPerturbed.sh tSubtract.sh \
 #tCorrect.sh tPredSolv.sh tBandpass.sh
 
-#EXTRA_DIST = $(TESTS) tBBSStatus.stdout tMeqParm.stdout tMeqPolcLog.stdout \
+#EXTRA_DIST = $(TESTS) tMeqParm.stdout tMeqPolcLog.stdout \
 #tMeqPolc.stdout tParmMerge.stdout tPredSolv.stdout t3C343.run tBandpass.run \
 #tCorrect.run tMeqPolcLog.run tMSData.run tParmMerge.run tPerturbed.run \
 #tPredict.run tPredSolv.run tSubtract.run makeDemoParmDB makeDemoParmDBCorr \
@@ -67,16 +64,16 @@ LDADD				= ../src/libbbskernel.la
 #XFAIL_TESTS = tPredSolv.sh tBandpass.sh
 
 # programs to run through supplied checktools
-#CHECKTOOLPROGS = tBBSStatus tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
+#CHECKTOOLPROGS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
 #tMeqParm tParmMerge tMSData tPredict tPerturbed tSubtract tCorrect
 
-TESTS = tBBSStatus.sh tFillRow.sh tMeqPolc.sh tMeqPolcLog.sh tMeqTabular.sh \
+TESTS = tFillRow.sh tMeqPolc.sh tMeqPolcLog.sh tMeqTabular.sh \
 tMeqParm.sh
 
-EXTRA_DIST = $(TESTS) tBBSStatus.stdout tMeqPolc.stdout tMeqPolcLog.stdout \
+EXTRA_DIST = $(TESTS) tMeqPolc.stdout tMeqPolcLog.stdout \
 tMeqPolcLog.run tMeqParm.stdout
 
-CHECKTOOLPROGS = tBBSStatus tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
+CHECKTOOLPROGS = tFillRow tMeqPolc tMeqPolcLog tMeqTabular \
 tMeqParm
 
 include $(top_srcdir)/Makefile.common
