@@ -493,7 +493,7 @@ void Model::precalculate(const MeqRequest& request)
             vector<MeqExprRep*> &nodes = precalcNodes[level];
             if(!nodes.empty())
             {
-                ASSERT(nodes.size() <= numeric_limits<int>::max());
+//                ASSERT(nodes.size() <= numeric_limits<int>::max());
 #pragma omp for schedule(dynamic)
                 for(int i = 0; i < static_cast<int>(nodes.size()); ++i)
                 {
@@ -575,7 +575,7 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
     vector<double> statUVW(3 * nStations);
 
     const VisDimensions &dims = buffer->getDimensions();
-    const Grid<double> &grid = dims.getGrid();
+    const Grid &grid = dims.getGrid();
     const vector<baseline_t> &baselines = dims.getBaselines();
     
     // Step through the MS by timeslot.

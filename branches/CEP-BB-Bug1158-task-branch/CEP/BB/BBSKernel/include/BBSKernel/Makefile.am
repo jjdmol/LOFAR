@@ -6,6 +6,7 @@ pkginclude_HEADERS = Package__Version.h 		\
 	Grid.h			\
 	Measurement.h		\
 	MeasurementAIPS.h	\
+	MetaMeasurement.h	\
 	Model.h			\
 	Prediffer.h		\
 	Solver.h		\

@@ -304,7 +304,7 @@ void MeasurementAIPS::write(const VisSelection &selection,
     const VisDimensions &dims = buffer->getDimensions();
     const size_t nChannels = dims.getChannelCount();
     const size_t nPolarizations = dims.getPolarizationCount();
-    const Grid<double> &grid = dims.getGrid();
+    const Grid &grid = dims.getGrid();
 
     // Allocate temporary buffers to be able to reverse frequency
     // channels. NOTE: Some performance can be gained by creating
@@ -476,7 +476,7 @@ void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
         itsFreqAxisReversed = true;
     }
 
-    Axis<double>::Pointer freqAxis(new RegularAxis<double>(lower,
+    Axis::Pointer freqAxis(new RegularAxis(lower,
         (upper - lower) / nChannels, nChannels));
 
     // Extract time grid based on TIME column (mid-point of integration
@@ -484,23 +484,56 @@ void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
     // TODO: Should use TIME_CENTROID here (centroid of exposure)?
     // NOTE: UVW is given of the TIME_CENTROID, not for TIME!
     // NOTE: TIME_CENTROID may be different for each baseline!
-    ROScalarColumn<Double> c_time(itsMS, "TIME");
+
+    // Find all unique integration cells.
+    Block<String> sortColumns(2);
+    sortColumns[0] = "TIME";
+    sortColumns[1] = "INTERVAL";
+    
+    Table tab_sorted = itsMS.sort(sortColumns, Sort::Ascending, Sort::QuickSort
+        + Sort::NoDuplicates);
+
+    // Read TIME and INTERVAL column.
+    ROScalarColumn<Double> c_time(tab_sorted, "TIME");
     Vector<Double> time = c_time.getColumn();
+
+    ROScalarColumn<Double> c_interval(tab_sorted, "INTERVAL");
+    Vector<Double> interval = c_interval.getColumn();
+
+    // Convert to vector<double>.
+    vector<double> timeCopy;
+    vector<double> intervalCopy;
+    
+    time.tovector(timeCopy);
+    interval.tovector(intervalCopy);
+
+    Axis::Pointer timeAxis(new IrregularAxis(timeCopy,
+        intervalCopy));
+    itsDimensions.setGrid(Grid(freqAxis, timeAxis));
+
+/*
+    // Read TIME and INTERVAL column.
+    ROScalarColumn<Double> c_time(itsMS, "TIME");
+    ROScalarColumn<Double> c_interval(itsMS, "INTERVAL");
+
+    Vector<Double> time = c_time.getColumn();
+    Vector<Double> interval = c_interval.getColumn();
 
     // Find all unique timeslots.
     Vector<uInt> timeIndex;
     uInt nTimeslots = GenSortIndirect<Double>::sort(timeIndex, time,
         Sort::Ascending, Sort::InsSort + Sort::NoDuplicates);
 
-    // Initialize time axis.
-    ROScalarColumn<Double> c_interval(itsMS, "INTERVAL");
-    Vector<Double> interval = c_interval.getColumn();
 
-    vector<double> times(nTimeslots + 1);
+    // TODO: Could this be simplified by sorting a subtable containing the
+    // TIME and INTERVAL column on TIME and then do call getColumn() for each
+    // column?
+    vector<double> sortedTimes(nTimeslots);
+    vector<double> sortedIntervals(nTimeslots);
     for(uInt i = 0; i < nTimeslots; ++i)
     {
-        // Compute _lower border_ of each integration cell.
-        times[i] = time[timeIndex[i]] - interval[timeIndex[i]] * 0.5;
+        sortedTimes[i] = time[timeIndex[i]]
+        sortedIntervals[i] = interval[timeIndex[i]];
     }
 
     // Compute upper border of last integration cell.
@@ -509,6 +542,7 @@ void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
 
     Axis<double>::Pointer timeAxis(new IrregularAxis<double>(times));
     itsDimensions.setGrid(Grid<double>(freqAxis, timeAxis));
+*/    
 }
 
 
@@ -713,7 +747,7 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     size_t nPolarizations = shape[0];
     size_t nChannels = shape[1];
 
-    const Grid<double> &rootGrid = itsDimensions.getGrid();
+    const Grid &rootGrid = itsDimensions.getGrid();
 
     // Initialize frequency axis.
     double lower, upper;    
@@ -730,10 +764,36 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
         upper = rootGrid[FREQ]->upper(slicer.end()[1]);
     }    
 
-    Axis<double>::Pointer fAxis(new RegularAxis<double>(lower, (upper - lower)
-        / nChannels, nChannels));
+    Axis::Pointer freqAxis(new RegularAxis(lower,
+        (upper - lower) / nChannels, nChannels));
 
     // Initialize time axis.
+    // Find all unique integration cells.
+    Block<String> sortTimeColumns(2);
+    sortTimeColumns[0] = "TIME";
+    sortTimeColumns[1] = "INTERVAL";    
+    Table tab_sorted = tab_selection.sort(sortTimeColumns, Sort::Ascending,
+        Sort::QuickSort + Sort::NoDuplicates);
+    size_t nTimeslots = tab_sorted.nrow();
+
+    // Read TIME and INTERVAL column.
+    ROScalarColumn<Double> c_time(tab_sorted, "TIME");
+    ROScalarColumn<Double> c_interval(tab_sorted, "INTERVAL");
+    Vector<Double> time = c_time.getColumn();
+    Vector<Double> interval = c_interval.getColumn();
+
+    // Convert to vector<double>.
+    vector<double> timeCopy;
+    vector<double> intervalCopy;    
+    time.tovector(timeCopy);
+    interval.tovector(intervalCopy);
+
+    Axis::Pointer timeAxis(new IrregularAxis(timeCopy,
+        intervalCopy));
+        
+    dims.setGrid(Grid(freqAxis, timeAxis));
+    
+/*
     ROScalarColumn<Double> c_time(tab_selection, "TIME");
     Vector<Double> time = c_time.getColumn();
     
@@ -761,13 +821,14 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
 
     Axis<double>::Pointer tAxis(new IrregularAxis<double>(times));
     dims.setGrid(Grid<double>(fAxis, tAxis));
+*/
 
     // Find all unique baselines.
-    Block<String> sortColumns(2);
-    sortColumns[0] = "ANTENNA1";
-    sortColumns[1] = "ANTENNA2";
-    Table tab_baselines = tab_selection.sort(sortColumns, Sort::Ascending,
-        Sort::QuickSort + Sort::NoDuplicates);
+    Block<String> sortBaselineColumns(2);
+    sortBaselineColumns[0] = "ANTENNA1";
+    sortBaselineColumns[1] = "ANTENNA2";
+    Table tab_baselines = tab_selection.sort(sortBaselineColumns,
+        Sort::Ascending, Sort::QuickSort + Sort::NoDuplicates);
     uInt nBaselines = tab_baselines.nrow();
 
     LOG_DEBUG_STR("Selection contains " << nBaselines << " baseline(s), "

@@ -38,7 +38,7 @@ namespace BBS
 using LOFAR::operator<<;
 
 
-void VisDimensions::setGrid(const Grid<double> &grid)
+void VisDimensions::setGrid(const Grid &grid)
 {
     itsGrid = grid;
 }

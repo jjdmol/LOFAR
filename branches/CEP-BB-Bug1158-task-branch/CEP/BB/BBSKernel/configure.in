@@ -62,6 +62,8 @@ lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h)
 #lofar_INTERNAL(LCS/ACC/PLC,PLC,,1,PLC/DH_ProcControl.h)
 #lofar_INTERNAL(CEP/BB/BBSControl,BBSControl,,1,BBSControl/BBSStep.h)
 
+lofar_EXTERNAL(boost,1,boost/logic/tribool.hpp,"")
+
 lofar_AIPSPP(1,"-lmeasures -ltables -lscimath -lscimath_f -lcasa")
 lofar_LAPACK(1)
 

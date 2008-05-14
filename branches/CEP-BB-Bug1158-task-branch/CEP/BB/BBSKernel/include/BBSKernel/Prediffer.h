@@ -122,7 +122,7 @@ public:
         const vector<string> &exclude);        
     void clearParameterSelection();
 
-    bool setCellGrid(const Grid<double> &cellGrid);
+    bool setCellGrid(const Grid &cellGrid);
 
     void getCoeffIndex(CoeffIndex &local) const;
     void setCoeffIndex(const CoeffIndex &global);
@@ -165,6 +165,17 @@ private:
         vector<double>          partialRe, partialIm;
     };
     
+    class Interval
+    {
+    public:
+        Interval()
+            :   start(0),
+                end(0)
+        {}
+        
+        uint32  start, end;                
+    };
+
     //# Copy construction and assignment are not allowed.
     Prediffer(const Prediffer& other);
     Prediffer &operator=(const Prediffer& other);
@@ -215,7 +226,7 @@ private:
     ParmDB::ParmDB                      itsSkyDb;
     ParmDB::ParmDB                      itsInstrumentDb;
     //# All parameter values that intersect the chunk.
-    map<string, ParmDB::ParmValueSet>   itsParameterValues;
+    map<string, LOFAR::ParmDB::ParmValueSet>   itsParameterValues;
 
     Model::Pointer                      itsModel;
     //# Container for the model parameters (the leaf nodes of the model).
@@ -227,8 +238,9 @@ private:
 
     //# Information required for the CONSTRUCT operation.
     //# ------------------------------------------------------------------------
-    Grid<double>                        itsGlobalCellGrid;
-    Grid<uint32>                        itsCellGrid;
+    Grid                                itsCellGrid;
+    vector<Interval>                    itsFreqIntervals;
+    vector<Interval>                    itsTimeIntervals;
     Location                            itsStartCell, itsEndCell;
 
     CoeffIndex                          itsCoeffIndex;

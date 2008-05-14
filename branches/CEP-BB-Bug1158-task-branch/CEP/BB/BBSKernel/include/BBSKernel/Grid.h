@@ -34,33 +34,18 @@ namespace BBS
 typedef pair<size_t, size_t>    Location;
 
 
-// Point: Class template that represents a point in a 2-D space.
-template <typename T>
-class Point
-{
-public:
-    Point(const T &a, const T &b)
-        :   first(a),
-            second(b)
-    {}
-                    
-    T   first, second;
-};
+// Point: A point in a 2-D space.
+typedef pair<double, double>    Point;
 
 
 // -----------------------------------------------------------------------------
-// - Box: Class template for an axis aligned bounding box.                     -
+// - Box: An axis aligned bounding box.                                        -
 // -----------------------------------------------------------------------------
-template <typename T>
 class Box;
+Box unite(const Box &lhs, const Box &rhs);
+Box intersect(const Box &lhs, const Box &rhs);
 
-template <typename T>
-Box<T> unite(const Box<T> &lhs, const Box<T> &rhs);
 
-template <typename T>
-Box<T> intersect(const Box<T> &lhs, const Box<T> &rhs);
-
-template <typename T>
 class Box
 {
 public:
@@ -70,7 +55,7 @@ public:
     {}
 
                 
-    Box(const Point<T> &start, const Point<T> &end)
+    Box(const Point &start, const Point &end)
         :   start(start),
             end(end)
     {
@@ -78,104 +63,68 @@ public:
     }            
 
 
-    bool intersects(const Box<T> &other) const
+    bool intersects(const Box &other) const
     {
         return (other.start.first < end.first
-            && !is_equal<T>::eval(other.start.first, end.first)
+            && !casa::near(other.start.first, end.first)
             && other.end.first > start.first
-            && !is_equal<T>::eval(other.end.first, start.first)
+            && !casa::near(other.end.first, start.first)
             && other.start.second < end.second
-            && !is_equal<T>::eval(other.start.second, end.second)
+            && !casa::near(other.start.second, end.second)
             && other.end.second > start.second
-            && !is_equal<T>::eval(other.end.second, start.second));
+            && !casa::near(other.end.second, start.second));
     }    
 
 
-    bool contains(const Box<T> &other) const
+    bool contains(const Box &other) const
     {
         return ((other.start.first > start.first
-                || is_equal<T>::eval(other.start.first, start.first))
+                || casa::near(other.start.first, start.first))
             && (other.end.first < end.first
-                || !is_equal<T>::eval(other.end.first, end.first))
+                || !casa::near(other.end.first, end.first))
             && (other.start.second > start.second
-                || is_equal<T>::eval(other.start.second, start.second))
+                || casa::near(other.start.second, start.second))
             && (other.end.second < end.second
-                || is_equal<T>::eval(other.end.second, end.second)));
+                || casa::near(other.end.second, end.second)));
     }
     
     bool empty()
     {
-        return (is_equal<T>::eval(start.first, end.first)
-            || is_equal<T>::eval(start.second, end.second));
+        return (casa::near(start.first, end.first)
+            || casa::near(start.second, end.second));
     }
 
-    Box<T> operator&(const Box<T> &other) const
+    Box operator&(const Box &other) const
     { return intersect(*this, other); }
 
     
-    Box<T> operator|(const Box<T> &other) const
+    Box operator|(const Box &other) const
     { return unite(*this, other); }
 
     
-    Point<T>    start, end;
+    Point    start, end;
 };
 
 
-template <typename T>
-Box<T> unite(const Box<T> &lhs, const Box<T> &rhs)
-{
-
-    Point<T> start(min(lhs.start.first, rhs.start.first),
-        min(lhs.start.second, rhs.start.second));
-        
-    Point<T> end(max(lhs.end.first, rhs.end.first),
-        max(lhs.end.second, rhs.end.second));
-
-    return Box<T>(start, end);
-}
-
-
-template <typename T>
-Box<T> intersect(const Box<T> &lhs, const Box<T> &rhs)
-{
-    Point<T> start(max(lhs.start.first, rhs.start.first),
-        max(lhs.start.second, rhs.start.second));
-
-    Point<T> end(min(lhs.end.first, rhs.end.first),
-        min(lhs.end.second, rhs.end.second));
-
-    if(start.first < end.first
-        && !is_equal<T>::eval(start.first, end.first)
-        && start.second < end.second
-        && !is_equal<T>::eval(start.second, end.second))
-    {
-        return Box<T>(start, end);
-    }
-
-    return Box<T>();
-}
-
-
 // -----------------------------------------------------------------------------
-// - Grid: Class template for a 2-D grid with regular/irregular axes.          -
+// - Grid: A 2-D grid with regular/irregular axes.                             -
 // -----------------------------------------------------------------------------
-template <typename T>
 class Grid
 {
 public:
     Grid()
     {}
     
-    Grid(typename Axis<T>::Pointer first, typename Axis<T>::Pointer second)
+    Grid(Axis::Pointer first, Axis::Pointer second)
     {
         itsAxes[0] = first;
         itsAxes[1] = second;
     }
     
-    typename Axis<T>::Pointer operator[](size_t n)
+    Axis::Pointer operator[](size_t n)
     { return itsAxes[n]; }
     
-    const typename Axis<T>::Pointer operator[](size_t n) const
+    const Axis::Pointer operator[](size_t n) const
     { return itsAxes[n]; }
 
     pair<size_t, size_t> size() const
@@ -190,40 +139,40 @@ public:
     Location getCellLocation(uint id) const
     { return Location(id % itsAxes[0]->size(), id / itsAxes[0]->size()); }
 
-    Box<T> getCell(const Location &location) const
+    Box getCell(const Location &location) const
     {
         DBGASSERT(location.first < itsAxes[0]->size()
             && location.second < itsAxes[1]->size());
             
-        return Box<T>(Point<T>(itsAxes[0]->lower(location.first),
+        return Box(Point(itsAxes[0]->lower(location.first),
             itsAxes[1]->lower(location.second)),
-             Point<T>(itsAxes[0]->upper(location.first),
+             Point(itsAxes[0]->upper(location.first),
                 itsAxes[1]->upper(location.second)));
     }
     
-    Box<T> getBoundingBox() const
+    Box getBoundingBox() const
     {
-        pair<T, T> range0 = itsAxes[0]->range();
-        pair<T, T> range1 = itsAxes[1]->range();
+        const pair<double, double> range0(itsAxes[0]->range());
+        const pair<double, double> range1(itsAxes[1]->range());
         
-        return Box<T>(Point<T>(range0.first, range1.first), 
-            Point<T>(range0.second, range1.second));
+        return Box(Point(range0.first, range1.first), 
+            Point(range0.second, range1.second));
     }
     
-    Box<T> getBoundingBox(const Location &start, const Location &end) const
+    Box getBoundingBox(const Location &start, const Location &end) const
     {
         DBGASSERT(start.first <= end.first && start.second <= end.second);
         return unite(getCell(start), getCell(end));
     }
 
-    Location locate(const Point<T> &point) const
+    Location locate(const Point &point) const
     {
         return make_pair(itsAxes[0]->locate(point.first),
             itsAxes[1]->locate(point.second));
     }
 
 private:
-    typename Axis<T>::Pointer   itsAxes[2];
+    Axis::Pointer   itsAxes[2];
 };
 
 

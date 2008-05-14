@@ -359,8 +359,9 @@ void Prediffer::setModelConfig(OperationType operation,
     DBGASSERT(type != Model::UNSET);
 
     // Reset state.
-    itsGlobalCellGrid = Grid<double>();
-    itsCellGrid = Grid<uint32>();
+    itsCellGrid = Grid();
+    itsFreqIntervals.clear();
+    itsTimeIntervals.clear();
     itsStartCell = Location();
     itsEndCell = Location();
     itsCoeffIndex.clear();
@@ -373,11 +374,12 @@ void Prediffer::setModelConfig(OperationType operation,
 
     // Initialize all funklets that intersect the chunk.
     const VisDimensions &dims = itsChunk->getDimensions();
-    const Grid<double> &sampleGrid = dims.getGrid();
-    Box<double> bbox = sampleGrid.getBoundingBox();
+    const Grid &sampleGrid = dims.getGrid();
+
+    Box bbox = sampleGrid.getBoundingBox();
     MeqDomain domain(bbox.start.first, bbox.end.first, bbox.start.second,
         bbox.end.second);
-            
+    
     for(MeqParmGroup::iterator it = itsParameters.begin();
         it != itsParameters.end();
         ++it)
@@ -387,16 +389,15 @@ void Prediffer::setModelConfig(OperationType operation,
 }   
 
 
-bool Prediffer::setCellGrid(const Grid<double> &cellGrid)
+bool Prediffer::setCellGrid(const Grid &cellGrid)
 {
     DBGASSERT(itsOperation == CONSTRUCT);
 
     // Compute intersection of the global cell grid and the current chunk.
     const VisDimensions &dims = itsChunk->getDimensions();
-    const Grid<double> &sampleGrid = dims.getGrid();
-    Box<double> intersection = sampleGrid.getBoundingBox()
-        & cellGrid.getBoundingBox();
+    const Grid &visGrid = dims.getGrid();
 
+    Box intersection = visGrid.getBoundingBox() & cellGrid.getBoundingBox();
     if(intersection.empty())
     {
         return false;
@@ -408,11 +409,11 @@ bool Prediffer::setCellGrid(const Grid<double> &cellGrid)
         << ")");
         
     // Keep a copy of the global cell grid.
-    itsGlobalCellGrid = cellGrid;
+    itsCellGrid = cellGrid;
 
     // Find the first and last solution cell that intersect the current chunk.
-    itsStartCell = itsGlobalCellGrid.locate(intersection.start);
-    itsEndCell = itsGlobalCellGrid.locate(intersection.end);
+    itsStartCell = itsCellGrid.locate(intersection.start);
+    itsEndCell = itsCellGrid.locate(intersection.end);
 
     LOG_DEBUG_STR("Local start: (" << itsStartCell.first << ","
         << itsStartCell.second << ")");
@@ -426,47 +427,55 @@ bool Prediffer::setCellGrid(const Grid<double> &cellGrid)
     LOG_DEBUG_STR("Cell count: " << nCells);
 
     // Map cell boundaries to sample boundaries (frequency axis).
-    Axis<double>::Pointer cellAxis, sampleAxis;
-    vector<uint32> boundaries(nFreqCells + 1);
+    Axis::Pointer visAxis(visGrid[FREQ]);
+    Axis::Pointer cellAxis(cellGrid[FREQ]);
 
-    cellAxis = itsGlobalCellGrid[FREQ];
-    sampleAxis = sampleGrid[FREQ];
-    boundaries.front() = sampleAxis->locate(intersection.start.first);
-    DBGASSERT(boundaries.front() < sampleAxis->size());
-    boundaries.back() = sampleAxis->locate(intersection.end.first);
-    DBGASSERT(boundaries.back() > boundaries.front() &&
-        boundaries.back() <= sampleAxis->size());
+    Interval interval;
+    interval.start = visAxis->locate(intersection.start.first);
+    DBGASSERT(interval.start < visAxis->size());
 
-    for(size_t i = 1; i < nFreqCells; ++i)
+    // DEBUG DEBUG
+    cout << "Intervals FREQ: ";
+    // DEBUG DEBUG
+    itsFreqIntervals.resize(nFreqCells);
+    for(size_t i = 0; i < nFreqCells; ++i)
     {
-        boundaries[i] = 
-            sampleAxis->locate(cellAxis->lower(itsStartCell.first + i));
-        DBGASSERT(boundaries[i] < sampleAxis->size());
+        interval.end = visAxis->locate(cellAxis->upper(itsStartCell.first + i));
+        itsFreqIntervals[i] = interval;
+        // DEBUG DEBUG
+        cout << "[" << interval.start << "," << interval.end << ") ";    
+        // DEBUG DEBUG
+        interval.start = interval.end;
     }
-    LOG_DEBUG_STR("Boundaries FREQ: " << boundaries);
-    Axis<uint32>::Pointer fAxis(new IrregularAxis<uint32>(boundaries));
-
+    // DEBUG DEBUG
+    cout << endl;
+    // DEBUG DEBUG
+    
     // Map cell boundaries to sample boundaries (time axis).
-    cellAxis = itsGlobalCellGrid[TIME];
-    sampleAxis = sampleGrid[TIME];
-    boundaries.resize(nTimeCells + 1);
-    boundaries.front() = sampleAxis->locate(intersection.start.second);
-    DBGASSERT(boundaries.front() < sampleAxis->size());
-    boundaries.back() = sampleAxis->locate(intersection.end.second);
-    DBGASSERT(boundaries.back() > boundaries.front() &&
-        boundaries.back() <= sampleAxis->size());
+    visAxis = visGrid[TIME];
+    cellAxis = itsCellGrid[TIME];
+    
+    interval = Interval();
+    interval.start = visAxis->locate(intersection.start.second);
+    DBGASSERT(interval.start < visAxis->size());
 
-    for(size_t i = 1; i < nTimeCells; ++i)
+    // DEBUG DEBUG
+    cout << "Intervals TIME: ";
+    // DEBUG DEBUG
+    itsTimeIntervals.resize(nTimeCells);
+    for(size_t i = 0; i < nTimeCells; ++i)
     {
-        boundaries[i] =
-            sampleAxis->locate(cellAxis->lower(itsStartCell.second + i));
-        DBGASSERT(boundaries[i] < sampleAxis->size());
+        interval.end =
+            visAxis->locate(cellAxis->upper(itsStartCell.second + i));
+        itsTimeIntervals[i] = interval;
+        // DEBUG DEBUG
+        cout << "[" << interval.start << "," << interval.end << ") ";    
+        // DEBUG DEBUG
+        interval.start = interval.end;
     }
-    LOG_DEBUG_STR("Boundaries TIME: " << boundaries);
-    Axis<uint32>::Pointer tAxis(new IrregularAxis<uint32>(boundaries));
-
-    // Set local cell grid.
-    itsCellGrid = Grid<uint32>(fAxis, tAxis);
+    // DEBUG DEBUG
+    cout << endl;
+    // DEBUG DEBUG
 
     // Initialize model parameters marked for fitting.
     itsCoeffIndex.clear();
@@ -476,7 +485,7 @@ bool Prediffer::setCellGrid(const Grid<double> &cellGrid)
     {
         for(size_t f = itsStartCell.first; f < itsEndCell.first; ++f)
         {
-            Box<double> domain = itsGlobalCellGrid.getCell(Location(f, t));
+            Box domain = itsCellGrid.getCell(Location(f, t));
             domains.push_back(MeqDomain(domain.start.first, domain.end.first,
                 domain.start.second, domain.end.second));
         }
@@ -645,13 +654,13 @@ void Prediffer::getCoeff(Location start, Location end, vector<CellCoeff> &local)
             ++globalLoc.first)
         {
             // Get global cell id.
-            const uint32 globalId = itsGlobalCellGrid.getCellId(globalLoc);
+            const uint32 globalId = itsCellGrid.getCellId(globalLoc);
             local[idx].id = globalId;
 
             // Get local cell id.
-            const Location localLoc(globalLoc.first - itsStartCell.first,
-                globalLoc.second - itsStartCell.second);
-            const uint32 localId = itsCellGrid.getCellId(localLoc);
+            const size_t localId = (globalLoc.second - itsStartCell.second)
+                * itsFreqIntervals.size()
+                + (globalLoc.first - itsStartCell.first);
         
             // Copy the coefficient values for every parameter for the
             // current cell.
@@ -691,7 +700,7 @@ void Prediffer::setCoeff(const vector<CellSolution> &global)
     {
         const CellSolution &cell = global[i];
 
-        Location cellLoc = itsGlobalCellGrid.getCellLocation(cell.id);
+        Location cellLoc = itsCellGrid.getCellLocation(cell.id);
         if(cellLoc.first >= itsEndCell.first
             || cellLoc.first < itsStartCell.first
             || cellLoc.second >= itsEndCell.second
@@ -700,9 +709,8 @@ void Prediffer::setCoeff(const vector<CellSolution> &global)
             continue;
         }            
         
-        cellLoc.first -= itsStartCell.first;
-        cellLoc.second -= itsStartCell.second;
-        const size_t localCellId = itsCellGrid.getCellId(cellLoc);
+        const size_t localCellId = (cellLoc.second - itsStartCell.second)
+            * itsFreqIntervals.size() + (cellLoc.first - itsStartCell.first);
         LOG_DEBUG_STR("Local cell id: " << localCellId);
 
         for(size_t j = 0; j < itsParameterSelection.size(); ++j)
@@ -814,7 +822,7 @@ void Prediffer::construct(Location start, Location end,
     {
         for(size_t f = start.first; f <= end.first; ++f)
         {
-            local[idx].id = itsGlobalCellGrid.getCellId(Location(f, t));
+            local[idx].id = itsCellGrid.getCellId(Location(f, t));
             local[idx].equation.set(nCoeff);
             ++idx;
         }
@@ -860,29 +868,29 @@ void Prediffer::construct(Location start, Location end,
 #endif
 
     // Compute local start and end cell.
-    Box<uint32> cellBox;
-    cellBox.start.first = start.first - itsStartCell.first;
-    cellBox.start.second = start.second - itsStartCell.second;
-    cellBox.end.first = end.first - itsStartCell.first;
-    cellBox.end.second = end.second - itsStartCell.second;
+    start.first -= itsStartCell.first;
+    start.second -= itsStartCell.second;
+    end.first -= itsStartCell.first;
+    end.second -= itsStartCell.second;
 
-    // Compute bounding box in sample coordinates.
-    const Box<uint32> visBox =
-        itsCellGrid.getBoundingBox
-            (Location(cellBox.start.first, cellBox.start.second),
-            Location(cellBox.end.first, cellBox.end.second));
+    Location localCells[2];
+    localCells[0] = start;
+    localCells[1] = end;
 
-    Location visStart(visBox.start.first, visBox.start.second);
-    Location visEnd(visBox.end.first, visBox.end.second);
+    // Compute start and end cell on the visibility grid
+    Location visStart(itsFreqIntervals[start.first].start,
+        itsTimeIntervals[start.second].start);
+    Location visEnd(itsFreqIntervals[end.first].end,
+        itsTimeIntervals[end.second].end);
     
-    LOG_DEBUG_STR("Processing visbility domain: [ (" << visBox.start.first
-        << "," << visBox.start.second << "), (" << visBox.end.first << ","
-        << visBox.end.second << ") )");
+    LOG_DEBUG_STR("Processing visbility domain: [ (" << visStart.first
+        << "," << visStart.second << "), (" << visEnd.first << ","
+        << visEnd.second << ") )");
 
     // Generate equations.
     itsProcessTimer.start();
     process(true, true, visStart, visEnd, &Prediffer::constructBl,
-        static_cast<void*>(&cellBox));
+        static_cast<void*>(&localCells[0]));
     itsProcessTimer.stop();
     
 #ifdef _OPENMP
@@ -932,7 +940,7 @@ void Prediffer::process(bool, bool precalc, const Location &start,
 
     // NOTE: Temporary vector; should be removed after MNS overhaul.
     const VisDimensions &dims = itsChunk->getDimensions();
-    const Grid<double> &sampleGrid = dims.getGrid();
+    const Grid &sampleGrid = dims.getGrid();
     vector<double> timeAxis(nTimeslots + 1);
     for(size_t i = 0; i < nTimeslots; ++i)
     {
@@ -1135,9 +1143,8 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
     context.timers[ThreadContext::PROCESS].start();
         
     // Get cells to process.
-    const Box<uint32> *cellBox = static_cast<Box<uint32>*>(arguments);
-    const Point<uint32> &start = cellBox->start;
-    const Point<uint32> &end = cellBox->end;
+    const Location start = static_cast<Location*>(arguments)[0];
+    const Location end = static_cast<Location*>(arguments)[1];
 
 //    LOG_DEBUG_STR("Offset: (" << offset.first << "," << offset.second << ")");
 //    LOG_DEBUG_STR("Processing cells (" << start.first << "," << start.second
@@ -1216,19 +1223,13 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
             {
                 context.timers[ThreadContext::GRID_LOOKUP].start();
                 
-                const size_t cellId =
-                    itsCellGrid.getCellId(cell);
-                const size_t chStart =
-                    itsCellGrid[FREQ]->lower(cell.first);
-                const size_t chEnd =
-                    itsCellGrid[FREQ]->upper(cell.first);
-                const size_t tsStart =
-                    itsCellGrid[TIME]->lower(cell.second);
-                const size_t tsEnd =
-                    itsCellGrid[TIME]->upper(cell.second);
-                
-                size_t visOffset = (tsStart - offset.second) * nChannels
-                    + (chStart - offset.first);
+                const size_t cellId = cell.second * itsFreqIntervals.size()
+                    + cell.first;
+                const Interval chInterval = itsFreqIntervals[cell.first];
+                const Interval tsInterval = itsTimeIntervals[cell.second];
+
+                size_t visOffset = (tsInterval.start - offset.second)
+                    * nChannels + (chInterval.start - offset.first);
                 
                 casa::LSQFit *equation = context.equations[eqIndex];
 
@@ -1253,7 +1254,7 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
                 context.timers[ThreadContext::INV_DELTA].stop();
                 
 
-                for(size_t ts = tsStart; ts < tsEnd; ++ts)
+                for(size_t ts = tsInterval.start; ts < tsInterval.end; ++ts)
                 {
                     // Skip timeslot if flagged.
                     if(itsChunk->tslot_flag[bl][ts])
@@ -1265,7 +1266,7 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
 //                    double sumRe = 0.0, sumIm = 0.0;
                     
                     // Construct two equations for each unflagged visibility.
-                    for(size_t ch = chStart; ch < chEnd; ++ch)
+                    for(size_t ch = chInterval.start; ch < chInterval.end; ++ch)
                     {
                         if(!itsChunk->vis_flag[bl][ts][ch][ext_pol])
                         {
@@ -1323,7 +1324,7 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
 //                    cout << "CHECKSUM: " << sumRe << " " << sumIm << endl;
                     
                     // Move to next timeslot.
-                    visOffset += nChannels - (chEnd - chStart);
+                    visOffset += nChannels - (chInterval.end - chInterval.start);
                 } // for(size_t ts = tsStart; ts < tsEnd; ++ts) 
                 
                 // Move to next solution cell.
@@ -1664,8 +1665,8 @@ void Prediffer::loadParameterValues()
 
     // Get all parameters that intersect the chunk.
     const VisDimensions &dims = itsChunk->getDimensions();
-    const Grid<double> &sampleGrid = dims.getGrid();
-    const Box<double> bbox = sampleGrid.getBoundingBox();
+    const Grid &sampleGrid = dims.getGrid();
+    const Box bbox = sampleGrid.getBoundingBox();
     LOFAR::ParmDB::ParmDomain domain(bbox.start.first, bbox.end.first,
         bbox.start.second, bbox.end.second);
 

@@ -1,7 +1,10 @@
 lib_LTLIBRARIES = libbbskernel.la
 
 libbbskernel_la_SOURCES = Package__Version.cc  	\
+	Axis.cc				\
+	Grid.cc				\
 	MeasurementAIPS.cc		\
+	MetaMeasurement.cc		\
 	Model.cc			\
 	Prediffer.cc			\
 	Solver.cc			\
@@ -54,10 +57,14 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	MNS/MeqStatUVW.cc		\
 	MNS/MeqTabular.cc 
 
-bin_PROGRAMS = versionbbskernel
+bin_PROGRAMS = versionbbskernel metams
 
 versionbbskernel_SOURCES      = versionbbskernel.cc
 versionbbskernel_LDADD        = libbbskernel.la
 versionbbskernel_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
+
+metams_SOURCES      = metams.cc
+metams_LDADD        = libbbskernel.la
+metams_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

@@ -23,6 +23,7 @@
 #ifndef LOFAR_BBS_BBSKERNEL_AXIS_H
 #define LOFAR_BBS_BBSKERNEL_AXIS_H
 
+#include <Blob/BlobStreamable.h>
 #include <Common/lofar_algorithm.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_smartptr.h>
@@ -38,101 +39,64 @@ namespace BBS
 {
 using std::pair;
 using std::make_pair;
-using std::numeric_limits;
-
-
-// Class template that encapsulates the comparison of two values for equality.
-// For floating point types, values 'very near' to each other are assumed to be
-// equal. The notion of 'very near' is captured by casa::near().
-template <typename T, bool is_integer = std::numeric_limits<T>::is_integer>
-struct is_equal
-{
-    static bool eval(const T &a, const T &b);
-};
-
-template <typename T>
-struct is_equal<T, true>
-{
-    static bool eval(const T &a, const T &b)
-    { return (a == b); }
-};
-
-template <typename T>
-struct is_equal<T, false>
-{
-    static bool eval(const T &a, const T &b)
-    { return casa::near(a, b); }
-};
-
 
 // Abstract base class for a cell centered axis.
-template <typename T>
-class Axis
+class Axis: public BlobStreamable
 {
 public:
-    typedef shared_ptr<Axis<T> >    Pointer;
+    typedef shared_ptr<Axis>    Pointer;
     
     virtual ~Axis()
     {}
     
-    virtual T center(size_t n) const = 0;
-    virtual T lower(size_t n) const = 0;
-    virtual T upper(size_t n) const = 0;
-    virtual T width(size_t n) const = 0;
+    virtual double center(size_t n) const = 0;
+    virtual double lower(size_t n) const = 0;
+    virtual double upper(size_t n) const = 0;
+    virtual double width(size_t n) const = 0;
     virtual size_t size() const = 0;
-    virtual pair<T, T> range() const = 0;
-    virtual size_t locate(const T &x) const = 0;
+    virtual pair<double, double> range() const = 0;
+    virtual size_t locate(const double &x) const = 0;
 };
 
 
 // Regularly strided cell centered axis.
-template <typename T>
-class RegularAxis: public Axis<T>
+class RegularAxis: public Axis
 {
 public:
-    typedef shared_ptr<RegularAxis<T> > Pointer;
+    typedef shared_ptr<RegularAxis> Pointer;
     
     RegularAxis()
         :   itsBegin(0),
-            itsDelta(0),
-            itsCount(0)
-    {}
+            itsDelta(1),
+            itsCount(1)
+    {}     
     
-    RegularAxis(const T &begin, const T &delta, size_t count)
-        :   itsBegin(begin),
-            itsDelta(delta),
-            itsCount(count)
-    {}
+    RegularAxis(const double &begin, const double &delta, size_t count);
     
     ~RegularAxis()
     {}
     
-    T center(size_t n) const
-    { return itsBegin + (2 * n * itsDelta + itsDelta) / 2; }
+    double center(size_t n) const
+    { return itsBegin + 0.5 * ((2.0 * n + 1.0) * itsDelta); }
  
-    T lower(size_t n) const
+    double lower(size_t n) const
     { return itsBegin + n * itsDelta; }
 
-    T upper(size_t n) const
+    double upper(size_t n) const
     { return (itsBegin + itsDelta) + n * itsDelta; }
 
-    T width(size_t) const
+    double width(size_t) const
     { return itsDelta; }
 
     size_t size() const
     { return itsCount; }
 
-    pair<T, T> range() const
+    pair<double, double> range() const
     { 
-        if(size() == 0)
-        {
-            return make_pair(0, 0);
-        }
-        
         return make_pair(lower(0), upper(size() - 1));
     }
 
-    size_t locate(const T &x) const
+    size_t locate(const double &x) const
     {
         // Find the cell that contains x. The upper border of a cell is open by
         // convention. Therefore, if x is located precisely on a cell border,
@@ -141,20 +105,15 @@ public:
         // for floating point types. Values of x that are 'very near' to a cell
         // border are assumed to lie on the cell border.
 
+        const size_t axisSize = size();
+        
         // T may be unsigned. If x < itsBegin, this will create a problem when
         // evaluating x - itsBegin. For floating point types, even though
         // x < itsBegin, x may still be 'very close' to the lower border of cell
         // 0, in which case it should be attributed to cell 0.
         if(x < itsBegin)
         {
-            if(is_equal<T>::eval(x, itsBegin))
-            {
-                return 0;
-            }                
-            else
-            {
-                return size();
-            }
+            return casa::near(x, itsBegin) ? 0 : axisSize;
         }        
 
         // Find the index of the cell that contains x.
@@ -162,70 +121,77 @@ public:
 
         // If T is a floating point type, x could be 'very close' to the upper
         // cell border, in which case it should be attributed to the next cell.
-        if(is_equal<T>::eval(x, upper(index)))
+        if(casa::near(x, upper(index)))
         {
             ++index;
         }
 
         // If x was located outside of the range of the axis, size() will be
         // returned.
-        if(index > size())
+        if(index > axisSize)
         {
-            index = size();
+            index = axisSize;
         }
     
         return index;
     }
     
 private:
-    T       itsBegin, itsDelta;
+    //# -------- BlobStreamable interface implementation -------- 
+
+    // Write the contents of \c *this into the blob output stream \a bos.
+    virtual void write(BlobOStream& bos) const;
+
+    // Read the contents from the blob input stream \a bis into \c *this.
+    virtual void read(BlobIStream& bis);
+
+    // Return the type of \c *this as a string.
+    virtual const string& classType() const;
+    
+    //# -------- BlobStreamable interface implementation -------- 
+
+    double  itsBegin, itsDelta;
     size_t  itsCount;
 };
 
 
 // Irregularly strided cell centered axis.
-template <typename T>
-class IrregularAxis: public Axis<T>
+class IrregularAxis: public Axis
 {
 public:
-    typedef shared_ptr<IrregularAxis<T> >   Pointer;
+    typedef shared_ptr<IrregularAxis>   Pointer;
     
     IrregularAxis()
+        :   itsCenters(1, 0.0),
+            itsWidths(1, 1.0)
     {}
 
-    IrregularAxis(const vector<T> &borders)
-        :   itsBorders(borders)
-    {}
+    IrregularAxis(const vector<double> &centers, const vector<double> &widths);
     
     ~IrregularAxis()
     {}
 
-    T center(size_t n) const
-    { return (itsBorders[n] + itsBorders[n + 1]) / 2; }
+    double center(size_t n) const
+    { return itsCenters[n]; }
  
-    T lower(size_t n) const
-    { return itsBorders[n]; }
+    double lower(size_t n) const
+    { return itsCenters[n] - 0.5 * itsWidths[n]; }
 
-    T upper(size_t n) const
-    { return itsBorders[n + 1]; }
+    double upper(size_t n) const
+    { return itsCenters[n] + 0.5 * itsWidths[n]; }
 
-    T width(size_t n) const
-    { return upper(n) - lower(n); }
+    double width(size_t n) const
+    { return itsWidths[n]; }
 
     size_t size() const
-    { return (itsBorders.size() ? itsBorders.size() - 1 : 0); }
+    { return itsCenters.size(); }
 
-    pair<T, T> range() const
+    pair<double, double> range() const
     { 
-        if(size() == 0)
-        {
-            return make_pair(0, 0);
-        }
-
         return make_pair(lower(0), upper(size() - 1));
     }
 
-    size_t locate(const T &x) const
+    size_t locate(const double &x) const
     {
         // Try to find x in the list of cell borders. This will return the index
         // of the first border that is greater than or equal to x. The upper
@@ -236,31 +202,49 @@ public:
         // for floating point types. Values of x that are 'very near' to a cell
         // border are assumed to lie on the cell border.
 
-        size_t index = upper_bound(itsBorders.begin(), itsBorders.end(), x) -
-            itsBorders.begin();
+        const size_t axisSize = size();
 
-        if(index == itsBorders.size())
+        // General case.
+        if(x > lower(0) && x < upper(axisSize - 1))
         {
-            return size();
+            const size_t index =
+                upper_bound(itsCenters.begin(), itsCenters.end(), x)
+                - itsCenters.begin();
+            const double lowerBorder = lower(index);            
+            
+            return x < lowerBorder && !casa::near(x, lowerBorder) ?
+                index - 1 : index;
         }
 
-        if(!is_equal<T>::eval(x, lower(index)))
+        const pair<double,double> axisRange = range();
+
+        // Left border.
+        if(x <= lower(0))
         {
-            --index;
+            return x > axisRange.first || casa::near(x, axisRange.first) ?
+                0 : axisSize;
         }
-           
-        // If x was located outside of the range of the axis, size() will be
-        // returned.
-        if(index > size())
-        {
-            index = size();
-        }
-    
-        return index;
+
+        // Right border.
+        return x < axisRange.second && !casa::near(x, axisRange.second) ?
+            axisSize - 1 : axisSize;
     }
 
 private:
-    vector<T>   itsBorders;
+    //# -------- BlobStreamable interface implementation -------- 
+
+    // Write the contents of \c *this into the blob output stream \a bos.
+    virtual void write(BlobOStream& bos) const;
+
+    // Read the contents from the blob input stream \a bis into \c *this.
+    virtual void read(BlobIStream& bis);
+
+    // Return the type of \c *this as a string.
+    virtual const string& classType() const;
+    
+    //# -------- BlobStreamable interface implementation -------- 
+
+    vector<double>   itsCenters, itsWidths;
 };
 
 

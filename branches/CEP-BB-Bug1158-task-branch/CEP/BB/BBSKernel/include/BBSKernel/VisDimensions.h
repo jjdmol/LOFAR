@@ -42,21 +42,21 @@ namespace BBS
         VisDimensions()
         {}
         
-        void setGrid(const Grid<double> &grid);
+        void setGrid(const Grid &grid);
         void setBaselines(const vector<baseline_t> &baselines);
         void setPolarizations(const vector<string> &polarizations);
         
-        const Grid<double> &getGrid() const
+        const Grid &getGrid() const
         { return itsGrid; }
 
-        const Axis<double>::Pointer getFreqAxis() const
+        const Axis::Pointer getFreqAxis() const
         { return itsGrid[FREQ]; }
-        size_t getChannelCount() const
-        { return itsGrid[FREQ]->size(); }
         pair<double, double> getFreqRange() const
         { return itsGrid[FREQ]->range(); }
+        size_t getChannelCount() const
+        { return itsGrid[FREQ]->size(); }
 
-        const Axis<double>::Pointer getTimeAxis() const
+        const Axis::Pointer getTimeAxis() const
         { return itsGrid[TIME]; }
         pair<double, double> getTimeRange() const
         { return itsGrid[TIME]->range(); }
@@ -78,7 +78,7 @@ namespace BBS
         size_t getPolarizationIndex(const string &polarization) const;
 
     private:
-        Grid<double>            itsGrid;
+        Grid                    itsGrid;
         vector<baseline_t>      itsBaselines;
         vector<string>          itsPolarizations;
 
