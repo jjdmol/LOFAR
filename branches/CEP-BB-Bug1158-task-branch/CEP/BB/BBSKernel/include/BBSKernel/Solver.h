@@ -66,17 +66,17 @@ namespace BBS
             vector<double>  coeff;
         };
 
-        map<uint32, Cell>                           itsCells;
-        CoeffIndex                                  itsCoeffIndex;
-        map<uint32, vector<uint32> >                itsCoeffMapping;
+        map<uint32, Cell>               itsCells;
+        CoeffIndex                      itsCoeffIndex;
+        map<uint32, vector<uint32> >    itsCoeffMapping;
         
-        double                                      itsEpsValue;
-        double                                      itsEpsDerivative;
-        size_t                                      itsMaxIter;
-        double                                      itsColFactor;
-        double                                      itsLmFactor;
-        bool                                        itsBalanced;
-        bool                                        itsUseSvd;
+        double                          itsEpsValue;
+        double                          itsEpsDerivative;
+        size_t                          itsMaxIter;
+        double                          itsColFactor;
+        double                          itsLmFactor;
+        bool                            itsBalanced;
+        bool                            itsUseSvd;
   };
 
 } //# namespace BBS

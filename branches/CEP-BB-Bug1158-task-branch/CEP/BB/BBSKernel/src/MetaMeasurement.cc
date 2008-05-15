@@ -23,7 +23,11 @@
 #include <lofar_config.h>
 
 #include <BBSKernel/MetaMeasurement.h>
+
+#include <BBSKernel/BlobIOExtensions.h>
+#include <BBSKernel/Exceptions.h>
 #include <BBSKernel/Types.h>
+
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobOStream.h>
 #include <Blob/BlobAipsIO.h>
@@ -32,6 +36,7 @@
 #include <measures/Measures/MeasConvert.h>
 #include <measures/Measures/MCDirection.h>
 #include <measures/Measures/MCPosition.h>
+#include <casa/Containers/Record.h>
 #include <casa/Quanta/MVDirection.h>
 #include <casa/Quanta/MVPosition.h>
 #include <casa/Quanta/MVAngle.h>
@@ -73,75 +78,8 @@ void MetaMeasurement::addPart(const string &host, const string &path,
 }    
 
 // -----------------------------------------------------------------------------
-// BlobStream I/O
+// - BlobStream I/O                                                            -
 // -----------------------------------------------------------------------------
-
-BlobOStream &operator<<(BlobOStream &out, const Station &obj)
-{
-    return out << obj.name << obj.position;
-}
-
-BlobIStream &operator>>(BlobIStream &in, Station &obj)
-{
-    return in >> obj.name >> obj.position;
-}
-
-BlobOStream &operator<<(BlobOStream &out, const Instrument &obj)
-{
-    return out << obj.name << obj.position << obj.stations;
-}
-
-BlobIStream &operator>>(BlobIStream &in, Instrument &obj)
-{
-    return in >> obj.name >> obj.position >> obj.stations;
-}
-
-BlobOStream &operator<<(BlobOStream &out, const casa::MDirection &obj)
-{
-    // Convert to J2000.
-    casa::MDirection j2k = casa::MDirection::Convert(obj,
-        casa::MDirection::Ref(casa::MDirection::J2000))();
-    casa::Quantum<casa::Vector<double> > angles = j2k.getAngle("rad");
-
-    return out << angles.getValue()(0) << angles.getValue()(1);
-}
-
-BlobIStream &operator>>(BlobIStream &in, casa::MDirection &obj)
-{
-    casa::Double angle1, angle2;
-    in >> angle1 >> angle2;
-    
-    obj = casa::MDirection(casa::Quantity(angle1, "rad"),
-        casa::Quantity(angle2, "rad"),
-        casa::MDirection::Ref(casa::MDirection::J2000));
-
-    return in;        
-}
-
-BlobOStream &operator<<(BlobOStream &out, const casa::MPosition &obj)
-{
-    // Convert to ITRF.
-    casa::MPosition itrf = casa::MPosition::Convert(obj,
-        casa::MPosition::Ref(casa::MPosition::ITRF))();
-    casa::Quantum<casa::Vector<casa::Double> > coordinates = itrf.get("m");
-
-    return out << coordinates.getValue()(0)
-        << coordinates.getValue()(1)
-        << coordinates.getValue()(2);
-}
-
-BlobIStream &operator>>(BlobIStream &in, casa::MPosition &obj)
-{
-    casa::Double x, y, z;
-
-    in >> x >> y >> z;
-    
-    casa::MVPosition itrf(x, y, z);
-    obj = casa::MPosition(itrf, casa::MPosition::Ref(casa::MPosition::ITRF));
-    
-    return in;
-}
-
 BlobOStream &operator<<(BlobOStream &out, const MetaMeasurement::Part &obj)
 {
     out << obj.itsHostName
@@ -164,14 +102,11 @@ BlobIStream &operator>>(BlobIStream &in, MetaMeasurement::Part &obj)
 
 BlobOStream &operator<<(BlobOStream &out, const MetaMeasurement &obj)
 {
-//    vector<string> tmp(obj.itsPolarizations.size());
-//    copy(obj.itsPolarizations.begin(), obj.itsPolarizations.end(), tmp.begin());
-
     out.putStart("MetaMeasurement", 1);
     out << obj.itsName
         << obj.itsPhaseCenter
         << obj.itsInstrument
-//        << obj.itsBaselines
+        << obj.itsBaselines
         << obj.itsPolarizations
         << obj.itsParts;
 
@@ -183,13 +118,11 @@ BlobOStream &operator<<(BlobOStream &out, const MetaMeasurement &obj)
 
 BlobIStream &operator>>(BlobIStream &in, MetaMeasurement &obj)
 {
-//    vector<string> tmp;
-
     in.getStart("MetaMeasurement");
     in >> obj.itsName
         >> obj.itsPhaseCenter
         >> obj.itsInstrument
-//        >> obj.itsBaselines
+        >> obj.itsBaselines
         >> obj.itsPolarizations
         >> obj.itsParts;
 
@@ -197,12 +130,12 @@ BlobIStream &operator>>(BlobIStream &in, MetaMeasurement &obj)
         Axis::Pointer(dynamic_cast<Axis*>(BlobStreamable::deserialize(in)));
     
     in.getEnd();
-
-//    obj.itsPolarizations = set<string>(tmp.begin(), tmp.end());
-
     return in;
 }
 
+// -----------------------------------------------------------------------------
+// - iostream I/O                                                              -
+// -----------------------------------------------------------------------------
 ostream &operator<<(ostream &out, MetaMeasurement &obj)
 {
     double timeStart = obj.itsTimeAxis->range().first;
@@ -236,7 +169,7 @@ ostream &operator<<(ostream &out, MetaMeasurement &obj)
     out << "Stations: " << endl;
     out << setfill('0');
     const Instrument &instrument = obj.itsInstrument;
-    for(size_t i = 0; i < instrument.getStationCount(); ++i)
+    for(size_t i = 0; i < instrument.stations.size(); ++i)
     {
         out << "[" << setw(3) << i << "]: " << instrument.stations[i].name
             << endl;

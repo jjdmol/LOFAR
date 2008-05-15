@@ -2,7 +2,9 @@ lib_LTLIBRARIES = libbbskernel.la
 
 libbbskernel_la_SOURCES = Package__Version.cc  	\
 	Axis.cc				\
+	BlobIOExtensions.cc	\
 	Grid.cc				\
+	Instrument.cc		\
 	MeasurementAIPS.cc		\
 	MetaMeasurement.cc		\
 	Model.cc			\

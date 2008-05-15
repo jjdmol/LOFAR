@@ -529,9 +529,9 @@ void Model::makeStationNodes(const Instrument &instrument,
         " casa::MDirection to allow comparison with earlier version of BBS and"
         " with MeqTree. Should be removed after validation.");
 
-    itsStationNodes.resize(instrument.getStationCount());
-    itsUVWNodes.resize(instrument.getStationCount());
-    for(size_t i = 0; i < instrument.getStationCount(); ++i)
+    itsStationNodes.resize(instrument.stations.size());
+    itsUVWNodes.resize(instrument.stations.size());
+    for(size_t i = 0; i < instrument.stations.size(); ++i)
     {
         const casa::MVPosition &position =
             instrument.stations[i].position.getValue();
@@ -570,7 +570,7 @@ void Model::makeSourceNodes(const vector<string> &names, MeqPhaseRef *phaseRef)
 
 void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
 {
-    const size_t nStations = instrument.getStationCount();
+    const size_t nStations = instrument.stations.size();
     vector<bool> statDone(nStations);
     vector<double> statUVW(3 * nStations);
 

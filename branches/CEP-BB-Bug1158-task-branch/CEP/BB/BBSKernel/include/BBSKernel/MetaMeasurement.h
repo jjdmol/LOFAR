@@ -24,12 +24,15 @@
 #define LOFAR_BBS_METAMEASUREMENT_H
 
 #include <BBSKernel/Axis.h>
-#include <BBSKernel/Measurement.h>
+#include <BBSKernel/Instrument.h>
+#include <BBSKernel/Types.h>
 
 #include <Common/lofar_vector.h>
+#include <Common/lofar_set.h>
 #include <Common/lofar_string.h>
 
 #include <casa/OS/Path.h>
+#include <measures/Measures/MDirection.h>
 
 namespace LOFAR
 {
@@ -59,16 +62,15 @@ namespace BBS
         void setTimeAxis(Axis::Pointer axis)
         { itsTimeAxis = axis; }
         
-        void setBaselines(const vector<baseline_t> &baselines)
+        void setBaselines(const set<baseline_t> &baselines)
         { itsBaselines = baselines; }
 
-        void setPolarizations(const vector<string> &polarizations)
+        void setPolarizations(const set<string> &polarizations)
         { itsPolarizations = polarizations; }
         
         void addPart(const string &host, const string &path,
             Axis::Pointer axis);
 
-// -----------------------------------------------------------------------------
         const string &getName() const
         { return itsName; }
         
@@ -87,12 +89,12 @@ namespace BBS
         size_t getTimeslotCount() const
         { return itsTimeAxis->size(); }
 
-        const vector<baseline_t> &getBaselines() const
+        const set<baseline_t> &getBaselines() const
         { return itsBaselines; }
         size_t getBaselineCount() const
         { return itsBaselines.size(); }
 
-        const vector<string> &getPolarizations() const
+        const set<string> &getPolarizations() const
         { return itsPolarizations; }
         size_t getPolarizationCount() const
         { return itsPolarizations.size(); }
@@ -165,8 +167,8 @@ namespace BBS
         Instrument          itsInstrument;
         
         Axis::Pointer       itsTimeAxis;
-        vector<baseline_t>  itsBaselines;
-        vector<string>      itsPolarizations;
+        set<baseline_t>     itsBaselines;
+        set<string>         itsPolarizations;
 
         vector<Part>        itsParts;
         
@@ -184,18 +186,11 @@ namespace BBS
         friend ostream &operator<<(ostream &out, MetaMeasurement &obj);
     };
 
+    // BlobStream I/O.
     BlobOStream &operator<<(BlobOStream &out, const MetaMeasurement &obj);
     BlobIStream &operator>>(BlobIStream &in, MetaMeasurement &obj);
 
-    BlobOStream &operator<<(BlobOStream &out, const Station &obj);
-    BlobIStream &operator>>(BlobIStream &in, Station &obj);
-    BlobOStream &operator<<(BlobOStream &out, const Instrument &obj);
-    BlobIStream &operator>>(BlobIStream &in, Instrument &obj);
-    BlobOStream &operator<<(BlobOStream &out, const casa::MDirection &obj);
-    BlobIStream &operator>>(BlobIStream &in, casa::MDirection &obj);
-    BlobOStream &operator<<(BlobOStream &out, const casa::MPosition &obj);
-    BlobIStream &operator>>(BlobIStream &in, casa::MPosition &obj);
-
+    // iostream I/O.
     ostream &operator<<(ostream &out, MetaMeasurement &obj);
 
 } // namespace BBS

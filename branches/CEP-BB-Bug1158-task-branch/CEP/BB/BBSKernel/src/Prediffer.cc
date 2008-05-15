@@ -223,7 +223,7 @@ bool Prediffer::setSelection(const string &filter,
             casa::Regex regex1 = casa::Regex::fromPattern(*baseline_it1);
             casa::Regex regex2 = casa::Regex::fromPattern(*baseline_it2);
 
-            for(size_t i = 0; i < instrument.getStationCount(); ++i)
+            for(size_t i = 0; i < instrument.stations.size(); ++i)
             {
                 casa::String stationName(instrument.stations[i].name);
 

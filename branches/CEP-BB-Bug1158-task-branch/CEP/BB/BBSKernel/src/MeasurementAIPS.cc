@@ -653,7 +653,7 @@ MeasurementAIPS::getTAQLExpression(const VisSelection &selection) const
 
             // If the name of a station matches the pattern, add it to the
             // selection.
-            for(size_t i = 0; i < itsInstrument.getStationCount(); ++i)
+            for(size_t i = 0; i < itsInstrument.stations.size(); ++i)
             {
                 String name(itsInstrument.stations[i].name);
                 if(name.matches(regex))
