@@ -164,8 +164,14 @@ string	realHostname(const string&	someName)
 //
 // Converts a name of a SAS datapoint to the corresponding PVSS DPname
 //
-// PVSS:  SYSTEM:LOFAR_PIC_xxx
-// SAS :  PIC.<RING>.SYSTEM.xxx
+// SAS :  LOFAR.PIC.<RING>.<SYSTEM>.xxx
+// PVSS:  <SYSTEM>:LOFAR_PIC_xxx
+//        ^       ^      ^
+//        |       |      +-- locationPos + locationLen
+//        |       +-- colon
+//        +-- systemLen
+//
+// NOTE: instead of PIC the DPname may contain PermSW or ObsSW_Observation<n>
 //
 string PVSS2SASname(const string&	PVSSname)
 {
@@ -176,9 +182,14 @@ string PVSS2SASname(const string&	PVSSname)
 //	bexp.assign(expression_text);
 //	return(boost::regex_replace(PVSSname, bexp, format_text));
 
-	size_t	colon(PVSSname.find(':',0));
-	size_t	picPos(PVSSname.find("PIC_",0));
-	if (colon == string::npos || picPos == string::npos) {
+	size_t	colon(PVSSname.find(':',0));	// = systemLen
+	size_t	locationPos(PVSSname.find("_",colon)+1);
+	size_t	locationLen(PVSSname.find("_",locationPos)-locationPos);
+	if (locationLen > 1024) {
+		locationLen = PVSSname.find(".",locationPos)-locationPos;
+	}
+	string	location(PVSSname.substr(locationPos, locationLen));
+	if ((location != "PIC") && (location != "PermSW") &&(location != "ObsSW")) {
 		string	SASname(PVSSname);
 		replace(SASname.begin(), SASname.end(), '_', '.');
 		return (SASname);
@@ -190,11 +201,34 @@ string PVSS2SASname(const string&	PVSSname)
 		ring = "Core";
 	else if (stnCode == "RS")
 		ring = "Remote";
-	else
+	else if (colon == 5)
 		ring = "Europe";
+	else
+		ring = "CEP";
 
-	string	SASname(formatString("PIC.%s.%s.%s", ring.c_str(), PVSSname.substr(0,colon).c_str(), 
-							PVSSname.substr(picPos+4).c_str()));
+	string	SASname;
+	if (location == "ObsSW") {
+		// skip 'Observation<n> part
+		// <SYSTEM>:LOFAR_ObsSW_Observation<n>_xxx
+		//                                     ^
+		//                                     +-- restPos
+		size_t	restPos(PVSSname.find("_", locationPos+locationLen+1)+1);
+		if (restPos != string::npos) {
+			//                        LOFAR.ObsSW.<RING>.<SYSTEM>.xxx
+			SASname = formatString("LOFAR.%s.%s.%s.%s", location.c_str(), ring.c_str(), PVSSname.substr(0,colon).c_str(),
+								PVSSname.substr(restPos).c_str());
+		}
+		else {
+			//                        LOFAR.ObsSW.Observation.xxx
+			restPos = PVSSname.find(".", locationPos+locationLen+1)+1;
+			SASname = formatString("LOFAR.ObsSW.Observation.%s", PVSSname.substr(restPos).c_str());
+		}
+	}
+	else {
+		//                        LOFAR.PIC.<RING>.<SYSTEM>.xxx
+		SASname = formatString("LOFAR.%s.%s.%s.%s", location.c_str(), ring.c_str(), PVSSname.substr(0,colon).c_str(), 
+							PVSSname.substr(locationPos+locationLen+1).c_str());
+	}
 	replace(SASname.begin(), SASname.end(), '_', '.');
 	return (SASname);
 }
@@ -204,8 +238,14 @@ string PVSS2SASname(const string&	PVSSname)
 //
 // Converts a name of a SAS datapoint to the corresponding PVSS DPname
 //
-// PVSS:  SYSTEM:LOFAR_PIC_xxx
-// SAS :  PIC.<RING>.SYSTEM.xxx
+// PVSS:  <SYSTEM>:LOFAR_PIC_xxx
+// SAS :  LOFAR.PIC.<RING>.<SYSTEM>.xxx
+//              ^   ^      ^
+//              |   |      +-- systemPos + systemLen
+//              |   +-- ringPos
+//              +-- locationPos + locationLen
+//
+// NOTE: instead of PIC the DPname may contain PermSW
 //
 string SAS2PVSSname(const string&	SASname)
 {
@@ -213,21 +253,29 @@ string SAS2PVSSname(const string&	SASname)
 	replace(PVSSname.begin(), PVSSname.end(), '.', '_');		// replace all . with _
 	PVSSname.replace(PVSSname.find_last_of('_'), 1, 1, '.');	// except for the last
 
-	// PIC_<ring>_<system>_xxx_yyy.zzz
-	size_t	picPos(PVSSname.find("PIC_",0));						// PIC might need adjustments
-	if (picPos == string::npos) {
-		return (PVSSname);										// no PIC DP.
+	// LOFAR_PIC_<ring>_<system>_xxx_yyy.zzz
+	size_t	locationPos(PVSSname.find("PIC_",0));				// PIC might need adjustments
+	int		locationLen = 4;
+	if (locationPos == string::npos) {
+		locationLen = 7;
+		locationPos = PVSSname.find("PermSW_",0);
+		if (locationPos == string::npos) {
+			return (PVSSname);									// no PIC or PermSW DP.
+		}
 	}
+	size_t	ringPos(locationPos + locationLen);
 
-	// is there a ring in the name?
-	string	ring = PVSSname.substr(picPos+4,5);
-	if (ring != "Core_" && ring != "Remot" && ring != "Europ") {
+	// Check ringname
+	string	ring = PVSSname.substr(ringPos,4);
+	if (ring != "Core" && ring != "Remo" && ring != "Euro" && ring != "CEP_") {
 		return (PVSSname);
 	}
 
-	int		ringLen(ring == "Core." ? 5 : 7);
-	return (formatString("%s:LOFAR_PIC_%s", PVSSname.substr(picPos+4+ringLen, 5).c_str(),
-							PVSSname.substr(picPos+4+ringLen+6).c_str()));
+	size_t	systemPos(PVSSname.find("_", ringPos)+1);
+	int		systemLen(PVSSname.find("_", systemPos+1) - systemPos);
+	return (formatString("%s:%s%s", PVSSname.substr(systemPos, systemLen).c_str(),
+							PVSSname.substr(0, ringPos).c_str(),
+							PVSSname.substr(systemPos+systemLen+1).c_str()));
 }
 
 
