@@ -305,9 +305,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
             double scaleFactor = mask[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
                 : 1.0 / 600.0;
 
-            // Make an E-jones expression per source. For now, we use the instrument
-            // position as reference position on earth. In the future, we will need
-            // an E-jones expression per source, _per station_.
+            // Make an E-jones expression per station per source.
             for(size_t j = 0; j < nSources; ++j)
             {
     //                dipole_beam[i] = new MeqDipoleBeam(azel[i], 1.706, 1.38,
