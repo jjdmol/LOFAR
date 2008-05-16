@@ -44,15 +44,27 @@ int main (int	argc, char* argv[])
 	LOG_INFO_STR("hostname of CS010C = " << realHostname("CS010C"));
 	LOG_INFO_STR("hostname of CS010T = " << realHostname("CS010T"));
 
-	LOG_INFO_STR("SASname(RS002:LOFAR_PIC_Cabinet0_Subrack0.state) = " << 
+	LOG_INFO_STR("PVSS==>SAS(RS002:LOFAR_PIC_Cabinet0_Subrack0.state)        = " << 
 				PVSS2SASname("RS002:LOFAR_PIC_Cabinet0_Subrack0.state"));
-	LOG_INFO_STR("SASname(RS002:LOFAR_PermSW_MACScheduler.state) = " << 
-				PVSS2SASname("RS002:LOFAR_PermSW_MACScheduler.state"));
+	LOG_INFO_STR("PVSS==>SAS(MCU001:LOFAR_PermSW.state)                      = " << 
+				PVSS2SASname("MCU001:LOFAR_PermSW.state"));
+	LOG_INFO_STR("PVSS==>SAS(MCU001:LOFAR_PermSW_MACScheduler.state)         = " << 
+				PVSS2SASname("MCU001:LOFAR_PermSW_MACScheduler.state"));
+	LOG_INFO_STR("PVSS==>SAS(MCU001:LOFAR_ObsSW_Observation5_ObsCtrl.state)  = " << 
+				PVSS2SASname("MCU001:LOFAR_ObsSW_Observation5_ObsCtrl.state"));
+	LOG_INFO_STR("PVSS==>SAS(RS002:LOFAR_ObsSW_Observation5.antennaArray)    = " << 
+				PVSS2SASname("RS002:LOFAR_ObsSW_Observation5.antennaArray"));
+	LOG_INFO_STR("PVSS==>SAS(RS002:LOFAR_ObsSW_Observation5_BeamCtrl.state)  = " << 
+				PVSS2SASname("RS002:LOFAR_ObsSW_Observation5_BeamCtrl.state"));
 
-	LOG_INFO_STR("PVSSname(PIC.Remote.RS002.Cabinet0.Subrack0.state) = " << 
-				SAS2PVSSname("PIC.Remote.RS002.Cabinet0.Subrack0.state"));
-	LOG_INFO_STR("PVSSname(ObsSW.Observation.VirtualInstrument.stationList) = " << 
-				SAS2PVSSname("ObsSW.Observation.VirtualInstrument.stationList"));
+	LOG_INFO_STR("PVSSname(LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.state)        = " << 
+				SAS2PVSSname("LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.state"));
+	LOG_INFO_STR("PVSSname(LOFAR.PermSW.Remote.RS002.ServiceBroker.state)         = " << 
+				SAS2PVSSname("LOFAR.PermSW.Remote.RS002.ServiceBroker.state"));
+	LOG_INFO_STR("PVSSname(LOFAR.PermSW.CEP.MCU001.MACScheduler.state)            = " << 
+				SAS2PVSSname("LOFAR.PermSW.CEP.MCU001.MACScheduler.state"));
+	LOG_INFO_STR("PVSSname(LOFAR.ObsSW.Observation.VirtualInstrument.stationList) = " << 
+				SAS2PVSSname("LOFAR.ObsSW.Observation.VirtualInstrument.stationList"));
 
 	return (0);
 }
