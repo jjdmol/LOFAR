@@ -14,12 +14,14 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	VisData.cc			\
 	VisDimensions.cc		\
 	VisSelection.cc			\
+	MNS/ExternalFunction.cc		\
 	MNS/MeqAzEl.cc			\
 	MNS/MeqBaseDFTPS.cc		\
 	MNS/MeqBaseLinPS.cc		\
 	MNS/MeqDFTPS.cc			\
 	MNS/MeqDiag.cc			\
 	MNS/MeqDipoleBeam.cc		\
+	MNS/MeqDipoleBeamExternal.cc	\
 	MNS/MeqDomain.cc		\
 	MNS/MeqExpr.cc			\
 	MNS/MeqFunklet.cc		\

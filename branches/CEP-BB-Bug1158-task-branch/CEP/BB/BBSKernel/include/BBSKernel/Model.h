@@ -60,7 +60,8 @@ public:
         BANDPASS = 0,
         GAIN,
         DIRECTIONAL_GAIN,
-        DIPOLE_BEAM,
+        DIPOLE_BEAM_LBA,
+        DIPOLE_BEAM_HBA,
         PHASORS,
         N_ModelComponent
     };

@@ -5,7 +5,7 @@ pkginclude_HEADERS = Package__Version.h 		\
 	BlobIOExtensions.h	\
 	Exceptions.h		\
 	Grid.h			\
-	Instrument.h	\
+	Instrument.h		\
 	Measurement.h		\
 	MeasurementAIPS.h	\
 	MetaMeasurement.h	\
@@ -19,12 +19,14 @@ pkginclude_HEADERS = Package__Version.h 		\
 	VisSelection.h
 
 pkginclude_MNS_HEADERS	= 	\
+	MNS/ExternalFunction.h	\
 	MNS/MeqAzEl.h		\
 	MNS/MeqBaseDFTPS.h	\
 	MNS/MeqBaseLinPS.h	\
 	MNS/MeqDFTPS.h		\
 	MNS/MeqDiag.h		\
 	MNS/MeqDipoleBeam.h	\
+	MNS/MeqDipoleBeamExternal.h	\
 	MNS/MeqDomain.h		\
 	MNS/MeqExpr.h		\
 	MNS/MeqFunklet.h	\

@@ -90,12 +90,14 @@ MeqJonesResult MeqDipoleBeam::getJResult(const MeqRequest &request)
     	}
 
         // Evaluate X polarization.
-        evaluate(request, azel[0].getValue(), azel[1].getValue(),
+        evaluate(request,
+            azel[0].getPerturbedValue(i), azel[1].getPerturbedValue(i),
             result11.getPerturbedValueRW(i), result12.getPerturbedValueRW(i),
             itsHeight, itsLength, itsSlant, itsOrientation);
                 
         // Evaluate Y polarization.
-        evaluate(request, azel[0].getValue(), azel[1].getValue(),
+        evaluate(request,
+            azel[0].getPerturbedValue(i), azel[1].getPerturbedValue(i),
             result21.getPerturbedValueRW(i), result22.getPerturbedValueRW(i),
             itsHeight, itsLength, itsSlant, itsOrientation - casa::C::pi_2);
         
