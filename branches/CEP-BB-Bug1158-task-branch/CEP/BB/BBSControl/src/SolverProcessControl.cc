@@ -31,6 +31,7 @@
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/Messages.h>
 #include <BBSControl/InitializeCommand.h>
+#include <BBSControl/NextChunkCommand.h>
 #include <BBSControl/StreamUtil.h>
 #include <BBSControl/Exceptions.h>
 
@@ -56,21 +57,10 @@ namespace LOFAR
   {
     using LOFAR::operator<<;
 
-    //# Ensure classes are registered with the ObjectFactory.
-    template class BlobStreamableVector<DomainRegistrationRequest>;
-    template class BlobStreamableVector<IterationRequest>;
-    template class BlobStreamableVector<IterationResult>;
-
-    namespace
-    {
-      bool dummy = CommandFactory::instance().
-        registerClass<NextChunkCommand>("nextchunk");
-    }
-
     namespace
     {
       InitializeCommand initCmd;
-      // CoeffIndexMsg     coeffIndexMsg;
+      NextChunkCommand  nextChunkCmd;
     }
 
     //##----   P u b l i c   m e t h o d s   ----##//

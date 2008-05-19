@@ -23,15 +23,10 @@
 #include <lofar_config.h>
 #include <BBSControl/CommandExecutor.h>
 
+#include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/Messages.h>
 #include <BBSControl/Types.h>
-
-#include <BBSControl/BlobStreamableVector.h>
-#include <BBSControl/BlobStreamableConnection.h>
-#include <BBSControl/DomainRegistrationRequest.h>
-#include <BBSControl/IterationRequest.h>
-#include <BBSControl/IterationResult.h>
 
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
@@ -49,7 +44,6 @@
 #include <BBSControl/RefitStep.h>
 
 #include <BBSKernel/MeasurementAIPS.h>
-#include <BBSKernel/Prediffer.h>
 #include <BBSKernel/Solver.h>
 
 #include <Blob/BlobIStream.h>
@@ -60,9 +54,6 @@
 #include <Common/LofarLogger.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/Timer.h>
-
-//#include <casa/Quanta/Quantum.h>
-//#include <casa/Quanta/MVTime.h>
 
 #if 0
 #define NONREADY        casa::LSQFit::NONREADY
@@ -82,12 +73,6 @@ namespace LOFAR
 namespace BBS 
 {
 using LOFAR::operator<<;
-
-//# Ensure classes are registered with the ObjectFactory.
-template class BlobStreamableVector<DomainRegistrationRequest>;
-template class BlobStreamableVector<IterationRequest>;
-template class BlobStreamableVector<IterationResult>;
-
 
 CommandExecutor::~CommandExecutor()
 {
@@ -113,30 +98,31 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     }
     catch(Exception &ex)
     {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Failed to read meta measurement.");
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to read meta" 
+            " measurement.");
         return;
     }        
 
-    // TODO: Determine kernel id.
-    ASSERT(LOFAR::ACC::APS::globalParameterSet());
-    itsKernelId = LOFAR::ACC::APS::globalParameterSet()->getUint32("KernelId");
-    ASSERT(itsKernelId < itsMetaMeasurement.getPartCount());    
+    if(itsKernelId >= itsMetaMeasurement.getPartCount())
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Kernel id does not map"
+          " to any measurement in " + strategy->dataSet());
+        return;
+    }
     
     try
     {
-        string path = itsMetaMeasurement.getPath(itsKernelId);
-        
         // Open measurement.
+        string path = itsMetaMeasurement.getPath(itsKernelId);
         LOG_INFO_STR("Input: " << path << "::" << strategy->inputData());
+
         itsInputColumn = strategy->inputData();
         itsMeasurement.reset(new MeasurementAIPS(path));
     }
     catch(Exception &ex)
     {
-        // TODO: get exception msg and put into result msg.
-        itsResult = CommandResult(CommandResult::ERROR, "Could not create"
-            " kernel.");
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to open"
+          " measurement: " + itsMetaMeasurement.getPath(itsKernelId));
     }
 
     try
@@ -150,8 +136,8 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     }
     catch(Exception &ex)
     {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Failed to open sky model parameter database.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to open sky"
+            " model parameter database: " + strategy->parmDB().localSky);
         return;
     }        
 
@@ -166,8 +152,9 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     }
     catch(Exception &ex)
     {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Failed to open instrument model parameter database.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to open"
+            " instrument model parameter database."
+            + strategy->parmDB().instrument);
         return;
     }        
 
@@ -176,7 +163,6 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
         *itsInstrumentDb.get()));
 
     // Initialize the chunk selection from information in strategy.
-
     if(!strategy->stations().empty())
     {
         itsChunkSelection.setStations(strategy->stations());
@@ -207,7 +193,6 @@ void CommandExecutor::visit(const FinalizeCommand &/*command*/)
 
     LOG_DEBUG("Handling a FinalizeCommand");
 
-    //# How to notify KernelProcessControl of this?
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -218,7 +203,7 @@ void CommandExecutor::visit(const NextChunkCommand &command)
 
     LOG_DEBUG("Handling a NextChunkCommand");
 
-    // Create chunk selection.
+    // Update chunk selection.
     itsChunkSelection.clear(VisSelection::TIME_START);
     itsChunkSelection.clear(VisSelection::TIME_END);
 
@@ -243,15 +228,6 @@ void CommandExecutor::visit(const NextChunkCommand &command)
             " chunk.");
         return;                
     }
-
-/*
-    if(<CHUNK EMPTY>)
-    {
-        LOG_DEBUG_STR("NextChunk: OUT_OF_DATA");
-        itsResult = CommandResult(CommandResult::OUT_OF_DATA);
-        return;
-    }
-*/
 
     itsKernel->attachChunk(itsChunk);
 
@@ -307,27 +283,32 @@ void CommandExecutor::visit(const PredictStep &command)
     LOG_DEBUG("Handling a PredictStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-#if 0
     ASSERTSTR(itsKernel, "No kernel available.");
 
-    PredictContext context;
-    context.baselines = command.baselines();
-    context.correlation = command.correlation();
-    context.sources = command.sources();
-    context.instrumentModel = command.instrumentModels();
-    context.outputColumn = command.outputData();
-
-    // Set context.
-    if(!itsKernel->setContext(context))
-    {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Could not set context.");
+    // Set visibility selection.
+    if(!itsKernel->setSelection(command.correlation().selection,
+        command.baselines().station1, command.baselines().station2,
+        command.correlation().type))
+    {        
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
         return;
+    }        
+        
+    // Initialize model.
+    itsKernel->setModelConfig(Prediffer::SIMULATE, command.instrumentModels(),
+        command.sources());
+        
+    // Compute simulated visibilities.
+    itsKernel->simulate();
+
+    // Optionally write the simulated visibilities.
+    if(!command.outputData().empty())
+    {
+        itsMeasurement->write(itsChunkSelection, itsChunk, command.outputData(),
+            false);
     }
 
-    // Execute predict.
-    itsKernel->predict();
-#endif
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -339,27 +320,32 @@ void CommandExecutor::visit(const SubtractStep &command)
     LOG_DEBUG("Handling a SubtractStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-#if 0
     ASSERTSTR(itsKernel, "No kernel available.");
 
-    SubtractContext context;
-    context.baselines = command.baselines();
-    context.correlation = command.correlation();
-    context.sources = command.sources();
-    context.instrumentModel = command.instrumentModels();
-    context.outputColumn = command.outputData();
-
-    // Set context.
-    if(!itsKernel->setContext(context))
-    {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Could not set context.");
+    // Set visibility selection.
+    if(!itsKernel->setSelection(command.correlation().selection,
+        command.baselines().station1, command.baselines().station2,
+        command.correlation().type))
+    {        
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
         return;
+    }        
+        
+    // Initialize model.
+    itsKernel->setModelConfig(Prediffer::SUBTRACT, command.instrumentModels(),
+        command.sources());
+        
+    // Subtract the simulated visibilities from the observed visibilities.
+    itsKernel->subtract();
+
+    // Optionally write the residuals.
+    if(!command.outputData().empty())
+    {
+        itsMeasurement->write(itsChunkSelection, itsChunk, command.outputData(),
+            false);
     }
 
-    // Execute subtract.
-    itsKernel->subtract();
-#endif
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -371,27 +357,32 @@ void CommandExecutor::visit(const CorrectStep &command)
     LOG_DEBUG("Handling a CorrectStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-#if 0
     ASSERTSTR(itsKernel, "No kernel available.");
 
-    CorrectContext context;
-    context.baselines = command.baselines();
-    context.correlation = command.correlation();
-    context.sources = command.sources();
-    context.instrumentModel = command.instrumentModels();
-    context.outputColumn = command.outputData();
-
-    // Set context.
-    if(!itsKernel->setContext(context))
-    {
-        itsResult = CommandResult(CommandResult::ERROR,
-            "Could not set context.");
+    // Set visibility selection.
+    if(!itsKernel->setSelection(command.correlation().selection,
+        command.baselines().station1, command.baselines().station2,
+        command.correlation().type))
+    {        
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
         return;
-    }
-
-    // Execute correct.
+    }        
+        
+    // Initialize model.
+    itsKernel->setModelConfig(Prediffer::CORRECT, command.instrumentModels(),
+        command.sources());
+        
+    // Correct the visibilities.
     itsKernel->correct();
-#endif
+
+    // Optionally write the corrected visibilities.
+    if(!command.outputData().empty())
+    {
+        itsMeasurement->write(itsChunkSelection, itsChunk, command.outputData(),
+            false);
+    }
+    
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
@@ -403,7 +394,7 @@ void CommandExecutor::visit(const SolveStep &command)
     LOG_DEBUG_STR("Command: " << endl << command);
 
     ASSERTSTR(itsKernel, "No kernel available.");
-    ASSERTSTR(itsGlobalSolver, "No global solver available.");
+    ASSERTSTR(itsSolver, "No global solver available.");
 
     // Set visibility selection.
     if(!itsKernel->setSelection(command.correlation().selection,
@@ -486,7 +477,7 @@ void CommandExecutor::visit(const SolveStep &command)
     
     CoeffIndexMsg msg(itsKernelId);
     itsKernel->getCoeffIndex(msg.getContents());
-    itsGlobalSolver->sendObject(msg);
+    itsSolver->sendObject(msg);
 
 /*
     

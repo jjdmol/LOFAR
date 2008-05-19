@@ -82,9 +82,8 @@ private:
     // Command Queue.
     shared_ptr<CommandQueue>                itsCommandQueue;
 
-    // Connection to the solver.
+    // Connection to the global solver.
     shared_ptr<BlobStreamableConnection>    itsSolver;
-    shared_ptr<BlobStreamableConnection>    itsGlobalSolver;
     
     // Command Executor.
     scoped_ptr<CommandExecutor>             itsCommandExecutor;

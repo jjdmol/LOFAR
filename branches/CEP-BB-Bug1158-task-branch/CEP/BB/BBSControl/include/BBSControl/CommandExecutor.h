@@ -58,12 +58,12 @@ namespace LOFAR
     class CommandExecutor: public CommandVisitor
     {
     public:
-      CommandExecutor(shared_ptr<CommandQueue> &queue,
-                      shared_ptr<BlobStreamableConnection> &global,
-                      shared_ptr<BlobStreamableConnection> &local)
-        :   itsCommandQueue(queue),
-            itsGlobalSolver(global),
-            itsSolver(local)
+      CommandExecutor(uint32 id,
+                      shared_ptr<CommandQueue> &queue,
+                      shared_ptr<BlobStreamableConnection> &solver)
+        :   itsKernelId(id),
+            itsCommandQueue(queue),
+            itsSolver(solver)
       {
       }
 
@@ -112,8 +112,7 @@ namespace LOFAR
       // CommandQueue.
       shared_ptr<CommandQueue>                itsCommandQueue;
 
-      // Connection to the solver.
-      shared_ptr<BlobStreamableConnection>    itsGlobalSolver;
+      // Connection to the global solver.
       shared_ptr<BlobStreamableConnection>    itsSolver;
 
       // Result of the last executed command.

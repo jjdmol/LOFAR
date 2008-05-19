@@ -36,6 +36,7 @@
 #include <BBSControl/StreamUtil.h>
 
 #include <APS/ParameterSet.h>
+#include <APS/Exceptions.h>
 #include <Blob/BlobStreamable.h>
 
 #include <Common/LofarLogger.h>
@@ -59,8 +60,8 @@ namespace LOFAR
     namespace
     {
       InitializeCommand cmd1;
-      FinalizeCommand cmd2;
-      NextChunkCommand cmd3;
+      FinalizeCommand   cmd2;
+      NextChunkCommand  cmd3;
     }
 
 
@@ -86,37 +87,20 @@ namespace LOFAR
       ParameterSet* ps(globalParameterSet());
       ASSERT(ps);
 
-      string host, port;
       try {
-        host = ps->getString("Solver.Global.Host");
-        port = ps->getString("Solver.Global.Port");
+        string host, port;
+        
+        host = ps->getString("Solver.Host");
+        port = ps->getString("Solver.Port");
 
         LOG_DEBUG_STR("Defining connection: solver@" << host << ":" << port);
-        itsGlobalSolver.reset(new BlobStreamableConnection(host, port,
-        Socket::TCP));
+        itsSolver.reset(new BlobStreamableConnection(host, port, Socket::TCP));
       }
-      catch(Exception &e) {
-        itsGlobalSolver.reset();
-        LOG_WARN("No global solver specified in parset; Global solver will be"
-            " unavailable.");
+      catch(APSException &e) {
+        LOG_WARN("No global solver specified in parset, proceeding without"
+            " it.");
       }
-  
-/*
-        ostringstream oss;
-        oss << "=Solver_" << getenv("USER") << ps->getInt32("Solver.Local.Id");
-        host = "localhost";
-        port = oss.str();
-
-        LOG_DEBUG_STR("Defining connection: solver@" << host << ":" << port);
-        itsSolver.reset(new BlobStreamableConnection(host, port,
-            Socket::LOCAL));
-      }
-      catch(Exception& e) {
-        LOG_ERROR_STR(e);
-        return false;
-      }
-*/            
-
+      
       return true;
     }
 
@@ -126,6 +110,9 @@ namespace LOFAR
       LOG_DEBUG("KernelProcessControl::init()");
 
       try {
+        uint32 id =
+            LOFAR::ACC::APS::globalParameterSet()->getUint32("KernelId");
+
         // Create a new CommandQueue. This will open a connection to the
         // blackboard database.
         itsCommandQueue.reset
@@ -138,20 +125,13 @@ namespace LOFAR
         // command is posted to the blackboard database.
         itsCommandQueue->registerTrigger(CommandQueue::Trigger::Command);
 
-        if(itsGlobalSolver && !itsGlobalSolver->connect()) {
+        if(itsSolver && !itsSolver->connect()) {
+          LOG_ERROR("Unable to connect to global solver.");
           return false;
         }
-        LOG_DEBUG("Connected to global solver.");
 
-/*
-        if(!itsSolver->connect())
-        {
-          return false;
-        }
-        LOG_DEBUG("Connected to local solver.");
-*/
-        itsCommandExecutor.reset
-          (new CommandExecutor(itsCommandQueue, itsGlobalSolver, itsSolver));
+        itsCommandExecutor.reset(new CommandExecutor(id, itsCommandQueue,
+            itsSolver));
       }
       catch(Exception& e)
       {
@@ -173,8 +153,8 @@ namespace LOFAR
         {
           if(!itsCommandQueue->isNewRun(false))
           {
-            LOG_ERROR("Need to recover from an aborted run, but "
-                      "recovery has not yet been implemented.");
+            LOG_ERROR("Need to recover from an aborted run, but recovery has"
+              " not been implemented yet.");
             return false;
           }
 
@@ -189,12 +169,31 @@ namespace LOFAR
 
           if(cmd.first)
           {
+            // Execute the command.
             cmd.first->accept(*itsCommandExecutor);
-            itsCommandQueue->addResult(cmd.second,
-                                       itsCommandExecutor->getResult());
+            const CommandResult &result = itsCommandExecutor->getResult();
 
-            if(cmd.first->type() == "Finalize")
+            // Report the result to the global controller.
+            itsCommandQueue->addResult(cmd.second, result);
+            
+            // If an error occurred, log a descriptive message and exit.
+            if(result.is(CommandResult::ERROR))
+            {
+              LOG_ERROR_STR("Error executing " << cmd.first->type()
+                << " command: " << result.message());
               return false;
+            }
+
+            // If the command was a finalize command, log that we are done
+            // and exit.
+            if(cmd.first->type() == "Finalize")
+            {
+              LOG_INFO("Run completed succesfully.");
+              
+              // Exit from ACCMain. Unfortunately, this will generate an error
+              // message.
+              return false;
+            }
           }
           else
             itsState = KernelProcessControl::WAIT;
@@ -213,7 +212,6 @@ namespace LOFAR
           }
           break;
         }
-
 
       default:
         {
