@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <lofar_config.h>
-#include <BBSKernel/BlobMeasureIO.h>
+#include <BBSKernel/BlobIOExtensions.h>
 #include <BBSKernel/Exceptions.h>
 
 #include <Blob/BlobIStream.h>
@@ -30,6 +30,7 @@
 #include <Blob/BlobSTL.h>
 
 #include <casa/Containers/Record.h>
+#include <casa/IO/AipsIO.h>
 #include <measures/Measures/MeasureHolder.h>
 #include <measures/Measures/Measure.h>
 #include <measures/Measures/MDirection.h>

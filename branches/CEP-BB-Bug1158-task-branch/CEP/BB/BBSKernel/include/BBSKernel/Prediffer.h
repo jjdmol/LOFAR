@@ -160,7 +160,7 @@ private:
         unsigned long long      visCount;
 
         vector<casa::LSQFit*>   equations;
-        vector<size_t>          coeffIndex;
+        vector<uint>            coeffIndex;
         vector<const double*>   perturbedRe, perturbedIm;
         vector<double>          partialRe, partialIm;
     };
