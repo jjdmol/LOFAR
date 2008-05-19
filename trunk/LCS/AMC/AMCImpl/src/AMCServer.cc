@@ -1,4 +1,4 @@
-//#  amcserver.cc: Astronomical Measures Conversions server.
+//#  AMCServer.cc: Astronomical Measures Conversions server.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  $Id$
+//#  $Id: amcserver.cc 7785 2006-03-13 16:10:05Z loose $
 
 //# Always #include <lofar_config.h> first!
 #include <lofar_config.h>
@@ -37,7 +37,7 @@ int main(int argc, const char* const argv[])
   // Listen port (default: 31337)
   uint16 port = argc > 1 ? atoi(argv[1]) : 31337;
 
-  LOG_INFO_STR("Starting amcserver using port " << port);
+  LOG_INFO_STR("Starting AMCServer using port " << port);
   try {
     // Create a converter server, listening on port \a port.
     ConverterServer server(port);
@@ -49,6 +49,6 @@ int main(int argc, const char* const argv[])
     LOG_ERROR_STR(e);
     return 1;
   }
-  LOG_INFO("amcserver terminated");
+  LOG_INFO("AMCServer terminated");
   return 0;
 }
