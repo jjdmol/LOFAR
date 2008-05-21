@@ -1,24 +1,19 @@
-NrLocalCtrls            = 1                 # number of local controllers
-Solver.nrKernels        = 1
+NrLocalCtrls            = 2                 # number of local controllers
+Solver.nrKernels        = 2
 Solver.Global           = true
-Solver.Global.Host      = localhost
-Solver.Global.Port      = 11111
 Solver.Host             = localhost
 Solver.Port             = 11111
 
-KernelId                = 0
-
-DataSet                 = /opt/lofar/data/test.meta  # name of Measurement Set
+DataSet                 = test.ms           # name of Measurement Set
 
 Strategy.Steps          = [ xyz1, xyz2 ]    # steps
-Strategy.Stations       = [ ]   # names of stations to use
-Strategy.InputData      = DATA              # MS input data column 
-Strategy.RegionOfInterest.Freq = []
-Strategy.RegionOfInterest.Time = []
+Strategy.Stations       = [ CS*, RS1*, RS2*, DE* ]   # names of stations to use
+Strategy.InputData      = INDATA            # MS input data column 
+Strategy.RegionOfInterest = [1175e6, 1176e6, 1000.0, 3000.0] # region of interest to process
 Strategy.Correlation.Selection = ALL        # one of AUTO, CROSS, ALL
 Strategy.Correlation.Type = [ XX, YY ]      # which (cross)correlations to use
-Strategy.WorkDomainSize.Freq = 0            # work domain size: f(Hz) 
-Strategy.WorkDomainSize.Time = 0            # work domain size: t(s)
+Strategy.WorkDomainSize.Freq = 1e+6         # work domain size: f(Hz) 
+Strategy.WorkDomainSize.Time = 10           # work domain size: t(s)
 Strategy.Integration.Freq = 1               # integration interval: f(Hz)
 Strategy.Integration.Time = 0.1             # integration interval: t(s)
 
@@ -28,8 +23,8 @@ BBDB.DBName             = bbs               # name of the BB database
 BBDB.UserName           = postgres          # username for accessing the DBMS
 BBDB.PassWord           =                   # password for accessing the DBMS
 
-ParmDB.Instrument       = /opt/lofar/data/test.instrument # instrument parameters (MS table)
-ParmDB.LocalSky         = /opt/lofar/data/test.sky # local sky parameters (MS table)
+ParmDB.Instrument       = test.mep          # instrument parameters (MS table)
+ParmDB.LocalSky         = test.gsm          # local sky parameters (MS table)
 ParmDB.History          = test.his          # history (MS table)
 
 Step.xyz1.Steps         = [ sl1, sl2 ]      # names of substeps
@@ -37,8 +32,8 @@ Step.xyz1.Baselines.Station1 =            \ # baselines to use
       [ CS*, CS*,  CS*,  RS1*, RS1*, RS2* ]
 Step.xyz1.Baselines.Station2 =            \ # (all if empty)
       [ CS*, RS1*, RS2*, RS1*, RS2*, RS2* ]
-Step.xyz1.Sources       = [ ]               # list of sources
-Step.xyz1.ExtraSources  = [ ]               # list of sources outside patch
+Step.xyz1.Sources       = [ 3C343 ]         # list of sources
+Step.xyz1.ExtraSources  = [ M81 ]           # list of sources outside patch
 Step.xyz1.InstrumentModel = [ Bandpass,   \ # Instrument model
                            DirGain, Phase ]
 Step.xyz1.Integration.Freq = 2              # integration interval: f(Hz)
@@ -53,11 +48,11 @@ Step.xyz2.Baselines.Station2 = [ CS*, RS1*, RS1* ] # (all if empty)
 Step.xyz2.Sources       = [ 3C343 ]         # sources in the source model
 Step.xyz2.InstrumentModel = [ Bandpass ]    # Instrument model
 
-Step.sl1.Baselines.Station1 = [ ]          # baselines to use
-Step.sl1.Baselines.Station2 = [ ]           # (all if empty)
+Step.sl1.Baselines.Station1 = [ CS*,  RS1* ] # baselines to use
+Step.sl1.Baselines.Station2 = [ RS1*, RS2* ] # (all if empty)
 Step.sl1.Operation      = SOLVE           \ # one of SOLVE, SUBTRACT, CORRECT,
                                             # PREDICT, SHIFT, REFIT
-Step.sl1.OutputData     =                   # MS output data column
+Step.sl1.OutputData     = OUTDATA1          # MS output data column
 Step.sl1.Solve.Options.MaxIter  = 10        # maximum number of iterations
 Step.sl1.Solve.Options.EpsValue  = 1e-7     # convergence threshold
 Step.sl1.Solve.Options.EpsDerivative  = 1e-7 # convergence threshold
@@ -66,12 +61,12 @@ Step.sl1.Solve.Options.CollFactor = 0.99    # collinearity factor
 Step.sl1.Solve.Options.LMFactor = 1e-3      # Levenberg-Marquardt factor
 Step.sl1.Solve.Options.BalancedEqs = true   # Well-balanced normal equations
 Step.sl1.Solve.Options.UseSVD = false       # Use singular value decomposition
-Step.sl1.Solve.Parms    = ["gain:{11,22}:*"] # names of solvable parameters
+Step.sl1.Solve.Parms    = ["GAIN:{11,22}:*"] # names of solvable parameters
 Step.sl1.Solve.ExclParms = []               # parameters excluded from solve
-Step.sl1.Solve.DomainSize.Freq = 0          # f(Hz)
+Step.sl1.Solve.DomainSize.Freq = 1000       # f(Hz)
 Step.sl1.Solve.DomainSize.Time = 1          # t(s)
-Step.sl1.Solve.KernelGroups = [1]
-Step.sl1.InstrumentModel = [ GAIN ]
+Step.sl1.Solve.KernelGroups = [1, 1]
+Step.sl1.InstrumentModel = [ Bandpass, Phase ]
 
 Step.sl2.Operation      = CORRECT         \ # one of SOLVE, SUBTRACT, CORRECT,
                                             # PREDICT, SHIFT, REFIT
