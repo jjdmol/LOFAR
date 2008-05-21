@@ -40,8 +40,10 @@
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iomanip.h>
+#include <Common/lofar_numeric.h>
 #include <Common/lofar_smartptr.h>
 
+// #include <numeric>
 #include <stdlib.h>
 
 #define NONREADY        0
@@ -145,13 +147,31 @@ namespace LOFAR
         LOG_DEBUG_STR("Waiting for " << itsNrKernels << 
                       " kernel(s) to connect ...");
         itsKernels.resize(itsNrKernels);
+
         for (uint i = 0; i < itsNrKernels; ++i) {
           connector.reset(new BlobStreamableConnection(acceptor.accept()));
           if (!connector->connect()) {
-            THROW (IOException, "Failed to connect kernel #" << i); 
+            THROW (IOException, "Failed to connect kernel");
           }
-          itsKernels[i] = connector;
-          LOG_DEBUG_STR("Kernel #" << i << " connected.");
+
+          scoped_ptr<const KernelIdMsg>
+            msg(dynamic_cast<KernelIdMsg*>(connector->recvObject()));
+          if (!msg) {
+            THROW (SolverControlException, 
+                   "Illegal message. Expected a KernelIdMsg");
+          }
+
+          KernelId id(msg->getKernelId());
+          try {
+            itsKernels.at(id) = KernelConnection(connector, id);
+          } catch (std::out_of_range&) {
+            connector.reset();
+            LOG_ERROR_STR("Kernel ID (" << id << ") out of range. "
+                          "Disconnected kernel");
+          }
+
+          LOG_DEBUG_STR("Kernel " << i << " of " << itsNrKernels << 
+                        " connected (id=" << id << ")");
         }
 
         // Switch to IDLE state, indicating that we're ready to receive
@@ -160,7 +180,7 @@ namespace LOFAR
         itsState = IDLE;
       }
 
-      catch(Exception& e) {
+      catch (Exception& e) {
         LOG_ERROR_STR(e);
         return false;
       }
@@ -197,7 +217,7 @@ namespace LOFAR
             itsSolveStep = dynamic_pointer_cast<const SolveStep>(cmd);
             if (itsSolveStep) {
               // It's a SolveStep. Setup kernel groups and change state.
-              setKernelGroups(itsSolveStep->kernelGroups());
+              setSolveTasks(itsSolveStep->kernelGroups());
               itsState = SOLVING;
             }
             else {
@@ -212,6 +232,23 @@ namespace LOFAR
         case SOLVING: {
           LOG_TRACE_FLOW("ProcessState::SOLVING");
 
+          // Call the run() method on each kernel group. In the current
+          // implementation, this is a serialized operation. Once we run each
+          // kernel group in its own thread, we can parallellize
+          // things. Threads will also make it possible to return swiftly from
+          // the current method, so that we can promptly react to ACC
+          // commands.
+          //
+          // [Q] Should we let run() return a bool or do we handle error
+          // conditions with exceptions. I think the former (bools) is a
+          // better choice, since we're planning on running each task in a
+          // separate thread, and it is usually a bad thing to handle an
+          // exception in a different thread than in wich it was thrown.
+          for (uint i = 0; i < itsSolveTasks.size(); ++i) {
+            itsSolveTasks[i].run();
+          }
+
+#if 0
           // switch (SolverState)
           // case INDEXING:
           //   for each kernel group
@@ -234,9 +271,7 @@ namespace LOFAR
               msg->passTo(kernelGroup(msg->getKernelId()));
             }
           }
-
-          // Send indices back to all kernels.
-
+#endif
           break;
         }
 
@@ -355,6 +390,7 @@ namespace LOFAR
     }
 
 
+#if 0
     void SolverProcessControl::setKernelGroups(const vector<uint>& groups)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
@@ -376,7 +412,36 @@ namespace LOFAR
                << itsNrKernels << ")");
       }
     }
+#endif
 
+    void SolverProcessControl::setSolveTasks(const vector<uint>& groups)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      LOG_DEBUG_STR("Kernel groups: " << groups);
+
+      // Sanity check
+      if (itsKernels.size() < accumulate(groups.begin(), groups.end(), 0U)) {
+        THROW (SolverControlException, 
+               "Sum of kernels in subgroups exceeds total number of kernels");
+      }
+
+      // Initialization
+      itsSolveTasks.clear();
+      vector<KernelConnection>::const_iterator beg(itsKernels.begin());
+      vector<KernelConnection>::const_iterator end(beg);
+
+      // Create kernel groups, passing the correct subrange of kernel
+      // connections to each kernel group.
+      for (uint i = 0; i < groups.size(); ++i) {
+        advance(end, groups[i]);
+        itsSolveTasks.push_back
+          (SolveTask(vector<KernelConnection>(beg, end)));
+        beg = end;
+      }
+    }
+
+
+#if 0
 
     KernelGroup& SolverProcessControl::kernelGroup(const KernelId& id)
     {
@@ -448,17 +513,14 @@ namespace LOFAR
 
     bool SolverProcessControl::handle(const IterationRequest *request) const
     {
-#if 0
       scoped_ptr<IterationResult> result(performIteration(request));
       return itsKernelConnection->sendObject(*result.get());
-#endif
     }
 
 
     bool SolverProcessControl::handle
     (const BlobStreamableVector<IterationRequest> *request) const
     {
-#if 0
       BlobStreamableVector<IterationResult> result;
 
       for(vector<IterationRequest*>::const_iterator it =
@@ -470,7 +532,6 @@ namespace LOFAR
       }
 
       return itsKernelConnection->sendObject(result);
-#endif
     }
 
 
@@ -553,6 +614,8 @@ namespace LOFAR
 
       return result;
     }
+
+#endif /* 0 */
 
   } // namespace BBS
 

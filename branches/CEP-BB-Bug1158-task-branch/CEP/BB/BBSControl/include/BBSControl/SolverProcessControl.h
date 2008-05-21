@@ -31,20 +31,15 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <BBSControl/DomainRegistrationRequest.h>
-#include <BBSControl/IterationRequest.h>
-#include <BBSControl/IterationResult.h>
-#include <BBSControl/BlobStreamableVector.h>
-#include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandQueue.h>
+#include <BBSControl/KernelConnection.h>
+#include <BBSControl/SolveTask.h>
 #include <BBSControl/SolveStep.h>
-#include <BBSControl/KernelGroup.h>
 
-#include <Common/lofar_smartptr.h>
 #include <PLC/ProcessControl.h>
-#include <APS/ParameterSet.h>
+#include <Common/lofar_smartptr.h>
 
-#include <scimath/Fitting/LSQFit.h>
+// #include <scimath/Fitting/LSQFit.h>
 
 namespace LOFAR
 {
@@ -79,12 +74,14 @@ namespace LOFAR
       // @}
 
     private:
+#if 0
       struct Domain
       {
         uint32          index;
         vector<double>  unknowns;
         casa::LSQFit    solver;
       };
+#endif
 
       enum RunState {
         UNDEFINED = 0,
@@ -105,14 +102,15 @@ namespace LOFAR
       // - The size of the vector determines the number of groups.
       // - The sum of the elements determines the total number of kernels.
       // - Each element determines the number of kernels per group.
-      void setKernelGroups(const vector<uint>& groups);
-
-      // Return a reference to the kernel group of the kernel with id \a
-      // kernelId.
-      KernelGroup& kernelGroup(const KernelId& id);
-
+      void setSolveTasks(const vector<uint>& groups);
 
 #if 0
+      // Return a reference to the kernel group of the kernel with id \a id.
+      SolveTask& solveTask(const KernelId& id);
+
+//       // Return a reference to the kernel with id \a id.
+//       Kernel& getKernelById(const KernelId& id);
+
       struct Kernel
       {
         KernelId id;
@@ -174,37 +172,38 @@ namespace LOFAR
       // Connection to the command queue.
       scoped_ptr<CommandQueue> itsCommandQueue;
 
-      bool dispatch(const BlobStreamable *message);
-      bool handle(const DomainRegistrationRequest *request);
-      bool handle(const BlobStreamableVector<DomainRegistrationRequest> *request);
-      bool handle(const IterationRequest *request) const;
-      bool handle(const BlobStreamableVector<IterationRequest> *request) const;
+//       // Map containing our "pool" of kernel connections.
+//       typedef map<KernelId, shared_ptr<BlobStreamableConnection> > kernelmap_t;
+//       kernel_t itsKernels;
 
-      bool registerDomain(const DomainRegistrationRequest *request);
-      IterationResult *performIteration(const IterationRequest *request);
+//       // Used by KernelGroup.
+//       typedef set< shared_ptr<BlobStreamableConnection> > kernelset_t;
 
       // Vector of kernels.
-      vector< shared_ptr<BlobStreamableConnection> > itsKernels;
+      vector<KernelConnection> itsKernels;
 //       vector<Kernel> itsKernels;
       
       // Container of kernel groups. 
-      vector<KernelGroup> itsKernelGroups;
+      vector<SolveTask> itsSolveTasks;
 
+      // Current solve command. We need to keep track of it, because we need
+      // the information in it between different calls to the run() method.
+      shared_ptr<const SolveStep> itsSolveStep;
+      
+#if 0
       // Vector used for look-up of kernel group-id given a kernel-id. This is
       // just one way of solving the look-up. It's not the most memory
       // efficient, but that's not really an issue, since the number of
       // kernels is not large. Besides, this type of look-up is constant time.
       vector<uint> itsKernelGroupIds;
 
-      // Current solve command. We need to keep track of it, because we need
-      // the information in it between different calls to the run() method.
-      shared_ptr<const SolveStep> itsSolveStep;
-      
 //       // The Message handler is responsible for handling the messages coming
 //       // from the kernel.
 //       KernelMessageHandler itsMessageHandler;
 
       map<uint32, Domain> itsRegisteredDomains;
+#endif
+
     };
     // @}
 

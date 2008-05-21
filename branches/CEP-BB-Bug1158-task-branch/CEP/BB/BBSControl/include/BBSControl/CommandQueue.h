@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBS_COMMANDQUEUE_H
-#define LOFAR_BBS_COMMANDQUEUE_H
+#ifndef LOFAR_BBSCONTROL_COMMANDQUEUE_H
+#define LOFAR_BBSCONTROL_COMMANDQUEUE_H
 
 // \file
 // Command queue of the blackboard system.

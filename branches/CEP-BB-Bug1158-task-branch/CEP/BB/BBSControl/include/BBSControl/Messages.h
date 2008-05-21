@@ -29,6 +29,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_smartptr.h>
 #include <BBSKernel/SolverInterfaceTypes.h>
+#include <BBSControl/Types.h>
 
 namespace LOFAR
 {
@@ -72,12 +73,12 @@ namespace LOFAR
       string type() const { return classType(); }
 
       // Return the kernel-id of the kernel that sent the message.
-      uint32 getKernelId() const
+      KernelId getKernelId() const
       { return itsKernelId; }
 
     protected:
       // Construct a KernelMessage object.
-      KernelMessage(uint32 id = 0) : itsKernelId(id) {}
+      KernelMessage(KernelId id = KernelId(-1)) : itsKernelId(id) {}
 
       //# -------- BlobStreamable interface implementation -------- 
 
@@ -89,7 +90,7 @@ namespace LOFAR
 
     private:
       // Kernel-id of the kernel that sent the message.
-      uint32      itsKernelId;
+      KernelId      itsKernelId;
     };
 
 
@@ -126,7 +127,41 @@ namespace LOFAR
 
     //## --------  C o n c r e t e   c l a s s e s  -------- ##//
 
-    // Message for passing coefficient indices between kernel and solver.
+    // Message for passing the kernel-id from kernel to solver.
+    class KernelIdMsg : public KernelMessage
+    {
+    public:
+      typedef KernelMessage super;
+      typedef shared_ptr<KernelIdMsg>     Pointer;
+
+      KernelIdMsg()
+        : KernelMessage()
+      {}
+
+      KernelIdMsg(KernelId kernelId)
+        : KernelMessage(kernelId)
+      {}
+
+      //# -------- Message interface implementation --------
+      virtual void passTo(KernelMessageHandler &handler) const;
+
+    private:
+
+      //# -------- BlobStreamable interface implementation -------- 
+      static const string theirClassType;
+
+      // Write the contents of \c *this into the blob output stream \a bos.
+      virtual void write(BlobOStream& bos) const;
+
+      // Read the contents from the blob input stream \a bis into \c *this.
+      virtual void read(BlobIStream& bis);
+
+      // Return the type of \c *this as a string.
+      virtual const string& classType() const;
+    };
+
+
+    // Message for passing coefficient indices from kernel and solver.
     class CoeffIndexMsg: public KernelMessage
     {
     public:
@@ -137,7 +172,7 @@ namespace LOFAR
         : KernelMessage()
       {}
 
-      CoeffIndexMsg(uint32 kernelId)
+      CoeffIndexMsg(KernelId kernelId)
         : KernelMessage(kernelId)
       {}
 
@@ -167,6 +202,42 @@ namespace LOFAR
     };
 
 
+    // Message for passing merged coefficient indices from solver to kernel.
+    class MergedCoeffIndexMsg: public SolverMessage
+    {
+    public:
+      typedef SolverMessage super;
+      typedef shared_ptr<MergedCoeffIndexMsg>   Pointer;
+        
+      MergedCoeffIndexMsg()
+      {}
+
+      CoeffIndex &getContents()
+      { return itsContents; }
+        
+      const CoeffIndex &getContents() const
+      { return itsContents; }
+
+      //# -------- Message interface implementation --------
+      virtual void passTo(SolverMessageHandler &handler) const;
+
+    private:
+      CoeffIndex  itsContents;
+    
+      //# -------- BlobStreamable interface implementation -------- 
+      static const string theirClassType;
+
+      // Write the contents of \c *this into the blob output stream \a bos.
+      virtual void write(BlobOStream& bos) const;
+
+      // Read the contents from the blob input stream \a bis into \c *this.
+      virtual void read(BlobIStream& bis);
+
+      // Return the type of \c *this as a string.
+      virtual const string& classType() const;
+    };
+
+
     // Message for passing coefficients from kernel to solver.
     class CoeffMsg: public KernelMessage
     {
@@ -178,11 +249,11 @@ namespace LOFAR
         : KernelMessage()
       {}
 
-      CoeffMsg(uint32 kernelId)
+      CoeffMsg(KernelId kernelId)
         : KernelMessage(kernelId)
       {}
 
-      CoeffMsg(uint32 kernelId, size_t count)
+      CoeffMsg(KernelId kernelId, size_t count)
         :   KernelMessage(kernelId),
             itsContents(count)
       {}
@@ -228,11 +299,11 @@ namespace LOFAR
         : KernelMessage()
       {}
 
-      EquationMsg(uint32 kernelId)
+      EquationMsg(KernelId kernelId)
         : KernelMessage(kernelId)
       {}
 
-      EquationMsg(uint32 kernelId, size_t count)
+      EquationMsg(KernelId kernelId, size_t count)
         :   KernelMessage(kernelId),
             itsContents(count)
       {}
@@ -323,7 +394,7 @@ namespace LOFAR
         : KernelMessage()
       {}
 
-      ChunkDoneMsg(uint32 kernelId)
+      ChunkDoneMsg(KernelId kernelId)
         : KernelMessage(kernelId)
       {}
 

@@ -14,7 +14,6 @@ pkginclude_HEADERS = \
 	InitializeCommand.h \
 	IterationRequest.h \
 	IterationResult.h \
-	KernelGroup.h \
 	KernelProcessControl.h \
 	LocalControlId.h \
 	Messages.h \
@@ -28,6 +27,7 @@ pkginclude_HEADERS = \
 	SingleStep.h \
 	SolverProcessControl.h \
 	SolveStep.h \
+	SolveTask.h \
 	Step.h \
 	Strategy.h \
 	SubtractStep.h \

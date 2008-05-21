@@ -43,7 +43,9 @@ namespace LOFAR
     using LOFAR::operator>>;
 
     // -------------------------------------------------------------------- //
+    const string KernelIdMsg::theirClassType = "KernelIdMsg";
     const string CoeffIndexMsg::theirClassType = "CoeffIndexMsg";
+    const string MergedCoeffIndexMsg::theirClassType = "MergedCoeffIndexMsg";
     const string CoeffMsg::theirClassType = "CoeffMsg";
     const string EquationMsg::theirClassType = "EquationMsg";
     const string SolutionMsg::theirClassType = "SolutionMsg";
@@ -55,14 +57,18 @@ namespace LOFAR
     namespace
     {
       bool dummy1 = BlobStreamableFactory::instance().
-        registerClass<CoeffIndexMsg>("CoeffIndexMsg");
+        registerClass<KernelIdMsg>("KernelIdMsg");
       bool dummy2 = BlobStreamableFactory::instance().
-        registerClass<CoeffMsg>("CoeffMsg");
+        registerClass<CoeffIndexMsg>("CoeffIndexMsg");
       bool dummy3 = BlobStreamableFactory::instance().
-        registerClass<EquationMsg>("EquationMsg");
+        registerClass<MergedCoeffIndexMsg>("MergedCoeffIndexMsg");
       bool dummy4 = BlobStreamableFactory::instance().
-        registerClass<SolutionMsg>("SolutionMsg");
+        registerClass<CoeffMsg>("CoeffMsg");
       bool dummy5 = BlobStreamableFactory::instance().
+        registerClass<EquationMsg>("EquationMsg");
+      bool dummy6 = BlobStreamableFactory::instance().
+        registerClass<SolutionMsg>("SolutionMsg");
+      bool dummy7 = BlobStreamableFactory::instance().
         registerClass<ChunkDoneMsg>("ChunkDoneMsg");
     }
 
@@ -75,6 +81,27 @@ namespace LOFAR
     void KernelMessage::read(BlobIStream& bis)
     {
       bis >> itsKernelId;
+    }
+
+    // -------------------------------------------------------------------- //
+    void KernelIdMsg::passTo(KernelMessageHandler &handler) const
+    {
+      handler.handle(*this);
+    }
+
+    void KernelIdMsg::write(BlobOStream& bos) const
+    {
+      super::write(bos);
+    }
+
+    void KernelIdMsg::read(BlobIStream& bis)
+    {
+      super::read(bis);
+    }
+
+    const string& KernelIdMsg::classType() const
+    {
+      return KernelIdMsg::theirClassType;
     }
 
     // -------------------------------------------------------------------- //
@@ -98,6 +125,27 @@ namespace LOFAR
     const string& CoeffIndexMsg::classType() const
     {
       return CoeffIndexMsg::theirClassType;
+    }
+
+    // -------------------------------------------------------------------- //
+    void MergedCoeffIndexMsg::passTo(SolverMessageHandler &handler) const
+    {
+      handler.handle(*this);
+    }
+
+    void MergedCoeffIndexMsg::write(BlobOStream& bos) const
+    {
+      bos << itsContents;
+    }
+
+    void MergedCoeffIndexMsg::read(BlobIStream& bis)
+    {
+      bis >> itsContents;
+    }
+
+    const string& MergedCoeffIndexMsg::classType() const
+    {
+      return MergedCoeffIndexMsg::theirClassType;
     }
 
     // -------------------------------------------------------------------- //

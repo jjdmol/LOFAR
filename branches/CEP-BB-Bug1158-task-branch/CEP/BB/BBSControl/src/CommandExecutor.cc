@@ -52,6 +52,7 @@
 #include <APS/ParameterSet.h>
 
 #include <Common/LofarLogger.h>
+#include <Common/lofar_fstream.h>
 #include <BBSControl/StreamUtil.h>
 #include <Common/Timer.h>
 

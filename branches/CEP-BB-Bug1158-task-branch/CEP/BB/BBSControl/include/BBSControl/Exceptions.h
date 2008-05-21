@@ -50,6 +50,10 @@ namespace LOFAR
     // Exception class for the (global) solver controller.
     EXCEPTION_CLASS(SolverControlException, BBSControlException);
 
+    // Exception class for the (global) solver controller, used when it
+    // receives an illegal message from one of the local controllers.
+    EXCEPTION_CLASS(IllegalMessageException, SolverControlException);
+
     // Exception class for the database access layer.
     EXCEPTION_CLASS(DatabaseException, BBSControlException);
 

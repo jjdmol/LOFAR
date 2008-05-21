@@ -13,7 +13,7 @@ libbbscontrol_la_SOURCES	= \
 	InitializeCommand.cc \
 	IterationRequest.cc \
 	IterationResult.cc \
-	KernelGroup.cc \
+	KernelConnection.cc \
 	KernelProcessControl.cc \
 	Messages.cc \
 	MultiStep.cc \
@@ -27,6 +27,7 @@ libbbscontrol_la_SOURCES	= \
 	SingleStep.cc \
 	SolverProcessControl.cc \
 	SolveStep.cc \
+	SolveTask.cc \
 	Step.cc \
 	Strategy.cc \
 	StreamUtil.cc \

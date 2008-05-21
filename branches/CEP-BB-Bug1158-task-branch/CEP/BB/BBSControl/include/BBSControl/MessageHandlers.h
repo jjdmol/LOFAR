@@ -20,15 +20,17 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_MESSAGEHANDLERS_H
-#define LOFAR_BB_BBS_MESSAGEHANDLERS_H
+#ifndef LOFAR_BBSCONTROL_MESSAGEHANDLERS_H
+#define LOFAR_BBSCONTROL_MESSAGEHANDLERS_H
 
 namespace LOFAR
 {
   namespace BBS
   {
     //# Forward declarations
+    class KernelIdMsg;
     class CoeffIndexMsg;
+    class MergedCoeffIndexMsg;
     class CoeffMsg;
     class EquationMsg;
     class SolutionMsg;
@@ -49,6 +51,7 @@ namespace LOFAR
     {
     public:
       virtual ~KernelMessageHandler() {}
+      virtual void handle(const KernelIdMsg &message) = 0;
       virtual void handle(const CoeffIndexMsg &message) = 0;
       virtual void handle(const CoeffMsg &message) = 0;
       virtual void handle(const EquationMsg &message) = 0;
@@ -59,6 +62,7 @@ namespace LOFAR
     {
     public:
       virtual ~SolverMessageHandler() {}
+      virtual void handle(const MergedCoeffIndexMsg &message) = 0;
       virtual void handle(const SolutionMsg &message) = 0;
     };
     //@}

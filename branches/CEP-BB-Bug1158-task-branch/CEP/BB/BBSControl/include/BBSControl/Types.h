@@ -33,8 +33,6 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
-//#include <BBSKernel/Types.h>
-//#include <APS/ParameterSet.h>
 
 namespace LOFAR
 {
