@@ -37,6 +37,7 @@ pkginclude_HEADERS = Package__Version.h  \
 	LofarLogger.h \
 	lofar_map.h \
 	lofar_math.h \
+	lofar_numeric.h \
 	lofar_set.h \
 	lofar_smartptr.h \
 	lofar_sstream.h \
