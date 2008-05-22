@@ -39,8 +39,6 @@
 #include <PLC/ProcessControl.h>
 #include <Common/lofar_smartptr.h>
 
-// #include <scimath/Fitting/LSQFit.h>
-
 namespace LOFAR
 {
   namespace BBS
@@ -74,15 +72,6 @@ namespace LOFAR
       // @}
 
     private:
-#if 0
-      struct Domain
-      {
-        uint32          index;
-        vector<double>  unknowns;
-        casa::LSQFit    solver;
-      };
-#endif
-
       enum RunState {
         UNDEFINED = 0,
         IDLE,
@@ -104,65 +93,6 @@ namespace LOFAR
       // - Each element determines the number of kernels per group.
       void setSolveTasks(const vector<uint>& groups);
 
-#if 0
-      // Return a reference to the kernel group of the kernel with id \a id.
-      SolveTask& solveTask(const KernelId& id);
-
-//       // Return a reference to the kernel with id \a id.
-//       Kernel& getKernelById(const KernelId& id);
-
-      struct Kernel
-      {
-        KernelId id;
-        KernelGroupId groupId;
-        shared_ptr<BlobStreamableConnection> connection;
-      };
-
-      // A kernel group is a collection of kernels that connect to the same
-      // solver. The state of the group as a whole depends on the state of
-      // each individual kernel in the group.
-      struct KernelGroup
-      {
-        shared_ptr<SolverState> state;
-        vector<Kernel> kernels;
-      };
-
-      class SolverState
-      {
-      public:
-        virtual void handle() = 0;
-      protected:
-        shared_ptr<Message> recvMessage() const;
-        void setState(const KernelGroup&);
-      };
-
-      class SolverIndexing : public SolverState
-      {
-      public:
-        virtual void handle();
-      };
-
-      class SolverInitializing : public SolverState
-      {
-      public:
-        virtual void handle();
-      };
-
-      class SolverIterating : public SolverState
-      {
-      public:
-        virtual void handle();
-      };
-#endif
-
-//       enum SolverState {
-//         UNDEFINED = 0,
-//         INDEXING,
-//         INITIALZING,
-//         ITERATING,
-//         N_States
-//       };
-
       // (Run) state of the solver control process
       RunState itsState;
 
@@ -172,16 +102,8 @@ namespace LOFAR
       // Connection to the command queue.
       scoped_ptr<CommandQueue> itsCommandQueue;
 
-//       // Map containing our "pool" of kernel connections.
-//       typedef map<KernelId, shared_ptr<BlobStreamableConnection> > kernelmap_t;
-//       kernel_t itsKernels;
-
-//       // Used by KernelGroup.
-//       typedef set< shared_ptr<BlobStreamableConnection> > kernelset_t;
-
       // Vector of kernels.
       vector<KernelConnection> itsKernels;
-//       vector<Kernel> itsKernels;
       
       // Container of kernel groups. 
       vector<SolveTask> itsSolveTasks;
@@ -189,22 +111,8 @@ namespace LOFAR
       // Current solve command. We need to keep track of it, because we need
       // the information in it between different calls to the run() method.
       shared_ptr<const SolveStep> itsSolveStep;
-      
-#if 0
-      // Vector used for look-up of kernel group-id given a kernel-id. This is
-      // just one way of solving the look-up. It's not the most memory
-      // efficient, but that's not really an issue, since the number of
-      // kernels is not large. Besides, this type of look-up is constant time.
-      vector<uint> itsKernelGroupIds;
-
-//       // The Message handler is responsible for handling the messages coming
-//       // from the kernel.
-//       KernelMessageHandler itsMessageHandler;
-
-      map<uint32, Domain> itsRegisteredDomains;
-#endif
-
     };
+
     // @}
 
   } //# namespace BBS

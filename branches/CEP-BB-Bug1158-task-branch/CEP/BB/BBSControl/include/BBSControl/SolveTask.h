@@ -89,6 +89,9 @@ namespace LOFAR
 //       State state() const { return itsState; }
       const string& showState() const;
 
+      // Compose error message and thow SolveTaskException.
+      void error(const string& prefix, const KernelMessage& message);
+
     private:
 
       enum MsgType {

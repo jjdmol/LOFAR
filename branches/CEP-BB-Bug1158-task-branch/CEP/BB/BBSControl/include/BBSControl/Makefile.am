@@ -7,13 +7,10 @@ pkginclude_HEADERS = \
 	CommandResult.h \
 	CommandVisitor.h \
 	CorrectStep.h \
-	DomainRegistrationRequest.h \
 	Exceptions.h \
 	FinalizeCommand.h \
 	GlobalProcessControl.h \
 	InitializeCommand.h \
-	IterationRequest.h \
-	IterationResult.h \
 	KernelProcessControl.h \
 	LocalControlId.h \
 	Messages.h \

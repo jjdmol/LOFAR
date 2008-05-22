@@ -43,13 +43,7 @@
 #include <Common/lofar_numeric.h>
 #include <Common/lofar_smartptr.h>
 
-// #include <numeric>
 #include <stdlib.h>
-
-#define NONREADY        0
-#define N_ReadyCode     999
-#define NC              0
-#define SUMLL           2
 
 namespace LOFAR
 {
@@ -198,12 +192,17 @@ namespace LOFAR
 
         switch(itsState) {
 
-        case UNDEFINED: {
+        default:
+          LOG_ERROR("ProcessState UNKNOWN: this is a program logic error!");
+          return false;
+          break;
+
+        case UNDEFINED:
           LOG_WARN("ProcessState UNDEFINED; init() must be called first!");
           return false;
-        }
+          break;
 
-        case IDLE: {
+        case IDLE:
           LOG_TRACE_FLOW("ProcessState::IDLE");
 
           LOG_DEBUG("Waiting for command trigger ...");
@@ -227,9 +226,8 @@ namespace LOFAR
             }
           }
           break;
-        }
           
-        case SOLVING: {
+        case SOLVING:
           LOG_TRACE_FLOW("ProcessState::SOLVING");
 
           // Call the run() method on each kernel group. In the current
@@ -247,77 +245,18 @@ namespace LOFAR
           for (uint i = 0; i < itsSolveTasks.size(); ++i) {
             itsSolveTasks[i].run();
           }
-
-#if 0
-          // switch (SolverState)
-          // case INDEXING:
-          //   for each kernel group
-          //     for each kernel in the group
-          //       poll for coeffindex
-          //     if received all coeffindices 
-          //       change to state INITIALIZING
-
-          // Receive messages from our kernel(s); for the time being we'll use
-          // a round-robin "polling". Every message is handed over to the
-          // kernel group that currently "holds" the kernel identified by the
-          // kernel-id in the received message.
-          // Note that the current implementation assumes blocking I/O. 
-          for (uint i = 0; i < itsNrKernels; ++i) {
-            LOG_TRACE_STAT_STR("Kernel #" << i << ": recvObject()");
-            shared_ptr<const KernelMessage> 
-              msg(dynamic_cast<const KernelMessage*>
-                  (itsKernels[i]->recvObject()));
-            if (msg) {
-              msg->passTo(kernelGroup(msg->getKernelId()));
-            }
-          }
-#endif
+          
+          // OK, all SolveTasks are done (since we're currently running one
+          // thread!!). We can change state.
+          itsState = IDLE;
           break;
-        }
-
-          //         case INITIALZING: {
-          //           LOG_TRACE_FLOW("RunState::INITIALZING");
-
-          //           // Set initial coefficients
-
-          //           LOG_DEBUG("Switching to ITERATING state");
-          //           itsState = ITERATING;
-          //           break;
-          //         }
-
-          //         case ITERATING: {
-          //           LOG_TRACE_FLOW("RunState::ITERATING");
-
-          //           // While not converged:
-          //           //   Set equations
-          //           //   iterate
-          //           if (converged) {
-          //           break;
-          //         }
-
-        default: {
-          LOG_ERROR("ProcessState UNKNOWN: this is a program logic error!");
-          return false;
-        }
 
         } // switch
-
-#if 0
-        // Receive the next message
-        scoped_ptr<BlobStreamable> message(itsKernelConnection->recvObject());
-        if(message)
-          return dispatch(message.get());
-        else
-          return false;
-#endif
-
       }
-
       catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
       }
-
       return true;
     }
 
@@ -439,183 +378,6 @@ namespace LOFAR
         beg = end;
       }
     }
-
-
-#if 0
-
-    KernelGroup& SolverProcessControl::kernelGroup(const KernelId& id)
-    {
-      LOG_INFO_STR("Kernel-id: " << id << "; Kernel group-id: " 
-                   << itsKernelGroupIds[id]);
-      return itsKernelGroups[itsKernelGroupIds[id]];
-    }
-
-
-    bool SolverProcessControl::dispatch(const BlobStreamable *message)
-    {
-      {
-        const DomainRegistrationRequest *request =
-          dynamic_cast<const DomainRegistrationRequest*>(message);
-        if(request)
-          return handle(request);
-      }
-
-      {
-        const BlobStreamableVector<DomainRegistrationRequest> *request =
-          dynamic_cast<const BlobStreamableVector<DomainRegistrationRequest>*>
-          (message);
-        if(request)
-          return handle(request);
-      }
-
-      {
-        const IterationRequest *request =
-          dynamic_cast<const IterationRequest*>(message);
-        if(request)
-          return handle(request);
-      }
-
-      {
-        const BlobStreamableVector<IterationRequest> *request =
-          dynamic_cast<const BlobStreamableVector<IterationRequest>*>
-          (message);
-        if(request)
-          return handle(request);
-      }
-
-      // We received a message we can't handle
-      LOG_WARN_STR("Received message of unsupported type");
-      return false;
-    }
-
-
-    bool SolverProcessControl::handle(const DomainRegistrationRequest *request)
-    {
-      return registerDomain(request);
-    }
-
-
-    bool SolverProcessControl::handle
-    (const BlobStreamableVector<DomainRegistrationRequest> *request)
-    {
-      bool result = true;
-
-      for(vector<DomainRegistrationRequest*>::const_iterator it =
-            request->getVector().begin();
-          it != request->getVector().end() && result;
-          ++it)
-      {
-        result = result && registerDomain(*it);
-      }
-      return result;
-    }
-
-
-    bool SolverProcessControl::handle(const IterationRequest *request) const
-    {
-      scoped_ptr<IterationResult> result(performIteration(request));
-      return itsKernelConnection->sendObject(*result.get());
-    }
-
-
-    bool SolverProcessControl::handle
-    (const BlobStreamableVector<IterationRequest> *request) const
-    {
-      BlobStreamableVector<IterationResult> result;
-
-      for(vector<IterationRequest*>::const_iterator it =
-            request->getVector().begin();
-          it != request->getVector().end();
-          ++it)
-      {
-        result.getVector().push_back(performIteration(*it));
-      }
-
-      return itsKernelConnection->sendObject(result);
-    }
-
-
-    bool SolverProcessControl::registerDomain
-    (const DomainRegistrationRequest *request)
-    {
-      LOG_DEBUG_STR("DomainRegistrationRequest: index: "
-                    << request->getDomainIndex() << " #unknowns: "
-                    << request->getUnknowns().size());
-      LOG_DEBUG_STR("+ unknowns: " << request->getUnknowns());
-
-      Domain &domain = itsRegisteredDomains[request->getDomainIndex()];
-      domain.index = request->getDomainIndex();
-      domain.unknowns = request->getUnknowns();
-      domain.solver.set(casa::uInt(domain.unknowns.size()));
-      // Set new value solution test
-      domain.solver.setEpsValue(request->getEpsilon());
-      // Set new 'derivative' test (actually, the inf norm of the known
-      // vector is checked).
-      domain.solver.setEpsDerivative(request->getEpsilon());
-      // Set maximum number of iterations
-      domain.solver.setMaxIter(request->getMaxIter());
-      // Set new factors (collinearity factor, and Levenberg-Marquardt LMFactor)
-      domain.solver.set(request->getColFactor(), request->getLMFactor());
-      domain.solver.setBalanced(request->getBalancedEq());
-      return true;
-    }
-
-
-    IterationResult* SolverProcessControl::performIteration
-    (const IterationRequest *request)
-    {
-      map<uint32, Domain>::iterator it =
-        itsRegisteredDomains.find(request->getDomainIndex());
-
-      if(it == itsRegisteredDomains.end())
-      {
-        // Artifact of the current implementation: equations are still being
-        // generated and send even if the solve domain has already
-        // converged. So, we'll just return a result with resultCode N_ReadyCode
-        // (i.e. already converged).
-        return new IterationResult(request->getDomainIndex(),
-                                   N_ReadyCode, "", vector<double>(), 0, -1.0, -1.0);
-      }
-
-      // Set the new normal equations.
-      Domain &domain = it->second;
-      domain.solver.merge(request->getNormalEquations());
-
-      // Get some statistics from the solver. Note that the chi squared is
-      // valid for the _previous_ iteration. The solver cannot compute the
-      // chi squared directly after an iteration, because it needs the new
-      // condition equations for that and these are computed by the kernel.
-      casa::uInt rank, nun, np, ncon, ner, *piv;
-      casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
-      domain.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
-                            piv, sEq, sol, prec, nonlin);
-      ASSERT(er && ner > SUMLL);
-
-      double lmFactor = nonlin;
-      double chiSquared = er[SUMLL] / std::max(er[NC] + nun, 1.0);
-
-      // Solve the normal equations.
-      domain.solver.solveLoop(rank, &(domain.unknowns[0]), true);
-
-      // Construct a result.
-      IterationResult *result = new IterationResult(domain.index,
-                                                    domain.solver.isReady(),
-                                                    domain.solver.readyText(),
-                                                    domain.unknowns,
-                                                    rank,
-                                                    chiSquared,
-                                                    lmFactor);
-
-      // If we're done with this domain, unregister it.
-      if(domain.solver.isReady() != NONREADY)
-      {
-        itsRegisteredDomains.erase(request->getDomainIndex());
-      }
-
-      return result;
-    }
-
-#endif /* 0 */
 
   } // namespace BBS
 

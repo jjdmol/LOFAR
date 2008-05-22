@@ -73,9 +73,7 @@ namespace LOFAR
     void SolveTask::handle(const KernelIdMsg &message)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      THROW (IllegalMessageException, message.type() << 
-             "' received from kernel (id=" << message.getKernelId() << 
-             ") while in " << showState() << " state");
+      error("Illegal", message);
     }
 
     void SolveTask::handle(const CoeffIndexMsg &message)
@@ -86,9 +84,7 @@ namespace LOFAR
 
       switch (itsState) {
       default:
-        THROW (IllegalMessageException, message.type() << 
-             " received from kernel (id=" << message.getKernelId() << 
-             ") while in " << showState() << " state");
+        error("Illegal", message);
         break;
 
       case IDLE:
@@ -98,9 +94,7 @@ namespace LOFAR
       case INDEXING:
         // Check to see whether this kernel has already sent a CoeffIndexMsg.
         if (!itsKernelMessageReceived.insert(message.getKernelId()).second) {
-          THROW (IllegalMessageException, 
-                 "Duplicate message " << message.type() << 
-                 " received from kernel (id=" << message.getKernelId() << ")");
+          error("Dpulicate", message);
         }
         // Set the coefficient index in the solver
         itsSolver.setCoeffIndex(message.getKernelId(), message.getContents());
@@ -129,17 +123,13 @@ namespace LOFAR
 
       switch (itsState) {
       default:
-      THROW (IllegalMessageException, message.type() << 
-             " received from kernel (id=" << message.getKernelId() << 
-             ") while in " << showState() << " state");
+        error("Illegal", message);
         break;
 
       case INITIALIZING:
         // Check to see whether this kernel has already sent a CoeffMsg.
         if (!itsKernelMessageReceived.insert(message.getKernelId()).second) {
-          THROW (IllegalMessageException, 
-                 "Duplicate message " << message.type() << 
-                 " received from kernel (id=" << message.getKernelId() << ")");
+          error("Duplicate", message);
         }
         // Set initial coefficients in the solver.
         itsSolver.setCoeff(message.getKernelId(), message.getContents());
@@ -160,17 +150,13 @@ namespace LOFAR
 
       switch (itsState) {
       default:
-      THROW (IllegalMessageException, message.type() << 
-             " received from kernel (id=" << message.getKernelId() << 
-             ") while in " << showState() << " state");
+        error("Illegal", message);
         break;
 
       case ITERATING:
         // Check to see whether this kernel has already sent a CoeffMsg.
         if (!itsKernelMessageReceived.insert(message.getKernelId()).second) {
-          THROW (IllegalMessageException, 
-                 "Duplicate message " << message.type() << 
-                 " received from kernel (id=" << message.getKernelId() << ")");
+          error("Duplicate", message);
         }
         // Set equations in the solver.
         itsSolver.setEquations(message.getKernelId(), message.getContents());
@@ -201,21 +187,17 @@ namespace LOFAR
 
       switch (itsState) {
       default:
-      THROW (IllegalMessageException, message.type() << 
-             " received from kernel (id=" << message.getKernelId() << 
-             ") while in " << showState() << " state");
+        error("Illegal", message);
         break;
 
       case INITIALIZING:
         // Check to see whether this kernel has already sent a ChunkDoneMsg.
         if (!itsKernelMessageReceived.insert(message.getKernelId()).second) {
-          THROW (IllegalMessageException, 
-                 "Duplicate message " << message.type() << 
-                 " received from kernel (id=" << message.getKernelId() << ")");
+          error("Duplicate", message);
         }
         if (itsKernelMessageReceived.size() == itsKernels.size()) {
           itsKernelMessageReceived.clear();
-          setState(IDLE);
+          setState(DONE);
         }
         break;
       }
@@ -243,6 +225,14 @@ namespace LOFAR
       };
       if (IDLE <= itsState && itsState < N_States) return states[itsState];
       else return states[N_States];
+    }
+
+
+    void SolveTask::error(const string& prefix, const KernelMessage& message)
+    {
+      THROW (SolveTaskException, prefix << " message " << message.type() << 
+             " received from kernel (id=" << message.getKernelId() <<
+             ") while in " << showState() << " state");
     }
 
   } //# namespace BBS

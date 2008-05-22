@@ -511,7 +511,7 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
     for(uint block = 0; block < nBlocks; ++block)
     {
         // Move to next block.
-        endCell.second = min(startCell.second + blockSize - 1,
+      endCell.second = std::min(startCell.second + blockSize - 1,
             chunkEndCell.second - 1);
 
         itsKernel->getCoeff(startCell, endCell, coeff);
@@ -567,7 +567,7 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
                 cout << "GET: " << f << "," << endCell.second << endl;
                 cout << "COEFF: " << initialValues << endl;
                 for(size_t t = chunkStartCell.second + (block + 1) * blockSize;
-                    t < min(chunkEndCell.second,
+                    t < std::min(chunkEndCell.second,
                             chunkStartCell.second + (block + 2) * blockSize);
                     ++t)
                 {
@@ -685,7 +685,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     for(uint block = 0; block < nBlocks; ++block)
     {
         // Move to next block.
-        endCell.second = min(startCell.second + blockSize - 1,
+      endCell.second = std::min(startCell.second + blockSize - 1,
             chunkEndCell.second - 1);
 
         CoeffMsg kernelCoeffMsg(itsKernelId);
@@ -759,7 +759,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
                 cout << "GET: " << f << "," << endCell.second << endl;
                 cout << "COEFF: " << initialValues << endl;
                 for(size_t t = chunkStartCell.second + (block + 1) * blockSize;
-                    t < min(chunkEndCell.second,
+                    t < std::min(chunkEndCell.second,
                             chunkStartCell.second + (block + 2) * blockSize);
                     ++t)
                 {
