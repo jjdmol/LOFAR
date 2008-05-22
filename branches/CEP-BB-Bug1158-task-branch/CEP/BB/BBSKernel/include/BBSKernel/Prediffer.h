@@ -124,8 +124,11 @@ public:
 
     bool setCellGrid(const Grid &cellGrid);
 
-    void getCoeffIndex(CoeffIndex &local) const;
+    const CoeffIndex &getCoeffIndex() const;
     void setCoeffIndex(const CoeffIndex &global);
+
+    void getCoeff(const Location &cell, vector<double> &coeff) const;
+    void setCoeff(const Location &cell, const vector<double> &coeff);
 
     void getCoeff(Location start, Location end, vector<CellCoeff> &local) const;
     void setCoeff(const vector<CellSolution> &global);
@@ -256,6 +259,7 @@ private:
     //# TODO: Remove this.
     //# Phase reference position in J2000 coordinates.
     MeqPhaseRef                         itsPhaseRef;
+    casa::MPosition                     itsDebugPos;
 };
 
 // @}

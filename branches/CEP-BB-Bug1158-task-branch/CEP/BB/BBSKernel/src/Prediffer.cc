@@ -132,6 +132,8 @@ Prediffer::Prediffer(Measurement::Pointer measurement,
     itsModel.reset(new Model(itsMeasurement->getInstrument(), itsParameters,
         &itsSkyDb, &itsPhaseRef));
 
+    LOG_DEBUG_STR("DebugPos: " << itsDebugPos);
+
     // Allocate thread private buffers.
 #if defined _OPENMP
     LOG_INFO_STR("Number of threads: " << omp_get_max_threads());
@@ -596,10 +598,10 @@ void Prediffer::clearParameterSelection()
 }
 
 
-void Prediffer::getCoeffIndex(CoeffIndex &local) const
+const CoeffIndex &Prediffer::getCoeffIndex() const
 {
     DBGASSERT(itsOperation == CONSTRUCT);
-    local = itsCoeffIndex;
+    return itsCoeffIndex;
 }
 
 
@@ -621,16 +623,55 @@ void Prediffer::setCoeffIndex(const CoeffIndex &global)
 }
 
 
+void Prediffer::getCoeff(const Location &cell, vector<double> &coeff) const
+{
+    // Check preconditions.
+    ASSERT(itsOperation == CONSTRUCT);
+    ASSERT(cell.first >= itsStartCell.first && cell.first < itsEndCell.first);
+    ASSERT(cell.second >= itsStartCell.second
+        && cell.second < itsEndCell.second);
+
+    // Get local cell id.
+    const size_t localId = (cell.second - itsStartCell.second)
+        * (itsEndCell.first - itsStartCell.first)
+        + (cell.first - itsStartCell.first);
+
+    // Copy the coefficient values for every selected parameter.
+    coeff.reserve(itsCoeffIndex.getCoeffCount());
+    for(size_t i = 0; i < itsParameterSelection.size(); ++i)
+    {
+        const MeqPExpr &parm = itsParameterSelection[i];
+        ASSERT(localId < parm.getFunklets().size());
+
+        const MeqFunklet *funklet = parm.getFunklets()[localId];
+        const MeqMatrix &funkCoeff = funklet->getCoeff();
+        const double *funkCoeffValues = funkCoeff.doubleStorage();
+        const vector<bool> &funkCoeffMask = funklet->getSolvMask();
+        
+        for(size_t j = 0; j < static_cast<size_t>(funkCoeff.nelements()); ++j)
+        {
+            if(funkCoeffMask[j])
+            {
+                coeff.push_back(funkCoeffValues[j]);
+            }
+        }
+    }
+}
+
+
 void Prediffer::getCoeff(Location start, Location end, vector<CellCoeff> &local)
     const
 {    
-    DBGASSERT(itsOperation == CONSTRUCT);
+    ASSERT(itsOperation == CONSTRUCT);
+
+    LOG_DEBUG_STR("Request coeff for [(" << start.first << "," << start.second
+        << "),(" << end.first << "," << end.second << "))");
 
     // Check preconditions.
-    DBGASSERT(start.first <= end.first && start.second <= end.second);
-    DBGASSERT(start.first < itsEndCell.first
+    ASSERT(start.first <= end.first && start.second <= end.second);
+    ASSERT(start.first < itsEndCell.first
         && end.first >= itsStartCell.first);
-    DBGASSERT(start.second < itsEndCell.second
+    ASSERT(start.second < itsEndCell.second
         && end.second >= itsStartCell.second);
 
     // Clip against chunk.
@@ -638,6 +679,9 @@ void Prediffer::getCoeff(Location start, Location end, vector<CellCoeff> &local)
     start.second = max(start.second, itsStartCell.second);
     end.first = min(end.first, itsEndCell.first - 1);
     end.second = min(end.second, itsEndCell.second - 1);
+    
+    LOG_DEBUG_STR("Getting coeff for [(" << start.first << "," << start.second
+        << "),(" << end.first << "," << end.second << "))");
 
     size_t nCells = (end.first - start.first + 1)
         * (end.second - start.second + 1);
@@ -646,51 +690,45 @@ void Prediffer::getCoeff(Location start, Location end, vector<CellCoeff> &local)
 
     // Loop over all requested cells and copy the coefficient values for
     // each parameter.
+    Location cell;
     size_t idx = 0;
-    Location globalLoc;
-    for(globalLoc.second = start.second; globalLoc.second <= end.second;
-        ++globalLoc.second)
+    for(cell.second = start.second; cell.second <= end.second; ++cell.second)
     {
-        for(globalLoc.first = start.first; globalLoc.first <= end.first;
-            ++globalLoc.first)
+        for(cell.first = start.first; cell.first <= end.first; ++cell.first)
         {
             // Get global cell id.
-            const uint32 globalId = itsCellGrid.getCellId(globalLoc);
-            local[idx].id = globalId;
-
-            // Get local cell id.
-            const size_t localId = (globalLoc.second - itsStartCell.second)
-                * itsFreqIntervals.size()
-                + (globalLoc.first - itsStartCell.first);
-        
-            // Copy the coefficient values for every parameter for the
-            // current cell.
-            for(size_t i = 0; i < itsParameterSelection.size(); ++i)
-            {
-                const MeqPExpr &parm = itsParameterSelection[i];
-                DBGASSERT(localId < parm.getFunklets().size());
-
-                const MeqFunklet *funklet = parm.getFunklets()[localId];
-                const MeqMatrix &coeff = funklet->getCoeff();
-                const double *coeffValues = coeff.doubleStorage();
-                const vector<bool> &mask = funklet->getSolvMask();
-                
-                local[idx].coeff.reserve(funklet->nscid());
-                for(size_t j = 0; j < static_cast<size_t>(coeff.nelements());
-                    ++j)
-                {
-                    if(mask[j])
-                    {
-                        local[idx].coeff.push_back(coeffValues[j]);
-                    }
-                }
-            }
+            local[idx] = CellCoeff(itsCellGrid.getCellId(cell));
+            
+            // Get coefficients.
+            getCoeff(cell, local[idx].coeff);
 
             // Move to next cell.
             ++idx;
-        }            
+        }
     }
 }    
+
+
+void Prediffer::setCoeff(const Location &cell, const vector<double> &coeff)
+{
+    // Check preconditions.
+    ASSERT(itsOperation == CONSTRUCT);
+    ASSERT(cell.first >= itsStartCell.first && cell.first < itsEndCell.first);
+    ASSERT(cell.second >= itsStartCell.second
+        && cell.second < itsEndCell.second);
+
+    // Get local cell id.
+    const size_t localId = (cell.second - itsStartCell.second)
+        * (itsEndCell.first - itsStartCell.first)
+        + (cell.first - itsStartCell.first);
+    LOG_DEBUG_STR("Local cell id: " << localId);
+
+    for(size_t j = 0; j < itsParameterSelection.size(); ++j)
+    {
+        MeqPExpr &parm = itsParameterSelection[j];
+        parm.update(localId, coeff, itsCoeffMapping[j].start);
+    }
+}
 
 
 void Prediffer::setCoeff(const vector<CellSolution> &global)
@@ -699,26 +737,19 @@ void Prediffer::setCoeff(const vector<CellSolution> &global)
 
     for(size_t i = 0; i < global.size(); ++i)
     {
-        const CellSolution &cell = global[i];
+        const CellSolution &solution = global[i];
 
-        Location cellLoc = itsCellGrid.getCellLocation(cell.id);
-        if(cellLoc.first >= itsEndCell.first
-            || cellLoc.first < itsStartCell.first
-            || cellLoc.second >= itsEndCell.second
-            || cellLoc.second < itsStartCell.second)
+        // Skip solutions for cells outside the chunk.
+        Location cell = itsCellGrid.getCellLocation(solution.id);
+        if(cell.first >= itsEndCell.first
+            || cell.first < itsStartCell.first
+            || cell.second >= itsEndCell.second
+            || cell.second < itsStartCell.second)
         {
             continue;
         }            
         
-        const size_t localCellId = (cellLoc.second - itsStartCell.second)
-            * itsFreqIntervals.size() + (cellLoc.first - itsStartCell.first);
-        LOG_DEBUG_STR("Local cell id: " << localCellId);
-
-        for(size_t j = 0; j < itsParameterSelection.size(); ++j)
-        {
-            MeqPExpr &parm = itsParameterSelection[j];
-            parm.update(localCellId, cell.coeff, itsCoeffMapping[j].start);
-        }
+        setCoeff(cell, solution.coeff);
     }
 }
 

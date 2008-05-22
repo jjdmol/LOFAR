@@ -35,22 +35,14 @@ namespace BBS
     class Solver
     {
     public:
-        Solver()
-            :   itsEpsValue(1e-9),
-                itsEpsDerivative(1e-9),
-                itsMaxIter(10),
-                itsColFactor(1e-9),
-                itsLmFactor(1.0),
-                itsBalanced(false),
-                itsUseSvd(true)
-        {}
+        Solver();
 
         void reset(double epsValue = 1e-9, double epsDerivative = 1e-9,
             size_t maxIter = 10, double colFactor = 1e-9, double lmFactor = 1.0,
             bool balanced = false, bool useSvd = true);
 
         void setCoeffIndex(uint32 kernelId, const CoeffIndex &local);
-        void getCoeffIndex(CoeffIndex &global) const;
+        const CoeffIndex &getCoeffIndex() const;
 
         void setCoeff(uint32 kernelId, const vector<CellCoeff> &local);
 

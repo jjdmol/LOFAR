@@ -48,6 +48,12 @@ namespace BBS
 {
 using LOFAR::operator<<;
 
+Solver::Solver()
+{
+    reset();
+}
+
+
 void Solver::reset(double epsValue, double epsDerivative, size_t maxIter,
     double colFactor, double lmFactor, bool balanced, bool useSvd)
 {
@@ -84,9 +90,9 @@ void Solver::setCoeffIndex(uint32 kernelId, const CoeffIndex &local)
 }    
 
 
-void Solver::getCoeffIndex(CoeffIndex &global) const
+const CoeffIndex &Solver::getCoeffIndex() const
 {
-    global = itsCoeffIndex;
+    return itsCoeffIndex;
 }
 
 
@@ -170,6 +176,9 @@ void Solver::getEquations(vector<CellEquation> &global)
 
 bool Solver::iterate(vector<CellSolution> &global)
 {
+    // Empty the solution vector.
+    global.clear();
+
     bool done = true;
     map<uint32, Cell>::iterator it = itsCells.begin();
     while(it != itsCells.end())
