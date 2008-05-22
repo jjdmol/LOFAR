@@ -99,7 +99,7 @@ CREATE TABLE PICkvt (
 	value		TEXT			NOT NULL,
 	time		TIMESTAMP		DEFAULT now(),
 
-	CONSTRAINT	pickvt_uniq		UNIQUE(paramID, timestamp)
+	CONSTRAINT	pickvt_uniq		UNIQUE(paramID, time)
 ) WITHOUT OIDS;
 
 CREATE INDEX PIC_kvt_id   ON PICkvt(paramID);
