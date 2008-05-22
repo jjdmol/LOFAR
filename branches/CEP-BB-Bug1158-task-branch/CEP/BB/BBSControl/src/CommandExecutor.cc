@@ -56,6 +56,11 @@
 #include <BBSControl/StreamUtil.h>
 #include <Common/Timer.h>
 
+#ifdef LOG_SOLVE_DOMAIN_STATS
+#include <Common/lofar_sstream.h>
+#include <Common/lofar_iomanip.h>
+#endif
+
 #if 0
 #define NONREADY        casa::LSQFit::NONREADY
 #define SOLINCREMENT    casa::LSQFit::SOLINCREMENT
@@ -393,470 +398,19 @@ void CommandExecutor::visit(const SolveStep &command)
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
     LOG_DEBUG("Handling a SolveStep");
     LOG_DEBUG_STR("Command: " << endl << command);
-
-    ASSERTSTR(itsKernel, "No kernel available.");
-    ASSERTSTR(itsSolver, "No global solver available.");
-
-    // Set visibility selection.
-    if(!itsKernel->setSelection(command.correlation().selection,
-        command.baselines().station1, command.baselines().station2,
-        command.correlation().type))
-    {        
-        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
-            " selection.");
-        return;
-    }        
-        
-    // Initialize model.
-    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
-        command.sources());
-
-    itsKernel->setParameterSelection(command.parms(), command.exclParms());
     
-    // Construct solution grid.
-    pair<size_t, size_t> cellSize(command.domainSize().bandWidth,
-        command.domainSize().timeInterval);
-
-    // Get measurement dimensions.
-    const VisDimensions &dims = itsMeasurement->getDimensions();
-
-    // Construct frequency axis.
-    Axis::Pointer faxis = dims.getFreqAxis();
-    LOG_DEBUG_STR("Frequency axis: " << faxis->size() << " channels.");
+    LOG_DEBUG_STR("Solve type: " << (command.kernelGroups().empty() ? "LOCAL" 
+        : "GLOBAL"));
+    LOG_DEBUG_STR("Kernel ID: " << itsKernelId);
     
-    if(cellSize.first == 0)
+    if(command.kernelGroups().empty())
     {
-        // If cell size in frequency is specified as 0, take all channels as
-        // a single cell.
-        cellSize.first = faxis->size();
+        handleLocalSolve(command);
     }
-
-    ASSERT(faxis->size() % cellSize.first == 0);
-//    if(faxis->size() % cellSize.first == 0)
-//    {
-//    LOG_DEBUG_STR("Frequency axis: regular");
-    const pair<double, double> range = faxis->range();
-    const size_t count = faxis->size() / cellSize.first;
-    const double delta = (range.second - range.first) / count;
-
-    faxis.reset(new RegularAxis(range.first, delta, count));
-//    }
-/*
     else
     {
-        size_t i = 0;
-        vector<double> fborders;
-
-        while(i < faxis->size())
-        {
-            fborders.push_back(faxis->lower(i));
-            i += cellSize.first;
-        }        
-        fborders.push_back(faxis->range().second);
-        
-        faxis.reset(new IrregularAxis<double>(fborders));
-    }        
-*/
-
-    // Construct time axis.
-    Axis::Pointer taxis = dims.getTimeAxis();
-
-    size_t i = 0;
-    vector<double> tcenters;
-    vector<double> twidths;
-    while(i < taxis->size())
-    {
-        tcenters.push_back(taxis->center(i));
-        twidths.push_back(taxis->width(i));
-        i += cellSize.second;
-    }        
-    taxis.reset(new IrregularAxis(tcenters, twidths));
-
-    // Set solution grid.
-    Grid grid(faxis, taxis);
-    itsKernel->setCellGrid(grid);
-    
-    CoeffIndexMsg msg(itsKernelId);
-    itsKernel->getCoeffIndex(msg.getContents());
-    itsSolver->sendObject(msg);
-
-/*
-    
-    const Grid<double> &chunkGrid = itsChunk->getDimensions().getGrid();
-    Box<double> bbox = chunkGrid.getBoundingBox() & grid.getBoundingBox();
-    ASSERT(!bbox.empty());
-
-    // Find the first and last solution cell that intersect the current chunk.
-    Location chunkStart = grid.locate(bbox.start);
-    Location chunkEnd = grid.locate(bbox.end);
-
-    LOG_DEBUG_STR("Cells in chunk: [(" << chunkStart.first << ","
-        << chunkStart.second << "), (" << chunkEnd.first << ","
-        << chunkEnd.second << "))");
-        
-    Solver solver;
-    solver.reset(1e-9, 1e-9, command.solverOptions().maxIter);
-
-    // Exchange coefficient index.
-    CoeffIndex coeffIndex;
-    itsKernel->getCoeffIndex(coeffIndex);
-    solver.setCoeffIndex(itsKernelId, coeffIndex);
-
-    solver.getCoeffIndex(coeffIndex);
-    itsKernel->setCoeffIndex(coeffIndex);
-    
-    vector<CellSolution> sol;
-    for(size_t ts = chunkStart.second; ts < chunkEnd.second; ++ts)
-    {
-        Location start(chunkStart.first, ts);
-        Location end(chunkEnd.first, ts);
-        
-        if(!sol.empty())
-        {
-//            LOG_DEBUG("COPYING SOLUTIONS");
-            size_t idx = 0;
-            Location loc(start.first, start.second);
-            for(loc.first = start.first; loc.first < end.first; ++loc.first)
-            {
-//                LOG_DEBUG_STR("Copy [" << cellSol[idx].id << "] -> ["
-//                    << grid.getCellId(loc) << "] Coefficients: "
-//                    << cellSol[idx].coeff);
-                sol[idx++].id = grid.getCellId(loc);
-            }
-
-            itsKernel->setCoeff(sol);
-        }
-
-        vector<CellCoeff> coeff;
-        itsKernel->getCoeff(start, end, coeff);
-        
-//        LOG_DEBUG("INITIALIZING SOLUTION CELL");
-//        for(size_t i = 0; i < msg->getContents().size(); ++i)
-//        {
-//            LOG_DEBUG_STR("[" << msg->getContents()[i].id << "] Coefficients: "
-//                << setprecision(20) << msg->getContents()[i].coeff);
-//        }
-
-        solver.setCoeff(itsKernelId, coeff);
-
-        bool done = false;
-        while(!done)
-        {
-            vector<CellEquation> equations;
-            itsKernel->construct(start, end, equations);
-            solver.setEquations(itsKernelId, equations);
-
-            vector<CellSolution> tmp;
-            done = solver.iterate(tmp);
-
-            if(!done)
-            {
-                sol = tmp;
-    
-                LOG_DEBUG_STR("#Solutions: " << sol.size());
-                for(size_t i = 0; i < sol.size(); ++i)
-                {
-                    LOG_DEBUG_STR("[" << sol[i].id << "] Result: "
-                        << sol[i].resultText
-                        << " ChiSqr: " << sol[i].chiSqr << " lmFactor: "
-                        << sol[i].lmFactor);
-//                    LOG_DEBUG_STR("[" << cells[i].id << "] Coefficients: "
-//                        << setprecision(20) << cells[i].coeff);
-                }
-
-                itsKernel->setCoeff(sol);
-            }                
-        }
+        handleGlobalSolve(command);
     }
-
-    itsKernel->storeParameterValues();
-*/    
-/*
-    NSTimer timer;
-
-    // Construct context.
-    GenerateContext context;
-    context.baselines = command.baselines();
-    context.correlation = command.correlation();
-    context.sources = command.sources();
-    context.instrumentModel = command.instrumentModels();
-    context.unknowns = command.parms();
-    context.excludedUnknowns = command.exclParms();
-//    if(command.domainSize().bandWidth != 0)
-//    {
-//        LOG_WARN_STR("Subdivision in frequency not yet implemented; setting"
-//            " will be ignored.");
-//    }
-    context.domainSize = pair<size_t, size_t>(command.domainSize().bandWidth,
-        command.domainSize().timeInterval);
-
-    // Set context.
-    if(!itsKernel->setContext(context))
-    {
-        itsResult = CommandResult(CommandResult::ERROR, "Could not set"
-            " context.");
-        return;
-    }
-
-    // Get unknowns.
-    const vector<vector<double> > &domainUnknowns = itsKernel->getUnknowns();
-
-    // Get solve domain grid size.
-    pair<size_t, size_t> gridSize = itsKernel->getSolveDomainGridSize();
-
-    size_t blockSize = 1;
-    size_t blockCount =
-        ceil(gridSize.second / static_cast<double>(blockSize));
-
-    vector<casa::LSQFit> solvers(gridSize.first * blockSize);
-    vector<vector<double> > border(gridSize.first);
-    for(size_t i = 0; i < gridSize.first; ++i)
-    {
-        border[i] = domainUnknowns[i];
-    }
-
-    size_t convergedTotal = 0, stoppedTotal = 0;
-    for(size_t block = 0; block < blockCount; ++block)
-    {
-        pair<size_t, size_t> frange(0, gridSize.first - 1);
-        pair<size_t, size_t> trange(block * blockSize,
-            (block + 1) * blockSize - 1);
-
-        if(trange.second >= gridSize.second)
-        {
-            trange.second = gridSize.second - 1;
-        }
-
-        pair<size_t, size_t> drange(
-            trange.first * gridSize.first + frange.first,
-            trange.second * gridSize.first + frange.second);
-        size_t nDomains = drange.second - drange.first + 1;
-
-        LOG_DEBUG_STR("frange: [" << frange.first << ", " << frange.second
-            << "]");
-        LOG_DEBUG_STR("trange: [" << trange.first << ", " << trange.second
-            << "]");
-        LOG_DEBUG_STR("drange: [" << drange.first << ", " << drange.second
-            << "]");
-
-        LOG_DEBUG_STR("Processing domain(s) " << drange.first << " - "
-            << drange.second << " (" << domainUnknowns.size()
-            << " domain(s) in total)");
-
-        LOG_DEBUG_STR("Initial values: ");
-        for(size_t i = drange.first; i <= drange.second; ++i)
-        {
-            size_t idx = (i - drange.first) % gridSize.first;
-            LOG_DEBUG_STR("Domain " << i << " Index " << idx << ": "
-                << border[idx]);
-        }
-
-        // Register all solve domains with the solver.
-        BlobStreamableVector<DomainRegistrationRequest> request;
-        for(size_t i = drange.first; i <= drange.second; ++i)
-        {
-            size_t idx = (i - drange.first) % gridSize.first;
-            itsKernel->updateUnknowns(i, border[idx]);
-            request.getVector().push_back(new DomainRegistrationRequest(i,
-                border[idx],
-                command.maxIter(),
-                command.epsilon()));
-        }
-        itsSolverConnection->sendObject(request);
-
-        // Main iteration loop.
-        bool finished = false;
-        size_t iteration = 1, converged = 0, stopped = 0;
-        while(!finished)
-        {
-            LOG_DEBUG_STR("[START] Iteration: " << iteration);
-            LOG_DEBUG_STR("[START] Generating normal equations...");
-            timer.reset();
-            timer.start();
-
-            // Generate normal equations.
-            itsKernel->generate(make_pair(frange.first, trange.first),
-                make_pair(frange.second, trange.second), solvers);
-
-            timer.stop();
-            LOG_DEBUG_STR("[ END ] Generating normal equations; " << timer);
-
-
-            LOG_DEBUG_STR("[START] Sending equations to solver and waiting"
-                " for results...");
-            timer.reset();
-            timer.start();
-
-            // Send iteration requests to the solver in one go.
-            BlobStreamableVector<IterationRequest> iterationRequests;
-            for(size_t i = 0; i < nDomains; ++i)
-            {
-                iterationRequests.getVector().push_back(
-                    new IterationRequest(drange.first + i,
-                        solvers[i]));
-            }
-            itsSolverConnection->sendObject(iterationRequests);
-
-            BlobStreamableVector<IterationResult> *resultv =
-                dynamic_cast<BlobStreamableVector<IterationResult>*>(
-                    itsSolverConnection->recvObject());
-
-            ASSERT(resultv);
-
-            timer.stop();
-            LOG_DEBUG_STR("[ END ] Sending/waiting; " << timer);
-
-            LOG_DEBUG_STR("[START] Processing results...");
-            timer.reset();
-            timer.start();
-
-            const vector<IterationResult*> &results = resultv->getVector();
-
-            // For each solve domain:
-            //     - check for convergence
-            //     - update cached values of the unknowns
-            converged = stopped = 0;
-            for(size_t i = 0; i < results.size(); ++i)
-            {
-                const IterationResult *result = results[i];
-                size_t resultCode = result->getResultCode();
-
-                if(resultCode == NONREADY)
-                {
-                    // Update cached values of the unknowns.
-                    itsKernel->updateUnknowns(result->getDomainIndex(),
-                        result->getUnknowns());
-
-                    // Log the updated unknowns.
-                    itsKernel->logIteration(
-                        command.name(),
-                        startDomain + i,
-                        result->getRank(),
-                        result->getChiSquared(),
-                        result->getLMFactor());
-
-#ifdef LOG_SOLVE_DOMAIN_STATS
-                    LOG_DEBUG_STR("Domain: " << result->getDomainIndex()
-                        << ", Rank: " << result->getRank()
-                        << ", Chi^2: " << result->getChiSquared()
-                        << ", LM factor: " << result->getLMFactor()
-                        << ", Message: " << result->getResultText());
-#endif
-                }
-                else if(resultCode == SOLINCREMENT
-                        || resultCode == DERIVLEVEL
-                        || resultCode == N_ReadyCode)
-                {
-                    converged++;
-                }
-                else
-                {
-                    stopped++;
-                }
-            }
-
-            // Update border.
-            for(size_t i = (blockSize - 1) * gridSize.first;
-                i <= (blockSize) * gridSize.first - 1;
-                ++i)
-            {
-                size_t idx = i % gridSize.first;
-
-                if(results[i]->getResultCode() == NONREADY)
-                {
-                    // Save solution of last solve domain in this block.
-                    border[idx] = results[i]->getUnknowns();
-                }
-            }
-            delete resultv;
-
-            timer.stop();
-            LOG_DEBUG_STR("[ END ] Processing results; " << timer);
-            LOG_DEBUG_STR("[ END ] Iteration: " << iteration);
-
-            ostringstream oss;
-            oss << "Block statistics: " << endl;
-            oss << "    converged: " << converged << "/" << nDomains
-                << " (" << (((double) converged) / nDomains * 100.0) << "%)"
-                << endl;
-            oss << "    stopped  : " << stopped << "/" << nDomains
-                << " (" << (((double) stopped) / nDomains * 100.0) << "%)";
-            LOG_DEBUG(oss.str());
-            //finished = (converged + stopped ==
-            // context.solveDomains.size()) || (converged>=
-            //(command.minConverged() *
-            //context.solveDomains.size()) / 100.0);
-
-            finished = ((converged + stopped) == nDomains);
-//                || (iteration == command.maxIter());
-            iteration++;
-        }
-
-        convergedTotal += converged;
-        stoppedTotal += stopped;
-
-        ostringstream oss;
-        oss << "Global statistics: " << endl;
-        oss << "    converged: " << convergedTotal << "/"
-            << domainUnknowns.size() << " ("
-            << (((double) convergedTotal) / domainUnknowns.size() * 100.0)
-            << "%)" << endl;
-        oss << "    stopped  : " << stoppedTotal << "/"
-            << domainUnknowns.size() << " ("
-            << (((double) stoppedTotal) / domainUnknowns.size() * 100.0)
-            << "%)";
-        LOG_DEBUG(oss.str());
-
-        LOG_DEBUG_STR("[START] Writing solutions into parameter"
-            " databases...");
-        timer.reset();
-        timer.start();
-
-        NSTimer write_timer, unlock_timer;
-        itsKernel->lock();
-        for(size_t i = drange.first; i <= drange.second; ++i)
-        {
-            write_timer.start();
-            itsKernel->writeParms(i);
-            write_timer.stop();
-        }
-        unlock_timer.start();
-        itsKernel->unlock();
-        unlock_timer.stop();
-
-        LOG_DEBUG_STR("write timer: " << write_timer);
-        LOG_DEBUG_STR("unlock timer: " << unlock_timer);
-
-        timer.stop();
-        LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
-    }
-
-    LOG_DEBUG_STR("[START] Writing solutions into parameter"
-        " databases...");
-    timer.reset();
-    timer.start();
-
-    NSTimer write_timer, unlock_timer;
-    itsKernel->lock();
-    itsKernel->writeParms();
-
-    unlock_timer.start();
-    itsKernel->unlock();
-    unlock_timer.stop();
-
-    LOG_DEBUG_STR("write timer: " << write_timer);
-    LOG_DEBUG_STR("unlock timer: " << unlock_timer);
-
-    timer.stop();
-    LOG_DEBUG_STR("[ END ] Writing solutions; " << timer);
-
-    static int count(0);
-    LOG_INFO_STR("Sending CoeffIndexMsg(" << count << ")");
-    itsSolverConnection->sendObject(CoeffIndexMsg(count));
-    count++;
-*/
-
-    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -876,6 +430,355 @@ void CommandExecutor::visit(const RefitStep &command)
 
     itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
+
+
+void CommandExecutor::handleLocalSolve(const SolveStep &command)
+{
+    ASSERTSTR(itsKernel, "No kernel available.");
+
+    // Set visibility selection.
+    if(!itsKernel->setSelection(command.correlation().selection,
+        command.baselines().station1, command.baselines().station2,
+        command.correlation().type))
+    {        
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
+        return;
+    }        
+        
+    // Initialize model.
+    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
+        command.sources());
+
+    itsKernel->setParameterSelection(command.parms(), command.exclParms());
+    
+    // Get measurement dimensions.
+    const VisDimensions &dims = itsMeasurement->getDimensions();
+
+    // Construct solution cell grid.
+    Axis::Pointer freqAxis(dims.getFreqAxis());
+    if(command.domainSize().bandWidth > 1)
+    {
+        freqAxis = freqAxis->compress(static_cast<size_t>(command.domainSize().bandWidth));
+    }
+
+    Axis::Pointer timeAxis = dims.getTimeAxis();
+    if(command.domainSize().timeInterval > 1)
+    {
+        timeAxis = timeAxis->compress(static_cast<size_t>(command.domainSize().timeInterval));
+    }
+
+    Grid cellGrid(freqAxis, timeAxis);
+
+    // Set solution cell grid.
+    itsKernel->setCellGrid(cellGrid);
+    
+    // Find cells to process.
+    const Grid &visGrid = itsChunk->getDimensions().getGrid();
+    Box bbox = visGrid.getBoundingBox() & cellGrid.getBoundingBox();
+    ASSERT(!bbox.empty());
+
+    Location chunkStartCell = cellGrid.locate(bbox.start);
+    Location chunkEndCell = cellGrid.locate(bbox.end);
+
+    LOG_DEBUG_STR("Cells in chunk: [(" << chunkStartCell.first << ","
+        << chunkStartCell.second << "), (" << chunkEndCell.first << ","
+        << chunkEndCell.second << "))");
+    
+    // TODO: Create parameter set keys for this.
+    bool copyCoeff = true;
+    uint blockSize = 2;
+
+    uint nBlocks =
+        static_cast<uint>(ceil(static_cast<double>(chunkEndCell.second
+            - chunkStartCell.second) / blockSize));
+
+    Solver solver;
+    solver.setCoeffIndex(0, itsKernel->getCoeffIndex());
+    itsKernel->setCoeffIndex(solver.getCoeffIndex());
+    
+    vector<CellCoeff> coeff;
+    vector<CellEquation> equations;
+    vector<CellSolution> solutions;
+    
+#ifdef LOG_SOLVE_DOMAIN_STATS
+    uint nCells = (chunkEndCell.first - chunkStartCell.first)
+        * (chunkEndCell.second - chunkStartCell.second);
+    uint nConverged = 0, nStopped = 0;
+#endif
+
+    Location startCell(chunkStartCell), endCell(chunkEndCell);
+    for(uint block = 0; block < nBlocks; ++block)
+    {
+        // Move to next block.
+        endCell.second = min(startCell.second + blockSize - 1,
+            chunkEndCell.second - 1);
+
+        itsKernel->getCoeff(startCell, endCell, coeff);
+        solver.setCoeff(0, coeff);
+
+        bool done = false;
+        while(!done)
+        {
+            itsKernel->construct(startCell, endCell, equations);
+            solver.setEquations(0, equations);
+            done = solver.iterate(solutions);
+            
+#ifdef LOG_SOLVE_DOMAIN_STATS
+            ostringstream oss;
+            oss << "Solver statistics:";
+            for(size_t i = 0; i < solutions.size(); ++i)
+            {
+                oss << " [" << solutions[i].id << "] " << solutions[i].rank
+                << " " << solutions[i].chiSqr;
+                
+                if(solutions[i].result == SOLINCREMENT
+                    || solutions[i].result == DERIVLEVEL)
+                {
+                    nConverged++;
+                }
+                else if(solutions[i].result != NONREADY)
+                {
+                    nStopped++;
+                }
+            }
+            LOG_DEBUG(oss.str());
+#endif            
+            
+            itsKernel->setCoeff(solutions);
+        }
+
+#ifdef LOG_SOLVE_DOMAIN_STATS
+            LOG_DEBUG_STR("" << setw(3) << nConverged / nCells * 100.0
+                << "% converged, " << setw(3) << nStopped / nCells * 100.0
+                << "% stopped.");
+#endif
+                
+        // Copy initial values.
+        if(copyCoeff)
+        {
+            Location cell;
+            vector<double> initialValues;
+            
+            for(size_t f = startCell.first; f < endCell.first; ++f)
+            {
+                itsKernel->getCoeff(Location(f, endCell.second), initialValues);
+
+                cout << "GET: " << f << "," << endCell.second << endl;
+                cout << "COEFF: " << initialValues << endl;
+                for(size_t t = chunkStartCell.second + (block + 1) * blockSize;
+                    t < min(chunkEndCell.second,
+                            chunkStartCell.second + (block + 2) * blockSize);
+                    ++t)
+                {
+                    cout << "SET: " << f << "," << t << endl;
+                    itsKernel->setCoeff(Location(f, t), initialValues);
+                }
+            }
+        }                
+
+        startCell.second += blockSize;
+    }
+
+    itsKernel->storeParameterValues();
+
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
+}
+
+
+void CommandExecutor::handleGlobalSolve(const SolveStep &command)
+{
+    ASSERTSTR(itsKernel, "No kernel available.");
+    ASSERTSTR(itsSolver, "No global solver available.");
+
+    // Set visibility selection.
+    if(!itsKernel->setSelection(command.correlation().selection,
+        command.baselines().station1, command.baselines().station2,
+        command.correlation().type))
+    {        
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
+        return;
+    }        
+        
+    // Initialize model.
+    itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
+        command.sources());
+
+    itsKernel->setParameterSelection(command.parms(), command.exclParms());
+    
+    // Get measurement dimensions.
+    const VisDimensions &dims = itsMeasurement->getDimensions();
+
+    // Construct solution cell grid.
+    vector<uint32> groupEnd = command.kernelGroups();    
+    partial_sum(groupEnd.begin(), groupEnd.end(), groupEnd.begin());
+
+    const size_t groupId = lower_bound(groupEnd.begin(), groupEnd.end(),
+        itsKernelId) - groupEnd.begin();    
+    ASSERT(groupId < groupEnd.size());
+    
+    LOG_DEBUG_STR("Group id: " << groupId);
+    
+    double freqBegin = itsMetaMeasurement.getFreqRange(groupId > 0
+        ? groupEnd[groupId - 1] : 0).first;
+    double freqEnd =
+        itsMetaMeasurement.getFreqRange(groupEnd[groupId] - 1).second;
+        
+    LOG_DEBUG_STR("Group freq range: " << freqBegin << " - " << freqEnd);
+    Axis::Pointer freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin, 1));
+
+    Axis::Pointer timeAxis = dims.getTimeAxis();
+    if(command.domainSize().timeInterval > 1)
+    {
+        timeAxis = timeAxis->compress(static_cast<size_t>(command.domainSize().timeInterval));
+    }
+
+    Grid cellGrid(freqAxis, timeAxis);
+
+    // Set solution cell grid.
+    itsKernel->setCellGrid(cellGrid);
+    
+    // Find cells to process.
+    const Grid &visGrid = itsChunk->getDimensions().getGrid();
+    Box bbox = visGrid.getBoundingBox() & cellGrid.getBoundingBox();
+    ASSERT(!bbox.empty());
+
+    Location chunkStartCell = cellGrid.locate(bbox.start);
+    Location chunkEndCell = cellGrid.locate(bbox.end);
+
+    LOG_DEBUG_STR("Cells in chunk: [(" << chunkStartCell.first << ","
+        << chunkStartCell.second << "), (" << chunkEndCell.first << ","
+        << chunkEndCell.second << "))");
+    
+    // TODO: Create parameter set keys for this.
+    bool copyCoeff = true;
+    uint blockSize = 2;
+
+    uint nBlocks =
+        static_cast<uint>(ceil(static_cast<double>(chunkEndCell.second
+            - chunkStartCell.second) / blockSize));
+
+    // Send coefficient index.
+    CoeffIndexMsg kernelIndexMsg(itsKernelId);
+    kernelIndexMsg.getContents() = itsKernel->getCoeffIndex();
+    itsSolver->sendObject(kernelIndexMsg);
+
+    shared_ptr<BlobStreamable> solverMsg(itsSolver->recvObject());
+    shared_ptr<MergedCoeffIndexMsg> solverIndexMsg(dynamic_pointer_cast<MergedCoeffIndexMsg>(solverMsg));
+    
+    if(!solverIndexMsg)
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Protocol error");
+        return;
+    }
+    
+    itsKernel->setCoeffIndex(solverIndexMsg->getContents());
+
+#ifdef LOG_SOLVE_DOMAIN_STATS
+    uint nCells = (chunkEndCell.first - chunkStartCell.first)
+        * (chunkEndCell.second - chunkStartCell.second);
+    uint nConverged = 0, nStopped = 0;
+#endif
+
+    Location startCell(chunkStartCell), endCell(chunkEndCell);
+    for(uint block = 0; block < nBlocks; ++block)
+    {
+        // Move to next block.
+        endCell.second = min(startCell.second + blockSize - 1,
+            chunkEndCell.second - 1);
+
+        CoeffMsg kernelCoeffMsg(itsKernelId);
+        itsKernel->getCoeff(startCell, endCell, kernelCoeffMsg.getContents());
+        itsSolver->sendObject(kernelCoeffMsg);
+
+        bool done = false;
+        while(!done)
+        {
+            EquationMsg kernelEqMsg(itsKernelId);
+            itsKernel->construct(startCell, endCell, kernelEqMsg.getContents());
+            itsSolver->sendObject(kernelEqMsg);
+
+            solverMsg.reset(itsSolver->recvObject());
+            shared_ptr<SolutionMsg> solverSolutionMsg(dynamic_pointer_cast<SolutionMsg>(solverMsg));
+            if(!solverSolutionMsg)
+            {
+                itsResult = CommandResult(CommandResult::ERROR, "Protocol error");
+                return;
+            }
+            
+            const vector<CellSolution> &solutions =
+                solverSolutionMsg->getContents();
+
+            itsKernel->setCoeff(solutions);
+            
+            done = true;
+            for(size_t i = 0; i < solutions.size(); ++i)
+            {
+                done = done && (solutions[i].result != NONREADY);
+            }                
+
+#ifdef LOG_SOLVE_DOMAIN_STATS
+            ostringstream oss;
+            oss << "Solver statistics:";
+            for(size_t i = 0; i < solutions.size(); ++i)
+            {
+                oss << " [" << solutions[i].id << "] " << solutions[i].rank
+                << " " << solutions[i].chiSqr;
+                
+                if(solutions[i].result == SOLINCREMENT
+                    || solutions[i].result == DERIVLEVEL)
+                {
+                    nConverged++;
+                }
+                else if(solutions[i].result != NONREADY)
+                {
+                    nStopped++;
+                }
+            }
+            LOG_DEBUG(oss.str());
+#endif            
+        }
+
+#ifdef LOG_SOLVE_DOMAIN_STATS
+            LOG_DEBUG_STR("" << setw(3) << nConverged / nCells * 100.0
+                << "% converged, " << setw(3) << nStopped / nCells * 100.0
+                << "% stopped.");
+#endif
+                
+        // Copy initial values.
+        if(copyCoeff)
+        {
+            Location cell;
+            vector<double> initialValues;
+            
+            for(size_t f = startCell.first; f < endCell.first; ++f)
+            {
+                itsKernel->getCoeff(Location(f, endCell.second), initialValues);
+
+                cout << "GET: " << f << "," << endCell.second << endl;
+                cout << "COEFF: " << initialValues << endl;
+                for(size_t t = chunkStartCell.second + (block + 1) * blockSize;
+                    t < min(chunkEndCell.second,
+                            chunkStartCell.second + (block + 2) * blockSize);
+                    ++t)
+                {
+                    cout << "SET: " << f << "," << t << endl;
+                    itsKernel->setCoeff(Location(f, t), initialValues);
+                }
+            }
+        }                
+
+        startCell.second += blockSize;
+    }
+
+    itsSolver->sendObject(ChunkDoneMsg(itsKernelId));
+
+//    itsKernel->storeParameterValues();
+
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
+}
+
 
 } //# namespace BBS
 } //# namespace LOFAR

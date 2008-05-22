@@ -109,7 +109,7 @@ namespace LOFAR
         // merged coefficient indices back to our kernels.
         if (itsKernelMessageReceived.size() == itsKernels.size()) {
           MergedCoeffIndexMsg msg;
-          itsSolver.getCoeffIndex(msg.getContents());
+          msg.getContents() = itsSolver.getCoeffIndex();
           for (uint i = 0; i < itsKernels.size(); ++i) {
             itsKernels[i].sendMessage(msg);
           }

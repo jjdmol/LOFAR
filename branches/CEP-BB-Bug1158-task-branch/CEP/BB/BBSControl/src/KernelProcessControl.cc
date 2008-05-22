@@ -27,6 +27,7 @@
 
 #include <BBSControl/KernelProcessControl.h>
 #include <BBSControl/CommandQueue.h>
+#include <BBSControl/Messages.h>
 #include <BBSControl/Step.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
@@ -110,7 +111,7 @@ namespace LOFAR
       LOG_DEBUG("KernelProcessControl::init()");
 
       try {
-        uint32 id =
+        uint32 kernelId =
             LOFAR::ACC::APS::globalParameterSet()->getUint32("KernelId");
 
         // Create a new CommandQueue. This will open a connection to the
@@ -125,12 +126,19 @@ namespace LOFAR
         // command is posted to the blackboard database.
         itsCommandQueue->registerTrigger(CommandQueue::Trigger::Command);
 
-        if(itsSolver && !itsSolver->connect()) {
-          LOG_ERROR("Unable to connect to global solver.");
-          return false;
+        if(itsSolver)
+        {
+            if(!itsSolver->connect())
+            {        
+                LOG_ERROR("Unable to connect to global solver.");
+                return false;
+            }
+                            
+            // Make our kernel id known to the global solver.
+            itsSolver->sendObject(KernelIdMsg(kernelId));
         }
 
-        itsCommandExecutor.reset(new CommandExecutor(id, itsCommandQueue,
+        itsCommandExecutor.reset(new CommandExecutor(kernelId, itsCommandQueue,
             itsSolver));
       }
       catch(Exception& e)

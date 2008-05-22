@@ -26,6 +26,7 @@
 // \file
 // Concrete viistor class for concrete Command classes
 
+#include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/CommandResult.h>
 
@@ -50,7 +51,7 @@ namespace LOFAR
   {
     //# Forward declations
     class CommandQueue;
-    class BlobStreamableConnection;
+//    class BlobStreamableConnection;
 
     // \addtogroup BBSControl
     // @{
@@ -92,6 +93,9 @@ namespace LOFAR
 
 
     private:
+      void handleLocalSolve(const SolveStep &command);
+      void handleGlobalSolve(const SolveStep &command);
+      
       // Kernel.
       scoped_ptr<Prediffer>                   itsKernel;
       uint32                                  itsKernelId;
