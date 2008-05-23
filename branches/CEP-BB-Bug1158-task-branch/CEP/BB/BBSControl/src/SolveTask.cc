@@ -50,8 +50,9 @@ namespace LOFAR
 
     bool SolveTask::run()
     {
-      while (itsState != DONE) {
+//      while (itsState != DONE) {
 
+      if(itsState != DONE) {
         // Receive messages from our kernel(s); for the time being we'll use
         // a round-robin "polling". Every message is handed over to the
         // kernel group that currently "holds" the kernel identified by the
@@ -64,7 +65,8 @@ namespace LOFAR
           if (msg) msg->passTo(*this);
         }
       }
-      return true;
+
+      return (itsState == DONE);
     }
 
 

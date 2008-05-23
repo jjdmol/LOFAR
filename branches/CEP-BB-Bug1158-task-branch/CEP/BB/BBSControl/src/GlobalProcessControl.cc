@@ -218,7 +218,7 @@ namespace LOFAR
 
         if(roi.time.size() > 1 && casa::MVTime::read(time, roi.time[1]))
         {
-            itsTimeEnd = timeAxis->locate(time.getValue("s"));
+            itsTimeEnd = timeAxis->locate(time.getValue("s"), false);
         }
 
         itsChunkStart = itsTimeStart;
@@ -227,11 +227,11 @@ namespace LOFAR
         {
             // If chunk size equals 0, take the whole region of interest
             // as a single chunk.
-            itsChunkSize = itsTimeEnd;
+            itsChunkSize = itsTimeEnd - itsTimeStart + 1;
         }
 
         LOG_DEBUG_STR("Time range: [" << itsTimeStart << "," << itsTimeEnd
-            << ")");
+            << "]");
         LOG_DEBUG_STR("Chunk size: " << itsChunkSize << " time slot(s)");
 
         // Only return true if none of the local controllers returned an error
@@ -256,16 +256,15 @@ namespace LOFAR
         case NEXT_CHUNK: {
           // Send a "next chunk" command. 
           LOG_TRACE_FLOW("RunState::NEXT_CHUNK");
+          ASSERT(itsChunkStart <= itsTimeEnd);
 
           const Axis::Pointer timeAxis = itsMetaMeasurement.getTimeAxis();
           const double start = timeAxis->lower(itsChunkStart);
+          const double end =
+            timeAxis->upper(std::min(itsChunkStart + itsChunkSize - 1,
+                itsTimeEnd));
           
           itsChunkStart += itsChunkSize;
-          if(itsChunkStart > itsTimeEnd)
-          {
-            itsChunkStart = itsTimeEnd;
-          }
-          const double end = timeAxis->upper(itsChunkStart - 1);
           
           NextChunkCommand cmd(itsFreqStart, itsFreqEnd, start, end);          
           nextChunkId = itsCommandQueue->addCommand(cmd);
@@ -350,7 +349,7 @@ namespace LOFAR
             itsCommandQueue->addCommand(**itsStepsIterator++);
 //             LOG_DEBUG("Switching to WAIT state");
 //             itsState = WAIT;
-          } else if(itsChunkStart == itsTimeEnd) {
+          } else if(itsChunkStart > itsTimeEnd) {
             LOG_DEBUG("Switching to FINALIZE state");
             itsState = FINALIZE;
           } else {

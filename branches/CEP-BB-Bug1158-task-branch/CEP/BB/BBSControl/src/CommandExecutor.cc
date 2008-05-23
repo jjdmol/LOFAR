@@ -614,10 +614,22 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     vector<uint32> groupEnd = command.kernelGroups();    
     partial_sum(groupEnd.begin(), groupEnd.end(), groupEnd.begin());
 
+    size_t groupId = 0;
+    while(itsKernelId >= groupEnd[groupId])
+    {
+        ++groupId;
+    }
+
+/*
+    vector<uint32> groupEnd = command.kernelGroups();    
+    partial_sum(groupEnd.begin(), groupEnd.end(), groupEnd.begin());
+
+    LOG_DEBUG_STR("groupEnd: " << groupEnd);
+    
     const size_t groupId = lower_bound(groupEnd.begin(), groupEnd.end(),
         itsKernelId) - groupEnd.begin();    
+*/
     ASSERT(groupId < groupEnd.size());
-    
     LOG_DEBUG_STR("Group id: " << groupId);
     
     double freqBegin = itsMetaMeasurement.getFreqRange(groupId > 0
@@ -625,7 +637,8 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     double freqEnd =
         itsMetaMeasurement.getFreqRange(groupEnd[groupId] - 1).second;
         
-    LOG_DEBUG_STR("Group freq range: " << freqBegin << " - " << freqEnd);
+    LOG_DEBUG_STR("Group freq range: " << setprecision(15) << freqBegin << " - "
+        << freqEnd);
     Axis::Pointer freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin, 1));
 
     Axis::Pointer timeAxis = dims.getTimeAxis();
@@ -645,11 +658,11 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     ASSERT(!bbox.empty());
 
     Location chunkStartCell = cellGrid.locate(bbox.start);
-    Location chunkEndCell = cellGrid.locate(bbox.end);
+    Location chunkEndCell = cellGrid.locate(bbox.end, false);
 
     LOG_DEBUG_STR("Cells in chunk: [(" << chunkStartCell.first << ","
         << chunkStartCell.second << "), (" << chunkEndCell.first << ","
-        << chunkEndCell.second << "))");
+        << chunkEndCell.second << ")]");
     
     // TODO: Create parameter set keys for this.
     bool copyCoeff = true;
@@ -657,7 +670,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
 
     uint nBlocks =
         static_cast<uint>(ceil(static_cast<double>(chunkEndCell.second
-            - chunkStartCell.second) / blockSize));
+            - chunkStartCell.second + 1) / blockSize));
 
     // Send coefficient index.
     CoeffIndexMsg kernelIndexMsg(itsKernelId);
@@ -676,8 +689,8 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     itsKernel->setCoeffIndex(solverIndexMsg->getContents());
 
 #ifdef LOG_SOLVE_DOMAIN_STATS
-    uint nCells = (chunkEndCell.first - chunkStartCell.first)
-        * (chunkEndCell.second - chunkStartCell.second);
+    uint nCells = (chunkEndCell.first - chunkStartCell.first + 1)
+        * (chunkEndCell.second - chunkStartCell.second + 1);
     uint nConverged = 0, nStopped = 0;
 #endif
 
@@ -686,7 +699,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     {
         // Move to next block.
       endCell.second = std::min(startCell.second + blockSize - 1,
-            chunkEndCell.second - 1);
+            chunkEndCell.second);
 
         CoeffMsg kernelCoeffMsg(itsKernelId);
         itsKernel->getCoeff(startCell, endCell, kernelCoeffMsg.getContents());
@@ -752,15 +765,15 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
             Location cell;
             vector<double> initialValues;
             
-            for(size_t f = startCell.first; f < endCell.first; ++f)
+            for(size_t f = startCell.first; f <= endCell.first; ++f)
             {
                 itsKernel->getCoeff(Location(f, endCell.second), initialValues);
 
                 cout << "GET: " << f << "," << endCell.second << endl;
                 cout << "COEFF: " << initialValues << endl;
                 for(size_t t = chunkStartCell.second + (block + 1) * blockSize;
-                    t < std::min(chunkEndCell.second,
-                            chunkStartCell.second + (block + 2) * blockSize);
+                    t <= min(chunkEndCell.second,
+                        chunkStartCell.second + (block + 2) * blockSize - 1);
                     ++t)
                 {
                     cout << "SET: " << f << "," << t << endl;

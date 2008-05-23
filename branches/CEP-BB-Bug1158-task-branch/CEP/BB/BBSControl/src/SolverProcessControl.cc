@@ -242,13 +242,16 @@ namespace LOFAR
           // better choice, since we're planning on running each task in a
           // separate thread, and it is usually a bad thing to handle an
           // exception in a different thread than in wich it was thrown.
+          bool done = true;
           for (uint i = 0; i < itsSolveTasks.size(); ++i) {
-            itsSolveTasks[i].run();
+            done = itsSolveTasks[i].run() && done;
           }
           
           // OK, all SolveTasks are done (since we're currently running one
           // thread!!). We can change state.
-          itsState = IDLE;
+          if(done) {
+            itsState = IDLE;
+          }
           break;
 
         } // switch
