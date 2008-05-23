@@ -4,7 +4,7 @@
 #
 # Syntax: createFiles ( -a | stationname [stationame ...])
 #
-import re, sys
+import re, sys, os
 warnings = []
 
 #
@@ -32,7 +32,7 @@ def findRSPDestNodes(stationName):
     for match in pattern.finditer(open("RSPConnections").read()):
         rspDestNode[match.group(1)] = match.group(2)
     if len(rspDestNode) == 0:
-        setWarning(stationName+" not found in file 'TBBConnections'")
+        setWarning(stationName+" not found in file 'RSPConnections'")
     return rspDestNode
 
 #
@@ -81,7 +81,7 @@ def findStationInfo(stationName):
         raise "\nFatal error: "+stationName+" is not defined in file 'StationInfo'"
     return match.group().split()
 
-def createRSPDriverFile(stationName):
+def createRSPDriverFile(resultDir, stationName):
     """
     Fills in the markers in the RSPDriver.conf file to match the values for the given station.
     """
@@ -106,9 +106,11 @@ def createRSPDriverFile(stationName):
     RSPconfig = RSPconfig.replace("@STATION_HID@",  hexStationID)
     RSPconfig = RSPconfig.replace("@STATION_ID@",   stationID)
 
-    print RSPconfig
+    outFile = os.open(resultDir+"/RSPDriver.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
+    os.write(outFile, RSPconfig)
+    os.close(outFile)
 
-def createTBBDriverFile(stationName):
+def createTBBDriverFile(resultDir, stationName):
     """
     Fills in the markers in the TBBDriver.conf file to match the values for the given station.
     """
@@ -133,9 +135,11 @@ def createTBBDriverFile(stationName):
     TBBconfig = TBBconfig.replace("@STATION_HID@",  hexStationID)
     TBBconfig = TBBconfig.replace("@STATION_ID@",   stationID)
 
-    print TBBconfig
+    outFile = os.open(resultDir+"/TBBDriver.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
+    os.write(outFile, TBBconfig)
+    os.close(outFile)
 
-def createRemoteStationFile(stationName):
+def createRemoteStationFile(resultDir, stationName):
     """
     Fills in the markers in the RemoteStation.conf file to match the values for the given station.
     """
@@ -150,15 +154,23 @@ def createRemoteStationFile(stationName):
     RSconfig = RSconfig.replace("@HBA_SPLIT@",    HBAsplit)
     RSconfig = RSconfig.replace("@LBA_WIDE@",     LBAcal)
 
-    print RSconfig
+    outFile = os.open(resultDir+"/RemoteStation.conf", os.O_RDWR|os.O_CREAT|os.O_TRUNC)
+    os.write(outFile, RSconfig)
+    os.close(outFile)
 
 
 
 # MAIN
 for stationName in sys.argv[1:]:
-    createRSPDriverFile(stationName)
-    createTBBDriverFile(stationName)
-    createRemoteStationFile(stationName)
+    resultDir = "output/"+stationName
+    if os.path.exists(resultDir):
+        for oldfile in os.listdir(resultDir):
+            os.remove(resultDir+"/"+oldfile)
+    else:
+        os.mkdir(resultDir)
+    createRSPDriverFile    (resultDir, stationName) 
+    createTBBDriverFile    (resultDir, stationName)
+    createRemoteStationFile(resultDir, stationName)
 
 if len(warnings) > 0:
     print "To following warnings occured:"
