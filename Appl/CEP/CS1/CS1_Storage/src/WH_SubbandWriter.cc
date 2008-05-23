@@ -26,6 +26,7 @@
 
 // General includes
 #include <Common/LofarLogger.h>
+#include <Common/LofarConstants.h>
 #include <APS/ParameterSet.h>
 #include <Common/lofar_iomanip.h>
 
@@ -50,11 +51,9 @@ namespace LOFAR
   {
 
     WH_SubbandWriter::WH_SubbandWriter(const string& name, 
-                                       const vector<uint>& subbandID,
-				       CS1_Parset *pset) 
-      : WorkHolder(pset->nrInputsPerStorageNode(), 0, name, "WH_SubbandWriter"),
+ 				       CS1_Parset *pset) 
+      : WorkHolder(pset->nrInputsPerStorageNode(TH_MPI::getCurrentRank()/pset->nrStorageNodes()), 0, name, "WH_SubbandWriter"),
         itsCS1PS(pset),
-        itsSubbandIDs(subbandID),
         itsTimeCounter(0),
 	itsTimesToIntegrate(pset->storageIntegrationSteps()),
         itsFlagsBuffers(0),
@@ -68,7 +67,8 @@ namespace LOFAR
 #ifdef USE_MAC_PI
       itsWriteToMAC = itsPS.getBool("Storage.WriteToMAC");
 #endif
-      itsNStations = itsCS1PS->nrStations();
+      itsStorageStationNames = itsCS1PS->stationNames(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
+      itsNStations = itsStorageStationNames.size();
       itsNBaselines = itsNStations * (itsNStations +1)/2;
       itsNChannels = itsCS1PS->nrChannelsPerSubband();
       itsNBeams = itsCS1PS->getUint32("Observation.nrBeams");
@@ -83,7 +83,7 @@ namespace LOFAR
       char str[32];
       for (int i=0; i<itsNinputs; i++) {
         sprintf(str, "DH_in_%d", i);
-        getDataManager().addInDataHolder(i, new DH_Visibilities(str, pset));
+        getDataManager().addInDataHolder(i, new DH_Visibilities(str, pset, TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes()));
         getDataManager().setAutoTriggerIn(i, false);
       }
     }
@@ -109,15 +109,14 @@ namespace LOFAR
     }
 
     WorkHolder* WH_SubbandWriter::construct(const string& name,
-                                            const vector<uint>& subbandIDs,
 					          CS1_Parset *pset)
     {
-      return new WH_SubbandWriter(name, subbandIDs, pset);
+      return new WH_SubbandWriter(name, pset);
     }
 
     WH_SubbandWriter* WH_SubbandWriter::make(const string& name)
     {
-      return new WH_SubbandWriter(name, itsSubbandIDs, itsCS1PS);
+      return new WH_SubbandWriter(name, itsCS1PS);
     }
 
     void WH_SubbandWriter::preprocess() 
@@ -133,43 +132,39 @@ namespace LOFAR
         LOG_TRACE_FLOW("WH_SubbandWriter PropertySet not enabled");
       };
 #endif
-
       double startTime = itsCS1PS->startTime();
       LOG_TRACE_VAR_STR("startTime = " << startTime);
-      
-      vector<double> antPos = itsCS1PS->positions();
+      vector<double> antPos = itsCS1PS->positions(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
       ASSERTSTR(antPos.size() == 3 * itsNStations,
                 antPos.size() << " == " << 3 * itsNStations);
-      itsNrSubbandsPerPset	= itsCS1PS->nrSubbandsPerPset();
-      itsNrSubbandsPerStorage	= itsNrSubbandsPerPset * itsCS1PS->nrPsetsPerStorage();
+      itsNrSubbandsPerPset	= itsCS1PS->nrSubbandsPerPset(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
+      itsNrSubbandsPerStorage	= itsNrSubbandsPerPset * itsCS1PS->nrPsetsPerStorage(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
       itsNrInputChannelsPerPset = itsCS1PS->useGather() ? 1 : itsCS1PS->nrCoresPerPset();
       itsCurrentInputs.resize(itsNrSubbandsPerStorage / itsNrSubbandsPerPset, 0);
       LOG_TRACE_VAR_STR("SubbandsPerStorage = " << itsNrSubbandsPerStorage);
-      vector<string> storageStationNames = itsCS1PS->getStringVector("OLAP.storageStationNames");
 
-      unsigned mssesPerStorage = itsCS1PS->getUint32("OLAP.subbandsPerPset") * itsCS1PS->getUint32("OLAP.psetsPerStorage");
+      unsigned mssesPerStorage = itsNrSubbandsPerPset * itsCS1PS->nrPsetsPerStorage(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
       itsWriters.resize(mssesPerStorage);
       
-      vector<int32>  bl2beams = itsCS1PS->beamlet2beams();
-      vector<uint32> sb2Index = itsCS1PS->subband2Index();
+      vector<int32>  bl2beams = itsCS1PS->beamlet2beams(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
+      vector<uint32> sb2Index = itsCS1PS->subband2Index(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
       
       for (unsigned i = 0; i < mssesPerStorage; i ++) {
 #if defined HAVE_MPI
-	unsigned currentSubband = (TH_MPI::getCurrentRank() * mssesPerStorage + i);
+	unsigned currentSubband = (TH_MPI::getCurrentRank() % itsCS1PS->nrStorageNodes() * mssesPerStorage + i);
 #else
 	unsigned currentSubband = i;
 #endif
 	itsWriters[i] = new MSWriter(
-	  itsCS1PS->getMSname(currentSubband).c_str(),
+	  itsCS1PS->getMSname(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes() * MAX_BEAMLETS_PER_RSP + currentSubband).c_str(),
 	  startTime, itsCS1PS->storageIntegrationTime(), itsNChannels,
 	  itsNPolSquared, itsNStations, antPos,
-	  storageStationNames, itsTimesToIntegrate);
-
+	  itsStorageStationNames, itsTimesToIntegrate);
         vector<double> beamDir = itsCS1PS->getBeamDirection(bl2beams[sb2Index[currentSubband]]);
 	itsWriters[i]->addField(beamDir[0], beamDir[1], bl2beams[sb2Index[currentSubband]]);
       }
 
-      vector<double> refFreqs= itsCS1PS->refFreqs();
+      vector<double> refFreqs= itsCS1PS->refFreqs(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
 
       // Now we must add \a itsNrSubbandsPerStorage to the measurement set. The
       // correct indices for the reference frequencies are in the vector of
@@ -177,10 +172,10 @@ namespace LOFAR
       itsBandIDs.resize(itsNrSubbandsPerStorage);
       double chanWidth = itsCS1PS->chanWidth();
       LOG_TRACE_VAR_STR("chanWidth = " << chanWidth);
-
+      
       for (uint sb = 0; sb < itsNrSubbandsPerStorage; ++sb) {
 	// compensate for the half-channel shift introduced by the PPF
-	double refFreq = refFreqs[sb2Index[itsSubbandIDs[sb]]] - chanWidth / 2;
+	double refFreq = refFreqs[sb2Index[TH_MPI::getCurrentRank() % 2 * itsNrSubbandsPerStorage + sb]] - chanWidth / 2;
 	itsBandIDs[sb] = itsWriters[sb]->addBand(itsNPolSquared, itsNChannels, refFreq, chanWidth);
       }
       
