@@ -412,19 +412,21 @@ bool Prediffer::setCellGrid(const Grid &cellGrid)
         << ")");
         
     // Keep a copy of the global cell grid.
+    // TODO: use clone()?
     itsCellGrid = cellGrid;
 
     // Find the first and last solution cell that intersect the current chunk.
     itsStartCell = itsCellGrid.locate(intersection.start);
-    itsEndCell = itsCellGrid.locate(intersection.end);
+    itsEndCell = itsCellGrid.locate(intersection.end, false);
 
     LOG_DEBUG_STR("Local start: (" << itsStartCell.first << ","
         << itsStartCell.second << ")");
     LOG_DEBUG_STR("Local end  : (" << itsEndCell.first << ","
         << itsEndCell.second << ")");
 
-    const size_t nFreqCells = itsEndCell.first - itsStartCell.first;
-    const size_t nTimeCells = itsEndCell.second - itsStartCell.second;
+    // The end cell is inclusive by convention.
+    const size_t nFreqCells = itsEndCell.first - itsStartCell.first + 1;
+    const size_t nTimeCells = itsEndCell.second - itsStartCell.second + 1;
     const size_t nCells = nFreqCells * nTimeCells;
 
     LOG_DEBUG_STR("Cell count: " << nCells);
@@ -434,24 +436,27 @@ bool Prediffer::setCellGrid(const Grid &cellGrid)
     Axis::Pointer cellAxis(cellGrid[FREQ]);
 
     Interval interval;
-    interval.start = visAxis->locate(intersection.start.first);
-    DBGASSERT(interval.start < visAxis->size());
 
     // DEBUG DEBUG
-    cout << "Intervals FREQ: ";
+    ostringstream oss;
+    oss << "Intervals FREQ: ";
     // DEBUG DEBUG
     itsFreqIntervals.resize(nFreqCells);
     for(size_t i = 0; i < nFreqCells; ++i)
     {
-        interval.end = visAxis->locate(cellAxis->upper(itsStartCell.first + i));
+        interval.start =
+            visAxis->locate(std::max(cellAxis->lower(itsStartCell.first + i),
+                intersection.start.first));
+        interval.end =
+            visAxis->locate(std::min(cellAxis->upper(itsStartCell.first + i),
+                intersection.end.first), false);
         itsFreqIntervals[i] = interval;
         // DEBUG DEBUG
-        cout << "[" << interval.start << "," << interval.end << ") ";    
+        oss << "[" << interval.start << "," << interval.end << "] ";
         // DEBUG DEBUG
-        interval.start = interval.end;
     }
     // DEBUG DEBUG
-    cout << endl;
+    LOG_DEBUG(oss.str());
     // DEBUG DEBUG
     
     // Map cell boundaries to sample boundaries (time axis).
@@ -459,34 +464,36 @@ bool Prediffer::setCellGrid(const Grid &cellGrid)
     cellAxis = itsCellGrid[TIME];
     
     interval = Interval();
-    interval.start = visAxis->locate(intersection.start.second);
-    DBGASSERT(interval.start < visAxis->size());
 
     // DEBUG DEBUG
-    cout << "Intervals TIME: ";
+    oss.str("");
+    oss << "Intervals TIME: ";
     // DEBUG DEBUG
     itsTimeIntervals.resize(nTimeCells);
     for(size_t i = 0; i < nTimeCells; ++i)
     {
+        interval.start =
+            visAxis->locate(std::max(cellAxis->lower(itsStartCell.second + i),
+                intersection.start.second));
         interval.end =
-            visAxis->locate(cellAxis->upper(itsStartCell.second + i));
+            visAxis->locate(std::min(cellAxis->upper(itsStartCell.second + i),
+                intersection.end.second), false);
         itsTimeIntervals[i] = interval;
         // DEBUG DEBUG
-        cout << "[" << interval.start << "," << interval.end << ") ";    
+        oss << "[" << interval.start << "," << interval.end << "] ";
         // DEBUG DEBUG
-        interval.start = interval.end;
     }
     // DEBUG DEBUG
-    cout << endl;
+    LOG_DEBUG(oss.str());
     // DEBUG DEBUG
 
     // Initialize model parameters marked for fitting.
     itsCoeffIndex.clear();
 
     vector<MeqDomain> domains;
-    for(size_t t = itsStartCell.second; t < itsEndCell.second; ++t)
+    for(size_t t = itsStartCell.second; t <= itsEndCell.second; ++t)
     {
-        for(size_t f = itsStartCell.first; f < itsEndCell.first; ++f)
+        for(size_t f = itsStartCell.first; f <= itsEndCell.first; ++f)
         {
             Box domain = itsCellGrid.getCell(Location(f, t));
             domains.push_back(MeqDomain(domain.start.first, domain.end.first,
@@ -627,13 +634,13 @@ void Prediffer::getCoeff(const Location &cell, vector<double> &coeff) const
 {
     // Check preconditions.
     ASSERT(itsOperation == CONSTRUCT);
-    ASSERT(cell.first >= itsStartCell.first && cell.first < itsEndCell.first);
+    ASSERT(cell.first >= itsStartCell.first && cell.first <= itsEndCell.first);
     ASSERT(cell.second >= itsStartCell.second
-        && cell.second < itsEndCell.second);
+        && cell.second <= itsEndCell.second);
 
     // Get local cell id.
     const size_t localId = (cell.second - itsStartCell.second)
-        * (itsEndCell.first - itsStartCell.first)
+        * (itsEndCell.first - itsStartCell.first + 1)
         + (cell.first - itsStartCell.first);
 
     // Copy the coefficient values for every selected parameter.
@@ -665,23 +672,22 @@ void Prediffer::getCoeff(Location start, Location end, vector<CellCoeff> &local)
     ASSERT(itsOperation == CONSTRUCT);
 
     LOG_DEBUG_STR("Request coeff for [(" << start.first << "," << start.second
-        << "),(" << end.first << "," << end.second << "))");
+        << "),(" << end.first << "," << end.second << ")]");
 
     // Check preconditions.
     ASSERT(start.first <= end.first && start.second <= end.second);
-    ASSERT(start.first < itsEndCell.first
-        && end.first >= itsStartCell.first);
-    ASSERT(start.second < itsEndCell.second
+    ASSERT(start.first <= itsEndCell.first && end.first >= itsStartCell.first);
+    ASSERT(start.second <= itsEndCell.second
         && end.second >= itsStartCell.second);
 
     // Clip against chunk.
     start.first = max(start.first, itsStartCell.first);
     start.second = max(start.second, itsStartCell.second);
-    end.first = min(end.first, itsEndCell.first - 1);
-    end.second = min(end.second, itsEndCell.second - 1);
+    end.first = min(end.first, itsEndCell.first);
+    end.second = min(end.second, itsEndCell.second);
     
     LOG_DEBUG_STR("Getting coeff for [(" << start.first << "," << start.second
-        << "),(" << end.first << "," << end.second << "))");
+        << "),(" << end.first << "," << end.second << ")]");
 
     size_t nCells = (end.first - start.first + 1)
         * (end.second - start.second + 1);
@@ -713,13 +719,13 @@ void Prediffer::setCoeff(const Location &cell, const vector<double> &coeff)
 {
     // Check preconditions.
     ASSERT(itsOperation == CONSTRUCT);
-    ASSERT(cell.first >= itsStartCell.first && cell.first < itsEndCell.first);
+    ASSERT(cell.first >= itsStartCell.first && cell.first <= itsEndCell.first);
     ASSERT(cell.second >= itsStartCell.second
-        && cell.second < itsEndCell.second);
+        && cell.second <= itsEndCell.second);
 
     // Get local cell id.
     const size_t localId = (cell.second - itsStartCell.second)
-        * (itsEndCell.first - itsStartCell.first)
+        * (itsEndCell.first - itsStartCell.first + 1)
         + (cell.first - itsStartCell.first);
     LOG_DEBUG_STR("Local cell id: " << localId);
 
@@ -741,9 +747,9 @@ void Prediffer::setCoeff(const vector<CellSolution> &global)
 
         // Skip solutions for cells outside the chunk.
         Location cell = itsCellGrid.getCellLocation(solution.id);
-        if(cell.first >= itsEndCell.first
+        if(cell.first > itsEndCell.first
             || cell.first < itsStartCell.first
-            || cell.second >= itsEndCell.second
+            || cell.second > itsEndCell.second
             || cell.second < itsStartCell.second)
         {
             continue;
@@ -762,11 +768,11 @@ void Prediffer::simulate()
 
     const VisDimensions &dims = itsChunk->getDimensions();
     Location visStart(0, 0);
-    Location visEnd(dims.getChannelCount(), dims.getTimeslotCount());
+    Location visEnd(dims.getChannelCount() - 1, dims.getTimeslotCount() - 1);
 
     LOG_DEBUG_STR("Processing visbility domain: [ (" << visStart.first << ","
         << visStart.second << "), (" << visEnd.first << "," << visEnd.second
-        << ") )");
+        << ") ]");
 
     itsProcessTimer.start();
     process(false, true, visStart, visEnd, &Prediffer::copyBl);
@@ -784,11 +790,11 @@ void Prediffer::subtract()
 
     const VisDimensions &dims = itsChunk->getDimensions();
     Location visStart(0, 0);
-    Location visEnd(dims.getChannelCount(), dims.getTimeslotCount());
+    Location visEnd(dims.getChannelCount() - 1, dims.getTimeslotCount() - 1);
 
     LOG_DEBUG_STR("Processing visbility domain: [ (" << visStart.first << ","
         << visStart.second << "), (" << visEnd.first << "," << visEnd.second
-        << ") )");
+        << ") ]");
 
     itsProcessTimer.start();
     process(false, true, visStart, visEnd, &Prediffer::subtractBl);
@@ -806,11 +812,11 @@ void Prediffer::correct()
 
     const VisDimensions &dims = itsChunk->getDimensions();
     Location visStart(0, 0);
-    Location visEnd(dims.getChannelCount(), dims.getTimeslotCount());
+    Location visEnd(dims.getChannelCount() - 1, dims.getTimeslotCount() - 1);
 
     LOG_DEBUG_STR("Processing visbility domain: [ (" << visStart.first << ","
         << visStart.second << "), (" << visEnd.first << "," << visEnd.second
-        << ") )");
+        << ") ]");
 
     itsProcessTimer.start();
     process(false, true, visStart, visEnd, &Prediffer::copyBl);
@@ -826,9 +832,9 @@ void Prediffer::construct(Location start, Location end,
     DBGASSERT(itsOperation == CONSTRUCT);
 
     DBGASSERT(start.first <= end.first && start.second <= end.second);
-    DBGASSERT(start.first < itsEndCell.first
+    DBGASSERT(start.first <= itsEndCell.first
         && end.first >= itsStartCell.first);
-    DBGASSERT(start.second < itsEndCell.second
+    DBGASSERT(start.second <= itsEndCell.second
         && end.second >= itsStartCell.second);
 
     resetTimers();
@@ -836,8 +842,8 @@ void Prediffer::construct(Location start, Location end,
     // Clip request against chunk.
     start.first = max(start.first, itsStartCell.first);
     start.second = max(start.second, itsStartCell.second);
-    end.first = min(end.first, itsEndCell.first - 1);
-    end.second = min(end.second, itsEndCell.second - 1);
+    end.first = min(end.first, itsEndCell.first);
+    end.second = min(end.second, itsEndCell.second);
 
     const size_t nCells = (end.first - start.first + 1)
         * (end.second - start.second + 1);
@@ -917,7 +923,7 @@ void Prediffer::construct(Location start, Location end,
     
     LOG_DEBUG_STR("Processing visbility domain: [ (" << visStart.first
         << "," << visStart.second << "), (" << visEnd.first << ","
-        << visEnd.second << ") )");
+        << visEnd.second << ") ]");
 
     // Generate equations.
     itsProcessTimer.start();
@@ -957,12 +963,12 @@ void Prediffer::construct(Location start, Location end,
 void Prediffer::process(bool, bool precalc, const Location &start,
     const Location &end, BlProcessor processor, void *arguments)
 {
-    DBGASSERT(start.first < end.first);
-    DBGASSERT(start.second < end.second);
+    DBGASSERT(start.first <= end.first);
+    DBGASSERT(start.second <= end.second);
     
     // Get frequency / time grid information.
-    const size_t nChannels = end.first - start.first;
-    const size_t nTimeslots = end.second - start.second;
+    const size_t nChannels = end.first - start.first + 1;
+    const size_t nTimeslots = end.second - start.second + 1;
 
 //    cout << "nChannels: " << nChannels << " nTimeslots: " << nTimeslots << endl;
 
@@ -978,7 +984,7 @@ void Prediffer::process(bool, bool precalc, const Location &start,
     {
         timeAxis[i] = sampleGrid[TIME]->lower(start.second + i);
     }
-    timeAxis[nTimeslots] = sampleGrid[TIME]->upper(end.second - 1);
+    timeAxis[nTimeslots] = sampleGrid[TIME]->upper(end.second);
 
     // TODO: Fix memory pool implementation.    
     // Initialize the ComplexArr pool with the most frequently used size.
@@ -990,9 +996,9 @@ void Prediffer::process(bool, bool precalc, const Location &start,
 
     // Create a request.
     MeqDomain reqDomain(sampleGrid[FREQ]->lower(start.first),
-        sampleGrid[FREQ]->upper(end.first - 1),
+        sampleGrid[FREQ]->upper(end.first),
         sampleGrid[TIME]->lower(start.second),
-        sampleGrid[TIME]->upper(end.second - 1));
+        sampleGrid[TIME]->upper(end.second));
 
     MeqRequest request(reqDomain, nChannels, timeAxis, nPerturbedValues);
     request.setOffset(start);
@@ -1179,8 +1185,8 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
     const Location end = static_cast<Location*>(arguments)[1];
 
 //    LOG_DEBUG_STR("Offset: (" << offset.first << "," << offset.second << ")");
-//    LOG_DEBUG_STR("Processing cells (" << start.first << "," << start.second
-//        << ") - (" << end.first << "," << end.second << ")");
+//    LOG_DEBUG_STR("Processing cells [(" << start.first << "," << start.second
+//        << "),(" << end.first << "," << end.second << ")]");
 
     // Get baseline index.
     const VisDimensions &dims = itsChunk->getDimensions();
@@ -1286,7 +1292,7 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
                 context.timers[ThreadContext::INV_DELTA].stop();
                 
 
-                for(size_t ts = tsInterval.start; ts < tsInterval.end; ++ts)
+                for(size_t ts = tsInterval.start; ts <= tsInterval.end; ++ts)
                 {
                     // Skip timeslot if flagged.
                     if(itsChunk->tslot_flag[bl][ts])
@@ -1298,7 +1304,8 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
 //                    double sumRe = 0.0, sumIm = 0.0;
                     
                     // Construct two equations for each unflagged visibility.
-                    for(size_t ch = chInterval.start; ch < chInterval.end; ++ch)
+                    for(size_t ch = chInterval.start; ch <= chInterval.end;
+                        ++ch)
                     {
                         if(!itsChunk->vis_flag[bl][ts][ch][ext_pol])
                         {
@@ -1356,7 +1363,8 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
 //                    cout << "CHECKSUM: " << sumRe << " " << sumIm << endl;
                     
                     // Move to next timeslot.
-                    visOffset += nChannels - (chInterval.end - chInterval.start);
+                    visOffset +=
+                        nChannels - (chInterval.end - chInterval.start + 1);
                 } // for(size_t ts = tsStart; ts < tsEnd; ++ts) 
                 
                 // Move to next solution cell.

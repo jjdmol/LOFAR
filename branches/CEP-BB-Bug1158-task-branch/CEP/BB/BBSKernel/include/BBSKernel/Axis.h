@@ -56,7 +56,7 @@ public:
     virtual double width(size_t n) const = 0;
     virtual size_t size() const = 0;
     virtual pair<double, double> range() const = 0;
-    virtual size_t locate(double x) const = 0;
+    virtual size_t locate(double x, bool biasRight = true) const = 0;
     virtual Axis::Pointer compress(size_t factor) const = 0;
 };
 
@@ -78,7 +78,7 @@ public:
     double width(size_t) const;
     size_t size() const;
     pair<double, double> range() const;
-    size_t locate(double x) const;
+    size_t locate(double x, bool biasRight = true) const;
     Axis::Pointer compress(size_t factor) const;
     
 private:
@@ -117,7 +117,7 @@ public:
     double width(size_t n) const;
     size_t size() const;
     pair<double, double> range() const;
-    size_t locate(double x) const;
+    size_t locate(double x, bool biasRight = true) const;
     Axis::Pointer compress(size_t factor) const;
 
 private:

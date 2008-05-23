@@ -489,60 +489,23 @@ void MeasurementAIPS::initFreqTimeInfo(const ROMSSpWindowColumns &window,
     Block<String> sortColumns(2);
     sortColumns[0] = "TIME";
     sortColumns[1] = "INTERVAL";
-    
     Table tab_sorted = itsMS.sort(sortColumns, Sort::Ascending, Sort::QuickSort
         + Sort::NoDuplicates);
 
     // Read TIME and INTERVAL column.
     ROScalarColumn<Double> c_time(tab_sorted, "TIME");
-    Vector<Double> time = c_time.getColumn();
-
     ROScalarColumn<Double> c_interval(tab_sorted, "INTERVAL");
+    Vector<Double> time = c_time.getColumn();
     Vector<Double> interval = c_interval.getColumn();
 
     // Convert to vector<double>.
     vector<double> timeCopy;
     vector<double> intervalCopy;
-    
     time.tovector(timeCopy);
     interval.tovector(intervalCopy);
 
-    Axis::Pointer timeAxis(new IrregularAxis(timeCopy,
-        intervalCopy));
+    Axis::Pointer timeAxis(new IrregularAxis(timeCopy, intervalCopy));
     itsDimensions.setGrid(Grid(freqAxis, timeAxis));
-
-/*
-    // Read TIME and INTERVAL column.
-    ROScalarColumn<Double> c_time(itsMS, "TIME");
-    ROScalarColumn<Double> c_interval(itsMS, "INTERVAL");
-
-    Vector<Double> time = c_time.getColumn();
-    Vector<Double> interval = c_interval.getColumn();
-
-    // Find all unique timeslots.
-    Vector<uInt> timeIndex;
-    uInt nTimeslots = GenSortIndirect<Double>::sort(timeIndex, time,
-        Sort::Ascending, Sort::InsSort + Sort::NoDuplicates);
-
-
-    // TODO: Could this be simplified by sorting a subtable containing the
-    // TIME and INTERVAL column on TIME and then do call getColumn() for each
-    // column?
-    vector<double> sortedTimes(nTimeslots);
-    vector<double> sortedIntervals(nTimeslots);
-    for(uInt i = 0; i < nTimeslots; ++i)
-    {
-        sortedTimes[i] = time[timeIndex[i]]
-        sortedIntervals[i] = interval[timeIndex[i]];
-    }
-
-    // Compute upper border of last integration cell.
-    times[nTimeslots] = time[timeIndex[nTimeslots - 1]]
-        + interval[timeIndex[nTimeslots - 1]] * 0.5;
-
-    Axis<double>::Pointer timeAxis(new IrregularAxis<double>(times));
-    itsDimensions.setGrid(Grid<double>(freqAxis, timeAxis));
-*/    
 }
 
 
@@ -737,8 +700,7 @@ Slicer MeasurementAIPS::getCellSlicer(const VisSelection &selection) const
 }
 
 
-VisDimensions
-MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
+VisDimensions MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     const Slicer slicer) const
 {
     VisDimensions dims;
@@ -774,7 +736,6 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     sortTimeColumns[1] = "INTERVAL";    
     Table tab_sorted = tab_selection.sort(sortTimeColumns, Sort::Ascending,
         Sort::QuickSort + Sort::NoDuplicates);
-    size_t nTimeslots = tab_sorted.nrow();
 
     // Read TIME and INTERVAL column.
     ROScalarColumn<Double> c_time(tab_sorted, "TIME");
@@ -788,41 +749,9 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     time.tovector(timeCopy);
     interval.tovector(intervalCopy);
 
-    Axis::Pointer timeAxis(new IrregularAxis(timeCopy,
-        intervalCopy));
-        
+    Axis::Pointer timeAxis(new IrregularAxis(timeCopy, intervalCopy));
     dims.setGrid(Grid(freqAxis, timeAxis));
     
-/*
-    ROScalarColumn<Double> c_time(tab_selection, "TIME");
-    Vector<Double> time = c_time.getColumn();
-    
-    // Find all unique timeslots.
-    Vector<uInt> timeIndex;
-    uInt nTimeslots = GenSortIndirect<double>::sort(timeIndex, time,
-        Sort::Ascending, Sort::InsSort + Sort::NoDuplicates);
-
-    ROScalarColumn<Double> c_interval(tab_selection, "INTERVAL");
-    Vector<Double> interval = c_interval.getColumn();
-
-    const double start = time[timeIndex[0]] - interval[timeIndex[0]] * 0.5;
-    const size_t offset = rootGrid[TIME]->locate(start);
-    DBGASSERT(offset + nTimeslots <= rootGrid[TIME]->size());
-
-    LOG_DEBUG_STR("Chunk offset: " << offset);
-
-    vector<double> times(nTimeslots + 1);
-    for(uInt i = 0; i < nTimeslots; ++i)
-    {
-        // Copy _lower border_ of each integration cell.
-        times[i] = rootGrid[TIME]->lower(offset + i);
-    }
-    times[nTimeslots] = rootGrid[TIME]->upper(offset + nTimeslots - 1);
-
-    Axis<double>::Pointer tAxis(new IrregularAxis<double>(times));
-    dims.setGrid(Grid<double>(fAxis, tAxis));
-*/
-
     // Find all unique baselines.
     Block<String> sortBaselineColumns(2);
     sortBaselineColumns[0] = "ANTENNA1";
@@ -832,8 +761,8 @@ MeasurementAIPS::getDimensionsImpl(const Table tab_selection,
     uInt nBaselines = tab_baselines.nrow();
 
     LOG_DEBUG_STR("Selection contains " << nBaselines << " baseline(s), "
-        << nTimeslots << " timeslot(s), " << nChannels << " channel(s), and "
-        << nPolarizations << " polarization(s).");
+        << timeAxis->size() << " timeslot(s), " << freqAxis->size()
+        << " channel(s), and " << nPolarizations << " polarization(s).");
 
     // Initialize baseline axis.
     ROScalarColumn<Int> c_antenna1(tab_baselines, "ANTENNA1");

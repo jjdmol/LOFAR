@@ -65,6 +65,8 @@ public:
 
     bool intersects(const Box &other) const
     {
+        // Box A only intersects box B if there is at least one point within or
+        // on the border of A that falls within B (excluding its border).
         return (other.start.first < end.first
             && !casa::near(other.start.first, end.first)
             && other.end.first > start.first
@@ -78,10 +80,12 @@ public:
 
     bool contains(const Box &other) const
     {
+        // A box A contains a box B if all points within or on the border of B
+        // fall within or on the border of A.
         return ((other.start.first > start.first
                 || casa::near(other.start.first, start.first))
             && (other.end.first < end.first
-                || !casa::near(other.end.first, end.first))
+                || casa::near(other.end.first, end.first))
             && (other.start.second > start.second
                 || casa::near(other.start.second, start.second))
             && (other.end.second < end.second
@@ -165,10 +169,10 @@ public:
         return unite(getCell(start), getCell(end));
     }
 
-    Location locate(const Point &point) const
+    Location locate(const Point &point, bool biasRight = true) const
     {
-        return make_pair(itsAxes[0]->locate(point.first),
-            itsAxes[1]->locate(point.second));
+        return make_pair(itsAxes[0]->locate(point.first, biasRight),
+            itsAxes[1]->locate(point.second, biasRight));
     }
 
 private:

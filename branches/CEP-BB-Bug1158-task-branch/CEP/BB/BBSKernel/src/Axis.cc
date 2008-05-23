@@ -95,43 +95,55 @@ namespace BBS
         return make_pair(lower(0), upper(size() - 1));
     }
 
-    size_t RegularAxis::locate(double x) const
+    size_t RegularAxis::locate(double x, bool biasRight) const
     {
-        // Find the cell that contains x. The upper border of a cell is open by
-        // convention. Therefore, if x is located precisely on a cell border,
-        // it is located in the cell of which that border is the _lower_ border.
-        // Equality is tested with is_equal<T>, which does a fuzzy comparison
-        // for floating point types. Values of x that are 'very near' to a cell
-        // border are assumed to lie on the cell border.
-
-        const size_t axisSize = size();
+        // Find the cell that contains x. Values of x that are 'very near' (as
+        // tested by casa::near()) to a cell border are assumed to lie on the
+        // border. 
+        // If x is located on a cell border, its location is decided according
+        // to the value of biasRight. If biasRight is true, the decision is
+        // 'biased to the right'. In other words, x is attributed to the cell
+        // that has x as its lower border.
         
-        // T may be unsigned. If x < itsBegin, this will create a problem when
-        // evaluating x - itsBegin. For floating point types, even though
-        // x < itsBegin, x may still be 'very close' to the lower border of cell
-        // 0, in which case it should be attributed to cell 0.
-        if(x < itsBegin)
-        {
-            return casa::near(x, itsBegin) ? 0 : axisSize;
-        }        
+        const pair<double, double> axisRange = range();
 
-        // Find the index of the cell that contains x.
-        size_t index = static_cast<size_t>(floor((x - itsBegin) / itsWidth));
-
-        // If T is a floating point type, x could be 'very close' to the upper
-        // cell border, in which case it should be attributed to the next cell.
-        if(casa::near(x, upper(index)))
+        // Lower boundary case.
+        if(casa::near(x, axisRange.first))
         {
-            ++index;
+            return biasRight ? 0 : size();
         }
 
-        // If x was located outside of the range of the axis, size() will be
-        // returned.
-        if(index > axisSize)
+        if(x < axisRange.first)
         {
-            index = axisSize;
+            return size();
         }
-    
+
+        // Upper boundary case.
+        if(casa::near(x, axisRange.second))
+        {
+            return biasRight ? size() : size() - 1;
+        }
+        
+        if(x > axisRange.second)
+        {
+            return size();
+        }
+        
+        // General case.
+        // Find the index of the cell that contains x. Because the boundary
+        // cases have already been dealt with, it is certain that x lies within
+        // the range of the axis. Therefore, it is allowed to use std::max() in
+        // the following.
+        size_t index = static_cast<size_t>(std::max(0.0, floor((x - center(0))
+            / itsWidth)));
+        DBGASSERT(index < size());
+
+        if(casa::near(x, lower(index)) && !biasRight)
+        {
+            DBGASSERT(index > 0);
+            --index;
+        }
+
         return index;
     }
 
@@ -232,43 +244,58 @@ namespace BBS
         return make_pair(lower(0), upper(size() - 1));
     }
 
-    size_t IrregularAxis::locate(double x) const
+    size_t IrregularAxis::locate(double x, bool biasRight) const
     {
-        // Try to find x in the list of cell borders. This will return the index
-        // of the first border that is greater than or equal to x. The upper
-        // border of a cell is open by convention. Therefore, if x is located
-        // precisely on a cell border, it is located in the cell of which that
-        // border is the _lower_ border.
-        // Equality is tested with is_equal<T>, which does a fuzzy comparison
-        // for floating point types. Values of x that are 'very near' to a cell
-        // border are assumed to lie on the cell border.
+        // Find the cell that contains x. Values of x that are 'very near' (as
+        // tested by casa::near()) to a cell border are assumed to lie on the
+        // border. 
+        // If x is located on a cell border, its location is decided according
+        // to the value of biasRight. If biasRight is true, the decision is
+        // 'biased to the right'. In other words, x is attributed to the cell
+        // that has x as its lower border.
 
-        const size_t axisSize = size();
+        const pair<double, double> axisRange = range();
 
-        // General case.
-        if(x > lower(0) && x < upper(axisSize - 1))
+        // Lower boundary case.
+        if(casa::near(x, axisRange.first))
         {
-            const size_t index =
-                upper_bound(itsCenters.begin(), itsCenters.end(), x)
-                - itsCenters.begin();
-            const double lowerBorder = lower(index);            
-            
-            return x < lowerBorder && !casa::near(x, lowerBorder) ?
-                index - 1 : index;
+            return biasRight ? 0 : size();
         }
 
-        const pair<double,double> axisRange = range();
-
-        // Left border.
-        if(x <= lower(0))
+        if(x < axisRange.first)
         {
-            return x > axisRange.first || casa::near(x, axisRange.first) ?
-                0 : axisSize;
+            return size();
         }
 
-        // Right border.
-        return x < axisRange.second && !casa::near(x, axisRange.second) ?
-            axisSize - 1 : axisSize;
+        // Upper boundary case.
+        if(casa::near(x, axisRange.second))
+        {
+            return biasRight ? size() : size() - 1;
+        }
+        
+        if(x > axisRange.second)
+        {
+            return size();
+        }
+
+        // General case.        
+        // Try to find x in the list of cell centers. This will return the index
+        // of the first cell center that is greater than or equal to x. Because
+        // the boundary cases have already been dealt with, it is certain that
+        // x lies within the range of the axis. Therefore, it is allowed to use
+        // std::min() in the following.
+        size_t index = 
+            std::min(static_cast<size_t>(upper_bound(itsCenters.begin(),
+                itsCenters.end(), x) - itsCenters.begin()), size() - 1);
+        DBGASSERT(index < size());
+
+        if(casa::near(x, lower(index)) && !biasRight)
+        {
+            DBGASSERT(index > 0);
+            --index;
+        }
+
+        return index;
     }
 
     Axis::Pointer IrregularAxis::compress(size_t factor) const
