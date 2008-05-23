@@ -64,74 +64,54 @@ namespace LOFAR
 	
       //itsCS1PS->adoptFile(configFile);
       itsStub = new Stub_BGL(false, true, "BGLProc_Storage", itsCS1PS);
-      uint nrSubbands = itsCS1PS->nrSubbands(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
-      uint nrSubbandsPerPset = itsCS1PS->nrSubbandsPerPset(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
+
+      uint nrSubbands = itsCS1PS->nrSubbands();
+      ASSERT(nrSubbands > 0);
+      uint nrSubbandsPerPset = itsCS1PS->nrSubbandsPerPset();
       ASSERT(nrSubbandsPerPset > 0);
       uint nrInputChannels = itsCS1PS->useGather() ? 1 : itsCS1PS->nrCoresPerPset();
       ASSERT(nrInputChannels > 0);
-      uint nrPsetsPerStorage = itsCS1PS->nrPsetsPerStorage(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes());
-      uint maxConcurrent = itsCS1PS->getInt32("OLAP.BGLProc.maxConcurrentComm");
-       
-      unsigned index = TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes();
-      
-      uint nrWriters = 0;
-      
-      if (nrSubbands > 0 && itsCS1PS->nrStations(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes()) > 0) {
-        ASSERT(nrSubbands % nrSubbandsPerPset == 0);
-        ASSERT(nrSubbands / nrSubbandsPerPset % nrPsetsPerStorage == 0);
-        
-	// We must derive how many WH_SubbandWriter objects we have to
-        // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerPset
-        // to an AIPS++ Measurement Set.
-        nrWriters = nrSubbands / nrSubbandsPerPset / nrPsetsPerStorage;
-      }
-      else
-      {
-        time_t now = time(0);
-        char buf[26];
-        ctime_r(&now, buf);
-	
-        cout << "time = " << buf <<
-#if defined HAVE_MPI
-	", rank = " << TH_MPI::getCurrentRank() <<
-#endif
-	", nrSubbands = " << nrSubbands << endl;
+      uint nrPsetsPerStorage = itsParamSet.getUint32("OLAP.psetsPerStorage");
+      ASSERT(nrSubbands % nrSubbandsPerPset == 0);
+      ASSERT(nrSubbands / nrSubbandsPerPset % nrPsetsPerStorage == 0);
 
-        cout << "time = " << buf <<
-#if defined HAVE_MPI
-	", rank = " << TH_MPI::getCurrentRank() <<
-#endif
-	", nrStations = " << itsCS1PS->nrStations(TH_MPI::getCurrentRank()/itsCS1PS->nrStorageNodes()) << endl;
-      }
-	
+      // We must derive how many WH_SubbandWriter objects we have to
+      // create. Each WH_SubbandWriter will write up to \a nrSubbandsPerPset
+      // to an AIPS++ Measurement Set.
+      uint nrWriters = nrSubbands / nrSubbandsPerPset / nrPsetsPerStorage;
+      uint maxConcurrent = itsCS1PS->getInt32("OLAP.BGLProc.maxConcurrentComm");
       LOG_TRACE_VAR_STR("Creating " << nrWriters << " subband writers ...");
-      
-      if (nrWriters != 0)
+
+      for (unsigned nw = 0; nw < nrWriters; ++nw)
       {
+        // For now, we'll assume that the subbands can be sorted and grouped
+        // by ID. Hence, the first WH_SubbandWriter will write the first \a
+        // nrSubbandsPerPset subbands, the second will write the second \a
+        // nrSubbandsPerPset, etc.
+        vector<uint> sbIDs(nrSubbandsPerPset * nrPsetsPerStorage);
+        for (uint i = 0; i < nrSubbandsPerPset * nrPsetsPerStorage; ++i) {
+          sbIDs[i] = nrSubbandsPerPset * nrPsetsPerStorage * nw + i;         
+	  LOG_TRACE_LOOP_STR("Writer " << nw << ": sbIDs[" << i << "] = " 
+                             << sbIDs[i]);
+        }
+
         char whName[32];
-        snprintf(whName, 32, "WH_Storage_%03d", TH_MPI::getCurrentRank());
+        snprintf(whName, 32, "WH_Storage_%03d", nw);
         LOG_TRACE_STAT_STR("Creating " << whName);
-        WH_SubbandWriter wh(whName, itsCS1PS); 
+        WH_SubbandWriter wh(whName, sbIDs, itsCS1PS);
 
         Step step(wh);
         comp.addBlock(step);
 	
-	if (nrWriters == 1) {
-	  if (TH_MPI::getCurrentRank() % itsCS1PS->nrStorageNodes() == 0) {
-	    step.runOnNode(TH_MPI::getCurrentRank());
-	  }  
-	}
-	else {
-	    step.runOnNode(TH_MPI::getCurrentRank());
-	}
-	 
+        // Each writer will run on a separate node.
+        step.runOnNode(nw);
         // Connect to BG output
 	for (unsigned pset = 0; pset < nrPsetsPerStorage; pset ++) {
 	  vector<int> channels;
 	  for (unsigned core = 0; core < nrInputChannels; core++) {
 	    int channel = pset * nrInputChannels + core;
 	    step.getInDataManager(channel).setInBuffer(channel, false, 10);
-	    itsStub->connect(TH_MPI::getCurrentRank() % itsCS1PS->nrStorageNodes(), channel, index, step.getInDataManager(channel), channel);
+	    itsStub->connect(nw, channel, step.getInDataManager(channel), channel);
 	    channels.push_back(channel);
 	  }
 	  // limit the number of concurrent incoming connections
@@ -141,6 +121,10 @@ namespace LOFAR
 	  step.getInDataManager(0).setInRoundRobinPolicy(channels, maxConcurrent);
 	}
       }
+#ifdef HAVE_MPI
+      ASSERTSTR((unsigned) TH_MPI::getNumberOfNodes() == nrWriters,
+                 TH_MPI::getNumberOfNodes() << " == " << nrWriters );
+#endif
     }
 
 

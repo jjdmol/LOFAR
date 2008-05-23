@@ -70,6 +70,7 @@ int ACCmain_Storage (int argc, char* orig_argv[], ACC::PLC::ProcessControl* theP
 	} else {
 		char** argv = orig_argv;
 	}
+
 	for (int arg = 0; arg < argc; arg++) {
 		int arglen = 0;
 		if (myRank == 0) {
@@ -103,24 +104,26 @@ int ACCmain_Storage (int argc, char* orig_argv[], ACC::PLC::ProcessControl* theP
 		else {
 			LOG_DEBUG(programName + " started by ACC");
 		}
+
 		// Read in the parameterset.
 		ConfigLocator	CL;
 		string	ParsetFile = CL.locate(argv[1 + (ACCmode ? 1 : 0)]);
 		ASSERTSTR(!ParsetFile.empty(), "Could not find parameterset " << argv[1]);
 		LOG_INFO_STR("Using parameterset " << ParsetFile);
 		ACC::APS::globalParameterSet()->adoptFile(ParsetFile);
- 		// When not under control of ACC execute all modes immediately
+
+		// When not under control of ACC execute all modes immediately
 		if (!ACCmode) {
 			LOG_DEBUG(programName + " starting define");
 			if (!theProcess->define()) {
 				return (1);
 			}
-			
+
 			LOG_DEBUG(programName + " initializing");
 			if (!theProcess->init()) {
 				return (1);
 			}
-			
+
 			LOG_DEBUG(programName + " running");
 			int noRuns = atoi(argv[argc - 1]);
 			if (noRuns == 0) {
@@ -131,12 +134,12 @@ int ACCmain_Storage (int argc, char* orig_argv[], ACC::PLC::ProcessControl* theP
 					return (1);
 				}
 			}
- 
- 			LOG_DEBUG(programName + " releasing");
+
+			LOG_DEBUG(programName + " releasing");
 			if (!theProcess->release()) {
 				return (1);
 			}
-
+			
 			LOG_DEBUG(programName + " quitting");
 			if (!theProcess->quit()) {
 				return (1);
@@ -248,7 +251,7 @@ int ACCmain_Storage (int argc, char* orig_argv[], ACC::PLC::ProcessControl* theP
 		return (1);
 	} 
 	catch (std::exception& ex) {
-		LOG_FATAL_STR("Caught std::exception: " << ex.what() << ", rank = " << TH_MPI::getCurrentRank());
+		LOG_FATAL_STR("Caught std::exception: " << ex.what());
 		return (1);
 	} 
 	catch (...) {
