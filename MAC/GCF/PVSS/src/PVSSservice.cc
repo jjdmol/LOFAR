@@ -144,7 +144,7 @@ void PVSSservice::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswe
 		LOG_TRACE_FLOW_STR("Group has " << pGrItem->getNrOfItems() << " items");
 		for (AnswerItem *pAnItem = pGrItem->getFirstItem(); pAnItem;
 											pAnItem = pGrItem->getNextItem()) {
-			PVSSinfo::_lastSysNr = pAnItem->getDpIdentifier().getSystem();
+			PVSSinfo::_lastSysNr = (int) pAnItem->getDpIdentifier().getSystem();
 			if (pAnItem->getDpIdentifier().convertToString(pvssDPEConfigName) == PVSS_FALSE) {
 				if (answer.isAnswerOn() == DP_MSG_DP_REQ) {
 					LOG_TRACE_FLOW(formatString("DP %s was deleted successful",wait.getDpName().c_str()));
@@ -300,7 +300,7 @@ void PVSSservice::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& 
 		PVSSinfo::_lastTimestamp.tv_usec = ts.getMilli() * 1000;
 		PVSSinfo::_lastManNum 			 = group.getOriginManager().getManNum();
 		PVSSinfo::_lastManType 			 = group.getOriginManager().getManType();
-		PVSSinfo::_lastSysNr 			 = group.getOriginManager().getSystem();
+		PVSSinfo::_lastSysNr 			 = (int) group.getOriginManager().getSystem();
 		// normal subscription (with dpeSubscribe)
 		for (DpVCItem *pItem = group.getFirstItem(); pItem; pItem = group.getNextItem()) {
 			Variable *pVar = pItem->getValuePtr();
