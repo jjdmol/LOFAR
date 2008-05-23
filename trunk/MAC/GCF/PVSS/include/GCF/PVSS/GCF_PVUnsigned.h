@@ -43,7 +43,7 @@ class GCFPVUnsigned : public GCFPValue
 {
   public:
   	explicit GCFPVUnsigned(uint32 val = 0) : GCFPValue(LPT_UNSIGNED), _value(val) {;}
-    explicit GCFPVUnsigned(const GCFPVUnsigned& val) : GCFPValue(LPT_UNSIGNED), _value(val.getValue()) {;}
+    GCFPVUnsigned(const GCFPVUnsigned& val) : GCFPValue(LPT_UNSIGNED), _value(val.getValue()) {;}
 
   	virtual ~GCFPVUnsigned() {;}
     

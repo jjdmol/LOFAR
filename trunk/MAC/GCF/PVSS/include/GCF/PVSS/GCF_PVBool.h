@@ -41,7 +41,7 @@ class GCFPVBool : public GCFPValue
 {
   public: 
   	explicit GCFPVBool (bool val = false) : GCFPValue(LPT_BOOL), _value(val) {;}
-    explicit GCFPVBool(const GCFPVBool& val) : GCFPValue(LPT_BOOL), _value(val.getValue()) {;}
+    GCFPVBool(const GCFPVBool& val) : GCFPValue(LPT_BOOL), _value(val.getValue()) {;}
 
   	virtual ~GCFPVBool () {;}
     

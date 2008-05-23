@@ -42,7 +42,7 @@ class GCFPVInteger : public GCFPValue
 {
   public:
   	explicit GCFPVInteger (int32 val = 0) : GCFPValue(LPT_INTEGER), _value(val) {;}
-    explicit GCFPVInteger(const GCFPVInteger& val) : GCFPValue(LPT_INTEGER), _value(val.getValue()) {;}
+    GCFPVInteger(const GCFPVInteger& val) : GCFPValue(LPT_INTEGER), _value(val.getValue()) {;}
 
   	virtual ~GCFPVInteger () {;}
     

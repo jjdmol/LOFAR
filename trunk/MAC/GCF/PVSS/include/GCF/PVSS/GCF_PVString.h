@@ -39,7 +39,7 @@ class GCFPVString : public GCFPValue
 {
   public:
   	explicit GCFPVString(string val = "") : GCFPValue(LPT_STRING), _value(val) {;}
-    explicit GCFPVString(const GCFPVString& val) : GCFPValue(LPT_STRING), _value(val.getValue()) {;}
+    GCFPVString(const GCFPVString& val) : GCFPValue(LPT_STRING), _value(val.getValue()) {;}
 
   	virtual ~GCFPVString() {;}
     

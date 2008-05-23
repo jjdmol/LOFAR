@@ -47,7 +47,8 @@ class GCFPVBlob : public GCFPValue
      * @param clone buffer must be cloned 
      */
   	explicit GCFPVBlob(unsigned char* val = 0, uint16 length = 0, bool clone = false);
-    explicit GCFPVBlob(const GCFPVBlob& val) 
+
+    GCFPVBlob(const GCFPVBlob& val) 
       : GCFPValue(LPT_BLOB), _value(0), _length(0), _isDataHolder(false) 
       { copy(val);}
 
