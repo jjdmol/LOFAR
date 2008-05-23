@@ -47,10 +47,12 @@ namespace LOFAR
     //##----------------  Public methods  ----------------##//
 
     WH_DelayCompensation::WH_DelayCompensation(const CS1_Parset *ps,
-                                               const string &stationName) :      
+                                               const string &stationName,
+					       const int32 partitionIndex) :      
       itsCS1PS     (ps),
       itsNrBeams   (ps->getUint32("Observation.nrBeams")),
       itsStationName(stationName),
+      itsPartitionIndex(partitionIndex),
       itsConverter (0)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
@@ -145,7 +147,7 @@ namespace LOFAR
       // positions are stored as one large vector of doubles.
       vector<double> refPos, pos;      
       
-      refPos = itsCS1PS->getRefPhaseCentres();
+      refPos = itsCS1PS->getRefPhaseCentres(itsPartitionIndex);
       const Position pRef(refPos[0], refPos[1], refPos[2], posType);
       
       pos = itsCS1PS->getPhaseCentresOf(itsStationName);

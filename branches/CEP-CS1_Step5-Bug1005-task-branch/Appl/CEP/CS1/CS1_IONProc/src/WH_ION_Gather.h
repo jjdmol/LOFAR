@@ -57,6 +57,7 @@ class WH_ION_Gather : public WorkHolder
 
     unsigned			itsPsetNumber, itsNrComputeCores, itsCurrentComputeCore;
     unsigned			itsNrSubbandsPerPset, itsCurrentSubband;
+    int32                       itsPartitionIndex;
     unsigned			itsNrIntegrationSteps, itsCurrentIntegrationStep;
 
     const CS1_Parset		*itsPS;

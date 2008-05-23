@@ -58,13 +58,12 @@ static unsigned  nrInputSectionRuns;
 static std::vector<TransportHolder *> clientTHs;
 
 
-static void checkParset(const CS1_Parset &parset)
+static void checkParset(const CS1_Parset &parset, const unsigned partitionIndex)
 {
 #if defined HAVE_BGLPERSONALITY
   BGLPersonality *personality = getBGLpersonality();
-
-  if (parset.nrPsets() > personality->numPsets())
-    std::cerr << "needs " << parset.nrPsets() << " psets; only " << personality->numPsets() << " available" << std::endl;
+  if (parset.nrPsets(partitionIndex) > personality->numPsets())
+    std::cerr << "needs " << parset.nrPsets(partitionIndex) << " psets; only " << personality->numPsets() << " available" << std::endl;
 #endif
 
 #if 0
@@ -74,7 +73,6 @@ static void checkParset(const CS1_Parset &parset)
   parset.parseBeamletList();
 #endif 
 }
-
 
 void createClientTHs(unsigned nrClients)
 {
@@ -95,25 +93,25 @@ void deleteClientTHs()
     delete clientTHs[core];
 }
 
-
-static void configureCNs(const CS1_Parset &parset)
+static void configureCNs(const CS1_Parset &parset, const unsigned partitionIndex)
 {
+  
   BGL_Command	    command(BGL_Command::PREPROCESS);
   BGL_Configuration configuration;
 
-  configuration.nrStations()              = parset.nrStations();
+  configuration.nrStations()              = parset.nrStations(partitionIndex);
   configuration.nrBeams()                 = parset.nrBeams();
   configuration.nrSamplesPerIntegration() = parset.BGLintegrationSteps();
   configuration.nrSamplesToBGLProc()      = parset.nrSamplesToBGLProc();
   configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
-  configuration.nrSubbandsPerPset()       = parset.nrSubbandsPerPset();
+  configuration.nrSubbandsPerPset()       = parset.nrSubbandsPerPset(partitionIndex);
   configuration.delayCompensation()       = parset.getBool("OLAP.delayCompensation");
   configuration.sampleRate()              = parset.sampleRate();
-  configuration.inputPsets()              = parset.getUint32Vector("OLAP.BGLProc.inputPsets");
-  configuration.outputPsets()             = parset.getUint32Vector("OLAP.BGLProc.outputPsets");
-  configuration.refFreqs()                = parset.refFreqs();
-  configuration.beamlet2beams()           = parset.beamlet2beams();
-  configuration.subband2Index()           = parset.subband2Index();
+  configuration.inputPsets()              = parset.inputPsets(partitionIndex);
+  configuration.outputPsets()             = parset.outputPsets(partitionIndex);
+  configuration.refFreqs()                = parset.refFreqs(partitionIndex);
+  configuration.beamlet2beams()           = parset.beamlet2beams(partitionIndex);
+  configuration.subband2Index()           = parset.subband2Index(partitionIndex);
 
   for (unsigned core = 0; core < parset.nrCoresPerPset(); core ++) {
     std::clog << "configure core " << core << std::endl;
@@ -153,7 +151,7 @@ void *input_thread(void *parset)
     InputSection inputSection(clientTHs);
 
     inputSection.preprocess(static_cast<CS1_Parset *>(parset));
-
+    
     for (unsigned run = 0; run < nrInputSectionRuns; run ++)
       inputSection.process();
 
@@ -207,84 +205,90 @@ void *master_thread(void *)
     CS1_Parset cs1_parset(&parameterSet);
 
     cs1_parset.adoptFile("OLAP.parset");
-    checkParset(cs1_parset);
+    char block_id[17];
+    getBGLpersonality()->BlockID(block_id, 16);
+    block_id[16] = '\0'; // just in case it was not already '\0' terminated
+    int32 partitionIndex = cs1_parset.partitionName2Index(string(block_id));
+    ASSERTSTR(partitionIndex >= 0, "Partition(" << string(block_id) << ") is not specified in the partitionList");
+   
+    checkParset(cs1_parset, partitionIndex);
+    configureCNs(cs1_parset, partitionIndex);
 
 #if !defined HAVE_ZOID
     nrCoresPerPset = cs1_parset.nrCoresPerPset();
     createClientTHs(nrCoresPerPset);
 #endif
-
-    configureCNs(cs1_parset);
-
+    
 #if defined HAVE_BGLPERSONALITY
     unsigned myPsetNumber = getBGLpersonality()->getPsetNum();
 #else
     unsigned myPsetNumber = 0;
 #endif
-
-    if (cs1_parset.inputPsetIndex(myPsetNumber) >= 0) {
+    
+    if (cs1_parset.nrSubbands(partitionIndex) > 0 ) {
+      if (cs1_parset.inputPsetIndex(myPsetNumber, partitionIndex) >= 0) {
 #if 0
-      static char nrRuns[16], *argv[] = {
-	global_argv[0],
-	global_argv[1],
-	nrRuns,
-	0
-      };
+        static char nrRuns[16], *argv[] = {
+	  global_argv[0],
+	  global_argv[1],
+	  nrRuns,
+	  0
+        };
 
-      sprintf(nrRuns, "%u", atoi(global_argv[2]) * cs1_parset.nrCoresPerPset() / cs1_parset.nrSubbandsPerPset());
+        sprintf(nrRuns, "%u", atoi(global_argv[2]) * cs1_parset.nrCoresPerPset() / cs1_parset.nrSubbandsPerPset(partitionIndex));
 
-      if (pthread_create(&input_thread_id, 0, input_thread, argv) != 0) {
-	perror("pthread_create");
-	exit(1);
-      }
+        if (pthread_create(&input_thread_id, 0, input_thread, argv) != 0) {
+	  perror("pthread_create");
+	  exit(1);
+        }
 #else
-      // Passing this via a global variable is a real hack
-      nrInputSectionRuns = atoi(global_argv[2]) * cs1_parset.nrCoresPerPset() / cs1_parset.nrSubbandsPerPset();
+        // Passing this via a global variable is a real hack
+        nrInputSectionRuns = atoi(global_argv[2]) * cs1_parset.nrCoresPerPset() / cs1_parset.nrSubbandsPerPset(partitionIndex);
 
-      if (pthread_create(&input_thread_id, 0, input_thread, static_cast<void *>(&cs1_parset)) != 0) {
-	perror("pthread_create");
-	exit(1);
-      }
+        if (pthread_create(&input_thread_id, 0, input_thread, static_cast<void *>(&cs1_parset)) != 0) {
+	  perror("pthread_create");
+	  exit(1);
+        }
 #endif
-    }
-
-    if (cs1_parset.useGather() && cs1_parset.outputPsetIndex(myPsetNumber) >= 0) {
-      static char nrRuns[16], *argv[] = {
-	global_argv[0],
-	global_argv[1],
-	nrRuns,
-	0
-      };
-
-      sprintf(nrRuns, "%u", atoi(global_argv[2]) * cs1_parset.nrCoresPerPset());
-
-      if (pthread_create(&gather_thread_id, 0, gather_thread, argv) != 0) {
-	perror("pthread_create");
-	exit(1);
       }
-    }
+    
+      if (cs1_parset.useGather() && cs1_parset.outputPsetIndex(myPsetNumber, partitionIndex) >= 0) {
+        static char nrRuns[16], *argv[] = {
+	  global_argv[0],
+	  global_argv[1],
+	  nrRuns,
+	  0
+        };
 
-    if (gather_thread_id != 0 && input_thread_id == 0) {
-      // quick hack to send PROCESS commands to CNs
+        sprintf(nrRuns, "%u", atoi(global_argv[2]) * cs1_parset.nrCoresPerPset());
 
-      BGL_Command command(BGL_Command::PROCESS);
-      unsigned	  nrRuns  = atoi(global_argv[2]);
-      unsigned	  nrCores = cs1_parset.nrCoresPerPset();
-
-      for (unsigned run = 0; run < nrRuns; run ++)
-	for (unsigned core = 0; core < nrCores; core ++)
-	  command.write(clientTHs[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
-    }
-
-    if (input_thread_id != 0) {
-      if (pthread_join(input_thread_id, 0) != 0) {
-	perror("pthread join");
-	exit(1);
+        if (pthread_create(&gather_thread_id, 0, gather_thread, argv) != 0) {
+	  perror("pthread_create");
+	  exit(1);
+        }
       }
 
-      std::clog << "lofar__fini: input thread joined" << std::endl;
-    }
+      if (gather_thread_id != 0 && input_thread_id == 0) {
+        // quick hack to send PROCESS commands to CNs
 
+        BGL_Command command(BGL_Command::PROCESS);
+        unsigned	  nrRuns  = atoi(global_argv[2]);
+        unsigned	  nrCores = cs1_parset.nrCoresPerPset();
+
+        for (unsigned run = 0; run < nrRuns; run ++)
+	  for (unsigned core = 0; core < nrCores; core ++)
+	    command.write(clientTHs[BGL_Mapping::mapCoreOnPset(core, myPsetNumber)]);
+      }
+
+      if (input_thread_id != 0) {
+        if (pthread_join(input_thread_id, 0) != 0) {
+	  perror("pthread join");
+	  exit(1);
+        }
+
+        std::clog << "lofar__fini: input thread joined" << std::endl;
+      }
+    }
     unconfigureCNs(cs1_parset);
     stopCNs();
 

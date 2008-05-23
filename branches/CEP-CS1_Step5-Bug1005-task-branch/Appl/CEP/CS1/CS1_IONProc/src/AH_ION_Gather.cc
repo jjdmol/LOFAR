@@ -68,13 +68,19 @@ void AH_ION_Gather::define(const KeyValueMap&)
   dm->setOutBuffer(0, false, 2);
 
   itsVisibilitiesStub = new Stub_BGL(true, false, "BGLProc_Storage", itsCS1PS);
+  
+  char block_id[17];
+  getBGLpersonality()->BlockID(block_id, 16);
+  block_id[16] = '\0'; // just in case it was not already '\0' terminated
+  int32 partitionIndex = itsCS1PS->partitionName2Index(string(block_id));
+  ASSERTSTR(partitionIndex >= 0, "Partition(" << string(block_id) << ") is not specified in the partitionList");
 
-  unsigned myPsetIndex	     = itsCS1PS->outputPsetIndex(myPsetNumber);
-  unsigned nrPsetsPerStorage = itsCS1PS->nrPsetsPerStorage();
+  unsigned myPsetIndex	     = itsCS1PS->outputPsetIndex(myPsetNumber, partitionIndex);
+  unsigned nrPsetsPerStorage = itsCS1PS->nrPsetsPerStorage(partitionIndex);
   unsigned storage_host	     = myPsetIndex / nrPsetsPerStorage;
   unsigned storage_port      = myPsetIndex % nrPsetsPerStorage;
-
-  itsVisibilitiesStub->connect(storage_host, storage_port, *dm, /*channel*/ 0);
+  
+  itsVisibilitiesStub->connect(storage_host, storage_port, partitionIndex, *dm, /*channel*/ 0);
 }
 
 

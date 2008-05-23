@@ -83,7 +83,8 @@ namespace LOFAR
     {
     public:
       WH_DelayCompensation(const CS1_Parset *ps,
-                           const string &stationName);
+                           const string &stationName,
+			   const int32 partitionIndex);
 
       ~WH_DelayCompensation();
 
@@ -137,6 +138,8 @@ namespace LOFAR
 
       // Station Name.
       const string                  itsStationName;
+      
+      const int32                   itsPartitionIndex;
       
       // A beam direction consists of two doubles.
       vector<double>                itsAngle1;

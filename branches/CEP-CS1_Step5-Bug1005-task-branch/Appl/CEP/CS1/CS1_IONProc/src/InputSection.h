@@ -69,6 +69,7 @@ class InputSection {
 
     TransportHolder *itsInputTH;
     const std::vector<TransportHolder *> &itsClientTHs;
+    int32    itsPartitionIndex;
     unsigned itsStationNr;
     
     const CS1_Parset *itsCS1PS;

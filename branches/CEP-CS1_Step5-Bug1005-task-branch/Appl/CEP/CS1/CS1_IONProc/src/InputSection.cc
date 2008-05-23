@@ -101,16 +101,23 @@ void InputSection::startThread()
 
 void InputSection::preprocess(const CS1_Parset *ps)
 {
+  char block_id[17];
   itsCS1PS = ps;
+  
+  getBGLpersonality()->BlockID(block_id, 16);
+  block_id[16] = '\0'; // just in case it was not already '\0' terminated
+  itsPartitionIndex = ps->partitionName2Index(string(block_id));
+  ASSERTSTR(itsPartitionIndex >= 0, "Partition(" << string(block_id) << ") is not specified in the partitionList");
+  
   itsSampleRate = ps->sampleRate();
   TimeStamp::setMaxBlockId(itsSampleRate);
-  itsStationNr = ps->inputPsetIndex(itsPsetNumber);
+  itsStationNr = ps->inputPsetIndex(itsPsetNumber, itsPartitionIndex);
 
-  std::string stationName = ps->stationName(itsStationNr);
+  std::string stationName = ps->stationName(itsStationNr, itsPartitionIndex);
   std::clog << "station " << itsStationNr << " = " << stationName << std::endl;
 
   itsInputTH		= Connector::readTH(ps, stationName);
-  itsNSubbandsPerPset	= ps->nrSubbandsPerPset();
+  itsNSubbandsPerPset	= ps->nrSubbandsPerPset(itsPartitionIndex);
   itsNSamplesPerSec	= ps->nrSubbandSamples();
 
 #if defined DUMP_RAW_DATA
@@ -124,15 +131,15 @@ void InputSection::preprocess(const CS1_Parset *ps)
   itsSampleDuration     = ps->sampleDuration();
 
   // create the buffer controller.
-  int subbandsToReadFromFrame = ps->subbandsToReadFromFrame();
-  std::clog << "nrSubbands = "<< ps->nrSubbands() << std::endl;
-  std::clog << "nrStations = "<< ps->nrStations() << std::endl;
-  std::clog << "nrRSPboards = "<< ps->nrRSPboards() << std::endl;
+  int subbandsToReadFromFrame = itsCS1PS->subbandsToReadFromFrame(itsPartitionIndex);
   ASSERTSTR(subbandsToReadFromFrame <= ps->nrSubbandsPerFrame(), subbandsToReadFromFrame << " < " << ps->nrSubbandsPerFrame());
+  std::clog << "nrSubbands = "<< ps->nrSubbands(itsPartitionIndex) << std::endl;
+  std::clog << "nrStations = "<< ps->nrStations(itsPartitionIndex) << std::endl;
+  std::clog << "nrRSPboards = "<< ps->nrRSPboards(itsPartitionIndex) << std::endl;
 
-  itsDelayCompensation = ps->getBool("OLAP.delayCompensation");
-  itsBeamlet2beams = ps->beamlet2beams();
-  itsSubband2Index = ps->subband2Index();
+  itsDelayCompensation = itsCS1PS->getBool("OLAP.delayCompensation");
+  itsBeamlet2beams = ps->beamlet2beams(itsPartitionIndex);
+  itsSubband2Index = ps->subband2Index(itsPartitionIndex);
   
   itsNrCalcDelays = ps->getUint32("OLAP.DelayComp.nrCalcDelays");
 
@@ -149,7 +156,7 @@ void InputSection::preprocess(const CS1_Parset *ps)
     itsDelaysAfterEnd.resize(ps->nrBeams());
     itsNrCalcDelaysForEachTimeNrDirections.resize(itsNrCalcDelays * ps->nrBeams());
     
-    itsDelayComp = new WH_DelayCompensation(ps, ps->stationName(itsStationNr));
+    itsDelayComp = new WH_DelayCompensation(ps, ps->stationName(itsStationNr, itsPartitionIndex), itsPartitionIndex);
 
     std::vector<double> startTimes(itsNrCalcDelays);
 
@@ -322,11 +329,11 @@ void InputSection::process()
     fileHeader.magic = 0x3F8304EC;
     fileHeader.bitsPerSample = 16;
     fileHeader.nrPolarizations = 2;
-    fileHeader.nrBeamlets = itsCS1PS->nrSubbands();
+    fileHeader.nrBeamlets = itsCS1PS->nrSubbands(itsPartitionIndex);
     fileHeader.nrSamplesPerBeamlet = itsNSamplesPerSec;
-    strncpy(fileHeader.station, itsCS1PS->stationName(itsStationNr).c_str(), 16);
+    strncpy(fileHeader.station, itsCS1PS->stationName(itsStationNr, itsPartitionIndex).c_str(), 16);
     fileHeader.sampleRate = itsSampleRate;
-    memcpy(fileHeader.subbandFrequencies, &itsCS1PS->refFreqs()[0], 54 * sizeof(double));
+    memcpy(fileHeader.subbandFrequencies, &itsCS1PS->refFreqs(itsPartitionIndex)[0], 54 * sizeof(double));
  
     for (unsigned beam = 1; beam < itsCS1PS->nrBeams()+1; beam ++){
       vector<double> beamDir = itsCS1PS->getBeamDirection(beam);
@@ -366,7 +373,7 @@ void InputSection::process()
   
   rawDataTH->sendBlocking(&blockHeader, sizeof blockHeader, 0, 0);
 
-  for (unsigned subband = 0; subband < itsCS1PS->nrSubbands(); subband ++)
+  for (unsigned subband = 0; subband < itsCS1PS->nrSubbands(itsPartitionIndex); subband ++)
     itsBBuffer->sendUnalignedSubband(rawDataTH, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);
 
 #else
@@ -378,7 +385,7 @@ void InputSection::process()
     command.write(th);
     itsIONtoCNdata.write(th, itsCS1PS->nrBeams());
 
-    for (unsigned pset = 0; pset < itsCS1PS->nrPsets(); pset ++) {
+    for (unsigned pset = 0; pset < itsCS1PS->nrPsets(itsPartitionIndex); pset ++) {
       unsigned subband = itsNSubbandsPerPset * pset + subbandBase;
 
       itsBBuffer->sendSubband(th, subband, itsBeamlet2beams[itsSubband2Index[subband]] - 1);

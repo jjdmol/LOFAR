@@ -25,6 +25,7 @@
 #include <ION_Allocator.h>
 #include <WH_ION_Gather.h>
 #include <TH_ZoidServer.h>
+#include <BGL_Personality.h>
 
 #include <cstring>
 #include <string>
@@ -49,13 +50,21 @@ WH_ION_Gather::WH_ION_Gather(const string &name, unsigned psetNumber, const CS1_
   itsTmpDH		    = 0;
   itsNrComputeCores	    = ps->nrCoresPerPset();
   itsCurrentComputeCore	    = 0;
-  itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset();
+  
+  char block_id[17];
+  getBGLpersonality()->BlockID(block_id, 16);
+  block_id[16] = '\0'; // just in case it was not already '\0' terminated
+  
+  itsPartitionIndex = ps->partitionName2Index(string(block_id));
+  ASSERTSTR(itsPartitionIndex >= 0, "Partition(" << string(block_id) << ") is not specified in the partitionList");
+  
+  itsNrSubbandsPerPset	    = ps->nrSubbandsPerPset(itsPartitionIndex);
   itsCurrentSubband	    = 0;
   itsNrIntegrationSteps     = ps->IONintegrationSteps();
   itsCurrentIntegrationStep = 0;
 
   TinyDataManager &dm = getDataManager();
-  DH_Visibilities *dh = new DH_Visibilities("output", ps);
+  DH_Visibilities *dh = new DH_Visibilities("output", ps, itsPartitionIndex);
   dh->setAllocationProperties(false, BlobStringType(false, ION_Allocator()));
   dm.addOutDataHolder(0, dh);
   dm.setAutoTriggerOut(0, false);
@@ -92,13 +101,13 @@ void WH_ION_Gather::preprocess()
 {
   if (itsNrIntegrationSteps > 1)
     for (unsigned subband = 0; subband < itsNrSubbandsPerPset; subband ++) {
-      DH_Visibilities *dh = new DH_Visibilities("sum", itsPS);
+      DH_Visibilities *dh = new DH_Visibilities("sum", itsPS, itsPartitionIndex);
       dh->setAllocationProperties(false, BlobStringType(false, ION_Allocator()));
       dh->init();
       itsSumDHs.push_back(dh);
     }
 
-  itsTmpDH = new DH_Visibilities("tmp", itsPS);
+  itsTmpDH = new DH_Visibilities("tmp", itsPS, itsPartitionIndex);
   itsTmpDH->setAllocationProperties(false, BlobStringType(false, ION_Allocator()));
   itsTmpDH->init();
 }
