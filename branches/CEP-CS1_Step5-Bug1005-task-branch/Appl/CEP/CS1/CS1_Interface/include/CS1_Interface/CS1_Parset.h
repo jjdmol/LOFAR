@@ -64,11 +64,11 @@ public:
 	 
 	double         startTime() const;
 	double         stopTime() const;
-	uint32	       nrStations() const;
+	uint32	       nrStations(const int index) const;
 	double         sampleRate() const;
 	double         sampleDuration() const;
-	vector<double> positions() const;
-	vector<double> getRefPhaseCentres() const;
+	vector<double> positions(const int index) const;
+	vector<double> getRefPhaseCentres(const int index) const;
 	vector<double> getPhaseCentresOf(const string& name) const;	
 	uint32	       BGLintegrationSteps() const;
 	uint32	       IONintegrationSteps() const;
@@ -77,44 +77,48 @@ public:
 	double         IONintegrationTime() const;
 	double         storageIntegrationTime() const;
 	uint32         nrSubbandSamples() const;
-        uint32         nrSubbandsPerPset() const; 
+        uint32         nrSubbandsPerPset(const int index) const; 
 	uint32         nrHistorySamples() const;
 	uint32         nrSamplesToBGLProc() const;
 	uint32         nrSamplesToBuffer() const;
 	uint32	       maxNetworkDelay() const;
-	uint32         nrRSPboards() const;
-	uint32         nrRSPboardsPerStation() const;
-	uint32         subbandsToReadFromFrame() const;
+	uint32         nrRSPboards(const int index) const;
+	uint32         nrRSPboardsPerStation(const int index) const;
+	uint32         subbandsToReadFromFrame(const int index) const;
 	uint32         nrPPFTaps() const;
 	uint32         nrChannelsPerSubband() const;
-	uint32         nrSubbands() const;
-	uint32         nrPsets() const;
+	vector<string> stationNames(const int index) const;
+	uint32         nrSubbands(const int index) const;
+	uint32         nrPsets(const int index) const;
 	uint32         nrCoresPerPset() const;
-	vector<double> refFreqs(uint32 rspid=0) const;
+	vector<double> refFreqs(const int index) const;
 	double         chanWidth() const;
-	vector<string> getPortsOf(const string& aKey) const;
+	unsigned       portNr(const unsigned coreNr, const int index) const;
 	string         inputPortnr(const string& aKey) const;
-	string         stationName(const int index) const;
+	string         stationName(const int stationNr, const int index) const;
 	uint32         rspId(const string& stationName) const;
 	static string  expandedArrayString(const string& orgStr);
 	bool	       useScatter() const;
 	bool	       useGather() const;
-	uint32	       nrPsetsPerStorage() const;
+	uint32	       nrPsetsPerStorage(const int index) const;
 	uint32	       nrOutputsPerInputNode() const;
-	uint32	       nrInputsPerStorageNode() const;
-	vector<uint32> inputPsets() const;
-	vector<uint32> outputPsets() const;
-	int	       inputPsetIndex(uint32 pset) const;
-	int	       outputPsetIndex(uint32 pset) const;
+	uint32	       nrInputsPerStorageNode(const int index) const;
+	vector<uint32> inputPsets(const int index) const;
+	vector<uint32> outputPsets(const int index) const;
+	int	       inputPsetIndex(uint32 pset,const int index) const;
+	int	       outputPsetIndex(uint32 pset, const int index) const;
 	string	       getMSname(unsigned sb) const;
 	uint32         nrBeams() const;
-	vector<int32>  beamlet2beams(uint32 rspid=0) const;
-	vector<int32>  beamlet2subbands(uint32 rspid=0) const;
-	vector<uint32> subband2Index(uint32 rspid=0) const;
+	vector<int32>  beamlet2beams(const int index) const;
+	vector<int32>  beamlet2subbands(const int index) const;
+	vector<uint32> subband2Index(const int index) const;
 	int32          nrSubbandsPerFrame() const;
 	
 	vector<double> getBeamDirection(const unsigned currentBeam) const;
 	string         getBeamDirectionType(const unsigned currentBeam) const;
+	vector<string> partitionList() const;
+	uint32         nrStorageNodes() const;
+	int            partitionName2Index(const string& pName) const;
 
 	//# Datamembers
 	string	       name;
@@ -145,16 +149,16 @@ inline double CS1_Parset::stopTime() const
   return getTime("Observation.stopTime");
 }
 
-inline string CS1_Parset::stationName(const int index) const
+inline string CS1_Parset::stationName(const int stationNr, const int index) const
 {
-  return getStringVector("OLAP.storageStationNames")[index];
+  return stationNames(index)[stationNr];
 }
 
-inline uint32 CS1_Parset::nrStations() const
+inline uint32 CS1_Parset::nrStations(const int index) const
 {
-  return getStringVector("OLAP.storageStationNames").size();
+  return stationNames(index).size();
 } 
-  
+
 inline double CS1_Parset::sampleRate() const
 {
   return getUint32("Observation.sampleClock") * 1000000.0 / 1024;
@@ -220,24 +224,19 @@ inline uint32 CS1_Parset::maxNetworkDelay() const
   return (uint32) (getDouble("OLAP.maxNetworkDelay") * sampleRate());
 }
 
-inline uint32 CS1_Parset::nrRSPboards() const
+inline uint32 CS1_Parset::nrRSPboards(const int index) const
 {
-  return getUint32("OLAP.nrRSPboards");
+  return stationNames(index).size();
 }
 
-inline uint32 CS1_Parset::nrRSPboardsPerStation() const
+inline uint32 CS1_Parset::nrRSPboardsPerStation(const int index) const
 {
-  return nrRSPboards() / nrStations();
+  return nrRSPboards(index) / nrStations(index);
 }
 
-inline uint32 CS1_Parset::subbandsToReadFromFrame() const
+inline uint32 CS1_Parset::subbandsToReadFromFrame(const int index) const
 {
-  return nrSubbands() * nrStations() / nrRSPboards();
-}
-
-inline uint32 CS1_Parset::nrSubbandsPerPset() const
-{
-  return getUint32("OLAP.subbandsPerPset");
+  return nrSubbands(index) * nrStations(index) / nrRSPboards(index);
 }
 
 inline uint32 CS1_Parset::nrPPFTaps() const
@@ -250,9 +249,9 @@ inline uint32 CS1_Parset::nrChannelsPerSubband() const
   return getUint32("Observation.channelsPerSubband");
 }
 
-inline uint32 CS1_Parset::nrPsets() const
+inline uint32 CS1_Parset::nrPsets(const int index) const
 {
-  return nrSubbands() / nrSubbandsPerPset();
+  return nrSubbands(index) / nrSubbandsPerPset(index);
 }
 
 inline uint32 CS1_Parset::nrCoresPerPset() const
@@ -275,39 +274,24 @@ inline bool CS1_Parset::useGather() const
   return getBool("OLAP.IONProc.useGather");
 }
 
-inline uint32 CS1_Parset::nrPsetsPerStorage() const
-{
-  return getUint32("OLAP.psetsPerStorage");
-}
-
 inline uint32 CS1_Parset::nrOutputsPerInputNode() const
 {
   return useScatter() ? 1 : nrCoresPerPset();
 }
 
-inline uint32 CS1_Parset::nrInputsPerStorageNode() const
+inline uint32 CS1_Parset::nrInputsPerStorageNode(const int index) const
 {
-  return (useGather() ? 1 : nrCoresPerPset()) * nrPsetsPerStorage();
+  return (useGather() ? 1 : nrCoresPerPset()) * nrPsetsPerStorage(index);
 }
 
-inline vector<uint32> CS1_Parset::inputPsets() const
+inline int CS1_Parset::inputPsetIndex(uint32 pset, const int index) const
 {
-  return getUint32Vector("OLAP.BGLProc.inputPsets");
+  return findIndex(pset, inputPsets(index));
 }
 
-inline vector<uint32> CS1_Parset::outputPsets() const
+inline int CS1_Parset::outputPsetIndex(uint32 pset, const int index) const
 {
-  return getUint32Vector("OLAP.BGLProc.outputPsets");
-}
-
-inline int CS1_Parset::inputPsetIndex(uint32 pset) const
-{
-  return findIndex(pset, inputPsets());
-}
-
-inline int CS1_Parset::outputPsetIndex(uint32 pset) const
-{
-  return findIndex(pset, outputPsets());
+  return findIndex(pset, outputPsets(index));
 }
 
 inline uint32 CS1_Parset::nrBeams() const
@@ -320,6 +304,15 @@ inline int32  CS1_Parset::nrSubbandsPerFrame() const
   return getInt32("OLAP.nrSubbandsPerFrame");
 }
 
+inline vector<string>  CS1_Parset::partitionList() const
+{
+  return getStringVector("Observation.VirtualInstrument.partitionList");
+}
+
+inline uint32 CS1_Parset::nrStorageNodes() const
+{
+  return getUint32("OLAP.nrStorageNodes");
+}
 
 } // namespace CS1
 } // namespace LOFAR

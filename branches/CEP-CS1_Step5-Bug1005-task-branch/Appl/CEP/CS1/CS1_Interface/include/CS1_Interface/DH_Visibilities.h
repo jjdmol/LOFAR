@@ -45,7 +45,8 @@ class DH_Visibilities: public DataHolder
     typedef float	   CentroidType;
 
     explicit DH_Visibilities(const string& name,
-			     const CS1_Parset *pSet);
+			     const CS1_Parset *pSet,
+			     const int index);
 
     DH_Visibilities(const DH_Visibilities&);
 

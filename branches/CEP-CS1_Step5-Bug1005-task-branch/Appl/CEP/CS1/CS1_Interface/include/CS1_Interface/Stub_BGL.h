@@ -46,7 +46,7 @@ class Stub_BGL
     Stub_BGL(bool iAmOnBGL, bool isInput, const char *connectionName, const CS1_Parset *pSet);
     ~Stub_BGL();
 
-    void connect(unsigned psetNr, unsigned coreNr, TinyDataManager &dm, unsigned channel);
+    void connect(unsigned psetNr, unsigned coreNr, unsigned portArrayNr, TinyDataManager &dm, unsigned channel);
 
   private:
     const CS1_Parset				     *itsCS1PS;
