@@ -28,6 +28,7 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <Common/lofar_datetime.h>
+#include <Common/LofarConstants.h>
 //#include <APL/APLCommon/APLUtilities.h>
 #include <CS1_Interface/CS1_Parset.h>
 
@@ -36,6 +37,8 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/format.hpp>
 #include <algorithm>
+
+#define MAX_SB_PER_PSET 6
 
 namespace LOFAR {
 namespace CS1 {
@@ -51,18 +54,77 @@ CS1_Parset::~CS1_Parset()
 {
 }
 
-uint32 CS1_Parset::nrSubbands() const
+vector<string>  CS1_Parset::stationNames(const int index) const
 {
-  uint32 nrSubbands(0);
-  vector<int32> b2s = beamlet2subbands();
+  vector<string> allStations = getStringVector("OLAP.storageStationNames");
+  vector<string> sNames;
+  sNames.reserve(allStations.size());
+  for (uint i = 0; i < allStations.size(); i++) {
+    if (getUint32("PIC.Core." + allStations[i] + ".RSP") == (uint32)index) {
+      sNames.push_back(allStations[i]);
+    }
+  }
+  return sNames;
+}
+
+uint32 CS1_Parset::nrSubbands(const int index) const
+{
+  uint32 nrSBands(0);
+  vector<int32> b2b = itsObservation.beamlet2beams;
+  unsigned begin = index * MAX_BEAMLETS_PER_RSP;
+  unsigned end = begin + MAX_BEAMLETS_PER_RSP-1;
   
-  for (uint i = 0; i < 54; i++) {
-    if (b2s[i] != -1) {
-      nrSubbands++;
+  for (uint i = begin; i <= end; i++) {
+    if (b2b[i] != 0) {
+      nrSBands++;
     }  
   }
-	
-  return nrSubbands;
+  return (nrSBands);
+}
+
+uint32 CS1_Parset::nrSubbandsPerPset(const int index) const
+{
+  uint32 nrSBands = nrSubbands(index);
+  if (nrSBands == 1)  { return(1); }
+  else {
+    for (uint i = MAX_SB_PER_PSET; i > 0; i--) {
+      if (nrSBands/nrStorageNodes() % i == 0) { return (i); }	
+    }
+  }
+  return (0);
+}
+
+uint32 CS1_Parset::nrPsetsPerStorage(const int index) const
+{
+  uint32 nrSBands = nrSubbands(index);
+  if (nrSBands == 1)  { return(1); }
+  else {
+    return (nrSBands / nrSubbandsPerPset(index) / 2);
+  }
+}
+
+vector<uint32> CS1_Parset::inputPsets(const int index) const
+{
+  vector<string> inputP = getStringVector("OLAP.BGLProc.inputPsets");
+  
+  string inputPsetsString("x=[" + inputP[index]+ "]");
+  
+  ParameterSet	inParset;
+  inParset.adoptBuffer(inputPsetsString);
+  
+  return inParset.getUint32Vector("x");
+}
+
+vector<uint32> CS1_Parset::outputPsets(const int index) const
+{
+  vector<string> outputP = getStringVector("OLAP.BGLProc.outputPsets");
+  
+  string outputPsetsString("x=[" + outputP[index]+ "]");
+  
+  ParameterSet	outParset;
+  outParset.adoptBuffer(outputPsetsString);
+  
+  return outParset.getUint32Vector("x");
 }
 
 uint32 CS1_Parset::rspId(const string& stationName) const
@@ -79,99 +141,37 @@ string CS1_Parset::inputPortnr(const string& s) const
   return destPorts.substr(i+1, 4);  
 }
 
-vector<int32>  CS1_Parset::beamlet2beams(uint32 rspid) const
+vector<int32>  CS1_Parset::beamlet2beams(const int index) const
 {
   vector<int32> b2b;
   
-  switch (rspid) {
-    case 0 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2beams[0]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2beams[54]);
-		  
-		  std::copy(begin,end,std::back_inserter(b2b));
-		}
-		
-		return b2b;
-		
-    case 1 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2beams[54]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2beams[108]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2b));
-		}
-		
-		return b2b;
-		
-    case 2 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2beams[108]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2beams[162]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2b));
- 		}
-		  
-		return b2b;
-		
-    case 3 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2beams[162]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2beams[216]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2b));
- 		}
-		
-		return b2b;
-		 
-    default :	return b2b;
-  }
+  unsigned b = index * MAX_BEAMLETS_PER_RSP;
+  unsigned e = b + MAX_BEAMLETS_PER_RSP;
+  
+  vector<int32>::const_iterator begin(&itsObservation.beamlet2beams[b]);
+  vector<int32>::const_iterator end(&itsObservation.beamlet2beams[e]);
+  std::copy(begin,end,std::back_inserter(b2b));
+  
+  return b2b;
 }
 
-vector<int32>  CS1_Parset::beamlet2subbands(uint32 rspid) const
+vector<int32>  CS1_Parset::beamlet2subbands(const int index) const
 {
   vector<int32> b2s;
+
+  unsigned b = index * MAX_BEAMLETS_PER_RSP;
+  unsigned e = b + MAX_BEAMLETS_PER_RSP;
   
-  switch (rspid) {
-    case 0 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2subbands[0]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2subbands[54]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2s));
- 		}  
-		
-		return b2s;
-		
-    case 1 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2subbands[54]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2subbands[108]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2s));
-   		}  
-		
-		return b2s;
-    
-    case 2 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2subbands[108]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2subbands[162]);
-                  
-		  std::copy(begin,end,std::back_inserter(b2s));
-		}  
-		
-		return b2s;
-   
-    case 3 :	{
-                  vector<int32>::const_iterator begin(&itsObservation.beamlet2subbands[162]);
-                  vector<int32>::const_iterator end(&itsObservation.beamlet2subbands[216]);
-		  
-		  std::copy(begin,end,std::back_inserter(b2s));
-		}
-		
-		return b2s;
-		 
-    default :	return b2s;
-  }
+  vector<int32>::const_iterator begin(&itsObservation.beamlet2subbands[b]);
+  vector<int32>::const_iterator end(&itsObservation.beamlet2subbands[e]);
+  std::copy(begin,end,std::back_inserter(b2s));
+  
+  return b2s;
 }
 
-vector<uint32>  CS1_Parset::subband2Index(uint32 rspid) const
+vector<uint32>  CS1_Parset::subband2Index(const int index) const
 {
-  vector<int32> s2b = beamlet2subbands(rspid);
+  vector<int32> s2b = beamlet2subbands(index);
   vector<uint32> subband2Index;
   
   for (uint i = 0; i < s2b.size(); i++) {
@@ -179,16 +179,15 @@ vector<uint32>  CS1_Parset::subband2Index(uint32 rspid) const
       subband2Index.push_back(i);
     }  
   }
-
   return subband2Index;
 }
 
-vector<double> CS1_Parset::positions() const
+vector<double> CS1_Parset::positions(const int index) const
 {
-  vector<string> stNames = getStringVector("OLAP.storageStationNames");
+  vector<string> stNames = stationNames(index);
   vector<double> pos, list;
   
-  for (uint i = 0; i < nrStations(); i++)
+  for (uint i = 0; i < stNames.size(); i++)
   {
     pos = getDoubleVector("PIC.Core." + stNames[i] + ".position");
     list.insert(list.end(), pos.begin(), pos.end());
@@ -197,14 +196,13 @@ vector<double> CS1_Parset::positions() const
   return list;
 }
 
-vector<double> CS1_Parset::getRefPhaseCentres() const
+vector<double> CS1_Parset::getRefPhaseCentres(const int index) const
 {
   vector<double> list;
-  vector<string> stNames = getStringVector("OLAP.storageStationNames");
-  int index;
+  vector<string> stNames = stationNames(index);
+  int i = stNames[0].find("_");
   
-  index = stNames[0].find("_");
-  list = getDoubleVector(locateModule(stNames[0].substr(0,index)) + stNames[0].substr(0,index)  + ".phaseCenter");
+  list = getDoubleVector(locateModule(stNames[0].substr(0,i)) + stNames[0].substr(0,i)  + ".phaseCenter");
  
   return list; 
 }
@@ -220,28 +218,26 @@ vector<double> CS1_Parset::getPhaseCentresOf(const string& name) const
   return list; 
 }
 
-vector<double> CS1_Parset::refFreqs(uint32 rspid) const
+vector<double> CS1_Parset::refFreqs(const int index) const
 {
-  vector<uint32> sb2Index   = subband2Index(rspid);
-  vector<int32> subbandIDs = beamlet2subbands(rspid);
+  vector<int32> subbandIDs = beamlet2subbands(index);
   vector<double> refFreqs;
   
   refFreqs.resize(subbandIDs.size(), -1);
 
   for (uint i = 0; i < subbandIDs.size(); i++)
   {
-    if (subbandIDs[i] != -1) 
+    if (subbandIDs[i] != -1) { 
       refFreqs[i] = ((itsObservation.nyquistZone - 1 )*(getUint32("Observation.sampleClock")*1000000/2) + 
-                      sampleRate()*subbandIDs[sb2Index[i]]);
+                      sampleRate()*subbandIDs[i]);
+    }      
   }
-  
   return refFreqs;
 }
 
 string CS1_Parset::getMSname(unsigned sb) const
 {
   using namespace boost;
-
   string	 name	   = getString("Observation.MSNameMask");
   string	 startTime = getString("Observation.startTime");
   vector<string> splitStartTime;
@@ -253,21 +249,14 @@ string CS1_Parset::getMSname(unsigned sb) const
   replace_all(name, "${HOURS}", splitStartTime[3]);
   replace_all(name, "${MINUTES}", splitStartTime[4]);
   replace_all(name, "${SECONDS}", splitStartTime[5]);
-
   replace_all(name, "${MSNUMBER}", str(format("%05u") % getUint32("Observation.ObsID")));
   replace_all(name, "${SUBBAND}", str(format("%d") % sb));
-
   return name;
 }
 
-vector<string> CS1_Parset::getPortsOf(const string& aKey) const
+unsigned CS1_Parset::portNr(const unsigned coreNr, const int index) const
 {
-  ParameterSet    pParset;
-  
-  string portsString("ports=" + expandedArrayString(getString(aKey + "_Ports")));
-  pParset.adoptBuffer(portsString);
-  
-  return pParset.getStringVector("ports");
+  return (8300 + (index*100) + coreNr);
 }
 
 vector<double> CS1_Parset::getBeamDirection(const unsigned currentBeam) const
@@ -292,6 +281,14 @@ string CS1_Parset::getBeamDirectionType(const unsigned currentBeam) const
   beamDirType = getString(buf);
 
   return beamDirType;
+}
+
+int CS1_Parset::partitionName2Index(const string& pName) const
+{
+  vector<string> pNames = partitionList();
+  unsigned index = std::find(pNames.begin(), pNames.end(), pName) - pNames.begin();
+  
+  return index != pNames.size() ? (int) index : -1;
 }
 
 int CS1_Parset::findIndex(uint32 pset, const vector<uint32> &psets)

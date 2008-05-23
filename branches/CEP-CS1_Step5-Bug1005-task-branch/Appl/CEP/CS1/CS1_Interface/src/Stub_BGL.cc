@@ -54,7 +54,7 @@ Stub_BGL::~Stub_BGL()
 }
 
 
-void Stub_BGL::connect(unsigned psetNr, unsigned coreNr, TinyDataManager &dm, unsigned channel)
+void Stub_BGL::connect(unsigned psetNr, unsigned coreNr, unsigned portArrayNr,  TinyDataManager &dm, unsigned channel)
 {
   pair<unsigned, unsigned> index(psetNr, coreNr);
 
@@ -65,7 +65,11 @@ void Stub_BGL::connect(unsigned psetNr, unsigned coreNr, TinyDataManager &dm, un
 
   if (transportType == "TCP") {
     string server  = itsCS1PS->getStringVector(itsPrefix + "_ServerHosts")[psetNr];
-    string service = itsCS1PS->getPortsOf(itsPrefix)[coreNr];
+    
+    std::stringstream stream;
+    stream << itsCS1PS->portNr(coreNr, portArrayNr);
+    std::string service = stream.str( );
+ 
     th = itsIAmOnBGL ? new TH_Socket(server, service, false, Socket::TCP, false) : new TH_Socket(service, false, Socket::TCP, 5, false);
   } else if (transportType == "FILE") {
     string baseFileName = itsCS1PS->getString(itsPrefix + "_BaseFileName");

@@ -28,7 +28,7 @@
 namespace LOFAR {
 namespace CS1 {
 
-DH_Visibilities::DH_Visibilities(const string &name, const CS1_Parset *pSet)
+DH_Visibilities::DH_Visibilities(const string &name, const CS1_Parset *pSet, const int index)
 : DataHolder(name, "DH_Visibilities"),
   itsCS1PS  (pSet),
   itsVisibilities(0),
@@ -36,7 +36,7 @@ DH_Visibilities::DH_Visibilities(const string &name, const CS1_Parset *pSet)
   itsCentroids(0)
 {
   itsNrChannels       = itsCS1PS->nrChannelsPerSubband();
-  unsigned nrStations = itsCS1PS->nrStations();
+  unsigned nrStations = itsCS1PS->nrStations(index);
   itsNrBaselines      = nrStations * (nrStations + 1) / 2;
 }   
 
