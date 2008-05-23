@@ -27,6 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
 #include <APL/APLCommon/StationInfo.h>
+#include <boost/regex.hpp>
 
 using namespace LOFAR;
 using namespace LOFAR::Deployment;
@@ -48,6 +49,8 @@ int main (int	argc, char* argv[])
 				PVSS2SASname("RS002:LOFAR_PIC_Cabinet0_Subrack0.state"));
 	LOG_INFO_STR("PVSS==>SAS(MCU001:LOFAR_PermSW.state)                      = " << 
 				PVSS2SASname("MCU001:LOFAR_PermSW.state"));
+	LOG_INFO_STR("PVSS==>SAS(RS002:LOFAR_PermSW.state)                       = " << 
+				PVSS2SASname("RS002:LOFAR_PermSW.state"));
 	LOG_INFO_STR("PVSS==>SAS(MCU001:LOFAR_PermSW_MACScheduler.state)         = " << 
 				PVSS2SASname("MCU001:LOFAR_PermSW_MACScheduler.state"));
 	LOG_INFO_STR("PVSS==>SAS(MCU001:LOFAR_ObsSW_Observation5_ObsCtrl.state)  = " << 
@@ -57,13 +60,13 @@ int main (int	argc, char* argv[])
 	LOG_INFO_STR("PVSS==>SAS(RS002:LOFAR_ObsSW_Observation5_BeamCtrl.state)  = " << 
 				PVSS2SASname("RS002:LOFAR_ObsSW_Observation5_BeamCtrl.state"));
 
-	LOG_INFO_STR("PVSSname(LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.state)        = " << 
+	LOG_INFO_STR("SAS==>PVSS(LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.state)        = " << 
 				SAS2PVSSname("LOFAR.PIC.Remote.RS002.Cabinet0.Subrack0.state"));
-	LOG_INFO_STR("PVSSname(LOFAR.PermSW.Remote.RS002.ServiceBroker.state)         = " << 
+	LOG_INFO_STR("SAS==>PVSS(LOFAR.PermSW.Remote.RS002.ServiceBroker.state)         = " << 
 				SAS2PVSSname("LOFAR.PermSW.Remote.RS002.ServiceBroker.state"));
-	LOG_INFO_STR("PVSSname(LOFAR.PermSW.CEP.MCU001.MACScheduler.state)            = " << 
-				SAS2PVSSname("LOFAR.PermSW.CEP.MCU001.MACScheduler.state"));
-	LOG_INFO_STR("PVSSname(LOFAR.ObsSW.Observation.VirtualInstrument.stationList) = " << 
+	LOG_INFO_STR("SAS==>PVSS(LOFAR.PermSW.Control.MCU001.MACScheduler.state)        = " << 
+				SAS2PVSSname("LOFAR.PermSW.Control.MCU001.MACScheduler.state"));
+	LOG_INFO_STR("SAS==>PVSS(LOFAR.ObsSW.Observation.VirtualInstrument.stationList) = " << 
 				SAS2PVSSname("LOFAR.ObsSW.Observation.VirtualInstrument.stationList"));
 
 	return (0);
