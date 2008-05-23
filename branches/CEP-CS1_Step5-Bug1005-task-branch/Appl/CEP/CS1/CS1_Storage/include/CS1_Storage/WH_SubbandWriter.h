@@ -49,13 +49,11 @@ namespace LOFAR
     {
     public:
 
-      WH_SubbandWriter(const string& name,  const vector<uint>& subbandIDs,
-                             CS1_Parset *pset);
+      WH_SubbandWriter(const string& name, CS1_Parset *pset);
 
       virtual ~WH_SubbandWriter();
     
-      static WorkHolder* construct(const string& name,  
-                                   const vector<uint>& subbandIDs,
+      static WorkHolder* construct(const string& name,
 				         CS1_Parset *pset);
 
       virtual WH_SubbandWriter* make(const string& name);
@@ -75,7 +73,7 @@ namespace LOFAR
       void clearAllSums();
       
       CS1_Parset *itsCS1PS;
-      const vector<uint> itsSubbandIDs;     ///< IDs of the subband(s)
+      vector<string> itsStationNames;
       uint  itsNStations;
       uint  itsNBaselines;
       uint  itsNChannels;
