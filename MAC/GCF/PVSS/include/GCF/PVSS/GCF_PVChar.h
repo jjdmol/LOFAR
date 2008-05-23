@@ -39,7 +39,6 @@ class GCFPVChar : public GCFPValue
 {
   public:
   	explicit GCFPVChar (char val = 0) : GCFPValue(LPT_CHAR), _value(val) {;}
-    explicit GCFPVChar(const GCFPVChar& val) : GCFPValue(LPT_CHAR), _value(val.getValue()) {;}
  
   	virtual ~GCFPVChar () {;}
 

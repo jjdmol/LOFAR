@@ -40,7 +40,7 @@ class GCFPVDouble : public GCFPValue
 {
   public: 
   	explicit GCFPVDouble (double val = 0.0) : GCFPValue(LPT_DOUBLE), _value(val) {;}
-    explicit GCFPVDouble(const GCFPVDouble& val) : GCFPValue(LPT_DOUBLE), _value(val.getValue()) {;}
+    GCFPVDouble(const GCFPVDouble& val) : GCFPValue(LPT_DOUBLE), _value(val.getValue()) {;}
 
   	virtual ~GCFPVDouble () {;}
     
