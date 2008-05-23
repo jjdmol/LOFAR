@@ -35,15 +35,15 @@ def doObservation(obsID, parset):
 	sys.exit(1)
 
     sectionTable = dict({\
-	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
+	'BGLProcSection': BGLProcSection(parset, userId.getHost()),
 	'StorageSection': StorageSection(parset, listfen)
 	#Flagger(parset, listfen)
         })
-
+    
     if sectionTable.has_key('BGLProcSection') and sectionTable.has_key('StorageSection'):
 	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'TCP'
     else:
-	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'NULL'
+ 	parset['OLAP.OLAP_Conn.BGLProc_Storage_Transport'] = 'NULL'
 
     nSubbandSamples = float(parset['OLAP.BGLProc.integrationSteps']) * float(parset['Observation.channelsPerSubband'])
     stepTime = nSubbandSamples / (parset['Observation.sampleClock'] * 1000000.0 / 1024)
@@ -64,7 +64,7 @@ def doObservation(obsID, parset):
     try:
         for section in sectionTable:
             print ('Starting ' + sectionTable.get(section).package)
-            runlog = logdir + obsID + '/' + sectionTable.get(section).getName() + '.' + options.partition +'.runlog'
+            runlog = logdir + obsID + '/' + sectionTable.get(section).getName()
 
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
@@ -104,7 +104,6 @@ if __name__ == '__main__':
 
     # do not use the callback actions of the OptionParser, because we must make sure we read the parset before adding any variables
     parser.add_option('--parset'         , dest='parset'         , default='CS1.parset', type='string', help='name of the parameterset [%default]')
-    parser.add_option('--partition'      , dest='partition'      , default='R000_128_0T',type='string', help='name of the BGL partion [%default]')
     parser.add_option('--clock'          , dest='clock'          , default='160MHz'    , type='string', help='clock frequency (either 160MHz or 200MHz) [%default]')
     parser.add_option('--runtime'        , dest='runtime'        , default='600'       , type='int'   , help='length of measurement in seconds [%default]')
     parser.add_option('--starttime'      , dest='starttime', default=int(time.time() + 90), type='int', help='start of measurement in UTC seconds [now + 90s]')
@@ -120,11 +119,8 @@ if __name__ == '__main__':
 
     parset.readFromFile(options.parset)
 
-    parset.checkCS1Parset()
-
     parset.setClock(options.clock)
     parset.setIntegrationTime(options.integrationtime) 
-    parset.setPartition(options.partition) 
     if options.msname:
         parset.setMSName(options.msname)
 
@@ -181,6 +177,8 @@ if __name__ == '__main__':
 	sys.exit(1)
 
     obsID = 'L' + dateStr[0] + '_' + '%05d' % measurementnumber
+    
+    parset.parseParset()
     
     # start the observation
     doObservation(obsID, parset)

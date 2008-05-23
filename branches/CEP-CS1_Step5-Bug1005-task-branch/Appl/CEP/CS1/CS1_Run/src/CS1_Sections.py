@@ -18,7 +18,6 @@ class Section(object):
         self.host = host
         self.buildvar = buildvar
         self.executable = self.package.split('/')[-1]
-	self.partition = parset.getPartition()
         
     def getName(self):
         return self.package.split('/')[-1]
@@ -33,37 +32,40 @@ class Section(object):
     def isBuildSuccess(self):
         return self.buildJob.isSuccess()
     
+    def createBGLJob(self):
+	return BGLJob(self.package.split('/')[-1], \
+                      self.host, \
+                      executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
+                      noProcesses = self.noProcesses, \
+                      partition = self.partition, \
+                      workingDir = self.workingDir)
+    
     def run(self, runlog, noRuns, runCmd = None):
         if '_bgl' in self.buildvar:
-            self.runJob = BGLJob(self.package.split('/')[-1], \
-                                 self.host, \
-                                 executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
-                                 noProcesses = self.noProcesses, \
-                                 partition = self.partition, \
-                                 workingDir = self.workingDir)
+            self.runJob.run(runlog, 
+                        self.parsetfile,
+                        200*noRuns,
+                        noRuns,
+                        runCmd)
+	    return 0		
         elif 'mpi' in self.buildvar:
             self.runJob = MPIJob(self.package.split('/')[-1], \
                                  self.host, \
                                  executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
                                  noProcesses = self.noProcesses, \
-                                 workingDir = self.workingDir,
-				 partition = self.partition)
+                                 workingDir = self.workingDir)
         else:   
             self.runJob = Job(self.package.split('/')[-1], \
                               self.host, \
                               executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
-                              workingDir = self.workingDir, \
-			      partition = self.partition)
-
-        parsetfile = '/tmp/' + self.executable + '.parset'
-        self.parset.writeToFile(parsetfile)
+                              workingDir = self.workingDir)
+        
         # For now set the timeout on 100 times the number of seconds to process
         self.runJob.run(runlog, 
-                        parsetfile,
+                        self.parsetfile,
                         100*noRuns,
                         noRuns,
                         runCmd)
-        os.remove(parsetfile)
 
     def isRunDone(self):
         return self.runJob.isDone()
@@ -76,72 +78,131 @@ class Section(object):
 
 class StorageSection(Section):
     def __init__(self, parset, host):
-
-        nSubbands = parset.getNrSubbands()
-        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
-        nPsetsPerStorage = parset.getInt32('OLAP.psetsPerStorage');
-        if not nSubbands % (nSubbandsPerPset * nPsetsPerStorage) == 0:
-            raise Exception('Not a integer number of subbands per storage node!')
-
-        self.noProcesses = nSubbands / (nSubbandsPerPset * nPsetsPerStorage)
+        for i in range(0, len(parset.getStringVector('Observation.VirtualInstrument.partitionList'))):
+	    nSubbands = parset.getNrSubbands(i)
+            self.nSubbandsPerPset = parset.subbandsPerPset(i)
+ 	    nPsetsPerStorage = parset.psetsPerStorage(i)
+	    if nSubbands > 0:
+                if not nSubbands % (self.nSubbandsPerPset * nPsetsPerStorage) == 0:
+                    raise Exception('Not a integer number of subbands per storage node!')
+		    
+        self.noProcesses = len(parset.getStringVector('Observation.VirtualInstrument.partitionList')) * parset.getInt32('OLAP.nrStorageNodes')
 
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_Storage', \
                          host = host, \
                          buildvar = 'gnu_openmpi-opt')
-
-        storageIPs = [s.getExtIP() for s in self.host.getSlaves(self.noProcesses * nPsetsPerStorage)]
-        self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
-
+        
+	if self.parset.getInt32('OLAP.nrStorageNodes') != len(self.host.getSlaves()):
+	    raise Exception('key OLAP.nrStorageNodes("%d") != nrStorageNodes("%d") defined in file: CS1_Host.py' % (self.parset.getInt32('OLAP.nrStorageNodes'),  len(self.host.getSlaves())))
+	
+	storageIPs = [s.getExtIP() for s in self.host.getSlaves()]
+	self.parset['OLAP.OLAP_Conn.BGLProc_Storage_ServerHosts'] = '[' + ','.join(storageIPs) + ']'
+	
     def run(self, runlog, noRuns, runCmd = None):
+        self.parsetfile = '/tmp/' + self.executable + '.parset'
+	self.parset.writeToFile(self.parsetfile)
+        runlog = runlog +'.runlog'
 	if self.parset.getBool("OLAP.IONProc.useGather"):
 	    noRuns = noRuns / self.parset.getInt32("OLAP.IONProc.integrationSteps");
         Section.run(self, runlog, noRuns, runCmd)
-
         
-class BGLProcSection(Section):
-    def __init__(self, parset, host, partition):
-        self.partition = partition
+	os.remove(self.parsetfile)
+	
+class BGLProcSection(object):
+    def __init__(self, parset, host):
+        self.BGLProcSectionList = list()
+	self.package = 'Appl/CEP/CS1/CS1_BGLProc'
+ 
+        #createBGLProcSection(s)
+	for i in range(0, len(parset.getStringVector('Observation.VirtualInstrument.partitionList'))):
+	    self.BGLProcSectionList.append(BGLProc(parset,host, i, self.package))
+	
+	inputPsetsArray = '['
+	outputPsetsArray = '['
+	for bglproc in self.BGLProcSectionList:
+	    if len(self.BGLProcSectionList) -1 != self.BGLProcSectionList.index(bglproc):
+	       inputPsetsArray = inputPsetsArray + '"' + ','.join(str(b) for b in bglproc.inputPsets) + '",'
+	       outputPsetsArray = outputPsetsArray + '"' + ','.join(str(b) for b in bglproc.outputPsets) + '",'
+	    else:
+	       inputPsetsArray = inputPsetsArray + '"' + ','.join(str(b) for b in bglproc.inputPsets) + '"]'
+	       outputPsetsArray = outputPsetsArray + '"' + ','.join(str(b) for b in bglproc.outputPsets) + '"]'
+	     
+	parset['OLAP.BGLProc.inputPsets']  = inputPsetsArray
+	parset['OLAP.BGLProc.outputPsets'] = outputPsetsArray
+	print 'inputPsetsArray = ', inputPsetsArray
+	print 'outputPsetsArray = ', outputPsetsArray
 
-        nSubbands = parset.getNrSubbands()
-        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
-
-        if not nSubbands % nSubbandsPerPset == 0:
-            raise Exception('subbands cannot be evenly divided over psets (nSubbands = %d and nSubbandsPerPset = %d)' % (nSubbands, nSubbandsPerPset))
-
-        nPsets = nSubbands / nSubbandsPerPset
-        self.noProcesses = int(nPsets) * parset.getInt32('OLAP.BGLProc.coresPerPset')
-        self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
-
-        inputNodes = parset.getInputNodes()
-	interfaces = IONodes.get(partition)
-
-	inputPsets = [interfaces.index(i) for i in inputNodes]
-	outputPsets = range(nPsets)
-	parset['OLAP.BGLProc.inputPsets']  = inputPsets
-	parset['OLAP.BGLProc.outputPsets'] = outputPsets
-	print 'inputNodes = ', inputNodes
-	print 'interfaces = ', interfaces
-	print 'inputPsets = ', inputPsets
-	print 'outputPsets = ', outputPsets
-
-        Section.__init__(self, parset, \
-                         'Appl/CEP/CS1/CS1_BGLProc', \
+    def getName(self):
+        return self.package.split('/')[-1]
+    
+    def run(self, runlog, noRuns, runCmd = None):
+        parsetfile = '/tmp/' + self.BGLProcSectionList[0].executable + '.parset'
+	self.BGLProcSectionList[0].parset.writeToFile(parsetfile)
+	
+	#copied files
+        self.BGLProcSectionList[0].runJob.prerun(parsetfile)
+        for bglproc in self.BGLProcSectionList:
+	    bglproc.run(runlog, noRuns, parsetfile)
+    
+        os.remove(parsetfile)
+   
+    def isRunSuccess(self):
+        for bglproc in self.BGLProcSectionList:
+	    bglproc.isRunSuccess()
+    
+class BGLProc(Section):
+    def __init__(self, parset, host, index, package):
+	self.parset = parset
+        self.partition = parset.getStringVector('Observation.VirtualInstrument.partitionList')[index].strip().strip('[').rstrip(']')
+	self.nSubbands = parset.getNrSubbands(index)
+	self.nSubbandsPerPset = parset.subbandsPerPset(index)
+	nPsets = 0
+	self.inputPsets = list()
+	self.outputPsets = list()
+	
+	if self.nSubbands > 0:
+	    if not self.nSubbands % self.nSubbandsPerPset == 0:
+		raise Exception('subbands cannot be evenly divided over psets (nSubbands = %d and nSubbandsPerPset = %d)' % (self.nSubbands, self.nSubbandsPerPset))
+	    
+	    nPsets = self.nSubbands / self.nSubbandsPerPset
+            
+	    inputNodes = parset.getInputNodes(index)
+	    interfaces = IONodes.get(self.partition)
+ 	    self.inputPsets = [interfaces.index(j) for j in inputNodes]
+	   
+	    self.outputPsets = range(nPsets)
+	    print 'inputNodes = ', inputNodes
+	    print 'interfaces = ', interfaces
+	    print 'inputPsets = ', self.inputPsets
+	    print 'outputPsets = ', self.outputPsets
+	else:
+	    self.inputPsets.append(0)
+	    self.outputPsets.append(0)  
+        
+	#self.noProcesses = int(nPsets) * parset.getInt32('OLAP.BGLProc.coresPerPset')
+	self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
+	Section.__init__(self, parset, \
+                         package, \
                          host = host, \
                          buildvar = 'gnubgl_bgl')
-
-        nstations = parset.getNStations()
-        clock = parset.getClockString()
+	    
 	self.executable = 'CS1_BGL_Processing'
-        
-    def run(self, runlog, noRuns, runCmd = None):
+	self.runJob = self.createBGLJob()
+	    		     
+        nstations = parset.getNStations(index)
+        clock = parset.getClockString()	
+	    
+    def run(self, runlog, noRuns, parsetfile, runCmd = None):
+        self.parsetfile = parsetfile 
         coresPerPset = self.parset.getInt32('OLAP.BGLProc.coresPerPset')
-        subbandsPerPset = self.parset.getInt32('OLAP.subbandsPerPset')
+        subbandsPerPset = self.nSubbandsPerPset
         actualRuns = int(noRuns * subbandsPerPset / coresPerPset)
         if not actualRuns * coresPerPset == noRuns * subbandsPerPset:
             raise Exception('illegal number of runs')
-        Section.run(self, runlog, actualRuns, runCmd)        
-
+        
+	Section.run(self, runlog, actualRuns, runCmd)
+    
 class GeneratorSection(Section):
     def __init__(self, parset, host):
         Section.__init__(self, parset, \

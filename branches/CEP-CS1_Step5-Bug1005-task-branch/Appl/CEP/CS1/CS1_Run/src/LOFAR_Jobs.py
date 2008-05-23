@@ -8,22 +8,20 @@ class Job(object):
     Represents a run of some program.
 
     """
-    def __init__(self, name, host, executable, workingDir, partition):
+    def __init__(self, name, host, executable, workingDir):
         self.workingDir = workingDir
         self.name = name
         self.host = host
         self.executable = executable
-        self.remoteRunLog = self.workingDir + '/run.' + name + '.' + partition + '.log'
-        self.runlog = None
-	self.partition = partition
+	if self.partition == None:
+            self.remoteRunLog = self.workingDir + 'run.' + name + '.log'
+	else:
+	    self.remoteRunLog = self.workingDir + 'run.' + name + '.' + self.partition +'.log'    
+	self.runlog = None
 
     def run(self, runlog, parsetfile, timeOut, noRuns, runCmd = None):
         self.runlog = runlog
         self.runLogRetreived = False
-        self.host.sput(parsetfile, '~/')
-	tmp = self.workingDir + '/LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop'
-	self.host.sput(tmp, '~/')
-	self.host.sput('OLAP.parset', '~/')
 
         if runCmd == None:
             runCmd = self.executable
@@ -42,7 +40,7 @@ class Job(object):
     def isSuccess(self):
         self.waitForDone()
         if not self.runLogRetreived:
-	    if (self.name == 'CS1_BGLProc'):
+	    if self.partition != None:
 		interfaces = IONodes.get(self.partition)
 		for i in range(0, len(interfaces)):
 		    remoteRunLogIONProc = self.workingDir + '/run.CS1_IONProc.' + self.partition + '.'  + str(i)
@@ -65,19 +63,24 @@ class MPIJob(Job):
     '''
     This is a variation on a job that runs with MPI
     '''
-    def __init__(self, name, host, executable, noProcesses, workingDir, partition):
-        self.noProcesses = noProcesses
-        Job.__init__(self, name, host, executable, workingDir, partition)
+    def __init__(self, name, host, executable, noProcesses, workingDir):
+        self.partition = None
+	self.noProcesses = noProcesses
+        Job.__init__(self, name, host, executable, workingDir)
+    
     def run(self, runlog, parsetfile, timeOut, noRuns, runCmd):
         self.createMachinefile()
         if runCmd == None:
             runCmd = self.executable
-        if self.name == 'CS1_InputSection':
-            Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun_rsh -np ' + str(self.noProcesses) + \
-                    ' -hostfile ~/' + self.name + '.machinefile ' + runCmd)
-        else:
-            Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -nolocal -np ' + str(self.noProcesses) + \
-                    ' -machinefile ~/' + self.name + '.machinefile ' + runCmd)
+        
+	self.host.sput(parsetfile, '~/')
+	tmp = self.workingDir + '/LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop'
+	self.host.sput(tmp, '~/')
+	self.host.sput('OLAP.parset', '~/')
+
+	Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -nolocal -np ' + str(self.noProcesses) + ' --bynode' \
+                ' -machinefile ~/' + self.name + '.machinefile ' + runCmd)
+		
     def abort(self):
         print('Aborting ' + self.name)
         self.host.executeAsync('killall ' + self.name).waitForDone()
@@ -88,10 +91,10 @@ class MPIJob(Job):
 
     def createMachinefile(self):
         lmf = '/tmp/CS1_tmpfile'
-        slaves = self.host.getSlaves(self.noProcesses)
+        slaves = self.host.getSlaves()
         outf = open(lmf, 'w')
-        for slave in slaves:
-            outf.write(slave.getIntName() + '\n')
+	for slave in slaves:
+	    outf.write(slave.getIntName() + ' slots=4 max_slots=8\n')
         outf.close()
         self.host.sput(lmf, '~/' + self.name + '.machinefile')
         os.remove(lmf)
@@ -104,19 +107,23 @@ class BGLJob(Job):
         self.noProcesses = noProcesses
 
         # this can overwrite the values that were set before this line
-        Job.__init__(self, name, host, executable, workingDir, partition)
+        Job.__init__(self, name, host, executable, workingDir)
         self.tmplog = 'CS1_Run.tmplog'
         self.jobID = '0'
-
-    def run(self, runlog, parsetfile, timeOut, noRuns, runCmd):
-        print 'executing: Immediately executing ' + self.host.getSSHCommand() + ' "cp ' + self.executable + ' ' + self.workingDir + '"'
-        self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
+    
+    def prerun(self, parsetfile):
+	self.host.executeAsync('cp ' + self.executable + ' ' + self.workingDir).waitForDone()
 	self.host.sput(parsetfile, self.workingDir)
 	self.host.sput(parsetfile, self.workingDir + '/CS1.parset')
 	self.host.sput('OLAP.parset', self.workingDir)
+	self.host.sput(parsetfile, '~/')
+	tmp = self.workingDir + '/LOFAR/Appl/CEP/CS1/' + self.name + '/src/' + self.name + '.log_prop'
+	self.host.sput(tmp, '~/')
+	self.host.sput('OLAP.parset', '~/')
+	
+    def run(self, runlog, parsetfile, timeOut, noRuns, runCmd):
         #Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
         Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
-
 
 class BuildJob(Job):
     ''' A job that builds a LOFAR package '''

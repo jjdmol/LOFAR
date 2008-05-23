@@ -10,8 +10,6 @@
 
 # The ports for all (socket)connections
 
-OLAP.OLAP_Conn.BGLProc_Storage_Ports = [8300..8363]
-
 # should be one of NULL(inputFromMemory), FILE, TCP, UDP, ETHERNET
 OLAP.OLAP_Conn.station_Input_Transport = UDP
 
@@ -19,8 +17,7 @@ OLAP.OLAP_Conn.rawDataServers = ["10.181.0.4"]
 OLAP.OLAP_Conn.rawDataPorts = [4000]
 
 # Variables for Storage
-OLAP.subbandsPerPset = 6 #6
-OLAP.psetsPerStorage = 2 #3
+OLAP.nrStorageNodes = 2
 OLAP.BGLProc.integrationSteps = 608  #768 at 200MHz
 OLAP.BGLProc.nrPPFTaps=16
 OLAP.BGLProc.coresPerPset = 16
@@ -40,13 +37,16 @@ OLAP.DelayComp.nrCalcDelays = 16
 OLAP.IPHeaderSize = 32
 OLAP.EPAHeaderSize = 16
 OLAP.nrTimesInFrame = 16
-OLAP.nrSubbandsPerFrame = 18
+OLAP.nrSubbandsPerFrame = 48
 OLAP.nrBitsPerSample=16
 OLAP.nrSecondsOfBuffer = 6
 OLAP.maxNetworkDelay = 2.0 # 1 second extra added to compensate for timestamp bug
 OLAP.delayCompensation = F
 
 Observation.sampleClock = 160
+
+Observation.VirtualInstrument.partitionList = [R000_B06,R000_B04,R000_B05,R000_B07]
+#Observation.VirtualInstrument.partitionList = [R000_B06,R000_B04]
 
 # Nyquist zone:
 Observation.bandFilter = LBL_10_80
@@ -77,8 +77,8 @@ Observation.Beam[8].angle2 = 0
 Observation.nrBeams = 1
 
 Observation.Beam[1].directionTypes = J2000
-Observation.Beam[1].subbandList = [57,73,89,121,138,154,170,187,203,219,236,252,268,285,301,317,334,350,366,383,399,415,432,448]
-Observation.Beam[1].beamletList = [0..23]
+Observation.Beam[1].subbandList = [0,0..3,0..7,0..15]
+Observation.Beam[1].beamletList = [0,54..57,108..115,162..177]
 
 # example 2 beams:
 #Observation.nrBeams = 2

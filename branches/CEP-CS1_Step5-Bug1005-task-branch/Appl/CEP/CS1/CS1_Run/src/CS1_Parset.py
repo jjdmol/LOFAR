@@ -6,6 +6,10 @@ import sys
 import copy
 import string
 from Numeric import zeros
+import Hosts
+from CS1_Hosts import *
+
+MAX_BEAMLETS_PER_RSP = 54
 
 class CS1_Parset(LOFAR_Parset.Parset):
 
@@ -17,7 +21,6 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	self.bl2beams = list()
 	self.bl2subbands = list()
 	self.sb2index = list()
-	self.nrSubbands = 0
 	self.doObservation =False
 
     def setClock(self, clock):
@@ -35,33 +38,56 @@ class CS1_Parset(LOFAR_Parset.Parset):
     def getClockString(self):
         return self.clock
 
+    def subbandsPerPset(self, index):
+        nrSubbands = self.getNrSubbands(index)
+	if nrSubbands == 1 : return 1
+	else:
+	    pSets = (6, 5, 4, 3, 2, 1)
+	    for p in pSets:
+	        if nrSubbands % self.getInt32('OLAP.nrStorageNodes') != 0:
+		    begin = index * MAX_BEAMLETS_PER_RSP
+	            end = begin + MAX_BEAMLETS_PER_RSP-1
+		    raise Exception('Use even numbers of subbands in beamlets %d-%d' %(begin,end) + ', except for nrSubbands = "1"')
+		
+		if nrSubbands/self.getInt32('OLAP.nrStorageNodes') % p == 0: 
+		    if nrSubbands/p > self.maxNPsets(index):
+		        begin = index * MAX_BEAMLETS_PER_RSP
+	                end = begin + MAX_BEAMLETS_PER_RSP-1
+			print 'Needs "%d"' % (nrSubbands/p) + ' psets; only "%d"' % (self.maxNPsets(index)) + ' available in beamlets %d-%d' %(begin,end)
+			sys.exit(0)
+		    return p	
+    
+    def psetsPerStorage(self, index):
+        nrSubbands = self.getNrSubbands(index)
+	if nrSubbands == 1 : return 1
+	else:
+	    subPerPset = self.subbandsPerPset(index)
+	    return nrSubbands / subPerPset / self.getInt32('OLAP.nrStorageNodes')
+    
+    def partitionName(self, index):
+	partition = self.getStringVector('Observation.VirtualInstrument.partitionList')[index]
+	return partition.strip().strip('[').rstrip(']')
+	
     def setStations(self, stationList):
         self.stationList = stationList
-        self['OLAP.nrRSPboards'] = len(stationList)
         self['OLAP.storageStationNames'] = [s.getName() for s in stationList]
     
-    def setPartition(self, partition):
-        self.partition = partition
-	
-    def getPartition(self):
-        return self.partition
-	
     def setInputToMem(self):
         self.inputFromMemory = True
 	self['OLAP.OLAP_Conn.station_Input_Transport'] = 'NULL'
 
-    def getInputNodes(self):
+    def getInputNodes(self,index):
         inputNodelist = list()
 	
-	for s in self.stationList:
-	    destPorts = self.getStringVector('PIC.Core.' + string.split(s.getName(), '_')[0] + '_RSP.dest.ports')[self.getInt32('PIC.Core.' + s.getName() + '.RSP')]
+	for s in self.stationNames(index):
+	    destPorts = self.getStringVector('PIC.Core.' + string.split(s, '_')[0] + '_RSP.dest.ports')[self.getInt32('PIC.Core.' + s + '.RSP')]
 	    destPorts =  destPorts.strip().strip('[').rstrip(']')
 	    dest = string.split(destPorts, ':')[0]
 	    inputNodelist.append(string.split(destPorts, ':')[0])
 	return inputNodelist    
 	
-    def getNStations(self):
-        return int(len(self.stationList))
+    def getNStations(self,index):
+        return int(len(self.stationNames(index)))
         
     def setInterval(self, start, duration):
         self['Observation.startTime'] = datetime.datetime.fromtimestamp(start)
@@ -77,21 +103,19 @@ class CS1_Parset(LOFAR_Parset.Parset):
 
     def setMSName(self, msName):
         self['Observation.MSNameMask'] = msName
-
+    
+    def maxNPsets(self, index):
+        return len(IONodes.get(self.getStringVector('Observation.VirtualInstrument.partitionList')[index].strip().strip('[').rstrip(']')))
+     
     def getMSName(self):
         return self['Observation.MSNameMask']
-
-    def getNPsets(self):
-        subbands = self.getNrSubbands()
-        subbandsperpset = self.getInt32('OLAP.subbandsPerPset')
-        return subbands / subbandsperpset
 
     def find_first_of(self, key):
 	digit = False
         for s, result in [('0', ['0']), ('1', ['1']),('2', ['2']),('3', ['3']),('4', ['4']),('5', ['5']),('6', ['6']),('7', ['7']),('8', ['8']),('9', ['9'])]:
 	    if (key[0] == s):
 	        digit = True
-	        break;
+	        break
 
 	if not digit:
 	        print key + ' is not an short value'
@@ -134,7 +158,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    else:                   # yes, try to get second element.
 	        lastVal = outMask % int(strList[idx].split('..')[1])
 		
-		if (lastVal < firstVal):
+		if (int(lastVal) < int(firstVal)):
 		    print 'Illegal range specified in ' + strList[idx] + '.'
 	            sys.exit(0)
 	    	
@@ -163,15 +187,23 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    self.observation()
 	return self.sb2index    
 
-    def getNrSubbands(self):
-        if not self.doObservation:
+    def getNrSubbands(self, index):
+        begin = index * MAX_BEAMLETS_PER_RSP
+	end = begin + MAX_BEAMLETS_PER_RSP-1
+	
+	if not self.doObservation:
 	    self.observation()
-	return self.nrSubbands   
+	
+	nSubbands = 0
+	for i in range(begin,end):
+	    if self.bl2beams[i] != 0:
+	        nSubbands += 1
+	return nSubbands
 	
     def observation(self):
         self.doObservation = True
-        bl2beamsArray = zeros(4*54)
-	bl2subbandsArray = zeros(4*54)
+        bl2beamsArray = zeros(4*MAX_BEAMLETS_PER_RSP)
+	bl2subbandsArray = zeros(4*MAX_BEAMLETS_PER_RSP)
 	sb2indexArray = list()
 	
 	for i in range(0, len(bl2subbandsArray)):
@@ -189,7 +221,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    beamlets = self.getInt32Vector('x')
 	    
 	    if len(subbands) != len(beamlets):
-	        print 'NrBeamlets(%d)' % len(beamlets) + ' and nrSubbands(%d)' % len(subbands) + ' are not equal'
+	        print 'Number of subbands("%d")' % len(subbands) + ' != number of beamlets("%d")' % len(beamlets) + ' in beam ' + str(beam)
 	        sys.exit(0)
 		
 	    for b in range(0, len(beamlets)):
@@ -205,27 +237,10 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    if bl2subbandsArray[i] != -1:
 	        sb2indexArray.append(i)
 	
-	# nrSubbands, check the number of subbands of each RSP
-	nSubbands = 0
-	for i in range(0,54):
-	    if bl2subbandsArray[i] != -1:
-	        nSubbands += 1
-	
 	self.bl2beams = bl2beamsArray
 	self.bl2subbands = bl2subbandsArray
 	self.sb2index = sb2indexArray
-	self.nrSubbands = nSubbands
     	
-    def subbandList(self):
-        sbList = list()
-        
-	b2s = self.getBeamlet2subbands()
-	for i in range(0,54):
-	    if b2s[i] != -1:
-	        sbList.append(b2s[i])
-	    
-	return sbList    
-    
     def nyquistzoneFromFilter(self, filterName):
     
         if filterName == 'LBL_10_80' : return 1
@@ -239,22 +254,34 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	print 'filterselection value "' + filterName + '" not recognized, using LBL_10_80'
 	return 1
     
-    def checkCS1Parset(self):
-        if not self.isDefined('Observation.Beam[1].beamletList') and self.getInt32('Observation.nrBeams') == 1:
-	    sbString = self.expandedArrayString(self.getString('Observation.Beam[1].subbandList'))
-	    self.__setitem__('x',sbString);
-	    subbands = self.getInt32Vector('x')
-	    self['Observation.Beam[1].beamletList'] = '[0..%s]' % str(len(subbands) - 1)
+    def stationNames(self,index):
+        sNames = list()
+ 	for s in self.stationList:
+	    if self.getInt32('PIC.Core.' +  s.getName() + '.RSP') == index:
+		sNames.append(s.getName())
+	
+	return sNames  
+  
+    def parseParset(self):
+        for i in range(0, len(self.getStringVector('Observation.VirtualInstrument.partitionList'))):
+	    if self.getNrSubbands(i) > 0 and len(self.stationNames(i)) == 0:
+	        begin = i * MAX_BEAMLETS_PER_RSP
+	        end = begin + MAX_BEAMLETS_PER_RSP-1
+	        print 'No station name(s) selected in beamlets %d-%d' %(begin,end)
+		sys.exit(0)
+	    
+        b2b = self.getBeamlet2beams()
+	for i in range(0, len(self.getStringVector('Observation.VirtualInstrument.partitionList'))):
+	    begin = i * MAX_BEAMLETS_PER_RSP
+	    end = begin + MAX_BEAMLETS_PER_RSP-1
+	    nBeamlets = 0
+	    for j in range(begin,end):
+	        if b2b[j] != 0:
+		    nBeamlets += 1
 		    
-	b2b = self.getBeamlet2beams()
-        nBeamlets = 0
-	for i in range(0,53):
-	    if b2b[i] != 0:
-	        nBeamlets += 1
-
-	if nBeamlets > self.getInt32('OLAP.nrSubbandsPerFrame'):
-	    print 'NrBeamlets(%d)' % nBeamlets + ' > OLAP.nrSubbandsPerFrame(%d)' %  self.getInt32('OLAP.nrSubbandsPerFrame')
-	    sys.exit(0)
+	    if nBeamlets > self.getInt32('OLAP.nrSubbandsPerFrame'):
+	        print 'NrBeamlets("%d")' % nBeamlets + ' > OLAP.nrSubbandsPerFrame("%d")' %  self.getInt32('OLAP.nrSubbandsPerFrame')
+	        sys.exit(0)
 	
     def updateSBValues(self):
         if self.clock == '160MHz':
@@ -262,20 +289,25 @@ class CS1_Parset(LOFAR_Parset.Parset):
         elif self.clock == '200MHz':
             subbandwidth = 195312.5
 
-	#note: this is only true when the number of subbands in the 4 ranges(0..53,54..107,108..161,162..215) are equal!
-	subbandIDs = self.subbandList()
-        
+	subbandIDs = self.getBeamlet2subbands()
 	nyquistZone = self.nyquistzoneFromFilter(self.getString('Observation.bandFilter'))
+	refFreqList = zeros(4*MAX_BEAMLETS_PER_RSP)
+	for i in range(0, len(refFreqList)):
+	    refFreqList[i] = -1
+
+	for i in range(0, len(subbandIDs)):
+	   if subbandIDs[i] != -1:
+	       refFreqList[i] = ((nyquistZone -1 )*(self.getInt32('Observation.sampleClock')*1000000/2)  + subbandIDs[i] * subbandwidth)
 	
- 	sbs = list()
-        for sb in range(0, self.getNrSubbands()):
-            sbs.append((nyquistZone -1 )*(self.getInt32('Observation.sampleClock')*1000000/2)  + subbandIDs[sb] * subbandwidth)
-
-        # create the frequencies for all subbands
-        self['Observation.RefFreqs'] = '[' + ', '.join(str(sb) for sb in sbs) + ']'
-        self['Observation.NSubbands'] = self.getNrSubbands()
-
-        #the number of subbands should be dividable by the number of subbands per pset
-        if not self.getNrSubbands() % self.getInt32('OLAP.subbandsPerPset') == 0:
-            raise Exception('Number of subbandIDs(%d) in not dividable by the number of subbands per pset (%d).' % self.getNrSubbands(), self['OLAP.subbandsPerPset'])
-            
+	# create the frequencies for all subbands
+        self['Observation.RefFreqs'] = '[' + ', '.join(str(refFreg) for refFreg in refFreqList) + ']'
+	
+	nSubband = 0
+	for i in range(0, len(self.getStringVector('Observation.VirtualInstrument.partitionList'))):
+	    #the number of subbands should be dividable by the number of subbands per pset
+	    if not self.getNrSubbands(i) % self.subbandsPerPset(i) == 0:
+	        raise Exception('Number of subbandIDs("%d") in not dividable by the number of subbands per pset ("%d").' % (self.getNrSubbands(i), self.subbandsPerPset(i)))
+	    
+	    nSubband = nSubband + self.getNrSubbands(i)
+	
+	self['Observation.NSubbands'] = nSubband
