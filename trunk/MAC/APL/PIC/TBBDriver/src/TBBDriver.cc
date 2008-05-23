@@ -31,6 +31,7 @@
 #include <Common/Version.h>
 
 #include <getopt.h>
+#include <errno.h>
 //#include <string>
 
 #include "TBBDriver.h"
