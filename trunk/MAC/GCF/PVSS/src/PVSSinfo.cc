@@ -162,7 +162,7 @@ const string& PVSSinfo::getLocalSystemName()
 //
 int8 PVSSinfo::getLocalSystemId()
 {
-	return (Resources::getSystem());
+	return ((int) Resources::getSystem());
 }
 
 //
@@ -199,7 +199,7 @@ int8 PVSSinfo::getSysId(const string& name)
 		index = name.length();
 	}
 	CharString sysName(name.c_str(), index);
-	SystemNumType sysNr;
+	int	 sysNr;
 	// workaround - start
 	DpIdentifier dpId;
 	Manager::getId(sysName + ":", dpId);

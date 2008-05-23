@@ -42,9 +42,10 @@ typedef vector<GCFPValue*> GCFPValueArray;
 class GCFPVDynArr : public GCFPValue
 {
   public:
-  	explicit GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
     explicit GCFPVDynArr(TMACValueType itemType);
-    explicit GCFPVDynArr (const GCFPVDynArr& valArray) : GCFPValue(valArray.getType())
+  	GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
+
+    GCFPVDynArr (const GCFPVDynArr& valArray) : GCFPValue(valArray.getType())
       { setValue(valArray.getValue()); }
 
   	virtual ~GCFPVDynArr();
