@@ -4,6 +4,11 @@
 # $Id: $
 #
 # station	board	node
+CS001T		RSP_0	bgl098
+CS001T		RSP_1	bgl097
+CS001T		RSP_2	bgl100
+CS001T		RSP_3	bgl099
+
 CS001		RSP_0	bgl130
 CS001		RSP_1	bgl129
 CS001		RSP_2	bgl132
