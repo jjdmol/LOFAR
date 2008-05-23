@@ -175,62 +175,30 @@ string	realHostname(const string&	someName)
 //
 string PVSS2SASname(const string&	PVSSname)
 {
-//	This is typically something for a regular expression but I can't get it linked.
-//	const char*		expression_text = "s/^([^:]*):LOFAR_PIC_";
-//	const char*		format_text     = "(?1PIC.Remote.$&.)";
-//	boost::regex	bexp;
-//	bexp.assign(expression_text);
-//	return(boost::regex_replace(PVSSname, bexp, format_text));
+	const char*		structure_match = "(([A-Z]{2,3}[0-9]{3}):LOFAR_(PIC|PermSW)_)|"		// 1,2,3
+									  "(([A-Z]{2,3}[0-9]{3}):LOFAR_(PIC|PermSW)\\.)";	// 4,5,6
+	const char*		location_match  = "(RCU[0-9]{3})|"									// 1
+									  "_(CS[0-9]{3})_|"									// 2 CS999
+									  "_(RS[0-9]{3})_|"									// 3 RS999
+									  "_([ABD-QS-Z][A-Z][0-9]{3})_|"					// 4 XX999
+									  "_([A-Z]{3}[0-9]{3})_";							// 5 XXX999
 
-	size_t	colon(PVSSname.find(':',0));	// = systemLen
-	size_t	locationPos(PVSSname.find("_",colon)+1);
-	size_t	locationLen(PVSSname.find("_",locationPos)-locationPos);
-	if (locationLen > 1024) {
-		locationLen = PVSSname.find(".",locationPos)-locationPos;
-	}
-	string	location(PVSSname.substr(locationPos, locationLen));
-	if ((location != "PIC") && (location != "PermSW") &&(location != "ObsSW")) {
-		string	SASname(PVSSname);
-		replace(SASname.begin(), SASname.end(), '_', '.');
-		return (SASname);
-	}
+	const char*		structure_repl  = "(?1LOFAR_$3_$2_)"	// LOFAR_PIC_RS002
+									  "(?4LOFAR_$6.)";		// LOFAR_PIC
+	const char*		location_repl	= "(?1$&)"				// ignore RCU999
+									  "(?2_Core$&)"			 
+									  "(?3_Remote$&)"
+									  "(?4_Europe$&)"
+									  "(?5_Control$&)";
 
-	string	stnCode = PVSSname.substr(0,2);
-	string	ring;
-	if (stnCode == "CS")
-		ring = "Core";
-	else if (stnCode == "RS")
-		ring = "Remote";
-	else if (colon == 5)
-		ring = "Europe";
-	else
-		ring = "CEP";
+	boost::regex	strexp, locexp;;
+	locexp.assign(location_match);
+	strexp.assign(structure_match);
 
-	string	SASname;
-	if (location == "ObsSW") {
-		// skip 'Observation<n> part
-		// <SYSTEM>:LOFAR_ObsSW_Observation<n>_xxx
-		//                                     ^
-		//                                     +-- restPos
-		size_t	restPos(PVSSname.find("_", locationPos+locationLen+1)+1);
-		if (restPos != string::npos) {
-			//                        LOFAR.ObsSW.<RING>.<SYSTEM>.xxx
-			SASname = formatString("LOFAR.%s.%s.%s.%s", location.c_str(), ring.c_str(), PVSSname.substr(0,colon).c_str(),
-								PVSSname.substr(restPos).c_str());
-		}
-		else {
-			//                        LOFAR.ObsSW.Observation.xxx
-			restPos = PVSSname.find(".", locationPos+locationLen+1)+1;
-			SASname = formatString("LOFAR.ObsSW.Observation.%s", PVSSname.substr(restPos).c_str());
-		}
-	}
-	else {
-		//                        LOFAR.PIC.<RING>.<SYSTEM>.xxx
-		SASname = formatString("LOFAR.%s.%s.%s.%s", location.c_str(), ring.c_str(), PVSSname.substr(0,colon).c_str(), 
-							PVSSname.substr(locationPos+locationLen+1).c_str());
-	}
-	replace(SASname.begin(), SASname.end(), '_', '.');
-	return (SASname);
+	return (boost::regex_replace(
+				boost::regex_replace(
+				PVSSname, strexp, structure_repl, boost::match_default | boost::format_all), 
+			locexp, location_repl, boost::match_default | boost::format_all));
 }
 
 //
@@ -249,33 +217,17 @@ string PVSS2SASname(const string&	PVSSname)
 //
 string SAS2PVSSname(const string&	SASname)
 {
-	string	PVSSname(SASname);									// prepare answer
+	const char*		structure_match = "(LOFAR\\.(PIC|PermSW)\\.(Core|Remote|Europe|Control)\\.([A-Z]{2}[0-9]{3})\\.)";		// 1,2,3
+	const char*		structure_repl  = "(?1$4\\:LOFAR_$2_)";	// RS002:LOFAR_PIC
+
+	boost::regex	strexp;
+	strexp.assign(structure_match);
+
+	string PVSSname(boost::regex_replace(SASname, strexp, structure_repl, boost::match_default | boost::format_all));
 	replace(PVSSname.begin(), PVSSname.end(), '.', '_');		// replace all . with _
 	PVSSname.replace(PVSSname.find_last_of('_'), 1, 1, '.');	// except for the last
 
-	// LOFAR_PIC_<ring>_<system>_xxx_yyy.zzz
-	size_t	locationPos(PVSSname.find("PIC_",0));				// PIC might need adjustments
-	int		locationLen = 4;
-	if (locationPos == string::npos) {
-		locationLen = 7;
-		locationPos = PVSSname.find("PermSW_",0);
-		if (locationPos == string::npos) {
-			return (PVSSname);									// no PIC or PermSW DP.
-		}
-	}
-	size_t	ringPos(locationPos + locationLen);
-
-	// Check ringname
-	string	ring = PVSSname.substr(ringPos,4);
-	if (ring != "Core" && ring != "Remo" && ring != "Euro" && ring != "CEP_") {
-		return (PVSSname);
-	}
-
-	size_t	systemPos(PVSSname.find("_", ringPos)+1);
-	int		systemLen(PVSSname.find("_", systemPos+1) - systemPos);
-	return (formatString("%s:%s%s", PVSSname.substr(systemPos, systemLen).c_str(),
-							PVSSname.substr(0, ringPos).c_str(),
-							PVSSname.substr(systemPos+systemLen+1).c_str()));
+	return (PVSSname);
 }
 
 
