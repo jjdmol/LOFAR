@@ -25,6 +25,8 @@ PermSW			-			C	P	LOFAR_PermSW
 MACScheduler	MS			C	P	LOFAR_PermSW_MACScheduler
 Ring			-			C	P	LOFAR_PermSW_@ring@
 Station			-			C	P	LOFAR_PermSW_@ring@_@station@
+Cluster			-			C	P	LOFAR_PermSW_@cluster@
+Node			-			C	P	LOFAR_PermSW_@cluster@_@node@
 ObsSW			-			C	P	LOFAR_ObsSW
 Observation		OBS			C	O	LOFAR_ObsSW_@observation@
 ObsCtrl			OBSCTRL		C	O	LOFAR_ObsSW_@observation@_ObsCtrl

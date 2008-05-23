@@ -32,7 +32,10 @@ using namespace std;
 using namespace LOFAR::Deployment;
 
 int	main (int	argc, char*	argv[]) {
-	cout << PVSS2SASname(argv[1]) << endl;
+	string	input;
+	while(getline(cin, input)) {
+		cout << PVSS2SASname(input) << endl;
+	}
 	return (0);
 }
 
