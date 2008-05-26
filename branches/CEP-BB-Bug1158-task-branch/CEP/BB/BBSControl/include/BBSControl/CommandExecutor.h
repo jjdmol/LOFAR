@@ -110,8 +110,8 @@ namespace LOFAR
       VisData::Pointer                        itsChunk;
       
       // Model parameter databases.
-      scoped_ptr<ParmDB::ParmDB>              itsSkyDb;
-      scoped_ptr<ParmDB::ParmDB>              itsInstrumentDb;
+      scoped_ptr<LOFAR::ParmDB::ParmDB>       itsSkyDb;
+      scoped_ptr<LOFAR::ParmDB::ParmDB>       itsInstrumentDb;
 
       // CommandQueue.
       shared_ptr<CommandQueue>                itsCommandQueue;

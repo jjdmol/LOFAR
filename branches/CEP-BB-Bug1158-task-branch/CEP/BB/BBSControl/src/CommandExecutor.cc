@@ -456,16 +456,34 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
     const VisDimensions &dims = itsMeasurement->getDimensions();
 
     // Construct solution cell grid.
+    const size_t cellSizeFreq =
+        static_cast<size_t>(command.domainSize().bandWidth);
+
     Axis::Pointer freqAxis(dims.getFreqAxis());
-    if(command.domainSize().bandWidth > 1)
+    if(cellSizeFreq == 0)
     {
-        freqAxis = freqAxis->compress(static_cast<size_t>(command.domainSize().bandWidth));
+        const pair<double, double> range = dims.getFreqRange();
+        freqAxis.reset(new RegularAxis(range.first, range.second - range.first,
+            1));
+    }
+    else if(cellSizeFreq > 1)
+    {
+        freqAxis = freqAxis->compress(cellSizeFreq);
     }
 
-    Axis::Pointer timeAxis = dims.getTimeAxis();
-    if(command.domainSize().timeInterval > 1)
+    const size_t cellSizeTime =
+        static_cast<size_t>(command.domainSize().timeInterval);
+
+    Axis::Pointer timeAxis(dims.getTimeAxis());
+    if(cellSizeTime == 0)
     {
-        timeAxis = timeAxis->compress(static_cast<size_t>(command.domainSize().timeInterval));
+        const pair<double, double> range = dims.getTimeRange();
+        timeAxis.reset(new RegularAxis(range.first, range.second - range.first,
+            1));
+    }
+    else if(cellSizeTime > 1)
+    {
+        timeAxis = timeAxis->compress(cellSizeTime);
     }
 
     Grid cellGrid(freqAxis, timeAxis);
@@ -479,11 +497,11 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
     ASSERT(!bbox.empty());
 
     Location chunkStartCell = cellGrid.locate(bbox.start);
-    Location chunkEndCell = cellGrid.locate(bbox.end);
+    Location chunkEndCell = cellGrid.locate(bbox.end, false);
 
     LOG_DEBUG_STR("Cells in chunk: [(" << chunkStartCell.first << ","
         << chunkStartCell.second << "), (" << chunkEndCell.first << ","
-        << chunkEndCell.second << "))");
+        << chunkEndCell.second << ")]");
     
     // TODO: Create parameter set keys for this.
     bool copyCoeff = true;
@@ -491,7 +509,7 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
 
     uint nBlocks =
         static_cast<uint>(ceil(static_cast<double>(chunkEndCell.second
-            - chunkStartCell.second) / blockSize));
+            - chunkStartCell.second + 1) / blockSize));
 
     Solver solver;
     solver.setCoeffIndex(0, itsKernel->getCoeffIndex());
@@ -500,10 +518,10 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
     vector<CellCoeff> coeff;
     vector<CellEquation> equations;
     vector<CellSolution> solutions;
-    
+
 #ifdef LOG_SOLVE_DOMAIN_STATS
-    uint nCells = (chunkEndCell.first - chunkStartCell.first)
-        * (chunkEndCell.second - chunkStartCell.second);
+    uint nCells = (chunkEndCell.first - chunkStartCell.first + 1)
+        * (chunkEndCell.second - chunkStartCell.second + 1);
     uint nConverged = 0, nStopped = 0;
 #endif
 
@@ -511,8 +529,8 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
     for(uint block = 0; block < nBlocks; ++block)
     {
         // Move to next block.
-      endCell.second = std::min(startCell.second + blockSize - 1,
-            chunkEndCell.second - 1);
+        endCell.second = std::min(startCell.second + blockSize - 1,
+            chunkEndCell.second);
 
         itsKernel->getCoeff(startCell, endCell, coeff);
         solver.setCoeff(0, coeff);
@@ -524,6 +542,8 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
             solver.setEquations(0, equations);
             done = solver.iterate(solutions);
             
+            itsKernel->setCoeff(solutions);
+
 #ifdef LOG_SOLVE_DOMAIN_STATS
             ostringstream oss;
             oss << "Solver statistics:";
@@ -544,14 +564,12 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
             }
             LOG_DEBUG(oss.str());
 #endif            
-            
-            itsKernel->setCoeff(solutions);
         }
 
 #ifdef LOG_SOLVE_DOMAIN_STATS
-            LOG_DEBUG_STR("" << setw(3) << nConverged / nCells * 100.0
-                << "% converged, " << setw(3) << nStopped / nCells * 100.0
-                << "% stopped.");
+        LOG_DEBUG_STR("" << setw(3) << nConverged / nCells * 100.0
+            << "% converged, " << setw(3) << nStopped / nCells * 100.0
+            << "% stopped.");
 #endif
                 
         // Copy initial values.
@@ -560,15 +578,15 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
             Location cell;
             vector<double> initialValues;
             
-            for(size_t f = startCell.first; f < endCell.first; ++f)
+            for(size_t f = startCell.first; f <= endCell.first; ++f)
             {
                 itsKernel->getCoeff(Location(f, endCell.second), initialValues);
 
                 cout << "GET: " << f << "," << endCell.second << endl;
                 cout << "COEFF: " << initialValues << endl;
                 for(size_t t = chunkStartCell.second + (block + 1) * blockSize;
-                    t < std::min(chunkEndCell.second,
-                            chunkStartCell.second + (block + 2) * blockSize);
+                    t <= min(chunkEndCell.second,
+                        chunkStartCell.second + (block + 2) * blockSize - 1);
                     ++t)
                 {
                     cout << "SET: " << f << "," << t << endl;
@@ -580,7 +598,9 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
         startCell.second += blockSize;
     }
 
-    itsKernel->storeParameterValues();
+    itsSolver->sendObject(ChunkDoneMsg(itsKernelId));
+
+//    itsKernel->storeParameterValues();
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
@@ -619,16 +639,6 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     {
         ++groupId;
     }
-
-/*
-    vector<uint32> groupEnd = command.kernelGroups();    
-    partial_sum(groupEnd.begin(), groupEnd.end(), groupEnd.begin());
-
-    LOG_DEBUG_STR("groupEnd: " << groupEnd);
-    
-    const size_t groupId = lower_bound(groupEnd.begin(), groupEnd.end(),
-        itsKernelId) - groupEnd.begin();    
-*/
     ASSERT(groupId < groupEnd.size());
     LOG_DEBUG_STR("Group id: " << groupId);
     
@@ -641,10 +651,19 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
         << freqEnd);
     Axis::Pointer freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin, 1));
 
+    const size_t cellSizeTime =
+        static_cast<size_t>(command.domainSize().timeInterval);
+
     Axis::Pointer timeAxis = dims.getTimeAxis();
-    if(command.domainSize().timeInterval > 1)
+    if(cellSizeTime == 0)
     {
-        timeAxis = timeAxis->compress(static_cast<size_t>(command.domainSize().timeInterval));
+        const pair<double, double> range = dims.getTimeRange();
+        timeAxis.reset(new RegularAxis(range.first, range.second - range.first,
+            1));
+    }
+    else if(cellSizeTime > 1)
+    {
+        timeAxis = timeAxis->compress(cellSizeTime);
     }
 
     Grid cellGrid(freqAxis, timeAxis);
@@ -698,7 +717,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     for(uint block = 0; block < nBlocks; ++block)
     {
         // Move to next block.
-      endCell.second = std::min(startCell.second + blockSize - 1,
+        endCell.second = std::min(startCell.second + blockSize - 1,
             chunkEndCell.second);
 
         CoeffMsg kernelCoeffMsg(itsKernelId);
@@ -754,9 +773,9 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
         }
 
 #ifdef LOG_SOLVE_DOMAIN_STATS
-            LOG_DEBUG_STR("" << setw(3) << nConverged / nCells * 100.0
-                << "% converged, " << setw(3) << nStopped / nCells * 100.0
-                << "% stopped.");
+        LOG_DEBUG_STR("" << setw(3) << nConverged / nCells * 100.0
+            << "% converged, " << setw(3) << nStopped / nCells * 100.0
+            << "% stopped.");
 #endif
                 
         // Copy initial values.
