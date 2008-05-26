@@ -193,14 +193,15 @@ void usage()
         " readable" << endl;
     cout << "       at the specified path from the host on which metams is run."
         << endl;
-    cout << "    metams --merge L2007_01221 SB0.meta SB1.meta SB2.meta" << endl;
+    cout << "    metams --merge L2007_01221.meta SB0.meta SB1.meta SB2.meta"
+        << endl;
     cout << endl;
 }
 
 
 int main(int argc, char **argv)
 {
-    INIT_LOGGER("metams");
+//    INIT_LOGGER("metams");
 
     if(argc < 2)
     {
@@ -217,6 +218,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
+        cout << "extracting meta data..." << endl;
         for(size_t i = 2; i < static_cast<size_t>(argc); ++i)
         {
             string host;
@@ -241,9 +243,6 @@ int main(int argc, char **argv)
                 path = casa::Path(tmp);
             }
 
-            cout << "Host: " << host << endl;
-            cout << "Path: " << path.originalName() << endl;
-            
             // Strip extension.
             string name;
             casa::String base = path.baseName();
@@ -257,8 +256,6 @@ int main(int argc, char **argv)
                 name.insert(0, base, 0, dot);
             }
 
-            cout << "Meta name: " << name << endl;
-            
             MetaMeasurement meta(name);
             MeasurementAIPS::Pointer measurement
                 (new MeasurementAIPS(path.absoluteName()));
@@ -269,7 +266,11 @@ int main(int argc, char **argv)
             BlobOBufStream bufs(fout);
             BlobOStream bos(bufs);
             bos << meta;
+            
+            cout << base << endl;
         }
+        
+        cout << endl;
     }
     else if(command == "--merge")
     {
@@ -279,15 +280,34 @@ int main(int argc, char **argv)
             return 1;
         }
 
+        // Strip extension.
+        string name;
+        casa::Path path(argv[2]);
+        casa::String base = path.baseName();
+        size_t dot = base.find('.');
+        if(dot == base.npos)
+        {
+            name = string(base.begin(), base.end());
+        }
+        else
+        {
+            name.insert(0, base, 0, dot);
+        }
+
+        cout << "merging meta data..." << endl;
+
         MetaMeasurement meta;
         ifstream fin(argv[3]);
         BlobIBufStream ibufs(fin);
         BlobIStream bis(ibufs);
         bis >> meta;
-        
-        meta.setName(argv[2]);
-        
-        for(size_t i = 4; i < static_cast<size_t>(argc); ++i)
+
+        meta.setName(name);
+        cout << casa::Path(argv[3]).baseName() << endl;
+
+        bool ok = true;
+        size_t i = 4;
+        while(ok && i < static_cast<size_t>(argc))
         {
             MetaMeasurement rhs;
 
@@ -296,15 +316,24 @@ int main(int argc, char **argv)
             BlobIStream bis(ibufs);
             bis >> rhs;
             
-            mergeMeta(meta, rhs);
+            ok = mergeMeta(meta, rhs);
+            cout << casa::Path(argv[i]).baseName() << endl;
+
+            ++i;
         }
             
-        ofstream fout((meta.getName() + ".meta").c_str());
+        if(!ok)
+        {
+            cout << endl << "exit due to error in " << argv[i - 1] << endl;
+            return 1;
+        }
+        
+        ofstream fout(argv[2]);
         BlobOBufStream obufs(fout);
         BlobOStream bos(obufs);
         bos << meta;
         
-        cout << "Measurement info:" << endl << meta << endl;
+        cout << endl << meta << endl;
     }        
     else if(command == "--show")
     {
@@ -320,7 +349,7 @@ int main(int argc, char **argv)
         BlobIStream bis(ibufs);
         bis >> meta;
     
-        cout << "Measurement info:" << endl << meta << endl;
+        cout << meta << endl;
     }
     else
     {

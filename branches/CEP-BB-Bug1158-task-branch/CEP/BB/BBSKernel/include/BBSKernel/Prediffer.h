@@ -79,8 +79,8 @@ public:
     };
 
     Prediffer(Measurement::Pointer measurement,
-        ParmDB::ParmDB sky,
-        ParmDB::ParmDB instrument);
+        LOFAR::ParmDB::ParmDB sky,
+        LOFAR::ParmDB::ParmDB instrument);
 
     // Attach/detach the chunk of data to process.
     // <group>
@@ -106,6 +106,9 @@ public:
     // function called should match the operation specified in the call to
     // setModelConfig().
     //
+    // NOTE: The start and end arguments to construct() specify an _inclusive_
+    // interval.
+    //
     // NOTE: Prior to calling construct(), the parameters to solve for should be
     // selected and a solution cell grid should be set (see
     // setParameterSelection() and setCellGrid() below).
@@ -118,15 +121,20 @@ public:
     
     // (Distributed) solving.
     // <group>
-    void setParameterSelection(const vector<string> &include,
+    bool setParameterSelection(const vector<string> &include,
         const vector<string> &exclude);        
     void clearParameterSelection();
 
+    // Set the global cell grid.
     bool setCellGrid(const Grid &cellGrid);
 
+    // Exchange coefficient index.
     const CoeffIndex &getCoeffIndex() const;
     void setCoeffIndex(const CoeffIndex &global);
 
+    // Get initial coefficient values.
+    // NOTE: The start and end arguments to getCoeff() specify an _inclusive_
+    // interval.
     void getCoeff(const Location &cell, vector<double> &coeff) const;
     void setCoeff(const Location &cell, const vector<double> &coeff);
 
@@ -183,6 +191,9 @@ private:
     Prediffer(const Prediffer& other);
     Prediffer &operator=(const Prediffer& other);
 
+    //# Reset internal state.
+    void resetState();
+    
     //# Define the signature for a function that processes the data of a single
     //# baseline.
     typedef void (Prediffer::*BlProcessor) (size_t threadNr,
@@ -218,48 +229,56 @@ private:
     //# Reset and/or print various timers and statistics.
     void resetTimers();
     void printTimers(const string &operation);
+    
+    //# Compute local cell id for global cell.
+    inline size_t getLocalCellId(const Location &globalCell) const;
 
-
-    Measurement::Pointer                itsMeasurement;
-    VisData::Pointer                    itsChunk;
+    Measurement::Pointer                        itsMeasurement;
+    VisData::Pointer                            itsChunk;
     //# Mapping from internal polarization (XX,XY,YX,YY) to polarizations
     //# found in the chunk (which may be a subset, and in a different order).
-    vector<int>                         itsPolarizationMap;
+    vector<int>                                 itsPolarizationMap;
 
-    ParmDB::ParmDB                      itsSkyDb;
-    ParmDB::ParmDB                      itsInstrumentDb;
+    LOFAR::ParmDB::ParmDB                       itsSkyDb;
+    LOFAR::ParmDB::ParmDB                       itsInstrumentDb;
     //# All parameter values that intersect the chunk.
-    map<string, LOFAR::ParmDB::ParmValueSet>   itsParameterValues;
+    map<string, LOFAR::ParmDB::ParmValueSet>    itsParameterValues;
 
-    Model::Pointer                      itsModel;
+    Model::Pointer                              itsModel;
     //# Container for the model parameters (the leaf nodes of the model).
-    MeqParmGroup                        itsParameters;
+    MeqParmGroup                                itsParameters;
 
-    OperationType                       itsOperation;
-    vector<baseline_t>                  itsBaselineSelection;
-    vector<size_t>                      itsPolarizationSelection;
+    OperationType                               itsOperation;
+    vector<baseline_t>                          itsBaselineSelection;
+    vector<size_t>                              itsPolarizationSelection;
 
     //# Information required for the CONSTRUCT operation.
     //# ------------------------------------------------------------------------
-    Grid                                itsCellGrid;
-    vector<Interval>                    itsFreqIntervals;
-    vector<Interval>                    itsTimeIntervals;
-    Location                            itsStartCell, itsEndCell;
+    //# Global cell grid.
+    Grid                                        itsCellGrid;
+    //# Local cell grid represented as inclusive intervals along each axis.
+    vector<Interval>                            itsFreqIntervals;
+    vector<Interval>                            itsTimeIntervals;
+    //# Location in the global grid of the current chunk's start and end cell.
+    Location                                    itsStartCell, itsEndCell;
 
-    CoeffIndex                          itsCoeffIndex;
-    vector<MeqPExpr>                    itsParameterSelection;
-    vector<CoeffInterval>               itsCoeffMapping;
+    //# Parameters selected for solving.
+    vector<MeqPExpr>                            itsParameterSelection;
+    //# Local coefficient index.
+    CoeffIndex                                  itsCoeffIndex;
+    //# Mapping from global to local coefficients.
+    vector<CoeffInterval>                       itsCoeffMapping;
     //# ------------------------------------------------------------------------
 
-    vector<ThreadContext>               itsThreadContexts;
+    vector<ThreadContext>                       itsThreadContexts;
 
     //# Timers for performance measurement.
-    NSTimer                             itsPrecalcTimer, itsProcessTimer;
+    NSTimer                                     itsPrecalcTimer;
+    NSTimer                                     itsProcessTimer;
     
     //# TODO: Remove this.
     //# Phase reference position in J2000 coordinates.
-    MeqPhaseRef                         itsPhaseRef;
-    casa::MPosition                     itsDebugPos;
+    MeqPhaseRef                                 itsPhaseRef;
 };
 
 // @}

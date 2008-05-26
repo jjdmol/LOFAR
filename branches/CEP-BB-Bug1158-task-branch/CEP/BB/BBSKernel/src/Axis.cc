@@ -29,6 +29,7 @@
 #include <Blob/BlobSTL.h>
 #include <Common/LofarLogger.h> 
 #include <Common/StreamUtil.h> 
+#include <Common/lofar_iomanip.h> 
 
 namespace LOFAR
 {
@@ -132,19 +133,18 @@ namespace BBS
         // General case.
         // Find the index of the cell that contains x. Because the boundary
         // cases have already been dealt with, it is certain that x lies within
-        // the range of the axis. Therefore, it is allowed to use std::max() in
+        // the range of the axis. Therefore, it is allowed to use std::min() in
         // the following.
-        size_t index = static_cast<size_t>(std::max(0.0, floor((x - center(0))
-            / itsWidth)));
-        DBGASSERT(index < size());
+        size_t index = std::min(static_cast<size_t>(floor((x + 0.5 * itsWidth
+            - itsBegin) / itsWidth)), size() - 1);
 
-        if(casa::near(x, lower(index)) && !biasRight)
+        if(casa::near(x, lower(index)))
         {
             DBGASSERT(index > 0);
-            --index;
+            return biasRight ? index : index - 1;
         }
 
-        return index;
+        return x < lower(index) ? index - 1 : index;
     }
 
     Axis::Pointer RegularAxis::compress(size_t factor) const
@@ -284,19 +284,24 @@ namespace BBS
         // the boundary cases have already been dealt with, it is certain that
         // x lies within the range of the axis. Therefore, it is allowed to use
         // std::min() in the following.
-        size_t index = 
-            std::min(static_cast<size_t>(upper_bound(itsCenters.begin(),
+        size_t index =
+            std::min(static_cast<size_t>(lower_bound(itsCenters.begin(),
                 itsCenters.end(), x) - itsCenters.begin()), size() - 1);
-        DBGASSERT(index < size());
-
-        if(casa::near(x, lower(index)) && !biasRight)
+        
+        LOG_DEBUG_STR("locate: " << setprecision(15) << x << " index: " << index
+            << " lower: " << lower(index) << " biasRight: " << biasRight
+            << " near: " << casa::near(x, lower(index)) << " smaller: "
+            << (x < lower(index))); 
+    
+        if(casa::near(x, lower(index)))
         {
             DBGASSERT(index > 0);
-            --index;
+            return biasRight ? index : index - 1;
         }
 
-        return index;
+        return x < lower(index) ? index - 1 : index;
     }
+
 
     Axis::Pointer IrregularAxis::compress(size_t factor) const
     {
