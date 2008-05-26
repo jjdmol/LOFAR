@@ -1,0 +1,891 @@
+V 10
+1
+LANG:1 12 Event Viewer
+PANEL,-1 -1 923 750 N "_3DFace" 0
+"main()
+{
+  int retry=0;
+  while (navigator_initializing() & retry < 60) {
+    delay(2);
+    retry++;
+    if (retry >= 60) {
+      LOG_FATAL(\"Event_Viewer.pnl retry longer then 2 minutes, navigatorInstance still not ready?\");
+      break;
+    }
+  }
+  
+  itsInitiatorDp = DPNAME_NAVIGATOR + g_navigatorID + \".navigator.initiator\";
+  itsEventDp     = DPNAME_NAVIGATOR + g_navigatorID + \".navigator.event\";
+  itsSelectionDp = DPNAME_NAVIGATOR + g_navigatorID + \".navigator.selection\";
+  
+  LOG_DEBUG(\"Event_Viewer.pnl Working with itsEventDp : \" + itsEventDp);
+
+  
+  
+  if ( dpExists(itsEventDp) ) {
+    dpConnect(\"doEvent\",false,itsEventDp);
+  } else {
+    setValue(\"text_event\",\"backCol\",\"_dpdoesnotexist\");
+  }      
+  
+  if ( !dpExists(itsSelectionDp) ) {
+    setValue(\"text_selection\",\"backCol\",\"_dpdoesnotexist\");
+  }
+
+  if ( !dpExists(itsInitiatorDp) ) {
+    setValue(\"text_initiator\",\"backCol\",\"_dpdoesnotexist\");
+  }
+
+}
+
+//
+// Callback for dpConnect to selection point.
+// If there is an action required this point will tell so
+//
+void doEvent(string aDP, string anEvent) {
+  if (navigator_initializing()) {
+    return;
+  }
+  string aSelection;
+  string anInitiator;
+  dpGet(itsSelectionDp,aSelection);
+  dpGet(itsInitiatorDp,anInitiator);
+  setValue(\"text_event\",\"text\",anEvent);
+  setValue(\"text_initiator\",\"text\",anInitiator);
+  setValue(\"text_selection\",\"text\",aSelection);
+  setValue(\"txt_datapoint\",\"text\",g_currentDatapoint);
+}
+
+" 0
+ E E E E 1 -1 -1 0  10 10
+""0  1
+E "#uses \"navigator.ctl\"
+
+string 	itsEventDp         = \"\";
+string 	itsSelectionDp     = \"\";
+string  itsInitiatorDp     = \"\";
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+30 2
+"FRAME1"
+""
+1 10 1 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
+ E E
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E 0.986193293885602 0 0.450511945392491 395.138067061144 298.549488054608 0 E 10 1 518 295
+1
+LANG:1 99 -*-Arial Black-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,758,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
+LANG:1 19 Navigator Framework
+14 3
+"text_event"
+""
+1 557 348 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 555 346 899 369.145038167939
+3 "0s" 0 0 0 0 0 -1  E E E
+2 6
+"PRIMITIVE_TEXT4"
+""
+1 556 378.569139327545 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+6 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1.00763358778626 136 3.16793893129752 1 E 283 371 384 387
+0 2 2 "0s" 0 0 0 192 0 0  283 371 1
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
+LANG:1 18 Initiating Object:
+2 7
+"PRIMITIVE_TEXT5"
+""
+1 556 350.330691684634 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+7 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1.00763358778626 137 6.40458015267157 1 E 282 340 379 356
+0 2 2 "0s" 0 0 0 192 0 0  282 340 1
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
+LANG:1 15 Event Received:
+2 8
+"PRIMITIVE_TEXT6"
+""
+1 556 405.792203251558 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+8 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1 0 1.00763358778626 137 0.946564885495969 1 E 282 400 342 416
+0 2 2 "0s" 0 0 0 192 0 0  282 400 1
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
+LANG:1 10 Selection:
+14 9
+"text_initiator"
+""
+1 557 376 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 555 374 899 397.145038167939
+3 "0s" 0 0 0 0 0 -1  E E E
+14 11
+"text_selection"
+""
+1 557 403 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+11 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 555 401 899 424.145038167939
+3 "0s" 0 0 0 0 0 -1  E E E
+4 18
+"LINE4"
+""
+1 441 304 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  441 304 179 90
+4 19
+"LINE5"
+""
+1 171 104 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+19 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  171 104 178 90
+4 20
+"LINE6"
+""
+1 182 91 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+20 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  182 91 201 94
+4 23
+"LINE7"
+""
+1 523 90 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+25 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  523 90 523 306
+4 24
+"LINE8"
+""
+1 525 90 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+26 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  525 90 510 100
+4 25
+"LINE9"
+""
+1 526 91 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+27 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  526 91 534 102
+4 28
+"LINE10"
+""
+1 697 307 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+32 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  697 307 751 186
+4 29
+"LINE11"
+""
+1 749 188 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+33 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  749 188 735 192
+4 30
+"LINE12"
+""
+1 752 188 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+34 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  752 188 756 199
+4 33
+"LINE13"
+""
+1 678 433 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+39 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  678 433 745 541
+4 34
+"LINE14"
+""
+1 745 539 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+40 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  745 539 749 527
+4 35
+"LINE15"
+""
+1 741 540 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+41 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  741 540 727 533
+4 40
+"LINE16"
+""
+1 530 429 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+50 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  530 429 530 650
+4 41
+"LINE17"
+""
+1 538 637 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+51 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  538 637 529 648
+4 42
+"LINE18"
+""
+1 520 640 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+52 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  520 640 529 647
+4 43
+"LINE19"
+""
+1 473 430 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+53 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  473 430 203 541
+4 44
+"LINE20"
+""
+1 204 539 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+54 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  204 539 227 538
+1 185 0 "" 0
+0
+1 186 1 "" 0
+0
+1 187 2 "" 0
+0
+1 188 4 "" 0
+0
+1 189 5 "" 0
+0
+1 190 6 "" 0
+0
+1 191 7 "" 0
+0
+1 192 7 "" 1
+0
+1 193 7 "" 2
+0
+1 194 7 "" 3
+0
+1 195 7 "" 4
+0
+1 196 9 "" 0
+0
+1 197 9 "" 1
+0
+1 198 9 "" 2
+0
+1 199 9 "" 3
+0
+1 200 9 "" 4
+0
+1 201 12 "" 0
+0
+1 202 12 "" 1
+0
+1 203 12 "" 2
+0
+1 204 12 "" 3
+0
+1 205 12 "" 4
+0
+1 206 14 "" 0
+0
+1 207 14 "" 1
+0
+1 208 14 "" 2
+0
+1 209 14 "" 3
+0
+1 210 14 "" 4
+0
+1 211 17 "" 0
+0
+1 212 17 "" 1
+0
+1 213 17 "" 2
+0
+1 214 17 "" 3
+0
+1 215 17 "" 4
+0
+1 216 18 "" 0
+0
+1 217 18 "" 1
+0
+1 218 18 "" 2
+0
+1 219 18 "" 3
+0
+1 220 18 "" 4
+0
+1 221 19 "" 0
+0
+1 222 19 "" 1
+0
+1 223 19 "" 2
+0
+1 224 19 "" 3
+0
+1 225 19 "" 4
+0
+4 87
+"LINE21"
+""
+1 204 542 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+117 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  204 542 212 521
+4 89
+"LINE23"
+""
+1 57 335 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+119 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  57 335 404 410
+4 90
+"LINE24"
+""
+1 56 337 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+120 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  56 337 62 351
+4 91
+"LINE25"
+""
+1 62 333 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+121 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 3 1 2 1 E  62 333 81 333
+1 226 20 "" 0
+0
+14 134
+"txt_datapoint"
+""
+1 557 321.694656488549 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+123 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 555 319.694656488549 899 342.839694656488
+3 "0s" 0 0 0 0 0 -1  E E E
+2 135
+"PRIMITIVE_TEXT11"
+""
+1 565.633663366337 324.330691684634 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+125 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E 1.06930693069307 0 1.00763358778626 117.594059405941 -19.5954198473284 1 E 282 340 391 356
+0 2 2 "0s" 0 0 0 192 0 0  282 340 1
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+1
+LANG:1 18 Active Datapoint: 
+13 178
+"PUSH_BUTTON1"
+""
+1 16 416 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+127 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 14 414 164 441
+
+T 
+1
+LANG:1 19 show g_observations
+"main()
+{
+   showMapping(g_observations,\"g_observations\");
+}" 0
+ E E E
+13 179
+"PUSH_BUTTON2"
+""
+1 17 445 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+129 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 15 443 163 470
+
+T 
+1
+LANG:1 17 show strHighlight
+"main()
+{
+    LOG_DEBUG(\"Event_Viewer.pnl strHighlight contains: \" + strHighlight);
+}" 0
+ E E E
+13 180
+"PUSH_BUTTON3"
+""
+1 18 475 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+131 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 16 473 165 500
+
+T 
+1
+LANG:1 14 show g_alarms
+
+"main()
+{
+  LOG_DEBUG(\"Event_Viewer.pnl showMapping for g_alarms\");
+  showMapping(g_alarms,\"g_alarms\");
+}" 0
+ E E E
+14 181
+"alarm_dp"
+""
+1 37 640 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+133 0 0 0 0 0
+E E E
+0
+1
+LANG:1 9 Datapoint
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 35 638 322 661
+3 "0s" 0 0 0 0 0 -1  E E E
+13 182
+"PUSH_BUTTON4"
+""
+1 199 671 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+135 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 197 669 321 696
+
+T 
+1
+LANG:1 8 setAlarm
+"main()
+{
+  string dp;
+  getValue(\"alarm_dp\",\"text\",dp);
+  int state;
+  getValue(\"alarm_state\",\"text\",state);
+  string message;
+  getValue(\"alarm_message\",\"text\",message);
+  
+  dpSet(\"MCU001:__navObjectState.DPName\",dp,\"MCU001:__navObjectState.stateNr\",state,\"MCU001:__navObjectState.message\",message);
+}" 0
+ E E E
+14 183
+"alarm_state"
+""
+1 38 672 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+137 0 0 0 0 0
+E E E
+0
+1
+LANG:1 5 state
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 36 670 88 693
+3 "4d" 4 0 0 0 0 -1  E E E
+14 184
+"alarm_message"
+""
+1 37 704 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+139 0 0 0 0 0
+E E E
+0
+1
+LANG:1 12 alarmmessage
+
+0
+1
+LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
+0 ""
+ 35 702 321 725
+3 "0s" 0 0 0 0 0 -1  E E E
+13 227
+"PUSH_BUTTON5"
+""
+1 20 390 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+140 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 18 388 162 414
+
+T 
+1
+LANG:1 19 show strClaimedDP's
+"main()
+{
+  DebugN(\"strClaimedObjectName contains: \"+strClaimObjectName);
+}" 0
+ E E E
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "PANEL_REF1"
+"objects/Test\\Action.pnl" 158 150 T 105 1 0 1 -81 -32
+1
+"$name""fw_viewSelection"
+3 1 "PANEL_REF2"
+"objects/Test\\Action.pnl" 390 150 T 106 1 0 1 -10 32
+1
+"$name""fw_topDetailSelection"
+3 2 "PANEL_REF3"
+"objects/Test\\Action.pnl" 668 220 T 107 1 0 1 -78 4
+1
+"$name""fw_bottomDetailSelection"
+3 4 "PANEL_REF5"
+"objects/Test\\Action.pnl" 649 450 T 108 1 0 1 -77 -3
+1
+"$name""fw_locator"
+3 5 "PANEL_REF6"
+"objects/Test\\Action.pnl" 413 460 T 109 1 0 1 -42 33
+1
+"$name""fw_progressBar"
+3 6 "PANEL_REF7"
+"objects/Test\\Action.pnl" 189 450 T 110 1 0 1 22 4
+1
+"$name""fw_headLines"
+3 7 "PANEL_REF8"
+"objects/Test\\Event.pnl" 15 8 T 111 1 0 1 0 1
+1
+"$name""fw_viewSelection"
+3 9 "PANEL_REF10"
+"objects/Test\\Event.pnl" 377 7 T 112 1 0 1 0 1
+1
+"$name""fw_topDetailSelection"
+3 12 "PANEL_REF13"
+"objects/Test\\Event.pnl" 541 104 T 113 1 0 1 31 -1
+1
+"$name""fw_bottomDetailSelection"
+3 14 "PANEL_REF15"
+"objects/Test\\Event.pnl" 578 531 T 114 U 
+1
+"$name""fw_locator"
+3 17 "PANEL_REF18"
+"objects/Test\\Event.pnl" 334 642 T 115 U 
+1
+"$name""fw_progressBar"
+3 18 "PANEL_REF19"
+"objects/Test\\Event.pnl" -2 533 T 116 U 
+1
+"$name""fw_headLines"
+3 19 "PANEL_REF20"
+"objects/Test\\Event.pnl" 0 205 T 116 1 0 1 9 46
+1
+"$name""fw_viewBox"
+3 20 "PANEL_REF21"
+"objects/Test\\Action.pnl" 207 346 T 122 1 0 1 -103 8
+1
+"$name""fw_viewBox"
+0

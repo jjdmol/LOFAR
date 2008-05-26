@@ -1,0 +1,230 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 746 499 N "_3DFace" 0
+"
+
+
+
+main()
+{
+  string strQuery = \"\"
+    \"SELECT '.name:_original.._value, .state:_original.._value, .childState:_original.._value, .stationList:_original.._value' FROM '*' WHERE _DPT = \\\"ObsCtrl\\\"\";
+
+  // Define a global variable of type mapping
+  // that holds the various properties of the observations
+  Observations[ \"DP\"          ] = makeDynString();                    
+  Observations[ \"NAME\"        ] = makeDynString();
+  Observations[ \"STATE\"       ] = makeDynInt();
+  Observations[ \"CHILDSTATE\"  ] = makeDynInt();
+  Observations[ \"STATIONLIST\" ] = makeDynString();
+  
+  // Triggr a single query that gets an update when one 
+  // observation changes
+  dpQueryConnectSingle( \"Callback\", 1, \"ident\", strQuery, 50 );
+}
+
+void Callback( 
+  string strIdent,
+  dyn_dyn_anytype aResult 
+)
+{
+  int iPos;
+  dyn_string strTableDP;
+  dyn_string strTableName;
+  dyn_int    iTableState;
+  dyn_int    iTableChildState;
+  dyn_string strTableStationList;
+  
+  DebugN( \"Number of records = \" + dynlen( aResult ) );
+  
+  for( int t = 2; t <= dynlen( aResult ); t++)
+  {  
+    string strDP = aResult[t][1];
+    
+    dynAppend( strTableDP      , strDP          );
+    dynAppend( strTableName    , aResult[t][2] );
+    dynAppend( iTableState     , aResult[t][3] );
+    dynAppend( iTableChildState, aResult[t][4] );
+    dynAppend( strTableStationList  , aResult[t][5] );
+    
+    // Is this an existing observation or a new one
+    iPos = dynContains( Observations[ \"DP\"         ], strDP );  
+  
+    if( iPos < 1 ){
+      dynAppend( Observations[ \"DP\"          ], strDP );
+      iPos = dynlen( Observations[ \"DP\" ] );
+    }  
+
+    Observations[ \"NAME\"        ][t] = aResult[t][2];
+    Observations[ \"STATE\"       ][t] = aResult[t][3];
+    Observations[ \"CHILDSTATE\"  ][t] = aResult[t][4];
+    Observations[ \"STATIONLIST\" ][t] = aResult[t][5];
+  }
+
+  TABLE.updateLines( 1,
+    \"DP\"         , strTableDP,
+    \"NAME\"       , strTableName,
+    \"STATE\"      , iTableState,
+    \"CHILDSTATE\" , iTableChildState,
+    \"STATIONLIST\", strTableStationList );
+  
+  TABLE.sort( \"DP\" );
+                      
+}  " 0
+ E E E E 1 -1 -1 0  32 24
+""0  1
+E E 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+2 0
+"PRIMITIVE_TEXT1"
+""
+1 16 16 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+0 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 2 1 1 2 1 E U  1 E 16 16 168 56
+0 2 2 "0s" 0 0 0 64 0 0  16 16 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 20 Query : 'Observatie'
+25 1
+"TABLE"
+""
+1 16 72 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+ 14 70 722 418
+E"main(int row, string column, string value)
+{
+  if( column == \"STATIONLIST\" )
+  {
+    // Split the line so that we get a dyn_string into a global var
+    strHighlight = strsplit( value, \",\" );
+    
+    // Kick the symbols
+    dpSet( \"MCU001:Trigger.trigger\", true );
+  }
+}" 0
+ 1 0 1 5 0 "DP" 14 1 0 "s" 1
+LANG:1 2 DP
+E
+1
+LANG:1 0 
+
+200 "NAME" 10 1 0 "s" 1
+LANG:1 10 Observatie
+E
+1
+LANG:1 0 
+
+149 "STATE" 3 1 0 "s" 1
+LANG:1 5 State
+E
+1
+LANG:1 0 
+
+50 "CHILDSTATE" 6 1 0 "s" 1
+LANG:1 10 ChildState
+E
+1
+LANG:1 0 
+
+86 "STATIONLIST" 14 1 0 "s" 1
+LANG:1 11 StationList
+E
+1
+LANG:1 0 
+
+200 
+17 17 10 10
+1
+LANG:1 84 -*-Arial-*-r-normal-*-17-*-100-100-*-*-iso8859-1|-17,0,0,0,505,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 1 1 1 7
+1 0
+1 2 0 "" 0
+0
+1 3 0 "" 1
+0
+1 4 1 "" 0
+0
+1 5 1 "" 1
+0
+1 6 2 "" 0
+0
+1 7 2 "" 1
+0
+1 8 3 "" 0
+0
+1 9 3 "" 1
+0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "PANEL_REF1"
+"objects/FRENKM_STATION.pnl" 50 440 T 2 U 
+1
+"$STATION""CS010"
+3 1 "PANEL_REF2"
+"objects/FRENKM_STATION.pnl" 50 440 T 3 1 0 1 96 0
+1
+"$STATION""CS011"
+3 2 "PANEL_REF3"
+"objects/FRENKM_STATION.pnl" 50 440 T 4 1 0 1 184 0
+1
+"$STATION""CS020"
+3 3 "PANEL_REF4"
+"objects/FRENKM_STATION.pnl" 50 440 T 5 1 0 1 280 0
+1
+"$STATION""CS030"
+0

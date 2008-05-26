@@ -1,0 +1,211 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 201 69 N "_3DFace" 1
+"$Station"
+"main()
+{
+  // initialize the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  baseDP           = $Station+\":LOFAR\";
+  
+  setValue(\"\",\"toolTipText\",$Station);	
+
+  // connect for childUpdates
+  showChildState(baseDP);
+  // connect for selfUpdates
+  showSelfState(baseDP);
+}" 0
+ E "main(int x, int y)
+{
+  click();
+}" 0
+ "main()
+{
+  rClick();
+}" 0
+ "main(int x, int y)
+{
+  dblClick();
+}" 0
+ 1 -1 -1 0  0 0
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP          = \"\";
+bool   bDoubleClicked  = false;
+
+// routine for single mouse click
+void click() {
+    // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    navPanel_setEvent($Station,\"EventClick\");
+  }
+}
+
+// routine for double mouse click
+void dblClick() {
+  
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+
+  if (dpExists(baseDP) ) {
+    LOG_DEBUG(\"Station_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+    g_currentDatapoint=baseDP;
+    navPanel_setEvent($Station,\"ChangePanel\");
+  }
+  
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
+
+// routine for right mouse click
+void rClick() {
+  navPanel_setEvent($Station,\"EventRightClick\");
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+7 2
+"station_highLight"
+""
+1 147 40 E E E 1 E 0 E N "_Transparent" E N "Lofar_highLight" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+3 0 0 0 0 0
+E E E
+0
+1
+LANG:1 4 test
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  dpConnect( \"StationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void StationCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"Station_small.pnl:StationCallback| objectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"Station_small.pnl:StationCallback|Found highlight : \" + highlight+ \" Looking for: \"+ $Station);
+  bool bHighlight=false;
+  if (dynContains(highlight,$Station)) {
+    bHighlight=true;
+  }
+  LOG_DEBUG(\"Station_small.pnl:StationCallback|Highlight request: \"+bHighlight);
+  station_highLight.visible = bHighlight;
+  
+}
+
+" 0
+ "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E 0.656066689301206 0 0.65668202764977 -86.4418033272773 -16.2672811059908 1 E 147 40 14 14
+7 0
+"selfState.light"
+""
+1 299 316 E E E 1 E 1 E N "Lofar_operational" E N "Lofar_operational" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+1 0 0 0 0 0
+E E E
+0
+1
+LANG:1 4 test
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  setValue(\"\",\"toolTipText\",baseDP+\" state\");
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 0 1 0 1 E 1.22050447072768 0 1.26793333333333 -354.930836747576 -390.666933333332 1 E 299 316 5 5
+7 1
+"childStateBorder"
+""
+1 59 60 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
+2 0 0 0 0 0
+E E E
+0
+1
+LANG:1 4 test
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+  setValue(\"\",\"toolTipText\",baseDP+\" childstate\");
+}" 0
+ "main()
+{
+  click();
+}" 0
+ 0 3 1 2 1 E 1.0826177569242 0 1.00433361619441 -53.8744476585278 -50.2600169716646 1 E 59 60 6 6
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+0
