@@ -1,0 +1,298 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,-1 -1 192 113 N "_3DFace" 1
+"$aSide"
+"main()
+{
+  
+  baseDP = g_currentDatapoint;
+  
+  setValue(\"aSide\",\"text\",$aSide);   
+
+  if(dpExists(baseDP +\".\"+$aSide+\".door\"))
+  {
+    dpConnect(  \"showDoorState\"
+    		, baseDP +\".\"+$aSide+\".door:_original.._value\"
+     	        , baseDP +\".\"+$aSide+\".door:_online.._invalid\");
+  } else {
+    setValue(\"doorBorder\", \"backCol\", \"_dpdoesnotexist\");
+  }
+
+  if (dpExists(baseDP +\".\"+$aSide+\".fan\"))
+  {
+    dpConnect(  \"showFanState\"
+        	, baseDP +\".\"+$aSide+\".fan:_original.._value\"
+    		, baseDP +\".\"+$aSide+\".fan:_online.._invalid\");
+  }  else  {
+    setValue(\"fanBorder\", \"backCol\", \"_dpdoesnotexist\");
+  }
+  
+  if(dpExists(baseDP +\".\"+$aSide+\".temperature:\"))
+  {
+    dpConnect(  \"setTemperature\"
+    		, baseDP +\".\"+$aSide+\".temperature:_original.._value\"
+    		, baseDP +\".\"+$aSide+\".temperature:_online.._invalid\");
+  }  else  {
+    setValue(\"txt_temperature\"  , \"text\"    , \"x.x\");
+  }
+}
+
+showDoorState( string dp1, bool DoorClosed,
+               string dp2, bool invalid)
+{
+  if(!invalid)
+  {
+    if(DoorClosed)
+    {
+      setValue(\"doorBorder\", \"backCol\", \"Lofar_operational\");
+    }
+    else 
+    {
+      setValue(\"doorBorder\", \"backCol\", \"Lofar_bad\");
+    }
+  }
+  else
+  {
+    setValue(\"doorBorder\", \"backCol\", \"Lofar_invalid\");
+  }
+}
+
+showFanState( string dp1, bool FanFree,
+              string dp2, bool invalid)
+{
+  if(!invalid)
+  {
+    if(FanFree)
+    {
+      setValue(\"fanBorder\", \"backCol\", \"Lofar_operational\");
+    }
+    else 
+    {
+      setValue(\"fanBorder\", \"backCol\", \"Lofar_bad\");
+    }
+  }
+  else
+  {
+    setValue(\"fanBorder\", \"backCol\", \"Lofar_invalid\");
+  }
+}
+
+setTemperature( string dp1, float aTemp,
+                string dp2, bool invalid)
+{
+  if(!invalid)
+  {
+  	setValue(\"txt_temperature\",\"text\",aTemp);        
+  }
+  else
+  {
+    setValue(\"txt_temperature\"  , \"text\"    , \"x.x\");
+  }
+}
+
+" 0
+ E E E E 1 0 0 0  17 191
+""0  1
+E "string      baseDP         = \"\";
+
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+1
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 901
+"childStateBorder"
+""
+1 17 89 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+77 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+"main()
+{
+
+}" 0
+ E 0 2 1 0 1 E U  1 E 17 17 140 90
+6 918
+"Border1"
+""
+1 74 45 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+95 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 70 25 129 45
+2 912
+"aSide"
+""
+1 24 24 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+89 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 26 26 63 43
+0 2 0 "0s" 0 0 0 192 0 0  26 26 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 5 aSide
+6 913
+"doorBorder"
+""
+1 25 73 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+90 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 25 53 45 73
+2 914
+"doorTXT"
+""
+1 46 53 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+91 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 48 55 78 72
+0 2 0 "0s" 0 0 0 193 0 0  63 55 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 4 Door
+6 915
+"fanBorder"
+""
+1 85 73 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
+ E E
+92 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 85 53 105 73
+2 916
+"fanTXT"
+""
+1 106 53 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+93 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 108 55 132 72
+0 2 0 "0s" 0 0 0 193 0 0  120 55 1
+1
+LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 3 Fan
+2 917
+"label_temperature"
+""
+1 112 27 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+94 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 114 27 128 44
+0 2 0 "0s" 0 0 0 194 0 0  128 27 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 2 °C
+2 919
+"txt_temperature"
+""
+1 103 25 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+96 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 105 27 112 44
+0 2 0 "3.2f" 6 0 0 194 0 0  112 27 1
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+0 ""
+1
+LANG:1 1 x
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0

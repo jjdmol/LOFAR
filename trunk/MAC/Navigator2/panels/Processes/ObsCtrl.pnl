@@ -1,0 +1,227 @@
+V 10
+1
+LANG:1 0 
+PANEL,-1 -1 1013 750 N "_3DFace" 0
+"main()
+{
+  // Initialise the Panel
+  navPanel_initPanel(\"fw_viewBox\");
+  
+  baseDP         = g_currentDatapoint;
+  database = dpSubStr(baseDP,DPSUB_SYS);
+  
+  // set the hardware selectable items
+  dyn_string result=\"\";  
+  
+  // There are no further hardware elements below that can be selected, so empty
+  // the list in the database
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
+  
+  LOG_DEBUG(\"ObsCtrl.pnl:main|processList found: \"+ result); 
+  
+  // trigger that the panel values are calculated and ready
+  navPanel_setEvent(\"ObsCtrl.pnl\",\"Update\");
+  
+
+  // no selection, so no trigger mechanism needed in this panel.   
+}
+
+updateObsCtrl(string dp1, int claimPeriod,
+              string dp2, int preparePeriod,
+              string dp3, string startTime,
+              string dp4, string stopTime,
+              string dp5, string bandFilter,
+              string dp6, int nyquistzone,
+              string dp7, string antennaArray,
+              string dp8, string receiverList,
+              string dp9, string sampleClock,
+              string dp10,string measurementSet,
+              string dp11,string stationList,
+              string dp12,string inputNodeList,
+              string dp13,string BGLNodeList,
+              string dp14,string storageNodeList,
+              string dp15,dyn_string directionType,
+              string dp16,dyn_float angle1,
+              string dp17,dyn_float angle2,
+              string dp18,dyn_string subbandList,
+              string dp19,dyn_string beamletList, 
+              string dp20, bool invalid)
+{
+  LOG_TRACE(\"ObsCtrl.pnl:updateObsCtrl|entered\");
+  beamTable.deleteAllLines();
+  
+  if (!invalid) {
+    beamTable.enabled(true);
+    setValue(\"claimPeriodText\", \"text\", claimPeriod);
+    setValue(\"preparePeriodText\", \"text\", preparePeriod);
+    setValue(\"startTimeText\", \"text\", startTime);
+    setValue(\"stopTimeText\", \"text\", stopTime);
+    setValue(\"bandFilterText\", \"text\", bandFilter);
+    setValue(\"nyquistzoneText\", \"text\", nyquistzone);
+    setValue(\"antennaArrayText\", \"text\", antennaArray);
+    setValue(\"receiverListText\", \"text\", receiverList);
+    setValue(\"sampleClockText\", \"text\", sampleClock);
+    setValue(\"measurementSetText\", \"text\", measurementSet);
+    setValue(\"stationListText\", \"text\", stationList);
+    setValue(\"inputNodeListText\", \"text\", inputNodeList);
+    setValue(\"BGLNodeListText\", \"text\", BGLNodeList);
+    setValue(\"storageNodeListText\", \"text\", storageNodeList);
+    for (int i=1; i<= dynlen(directionType); i++) {
+      beamTable.appendLine(\"Direction\",directionType[i],\"Angle1\",angle1[i],\"Angle2\",angle2[i],
+                           \"subbands\",subbandList[i],\"beamlets\",beamletList[i]);
+    }
+    
+  } else {
+    setValue(\"claimPeriodText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"preparePeriodText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"startTimeText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"stopTimeText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"bandFilterText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"nyquistzoneText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"antennaArrayText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"receiverListText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"sampleClockText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"measurementSetText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"stationListText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"inputNodeListText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"BGLNodeListText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"storageNodeListText\", \"backCol\", \"Lofar_invalid\");
+    beamTable.enabled(false);
+  }  
+}
+" 0
+ E E E E 1 -1 -1 0  49 92
+""0  1
+E "#uses \"navPanel.ctl\"
+
+string baseDP=\"\";
+string database=\"\";
+" 0
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+1 84 0 "" 0
+0
+1 85 0 "0" 1
+0
+1 86 0 "" 2
+0
+1 87 0 "" 3
+0
+1 88 0 "" 7
+0
+1 89 0 "" 8
+0
+1 90 0 "" 9
+0
+1 91 0 "" 10
+0
+1 92 0 "" 11
+0
+1 93 0 "" 12
+0
+1 94 0 "" 13
+0
+1 120 1 "" 0
+0
+1 121 1 "" 1
+0
+1 122 1 "" 2
+0
+1 123 1 "" 3
+0
+1 124 1 "" 4
+0
+1 125 1 "" 5
+0
+1 126 1 "" 6
+0
+1 127 1 "" 7
+0
+1 128 1 "" 8
+0
+1 129 1 "" 9
+0
+1 130 1 "" 10
+0
+1 131 1 "" 11
+0
+1 132 1 "" 12
+0
+1 133 1 "" 13
+0
+1 134 1 "" 14
+0
+1 135 1 "" 15
+0
+1 136 1 "" 16
+0
+1 137 1 "" 17
+0
+1 138 1 "" 18
+0
+1 139 1 "" 19
+0
+1 140 1 "" 20
+0
+1 141 1 "" 21
+0
+1 142 1 "" 22
+0
+1 143 1 "" 23
+0
+1 144 1 "" 24
+0
+1 145 1 "" 25
+0
+1 146 1 "" 26
+0
+1 147 1 "" 27
+0
+1 148 1 "" 28
+0
+1 149 1 "" 29
+0
+0
+LAYER, 1 
+1
+LANG:1 0 
+0
+LAYER, 2 
+1
+LANG:1 0 
+0
+LAYER, 3 
+1
+LANG:1 0 
+0
+LAYER, 4 
+1
+LANG:1 0 
+0
+LAYER, 5 
+1
+LANG:1 0 
+0
+LAYER, 6 
+1
+LANG:1 0 
+0
+LAYER, 7 
+1
+LANG:1 0 
+0
+3 0 "PANEL_REF1"
+"objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
+1
+"$ctrlName""ObsCtrl"
+3 1 "PANEL_REF2"
+"objects/Shared\\Observation_Overview.pnl" 60 320 T 89 1 0 1 -60 -10
+0
+0
