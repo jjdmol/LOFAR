@@ -29,7 +29,6 @@
 #include <Blob/BlobSTL.h>
 #include <Common/LofarLogger.h> 
 #include <Common/StreamUtil.h> 
-#include <Common/lofar_iomanip.h> 
 
 namespace LOFAR
 {
@@ -288,11 +287,6 @@ namespace BBS
             std::min(static_cast<size_t>(lower_bound(itsCenters.begin(),
                 itsCenters.end(), x) - itsCenters.begin()), size() - 1);
         
-        LOG_DEBUG_STR("locate: " << setprecision(15) << x << " index: " << index
-            << " lower: " << lower(index) << " biasRight: " << biasRight
-            << " near: " << casa::near(x, lower(index)) << " smaller: "
-            << (x < lower(index))); 
-    
         if(casa::near(x, lower(index)))
         {
             DBGASSERT(index > 0);
