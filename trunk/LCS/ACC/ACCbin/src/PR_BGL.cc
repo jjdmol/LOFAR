@@ -36,7 +36,7 @@ namespace LOFAR {
 		   const string&  aWorkingDir,
 		   const string&  aParamFile,
 		   const uint numberOfNodes) :
-	ProcRule(aPartition, aJobName, aExecutable, aParamFile)
+	ProcRule("BGLjob", aPartition, aExecutable, aParamFile)
     {
       itsStartCmd = formatString("./startBGL.sh %s %s %s %s %s %d", 
 				 aJobName.c_str(),
