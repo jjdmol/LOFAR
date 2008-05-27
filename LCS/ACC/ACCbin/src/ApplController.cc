@@ -292,6 +292,12 @@ void ApplController::createParSubsets()
 			LOG_DEBUG_STR("nrOfProcesses calculated by script = " << nrProcs);
 		}
 		else if (procPrefix == "StorageAppl.StorageProg") {
+#ifdef STEP5 			
+			LOG_DEBUG("CS1_SPECIAL: for StorageAppl.StorageProg");
+			// NOTE: next code-fragment should be replaced with coe based on 'Observation' class.
+			nrProcs = itsObsParamSet->getStringVector("Observation.VirtualInstrument.partitionList").size() * itsObsParamSet->getInt32("OLAP.nrStorageNodes");
+			LOG_DEBUG_STR("nrOfProcesses = " << nrProcs);
+#else			
 			LOG_DEBUG("CS1_SPECIAL: for StorageAppl.StorageProg");
 			// NOTE: next code-fragment should be replaced with coe based on 'Observation' class.
 			int32	nrSubbands(0);
@@ -313,6 +319,8 @@ void ApplController::createParSubsets()
 			nrProcs = nrSubbands / (psetsPerStorage * subbandsPerPset);
 			LOG_DEBUG_STR("nrOfProcesses = " << nrSubbands << "/(" << psetsPerStorage << "*" << 
 							subbandsPerPset << ")=" << nrProcs);
+#endif		
+		
 		}
         
 		if (nrProcs == 0) {
@@ -416,6 +424,26 @@ void ApplController::createParSubsets()
 
 		// --- bgl ---
 		else if (startstopType == "bgl") {
+#ifdef STEP5
+			// This processSet is a BG/L job
+			LOG_TRACE_COND_STR("bgl process " << procName);
+			vector<string>	parList = basePS.getStringVector("Observation.VirtualInstrument.partitionList");
+			for (uint parIdx = 0; parIdx < parList.size(); parIdx++) {
+			  
+			  itsProcRuler.add(PR_BGL(procName,				    
+									  parList[parIdx],
+									  basePS.getString(procPrefix + "._executable"),
+									  basePS.getString(procPrefix + ".workingdir"),
+									  fileName, 
+									  nrProcs));
+			
+			  writeParSubset(basePS, parList[parIdx], fileName);
+			}
+			
+			// BGL processes do not connect to the ApplController.
+			itsNrOfProcs -= nrProcs ? nrProcs : 1;
+
+#else		
 			// This processSet is a BG/L job
 			LOG_TRACE_COND_STR("bgl process " << procName);
 			itsProcRuler.add(PR_BGL(procName,				    
@@ -427,6 +455,7 @@ void ApplController::createParSubsets()
 			writeParSubset(basePS, procName, fileName);
 			// BGL processes do not connect to the ApplController.
 			itsNrOfProcs -= nrProcs ? nrProcs : 1;
+#endif				
 		}
 	} // for processes
 }
