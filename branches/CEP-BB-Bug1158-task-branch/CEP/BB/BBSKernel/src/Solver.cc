@@ -54,7 +54,7 @@ Solver::Solver()
 }
 
 
-void Solver::reset(double epsValue, double epsDerivative, size_t maxIter,
+void Solver::reset(size_t maxIter, double epsValue, double epsDerivative,
     double colFactor, double lmFactor, bool balanced, bool useSvd)
 {
     itsEpsValue = epsValue;
@@ -201,9 +201,8 @@ bool Solver::iterate(vector<CellSolution> &global)
         double lmFactor = nonlin;
         double chiSqr = er[SUMLL] / std::max(er[NC] + nun, 1.0);
 
-        // Solve the normal equations.
+        // Perform an iteration.
         cell.solver.solveLoop(rank, &(cell.coeff[0]), itsUseSvd);
-//        cout << "Coefficients: " << cell.coeff << endl;
 
         // Record solution and statistics.
         CellSolution solution(cellId);
@@ -223,6 +222,8 @@ bool Solver::iterate(vector<CellSolution> &global)
         }
         else
         {
+            // If a cell is done, remove it for the map. Any subsequent calls
+            // to setEquations() for this cell will be silently ignored.
             itsCells.erase(it++);
         }
     }

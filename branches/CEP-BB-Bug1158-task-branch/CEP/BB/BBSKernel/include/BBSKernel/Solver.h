@@ -37,18 +37,26 @@ namespace BBS
     public:
         Solver();
 
-        void reset(double epsValue = 1e-9, double epsDerivative = 1e-9,
-            size_t maxIter = 10, double colFactor = 1e-9, double lmFactor = 1.0,
-            bool balanced = false, bool useSvd = true);
+        // (Re)set the solver's state. This allows a solver instance to be
+        // re-used.
+        void reset(size_t maxIter = 10, double epsValue = 1e-9,
+            double epsDerivative = 1e-9, double colFactor = 1e-9,
+            double lmFactor = 1.0, bool balanced = false, bool useSvd = true);
 
+        // Set the (local) coefficient index of a kernel.
         void setCoeffIndex(uint32 kernelId, const CoeffIndex &local);
+        // Get the merged (global) coefficient index.
         const CoeffIndex &getCoeffIndex() const;
 
+        // Set the initial coefficients of a kernel.
         void setCoeff(uint32 kernelId, const vector<CellCoeff> &local);
 
+        // Set the equations of a kernel.
         void setEquations(uint32 kernelId, const vector<CellEquation> &local);
+        // Get the merged equations (meant for debugging purposes).
         void getEquations(vector<CellEquation> &global);
 
+        // Perform an iteration for all available cells.
         bool iterate(vector<CellSolution> &global);
 
     private:

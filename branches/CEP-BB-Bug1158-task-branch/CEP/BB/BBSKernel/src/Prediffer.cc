@@ -1296,6 +1296,8 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
                 }
                 context.timers[ThreadContext::INV_DELTA].stop();
                 
+//                double sumRe = 0.0, sumIm = 0.0;
+
                 for(size_t ts = tsInterval.start; ts <= tsInterval.end; ++ts)
                 {
                     // Skip timeslot if flagged.
@@ -1305,8 +1307,6 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
                         continue;
                     }
 
-//                    double sumRe = 0.0, sumIm = 0.0;
-                    
                     // Construct two equations for each unflagged visibility.
                     for(size_t ch = chInterval.start; ch <= chInterval.end;
                         ++ch)
@@ -1364,13 +1364,14 @@ void Prediffer::constructBl(size_t threadNr, const baseline_t &baseline,
                         ++visOffset;
                     } // for(size_t ch = chStart; ch < chEnd; ++ch)
                     
-//                    cout << "CHECKSUM: " << sumRe << " " << sumIm << endl;
-                    
                     // Move to next timeslot.
                     visOffset +=
                         nChannels - (chInterval.end - chInterval.start + 1);
                 } // for(size_t ts = tsStart; ts < tsEnd; ++ts) 
                 
+//                LOG_DEBUG_STR("[" << cellId << "] " << setprecision(20) << sumRe
+//                    << " " << sumIm);
+                    
                 // Move to next solution cell.
                 ++eqIndex;
             } // for(cell.first = ...; cell.first < ...; ++cell.first)
