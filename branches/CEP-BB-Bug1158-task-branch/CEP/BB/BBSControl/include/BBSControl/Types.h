@@ -74,21 +74,21 @@ namespace LOFAR
     // Selection of the data domain that is to be processed.
     struct RegionOfInterest
     {
-      vector<int32>  frequency; 
+      vector<uint32> freq; 
       vector<string> time;
     };    
     
-    // Domain size is defined by two parameters: bandwidth f(Hz), and time
-    // interval t(s).
-    struct DomainSize
+    // Cell size is defined along the frequency and the time axis, in number
+    // of channels and number of timeslots respectively.
+    struct CellSize
     {
-      DomainSize() : bandWidth(0), timeInterval(0) {}
-      double bandWidth;	     ///< Bandwidth in Hz.
-      double timeInterval;   ///< Time interval is seconds.
+      CellSize() : freq(0), time(0) {}
+      uint32 freq;	         ///< Size in frequency (number of channels).
+      uint32 time;           ///< Size in time (number of timeslots).
     };
 
     // Sizes of the integration intervals, when applied. Integration can be
-    // performed along the frequency axis and the time axis.q
+    // performed along the frequency axis and the time axis.
     struct Integration
     {
       Integration() : deltaFreq(0), deltaTime(0) {}
@@ -100,13 +100,12 @@ namespace LOFAR
     struct SolverOptions
     {
       SolverOptions() : maxIter(0), epsValue(0), epsDerivative(0),
-                        minConverged(0), collFactor(0), lmFactor(0),
-                        balancedEqs(false), useSVD(false) {}
+                        colFactor(0), lmFactor(0), balancedEqs(false),
+                        useSVD(false) {}
       uint32 maxIter;        ///< Maximum number of iterations
       double epsValue;       ///< Value convergence threshold
       double epsDerivative;  ///< Derivative convergence threshold
-      double minConverged;   ///< Fraction that must have converged
-      double collFactor;     ///< Collinearity factor
+      double colFactor;      ///< Colinearity factor
       double lmFactor;       ///< Levenberg-Marquardt factor
       bool   balancedEqs;    ///< Indicates well-balanced normal equations
       bool   useSVD;         ///< Use singular value decomposition.
@@ -152,7 +151,7 @@ namespace LOFAR
     // @{
     ostream& operator<<(ostream&, const BBDB&);
     ostream& operator<<(ostream&, const ParmDB&);
-    ostream& operator<<(ostream&, const DomainSize&);
+    ostream& operator<<(ostream&, const CellSize&);
     ostream& operator<<(ostream&, const RegionOfInterest&);
     ostream& operator<<(ostream&, const Integration&);
     ostream& operator<<(ostream&, const SolverOptions&);

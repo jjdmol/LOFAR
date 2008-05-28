@@ -28,6 +28,7 @@
 #include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
@@ -80,9 +81,13 @@ namespace LOFAR
 	Indent id;
 	os << endl << indent << "Solvable parameters: " << itsParms
 	   << endl << indent << "Excluded parameters: " << itsExclParms
-           << endl << indent << "Kernel groups: "       << itsKernelGroups
-	   << endl << indent << itsDomainSize
-           << endl << indent << itsSolverOptions;
+       << endl << indent << "Kernel groups: "       << itsKernelGroups
+	   << endl << indent << itsCellSize
+	   << endl << indent << "Cell chunk size: " << itsCellChunkSize
+	   << boolalpha
+	   << endl << indent << "Propagate solutions: " << itsPropagateFlag
+	   << noboolalpha
+       << endl << indent << itsSolverOptions;
       }
     }
 
@@ -113,20 +118,22 @@ namespace LOFAR
                  toString(itsExclParms));
       ps.replace(prefix + "KernelGroups",
                  toString(itsKernelGroups));
-      ps.replace(prefix + "DomainSize.Freq",
-                 toString(itsDomainSize.bandWidth));
-      ps.replace(prefix + "DomainSize.Time", 
-                 toString(itsDomainSize.timeInterval));
+      ps.replace(prefix + "CellSize.Freq",
+                 toString(itsCellSize.freq));
+      ps.replace(prefix + "CellSize.Time", 
+                 toString(itsCellSize.time));
+      ps.replace(prefix + "CellChunkSize", 
+                 toString(itsCellChunkSize));
+      ps.replace(prefix + "PropagateSolutions", 
+                 toString(itsPropagateFlag));
       ps.replace(prefix + "Options.MaxIter", 
                  toString(itsSolverOptions.maxIter));
       ps.replace(prefix + "Options.EpsValue", 
                  toString(itsSolverOptions.epsValue));
       ps.replace(prefix + "Options.EpsDerivative", 
                  toString(itsSolverOptions.epsDerivative));
-      ps.replace(prefix + "Options.MinConverged", 
-                 toString(itsSolverOptions.minConverged));
-      ps.replace(prefix + "Options.CollFactor", 
-                 toString(itsSolverOptions.collFactor));
+      ps.replace(prefix + "Options.ColFactor", 
+                 toString(itsSolverOptions.colFactor));
       ps.replace(prefix + "Options.LMFactor", 
                  toString(itsSolverOptions.lmFactor));
       ps.replace(prefix + "Options.BalancedEqs", 
@@ -148,20 +155,22 @@ namespace LOFAR
         pss.getStringVector("ExclParms",    vector<string>());
       itsKernelGroups                = 
         pss.getUint32Vector("KernelGroups");//, vector<uint32>());
-      itsDomainSize.bandWidth        = 
-        pss.getDouble      ("DomainSize.Freq");
-      itsDomainSize.timeInterval     = 
-        pss.getDouble      ("DomainSize.Time");
+      itsCellSize.freq               =
+        pss.getUint32      ("CellSize.Freq");
+      itsCellSize.time               = 
+        pss.getUint32      ("CellSize.Time");
+      itsCellChunkSize               = 
+        pss.getUint32      ("CellChunkSize", 0);
+      itsPropagateFlag               =
+        pss.getBool("PropagateSolutions", false);
       itsSolverOptions.maxIter       = 
         pss.getUint32      ("Options.MaxIter");
       itsSolverOptions.epsValue      = 
         pss.getDouble      ("Options.EpsValue");
       itsSolverOptions.epsDerivative = 
         pss.getDouble      ("Options.EpsDerivative");
-      itsSolverOptions.minConverged  = 
-        pss.getDouble      ("Options.MinConverged");
-      itsSolverOptions.collFactor    = 
-        pss.getDouble      ("Options.CollFactor");
+      itsSolverOptions.colFactor     = 
+        pss.getDouble      ("Options.ColFactor");
       itsSolverOptions.lmFactor      = 
         pss.getDouble      ("Options.LMFactor");
       itsSolverOptions.balancedEqs   = 

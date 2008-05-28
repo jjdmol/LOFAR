@@ -222,7 +222,7 @@ namespace LOFAR
         }
 
         itsChunkStart = itsTimeStart;
-        itsChunkSize = itsStrategy->domainSize().timeInterval;
+        itsChunkSize = itsStrategy->chunkSize();
         if(itsChunkSize == 0)
         {
             // If chunk size equals 0, take the whole region of interest

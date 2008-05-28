@@ -267,10 +267,9 @@ namespace LOFAR
             << ",'" << strategy.parmDB().history             << "'"
             << ",'" << strategy.stations()                   << "'"
             << ",'" << strategy.inputData()                  << "'"
-            << ",'" << strategy.regionOfInterest().frequency << "'"
+            << ",'" << strategy.regionOfInterest().freq      << "'"
             << ",'" << strategy.regionOfInterest().time      << "'"
-            << ",'" << strategy.domainSize().bandWidth       << "'"
-            << ",'" << strategy.domainSize().timeInterval    << "'"
+            << ",'" << strategy.chunkSize()                  << "'"
             << ",'" << strategy.correlation().selection      << "'"
             << ",'" << strategy.correlation().type           << "'";
         return oss.str();

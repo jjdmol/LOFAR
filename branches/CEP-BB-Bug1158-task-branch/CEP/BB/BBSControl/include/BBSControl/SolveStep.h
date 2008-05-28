@@ -69,11 +69,13 @@ namespace LOFAR
 
       // @name Accessor methods
       // @{
-      vector<string> parms()         const { return itsParms; }
-      vector<string> exclParms()     const { return itsExclParms; }
-      vector<uint32> kernelGroups()  const { return itsKernelGroups; }
-      DomainSize     domainSize()    const { return itsDomainSize; }
-      SolverOptions  solverOptions() const { return itsSolverOptions; }
+      vector<string> parms()            const { return itsParms; }
+      vector<string> exclParms()        const { return itsExclParms; }
+      vector<uint32> kernelGroups()     const { return itsKernelGroups; }
+      CellSize       cellSize()         const { return itsCellSize; }
+      uint32         cellChunkSize()    const { return itsCellChunkSize; }
+      bool           propagate()        const { return itsPropagateFlag; }
+      SolverOptions  solverOptions()    const { return itsSolverOptions; }
       // @}
 
       // Return the command type of \c *this as a string.
@@ -89,9 +91,10 @@ namespace LOFAR
       vector<string> itsParms;         ///< Names of the solvable parameters
       vector<string> itsExclParms;     ///< Parameters excluded from solve
       vector<uint32> itsKernelGroups;  ///< Vector of kernel groups.
-      DomainSize     itsDomainSize;    ///< Solve domain size
+      CellSize       itsCellSize;      ///< Solution cell size.
+      uint32         itsCellChunkSize; ///< Number of cells processed together.
+      bool           itsPropagateFlag; ///< Propagate solutions?
       SolverOptions  itsSolverOptions; ///< Solver options
-
     };
 
     // @}

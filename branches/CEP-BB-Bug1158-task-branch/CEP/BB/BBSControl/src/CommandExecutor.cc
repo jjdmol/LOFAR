@@ -450,40 +450,41 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
     itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
         command.sources());
 
-    itsKernel->setParameterSelection(command.parms(), command.exclParms());
-    
+    if(!itsKernel->setParameterSelection(command.parms(), command.exclParms()))
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set"
+            " parameter selection.");
+        return;
+    }
+        
     // Get measurement dimensions.
     const VisDimensions &dims = itsMeasurement->getDimensions();
 
     // Construct solution cell grid.
-    const size_t cellSizeFreq =
-        static_cast<size_t>(command.domainSize().bandWidth);
+    const CellSize cellSize(command.cellSize());
 
     Axis::Pointer freqAxis(dims.getFreqAxis());
-    if(cellSizeFreq == 0)
+    if(cellSize.freq == 0)
     {
         const pair<double, double> range = dims.getFreqRange();
         freqAxis.reset(new RegularAxis(range.first, range.second - range.first,
             1));
     }
-    else if(cellSizeFreq > 1)
+    else if(cellSize.freq > 1)
     {
-        freqAxis = freqAxis->compress(cellSizeFreq);
+        freqAxis = freqAxis->compress(cellSize.freq);
     }
 
-    const size_t cellSizeTime =
-        static_cast<size_t>(command.domainSize().timeInterval);
-
     Axis::Pointer timeAxis(dims.getTimeAxis());
-    if(cellSizeTime == 0)
+    if(cellSize.time == 0)
     {
         const pair<double, double> range = dims.getTimeRange();
         timeAxis.reset(new RegularAxis(range.first, range.second - range.first,
             1));
     }
-    else if(cellSizeTime > 1)
+    else if(cellSize.time > 1)
     {
-        timeAxis = timeAxis->compress(cellSizeTime);
+        timeAxis = timeAxis->compress(cellSize.time);
     }
 
     Grid cellGrid(freqAxis, timeAxis);
@@ -503,15 +504,28 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
         << chunkStartCell.second << "), (" << chunkEndCell.first << ","
         << chunkEndCell.second << ")]");
     
-    // TODO: Create parameter set keys for this.
-    bool copyCoeff = true;
-    uint blockSize = 2;
+    // Number of cells along the time axis.
+    const uint nCellsTime = chunkEndCell.second - chunkStartCell.second + 1;
 
-    uint nBlocks =
-        static_cast<uint>(ceil(static_cast<double>(chunkEndCell.second
-            - chunkStartCell.second + 1) / blockSize));
+    // Determine the number of cells to process simultaneously.
+    uint cellChunkSize = std::min(command.cellChunkSize(), nCellsTime);
+    if(cellChunkSize == 0)
+    {
+        cellChunkSize = nCellsTime;
+    }
+    
+    const uint nCellChunks =
+        static_cast<uint>(ceil(static_cast<double>(nCellsTime)
+            / cellChunkSize));
 
+    // Initialize solver.
     Solver solver;
+    SolverOptions options(command.solverOptions());
+    solver.reset(options.maxIter, options.epsValue, options.epsDerivative,
+        options.colFactor, options.lmFactor, options.balancedEqs,
+        options.useSVD);
+
+    // Short-wire coefficient index.
     solver.setCoeffIndex(0, itsKernel->getCoeffIndex());
     itsKernel->setCoeffIndex(solver.getCoeffIndex());
     
@@ -526,22 +540,28 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
 #endif
 
     Location startCell(chunkStartCell), endCell(chunkEndCell);
-    for(uint block = 0; block < nBlocks; ++block)
+    for(uint cellChunk = 0; cellChunk < nCellChunks; ++cellChunk)
     {
-        // Move to next block.
-        endCell.second = std::min(startCell.second + blockSize - 1,
+        // Move to next cell chunk.
+        endCell.second = std::min(startCell.second + cellChunkSize - 1,
             chunkEndCell.second);
 
+        // Short-wire initial coefficients.
         itsKernel->getCoeff(startCell, endCell, coeff);
         solver.setCoeff(0, coeff);
 
+        // Iterate.
         bool done = false;
         while(!done)
         {
+            // Construct equations and pass to solver.
             itsKernel->construct(startCell, endCell, equations);
             solver.setEquations(0, equations);
+            
+            // Perform an non-linear LSQ iteration.
             done = solver.iterate(solutions);
             
+            // Update coefficients.
             itsKernel->setCoeff(solutions);
 
 #ifdef LOG_SOLVE_DOMAIN_STATS
@@ -572,8 +592,8 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
             << "% stopped.");
 #endif
                 
-        // Copy initial values.
-        if(copyCoeff)
+        // Propagate solutions to the next cell chunk.
+        if(command.propagate())
         {
             Location cell;
             vector<double> initialValues;
@@ -584,9 +604,10 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
 
                 cout << "GET: " << f << "," << endCell.second << endl;
                 cout << "COEFF: " << initialValues << endl;
-                for(size_t t = chunkStartCell.second + (block + 1) * blockSize;
-                    t <= min(chunkEndCell.second,
-                        chunkStartCell.second + (block + 2) * blockSize - 1);
+                for(size_t t = chunkStartCell.second + (cellChunk + 1)
+                        * cellChunkSize;
+                    t <= min(chunkEndCell.second, chunkStartCell.second
+                        + (cellChunk + 2) * cellChunkSize - 1);
                     ++t)
                 {
                     cout << "SET: " << f << "," << t << endl;
@@ -595,12 +616,12 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
             }
         }                
 
-        startCell.second += blockSize;
+        startCell.second += cellChunkSize;
     }
 
     itsSolver->sendObject(ChunkDoneMsg(itsKernelId));
 
-//    itsKernel->storeParameterValues();
+    itsKernel->storeParameterValues();
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
@@ -625,8 +646,13 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
         command.sources());
 
-    itsKernel->setParameterSelection(command.parms(), command.exclParms());
-    
+    if(!itsKernel->setParameterSelection(command.parms(), command.exclParms()))
+    {
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set"
+            " parameter selection.");
+        return;
+    }
+        
     // Get measurement dimensions.
     const VisDimensions &dims = itsMeasurement->getDimensions();
 
@@ -651,26 +677,25 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
         << freqEnd);
     Axis::Pointer freqAxis(new RegularAxis(freqBegin, freqEnd - freqBegin, 1));
 
-    const size_t cellSizeTime =
-        static_cast<size_t>(command.domainSize().timeInterval);
+    const CellSize cellSize(command.cellSize());
 
     Axis::Pointer timeAxis = dims.getTimeAxis();
-    if(cellSizeTime == 0)
+    if(cellSize.time == 0)
     {
         const pair<double, double> range = dims.getTimeRange();
         timeAxis.reset(new RegularAxis(range.first, range.second - range.first,
             1));
     }
-    else if(cellSizeTime > 1)
+    else if(cellSize.time > 1)
     {
-        timeAxis = timeAxis->compress(cellSizeTime);
+        timeAxis = timeAxis->compress(cellSize.time);
     }
 
     Grid cellGrid(freqAxis, timeAxis);
 
     // Set solution cell grid.
     itsKernel->setCellGrid(cellGrid);
-    
+
     // Find cells to process.
     const Grid &visGrid = itsChunk->getDimensions().getGrid();
     Box bbox = visGrid.getBoundingBox() & cellGrid.getBoundingBox();
@@ -683,13 +708,19 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
         << chunkStartCell.second << "), (" << chunkEndCell.first << ","
         << chunkEndCell.second << ")]");
     
-    // TODO: Create parameter set keys for this.
-    bool copyCoeff = true;
-    uint blockSize = 2;
+    // Number of cells along the time axis.
+    const uint nCellsTime = chunkEndCell.second - chunkStartCell.second + 1;
 
-    uint nBlocks =
-        static_cast<uint>(ceil(static_cast<double>(chunkEndCell.second
-            - chunkStartCell.second + 1) / blockSize));
+    // Determine the number of cells to process simultaneously.
+    uint cellChunkSize = std::min(command.cellChunkSize(), nCellsTime);
+    if(cellChunkSize == 0)
+    {
+        cellChunkSize = nCellsTime;
+    }
+    
+    const uint nCellChunks =
+        static_cast<uint>(ceil(static_cast<double>(nCellsTime)
+            / cellChunkSize));
 
     // Send coefficient index.
     CoeffIndexMsg kernelIndexMsg(itsKernelId);
@@ -714,10 +745,10 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
 #endif
 
     Location startCell(chunkStartCell), endCell(chunkEndCell);
-    for(uint block = 0; block < nBlocks; ++block)
+    for(uint cellChunk = 0; cellChunk < nCellChunks; ++cellChunk)
     {
-        // Move to next block.
-        endCell.second = std::min(startCell.second + blockSize - 1,
+        // Move to next cell chunk.
+        endCell.second = std::min(startCell.second + cellChunkSize - 1,
             chunkEndCell.second);
 
         CoeffMsg kernelCoeffMsg(itsKernelId);
@@ -778,8 +809,8 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
             << "% stopped.");
 #endif
                 
-        // Copy initial values.
-        if(copyCoeff)
+        // Propagate solutions to the next cell chunk.
+        if(command.propagate())
         {
             Location cell;
             vector<double> initialValues;
@@ -790,9 +821,10 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
 
                 cout << "GET: " << f << "," << endCell.second << endl;
                 cout << "COEFF: " << initialValues << endl;
-                for(size_t t = chunkStartCell.second + (block + 1) * blockSize;
-                    t <= min(chunkEndCell.second,
-                        chunkStartCell.second + (block + 2) * blockSize - 1);
+                for(size_t t = chunkStartCell.second + (cellChunk + 1)
+                        * cellChunkSize;
+                    t <= min(chunkEndCell.second, chunkStartCell.second
+                        + (cellChunk + 2) * cellChunkSize - 1);
                     ++t)
                 {
                     cout << "SET: " << f << "," << t << endl;
@@ -801,12 +833,12 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
             }
         }                
 
-        startCell.second += blockSize;
+        startCell.second += cellChunkSize;
     }
 
     itsSolver->sendObject(ChunkDoneMsg(itsKernelId));
 
-//    itsKernel->storeParameterValues();
+    itsKernel->storeParameterValues();
 
     itsResult = CommandResult(CommandResult::OK, "Ok.");
 }

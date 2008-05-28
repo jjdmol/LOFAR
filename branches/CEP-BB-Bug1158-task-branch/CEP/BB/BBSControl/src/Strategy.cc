@@ -77,14 +77,13 @@ namespace LOFAR
       itsInputData = ps.getString("InputData");
 
       // Get the region of interest (optional)
-      itsRegionOfInterest.frequency =
-        ps.getInt32Vector("RegionOfInterest.Freq", vector<int32>());
+      itsRegionOfInterest.freq =
+        ps.getUint32Vector("RegionOfInterest.Freq", vector<uint32>());
       itsRegionOfInterest.time =
         ps.getStringVector("RegionOfInterest.Time", vector<string>());
 
-      // Get the work domain size for this strategy
-      itsDomainSize.bandWidth = ps.getDouble("WorkDomainSize.Freq");      
-      itsDomainSize.timeInterval = ps.getDouble("WorkDomainSize.Time");
+      // Get the chunk size for this strategy
+      itsChunkSize = ps.getUint32("ChunkSize", 0);
 
       // Get the correlation product selection (ALL, AUTO, or CROSS)
       itsCorrelation.selection = 
@@ -128,7 +127,7 @@ namespace LOFAR
       Indent id;
       os << endl << indent << "Input data: " << itsInputData
 	 << endl << indent << itsRegionOfInterest
-	 << endl << indent << itsDomainSize
+	 << endl << indent << "Chunk size: " << itsChunkSize
 	 << endl << indent << itsCorrelation
 	 << endl << indent << itsIntegration
 	 << endl << indent << "Stations: " << itsStations;
@@ -162,14 +161,11 @@ namespace LOFAR
       ps.add("ParmDB.History", itsParmDB.history);
       ps.add("Strategy.Stations", toString(itsStations));
       ps.add("Strategy.InputData", itsInputData);
-      ps.add("Strategy.WorkDomainSize.Freq", 
-             toString(itsDomainSize.bandWidth));
-      ps.add("Strategy.WorkDomainSize.Time", 
-             toString(itsDomainSize.timeInterval));
+      ps.add("Strategy.ChunkSize", toString(itsChunkSize));
       ps.add("Strategy.RegionOfInterest.Freq", 
-             toString(itsRegionOfInterest.frequency));
+             toString(itsRegionOfInterest.freq));
       ps.add("Strategy.RegionOfInterest.Time",
-                 toString(itsRegionOfInterest.time));
+             toString(itsRegionOfInterest.time));
       ps.add("Strategy.Correlation.Selection", itsCorrelation.selection);
       ps.add("Strategy.Correlation.Type", toString(itsCorrelation.type));
       ps.add("Strategy.Integration.Freq", toString(itsIntegration.deltaFreq));
@@ -190,13 +186,9 @@ namespace LOFAR
       itsParmDB.history          = ps.getString("ParmDB.History");
       itsStations                = ps.getStringVector("Strategy.Stations");
       itsInputData               = ps.getString("Strategy.InputData");
-      //       itsRegionOfInterest        = ps.getXXX();
-      itsDomainSize.bandWidth    = 
-        ps.getDouble("Strategy.WorkDomainSize.Freq");
-      itsDomainSize.timeInterval = 
-        ps.getDouble("Strategy.WorkDomainSize.Time");
-      itsRegionOfInterest.frequency =
-        ps.getInt32Vector("Strategy.RegionOfInterest.Freq");
+      itsChunkSize = ps.getUint32("Strategy.ChunkSize");
+      itsRegionOfInterest.freq =
+        ps.getUint32Vector("Strategy.RegionOfInterest.Freq");
       itsRegionOfInterest.time  =
         ps.getStringVector("Strategy.RegionOfInterest.Time");
       itsCorrelation.selection   =

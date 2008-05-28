@@ -14,8 +14,7 @@ CREATE TABLE blackboard.strategy
     "Strategy.RegionOfInterest.Freq"    TEXT                DEFAULT '[]',
     "Strategy.RegionOfInterest.Time"    TEXT                DEFAULT '[]',
 
-    "Strategy.WorkDomainSize.Freq"      DOUBLE PRECISION    NOT NULL,
-    "Strategy.WorkDomainSize.Time"      DOUBLE PRECISION    NOT NULL,
+    "Strategy.ChunkSize"                INTEGER             NOT NULL,
 
     "Strategy.Correlation.Selection"    TEXT                DEFAULT 'CROSS',
     "Strategy.Correlation.Type"         TEXT                DEFAULT '[]',

@@ -93,7 +93,7 @@ namespace LOFAR
       vector<string>    stations()         const { return itsStations; }
       string            inputData()        const { return itsInputData; }
       RegionOfInterest  regionOfInterest() const { return itsRegionOfInterest;}
-      DomainSize        domainSize()       const { return itsDomainSize; }
+      uint32            chunkSize()        const { return itsChunkSize; }
       Correlation       correlation()      const { return itsCorrelation; }
       Integration       integration()      const { return itsIntegration; }
       // @}
@@ -123,8 +123,8 @@ namespace LOFAR
       // Region of interest
       RegionOfInterest       itsRegionOfInterest;
 
-      // The work domain size
-      DomainSize             itsDomainSize;
+      // Chunk size (#timeslots)
+      uint32                 itsChunkSize;
 
       // Selection type of the correlation products.
       Correlation            itsCorrelation;

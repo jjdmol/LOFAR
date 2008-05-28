@@ -66,18 +66,18 @@ namespace LOFAR
     {
       os << "Region of interest:";
       Indent id;
-      os << endl << indent << "Frequency: " << obj.frequency
+      os << endl << indent << "Frequency: " << obj.freq
          << endl << indent << "Time: "      << obj.time;
       return os;
     }
     
     
-    ostream& operator<<(ostream& os, const DomainSize& obj)
+    ostream& operator<<(ostream& os, const CellSize& obj)
     {
-      os << "Domain size:";
+      os << "Cell size:";
       Indent id;
-      os << endl << indent << "Bandwidth: "     << obj.bandWidth    << " (Hz)"
-	 << endl << indent << "Time interval: " << obj.timeInterval << " (s)";
+      os << endl << indent << "No. of channels: " << obj.freq << endl
+         << indent << "No. of timeslots: " << obj.time;
       return os;
     }
 
@@ -99,8 +99,7 @@ namespace LOFAR
       os << endl << indent << "Max nr. of iterations: "  << obj.maxIter
          << endl << indent << "Epsilon value: "          << obj.epsValue
          << endl << indent << "Epsilon derivative: "     << obj.epsDerivative
-         << endl << indent << "Min fraction converged: " << obj.minConverged
-         << endl << indent << "Collinearity factor: "    << obj.collFactor
+         << endl << indent << "Colinearity factor: "     << obj.colFactor
          << endl << indent << "LM factor: "              << obj.lmFactor
          << boolalpha
          << endl << indent << "Balanced equations: "     << obj.balancedEqs
