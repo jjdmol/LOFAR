@@ -90,11 +90,12 @@ elif [ "$getvers" != "" ]; then
   # Use the given version where . is subsituted by _.
   getvers=`echo $getvers | sed -e 's/\./_/g'`
   # If needed (i.e. if only numeric), prepend by package name.
+  # In that case the version is given, so used packages must have one too.
   evers=`echo $getvers | sed -e 's/[0-9_]*//g'`
   if [ "$evers" = "" ]; then
     getvers=$pkgnmvers-$getvers
+    versgiven=1
   fi
-  versgiven=1
 fi
 
 # See if this package was already updated. Take the last line.
@@ -124,7 +125,7 @@ if [ "$pkgline" = "" ]; then
       # Remove the part '-release-branch' leaving the CVS tag name.
       getvers=`cvs log $pkgname/configure.in 2>&1 | grep release-branch | head -1 | sed -e 's/[ \t]*\(.*\)-release-branch.*/\1/'`
     else
-      getvers=`svn list $svnurl/tags 2>&1 | grep $pkgnmvers | grep release-root | tail -1 | sed -e 's/[ \t]*\(.*\)-release-root.*/\1/'`
+      getvers=`svn list $svnurl/branches 2>&1 | grep $pkgnmvers | grep release-root | tail -1 | sed -e 's/[ \t]*\(.*\)-release-root.*/\1/'`
     fi
   fi
 
@@ -210,7 +211,7 @@ if [ "$pkgline" = ""  -o  "$getvers" != "$curvers" ]; then
         # in version is also handled.
         part="trunk"
         if [ "$getvers" != "" ]; then
-          part="tags/$getvers"
+          part="branches/$getvers"
         fi
         echo "(cd $pkgname  &&  $command switch $svnurl/$part/$pkgname)" >> rub.log 2>&1
         (cd $pkgname  &&  $command switch $svnurl/$part/$pkgname) >> rub.log 2>&1
@@ -252,7 +253,7 @@ if [ "$pkgline" = ""  -o  "$getvers" != "$curvers" ]; then
         # Check out the leaf.
         part=trunk
         if [ "$getvers" != "" ]; then
-          part="tags/$getvers"
+          part="branches/$getvers"
         fi
         # Find out if it is a leaf package or super package by testing
 	# if it has a configure.in file.
@@ -344,9 +345,17 @@ if [ $recur != 0 ]; then
     pkgnm=`echo $pkg | awk -F= '{print $1}' | sed -e 's%^/%%'`
     # Replace a . in the version by _.
     vers=`echo $pkg | awk -F= '{print $2}' | sed -e 's/\./_/g'`
+    # See if it a a real (numeric) version.
+    hasvers=0;
+    if [ "$vers" != "" ]; then
+      evers=`echo "$vers" | sed -e 's/[0-9.]*//g'`
+      if [ "$evers" = "" ]; then
+	hasvers=1
+      fi
+    fi
     # If the parent package has a version, this one must have one as well.
     # The only exception is package LCS/Tools.
-    if [ $versgiven = 1  -a  "$vers" = ""  -a  "$pkgnm" != "LCS/Tools" ]; then 
+    if [ $versgiven = 1  -a  $hasvers = 0  -a  "$pkgnm" != "LCS/Tools" ]; then 
      echo "Package $pkgnm used by $pkgname-$getvers must have a version as well"
       exit 2
     fi

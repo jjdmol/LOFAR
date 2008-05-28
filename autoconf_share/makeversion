@@ -99,9 +99,18 @@ if [ $hassvn = 0 ]; then
   # It should look like trunk/package or tags/package-version/package
   rvers1=`fgrep 'URL: ' version.svn.tmp | sed -e 's%.*/LOFAR/%%'`
   rvers=`echo $rvers1 | sed -e 's%/.*%%'`
-  if test "$rvers" = "tags"; then
+  if test "$rvers" = "tags"  -o  "$rvers" = "branches"; then
+    # We have a task branch (for a bug) or a release branch.
     # Remove all but version and replace _ in version by .
-    rvers=`echo $rvers1 | sed -e 's%^[^/]*/[^/]*-%%' -e 's%/.*%%' -e 's%_%.%g'`
+    rvers1=`echo $rvers1 | sed -e 's%^[^/]*/%%' -e 's%/.*%%'`
+    rvers=`echo $rvers1 | sed -e 's%-Bug[0-9]%%'`
+    if test "$rvers" = "$rvers1"; then
+      # No task branch, thus normal version number after the -.
+      rvers=`echo $rvers1 | sed -e 's%-release-.*%%' -e 's%.*-%%' -e 's%_%.%g'`
+    else
+      # Task branch, so extract from 'Bug' on.
+      rvers=`echo $rvers1 | sed -e 's%-task-.*%%' -e 's%.*-Bug%Bug%'`
+    fi
   fi
   # Get revision.
   grev=`fgrep 'Revision: ' version.svn.tmp | sed -e 's/.*: *//'`
