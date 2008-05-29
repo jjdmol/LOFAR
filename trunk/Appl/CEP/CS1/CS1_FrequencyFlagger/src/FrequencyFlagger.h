@@ -47,7 +47,8 @@ namespace LOFAR
     {
       public:
         FrequencyFlagger(MS_File* MSfile,
-                         double Threshold);
+                         double InputThreshold,
+                         int InputAlgorithm);
         ~FrequencyFlagger();
 
         void FlagDataOrBaselines(bool ExistingFlags);
@@ -60,6 +61,7 @@ namespace LOFAR
         int                     NumPolarizations;
         int                     NumTimeslots;
         double                  Threshold;
+        int                     Algorithm;
         double                  MaxBaselineLength;
         double                  NoiseLevel;
         bool ExistingFlags;

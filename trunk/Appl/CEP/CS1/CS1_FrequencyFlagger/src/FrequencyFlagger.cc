@@ -54,10 +54,12 @@ namespace LOFAR
     //===============>>>  FrequencyFlagger::FrequencyFlagger  <<<===============
     /* initialize some meta data and get the datastorage the right size. */
     FrequencyFlagger::FrequencyFlagger(MS_File* InputMSfile,
-                                       double InputThreshold)
+                                       double InputThreshold,
+                                       int InputAlgorithm)
     {
       MSfile           = InputMSfile;
       Threshold        = InputThreshold;
+      Algorithm        = InputAlgorithm;
       NumAntennae      = (*MSfile).itsNumAntennae;
       NumPairs         = (*MSfile).itsNumPairs;
       NumBands         = (*MSfile).itsNumBands;
@@ -212,6 +214,7 @@ namespace LOFAR
     {
       vector<double> MS(NumPolarizations, 0.0);
       vector<double> RMS(NumPolarizations);
+      Matrix<double> MedianArray(NumPolarizations, NumChannels);
       vector<int>    RMSCounter(NumPolarizations, 0);
       bool           FlagCompleteRow = true;
       int            flagcount       = 0;
@@ -219,17 +222,34 @@ namespace LOFAR
       {
         for (int i = NumChannels-1; i >= 0; i--) //calculata RMS of unflagged datapoints
         {
-          if (!ExistingFlags || !Flags(j, i))
-          { double temp = pow(abs(Timeslots(j, i)), 2);
-            if (!isNaN(temp))
-            {
-              MS[j] += temp;
-              RMSCounter[j] += 1;
+          if (Algorithm == 1)
+          { if (!ExistingFlags || !Flags(j, i))
+            { double temp = pow(abs(Timeslots(j, i)), 2);
+              if (!isNaN(temp))
+              {
+                MS[j] += temp;
+                RMSCounter[j] += 1;
+              }
+            }
+          }
+          else
+          { if (!ExistingFlags || !Flags(j, i))
+            { double temp = abs(Timeslots(i, j));
+              if (!isNaN(temp))
+              {
+                MedianArray(j, RMSCounter[j]) = temp;
+                RMSCounter[j] += 1;
+              }
             }
           }
         }
         if (RMSCounter[j])
-        { RMS[j] = sqrt(MS[j] /RMSCounter[j]);
+        { if (Algorithm == 1)
+          { RMS[j] = sqrt(MS[j] /RMSCounter[j]);
+          }
+          else
+          { RMS[j] = medianInPlace(MedianArray.row(j).operator()(Slice(0, RMSCounter[j]-1,1)));
+          }
           for (int i = NumChannels-1; i >= 0; i--)
           {
             if (!ExistingFlags || !Flags(j, i))
