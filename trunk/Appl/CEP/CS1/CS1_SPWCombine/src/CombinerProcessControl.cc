@@ -29,9 +29,11 @@
 #include <CS1_SPWCombine/CombinerProcessControl.h>
 #include "SPWCombine.h"
 
-#define COMBINER_VERSION "0.20"
+#define COMBINER_VERSION "0.22"
 // 0.10 Initial version based on DataSquasher
 // 0.20 Ported additions and updates from DataSquasher
+// 0.21 Fixed calculation of REF_FREQUENCY
+// 0.22 Added handing of Measurementsets with different numbers of timesamples
 
 namespace LOFAR
 {
@@ -64,10 +66,24 @@ namespace LOFAR
     {
       try{
         std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
+        unsigned int min_nrow = MAXINT;
+        int sourceMS = 0;
+        for (unsigned int i = 0; i < itsInMS.size(); i++) // to search the shortest MS
+        {
+          if (inMS[i]->nrow() < min_nrow)
+          {
+            min_nrow = inMS[i]->nrow();
+            sourceMS = i;
+          }
+        }
+        if (sourceMS > 0)
+        { cout << "Not all sources are the same lenght, using te shortest one." << endl;
+        }
+
         Table TempTable = tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
                                        string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,") +
                                        string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID,WEIGHT_SPECTRUM,FLAG FROM ")
-                                       + itsInMS[0] + string(" WHERE DATA_DESC_ID = 1"));
+                                       + itsInMS[sourceMS] + string(" WHERE DATA_DESC_ID = 0"));
         // Need FLAG to make it a valid MS
         TempTable.deepCopy(itsOutMS, Table::NewNoReplace, true);
         tableCommand(string("DELETE FROM ") + itsOutMS + string("/DATA_DESCRIPTION WHERE rownumber() > 1"));
@@ -82,7 +98,7 @@ namespace LOFAR
           { nchan += itsCombiner->itsNumChannels;
           }
         }
-        TableDesc tdesc    = inMS[0]->tableDesc();
+        TableDesc tdesc    = inMS[sourceMS]->tableDesc();
         Vector<Int> temp(2);
         temp(0)            = itsCombiner->itsNumPolarizations;
         temp(1)            = nchan;
@@ -111,12 +127,15 @@ namespace LOFAR
         ArrayColumn<Double> outWIDTH(outSPW, "CHAN_WIDTH");
         ArrayColumn<Double> outBW(outSPW, "EFFECTIVE_BW");
         ArrayColumn<Double> outRESOLUTION(outSPW, "RESOLUTION");
+        ScalarColumn<Double> outREF_FREQUENCY(outSPW, "REF_FREQUENCY");
 
         Vector<Double> new_FREQ(nchan, 0.0);
         Vector<Double> new_WIDTH(nchan, 0.0);
         Vector<Double> new_BW(nchan, 0.0);
         Vector<Double> new_RESOLUTION(nchan, 0.0);
-        int total_channels = 0;
+        int total_channels   = 0;
+        int total_bands      = 0;
+        double ref_frequency = 0.0;
 
         for (unsigned int i = 0; i < itsInMS.size(); i++)
         {
@@ -130,13 +149,13 @@ namespace LOFAR
           ROArrayColumn<Double> inWIDTH(inSPW, "CHAN_WIDTH");
           ROArrayColumn<Double> inBW(inSPW, "EFFECTIVE_BW");
           ROArrayColumn<Double> inRESOLUTION(inSPW, "RESOLUTION");
-
+          ROScalarColumn<Double> inREF_FREQUENCY(inSPW, "REF_FREQUENCY");
 
           for (unsigned int n = 0; n < inSPW.nrow(); n++)
           {
             for (int m = 0; m < old_nchan; m++)
             {
-            inFREQ.get(n, old_temp);
+            inFREQ.get(n, old_temp); // could be outsid this loop
             new_FREQ(total_channels + m) = old_temp(m);
 
             inWIDTH.get(n, old_temp);
@@ -149,11 +168,17 @@ namespace LOFAR
             new_RESOLUTION(total_channels + m) = old_temp(m);
             }
             total_channels += old_nchan;
+
+            double temp_freq;
+            inREF_FREQUENCY.get(n, temp_freq);
+            ref_frequency += temp_freq;
+            total_bands++;
           }
           outFREQ.put(0, new_FREQ);
           outWIDTH.put(0, new_WIDTH);
           outBW.put(0, new_BW);
           outRESOLUTION.put(0, new_RESOLUTION);
+          outREF_FREQUENCY.put(0, ref_frequency/total_bands);
         }
 
         //Do the real stuff
