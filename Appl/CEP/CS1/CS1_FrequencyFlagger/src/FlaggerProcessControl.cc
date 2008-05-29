@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2007 by ASTRON, Adriaan Renting                         *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -62,6 +62,7 @@ namespace LOFAR
       itsMS        = ParamSet->getString("ms");
       itsExisting  = ParamSet->getBool("existing");
       itsThreshold = ParamSet->getDouble("threshold");
+      itsAlgorithm = ParamSet->getInt32("algorithm");
       return true;
     }
 
@@ -93,7 +94,7 @@ namespace LOFAR
               string("Documentation can be found at: www.lofar.org/operations/doku.php?id=engineering:software:postprocessing_software\n");
       cout << itsMS << endl;
       myMS       = new MS_File(itsMS);
-      itsFlagger = new FrequencyFlagger (myMS, itsThreshold);
+      itsFlagger = new FrequencyFlagger (myMS, itsThreshold, itsAlgorithm);
       }
       catch(casa::AipsError& err)
       {

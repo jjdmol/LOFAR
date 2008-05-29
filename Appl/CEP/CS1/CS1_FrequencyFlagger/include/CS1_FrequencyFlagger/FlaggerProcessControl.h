@@ -40,6 +40,7 @@ namespace LOFAR
       std::string  itsMS;
       bool         itsExisting;
       double       itsThreshold;
+      int          itsAlgorithm;
       MS_File*          myMS;
       FrequencyFlagger* itsFlagger;
     public:
