@@ -76,229 +76,63 @@ dyn_string 	        itsSelectionDp  = \"\";
 int nrRows=0;
 int selectedRow=0;
 int firstRow=0;
+bool   bDoubleClicked  = false;
 
-// *******************************************
-// Name : redraw_table
-// *******************************************
-// Description:
-// redraws the alarm table
-//
-//
-// Returns:
-//    nothing
-// *******************************************
+// routine for single mouse click
+void click(int row) {
+    // set delay in case double click was meant
+  delay(0, 100); 
+  if (!bDoubleClicked) {
+    selectedRow = firstRow+row;
+    setValue(\"alarm_currentLine\",\"text\",selectedRow);
+  }
+}
 
-void redraw_table(int line) {
-  // clear table
-  LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|deleting all entries from alarms\");
-  alarmTable.deleteAllLines();
-
-  // set alarm_lineCount
-  setValue(\"alarm_lineCount\",\"text\",dynlen(g_alarms[ \"TIME\" ]));
-
-    // check selectedRow 
-  if (line > -1) {
-    if (line > dynlen(g_alarms[ \"TIME\" ])-3 ){
-      line =dynlen(g_alarms[ \"TIME\" ])-3;
-    }
-    if (line<1) {
-      line=1;
-    }
-    setValue(\"alarm_currentLine\",\"text\",line);
-    firstRow=line;
-    selectedRow=line;
-  } else {
-    setValue(\"alarm_currentLine\",\"text\",0);
-    firstRow = dynlen(g_alarms[ \"TIME\" ])-3;
-    if (firstRow < 1) {
-      firstRow=1;
-    } 
+// routine for double mouse click
+void dblClick(int row) {
+  
+  // indicate this is a doubleClick
+  bDoubleClicked = true; 
+  string selection=\"\";
+  
+  LOG_TRACE(\"navigator_alerts.pnl:DoubleClicked|doubleClick received on alarmtable row: \" + row);
+  
+  if (alarmTable.lineCount() < 1) {
+    bDoubleClicked = false;  
+    return;
+  }
+  dyn_anytype result = alarmTable.getLineN(row);
+  LOG_DEBUG(\"navigator_alerts.pnl:DoubleClicked|Result: \"+result);
+  string dp = result[2];  
+  if (dpExists(dp) ) {
+    LOG_DEBUG(\"navigator_alerts.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+dp);
+    g_currentDatapoint=dp;
+    if (strpos(dp,\"LOFAR_PIC\") >= 0) {
+        selection=\"Hardware\";
+    } else if (strpos(dp,\"LOFAR_ObsSW\") >= 0) {
+      if (strpos(dp,\"Ctrl\") >= 0) {
+        selection=\"Processes\";
+      } else {
+        selection=\"Observations\";
+      }
+    } else if (strpos(dp,\"LOFAR_PermSW\") >= 0) {
+      selection=\"Processes\";
+    }         
+    setEvent(selection,\"ChangeTab\");
   }
   
+  // set delay to avoid click event will be triggered
+  delay(0, 500);
+  bDoubleClicked = false;  
+}
 
-  showMapping(g_alarms,\"g_alarms in alertpanel\");
-  LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"TIME\"]));
-  
-  //append  4  alarms
-  for (int j=0; j<=3  ; j++) {
-    int i=firstRow+j;
-    if (i <= dynlen(g_alarms[ \"TIME\" ]) && i > 0) {
-      LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|Adding alarmTable line : \"+i);
- 	    alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][i],\"Datapoint\",dpSubStr(g_alarms[\"DPNAME\"][i],DPSUB_SYS_DP),
-                            \"Message\",g_alarms[\"MESSAGE\"][i],\"Status\",getAlarmStatus(g_alarms[\"STATUS\"][i]));
-
-      string aColor=getStateColor(g_alarms[\"STATE\"][i]);
-      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Time\",aColor);
-      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Datapoint\",aColor);
-      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Message\",aColor);
-      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Status\",aColor);
-    } else {
-      string aColor=\"white\";
-      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Time\",aColor);
-      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Datapoint\",aColor);
-      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Message\",aColor);
-      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Status\",aColor);
-    }
-  }
-}" 0
- 2
-"CBRef" "1"
-"EClose" E
-""
-DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
-LAYER, 0 
-1
-LANG:1 0 
-13 0
-"alarm_up"
-""
-1 961.010033444811 16.3846153846154 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
- E E
-1 0 0 0 0 0
-E E E
-0
-2
-LANG:1 0 
-LANG:0 0 
-
-0
-2
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
- 961.086956521734 17 992.086956521734 38
-
-P 
-6736998
-"pictures/up_en.gif"
-2
-LANG:1 0 
-LANG:0 0 
-"main()
-{
-  // check if first viewwindow row is bigger then 1
-  // also check if the result
-  if (firstRow > 1) {
-    firstRow--;
-    
-    // redraw Table
-    redraw_table(firstRow);
-  }
-}" 0
- E E E
-13 1
-"alarm_down"
-""
-1 961.086956521734 61.3846153846154 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
- E E
-3 0 0 0 0 0
-E E E
-0
-2
-LANG:1 0 
-LANG:0 0 
-
-0
-2
-LANG:1 84 -*-arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,arial
-LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
-0 ""
- 961.086956521734 62 992 83
-
-P 
-6736998
-"pictures/down_en.gif"
-2
-LANG:1 0 
-LANG:0 0 
-"main()
-{
-  // check if first viewwindow row is smaller then length g_alerts -3
-  if (firstRow < (dynlen(g_alarms[ \"TIME\" ])-3) ) {
-    firstRow++;
-    
-    // redraw Table
-    redraw_table(firstRow);
-  }
-}" 0
- E E E
-2 8
-"alarm_currentLine"
-""
-1 811.395085066162 67 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
- E E
-14 0 0 0 0 0
-E E E
-0
-2
-LANG:1 0 
-LANG:0 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.04347826086957 0 1 -93.3913043478308 23 0 E 977 21 1019 37
-0 2 2 "4d" 4 0 0 66 0 0  977 21 1
-2
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-2
-LANG:1 1 0
-LANG:0 1 0
-2 9
-"alarm_lineCount"
-""
-1 987.086956521734 44 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
- E E
-16 0 0 0 0 0
-E E E
-0
-2
-LANG:1 0 
-LANG:0 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 987.086956521734 44 1029.08695652173 60
-0 2 2 "4d" 4 0 0 64 0 0  987.086956521734 44 1
-2
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-2
-LANG:1 1 0
-LANG:0 1 0
-2 10
-"Text1"
-""
-1 975.086956521734 43 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
- E E
-18 0 0 0 0 0
-E E E
-0
-2
-LANG:1 0 
-LANG:0 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 975.086956521734 43 979 60
-0 2 2 "0s" 0 0 0 192 0 0  975.086956521734 43 1
-2
-LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
-LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-2
-LANG:1 1 /
-LANG:0 1 /
-25 11
-"alarmTable"
-""
-1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- "main(int row, string column)
-{
+// routine for right mouse click
+void rClick(int row) {
   LOG_TRACE(\"navigator_alerts.pnl:RightMouseClick|Right mouseclick received on alarmtable row: \" + row);
- 
+  
+  if (alarmTable.lineCount() < 1) {
+    return;
+  }
   dyn_anytype result = alarmTable.getLineN(row);
   LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|Result: \"+result);
   time aTime = result[1];
@@ -393,8 +227,259 @@ LANG:0 1 /
       }    
     }
   }
+}
+
+
+// *******************************************
+// Name : redraw_table
+// *******************************************
+// Description:
+// redraws the alarm table
+//
+//
+// Returns:
+//    nothing
+// *******************************************
+
+void redraw_table(int line) {
+  // clear table
+  LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|deleting all entries from alarms\");
+  alarmTable.deleteAllLines();
+
+  // set alarm_lineCount
+  setValue(\"alarm_lineCount\",\"text\",dynlen(g_alarms[ \"TIME\" ]));
+
+  if (dynlen(g_alarms[ \"TIME\" ]) < 1) {
+    selectedRow=0;
+    firstRow=0;
+    setValue(\"alarm_currentLine\",\"text\",0);
+  } else {
+    // check selectedRow 
+    if (line > -1) {
+      if (line > dynlen(g_alarms[ \"TIME\" ])-3 ){
+        line =dynlen(g_alarms[ \"TIME\" ])-3;
+      }
+      if (line<1) {
+        line=1;
+      }
+      setValue(\"alarm_currentLine\",\"text\",line);
+      firstRow=line;
+      selectedRow=line;
+    } else {
+      setValue(\"alarm_currentLine\",\"text\",0);
+      firstRow = dynlen(g_alarms[ \"TIME\" ])-3;
+      if (firstRow < 1) {
+        firstRow=1;
+      } 
+    }
+  }
+  
+
+  showMapping(g_alarms,\"g_alarms in alertpanel\");
+  LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|Nr of alerts in global table: \" + dynlen(g_alarms[\"TIME\"]));
+  
+  //append  4  alarms
+  for (int j=0; j<=3  ; j++) {
+    int i=firstRow+j;
+    if (i <= dynlen(g_alarms[ \"TIME\" ]) && i > 0) {
+      LOG_DEBUG(\"navigator_alerts.pnl:redraw_table|Adding alarmTable line : \"+i);
+ 	    alarmTable.appendLine(\"Time\",g_alarms[\"TIME\"][i],\"Datapoint\",dpSubStr(g_alarms[\"DPNAME\"][i],DPSUB_SYS_DP),
+                            \"Message\",g_alarms[\"MESSAGE\"][i],\"Status\",getAlarmStatus(g_alarms[\"STATUS\"][i]));
+
+      string aColor=getStateColor(g_alarms[\"STATE\"][i]);
+      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Time\",aColor);
+      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Datapoint\",aColor);
+      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Message\",aColor);
+      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Status\",aColor);
+    } else {
+      string aColor=\"white\";
+      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Time\",aColor);
+      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Datapoint\",aColor);
+      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Message\",aColor);
+      setValue(\"alarmTable\",\"cellBackColRC\",j,\"Status\",aColor);
+    }
+  }
+}
+
+void setEvent(dyn_string aSelection,string event) {
+  if (navigator_initializing()) {
+    return;
+  }
+  string anEvent=$name+\"|\"+event;
+  if (dpExists(itsEventDp)) {
+     dpSet(itsEventDp,anEvent);
+  } else {
+    LOG_ERROR(\"navigator_alerts.pnl:setEvent|\"+itsEventDp + \" Does not exist yet\");     
+  }
+  if (dpExists(itsSelectionDp)) {
+    dpSet(itsSelectionDp,aSelection);
+  } else {
+    LOG_ERROR(\"navigator_alerts.pnl:setEvent|\"+itsSelectionDp + \" Does not exist yet\");     
+  }
 }" 0
- E
+ 2
+"CBRef" "1"
+"EClose" E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 0 
+13 0
+"alarm_up"
+""
+1 961.010033444811 16.3846153846154 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+1 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+0
+2
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+ 961 17 992 38
+
+P 
+6736998
+"pictures/up_en.gif"
+2
+LANG:1 0 
+LANG:0 0 
+"main()
+{
+  // check if first viewwindow row is bigger then 1
+  // also check if the result
+  if (firstRow > 1) {
+    firstRow--;
+    
+    // redraw Table
+    redraw_table(firstRow);
+  }
+}" 0
+ E E E
+13 1
+"alarm_down"
+""
+1 961.086956521734 61.3846153846154 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+3 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+0
+2
+LANG:1 84 -*-arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,arial
+LANG:0 107 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,500,0,0,0,0,0,0,0,16,arial
+0 ""
+ 961 62 992 83
+
+P 
+6736998
+"pictures/down_en.gif"
+2
+LANG:1 0 
+LANG:0 0 
+"main()
+{
+  // check if first viewwindow row is smaller then length g_alerts -3
+  if (firstRow < (dynlen(g_alarms[ \"TIME\" ])-3) ) {
+    firstRow++;
+    
+    // redraw Table
+    redraw_table(firstRow);
+  }
+}" 0
+ E E E
+2 8
+"alarm_currentLine"
+""
+1 811.395085066162 67 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E 1.04347826086957 0 1 -93.3913043478308 23 0 E 977 21 1019 37
+0 2 2 "4d" 4 0 0 66 0 0  977 21 1
+2
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+2
+LANG:1 1 0
+LANG:0 1 0
+2 9
+"alarm_lineCount"
+""
+1 987.086956521734 44 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 987.086956521734 44 1029.08695652173 60
+0 2 2 "4d" 4 0 0 64 0 0  987.086956521734 44 1
+2
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+2
+LANG:1 1 0
+LANG:0 1 0
+2 10
+"Text1"
+""
+1 975.086956521734 43 E E E 1 E 1 E N "_3DText" E N "_Transparent" E E
+ E E
+18 0 0 0 0 0
+E E E
+0
+2
+LANG:1 0 
+LANG:0 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 975.086956521734 43 979 60
+0 2 2 "0s" 0 0 0 192 0 0  975.086956521734 43 1
+2
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
+LANG:0 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+2
+LANG:1 1 /
+LANG:0 1 /
+25 11
+"alarmTable"
+""
+1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ "main(int row, string column)
+{
+  rClick(row);
+}" 0
+ "main(int row, string column)
+{
+  dblClick(row);
+}" 0
+
 19 0 0 0 0 0
 E E E
 0
@@ -408,8 +493,7 @@ LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0
  8 8 939 92
 E"main(int row, string column, string value)
 {
-  selectedRow = firstRow+row;
-  setValue(\"alarm_currentLine\",\"text\",selectedRow);
+  click(row);
 }" 0
  0 0 1 4 4 "Time" 13 1 0 "s" 1
 LANG:1 4 Time

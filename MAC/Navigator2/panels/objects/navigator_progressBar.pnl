@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,-1 -1 264 97 N "_3DFace" 2
+PANEL,-1 -1 638 97 N "_3DFace" 2
 "$name"
 "$progressBarDPE"
 "main()
@@ -90,7 +90,24 @@ string 			itsEventDp     = \"\";
 dyn_string 	        itsSelectionDp = \"\";
 
 bool connected=false;
-string dpe;" 0
+string dpe;
+
+void setEvent(dyn_string aSelection,string event) {
+  if (navigator_initializing()) {
+    return;
+  }
+  string anEvent=$name+\"|\"+event;
+  if (dpExists(itsEventDp)) {
+     dpSet(itsEventDp,anEvent);
+  } else {
+    LOG_ERROR(\"navigator_progressBar.pnl:setEvent|\"+itsEventDp + \" Does not exist yet\");     
+  }
+  if (dpExists(itsSelectionDp)) {
+    dpSet(itsSelectionDp,aSelection);
+  } else {
+    LOG_ERROR(\"navigator_progressBar.pnl:setEvent|\"+itsSelectionDp + \" Does not exist yet\");     
+  }
+}" 0
  2
 "CBRef" "1"
 "EClose" E

@@ -27,7 +27,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   if (dpExists(baseDP + \".setpoint\")) {
     dpConnect(\"updateTempCtrl\", baseDP + \".setpoint\",
 		                    baseDP + \".ambient.lowestTemp\",
-		                    baseDP + \".ambient.higestTemp\",
+		                    baseDP + \".ambient.highestTemp\",
 		                    baseDP + \".setpoint:_online.._invalid\");
   } else {
     LOG_ERROR(\"TempCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
@@ -45,15 +45,15 @@ updateTempCtrl(string dp1, float setpoint,
 {
   LOG_DEBUG(\"TempCtrl.pnl:updateDigBrdCtrl|entered with setpoint: \"+ setpoint + 
             \" lowTemp: \" + lowTemp +
-            \" highTemp: \" + highemp);  
+            \" highTemp: \" + highTemp);  
   if (!invalid) {
-    setValue(\"setPointText\", \"backCol\", setpoint);
+    setValue(\"setpointText\", \"backCol\", setpoint);
     setValue(\"tempLowText\", \"backCol\",lowTemp);
-    setValue(\"temphighText\", \"backCol\", highTemp);
+    setValue(\"tempHighText\", \"backCol\", highTemp);
   } else {
-    setValue(\"setPointText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"setpointText\", \"backCol\", \"Lofar_invalid\");
     setValue(\"tempLowText\", \"backCol\", \"Lofar_invalid\");
-    setValue(\"temphighText\", \"backCol\", \"Lofar_invalid\");
+    setValue(\"tempHighText\", \"backCol\", \"Lofar_invalid\");
   }  
 }
 " 0
