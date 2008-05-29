@@ -1,30 +1,22 @@
-//# tPagedImage.cc: This program tests the PagedImage class
-//# Copyright (C) 1994,1995,1996,1999,2000,2001
-//# Associated Universities, Inc. Washington DC, USA.
-//#
-//# This program is free software; you can redistribute it and/or modify it
-//# under the terms of the GNU General Public License as published by the Free
-//# Software Foundation; either version 2 of the License, or(at your option)
-//# any later version.
-//#
-//# This program is distributed in the hope that it will be useful, but WITHOUT
-//# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-//# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-//# more details.
-//#
-//# You should have received a copy of the GNU General Public License along
-//# with this program; if not, write to the Free Software Foundation, Inc.,
-//# 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//#
-//# Correspondence concerning AIPS++ should be addressed as follows:
-//#        Internet email: aips2-request@nrao.edu.
-//#        Postal address: AIPS++ Project Office
-//#                        National Radio Astronomy Observatory
-//#                        520 Edgemont Road
-//#                        Charlottesville, VA 22903-2475 USA
-//#
-//# $Id$
-//#--------------------------------------------------------------------------
+/***************************************************************************
+ *   Copyright (C) 2007 by ASTRON, Adriaan Renting                         *
+ *   renting@astron.nl                                                     *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
 #include<casa/aips.h>
 #include <images/Images/PagedImage.h>
@@ -79,9 +71,41 @@ namespace LOFAR
 
     void Image_File::WriteImage(std::vector< casa::Cube<float> > image)
     {
-      casa::Cube<float> Bal = image[0];
-      init(Bal.shape(), image.size());
-      Image->putSlice(Bal, casa::IPosition(3, 0, 0, 0), casa::IPosition(3, 0, 0, 0));
+//       casa::Cube<float> Bal = image[0];
+//       init(Bal.shape(), image.size());
+//       Image->putSlice(Bal, casa::IPosition(3, 0, 0, 0), casa::IPosition(3, 0, 0, 0));
+//
+//     CoordinateSystem imagecoords;
+//     if(!imagecoordinates(imagecoords))
+//       {
+//     make(imageName);
+//     PagedImage<Float> imageImage(imageName);
+//     imageImage.set(0.0);
+//     imageImage.table().markForDelete();
+//
+//     // Now set up the tile size, here we guess only
+//     IPosition cimageShape(imageshape());
+//
+//     IPosition tileShape(4, min(32, cimageShape(0)), min(32, cimageShape(1)),
+//                         min(4, cimageShape(2)), min(32, cimageShape(3)));
+//
+//     CoordinateSystem cimagecoords;
+//     if(!imagecoordinates(cimagecoords))
+// PagedImage<Complex> cImageImage(TiledShape(cimageShape, tileShape),
+//                                     cimagecoords,
+//                                     cImageName);
+//     cImageImage.set(Complex(0.0));
+//     cImageImage.setMaximumCacheSize(cache_p/2);
+//     cImageImage.table().markForDelete();
+//     //
+//     // Add the distance to the object: this is not nice. We should define the
+//     // coordinates properly.
+//     //
+//     Record info(imageImage.miscInfo());
+//     info.define("distance", distance_p.get("m").getValue());
+//     cImageImage.setMiscInfo(info);
+//  imageImage.setUnits(Unit("Jy/beam"));
+
     }
 
 
