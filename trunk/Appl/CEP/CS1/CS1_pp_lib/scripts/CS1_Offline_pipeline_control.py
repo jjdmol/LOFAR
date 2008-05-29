@@ -51,15 +51,16 @@ def spawn(dest, src, log):
 ##        os.system('ssh -A -t ' + dest[0] + ' "cd /local/renting;time >> pipeline.log"')
         os.system('ssh -A -t ' + dest[0] + ' "setenv PYTHONPATH /app/LOFAR/stable;' +
         'source /app/scripts/doUnstableAIPS++; cd '+ dest[1] + ';python ' +
-        'CS1_Offline_pipeline_node.py -r' + src[0] + ' -m' + src[1] +
+        'CS1_Offline_pipeline_node.py -r' + src[0] + ' -m' + src[1] + ' -d' + dest[0] +
         ' -l' + log + ' >> pipeline.log"')
 ## bash version
 ##        os.system('ssh -A -t ' + dest[0] + ' "export PYTHONPATH=/app/LOFAR/stable;' +
 ##        '. /app/aips++/Unstable/aipsinit.sh; cd '+ dest[1] + ';python ' +
 ##        'CS1_Offline_pipeline_node.py -r ' + src[0] + ' -m ' + src[1] + ' > pipeline.log"')
         zzz = time.gmtime()
-        os.system('scp ' + dest[0] + ':' + dest[1] +
-        '/pipeline.log ' + dest[0] + str(zzz[3]) + str(zzz[4]) + str(zzz[5]) +'.log')
+        os.system('scp ' + dest[0] + ':' + dest[1] + '/' + dest[0] +
+        '/' + log + ' ' + dest[0] +'_' + str(zzz[3]) + '-' + str(zzz[4]) +
+        '-' + str(zzz[5]) + '.log')
         os._exit(0)
     else: ## parent process
         return pid
@@ -102,7 +103,8 @@ while len(joblist):
             pidlist.append((spawn((job[0], job[1]),(job[2],job[3]), run_id + '.log'), job))
             proclist.append(job[0])
         else:
-            print "aha" + str(job)
+            print "queueing for later execution: " + str(job)
+        time.sleep(2) ## If we start all node scripts at the same time, the file server has problems
     #
     time.sleep(10) ## wait for childs to spawn
     #
@@ -115,6 +117,7 @@ add_log(options, "Done with the collapsing of individual subbands")
 print "Done with the collapsing of individual subbands "
 sys.stdout.flush
 
+add_log(options, "Now copying back The collapsed individual subbands ")
 print "Now copying back The collapsed individual subbands "
 sys.stdout.flush
 
@@ -122,7 +125,9 @@ sys.stdout.flush
 MSlist = []
 for i in range(0,len(flist)):
     ## get the squashed measurementsets back
-    os.system('scp -r ' + dlist[i][0] +':'  +  dlist[i][1] + '/' + flist[i][1].split('/')[-1]  + 's .')
+    ret = os.system('scp -r ' + dlist[i][0] +':'  +  dlist[i][1] + '/' +
+                    dlist[i][0] + '/' + flist[i][1].split('/')[-1]  + 's .')
+    print ret
     MSlist.append(flist[i][1].split('/')[-1] + 's')
 
 MS = 'result.MS'
