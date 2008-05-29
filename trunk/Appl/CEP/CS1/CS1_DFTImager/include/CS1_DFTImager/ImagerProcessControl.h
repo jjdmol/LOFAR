@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2007 by Adriaan Renting                                 *
+ *   Copyright (C) 2007 by ASTRON, Adriaan Renting                         *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
