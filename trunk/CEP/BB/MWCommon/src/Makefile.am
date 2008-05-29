@@ -46,6 +46,6 @@ finddproc_LDADD        = libmwcommon.la
 finddproc_DEPENDENCIES = libmwcommon.la $(LOFAR_DEPEND)
 
 scriptdir = $(bindir)
-dist_script_SCRIPTS = startdproc socketrun
+dist_script_SCRIPTS = startdistproc socketrun
 
 include $(top_srcdir)/Makefile.common
