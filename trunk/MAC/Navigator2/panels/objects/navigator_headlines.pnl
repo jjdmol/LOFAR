@@ -114,7 +114,24 @@ E "#uses \"navigator.ctl\"
 //Global mainpoint holders
 string 			itsActionDp	= \"\";
 string 			itsEventDp      = \"\";
-dyn_string 	        itsSelectionDp  = \"\";" 0
+dyn_string 	        itsSelectionDp  = \"\";
+
+void setEvent(dyn_string aSelection,string event) {
+  if (navigator_initializing()) {
+    return;
+  }
+  string anEvent=$name+\"|\"+event;
+  if (dpExists(itsEventDp)) {
+     dpSet(itsEventDp,anEvent);
+  } else {
+    LOG_ERROR(\"navigator_headlines.pnl:setEvent|\"+itsEventDp + \" Does not exist yet\");     
+  }
+  if (dpExists(itsSelectionDp)) {
+    dpSet(itsSelectionDp,aSelection);
+  } else {
+    LOG_ERROR(\"navigator_headlines.pnl:setEvent|\"+itsSelectionDp + \" Does not exist yet\");     
+  }
+}" 0
  2
 "CBRef" "1"
 "EClose" E

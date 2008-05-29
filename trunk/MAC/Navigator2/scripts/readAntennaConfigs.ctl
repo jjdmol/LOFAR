@@ -130,20 +130,25 @@ dyn_string lto_getFile_asDynStr(string aFileName)
   int err;                           // error code
   
   f=fopen(aFileName,"r");        // open for reading
-  err=ferror(f);                 // export error
+  if (f > 0) 
+  {
+    err=ferror(f);                 // export error
 
-  if (err!=0) 
-  {
-    DebugN("readAntennaConfigs.ctl:lto_getFile_asDynStr|Error during read no. " + err);
-  }
-  else
-  {
-    if ( fileToString (aFileName, aFile_asStr) )
+    if (err!=0) 
     {
-      aFile_asDynStr = strsplit(aFile_asStr, "\n");
-    }	
+      DebugN("readAntennaConfigs.ctl:lto_getFile_asDynStr|Error during read no. " + err);
+    }
+    else
+    {
+      if ( fileToString (aFileName, aFile_asStr) )
+      {
+        aFile_asDynStr = strsplit(aFile_asStr, "\n");
+      }	
+    }
+    fclose(f); // close file
+  } else {
+    DebugN("readAntennaConfigs.ctl:lto_getFile_asDynStr|Error opening file: " + aFileName);
   }
-  fclose(f); // close file
     
   return aFile_asDynStr;
 }

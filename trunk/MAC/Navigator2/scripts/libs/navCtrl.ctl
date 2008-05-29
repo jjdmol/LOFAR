@@ -465,13 +465,13 @@ void navCtrl_handleHeadLinesEvent(string dp,string value){
 
 ///////////////////////////////////////////////////////////////////////////
 //
-// Function navCtrl_handleAlertEvent
+// Function navCtrl_handleAlertsEvent
 //
 // handles all interactions after an event from the Alert
 //
 ///////////////////////////////////////////////////////////////////////////
-void navCtrl_handleAlertEvent(string dp,string value){
-  LOG_TRACE("navCtrl.ctl:navCtrl_handleAlertEvent|entered with dp: " + dp + " and value: " + value);
+void navCtrl_handleAlertsEvent(string dp,string value){
+  LOG_TRACE("navCtrl.ctl:navCtrl_handleAlertsEvent|entered with dp: " + dp + " and value: " + value);
 
   string aShape;
   string anEvent;
@@ -480,13 +480,13 @@ void navCtrl_handleAlertEvent(string dp,string value){
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".fw_alerts.selection")) {
     dpGet(DPNAME_NAVIGATOR + g_navigatorID+".fw_alerts.selection", aSelection);
   } else {
-    LOG_WARNING("navCtrl.ctl:navCtrl_handleAlertEvent| Error getting selection from : " + DPNAME_NAVIGATOR + g_navigatorID+".fw_alerts.selection");
+    LOG_WARNING("navCtrl.ctl:navCtrl_handleAlertsEvent| Error getting selection from : " + DPNAME_NAVIGATOR + g_navigatorID+".fw_alerts.selection");
     return;
   }      
   
   // split the event into shape and event
   if (!navFunct_splitEvent(value,aShape,anEvent) ) {
-    LOG_WARNING("navCtrl.ctl:navCtrl_handleAlertEvent| Error splitting event: " + value);
+    LOG_WARNING("navCtrl.ctl:navCtrl_handleAlertsEvent| Error splitting event: " + value);
     return;
   }
 
@@ -494,11 +494,28 @@ void navCtrl_handleAlertEvent(string dp,string value){
   // aShape contains the shape that initiated the event
   // anEvent contains the initial event
   // aSelection contains the Selections that belongs to the event  
-  LOG_INFO("navCtrl.ctl:navCtrl_handleAlertEvent| Found shape    : " + aShape);
-  LOG_INFO("navCtrl.ctl:navCtrl_handleAlertEvent| Found event    : " + anEvent);
-  LOG_INFO("navCtrl.ctl:navCtrl_handleAlertEvent| Found selection: " + aSelection);
+  LOG_INFO("navCtrl.ctl:navCtrl_handleAlertsEvent| Found shape    : " + aShape);
+  LOG_INFO("navCtrl.ctl:navCtrl_handleAlertsEvent| Found event    : " + anEvent);
+  LOG_INFO("navCtrl.ctl:navCtrl_handleAlertsEvent| Found selection: " + aSelection);
  	navCtrl_handleNavigatorEvent(aSelection,anEvent,aShape); 
-  
+        
+       
+  // Check for top tab and change when needed, also set the new active DP panel if available 
+  if (anEvent == "ChangeTab") {
+    if (ACTIVE_TAB != aSelection) {
+      navTabCtrl_setSelectedTab(aSelection);
+      ACTIVE_TAB = aSelection;
+    }
+    if (navTabCtrl_showView()) {
+        
+      // change locator
+      dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
+
+      // inform headLines Object
+      dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
+    }
+  }
+
 }
 ///////////////////////////////////////////////////////////////////////////
 //

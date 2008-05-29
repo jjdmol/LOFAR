@@ -7,8 +7,6 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
 "main()
 { 
   
-  g_currentDatapoint=\"CS010:LOFAR\";
-  
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
   
@@ -188,8 +186,8 @@ void clearRefNames() {
 
 void redraw(string mode) {
   
-  float maxXOffsetValue;
-  float maxYOffsetValue;
+  float maxXOffsetValue=1.;
+  float maxYOffsetValue=1.;
   float expandFactorX;
   float expandFactorY;
   int   xPos_AddSymbol;
@@ -463,9 +461,9 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 2 "PANEL_REF3"
-"objects/compass.pnl" 212 350 T 12 0.742857142857143 0 0.752688172043011 -29.7142857142857 -52.6881720430108
+"objects\\compass.pnl" 212 350 T 12 0.742857142857143 0 0.752688172043011 -29.7142857142857 -52.6881720430108
 0
 3 5 "PANEL_REF6"
-"objects/Hardware/Station_Cabinet_top.pnl" 298 258 T 13 1 0 1 40 -100
+"objects\\Hardware\\Station_Cabinet_top.pnl" 298 258 T 13 1 0 1 40 -100
 0
 0

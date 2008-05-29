@@ -245,14 +245,22 @@ void clientAddClaimCallback(
 {
   
   if (bDebug) DebugN("claim.ctl:clientAddClaimCallback| entered.");
+  if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|typeName  : " + typeName);
+  if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|objectName: " + newObjectName);
+  if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|DPName    : " + DPName);
+  if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|claimDate : " + claimDate);
   // local data
   mapping tmp;
   int index = -1;
-  
+
+  if (DPName == "") {
+    if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|Empty DPName, no claim needed");
+    return;
+  } 
   if( mappingHasKey( g_ClaimedTypes, typeName )){  // when we know the type
     // if length is 0 then we just need to add
     if( !dynlen( g_ClaimedTypes[ typeName ][ "DP" ] )) {
-        if (bDebug) DebugN("Adding entry because 0 entries in type");
+        if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|Adding entry because 0 entries in type");
 	  	dynAppend(g_ClaimedTypes[ typeName ][ "DP"        ],DPName);
   		dynAppend(g_ClaimedTypes[ typeName ][ "NAME"      ],newObjectName);
   		dynAppend(g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],claimDate); 
@@ -265,7 +273,7 @@ void clientAddClaimCallback(
         if ((g_ClaimedTypes[ typeName ][ "DP"   ][t] == DPName) &&
             (g_ClaimedTypes[ typeName ][ "NAME" ][t] == newObjectName)) {
 
-          if (bDebug) DebugN("DPName & ObjectName same, so only refresh claimdate");
+          if (bDebug) DebugN("claim.ctl:clientAddClaimCallback|DPName & ObjectName same, so only refresh claimdate");
           
           dynRemove(g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],t);
           dynInsertAt(g_ClaimedTypes[ typeName ][ "CLAIMDATE" ],claimDate,t);

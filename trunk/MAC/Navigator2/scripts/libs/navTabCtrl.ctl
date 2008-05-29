@@ -141,6 +141,7 @@ dyn_string navTabCtrl_getViewPanels()
   
   // get DPT from current DP
   string panelConfigDP="";
+  bool lowestLevel=false; // used to skip when allready looked at lowest level
   bool found=false;
   while (!found)  {
     if (dpExists(g_currentDatapoint)) {
@@ -164,8 +165,13 @@ dyn_string navTabCtrl_getViewPanels()
     string dp = dpSubStr(g_currentDatapoint,DPSUB_SYS);
     if (dp == "") {
       g_currentDatapoint=MainDBName+"LOFAR";
-      return dpViews;
+      if (lowestLevel) {
+        return dpViews;
+      } else {
+        lowestLevel=true;
+      }
     }
+        
     //dpViews[1]="nopanel.pnl";
   }
   return dpViews;
