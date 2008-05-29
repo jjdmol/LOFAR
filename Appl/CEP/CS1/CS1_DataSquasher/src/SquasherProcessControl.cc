@@ -28,7 +28,7 @@
 #include <CS1_DataSquasher/SquasherProcessControl.h>
 #include "DataSquasher.h"
 
-#define SQUASHER_VERSION "0.43"
+#define SQUASHER_VERSION "0.50"
 //0.20 Added handling MODEL and CORRECTED DATA
 //0.30 Added handling threshold and weights
 //0.31 Added handing MODEL_DATA and CORRECTED_DATA keywords for imager
@@ -36,6 +36,7 @@
 //0.41 Cleaned up the code for readability
 //0.42 Fixed the incorect weighting of partially flagged bands
 //0.43 Some code cleanup, and maybe small error fix
+//0.50 Added handling of WEIGHT_SPECTRUM
 
 namespace LOFAR
 {
@@ -80,10 +81,12 @@ namespace LOFAR
         std::cout << "Creating " << itsOutMS << ", please wait..." << std::endl;
         Table temptable = tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
                                        string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,") +
-                                       string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID,WEIGHT_SPECTRUM,FLAG FROM ") + itsInMS);
+                                       string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID,FLAG FROM ") + itsInMS);
+        // NOT copying WEIGHT_SPECTRUM as it only contains dummy data anyway
+
         // Need FLAG to make it a valid MS
         temptable.deepCopy(itsOutMS, Table::NewNoReplace);
-
+        if (temptable.tableDesc().isColumn("WEIGHT_SPECTRUM")) cout << "Kiekeboe" << endl;
         MeasurementSet inMS  = MeasurementSet(itsInMS);
         MeasurementSet outMS = MeasurementSet(itsOutMS, Table::Update);
 
@@ -99,7 +102,12 @@ namespace LOFAR
         std::cout << "New shape: " << temp_pos(0) << ":" <<  temp_pos(1) << std::endl;
         IPosition data_ipos(temp_pos);
 
+        tdesc.removeColumn("WEIGHT_SPECTRUM");
+        tdesc.addColumn(ArrayColumnDesc<Float>("WEIGHT_SPECTRUM", "Added by datasquasher",
+                                               data_ipos, ColumnDesc::FixedShape));
+
         itsSquasher->TableResize(tdesc, data_ipos, "DATA", outMS);
+        itsSquasher->TableResize(tdesc, data_ipos, "WEIGHT_SPECTRUM", outMS);
 
         //do the actual data squashing
         Cube<Bool> NewFlags(0, 0, 0);
@@ -222,9 +230,9 @@ namespace LOFAR
         }
 
         //Fix WEIGHT
-        ArrayColumn<Float> weight(outMS, "WEIGHT");
+/*        ArrayColumn<Float> weight(outMS, "WEIGHT");
         Vector<Float> temp_weight(itsSquasher->itsNumPolarizations, 1.0); //dirty hack with direct reference to itsSquasher
-        weight.fillColumn(temp_weight);
+        weight.fillColumn(temp_weight);*/
       }
       catch(casa::AipsError& err)
       {

@@ -89,7 +89,7 @@ namespace LOFAR
     //===============>>>  DataSquasher::SquashData  <<<===============
 
     void DataSquasher::SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData,
-                                  Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags,
+                                  Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags, Matrix<Float>& newWeights,
                                   int Start, int Step, int NChan, float threshold)
     {
       int incounter  = 0;
@@ -113,6 +113,7 @@ namespace LOFAR
         {
           for (int i = 0; i < itsNumPolarizations; i++)
           { values(i) = values(i) / weights(i);
+            newWeights(i, outcounter) = abs(weights(i)) / Step;
           }
           newData.column(outcounter)  = values;
           for (int i = 0; i < itsNumPolarizations; i++) // I can't get anyGT or something like that to work
@@ -151,19 +152,24 @@ namespace LOFAR
         Table         OutDataTable = outIter.table();
         ROArrayColumn<Complex> Old(InDataTable, Data);
         ArrayColumn<Complex>   New(OutDataTable, Data);
+        ArrayColumn<Float>     Weights(OutDataTable, "WEIGHT_SPECTRUM");
         Matrix<Complex>        myOldData(itsNumPolarizations, itsNumChannels);
         Matrix<Complex>        myNewData(itsNumPolarizations, NChan/Step);
 
-        ROArrayColumn<Bool>    Flags(OutDataTable, "FLAG");
+        ROArrayColumn<Bool>    Flags(InDataTable, "FLAG");
+        //when not using the flags, they are all set to false, automotically assuming all data is good.
         Matrix<Bool>           myOldFlags(itsNumPolarizations, itsNumChannels, false);
         Matrix<Bool>           myNewFlags(itsNumPolarizations, NChan/Step);
+
+        Matrix<Float>          NewWeights(itsNumPolarizations, NChan/Step);
 
         Old.get(0, myOldData);
         if (UseFlags)
         { Flags.get(0, myOldFlags);
         }
-        SquashData(myOldData, myNewData, myOldFlags, myNewFlags, Start, Step, NChan, threshold);
+        SquashData(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights, Start, Step, NChan, threshold);
         New.put(0, myNewData);
+        Weights.put(0, NewWeights);
         if (!rwFlags)
         { newFlags.xyPlane(row - 1) = myNewFlags;
         }

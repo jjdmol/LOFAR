@@ -46,7 +46,7 @@ namespace LOFAR
       TableIterator CreateDataIterator(MeasurementSet& myMS);
       void GetMSInfo(MeasurementSet& myMS);
       void SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData,
-                             Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags,
+                             Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags, Matrix<Float>& newWeights,
                              int Start, int Step, int NChan, float threshold);
 
     public:
