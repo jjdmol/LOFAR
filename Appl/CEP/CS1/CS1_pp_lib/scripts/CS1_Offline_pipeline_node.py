@@ -14,21 +14,29 @@ parser.add_option("-m", "--ms", dest="ms", default="",
                   help="Measurementset name")
 parser.add_option("-l", "--log", dest="log", default="",
                   help="Logfile name")
+parser.add_option("-d", "--dir", dest="directory", default="",
+                  help="Directory name")
+
 
 options, args = parser.parse_args()
 
-add_log(options, 'Started processing:')
+print 'Started processing:'
+
+if not os.path.exists(options.directory):
+  os.mkdir(options.directory)
+os.chdir(options.directory)
 
 os.system('rm -rf *.MS *.parset *.debug *.log')
-add_log(options, 'Cleaning up old data:')
+add_log(options, 'Cleaned up old data:')
 
+add_log(options, 'scp -r ' + options.remote_host + ':' + options.ms + ' .')
 result = os.system('scp -r ' + options.remote_host + ':' + options.ms + ' .')
 add_log(options, 'Completed copying data:')
 
-print "Preparations done"
+add_log(options, "Preparations done")
 sys.stdout.flush
 
-assert result == 0
+print str(result == 0) + str(result)
 
 MS=os.path.split(options.ms)[1]
 
@@ -37,17 +45,17 @@ sys.stdout.flush
 add_log(options, 'Start processing: ' + MS)
 
 if MS == "":
-    print "No Measurement set given, exiting"
+    add_log(options, "No Measurement set given, exiting")
     sys.exit(1)
 else:
     if not os.path.exists(MS):
-        print "MS does not exist, exiting"
+        add_log(options, "MS does not exist, exiting")
         sys.exit(2)
 
 try:
     os.environ['AIPSPATH']
 except:
-    print "AIPSPATH not set, exiting"
+    add_log(options, "AIPSPATH not set, exiting")
     sys.exit(3)
 
 Bandpass_parset = Parset()
@@ -86,11 +94,47 @@ fd.write("Global 20\n")
 fd.write("Everything 20\n")
 fd.close()
 
+# Unsure if these are usefull imager parameters, probably onlt around 60 MHz
+Imager_parset  = Parset()
+Imager_parset['ms']            = MS
+Imager_parset['compress']      = "False"
+Imager_parset['datamode']      = "channel"
+Imager_parset['imagemode']     = "mfs"
+Imager_parset['spwid']         = [0,1]
+Imager_parset['nchan']         = 256
+Imager_parset['start']         = 0
+Imager_parset['step']          = 1
+Imager_parset['nx']            = 512
+Imager_parset['ny']            = 512
+Imager_parset['cellx']         = 750
+Imager_parset['celly']         = 750
+Imager_parset['stokes']        = "I"
+Imager_parset['weighttype']    = "natural"
+Imager_parset['weightnpixels'] = 1024
+Imager_parset['tile']          = 32
+Imager_parset['padding']       = 1.0
+Imager_parset['gridfunction']  = "SF"
+Imager_parset['imagetype']     = "observed"
+Imager_parset['imagename']     = "observed.image"
+Imager_parset.writeToFile("CS1_Imager.parset")
+fd = open("CS1_Imager.debug", 'w')
+fd.write("Global 20\n")
+fd.write("Everything 20\n")
+fd.close()
+
+
 os.system("/app/LOFAR/stable/CS1_BandpassCorrector")
 add_log(options, 'CS1_BandpassCorrector finished')
 os.system("/app/LOFAR/stable/CS1_FrequencyFlagger")
 add_log(options, 'CS1_FrequencyFlagger finished')
 os.system("/app/LOFAR/stable/CS1_DataSquasher")
 add_log(options, 'CS1_DataSqasher finished')
-#os.system('rm -rf ' +  MS)
+
+os.system("glish -l /app/LOFAR/stable/flag_auto.g " + MS)
+add_log(options, "Flagging auto correlations done")
+
+os.system("/app/LOFAR/stable/CS1_Imager")
+add_log(options, "Imager done")
+
+os.system('rm -rf ' +  MS)
 add_log(options, 'Deleting MS finished')
