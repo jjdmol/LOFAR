@@ -1,0 +1,22 @@
+
+prog1 -arg arg2
+localhost
+node1
+node2
+node1
+
+mpirun -np 4 -machinefile tstartdproc_tmp.out2 prog1 -arg arg2
+localhost
+node1
+node2
+node1
+
+socketrun tstartdproc_tmp.out3 prog1 -arg arg2
+ssh localhost prog1 socket localhost 3851 4 0
+ssh node1 prog1 socket localhost 3851 4 1
+ssh node2 prog1 socket localhost 3851 4 2
+ssh node1 prog1 socket localhost 3851 4 3
+localhost
+node1
+node2
+node1
