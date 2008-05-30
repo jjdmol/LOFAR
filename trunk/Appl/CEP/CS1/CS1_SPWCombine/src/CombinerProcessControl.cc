@@ -240,6 +240,10 @@ namespace LOFAR
       return true;
     }
 
+    //===============>>> CombinerProcessControl::release  <<<=============================
+    tribool CombinerProcessControl::release()
+    { return false;
+    }
     //===============>>> CombinerProcessControl::recover  <<<=============================
     tribool CombinerProcessControl::recover(const std::string&)
     { return false;
