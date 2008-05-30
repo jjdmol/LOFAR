@@ -128,6 +128,11 @@ namespace LOFAR
       return true;
     }
 
+    //===============>>> ImagerProcessControl::release  <<<=============================
+    tribool ImagerProcessControl::release()
+    { return false;
+    }
+
     //===============>>> ImagerProcessControl::recover  <<<=============================
     tribool ImagerProcessControl::recover(const std::string&)
     { return false;
