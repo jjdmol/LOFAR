@@ -73,6 +73,7 @@ namespace LOFAR
       tribool run      (void);
 
       tribool pause(const std::string&);
+      tribool release(void);
       tribool quit(void);
       tribool recover(const std::string&);
       tribool reinit(const  std::string&);
