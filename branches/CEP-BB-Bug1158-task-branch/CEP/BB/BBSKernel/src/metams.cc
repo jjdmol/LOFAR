@@ -179,12 +179,12 @@ void usage()
     cout << "Usage: metams <command> <arguments> <file>..." << endl;
     cout << endl;
     cout << "Available commands:" << endl;
-    cout << "    --show <meta-file>                 Show contents of meta file."
+    cout << "    -x, --extract <measurement-file>...         Extract meta data."
         << endl;
-    cout << "    --extract <file>...                Extract meta data from"
-        " measurement(s)." << endl;
-    cout << "    --merge <meta-name> <file>...      Merge multiple meta"
-        " files." << endl;
+    cout << "    -m, --merge <meta-name> <meta-file>...      Merge meta"
+        " file(s)." << endl;
+    cout << "    -s, --show <meta-file>                      Show contents of"
+        " meta file." << endl;
     cout << endl;
     cout << "Examples:" << endl;
     cout << "    metams --show test.meta" << endl;
@@ -210,7 +210,7 @@ int main(int argc, char **argv)
     }
     
     string command(argv[1]);
-    if(command == "--extract")
+    if(command == "-x" || command == "--extract")
     {
         if(argc < 3)
         {
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
         
         cout << endl;
     }
-    else if(command == "--merge")
+    else if(command == "-m" || command == "--merge")
     {
         if(argc < 4)
         {
@@ -335,7 +335,7 @@ int main(int argc, char **argv)
         
         cout << endl << meta << endl;
     }        
-    else if(command == "--show")
+    else if(command == "-s" || command == "--show")
     {
         if(argc != 3)
         {

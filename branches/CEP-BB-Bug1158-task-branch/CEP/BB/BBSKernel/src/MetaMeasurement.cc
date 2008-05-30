@@ -192,7 +192,7 @@ ostream &operator<<(ostream &out, MetaMeasurement &obj)
         out << "[" << setw(3) << i << "]: " << host << ":" << part.getPath()
             << " :: " << range.first / 1e6 << " - " << range.second / 1e6
             << " MHz (" << count << " channel(s) of "
-            << (range.second - range.first) / count << " kHz on average)"
+            << (range.second - range.first) / (count * 1e3) << " kHz on average)"
             << endl;
     }
     out << setfill(' ');

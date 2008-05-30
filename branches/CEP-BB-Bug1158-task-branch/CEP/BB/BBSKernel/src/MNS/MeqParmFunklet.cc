@@ -315,15 +315,18 @@ int MeqParmFunklet::initDomain (const vector<MeqDomain>& solveDomains,
     // The nr of solve domains should match the nr of funklets.
     // However, if a default value is used, only one funklet is in use.
     // In that case more funklets are created if needed.
-    if (itsDefUsed  &&  nDomain > 1  &&  itsFunklets.size() != nDomain) {
+//    if (itsDefUsed  &&  nDomain > 1  &&  itsFunklets.size() != nDomain) {
+    if (itsDefUsed) {
       ASSERT (itsFunklets.size() == 1);
       itsFunklets[0]->setDomain (solveDomains[0]);
       itsFunklets.resize (nDomain);
       for (uint i=1; i<nDomain; ++i) {
-	itsFunklets[i] = itsFunklets[0]->clone();
-	itsFunklets[i]->setDomain (solveDomains[i]);
+        itsFunklets[i] = itsFunklets[0]->clone();
+	    itsFunklets[i]->setDomain (solveDomains[i]);
       }
+      itsDefUsed = false;
     }
+
     ASSERTSTR (itsFunklets.size() == nDomain,
 	       "Solvable parameter " << getName() << " has "
 	       << itsFunklets.size() << " funklet domains mismatching the "
