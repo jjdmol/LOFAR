@@ -126,6 +126,11 @@ namespace LOFAR
       return true;
     }
 
+    //===============>>> FlaggerProcessControl::release  <<<=============================
+    tribool FlaggerProcessControl::release()
+    { return false;
+    }
+
     //===============>>> FlaggerProcessControl::recover  <<<=============================
     tribool FlaggerProcessControl::recover(const std::string&)
     { return false;
