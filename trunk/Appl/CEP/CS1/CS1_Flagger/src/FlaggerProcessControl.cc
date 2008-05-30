@@ -30,7 +30,7 @@
 
 #define FLAGGER_VERSION "0.60"
 
-namespace LOFAR 
+namespace LOFAR
 {
   namespace CS1
   {
@@ -55,10 +55,10 @@ namespace LOFAR
 
     //===============>>> FlaggerProcessControl::define  <<<==============================
     tribool FlaggerProcessControl::define()
-    { 
+    {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
       itsMS       = ParamSet->getString("ms");
-      itsFlagData = ParamSet->getBool("flagdata"); 
+      itsFlagData = ParamSet->getBool("flagdata");
       itsFlagRMS  = ParamSet->getBool("flagrms");
       itsExisting = ParamSet->getBool("existing");
       itsWindow   = ParamSet->getInt32("window");
@@ -70,10 +70,10 @@ namespace LOFAR
 
     //===============>>> FlaggerProcessControl::run  <<<=================================
     tribool FlaggerProcessControl::run()
-    { 
+    {
       try{
       std::cout << "Runnning flagger please wait..." << std::endl;
-      itsFlagger->FlagDataOrBaselines(itsFlagData, 
+      itsFlagger->FlagDataOrBaselines(itsFlagData,
                                       itsFlagRMS,
                                       itsExisting);
       }
@@ -114,9 +114,9 @@ namespace LOFAR
         return false;
       }
       myMS       = new WSRT::MS_File(itsMS);
-      itsFlagger = new WSRT::ComplexMedianFlagger (myMS, 
-                                                  itsWindow, 
-                                                  itsCrosspol, 
+      itsFlagger = new WSRT::ComplexMedianFlagger (myMS,
+                                                  itsWindow,
+                                                  itsCrosspol,
                                                   itsMin,
                                                   itsMax);
       }
@@ -135,7 +135,7 @@ namespace LOFAR
 
     //===============>>> FlaggerProcessControl::quit  <<<================================
     tribool FlaggerProcessControl::quit()
-    { 
+    {
       if (myMS)
       {
         delete myMS;
@@ -147,6 +147,11 @@ namespace LOFAR
         itsFlagger = NULL;
       }
       return true;
+    }
+
+    //===============>>> FlaggerProcessControl::release  <<<=============================
+    tribool FlaggerProcessControl::release()
+    { return false;
     }
 
     //===============>>> FlaggerProcessControl::recover  <<<=============================
