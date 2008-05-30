@@ -130,6 +130,11 @@ namespace LOFAR
       return true;
     }
 
+    //===============>>> CorrectorProcessControl::release  <<<=============================
+    tribool CorrectorProcessControl::release()
+    { return false;
+    }
+
     //===============>>> CorrectorProcessControl::recover  <<<=============================
     tribool CorrectorProcessControl::recover(const std::string&)
     { return false;
