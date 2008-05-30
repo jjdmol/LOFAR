@@ -286,6 +286,11 @@ namespace LOFAR
       return true;
     }
 
+    //===============>>> SquasherProcessControl::release  <<<=============================
+    tribool SquasherProcessControl::release()
+    { return false;
+    }
+
     //===============>>> SquasherProcessControl::recover  <<<=============================
     tribool SquasherProcessControl::recover(const std::string&)
     { return false;
