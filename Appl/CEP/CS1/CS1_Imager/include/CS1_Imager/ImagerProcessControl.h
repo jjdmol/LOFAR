@@ -31,12 +31,12 @@
 @author Adriaan Renting
 */
 namespace casa
-{ 
+{
   class MeasurementSet; //foreward declaration
   class Imager;
 } //namespace casa
 
-namespace LOFAR 
+namespace LOFAR
 {
   namespace CS1
   {
@@ -44,7 +44,7 @@ namespace LOFAR
     {
     private:
       std::string  itsMS;
-      bool         itsCompress; 
+      bool         itsCompress;
       std::string  itsDataMode;
       std::string  itsImageMode;
       int          itsNChannel;
@@ -63,8 +63,8 @@ namespace LOFAR
       std::string  itsImageType;
       std::string  itsImageName;
 
-      std::vector<int> itsSpectralWindows; 
-      
+      std::vector<int> itsSpectralWindows;
+
       casa::MeasurementSet* myMS;
       casa::Imager*         myImager;
     public:
@@ -101,29 +101,30 @@ namespace LOFAR
       // condition is a key-value pair that can eg. contain a timestamp or a
       // number of a datasample.
       tribool pause(const std::string&);
-      
+
       // \c Quit stops the process.
-      // The process \b must call \c unregisterAtAC at ProcControlServer during 
-      // the execution of this command to pass the final results to the 
+      // The process \b must call \c unregisterAtAC at ProcControlServer during
+      // the execution of this command to pass the final results to the
       // Application Controller.
       tribool quit(void);
-      
+      tribool release(void);
+
       // \c Recover reconstructs the process as it was saved some time earlier.
       // The \c source argument contains the database info the process must use
       // to find the information it needs.
       tribool recover(const std::string&);
-      
+
       // With \c reinit the process receives a new parameterset that it must use
       // to reinitialize itself.
       tribool reinit(const  std::string&);
-      
+
       // With the \c snapshot command the process is instructed to save itself
       // in a database is such a way that on another moment in time it can
       // be reconstructed and can continue it task.<br>
       // The \c destination argument contains database info the process
       // must use to save itself.
       tribool snapshot(const std::string&);
-      
+
       // Define a generic way to exchange info between client and server.
       std::string askInfo(const std::string&);
       // @}
