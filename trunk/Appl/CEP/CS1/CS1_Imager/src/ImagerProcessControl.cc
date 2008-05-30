@@ -32,7 +32,7 @@
 
 #include <CS1_Imager/ImagerProcessControl.h>
 
-namespace LOFAR 
+namespace LOFAR
 {
   namespace CS1
   {
@@ -59,7 +59,7 @@ namespace LOFAR
 
     //===============>>> ImagerProcessControl::define  <<<==============================
     tribool ImagerProcessControl::define(void)
-    { 
+    {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
       cout << "AIPS++ version: ";
       casa::VersionInfo::report(cout);
@@ -67,7 +67,7 @@ namespace LOFAR
             << string("This is experimental software, please report errors or requests to renting@astron.nl") << std::endl
             << string("Documentation can be found at: http://www.astron.nl/aips++/docs/aips++.html") << std::endl;
       itsMS            = ParamSet->getString("ms");
-      itsCompress      = ParamSet->getBool("compress"); 
+      itsCompress      = ParamSet->getBool("compress");
       itsDataMode      = ParamSet->getString("datamode");
       itsImageMode     = ParamSet->getString("imagemode");
       itsNChannel      = ParamSet->getInt32("nchan");
@@ -91,7 +91,7 @@ namespace LOFAR
 
     //===============>>> ImagerProcessControl::run  <<<=================================
     tribool ImagerProcessControl::run(void)
-    { 
+    {
       std::cout << "Runnning imager please wait..." << std::endl;
       if ( myImager->makeimage(itsImageType, itsImageName))
       {
@@ -99,7 +99,7 @@ namespace LOFAR
         return true;
       }
       else
-      { return false;      
+      { return false;
       }
     }
 
@@ -108,7 +108,7 @@ namespace LOFAR
     {
       myMS     = new casa::MeasurementSet(itsMS, casa::Table::Update);
       myImager = new casa::Imager (*myMS, itsCompress);
-      
+
       const casa::Vector<casa::Int> myNChannel(1, itsNChannel);
       const casa::Vector<casa::Int> myStart(1, itsStart);
       const casa::Vector<casa::Int> myStep(1, itsStep);
@@ -120,7 +120,7 @@ namespace LOFAR
       int                           itsFieldID(0); //It's 1 in Glish, but propably 0 in C++
       const casa::Vector<casa::Int> myFieldID(1, itsFieldID);
       myImager->setdata(myDataMode, myNChannel, myStart, myStep, itsMStart, itsMStep, mySpectralWindowIDs, myFieldID);
-      
+
       const casa::Quantity          myCellX(itsCellX, "arcsec");
       const casa::Quantity          myCellY(itsCellY, "arcsec");
       const casa::String            myStokes(itsStokes);
@@ -143,7 +143,7 @@ namespace LOFAR
                            itsFieldID, itsFacets, itsDistance, itsPaStep, itsPbLimit);
       }
       const casa::String   itsWeightAlgorithm(itsWeightType);
-      const casa::String   itsRmode("none");      
+      const casa::String   itsRmode("none");
       const casa::Quantity itsNoise(0.0, "Jy");
       const casa::Double   itsRobust(0.0);
       const casa::Quantity itsFieldOfView(0, "rad");
@@ -168,7 +168,7 @@ namespace LOFAR
 
     //===============>>> ImagerProcessControl::quit  <<<================================
     tribool ImagerProcessControl::quit(void)
-    { 
+    {
       if (myMS)
       {
         delete myMS;
@@ -181,6 +181,11 @@ namespace LOFAR
         myImager = NULL;
       }
       return true;
+    }
+
+    //===============>>> ImagerProcessControl::release  <<<=============================
+    tribool ImagerProcessControl::release()
+    { return false;
     }
 
     //===============>>> ImagerProcessControl::recover  <<<=============================
