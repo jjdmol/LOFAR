@@ -25,7 +25,7 @@
 #include <libgen.h>
 #include <PLC/ACCmain.h>
 #include <casa/Exceptions.h>
-#include <CS1_Flagger/FlaggerProcessControl.h>
+#include <CS1_BinningFlagger/FlaggerProcessControl.h>
 
 int main(int argc, char *argv[])
 {
