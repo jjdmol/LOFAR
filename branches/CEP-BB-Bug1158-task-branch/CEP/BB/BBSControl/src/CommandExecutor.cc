@@ -65,12 +65,10 @@
 #define NONREADY        casa::LSQFit::NONREADY
 #define SOLINCREMENT    casa::LSQFit::SOLINCREMENT
 #define DERIVLEVEL      casa::LSQFit::DERIVLEVEL
-#define N_ReadyCode     casa::LSQFit::N_ReadyCode
 #else
 #define NONREADY        0
 #define SOLINCREMENT    1
 #define DERIVLEVEL      2
-#define N_ReadyCode     999
 #endif
 
 
@@ -129,6 +127,7 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     {
         itsResult = CommandResult(CommandResult::ERROR, "Unable to open"
           " measurement: " + itsMetaMeasurement.getPath(itsKernelId));
+        return;
     }
 
     try
@@ -572,14 +571,13 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
                 oss << " [" << solutions[i].id << "] " << solutions[i].rank
                 << " " << solutions[i].chiSqr;
                 
-                if(solutions[i].result == SOLINCREMENT
-                    || solutions[i].result == DERIVLEVEL)
+                if(solutions[i].result == DERIVLEVEL)
                 {
-                    nConverged++;
+                    ++nConverged;
                 }
                 else if(solutions[i].result != NONREADY)
                 {
-                    nStopped++;
+                    ++nStopped;
                 }
             }
             LOG_DEBUG(oss.str());
@@ -587,9 +585,9 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
         }
 
 #ifdef LOG_SOLVE_DOMAIN_STATS
-        LOG_DEBUG_STR("" << setw(3) << nConverged / nCells * 100.0
-            << "% converged, " << setw(3) << nStopped / nCells * 100.0
-            << "% stopped.");
+        LOG_DEBUG_STR("" << setw(3) << static_cast<double>(nConverged) / nCells
+            * 100.0 << "% converged, " << setw(3)
+            << static_cast<double>(nStopped) / nCells * 100.0 << "% stopped.");
 #endif
                 
         // Propagate solutions to the next cell chunk.
@@ -618,8 +616,6 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
 
         startCell.second += cellChunkSize;
     }
-
-    itsSolver->sendObject(ChunkDoneMsg(itsKernelId));
 
     itsKernel->storeParameterValues();
 
@@ -789,14 +785,13 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
                 oss << " [" << solutions[i].id << "] " << solutions[i].rank
                 << " " << solutions[i].chiSqr;
                 
-                if(solutions[i].result == SOLINCREMENT
-                    || solutions[i].result == DERIVLEVEL)
+                if(solutions[i].result == DERIVLEVEL)
                 {
-                    nConverged++;
+                    ++nConverged;
                 }
                 else if(solutions[i].result != NONREADY)
                 {
-                    nStopped++;
+                    ++nStopped;
                 }
             }
             LOG_DEBUG(oss.str());
@@ -804,9 +799,9 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
         }
 
 #ifdef LOG_SOLVE_DOMAIN_STATS
-        LOG_DEBUG_STR("" << setw(3) << nConverged / nCells * 100.0
-            << "% converged, " << setw(3) << nStopped / nCells * 100.0
-            << "% stopped.");
+        LOG_DEBUG_STR("" << setw(3) << static_cast<double>(nConverged) / nCells
+            * 100.0 << "% converged, " << setw(3)
+            << static_cast<double>(nStopped) / nCells * 100.0 << "% stopped.");
 #endif
                 
         // Propagate solutions to the next cell chunk.

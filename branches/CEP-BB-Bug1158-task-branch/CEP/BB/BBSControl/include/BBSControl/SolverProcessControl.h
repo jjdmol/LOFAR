@@ -43,6 +43,8 @@ namespace LOFAR
 {
   namespace BBS
   {
+    class SolverOptions;
+    
     // \addtogroup BBSControl
     // @{
 
@@ -91,7 +93,8 @@ namespace LOFAR
       // - The size of the vector determines the number of groups.
       // - The sum of the elements determines the total number of kernels.
       // - Each element determines the number of kernels per group.
-      void setSolveTasks(const vector<uint>& groups);
+      void setSolveTasks(const vector<uint>& groups,
+        const SolverOptions& options);
 
       // (Run) state of the solver control process
       RunState itsState;

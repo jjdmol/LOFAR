@@ -34,6 +34,7 @@
 #include <BBSControl/NextChunkCommand.h>
 #include <BBSControl/StreamUtil.h>
 #include <BBSControl/Exceptions.h>
+#include <BBSControl/Types.h>
 
 #include <APS/ParameterSet.h>
 #include <Blob/BlobStreamable.h>
@@ -216,7 +217,8 @@ namespace LOFAR
             itsSolveStep = dynamic_pointer_cast<const SolveStep>(cmd);
             if (itsSolveStep) {
               // It's a SolveStep. Setup kernel groups and change state.
-              setSolveTasks(itsSolveStep->kernelGroups());
+              setSolveTasks(itsSolveStep->kernelGroups(),
+                itsSolveStep->solverOptions());
               itsState = SOLVING;
             }
             else {
@@ -356,7 +358,8 @@ namespace LOFAR
     }
 #endif
 
-    void SolverProcessControl::setSolveTasks(const vector<uint>& groups)
+    void SolverProcessControl::setSolveTasks(const vector<uint>& groups,
+        const SolverOptions& options)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       LOG_DEBUG_STR("Kernel groups: " << groups);
@@ -377,7 +380,7 @@ namespace LOFAR
       for (uint i = 0; i < groups.size(); ++i) {
         advance(end, groups[i]);
         itsSolveTasks.push_back
-          (SolveTask(vector<KernelConnection>(beg, end)));
+          (SolveTask(vector<KernelConnection>(beg, end), options));
         beg = end;
       }
     }

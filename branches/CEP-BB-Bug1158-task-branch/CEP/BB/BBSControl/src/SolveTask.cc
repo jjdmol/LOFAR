@@ -37,7 +37,8 @@ namespace LOFAR
 
     //##--------  P u b l i c   m e t h o d s  --------##//
 
-    SolveTask::SolveTask(const vector<KernelConnection>& kernels) :
+    SolveTask::SolveTask(const vector<KernelConnection>& kernels, 
+      const SolverOptions& options) :
       itsKernels(kernels),
       itsState(IDLE)
     {
@@ -45,6 +46,9 @@ namespace LOFAR
 //       for (uint i = 0; i < kernels.size(); ++i) {
 //         itsKernels.push_back(make_pair(kernels[i], NOMESSAGE));
 //       }
+      itsSolver.reset(options.maxIter, options.epsValue, options.epsDerivative,
+        options.colFactor, options.lmFactor, options.balancedEqs,
+        options.useSVD);
     }
 
 

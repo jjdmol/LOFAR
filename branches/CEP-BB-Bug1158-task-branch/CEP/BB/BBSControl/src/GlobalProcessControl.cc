@@ -205,7 +205,7 @@ namespace LOFAR
         const Axis::Pointer timeAxis = itsMetaMeasurement.getTimeAxis();
 
         itsTimeStart = 0;
-        itsTimeEnd = timeAxis->size();
+        itsTimeEnd = timeAxis->size() - 1;
         casa::Quantity time;
         if(!roi.time.empty() && casa::MVTime::read(time, roi.time[0]))
         {

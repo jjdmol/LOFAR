@@ -71,7 +71,8 @@ namespace LOFAR
       // Construct a kernel group that consists of \a nrKernels kernels.
       // \note This class does \e not contain any kernel objects; it merely
       // keeps track of the count.
-      SolveTask(const vector<KernelConnection>& kernels);
+      SolveTask(const vector<KernelConnection>& kernels,
+        const SolverOptions& options);
 
       bool run();
 
