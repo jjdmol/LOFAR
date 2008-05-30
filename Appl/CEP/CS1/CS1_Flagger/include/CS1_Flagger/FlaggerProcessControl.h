@@ -27,12 +27,12 @@
 @author Adriaan Renting
 */
 namespace WSRT
-{ 
+{
   class MS_File; //foreward declaration
   class ComplexMedianFlagger;
 } //namespace WSRT
 
-namespace LOFAR 
+namespace LOFAR
 {
   namespace CS1
   {
@@ -40,7 +40,7 @@ namespace LOFAR
     {
     private:
       std::string  itsMS;
-      bool         itsFlagData; 
+      bool         itsFlagData;
       bool         itsFlagRMS;
       bool         itsExisting;
       int          itsWindow;
@@ -78,6 +78,7 @@ namespace LOFAR
       tribool run      (void);
 
       tribool pause(const std::string&);
+      tribool release(void);
       tribool quit(void);
       tribool recover(const std::string&);
       tribool reinit(const  std::string&);
