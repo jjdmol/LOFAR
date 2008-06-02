@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 12 Event Viewer
-PANEL,-1 -1 923 750 N "_3DFace" 0
+PANEL,-1 -1 1159 750 N "_3DFace" 0
 "main()
 {
   int retry=0;
@@ -107,7 +107,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 555 346 899 369.145038167939
+ 555 346 899 369
 3 "0s" 0 0 0 0 0 -1  E E E
 2 6
 "PRIMITIVE_TEXT4"
@@ -184,7 +184,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 555 374 899 397.145038167939
+ 555 374 899 397
 3 "0s" 0 0 0 0 0 -1  E E E
 14 11
 "text_selection"
@@ -201,7 +201,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 555 401 899 424.145038167939
+ 555 401 899 424
 3 "0s" 0 0 0 0 0 -1  E E E
 4 18
 "LINE4"
@@ -441,87 +441,87 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  204 539 227 538
-1 185 0 "" 0
+1 228 0 "" 0
 0
-1 186 1 "" 0
+1 229 1 "" 0
 0
-1 187 2 "" 0
+1 230 2 "" 0
 0
-1 188 4 "" 0
+1 231 4 "" 0
 0
-1 189 5 "" 0
+1 232 5 "" 0
 0
-1 190 6 "" 0
+1 233 6 "" 0
 0
-1 191 7 "" 0
+1 234 7 "" 0
 0
-1 192 7 "" 1
+1 235 7 "" 1
 0
-1 193 7 "" 2
+1 236 7 "" 2
 0
-1 194 7 "" 3
+1 237 7 "" 3
 0
-1 195 7 "" 4
+1 238 7 "" 4
 0
-1 196 9 "" 0
+1 239 9 "" 0
 0
-1 197 9 "" 1
+1 240 9 "" 1
 0
-1 198 9 "" 2
+1 241 9 "" 2
 0
-1 199 9 "" 3
+1 242 9 "" 3
 0
-1 200 9 "" 4
+1 243 9 "" 4
 0
-1 201 12 "" 0
+1 244 12 "" 0
 0
-1 202 12 "" 1
+1 245 12 "" 1
 0
-1 203 12 "" 2
+1 246 12 "" 2
 0
-1 204 12 "" 3
+1 247 12 "" 3
 0
-1 205 12 "" 4
+1 248 12 "" 4
 0
-1 206 14 "" 0
+1 249 14 "" 0
 0
-1 207 14 "" 1
+1 250 14 "" 1
 0
-1 208 14 "" 2
+1 251 14 "" 2
 0
-1 209 14 "" 3
+1 252 14 "" 3
 0
-1 210 14 "" 4
+1 253 14 "" 4
 0
-1 211 17 "" 0
+1 254 17 "" 0
 0
-1 212 17 "" 1
+1 255 17 "" 1
 0
-1 213 17 "" 2
+1 256 17 "" 2
 0
-1 214 17 "" 3
+1 257 17 "" 3
 0
-1 215 17 "" 4
+1 258 17 "" 4
 0
-1 216 18 "" 0
+1 259 18 "" 0
 0
-1 217 18 "" 1
+1 260 18 "" 1
 0
-1 218 18 "" 2
+1 261 18 "" 2
 0
-1 219 18 "" 3
+1 262 18 "" 3
 0
-1 220 18 "" 4
+1 263 18 "" 4
 0
-1 221 19 "" 0
+1 264 19 "" 0
 0
-1 222 19 "" 1
+1 265 19 "" 1
 0
-1 223 19 "" 2
+1 266 19 "" 2
 0
-1 224 19 "" 3
+1 267 19 "" 3
 0
-1 225 19 "" 4
+1 268 19 "" 4
 0
 4 87
 "LINE21"
@@ -579,7 +579,7 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 3 1 2 1 E  62 333 81 333
-1 226 20 "" 0
+1 269 20 "" 0
 0
 14 134
 "txt_datapoint"
@@ -596,7 +596,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 555 319.694656488549 899 342.839694656488
+ 555 320 899 343
 3 "0s" 0 0 0 0 0 -1  E E E
 2 135
 "PRIMITIVE_TEXT11"
@@ -621,7 +621,7 @@ LANG:1 18 Active Datapoint:
 13 178
 "PUSH_BUTTON1"
 ""
-1 16 416 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 97 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 127 0 0 0 0 0
 E E E
@@ -633,7 +633,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 14 414 164 441
+ 948 95 1098 122
 
 T 
 1
@@ -658,7 +658,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 15 443 163 470
+ 948 123 1098 150
 
 T 
 1
@@ -671,7 +671,7 @@ LANG:1 17 show strHighlight
 13 180
 "PUSH_BUTTON3"
 ""
-1 18 475 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 155 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 131 0 0 0 0 0
 E E E
@@ -683,7 +683,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 16 473 165 500
+ 948 153 1098 180
 
 T 
 1
@@ -781,7 +781,7 @@ LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0
 13 227
 "PUSH_BUTTON5"
 ""
-1 20 390 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 70 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 140 0 0 0 0 0
 E E E
@@ -791,9 +791,9 @@ LANG:1 0
 
 0
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 18 388 162 414
+ 948 68 1098 94
 
 T 
 1
@@ -803,6 +803,109 @@ LANG:1 19 show strClaimedDP's
   DebugN(\"strClaimedObjectName contains: \"+strClaimObjectName);
 }" 0
  E E E
+22 270
+"COMBO_BOX1"
+""
+1 1042 20 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+142 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 1040 18 1144 45
+6
+1
+LANG:1 5 Trace
+
+0
+1
+LANG:1 5 Debug
+
+0
+1
+LANG:1 4 Info
+
+0
+1
+LANG:1 4 Warn
+
+0
+1
+LANG:1 5 Error
+
+0
+1
+LANG:1 5 Fatal
+
+0
+
+E
+"main()
+{
+  string selected=\"\";
+  int sel=0;
+  getValue(\"\",\"text\",selected);
+  if ( selected == \"Trace\") {
+    sel = LOGLEVEL_TRACE;
+  } else if ( selected == \"Debug\") {
+    sel = LOGLEVEL_DEBUG;
+  } else if ( selected == \"Info\") {
+    sel = LOGLEVEL_INFO;
+  } else if ( selected == \"Warn\") {
+    sel = LOGLEVEL_WARN;
+  } else if ( selected == \"Error\") {
+    sel = LOGLEVEL_ERROR;
+  } else if ( selected == \"Fatal\") {
+    sel = LOGLEVEL_FATAL;
+  } 
+  
+  LOG_TRACE(\"navigator_viewSelection.pnl:Changed| changing loglevel to :\"+selected);
+  setLoglevel(sel);
+                  
+}" 0
+
+E
+ 1 0
+2 272
+"PRIMITIVE_TEXT13"
+""
+1 952 26 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+144 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 952 26 1028 40
+0 2 2 "0s" 0 0 0 192 0 0  952 26 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 12 Debug Level:
+4 273
+"LINE26"
+""
+1 940 10 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+145 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 1 3 1 2 1 E  940 10 940 740
 0
 LAYER, 1 
 1
@@ -833,59 +936,59 @@ LAYER, 7
 LANG:1 0 
 0
 3 0 "PANEL_REF1"
-"objects/Test\\Action.pnl" 158 150 T 105 1 0 1 -81 -32
+"objects\\Test\\Action.pnl" 158 150 T 105 1 0 1 -81 -32
 1
 "$name""fw_viewSelection"
 3 1 "PANEL_REF2"
-"objects/Test\\Action.pnl" 390 150 T 106 1 0 1 -10 32
+"objects\\Test\\Action.pnl" 390 150 T 106 1 0 1 -10 32
 1
 "$name""fw_topDetailSelection"
 3 2 "PANEL_REF3"
-"objects/Test\\Action.pnl" 668 220 T 107 1 0 1 -78 4
+"objects\\Test\\Action.pnl" 668 220 T 107 1 0 1 -78 4
 1
 "$name""fw_bottomDetailSelection"
 3 4 "PANEL_REF5"
-"objects/Test\\Action.pnl" 649 450 T 108 1 0 1 -77 -3
+"objects\\Test\\Action.pnl" 649 450 T 108 1 0 1 -77 -3
 1
 "$name""fw_locator"
 3 5 "PANEL_REF6"
-"objects/Test\\Action.pnl" 413 460 T 109 1 0 1 -42 33
+"objects\\Test\\Action.pnl" 413 460 T 109 1 0 1 -42 33
 1
 "$name""fw_progressBar"
 3 6 "PANEL_REF7"
-"objects/Test\\Action.pnl" 189 450 T 110 1 0 1 22 4
+"objects\\Test\\Action.pnl" 189 450 T 110 1 0 1 22 4
 1
 "$name""fw_headLines"
 3 7 "PANEL_REF8"
-"objects/Test\\Event.pnl" 15 8 T 111 1 0 1 0 1
+"objects\\Test\\Event.pnl" 15 8 T 111 1 0 1 0 1
 1
 "$name""fw_viewSelection"
 3 9 "PANEL_REF10"
-"objects/Test\\Event.pnl" 377 7 T 112 1 0 1 0 1
+"objects\\Test\\Event.pnl" 377 7 T 112 1 0 1 0 1
 1
 "$name""fw_topDetailSelection"
 3 12 "PANEL_REF13"
-"objects/Test\\Event.pnl" 541 104 T 113 1 0 1 31 -1
+"objects\\Test\\Event.pnl" 541 104 T 113 1 0 1 31 -1
 1
 "$name""fw_bottomDetailSelection"
 3 14 "PANEL_REF15"
-"objects/Test\\Event.pnl" 578 531 T 114 U 
+"objects\\Test\\Event.pnl" 578 531 T 114 U 
 1
 "$name""fw_locator"
 3 17 "PANEL_REF18"
-"objects/Test\\Event.pnl" 334 642 T 115 U 
+"objects\\Test\\Event.pnl" 334 642 T 115 U 
 1
 "$name""fw_progressBar"
 3 18 "PANEL_REF19"
-"objects/Test\\Event.pnl" -2 533 T 116 U 
+"objects\\Test\\Event.pnl" -2 533 T 116 U 
 1
 "$name""fw_headLines"
 3 19 "PANEL_REF20"
-"objects/Test\\Event.pnl" 0 205 T 116 1 0 1 9 46
+"objects\\Test\\Event.pnl" 0 205 T 116 1 0 1 9 46
 1
 "$name""fw_viewBox"
 3 20 "PANEL_REF21"
-"objects/Test\\Action.pnl" 207 346 T 122 1 0 1 -103 8
+"objects\\Test\\Action.pnl" 207 346 T 122 1 0 1 -103 8
 1
 "$name""fw_viewBox"
 0
