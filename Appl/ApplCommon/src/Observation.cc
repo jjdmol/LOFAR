@@ -35,8 +35,10 @@ namespace LOFAR {
 Observation::Observation() :
 	name(),
 	obsID(0),
+#if !defined HAVE_BGL	
 	startTime(0),
 	stopTime(0),
+#endif	
 	nyquistZone(0),
 	sampleClock(0)
 {
@@ -45,8 +47,10 @@ Observation::Observation() :
 Observation::Observation(ParameterSet*		aParSet) :
 	name(),
 	obsID(0),
+#if !defined HAVE_BGL	
 	startTime(0),
 	stopTime(0),
+#endif	
 	nyquistZone(0),
 	sampleClock(0)
 {
@@ -56,14 +60,14 @@ Observation::Observation(ParameterSet*		aParSet) :
 
 	name  = aParSet->getString(prefix+"name", "");
 	obsID = aParSet->getInt32("_treeID", 0);
-
+#if !defined HAVE_BGL
 	if (aParSet->isDefined(prefix+"startTime")) {
 		startTime = to_time_t(time_from_string(aParSet->getString(prefix+"startTime")));
 	}
 	if (aParSet->isDefined(prefix+"stopTime")) {
 		stopTime = to_time_t(time_from_string(aParSet->getString(prefix+"stopTime")));
 	}
-
+#endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
 		string stString("x=" + expandedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList")));
 		ParameterSet	stParset;
@@ -185,8 +189,10 @@ ostream& Observation::print (ostream&	os) const
 	os << endl;
 	os << "Observation  : " << name << endl;
     os << "ObsID        : " << obsID << endl;
+#if !defined HAVE_BGL
     os << "starttime    : " << to_simple_string(from_time_t(startTime)) << endl;
     os << "stoptime     : " << to_simple_string(from_time_t(stopTime)) << endl;
+#endif
 //    os << "stations     : " << stations << endl;
     os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
     os << "antennaArray : " << antennaArray << endl;
