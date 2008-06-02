@@ -83,8 +83,10 @@ public:
 	//# Datamembers
 	string			name;
 	int32			obsID;
+#if !defined HAVE_BGL
 	time_t			startTime;
 	time_t			stopTime;
+#endif
 	uint32			nyquistZone;
 	vector<string>	stations;
 	int32			sampleClock;
