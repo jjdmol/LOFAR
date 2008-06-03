@@ -100,6 +100,8 @@ public:
 	static string  expandedArrayString(const string& orgStr);
 	bool	       useScatter() const;
 	bool	       useGather() const;
+	bool           delayCompensation() const;
+	bool           tiedArrayBeamforming() const;
 	uint32	       nrPsetsPerStorage(const int index) const;
 	uint32	       nrOutputsPerInputNode() const;
 	uint32	       nrInputsPerStorageNode(const int index) const;
@@ -112,6 +114,7 @@ public:
 	vector<int32>  beamlet2beams(const int index) const;
 	vector<int32>  beamlet2subbands(const int index) const;
 	vector<uint32> subband2Index(const int index) const;
+	vector<uint32>  tiedArrayStations2Index() const;
 	int32          nrSubbandsPerFrame() const;
 	
 	vector<double> getBeamDirection(const unsigned currentBeam) const;
@@ -272,6 +275,16 @@ inline bool CS1_Parset::useScatter() const
 inline bool CS1_Parset::useGather() const
 {
   return getBool("OLAP.IONProc.useGather");
+}
+
+inline bool CS1_Parset::delayCompensation() const
+{
+  return getBool("OLAP.delayCompensation");
+}
+
+inline bool CS1_Parset::tiedArrayBeamforming() const
+{
+  return getBool("OLAP.tiedArrayBeamforming");
 }
 
 inline uint32 CS1_Parset::nrOutputsPerInputNode() const
