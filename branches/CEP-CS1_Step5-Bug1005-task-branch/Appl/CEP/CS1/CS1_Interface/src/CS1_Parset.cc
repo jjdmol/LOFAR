@@ -182,6 +182,26 @@ vector<uint32>  CS1_Parset::subband2Index(const int index) const
   return subband2Index;
 }
 
+vector<uint32> CS1_Parset::tiedArrayStations2Index() const
+{
+  /* Temporary solution: The function stationNames() will be changed when the specs of the station positions
+  are clear. Because the micro-mode will be removed */
+  
+  //vector<string> stNames = stationNames(index);
+  vector<string> stNames = getStringVector("Observation.VirtualInstrument.stationList");
+  vector<string> tiedArrayStations = getStringVector("Observation.VirtualInstrument.tiedArrayStationList");
+  vector<uint32> tiedArrSt2Index;
+  unsigned ind = 0;
+  
+  for (uint i = 0; i < tiedArrayStations.size(); i++)
+  {
+    ind = std::find(stNames.begin(), stNames.end(), tiedArrayStations[i]) - stNames.begin();
+    if (ind != stNames.size())
+      tiedArrSt2Index.push_back(ind);
+  }
+  return tiedArrSt2Index;
+}
+
 vector<double> CS1_Parset::positions(const int index) const
 {
   vector<string> stNames = stationNames(index);
