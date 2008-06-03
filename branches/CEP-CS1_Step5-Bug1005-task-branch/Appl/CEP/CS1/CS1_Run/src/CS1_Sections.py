@@ -78,7 +78,7 @@ class Section(object):
 
 class StorageSection(Section):
     def __init__(self, parset, host):
-        for i in range(0, len(parset.getStringVector('Observation.VirtualInstrument.partitionList'))):
+        for i in range(0, len(parset.getStringVector_new('Observation.VirtualInstrument.partitionList'))):
 	    nSubbands = parset.getNrSubbands(i)
             self.nSubbandsPerPset = parset.subbandsPerPset(i)
  	    nPsetsPerStorage = parset.psetsPerStorage(i)
@@ -86,7 +86,7 @@ class StorageSection(Section):
                 if not nSubbands % (self.nSubbandsPerPset * nPsetsPerStorage) == 0:
                     raise Exception('Not a integer number of subbands per storage node!')
 		    
-        self.noProcesses = len(parset.getStringVector('Observation.VirtualInstrument.partitionList')) * parset.getInt32('OLAP.nrStorageNodes')
+        self.noProcesses = len(parset.getStringVector_new('Observation.VirtualInstrument.partitionList')) * parset.getInt32('OLAP.nrStorageNodes')
 
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_Storage', \
@@ -115,7 +115,7 @@ class BGLProcSection(object):
 	self.package = 'Appl/CEP/CS1/CS1_BGLProc'
  
         #createBGLProcSection(s)
-	for i in range(0, len(parset.getStringVector('Observation.VirtualInstrument.partitionList'))):
+	for i in range(0, len(parset.getStringVector_new('Observation.VirtualInstrument.partitionList'))):
 	    self.BGLProcSectionList.append(BGLProc(parset,host, i, self.package))
 	
 	inputPsetsArray = '['
@@ -154,7 +154,7 @@ class BGLProcSection(object):
 class BGLProc(Section):
     def __init__(self, parset, host, index, package):
 	self.parset = parset
-        self.partition = parset.getStringVector('Observation.VirtualInstrument.partitionList')[index].strip().strip('[').rstrip(']')
+        self.partition = parset.getStringVector_new('Observation.VirtualInstrument.partitionList')[index]
 	self.nSubbands = parset.getNrSubbands(index)
 	self.nSubbandsPerPset = parset.subbandsPerPset(index)
 	nPsets = 0

@@ -43,10 +43,14 @@ OLAP.nrSecondsOfBuffer = 6
 OLAP.maxNetworkDelay = 2.0 # 1 second extra added to compensate for timestamp bug
 OLAP.delayCompensation = F
 
+OLAP.tiedArrayBeamforming = T
+Observation.VirtualInstrument.tiedArrayStationList=[CS001, CS008, CS010, CS016]
+Observation.VirtualInstrument.stationList = [CS001, CS008, CS010, CS016]
+
 Observation.sampleClock = 160
 
-Observation.VirtualInstrument.partitionList = [R000_B06,R000_B04,R000_B05,R000_B07]
-#Observation.VirtualInstrument.partitionList = [R000_B06,R000_B04]
+Observation.VirtualInstrument.partitionList = [R000_B06]
+#Observation.VirtualInstrument.partitionList = [R000_B06,R000_B04,R000_B05,R000_B07]
 
 # Nyquist zone:
 Observation.bandFilter = LBL_10_80
@@ -77,8 +81,8 @@ Observation.Beam[8].angle2 = 0
 Observation.nrBeams = 1
 
 Observation.Beam[1].directionTypes = J2000
-Observation.Beam[1].subbandList = [0,0..3,0..7,0..15]
-Observation.Beam[1].beamletList = [0,54..57,108..115,162..177]
+Observation.Beam[1].subbandList = [0]
+Observation.Beam[1].beamletList = [0]
 
 # example 2 beams:
 #Observation.nrBeams = 2

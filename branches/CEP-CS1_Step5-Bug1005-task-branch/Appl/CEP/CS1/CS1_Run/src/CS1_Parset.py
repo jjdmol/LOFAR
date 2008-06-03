@@ -65,8 +65,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    return nrSubbands / subPerPset / self.getInt32('OLAP.nrStorageNodes')
     
     def partitionName(self, index):
-	partition = self.getStringVector('Observation.VirtualInstrument.partitionList')[index]
-	return partition.strip().strip('[').rstrip(']')
+	return self.getStringVector_new('Observation.VirtualInstrument.partitionList')[index]
 	
     def setStations(self, stationList):
         self.stationList = stationList
@@ -80,8 +79,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
         inputNodelist = list()
 	
 	for s in self.stationNames(index):
-	    destPorts = self.getStringVector('PIC.Core.' + string.split(s, '_')[0] + '_RSP.dest.ports')[self.getInt32('PIC.Core.' + s + '.RSP')]
-	    destPorts =  destPorts.strip().strip('[').rstrip(']')
+	    destPorts = self.getStringVector_new('PIC.Core.' + string.split(s, '_')[0] + '_RSP.dest.ports')[self.getInt32('PIC.Core.' + s + '.RSP')]
 	    dest = string.split(destPorts, ':')[0]
 	    inputNodelist.append(string.split(destPorts, ':')[0])
 	return inputNodelist    
@@ -105,7 +103,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self['Observation.MSNameMask'] = msName
     
     def maxNPsets(self, index):
-        return len(IONodes.get(self.getStringVector('Observation.VirtualInstrument.partitionList')[index].strip().strip('[').rstrip(']')))
+        return len(IONodes.get(self.getStringVector_new('Observation.VirtualInstrument.partitionList')[index]))
      
     def getMSName(self):
         return self['Observation.MSNameMask']
@@ -263,7 +261,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	return sNames  
   
     def parseParset(self):
-        for i in range(0, len(self.getStringVector('Observation.VirtualInstrument.partitionList'))):
+        for i in range(0, len(self.getStringVector_new('Observation.VirtualInstrument.partitionList'))):
 	    if self.getNrSubbands(i) > 0 and len(self.stationNames(i)) == 0:
 	        begin = i * MAX_BEAMLETS_PER_RSP
 	        end = begin + MAX_BEAMLETS_PER_RSP-1
@@ -271,7 +269,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
 		sys.exit(0)
 	    
         b2b = self.getBeamlet2beams()
-	for i in range(0, len(self.getStringVector('Observation.VirtualInstrument.partitionList'))):
+	for i in range(0, len(self.getStringVector_new('Observation.VirtualInstrument.partitionList'))):
 	    begin = i * MAX_BEAMLETS_PER_RSP
 	    end = begin + MAX_BEAMLETS_PER_RSP-1
 	    nBeamlets = 0
@@ -282,6 +280,25 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	    if nBeamlets > self.getInt32('OLAP.nrSubbandsPerFrame'):
 	        print 'NrBeamlets("%d")' % nBeamlets + ' > OLAP.nrSubbandsPerFrame("%d")' %  self.getInt32('OLAP.nrSubbandsPerFrame')
 	        sys.exit(0)
+	
+	# parse tiedArrayStations:
+	if self.getBool('OLAP.tiedArrayBeamforming'):
+	    t = self.getStringVector_new('Observation.VirtualInstrument.tiedArrayStationList')
+	    tArrayStations = set(t)
+	    if (len(t) != len (tArrayStations)):
+	        print 'Duplicate tied array stationNames'
+	        sys.exit(0)
+	    sNames = self.getStringVector_new('Observation.VirtualInstrument.stationList')
+	    found = False
+	    
+	    for tas in tArrayStations:
+		for s in sNames:
+		    if tas == s: 
+			found = True
+			break
+		if not found:
+		    print 'Invalid tied array stationName "%s"' % tas
+		    sys.exit(0)
 	
     def updateSBValues(self):
         if self.clock == '160MHz':
@@ -303,7 +320,7 @@ class CS1_Parset(LOFAR_Parset.Parset):
         self['Observation.RefFreqs'] = '[' + ', '.join(str(refFreg) for refFreg in refFreqList) + ']'
 	
 	nSubband = 0
-	for i in range(0, len(self.getStringVector('Observation.VirtualInstrument.partitionList'))):
+	for i in range(0, len(self.getStringVector_new('Observation.VirtualInstrument.partitionList'))):
 	    #the number of subbands should be dividable by the number of subbands per pset
 	    if not self.getNrSubbands(i) % self.subbandsPerPset(i) == 0:
 	        raise Exception('Number of subbandIDs("%d") in not dividable by the number of subbands per pset ("%d").' % (self.getNrSubbands(i), self.subbandsPerPset(i)))

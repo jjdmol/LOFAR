@@ -1,5 +1,7 @@
 import os
 import time
+import sys
+import string
 
 class Parset(object):
 
@@ -51,6 +53,13 @@ class Parset(object):
         line.strip('[').strip(']')
         # this doesn't support \" in the string
         return line.split(',')
+    
+    def getStringVector_new(self, key):
+        line = self.parameters[key]
+	line = line.strip('[').rstrip(']')
+	line = string.replace(line,' ','')
+	
+	return line.split(',')
 
     def getInt32Vector(self, key):
         ln = self.parameters[key]
