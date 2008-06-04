@@ -29,7 +29,6 @@
 //# Includes
 #include <Common/lofar_string.h>
 #include <Common/lofar_iosfwd.h>
-#include <BBSControl/SenderId.h>
 
 namespace LOFAR
 {
@@ -57,17 +56,12 @@ namespace LOFAR
       };
 
       // Default constructor.
-      CommandResult(Result result = UNKNOWN, 
-                    const SenderId& sender = SenderId(),
-                    const string& message = string()
-                    );
+      CommandResult(Result result = UNKNOWN, const string& msg = string());
 
       // This constructor was added to make the life of the programmer a
       // little brighter. The job of converting the \c int \a result to an \c
       // enum Result is now done by the constructor.
-      CommandResult(int result, 
-                    const SenderId& sender = SenderId(),
-                    const string& message = string());
+      CommandResult(int result, const string& msg = string());
 
       // Return the result code as an integer.
       int asInt() const
@@ -79,9 +73,6 @@ namespace LOFAR
       // Return the user-supplied message.
       const string& message() const
       { return itsMessage; }
-
-      const SenderId& sender() const
-      { return itsSender; }
 
       // Return \c true if result is OK, else return \c false.
       operator bool() const
@@ -100,11 +91,9 @@ namespace LOFAR
       // The return result
       Result itsResult;
 
-      // ID of the sender that posted the command result.
-      SenderId itsSender;
-
       // User-supplied optional message.
       string itsMessage;
+
     };
 
     // Output in ASCII format.

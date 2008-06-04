@@ -96,6 +96,9 @@ namespace LOFAR
       void setSolveTasks(const vector<uint>& groups,
         const SolverOptions& options);
 
+      // Solver process ID.
+      SolverProcessId itsSolverProcId;
+
       // (Run) state of the solver control process
       RunState itsState;
 

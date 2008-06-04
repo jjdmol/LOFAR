@@ -102,20 +102,15 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     }
     catch(Exception &ex)
     {
-        itsResult = 
-          CommandResult(CommandResult::ERROR,
-                        SenderId(SenderId::KERNEL, itsKernelId),
-                        "Unable to read meta measurement.");
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to read meta" 
+            " measurement.");
         return;
     }        
 
     if(itsKernelId >= itsMetaMeasurement.getPartCount())
     {
-        itsResult =
-          CommandResult(CommandResult::ERROR, 
-                        SenderId(SenderId::KERNEL, itsKernelId),
-                        "Kernel id does not map to any measurement in " +
-                        strategy->dataSet());
+        itsResult = CommandResult(CommandResult::ERROR, "Kernel id does not map"
+          " to any measurement in " + strategy->dataSet());
         return;
     }
     
@@ -130,11 +125,8 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     }
     catch(Exception &ex)
     {
-        itsResult = 
-          CommandResult(CommandResult::ERROR, 
-                        SenderId(SenderId::KERNEL, itsKernelId),
-                        "Unable to open measurement: " + 
-                        itsMetaMeasurement.getPath(itsKernelId));
+        itsResult = CommandResult(CommandResult::ERROR, "Unable to open"
+          " measurement: " + itsMetaMeasurement.getPath(itsKernelId));
         return;
     }
 
@@ -149,11 +141,8 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     }
     catch(Exception &ex)
     {
-        itsResult =
-          CommandResult(CommandResult::ERROR, 
-                        SenderId(SenderId::KERNEL, itsKernelId),
-                        "Failed to open sky model parameter database: " + 
-                        strategy->parmDB().localSky);
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to open sky"
+            " model parameter database: " + strategy->parmDB().localSky);
         return;
     }        
 
@@ -168,11 +157,9 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
     }
     catch(Exception &ex)
     {
-        itsResult = 
-          CommandResult(CommandResult::ERROR, 
-                        SenderId(SenderId::KERNEL, itsKernelId),
-                        "Failed to open instrument model parameter database." +
-                        strategy->parmDB().instrument);
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to open"
+            " instrument model parameter database."
+            + strategy->parmDB().instrument);
         return;
     }        
 
@@ -201,9 +188,7 @@ void CommandExecutor::visit(const InitializeCommand &/*command*/)
         itsChunkSelection.setBaselineFilter(VisSelection::CROSS);
     }
 
-    itsResult = CommandResult(CommandResult::OK, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Ok.");
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -213,9 +198,7 @@ void CommandExecutor::visit(const FinalizeCommand &/*command*/)
 
     LOG_DEBUG("Handling a FinalizeCommand");
 
-    itsResult = CommandResult(CommandResult::OK, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Ok.");
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -246,10 +229,8 @@ void CommandExecutor::visit(const NextChunkCommand &command)
     }
     catch(Exception &ex)
     {
-        itsResult = 
-          CommandResult(CommandResult::ERROR, 
-                        SenderId(SenderId::KERNEL, itsKernelId),
-                        "Failed to read chunk.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to read"
+            " chunk.");
         return;                
     }
 
@@ -258,9 +239,7 @@ void CommandExecutor::visit(const NextChunkCommand &command)
     // Display information about chunk.
     LOG_INFO_STR("Chunk dimensions: " << endl << itsChunk->getDimensions());
 
-    itsResult = CommandResult(CommandResult::OK, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Ok.");
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -269,9 +248,7 @@ void CommandExecutor::visit(const RecoverCommand &/*command*/)
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
     LOG_DEBUG("Handling a RecoverCommand");
-    itsResult = CommandResult(CommandResult::ERROR, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Not yet implemented.");
+    itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
 
@@ -280,9 +257,7 @@ void CommandExecutor::visit(const SynchronizeCommand &/*command*/)
     LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
 
     LOG_DEBUG("Handling a SynchronizeCommand");
-    itsResult = CommandResult(CommandResult::ERROR, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Not yet implemented.");
+    itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
 
@@ -320,9 +295,8 @@ void CommandExecutor::visit(const PredictStep &command)
         command.baselines().station1, command.baselines().station2,
         command.correlation().type))
     {        
-        itsResult = CommandResult(CommandResult::ERROR, 
-                                  SenderId(SenderId::KERNEL, itsKernelId),
-                                  "Failed to set data selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
         return;
     }        
         
@@ -340,9 +314,7 @@ void CommandExecutor::visit(const PredictStep &command)
             false);
     }
 
-    itsResult = CommandResult(CommandResult::OK, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Ok.");
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -360,9 +332,8 @@ void CommandExecutor::visit(const SubtractStep &command)
         command.baselines().station1, command.baselines().station2,
         command.correlation().type))
     {        
-        itsResult = CommandResult(CommandResult::ERROR, 
-                                  SenderId(SenderId::KERNEL, itsKernelId),
-                                  "Failed to set data selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
         return;
     }        
         
@@ -380,9 +351,7 @@ void CommandExecutor::visit(const SubtractStep &command)
             false);
     }
 
-    itsResult = CommandResult(CommandResult::OK, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Ok.");
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -400,9 +369,8 @@ void CommandExecutor::visit(const CorrectStep &command)
         command.baselines().station1, command.baselines().station2,
         command.correlation().type))
     {        
-        itsResult = CommandResult(CommandResult::ERROR, 
-                                  SenderId(SenderId::KERNEL, itsKernelId),
-                                  "Failed to set data selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
         return;
     }        
         
@@ -420,9 +388,7 @@ void CommandExecutor::visit(const CorrectStep &command)
             false);
     }
     
-    itsResult = CommandResult(CommandResult::OK, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Ok.");
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -452,9 +418,7 @@ void CommandExecutor::visit(const ShiftStep &command)
     LOG_DEBUG("Handling a ShiftStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-    itsResult = CommandResult(CommandResult::ERROR, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Not yet implemented.");
+    itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
 
@@ -463,9 +427,7 @@ void CommandExecutor::visit(const RefitStep &command)
     LOG_DEBUG("Handling a RefitStep");
     LOG_DEBUG_STR("Command: " << endl << command);
 
-    itsResult = CommandResult(CommandResult::ERROR, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Not yet implemented.");
+    itsResult = CommandResult(CommandResult::ERROR, "Not yet implemented.");
 }
 
 
@@ -478,9 +440,8 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
         command.baselines().station1, command.baselines().station2,
         command.correlation().type))
     {        
-        itsResult = CommandResult(CommandResult::ERROR, 
-                                  SenderId(SenderId::KERNEL, itsKernelId),
-                                  "Failed to set data selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
         return;
     }        
         
@@ -490,9 +451,8 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
 
     if(!itsKernel->setParameterSelection(command.parms(), command.exclParms()))
     {
-        itsResult = CommandResult(CommandResult::ERROR, 
-                                  SenderId(SenderId::KERNEL, itsKernelId),
-                                  "Failed to set parameter selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set"
+            " parameter selection.");
         return;
     }
         
@@ -659,9 +619,7 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
 
     itsKernel->storeParameterValues();
 
-    itsResult = CommandResult(CommandResult::OK, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Ok.");
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 
@@ -675,9 +633,8 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
         command.baselines().station1, command.baselines().station2,
         command.correlation().type))
     {        
-        itsResult = CommandResult(CommandResult::ERROR, 
-                                  SenderId(SenderId::KERNEL, itsKernelId),
-                                  "Failed to set data selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set data"
+            " selection.");
         return;
     }        
         
@@ -687,9 +644,8 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
 
     if(!itsKernel->setParameterSelection(command.parms(), command.exclParms()))
     {
-        itsResult = CommandResult(CommandResult::ERROR, 
-                                  SenderId(SenderId::KERNEL, itsKernelId),
-                                  "Failed to set parameter selection.");
+        itsResult = CommandResult(CommandResult::ERROR, "Failed to set"
+            " parameter selection.");
         return;
     }
         
@@ -772,9 +728,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     
     if(!solverIndexMsg)
     {
-        itsResult = CommandResult(CommandResult::ERROR, 
-                                  SenderId(SenderId::KERNEL, itsKernelId),
-                                  "Protocol error");
+        itsResult = CommandResult(CommandResult::ERROR, "Protocol error");
         return;
     }
     
@@ -808,10 +762,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
             shared_ptr<SolutionMsg> solverSolutionMsg(dynamic_pointer_cast<SolutionMsg>(solverMsg));
             if(!solverSolutionMsg)
             {
-                itsResult = 
-                  CommandResult(CommandResult::ERROR, 
-                                SenderId(SenderId::KERNEL, itsKernelId),
-                                "Protocol error");
+                itsResult = CommandResult(CommandResult::ERROR, "Protocol error");
                 return;
             }
             
@@ -884,9 +835,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
 
     itsKernel->storeParameterValues();
 
-    itsResult = CommandResult(CommandResult::OK, 
-                              SenderId(SenderId::KERNEL, itsKernelId),
-                              "Ok.");
+    itsResult = CommandResult(CommandResult::OK, "Ok.");
 }
 
 

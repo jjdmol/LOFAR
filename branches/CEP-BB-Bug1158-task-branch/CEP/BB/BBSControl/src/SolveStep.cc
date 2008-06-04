@@ -169,7 +169,7 @@ namespace LOFAR
         pss.getDouble      ("Options.EpsValue");
       itsSolverOptions.epsDerivative = 
         pss.getDouble      ("Options.EpsDerivative");
-      itsSolverOptions.collFactor     = 
+      itsSolverOptions.collFactor    = 
         pss.getDouble      ("Options.CollFactor");
       itsSolverOptions.lmFactor      = 
         pss.getDouble      ("Options.LMFactor");

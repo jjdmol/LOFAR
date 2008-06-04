@@ -66,6 +66,7 @@ namespace LOFAR
 
     SolverProcessControl::SolverProcessControl() :
       ProcessControl(),
+      itsSolverProcId(0),
       itsState(UNDEFINED),
       itsNrKernels(0)
     {
@@ -83,6 +84,7 @@ namespace LOFAR
     {
       LOG_INFO("SolverProcessControl::define()");
       try {
+        itsSolverProcId = globalParameterSet()->getUint32("SolverProcessId");
         // Get the number of kernels that will connect 
         itsNrKernels = globalParameterSet()->getUint32("Solver.nrKernels");
       }
@@ -167,7 +169,7 @@ namespace LOFAR
                           "Disconnected kernel");
           }
 
-          LOG_DEBUG_STR("Kernel " << i << " of " << itsNrKernels << 
+          LOG_DEBUG_STR("Kernel " << i+1 << " of " << itsNrKernels << 
                         " connected (id=" << id << ")");
         }
 
@@ -227,8 +229,8 @@ namespace LOFAR
             else {
               // Not a SolveStep, send "Ok" result to command queue
               // immediately.
-              itsCommandQueue->addResult
-                (cmdId, CommandResult(CommandResult::OK, SenderId::SOLVER));
+              SenderId senderId(SenderId::SOLVER, itsSolverProcId);
+              itsCommandQueue->addResult(cmdId, CommandResult::OK, senderId);
             }
           }
           break;
@@ -253,11 +255,11 @@ namespace LOFAR
             done = itsSolveTasks[i].run() && done;
           }
           
-          // OK, all SolveTasks are done (since we're currently running one
-          // thread!!). We can change state.
+          // OK, all SolveTasks are done: send result to the command queue and
+          // change state.
           if(done) {
-            itsCommandQueue->addResult
-              (cmdId, CommandResult(CommandResult::OK, SenderId::SOLVER));
+            SenderId senderId(SenderId::SOLVER, itsSolverProcId);
+            itsCommandQueue->addResult(cmdId, CommandResult::OK, senderId);
             itsState = IDLE;
           }
           break;
@@ -386,7 +388,7 @@ namespace LOFAR
       for (uint i = 0; i < groups.size(); ++i) {
         advance(end, groups[i]);
         itsSolveTasks.push_back
-          (SolveTask(i, vector<KernelConnection>(beg, end), options));
+          (SolveTask(vector<KernelConnection>(beg, end), options));
         beg = end;
       }
     }

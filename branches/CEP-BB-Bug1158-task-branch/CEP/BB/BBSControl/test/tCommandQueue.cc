@@ -89,7 +89,7 @@ int main(int /*argc*/, char* argv[])
     while(true) {
       NextCommandType command = queue.getNextCommand();
       if (!command.first) break;
-      queue.addResult(command.second, CommandResult());
+      queue.addResult(command.second, CommandResult(), SenderId());
       ofs << *command.first << endl;
     }
     ofs.close();

@@ -180,9 +180,10 @@ namespace LOFAR
             // Execute the command.
             cmd.first->accept(*itsCommandExecutor);
             const CommandResult &result = itsCommandExecutor->getResult();
+            SenderId id(SenderId::KERNEL, itsCommandExecutor->getKernelId());
 
             // Report the result to the global controller.
-            itsCommandQueue->addResult(cmd.second, result);
+            itsCommandQueue->addResult(cmd.second, result, id);
             
             // If an error occurred, log a descriptive message and exit.
             if(result.is(CommandResult::ERROR))

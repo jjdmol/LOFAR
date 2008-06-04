@@ -12,7 +12,6 @@ pkginclude_HEADERS = Package__Version.h  \
 	GlobalProcessControl.h \
 	InitializeCommand.h \
 	KernelProcessControl.h \
-	LocalControlId.h \
 	Messages.h \
 	MessageHandlers.h \
 	MultiStep.h \

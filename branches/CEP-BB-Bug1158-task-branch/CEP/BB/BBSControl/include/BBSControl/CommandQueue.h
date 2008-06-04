@@ -41,7 +41,7 @@
 //# typedefs \c NextCommandType, \c ResultType, or \a ResultMapType are used.
 #include <BBSControl/Command.h>
 #include <BBSControl/CommandResult.h>
-#include <BBSControl/LocalControlId.h>
+#include <BBSControl/SenderId.h>
 #include <BBSControl/Types.h>
 
 #include <Common/lofar_list.h>
@@ -74,7 +74,7 @@ namespace LOFAR
     // Return type of the function CommandQueue::getNewResults(const
     // CommandId&). It pairs a command result with the local controller that
     // executed that command.
-    typedef pair<LocalControlId, CommandResult> ResultType;
+    typedef pair<SenderId, CommandResult> ResultType;
     
     // Return type of the function CommandQueue::getNewResults(). It binds a
     // command-id and the results received from the local controllers.
@@ -213,7 +213,8 @@ namespace LOFAR
       // \return \c true upon successful insertion; otherwise \c false (e.g.,
       // wrong \a commanId was specified).
       bool addResult(const CommandId& commandId, 
-                     const CommandResult& result) const;
+                     const CommandResult& result,
+                     const SenderId& senderId) const;
 
       // Get all new results from the database.
       ResultMapType getNewResults() const;

@@ -68,11 +68,11 @@ namespace LOFAR
       };
 
     public:
-      // Construct a solve task. Use a kernel group consisting of \a kernels,
-      // and initialize the solver with the given \a options.
-      SolveTask(SolverId id,
-                const vector<KernelConnection>& kernels,
-                const SolverOptions& options);
+      // Construct a kernel group that consists of \a nrKernels kernels.
+      // \note This class does \e not contain any kernel objects; it merely
+      // keeps track of the count.
+      SolveTask(const vector<KernelConnection>& kernels,
+        const SolverOptions& options);
 
       bool run();
 
@@ -84,10 +84,13 @@ namespace LOFAR
       virtual void handle(const EquationMsg &message);
       virtual void handle(const ChunkDoneMsg &message);
 
+//       uint nrKernels() const { return itsNrKernels; }
+
       void setState(State s);
+//       State state() const { return itsState; }
       const string& showState() const;
 
-      // Compose error message and throw SolveTaskException.
+      // Compose error message and thow SolveTaskException.
       void error(const string& prefix, const KernelMessage& message);
 
     private:
@@ -101,14 +104,10 @@ namespace LOFAR
         N_MsgTypes
       };
 
-      // The solver associated with this kernel group.
-      Solver itsSolver;
-
-      // ID of our solver.
-      SolverId itsSolverId;
-
-      // Kernels in out kernel group.
+//       // Number of kernels in this group
+//       uint itsNrKernels;
       vector<KernelConnection> itsKernels;
+//       vector< pair<KernelConnection, MsgType> > itsKernels;
 
       // State that this kernel group is in.
       State itsState;
@@ -135,6 +134,10 @@ namespace LOFAR
       // types interleaved. For the time being this will certainly not be the
       // case, but it is something to keep in the back of our minds.
       set<KernelId> itsKernelMessageReceived;
+
+      // The solver associated with this kernel group.
+      Solver itsSolver;
+      
     };
 
     // @}

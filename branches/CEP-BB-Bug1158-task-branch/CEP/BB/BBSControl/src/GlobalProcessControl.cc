@@ -31,8 +31,6 @@
 #include <BBSControl/SynchronizeCommand.h>
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/CommandQueue.h>
-//#include <BBSControl/CommandId.h>
-//#include <BBSControl/LocalControlId.h>
 
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobIBufStream.h>
@@ -167,7 +165,7 @@ namespace LOFAR
 
         // Did all local controllers respond with an "OK" status?
         // Here we have to iterate over all elements in result -- a count()
-        // will not do, because result is a vector<pair<LocalControlId,
+        // will not do, because result is a vector<pair<SenderId,
         // CmdResult> > instead of a "plain" vector<CmdResult>. Could this be
         // avoided by choosing a different STL container for ResultMapType??
         LOG_TRACE_CALC("Results:");
@@ -548,10 +546,10 @@ namespace LOFAR
       }
 
       // Did all local controllers respond with an "OK" status?
-      // Here we have to iterate over all elements in result -- a count()
-      // will not do, because result is a vector<pair<LocalControlId,
-      // CmdResult> > instead of a "plain" vector<CmdResult>. Could this be
-      // avoided by choosing a different STL container for ResultMapType??
+      // Here we have to iterate over all elements in result -- a count() will
+      // not do, because result is a vector< pair<SenderId, CmdResult> >
+      // instead of a "plain" vector<CmdResult>. Could this be avoided by
+      // choosing a different STL container for ResultMapType??
       LOG_TRACE_CALC("Results:");
       uint notOk(0);
       for (uint i = 0; i < results.size(); ++i) {

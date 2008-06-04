@@ -37,21 +37,25 @@ namespace LOFAR
 
     //##--------  P u b l i c   m e t h o d s  --------##//
 
-    SolveTask::SolveTask(SolverId id, 
-                         const vector<KernelConnection>& kernels, 
-                         const SolverOptions& options) :
-      itsSolverId(id),
+    SolveTask::SolveTask(const vector<KernelConnection>& kernels, 
+      const SolverOptions& options) :
       itsKernels(kernels),
       itsState(IDLE)
     {
+//       itsKernels.reserve(kernels.size());
+//       for (uint i = 0; i < kernels.size(); ++i) {
+//         itsKernels.push_back(make_pair(kernels[i], NOMESSAGE));
+//       }
       itsSolver.reset(options.maxIter, options.epsValue, options.epsDerivative,
-                      options.collFactor, options.lmFactor, 
-                      options.balancedEqs, options.useSVD);
+        options.collFactor, options.lmFactor, options.balancedEqs,
+        options.useSVD);
     }
-    
-    
+
+
     bool SolveTask::run()
     {
+//      while (itsState != DONE) {
+
       if(itsState != DONE) {
         // Receive messages from our kernel(s); for the time being we'll use
         // a round-robin "polling". Every message is handed over to the
@@ -65,6 +69,7 @@ namespace LOFAR
           if (msg) msg->passTo(*this);
         }
       }
+
       return (itsState == DONE);
     }
 
