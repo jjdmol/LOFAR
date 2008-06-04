@@ -1,4 +1,4 @@
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	BlobStreamableConnection.h \
 	BlobStreamableVector.h \
 	Command.h \
@@ -20,6 +20,7 @@ pkginclude_HEADERS = \
 	PredictStep.h \
 	RecoverCommand.h \
 	RefitStep.h \
+	SenderId.h \
 	ShiftStep.h \
 	SingleStep.h \
 	SolverProcessControl.h \

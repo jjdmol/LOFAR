@@ -29,6 +29,7 @@
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/CommandResult.h>
+#include <BBSControl/Types.h>
 
 #include <BBSKernel/Prediffer.h>
 #include <BBSKernel/MetaMeasurement.h>
@@ -59,7 +60,7 @@ namespace LOFAR
     class CommandExecutor: public CommandVisitor
     {
     public:
-      CommandExecutor(uint32 id,
+      CommandExecutor(KernelId id,
                       shared_ptr<CommandQueue> &queue,
                       shared_ptr<BlobStreamableConnection> &solver)
         :   itsKernelId(id),
@@ -91,6 +92,9 @@ namespace LOFAR
       const CommandResult &getResult() const
       { return itsResult; }
 
+      // Get the kernel ID.
+      KernelId getKernelId() const
+      { return itsKernelId; }
 
     private:
       void handleLocalSolve(const SolveStep &command);
@@ -98,7 +102,7 @@ namespace LOFAR
       
       // Kernel.
       scoped_ptr<Prediffer>                   itsKernel;
-      uint32                                  itsKernelId;
+      KernelId                                itsKernelId;
       
       // Measurement.
       MetaMeasurement                         itsMetaMeasurement;

@@ -206,6 +206,8 @@ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION blackboard.add_result
     (_command_id INTEGER,
     _pid INTEGER,
+    _sender_type INTEGER,
+    _sender_id INTEGER,
     _result_code INTEGER,
     _message TEXT)
 RETURNS BOOL AS
@@ -214,8 +216,11 @@ $$
         IF _command_id > 0
             AND _command_id = blackboard.get_next_command_id(_pid)
         THEN
-            INSERT INTO blackboard.result(command_id, pid, result_code, message)
-                VALUES (_command_id, _pid, _result_code, _message);
+            INSERT 
+                INTO blackboard.result(command_id, pid, sender_type, sender_id,
+                                       result_code, message)
+                VALUES (_command_id, _pid, _sender_type, _sender_id,
+                        _result_code, _message);
             
             RETURN FOUND;
         END IF;

@@ -32,6 +32,7 @@
 #include <BBSControl/Messages.h>
 #include <BBSControl/InitializeCommand.h>
 #include <BBSControl/NextChunkCommand.h>
+#include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/StreamUtil.h>
 #include <BBSControl/Exceptions.h>
 #include <BBSControl/Types.h>
@@ -58,6 +59,7 @@ namespace LOFAR
     {
       InitializeCommand initCmd;
       NextChunkCommand  nextChunkCmd;
+      FinalizeCommand   finalizeCmd;
     }
 
     //##----   P u b l i c   m e t h o d s   ----##//
@@ -207,12 +209,13 @@ namespace LOFAR
           LOG_TRACE_FLOW("ProcessState::IDLE");
 
           LOG_DEBUG("Waiting for command trigger ...");
+          CommandId cmdId;
           if (itsCommandQueue->
               waitForTrigger(CommandQueue::Trigger::Command)) {
             // Get the next command.
             const NextCommandType& nextCmd = itsCommandQueue->getNextCommand();
             shared_ptr<const Command> cmd = nextCmd.first;
-            const CommandId cmdId = nextCmd.second;
+            cmdId = nextCmd.second;
 
             itsSolveStep = dynamic_pointer_cast<const SolveStep>(cmd);
             if (itsSolveStep) {
@@ -224,7 +227,8 @@ namespace LOFAR
             else {
               // Not a SolveStep, send "Ok" result to command queue
               // immediately.
-              itsCommandQueue->addResult(cmdId, CommandResult::OK);
+              itsCommandQueue->addResult
+                (cmdId, CommandResult(CommandResult::OK, SenderId::SOLVER));
             }
           }
           break;
@@ -252,6 +256,8 @@ namespace LOFAR
           // OK, all SolveTasks are done (since we're currently running one
           // thread!!). We can change state.
           if(done) {
+            itsCommandQueue->addResult
+              (cmdId, CommandResult(CommandResult::OK, SenderId::SOLVER));
             itsState = IDLE;
           }
           break;
@@ -380,7 +386,7 @@ namespace LOFAR
       for (uint i = 0; i < groups.size(); ++i) {
         advance(end, groups[i]);
         itsSolveTasks.push_back
-          (SolveTask(vector<KernelConnection>(beg, end), options));
+          (SolveTask(i, vector<KernelConnection>(beg, end), options));
         beg = end;
       }
     }

@@ -1,6 +1,6 @@
 lib_LTLIBRARIES			= libbbscontrol.la
 
-libbbscontrol_la_SOURCES	= \
+libbbscontrol_la_SOURCES	= Package__Version.cc  \
 	BlobStreamableConnection.cc \
 	Command.cc \
 	CommandExecutor.cc \
@@ -20,6 +20,7 @@ libbbscontrol_la_SOURCES	= \
 	QueryBuilder/AddCommand.cc \
 	RecoverCommand.cc \
 	RefitStep.cc \
+	SenderId.cc \
 	ShiftStep.cc \
 	SingleStep.cc \
 	SolverProcessControl.cc \
@@ -32,7 +33,7 @@ libbbscontrol_la_SOURCES	= \
 	SynchronizeCommand.cc \
 	Types.cc
 
-bin_PROGRAMS			= GlobalControl KernelControl SolverControl
+bin_PROGRAMS			= versionbbscontrol GlobalControl KernelControl SolverControl
 
 GlobalControl_SOURCES		= GlobalControl.cc
 GlobalControl_LDADD		= libbbscontrol.la
@@ -45,5 +46,9 @@ KernelControl_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
 SolverControl_SOURCES		= SolverControl.cc
 SolverControl_LDADD		= libbbscontrol.la
 SolverControl_DEPENDENCIES 	= libbbscontrol.la $(LOFAR_DEPEND)
+
+versionbbscontrol_SOURCES      = versionbbscontrol.cc
+versionbbscontrol_LDADD        = libbbscontrol.la
+versionbbscontrol_DEPENDENCIES = libbbscontrol.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

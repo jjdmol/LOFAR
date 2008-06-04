@@ -251,6 +251,8 @@ namespace LOFAR
       query << "SELECT * FROM blackboard.add_result(" 
             << commandId        << "," 
             << getpid()         << ","
+            << result.sender().type()  << ","
+            << result.sender().id()    << ","
             << result.asInt()   << ",'" 
             << result.message() << "') AS result";
 
@@ -277,11 +279,13 @@ namespace LOFAR
       for (uint row = 0; row < nRows; ++row) {
         ostringstream prefix;
         prefix << "_row(" << row << ")."; 
-        CommandId      cmdId (ps.getUint32(prefix.str() + "command_id"));
-        LocalControlId ctrlId(ps.getString(prefix.str() + "node"),
-                              ps.getInt32(prefix.str() + "pid"));
-        CommandResult  cmdRes(ps.getUint32(prefix.str() + "result_code"),
-                              ps.getString(prefix.str() + "message"));
+        CommandId      cmdId (ps.getUint32(prefix.str()+"command_id"));
+        LocalControlId ctrlId(ps.getString(prefix.str()+"node"),
+                              ps.getInt32(prefix.str()+"pid"));
+        CommandResult cmdRes(ps.getUint32(prefix.str()+"result_code"),
+                             SenderId(ps.getInt32(prefix.str()+"sender_type"),
+                                      ps.getInt32(prefix.str()+"sender_id")),
+                             ps.getString(prefix.str()+"message"));
         LOG_TRACE_CALC_STR("Row: " << row << " [" << cmdId << "],[[" 
                            << ctrlId << "],[" << cmdRes << "]]");
         // Looking up results[cmdId] each iteration may cause a performance
@@ -318,6 +322,8 @@ namespace LOFAR
         LocalControlId id(ps.getString(prefix.str() + "node"),
                           ps.getInt32(prefix.str() + "pid"));
         CommandResult res(ps.getUint32(prefix.str() + "result_code"),
+                          SenderId(ps.getInt32(prefix.str() + "sender_type"),
+                                   ps.getInt32(prefix.str() + "sender_id")),
                           ps.getString(prefix.str() + "message"));
         LOG_TRACE_CALC_STR("Row: " << row << "[" << id << "],[" << res << "]");
         results.push_back(ResultType(id,res));

@@ -47,8 +47,9 @@ namespace LOFAR
     // Typedefs
     // @{
     typedef uint CommandId;
-    typedef int KernelId;
-    typedef int KernelGroupId;
+    typedef uint KernelId;
+    typedef uint KernelGroupId;
+    typedef uint SolverId;
     // @}
 
     // Information about the Blackboard database.
@@ -100,12 +101,12 @@ namespace LOFAR
     struct SolverOptions
     {
       SolverOptions() : maxIter(0), epsValue(0), epsDerivative(0),
-                        colFactor(0), lmFactor(0), balancedEqs(false),
+                        collFactor(0), lmFactor(0), balancedEqs(false),
                         useSVD(false) {}
       uint32 maxIter;        ///< Maximum number of iterations
       double epsValue;       ///< Value convergence threshold
       double epsDerivative;  ///< Derivative convergence threshold
-      double colFactor;      ///< Colinearity factor
+      double collFactor;     ///< Collinearity factor
       double lmFactor;       ///< Levenberg-Marquardt factor
       bool   balancedEqs;    ///< Indicates well-balanced normal equations
       bool   useSVD;         ///< Use singular value decomposition.

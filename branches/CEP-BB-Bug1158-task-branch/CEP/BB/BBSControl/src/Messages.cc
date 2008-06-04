@@ -75,12 +75,14 @@ namespace LOFAR
     // -------------------------------------------------------------------- //
     void KernelMessage::write(BlobOStream& bos) const
     {
-      bos << itsKernelId;
+      bos << static_cast<int32>(itsKernelId);
     }
 
     void KernelMessage::read(BlobIStream& bis)
     {
-      bis >> itsKernelId;
+      int32 id;
+      bis >> id;
+      itsKernelId = static_cast<KernelId>(id);
     }
 
     // -------------------------------------------------------------------- //

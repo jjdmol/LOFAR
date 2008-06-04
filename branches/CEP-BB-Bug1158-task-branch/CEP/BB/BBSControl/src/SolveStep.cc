@@ -132,8 +132,8 @@ namespace LOFAR
                  toString(itsSolverOptions.epsValue));
       ps.replace(prefix + "Options.EpsDerivative", 
                  toString(itsSolverOptions.epsDerivative));
-      ps.replace(prefix + "Options.ColFactor", 
-                 toString(itsSolverOptions.colFactor));
+      ps.replace(prefix + "Options.CollFactor", 
+                 toString(itsSolverOptions.collFactor));
       ps.replace(prefix + "Options.LMFactor", 
                  toString(itsSolverOptions.lmFactor));
       ps.replace(prefix + "Options.BalancedEqs", 
@@ -169,8 +169,8 @@ namespace LOFAR
         pss.getDouble      ("Options.EpsValue");
       itsSolverOptions.epsDerivative = 
         pss.getDouble      ("Options.EpsDerivative");
-      itsSolverOptions.colFactor     = 
-        pss.getDouble      ("Options.ColFactor");
+      itsSolverOptions.collFactor     = 
+        pss.getDouble      ("Options.CollFactor");
       itsSolverOptions.lmFactor      = 
         pss.getDouble      ("Options.LMFactor");
       itsSolverOptions.balancedEqs   = 

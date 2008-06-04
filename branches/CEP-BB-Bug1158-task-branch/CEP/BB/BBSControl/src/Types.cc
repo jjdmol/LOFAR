@@ -99,7 +99,7 @@ namespace LOFAR
       os << endl << indent << "Max nr. of iterations: "  << obj.maxIter
          << endl << indent << "Epsilon value: "          << obj.epsValue
          << endl << indent << "Epsilon derivative: "     << obj.epsDerivative
-         << endl << indent << "Colinearity factor: "     << obj.colFactor
+         << endl << indent << "Collinearity factor: "    << obj.collFactor
          << endl << indent << "LM factor: "              << obj.lmFactor
          << boolalpha
          << endl << indent << "Balanced equations: "     << obj.balancedEqs

@@ -32,19 +32,24 @@ namespace LOFAR
   namespace BBS
   {
 
-    CommandResult::CommandResult(Result result, const string& msg) :
-      itsMessage(msg)
+    CommandResult::CommandResult(Result result, 
+                                 const SenderId& sender,
+                                 const string& message) :
+      itsSender(sender),
+      itsMessage(message)
     {
       set(result);
     }
 
 
-    CommandResult::CommandResult(int result, const string& msg) :
-      itsMessage(msg)
+    CommandResult::CommandResult(int result, 
+                                 const SenderId& sender,
+                                 const string& message) :
+      itsSender(sender),
+      itsMessage(message)
     {
       set(static_cast<Result>(result));
     }
-
 
     const string& CommandResult::asString() const
     {
