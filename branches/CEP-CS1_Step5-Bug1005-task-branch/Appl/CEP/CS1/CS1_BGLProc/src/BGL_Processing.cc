@@ -377,9 +377,9 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
     itsLastSubband	 = itsFirstSubband + nrSubbandsPerPset;
     itsCurrentSubband	 = itsFirstSubband + logicalNode % usedCoresPerPset % nrSubbandsPerPset;
     itsSubbandIncrement	 = usedCoresPerPset % nrSubbandsPerPset;
-    itsTiedArrayBeamforming = configuration.tiedArrayBeamforming();
-    itsTiedArrayStations = configuration.tiedArrayStations();
-
+    itsNrTABs            = configuration.nrTABs();
+    itsStation2TABGroups = configuration.station2TABGroups();
+    
 #if defined HAVE_MPI
     printSubbandList();
 #endif

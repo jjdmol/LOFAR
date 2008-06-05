@@ -94,9 +94,9 @@ class BGL_Processing {
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool		itsIsTransposeInput, itsIsTransposeOutput;
-    bool                itsTiedArrayBeamforming;
+    unsigned            itsNrTABs;
     
-    std::vector<unsigned> itsTiedArrayStations;
+    std::vector<unsigned> itsStation2TABGroups;
     std::vector<signed>   itsBeamlet2beams;
     std::vector<unsigned> itsSubband2Index;
     unsigned              itsNrBeams;
