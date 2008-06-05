@@ -101,7 +101,7 @@ public:
 	bool	       useScatter() const;
 	bool	       useGather() const;
 	bool           delayCompensation() const;
-	bool           tiedArrayBeamforming() const;
+	uint32         nrTABs() const;
 	uint32	       nrPsetsPerStorage(const int index) const;
 	uint32	       nrOutputsPerInputNode() const;
 	uint32	       nrInputsPerStorageNode(const int index) const;
@@ -114,7 +114,7 @@ public:
 	vector<int32>  beamlet2beams(const int index) const;
 	vector<int32>  beamlet2subbands(const int index) const;
 	vector<uint32> subband2Index(const int index) const;
-	vector<uint32>  tiedArrayStations2Index() const;
+	vector<uint32> station2TABGroups() const;
 	int32          nrSubbandsPerFrame() const;
 	
 	vector<double> getBeamDirection(const unsigned currentBeam) const;
@@ -282,9 +282,9 @@ inline bool CS1_Parset::delayCompensation() const
   return getBool("OLAP.delayCompensation");
 }
 
-inline bool CS1_Parset::tiedArrayBeamforming() const
+inline uint32 CS1_Parset::nrTABs() const
 {
-  return getBool("OLAP.tiedArrayBeamforming");
+  return getUint32("OLAP.TABs");
 }
 
 inline uint32 CS1_Parset::nrOutputsPerInputNode() const

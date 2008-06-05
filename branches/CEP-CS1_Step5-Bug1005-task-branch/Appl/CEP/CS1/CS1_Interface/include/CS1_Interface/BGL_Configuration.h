@@ -41,13 +41,13 @@ class BGL_Configuration
     unsigned		  &nrUsedCoresPerPset();
     unsigned		  &nrSubbandsPerPset();
     bool		  &delayCompensation();
-    bool                  &tiedArrayBeamforming();
+    unsigned              &nrTABs();
     double		  &sampleRate();
     std::vector<unsigned> &inputPsets(), &outputPsets();
     std::vector<double>	  &refFreqs();
     std::vector<signed>   &beamlet2beams();
     std::vector<unsigned> &subband2Index();
-    std::vector<unsigned> &tiedArrayStations();
+    std::vector<unsigned> &station2TABGroups();
 
     void		  read(TransportHolder *);
     void		  write(TransportHolder *);
@@ -61,7 +61,7 @@ class BGL_Configuration
     std::vector<double>	  itsRefFreqs;
     std::vector<signed>   itsBeamlet2beams;
     std::vector<unsigned> itsSubband2Index;
-    std::vector<unsigned> itsTiedArrayStations;
+    std::vector<unsigned> itsStation2TABGroups;
 
     struct MarshalledData
     {
@@ -73,18 +73,18 @@ class BGL_Configuration
       unsigned		  itsNrUsedCoresPerPset;
       unsigned		  itsNrSubbandsPerPset;
       bool		  itsDelayCompensation;
-      bool		  itsTiedArrayBeamforming;
+      unsigned		  itsTABs;
       double		  itsSampleRate;
       unsigned		  itsInputPsetsSize, itsOutputPsetsSize;
       unsigned		  itsRefFreqsSize;
       unsigned		  itsBeamlet2beamsSize;
       unsigned		  itsSubband2IndexSize;
-      unsigned            itsTiedArrayStationsSize;
+      unsigned            itsStation2TABGroupsSize;
       unsigned		  itsInputPsets[MAX_PSETS], itsOutputPsets[MAX_PSETS];
       double		  itsRefFreqs[MAX_SUBBANDS];
       signed              itsBeamlet2beams[MAX_SUBBANDS]; // to which beam each beamlet belongs
       unsigned            itsSubband2Index[MAX_SUBBANDS]; // to which beam each beamlet belongs
-      unsigned            itsTiedArrayStations[MAX_STATIONS];
+      unsigned            itsStation2TABGroups[MAX_STATIONS];
     } itsMarshalledData;
 };
 
@@ -124,9 +124,9 @@ inline bool &BGL_Configuration::delayCompensation()
   return itsMarshalledData.itsDelayCompensation;
 }
 
-inline bool &BGL_Configuration::tiedArrayBeamforming()
+inline unsigned &BGL_Configuration::nrTABs()
 {
-  return itsMarshalledData.itsTiedArrayBeamforming;
+  return itsMarshalledData.itsTABs;
 }
 
 
@@ -160,9 +160,9 @@ inline std::vector<unsigned> & BGL_Configuration::subband2Index()
   return itsSubband2Index;
 }
 
-inline std::vector<unsigned> & BGL_Configuration::tiedArrayStations()
+inline std::vector<unsigned> & BGL_Configuration::station2TABGroups()
 {
-  return itsTiedArrayStations;
+  return itsStation2TABGroups;
 }
 
 } // namespace CS1
