@@ -106,14 +106,14 @@ static void configureCNs(const CS1_Parset &parset, const unsigned partitionIndex
   configuration.nrUsedCoresPerPset()      = parset.nrCoresPerPset();
   configuration.nrSubbandsPerPset()       = parset.nrSubbandsPerPset(partitionIndex);
   configuration.delayCompensation()       = parset.delayCompensation();
-  configuration.tiedArrayBeamforming()    = parset.tiedArrayBeamforming();
+  configuration.nrTABs()                  = parset.nrTABs();
   configuration.sampleRate()              = parset.sampleRate();
   configuration.inputPsets()              = parset.inputPsets(partitionIndex);
   configuration.outputPsets()             = parset.outputPsets(partitionIndex);
   configuration.refFreqs()                = parset.refFreqs(partitionIndex);
   configuration.beamlet2beams()           = parset.beamlet2beams(partitionIndex);
   configuration.subband2Index()           = parset.subband2Index(partitionIndex);
-  configuration.tiedArrayStations()       = parset.tiedArrayStations2Index();
+  configuration.station2TABGroups()       = parset.station2TABGroups();
 
   for (unsigned core = 0; core < parset.nrCoresPerPset(); core ++) {
     std::clog << "configure core " << core << std::endl;
