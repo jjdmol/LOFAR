@@ -48,8 +48,8 @@ void BGL_Configuration::read(TransportHolder *th)
   itsSubband2Index.resize(itsMarshalledData.itsSubband2IndexSize);
   memcpy(&itsSubband2Index[0], itsMarshalledData.itsSubband2Index, itsMarshalledData.itsSubband2IndexSize * sizeof(unsigned));
   
-  itsTiedArrayStations.resize(itsMarshalledData.itsTiedArrayStationsSize);
-  memcpy(&itsTiedArrayStations[0], itsMarshalledData.itsTiedArrayStations, itsMarshalledData.itsTiedArrayStationsSize * sizeof(unsigned));
+  itsStation2TABGroups.resize(itsMarshalledData.itsStation2TABGroupsSize);
+  memcpy(&itsStation2TABGroups[0], itsMarshalledData.itsStation2TABGroups, itsMarshalledData.itsStation2TABGroupsSize * sizeof(unsigned));
 }
 
 
@@ -75,9 +75,9 @@ void BGL_Configuration::write(TransportHolder *th)
   assert(itsMarshalledData.itsSubband2IndexSize <= MAX_SUBBANDS);
   memcpy(itsMarshalledData.itsSubband2Index, &itsSubband2Index[0], itsMarshalledData.itsSubband2IndexSize * sizeof(unsigned));
   
-  itsMarshalledData.itsTiedArrayStationsSize = itsTiedArrayStations.size();
-  assert(itsMarshalledData.itsTiedArrayStationsSize <= MAX_STATIONS);
-  memcpy(itsMarshalledData.itsTiedArrayStations, &itsTiedArrayStations[0], itsMarshalledData.itsTiedArrayStationsSize * sizeof(unsigned));
+  itsMarshalledData.itsStation2TABGroupsSize = itsStation2TABGroups.size();
+  assert(itsMarshalledData.itsStation2TABGroupsSize <= MAX_STATIONS);
+  memcpy(itsMarshalledData.itsStation2TABGroups, &itsStation2TABGroups[0], itsMarshalledData.itsStation2TABGroupsSize * sizeof(unsigned));
   
 
   th->sendBlocking(&itsMarshalledData, sizeof itsMarshalledData, 1, 0);
