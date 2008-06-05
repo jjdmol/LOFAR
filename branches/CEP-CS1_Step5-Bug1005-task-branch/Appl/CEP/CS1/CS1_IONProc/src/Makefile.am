@@ -35,7 +35,7 @@ bin_PROGRAMS			= versioncs1_ionproc
 
 install-exec-local:
 	ln -sf .libs/liblofar_impl.so.0.0.0 lofar_impl.so
-	cp lofar_impl.so $(HOME)/LOFAR/lib
+	cp lofar_impl.so /bgl/lofar-utils/zoid-test/lib
 
 uninstall-local:
 	rm lofar_impl.so
