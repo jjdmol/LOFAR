@@ -43,9 +43,13 @@ OLAP.nrSecondsOfBuffer = 6
 OLAP.maxNetworkDelay = 2.0 # 1 second extra added to compensate for timestamp bug
 OLAP.delayCompensation = F
 
-OLAP.tiedArrayBeamforming = T
-Observation.VirtualInstrument.tiedArrayStationList=[CS001, CS008, CS010, CS016]
-Observation.VirtualInstrument.stationList = [CS001, CS008, CS010, CS016]
+
+OLAP.TABs = 3
+Observation.TAB[1] = [CS001, CS002, CS003]
+Observation.TAB[2] = [CS004, CS005, CS006, CS007]
+Observation.TAB[3] = [CS008]
+
+Observation.VirtualInstrument.stationList = [CS001, CS002, CS003, CS004, CS005, CS006, CS007, CS008]
 
 Observation.sampleClock = 160
 

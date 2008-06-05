@@ -261,6 +261,13 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	return sNames  
   
     def parseParset(self):
+        # parse station list
+	s = self.getStringVector_new('Observation.VirtualInstrument.stationList')
+	stationName = set(s)
+	if (len(s) != len (stationName)):
+	    print 'Duplicate in "stationList"'
+	    sys.exit(0)
+
         for i in range(0, len(self.getStringVector_new('Observation.VirtualInstrument.partitionList'))):
 	    if self.getNrSubbands(i) > 0 and len(self.stationNames(i)) == 0:
 	        begin = i * MAX_BEAMLETS_PER_RSP
@@ -281,25 +288,28 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	        print 'NrBeamlets("%d")' % nBeamlets + ' > OLAP.nrSubbandsPerFrame("%d")' %  self.getInt32('OLAP.nrSubbandsPerFrame')
 	        sys.exit(0)
 	
-	# parse tiedArrayStations:
-	if self.getBool('OLAP.tiedArrayBeamforming'):
-	    t = self.getStringVector_new('Observation.VirtualInstrument.tiedArrayStationList')
-	    tArrayStations = set(t)
-	    if (len(t) != len (tArrayStations)):
-	        print 'Duplicate tied array stationNames'
-	        sys.exit(0)
-	    sNames = self.getStringVector_new('Observation.VirtualInstrument.stationList')
-	    found = False
-	    
-	    for tas in tArrayStations:
-		for s in sNames:
-		    if tas == s: 
-			found = True
-			break
-		if not found:
-		    print 'Invalid tied array stationName "%s"' % tas
-		    sys.exit(0)
+	# parse keys tied Array Beamforming:
+	if self.getInt32('OLAP.nrStorageNodes') > 0:
+            for tab in range(1, self.getInt32('OLAP.TABs')+1):
+                tabPrefix = 'Observation.TAB[%d]' % tab
+		tiedArrayBeamforming = self.getStringVector_new(tabPrefix)
+		TABs = set(tiedArrayBeamforming)
+		if (len(tiedArrayBeamforming) != len (TABs)):
+	            print 'Duplicate in TAB("%d")' % tab
+	            sys.exit(0)
 	
+	        stationNames = self.getStringVector_new('Observation.VirtualInstrument.stationList')
+	        found = False
+		for t in TABs:
+		    for s in stationNames:
+		        if t == s:
+			   found = True
+			   break 
+		    if not found:
+		        print 'In TAB[%d]' % tab + ', invalid tied array stationName "%s"' % t
+		        sys.exit(0)
+		    found = False
+		    	
     def updateSBValues(self):
         if self.clock == '160MHz':
             subbandwidth = 156250
