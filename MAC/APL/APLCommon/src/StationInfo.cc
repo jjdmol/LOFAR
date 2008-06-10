@@ -175,13 +175,15 @@ string	realHostname(const string&	someName)
 //
 string PVSS2SASname(const string&	PVSSname)
 {
-	const char*		structure_match = "(([A-Z]{2,3}[0-9]{3}):LOFAR_(PIC|PermSW)_)|"		// 1,2,3
-									  "(([A-Z]{2,3}[0-9]{3}):LOFAR_(PIC|PermSW)\\.)";	// 4,5,6
+	const char*		structure_match = "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)_)|"		// 1,2,3
+									  "(([A-Z]{2,3}[0-9]{3}[A-Z]?):LOFAR_(PIC|PermSW)\\.)";	// 4,5,6
 	const char*		location_match  = "(RCU[0-9]{3})|"									// 1
-									  "_(CS[0-9]{3})_|"									// 2 CS999
-									  "_(RS[0-9]{3})_|"									// 3 RS999
-									  "_([ABD-QS-Z][A-Z][0-9]{3})_|"					// 4 XX999
-									  "_([A-Z]{3}[0-9]{3})_";							// 5 XXX999
+									  "_(CS[0-9]{3}[A-Z]?)_|" 							// 2 CS999
+									  "_(RS[0-9]{3}[A-Z]?)_|"							// 3 RS999
+									  "_([ABD-QS-Z][A-Z][0-9]{3}[A-Z]?)_|"				// 4 XX999
+									  "_([A-Z]{3}[0-9]{3}[A-Z]?)_";						// 5 XXX999
+	const char*		separator_match = "(_)|(\\.)";
+	const char*		boundary_match  = "(^([^_]+)_)";
 
 	const char*		structure_repl  = "(?1LOFAR_$3_$2_)"	// LOFAR_PIC_RS002
 									  "(?4LOFAR_$6.)";		// LOFAR_PIC
@@ -190,15 +192,23 @@ string PVSS2SASname(const string&	PVSSname)
 									  "(?3_Remote$&)"
 									  "(?4_Europe$&)"
 									  "(?5_Control$&)";
+	const char*		separator_repl  = "(?1.)(?2_)";			// swap separators
+	const char*		boundary_repl   = "$2.";				// reverse separator on object-field edge
 
-	boost::regex	strexp, locexp;;
+	boost::regex	strexp, locexp, sepexp, bndexp;
 	locexp.assign(location_match);
 	strexp.assign(structure_match);
+	sepexp.assign(separator_match);
+	bndexp.assign(boundary_match);
 
 	return (boost::regex_replace(
 				boost::regex_replace(
-				PVSSname, strexp, structure_repl, boost::match_default | boost::format_all), 
-			locexp, location_repl, boost::match_default | boost::format_all));
+					boost::regex_replace(
+						boost::regex_replace(
+						PVSSname, strexp, structure_repl, boost::match_default | boost::format_all), 
+					locexp, location_repl, boost::match_default | boost::format_all),
+				sepexp, separator_repl, boost::match_default | boost::format_all),
+			bndexp, boundary_repl, boost::match_default));
 }
 
 //
@@ -218,17 +228,25 @@ string PVSS2SASname(const string&	PVSSname)
 string SAS2PVSSname(const string&	SASname)
 {
 	const char*		structure_match = "(LOFAR\\.(PIC|PermSW)\\.(Core|Remote|Europe|Control)\\.([A-Z]{2}[0-9]{3})\\.)";		// 1,2,3
-	const char*		structure_repl  = "(?1$4\\:LOFAR_$2_)";	// RS002:LOFAR_PIC
+	const char*		separator_match = "(_)|(\\.)";
+	const char*		boundary_match  = "(\\.([^\\.]+))$";
 
-	boost::regex	strexp;
+	const char*		structure_repl  = "(?1$4\\:LOFAR\\.$2\\.)";	// RS002:LOFAR_PIC
+	const char*		separator_repl  = "(?1.)(?2_)";				// swap separators
+	const char*		boundary_repl   = "_$2";					// reverse separator on object-field edge
+
+	boost::regex	strexp, sepexp, bndexp;
 	strexp.assign(structure_match);
+	sepexp.assign(separator_match);
+	bndexp.assign(boundary_match);
 
-	string PVSSname(boost::regex_replace(SASname, strexp, structure_repl, boost::match_default | boost::format_all));
-	replace(PVSSname.begin(), PVSSname.end(), '.', '_');		// replace all . with _
-	PVSSname.replace(PVSSname.find_last_of('_'), 1, 1, '.');	// except for the last
-
-	return (PVSSname);
-}
+	return (boost::regex_replace(
+				boost::regex_replace(
+					boost::regex_replace(
+					SASname, strexp, structure_repl, boost::match_default | boost::format_all),
+				bndexp, boundary_repl, boost::match_default),
+			sepexp, separator_repl, boost::match_default | boost::format_all));
+	}
 
 
 
