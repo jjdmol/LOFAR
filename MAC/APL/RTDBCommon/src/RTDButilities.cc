@@ -72,7 +72,7 @@ bool setObjectState(const string&	who,
 	fields.push_back("DPName");
 	fields.push_back("stateNr");
 	fields.push_back("message");
-	values.push_back(new GCFPVString(objectName+".state"));
+	values.push_back(new GCFPVString(objectName+".status.state"));
 	values.push_back(new GCFPVInteger(objStateTable[newState].RTDBvalue));
 	values.push_back(new GCFPVString(who));
 
