@@ -37,6 +37,7 @@ namespace LOFAR {
 // @{
 
 // The two only well-known ports of whole MAC.
+#define	SHM_INFOSERVER_PORT				23990
 #define	MAC_CODELOGGING_PORT			23999
 #define	MAC_SERVICEBROKER_PORT			24000
 
@@ -64,6 +65,8 @@ namespace LOFAR {
 #define	MAC_SVCMASK_CALIBRATIONCTRL		"CalibrationCtrl%s:v1.0"
 #define	MAC_SVCMASK_TBBCTRL				"TBBCtrl%s:v1.0"
 #define	MAC_SVCMASK_STATIONINFRACTRL	"StationInfraCtrl%s:v1.0"
+#define	MAC_SVCMASK_MACINFOSERVER		"MACInfoServer%s:v1.0"
+#define	MAC_SVCMASK_MISSESSION			"MISSession%s:v1.0"
 
 
 // Define names for GCF test applications
