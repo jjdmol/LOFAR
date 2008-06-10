@@ -1,6 +1,6 @@
 //#  MISSession.cc: 
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -21,6 +21,9 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <Common/LofarConstants.h>
+#include <APL/RTDBCommon/RTDButilities.h>
+#include <APL/RTCCommon/PSAccess.h>
 
 #include "MISSession.h"
 #include "MISDaemon.h"
@@ -28,25 +31,16 @@
 //#include "MISSubscription.h"
 #include "XCStatistics.h"         //MAXMOD
 #include "RspStatus.h"            //MAXMOD
-//#include <GCF/PAL/GCF_PVSSInfo.h>
-//#include <GCF/PAL/GCF_Answer.h>
-//#include <APL/APLCommon/APL_Defines.h>
-//#include <GCF/GCF_PVInteger.h>
-#include <APL/RTCCommon/PSAccess.h>
-//#include <GCF/LogSys/GCF_KeyValueLogger.h>
 
 using namespace blitz;
 
 
-namespace LOFAR 
-{
-using namespace GCF::Common;
-using namespace GCF::TM;
-using namespace RTC;
-//using namespace APLCommon;
+namespace LOFAR {
+	using namespace GCF::TM;
+	using namespace RTC;
+	using namespace APL::RTDBCommon;
 
- namespace AMI
- {
+	namespace AMI {
 
 #define LOGMSGHDR(_in_)   \
     LOG_TRACE_FLOW(formatString( \
@@ -91,20 +85,25 @@ using namespace RTC;
    //MAXMOD
    unsigned int i,j;
    
+//
+// MISSession(MISDaemon)
+//
 MISSession::MISSession(MISDaemon& daemon) :
-  GCFTask((State)&MISSession::initial_state, MISS_TASK_NAME),
-  _daemon(daemon),
-//  _propertyProxy(*this),
-  _curSeqNr(1),
-  _curReplyNr(0),
-  _pRememberedEvent(0),
-  _nrOfRCUs(0)
+	GCFTask((State)&MISSession::initial_state, "MISSession"),
+	_daemon			 	 (daemon),
+	_curSeqNr			 (1),
+	_curReplyNr			 (0),
+	_pRememberedEvent	 (0),
+	_nrOfRCUs			 (0)
 {
-  _missPort.init(*this, MISS_PORT_NAME, GCFPortInterface::SPP, MIS_PROTOCOL);
-  _rspDriverPort.init(*this, MIS_RSP_PORT_NAME, GCFPortInterface::SAP, RSP_PROTOCOL);
-  _daemon.getPortProvider().accept(_missPort);
+	_missPort.init(*this, MAC_SVCMASK_MISSESSION, GCFPortInterface::SPP, MIS_PROTOCOL);
+	_rspDriverPort.init(*this, MAC_SVCMASK_RSPDRIVER, GCFPortInterface::SAP, RSP_PROTOCOL);
+	_daemon.getPortProvider().accept(_missPort);
 }
 
+//
+// ~MISSession()
+//
 MISSession::~MISSession () 
 {
 #if 0
@@ -115,12 +114,14 @@ MISSession::~MISSession ()
 #endif
 }
 
+//
+// initial_state(event, port)
+//
 GCFEvent::TResult MISSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
-  switch (e.signal)
-  {
+  switch (e.signal) {
     case F_INIT:
       break;
 
@@ -143,6 +144,9 @@ GCFEvent::TResult MISSession::initial_state(GCFEvent& e, GCFPortInterface& /*p*/
   return status;
 }
 
+//
+// waiting_state(event, port)
+//
 GCFEvent::TResult MISSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -154,7 +158,7 @@ GCFEvent::TResult MISSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
       _busy = false;
       garbageTimerID = _missPort.setTimer(5.0, 5.0);
       if (_pRememberedEvent) delete _pRememberedEvent;
-      _pRememberedEvent = 0;
+		  _pRememberedEvent = 0;
       break;
 
     case F_EXIT:
@@ -239,6 +243,9 @@ GCFEvent::TResult MISSession::waiting_state(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+//
+// genericPingPong(event)
+//
 void MISSession::genericPingpong(GCFEvent& e)
 {
   MISGenericPingpongEvent in(e);
@@ -252,6 +259,9 @@ void MISSession::genericPingpong(GCFEvent& e)
   _missPort.send(out);
 }
 
+//
+// getGenericIdentity(event)
+//
 void MISSession::getGenericIdentity(GCFEvent& e)
 {    
   MISGenericIdentifyRequestEvent in(e);
@@ -273,94 +283,16 @@ void MISSession::getGenericIdentity(GCFEvent& e)
   _missPort.send(out);
 }
 
+//
+// setDiagnosis(event)
+//
 void MISSession::setDiagnosis(GCFEvent& e)
 {
-#if 0
-  MISDiagnosisNotificationEvent* pIn(0);
-  static string resourceStatusPropName = "";
+	MISDiagnosisNotificationEvent	diagnose(e);
 
-  assert(_pRememberedEvent == 0);
-    
-  pIn = new MISDiagnosisNotificationEvent(e);
-  LOGMSGHDR((*pIn));
-  resourceStatusPropName = pIn->component;
+	// setObjectState(message, datapoint, new state)
+	setObjectState("SHM:" + diagnose.diagnosis_id, diagnose.component, diagnose.new_state);
 
-  // first try to get the current status value of the component
-  // for this purpose it is important that the component name contains ".status"
-  if (resourceStatusPropName.find(".status") == string::npos) {
-    resourceStatusPropName += ".status";
-  }
-  if (GCFPVSSInfo::propExists(resourceStatusPropName)) {
-    if (_propertyProxy.requestPropValue(resourceStatusPropName) != GCF_NO_ERROR) {
-      SEND_RESP_MSG((*pIn), DiagnosisResponse, "NAK (Error while requesting the current component status!)");
-    }
-    else {
-      _pRememberedEvent = pIn;      
-      TRAN(MISSession::setDiagnosis_state);
-    }
-  }
-  else {
-    SEND_RESP_MSG((*pIn), DiagnosisResponse, "NAK (Component has no status or does not exist!)");
-  }
-  if (_pRememberedEvent == 0) {
-    delete pIn;
-  }
-#endif
-}
-
-GCFEvent::TResult MISSession::setDiagnosis_state(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-#if 0
-
-  static string resourceStatusPropName = "";
-  
-  switch (e.signal)
-  {
-    case F_VGETRESP:
-    {
-      assert (_pRememberedEvent);
-      MISDiagnosisNotificationEvent* pIn = (MISDiagnosisNotificationEvent*)_pRememberedEvent;
-      resourceStatusPropName = pIn->component;
-      // first try to get the current status value of the component
-      // for this purpose it is important that the component name contains ".status"
-      if (resourceStatusPropName.find(".status") == string::npos)
-      {
-        resourceStatusPropName += ".status";
-      }
-
-      GCFPVInteger resourceState(RS_IDLE);
-      GCFPropValueEvent* pE = (GCFPropValueEvent*)(&e);
-      resourceState.copy(*pE->pValue); 
-      string response  = _daemon.getPolicyHandler().checkDiagnose(*pIn, resourceState);
-      if (response == "ACK")
-      {
-        _propertyProxy.setPropValue(resourceStatusPropName, resourceState);
-        if (resourceStatusPropName.find(":") == string::npos)
-        {
-          resourceStatusPropName = GCFPVSSInfo::getLocalSystemName() + string(":") + resourceStatusPropName;
-        }
-        timeval ts = {pIn->timestamp_sec, pIn->timestamp_nsec / 1000};
-        string descr(formatString (
-            "%s(cl:%d, url:%d)",
-            pIn->diagnosis.c_str(),
-            pIn->confidence,
-            pIn->diagnosis_id.c_str()));
-        
-        LOG_KEYVALUE_TSD(resourceStatusPropName, resourceState, 
-                         KVL_ORIGIN_SHM, ts, descr);
-      }
-      SEND_RESP_MSG((*pIn), DiagnosisResponse, response);
-      TRAN(MISSession::waiting_state);      
-      break;
-    }  
-      
-    default:
-      status = defaultHandling(e, p);
-      break;
-  }
-#endif
-  return status;
 }
 
 
@@ -474,12 +406,12 @@ void MISSession::getRspStatus(GCFEvent& e)
 		try {
 		  //MAXMOD
 		  //_nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-		  _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * MEPHeader::N_POL;
+		  _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * N_POL;
 		  LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
 		  _allRCUSMask.reset(); // init all bits to false value
 		  _allRCUSMask.flip(); // flips all bits to the true value
 		  // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-		  for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
+		  for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 		    _allRCUSMask.set(i, false);
 		  }
 		  // idem for RSP mask [reo]
@@ -611,12 +543,12 @@ void MISSession::getSubbandStatistics(GCFEvent& e)
 		try {
 		  //MAXMOD
 		  //_nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-		  _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * MEPHeader::N_POL;
+		  _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * N_POL;
 			LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
 			_allRCUSMask.reset(); // init all bits to false value
 			_allRCUSMask.flip(); // flips all bits to the true value
 			// if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-			for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
+			for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 				_allRCUSMask.set(i, false);
 			}
 			// idem for RSP mask [reo]
@@ -812,9 +744,9 @@ void MISSession::getAntennaCorrelation(GCFEvent& e)
 
 	int subband = pIn->subband_selector;
 
-	if (subband < 0 || subband >= MEPHeader::N_SUBBANDS)
+	if (subband < 0 || subband >= MAX_SUBBANDS)
 	  {
-	    LOG_DEBUG(formatString("MAXMOD: Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MEPHeader::N_SUBBANDS));
+	    LOG_DEBUG(formatString("MAXMOD: Error: argument to --xcsubband out of range, value must be >= 0 and < %d",MAX_SUBBANDS));
 	    //exit(EXIT_FAILURE);
 	    TRAN(MISSession::waiting_state);
 	  }
@@ -822,12 +754,12 @@ void MISSession::getAntennaCorrelation(GCFEvent& e)
 	//MAXMOD I'm not sure the following is really nec.
 	if (_nrOfRCUs == 0) {
 	  try {
-	    _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * MEPHeader::N_POL;
+	    _nrOfRCUs = GET_CONFIG("RS.N_RSPBOARDS", i) * 4 * N_POL;
 	    LOG_DEBUG(formatString ("NrOfRCUs %d", _nrOfRCUs));
 	    _allRCUSMask.reset(); // init all bits to false value
 	    _allRCUSMask.flip(); // flips all bits to the true value
 	    // if nrOfRCUs is less than MAX_N_RCUS the not used bits must be unset
-	    for (int i = _nrOfRCUs; i < MEPHeader::MAX_N_RCUS; i++) {
+	    for (int i = _nrOfRCUs; i < MAX_RCUS; i++) {
 	      _allRCUSMask.set(i, false);
 	    }
 	    // idem for RSP mask [reo]
@@ -973,7 +905,7 @@ GCFEvent::TResult MISSession::getAntennaCorrelation_state(GCFEvent& e, GCFPortIn
 
       setsubbands.subbands().resize(1,1);
       list<int> subbandlist;
-      for (int rcu = 0; rcu < _nrOfRCUs / MEPHeader::N_POL; rcu++){
+      for (int rcu = 0; rcu < _nrOfRCUs / N_POL; rcu++){
 	subbandlist.push_back(pIn->subband_selector);
 	LOG_DEBUG(formatString("MAXMOD rcu = %d", rcu));
       }
@@ -1109,7 +1041,7 @@ GCFEvent::TResult MISSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
       break;
     
     case MIS_DIAGNOSIS_NOTIFICATION:
-      RETURN_NOACK_MSG(DiagnosisNotification, DiagnosisResponse, "BUSY");     
+//      RETURN_NOACK_MSG(DiagnosisNotification, DiagnosisResponse, "BUSY");     
       break;
 
     case MIS_RECONFIGURATION_REQUEST:
@@ -1144,6 +1076,7 @@ GCFEvent::TResult MISSession::defaultHandling(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+#if 0
 void MISSession::subscribed(MISPvssDpSubscriptionResponseEvent& e)
 {
   e.seqnr = _curSeqNr++;
@@ -1156,6 +1089,7 @@ void MISSession::valueChanged(MISPvssDpSubscriptionValueChangedAsyncEvent& e)
   e.seqnr = _curSeqNr++;
   _missPort.send(e);
 }
+#endif 
 
 void MISSession::mayDelete(const string& propName)
 {

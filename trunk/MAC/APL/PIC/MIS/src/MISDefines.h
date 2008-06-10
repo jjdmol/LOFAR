@@ -25,40 +25,11 @@
 
 //#include <GCF/GCF_Defines.h>
 
-namespace LOFAR 
-{
- namespace AMI
- {
+namespace LOFAR {
+ namespace AMI {
 const uint8 MIS_MAJOR_VER = 1; 
 const uint8 MIS_MIDOR_VER = 1;
 const uint8 MIS_MINOR_VER = 0;
-
-const string MIS_TASK_NAME("APL-MIS");
-const string MIS_CONF("MIS.conf");
-const string MIS_PORT_NAME("client");
-
-const string MISS_TASK_NAME("APL-MISS");
-const string MISS_PORT_NAME("misd-session");
-
-const string MISD_TASK_NAME("APL-MISD");
-const string MISD_PORT_NAME("server");
-
-const string MIS_RSP_PORT_NAME("rspclient");
-
-enum {
-    RS_DEFECT = -3,
-    RS_VERIFY,
-    RS_OFFLINE,
-    RS_IDLE,
-    RS_BUSY,
-    RS_SUSPECT_IDLE = 0x40000000
-};
-
-#define IS_BUSY(s) ((s > 0) && (s != RS_SUSPECT_IDLE))
-#define IS_SUSPECT(s) (s >= RS_SUSPECT_IDLE)
-#define IS_IDLE(s) ((s == 0) || (s == RS_SUSPECT_IDLE))
-#define MAKE_SUSPECT(s) (s |= RS_SUSPECT_IDLE)
-#define MAKE_UNSUSPECT(s) (s &= ~RS_SUSPECT_IDLE)
 
  } // namespace AMI
 } // namespace LOFAR

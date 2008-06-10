@@ -33,15 +33,13 @@
 #include <MIS_Protocol.ph>
 #include <APL/RSP_Protocol/RSP_Protocol.ph>
 
-namespace blitz
-{
- template<typename, int > class Array;
+namespace blitz {
+	template<typename, int > class Array;
 }
-namespace LOFAR 
-{
- using MACIO::GCFEvent;
- namespace AMI
- {  
+
+namespace LOFAR {
+	using MACIO::GCFEvent;
+	namespace AMI {  
 
 class MISDaemon;
 //class MISSubsciption;
@@ -50,17 +48,18 @@ class MISDaemon;
 
 class MISSession : public GCF::TM::GCFTask
 {
-  public:
+public:
     MISSession (MISDaemon& daemon);
     virtual ~MISSession ();
     
-  public: // member functions
-    void subscribed(MISPvssDpSubscriptionResponseEvent& e);
-    void valueChanged(MISPvssDpSubscriptionValueChangedAsyncEvent& e);
+	// member functions
+//    void subscribed(MISPvssDpSubscriptionResponseEvent& e);
+//    void valueChanged(MISPvssDpSubscriptionValueChangedAsyncEvent& e);
     void mayDelete(const string& propName);
     static void setCurrentTime(int64& sec, uint32& nsec);
   
-  private: // state methods
+private: 
+	// state methods
     GCFEvent::TResult initial_state                (GCFEvent& e, GCF::TM::GCFPortInterface& p);
     GCFEvent::TResult waiting_state                (GCFEvent& e, GCF::TM::GCFPortInterface& p);
     GCFEvent::TResult setDiagnosis_state           (GCFEvent& e, GCF::TM::GCFPortInterface& p);
@@ -74,7 +73,7 @@ class MISSession : public GCF::TM::GCFTask
         
     GCFEvent::TResult defaultHandling              (GCFEvent& e, GCF::TM::GCFPortInterface& p);
 
-  private: // helper methods
+	// helper methods
     void genericPingpong      (GCFEvent& e);
     void getGenericIdentity   (GCFEvent& e);
     void setDiagnosis         (GCFEvent& e);
@@ -83,7 +82,8 @@ class MISSession : public GCF::TM::GCFTask
     //MAXMOD
     void getAntennaCorrelation(GCFEvent& e);
     void getRspStatus         (GCFEvent& e);
-  private: // data members      
+
+	// data members      
 //    typedef map<string /*resource name*/, MISSubscription*> TSubscriptions;
     GCF::TM::GCFTCPPort _missPort;
     GCF::TM::GCFTCPPort _rspDriverPort;
@@ -92,7 +92,7 @@ class MISSession : public GCF::TM::GCFTask
 //    TSubscriptions      _subscriptions;
 //    PropertyProxy       _propertyProxy;
 
-  private: // admin members
+	// admin members
     uint64                  _curSeqNr;
     uint64                  _curReplyNr;
     bool                    _busy;
@@ -102,6 +102,7 @@ class MISSession : public GCF::TM::GCFTask
     bitset<MEPHeader::MAX_N_RCUS> _allRCUSMask;    
     bitset<MAX_N_RSPBOARDS> _allRSPSMask;    
 };
+
  } // namespace AMI
 } // namespace LOFAR
 

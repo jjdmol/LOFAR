@@ -10,7 +10,6 @@ DOCHDRS	=	 $(BUILT_SOURCES) \
 	MISDaemon.h \
 	MISDefines.h \
 	MISSession.h \
-	MISPolicyHandler.h \
 	XCStatistics.h \
 	RspStatus.h
 
@@ -23,7 +22,6 @@ libmis_la_SOURCES	= Package__Version.cc \
 	$(DOCHDRS) \
 	MISDaemon.cc \
 	MISSession.cc \
-	MISPolicyHandler.cc \
 	MIS_Protocol.cc \
 	XCStatistics.cc \
 	RspStatus.cc
@@ -42,8 +40,7 @@ BUILT_SOURCES = \
 
 EXTRA_DIST = $(sysconf_DATA)
 	
-sysconf_DATA= \
-	MACInformationServer.conf
+sysconf_DATA= 
 	
 %.conf: %.conf.in
 	cp $< $@
