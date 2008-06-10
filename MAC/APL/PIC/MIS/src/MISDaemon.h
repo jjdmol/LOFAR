@@ -1,6 +1,6 @@
 //#  MISDaemon.h: 
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -23,14 +23,13 @@
 #ifndef MISDAEMON_H
 #define MISDAEMON_H
 
+#include <Common/lofar_list.h>
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
-#include <MISPolicyHandler.h>
+//#include <MISPolicyHandler.h>
 
-namespace LOFAR 
-{
- namespace AMI 
- {  
+namespace LOFAR {
+	namespace AMI {  
 
 class MISSession;
 
@@ -39,39 +38,39 @@ class MISSession;
 
 class MISDaemon : public GCF::TM::GCFTask
 {
-  public:
+public:
     MISDaemon ();
-    virtual ~MISDaemon () {}
+    ~MISDaemon();
     
-  public: // member functions
-    GCF::TM::GCFTCPPort& getPortProvider();
-    MISPolicyHandler& getPolicyHandler();
+	// member functions
+    GCF::TM::GCFTCPPort& 	getPortProvider();
+//    MISPolicyHandler& 		getPolicyHandler();
     void clientClosed(MISSession& client);
   
-  private: // state methods
+private: 
+	// state methods
     MACIO::GCFEvent::TResult initial   (MACIO::GCFEvent& e, GCF::TM::GCFPortInterface& p);
     MACIO::GCFEvent::TResult accepting (MACIO::GCFEvent& e, GCF::TM::GCFPortInterface& p);
         
-  private: // helper methods
-    
-  private: // data members        
-    GCF::TM::GCFTCPPort  _misdPortProvider;
-    MISPolicyHandler _policyHandler;
+	// data members        
+    GCF::TM::GCFTCPPort*	itsListener;
+//	RTDB::DPservice*		itsDPservice;
+//    MISPolicyHandler		_policyHandler;
 
-  private: // admin members
+	// admin members
     typedef list<MISSession*> TSessions;
-    TSessions        _sessionsGarbage;    
+    TSessions				_sessionsGarbage;    
 };
 
 inline GCF::TM::GCFTCPPort& MISDaemon::getPortProvider()
 {
-  return _misdPortProvider;
+	return (*itsListener);
 }
 
-inline MISPolicyHandler& MISDaemon::getPolicyHandler()
-{
-  return _policyHandler;
-}
+//inline MISPolicyHandler& MISDaemon::getPolicyHandler()
+//{
+//	return (_policyHandler);
+//}
 
  } // namespace AMI
 } // namespace LOFAR

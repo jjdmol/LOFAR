@@ -207,44 +207,21 @@ event = {
     signal = "DIAGNOSIS_NOTIFICATION";
     dir = IN; // SHM -> MAC
     param = {
-        name = "seqnr";
-        type = "uint64";
-    };
-    param = {
-        name = "replynr"; // always zero
-        type = "uint64";
-    };
-    param = {
         name = "timestamp_sec";
         type = "int64";
     };
-    param = {
-        name = "timestamp_nsec";
-        type = "uint32";
-    };
-    // The payload timestamp denotes the time for which the diagnosis
-    // being reported is "valid". This may be taken into account by
-    // the diagnosis policy (e.g., reject diagnoses that are too old).
-    param = {
-        name = "payload_timestamp_sec";
-        type = "int64";
-    };
-    param = {
-        name = "payload_timestamp_nsec";
-        type = "uint32";
-    };
+
     // PVSS property set name of the component being diagnosed.
     param = {
         name = "component";  // e.g. "PIC_Rack0_SubRack0_Board0_AP0_RCU0_HFA"
         type = "string";
     };
-    // Format: <FAULTHY|HEALTHY> [(explanation)]"
-    // e.g.: "FAULTY (broken fuse)"
-    //       "HEALTHY"
+
     param = {
-        name = "diagnosis";
-        type = "string";
+        name = "new_state";
+        type = "int64";
     };
+
     // Confidence of SHM in its own diagnosis.
     // range: 0 (absolutely unsure) to 10000 (absolutely sure).
     //
@@ -264,6 +241,7 @@ event = {
         name = "confidence";
         type = "uint16";
     };
+
     // The diagnosis_id can be used to get an explanation URI,
     // e.g. "diag1003" --> "http://shm.lofar/diagnosis-info?diagnosis_id=diag1003".
     // The way in which the diagnosis_id can be translated to a URI

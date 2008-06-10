@@ -23,22 +23,21 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-#include <MISDaemon.h>
 #include <GCF/TM/GCF_Control.h>
+#include "MISDaemon.h"
 
-using namespace LOFAR;
+using namespace LOFAR::GCF::TM;
+using namespace LOFAR::AMI;
 
-int main(int argC, char *argV[])
+int main(int argc, char *argv[])
 {
-  GCF::TM::GCFTask::init(argC, argV);
-  
-  LOG_INFO("MACProcessScope: APL.PIC.MIS");
-  
-  AMI::MISDaemon misd; 
-  
-  misd.start(); // make initial transition
-  
-  GCF::TM::GCFTask::run();
+	GCFTask::init(argc, argv, "MACInfoServer");
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_MACInfoServer");
 
-  return 0;
+	MISDaemon misd; 
+	misd.start(); // make initial transition
+
+	GCFTask::run();
+
+	return (0);
 }
