@@ -424,6 +424,16 @@ void PVSSservice::_processQueryResult(Variable*		firstVar,
 	GCFPValueArray	DPtimes;
 	PVSSresult		result(SA_NO_ERROR);
 
+	// when query is empty as least return an empty answer.
+	if (nrOfRows == 1) {	// query is empty
+		itsResponse->dpQueryChanged(queryID, result, 
+									GCFPVDynArr(LPT_DYNSTRING, DPnames),
+									GCFPVDynArr(LPT_DYNSTRING, DPvalues),
+									GCFPVDynArr(LPT_DYNDATETIME, DPtimes));
+		return;
+	}
+
+	// process the query result
 	for (int row = 2; row <= nrOfRows; row++) {
 		// --- extract the DPID of the changed DP (column 1)
 		if ((pTempVar = extractArrayValue(*secondVar, row, 1)) == 0) {
