@@ -35,6 +35,7 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	MNS/MeqMatrixRealSca.cc	\
 	MNS/MeqMatrixRep.cc	\
 	MNS/MeqMatrixTmp.cc	\
+	MNS/MeqNumericalDipoleBeam.cc \
 	MNS/MeqParm.cc		\
 	MNS/MeqParmExpr.cc	\
 	MNS/MeqParmFunklet.cc	\
