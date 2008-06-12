@@ -32,9 +32,9 @@ using namespace LOFAR::CUDaemons;
 
 int main(int argc, char *argv[])
 {
-  GCFTask::init(argc, argv);
+  GCFTask::init(argc, argv, "ServiceBroker");
   
-  LOG_INFO("MACProcessScope: GCF.SB");
+  LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_ServiceBroker");
 
   ServiceBroker	 sb; 
   

@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
 {
 	GCFTask::init(argc, argv, "LoggingClient");
 
+//	LOG_INFO("MACProcessScope: LOFAR_PermSW_LoggingClient");
+
 	LoggingClient LC("LoggingClient"); 
 	LC.start(); // make initial transition
 

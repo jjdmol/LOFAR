@@ -31,14 +31,16 @@ int main(int argc, char* argv[])
 {
 //	signal (SIGCHLD, SIG_IGN);
 
-	GCFTask::init(argc, argv);
-  
-	CUDaemons::CTStartDaemon sd(string("StartDaemon"));		// give myself a name
+	GCFTask::init(argc, argv, "StartDaemon");
+
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_CTStartDaemon");
+
+	CUDaemons::CTStartDaemon sd("StartDaemon");		// give myself a name
 
 	sd.start(); // make initial transition
 
 	GCFTask::run();
-    
+
 	return 0;
 }
 
