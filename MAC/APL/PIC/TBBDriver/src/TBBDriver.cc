@@ -1253,7 +1253,7 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 //
 int main(int argc, char** argv)
 {
-  LOFAR::GCF::TM::GCFTask::init(argc, argv);    // initializes log system
+  LOFAR::GCF::TM::GCFTask::init(argc, argv, "TBBDriver");    // initializes log system
   
 	LOG_INFO_STR("Starting up " << argv[0]);
   
