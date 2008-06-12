@@ -60,6 +60,7 @@
 #include "UpdRCUCmd.h"
 #include "SetHBACmd.h"
 #include "GetHBACmd.h"
+#include "ReadHBACmd.h"
 #include "UpdHBACmd.h"
 #include "SetRSUCmd.h"
 #include "SetWGCmd.h"
@@ -1008,6 +1009,10 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       rsp_gethba(event, port);
       break;
       
+    case RSP_READHBA:
+      rsp_readhba(event, port);
+      break;
+
     case RSP_SUBHBA:
       rsp_subhba(event, port);
       break;
@@ -1726,6 +1731,35 @@ void RSPDriver::rsp_gethba(GCFEvent& event, GCFPortInterface& port)
   {
     (void)m_scheduler.enter(Ptr<Command>(&(*command)));
   }
+}
+
+//
+// rsp_readhba(event,port)
+//
+void RSPDriver::rsp_readhba(GCFEvent& event, GCFPortInterface& port)
+{
+	Ptr<ReadHBACmd> command = new ReadHBACmd(event, port, Command::READ);
+
+	if (!command->validate()) {
+		LOG_ERROR("READHBA: invalid parameter");
+
+		RSPReadhbaackEvent ack;
+		ack.timestamp = Timestamp(0,0);
+		ack.status = FAILURE;
+		ack.settings().resize(1, 1); // create something to pack
+		ack.settings() = 0;
+		port.send(ack);
+		return;
+	}
+
+	// if null timestamp get value from the cache and acknowledge immediately
+	if ( (Timestamp(0,0) == command->getTimestamp()) && (true == command->readFromCache())) {
+		command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+		command->ack(Cache::getInstance().getFront());
+	}
+	else {
+		(void)m_scheduler.enter(Ptr<Command>(&(*command)));
+	}
 }
 
 //
@@ -2587,7 +2621,7 @@ void RSPDriver::rsp_gettbb(GCFEvent& event, GCFPortInterface& port)
 //
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);    // initializes log system
+  GCFTask::init(argc, argv, "RSPDriver");    // initializes log system
   
   LOG_INFO(formatString("Starting up %s", argv[0]));
 

@@ -124,6 +124,7 @@ namespace LOFAR {
 
       void rsp_sethba  (GCFEvent& event, GCFPortInterface &port);
       void rsp_gethba  (GCFEvent& event, GCFPortInterface &port);
+      void rsp_readhba (GCFEvent& event, GCFPortInterface &port);
       void rsp_subhba  (GCFEvent& event, GCFPortInterface &port);
       void rsp_unsubhba(GCFEvent& event, GCFPortInterface &port);
 

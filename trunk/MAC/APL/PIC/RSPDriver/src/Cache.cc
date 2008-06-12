@@ -62,6 +62,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
   LOG_DEBUG_STR("m_beamletweights().size()     =" << m_beamletweights().size()     * sizeof(complex<int16>));
   LOG_DEBUG_STR("m_subbandselection().size()   =" << m_subbandselection().size()   * sizeof(uint16));
   LOG_DEBUG_STR("m_rcusettings().size()        =" << m_rcusettings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_hbasettings().size()        =" << m_hbasettings().size()        * sizeof(uint8));
+  LOG_DEBUG_STR("m_hbareadings().size()        =" << m_hbareadings().size()        * sizeof(uint8));
   LOG_DEBUG_STR("m_rsusettings().size()        =" << m_rsusettings().size()        * sizeof(uint8));
   LOG_DEBUG_STR("m_wgsettings().size()         =" << m_wgsettings().size()         * sizeof(WGSettings::WGRegisterType));
   LOG_DEBUG_STR("m_subbandstats().size()       =" << m_subbandstats().size()       * sizeof(uint16));
@@ -78,6 +80,8 @@ CacheBuffer::CacheBuffer(Cache* cache) : m_cache(cache)
 	         m_beamletweights().size()    	       
 	       + m_subbandselection().size()  
 	       + m_rcusettings().size()       
+	       + m_hbasettings().size()       
+	       + m_hbareadings().size()       
 	       + m_rsusettings().size()       
 	       + m_wgsettings().size()        
 	       + m_subbandstats().size()      
@@ -96,6 +100,8 @@ CacheBuffer::~CacheBuffer()
   m_beamletweights().free();
   m_subbandselection().free();
   m_rcusettings().free();
+  m_hbasettings().free();
+  m_hbareadings().free();
   m_rsusettings().free();
   m_wgsettings().free();
   m_wgsettings.waveforms().free();
@@ -154,6 +160,8 @@ void CacheBuffer::reset(void)
   // initialize HBA settings
   m_hbasettings().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_HBA_DELAYS);
   m_hbasettings() = 0; // initialize to 0
+  m_hbareadings().resize(StationSettings::instance()->nrRcus(), MEPHeader::N_HBA_DELAYS);
+  m_hbareadings() = 0; // initialize to 0
 
   // RSU settings
   m_rsusettings().resize(StationSettings::instance()->nrRspBoards());
@@ -243,6 +251,11 @@ RCUSettings& CacheBuffer::getRCUSettings()
 HBASettings& CacheBuffer::getHBASettings()
 {
   return m_hbasettings;
+}
+
+HBASettings& CacheBuffer::getHBAReadings()
+{
+  return m_hbareadings;
 }
 
 RSUSettings& CacheBuffer::getRSUSettings()
