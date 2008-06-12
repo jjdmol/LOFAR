@@ -629,7 +629,7 @@ GCFEvent::TResult CalServer::handle_cal_start(GCFEvent& e, GCFPortInterface &por
 			specInvCmd.settings()(0).setXSI(SIon);
 			specInvCmd.settings()(0).setYSI(SIon);
 			LOG_DEBUG_STR("NyquistZone = " << start.rcumode()(0).getNyquistZone() 
-							<< " setting spectral inversion " << (SIon) ? "ON" : "OFF");
+							<< " setting spectral inversion " << ((SIon) ? "ON" : "OFF"));
 			m_rspdriver.send(specInvCmd);
 		}
 	}
