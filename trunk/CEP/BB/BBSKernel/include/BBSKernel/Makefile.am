@@ -42,6 +42,7 @@ pkginclude_MNS_HEADERS	= 	\
 	MNS/MeqMatrixRealSca.h	\
 	MNS/MeqMatrixRep.h	\
 	MNS/MeqMatrixTmp.h	\
+	MNS/MeqNumericalDipoleBeam.h \
 	MNS/MeqParmExpr.h	\
 	MNS/MeqParmFunklet.h	\
 	MNS/MeqParm.h		\
