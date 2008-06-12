@@ -106,6 +106,8 @@ RSPDriverFiles = \
 	SetHBACmd.cc \
 	GetHBACmd.h \
 	GetHBACmd.cc \
+	ReadHBACmd.h \
+	ReadHBACmd.cc \
 	UpdHBACmd.h \
 	UpdHBACmd.cc \
 	SetRSUCmd.h \

@@ -42,7 +42,7 @@ namespace LOFAR {
 #define	MAC_SERVICEBROKER_PORT			24000
 
 // Define names for the services
-#define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3"
+#define MAC_SVCMASK_RSPDRIVER			"RSPDriver%s:acceptor_v3.1"
 #define	MAC_SVCMASK_CALSERVER			"CalServer%s:acceptor_v2"
 #define MAC_SVCMASK_BEAMSERVER			"BeamServer%s:acceptor_v2"
 #define MAC_SVCMASK_TBBDRIVER			"TBBDriver%s:acceptor"

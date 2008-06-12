@@ -297,87 +297,83 @@ HBAProtocolWrite::~HBAProtocolWrite()
 
 void HBAProtocolWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
+	uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
 
-  // only update if rcuprotocol is not being updated and one of hbaprotocol needs updating
-  if (RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL)
-      || RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL + 1))
-  {
-    setContinue(true);
-    return;
-  }
+	// only update if rcuprotocol is not being updated and one of hbaprotocol needs updating
+	if (RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL)
+	 || RTC::RegisterState::IDLE != Cache::getInstance().getState().rcuprotocol().get(global_blp * MEPHeader::N_POL + 1)) {
+		setContinue(true);
+		return;
+	}
    
-  if (RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL)
-      && RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL + 1))
-  {
-    Cache::getInstance().getState().hbaprotocol().unmodified(global_blp * MEPHeader::N_POL);
-    Cache::getInstance().getState().hbaprotocol().unmodified(global_blp * MEPHeader::N_POL + 1);
-    setContinue(true);
-    return;
-  }
+	if (RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL)
+	 && RTC::RegisterState::WRITE != Cache::getInstance().getState().hbaprotocol().get(global_blp * MEPHeader::N_POL + 1)) {
+		Cache::getInstance().getState().hbaprotocol().unmodified(global_blp * MEPHeader::N_POL);
+		Cache::getInstance().getState().hbaprotocol().unmodified(global_blp * MEPHeader::N_POL + 1);
+		setContinue(true);
+		return;
+	}
 
-  // delays for at least on HBA need to be written, and the RCUProtocol register is not in use by RCUProtocolWrite
+	// delays for at least on HBA need to be written, and the RCUProtocol register is not in use by RCUProtocolWrite
 
 	LOG_INFO_STR("HBAsendrequest: " << getCurrentIndex());
-  switch (getCurrentIndex() % N_WRITES) {
-    
-  case 0:
-    {
+	switch (getCurrentIndex() % N_WRITES) {
+	case 0: {
 #ifdef HBA_WRITE_DELAYS
-      if (PROTOCOL_DELAY_OFFSET > 0) {
-	Array<uint8, 2> delays(i2c_protocol + PROTOCOL_DELAY_OFFSET,
-			       shape(MEPHeader::N_HBA_DELAYS, 2),
-			       neverDeleteData);
+		if (PROTOCOL_DELAY_OFFSET > 0) {
+			Array<uint8, 2> delays(i2c_protocol + PROTOCOL_DELAY_OFFSET,
+									shape(MEPHeader::N_HBA_DELAYS, 2),
+									neverDeleteData);
 
-	delays(Range::all(), 0) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL, Range::all());
-	delays(Range::all(), 1) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL + 1, Range::all());
+			delays(Range::all(), 0) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL, Range::all());
+			delays(Range::all(), 1) = Cache::getInstance().getBack().getHBASettings()()(global_blp * MEPHeader::N_POL + 1, Range::all());
 	
-	// copy set delays to i2c_result which is the expected result
-	uint8* cur = i2c_result + RESULT_DELAY_OFFSET;
-	for (int elem = 0; elem < MEPHeader::N_HBA_DELAYS; elem++){
-	  *(cur+0) = delays(elem, 0); // X
-	  *(cur+1) = delays(elem, 1); // Y
-	  cur += RESULT_DELAY_STRIDE;
-	}
-      }
-
+			// copy set delays to i2c_result which is the expected result
+			uint8* cur = i2c_result + RESULT_DELAY_OFFSET;
+			for (int elem = 0; elem < MEPHeader::N_HBA_DELAYS; elem++){
+				*(cur+0) = delays(elem, 0); // X
+				*(cur+1) = delays(elem, 1); // Y
+				cur += RESULT_DELAY_STRIDE;
+			}
+		}
 #else
-
-      i2c_protocol[PROTOCOL_LED_OFFSET] = (m_on_off ? 0xf : 0x0);
-      i2c_result[RESULT_LED_OFFSET] = i2c_protocol[PROTOCOL_LED_OFFSET];
-      LOG_INFO(formatString("Switch LED (HBA_blp=%d) %s", global_blp, m_on_off ? "on" : "off"));
-
+		i2c_protocol[PROTOCOL_LED_OFFSET] = (m_on_off ? 0xf : 0x0);
+		i2c_result[RESULT_LED_OFFSET] = i2c_protocol[PROTOCOL_LED_OFFSET];
+		LOG_INFO(formatString("Switch LED (HBA_blp=%d) %s", global_blp, m_on_off ? "on" : "off"));
 #endif
+		// create the event
+		EPARcuProtocolEvent rcuprotocol;
+		rcuprotocol.hdr.set(MEPHeader::RCU_PROTOCOLY_HDR, 1 << (getCurrentIndex() / N_WRITES), MEPHeader::WRITE, sizeof(i2c_protocol));
+		rcuprotocol.protocol.setBuffer(i2c_protocol, sizeof(i2c_protocol));
 
-      // create the event
-      EPARcuProtocolEvent rcuprotocol;
-      rcuprotocol.hdr.set(MEPHeader::RCU_PROTOCOLY_HDR, 1 << (getCurrentIndex() / N_WRITES), MEPHeader::WRITE, sizeof(i2c_protocol));
-      rcuprotocol.protocol.setBuffer(i2c_protocol, sizeof(i2c_protocol));
-	  string tmpbuf;
-	  hexdump (tmpbuf, i2c_protocol, sizeof(i2c_protocol));
-	  LOG_INFO_STR("HBA WRITE: " << tmpbuf);
+		string tmpbuf;
+		hexdump (tmpbuf, i2c_protocol, sizeof(i2c_protocol));
+		LOG_INFO_STR("HBA WRITE: " << tmpbuf);
   
-      m_hdr = rcuprotocol.hdr; // remember header to match with ack
-      getBoardPort().send(rcuprotocol);
-    }
-    break;
+		m_hdr = rcuprotocol.hdr; // remember header to match with ack
+		getBoardPort().send(rcuprotocol);
+	}
+	break;
 
-  case 1:
-    {
-      EPAWriteEvent rcuresultwrite;
+	case 1: {
+		EPAWriteEvent rcuresultwrite;
 
-      // set the result register to 0xBB's
-      rcuresultwrite.hdr.set(MEPHeader::WRITE, 1 << (getCurrentIndex() / N_WRITES),
-			     MEPHeader::RCU, MEPHeader::RCU_RESULTY, sizeof(i2c_result), 0);
-      uint8 clear[RESULT_SIZE];
-      memset(clear, 0xBB, RESULT_SIZE); // clear result
-      rcuresultwrite.payload.setBuffer(clear, RESULT_SIZE);
+		// set the result register to 0xBB's
+		rcuresultwrite.hdr.set(MEPHeader::WRITE, 1 << (getCurrentIndex() / N_WRITES),
+		MEPHeader::RCU, MEPHeader::RCU_RESULTY, sizeof(i2c_result), 0);
+		uint8 clear[RESULT_SIZE];
+		memset(clear, 0xBB, RESULT_SIZE); // clear result
+		rcuresultwrite.payload.setBuffer(clear, RESULT_SIZE);
 
-      m_hdr = rcuresultwrite.hdr; // remember header to match with ack
-      getBoardPort().send(rcuresultwrite);
-    }
-    break;
-  }
+		string tmpbuf;
+		hexdump (tmpbuf, clear, sizeof(clear));
+		LOG_INFO_STR("HBA RESULT WRITE: " << tmpbuf);
+
+		m_hdr = rcuresultwrite.hdr; // remember header to match with ack
+		getBoardPort().send(rcuresultwrite);
+	}
+	break;
+	}
 }
 
 void HBAProtocolWrite::sendrequest_status()
@@ -397,6 +393,7 @@ GCFEvent::TResult HBAProtocolWrite::handleack(GCFEvent& event, GCFPortInterface&
 
   uint8 global_blp = (getBoardId() * StationSettings::instance()->nrBlpsPerBoard()) + (getCurrentIndex() / N_WRITES);
 
+LOG_INFO_STR("hba[" << (int)(global_blp) << "]: handleAck");
   if (!ack.hdr.isValidAck(m_hdr))
   {
     LOG_ERROR("HBAProtocolWrite::handleack: invalid ack");

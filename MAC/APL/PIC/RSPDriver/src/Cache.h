@@ -60,6 +60,7 @@ namespace LOFAR {
       RSP_Protocol::SubbandSelection&  getSubbandSelection();
       RSP_Protocol::RCUSettings&       getRCUSettings();
       RSP_Protocol::HBASettings&       getHBASettings();
+      RSP_Protocol::HBASettings&       getHBAReadings();
       RSP_Protocol::RSUSettings&       getRSUSettings();
       RSP_Protocol::WGSettings&        getWGSettings();
       RSP_Protocol::SystemStatus&      getSystemStatus();
@@ -103,6 +104,7 @@ namespace LOFAR {
       RSP_Protocol::SubbandSelection m_subbandselection;
       RSP_Protocol::RCUSettings      m_rcusettings;
       RSP_Protocol::HBASettings      m_hbasettings;
+      RSP_Protocol::HBASettings      m_hbareadings;
       RSP_Protocol::RSUSettings      m_rsusettings;
       RSP_Protocol::WGSettings       m_wgsettings;
       RSP_Protocol::Statistics       m_subbandstats;
