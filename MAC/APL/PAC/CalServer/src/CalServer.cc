@@ -861,7 +861,9 @@ int main(int argc, char** argv)
 		}
 	}
 
-	GCFTask::init(argc, argv);
+	GCFTask::init(argc, argv, "CalServer");
+
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_CalServer");
 
 	LOG_INFO(formatString("Program %s has started", argv[0]));
 

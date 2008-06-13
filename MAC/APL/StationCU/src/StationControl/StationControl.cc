@@ -481,7 +481,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 LOG_DEBUG_STR(formatString("event.signal = %04X", event.signal));
 LOG_DEBUG_STR("F_INDIR = " << F_INDIR(event.signal));
 LOG_DEBUG_STR("F_OUTDIR = " << F_OUTDIR(event.signal));
-LOG_DEBUG_STR("inSync = " << theObs->second->inSync() ? "true" : "false");
+LOG_DEBUG_STR("inSync = " << (theObs->second->inSync() ? "true" : "false"));
 #if 0
 		if (F_OUTDIR(event.signal) && !theObs->second->inSync()) {
 			// TODO

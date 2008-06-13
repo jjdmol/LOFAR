@@ -144,6 +144,9 @@ for line in central.findall(open(PVSSbasefile).read()):
             print "21 "+line.replace("@cluster@", cluster)+".state"
         # and the control-section
         print "21 "+line.replace("@cluster@", "Control")+".state"
+    # ---
+    else:
+        print "21 "+line+".state"
         
 # for all expandable lines
 

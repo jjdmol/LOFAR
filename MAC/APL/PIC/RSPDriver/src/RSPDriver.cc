@@ -160,121 +160,122 @@ static bool     g_daemonize  = false;
 void parseOptions(int           argc,
                   char**        argv)
 {
-  static struct option long_options[] = {
-    { "instance",   required_argument, 0, 'I' },
-    { "daemon",     no_argument,       0, 'd' },
-    { 0, 0, 0, 0 },
-  };
+	static struct option long_options[] = {
+		{ "instance",   required_argument, 0, 'I' },
+		{ "daemon",     no_argument,       0, 'd' },
+		{ 0, 0, 0, 0 },
+	};
 
-  optind = 0; // reset option parsing
-  for(;;) {
-    int option_index = 0;
-    int c = getopt_long(argc, argv, "dI:", long_options, &option_index);
+	optind = 0; // reset option parsing
+	for(;;) {
+		int option_index = 0;
+		int c = getopt_long(argc, argv, "dI:", long_options, &option_index);
 
-    if (c == -1) {
-      break;
-    }
+		if (c == -1) {
+			break;
+		}
 
-    switch (c) {
-    case 'I':   // --instance
-      g_instancenr = atoi(optarg);
-      break;
-    case 'd':   // --daemon
-      g_daemonize = true;
-      break;
-    default:
-      LOG_FATAL (formatString("Unknown option %c", c));
-      ASSERT(false);
-    } // switch
-  } // for loop
-
+		switch (c) {
+		case 'I':   // --instance
+			g_instancenr = atoi(optarg);
+			break;
+		case 'd':   // --daemon
+			g_daemonize = true;
+			break;
+		default:
+			LOG_FATAL (formatString("Unknown option %c", c));
+			ASSERT(false);
+		} // switch
+	} // for loop
 }
 
 //
 // RSPDriver(name)
 //
-RSPDriver::RSPDriver(string name)
-  : GCFTask((State)&RSPDriver::initial, name), m_board(0), m_scheduler(),
-    m_update_counter(0), m_n_updates(0), m_elapsed(0)
+RSPDriver::RSPDriver(string name) :
+	GCFTask((State)&RSPDriver::initial, name), 
+	m_board			(0), 
+	m_scheduler		(),
+	m_update_counter(0), 
+	m_n_updates		(0), 
+	m_elapsed		(0)
 #ifdef HAVE_SYS_TIMEPPS_H
-  , m_ppsfd(-1), m_ppshandle(0)
+	, m_ppsfd	 (-1)
+	, m_ppshandle(0)
 #endif
 {
 #ifdef HAVE_SYS_TIMEPPS_H
-  memset(&m_ppsinfo, 0, sizeof(pps_info_t));
+	memset(&m_ppsinfo, 0, sizeof(pps_info_t));
 #endif
-
 	LOG_INFO(Version::getInfo<RSPDriverVersion>("RSPDriver"));
 
-  // first initialize the global settins
-  LOG_DEBUG("Setting up station settings");
-  StationSettings*      ssp = StationSettings::instance();
-  ssp->setMaxRspBoards  (GET_CONFIG("RS.N_RSPBOARDS", i));
-  ssp->setNrRspBoards   (GET_CONFIG("RS.N_RSPBOARDS", i));
-  ssp->setNrBlpsPerBoard(MEPHeader::N_BLPS);
-  if (GET_CONFIG("RSPDriver.OPERATION_MODE", i) == MODE_SUBSTATION) {
-    ssp->setNrRspBoards(1);
-  };
-  ASSERTSTR (g_instancenr <= StationSettings::instance()->maxRspBoards(),
-                 "instancenumber larger than MAX_RSPBOARDS");
-  ASSERTSTR ((GET_CONFIG("RSPDriver.OPERATION_MODE" ,i) == MODE_SUBSTATION) == 
-        (g_instancenr != -1), 
-        "--instance option does not match OPERATION_MODE setting");
-  LOG_DEBUG_STR (*ssp);
+	// first initialize the global settins
+	LOG_DEBUG("Setting up station settings");
+	StationSettings*      ssp = StationSettings::instance();
+	ssp->setMaxRspBoards  (GET_CONFIG("RS.N_RSPBOARDS", i));
+	ssp->setNrRspBoards   (GET_CONFIG("RS.N_RSPBOARDS", i));
+	ssp->setNrBlpsPerBoard(MEPHeader::N_BLPS);
+	if (GET_CONFIG("RSPDriver.OPERATION_MODE", i) == MODE_SUBSTATION) {
+		ssp->setNrRspBoards(1);
+	};
+	ASSERTSTR (g_instancenr <= StationSettings::instance()->maxRspBoards(),
+				"instancenumber larger than MAX_RSPBOARDS");
+	ASSERTSTR ((GET_CONFIG("RSPDriver.OPERATION_MODE" ,i) == MODE_SUBSTATION) == (g_instancenr != -1), 
+				"--instance option does not match OPERATION_MODE setting");
+	LOG_DEBUG_STR (*ssp);
 
-  int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
-  if (mode < SYNC_SOFTWARE || mode > SYNC_PPS) {
-    LOG_FATAL_STR("Invalid SYNC_MODE: " << mode);
-    exit(EXIT_FAILURE);
-  }
+	int mode = GET_CONFIG("RSPDriver.SYNC_MODE", i);
+	if (mode < SYNC_SOFTWARE || mode > SYNC_PPS) {
+		LOG_FATAL_STR("Invalid SYNC_MODE: " << mode);
+		exit(EXIT_FAILURE);
+	}
 
-  // Register protocols for debugging
-  LOG_DEBUG("Registering protocols");
-  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
-  registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_STRINGS);
+	// Register protocols for debugging
+	LOG_DEBUG("Registering protocols");
+	registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);
+	registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_STRINGS);
 
 #if 0
-  // connect to clock
-  LOG_DEBUG("Connecting to clock");
-  m_clock.init(*this, "spid", GCFPortInterface::SAP, 0 /*don't care*/, true /*raw*/);
+	// connect to clock
+	LOG_DEBUG("Connecting to clock");
+	m_clock.init(*this, "spid", GCFPortInterface::SAP, 0 /*don't care*/, true /*raw*/);
 #endif
 
-  // open client port
-  LOG_DEBUG("Opening listener for clients");
+	// open client port
+	LOG_DEBUG("Opening listener for clients");
 
-  string acceptorID;
-  if (g_instancenr>=0) {
-    acceptorID = formatString("(%d)", g_instancenr);
-  }
-  m_acceptor.init(*this, MAC_SVCMASK_RSPDRIVER + acceptorID, GCFPortInterface::MSPP, RSP_PROTOCOL);
+	string acceptorID;
+	if (g_instancenr>=0) {
+		acceptorID = formatString("(%d)", g_instancenr);
+	}
+	m_acceptor.init(*this, MAC_SVCMASK_RSPDRIVER + acceptorID, GCFPortInterface::MSPP, RSP_PROTOCOL);
 
-  // open port with RSP board
-  LOG_DEBUG("Connecting to RSPboards");
-  m_board = new GCFETHRawPort[StationSettings::instance()->nrRspBoards()];
-  ASSERT(m_board);
+	// open port with RSP board
+	LOG_DEBUG("Connecting to RSPboards");
+	m_board = new GCFETHRawPort[StationSettings::instance()->nrRspBoards()];
+	ASSERT(m_board);
 
-  //
-  // Get MAC addresses of RSPBoards
-  //
-  char boardname[64];
-  char paramname[64];
-  char macaddrstr[64];
-  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
-  {
-    snprintf(boardname, 64, "board%d", boardid);
+	//
+	// Get MAC addresses of RSPBoards
+	//
+	char boardname[64];
+	char paramname[64];
+	char macaddrstr[64];
+	for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++) {
+		snprintf(boardname, 64, "board%d", boardid);
 
-    snprintf(paramname, 64, "RSPDriver.MAC_ADDR_%d", boardid);
-    strncpy(macaddrstr, GET_CONFIG_STRING(paramname), 64);
+		snprintf(paramname, 64, "RSPDriver.MAC_ADDR_%d", boardid);
+		strncpy(macaddrstr, GET_CONFIG_STRING(paramname), 64);
 
-    LOG_DEBUG_STR("initializing board " << boardname << ":" << macaddrstr);
-    m_board[boardid].init(*this, boardname, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
-    m_board[boardid].setAddr(GET_CONFIG_STRING("RSPDriver.IF_NAME"), macaddrstr);
+		LOG_DEBUG_STR("initializing board " << boardname << ":" << macaddrstr);
+		m_board[boardid].init(*this, boardname, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
+		m_board[boardid].setAddr(GET_CONFIG_STRING("RSPDriver.IF_NAME"), macaddrstr);
 
-    // set ethertype to 0x10FA so Ethereal can decode EPA messages
-    m_board[boardid].setEtherType(ETHERTYPE_EPA);
-  }
+		// set ethertype to 0x10FA so Ethereal can decode EPA messages
+		m_board[boardid].setEtherType(ETHERTYPE_EPA);
+	}
 
-  addAllSyncActions();
+	addAllSyncActions();
 }
 
 //
@@ -282,7 +283,7 @@ RSPDriver::RSPDriver(string name)
 //
 RSPDriver::~RSPDriver()
 {
-  delete [] m_board;
+	delete [] m_board;
 }
 
 //
@@ -290,25 +291,22 @@ RSPDriver::~RSPDriver()
 //
 bool RSPDriver::isEnabled()
 {
-  bool enabled = true;
-  for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++)
-  {
-    if (!m_board[boardid].isConnected())
-    {
-      enabled = false;
-      break;
-    }
-  }
+	bool enabled = true;
+	for (int boardid = 0; boardid < StationSettings::instance()->nrRspBoards(); boardid++) {
+		if (!m_board[boardid].isConnected()) {
+			enabled = false;
+			break;
+		}
+	}
 
 #if 0
-  // m_clock is only used in SYNC_PARALLEL
-  if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL)
-  {
-    enabled = enabled && m_clock.isConnected();
-  }
+	// m_clock is only used in SYNC_PARALLEL
+	if (GET_CONFIG("RSPDriver.SYNC_MODE", i) == SYNC_PARALLEL) {
+		enabled = enabled && m_clock.isConnected();
+	}
 #endif
-  
-  return enabled;
+
+	return enabled;
 }
 
 /**
@@ -2621,82 +2619,81 @@ void RSPDriver::rsp_gettbb(GCFEvent& event, GCFPortInterface& port)
 //
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv, "RSPDriver");    // initializes log system
-  
-  LOG_INFO(formatString("Starting up %s", argv[0]));
+	GCFTask::init(argc, argv, "RSPDriver");    // initializes log system
 
-  // adopt commandline switches
-  LOG_DEBUG("Parsing options");
-  parseOptions (argc, argv);
+	// Inform Logprocessor who we are
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_RSPDriver");
 
-  /* daemonize if required */
-  if (g_daemonize) {
-    if (0 != daemonize(false)) {
-      cerr << "Failed to background this process: " << strerror(errno) << endl;
-      exit(EXIT_FAILURE);
-    }
-  }
+	LOG_INFO(formatString("Starting up %s", argv[0]));
 
-  /* change to real-time priority */
+	// adopt commandline switches
+	LOG_DEBUG("Parsing options");
+	parseOptions (argc, argv);
+
+	/* daemonize if required */
+	if (g_daemonize) {
+		if (0 != daemonize(false)) {
+			cerr << "Failed to background this process: " << strerror(errno) << endl;
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	/* change to real-time priority */
 #ifdef _POSIX_PRIORITY_SCHEDULING
-  int min_priority = sched_get_priority_min(SCHED_FIFO);
-  int max_priority = sched_get_priority_max(SCHED_FIFO);
+	int min_priority = sched_get_priority_min(SCHED_FIFO);
+	int max_priority = sched_get_priority_max(SCHED_FIFO);
 
-  if (min_priority < 0 || max_priority < 0) {
-    LOG_FATAL(formatString("Failed to get real-time priority range: %s", strerror(errno)));
-    exit(EXIT_FAILURE);
-  }
+	if (min_priority < 0 || max_priority < 0) {
+		LOG_FATAL(formatString("Failed to get real-time priority range: %s", strerror(errno)));
+		exit(EXIT_FAILURE);
+	}
 
-  /* set SCHED_FIFO priority at 50% */
-  struct sched_param priority;
-  memset(&priority, 0, sizeof(struct sched_param));
-  priority.sched_priority = ((max_priority - min_priority) / 2) + min_priority;
-  if (sched_setscheduler(0 /*this process*/, SCHED_FIFO, &priority) < 0) {
-    LOG_FATAL(formatString("Failed to set scheduling policy SCHED_FIFO with priority %d: %s",
-                           priority.sched_priority, strerror(errno)));
-    exit(EXIT_FAILURE);
-  }
+	/* set SCHED_FIFO priority at 50% */
+	struct sched_param priority;
+	memset(&priority, 0, sizeof(struct sched_param));
+	priority.sched_priority = ((max_priority - min_priority) / 2) + min_priority;
+	if (sched_setscheduler(0 /*this process*/, SCHED_FIFO, &priority) < 0) {
+		LOG_FATAL(formatString("Failed to set scheduling policy SCHED_FIFO with priority %d: %s",
+		priority.sched_priority, strerror(errno)));
+		exit(EXIT_FAILURE);
+	}
 #else
-  LOG_WARN("System does not support real-time scheduling (SCHED_FIFO).");
+	LOG_WARN("System does not support real-time scheduling (SCHED_FIFO).");
 #endif
 
-  /* lock all current and future memory pages in memory */
+	/* lock all current and future memory pages in memory */
 #ifdef _POSIX_MEMLOCK
-  if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0) {
-    LOG_FATAL(formatString("Failed to lock pages in memory: %s", strerror(errno)));
-    exit(EXIT_FAILURE);
-  }
+	if (mlockall(MCL_CURRENT | MCL_FUTURE) < 0) {
+		LOG_FATAL(formatString("Failed to lock pages in memory: %s", strerror(errno)));
+		exit(EXIT_FAILURE);
+	}
 #else
-  LOG_WARN("System does not support locking pages in memory.");
+	LOG_WARN("System does not support locking pages in memory.");
 #endif
 
-  LOG_DEBUG ("Reading configuration files");
-  try
-  {
-    ConfigLocator cl;
-    globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));
-  }
-  catch (Exception e)
-  {
-    LOG_ERROR_STR("Failed to load configuration files: " << e.text());
-    exit(EXIT_FAILURE);
-  }
+	LOG_DEBUG ("Reading configuration files");
+	try {
+		ConfigLocator cl;
+		globalParameterSet()->adoptFile(cl.locate("RemoteStation.conf"));
+	}
+	catch (Exception e) {
+		LOG_ERROR_STR("Failed to load configuration files: " << e.text());
+		exit(EXIT_FAILURE);
+	}
 
-  RSPDriver rsp("RSPDriver");
+	RSPDriver rsp("RSPDriver");
 
-  rsp.start(); // make initial transition
+	rsp.start(); // make initial transition
 
-  try
-  {
-    GCFTask::run();
-  }
-  catch (Exception e)
-  {
-    LOG_ERROR_STR("Exception: " << e.text());
-    exit(EXIT_FAILURE);
-  }
+	try {
+		GCFTask::run();
+	}
+	catch (Exception e) {
+		LOG_ERROR_STR("Exception: " << e.text());
+		exit(EXIT_FAILURE);
+	}
 
-  LOG_INFO("Normal termination of program");
+	LOG_INFO("Normal termination of program");
 
-  return 0;
+	return 0;
 }

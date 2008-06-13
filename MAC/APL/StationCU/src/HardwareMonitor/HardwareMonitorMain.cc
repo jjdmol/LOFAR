@@ -40,12 +40,10 @@ using namespace LOFAR::StationCU;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFTask::init(argc, argv);
+	GCFTask::init(argc, argv, "HardwareMonitor");
 
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_HardwareMonitor");
 	LOG_INFO(Version::getInfo<StationCUVersion>("HardwareMonitor"));
-
-	// TODO
-	LOG_INFO("MACProcessScope: LOFAR.PermSW.HWmonitor");
 
 	// for debugging purposes
 	registerProtocol (RSP_PROTOCOL, RSP_PROTOCOL_STRINGS);

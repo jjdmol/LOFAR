@@ -1066,7 +1066,7 @@ GCFEvent::TResult BeamServer::recall(GCFPortInterface& /*p*/)
 //
 // main
 //
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
 	/* daemonize if required */
 	if (argc >= 2) {
@@ -1078,8 +1078,9 @@ int main(int argc, char** argv)
 		}
 	}
 
-	GCFTask::init(argc, argv);
+	GCFTask::init(argc, argv, "BeamServer");
 
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_BeamServer");
 	LOG_INFO(formatString("Program %s has started", argv[0]));
 
 	try {
