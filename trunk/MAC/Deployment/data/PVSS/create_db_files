@@ -544,7 +544,12 @@ create_dpt_file()
 						elemNr++;
 						oldnode[level] = newnode[level];
 					}
-					print substr(tabs, 0, level+1) nodename"	"PVSStype[$2]"#"elemNr
+					if (substr($2,0,1) == ":") {
+						print substr(tabs, 0, level+1) nodename"	41#"elemNr$2
+					}
+					else {
+						print substr(tabs, 0, level+1) nodename"	"PVSStype[$2]"#"elemNr
+					}
 					elemNr++;
 
 					if (level < prevlevel) {
@@ -633,7 +638,7 @@ create_dp_file()
 			echo "0	0	_mp_${dpt}.process.logMsg	${dpt}	1	15		_ValueArchive_2"
 			echo ""
 		fi
-	done >>${DESTDIR}/${DP_FILE}
+	done >>${DESTDIR}/${DPT_FILE}
 
 	echo "created: ${DESTDIR}/${DP_FILE}"
 }

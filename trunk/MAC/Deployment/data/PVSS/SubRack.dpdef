@@ -1,9 +1,9 @@
-SPU.state			int
+SPU.status			:ObjectState
 SPU.Vhba			float
 SPU.Vlba			float
 SPU.Vdig			float
 SPU.temperature		float
-clockBoard.state		int
+clockBoard.status		:ObjectState
 clockBoard.Vfsp			float
 clockBoard.Vclock		float
 clockBoard.version		string

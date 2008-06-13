@@ -1,11 +1,7 @@
 # HardwareMonitor
 #
 RSP.connected		bool
-RSP.currentAction	string
-RSP.error			string
-RSP.logMsg			string
+RSP.process			:ProcessStatus
 
 TBB.connected		bool
-TBB.currentAction	string
-TBB.error			string
-TBB.logMsg			string
+TBB.process			:ProcessStatus

@@ -1,7 +1,7 @@
 # Definition of some basic types
 TypeName
 Claim.Claim	1#1
-	ClaimDate	26#2
+	claimDate	26#2
 
 TypeName
 AntennaArrays.AntennaArrays	1#1
