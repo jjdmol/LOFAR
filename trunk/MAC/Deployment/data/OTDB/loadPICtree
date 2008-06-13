@@ -52,5 +52,5 @@ RESULTFILE=OTDBDatapoints.out
 
 rm -f ${RESULTFILE}
 echo "Creating PIC file..."
-./createPICfile | ../../build/gnu_debug/data/bin/PVSS2SAS >${RESULTFILE}
-../../build/gnu_debug/data/bin/load_PICtree $1 ${RESULTFILE}
+./createPICfile | ../../build/gnu*_debug/data/bin/PVSS2SAS >${RESULTFILE}
+../../build/gnu*_debug/data/bin/load_PICtree $1 ${RESULTFILE}

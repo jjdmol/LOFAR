@@ -169,7 +169,7 @@ GCFEvent::TResult SASGateway::connect2PVSS(GCFEvent& event, GCFPortInterface& po
 	case F_TIMER: {
 		// take subscribtion on *.state
 		LOG_DEBUG("Taking subscription on all state fields");
-		PVSSresult	result = itsDPservice->query("'LOFAR_PIC_*.state'", "");
+		PVSSresult	result = itsDPservice->query("'LOFAR_PIC_*.status.state'", "");
 		if (result != PVSS::SA_NO_ERROR) {
 			LOG_ERROR ("Taking subscription on PVSS-states failed, retry in 10 seconds");
 			itsTimerPort->setTimer(10.0);

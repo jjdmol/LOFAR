@@ -1253,48 +1253,51 @@ bool TBBDriver::SetTbbCommand(unsigned short signal)
 //
 int main(int argc, char** argv)
 {
-  LOFAR::GCF::TM::GCFTask::init(argc, argv, "TBBDriver");    // initializes log system
-  
-	LOG_INFO_STR("Starting up " << argv[0]);
-  
-  // adopt commandline switches
-  LOG_DEBUG_STR("Parsing options");
-  parseOptions (argc, argv);
-  
-  // daemonize if required 
-  if (itsDaemonize) {
+	GCFTask::init(argc, argv, "TBBDriver");    // initializes log system
+
+	// Inform Logprocessor who we are
+	LOG_INFO("MACProcessScope: LOFAR_PermSW_TBBDriver");
+
+	LOG_INFO(formatString("Starting up %s", argv[0]));
+
+	// adopt commandline switches
+	LOG_DEBUG_STR("Parsing options");
+	parseOptions (argc, argv);
+
+	// daemonize if required 
+	if (itsDaemonize) {
 		LOG_DEBUG_STR("background this process");
 		if (daemonize(false) == 0) {
-		cerr << "Failed to background this process: " << strerror(errno) << endl;
-		exit(EXIT_FAILURE);
-	 }
-  }
-	
-  LOG_DEBUG_STR("Reading configuration files");
-  try {
-  	LOFAR::ConfigLocator cl;
+			cerr << "Failed to background this process: " << strerror(errno) << endl;
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	LOG_DEBUG_STR("Reading configuration files");
+	try {
+		LOFAR::ConfigLocator cl;
 		LOFAR::ACC::APS::globalParameterSet()->adoptFile(cl.locate("TBBDriver.conf"));
 	}
 	catch (LOFAR::Exception e) {
 		LOG_ERROR_STR("Failed to load configuration files: " << e.text());
 		exit(EXIT_FAILURE);
 	}
-  
+
 	LOFAR::TBB::TBBDriver tbb("TBBDriver");
-  
+
 	tbb.start(); // make initialsition
-  
-  try {
+
+	try {
 		LOFAR::GCF::TM::GCFTask::run();
 	}
 	catch (LOFAR::Exception e) {
 		LOG_ERROR_STR("Exception: " << e.text());
 		exit(EXIT_FAILURE);
 	}
-  
-  LOG_INFO("Normal termination of program");
-  
-  return(0);
+
+	LOG_INFO("Normal termination of program");
+
+	return(0);
 }
 
 // Remove lines or remove comments for copy constructor and assignment.

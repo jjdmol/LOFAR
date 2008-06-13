@@ -410,7 +410,7 @@ string LoggingProcessor::_searchClientDP(spi::InternalLoggingEvent&	logEvent,
 			DPname[i] = '_';
 		}
 	} 
-	DPname.append(".logMsg");
+	DPname.append(".process.logMsg");
 	itsClients[&port] = LogClient(DPname);
 	itsClients[&port].msgCnt = 0;
 	itsClients[&port].valid = true;
