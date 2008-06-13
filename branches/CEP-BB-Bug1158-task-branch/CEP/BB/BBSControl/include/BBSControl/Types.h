@@ -46,10 +46,8 @@ namespace LOFAR
 
     // Typedefs
     // @{
-    typedef uint CommandId;
+    typedef int CommandId;
     typedef uint KernelId;
-    typedef uint KernelGroupId;
-    typedef uint SolverProcessId;
     // @}
 
     // Information about the Blackboard database.

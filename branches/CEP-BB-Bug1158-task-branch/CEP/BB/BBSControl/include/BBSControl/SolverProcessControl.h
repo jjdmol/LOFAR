@@ -75,9 +75,11 @@ namespace LOFAR
 
     private:
       enum RunState {
-        UNDEFINED = 0,
-        IDLE,
-        SOLVING,
+        UNDEFINED = -1,
+        WAIT,
+        GET_COMMAND,
+        SOLVE,
+        //# Insert new types HERE !!
         N_States
       };
 
@@ -88,16 +90,19 @@ namespace LOFAR
       // one, the solver control process controls a global solver.
       bool isGlobal() const;
 
+      // Set run state to \a state
+      void setState(RunState state);
+
+      // Return the current state as a string.
+      const string& showState() const;
+
       // Set kernel groups. The argument \a groups should be interpreted as
       // follows:
       // - The size of the vector determines the number of groups.
       // - The sum of the elements determines the total number of kernels.
       // - Each element determines the number of kernels per group.
       void setSolveTasks(const vector<uint>& groups,
-        const SolverOptions& options);
-
-      // Solver process ID.
-      SolverProcessId itsSolverProcId;
+                         const SolverOptions& options);
 
       // (Run) state of the solver control process
       RunState itsState;
@@ -108,15 +113,23 @@ namespace LOFAR
       // Connection to the command queue.
       scoped_ptr<CommandQueue> itsCommandQueue;
 
-      // Vector of kernels.
-      vector<KernelConnection> itsKernels;
-      
-      // Container of kernel groups. 
-      vector<SolveTask> itsSolveTasks;
+      // Sender ID, used when posting results to the command queue.
+      SenderId itsSenderId;
+
+      // Command that should be executed next, or is currently being
+      // executed.
+      NextCommandType itsCommand;
 
       // Current solve command. We need to keep track of it, because we need
       // the information in it between different calls to the run() method.
       shared_ptr<const SolveStep> itsSolveStep;
+
+      // Vector of kernels.
+      vector<KernelConnection> itsKernels;
+      
+      // Container of solve tasks. Each task is executed by a different kernel
+      // group.
+      vector<SolveTask> itsSolveTasks;
     };
 
     // @}

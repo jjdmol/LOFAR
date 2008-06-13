@@ -69,7 +69,7 @@ namespace LOFAR
 
     // Return type of the function CommandQueue::getNextCommand(). It pairs a
     // (managed) pointer to a Command with its ID.
-    typedef pair<shared_ptr<const Command>, const CommandId> NextCommandType;
+    typedef pair<shared_ptr<const Command>, CommandId> NextCommandType;
 
     // Return type of the function CommandQueue::getNewResults(const
     // CommandId&). It pairs a command result with the local controller that
@@ -210,9 +210,9 @@ namespace LOFAR
       // Add the result \a result for the command (identified by) \a commandId
       // to the blackboard result table. \a commandId must be the ID of the
       // first command in the queue for which no result has been set yet.
-      // \return \c true upon successful insertion; otherwise \c false (e.g.,
-      // wrong \a commanId was specified).
-      bool addResult(const CommandId& commandId, 
+      // \throw CommandQueueException when insertion failed (e.g., a wrong \a
+      // commandId was specified).
+      void addResult(const CommandId& commandId, 
                      const CommandResult& result,
                      const SenderId& senderId) const;
 

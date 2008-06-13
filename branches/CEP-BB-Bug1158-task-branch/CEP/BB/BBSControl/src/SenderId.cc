@@ -93,7 +93,7 @@ namespace LOFAR
 
     ostream& operator<<(ostream& os, const SenderId& si)
     {
-      return os << si.typeAsString() << ":" << si.id();
+      return os << si.typeAsString() << " " << si.id();
     }
 
 

@@ -66,7 +66,6 @@ namespace LOFAR
 
     SolverProcessControl::SolverProcessControl() :
       ProcessControl(),
-      itsSolverProcId(0),
       itsState(UNDEFINED),
       itsNrKernels(0)
     {
@@ -84,9 +83,10 @@ namespace LOFAR
     {
       LOG_INFO("SolverProcessControl::define()");
       try {
-        itsSolverProcId = globalParameterSet()->getUint32("SolverProcessId");
-        // Get the number of kernels that will connect 
         itsNrKernels = globalParameterSet()->getUint32("Solver.nrKernels");
+        itsSenderId = 
+          SenderId(SenderId::SOLVER,
+                   globalParameterSet()->getUint32("SolverProcessId"));
       }
       catch(Exception& e) {
         LOG_ERROR_STR(e);
@@ -173,10 +173,9 @@ namespace LOFAR
                         " connected (id=" << id << ")");
         }
 
-        // Switch to IDLE state, indicating that we're ready to receive
-        // commands. Note that we will only react to Solve commands; others
-        // will be silently ignored.
-        itsState = IDLE;
+        // Switch to GET_COMMAND state, indicating that we're ready to receive
+        // commands.
+        setState(GET_COMMAND);
       }
 
       catch (Exception& e) {
@@ -194,49 +193,59 @@ namespace LOFAR
       LOG_INFO("SolverProcessControl::run()");
 
       try {
-
         switch(itsState) {
 
-        default:
-          LOG_ERROR("ProcessState UNKNOWN: this is a program logic error!");
+        default: {
+          LOG_ERROR("RunState UNKNOWN: this is a program logic error!");
           return false;
           break;
+        }
 
-        case UNDEFINED:
-          LOG_WARN("ProcessState UNDEFINED; init() must be called first!");
+        case UNDEFINED: {
+          LOG_WARN("RunState UNDEFINED; init() must be called first!");
           return false;
           break;
+        }
 
-        case IDLE:
-          LOG_TRACE_FLOW("ProcessState::IDLE");
-
+        case WAIT: {
+          LOG_TRACE_FLOW_STR("RunState::" << showState());
           LOG_DEBUG("Waiting for command trigger ...");
-          CommandId cmdId;
           if (itsCommandQueue->
               waitForTrigger(CommandQueue::Trigger::Command)) {
-            // Get the next command.
-            const NextCommandType& nextCmd = itsCommandQueue->getNextCommand();
-            shared_ptr<const Command> cmd = nextCmd.first;
-            cmdId = nextCmd.second;
-
-            itsSolveStep = dynamic_pointer_cast<const SolveStep>(cmd);
-            if (itsSolveStep) {
-              // It's a SolveStep. Setup kernel groups and change state.
-              setSolveTasks(itsSolveStep->kernelGroups(),
-                itsSolveStep->solverOptions());
-              itsState = SOLVING;
-            }
-            else {
-              // Not a SolveStep, send "Ok" result to command queue
-              // immediately.
-              SenderId senderId(SenderId::SOLVER, itsSolverProcId);
-              itsCommandQueue->addResult(cmdId, CommandResult::OK, senderId);
-            }
+            setState(GET_COMMAND);
           }
           break;
-          
-        case SOLVING:
-          LOG_TRACE_FLOW("ProcessState::SOLVING");
+        }
+
+        case GET_COMMAND: {
+          LOG_TRACE_FLOW_STR("RunState::" << showState());
+          LOG_DEBUG("Retrieving command ...");
+          itsCommand = itsCommandQueue->getNextCommand();
+
+          if (!itsCommand.first) {
+            LOG_DEBUG("Received empty command. Ignored");
+            setState(WAIT);
+            break;
+          }
+
+          // If Command is a SolveStep, we should initiate a solve operation.
+          shared_ptr<const SolveStep> solveStep = 
+            dynamic_pointer_cast<const SolveStep>(itsCommand.first);
+          if (solveStep) {
+            setSolveTasks(solveStep->kernelGroups(), 
+                          solveStep->solverOptions());
+            setState(SOLVE);
+          } 
+          else {
+            itsCommandQueue->
+              addResult(itsCommand.second, CommandResult::OK, itsSenderId);
+            setState(WAIT);
+          }
+          break;
+        }
+
+        case SOLVE: {
+          LOG_TRACE_FLOW_STR("RunState::" << showState());
 
           // Call the run() method on each kernel group. In the current
           // implementation, this is a serialized operation. Once we run each
@@ -249,20 +258,19 @@ namespace LOFAR
           // conditions with exceptions. I think the former (bools) is a
           // better choice, since we're planning on running each task in a
           // separate thread, and it is usually a bad thing to handle an
-          // exception in a different thread than in wich it was thrown.
+          // exception in a different thread than in which it was thrown.
           bool done = true;
           for (uint i = 0; i < itsSolveTasks.size(); ++i) {
             done = itsSolveTasks[i].run() && done;
           }
-          
-          // OK, all SolveTasks are done: send result to the command queue and
-          // change state.
+          // OK, all SolveTasks are done; we can post the result.
           if(done) {
-            SenderId senderId(SenderId::SOLVER, itsSolverProcId);
-            itsCommandQueue->addResult(cmdId, CommandResult::OK, senderId);
-            itsState = IDLE;
+            itsCommandQueue->
+              addResult(itsCommand.second, CommandResult::OK, itsSenderId);
+            setState(WAIT);
           }
           break;
+        }
 
         } // switch
       }
@@ -342,29 +350,27 @@ namespace LOFAR
     }
 
 
-#if 0
-    void SolverProcessControl::setKernelGroups(const vector<uint>& groups)
+    void SolverProcessControl::setState(RunState state) 
     {
-      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
-      LOG_DEBUG_STR("Kernel groups: " << groups);
-      itsKernelGroups.clear();
-      itsKernelGroupIds.clear();
-      for (uint i = 0; i < groups.size(); ++i) {
-        itsKernelGroups.push_back(KernelGroup(groups[i]));
-        for (uint j = 0; j < groups[i]; ++j) {
-          itsKernelGroupIds.push_back(i);
-        }
-      }
-      // The sum of the number of kernels in each group must match the total
-      // number of kernels.
-      if (itsKernelGroupIds.size() != itsNrKernels) {
-        THROW (SolverControlException, "Number of kernels in kernel groups ("
-               << itsKernelGroupIds.size() 
-               << ") does not match total number of kernels (" 
-               << itsNrKernels << ")");
-      }
+      itsState = state;
+      LOG_DEBUG_STR("Switching to " << showState() << " state");
     }
-#endif
+
+
+    const string& SolverProcessControl::showState() const
+    {
+      //# Caution: Always keep this array of strings in sync with the enum
+      //#          State that is defined in the header file!
+      static const string states[N_States+1] = {
+        "WAIT",
+        "GET_COMMAND",
+        "SOLVE",
+        "<UNDEFINED>"  //# This should ALWAYS be last !!
+      };
+      if (UNDEFINED < itsState && itsState < N_States) return states[itsState];
+      else return states[N_States];
+    }
+
 
     void SolverProcessControl::setSolveTasks(const vector<uint>& groups,
         const SolverOptions& options)

@@ -145,12 +145,12 @@ namespace LOFAR
       // If command type is an empty string, then we've probably received an
       // empty result row; return a null pointer.
       string type = ps.getString("Type");
-      if (type.empty()) return make_pair(shared_ptr<Command>(), CommandId());
-
-      LOG_DEBUG_STR("Next command: " << type);
+      if (type.empty()) return make_pair(shared_ptr<Command>(), CommandId(-1));
 
       // Get the command-id.
       CommandId id = ps.getUint32("id");
+
+      LOG_DEBUG_STR("Next command: " << type << " (id=" << id << ")");
 
       // Get the command name. Only steps have names, so this is a way to
       // differentiate between ordinary commands and steps.
@@ -241,7 +241,7 @@ namespace LOFAR
     }
 
 
-    bool CommandQueue::addResult(const CommandId& commandId, 
+    void CommandQueue::addResult(const CommandId& commandId, 
                                  const CommandResult& result,
                                  const SenderId& senderId) const
     {
@@ -258,7 +258,10 @@ namespace LOFAR
             << result.message() << "') AS result";
 
       // Execute the query and return the result
-      return execQuery(query.str()).getBool("result");
+      if (!execQuery(query.str()).getBool("result")) {
+        THROW (CommandQueueException, "Failed to add result to the blackboard."
+               << "\nQuery: " << query.str());
+      }
     }
 
 

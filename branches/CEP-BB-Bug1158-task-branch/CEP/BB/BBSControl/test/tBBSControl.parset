@@ -1,4 +1,6 @@
 NrLocalCtrls            = 2                 # number of local controllers
+NrGlobalSolvers         = 1                 # number of global solvers
+
 Solver.nrKernels        = 2
 Solver.Global           = true
 Solver.Host             = localhost

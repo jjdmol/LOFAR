@@ -213,7 +213,7 @@ namespace LOFAR
     void SolveTask::setState(State state) 
     {
       itsState = state;
-      LOG_DEBUG_STR("Changed state to " << showState());
+      LOG_DEBUG_STR("Switching to " << showState() << " state");
     }
 
 

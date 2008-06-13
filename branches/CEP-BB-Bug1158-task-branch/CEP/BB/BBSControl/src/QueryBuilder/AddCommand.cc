@@ -208,7 +208,7 @@ namespace LOFAR
 
       //##--------   P r i v a t e   m e t h o d s   --------##//
 
-      string AddCommand::selectClause(const Command& command) const
+      string AddCommand::selectClause(const Command&) const
       {
         return "SELECT * FROM blackboard.add_command";
       }
