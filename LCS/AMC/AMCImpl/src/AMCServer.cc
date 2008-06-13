@@ -32,7 +32,9 @@ using namespace LOFAR::AMC;
 
 int main(int argc, const char* const argv[])
 {
-  INIT_LOGGER(argv[0]);
+  INIT_VAR_LOGGER(argv[0], "AMCServer");
+
+  LOG_INFO("MACProcessScope: LOFAR_PermSW_AMCServer");
 
   // Listen port (default: 31337)
   uint16 port = argc > 1 ? atoi(argv[1]) : 31337;
