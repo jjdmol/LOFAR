@@ -84,6 +84,7 @@ BGL_Processing::BGL_Processing(TransportHolder *th)
   itsTranspose(0),
 #endif
   itsPPF(0),
+  itsBeamFormer(0),
   itsCorrelator(0)
 {
   memset(itsArenas, 0, sizeof itsArenas);
@@ -260,6 +261,9 @@ void BGL_Processing::preprocess(CS1_Parset *parset)
   unsigned nrSamplesPerIntegration = parset->BGLintegrationSteps();
   unsigned nrSamplesToBGLProc	   = parset->nrSamplesToBGLProc();
 
+  unsigned nrBeamFormedStations = configuration.nrTABs();
+  std::vector<unsigned> station2BeamFormedStation = configuration.station2TABGroups();
+
   size_t inputDataSize      = itsIsTransposeInput  ? InputData::requiredSize(outputPsets.size(), nrSamplesToBGLProc) : 0;
   size_t transposedDataSize = itsIsTransposeOutput ? TransposedData::requiredSize(nrStations, nrSamplesToBGLProc) : 0;
   size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(nrStations, nrSamplesPerIntegration) : 0;
@@ -295,7 +299,8 @@ void BGL_Processing::preprocess(CS1_Parset *parset)
     itsCorrelatedData = new CorrelatedData(*itsHeaps[1], nrBaselines);
 
     itsPPF	      = new PPF(nrStations, nrSamplesPerIntegration, parset->sampleRate() / NR_SUBBAND_CHANNELS, parset->getBool("OLAP.delayCompensation"));
-    itsCorrelator     = new Correlator(nrStations, nrSamplesPerIntegration);
+    itsBeamFormer     = new BeamFormer(nrStations, nrSamplesPerIntegration, nrBeamFormedStations, station2BeamFormedStation);
+    itsCorrelator     = new Correlator(nrBeamFormedStations == 0 ? nrStations : nrBeamFormedStations, itsBeamFormer->getStationMapping(), nrSamplesPerIntegration);
   }
 
 #if defined HAVE_MPI
@@ -344,6 +349,9 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
   unsigned nrSamplesPerIntegration = configuration.nrSamplesPerIntegration();
   unsigned nrSamplesToBGLProc	   = configuration.nrSamplesToBGLProc();
 
+  unsigned nrBeamFormedStations = configuration.nrTABs();
+  std::vector<unsigned> station2BeamFormedStation = configuration.station2TABGroups();
+
   // Each phase (e.g., transpose, PPF, correlator) reads from an input data
   // set and writes to an output data set.  To save memory, two memory buffers
   // are used, and consecutive phases alternately use one of them as input
@@ -377,9 +385,7 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
     itsLastSubband	 = itsFirstSubband + nrSubbandsPerPset;
     itsCurrentSubband	 = itsFirstSubband + logicalNode % usedCoresPerPset % nrSubbandsPerPset;
     itsSubbandIncrement	 = usedCoresPerPset % nrSubbandsPerPset;
-    itsNrTABs            = configuration.nrTABs();
-    itsStation2TABGroups = configuration.station2TABGroups();
-    
+
 #if defined HAVE_MPI
     printSubbandList();
 #endif
@@ -389,7 +395,8 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
     itsCorrelatedData = new CorrelatedData(*itsArenas[1], nrBaselines);
 
     itsPPF	      = new PPF(nrStations, nrSamplesPerIntegration, configuration.sampleRate() / NR_SUBBAND_CHANNELS, configuration.delayCompensation());
-    itsCorrelator     = new Correlator(nrStations, nrSamplesPerIntegration);
+    itsBeamFormer     = new BeamFormer(nrStations, nrSamplesPerIntegration, nrBeamFormedStations, station2BeamFormedStation);
+    itsCorrelator     = new Correlator(nrBeamFormedStations == 0 ? nrStations : nrBeamFormedStations, itsBeamFormer->getStationMapping(), nrSamplesPerIntegration);
   }
 
 #if defined HAVE_MPI
@@ -445,6 +452,7 @@ MPI_Barrier(itsTransposeGroup);
     computeTimer.start();
     itsPPF->computeFlags(itsTransposedData, itsFilteredData);
     itsPPF->filter(itsCenterFrequencies[itsSubband2Index[itsCurrentSubband]], itsTransposedData, itsFilteredData);
+    itsBeamFormer->formBeams(itsFilteredData);
     itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
     itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
 
@@ -497,6 +505,7 @@ void BGL_Processing::postprocess()
     delete itsTransposedData;
     delete itsPPF;
     delete itsFilteredData;
+    delete itsBeamFormer;
     delete itsCorrelator;
     delete itsCorrelatedData;
 

@@ -41,6 +41,7 @@
 
 #include <Transpose.h>
 #include <PPF.h>
+#include <BeamFormer.h>
 #include <Correlator.h>
 
 #if defined HAVE_BGL
@@ -94,9 +95,7 @@ class BGL_Processing {
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool		itsIsTransposeInput, itsIsTransposeOutput;
-    unsigned            itsNrTABs;
     
-    std::vector<unsigned> itsStation2TABGroups;
     std::vector<signed>   itsBeamlet2beams;
     std::vector<unsigned> itsSubband2Index;
     unsigned              itsNrBeams;
@@ -111,6 +110,7 @@ class BGL_Processing {
     Transpose		*itsTranspose;
 #endif
     PPF			*itsPPF;
+    BeamFormer          *itsBeamFormer;
     Correlator		*itsCorrelator;
 
 #if defined HAVE_BGL

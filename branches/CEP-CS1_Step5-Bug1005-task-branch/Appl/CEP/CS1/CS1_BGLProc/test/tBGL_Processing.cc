@@ -38,6 +38,7 @@
 #include <Common/Timer.h>
 #include <Transport/TH_Null.h>
 #include <PPF.h>
+#include <BeamFormer.h>
 #include <Correlator.h>
 #include <cmath>
 #include <cstring>
@@ -194,13 +195,28 @@ void doWork()
   if (personality.getXcoord() == 0 && personality.getYcoord() == 0 && personality.getZcoord() == 0)
 #endif
   {
-    unsigned   nrStations	= 77;
+    unsigned   nrStations	= 14; // 77;
     unsigned   nrSamplesPerIntegration = 768;
     double     sampleRate	= 195312.5;
     double     refFreq		= 384 * sampleRate;
     double     signalFrequency	= refFreq + 73 * sampleRate / NR_SUBBAND_CHANNELS; // channel 73
     unsigned   nrSamplesToBGLProc = NR_SUBBAND_CHANNELS * (nrSamplesPerIntegration + NR_TAPS - 1) + 32 / sizeof(TransposedData::SampleType[NR_POLARIZATIONS]);
     unsigned   nrBaselines	= nrStations * (nrStations + 1) / 2;
+
+#if 0
+    unsigned nrSuperStations = nrStations / 7;
+#else
+    unsigned nrSuperStations = 0;
+#endif
+
+    std::vector<unsigned> station2SuperStation;
+
+    station2SuperStation.resize(nrStations);
+    for(unsigned i=0; i<nrStations; i++) {
+      station2SuperStation[i] = (i / 7);
+//      cerr << station2SuperStation[i] << endl;
+    }
+
 
     const char *env;
 
@@ -224,11 +240,14 @@ void doWork()
     CorrelatedData correlatedData(arena1, nrBaselines);
 
     PPF		   ppf(nrStations, nrSamplesPerIntegration, sampleRate / NR_SUBBAND_CHANNELS, true);
-    Correlator     correlator(nrStations, nrSamplesPerIntegration);
+    BeamFormer     beamFormer(nrStations, nrSamplesPerIntegration, nrSuperStations, station2SuperStation);
+    Correlator     correlator(nrSuperStations == 0 ? nrStations : nrSuperStations, beamFormer.getStationMapping(), nrSamplesPerIntegration);
 
     setSubbandTestPattern(&transposedData, nrStations, signalFrequency, sampleRate);
     ppf.computeFlags(&transposedData, &filteredData);
     ppf.filter(refFreq, &transposedData, &filteredData);
+
+    beamFormer.formBeams(&filteredData);
 
     correlator.computeFlagsAndCentroids(&filteredData, &correlatedData);
     correlator.correlate(&filteredData, &correlatedData);

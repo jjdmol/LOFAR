@@ -11,6 +11,7 @@ CorrelatedData.h	\
 FIR.h			\
 PPF.h			\
 Transpose.h		\
+BeamFormer.h            \
 Correlator.h		\
 BGL_Processing.h	\
 TH_ZoidClient.h
@@ -41,6 +42,7 @@ FFT_Asm.S			\
 FIR.cc				\
 Transpose.cc			\
 PPF.cc				\
+BeamFormer.cc                   \
 Correlator.cc			\
 CS1_BGL_Processing_main.cc 	\
 BGL_Processing.cc		\

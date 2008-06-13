@@ -11,6 +11,7 @@ tBGL_Processing_SOURCES =			\
 tBGL_Processing.cc				\
 ../src/Allocator.cc				\
 ../src/BGL_Processing.cc			\
+../src/BeamFormer.cc				\
 ../src/Correlator.cc				\
 ../src/CorrelatorAsm.S				\
 ../src/FFT_Asm.S				\

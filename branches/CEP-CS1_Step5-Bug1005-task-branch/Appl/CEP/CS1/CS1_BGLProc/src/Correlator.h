@@ -19,7 +19,7 @@ namespace CS1 {
 class Correlator
 {
   public:
-    Correlator(unsigned nrStations, unsigned nrSamplesPerIntegration);
+    Correlator(unsigned nrStations, unsigned* stationMapping, unsigned nrSamplesPerIntegration);
     ~Correlator();
 
     void	    correlate(const FilteredData *, CorrelatedData *);
@@ -29,6 +29,11 @@ class Correlator
 
   private:
     unsigned	    itsNrStations, itsNrBaselines, itsNrSamplesPerIntegration;
+
+    // A list indexed by station number, result is the station position in the Filtered data.
+    // This is needed in case of tied array beam forming.
+    unsigned*       itsStationMapping; //[itsNrStations] 
+
     float	    *itsCorrelationWeights; //[itsNrSamplesPerIntegration + 1]
 
     double	    computeCentroidAndValidSamples(const SparseSet<unsigned> &flags, unsigned &nrValidSamples) const;
