@@ -644,10 +644,49 @@ create_dp_file()
 }
 
 #
+# expand_component compname labelprefix DPprefix
+#
+# format COMPONENT_FILE:
+#	comp.comp 1#1
+#		field1	??#2
+#		field2	??#3
+#		...
+expand_component()
+{
+	expanding=false
+	cleanlist $COMPONENT_FILE | while read field fldtype
+	do
+		if [ $expanding == false ]; then
+			if [ $field == $1.$1 ]; then
+				expanding=true
+			fi
+			continue
+		fi
+
+		if [ -z "${fldtype}" ] || [ "${fldtype:0:8}" == "TypeName" ]; then 
+			expanding=false
+			continue
+		fi
+		
+		varlabel=`labelize $2_$field`
+		echo "#define	PN_${varlabel}	\"$3.${field}\""
+	done	
+}
+
+#
 # create_cpp_headerfile inputfile dbtype dptype
 #
 create_cpp_headerfile()
 {
+	# write out the fields of the components
+	(
+		echo "// process"
+		expand_component ProcessStatus "FSM" "process" 
+		echo "// object"
+		expand_component ObjectStatus  "OBJ" "object"
+		echo ""
+	)  >>${DESTDIR}/${CPP_HEADERFILE}
+
 	cleanlist $1 | while read dpt prefix dbtype dptype dp
 	do
 		if [ "${dbtype}" != "$2" -o "${dptype}" != "$3" ]; then
@@ -662,15 +701,18 @@ create_cpp_headerfile()
 			if [ -f ${dpt}.dpdef ]; then
 				cleanlist ${dpt}.dpdef | while read varname vartype
 				do
-					varlabel=`labelize ${varname}`
-					echo "#define PN_${prefix}_${varlabel}	\"${varname}\""
+					if [ ${vartype:0:1} == ":" ]; then
+						expand_component ${vartype:1} ${prefix}_${varname} ${varname}
+					else
+						varlabel=`labelize ${varname}`
+						echo "#define PN_${prefix}_${varlabel}	\"${varname}\""
+					fi
 				done
 			fi
 			echo ""
 		fi
 	done >>${DESTDIR}/${CPP_HEADERFILE}
 }
-
 
 #------------------------------ MAIN program ------------------------------
 #
@@ -722,6 +764,7 @@ shift				# remove '--'
 
 # define the input files
 STATIONINFOFILE=../StaticMetaData/StationInfo
+COMPONENT_FILE=PVSSbase.dpdef
 CLUSTERFILE=Clusters.list
 RINGFILE=Rings.list
 WANFILE=Wan.list
