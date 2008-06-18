@@ -31,76 +31,111 @@
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
-#include <BBSControl/DomainRegistrationRequest.h>
-#include <BBSControl/IterationRequest.h>
-#include <BBSControl/IterationResult.h>
-#include <BBSControl/BlobStreamableVector.h>
-#include <BBSControl/BlobStreamableConnection.h>
+#include <BBSControl/CommandQueue.h>
+#include <BBSControl/KernelConnection.h>
+#include <BBSControl/SolveTask.h>
+#include <BBSControl/SolveStep.h>
 
-#include <Common/lofar_smartptr.h>
 #include <PLC/ProcessControl.h>
-#include <APS/ParameterSet.h>
-
-#include <scimath/Fitting/LSQFit.h>
+#include <Common/lofar_smartptr.h>
 
 namespace LOFAR
 {
+  namespace BBS
+  {
+    class SolverOptions;
+    
+    // \addtogroup BBSControl
+    // @{
 
-namespace BBS
-{
-        // \addtogroup BBSControl
-        // @{
+    // Implementation of the ProcessControl interface for the BBS solver
+    // component.
+    class SolverProcessControl: public ACC::PLC::ProcessControl
+    {
+    public:
+      // Default constructor.
+      SolverProcessControl();
 
-        // Implementation of the ProcessControl interface for the BBS solver component.
-        class SolverProcessControl: public ACC::PLC::ProcessControl
-        {
-        public:
-            // Default constructor.
-            SolverProcessControl();
+      // Destructor.
+      virtual ~SolverProcessControl();
 
-            // Destructor.
-            virtual ~SolverProcessControl();
+      // @name Implementation of PLC interface.
+      // @{
+      virtual tribool define();
+      virtual tribool init();
+      virtual tribool run();
+      virtual tribool pause(const string& condition);
+      virtual tribool release();
+      virtual tribool quit();
+      virtual tribool snapshot(const string& destination);
+      virtual tribool recover(const string& source);
+      virtual tribool reinit(const string& configID);
+      virtual string  askInfo(const string& keylist);
+      // @}
 
-            // @name Implementation of PLC interface.
-            // @{
-            virtual tribool define();
-            virtual tribool init();
-            virtual tribool run();
-            virtual tribool pause(const string& condition);
-            virtual tribool release();
-            virtual tribool quit();
-            virtual tribool snapshot(const string& destination);
-            virtual tribool recover(const string& source);
-            virtual tribool reinit(const string& configID);
-            virtual string  askInfo(const string& keylist);
-            // @}
+    private:
+      enum RunState {
+        UNDEFINED = -1,
+        WAIT,
+        GET_COMMAND,
+        SOLVE,
+        //# Insert new types HERE !!
+        N_States
+      };
 
-        private:
-            struct Domain
-            {
-                uint32          index;
-                vector<double>  unknowns;
-                casa::LSQFit    solver;
-            };
+      // Returns whether the current solver control process controls a global
+      // solver or not. 
+      // \note For the time being we will assume that, when the number of
+      // kernels that will connect to the solver control process is more than
+      // one, the solver control process controls a global solver.
+      bool isGlobal() const;
 
-            bool dispatch(const BlobStreamable *message);
-            bool handle(const DomainRegistrationRequest *request);
-            bool handle(const BlobStreamableVector<DomainRegistrationRequest> *request);
-            bool handle(const IterationRequest *request);
-            bool handle(const BlobStreamableVector<IterationRequest> *request);
+      // Set run state to \a state
+      void setState(RunState state);
 
-            bool registerDomain(const DomainRegistrationRequest *request);
-            IterationResult *performIteration(const IterationRequest *request);
+      // Return the current state as a string.
+      const string& showState() const;
 
-            // Parameter set for this process controller.
-            ACC::APS::ParameterSet itsParameterSet;
+      // Set kernel groups. The argument \a groups should be interpreted as
+      // follows:
+      // - The size of the vector determines the number of groups.
+      // - The sum of the elements determines the total number of kernels.
+      // - Each element determines the number of kernels per group.
+      void setSolveTasks(const vector<uint>& groups,
+                         const SolverOptions& options);
 
-            scoped_ptr<BlobStreamableConnection> itsKernelConnection;
+      // (Run) state of the solver control process
+      RunState itsState;
 
-            map<uint32, Domain> itsRegisteredDomains;
-        };
+      // Number of kernels that will connect to this solver control process.
+      uint itsNrKernels;
+
+      // Connection to the command queue.
+      scoped_ptr<CommandQueue> itsCommandQueue;
+
+      // Sender ID, used when posting results to the command queue.
+      SenderId itsSenderId;
+
+      // Command that should be executed next, or is currently being
+      // executed.
+      NextCommandType itsCommand;
+
+      // Current solve command. We need to keep track of it, because we need
+      // the information in it between different calls to the run() method.
+      shared_ptr<const SolveStep> itsSolveStep;
+
+      // Vector of kernels.
+      vector<KernelConnection> itsKernels;
+      
+      // Container of solve tasks. Each task is executed by a different kernel
+      // group.
+      vector<SolveTask> itsSolveTasks;
+    };
+
     // @}
-} //# namespace BBS
+
+  } //# namespace BBS
+
 } //# namespace LOFAR
 
 #endif

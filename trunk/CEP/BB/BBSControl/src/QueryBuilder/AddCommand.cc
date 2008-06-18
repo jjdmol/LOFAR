@@ -208,7 +208,7 @@ namespace LOFAR
 
       //##--------   P r i v a t e   m e t h o d s   --------##//
 
-      string AddCommand::selectClause(const Command& command) const
+      string AddCommand::selectClause(const Command&) const
       {
         return "SELECT * FROM blackboard.add_command";
       }
@@ -237,6 +237,17 @@ namespace LOFAR
         return "'" + toLower(cmd.type()) + "'";
       }
 
+
+      string AddCommand::argumentList(const NextChunkCommand& cmd) const
+      {
+        ostringstream oss;
+        ParameterSet  ps;
+        oss << argumentList(static_cast<const Command&>(cmd))
+            << ",''"
+            << ",'" << (ps << cmd) << "'";
+        return oss.str();
+      }
+
       string AddCommand::argumentList(const Step& step) const
       {
         ostringstream oss;
@@ -256,10 +267,9 @@ namespace LOFAR
             << ",'" << strategy.parmDB().history             << "'"
             << ",'" << strategy.stations()                   << "'"
             << ",'" << strategy.inputData()                  << "'"
-            << ",'" << strategy.regionOfInterest().frequency << "'"
+            << ",'" << strategy.regionOfInterest().freq      << "'"
             << ",'" << strategy.regionOfInterest().time      << "'"
-            << ",'" << strategy.domainSize().bandWidth       << "'"
-            << ",'" << strategy.domainSize().timeInterval    << "'"
+            << ",'" << strategy.chunkSize()                  << "'"
             << ",'" << strategy.correlation().selection      << "'"
             << ",'" << strategy.correlation().type           << "'";
         return oss.str();

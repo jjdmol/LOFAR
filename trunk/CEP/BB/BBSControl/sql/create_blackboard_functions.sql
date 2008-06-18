@@ -98,8 +98,7 @@ CREATE OR REPLACE FUNCTION blackboard.set_strategy
     input_data TEXT,
     region_of_interest_freq TEXT,
     region_of_interest_time TEXT,
-    work_domain_size_freq DOUBLE PRECISION,
-    work_domain_size_time DOUBLE PRECISION,
+    chunk_size INTEGER,
     correlation_time TEXT,
     correlation_size TEXT)
 RETURNS BOOLEAN AS
@@ -120,8 +119,7 @@ $$
                 "Strategy.InputData",
                 "Strategy.RegionOfInterest.Freq",
                 "Strategy.RegionOfInterest.Time",
-                "Strategy.WorkDomainSize.Freq",
-                "Strategy.WorkDomainSize.Time",
+                "Strategy.ChunkSize",
                 "Strategy.Correlation.Selection",
                 "Strategy.Correlation.Type")
             VALUES
@@ -134,8 +132,7 @@ $$
                 input_data,
                 region_of_interest_freq,
                 region_of_interest_time,
-                work_domain_size_freq,
-                work_domain_size_time,
+                chunk_size,
                 correlation_time,
                 correlation_size);
 
@@ -209,6 +206,8 @@ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION blackboard.add_result
     (_command_id INTEGER,
     _pid INTEGER,
+    _sender_type INTEGER,
+    _sender_id INTEGER,
     _result_code INTEGER,
     _message TEXT)
 RETURNS BOOL AS
@@ -217,8 +216,11 @@ $$
         IF _command_id > 0
             AND _command_id = blackboard.get_next_command_id(_pid)
         THEN
-            INSERT INTO blackboard.result(command_id, pid, result_code, message)
-                VALUES (_command_id, _pid, _result_code, _message);
+            INSERT 
+                INTO blackboard.result(command_id, pid, sender_type, sender_id,
+                                       result_code, message)
+                VALUES (_command_id, _pid, _sender_type, _sender_id,
+                        _result_code, _message);
             
             RETURN FOUND;
         END IF;

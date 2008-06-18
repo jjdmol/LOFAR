@@ -1,6 +1,6 @@
-//# Solver.h: Calculate parameter values using a least squares fitter
+//# Solver.h: 
 //#
-//# Copyright (C) 2004
+//# Copyright (C) 2007
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,122 +20,66 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BB_BBS_SOLVER_H
-#define LOFAR_BB_BBS_SOLVER_H
+#ifndef LOFAR_BB_BBSKERNEL_SOLVER_H
+#define LOFAR_BB_BBSKERNEL_SOLVER_H
 
-// \file
-// Calculates parameter values using a least squares fitter
-
-#include <scimath/Fitting/LSQaips.h>
-#include <BBSKernel/ParmData.h>
-#include <BBSKernel/Quality.h>
-#include <ParmDB/ParmDB.h>
+#include <BBSKernel/SolverInterfaceTypes.h>
 #include <Common/LofarTypes.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_map.h>
+
+#include <scimath/Fitting/LSQFit.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
+    class Solver
+    {
+    public:
+        Solver();
 
-// \addtogroup BBSKernel
-// @{
+        // (Re)set the solver's state. This allows a solver instance to be
+        // re-used.
+        void reset(size_t maxIter = 10, double epsValue = 1e-9,
+            double epsDerivative = 1e-9, double colFactor = 1e-9,
+            double lmFactor = 1.0, bool balanced = false, bool useSvd = true);
 
-// Solver calculates new parameter values from the equations given by the
-// Prediffer class.
-class Solver
-{
+        // Set the (local) coefficient index of a kernel.
+        void setCoeffIndex(uint32 kernelId, const CoeffIndex &local);
+        // Get the merged (global) coefficient index.
+        const CoeffIndex &getCoeffIndex() const;
 
-public:
-  // Create Solver object.
-  Solver();
+        // Set the initial coefficients of a kernel.
+        void setCoeff(uint32 kernelId, const vector<CellCoeff> &local);
 
-  // Destructor
-  ~Solver();
+        // Set the equations of a kernel.
+        void setEquations(uint32 kernelId, const vector<CellEquation> &local);
+        // Get the merged equations (meant for debugging purposes).
+        void getEquations(vector<CellEquation> &global);
 
-  // Initialize the solvable parm data.
-  void initSolvableParmData (int nrPrediffers,
-			     const vector<MeqDomain>& solveDomains,
-			     const MeqDomain& workDomain);
+        // Perform an iteration for all available cells.
+        bool iterate(vector<CellSolution> &global);
 
-  // Set the solvable parm data for a given prediffer.
-  void setSolvableParmData (const ParmDataInfo&, int prediffer);
+    private:
+        struct Cell
+        {
+            casa::LSQFit    solver;
+            vector<double>  coeff;
+        };
 
-  // Get the solvable parameter name info.
-  const ParmDataInfo& getSolvableParmData() const
-    { return itsParmInfo; }
-
-  // Merge the fitters from the given Prediffer with the global fitter.
-  void mergeFitters (const vector<casa::LSQFit>&, int prediffer);
-
-  // Solve all the matrices.
-  void solve (bool useSVD);
-
-  // Get the solvable values for the given fitter (i.e. solve domain).
-  const vector<double>& getSolvableValues (uint fitterIndex) const;
-
-  // Get quality for the given fitter (i.e. solve domain).
-  const Quality& getQuality (uint fitterIndex) const;
-
-  // Show the relevant info.
-  void show (std::ostream&);
-  
-  // Log the quality indicators, and the coefficients of the solvable
-  // parameters to a ParmDB.
-  void log(LOFAR::ParmDB::ParmDB &table, const string &stepName);
-
-private:
-  // Copy constructor and assignment are not allowed.
-  // <group>
-  Solver(const Solver& other);
-  Solver& operator=(const Solver& other);
-  // </group>
-
-  // The solver combines the results from multiple Prediffers.
-  // Each Prediffer casn have a subset of the solvable parms and a
-  // subset of the solve domains.
-  // setSolvableData tells for each Prediffer its solvable parms and
-  // its solve domains (as contained in ParmDataInfo). For each parm,
-  // ParmData gives the number of solvable coefficients per solve domain
-  // (in ParmData::PDInfo) and the number of perturbed values (which is the
-  // maximum of the number of solvable coefficients for all solve domains).
-  //
-  // So Solver has to combine the solvable parm info from all Prediffers:
-  // - It has to put the LSQFit info from the Prediffers at the correct
-  //   place in the global LSQFit objects.
-  // - The parm coefficients in the Prediffers have to updated correctly.
-  // - The parms in the ParmDB have to updated correctly.
-  // For this purpose it holds a few maps per Prediffer:
-  // - index of the i-th Prediffer parm in the global parm vector.
-  // - per parm a vector telling the number of scids per solve domain.
-  // - per parm a vector telling the first scid in the LSQFit per solve domain.
-  struct FitterData
-  {
-    casa::LSQFit   fitter;
-    Quality        quality;
-    std::vector<double> solvableValues;
-    int            nused;
-    int            nflagged;
-  };
-  
-  struct PredifferInfo
-  {
-    vector<int>           solveDomainIndices;
-    vector<vector<uint> > scidMap; //# map scids in Prediffer fitters to global
+        map<uint32, Cell>               itsCells;
+        CoeffIndex                      itsCoeffIndex;
+        map<uint32, vector<uint32> >    itsCoeffMapping;
+        
+        double                          itsEpsValue;
+        double                          itsEpsDerivative;
+        size_t                          itsMaxIter;
+        double                          itsColFactor;
+        double                          itsLmFactor;
+        bool                            itsBalanced;
+        bool                            itsUseSvd;
   };
 
-  map<string,int>       itsNameMap;        //# Map parameter name to index
-  vector<FitterData>    itsFitters;
-  ParmDataInfo          itsParmInfo;       //# Global parm info
-  vector<PredifferInfo> itsPredInfo;       //# prediffer info
-  bool                  itsDoSet;          //# true = do itsSolver.set
-};
-
-// @}
-
-} // namespace BBS
-} // namespace LOFAR
+} //# namespace BBS
+} //# namespace LOFAR
 
 #endif

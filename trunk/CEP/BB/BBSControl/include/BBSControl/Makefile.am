@@ -1,36 +1,35 @@
-pkginclude_HEADERS = \
+pkginclude_HEADERS = Package__Version.h  \
 	BlobStreamableConnection.h \
 	BlobStreamableVector.h \
-	CommandExecutor.h \
 	Command.h \
-	CommandId.h \
+	CommandExecutor.h \
 	CommandQueue.h \
 	CommandResult.h \
 	CommandVisitor.h \
 	CorrectStep.h \
-	DomainRegistrationRequest.h \
 	Exceptions.h \
 	FinalizeCommand.h \
 	GlobalProcessControl.h \
 	InitializeCommand.h \
-	IterationRequest.h \
-	IterationResult.h \
 	KernelProcessControl.h \
-	LocalControlId.h \
+	Messages.h \
+	MessageHandlers.h \
 	MultiStep.h \
 	NextChunkCommand.h \
 	PredictStep.h \
 	RecoverCommand.h \
 	RefitStep.h \
+	SenderId.h \
 	ShiftStep.h \
 	SingleStep.h \
 	SolverProcessControl.h \
 	SolveStep.h \
+	SolveTask.h \
 	Step.h \
 	Strategy.h \
-	Structs.h \
 	SubtractStep.h \
-	SynchronizeCommand.h
+	SynchronizeCommand.h \
+	Types.h
 
 noinst_HEADERS = \
 	pqutil.h \

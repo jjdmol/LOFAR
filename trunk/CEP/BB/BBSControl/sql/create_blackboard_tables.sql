@@ -14,8 +14,7 @@ CREATE TABLE blackboard.strategy
     "Strategy.RegionOfInterest.Freq"    TEXT                DEFAULT '[]',
     "Strategy.RegionOfInterest.Time"    TEXT                DEFAULT '[]',
 
-    "Strategy.WorkDomainSize.Freq"      DOUBLE PRECISION    NOT NULL,
-    "Strategy.WorkDomainSize.Time"      DOUBLE PRECISION    NOT NULL,
+    "Strategy.ChunkSize"                INTEGER             NOT NULL,
 
     "Strategy.Correlation.Selection"    TEXT                DEFAULT 'CROSS',
     "Strategy.Correlation.Type"         TEXT                DEFAULT '[]',
@@ -45,6 +44,8 @@ CREATE TABLE blackboard.result
     timestamp       TIMESTAMP WITH TIME ZONE    DEFAULT now(),
     node            INET                        DEFAULT inet_client_addr(),
     pid             INTEGER                     NOT NULL,
+    sender_type     INTEGER                     DEFAULT -1,
+    sender_id       INTEGER                     DEFAULT -1,
     result_code     INTEGER                     DEFAULT -1,
     message         TEXT                        NOT NULL,
     read_flag       BOOL                        DEFAULT 'false',

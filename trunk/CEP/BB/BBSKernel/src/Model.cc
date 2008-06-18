@@ -38,7 +38,8 @@
 #include <BBSKernel/MNS/MeqJonesSum.h>
 #include <BBSKernel/MNS/MeqJonesVisData.h>
 #include <BBSKernel/MNS/MeqAzEl.h>
-#include <BBSKernel/MNS/MeqDipoleBeam.h>
+//#include <BBSKernel/MNS/MeqDipoleBeam.h>
+#include <BBSKernel/MNS/MeqDipoleBeamExternal.h>
 
 #include <BBSKernel/MNS/MeqStation.h>
 #include <BBSKernel/MNS/MeqStatUVW.h>
@@ -69,6 +70,7 @@ using std::max;
 
 Model::Model(const Instrument &instrument, MeqParmGroup &parmGroup,
     ParmDB *skyDBase, MeqPhaseRef *phaseRef)
+    :   itsEquationType(UNSET)
 {
     // Construct source list.
     itsSourceList.reset(new MeqSourceList(*skyDBase, parmGroup));
@@ -97,10 +99,13 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
         {
             mask[DIRECTIONAL_GAIN] = true;
         }
-        else if(*it == "DIPOLE_BEAM")
+        else if(*it == "DIPOLE_BEAM_LBA" && type == SIMULATE)
         {
-            mask[DIPOLE_BEAM] = true;
-            LOG_DEBUG_STR("Using dipole beam....");
+            mask[DIPOLE_BEAM_LBA] = true;
+        }
+        else if(*it == "DIPOLE_BEAM_HBA" && type == SIMULATE)
+        {
+            mask[DIPOLE_BEAM_HBA] = true;
         }
         else if(*it == "BANDPASS")
         {
@@ -110,18 +115,21 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
         {
             mask[PHASORS] = true;
         }
+        else
+        {
+            LOG_WARN_STR("Ignored unknown model component '" << *it << "'.");
+        }
     }
     
-    string part1("real:");
-    string part2("imag:");
-    if(mask[PHASORS])
-    {
-        part1 = "ampl:";
-        part2 = "phase:";
-    }
+    ASSERTSTR(!(mask[DIPOLE_BEAM_LBA] && mask[DIPOLE_BEAM_HBA]),
+        "Using both DIPOLE_BEAM_LBA and DIPOLE_BEAM_HBA is not supported.");
+
+    string part1(mask[PHASORS] ? "ampl:" : "real:");
+    string part2(mask[PHASORS] ? "phase:" : "imag:");
 
     // Clear all equations.
-    itsEquations.clear();
+    clearEquations();
+    itsEquationType = type;
 
     // Make nodes for all specified sources (use all if none specified).
     if(sources.empty())
@@ -154,21 +162,18 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
         dir_gain.resize(nStations * nSources);
     }
 
-    if(mask[DIPOLE_BEAM])
+    if(mask[DIPOLE_BEAM_LBA] || mask[DIPOLE_BEAM_HBA])
     {
-        // Make an E-jones expression per source. For now, we use the instrument
-        // position as reference position on earth. In the future, we will need
-        // an E-jones expression per source, _per station_.
+        dipole_beam.resize(nStations * nSources);
+
+        // TODO: Use station 0 as reference position on earth (see
+        // global_model.py in EJones_HBA). Is this accurate enough?
         azel.resize(nSources);
-        dipole_beam.resize(nSources);
         for(size_t i = 0; i < nSources; ++i)
         {
             azel[i] =
                 new MeqAzEl(*(itsSourceNodes[i]), *(itsStationNodes[0].get()));
-
-            dipole_beam[i] = new MeqDipoleBeam(azel[i], 1.706, 1.38,
-                casa::C::pi / 4.001, -casa::C::pi_4);
-        }
+        }                    
     }
 
     for(size_t i = 0; i < nStations; ++i)
@@ -285,6 +290,33 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
 //                    inv_gain[i] = new MeqJonesInvert(gain[i * nSources]);
             }
         }
+
+        if(mask[DIPOLE_BEAM_LBA] || mask[DIPOLE_BEAM_HBA])
+        {
+            string suffix = itsStationNodes[i]->getName();
+            MeqExpr orientation(MeqParmFunklet::create("orientation:" + suffix,
+                parmGroup, instrumentDBase));
+
+            string moduleTheta(mask[DIPOLE_BEAM_LBA] ? "beam_dr_theta.so"
+                : "hba_beam_theta.so");
+            string modulePhi(mask[DIPOLE_BEAM_LBA] ? "beam_dr_phi.so"
+                : "hba_beam_phi.so");
+
+            // TODO: Where is this scale factor coming from (see global_model.py
+            // in EJones_droopy_comp and EJones_HBA)?
+            double scaleFactor = mask[DIPOLE_BEAM_LBA] ? 1.0 / 88.0
+                : 1.0 / 600.0;
+
+            // Make an E-jones expression per station per source.
+            for(size_t j = 0; j < nSources; ++j)
+            {
+    //                dipole_beam[i] = new MeqDipoleBeam(azel[i], 1.706, 1.38,
+    //                    casa::C::pi / 4.001, -casa::C::pi_4);
+                dipole_beam[i * nSources + j] =
+                    new MeqDipoleBeamExternal(moduleTheta, modulePhi, azel[j],
+                        orientation, scaleFactor);
+            }
+        }
     }
 
     if(type == CORRECT)
@@ -388,10 +420,12 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
                 sourceExpr = new MeqJonesMul(sourceExpr, shift);
                 
                 // Apply image plane effects if required.
-                if(mask[DIPOLE_BEAM])
+                if(mask[DIPOLE_BEAM_LBA] || mask[DIPOLE_BEAM_HBA])
                 {
-                    sourceExpr = new MeqJonesCMul3(dipole_beam[j], sourceExpr,
-                        dipole_beam[j]);
+                    sourceExpr = new MeqJonesCMul3
+                        (dipole_beam[baseline.first * nSources + j],
+                        sourceExpr,
+                        dipole_beam[baseline.second * nSources + j]);
                 }
 
                 if(mask[DIRECTIONAL_GAIN])
@@ -433,6 +467,7 @@ void Model::makeEquations(EquationType type, const vector<string> &components,
 void Model::clearEquations()
 {
     itsEquations.clear();
+    itsEquationType = UNSET;
 }
 
 
@@ -505,9 +540,14 @@ void Model::precalculate(const MeqRequest& request)
         {
             vector<MeqExprRep*> &nodes = precalcNodes[level];
             if(!nodes.empty())
+            {
+//                ASSERT(nodes.size() <= numeric_limits<int>::max());
 #pragma omp for schedule(dynamic)
-                for(size_t i=0; i < nodes.size(); ++i)
+                for(int i = 0; i < static_cast<int>(nodes.size()); ++i)
+                {
                     nodes[i]->precalculate(request);
+                }
+            }
         }
     } // omp parallel
 }
@@ -537,9 +577,9 @@ void Model::makeStationNodes(const Instrument &instrument,
         " casa::MDirection to allow comparison with earlier version of BBS and"
         " with MeqTree. Should be removed after validation.");
 
-    itsStationNodes.resize(instrument.getStationCount());
-    itsUVWNodes.resize(instrument.getStationCount());
-    for(size_t i = 0; i < instrument.getStationCount(); ++i)
+    itsStationNodes.resize(instrument.stations.size());
+    itsUVWNodes.resize(instrument.stations.size());
+    for(size_t i = 0; i < instrument.stations.size(); ++i)
     {
         const casa::MVPosition &position =
             instrument.stations[i].position.getValue();
@@ -578,18 +618,22 @@ void Model::makeSourceNodes(const vector<string> &names, MeqPhaseRef *phaseRef)
 
 void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
 {
-    size_t nStations = instrument.getStationCount();
+    const size_t nStations = instrument.stations.size();
     vector<bool> statDone(nStations);
     vector<double> statUVW(3 * nStations);
 
+    const VisDimensions &dims = buffer->getDimensions();
+    const Grid &grid = dims.getGrid();
+    const vector<baseline_t> &baselines = dims.getBaselines();
+    
     // Step through the MS by timeslot.
-    for (size_t tslot = 0; tslot < buffer->grid.time.size(); ++tslot)
+    for (size_t tslot = 0; tslot < grid[TIME]->size(); ++tslot)
     {
-        double time = buffer->grid.time(tslot);
+        const double time = grid[TIME]->center(tslot);
         fill(statDone.begin(), statDone.end(), false);
 
         // Set UVW of first station used to 0 (UVW coordinates are relative!).
-        size_t station0 = buffer->grid.baselines[0].first;
+        size_t station0 = baselines[0].first;
         statUVW[3 * station0] = 0.0;
         statUVW[3 * station0 + 1] = 0.0;
         statUVW[3 * station0 + 2] = 0.0;
@@ -600,7 +644,7 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
         do
         {
             nDone = 0;
-            for(size_t idx = 0; idx < buffer->grid.baselines.size(); ++idx)
+            for(size_t idx = 0; idx < baselines.size(); ++idx)
             {
                 // If the contents of the UVW column is uninitialized, skip
                 // it.
@@ -609,8 +653,8 @@ void Model::setStationUVW(const Instrument &instrument, VisData::Pointer buffer)
                     continue;
                 }
                 
-                size_t statA = buffer->grid.baselines[idx].first;
-                size_t statB = buffer->grid.baselines[idx].second;
+                size_t statA = baselines[idx].first;
+                size_t statB = baselines[idx].second;
                 if(statDone[statA] && !statDone[statB])
                 {
                     statUVW[3 * statB] =

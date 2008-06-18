@@ -66,21 +66,30 @@ int MeqParm::initDomain (const vector<MeqDomain>&, int&, vector<int>&)
 void MeqParm::save()
 {}
 
-void MeqParm::save(size_t domainIndex)
+void MeqParm::save(size_t)
 {}
 
+/*
 void MeqParm::update (const ParmData&)
 {
   throw Exception("MeqParm::update(ParmData) should not be called");
 }
+*/
+
 void MeqParm::update (const vector<double>&)
 {
   throw Exception("MeqParm::update(vector<double>) should not be called");
 }
 
-void MeqParm::update(size_t domain, const vector<double> &unknowns)
+void MeqParm::update(size_t, const vector<double> &)
 {
   throw Exception("MeqParm::update(size_t, vector<double>) should not be called");
+}
+
+void MeqParm::update(size_t, const vector<double> &, size_t)
+{
+  throw Exception("MeqParm::update(size_t, vector<double>, size_t) should not"
+    " be called");
 }
 
 void MeqParm::updateFromTable()

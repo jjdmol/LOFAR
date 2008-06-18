@@ -9,9 +9,7 @@ Strategy:
 . Region of interest:
 . . Frequency: []
 . . Time: []
-. Domain size:
-. . Bandwidth: 1e+06 (Hz)
-. . Time interval: 10 (s)
+. Chunk size: 0
 . Correlation:
 . . Selection: ALL
 . . Type: ["XX","YY"]
@@ -51,14 +49,22 @@ Strategy:
 . . . Instrument models: ["Bandpass","Phase"]
 . . . Output data: OUTDATA1
 . . . Solve: 
-. . . . Max nr. of iterations: 10
-. . . . Convergence threshold: 1e-07
-. . . . Min fraction converged: 0.95
 . . . . Solvable parameters: ["GAIN:{11,22}:*"]
 . . . . Excluded parameters: []
-. . . . Domain size:
-. . . . . Bandwidth: 1000 (Hz)
-. . . . . Time interval: 1 (s)
+. . . . Kernel groups: [1,1]
+. . . . Cell size:
+. . . . . No. of channels: 1000
+. . . . . No. of timeslots: 1
+. . . . Cell chunk size: 0
+. . . . Propagate solutions: false
+. . . . Solver options:
+. . . . . Max nr. of iterations: 10
+. . . . . Epsilon value: 1e-07
+. . . . . Epsilon derivative: 1e-07
+. . . . . Collinearity factor: 0.99
+. . . . . LM factor: 0.001
+. . . . . Balanced equations: true
+. . . . . Use SVD: false
 . . Step: Correct
 . . . Name: sl2
 . . . Full name: xyz1.sl2
@@ -107,14 +113,22 @@ Strategy:
 . . . Instrument models: ["Bandpass","Phase"]
 . . . Output data: OUTDATA1
 . . . Solve: 
-. . . . Max nr. of iterations: 10
-. . . . Convergence threshold: 1e-07
-. . . . Min fraction converged: 0.95
 . . . . Solvable parameters: ["GAIN:{11,22}:*"]
 . . . . Excluded parameters: []
-. . . . Domain size:
-. . . . . Bandwidth: 1000 (Hz)
-. . . . . Time interval: 1 (s)
+. . . . Kernel groups: [1,1]
+. . . . Cell size:
+. . . . . No. of channels: 1000
+. . . . . No. of timeslots: 1
+. . . . Cell chunk size: 0
+. . . . Propagate solutions: false
+. . . . Solver options:
+. . . . . Max nr. of iterations: 10
+. . . . . Epsilon value: 1e-07
+. . . . . Epsilon derivative: 1e-07
+. . . . . Collinearity factor: 0.99
+. . . . . LM factor: 0.001
+. . . . . Balanced equations: true
+. . . . . Use SVD: false
 . . Step: Predict
 . . . Name: sl3
 . . . Full name: xyz2.sl3

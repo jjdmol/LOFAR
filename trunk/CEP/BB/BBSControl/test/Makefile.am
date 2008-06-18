@@ -1,6 +1,9 @@
 check_PROGRAMS			= tpqutil \
 				  tStrategy \
-				  tCommandQueue
+				  tCommandQueue \
+				  tClient \
+				  tServer \
+				  tSenderId 
 
 check_SCRIPTS			= tpqutil.sh \
 				  tStrategy.sh \
@@ -23,6 +26,18 @@ tStrategy_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
 tCommandQueue_SOURCES		= tCommandQueue.cc
 tCommandQueue_LDADD		= ../src/libbbscontrol.la
 tCommandQueue_DEPENDENCIES	= ../src/libbbscontrol.la $(LOFAR_DEPEND)
+
+tClient_SOURCES			= MyDH.h MyDH.cc tClient.cc
+tClient_LDADD			= ../src/libbbscontrol.la
+tClient_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
+
+tServer_SOURCES			= MyDH.h MyDH.cc tServer.cc
+tServer_LDADD			= ../src/libbbscontrol.la
+tServer_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
+
+tSenderId_SOURCES		= tSenderId.cc
+tSenderId_LDADD			= ../src/libbbscontrol.la
+tSenderId_DEPENDENCIES		= ../src/libbbscontrol.la $(LOFAR_DEPEND)
 
 TESTS				= $(check_SCRIPTS)
 

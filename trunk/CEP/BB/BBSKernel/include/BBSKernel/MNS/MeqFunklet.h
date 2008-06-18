@@ -142,7 +142,11 @@ public:
 
   // Update the solvable coefficients with the new values taken at
   // the scid index from the vector.
-  void update (const vector<double>& values);
+  void update (const vector<double>& coeff);
+
+  // Update the solvable coefficients with the new values taken from the vector
+  // starting from the given offset.
+  void update (const vector<double>& coeff, size_t offset);
 
   // Update the solvable coefficients with the new values.
   void update (const MeqMatrix& value);

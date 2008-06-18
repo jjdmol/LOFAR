@@ -28,349 +28,377 @@
 
 #include <BBSControl/SolverProcessControl.h>
 #include <BBSControl/BlobStreamableConnection.h>
+#include <BBSControl/CommandQueue.h>
+#include <BBSControl/Messages.h>
+#include <BBSControl/InitializeCommand.h>
+#include <BBSControl/NextChunkCommand.h>
+#include <BBSControl/FinalizeCommand.h>
+#include <BBSControl/StreamUtil.h>
+#include <BBSControl/Exceptions.h>
+#include <BBSControl/Types.h>
 
 #include <APS/ParameterSet.h>
 #include <Blob/BlobStreamable.h>
 #include <Common/Exceptions.h>
 #include <Common/LofarLogger.h>
-#include <BBSControl/StreamUtil.h>
 #include <Common/lofar_iomanip.h>
+#include <Common/lofar_numeric.h>
 #include <Common/lofar_smartptr.h>
 
 #include <stdlib.h>
 
-#if 0
-    #define NONREADY        casa::LSQFit::NONREADY
-    #define N_ReadyCode     casa::LSQFit::N_ReadyCode
-    #define SUMLL           casa::LSQFit::SUMLL
-    #define NC              casa::LSQFit::NC
-#else
-    #define NONREADY        0
-    #define N_ReadyCode     999
-    #define NC              0
-    #define SUMLL           2
-#endif
-
-using namespace LOFAR::ACC::APS;
-
 namespace LOFAR
 {
-namespace BBS
-{
-using LOFAR::operator<<;
-using boost::scoped_ptr;
+  using namespace ACC::APS;
 
-//# Ensure classes are registered with the ObjectFactory.
-template class BlobStreamableVector<DomainRegistrationRequest>;
-template class BlobStreamableVector<IterationRequest>;
-template class BlobStreamableVector<IterationResult>;
+  namespace BBS
+  {
+    using LOFAR::operator<<;
 
-
-//##----   P u b l i c   m e t h o d s   ----##//
-SolverProcessControl::SolverProcessControl()
-    :   ProcessControl()
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-}
-
-
-SolverProcessControl::~SolverProcessControl()
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-}
-
-
-tribool SolverProcessControl::define()
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
-    try
+    namespace
     {
-        char *user = getenv("USER");
-        ASSERT(user);
-        string userString(user);
-
-        ostringstream socketName;
-        int id = globalParameterSet()->getInt32("SolverId");
-        socketName << "=Solver_" << userString << id;
-
-        itsKernelConnection.reset(new BlobStreamableConnection(
-            socketName.str(),
-            Socket::LOCAL));
+      InitializeCommand initCmd;
+      NextChunkCommand  nextChunkCmd;
+      FinalizeCommand   finalizeCmd;
     }
-    catch(Exception& e)
+
+    //##----   P u b l i c   m e t h o d s   ----##//
+
+    SolverProcessControl::SolverProcessControl() :
+      ProcessControl(),
+      itsState(UNDEFINED),
+      itsNrKernels(0)
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+    }
+
+
+    SolverProcessControl::~SolverProcessControl()
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+    }
+
+
+    tribool SolverProcessControl::define()
+    {
+      LOG_INFO("SolverProcessControl::define()");
+      try {
+        itsNrKernels = globalParameterSet()->getUint32("Solver.nrKernels");
+        itsSenderId = 
+          SenderId(SenderId::SOLVER,
+                   globalParameterSet()->getUint32("SolverProcessId"));
+      }
+      catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
+      }
+      return true;
     }
 
-    return true;
-}
 
-
-tribool SolverProcessControl::init()
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
-    try
+    tribool SolverProcessControl::init()
     {
-        LOG_INFO("Listening at solver@localhost");
-        if(!itsKernelConnection->connect())
-        {
-            LOG_ERROR("+ listen failed");
-            return false;
+      LOG_INFO("SolverProcessControl::init()");
+      try {
+        // Socket acceptor. In the global case, it will become a TCP listen
+        // socket; in the local case a Unix domain socket. The acceptor can be
+        // a stack object, since we don't need it anymore, once all kernels
+        // have connected.
+        Socket acceptor("SolverProcessControl");
+
+        // Socket connector. In the global case, this will become a TCP socket
+        // accepted by the listening socket; in the local case, a Unix domain
+        // socket. The connector is a heap object, since we need it in the
+        // run() method.
+        shared_ptr<BlobStreamableConnection> connector;
+
+        if (isGlobal()) {
+          LOG_DEBUG("This is a global solver.");
+
+          // Create a new CommandQueue. This will open a connection to the
+          // blackboard database.
+          itsCommandQueue.reset
+            (new CommandQueue(globalParameterSet()->getString("BBDB.DBName"),
+                              globalParameterSet()->getString("BBDB.UserName"),
+                              globalParameterSet()->getString("BBDB.Host"),
+                              globalParameterSet()->getString("BBDB.Port")));
+
+          // Register for the "command" trigger, which fires when a new
+          // command is posted to the blackboard database.
+          itsCommandQueue->registerTrigger(CommandQueue::Trigger::Command);
+
+          // Create a TCP listen socket that will accept incoming kernel
+          // connections.
+          acceptor.initServer(globalParameterSet()->getString("Solver.Port"), 
+                              Socket::TCP);
         }
-        LOG_INFO("+ ok");
-    }
-    catch(Exception& e)
-    {
+        else {
+          LOG_DEBUG("This is a local solver.");
+
+          // Create a Unix domain socket to connect to "our" kernel.
+          ostringstream oss;
+          oss << "=Solver_" << getenv("USER") 
+              << globalParameterSet()->getInt32("Solver.Id");
+          acceptor.initServer(oss.str(), Socket::LOCAL);
+        }
+
+        //  Wait for all kernels to connect.
+        LOG_DEBUG_STR("Waiting for " << itsNrKernels << 
+                      " kernel(s) to connect ...");
+        itsKernels.resize(itsNrKernels);
+
+        for (uint i = 0; i < itsNrKernels; ++i) {
+          connector.reset(new BlobStreamableConnection(acceptor.accept()));
+          if (!connector->connect()) {
+            THROW (IOException, "Failed to connect kernel");
+          }
+
+          scoped_ptr<const KernelIdMsg>
+            msg(dynamic_cast<KernelIdMsg*>(connector->recvObject()));
+          if (!msg) {
+            THROW (SolverControlException, 
+                   "Illegal message. Expected a KernelIdMsg");
+          }
+
+          KernelId id(msg->getKernelId());
+          try {
+            itsKernels.at(id) = KernelConnection(connector, id);
+          } catch (std::out_of_range&) {
+            connector.reset();
+            LOG_ERROR_STR("Kernel ID (" << id << ") out of range. "
+                          "Disconnected kernel");
+          }
+
+          LOG_DEBUG_STR("Kernel " << i+1 << " of " << itsNrKernels << 
+                        " connected (id=" << id << ")");
+        }
+
+        // Switch to GET_COMMAND state, indicating that we're ready to receive
+        // commands.
+        setState(GET_COMMAND);
+      }
+
+      catch (Exception& e) {
         LOG_ERROR_STR(e);
         return false;
+      }
+
+      // All went well.
+      return true;
     }
 
-    // All went well.
-    return true;
-}
 
-
-tribool SolverProcessControl::run()
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-
-    try
+    tribool SolverProcessControl::run()
     {
-        // Receive the next message
-        scoped_ptr<BlobStreamable> message(itsKernelConnection->recvObject());
-        if(message)
-            return dispatch(message.get());
-        else
-            return false;
-    }
-    catch(Exception& e)
-    {
+      LOG_INFO("SolverProcessControl::run()");
+
+      try {
+        switch(itsState) {
+
+        default: {
+          LOG_ERROR("RunState UNKNOWN: this is a program logic error!");
+          return false;
+          break;
+        }
+
+        case UNDEFINED: {
+          LOG_WARN("RunState UNDEFINED; init() must be called first!");
+          return false;
+          break;
+        }
+
+        case WAIT: {
+          LOG_TRACE_FLOW_STR("RunState::" << showState());
+          LOG_DEBUG("Waiting for command trigger ...");
+          if (itsCommandQueue->
+              waitForTrigger(CommandQueue::Trigger::Command)) {
+            setState(GET_COMMAND);
+          }
+          break;
+        }
+
+        case GET_COMMAND: {
+          LOG_TRACE_FLOW_STR("RunState::" << showState());
+          LOG_DEBUG("Retrieving command ...");
+          itsCommand = itsCommandQueue->getNextCommand();
+
+          if (!itsCommand.first) {
+            LOG_DEBUG("Received empty command. Ignored");
+            setState(WAIT);
+            break;
+          }
+
+          // If Command is a SolveStep, we should initiate a solve operation.
+          shared_ptr<const SolveStep> solveStep = 
+            dynamic_pointer_cast<const SolveStep>(itsCommand.first);
+          if (solveStep) {
+            setSolveTasks(solveStep->kernelGroups(), 
+                          solveStep->solverOptions());
+            setState(SOLVE);
+          } 
+          else {
+            itsCommandQueue->
+              addResult(itsCommand.second, CommandResult::OK, itsSenderId);
+            setState(WAIT);
+          }
+          break;
+        }
+
+        case SOLVE: {
+          LOG_TRACE_FLOW_STR("RunState::" << showState());
+
+          // Call the run() method on each kernel group. In the current
+          // implementation, this is a serialized operation. Once we run each
+          // kernel group in its own thread, we can parallellize
+          // things. Threads will also make it possible to return swiftly from
+          // the current method, so that we can promptly react to ACC
+          // commands.
+          //
+          // [Q] Should we let run() return a bool or do we handle error
+          // conditions with exceptions. I think the former (bools) is a
+          // better choice, since we're planning on running each task in a
+          // separate thread, and it is usually a bad thing to handle an
+          // exception in a different thread than in which it was thrown.
+          bool done = true;
+          for (uint i = 0; i < itsSolveTasks.size(); ++i) {
+            done = itsSolveTasks[i].run() && done;
+          }
+          // OK, all SolveTasks are done; we can post the result.
+          if(done) {
+            itsCommandQueue->
+              addResult(itsCommand.second, CommandResult::OK, itsSenderId);
+            setState(WAIT);
+          }
+          break;
+        }
+
+        } // switch
+      }
+      catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
+      }
+      return true;
     }
-}
 
 
-tribool SolverProcessControl::pause(const string& /*condition*/)
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    LOG_WARN("Not supported");
-    return false;
-}
-
-
-tribool SolverProcessControl::release()
-{
-    LOG_INFO("SolverProcessControl::release()");
-    LOG_WARN("Not supported");
-    return false;
-}
-
-
-tribool SolverProcessControl::quit()
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    return true;
-}
-
-
-tribool SolverProcessControl::snapshot(const string& /*destination*/)
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    LOG_WARN("Not supported");
-    return false;
-}
-
-
-tribool SolverProcessControl::recover(const string& /*source*/)
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    LOG_WARN("Not supported");
-    return false;
-}
-
-
-tribool SolverProcessControl::reinit(const string& /*configID*/)
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    LOG_WARN("Not supported");
-    return false;
-}
-
-
-std::string SolverProcessControl::askInfo(const string& /*keylist*/)
-{
-    LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
-    return std::string("");
-}
-
-
-bool SolverProcessControl::dispatch(const BlobStreamable *message)
-{
+    tribool SolverProcessControl::pause(const string& /*condition*/)
     {
-        const DomainRegistrationRequest *request =
-            dynamic_cast<const DomainRegistrationRequest*>(message);
-        if(request)
-            return handle(request);
+      LOG_INFO("SolverProcessControl::pause()");
+      LOG_WARN("Not supported");
+      return false;
     }
 
+
+    tribool SolverProcessControl::release()
     {
-        const BlobStreamableVector<DomainRegistrationRequest> *request =
-            dynamic_cast<const BlobStreamableVector<DomainRegistrationRequest>*>
-                (message);
-        if(request)
-            return handle(request);
+      LOG_INFO("SolverProcessControl::release()");
+      itsState = UNDEFINED;
+      /* Here we should properly close all connections to the outside world.
+         I.e. our connection to the command queue, and the connections
+         that we've accepted from the kernels.
+      */
+      return true;
     }
 
+
+    tribool SolverProcessControl::quit()
     {
-        const IterationRequest *request =
-            dynamic_cast<const IterationRequest*>(message);
-        if(request)
-            return handle(request);
+      LOG_INFO("SolverProcessControl::quit()");
+      return true;
     }
 
+
+    tribool SolverProcessControl::snapshot(const string& /*destination*/)
     {
-        const BlobStreamableVector<IterationRequest> *request =
-            dynamic_cast<const BlobStreamableVector<IterationRequest>*>
-                (message);
-        if(request)
-            return handle(request);
+      LOG_INFO("SolverProcessControl::snapshot()");
+      LOG_WARN("Not supported");
+      return false;
     }
 
-    // We received a message we can't handle
-    LOG_WARN_STR("Received message of unsupported type");
-    return false;
-}
 
-
-bool SolverProcessControl::handle(const DomainRegistrationRequest *request)
-{
-    return registerDomain(request);
-}
-
-
-bool SolverProcessControl::handle
-    (const BlobStreamableVector<DomainRegistrationRequest> *request)
-{
-    bool result = true;
-
-    for(vector<DomainRegistrationRequest*>::const_iterator it =
-        request->getVector().begin();
-        it != request->getVector().end() && result;
-        ++it)
+    tribool SolverProcessControl::recover(const string& /*source*/)
     {
-        result = result && registerDomain(*it);
+      LOG_INFO("SolverProcessControl::recover()");
+      LOG_WARN("Not supported");
+      return false;
     }
-    return result;
-}
 
 
-bool SolverProcessControl::handle(const IterationRequest *request)
-{
-    scoped_ptr<IterationResult> result(performIteration(request));
-    return itsKernelConnection->sendObject(*result.get());
-}
-
-
-bool SolverProcessControl::handle
-    (const BlobStreamableVector<IterationRequest> *request)
-{
-    BlobStreamableVector<IterationResult> result;
-
-    for(vector<IterationRequest*>::const_iterator it =
-        request->getVector().begin();
-        it != request->getVector().end();
-        ++it)
+    tribool SolverProcessControl::reinit(const string& /*configID*/)
     {
-        result.getVector().push_back(performIteration(*it));
+      LOG_INFO("SolverProcessControl::reinit()");
+      LOG_WARN("Not supported");
+      return false;
     }
 
-    return itsKernelConnection->sendObject(result);
-}
 
-
-bool SolverProcessControl::registerDomain
-    (const DomainRegistrationRequest *request)
-{
-    LOG_DEBUG_STR("DomainRegistrationRequest: index: "
-        << request->getDomainIndex() << " #unknowns: "
-        << request->getUnknowns().size());
-    LOG_DEBUG_STR("+ unknowns: " << request->getUnknowns());
-
-    Domain &domain = itsRegisteredDomains[request->getDomainIndex()];
-    domain.index = request->getDomainIndex();
-    domain.unknowns = request->getUnknowns();
-    domain.solver.set(casa::uInt(domain.unknowns.size()));
-    // Set new value solution test
-    domain.solver.setEpsValue(request->getEpsilon());
-    // Set new 'derivative' test (actually, the inf norm of the known
-    // vector is checked).
-    domain.solver.setEpsDerivative(request->getEpsilon());
-    // Set maximum number of iterations
-    domain.solver.setMaxIter(request->getMaxIter());
-    // Set new factors (collinearity factor, and Levenberg-Marquardt LMFactor)
-    domain.solver.set(request->getColFactor(), request->getLMFactor());
-    domain.solver.setBalanced(request->getBalancedEq());
-    return true;
-}
-
-
-IterationResult* SolverProcessControl::performIteration
-    (const IterationRequest *request)
-{
-    map<uint32, Domain>::iterator it =
-        itsRegisteredDomains.find(request->getDomainIndex());
-
-    if(it == itsRegisteredDomains.end())
+    std::string SolverProcessControl::askInfo(const string& /*keylist*/)
     {
-        // Artifact of the current implementation: equations are still being
-        // generated and send even if the solve domain has already
-        // converged. So, we'll just return a result with resultCode N_ReadyCode
-        // (i.e. already converged).
-        return new IterationResult(request->getDomainIndex(),
-            N_ReadyCode, "", vector<double>(), 0, -1.0, -1.0);
+      LOG_INFO("SolverProcessControl::askInfo()");
+      LOG_WARN("Not supported");
+      return string();
     }
 
-    // Set the new normal equations.
-    Domain &domain = it->second;
-    domain.solver.merge(request->getNormalEquations());
 
-    // Get some statistics from the solver. Note that the chi squared is
-    // valid for the _previous_ iteration. The solver cannot compute the
-    // chi squared directly after an iteration, because it needs the new
-    // condition equations for that and these are computed by the kernel.
-    casa::uInt rank, nun, np, ncon, ner, *piv;
-    casa::Double *nEq, *known, *constr, *er, *sEq, *sol, prec, nonlin;
-    domain.solver.debugIt(nun, np, ncon, ner, rank, nEq, known, constr, er,
-        piv, sEq, sol, prec, nonlin);
-    ASSERT(er && ner > SUMLL);
+    //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    double lmFactor = nonlin;
-    double chiSquared = er[SUMLL] / std::max(er[NC] + nun, 1.0);
-
-    // Solve the normal equations.
-    domain.solver.solveLoop(rank, &(domain.unknowns[0]), true);
-
-    // Construct a result.
-    IterationResult *result = new IterationResult(domain.index,
-        domain.solver.isReady(),
-        domain.solver.readyText(),
-        domain.unknowns,
-        rank,
-        chiSquared,
-        lmFactor);
-
-    // If we're done with this domain, unregister it.
-    if(domain.solver.isReady() != NONREADY)
+    bool SolverProcessControl::isGlobal() const
     {
-        itsRegisteredDomains.erase(request->getDomainIndex());
+      return true;
+      return itsNrKernels > 1;
     }
 
-    return result;
-}
 
-} // namespace BBS
+    void SolverProcessControl::setState(RunState state) 
+    {
+      itsState = state;
+      LOG_DEBUG_STR("Switching to " << showState() << " state");
+    }
+
+
+    const string& SolverProcessControl::showState() const
+    {
+      //# Caution: Always keep this array of strings in sync with the enum
+      //#          State that is defined in the header file!
+      static const string states[N_States+1] = {
+        "WAIT",
+        "GET_COMMAND",
+        "SOLVE",
+        "<UNDEFINED>"  //# This should ALWAYS be last !!
+      };
+      if (UNDEFINED < itsState && itsState < N_States) return states[itsState];
+      else return states[N_States];
+    }
+
+
+    void SolverProcessControl::setSolveTasks(const vector<uint>& groups,
+        const SolverOptions& options)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      LOG_DEBUG_STR("Kernel groups: " << groups);
+
+      // Sanity check
+      if (itsKernels.size() < accumulate(groups.begin(), groups.end(), 0U)) {
+        THROW (SolverControlException, 
+               "Sum of kernels in subgroups exceeds total number of kernels");
+      }
+
+      // Initialization
+      itsSolveTasks.clear();
+      vector<KernelConnection>::const_iterator beg(itsKernels.begin());
+      vector<KernelConnection>::const_iterator end(beg);
+
+      // Create kernel groups, passing the correct subrange of kernel
+      // connections to each kernel group.
+      for (uint i = 0; i < groups.size(); ++i) {
+        advance(end, groups[i]);
+        itsSolveTasks.push_back
+          (SolveTask(vector<KernelConnection>(beg, end), options));
+        beg = end;
+      }
+    }
+
+  } // namespace BBS
+
 } // namespace LOFAR

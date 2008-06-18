@@ -48,8 +48,8 @@ namespace LOFAR
       // object being created. The third argument is used to pass a
       // backreference to the parent Step object.
       MultiStep(const string& name,
-		   const ACC::APS::ParameterSet& parset,
-		   const Step* parent);
+                const ACC::APS::ParameterSet& parset,
+                const Step* parent);
 
       // Default constructor. Construct an empty MultiStep object and make
       // it a child of the Step object \a parent.

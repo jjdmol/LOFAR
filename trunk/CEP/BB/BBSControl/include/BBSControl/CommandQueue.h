@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBS_COMMANDQUEUE_H
-#define LOFAR_BBS_COMMANDQUEUE_H
+#ifndef LOFAR_BBSCONTROL_COMMANDQUEUE_H
+#define LOFAR_BBSCONTROL_COMMANDQUEUE_H
 
 // \file
 // Command queue of the blackboard system.
@@ -35,6 +35,14 @@
 #else
 # error libpqxx, the C++ API to PostgreSQL, is required
 #endif
+
+//# The following #includes are not really necessary to compile the code,
+//# but it avoids the need to #include them whenever any of the public
+//# typedefs \c NextCommandType, \c ResultType, or \a ResultMapType are used.
+#include <BBSControl/Command.h>
+#include <BBSControl/CommandResult.h>
+#include <BBSControl/SenderId.h>
+#include <BBSControl/Types.h>
 
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
@@ -50,12 +58,8 @@ namespace LOFAR
   namespace BBS
   {
     //# Forward Declarations
-    class Command;
     class Step;
     class Strategy;
-    class CommandResult;
-    class CommandId;
-    class LocalControlId;
 
     // \addtogroup BBSControl
     // @{
@@ -65,12 +69,12 @@ namespace LOFAR
 
     // Return type of the function CommandQueue::getNextCommand(). It pairs a
     // (managed) pointer to a Command with its ID.
-    typedef pair<shared_ptr<const Command>, const CommandId> NextCommandType;
+    typedef pair<shared_ptr<const Command>, CommandId> NextCommandType;
 
     // Return type of the function CommandQueue::getNewResults(const
     // CommandId&). It pairs a command result with the local controller that
     // executed that command.
-    typedef pair<LocalControlId, CommandResult> ResultType;
+    typedef pair<SenderId, CommandResult> ResultType;
     
     // Return type of the function CommandQueue::getNewResults(). It binds a
     // command-id and the results received from the local controllers.
@@ -189,7 +193,7 @@ namespace LOFAR
       //
       // \todo Wrap multiple queries (needed for, e.g., reconstructing a
       // SolveStep) in one transaction.
-      pair<shared_ptr<const Command>, const CommandId> getNextCommand() const;
+      NextCommandType getNextCommand() const;
 
       // Set the Strategy in the command queue. All information, \e except
       // the Step objects within the Strategy are stored in the
@@ -206,10 +210,11 @@ namespace LOFAR
       // Add the result \a result for the command (identified by) \a commandId
       // to the blackboard result table. \a commandId must be the ID of the
       // first command in the queue for which no result has been set yet.
-      // \return \c true upon successful insertion; otherwise \c false (e.g.,
-      // wrong \a commanId was specified).
-      bool addResult(const CommandId& commandId, 
-                     const CommandResult& result) const;
+      // \throw CommandQueueException when insertion failed (e.g., a wrong \a
+      // commandId was specified).
+      void addResult(const CommandId& commandId, 
+                     const CommandResult& result,
+                     const SenderId& senderId) const;
 
       // Get all new results from the database.
       ResultMapType getNewResults() const;

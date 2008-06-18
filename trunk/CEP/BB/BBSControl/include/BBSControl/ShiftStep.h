@@ -49,11 +49,8 @@ namespace LOFAR
       }
 
       ShiftStep(const string& name, 
-		   const ACC::APS::ParameterSet& parSet,
-		   const Step* parent) :
-        SingleStep(name, parSet, parent)
-      {
-      }
+                const ACC::APS::ParameterSet& parSet,
+                const Step* parent);
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;

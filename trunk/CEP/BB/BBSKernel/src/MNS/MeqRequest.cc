@@ -54,7 +54,7 @@ MeqRequest::MeqRequest (const MeqDomain& domain, int nx,
 }
 
 MeqRequest::MeqRequest (const MeqRequest& req,
-			uint stx, uint nrx, uint sty, uint nry)
+			unsigned int stx, unsigned int nrx, unsigned int sty, unsigned int nry)
 : itsRequestId (req.itsRequestId),
   itsStepX     (req.itsStepX),
   itsSourceNr  (req.itsSourceNr),

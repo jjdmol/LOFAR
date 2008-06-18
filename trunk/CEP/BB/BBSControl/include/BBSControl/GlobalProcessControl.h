@@ -27,13 +27,13 @@
 // Implementation of ACC/PLC ProcessControl class
 
 //# Includes
-#include <PLC/ProcessControl.h>
-#include <Common/lofar_smartptr.h>
-
-#include <BBSControl/CommandId.h>
 #include <BBSControl/CommandResult.h>
 #include <BBSControl/CommandQueue.h>
-#include <BBSControl/LocalControlId.h>
+
+#include <BBSKernel/Axis.h>
+#include <BBSKernel/MetaMeasurement.h>
+
+#include <PLC/ProcessControl.h>
 
 #include <Common/lofar_smartptr.h>
 
@@ -76,17 +76,23 @@ namespace LOFAR
 
     private:
         enum RunState {
-          UNDEFINED = 0,
-//           PREPARE,
-//           PREPARE_WAIT,
+          UNDEFINED = -1,
           NEXT_CHUNK,
           NEXT_CHUNK_WAIT,
           RUN,
           WAIT,
           RECOVER,
           FINALIZE,
-          QUIT
+          QUIT,
+          //# Insert new types HERE !!
+          N_States
         };
+
+      // Set run state to \a state
+      void setState(RunState state);
+
+      // Return the current state as a string.
+      const string& showState() const;
 
 #if 0
       // Post the command \a cmd to the command queue and wait until all local
@@ -132,7 +138,11 @@ namespace LOFAR
 
       // CommandQueue where strategies and steps can be "posted".
       scoped_ptr<CommandQueue> itsCommandQueue;
-
+      
+      MetaMeasurement       itsMetaMeasurement;
+      double                itsFreqStart, itsFreqEnd;
+      size_t                itsTimeStart, itsTimeEnd;
+      size_t                itsChunkStart, itsChunkSize;
     };
 
     // @}

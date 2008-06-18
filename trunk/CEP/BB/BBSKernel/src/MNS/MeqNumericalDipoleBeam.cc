@@ -176,8 +176,8 @@ void MeqNumericalDipoleBeam::evaluate(const MeqRequest &request,
                 const double kappa = ((k + 1) % 2 == 0 ? 1 : -1) * (2 * k + 1);
                 const double phi = kappa * (az[t] - orientation);
                 
-                const double cosphi = cos(phi);
-                const double sinphi = sin(phi);
+                const double cosphi = std::cos(phi);
+                const double sinphi = std::sin(phi);
                 
                 // R(kappa(k) * phi) * Pk(theta).
                 J[0][0] += cosphi * P[0];

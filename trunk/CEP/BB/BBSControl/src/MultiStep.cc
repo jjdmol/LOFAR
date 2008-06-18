@@ -41,18 +41,20 @@ namespace LOFAR
     MultiStep::MultiStep(const string& name,
 			       const ParameterSet& parset,
 			       const Step* parent) :
-      Step(name, parset, parent)
+      Step(name, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // This multistep consists of the following steps.
-      vector<string> steps(parset.getStringVector("Step." + name + ".Steps"));
+      read(parset);
 
-      // Create a new step for each name in \a steps.
-      for (uint i = 0; i < steps.size(); ++i) {
-	infiniteRecursionCheck(steps[i]);
-	itsSteps.push_back(Step::create(steps[i], parset, this));
-      }
+//       // This multistep consists of the following steps.
+//       vector<string> steps(parset.getStringVector("Step." + name + ".Steps"));
+
+//       // Create a new step for each name in \a steps.
+//       for (uint i = 0; i < steps.size(); ++i) {
+// 	infiniteRecursionCheck(steps[i]);
+// 	itsSteps.push_back(Step::create(steps[i], parset, this));
+//       }
     }
 
 
@@ -92,7 +94,7 @@ namespace LOFAR
     void MultiStep::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << name());
-      Step::read(ps);
+      Step::read(ps.makeSubset("Step." + name() + "."));
       readSteps(ps);
     }
 
@@ -106,16 +108,15 @@ namespace LOFAR
 
     void MultiStep::writeSteps(ParameterSet& ps) const
     {
-      ostringstream oss;
-
       // Write the "Steps" key/value pair
-      oss << "Step." << name() << ".Steps = [ ";
+      const string key = "Step." + name() + ".Steps";
+      string value = "[";
       for (uint i = 0; i < itsSteps.size(); ++i) {
-        if (i > 0) oss << ", ";
-        oss << itsSteps[i]->name();
+        if (i > 0) value += ",";
+        value += itsSteps[i]->name();
       }
-      oss << " ]";
-      ps.adoptBuffer(oss.str());
+      value += "]";
+      ps.replace(key,value);
 
       // Write the Step objects, one by one.
       for (uint i = 0; i < itsSteps.size(); ++i) {
@@ -126,9 +127,13 @@ namespace LOFAR
 
     void MultiStep::readSteps(const ParameterSet& ps)
     {
-      vector<string> steps = ps.getStringVector("Strategy.Steps");
+      // This multistep consists of the following steps.
+      vector<string> steps(ps.getStringVector("Step." + name() + ".Steps"));
+
+      // Create a new step for each name in \a steps.
       for (uint i = 0; i < steps.size(); ++i) {
-        itsSteps.push_back(Step::create(steps[i], ps, 0));
+	infiniteRecursionCheck(steps[i]);
+	itsSteps.push_back(Step::create(steps[i], ps, this));
       }
     }
 

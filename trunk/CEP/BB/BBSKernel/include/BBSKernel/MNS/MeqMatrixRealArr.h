@@ -28,6 +28,7 @@
 
 //# Includes
 #include <BBSKernel/MNS/MeqMatrixRep.h>
+#include <cstring>
 
 namespace LOFAR
 {
@@ -57,8 +58,8 @@ public:
     return new (nx, ny) MeqMatrixRealArr(nx, ny);
   }
 
-  static void poolActivate(int nelements);
-  static void poolDeactivate();
+//  static void poolActivate(int nelements);
+//  static void poolDeactivate();
 
   virtual MeqMatrixRep* clone() const;
 

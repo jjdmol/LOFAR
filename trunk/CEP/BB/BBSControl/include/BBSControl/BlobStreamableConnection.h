@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_BBSKERNEL_BLOBSTREAMABLECONNECTION_H
-#define LOFAR_BBSKERNEL_BLOBSTREAMABLECONNECTION_H
+#ifndef LOFAR_BBSCONTROL_BLOBSTREAMABLECONNECTION_H
+#define LOFAR_BBSCONTROL_BLOBSTREAMABLECONNECTION_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -49,14 +49,22 @@ namespace LOFAR
     {
     public:
       // Create a server connection end-point.
-      BlobStreamableConnection(const string& port, int32 protocol = Socket::TCP);
+      BlobStreamableConnection(const string& port, 
+                               int32 protocol = Socket::TCP,
+                               bool blocking = true);
 
       // Create a client connection end-point.
-      BlobStreamableConnection(const string& server, const string& port, int32 protocol = Socket::TCP);
+      BlobStreamableConnection(const string& server, 
+                               const string& port, 
+                               int32 protocol = Socket::TCP,
+                               bool blocking = true);
+
+      // Create a connection using an existing data socket.
+      BlobStreamableConnection(Socket* socket);
 
       // Try to connection to the other side.
       bool connect();
-      
+
       // Send the BlobStreamable object \a obj.
       bool sendObject(const BlobStreamable& obj);
 

@@ -26,9 +26,19 @@
 // \file
 // Concrete viistor class for concrete Command classes
 
+#include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandVisitor.h>
 #include <BBSControl/CommandResult.h>
+#include <BBSControl/Types.h>
+
 #include <BBSKernel/Prediffer.h>
+#include <BBSKernel/MetaMeasurement.h>
+#include <BBSKernel/Measurement.h>
+#include <BBSKernel/VisSelection.h>
+#include <BBSKernel/VisData.h>
+
+#include <ParmDB/ParmDB.h>
+
 #include <Common/lofar_smartptr.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
@@ -42,8 +52,7 @@ namespace LOFAR
   {
     //# Forward declations
     class CommandQueue;
-    class Prediffer;
-    class BlobStreamableConnection;
+//    class BlobStreamableConnection;
 
     // \addtogroup BBSControl
     // @{
@@ -51,10 +60,12 @@ namespace LOFAR
     class CommandExecutor: public CommandVisitor
     {
     public:
-      CommandExecutor(shared_ptr<CommandQueue> &queue,
+      CommandExecutor(KernelId id,
+                      shared_ptr<CommandQueue> &queue,
                       shared_ptr<BlobStreamableConnection> &solver)
-        :   itsCommandQueue(queue),
-            itsSolverConnection(solver)
+        :   itsKernelId(id),
+            itsCommandQueue(queue),
+            itsSolver(solver)
       {
       }
 
@@ -81,16 +92,36 @@ namespace LOFAR
       const CommandResult &getResult() const
       { return itsResult; }
 
+      // Get the kernel ID.
+      KernelId getKernelId() const
+      { return itsKernelId; }
 
     private:
+      void handleLocalSolve(const SolveStep &command);
+      void handleGlobalSolve(const SolveStep &command);
+      
       // Kernel.
       scoped_ptr<Prediffer>                   itsKernel;
+      KernelId                                itsKernelId;
+      
+      // Measurement.
+      MetaMeasurement                         itsMetaMeasurement;
+      Measurement::Pointer                    itsMeasurement;
+      string                                  itsInputColumn;
+
+      // Chunk.
+      VisSelection                            itsChunkSelection;
+      VisData::Pointer                        itsChunk;
+      
+      // Model parameter databases.
+      scoped_ptr<LOFAR::ParmDB::ParmDB>       itsSkyDb;
+      scoped_ptr<LOFAR::ParmDB::ParmDB>       itsInstrumentDb;
 
       // CommandQueue.
       shared_ptr<CommandQueue>                itsCommandQueue;
 
-      // Connection to the solver.
-      shared_ptr<BlobStreamableConnection>    itsSolverConnection;
+      // Connection to the global solver.
+      shared_ptr<BlobStreamableConnection>    itsSolver;
 
       // Result of the last executed command.
       CommandResult                           itsResult;

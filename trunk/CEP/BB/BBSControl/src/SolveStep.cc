@@ -28,6 +28,7 @@
 #include <BBSControl/StreamUtil.h>
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
+#include <Common/lofar_iomanip.h>
 
 namespace LOFAR
 {
@@ -40,8 +41,7 @@ namespace LOFAR
     //##--------   P u b l i c   m e t h o d s   --------##//
 
     SolveStep::SolveStep(const Step* parent) : 
-      SingleStep(parent),
-      itsMaxIter(0), itsEpsilon(0), itsMinConverged(0)
+      SingleStep(parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
     }
@@ -50,23 +50,12 @@ namespace LOFAR
     SolveStep::SolveStep(const string& name, 
 			       const ParameterSet& parset,
 			       const Step* parent) :
-      SingleStep(name, parset, parent)
+      SingleStep(name, parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // Create a subset of \a parset, containing only the relevant keys for
-      // the current SingleStep.
-      ParameterSet ps(parset.makeSubset("Step." + name + ".Solve."));
-
       // Get the relevant parameters from the Parameter Set \a parset. 
-      // \note A missing key is considered an error.
-      itsMaxIter                 = ps.getUint32("MaxIter");
-      itsEpsilon                 = ps.getDouble("Epsilon");
-      itsMinConverged            = ps.getDouble("MinConverged");
-      itsParms                   = ps.getStringVector("Parms");
-      itsExclParms               = ps.getStringVector("ExclParms");
-      itsDomainSize.bandWidth    = ps.getDouble("DomainSize.Freq");
-      itsDomainSize.timeInterval = ps.getDouble("DomainSize.Time");
+      read(parset.makeSubset("Step." + name + "."));
     }
 
 
@@ -90,12 +79,15 @@ namespace LOFAR
       os << endl << indent << "Solve: ";
       {
 	Indent id;
-	os << endl << indent << "Max nr. of iterations: "  << itsMaxIter
-	   << endl << indent << "Convergence threshold: "  << itsEpsilon
-	   << endl << indent << "Min fraction converged: " << itsMinConverged
-	   << endl << indent << "Solvable parameters: "    << itsParms
-	   << endl << indent << "Excluded parameters: "    << itsExclParms
-	   << endl << indent << itsDomainSize;
+	os << endl << indent << "Solvable parameters: " << itsParms
+	   << endl << indent << "Excluded parameters: " << itsExclParms
+       << endl << indent << "Kernel groups: "       << itsKernelGroups
+	   << endl << indent << itsCellSize
+	   << endl << indent << "Cell chunk size: " << itsCellChunkSize
+	   << boolalpha
+	   << endl << indent << "Propagate solutions: " << itsPropagateFlag
+	   << noboolalpha
+       << endl << indent << itsSolverOptions;
       }
     }
 
@@ -119,15 +111,36 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::write(ps);
-      ostringstream oss;
-      oss << endl << "MaxIter = " << itsMaxIter
-          << endl << "Epsilon = " << itsEpsilon
-          << endl << "MinConverged = " << itsMinConverged
-          << endl << "Parms = " << itsParms
-          << endl << "ExclParms = " << itsExclParms
-          << endl << "DomainSize.Freq = " << itsDomainSize.bandWidth
-          << endl << "DomainSize.Time = " << itsDomainSize.timeInterval;
-      ps.adoptBuffer(oss.str(), "Step." + name() + ".Solve.");
+      const string prefix = "Step." + name() + ".Solve.";
+      ps.replace(prefix + "Parms", 
+                 toString(itsParms));
+      ps.replace(prefix + "ExclParms", 
+                 toString(itsExclParms));
+      ps.replace(prefix + "KernelGroups",
+                 toString(itsKernelGroups));
+      ps.replace(prefix + "CellSize.Freq",
+                 toString(itsCellSize.freq));
+      ps.replace(prefix + "CellSize.Time", 
+                 toString(itsCellSize.time));
+      ps.replace(prefix + "CellChunkSize", 
+                 toString(itsCellChunkSize));
+      ps.replace(prefix + "PropagateSolutions", 
+                 toString(itsPropagateFlag));
+      ps.replace(prefix + "Options.MaxIter", 
+                 toString(itsSolverOptions.maxIter));
+      ps.replace(prefix + "Options.EpsValue", 
+                 toString(itsSolverOptions.epsValue));
+      ps.replace(prefix + "Options.EpsDerivative", 
+                 toString(itsSolverOptions.epsDerivative));
+      ps.replace(prefix + "Options.CollFactor", 
+                 toString(itsSolverOptions.collFactor));
+      ps.replace(prefix + "Options.LMFactor", 
+                 toString(itsSolverOptions.lmFactor));
+      ps.replace(prefix + "Options.BalancedEqs", 
+                 toString(itsSolverOptions.balancedEqs));
+      ps.replace(prefix + "Options.UseSVD", 
+                 toString(itsSolverOptions.useSVD));
+      LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
 
@@ -135,15 +148,35 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
       SingleStep::read(ps);
-      ParameterSet pss(ps.makeSubset("Step." + name() + ".Solve."));
-//       ParameterSet pss(ps);
-      itsMaxIter                 = pss.getInt32("MaxIter");
-      itsEpsilon                 = pss.getDouble("Epsilon");
-      itsMinConverged            = pss.getDouble("MinConverged");
-      itsParms                   = pss.getStringVector("Parms");
-      itsExclParms               = pss.getStringVector("ExclParms");
-      itsDomainSize.bandWidth    = pss.getDouble("DomainSize.Freq");
-      itsDomainSize.timeInterval = pss.getDouble("DomainSize.Time");
+      ParameterSet pss(ps.makeSubset("Solve."));
+      itsParms                       =
+        pss.getStringVector("Parms");
+      itsExclParms                   = 
+        pss.getStringVector("ExclParms",    vector<string>());
+      itsKernelGroups                = 
+        pss.getUint32Vector("KernelGroups");//, vector<uint32>());
+      itsCellSize.freq               =
+        pss.getUint32      ("CellSize.Freq");
+      itsCellSize.time               = 
+        pss.getUint32      ("CellSize.Time");
+      itsCellChunkSize               = 
+        pss.getUint32      ("CellChunkSize", 0);
+      itsPropagateFlag               =
+        pss.getBool("PropagateSolutions", false);
+      itsSolverOptions.maxIter       = 
+        pss.getUint32      ("Options.MaxIter");
+      itsSolverOptions.epsValue      = 
+        pss.getDouble      ("Options.EpsValue");
+      itsSolverOptions.epsDerivative = 
+        pss.getDouble      ("Options.EpsDerivative");
+      itsSolverOptions.collFactor    = 
+        pss.getDouble      ("Options.CollFactor");
+      itsSolverOptions.lmFactor      = 
+        pss.getDouble      ("Options.LMFactor");
+      itsSolverOptions.balancedEqs   = 
+        pss.getBool        ("Options.BalancedEqs");
+      itsSolverOptions.useSVD        = 
+        pss.getBool        ("Options.UseSVD");
     }
 
 

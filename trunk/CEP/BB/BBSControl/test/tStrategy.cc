@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <lofar_config.h>
+#include <BBSControl/Package__Version.h>
 #include <BBSControl/Strategy.h>
 #include <BBSControl/Step.h>
 #include <BBSControl/MultiStep.h>
@@ -46,6 +47,8 @@ int main()
 {
   const string progName("tStrategy");
   INIT_LOGGER(progName.c_str());
+
+  LOG_INFO(Version::getInfo<BBSControlVersion>());
 
   try {
 

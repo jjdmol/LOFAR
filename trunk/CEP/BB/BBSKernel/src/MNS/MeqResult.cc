@@ -31,6 +31,7 @@ namespace LOFAR
 namespace BBS
 {
 
+/*
 Pool<MeqResultRep> theirPool;
 #pragma omp threadprivate(theirPool)
 
@@ -43,7 +44,7 @@ void MeqResultRep::operator delete(void *rep)
 {
   theirPool.deallocate((MeqResultRep *) rep);
 }
-
+*/
 
 MeqResultRep::MeqResultRep (int nspid)
 : itsCount           (0),

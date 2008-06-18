@@ -42,6 +42,24 @@ namespace LOFAR
     class NextChunkCommand : public Command
     {
     public:
+      // Constructors.
+      NextChunkCommand()
+        :   itsFreqRange(0.0, 0.0),
+            itsTimeRange(0.0, 0.0)
+      {}
+      
+      NextChunkCommand(double freqStart, double freqEnd, double timeStart,
+        double timeEnd)
+        :   itsFreqRange(freqStart, freqEnd),
+            itsTimeRange(timeStart, timeEnd)
+      {}            
+      
+      NextChunkCommand(const pair<double, double> &freqRange,
+        const pair<double, double> &timeRange)
+        :   itsFreqRange(freqRange),
+            itsTimeRange(timeRange)
+      {}                    
+
       // Destructor.
       virtual ~NextChunkCommand() {}
 
@@ -60,6 +78,16 @@ namespace LOFAR
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;
+      
+      pair<double, double> getFreqRange() const
+      { return itsFreqRange; }
+
+      pair<double, double> getTimeRange() const
+      { return itsTimeRange; }
+
+    private:
+      pair<double, double>      itsFreqRange;
+      pair<double, double>      itsTimeRange;      
     };
 
     // @}

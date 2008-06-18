@@ -60,14 +60,16 @@ public:
         BANDPASS = 0,
         GAIN,
         DIRECTIONAL_GAIN,
-        DIPOLE_BEAM,
+        DIPOLE_BEAM_LBA,
+        DIPOLE_BEAM_HBA,
         PHASORS,
         N_ModelComponent
     };
 
     enum EquationType
     {
-        PREDICT = 0,
+        UNSET = 0,
+        SIMULATE,
         CORRECT,
         N_EquationType
     };
@@ -83,6 +85,9 @@ public:
         MeqPhaseRef *phaseRef, VisData::Pointer buffer);
 
     void clearEquations();
+    
+    EquationType getEquationType()
+    { return itsEquationType; }
 
     void precalculate(const MeqRequest& request);
 
@@ -100,6 +105,7 @@ private:
     vector<MeqSource*>                  itsSourceNodes;
     vector<MeqLMN*>                     itsLMNNodes;
     map<baseline_t, MeqJonesExpr>       itsEquations;
+    EquationType                        itsEquationType;
 };
 
 } //# namespace BBS

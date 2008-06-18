@@ -46,7 +46,7 @@ namespace BBS
 class MeqDomain;
 class MeqParmGroup;
 class MeqFunklet;
-class ParmData;
+//class ParmData;
 
 // This class is the (abstract) base class for parameters.
 // The constructor assigns a unique id to the parameter and adds
@@ -104,9 +104,10 @@ public:
   // Functions needed for MeqParmFunklet.
   // By default they throw an exception.
   // <group>
-  virtual void update(const ParmData& values);
+//  virtual void update(const ParmData& values);
   virtual void update(const vector<double>& value);
-  virtual void update(size_t domain, const vector<double> &unknowns);
+  virtual void update(size_t cell, const vector<double> &coeff);
+  virtual void update(size_t cell, const vector<double> &coeff, size_t offset);
   virtual void updateFromTable();
   // </group>
 
@@ -163,12 +164,15 @@ public:
     { itsParmPtr->save(); }
   void save(size_t domainIndex)
     { itsParmPtr->save(domainIndex); }
-  void update (const ParmData& values)
-    { itsParmPtr->update (values); }
+//  void update (const ParmData& values)
+//    { itsParmPtr->update (values); }
   void update (const vector<double>& value)
     { itsParmPtr->update (value); }
-  void update(size_t domain, const vector<double> &unknowns)
-    { itsParmPtr->update (domain, unknowns); }
+  void update(size_t cell, const vector<double> &coeff)
+    { itsParmPtr->update (cell, coeff); }
+  void update(size_t cell, const vector<double> &coeff, size_t offset)
+    { itsParmPtr->update (cell, coeff, offset); }
+    
   void updateFromTable()
     { itsParmPtr->updateFromTable(); }
   // </group>

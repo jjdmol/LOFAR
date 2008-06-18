@@ -1,17 +1,25 @@
 lib_LTLIBRARIES = libbbskernel.la
 
 libbbskernel_la_SOURCES = Package__Version.cc  	\
-	BBSKernelStructs.cc	\
-	BBSStatus.cc		\
+	Axis.cc			\
+	BlobIOExtensions.cc	\
+	Grid.cc			\
+	Instrument.cc		\
 	MeasurementAIPS.cc	\
+	MetaMeasurement.cc	\
 	Model.cc		\
 	Prediffer.cc		\
+	Solver.cc		\
+	SolverInterfaceTypes.cc	\
 	VisData.cc		\
+	VisDimensions.cc	\
 	VisSelection.cc		\
+	MNS/ExternalFunction.cc		\
 	MNS/MeqAzEl.cc		\
 	MNS/MeqDFTPS.cc		\
 	MNS/MeqDiag.cc		\
 	MNS/MeqDipoleBeam.cc	\
+	MNS/MeqDipoleBeamExternal.cc	\
 	MNS/MeqDomain.cc	\
 	MNS/MeqExpr.cc		\
 	MNS/MeqFunklet.cc	\
@@ -56,10 +64,14 @@ libbbskernel_la_SOURCES = Package__Version.cc  	\
 	MNS/MeqStatUVW.cc	\
 	MNS/MeqTabular.cc 
 
-bin_PROGRAMS = versionbbskernel
+bin_PROGRAMS = versionbbskernel metams
 
 versionbbskernel_SOURCES      = versionbbskernel.cc
 versionbbskernel_LDADD        = libbbskernel.la
 versionbbskernel_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
+
+metams_SOURCES      = metams.cc
+metams_LDADD        = libbbskernel.la
+metams_DEPENDENCIES = libbbskernel.la $(LOFAR_DEPEND)
 
 include $(top_srcdir)/Makefile.common

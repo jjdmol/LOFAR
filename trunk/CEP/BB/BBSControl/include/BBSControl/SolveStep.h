@@ -28,7 +28,7 @@
 
 //# Includes
 #include <BBSControl/SingleStep.h>
-#include <BBSControl/Structs.h>
+#include <BBSControl/Types.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
@@ -52,29 +52,30 @@ namespace LOFAR
       // parset, by searching for keys <tt>Step.\a name</tt>. \a parent
       // is a pointer to the Step object that is the parent of \c *this.
       SolveStep(const string& name,
-                   const ACC::APS::ParameterSet& parset,
-                   const Step* parent);
+                const ACC::APS::ParameterSet& parset,
+                const Step* parent);
 
       virtual ~SolveStep();
 
       // Accept a CommandVisitor that wants to process \c *this.
       virtual void accept(CommandVisitor &visitor) const;
 
-       // Return the operation type of \c *this as a string.
+      // Return the operation type of \c *this as a string.
       virtual const string& operation() const;
 
-     // Print the contents of \c *this in human readable form into the output
+      // Print the contents of \c *this in human readable form into the output
       // stream \a os.
       virtual void print(ostream& os) const;
 
       // @name Accessor methods
       // @{
-      uint32 maxIter()           const { return itsMaxIter; }
-      double epsilon()           const { return itsEpsilon; }
-      double minConverged()      const { return itsMinConverged; }
-      vector<string> parms()     const { return itsParms; }
-      vector<string> exclParms() const { return itsExclParms; }
-      DomainSize domainSize()    const { return itsDomainSize; }
+      vector<string> parms()            const { return itsParms; }
+      vector<string> exclParms()        const { return itsExclParms; }
+      vector<uint32> kernelGroups()     const { return itsKernelGroups; }
+      CellSize       cellSize()         const { return itsCellSize; }
+      uint32         cellChunkSize()    const { return itsCellChunkSize; }
+      bool           propagate()        const { return itsPropagateFlag; }
+      SolverOptions  solverOptions()    const { return itsSolverOptions; }
       // @}
 
       // Return the command type of \c *this as a string.
@@ -87,13 +88,13 @@ namespace LOFAR
       // Read the contents from the ParameterSet \a ps into \c *this.
       virtual void read(const ACC::APS::ParameterSet& ps);
 
-      uint32 itsMaxIter;            ///< Maximum number of iterations
-      double itsEpsilon;            ///< Convergence threshold
-      double itsMinConverged;       ///< Fraction that must have converged
-      vector<string> itsParms;      ///< Names of the solvable parameters
-      vector<string> itsExclParms;  ///< Parameters to be excluded from solve
-      DomainSize itsDomainSize;     ///< Solve domain size.
-
+      vector<string> itsParms;         ///< Names of the solvable parameters
+      vector<string> itsExclParms;     ///< Parameters excluded from solve
+      vector<uint32> itsKernelGroups;  ///< Vector of kernel groups.
+      CellSize       itsCellSize;      ///< Solution cell size.
+      uint32         itsCellChunkSize; ///< Number of cells processed together.
+      bool           itsPropagateFlag; ///< Propagate solutions?
+      SolverOptions  itsSolverOptions; ///< Solver options
     };
 
     // @}
