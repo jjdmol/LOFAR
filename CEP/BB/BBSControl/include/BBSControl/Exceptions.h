@@ -42,19 +42,21 @@ namespace LOFAR
     EXCEPTION_CLASS(BBSControlException, LOFAR::Exception);
 
     // Exception class for the global controller.
-    // part.
     EXCEPTION_CLASS(GlobalControlException, BBSControlException);
 
     // Exception class for the local controller.
-    // part.
     EXCEPTION_CLASS(LocalControlException, BBSControlException);
 
+    // Exception class for the (global) solver controller.
+    EXCEPTION_CLASS(SolverControlException, BBSControlException);
+
+    // Exception class for the solve task.
+    EXCEPTION_CLASS(SolveTaskException, BBSControlException);
+
     // Exception class for the database access layer.
-    // part.
     EXCEPTION_CLASS(DatabaseException, BBSControlException);
 
     // Exception class for the command queue.
-    // part.
     EXCEPTION_CLASS(CommandQueueException, BBSControlException);
 
     //  @}

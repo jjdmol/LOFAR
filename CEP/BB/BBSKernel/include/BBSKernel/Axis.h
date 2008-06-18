@@ -1,6 +1,6 @@
-//# Axis.h:
+//# Axis.h: Class templates that represent a regular or irregular axis.
 //#
-//# Copyright (C) 2007
+//# Copyright (C) 2008
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,137 +20,123 @@
 //#
 //# $Id$
 
-#ifndef LOFAR_BBS_BBSKERNEL_GRID_H
-#define LOFAR_BBS_BBSKERNEL_GRID_H
+#ifndef LOFAR_BBS_BBSKERNEL_AXIS_H
+#define LOFAR_BBS_BBSKERNEL_AXIS_H
 
-#include <Common/lofar_vector.h>
+#include <Blob/BlobStreamable.h>
 #include <Common/lofar_algorithm.h>
-#include <functional>
+#include <Common/lofar_vector.h>
+#include <Common/lofar_smartptr.h>
+#include <Common/LofarTypes.h>
+
+#include <limits>
 #include <utility>
+
+#include <casa/BasicMath/Math.h>
 
 namespace LOFAR
 {
 namespace BBS
 {
-using std::unary_function;
 using std::pair;
 using std::make_pair;
-using std::max;
-using std::min;
 
-class regular_series: public unary_function<size_t, double>
+// Abstract base class for a cell centered axis.
+class Axis: public BlobStreamable
 {
 public:
-    regular_series()
-        :   m_begin(0.0),
-            m_delta(1.0)
+    typedef shared_ptr<Axis>    Pointer;
+    
+    virtual ~Axis()
     {}
-
-    regular_series(result_type begin, result_type delta)
-        :   m_begin(begin),
-            m_delta(delta)
-    {}
-
-    result_type operator()(argument_type n) const
-    { return m_begin + n * m_delta; }
- 
-private:
-    result_type    m_begin, m_delta;
+    
+    virtual double center(size_t n) const = 0;
+    virtual double lower(size_t n) const = 0;
+    virtual double upper(size_t n) const = 0;
+    virtual double width(size_t n) const = 0;
+    virtual size_t size() const = 0;
+    virtual pair<double, double> range() const = 0;
+    virtual size_t locate(double x, bool biasRight = true) const = 0;
+    virtual Axis::Pointer compress(size_t factor) const = 0;
 };
 
 
-class irregular_series: public unary_function<size_t, double>
+// Regularly strided cell centered axis.
+class RegularAxis: public Axis
 {
 public:
-    irregular_series()
-    {}
+    typedef shared_ptr<RegularAxis> Pointer;
+    
+    RegularAxis();
+    RegularAxis(const double &begin, const double &width, uint32 count);
 
-    irregular_series(const vector<result_type> &terms)
-        : m_terms(terms)
-    {}
-
-    result_type operator()(argument_type n) const
-    { return m_terms[n]; }
-
+    ~RegularAxis();
+    
+    double center(size_t n) const;
+    double lower(size_t n) const;
+    double upper(size_t n) const;
+    double width(size_t) const;
+    size_t size() const;
+    pair<double, double> range() const;
+    size_t locate(double x, bool biasRight = true) const;
+    Axis::Pointer compress(size_t factor) const;
+    
 private:
-    vector<result_type>    m_terms;
+    //# -------- BlobStreamable interface implementation -------- 
+
+    // Write the contents of \c *this into the blob output stream \a bos.
+    virtual void write(BlobOStream& bos) const;
+
+    // Read the contents from the blob input stream \a bis into \c *this.
+    virtual void read(BlobIStream& bis);
+
+    // Return the type of \c *this as a string.
+    virtual const string& classType() const;
+    
+    //# -------- BlobStreamable interface implementation -------- 
+
+    double  itsBegin, itsWidth;
+    uint32  itsCount;
 };
 
 
-template <typename SeriesType>
-class cell_centered_axis
+// Irregularly strided cell centered axis.
+class IrregularAxis: public Axis
 {
 public:
-    cell_centered_axis()
-        :   m_series(SeriesType()),
-            m_size(0)
-    {}
+    typedef shared_ptr<IrregularAxis>   Pointer;
+    
+    IrregularAxis();
+    IrregularAxis(const vector<double> &centers, const vector<double> &widths);
+    
+    ~IrregularAxis();
 
-    cell_centered_axis(SeriesType series, size_t size)
-        :   m_series(series),
-            m_size(size)
-    {}
-
-    double operator()(size_t n) const
-    { return 0.5 * (m_series(n) + m_series(n + 1)); }
-
-    double lower(size_t n) const
-    { return m_series(n); }
-
-    double upper(size_t n) const
-    { return m_series(n + 1); }
-
-    double width(size_t n) const
-    { return m_series(n + 1) - m_series(n); }
-
-    size_t size() const
-    { return m_size; }
-
-    pair<double, double> range() const
-    { return make_pair(lower(0), upper(size() - 1)); }
+    double center(size_t n) const;
+    double lower(size_t n) const;
+    double upper(size_t n) const;
+    double width(size_t n) const;
+    size_t size() const;
+    pair<double, double> range() const;
+    size_t locate(double x, bool biasRight = true) const;
+    Axis::Pointer compress(size_t factor) const;
 
 private:
-    SeriesType         m_series;
-    size_t             m_size;
+    //# -------- BlobStreamable interface implementation -------- 
+
+    // Write the contents of \c *this into the blob output stream \a bos.
+    virtual void write(BlobOStream& bos) const;
+
+    // Read the contents from the blob input stream \a bis into \c *this.
+    virtual void read(BlobIStream& bis);
+
+    // Return the type of \c *this as a string.
+    virtual const string& classType() const;
+    
+    //# -------- BlobStreamable interface implementation -------- 
+
+    vector<double>   itsCenters, itsWidths;
 };
 
-
-template <typename SeriesType>
-class node_centered_axis
-{
-public:
-    node_centered_axis()
-        :   m_series(SeriesType()),
-            m_size(0)
-    {}
-
-    node_centered_axis(SeriesType series, size_t size)
-        :   m_series(series),
-            m_size(size)
-    {}
-
-    double operator()(size_t n) const
-    { return m_series(n); }
-
-    double lower(size_t n) const
-    { return m_series(n); }
-
-    double upper(size_t n) const
-    { return m_series(n); }
-
-    double width(size_t n) const
-    { return 0.0; }
-
-    size_t size() const
-    { return m_size; }
-
-    pair<double, double> range() const
-    { return make_pair(lower(0), upper(size() - 1)); }
-
-private:
-    SeriesType         m_series;
-    size_t             m_size;
-};
 
 } //# namespace BBS
 } //# namespace LOFAR

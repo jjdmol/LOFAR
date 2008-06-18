@@ -25,12 +25,18 @@
 #include <BBSControl/CommandVisitor.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
+#include <APS/ParameterSet.h>
+
+#include <casa/Quanta/Quantum.h>
+#include <casa/Quanta/MVTime.h>
 
 namespace LOFAR
 {
   namespace BBS 
   {
     using ACC::APS::ParameterSet;
+    using ACC::APS::KVpair;
 
     // Register NextChunkCommand with the CommandFactory. Use an anonymous
     // namespace. This ensures that the variable `dummy' gets its own private
@@ -60,23 +66,44 @@ namespace LOFAR
     void NextChunkCommand::print(ostream& os) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+
       Command::print(os);
+      os << endl;
+      os << "Frequency: " << setprecision(3) << itsFreqRange.first / 1e6
+        << " - " << setprecision(3) << itsFreqRange.second / 1e6 << " MHz"
+        << endl;
+      os << "Time: "
+        << casa::MVTime::Format(casa::MVTime::YMD, 6)
+        << casa::MVTime(casa::Quantum<casa::Double>(itsTimeRange.first, "s"))
+        << " - "
+        << casa::MVTime::Format(casa::MVTime::YMD, 6)
+        << casa::MVTime(casa::Quantum<casa::Double>(itsTimeRange.second, "s"))
+        << endl;
     }
 
 
     //##--------   P r i v a t e   m e t h o d s   --------##//
 
-    void NextChunkCommand::write(ParameterSet&) const
+    void NextChunkCommand::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      
+      ps.replace(KVpair("Freq.Start", itsFreqRange.first));
+      ps.replace(KVpair("Freq.End", itsFreqRange.second));
+      ps.replace(KVpair("Time.Start", itsTimeRange.first));
+      ps.replace(KVpair("Time.End", itsTimeRange.second));
     }
 
 
-    void NextChunkCommand::read(const ParameterSet&)
+    void NextChunkCommand::read(const ParameterSet& ps)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
+      
+      itsFreqRange = make_pair(ps.getDouble("Freq.Start", 0.0),
+          ps.getDouble("Freq.End", 0.0));
+      itsTimeRange = make_pair(ps.getDouble("Time.Start", 0.0),
+          ps.getDouble("Time.End", 0.0));
     }
-
 
   } //# namespace BBS
 

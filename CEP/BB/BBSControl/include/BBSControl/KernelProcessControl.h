@@ -32,6 +32,7 @@
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/BlobStreamableConnection.h>
 #include <BBSControl/CommandExecutor.h>
+#include <BBSControl/SolveStep.h>
 
 #include <Common/lofar_smartptr.h>
 #include <PLC/ProcessControl.h>
@@ -81,8 +82,8 @@ private:
     // Command Queue.
     shared_ptr<CommandQueue>                itsCommandQueue;
 
-    // Connection to the solver.
-    shared_ptr<BlobStreamableConnection>    itsSolverConnection;
+    // Connection to the global solver.
+    shared_ptr<BlobStreamableConnection>    itsSolver;
     
     // Command Executor.
     scoped_ptr<CommandExecutor>             itsCommandExecutor;

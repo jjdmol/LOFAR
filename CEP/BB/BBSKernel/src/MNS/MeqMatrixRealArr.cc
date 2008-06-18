@@ -50,10 +50,10 @@ namespace BBS
 
 // Allocation will be done from the pool containing matrices of poolNElements
 // or less elements.
-static Pool<MeqMatrixRealArr> pool;
-#pragma omp threadprivate(pool)
-static size_t             poolArraySize;
-static int            poolNElements = 0;
+//static Pool<MeqMatrixRealArr> pool;
+//#pragma omp threadprivate(pool)
+//static size_t         poolArraySize;
+//static int            poolNElements = 0;
 
 
 MeqMatrixRealArr::MeqMatrixRealArr (int nx, int ny)
@@ -81,12 +81,12 @@ void *MeqMatrixRealArr::operator new(size_t, int nx, int ny)
 
   void *ptr;
 
-  if (nx * ny == poolNElements)
-  {
-    // Allocate memory from the pool.
-    ptr = pool.allocate(poolArraySize);
-  }
-  else
+//  if (nx * ny == poolNElements)
+//  {
+//    // Allocate memory from the pool.
+//    ptr = pool.allocate(poolArraySize);
+//  }
+//  else
   {
     // The number of elements in the matrix is non-standard -> allocate it separately.
     // Still use new to get enough memory for alignment.
@@ -107,23 +107,24 @@ void MeqMatrixRealArr::operator delete(void *ptr)
   timer.start();
 #endif
 
-  if(poolNElements == 0 || ((MeqMatrixRealArr *) ptr)->nelements() != poolNElements)
+//  if(poolNElements == 0 || ((MeqMatrixRealArr *) ptr)->nelements() != poolNElements)
   {
     // Pool is deactivated or the number of elements in the matrix is non-standard.
     // -> use standard free()
     free(ptr);
   }
-  else
-  {
+//  else
+//  {
     // Return memory to the pool.
-    pool.deallocate((MeqMatrixRealArr *) ptr);
-  }
+//    pool.deallocate((MeqMatrixRealArr *) ptr);
+//  }
 
 #if defined TIMER
   timer.stop();
 #endif
 }
 
+/*
 void MeqMatrixRealArr::poolActivate(int nelements)
 {
   //std::cerr << "MeqMatrixRealArr::poolActivate(" << nelements << ")\n";
@@ -143,7 +144,7 @@ void MeqMatrixRealArr::poolDeactivate()
   // allocate will simply 'new' memory, deallocate will 'delete' it.
   poolNElements = 0;
 }
-
+*/
 
 MeqMatrixRep* MeqMatrixRealArr::clone() const
 {

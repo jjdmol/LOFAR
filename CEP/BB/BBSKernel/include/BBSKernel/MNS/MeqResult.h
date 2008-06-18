@@ -28,7 +28,7 @@
 
 //# Includes
 #include <BBSKernel/MNS/MeqMatrix.h>
-#include <BBSKernel/MNS/Pool.h>
+//#include <BBSKernel/MNS/Pool.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_iostream.h>
@@ -63,8 +63,8 @@ public:
   static void unlink (MeqResultRep* rep)
     { if (rep != 0 && --rep->itsCount == 0) delete rep; }
 
-  static void *operator new(size_t size);
-  static void operator delete(void *rep);
+//  static void *operator new(size_t size);
+//  static void operator delete(void *rep);
 
   // Get the value.
   const MeqMatrix& getValue() const

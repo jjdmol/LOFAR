@@ -1,4 +1,4 @@
-//# Prediffer.h: Read and predict read visibilities
+//# Prediffer.h: Calibrate observed data.
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,24 +24,23 @@
 #define LOFAR_BB_BBS_PREDIFFER_H
 
 // \file
-// Read and predict read visibilities
+// Calibrate observed data.
 
-//#include <casa/BasicSL/Complex.h>
-//#include <casa/Arrays/Matrix.h>
-
+#include <BBSKernel/Grid.h>
 #include <BBSKernel/Measurement.h>
 #include <BBSKernel/Model.h>
-#include <BBSKernel/VisSelection.h>
+#include <BBSKernel/SolverInterfaceTypes.h>
+#include <BBSKernel/Types.h>
 #include <BBSKernel/VisData.h>
+#include <BBSKernel/VisSelection.h>
 
-#include <BBSKernel/BBSKernelStructs.h>
-//#include <BBSKernel/ParmData.h>
 #include <BBSKernel/MNS/MeqDomain.h>
 #include <BBSKernel/MNS/MeqJonesExpr.h>
 #include <BBSKernel/MNS/MeqMatrix.h>
 #include <BBSKernel/MNS/MeqParm.h>
 #include <BBSKernel/MNS/MeqPhaseRef.h>
 #include <BBSKernel/MNS/MeqRequest.h>
+
 #include <ParmDB/ParmDB.h>
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/ParmDomain.h>
@@ -51,12 +50,7 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_map.h>
 
-#include <utility>
-
-namespace casa
-{
-    class LSQFit;
-}
+#include <scimath/Fitting/LSQFit.h>
 
 namespace LOFAR
 {
@@ -70,220 +64,221 @@ namespace BBS
 // It subtracts them from each other and calculates the derivatives.
 // These results can be sent to the solver to find better parameter values.
 
-struct ProcessingContext
-{
-    ProcessingContext()
-        :   domainSize(0, 0),
-            domainCount(0, 0),
-            unknownCount(0)
-    {}
-
-    vector<baseline_t>              baselines;
-    set<size_t>                     polarizations;
-    string                          outputColumn;
-
-    // 
-    // Information for the SOLVE operation (valid if unknownCount > 0).
-    //     
-
-    // Nominal solve domain size along each axis in #channels, #timeslots.
-    std::pair<size_t, size_t>       domainSize;
-    // Number of solve domains along each axis.
-    std::pair<size_t, size_t>       domainCount;
-    // Solve domains.
-    vector<MeqDomain>               domains;
-//    boost::multi_array<MeqDomain, 2>    domains;
-    
-    // Sum of the maximal number (over all solve domains) of unknowns of each
-    // parameter.
-    size_t                          unknownCount;
-    // The set of unknowns for each solve domain.
-    vector<vector<double> >         unknowns;
-//    boost::multi_array<double, 3>   unknowns;
-
-    // The set of parameters included in the SOLVE operation.
-//    vector<MeqPExpr>                parameters;
-    // Index into the unknown vector of the first (solvable) coefficient of a
-    // given parameter.
-//    vector<size_t>                  parameterOffset;
-};
-
-
-struct ThreadContext
-{
-    vector<casa::LSQFit*>   solvers;
-    vector<uint>            unknownIndex;
-    vector<const double*>   perturbedRe, perturbedIm;
-    vector<double>          partialRe, partialIm;
-    NSTimer                 evaluationTimer, operationTimer;
-};
-
 
 class Prediffer
 {
 public:
-    Prediffer(const string &measurement, size_t subband,
-        const string &inputColumn,
-        const string &skyDBase, const string &instrumentDBase,
-        const string &historyDBase, bool readUVW);
+    enum OperationType
+    {
+        UNSET = 0,
+        SIMULATE,
+        SUBTRACT,
+        CORRECT,
+        CONSTRUCT,
+        N_OperationType        
+    };
 
-    // Destructor
-    ~Prediffer();
+    Prediffer(Measurement::Pointer measurement,
+        LOFAR::ParmDB::ParmDB sky,
+        LOFAR::ParmDB::ParmDB instrument);
 
-    // Lock and unlock the parm database tables.
-    // The user does not need to lock/unlock, but it can increase performance
-    // if many small accesses have to be done.
+    // Attach/detach the chunk of data to process.
     // <group>
-    void lock(bool lockForWrite = true)
-    {
-        itsInstrumentDBase->lock(lockForWrite);
-        itsSkyDBase->lock(lockForWrite);
-    }
-
-    void unlock()
-    {
-        itsInstrumentDBase->unlock();
-        itsSkyDBase->unlock();
-    }
+    void attachChunk(VisData::Pointer chunk);
+    void detachChunk();
     // </group>
 
-    void setSelection(VisSelection selection);
-    void setChunkSize(size_t time);
-    bool nextChunk();
-
-    bool setContext(const PredictContext &context);
-    bool setContext(const SubtractContext &context);
-    bool setContext(const CorrectContext &context);
-    bool setContext(const GenerateContext &context);
-
-    void predict();
+    // Select a subset of the data for processing. An empty vector matches
+    // anything. The selection remains active until it is changed or until
+    // attachChunk() is called.
+    bool setSelection(const string &filter,
+        const vector<string> &stations1,
+        const vector<string> &stations2,
+        const vector<string> &polarizations);
+    
+    void setModelConfig(OperationType operation,
+        const vector<string> &components,
+        const vector<string> &sources);
+        
+    // Operations that can be performed on the data. The setModelConfig()
+    // function should be called prior to calling any of these functions. This
+    // ensures the model is properly initialized. Of course, the operation
+    // function called should match the operation specified in the call to
+    // setModelConfig().
+    //
+    // NOTE: The start and end arguments to construct() specify an _inclusive_
+    // interval.
+    //
+    // NOTE: Prior to calling construct(), the parameters to solve for should be
+    // selected and a solution cell grid should be set (see
+    // setParameterSelection() and setCellGrid() below).
+    // <group>
+    void simulate();
     void subtract();
     void correct();
-    void generate(pair<size_t, size_t> start, pair<size_t, size_t> end,
-        vector<casa::LSQFit> &solvers);
-
-    // Get the actual work domain for this MS (after a setStrategy).
-    const MeqDomain &getWorkDomain() const
-        { return itsWorkDomain; }
-
-    // Get the local data domain.
-//    MeqDomain getLocalDataDomain() const;
-
-    // There are three ways to update the solvable parms after the solver
-    // found a new solution.
+    void construct(Location start, Location end, vector<CellEquation> &local);
+    // </group>
+    
+    // (Distributed) solving.
     // <group>
-    // Update the values of solvable parms.
-    // Using its spid index each parm takes its values from the vector.
-//    void updateSolvableParms (const vector<double>& values);
+    bool setParameterSelection(const vector<string> &include,
+        const vector<string> &exclude);        
+    void clearParameterSelection();
 
-    // Update the given values (for the current domain) of solvable parms
-    // matching the corresponding parm name in the vector.
-    // Vector values with a name matching no solvable parm are ignored.
-//    void updateSolvableParms (const ParmDataInfo& parmData);
+    // Set the global cell grid.
+    bool setCellGrid(const Grid &cellGrid);
 
-    // Update the solvable parm values (reread from table).
-    void updateSolvableParms();
-    void updateUnknowns(size_t domain, const vector<double> &unknowns);
+    // Exchange coefficient index.
+    const CoeffIndex &getCoeffIndex() const;
+    void setCoeffIndex(const CoeffIndex &global);
 
-    // Log the updated values of a single solve domain.
-    //void logIteration(const string &stepName, size_t solveDomainIndex,
-    //    double rank, double chiSquared, double LMFactor);
+    // Get initial coefficient values.
+    // NOTE: The start and end arguments to getCoeff() specify an _inclusive_
+    // interval.
+    void getCoeff(const Location &cell, vector<double> &coeff) const;
+    void setCoeff(const Location &cell, const vector<double> &coeff);
 
-    // Write the solved parms.
-    void writeParms();
-    void writeParms(size_t solveDomainIndex);
+    void getCoeff(Location start, Location end, vector<CellCoeff> &local) const;
+    void setCoeff(const vector<CellSolution> &global);
+    // </group>
 
-    const vector<vector<double > > &getUnknowns() const
-    { return itsContext.unknowns; }
+    // Commit cached parameter values to the parameter database.
+    void storeParameterValues();
 
-    pair<size_t, size_t> getSolveDomainGridSize() const
-    { return itsContext.domainCount; }
-
+/*
 #ifdef EXPR_GRAPH
     void writeExpressionGraph(const string &fileName, baseline_t baseline);
 #endif
+*/
 
-private:
-    // Copy constructor and assignment are not allowed.
-    // <group>
-    Prediffer (const Prediffer& other);
-    Prediffer& operator= (const Prediffer& other);
-    // </group>
+private:    
+    struct ThreadContext
+    {
+        enum
+        {
+            MODEL_EVALUATION = 0,
+            PROCESS,
+            GRID_LOOKUP,
+            INV_DELTA,
+            BUILD_INDEX,
+            DERIVATIVES,
+            MAKE_NORM,
+            N_Timer
+        } Timer;
 
-    bool setContext(const Context &context);
-    void initSolveDomains(std::pair<size_t, size_t> size);
-    void initPolarizationMap();
+        static string           timerNames[N_Timer];
+        NSTimer                 timers[N_Timer];
+        unsigned long long      visCount;
+
+        vector<casa::LSQFit*>   equations;
+        vector<uint>            coeffIndex;
+        vector<const double*>   perturbedRe, perturbedIm;
+        vector<double>          partialRe, partialIm;
+    };
     
-    // Make all parameters non-solvable.
-    void clearSolvableParms();
+    class Interval
+    {
+    public:
+        Interval()
+            :   start(0),
+                end(0)
+        {}
+        
+        uint32  start, end;                
+    };
 
-    // Read the polcs for all parameters for the current work domain.
-    void readParms();
+    //# Copy construction and assignment are not allowed.
+    Prediffer(const Prediffer& other);
+    Prediffer &operator=(const Prediffer& other);
 
-    // Define the signature of a function processing a baseline.
-    typedef void (Prediffer::*BaselineProcessor) (int threadnr, void* arguments,
-        VisData::Pointer chunk, pair<size_t, size_t> offset,
-        const MeqRequest& request, baseline_t baseline, bool showd);
+    //# Reset internal state.
+    void resetState();
+    
+    //# Define the signature for a function that processes the data of a single
+    //# baseline.
+    typedef void (Prediffer::*BlProcessor) (size_t threadNr,
+        const baseline_t &baseline,
+        const Location &offset,
+        const MeqRequest &request,
+        void *arguments);
 
-    // Loop through all data and process each baseline by ProcessFuncBL.
-    void process(bool useFlags, bool precalc, bool derivatives,
-        pair<size_t, size_t> start, pair<size_t, size_t> end,
-        BaselineProcessor processor, void *arguments);
+    //# Process (a subset of) the observed data.
+    void process(bool checkFlags, bool precalc, const Location &start,
+        const Location &end, BlProcessor processor, void *arguments = 0);
 
-    // Write the predicted data of a baseline.
-    void copyBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
-        pair<size_t, size_t> offset, const MeqRequest& request,
-        baseline_t baseline, bool showd = false);
+    //# Copy the simulated visibilities for a single baseline.
+    void copyBl(size_t threadNr, const baseline_t &baseline,
+        const Location &offset, const MeqRequest &request, void *arguments = 0);
 
-    // Subtract the data of a baseline.
-    void subtractBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
-        pair<size_t, size_t> offset, const MeqRequest& request,
-        baseline_t baseline, bool showd = false);
+    //# Subtract the simulated visibilities from the observed data for a
+    //# single baseline.
+    void subtractBl(size_t threadNr, const baseline_t &baseline,
+        const Location &offset, const MeqRequest &request, void *arguments = 0);
 
-    // Generate equations for a baseline.
-    void generateBaseline(int threadnr, void* arguments, VisData::Pointer chunk,
-        pair<size_t, size_t> offset, const MeqRequest& request,
-        baseline_t baseline, bool showd = false);
+    //# Construct equations for a single baseline.
+    void constructBl(size_t threadNr, const baseline_t &baseline,
+        const Location &offset, const MeqRequest &request, void *arguments = 0);
 
-//    void testFlagsBaseline(int threadnr, void* arguments,
-//        VisData::Pointer chunk, const MeqRequest& request, baseline_t
-//baseline,
-//        bool showd);
+    //# Create a look-up table that maps external (measurement) polarization
+    //# indices to internal polarization indices.
+    void initPolarizationMap();
 
+    //# Get all parameter values that intersect the current chunk.
+    void loadParameterValues();
+
+    //# Reset and/or print various timers and statistics.
     void resetTimers();
-    void printTimers(const string &operationName);
+    void printTimers(const string &operation);
+    
+    //# Compute local cell id for global cell.
+    inline size_t getLocalCellId(const Location &globalCell) const;
 
-    string                              itsInputColumn;
-    bool                                itsReadUVW;
-    size_t                              itsChunkSize;
-    size_t                              itsChunkPosition;
+    Measurement::Pointer                        itsMeasurement;
+    VisData::Pointer                            itsChunk;
+    //# Mapping from internal polarization (XX,XY,YX,YY) to polarizations
+    //# found in the chunk (which may be a subset, and in a different order).
+    vector<int>                                 itsPolarizationMap;
 
-    vector<int>                         itsPolarizationMap;
+    LOFAR::ParmDB::ParmDB                       itsSkyDb;
+    LOFAR::ParmDB::ParmDB                       itsInstrumentDb;
+    //# All parameter values that intersect the chunk.
+    map<string, LOFAR::ParmDB::ParmValueSet>    itsParameterValues;
 
-    scoped_ptr<ParmDB::ParmDB>          itsInstrumentDBase;
-    scoped_ptr<ParmDB::ParmDB>          itsSkyDBase;
-    scoped_ptr<ParmDB::ParmDB>          itsHistoryDBase;
+    Model::Pointer                              itsModel;
+    //# Container for the model parameters (the leaf nodes of the model).
+    MeqParmGroup                                itsParameters;
 
-    //# Container for all parameters.
-    MeqParmGroup                        itsParmGroup;
-    //# All parm values in current work domain.
-    map<string, ParmDB::ParmValueSet>   itsParmValues;
+    OperationType                               itsOperation;
+    vector<baseline_t>                          itsBaselineSelection;
+    vector<size_t>                              itsPolarizationSelection;
 
+    //# Information required for the CONSTRUCT operation.
+    //# ------------------------------------------------------------------------
+    //# Global cell grid.
+    Grid                                        itsCellGrid;
+    //# Local cell grid represented as inclusive intervals along each axis.
+    vector<Interval>                            itsFreqIntervals;
+    vector<Interval>                            itsTimeIntervals;
+    //# Location in the global grid of the current chunk's start and end cell.
+    Location                                    itsStartCell, itsEndCell;
+
+    //# Parameters selected for solving.
+    vector<MeqPExpr>                            itsParameterSelection;
+    //# Local coefficient index.
+    CoeffIndex                                  itsCoeffIndex;
+    //# Mapping from global to local coefficients.
+    vector<CoeffInterval>                       itsCoeffMapping;
+    //# ------------------------------------------------------------------------
+
+    vector<ThreadContext>                       itsThreadContexts;
+
+    //# Timers for performance measurement.
+    NSTimer                                     itsPrecalcTimer;
+    NSTimer                                     itsProcessTimer;
+    
+    //# TODO: Remove this.
     //# Phase reference position in J2000 coordinates.
-    MeqPhaseRef                         itsPhaseRef;
-    MeqDomain                           itsWorkDomain;
-
-    //# Thread private buffers.
-    vector<ThreadContext>               itsThreadContexts;
-
-    NSTimer                             itsPrecalcTimer, itsProcessTimer;
-
-    Measurement::Pointer                itsMeasurement;
-    Model::Pointer                      itsModel;
-    VisGrid                             itsGrid;
-    VisSelection                        itsChunkSelection;
-    VisData::Pointer                    itsChunkData;
-    ProcessingContext                   itsContext;
+    MeqPhaseRef                                 itsPhaseRef;
 };
 
 // @}

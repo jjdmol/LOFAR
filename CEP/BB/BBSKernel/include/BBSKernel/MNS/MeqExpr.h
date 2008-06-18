@@ -104,7 +104,7 @@ public:
   }
 
   // Get the current number of parents
-  const int getParentCount() const
+  int getParentCount() const
   {
       return itsNParents;
   }
@@ -233,7 +233,7 @@ public:
   
   //# -- DELEGATED METHODS --
   // Get the current number of parents
-  const int getParentCount() const
+  int getParentCount() const
   {
       return itsRep->getParentCount();
   }

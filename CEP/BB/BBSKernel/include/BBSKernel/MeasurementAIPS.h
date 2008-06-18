@@ -55,7 +55,7 @@ public:
 
     ~MeasurementAIPS();
 
-    virtual VisGrid grid(const VisSelection &selection) const;
+    virtual VisDimensions getDimensions(const VisSelection &selection) const;
 
     virtual VisData::Pointer read(const VisSelection &selection,
         const string &column = "DATA", bool readUVW = true) const;
@@ -64,20 +64,18 @@ public:
         const string &column = "CORRECTED_DATA", bool writeFlags = true);
 
 private:
-//    void initObservationInfo(const casa::ROMSObservationColumns &observation,
-//        uint id);
     void initInstrumentInfo(const casa::ROMSAntennaColumns &antenna,
         const casa::ROMSObservationColumns &observation, uint id);
-    void initTimeInfo();
-    void initFreqInfo(const casa::ROMSSpWindowColumns &window, uint id);
+    void initFreqTimeInfo(const casa::ROMSSpWindowColumns &window, uint id);
+    void initBaselineInfo();
     void initPolarizationInfo(const casa::ROMSPolarizationColumns &polarization,
         uint id);
     void initFieldInfo(const casa::ROMSFieldColumns &field, uint id);
 
     casa::TableExprNode getTAQLExpression(const VisSelection &selection) const;
     casa::Slicer getCellSlicer(const VisSelection &selection) const;
-    VisGrid grid(const casa::Table tab_selection, const casa::Slicer slicer)
-        const;
+    VisDimensions getDimensionsImpl(const casa::Table tab_selection,
+        const casa::Slicer slicer) const;
 
     casa::MeasurementSet    itsMS;
     bool                    itsFreqAxisReversed;

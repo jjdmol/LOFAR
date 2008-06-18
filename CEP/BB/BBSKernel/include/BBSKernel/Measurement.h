@@ -23,94 +23,61 @@
 #ifndef LOFAR_BBS_BBSKERNEL_MEASUREMENT_H
 #define LOFAR_BBS_BBSKERNEL_MEASUREMENT_H
 
-#include <BBSKernel/VisSelection.h>
+#include <BBSKernel/Instrument.h>
 #include <BBSKernel/VisData.h>
+#include <BBSKernel/VisDimensions.h>
+#include <BBSKernel/VisSelection.h>
 
+#include <measures/Measures/MDirection.h>
+
+/*
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_set.h>
-#include <utility>
 
-#include <measures/Measures/MDirection.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
+*/
 
 namespace LOFAR
 {
+    class BlobIStream;
+    class BlobOStream;
+
 namespace BBS
 {
+    class Measurement
+    {
+    public:
+        typedef shared_ptr<Measurement> Pointer;
 
-struct Station
-{
-    string              name;
-    casa::MPosition     position;
-};
+        virtual ~Measurement()
+        {}
 
-class Instrument
-{
-public:
-    size_t getStationCount() const
-    { return stations.size(); }
+        virtual VisDimensions
+            getDimensions(const VisSelection &selection) const = 0;
 
-    string              name;
-    casa::MPosition     position;
-    vector<Station>     stations;
-};
+        virtual VisData::Pointer read(const VisSelection &selection,
+            const string &column = "DATA", bool readUVW = true) const = 0;
 
-class Measurement
-{
-public:
-    typedef shared_ptr<Measurement> Pointer;
+        virtual void write(const VisSelection &selection,
+            VisData::Pointer buffer, const string &column = "CORRECTED_DATA",
+            bool writeFlags = true) = 0;
 
-    virtual ~Measurement()
-    {}
+        const Instrument &getInstrument() const
+        { return itsInstrument; }
 
-    virtual VisGrid grid(const VisSelection &selection) const = 0;
+        const casa::MDirection &getPhaseCenter() const
+        { return itsPhaseCenter; }
+        
+        const VisDimensions &getDimensions() const
+        { return itsDimensions; }
 
-    virtual VisData::Pointer read(const VisSelection &selection,
-        const string &column = "DATA", bool readUVW = true) const = 0;
-
-    virtual void write(const VisSelection &selection, VisData::Pointer buffer,
-        const string &column = "CORRECTED_DATA",
-        bool writeFlags = true) = 0;
-
-    const Instrument &getInstrument() const
-    { return itsInstrument; }
-
-    const casa::MDirection &getPhaseCenter() const
-    { return itsPhaseCenter; }
-
-    const cell_centered_axis<regular_series> &getFreqAxis() const
-    { return itsFreqAxis; }
-
-    pair<double, double> getFreqRange() const
-    { return itsFreqAxis.range(); }
-
-    size_t getChannelCount() const
-    { return itsFreqAxis.size(); }
-
-    const cell_centered_axis<irregular_series> &getTimeAxis() const
-    { return itsTimeAxis; }
-
-    pair<double, double> getTimeRange() const
-    { return itsTimeAxis.range(); }
-
-    size_t getTimeSlotCount() const
-    { return itsTimeAxis.size(); }
-
-    const vector<string> &getPolarizations() const
-    { return itsPolarizations; }
-
-    size_t getPolarizationCount() const
-    { return itsPolarizations.size(); }
-
-protected:
-    Instrument                              itsInstrument;
-    casa::MDirection                        itsPhaseCenter;
-    cell_centered_axis<regular_series>      itsFreqAxis;
-    cell_centered_axis<irregular_series>    itsTimeAxis;
-    vector<string>                          itsPolarizations;
-};
+    protected:
+        Instrument              itsInstrument;
+        casa::MDirection        itsPhaseCenter;
+        VisDimensions           itsDimensions;
+    };
 
 } //# namespace BBS
 } //# namespace LOFAR

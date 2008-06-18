@@ -25,10 +25,9 @@
 
 //# Includes
 #include <BBSControl/Command.h>
-#include <BBSControl/CommandId.h>
 #include <BBSControl/CommandQueue.h>
 #include <BBSControl/CommandResult.h>
-#include <BBSControl/LocalControlId.h>
+#include <BBSControl/SenderId.h>
 #include <BBSControl/QueryBuilder/AddCommand.h>
 #include <BBSControl/Step.h>
 #include <BBSControl/Strategy.h>
@@ -146,25 +145,27 @@ namespace LOFAR
       // If command type is an empty string, then we've probably received an
       // empty result row; return a null pointer.
       string type = ps.getString("Type");
-      if (type.empty()) return make_pair(shared_ptr<Command>(), CommandId());
+      if (type.empty()) return make_pair(shared_ptr<Command>(), CommandId(-1));
 
       // Get the command-id.
-      CommandId id = ps.getInt32("id");
+      CommandId id = ps.getUint32("id");
+
+      LOG_DEBUG_STR("Next command: " << type << " (id=" << id << ")");
 
       // Get the command name. Only steps have names, so this is a way to
       // differentiate between ordinary commands and steps.
       string name = ps.getString("Name");
 
+      // Name is not empty, so we must construct a Step object.
+      // Get additional information needed to create the Step.
+      string buf = ps.getString("ParameterSet");
+
+      // The string \a buf now contains a string of key/value pairs. Turn it
+      // into a ParameterSet. Note that we can safely reuse \a ps.
+      ps.clear();
+      ps.adoptBuffer(buf);
+
       if (!name.empty()) {
-        // Name is not empty, so we must construct a Step object.
-        // Get additional information needed to create the Step.
-        string buf = ps.getString("ParameterSet");
-
-        // The string \a buf now contains a string of key/value pairs. Turn it
-        // into a ParameterSet. Note that we can safely reuse \a ps.
-        ps.clear();
-        ps.adoptBuffer(buf);
-
         // Create a new Step and return it.
         return make_pair(Step::create(name, ps, 0), id);
       }
@@ -240,21 +241,27 @@ namespace LOFAR
     }
 
 
-    bool CommandQueue::addResult(const CommandId& commandId, 
-                                 const CommandResult& result) const
+    void CommandQueue::addResult(const CommandId& commandId, 
+                                 const CommandResult& result,
+                                 const SenderId& senderId) const
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
       // Compose the query.
       ostringstream query;
       query << "SELECT * FROM blackboard.add_result(" 
-            << commandId.asInt() << "," 
-            << getpid() << ","
-            << result.asInt()    << ",'" 
-            << result.message()  << "') AS result";
+            << commandId        << "," 
+            << getpid()         << ","
+            << senderId.type()  << ","
+            << senderId.id()    << ","
+            << result.asInt()   << ",'" 
+            << result.message() << "') AS result";
 
       // Execute the query and return the result
-      return execQuery(query.str()).getBool("result");
+      if (!execQuery(query.str()).getBool("result")) {
+        THROW (CommandQueueException, "Failed to add result to the blackboard."
+               << "\nQuery: " << query.str());
+      }
     }
 
 
@@ -277,16 +284,16 @@ namespace LOFAR
         ostringstream prefix;
         prefix << "_row(" << row << ")."; 
         CommandId      cmdId (ps.getUint32(prefix.str() + "command_id"));
-        LocalControlId ctrlId(ps.getString(prefix.str() + "node"),
-                              ps.getInt32(prefix.str() + "pid"));
+        SenderId       sndrId(ps.getUint32(prefix.str() + "sender_type"),
+                              ps.getUint32(prefix.str() + "sender_id"));
         CommandResult  cmdRes(ps.getUint32(prefix.str() + "result_code"),
                               ps.getString(prefix.str() + "message"));
         LOG_TRACE_CALC_STR("Row: " << row << " [" << cmdId << "],[[" 
-                           << ctrlId << "],[" << cmdRes << "]]");
+                           << sndrId << "],[" << cmdRes << "]]");
         // Looking up results[cmdId] each iteration may cause a performance
         // problem. However, most of the times nRows will be small (probably
         // just 1), so leave it for the time being.
-        results[cmdId].push_back(ResultType(ctrlId, cmdRes));
+        results[cmdId].push_back(ResultType(sndrId, cmdRes));
       }
       // Return the result map.
       return results;
@@ -314,8 +321,8 @@ namespace LOFAR
       for (uint row = 0; row < nRows; ++row) {
         ostringstream prefix;
         prefix << "_row(" << row << ").";
-        LocalControlId id(ps.getString(prefix.str() + "node"),
-                          ps.getInt32(prefix.str() + "pid"));
+        SenderId       id(ps.getUint32(prefix.str() + "sender_type"),
+                          ps.getUint32(prefix.str() + "sender_id"));
         CommandResult res(ps.getUint32(prefix.str() + "result_code"),
                           ps.getString(prefix.str() + "message"));
         LOG_TRACE_CALC_STR("Row: " << row << "[" << id << "],[" << res << "]");

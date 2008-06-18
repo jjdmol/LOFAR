@@ -24,11 +24,12 @@
 #include <BBSKernel/MNS/MeqParmFunklet.h>
 #include <BBSKernel/MNS/MeqParmExpr.h>
 #include <BBSKernel/MNS/MeqPolc.h>
-#include <BBSKernel/ParmData.h>
+//#include <BBSKernel/ParmData.h>
 #include <ParmDB/ParmValue.h>
 #include <ParmDB/ParmDB.h>
 #include <Common/LofarLogger.h>
 #include <casa/BasicMath/Math.h>
+#include <Common/lofar_algorithm.h>
 
 using namespace casa;
 using namespace std;
@@ -314,15 +315,18 @@ int MeqParmFunklet::initDomain (const vector<MeqDomain>& solveDomains,
     // The nr of solve domains should match the nr of funklets.
     // However, if a default value is used, only one funklet is in use.
     // In that case more funklets are created if needed.
-    if (itsDefUsed  &&  nDomain > 1  &&  itsFunklets.size() != nDomain) {
+//    if (itsDefUsed  &&  nDomain > 1  &&  itsFunklets.size() != nDomain) {
+    if (itsDefUsed) {
       ASSERT (itsFunklets.size() == 1);
       itsFunklets[0]->setDomain (solveDomains[0]);
       itsFunklets.resize (nDomain);
       for (uint i=1; i<nDomain; ++i) {
-	itsFunklets[i] = itsFunklets[0]->clone();
-	itsFunklets[i]->setDomain (solveDomains[i]);
+        itsFunklets[i] = itsFunklets[0]->clone();
+	    itsFunklets[i]->setDomain (solveDomains[i]);
       }
+      itsDefUsed = false;
     }
+
     ASSERTSTR (itsFunklets.size() == nDomain,
 	       "Solvable parameter " << getName() << " has "
 	       << itsFunklets.size() << " funklet domains mismatching the "
@@ -366,6 +370,7 @@ const vector<MeqFunklet*>& MeqParmFunklet::getFunklets() const
   return itsFunklets;
 }
 
+/*
 void MeqParmFunklet::update (const ParmData& values)
 {
   ASSERT(values.size() == int(itsFunklets.size()));
@@ -373,12 +378,26 @@ void MeqParmFunklet::update (const ParmData& values)
     itsFunklets[i]->update (values.getCoeff(i));
   }
 }
+*/
 
 void MeqParmFunklet::update (const vector<double>& value)
 {
   for (uint i=0; i<itsFunklets.size(); i++) {
     itsFunklets[i]->update (value);
   }
+}
+
+void MeqParmFunklet::update(size_t cell, const vector<double> &coeff)
+{
+    ASSERT(cell < itsFunklets.size());
+    itsFunklets[cell]->update(coeff);
+}
+
+void MeqParmFunklet::update(size_t cell, const vector<double> &coeff,
+    size_t offset)
+{
+    ASSERT(cell < itsFunklets.size());
+    itsFunklets[cell]->update(coeff, offset);
 }
 
 void MeqParmFunklet::updateFromTable()
@@ -408,12 +427,6 @@ void MeqParmFunklet::save()
     itsTable->putValue (getName(), pval);
   }
 //  itsTable->unlock();
-}
-
-void MeqParmFunklet::update(size_t domain, const vector<double> &unknowns)
-{
-    ASSERT(domain < itsFunklets.size());
-    itsFunklets[domain]->update(unknowns);
 }
 
 void MeqParmFunklet::save(size_t domainIndex)

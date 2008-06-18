@@ -2,22 +2,29 @@ pkginclude_MNSdir = $(pkgincludedir)/MNS
 
 pkginclude_HEADERS = Package__Version.h 		\
 	Axis.h			\
-	BBSKernelStructs.h	\
-	BBSStatus.h		\
+	BlobIOExtensions.h	\
 	Exceptions.h		\
+	Grid.h			\
+	Instrument.h		\
 	Measurement.h		\
 	MeasurementAIPS.h	\
+	MetaMeasurement.h	\
 	Model.h			\
-	ParmData.h		\
 	Prediffer.h		\
+	Solver.h		\
+	SolverInterfaceTypes.h	\
+	Types.h			\
 	VisData.h		\
+	VisDimensions.h		\
 	VisSelection.h
 
 pkginclude_MNS_HEADERS	= 	\
+	MNS/ExternalFunction.h	\
 	MNS/MeqAzEl.h		\
 	MNS/MeqDFTPS.h		\
 	MNS/MeqDiag.h		\
 	MNS/MeqDipoleBeam.h	\
+	MNS/MeqDipoleBeamExternal.h	\
 	MNS/MeqDomain.h		\
 	MNS/MeqExpr.h		\
 	MNS/MeqFunklet.h	\

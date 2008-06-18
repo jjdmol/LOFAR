@@ -33,9 +33,9 @@
 #include <Common/lofar_vector.h>
 
 // Forward Declarations
-namespace LOFAR {
-  class ParmData;
-}
+//namespace LOFAR {
+//  class ParmData;
+//}
 
 namespace LOFAR
 {
@@ -106,13 +106,14 @@ public:
   virtual void save(size_t domainIndex);
 
   // Update the solvable parameter with the new value.
-  virtual void update(const ParmData& values);
+//  virtual void update(const ParmData& values);
 
   // Update the solvable parameter coefficients with the new values.
   // The vector contains all solvable values; it picks out the values
   // at the spid index of this parameter.
   virtual void update(const vector<double>& value);
-  virtual void update(size_t domain, const vector<double> &unknowns);
+  virtual void update(size_t cell, const vector<double> &coeff);
+  virtual void update(size_t cell, const vector<double> &coeff, size_t offset);
 
   // Update the solvable parameter coefficients with the new values
   // in the table.

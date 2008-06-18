@@ -106,7 +106,7 @@ namespace LOFAR
             step.reset(new RefitStep(name, parset, parent));
           else THROW (BBSControlException, "Operation \"" << oper << 
                       "\" is not a valid Step operation");
-        } catch (APSException& e) {
+         } catch (APSException& e) {
           THROW (BBSControlException, e.what());
         }
       }
@@ -116,9 +116,7 @@ namespace LOFAR
 
     //##--------   P r o t e c t e d   m e t h o d s   --------##//
 
-    Step::Step(const string& name, 
-		     const ParameterSet& parset,
-		     const Step* parent)
+    Step::Step(const string& name, const Step* parent)
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
@@ -130,28 +128,31 @@ namespace LOFAR
       // previous data copy.
       itsName = name;
       itsParent = parent;
-
-      // Overrride default values for data members of the current Step, if
-      // they're specified in \a parset.
-      read(parset.makeSubset("Step." + name + "."));
-
     }
 
 
     void Step::write(ParameterSet& ps) const
     {
       LOG_TRACE_LIFETIME_STR(TRACE_LEVEL_COND, "Step." << itsName);
-      ostringstream oss;
-      oss << "Baselines.Station1 = "    << itsBaselines.station1    << endl
-          << "Baselines.Station2 = "    << itsBaselines.station2    << endl
-          << "Correlation.Selection = " << itsCorrelation.selection << endl
-          << "Correlation.Type = "      << itsCorrelation.type      << endl
-          << "Integration.Freq = "      << itsIntegration.deltaFreq << endl
-          << "Integration.Time = "      << itsIntegration.deltaTime << endl
-          << "Sources = "               << itsSources               << endl
-          << "ExtraSources = "          << itsExtraSources          << endl
-          << "InstrumentModel = "       << itsInstrumentModels      << endl;
-      ps.adoptBuffer(oss.str(), "Step." + itsName + ".");
+      const string prefix = "Step." + itsName + ".";
+      ps.replace(prefix + "Baselines.Station1",
+                 toString(itsBaselines.station1));
+      ps.replace(prefix + "Baselines.Station2",
+                 toString(itsBaselines.station2));
+      ps.replace(prefix + "Correlation.Selection",
+                 itsCorrelation.selection);
+      ps.replace(prefix + "Correlation.Type",
+                 toString(itsCorrelation.type));
+      ps.replace(prefix + "Integration.Freq",
+                 toString(itsIntegration.deltaFreq));
+      ps.replace(prefix + "Integration.Time",
+                 toString(itsIntegration.deltaTime));
+      ps.replace(prefix + "Sources",
+                 toString(itsSources));
+      ps.replace(prefix + "ExtraSources",
+                 toString(itsExtraSources));
+      ps.replace(prefix + "InstrumentModel",
+                 toString(itsInstrumentModels));
       LOG_TRACE_VAR_STR("\nContents of ParameterSet ps:\n" << ps);
     }
 
@@ -160,40 +161,36 @@ namespace LOFAR
     {
       LOG_TRACE_LIFETIME(TRACE_LEVEL_COND, "");
 
-      // If defined, get the baseline selection for this step.
-      try {
-	itsBaselines.station1 = ps.getStringVector("Baselines.Station1");
-	itsBaselines.station2 = ps.getStringVector("Baselines.Station2");
-      } catch (APSException&) {}
+      // Get the baseline selection for this step.
+      itsBaselines.station1 = 
+        ps.getStringVector("Baselines.Station1", itsBaselines.station1);
+      itsBaselines.station2 =
+        ps.getStringVector("Baselines.Station2", itsBaselines.station2);
 
-      // If defined, get the correlation selection (ALL, AUTO, or CROSS), and
-      // type (e.g., ["XX", "XY", "YX", "YY"]
-      try {
-	itsCorrelation.selection = ps.getString("Correlation.Selection");
-	itsCorrelation.type = ps.getStringVector("Correlation.Type");
-      } catch (APSException&) {}
+      // Get the correlation selection (ALL, AUTO, or CROSS), and type
+      // (e.g., ["XX", "XY", "YX", "YY"]).
+      itsCorrelation.selection = 
+        ps.getString("Correlation.Selection", itsCorrelation.selection);
+      itsCorrelation.type = 
+        ps.getStringVector("Correlation.Type", itsCorrelation.type);
 
-      // If defined, get the integration intervals in frequency (Hz) and
-      // time (s).
-      try {
-	itsIntegration.deltaFreq = ps.getDouble("Integration.Freq");
-	itsIntegration.deltaTime = ps.getDouble("Integration.Time");
-      } catch (APSException&) {}
+      // Get the integration intervals in frequency (Hz) and time (s).
+      itsIntegration.deltaFreq = 
+        ps.getDouble("Integration.Freq", itsIntegration.deltaFreq);
+      itsIntegration.deltaTime = 
+        ps.getDouble("Integration.Time", itsIntegration.deltaTime);
 
-      // If defined, get the sources for the current patch.
-      try {
-	itsSources = ps.getStringVector("Sources");
-      } catch (APSException&) {}
+      // Get the sources for the current patch.
+      itsSources = 
+        ps.getStringVector("Sources", itsSources);
 
-      // If defined, get the extra source, outside the current patch.
-      try {
-	itsExtraSources = ps.getStringVector("ExtraSources");
-      } catch (APSException&) {}
+      // Get the extra source, outside the current patch.
+      itsExtraSources = 
+        ps.getStringVector("ExtraSources", itsExtraSources);
 
-      // If defined, get the instrument model(s) used.
-      try {
-	itsInstrumentModels = ps.getStringVector("InstrumentModel");
-      } catch (APSException&) {}
+      // Get the instrument model(s) used.
+      itsInstrumentModels = 
+        ps.getStringVector("InstrumentModel", itsInstrumentModels);
     }
 
 

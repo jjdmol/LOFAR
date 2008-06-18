@@ -32,22 +32,38 @@ namespace LOFAR
   namespace BBS
   {
 
-    BlobStreamableConnection::BlobStreamableConnection(const string& port, int32 protocol) : 
-      itsTransportHolder(port, true, protocol, 5, true),
+    BlobStreamableConnection::BlobStreamableConnection(const string& port, 
+                                                       int32 protocol,
+                                                       bool blocking) : 
+      itsTransportHolder(port, blocking, protocol, 5, true),
       itsDoReconnect(false)
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
     }
 
 
-    BlobStreamableConnection::BlobStreamableConnection(const string& server, const string& port, int32 protocol) :
-      itsTransportHolder(server, port, true, protocol, true),
+    BlobStreamableConnection::BlobStreamableConnection(const string& server,
+                                                       const string& port,
+                                                       int32 protocol,
+                                                       bool blocking) :
+      itsTransportHolder(server, port, blocking, protocol, true),
       itsDoReconnect(true)
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
     }
 
-    
+
+    BlobStreamableConnection::BlobStreamableConnection(Socket* socket) :
+      itsTransportHolder(socket),
+      itsDoReconnect(false)
+    {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+    }
+
     bool BlobStreamableConnection::connect()
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+
       if(!itsTransportHolder.init())
         return false;
       
@@ -63,9 +79,11 @@ namespace LOFAR
     
     bool BlobStreamableConnection::sendObject(const BlobStreamable& bs)
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+
       if(!itsConnection)
       {
-        LOG_ERROR("recvObject() called while not connected.");
+        LOG_ERROR("sendObject() called while not connected.");
         return false;
       } 
       
@@ -75,16 +93,17 @@ namespace LOFAR
       // Do a blocking send. If the write fails, we may have lost the
       // connection. 
       LOG_DEBUG_STR("Sending a " << itsDataHolder.classType() << " object");
-      if (itsConnection->write() == CSConnection::Error) {
+      if (itsConnection->write() == CSConnection::Error)
+      {
         LOG_WARN("BlobStreamableConnection::sendObject() - Connection error");
 
         // If \c itsDoReconnect is \c true, try to reconnect.
-        if (itsDoReconnect) {
+        if (itsDoReconnect)
+        {
           LOG_DEBUG("Trying to reconnect ...");
           // Try to reconnect
-          if (!itsTransportHolder.init()) {
+          if (!itsTransportHolder.init()) 
             THROW (IOException, "Failed to reconnect");
-          }
         }
         return false;
       }
@@ -100,6 +119,8 @@ namespace LOFAR
 
     BlobStreamable* BlobStreamableConnection::recvObject()
     {
+      LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
+
       if(!itsConnection)
       {
         LOG_ERROR("recvObject() called while not connected.");
@@ -110,16 +131,17 @@ namespace LOFAR
 
       // Do a blocking receive. If the read fails, we may have lost the
       // connection.
-      if (itsConnection->read() == CSConnection::Error) {
+      if (itsConnection->read() == CSConnection::Error)
+      {
         LOG_WARN("BlobStreamableConnection::recvObject() - Connection error");
 
         // If \c itsDoReconnect is \c true, try to reconnect.
-        if (itsDoReconnect) {
+        if (itsDoReconnect) 
+        {
           LOG_DEBUG("Trying to reconnect ...");
           // Try to reconnect
-          if (!itsTransportHolder.init()) {
+          if (!itsTransportHolder.init())
             THROW (IOException, "Failed to reconnect");
-          }
         }
         return 0;
       }
@@ -130,7 +152,8 @@ namespace LOFAR
 
       // Deserialize the object
       LOG_DEBUG_STR("Received a " << itsDataHolder.classType() << " object");
-      if (!(bs = itsDataHolder.deserialize())) {
+      if (!(bs = itsDataHolder.deserialize())) 
+      {
         LOG_ERROR_STR("BlobStreamableConnection::recvObject() - "
                       "Error deserializing object " << 
                       itsDataHolder.classType());
@@ -140,7 +163,8 @@ namespace LOFAR
       // When we get here, everything went well. Return the object.
       return bs;
     }
-    
+   
 
   } // namespace BBS
+
 } // namespace LOFAR
