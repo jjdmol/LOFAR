@@ -26,12 +26,14 @@
 #include <CS1_Interface/BGL_Configuration.h>
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/CS1_Parset.h>
-#include <InputSection.h>
-#include <AH_ION_Gather.h>
-#include <BGL_Personality.h>
 #include <Transport/TH_Null.h>
-#include <TH_ZoidServer.h>
-#include <Package__Version.h>
+#include "InputSection.h"
+#include "AH_ION_Gather.h"
+#include "BGL_Personality.h"
+#include "TH_ZoidServer.h"
+#ifdef HAVE_PACKAGE_VERSION
+#include "Package__Version.h"
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -195,7 +197,9 @@ void *gather_thread(void *argv)
 void *master_thread(void *)
 {
   std::string type = "brief";
+#ifdef HAVE_PACKAGE_VERSION
   Version::show<CS1_IONProcVersion> (std::clog, "CS1_IONProc", type);
+#endif
   
   std::clog << "starting master_thread" << std::endl;
 

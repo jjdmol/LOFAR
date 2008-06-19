@@ -1,5 +1,5 @@
 
-make_package_version (${LCS_SOURCE_DIR}/Common/src TRUE TRUE)
+#make_package_version (${LCS_SOURCE_DIR}/Common/src TRUE TRUE)
 
 file (GLOB libcommon_SOURCES *.cc Net/*.cc)
 

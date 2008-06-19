@@ -1,19 +1,36 @@
 
-set (liblofar_impl_SOURCES
-  BeamletBuffer.cc
-  BGL_Personality.cc
-  CS1_ION_main.cc
-  Connector.cc
-  InputThread.cc
-  ION_Allocator.cc
-  ReaderWriterSynchronization.cc
-  InputSection.cc
-  WH_DelayCompensation.cc
-  AH_ION_Gather.cc
-  WH_ION_Gather.cc
-  TH_ZoidServer.cc
-#  Package__Version.cc
+## ------------------------------------------------------------------------------
+## Build the library
+
+file (GLOB liblofar_impl_SOURCES *.cc)
+
+add_library (lofar_impl SHARED ${liblofar_impl_SOURCES})
+
+target_link_libraries (lofar_impl
+  amcimpl
+  amcbase
+  cepframe
+  cs1_interface
+  tinycep
+  plc
+  transport
+  applcommon
+  blob
+  aps
+  common
   )
 
-add_library (lofar_impl ${liblofar_impl_SOURCES})
+set_target_properties (lofar_impl
+  PROPERTIES
+  LINK_FLAGS "-fPIC --whole-archive"
+)
+
+## ------------------------------------------------------------------------------
+## Installation
+
+install (
+  TARGETS lofar_impl
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  )
 

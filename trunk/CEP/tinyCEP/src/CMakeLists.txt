@@ -1,13 +1,11 @@
 
-#make_package_version (${LCS_SOURCE_DIR}/Blob/src TRUE TRUE)
-
 ## ------------------------------------------------------------------------------
 ## Process input files for Flex and Bison
 
 if (yacc_bin)
   execute_process (
-    WORKING_DIRECTORY ${LCS_SOURCE_DIR}/Blob/src
-    COMMAND yacc -d -p KeyParse -o KeyParse.h KeyParse.yy
+    WORKING_DIRECTORY ${CEP_SOURCE_DIR}/tinyCEP/src
+    COMMAND yacc -d -p SimulatorParse -o SimulatorParse.h SimulatorParse.yy
     TIMEOUT 20
     ERROR_VARIABLE yacc_error
     OUTPUT_QUIET
@@ -18,10 +16,10 @@ endif (yacc_bin)
 
 if (flex_bin)
    execute_process (
-    WORKING_DIRECTORY ${LCS_SOURCE_DIR}/Blob/src
-    COMMAND flex -t -PKeyTokenize KeyTokenize.ll
+    WORKING_DIRECTORY ${CEP_SOURCE_DIR}/tinyCEP/src
+    COMMAND flex -t -PSimulatorTokenize SimulatorTokenize.ll
     TIMEOUT 20
-    OUTPUT_FILE KeyTokenize.cc
+    OUTPUT_FILE SimulatorTokenize.cc
     ERROR_VARIABLE lex_error
     OUTPUT_QUIET
    )
@@ -32,17 +30,15 @@ endif (flex_bin)
 ## ------------------------------------------------------------------------------
 ## Build the library
 
-file (GLOB libblob_SOURCES *.cc Net/*.cc)
+file (GLOB libtinycep_SOURCES *.cc)
 
-add_library (blob ${libblob_SOURCES})
-
-target_link_libraries (blob ${CASA_LIBRARIES})
+add_library (tinycep ${libtinycep_SOURCES})
 
 ## ------------------------------------------------------------------------------
 ## Installation
 
 install (
-  TARGETS blob
+  TARGETS tinycep
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   )

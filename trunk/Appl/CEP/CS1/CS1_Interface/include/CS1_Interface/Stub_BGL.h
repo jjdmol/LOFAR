@@ -23,8 +23,6 @@
 #ifndef LOFAR_CS1_INTERFACE_STUB_BGL_H
 #define LOFAR_CS1_INTERFACE_STUB_BGL_H
 
-#if defined HAVE_TINYCEP && defined HAVE_APS
-
 #include <tinyCEP/TinyDataManager.h>
 #include <Transport/Connection.h>
 #include <Transport/TransportHolder.h>
@@ -59,5 +57,4 @@ class Stub_BGL
 } // namespace CS1
 } // namespace LOFAR
 
-#endif // defined HAVE_TINYCEP && defined HAVE_APS
 #endif
