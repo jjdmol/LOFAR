@@ -1,7 +1,5 @@
 # HardwareMonitor
 #
 RSP.connected		bool
-RSP.process			:ProcessStatus
 
 TBB.connected		bool
-TBB.process			:ProcessStatus

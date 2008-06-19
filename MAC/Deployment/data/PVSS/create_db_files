@@ -680,6 +680,8 @@ create_cpp_headerfile()
 {
 	# write out the fields of the components
 	(
+		echo "#ifndef LOFAR_DEPLOYMENT_PVSSDATAPOINTS_H"
+		echo "#define LOFAR_DEPLOYMENT_PVSSDATAPOINTS_H"
 		echo "// process"
 		expand_component ProcessStatus "FSM" "process" 
 		echo "// object"
@@ -689,9 +691,9 @@ create_cpp_headerfile()
 
 	cleanlist $1 | while read dpt prefix dbtype dptype dp
 	do
-		if [ "${dbtype}" != "$2" -o "${dptype}" != "$3" ]; then
-			continue
-		fi
+#		if [ "${dbtype}" != "$2" -o "${dptype}" != "$3" ]; then
+#			continue
+#		fi
 
 		if [ $prefix != "-" ]; then
 			label=`labelize ${dpt}`
@@ -712,6 +714,8 @@ create_cpp_headerfile()
 			echo ""
 		fi
 	done >>${DESTDIR}/${CPP_HEADERFILE}
+
+	echo "#endif"  >>${DESTDIR}/${CPP_HEADERFILE}
 }
 
 #------------------------------ MAIN program ------------------------------
@@ -772,7 +776,7 @@ ERRORFILE=/tmp/Crea.Error
 INPUTFILE=./PVSSDataPoints.base
 
 # define the output files
-CPP_HEADERFILE=${DBTYPENAME}${DPTYPENAME}DatapointDefs.h
+CPP_HEADERFILE=PVSSDatapointDefs.h
 DP_FILE=${DBTYPENAME}${DPTYPENAME}Datapoints.dpl
 DPT_FILE=${DBTYPENAME}Datapointtypes.dpl
 
