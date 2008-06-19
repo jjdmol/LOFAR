@@ -5,9 +5,6 @@ PANEL,-1 -1 120 444 N "_3DFace" 1
 "$RSP"
 "main()
 {
-  // Initialise the Panel
-  navPanel_initPanel(\"fw_viewBox\");
-
   rspNr=$RSP;
   baseDP = g_currentDatapoint;
   string database=sysName;

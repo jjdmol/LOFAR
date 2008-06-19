@@ -11,6 +11,7 @@ PANEL,-1 -1 999 240 N "_3DFace" 1
   database=dpSubStr(baseDP,DPSUB_SYS);
 
   baseDP+=\"_PermSW_MACScheduler\";
+  
 
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".\"+$name)) {
@@ -36,8 +37,8 @@ void click(int row) {
   // set delay in case double click was meant
   delay(0, 100); 
   if (!bDoubleClicked) {
-    string dp = \"LOFAR_ObsSW_\" + myTable.cellValueRC(row,\"Name\");
-    navPanel_setEvent(dp,\"EventClick\");
+    string obs = myTable.cellValueRC(row,\"Name\");
+    navPanel_setEvent(obs,\"EventClick\");
   }
 }
 
@@ -74,14 +75,13 @@ updateObservations(string dp1, dyn_string obs,
   {
     // get real name from claimmanager
     obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+myTable.cellValueRC(i,\"Name\"));
-    if (dpExists(obsDP+\"_ObsCtrl\")) {
-      string dpPrefix = obsDP + \"_ObsCtrl\";
-      dpDisconnect(\"updateObservationsTableValues\",dpPrefix + \".status.state\",
-                                                   dpPrefix + \".startTime\",
-                                                   dpPrefix + \".stopTime\",
-                                                   dpPrefix + \".process.currentAction\",
-                                                   dpPrefix + \".stationList\",
-                                                   dpPrefix + \".status.state:_online.._invalid\"); 
+    if (dpExists(obsDP)) {
+      dpDisconnect(\"updateObservationsTableValues\",obsDP + \".status.state\",
+                                                   obsDP + \".startTime\",
+                                                   obsDP + \".stopTime\",
+                                                   obsDP + \".runState\",
+                                                   obsDP + \".stationList\",
+                                                   obsDP + \".status.state:_online.._invalid\"); 
     }
   }
   myTable.deleteAllLines();
@@ -91,16 +91,15 @@ updateObservations(string dp1, dyn_string obs,
   for (int i=1; i<= dynlen(obs);i++) {
     // get real name from claimmanager
     obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+obs[i]);
-    if (dpExists(obsDP+\"_ObsCtrl\")) {
+    if (dpExists(obsDP)) {
       myTable.appendLine(\"Name\",obs[i]);
     
-      string dpPrefix = obsDP + \"_ObsCtrl\";
-      dpConnect(\"updateObservationsTableValues\",dpPrefix + \".status.state\",
-                                                dpPrefix + \".startTime\",
-                                                dpPrefix + \".stopTime\",
-                                                dpPrefix + \".process.currentAction\",
-                                                dpPrefix + \".stationList\",
-                                                dpPrefix + \".status.state:_online.._invalid\");    
+      dpConnect(\"updateObservationsTableValues\",obsDP + \".status.state\",
+                                                obsDP + \".startTime\",
+                                                obsDP + \".stopTime\",
+                                                obsDP + \".runState\",
+                                                obsDP + \".stationList\",
+                                                obsDP + \".status.state:_online.._invalid\");    
     }
   }
 }
@@ -108,7 +107,7 @@ updateObservations(string dp1, dyn_string obs,
 updateObservationsTableValues(string dp1, int state,
                               string dp2, string startTime,
                               string dp3, string stopTime,
-                              string dp4, string currentAction,
+                              string dp4, string runState,
                               string dp5, string stationList,
                               string dp6, bool invalid)                              
 {
@@ -126,7 +125,7 @@ updateObservationsTableValues(string dp1, int state,
     if(name == \"LOFAR_ObsSW_\"+myTable.cellValueRC(i,\"Name\"))
     {
       myTable.cellValueRC(i,\"State\",d1);
-      myTable.cellValueRC(i,\"Current Action\",currentAction);
+      myTable.cellValueRC(i,\"runState\",runState);
       myTable.cellValueRC(i,\"Start Time\",startTime);
       myTable.cellValueRC(i,\"Stop Time\",stopTime);
       myTable.cellValueRC(i,\"Station List\",stationList);
@@ -165,11 +164,34 @@ LANG:1 0
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
  -2 -2 991 219
-E"main(int row, string column, string value)
+"main()
+{
+  myTable.tableMode(TABLE_SELECT_BROWSE);
+  
+  // connect for highlight mechanism
+  dpConnect( \"ObservationCallback\",true,DPNAME_NAVIGATOR + g_navigatorID +\".objectTrigger\" );
+}
+
+void ObservationCallback(string dp1, bool aTrig) {
+  
+  LOG_DEBUG(\"Observation_small.pnl:ObservationCallback|ObjectTrigger Callback on: \"+dp1+\" trigger: \"+aTrig);
+  LOG_DEBUG(\"Observation_small.pnl:ObservationCallback|Found highlight : \" + highlight + \" \"+$name);
+  int lineNr=-1;
+  for (int i=0; i< myTable.lineCount(); i++) {
+    myTable.currentCell(i,0);
+    if (dynContains(highlight,myTable.cellValueRC(i,\"Name\"))) {
+      myTable.cellBackCol(\"Lofar_highLight\");
+      lineNr=i;
+    } else {
+      myTable.cellBackCol(\"white\");
+    }      
+  }
+}" 0
+"main(int row, string column, string value)
 {
   click(row);
 }" 0
- 1 0 1 6 0 "Name" 8 1 0 "s" 1
+ 1 0 1 6 0 "Name" 10 1 0 "s" 1
 LANG:1 4 Name
 E
 1
@@ -181,8 +203,8 @@ E
 1
 LANG:1 0 
 
-19 "Current Action" 8 1 0 "s" 1
-LANG:1 14 Current Action
+19 "runState" 8 1 0 "s" 1
+LANG:1 8 runState
 E
 1
 LANG:1 0 
@@ -199,7 +221,7 @@ E
 1
 LANG:1 0 
 
-100 "Station List" 51 1 0 "s" 1
+100 "Station List" 48 1 0 "s" 1
 LANG:1 12 Station List
 E
 1

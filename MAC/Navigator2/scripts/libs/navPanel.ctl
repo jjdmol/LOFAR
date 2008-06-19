@@ -70,6 +70,18 @@ void navPanel_initPanel(string objectName) {
   itsEventDp     = DPNAME_NAVIGATOR + g_navigatorID + "." + objectName + ".event";
   itsSelectionDp = DPNAME_NAVIGATOR + g_navigatorID + "." + objectName + ".selection";
   sysName = dpSubStr(g_currentDatapoint,DPSUB_SYS);
+  
+  // empty global listings
+  dynClear(g_stationList);
+  dynClear(g_cabinetList);
+  dynClear(g_subrackList);
+  dynClear(g_RSPList);
+  dynClear(g_TBBList);
+  dynClear(g_RCUList);
+  dynClear(g_observationsList);
+  dynClear(g_processesList);
+  
+  
 }
 
 // ****************************************
@@ -108,7 +120,6 @@ void navPanel_setEvent(dyn_string aSelection,string anEvent) {
 // ****************************************
 navPanel_showVersion(string dp1, string version)
 {
-    LOG_TRACE("navPanel.ctl:navPanel_showVersion| dp1, version: ",dp1,version);
     if (version !="")
     {
       setValue("txt_version", "text", "ver: " +version);
@@ -127,7 +138,6 @@ navPanel_showVersion(string dp1, string version)
 // ****************************************
 navPanel_showTemp(string dp1, float temp)
 {
-    LOG_TRACE("navPanel.ctl:navPanel_showTemp| dp1, temp: ",dp1,temp);
     if (temp !="")
     {
       setValue("txt_temperature", "text", +temp);

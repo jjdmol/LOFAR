@@ -227,3 +227,21 @@ bool navTabCtrl_showView()
   }
   return false;
 }
+
+///////////////////////////////////////////////////////////////////////////
+//
+// Function navTabCtrl_removeView()
+// 
+// removes the panel from the current tab. 
+//
+///////////////////////////////////////////////////////////////////////////
+void navTabCtrl_removeView()
+{
+  LOG_TRACE("navTabCtrl.ctl:navTabCtrl_removeView|entered");
+
+  // get Object name 
+  string tabCtrl = navTabCtrl_getTabCtrlName();
+  
+  setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, "" , makeDynString(""));
+  
+}

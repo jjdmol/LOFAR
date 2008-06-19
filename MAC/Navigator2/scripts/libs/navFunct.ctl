@@ -40,6 +40,8 @@
 // navFunct_getDPFromTypePath                 : Returns Dpname derived from currentDatapoint,typeList and chosen type
 // navFunct_dynToString                       : Returns a dynArray as a , seperated string
 // navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
+// navFunct_bareDBName                        : Returns a DatabaseName without the : (if any)
+// navFunct_findFirstOne                      : Returns the number of a given array that is true for a certain range
 
 
 #uses "GCFLogging.ctl"
@@ -166,8 +168,8 @@ void navFunct_queryConnectObservations_Callback(
     if (aResult[t][2] != "") {
       string dpName = claimManager_nameToRealName(aResult[t][2]);
       //get stationList for this Observation from its ObsCtrl DP
-      LOG_TRACE("navFunct.ctl:navFunct_queryConnectObservations_Callback|Getting stationList for: "+dpName + "_ObsCtrl.stationList");
-      dpGet(dpName + "_ObsCtrl.stationList",strStationList);
+      LOG_TRACE("navFunct.ctl:navFunct_queryConnectObservations_Callback|Getting stationList for: "+dpName + ".stationList");
+      dpGet(dpName + ".stationList",strStationList);
       g_observations[ "STATIONLIST" ][iPos] = strStationList;
     } else {
       g_observations[ "STATIONLIST" ][iPos] = makeDynString();
@@ -467,7 +469,7 @@ string navFunct_dynToString (dyn_anytype aDynArray) {
 }
 
 // ****************************************
-// Name : avFunct_getDynString
+// Name : navFunct_getDynString
 // ****************************************
 // Description:
 //    Make a dyn_string from a given index at a dyn_dyn_anytype
@@ -480,4 +482,34 @@ dyn_string navFunct_getDynString(dyn_dyn_anytype tab, int start,int idx) {
     dynAppend(aS,tab[i][idx]);
   }
   return aS;
+}
+
+
+// ****************************************
+// Name : navFunct_bareDBName
+// ****************************************
+// Description:
+//    Returns a DatabaseName without the : (if any)
+//
+// 
+// Returns:  
+//    Returns a string containing the name
+// ****************************************
+string navFunct_bareDBName(string aDBName) {
+  strreplace(aDBName,":","");
+  return aDBName;
+}
+
+
+// ****************************************
+// Name : navFunct_findFirstOne
+// ****************************************
+// Description:
+//    Returns the number of a given array that is true for a certain range
+//
+// 
+// Returns:  
+//    Returns a dynString
+// ****************************************
+dyn_string navFunct_findFirstOne(dyn_anytype tab, int start,int end) {
 }

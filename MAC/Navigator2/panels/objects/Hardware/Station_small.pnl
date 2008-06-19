@@ -5,8 +5,6 @@ PANEL,-1 -1 201 69 N "_3DFace" 1
 "$Station"
 "main()
 {
-  // initialize the Panel
-  navPanel_initPanel(\"fw_viewBox\");
   
   baseDP           = $Station+\":LOFAR\";
   
@@ -142,7 +140,7 @@ LANG:1 4 test
 "dashclr"N "_Transparent"
 "main()
 {
-  setValue(\"\",\"toolTipText\",baseDP+\" state\");
+  setValue(\"selfState.light\",\"toolTipText\",baseDP+\" state\");
 }" 0
  "main()
 {
@@ -172,7 +170,7 @@ LANG:1 4 test
 "dashclr"N "_Transparent"
 "main()
 {
-  setValue(\"\",\"toolTipText\",baseDP+\" childstate\");
+  setValue(\"childStateBorder\",\"toolTipText\",baseDP+\" childstate\");
 }" 0
  "main()
 {

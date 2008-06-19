@@ -137,7 +137,7 @@ LANG:1 7 Daemons
 2 37
 "PRIMITIVE_TEXT2"
 ""
-1 370 184 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 370 186 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 E E E
@@ -147,8 +147,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 370 184 439 205
-0 2 2 "0s" 0 0 0 192 0 0  370 184 1
+E E 0 1 1 2 1 E U  1 E 370 186 439 207
+0 2 2 "0s" 0 0 0 192 0 0  370 186 1
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -245,7 +245,7 @@ LANG:1 6 PermSW
 2 109
 "PRIMITIVE_TEXT7"
 ""
-1 199 27 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 199 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 17 0 0 0 0 0
 E E E
@@ -255,57 +255,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 199 27 206 41
-0 2 2 "0s" 0 0 0 192 0 0  199 27 1
+E E 0 1 1 2 1 E U  1 E 199 18 206 32
+0 2 2 "0s" 0 0 0 192 0 0  199 18 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 1 A
-2 110
-"PRIMITIVE_TEXT8"
-""
-1 232 27 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-19 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 232 27 281 41
-0 2 2 "0s" 0 0 0 192 0 0  232 27 1
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 9 ProcessID
-2 111
-"PRIMITIVE_TEXT9"
-""
-1 362 27 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-21 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 362 27 407 41
-0 2 2 "0s" 0 0 0 192 0 0  362 27 1
-1
-LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
-0 ""
-1
-LANG:1 9 StartTime
 2 112
 "PRIMITIVE_TEXT10"
 ""
-1 542 27 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 220 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 23 0 0 0 0 0
 E E E
@@ -315,13 +275,13 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 542 27 587 41
-0 2 2 "0s" 0 0 0 192 0 0  542 27 1
+E E 0 1 1 2 1 E U  1 E 220 18 254 32
+0 2 2 "0s" 0 0 0 192 0 0  220 18 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
-LANG:1 8 StopTime
+LANG:1 6 logMsg
 1 181 14 "" 4
 0
 1 182 14 "" 3
@@ -385,7 +345,7 @@ LANG:1 0
 2 134
 "PRIMITIVE_TEXT12"
 ""
-1 132 205 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 163 205 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 30 0 0 0 0 0
 E E E
@@ -395,8 +355,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 132 205 153 219
-0 2 2 "0s" 0 0 0 192 0 0  132 205 1
+E E 0 1 1 2 1 E U  1 E 163 205 184 219
+0 2 2 "0s" 0 0 0 192 0 0  163 205 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -405,7 +365,7 @@ LANG:1 5 error
 2 135
 "PRIMITIVE_TEXT13"
 ""
-1 252 205 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 288 205 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 32 0 0 0 0 0
 E E E
@@ -415,8 +375,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 252 205 315 219
-0 2 2 "0s" 0 0 0 192 0 0  252 205 1
+E E 0 1 1 2 1 E U  1 E 288 205 351 219
+0 2 2 "0s" 0 0 0 192 0 0  288 205 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -425,7 +385,7 @@ LANG:1 13 currentAction
 2 136
 "PRIMITIVE_TEXT14"
 ""
-1 382 205 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 413 205 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 34 0 0 0 0 0
 E E E
@@ -435,8 +395,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 382 205 416 219
-0 2 2 "0s" 0 0 0 192 0 0  382 205 1
+E E 0 1 1 2 1 E U  1 E 413 205 447 219
+0 2 2 "0s" 0 0 0 192 0 0  413 205 1
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -451,6 +411,16 @@ LANG:1 6 logMsg
 1 204 20 "" 2
 0
 1 205 20 "" 6
+0
+1 206 21 "" 4
+0
+1 207 21 "" 3
+0
+1 208 21 "" 2
+0
+1 209 21 "" 6
+0
+1 210 21 "0" 1
 0
 0
 LAYER, 1 
@@ -482,30 +452,34 @@ LAYER, 7
 LANG:1 0 
 0
 3 12 "PANEL_REF13"
-"objects/Processes\\ObsSW_Main.pnl" 75 402 T 15 1 0 1 -68 -27
+"objects\\Processes\\ObsSW_Main.pnl" 75 402 T 15 1 0 1 -68 -27
 0
 3 13 "PANEL_REF14"
-"objects/Processes\\daemon_small.pnl" 0 40 T 16 U 
-1
-"$name""CTStartDaemon"
-3 14 "PANEL_REF15"
-"objects/Processes\\daemon_small.pnl" 0 80 T 24 1 0 1 0 -8
-1
-"$name""KVLogger"
-3 15 "PANEL_REF16"
-"objects/Processes\\daemon_small.pnl" 0 110 T 25 1 0 1 0 -6
+"objects\\Processes\\daemon_small.pnl" 0 40 T 16 1 0 1 0 -8
 1
 "$name""LogProcessor"
-3 16 "PANEL_REF17"
-"objects/Processes\\daemon_small.pnl" 0 140 T 26 1 0 1 0 -4
+3 14 "PANEL_REF15"
+"objects\\Processes\\daemon_small.pnl" 0 80 T 24 1 0 1 0 -18
 1
 "$name""ServiceBroker"
+3 15 "PANEL_REF16"
+"objects\\Processes\\daemon_small.pnl" 0 110 T 25 1 0 1 0 -18
+1
+"$name""CTStartDaemon"
+3 16 "PANEL_REF17"
+"objects\\Processes\\daemon_small.pnl" 0 140 T 26 1 0 1 0 -18
+1
+"$name""SASGateway"
 3 19 "PANEL_REF20"
-"objects/Processes\\controller_small.pnl" 0 220 T 27 U 
+"objects\\Processes\\controller_small.pnl" 0 220 T 27 U 
 1
 "$name""MACScheduler"
 3 20 "PANEL_REF21"
-"objects/Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -10
+"objects\\Processes\\controller_small.pnl" 0 280 T 35 1 0 1 0 -32
 1
 "$name""SoftwareMonitor"
+3 21 "PANEL_REF22"
+"objects\\Processes\\daemon_small.pnl" 0 140 T 35 1 0 1 0 12
+1
+"$name""KVLogger"
 0

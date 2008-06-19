@@ -44,12 +44,18 @@
 
 global bool       g_initializing         = true;
 global string     g_currentDatapoint     = "LOFAR";
-//global dyn_string g_hardwareList;    // holds hardwarelist to fill typeselector hardwarelist
-//global dyn_string g_softwareList;    // holds softwarelist to fill typeselector softwarelist
-global mapping    g_observations;    // 
+global dyn_string g_observationsList;  // holds active observations
+global dyn_string g_processesList;     // holds active software
+global mapping    g_observations;      // 
+global dyn_string g_stationList;       // holds valid stations for choices in the viewBox
+global dyn_string g_cabinetList;       // holds valid cabinets for choices in the viewBox
+global dyn_string g_subrackList;       // holds valid subracks for choices in the viewBox
+global dyn_string g_RSPList;           // holds valid RSP's for choices in the viewBox
+global dyn_string g_TBBList;           // holds valid TBB's for choices in the viewBox
+global dyn_string g_RCUList;           // holds valid RCU's for choices in the viewBox
 global dyn_string strPlannedObs;
-global dyn_string strHighlight;      // contains highlight info for mainpanels
-global dyn_string highlight;         // contains highlight info for objects
+global dyn_string strHighlight;        // contains highlight info for mainpanels
+global dyn_string highlight;           // contains highlight info for objects
 
 //======================== Action Handlers =======================================
 //
@@ -139,6 +145,9 @@ bool navigator_initializing() {
 //
 ///////////////////////////////////////////////////////////////////////////
 void navigator_clearWorkDPs() {
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".observationsList")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".observationsList",makeDynString(",LOFAR,LOFAR"));
+  }
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".hardwareList")) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".hardwareList",makeDynString(",LOFAR,LOFAR"));
   }

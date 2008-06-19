@@ -119,7 +119,7 @@ string claimManager_realNameToName( string strName )
 void claimManager_queryConnectClaims()
 {
   // Local data
-  string strQuery = "SELECT '.name:_original.._value, .Claim.ClaimDate:_original.._value' FROM '*' WHERE _DPT = \"Observation\"";
+  string strQuery = "SELECT '.claim.name:_original.._value, .claim.claimDate:_original.._value' FROM '*' WHERE _DPT = \"Observation\"";
 
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaims|*** Doing a query for : claimManager_QueryConnectClaims() " );
  
@@ -141,7 +141,7 @@ void claimManager_queryConnectClaim_Callback(
   bool bClaimed;
   
   LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| has " + dynlen( aResult ) + " results" );
-  
+  LOG_DEBUG( "claimManager.ctl:claimManager_queryConnectClaim_Callback| "+aResult);
   if( dynlen( aResult ) < 2 )
       return;
   

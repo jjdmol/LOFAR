@@ -4,6 +4,11 @@ LANG:1 7 Station
 PANEL,-1 -1 732 746 N "_3DFace" 0
 "main()
 {
+  // empty the hardwareList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
+  }  
+  
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
 
@@ -16,35 +21,9 @@ PANEL,-1 -1 732 746 N "_3DFace" 0
     LOG_ERROR(\"Station_Cabinet_detailed.pnl:Initialize|No Cabinet found in currentDatapoint.\");
   }
   
-  // set the hardware selectable items
-  dyn_dyn_anytype tab;
-  int z;
-  dyn_string result;
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
   
-  
-  // For this panel subracks should be selectable so we get them for the treelist
-  // Cabinets first
-  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"SubRack\\\" \", tab);
-  LOG_TRACE(\"Station_Cabinet_detailed.pnl:Initialize|tab: \"+tab);
-  
-  dyn_string aDS=navFunct_getDynString(tab, 2,1);
-  dynSortAsc(aDS);
-      
-  for(z=1;z<=dynlen(aDS);z++){
-    
-    // strip .status.state and systemname from result
-    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
-
-    // Remainder should be *Cabinet?_Subrack? combinations, split on _ 
-    dyn_string spl=strsplit(aS,\"_\");
-    result[z]=\",\"+spl[dynlen(spl)]+\",\"+aS;
-  }
-
-  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:Initialize|HardwareTree found: \"+ result);
-  
-  // write result to the db so various panels can reset themselves  
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
-
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_Cabinet_Panel.pnl\",\"Update\");
   
@@ -117,6 +96,40 @@ void TriggerCallback(string dp1, bool aTrig) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
   } 
 
+}
+
+void prepareHardwareList() {
+  // set the hardware selectable items
+  dyn_dyn_anytype tab;
+  int z;
+  dyn_string result;
+  
+  
+  // For this panel subracks should be selectable so we get them for the treelist
+  // Cabinets first
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"SubRack\\\" \", tab);
+  LOG_TRACE(\"Station_Cabinet_detailed.pnl:prepareHardwareList|tab: \"+tab);
+  
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);
+      
+  g_stationList[1]=navFunct_bareDBName(sysName);
+  
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state and systemname from result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+    // Remainder should be *Cabinet?_Subrack? combinations, split on _ 
+    dyn_string spl=strsplit(aS,\"_\");
+    result[z]=\",\"+spl[dynlen(spl)]+\",\"+aS;
+    g_subrackList[z] = spl[dynlen(spl)];
+  }
+
+  LOG_DEBUG(\"Station_Cabinet_detailed.pnl:prepareHardwareList|HardwareTree found: \"+ result);
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
 }
 " 0
  E E E E 1 -1 -1 0  188 128
@@ -332,12 +345,12 @@ LANG:1 6 Layer8
 1
 "$object""Cabinet"
 3 89 "PANEL_REF90"
-"objects/Hardware/Station_Subrack_small.pnl" 48 330 T 855 1 0 1 354 -8
+"objects\\Hardware\\Station_Subrack_small.pnl" 48 330 T 855 1 0 1 354 -8
 2
 "$CabinetNr""0"
 "$SubrackNr""0"
 3 90 "PANEL_REF91"
-"objects/Hardware/Station_Subrack_small.pnl" 48 520 T 856 1 0 1 354 -13
+"objects\\Hardware\\Station_Subrack_small.pnl" 48 520 T 856 1 0 1 354 -13
 2
 "$CabinetNr""0"
 "$SubrackNr""1"

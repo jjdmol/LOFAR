@@ -5,9 +5,8 @@ PANEL,-1 -1 242 65 N "_3DFace" 0
 "main()
 {
   baseDP=g_currentDatapoint;
-  string systemName = dpSubStr(baseDP,DPSUB_SYS);
 	
-  baseDP = systemName + \"LOFAR_PIC_StationClock\";
+  baseDP = sysName + \"LOFAR_PIC_StationClock\";
 
   if(dpExists(baseDP +\".clock:_online.._value\")) {
     dpConnect(\"setClock\", baseDP +\".clock:_online.._value\",

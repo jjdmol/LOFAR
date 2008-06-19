@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 1000 124 N "_3DFace" 1
+PANEL,-1 -1 1031 124 N "_3DFace" 1
 "$name"
 "main()
 {
@@ -31,19 +31,8 @@ updateController(string dp1, string error,
                  string dp3, string logMsg,
                  string dp4, bool invalid)
 {
-  string col=\"Lofar_operational\";
-  if (invalid) {
-    col = \"Lofar_invalid\";
-  } else if (!connected) {
-    col = \"Lofar_off\";
-  }
-
   myTable.deleteAllLines();
   myTable.appendLine(\"error\",error,\"currentAction\",currentAction,\"logMsg\",logMsg);  
-  myTable.appendLine(\"error\",oldError,\"currentAction\",oldAction,\"logMsg\",oldLogMsg);
-  oldError  = error;
-  oldAction = currentAction;
-  oldLogMsg = logMsg;    
 }" 0
  E "main(int x, int y)
 {
@@ -67,7 +56,6 @@ bool   bDoubleClicked  = false;
 
 string oldError        = \"\";
 string oldAction       = \"\";
-string oldLogMsg       = \"\";
 
 // routine for single mouse click
 void click() {
@@ -146,7 +134,7 @@ void controllerCallback(string dp1, bool aTrig) {
 {
   click();
 }" 0
- 0 1 1 2 1 E U  1 E 0 0 944 51
+ 0 1 1 2 1 E U  1 E 0 0 998 31
 6 3
 "childStateBorder"
 ""
@@ -172,13 +160,13 @@ E "main()
 {
   click();
 }" 0
- 0 2 1 2 1 E U  1 E 5 5 994 46
+ 0 2 1 2 1 E U  1 E 5 5 994 27
 1 7 0 "" 1
 0
 25 2
 "myTable"
 ""
-1 212.05231534163 3 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 247.8200249810953 3 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 2 0 0 0 0 0
 E E E
@@ -190,7 +178,7 @@ LANG:1 0
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 118 4 992 46
+ 158 4 992 27
 EE 0 0 1 3 1 "error" 13 1 0 "s" 1
 LANG:1 5 error
 E
@@ -209,7 +197,7 @@ E
 1
 LANG:1 0 
 
-615 
+579 
 19 19 "" 1 1
 LANG:1 2 #1
 10 150
@@ -221,7 +209,7 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 2 6
 "name"
 ""
-1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 31 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 E E E
@@ -231,8 +219,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 10 10 40 24
-0 2 2 "0s" 0 0 0 192 0 0  10 10 1
+E E 0 1 1 2 1 E U  1 E 31 10 61 24
+0 2 2 "0s" 0 0 0 192 0 0  31 10 1
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
@@ -268,7 +256,7 @@ LAYER, 7
 LANG:1 0 
 0
 3 0 "selfState"
-"objects/lofar_self_state.pnl" 9.50000000000001 9.5 T 1 1 0 0.882352941176471 -0.499999999999993 18.6176470588235
+"objects\\lofar_self_state.pnl" 9.500000000000011 9.5 T 1 1 0 0.882352941176471 -0.499999999999993 0.6176470588235254
 1
 "$object""MACScheduler"
 0

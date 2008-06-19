@@ -6,7 +6,11 @@ LANG:30 8 (NoName)
 PANEL,-1 -1 1013 750 N "_3DFace" 0
 "main()
 { 
-  
+  // empty the hardwareList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
+  }  
+    
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
   
@@ -194,6 +198,8 @@ void redraw(string mode) {
   int   yPos_AddSymbol;
   string addPanelName;
   
+  dynClear(g_RCUList);
+  g_stationList[1] = navFunct_bareDBName(sysName);
   
   LOG_DEBUG(\"Station.pnl:redraw|Mode: \"+mode);
   if (strpos(mode,\"LBA\") > -1 || strpos(mode,\"LBL\") > -1 || strpos(mode,\"LBH\") > -1) {
@@ -213,8 +219,16 @@ void redraw(string mode) {
     if ( maxYOffsetValue < fabs(antennaOffsetsNB[i]) ) maxYOffsetValue = fabs(antennaOffsetsNB[i]);
   }
 
-  expandFactorX = floor(mainpanel_midX / maxXOffsetValue);
-  expandFactorY = floor(mainpanel_midY / maxYOffsetValue);
+  LOG_DEBUG(\"Station.pnl:redraw|mainpanel_midX: \"+mainpanel_midX);
+  LOG_DEBUG(\"Station.pnl:redraw|mainpanel_midY: \"+mainpanel_midY);
+  LOG_DEBUG(\"Station.pnl:redraw|maxXOffsetValue: \"+maxXOffsetValue);
+  LOG_DEBUG(\"Station.pnl:redraw|maxYOffsetValue: \"+maxYOffsetValue);
+  
+  expandFactorX = floor((mainpanel_midX-30) / maxXOffsetValue);
+  expandFactorY = floor((mainpanel_midY-30) / maxYOffsetValue);
+  
+  LOG_DEBUG(\"Station.pnl:redraw|expandFactorX: \"+expandFactorX);
+  LOG_DEBUG(\"Station.pnl:redraw|expandFactorY: \"+expandFactorY);
   
   // To make the field a bit more square we will multiply all by the smallest expandfactor
   if (expandFactorX > expandFactorY) {
@@ -223,6 +237,8 @@ void redraw(string mode) {
     expandFactorY=expandFactorX;
   }
 
+  LOG_DEBUG(\"Final expandfactors: \" + expandFactorX+\" \"+ expandFactorY);
+  
   // set the hardware selectable items
   // For this panel the Cabinet and the Antenna's in a choosen layout should be selectable 
   result[1]=\",Cabinet,\"+baseDP+\"_PIC\";
@@ -230,38 +246,36 @@ void redraw(string mode) {
   
   //  now start adding symbols to panel
   for (int i = 1; i <= dynlen(antennaOffsetsOL); i++ ) { 
-    // OL + NB both 0 we have to skip now
-    // not connected receivers now seem to have delta0 for both directions
-    if ( antennaOffsetsOL[i] != 0 || antennaOffsetsNB[i] != 0) {
-      int XRCU = 2 * (i-1);
-      int YRCU = XRCU+1;
-      string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
-                 navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
-      string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
-                 navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
-      result[r_idx++]=baseDP+\"_PIC,RCU\"+XRCU+\",\"+xDP;
-      result[r_idx++]=baseDP+\"_PIC,RCU\"+YRCU+\",\"+yDP;
-      refNames[i]=\"ant\"+(i-1);
-      xPos_AddSymbol = mainpanel_midX + (antennaOffsetsOL[i] * expandFactorX);
-      yPos_AddSymbol = mainpanel_midY - (antennaOffsetsNB[i] * expandFactorY);
+    int XRCU = 2 * (i-1);
+    int YRCU = XRCU+1;
+    string xDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(XRCU)+\"_Subrack\"+
+               navFunct_receiver2Subrack(XRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(XRCU)+\"_RCU\"+XRCU;
+    string yDP=baseDP+\"_PIC_Cabinet\"+navFunct_receiver2Cabinet(YRCU)+\"_Subrack\"+
+               navFunct_receiver2Subrack(YRCU)+\"_RSPBoard\"+navFunct_receiver2RSP(YRCU)+\"_RCU\"+YRCU;
+    g_RCUList[r_idx-1]=\"RCU\"+XRCU;
+    result[r_idx++]=baseDP+\"_PIC,RCU\"+XRCU+\",\"+xDP;
+    g_RCUList[r_idx-1]=\"RCU\"+YRCU;
+    result[r_idx++]=baseDP+\"_PIC,RCU\"+YRCU+\",\"+yDP;
+    refNames[i]=\"ant\"+(i-1);
+    xPos_AddSymbol = mainpanel_midX + (antennaOffsetsOL[i] * expandFactorX);
+    yPos_AddSymbol = mainpanel_midY - (antennaOffsetsNB[i] * expandFactorY);
       
     
-      if (  addSymbol(  strModuleName,                   // Stay in this module
-  	   	        \"\",                  // Name of this panel
-		        addPanelName,                    // Panel to add
-		        refNames[i],                     // Ref of the addedPanel
-		        makeDynString( \"$aNr:\" + (i-1) ,     // Define all $values
-		                       \"$aOL:\" + antennaOffsetsOL[i]  ,    
-		                       \"$aNB:\" + antennaOffsetsNB[i]  ,
-		                       \"$aH:\"  + antennaOffsetsH[i]),                  // of particular addedpanel
-		        xPos_AddSymbol,                  // Xpos of the AddedSymbol
-		        yPos_AddSymbol,                  // Ypos of the AddedSymbol
-		        0,                               // angle
-		        1    ,1                          // zoomX , zoomY
-          ) < 0 ) {
-	    LOG_ERROR(\"Station.pnl:redraw|Error Appending antenna : \" + i + \" in this panel.\");
-      }	
-    }
+    if (  addSymbol(  strModuleName,                   // Stay in this module
+	   	      \"\",                  // Name of this panel
+		      addPanelName,                    // Panel to add
+		      refNames[i],                     // Ref of the addedPanel
+		      makeDynString( \"$aNr:\" + (i-1) ,     // Define all $values
+		                     \"$aOL:\" + antennaOffsetsOL[i]  ,    
+		                     \"$aNB:\" + antennaOffsetsNB[i]  ,
+		                     \"$aH:\"  + antennaOffsetsH[i]),                  // of particular addedpanel
+		      xPos_AddSymbol,                  // Xpos of the AddedSymbol
+		      yPos_AddSymbol,                  // Ypos of the AddedSymbol
+		      0,                               // angle
+		      1    ,1                          // zoomX , zoomY
+        ) < 0 ) {
+	  LOG_ERROR(\"Station.pnl:redraw|Error Appending antenna : \" + i + \" in this panel.\");
+    }	
   }
   LOG_DEBUG(\"Station.pnl:redraw|HardwareTree found: \"+ result);
 

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 866 66 N "_3DFace" 1
+PANEL,-1 -1 1019 43 N "_3DFace" 1
 "$name"
 "main()
 {
@@ -13,11 +13,10 @@ PANEL,-1 -1 866 66 N "_3DFace" 1
   baseDP+=\"_PermSW_Daemons_\"+$name;
 
   // check if the required datapoint for this view are enabled and accessible
-  if (dpExists(baseDP+\".processID\")) {
-    dpConnect(\"updateDaemon\", baseDP +\".processID:_online.._value\",
-                              baseDP +\".startTime:_online.._value\",
-                              baseDP +\".stopTime:_online.._value\",
-                              baseDP +\".processID:_online.._invalid\");
+  if (dpExists(baseDP+\".process.processID\")) {
+    dpConnect(\"updateDaemon\", baseDP +\".process.processID:_online.._value\",
+                              baseDP +\".process.logMsg:_online.._value\",
+                              baseDP +\".process.processID:_online.._invalid\");
   } else {
     LOG_ERROR($name+\"_small.pnl:main|Couldn't find DP to connect to: \"+baseDP);
   }	
@@ -27,9 +26,8 @@ PANEL,-1 -1 866 66 N "_3DFace" 1
 }
 
 updateDaemon(string dp1, unsigned processID,
-             string dp2, string startTime,
-             string dp3, string stopTime,
-             string dp4, bool invalid)
+             string dp2, string logMsg,
+             string dp3, bool invalid)
 {
   string col=\"Lofar_operational\";
   if (invalid) {
@@ -38,7 +36,7 @@ updateDaemon(string dp1, unsigned processID,
     col = \"Lofar_off\";
   }
   myTable.deleteAllLines();
-  myTable.appendLine(\"Active\",\"\",\"ProcessID\",processID,\"StartTime\",startTime,\"StopTime\",stopTime);
+  myTable.appendLine(\"logMsg\",logMsg);  
   myTable.cellBackColRC(0,\"Active\",col);
 }" 0
  E "main(int x, int y)
@@ -139,7 +137,7 @@ void myCallback(string dp1, bool aTrig) {
 {
   click();
 }" 0
- 0 1 1 2 1 E U  1 E 0 0 699 33
+ 0 1 1 2 1 E U  1 E 0 0 998 33
 6 3
 "RECTANGLE2"
 ""
@@ -165,13 +163,13 @@ E "main()
 {
   click();
 }" 0
- 0 1 1 2 1 E U  1 E 5 5 694 28
+ 0 1 1 2 1 E U  1 E 5 5 993 28
 1 7 0 "" 1
 0
 25 2
 "myTable"
 ""
-1 60 24 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 -19.42685370741484 24 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  "main()
 {
   rClick();
@@ -191,36 +189,24 @@ LANG:1 0
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 191 5 694 28
+ 191 5 993 28
 E"main(int row, string column, string value)
 {
   click();
 }" 0
- 0 0 1 4 1 "Active" 1 1 0 "s" 1
+ 0 0 1 2 1 "active" 1 1 0 "s" 1
 LANG:1 1 A
 E
 1
 LANG:1 0 
 
-20 "ProcessID" 13 1 0 "s" 1
-LANG:1 9 ProcessID
+20 "logMsg" 55 1 0 "s" 1
+LANG:1 6 logMsg
 E
 1
 LANG:1 0 
 
-130 "StartTime" 18 1 0 "s" 1
-LANG:1 9 StartTime
-E
-1
-LANG:1 0 
-
-175 "StopTime" 18 1 0 "s" 1
-LANG:1 8 StopTime
-E
-1
-LANG:1 0 
-
-175 
+777 
 19 19 "" 1 1
 LANG:1 2 #1
 10 150
@@ -291,7 +277,7 @@ LAYER, 7
 LANG:1 0 
 0
 3 0 "selfState"
-"objects/lofar_self_state.pnl" 9.50000000000001 9.5 T 1 1 0 1 0.499999999999989 -1.5
+"objects\\lofar_self_state.pnl" 9.500000000000011 9.5 T 1 1 0 1 0.499999999999989 -1.5
 1
 "$object""CTStartDaemon"
 0

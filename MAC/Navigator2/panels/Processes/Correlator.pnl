@@ -18,10 +18,10 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   // write result to the db so various panels can reset themselves  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",result);
   
-  LOG_DEBUG(\"ObsCtrl.pnl:main|processList found: \"+ result); 
+  LOG_DEBUG(\"Correlator.pnl:main|processList found: \"+ result); 
   
   // trigger that the panel values are calculated and ready
-  navPanel_setEvent(\"ObsCtrl.pnl\",\"Update\");
+  navPanel_setEvent(\"Correlator.pnl\",\"Update\");
   
 
   // no selection, so no trigger mechanism needed in this panel.   
@@ -108,5 +108,5 @@ LANG:1 0
 3 0 "PANEL_REF1"
 "objects\\Processes\\controller_top.pnl" 49 92 T 0 1 0 1 1.4432899320127e-014 -40
 1
-"$ctrlName""ObsCtrl"
+"$ctrlName""Correlator"
 0

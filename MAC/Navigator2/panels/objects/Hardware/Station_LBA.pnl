@@ -3,7 +3,7 @@ V 10
 LANG:1 4 aLBA
 LANG:6 0 
 LANG:30 0 
-PANEL,-1 -1 169 125 N "_3DFace" 4
+PANEL,-1 -1 120 54 N "_3DFace" 4
 "$aH"
 "$aNB"
 "$aNr"
@@ -40,8 +40,10 @@ PANEL,-1 -1 169 125 N "_3DFace" 4
   strToolTip += \"\\n diff from centerNB:\" + $aNB;
   strToolTip += \"\\n diff from centerH:\"  + $aH;
     
-  tooltipbox.toolTipText = strToolTip;
-  LBA.toolTipText        = strToolTip;
+  antennaHighlight.toolTipText  = strToolTip;
+  aNr.toolTipText   = strToolTip;
+  LBA.toolTipText  = strToolTip;
+
   
   // check if the required datapoints for this view are enabled and accessible
   if (dpExists(baseDP+\".status.state\") && dpExists(baseDPY + \".status.state\")) {
@@ -83,7 +85,7 @@ void updateAntenna(string dp1, int stateX,
 {
   dblClick(); 
 }" 0
- 1 0 0 0  20 20
+ 1 0 0 0  25 25
 ""0  1
 E "#uses \"navPanel.ctl\"
 
@@ -180,41 +182,10 @@ void StationCallback(string dp1, bool aTrig) {
   click();
 }" 0
  0 1 1 2 1 E 1 0 1 -80 -20 1 E 80 20 130 70
-6 1
-"tooltipbox"
-""
-1 21 22 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
- "main()
-{
-  rClick();
-}" 0
- "main()
-{
-  dblClick();
-}" 0
-
-3 0 0 0 0 0
-E E E
-4
-3
-LANG:1 6 "iets"
-LANG:6 0 
-LANG:30 0 
-
-1
-"dashclr"N "_Transparent"
-"main()
-{
-}" 0
- "main()
-{
-  click();
-}" 0
- 0 1 1 0 1 E 1 0 1 -6 -7 1 E 11 12 51 52
 4 2
 "Line1"
 ""
-1 15 15 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 0 0 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  "main()
 {
   rclick();
@@ -242,7 +213,7 @@ E "main()
 4 3
 "Line0"
 ""
-1 15 15 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+1 0 0 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
  "main()
 {
   rClick();
@@ -270,7 +241,7 @@ E "main()
 7 4
 "LBA"
 ""
-1 21 22 E E E 1 E 1 E N "_Transparent" E N {255,255,255} E E
+1 6 7 E E E 1 E 1 E N "_Transparent" E N {255,255,255} E E
  E "main()
 {
     dblClick();
@@ -294,7 +265,7 @@ E "main()
 2 5
 "aNr"
 ""
-1 15 15 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 0 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()
 {
   rClick();
@@ -322,8 +293,8 @@ LANG:30 0
 {
   click();
 }" 0
- 0 1 1 0 1 E U  0 E 19 17 31 34
-0 2 0 "0s" 0 0 0 193 0 0  25 17 1
+ 0 1 1 0 1 E U  0 E 18 16 30 33
+0 2 0 "0s" 0 0 0 193 0 0  24 16 1
 3
 LANG:1 87 -*-Arial-bold-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 LANG:6 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial

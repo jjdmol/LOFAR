@@ -4,6 +4,11 @@ LANG:1 7 Subrack
 PANEL,-1 -1 986 776 N "_3DFace" 0
 "main()
 {
+  // empty the hardwareList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
+  }
+    
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
 
@@ -16,36 +21,8 @@ PANEL,-1 -1 986 776 N "_3DFace" 0
     LOG_ERROR(\"Station_RSPBoard.pnl:Initialize|No RSPBoard found in currentDatapoint.\");
   }
   
-  // set the hardware selectable items
-  dyn_dyn_anytype tab;
-  int z;
-  dyn_string result;
-  
-  
-  // For this panel RCU's should be selectable so we get them for the treelist
-  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"RCU\\\"\", tab);
-  LOG_TRACE(\"Station_RSPBoard.pnl:Initialize|tab: \"+tab);
-  
-  dyn_string aDS=navFunct_getDynString(tab, 2,1);
-  dynSortAsc(aDS);   
-  for(z=1;z<=dynlen(aDS);z++){
-    
-    // strip .status.state from result
-    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
-    // keep path
-    string path=aS;
-
-     // strip all b4 and including RSPBoard out of the string
-    strreplace(aS,baseDP+\"_\",\"\");
-    
-    // Remainder should be _RCU? 
-    result[z]=\",\"+aS+\",\"+path;
-  }
-
-  LOG_DEBUG(\"Station_RSPBoard.pnl:Initialize|HardwareTree found: \"+ result);
-  
-  // write result to the db so various panels can reset themselves  
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
   
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_RSPBoard.pnl\",\"Update\");
@@ -111,6 +88,41 @@ void TriggerCallback(string dp1, bool aTrig) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
   } 
   
+}
+
+void prepareHardwareList() {
+    // set the hardware selectable items
+  dyn_dyn_anytype tab;
+  int z;
+  dyn_string result;
+  
+  
+  // For this panel RCU's should be selectable so we get them for the treelist
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT=\\\"RCU\\\"\", tab);
+  LOG_TRACE(\"Station_RSPBoard.pnl:prepareHardwareList|tab: \"+tab);
+
+  g_stationList[1]=navFunct_bareDBName(sysName);  
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);   
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state from result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+    // keep path
+    string path=aS;
+
+     // strip all b4 and including RSPBoard out of the string
+    strreplace(aS,baseDP+\"_\",\"\");
+    
+    // Remainder should be _RCU? 
+    result[z]=\",\"+aS+\",\"+path;
+    g_RCUList[z]=aS;
+  }
+
+  LOG_DEBUG(\"Station_RSPBoard.pnl:prepareHardwareList|HardwareTree found: \"+ result);
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
 }" 0
  E E E E 1 -1 -1 0  120 205
 ""0  1

@@ -7,7 +7,7 @@ PANEL,-1 -1 328 89 N "_3DFace" 0
   
   baseDP = g_currentDatapoint + \".BP\";
   bp.toolTipText = baseDP;
-  if(dpExists(baseDP + \".state:_online.._value\"))
+  if(dpExists(baseDP + \".version:_online.._value\"))
   {
     dpConnect(\"navPanel_showVersion\", baseDP + \".version:_online.._value\");
     dpConnect(\"navPanel_showTemp\", baseDP + \".temperature:_online.._value\");
