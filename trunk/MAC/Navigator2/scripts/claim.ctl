@@ -9,21 +9,21 @@
 //    A claim must be made via:
 //
 //    dpSet( 
-//      "ClaimManager.Request.TypeName", "Observation",
-//      "ClaimManager.Request.NewObjectName", "MYOBSERVATION" );
+//      "claimManager.request.typeName", "Observation",
+//      "claimManager.request.newObjectName", "MYOBSERVATION" );
 //
 //
 //    The Claim Manager has a global array of claimed datapoints
 //    for better performance. If the claimmanager runs on the mainserver
 //    the manager has write rights and is responsible to fill the cache values
-//    dpSet("ClaimManager.Cache.TypeNames",*add the new typename to the dyn_string*,
-//          "ClaimManager.Cache.NewObjectNames",*add the new ObjectName to the dyn_string*,
-//          "ClaimManager.Cache.DPNames",*add the new DPName to the dyn_string*,
-//          "ClaimManager.Cache.ClaimDates",*add the new ClaimDate to the dyn_string*)
+//    dpSet("claimManager.cache.typeNames",*add the new typename to the dyn_string*,
+//          "claimManager.cache.newObjectNames",*add the new ObjectName to the dyn_string*,
+//          "claimManager.cache.DPNames",*add the new DPName to the dyn_string*,
+//          "claimManager.cache.claimDates",*add the new ClaimDate to the dyn_string*)
 //
 //    When a client connects to the maindatabase he will fill his internal cache map (gClaimdTypes)
 //    from the ClaimManager.Cache  arrays.  This will also be done after a disconnect/reconnect
-//    The client will take a dpConnect on the ClaimManager.Response fields and will update his 
+//    The client will take a dpConnect on the claimManager.response fields and will update his 
 //    internal cache map via the callback from this also (if the point doesn't exist yet)
 //
 //    To check distributed connections a dpconnect on the distmanager is needed for the clients
@@ -37,7 +37,7 @@
 
 global mapping g_ClaimedTypes;
 
-global bool bDebug = false;
+global bool bDebug = true;
 // needed for dpDisconnect after a connect and a resync
 global bool isConnected = false;
 // is the machine we are running from a client or not
@@ -133,20 +133,20 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
   
   if (isConnected) {
     dpDisconnect("clientAddClaimCallback",
-    	MainDBName+"ClaimManager.Response.TypeName", 
-    	MainDBName+"ClaimManager.Response.NewObjectName",
-    	MainDBName+"ClaimManager.Response.DPName",
-    	MainDBName+"ClaimManager.Response.ClaimDate"); 
+    	MainDBName+"claimManager.response.typeName", 
+    	MainDBName+"claimManager.response.newObjectName",
+    	MainDBName+"claimManager.response.DPName",
+    	MainDBName+"claimManager.response.claimDate"); 
   }
   
   // Connect to the dp elements that we use to receive
   // a new claim in the MainDB
   dpConnect( "clientAddClaimCallback", 
     true,         
-    MainDBName+"ClaimManager.Response.TypeName", 
-    MainDBName+"ClaimManager.Response.NewObjectName",
-    MainDBName+"ClaimManager.Response.DPName",
-    MainDBName+"ClaimManager.Response.ClaimDate"); 
+    MainDBName+"claimManager.response.typeName", 
+    MainDBName+"claimManager.response.newObjectName",
+    MainDBName+"claimManager.response.DPName",
+    MainDBName+"claimManager.response.claimDate"); 
   isConnected = true; 
   
   // start the local Claim mechanism
@@ -158,7 +158,7 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
 // *******************************************
 // Description:
 //    This will (re)load the internal mapping from the 
-//    ClaimManager.Cache strings 
+//    claimManager.cache strings 
 //
 // Returns:
 //    None
@@ -179,7 +179,7 @@ void syncClient() {
   // because it always takes some time for the databases to be ready while the are connecting we will have to wait here till the MainDB 
   // is fully reachable
   int retry=0;
-  while (!dpExists(MainDBName+"ClaimManager.Cache.TypeNames") & retry < 120) {
+  while (!dpExists(MainDBName+"claimManager.cache.typeNames") & retry < 120) {
     delay(2);
     retry++;
     if (retry >= 120) {
@@ -189,10 +189,10 @@ void syncClient() {
   }	
       
   // get all lists of claimed datapoints 
-  dpGet(MainDBName+"ClaimManager.Cache.TypeNames",typeNames,
-        MainDBName+"ClaimManager.Cache.NewObjectNames",newObjectNames,
-        MainDBName+"ClaimManager.Cache.DPNames",DPNames,
-        MainDBName+"ClaimManager.Cache.ClaimDates",claimDates);
+  dpGet(MainDBName+"claimManager.cache.typeNames",typeNames,
+        MainDBName+"claimManager.cache.newObjectNames",newObjectNames,
+        MainDBName+"claimManager.cache.DPNames",DPNames,
+        MainDBName+"claimManager.cache.claimDates",claimDates);
   
   for (int t = 1 ; t <= dynlen(typeNames); t++) {
     
@@ -212,8 +212,8 @@ void syncClient() {
       dynAppend(g_ClaimedTypes[ typeNames[t] ][ "NAME"      ],newObjectNames[t]);
       dynAppend(g_ClaimedTypes[ typeNames[t] ][ "CLAIMDATE" ],claimDates[t]);
     } 
-    if (bDebug) DebugN("Setting DPNames[t].name : "+dpSubStr(DPNames[t],DPSUB_DP) + " --> "+newObjectNames[t]);
-    dpSet(dpSubStr(DPNames[t],DPSUB_DP)+".name",newObjectNames[t],dpSubStr(DPNames[t],DPSUB_DP)+".Claim.ClaimDate",claimDates[t]); 
+    if (bDebug) DebugN("Setting DPNames[t].claim.name : "+dpSubStr(DPNames[t],DPSUB_DP) + " --> "+newObjectNames[t]);
+    dpSet(dpSubStr(DPNames[t],DPSUB_DP)+".claim.name",newObjectNames[t],dpSubStr(DPNames[t],DPSUB_DP)+".claim.claimDate",claimDates[t]); 
   }
   showMapping("syncClient");
 
@@ -324,7 +324,7 @@ void clientAddClaimCallback(
   		g_ClaimedTypes[ typeName ][ "NAME"      ] = makeDynString(newObjectName);
   		g_ClaimedTypes[ typeName ][ "CLAIMDATE" ] = makeDynTime(claimDate); 
     }
-    dpSet(dpSubStr(DPName,DPSUB_DP)+".name",newObjectName,dpSubStr(DPName,DPSUB_DP)+".Claim.ClaimDate",claimDate); 
+    dpSet(dpSubStr(DPName,DPSUB_DP)+".claim.name",newObjectName,dpSubStr(DPName,DPSUB_DP)+".claim.claimDate",claimDate); 
   }  
   
   if (bDebug) showMapping("clientAddClaimCallback");
@@ -347,8 +347,8 @@ void startLocalClaim() {
   // a new claim
   dpConnect( "claimCallback", 
     false,         
-    "ClaimManager.Request.TypeName", 
-    "ClaimManager.Request.NewObjectName" ); 
+    "claimManager.request.typeName", 
+    "claimManager.request.newObjectName" ); 
 
 }
 
@@ -362,8 +362,8 @@ void startLocalClaim() {
 //    A claim must be made via:
 //
 //    dpSet( 
-//      "ClaimManager.Request.TypeName", "ObsCtrl",
-//      "ClaimManager.Request.NewObjectName", "MYOBSERVATION" );
+//      "claimManager.request.typeName", "ObsCtrl",
+//      "claimManager.request.newObjectName", "MYOBSERVATION" );
 //
 // Returns:
 //    None
@@ -409,10 +409,10 @@ void claimCallback(
       dyn_time   claimDates;
 
       // get all lists of claimed datapoints 
-      dpGet("ClaimManager.Cache.TypeNames",typeNames,
-        		"ClaimManager.Cache.NewObjectNames",newObjectNames,
-        		"ClaimManager.Cache.DPNames",DPNames,
-        		"ClaimManager.Cache.ClaimDates",claimDates); 
+      dpGet("claimManager.cache.typeNames",typeNames,
+        		"claimManager.cache.newObjectNames",newObjectNames,
+        		"claimManager.cache.DPNames",DPNames,
+        		"claimManager.cache.claimDates",claimDates); 
       
       // we need to check if the data is allready in the cacheArrays, to avoid duplication.
       // same type and same name and same dpname  only the claimdate might need to be changed.
@@ -459,19 +459,19 @@ void claimCallback(
       }
       
       // write back
-      dpSet("ClaimManager.Cache.TypeNames",typeNames,
-        		"ClaimManager.Cache.NewObjectNames",newObjectNames,
-        		"ClaimManager.Cache.DPNames",DPNames,
-        		"ClaimManager.Cache.ClaimDates",claimDates);  
+      dpSet("claimManager.cache.typeNames",typeNames,
+        		"claimManager.cache.newObjectNames",newObjectNames,
+        		"claimManager.cache.DPNames",DPNames,
+        		"claimManager.cache.claimDates",claimDates);  
     }
     
     if (bDebug) DebugN("claim.ctl:claimCallback|Set ClaimManagers Response point");
     // for master and client, if not strDP == empty
     dpSet(
-      "ClaimManager.Response.DPName"       , strDP,
-      "ClaimManager.Response.TypeName"     , strTypeName,
-      "ClaimManager.Response.NewObjectName", strNewObjectName,
-      "ClaimManager.Response.ClaimDate"    , claimDate );
+      "claimManager.response.DPName"       , strDP,
+      "claimManager.response.typeName"     , strTypeName,
+      "claimManager.response.newObjectName", strNewObjectName,
+      "claimManager.response.claimDate"    , claimDate );
   }
 
 }
@@ -526,8 +526,8 @@ void VerifyDatapointType( string strType )
   // Determine the dp names of the elements 'ClaimDate' and 'name'
   for( t = 1; t <= dynlen( g_ClaimedTypes[ strType ][ "DP"   ] ); t++)
   {
-     dynAppend( strDPNames    , g_ClaimedTypes[ strType ][ "DP"   ][t] + ".name" );
-     dynAppend( strDPClaimDate, g_ClaimedTypes[ strType ][ "DP"   ][t] + ".Claim.ClaimDate" );
+     dynAppend( strDPNames    , g_ClaimedTypes[ strType ][ "DP"   ][t] + ".claim.name" );
+     dynAppend( strDPClaimDate, g_ClaimedTypes[ strType ][ "DP"   ][t] + ".claim.claimDate" );
   }
 
   // Note:
@@ -656,8 +656,8 @@ string  FindFreeClaim(
      
     if (!isClient) {
       dpSet( 
-        strDP + ".name", strNewObjectName,
-        strDP + ".Claim.ClaimDate", claimDate);
+        strDP + ".claim.name", strNewObjectName,
+        strDP + ".claim.claimDate", claimDate);
     }
   }
   

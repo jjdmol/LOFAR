@@ -4,53 +4,26 @@ LANG:1 7 Station
 PANEL,-1 -1 980 746 N "_3DFace" 0
 "main()
 {
+  // empty the hardwareList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
+  }  
+  
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
   
   baseDP         = g_currentDatapoint;
   
-  // set the hardware selectable items
-  dyn_dyn_anytype tab;
-  int z;
-  dyn_string result;
-  
-  
-  // For this panel Cabinets and subracks should be selectable so we get them for the treelist
-  // Cabinets first
-  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"Cabinet\\\" OR _DPT=\\\"SubRack\\\" \", tab);
-  LOG_TRACE(\"Station_Cabinet.pnl:main|tab: \"+tab);
-  
-  dyn_string aDS=navFunct_getDynString(tab, 2,1);
-  dynSortAsc(aDS);
-  for(z=1;z<=dynlen(aDS);z++){
-    
-    // strip .status.state from result
-    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
 
-    // keep Path to work with
-    string path=aS;
-    
-    // strip all b4 Cabinet out of the string
-    strreplace(aS,baseDP+\"_\",\"\");
-    
-    // Remainder should be Cabinet?_Subrack? combinations, split on _ 
-    dyn_string spl=strsplit(aS,\"_\");
-    if (dynlen(spl) > 1) { // Subrack
-      result[z]=navFunct_dpStripLastElement(path)+\",\"+spl[2]+\",\"+path;
-    } else {   // Cabinet
-      result[z]=\",\"+spl[1]+\",\"+path;
-    }
-  }
-
-  LOG_DEBUG(\"Station_Cabinet.pnl:main|HardwareTree found: \"+ result);
   
-  // write result to the db so various panels can reset themselves  
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
+  
+
   
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"Station_Cabinet.pnl\",\"Update\");
-    
-  
+      
   // connect to trigger to get a signal if some highlighting should be done.
   dpConnect( \"TriggerCallback\",true,DPNAME_NAVIGATOR + g_navigatorID + \".trigger\");
   
@@ -118,6 +91,51 @@ void TriggerCallback(string dp1, bool aTrig) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
   } 
 
+}
+
+void prepareHardwareList() {
+  // set the hardware selectable items
+  dyn_dyn_anytype tab;
+  int z;
+  dyn_string result;
+  
+  g_stationList[1]=navFunct_bareDBName(sysName);
+  
+  // For this panel Cabinets and subracks should be selectable so we get them for the treelist
+  // Cabinets first
+  dpQuery(\"SELECT '_original.._value' FROM '\"+baseDP+\"_*.status.state' REMOTE '\"+sysName+\"' WHERE _DPT= \\\"Cabinet\\\" OR _DPT=\\\"SubRack\\\" \", tab);
+  LOG_TRACE(\"Station_Cabinet.pnl:prepareHardwareList|tab: \"+tab);
+  
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);
+  int subrackCnt=1;
+  int cabinetCnt=1;
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // strip .status.state from result
+    string aS = dpSubStr(aDS[z],DPSUB_SYS_DP);
+
+    // keep Path to work with
+    string path=aS;
+    
+    // strip all b4 Cabinet out of the string
+    strreplace(aS,baseDP+\"_\",\"\");
+    
+    // Remainder should be Cabinet?_Subrack? combinations, split on _ 
+    dyn_string spl=strsplit(aS,\"_\");
+    if (dynlen(spl) > 1) { // Subrack
+      result[z]=navFunct_dpStripLastElement(path)+\",\"+spl[2]+\",\"+path;
+      g_subrackList[subrackCnt++]=spl[2];
+    } else {   // Cabinet
+      result[z]=\",\"+spl[1]+\",\"+path;
+      g_cabinetList[cabinetCnt++]=spl[1];
+    }
+  }
+
+  LOG_DEBUG(\"Station_Cabinet.pnl:prepareHardwareList|HardwareTree found: \"+ result);
+  
+  // write result to the db so various panels can reset themselves  
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
 }" 0
  E E E E 1 -1 -1 0  188 128
 ""0  1
@@ -357,44 +375,44 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 96 "PANEL_REF97"
-"objects/Hardware/Station_Cabinet_small.pnl" 358 358 T 860 1 0 1 -141 -170
+"objects\\Hardware\\Station_Cabinet_small.pnl" 358 358 T 860 1 0 1 -141 -170
 1
 "$CabinetNr""0"
 3 97 "PANEL_REF98"
-"objects/Hardware/Station_Cabinet_small.pnl" 358 458 T 861 1 0 1 68 -270
+"objects\\Hardware\\Station_Cabinet_small.pnl" 358 458 T 861 1 0 1 68 -270
 1
 "$CabinetNr""1"
 3 98 "PANEL_REF99"
-"objects/Hardware/Station_Cabinet_small.pnl" 608 458 T 862 1 0 1 25 -270
+"objects\\Hardware\\Station_Cabinet_small.pnl" 608 458 T 862 1 0 1 25 -270
 1
 "$CabinetNr""2"
 3 100 "PANEL_REF101"
-"objects/Hardware/Station_Subrack_small.pnl" 288 620 T 864 1 0 1 -230 -343
+"objects\\Hardware\\Station_Subrack_small.pnl" 288 620 T 864 1 0 1 -230 -343
 2
 "$CabinetNr""0"
 "$SubrackNr""0"
 3 101 "PANEL_REF102"
-"objects/Hardware/Station_Subrack_small.pnl" 248 670 T 865 1 0 1 -190 -211
+"objects\\Hardware\\Station_Subrack_small.pnl" 248 670 T 865 1 0 1 -190 -211
 2
 "$CabinetNr""0"
 "$SubrackNr""1"
 3 102 "PANEL_REF103"
-"objects/Hardware/Station_Subrack_small.pnl" 258 620 T 866 1 0 1 5 -343
+"objects\\Hardware\\Station_Subrack_small.pnl" 258 620 T 866 1 0 1 5 -343
 2
 "$CabinetNr""1"
 "$SubrackNr""2"
 3 103 "PANEL_REF104"
-"objects/Hardware/Station_Subrack_small.pnl" 258 650 T 867 1 0 1 5 -191
+"objects\\Hardware\\Station_Subrack_small.pnl" 258 650 T 867 1 0 1 5 -191
 2
 "$CabinetNr""1"
 "$SubrackNr""3"
 3 105 "PANEL_REF106"
-"objects/Hardware/Station_Subrack_small.pnl" 288 620 T 868 1 0 1 185 -343
+"objects\\Hardware\\Station_Subrack_small.pnl" 288 620 T 868 1 0 1 185 -343
 2
 "$CabinetNr""2"
 "$SubrackNr""4"
 3 106 "PANEL_REF107"
-"objects/Hardware/Station_Subrack_small.pnl" 328 630 T 869 1 0 1 145 -171
+"objects\\Hardware\\Station_Subrack_small.pnl" 328 630 T 869 1 0 1 145 -171
 2
 "$CabinetNr""2"
 "$SubrackNr""5"

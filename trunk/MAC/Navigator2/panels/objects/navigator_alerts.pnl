@@ -219,11 +219,14 @@ void rClick(int row) {
     } else {
      
       // now we determined the new status and state we need to write it in the databasepoint
-      // to trigger the complete chain again.
-      if (dpExists(\"__navObjectState\")) {
-		  dpSet(\"__navObjectState.DPName\",dp,
-                      \"__navObjectState.stateNr\",state,
-                      \"__navObjectState.message\",message);
+      // to trigger the complete chain again. ofcourse this needs to be done on the right database, se we get the
+      // systemname from the dp first.
+      
+      string sys = dpSubStr(dp,DPSUB_SYS);
+      if (dpExists(sys+\"__navObjectState\")) {
+		  dpSet(sys+\"__navObjectState.DPName\",dp,
+                      sys+\"__navObjectState.stateNr\",state,
+                      sys+\"__navObjectState.message\",message);
       }    
     }
   }

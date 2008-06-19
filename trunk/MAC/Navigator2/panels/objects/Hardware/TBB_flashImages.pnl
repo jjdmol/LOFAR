@@ -1,22 +1,21 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,385 113 900 592 N "_3DFace" 1
-"$datapoint"
+PANEL,-1 -1 900 592 N "_3DFace" 0
 "main()
 {
-	baseDP=$datapoint;
-	// check if the requiered datapoint for this view are enabled and accessible
-	if (dpExists(baseDP+\".imageInfo\")) {
-    // connect for flash image updates
-	  dpConnect(\"updateTable\",baseDP+\".imageInfo.version\",
-	  												baseDP+\".imageInfo.writeDate\",
-	  			                  baseDP+\".imageInfo.TPFile\",
-	  			                  baseDP+\".imageInfo.MPFile\",
- 	             							baseDP+\".imageInfo.writeDate:_online.._invalid\");
- 	} else {
-	  //clear table
-		flashTable.deleteAllLines();
+  baseDP=g_currentDatapoint;
+  // check if the requiered datapoint for this view are enabled and accessible
+  if (dpExists(baseDP+\".imageInfo\")) {
+  // connect for flash image updates
+    dpConnect(\"updateTable\",baseDP+\".imageInfo.version\",
+	  		    baseDP+\".imageInfo.writeDate\",
+	  	            baseDP+\".imageInfo.TPFile\",
+	  		    baseDP+\".imageInfo.MPFile\",
+ 	             	    baseDP+\".imageInfo.writeDate:_online.._invalid\");
+   } else {
+     //clear table
+    flashTable.deleteAllLines();
   }	
 }
 
@@ -37,12 +36,12 @@ updateTable(string dp1, dyn_string version,
   }
 }
 " 0
-EE E E 1 0 0 0  40 560
-"" 0 1
-E"string baseDP;" 0
+ E E E E 1 0 0 0  40 560
+""0  1
+E "string baseDP;" 0
  2
-"CBRef""1"
-"EClose"E
+"CBRef" "1"
+"EClose" E
 ""
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
@@ -54,10 +53,11 @@ LANG:1 6 Layer1
 1 40 560 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 40 10 635 560
@@ -67,17 +67,17 @@ E E 0 1 1 0 1 E U  0 E 40 10 635 560
 1 236 16 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  0 E 238 18 384 44
-0 2 0 "s" 0 0 0 64 0 0  238 18
- 1
+0 2 0 "0s" 0 0 0 64 0 0  238 18 1
 1
-LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-160-100-100-*-*-iso8859-1|-19,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+LANG:1 87 -*-Arial-bold-r-normal-*-19-*-100-100-*-*-iso8859-1|-19,0,0,0,697,0,0,0,0,0,0,0,0,Arial
 0 ""
 1
 LANG:1 12 Flash images
@@ -87,36 +87,48 @@ LANG:1 12 Flash images
 1 50 50 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 1 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-48 48 627 512
-E E 1 0 1 5 32 "Nr" 0 1 0 "s" 1
+ 48 48 627 512
+EE 1 0 1 5 32 "Nr" 2 1 0 "s" 1
 LANG:1 2 Nr
-E1
+E
+1
 LANG:1 8 Image Nr
- 30 "version" 0 1 0 "s" 1
+
+30 "version" 3 1 0 "s" 1
 LANG:1 7 version
-E1
+E
+1
 LANG:1 16 Software Version
- 50 "writeDate" 0 1 0 "s" 1
+
+50 "writeDate" 13 1 0 "s" 1
 LANG:1 10 Write Time
-E1
+E
+1
 LANG:1 15 write timestamp
- 155 "TPFile" 0 1 0 "s" 1
+
+155 "TPFile" 13 1 0 "s" 1
 LANG:1 11 TP FileName
-E1
+E
+1
 LANG:1 11 TP filename
- 155 "MPFile" 0 1 0 "s" 1
+
+155 "MPFile" 13 1 0 "s" 1
 LANG:1 11 MP FileName
-E1
+E
+1
 LANG:1 11 MP filename
- 155 20 20 "" 1 1
+
+155 
+20 20 "" 1 1
 LANG:1 2 #1
 "" 1 1
 LANG:1 2 #2
@@ -180,26 +192,29 @@ LANG:1 3 #30
 LANG:1 3 #31
 "" 1 1
 LANG:1 3 #32
-8 30 1
-LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+8 30
+1
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 1 1 3 0
+0 1 1 1 7
 1 0
 13 3
 "Button1"
 ""
-1 275 525 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 275 525 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 4 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 0 
+
 0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 84 -*-Arial-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,404,0,0,0,0,0,0,0,0,Arial
 0 ""
-273 523 397 550
+ 273 523 397 550
+
 T 
 1
 LANG:1 12 Close Window

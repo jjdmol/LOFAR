@@ -4,30 +4,18 @@ LANG:1 8 (NoName)
 PANEL,-1 -1 947 764 N "_3DFace" 0
 "main()
 {
-  
+  // empty the hardwareList
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",makeDynString(\"\"));
+  }  
+    
   // Initialise the Panel
   navPanel_initPanel(\"fw_viewBox\");
   
-  // set the hardware selectable items
-  dyn_dyn_anytype tab;
-  int z;
-  dyn_string result;
+  // set the hardware selectable items for this screen
+  prepareHardwareList();
   
-  dpQuery(\"SELECT '_original.._value' FROM 'LOFAR_PIC_Core_*.status.state' WHERE _DPT= \\\"Station\\\" \", tab);
-  LOG_TRACE(\"LOFAR_Netherlands.pnl:main|tab: \"+tab);
   
-  dyn_string aDS=navFunct_getDynString(tab, 2,1);
-  dynSortAsc(aDS);
-  
-  for(z=1;z<=dynlen(aDS);z++){
-    
-    // split on _ 
-    string aS= aDS[z];
-    dyn_string spl=strsplit(aS,\"_\");
-    LOG_TRACE(\"LOFAR_Netherlands.pnl:main|Found: \"+ strsplit(spl[dynlen(spl)],\".\")[1]);
-    result [z]=\",\"+ strsplit(spl[dynlen(spl)],\".\")[1]+\",\"+strsplit(spl[dynlen(spl)],\".\")[1]+\":LOFAR\";
-  }
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
   
   // trigger that the panel values are calculated and ready
   navPanel_setEvent(\"LOFAR_Netherlands.pnl\",\"Update\");
@@ -91,7 +79,29 @@ void TriggerCallback(string dp1, bool aTrig) {
     LOG_DEBUG(\"LOFAR_Netherlands.pnl:Trigger Callback|Pushing objectTrigger\");
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
   } 
+}
 
+void prepareHardwareList() {
+  dyn_dyn_anytype tab;
+  int z;
+  dyn_string result;
+  
+  dpQuery(\"SELECT '_original.._value' FROM 'LOFAR_PIC_Core_*.status.state' WHERE _DPT= \\\"Station\\\" \", tab);
+  LOG_TRACE(\"LOFAR_Netherlands.pnl:prepareHardwareList|tab: \"+tab);
+  
+  dyn_string aDS=navFunct_getDynString(tab, 2,1);
+  dynSortAsc(aDS);
+  
+  for(z=1;z<=dynlen(aDS);z++){
+    
+    // split on _ 
+    string aS= aDS[z];
+    dyn_string spl=strsplit(aS,\"_\");
+    LOG_TRACE(\"LOFAR_Netherlands.pnl:prepareHardwareList|Found: \"+ strsplit(spl[dynlen(spl)],\".\")[1]);
+    result [z]=\",\"+ strsplit(spl[dynlen(spl)],\".\")[1]+\",\"+strsplit(spl[dynlen(spl)],\".\")[1]+\":LOFAR\";
+    g_stationList[z] = strsplit(spl[dynlen(spl)],\".\")[1];
+  }
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".hardwareList\",result);
 }" 0
  E E E E 1 -1 -1 0  20 740
 ""0  1
@@ -187,19 +197,19 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 3 "PANEL_REF4"
-"objects/Hardware/Station_small.pnl" 619 409 T 21 1 0 1 162 -59
+"objects\\Hardware\\Station_small.pnl" 619 409 T 21 1 0 1 162 -59
 1
 "$Station""CS010"
 3 4 "PANEL_REF5"
-"objects/Hardware\\Station_small.pnl" 779 329 T 22 1 0 1 1 0
+"objects\\Hardware\\Station_small.pnl" 779 329 T 22 1 0 1 1 0
 1
 "$Station""CS008"
 3 5 "PANEL_REF6"
-"objects/Hardware\\Station_small.pnl" 769 379 T 23 1 0 1 -4 -1
+"objects\\Hardware\\Station_small.pnl" 769 379 T 23 1 0 1 -4 -1
 1
 "$Station""CS001"
 3 6 "PANEL_REF7"
-"objects/Hardware\\Station_small.pnl" 829 359 T 24 1 0 1 -2 -4
+"objects\\Hardware\\Station_small.pnl" 829 359 T 24 1 0 1 -2 -4
 1
 "$Station""CS016"
 0

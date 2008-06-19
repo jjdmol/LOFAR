@@ -98,6 +98,10 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
 
       // inform headLines Object
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
+   
+      // update selectors   
+      dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
+      dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
     }
     return;
   }
@@ -113,6 +117,10 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
   }  
   
   if (anEvent == "EventClick") {
+    
+    // Empty highlight string
+    dynClear(strHighlight);
+    
     // inform headLines Object
     dpSet(HEADLINESACTIONDP,"ChangeInfo|"+aSelection);
     // also fire highlight mechanism for detail selectors
@@ -176,6 +184,7 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
   // TabChanged: The Tab has changed, so a new panle needs to be initialized and put in place
   if (anEvent == "TabChanged") {
     if (aSelection != ACTIVE_TAB) {
+      navTabCtrl_removeView();
       
       ACTIVE_TAB = aSelection;
       if (navTabCtrl_showView()) {
@@ -185,7 +194,10 @@ void navCtrl_handleViewSelectionEvent(string dp,string value){
 
         // inform headLines Object
         dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
-      }
+        
+        // update selectors   
+        dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
+        dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");      }
     }
     return;
   } 
@@ -287,18 +299,24 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
           typeSelector=sel[1];
           observationType=sel[2];
           selection=sel[3];
-          if (!dynContains(strHighlight,sel[3])) {
+          int nr = dynContains(strHighlight,sel[3]);
+          if (nr > 0) {
+            dynRemove(strHighlight,nr);
+          } else {
 	    dynAppend(strHighlight,sel[3]);
-            action+="|"+sel[1]+"|"+sel[2]+"|"+sel[3];
           }
+          action+="|"+sel[1]+"|"+sel[2]+"|"+sel[3];
         } else {  // Hardware or processes
           typeSelector=sel[1];
           observationType="";
           selection=sel[2];
-          if (!dynContains(strHighlight,sel[2])) {
+          int nr = dynContains(strHighlight,sel[2]);
+          if (nr >0) {
+            dynRemove(strHighlight,nr);
+          } else {
 	    dynAppend(strHighlight,sel[2]);
-            action+="|"+sel[1]+"|"+sel[2];
           }
+          action+="|"+sel[1]+"|"+sel[2];
         }
       }
     }   
@@ -379,7 +397,10 @@ void navCtrl_handleLocatorEvent(string dp,string value){
   // depending on the event received, actions need to be taken
   if (anEvent == "ChangePanel") {
     if (navTabCtrl_showView()) {
-        
+      
+      //clear old highlights
+      dynClear(strHighlight);        
+      
       // change locator
       dpSet(LOCATORACTIONDP,"ChangeSelection|"+aSelection);
     }

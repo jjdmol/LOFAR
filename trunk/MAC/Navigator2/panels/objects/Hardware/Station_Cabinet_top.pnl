@@ -4,8 +4,6 @@ LANG:1 7 Station
 PANEL,-1 -1 159 69 N "_3DFace" 0
 "main()
 {
-  // Initialise the Panel
-  navPanel_initPanel(\"fw_viewBox\");
 
   baseDP = g_currentDatapoint+\"_PIC\";
 	

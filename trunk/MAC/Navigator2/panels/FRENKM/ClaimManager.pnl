@@ -75,8 +75,8 @@ LANG:1 5 claim
 "main()
 {
   dpSet(
-      \"_ClaimManager.Request.TypeName\"      , TYPE.text,
-      \"_ClaimManager.Request.NewObjectName\" , NAME.text );
+      \"claimManager.request.typeName\"      , TYPE.text,
+      \"claimManager.request.newObjectName\" , NAME.text );
   
 }" 0
  E E E
@@ -202,14 +202,14 @@ EP_textFieldIn()
 {
 dyn_errClass err;
 
-  if( !dpExists( \"MCU001:_ClaimManager.Response.DPName:_online.._value\"))
+  if( !dpExists( \"MCU001:claimManager.response.DPName:_online.._value\"))
   {
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
     return;
   }
 
   dpConnect(\"EP_textFieldInCB\", false,
-            \"MCU001:_ClaimManager.Response.DPName:_online.._value\");
+            \"MCU001:claimManager.response.DPName:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
@@ -223,7 +223,7 @@ EP_textFieldInCB(string dp, string sNewValue)
 }
 
 // SimpleCtrlScript {EP_textFieldIn}
-// DP {MCU001:_ClaimManager.Response.DPName}
+// DP {MCU001:claimManager.response.DPName}
 // DPConfig {:_online.._value}
 // DPType {string}
 // UseDPUnit {TRUE}

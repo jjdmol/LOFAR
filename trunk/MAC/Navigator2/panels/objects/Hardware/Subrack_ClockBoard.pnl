@@ -4,8 +4,6 @@ LANG:1 17 SubrackClockBoard
 PANEL,-1 -1 735 210 N "_3DFace" 0
 "main()
 {
-  // Initialise the Panel
-  navPanel_initPanel(\"fw_viewBox\");
 
   baseDP = g_currentDatapoint+\".clockBoard\";
   

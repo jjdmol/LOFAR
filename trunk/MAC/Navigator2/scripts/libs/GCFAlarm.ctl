@@ -182,6 +182,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   int iPos;
   
   LOG_DEBUG( "GCFAlarm.ctl:objectStateCallback| Number of states in callback = " + dynlen( aResult ) );
+  LOG_DEBUG("Result: "+ aResult);
   
   if (dynlen(aResult) <= 0) {
     return;

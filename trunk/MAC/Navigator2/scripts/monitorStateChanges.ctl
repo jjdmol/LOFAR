@@ -54,7 +54,7 @@ void subscribeObjectStateChange() {
   // ROutine to connnect to the __navObjectState point to trigger statechanges
   // So that childState points can be set/reset accordingly.
 
-  dpConnect("objectStateTriggered",true,"__navObjectState.DPName",
+  dpConnect("objectStateTriggered",false,"__navObjectState.DPName",
             "__navObjectState.stateNr",
             "__navObjectState.message");
   

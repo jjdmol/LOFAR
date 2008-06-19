@@ -4,9 +4,6 @@ LANG:1 8 (NoName)
 PANEL,-1 -1 257 137 N "_3DFace" 0
 "main()
 {
-
-  // Initialise the Panel
-  navPanel_initPanel(\"fw_viewBox\");
   	
   baseDP = g_currentDatapoint;
 

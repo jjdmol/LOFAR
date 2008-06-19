@@ -6,8 +6,8 @@ PANEL,-1 -1 1000 735 N "_3DFace" 0
 {
   
   // empty the processesList
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\")) {
-    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".processesList\",makeDynString(\"\"));
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\")) {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\",makeDynString(\"\"));
   }  
   
   // Initialise the Panel
@@ -16,8 +16,9 @@ PANEL,-1 -1 1000 735 N "_3DFace" 0
   baseDP = g_currentDatapoint+\"_PermSW_MACScheduler\";
   syst   = dpSubStr(baseDP,DPSUB_SYS);
     
-  // set the process selectable items
-    
+  // set the observation selectable items
+  prepareObservationsList();
+        
   // connect to trigger to get a signal if some highlighting should be done.
   dpConnect( \"TriggerCallback\",true,DPNAME_NAVIGATOR + g_navigatorID + \".trigger\");
   
@@ -66,7 +67,12 @@ void TriggerCallback(string dp1, bool aTrig) {
 //    }
 //  } 
   
-  //get stations from choice
+  //get observations from choice
+  if (dynlen(obsMatch) > 0) {
+    dynAppend(highlight,obsMatch);
+  }
+
+    //get stations from choice
 //  if (dynlen(stationMatch) > 0) {
 //    dynAppend(highlight,stationMatch);
 //  }
@@ -84,6 +90,56 @@ void TriggerCallback(string dp1, bool aTrig) {
     LOG_DEBUG(\"Observations.pnl:Trigger Callback|Pushing objectTrigger\");
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".objectTrigger\",TRUE);
   }   
+}
+
+void prepareObservationsList() {
+  // check if the required datapoint for this view are enabled and accessible
+  if (dpExists(baseDP+\".plannedObservations\")) {
+    dpConnect(\"updateObservationsList\", baseDP +\".plannedObservations:_online.._value\",
+                                        baseDP +\".activeObservations:_online.._value\",
+                                        baseDP +\".finishedObservations:_online.._value\",
+                                        baseDP +\".plannedObservations:_online.._invalid\");
+  } else {
+    LOG_ERROR(\"Observation_small.pnl:main|Couldn't find DP to connect to: \"+baseDP);
+  }	
+}
+
+void updateObservationsList(string dp1, dyn_string plannedObs,
+                            string dp2, dyn_string activeObs,
+                            string dp3, dyn_string finishedObs,
+                            string dp4, bool invalid)
+{
+  string obsDP;
+  dyn_string result;
+  int idx=1;
+  int obsCnt=1;
+  
+  dynSortAsc(plannedObs);
+  dynSortAsc(activeObs);
+  dynSortAsc(finishedObs);
+  
+  result [idx++]=\",Planned Observations,Planned Observations\";
+  for (int i=1; i<= dynlen(plannedObs); i++) {
+    // get real name from claimmanager
+    obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+plannedObs[i]);    
+    result [idx++]=\"Planned Observations,\"+ plannedObs[i]+\",\"+obsDP;
+  }
+  
+  result [idx++]=\",Active Observations,Active Observations\";
+  for (int i=1; i<= dynlen(activeObs); i++) {
+    // get real name from claimmanager
+    obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+activeObs[i]);    
+    result [idx++]=\"Active Observations,\"+ activeObs[i]+\",\"+obsDP;
+    g_observationsList[obsCnt++] = activeObs[i];
+  }
+    
+  result [idx++]=\",Finished Observations,Finished Observations\";
+  for (int i=1; i<= dynlen(finishedObs); i++) {
+    // get real name from claimmanager
+    obsDP=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+finishedObs[i]);    
+    result [idx++]=\"Finished Observations,\"+ finishedObs[i]+\",\"+obsDP;
+  }
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + \".observationsList\",result);
 }" 0
  E E E E 1 -1 -1 0  10 10
 ""0  1
@@ -141,13 +197,13 @@ LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-16-*-100-100-*-*-iso8859-1|-16,0,0,0,
 0 ""
 1
 LANG:1 12 Observations
-1 207 0 "" 1
+1 215 0 "" 1
 0
-1 208 1 "" 0
+1 216 1 "" 0
 0
-1 209 5 "" 0
+1 217 5 "" 0
 0
-1 210 6 "" 0
+1 218 6 "" 0
 0
 2 212
 "PRIMITIVE_TEXT14"
@@ -165,7 +221,7 @@ LANG:1 0
 E E 0 1 1 2 1 E U  1 E 2 29 130 43
 0 2 2 "0s" 0 0 0 194 0 0  130 29 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 21 Planned Observations:
@@ -185,7 +241,7 @@ LANG:1 0
 E E 0 1 1 2 1 E U  1 E 2 266 120 280
 0 2 2 "0s" 0 0 0 194 0 0  120 266 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 20 Active Observations:
@@ -205,7 +261,7 @@ LANG:1 0
 E E 0 1 1 2 1 E U  1 E 1 504 130 518
 0 2 2 "0s" 0 0 0 194 0 0  130 504 1
 1
-LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
 1
 LANG:1 22 Finished Observations:
