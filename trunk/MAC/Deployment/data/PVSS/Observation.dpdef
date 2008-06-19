@@ -1,4 +1,6 @@
 #ObservationControl.dpdef
+claim				:Claim
+
 claimPeriod			int
 preparePeriod		int
 startTime			string
