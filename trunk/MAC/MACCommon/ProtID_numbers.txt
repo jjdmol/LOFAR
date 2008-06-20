@@ -25,7 +25,7 @@ LOG             F_GCF_PROTOCOL + 0      3    // used to be PML
 KVT             F_GCF_PROTOCOL + 1      4    // used to be PI
 DP              F_GCF_PROTOCOL + 2      5    // used to be PA
 SB              F_GCF_PROTOCOL + 3      6
-...             F_GCF_PROTOCOL + 4      7	 // used to be KVL
+CM              F_GCF_PROTOCOL + 4      7	 // used to be KVL
 
 TST             F_APL_PROTOCOL + 0      10   // used for testing
 ...             F_APL_PROTOCOL + 1      11   // was LogicalDevice
