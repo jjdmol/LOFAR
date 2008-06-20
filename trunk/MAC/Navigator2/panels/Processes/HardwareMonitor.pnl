@@ -138,7 +138,157 @@ updateTBB(string dp1, string connected,
 E "#uses \"navPanel.ctl\"
 
 string baseDP=\"\";
-string database=\"\";" 0
+string database=\"\";
+
+// ****************************************
+// Name: showLogging   
+// ****************************************
+//    Connects to the given datapoint .logMsg and it's historical data (if any)
+//    and logs all into the logWindow
+//           
+// ****************************************
+showLogging(string aDP)
+{
+  LOG_TRACE(\"HardwareMonitor.pnl:showLogging| Datapoint: \",aDP);
+	
+  string dpLog = aDP+\".process.logMsg\";
+  string systemName = dpSubStr(dpLog,DPSUB_SYS);
+  string bareDP     = dpSubStr(dpLog,DPSUB_DP_EL_CONF_DET_ATT);
+
+  myLogTable.deleteAllLines();
+ 
+  if(dpExists(dpLog)) {
+    // initialize the logging table with historical data:
+    dyn_dyn_anytype tab;
+    int z;
+    time tStart;
+    time tStop;
+    tStop = getCurrentTime();
+    tStart = tStop - 3*3600; // three hours of history
+	
+    string query=\"\";
+            
+    if (systemName != MainDBName) {     
+      query = \"SELECT ALL '_original.._value' FROM '\" + dpLog + \"' REMOTE'\"+systemName +\"' TIMERANGE(\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
+    } else {
+      query = \"SELECT ALL '_original.._value' FROM '\" + dpLog + \"' TIMERANGE(\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStart) + \"\\\",\\\"\" +
+              formatTime(\"%Y.%m.%d %H:%M:%S\",tStop) + \"\\\",1,0) LAST 100\";
+    }
+      
+    LOG_DEBUG(\"HardwareMonitor.pnl:showLogging|Query: \" + query);
+    dpQuery(query, tab);
+    LOG_DEBUG(\"HardwareMonitor.pnl:showLogging|Found: \" + tab + \" length: \" + dynlen(tab));
+	 	 
+	 	
+    for(z=2;z<dynlen(tab);z++) {
+      addLogMessage(tab[z][2]);
+    }
+	
+    // connect to logging
+    dpConnect(\"updateLogging\",dpLog);
+  } else {
+    LOG_DEBUG(\"HardwareMonitor.pnl:showLogging|error connecting to: \"+ dpLog);
+  }    
+}
+
+// ****************************************
+// Name: updateLogging   
+// ****************************************
+//    callback for showLogging
+//           
+// ****************************************
+updateLogging(string dpe, string logMsg)
+{
+  LOG_TRACE(\"HardwareMonitor.pnl:showLogging|LogMsg: \"+logMsg);
+  
+  if (logMsg != \"\") {
+    addLogMessage(logMsg);
+  }
+}
+
+// ****************************************
+// Name: addLogMsg   
+// ****************************************
+//    places a log Msg in the appropiate table
+//    split lines like:
+//    13-11-06 10:06:00.519|INFO|MAC.GCF.PAL.SAL|Set value of property 'MCU001:LOFAR_PermSW_MACScheduler.OTDB.lastPoll'|GSA_Service.cc:661
+//    into relevant pieces
+//           
+// The Hardware monitor handles logging for different programs, and it's not possible to do multiple thread logging
+// so for now we determined that the logmsg's that are for a specific program will be preceeded by a program specific
+// tag. for example:
+// RSP related will be preceeded by RSP:
+// TBB related will be preceeded by TBB:
+// we are now able to spit off the msg's that are intended for these driver logwindows and send them to the right place.
+// ****************************************
+addLogMessage(string aMsg)
+{
+
+
+  LOG_TRACE(\"navPanel.ctl:navPanel_addLogMsg|msg: \" + aMsg);
+  if (aMsg != \"\") {
+
+
+    dyn_string msgParts;
+    string dateTime=\"\";
+    string level=\"\";
+    string source=\"\";
+    string logMsg=\"\";
+    string codeLine=\"\";
+    bool error=false;
+
+    msgParts = strsplit(aMsg,\"|\");
+    
+    if (dynlen(msgParts) >=1) {
+      dateTime = msgParts[1];
+    } else {
+      error=true;
+    }
+    if (dynlen(msgParts) >=2) {
+      level    = msgParts[2];
+    } else {
+      error=true;
+    }
+    if (dynlen(msgParts) >=3) {
+      source   = msgParts[3];
+    } else {
+      error=true;
+    }
+
+    if (dynlen(msgParts) >=4) {
+      logMsg = msgParts[4];
+    } else {
+      error=true;
+    }
+
+    if (dynlen(msgParts) >=5) {
+      codeLine = msgParts[5];
+    } else {
+      error=true;
+    }
+	
+	
+    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|dateTime: \" + dateTime);
+    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|level: \" + level);
+    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|source: \" + source);
+    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|logMsg: \" + logMsg);
+    LOG_DEBUG(\"navPanel.ctl:navPanel_showLogging|codeLine: \" + codeLine);
+
+    if (!error) {
+      
+      if (strpos(logMsg,\"RSP:\") > -1) {
+        RSPTable.appendLine(\"time\",dateTime,\"level\",level,\"source\",source,\"message\",logMsg,\"code\",codeLine);
+      } else if (strpos(logMsg,\"TBB:\") > -1) {
+        TBBTable.appendLine(\"time\",dateTime,\"level\",level,\"source\",source,\"message\",logMsg,\"code\",codeLine);
+      }
+      myLogTable.appendLine(\"time\",dateTime,\"level\",level,\"source\",source,\"message\",logMsg,\"code\",codeLine);
+      myLogTable.lineVisible(-1);
+    }
+  }
+}" 0
  2
 "CBRef" "1"
 "EClose" E
@@ -150,7 +300,7 @@ LANG:1 0
 25 50
 "RSPTable"
 ""
-1 31 353 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 30 350 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 25 0 0 0 0 0
 E E E
@@ -162,7 +312,7 @@ LANG:1 0
 1
 LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 29 351 993 434
+ 28 348 992 431
 EE 1 0 1 5 1 "time" 12 1 0 "s" 1
 LANG:1 4 time
 E
@@ -420,7 +570,7 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-13-*-100-100-*-*-iso8859-1|-13,0,0,0,505,
 0 ""
 0 1 2 1 7
 1 0
-1 59 4 "" 1
+1 75 4 "" 1
 0
 14 60
 "statusMessage"

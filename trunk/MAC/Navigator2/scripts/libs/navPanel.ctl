@@ -344,6 +344,11 @@ navPanel_addLogMessage(string aMsg)
     string codeLine="";
     bool error=false;
 
+    
+    // we need to cut out all \r and \n from the string
+    strreplace(aMsg,"\r","");
+    strreplace(aMsg,"\n","");
+    
     msgParts = strsplit(aMsg,"|");
     
     if (dynlen(msgParts) >=1) {
