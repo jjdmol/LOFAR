@@ -26,7 +26,9 @@ endif (USG_ROOT)
 
 ## ------------------------------------------------------------------------------
 
-option (WITH_TINYCEP "Use tinyCEP?" FALSE)
+option (LOFAR_VERBOSE_CONFIGURE "Verbose output during configuration?" 0)
+option (LOFAR_BUILD_TESTS       "Build the test programs?"             1)
+option (LOFAR_WITH_TINYCEP      "Use tinyCEP?"                         0)
 
 ## ------------------------------------------------------------------------------
 ## Additional CMake modules
@@ -84,8 +86,10 @@ find_program ( yacc_bin  yacc  )
 ## ------------------------------------------------------------------------------
 ## Search for external libraries
 
-set (BOOST_FIND_QUIETLY TRUE)
-set (CASACORE_FIND_QUIETLY TRUE)
+if (NOT LOFAR_VERBOSE_CONFIGURE)
+  set (BOOST_FIND_QUIETLY TRUE)
+  set (CASACORE_FIND_QUIETLY TRUE)
+endif (NOT LOFAR_VERBOSE_CONFIGURE)
 
 ## Boost++
 
@@ -154,23 +158,50 @@ include_directories (
   )
 
 ## ------------------------------------------------------------------------------
-## Directories to be included in the build
+## Check for the presence of various packages in the code tree
 
-find_path (HAVE_TINYCEP ${LOFAR_SOURCE_DIR}/CEP/tinyCEP)
+## --- Appl --------------------------------------
+
+find_path (HAVE_APPLCOMMON CMakeLists.txt ${LOFAR_SOURCE_DIR}/Appl/ApplCommon)
+
+if (HAVE_APPLCOMMON)
+   set (HAVE_APPLCOMMON TRUE CACHE BOOL "Have package ApplCommon?" FORCE)
+endif (HAVE_APPLCOMMON)
+
+## --- CEP ---------------------------------------
+
+find_path (HAVE_CEPFRAME CMakeLists.txt ${LOFAR_SOURCE_DIR}/CEP/CEPFrame)
+
+if (HAVE_CEPFRAME)
+   set (HAVE_CEPFRAME TRUE CACHE BOOL "Have package CEPFrame?" FORCE)
+endif (HAVE_CEPFRAME)
+
+find_path (HAVE_TINYCEP CMakeLists.txt ${LOFAR_SOURCE_DIR}/CEP/tinyCEP)
 
 if (HAVE_TINYCEP)
    set (HAVE_TINYCEP TRUE CACHE BOOL "Have package TINYCEP?" FORCE)
 endif (HAVE_TINYCEP)
 
-find_path (HAVE_APS ${LOFAR_SOURCE_DIR}/LCS/ACC/APS)
+## --- LCS ---------------------------------------
+
+find_path (HAVE_APS CMakeLists.txt ${LOFAR_SOURCE_DIR}/LCS/ACC/APS)
 
 if (HAVE_APS)
    set (HAVE_APS TRUE CACHE BOOL "Have package APS?" FORCE)
 endif (HAVE_APS)
 
+## ------------------------------------------------------------------------------
+## Directories to be included in the build
+
 add_subdirectory (Appl)
-add_subdirectory (LCS)
-add_subdirectory (CEP)
+
+if (HAVE_CEPFRAME AND HAVE_TINYCEP)
+  add_subdirectory (CEP)
+endif (HAVE_CEPFRAME AND HAVE_TINYCEP)
+
+if (HAVE_APS)
+  add_subdirectory (LCS)
+endif (HAVE_APS)
 
 ## ==============================================================================
 ##
@@ -178,8 +209,18 @@ add_subdirectory (CEP)
 ##
 ## ==============================================================================
 
-message (STATUS "LOFAR_SOURCE_DIR = ${LOFAR_SOURCE_DIR}")
-message (STATUS "CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}")
-message (STATUS "Flex  = ${flex_bin}")
-message (STATUS "Bison = ${bison_bin}")
-message (STATUS "Yacc  = ${yacc_bin}")
+if (LOFAR_VERBOSE_CONFIGURE)
+  message (STATUS "-----------------------------------------------------------------")
+  message (STATUS "[LOFAR] Configuration summary")
+  message (STATUS "LOFAR_SOURCE_DIR        = ${LOFAR_SOURCE_DIR}")
+  message (STATUS "CMAKE_MODULE_PATH       = ${CMAKE_MODULE_PATH}")
+  message (STATUS "Have package ApplCommon = ${HAVE_APPLCOMMON}")
+  message (STATUS "Have package APS        = ${HAVE_APS}")
+  message (STATUS "Have package CEPFrame   = ${HAVE_CEPFRAME}")
+  message (STATUS "Have package tinyCEP    = ${HAVE_TINYCEP}")
+  message (STATUS "Boost++ includes        = ${BOOST_INCLUDES}")
+  message (STATUS "Boost++ libraries       = ${BOOST_LIBRARIES}")
+  message (STATUS "Have Boost++            = ${HAVE_BOOST}")
+  message (STATUS "Have casacore           = ${HAVE_CASACORE}")
+  message (STATUS "-----------------------------------------------------------------")
+endif (LOFAR_VERBOSE_CONFIGURE)
