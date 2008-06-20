@@ -35,6 +35,7 @@ using namespace LOFAR::OTDB;
 int main (int	argc, char*	argv[]) {
 
 	INIT_LOGGER ("logger.log_prop");
+	LOG_INFO("Initialized logsystem with: logger.log_prop");
 
 	string	dbName, hostname, PICfile;
 
