@@ -4,6 +4,9 @@ libplc_la_SOURCES 		  = Package__Version.cc  DH_ProcControl.cc \
 							PCCmd.cc \
 							ProcControlComm.cc  \
 							ProcControlServer.cc \
+							ProcCtrlProxy.cc \
+							ProcCtrlCmdLine.cc \
+							ProcCtrlRemote.cc \
 							ACCmain.cc
 
 bin_PROGRAMS = versionplc

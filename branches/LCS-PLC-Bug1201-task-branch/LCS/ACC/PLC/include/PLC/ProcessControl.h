@@ -1,6 +1,6 @@
 //#  ProcessControl.h: Defines the I/F of Process Control.
 //#
-//#  Copyright (C) 2004
+//#  Copyright (C) 2004-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -31,7 +31,6 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <PLC/DH_ProcControl.h>
-#include <APS/ParameterSet.h>
 #include <boost/logic/tribool.hpp>
 
 using boost::logic::tribool;
@@ -119,76 +118,30 @@ public:
 	// Define a generic way to exchange info between client and server.
 	virtual string	askInfo   (const string& 	keylist)  = 0;
 
-	// Retrieve the pause condition.
-	string getPauseCondition() const;
-
-	// Routines for handling the runState;
-	void clearRunState();
-	bool inRunState() const;
+        // Returns whether we're currently in the run state or not.
+	bool inRunState() const	{ return itsRunState; }
 
 protected:
-	// Not default constructable
-	ProcessControl() : itsPauseCondition(""), itsInRunState(false) { };
+	// Default constructor
+	ProcessControl()	: itsRunState(false)	{}
+
+        // Routines for handling the run state.
+        // @{
+	void setRunState()	{ itsRunState = true; }
+	void clearRunState()	{ itsRunState = false; }
+        // @}
+
+private:
 	// Copying is also not allowed
 	ProcessControl(const ProcessControl& that);
 	ProcessControl& 	operator=(const ProcessControl& that);
 
-private:
-	// Some flow control functions for the ProcControlServer;
-	friend class ProcControlServer;
-	void setPauseCondition(const string&		condition);
-	void setRunState();
-
-	// ----- Data members -----
-	string		itsPauseCondition;
-	bool		itsInRunState;
+        // Run-state flag.
+        bool	itsRunState;
 };
 
 // @} addgroup
 
-//# ---------- inline functions ----------
-
-//
-// setPauseCondition(condition)
-//
-inline void ProcessControl::setPauseCondition(const string&		condition)
-{
-	itsPauseCondition = condition;
-}
-
-//
-// getPauseCondition()
-//
-inline string ProcessControl::getPauseCondition() const
-{
-	return (itsPauseCondition);
-}
-
-//
-// setRunState()
-//
-inline	void ProcessControl::setRunState()
-{
-	itsInRunState = true;
-	LOG_DEBUG("Runstate is active");
-}
-
-//
-// clearRunState()
-//
-inline	void ProcessControl::clearRunState()
-{
-	itsInRunState = false;
-	LOG_DEBUG("Runstate is cleared");
-}
-
-//
-// inRunState()
-//
-inline	bool ProcessControl::inRunState() const
-{
-	return (itsInRunState);
-}
 
     } // namespace PLC
   } // namespace ACC

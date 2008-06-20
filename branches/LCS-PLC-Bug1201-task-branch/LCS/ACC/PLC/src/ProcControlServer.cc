@@ -30,6 +30,7 @@
 #include <Common/StringUtil.h>
 #include <Transport/TH_Socket.h>
 #include <PLC/ProcControlServer.h>
+#include <PLC/ProcCtrlProxy.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -40,8 +41,8 @@ namespace LOFAR {
 //
 ProcControlServer::ProcControlServer(const string&		hostname, 
 									 const uint16		portnr,
-									 ProcessControl*	PCImpl) :
-	itsPCImpl		(PCImpl),
+									 ProcCtrlProxy*	PCProxy) :
+	itsPCProxy		(PCProxy),
 	itsCommChan		(0),
 	itsInRunState	(false)
 {
@@ -52,9 +53,7 @@ ProcControlServer::ProcControlServer(const string&		hostname,
 // Destructor
 ProcControlServer::~ProcControlServer() 
 {
-	if (itsCommChan) {
-		delete itsCommChan;
-	}
+	delete itsCommChan;
 }
 
 //
@@ -122,46 +121,39 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 		//TODO ???
 		break;
 	case PCCmdDefine:
-		result = itsPCImpl->define();
+		result = itsPCProxy->define();
 		break;
 	case PCCmdInit:	
-		result = itsPCImpl->init();
+		result = itsPCProxy->init();
 		break;
 	case PCCmdRun:
 		sendAnswer = !itsInRunState;
 		itsInRunState = true;
-		itsPCImpl->setRunState();
-		if (!(result = itsPCImpl->run())) {
-			itsPCImpl->clearRunState();
-		}
+		result = itsPCProxy->run();
 		break;
 	case PCCmdPause:
-		itsPCImpl->setPauseCondition(options);	// register condition
-		if (options == PAUSE_OPTION_NOW) {		// if 'direct' clear runstate
-			itsPCImpl->clearRunState();
-		}
-		result = itsPCImpl->pause(options);		// let user evaluate the condition.
+		result = itsPCProxy->pause(options);		// let user evaluate the condition.
 		// when we are still in run-state we should not
 		// send an answer on the pause command yet.
-		if (itsPCImpl->inRunState()) {
+		if (itsPCProxy->inRunState()) {
 			sendAnswer = false;
 		}
 		break;
 	case PCCmdRelease:
-		result = itsPCImpl->release();
+		result = itsPCProxy->release();
 		break;
 	case PCCmdQuit:
-		itsPCImpl->quit();
+		itsPCProxy->quit();
 		sendAnswer = false;			// user should used unregister.
 		break;
 	case PCCmdSnapshot:
-		result = itsPCImpl->snapshot(options);
+		result = itsPCProxy->snapshot(options);
 		break;
 	case PCCmdRecover:
-		result = itsPCImpl->recover (options);
+		result = itsPCProxy->recover (options);
 		break;
 	case PCCmdReinit:
-		result = itsPCImpl->reinit (options);
+		result = itsPCProxy->reinit (options);
 		break;
 	default:
 		//TODO
@@ -169,13 +161,12 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 		break;
 	}
 
-	LOG_DEBUG_STR("sendAnswer:" << sendAnswer << ", itsInRunState: " << itsInRunState << ", pc->inRunState(): " << itsPCImpl->inRunState());
+	LOG_DEBUG_STR("sendAnswer:" << sendAnswer << ", itsInRunState: " << itsInRunState << ", pc->inRunState(): " << itsPCProxy->inRunState());
 
 	// send result to AC
-	if (itsInRunState && !itsPCImpl->inRunState()) {		// just ended the runstate?
+	if (itsInRunState && !itsPCProxy->inRunState()) {		// just ended the runstate?
 		LOG_DEBUG("Sending pause-ack now condition is met");
 		itsInRunState = false;
-		itsPCImpl->setPauseCondition("");
 		sendResult(PCCmdPause, result ? PcCmdMaskOk : 
 						  indeterminate(result) ? PcCmdMaskNotSupported : 0);
 	}
