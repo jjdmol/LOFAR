@@ -18,7 +18,7 @@ def expandRCUMarker(dataPoint, nrRSP):
         print "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet)) \
                                .replace("@subrack@","Subrack"+str(subrack)) \
                                .replace("@RSPBoard@", "RSPBoard"+str(rsp)) \
-                               .replace("@rcu@", "RCU"+str(rcu))+".state"
+                               .replace("@rcu@", "RCU"+str(rcu))+".status.state"
 
 def expandRSPBoardMarker(dataPoint, nrRSP):
     """
@@ -29,7 +29,7 @@ def expandRSPBoardMarker(dataPoint, nrRSP):
         cabinet = rsp / 8
         print "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet)) \
                                .replace("@subrack@","Subrack"+str(subrack)) \
-                               .replace("@RSPBoard@", "RSPBoard"+str(rsp))+".state"
+                               .replace("@RSPBoard@", "RSPBoard"+str(rsp))+".status.state"
 
 def expandTBBoardMarker(dataPoint, nrTBB):
     """
@@ -40,7 +40,7 @@ def expandTBBoardMarker(dataPoint, nrTBB):
         cabinet = tbb / 4
         print "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet)) \
                                .replace("@subrack@","Subrack"+str(subrack)) \
-                               .replace("@TBBoard@", "TBBoard"+str(tbb))+".state"
+                               .replace("@TBBoard@", "TBBoard"+str(tbb))+".status.state"
 
 def expandSubrackMarker(dataPoint, nrRSP):
     """
@@ -51,7 +51,7 @@ def expandSubrackMarker(dataPoint, nrRSP):
     for subrack in range(0, nrSubracks):
         cabinet = subrack / 2
         print "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet)) \
-                               .replace("@subrack@","Subrack"+str(subrack))+".state"
+                               .replace("@subrack@","Subrack"+str(subrack))+".status.state"
 
 def expandCabinetMarker(dataPoint, nrRSP):
 	"""
@@ -60,7 +60,7 @@ def expandCabinetMarker(dataPoint, nrRSP):
 	nrCabinets = nrRSP / 8
 	if nrRSP % 8: nrCabinets += 1
 	for cabinet in range(0, nrCabinets):
-		print "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet))+".state"
+		print "21 "+dataPoint.replace("@cabinet@","Cabinet"+str(cabinet))+".status.state"
 
 
 
@@ -105,9 +105,9 @@ for line in filledLine.findall(open(ControlFile).read()):
 #print "controlList =", controlList
 
 # open outputfile and write top-node of PIC
-print "21 LOFAR.state"
-print "21 LOFAR_PIC.state"
-print "21 LOFAR_PermSW.state"
+print "21 LOFAR.status.state"
+print "21 LOFAR_PIC.status.state"
+print "21 LOFAR_PermSW.status.state"
 
 # construct the rings with stations and the clusters with their nodes
 # ???	???  	C	P	???_PIC_@???@
@@ -118,12 +118,12 @@ for line in central.findall(open(PVSSbasefile).read()):
     if line.find("@station@") >= 0:
         ringStationMask=line.replace("LOFAR_","")
         for RS in ringStations:
-            print "21 "+line.replace("@ring@_@station@", RS)+".state"
+            print "21 "+line.replace("@ring@_@station@", RS)+".status.state"
     # ---
     elif line.find("@ring@") >= 0:
         # for all rings
         for ring in ringDict.keys():
-            print "21 "+line.replace("@ring@", ringDict[ring])+".state"
+            print "21 "+line.replace("@ring@", ringDict[ring])+".status.state"
     # ---
     elif line.find("@node@") >= 0:
         # for all nodes in each cluster
@@ -131,22 +131,22 @@ for line in central.findall(open(PVSSbasefile).read()):
             (name, count) = clusterDict[cluster]
             for nodeNr in range(1, int(count)+1):
                 nodename = "%s%03d" % (name, nodeNr)
-                print "21 "+line.replace("@cluster@_@node@", cluster+"_"+nodename)+".state"
+                print "21 "+line.replace("@cluster@_@node@", cluster+"_"+nodename)+".status.state"
             # for all nodes
         # for all clusters
         # also add the control 'cluster' at this place
         for node in controlList:
-            print "21 "+line.replace("@cluster@_@node@", "Control_"+node)+".state"
+            print "21 "+line.replace("@cluster@_@node@", "Control_"+node)+".status.state"
     # ---
     elif line.find("@cluster@") >= 0:
         # for all clusters
         for cluster in clusterDict.keys():
-            print "21 "+line.replace("@cluster@", cluster)+".state"
+            print "21 "+line.replace("@cluster@", cluster)+".status.state"
         # and the control-section
-        print "21 "+line.replace("@cluster@", "Control")+".state"
+        print "21 "+line.replace("@cluster@", "Control")+".status.state"
     # ---
     else:
-        print "21 "+line+".state"
+        print "21 "+line+".status.state"
         
 # for all expandable lines
 
@@ -154,7 +154,7 @@ for line in central.findall(open(PVSSbasefile).read()):
 software=re.compile("^\w+[ \t]+[^ \t]+[ \t]+C[ \t]+P[ \t]([A-Za-z_]+_PermSW_[^@].*)", \
 					re.IGNORECASE | re.MULTILINE)
 for line in software.findall(open(PVSSbasefile).read()):
-	print "21 MCU001:%s.state" % line
+	print "21 MCU001:%s.status.state" % line
 
 # generate the hardware on each station
 for line in filledLine.findall(open(StationFile).read()):
@@ -184,7 +184,7 @@ for line in filledLine.findall(open(StationFile).read()):
     software=re.compile("^\w+[ \t]+[^ \t]+[ \t]+S[ \t]+P[ \t]([A-Za-z_]+_PermSW_.*)", \
                         re.IGNORECASE | re.MULTILINE)
     for line in software.findall(open(PVSSbasefile).read()):
-        print "21 %s:%s.state" % (name, line)
+        print "21 %s:%s.status.state" % (name, line)
     
 #for all stations
 
