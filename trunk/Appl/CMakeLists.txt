@@ -73,34 +73,6 @@ else (HAVE_SYS_TYPES_H)
 endif (HAVE_SYS_TYPES_H)
 
 ## ------------------------------------------------------------------------------
-## Check for required tools
-
-find_program ( bison_bin bison )
-find_program ( flex_bin  flex  )
-find_program ( yacc_bin  yacc  )
-
-## ------------------------------------------------------------------------------
-## Search for external libraries
-
-## Boost++
-
-include (FindBoost)
-
-if (BOOST_INCLUDES)
-  include_directories (${BOOST_INCLUDES})
-  add_definitions (-DHAVE_BOOST)
-endif (BOOST_INCLUDES)
-
-## casacore
-
-include (FindCASACORE)
-
-if (CASACORE_INCLUDES)
-  include_directories (${CASACORE_INCLUDES})
-  add_definitions (-DHAVE_AIPSPP)
-endif (CASACORE_INCLUDES)
-
-
 ## Commonly used configuration files
 
 set (Appl_config ${Appl_BINARY_DIR}/lofar_config.h)
@@ -115,14 +87,3 @@ include_directories (${Appl_BINARY_DIR})
 add_subdirectory (ApplCommon)
 add_subdirectory (CEP)
 #add_subdirectory (USG)
-
-
-## ==============================================================================
-##
-## Feedback on configuration settings
-##
-## ==============================================================================
-
-message (STATUS "Flex  = ${flex_bin}")
-message (STATUS "Bison = ${bison_bin}")
-message (STATUS "Yacc  = ${yacc_bin}")
