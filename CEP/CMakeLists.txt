@@ -89,34 +89,6 @@ else (HAVE_SYS_TYPES_H)
 endif (HAVE_SYS_TYPES_H)
 
 ## ------------------------------------------------------------------------------
-## Search for external libraries
-
-## Boost++
-
-include (${USG_ROOT}/cmake/FindBoost.cmake)
-
-if (BOOST_INCLUDES)
-  include_directories (${BOOST_INCLUDES})
-  add_definitions (-DHAVE_BOOST)
-endif (BOOST_INCLUDES)
-
-## casacore
-
-include (${USG_ROOT}/cmake/FindCASACORE.cmake)
-
-if (CASACORE_INCLUDES)
-  include_directories (${CASACORE_INCLUDES})
-  add_definitions (-DHAVE_AIPSPP)
-endif (CASACORE_INCLUDES)
-
-## ------------------------------------------------------------------------------
-## Check for required tools
-
-find_program ( bison_bin bison )
-find_program ( flex_bin  flex  )
-find_program ( yacc_bin  yacc  )
-
-## ------------------------------------------------------------------------------
 ## Module header files
 
 include_directories (
@@ -129,17 +101,3 @@ include_directories (
 
 add_subdirectory (CEPFrame)
 add_subdirectory (tinyCEP)
-
-## ==============================================================================
-##
-## Feedback on configuration settings
-##
-## ==============================================================================
-
-message (STATUS "[CEP] Configuration summary")
-message (STATUS "USG_ROOT   = ${USG_ROOT}")
-message (STATUS "CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}")
-message (STATUS "Flex       = ${flex_bin}")
-message (STATUS "Bison      = ${bison_bin}")
-message (STATUS "Yacc       = ${yacc_bin}")
-message (STATUS "HAVE_BOOST = ${HAVE_BOOST}")

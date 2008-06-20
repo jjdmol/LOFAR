@@ -141,20 +141,3 @@ add_subdirectory (Common)
 #add_subdirectory (Math)
 add_subdirectory (Tools)
 add_subdirectory (Transport)
-
-
-## ==============================================================================
-##
-## Feedback on configuration settings
-##
-## ==============================================================================
-
-message (STATUS "[LCS] Configuration summary")
-message (STATUS "USG_ROOT   = ${USG_ROOT}")
-message (STATUS "CMAKE_MODULE_PATH = ${CMAKE_MODULE_PATH}")
-message (STATUS "Flex       = ${flex_bin}")
-message (STATUS "Bison      = ${bison_bin}")
-message (STATUS "Yacc       = ${yacc_bin}")
-message (STATUS "HAVE_BOOST = ${HAVE_BOOST}")
-message (STATUS "BOOST_INCLUDES = ${BOOST_INCLUDES}")
-message (STATUS "HAVE_CASACORE  = ${HAVE_CASACORE}")
