@@ -25,11 +25,13 @@
 
 //# Includes
 #include <Common/LofarLogger.h>
+#include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/DPservice.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <APL/RTDBCommon/RTDButilities.h>
 
 namespace LOFAR {
+  using namespace GCF::TM;
   using namespace GCF::PVSS;
   using namespace GCF::RTDB;
   namespace APL {
@@ -41,13 +43,13 @@ typedef struct RTDBObjState {
 } RTDBobjState_t;
 
 RTDBobjState_t	objStateTable[] = {
-	{	 0,	"Off"			},
-	{	10,	"Operational"	},
-	{	20,	"Maintenance"	},
-	{	30,	"Test"			},
-	{	46,	"Suspicious"	},
-	{	56,	"Broken"		},
-	{	60,	"Not available"	}
+	{	 0,	"'Off'"				},
+	{	10,	"'Operational'"		},
+	{	20,	"'Maintenance'"		},
+	{	30,	"'Test'"			},
+	{	46,	"'Suspicious'"		},
+	{	56,	"'Broken'"			},
+	{	60,	"'Not available'"	}
 };
 
 // Every softwaremodule or hardwarecomponent has a color on the Navigator screens
