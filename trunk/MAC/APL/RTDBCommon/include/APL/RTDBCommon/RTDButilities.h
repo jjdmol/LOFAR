@@ -66,10 +66,12 @@ enum {
 // @param who	name of the program that changes the value.
 // @param objectname	name of the module you like to set the state of.
 // @param newState	the new state (use one of the enum values of above).
-//
+// @param force	when true any state change is allowed otherwise only state-changes 
+//				that 'worsen' the state.
 bool	setObjectState(const string&	who,
 					   const string&	objectName,
-					   uint32			newState);
+					   uint32			newState,
+					   bool				force = false);
 
 
 

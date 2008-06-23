@@ -70,7 +70,7 @@ ClaimMgrTask::~ClaimMgrTask()
 
 // -------------------- static functions --------------------
 //
-// instance(temp)
+// [static] instance(temp)
 //
 ClaimMgrTask* ClaimMgrTask::instance(bool temporary)
 {
@@ -90,7 +90,7 @@ ClaimMgrTask* ClaimMgrTask::instance(bool temporary)
 }
 
 //
-// release()
+// [static] release()
 //
 void ClaimMgrTask::release()
 {
@@ -175,9 +175,9 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 				break;
 			}
 			// request a DPname
-			itsClaimMgrPS->setValue("Request.TypeName",      
+			itsClaimMgrPS->setValue("request.typeName",      
 							GCFPVString(itsObjectType), 0.0, false);
-			itsClaimMgrPS->setValue("Request.NewObjectName", 
+			itsClaimMgrPS->setValue("request.newObjectName", 
 							GCFPVString(itsNameInAppl), 0.0, false);
 			itsClaimMgrPS->flush();
 			itsResolveState = RO_ASKED;
@@ -201,19 +201,19 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 // CS001:ClaimManager.Request.TypeName
 		DPChangedEvent	dpEvent(event);
 		LOG_DEBUG_STR("DP " << dpEvent.DPname << " changed");
-		if (dpEvent.DPname.find("Response.NewObjectName") != string::npos) {
+		if (dpEvent.DPname.find("response.newObjectName") != string::npos) {
 			string	fldContents(((GCFPVString*)(dpEvent.value._pValue))->getValue());
 			ASSERTSTR(fldContents == itsNameInAppl, "CM returned answer for request '" 
 						<< fldContents <<"' iso " << itsNameInAppl);
 			itsFieldsReceived++;
 		}
-		else if (dpEvent.DPname.find("Response.TypeName") != string::npos) {
+		else if (dpEvent.DPname.find("response.typeName") != string::npos) {
 			string	fldContents(((GCFPVString*)(dpEvent.value._pValue))->getValue());
 			ASSERTSTR(fldContents == itsObjectType, "CM returned answer for type '" 
 						<< fldContents <<"' iso " << itsObjectType);
 			itsFieldsReceived++;
 		}
-		else if (dpEvent.DPname.find("Response.DPName") != string::npos) {
+		else if (dpEvent.DPname.find("response.DPName") != string::npos) {
 			itsResultDPname = ((GCFPVString*)(dpEvent.value._pValue))->getValue();
 			itsFieldsReceived++;
 		}

@@ -70,8 +70,8 @@ GCFEvent::TResult MgrTest::doTest(GCFEvent& event, GCFPortInterface& port)
 		itsClaimMgrTask = ClaimMgrTask::instance();
 		ASSERTSTR(itsClaimMgrTask, "Can't construct a claimMgrTask");
 
-		LOG_DEBUG_STR("=@=@= Calling claimManager for 'Observation5'");
-		itsClaimMgrTask->claimObject("Observation", "LOFAR_ObsSW_Observation5", *itsTimerPort);
+		LOG_DEBUG_STR("=@=@= Calling claimManager for 'Observation7'");
+		itsClaimMgrTask->claimObject("Observation", "LOFAR_ObsSW_Observation7", *itsTimerPort);
 		itsTimerPort->setTimer(10.0);
 		break;
 
