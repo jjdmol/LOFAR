@@ -1,4 +1,4 @@
-//#  lofar_thread.h: namespace wrapper for Boost.Thread
+//#  lofar_tribool.h: namespace wrapper for Boost.Tribool
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,44 +20,22 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_THREAD_H
-#define LOFAR_COMMON_THREAD_H
+#ifndef LOFAR_COMMON_TRIBOOL_H
+#define LOFAR_COMMON_TRIBOOL_H
 
 // \file
-// namespace wrapper for Boost.Thread
+// namespace wrapper for Boost.Tribool
 
 #if !defined(HAVE_BOOST)
-#error Boost.Thread classes are required.
+#error Boost.Tribool is required.
 #endif
 
-#ifndef USE_THREADS
-#error Threading support unavailable: it should be explicitly enabled \
-with USE_THREADS
-#endif
-
-#define	BOOST_SP_USE_PTHREADS
-
-#include <boost/thread.hpp>
+#include <boost/logic/tribool.hpp>
 
 namespace LOFAR
 {
-//   using boost::barrier;
-  using boost::condition;
-  using boost::lock_error;
-  using boost::thread_resource_error;
-  using boost::mutex;
-  using boost::try_mutex;
-  using boost::timed_mutex;
-  using boost::call_once;
-  using boost::recursive_mutex;
-  using boost::recursive_try_mutex;
-  using boost::recursive_timed_mutex;
-  using boost::thread;
-  using boost::thread_group;
-  using boost::xtime;
-  using boost::xtime_get;
+  using boost::logic::tribool;
+  using boost::logic::indeterminate;
 }
-
-#define LOFAR_ONCE_INIT BOOST_ONCE_INIT
 
 #endif
