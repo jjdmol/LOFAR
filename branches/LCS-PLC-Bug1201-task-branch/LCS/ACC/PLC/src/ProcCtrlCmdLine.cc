@@ -48,36 +48,36 @@ namespace LOFAR
       int ProcCtrlCmdLine::operator()(const ParameterSet& arg)
       {
         LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
-        bool   ok       = true;
+        bool   err      = false;
         string progName = arg.getString("ProgramName");
         uint   noRuns   = arg.getUint32("NoRuns", 0);
 
         LOG_DEBUG(progName + " starting define");
-        if (!(ok = ok && define())) LOG_ERROR("Error during define()");
+        if (err = err || !define()) LOG_ERROR("Error during define()");
         else {
           LOG_DEBUG(progName + " initializing");
-          if (!(ok = ok && init())) LOG_ERROR("Error during init()");
+          if (err = err || !init()) LOG_ERROR("Error during init()");
           else {
             LOG_DEBUG_STR(progName + " running (noRuns=" << noRuns << ")");
             if (noRuns > 0) 
-              do ok = ok && run(); while (inRunState() && noRuns-- > 0);
+              do err = err || !run(); while (inRunState() && noRuns-- > 0);
             else
-              do ok = ok && run(); while (inRunState());
-            if (!ok) LOG_ERROR("Error during run()");
+              do err = err || !run(); while (inRunState());
+            if (err) LOG_ERROR("Error during run()");
             else {
               LOG_DEBUG(progName + " pausing now");
-              if (!(ok = ok && pause(PAUSE_OPTION_NOW))) 
+              if (err = err || !pause(PAUSE_OPTION_NOW))
                 LOG_ERROR("Error during pause()");
             }
           }
         }
         LOG_DEBUG(progName + " releasing");
-        if (!(ok = ok && release())) LOG_ERROR("Error during release()");
+        if (err = err || !release()) LOG_ERROR("Error during release()");
 
         LOG_DEBUG(progName + " quitting");
-        if (!(ok = ok && quit())) LOG_ERROR("Error during quit()");
+        if (err = err || !quit()) LOG_ERROR("Error during quit()");
 
-        return (!ok);
+        return (err);
       }
 
     } // namespace PLC
