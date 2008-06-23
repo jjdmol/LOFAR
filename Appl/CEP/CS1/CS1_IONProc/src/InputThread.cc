@@ -32,6 +32,10 @@
 #include <BeamletBuffer.h>
 #include <InputThread.h>
 
+#if defined __linux__
+#include <sched.h>
+#endif
+
 namespace LOFAR {
 namespace CS1 {
 
@@ -90,6 +94,21 @@ void *InputThread::logThread(void *)
 void *InputThread::mainLoopStub(void *inputThread)
 {
   std::clog << "InputThread::mainLoopStub()" << std::endl;
+
+#if 1 && __linux__
+  cpu_set_t cpu_set;
+
+  CPU_ZERO(&cpu_set);
+
+  for (unsigned cpu = 1; cpu < 4; cpu ++)
+    CPU_SET(cpu, &cpu_set);
+
+  if (sched_setaffinity(0, sizeof cpu_set, &cpu_set) != 0) {
+    std::clog << "WARNING: sched_setaffinity failed" << std::endl;
+    perror("sched_setaffinity");
+  }
+#endif
+
   reinterpret_cast<InputThread *>(inputThread)->mainLoop();
   return 0;
 }

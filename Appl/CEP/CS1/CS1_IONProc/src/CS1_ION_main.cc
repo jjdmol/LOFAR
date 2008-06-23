@@ -26,14 +26,13 @@
 #include <CS1_Interface/BGL_Configuration.h>
 #include <CS1_Interface/BGL_Mapping.h>
 #include <CS1_Interface/CS1_Parset.h>
+#include <InputSection.h>
+#include <AH_ION_Gather.h>
+#include <Transport/TH_File.h>
 #include <Transport/TH_Null.h>
-#include "InputSection.h"
-#include "AH_ION_Gather.h"
-#include "BGL_Personality.h"
-#include "TH_ZoidServer.h"
-#ifdef HAVE_PACKAGE_VERSION
-#include "Package__Version.h"
-#endif
+#include <Transport/TH_Socket.h>
+#include <TH_ZoidServer.h>
+#include <Package__Version.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -42,6 +41,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <cstring>
+#include <boost/lexical_cast.hpp>
 
 #if defined HAVE_ZOID
 extern "C" {
@@ -54,20 +54,19 @@ using namespace LOFAR;
 using namespace LOFAR::CS1;
 
 
-static char	 **global_argv;
-static unsigned  nrCoresPerPset;
-static unsigned  nrInputSectionRuns;
+static char	   **global_argv;
+static std::string blockID;
+static unsigned    myPsetNumber, nrPsets, nrCoresPerPset;
+static unsigned    nrInputSectionRuns;
 static std::vector<TransportHolder *> clientTHs;
 
 
 static void checkParset(const CS1_Parset &parset)
 {
-#if defined HAVE_BGLPERSONALITY
-  BGLPersonality *personality = getBGLpersonality();
-
-  if (parset.nrPsets() > personality->numPsets())
-    std::cerr << "needs " << parset.nrPsets() << " psets; only " << personality->numPsets() << " available" << std::endl;
-#endif
+  if (parset.nrPsets() > nrPsets) {
+    std::cerr << "needs " << parset.nrPsets() << " psets; only " << nrPsets << " available" << std::endl;
+    exit(1);
+  }
 
 #if 0
   if (parset.sizeBeamletAndSubbandList);
@@ -82,12 +81,22 @@ void createClientTHs(unsigned nrClients)
 {
   clientTHs.resize(nrClients);
 
-  for (unsigned core = 0; core < nrClients; core ++)
+  for (unsigned core = 0; core < nrClients; core ++) {
 #if defined HAVE_ZOID
     clientTHs[core] = new TH_ZoidServer(core);
-#else
+#elif 0
     clientTHs[core] = new TH_Null;
+#elif 0
+    clientTHs[core] = new TH_Socket(boost::lexical_cast<string>(5000 + core));
+
+    while (!clientTHs[core]->init())
+      usleep(10000);
+#else
+    std::string filename(std::string("/tmp/sock.") + boost::lexical_cast<string>(core));
+    mknod(filename.c_str(), 0666 | S_IFIFO, 0);
+    clientTHs[core] = new TH_File(filename, TH_File::Write);
 #endif
+  }
 }
 
 
@@ -117,33 +126,43 @@ static void configureCNs(const CS1_Parset &parset)
   configuration.beamlet2beams()           = parset.beamlet2beams();
   configuration.subband2Index()           = parset.subband2Index();
 
-  for (unsigned core = 0; core < parset.nrCoresPerPset(); core ++) {
-    std::clog << "configure core " << core << std::endl;
+  std::clog << "configuring " << nrCoresPerPset << " cores ... ";
+  std::clog.flush();
+
+  for (unsigned core = 0; core < nrCoresPerPset; core ++) {
     command.write(clientTHs[core]);
     configuration.write(clientTHs[core]);
   }
+
+  std::clog << "done" << std::endl;
 }
 
 
 static void unconfigureCNs(CS1_Parset &parset)
 {
+  std::clog << "unconfiguring " << nrCoresPerPset << " cores ... ";
+  std::clog.flush();
+
   BGL_Command command(BGL_Command::POSTPROCESS);
 
-  for (unsigned core = 0; core < parset.nrCoresPerPset(); core ++) {
-    std::clog << "unconfigure core " << core << std::endl;
+  for (unsigned core = 0; core < nrCoresPerPset; core ++)
     command.write(clientTHs[core]);
-  }
+
+  std::clog << "done" << std::endl;
 }
 
 
 static void stopCNs()
 {
+  std::clog << "stopping " << nrCoresPerPset << " cores ... ";
+  std::clog.flush();
+
   BGL_Command command(BGL_Command::STOP);
 
-  for (unsigned core = 0; core < nrCoresPerPset; core ++) {
-    std::clog << "stopping core " << core << std::endl;
+  for (unsigned core = 0; core < nrCoresPerPset; core ++)
     command.write(clientTHs[core]);
-  }
+
+  std::clog << "done" << std::endl;
 }
 
 
@@ -152,7 +171,7 @@ void *input_thread(void *parset)
   std::clog << "starting input thread" << std::endl;
 
   try {
-    InputSection inputSection(clientTHs);
+    InputSection inputSection(clientTHs, myPsetNumber);
 
     inputSection.preprocess(static_cast<CS1_Parset *>(parset));
 
@@ -197,9 +216,7 @@ void *gather_thread(void *argv)
 void *master_thread(void *)
 {
   std::string type = "brief";
-#ifdef HAVE_PACKAGE_VERSION
   Version::show<CS1_IONProcVersion> (std::clog, "CS1_IONProc", type);
-#endif
   
   std::clog << "starting master_thread" << std::endl;
 
@@ -219,12 +236,6 @@ void *master_thread(void *)
 #endif
 
     configureCNs(cs1_parset);
-
-#if defined HAVE_BGLPERSONALITY
-    unsigned myPsetNumber = getBGLpersonality()->getPsetNum();
-#else
-    unsigned myPsetNumber = 0;
-#endif
 
     if (cs1_parset.inputPsetIndex(myPsetNumber) >= 0) {
 #if 0
@@ -335,18 +346,53 @@ extern "C"
 
 inline static void redirect_output()
 {
-#if defined HAVE_BGLPERSONALITY
+#if defined HAVE_ZOID
   int  fd;
-  char file_name[64], block_id[17];
+  char file_name[64];
   
-  getBGLpersonality()->BlockID(block_id, 16);
-  block_id[16] = '\0'; // just in case it was not already '\0' terminated
- 
-  sprintf(file_name, "run.CS1_IONProc.%s.%u", block_id, getBGLpersonality()->getPsetNum());
+  sprintf(file_name, "run.CS1_IONProc.%s.%u", blockID.c_str(), myPsetNumber);
 
   if ((fd = open(file_name, O_CREAT | O_TRUNC | O_RDWR, 0666)) < 0 || dup2(fd, 1) < 0 || dup2(fd, 2) < 0)
       perror("redirecting stdout/stderr");
 #endif
+}
+
+
+static void tryToGetPersonality()
+{
+  myPsetNumber = 0;
+  nrPsets      = 1;
+
+  try {
+    ACC::APS::ParameterSet personality("/proc/personality.sh");
+
+#if defined HAVE_ZOID // compiler bug: exceptions cause crashes
+    try {
+      myPsetNumber = personality.getUint32("BGL_PSETNUM");
+      nrPsets	   = personality.getUint32("BGL_NUMPSETS");
+      blockID	   = personality.getString("BGL_BLOCKID");
+
+      std::clog << " myPsetNumber : " << myPsetNumber
+		<< " nrPsets : " << nrPsets
+		<< " blockID : " << blockID
+		<< std::endl;
+    } catch (std::exception& ex) {
+      std::cerr << ex.what() << std::endl;
+
+    } catch (...) {
+      std::cerr << "Caught unknown exception"  << std::endl;
+      
+    }
+#else
+    try {
+      myPsetNumber = personality.getUint32("BG_PSETNUM");
+      nrPsets	   = personality.getUint32("BG_NUMPSETS");
+      blockID	   = personality.getString("BG_BLOCKID");
+    } catch (...) {
+    }
+#endif
+  } catch (...) {
+  }
 }
 
 
@@ -355,6 +401,7 @@ inline static void redirect_output()
 void lofar__init(int nrComputeCores)
 {
   nrCoresPerPset = nrComputeCores;
+  tryToGetPersonality();
   redirect_output();
   std::clog << "begin of lofar__init" << std::endl;
 
@@ -415,6 +462,7 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  tryToGetPersonality();
   master_thread(0);
   deleteClientTHs();
   return 0;
