@@ -425,7 +425,7 @@ void claimCallback(
         // same only claimdate can be altered
         if (typeNames[i] == strTypeName &&
             newObjectNames[i] == strNewObjectName &&
-            DPNames[i] == strDP && !found) {
+            DPNames[i] == substr(strDP,DPSUB_DP) && !found) {
           
           if (bDebug) DebugN("claim.ctl:claimCallback|Found type and Objectname and DPname are the same, refresh Cache entry Claimdate");
           dynRemove(  claimDates,i); 
@@ -436,7 +436,7 @@ void claimCallback(
         // item has been reused
  	      if (typeNames[i] == strTypeName &&
    	        newObjectNames[i] != strNewObjectName &&
-     	      DPNames[i] == strDP && !found) {
+     	      DPNames[i] == dpSubStr(strDP,DPSUB_DP) && !found) {
                 
           if (bDebug) DebugN("claim.ctl:claimCallback|type and DPname are the same, but ObjectName is different, Cache entry has been reused");
                 
@@ -454,7 +454,7 @@ void claimCallback(
 	      // append new info
   	    dynAppend(typeNames,strTypeName);
     	  dynAppend(newObjectNames,strNewObjectName);
-      	dynAppend(DPNames,strDP);
+      	dynAppend(DPNames,dpSubStr(strDP,DPSUB_DP));
       	dynAppend(claimDates,claimDate);
       }
       
@@ -468,7 +468,7 @@ void claimCallback(
     if (bDebug) DebugN("claim.ctl:claimCallback|Set ClaimManagers Response point");
     // for master and client, if not strDP == empty
     dpSet(
-      "claimManager.response.DPName"       , strDP,
+      "claimManager.response.DPName"       , dpSubStr(strDP,DPSUB_DP),
       "claimManager.response.typeName"     , strTypeName,
       "claimManager.response.newObjectName", strNewObjectName,
       "claimManager.response.claimDate"    , claimDate );

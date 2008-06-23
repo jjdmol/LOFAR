@@ -13,7 +13,7 @@ PANEL,-1 -1 1013 750 N "_3DFace" 0
   TopLabel.text(database+\" HardwareMonitor\");
   
   // start the logging process
-  navPanel_showLogging(baseDP);
+  showLogging(baseDP);
   
   // set the hardware selectable items
   dyn_string result=\"\";  
