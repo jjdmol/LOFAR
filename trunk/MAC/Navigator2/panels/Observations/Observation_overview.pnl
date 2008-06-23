@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 1000 438 N "_3DFace" 0
+PANEL,-1 -1 1000 561 N "_3DFace" 0
 "main()
 {
   baseDP         = g_currentDatapoint;

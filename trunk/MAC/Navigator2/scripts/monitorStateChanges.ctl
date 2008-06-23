@@ -28,6 +28,7 @@
 // 
 
 global bool isConnected=false;
+global bool bDebug = true;
 
 main () {
 
@@ -50,13 +51,16 @@ main () {
 ///////////////////////////////////////////////////////////////////////////
 void subscribeObjectStateChange() {
 
-  LOG_TRACE("monitorStateChanges.ctl:subscribeObjectStateChange|entered");
+  if (bDebug){
+     DebugN("monitorStateChanges.ctl:subscribeObjectStateChange|entered");
+   }
   // ROutine to connnect to the __navObjectState point to trigger statechanges
   // So that childState points can be set/reset accordingly.
 
   dpConnect("objectStateTriggered",false,"__navObjectState.DPName",
             "__navObjectState.stateNr",
-            "__navObjectState.message");
+            "__navObjectState.message",
+            "__navObjectState.force");
   
   //Find out the Database we are running on
   string database=getSystemName();
@@ -91,7 +95,7 @@ void connectMainPoints() {
   if (dpExists("_DistConnections.Dist.ManNums")) {
     dpConnect("distSystemTriggered",true,"_DistConnections.Dist.ManNums");
   } else {
-    LOG_WARN("monitorStateChanges.ctl:connectMainPoints|_DistConnections point not found, no trigger available for dist System updates.");  
+    DebugN("monitorStateChanges.ctl:connectMainPoints|_DistConnections point not found, no trigger available for dist System updates.");  
   }
 
 }
@@ -105,7 +109,7 @@ void connectMainPoints() {
 ///////////////////////////////////////////////////////////////////////////
 void distSystemTriggered(string dp1, dyn_int systemList) {
 
-  LOG_TRACE("monitorStateChanges.ctl:distSystemTriggered|entered");
+  if (bDebug) DebugN("monitorStateChanges.ctl:distSystemTriggered|entered");
 
   // Check all states from LOFAR_PermSW.state in all remote stations.
   // if one of them changes, and the state is not equal to old state, update the MCU one
@@ -120,16 +124,16 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
   string queryObservation = "SELECT '_original.._value' FROM '{LOFAR_ObsSW_Observation*.status.state,LOFAR_ObsSW_Observation*.status.childState}' REMOTE ALL WHERE _DPT = \"StnObservation\" SORT BY 1 DESC";
 
 
-  LOG_DEBUG("monitorStateChanges.ctl:distSystemTriggered|isConnected: "+isConnected);
+  if (bDebug) DebugN("monitorStateChanges.ctl:distSystemTriggered|isConnected: "+isConnected);
   if (isConnected) {
     if (dpQueryDisconnect("stationStateTriggered","PermSW") < 0) {
-      LOG_DEBUG("monitorStateChanges.ctl:distSystemTriggered|disconnect PermSW: "+getLastError());
+      if (bDebug) DebugN("monitorStateChanges.ctl:distSystemTriggered|disconnect PermSW: "+getLastError());
     }
     if (dpQueryDisconnect("stationStateTriggered","PIC") < 0) {
-      LOG_DEBUG("monitorStateChanges.ctl:distSystemTriggered|disconnect PIC: "+getLastError());
+      if (bDebug) DebugN("monitorStateChanges.ctl:distSystemTriggered|disconnect PIC: "+getLastError());
     }
     if (dpQueryDisconnect("stationStateTriggered","Observation") < 0) {
-      LOG_DEBUG("monitorStateChanges.ctl:distSystemTriggered|disconnect Observation: "+getLastError());
+      if (bDebug) DebugN("monitorStateChanges.ctl:distSystemTriggered|disconnect Observation: "+getLastError());
     }
   }
 
@@ -151,7 +155,7 @@ void distSystemTriggered(string dp1, dyn_int systemList) {
 // Added 02-04-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
-  LOG_TRACE("monitorStateChanges.ctl:stationStateTriggered|entered");
+  if (bDebug) DebugN("monitorStateChanges.ctl:stationStateTriggered|entered");
 
   string state    = "";
   string station = "";
@@ -161,7 +165,7 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
 
 
   for(int z=2;z<=dynlen(tab);z++){
-    LOG_DEBUG("Found : ",tab[z]);
+    if (bDebug) DebugN("monitorStateChanges.ctl:stationStateTriggered|Found : ",tab[z]);
 
     state = tab[z][2];
     string dp=tab[z][1];
@@ -179,7 +183,7 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
     armName=navFunct_getArmFromStation(station);
 
 
-    LOG_DEBUG("monitorStateChanges.ctl:stationStateTriggered|station : ",station, " DP: " ,datapoint," element: ",element);
+    if (bDebug) DebugN("monitorStateChanges.ctl:stationStateTriggered|station : ",station, " DP: " ,datapoint," element: ",element);
 
     // if all needed values are available we can start doing the major update.
     if (state >-1 && datapoint != "" && station != "" && armName != "" && element != ""){
@@ -201,21 +205,27 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
 ///////////////////////////////////////////////////////////////////////////
 void objectStateTriggered(string dp1, string trigger,
                           string dp2, int state,
-                          string dp3, string message) {
+                          string dp3, string message,
+                          string dp4, bool force) {
   // __navObjectState change.
   // This point should have points like:
   //
   // LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0_RCU0.state
   // 1 (= good)
   // a msg indicating extra comments on the state
-  //                                     
+  // true/false
+  //
+  // The force bool will be used to monitor if lowering a state > 10 is allowed.
+  // false means NO, true means force a change.
+  //                               
   // This State should be set to childState=bad in all upper (LOFAR-PIC_Cabinet0_Subrack0_RSPBoard0) treenodes
   // ofcourse we need to monitor if this statechange is allowed.
+  
 
 
   if (trigger == "") return;
 
-  LOG_TRACE("monitorStateChanges.ctl:objectStateTriggered|entered with trigger:", trigger);
+  if (bDebug) DebugN("monitorStateChanges.ctl:objectStateTriggered|entered with trigger:", trigger);
 
   string datapoint = "";
   string element   = "";
@@ -234,7 +244,7 @@ void objectStateTriggered(string dp1, string trigger,
     if (start >= 0) {
    	  element = "status.childState";
     } else {
-      LOG_DEBUG("monitorStateChanges.ctl:objectStateTriggered|ERROR: No state nor childState found in DPName");
+      if (bDebug) DebugN("monitorStateChanges.ctl:objectStateTriggered|ERROR: No state nor childState found in DPName");
       return;
     }
   }
@@ -243,13 +253,13 @@ void objectStateTriggered(string dp1, string trigger,
   // the remainder is used as path
   datapoint = (substr(trigger,0,start));
 
-  LOG_DEBUG("monitorStateChanges.ctl:objectStateTriggered|state:  " + state + " DP: " + datapoint + " Element: " + element + " Message: " + message);
+  if (bDebug) DebugN("monitorStateChanges.ctl:objectStateTriggered|state:  " + state + " DP: " + datapoint + " Element: " + element + " Message: " + message);
   // if all needed values are available we can start doing the major update.
   if (state >= 0 && datapoint != "" && element != "" && dpExists(datapoint+"."+element)){
 
-    setStates(datapoint,element,state,message,false);
+    setStates(datapoint,element,state,message,force,false);
   } else {
-    LOG_ERROR("monitorStateChanges.ctl:objectStateTriggered|result: not complete command, or database could not be found."+ getLastError());
+    DebugN("monitorStateChanges.ctl:objectStateTriggered|result: not complete command, or database could not be found."+ getLastError());
   }
 }
 
@@ -263,15 +273,16 @@ void objectStateTriggered(string dp1, string trigger,
 // element        = state or childState needs 2b checked 
 // state          = new state
 // message        = message if applied by __navObjectState
+// force          = boolean indicating if states > 10 are allowed to be lowered or not
 // stationTrigger = check if the stationTrigger fired this. In that case the state/childState
 //                  is a pure copy from the station to the MCU point, so childState should be 
 //                  treated as state and just be copied, not evaluated.
 //
 // Added 3-4-2007 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
-void setStates(string datapoint,string element,int state,string message,bool stationTrigger) {
+void setStates(string datapoint,string element,int state,string message,bool force,bool stationTrigger) {
 
-  LOG_TRACE("monitorStateChanges.ctl:setStates|entered with datapoint: "+ datapoint+" element: "+ element+ " state: "+state+" message: "+message);
+  if (bDebug) DebugN("monitorStateChanges.ctl:setStates|entered with datapoint: "+ datapoint+" element: "+ element+ " state: "+state+" message: "+message);
 
   string dp;
   
@@ -287,26 +298,37 @@ void setStates(string datapoint,string element,int state,string message,bool sta
     int aVal;
     dpGet(datapoint+"."+element,aVal);
     if (aVal != state && state > -1) {
-      dpSet(datapoint+"."+element,state);
+      if (force) {
+        dpSet(datapoint+"."+element,state);
+      } else {
+        if (aVal <=10 && state <= 10) {
+          dpSet(datapoint+"."+element,state);
+        } else if (aVal <= state) {
+          dpSet(datapoint+"."+element,state);
+        } else {
+          if (bDebug) DebugN("monitorStateChanges.ctl:setStates|State not changed because of force conditions");
+          return;
+        }
+      }
       
       dp = getPathLessOne(datapoint);
       datapoint=dp;
     } else {
-      LOG_DEBUG("monitorStateChanges.ctl:setStates|Equal value or state < 0, no need to set new state");
+      if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Equal value or state < 0, no need to set new state");
       return;
     }
 
   } else if (element != "status.childState") {
-    LOG_ERROR("monitorStateChanges.ctl:setStates|Error. unknown element in stateChange trigger: ", element);
+    DebugN("monitorStateChanges.ctl:setStates|Error. unknown element in stateChange trigger: ", element);
     return;
   }
 
   
-  LOG_DEBUG( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+datapoint);
+  if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+datapoint);
   // set childState if needed, if succeeded set childState for one level less also
   // continue while true
   while ( setChildState(datapoint,state)) {
-    LOG_DEBUG( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+datapoint);
+    if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+datapoint);
     dp = getPathLessOne(datapoint);
     datapoint=dp;
   }
@@ -323,7 +345,7 @@ void setStates(string datapoint,string element,int state,string message,bool sta
 ///////////////////////////////////////////////////////////////////////////
 bool setChildState(string Dp,int state) {
 
-  LOG_TRACE("monitorStateChanges.ctl:setChildState| entered with DP: "+Dp+" stateVal: "+ state);
+  if (bDebug) DebugN("monitorStateChanges.ctl:setChildState| entered with DP: "+Dp+" stateVal: "+ state);
 
   if (state < 0 || Dp == "") return false;
 
@@ -333,7 +355,7 @@ bool setChildState(string Dp,int state) {
 
   // take present value for comparing later.
   dpGet(Dp+".status.childState",aVal);
-  LOG_DEBUG("monitorStateChanges.ctl:setChildState|"+Dp+".status.childState = "+aVal);
+  if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|"+Dp+".status.childState = "+aVal);
 
 
   // Query for all state and childState in the tree from this datapoint down.
@@ -354,14 +376,14 @@ bool setChildState(string Dp,int state) {
   }
 
   string query = "SELECT '_original.._value' FROM '{"+Dp+"_*.status.childState,"+Dp+"_*.status.state,"+Dp+"_*.status.childState,"+Dp+"_*.status.state}' SORT BY 1 DESC";
-  LOG_DEBUG("monitorStateChanges.ctl:setChildState|Query: ",query);
+  if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Query: ",query);
   err = dpQuery(query, tab);
 
 
 
    
   if (err < 0) {
-    LOG_ERROR("monitorStateChanges.ctl:setChildState|Error " + err + " while getting query.");
+    if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Error " + err + " while getting query.");
     return false;
   }
  
@@ -369,7 +391,7 @@ bool setChildState(string Dp,int state) {
   int maxElements= dynlen(aS1)+1; 
   int foundElements=0;
 
-  LOG_DEBUG("monitorStateChanges.ctl:setChildState|max elements for DP  after _ split: "+maxElements);
+  if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|max elements for DP  after _ split: "+maxElements);
 
   // first check if the last element still has . seperated elements
   dyn_string aS2=strsplit(aS1[dynlen(aS1)],".");
@@ -377,13 +399,13 @@ bool setChildState(string Dp,int state) {
     maxElements+=dynlen(aS2)-1; 
   }
 
-  LOG_DEBUG("monitorStateChanges.ctl:setChildState|max elements for DP  after . split: "+maxElements);
+  if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|max elements for DP  after . split: "+maxElements);
 
   for(z=2;z<=dynlen(tab);z++) {
     dyn_string aStr1=strsplit((string)tab[z][1],"_");
     foundElements=dynlen(aStr1);
 
-    LOG_DEBUG("monitorStateChanges.ctl:setChildState|Working with dp: " +(string)tab[z][1]+ " that has "+ foundElements +" elements");
+    if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Working with dp: " +(string)tab[z][1]+ " that has "+ foundElements +" elements");
 
     // first check if the last element still has . seperated elements but skip the status.state status.childState
     dyn_string aStr2=strsplit(aStr1[dynlen(aStr1)],".");
@@ -391,10 +413,10 @@ bool setChildState(string Dp,int state) {
       foundElements+=dynlen(aStr2)-3; 
     }
     
-    LOG_DEBUG("monitorStateChanges.ctl:setChildState|and after . check has " + foundElements +" elements");
+    if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|and after . check has " + foundElements +" elements");
 
     if(foundElements <= maxElements) {
-      LOG_INFO("monitorStateChanges.ctl:setChildState|Have to check DP: ",tab[z][1], " state: ", tab[z][2]);
+      if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|Have to check DP: ",tab[z][1], " state: ", tab[z][2]);
 
       // check if found state > new state
       if ((int)tab[z][2] > state) {
@@ -402,7 +424,7 @@ bool setChildState(string Dp,int state) {
       }
       // check if state != oldVal
       if (state != aVal && state > -1 ) {
-        LOG_INFO("monitorStateChanges.ctl:setChildState|state not equal oldstate(",aVal,") so set ",Dp+".status.childState to: ",state);
+        if (bDebug) DebugN("monitorStateChanges.ctl:setChildState|state not equal oldstate(",aVal,") so set ",Dp+".status.childState to: ",state);
         dpSet(Dp+".status.childState",state);
         return true;
       }
@@ -426,7 +448,7 @@ bool setChildState(string Dp,int state) {
 // Added 07-12-2008 A.Coolen
 ///////////////////////////////////////////////////////////////////////////
 string getPathLessOne(string path) {
-  LOG_TRACE("monitorStateChanges.ctl:getPathLessOne|entered with: " + path);
+  if (bDebug) DebugN("monitorStateChanges.ctl:getPathLessOne|entered with: " + path);
   
   string returnVal="";
   dyn_string aS;
@@ -441,11 +463,11 @@ string getPathLessOne(string path) {
   	for (int i=2; i< dynlen(aS);i++) {
       returnVal += "."+aS[i];
     }
-    LOG_DEBUG("monitorStateChanges.ctl:getPathLessOne| returns "+returnVal);
+    if (bDebug) DebugN("monitorStateChanges.ctl:getPathLessOne| returns "+returnVal);
     return returnVal;
   }
   
-  LOG_DEBUG("monitorStateChanges.ctl:getPathLessOne|No . in Path found, continueing with _");
+  if (bDebug) DebugN("monitorStateChanges.ctl:getPathLessOne|No . in Path found, continueing with _");
   // if no . found then look if there is a _ in the pathname, 
   // if so strip the last one plus _ and return the result
   // and we are done
@@ -456,7 +478,7 @@ string getPathLessOne(string path) {
   	for (int i=2; i< dynlen(aS);i++) {
       returnVal += "_"+aS[i];
     }
-    LOG_DEBUG("monitorStateChanges.ctl:getPathLessOne|returns "+returnVal);
+    if (bDebug) DebugN("monitorStateChanges.ctl:getPathLessOne|returns "+returnVal);
     return returnVal;
   }
   
