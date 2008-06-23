@@ -1,4 +1,4 @@
-//#  lofar_smartptr.h: basic header for the Smartptr package
+//#  lofar_smartptr.h: namespace wrapper for Boost Smart Pointers
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,6 +24,7 @@
 #define LOFAR_COMMON_SMARTPTR_H
 
 // \file
+// namespace wrapper for Boost Smart Pointers
 
 #if !defined(HAVE_BOOST)
 #error Boost Smart Pointer classes are required.

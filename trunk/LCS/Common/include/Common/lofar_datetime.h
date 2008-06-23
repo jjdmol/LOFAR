@@ -1,4 +1,4 @@
-//# lofar_datetime.h:
+//# lofar_datetime.h: namespace wrapper for Boost.Date_Time Posix classes
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,6 +24,11 @@
 #define LOFAR_COMMON_DATETIME_H
 
 // \file
+// namespace wrapper for Boost.Date_Time Posix classes
+
+#if !defined(HAVE_BOOST)
+#error Boost.Date_Time is required.
+#endif
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <time.h>
