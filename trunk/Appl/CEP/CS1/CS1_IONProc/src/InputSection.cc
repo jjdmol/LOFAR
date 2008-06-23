@@ -26,7 +26,6 @@
 //# Includes
 #include <Common/Timer.h>
 #include <Common/PrettyUnits.h>
-#include <BGL_Personality.h>
 #include <InputSection.h>
 #include <BeamletBuffer.h>
 #include <Connector.h>
@@ -57,20 +56,16 @@ static TransportHolder *rawDataTH;
 #endif
 
 
-InputSection::InputSection(const std::vector<TransportHolder *> &clientTHs)
+InputSection::InputSection(const std::vector<TransportHolder *> &clientTHs, unsigned psetNumber)
 :
   itsInputThread(0),
   itsInputTH(0),
   itsClientTHs(clientTHs),
+  itsPsetNumber(psetNumber),
   itsBBuffer(0),
   itsDelayComp(0),
   itsDelayTimer("delay")
 {
-#if defined HAVE_BGLPERSONALITY
-  itsPsetNumber	= getBGLpersonality()->getPsetNum();
-#else
-  itsPsetNumber	= 0;
-#endif
 }
 
 

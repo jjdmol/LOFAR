@@ -48,7 +48,7 @@ namespace CS1 {
 // and distributes it per subband to the Blue Gene/L
 class InputSection {
   public:
-    InputSection(const std::vector<TransportHolder *> &);
+    InputSection(const std::vector<TransportHolder *> &, unsigned psetNumber);
     ~InputSection();
   
     void preprocess(const CS1_Parset *ps);
