@@ -29,7 +29,8 @@
 // Proxy for the ProcessControl class hierarchy.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-#include <PLC/ProcessControl.h>
+#include <Common/lofar_tribool.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -40,6 +41,9 @@ namespace LOFAR
 
     namespace PLC 
     {
+      //# Forward declarations
+      class ProcessControl;
+
       // \addtogroup PLC
       // @{
 
@@ -53,23 +57,27 @@ namespace LOFAR
       // - ProcCtrlRemote, which puts the process under control of ACC;
       //   i.e.\ ACC determines which functions of ProcessControl will be
       //   called when.
-      class ProcCtrlProxy : public ProcessControl
+      class ProcCtrlProxy
       {
       public:
-	// Destructor
-	virtual ~ProcCtrlProxy();
+        // Destructor
+        virtual ~ProcCtrlProxy();
 
         //## ---- Implementation of the ProcessControl interface ---- ##//
-	virtual tribool	define 	 ();
-	virtual tribool	init 	 ();
-	virtual tribool	run 	 ();
-	virtual tribool	pause  	 (const	string&	condition);
-	virtual tribool	release	 ();
-	virtual tribool	quit  	 ();
-	virtual tribool	snapshot (const string&	destination);
-	virtual tribool	recover  (const string&	source);
-	virtual tribool	reinit	 (const string&	configID);
-	virtual string	askInfo  (const string& keylist);
+        tribool define   ();
+        tribool init     ();
+        tribool run      ();
+        tribool pause    (const string& condition);
+        tribool release  ();
+        tribool quit     ();
+        tribool snapshot (const string& destination);
+        tribool recover  (const string& source);
+        tribool reinit   (const string& configID);
+        string  askInfo  (const string& keylist);
+
+        bool inRunState() const;
+        void setRunState();
+        void clearRunState();
 
       protected:
         // Constructor. Keep a pointer to the "real" Process Control object.
@@ -82,11 +90,11 @@ namespace LOFAR
         // Start the process controller. Arguments can be passed in a generic
         // way, using a ParameterSet. This method must be implemented by the
         // derived classes.
-        virtual int exec(const APS::ParameterSet& arg) = 0;
+        virtual int operator()(const APS::ParameterSet& arg) = 0;
 
       private:
         // Pointer to the "real" ProcessControl object.
-        ProcessControl*  itsProcCtrl;
+        ProcessControl* itsProcCtrl;
       };
 
       // @}

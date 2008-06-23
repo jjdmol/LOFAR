@@ -42,16 +42,17 @@ namespace LOFAR
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       }
 
-      int ProcCtrlRemote::exec(const ParameterSet& arg)
+      int ProcCtrlRemote::operator()(const ParameterSet& arg)
       {
         LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
 
         string prefix = globalParameterSet()->getString("_parsetPrefix");
-			
+
         // connect to Application Controller
-        ProcControlServer pcServer(globalParameterSet()->getString(prefix+"_ACnode"),
-                                   globalParameterSet()->getUint16(prefix+"_ACport"),
-                                   this);
+        ProcControlServer 
+          pcServer(globalParameterSet()->getString(prefix+"_ACnode"),
+                   globalParameterSet()->getUint16(prefix+"_ACport"),
+                   this);
 
         // Tell AC who we are.
         string procID = arg.getString("ProcID");
@@ -89,7 +90,7 @@ namespace LOFAR
           }
         }
         LOG_INFO_STR("Shutting down: ApplicationController");
-        pcServer.unregisterAtAC("");		// send to AC before quiting
+        pcServer.unregisterAtAC("");    // send to AC before quiting
 
         return (!ok);
       }

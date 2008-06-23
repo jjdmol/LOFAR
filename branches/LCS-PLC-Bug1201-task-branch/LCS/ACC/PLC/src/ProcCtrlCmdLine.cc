@@ -25,6 +25,7 @@
 
 //# Includes
 #include <PLC/ProcCtrlCmdLine.h>
+#include <PLC/PCCmd.h>
 #include <APS/ParameterSet.h>
 #include <Common/LofarLogger.h>
 
@@ -44,7 +45,7 @@ namespace LOFAR
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       }
 
-      int ProcCtrlCmdLine::exec(const ParameterSet& arg)
+      int ProcCtrlCmdLine::operator()(const ParameterSet& arg)
       {
         LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW, "");
         bool   ok       = true;

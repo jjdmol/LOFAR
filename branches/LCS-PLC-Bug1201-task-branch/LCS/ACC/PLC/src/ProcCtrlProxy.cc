@@ -25,6 +25,7 @@
 
 //# Includes
 #include <PLC/ProcCtrlProxy.h>
+#include <PLC/ProcessControl.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR
@@ -40,61 +41,74 @@ namespace LOFAR
         LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       }
 
-      tribool	ProcCtrlProxy::define 	 ()
+      tribool ProcCtrlProxy::define()
       {
         return itsProcCtrl->define();
       }
 
-      tribool	ProcCtrlProxy::init 	 ()
+      tribool ProcCtrlProxy::init()
       {
         return itsProcCtrl->init();
       }
 
-      tribool	ProcCtrlProxy::run 	 ()
+      tribool ProcCtrlProxy::run()
       {
-        tribool result;
         setRunState();
-        result = itsProcCtrl->run();
+        tribool result = itsProcCtrl->run();
         if (!result) clearRunState();
         return result;
       }
 
-      tribool	ProcCtrlProxy::pause  	 (const	string&	condition)
+      tribool ProcCtrlProxy::pause(const string& condition)
       {
         if (condition == PAUSE_OPTION_NOW) clearRunState();
         return itsProcCtrl->pause(condition);
       }
 
-      tribool	ProcCtrlProxy::release	 ()
+      tribool ProcCtrlProxy::release()
       {
         return itsProcCtrl->release();
       }
 
-      tribool	ProcCtrlProxy::quit  	 ()
+      tribool ProcCtrlProxy::quit()
       {
         return itsProcCtrl->quit();
       }
 
-      tribool	ProcCtrlProxy::snapshot (const string&	destination)
+      tribool ProcCtrlProxy::snapshot(const string& destination)
       {
         return itsProcCtrl->snapshot(destination);
       }
 
-      tribool	ProcCtrlProxy::recover  (const string&	source)
+      tribool ProcCtrlProxy::recover(const string& source)
       {
         return itsProcCtrl->recover(source);
       }
 
-      tribool	ProcCtrlProxy::reinit	 (const string&	configID)
+      tribool ProcCtrlProxy::reinit(const string& configID)
       {
         return itsProcCtrl->reinit(configID);
       }
 
-      string	ProcCtrlProxy::askInfo  (const string& keylist)
+      string ProcCtrlProxy::askInfo(const string& keylist)
       {
         return itsProcCtrl->askInfo(keylist);
       }
 
+      bool ProcCtrlProxy::inRunState() const
+      {
+        return itsProcCtrl->inRunState();
+      }
+
+      void ProcCtrlProxy::setRunState()
+      {
+        itsProcCtrl->setRunState();
+      }
+
+      void ProcCtrlProxy::clearRunState()
+      {
+        itsProcCtrl->clearRunState();
+      }
 
       //## -------- P r o t e c t e d   m e t h o d s   -------- ##//
 

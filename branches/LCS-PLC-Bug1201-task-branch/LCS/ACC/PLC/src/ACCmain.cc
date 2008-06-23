@@ -89,6 +89,7 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 
 	string	programName(basename(argv[0]));
 	bool	ACCmode(true);
+        int     result(0);
 
 	// Check invocation syntax: [ACC] parsetfile UniqProcesName
 	// When we are called by ACC the first argument is ACC.
@@ -113,33 +114,34 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
                 // Create the correct ProcCtrlProxy and start it. 
                 if (ACCmode) {
                   arg.add("ProcID", argv[3]);
-                  ProcCtrlRemote(theProcess).exec(arg);
+                  result = (ProcCtrlRemote(theProcess))(arg);
                 } 
                 else {
                   arg.add("NoRuns", argv[argc-1]);
-                  ProcCtrlCmdLine(theProcess).exec(arg);
+                  result = (ProcCtrlCmdLine(theProcess))(arg);
                 }
 	} 
 	catch (Exception& ex) {
 		LOG_FATAL_STR("Caught exception: " << ex << endl);
-		LOG_FATAL_STR(programName << " terminated by exception!");
-		return (1);
+		result = 1;
 	} 
 	catch (std::exception& ex) {
 		LOG_FATAL_STR("Caught std::exception: " << ex.what());
-		return (1);
+		result = 1;
 	} 
 	catch (...) {
-		LOG_FATAL_STR("Caught unknown exception, exitting");
-		return (1);
+		LOG_FATAL_STR("Caught unknown exception.");
+		result = 1;
 	}  
 
 #ifdef HAVE_MPI
 	TH_MPI::finalize();
 #endif
 
-	LOG_INFO_STR(programName << " terminated normally");
-	return (0);
+	LOG_INFO(programName + " terminated " + 
+                 (result ? "with an error" : "normally"));
+
+	return result;
 }
 
     } // namespace PLC

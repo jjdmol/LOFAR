@@ -31,13 +31,12 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <PLC/DH_ProcControl.h>
-#include <boost/logic/tribool.hpp>
-
-using boost::logic::tribool;
+#include <Common/lofar_tribool.h>
 
 namespace LOFAR {
   namespace ACC {
     namespace PLC {
+
 // \addtogroup PLC
 // @{
 
@@ -130,6 +129,9 @@ protected:
 	void setRunState()	{ itsRunState = true; }
 	void clearRunState()	{ itsRunState = false; }
         // @}
+
+	// The proxy class must be able to set/clear the run state.
+	friend class ProcCtrlProxy;
 
 private:
 	// Copying is also not allowed

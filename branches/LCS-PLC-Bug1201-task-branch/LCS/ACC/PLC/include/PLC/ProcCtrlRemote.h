@@ -51,7 +51,7 @@ namespace LOFAR
 
         // Start the process controller. Let it run under control of a
         // ProcControlServer.
-        virtual int exec(const APS::ParameterSet& arg);
+        virtual int operator()(const APS::ParameterSet& arg);
       };
 
       // @}

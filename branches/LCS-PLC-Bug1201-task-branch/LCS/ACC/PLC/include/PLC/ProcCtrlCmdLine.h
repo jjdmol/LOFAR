@@ -52,7 +52,7 @@ namespace LOFAR
         // to ProcessController's member functions; the number of times that
         // the run() method will be called is determined by the value of the
         // value of the key \c noRuns in \a arg.
-        virtual int exec(const APS::ParameterSet& arg);
+        virtual int operator()(const APS::ParameterSet& arg);
       };
 
       // @}
