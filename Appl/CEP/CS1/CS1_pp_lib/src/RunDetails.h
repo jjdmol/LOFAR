@@ -41,7 +41,7 @@ namespace LOFAR
       int    Start;        // DataSquasher
       int    Step;         // DataSquasher
       bool   Skip;         // DataSquasher
-      Bool   Columns;      // DataSquasher
+      bool   Columns;      // DataSquasher
       void PrintInfo(void);
 
     protected:

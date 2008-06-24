@@ -17,151 +17,118 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-//#include <casa/Arrays/ArrayLogical.h>
-
 #include "DataSquasher.h"
-namespace LOFAR
+#include "MsInfo.h"
+#include "RunDetails.h"
+#include "DataBuffer.h"
+
+
+using namespace LOFAR::CS1;
+using namespace casa;
+
+//===============>>>  DataSquasher::DataSquasher  <<<===============
+
+DataSquasher::DataSquasher(void)
 {
-  namespace CS1
+}
+
+//===============>>>  DataSquasher::~DataSquasher  <<<===============
+
+DataSquasher::~DataSquasher(void)
+{
+}
+
+//===============>>>  DataSquasher::Squash  <<<===============
+
+void DataSquasher::Squash(Matrix<Complex>& oldData, Matrix<Complex>& newData,
+                          Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags,
+                          Matrix<Float>& newWeights, int itsNumPolarizations,
+                          int Start, int Step, int NChan)
+{
+  int incounter  = 0;
+  int outcounter = 0;
+  bool flagnew   = true;
+  Vector<Complex> values(itsNumPolarizations, 0);
+  Vector<Complex> weights(itsNumPolarizations, 0);
+  while (incounter < NChan)
   {
-    using namespace casa;
-
-    //===============>>>  DataSquasher::DataSquasher  <<<===============
-
-    DataSquasher::DataSquasher(void)
+    for (int i = 0; i < itsNumPolarizations; i++)
     {
+      if (!oldFlags(i, Start + incounter))
+      { //existing weight <> 1 is not handled here, maybe sometime in the future?
+        values(i) += oldData(i, Start + incounter);
+        weights(i) += 1;
+        flagnew = false;
+      }
     }
-
-    //===============>>>  DataSquasher::~DataSquasher  <<<===============
-
-    DataSquasher::~DataSquasher(void)
+    incounter++;
+    if ((incounter) % Step == 0)
     {
-    }
-
-    //===============>>>  DataSquasher::GetMSInfo  <<<===============
-
-    void DataSquasher::GetMSInfo(MeasurementSet& outMS)
-    {
-      //Number of samples
-      itsNumSamples                    = outMS.nrow();
-
-      //Number of channels in the Band
-      MSSpectralWindow spectral_window = outMS.spectralWindow();
-      ROScalarColumn<Int>              NUM_CHAN_col(spectral_window, "NUM_CHAN");
-      itsNumChannels                   = NUM_CHAN_col(0);
-
-      //Number of Bands
-      itsNumBands                      = NUM_CHAN_col.nrow();
-
-      //Number of polarizations
-      MSPolarization polarization      = outMS.polarization();
-      ROScalarColumn<Int>              NUM_CORR_col(polarization, "NUM_CORR");
-      itsNumPolarizations              = NUM_CORR_col(0);
-    }
-
-    //===============>>>  DataSquasher::CreateDataIterator  <<<===============
-
-    TableIterator DataSquasher::CreateDataIterator(MeasurementSet& outMS)
-    {
-      Block<String> ms_OutIteration_variables(4);
-      ms_OutIteration_variables[0] = "TIME_CENTROID";
-      ms_OutIteration_variables[1] = "DATA_DESC_ID";
-      ms_OutIteration_variables[2] = "ANTENNA1";
-      ms_OutIteration_variables[3] = "ANTENNA2";
-
-      return TableIterator(outMS, ms_OutIteration_variables);
-    }
-
-    //===============>>>  DataSquasher::SquashData  <<<===============
-
-    void DataSquasher::SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData,
-                                  Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags, Matrix<Float>& newWeights,
-                                  int Start, int Step, int NChan, float threshold)
-    {
-      int incounter  = 0;
-      int outcounter = 0;
-      bool flagrow   = true;
-      Vector<Complex> values(itsNumPolarizations, 0);
-      Vector<Complex> weights(itsNumPolarizations, 0);
-      while (incounter < NChan)
+      if (flagnew)
+      {
+        newWeights.column(outcounter) = 1.0;
+        for (int i = 0; i < itsNumPolarizations; i++)
+          newData(i, outcounter)      = values(i)/Step;
+        newFlags.column(outcounter)   = true;
+      }
+      else
       {
         for (int i = 0; i < itsNumPolarizations; i++)
-        {
-          if (!oldFlags(i, Start + incounter))
-          { //weight is not handled here, maybe sometime in the future?
-            values(i) += oldData(i, Start + incounter);
-            weights(i) += 1;
-            flagrow = false;
-          }
+        { values(i) = values(i) / weights(i);
+          newWeights(i, outcounter) = abs(weights(i)) / Step;
         }
-        incounter++;
-        if ((incounter) % Step == 0)
-        {
-          for (int i = 0; i < itsNumPolarizations; i++)
-          { values(i) = values(i) / weights(i);
-            newWeights(i, outcounter) = abs(weights(i)) / Step;
-          }
-          newData.column(outcounter)  = values;
-          for (int i = 0; i < itsNumPolarizations; i++) // I can't get anyGT or something like that to work
-            flagrow = flagrow || (threshold * 1.001 >= abs(values[i]));
-          newFlags.column(outcounter) = flagrow;
-          values = 0;
-          weights = 0;
-          outcounter++;
-          flagrow = true;
-        }
+        newData.column(outcounter)  = values;
+        newFlags.column(outcounter) = flagnew;
       }
+      values  = 0;
+      weights = 0;
+      outcounter++;
+      flagnew = true;
     }
+  }
+}
 
-    //===============>>>  DataSquasher::Squash  <<<===============
+//===============>>>  DataSquasher::ProcessTimeslot  <<<===============
 
-    void DataSquasher::Squash(MeasurementSet& inMS, MeasurementSet& outMS, std::string Data,
-                              int Start, int Step, int NChan, float threshold,
-                              bool UseFlags, Cube<Bool>& newFlags)
+void DataSquasher::ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
+                                   MsInfo& Info, RunDetails& Details)
+{
+  //Data.Position is the last filled timeslot, the middle is 1/2 a window behind it
+  int pos = (InData.Position - (InData.WindowSize-1)/2) % InData.WindowSize;
+  Matrix<Complex> myOldData;
+  Matrix<Complex> myNewData;
+  Matrix<Bool> myOldFlags;
+  Matrix<Bool> myNewFlags;
+  Matrix<Float> NewWeights;
+  for (int i = 0; i < Info.NumBands; i++)
+  {
+    for(int j = 0; j < Info.NumAntennae; j++)
     {
-      TableIterator inIter  = CreateDataIterator(inMS);
-      TableIterator outIter = CreateDataIterator(outMS);
-      GetMSInfo(outMS);
-      int step = outMS.nrow() / 10 + 1; //not exact but it'll do
-      int row  = 0;
-      bool rwFlags = newFlags.nrow() > 0;
-      if (!rwFlags) //we are able to re-use the same flags
-      { newFlags.resize(itsNumPolarizations, NChan/Step, itsNumSamples);
-      }
-
-      while (!outIter.pastEnd())
+      for(int k = j; k < Info.NumAntennae; k++)
       {
-        if (row++ % step == 0) // to tell the user how much % we have processed,
-        { std::cout << 10*(row/step) << "%" << std::endl; //not very accurate for low numbers of timeslots
-        }
-        Table         InDataTable  = inIter.table();
-        Table         OutDataTable = outIter.table();
-        ROArrayColumn<Complex> Old(InDataTable, Data);
-        ArrayColumn<Complex>   New(OutDataTable, Data);
-        ArrayColumn<Float>     Weights(OutDataTable, "WEIGHT_SPECTRUM");
-        Matrix<Complex>        myOldData(itsNumPolarizations, itsNumChannels);
-        Matrix<Complex>        myNewData(itsNumPolarizations, NChan/Step);
+        int index = i * Info.NumPairs + Info.BaselineIndex[baseline_t(j, k)];
 
-        ROArrayColumn<Bool>    Flags(InDataTable, "FLAG");
-        //when not using the flags, they are all set to false, automotically assuming all data is good.
-        Matrix<Bool>           myOldFlags(itsNumPolarizations, itsNumChannels, false);
-        Matrix<Bool>           myNewFlags(itsNumPolarizations, NChan/Step);
-
-        Matrix<Float>          NewWeights(itsNumPolarizations, NChan/Step);
-
-        Old.get(0, myOldData);
-        if (UseFlags)
-        { Flags.get(0, myOldFlags);
+        InData.Data[index].xyPlane(pos).reference(myOldData);
+        OutData.Data[index].xyPlane(pos).reference(myNewData);
+        InData.Flags[index].xyPlane(pos).reference(myOldFlags);
+        OutData.Flags[index].xyPlane(pos).reference(myNewFlags);
+        OutData.Weights[index].xyPlane(pos).reference(NewWeights);
+        Squash(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights,
+               Info.NumPolarizations, Details.Start, Details.Step, Details.NChan);
+        if (Details.Columns)
+        {
+          InData.ModelData[index].xyPlane(pos).reference(myOldData);
+          OutData.ModelData[index].xyPlane(pos).reference(myNewData);
+          Squash(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights,
+                 Info.NumPolarizations, Details.Start, Details.Step, Details.NChan);
+          InData.CorrectedData[index].xyPlane(pos).reference(myOldData);
+          OutData.CorrectedData[index].xyPlane(pos).reference(myNewData);
+          Squash(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights,
+                 Info.NumPolarizations, Details.Start, Details.Step, Details.NChan);
         }
-        SquashData(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights, Start, Step, NChan, threshold);
-        New.put(0, myNewData);
-        Weights.put(0, NewWeights);
-        if (!rwFlags)
-        { newFlags.xyPlane(row - 1) = myNewFlags;
-        }
-        outIter++;
-        inIter++;
       }
     }
-  } //namespace CS1
-}; //namespace LOFAR
+  }
+}
+
+//===============>>>  DataSquasher  <<<===============

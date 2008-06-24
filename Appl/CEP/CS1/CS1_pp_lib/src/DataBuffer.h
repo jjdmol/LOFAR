@@ -31,7 +31,7 @@ namespace LOFAR
     class DataBuffer
     {
       public:
-         DataBuffer(MsInfo* info, int TimeWindow);
+         DataBuffer(MsInfo* info, int TimeWindow, bool Columns);
          ~DataBuffer();
         int Position;
         int NumSlots;
@@ -39,6 +39,8 @@ namespace LOFAR
 
         std::vector< bool >                      PolarizationsToCheck;
         std::vector< casa::Cube<casa::Complex> > Data;
+        std::vector< casa::Cube<casa::Complex> > ModelData;
+        std::vector< casa::Cube<casa::Complex> > CorrectedData;
         std::vector< casa::Cube<casa::Bool> >    Flags;
         std::vector< casa::Cube<casa::Float> >   Weights;
         void DeterminePolarizationsToCheck(bool UseOnlyXpolarizations);
@@ -47,7 +49,7 @@ namespace LOFAR
 
       private:
         MsInfo* myInfo;
-        void    Init(void);
+        void    Init(bool Columns);
     }; // DataBuffer
   }; //CS1
 }; // namespace LOFAR

@@ -102,7 +102,7 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
   //if present handle the CORRECTED_DATA column
   if (tdesc.isColumn("CORRECTED_DATA"))
   {
-    if (itsColumns)
+    if (Details.Columns)
     {
       cout << "Preparing CORRECTED_DATA" << endl;
       TableResize(tdesc, data_ipos, "CORRECTED_DATA", *OutMS);
@@ -120,7 +120,7 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
   //if present handle the MODEL_DATA column
   if (tdesc.isColumn("MODEL_DATA"))
   {
-    if (itsColumns)
+    if (Details.Columns)
     {
       cout << "Processing MODEL_DATA" << endl;
       desc = tdesc.rwColumnDesc("MODEL_DATA");
@@ -129,7 +129,7 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
       desc.setOptions(4);
       desc.rwKeywordSet().removeField("CHANNEL_SELECTION"); //messes with the Imager if it's there but has wrong values
       Matrix<Int> selection;
-      selection.resize(2, Info.itsNumBands); //dirty hack with direct reference to itsSquasher
+      selection.resize(2, Info.NumBands); //dirty hack with direct reference to itsSquasher
       selection.row(0) = 0; //start in Imager, will therefore only work if imaging whole SPW
       selection.row(1) = new_nchan;
       desc.rwKeywordSet().define("CHANNEL_SELECTION", selection); // #spw x [startChan, NumberChan] for the VisBuf in the Imager
@@ -160,13 +160,13 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
   channum.fillColumn(new_nchan);
 
   TableDesc SPWtdesc = inSPW.tableDesc();
-  itsSquasher->TableResize(SPWtdesc, spw_ipos, "CHAN_FREQ", outSPW);
+  TableResize(SPWtdesc, spw_ipos, "CHAN_FREQ", outSPW);
 
-  itsSquasher->TableResize(SPWtdesc, spw_ipos, "CHAN_WIDTH", outSPW);
+  TableResize(SPWtdesc, spw_ipos, "CHAN_WIDTH", outSPW);
 
-  itsSquasher->TableResize(SPWtdesc, spw_ipos, "EFFECTIVE_BW", outSPW);
+  TableResize(SPWtdesc, spw_ipos, "EFFECTIVE_BW", outSPW);
 
-  itsSquasher->TableResize(SPWtdesc, spw_ipos, "RESOLUTION", outSPW);
+  TableResize(SPWtdesc, spw_ipos, "RESOLUTION", outSPW);
 
   ROArrayColumn<Double> inFREQ(inSPW, "CHAN_FREQ");
   ROArrayColumn<Double> inWIDTH(inSPW, "CHAN_WIDTH");
@@ -185,28 +185,28 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
   {
     for (int j = 0; j < new_nchan; j++)
     { inFREQ.get(i, old_temp);
-      if (itsStep % 2) //odd number of channels in step
-      { new_temp(j) = old_temp(itsStart + j*itsStep + (itsStep + 1)/2);
+      if (Details.Step % 2) //odd number of channels in step
+      { new_temp(j) = old_temp(Details.Start + j*Details.Step + (Details.Step + 1)/2);
       }
       else //even number of channels in step
-      { new_temp(j) = 0.5 * (old_temp(itsStart + j*itsStep + itsStep/2 -1)
-                              + old_temp(itsStart + j*itsStep + itsStep/2));
+      { new_temp(j) = 0.5 * (old_temp(Details.Start + j*Details.Step + Details.Step/2 -1)
+                              + old_temp(Details.Start + j*Details.Step + Details.Step/2));
       }
       outFREQ.put(i, new_temp);
     }
     for (int j = 0; j < new_nchan; j++)
     { inWIDTH.get(i, old_temp);
-      new_temp(j) = old_temp(0) * itsStep;
+      new_temp(j) = old_temp(0) * Details.Step;
       outWIDTH.put(i, new_temp);
     }
     for (int j = 0; j < new_nchan; j++)
     { inBW.get(i, old_temp);
-      new_temp(j) = old_temp(0) * itsStep;
+      new_temp(j) = old_temp(0) * Details.Step;
       outBW.put(i, new_temp);
     }
     for (int j = 0; j < new_nchan; j++)
     { inRESOLUTION.get(i, old_temp);
-      new_temp(j) = old_temp(0) * itsStep;
+      new_temp(j) = old_temp(0) * Details.Step;
       outRESOLUTION.put(i, new_temp);
     }
   }

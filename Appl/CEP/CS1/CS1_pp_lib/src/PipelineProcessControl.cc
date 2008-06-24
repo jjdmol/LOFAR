@@ -44,6 +44,12 @@ namespace LOFAR
     PipelineProcessControl::PipelineProcessControl()
     : ProcessControl()
     {
+      myPipeline = NULL;
+      myFile = NULL;
+      myInfo = NULL;
+      myBandpass = NULL;
+      myFlagger = NULL;
+      mySquasher = NULL;
     }
 
     //===============>>> PipelineProcessControl::~PipelineProcessControl  <<<==============
@@ -61,7 +67,7 @@ namespace LOFAR
       myDetails->TimeWindow   = ParamSet->getInt32("timewindow"); // ComplexMedianFlagger, MADFlagger
       myDetails->Treshold     = ParamSet->getInt32("treshold");   // FrequencyFlagger
       myDetails->MinThreshold = ParamSet->getDouble("min");       // ComplexMedianFlagger
-      myDetails->MaxThreshold = ParamSet->getDouble("min");       // ComplexMedianFlagger
+      myDetails->MaxThreshold = ParamSet->getDouble("max");       // ComplexMedianFlagger
       myDetails->Existing     = ParamSet->getBool("existing");    // all flaggers
       myDetails->NChan        = ParamSet->getInt32("nchan");      // DataSquasher
       myDetails->Start        = ParamSet->getInt32("start");      // DataSquasher
@@ -71,10 +77,7 @@ namespace LOFAR
 
 //      itsFlagData = ParamSet->getBool("flagdata");
 //      itsFlagRMS  = ParamSet->getBool("flagrms");
-//      itsExisting = ParamSet->getBool("existing");
 //      itsCrosspol = ParamSet->getBool("crosspol");
-//      itsMin      = ParamSet->getDouble("min");
-//      itsMax      = ParamSet->getDouble("max");
 
       itsInMS     = ParamSet->getString("msin");
       itsOutMS    = ParamSet->getString("msout");
@@ -90,7 +93,9 @@ namespace LOFAR
       try{
       std::cout << "Runnning pipeline please wait..." << std::endl;
         myFile->Init(*myInfo, *myDetails);
-        myPipeline->Run();
+        MsInfo* outInfo = new MsInfo(itsOutMS);
+        myPipeline->Run(outInfo, myDetails->Columns);
+        delete outInfo;
       }
       catch(casa::AipsError& err)
       {
@@ -119,7 +124,6 @@ namespace LOFAR
         switch (itsBandpass)
         {
           case 1:  myBandpass = new BandpassCorrector();
-          default: myBandpass = NULL;
         }
         switch (itsFlagger)
         {
@@ -127,12 +131,10 @@ namespace LOFAR
   //        case 2:  myFlagger = new ComplexMedian2Flagger();
   //        case 3:  myFlagger = new FrequencyFlagger();
           case 4:  myFlagger = new MADFlagger();
-          default: myFlagger = NULL;
         }
         switch (itsSquasher)
         {
           case 1:  mySquasher = new DataSquasher();
-          default: mySquasher = NULL;
         }
         myPipeline = new Pipeline(myInfo, myFile, myDetails,
                                   myBandpass, myFlagger, mySquasher);
