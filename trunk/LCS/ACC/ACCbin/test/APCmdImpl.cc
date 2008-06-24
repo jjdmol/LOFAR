@@ -27,9 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <PLC/PCCmd.h>
 #include <APCmdImpl.h>
-#include <boost/logic/tribool.hpp>
-
-using boost::logic::tribool;
+#include <Common/lofar_tribool.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -96,7 +94,7 @@ tribool	APCmdImpl::pause(const	string&		condition)
 tribool	APCmdImpl::release()
 {
 	LOG_DEBUG("release");
-	return (boost::logic::indeterminate);	// so we test this too
+	return (indeterminate);	// so we test this too
 }
 
 // quit()

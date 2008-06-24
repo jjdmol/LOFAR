@@ -28,9 +28,8 @@
 //# Includes
 #include <PLC/ProcessControl.h>
 #include <APS/ParameterSet.h>
-#include <boost/logic/tribool.hpp>
+#include <Common/lofar_tribool.h>
 
-using boost::logic::tribool;
 using namespace LOFAR::ACC::PLC;
 
 namespace LOFAR {
