@@ -30,7 +30,6 @@
 #include <Transport/TH_MPI.h>
 #include <CS1_Interface/BGL_Configuration.h>
 #include <CS1_Interface/BGL_Mapping.h>
-#include <CS1_Interface/PrintVector.h>
 
 #include <cassert>
 #include <complex>
@@ -39,8 +38,12 @@
 #include <iostream>
 #include <map>
 
+#if defined HAVE_BGP
+#include <common/bgp_personality_inlines.h>
+#include <spi/kernel_interface.h>
+#endif
 
-#if defined HAVE_ZOID && defined HAVE_BGL
+#if defined HAVE_ZOID && (defined HAVE_BGL || defined HAVE_BGP)
 extern "C" {
 #include <lofar.h>
 }
@@ -48,7 +51,11 @@ extern "C" {
 #endif
 
 #if defined HAVE_MPI
+#if defined HAVE_BGP || defined HAVE_BGL
+#define LOG_CONDITION	(itsCurrentSubband == itsFirstSubband)
+#else
 #define LOG_CONDITION	(itsRankInPset == 0)
+#endif
 //#define LOG_CONDITION	(TH_MPI::getCurrentRank() == 0)
 #else
 #define LOG_CONDITION	1
@@ -73,14 +80,15 @@ static NSTimer computeTimer("computing", true);
 char **BGL_Processing::original_argv;
 
 
-BGL_Processing::BGL_Processing(TransportHolder *th)
+BGL_Processing::BGL_Processing(TransportHolder *th, const LocationInfo &locationInfo)
 :
   itsTransportHolder(th),
+  itsLocationInfo(locationInfo),
   itsInputData(0),
   itsTransposedData(0),
   itsFilteredData(0),
   itsCorrelatedData(0),
-#if defined HAVE_BGL
+#if defined HAVE_BGL || defined HAVE_BGP
   itsTranspose(0),
 #endif
   itsPPF(0),
@@ -88,11 +96,11 @@ BGL_Processing::BGL_Processing(TransportHolder *th)
 {
   memset(itsArenas, 0, sizeof itsArenas);
 
-#if defined HAVE_BGL
-  getPersonality();
-#endif
+// #if defined HAVE_BGL
+//   getPersonality();
+// #endif
 
-#if defined HAVE_ZOID && defined HAVE_BGL
+#if defined HAVE_ZOID && (defined HAVE_BGL || defined HAVE_BGP)
   initIONode();
 #endif
 }
@@ -103,7 +111,8 @@ BGL_Processing::~BGL_Processing()
 }
 
 
-#if defined HAVE_BGL
+#if 0
+  //#if defined HAVE_BGL
 
 struct Location {
   unsigned pset, rankInPset;
@@ -142,21 +151,21 @@ void BGL_Processing::getPersonality()
     for (unsigned rank = 0; rank < allLocations.size(); rank ++)
       cores[allLocations[rank].pset][allLocations[rank].rankInPset] = rank;
 
-    for (unsigned pset = 0; pset < itsPersonality.numPsets(); pset ++)
-      std::clog << "pset " << pset << " contains cores " << cores[pset] << std::endl;
+//     for (unsigned pset = 0; pset < itsPersonality.numPsets(); pset ++)
+//       std::clog << "pset " << pset << " contains cores " << cores[pset] << std::endl;
   }
 }
 
 #endif
 
 
-#if defined HAVE_ZOID && defined HAVE_BGL
+#if defined HAVE_ZOID && (defined HAVE_BGL || defined HAVE_BGP)
 
 void BGL_Processing::initIONode() const
 {
   // one of the compute cores in each Pset has to initialize its I/O node
 
-  if (itsRankInPset == 0) {
+  if (itsLocationInfo.rankInPset() == 0) {
     std::vector<size_t> lengths;
 
     for (int arg = 0; original_argv[arg] != 0; arg ++) {
@@ -226,96 +235,18 @@ void BGL_Processing::printSubbandList() const
 #endif
 
 
-
-#if 0
-void BGL_Processing::preprocess(CS1_Parset *parset)
-{
-  checkConsistency(parset);
-  
-#if defined HAVE_BGL
-  unsigned usedCoresPerPset = parset->nrCoresPerPset();
-  unsigned myPset	    = itsPersonality.getPsetNum();
-  unsigned myCore	    = BGL_Mapping::reverseMapCoreOnPset(itsRankInPset, myPset);
-#else
-  unsigned usedCoresPerPset = 1;
-  unsigned myPset	    = 0;
-  unsigned myCore	    = 0;
-#endif
-
-  vector<unsigned> inputPsets  = parset->getUint32Vector("OLAP.BGLProc.inputPsets");
-  vector<unsigned> outputPsets = parset->getUint32Vector("OLAP.BGLProc.outputPsets");
-
-#if defined HAVE_BGL
-  Transpose::getMPIgroups(usedCoresPerPset, itsPersonality, inputPsets, outputPsets);
-#endif
-
-  vector<unsigned>::const_iterator inputPsetIndex  = std::find(inputPsets.begin(),  inputPsets.end(),  myPset);
-  vector<unsigned>::const_iterator outputPsetIndex = std::find(outputPsets.begin(), outputPsets.end(), myPset);
-
-  itsIsTransposeInput  = inputPsetIndex  != inputPsets.end();
-  itsIsTransposeOutput = outputPsetIndex != outputPsets.end();
-
-  unsigned nrStations		   = parset->nrStations();
-  unsigned nrBaselines		   = nrStations * (nrStations + 1) / 2;
-  unsigned nrSamplesPerIntegration = parset->BGLintegrationSteps();
-  unsigned nrSamplesToBGLProc	   = parset->nrSamplesToBGLProc();
-
-  size_t inputDataSize      = itsIsTransposeInput  ? InputData::requiredSize(outputPsets.size(), nrSamplesToBGLProc) : 0;
-  size_t transposedDataSize = itsIsTransposeOutput ? TransposedData::requiredSize(nrStations, nrSamplesToBGLProc) : 0;
-  size_t filteredDataSize   = itsIsTransposeOutput ? FilteredData::requiredSize(nrStations, nrSamplesPerIntegration) : 0;
-  size_t correlatedDataSize = itsIsTransposeOutput ? CorrelatedData::requiredSize(nrBaselines) : 0;
-
-  itsHeaps[0] = new Heap(std::max(inputDataSize, filteredDataSize), 32);
-  itsHeaps[1] = new Heap(std::max(transposedDataSize, correlatedDataSize), 32);
-
-  if (itsIsTransposeInput) {
-    itsInputData = new InputData(*itsHeaps[0], outputPsets.size(), nrSamplesToBGLProc);
-  }
-
-  if (itsIsTransposeOutput) {
-    // FIXME: !useGather not implemented
-    ASSERT(parset->getBool("OLAP.IONProc.useGather"));
-
-    unsigned nrSubbandsPerPset	= parset->nrSubbandsPerPset();
-    unsigned logicalNode	= usedCoresPerPset * (outputPsetIndex - outputPsets.begin()) + myCore;
-    // TODO: logicalNode assumes output psets are consecutively numbered
-
-    itsCenterFrequencies = parset->refFreqs();
-    itsFirstSubband	 = (logicalNode / usedCoresPerPset) * nrSubbandsPerPset;
-    itsLastSubband	 = itsFirstSubband + nrSubbandsPerPset;
-    itsCurrentSubband	 = itsFirstSubband + logicalNode % usedCoresPerPset % nrSubbandsPerPset;
-    itsSubbandIncrement	 = usedCoresPerPset % nrSubbandsPerPset;
-
-#if defined HAVE_MPI
-    printSubbandList();
-#endif
-
-    itsTransposedData = new TransposedData(*itsHeaps[1], nrStations, nrSamplesToBGLProc);
-    itsFilteredData   = new FilteredData(*itsHeaps[0], nrStations, nrSamplesPerIntegration);
-    itsCorrelatedData = new CorrelatedData(*itsHeaps[1], nrBaselines);
-
-    itsPPF	      = new PPF(nrStations, nrSamplesPerIntegration, parset->sampleRate() / NR_SUBBAND_CHANNELS, parset->getBool("OLAP.delayCompensation"));
-    itsCorrelator     = new Correlator(nrStations, nrSamplesPerIntegration);
-  }
-
-#if defined HAVE_MPI
-  if (itsIsTransposeInput || itsIsTransposeOutput) {
-    itsTranspose = new Transpose(itsIsTransposeInput, itsIsTransposeOutput, myCore, nrStations);
-    itsTranspose->setupTransposeParams(inputPsets, outputPsets, itsInputData, itsTransposedData);
-  }
-#endif
-}
-
-#else
-
 void BGL_Processing::preprocess(BGL_Configuration &configuration)
 {
   //checkConsistency(parset);	TODO
 
-#if defined HAVE_BGL
+// #if defined HAVE_BGL
+//   unsigned usedCoresPerPset = configuration.nrUsedCoresPerPset();
+//   unsigned myPset	    = itsPersonality.getPsetNum();
+//   unsigned myCore	    = BGL_Mapping::reverseMapCoreOnPset(itsRankInPset, myPset);
+#if defined HAVE_BGL || HAVE_BGP
   unsigned usedCoresPerPset = configuration.nrUsedCoresPerPset();
-  unsigned myPset	    = itsPersonality.getPsetNum();
-  unsigned myCore	    = BGL_Mapping::reverseMapCoreOnPset(itsRankInPset, myPset);
+  unsigned myPset	    = itsLocationInfo.psetNumber();
+  unsigned myCore	    = BGL_Mapping::reverseMapCoreOnPset(itsLocationInfo.rankInPset(), myPset);
 #else
   unsigned usedCoresPerPset = 1;
   unsigned myPset	    = 0;
@@ -324,8 +255,10 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
   std::vector<unsigned> &inputPsets  = configuration.inputPsets();
   std::vector<unsigned> &outputPsets = configuration.outputPsets();
 
-#if defined HAVE_BGL
-  Transpose::getMPIgroups(usedCoresPerPset, itsPersonality, inputPsets, outputPsets);
+// #if defined HAVE_BGL
+//   Transpose::getMPIgroups(usedCoresPerPset, itsPersonality, inputPsets, outputPsets);
+#if defined HAVE_BGP || defined HAVE_BGL
+  Transpose::getMPIgroups(usedCoresPerPset, itsLocationInfo, inputPsets, outputPsets);
 #endif
 
   std::vector<unsigned>::const_iterator inputPsetIndex  = std::find(inputPsets.begin(),  inputPsets.end(),  myPset);
@@ -397,13 +330,13 @@ void BGL_Processing::preprocess(BGL_Configuration &configuration)
   }
 #endif
 }
-#endif
 
 
 void BGL_Processing::process()
 {
   NSTimer totalTimer("total", LOG_CONDITION);
   totalTimer.start();
+
   if (itsIsTransposeInput) {
 #if defined HAVE_MPI
     if (LOG_CONDITION)
@@ -446,9 +379,6 @@ MPI_Barrier(itsTransposeGroup);
     itsCorrelator->computeFlagsAndCentroids(itsFilteredData, itsCorrelatedData);
     itsCorrelator->correlate(itsFilteredData, itsCorrelatedData);
 
-    if ((itsCurrentSubband += itsSubbandIncrement) >= itsLastSubband)
-      itsCurrentSubband -= itsLastSubband - itsFirstSubband;
-
     computeTimer.stop();
 
 #if defined HAVE_MPI
@@ -475,6 +405,10 @@ MPI_Barrier(itsTransposeGroup);
     for (double time = MPI_Wtime() + 4.0; MPI_Wtime() < time;)
       ;
 #endif
+
+  if ((itsCurrentSubband += itsSubbandIncrement) >= itsLastSubband)
+    itsCurrentSubband -= itsLastSubband - itsFirstSubband;
+
   totalTimer.stop();
 }
 

@@ -1,7 +1,7 @@
 #ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_PPF_H
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_PPF_H
 
-#if 0 || !defined HAVE_BGL
+#if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
 #define PPF_C_IMPLEMENTATION
 #endif
 

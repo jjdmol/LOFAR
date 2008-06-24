@@ -21,7 +21,7 @@
 #ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_CORRELATOR_ASM_H
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_CORRELATOR_ASM_H
 
-#if defined HAVE_BGL
+#if defined HAVE_BGL || defined HAVE_BGP
 #include <CS1_Interface/CS1_Config.h>
 
 namespace LOFAR {

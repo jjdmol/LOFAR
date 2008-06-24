@@ -21,10 +21,12 @@
 #ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_FIR_ASM_H
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_FIR_ASM_H
 
-#if defined HAVE_BGL
+#if defined HAVE_BGL || defined HAVE_BGP
 #include <CS1_Interface/CS1_Config.h>
 
+#if defined HAVE_BGL
 #include <rts.h>
+#endif
 
 namespace LOFAR
 {
@@ -65,7 +67,10 @@ extern "C" {
     unsigned nr_polarizations;
   } _FIR_constants_used;
 
+#if defined HAVE_BGL
   void _bgl_mutex_lock(BGL_Mutex *), _bgl_mutex_unlock(BGL_Mutex *);
+#endif
+
   unsigned long long _rdtsc();
 };
 

@@ -21,7 +21,7 @@
 #ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_BGL_PROCESSING_H
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_BGL_PROCESSING_H
 
-#if 0 || !defined HAVE_BGL
+#if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
 #define C_IMPLEMENTATION
 #endif
 
@@ -34,6 +34,7 @@
 #endif
 
 #include <CS1_Interface/Allocator.h>
+
 #include <InputData.h>
 #include <FilteredData.h>
 #include <TransposedData.h>
@@ -43,9 +44,7 @@
 #include <PPF.h>
 #include <Correlator.h>
 
-#if defined HAVE_BGL
-#include <mpi.h>
-#endif
+#include <LocationInfo.h>
 
 #if defined HAVE_BGL
 #include <bglpersonality.h>
@@ -60,7 +59,7 @@ namespace CS1 {
 
 class BGL_Processing {
   public:
-			BGL_Processing(TransportHolder *th);
+			BGL_Processing(TransportHolder *, const LocationInfo &);
 			~BGL_Processing();
 
 #if 0
@@ -91,6 +90,7 @@ class BGL_Processing {
 #endif
 
     TransportHolder	*itsTransportHolder;
+    const LocationInfo	&itsLocationInfo;
     std::vector<double> itsCenterFrequencies;
     unsigned    	itsFirstSubband, itsCurrentSubband, itsLastSubband, itsSubbandIncrement;
     bool		itsIsTransposeInput, itsIsTransposeOutput;

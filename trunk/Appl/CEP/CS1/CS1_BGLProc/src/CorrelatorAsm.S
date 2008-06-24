@@ -18,7 +18,7 @@
 #
 #  $Id$
 
-#if defined HAVE_BGL
+#if defined HAVE_BGL || defined HAVE_BGP
 #define BGL_PROCESSING
 #include <CS1_Interface/CS1_Config.h>
 
@@ -218,25 +218,33 @@ loop1:	# loop over time
 
 	bdnz	 loop1
 
+#if !defined HAVE_BGP
 	dcbz	 0,7
+#endif
 	stfpsx	 0,0,7		# store results S0 * ~S2
 	stfpsux	 1,7,11
 	stfpsux	 2,7,11
 	stfpsux	 3,7,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,8
+#endif
 	stfpsx	 4,0,8		# store results S0 * ~S3
 	stfpsux	 5,8,11
 	stfpsux	 6,8,11
 	stfpsux	 7,8,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,9
+#endif
 	stfpsx	 8,0,9		# store results S1 * ~S2
 	stfpsux	 9,9,11
 	stfpsux	 10,9,11
 	stfpsux	 11,9,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,10
+#endif
 	stfpsx	 12,0,10	# store results S1 * ~S3
 	stfpsux	 13,10,11
 	stfpsux	 14,10,11
@@ -389,18 +397,18 @@ loop2:
 	fxcxma   20,24,30,20
 	fxcxma   21,24,31,21
 	fxcxma   22,25,30,22	; lfpsux	 30,7,11
-	fxcxma   23,25,31,23	; lfpsux	 31,7,11
+	fxcxma   23,25,31,23
 
 	# S0 * ~S3, phase 1	; # ld S1
-	fxcpnsma 0,26,28,0	; lfpsux	 24,4,11
-	fxcpnsma 1,26,29,1	; lfpsux	 25,4,11
-	fxcpnsma 2,27,28,2
-	fxcpnsma 3,27,29,3
+	fxcpnsma 0,26,28,0
+	fxcpnsma 1,26,29,1
+	fxcpnsma 2,27,28,2	; lfpsux	 31,7,11
+	fxcpnsma 3,27,29,3	; lfpsux	 24,4,11
 
 	# S0 * ~S4, phase 1
 	fxcpnsma 4,26,30,4
 	fxcpnsma 5,26,31,5
-	fxcpnsma 6,27,30,6
+	fxcpnsma 6,27,30,6	; lfpsux	 25,4,11
 	fxcpnsma 7,27,31,7
 
 	# S0 * ~S4, phase 2
@@ -469,37 +477,49 @@ loop2:
 	lwz	 4,288+12(1)
 	lwz	 5,288+16(1)
 
+#if !defined HAVE_BGP
 	dcbz	 0,8
+#endif
 	stfpsx	 0,0,8		# store results S0 * ~S3
 	stfpsux	 1,8,11
 	stfpsux	 2,8,11
 	stfpsux	 3,8,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,9
+#endif
 	stfpsx	 4,0,9		# store results S0 * ~S4
 	stfpsux	 5,9,11
 	stfpsux	 6,9,11
 	stfpsux	 7,9,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,10
+#endif
 	stfpsx	 8,0,10		# store results S1 * ~S3
 	stfpsux	 9,10,11
 	stfpsux	 10,10,11
 	stfpsux	 11,10,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,3
+#endif
 	stfpsx	 12,0,3		# store results S1 * ~S4
 	stfpsux	 13,3,11
 	stfpsux	 14,3,11
 	stfpsux	 15,3,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,4
+#endif
 	stfpsx	 16,0,4		# store results S2 * ~S3
 	stfpsux	 17,4,11
 	stfpsux	 18,4,11
 	stfpsux	 19,4,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,5
+#endif
 	stfpsx	 20,0,5		# store results S2 * ~S4
 	stfpsux	 21,5,11
 	stfpsux	 22,5,11
@@ -593,10 +613,12 @@ loop4:	# loop over time
 	bdnz	 loop4
 
 	fxcsnsma 0,0,12,0	# f0r += 1*f0i, f0i += -1*f0i = 0
-	fxcsnsma 3,3,12,3
 	fpadd	 1,1,2
+	fxcsnsma 3,3,12,3
 
+#if !defined HAVE_BGP
 	dcbz	 0,4		# store result
+#endif
 	stfpsx	 0,0,4
 	stfpsux	 1,4,8
 	fsneg	 1,1
@@ -733,20 +755,26 @@ loop3:	# loop over time
 	fxcsnsma 8,8,12,8
 	fxcsnsma 11,11,12,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,5
+#endif
 	stfpsx	 0,0,5		# store results S0 * ~S0
 	stfpsux	 1,5,11
 	fsneg	 1,1
 	stfpsux	 1,5,11
 	stfpsux	 3,5,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,6
+#endif
 	stfpsx	 4,0,6		# store results S0 * ~S1
 	stfpsux	 5,6,11
 	stfpsux	 6,6,11
 	stfpsux	 7,6,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,7
+#endif
 	stfpsx	 8,0,7		# store results S1 * ~S1
 	stfpsux	 9,7,11
 	fsneg	 9,9
@@ -972,32 +1000,42 @@ loop7:	# loop over time
 	fxcsnsma 15,15,18,15
 	fxcsnsma 17,17,18,17
 
+#if !defined HAVE_BGP
 	dcbz	 0,6
+#endif
 	stfpsx	 0,0,6		# store results S0 * ~S1
 	stfpsux	 1,6,11
 	stfpsux	 2,6,11
 	stfpsux	 3,6,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,7
+#endif
 	stfpsx	 4,0,7		# store results S0 * ~S2
 	stfpsux	 5,7,11
 	stfpsux	 6,7,11
 	stfpsux	 7,7,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,8
+#endif
 	stfpsx	 8,0,8		# store results S1 * ~S1
 	stfpsux	 9,8,11
 	fsneg	 9,9
 	stfpsux	 9,8,11
 	stfpsux	 10,8,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,9
+#endif
 	stfpsx	 11,0,9		# store results S1 * ~S2
 	stfpsux	 12,9,11
 	stfpsux	 13,9,11
 	stfpsux	 14,9,11
 
+#if !defined HAVE_BGP
 	dcbz	 0,10
+#endif
 	stfpsx	 15,0,10	# store results S2 * ~S2
 	stfpsux	 16,10,11
 	fsneg	 16,16
@@ -1139,7 +1177,19 @@ _add_correlations:
 .align	5
 .global	_clear_correlation
 _clear_correlation:
+#if defined HAVE_BGP
+	li	0,0
+	stw	0,0(3)
+	stw	0,4(3)
+	stw	0,8(3)
+	stw	0,12(3)
+	stw	0,16(3)
+	stw	0,20(3)
+	stw	0,24(3)
+	stw	0,28(3)
+#else
 	dcbz	0,3		# clear the entire cache line, it contains all
+#endif
 	blr			# polarizations
 
 

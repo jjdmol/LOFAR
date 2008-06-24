@@ -1,17 +1,20 @@
+
 #ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_TRANSPOSE_H
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_TRANSPOSE_H
 
 #include <InputData.h>
+#include <LocationInfo.h>
 #include <TransposedData.h>
 
 #include <boost/multi_array.hpp>
 
-#if defined HAVE_BGL
-#include <bglpersonality.h>
+#if defined HAVE_MPI
+#define MPICH_IGNORE_CXX_SEEK
+#include <mpi.h>
 #endif
 
-#if defined HAVE_MPI
-#include <mpi.h>
+#if defined HAVE_BGL
+#include <bglpersonality.h>
 #endif
 
 #include <vector>
@@ -28,10 +31,14 @@ class Transpose {
     ~Transpose();
 
     void setupTransposeParams(const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets, InputData *, TransposedData *);
-    static void	getMPIgroups(unsigned nrCoresPerPset, const BGLPersonality &, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets);
 
-#if defined HAVE_BGL
-    static unsigned remapOnTree(unsigned pset, unsigned core, const struct BGLPersonality &);
+/* #if defined HAVE_BGL */
+/*     static void	getMPIgroups(unsigned nrCoresPerPset, const BGLPersonality &, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets); */
+/*     static unsigned remapOnTree(unsigned pset, unsigned core, const struct BGLPersonality &); */
+/* #elif defined HAVE_BGP */
+#if defined HAVE_BGL || HAVE_BGP
+    static void	getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets);
+    static unsigned remapOnTree(unsigned pset, unsigned core, const std::vector<unsigned> &psetNumbers);
 #endif
 
     void transpose(const InputData *, TransposedData *);

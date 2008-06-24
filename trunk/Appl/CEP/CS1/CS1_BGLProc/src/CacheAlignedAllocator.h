@@ -5,7 +5,7 @@
 #include <memory>
 
 
-#if defined HAVE_BGL
+#if defined HAVE_BGL || defined HAVE_BGP
 #define CACHE_LINE_SIZE	32
 #define CACHE_ALIGNED	__attribute__ ((aligned(CACHE_LINE_SIZE)))
 #else

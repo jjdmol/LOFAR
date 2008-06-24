@@ -26,9 +26,12 @@
 #include <Common/Exception.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Configuration.h>
+#include <Transport/TH_File.h>
 #include <Transport/TH_Null.h>
+#include <Transport/TH_Socket.h>
 #include <CS1_BGLProc/TH_ZoidClient.h>
 #endif
+#include <CS1_BGLProc/LocationInfo.h>
 #include <CS1_BGLProc/BGL_Processing.h>
 #include <CS1_BGLProc/Package__Version.h>
 #include <Transport/TH_MPI.h>
@@ -40,6 +43,8 @@ using namespace LOFAR::CS1;
 
 int main(int argc, char **argv)
 {
+  std::clog.rdbuf(std::cout.rdbuf());
+
   try {
     BGL_Processing::original_argv = argv;
 
@@ -53,18 +58,34 @@ int main(int argc, char **argv)
       Version::show<CS1_BGLProcVersion> (std::cout, "CS1_BGLProc", type);
     }
 
+    LocationInfo   locationInfo;
+
 #if defined HAVE_ZOID && defined HAVE_BGL
-    TH_ZoidClient     th;
+    TH_ZoidClient  th;
+#elif 0
+    TH_Null	   th;
+#elif 0
+    usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
+
+    TH_Socket	   th("127.0.0.1", boost::lexical_cast<string>(5000 + locationInfo.rankInPset()));
+
+    while (!th.init())
+      sleep(1);
 #else
-    TH_Null	      th;
+    TH_File	   th(string("/tmp/sock.") + boost::lexical_cast<string>(locationInfo.rankInPset()), TH_File::Read);
+
+    while (!th.init())
+      sleep(1);
 #endif
 
-    BGL_Processing    proc(&th);
-    BGL_Command	      command;
+    BGL_Processing proc(&th, locationInfo);
+    BGL_Command	   command;
 
     do {
+std::clog << TH_MPI::getCurrentRank() << " read command" << std::endl;
       command.read(&th);
 
+std::clog << TH_MPI::getCurrentRank() << " received command " << (unsigned) command.value() << std::endl;
       switch (command.value()) {
 	case BGL_Command::PREPROCESS :	{
 					  BGL_Configuration configuration;
@@ -82,6 +103,7 @@ int main(int argc, char **argv)
 
 	default :			break;
       }
+std::clog << TH_MPI::getCurrentRank() << " command handled" << std::endl;
     } while (command.value() != BGL_Command::STOP);
 
 #if defined HAVE_MPI
