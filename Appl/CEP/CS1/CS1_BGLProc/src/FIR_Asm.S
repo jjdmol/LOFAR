@@ -17,7 +17,7 @@
 #
 #  $Id$
 
-#if defined HAVE_BGL
+#if defined HAVE_BGL || defined HAVE_BGP
 #define BGL_PROCESSING
 #include <CS1_Interface/CS1_Config.h>
 
@@ -93,7 +93,9 @@ L4:
 	lfpsux	2,4,6
 	lfpsux	3,4,6
 
+#if !defined HAVE_BGP
 	dcbz	3,7
+#endif
 	stfpsux	0,3,7
 	stfpsux	1,3,9
 	stfpsux	2,3,9
@@ -164,7 +166,11 @@ L5:
 	fxcxnpma 3,3,10,15	; lfpsux	7,4,7
 
 	fxcxnpma 8,8,9,16
+#if defined HAVE_BGP
+	fxcxnpma 10,10,11,17
+#else
 	fxcxnpma 10,10,11,17	; dcbz		3,6
+#endif
  
 	fxpmul	12,4,8		; stfpsux	0,3,6
 	fxpmul	13,5,8		; stfpsux	1,3,10
@@ -180,7 +186,11 @@ L5:
 	fxcxnpma 7,7,10,15	; lfpsux	3,4,7
 
 	fxcxnpma 8,8,9,16
+#if defined HAVE_BGP
+	fxcxnpma 10,10,11,17
+#else
 	fxcxnpma 10,10,11,17	; dcbz		3,6
+#endif
  
 	fxpmul	12,0,8		; stfpsux	4,3,6
 	fxpmul	13,1,8 		; stfpsux	5,3,10
@@ -1604,9 +1614,29 @@ L8:	cmpi	0,7,NR_SAMPLES_PER_INTEGRATION
 #endif
 
 
+#if defined HAVE_BGP
+zero:	.long	0,0
+#endif
+
 .align 5
 .global _memzero
 _memzero:
+#if defined HAVE_BGP
+	lis	5,zero@ha	; srwi	4,4,7
+	addi	5,5,zero@l	; mtctr	4
+	lfpsx	0,0,5		; li	8,16
+	subi	3,3,16
+
+L1:	stfpdux	0,3,8
+	stfpdux	0,3,8
+	stfpdux	0,3,8
+	stfpdux	0,3,8
+	stfpdux	0,3,8
+	stfpdux	0,3,8
+	stfpdux	0,3,8
+	stfpdux	0,3,8
+	bdnz	L1
+#else
 	srwi	4,4,7
 	mtctr	4
 	li	4,32
@@ -1614,13 +1644,13 @@ _memzero:
 	li	6,96
 	li	7,128
 
-L1:	
-	dcbz	0,3
+L1:	dcbz	0,3
 	dcbz	3,4
 	dcbz	3,5
 	dcbz	3,6
 	add	3,3,7
 	bdnz	L1
+#endif
 	blr
 
 

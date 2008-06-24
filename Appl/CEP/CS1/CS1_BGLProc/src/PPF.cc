@@ -197,7 +197,7 @@ void PPF::filter(double centerFrequency, const TransposedData *transposedData, F
 #endif
 
 #if defined PPF_C_IMPLEMENTATION
-    fcomplex fftOutData[NR_SUBBAND_CHANNELS];
+    fcomplex fftOutData[NR_SUBBAND_CHANNELS] __attribute__ ((aligned(sizeof(fcomplex))));
 
     FIRtimer.start();
     for (unsigned pol = 0; pol < NR_POLARIZATIONS; pol ++) {

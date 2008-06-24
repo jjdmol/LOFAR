@@ -1,7 +1,7 @@
 #ifndef LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_FIR_H
 #define LOFAR_APPL_CEP_CS1_CS1_BGL_PROC_FIR_H
 
-#if 0 || !defined HAVE_BGL
+#if 0 || !(defined HAVE_BGL || defined HAVE_BGP)
 #define FIR_C_IMPLEMENTATION
 #endif
 

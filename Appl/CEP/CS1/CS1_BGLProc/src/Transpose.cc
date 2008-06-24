@@ -10,6 +10,9 @@
 
 #if defined HAVE_BGL
 #include <rts.h>
+//#elif defined HAVE_BGP
+//#include <common/bgp_personality_inlines.h>
+//#include <spi/kernel_interface.h>
 #endif
 
 #include <cassert>
@@ -44,48 +47,68 @@ Transpose::~Transpose()
 }
 
 
-#if defined HAVE_BGL
+// #if defined HAVE_BGL
 
-unsigned Transpose::remapOnTree(unsigned pset, unsigned core, const struct BGLPersonality &personality)
+// unsigned Transpose::remapOnTree(unsigned pset, unsigned core, const struct BGLPersonality &personality)
+// {
+//   unsigned psetXsize  = personality.getXpsetSize();
+//   unsigned psetYsize  = personality.getYpsetSize();
+//   unsigned psetZsize  = personality.getZpsetSize();
+
+//   unsigned psetXcount = personality.getXsize() / psetXsize;
+//   unsigned psetYcount = personality.getYsize() / psetYsize;
+//   unsigned psetZcount = personality.getZsize() / psetZsize;
+
+//   unsigned xOrigin    = pset			       % psetXcount * psetXsize;
+//   unsigned yOrigin    = pset / psetXcount	       % psetYcount * psetYsize;
+//   unsigned zOrigin    = pset / psetXcount / psetYcount % psetZcount * psetZsize;
+
+//   unsigned nodesPerPset = personality.numNodesInPset();
+
+//   unsigned numProcs, xOffset, yOffset, zOffset, node;
+
+//   core = BGL_Mapping::mapCoreOnPset(core, pset);
+//   personality.coordsForPsetRank(core % nodesPerPset, xOffset, yOffset, zOffset);
+
+//   unsigned x = xOrigin + xOffset - personality.xPsetOrigin();
+//   unsigned y = yOrigin + yOffset - personality.yPsetOrigin();
+//   unsigned z = zOrigin + zOffset - personality.zPsetOrigin();
+//   unsigned t = core / nodesPerPset;
+
+//   rts_rankForCoordinates(x, y, z, t, &node, &numProcs);
+
+// #if defined HAVE_MPI
+//   if (node >= (unsigned) TH_MPI::getNumberOfNodes()) {
+//     std::cerr << "not enough nodes allocated (node = " << node << ", TH_MPI::getNumberOfNodes() = " << TH_MPI::getNumberOfNodes() << std::endl;
+//     exit(1);
+//   }
+// #endif
+
+//   return node;
+// }
+
+// #elif defined HAVE_BGP
+#if defined HAVE_BGL || defined HAVE_BGP
+
+unsigned Transpose::remapOnTree(unsigned pset, unsigned core, const std::vector<unsigned> &psetNumbers)
 {
-  unsigned psetXsize  = personality.getXpsetSize();
-  unsigned psetYsize  = personality.getYpsetSize();
-  unsigned psetZsize  = personality.getZpsetSize();
-
-  unsigned psetXcount = personality.getXsize() / psetXsize;
-  unsigned psetYcount = personality.getYsize() / psetYsize;
-  unsigned psetZcount = personality.getZsize() / psetZsize;
-
-  unsigned xOrigin    = pset			       % psetXcount * psetXsize;
-  unsigned yOrigin    = pset / psetXcount	       % psetYcount * psetYsize;
-  unsigned zOrigin    = pset / psetXcount / psetYcount % psetZcount * psetZsize;
-
-  unsigned nodesPerPset = personality.numNodesInPset();
-
-  unsigned numProcs, xOffset, yOffset, zOffset, node;
-
   core = BGL_Mapping::mapCoreOnPset(core, pset);
-  personality.coordsForPsetRank(core % nodesPerPset, xOffset, yOffset, zOffset);
 
-  unsigned x = xOrigin + xOffset - personality.xPsetOrigin();
-  unsigned y = yOrigin + yOffset - personality.yPsetOrigin();
-  unsigned z = zOrigin + zOffset - personality.zPsetOrigin();
-  unsigned t = core / nodesPerPset;
-
-  rts_rankForCoordinates(x, y, z, t, &node, &numProcs);
-
-#if defined HAVE_MPI
-  if (node >= (unsigned) TH_MPI::getNumberOfNodes()) {
-    std::cerr << "not enough nodes allocated (node = " << node << ", TH_MPI::getNumberOfNodes() = " << TH_MPI::getNumberOfNodes() << std::endl;
-    exit(1);
-  }
-#endif
-
-  return node;
+  for (unsigned rank = 0;; rank ++)
+    if (psetNumbers[rank] == pset && core -- == 0)
+      return rank;
 }
 
+#endif
 
-void Transpose::getMPIgroups(unsigned nrCoresPerPset, const struct BGLPersonality &personality, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets)
+
+// #if defined HAVE_BGL
+// void Transpose::getMPIgroups(unsigned nrCoresPerPset, const struct BGLPersonality &personality, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets)
+// #elif defined HAVE_BGP
+#if defined HAVE_BGL || defined HAVE_BGP
+void Transpose::getMPIgroups(unsigned nrCoresPerPset, const LocationInfo &locationInfo, const std::vector<unsigned> &inputPsets, const std::vector<unsigned> &outputPsets)
+#endif
+#if defined HAVE_BGL || defined HAVE_BGP
 {
   allTransposeGroups.resize(nrCoresPerPset);
 
@@ -105,10 +128,14 @@ void Transpose::getMPIgroups(unsigned nrCoresPerPset, const struct BGLPersonalit
     std::vector<int> ranks;
 
     for (std::set<unsigned>::const_iterator pset = psets.begin(); pset != psets.end(); pset ++)
+#if 0 // defined HAVE_BGL
       ranks.push_back(remapOnTree(*pset, core, personality));
+#else
+      ranks.push_back(locationInfo.remapOnTree(*pset, core));
+#endif
 
     if (TH_MPI::getCurrentRank() == 0)
-      std::clog << "group " << core << " contains cores " << ranks << std::endl;
+      std::clog << "Transpose :: group " << core << " contains cores " << ranks << std::endl;
 
     if (MPI_Group_incl(all, ranks.size(), &ranks[0], &group) != MPI_SUCCESS) {
       std::cerr << "MPI_Group_incl() failed" << std::endl;

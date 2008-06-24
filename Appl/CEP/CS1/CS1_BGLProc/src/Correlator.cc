@@ -190,6 +190,7 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
     for (unsigned stat2 = nrValidStations % 2 ? 1 : 2; stat2 < nrValidStations; stat2 += 2) {
       unsigned stat1 = 0;
 
+#if defined HAVE_BGL
       // do as many 3x2 blocks as possible
       for (; stat1 + 3 <= stat2; stat1 += 3) { 
 	unsigned stat10 = map[stat1], stat11 = map[stat1+1], stat12 = map[stat1+2];
@@ -208,9 +209,10 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
 		       correlatedData->visibilities[baseline(stat12, stat21)][ch].origin(),
 		       itsNrSamplesPerIntegration);
       }
+#endif
 
       // see if a 2x2 block is necessary
-      if (stat1 + 2 <= stat2) {
+      for (; stat1 + 2 <= stat2; stat1 += 2) {
 	unsigned stat10 = map[stat1], stat11 = map[stat1+1];
 	unsigned stat20 = map[stat2], stat21 = map[stat2+1];
 
@@ -223,7 +225,6 @@ void Correlator::correlate(const FilteredData *filteredData, CorrelatedData *cor
 		       correlatedData->visibilities[baseline(stat11, stat20)][ch].origin(),
 		       correlatedData->visibilities[baseline(stat11, stat21)][ch].origin(),
 		       itsNrSamplesPerIntegration);
-	stat1 += 2;
       }
 
       // do the remaining (auto)correlations near the diagonal
