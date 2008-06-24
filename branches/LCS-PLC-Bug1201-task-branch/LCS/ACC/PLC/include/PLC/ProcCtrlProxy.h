@@ -63,7 +63,10 @@ namespace LOFAR
         // Destructor
         virtual ~ProcCtrlProxy();
 
-        //## ---- Implementation of the ProcessControl interface ---- ##//
+        // "Implementation" of the ProcessControl methods. For detailed
+        // documentation of these methods, please refer to the ProcessControl
+        // class.
+        // @{
         tribool define   ();
         tribool init     ();
         tribool run      ();
@@ -78,6 +81,7 @@ namespace LOFAR
         bool inRunState() const;
         void setRunState();
         void clearRunState();
+        // @}
 
       protected:
         // Constructor. Keep a pointer to the "real" Process Control object.
@@ -90,6 +94,8 @@ namespace LOFAR
         // Start the process controller. Arguments can be passed in a generic
         // way, using a ParameterSet. This method must be implemented by the
         // derived classes.
+        // \return 0 : success
+        // \return 1 : failure
         virtual int operator()(const APS::ParameterSet& arg) = 0;
 
       private:

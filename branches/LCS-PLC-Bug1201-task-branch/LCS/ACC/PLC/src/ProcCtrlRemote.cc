@@ -61,7 +61,7 @@ namespace LOFAR
         pcServer.registerAtAC(procID);
 
         // Main processing loop
-        bool ok(true);
+        bool err(false);
         bool quiting(false);
         while (!quiting) {
 
@@ -76,7 +76,7 @@ namespace LOFAR
               quiting = true;
             } 
 
-            if (!(ok = ok && pcServer.handleMessage(newMsg))) {
+            if (err = err || !pcServer.handleMessage(newMsg)) {
               LOG_ERROR("ProcControlServer::handleMessage() failed");
             }
           } 
@@ -85,14 +85,14 @@ namespace LOFAR
             // call the run-routine again.
             if (inRunState()) {
               DH_ProcControl tmpMsg(PCCmdRun);
-              ok = ok && pcServer.handleMessage(&tmpMsg);
+              err = err || !pcServer.handleMessage(&tmpMsg);
             }
           }
         }
         LOG_INFO_STR("Shutting down: ApplicationController");
         pcServer.unregisterAtAC("");    // send to AC before quiting
 
-        return (!ok);
+        return (err);
       }
       
     } // namespace PLC
