@@ -87,7 +87,7 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
   std::cout << "New shape: " << temp_pos(0) << ":" <<  temp_pos(1) << std::endl;
   IPosition data_ipos(temp_pos);
 
-  tdesc.removeColumn("WEIGHT_SPECTRUM");
+  //tdesc.removeColumn("WEIGHT_SPECTRUM");
   tdesc.addColumn(ArrayColumnDesc<Float>("WEIGHT_SPECTRUM", "Added by datasquasher",
                                           data_ipos, ColumnDesc::FixedShape));
 
@@ -258,7 +258,8 @@ void MsFile::UpdateTimeslotData(casa::TableIterator Data_iter,
   data.getColumn(tempData); //We're not checking Data.nrow() Data.ncolumn(), assuming all data is the same size.
   flags.getColumn(tempFlags);
 
-  Buffer.Position = Buffer.Position++ % Buffer.WindowSize;
+  Buffer.Position = ++(Buffer.Position) % Buffer.WindowSize;
+  cout << Buffer.Position << endl;
   for (int i = 0; i < rowcount; i++)
   {
     int bi    = Info.BaselineIndex[baseline_t(antenna1(i), antenna2(i))];
@@ -289,7 +290,6 @@ void MsFile::WriteData(casa::TableIterator Data_iter,
     int bi    = Info.BaselineIndex[baseline_t(antenna1(i), antenna2(i))];
     int band  = bandnr(i);
     int index = (band % Info.NumBands) * Info.NumPairs + bi;
-
     data.put(i, Buffer.Data[index].xyPlane(Buffer.Position));
     flags.put(i, Buffer.Flags[index].xyPlane(Buffer.Position));
   }

@@ -26,6 +26,7 @@
 #include <PLC/ACCmain.h>
 #include <casa/Exceptions.h>
 #include <CS1_IDPPP/PipelineProcessControl.h>
+#include <Common/LofarLogger.h>
 
 int main(int argc, char *argv[])
 {

@@ -45,10 +45,10 @@ namespace LOFAR
     : ProcessControl()
     {
       myPipeline = NULL;
-      myFile = NULL;
-      myInfo = NULL;
+      myFile     = NULL;
+      myInfo     = NULL;
       myBandpass = NULL;
-      myFlagger = NULL;
+      myFlagger  = NULL;
       mySquasher = NULL;
     }
 
@@ -94,6 +94,8 @@ namespace LOFAR
       std::cout << "Runnning pipeline please wait..." << std::endl;
         myFile->Init(*myInfo, *myDetails);
         MsInfo* outInfo = new MsInfo(itsOutMS);
+        outInfo->Update();
+        outInfo->PrintInfo();
         myPipeline->Run(outInfo, myDetails->Columns);
         delete outInfo;
       }
@@ -123,18 +125,18 @@ namespace LOFAR
         myInfo->PrintInfo();
         switch (itsBandpass)
         {
-          case 1:  myBandpass = new BandpassCorrector();
+          case 1:  myBandpass = new BandpassCorrector(); break;
         }
         switch (itsFlagger)
         {
-          case 1:  myFlagger = new ComplexMedianFlagger();
-  //        case 2:  myFlagger = new ComplexMedian2Flagger();
-  //        case 3:  myFlagger = new FrequencyFlagger();
-          case 4:  myFlagger = new MADFlagger();
+          case 1:  myFlagger = new ComplexMedianFlagger(); break;
+  //        case 2:  myFlagger = new ComplexMedian2Flagger(); break;
+  //        case 3:  myFlagger = new FrequencyFlagger(); break;
+          case 4:  myFlagger = new MADFlagger(); break;
         }
         switch (itsSquasher)
         {
-          case 1:  mySquasher = new DataSquasher();
+          case 1:  mySquasher = new DataSquasher(); break;
         }
         myPipeline = new Pipeline(myInfo, myFile, myDetails,
                                   myBandpass, myFlagger, mySquasher);
