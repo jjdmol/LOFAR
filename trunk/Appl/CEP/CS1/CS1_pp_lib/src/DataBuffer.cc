@@ -134,6 +134,15 @@ void DataBuffer::Init(bool Columns)
 
 void DataBuffer::PrintInfo(void)
 {
+  std::cout << "Baselines:      " << Data.size() << std::endl;
+  std::cout << "Data:           " << Data[0].shape() << std::endl;
+  std::cout << "Flags:          " << Flags[0].shape() << std::endl;
+  std::cout << "Weights:        " << Weights[0].shape() << std::endl;
+  if (ModelData.size())
+  {
+    std::cout << "ModelData:      " << ModelData[0].shape() << std::endl;
+    std::cout << "CorrectedData:  " << CorrectedData[0].shape() << std::endl;
+  }
 }
 
 //===============>>> DataBuffer  <<<===============

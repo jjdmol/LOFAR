@@ -72,6 +72,7 @@ void Pipeline::Run(MsInfo* SquashedInfo, bool Columns)
   //  else
   //  { FlaggerData = BandpassData;
   //  }
+  FlaggerData = BandpassData;
   if (mySquasher)
   { SquasherData = new DataBuffer(SquashedInfo, myDetails->TimeWindow, Columns);
   }
@@ -82,32 +83,39 @@ void Pipeline::Run(MsInfo* SquashedInfo, bool Columns)
   TableIterator read_iter   = (*myFile).ReadIterator();
   TableIterator write_iter  = (*myFile).WriteIterator();
   int           TimeCounter = 0;
-  int           step          = myInfo->NumTimeslots / 10 + 1; //not exact but it'll do
-  int           row           = 0;
+  int           step        = myInfo->NumTimeslots / 10 + 1; //not exact but it'll do
+  int           row         = 0;
   while (!read_iter.pastEnd())
-  {
+  { cout << "reading data" << endl;
     myFile->UpdateTimeslotData(read_iter, *myInfo, *BandpassData);
     read_iter++;
     if (myBandpass)
-    { myBandpass->ProcessTimeslot(*BandpassData, *myInfo, *myDetails);
+    { cout << "Running Bandpass correction" << endl;
+      myBandpass->ProcessTimeslot(*BandpassData, *myInfo, *myDetails);
     }
-    if (TimeCounter > (BandpassData->WindowSize - 1)/2)
+    if (TimeCounter >= (BandpassData->WindowSize - 1)/2)
     {
       if (myFlagger)
-      { myFlagger->ProcessTimeslot(*BandpassData, *myInfo, *myDetails, *myStatistics);
+      { cout << "Running flagger" << endl;
+        myFlagger->ProcessTimeslot(*BandpassData, *myInfo, *myDetails, *myStatistics);
       }
       if (mySquasher)
-      { mySquasher->ProcessTimeslot(*BandpassData, *SquasherData, *myInfo, *myDetails);
+      { cout << "Running Data reduction" << endl;
+        SquasherData->Position = (SquasherData->Position + 1) % SquasherData->WindowSize;
+        cout << SquasherData->Position << endl;
+        mySquasher->ProcessTimeslot(*BandpassData, *SquasherData, *myInfo, *myDetails);
       }
+      cout << "writing data" << endl;
       myFile->WriteData(write_iter, *myInfo, *SquasherData);
       write_iter++;
-      if (row++ % step == 0) // to tell the user how much % we have processed,
-      { cout << 10*(row/step) << "%" << endl; //not very accurate for low numbers of timeslots, but it'll do for now
-      }
     }
     else
     {
       initBuffer(*BandpassData, *myInfo);
+    }
+    TimeCounter++;
+    if (row++ % step == 0) // to tell the user how much % we have processed,
+    { cout << 10*(row/step) << "%" << endl; //not very accurate for low numbers of timeslots, but it'll do for now
     }
   }
   myStatistics->PrintStatistics(std::cout);

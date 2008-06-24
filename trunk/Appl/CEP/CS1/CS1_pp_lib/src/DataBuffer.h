@@ -45,7 +45,6 @@ namespace LOFAR
         std::vector< casa::Cube<casa::Float> >   Weights;
         void DeterminePolarizationsToCheck(bool UseOnlyXpolarizations);
         void PrintInfo(void);
-        void UpdateData();
 
       private:
         MsInfo* myInfo;
