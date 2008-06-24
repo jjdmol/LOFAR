@@ -83,6 +83,7 @@ namespace LOFAR
           WAIT,
           RECOVER,
           FINALIZE,
+          FINALIZE_WAIT,
           QUIT,
           //# Insert new types HERE !!
           N_States

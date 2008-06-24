@@ -79,6 +79,7 @@ namespace LOFAR
         WAIT,
         GET_COMMAND,
         SOLVE,
+        QUIT,
         //# Insert new types HERE !!
         N_States
       };

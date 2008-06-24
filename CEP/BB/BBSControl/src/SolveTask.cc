@@ -100,7 +100,7 @@ namespace LOFAR
       case INDEXING:
         // Check to see whether this kernel has already sent a CoeffIndexMsg.
         if (!itsKernelMessageReceived.insert(message.getKernelId()).second) {
-          error("Dpulicate", message);
+          error("Duplicate", message);
         }
         // Set the coefficient index in the solver
         itsSolver.setCoeffIndex(message.getKernelId(), message.getContents());

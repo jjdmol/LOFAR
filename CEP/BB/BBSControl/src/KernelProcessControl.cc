@@ -198,10 +198,7 @@ namespace LOFAR
             if(cmd.first->type() == "Finalize")
             {
               LOG_INFO("Run completed succesfully.");
-              
-              // Exit from ACCMain. Unfortunately, this will generate an error
-              // message.
-              return false;
+              clearRunState();
             }
           }
           else
@@ -237,16 +234,16 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
     tribool KernelProcessControl::release()
     {
       LOG_INFO("KernelProcessControl::release()");
-      LOG_WARN("Not implemented yet");
+      LOG_WARN("Not supported");
       /* Here we should properly clean-up; i.e. close open sockets, etc. */
-      return true;
+      return indeterminate;
     }
 
 
@@ -261,7 +258,7 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
@@ -269,7 +266,7 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
@@ -277,7 +274,7 @@ namespace LOFAR
     {
       LOG_TRACE_FLOW(AUTO_FUNCTION_NAME);
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 

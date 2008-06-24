@@ -239,7 +239,11 @@ namespace LOFAR
           else {
             itsCommandQueue->
               addResult(itsCommand.second, CommandResult::OK, itsSenderId);
-            setState(WAIT);
+            // If we've received a "finalize" command, we should quit.
+            if (dynamic_pointer_cast<const FinalizeCommand>(itsCommand.first))
+              setState(QUIT);
+            else 
+              setState(WAIT);
           }
           break;
         }
@@ -272,12 +276,18 @@ namespace LOFAR
           break;
         }
 
+        case QUIT: {
+          LOG_TRACE_FLOW_STR("RunState::" << showState());
+          clearRunState();
+        }
+
         } // switch
       }
       catch(Exception& e) {
         LOG_ERROR_STR(e);
         return false;
       }
+
       return true;
     }
 
@@ -286,7 +296,7 @@ namespace LOFAR
     {
       LOG_INFO("SolverProcessControl::pause()");
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
@@ -298,7 +308,7 @@ namespace LOFAR
          I.e. our connection to the command queue, and the connections
          that we've accepted from the kernels.
       */
-      return true;
+      return indeterminate;
     }
 
 
@@ -313,7 +323,7 @@ namespace LOFAR
     {
       LOG_INFO("SolverProcessControl::snapshot()");
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
@@ -321,7 +331,7 @@ namespace LOFAR
     {
       LOG_INFO("SolverProcessControl::recover()");
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
@@ -329,7 +339,7 @@ namespace LOFAR
     {
       LOG_INFO("SolverProcessControl::reinit()");
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
@@ -365,6 +375,7 @@ namespace LOFAR
         "WAIT",
         "GET_COMMAND",
         "SOLVE",
+        "QUIT",
         "<UNDEFINED>"  //# This should ALWAYS be last !!
       };
       if (UNDEFINED < itsState && itsState < N_States) return states[itsState];
