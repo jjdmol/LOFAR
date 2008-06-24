@@ -30,6 +30,8 @@
 #include <APS/ParameterSet.h>
 #include <APS/Exceptions.h>
 #include <PLC/ProcControlServer.h>
+#include <PLC/ProcCtrlCmdLine.h>
+#include <PLC/ProcCtrlRemote.h>
 #include <PLC/ACCmain.h>
 #ifdef HAVE_MPI
 #include <Transport/TH_MPI.h>
@@ -85,23 +87,19 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 	}
 #endif
 
-	// 
 	string	programName(basename(argv[0]));
 	bool	ACCmode(true);
+        int     result(0);
+
+	// Check invocation syntax: [ACC] parsetfile UniqProcesName
+	// When we are called by ACC the first argument is ACC.
+	// otherwise we do all states right after each other.
+	if ((argc < 2) || (strcmp("ACC", argv[1]) != 0)) {
+		ACCmode = false;
+	}
+	LOG_DEBUG(programName + (ACCmode ? " " : " not ") + "started by ACC");
 
 	try {
-		// Check invocation syntax: [ACC] parsetfile UniqProcesName
-		// When we are called by ACC the first argument is ACC.
-		// otherwise we do all states right after each other.
-		if ((argc < 2) || (strcmp("ACC", argv[1]) != 0)) {
-			// we were not called by ACC
-			LOG_DEBUG(programName + " not started by ACC");
-			ACCmode = false;
-		}
-		else {
-			LOG_DEBUG(programName + " started by ACC");
-		}
-
 		// Read in the parameterset.
 		ConfigLocator	CL;
 		string	ParsetFile = CL.locate(argv[1 + (ACCmode ? 1 : 0)]);
@@ -109,111 +107,41 @@ int ACCmain (int argc, char* orig_argv[], ProcessControl* theProcess) {
 		LOG_INFO_STR("Using parameterset " << ParsetFile);
 		globalParameterSet()->adoptFile(ParsetFile);
 
-		// When not under control of ACC execute all modes immediately
-		if (!ACCmode) {
-			LOG_DEBUG(programName + " starting define");
-			if (!theProcess->define()) {
-				return (1);
-			}
+                // Use a local parameterset to pass arguments.
+                ParameterSet arg;
+                arg.add("ProgramName", programName);
 
-			LOG_DEBUG(programName + " initializing");
-			if (!theProcess->init()) {
-				return (1);
-			}
-
-			LOG_DEBUG(programName + " running");
-			int noRuns = atoi(argv[argc - 1]);
-			if (noRuns == 0) {
-				noRuns = 1;
-			}
-			for (int run = 0; run < noRuns; run++) {
-				if (!theProcess->run()) {
-					return (1);
-				}
-			}
-
-			LOG_DEBUG(programName + " releasing");
-			if (!theProcess->release()) {
-				return (1);
-			}
-			
-			LOG_DEBUG(programName + " quitting");
-			if (!theProcess->quit()) {
-				return (1);
-			}
-
-			LOG_DEBUG(programName + " deleting process");
-
-		} 
-		else {
-			// we are under control of ACC
-			// Note args are: ACC parsetfile UniqProcesName
-			string	procID(argv[3]);
-			string	prefix = globalParameterSet()->getString("_parsetPrefix");
-			
-			// connect to Application Controller
-			ProcControlServer pcServer(globalParameterSet()->getString(prefix+"_ACnode"),
-									   globalParameterSet()->getUint16(prefix+"_ACport"),
-									   theProcess);
-
-
-			// Tell AC who we are.
-			LOG_DEBUG_STR("Registering at ApplController as " << procID);
-			sleep(1);
-			pcServer.registerAtAC(procID);
-
-			// Main processing loop
-			bool	quiting(false);
-			while (!quiting) {
-				LOG_TRACE_STAT("Polling ApplController for message");
-				if (pcServer.pollForMessage()) {
-					LOG_TRACE_COND("Message received from ApplController");
-
-					// get pointer to received data
-					DH_ProcControl* newMsg = pcServer.getDataHolder();
-
-					if (newMsg->getCommand() == ACC::PLC::PCCmdQuit) {
-						quiting = true;
-					} 
-
-					if (!pcServer.handleMessage(newMsg)) {
-						LOG_ERROR("ProcControlServer::handleMessage() failed");
-					}
-
-				} else  {
-					// no new command received. If we are in the runstate 
-					// call the run-routine again.
-					if (theProcess->inRunState()) {
-						DH_ProcControl		tmpMsg(PCCmdRun);
-						pcServer.handleMessage(&tmpMsg);
-					}
-				}
-			}
-
-			LOG_INFO_STR("Shutting down: ApplicationController");
-			pcServer.unregisterAtAC("");		// send to AC before quiting
-		}
+                // Create the correct ProcCtrlProxy and start it. 
+                if (ACCmode) {
+                  arg.add("ProcID", argv[3]);
+                  result = (ProcCtrlRemote(theProcess))(arg);
+                } 
+                else {
+                  arg.add("NoRuns", argv[argc-1]);
+                  result = (ProcCtrlCmdLine(theProcess))(arg);
+                }
 	} 
 	catch (Exception& ex) {
 		LOG_FATAL_STR("Caught exception: " << ex << endl);
-		LOG_FATAL_STR(programName << " terminated by exception!");
-		return (1);
+		result = 1;
 	} 
 	catch (std::exception& ex) {
 		LOG_FATAL_STR("Caught std::exception: " << ex.what());
-		return (1);
+		result = 1;
 	} 
 	catch (...) {
-		LOG_FATAL_STR("Caught unknown exception, exitting");
-		return (1);
+		LOG_FATAL_STR("Caught unknown exception.");
+		result = 1;
 	}  
 
 #ifdef HAVE_MPI
 	TH_MPI::finalize();
 #endif
 
-	LOG_INFO_STR(programName << " terminated normally");
-	return (0);
+	LOG_INFO(programName + " terminated " + 
+                 (result ? "with an error" : "normally"));
+
+	return result;
 }
 
     } // namespace PLC
