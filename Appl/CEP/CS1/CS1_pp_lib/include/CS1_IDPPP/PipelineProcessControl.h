@@ -36,19 +36,31 @@ namespace LOFAR
 {
   namespace CS1
   {
+    //Foreward declarations
+    class BandpassCorrector;
+    class Flagger;
+    class DataSquasher;
+    class MsFile;
+    class MsInfo;
+    class RunDetails;
+    class Pipeline;
+
     class PipelineProcessControl : public LOFAR::ACC::PLC::ProcessControl
     {
     private:
-      std::string  itsMS;
-//      bool         itsFlagData;
-//      bool         itsFlagRMS;
-//      bool         itsExisting;
-//      int          itsWindow;
-//      bool         itsCrosspol;
-//      double       itsMin;
-//      double       itsMax;
-//      WSRT::MS_File*              myMS;
-//      WSRT::ComplexMedianFlagger* itsFlagger;
+      std::string  itsInMS;
+      std::string  itsOutMS;
+      int          itsBandpass;
+      int          itsFlagger;
+      int          itsSquasher;
+
+      MsFile*            myFile;
+      MsInfo*            myInfo;
+      RunDetails*        myDetails;
+      BandpassCorrector* myBandpass;
+      Flagger*           myFlagger;
+      DataSquasher*      mySquasher;
+      Pipeline*          myPipeline;
     public:
       PipelineProcessControl(void);
 

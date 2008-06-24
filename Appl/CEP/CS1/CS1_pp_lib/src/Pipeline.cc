@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006-8 by ASTRON/LOFAR, Adriaan Renting                 *
+ *   Copyright (C) 2007-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -17,32 +17,101 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include <iostream>
 
+#include "Pipeline.h"
+#include "MsInfo.h"
+#include "MsFile.h"
+#include "RunDetails.h"
+#include "BandpassCorrector.h"
+#include "Flagger.h"
+#include "DataSquasher.h"
+#include "DataBuffer.h"
+#include "FlaggerStatistics.h"
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-#include <libgen.h>
-#include <PLC/ACCmain.h>
-#include <casa/Exceptions.h>
-#include <CS1_IDPPP/PipelineProcessControl.h>
+using namespace LOFAR::CS1;
+using namespace casa;
 
-int main(int argc, char *argv[])
+//===============>>>  Pipeline::Pipeline  <<<===============
+
+Pipeline::Pipeline(MsInfo* info, MsFile* msfile, RunDetails* details,
+                   BandpassCorrector* bandpass, Flagger* flagger, DataSquasher* squasher)
+
 {
-  try
-  {
-    INIT_LOGGER(basename(argv[0]));
-    LOFAR::CS1::PipelineProcessControl myProcess;
-    return LOFAR::ACC::PLC::ACCmain(argc, argv, &myProcess);
-  } //try
-  catch(casa::AipsError& err)
-  {
-    std::cerr << "Aips++ error detected: " << err.getMesg() << std::endl;
-    return -2;
+  myInfo     = info;
+  myFile     = msfile;
+  myDetails  = details;
+  myBandpass = bandpass;
+  myFlagger  = flagger;
+  mySquasher = squasher;
+  myStatistics = new FlaggerStatistics(*myInfo);
+  BandpassData = new DataBuffer(info, myDetails->TimeWindow);
+//  if (myFlagger && myBandpass)
+//  { FlaggerData = new DataBuffer(info, myDetails->TimeWindow);
+//  }
+//  else
+//  { FlaggerData = BandpassData;
+//  }
+  if (mySquasher)
+  { SquasherData = new DataBuffer(info, myDetails->TimeWindow);
   }
-  catch(...)
-  {
-    std::cerr << "** PROBLEM **: Unhandled exception caught." << std::endl;
-    return -3;
+  else
+  { SquasherData = FlaggerData;
   }
 }
+
+//===============>>>  Pipeline::~Pipeline  <<<===============
+
+Pipeline::~Pipeline()
+{
+}
+
+//===============>>>  Pipeline::~Pipeline  <<<===============
+
+void Pipeline::initBuffer(DataBuffer& buffer, MsInfo& info)
+{
+  for (int i = 0; i < info.NumBands * info.NumPairs; i++)
+  { buffer.Data[i].xyPlane(buffer.WindowSize -1 - buffer.Position) = buffer.Data[i].xyPlane(buffer.Position);
+  }
+}
+
+//===============>>> ComplexMedianFlagger::UpdateTimeslotData  <<<===============
+void Pipeline::Run(void)
+{
+
+  TableIterator read_iter   = (*myFile).ReadIterator();
+  TableIterator write_iter  = (*myFile).WriteIterator();
+  int           TimeCounter = 0;
+  int           step          = myInfo->NumTimeslots / 10 + 1; //not exact but it'll do
+  int           row           = 0;
+  while (!read_iter.pastEnd())
+  {
+    myFile->UpdateTimeslotData(read_iter, *myInfo, *BandpassData);
+    read_iter++;
+    if (myBandpass)
+    { myBandpass->ProcessTimeslot(*BandpassData, *myInfo, *myDetails);
+    }
+    if (TimeCounter > (BandpassData->WindowSize - 1)/2)
+    {
+      if (myFlagger)
+      { myFlagger->ProcessTimeslot(*BandpassData, *myInfo, *myDetails, *myStatistics);
+      }
+  //    if (mySquasher)
+  //    { mySquasher->ProcessTimeslot(*BandpassData, *SquasherData, *myInfo, *myDetails);
+  //    }
+      myFile->WriteData(write_iter, *myInfo, *SquasherData);
+      write_iter++;
+      if (row++ % step == 0) // to tell the user how much % we have processed,
+      { cout << 10*(row/step) << "%" << endl; //not very accurate for low numbers of timeslots, but it'll do for now
+      }
+    }
+    else
+    {
+      initBuffer(*BandpassData, *myInfo);
+    }
+  }
+  myStatistics->PrintStatistics(std::cout);
+}
+
+//===============>>> Pipeline  <<<===============
+

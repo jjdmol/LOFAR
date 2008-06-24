@@ -19,14 +19,20 @@
  ***************************************************************************/
 
 #include <iostream>
-#include <cstdlib>
-#include <iostream>
 #include <casa/Inputs/Input.h>
 #include <ms/MeasurementSets.h>
 
 #include <CS1_IDPPP/PipelineProcessControl.h>
-//#include "MS_File.h"
-//#include "ComplexMedianPipeline.h"
+#include "MsInfo.h"
+#include "MsFile.h"
+#include "RunDetails.h"
+#include "Pipeline.h"
+
+#include "BandpassCorrector.h"
+#include "Flagger.h"
+#include "ComplexMedianFlagger.h"
+#include "MADFlagger.h"
+#include "DataSquasher.h"
 
 #define PIPELINE_VERSION "0.10"
 
@@ -38,33 +44,43 @@ namespace LOFAR
     PipelineProcessControl::PipelineProcessControl()
     : ProcessControl()
     {
-      myMS       = NULL;
-      itsPipeline = NULL;
     }
 
     //===============>>> PipelineProcessControl::~PipelineProcessControl  <<<==============
     PipelineProcessControl::~PipelineProcessControl()
     {
-      if (myMS)
-      { delete myMS;
-      }
-      if (itsPipeline)
-      { delete itsPipeline;
-      }
     }
 
     //===============>>> PipelineProcessControl::define  <<<==============================
     tribool PipelineProcessControl::define()
     {
       LOFAR::ACC::APS::ParameterSet* ParamSet = LOFAR::ACC::APS::globalParameterSet();
-      itsMS       = ParamSet->getString("ms");
+      myDetails  = new RunDetails();
+      myDetails->Fixed        = ParamSet->getInt32("fixed");      // BandpassCorrector
+      myDetails->FreqWindow   = ParamSet->getInt32("freqwindow"); // FrequencyFlagger, MADFlagger
+      myDetails->TimeWindow   = ParamSet->getInt32("timewindow"); // ComplexMedianFlagger, MADFlagger
+      myDetails->Treshold     = ParamSet->getInt32("treshold");   // FrequencyFlagger
+      myDetails->MinThreshold = ParamSet->getDouble("min");       // ComplexMedianFlagger
+      myDetails->MaxThreshold = ParamSet->getDouble("min");       // ComplexMedianFlagger
+      myDetails->Existing     = ParamSet->getBool("existing");    // all flaggers
+      myDetails->NChan        = ParamSet->getInt32("nchan");      // DataSquasher
+      myDetails->Start        = ParamSet->getInt32("start");      // DataSquasher
+      myDetails->Step         = ParamSet->getInt32("step");       // DataSquasher
+      myDetails->Skip         = ParamSet->getBool("skipflags");   // DataSquasher
+      myDetails->Columns      = ParamSet->getBool("allcolumns");  // DataSquasher
+
 //      itsFlagData = ParamSet->getBool("flagdata");
 //      itsFlagRMS  = ParamSet->getBool("flagrms");
 //      itsExisting = ParamSet->getBool("existing");
-//      itsWindow   = ParamSet->getInt32("window");
 //      itsCrosspol = ParamSet->getBool("crosspol");
 //      itsMin      = ParamSet->getDouble("min");
 //      itsMax      = ParamSet->getDouble("max");
+
+      itsInMS     = ParamSet->getString("msin");
+      itsOutMS    = ParamSet->getString("msout");
+      itsBandpass     = ParamSet->getInt32("bandpass");
+      itsFlagger      = ParamSet->getInt32("flagger");
+      itsSquasher     = ParamSet->getInt32("squasher");
       return true;
     }
 
@@ -73,9 +89,8 @@ namespace LOFAR
     {
       try{
       std::cout << "Runnning pipeline please wait..." << std::endl;
-//      itsPipeline->FlagDataOrBaselines(itsFlagData,
-//                                      itsFlagRMS,
-//                                      itsExisting);
+        myFile->Init(*myInfo, *myDetails);
+        myPipeline->Run();
       }
       catch(casa::AipsError& err)
       {
@@ -89,20 +104,38 @@ namespace LOFAR
     tribool PipelineProcessControl::init()
     {
       try {
-      using std::cout;
-      using std::cerr;
-      using std::endl;
+        using std::cout;
+        using std::cerr;
+        using std::endl;
 
-      cout  << string(PIPELINE_VERSION) + string(" Integrated Data Post Processing Pipeline by Adriaan Renting and others for LOFAR CS1 data\n") +
-              string("This is experimental software, please report errors or requests to renting@astron.nl\n") +
-              string("Documentation can be found at: www.lofar.org/operations\n");
-      cout << itsMS << endl;
-//      myMS       = new WSRT::MS_File(itsMS);
-//      itsPipeline = new WSRT::ComplexMedianPipeline (myMS,
-//                                                  itsWindow,
-//                                                  itsCrosspol,
-//                                                  itsMin,
-//                                                  itsMax);
+        cout  << string(PIPELINE_VERSION) + string(" Integrated Data Post Processing Pipeline by Adriaan Renting and others for LOFAR CS1 data\n") +
+                string("This is experimental software, please report errors or requests to renting@astron.nl\n") +
+                string("Documentation can be found at: www.lofar.org/operations\n");
+
+        myFile     = new MsFile(itsInMS, itsOutMS);
+        myInfo     = new MsInfo(itsInMS);
+        myInfo->Update();
+        myInfo->PrintInfo();
+        switch (itsBandpass)
+        {
+          case 1:  myBandpass = new BandpassCorrector();
+          default: myBandpass = NULL;
+        }
+        switch (itsFlagger)
+        {
+          case 1:  myFlagger = new ComplexMedianFlagger();
+  //        case 2:  myFlagger = new ComplexMedian2Flagger();
+  //        case 3:  myFlagger = new FrequencyFlagger();
+          case 4:  myFlagger = new MADFlagger();
+          default: myFlagger = NULL;
+        }
+        switch (itsSquasher)
+        {
+          case 1:  mySquasher = new DataSquasher();
+          default: mySquasher = NULL;
+        }
+        myPipeline = new Pipeline(myInfo, myFile, myDetails,
+                                  myBandpass, myFlagger, mySquasher);
       }
       catch(casa::AipsError& err)
       {
@@ -120,15 +153,35 @@ namespace LOFAR
     //===============>>> PipelineProcessControl::quit  <<<================================
     tribool PipelineProcessControl::quit()
     {
-      if (myMS)
+      if (myPipeline)
       {
-        delete myMS;
-        myMS = NULL;
+        delete myPipeline;
+        myPipeline = NULL;
       }
-      if (itsPipeline)
+      if (myFile)
       {
-        delete itsPipeline;
-        itsPipeline = NULL;
+        delete myFile;
+        myFile = NULL;
+      }
+      if (myInfo)
+      {
+        delete myInfo;
+        myInfo = NULL;
+      }
+      if (myBandpass)
+      {
+        delete myBandpass;
+        myBandpass = NULL;
+      }
+      if (myFlagger)
+      {
+        delete myFlagger;
+        myFlagger = NULL;
+      }
+      if (mySquasher)
+      {
+        delete mySquasher;
+        mySquasher = NULL;
       }
       return true;
     }
