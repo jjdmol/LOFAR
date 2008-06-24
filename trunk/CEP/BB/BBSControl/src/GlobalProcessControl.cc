@@ -32,6 +32,7 @@
 #include <BBSControl/FinalizeCommand.h>
 #include <BBSControl/CommandQueue.h>
 
+#include <APS/ParameterSet.h>
 #include <Blob/BlobIStream.h>
 #include <Blob/BlobIBufStream.h>
 #include <Common/LofarLogger.h>
@@ -58,8 +59,9 @@ namespace LOFAR
       uint nrGlobalSolvers(0);  // Number of global solvers
       uint nrClients(0);        // Number of clients (sum of the above two)
 
-      // ID of the last "next chunk" command (if any).
+      // IDs of the last "next chunk" and "finalize" commands (if any).
       CommandId nextChunkId(0);
+      CommandId finalizeId(0);
       
       bool dummy1 = BlobStreamableFactory::instance().registerClass<RegularAxis>("RegularAxis");
       bool dummy2 = BlobStreamableFactory::instance().registerClass<IrregularAxis>("IrregularAxis");      
@@ -170,6 +172,7 @@ namespace LOFAR
             results.insert(results.end(), 
                            newResults.begin(), newResults.end());
           }
+          ASSERT(results.size() <= nrClients);
           LOG_DEBUG_STR(results.size() << " out of " << nrClients << 
                         " clients have responded");
         }
@@ -374,16 +377,27 @@ namespace LOFAR
           // the strategy as 'done'.
           LOG_TRACE_FLOW("RunState::FINALIZE");
 
-          CommandId id = itsCommandQueue->addCommand(FinalizeCommand());
-          LOG_DEBUG_STR("Finalize command has ID: " << id);
+          finalizeId = itsCommandQueue->addCommand(FinalizeCommand());
+          LOG_DEBUG_STR("Finalize command has ID: " << finalizeId);
+
+          setState(FINALIZE_WAIT);
+          break;
+        }
+
+
+        case FINALIZE_WAIT: {
+          // Wait for a "result trigger" from the database. If trigger
+          // received within time-out period, fetch new results. When all
+          // "clients" have acknowledged the "finalize" command, we can switch
+          // to the QUIT state.
+          LOG_TRACE_FLOW("RunState::FINALIZE_WAIT");
 
           // Get a reference to the results registered in our local result map.
-          ResultMapType::mapped_type& results = itsResults[id];
+          ResultMapType::mapped_type& results = itsResults[finalizeId];
 
-          // Wait until all "clients" have acknowledged the "finalize"
-          // command.
-          while (results.size() < nrClients) {
-
+          // Did all "clients" acknowledge the "finalize" command?
+          if (results.size() < nrClients) { 
+            // No, wait for a result.
             LOG_DEBUG("Waiting for result trigger ...");
             
             if (itsCommandQueue->
@@ -391,7 +405,7 @@ namespace LOFAR
 
               // Retrieve the new results from the command queue.
               vector<ResultType> newResults = 
-                itsCommandQueue->getNewResults(id);
+                itsCommandQueue->getNewResults(finalizeId);
 
               // Add the new results to our local results vector.
               results.insert(results.end(), 
@@ -400,39 +414,43 @@ namespace LOFAR
             LOG_DEBUG_STR(results.size() << " out of " << nrClients << 
                           " clients have responded");
           }
-          
-          // Did all local controllers respond with an "OK" status?
-          LOG_TRACE_CALC("Results:");
-          uint notOk(0);
-          for (uint i = 0; i < results.size(); ++i) {
-            LOG_TRACE_CALC_STR(results[i].first << " - " << results[i].second);
-            if (!results[i].second) {
-              LOG_DEBUG_STR(results[i].first << " returned: " << 
-                            results[i].second.asString());
-              notOk++;
+          else { 
+            // Yes, all clients have responded.
+            ASSERT(results.size() <= nrClients);
+
+            // Did all local controllers respond with an "OK" status?
+            LOG_TRACE_CALC("Results:");
+            uint notOk(0);
+            for (uint i = 0; i < results.size(); ++i) {
+              LOG_TRACE_CALC_STR(results[i].first << " - " << 
+                                 results[i].second);
+              if (!results[i].second) {
+                LOG_DEBUG_STR(results[i].first << " returned: " << 
+                              results[i].second.asString());
+                notOk++;
+              }
             }
-          }
-          LOG_DEBUG_STR(notOk << " out of " << nrClients << 
-                        " clients returned an error status");
+            LOG_DEBUG_STR(notOk << " out of " << nrClients << 
+                          " clients returned an error status");
 
-          // Only set strategy state flag to "done" if none of the local
-          // controllers returned an error status.
-          if (notOk == 0) {
-            itsCommandQueue->setStrategyDone();
-          }
+            // Only set strategy state flag to "done" if none of the local
+            // controllers returned an error status.
+            if (notOk == 0) {
+              itsCommandQueue->setStrategyDone();
+            }
 
-          // Switch to QUIT state.
-          setState(QUIT);
+            // Switch to QUIT state.
+            setState(QUIT);
+          }
           break;
         }
-
 
         case QUIT: {
           // We're done. All we have to do now is wait for ACC to invoke
           // quit(). Sleep for a second to avoid continuous polling by
           // ACCmain.
           LOG_TRACE_FLOW("RunState::QUIT");
-          sleep(1);
+          clearRunState();
           break;
         }
 
@@ -458,7 +476,7 @@ namespace LOFAR
     {
       LOG_INFO("GlobalProcessControl::release()");
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
     tribool GlobalProcessControl::quit()
@@ -478,7 +496,7 @@ namespace LOFAR
     {
       LOG_INFO("GlobalProcessControl::pause()");
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
@@ -486,7 +504,7 @@ namespace LOFAR
     {
       LOG_INFO("GlobalProcessControl::snapshot()");
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
@@ -494,7 +512,7 @@ namespace LOFAR
     {
       LOG_INFO("GlobalProcessControl::recover()");
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
 
@@ -502,7 +520,7 @@ namespace LOFAR
     {
       LOG_INFO("GlobalProcessControl::reinit()");
       LOG_WARN("Not supported");
-      return false;
+      return indeterminate;
     }
 
     string GlobalProcessControl::askInfo(const string& /*keylist*/)
@@ -533,6 +551,7 @@ namespace LOFAR
         "WAIT",
         "RECOVER",
         "FINALIZE",
+        "FINALIZE_WAIT",
         "QUIT",
         "<UNDEFINED>"  //# This should ALWAYS be last !!
       };
