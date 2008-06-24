@@ -39,6 +39,8 @@ namespace LOFAR {
 // \addtogroup PLC
 // @{
 
+//# Forward declarations
+class ProcCtrlProxy;
 
 //# Description of class.
 // The ProcControl class provides some functions for the server-side program
@@ -51,7 +53,7 @@ public:
 	// Note: default constructor is private
 	ProcControlServer(const string&			hostname,
 					  const uint16			portNr,
-					  ProcessControl*		PCimpl);
+					  ProcCtrlProxy*		PCProxy);
 
 	// Destructor;
 	~ProcControlServer();
@@ -91,7 +93,7 @@ private:
 	ProcControlServer(const ProcControlServer& that);
 	ProcControlServer& 	operator=(const ProcControlServer& that);
 
-	ProcessControl*		itsPCImpl;
+	ProcCtrlProxy*		itsPCProxy;
 	ProcControlComm*	itsCommChan;
 	bool				itsInRunState;
 };
