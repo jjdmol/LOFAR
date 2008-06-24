@@ -40,13 +40,13 @@ enum CorrelationTypes {None=0,I=1,Q=2,U=3,V=4,RR=5,RL=6,LR=7,LL=8,XX=9,XY=10,YX=
 
 //===============>>>  DataBuffer::DataBuffer  <<<===============
 
-DataBuffer::DataBuffer(MsInfo* info, int TimeWindow)
+DataBuffer::DataBuffer(MsInfo* info, int TimeWindow, bool Columns)
 {
   myInfo     = info;
   Position   = -1;
   NumSlots   = myInfo->NumPairs * myInfo->NumBands;
   WindowSize = TimeWindow;
-  Init();
+  Init(Columns);
 }
 
 //===============>>>  DataBuffer::~DataBuffer  <<<===============
@@ -104,7 +104,7 @@ void DataBuffer::DeterminePolarizationsToCheck(bool UseOnlyXpolarizations)
 
 //===============>>> DataBuffer::update  <<<===============
 
-void DataBuffer::Init(void)
+void DataBuffer::Init(bool Columns)
 {
   PolarizationsToCheck.resize(myInfo->NumPolarizations);
 //  DeterminePolarizationsToCheck(UseOnlyXpolarizations);
@@ -112,11 +112,21 @@ void DataBuffer::Init(void)
   Data.resize(NumSlots);
   Flags.resize(NumSlots);
   Weights.resize(NumSlots);
+  if (Columns)
+  {
+    ModelData.resize(NumSlots);
+    CorrectedData.resize(NumSlots);
+  }
   for (int i = 0; i < NumSlots; i++)
   {
     Data[i].resize(myInfo->NumPolarizations, myInfo->NumChannels, WindowSize);
     Flags[i].resize(myInfo->NumPolarizations, myInfo->NumChannels, WindowSize);
     Weights[i].resize(myInfo->NumPolarizations, myInfo->NumChannels, WindowSize);
+    if (Columns)
+    {
+      ModelData[i].resize(myInfo->NumPolarizations, myInfo->NumChannels, WindowSize);
+      CorrectedData[i].resize(myInfo->NumPolarizations, myInfo->NumChannels, WindowSize);
+    }
   }
 }
 

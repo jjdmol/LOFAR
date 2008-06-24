@@ -35,30 +35,24 @@ namespace LOFAR
 {
   namespace CS1
   {
-    using namespace casa;
+    class DataBuffer;
+    class MsInfo;
+    class RunDetails;
 
     class DataSquasher
     {
-    private:
-      int itsNumSamples;
-      int itsNumChannels;
-
-      TableIterator CreateDataIterator(MeasurementSet& myMS);
-      void GetMSInfo(MeasurementSet& myMS);
-      void SquashData(Matrix<Complex>& oldData, Matrix<Complex>& newData,
-                             Matrix<Bool>& oldFlags, Matrix<Bool>& newFlags, Matrix<Float>& newWeights,
-                             int Start, int Step, int NChan, float threshold);
-
     public:
       DataSquasher(void);
       ~DataSquasher(void);
-      int itsNumBands;
-      int itsNumPolarizations;
+      void ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
+                           MsInfo& Info, RunDetails& Details);
+    private:
+      void Squash(casa::Matrix<casa::Complex>& oldData, casa::Matrix<casa::Complex>& newData,
+                  casa::Matrix<casa::Bool>& oldFlags, casa::Matrix<casa::Bool>& newFlags,
+                  casa::Matrix<casa::Float>& newWeights, int itsNumPolarizations,
+                  int Start, int Step, int NChan);
 
-      void Squash(MeasurementSet& inMS, MeasurementSet& outMS, std::string Data,
-                  int Start, int Step, int NChan, float threshold,
-                  bool UseFlags, Cube<Bool>& newFlags);
     }; //DataSquasher
-  } //namespace CS1
+  }; //namespace CS1
 }; //namespace LOFAR
 #endif

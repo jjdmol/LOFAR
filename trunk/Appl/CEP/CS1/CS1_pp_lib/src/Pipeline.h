@@ -40,7 +40,7 @@ namespace LOFAR
       Pipeline(MsInfo* info, MsFile* msfile, RunDetails* details,
                BandpassCorrector* bandpass, Flagger* flagger, DataSquasher* squasher);
       ~Pipeline();
-      void Run(void);
+      void Run(MsInfo* SquashedInfo, bool Columns);
 
     protected:
     private:

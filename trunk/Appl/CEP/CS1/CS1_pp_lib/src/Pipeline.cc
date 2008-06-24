@@ -45,19 +45,6 @@ Pipeline::Pipeline(MsInfo* info, MsFile* msfile, RunDetails* details,
   myFlagger  = flagger;
   mySquasher = squasher;
   myStatistics = new FlaggerStatistics(*myInfo);
-  BandpassData = new DataBuffer(info, myDetails->TimeWindow);
-//  if (myFlagger && myBandpass)
-//  { FlaggerData = new DataBuffer(info, myDetails->TimeWindow);
-//  }
-//  else
-//  { FlaggerData = BandpassData;
-//  }
-  if (mySquasher)
-  { SquasherData = new DataBuffer(info, myDetails->TimeWindow);
-  }
-  else
-  { SquasherData = FlaggerData;
-  }
 }
 
 //===============>>>  Pipeline::~Pipeline  <<<===============
@@ -76,8 +63,21 @@ void Pipeline::initBuffer(DataBuffer& buffer, MsInfo& info)
 }
 
 //===============>>> ComplexMedianFlagger::UpdateTimeslotData  <<<===============
-void Pipeline::Run(void)
+void Pipeline::Run(MsInfo* SquashedInfo, bool Columns)
 {
+  BandpassData = new DataBuffer(myInfo, myDetails->TimeWindow, Columns);
+  //  if (myFlagger && myBandpass)
+  //  { FlaggerData = new DataBuffer(info, myDetails->TimeWindow);
+  //  }
+  //  else
+  //  { FlaggerData = BandpassData;
+  //  }
+  if (mySquasher)
+  { SquasherData = new DataBuffer(SquashedInfo, myDetails->TimeWindow, Columns);
+  }
+  else
+  { SquasherData = FlaggerData;
+  }
 
   TableIterator read_iter   = (*myFile).ReadIterator();
   TableIterator write_iter  = (*myFile).WriteIterator();
@@ -96,9 +96,9 @@ void Pipeline::Run(void)
       if (myFlagger)
       { myFlagger->ProcessTimeslot(*BandpassData, *myInfo, *myDetails, *myStatistics);
       }
-  //    if (mySquasher)
-  //    { mySquasher->ProcessTimeslot(*BandpassData, *SquasherData, *myInfo, *myDetails);
-  //    }
+      if (mySquasher)
+      { mySquasher->ProcessTimeslot(*BandpassData, *SquasherData, *myInfo, *myDetails);
+      }
       myFile->WriteData(write_iter, *myInfo, *SquasherData);
       write_iter++;
       if (row++ % step == 0) // to tell the user how much % we have processed,
