@@ -89,6 +89,7 @@ ParameterSetImpl::makeSubset(const string& baseKey,
   // Convert \a baseKey to lowercase, if we need to do case insensitve compare.
   string            base   = (itsMode == KeyCompare::NOCASE) ? toLower(baseKey) : baseKey;
   ParameterSetImpl* subSet = new ParameterSetImpl(itsMode);
+  iterator          pos    = subSet->begin();
 
   LOG_TRACE_CALC_STR("makeSubSet(" << baseKey << "," << prefix << ")");
 
@@ -104,8 +105,8 @@ ParameterSetImpl::makeSubset(const string& baseKey,
 
     LOG_TRACE_VAR_STR(base << " matches with " << it->first);
     // cut off baseString and copy to subset
-    subSet->insert(make_pair(prefix + it->first.substr(base.size()),
-			     it->second));
+    pos = subSet->insert(pos, make_pair(prefix + it->first.substr(base.size()),
+                                        it->second));
   }
   
   return (subSet);
@@ -380,11 +381,7 @@ ParameterSetImpl::findKV(const string& aKey, bool doThrow) const
 //
 void ParameterSetImpl::add(const string& aKey, const string& aValue)
 {
-	pair< KeyValueMap::iterator, bool>		result;
-
-	result = insert(std::make_pair(aKey, aValue)); 
-
-	if (!result.second) {
+	if (!insert(make_pair(aKey, aValue)).second) {
 		THROW (APSException, formatString("add:Key %s double defined?", aKey.c_str()));
 	}
 }
@@ -402,10 +399,7 @@ void ParameterSetImpl::add(const KVpair&	aPair)
 //
 void ParameterSetImpl::replace(const string& aKey, const string& aValue)
 {
-	// remove any existed value
-	erase(aKey);
-
-	add (aKey, aValue);
+	(*this)[aKey] = aValue;
 }
 
 //
