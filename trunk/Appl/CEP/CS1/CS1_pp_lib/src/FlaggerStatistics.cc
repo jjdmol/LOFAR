@@ -19,14 +19,13 @@
  ***************************************************************************/
 #include "FlaggerStatistics.h"
 
-using namespace std;
-using namespace LOFAR;
+using namespace LOFAR::CS1;
 using namespace casa;
 
-//===============>>>  itoa  <<<===============
+//===============>>>  int2string  <<<===============
 //ANSI C++ doesn't seem to have a decent function for this, or I'm not aware of it. Need to rename it to IntToStr(), to avoid confusion
-std::string itoa(int value, int base=10)
-{ // found on http://www.jb.man.ac.uk/~slowe/cpp/itoa.html
+std::string int2string(int value, int base=10)
+{ // found on http://www.jb.man.ac.uk/~slowe/cpp/int2string.html
   //maybe copyright Robert Jan Schaper, Ray-Yuan Sheu, Rodrigo de Salvo Braz, Wes Garland and John Maloney
   enum { kMaxDigits = 35 };
   std::string buf;
@@ -48,12 +47,12 @@ std::string itoa(int value, int base=10)
 
 //===============>>>  FlaggerStatistics::FlaggerStatistics  <<<===============
 /* initialize some meta data and get the datastorage the right size. */
-FlaggerStatistics::FlaggerStatistics(int Bands, int Antennae, vector<String> Names, int Norm)
+FlaggerStatistics::FlaggerStatistics(MsInfo& info)
 {
-  NumBands     = Bands;
-  NumAntennae  = Antennae;
-  AntennaNames = Names;
-  Normalizer   = Norm;//NumChannels * NumTimeslots * NumPolarizations
+  NumBands     = info.NumBands;
+  NumAntennae  = info.NumAntennae;
+  AntennaNames = info.AntennaNames;
+  Normalizer   = info.NumChannels * info.NumTimeslots * info.NumPolarizations;
   Statistics   = Cube<int>(NumBands, NumAntennae, NumAntennae, 0);
 }
 
@@ -62,6 +61,14 @@ FlaggerStatistics::FlaggerStatistics(int Bands, int Antennae, vector<String> Nam
 FlaggerStatistics::~FlaggerStatistics()
 {
 }
+
+//===============>>>  FlaggerStatistics::~operator[]  <<<===============
+
+int& FlaggerStatistics::operator()(int x, int y, int z)
+{
+  return Statistics(x, y, z);
+}
+
 
 //===============>>> FlaggerStatistics::FlagDataOrBaselines  <<<===============
 /*This function outputs the gathered statistics.*/
@@ -100,7 +107,7 @@ void FlaggerStatistics::PrintStatistics(ostream& output)
           bands[i]    += val;
           antennae[j] += val;
           antennae[k] += val;
-          string out = itoa(val) + "%";
+          string out = int2string(val) + "%";
           out.resize(namelength+1,' ');
           output << out;
         }
@@ -110,7 +117,7 @@ void FlaggerStatistics::PrintStatistics(ostream& output)
           bands[i]    += val;
           antennae[j] += val;
           antennae[k] += val;
-          string out = itoa(val) + "%";
+          string out = int2string(val) + "%";
           out.resize(namelength+1,' ');
           output << out;
         }
@@ -121,14 +128,14 @@ void FlaggerStatistics::PrintStatistics(ostream& output)
   output << "Bands (flagged %):    ";
   for (int i = 0; i < NumBands; i++)
   {
-    string out = string("BND") + itoa(i);
+    string out = string("BND") + int2string(i);
     out.resize(namelength+1,' ');
     output << out;
   }
   output << endl << "                      ";
   for (int i = 0; i < NumBands; i++)
   {
-    string out = itoa(bands[i] / (NumAntennae*NumAntennae)) + "%";
+    string out = int2string(bands[i] / (NumAntennae*NumAntennae)) + "%";
     out.resize(namelength+1,' ');
     output << out;
   }
@@ -142,7 +149,7 @@ void FlaggerStatistics::PrintStatistics(ostream& output)
   output << endl << "                       ";
   for (int i = 0; i < NumAntennae; i++)
   {
-    string out = itoa(antennae[i] / (NumBands*NumAntennae*2)) + "%";
+    string out = int2string(antennae[i] / (NumBands*NumAntennae*2)) + "%";
     out.resize(namelength+1,' ');
     output << out;
   }

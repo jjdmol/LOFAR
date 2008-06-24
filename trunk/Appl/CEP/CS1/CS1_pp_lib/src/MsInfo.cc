@@ -24,7 +24,7 @@
 
 #include "MsInfo.h"
 
-using namespace LOFAR;
+using namespace LOFAR::CS1;
 using namespace casa;
 
 //===============>>>  Ms_Info::Ms_Info  <<<===============
@@ -110,6 +110,16 @@ void MsInfo::Update(void)
   //calculate number of Bands
   NumBands                      = NumSamples / (NumPairs * NumTimeslots);
 
+  PairsIndex.resize(NumPairs);
+
+  int index = 0;
+  for (int i = 0; i < NumAntennae; i++)
+  { for(int j = i; j < NumAntennae; j++)
+    { PairsIndex[index]               = baseline_t(i, j);
+      BaselineIndex[baseline_t(i, j)] = index++;
+    }
+  }
+
   ComputeBaselineLengths(MS);
 }
 
@@ -123,7 +133,6 @@ void MsInfo::PrintInfo(void)
   std::cout << "NumChannels:      " << NumChannels << std::endl;
   std::cout << "NumPolarizations: " << NumPolarizations << std::endl;
   std::cout << "Noiselevel:       " << NoiseLevel << std::endl;
-  std::cout << "Interval:         " << Interval << std::endl;
   std::cout << "Numtimeslots:     " << NumTimeslots << std::endl;
   std::cout << "NumPairs:         " << NumPairs << std::endl;
   std::cout << "NumBands:         " << NumBands << std::endl;

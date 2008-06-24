@@ -29,39 +29,41 @@
 
 namespace LOFAR
 {
-  typedef std::pair<int, int> baseline_t;
-
-  class MsInfo
+  namespace CS1
   {
-  public:
-     MsInfo(const std::string& msname);
-    ~MsInfo();
+    typedef std::pair<int, int> baseline_t;
 
-    int                       NumSamples;
-    int                       NumAntennae;
-    int                       NumFields;
-    int                       NumBands;
-    int                       NumChannels;
-    int                       NumPolarizations;
-    int                       NumPairs;
-    int                       NumTimeslots;
-    double                    NoiseLevel;
-    std::vector<casa::String> AntennaNames;
-    casa::Vector<casa::Int>   Polarizations;
-    double                    MaxBaselineLength;
-    std::vector<double>       BaselineLengths;
-    std::vector<baseline_t>   PairsIndex;
-    std::map<baseline_t, int> BaselineIndex;
+    class MsInfo
+    {
+    public:
+      MsInfo(const std::string& msname);
+      ~MsInfo();
 
-    void                      Update(void);
-    void                      PrintInfo(void);
+      int                       NumSamples;
+      int                       NumAntennae;
+      int                       NumFields;
+      int                       NumBands;
+      int                       NumChannels;
+      int                       NumPolarizations;
+      int                       NumPairs;
+      int                       NumTimeslots;
+      double                    NoiseLevel;
+      std::vector<casa::String> AntennaNames;
+      casa::Vector<casa::Int>   Polarizations;
+      double                    MaxBaselineLength;
+      std::vector<baseline_t>   PairsIndex;
+      std::map<baseline_t, int> BaselineIndex;
+      std::vector<double>       BaselineLengths;
 
-  protected:
-  private:
-    std::string MsName;
-    double      Interval;
-    void        ComputeBaselineLengths(casa::MeasurementSet& MS);
-  }; // class MsInfo
+      void                      Update(void);
+      void                      PrintInfo(void);
+
+    protected:
+    private:
+      std::string MsName;
+      void        ComputeBaselineLengths(casa::MeasurementSet& MS);
+    }; // class MsInfo
+  }; // CS1
 }; // namespace LOFAR
 
 #endif // __CS1_PP_MS_INFO_H__

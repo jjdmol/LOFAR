@@ -23,30 +23,29 @@
 #include <casa/Arrays.h>
 #include <iostream>
 #include <vector>
+#include "MsInfo.h"
 
 namespace LOFAR
 {
-  using casa::Cube;
-  using casa::String;
-  using std::vector;
-  using std::ostream;
-
-  class FlaggerStatistics
+  namespace CS1
   {
-    public:
-       FlaggerStatistics(int Bands, int Antennae, vector<String> Names, int Norm);
-      ~FlaggerStatistics();
+    class FlaggerStatistics
+    {
+      public:
+        FlaggerStatistics(MsInfo& info);
+        ~FlaggerStatistics();
+        void PrintStatistics(std::ostream& output);
+        int& operator()(int x, int y, int z);
 
-    protected:
-      void PrintStatistics(ostream& output);
-
-    private:
-      int                       NumAntennae;
-      int                       NumBands;
-      Cube< int >               Statistics;
-      int                       Normalizer;
-      std::vector<casa::String> AntennaNames;
-  }; // FlaggerStatistics
+      protected:
+      private:
+        int                       NumAntennae;
+        int                       NumBands;
+        casa::Cube< int >         Statistics;
+        int                       Normalizer;
+        std::vector<casa::String> AntennaNames;
+    }; // FlaggerStatistics
+  }; // CS1
 }; // namespace LOFAR
 
 #endif //  __CS1_PP_FLAGGER_STATISTICS_H__
