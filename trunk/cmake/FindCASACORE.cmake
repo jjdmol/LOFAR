@@ -42,11 +42,13 @@ list (APPEND include_locations
   /sw/share/casacore
   /sw/include/casacore
   /cephome/lofarsystem/casacore/casacore-0.1.2
+  /apps/aips++/casacore_64/include
 )
 
 list (APPEND lib_locations
   /opt/casacore/lib
   /cephome/lofarsystem/casacore/casacore-0.1.2/lib
+  /apps/aips++/casacore_64/lib
 )
 
 set (casacore_modules
