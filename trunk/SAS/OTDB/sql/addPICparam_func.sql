@@ -61,12 +61,10 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
 	  END IF;
 
 	  -- be sure NODE exists in reference table.
-	  -- PVSSname has format like xxx:aaa_bbb_ccc.ddd 
-	  -- or xxx:aaa_bbb_ccc.ddd.eee
+	  -- name has format like xxx:aaa.bbb.ccc.ddd or xxx:aaa.bbb.ccc.ddd_eee
 	  vNodename := rtrim($2, \'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890_\');			-- xxx:aaa_bbb_ccc.
-	  vNodename := rtrim(vNodename, \'.\');				-- xxx:aaa_bbb_ccc
-	  vNodename := translate(vNodename, \'_\', \'.\');	-- xxx:aaa.bbb.ccc
-	  vFullname := translate($2, \'_\', \'.\');			-- xxx:aaa.bbb.ccc.ddd
+	  vNodename := rtrim(vNodename, \'.\');				-- xxx:aaa.bbb.ccc
+	  vFullname := $2;									-- xxx:aaa.bbb.ccc.ddd_eee
 	  IF length(vNodename) > 0 THEN
 	    SELECT paramID 
 	    INTO   vParRefID
@@ -76,7 +74,7 @@ CREATE OR REPLACE FUNCTION addPICparam (INT4, VARCHAR(150), INT2)
 	    IF NOT FOUND THEN
 		  -- node not yet in reference table, add it.
 	      INSERT INTO PICparamRef(PVSSname, par_type)
-	      VALUES (vNodename, vParType);
+	      VALUES (vNodename, 0);	-- type=node
 	    END IF;
 	  END IF;
 

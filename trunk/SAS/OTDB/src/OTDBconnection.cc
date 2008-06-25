@@ -222,7 +222,7 @@ vector<TreeState> OTDBconnection::getStateList(
 		return (empty); 
 	}
 
-	LOG_TRACE_FLOW_STR ("OTDB:getTreeList(" << aTreeID << "," 
+	LOG_TRACE_FLOW_STR ("OTDB:getStateList(" << aTreeID << "," 
 										<< toString(isMomID) << ","
 										<< to_simple_string(beginDate) << ","
 										<< to_simple_string(endDate) << ")");
@@ -296,6 +296,53 @@ vector<OTDBtree> OTDBconnection::getExecutableTrees(classifType aClassification)
 	}
 	catch (std::exception&	ex) {
 		itsError = string("Exception during retrieval of getExecutableTrees:")
+					 + ex.what();
+	}
+
+	vector<OTDBtree> 	empty;
+	return (empty);
+}
+
+//
+// getTreeGroup(groupType, periodInMinutes)
+//
+// 1 = planned, 2 = active, 3 = finished
+//
+// Note: this function will probably make getExecutableTrees obsolete.
+//
+vector<OTDBtree> OTDBconnection::getTreeGroup(uint32	groupType, uint32 period)
+{
+	if (!itsIsConnected && !connect()) {
+		vector<OTDBtree> 	empty;
+		return (empty); 
+	}
+
+	LOG_TRACE_FLOW_STR ("OTDB:getTreeGroup(" << groupType << "," << period << ")");
+	try {
+		// construct a query that calls a stored procedure.
+		work	xAction(*itsConnection, "getTreeGroup");
+		string	query("SELECT * from getTreeGroup('" +
+						toString(groupType) + "','" +
+						toString(period) + "')");
+
+		// execute query
+		result	res = xAction.exec(query);
+
+		// show how many records found
+		result::size_type	nrRecords = res.size();
+		LOG_DEBUG_STR (nrRecords << " records in treeGroup(" 
+									<< groupType << "," << period << ")");
+	
+		// copy information to output vector
+		vector<OTDBtree>	resultVec;
+		for (result::size_type i = 0; i < nrRecords; ++i) {
+			resultVec.push_back(OTDBtree(res[i]));
+		}
+
+		return (resultVec);
+	}
+	catch (std::exception&	ex) {
+		itsError = string("Exception during retrieval of getTreeGroup:")
 					 + ex.what();
 	}
 

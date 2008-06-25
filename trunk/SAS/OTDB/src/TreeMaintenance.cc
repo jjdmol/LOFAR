@@ -88,15 +88,16 @@ treeIDType	TreeMaintenance::loadMasterFile (const string&	filename)
 
 	try {
 		// First create a new tree entry.
-		result res = xAction.exec(
-					formatString("SELECT newTree(%d,%d,%d,%d::int2,%d::int2,%d::int2,%d)",
-							itsConn->getAuthToken(),
-							0, 						// original tree
-							0, 						// MomID tree
-							TCexperimental,			// classification
-							TThardware,
-							TSidle,
-							0));					// no campaign
+		string	createTreeCmd(formatString("SELECT newTree(%d,%d,%d,%d::int2,%d::int2,%d::int2,%d)",
+											itsConn->getAuthToken(),
+											0, 						// original tree
+											0, 						// MomID tree
+											TCexperimental,			// classification
+											TThardware,
+											TSidle,
+											0));					// no campaign
+		LOG_TRACE_FLOW(createTreeCmd);
+		result res = xAction.exec(createTreeCmd);
 							
 		// Analyse result.
 		treeIDType		newTreeID;
@@ -112,10 +113,12 @@ treeIDType	TreeMaintenance::loadMasterFile (const string&	filename)
 		paramType		parType;
 		counter = 0;
 		while (inFile >> parType >> parName) {
-			res = xAction.exec("SELECT addPICparam(" + 
-								to_string(newTreeID) + "," +
-								"'" + parName + "'," + 
-								to_string(parType) + "::int2)");
+			string	addParamCmd = "SELECT addPICparam(" + 
+									to_string(newTreeID) + "," +
+									"'" + parName + "'," + 
+									to_string(parType) + "::int2)";
+			LOG_TRACE_FLOW(addParamCmd);
+			res = xAction.exec(addParamCmd);
 			++counter;
 		} 
 

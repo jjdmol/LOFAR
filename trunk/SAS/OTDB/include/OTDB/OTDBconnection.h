@@ -83,6 +83,12 @@ public:
 	// To get a list of all executable OTDB trees available in the database.
 	vector<OTDBtree> getExecutableTrees(classifType aClassification=TCoperational);
 
+	// To get a list of all VIC trees of one of the following groups:
+	// groupType = 1: observations that are scheduled to start the next 'period' minutes
+	//             2: active observations ; period is ignored
+	//             3: observations that were finished during the last 'period' minutes
+	vector<OTDBtree> getTreeGroup(uint32	groupType, uint32	periodInMinutes);
+
 	// Show connection characteristics.
 	ostream& print (ostream& os) const;
 
