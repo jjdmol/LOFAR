@@ -79,14 +79,19 @@ public:
                  const MeqDomain&);
 
   // Initialize the solvable parameter for the given domain.
-  virtual int initDomain (const vector<MeqDomain>&, int& pertIndex,
-              vector<int>& scidIndex);
+  virtual void initDomain (const vector<MeqDomain>&);
 
   // Make parameter solvable, thus perturbed values have to be calculated.
   // spidIndex is the index of the first spid of this parm.
   // It returns the number of spids in this parm.
-  void setSolvable (bool solvable)
-    { itsIsSolvable = solvable; }
+  virtual int setSolvable(int)
+  {
+    itsIsSolvable = true;
+    return 0;
+  }
+  
+  virtual void unsetSolvable()
+  { itsIsSolvable = false; }
 
   bool isSolvable() const
     { return itsIsSolvable; }
@@ -151,11 +156,12 @@ public:
   void fillFunklets (const std::map<std::string,LOFAR::ParmDB::ParmValueSet>& parmSet,
              const MeqDomain& domain)
     { itsParmPtr->fillFunklets (parmSet, domain); }
-  int initDomain (const vector<MeqDomain>& solveDomains, int& pertIndex,
-              vector<int>& scidIndex)
-    { return itsParmPtr->initDomain (solveDomains, pertIndex, scidIndex); }
-  void setSolvable (bool solvable)
-    { itsParmPtr->setSolvable (solvable); }
+  void initDomain (const vector<MeqDomain>& solveDomains)
+    { itsParmPtr->initDomain (solveDomains); }
+  int setSolvable(int spid)
+  { return itsParmPtr->setSolvable(spid); }
+  void unsetSolvable()
+  { itsParmPtr->unsetSolvable(); }
   bool isSolvable() const
     { return itsParmPtr->isSolvable(); }
   const vector<MeqFunklet*>& getFunklets() const

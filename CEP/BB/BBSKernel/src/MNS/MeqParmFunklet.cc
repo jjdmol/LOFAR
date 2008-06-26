@@ -289,81 +289,99 @@ void MeqParmFunklet::fillFunklets
   itsWorkDomain = domain;
 }
 
-int MeqParmFunklet::initDomain (const vector<MeqDomain>& solveDomains,
-				int& pertIndex, vector<int>& scidIndex)
-{
-  itsNrPert  = 0;
-  itsPertInx = -1;
-  if (isSolvable()) {
-    // See if the values of the previous domain can be used.
-    // We only do that if the default was used in a single previous domain.
-    ///    if (itsDefUsed  &&  polcs.size() == 1) {
-    ///      polcs[0].setDomain (domain);
-    ///      polcs[0].setNewParm();
-    ///    } else {
 
+int MeqParmFunklet::setSolvable(int spid)
+{
+    ASSERT(itsNrPert == 0 && itsPertInx == -1);
+    ASSERT(!itsFunklets.empty());
+
+    // Call the base class.
+    MeqParm::setSolvable(spid);
+    
+    // Set coefficient index and determine number of coefficients.
+    itsPertInx = spid;
+    itsNrPert = itsFunklets[0]->makeSolvable(itsPertInx);
+
+    for(uint i = 1; i < itsFunklets.size(); ++i)
+    {
+        int nrs = itsFunklets[i]->makeSolvable(itsPertInx);
+        ASSERT(nrs == itsNrPert);
+    }
+    
+    return itsNrPert;    
+}
+
+
+void MeqParmFunklet::unsetSolvable()
+{
+    // Call the base class.
+    MeqParm::unsetSolvable();
+    
+    itsPertInx = -1;
+    itsNrPert = 0;
+    for (uint i=0; i<itsFunklets.size(); i++)
+    {
+        itsFunklets[i]->clearSolvable();
+    }
+}
+
+
+void MeqParmFunklet::initDomain(const vector<MeqDomain>& solveDomains)
+{
     uint nDomain = solveDomains.size();
-    ASSERTSTR (nDomain > 0 &&
-	       solveDomains[0].endX()>itsWorkDomain.startX() &&
-	       solveDomains[0].endY()>itsWorkDomain.startY() &&
-	       solveDomains[nDomain-1].startX()<itsWorkDomain.endX() &&
-	       solveDomains[nDomain-1].startY()<itsWorkDomain.endY(),
-	       "MeqParmFunklet::initDomain of parm " << getName() << " - "
-	       "solvedomains " << solveDomains[0] << solveDomains[nDomain-1]
-	       << " mismatch workdomain " << itsWorkDomain
-	       << " given in last fillFunklets");
+
+    ASSERTSTR(nDomain > 0 &&
+        solveDomains[0].endX()>itsWorkDomain.startX() &&
+        solveDomains[0].endY()>itsWorkDomain.startY() &&
+        solveDomains[nDomain-1].startX()<itsWorkDomain.endX() &&
+        solveDomains[nDomain-1].startY()<itsWorkDomain.endY(),
+        "MeqParmFunklet::initDomain of parm " << getName() << " - "
+        "solvedomains " << solveDomains[0] << solveDomains[nDomain-1]
+        << " mismatch workdomain " << itsWorkDomain
+        << " given in last fillFunklets");
+
     // The nr of solve domains should match the nr of funklets.
     // However, if a default value is used, only one funklet is in use.
     // In that case more funklets are created if needed.
-//    if (itsDefUsed  &&  nDomain > 1  &&  itsFunklets.size() != nDomain) {
-    if (itsDefUsed) {
-      ASSERT (itsFunklets.size() == 1);
-      itsFunklets[0]->setDomain (solveDomains[0]);
-      itsFunklets.resize (nDomain);
-      for (uint i=1; i<nDomain; ++i) {
-        itsFunklets[i] = itsFunklets[0]->clone();
-	    itsFunklets[i]->setDomain (solveDomains[i]);
-      }
-      itsDefUsed = false;
-    }
+    if(itsDefUsed)
+    {
+        ASSERT(itsFunklets.size() == 1);
 
-    ASSERTSTR (itsFunklets.size() == nDomain,
-	       "Solvable parameter " << getName() << " has "
-	       << itsFunklets.size() << " funklet domains mismatching the "
-	       << nDomain << " solve domains for work domain "
-	       << itsWorkDomain);
-    for (uint i=0; i<nDomain; ++i) {
-      const MeqDomain& polDom = itsFunklets[i]->domain();
-      const MeqDomain& solDom = solveDomains[i];
-      ASSERTSTR (near(solDom.startX(), polDom.startX())  &&
-		 near(solDom.endX(), polDom.endX())  &&
-		 near(solDom.startY(), polDom.startY())  &&
-		 near(solDom.endY(), polDom.endY()),
-		 "Solvable parameter " << getName() <<
-		 " has a partially instead of fully matching entry for "
-		 "solve domain " << solDom << endl
-		 << '(' << polDom << ')');
+        itsFunklets[0]->setDomain(solveDomains[0]);
+        itsFunklets.resize(nDomain);
+        for(uint i=1; i<nDomain; ++i)
+        {
+            itsFunklets[i] = itsFunklets[0]->clone();
+            itsFunklets[i]->setDomain(solveDomains[i]);
+        }
+        
+        itsDefUsed = false;
     }
-    // Determine the solvable coeff ids for each funklet.
-    // The highest nr of scids is the nr of perturbed values.
-    itsPertInx = pertIndex;
-    for (uint i=0; i<nDomain; ++i) {
-//      int nrs = itsFunklets[i]->makeSolvable (scidIndex[i]);
-      int nrs = itsFunklets[i]->makeSolvable (itsPertInx);
-      scidIndex[i] += nrs;
-      if (nrs > itsNrPert) {
-      	itsNrPert = nrs;
-      }
-    }
-//    itsPertInx = pertIndex;
-    pertIndex += itsNrPert;
-  } else {
-    for (uint i=0; i<itsFunklets.size(); i++) {
-      itsFunklets[i]->clearSolvable();
-    }
-  }    
-  return itsNrPert;
+    else
+    {
+        ASSERTSTR (itsFunklets.size() == nDomain,
+            "Solvable parameter " << getName() << " has "
+            << itsFunklets.size() << " funklet domains mismatching the "
+            << nDomain << " solve domains for work domain "
+            << itsWorkDomain);
+        
+        for(uint i=0; i<nDomain; ++i)
+        {
+            const MeqDomain& polDom = itsFunklets[i]->domain();
+            const MeqDomain& solDom = solveDomains[i];
+
+            ASSERTSTR (near(solDom.startX(), polDom.startX())  &&
+                near(solDom.endX(), polDom.endX())  &&
+                near(solDom.startY(), polDom.startY())  &&
+                near(solDom.endY(), polDom.endY()),
+                "Solvable parameter " << getName() <<
+                " has a partially instead of fully matching entry for "
+                "solve domain " << solDom << endl
+                << '(' << polDom << ')');
+        }
+    }        
 }
+
 
 const vector<MeqFunklet*>& MeqParmFunklet::getFunklets() const
 {

@@ -83,14 +83,16 @@ public:
   // Add a funklet.
   void add (const MeqFunklet& funklet);
 
+  virtual int setSolvable(int spid);
+  virtual void unsetSolvable();
+
   // Initialize the solvable parameter for the given solve domain size.
   // FillFunklets must have been done before.
   // The only important thing about the solve domain is its size, not the
   // start and end values. However, it is checked if the start of the
   // solve domain matches the start of the work domain given to fillFunklets.
   // It returns the number of spids used for this parm.
-  virtual int initDomain (const vector<MeqDomain>&, int& pertIndex,
-			  vector<int>& scidIndex);
+  virtual void initDomain (const vector<MeqDomain>&);
 
   // Get the current funklets.
   virtual const vector<MeqFunklet*>& getFunklets() const;
