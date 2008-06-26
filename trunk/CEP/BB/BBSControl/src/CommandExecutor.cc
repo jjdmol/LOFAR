@@ -449,7 +449,7 @@ void CommandExecutor::handleLocalSolve(const SolveStep &command)
     itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
         command.sources());
 
-    if(!itsKernel->setParameterSelection(command.parms(), command.exclParms()))
+    if(!itsKernel->setSolvableParameters(command.parms(), command.exclParms()))
     {
         itsResult = CommandResult(CommandResult::ERROR, "Failed to set"
             " parameter selection.");
@@ -642,7 +642,7 @@ void CommandExecutor::handleGlobalSolve(const SolveStep &command)
     itsKernel->setModelConfig(Prediffer::CONSTRUCT, command.instrumentModels(),
         command.sources());
 
-    if(!itsKernel->setParameterSelection(command.parms(), command.exclParms()))
+    if(!itsKernel->setSolvableParameters(command.parms(), command.exclParms()))
     {
         itsResult = CommandResult(CommandResult::ERROR, "Failed to set"
             " parameter selection.");
