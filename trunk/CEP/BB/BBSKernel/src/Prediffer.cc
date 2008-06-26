@@ -179,12 +179,13 @@ void Prediffer::resetState()
     itsStartCell = Location();
     itsEndCell = Location();
     itsCoeffIndex.clear();
-    clearParameterSelection();
     itsCoeffMapping.clear();    
+
+    // Reset solvable state of all parameters.
+    resetSolvableParameters();
 
     // Reset model equations.
     itsModel->clearEquations();
-//    itsParameters.clear();
 }
 
 
@@ -401,7 +402,7 @@ void Prediffer::setModelConfig(OperationType operation,
 }   
 
 
-bool Prediffer::setParameterSelection(const vector<string> &include,
+bool Prediffer::setSolvableParameters(const vector<string> &include,
         const vector<string> &exclude)
 {
     ASSERT(itsOperation == CONSTRUCT);
@@ -427,7 +428,7 @@ bool Prediffer::setParameterSelection(const vector<string> &include,
 
     // Clear the solvable flag of any parameter marked for solving and empty
     // the parameter selection.
-    clearParameterSelection();
+    resetSolvableParameters();
     
     // Find all parameters matching context.unknowns, exclude those that
     // match context.excludedUnknowns.
@@ -461,28 +462,27 @@ bool Prediffer::setParameterSelection(const vector<string> &include,
 
                 if(includeFlag)
                 {
-                    parm_it->second.setSolvable(true);
-                    itsParameterSelection.push_back(parm_it->second);
+                    itsSolvableParameters.push_back(parm_it->second);
                 }
                 
                 break;
             }
         }
     }
-    
-    return true;
+
+    return !itsSolvableParameters.empty();
 }
 
 
-void Prediffer::clearParameterSelection()
+void Prediffer::resetSolvableParameters()
 {
-    itsParameterSelection.clear();
+    itsSolvableParameters.clear();
 
     for (MeqParmGroup::iterator it = itsParameters.begin();
         it != itsParameters.end();
         ++it)
     {
-        it->second.setSolvable(false);
+        it->second.unsetSolvable();
     }
 }
 
@@ -579,7 +579,8 @@ bool Prediffer::setCellGrid(const Grid &cellGrid)
     LOG_DEBUG(oss.str());
     // DEBUG DEBUG
 
-    // Initialize model parameters marked for solving.
+    // Initialize model parameters selected for solving and construct
+    // coefficient index.
     vector<MeqDomain> domains;
     for(size_t t = itsStartCell.second; t <= itsEndCell.second; ++t)
     {
@@ -591,29 +592,20 @@ bool Prediffer::setCellGrid(const Grid &cellGrid)
         }
     }
 
-    // Clear coefficient index.
     itsCoeffIndex.clear();
-
-    // Temporary variables (required by MeqParmFunklet::initDomain() but not
-    // needed here).
-    int nCoeff = 0;
-    vector<int> tmp(nCells, 0);
-    for(MeqParmGroup::iterator it = itsParameters.begin();
-        it != itsParameters.end();
+    for(vector<MeqPExpr>::iterator it = itsSolvableParameters.begin();
+        it != itsSolvableParameters.end();
         ++it)
     {
-        // Determine maximal number of coefficients over all solution
-        // domains for this parameter.
-        int count = it->second.initDomain(domains, nCoeff, tmp);
-        
-        if(it->second.isSolvable())
-        {
-            itsCoeffIndex.insert(it->first, count);
-        }
-    }
-    ASSERT(itsCoeffIndex.getCoeffCount() == static_cast<size_t>(nCoeff));
+        // NOTE: initDomains() should come before setSolvable(), because
+        // it can modify the number of funklets of a Parm.
+        it->initDomain(domains);
 
-    LOG_DEBUG_STR("nCoeff: " << itsCoeffIndex.getCoeffCount());
+        int nCoeff = it->setSolvable(itsCoeffIndex.getCoeffCount());
+        itsCoeffIndex.insert(it->getName(), nCoeff);
+    }
+
+//    LOG_DEBUG_STR("CoeffIndex: " << endl << itsCoeffIndex);
     return (itsCoeffIndex.getCoeffCount() > 0);
 }
 
@@ -629,10 +621,10 @@ void Prediffer::setCoeffIndex(const CoeffIndex &global)
 {
     ASSERT(itsOperation == CONSTRUCT);
 
-    itsCoeffMapping.resize(itsParameterSelection.size());
-    for(size_t i = 0; i < itsParameterSelection.size(); ++i)
+    itsCoeffMapping.resize(itsSolvableParameters.size());
+    for(size_t i = 0; i < itsSolvableParameters.size(); ++i)
     {
-        const MeqPExpr &parm = itsParameterSelection[i];
+        const MeqPExpr &parm = itsSolvableParameters[i];
         
         // Note: log(N) look-up.
         CoeffIndex::const_iterator it = global.find(parm.getName());
@@ -653,9 +645,9 @@ void Prediffer::getCoeff(const Location &cell, vector<double> &coeff) const
 
     // Copy the coefficient values for every selected parameter.
     coeff.reserve(itsCoeffIndex.getCoeffCount());
-    for(size_t i = 0; i < itsParameterSelection.size(); ++i)
+    for(size_t i = 0; i < itsSolvableParameters.size(); ++i)
     {
-        const MeqPExpr &parm = itsParameterSelection[i];
+        const MeqPExpr &parm = itsSolvableParameters[i];
         ASSERT(localId < parm.getFunklets().size());
 
         const MeqFunklet *funklet = parm.getFunklets()[localId];
@@ -732,9 +724,9 @@ void Prediffer::setCoeff(const Location &cell, const vector<double> &coeff)
     const size_t localId = getLocalCellId(cell);
     LOG_DEBUG_STR("Local cell id: " << localId);
 
-    for(size_t j = 0; j < itsParameterSelection.size(); ++j)
+    for(size_t j = 0; j < itsSolvableParameters.size(); ++j)
     {
-        MeqPExpr &parm = itsParameterSelection[j];
+        MeqPExpr &parm = itsSolvableParameters[j];
         parm.update(localId, coeff, itsCoeffMapping[j].start);
     }
 }
@@ -1703,6 +1695,14 @@ void Prediffer::initPolarizationMap()
 
 void Prediffer::loadParameterValues()
 {
+    // Remove the funklets from all parameters.
+    for(MeqParmGroup::iterator it = itsParameters.begin();
+        it != itsParameters.end();
+        ++it)
+    {
+        it->second.removeFunklets();
+    }
+
     // Clear all cached parameter values.
     itsParameterValues.clear();
 
@@ -1714,13 +1714,6 @@ void Prediffer::loadParameterValues()
 
     itsInstrumentDb.getValues(itsParameterValues, vector<string>(), domain);
     itsSkyDb.getValues(itsParameterValues, vector<string>(), domain);
-
-    for(MeqParmGroup::iterator it = itsParameters.begin();
-        it != itsParameters.end();
-        ++it)
-    {
-        it->second.removeFunklets();
-    }
 }
 
 
@@ -1731,9 +1724,9 @@ void Prediffer::storeParameterValues()
         itsSkyDb.lock(true);
         itsInstrumentDb.lock(true);
         
-        for(size_t i = 0; i < itsParameterSelection.size(); ++i)
+        for(size_t i = 0; i < itsSolvableParameters.size(); ++i)
         {
-            itsParameterSelection[i].save();
+            itsSolvableParameters[i].save();
         }
 
         itsSkyDb.unlock();

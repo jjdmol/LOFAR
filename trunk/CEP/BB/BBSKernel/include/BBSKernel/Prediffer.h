@@ -121,9 +121,9 @@ public:
     
     // (Distributed) solving.
     // <group>
-    bool setParameterSelection(const vector<string> &include,
+    bool setSolvableParameters(const vector<string> &include,
         const vector<string> &exclude);        
-    void clearParameterSelection();
+    void resetSolvableParameters();
 
     // Set the global cell grid.
     bool setCellGrid(const Grid &cellGrid);
@@ -263,7 +263,7 @@ private:
     Location                                    itsStartCell, itsEndCell;
 
     //# Parameters selected for solving.
-    vector<MeqPExpr>                            itsParameterSelection;
+    vector<MeqPExpr>                            itsSolvableParameters;
     //# Local coefficient index.
     CoeffIndex                                  itsCoeffIndex;
     //# Mapping from global to local coefficients.

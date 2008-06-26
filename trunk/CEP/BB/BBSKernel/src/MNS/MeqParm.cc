@@ -57,10 +57,8 @@ const vector<MeqFunklet*>& MeqParm::getFunklets() const
   return vec;
 }
 
-int MeqParm::initDomain (const vector<MeqDomain>&, int&, vector<int>&)
+void MeqParm::initDomain (const vector<MeqDomain>&)
 {
-  ASSERT (! isSolvable());
-  return 0;
 }
 
 void MeqParm::save()
