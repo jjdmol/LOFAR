@@ -90,6 +90,7 @@
 #include <Common/LofarTypes.h>	// for uint32
 #include <cstddef>     // for size_t
 #include <cstring>     // for memset
+#include <climits>     // for CHAR_BIT
 #include <string>
 #include <ostream>     // for ostream (operator<<)
 #include <istream>     // for istream (operator>>)

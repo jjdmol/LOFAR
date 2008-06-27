@@ -26,6 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 #include <Common/StringUtil.h>
+#include <cstdlib>
 #include <libgen.h>
 
 using namespace LOFAR;

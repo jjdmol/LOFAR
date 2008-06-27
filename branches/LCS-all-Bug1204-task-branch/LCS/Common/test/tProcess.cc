@@ -27,6 +27,7 @@
 #include <Common/Process.h>
 #include <Common/LofarLogger.h>
 #include <cerrno>
+#include <cstdlib>
 #include <unistd.h>    // for getpid() and sleep()
 #include <libgen.h>    // for basename()
 

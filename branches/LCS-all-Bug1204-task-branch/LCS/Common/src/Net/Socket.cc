@@ -34,7 +34,7 @@
 #include <sys/time.h>
 #include <sys/poll.h>
 #include <arpa/inet.h>
-#include <unistd.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
