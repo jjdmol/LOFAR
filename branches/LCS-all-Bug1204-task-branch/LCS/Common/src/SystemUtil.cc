@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <unistd.h>
 #include <cstdlib>
 #include <cstring>
 
