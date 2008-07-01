@@ -142,12 +142,6 @@ class BGLProcSection(Section):
             raise Exception('illegal number of runs')
         Section.run(self, runlog, actualRuns, runCmd)        
 
-class InputSection(Section):
-    def __init__(self, parset, host):
-        Section.__init__(self, parset, \
-                         'Appl/CEP/CS1/CS1_InputProc', \
-                         host = host, \
-                         buildvar = 'gnu_opt')
 class GeneratorSection(Section):
     def __init__(self, parset, host):
         Section.__init__(self, parset, \
