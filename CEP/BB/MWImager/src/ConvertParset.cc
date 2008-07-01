@@ -32,13 +32,13 @@ using namespace std;
 namespace LOFAR {
 
   ACC::APS::ParameterSet MWImager::convertParset (const string& nameIn,
-						const string& nameOut)
+						  const string& nameOut)
   {
     return convertParset (ACC::APS::ParameterSet(nameIn), nameOut);
   }
 
   ACC::APS::ParameterSet MWImager::convertParset (const ACC::APS::ParameterSet& in,
-						const string& nameOut)
+						  const string& nameOut)
   {
     ACC::APS::ParameterSet out;
     string outname;
@@ -72,20 +72,22 @@ namespace LOFAR {
     }
     {
       ACC::APS::ParameterSet grin = in.makeSubset ("Gridder.");
-      string cutoff     = grin.getString ("cutoff");
-      string nfacets    = grin.getString ("nfacets");
-      string nwplanes   = grin.getString ("nwplanes");
-      string oversample = grin.getString ("oversample");
-      string wmax       = grin.getString ("wmax");
-      string maxsupport = grin.getString ("maxsupport");
-      string type       = grin.getString ("type");
+      string cutoff       = grin.getString ("cutoff");
+      string nfacets      = grin.getString ("nfacets");
+      string nwplanes     = grin.getString ("nwplanes");
+      string oversample   = grin.getString ("oversample");
+      string wmax         = grin.getString ("wmax");
+      string maxsupport   = grin.getString ("maxsupport");
+      string limitsupport = grin.getString ("limitsupport", "0");
+      string type         = grin.getString ("type");
       string name = "Cimager.gridder." + type;
-      out.add ("Cimager.gridder",    type);
-      out.add (name + ".wmax",       wmax);
-      out.add (name + ".nwplanes",   nwplanes);
-      out.add (name + ".oversample", oversample);
-      out.add (name + ".cutoff",     cutoff);
-      out.add (name + ".maxsupport", maxsupport);
+      out.add ("Cimager.gridder",      type);
+      out.add (name + ".wmax",         wmax);
+      out.add (name + ".nwplanes",     nwplanes);
+      out.add (name + ".oversample",   oversample);
+      out.add (name + ".cutoff",       cutoff);
+      out.add (name + ".maxsupport",   maxsupport);
+      out.add (name + ".limitsupport", limitsupport);
     }
     {
       ACC::APS::ParameterSet soin = in.makeSubset ("Solver.");
@@ -105,8 +107,8 @@ namespace LOFAR {
     }
     {
       ACC::APS::ParameterSet imin = in.makeSubset ("Images.");
-      string angle1    = imin.getString ("angle1");
-      string angle2    = imin.getString ("angle2");
+      string angle1    = imin.getString ("ra");
+      string angle2    = imin.getString ("dec");
       string dirType   = imin.getString ("directionType");
       string nchan     = imin.getString ("nchan");
       string shape     = imin.getString ("shape");
@@ -128,7 +130,9 @@ namespace LOFAR {
       }
       ostringstream namesStr;
       namesStr << names;
-      out.add ("Cimager.Images.Names", namesStr.str());
+      out.add ("Cimager.Images.Names",    namesStr.str());
+      out.add ("Cimager.Images.shape",    shape);
+      out.add ("Cimager.Images.cellsize", cellSizeStr.str());
       vector<string> dirVec(3);
       dirVec[0] = angle1;
       dirVec[1] = angle2;
@@ -137,8 +141,6 @@ namespace LOFAR {
       dirVecStr << dirVec;
       for (unsigned i=0; i<stokes.size(); ++i) {
 	string name = "Cimager.Images.image." + stokes[i] + '.' + outname + '.';
-	out.add (name+"shape",     shape);
-	out.add (name+"cellsize",  cellSizeStr.str());
 	out.add (name+"frequency", frequency);
 	out.add (name+"nchan",     nchan);
 	out.add (name+"direction", dirVecStr.str());

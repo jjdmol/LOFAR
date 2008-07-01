@@ -1,8 +1,14 @@
-CHECKTOOLPROGS		= tconvertimagerparset
+CHECKTOOLPROGS	= tconvertimagerparset
 
-TESTS		= tconvertimagerparset.sh
+TESTS		= tconvertimagerparset.sh \
+		  tmwimager.sh
 
-EXTRA_DIST	= tconvertimagerparset.in tconvertimagerparset.stdout
+EXTRA_DIST	= tconvertimagerparset.run \
+		  tconvertimagerparset.in \
+		  tconvertimagerparset.stdout \
+		  tmwimager.run \
+		  tmwimager.in_cd tmwimager.in_vd \
+		  tmwimager.stdout
 
 include $(top_srcdir)/Makefile.common
 
