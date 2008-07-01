@@ -18,39 +18,31 @@ void check (const VdsPartDesc& vds)
   ASSERT (vds.getFileSys() == "node1:/usr");
   ASSERT (vds.getStartTime() == 0);
   ASSERT (vds.getEndTime() == 1);
+  ASSERT (vds.getStepTime() == 0.5);
   ASSERT (vds.getNChan().size() == 2);
-  ASSERT (vds.getNChan()[0] == 64);
-  ASSERT (vds.getNChan()[1] == 128);
-  ASSERT (vds.getStartFreqs().size() == 2);
+  ASSERT (vds.getNChan()[0] == 2);
+  ASSERT (vds.getNChan()[1] == 3);
+  ASSERT (vds.getStartFreqs().size() == 5);
   ASSERT (vds.getStartFreqs()[0] == 20);
-  ASSERT (vds.getStartFreqs()[1] == 120);
-  ASSERT (vds.getEndFreqs().size() == 2);
-  ASSERT (vds.getEndFreqs()[0] == 100);
-  ASSERT (vds.getEndFreqs()[1] == 300);
-  ASSERT (vds.getAnt1().size() == 3);
-  ASSERT (vds.getAnt1()[0] == 0);
-  ASSERT (vds.getAnt1()[1] == 1);
-  ASSERT (vds.getAnt1()[2] == 2);
-  ASSERT (vds.getAnt2().size() == 3);
-  ASSERT (vds.getAnt2()[0] == 0);
-  ASSERT (vds.getAnt2()[1] == 1);
-  ASSERT (vds.getAnt2()[2] == 3);
+  ASSERT (vds.getStartFreqs()[1] == 60);
+  ASSERT (vds.getStartFreqs()[2] == 120);
+  ASSERT (vds.getStartFreqs()[3] == 180);
+  ASSERT (vds.getStartFreqs()[4] == 240);
+  ASSERT (vds.getEndFreqs().size() == 5);
+  ASSERT (vds.getEndFreqs()[0] == 60);
+  ASSERT (vds.getEndFreqs()[1] == 100);
+  ASSERT (vds.getEndFreqs()[2] == 180);
+  ASSERT (vds.getEndFreqs()[3] == 240);
+  ASSERT (vds.getEndFreqs()[4] == 300);
 }
 
 void doIt()
 {
   VdsPartDesc vds;
   vds.setName ("/usr/local/xyx", "node1:/usr");
-  vds.setTimes (0, 1);
-  vds.addBand (64, 20, 100);
-  vds.addBand (128, 120, 300);
-  vector<int> ant1(3);
-  ant1[0] = 0;
-  ant1[1] = 1;
-  ant1[2] = 2;
-  vector<int> ant2(ant1);
-  ant2[2] = 3;
-  vds.setBaselines (ant1, ant2);
+  vds.setTimes (0, 1, 0.5);
+  vds.addBand (2, 20, 100);
+  vds.addBand (3, 120, 300);
   check(vds);
   // Write into parset file.
   ofstream fos("tVdsPartDesc_tmp.fil");

@@ -29,15 +29,14 @@ namespace LOFAR { namespace CEP {
   /// The description of the VDS also contains info about the time,
   /// frequency, and baseline domain of the visibility data.
   ///
-  /// Currently the information is made persistent in a LOFAR .parset file.
-  /// In the future it needs to use the Centrol Processor Resource Manager.
+  /// The information is made persistent in a LOFAR .parset file.
 
   class VdsPartDesc
   {
   public:
     /// Construct an empty object.
     VdsPartDesc()
-      : itsStartTime(0), itsEndTime(0)
+      : itsStartTime(0), itsStepTime(1)
       {}
 
     /// Construct from the given parameterset.
@@ -47,14 +46,10 @@ namespace LOFAR { namespace CEP {
     void setName (const std::string& name, const std::string& fileSys);
 
     /// Set the start and end time.
-    void setTimes (double startTime, double endTime);
+    void setTimes (double startTime, double endTime, double stepTime);
 
     /// Add a band.
     void addBand (int nchan, double startFreq, double endFreq);
-
-    /// Set the baselines.
-    void setBaselines (const std::vector<int>& ant1,
-		       const std::vector<int>& ant2);
 
     /// Write it in parset format.
     void write (std::ostream& os, const std::string& prefix) const;
@@ -69,6 +64,8 @@ namespace LOFAR { namespace CEP {
       { return itsStartTime; }
     double getEndTime() const
       { return itsEndTime; }
+    double getStepTime() const
+      { return itsStepTime; }
     int getNBand() const
       { return itsNChan.size(); }
     const std::vector<int>& getNChan() const
@@ -77,10 +74,6 @@ namespace LOFAR { namespace CEP {
       { return itsStartFreqs; }
     const std::vector<double>& getEndFreqs() const
       { return itsEndFreqs; }
-    const std::vector<int>& getAnt1() const
-      { return itsAnt1; }
-    const std::vector<int>& getAnt2() const
-      { return itsAnt2; }
     /// @}
 
   private:
@@ -88,11 +81,10 @@ namespace LOFAR { namespace CEP {
     std::string itsFileSys;    //# name of file system the VDS resides on
     double      itsStartTime;
     double      itsEndTime;
-    std::vector<int>         itsNChan;        //# nr of channels per band
-    std::vector<double>      itsStartFreqs;   //# start freq of each band
-    std::vector<double>      itsEndFreqs;     //# end freq of each band
-    std::vector<int>         itsAnt1;         //# 1st antenna of each baseline
-    std::vector<int>         itsAnt2;         //# 2nd antenna of each baseline
+    double      itsStepTime;
+    std::vector<int>    itsNChan;        //# nr of channels per band
+    std::vector<double> itsStartFreqs;   //# start freq of each channel
+    std::vector<double> itsEndFreqs;     //# end freq of each channel
   };
     
 }} /// end namespaces

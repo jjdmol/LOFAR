@@ -16,6 +16,7 @@ if [ $STATUS != 0 ]; then
 fi
 
 # Output the result in order.
+sleep 1
 echo "Run1 ..."
 cat tSocketConnection_tmp.outs1 tSocketConnection_tmp.outc1
 
@@ -35,6 +36,7 @@ if [ $STATUS != 0 ]; then
 fi
 
 # Output the result in order.
+sleep 1
 echo "Run2 ..."
 cat tSocketConnection_tmp.outs2 tSocketConnection_tmp.outc2
 exit 0
