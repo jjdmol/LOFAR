@@ -35,9 +35,8 @@ def doObservation(obsID, parset):
 	sys.exit(1)
 
     sectionTable = dict({\
-        'InputSection': InputSection(parset, list003),
-	#'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
-	#'StorageSection': StorageSection(parset, listfen)
+	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
+	'StorageSection': StorageSection(parset, listfen)
 	#Flagger(parset, listfen)
         })
 
