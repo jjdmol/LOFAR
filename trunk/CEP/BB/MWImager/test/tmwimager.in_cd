@@ -1,0 +1,6 @@
+ClusterName = cl
+NNodes = 2
+Node0.NodeName = localhost
+Node0.NodeFileSys = [node1:/usr]
+Node1.NodeName = localhost
+Node1.NodeFileSys = [node1:/usr]

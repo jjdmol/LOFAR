@@ -53,6 +53,7 @@ dnl
 lofar_GENERAL
 lofar_INTERNAL(LCS/Common,Common,,1,Common/LofarTypedefs.h,,)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
+lofar_INTERNAL(CEP/BB/MWCommon,MWCommon,,1,MWCommon/ClusterDesc.h,,)
 
 dnl
 dnl Output Makefiles
