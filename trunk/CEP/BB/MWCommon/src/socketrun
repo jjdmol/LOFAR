@@ -11,13 +11,15 @@
 # This script starts a distributed process to process a datasets.
 # The processes will use sockets for communication.
 #
-# run as:  socketrun dry hfn port program [arg1 arg2 ...]
+# run as:  socketrun dry hfn port logfile program [arg1 arg2 ...]
 
 dry=$1
 shift
 hfn=$1
 shift
 port=$1
+shift
+logfile=$1
 shift
 program=$1
 shift
@@ -27,14 +29,20 @@ np=`wc -l $hfn | awk '{print $1}'`
 # The first host is the master one.
 masterhost=
 rank=0
-for host in `cat $hfn`
+for inline in `cat $hfn`
 do
+  host=`echo $inline | sed -e 's%#.*%%'`
+  part=`echo $inline | sed -e 's%.*#%%'`
   if test "$masterhost" = ""; then
     masterhost=$host
   fi
-  echo "ssh $host $program socket $masterhost $port $np $rank"
+  echo "ssh $host $program socket $masterhost $port $np $rank $part" "$@"
   if test $dry = 0; then
-    ssh $host $program socket $masterhost $port $np $rank &
+    if test "$logfile" = ""; then
+      ssh -x -f $host $program socket $masterhost $port $np $rank $part "$@"
+    else
+      ssh -x -f $host $program socket $masterhost $port $np $rank $part "$@" > $logfile-$rank 2>&1
+    fi
   fi
   rank=`expr $rank + 1`
 done

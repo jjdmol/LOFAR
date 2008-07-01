@@ -42,7 +42,7 @@ void makeFile (const string& vdsName, const string& clusterName)
 	     " for dataset part " << iter->getName() <<
 	     " on file system " << iter->getFileSys());
     }
-    cout << nodes[winx].getName() << endl;
+    cout << nodes[winx].getName() << '#' << iter->getName() << endl;
     // Increment the load to indicate it is already in use. In that way it
     // will only be used again if all other possible nodes are used as well.
     workers.incrLoad (winx);

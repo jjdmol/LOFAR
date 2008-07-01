@@ -33,8 +33,7 @@ namespace LOFAR { namespace CEP {
   {
   public:
     /// Construct with a description of the entire visibility data set.
-    /// Also supply a vector mapping antenna name to number.
-    VdsDesc (const VdsPartDesc&, const std::vector<std::string>& antNames);
+    explicit VdsDesc (const VdsPartDesc&);
 
     /// Construct from the given parameterset.
     /// @{
@@ -55,17 +54,6 @@ namespace LOFAR { namespace CEP {
     const VdsPartDesc& getDesc() const
       { return itsDesc; }
 
-    /// Get antennas names.
-    const std::vector<std::string>& getAntNames() const
-      { return itsAntNames; }
-
-    /// Convert an antenna name to its index.
-    /// -1 is returned if not found.
-    int antNr (const std::string& name) const;
-
-    /// Convert an antenna regex to indices.
-    std::vector<int> antNrs (const casa::Regex& names) const;
-
     /// Write it in parset format.
     void write (std::ostream& os) const;
 
@@ -75,7 +63,6 @@ namespace LOFAR { namespace CEP {
 
     VdsPartDesc              itsDesc;
     std::vector<VdsPartDesc> itsParts;
-    std::vector<std::string> itsAntNames;     //# maps antennanr to name
   };
 
 }} /// end namespaces
