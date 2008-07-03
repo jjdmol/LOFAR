@@ -2,9 +2,12 @@ lib_LTLIBRARIES		= libbbms.la
 
 libbbms_la_SOURCES	= Package__Version.cc  DH_MSMake.cc \
 			  MSCreate.cc \
-			  MSDesc.cc
+			  MSDesc.cc \
+			  VdsMaker.cc
 
 bin_PROGRAMS 		= versionms MSSplit \
+			  makevds \
+			  combinevds \
 			  makemsdesc \
 			  readmsdesc \
 			  makems\
@@ -12,6 +15,14 @@ bin_PROGRAMS 		= versionms MSSplit \
 
 MSSplit_SOURCES		= MSSplit.cc
 MSSplit_DEPENDENCIES	= $(LOFAR_DEPEND)
+
+makevds_SOURCES		= makevds.cc
+makevds_LDADD		= libbbms.la
+makevds_DEPENDENCIES	= libbbms.la $(LOFAR_DEPEND)
+
+combinevds_SOURCES	= combinevds.cc
+combinevds_LDADD	= libbbms.la
+combinevds_DEPENDENCIES	= libbbms.la $(LOFAR_DEPEND)
 
 makemsdesc_SOURCES	= makemsdesc.cc
 makemsdesc_LDADD	= libbbms.la
