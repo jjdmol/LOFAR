@@ -1,0 +1,4 @@
+#!/bin/sh
+
+../src/combinevds tcombinevds_tmp.vdsout tcombinevds.in_vds1 tcombinevds.in_vds2
+cat tcombinevds_tmp.vdsout
