@@ -11,6 +11,7 @@
 
 //# Includes
 #include <MWCommon/VdsPartDesc.h>
+#include <MWCommon/ParameterHandler.h>
 #include <casa/Utilities/Regex.h>
 
 namespace LOFAR { namespace CEP {

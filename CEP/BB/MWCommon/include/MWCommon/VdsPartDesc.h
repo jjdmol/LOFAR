@@ -10,7 +10,9 @@
 #define LOFAR_MWCOMMON_VDSPARTDESC_H
 
 //# Includes
-#include <MWCommon/ParameterHandler.h>
+#include <APS/ParameterSet.h>
+#include <Blob/BlobOStream.h>
+#include <Blob/BlobIStream.h>
 #include <string>
 #include <vector>
 #include <iosfwd>
@@ -40,7 +42,7 @@ namespace LOFAR { namespace CEP {
       {}
 
     /// Construct from the given parameterset.
-    explicit VdsPartDesc (const ParameterSet&);
+    explicit VdsPartDesc (const ACC::APS::ParameterSet&);
 
     /// Set VDS name and file system.
     void setName (const std::string& name, const std::string& fileSys);
@@ -49,9 +51,26 @@ namespace LOFAR { namespace CEP {
     void setTimes (double startTime, double endTime, double stepTime);
 
     /// Add a band.
+    // <group>
     void addBand (int nchan, double startFreq, double endFreq);
+    void addBand (int nchan, const vector<double>& startFreq,
+		  const vector<double>& endFreq);
+    // </group>
 
-    /// Write it in parset format.
+    // Add an extra parameter. It is added to the subset 'Extra.'.
+    // If the paramter already exists, it is replaced.
+    void addParm (const std::string& key, const std::string& value)
+      { return itsParms.add (key, value); }
+
+    // Get access to the extra parameters.
+    const ACC::APS::ParameterSet& getParms() const
+      { return itsParms; }
+
+    // Clear the extra parameters.
+    void clearParms()
+      { itsParms.clear(); }
+
+    /// Write the VdsPartDesc object in parset format.
     void write (std::ostream& os, const std::string& prefix) const;
 
     /// Get the values.
@@ -76,17 +95,32 @@ namespace LOFAR { namespace CEP {
       { return itsEndFreqs; }
     /// @}
 
+  // Put/get the object to/from a blob.
+  // <group>
+  BlobOStream& toBlob (BlobOStream&) const;
+  BlobIStream& fromBlob (BlobIStream&);
+  // </group>
+
   private:
     std::string itsName;       //# full name of the VDS
     std::string itsFileSys;    //# name of file system the VDS resides on
     double      itsStartTime;
     double      itsEndTime;
     double      itsStepTime;
-    std::vector<int>    itsNChan;        //# nr of channels per band
+    std::vector<int32>  itsNChan;        //# nr of channels per band
     std::vector<double> itsStartFreqs;   //# start freq of each channel
     std::vector<double> itsEndFreqs;     //# end freq of each channel
+    ACC::APS::ParameterSet itsParms;     //# extra parameters
   };
     
+  // Put/get the object to/from a blob.
+  // <group>
+    inline BlobOStream& operator<< (BlobOStream& bs, const VdsPartDesc& vpd)
+    { return vpd.toBlob (bs); }
+    inline BlobIStream& operator>> (BlobIStream& bs, VdsPartDesc& vpd)
+    { return vpd.fromBlob (bs); }
+  // </group>
+
 }} /// end namespaces
 
 #endif

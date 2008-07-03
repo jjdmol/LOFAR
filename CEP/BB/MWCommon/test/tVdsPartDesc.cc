@@ -5,10 +5,14 @@
 //# $Id$
 
 #include <MWCommon/VdsPartDesc.h>
+#include <Blob/BlobString.h>
+#include <Blob/BlobOBufString.h>
+#include <Blob/BlobIBufString.h>
 #include <Common/LofarLogger.h>
 #include <ostream>
 #include <fstream>
 
+using namespace LOFAR;
 using namespace LOFAR::CEP;
 using namespace std;
 
@@ -34,6 +38,8 @@ void check (const VdsPartDesc& vds)
   ASSERT (vds.getEndFreqs()[2] == 180);
   ASSERT (vds.getEndFreqs()[3] == 240);
   ASSERT (vds.getEndFreqs()[4] == 300);
+  ASSERT (vds.getParms().size() == 1);
+  ASSERT (vds.getParms().getString("key1") == "value1");
 }
 
 void doIt()
@@ -43,6 +49,7 @@ void doIt()
   vds.setTimes (0, 1, 0.5);
   vds.addBand (2, 20, 100);
   vds.addBand (3, 120, 300);
+  vds.addParm ("key1", "value1");
   check(vds);
   // Write into parset file.
   ofstream fos("tVdsPartDesc_tmp.fil");
@@ -53,6 +60,18 @@ void doIt()
   check(vds2);
   vds = vds2;
   check(vds);
+  // Check writing/reading from/to blob.
+  BlobString bstr;
+  BlobOBufString bobs(bstr);
+  BlobOStream bos(bobs);
+  bos << vds;
+  BlobIBufString bibs(bstr);
+  BlobIStream bis(bibs);
+  VdsPartDesc vdsb;
+  bis >> vdsb;
+  check (vdsb);
+  vdsb.clearParms();
+  ASSERT (vdsb.getParms().size() == 0);
 }
 
 int main()
