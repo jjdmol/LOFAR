@@ -51,6 +51,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_GENERAL
+lofar_AIPSPP(1,"-lcasa")
 lofar_INTERNAL(LCS/Blob,Blob,,1,Blob/BlobHeader.h,,)
 lofar_INTERNAL(LCS/ACC/APS,APS,,1,APS/ParameterSet.h,,)
 
