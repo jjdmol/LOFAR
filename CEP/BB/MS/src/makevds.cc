@@ -35,7 +35,7 @@ int main(int argc, const char* argv[])
       cout << "Run as:  makevds ms" << endl;
       return 0;
     }
-    LOFAR::VdsMaker::create (argv[1], string(argv[1])+".vds.");
+    LOFAR::VdsMaker::create (argv[1], string(argv[1])+".vds");
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;
