@@ -40,7 +40,7 @@ if test $# = 0; then
   echo "run as:   mwimager parset-file [clusterdesc] [wd] [logfile] [dry] [hfn]"
   echo "       parset-file   name of parset file"
   echo "       clusterdesc   name of clusterdesc file"
-  echo "                     default is $HOME/CEP.cl;usterdesc"
+  echo "                     default is $HOME/CEP.clusterdesc"
   echo "       wd            working directory in subprocesses"
   echo "       logfile       root name of logfile of each subprocess"
   echo "                     A sequence number gets appended to it"
@@ -54,25 +54,34 @@ else
   psn=$1
   shift
 fi
-cdn=$HOME/CEP.clusterdesc
+cdn=
 if test $# != 0; then
   cdn=$1
   shift
 fi
-wd=0
+if test "$cdn" = ""; then
+  cdn=$HOME/CEP.clusterdesc
+fi
+wd=
 if test $# != 0; then
   wd=$1
   shift
+fi
+if test "$wd" = ""; then
+  wd=.
 fi
 logfile=
 if test $# != 0; then
   logfile=$1
   shift
 fi
-dry=0
+dry=
 if test $# != 0; then
   dry=$1
   shift
+fi
+if test "$dry" = ""; then
+  dry="nodry"
 fi
 hfn=
 if test $# != 0; then
@@ -80,18 +89,20 @@ if test $# != 0; then
   shift
 fi
 
-# Prepend parset with pwd if it has a relative file name.
-case "$psn" in
-    /*)
-	;;
-    *)
-	psn=$wd/$psn
-	;;
-esac
+# Make all file names absolute.
+wd=`cd $wd > /dev/null; pwd`
+dn=`dirname $psn`
+psn=`cd $dn > /dev/null; pwd`/`basename $psn`
+dn=`dirname $cdn`
+cdn=`cd $dn > /dev/null; pwd`/`basename $cdn`
+if test "$hfn" != ""; then
+  dn=`dirname $hfn`
+  hfn=`cd $dn > /dev/null; pwd`/`basename $hfn`
+fi
 
 # Get dataset name from the parset.
-msname=`getparsetvalue $psn dataset` || exit 1
+msvds=`getparsetvalue $psn dataset` || exit 1
 
 # Start the imager processes on the various machines.
-echo "startdistproc -mode 0 -nomasterhost -dsn $msname -hfn "$hfn" -cdn $cdn -logfile "$logfile" $pgmpath/mwimager-part $LOFARROOT $psn $wd $dry"
-startdistproc -mode 0 -nomasterhost -dsn $msname -hfn "$hfn" -cdn $cdn -logfile "$logfile" $pgmpath/mwimager-part $LOFARROOT $psn $wd $dry
+echo "startdistproc -mode 0 -nomasterhost -dsn $msvds -hfn "$hfn" -cdn $cdn -logfile "$logfile" $pgmpath/mwimager-part $LOFARROOT $psn $wd $dry"
+startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/mwimager-part "$LOFARROOT" "$psn" "$wd" "$dry"
