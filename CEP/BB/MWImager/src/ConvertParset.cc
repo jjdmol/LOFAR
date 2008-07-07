@@ -63,11 +63,15 @@ namespace LOFAR {
       ostringstream osvec;
       osvec << restoreBeamStr;
       out.add ("Cimager.restore.beam", osvec.str());
-      // The output name is the MS name minus the possibly trailing .MS.
+      // The output name is the base MS name minus the possible extension.
       outname = dataset;
-      string::size_type pos = outname.rfind (".MS");
+      string::size_type pos = outname.rfind ('.');
       if (pos != string::npos) {
-	outname.erase (pos);
+	outname = outname.substr (0, pos);
+      }
+      pos = outname.rfind ('/');
+      if (pos != string::npos) {
+	outname = outname.substr (pos+1);
       }
     }
     {
@@ -110,7 +114,7 @@ namespace LOFAR {
       string angle1    = imin.getString ("ra");
       string angle2    = imin.getString ("dec");
       string dirType   = imin.getString ("directionType");
-      string nchan     = imin.getString ("nchan");
+      string nchan     = imin.getString ("nchan", "1");
       string shape     = imin.getString ("shape");
       string frequency = imin.getString ("frequency");
       vector<string> stokes   = imin.getStringVector ("stokes");

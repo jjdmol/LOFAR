@@ -1,6 +1,8 @@
-ClusterName = cl
+ClusterName = test
 NNodes = 2
 Node0.NodeName = localhost
 Node0.NodeFileSys = [node1:/usr]
+Node0.NodeMountPoints = /
 Node1.NodeName = localhost
 Node1.NodeFileSys = [node1:/usr]
+Node1.NodeMountPoints = /

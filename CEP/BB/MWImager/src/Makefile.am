@@ -15,7 +15,7 @@ versionmwimager_LDADD        = libmwimager.la
 versionmwimager_DEPENDENCIES = libmwimager.la $(LOFAR_DEPEND)
 
 scriptdir = $(bindir)
-dist_script_SCRIPTS = mwimager
+dist_script_SCRIPTS = mwimager mwimager-part
 
 include $(top_srcdir)/Makefile.common
 
