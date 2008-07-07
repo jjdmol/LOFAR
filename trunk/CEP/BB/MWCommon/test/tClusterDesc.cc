@@ -43,13 +43,13 @@ void doIt()
   cl.setName ("cl");
   NodeDesc node1;
   node1.setName ("node1");
-  node1.addFileSys ("fs0");
-  node1.addFileSys ("fs1");
+  node1.addFileSys ("fs0", "/auto/fs0");
+  node1.addFileSys ("fs1", "/fs1");
   cl.addNode (node1);
   NodeDesc node2;
   node2.setName ("node2");
-  node2.addFileSys ("fs1");
-  node2.addFileSys ("fs2");
+  node2.addFileSys ("fs1", "/auto/fs1");
+  node2.addFileSys ("fs2", "/fs2");
   cl.addNode (node2);
   check(cl);
   // Write into parset file.
