@@ -18,14 +18,20 @@ void check (const NodeDesc& node)
   ASSERT (node.getFileSys().size() == 2);
   ASSERT (node.getFileSys()[0] == "fs0");
   ASSERT (node.getFileSys()[1] == "fs1");
+  ASSERT (node.getMountPoints()[0] == "/fs0/fs1");
+  ASSERT (node.getMountPoints()[1] == "/fs1");
+
+  ASSERT (node.findFileSys ("/fs1/abc") == "fs1");
+  ASSERT (node.findFileSys ("/fs0/fs1/abc") == "fs0");
+  ASSERT (node.findFileSys ("/fs0/abc") == "");
 }
 
 void doIt()
 {
   NodeDesc node;
   node.setName ("node1");
-  node.addFileSys ("fs0");
-  node.addFileSys ("fs1");
+  node.addFileSys ("fs0", "/auto/fs0/fs1");
+  node.addFileSys ("fs1", "/fs1");
   check(node);
   // Write into parset file.
   ofstream fos("tNodeDesc_tmp.fil");
@@ -36,6 +42,11 @@ void doIt()
   check(node2);
   node = node2;
   check(node);
+  // Chck that findFileSys handles a single / correctly.
+  node.addFileSys ("fs2", "/");
+  ASSERT (node.findFileSys ("/fs1/abc") == "fs1");
+  ASSERT (node.findFileSys ("/fs0/fs1/abc") == "fs0");
+  ASSERT (node.findFileSys ("/fs0/abc") == "fs2");
 }
 
 int main()

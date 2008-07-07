@@ -19,19 +19,19 @@ void doIt1()
   cl.setName ("cl");
   NodeDesc node0;
   node0.setName ("node0");
-  node0.addFileSys ("fs0");
-  node0.addFileSys ("fs1");
+  node0.addFileSys ("fs0", "/fs0");
+  node0.addFileSys ("fs1", "/fs1");
   cl.addNode (node0);
   NodeDesc node1;
   node1.setName ("node1");
-  node1.addFileSys ("fs1");
-  node1.addFileSys ("fs2");
+  node1.addFileSys ("fs1", "/fs1");
+  node1.addFileSys ("fs2", "/fs2");
   cl.addNode (node1);
   NodeDesc node2;
   node2.setName ("node2");
-  node2.addFileSys ("fs0");
-  node2.addFileSys ("fs1");
-  node2.addFileSys ("fs2");
+  node2.addFileSys ("fs0", "/fs0");
+  node2.addFileSys ("fs1", "/fs1");
+  node2.addFileSys ("fs2", "/fs2");
   cl.addNode (node2);
   WorkersDesc wdesc(cl);
   // Now define all workers which can perform 2 work types.
@@ -80,15 +80,15 @@ void doIt2()
   cl.setName ("cl");
   NodeDesc node0;
   node0.setName ("node0");
-  node0.addFileSys ("fs0");
+  node0.addFileSys ("fs0", "/fs0");
   cl.addNode (node0);
   NodeDesc node1;
   node1.setName ("node1");
-  node1.addFileSys ("fs1");
+  node1.addFileSys ("fs1", "/fs1");
   cl.addNode (node1);
   NodeDesc node2;
   node2.setName ("node2");
-  node2.addFileSys ("fs2");
+  node2.addFileSys ("fs2", "/fs2");
   cl.addNode (node2);
   WorkersDesc wdesc(cl);
   // Now define all workers which can perform 2 work types.
