@@ -23,6 +23,7 @@
 #include <lofar_config.h>
 #include <MS/VdsMaker.h>
 #include <MWCommon/VdsPartDesc.h>
+#include <MWCommon/ClusterDesc.h>
 #include <Common/StreamUtil.h>
 #include <Common/LofarLogger.h>
 
@@ -43,6 +44,7 @@
 #include <casa/Utilities/LinearSearch.h>
 #include <casa/OS/Path.h>
 #include <casa/OS/RegularFile.h>
+#include <casa/OS/HostInfo.h>
 #include <casa/Exceptions/Error.h>
 #include <iostream>
 #include <fstream>
@@ -139,9 +141,29 @@ void VdsMaker::getDataFileInfo (MS& ms, string& name, bool& regular,
   }
 }
 
-
-void VdsMaker::create (const string& msName, const string& outName)
+string findFileSys (const std::string& fileName, const ClusterDesc& cdesc)
 {
+  // Find the file system by looking for a matching mountpoint.
+  const std::vector<NodeDesc>& nodes = cdesc.getNodes();
+  // First find the NodeDesc for this node.
+  string nodeName = HostInfo::hostName();
+  uint i=0;
+  for (; i<nodes.size(); ++i) {
+    if (nodes[i].getName() == nodeName) {
+      break;
+    }
+  }
+  ASSERTSTR (i < nodes.size(), "Hostname '" << nodeName << "' not found in "
+	     "ClusterDesc file ");
+  return nodes[i].findFileSys (fileName);
+}
+
+
+void VdsMaker::create (const string& msName, const string& outName,
+		       const string& clusterDescName)
+{
+  // Open the ClusterDesc parset file.
+  ClusterDesc cdesc((ParameterSet(clusterDescName)));
   // Open the table.
   MS ms(msName);
   // Create and fill the Vds object.
@@ -149,8 +171,8 @@ void VdsMaker::create (const string& msName, const string& outName)
   ostringstream oss;
   // Fill in MS path and name.
   Path mspr(msName);
-  Path msp(mspr.absoluteName());
-  msd.setName (msp.originalName(), msp.dirName());
+  string absName = mspr.absoluteName();
+  msd.setName (absName, findFileSys(absName, cdesc));
   // Get freq info.
   // Fill in correlation info.
   vector<string> corrNames;

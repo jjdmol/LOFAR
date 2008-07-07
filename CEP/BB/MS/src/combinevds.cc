@@ -50,6 +50,7 @@ int main(int argc, const char* argv[])
     vpds.reserve (argc-2);
     for (int i=2; i<argc; ++i) {
       VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(argv[i]));
+      vpd->setName (argv[i], vpd->getFileSys());
       vpds.push_back (vpd);
       vpd->clearParms();
       const vector<int>& chans = vpd->getNChan();
@@ -90,6 +91,7 @@ int main(int argc, const char* argv[])
       }
       delete vpds[i];
       vpds[i] = 0;
+
     }
     ofstream ostr(argv[1]);
     gdesc.write (ostr);

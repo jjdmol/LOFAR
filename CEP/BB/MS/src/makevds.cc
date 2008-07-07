@@ -31,11 +31,15 @@ using namespace std;
 int main(int argc, const char* argv[])
 {
   try {
-    if (argc < 2) {
-      cout << "Run as:  makevds ms" << endl;
+    if (argc < 3) {
+      cout << "Run as:  makevds clusterdesc ms [msvds]" << endl;
       return 0;
     }
-    LOFAR::VdsMaker::create (argv[1], string(argv[1])+".vds");
+    string msvds = string(argv[2]) + ".vds";
+    if (argc > 3) {
+      msvds = argv[3];
+    }
+    LOFAR::VdsMaker::create (argv[2], msvds, argv[1]);
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;
