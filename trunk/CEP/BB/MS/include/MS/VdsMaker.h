@@ -43,7 +43,8 @@ namespace LOFAR {
   public:
     // Create the description for the given MS and put it in a file
     // with the given name.
-    static void create (const string& msName, const string& outName);
+    static void create (const string& msName, const string& outName,
+			const string& clusterDescName);
 
   private:
     // Get the frequency info for each spectral window in the MS.
