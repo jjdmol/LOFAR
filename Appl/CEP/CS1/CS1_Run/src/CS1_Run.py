@@ -143,6 +143,8 @@ if __name__ == '__main__':
     
     parset.setStations(stationList)
     
+    #parset.addkeys_IONodeRSP()
+    
     # see if we are using fake input
     if options.fakeinput > 0:
         parset.setInterval(1, options.runtime+10)

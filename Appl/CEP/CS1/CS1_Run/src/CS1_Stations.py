@@ -196,9 +196,15 @@ T0 = T0_0 + T0_1 + T0_2 + T0_3 + T0_4 + T0_5 + T0_6 + T0_7 + T0_8 + T0_9 + T0_10
 I_43 = [Station('I_43')]
 I_91 = [Station('I_91')]
 
+CS001  = [Station('CS001')]
+CS008  = [Station('CS008')]
+CS010  = [Station('CS010')]
+CS016  = [Station('CS016')]
+
 # CS0XX_4dipoles_1 =  CS0XX_dipole0 + CSXX_dipole4 + CS0XX_dipole8  + CS0XX_dipole12
 # CS0XX_4dipoles_2 =  CS0XX_dipole2 + CSXX_dipole6 + CS0XX_dipole10 + CS0XX_dipole14
 
+AllStations      = CS001 +  CS008 +  CS010 + CS016
 AllMicroStations = CS010_4us + CS001_4us + CS008_4us + CS016_4us
 AllDipoles       = CS010_4dipoles_1 + CS001_4dipoles_1 + CS008_4dipoles_1 + CS016_4dipoles_1
 AllDipolesMixed  = CS010_4dipoles_1 + CS001_4dipoles_2 + CS008_4dipoles_2 + CS016_4dipoles_2
