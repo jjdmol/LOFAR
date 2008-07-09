@@ -6,6 +6,7 @@ import sys
 import copy
 import string
 from Numeric import zeros
+from CS1_Hosts import *
 
 class CS1_Parset(LOFAR_Parset.Parset):
 
@@ -225,7 +226,19 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	        sbList.append(b2s[i])
 	    
 	return sbList    
-    
+
+    def nrBeams(self, index):
+        MAX_BEAMLETS_PER_RSP = 54
+	begin = index * MAX_BEAMLETS_PER_RSP
+	end = begin + MAX_BEAMLETS_PER_RSP-1
+	nbeams = 0
+        
+	for i in range(begin, end):
+	    if self.bl2beams[i] != 0:
+	       nbeams += 1 
+	
+	return nbeams   
+	    
     def nyquistzoneFromFilter(self, filterName):
     
         if filterName == 'LBL_10_80' : return 1
@@ -255,6 +268,49 @@ class CS1_Parset(LOFAR_Parset.Parset):
 	if nBeamlets > self.getInt32('OLAP.nrSubbandsPerFrame'):
 	    print 'NrBeamlets(%d)' % nBeamlets + ' > OLAP.nrSubbandsPerFrame(%d)' %  self.getInt32('OLAP.nrSubbandsPerFrame')
 	    sys.exit(0)
+
+    def addkeys_IONodeRSP(self):
+	interfaces = IONodes.get(self.partition)
+	dplists = [[] for i in range(len(interfaces))]
+	
+	for s in self.stationList:
+	    dest_ports = self.getStringVector_new('PIC.Core.' + s.getName() + '_RSP.dest.ports')
+	    for dp in dest_ports:
+		if (dp.find(':') == -1) or (dp[0:5] == 'file:') or (dp[0:5] == 'FILE:'):
+		    found = False
+		    for i in range(0, len(interfaces)):
+		        if not found and self.isDefined('PIC.Core.IONode[%d].RSP' % i):
+			    for sname in self.getStringVector_new('PIC.Core.IONode[%d].RSP' % i):
+			        if sname == s.getName()+ '_RSP%d' % dest_ports.index(dp):
+				    found = True
+				    break
+				    
+		    if not found:
+			print 'Warning: missing PIC.Core.IONode[x].RSP for station: ' + s.getName() + '_RSP%d("%s")' % (dest_ports.index(dp), dp) + ' in CS1.parset'
+		else:		    		    
+		    if (dp[0:4] == 'udp:') or (dp[0:4] == 'UDP:'):
+			index = interfaces.index(string.split(dp.strip(dp[0:4]), ':')[0])
+		    elif (dp[0:4] == 'tcp:') or (dp[0:4] == 'TCP:'):
+		        index = interfaces.index(string.split(dp.strip(dp[0:4]), ':')[0])
+		    else:
+		        index = interfaces.index(string.split(dp, ':')[0])	
+		    
+		    if self.nrBeams(dest_ports.index(dp)) > 0:
+		        dplists[index].append(s.getName() + '_RSP%d' % dest_ports.index(dp))
+	
+	count = 0
+	for dp in dplists:
+	    if self.isDefined('PIC.Core.IONode[%d].RSP' % count):
+		if len(self.getStringVector_new('PIC.Core.IONode[%d].RSP' % count)) != len(self.stationList):
+		    print 'nrStations in PIC.Core.IONode[%d].RSP' % count + ' must be: %d' % len(self.stationList)
+	            sys.exit(0)
+	    else:
+		if (len(dp) > 0) and (len(dp) != len(self.stationList)):
+		    print 'Error: manually set PIC.Core.IONode[x].RSP and the station name(s) in CS1.parset'
+	            sys.exit(0)
+		else:
+		    self['PIC.Core.IONode[%d].RSP' % count] = dp
+	    count += 1
 	
     def updateSBValues(self):
         if self.clock == '160MHz':
