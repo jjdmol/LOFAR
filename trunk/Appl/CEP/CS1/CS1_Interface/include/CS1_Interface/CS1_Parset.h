@@ -94,6 +94,7 @@ public:
 	double         chanWidth() const;
 	vector<string> getPortsOf(const string& aKey) const;
 	string         inputPortnr(const string& aKey) const;
+	void           IONodeRSPDestPorts(uint32 pset, vector<pair<string, string> > &RSPDestPort) const; 
 	string         stationName(const int index) const;
 	uint32         rspId(const string& stationName) const;
 	static string  expandedArrayString(const string& orgStr);

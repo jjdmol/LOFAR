@@ -51,6 +51,34 @@ CS1_Parset::~CS1_Parset()
 {
 }
 
+void CS1_Parset::IONodeRSPDestPorts(uint32 pset, vector<pair<string, string> > &RSPDestPort) const
+{
+  char buf[50];
+  
+  sprintf(buf,"PIC.Core.IONode[%d].RSP",pset);
+  vector<string> snames = getStringVector(buf);
+  string rspdest_ports;
+    
+  for (uint i = 0; i < snames.size(); i++) {
+    rspdest_ports = getStringVector("PIC.Core." + snames[i].substr(0, snames[i].length()-1) + ".dest.ports")[atoi(snames[i].substr(snames[i].length()-1,snames[i].length()).c_str())];
+    if ((rspdest_ports.substr(0,5).compare("file:") == 0) || (rspdest_ports.substr(0,5).compare("FILE:") == 0)) {
+      RSPDestPort.push_back(pair<string, string>(rspdest_ports.substr(rspdest_ports.find(":")+1),""));
+    }
+    else if ((rspdest_ports.substr(0,4).compare("udp:") == 0) || (rspdest_ports.substr(0,4).compare("UDP:") == 0) ||
+             (rspdest_ports.substr(0,4).compare("tcp:") == 0) || (rspdest_ports.substr(0,4).compare("TCP:") == 0)) {
+        RSPDestPort.push_back(pair<string, string>(StringUtil::split(rspdest_ports, ':')[1], rspdest_ports.substr(rspdest_ports.rfind(":")+1)));
+    }
+    else if (rspdest_ports.find(":") != string::npos){
+      // udp
+      RSPDestPort.push_back(pair<string, string>(StringUtil::split(rspdest_ports, ':')[0], StringUtil::split(rspdest_ports, ':')[1]));
+    }
+    else {
+      // file
+      RSPDestPort.push_back(pair<string, string>(rspdest_ports,""));
+    }
+  }
+}
+
 uint32 CS1_Parset::nrSubbands() const
 {
   uint32 nrSubbands(0);
