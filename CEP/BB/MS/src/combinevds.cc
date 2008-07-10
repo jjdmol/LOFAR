@@ -22,6 +22,7 @@
 
 #include <lofar_config.h>
 #include <MWCommon/VdsDesc.h>
+#include <casa/OS/Path.h>
 #include<stdexcept>
 #include <iostream>
 #include <fstream>
@@ -34,7 +35,7 @@ int main(int argc, const char* argv[])
 {
   try {
     if (argc < 3) {
-      cout << "Run as:  makevds outName in1 in2 ..." << endl;
+      cout << "Run as:  combinevds outName in1 in2 ..." << endl;
       return 0;
     }
 
@@ -50,7 +51,8 @@ int main(int argc, const char* argv[])
     vpds.reserve (argc-2);
     for (int i=2; i<argc; ++i) {
       VdsPartDesc* vpd = new VdsPartDesc(ParameterSet(argv[i]));
-      vpd->setName (argv[i], vpd->getFileSys());
+      casa::Path path(argv[i]);
+      vpd->setName (path.absoluteName(), vpd->getFileSys());
       vpds.push_back (vpd);
       vpd->clearParms();
       const vector<int>& chans = vpd->getNChan();
