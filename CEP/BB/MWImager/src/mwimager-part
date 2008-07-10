@@ -27,8 +27,6 @@
 pgmpath=`dirname $0`
 pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
-echo "$@" >> $HOME/xxx
-
 if test $# != 10; then
   echo "run as:   mwimager-part dummy dummy dummy dummy rank ms-part"
   echo "                        lofarroot parset-file wd dry"
@@ -60,7 +58,6 @@ echan=`getparsetvalue $psnbase.part$seqnr lastchan  2>/dev/null` || echan=-1
 sfreq=`getparsetvalue $msn StartFreqs schan` || exit 1
 efreq=`getparsetvalue $msn EndFreqs   echan` || exit 1
 dname=`getparsetvalue $msn Name` || exit 1
-echo "$schan $echan $sfreq $efreq $dname" >> $HOME/xxx
 echo "Images.frequency = [$sfreq, $efreq]" >> $psnbase.part$seqnr
 sed -e "s%^ *dataset * =.*%dataset = $dname%" $psnbase.part$seqnr > $psnbase.part$seqnr-tmp
 mv $psn.part$seqnr-tmp $psn.part$seqnr
@@ -80,8 +77,8 @@ if test "$dry" = dry; then
 fi
 
 # Run the imager.
-echo "~/askapsoft/Code/Components/Synthesis/synthesis/trunk/apps/cimager.sh -inputs $psnbase.part$seqnr.cvt" > $HOME/xxx
-~/askapsoft/Code/Components/Synthesis/synthesis/trunk/apps/cimager.sh -inputs $psnbase.part$seqnr.cvt
+echo "cimager.sh -inputs $psnbase.part$seqnr.cvt"
+cimager.sh -inputs $psnbase.part$seqnr.cvt
 
 # Convert to FITS.
 ## image2fits 
