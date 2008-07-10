@@ -29,7 +29,7 @@ pgmpath=`cd $pgmpath > /dev/null 2>&1  &&  pwd`
 
 # Check if LOFARROOT is set.
 if test "$LOFARROOT" = ""; then
-  echo "LOFARROT is undefined; source lofarinit.(c)sh first"
+  echo "LOFARROOT is undefined; source lofarinit.(c)sh first"
   exit 1
 fi
 
@@ -41,7 +41,9 @@ if test $# = 0; then
   echo "       parset-file   name of parset file"
   echo "       clusterdesc   name of clusterdesc file"
   echo "                     default is $HOME/CEP.clusterdesc"
-  echo "       wd            working directory in subprocesses"
+  echo "       wd            working directory in subprocesses which will get"
+  echo "                     the images and log files"
+  echo "                     default is same directory as MS"
   echo "       logfile       root name of logfile of each subprocess"
   echo "                     A sequence number gets appended to it"
   echo "                     default is mwimager.log"
@@ -67,9 +69,6 @@ if test $# != 0; then
   wd=$1
   shift
 fi
-if test "$wd" = ""; then
-  wd=.
-fi
 logfile=
 if test $# != 0; then
   logfile=$1
@@ -90,7 +89,6 @@ if test $# != 0; then
 fi
 
 # Make all file names absolute.
-wd=`cd $wd > /dev/null; pwd`
 dn=`dirname $psn`
 psn=`cd $dn > /dev/null; pwd`/`basename $psn`
 dn=`dirname $cdn`
@@ -101,8 +99,14 @@ if test "$hfn" != ""; then
 fi
 
 # Get dataset name from the parset.
+# If it is an MS, operate directly on it (as rank 0).
 msvds=`getparsetvalue $psn dataset` || exit 1
+if test -d "$msvds"  -a  -e "$msvds/table.dat"; then
+  echo "mwimager-part '' '' '' '' 0 '$msvds' '$LOFARROOT' '$psn' '$wd' '$dry'"
+  mwimager-part "" "" "" "" 0 "$msvds" "$LOFARROOT" "$psn" "$wd" "$dry" 
 
-# Start the imager processes on the various machines.
-echo "startdistproc -mode 0 -nomasterhost -dsn $msvds -hfn "$hfn" -cdn $cdn -logfile "$logfile" $pgmpath/mwimager-part $LOFARROOT $psn $wd $dry"
-startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/mwimager-part "$LOFARROOT" "$psn" "$wd" "$dry"
+else
+  # Start the imager processes on the various machines.
+  echo "startdistproc -mode 0 -nomasterhost -dsn '$msvds' -hfn '$hfn' -cdn '$cdn' -logfile '$logfile' $pgmpath/mwimager-part '$LOFARROOT' '$psn' '$wd' '$dry'"
+  startdistproc -mode 0 -nomasterhost -dsn "$msvds" -hfn "$hfn" -cdn "$cdn" -logfile "$logfile" $pgmpath/mwimager-part "$LOFARROOT" "$psn" "$wd" "$dry"
+fi
