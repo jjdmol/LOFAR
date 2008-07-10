@@ -50,7 +50,7 @@ psnbase=`basename $psn`
 . $lroot/lofarinit.sh
 
 # Get the data set name and the directory name of it.
-if test "$wd" = ""; then
+if test "$wd" = ""  -o  "$wd" = "..."; then
   wd=`dirname "$msn"`
 fi
 
