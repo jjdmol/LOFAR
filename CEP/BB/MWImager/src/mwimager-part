@@ -48,8 +48,20 @@ psnbase=`basename $psn`
 
 # Initialize lofar environment.
 . $lroot/lofarinit.sh
+
+# Get the data set name and the directory name of it.
+if test "$wd" = ""; then
+  wd=`dirname "$msn"`
+fi
+
 # Set to working directory.
 cd $wd
+
+# If an MS name is given, create a temporary description file for it.
+if test -d "$msn"  -a  -e "$msn/table.dat"; then
+  makevds "" "$msn" "$msn.tmpvds"
+  msn="$msn.tmpvds"
+fi
 
 # Add channel info to the parset file.
 cp $psn $psnbase.part$seqnr
