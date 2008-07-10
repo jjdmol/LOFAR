@@ -33,6 +33,7 @@
 #include <Transport/TransportHolder.h>
 #include <Common/lofar_deque.h>
 #include <Common/lofar_list.h>
+#define MPICH_IGNORE_CXX_SEEK
 #include <mpi.h>
 
 #ifdef HAVE_MPE
