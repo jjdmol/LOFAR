@@ -162,8 +162,6 @@ string findFileSys (const std::string& fileName, const ClusterDesc& cdesc)
 void VdsMaker::create (const string& msName, const string& outName,
 		       const string& clusterDescName)
 {
-  // Open the ClusterDesc parset file.
-  ClusterDesc cdesc((ParameterSet(clusterDescName)));
   // Open the table.
   MS ms(msName);
   // Create and fill the Vds object.
@@ -172,7 +170,14 @@ void VdsMaker::create (const string& msName, const string& outName,
   // Fill in MS path and name.
   Path mspr(msName);
   string absName = mspr.absoluteName();
-  msd.setName (absName, findFileSys(absName, cdesc));
+  // If the ClusterDesc file is given, try to find filesys.
+  // Otherwise it is unknown.
+  if (clusterDescName.empty()) {
+    msd.setName (absName, "unknown");
+  } else {
+    ClusterDesc cdesc((ParameterSet(clusterDescName)));
+    msd.setName (absName, findFileSys(absName, cdesc));
+  }
   // Get freq info.
   // Fill in correlation info.
   vector<string> corrNames;
