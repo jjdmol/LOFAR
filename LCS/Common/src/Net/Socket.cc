@@ -766,7 +766,7 @@ int32 Socket::setBlocking (bool block)
 	}
 
 	if (itsSocketID >= 0) {					// we must have a socket ofcourse
-#ifndef HAVE_BGL
+#if !defined HAVE_BGL && !defined HAVE_BGP
 		if (fcntl (itsSocketID, F_SETFL, block ? 0 : O_NONBLOCK) < 0) {
 			return (setErrno(SOCKOPT));
 		}
