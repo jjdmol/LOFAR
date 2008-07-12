@@ -34,7 +34,7 @@ class Section(object):
         return self.buildJob.isSuccess()
     
     def run(self, runlog, noRuns, runCmd = None):
-        if '_bgl' in self.buildvar:
+        if '_bgp' in self.buildvar:
             self.runJob = BGLJob(self.package.split('/')[-1], \
                                  self.host, \
                                  executable = self.workingDir + '/LOFAR/installed/' + self.buildvar + '/bin/' + self.executable, \
@@ -128,7 +128,7 @@ class BGLProcSection(Section):
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_BGLProc', \
                          host = host, \
-                         buildvar = 'gnubgl_bgl')
+                         buildvar = 'gnubgp_bgp')
 
         nstations = parset.getNStations()
         clock = parset.getClockString()

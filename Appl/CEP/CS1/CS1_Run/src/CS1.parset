@@ -23,7 +23,7 @@ OLAP.subbandsPerPset = 6 #6
 OLAP.psetsPerStorage = 2 #3
 OLAP.BGLProc.integrationSteps = 608  #768 at 200MHz
 OLAP.BGLProc.nrPPFTaps=16
-OLAP.BGLProc.coresPerPset = 16
+OLAP.BGLProc.coresPerPset = 64
 OLAP.BGLProc.maxConcurrentComm = 1
 
 OLAP.IONProc.useGather = T
