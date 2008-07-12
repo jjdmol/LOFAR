@@ -86,7 +86,7 @@ void createClientTHs(unsigned nrClients)
     clientTHs[core] = new TH_ZoidServer(core);
 #elif 0
     clientTHs[core] = new TH_Null;
-#elif 0
+#elif 1
     clientTHs[core] = new TH_Socket(boost::lexical_cast<string>(5000 + core));
 
     while (!clientTHs[core]->init())
