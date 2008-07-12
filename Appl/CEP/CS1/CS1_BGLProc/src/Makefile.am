@@ -29,7 +29,6 @@ DOCHDRS 		= $(INSTHDRS) $(NOINSTHDRS)
 
 bin_PROGRAMS 		= CS1_BGL_Processing 
 
-CCAS			= $(CC)
 CCASFLAGS		= $(patsubst -q%,,$(CPPFLAGS)) $(EXTRA_CPPFLAGS)
 
 CS1_BGL_Processing_SOURCES	= $(DOCHDRS) \
