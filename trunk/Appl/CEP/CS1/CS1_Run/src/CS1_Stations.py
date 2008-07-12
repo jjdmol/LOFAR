@@ -169,11 +169,18 @@ Effelsberg = Effelsberg_0 + Effelsberg_1 + Effelsberg_2 + Effelsberg_3
 
 I001_us0 = [Station('I001_us0')]
 
-B06_0 = [Station('B06_0')]
-B06_1 = [Station('B06_1')]
-B06_2 = [Station('B06_2')]
-B06_3 = [Station('B06_3')]
-B06 = B06_0 + B06_1 + B06_2 + B06_3
+B00_0 = [Station('B00_0')]
+B00_1 = [Station('B00_1')]
+B01_0 = [Station('B01_0')]
+B01_1 = [Station('B01_1')]
+B02_0 = [Station('B02_0')]
+B02_1 = [Station('B02_1')]
+B03_0 = [Station('B03_0')]
+B03_1 = [Station('B03_1')]
+B00 = B00_0 + B00_1
+B01 = B01_0 + B01_1
+B02 = B02_0 + B02_1
+B03 = B03_0 + B03_1
 
 T0_0 = [Station('T0_0')]
 T0_1 = [Station('T0_1')]
@@ -204,7 +211,7 @@ CS016  = [Station('CS016')]
 # CS0XX_4dipoles_1 =  CS0XX_dipole0 + CSXX_dipole4 + CS0XX_dipole8  + CS0XX_dipole12
 # CS0XX_4dipoles_2 =  CS0XX_dipole2 + CSXX_dipole6 + CS0XX_dipole10 + CS0XX_dipole14
 
-AllStations      = CS001 +  CS008 +  CS010 + CS016
+AllStations      = CS001 + CS010 + CS016
 AllMicroStations = CS010_4us + CS001_4us + CS008_4us + CS016_4us
 AllDipoles       = CS010_4dipoles_1 + CS001_4dipoles_1 + CS008_4dipoles_1 + CS016_4dipoles_1
 AllDipolesMixed  = CS010_4dipoles_1 + CS001_4dipoles_2 + CS008_4dipoles_2 + CS016_4dipoles_2
@@ -214,4 +221,4 @@ Mixed            = CS010_us0 + CS010_dipole4 + CS010_dipole8 + CS010_dipole12 + 
 All24Dipoles     = CS001_4dipoles_1 + CS008_4dipoles_1 + CS016_4dipoles_1 + CS030_4dipoles + CS031_4dipoles + CS032_4dipoles
 All23Dipoles     = CS001_4dipoles_1 + CS008_4dipoles_1 + CS016_us0 + CS016_us1 + CS016_us2 + CS030_4dipoles + CS031_4dipoles + CS032_4dipoles
 Generator        = CS010_HBA0 + CS010_HBA2 + CS010_HBA3 + CS008_HBA0 + CS008_HBA2 + CS008_HBA3 + CS001_HBA0 + CS001_HBA2 + CS001_HBA3 + CS016_HBA0 + CS016_HBA2 + CS016_HBA3
-Everything       = All23Dipoles + B06_0
+Everything       = All23Dipoles
