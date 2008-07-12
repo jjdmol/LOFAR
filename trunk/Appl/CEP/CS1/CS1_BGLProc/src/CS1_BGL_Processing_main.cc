@@ -64,13 +64,16 @@ int main(int argc, char **argv)
     TH_ZoidClient  th;
 #elif 0
     TH_Null	   th;
-#elif 0
+#elif 1
     usleep(10000 * locationInfo.rankInPset()); // do not connect all at the same time
 
+    std::clog << "creating connection ..." << std::endl;
     TH_Socket	   th("127.0.0.1", boost::lexical_cast<string>(5000 + locationInfo.rankInPset()));
+    std::clog << "waiting for connection ..." << std::endl;
 
     while (!th.init())
       sleep(1);
+    std::clog << "connection successful" << std::endl;
 #else
     TH_File	   th(string("/tmp/sock.") + boost::lexical_cast<string>(locationInfo.rankInPset()), TH_File::Read);
 
@@ -82,10 +85,8 @@ int main(int argc, char **argv)
     BGL_Command	   command;
 
     do {
-std::clog << TH_MPI::getCurrentRank() << " read command" << std::endl;
       command.read(&th);
 
-std::clog << TH_MPI::getCurrentRank() << " received command " << (unsigned) command.value() << std::endl;
       switch (command.value()) {
 	case BGL_Command::PREPROCESS :	{
 					  BGL_Configuration configuration;
@@ -103,7 +104,6 @@ std::clog << TH_MPI::getCurrentRank() << " received command " << (unsigned) comm
 
 	default :			break;
       }
-std::clog << TH_MPI::getCurrentRank() << " command handled" << std::endl;
     } while (command.value() != BGL_Command::STOP);
 
 #if defined HAVE_MPI
