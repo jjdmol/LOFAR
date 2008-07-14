@@ -191,7 +191,7 @@ E
 1
 LANG:1 0 
 
-125 "logMsg" 67 1 0 "s" 1
+125 "logMsg" 63 1 0 "s" 1
 LANG:1 6 logMsg
 E
 1
@@ -210,7 +210,15 @@ LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,
 "name"
 ""
 1 31 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  rClick();
+}" 0
+ "main()
+{
+  dblClick();
+}" 0
+
 5 0 0 0 0 0
 E E E
 0
@@ -219,7 +227,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 2 1 E U  1 E 31 10 61 24
+E "main()
+{
+  click();
+}" 0
+ 0 1 1 2 1 E U  1 E 31 10 61 24
 0 2 2 "0s" 0 0 0 192 0 0  31 10 1
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
@@ -256,7 +268,7 @@ LAYER, 7
 LANG:1 0 
 0
 3 0 "selfState"
-"objects\\lofar_self_state.pnl" 9.500000000000011 9.5 T 1 1 0 0.882352941176471 -0.499999999999993 0.6176470588235254
+"objects\\lofar_self_state.pnl" 9.500000000000011 9.5 T 1 1 0 0.882352941176471 -0.499999999999993 -1.382352941176475
 1
 "$object""MACScheduler"
 0

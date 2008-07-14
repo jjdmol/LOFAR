@@ -39,7 +39,7 @@ void initialize() {
 // If there is an action required this point will tell so
 //
 void doAction(string aDP, string anAction) {
-  LOG_DEBUG(\"Navigator_headLines.pnl:doAction: required for \" + $name + \". Action found: \" + anAction);
+  LOG_DEBUG(\"Navigator_headLines.pnl:doAction| required for \" + $name + \". Action found: \" + anAction);
   // split action into essentials
   dyn_string actionString;
   if (!navFunct_splitAction(anAction,actionString)) {

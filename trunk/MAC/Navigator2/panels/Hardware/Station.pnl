@@ -237,7 +237,7 @@ void redraw(string mode) {
     expandFactorY=expandFactorX;
   }
 
-  LOG_DEBUG(\"Final expandfactors: \" + expandFactorX+\" \"+ expandFactorY);
+  LOG_DEBUG(\"Station.pnl:redraw|Final expandfactors: \" + expandFactorX+\" \"+ expandFactorY);
   
   // set the hardware selectable items
   // For this panel the Cabinet and the Antenna's in a choosen layout should be selectable 

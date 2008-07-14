@@ -56,7 +56,7 @@ void MainCU_Processes_initList() {
   dyn_dyn_anytype tab;
   //PermSW + PermSW_Daemons
   dpQuery("SELECT '_original.._value' FROM 'LOFAR_PermSW_*.status.state' ", tab);
-  LOG_TRACE("MainCU_Processes.pnl:main|Found: "+ tab);
+  LOG_TRACE("MainCU_Processes.ctl:initList|Found: "+ tab);
   
   dyn_string aDS=navFunct_getDynString(tab, 2,1);
   dynSortAsc(aDS);
@@ -82,6 +82,12 @@ void MainCU_Processes_initList() {
       result[z]=","+spl[1]+","+path;
     }
   }
+  
+  if (!dpExists(MainDBName+"LOFAR_PermSW_MACScheduler.activeObservations")) {
+    setValue("activeObs","backCol","_dpdoesnotexist");
+  } else {
+    dpConnect("MainCU_Processes_ActiveObsCallback",true,"LOFAR_PermSW_MACScheduler.activeObservations");
+  }
  
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".processesList",result);
   
@@ -100,22 +106,22 @@ void MainCU_Processes_initList() {
 // ***************************************
 void MainCU_Processes_UpdateMainControllers() {
   string newSelectedObservation=activeObs.getText(activeObs.selectedItem(),0);
+  LOG_TRACE("MainCU_Processes.ctl:updateMainControllers|selected observation: "+ selectedObservation +" New: "+ newSelectedObservation);
   // check if selection is made, and the selection is indeed a new one
-  if (newSelectedObservation != selectedObservation && newSelectedObservation != "") {
-    selectedObservation = newSelectedObservation;
+  if (newSelectedObservation != 0) {
     selectedStation="";
+    selectedObservation = newSelectedObservation;
+    observationName.text(selectedObservation);
     // get the real name from the selected Observation
     obsBaseDP=claimManager_nameToRealName("LOFAR_ObsSW_"+selectedObservation);   
-    
+    LOG_TRACE("MainCU_Processes.ctl:updateMainControllers|connecting to  Main Observation Ctrls");    
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","ObsCtrlPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineCtrl_StorageApplPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.objectName","OnlineCtrl_CorrelatorPanel",
           DPNAME_NAVIGATOR + g_navigatorID + ".updateTrigger.paramList",makeDynString(obsBaseDP));
-
   }
-
 }
 
 // ****************************************
@@ -128,8 +134,10 @@ void MainCU_Processes_UpdateMainControllers() {
 // ***************************************
 void MainCU_Processes_UpdateStationControllers() {
   string newSelectedStation=stationTree.getText(stationTree.selectedItem(),0);
+
+  LOG_TRACE("MainCU_Processes.ctl:updateStationControllers|selected station: "+ selectedStation +" New: "+ newSelectedStation);
   // check if selection is made, and the selection is indeed a new one
-  if (newSelectedStation != selectedStation && newSelectedStation != "") {
+  if (newSelectedStation != 0) {  
     selectedStation = newSelectedStation;
     stationDBName.text(selectedStation);
     MainCU_Processes_UpdateProcessesList();
@@ -153,6 +161,7 @@ void MainCU_Processes_UpdateStationControllers() {
 //  
 // ***************************************
 void MainCU_Processes_UpdateProcessesList() {
+  LOG_TRACE("MainCU_Processes.ctl:updateProcessesList|entered");
   dyn_string list;
   
   // copy old results from rest of the panel to the new list
@@ -208,7 +217,7 @@ void MainCU_Processes_UpdateProcessesList() {
 
       //select all Ctrl under Station:LOFAR_PermSW_'selectedObservation'
       dpQuery("SELECT '_original.._value' FROM '"+stationObsDP+"_*.status.state' REMOTE '"+selectedStation+":'", tab);
-      LOG_TRACE("MainCU_Processes.pnl:updateProcessesList|Station Controllers Found: "+ tab);
+      LOG_TRACE("MainCU_Processes.ctl:updateProcessesList|Station Controllers Found: "+ tab);
       
       aDS=navFunct_getDynString(tab, 2,1);
       dynSortAsc(aDS);
@@ -239,26 +248,27 @@ void MainCU_Processes_UpdateProcessesList() {
     // trigger that the panel values are calculated and ready
     navPanel_setEvent("MainCU_Processes.ctl:updateProcessesList","Update");
   }
-//  navPanel_setEvent("ObsSW_Main|"+selectedStation+"|"+selectedObservation,"EventClick");
 } 
 
 MainCU_Processes_UpdateStationTree() {
 
-  // empty the table
+  LOG_TRACE("MainCU_Processes.ctl:updateStationTree|entered. Selected Observation: "+selectedObservation);
+    // empty the table
   stationTree.clear();
   
   
   if (selectedObservation == "") {
     return;
   }
-   
-  if (obsBaseDP != "") {
+  
+  LOG_DEBUG("MainCU_Processes.ctl:updateStationTree|obsBaseDP: "+obsBaseDP);
+  if (dpExists(obsBaseDP)) {
     // look if that name is available in the Observation List
     int j = dynContains(g_observations["DP"],obsBaseDP);
     if ( j > 0) {
       // get the Stationlist from that observation
       string sts=g_observations["STATIONLIST"][j];
-      LOG_DEBUG("MainCU_Processes.ctl:MainCU_Processes_UpdateStationTree|Found Stationlist for this Observation: "+ sts);
+      LOG_DEBUG("MainCU_Processes.ctl:UpdateStationTree|Found Stationlist for this Observation: "+ sts);
       // add stations if not allready there
       dyn_string stations = strsplit(sts,",");
       for (int k=1; k<= dynlen(stations);k++) {
@@ -268,12 +278,65 @@ MainCU_Processes_UpdateStationTree() {
           stationTree.setIcon(stations[k],0,"16_empty.gif");
           if (k==1) {
             stationTree.setSelectedItem(stations[k],true);
+            selectedStation=stations[k];
           }
         }
       }
+      LOG_TRACE("MainCU_Processes.ctl:updateStationTree|calling UpdateStationControllers. selected ststion: "+selectedStation);
       MainCU_Processes_UpdateStationControllers();
     }
   }
+}
+
+MainCU_Processes_ActiveObsCallback(string dp1, dyn_string activeObservations) {
+  LOG_TRACE("MainCU_Processes.ctl:activeObsCallback|Found: "+ activeObservations);
+
+  // empty the table
+  activeObs.clear();
+  
+  // if the active observations list changes the list here should be changed also.
+  // iterate over the found entries and fill the table
+  // if no previous Observation selected, set selection to the first on the list, also
+  // set it here when previous selection disappeared from the list.
+  // otherwise nothing will be changed in the selection
+
+  int idx=-1;
+  string newSelection="";
+  string oldSelection=activeObs.selectedItem();
+  selectedObservation=oldSelection;
+  LOG_DEBUG("MainCU_Processes.ctl:activeObsCallback|oldSelection: "+oldSelection);
+  for (int i=1; i<= dynlen(activeObservations);i++) {
+    string realName=claimManager_nameToRealName("LOFAR_ObsSW_"+activeObservations[i]);
+    activeObs.appendItem("",realName,activeObservations[i]);
+    activeObs.ensureItemVisible(realName);
+    activeObs.setIcon(realName,0,"16_empty.gif");
+    if (i==1) {
+      newSelection=realName;
+    }
+  }
+  
+  if ((oldSelection == newSelection) ||
+      (oldSelection != "" && activeObs.itemExists(oldSelection))) {
+    activeObs.setSelectedItem(oldSelection,true);
+    selectedObservation=activeObs.getText(activeObs.selectedItem(),0); 
+    observationName.text(selectedObservation);
+    LOG_DEBUG("MainCU_Processes.ctl:activeObsCallback|Selection: "+selectedObservation);
+    // nothing further needed
+    return;
+  } else {
+    activeObs.setSelectedItem(newSelection,true);    
+    selectedObservation=activeObs.getText(activeObs.selectedItem(),0); 
+  }
+  
+  observationName.text(selectedObservation);
+  LOG_DEBUG("MainCU_Processes.ctl:activeObsCallback|Selection: "+selectedObservation);
+  
+  // something has changed, so update Main Controllers
+  LOG_DEBUG("MainCU_Processes.ctl:activeObsCallback|Starting updateMainControllers");
+  MainCU_Processes_UpdateMainControllers(); 
+  LOG_DEBUG("MainCU_Processes.ctl:activeObsCallback|Starting updateStationTree");
+  MainCU_Processes_UpdateStationTree(); 
+   
 }
 
 

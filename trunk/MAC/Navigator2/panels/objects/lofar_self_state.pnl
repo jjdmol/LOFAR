@@ -1,17 +1,102 @@
 V 10
 1
 LANG:1 16 Lofar Self State
-PANEL,422 141 95 86 N "_3DFace" 1
+PANEL,-1 -1 170 141 N "_3DFace" 1
 "$object"
 "main()
 {
-	setValue(\"light\",\"toolTipText\",$object+\" state\");
+  setValue(\"light\",\"toolTipText\",$object+\" state\");
+  baseDP=g_currentDatapoint;
+  
+
+    
 }" 0
-EE E E 1 0 0 0  10 10
-"" 0 1
-EE 2
-"CBRef""1"
-"EClose"E
+ E E "main()
+{
+  rClick();
+}" 0
+ E 1 0 0 0  10 10
+""0  1
+E "#uses \"navPanel.ctl\"
+
+
+dyn_string popup;
+string baseDP=\"\";
+
+
+// NCFObjectState vars
+string DPName=\"\";
+int state;
+string message=\"Operator Overrule\";
+bool force=true;
+
+
+void rClick() {
+  // define the popupMenu
+ 
+  int idx=1;
+  dynInsertAt(popup,\"CASCADE_BUTTON,Set State, 1\",idx++);
+  dynInsertAt(popup,\"CASCADE_BUTTON,Set Recursive State, 1\",idx++);
+  dynInsertAt(popup,\"Set State\",idx++);
+  for (int i = 1; i <= mappinglen(stateName); i++)  {
+    string aS=\"PUSH_BUTTON,\"+mappingGetValue(stateName,i)+\",1\"+mappingGetKey(stateName,i)+\",1\";
+    dynInsertAt(popup,aS,idx++);
+  }  
+  dynInsertAt(popup,\"Set Recursive State\",idx++);
+  for (int i = 1; i <= mappinglen(stateName); i++)  {
+    string aS=\"PUSH_BUTTON,\"+mappingGetValue(stateName,i)+\",2\"+mappingGetKey(stateName,i)+\",1\";
+    dynInsertAt(popup,aS,idx++);
+  }
+  
+  popupMenu(popup,state);
+  
+  bool recursive = false;
+  if (state == 10 ) {
+    state = 0;
+  } else if (state == 20) {
+    state = 0;
+  recursive = true;    
+  } else if (state < 200) {
+    state -= 100;
+  } else {
+    state -= 200;
+    recursive = true;
+  }        
+
+  bool ack=navFunct_acknowledgePanel(\"This will (re)set the state of \"+baseDP+\" to \"+getStateName(state)+\". Are you sure?\");
+  if (!ack) {
+    LOG_DEBUG(\"lofar_self_state.pnl:rClick|State change by operator cancelled\");
+  }
+  string database = dpSubStr(baseDP,DPSUB_SYS);
+  string bareDP = dpSubStr(baseDP,DPSUB_DP);
+  if (state) {
+    if (!recursive) {
+      LOG_DEBUG(\"lofar_self_state.pnl:rClick|Operator sets \"+baseDP+\".status.state to \"+getStateName(state));
+      DPName=baseDP+\".status.state\";
+      dpSet(database+\"__navObjectState.DPName\",DPName,
+            database+\"__navObjectState.stateNr\",state,
+            database+\"__navObjectState.message\",message,
+            database+\"__navObjectState.force\",force);
+    } else {
+      // If baseDP is on a station, only that station is needed in the query.
+      // if it is on the Main DB, all stations need to be examined.
+      string query=\"\";
+      if (database == MainDBName) {
+        query= \"SELECT '_original.._value' FROM '\"+bareDP+\"*.status.state' REMOTE 'ALL' WHERE '_original.._value' != \"+state;
+      } else {
+        query= \"SELECT '_original.._value' FROM '\"+bareDP+\"*.status.state' REMOTE '\"+database+\"'WHERE '_original.._value' != \"+state;
+      }   
+      dyn_dyn_anytype tab;
+      
+      dpQuery(query,tab);
+      
+      DebugN(\"lofar_self_state.pnl:rClick|Found: \"+tab+\" will all be set\");    
+    }
+  }
+}" 0
+ 2
+"CBRef" "1"
+"EClose" E
 ""
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
@@ -21,15 +106,21 @@ LANG:1 6 Layer1
 "light"
 ""
 1 17.0333 17.0333 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
+ "main()
+{
+// rClick();
+    DebugN(\"objectbaseDP:\"+itsObject);
+}" 0
+ E
 2 0 0 0 0 0
-EE E
+E E E
 0
 1
 LANG:1 10 self state
+
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E 1.071428571428571 0 1.071428571428571  -1.25 -1.25  1 E 17.5 17.5 7 7
+E E 0 1 1 0 1 E 1.071428571428571 0 1.071428571428571 1.250000000000007 1.250000000000007 1 E 17.5 17.5 7 7
 0
 LAYER, 1 
 1

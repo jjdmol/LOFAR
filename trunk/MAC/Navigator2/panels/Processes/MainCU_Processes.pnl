@@ -40,6 +40,7 @@ void TriggerCallback(string dp1, bool aTrig) {
   dynAppend(processMatch,dynPatternMatch(\"KVLogger\",strHighlight));
   dynAppend(processMatch,dynPatternMatch(\"LogProcessor\",strHighlight));
   dynAppend(processMatch,dynPatternMatch(\"ServiceBroker\",strHighlight));
+  dynAppend(processMatch,dynPatternMatch(\"SASGateway\",strHighlight));  
   dynAppend(processMatch,dynPatternMatch(\"MACScheduler\",strHighlight));
   dynAppend(processMatch,dynPatternMatch(\"SoftwareMonitor\",strHighlight));
   dynAppend(processMatch,dynPatternMatch(\"ObsCtrl\",strHighlight));
@@ -416,11 +417,11 @@ LANG:1 6 logMsg
 0
 1 207 21 "" 3
 0
-1 208 21 "" 2
+1 208 21 "0" 1
 0
-1 209 21 "" 6
+1 209 21 "" 2
 0
-1 210 21 "0" 1
+1 210 21 "" 6
 0
 0
 LAYER, 1 

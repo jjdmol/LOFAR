@@ -100,8 +100,8 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
       dpSet(HEADLINESACTIONDP,"ChangeInfo|"+g_currentDatapoint);
    
       // update selectors   
-      dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
-      dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
+//      dpSet(TOPDETAILSELECTIONACTIONDP,"Update");
+//      dpSet(BOTTOMDETAILSELECTIONACTIONDP,"Update");
     }
     return;
   }
@@ -120,6 +120,20 @@ void navCtrl_handleViewBoxEvent(string dp,string value){
     
     // Empty highlight string
     dynClear(strHighlight);
+    dynClear(highlight);
+    
+    for (int i=1;i<= dynlen(aSelection);i++){
+      dyn_string sel = strsplit(aSelection[i],"|"); 
+      LOG_DEBUG("navCtrl.ctl:navCtrl_handleViewBoxEvent|sel: "+sel); 
+      if (dynlen(sel) > 0) {
+        dynAppend(strHighlight,sel[1]);
+      }
+    }   
+    LOG_TRACE("navCtrl.ctl:navCtrl_handleViewBoxEvent| strHighlight contains now: "+strHighlight);                          
+    if (dynlen(strHighlight) > 0) {
+      LOG_TRACE("navCtrl.ctl:navCtrl_handleDetailSelectionEvent| Kick trigger");
+      dpSet(DPNAME_NAVIGATOR + g_navigatorID+".trigger",true);
+    }
     
     // inform headLines Object
     dpSet(HEADLINESACTIONDP,"ChangeInfo|"+aSelection);
@@ -285,12 +299,13 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
     }    
   }
   
-  // Empty highlight string
-  dynClear(strHighlight);
   
   // Fill highlight string        
   string action = "Highlight";
   if (anEvent == "EventClick") { 
+    // Empty highlight string
+    dynClear(highlight);
+    dynClear(strHighlight);
     for (int i=1;i<= dynlen(aSelection);i++){
       dyn_string sel = strsplit(aSelection[i],"|"); 
       LOG_DEBUG("navCtrl.ctl:navCtrl_handleDetailSelectionEvent|sel: "+sel); 
@@ -299,23 +314,13 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
           typeSelector=sel[1];
           observationType=sel[2];
           selection=sel[3];
-          int nr = dynContains(strHighlight,sel[3]);
-          if (nr > 0) {
-            dynRemove(strHighlight,nr);
-          } else {
-	    dynAppend(strHighlight,sel[3]);
-          }
+          dynAppend(strHighlight,sel[3]);
           action+="|"+sel[1]+"|"+sel[2]+"|"+sel[3];
         } else {  // Hardware or processes
           typeSelector=sel[1];
           observationType="";
           selection=sel[2];
-          int nr = dynContains(strHighlight,sel[2]);
-          if (nr >0) {
-            dynRemove(strHighlight,nr);
-          } else {
-	    dynAppend(strHighlight,sel[2]);
-          }
+          dynAppend(strHighlight,sel[2]);
           action+="|"+sel[1]+"|"+sel[2];
         }
       }
@@ -328,11 +333,9 @@ void navCtrl_handleDetailSelectionEvent(string dp,string value,string target){
       // Also prepare actions for the different objects that can do something
       // with this highlight.
       // the Detail selection events need to highlight the choices involved also
-      if (target=="bottom") {
-        dpSet(TOPDETAILSELECTIONACTIONDP,action);
-      } else {
-        dpSet(BOTTOMDETAILSELECTIONACTIONDP,action);
-      }
+      dpSet(TOPDETAILSELECTIONACTIONDP,action);
+      dpSet(BOTTOMDETAILSELECTIONACTIONDP,action);
+      
           
     }
   }

@@ -155,7 +155,7 @@ void setAlarms(string dp,dyn_time times,dyn_string names, dyn_string messages, d
 // *******************************************
 void distSystemTriggered(string dp1, dyn_int systemList) {
   
-  string query = "SELECT '_original.._value' FROM '{__navObjectState.DPName,__navObjectState.stateNr,__navObjectState.message}' REMOTE ALL WHERE _DPT = \"NCFObjectState\" SORT BY 0";
+  string query = "SELECT '_original.._value' FROM '{__navObjectState.DPName,__navObjectState.stateNr,__navObjectState.message,__navObjectState.force}' REMOTE ALL WHERE _DPT = \"NCFObjectState\" SORT BY 0";
   
   
   if (isConnected) {
@@ -187,11 +187,12 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   if (dynlen(aResult) <= 0) {
     return;
   }
-  //get the stateNr and DP that go with this message This will need to be done in one call later though!!
+  //get the stateNr and DP that go with this message
   time aTime     = getCurrentTime();
   string aDP     = aResult[2][2];
   int state      = (int)aResult[3][2];
   string message = aResult[4][2];
+  bool force     = aResult[5][2];
   int aStatus    = CAME;
   
   // Is this an existing Timestamp DP state combo or a new one
@@ -311,6 +312,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   LOG_DEBUG("GCFAlarm.ctl:objectStateCallback|Found: State     - "+state);
   LOG_DEBUG("GCFAlarm.ctl:objectStateCallback|Found: Message   - "+message);
   LOG_DEBUG("GCFAlarm.ctl:objectStateCallback|Found: Status    - "+aStatus);
+  LOG_DEBUG("GCFAlarm.ctl:objectStateCallback|Found: Force     - "+force);
   // Now store the values 
   g_alarms[ "TIME"    ][iPos] = aTime;
   g_alarms[ "STATE"   ][iPos] = state;
@@ -320,7 +322,7 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
   
   // fill initial alarms from database.
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".alarms")) {
-    LOG_DEBUG("GCFAlarm.ctl:objectStateCallback|Storing the alarsm in db");
+    LOG_DEBUG("GCFAlarm.ctl:objectStateCallback|Storing the alarms in db");
     setAlarms(DPNAME_NAVIGATOR + g_navigatorID + ".alarms",
               g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
   } else {

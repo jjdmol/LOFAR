@@ -76,7 +76,7 @@ LANG:1 0
 13 320
 "PUSH_BUTTON10"
 ""
-1 950 301 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 511 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 155 0 0 0 0 0
 E E E
@@ -88,7 +88,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 299 1098 326
+ 948 509 1098 536
 
 T 
 1
@@ -650,7 +650,7 @@ LANG:1 18 Active Datapoint:
 13 178
 "PUSH_BUTTON1"
 ""
-1 950 98 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 308 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 127 0 0 0 0 0
 E E E
@@ -662,7 +662,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 96 1098 123
+ 948 306 1098 333
 
 T 
 1
@@ -675,7 +675,7 @@ LANG:1 19 show g_observations
 13 179
 "PUSH_BUTTON2"
 ""
-1 17 447 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 17 657 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 129 0 0 0 0 0
 E E E
@@ -687,7 +687,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 125 1098 152
+ 948 335 1098 362
 
 T 
 1
@@ -700,7 +700,7 @@ LANG:1 17 show strHighlight
 13 180
 "PUSH_BUTTON3"
 ""
-1 950 156 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 366 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 131 0 0 0 0 0
 E E E
@@ -712,7 +712,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 154 1098 181
+ 948 364 1098 391
 
 T 
 1
@@ -812,7 +812,7 @@ LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0
 13 227
 "PUSH_BUTTON5"
 ""
-1 950 70 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 280 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 140 0 0 0 0 0
 E E E
@@ -824,7 +824,7 @@ LANG:1 0
 1
 LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
 0 ""
- 948 68 1098 94
+ 948 278 1098 304
 
 T 
 1
@@ -896,7 +896,7 @@ E
     sel = LOGLEVEL_FATAL;
   } 
   
-  LOG_TRACE(\"navigator_viewSelection.pnl:Changed| changing loglevel to :\"+selected);
+  LOG_TRACE(\"Event_Viewer.pnl:Changed| changing loglevel to :\"+selected);
   setLoglevel(sel);
                   
 }" 0
@@ -940,7 +940,7 @@ E E 1 3 1 2 1 E  940 10 940 740
 13 316
 "PUSH_BUTTON6"
 ""
-1 950 185 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 395 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 147 0 0 0 0 0
 E E E
@@ -952,7 +952,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 183 1098 210
+ 948 393 1098 420
 
 T 
 1
@@ -969,7 +969,7 @@ LANG:1 19 show g_stationList
 13 317
 "PUSH_BUTTON7"
 ""
-1 950 214 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 424 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 149 0 0 0 0 0
 E E E
@@ -981,7 +981,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 212 1098 239
+ 948 422 1098 449
 
 T 
 1
@@ -998,7 +998,7 @@ LANG:1 19 show g_cabinetList
 13 318
 "PUSH_BUTTON8"
 ""
-1 950 243 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 453 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 151 0 0 0 0 0
 E E E
@@ -1010,7 +1010,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 241 1098 268
+ 948 451 1098 478
 
 T 
 1
@@ -1027,7 +1027,7 @@ LANG:1 19 show g_subrackList
 13 319
 "PUSH_BUTTON9"
 ""
-1 950 272 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 482 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 153 0 0 0 0 0
 E E E
@@ -1039,7 +1039,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 270 1098 297
+ 948 480 1098 507
 
 T 
 1
@@ -1056,7 +1056,7 @@ LANG:1 15 show g_RSPList
 13 321
 "PUSH_BUTTON11"
 ""
-1 950 330 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 540 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 157 0 0 0 0 0
 E E E
@@ -1068,7 +1068,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 328 1098 355
+ 948 538 1098 565
 
 T 
 1
@@ -1085,7 +1085,7 @@ LANG:1 15 show g_RCUList
 13 364
 "PUSH_BUTTON12"
 ""
-1 950 360 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+1 950 570 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
  E E
 159 0 0 0 0 0
 E E E
@@ -1097,7 +1097,7 @@ LANG:1 0
 1
 LANG:1 96 -*-Arial Black-*-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,Arial Black
 0 ""
- 948 358 1112 385
+ 948 568 1112 595
 
 T 
 1
@@ -1108,6 +1108,68 @@ LANG:1 24 show g_observationsList
   LOG_DEBUG(\"Event_Viewer.pnl show g_observationsList\");
   for (int i=1; i<= dynlen(g_observationsList);i++) {
     DebugN(\"g_observationsList: \"+ g_observationsList[i]);
+  }
+}" 0
+ E E E
+13 407
+"PUSH_BUTTON13"
+""
+1 953 50 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+160 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 951 48 1055 72
+
+T 
+1
+LANG:1 18 Clear searchArrays
+"main()
+{
+  // reset scopes and searchStrings:
+  if (dpExists(DPNAME_LOGLEVEL+\".logScope\") && dpExists(DPNAME_LOGLEVEL+\".logScope\")) {
+    dpSet(DPNAME_LOGLEVEL+\".logScope\",makeDynString(\"\"),
+          DPNAME_LOGLEVEL+\".searchString\",makeDynString(\"\"));
+  }
+}" 0
+ E E E
+13 408
+"PUSH_BUTTON14"
+""
+1 953 72 E E E 1 E 1 E N "_ButtonText" E N "_Button" E E
+ E E
+162 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 98 -*-MS Shell Dlg-*-r-normal-*-*-80-100-100-*-*-iso8859-1|-11,0,0,0,505,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+ 951 70 1055 94
+
+T 
+1
+LANG:1 17 Show searchArrays
+"main()
+{
+  dyn_string anArray;
+  if (dpExists(DPNAME_LOGLEVEL+\".logScope\")) {
+    dpGet(DPNAME_LOGLEVEL+\".logScope\",anArray);
+    showDynArray(anArray,\"logScope\");
+  }
+  if (dpExists(DPNAME_LOGLEVEL+\".searchString\")) {
+    dpGet(DPNAME_LOGLEVEL+\".searchString\",anArray);
+    showDynArray(anArray,\"searchString\");
   }
 }" 0
  E E E

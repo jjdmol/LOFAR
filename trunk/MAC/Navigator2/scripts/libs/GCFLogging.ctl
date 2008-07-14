@@ -40,7 +40,6 @@
 //
 
 
-const string DPNAME_LOGLEVEL = "__loglevel";
 
 const int LOGLEVEL_FATAL = 50000;
 const int LOGLEVEL_ERROR = 40000;
@@ -57,7 +56,11 @@ const string LOGMESSAGE_DEBUG = "DEBUG";
 const string LOGMESSAGE_TRACE = "TRACE";
 
 // set the loglevel throughout the navigator
-global int  g_loglevel = 0;
+global int  g_logLevel = 0;
+global dyn_string g_logScope = "";
+global dyn_string g_searchString="";
+
+global string DPNAME_LOGLEVEL = "";
 global bool g_logInitialized = false;
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -68,10 +71,18 @@ global bool g_logInitialized = false;
 ////////////////////////////////////////////////////////////////////////////////
 void setLoglevel(int newLevel)
 {
-	DebugTN("setting loglevel to:", newLevel);
-	g_loglevel = newLevel;
+  DebugTN("setting loglevel to:", newLevel);
+  if(dpExists(DPNAME_LOGLEVEL)) {
+    dyn_errClass err;
+    dpSet(DPNAME_LOGLEVEL+".logLevel",newLevel);
+    err = getLastError();
+    if (dynlen(err) > 0) {
+      errorDialog(err);
+    }
+  } else {
+    g_logLevel=newLevel;
+  }  
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -259,17 +270,33 @@ void LOG_TRACE(string prefix, ...) // the prefix is necessary, otherwise PVSS wo
 ////////////////////////////////////////////////////////////////////////////////
 void LOG_MESSAGE(int level, string logmessage, dyn_anytype message)
 {
-	if(!g_logInitialized) {
-		initLog();
-	}
-
-	if (level >= g_loglevel) {
-		string msg = logmessage;
-		for (int i = 1; i <= dynlen(message); i++) {
-			msg += ", " + message[i];
-		}
-		DebugTN (msg);
-	}
+  // check if level is wanted
+  if (level >= g_logLevel) {
+    
+    // split the original string and check against scopes and searchstrings wanted
+    string originator="";
+    string function="";
+    string ms = "";
+    splitLogString(message,originator,function,ms);
+    bool logflag=false;
+    if (dynlen(g_logScope) < 1 && dynlen(g_searchString) < 1) {      // If No search criteria, just print
+      logflag = true;
+    } else if (originator == "" && function == "" ) {                // If empty split, just print
+      logflag = true;
+    } else if (matchLogScope(originator,function)) {     // if logscope contains originator or function
+      logflag = true;
+    } else if (matchSearchString(ms)) {    // if searchstring found in ms
+      logflag = true;
+    }
+    
+    if (logflag) {
+      string msg = logmessage;
+      for (int i = 1; i <= dynlen(message); i++) {
+        msg += ", " + message[i];
+      }
+      DebugTN (msg);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,18 +306,21 @@ void LOG_MESSAGE(int level, string logmessage, dyn_anytype message)
 // Connects the loglevelUpdated function to the loglevel DP to capture changes.
 //
 ////////////////////////////////////////////////////////////////////////////////
-void initLog()
+void initLog(string logDP)
 {
+  DPNAME_LOGLEVEL=logDP;
 	if(!g_logInitialized) {
 		if(dpExists(DPNAME_LOGLEVEL)) {
 			dyn_errClass err;
-			dpGet(DPNAME_LOGLEVEL+".",g_loglevel);
+			dpGet(DPNAME_LOGLEVEL+".logLevel",g_logLevel);
 			err = getLastError();
 			if (dynlen(err) > 0) {
 				errorDialog(err);
 			}
 			// monitor future updates:
-			dpConnect("loglevelUpdated",DPNAME_LOGLEVEL+".");
+			dpConnect("loglevelUpdated",DPNAME_LOGLEVEL+".logLevel",
+                                                    DPNAME_LOGLEVEL+".logScope",
+                                                    DPNAME_LOGLEVEL+".searchString");
 			err = getLastError();
 			if (dynlen(err) > 0) {
 				errorDialog(err);
@@ -309,10 +339,89 @@ void initLog()
 // Copies value to own admin and logs the change.
 //
 ////////////////////////////////////////////////////////////////////////////////
-void loglevelUpdated(string dp,int newLevel)
+void loglevelUpdated(string dp1, int newLevel,
+                     string dp2, dyn_string scope,
+                     string dp3, dyn_string search)
 {
-	DebugTN("new loglevel:", newLevel);
-	g_loglevel = newLevel;
+	DebugTN("new loglevel     : ", newLevel);
+	DebugTN("new scopes       : ", scope);
+	DebugTN("new searchStrings: ", search);
+	g_logLevel = newLevel;
+        g_logScope = scope;
+        g_searchString = search;
 }
 
 
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// splitLogString
+//
+// LogMsg's should look like:
+//
+//   LOG_TRACE("navigator.pnl:fw_viewBoxEvent| trigger: " + someinfo);
+//
+//   This routine will split the 3 main streams from a log msg into seperate vars.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+void splitLogString(string aString, string& originator, string& function, string& msg) {
+  dyn_string aS1= strsplit(aString,"|");
+  if (dynlen(aS1) > 1) {
+    msg=aS1[2];
+    for (int i=3;i<=dynlen(aS1);i++) {
+      msg= msg+"|"+aS1[i];
+    }
+    dyn_string aS2=strsplit(aS1[1],":");
+    if (dynlen(aS2) > 1) {
+      function = aS2[2];
+      originator = aS2[1];
+    } else if (dynlen(aS2) == 1) {
+      originator = aS2[1];
+      function = "";
+    }    
+  } else if (dynlen(aS1) == 1) {
+    msg=aS1[1];
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function matchLogScope
+//
+// Checks if entries in the g_logScope array match with the originator or function
+//
+////////////////////////////////////////////////////////////////////////////////
+bool matchLogScope(string originator,string function)
+{
+  int i;
+  for (i=1; i<= dynlen(g_logScope); i++) {
+    if (strpos(originator,g_logScope[i]) > -1) {
+      return true;
+    }
+  }
+  for (i=1; i<= dynlen(g_logScope); i++) {
+    if (strpos(function,g_logScope[i]) > -1) {
+      return true;
+    }
+  }
+  return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Function matchSearchString
+//
+// Checks if entries in the g_searchString array match with the remaining msg
+//
+////////////////////////////////////////////////////////////////////////////////
+bool matchSearchString(string msg)
+{
+  int i;
+  for (i=1; i<= dynlen(g_searchString); i++) {
+    if (strpos(msg,g_searchString[i]) > -1 && g_searchString[i] != "") {
+      return true;
+    }
+  }
+  return false;
+}

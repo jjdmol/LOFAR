@@ -219,8 +219,15 @@ bool navTabCtrl_showView()
   dyn_string viewPanels = navTabCtrl_getViewPanels();
    
 
+  // empty all highlights
+  dynClear(highlight);
+  dynClear(strHighlight);
+  
   // load the view
   if (dynlen(viewPanels) > 0) {
+    // remove old view
+    navTabCtrl_removeView();
+    
     LOG_DEBUG("navTabCtrl.ctl:navTabCtrl_showView|Trying to load panel: "+viewPanels[1]);
     setValue(tabCtrl,"namedRegisterPanel", ACTIVE_TAB, viewPanels[1], makeDynString(""));
     return true;

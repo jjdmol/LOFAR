@@ -28,7 +28,7 @@
 // 
 
 global bool isConnected=false;
-global bool bDebug = true;
+global bool bDebug = false;
 
 main () {
 
@@ -188,9 +188,9 @@ void stationStateTriggered(string ident, dyn_dyn_anytype tab) {
     // if all needed values are available we can start doing the major update.
     if (state >-1 && datapoint != "" && station != "" && armName != "" && element != ""){
       if (ident == "PIC") {
-	      setStates(datapoint + "_"+ armName + "_" + station,element,state,"",true);
+	      setStates(datapoint + "_"+ armName + "_" + station,element,state,"",true,true);
       } else {
-	      setStates(datapoint,element,state,"",true);
+	      setStates(datapoint,element,state,"",true,true);
       }
     }
   }

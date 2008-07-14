@@ -42,7 +42,7 @@
 // navFunct_getDynString                      : Returns a dynString from a dyn_dyn[index]
 // navFunct_bareDBName                        : Returns a DatabaseName without the : (if any)
 // navFunct_findFirstOne                      : Returns the number of a given array that is true for a certain range
-
+// navFunct_acknowledgePanel                  : Returns acknowledge on a given action
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -114,7 +114,7 @@ void navFunct_queryConnectObservations()
 {
   
   
-  string strQuery = "SELECT '.name:_original.._value, .status.state:_original.._value, .status.childState:_original.._value' FROM '*' WHERE _DPT = \"Observation\"";
+  string strQuery = "SELECT '.claim.name:_original.._value, .status.state:_original.._value, .status.childState:_original.._value' FROM '*' WHERE _DPT = \"Observation\"";
   
   g_observations[ "DP"          ] = makeDynString();                    
   g_observations[ "NAME"        ] = makeDynString();
@@ -168,12 +168,17 @@ void navFunct_queryConnectObservations_Callback(
     if (aResult[t][2] != "") {
       string dpName = claimManager_nameToRealName(aResult[t][2]);
       //get stationList for this Observation from its ObsCtrl DP
-      LOG_TRACE("navFunct.ctl:navFunct_queryConnectObservations_Callback|Getting stationList for: "+dpName + ".stationList");
-      dpGet(dpName + ".stationList",strStationList);
-      g_observations[ "STATIONLIST" ][iPos] = strStationList;
+      LOG_TRACE("navFunct.ctl:navFunct_queryConnectObservations_Callback|Getting stationList for: "+aResult[t][2]+" ==> "+dpName + ".stationList");
+      if (dpExists(dpName + ".stationList")) {
+        dpGet(dpName + ".stationList",strStationList);
+        g_observations[ "STATIONLIST" ][iPos] = strStationList;
+        LOG_DEBUG("navFunct.ctl:navFunct_queryConnectObservations_Callback|StationList: "+g_observations["STATIONLIST"][iPos]);         
+      } else {
+        g_observations[ "STATIONLIST" ][iPos] = makeDynString();
+      }
     } else {
       g_observations[ "STATIONLIST" ][iPos] = makeDynString();
-    }         
+    }
   }
   
 }  
@@ -212,10 +217,26 @@ string navFunct_getArmFromStation(string stationName) {
 //    None
 // *******************************************
 void showMapping(mapping aM,string name) {
-  LOG_DEBUG( "navFunct.ctl:showMapping|Local mapping "+name +" contains now: " );
+  DebugN( "navFunct.ctl:showMapping|Local mapping "+name +" contains now: " );
   for (int i = 1; i <= mappinglen(aM); i++) { 
-  	LOG_DEBUG("navFunct.ctl:showMapping|mappingGetKey", i, " = "+mappingGetKey(aM, i));  
-		LOG_DEBUG("  mappingGetValue", i, " = "+mappingGetValue(aM, i));
+  	DebugN("navFunct.ctl:showMapping|mappingGetKey", i, " = "+mappingGetKey(aM, i));  
+		DebugN("  mappingGetValue", i, " = "+mappingGetValue(aM, i));
+  }
+}
+
+// *******************************************
+// Name : showDynArray
+// *******************************************
+// Description:
+//    Prints all values in a dyn_anytype
+//
+// Returns:
+//    None
+// *******************************************
+void showDynArray(dyn_anytype anArray,string name) {
+  DebugN( "navFunct.ctl:showDynArray|array "+name +" contains now: " );
+  for (int i = 1; i <= dynlen(anArray); i++) { 
+  	DebugN("navFunct.ctl:showDynArray|", i, " = "+anArray[i]);  
   }
 }
 
@@ -512,4 +533,28 @@ string navFunct_bareDBName(string aDBName) {
 //    Returns a dynString
 // ****************************************
 dyn_string navFunct_findFirstOne(dyn_anytype tab, int start,int end) {
+}
+
+// ****************************************
+// Name : navFunct_acknowledgePanel 
+// ****************************************
+// Description:
+//    Acknowledge an action
+//
+// 
+// Returns:  
+//    Returns a bool
+// ****************************************
+bool navFunct_acknowledgePanel(string text) {
+  dyn_float dreturnf;   // Variables for the return values
+ 
+  dyn_string dreturns;
+  bool  retVal=false;
+
+  
+  ChildPanelOnReturn("vision/MessageInfo","Confirm",makeDynString("$1:"+text,"$2:Yes","$3:No"),10,10,dreturnf, dreturns);
+ 
+  // The code below is executed first when the child panel is closed
+  if (dreturns == "true") retVal=true;
+  return retVal;
 }
