@@ -152,36 +152,59 @@ void rClick(int row) {
   LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|sTime: \"+sTime);
   LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|Looking for dp: \"+dp+\" status: \"+status);
  
+  int iPos=-1;
 
   //to narrow actions determine if the state is 'acknowledgable'
-  if (status == ACK) return;
+  if (status != ACK) {
   
-  // ok rest should be possible to acknowledge
-  // find the entry in the table
-  int iPos=-1;
-  for (int i=1; i <=dynlen(g_alarms[ \"TIME\" ]);i++) {
-    LOG_DEBUG( \"navigator_alerts.pnl:RightMouseClick|Time in table: \");
-    LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|g_alarms: \"+g_alarms[ \"TIME\" ][i]);
-    LOG_DEBUG( \"navigator_alerts.pnl:RightMouseClick|dpname in table: \"+g_alarms[ \"DPNAME\" ][i]);
-    LOG_DEBUG( \"navigator_alerts.pnl:RightMouseClick|status in table: \"+g_alarms[ \"STATUS\" ][i]);
-    if ( g_alarms[ \"TIME\" ][i] == sTime &&
-         g_alarms[ \"DPNAME\" ][i] == dp &&
-         g_alarms[ \"STATUS\" ][i] == status) {
-      iPos = i;
-      break;
+    // ok rest should be possible to acknowledge
+    // find the entry in the table
+    for (int i=1; i <=dynlen(g_alarms[ \"TIME\" ]);i++) {
+      LOG_DEBUG( \"navigator_alerts.pnl:RightMouseClick|Time in table: \");
+      LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|g_alarms: \"+g_alarms[ \"TIME\" ][i]);
+      LOG_DEBUG( \"navigator_alerts.pnl:RightMouseClick|dpname in table: \"+g_alarms[ \"DPNAME\" ][i]);
+      LOG_DEBUG( \"navigator_alerts.pnl:RightMouseClick|status in table: \"+g_alarms[ \"STATUS\" ][i]);
+      if ( g_alarms[ \"TIME\" ][i] == sTime &&
+           g_alarms[ \"DPNAME\" ][i] == dp &&
+           g_alarms[ \"STATUS\" ][i] == status) {
+        iPos = i;
+        break;
+      }
+    }
+  
+    if (iPos == -1) {
+      LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Strange, couldn't find chosen entry in alarm global list.\");
     }
   }
   
-  if (iPos == -1) {
-    LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Strange, couldn't find chosen entry in alarm global list.\");
-    return;
+  // determine also if there is a http msg in the MESSAGE part if so we also need an open webpage on the rclikc menu
+  int start = strpos(message,\"http://\");
+  string httpStr=\"\";
+  if (start > -1) {
+    string startStr=substr(message,start);
+    int end=strpos(startStr,\" \");
+    httpStr=startStr;
+    if (end > -1){
+      httpStr=substr(startStr,0,end);
+    } 
   }
+  
+  
     
   // define the popupMenu
   dyn_string txt;
   int answer;
-  txt=makeDynString(\"PUSH_BUTTON, Acknowledge, 1, 1\");
-  popupMenu(txt,answer);
+  int idx=1;
+  if (iPos > -1) {
+    dynInsertAt(txt,\"PUSH_BUTTON, Acknowledge, 1, 1\",idx++);
+  }
+  if (httpStr != \"\") {
+    dynInsertAt(txt,\"PUSH_BUTTON, Show Webpage, 2, 1\",idx++);
+  }
+  
+  if (dynlen(txt) > 0) {
+    popupMenu(txt,answer);
+  }
 
   // acknowledge pushed, get the dp, and state and determine if 
   if (answer == 1) {
@@ -229,6 +252,8 @@ void rClick(int row) {
                       sys+\"__navObjectState.message\",message);
       }    
     }
+  } else if (answer == 2) {
+    std_help(httpStr,false);
   }
 }
 

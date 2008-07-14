@@ -80,6 +80,17 @@ void navigator_handleEventInitialize()
   // make sure there is a __navigator<id> datapoint of the type GCFNavigatorInstance.
   navConfig_setNavigatorID(navID); 
 
+  // Do a dpQueryConnectSingle() so that we get a permanent list of claims
+  // we can use this to translate a claimed name into a real datapoint name
+  claimManager_queryConnectClaims();
+  
+  // initialize the logSystem
+  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".logger")) {
+    initLog(DPNAME_NAVIGATOR + g_navigatorID + ".logger");
+  } else {
+    DebugN("ERROR: Logsystem hasn't been found.");
+  }
+
   // set user to root for now, has to be taken from PVSS login later
   if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".user")) {
     dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".user",getUserName());

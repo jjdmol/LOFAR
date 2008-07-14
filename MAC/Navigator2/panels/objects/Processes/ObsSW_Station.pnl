@@ -6,7 +6,9 @@ PANEL,-1 -1 995 220 N "_3DFace" 0
 {
   baseDP=g_currentDatapoint;
   station_selectedStation = dpSubStr(baseDP,DPSUB_SYS);
-  stationDBName.text(station_selectedStation);  
+  station_selectedObservation=selectedObservation;
+  stationDBName.text(station_selectedStation);
+  stationObservationName.text(station_selectedObservation);  
 }" 0
  E E E E 1 -1 -1 0  0 0
 ""0  1
@@ -28,6 +30,8 @@ void click(string originator) {
     } else if (originator == \"activeObs\") {
       station_obsBaseDP=activeStationObs.selectedItem();
       station_selectedObservation=activeStationObs.getText(activeStationObs.selectedItem(),0);
+      stationObservationName.text(station_selectedObservation);
+      setValue(\"stationObservationName\",\"text\",station_selectedObservation);
       Station_Processes_UpdateStationTree();      
     }
   }
@@ -45,15 +49,17 @@ void dblClick(string originator) {
     newDP=stationTree.selectedItem();
   }
   
-  if (dpExists(baseDP) ) {
-    if (originator == \"stationTree\") {
+  if (dpExists(newDP) ) {
+    baseDP=newDP;
+    LOG_TRACE(\"ObsSW_Station.pnl:DoubleClick||selectedStation: \"+station_selectedStation);
+    if (originator == \"stationTree\" && stationTree.selectedItem()+\":\" != station_selectedStation) {
       LOG_DEBUG(\"ObsSW_Station.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
       g_currentDatapoint=baseDP;
       navPanel_setEvent(\"ObsSW_Station|\"+stationTree.getText(stationTree.selectedItem(),0),\"ChangePanel\"); 
     } else if (originator == \"activeObs\") {
-//    LOG_DEBUG(\"ObsSW_Station.pnl.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
-//    g_currentDatapoint=baseDP;
-//    navPanel_setEvent(\"ObsSW_Station|\"+activeStationObs.getText(activeStationObs.selectedItem(),0),\"ChangePanel\");  
+//      LOG_DEBUG(\"ObsSW_Station.pnl.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+//      g_currentDatapoint=baseDP;
+//      navPanel_setEvent(\"ObsSW_Station|\"+activeStationObs.getText(activeStationObs.selectedItem(),0),\"ChangePanel\");  
     }
   }
   
@@ -112,14 +118,14 @@ E E E
 LANG:1 19 Active Observations
 
 8
-"frameShadow" "enum 48"
-"selectionMode" "enum 0"
-"backgroundOrigin" "enum 0"
-"defaultRenameAction" "enum 0"
-"frameShape" "enum 6"
-"vScrollBarMode" "enum 0"
-"hScrollBarMode" "enum 0"
 "resizeMode" "enum 0"
+"hScrollBarMode" "enum 0"
+"vScrollBarMode" "enum 0"
+"frameShape" "enum 6"
+"defaultRenameAction" "enum 0"
+"backgroundOrigin" "enum 0"
+"selectionMode" "enum 0"
+"frameShadow" "enum 48"
  822 20 992 188
 10 TreeWidget
 7
@@ -141,6 +147,10 @@ LANG:1 19 Active Observations
 {
   stationTree.addColumn(\"Involved Stations\");
   stationTree.setColumnWidth(0,201);
+
+  //take over the old selection from main (if any)
+  station_selectedStation=selectedStation;
+
 }    
     
 " 0
@@ -177,65 +187,9 @@ LANG:1 19 Active Observations
 {
   activeStationObs.addColumn(\"Active Observations\");
   activeStationObs.setColumnWidth(0,201);
-  if (!dpExists(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\")) {
-    setValue(\"activeStationObs\",\"backCol\",\"_dpdoesnotexist\");
-  } else {
-    dpConnect(\"activeStationObsCallback\",true,\"LOFAR_PermSW_MACScheduler.activeObservations\");
-  }
-}
-
-
-activeStationObsCallback(string dp1, dyn_string activeObservations) {
-
-  // empty the table
-  activeStationObs.clear();
-  station_obsBaseDP=\"\";  
   
-  // if the active observations list changes the list here should be changed also.
-  // iterate over the found entries and fill the table
-  // if no previous Observation selected, set selection to the first on the list, also
-  // set it here when previous selection disappeared from the list.
-  // otherwise nothing will be changed in the selection
-  
-  // check if this station is involved in an active observation, if so it will be added to the list
-
-  string newSelection=\"\";
-  string oldSelection=activeStationObs.selectedItem();
-  for (int i=1; i<= dynlen(activeObservations);i++) {
-    string realName=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+activeObservations[i]);
-    int j = dynContains(g_observations[\"NAME\"],\"LOFAR_ObsSW_\"+activeObservations[i]);
-    if ( j > 0) {
-      // get the Stationlist from that observation
-      string sts=g_observations[\"STATIONLIST\"][j];
-      dyn_string stations = strsplit(sts,\",\");
-      for (int k=1; k<= dynlen(stations);k++) { 
-        if (stations[k]+\":\" == station_selectedStation) {
-          if (station_obsBaseDP == \"\") {
-            station_obsBaseDP=realName;
-            station_selectedObservation=activeObservations[i];
-          }
-          activeStationObs.appendItem(\"\",realName,activeObservations[i]);
-          activeStationObs.ensureItemVisible(realName);
-          activeStationObs.setIcon(realName,0,\"16_empty.gif\");
-        }
-      }
-    }
-    if (station_obsBaseDP != \"\") {
-      newSelection=station_obsBaseDP;
-    }
-  }
-  
-  if ((oldSelection == newSelection) ||
-      (oldSelection != \"\" && activeStationObs.itemExists(oldSelection))) {
-    activeStationObs.setSelectedItem(oldSelection,true);    
-    // nothing further needed
-    return;
-  } else {
-    activeStationObs.setSelectedItem(newSelection,true);    
-  }
-  // something has changed, so update Station Tree
-  Station_Processes_UpdateStationTree(); 
-   
+  //take over the old selection from main (if any)
+  station_selectedObservation=selectedObservation;
 }
 " 0
 2 46
@@ -348,6 +302,26 @@ LANG:1 7 station
 0
 1 95 22 "" 6
 0
+2 97
+"stationObservationName"
+""
+1 668 20 E E E 1 E 1 E N "Blue" E N "_Transparent" E E
+ E E
+40 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 668 20 734 34
+0 2 2 "0s" 0 0 0 192 0 0  668 20 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 11 observation
 0
 LAYER, 1 
 1
@@ -378,17 +352,17 @@ LAYER, 7
 LANG:1 0 
 0
 3 20 "PANEL_REF21"
-"objects/Processes\\station_interactive_controller_small.pnl" 170 40 T 35 1 0 1 0 -4
+"objects\\Processes\\station_interactive_controller_small.pnl" 170 40 T 35 1 0 1 0 -4
 2
 "$databaselevel""station"
 "$name""BeamCtrl"
 3 21 "PANEL_REF22"
-"objects/Processes\\station_interactive_controller_small.pnl" 170 90 T 36 1 0 1 0 -4
+"objects\\Processes\\station_interactive_controller_small.pnl" 170 90 T 36 1 0 1 0 -4
 2
 "$databaselevel""station"
 "$name""CalCtrl"
 3 22 "PANEL_REF23"
-"objects/Processes\\station_interactive_controller_small.pnl" 170 140 T 37 1 0 1 0 -4
+"objects\\Processes\\station_interactive_controller_small.pnl" 170 140 T 37 1 0 1 0 -4
 2
 "$databaselevel""station"
 "$name""TBBCtrl"

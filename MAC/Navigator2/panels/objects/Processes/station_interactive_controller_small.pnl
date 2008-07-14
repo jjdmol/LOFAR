@@ -362,7 +362,7 @@ LAYER, 7
 LANG:1 0 
 0
 3 0 "selfState"
-"objects/lofar_self_state.pnl" 9.50000000000001 9.5 T 1 1 0 1 -0.499999999999992 17.5
+"objects\\lofar_self_state.pnl" 9.500000000000011 9.5 T 1 1 0 1 -0.499999999999992 12.5
 1
 "$object""ObsCtrl"
 0

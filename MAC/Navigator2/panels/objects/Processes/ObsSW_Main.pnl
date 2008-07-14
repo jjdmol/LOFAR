@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 995 412 N "_3DFace" 0
+PANEL,-1 -1 994 412 N "_3DFace" 0
 "main()
 {
   mainDBName.text(MainDBName);
@@ -45,9 +45,13 @@ void dblClick(string originator) {
   if (dpExists(newDP) ) {
     baseDP=newDP;
     if (originator == \"stationTree\") {
-      LOG_DEBUG(\"ObsSW_Main.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
-      g_currentDatapoint=baseDP;
-      navPanel_setEvent(\"ObsSW_Main|\"+stationTree.getText(stationTree.selectedItem(),0),\"ChangePanel\"); 
+      if (dpExists(baseDP) ) {
+        LOG_DEBUG(\"ObsSW_Main.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
+        g_currentDatapoint=baseDP;
+        navPanel_setEvent(\"ObsSW_Main|\"+stationTree.getText(stationTree.selectedItem(),0),\"ChangePanel\"); 
+      } else {
+        LOG_ERROR(\"ObsSW_Main.pnl:DoubleClick|Setting to new station failed: \"+ baseDP+ \" doesn't exist.\");
+      }          
     } else if (originator == \"activeObs\") {
 //    LOG_DEBUG(\"ObsSW_Main.pnl.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \"+baseDP);
 //    g_currentDatapoint=baseDP;
@@ -101,7 +105,7 @@ LANG:1 5 ObsSW
 29 4
 "stationTree"
 ""
-1 1182 -108.812949640288 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 1182 -113.812949640288 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 7 0 0 0 0 0
 E E E
@@ -118,7 +122,7 @@ LANG:1 19 Active Observations
 "backgroundOrigin" "enum 0"
 "selectionMode" "enum 0"
 "frameShadow" "enum 48"
- 822 25 992 347
+ 822 20 992 347
 10 TreeWidget
 7
 0 "expanded" "(string id)"
@@ -145,7 +149,7 @@ LANG:1 19 Active Observations
 29 5
 "activeObs"
 ""
-1 361 -117.748624629708 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 361 -121.6107356006344 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 9 0 0 0 0 0
 E E E
@@ -154,7 +158,7 @@ E E E
 LANG:1 19 Active Observations
 
 0
- 0 20 170 342
+ 0 20 170 347
 10 TreeWidget
 7
 0 "expanded" "(string id)"
@@ -175,51 +179,8 @@ LANG:1 19 Active Observations
 {
   activeObs.addColumn(\"Active Observations\");
   activeObs.setColumnWidth(0,201);
-  if (!dpExists(MainDBName+\"LOFAR_PermSW_MACScheduler.activeObservations\")) {
-    setValue(\"activeObs\",\"backCol\",\"_dpdoesnotexist\");
-  } else {
-    dpConnect(\"activeObsCallback\",true,\"LOFAR_PermSW_MACScheduler.activeObservations\");
-  }
 }
 
-
-activeObsCallback(string dp1, dyn_string activeObservations) {
-
-  // empty the table
-  activeObs.clear();
-  
-  
-  // if the active observations list changes the list here should be changed also.
-  // iterate over the found entries and fill the table
-  // if no previous Observation selected, set selection to the first on the list, also
-  // set it here when previous selection disappeared from the list.
-  // otherwise nothing will be changed in the selection
-
-  string newSelection=\"\";
-  string oldSelection=activeObs.selectedItem();
-  for (int i=1; i<= dynlen(activeObservations);i++) {
-    string realName=claimManager_nameToRealName(\"LOFAR_ObsSW_\"+activeObservations[i]);
-    activeObs.appendItem(\"\",realName,activeObservations[i]);
-    activeObs.ensureItemVisible(realName);
-    activeObs.setIcon(realName,0,\"16_empty.gif\");
-    if (i==1) {
-      newSelection=realName;
-    }
-  }
-  
-  if ((oldSelection == newSelection) ||
-      (oldSelection != \"\" && activeObs.itemExists(oldSelection))) {
-    activeObs.setSelectedItem(oldSelection,true);    
-    // nothing further needed
-    return;
-  } else {
-    activeObs.setSelectedItem(newSelection,true);    
-  }
-  // something has changed, so update Main Controllers
-  MainCU_Processes_UpdateMainControllers(); 
-  MainCU_Processes_UpdateStationTree(); 
-   
-}
 " 0
 2 46
 "PRIMITIVE_TEXT4"
@@ -395,6 +356,26 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 2 1 2 1 E  290 193 810 193
+2 113
+"observationName"
+""
+1 670 20 E E E 1 E 1 E N "Blue" E N "_Transparent" E E
+ E E
+38 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 2 1 E U  1 E 670 20 736 34
+0 2 2 "0s" 0 0 0 192 0 0  670 20 1
+1
+LANG:1 101 -*-MS Shell Dlg-bold-r-normal-*-11-*-100-100-*-*-iso8859-1|-11,0,0,0,758,0,0,0,0,0,0,0,0,MS Shell Dlg
+0 ""
+1
+LANG:1 11 observation
 0
 LAYER, 1 
 1
@@ -425,32 +406,32 @@ LAYER, 7
 LANG:1 0 
 0
 3 14 "PANEL_REF15"
-"objects/Processes\\interactive_controller_small.pnl" 180 40 T 26 1 0 1 -7 -5
+"objects\\Processes\\interactive_controller_small.pnl" 180 40 T 26 1 0 1 -7 -5
 2
 "$databaselevel""main"
 "$name""ObsCtrl"
 3 15 "PANEL_REF16"
-"objects/Processes\\interactive_controller_small.pnl" 170 90 T 27 1 0 1 3 -5
+"objects\\Processes\\interactive_controller_small.pnl" 170 90 T 27 1 0 1 3 -5
 2
 "$databaselevel""main"
 "$name""OnlineCtrl_Correlator"
 3 16 "PANEL_REF17"
-"objects/Processes\\interactive_controller_small.pnl" 180 140 T 28 1 0 1 -7 -5
+"objects\\Processes\\interactive_controller_small.pnl" 180 140 T 28 1 0 1 -7 -5
 2
 "$databaselevel""main"
 "$name""OnlineCtrl_StorageAppl"
 3 17 "PANEL_REF18"
-"objects/Processes\\interactive_controller_small.pnl" 180 200 T 29 1 0 1 -7 0
+"objects\\Processes\\interactive_controller_small.pnl" 180 200 T 29 1 0 1 -7 0
 2
 "$databaselevel""station"
 "$name""BeamCtrl"
 3 18 "PANEL_REF19"
-"objects/Processes\\interactive_controller_small.pnl" 170 240 T 30 1 0 1 3 10
+"objects\\Processes\\interactive_controller_small.pnl" 170 240 T 30 1 0 1 3 10
 2
 "$databaselevel""station"
 "$name""CalCtrl"
 3 19 "PANEL_REF20"
-"objects/Processes\\interactive_controller_small.pnl" 180 290 T 31 1 0 1 -7 10
+"objects\\Processes\\interactive_controller_small.pnl" 180 290 T 31 1 0 1 -7 10
 2
 "$databaselevel""station"
 "$name""TBBCtrl"

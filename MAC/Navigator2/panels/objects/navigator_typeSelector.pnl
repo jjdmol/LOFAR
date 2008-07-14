@@ -102,6 +102,20 @@ void doHighlight(dyn_string actionString) {
   // Highlight contains the names of the items in  the treelist that should be highlighted.
   // make a list of them for parsing
   
+  // check if tabname is in selection list (will be if triggered by detailselector) if so remove first
+  int i=dynContains(actionString,\"Hardware\");
+  if (i > 0) {
+    dynRemove(actionString,i);
+  }
+  int i=dynContains(actionString,\"Processes\");
+  if (i > 0) {
+    dynRemove(actionString,i);
+  }
+  int i=dynContains(actionString,\"Observations\");
+  if (i > 0) {
+    dynRemove(actionString,i);
+  }
+  
   if (dynlen(actionString) < 1) {
     return;
   }
@@ -334,8 +348,8 @@ E E E
 LANG:1 8 hardware
 
 2
-"allColumnsShowFocus" "bool TRUE"
 "selectionMode" "enum 0"
+"allColumnsShowFocus" "bool TRUE"
  10 30 212 378
 10 TreeWidget
 7
