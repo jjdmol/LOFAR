@@ -61,7 +61,7 @@ extern "C" {
   void _prefetch(const void *src, size_t count, size_t stride);
 
   extern struct {
-    unsigned input_type;
+    unsigned nr_bits_per_sample;
     unsigned nr_subband_channels;
     unsigned nr_taps;
     unsigned nr_polarizations;
@@ -72,6 +72,14 @@ extern "C" {
 #endif
 
   unsigned long long _rdtsc();
+
+#if NR_BITS_PER_SAMPLE == 4
+  extern fcomplex _FIR_fp_table[16][16];
+#elif NR_BITS_PER_SAMPLE == 8
+  extern fcomplex _FIR_fp_table[256][256];
+#elif NR_BITS_PER_SAMPLE == 16
+  extern float _FIR_fp_table[65536];
+#endif
 };
 
 } // namespace CS1

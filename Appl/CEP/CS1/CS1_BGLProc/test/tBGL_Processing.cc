@@ -52,12 +52,14 @@ inline TransposedData::SampleType toComplex(double phi)
     double s, c;
 
     sincos(phi, &s, &c);
-#if INPUT_TYPE == I4COMPLEX_TYPE
+#if NR_BITS_PER_SAMPLE == 4
     return makei4complex((int) rint(7 * c), (int) rint(7 * s));
-#elif INPUT_TYPE == I16COMPLEX_TYPE
+#elif NR_BITS_PER_SAMPLE == 8
+    return makei8complex((int) rint(127 * c), (int) rint(127 * s));
+#elif NR_BITS_PER_SAMPLE == 16
     return makei16complex((int) rint(32767 * c), (int) rint(32767 * s));
 #else
-#error Unknown INPUT_TYPE
+#error Unknown NR_BITS_PER_SAMPLE
 #endif
 }
 

@@ -22,13 +22,15 @@
 #include <CS1_Interface/CS1_Config.h>
 
 #define I4COMPLEX_SIZE	 1
+#define I8COMPLEX_SIZE	 2
 #define I16COMPLEX_SIZE	 4
 #define FCOMPLEX_SIZE	 8
 #define DCOMPLEX_SIZE	16
+#define FLOAT_SIZE	 4
 
 .global	_FIR_constants_used
 _FIR_constants_used:
-	.long	INPUT_TYPE
+	.long	NR_BITS_PER_SAMPLE
 	.long	NR_SUBBAND_CHANNELS
 	.long	NR_TAPS
 	.long	NR_POLARIZATIONS
@@ -208,266 +210,10 @@ L5:
 	blr
 
 
-#if INPUT_TYPE == I4COMPLEX_TYPE
+#if NR_BITS_PER_SAMPLE == 4
 
 .align	5
-fp_table:
-	.long	0x00000000, 0x00000000
-	.long	0x3F800000, 0x00000000
-	.long	0x40000000, 0x00000000
-	.long	0x40400000, 0x00000000
-	.long	0x40800000, 0x00000000
-	.long	0x40A00000, 0x00000000
-	.long	0x40C00000, 0x00000000
-	.long	0x40E00000, 0x00000000
-	.long	0xC1000000, 0x00000000
-	.long	0xC0E00000, 0x00000000
-	.long	0xC0C00000, 0x00000000
-	.long	0xC0A00000, 0x00000000
-	.long	0xC0800000, 0x00000000
-	.long	0xC0400000, 0x00000000
-	.long	0xC0000000, 0x00000000
-	.long	0xBF800000, 0x00000000
-	.long	0x00000000, 0x3F800000
-	.long	0x3F800000, 0x3F800000
-	.long	0x40000000, 0x3F800000
-	.long	0x40400000, 0x3F800000
-	.long	0x40800000, 0x3F800000
-	.long	0x40A00000, 0x3F800000
-	.long	0x40C00000, 0x3F800000
-	.long	0x40E00000, 0x3F800000
-	.long	0xC1000000, 0x3F800000
-	.long	0xC0E00000, 0x3F800000
-	.long	0xC0C00000, 0x3F800000
-	.long	0xC0A00000, 0x3F800000
-	.long	0xC0800000, 0x3F800000
-	.long	0xC0400000, 0x3F800000
-	.long	0xC0000000, 0x3F800000
-	.long	0xBF800000, 0x3F800000
-	.long	0x00000000, 0x40000000
-	.long	0x3F800000, 0x40000000
-	.long	0x40000000, 0x40000000
-	.long	0x40400000, 0x40000000
-	.long	0x40800000, 0x40000000
-	.long	0x40A00000, 0x40000000
-	.long	0x40C00000, 0x40000000
-	.long	0x40E00000, 0x40000000
-	.long	0xC1000000, 0x40000000
-	.long	0xC0E00000, 0x40000000
-	.long	0xC0C00000, 0x40000000
-	.long	0xC0A00000, 0x40000000
-	.long	0xC0800000, 0x40000000
-	.long	0xC0400000, 0x40000000
-	.long	0xC0000000, 0x40000000
-	.long	0xBF800000, 0x40000000
-	.long	0x00000000, 0x40400000
-	.long	0x3F800000, 0x40400000
-	.long	0x40000000, 0x40400000
-	.long	0x40400000, 0x40400000
-	.long	0x40800000, 0x40400000
-	.long	0x40A00000, 0x40400000
-	.long	0x40C00000, 0x40400000
-	.long	0x40E00000, 0x40400000
-	.long	0xC1000000, 0x40400000
-	.long	0xC0E00000, 0x40400000
-	.long	0xC0C00000, 0x40400000
-	.long	0xC0A00000, 0x40400000
-	.long	0xC0800000, 0x40400000
-	.long	0xC0400000, 0x40400000
-	.long	0xC0000000, 0x40400000
-	.long	0xBF800000, 0x40400000
-	.long	0x00000000, 0x40800000
-	.long	0x3F800000, 0x40800000
-	.long	0x40000000, 0x40800000
-	.long	0x40400000, 0x40800000
-	.long	0x40800000, 0x40800000
-	.long	0x40A00000, 0x40800000
-	.long	0x40C00000, 0x40800000
-	.long	0x40E00000, 0x40800000
-	.long	0xC1000000, 0x40800000
-	.long	0xC0E00000, 0x40800000
-	.long	0xC0C00000, 0x40800000
-	.long	0xC0A00000, 0x40800000
-	.long	0xC0800000, 0x40800000
-	.long	0xC0400000, 0x40800000
-	.long	0xC0000000, 0x40800000
-	.long	0xBF800000, 0x40800000
-	.long	0x00000000, 0x40A00000
-	.long	0x3F800000, 0x40A00000
-	.long	0x40000000, 0x40A00000
-	.long	0x40400000, 0x40A00000
-	.long	0x40800000, 0x40A00000
-	.long	0x40A00000, 0x40A00000
-	.long	0x40C00000, 0x40A00000
-	.long	0x40E00000, 0x40A00000
-	.long	0xC1000000, 0x40A00000
-	.long	0xC0E00000, 0x40A00000
-	.long	0xC0C00000, 0x40A00000
-	.long	0xC0A00000, 0x40A00000
-	.long	0xC0800000, 0x40A00000
-	.long	0xC0400000, 0x40A00000
-	.long	0xC0000000, 0x40A00000
-	.long	0xBF800000, 0x40A00000
-	.long	0x00000000, 0x40C00000
-	.long	0x3F800000, 0x40C00000
-	.long	0x40000000, 0x40C00000
-	.long	0x40400000, 0x40C00000
-	.long	0x40800000, 0x40C00000
-	.long	0x40A00000, 0x40C00000
-	.long	0x40C00000, 0x40C00000
-	.long	0x40E00000, 0x40C00000
-	.long	0xC1000000, 0x40C00000
-	.long	0xC0E00000, 0x40C00000
-	.long	0xC0C00000, 0x40C00000
-	.long	0xC0A00000, 0x40C00000
-	.long	0xC0800000, 0x40C00000
-	.long	0xC0400000, 0x40C00000
-	.long	0xC0000000, 0x40C00000
-	.long	0xBF800000, 0x40C00000
-	.long	0x00000000, 0x40E00000
-	.long	0x3F800000, 0x40E00000
-	.long	0x40000000, 0x40E00000
-	.long	0x40400000, 0x40E00000
-	.long	0x40800000, 0x40E00000
-	.long	0x40A00000, 0x40E00000
-	.long	0x40C00000, 0x40E00000
-	.long	0x40E00000, 0x40E00000
-	.long	0xC1000000, 0x40E00000
-	.long	0xC0E00000, 0x40E00000
-	.long	0xC0C00000, 0x40E00000
-	.long	0xC0A00000, 0x40E00000
-	.long	0xC0800000, 0x40E00000
-	.long	0xC0400000, 0x40E00000
-	.long	0xC0000000, 0x40E00000
-	.long	0xBF800000, 0x40E00000
-	.long	0x00000000, 0xC1000000
-	.long	0x3F800000, 0xC1000000
-	.long	0x40000000, 0xC1000000
-	.long	0x40400000, 0xC1000000
-	.long	0x40800000, 0xC1000000
-	.long	0x40A00000, 0xC1000000
-	.long	0x40C00000, 0xC1000000
-	.long	0x40E00000, 0xC1000000
-	.long	0xC1000000, 0xC1000000
-	.long	0xC0E00000, 0xC1000000
-	.long	0xC0C00000, 0xC1000000
-	.long	0xC0A00000, 0xC1000000
-	.long	0xC0800000, 0xC1000000
-	.long	0xC0400000, 0xC1000000
-	.long	0xC0000000, 0xC1000000
-	.long	0xBF800000, 0xC1000000
-	.long	0x00000000, 0xC0E00000
-	.long	0x3F800000, 0xC0E00000
-	.long	0x40000000, 0xC0E00000
-	.long	0x40400000, 0xC0E00000
-	.long	0x40800000, 0xC0E00000
-	.long	0x40A00000, 0xC0E00000
-	.long	0x40C00000, 0xC0E00000
-	.long	0x40E00000, 0xC0E00000
-	.long	0xC1000000, 0xC0E00000
-	.long	0xC0E00000, 0xC0E00000
-	.long	0xC0C00000, 0xC0E00000
-	.long	0xC0A00000, 0xC0E00000
-	.long	0xC0800000, 0xC0E00000
-	.long	0xC0400000, 0xC0E00000
-	.long	0xC0000000, 0xC0E00000
-	.long	0xBF800000, 0xC0E00000
-	.long	0x00000000, 0xC0C00000
-	.long	0x3F800000, 0xC0C00000
-	.long	0x40000000, 0xC0C00000
-	.long	0x40400000, 0xC0C00000
-	.long	0x40800000, 0xC0C00000
-	.long	0x40A00000, 0xC0C00000
-	.long	0x40C00000, 0xC0C00000
-	.long	0x40E00000, 0xC0C00000
-	.long	0xC1000000, 0xC0C00000
-	.long	0xC0E00000, 0xC0C00000
-	.long	0xC0C00000, 0xC0C00000
-	.long	0xC0A00000, 0xC0C00000
-	.long	0xC0800000, 0xC0C00000
-	.long	0xC0400000, 0xC0C00000
-	.long	0xC0000000, 0xC0C00000
-	.long	0xBF800000, 0xC0C00000
-	.long	0x00000000, 0xC0A00000
-	.long	0x3F800000, 0xC0A00000
-	.long	0x40000000, 0xC0A00000
-	.long	0x40400000, 0xC0A00000
-	.long	0x40800000, 0xC0A00000
-	.long	0x40A00000, 0xC0A00000
-	.long	0x40C00000, 0xC0A00000
-	.long	0x40E00000, 0xC0A00000
-	.long	0xC1000000, 0xC0A00000
-	.long	0xC0E00000, 0xC0A00000
-	.long	0xC0C00000, 0xC0A00000
-	.long	0xC0A00000, 0xC0A00000
-	.long	0xC0800000, 0xC0A00000
-	.long	0xC0400000, 0xC0A00000
-	.long	0xC0000000, 0xC0A00000
-	.long	0xBF800000, 0xC0A00000
-	.long	0x00000000, 0xC0800000
-	.long	0x3F800000, 0xC0800000
-	.long	0x40000000, 0xC0800000
-	.long	0x40400000, 0xC0800000
-	.long	0x40800000, 0xC0800000
-	.long	0x40A00000, 0xC0800000
-	.long	0x40C00000, 0xC0800000
-	.long	0x40E00000, 0xC0800000
-	.long	0xC1000000, 0xC0800000
-	.long	0xC0E00000, 0xC0800000
-	.long	0xC0C00000, 0xC0800000
-	.long	0xC0A00000, 0xC0800000
-	.long	0xC0800000, 0xC0800000
-	.long	0xC0400000, 0xC0800000
-	.long	0xC0000000, 0xC0800000
-	.long	0xBF800000, 0xC0800000
-	.long	0x00000000, 0xC0400000
-	.long	0x3F800000, 0xC0400000
-	.long	0x40000000, 0xC0400000
-	.long	0x40400000, 0xC0400000
-	.long	0x40800000, 0xC0400000
-	.long	0x40A00000, 0xC0400000
-	.long	0x40C00000, 0xC0400000
-	.long	0x40E00000, 0xC0400000
-	.long	0xC1000000, 0xC0400000
-	.long	0xC0E00000, 0xC0400000
-	.long	0xC0C00000, 0xC0400000
-	.long	0xC0A00000, 0xC0400000
-	.long	0xC0800000, 0xC0400000
-	.long	0xC0400000, 0xC0400000
-	.long	0xC0000000, 0xC0400000
-	.long	0xBF800000, 0xC0400000
-	.long	0x00000000, 0xC0000000
-	.long	0x3F800000, 0xC0000000
-	.long	0x40000000, 0xC0000000
-	.long	0x40400000, 0xC0000000
-	.long	0x40800000, 0xC0000000
-	.long	0x40A00000, 0xC0000000
-	.long	0x40C00000, 0xC0000000
-	.long	0x40E00000, 0xC0000000
-	.long	0xC1000000, 0xC0000000
-	.long	0xC0E00000, 0xC0000000
-	.long	0xC0C00000, 0xC0000000
-	.long	0xC0A00000, 0xC0000000
-	.long	0xC0800000, 0xC0000000
-	.long	0xC0400000, 0xC0000000
-	.long	0xC0000000, 0xC0000000
-	.long	0xBF800000, 0xC0000000
-	.long	0x00000000, 0xBF800000
-	.long	0x3F800000, 0xBF800000
-	.long	0x40000000, 0xBF800000
-	.long	0x40400000, 0xBF800000
-	.long	0x40800000, 0xBF800000
-	.long	0x40A00000, 0xBF800000
-	.long	0x40C00000, 0xBF800000
-	.long	0x40E00000, 0xBF800000
-	.long	0xC1000000, 0xBF800000
-	.long	0xC0E00000, 0xBF800000
-	.long	0xC0C00000, 0xBF800000
-	.long	0xC0A00000, 0xBF800000
-	.long	0xC0800000, 0xBF800000
-	.long	0xC0400000, 0xBF800000
-	.long	0xC0000000, 0xBF800000
-	.long	0xBF800000, 0xBF800000
+.comm	_FIR_fp_table,16*16*FCOMPLEX_SIZE,8
 
 .global	_filter
 _filter:
@@ -484,7 +230,7 @@ _filter:
 #	internally used:
 #	r9 :	  8
 #	r10 :	  512
-#	r11 :	  pointer to fp_table
+#	r11 :	  pointer to _FIR_fp_table
 #	r28-r31 : prefetched samples
 #	f0-f15 :  delay line (real in primary, imaginary in secondary unit)
 #	f16-f23 : weights (these are real values alternately stored in primary
@@ -523,8 +269,8 @@ _filter:
 	# convert 15 i4complex numbers to fcomplex
 	li	10,I4COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
 				; lbzx	 29,0,5	# fetch FIR history samples
-	lis     11,fp_table@ha	; lbzux  30,5,10
-	la      11,fp_table@l(11);lbzux	 31,5,10
+	lis     11,_FIR_fp_table@ha	; lbzux  30,5,10
+	la      11,_FIR_fp_table@l(11);lbzux	 31,5,10
 	slwi	29,29,3		; lbzux	 28,5,10
 				; lfpsx  1,11,29
 	slwi	30,30,3		; lbzux	 29,5,10
@@ -571,19 +317,54 @@ _filter:
 loop:
 	# time steps 0-5
 
-	fxcpmadd 24,17,14,24
-	fxcsmadd 25,17,14,25
-	fxcpmadd 26,18,14,26
-	fxcsmadd 27,18,14,27
-	fxcpmadd 28,19,14,28
-	fxcsmadd 29,19,14,29
+	fxcsmadd 24,23,1,24	; slwi	 28,28,3
+	fxcpmadd 25,20,9,25	; lfpsx	 0,11,28
+	fxcsmadd 26,20,9,26
+	fxcpmadd 27,21,9,27
+	fxcsmadd 28,21,9,28
+	fxcpmadd 29,22,9,29	; lbzux	 28,5,10
 
-	fxcpmadd 24,21,6,24	; slwi	 28,28,3
-	fxcsmadd 25,21,6,25	; lfpsx	 0,11,28
-	fxcpmadd 26,22,6,26	; lbzux	 28,5,10
+	fxcpmadd 24,23,2,24
+	fxcsmadd 25,23,2,25
+	fxcpmadd 26,20,10,26
+	fxcsmadd 27,20,10,27
+	fxcpmadd 28,21,10,28
+	fxcsmadd 29,21,10,29
+
+	fxcsmadd 24,22,3,24	; slwi	 29,29,3
+	fxcpmadd 25,23,3,25	; lfpsx	 1,11,29
+	fxcsmadd 26,23,3,26
+	fxcpmadd 27,20,11,27
+	fxcsmadd 28,20,11,28
+	fxcpmadd 29,21,11,29	; lbzux	 29,5,10
+
+	fxcpmadd 24,22,4,24
+	fxcsmadd 25,22,4,25
+	fxcpmadd 26,23,4,26
+	fxcsmadd 27,23,4,27
+	fxcpmadd 28,20,12,28
+	fxcsmadd 29,20,12,29
+
+	fxcsmadd 24,21,5,24	; slwi	 30,30,3
+	fxcpmadd 25,22,5,25	; lfpsx	 2,11,30
+	fxcsmadd 26,22,5,26
+	fxcpmadd 27,23,5,27
+	fxcsmadd 28,23,5,28
+	fxcpmadd 29,20,13,29	; lbzux	 30,5,10
+
+	fxcpmadd 24,21,6,24
+	fxcsmadd 25,21,6,25
+	fxcpmadd 26,22,6,26
 	fxcsmadd 27,22,6,27
 	fxcpmadd 28,23,6,28
 	fxcsmadd 29,23,6,29
+	
+	fxcsmadd 24,20,7,24	; slwi	 31,31,3
+	fxcpmadd 25,21,7,25	; lfpsx	 3,11,31
+	fxcsmadd 26,21,7,26
+	fxcpmadd 27,22,7,27
+	fxcsmadd 28,22,7,28
+	fxcpmadd 29,23,7,29	; lbzux	 31,5,10
 
 	fxcpmadd 24,20,8,24
 	fxcsmadd 25,20,8,25
@@ -592,40 +373,26 @@ loop:
 	fxcpmadd 28,22,8,28
 	fxcsmadd 29,22,8,29
 
+	fxcpmadd 24,17,14,24	; slwi	 28,28,3
+	fxcsmadd 25,17,14,25	; lfpsx	 4,11,28
+	fxcpmadd 26,18,14,26
+	fxcsmadd 27,18,14,27
+	fxcpmadd 28,19,14,28
+	fxcsmadd 29,19,14,29	; lbzux	 28,5,10
+	
 	fxcpmadd 24,16,0,24
 	fxcsmadd 25,16,0,25
 	fxcpmadd 26,17,0,26
 	fxcsmadd 27,17,0,27
 	fxcpmadd 28,18,0,28
-	fxcsmadd 29,18,0,29	; slwi	 29,29,3
+	fxcsmadd 29,18,0,29
 
-	fxcsmadd 24,23,1,24	; lfpsx	 1,11,29
-	fxcpmadd 25,20,9,25	; lbzux	 29,5,10
-	fxcsmadd 26,20,9,26
-	fxcpmadd 27,21,9,27
-	fxcsmadd 28,21,9,28
-	fxcpmadd 29,22,9,29
-
-	fxcsmadd 24,19,9,24
-	fxcpmadd 25,16,1,25
+	fxcsmadd 24,19,9,24	; slwi	 29,29,3
+	fxcpmadd 25,16,1,25	; lfpsx	 5,11,29
 	fxcsmadd 26,16,1,26
 	fxcpmadd 27,17,1,27
 	fxcsmadd 28,17,1,28
-	fxcpmadd 29,18,1,29
-
-	fxcpmadd 24,23,2,24	; slwi	 30,30,3
-	fxcsmadd 25,23,2,25	; lfpsx	 2,11,30
-	fxcpmadd 26,20,10,26	; lbzux	 30,5,10
-	fxcsmadd 27,20,10,27
-	fxcpmadd 28,21,10,28
-	fxcsmadd 29,21,10,29
-	
-	fxcsmadd 24,20,7,24
-	fxcpmadd 25,21,7,25
-	fxcsmadd 26,21,7,26
-	fxcpmadd 27,22,7,27
-	fxcsmadd 28,22,7,28
-	fxcpmadd 29,23,7,29
+	fxcpmadd 29,18,1,29	; lbzux	 29,5,10
 
 	fxcpmadd 24,19,10,24
 	fxcsmadd 25,19,10,25
@@ -634,13 +401,6 @@ loop:
 	fxcpmadd 28,17,2,28
 	fxcsmadd 29,17,2,29
 
-	fxcsmadd 24,22,3,24
-	fxcpmadd 25,23,3,25	; slwi	 31,31,3
-	fxcsmadd 26,23,3,26	; lfpsx	 3,11,31
-	fxcpmadd 27,20,11,27	; lbzux	 31,5,10
-	fxcsmadd 28,20,11,28
-	fxcpmadd 29,21,11,29
-
 	fxcsmadd 24,18,11,24
 	fxcpmadd 25,19,11,25
 	fxcsmadd 26,19,11,26
@@ -648,26 +408,12 @@ loop:
 	fxcsmadd 28,16,3,28
 	fxcpmadd 29,17,3,29
 
-	fxcpmadd 24,22,4,24
-	fxcsmadd 25,22,4,25
-	fxcpmadd 26,23,4,26	; slwi	 28,28,3
-	fxcsmadd 27,23,4,27	; lfpsx	 4,11,28
-	fxcpmadd 28,20,12,28	; lbzux	 28,5,10
-	fxcsmadd 29,20,12,29
-
 	fxcpmadd 24,18,12,24
 	fxcsmadd 25,18,12,25
 	fxcpmadd 26,19,12,26
 	fxcsmadd 27,19,12,27
 	fxcpmadd 28,16,4,28
 	fxcsmadd 29,16,4,29
-
-	fxcsmadd 24,21,5,24
-	fxcpmadd 25,22,5,25
-	fxcsmadd 26,22,5,26
-	fxcpmadd 27,23,5,27	; slwi	 29,29,3
-	fxcsmadd 28,23,5,28	; lfpsx	 5,11,29
-	fxcpmadd 29,20,13,29	; lbzux	 29,5,10
 
 	fxcsmadd 24,17,13,24
 	fxcpmadd 25,18,13,25
@@ -907,7 +653,1095 @@ loop:
 	addi	1,1,272		# restore stack pointer
 	blr			# return
 
-#elif INPUT_TYPE == I16COMPLEX_TYPE
+#elif NR_BITS_PER_SAMPLE == 8
+
+.align	5
+.comm	_FIR_fp_table,256*256*FCOMPLEX_SIZE,8
+
+.global	_filter
+_filter:
+#	filters all samples for one station, one polarization
+
+#	arguments:
+#	r3 :	  pointer to delay line (fcomplex[16])  NOTE: USE OF THE DELAY
+#		  LINE IS COMMENTED OUT!!!!!!!!!!!!!!!!!!!!
+#	r4 :	  pointer to weights line (const fcomplex[16])
+#	r5 :	  pointer to first sample (const i8complex[16*r7])
+#	r6 :	  pointer to result (fcomplex *)
+#	r7 :	  number of samples / 16
+
+#	internally used:
+#	r9 :	  8
+#	r10 :	  1024
+#	r11 :	  ptr to constant table
+#	r28-r31 : prefetched samples
+#	f0-f15 :  delay line (real in primary, imaginary in secondary unit)
+#	f16-f23 : weights (these are real values alternately stored in primary
+#			   and secondary units)
+#	f24-f29 : sums
+
+#	The implementation works on 5 or 6 time samples concurrently, to avoid
+#	stalls in the double hummer.  This unfortunately leads to totally
+#	incomprehensible code.  The loop processes 16 samples at a time.
+#	The input is converted from int16complex to dcomplex by black magic,
+#	making the code even harder to understand.
+
+	mtctr	7		# set number of iterations
+
+	li	9,-DCOMPLEX_SIZE
+	stfpdux 14,1,9		# save call-saved registers
+	stfpdux 15,1,9
+	stfpdux 16,1,9
+	stfpdux 17,1,9
+	stfpdux 18,1,9
+	stfpdux 19,1,9
+	stfpdux 20,1,9
+	stfpdux 21,1,9
+	stfpdux 22,1,9
+	stfpdux 23,1,9
+	stfpdux 24,1,9
+	stfpdux 25,1,9
+	stfpdux 26,1,9
+	stfpdux 27,1,9
+	stfpdux 28,1,9
+	stfpdux 29,1,9
+	stfpdux 30,1,9
+	stfpdux 31,1,9
+
+	subi	1,1,16
+	stmw	28,0(1)	# save r28 ... r31
+
+	lis	11,_FIR_fp_table@ha
+	li	9,FCOMPLEX_SIZE
+	la	11,_FIR_fp_table@l(11)
+	li	10,I8COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
+	subi	6,6,FCOMPLEX_SIZE
+
+
+#if 0
+	lfpsx	1,0,3		# load delay line
+	lfpsux	2,3,9
+	lfpsux	3,3,9
+	lfpsux	4,3,9
+	lfpsux	5,3,9
+	lfpsux	6,3,9
+	lfpsux	7,3,9
+	lfpsux	8,3,9
+	lfpsux	9,3,9
+	lfpsux	10,3,9
+	lfpsux	11,3,9
+	lfpsux	12,3,9
+	lfpsux	13,3,9
+	lfpsux	14,3,9
+	lfpsux	15,3,9
+#endif
+
+	# convert 15 i16complex numbers to fcomplex
+	lhzx	29,0,5		# fetch FIR history samples
+	lhzux	30,5,10
+	lhzux	31,5,10
+	lhzux	28,5,10
+
+	rlwinm	12,29,3,13,28
+	lfpsx	1,11,12
+	lhzux	29,5,10
+
+	rlwinm	12,30,3,13,28
+	lfpsx	2,11,12
+	lhzux	30,5,10
+
+	rlwinm	12,31,3,13,28
+	lfpsx	3,11,12
+	lhzux	31,5,10
+
+	rlwinm	12,28,3,13,28
+	lfpsx	4,11,12
+	lhzux	28,5,10
+
+	rlwinm	12,29,3,13,28
+	lfpsx	5,11,12
+	lhzux	29,5,10
+
+	rlwinm	12,30,3,13,28
+	lfpsx	6,11,12
+	lhzux	30,5,10
+
+	rlwinm	12,31,3,13,28
+	lfpsx	7,11,12
+	lhzux	31,5,10
+
+	rlwinm	12,28,3,13,28
+	lfpsx	8,11,12
+	lhzux	28,5,10
+
+	rlwinm	12,29,3,13,28
+	lfpsx	9,11,12
+	lhzux	29,5,10
+
+	rlwinm	12,30,3,13,28
+	lfpsx	10,11,12
+	lhzux	30,5,10
+
+	rlwinm	12,31,3,13,28
+	lfpsx	11,11,12
+	lhzux	31,5,10
+
+	rlwinm	12,28,3,13,28
+	lfpsx	12,11,12
+	lhzux	28,5,10 # prefetch samples before entering loop
+
+	rlwinm	12,29,3,13,28
+	lfpsx	13,11,12
+	lhzux	29,5,10
+
+	rlwinm	12,30,3,13,28
+	lfpsx	14,11,12
+	lhzux	30,5,10
+
+	rlwinm	12,31,3,13,28
+	lfpsx	15,11,12
+	lhzux	31,5,10
+
+				; lfpsx	  16,0,4	# load weights line
+				; lfpsux  17,4,9
+				; lfpsux  18,4,9
+				; lfpsux  19,4,9
+				; lfpsux  20,4,9
+				; lfpsux  21,4,9
+				; lfpsux  22,4,9
+				; lfpsux  23,4,9
+
+	# essentially part of loop, but interleaved with
+	# the stores in the tail of the loop
+	fxpmul	 24,20,8
+	fxsmul	 25,20,8
+	fxpmul	 26,21,8
+	fxsmul	 27,21,8
+	fxpmul	 28,22,8
+	fxsmul	 29,22,8
+	fxpmul	 30,23,8
+	fxsmul	 31,23,8
+
+loop:
+	# time steps 0-7
+
+	# load 0
+
+	fxcsmadd 24,23,1,24	; rlwinm 12,28,3,13,28
+	# load 1
+	fxcpmadd 25,20,9,25	; lfpsx  0,11,12
+	fxcsmadd 26,20,9,26	; lhzux	 28,5,10
+	fxcpmadd 27,21,9,27
+	fxcsmadd 28,21,9,28
+	fxcpmadd 29,22,9,29
+	fxcsmadd 30,22,9,30
+	fxcpmadd 31,23,9,31
+
+	fxcpmadd 24,23,2,24	; rlwinm 12,29,3,13,28
+	fxcsmadd 25,23,2,25	; lfpsx  1,11,12
+	# load 2
+	fxcpmadd 26,20,10,26	; lhzux	 29,5,10
+	fxcsmadd 27,20,10,27
+	fxcpmadd 28,21,10,28
+	fxcsmadd 29,21,10,29
+	fxcpmadd 30,22,10,30
+	fxcsmadd 31,22,10,31
+
+	fxcsmadd 24,22,3,24	; rlwinm 12,30,3,13,28
+	fxcpmadd 25,23,3,25	; lfpsx  2,11,12
+	fxcsmadd 26,23,3,26	; lhzux	 30,5,10
+	# load 3
+	fxcpmadd 27,20,11,27
+	fxcsmadd 28,20,11,28
+	fxcpmadd 29,21,11,29
+	fxcsmadd 30,21,11,30
+	fxcpmadd 31,22,11,31
+
+	fxcpmadd 24,22,4,24	; rlwinm 12,31,3,13,28
+	fxcsmadd 25,22,4,25	; lfpsx  3,11,12
+	fxcpmadd 26,23,4,26	; lhzux	 31,5,10
+	fxcsmadd 27,23,4,27
+	# load 4
+	fxcpmadd 28,20,12,28
+	fxcsmadd 29,20,12,29
+	fxcpmadd 30,21,12,30
+	fxcsmadd 31,21,12,31
+
+	fxcsmadd 24,21,5,24
+	fxcpmadd 25,22,5,25
+	fxcsmadd 26,22,5,26
+	fxcpmadd 27,23,5,27
+	fxcsmadd 28,23,5,28
+	# load 5
+	fxcpmadd 29,20,13,29
+	fxcsmadd 30,20,13,30
+	fxcpmadd 31,21,13,31
+
+	fxcpmadd 24,21,6,24
+	fxcsmadd 25,21,6,25
+	fxcpmadd 26,22,6,26
+	fxcsmadd 27,22,6,27
+	fxcpmadd 28,23,6,28
+	fxcsmadd 29,23,6,29
+	# load 6
+	fxcpmadd 30,20,14,30
+	fxcsmadd 31,20,14,31
+
+	fxcsmadd 24,20,7,24
+	fxcpmadd 25,21,7,25
+	fxcsmadd 26,21,7,26
+	fxcpmadd 27,22,7,27	; rlwinm 12,28,3,13,28
+	fxcsmadd 28,22,7,28	; lfpsx	 4,11,12
+	fxcpmadd 29,23,7,29	; lhzux	 28,5,10
+	fxcsmadd 30,23,7,30
+	# load 7
+	fxcpmadd 31,20,15,31
+
+	# after loads
+	fxcpmadd 24,16,0,24
+	fxcsmadd 25,16,0,25
+	fxcpmadd 26,17,0,26
+	fxcsmadd 27,17,0,27
+	fxcpmadd 28,18,0,28
+	fxcsmadd 29,18,0,29
+	fxcpmadd 30,19,0,30
+	fxcsmadd 31,19,0,31	; rlwinm 12,29,3,13,28
+
+	fxcsmadd 24,19,9,24	; lfpsx  5,11,12
+	fxcpmadd 25,16,1,25	; lhzux	 29,5,10
+	fxcsmadd 26,16,1,26
+	fxcpmadd 27,17,1,27
+	fxcsmadd 28,17,1,28
+	fxcpmadd 29,18,1,29
+	fxcsmadd 30,18,1,30
+	fxcpmadd 31,19,1,31
+
+	fxcpmadd 24,19,10,24
+	fxcsmadd 25,19,10,25
+	fxcpmadd 26,16,2,26
+	fxcsmadd 27,16,2,27	; rlwinm 12,30,3,13,28
+	fxcpmadd 28,17,2,28	; lfpsx  6,11,12
+	fxcsmadd 29,17,2,29	; lhzux	 30,5,10
+	fxcpmadd 30,18,2,30
+	fxcsmadd 31,18,2,31
+
+	fxcsmadd 24,18,11,24
+	fxcpmadd 25,19,11,25
+	fxcsmadd 26,19,11,26
+	fxcpmadd 27,16,3,27
+	fxcsmadd 28,16,3,28
+	fxcpmadd 29,17,3,29
+	fxcsmadd 30,17,3,30
+	fxcpmadd 31,18,3,31	; rlwinm 12,31,3,13,28
+	
+	fxcpmadd 24,18,12,24	; lfpsx  7,11,12
+	fxcsmadd 25,18,12,25	; lhzux	 31,5,10
+	fxcpmadd 26,19,12,26
+	fxcsmadd 27,19,12,27
+	fxcpmadd 28,16,4,28
+	fxcsmadd 29,16,4,29
+	fxcpmadd 30,17,4,30
+	fxcsmadd 31,17,4,31
+
+	fxcsmadd 24,17,13,24
+	fxcpmadd 25,18,13,25
+	fxcsmadd 26,18,13,26
+	fxcpmadd 27,19,13,27
+	fxcsmadd 28,19,13,28
+	fxcpmadd 29,16,5,29
+	fxcsmadd 30,16,5,30
+	fxcpmadd 31,17,5,31	; rlwinm 12,28,3,13,28
+
+	fxcpmadd 24,17,14,24	; lfpsx  8,11,12
+	fxcsmadd 25,17,14,25	; lhzux	 28,5,10
+	fxcpmadd 26,18,14,26
+	fxcsmadd 27,18,14,27
+	fxcpmadd 28,19,14,28
+	fxcsmadd 29,19,14,29
+	fxcpmadd 30,16,6,30
+	fxcsmadd 31,16,6,31
+
+	fxcsmadd 24,16,15,24
+	fxcpmadd 25,17,15,25
+	fxcsmadd 26,17,15,26
+	fxcpmadd 27,18,15,27
+	fxcsmadd 28,18,15,28
+	fxcpmadd 29,19,15,29	; stfpsux 24,6,9
+	fxcsmadd 30,19,15,30	; stfpsux 25,6,9
+	fxcpmadd 31,16,7,31	; stfpsux 26,6,9
+
+	
+	# time steps 8-15
+	fxpmul	 24,20,0
+	fxsmul	 25,20,0
+	fxpmul	 26,21,0	; stfpsux 27,6,9
+	fxsmul	 27,21,0	; stfpsux 28,6,9
+	fxpmul	 28,22,0	; stfpsux 29,6,9
+	fxsmul	 29,22,0	; stfpsux 30,6,9
+	fxpmul	 30,23,0	; stfpsux 31,6,9
+	fxsmul	 31,23,0
+
+	# already loaded 8
+
+	fxcsmadd 24,23,9,24
+	# load 9
+	fxcpmadd 25,20,1,25
+	fxcsmadd 26,20,1,26
+	fxcpmadd 27,21,1,27
+	fxcsmadd 28,21,1,28
+	fxcpmadd 29,22,1,29
+	fxcsmadd 30,22,1,30
+	fxcpmadd 31,23,1,31
+
+	fxcpmadd 24,23,10,24
+	fxcsmadd 25,23,10,25
+	# load 10
+	fxcpmadd 26,20,2,26
+	fxcsmadd 27,20,2,27
+	fxcpmadd 28,21,2,28
+	fxcsmadd 29,21,2,29
+	fxcpmadd 30,22,2,30
+	fxcsmadd 31,22,2,31	; rlwinm 12,29,3,13,28
+
+	fxcsmadd 24,22,11,24	; lfpsx  9,11,12
+	fxcpmadd 25,23,11,25	; lhzux	 29,5,10
+	fxcsmadd 26,23,11,26
+	# load 11
+	fxcpmadd 27,20,3,27
+	fxcsmadd 28,20,3,28
+	fxcpmadd 29,21,3,29
+	fxcsmadd 30,21,3,30
+	fxcpmadd 31,22,3,31
+
+	fxcpmadd 24,22,12,24
+	fxcsmadd 25,22,12,25
+	fxcpmadd 26,23,12,26
+	fxcsmadd 27,23,12,27	; rlwinm 12,30,3,13,28
+	# load 12
+	fxcpmadd 28,20,4,28	; lfpsx  10,11,12
+	fxcsmadd 29,20,4,29	; lhzux	 30,5,10
+	fxcpmadd 30,21,4,30
+	fxcsmadd 31,21,4,31
+
+	fxcsmadd 24,21,13,24
+	fxcpmadd 25,22,13,25
+	fxcsmadd 26,22,13,26
+	fxcpmadd 27,23,13,27
+	fxcsmadd 28,23,13,28
+	# load 13
+	fxcpmadd 29,20,5,29
+	fxcsmadd 30,20,5,30
+	fxcpmadd 31,21,5,31	; rlwinm 12,31,3,13,28
+
+	fxcpmadd 24,21,14,24	; lfpsx  11,11,12
+	fxcsmadd 25,21,14,25	; lhzux	 31,5,10
+	fxcpmadd 26,22,14,26
+	fxcsmadd 27,22,14,27
+	fxcpmadd 28,23,14,28
+	fxcsmadd 29,23,14,29
+	# load 14
+	fxcpmadd 30,20,6,30
+	fxcsmadd 31,20,6,31
+
+	fxcsmadd 24,20,15,24
+	fxcpmadd 25,21,15,25
+	fxcsmadd 26,21,15,26
+	fxcpmadd 27,22,15,27	; rlwinm 12,28,3,13,28
+	fxcsmadd 28,22,15,28	; lfpsx  12,11,12
+	fxcpmadd 29,23,15,29	; lhzux	 28,5,10
+	fxcsmadd 30,23,15,30
+	# load 15
+	fxcpmadd 31,20,7,31
+
+	# after loads
+
+	fxcpmadd 24,16,8,24
+	fxcsmadd 25,16,8,25
+	fxcpmadd 26,17,8,26
+	fxcsmadd 27,17,8,27
+	fxcpmadd 28,18,8,28
+	fxcsmadd 29,18,8,29
+	fxcpmadd 30,19,8,30
+	fxcsmadd 31,19,8,31	; rlwinm 12,29,3,13,28
+
+	fxcsmadd 24,19,1,24	; lfpsx  13,11,12
+	fxcpmadd 25,16,9,25	; lhzux	 29,5,10
+	fxcsmadd 26,16,9,26
+	fxcpmadd 27,17,9,27
+	fxcsmadd 28,17,9,28
+	fxcpmadd 29,18,9,29
+	fxcsmadd 30,18,9,30
+	fxcpmadd 31,19,9,31
+
+	fxcpmadd 24,19,2,24
+	fxcsmadd 25,19,2,25
+	fxcpmadd 26,16,10,26
+	fxcsmadd 27,16,10,27	; rlwinm 12,30,3,13,28
+	fxcpmadd 28,17,10,28	; lfpsx  14,11,12
+	fxcsmadd 29,17,10,29	; lhzux	 30,5,10
+	fxcpmadd 30,18,10,30
+	fxcsmadd 31,18,10,31
+
+	fxcsmadd 24,18,3,24
+	fxcpmadd 25,19,3,25
+	fxcsmadd 26,19,3,26
+	fxcpmadd 27,16,11,27
+	fxcsmadd 28,16,11,28
+	fxcpmadd 29,17,11,29
+	fxcsmadd 30,17,11,30
+	fxcpmadd 31,18,11,31	; rlwinm 12,31,3,13,28
+
+	fxcpmadd 24,18,4,24	; lfpsx  15,11,12
+	fxcsmadd 25,18,4,25	; lhzux	 31,5,10
+	fxcpmadd 26,19,4,26
+	fxcsmadd 27,19,4,27
+	fxcpmadd 28,16,12,28
+	fxcsmadd 29,16,12,29
+	fxcpmadd 30,17,12,30
+	fxcsmadd 31,17,12,31
+	
+	fxcsmadd 24,17,5,24
+	fxcpmadd 25,18,5,25
+	fxcsmadd 26,18,5,26
+	fxcpmadd 27,19,5,27
+	fxcsmadd 28,19,5,28
+	fxcpmadd 29,16,13,29
+	fxcsmadd 30,16,13,30
+	fxcpmadd 31,17,13,31
+
+	fxcpmadd 24,17,6,24
+	fxcsmadd 25,17,6,25
+	fxcpmadd 26,18,6,26
+	fxcsmadd 27,18,6,27
+	fxcpmadd 28,19,6,28
+	fxcsmadd 29,19,6,29
+	fxcpmadd 30,16,14,30
+	fxcsmadd 31,16,14,31
+
+	fxcsmadd 24,16,7,24
+	fxcpmadd 25,17,7,25
+	fxcsmadd 26,17,7,26
+	fxcpmadd 27,18,7,27
+	fxcsmadd 28,18,7,28
+	fxcpmadd 29,19,7,29	; stfpsux 24,6,9
+	fxcsmadd 30,19,7,30	; stfpsux 25,6,9
+	fxcpmadd 31,16,15,31	; stfpsux 26,6,9
+
+	fxpmul	 24,20,8	# part of next loop
+	fxsmul	 25,20,8
+	fxpmul	 26,21,8	; stfpsux 27,6,9
+	fxsmul	 27,21,8	; stfpsux 28,6,9
+	fxpmul	 28,22,8	; stfpsux 29,6,9
+	fxsmul	 29,22,8	; stfpsux 30,6,9
+	fxpmul	 30,23,8	; stfpsux 31,6,9
+	fxsmul	 31,23,8
+	bdnz	loop
+
+#if 0
+	addi	3,3,-120	# store delay line
+	stfpsux	1,3,9
+	stfpsux	2,3,9
+	stfpsux	3,3,9
+	stfpsux	4,3,9
+	stfpsux	5,3,9
+	stfpsux	6,3,9
+	stfpsux	7,3,9
+	stfpsux	8,3,9
+	stfpsux	9,3,9
+	stfpsux	10,3,9
+	stfpsux	11,3,9
+	stfpsux	12,3,9
+	stfpsux	13,3,9
+	stfpsux	14,3,9
+	stfpsux	15,3,9
+#endif
+
+	li	9,DCOMPLEX_SIZE	# restore call-saved registers
+	lmw	28,0(1)	# restore r28 ... r31
+
+	#addi	1,1,16
+	lfpdux	31,1,9
+	lfpdux	30,1,9
+	lfpdux	29,1,9
+	lfpdux	28,1,9
+	lfpdux	27,1,9
+	lfpdux	26,1,9
+	lfpdux	25,1,9
+	lfpdux	24,1,9
+	lfpdux	23,1,9
+	lfpdux	22,1,9
+	lfpdux	21,1,9
+	lfpdux	20,1,9
+	lfpdux	19,1,9
+	lfpdux	18,1,9
+	lfpdux	17,1,9
+	lfpdux	16,1,9
+	lfpdux	15,1,9
+	lfpdux	14,1,9
+
+	addi	1,1,16		# restore stack pointer
+	blr			# return
+
+#elif 0 && NR_BITS_PER_SAMPLE == 16
+
+.align	5
+.comm	_FIR_fp_table,65536*FLOAT_SIZE,4
+
+.global	_filter
+_filter:
+#	filters all samples for one station, one polarization
+
+#	arguments:
+#	r3 :	  pointer to delay line (fcomplex[16])  NOTE: USE OF THE DELAY
+#		  LINE IS COMMENTED OUT!!!!!!!!!!!!!!!!!!!!
+#	r4 :	  pointer to weights line (const fcomplex[16])
+#	r5 :	  pointer to first sample (const i16complex[16*r7])
+#	r6 :	  pointer to result (fcomplex *)
+#	r7 :	  number of samples / 16
+
+#	internally used:
+#	r9 :	  8
+#	r10 :	  2048
+#	r11 :	  ptr to constant table
+#	r28-r31 : prefetched samples
+#	f0-f15 :  delay line (real in primary, imaginary in secondary unit)
+#	f16-f23 : weights (these are real values alternately stored in primary
+#			   and secondary units)
+#	f24-f29 : sums
+
+#	The implementation works on 5 or 6 time samples concurrently, to avoid
+#	stalls in the double hummer.  This unfortunately leads to totally
+#	incomprehensible code.  The loop processes 16 samples at a time.
+#	The input is converted from int16complex to dcomplex by black magic,
+#	making the code even harder to understand.
+
+	mtctr	7		# set number of iterations
+
+	li	9,-DCOMPLEX_SIZE
+	stfpdux 14,1,9		# save call-saved registers
+	stfpdux 15,1,9
+	stfpdux 16,1,9
+	stfpdux 17,1,9
+	stfpdux 18,1,9
+	stfpdux 19,1,9
+	stfpdux 20,1,9
+	stfpdux 21,1,9
+	stfpdux 22,1,9
+	stfpdux 23,1,9
+	stfpdux 24,1,9
+	stfpdux 25,1,9
+	stfpdux 26,1,9
+	stfpdux 27,1,9
+	stfpdux 28,1,9
+	stfpdux 29,1,9
+	stfpdux 30,1,9
+	stfpdux 31,1,9
+
+	subi	1,1,16
+	stmw	28,0(1)	# save r28 ... r31
+
+	lis	11,_FIR_fp_table@ha
+	li	9,FCOMPLEX_SIZE
+	la	11,_FIR_fp_table@l(11)
+	li	10,I16COMPLEX_SIZE*NR_SUBBAND_CHANNELS*NR_POLARIZATIONS
+	subi	6,6,FCOMPLEX_SIZE
+
+
+#if 0
+	lfpsx	1,0,3		# load delay line
+	lfpsux	2,3,9
+	lfpsux	3,3,9
+	lfpsux	4,3,9
+	lfpsux	5,3,9
+	lfpsux	6,3,9
+	lfpsux	7,3,9
+	lfpsux	8,3,9
+	lfpsux	9,3,9
+	lfpsux	10,3,9
+	lfpsux	11,3,9
+	lfpsux	12,3,9
+	lfpsux	13,3,9
+	lfpsux	14,3,9
+	lfpsux	15,3,9
+#endif
+
+	# convert 15 i16complex numbers to fcomplex
+	lwzx	29,0,5		# fetch FIR history samples
+	lwzux	30,5,10
+	lwzux	31,5,10
+	lwzux	28,5,10
+
+	rlwinm	12,29,2,14,29
+	lfssx	1,11,12
+	rlwinm	12,29,18,14,29
+	lfsx	1,11,12
+	lwzux	29,5,10
+
+	rlwinm	12,30,2,14,29
+	lfssx	2,11,12
+	rlwinm	12,30,18,14,29
+	lfsx	2,11,12
+	lwzux	30,5,10
+
+	rlwinm	12,31,2,14,29
+	lfssx	3,11,12
+	rlwinm	12,31,18,14,29
+	lfsx	3,11,12
+	lwzux	31,5,10
+
+	rlwinm	12,28,2,14,29
+	lfssx	4,11,12
+	rlwinm	12,28,18,14,29
+	lfsx	4,11,12
+	lwzux	28,5,10
+
+	rlwinm	12,29,2,14,29
+	lfssx	5,11,12
+	rlwinm	12,29,18,14,29
+	lfsx	5,11,12
+	lwzux	29,5,10
+
+	rlwinm	12,30,2,14,29
+	lfssx	6,11,12
+	rlwinm	12,30,18,14,29
+	lfsx	6,11,12
+	lwzux	30,5,10
+
+	rlwinm	12,31,2,14,29
+	lfssx	7,11,12
+	rlwinm	12,31,18,14,29
+	lfsx	7,11,12
+	lwzux	31,5,10
+
+	rlwinm	12,28,2,14,29
+	lfssx	8,11,12
+	rlwinm	12,28,18,14,29
+	lfsx	8,11,12
+	lwzux	28,5,10
+
+	rlwinm	12,29,2,14,29
+	lfssx	9,11,12
+	rlwinm	12,29,18,14,29
+	lfsx	9,11,12
+	lwzux	29,5,10
+
+	rlwinm	12,30,2,14,29
+	lfssx	10,11,12
+	rlwinm	12,30,18,14,29
+	lfsx	10,11,12
+	lwzux	30,5,10
+
+	rlwinm	12,31,2,14,29
+	lfssx	11,11,12
+	rlwinm	12,31,18,14,29
+	lfsx	11,11,12
+	lwzux	31,5,10
+
+	rlwinm	12,28,2,14,29
+	lfssx	12,11,12
+	rlwinm	12,28,18,14,29
+	lfsx	12,11,12
+	lwzux	28,5,10 # prefetch samples before entering loop
+
+	rlwinm	12,29,2,14,29
+	lfssx	13,11,12
+	rlwinm	12,29,18,14,29
+	lfsx	13,11,12
+	lwzux	29,5,10
+
+	rlwinm	12,30,2,14,29
+	lfssx	14,11,12
+	rlwinm	12,30,18,14,29
+	lfsx	14,11,12
+	lwzux	30,5,10
+
+	rlwinm	12,31,2,14,29
+	lfssx	15,11,12
+	rlwinm	12,31,18,14,29
+	lfsx	15,11,12
+	lwzux	31,5,10
+
+				; lfpsx	  16,0,4	# load weights line
+				; lfpsux  17,4,9
+				; lfpsux  18,4,9
+				; lfpsux  19,4,9
+				; lfpsux  20,4,9
+				; lfpsux  21,4,9
+				; lfpsux  22,4,9
+				; lfpsux  23,4,9
+
+	# essentially part of loop, but interleaved with
+	# the stores in the tail of the loop
+	fxpmul	 24,20,8
+	fxsmul	 25,20,8
+	fxpmul	 26,21,8
+	fxsmul	 27,21,8
+	fxpmul	 28,22,8
+	fxsmul	 29,22,8
+	fxpmul	 30,23,8
+	fxsmul	 31,23,8
+
+loop:
+	# time steps 0-7
+
+	# load 0
+
+	fxcsmadd 24,23,1,24	; rlwinm 12,28,2,14,29
+	# load 1
+	fxcpmadd 25,20,9,25	; lfssx  0,11,12
+	fxcsmadd 26,20,9,26	; rlwinm 12,28,18,14,29
+	fxcpmadd 27,21,9,27	; lfsx	 0,11,12
+	fxcsmadd 28,21,9,28	; lwzux	 28,5,10
+	fxcpmadd 29,22,9,29
+	fxcsmadd 30,22,9,30
+	fxcpmadd 31,23,9,31
+
+	fxcpmadd 24,23,2,24	; rlwinm 12,29,2,14,29
+	fxcsmadd 25,23,2,25	; lfssx  1,11,12
+	# load 2
+	fxcpmadd 26,20,10,26	; rlwinm 12,29,18,14,29
+	fxcsmadd 27,20,10,27	; lfsx	 1,11,12
+	fxcpmadd 28,21,10,28	; lwzux	 29,5,10
+	fxcsmadd 29,21,10,29
+	fxcpmadd 30,22,10,30
+	fxcsmadd 31,22,10,31
+
+	fxcsmadd 24,22,3,24	; rlwinm 12,30,2,14,29
+	fxcpmadd 25,23,3,25	; lfssx  2,11,12
+	fxcsmadd 26,23,3,26	; rlwinm 12,30,18,14,29
+	# load 3
+	fxcpmadd 27,20,11,27	; lfsx	 2,11,12
+	fxcsmadd 28,20,11,28	; lwzux	 30,5,10
+	fxcpmadd 29,21,11,29
+	fxcsmadd 30,21,11,30
+	fxcpmadd 31,22,11,31
+
+	fxcpmadd 24,22,4,24	; rlwinm 12,31,2,14,29
+	fxcsmadd 25,22,4,25	; lfssx  3,11,12
+	fxcpmadd 26,23,4,26	; rlwinm 12,31,18,14,29
+	fxcsmadd 27,23,4,27	; lfsx   3,11,12
+	# load 4
+	fxcpmadd 28,20,12,28	; lwzux	 31,5,10
+	fxcsmadd 29,20,12,29
+	fxcpmadd 30,21,12,30
+	fxcsmadd 31,21,12,31
+
+	fxcsmadd 24,21,5,24
+	fxcpmadd 25,22,5,25
+	fxcsmadd 26,22,5,26
+	fxcpmadd 27,23,5,27
+	fxcsmadd 28,23,5,28
+	# load 5
+	fxcpmadd 29,20,13,29
+	fxcsmadd 30,20,13,30
+	fxcpmadd 31,21,13,31
+
+	fxcpmadd 24,21,6,24
+	fxcsmadd 25,21,6,25
+	fxcpmadd 26,22,6,26
+	fxcsmadd 27,22,6,27
+	fxcpmadd 28,23,6,28
+	fxcsmadd 29,23,6,29
+	# load 6
+	fxcpmadd 30,20,14,30
+	fxcsmadd 31,20,14,31
+
+	fxcsmadd 24,20,7,24
+	fxcpmadd 25,21,7,25
+	fxcsmadd 26,21,7,26
+	fxcpmadd 27,22,7,27	; rlwinm 12,28,2,14,29
+	fxcsmadd 28,22,7,28	; lfssx	 4,11,12
+	fxcpmadd 29,23,7,29
+	fxcsmadd 30,23,7,30
+	# load 7
+	fxcpmadd 31,20,15,31
+
+	# after loads
+	fxcpmadd 24,16,0,24	; rlwinm 12,28,18,14,29
+	fxcsmadd 25,16,0,25	; lfsx   4,11,12
+	fxcpmadd 26,17,0,26
+	fxcsmadd 27,17,0,27	; lwzux	 28,5,10
+	fxcpmadd 28,18,0,28
+	fxcsmadd 29,18,0,29
+	fxcpmadd 30,19,0,30
+	fxcsmadd 31,19,0,31	; rlwinm 12,29,2,14,29
+
+	fxcsmadd 24,19,9,24	; lfssx  5,11,12
+	fxcpmadd 25,16,1,25
+	fxcsmadd 26,16,1,26
+	fxcpmadd 27,17,1,27
+	fxcsmadd 28,17,1,28	; rlwinm 12,29,18,14,29
+	fxcpmadd 29,18,1,29	; lfsx   5,11,12
+	fxcsmadd 30,18,1,30
+	fxcpmadd 31,19,1,31	; lwzux	 29,5,10
+
+	fxcpmadd 24,19,10,24
+	fxcsmadd 25,19,10,25
+	fxcpmadd 26,16,2,26
+	fxcsmadd 27,16,2,27	; rlwinm 12,30,2,14,29
+	fxcpmadd 28,17,2,28	; lfssx  6,11,12
+	fxcsmadd 29,17,2,29
+	fxcpmadd 30,18,2,30
+	fxcsmadd 31,18,2,31
+
+	fxcsmadd 24,18,11,24	; rlwinm 12,30,18,14,29
+	fxcpmadd 25,19,11,25	; lfsx   6,11,12
+	fxcsmadd 26,19,11,26
+	fxcpmadd 27,16,3,27	; lwzux	 30,5,10
+	fxcsmadd 28,16,3,28
+	fxcpmadd 29,17,3,29
+	fxcsmadd 30,17,3,30
+	fxcpmadd 31,18,3,31	; rlwinm 12,31,2,14,29
+	
+	fxcpmadd 24,18,12,24	; lfssx  7,11,12
+	fxcsmadd 25,18,12,25
+	fxcpmadd 26,19,12,26
+	fxcsmadd 27,19,12,27
+	fxcpmadd 28,16,4,28	; rlwinm 12,31,18,14,29
+	fxcsmadd 29,16,4,29	; lfsx   7,11,12
+	fxcpmadd 30,17,4,30
+	fxcsmadd 31,17,4,31	; lwzux	 31,5,10
+
+	fxcsmadd 24,17,13,24
+	fxcpmadd 25,18,13,25
+	fxcsmadd 26,18,13,26
+	fxcpmadd 27,19,13,27
+	fxcsmadd 28,19,13,28
+	fxcpmadd 29,16,5,29
+	fxcsmadd 30,16,5,30
+	fxcpmadd 31,17,5,31	; rlwinm 12,28,2,14,29
+
+	fxcpmadd 24,17,14,24	; lfssx  8,11,12
+	fxcsmadd 25,17,14,25
+	fxcpmadd 26,18,14,26
+	fxcsmadd 27,18,14,27
+	fxcpmadd 28,19,14,28	; rlwinm 12,28,18,14,29
+	fxcsmadd 29,19,14,29	; lfsx   8,11,12
+	fxcpmadd 30,16,6,30
+	fxcsmadd 31,16,6,31	; lwzux	 28,5,10
+
+	fxcsmadd 24,16,15,24
+	fxcpmadd 25,17,15,25
+	fxcsmadd 26,17,15,26
+	fxcpmadd 27,18,15,27
+	fxcsmadd 28,18,15,28
+	fxcpmadd 29,19,15,29	; stfpsux 24,6,9
+	fxcsmadd 30,19,15,30	; stfpsux 25,6,9
+	fxcpmadd 31,16,7,31	; stfpsux 26,6,9
+
+	
+	# time steps 8-15
+	fxpmul	 24,20,0
+	fxsmul	 25,20,0
+	fxpmul	 26,21,0	; stfpsux 27,6,9
+	fxsmul	 27,21,0	; stfpsux 28,6,9
+	fxpmul	 28,22,0	; stfpsux 29,6,9
+	fxsmul	 29,22,0	; stfpsux 30,6,9
+	fxpmul	 30,23,0	; stfpsux 31,6,9
+	fxsmul	 31,23,0
+
+	# already loaded 8
+
+	fxcsmadd 24,23,9,24
+	# load 9
+	fxcpmadd 25,20,1,25
+	fxcsmadd 26,20,1,26
+	fxcpmadd 27,21,1,27
+	fxcsmadd 28,21,1,28
+	fxcpmadd 29,22,1,29
+	fxcsmadd 30,22,1,30
+	fxcpmadd 31,23,1,31
+
+	fxcpmadd 24,23,10,24
+	fxcsmadd 25,23,10,25
+	# load 10
+	fxcpmadd 26,20,2,26
+	fxcsmadd 27,20,2,27
+	fxcpmadd 28,21,2,28
+	fxcsmadd 29,21,2,29
+	fxcpmadd 30,22,2,30
+	fxcsmadd 31,22,2,31	; rlwinm 12,29,2,14,29
+
+	fxcsmadd 24,22,11,24	; lfssx  9,11,12
+	fxcpmadd 25,23,11,25
+	fxcsmadd 26,23,11,26
+	# load 11
+	fxcpmadd 27,20,3,27
+	fxcsmadd 28,20,3,28	; rlwinm 12,29,18,14,29
+	fxcpmadd 29,21,3,29	; lfsx   9,11,12
+	fxcsmadd 30,21,3,30
+	fxcpmadd 31,22,3,31	; lwzux	 29,5,10
+
+	fxcpmadd 24,22,12,24
+	fxcsmadd 25,22,12,25
+	fxcpmadd 26,23,12,26
+	fxcsmadd 27,23,12,27	; rlwinm 12,30,2,14,29
+	# load 12
+	fxcpmadd 28,20,4,28	; lfssx  10,11,12
+	fxcsmadd 29,20,4,29
+	fxcpmadd 30,21,4,30
+	fxcsmadd 31,21,4,31
+
+	fxcsmadd 24,21,13,24	; rlwinm 12,30,18,14,29
+	fxcpmadd 25,22,13,25	; lfsx   10,11,12
+	fxcsmadd 26,22,13,26
+	fxcpmadd 27,23,13,27	; lwzux	 30,5,10
+	fxcsmadd 28,23,13,28
+	# load 13
+	fxcpmadd 29,20,5,29
+	fxcsmadd 30,20,5,30
+	fxcpmadd 31,21,5,31	; rlwinm 12,31,2,14,29
+
+	fxcpmadd 24,21,14,24	; lfssx  11,11,12
+	fxcsmadd 25,21,14,25
+	fxcpmadd 26,22,14,26
+	fxcsmadd 27,22,14,27
+	fxcpmadd 28,23,14,28	; rlwinm 12,31,18,14,29
+	fxcsmadd 29,23,14,29	; lfsx   11,11,12
+	# load 14
+	fxcpmadd 30,20,6,30
+	fxcsmadd 31,20,6,31	; lwzux	 31,5,10
+
+	fxcsmadd 24,20,15,24
+	fxcpmadd 25,21,15,25
+	fxcsmadd 26,21,15,26
+	fxcpmadd 27,22,15,27	; rlwinm 12,28,2,14,29
+	fxcsmadd 28,22,15,28	; lfssx  12,11,12
+	fxcpmadd 29,23,15,29
+	fxcsmadd 30,23,15,30
+	# load 15
+	fxcpmadd 31,20,7,31
+
+	# after loads
+
+	fxcpmadd 24,16,8,24	; rlwinm 12,28,18,14,29
+	fxcsmadd 25,16,8,25	; lfsx   12,11,12
+	fxcpmadd 26,17,8,26
+	fxcsmadd 27,17,8,27	; lwzux	 28,5,10
+	fxcpmadd 28,18,8,28
+	fxcsmadd 29,18,8,29
+	fxcpmadd 30,19,8,30
+	fxcsmadd 31,19,8,31	; rlwinm 12,29,2,14,29
+
+	fxcsmadd 24,19,1,24	; lfssx  13,11,12
+	fxcpmadd 25,16,9,25
+	fxcsmadd 26,16,9,26
+	fxcpmadd 27,17,9,27
+	fxcsmadd 28,17,9,28	; rlwinm 12,29,18,14,29
+	fxcpmadd 29,18,9,29	; lfsx   13,11,12
+	fxcsmadd 30,18,9,30
+	fxcpmadd 31,19,9,31	; lwzux	 29,5,10
+
+	fxcpmadd 24,19,2,24
+	fxcsmadd 25,19,2,25
+	fxcpmadd 26,16,10,26
+	fxcsmadd 27,16,10,27	; rlwinm 12,30,2,14,29
+	fxcpmadd 28,17,10,28	; lfssx  14,11,12
+	fxcsmadd 29,17,10,29
+	fxcpmadd 30,18,10,30
+	fxcsmadd 31,18,10,31
+
+	fxcsmadd 24,18,3,24	; rlwinm 12,30,18,14,29
+	fxcpmadd 25,19,3,25	; lfsx   14,11,12
+	fxcsmadd 26,19,3,26
+	fxcpmadd 27,16,11,27	; lwzux	 30,5,10
+	fxcsmadd 28,16,11,28
+	fxcpmadd 29,17,11,29
+	fxcsmadd 30,17,11,30
+	fxcpmadd 31,18,11,31	; rlwinm 12,31,2,14,29
+
+	fxcpmadd 24,18,4,24	; lfssx  15,11,12
+	fxcsmadd 25,18,4,25
+	fxcpmadd 26,19,4,26
+	fxcsmadd 27,19,4,27
+	fxcpmadd 28,16,12,28	; rlwinm 12,31,18,14,29
+	fxcsmadd 29,16,12,29	; lfsx   15,11,12
+	fxcpmadd 30,17,12,30
+	fxcsmadd 31,17,12,31	; lwzux	 31,5,10
+	
+	fxcsmadd 24,17,5,24
+	fxcpmadd 25,18,5,25
+	fxcsmadd 26,18,5,26
+	fxcpmadd 27,19,5,27
+	fxcsmadd 28,19,5,28
+	fxcpmadd 29,16,13,29
+	fxcsmadd 30,16,13,30
+	fxcpmadd 31,17,13,31
+
+	fxcpmadd 24,17,6,24
+	fxcsmadd 25,17,6,25
+	fxcpmadd 26,18,6,26
+	fxcsmadd 27,18,6,27
+	fxcpmadd 28,19,6,28
+	fxcsmadd 29,19,6,29
+	fxcpmadd 30,16,14,30
+	fxcsmadd 31,16,14,31
+
+	fxcsmadd 24,16,7,24
+	fxcpmadd 25,17,7,25
+	fxcsmadd 26,17,7,26
+	fxcpmadd 27,18,7,27
+	fxcsmadd 28,18,7,28
+	fxcpmadd 29,19,7,29	; stfpsux 24,6,9
+	fxcsmadd 30,19,7,30	; stfpsux 25,6,9
+	fxcpmadd 31,16,15,31	; stfpsux 26,6,9
+
+	fxpmul	 24,20,8	# part of next loop
+	fxsmul	 25,20,8
+	fxpmul	 26,21,8	; stfpsux 27,6,9
+	fxsmul	 27,21,8	; stfpsux 28,6,9
+	fxpmul	 28,22,8	; stfpsux 29,6,9
+	fxsmul	 29,22,8	; stfpsux 30,6,9
+	fxpmul	 30,23,8	; stfpsux 31,6,9
+	fxsmul	 31,23,8
+	bdnz	loop
+
+#if 0
+	addi	3,3,-120	# store delay line
+	stfpsux	1,3,9
+	stfpsux	2,3,9
+	stfpsux	3,3,9
+	stfpsux	4,3,9
+	stfpsux	5,3,9
+	stfpsux	6,3,9
+	stfpsux	7,3,9
+	stfpsux	8,3,9
+	stfpsux	9,3,9
+	stfpsux	10,3,9
+	stfpsux	11,3,9
+	stfpsux	12,3,9
+	stfpsux	13,3,9
+	stfpsux	14,3,9
+	stfpsux	15,3,9
+#endif
+
+	li	9,DCOMPLEX_SIZE	# restore call-saved registers
+	lmw	28,0(1)	# restore r28 ... r31
+
+	#addi	1,1,16
+	lfpdux	31,1,9
+	lfpdux	30,1,9
+	lfpdux	29,1,9
+	lfpdux	28,1,9
+	lfpdux	27,1,9
+	lfpdux	26,1,9
+	lfpdux	25,1,9
+	lfpdux	24,1,9
+	lfpdux	23,1,9
+	lfpdux	22,1,9
+	lfpdux	21,1,9
+	lfpdux	20,1,9
+	lfpdux	19,1,9
+	lfpdux	18,1,9
+	lfpdux	17,1,9
+	lfpdux	16,1,9
+	lfpdux	15,1,9
+	lfpdux	14,1,9
+
+	addi	1,1,16		# restore stack pointer
+	blr			# return
+
+#elif NR_BITS_PER_SAMPLE == 16
 
 .align	5
 sub_value:
@@ -1158,116 +1992,118 @@ _filter:
 loop:
 	# time steps 0-5
 
-	fxcpmadd 24,17,14,24
-	fxcsmadd 25,17,14,25	; xor	 28,28,12
-	fxcpmadd 26,18,14,26	; sthbrx 28,7,1
-	fxcsmadd 27,18,14,27
-	fxcpmadd 28,19,14,28
-	fxcsmadd 29,19,14,29	; srawi	 28,28,16
-
-	fxcpmadd 24,21,6,24	; sthbrx 28,11,1
-	fxcsmadd 25,21,6,25
-	fxcpmadd 26,22,6,26
-	fxcsmadd 27,22,6,27	; lfpdx	 30,8,1
-	fxcpmadd 28,23,6,28
-	fxcsmadd 29,23,6,29	; lwzux	 28,5,10
-
-	fxcpmadd 24,20,8,24
-	fxcsmadd 25,20,8,25
-	fpsub	0,30,31
-	fxcpmadd 26,21,8,26	; xor	 29,29,12
-	fxcsmadd 27,21,8,27	; sthbrx 29,7,1
-	fxcpmadd 28,22,8,28
-	fxcsmadd 29,22,8,29
-
-	fxcpmadd 24,16,0,24	; srawi	 29,29,16
-	fxcsmadd 25,16,0,25	; sthbrx 29,11,1
-	fxcpmadd 26,17,0,26
-	fxcsmadd 27,17,0,27
-	fxcpmadd 28,18,0,28	; lfpdx	 30,8,1
-	fxcsmadd 29,18,0,29
-
-	fxcsmadd 24,23,1,24	; lwzux	 29,5,10
-	fxcpmadd 25,20,9,25
-	fxcsmadd 26,20,9,26
-	fpsub	1,30,31
-	fxcpmadd 27,21,9,27	; xor	 30,30,12
-	fxcsmadd 28,21,9,28	; sthbrx 30,7,1
+	fxcsmadd 24,23,1,24	; xor	 28,28,12
+	fxcpmadd 25,20,9,25	; sthbrx 28,7,1
+	fxcsmadd 26,20,9,26	; srawi	 28,28,16
+	fxcpmadd 27,21,9,27	; sthbrx 28,11,1
+	fxcsmadd 28,21,9,28
 	fxcpmadd 29,22,9,29
 
-	fxcsmadd 24,19,9,24
-	fxcpmadd 25,16,1,25	; srawi	 30,30,16
-	fxcsmadd 26,16,1,26	; sthbrx 30,11,1
-	fxcpmadd 27,17,1,27
-	fxcsmadd 28,17,1,28
-	fxcpmadd 29,18,1,29	; lfpdx	 30,8,1
-
 	fxcpmadd 24,23,2,24
-	fxcsmadd 25,23,2,25	; lwzux	 30,5,10
+	fxcsmadd 25,23,2,25	; lfpdx	 30,8,1
 	fxcpmadd 26,20,10,26
 	fxcsmadd 27,20,10,27
-	fpsub	2,30,31
-	fxcpmadd 28,21,10,28	; xor	 31,31,12
-	fxcsmadd 29,21,10,29	; sthbrx 31,7,1
-	
-	fxcsmadd 24,20,7,24
-	fxcpmadd 25,21,7,25
-	fxcsmadd 26,21,7,26
-	fxcpmadd 27,22,7,27
-	fxcsmadd 28,22,7,28
-	fxcpmadd 29,23,7,29
+	fxcpmadd 28,21,10,28
+	fxcsmadd 29,21,10,29	; lwzux	 28,5,10
 
-	fxcpmadd 24,19,10,24
-	fxcsmadd 25,19,10,25
-	fxcpmadd 26,16,2,26	; srawi	 31,31,16
-	fxcsmadd 27,16,2,27	; sthbrx 31,11,1
-	fxcpmadd 28,17,2,28
-	fxcsmadd 29,17,2,29
-
-	fxcsmadd 24,22,3,24	; lfpdx	 30,8,1
+	fxcsmadd 24,22,3,24
 	fxcpmadd 25,23,3,25
-	fxcsmadd 26,23,3,26	; lwzux	 31,5,10
-	fxcpmadd 27,20,11,27
-	fxcsmadd 28,20,11,28
-	fpsub	3,30,31
-	fxcpmadd 29,21,11,29	; xor	 28,28,12
+	fxcsmadd 26,23,3,26
+	fxcpmadd 27,20,11,27	; xor	 29,29,12
+	fxcsmadd 28,20,11,28	; sthbrx 29,7,1
+	fxcpmadd 29,21,11,29	; srawi	 29,29,16
 
-	fxcsmadd 24,18,11,24	; sthbrx 28,7,1
-	fxcpmadd 25,19,11,25
-	fxcsmadd 26,19,11,26
-	fxcpmadd 27,16,3,27	; srawi	 28,28,16
-	fxcsmadd 28,16,3,28	; sthbrx 28,11,1
-	fxcpmadd 29,17,3,29
-
-	fxcpmadd 24,22,4,24
-	fxcsmadd 25,22,4,25	; lfpdx	 30,8,1
+	fxcpmadd 24,22,4,24	; sthbrx 29,11,1
+	fxcsmadd 25,22,4,25
 	fxcpmadd 26,23,4,26
-	fxcsmadd 27,23,4,27	; lwzux	 28,5,10
-	fxcpmadd 28,20,12,28
+	fxcsmadd 27,23,4,27
+	fpsub	0,30,31	
+	fxcpmadd 28,20,12,28	; lfpdx	 30,8,1
 	fxcsmadd 29,20,12,29
-
-	fpsub	4,30,31
-	fxcpmadd 24,18,12,24	; xor	 29,29,12
-	fxcsmadd 25,18,12,25	; sthbrx 29,7,1
-	fxcpmadd 26,19,12,26
-	fxcsmadd 27,19,12,27
-	fxcpmadd 28,16,4,28	; srawi	 29,29,16
-	fxcsmadd 29,16,4,29	; sthbrx 29,11,1
 
 	fxcsmadd 24,21,5,24
 	fxcpmadd 25,22,5,25
-	fxcsmadd 26,22,5,26	; lfpdx	 30,8,1
+	fxcsmadd 26,22,5,26	; lwzux	 29,5,10
 	fxcpmadd 27,23,5,27
-	fxcsmadd 28,23,5,28	; lwzux	 29,5,10
+	fxcsmadd 28,23,5,28
 	fxcpmadd 29,20,13,29
 
-	fxcsmadd 24,17,13,24
+	fxcpmadd 24,21,6,24	; xor	 30,30,12
+	fxcsmadd 25,21,6,25	; sthbrx 30,7,1
+	fxcpmadd 26,22,6,26	; srawi	 30,30,16
+	fxcsmadd 27,22,6,27	; sthbrx 30,11,1
+	fxcpmadd 28,23,6,28
+	fxcsmadd 29,23,6,29
+
+	fxcsmadd 24,20,7,24
+	fxcpmadd 25,21,7,25
+	fpsub	1,30,31	
+	fxcsmadd 26,21,7,26	; lfpdx	 30,8,1
+	fxcpmadd 27,22,7,27
+	fxcsmadd 28,22,7,28
+	fxcpmadd 29,23,7,29	; lwzux	 30,5,10
+
+	fxcpmadd 24,20,8,24
+	fxcsmadd 25,20,8,25
+	fxcpmadd 26,21,8,26
+	fxcsmadd 27,21,8,27
+	fxcpmadd 28,22,8,28
+	fxcsmadd 29,22,8,29	; xor	 31,31,12
+
+	fxcpmadd 24,17,14,24	; sthbrx 31,7,1
+	fxcsmadd 25,17,14,25
+	fxcpmadd 26,18,14,26
+	fxcsmadd 27,18,14,27	; srawi	 31,31,16
+	fxcpmadd 28,19,14,28	; sthbrx 31,11,1
+	fxcsmadd 29,19,14,29
+
+	fxcpmadd 24,16,0,24
+	fxcsmadd 25,16,0,25
+	fpsub	2,30,31	
+	fxcpmadd 26,17,0,26	; lfpdx	 30,8,1
+	fxcsmadd 27,17,0,27
+	fxcpmadd 28,18,0,28
+	fxcsmadd 29,18,0,29	; lwzux	 31,5,10
+
+	fpsub	3,30,31		; xor	 28,28,12
+	fxcsmadd 24,19,9,24	; sthbrx 28,7,1
+	fxcpmadd 25,16,1,25
+	fxcsmadd 26,16,1,26
+	fxcpmadd 27,17,1,27	; srawi	 28,28,16
+	fxcsmadd 28,17,1,28	; sthbrx 28,11,1
+	fxcpmadd 29,18,1,29
+
+	fxcpmadd 24,19,10,24
+	fxcsmadd 25,19,10,25
+	fxcpmadd 26,16,2,26	; lfpdx	 30,8,1
+	fxcsmadd 27,16,2,27
+	fxcpmadd 28,17,2,28
+	fxcsmadd 29,17,2,29	; lwzux	 28,5,10
+
+	fpsub	4,30,31		; xor	 29,29,12
+	fxcsmadd 24,18,11,24	; sthbrx 29,7,1
+	fxcpmadd 25,19,11,25
+	fxcsmadd 26,19,11,26
+	fxcpmadd 27,16,3,27	; srawi	 29,29,16
+	fxcsmadd 28,16,3,28	; sthbrx 29,11,1
+	fxcpmadd 29,17,3,29
+
+	fxcpmadd 24,18,12,24
+	fxcsmadd 25,18,12,25
+	fxcpmadd 26,19,12,26	; lfpdx	 30,8,1
+	fxcsmadd 27,19,12,27
+	fxcpmadd 28,16,4,28
+	fxcsmadd 29,16,4,29	; lwzux	 29,5,10
+
 	fpsub	5,30,31
+	fxcsmadd 24,17,13,24
 	fxcpmadd 25,18,13,25
 	fxcsmadd 26,18,13,26
 	fxcpmadd 27,19,13,27
-	fxcsmadd 28,19,13,28	; stfpsux 24,6,9
-	fxcpmadd 29,16,5,29	; stfpsux 25,6,9
+	fxcsmadd 28,19,13,28
+	fxcpmadd 29,16,5,29
+		; stfpsux 24,6,9
+		; stfpsux 25,6,9
 
 
 	# time steps 6-10
@@ -1530,9 +2366,8 @@ loop:
 
 	addi	1,1,16		# restore stack pointer
 	blr			# return
-
 #else
-#error INPUT_TYPE not supported
+#error unsupported NR_BITS_PER_SAMPLE
 #endif
 
 #if 0

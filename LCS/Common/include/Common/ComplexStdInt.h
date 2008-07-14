@@ -31,10 +31,13 @@
 namespace LOFAR {
 
   namespace TYPES {
+    typedef std::complex<int8>   i8complex;
     typedef std::complex<int16>  i16complex;
     typedef std::complex<uint16> u16complex;
   }
 
+  inline TYPES::i8complex makei8complex (TYPES::int8 re, TYPES::int8 im)
+    { return TYPES::i8complex(re,im); }
   inline TYPES::i16complex makei16complex (TYPES::uint16 re, TYPES::uint16 im)
     { return TYPES::i16complex(re,im); }
   inline TYPES::u16complex makeu16complex (TYPES::uint16 re, TYPES::uint16 im)
