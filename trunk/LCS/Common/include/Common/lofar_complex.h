@@ -60,6 +60,7 @@ namespace LOFAR
 {
   // Define complex types in LOFAR namespace.
   using TYPES::i4complex;
+  using TYPES::i8complex;
   using TYPES::i16complex;
   using TYPES::u16complex;
   using TYPES::fcomplex;
@@ -67,6 +68,10 @@ namespace LOFAR
 
   inline static i4complex makei4complex(i4complex &z) {
     return z;
+  }
+
+  inline static i4complex makei4complex(i8complex &z) {
+    return makei4complex(real(z), imag(z));
   }
 
   inline static i4complex makei4complex(i16complex &z) {
@@ -85,7 +90,35 @@ namespace LOFAR
     return makei4complex((int) real(z), (int) imag(z));
   }
 
+  inline static i8complex makei8complex(i4complex &z) {
+    return makei8complex(real(z), imag(z));
+  }
+
+  inline static i8complex makei8complex(i8complex &z) {
+    return z;
+  }
+
+  inline static i8complex makei8complex(i16complex &z) {
+    return makei8complex(real(z), imag(z));
+  }
+
+  inline static i8complex makei8complex(u16complex &z) {
+    return makei8complex(real(z), imag(z));
+  }
+
+  inline static i8complex makei8complex(fcomplex &z) {
+    return makei8complex((int) real(z), (int) imag(z));
+  }
+
+  inline static i8complex makei8complex(dcomplex &z) {
+    return makei8complex((int) real(z), (int) imag(z));
+  }
+
   inline static i16complex makei16complex(i4complex &z) {
+    return makei16complex(real(z), imag(z));
+  }
+
+  inline static i16complex makei16complex(i8complex &z) {
     return makei16complex(real(z), imag(z));
   }
 
@@ -109,6 +142,10 @@ namespace LOFAR
     return makeu16complex(real(z), imag(z));
   }
 
+  inline static u16complex makeu16complex(i8complex &z) {
+    return makeu16complex(real(z), imag(z));
+  }
+
   inline static u16complex makeu16complex(i16complex &z) {
     return makeu16complex(real(z), imag(z));
   }
@@ -129,6 +166,10 @@ namespace LOFAR
     return makefcomplex((float) real(z), (float) imag(z));
   }
 
+  inline static fcomplex makefcomplex(i8complex &z) {
+    return makefcomplex((float) real(z), (float) imag(z));
+  }
+
   inline static fcomplex makefcomplex(i16complex &z) {
     return makefcomplex((float) real(z), (float) imag(z));
   }
@@ -146,6 +187,10 @@ namespace LOFAR
   }
 
   inline static dcomplex makedcomplex(i4complex &z) {
+    return makedcomplex((double) real(z), (double) imag(z));
+  }
+
+  inline static dcomplex makedcomplex(i8complex &z) {
     return makedcomplex((double) real(z), (double) imag(z));
   }
 

@@ -191,7 +191,7 @@ void BGL_Processing::checkConsistency(CS1_Parset *parset) const
 #if !defined C_IMPLEMENTATION
   ASSERT(parset->BGLintegrationSteps() % 16		 == 0);
 
-  ASSERT(_FIR_constants_used.input_type			 == INPUT_TYPE);
+  ASSERT(_FIR_constants_used.nr_bits_per_sample		 == NR_BITS_PER_SAMPLE);
   ASSERT(_FIR_constants_used.nr_subband_channels	 == NR_SUBBAND_CHANNELS);
   ASSERT(_FIR_constants_used.nr_taps			 == NR_TAPS);
   ASSERT(_FIR_constants_used.nr_polarizations		 == NR_POLARIZATIONS);

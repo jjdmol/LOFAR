@@ -25,22 +25,21 @@
 
 /* This is included by C++ and assembly files.  Do not put anything but
    constants here! */
-#define INPUT_TYPE		   I16COMPLEX_TYPE
+#define NR_BITS_PER_SAMPLE	   16
 #define NR_POLARIZATIONS	   2
 #define NR_SUBBAND_CHANNELS	   256
 #define NR_TAPS			   16
 
 /* Do not change anything below this line */
 
-#define I4COMPLEX_TYPE		   1
-#define I16COMPLEX_TYPE		   2
-
-#if INPUT_TYPE == I4COMPLEX_TYPE
+#if NR_BITS_PER_SAMPLE == 4
 #define INPUT_SAMPLE_TYPE	   i4complex
-#elif INPUT_TYPE == I16COMPLEX_TYPE
+#elif NR_BITS_PER_SAMPLE == 8
+#define INPUT_SAMPLE_TYPE	   i8complex
+#elif NR_BITS_PER_SAMPLE == 16
 #define INPUT_SAMPLE_TYPE	   i16complex
 #else
-#error Bad INPUT_TYPE
+#error Bad NR_BITS_PER_SAMPLE
 #endif
 
 #endif

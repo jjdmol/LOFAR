@@ -6,6 +6,7 @@
 #include <FFT_Asm.h>
 #include <FIR_Asm.h>
 
+#include <Common/DataConvert.h>
 #include <Common/Timer.h>
 
 #include <complex>
@@ -57,6 +58,25 @@ PPF::PPF(unsigned nrStations, unsigned nrSamplesPerIntegration, double channelBa
 #endif
 {
   init_fft();
+
+#if !defined PPF_C_IMPLEMENTATION
+#if NR_BITS_PER_SAMPLE == 4
+  static const float map[] = {
+    0, 1, 2, 3, 4, 5, 6, 7, -8, -7, -6, -5, -4, -3, -2, -1,
+  };
+
+  for (unsigned i = 0; i < 16; i ++)
+    for (unsigned j = 0; j < 16; j ++)
+      _FIR_fp_table[i][j] = makefcomplex(map[j], map[i]);
+#elif NR_BITS_PER_SAMPLE == 8
+  for (unsigned i = 0; i < 256; i ++)
+    for (unsigned j = 0; j < 256; j ++)
+      _FIR_fp_table[i][j] = makefcomplex((float) (signed char) i, (float) (signed char) j);
+#elif 0 && NR_BITS_PER_SAMPLE == 16
+  for (unsigned i = 0; i < 65536; i ++)
+    _FIR_fp_table[i] = (float) byteSwap((signed short) i);
+#endif
+#endif
 }
 
 
