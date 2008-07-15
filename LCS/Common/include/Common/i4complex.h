@@ -32,20 +32,20 @@ namespace LOFAR {
       public:
         i4complex() {}
 
-	i4complex(int real, int imag) {
-	  value = (real & 0xF) | ((imag & 0xF) << 4);
+	i4complex(double real, double imag) {
+	  value = ((int) rint(real - .5) & 0xF) | (((int) rint(imag - .5) & 0xF) << 4);
 	}
 
-	int real() const {
-	  return (signed char) (value << 4) >> 4; // extend sign
+	double real() const {
+	  return ((signed char) (value << 4) >> 4) + .5; // extend sign
 	}
 
-	int imag() const {
-	  return value >> 4;
+	double imag() const {
+	  return (value >> 4) + .5;
 	}
 
 	i4complex conj() const {
-	  return i4complex(value ^ 0x80);
+	  return i4complex(value ^ 0xF0);
 	}
 
       private:
@@ -58,13 +58,13 @@ namespace LOFAR {
     };
   }
 
-  inline TYPES::i4complex makei4complex(int real, int imag)
+  inline TYPES::i4complex makei4complex(double real, double imag)
     { return TYPES::i4complex(real, imag); }
 
-  inline int real(TYPES::i4complex v)
+  inline double real(TYPES::i4complex v)
     { return v.real(); }
 
-  inline int imag(TYPES::i4complex v)
+  inline double imag(TYPES::i4complex v)
     { return v.imag(); }
 
   inline TYPES::i4complex conj(TYPES::i4complex x)

@@ -71,27 +71,27 @@ namespace LOFAR
   }
 
   inline static i4complex makei4complex(i8complex &z) {
-    return makei4complex(real(z), imag(z));
+    return makei4complex(real(z) - .5, imag(z) - .5);
   }
 
   inline static i4complex makei4complex(i16complex &z) {
-    return makei4complex(real(z), imag(z));
+    return makei4complex(real(z) - .5, imag(z) - .5);
   }
 
   inline static i4complex makei4complex(u16complex &z) {
-    return makei4complex(real(z), imag(z));
+    return makei4complex(real(z) - .5, imag(z) - .5);
   }
 
   inline static i4complex makei4complex(fcomplex &z) {
-    return makei4complex((int) real(z), (int) imag(z));
+    return makei4complex(real(z), imag(z));
   }
 
   inline static i4complex makei4complex(dcomplex &z) {
-    return makei4complex((int) real(z), (int) imag(z));
+    return makei4complex(real(z), imag(z));
   }
 
   inline static i8complex makei8complex(i4complex &z) {
-    return makei8complex(real(z), imag(z));
+    return makei8complex((int) real(z), (int) imag(z));
   }
 
   inline static i8complex makei8complex(i8complex &z) {
@@ -115,7 +115,7 @@ namespace LOFAR
   }
 
   inline static i16complex makei16complex(i4complex &z) {
-    return makei16complex(real(z), imag(z));
+    return makei16complex((int) real(z), (int) imag(z));
   }
 
   inline static i16complex makei16complex(i8complex &z) {
@@ -139,7 +139,7 @@ namespace LOFAR
   }
 
   inline static u16complex makeu16complex(i4complex &z) {
-    return makeu16complex(real(z), imag(z));
+    return makeu16complex((int) real(z), (int) imag(z));
   }
 
   inline static u16complex makeu16complex(i8complex &z) {
@@ -163,7 +163,7 @@ namespace LOFAR
   }
 
   inline static fcomplex makefcomplex(i4complex &z) {
-    return makefcomplex((float) real(z), (float) imag(z));
+    return makefcomplex(real(z), imag(z));
   }
 
   inline static fcomplex makefcomplex(i8complex &z) {
@@ -187,7 +187,7 @@ namespace LOFAR
   }
 
   inline static dcomplex makedcomplex(i4complex &z) {
-    return makedcomplex((double) real(z), (double) imag(z));
+    return makedcomplex(real(z), imag(z));
   }
 
   inline static dcomplex makedcomplex(i8complex &z) {

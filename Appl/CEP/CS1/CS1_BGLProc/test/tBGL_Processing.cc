@@ -53,7 +53,7 @@ inline TransposedData::SampleType toComplex(double phi)
 
     sincos(phi, &s, &c);
 #if NR_BITS_PER_SAMPLE == 4
-    return makei4complex((int) rint(7 * c), (int) rint(7 * s));
+    return makei4complex(8 * c, 8 * s);
 #elif NR_BITS_PER_SAMPLE == 8
     return makei8complex((int) rint(127 * c), (int) rint(127 * s));
 #elif NR_BITS_PER_SAMPLE == 16
