@@ -51,7 +51,7 @@ public:
     static ClaimMgrTask* instance(bool temporary = false);
     static void release();
 
-	// member functions
+	// Ask the claimManager the claim an object. An ClaimReply event is send to the given port.
     void claimObject(const string&		objectType,
 					 const string&		nameInAppl,
 					 GCFPortInterface&	replyPort);

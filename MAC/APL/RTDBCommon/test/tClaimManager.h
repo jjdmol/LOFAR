@@ -40,6 +40,7 @@ public:
 
 private:
 	GCFTimerPort*		itsTimerPort;
+	GCFITCPort*			itsMsgPort;
 	ClaimMgrTask*		itsClaimMgrTask;
 };
 

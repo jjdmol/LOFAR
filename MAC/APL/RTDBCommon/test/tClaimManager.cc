@@ -43,6 +43,8 @@ MgrTest::MgrTest(const string& name) :
 
 	itsTimerPort = new GCFTimerPort(*this, "timerPort");
 	ASSERTSTR(itsTimerPort, "=@=@= Can't allocate GCFTimerPort");
+	itsMsgPort   = new GCFITCPort  (*this, *this, "ITCPort", GCFPortInterface::SAP, CM_PROTOCOL);
+	ASSERTSTR(itsMsgPort, "=@=@= Can't allocate GCFITCPort");
 
 	registerProtocol(F_FSM_PROTOCOL, F_FSM_PROTOCOL_STRINGS);
 	registerProtocol(CM_PROTOCOL, 	 CM_PROTOCOL_STRINGS);
@@ -71,7 +73,7 @@ GCFEvent::TResult MgrTest::doTest(GCFEvent& event, GCFPortInterface& port)
 		ASSERTSTR(itsClaimMgrTask, "Can't construct a claimMgrTask");
 
 		LOG_DEBUG_STR("=@=@= Calling claimManager for 'Observation7'");
-		itsClaimMgrTask->claimObject("Observation", "LOFAR_ObsSW_Observation7", *itsTimerPort);
+		itsClaimMgrTask->claimObject("Observation", "LOFAR_ObsSW_Observation7", *itsMsgPort);
 		itsTimerPort->setTimer(10.0);
 		break;
 
