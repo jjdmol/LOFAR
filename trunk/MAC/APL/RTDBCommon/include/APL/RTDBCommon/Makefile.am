@@ -1,4 +1,4 @@
-INSTHDRS 			= RTDButilities.h
+INSTHDRS 			= RTDButilities.h ClaimMgrTask.h
 
 NOINSTHDRS 			=
 TCCHDRS 			=

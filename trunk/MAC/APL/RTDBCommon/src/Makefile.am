@@ -12,7 +12,7 @@ clean-local:
 
 bin_PROGRAMS = versionrtdbcommon
 
-INSTHDRS					= CM_Protocol.ph ClaimMgrTask.h
+INSTHDRS					= CM_Protocol.ph 
 NOINSTHDRS					=    
 BUILT_SOURCES 				= CM_Protocol.cc \
 							  CM_Protocol.ph

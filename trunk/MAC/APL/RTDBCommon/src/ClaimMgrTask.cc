@@ -26,8 +26,8 @@
 #include <GCF/PVSS/GCF_PVString.h>
 #include <GCF/RTDB/DP_Protocol.ph>
 
+#include <APL/RTDBCommon/ClaimMgrTask.h>
 #include "CM_Protocol.ph"
-#include "ClaimMgrTask.h"
 
 namespace LOFAR {
   using namespace GCF::TM;
@@ -219,7 +219,13 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 		}
 		if (itsFieldsReceived >= 3) {
 			LOG_DEBUG_STR("@@@@@ NewObjectName = " << itsResultDPname);
-			// ... BACK TO USER
+			// Report claimresult back to the user
+			CMClaimResultEvent	cmEvent;
+			cmEvent.typeName	= itsObjectType;
+			cmEvent.nameInAppl	= itsNameInAppl;
+			cmEvent.DPname		= itsResultDPname;
+			itsReplyPort->send(cmEvent);
+			// clear admin to reaceive a new calim request.
 			itsObjectType.clear();
 			itsNameInAppl.clear();
 			itsResultDPname.clear();
