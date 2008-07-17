@@ -142,10 +142,10 @@ string	toLower(string str)
 bool	StringToBool(const string& aString) throw(Exception)
 {
 	char	firstChar = aString.c_str()[0];
-	if ((firstChar == 't') || (firstChar == 'T') || (firstChar == '1'))
+	if ((firstChar == 't') || (firstChar == 'T') || (firstChar == '1') || (firstChar == 'Y') || (firstChar == 'y'))
 		return (true);
 
-	if ((firstChar == 'f') || (firstChar == 'F') || (firstChar == '0'))
+	if ((firstChar == 'f') || (firstChar == 'F') || (firstChar == '0') || (firstChar == 'N') || (firstChar == 'n'))
 		return (false);
 
 	THROW (Exception, aString + " is not a boolean value");
@@ -252,7 +252,7 @@ double	StringToDouble(const string& aString, const char* fmt) throw(Exception)
 // ----------------------- ATTENTION !!!----------------------------------
 // This routine has been copied to the Navigator software
 // (MAC/Navigator/scripts/libs/nav_usr/CS1/CS1_Common.ctl)
-// if you change anything struktural change the Navigator part also please
+// if you change anything structural change the Navigator part also please
 // -----------------------------------------------------------------------
 
 string compactedArrayString(const string&	orgStr)
@@ -272,11 +272,18 @@ string compactedArrayString(const string&	orgStr)
 	if (firstDigit == string::npos) {	// no digits? then return org string
 		return (orgStr);
 	}
-	string	elemName(strVector[0].substr(0,firstDigit));
-	string	scanMask(elemName+"%ld");
-	string	outMask (formatString("%s%%0%dld", elemName.c_str(), 
-											strVector[0].length() - elemName.length()));
+	// construct masks for scanning and formatting.
+	string	elemName	 (strVector[0].substr(0,firstDigit));
+	string	scanMask	 (elemName+"%ld");
+	string	rangeScanMask(scanMask+".."+scanMask);
+	bool	rangeElem 	 (strVector[0].find("..",0) != string::npos);
+	int		numberLength (strVector[0].length() - elemName.length());
+	if (rangeElem) {
+		numberLength = (numberLength-2)/2;
+	}
+	string	outMask 	 (formatString("%s%%0%dld", elemName.c_str(), numberLength));
 
+	// process all elements in the vector.
 	string 	result("[");
 	long 	prevValue(-2);
 	bool	firstElem(true);
@@ -285,44 +292,56 @@ string compactedArrayString(const string&	orgStr)
 	int		nrElems(strVector.size());
 	for (int idx = 0; idx < nrElems; idx++) {
 		long	value;
+		long	lastValue;
 		if (sscanf(strVector[idx].c_str(), scanMask.c_str(), &value) != 1) {
 			LOG_DEBUG_STR("Element " << strVector[idx] << " does not match mask " 
-						<< scanMask << ". Returning orignal string");
+						<< scanMask << ". Returning orignal string.");
 			return (orgStr);
 		}
 
-		if (value == prevValue+1) {		// contiquous numbering?
-			elemsInRange++;
-			prevValue = value;
+		// check for already compacted elements.
+		rangeElem = (strVector[idx].find("..",0) != string::npos);
+		if (rangeElem && (sscanf(strVector[idx].c_str(), rangeScanMask.c_str(), &value, &lastValue) != 2)) {
+			LOG_DEBUG_STR("RangeElement " << strVector[idx] << " does not match mask " 
+						<< rangeScanMask << ". Returning orignal string.");
+			return (orgStr);
+		}
+			
+		// contiquous numbering?
+		if (value == prevValue+1) {
+			elemsInRange += rangeElem ? (lastValue-value+1) : 1;
+			prevValue    =  rangeElem ? lastValue : value;
 			if (idx < nrElems-1) {		// when elements left
 				continue;
 			}
 			endOfArray = true;
 		}
 
-		// broken range
-		if (firstElem) {
+		// list not contiguous anymore, write results we collected
+		if (firstElem) {				// don't start with a comma.
 			result += formatString(outMask.c_str(), value);
-			firstElem = false;
+		}
+
+		if (elemsInRange == 1) {
+			result += "," + formatString(outMask.c_str(), value);
 		}
 		else {
-			if (elemsInRange == 1) {
-				result += "," + formatString(outMask.c_str(), value);
+			if (elemsInRange == 2) {		// don't compact xx03,xx04 to xx03..xx04
+				result += "," + formatString(outMask.c_str(), prevValue);
 			}
-			else {
-				if (elemsInRange == 2) {
-					result += "," + formatString(outMask.c_str(), prevValue);
-				}
-				else {
-					result += ".." + formatString(outMask.c_str(), prevValue);
-				}
-				if (!endOfArray) {
-					result += "," + formatString(outMask.c_str(), value);
+			else if (elemsInRange > 2) {
+				result += ".." + formatString(outMask.c_str(), prevValue);
+			}
+			if (!firstElem && !endOfArray) {
+				result += "," + formatString(outMask.c_str(), value);
+				if (rangeElem) {
+					result += ".." + formatString(outMask.c_str(), lastValue);
 				}
 			}
 		}
-		elemsInRange = 1;
-		prevValue    = value;
+		elemsInRange = rangeElem ? (lastValue-value+1) : 1;
+		prevValue    = rangeElem ? lastValue : value;
+		firstElem 	 = false;
 	}
 
 	return (result+"]");
@@ -338,7 +357,7 @@ string compactedArrayString(const string&	orgStr)
 // ----------------------- ATTENTION !!!----------------------------------
 // This routine has been copied to the Navigator software
 // (MAC/Navigator/scripts/libs/nav_usr/CS1/CS1_Common.ctl)
-// if you change anything struktural change the Navigator part also please
+// if you change anything structural change the Navigator part also please
 // -----------------------------------------------------------------------
 
 string expandedArrayString(const string&	orgStr)
