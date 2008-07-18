@@ -35,6 +35,7 @@
 #include <APL/APLCommon/StationInfo.h>
 #include <GCF/PVSS/GCF_PVTypes.h>
 #include <GCF/RTDB/DP_Protocol.ph>
+#include <APL/RTDBCommon/CM_Protocol.ph>
 #include <signal.h>
 
 #include "ObservationControl.h"
@@ -60,6 +61,7 @@ static ObservationControl*	thisObservationControl = 0;
 ObservationControl::ObservationControl(const string&	cntlrName) :
 	GCFTask 			((State)&ObservationControl::initial_state,cntlrName),
 	itsPropertySet		(0),
+	itsClaimMgrTask		(0),
 	itsChildControl		(0),
 	itsChildPort		(0),
 	itsParentControl	(0),
@@ -126,6 +128,10 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	// need port for timers.
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
+	// startup claimManager task
+	itsClaimMgrTask = ClaimMgrTask::instance();
+	ASSERTSTR(itsClaimMgrTask, "Can't construct a claimMgrTask");
+
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
 	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
  
@@ -175,7 +181,7 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 	LOG_INFO_STR(getName() << " now in state " << cts.name(newState));
 
 	if (itsPropertySet) {
-		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),
+		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),
 									 GCFPVString(cts.name(newState)));
 	}
 
@@ -190,53 +196,52 @@ void	ObservationControl::setState(CTState::CTstateNr		newState)
 GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
+	static bool	firstPass;
+
 	LOG_DEBUG_STR ("initial:" << eventName(event) << "@" << port.getName());
 
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
-    case F_INIT:
-   		break;
+    case F_ENTRY: {
+		itsTimerPort->cancelAllTimers();
+		itsTimerPort->setTimer(0.0);
+		firstPass = true;
+	}
+   	break;
 
-	case F_ENTRY: {
-		// Create 'Observationxxx' datapoint as top of the observation tree
-		string	propSetName(createPropertySetName(PSN_OBSERVATION, getName()));
-		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
-		itsBootPS = new RTDBPropertySet(propSetName.c_str(),
-										PST_OBSERVATION,
-										PSAT_RW,
-										this);
+	case F_TIMER: {
+		if (!firstPass) {
+			LOG_ERROR_STR("Can't get real name of databasePoint for "<<observationName(itsTreeID));
 		}
-		break;
-	  
-	case DP_CREATED: {
-			// NOTE: thsi function may be called DURING the construction of the PropertySet.
-			// Always exit this event in a way that GCF can end the construction.
-			DPCreatedEvent	dpEvent(event);
-			LOG_DEBUG_STR("Result of creating " << dpEvent.DPname << " = " << dpEvent.result);
-			itsTimerPort->cancelAllTimers();
-			itsTimerPort->setTimer(0.0);
-        }
-		break;
-	  
-	case F_TIMER: {		// must be timer that PropSet has set.
-		// update PVSS.
-		LOG_TRACE_FLOW ("top DP of observation created, going to prepDB state");
-		TRAN(ObservationControl::prepDB_state);				// go to next state.
-		}
-		break;
 
-	case F_CONNECTED:
-		break;
+		// Ask claimMgrTask to get the DPname of this observation
+		itsClaimMgrTask->claimObject("Observation", 
+									 "LOFAR_ObsSW_"+observationName(itsTreeID), port);
+		// will result in CM_CLAIM_RESULT event
 
-	case F_DISCONNECTED:
-		break;
-	
+		itsTimerPort->setTimer(10.0);		// set emergency timer.
+		firstPass = false;
+	}
+	break;
+
+	case CM_CLAIM_RESULT: {	
+		// TODO: implement error checking and retrying.
+		CMClaimResultEvent	cmEvent(event);
+		LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
+		itsObsDPname = cmEvent.DPname;
+		itsTimerPort->cancelAllTimers();
+//		TRAN(ObservationControl::prepDB_state);				// go to next state.
+		TRAN(ObservationControl::starting_state);			// go to next state.
+	}
+	break;
+
 	default:
 		LOG_DEBUG_STR ("initial, default");
 		status = GCFEvent::NOT_HANDLED;
-		break;
+	break;
 	}    
+
 	return (status);
 }
 
@@ -251,12 +256,13 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 GCFEvent::TResult ObservationControl::prepDB_state(GCFEvent& event, 
 													GCFPortInterface& port)
 {
+	GCFEvent::TResult status = GCFEvent::HANDLED;
+	
+#if 0  
 	uint32	gNrStations = 0;
 
 	LOG_DEBUG_STR ("prepDB:" << eventName(event) << "@" << port.getName());
 
-	GCFEvent::TResult status = GCFEvent::HANDLED;
-  
 	switch (event.signal) {
     case F_INIT:
    		break;
@@ -326,6 +332,7 @@ GCFEvent::TResult ObservationControl::prepDB_state(GCFEvent& event,
 		status = GCFEvent::NOT_HANDLED;
 		break;
 	}    
+#endif
 	return (status);
 }
 
@@ -386,58 +393,8 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
 		Observation		theObs(globalParameterSet());
-		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString("Initial"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,  GCFPVString(""));
-		itsPropertySet->setValue(PN_OBSCTRL_CLAIM_PERIOD,	GCFPVInteger(itsClaimPeriod));
-		itsPropertySet->setValue(PN_OBSCTRL_PREPARE_PERIOD,	GCFPVInteger(itsPreparePeriod));
-		itsPropertySet->setValue(PN_OBSCTRL_START_TIME,		GCFPVString(to_simple_string(itsStartTime)));
-		itsPropertySet->setValue(PN_OBSCTRL_STOP_TIME,		GCFPVString(to_simple_string(itsStopTime)));
-		itsPropertySet->setValue(PN_OBSCTRL_BAND_FILTER, 	GCFPVString(theObs.filter));
-		itsPropertySet->setValue(PN_OBSCTRL_NYQUISTZONE, 	GCFPVInteger(theObs.nyquistZone));
-		itsPropertySet->setValue(PN_OBSCTRL_ANTENNA_ARRAY,	GCFPVString(theObs.antennaArray));
-		itsPropertySet->setValue(PN_OBSCTRL_RECEIVER_LIST, GCFPVString(
-						compactedArrayString(globalParameterSet()->
-						getString("Observation.receiverList"))));
-		itsPropertySet->setValue(PN_OBSCTRL_SAMPLE_CLOCK, GCFPVInteger(theObs.sampleClock));
-		itsPropertySet->setValue(PN_OBSCTRL_MEASUREMENT_SET, GCFPVString(
-						globalParameterSet()->getString("Observation.MSNameMask")));
-		itsPropertySet->setValue(PN_OBSCTRL_STATION_LIST, GCFPVString(
-						compactedArrayString(globalParameterSet()->
-						getString("Observation.VirtualInstrument.stationList"))));
-//		itsPropertySet->setValue(PN_OBSCTRL_INPUT_NODE_LIST, GCFPVString(
-//						compactedArrayString(globalParameterSet()->
-//						getString("Observation.VirtualInstrument.inputNodeList"))));
-		itsPropertySet->setValue(PN_OBSCTRL_BGL_NODE_LIST, GCFPVString(
-						compactedArrayString(globalParameterSet()->
-						getString("Observation.VirtualInstrument.BGLNodeList"))));
-		itsPropertySet->setValue(PN_OBSCTRL_STORAGE_NODE_LIST, GCFPVString(
-						compactedArrayString(globalParameterSet()->
-						getString("Observation.VirtualInstrument.storageNodeList"))));
-
-		// for the beams we have to construct dyn arrays first.
-		GCFPValueArray		subbandArr;
-		GCFPValueArray		beamletArr;
-		GCFPValueArray		angle1Arr;
-		GCFPValueArray		angle2Arr;
-		GCFPValueArray		dirTypesArr;
-		for (uint32	i(0); i < theObs.beams.size(); i++) {
-			stringstream		os;
-			writeVector(os, theObs.beams[i].subbands);
-			subbandArr.push_back  (new GCFPVString(os.str()));
-			os.clear();
-			writeVector(os, theObs.beams[i].beamlets);
-			beamletArr.push_back  (new GCFPVString(os.str()));
-			angle1Arr.push_back	  (new GCFPVDouble(theObs.beams[i].angle1));
-			angle2Arr.push_back	  (new GCFPVDouble(theObs.beams[i].angle2));
-			dirTypesArr.push_back (new GCFPVString(theObs.beams[i].directionType));
-		}
-
-		// Finally we can write those value to PVSS as well.
-		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_SUBBAND_LIST,		GCFPVDynArr(LPT_DYNSTRING, subbandArr));
-		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_BEAMLET_LIST,		GCFPVDynArr(LPT_DYNSTRING, beamletArr));
-		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_ANGLE1,			GCFPVDynArr(LPT_DYNDOUBLE, angle1Arr));
-		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, angle2Arr));
-		itsPropertySet->setValue(PN_OBSCTRL_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dirTypesArr));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("Initial"));
+		itsPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
 
 		// Start ChildControl task
 		LOG_DEBUG ("Enabling ChildControl task");
@@ -700,8 +657,8 @@ GCFEvent::TResult ObservationControl::finishing_state(GCFEvent& 		event,
 		itsParentPort->send(msg);
 
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("Finished"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("Finished"));
+		itsPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
 
 		itsTimerPort->setTimer(1L);	// give PVSS task some time to update the DB.
 		break;
@@ -904,29 +861,28 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 		DPChangedEvent	dpEvent(event);
 
 		// don't watch state and error fields.
-		if ((strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_STATE) != 0) || 
-			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_ERROR) != 0) ||
-			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_CURACT) != 0) ||
-			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_LOGMSG) != 0)) {
+		if ((strstr(dpEvent.DPname.c_str(), PN_FSM_ERROR) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PN_FSM_CURRENT_ACTION) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PN_FSM_LOG_MSG) != 0)) {
 			return;
 		}
  
 		// Change of claim_period?
-		if (strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_CLAIM_PERIOD) != 0) {
+		if (strstr(dpEvent.DPname.c_str(), PN_OBS_CLAIM_PERIOD) != 0) {
 			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
 			LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod << " to " << newVal);
 			itsClaimPeriod = newVal;
 		}
 		// Change of prepare_period?
-		else if (strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_PREPARE_PERIOD) != 0) {
+		else if (strstr(dpEvent.DPname.c_str(), PN_OBS_PREPARE_PERIOD) != 0) {
 			uint32  newVal = ((GCFPVInteger*) (dpEvent.value._pValue))->getValue();
 			LOG_INFO_STR ("Changing PreparePeriod from " << itsPreparePeriod << " to " << newVal);
 			itsPreparePeriod = newVal;
 		}
 
 		// Change of start or stop time?
-		if ((strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_START_TIME) != 0)  || 
-		    (strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_STOP_TIME) != 0)) {
+		if ((strstr(dpEvent.DPname.c_str(), PN_OBS_START_TIME) != 0)  || 
+		    (strstr(dpEvent.DPname.c_str(), PN_OBS_STOP_TIME) != 0)) {
 			string  newVal = ((GCFPVString*) (dpEvent.value._pValue))->getValue();
 			ptime	newTime;
 			try {
@@ -936,7 +892,7 @@ void ObservationControl::_databaseEventHandler(GCFEvent& event)
 				LOG_DEBUG_STR(newVal << " is not a legal time!!!");
 				return;
 			}
-			if (strstr(dpEvent.DPname.c_str(), PN_OBSCTRL_START_TIME) != 0) { 
+			if (strstr(dpEvent.DPname.c_str(), PN_OBS_START_TIME) != 0) { 
 				LOG_INFO_STR ("Changing startTime from " << to_simple_string(itsStartTime) << " to " << newVal);
 				itsStartTime = newTime;
 			}

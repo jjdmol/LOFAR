@@ -216,7 +216,7 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		itsPropertySet->setValue(PN_FSM_ERROR,				  GCFPVString  (""));
 		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,    	  GCFPVBool    (false));
 		itsPropertySet->setValue(PN_MS_OTDB_LAST_POLL,    	  GCFPVString  (""));
-		itsPropertySet->setValue(PN_MS_OTDB_POLLINTERVAL, 	  GCFPVInteger (itsActiveItv));
+		itsPropertySet->setValue(PN_MS_OTDB_POLLINTERVAL, 	  GCFPVInteger (itsPlannedItv));
 		GCFPValueArray	emptyArr;
 		itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,   GCFPVDynArr(LPT_STRING, emptyArr));
 		itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS,  GCFPVDynArr(LPT_STRING, emptyArr));
@@ -580,12 +580,12 @@ void MACScheduler::_updatePlannedList()
 
 	// get new list (list is ordered on starttime)
 	vector<OTDBtree> plannedDBlist = itsOTDBconnection->getTreeGroup(1, itsPlannedPeriod);	// planned observations
-	if (plannedDBlist.empty()) {
-		return;
-	}
 
-	LOG_DEBUG(formatString("OTDBCheck:First planned observation is at %s (tree=%d)", 
+	if (!plannedDBlist.empty()) {
+		LOG_DEBUG(formatString("OTDBCheck:First planned observation is at %s (tree=%d)", 
 				to_simple_string(plannedDBlist[0].starttime).c_str(), plannedDBlist[0].treeID()));
+	}
+	// NOTE: do not exit routine on emptylist: we need to write an empty list to clear the DB
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
 	GCFPValueArray	plannedArr;
@@ -598,7 +598,7 @@ void MACScheduler::_updatePlannedList()
 	while (idx < listSize)  {
 		// construct name and timings info for observation
 		treeIDType		obsID = plannedDBlist[idx].treeID();
-		string			obsName(formatString("Observation_%d", obsID));
+		string			obsName(observationName(obsID));
 
 		// must we claim this observation at the claimMgr?
 		OLiter	prepIter = itsPreparedObs.find(obsID);
@@ -606,7 +606,7 @@ void MACScheduler::_updatePlannedList()
 			// create a ParameterFile for this Observation
 			TreeMaintenance		tm(itsOTDBconnection);
 			OTDBnode			topNode = tm.getTopNode(obsID);
-			string				filename(formatString("%s/Observation_%d", LOFAR_SHARE_LOCATION, obsID));
+			string				filename(observationParset(obsID));
 			if (!tm.exportTree(obsID, topNode.nodeID(), filename)) {
 				LOG_ERROR_STR ("Cannot create ParameterSet '" << filename << 
 								"' for new observatio. Observation CANNOT BE STARTED!");
@@ -661,7 +661,7 @@ void MACScheduler::_updateActiveList()
 	vector<OTDBtree> activeDBlist = itsOTDBconnection->getTreeGroup(2, 0);
 	if (activeDBlist.empty()) {
 		LOG_DEBUG ("No active Observations");
-		return;
+		// NOTE: do not exit routine on emptylist: we need to write an empty list to clear the DB
 	}
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
@@ -670,7 +670,7 @@ void MACScheduler::_updateActiveList()
 	uint32			idx = 0;
 	while (idx < listSize)  {
 		// construct name and timings info for observation
-		string		obsName(formatString("Observation_%d", activeDBlist[idx].treeID()));
+		string		obsName(observationName(activeDBlist[idx].treeID()));
 		activeArr.push_back(new GCFPVString(obsName));
 
 		// remove obs from planned-list if its still their.
@@ -682,6 +682,7 @@ void MACScheduler::_updateActiveList()
 		idx++;
 	} // while
 
+	// Finally we can pass the list with active observations to PVSS.
 	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,	GCFPVDynArr(LPT_DYNSTRING, activeArr));
 }
 
@@ -696,7 +697,7 @@ void MACScheduler::_updateFinishedList()
 	vector<OTDBtree> finishedDBlist = itsOTDBconnection->getTreeGroup(3, itsFinishedPeriod);
 	if (finishedDBlist.empty()) {
 		LOG_DEBUG ("No finished Observations");
-		return;
+		// NOTE: do not exit routine on emptylist: we need to write an empty list to clear the DB
 	}
 
 	// walk through the list, prepare PVSS for the new obs, update own admin lists.
@@ -705,12 +706,12 @@ void MACScheduler::_updateFinishedList()
 	uint32			idx = 0;
 	while (idx < listSize)  {
 		// construct name and timings info for observation
-		string		obsName(formatString("Observation_%d", finishedDBlist[idx].treeID()));
+		string		obsName(observationName(finishedDBlist[idx].treeID()));
 		finishedArr.push_back(new GCFPVString(obsName));
 		idx++;
 	} // while
 
-	// write those value to PVSS as well.
+	// Finally we can pass the list with finished observations to PVSS.
 	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS,
 								GCFPVDynArr(LPT_DYNSTRING, finishedArr));
 }
