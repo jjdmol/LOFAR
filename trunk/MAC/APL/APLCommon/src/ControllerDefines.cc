@@ -213,6 +213,22 @@ int32	getControllerType	(const string&	controllerName)
 }
 
 //
+// observationName(obsID)
+//
+string observationName(int	obsID)
+{
+	return (formatString("Observation%d", obsID));
+}
+
+//
+// observationParset(obsID)
+//
+string observationParset(int	obsID)
+{
+	return (formatString("%s/%s", LOFAR_SHARE_LOCATION, observationName(obsID).c_str()));
+}
+
+//
 // createPropertySetName(propSetMask)
 //
 //  A PropSetMask may contain the markers:
