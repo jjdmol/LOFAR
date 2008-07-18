@@ -46,6 +46,8 @@
 #include <OTDB/OTDBnode.h>
 #include <APS/ParameterSet.h>
 
+#include "ObsClaimer.h"
+
 // forward declaration
 
 namespace LOFAR {
@@ -94,38 +96,59 @@ private:
 	MACScheduler(const MACScheduler&);
    	MACScheduler& operator=(const MACScheduler&);
 
-	Observation* _findActiveObservation(const string&	name);
-	void _addActiveObservation(const Observation&	newObs);
-	void _removeActiveObservation(const string& name);
    	void _connectedHandler(GCFPortInterface& port);
    	void _disconnectedHandler(GCFPortInterface& port);
    	void _databaseEventHandler(GCFEvent& event);
    	void _doOTDBcheck();
+	void _updatePlannedList();
+	void _updateActiveList();
+	void _updateFinishedList();
 
-   	RTDBPropertySet*		itsPropertySet;
+	// ----- DATA MEMBERS -----
+	// Our own propertySet in PVSS to inform the operator
+   	RTDBPropertySet*	itsPropertySet;
 
-	// Information about the Observations. Not used yet.
-	vector<Observation>			itsObservations;
-	GCF::PVSS::GCFPValueArray	itsPVSSObsList;
+	// pointers to other tasks
+	ChildControl*		itsChildControl;
+	GCFITCPort*			itsChildPort;
+	ObsClaimer*			itsClaimerTask;
+	GCFITCPort*			itsClaimerPort;
+
+	//       <ctlrName, ObsId>
+	typedef map<string, int>			CtlrMap;
+	typedef map<string, int>::iterator	CMiter;
+	CtlrMap				itsControllerMap;		// Own admin
+
+	// Define a list in which we keep the obsID's of the observations we prepared PVSS for.
+	// When an obs is in the list we at least have sent a claim request to PVSS. When the 
+	// second value it true we succeeded the claim and we don't have to claim it again.
+	typedef map<int /*obsID*/, bool /*prepReady*/>	ObsList;
+	typedef map<int ,bool>::iterator				OLiter;
+	ObsList				itsPreparedObs;			// Observations we already prepared PVSS for.
 
 	// Ports for StartDaemon and ObservationControllers.
-   	GCFTimerPort*			itsTimerPort;			// for timers
-
-	// pointer to child control task
-	ChildControl*			itsChildControl;
-	GCFITCPort*				itsChildPort;
+   	GCFTimerPort*		itsTimerPort;			// for timers
 
 	// Second timer used for internal timing.
-	uint32					itsSecondTimer;			// 1 second hardbeat
+	uint32				itsSecondTimer;			// 1 second heartbeat
+
+	// Timer admin for the lists
+	uint32				itsPlannedItv;			// interval to update the planned obs list
+	uint32				itsActiveItv;			// interval to update the active obs list
+	uint32				itsFinishedItv;			// interval to update the finished obs list
+	uint32				itsPlannedPeriod;		// period a planned observation is visible
+	uint32				itsFinishedPeriod;		// period a finished observation is visible
+
+	int32				itsNextPlannedTime;		// time to update the planned obs list again
+	int32				itsNextActiveTime;		// time to update the active obs list again
+	int32				itsNextFinishedTime;	// time to update the finished obs list again
 
 	// Scheduling settings
-	uint32					itsQueuePeriod;			// period between queueing and start
-	uint32					itsClaimPeriod;			// period between claiming and start
+	uint32				itsQueuePeriod;			// period between queueing and start
+	uint32				itsClaimPeriod;			// period between claiming and start
       
 	// OTDB related variables.
    	OTDB::OTDBconnection*	itsOTDBconnection;		// connection to the database
-	uint32					itsOTDBpollInterval;	// itv between OTDB polls
-	int32					itsNextOTDBpolltime;	// when next OTDB poll is scheduled
 
 };
 

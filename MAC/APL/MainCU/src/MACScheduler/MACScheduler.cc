@@ -1,6 +1,6 @@
 //#  MACScheduler.cc: Implementation of the MAC Scheduler task
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2004-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -22,6 +22,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/SystemUtil.h>
+#include <Common/StringUtil.h>
 #include <Common/Version.h>
 
 #include <APS/ParameterSet.h>
@@ -33,6 +34,7 @@
 #include <APL/APLCommon/StationInfo.h>
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <GCF/RTDB/DP_Protocol.ph>
+#include <APL/RTDBCommon/CM_Protocol.ph>
 #include <OTDB/TreeStateConv.h>
 #include <signal.h>
 
@@ -59,27 +61,32 @@ static MACScheduler* pMacScheduler = 0;
 // MACScheduler()
 //
 MACScheduler::MACScheduler() :
-	GCFTask 			((State)&MACScheduler::initial_state,string(MS_TASKNAME)),
+	GCFTask 			((State)&MACScheduler::initial_state,string("MACScheduler")),
 	itsPropertySet		(0),
-	itsObservations		(),
-	itsPVSSObsList		(),
-	itsTimerPort		(0),
 	itsChildControl		(0),
 	itsChildPort		(0),
+	itsClaimerTask		(0),
+	itsClaimerPort		(0),
+	itsTimerPort		(0),
 	itsSecondTimer		(0),
-	itsQueuePeriod		(0),
-	itsClaimPeriod		(0),
-	itsOTDBconnection	(0),
-	itsOTDBpollInterval	(0),
-	itsNextOTDBpolltime (0)
+	itsNextPlannedTime	(0),
+	itsNextActiveTime	(0),
+	itsNextFinishedTime	(0),
+	itsOTDBconnection	(0)
 {
 	LOG_TRACE_OBJ ("MACscheduler construction");
 
-	LOG_INFO_STR("MACProcessScope: " << globalParameterSet()->getString("prefix"));
+	LOG_INFO_STR("MACProcessScope: " << PSN_MAC_SCHEDULER);
 	LOG_INFO(Version::getInfo<MainCUVersion>("MACScheduler"));
 
-	// Readin some parameters from the ParameterSet.
-	itsOTDBpollInterval = globalParameterSet()->getTime("OTDBpollInterval");
+	// Read timersettings from the ParameterSet
+	itsPlannedItv	 = globalParameterSet()->getTime("pollIntervalPlanned", 60);
+	itsActiveItv	 = globalParameterSet()->getTime("pollIntervalExecute", 5);
+	itsFinishedItv	 = globalParameterSet()->getTime("pollIntervalFinished", 60);
+	itsPlannedPeriod = globalParameterSet()->getTime("plannedPeriod",  86400) / 60;	// in minutes
+	itsFinishedPeriod= globalParameterSet()->getTime("finishedPeriod", 86400) / 60; // in minutes
+
+	// Read the schedule periods for starting observations.
 	itsQueuePeriod 		= globalParameterSet()->getTime("QueuePeriod");
 	itsClaimPeriod 		= globalParameterSet()->getTime("ClaimPeriod");
 
@@ -90,13 +97,17 @@ MACScheduler::MACScheduler() :
 	ASSERTSTR(itsChildPort, "Cannot allocate ITCport for childcontrol");
 	itsChildPort->open();		// will result in F_CONNECTED
 
+	// create an PVSSprepare Task
+	itsClaimerTask = new ObsClaimer(this);
+	ASSERTSTR(itsClaimerTask, "Cannot construct a ObsClaimerTask");
+	itsClaimerPort = new GCFITCPort (*this, *itsClaimerTask, "ObsClaimerPort",
+									GCFPortInterface::SAP, CM_PROTOCOL);
+
 	// need port for timers
 	itsTimerPort = new GCFTimerPort(*this, "Timerport");
 
-	itsObservations.reserve(10);		// already reserve memory for 10 observations.
-
 	registerProtocol(CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	registerProtocol(DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
+	registerProtocol(DP_PROTOCOL, 		  DP_PROTOCOL_STRINGS);
 }
 
 
@@ -135,12 +146,13 @@ void MACScheduler::sigintHandler(int signum)
 void MACScheduler::_databaseEventHandler(GCFEvent& event)
 {
 
-	LOG_DEBUG_STR ("_databaseEventHandler:" << eventName(event));
+//	LOG_DEBUG_STR ("_databaseEventHandler:" << eventName(event));
 
 	switch(event.signal) {
 	case DP_CHANGED: {
 		DPChangedEvent	dpEvent(event);
 
+#if 0
 		// TODO: implement something usefull.
 		if (strstr(dpEvent.DPname.c_str(), PVSSNAME_MS_QUEUEPERIOD) != 0) {
 			uint32	newVal = ((GCFPVUnsigned*) (dpEvent.value._pValue))->getValue();
@@ -152,6 +164,7 @@ void MACScheduler::_databaseEventHandler(GCFEvent& event)
 			LOG_INFO_STR ("Changing ClaimPeriod from " << itsClaimPeriod << " to " << newVal);
 			itsClaimPeriod = newVal;
 		}
+#endif
 	}  
 	break;
 
@@ -199,12 +212,15 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 	case F_TIMER: {		// must be timer that PropSet is enabled.
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsPropertySet->setValue(PVSSNAME_FSM_CURACT,     GCFPVString  ("initial"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,      GCFPVString  (""));
-		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,    GCFPVBool    (false));
-		itsPropertySet->setValue(PN_MS_OTDB_LAST_POLL,    GCFPVString  (""));
-		itsPropertySet->setValue(PN_MS_OTDB_POLLINTERVAL, GCFPVInteger (itsOTDBpollInterval));
-		itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION,		  GCFPVString  ("initial"));
+		itsPropertySet->setValue(PN_FSM_ERROR,				  GCFPVString  (""));
+		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,    	  GCFPVBool    (false));
+		itsPropertySet->setValue(PN_MS_OTDB_LAST_POLL,    	  GCFPVString  (""));
+		itsPropertySet->setValue(PN_MS_OTDB_POLLINTERVAL, 	  GCFPVInteger (itsActiveItv));
+		GCFPValueArray	emptyArr;
+		itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,   GCFPVDynArr(LPT_STRING, emptyArr));
+		itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS,  GCFPVDynArr(LPT_STRING, emptyArr));
+		itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS, GCFPVDynArr(LPT_STRING, emptyArr));
 
       
 		// Try to connect to the SAS database.
@@ -227,6 +243,11 @@ GCFEvent::TResult MACScheduler::initial_state(GCFEvent& event, GCFPortInterface&
 		LOG_DEBUG ("Enabling ChildControltask");
 		itsChildControl->openService(MAC_SVCMASK_SCHEDULERCTRL, 0);
 		itsChildControl->registerCompletionPort(itsChildPort);
+
+		// setup initial schedule: first planned, next run active, second run finished
+		itsNextPlannedTime  = time(0);
+		itsNextActiveTime   = itsNextPlannedTime +   itsPlannedItv;
+		itsNextFinishedTime = itsNextPlannedTime + 2*itsPlannedItv;
 
 		TRAN(MACScheduler::recover_state);				// go to next state.
 		}
@@ -265,8 +286,8 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("recover"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("recover"));
+		itsPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
 
 		//
 		// TODO: do recovery
@@ -287,7 +308,7 @@ GCFEvent::TResult MACScheduler::recover_state(GCFEvent& event, GCFPortInterface&
 //
 // active_state(event, port)
 //
-// Normal operation state. Check OTDB every OTDBpollInterval seconds and control
+// Normal operation state. Check OTDB every itsActiveItv seconds and control
 // the running observations.
 //
 GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& port)
@@ -308,10 +329,10 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		signal (SIGTERM, MACScheduler::sigintHandler);	// kill
 
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("active"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("active"));
+		itsPropertySet->setValue(string(PN_FSM_ERROR),GCFPVString(""));
 
-		// Timers must be connected to ports, so abuse serverPort for second timer.
+		// Start heartbeat timer.
 		itsSecondTimer = itsTimerPort->setTimer(1L);
 		break;
 	}
@@ -335,16 +356,31 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		_databaseEventHandler(event);
 		break;
 
+	case CM_CLAIM_RESULT: {
+			// some observation was claimed by the claimMgr. Update our prepare_list.
+			CMClaimResultEvent	cmEvent(event);
+			LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
+			ltrim(cmEvent.nameInAppl, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_");
+			int		obsID = atoi(cmEvent.nameInAppl.c_str());
+			LOG_DEBUG_STR("PVSS preparation of observation " << obsID << " ready.");
+			itsPreparedObs[obsID] = true;
+		}
+		break;
+
 	case F_TIMER: {		// secondTimer or reconnectTimer.
 		GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
 		if (timerEvent.id == itsSecondTimer) {
 			// time to poll the OTDB?
-			if (time(0) >= itsNextOTDBpolltime) {
+			// Note: We assume here that the PlannedItv is smaller than the ActiveItv and the FinishedItv.
+			//		 When it is not smaller (very unlikely) than the ActiveItv and FinishedItv those two
+			//		 intervals will default to the PlannedItv.
+			if (time(0) >= itsNextPlannedTime) {		// check shortest interval
 				_doOTDBcheck();
+
 				// reinit polltime at multiple of intervaltime.
 				// (=more change to hit hh.mm:00)
-				itsNextOTDBpolltime = time(0) + itsOTDBpollInterval;
-				itsNextOTDBpolltime -= (itsNextOTDBpolltime % itsOTDBpollInterval);
+				itsNextPlannedTime = time(0) + itsPlannedItv;
+				itsNextPlannedTime -= (itsNextPlannedTime % itsPlannedItv);
 			}
 			port.cancelTimer(itsSecondTimer);
 			itsSecondTimer = port.setTimer(1.0);
@@ -359,7 +395,10 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 	}
 
 	// -------------------- EVENTS FROM CHILDCONTROL --------------------
-
+	//
+	// That must be events from the ObservationControllers that are currently 
+	// started or running.
+	//
 	case CONTROL_STARTED: {
 		// Child control received a message from the startDaemon that the
 		// observationController was started (or not)
@@ -367,30 +406,13 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		if (msg.successful) {
 			LOG_DEBUG_STR("Start of " << msg.cntlrName << 
 						  " was successful, waiting for connection.");
-#if 0
-// TODO: this code became obsolete because the Obscontroller now sends
-// CONTROL_CONNECTED events.
-			// ---
-			// Ok, controller is really up, update SAS so that obs will not appear in
-			// in the SAS list again.
-			Observation*	theObs(_findActiveObservation(msg.cntlrName));
-			if (!theObs) {
-				LOG_WARN_STR("Cannot find controller " << msg.cntlrName << 	
-							  ". Can't update the SAS database");
-				break;
-			}
-			OTDB::TreeMaintenance	tm(itsOTDBconnection);
-			TreeStateConv			tsc(itsOTDBconnection);
-			tm.setTreeState(theObs->obsID, tsc.get("queued"));
-			// ---
-#endif
 		}
 		else {
 			LOG_ERROR_STR("Observation controller " << msg.cntlrName <<
 						  " could not be started");
 			LOG_INFO_STR("Observation is be removed from administration, " << 
 						 "restart will occur in next cycle");
-			_removeActiveObservation(msg.cntlrName);
+			itsControllerMap.erase(msg.cntlrName);
 		}
 		break;
 	}
@@ -402,15 +424,15 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 
 		// Ok, controller is really up, update SAS so that obs will not appear in
 		// in the SAS list again.
-		Observation*	theObs(_findActiveObservation(conEvent.cntlrName));
-		if (!theObs) {
+		CMiter	theObs(itsControllerMap.find(conEvent.cntlrName));
+		if (theObs == itsControllerMap.end()) {
 			LOG_WARN_STR("Cannot find controller " << conEvent.cntlrName << 	
 						  ". Can't update the SAS database");
 			break;
 		}
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
-		tm.setTreeState(theObs->obsID, tsc.get("queued"));
+		tm.setTreeState(theObs->second, tsc.get("queued"));
 		break;
 	}
 
@@ -420,8 +442,8 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		LOG_DEBUG_STR("Received QUITED(" << quitedEvent.cntlrName << "," << quitedEvent.result << ")");
 
 		// update SAS database.
-		Observation*	theObs(_findActiveObservation(quitedEvent.cntlrName));
-		if (!theObs) {
+		CMiter	theObs(itsControllerMap.find(quitedEvent.cntlrName));
+		if (theObs == itsControllerMap.end()) {
 			LOG_WARN_STR("Cannot find controller " << quitedEvent.cntlrName << 	
 						  ". Can't update the SAS database");
 			break;
@@ -429,31 +451,31 @@ GCFEvent::TResult MACScheduler::active_state(GCFEvent& event, GCFPortInterface& 
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
 		if (quitedEvent.result == CT_RESULT_NO_ERROR) {
-			tm.setTreeState(theObs->obsID, tsc.get("finished"));
+			tm.setTreeState(theObs->second, tsc.get("finished"));
 		}
 		else {
-			tm.setTreeState(theObs->obsID, tsc.get("aborted"));
+			tm.setTreeState(theObs->second, tsc.get("aborted"));
 		}
 
 		// update our administration
 		LOG_DEBUG_STR("Removing observation " << quitedEvent.cntlrName << 
 						" from activeList");
-		_removeActiveObservation(quitedEvent.cntlrName);
+//		_removeActiveObservation(quitedEvent.cntlrName);
 		break;
 	}
 
 	case CONTROL_RESUMED: {
 		// update SAS database.
 		CONTROLResumedEvent		msg(event);
-		Observation*			theObs(_findActiveObservation(msg.cntlrName));
-		if (!theObs) {
+		CMiter	theObs(itsControllerMap.find(msg.cntlrName));
+		if (theObs == itsControllerMap.end()) {
 			LOG_WARN_STR("Cannot find controller " << msg.cntlrName << 	
 						  ". Can't update the SAS database");
 			break;
 		}
 		OTDB::TreeMaintenance	tm(itsOTDBconnection);
 		TreeStateConv			tsc(itsOTDBconnection);
-		tm.setTreeState(theObs->obsID, tsc.get("active"));
+		tm.setTreeState(theObs->second, tsc.get("active"));
 	}
 
 	// NOTE: ignore all other CONTROL events, we are not interested in the
@@ -485,9 +507,9 @@ GCFEvent::TResult MACScheduler::finishing_state(GCFEvent& event, GCFPortInterfac
 
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("finished"));
-		itsPropertySet->setValue(string(PVSSNAME_FSM_ERROR), GCFPVString(""));
-		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,       GCFPVBool  (false));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("finished"));
+		itsPropertySet->setValue(PN_FSM_ERROR, 			GCFPVString(""));
+		itsPropertySet->setValue(PN_MS_OTDB_CONNECTED,  GCFPVBool  (false));
 
 		itsTimerPort->setTimer(1L);
 		break;
@@ -524,190 +546,173 @@ void MACScheduler::finish()
 void MACScheduler::_doOTDBcheck()
 {
 	// update PVSS database with polltime
-	ptime	currentTime = from_time_t(time(0));
-	itsPropertySet->setValue(string(PN_MS_OTDB_LAST_POLL),
-										GCFPVString(to_simple_string(currentTime)));
+	time_t		now = time(0);
+	ptime	currentTime = from_time_t(now);
+	itsPropertySet->setValue(string(PN_MS_OTDB_LAST_POLL), GCFPVString(to_simple_string(currentTime)));
+
+	// always update planned list because we might need to start some of those
+	// (and we assumed that the PlannedItv was the smallest)
+	_updatePlannedList();
+
+	// update active lists when its time to do so.
+	if (now >= itsNextActiveTime) {
+		_updateActiveList();
+		while (itsNextActiveTime <= now) {
+			itsNextActiveTime += itsActiveItv;
+		}
+	}
+
+	// update finished lists when its time to do so.
+	if (now >= itsNextFinishedTime) {
+		_updateFinishedList();
+		while (itsNextFinishedTime <= now) {
+			itsNextFinishedTime += itsFinishedItv;
+		}
+	}
+}
+
+//
+// _updatePlannedList()
+//
+void MACScheduler::_updatePlannedList()
+{
+	LOG_DEBUG("_updatePlannedList()");
 
 	// get new list (list is ordered on starttime)
-	vector<OTDBtree> newTreeList = itsOTDBconnection->getExecutableTrees();
-	if (newTreeList.empty()) {
+	vector<OTDBtree> plannedDBlist = itsOTDBconnection->getTreeGroup(1, itsPlannedPeriod);	// planned observations
+	if (plannedDBlist.empty()) {
 		return;
 	}
 
-	LOG_DEBUG(formatString("OTDBCheck:First observation is at %s (tree=%d)", 
-				to_simple_string(newTreeList[0].starttime).c_str(), newTreeList[0].treeID()));
+	LOG_DEBUG(formatString("OTDBCheck:First planned observation is at %s (tree=%d)", 
+				to_simple_string(plannedDBlist[0].starttime).c_str(), plannedDBlist[0].treeID()));
 
-	// walk through the list and bring each observation in the right state when necc.
-	uint32		listSize = newTreeList.size();
-	uint32		idx = 0;
+	// walk through the list, prepare PVSS for the new obs, update own admin lists.
+	GCFPValueArray	plannedArr;
+	uint32			listSize = plannedDBlist.size();
+	uint32			idx = 0;
+	time_t			now = time(0);
+	ptime			currentTime = from_time_t(now);
 	ASSERTSTR (currentTime != not_a_date_time, "Can't determine systemtime, bailing out");
 
 	while (idx < listSize)  {
-		// timediff = time to go before start of Observation
-		time_duration	timediff = newTreeList[idx].starttime - currentTime;
-		LOG_TRACE_VAR_STR("timediff=" << timediff);
+		// construct name and timings info for observation
+		treeIDType		obsID = plannedDBlist[idx].treeID();
+		string			obsName(formatString("Observation_%d", obsID));
 
-		// when queuetime is not reached yet we are finished with the list.
-		if (timediff > seconds(itsQueuePeriod)) {
-			break;
-		}
-
-		// note: as soon as observation is up it will not show up anymore in the
-		// SAS list because we changed the state.
-		// If startup is in progress, it is in the SAS list but also in our admin.
-		string		cntlrName = controllerName(CNTLRTYPE_OBSERVATIONCTRL, 
-												0, newTreeList[idx].treeID());
-		if (_findActiveObservation(cntlrName)) {
-			LOG_DEBUG_STR("Skipping " << cntlrName);
-			idx++;
-			continue;
-		}
-
-		// get current state of Observation
-//		CTState		cts;
-//		CTState::CTstateNr	curState      = itsChildControl->getCurrentState(cntlrName);
-//		LOG_DEBUG_STR(cntlrName << ":cur=" << cts.name(curState));
-
-		// When in startup or claimtime we should try to start the controller.
-//		if ((timediff > seconds(0)) && (curState < CTState::CREATED)) {
-
-		// Obs is unknown so try to start it up as long as we didn't reach its starttime.
-		if (timediff > seconds(0)) {
-			// Let database construct the parset for the whole observation
-			OTDB::TreeMaintenance	tm(itsOTDBconnection);
-			OTDB::treeIDType		obsID = newTreeList[idx].treeID();
-			OTDBnode				topNode = tm.getTopNode(obsID);
-			// NOTE: this name must be the same as in the ChildControl.
-			string					filename = formatString("%s/Observation_%d", 
-														LOFAR_SHARE_LOCATION, obsID);
+		// must we claim this observation at the claimMgr?
+		OLiter	prepIter = itsPreparedObs.find(obsID);
+		if ((prepIter == itsPreparedObs.end()) || (prepIter->second == false)) {
+			// create a ParameterFile for this Observation
+			TreeMaintenance		tm(itsOTDBconnection);
+			OTDBnode			topNode = tm.getTopNode(obsID);
+			string				filename(formatString("%s/Observation_%d", LOFAR_SHARE_LOCATION, obsID));
 			if (!tm.exportTree(obsID, topNode.nodeID(), filename)) {
-				LOG_ERROR_STR ("Cannot create parset file " << filename << 
-							" for new observation. Observation CANNOT BE STARTED!");
+				LOG_ERROR_STR ("Cannot create ParameterSet '" << filename << 
+								"' for new observatio. Observation CANNOT BE STARTED!");
 			}
 			else {
-				// fire request for new controller, will result in CONTROL_STARTED
+				// Claim a DP in PVSS and write obssettings to it so the operator can see it.
+				LOG_DEBUG_STR("Requesting preparation of PVSS for " << obsName);
+				itsClaimerTask->prepareObservation(obsName);
+				itsPreparedObs[obsID] = false;	// requested claim but no answer yet.
+			}
+		}
+
+		// always add to PVSS list.
+		plannedArr.push_back(new GCFPVString(obsName));
+	
+		// should this observation (have) be(en) started?
+		time_duration	timeBeforeStart(plannedDBlist[idx].starttime - currentTime);
+//		LOG_TRACE_VAR_STR(obsName << " starts over " << timeBeforeStart << " seconds");
+		if (timeBeforeStart > seconds(0) && timeBeforeStart <= seconds(itsQueuePeriod)) {
+			if (itsPreparedObs[obsID] == false) {
+				LOG_ERROR_STR("Observation " << obsID << " must be started but is not claimed yet.");
+			}
+			else {
+				// starttime of observation lays in queuePeriod. Start the controller-chain,
+				// this will result in CONTROL_STARTED event in our main task
+				// Note: as soon as the ObservationController has reported itself to the MACScheduler
+				//		 the observation will not be returned in the 'plannedDBlist' anymore.
+				LOG_DEBUG_STR("Requesting start of " << obsName);
 				itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
-											obsID, 
+											plannedDBlist[idx].treeID(), 
 											0,		// instanceNr
 											myHostname(true));
 				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
-
-				// register this Observation
-				ParameterSet	obsPS(filename);
-				Observation		newObs(&obsPS);
-				newObs.name   = cntlrName;
-				newObs.obsID = obsID;
-				_addActiveObservation(newObs);
-				LOG_DEBUG_STR("Observation " << cntlrName << " added to active Observations");
 			}
-
-			// TODO: due to problems with the PA we only start one obs every cycle.
-			break;
-//			idx++;
-//			continue;
 		}
+		idx++;
+	} // while processing all planned obs'
 
-#if 0
-		// in CLAIM period?
-		if ((timediff > seconds(0)) && (timediff <= seconds(itsClaimPeriod))) {
-			// Observation is somewhere in the claim period its should be up by now.
-			if (curState < CTState::CLAIMED) {
-				LOG_ERROR_STR("Observation " << cntlrName << 
-							" should have reached the CLAIMING state by now," <<
-							" check state of observation.");
-				LOG_DEBUG_STR("Its state is: " << cts.name(curState));
-			}
-			idx++;
-			continue;
-		}
-
-		// observation must be running (otherwise it would not be in the newTreeList)
-		// TODO: check if endtime is reached and observation is still running.
-	
-		idx++;	
-#endif
-	} // while
+	// Finally we can pass the list with planned observations to PVSS.
+	itsPropertySet->setValue(PN_MS_PLANNED_OBSERVATIONS, GCFPVDynArr(LPT_DYNSTRING, plannedArr));
 
 }
 
 //
-// _findActiveObservation(name)
+// _updateActiveList()
 //
-Observation*	MACScheduler::_findActiveObservation(const string&	name)
+void MACScheduler::_updateActiveList()
 {
-	vector<Observation>::iterator	end  = itsObservations.end();
-	vector<Observation>::iterator	iter = itsObservations.begin();
-	while (iter != end) {
-		if (iter->name == name) {
-			return (&(*iter));
-		}
-		iter++;
-	}
+	LOG_DEBUG("_updateActiveList()");
 
-	return ((Observation*) 0);
-}
-
-//
-// _addActiveObservation(name)
-//
-void MACScheduler::_addActiveObservation(const Observation&	newObs)
-{
-	// Observation already in vector?
-	vector<Observation>::iterator	end  = itsObservations.end();
-	vector<Observation>::iterator	iter = itsObservations.begin();
-	while (iter != end) {
-		if (iter->name == newObs.name) {
-			return;
-		}
-		iter++;
-	}
-
-	// update own admin and PVSS datapoint
-	itsObservations.push_back(newObs);
-	itsPVSSObsList.push_back(new GCFPVString(formatString("Observation%d", newObs.obsID)));
-	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
-
-	LOG_DEBUG_STR("Added observation " << newObs.name << " to active observation-list");
-
-}
-
-
-//
-// _removeActiveObservation(name)
-//
-void MACScheduler::_removeActiveObservation(const string& name)
-{
-	// search observation.
-	OTDB::treeIDType		obsID;
-	vector<Observation>::iterator	end  = itsObservations.end();
-	vector<Observation>::iterator	iter = itsObservations.begin();
-	bool	found(false);
-	while (!found && (iter != end)) {
-		if (iter->name == name) {
-			found = true;
-			obsID = iter->obsID;
-			itsObservations.erase(iter);
-			LOG_DEBUG_STR("Removed observation " << name << " from active observationList");
-		}
-		iter++;
-	}
-
-	if (!found) {
+	// get new list (list is ordered on starttime)
+	vector<OTDBtree> activeDBlist = itsOTDBconnection->getTreeGroup(2, 0);
+	if (activeDBlist.empty()) {
+		LOG_DEBUG ("No active Observations");
 		return;
 	}
 
-	string		obsName(formatString("Observation%d", obsID));
-	GCFPValueArray::iterator	pEnd  = itsPVSSObsList.end();
-	GCFPValueArray::iterator	pIter = itsPVSSObsList.begin();
-	while (pIter != pEnd) {
-		if ((static_cast<GCFPVString*>(*pIter))->getValue() == obsName) {
-			delete 	*pIter;
-			itsPVSSObsList.erase(pIter);
-			break;
+	// walk through the list, prepare PVSS for the new obs, update own admin lists.
+	GCFPValueArray	activeArr;
+	uint32			listSize = activeDBlist.size();
+	uint32			idx = 0;
+	while (idx < listSize)  {
+		// construct name and timings info for observation
+		string		obsName(formatString("Observation_%d", activeDBlist[idx].treeID()));
+		activeArr.push_back(new GCFPVString(obsName));
+
+		// remove obs from planned-list if its still their.
+		OLiter	prepIter = itsPreparedObs.find(activeDBlist[idx].treeID());
+		if (prepIter != itsPreparedObs.end()) {
+			itsPreparedObs.erase(prepIter);
 		}
-		pIter++;
+
+		idx++;
+	} // while
+
+	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS,	GCFPVDynArr(LPT_DYNSTRING, activeArr));
+}
+
+//
+// _updateFinishedList()
+//
+void MACScheduler::_updateFinishedList()
+{
+	LOG_DEBUG("_updateFinishedList()");
+
+	// get new list (list is ordered on starttime)
+	vector<OTDBtree> finishedDBlist = itsOTDBconnection->getTreeGroup(3, itsFinishedPeriod);
+	if (finishedDBlist.empty()) {
+		LOG_DEBUG ("No finished Observations");
+		return;
 	}
-	itsPropertySet->setValue(PN_MS_ACTIVE_OBSERVATIONS, GCFPVDynArr(LPT_STRING, itsPVSSObsList));
+
+	// walk through the list, prepare PVSS for the new obs, update own admin lists.
+	GCFPValueArray	finishedArr;
+	uint32			listSize = finishedDBlist.size();
+	uint32			idx = 0;
+	while (idx < listSize)  {
+		// construct name and timings info for observation
+		string		obsName(formatString("Observation_%d", finishedDBlist[idx].treeID()));
+		finishedArr.push_back(new GCFPVString(obsName));
+		idx++;
+	} // while
+
+	// write those value to PVSS as well.
+	itsPropertySet->setValue(PN_MS_FINISHED_OBSERVATIONS,
+								GCFPVDynArr(LPT_DYNSTRING, finishedArr));
 }
 
 

@@ -7,12 +7,14 @@ MACScheduler_CPPFLAGS		= -DBOOST_DISABLE_THREADS \
 
 MACScheduler_SOURCES		= ../Package__Version.cc \
 							  MACScheduler.cc \
+							  ObsClaimer.cc \
 							  MACSchedulerMain.cc
 
 MACScheduler_LDADD			= -lpqxx $(LOFAR_DEPEND)
 MACScheduler_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= MACScheduler.h \
+							  ObsClaimer.h \
 							  MACSchedulerDefines.h
 
 INSTHDRS 					= 
