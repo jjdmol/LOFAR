@@ -113,6 +113,7 @@ void ClaimMgrTask::claimObject(const string&		objectType,
 							   GCFPortInterface&	replyPort)	// ???
 {
 	ASSERTSTR(itsClaimMgrPS, "There is no propertyset to access the claimManager");
+	LOG_DEBUG_STR("ClaimObject(" << objectType << "," << nameInAppl << ")");
 
 	// save info
 	itsObjectType = objectType;
@@ -218,7 +219,7 @@ GCFEvent::TResult ClaimMgrTask::operational(GCFEvent& event, GCFPortInterface& p
 			itsFieldsReceived++;
 		}
 		if (itsFieldsReceived >= 3) {
-			LOG_DEBUG_STR("@@@@@ NewObjectName = " << itsResultDPname);
+			LOG_DEBUG_STR("ClaimMgr:" << itsNameInAppl << "=" << itsResultDPname);
 			// Report claimresult back to the user
 			CMClaimResultEvent	cmEvent;
 			cmEvent.typeName	= itsObjectType;
