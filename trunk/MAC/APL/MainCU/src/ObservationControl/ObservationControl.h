@@ -27,6 +27,7 @@
 #include <MACIO/GCF_Event.h>
 #include <GCF/TM/GCF_Control.h>
 #include <GCF/RTDB/RTDB_PropertySet.h>
+#include <APL/RTDBCommon/ClaimMgrTask.h>
 
 //# local includes
 #include <APL/APLCommon/Controller_Protocol.ph>
@@ -54,6 +55,7 @@ namespace LOFAR {
 	using	GCF::TM::GCFPortInterface;
 	using	GCF::TM::GCFTask;
 	using	GCF::RTDB::RTDBPropertySet;
+	using	APL::RTDBCommon::ClaimMgrTask;
 	using	APLCommon::ChildControl;
 	using	APLCommon::ParentControl;
 	using	APLCommon::CTState;
@@ -99,9 +101,11 @@ private:
    	void	_disconnectedHandler(GCFPortInterface& port);
    	void	_databaseEventHandler(GCFEvent& answer);
 
-   	RTDBPropertySet*		itsPropertySet;
-	RTDBPropertySet*		itsBootPS;
-	map <string, RTDBPropertySet*>	itsStationDPs;
+	string					itsObsDPname;			// DPname of ObservationDP
+   	RTDBPropertySet*		itsPropertySet;			// my own propset.
+	ClaimMgrTask*			itsClaimMgrTask;		// for resolving the DPnames
+//	RTDBPropertySet*		itsBootPS;
+//	map <string, RTDBPropertySet*>	itsStationDPs;
 
 	// pointer to child control task
 	ChildControl*			itsChildControl;

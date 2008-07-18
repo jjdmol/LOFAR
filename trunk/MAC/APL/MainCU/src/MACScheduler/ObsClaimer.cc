@@ -40,12 +40,14 @@
 
 #include "MACSchedulerDefines.h"
 #include "ObsClaimer.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR::GCF::PVSS;
 using namespace LOFAR::GCF::TM;
 using namespace LOFAR::GCF::RTDB;
 using namespace LOFAR::APL::RTDBCommon;
 using namespace LOFAR::Deployment;
+using namespace boost::posix_time;
 using namespace std;
 
 namespace LOFAR {
@@ -216,8 +218,8 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 			RTDBPropertySet*	theObsPS = itsCurrentObs->second->propSet;
 //			theObsPS->setValue(PN_OBS_CLAIM_PERIOD,		GCFPVInteger(itsClaimPeriod), 0.0, false);
 //			theObsPS->setValue(PN_OBS_PREPARE_PERIOD,	GCFPVInteger(itsPreparePeriod), 0.0, false);
-//			theObsPS->setValue(PN_OBS_START_TIME,		GCFPVString (to_simple_string(itsStartTime)), 0.0, false);
-//			theObsPS->setValue(PN_OBS_STOP_TIME,		GCFPVString (to_simple_string(itsStopTime)), 0.0, false);
+			theObsPS->setValue(PN_OBS_START_TIME,		GCFPVString (to_simple_string(from_time_t(theObs.startTime))), 0.0, false);
+			theObsPS->setValue(PN_OBS_STOP_TIME,		GCFPVString (to_simple_string(from_time_t(theObs.stopTime))), 0.0, false);
 			theObsPS->setValue(PN_OBS_BAND_FILTER, 		GCFPVString (theObs.filter), 		  0.0, false);
 			theObsPS->setValue(PN_OBS_NYQUISTZONE, 		GCFPVInteger(theObs.nyquistZone), 	  0.0, false);
 			theObsPS->setValue(PN_OBS_ANTENNA_ARRAY,	GCFPVString (theObs.antennaArray), 	  0.0, false);
