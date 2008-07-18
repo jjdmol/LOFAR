@@ -35,10 +35,8 @@ namespace LOFAR {
 Observation::Observation() :
 	name(),
 	obsID(0),
-#if !defined HAVE_BGL	
 	startTime(0),
 	stopTime(0),
-#endif	
 	nyquistZone(0),
 	sampleClock(0)
 {
@@ -47,10 +45,8 @@ Observation::Observation() :
 Observation::Observation(ParameterSet*		aParSet) :
 	name(),
 	obsID(0),
-#if !defined HAVE_BGL	
 	startTime(0),
 	stopTime(0),
-#endif	
 	nyquistZone(0),
 	sampleClock(0)
 {
@@ -69,15 +65,19 @@ Observation::Observation(ParameterSet*		aParSet) :
 	}
 #endif
 	if (aParSet->isDefined(prefix+"VirtualInstrument.stationList")) {
+		stationList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList"));
+cout << "stationList=" << aParSet->getString(prefix+"VirtualInstrument.stationList") << endl;
+cout << "compacted stationList=" << stationList << endl;
 		string stString("x=" + expandedArrayString(aParSet->getString(prefix+"VirtualInstrument.stationList")));
 		ParameterSet	stParset;
 		stParset.adoptBuffer(stString);
 		stations = stParset.getStringVector("x");
 	}
 
-	sampleClock = aParSet->getUint32(prefix+"sampleClock", 0);
-	filter 		= aParSet->getString(prefix+"bandFilter", "");
+	sampleClock = aParSet->getUint32(prefix+"sampleClock",  0);
+	filter 		= aParSet->getString(prefix+"bandFilter",   "");
 	antennaArray= aParSet->getString(prefix+"antennaArray", "");
+	MSNameMask  = aParSet->getString(prefix+"MSNameMask",   "");
 	nyquistZone = nyquistzoneFromFilter(filter);
 
 	// new way of specifying the receivers and choosing the antenna array.
@@ -86,7 +86,8 @@ Observation::Observation(ParameterSet*		aParSet) :
 
 	RCUset.reset();							// clear RCUset by default.
 	if (aParSet->isDefined(prefix+"receiverList")) {
-		string	rcuString("x=" + expandedArrayString( aParSet->getString(prefix+"receiverList")));
+		receiverList = aParSet->getString(prefix+"receiverList");
+		string	rcuString("x=" + expandedArrayString(receiverList));
 		ParameterSet	rcuParset;
 		rcuParset.adoptBuffer(rcuString);
 		vector<uint32> RCUnumbers(rcuParset.getUint32Vector("x"));
@@ -99,6 +100,8 @@ Observation::Observation(ParameterSet*		aParSet) :
 			}
 		}
 	}
+	BGLNodeList     = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.BGLNodeList","[]"));
+	storageNodeList = compactedArrayString(aParSet->getString(prefix+"VirtualInstrument.storageNodeList","[]"));
 
 	// get the beams info
 	int32	nrBeams = aParSet->getInt32(prefix+"nrBeams", 0);
@@ -196,10 +199,17 @@ ostream& Observation::print (ostream&	os) const
 //    os << "stations     : " << stations << endl;
     os << "stations     : "; writeVector(os, stations, ",", "[", "]"); os << endl;
     os << "antennaArray : " << antennaArray << endl;
-    os << "receiverList : " << RCUset << endl;
+    os << "receiver set : " << RCUset << endl;
     os << "sampleClock  : " << sampleClock << endl;
     os << "filter       : " << filter << endl;
-    os << "nyquistZone  : " << nyquistZone << endl;
+    os << "nyquistZone  : " << nyquistZone << endl << endl;
+    os << "Meas.set     : " << MSNameMask << endl << endl;
+
+	os << "Receivers    : " << receiverList << endl;
+	os << "Stations     : " << stationList << endl;
+	os << "BLG nodes    : " << BGLNodeList << endl;
+	os << "Storage nodes: " << storageNodeList << endl << endl;
+
     os << "nrBeams      : " << beams.size() << endl;
 	for (size_t	i(0) ; i < beams.size(); i++) {
 		os << formatString("Beam[%d].pointing   : %f, %f, %s\n", i, beams[i].angle1, beams[i].angle2, beams[i].directionType.c_str());

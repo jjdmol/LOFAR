@@ -83,14 +83,13 @@ public:
 	//# Datamembers
 	string			name;
 	int32			obsID;
-#if !defined HAVE_BGL
 	time_t			startTime;
 	time_t			stopTime;
-#endif
 	uint32			nyquistZone;
 	vector<string>	stations;
 	int32			sampleClock;
 	string			filter;
+	string			MSNameMask;
 
 	// old way of specifying antennas
 	string			antennaArray;
@@ -103,6 +102,12 @@ public:
 	vector<Beam>	beams;
 	vector<int32>	beamlet2beams;		// to which beam each beamlet belongs
 	vector<int32>	beamlet2subbands;	// which subband each beamlet uses.
+
+	// couple of values of the virtual instrument as compacted strings
+	string			receiverList;
+	string			stationList;
+	string			BGLNodeList;
+	string			storageNodeList;
 
 };
 
