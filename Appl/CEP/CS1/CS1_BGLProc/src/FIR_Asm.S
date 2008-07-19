@@ -2449,11 +2449,12 @@ L8:	cmpi	0,7,NR_SAMPLES_PER_INTEGRATION
 #endif
 
 
+.align 5
+
 #if defined HAVE_BGP
 zero:	.long	0,0
 #endif
 
-.align 5
 .global _memzero
 _memzero:
 #if defined HAVE_BGP
