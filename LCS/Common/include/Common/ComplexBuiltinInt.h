@@ -26,6 +26,7 @@
 // \file
 
 
+#define LOFAR_I8COMPLEX LOFAR_BUILTIN_COMPLEXINT signed char
 #define LOFAR_I16COMPLEX LOFAR_BUILTIN_COMPLEXINT short
 #define LOFAR_U16COMPLEX LOFAR_BUILTIN_COMPLEXINT unsigned short
 
@@ -37,14 +38,27 @@
 namespace LOFAR {
   namespace TYPES {
     // Define the complex types.
+    typedef LOFAR_I8COMPLEX i8complex;
     typedef LOFAR_I16COMPLEX i16complex;
     typedef LOFAR_U16COMPLEX u16complex;
   }
 
+  inline TYPES::i8complex makei8complex (TYPES::int8 re, TYPES::int8 im)
+    { return (re + im*1i); }
   inline TYPES::i16complex makei16complex (TYPES::int16 re, TYPES::int16 im)
     { return (re + im*1i); }
   inline TYPES::u16complex makeu16complex (TYPES::uint16 re, TYPES::uint16 im)
     { return (re + im*1i); }
+
+  // Functions operating on int8 complex numbers.
+  // <group>
+  inline TYPES::int8 real (TYPES::i8complex x)
+    { return __real__(x); }
+  inline TYPES::int8 imag (TYPES::i8complex x)
+    { return __imag__(x); }
+  inline TYPES::i8complex conj (TYPES::i8complex x)
+    { return ~(x); }
+  // </group>
 
   // Functions operating on int16 complex numbers.
   // <group>
@@ -68,6 +82,8 @@ namespace LOFAR {
 
   // Show the complex numbers.
   // <group>
+  inline std::ostream& operator<< (std::ostream& os, TYPES::i8complex x)
+    { os << '(' << real(x) << ',' << imag(x) << ')'; return os; }
   inline std::ostream& operator<< (std::ostream& os, TYPES::i16complex x)
     { os << '(' << real(x) << ',' << imag(x) << ')'; return os; }
   inline std::ostream& operator<< (std::ostream& os, TYPES::u16complex x)
@@ -75,6 +91,7 @@ namespace LOFAR {
   // </group>
 }
 
+#undef LOFAR_I8COMPLEX
 #undef LOFAR_I16COMPLEX
 #undef LOFAR_U16COMPLEX
 
