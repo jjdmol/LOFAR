@@ -49,6 +49,11 @@ extern "C" {
 }
 #endif
 
+#if defined HAVE_FCNP && defined __PPC__
+#include <TH_FCNP_Server.h>
+#include <fcnp_ion.h>
+#endif
+
 
 using namespace LOFAR;
 using namespace LOFAR::CS1;
@@ -79,11 +84,17 @@ static void checkParset(const CS1_Parset &parset)
 
 void createClientTHs(unsigned nrClients)
 {
+#if defined HAVE_FCNP && defined __PPC__
+  FCNP_ION::init();
+#endif
+
   clientTHs.resize(nrClients);
 
   for (unsigned core = 0; core < nrClients; core ++) {
 #if defined HAVE_ZOID
     clientTHs[core] = new TH_ZoidServer(core);
+#elif 0 && defined HAVE_FCNP && defined __PPC__
+    clientTHs[core] = new TH_FCNP_Server(core);
 #elif 0
     clientTHs[core] = new TH_Null;
 #elif 1
@@ -104,6 +115,10 @@ void deleteClientTHs()
 {
   for (unsigned core = 0; core < clientTHs.size(); core ++)
     delete clientTHs[core];
+
+#if defined HAVE_FCNP && defined __PPC__
+  FCNP_ION::end();
+#endif
 }
 
 
@@ -126,29 +141,34 @@ static void configureCNs(const CS1_Parset &parset)
   configuration.beamlet2beams()           = parset.beamlet2beams();
   configuration.subband2Index()           = parset.subband2Index();
 
-  std::clog << "configuring " << nrCoresPerPset << " cores ... ";
+  std::clog << "configuring " << nrCoresPerPset << " cores ...";
   std::clog.flush();
 
   for (unsigned core = 0; core < nrCoresPerPset; core ++) {
+    std::clog << ' ' << core;
+    std::clog.flush();
     command.write(clientTHs[core]);
     configuration.write(clientTHs[core]);
   }
 
-  std::clog << "done" << std::endl;
+  std::clog << " done" << std::endl;
 }
 
 
 static void unconfigureCNs(CS1_Parset &parset)
 {
-  std::clog << "unconfiguring " << nrCoresPerPset << " cores ... ";
+  std::clog << "unconfiguring " << nrCoresPerPset << " cores ...";
   std::clog.flush();
 
   BGL_Command command(BGL_Command::POSTPROCESS);
 
-  for (unsigned core = 0; core < nrCoresPerPset; core ++)
+  for (unsigned core = 0; core < nrCoresPerPset; core ++) {
+    std::clog << ' ' << core;
+    std::clog.flush();
     command.write(clientTHs[core]);
+  }
 
-  std::clog << "done" << std::endl;
+  std::clog << " done" << std::endl;
 }
 
 

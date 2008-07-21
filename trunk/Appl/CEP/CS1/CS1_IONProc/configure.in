@@ -69,6 +69,7 @@ dnl lofar_EXTERNAL(zoid,0,lofar.h,"",/cephome/romein/projects/zoid/zoid/lofar)
 lofar_EXTERNAL(zoid_api,0,zoid_api.h,"")
 lofar_EXTERNAL(zoid,0,lofar.h,"")
 lofar_EXTERNAL(boost,1,boost/date_time/date.hpp,boost_date_time)
+lofar_EXTERNAL(fcnp,0,fcnp_ion.h,fcnp_ion,/cephome/romein/packages/fcnp)
 dnl lofar_EXTERNAL(zoid_lofar,0,lofar.h,lofar_blrts,/home/romein/projects/zoid/zoid/lofar)
 dnl lofar_EXTERNAL(zoid,0,zoid_api.h,zoid,/home/romein/projects/zoid/zoid/linux-client)
 
