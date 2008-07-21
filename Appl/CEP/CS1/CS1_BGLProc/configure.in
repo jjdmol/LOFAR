@@ -67,6 +67,7 @@ lofar_INTERNAL(Appl/CEP/CS1/CS1_Interface,CS1_Interface,,1,CS1_Interface/CS1_Con
 lofar_EXTERNAL(boost,1,boost/multi_array.hpp,"")
 dnl lofar_EXTERNAL(zoid,0,zoid_api.h,"",/cephome/romein/projects/zoid/glibc/sysdeps/blrts/zoid,-I/cephome/romein/projects/zoid/zoid/lofar,,"-L/cephome/romein/projects/zoid/glibc-build-zoid -L/cephome/romein/projects/zoid/zoid/lofar",-llofar_blrts)
 lofar_EXTERNAL(zoid,0,zoid_api.h,"",,-I/cephome/romein/projects/zoid/zoid/lofar,,"-L/cephome/romein/projects/zoid/glibc-build-zoid -L/cephome/romein/projects/zoid/zoid/lofar",-llofar_blrts)
+lofar_EXTERNAL(fcnp,0,fcnp_cn.h,fcnp_cn,/cephome/romein/packages/fcnp)
 
 dnl
 dnl Output Makefiles

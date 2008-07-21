@@ -115,7 +115,7 @@ class BGLJob(Job):
 	self.host.sput(parsetfile, self.workingDir + '/CS1.parset')
 	self.host.sput('OLAP.parset', self.workingDir)
         #Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -np ' + str(self.noProcesses) + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
-        Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -mode VN -label -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
+        Job.run(self, runlog, parsetfile, timeOut, noRuns, 'mpirun -partition ' + self.partition + ' -mode VN -label -env DCMF_COLLECTIVES=0 -cwd ' + self.workingDir + ' ' + os.path.join(self.workingDir, self.executable.split('/')[-1]))
 
 
 class BuildJob(Job):

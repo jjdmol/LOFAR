@@ -12,6 +12,7 @@ InputSection.h			\
 WH_DelayCompensation.h		\
 AH_ION_Gather.h			\
 WH_ION_Gather.h			\
+TH_FCNP_Server.h		\
 TH_ZoidServer.h	
 
 liblofar_impl_la_SOURCES = $(pkginclude_HEADERS) \
@@ -26,6 +27,7 @@ InputSection.cc			\
 WH_DelayCompensation.cc		\
 AH_ION_Gather.cc		\
 WH_ION_Gather.cc		\
+TH_FCNP_Server.cc		\
 TH_ZoidServer.cc                \
 Package__Version.cc
 

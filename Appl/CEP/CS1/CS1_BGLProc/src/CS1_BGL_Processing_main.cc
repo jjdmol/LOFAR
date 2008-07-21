@@ -26,10 +26,14 @@
 #include <Common/Exception.h>
 #include <CS1_Interface/BGL_Command.h>
 #include <CS1_Interface/BGL_Configuration.h>
+#include <TH_FCNP_Client.h>
 #include <Transport/TH_File.h>
 #include <Transport/TH_Null.h>
 #include <Transport/TH_Socket.h>
 #include <CS1_BGLProc/TH_ZoidClient.h>
+#if defined HAVE_FCNP && defined HAVE_BGP
+#include <fcnp_cn.h>
+#endif
 #endif
 #include <CS1_BGLProc/LocationInfo.h>
 #include <CS1_BGLProc/BGL_Processing.h>
@@ -62,6 +66,15 @@ int main(int argc, char **argv)
 
 #if defined HAVE_ZOID && defined HAVE_BGL
     TH_ZoidClient  th;
+#elif 0 && defined HAVE_FCNP && defined HAVE_BGP
+    std::vector<unsigned> psetDimensions(3);
+
+    psetDimensions[0] = 4;
+    psetDimensions[1] = 2;
+    psetDimensions[2] = 2;
+
+    FCNP_CN::init(psetDimensions);
+    TH_FCNP_Client th;
 #elif 0
     TH_Null	   th;
 #elif 1
