@@ -116,37 +116,37 @@ _correlate_2x2:
 	fpmr	 12,0		; lfpsux	 24,3,11
 	fpmr	 13,0		; lfpsux	 25,3,11
 	fpmr	 14,0		; lfpsux	 28,5,11
-	fpmr	 15,0		; lfpsux	 29,5,11
+	fpmr	 15,0	
 
 loop1:	# loop over time
 
 	# S0 * ~S2, phase 1
-	fxcpnsma 0,16,20,0	; lfpsux	 26,4,11
-	fxcpnsma 1,16,21,1
-	fxcpnsma 2,17,20,2	; lfpsux	 27,4,11
+	fxcpnsma 0,16,20,0
+	fxcpnsma 1,16,21,1	; lfpsux	 29,5,11
+	fxcpnsma 2,17,20,2
 	fxcpnsma 3,17,21,3
 
 	# S0 * ~S3, phase 1
 	fxcpnsma 4,16,22,4
-	fxcpnsma 5,16,23,5
+	fxcpnsma 5,16,23,5	; lfpsux	 26,4,11
 	fxcpnsma 6,17,22,6
 	fxcpnsma 7,17,23,7
 
 	# S1 * ~S2, phase 1
-	fxcpnsma 8,18,20,8	; lfpsux	 30,6,11
-	fxcpnsma 9,18,21,9
-	fxcpnsma 10,19,20,10	; lfpsux	 31,6,11
+	fxcpnsma 8,18,20,8
+	fxcpnsma 9,18,21,9	; lfpsux	 27,4,11
+	fxcpnsma 10,19,20,10
 	fxcpnsma 11,19,21,11
 
 	# S1 * ~S3, phase 1
 	fxcpnsma 12,18,22,12
-	fxcpnsma 13,18,23,13
+	fxcpnsma 13,18,23,13	; lfpsux	 30,6,11
 	fxcpnsma 14,19,22,14
 	fxcpnsma 15,19,23,15
 
 	# S0 * ~S2, phase 2
 	fxcxma   0,16,20,0
-	fxcxma   1,16,21,1
+	fxcxma   1,16,21,1	; lfpsux	 31,6,11
 	fxcxma   2,17,20,2
 	fxcxma   3,17,21,3
 
@@ -154,47 +154,47 @@ loop1:	# loop over time
 	fxcxma   4,16,22,4
 	fxcxma   5,16,23,5	; lfpsux	 16,3,11
 	fxcxma   6,17,22,6
-	fxcxma   7,17,23,7	; lfpsux	 17,3,11
+	fxcxma   7,17,23,7
 
 	# S1 * ~S2, phase 2
 	fxcxma   8,18,20,8
-	fxcxma   9,18,21,9
-	fxcxma   10,19,20,10	; lfpsux	 20,5,11
+	fxcxma   9,18,21,9	; lfpsux	 17,3,11
+	fxcxma   10,19,20,10
 	fxcxma   11,19,21,11
 
 	# S1 * ~S3, phase 2
 	fxcxma   12,18,22,12
-	fxcxma   13,18,23,13	; lfpsux	 21,5,11
+	fxcxma   13,18,23,13	; lfpsux	 20,5,11
 	fxcxma   14,19,22,14
-	fxcxma   15,19,23,15	; lfpsux	 18,4,11
+	fxcxma   15,19,23,15
 
 	# S0 * ~S2, phase 1
 	fxcpnsma 0,24,28,0
-	fxcpnsma 1,24,29,1
-	fxcpnsma 2,25,28,2	; lfpsux	 19,4,11
+	fxcpnsma 1,24,29,1	; lfpsux	 21,5,11
+	fxcpnsma 2,25,28,2
 	fxcpnsma 3,25,29,3
 
 	# S0 * ~S3, phase 1
 	fxcpnsma 4,24,30,4
-	fxcpnsma 5,24,31,5	; lfpsux	 22,6,11
+	fxcpnsma 5,24,31,5	; lfpsux	 18,4,11
 	fxcpnsma 6,25,30,6
-	fxcpnsma 7,25,31,7	; lfpsux	 23,6,11
+	fxcpnsma 7,25,31,7
 
 	# S1 * ~S2, phase 1
 	fxcpnsma 8,26,28,8
-	fxcpnsma 9,26,29,9
+	fxcpnsma 9,26,29,9	; lfpsux	 19,4,11
 	fxcpnsma 10,27,28,10
 	fxcpnsma 11,27,29,11
 
 	# S1 * ~S3, phase 1
 	fxcpnsma 12,26,30,12
-	fxcpnsma 13,26,31,13
+	fxcpnsma 13,26,31,13	; lfpsux	 22,6,11
 	fxcpnsma 14,27,30,14
 	fxcpnsma 15,27,31,15
 
 	# S0 * ~S2, phase 2
 	fxcxma   0,24,28,0
-	fxcxma   1,24,29,1
+	fxcxma   1,24,29,1	; lfpsux	 23,6,11
 	fxcxma   2,25,28,2
 	fxcxma   3,25,29,3
 
@@ -202,17 +202,17 @@ loop1:	# loop over time
 	fxcxma   4,24,30,4
 	fxcxma   5,24,31,5	; lfpsux	 24,3,11
 	fxcxma   6,25,30,6
-	fxcxma   7,25,31,7	; lfpsux	 25,3,11
+	fxcxma   7,25,31,7
 
 	# S1 * ~S2, phase 2
 	fxcxma   8,26,28,8
-	fxcxma   9,26,29,9
-	fxcxma   10,27,28,10	; lfpsux	 28,5,11
+	fxcxma   9,26,29,9	; lfpsux	 25,3,11
+	fxcxma   10,27,28,10
 	fxcxma   11,27,29,11
 
 	# S1 * ~S3, phase 2
 	fxcxma   12,26,30,12
-	fxcxma   13,26,31,13	; lfpsux	 29,5,11
+	fxcxma   13,26,31,13	; lfpsux	 28,5,11
 	fxcxma   14,27,30,14
 	fxcxma   15,27,31,15
 
