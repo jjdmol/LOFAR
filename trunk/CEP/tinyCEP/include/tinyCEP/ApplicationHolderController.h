@@ -31,7 +31,7 @@
 #include <Common/LofarLogger.h>
 
 #include <tinyCEP/Profiler.h>
-#include <PLC/ProcControlServer.h>
+#include <PLC/ProcessControl.h>
 
 #include <tinyCEP/TinyApplicationHolder.h>
 
@@ -61,15 +61,12 @@ public:
   virtual tribool	reinit	 (const string&	configID) ;
   virtual string askInfo   (const string& 	keylist) ;
   
-  virtual int main(int& argc, char**& argv);
-
 protected:
   TinyApplicationHolder& itsAH;
   int itsNoRuns;
   int itsNoTotalRuns;
   bool itsIsRunning;
   bool itsShouldQuit;
-  ProcControlServer* itsPCcomm;
 
   // Copying is not allowed
   ApplicationHolderController (const ApplicationHolderController& that);

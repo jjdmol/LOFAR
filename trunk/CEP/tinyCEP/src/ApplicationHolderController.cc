@@ -47,8 +47,7 @@ ApplicationHolderController::ApplicationHolderController(TinyApplicationHolder& 
     itsNoRuns(noRuns),
     itsNoTotalRuns(0),
     itsIsRunning(false),
-    itsShouldQuit(false),
-    itsPCcomm(0)
+    itsShouldQuit(false)
 {};
 ApplicationHolderController::~ApplicationHolderController()
 {};
@@ -158,83 +157,3 @@ string ApplicationHolderController::askInfo   (const string& )
   LOG_TRACE_FLOW("AskInfo called by ACC");
   return "no info available yet";
 }
-
-int ApplicationHolderController::main (int& argc, char**& argv) {
-  try {
-
-#ifdef HAVE_MPI
-    // this is needed here, because argc and argv will be changed by mpirun
-    // and MPI_Init will change them back
-    TH_MPI::initMPI(argc, argv);
-#endif
-
-    // Read in parameterfile and get my name
-    ParameterSet itsOrigParamSet; // may throw
-
-    // Now all ACC processes expect "ACC" as first argument
-    // So the parameter file is the second argument
-    ASSERTSTR(strncmp(argv[1], "ACC", 3) == 0, "Program wasn't started by ACC, but ApplicationHolderController::main was called");
-    itsOrigParamSet.adoptFile(argv[2]);
-    string itsProcID = itsOrigParamSet.getString("process.name");
-    ParameterSet itsParamSet = itsOrigParamSet.makeSubset(itsProcID+".");
-    itsAH.setParameters(itsParamSet);
-
-    if (itsPCcomm == 0) {
-      itsPCcomm = new ProcControlServer(itsParamSet.getString("ACnode"),
-					itsParamSet.getUint16("ACport"),
-					this);
-    }
-
-    sleep(2);
-    LOG_TRACE_FLOW("Registering at ApplController");
-    itsPCcomm->registerAtAC(itsProcID);
-    LOG_TRACE_FLOW("Registered at ApplController");
-
-    // Main processing loop
-    while (!itsShouldQuit) {
-      LOG_TRACE_FLOW("Polling ApplController for message");
-      if (itsPCcomm->pollForMessage()) {
-	LOG_TRACE_FLOW("Message received from ApplController");
-
-	// get pointer to received data
-	DH_ProcControl* newMsg = itsPCcomm->getDataHolder();
-
-	itsPCcomm->handleMessage(newMsg);
-      } 
-
-      if (itsIsRunning) { 
-	// If we are running call run
-	// this is needed in cepframeso our program will keep running once it is started
-	itsAH.baseRun(itsNoRuns);
-	itsNoTotalRuns += itsNoRuns;
-      } else {
-	// If we are not running, we should sleep 1 second
-	sleep(1);
-      }
-    }
-    
-    LOG_INFO_STR("Shutting down: ApplicationController");
-
-    // unregister at AC and send last results
-    // As an example only 1 KV pair is returned but it is allowed to pass
-    // a whole parameterset.
-    ParameterSet resultSet;
-    string resultBuffer;
-    resultSet.add(KVpair("ApplicationController.result", 
-			 formatString("%d runs completed", itsNoTotalRuns),
-			 true));
-    resultSet.writeBuffer(resultBuffer);		// convert to stringbuffer
-    itsPCcomm->unregisterAtAC(resultBuffer);		// send to AC before quiting
-    }
-  catch (Exception&	ex) {
-    LOG_FATAL_STR("Caught exception: " << ex << endl);
-    LOG_FATAL_STR(argv[0] << " terminated by exception!");
-    std::cerr << "Caught exception: " << ex.what() << std::endl;
-    return(1);
-  }
-  
-  LOG_INFO_STR(argv[0] << " terminated normally");
-
-  return 0;
-}
-
