@@ -38,12 +38,15 @@ Pipeline::Pipeline(MsInfo* info, MsFile* msfile, RunDetails* details,
                    BandpassCorrector* bandpass, Flagger* flagger, DataSquasher* squasher)
 
 {
-  myInfo     = info;
-  myFile     = msfile;
-  myDetails  = details;
-  myBandpass = bandpass;
-  myFlagger  = flagger;
-  mySquasher = squasher;
+  myInfo       = info;
+  myFile       = msfile;
+  myDetails    = details;
+  myBandpass   = bandpass;
+  myFlagger    = flagger;
+  mySquasher   = squasher;
+  BandpassData = NULL;
+  FlaggerData  = NULL;
+  SquasherData = NULL;
   myStatistics = new FlaggerStatistics(*myInfo);
 }
 
@@ -51,6 +54,22 @@ Pipeline::Pipeline(MsInfo* info, MsFile* msfile, RunDetails* details,
 
 Pipeline::~Pipeline()
 {
+  delete myStatistics;
+  if (BandpassData)
+  {
+    delete BandpassData;
+    BandpassData = NULL;
+  }
+  if (FlaggerData)
+  {
+    delete FlaggerData;
+    FlaggerData = NULL;
+  }
+  if (SquasherData)
+  {
+    delete SquasherData;
+    SquasherData = NULL;
+  }
 }
 
 //===============>>>  Pipeline::~Pipeline  <<<===============
@@ -102,11 +121,10 @@ void Pipeline::Run(MsInfo* SquashedInfo, bool Columns)
       if (mySquasher)
       { cout << "Running Data reduction" << endl;
         SquasherData->Position = (SquasherData->Position + 1) % SquasherData->WindowSize;
-        cout << SquasherData->Position << endl;
         mySquasher->ProcessTimeslot(*BandpassData, *SquasherData, *myInfo, *myDetails);
       }
       cout << "writing data" << endl;
-      myFile->WriteData(write_iter, *myInfo, *SquasherData);
+      myFile->WriteData(write_iter, *SquashedInfo, *SquasherData);
       write_iter++;
     }
     else

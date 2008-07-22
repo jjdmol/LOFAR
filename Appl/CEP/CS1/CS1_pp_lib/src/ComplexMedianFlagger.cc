@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -36,7 +36,6 @@ ComplexMedianFlagger::ComplexMedianFlagger()
 {
   NumChannels      = 0;
   NumPolarizations = 0;
-  WindowSize       = 0;
 }
 
 //===============>>>  ComplexMedianFlagger::~ComplexMedianFlagger  <<<===============
@@ -53,7 +52,9 @@ int ComplexMedianFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
                                            Cube<Complex>& Data,
                                            int flagCounter,
                                            double FlagThreshold,
-                                           int Position, bool Existing)
+                                           int Position,
+                                           bool Existing,
+                                           int WindowSize)
 {
   Vector<Float>  Reals(WindowSize);
   Vector<Float>  Imags(WindowSize);
@@ -101,29 +102,31 @@ void ComplexMedianFlagger::ProcessTimeslot(DataBuffer& data,
 {
   //Data.Position is the last filled timeslot, the middle is 1/2 a window behind it
   int pos = (data.Position + (data.WindowSize+1)/2) % data.WindowSize;
-  cout << pos << endl;
   NumChannels      = info.NumChannels;
   NumPolarizations = info.NumPolarizations;
-  WindowSize       = data.WindowSize;
+  int index        = 0;
+  double treshold  = 0.0;
+  Matrix<Bool> flags;
+
   for (int i = 0; i < info.NumBands; i++)
   {
     for(int j = 0; j < info.NumAntennae; j++)
     {
       for(int k = j; k < info.NumAntennae; k++)
       {
-        int index = i * info.NumPairs + info.BaselineIndex[baseline_t(j, k)];
-        double treshold = (details.MinThreshold + (details.MaxThreshold - details.MinThreshold)
-                           * info.BaselineLengths[info.BaselineIndex[baseline_t(j, k)]]
-                           / info.MaxBaselineLength
-                          ) * info.NoiseLevel;
-        Matrix<Bool> flags = data.Flags[index].xyPlane(pos);
-        //data.Flags[index].xyPlane(pos).reference(flags);
+        index    = i * info.NumPairs + info.BaselineIndex[baseline_t(j, k)];
+        treshold = (details.MinThreshold + (details.MaxThreshold - details.MinThreshold)
+                    * info.BaselineLengths[info.BaselineIndex[baseline_t(j, k)]]
+                    / info.MaxBaselineLength
+                    ) * info.NoiseLevel;
+        flags.reference(data.Flags[index].xyPlane(pos));
 //        if ((BaselineLengths[BaselineIndex[pairii(j, k)]] < 3000000))//radius of the Earth in meters? WSRT sometimes has fake telescopes at 3854243 m
         stats(i, j, k) = FlagBaselineBand(flags,
-                         data.Data[index],
-                         stats(i,j,k),
-                         treshold,
-                         pos, details.Existing);
+                                          data.Data[index],
+                                          stats(i,j,k),
+                                          treshold, pos,
+                                          details.Existing,
+                                          data.WindowSize);
       }
     }
   }

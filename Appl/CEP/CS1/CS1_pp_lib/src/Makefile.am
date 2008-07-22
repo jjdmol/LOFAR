@@ -9,6 +9,10 @@ CS1_IDPPP_SOURCES 		= IDPPP.cc \
 				  MsFile.h \
 				  ComplexMedianFlagger.cc \
 				  ComplexMedianFlagger.h \
+				  FrequencyFlagger.cc \
+				  FrequencyFlagger.h \
+				  ComplexMedianFlagger2.cc \
+				  ComplexMedianFlagger2.h \
 				  MADFlagger.cc \
 				  MADFlagger.h \
 				  BandpassCorrector.cc \
