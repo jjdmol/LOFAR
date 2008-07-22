@@ -64,13 +64,12 @@ namespace LOFAR
       InputThread(const ThreadArgs &args);
       ~InputThread();
 
-      static void stopThreads();
-
       static void *mainLoopStub(void *inputThread);
       void	  mainLoop();
 
     private:
       static void *logThread(void *);
+      static void sigHandler(int);
     
       //# Datamembers
       static volatile bool theirShouldStop;

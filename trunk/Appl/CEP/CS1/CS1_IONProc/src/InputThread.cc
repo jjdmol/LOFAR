@@ -36,6 +36,9 @@
 #include <sched.h>
 #endif
 
+#include <signal.h>
+
+
 namespace LOFAR {
 namespace CS1 {
 
@@ -47,6 +50,18 @@ InputThread::InputThread(const ThreadArgs &args)
   itsArgs(args)
 {
   std::clog << "InputThread::InputThread(...)" << std::endl;
+
+  struct sigaction sa;
+
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags	= 0;
+  sa.sa_handler = sigHandler;
+
+  if (sigaction(SIGUSR1, &sa, 0) != 0) {
+    perror("sigaction");
+    exit(1);
+  }
+
   if (pthread_create(&thread, 0, mainLoopStub, this) != 0) {
     std::cerr << "could not create input thread" << std::endl;
     exit(1);
@@ -56,13 +71,25 @@ InputThread::InputThread(const ThreadArgs &args)
 InputThread::~InputThread()
 {
   std::clog << "InputThread::~InputThread()" << std::endl;
+
   theirShouldStop = true;
+
+  if (pthread_kill(thread, SIGUSR1) != 0) { // interrupt read() system call
+    perror("pthread_kill");
+    exit(1);
+  }
 
   if (pthread_join(thread, 0) != 0) {
     std::cerr << "could not join input thread" << std::endl;
     exit(1);
   }
 }
+
+void InputThread::sigHandler(int)
+{
+  std::clog << "sigHandler" << std::endl;
+}
+
 
 // log from separate thread, since printing from a signal handler causes deadlocks
 
@@ -146,15 +173,22 @@ void InputThread::mainLoop()
 
   ASSERTSTR(itsArgs.th->init(), "Could not init TransportHolder");
 
-  NSTimer receiveTimer("receiveTimer", true), writeTimer("writeTimer", true);
+  NSTimer writeTimer("writeTimer", true);
   bool dataShouldContainValidStamp = (itsArgs.th->getType() != "TH_Null");
 
   std::clog << "InputThread::mainLoop() entering loop" << std::endl;
 
   while (!theirShouldStop) {
-    receiveTimer.start();
-    itsArgs.th->recvBlocking((void *) totRecvframe, frameSize, 0);
-    receiveTimer.stop();
+    // interruptible read, to allow stopping this thread even if the station
+    // does not send data
+
+    try { // stupid TH returns false or throws exception depending on error
+      if (!itsArgs.th->recvBlocking(totRecvframe, frameSize, 0))
+	break;
+    } catch (...) {
+      break;
+    }
+
     ++ nrPacketsReceived;
 
     // get the actual timestamp of first EPApacket in frame
@@ -205,12 +239,6 @@ void InputThread::mainLoop()
     std::cerr << "could not join log thread" << std::endl;
     exit(1);
   }
-}
-
-void InputThread::stopThreads()
-{
-  std::clog << "InputThread::stopThreads()" << std::endl;
-  theirShouldStop = true;
 }
 
 } // namespace CS1
