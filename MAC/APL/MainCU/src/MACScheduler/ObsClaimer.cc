@@ -161,10 +161,17 @@ GCFEvent::TResult ObsClaimer::idle_state (GCFEvent& event, GCFPortInterface& por
 			CMClaimResultEvent	cmEvent(event);
 			LOG_INFO_STR(cmEvent.nameInAppl << " is mapped to " << cmEvent.DPname);
 			OMiter		iter = itsObsMap.find(cmEvent.nameInAppl);
-			ASSERTSTR(iter != itsObsMap.end(), "Cannot find " << cmEvent.nameInAppl << " in admin");
-			iter->second->DPname = cmEvent.DPname;
-			itsCurrentObs = iter;
-			TRAN(ObsClaimer::preparePVSS_state);
+//			ASSERTSTR(iter != itsObsMap.end(), "Cannot find " << cmEvent.nameInAppl << " in admin");
+// 			sometimes we receive a ghost message so we can't assert on it. Using an IF for the time being.
+			if (iter == itsObsMap.end()) {
+				LOG_ERROR_STR("Cannot find " << cmEvent.nameInAppl << " in admin");
+				TRAN(ObsClaimer::idle_state);
+			}
+			else {
+				iter->second->DPname = cmEvent.DPname;
+				itsCurrentObs = iter;
+				TRAN(ObsClaimer::preparePVSS_state);
+			}
 		}
 		break;
 	
@@ -213,8 +220,10 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 	case F_TIMER: {		// must be timer that PropSet is enabled.
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing observation-fields in PVSS");
-			ParameterSet	obsPS(formatString("%s/%s", LOFAR_SHARE_LOCATION, itsCurrentObs->second->obsName.c_str()));
-			Observation		theObs(&obsPS); 
+			string				obsPSFilename(formatString("%s/%s", LOFAR_SHARE_LOCATION, 
+															itsCurrentObs->second->obsName.c_str()));
+			ParameterSet		obsPS(obsPSFilename);
+			Observation			theObs(&obsPS); 
 			RTDBPropertySet*	theObsPS = itsCurrentObs->second->propSet;
 //			theObsPS->setValue(PN_OBS_CLAIM_PERIOD,		GCFPVInteger(itsClaimPeriod), 0.0, false);
 //			theObsPS->setValue(PN_OBS_PREPARE_PERIOD,	GCFPVInteger(itsPreparePeriod), 0.0, false);
@@ -255,6 +264,10 @@ GCFEvent::TResult ObsClaimer::preparePVSS_state (GCFEvent& event, GCFPortInterfa
 			theObsPS->setValue(PN_OBS_BEAMS_ANGLE2,			GCFPVDynArr(LPT_DYNDOUBLE, angle2Arr),   0.0, false);
 			theObsPS->setValue(PN_OBS_BEAMS_DIRECTION_TYPE,	GCFPVDynArr(LPT_DYNSTRING, dirTypesArr), 0.0, false);
 			theObsPS->flush();
+
+			// append DPname to the ParameterFile
+			obsPS.add("_DPname", itsCurrentObs->second->DPname);
+			obsPS.writeFile(obsPSFilename);
 
 			// send Maintask a signal we are ready.
 			LOG_DEBUG_STR("Sending Maintask ready signal for " << itsCurrentObs->second->obsName);

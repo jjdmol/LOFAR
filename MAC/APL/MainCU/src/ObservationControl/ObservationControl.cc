@@ -59,9 +59,10 @@ static ObservationControl*	thisObservationControl = 0;
 // ObservationControl()
 //
 ObservationControl::ObservationControl(const string&	cntlrName) :
-	GCFTask 			((State)&ObservationControl::initial_state,cntlrName),
+	GCFTask 			((State)&ObservationControl::starting_state,cntlrName),
 	itsPropertySet		(0),
 	itsClaimMgrTask		(0),
+	itsClaimMgrPort		(0),
 	itsChildControl		(0),
 	itsChildPort		(0),
 	itsParentControl	(0),
@@ -99,6 +100,7 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsTreePrefix   = globalParameterSet()->getString("prefix");
 	itsTreeID		= globalParameterSet()->getUint32("_treeID");	// !!!
 	itsHeartBeatItv = globalParameterSet()->getUint32("heartbeatInterval");
+	itsObsDPname	= globalParameterSet()->getString("_DPname");
 
 	// The time I have to wait for the forced quit depends on the integration time of OLAP
 	string	OLAPpos = globalParameterSet()->locateModule("OLAP");
@@ -107,9 +109,9 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	LOG_DEBUG_STR ("Timer for forcing quit is set to " << itsForcedQuitDelay);
 
 	// Inform Logging manager who we are
-	// TODO read this from the PARSET file!
-	uint32	treeID(globalParameterSet()->getUint32("_treeID"));
-	LOG_INFO(formatString("MACProcessScope: LOFAR.ObsSW.Observation%d.ObsCtrl", treeID));
+//	LOG_INFO(formatString("MACProcessScope: LOFAR.ObsSW.Observation%d.ObsCtrl", itsTreeID));
+	LOG_INFO_STR("MACProcessScope: " << createPropertySetName(PSN_OBS_CTRL, getName(), itsObsDPname));
+	// NOTE: SAS gateway is not yet aware of claimMgr so the data will not be transferred to SAS.
 
 	// attach to child control task
 	itsChildControl = ChildControl::instance();
@@ -129,11 +131,14 @@ ObservationControl::ObservationControl(const string&	cntlrName) :
 	itsTimerPort = new GCFTimerPort(*this, "TimerPort");
 
 	// startup claimManager task
-	itsClaimMgrTask = ClaimMgrTask::instance();
-	ASSERTSTR(itsClaimMgrTask, "Can't construct a claimMgrTask");
+//	itsClaimMgrTask = ClaimMgrTask::instance();
+//	ASSERTSTR(itsClaimMgrTask, "Can't construct a claimMgrTask");
+//	itsClaimMgrPort = new GCFITCPort (*this, *this, "ClaimMgrPort",
+//									GCFPortInterface::SAP, CM_PROTOCOL);
 
 	registerProtocol (CONTROLLER_PROTOCOL, CONTROLLER_PROTOCOL_STRINGS);
-	registerProtocol (DP_PROTOCOL, 		DP_PROTOCOL_STRINGS);
+	registerProtocol (DP_PROTOCOL, 		   DP_PROTOCOL_STRINGS);
+	registerProtocol (CM_PROTOCOL, 		   CM_PROTOCOL_STRINGS);
  
 	// we cannot use setState right now, wait for propertysets to come online
 	//	setState(CTState::CREATED);
@@ -203,6 +208,9 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 	GCFEvent::TResult status = GCFEvent::HANDLED;
   
 	switch (event.signal) {
+	case F_INIT: 	// must exist in initializing FSM
+		break;
+	
     case F_ENTRY: {
 		itsTimerPort->cancelAllTimers();
 		itsTimerPort->setTimer(0.0);
@@ -217,7 +225,7 @@ GCFEvent::TResult ObservationControl::initial_state(GCFEvent& event,
 
 		// Ask claimMgrTask to get the DPname of this observation
 		itsClaimMgrTask->claimObject("Observation", 
-									 "LOFAR_ObsSW_"+observationName(itsTreeID), port);
+									 "LOFAR_ObsSW_"+observationName(itsTreeID), *itsClaimMgrPort);
 		// will result in CM_CLAIM_RESULT event
 
 		itsTimerPort->setTimer(10.0);		// set emergency timer.
@@ -355,7 +363,7 @@ GCFEvent::TResult ObservationControl::starting_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		string	propSetName(createPropertySetName(PSN_OBS_CTRL, getName()));
+		string	propSetName(createPropertySetName(PSN_OBS_CTRL, getName(), itsObsDPname));
 		LOG_DEBUG_STR ("Activating PropertySet: " << propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName.c_str(),
 											 PST_OBS_CTRL,

@@ -634,12 +634,17 @@ void MACScheduler::_updatePlannedList()
 				// this will result in CONTROL_STARTED event in our main task
 				// Note: as soon as the ObservationController has reported itself to the MACScheduler
 				//		 the observation will not be returned in the 'plannedDBlist' anymore.
-				LOG_DEBUG_STR("Requesting start of " << obsName);
+				string	cntlrName(controllerName(CNTLRTYPE_OBSERVATIONCTRL, 0, obsID));
+				LOG_DEBUG_STR("Requesting start of " << cntlrName);
 				itsChildControl->startChild(CNTLRTYPE_OBSERVATIONCTRL, 
-											plannedDBlist[idx].treeID(), 
+											obsID, 
 											0,		// instanceNr
 											myHostname(true));
 				// Note: controller is now in state NO_STATE/CONNECTED (C/R)
+
+				// add controller to our 'monitor' administration
+				itsControllerMap[cntlrName] =  obsID;
+				LOG_DEBUG_STR("itsControllerMap[" << cntlrName << "]=" <<  obsID);
 			}
 		}
 		idx++;
