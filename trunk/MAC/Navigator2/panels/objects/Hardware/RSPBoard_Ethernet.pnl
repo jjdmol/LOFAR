@@ -27,6 +27,9 @@ PANEL,-1 -1 560 213 N "_3DFace" 0
                                  baseDP + \".lastError:_online.._value\");
   }
 
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
   // connect for selfUpdates
   showSelfState(baseDP);
 }
@@ -211,6 +214,5 @@ LANG:1 6 Layer8
 0
 3 0 "selfState"
 "objects\\lofar_self_state.pnl" 42 91 T 11 1 0 1 -26 31
-1
-"$object""RSPBoard_Ethernet"
+0
 0

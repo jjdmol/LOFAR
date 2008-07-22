@@ -51,7 +51,10 @@ PANEL,-1 -1 120 444 N "_3DFace" 1
                aDP + \".voltage12:_online.._invalid\");
   }
       
-  // connect for childUpdates
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",aDP);
+  
+    // connect for childUpdates
   showChildState(aDP);
   // connect for selfUpdates
   showSelfState(aDP);
@@ -648,6 +651,5 @@ LANG:1 6 Layer8
 0
 3 0 "selfState"
 "objects\\lofar_self_state.pnl" 72 493 T 40 1 0 1 -63 -89
-1
-"$object""RSPBoard"
+0
 0

@@ -232,3 +232,4 @@ updateSelfState(string dp1, int state, string dp2, bool invalid) {
   	}
   	setValue("selfState.light", "backCol", SymbolCol);
 }
+

@@ -36,6 +36,9 @@ PANEL,-1 -1 184 193 N "_3DFace" 1
                                  baseDP + \".SYNC.errorCount:_online.._value\");
   }
 
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
   // connect for selfUpdates
   showSelfState(baseDP);
 }
@@ -313,7 +316,6 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 0 "selfState"
-"objects\\lofar_self_state.pnl" 25 171 T 17 1 0 1 -2 -10
-1
-"$object""AP"
+"objects\\lofar_self_state.pnl" 25 171 T 17 1 0 1 -2 -15
+0
 0

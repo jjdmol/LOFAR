@@ -392,3 +392,81 @@ navPanel_addLogMessage(string aMsg)
     }
   }
 }
+
+void navPanel_statePopup(string baseDP) {
+  dyn_string popup;
+
+  // NCFObjectState vars
+  string DPName="";
+  int state;
+  string message="Operator Overrule";
+  bool force=true;
+  
+  // define the popupMenu
+  LOG_DEBUG("navPanel.ctl:navPanel_statePopup|define popup for DP: "+baseDP);
+ 
+  int idx=1;
+  dynInsertAt(popup,"CASCADE_BUTTON,Set State, 1",idx++);
+  dynInsertAt(popup,"CASCADE_BUTTON,Set Recursive State, 1",idx++);
+  dynInsertAt(popup,"Set State",idx++);
+  for (int i = 1; i <= mappinglen(stateName); i++)  {
+    string aS="PUSH_BUTTON,"+mappingGetValue(stateName,i)+",1"+mappingGetKey(stateName,i)+",1";
+    dynInsertAt(popup,aS,idx++);
+  }  
+  dynInsertAt(popup,"Set Recursive State",idx++);
+  for (int i = 1; i <= mappinglen(stateName); i++)  {
+    string aS="PUSH_BUTTON,"+mappingGetValue(stateName,i)+",2"+mappingGetKey(stateName,i)+",1";
+    dynInsertAt(popup,aS,idx++);
+  }
+  
+  LOG_DEBUG("navPanel.ctl:navPanel_statePopup|popup composed");
+  if (popupMenu(popup,state)<0 || !state>0) {
+    return;
+  }
+  
+  LOG_DEBUG("navPanel.ctl:navPanel_statePopup|popup returned: "+state);
+  bool recursive = false;
+  if (state == 10 ) {
+    state = 0;
+  } else if (state == 20) {
+    state = 0;
+    recursive = true;    
+  } else if (state < 200) {
+    state -= 100;
+  } else {
+    state -= 200;
+    recursive = true;
+  }        
+
+  LOG_DEBUG("navPanel.ctl:navPanel_statePopup|recursive="+recursive);
+  bool ack=navFunct_acknowledgePanel("This will (re)set the state of "+baseDP+" to "+getStateName(state)+". Are you sure?");
+  if (!ack) {
+    LOG_DEBUG("navPanel.ctl:navPanel_statePopup|State change by operator cancelled");
+    return;
+  }
+  LOG_DEBUG("navPanel.ctl:navPanel_statePopup|State change by operator confirmed");
+  
+  string database = dpSubStr(baseDP,DPSUB_SYS);
+  string bareDP = dpSubStr(baseDP,DPSUB_DP);
+  if (state >= 0 ) {
+    if (!recursive) {
+      LOG_DEBUG("navPanel.ctl:navPanel_statePopup|Operator sets "+baseDP+".status.state to "+getStateName(state)+ " (SINGLE)");
+      DPName=baseDP+".status.state";
+      dpSet(database+"__navObjectState.DPName",DPName,
+            database+"__navObjectState.stateNr",state,
+            database+"__navObjectState.message",message,
+            database+"__navObjectState.force",force);
+    } else {
+      // we will write the info to the __resetObjectState point.
+      // All existing stations, CCU's and MCU's will be connected to this point
+      // via a ctl script that runs on each machine.
+      // that script will do an update (if needed) for their own Database.
+      LOG_DEBUG("navPanel.ctl:navPanel_statePopup|Operator sets "+baseDP+".status.state to "+getStateName(state)+" (RECURSIVE)");
+      dpSet(database+"__resetObjectState.DPName",baseDP,
+            database+"__resetObjectState.stateNr",state,
+            database+"__resetObjectState.message",message);
+    }
+
+  }
+  LOG_DEBUG("navPanel.ctl:navPanel_statePopup|end (re)set states reached");
+}

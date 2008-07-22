@@ -32,7 +32,7 @@
 // navigator_initializing               : returns false if init ready, else true
 // navigator_clearWorkDPs               : clear the work Datapoints
 
-
+#uses "GCFCWD.ctl"
 #uses "GCFLogging.ctl"
 #uses "claimManager.ctl"
 #uses "GCFCommon.ctl"
@@ -70,6 +70,9 @@ void navigator_handleEventInitialize()
 
   // Set the global statecolors/colornames.
   initLofarColors();
+  
+  // Init the connection Watchdog
+  GCFCWD_Init();
 
   // first thing to do: get a new navigator ID
   // check the commandline parameter:

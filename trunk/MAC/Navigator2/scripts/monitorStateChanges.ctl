@@ -28,7 +28,7 @@
 // 
 
 global bool isConnected=false;
-global bool bDebug = false;
+global bool bDebug = true;
 
 main () {
 
@@ -292,16 +292,16 @@ void setStates(string datapoint,string element,int state,string message,bool for
   // only the childState updates needs 2b done, unless stationTrigger = true, then childstate should be
   // handled the same way as state.
   if (element == "status.state" | stationTrigger) {
-    // set the state value of this dp, to avoid unneed update chains, check the value. If it
-    // is the same don't update it
+    // set the state value of this dp
     
     int aVal;
     dpGet(datapoint+"."+element,aVal);
-    if (aVal != state && state > -1) {
+    if (state > -1) {
       if (force) {
         dpSet(datapoint+"."+element,state);
       } else {
-        if (aVal <=10 && state <= 10) {
+        if (bDebug) DebugN("monitorStateChanges.ctl:setStates|original val: "+aVal+ " state to set to: " + state);
+        if (aVal <=10 && state <= 0) {
           dpSet(datapoint+"."+element,state);
         } else if (aVal <= state) {
           dpSet(datapoint+"."+element,state);
@@ -311,7 +311,7 @@ void setStates(string datapoint,string element,int state,string message,bool for
         }
       }
       
-      dp = getPathLessOne(datapoint);
+      dp = navFunct_getPathLessOne(datapoint);
       datapoint=dp;
     } else {
       if (bDebug) DebugN("monitorStateChanges.ctl:setStates|Equal value or state < 0, no need to set new state");
@@ -329,7 +329,7 @@ void setStates(string datapoint,string element,int state,string message,bool for
   // continue while true
   while ( setChildState(datapoint,state)) {
     if (bDebug) DebugN( "monitorStateChanges.ctl:setStates|Continueing with setChildState passing path: "+datapoint);
-    dp = getPathLessOne(datapoint);
+    dp = navFunct_getPathLessOne(datapoint);
     datapoint=dp;
   }
 }
@@ -433,57 +433,5 @@ bool setChildState(string Dp,int state) {
   }
 
   return false;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function getPathLessOne
-// 
-// Returns the given path string less the last item. Paths can contain
-// _ and . seperated items Like in:
-// LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0.AP0 (In fact the . seperated members
-// are nested elements, but we need to tread them as a Path member since they
-// can contain states and or childStates
-//
-//
-// Added 07-12-2008 A.Coolen
-///////////////////////////////////////////////////////////////////////////
-string getPathLessOne(string path) {
-  if (bDebug) DebugN("monitorStateChanges.ctl:getPathLessOne|entered with: " + path);
-  
-  string returnVal="";
-  dyn_string aS;
-  
-  // look if there is a . in the pathname, 
-  // if so strip the last one plus point and return the result
-  // and we are done
-  
-  aS = strsplit(path,'.');
-  if (dynlen(aS) > 1) {
-  	returnVal = aS[1];
-  	for (int i=2; i< dynlen(aS);i++) {
-      returnVal += "."+aS[i];
-    }
-    if (bDebug) DebugN("monitorStateChanges.ctl:getPathLessOne| returns "+returnVal);
-    return returnVal;
-  }
-  
-  if (bDebug) DebugN("monitorStateChanges.ctl:getPathLessOne|No . in Path found, continueing with _");
-  // if no . found then look if there is a _ in the pathname, 
-  // if so strip the last one plus _ and return the result
-  // and we are done
-  
-  aS = strsplit(path,'_');
-  if (dynlen(aS) > 1) {
-  	returnVal = aS[1];
-  	for (int i=2; i< dynlen(aS);i++) {
-      returnVal += "_"+aS[i];
-    }
-    if (bDebug) DebugN("monitorStateChanges.ctl:getPathLessOne|returns "+returnVal);
-    return returnVal;
-  }
-  
-  // otherwise return empty string
-  
-  return returnVal;
 }
 

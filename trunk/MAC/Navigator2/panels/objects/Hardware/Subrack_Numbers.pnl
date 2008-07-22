@@ -30,6 +30,9 @@ PANEL,-1 -1 257 137 N "_3DFace" 0
   setValue(\"Subrack_Txt\",\"text\",\"Subrack: \"+sNr);
   
 
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
   // connect for childUpdates
   showChildState(baseDP);
   // connect for selfUpdates
@@ -158,6 +161,5 @@ LANG:1 6 Layer8
 0
 3 0 "selfState"
 "objects\\lofar_self_state.pnl" 173 17 T 1 1 0 1 0 -1
-1
-"$object""Subrack"
+0
 0
