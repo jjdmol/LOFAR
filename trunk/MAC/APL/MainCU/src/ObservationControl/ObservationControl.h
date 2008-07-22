@@ -104,6 +104,7 @@ private:
 	string					itsObsDPname;			// DPname of ObservationDP
    	RTDBPropertySet*		itsPropertySet;			// my own propset.
 	ClaimMgrTask*			itsClaimMgrTask;		// for resolving the DPnames
+	GCFITCPort*				itsClaimMgrPort;
 //	RTDBPropertySet*		itsBootPS;
 //	map <string, RTDBPropertySet*>	itsStationDPs;
 
