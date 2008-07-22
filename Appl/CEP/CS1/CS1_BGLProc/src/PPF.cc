@@ -13,15 +13,18 @@
 #include <cmath>
 
 
-#if defined HAVE_MASS
-#include <mass.h>
-#endif
-
-
 namespace LOFAR {
 namespace CS1 {
 
-#if !defined HAVE_MASS
+#if defined HAVE_MASS
+
+extern "C"
+{
+  // the return conventions for std::complex<double> and double _Complex differ!
+  double _Complex cosisin(double);
+}
+
+#else
 
 inline static dcomplex cosisin(double x)
 {
