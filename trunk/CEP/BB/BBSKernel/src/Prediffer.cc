@@ -163,6 +163,27 @@ void Prediffer::attachChunk(VisData::Pointer chunk)
 
 void Prediffer::detachChunk()
 {
+    // Remove the funklets from all parameters.
+    for(MeqParmGroup::iterator it = itsParameters.begin();
+        it != itsParameters.end();
+        ++it)
+    {
+        it->second.removeFunklets();
+    }
+    
+    // Clear all cached parameter values.
+    itsParameterValues.clear();
+    
+    // Reset the data selection.
+    itsBaselineSelection.clear();
+    itsPolarizationSelection.clear();
+
+    // TODO: Clear cached UVW values.
+    resetState();
+    
+    // TODO: Clear polarization map.
+
+    // Release chunk.
     itsChunk.reset();
 }
 
