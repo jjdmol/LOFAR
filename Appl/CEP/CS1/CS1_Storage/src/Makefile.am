@@ -2,7 +2,7 @@ lib_LTLIBRARIES			= libcs1_storage.la
 
 libcs1_storage_la_SOURCES	= Package__Version.cc  AH_Storage.cc           \
 				  WH_SubbandWriter.cc     \
-				  ACCmain_Storage.cc       \
+				  AHC_Storage.cc          \
 				  MSWriter.cc             \
 				  MSWriterImpl.cc
 

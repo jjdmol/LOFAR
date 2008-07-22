@@ -16,7 +16,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/LofarLocators.h>
 
-#include <tinyCEP/ApplicationHolderController.h>
+#include <CS1_Storage/AHC_Storage.h>
 #include <CS1_Storage/AH_Storage.h>
 #include <CS1_Storage/Package__Version.h>
 
@@ -24,7 +24,7 @@ using namespace LOFAR;
 using namespace LOFAR::CS1;
 
 #if 1
-#include <CS1_Storage/ACCmain_Storage.h>
+#include <PLC/ACCmain.h>
 
 int main(int argc, char* argv[]) {
   
@@ -38,8 +38,8 @@ int main(int argc, char* argv[]) {
   LOG_DEBUG_STR("Initialized logsystem with: " << aCL.locate(logPropFile));
 
   AH_Storage myAH;
-  ApplicationHolderController myAHC(myAH, 1); // listen to ACC Controller once every 1 runs.
-  return ACCmain_Storage(argc, argv, &myAHC);
+  AHC_Storage myAHC(myAH, 1); // listen to ACC Controller once every 1 runs.
+  return ACC::PLC::ACCmain(argc, argv, &myAHC);
 }
 
 #else
