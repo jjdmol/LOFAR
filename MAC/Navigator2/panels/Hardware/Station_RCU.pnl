@@ -32,6 +32,9 @@ PANEL,-1 -1 870 803 N "_3DFace" 0
   
   // no hardware selection, so no trigger mechanism needed in this panel. 
 
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
   // connect for selfUpdates
   showSelfState(baseDP);
 
@@ -991,8 +994,7 @@ LANG:1 6 Layer8
 0
 3 43 "selfState"
 "objects\\lofar_self_state.pnl" 25 171 T 196 1 0 1 54.5 489.5
-1
-"$object""RCU"
+0
 3 44 ""
 "objects\\Hardware\\RCU_ADC_Component.pnl" 273 516 T 200 1 0 1 27 -16
 0

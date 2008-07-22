@@ -1,19 +1,21 @@
 V 10
 1
 LANG:1 0 
-PANEL,-1 -1 201 69 N "_3DFace" 1
+PANEL,-1 -1 369 69 N "_3DFace" 1
 "$Station"
 "main()
 {
   
   baseDP           = $Station+\":LOFAR\";
+  stationDP        = baseDP+\"_PIC\";
   
-  setValue(\"\",\"toolTipText\",$Station);	
+
+  setValue(\"selfState.light\",\"toolTipText\",$Station+ \" state\");
 
   // connect for childUpdates
-  showChildState(baseDP);
+  showChildState(stationDP);
   // connect for selfUpdates
-  showSelfState(baseDP);
+  showSelfState(stationDP);
 }" 0
  E "main(int x, int y)
 {
@@ -32,6 +34,7 @@ PANEL,-1 -1 201 69 N "_3DFace" 1
 E "#uses \"navPanel.ctl\"
 
 string baseDP          = \"\";
+string stationDP       = \"\";
 bool   bDoubleClicked  = false;
 
 // routine for single mouse click
@@ -62,7 +65,7 @@ void dblClick() {
 
 // routine for right mouse click
 void rClick() {
-  navPanel_setEvent($Station,\"EventRightClick\");
+  navPanel_statePopup(stationDP);
 }" 0
  2
 "CBRef" "1"
@@ -120,7 +123,7 @@ void StationCallback(string dp1, bool aTrig) {
 7 0
 "selfState.light"
 ""
-1 299 316 E E E 1 E 1 E N "Lofar_operational" E N "Lofar_operational" E E
+1 299 316 E E E 1 E 1 E N "_3DText" E N "_dpdoesnotexist" E E
  "main()
 {
   rClick();
@@ -138,11 +141,7 @@ LANG:1 4 test
 
 1
 "dashclr"N "_Transparent"
-"main()
-{
-  setValue(\"selfState.light\",\"toolTipText\",baseDP+\" state\");
-}" 0
- "main()
+E "main()
 {
   click();
 }" 0
@@ -168,15 +167,11 @@ LANG:1 4 test
 
 1
 "dashclr"N "_Transparent"
-"main()
-{
-  setValue(\"childStateBorder\",\"toolTipText\",baseDP+\" childstate\");
-}" 0
- "main()
+E "main()
 {
   click();
 }" 0
- 0 3 1 2 1 E 1.0826177569242 0 1.00433361619441 -53.8744476585278 -50.2600169716646 1 E 59 60 6 6
+ 0 3 1 2 1 E 1.0826177569242 0 1.00433361619441 -53.87444765852779 -50.26001697166461 1 E 59 60 6 6
 0
 LAYER, 1 
 1

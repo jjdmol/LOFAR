@@ -24,6 +24,7 @@ PANEL,-1 -1 120 400 N "_3DFace" 1
     
   baseDP+=\"_RSPBoard\"+rNr+\"_RCU\"+rcuNr;
  
+  
   // check if the required datapoint for this view are enabled and accessible
   if (dpExists(baseDP+\".status.state\")) {
     dpConnect(\"updateRCU\",baseDP + \".status.state\",

@@ -14,6 +14,9 @@ PANEL,-1 -1 429 479 N "_3DFace" 1
   setValue(\"text_RCUNr\", \"text\", \"RCU\" + rcuNr );
   baseDP+=\"_RCU\"+ rcuNr;
 
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+
   // connect for selfUpdates
   showSelfState(baseDP);
 }
@@ -207,7 +210,6 @@ LAYER, 7
 LANG:1 6 Layer8
 0
 3 1 "selfState"
-"objects\\lofar_self_state.pnl" 25 171 T 12 1 0 0.933333333333333 -11 -106.6
-1
-"$object""RCU"
+"objects\\lofar_self_state.pnl" 25 171 T 12 1 0 0.933333333333333 -11 -111.5999999999999
+0
 0

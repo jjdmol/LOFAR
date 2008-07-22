@@ -7,6 +7,9 @@ PANEL,-1 -1 735 210 N "_3DFace" 0
 
   baseDP = g_currentDatapoint+\".clockBoard\";
   
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
   // connect for selfUpdates
   showSelfState(baseDP);
   
@@ -504,6 +507,5 @@ LANG:1 6 Layer8
 0
 3 0 "selfState"
 "objects\\lofar_self_state.pnl" 66 132 T 31 1 0 1 576 -55
-1
-"$object""ClockBoard"
+0
 0

@@ -43,6 +43,7 @@
 // navFunct_bareDBName                        : Returns a DatabaseName without the : (if any)
 // navFunct_findFirstOne                      : Returns the number of a given array that is true for a certain range
 // navFunct_acknowledgePanel                  : Returns acknowledge on a given action
+// navFunct_getPathLessOne                    : Returns path less last leaf/node
 
 #uses "GCFLogging.ctl"
 #uses "GCFCommon.ctl"
@@ -558,3 +559,51 @@ bool navFunct_acknowledgePanel(string text) {
   if (dreturns == "true") retVal=true;
   return retVal;
 }
+
+///////////////////////////////////////////////////////////////////////////
+//Function navFunct_getPathLessOne
+// 
+// Returns the given path string less the last item. Paths can contain
+// _ and . seperated items Like in:
+// LOFAR_PIC_Cabinet0_Subrack0_RSPBoard0.AP0 (In fact the . seperated members
+// are nested elements, but we need to tread them as a Path member since they
+// can contain states and or childStates
+//
+//
+///////////////////////////////////////////////////////////////////////////
+string navFunct_getPathLessOne(string path) {
+  
+  string returnVal="";
+  dyn_string aS;
+  
+  // look if there is a . in the pathname, 
+  // if so strip the last one plus point and return the result
+  // and we are done
+  
+  aS = strsplit(path,'.');
+  if (dynlen(aS) > 1) {
+  	returnVal = aS[1];
+  	for (int i=2; i< dynlen(aS);i++) {
+      returnVal += "."+aS[i];
+    }
+    return returnVal;
+  }
+  
+  // if no . found then look if there is a _ in the pathname, 
+  // if so strip the last one plus _ and return the result
+  // and we are done
+  
+  aS = strsplit(path,'_');
+  if (dynlen(aS) > 1) {
+  	returnVal = aS[1];
+  	for (int i=2; i< dynlen(aS);i++) {
+      returnVal += "_"+aS[i];
+    }
+    return returnVal;
+  }
+  
+  // otherwise return empty string
+  
+  return returnVal;
+}
+

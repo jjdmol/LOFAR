@@ -35,6 +35,9 @@ PANEL,-1 -1 122 700 N "_3DFace" 1
  
   LOG_DEBUG(\"TBB_RSP.pnl:initialize|Composed datapoint \" + g_currentDatapoint + \": \" + baseDP);
   
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
   // connect for childUpdates
   showChildState(baseDP);
   // connect for selfUpdates
@@ -232,6 +235,5 @@ LANG:1 6 Layer8
 0
 3 4 "selfState"
 "objects\\lofar_self_state.pnl" 24 587 T 7 1 0 1 -9 -572
-1
-"$object""RSPBoard"
+0
 0

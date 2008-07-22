@@ -20,6 +20,9 @@ PANEL,-1 -1 191 716 N "_3DFace" 0
     setValue(\"txt_version\", \"text\", \"ver: x.!\");
   }
 
+  // pass baseDP to selfstate Object to work with
+  setValue(\"selfState.light\",\"toolTipText\",baseDP);
+  
   // connect for selfUpdates
   showSelfState(baseDP);
 }" 0
@@ -254,6 +257,5 @@ LANG:1 6 Layer8
 0
 3 5 "selfState"
 "objects\\lofar_self_state.pnl" 45 590 T 7 1 0 1 -30 -575
-1
-"$object""TBBoard"
+0
 0
