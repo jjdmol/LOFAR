@@ -12,7 +12,7 @@ CalibrationControl_LDADD		= $(LOFAR_DEPEND)
 CalibrationControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= CalibrationControl.h \
-							  CalibrationControlDefines.h
+							  PVSSDatapointDefs.h
 
 INSTHDRS 					= 
 

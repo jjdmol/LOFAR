@@ -37,7 +37,7 @@
 #include <signal.h>
 
 #include "BeamControl.h"
-#include "BeamControlDefines.h"
+#include "PVSSDatapointDefs.h"
 #include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
@@ -142,7 +142,7 @@ void    BeamControl::setState(CTState::CTstateNr     newState)
 
 	if (itsPropertySet) {
 		CTState		cts;
-		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString(cts.name(newState)));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString(cts.name(newState)));
 	}
 }   
 
@@ -176,13 +176,19 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 
     case F_INIT: {
 		// Get access to my own propertyset.
-		string	propSetName(createPropertySetName(PSN_BEAM_CTRL, getName()));
+		string	propSetName(createPropertySetName(PSN_BEAM_CTRL, getName(), 
+												  globalParameterSet()->getString("_DPname")));
 		LOG_INFO_STR ("Activating PropertySet" << propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
 											 PST_BEAM_CTRL,
 											 PSAT_RW,
 											 this);
 		// Wait for timer that is set on DP_CREATED event
+
+		// Instruct loggingProcessor
+//		LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".BeamCtrl");
+		LOG_INFO_STR("MACProcessScope: " << propSetName);
+		// NOTE: the SASgateway is not yet aware of claimMgr so the data will not be transferred to SAS.
 	}
 	break;
 
@@ -200,11 +206,6 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 		if (!itsPropertySetInitialized) {
 			itsPropertySetInitialized = true;
 
-			// Instruct codeloggingProcessor
-			// TODO
-			uint32	treeID = getObservationNr(getName());
-			LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".BeamCtrl");
-
 			// first redirect signalHandler to our quiting state to leave PVSS
 			// in the right state when we are going down
 			thisBeamControl = this;
@@ -214,8 +215,8 @@ GCFEvent::TResult BeamControl::initial_state(GCFEvent& event,
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
 			GCFPValueArray		dpeValues;
-			itsPropertySet->setValue(PVSSNAME_FSM_CURACT,	GCFPVString("initial"));
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,	GCFPVString(""));
+			itsPropertySet->setValue(PN_FSM_CURRENT_ACTION,	GCFPVString("initial"));
+			itsPropertySet->setValue(PN_FSM_ERROR,	GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_CONNECTED,		GCFPVBool  (false));
 			itsPropertySet->setValue(PN_BC_SUB_ARRAY,		GCFPVString(""));
 			itsPropertySet->setValue(PN_BC_SUBBAND_LIST,	GCFPVDynArr(LPT_DYNSTRING, dpeValues));
@@ -287,8 +288,8 @@ GCFEvent::TResult BeamControl::started_state(GCFEvent& event, GCFPortInterface& 
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("started"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+//		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("started"));
+		itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		itsPropertySet->setValue(PN_BC_CONNECTED,	GCFPVBool  (false));
 		break;
 	}
@@ -363,8 +364,8 @@ GCFEvent::TResult BeamControl::claimed_state(GCFEvent& event, GCFPortInterface& 
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("claimed"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+//		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("claimed"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 		break;
 	}
 
@@ -455,8 +456,8 @@ GCFEvent::TResult BeamControl::active_state(GCFEvent& event, GCFPortInterface& p
 	switch (event.signal) {
 	case F_ENTRY: {
 		// update PVSS
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("active"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+//		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("active"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 		break;
 	}
 
@@ -563,8 +564,8 @@ GCFEvent::TResult BeamControl::quiting_state(GCFEvent& event, GCFPortInterface& 
 		// tell Parent task we like to go down.
 		itsParentControl->nowInState(getName(), CTState::QUIT);
 
-//		itsPropertySet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("quiting"));
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString(""));
+//		itsPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("quiting"));
+		itsPropertySet->setValue(PN_FSM_ERROR, GCFPVString(""));
 		// disconnect from BeamServer
 		itsBeamServer->close();
 		break;
@@ -745,7 +746,7 @@ bool BeamControl::handleBeamFreeAck(GCFEvent&		event)
 	BSBeamfreeackEvent	ack(event);
 	if (ack.status != 0) {
 		LOG_ERROR_STR("Beam de-allocation failed with errorcode: " << ack.status);
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString("De-allocation of the beam failed."));
+		itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString("De-allocation of the beam failed."));
 		return (false);	
 	}
 

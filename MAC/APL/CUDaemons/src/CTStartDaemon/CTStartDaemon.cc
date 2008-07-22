@@ -243,7 +243,7 @@ int32 CTStartDaemon::startController(uint16			cntlrType,
 {
 	// not found? report problem
 	if (cntlrType == CNTLRTYPE_NO_TYPE || cntlrType >= CNTLRTYPE_NR_TYPES) {
-		LOG_DEBUG_STR("No support for starting controller of the type " << cntlrType);
+		LOG_ERROR_STR("No support for starting controller of the type " << cntlrType);
 		return (SD_RESULT_UNSUPPORTED_TYPE);
 	}
 
@@ -251,7 +251,7 @@ int32 CTStartDaemon::startController(uint16			cntlrType,
 	ProgramLocator		PL;
 	string	executable = PL.locate(getExecutable(cntlrType));
 	if (executable.empty()) {
-		LOG_DEBUG_STR("Executable '" << getExecutable(cntlrType) << "' not found.");
+		LOG_ERROR_STR("Executable '" << getExecutable(cntlrType) << "' not found.");
 		return (SD_RESULT_PROGRAM_NOT_FOUND);
 	}
 
@@ -261,10 +261,10 @@ int32 CTStartDaemon::startController(uint16			cntlrType,
 									cntlrName.c_str(),
 									parentHost.c_str(),
 									parentService.c_str());
-	LOG_DEBUG_STR("About to start: " << startCmd);
+	LOG_INFO_STR("About to start: " << startCmd);
 
 	int32	result = system (startCmd.c_str());
-	LOG_DEBUG_STR ("Result of start = " << result);
+	LOG_INFO_STR ("Result of start = " << result);
 
 	if (result == -1) {
 		return (SD_RESULT_START_FAILED);

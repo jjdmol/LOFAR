@@ -33,7 +33,7 @@
 
 #include "RSPMonitor.h"
 #include "RCUConstants.h"
-#include "StationPermDatapointDefs.h"
+#include "PVSSDatapointDefs.h"
 
 
 namespace LOFAR {
@@ -128,8 +128,8 @@ GCFEvent::TResult RSPMonitor::initial_state(GCFEvent& event,
 	case F_TIMER: {
 		// update PVSS.
 		LOG_TRACE_FLOW ("Updateing state to PVSS");
-		itsOwnPropertySet->setValue(PN_HWM_RSP_CURRENT_ACTION, GCFPVString("initial"));
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,  GCFPVString(""));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("RSP:initial"));
+//		itsOwnPropertySet->setValue(PN_FSM_ERROR,  GCFPVString(""));
 		
 		LOG_DEBUG_STR("Going to connect to the RSPDriver.");
 		TRAN (RSPMonitor::connect2RSP);
@@ -166,15 +166,15 @@ GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event,
 	switch (event.signal) {
 	case F_ENTRY:
 		// update PVSS
-		itsOwnPropertySet->setValue(PN_HWM_RSP_CURRENT_ACTION, GCFPVString("connecting"));
-		itsOwnPropertySet->setValue(PN_HWM_RSP_CONNECTED,GCFPVBool(false));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("RSP:connecting"));
+		itsOwnPropertySet->setValue(PN_HWM_RSP_CONNECTED,  GCFPVBool(false));
 		itsRSPDriver->open();		// will result in F_CONN or F_DISCONN
 		break;
 
 	case F_CONNECTED:
 		if (&port == itsRSPDriver) {
 			LOG_DEBUG ("Connected with RSPDriver, going to get the configuration");
-			itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,  GCFPVString(""));
+//			itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,  GCFPVString(""));
 			itsOwnPropertySet->setValue(PN_HWM_RSP_CONNECTED,GCFPVBool(true));
 			TRAN(RSPMonitor::askConfiguration);		// go to next state.
 		}
@@ -184,13 +184,13 @@ GCFEvent::TResult RSPMonitor::connect2RSP(GCFEvent& event,
 		port.close();
 		ASSERTSTR (&port == itsRSPDriver, 
 								"F_DISCONNECTED event from port " << port.getName());
-		LOG_DEBUG("Connection with RSPDriver failed, retry in 2 seconds");
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR, GCFPVString("connection timeout"));
-		itsTimerPort->setTimer(2.0);
+		LOG_WARN("RSP:Connection with RSPDriver failed, retry in 10 seconds");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR, GCFPVString("RSP:connection timeout"));
+		itsTimerPort->setTimer(10.0);
 		break;
 
 	case F_TIMER:
-		itsRSPDriver->open();	// results in F_COON or F_DISCON
+		itsRSPDriver->open();	// results in F_CONN or F_DISCON
 		break;
 
 	case DP_SET:
@@ -222,7 +222,7 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
   
 	switch (event.signal) {
 	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_HWM_RSP_CURRENT_ACTION,GCFPVString("asking configuration"));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:asking configuration"));
 		RSPGetconfigEvent	getconfig;
 		itsRSPDriver->send(getconfig);
 	}
@@ -254,16 +254,16 @@ GCFEvent::TResult RSPMonitor::askConfiguration(GCFEvent& event,
 	
 		// do some checks
 		if (itsNrRSPboards != (uint32)ack.max_rspboards) {
-			LOG_WARN_STR("RSPdriver only controls " << itsNrRSPboards << " of " << ack.max_rspboards 
+			LOG_WARN_STR("RSP:RSPdriver only controls " << itsNrRSPboards << " of " << ack.max_rspboards 
 						<< " RSPboards, cannot monitor full station");
 		}
 		if (itsNrRSPboards * NR_RCUS_PER_RSPBOARD != itsNrRCUs) {
-			LOG_INFO_STR("Station not fully equiped, only " << itsNrRCUs << " of " 
+			LOG_INFO_STR("RSP:Station not fully equiped, only " << itsNrRCUs << " of " 
 						<< itsNrRSPboards * NR_RCUS_PER_RSPBOARD << "RCUs");
 		}
 
 		LOG_DEBUG ("Going to allocate the property-sets");
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::createPropertySets);				// go to next state.
 		}
 		break;
@@ -299,7 +299,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 	switch (event.signal) {
 
 	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_HWM_RSP_CURRENT_ACTION,GCFPVString("create PropertySets"));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:create PropertySets"));
 		// resize vectors.
 		itsCabinets.resize(itsNrCabinets,  0);
 		itsSubracks.resize(itsNrSubracks,  0);
@@ -358,7 +358,7 @@ GCFEvent::TResult RSPMonitor::createPropertySets(GCFEvent& event,
 			ASSERTSTR(itsRCUs[rcu], "Allocation of PS for rcu " << rcu << " failed.");
 		}
 		LOG_DEBUG_STR("Allocation of all propertySets successfull, going to operational mode");
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::askVersion);
 	}
 	break;
@@ -398,8 +398,8 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 	switch (event.signal) {
 
 	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_HWM_RSP_CURRENT_ACTION,GCFPVString("getting version info"));
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:getting version info"));
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		RSPGetversionEvent	getVersion;
 		getVersion.timestamp.setNow();
 		getVersion.cache = true;
@@ -410,8 +410,8 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 	case RSP_GETVERSIONACK: {
 		RSPGetversionackEvent		ack(event);
 		if (ack.status != SUCCESS) {
-			LOG_ERROR_STR ("Failed to get the version information, trying other information");
-			itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString("getVersion error"));
+			LOG_ERROR_STR ("RSP:Failed to get the version information, trying other information");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getVersion error"));
 			TRAN(RSPMonitor::askRSPinfo);				// go to next state.
 			break;
 		}
@@ -448,7 +448,7 @@ GCFEvent::TResult RSPMonitor::askVersion(GCFEvent& event,
 		}
 
 		LOG_DEBUG_STR ("Version information updated, going to status information");
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::askRSPinfo);				// go to next state.
 		break;
 	}
@@ -488,8 +488,8 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 	switch (event.signal) {
 
 	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_HWM_RSP_CURRENT_ACTION,GCFPVString("updating RSP info"));
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:updating RSP info"));
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		RSPGetstatusEvent	getStatus;
 		getStatus.timestamp.setNow();
 		getStatus.cache = true;
@@ -501,14 +501,9 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 	case RSP_GETSTATUSACK: {
 		RSPGetstatusackEvent		ack(event);
 		if (ack.status != SUCCESS) {
-			LOG_ERROR_STR ("Failed to get the status information, trying other information");
-			itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString("getStatus error"));
-#if 1
+			LOG_ERROR_STR ("RSP:Failed to get the status information, trying other information");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getStatus error"));
 			TRAN(RSPMonitor::askRCUinfo);				// go to next state.
-#else
-			LOG_WARN ("SKIPPING RCU INFO FOR A MOMENT");
-			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-#endif
 			break;
 		}
 
@@ -532,6 +527,8 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 									double(ack.timestamp));
 			itsRSPs[rsp]->setValue(PN_RSP_ETHERNET_LAST_ERROR,       GCFPVUnsigned(bStat.eth.last_error), 
 									double(ack.timestamp));
+			setObjectState(getName(), itsRSPs[rsp]->getFullScope()+".Ethernet", (bStat.eth.nof_frames != 0) ? 
+															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 			
 			// MEP status
 			itsRSPs[rsp]->setValue(PN_RSP_MEP_SEQNR, GCFPVUnsigned(bStat.mep.seqnr), 
@@ -584,13 +581,8 @@ GCFEvent::TResult RSPMonitor::askRSPinfo(GCFEvent& event,
 		} // for all boards
 
 		LOG_DEBUG_STR ("RSPboard information updated, going to RCU information");
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
-#if 1
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::askRCUinfo);				// go to next state.
-#else
-		LOG_WARN ("SKIPPING RCU INFO FOR A MOMENT");
-		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
-#endif
 		break;
 	}
 
@@ -633,8 +625,8 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 
 	case F_ENTRY: {
 		// update PVSS
-		itsOwnPropertySet->setValue(PN_HWM_RSP_CURRENT_ACTION,GCFPVString("updating RSP info"));
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:updating RSP info"));
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		longlong	one(1);
 		RSPGetrcuEvent	getStatus;
 		getStatus.timestamp.setNow();
@@ -649,12 +641,12 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 	case RSP_GETRCUACK: {
 		RSPGetrcuackEvent	ack(event);
 		if (ack.status != SUCCESS) {
-			LOG_ERROR_STR ("Failed to get the RCU information, trying other information");
-			itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString("getRCU error"));
+			LOG_ERROR_STR ("RSP:Failed to get the RCU information, trying other information");
+			itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:getRCU error"));
 			TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
 			break;
 		}
-#if 1
+
 		// move the information to the database.
 		string		versionStr;
 		string		DPEname;
@@ -696,10 +688,12 @@ GCFEvent::TResult RSPMonitor::askRCUinfo(GCFEvent& event, GCFPortInterface& port
 						GCFPVUnsigned(uint32((rawValue & ATT_MASK) >> ATT_OFFSET)),
 						double(ack.timestamp), false);
 			itsRCUs[rcu]->flush();
+			setObjectState(getName(), itsRCUs[rcu]->getFullScope(), (rawValue & ADC_POWER_MASK) ? 
+															RTDB_OBJ_STATE_OPERATIONAL : RTDB_OBJ_STATE_OFF);
 		} // for all boards
-#endif
+
 		LOG_DEBUG ("Updated all RCU information, waiting for next cycle");
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
+//		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString(""));
 		TRAN(RSPMonitor::waitForNextCycle);			// go to next state.
 	}
 	break;
@@ -738,14 +732,14 @@ GCFEvent::TResult RSPMonitor::waitForNextCycle(GCFEvent& event,
   
 	switch (event.signal) {
 	case F_ENTRY: {
-		itsOwnPropertySet->setValue(PN_HWM_RSP_CURRENT_ACTION,GCFPVString("wait for next cycle"));
+		itsOwnPropertySet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("RSP:wait for next cycle"));
 		int		waitTime = itsPollInterval - (time(0) % itsPollInterval);
 		if (waitTime == 0) {
 			waitTime = itsPollInterval;
 		}
 		itsTimerPort->cancelAllTimers();
 		itsTimerPort->setTimer(double(waitTime));
-		LOG_DEBUG_STR("Waiting " << waitTime << " seconds for next cycle");
+		LOG_INFO_STR("RSP:Waiting " << waitTime << " seconds for next cycle");
 	}
 	break;
 
@@ -781,8 +775,8 @@ void RSPMonitor::_disconnectedHandler(GCFPortInterface& port)
 {
 	port.close();
 	if (&port == itsRSPDriver) {
-		LOG_DEBUG("Connection with RSPDriver failed, going to reconnect state");
-		itsOwnPropertySet->setValue(PN_HWM_RSP_ERROR,GCFPVString("connection lost"));
+		LOG_WARN("RSP:Connection with RSPDriver failed, going to reconnect state");
+		itsOwnPropertySet->setValue(PN_FSM_ERROR,GCFPVString("RSP:connection lost"));
 		TRAN (RSPMonitor::connect2RSP);
 	}
 }
@@ -804,8 +798,8 @@ GCFEvent::TResult RSPMonitor::finish_state(GCFEvent& event, GCFPortInterface& po
 
 	case F_ENTRY: {
 		// update PVSS
-		itsOwnPropertySet->setValue(string(PN_HWM_RSP_CURRENT_ACTION),GCFPVString("finished"));
-		itsOwnPropertySet->setValue(string(PN_HWM_RSP_ERROR),GCFPVString(""));
+		itsOwnPropertySet->setValue(string(PN_FSM_CURRENT_ACTION),GCFPVString("RSP:finished"));
+//		itsOwnPropertySet->setValue(string(PN_HWM_RSP_ERROR),GCFPVString(""));
 		break;
 	}
   

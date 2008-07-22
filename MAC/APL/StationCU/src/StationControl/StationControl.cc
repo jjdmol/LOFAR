@@ -1,6 +1,6 @@
 //	StationControl.cc: Implementation of the StationControl task
 //
-//	Copyright (C) 2006
+//	Copyright (C) 2006-2008
 //	ASTRON (Netherlands Foundation for Research in Astronomy)
 //	P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -41,7 +41,7 @@
 
 #include "ActiveObs.h"
 #include "StationControl.h"
-#include "StationControlDefines.h"
+#include "PVSSDatapointDefs.h"
 #include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
@@ -146,17 +146,17 @@ void StationControl::_databaseEventHandler(GCFEvent& event)
 	switch(event.signal) {
 	case DP_CHANGED:  {
 		DPChangedEvent		dpEvent(event);
-		if (strstr(dpEvent.DPname.c_str(), PN_SC_CLOCK) != 0) {
+		if (strstr(dpEvent.DPname.c_str(), PN_SCK_CLOCK) != 0) {
 			itsClock = ((GCFPVInteger*)(dpEvent.value._pValue))->getValue();
 			LOG_DEBUG_STR("Received clock change from PVSS, clock is now " << itsClock);
 			break;
 		}
 
 		// don't watch state and error fields.
-		if ((strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_STATE) != 0) || 
-			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_ERROR) != 0) ||
-			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_CURACT) != 0) ||
-			(strstr(dpEvent.DPname.c_str(), PVSSNAME_FSM_LOGMSG) != 0)) {
+		if ((strstr(dpEvent.DPname.c_str(), PN_OBJ_STATE) != 0) || 
+			(strstr(dpEvent.DPname.c_str(), PN_FSM_ERROR) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PN_FSM_CURRENT_ACTION) != 0) ||
+			(strstr(dpEvent.DPname.c_str(), PN_FSM_LOG_MSG) != 0)) {
 			return;
 		}
  
@@ -226,8 +226,8 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
-			itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("Initial"));
-			itsOwnPropSet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+			itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Initial"));
+			itsOwnPropSet->setValue(PN_FSM_ERROR,GCFPVString(""));
 
 			// enable clock propertyset.
 			string	clkPropSetName(createPropertySetName(PSN_STATION_CLOCK, getName()));
@@ -242,7 +242,7 @@ GCFEvent::TResult StationControl::initial_state(GCFEvent& event,
 			LOG_DEBUG ("Attached to external propertySets");
 
 			GCFPVInteger	clockVal;
-			itsClockPropSet->getValue(PN_SC_CLOCK, clockVal);
+			itsClockPropSet->getValue(PN_SCK_CLOCK, clockVal);
 			itsClock = clockVal.getValue();
 			LOG_DEBUG_STR("Clock in PVSS has value: " << itsClock);
 
@@ -286,7 +286,7 @@ GCFEvent::TResult StationControl::connect_state(GCFEvent& event,
    		break;
 
 	case F_ENTRY: {
-		itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("Connected"));
+		itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Connected"));
 
 		// start DigitalBoardController
 		LOG_DEBUG_STR("Starting DigitalBoardController");
@@ -375,8 +375,8 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 
 	case F_ENTRY: {
 		// update PVSS
-		itsOwnPropSet->setValue(PVSSNAME_FSM_CURACT,GCFPVString("Active"));
-		itsOwnPropSet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION,GCFPVString("Active"));
+		itsOwnPropSet->setValue(PN_FSM_ERROR,GCFPVString(""));
 	}
 	break;
 
@@ -472,7 +472,7 @@ GCFEvent::TResult StationControl::operational_state(GCFEvent& event, GCFPortInte
 								itsClock != theObs->second->obsPar()->sampleClock) {
 			itsClock = theObs->second->obsPar()->sampleClock;
 			LOG_DEBUG_STR ("Changing clock to " << itsClock);
-			itsClockPropSet->setValue(PN_SC_CLOCK,GCFPVInteger(itsClock));
+			itsClockPropSet->setValue(PN_SCK_CLOCK,GCFPVInteger(itsClock));
 			// TODO: give clock 5 seconds to stabelize
 		}
 
@@ -576,8 +576,8 @@ GCFEvent::TResult StationControl::finishing_state(GCFEvent& event, GCFPortInterf
 		itsParentPort->send(msg);
 
 		// update PVSS
-		itsOwnPropSet->setValue(string(PVSSNAME_FSM_CURACT),GCFPVString("Finished"));
-		itsOwnPropSet->setValue(string(PVSSNAME_FSM_ERROR),GCFPVString(""));
+		itsOwnPropSet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString("Finished"));
+		itsOwnPropSet->setValue(PN_FSM_ERROR,    GCFPVString(""));
 
 		itsTimerPort->setTimer(1L);
 		break;

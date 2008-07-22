@@ -34,7 +34,7 @@ using namespace LOFAR::StationCU;
 int main(int argc, char* argv[])
 {
 	// args: cntlrname, parentHost, parentService
-	GCFTask::init(argc, argv);
+	GCFTask::init(argc, argv, "StationControl");
 
 	ParentControl*	pc = ParentControl::instance();
 	pc->start();	// make initial transition
@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
 	ChildControl*	cc = ChildControl::instance();
 	cc->start();	// make initial transition
 
-	StationControl	dbc(argv[1]);
-	dbc.start(); 	// make initial transition
+	StationControl	sc(argv[1]);
+	sc.start(); 	// make initial transition
 
 	GCFTask::run();
 

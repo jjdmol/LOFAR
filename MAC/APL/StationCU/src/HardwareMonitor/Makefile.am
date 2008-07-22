@@ -15,7 +15,7 @@ HardwareMonitor_DEPENDENCIES= $(LOFAR_DEPEND)
 NOINSTHDRS 					= RSPMonitor.h \
 							  TBBMonitor.h \
 							  RCUConstants.h \
-							  StationPermDatapointDefs.h
+							  PVSSDatapointDefs.h
 
 INSTHDRS 					= 
 

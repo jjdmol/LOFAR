@@ -12,7 +12,7 @@ BeamControl_LDADD			= $(LOFAR_DEPEND)
 BeamControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= BeamControl.h \
-							  BeamControlDefines.h
+							  PVSSDatapointDefs.h
 
 INSTHDRS 					= 
 
