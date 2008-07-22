@@ -173,8 +173,7 @@ bool ChildControl::startChild (uint16				aCntlrType,
 									". Skipping creation of observation parset.");
 	}
 	else {
-		string	baseSetName = formatString("%s/Observation_%d", 
-											LOFAR_SHARE_LOCATION, anObsID);
+		string	baseSetName(observationParset(anObsID));
 		LOG_DEBUG_STR ("Reading parameterfile: " << baseSetName);
 		ParameterSet	wholeSet (baseSetName);
 		LOG_DEBUG_STR (wholeSet.size() << " elements in parameterfile");
@@ -211,9 +210,11 @@ bool ChildControl::startChild (uint16				aCntlrType,
 		cntlrSet.add("_instanceNr", lexical_cast<string>(instanceNr));
 		cntlrSet.add("_moduleName", nodeName);
 		cntlrSet.add("_treeID", lexical_cast<string>(anObsID));
+		cntlrSet.add("_DPname", wholeSet.getString("_DPname"));
 		cntlrSet.add("# moduleName", nodeName);
 		cntlrSet.add("# pathName", prefix+position+nodeName+".");
 		cntlrSet.add("# treeID", lexical_cast<string>(anObsID));
+		cntlrSet.add("# DPname", wholeSet.getString("_DPname"));
 		// Finally write to subset to the file.
 		cntlrSet.writeFile (cntlrSetName);
 

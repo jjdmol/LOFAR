@@ -12,7 +12,7 @@ DigitalBoardControl_LDADD		= $(LOFAR_DEPEND)
 DigitalBoardControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= DigitalBoardControl.h \
-							  DigitalBoardControlDefines.h
+							  PVSSDatapointDefs.h
 
 INSTHDRS 					= 
 

@@ -1,6 +1,6 @@
 //#  ControllerDefines.cc: Controller(name) related utilities
 //#
-//#  Copyright (C) 2006
+//#  Copyright (C) 2006-2008
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -244,7 +244,8 @@ string observationParset(int	obsID)
 //	@rcu@
 //
 string	createPropertySetName(const string&		propSetMask,
-							  const string&		controllerName)
+							  const string&		controllerName,
+							  const string&		realDPname)
 {
 	string	psName(propSetMask);		// editable copy
 	uint	pos;
@@ -270,9 +271,8 @@ string	createPropertySetName(const string&		propSetMask,
 			psName.replace(pos, 10, "");	
 		}
 	}
-	if ((pos = psName.find("@observation@")) != string::npos) {
-		psName.replace(pos, 13, string("Observation") +
-								lexical_cast<string>(getObservationNr(controllerName)));
+	if ((pos = psName.find("LOFAR_ObsSW_@observation@")) != string::npos) {
+		psName.replace(pos, 25, realDPname);
 	}
 
 	if ((pos = psName.find("@cabinet@")) != string::npos) {

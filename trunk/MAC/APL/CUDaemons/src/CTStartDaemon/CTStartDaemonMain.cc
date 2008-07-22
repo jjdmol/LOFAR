@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 {
 //	signal (SIGCHLD, SIG_IGN);
 
-	GCFTask::init(argc, argv, "StartDaemon");
+	GCFTask::init(argc, argv, "CTStartDaemon");
 
 	LOG_INFO("MACProcessScope: LOFAR_PermSW_Daemons_CTStartDaemon");
 

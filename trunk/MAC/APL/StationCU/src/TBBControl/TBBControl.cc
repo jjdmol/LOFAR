@@ -41,7 +41,7 @@
 
 //# local includes
 #include "TBBControl.h"
-#include "TBBControlDefines.h"
+#include "PVSSDatapointDefs.h"
 #include "TBBObservation.h"
 #include "TBBTrigger.h"
 #include "TBBReadCmd.h"
@@ -188,7 +188,8 @@ GCFEvent::TResult TBBControl::initial_state(GCFEvent& event,
 	
 	  case F_INIT: {
 			// Get access to my own propertyset.
-			string	propSetName(createPropertySetName(PSN_TBB_CTRL, getName()));
+			string	propSetName(createPropertySetName(PSN_TBB_CTRL, getName(),
+												  globalParameterSet()->getString("_DPname")));
 			LOG_INFO_STR ("Activating PropertySet" << propSetName);
 			itsPropertySet = new RTDBPropertySet(propSetName,
 												 PST_TBB_CTRL,

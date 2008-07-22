@@ -57,13 +57,6 @@ static const uint32	NR_RCUS_PER_CABINET		 = (NR_RCUS_PER_SUBRACK  * NR_SUBRACKS_
 
 #define PN_RSP_AP_VERSION_MASK		"AP%d.version"
 
-// next lines should be defined somewhere in Common.
-#define PVSSNAME_FSM_CURACT			"currentAction"
-#define PVSSNAME_FSM_ERROR			"error"
-#define PVSSNAME_FSM_LOGMSG			"logMsg"
-#define PVSSNAME_FSM_STATE			"state"
-#define PVSSNAME_FSM_CHILDSTATE		"childState"
-
   } // namespace StationCU
 } // namespace LOFAR
 

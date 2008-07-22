@@ -106,7 +106,8 @@ string 	observationParset(int	obsID);
 
 // Construct PS name solving markers line @observation@, @ring@, etc.
 string	createPropertySetName(const string&		propSetMask,
-							  const string&		controllerName);
+							  const string&		controllerName,
+							  const string&		realDPname = "REALDPNAME");
 
 // Construct a message the matches the given CTState and send it on the port.
 bool sendControlResult(GCF::TM::GCFPortInterface&	port,

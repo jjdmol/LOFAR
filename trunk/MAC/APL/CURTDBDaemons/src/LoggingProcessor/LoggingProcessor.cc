@@ -113,10 +113,12 @@ GCFEvent::TResult LoggingProcessor::initial(GCFEvent& event, GCFPortInterface& p
 	case F_ENTRY:
 	case F_TIMER:
 		if (!itsListener->isConnected()) {
+			LOG_DEBUG("Trying to start the listener for log4cplus");
 			itsListener->open();
 		}
 		else {
 			if (!itsBackDoor->isConnected()) {
+				LOG_DEBUG("Trying to start the listener for the LogClients");
 				itsBackDoor->open();
 			}
 		}
@@ -131,6 +133,7 @@ GCFEvent::TResult LoggingProcessor::initial(GCFEvent& event, GCFPortInterface& p
 	break;
 
 	case F_DISCONNECTED:
+		LOG_DEBUG("Starting Listener failed, retry in 5 seconds");
 		port.setTimer(5.0); // try again after 5 second
 	break;
 

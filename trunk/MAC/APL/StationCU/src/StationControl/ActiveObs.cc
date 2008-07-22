@@ -37,12 +37,8 @@
 #include <APL/APLCommon/Controller_Protocol.ph>
 #include <APL/APLCommon/StationInfo.h>
 #include <GCF/RTDB/DP_Protocol.ph>
-#include "StationControlDefines.h"
+#include "PVSSDatapointDefs.h"
 #include "ActiveObs.h"
-
-// Observation
-#define PSN_OBSERVATION	"LOFAR_ObsSW_@observation@"
-#define PST_OBSERVATION	"StnObservation"
 
 namespace LOFAR {
 	using ACC::APS::ParameterSet;

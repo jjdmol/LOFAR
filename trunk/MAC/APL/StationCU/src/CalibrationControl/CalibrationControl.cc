@@ -33,7 +33,7 @@
 #include <signal.h>
 
 #include "CalibrationControl.h"
-#include "CalibrationControlDefines.h"
+#include "PVSSDatapointDefs.h"
 #include "../Package__Version.h"
 
 using namespace LOFAR::GCF::TM;
@@ -136,7 +136,7 @@ void    CalibrationControl::setState(CTState::CTstateNr     newState)
 
 	if (itsPropertySet) {
 		CTState		cts;
-		itsPropertySet->setValue(PVSSNAME_FSM_CURACT, GCFPVString(cts.name(newState)));
+		itsPropertySet->setValue(PN_FSM_CURRENT_ACTION, GCFPVString(cts.name(newState)));
 	}
 }   
 
@@ -177,13 +177,19 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 
 	case F_ENTRY: {
 		// Get access to my own propertyset.
-		string	propSetName(createPropertySetName(PSN_CAL_CTRL, getName()));
+		string	propSetName(createPropertySetName(PSN_CAL_CTRL, getName(),
+												  globalParameterSet()->getString("_DPname")));
 		LOG_INFO_STR ("Activating PropertySet" << propSetName);
 		itsPropertySet = new RTDBPropertySet(propSetName,
 											 PST_CAL_CTRL,
 											 PSAT_RW | PSAT_TMP,
 											 this);
 		// Wait for timer that is set on DP_CREATED event
+
+		// Instruct loggingProcessor
+//		LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".CalCtrl");
+		LOG_INFO_STR("MACProcessScope: " << propSetName);
+		// NOTE: the SASgateway is not yet aware of claimMgr so the data will not be transferred to SAS.
 	}
 	break;
 
@@ -201,11 +207,6 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 		if (!itsPropertySetInitialized) {
 			itsPropertySetInitialized = true;
 
-			// Instruct CodeLoggingProcessor
-			// TODO
-			uint32	treeID = getObservationNr(getName());
-			LOG_INFO_STR("MACProcessScope: LOFAR.ObsSW.Observation" << treeID << ".CalCtrl");
-
 			// first redirect signalHandler to our finishing state to leave PVSS
 			// in the right state when we are going down
 			thisCalibrationControl = this;
@@ -215,14 +216,14 @@ GCFEvent::TResult CalibrationControl::initial_state(GCFEvent& event,
 			// update PVSS.
 			LOG_TRACE_FLOW ("Updateing state to PVSS");
 			GCFPValueArray		beamNameArr;
-			itsPropertySet->setValue(PVSSNAME_FSM_CURACT,GCFPVString ("initial"));
-			itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString (""));
-			itsPropertySet->setValue(PN_CC_CONNECTED,	GCFPVBool   (false));
-			itsPropertySet->setValue(PN_CC_BEAMNAMES,	GCFPVDynArr (LPT_DYNSTRING, beamNameArr));
-			itsPropertySet->setValue(PN_CC_ANTENNAARRAY,GCFPVString (""));
-			itsPropertySet->setValue(PN_CC_FILTER,		GCFPVString (""));
-			itsPropertySet->setValue(PN_CC_NYQUISTZONE,	GCFPVInteger(0));
-			itsPropertySet->setValue(PN_CC_RCUS,		GCFPVString (""));
+			itsPropertySet->setValue(PN_FSM_CURRENT_ACTION,	GCFPVString ("initial"));
+			itsPropertySet->setValue(PN_FSM_ERROR,			GCFPVString (""));
+			itsPropertySet->setValue(PN_CC_CONNECTED,		GCFPVBool   (false));
+			itsPropertySet->setValue(PN_CC_BEAM_NAMES,		GCFPVDynArr (LPT_DYNSTRING, beamNameArr));
+			itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,	GCFPVString (""));
+			itsPropertySet->setValue(PN_CC_FILTER,			GCFPVString (""));
+			itsPropertySet->setValue(PN_CC_NYQUISTZONE,		GCFPVInteger(0));
+			itsPropertySet->setValue(PN_CC_RCUS,			GCFPVString (""));
 		  
 			// Start ParentControl task
 			LOG_DEBUG ("Enabling ParentControl task and wait for my name");
@@ -286,7 +287,7 @@ GCFEvent::TResult CalibrationControl::started_state(GCFEvent& 		  event,
 
 	case F_ENTRY:
 		// update PVSS
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		itsPropertySet->setValue(PN_CC_CONNECTED,GCFPVBool(false));
 		break;
 
@@ -361,12 +362,12 @@ GCFEvent::TResult CalibrationControl::claimed_state(GCFEvent& 		  event,
 	case F_ENTRY: {
 		// update PVSS
 		GCFPValueArray		beamNameArr;
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR, GCFPVString (""));
-		itsPropertySet->setValue(PN_CC_BEAMNAMES,	 GCFPVDynArr (LPT_DYNSTRING, beamNameArr));
-		itsPropertySet->setValue(PN_CC_ANTENNAARRAY, GCFPVString (""));
-		itsPropertySet->setValue(PN_CC_FILTER,		 GCFPVString (""));
-		itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 GCFPVInteger(0));
-		itsPropertySet->setValue(PN_CC_RCUS,		 GCFPVString (""));
+		itsPropertySet->setValue(PN_FSM_ERROR, 			GCFPVString (""));
+		itsPropertySet->setValue(PN_CC_BEAM_NAMES,	 	GCFPVDynArr (LPT_DYNSTRING, beamNameArr));
+		itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,	GCFPVString (""));
+		itsPropertySet->setValue(PN_CC_FILTER,		 	GCFPVString (""));
+		itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 	GCFPVInteger(0));
+		itsPropertySet->setValue(PN_CC_RCUS,		 	GCFPVString (""));
 		break;
 	}
 
@@ -457,7 +458,7 @@ GCFEvent::TResult CalibrationControl::active_state(GCFEvent& event, GCFPortInter
 
 	case F_ENTRY: {
 		// update PVSS
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		break;
 	}
 
@@ -578,7 +579,7 @@ GCFEvent::TResult CalibrationControl::quiting_state(GCFEvent& 		  event,
 		// tell Parent task we like to go down.
 		itsParentControl->nowInState(getName(), CTState::QUIT);
 
-		itsPropertySet->setValue(PVSSNAME_FSM_ERROR,GCFPVString(""));
+		itsPropertySet->setValue(PN_FSM_ERROR,GCFPVString(""));
 		itsCalServer->close();
 		break;
 	}
@@ -643,11 +644,11 @@ bool	CalibrationControl::startCalibration()
 	} // for all beams
 
 	// inform operator about these values.
-	itsPropertySet->setValue(PN_CC_BEAMNAMES,	GCFPVDynArr(LPT_DYNSTRING, beamNameArr));
-	itsPropertySet->setValue(PN_CC_ANTENNAARRAY,GCFPVString(itsObsPar.antennaArray));
-	itsPropertySet->setValue(PN_CC_FILTER,		GCFPVString(itsObsPar.filter));
-	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	GCFPVInteger(itsObsPar.nyquistZone));
-	itsPropertySet->setValue(PN_CC_RCUS,		GCFPVString(
+	itsPropertySet->setValue(PN_CC_BEAM_NAMES,	 GCFPVDynArr(LPT_DYNSTRING, beamNameArr));
+	itsPropertySet->setValue(PN_CC_ANTENNA_ARRAY,GCFPVString(itsObsPar.antennaArray));
+	itsPropertySet->setValue(PN_CC_FILTER,		 GCFPVString(itsObsPar.filter));
+	itsPropertySet->setValue(PN_CC_NYQUISTZONE,	 GCFPVInteger(itsObsPar.nyquistZone));
+	itsPropertySet->setValue(PN_CC_RCUS,		 GCFPVString(
 										compactedArrayString(globalParameterSet()->
 										getString("Observation.receiverList"))));
 	return (true);

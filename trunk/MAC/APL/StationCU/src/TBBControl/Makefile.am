@@ -19,7 +19,7 @@ NOINSTHDRS 					= TBBControl.h \
 							  TBBReadCmd.h \
 							  VHECRTask.h \
 							  TBBObservation.h  \
-							  TBBControlDefines.h
+							  PVSSDatapointDefs.h
 
 INSTHDRS 					= 
 

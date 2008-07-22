@@ -14,7 +14,7 @@ StationControl_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 NOINSTHDRS 					= StationControl.h \
 							  ActiveObs.h \
-							  StationControlDefines.h
+							  PVSSDatapointDefs.h
 
 INSTHDRS 					= 
 
