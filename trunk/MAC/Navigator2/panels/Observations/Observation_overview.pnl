@@ -6,7 +6,6 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
 {
   baseDP         = g_currentDatapoint;
   database = dpSubStr(baseDP,DPSUB_SYS);
-  
   // check if the requiered datapoint for this view are enabled and accessible
   if (dpExists(baseDP + \".claimPeriod\")) {
     dpConnect(\"updateObsCtrl\", baseDP + \".claimPeriod\",
@@ -28,7 +27,7 @@ PANEL,-1 -1 1000 561 N "_3DFace" 0
                                baseDP + \".Beams.angle2\",
                                baseDP + \".Beams.subbandList\",
                                baseDP + \".Beams.beamletList\",
-		               baseDP + \".claimPeriod:_online.._invalid\");
+		               baseDP + \".antennaArray:_online.._invalid\");
   } else {
     LOG_ERROR(\"ObsCtrl.pnl:main|Couldn't find DP to connect to: \"+baseDP);
     setValue(\"claimPeriodText\", \"backCol\", \"_dpdoesnotexist\");

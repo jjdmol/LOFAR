@@ -47,8 +47,7 @@ void dblClick(int row) {
   // indicate this is a doubleClick
   bDoubleClicked = true; 
 
-  string dp = claimManager_nameToRealName(\"LOFAR_ObsSW_\" + myTable.cellValueRC(row,\"Name\"))+\"_ObsCtrl\";
-  DebugN(\"Dblclick, dp: \"+dp);
+  string dp = claimManager_nameToRealName(\"LOFAR_ObsSW_\" + myTable.cellValueRC(row,\"Name\"));
   if (dpExists(dp) ) {
     baseDP=dp;
     LOG_DEBUG(\"Observation_small.pnl:DoubleClick|Setting currentDatapoint from : \"+g_currentDatapoint+\" to \" + baseDP);
