@@ -31,10 +31,11 @@
 #include "BandpassCorrector.h"
 #include "Flagger.h"
 #include "ComplexMedianFlagger.h"
+#include "FrequencyFlagger.h"
 #include "MADFlagger.h"
 #include "DataSquasher.h"
 
-#define PIPELINE_VERSION "0.10"
+#define PIPELINE_VERSION "0.22"
 
 namespace LOFAR
 {

@@ -36,6 +36,7 @@ namespace LOFAR
       double Treshold;     // FrequencyFlagger
       double MinThreshold; // ComplexMedianFlagger
       double MaxThreshold; // ComplexMedianFlagger
+      int    Algorithm;    // FrequencyFlagger
       bool   Existing;     // all flaggers
       int    NChan;        // DataSquasher
       int    Start;        // DataSquasher

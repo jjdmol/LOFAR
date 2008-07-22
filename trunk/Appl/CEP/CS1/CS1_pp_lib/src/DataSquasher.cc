@@ -17,6 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
+#include <casa/Arrays/ArrayMath.h>
 #include "DataSquasher.h"
 #include "MsInfo.h"
 #include "RunDetails.h"
@@ -49,7 +50,7 @@ void DataSquasher::Squash(Matrix<Complex>& oldData, Matrix<Complex>& newData,
   int outcounter = 0;
   bool flagnew   = true;
   Vector<Complex> values(itsNumPolarizations, 0);
-  Vector<Complex> weights(itsNumPolarizations, 0);
+  Vector<Float>   weights(itsNumPolarizations, 0);
   while (incounter < NChan)
   {
     for (int i = 0; i < itsNumPolarizations; i++)
@@ -82,6 +83,7 @@ void DataSquasher::Squash(Matrix<Complex>& oldData, Matrix<Complex>& newData,
       for (int i = 0; i < itsNumPolarizations; i++)
       { values(i) = values(i) / weights(i);
         newWeights(i, outcounter) = abs(weights(i)) / Step;
+//        newWeights.column(outcounter) = weights/Float(Step);
       }
       newData.column(outcounter)  = values;
       newFlags.column(outcounter) = flagnew;
@@ -102,11 +104,10 @@ void DataSquasher::ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
   int pos = (InData.Position + (InData.WindowSize+1)/2) % InData.WindowSize;
   Matrix<Complex> myOldData;
   Matrix<Complex> myNewData;
-  Matrix<Bool> myOldFlags;
-  Matrix<Bool> myNewFlags;
-  Matrix<Float> NewWeights;
-  //InData.PrintInfo();
-  //OutData.PrintInfo();
+  Matrix<Bool>    myOldFlags;
+  Matrix<Bool>    myNewFlags;
+  Matrix<Float>   NewWeights;
+
   for (int i = 0; i < Info.NumBands; i++)
   {
     for(int j = 0; j < Info.NumAntennae; j++)
@@ -115,26 +116,23 @@ void DataSquasher::ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
       {
         int index = i * Info.NumPairs + Info.BaselineIndex[baseline_t(j, k)];
 
-/*        InData.Data[index].xyPlane(pos).reference(myOldData);
-        OutData.Data[index].xyPlane(pos).reference(myNewData);
-        InData.Flags[index].xyPlane(pos).reference(myOldFlags);
-        OutData.Flags[index].xyPlane(pos).reference(myNewFlags);
-        OutData.Weights[index].xyPlane(pos).reference(NewWeights);*/
-        myOldData  = InData.Data[index].xyPlane(pos);
-        myNewData  = OutData.Data[index].xyPlane(OutData.Position);
-        myOldFlags = InData.Flags[index].xyPlane(pos);
-        myNewFlags = OutData.Flags[index].xyPlane(OutData.Position);
-        NewWeights = OutData.Weights[index].xyPlane(OutData.Position);
+        myOldData.reference(InData.Data[index].xyPlane(pos));
+        myNewData.reference(OutData.Data[index].xyPlane(OutData.Position));
+        myOldFlags.reference(InData.Flags[index].xyPlane(pos));
+        myNewFlags.reference(OutData.Flags[index].xyPlane(OutData.Position));
+        NewWeights.reference(OutData.Weights[index].xyPlane(OutData.Position));
+
         Squash(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights,
                Info.NumPolarizations, Details.Start, Details.Step, Details.NChan);
         if (Details.Columns)
         {
-          InData.ModelData[index].xyPlane(pos).reference(myOldData);
-          OutData.ModelData[index].xyPlane(pos).reference(myNewData);
+          myOldData.reference(InData.ModelData[index].xyPlane(pos));
+          myNewData.reference(OutData.ModelData[index].xyPlane(pos));
           Squash(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights,
                  Info.NumPolarizations, Details.Start, Details.Step, Details.NChan);
-          InData.CorrectedData[index].xyPlane(pos).reference(myOldData);
-          OutData.CorrectedData[index].xyPlane(pos).reference(myNewData);
+
+          myOldData.reference(InData.CorrectedData[index].xyPlane(pos));
+          myNewData.reference(OutData.CorrectedData[index].xyPlane(pos));
           Squash(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights,
                  Info.NumPolarizations, Details.Start, Details.Step, Details.NChan);
         }

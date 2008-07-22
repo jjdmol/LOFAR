@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -40,7 +40,7 @@ namespace LOFAR
     class ComplexMedianFlagger: public Flagger
     {
       public:
-        ComplexMedianFlagger();
+        ComplexMedianFlagger(void);
         ~ComplexMedianFlagger();
 
         void ProcessTimeslot(DataBuffer& data,
@@ -54,10 +54,10 @@ namespace LOFAR
                              casa::Cube<casa::Complex>& Data,
                              int flagCounter,
                              double FlagThreshold,
-                             int Position, bool Existing);
+                             int Position, bool Existing,
+                             int WindowSize);
         int NumChannels;
         int NumPolarizations;
-        int WindowSize;
     }; // ComplexMedianFlagger
   }; // CS1
 }; // namespace WSRT

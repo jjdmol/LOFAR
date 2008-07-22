@@ -17,80 +17,49 @@
  *   Free Software Foundation, Inc.,                                       *
  *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
  ***************************************************************************/
-#ifndef __FLAGGER_COMPLEXMEDIANFLAGGER_H__
-#define __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+#ifndef __FLAGGER_FREQUENCYFLAGGER_H__
+#define __FLAGGER_FREQUENCYFLAGGER_H__
 
 #include <casa/Arrays.h>
 #include <utility>
 #include <vector>
 #include <list>
 #include <map>
-#include "MS_File.h"
+#include "Flagger.h"
 
 namespace LOFAR
 {
   namespace CS1
   {
-    using casa::Cube;
-    using casa::Matrix;
-    using casa::Complex;
-    using casa::Int;
-    using casa::Double;
-    using casa::Bool;
-    using casa::Table;
-    using std::list;
-    using std::vector;
+    //Foreward declarations
+    class DataBuffer;
+    class MsInfo;
+    class RunDetails;
+    class FlaggerStatistics;
 
-    typedef pair<int, int> pairii;
-
-    class FrequencyFlagger
+    class FrequencyFlagger: public Flagger
     {
       public:
-        FrequencyFlagger(MS_File* MSfile,
-                         double InputThreshold,
-                         int InputAlgorithm);
+        FrequencyFlagger();
         ~FrequencyFlagger();
 
-        void FlagDataOrBaselines(bool ExistingFlags);
+        void ProcessTimeslot(DataBuffer& data,
+                             MsInfo& info,
+                             RunDetails& details,
+                             FlaggerStatistics& stats);
 
       protected:
-        int                     NumAntennae;
-        int                     NumPairs;
-        int                     NumBands;
-        int                     NumChannels;
-        int                     NumPolarizations;
-        int                     NumTimeslots;
-        double                  Threshold;
-        int                     Algorithm;
-        double                  MaxBaselineLength;
-        double                  NoiseLevel;
-        bool ExistingFlags;
-        vector<double>          BaselineLengths;
-        vector<pairii>          PairsIndex;
-        map<pairii, int>        BaselineIndex;
-        Cube<Complex>           TimeslotData;
-        Cube<Bool>              Flags;
-        vector<casa::String>    AntennaNames;
-        Cube< int >             Statistics;
-        MS_File* MSfile;
-
-        void DeterminePolarizationsToCheck(Bool UseOnlyXpolarizations);
-        void ComputeBaselineLengths();
-        void ProcessStatistics();
-        bool FlagBaselineBand(Matrix<Bool> Flags,
-                              Matrix<Complex> Timeslots,
-                              int* flagCounter,
-                              double FlagThreshold);
-        void FlagTimeslot(casa::TableIterator* flag_iter,
-                          bool ExistingFlags);
-        bool UpdateTimeslotData(vector<int>* OldFields,
-                                vector<int>* OldBands,
-                                int* TimeCounter,
-                                Table* TimeslotTable,
-                                double* Time);
       private:
+        int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
+                             casa::Matrix<casa::Complex>& Data,
+                             int flagCounter,
+                             double FlagThreshold,
+                             bool Existing,
+                             int Algorithm);
+        int NumChannels;
+        int NumPolarizations;
     }; // FrequencyFlagger
   }; // namespace CS1
 }; // namespace LOFAR
 
-#endif //  __FLAGGER_COMPLEXMEDIANFLAGGER_H__
+#endif //  __FLAGGER_FREQUENCYFLAGGER_H__

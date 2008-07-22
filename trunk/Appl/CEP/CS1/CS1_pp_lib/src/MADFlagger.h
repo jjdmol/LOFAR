@@ -50,16 +50,20 @@ namespace LOFAR
 
       protected:
       private:
+        void ComputeThreshold(casa::Cube<casa::Complex>& Values,
+                              int TWindowSize, int FWindowSize,
+                              int TimePos, int ChanPos, int PolPos,
+                              double& Z1, double& Z2);
         int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
                              casa::Cube<casa::Complex>& Data,
                              int flagCounter,
-                             double FlagThreshold,
-                             int Position, bool Existing);
+                             double Level,
+                             int Position, bool Existing,
+                             int TWindowSize, int FWindowSize);
         int NumChannels;
         int NumPolarizations;
-        int WindowSize;
     }; // MADFlagger
   }; // CS1
-}; // namespace WSRT
+}; // namespace LOFAR
 
 #endif //  __FLAGGER_MADFLAGGER_H__

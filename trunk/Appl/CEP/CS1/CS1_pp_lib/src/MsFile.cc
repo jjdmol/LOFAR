@@ -64,7 +64,7 @@ void MsFile::TableResize(TableDesc tdesc, IPosition ipos, string name, Table& ta
 //===============>>> MsFile::PrintInfo  <<<===============
 void MsFile::Init(MsInfo& Info, RunDetails& Details)
 {
-  cout << "Please wait, creating output MS" << endl;
+  cout << "Please wait, preparing output MS" << endl;
   Table temptable = tableCommand(string("SELECT UVW,FLAG_CATEGORY,WEIGHT,SIGMA,ANTENNA1,ANTENNA2,ARRAY_ID,DATA_DESC_ID,") +
                                   string("EXPOSURE,FEED1,FEED2,FIELD_ID,FLAG_ROW,INTERVAL,OBSERVATION_ID,PROCESSOR_ID,") +
                                   string("SCAN_NUMBER,STATE_ID,TIME,TIME_CENTROID,FLAG FROM ") + InName);
@@ -74,7 +74,6 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
 
   InMS    = new MeasurementSet(InName);
   OutMS   = new MeasurementSet(OutName, Table::Update);
-
   //some magic to create a new DATA column
   TableDesc tdesc = InMS->tableDesc();
   ColumnDesc desc = tdesc.rwColumnDesc("DATA");
@@ -87,30 +86,22 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
   std::cout << "New shape: " << temp_pos(0) << ":" <<  temp_pos(1) << std::endl;
   IPosition data_ipos(temp_pos);
 
-  //tdesc.removeColumn("WEIGHT_SPECTRUM");
+  if (tdesc.isColumn("WEIGHT_SPECTRUM"))
+  { tdesc.removeColumn("WEIGHT_SPECTRUM");
+  }
   tdesc.addColumn(ArrayColumnDesc<Float>("WEIGHT_SPECTRUM", "Added by datasquasher",
                                           data_ipos, ColumnDesc::FixedShape));
 
   TableResize(tdesc, data_ipos, "DATA", *OutMS);
   TableResize(tdesc, data_ipos, "WEIGHT_SPECTRUM", *OutMS);
 
-  //do the actual data squashing
-//  itsSquasher->Squash(inMS, outMS, "DATA",
-//                      itsStart, itsStep, itsNChan, itsThreshold,
-//                      itsSkip, NewFlags);
-
   //if present handle the CORRECTED_DATA column
   if (tdesc.isColumn("CORRECTED_DATA"))
   {
     if (Details.Columns)
     {
-      cout << "Preparing CORRECTED_DATA" << endl;
+      cout << "Processing CORRECTED_DATA" << endl;
       TableResize(tdesc, data_ipos, "CORRECTED_DATA", *OutMS);
-
-      //do the actual data squashing
-//      itsSquasher->Squash(inMS, outMS, "CORRECTED_DATA",
-//                          itsStart, itsStep, itsNChan, itsThreshold,
-//                          itsSkip, NewFlags);
     }
     else
     { OutMS->removeColumn("CORRECTED_DATA");
@@ -129,18 +120,13 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
       desc.setOptions(4);
       desc.rwKeywordSet().removeField("CHANNEL_SELECTION"); //messes with the Imager if it's there but has wrong values
       Matrix<Int> selection;
-      selection.resize(2, Info.NumBands); //dirty hack with direct reference to itsSquasher
+      selection.resize(2, Info.NumBands);
       selection.row(0) = 0; //start in Imager, will therefore only work if imaging whole SPW
       selection.row(1) = new_nchan;
       desc.rwKeywordSet().define("CHANNEL_SELECTION", selection); // #spw x [startChan, NumberChan] for the VisBuf in the Imager
       // see code/msvis/implement/MSVis/VisSet.cc
       OutMS->addColumn(desc);
       OutMS->addColumn(ArrayColumnDesc<Float>("IMAGING_WEIGHT","imaging weight", 1));
-
-      //do the actual data squashing
-//      itsSquasher->Squash(inMS, outMS, "MODEL_DATA",
-//                          itsStart, itsStep, itsNChan, itsThreshold,
-//                          itsSkip, NewFlags);
     }
     else
     { OutMS->removeColumn("MODEL_DATA");
@@ -210,7 +196,8 @@ void MsFile::Init(MsInfo& Info, RunDetails& Details)
       outRESOLUTION.put(i, new_temp);
     }
   }
-  cout << "Finished creating output MS" << endl;
+  OutMS->flush(true);
+  cout << "Finished preparing output MS" << endl;
 }
 
 //===============>>> MsFile::PrintInfo  <<<===============
@@ -247,19 +234,21 @@ void MsFile::UpdateTimeslotData(casa::TableIterator Data_iter,
 {
   Table         TimeslotTable = Data_iter.table();
   int           rowcount      = TimeslotTable.nrow();
-  ROTableVector<Int>            antenna1(TimeslotTable, "ANTENNA1");
-  ROTableVector<Int>            antenna2(TimeslotTable, "ANTENNA2");
-  ROTableVector<Int>            bandnr  (TimeslotTable, "DATA_DESC_ID");
-  ROArrayColumn<Complex>        data    (TimeslotTable, "DATA");
+//  bool          columns       = Buffer.ModelData.size() > 0;
+  ROTableVector<Int>            antenna1     (TimeslotTable, "ANTENNA1");
+  ROTableVector<Int>            antenna2     (TimeslotTable, "ANTENNA2");
+  ROTableVector<Int>            bandnr       (TimeslotTable, "DATA_DESC_ID");
+  ROArrayColumn<Complex>        data         (TimeslotTable, "DATA");
+//  ROArrayColumn<Complex>        modeldata    (TimeslotTable, "MODEL_DATA");
+//  ROArrayColumn<Complex>        correcteddata(TimeslotTable, "CORRECTED_DATA");
+  ROArrayColumn<Bool>           flags        (TimeslotTable, "FLAG");
   Cube<Complex>                 tempData(Info.NumPolarizations, Info.NumChannels, rowcount);
-  ROArrayColumn<Bool>           flags   (TimeslotTable, "FLAG");
   Cube<Bool>                    tempFlags(Info.NumPolarizations, Info.NumChannels, rowcount);
 
   data.getColumn(tempData); //We're not checking Data.nrow() Data.ncolumn(), assuming all data is the same size.
   flags.getColumn(tempFlags);
 
   Buffer.Position = ++(Buffer.Position) % Buffer.WindowSize;
-  cout << Buffer.Position << endl;
   for (int i = 0; i < rowcount; i++)
   {
     int bi    = Info.BaselineIndex[baseline_t(antenna1(i), antenna2(i))];
@@ -279,11 +268,15 @@ void MsFile::WriteData(casa::TableIterator Data_iter,
 {
   Table         DataTable = Data_iter.table();
   int           rowcount  = DataTable.nrow();
-  ROTableVector<Int>        antenna1(DataTable, "ANTENNA1");
-  ROTableVector<Int>        antenna2(DataTable, "ANTENNA2");
-  ROTableVector<Int>        bandnr  (DataTable, "DATA_DESC_ID");
-  ArrayColumn  <Complex>    data(DataTable, "DATA");
-  ArrayColumn  <Bool>       flags(DataTable, "FLAG");
+//  bool          columns   = Buffer.ModelData.size() > 0;
+  ROTableVector<Int>        antenna1     (DataTable, "ANTENNA1");
+  ROTableVector<Int>        antenna2     (DataTable, "ANTENNA2");
+  ROTableVector<Int>        bandnr       (DataTable, "DATA_DESC_ID");
+  ArrayColumn  <Complex>    data         (DataTable, "DATA");
+//  ArrayColumn  <Complex>    modeldata    (DataTable, "MODEL_DATA");
+//  ArrayColumn  <Complex>    correcteddata(DataTable, "CORRECTED_DATA");
+  ArrayColumn  <Bool>       flags        (DataTable, "FLAG");
+  ArrayColumn  <Float>      weights      (DataTable, "WEIGHT_SPECTRUM");
 
   for (int i = 0; i < rowcount; i++)
   {
@@ -292,6 +285,12 @@ void MsFile::WriteData(casa::TableIterator Data_iter,
     int index = (band % Info.NumBands) * Info.NumPairs + bi;
     data.put(i, Buffer.Data[index].xyPlane(Buffer.Position));
     flags.put(i, Buffer.Flags[index].xyPlane(Buffer.Position));
+    weights.put(i, Buffer.Weights[index].xyPlane(Buffer.Position));
+//    if (columns)
+//    {
+//      data.put(i, Buffer.Data[index].xyPlane(Buffer.Position));
+//      data.put(i, Buffer.Data[index].xyPlane(Buffer.Position));
+//    }
   }
 }
 

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2006 by ASTRON, Adriaan Renting                         *
+ *   Copyright (C) 2006-8 by ASTRON, Adriaan Renting                       *
  *   renting@astron.nl                                                     *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -25,73 +25,42 @@
 #include <vector>
 #include <list>
 #include <map>
-#include "MS_File.h"
+#include "Flagger.h"
 
 namespace LOFAR
 {
   namespace CS1
   {
-    using casa::Cube;
-    using casa::Matrix;
-    using casa::Complex;
-    using casa::Int;
-    using casa::Double;
-    using casa::Bool;
-    using casa::Table;
-    using std::list;
-    using std::vector;
+    //Foreward declarations
+    class DataBuffer;
+    class MsInfo;
+    class RunDetails;
+    class FlaggerStatistics;
 
-    typedef pair<int, int> pairii;
-
-    class ComplexMedianFlagger2
+    class ComplexMedianFlagger2: public Flagger
     {
       public:
-        ComplexMedianFlagger2(MS_File* MSfile,
-                              int InputWindowSize,
-                              bool UseOnlyXpolarizations);
+        ComplexMedianFlagger2(void);
         ~ComplexMedianFlagger2();
 
-        void FlagDataOrBaselines(bool ExistingFlags, double Level);
+        void ProcessTimeslot(DataBuffer& data,
+                             MsInfo& info,
+                             RunDetails& details,
+                             FlaggerStatistics& stats);
 
       protected:
-        int                     NumAntennae;
-        int                     NumPairs;
-        int                     NumBands;
-        int                     NumChannels;
-        int                     NumPolarizations;
-        int                     WindowSize;
-        int                     NumTimeslots;
-        double                  MaxBaselineLength;
-        vector<double>          BaselineLengths;
-        vector<pairii>          PairsIndex;
-        map<pairii, int>        BaselineIndex;
-        vector< Cube<Complex> > TimeslotData;
-        vector< bool >          PolarizationsToCheck;
-        vector<casa::String>    AntennaNames;
-        Cube< int >             Statistics;
-        MS_File* MSfile;
-
-        void DeterminePolarizationsToCheck(Bool UseOnlyXpolarizations);
-        void ComputeBaselineLengths();
-        void ProcessStatistics();
-        vector<double> ComputeThreshold(Matrix<Complex> Values);
-        void FlagTimeslot(casa::TableIterator* flag_iter,
-                          bool ExistingFlags,
-                          int Position,
-                          double Level);
-        bool   FlagBaselineBand(Matrix<Bool>* Flags,
-                                Cube<Complex>* Timeslots,
-                                int* flagCounter,
-                                int Position,
-                                double Level);
-        bool UpdateTimeslotData(vector<int>* OldFields,
-                                vector<int>* OldBands,
-                                int* TimeCounter,
-                                Table* TimeslotTable,
-                                double* Time);
       private:
-    }; // ComplexMedianFlagger
-  }; //CS1
+        std::vector<double> ComputeThreshold(casa::Matrix<casa::Complex> Values);
+        int FlagBaselineBand(casa::Matrix<casa::Bool>& Flags,
+                             casa::Cube<casa::Complex>& Data,
+                             int flagCounter,
+                             double Level,
+                             int Position, bool Existing,
+                             int WindowSize);
+        int NumChannels;
+        int NumPolarizations;
+    }; // ComplexMedianFlagger2
+  }; // CS1
 }; // namespace LOFAR
 
 #endif //  __FLAGGER_COMPLEXMEDIANFLAGGER2_H__
