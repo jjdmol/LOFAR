@@ -7,7 +7,7 @@ class Host(object):
     def __init__(self, name, address):
         self.name = name
         self.address = address
-        self.sshCommand = 'ssh -X ' + self.address
+        self.sshCommand = 'ssh ' + self.address
         self.CVSHost = 'cvs.astron.nl'
         
     def getCVSHost(self):
