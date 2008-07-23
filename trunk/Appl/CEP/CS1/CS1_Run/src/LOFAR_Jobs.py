@@ -66,9 +66,11 @@ class Job(object):
 		    runlogIONProc = '/' + self.runlog.split('/')[1] + '/' + self.runlog.split('/')[2] + '/CS1_IONProc.%s.%u' % ( self.partition , interfaces.index(IONode) ) + '.runlog'
 		    ionode = Host(name = IONode, \
                                   address = IONode)
-		    ionode.sget(remoteRunLogIONProc, runlogIONProc)
+		    ionode.sget(remoteRunLogIONProc, remoteRunLogIONProc)
+		    listfen.sput(remoteRunLogIONProc,runlogIONProc)
 	    else:		    
-                self.host.sget(self.remoteRunLog, self.runlog)
+                listfen.sput(self.remoteRunLog, self.runlog)
+		
             self.runLogRetreived = True
         return self.runCommand.isSuccess()
 
