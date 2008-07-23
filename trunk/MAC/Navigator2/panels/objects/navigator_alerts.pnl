@@ -30,10 +30,10 @@ PANEL,-1 -1 1071 110 N "_3DFace" 1
 
 void initialize() {
   
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID+\".alarms\")) {
-    dpConnect(\"alarmTrigger\",true,DPNAME_NAVIGATOR + g_navigatorID+\".alarms.time\");
+  if (dpExists(DPNAME_NAVIGATOR +\".alarms\")) {
+    dpConnect(\"alarmTrigger\",true,DPNAME_NAVIGATOR +\".alarms.time\");
   } else {
-    LOG_ERROR(\"navigator_alerts.pnl:initialize|Error connecting to alarms point in nav instance.\");
+    LOG_ERROR(\"navigator_alerts.pnl:initialize|Error connecting to alarms point in nav.\");
   }
 }
 
@@ -232,12 +232,12 @@ void rClick(int row) {
       dynRemove(g_alarms[\"MESSAGE\"],iPos);
       dynRemove(g_alarms[\"STATUS\" ],iPos);
       // rewrite database  
-      if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + \".alarms\")) {
+      if (dpExists(DPNAME_NAVIGATOR + \".alarms\")) {
         LOG_DEBUG(\"navigator_alerts.pnl:RightMouseClick|Storing the alarms in db\");
-        setAlarms(DPNAME_NAVIGATOR + g_navigatorID + \".alarms\",
+        setAlarms(DPNAME_NAVIGATOR + \".alarms\",
                   g_alarms[ \"TIME\"],g_alarms[ \"DPNAME\"   ],g_alarms[ \"MESSAGE\"  ],g_alarms[ \"STATE\"    ],g_alarms[ \"STATUS\"   ]);
       } else {
-        LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Couldn't write alarms to navigator instance\");
+        LOG_ERROR(\"navigator_alerts.pnl:RightMouseClick|Couldn't write alarms to navigator\");
       }
     } else {
      
