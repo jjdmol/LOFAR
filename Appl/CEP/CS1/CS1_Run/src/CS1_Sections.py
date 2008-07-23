@@ -97,14 +97,16 @@ class Section(object):
 
 	inputPsets = [interfaces.index(i) for i in inputNodes]
 	outputPsets = range(nPsets)
+	
+	if not parset.isDefined('OLAP.BGLProc.inputPsets') and not parset.isDefined('OLAP.BGLProc.outputPsets'):
+	    print 'inputNodes = ', inputNodes
+	    print 'interfaces = ', interfaces
+	    print 'inputPsets = ', inputPsets
+	    print 'outputPsets = ', outputPsets
+
 	parset['OLAP.BGLProc.inputPsets']  = inputPsets
 	parset['OLAP.BGLProc.outputPsets'] = outputPsets
-	print 'inputNodes = ', inputNodes
-	print 'interfaces = ', interfaces
-	print 'inputPsets = ', inputPsets
-	print 'outputPsets = ', outputPsets
-		
-
+	
 class StorageSection(Section):
     def __init__(self, parset, host):
 
