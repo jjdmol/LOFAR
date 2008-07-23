@@ -58,11 +58,18 @@ class Section(object):
         parsetfile = '/tmp/' + self.executable + '.parset'
         self.parset.writeToFile(parsetfile)
         # For now set the timeout on 100 times the number of seconds to process
-        self.runJob.run(runlog, 
-                        parsetfile,
-                        100*noRuns,
-                        noRuns,
-                        runCmd)
+        if 'IONProc' in self.executable:
+	    self.runJob.runIONProc(runlog, 
+                                   parsetfile,
+                                   100*noRuns,
+                                   noRuns,
+                                   runCmd)
+	else:
+	    self.runJob.run(runlog, 
+                            parsetfile,
+                            100*noRuns,
+                            noRuns,
+                            runCmd)
         os.remove(parsetfile)
 
     def isRunDone(self):
@@ -73,6 +80,30 @@ class Section(object):
     
     def isRunSuccess(self):
         return self.runJob.isSuccess()
+	
+    def inOutPsets(self, parset):
+        nSubbands = parset.getNrSubbands()
+        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
+
+        if not nSubbands % nSubbandsPerPset == 0:
+            raise Exception('subbands cannot be evenly divided over psets (nSubbands = %d and nSubbandsPerPset = %d)' % (nSubbands, nSubbandsPerPset))
+
+        nPsets = nSubbands / nSubbandsPerPset
+        self.noProcesses = int(nPsets) * parset.getInt32('OLAP.BGLProc.coresPerPset')
+        self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
+
+        inputNodes = parset.getInputNodes()
+	interfaces = IONodes.get(self.partition)
+
+	inputPsets = [interfaces.index(i) for i in inputNodes]
+	outputPsets = range(nPsets)
+	parset['OLAP.BGLProc.inputPsets']  = inputPsets
+	parset['OLAP.BGLProc.outputPsets'] = outputPsets
+	print 'inputNodes = ', inputNodes
+	print 'interfaces = ', interfaces
+	print 'inputPsets = ', inputPsets
+	print 'outputPsets = ', outputPsets
+		
 
 class StorageSection(Section):
     def __init__(self, parset, host):
@@ -98,32 +129,31 @@ class StorageSection(Section):
 	    noRuns = noRuns / self.parset.getInt32("OLAP.IONProc.integrationSteps");
         Section.run(self, runlog, noRuns, runCmd)
 
+class IONProcSection(Section):
+    def __init__(self, parset, host, partition):
+        self.partition = partition
+
+	Section.__init__(self, parset, \
+                         'Appl/CEP/CS1/CS1_IONProc', \
+                         host = host, \
+                         buildvar = 'gnu_opt')
+	
+        self.inOutPsets(parset)
+	
+    def run(self, runlog, noRuns, runCmd = None):
+        coresPerPset = self.parset.getInt32('OLAP.BGLProc.coresPerPset')
+        subbandsPerPset = self.parset.getInt32('OLAP.subbandsPerPset')
+        actualRuns = int(noRuns * subbandsPerPset / coresPerPset)
+        if not actualRuns * coresPerPset == noRuns * subbandsPerPset:
+            raise Exception('illegal number of runs')
+        Section.run(self, runlog, actualRuns, runCmd)        
+	
         
 class BGLProcSection(Section):
     def __init__(self, parset, host, partition):
         self.partition = partition
 
-        nSubbands = parset.getNrSubbands()
-        nSubbandsPerPset = parset.getInt32('OLAP.subbandsPerPset')
-
-        if not nSubbands % nSubbandsPerPset == 0:
-            raise Exception('subbands cannot be evenly divided over psets (nSubbands = %d and nSubbandsPerPset = %d)' % (nSubbands, nSubbandsPerPset))
-
-        nPsets = nSubbands / nSubbandsPerPset
-        self.noProcesses = int(nPsets) * parset.getInt32('OLAP.BGLProc.coresPerPset')
-        self.noProcesses = 256 # The calculation above is not correct, because some ranks aren't used
-
-        inputNodes = parset.getInputNodes()
-	interfaces = IONodes.get(partition)
-
-	inputPsets = [interfaces.index(i) for i in inputNodes]
-	outputPsets = range(nPsets)
-	parset['OLAP.BGLProc.inputPsets']  = inputPsets
-	parset['OLAP.BGLProc.outputPsets'] = outputPsets
-	print 'inputNodes = ', inputNodes
-	print 'interfaces = ', interfaces
-	print 'inputPsets = ', inputPsets
-	print 'outputPsets = ', outputPsets
+        self.inOutPsets(parset)
 
         Section.__init__(self, parset, \
                          'Appl/CEP/CS1/CS1_BGLProc', \
