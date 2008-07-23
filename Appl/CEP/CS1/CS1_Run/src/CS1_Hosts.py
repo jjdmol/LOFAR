@@ -31,6 +31,8 @@ bglfen0   = Host(name = 'bglfen0', \
                  address = 'bglfen0.service.rug.nl')
 bgfen0    = Host(name = 'bgfen0', \
                  address = 'bgfen0.bgnet.rug.nl')
+bgsn      = Host(name = 'bgsn', \
+                 address = 'bgsn')		 
 CS10LCU   = Host(name = 'lcu', \
                  address = '10.151.18.1')
 localhost = Host(name = 'localhost', \
