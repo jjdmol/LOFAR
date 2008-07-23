@@ -7,10 +7,15 @@ import os
 import sys
 from optparse import OptionParser
 
-#check machine name
-if  os.environ.get('HOSTNAME', 'default') != 'listfen':
-    print 'Please restart CS1_Run script on hostname: listfen'
-    sys.exit(1)
+#check hostname
+for i in range(0,1):
+    if os.environ.get('HOSTNAME', 'default') == 'listfen':
+        break
+    elif os.environ.get('HOSTNAME', 'default') == 'bgfen0':
+        break
+    else:    
+        print 'Restart "CS1_Run" run-script on: listfen/bgfen0'
+        sys.exit(1)
 
 from CS1_Hosts import *
 from CS1_Parset import CS1_Parset
@@ -35,6 +40,7 @@ def doObservation(obsID, parset):
 	sys.exit(1)
 
     sectionTable = dict({\
+        'IONProcSection': IONProcSection(parset, userId.getHost(), options.partition),
 	'BGLProcSection': BGLProcSection(parset, userId.getHost(), options.partition),
 	'StorageSection': StorageSection(parset, listfen)
 	#Flagger(parset, listfen)
@@ -69,8 +75,8 @@ def doObservation(obsID, parset):
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
 
-	    noRuns = ((sz+15)&~15) + 16
-	    
+	    noRuns = ((sz+63)&~63) + 64
+
             if isinstance(sectionTable.get(section), StorageSection):
 	        
 		s = ':'
@@ -81,10 +87,9 @@ def doObservation(obsID, parset):
 	            else:
 		        s = s + '%d' % int(machineNr)
 			
-		noRuns = (sz+15)&~15
+		noRuns = (sz+63)&~63
 	        commandstr ='cexec ' + s + ' mkdir /data/' + obsID
-		if os.system(commandstr) != 0:
-	            print 'Failed to create directory: /data/' + obsID
+		listfen.executeAsync(commandstr).waitForDone()
 
 	    sectionTable.get(section).run(runlog, noRuns)
 
@@ -153,7 +158,7 @@ if __name__ == '__main__':
     # if the msname wasn't given, read the next number from the file
     runningNumberFile = '/log/nextMSNumber'
     MSdatabaseFile = '/log/MSList'
-
+    
     try:
 	inf = open(runningNumberFile, 'r')
 	measurementnumber = int(inf.readline())
