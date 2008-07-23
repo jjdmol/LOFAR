@@ -72,11 +72,11 @@ void initAlarmSystem()  {
  	// and will generate a callback everytime a station goes off-, or on- line
 
   // read initial alarms from database.
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".alarms")) {
-    getAlarms(DPNAME_NAVIGATOR + g_navigatorID + ".alarms",
+  if (dpExists(DPNAME_NAVIGATOR +  ".alarms")) {
+    getAlarms(DPNAME_NAVIGATOR +  ".alarms",
               g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
   } else {
-    LOG_ERROR("GCFAlarm.ctl:initAlarmSystem|Couldn't get alarms from navigator instance");
+    LOG_ERROR("GCFAlarm.ctl:initAlarmSystem|Couldn't get alarms from navigator");
   }
   
   if (dpExists("_DistConnections.Dist.ManNums")) {
@@ -221,11 +221,11 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     
     if (changed) {
       // rewrite database  
-      if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".alarms")) {
-        setAlarms(DPNAME_NAVIGATOR + g_navigatorID + ".alarms",
+      if (dpExists(DPNAME_NAVIGATOR + ".alarms")) {
+        setAlarms(DPNAME_NAVIGATOR + ".alarms",
                   g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
       } else {
-        LOG_ERROR("GCFAlarm.ctl:objectStateCallback|Couldn't write alarms to navigator instance");
+        LOG_ERROR("GCFAlarm.ctl:objectStateCallback|Couldn't write alarms to navigator");
       }
     }
          
@@ -321,12 +321,12 @@ void objectStateCallback(string ident, dyn_dyn_anytype aResult) {
     
   
   // fill initial alarms from database.
-  if (dpExists(DPNAME_NAVIGATOR + g_navigatorID + ".alarms")) {
+  if (dpExists(DPNAME_NAVIGATOR + ".alarms")) {
     LOG_DEBUG("GCFAlarm.ctl:objectStateCallback|Storing the alarms in db");
-    setAlarms(DPNAME_NAVIGATOR + g_navigatorID + ".alarms",
+    setAlarms(DPNAME_NAVIGATOR + ".alarms",
               g_alarms[ "TIME"],g_alarms[ "DPNAME"   ],g_alarms[ "MESSAGE"  ],g_alarms[ "STATE"    ],g_alarms[ "STATUS"   ]);
   } else {
-    LOG_ERROR("GCFAlarm.ctl:objectStateCallback|Couldn't write alarms to navigator instance");
+    LOG_ERROR("GCFAlarm.ctl:objectStateCallback|Couldn't write alarms to navigator ");
   }
 }
 
