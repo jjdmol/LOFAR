@@ -10,8 +10,10 @@ from optparse import OptionParser
 #check hostname
 for i in range(0,1):
     if os.environ.get('HOSTNAME', 'default') == 'listfen':
+        hostname = 'listfen'
         break
     elif os.environ.get('HOSTNAME', 'default') == 'bgfen0':
+        hostname = 'bgfen0'
         break
     else:    
         print 'Restart "CS1_Run" run-script on: listfen/bgfen0'
@@ -60,17 +62,29 @@ def doObservation(obsID, parset):
     sz = int(math.ceil((time.mktime(stopTime.timetuple()) - time.mktime(startTime.timetuple())) / stepTime))
 
     logdir = '/log/'
-    if not os.access(logdir, os.W_OK):
-        logdir = './'
     logdirCommand = 'mkdir ' + logdir + obsID
-    if os.system(logdirCommand) != 0:
-        print 'Failed to create directory: ' + logdirstr
-    parset.writeToFile(logdir +'/' + obsID + '/' + obsID + '.parset')
-
+    
+    if hostname == listfen.name:
+	if not os.access(logdir, os.W_OK):
+            logdir = './'
+	    
+        if os.system(logdirCommand) != 0:
+            print 'Failed to create directory: ' + logdirstr
+    else:
+         listfen.executeAsync(logdirCommand).waitForDone()
+    
+    parset.writeToFile('/tmp/' + obsID + '.parset')
+    if hostname == listfen.name:
+        if os.system('cp /tmp/' + obsID + '.parset ' + logdir + obsID + '/' + obsID + '.parset') != 0:
+	    print 'Failed: cp /tmp/' + obsID + '.parset ' + logdir + obsID + '/' + obsID + '.parset'
+    else:
+        listfen.sput('/tmp/' + obsID + '.parset', logdir + obsID + '/' + obsID + '.parset')
+    
     try:
         for section in sectionTable:
             print ('Starting ' + sectionTable.get(section).package)
             runlog = logdir + obsID + '/' + sectionTable.get(section).getName() + '.' + options.partition +'.runlog'
+	    print runlog
 
             # todo 27-10-2006 this is a temporary hack because storage doesn't close neatly.
             # This way all sections run longer than needed and storage stops before the rest does
@@ -90,8 +104,8 @@ def doObservation(obsID, parset):
 		noRuns = (sz+63)&~63
 	        commandstr ='cexec ' + s + ' mkdir /data/' + obsID
 		listfen.executeAsync(commandstr).waitForDone()
-
-	    sectionTable.get(section).run(runlog, noRuns)
+ 
+ 	    sectionTable.get(section).run(runlog, noRuns)
 
         for section in sectionTable:
             print ('Waiting for ' + sectionTable.get(section).package + ' to finish ...')
@@ -156,8 +170,19 @@ if __name__ == '__main__':
         parset.setInputToMem()
 
     # if the msname wasn't given, read the next number from the file
-    runningNumberFile = '/log/nextMSNumber'
-    MSdatabaseFile = '/log/MSList'
+    if hostname != listfen.name:
+        if os.system('cp /log/nextMSNumber /tmp/') != 0:
+	    print 'Failed: cp /log/nextMSNumber /tmp/'
+		    
+        if os.system('cp /log/MSList /tmp/') != 0:
+	    print 'Failed: cp /log/MSList /tmp/'
+
+        path = '/tmp/'
+    else:
+        path = '/log/'
+    
+    runningNumberFile = path + 'nextMSNumber'
+    MSdatabaseFile = path + 'MSList'
     
     try:
 	inf = open(runningNumberFile, 'r')
@@ -168,7 +193,6 @@ if __name__ == '__main__':
 	outf = open(runningNumberFile, 'w')
 	outf.write(str(measurementnumber + 1) + '\n')
 	outf.close()
-	
 	dbfile = open(MSdatabaseFile, 'a')
 	dateStr = time.strftime('%Y %0m %0d %H %M %S', time.gmtime()).split()
 	MS = parset.getString('Observation.MSNameMask')
@@ -183,11 +207,15 @@ if __name__ == '__main__':
 	
 	dbfile.write(MS + '\t' + ' '.join(dateStr[0:3]) + '\n')
 	dbfile.close()
+	
+	if hostname != listfen.name:
+	    listfen.sput(runningNumberFile, '/app/log/')
+	    listfen.sput(MSdatabaseFile, '/app/log/')
+	
     except:
 	print 'caught exception'
 	sys.exit(1)
 
     obsID = 'L' + dateStr[0] + '_' + '%05d' % measurementnumber
-    
     # start the observation
     doObservation(obsID, parset)
