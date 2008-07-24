@@ -55,7 +55,7 @@ DataBuffer::~DataBuffer()
 {
 }
 
-//===============>>> ComplexMedianFlagger::DetermineCorrelationsToCheck <<<===============
+//===============>>> DataBufferr::DetermineCorrelationsToCheck <<<===============
 /* create a list of polarizations we want to check, maybe we only want to to XY, YX */
 void DataBuffer::DeterminePolarizationsToCheck(bool UseOnlyXpolarizations)
 {
@@ -102,7 +102,7 @@ void DataBuffer::DeterminePolarizationsToCheck(bool UseOnlyXpolarizations)
   }
 }
 
-//===============>>> DataBuffer::update  <<<===============
+//===============>>> DataBuffer::Init  <<<===============
 
 void DataBuffer::Init(bool Columns)
 {
@@ -134,6 +134,7 @@ void DataBuffer::Init(bool Columns)
 
 void DataBuffer::PrintInfo(void)
 {
+  std::cout << "Position        " << Position << std::endl;
   std::cout << "Baselines:      " << Data.size() << std::endl;
   std::cout << "Data:           " << Data[0].shape() << std::endl;
   std::cout << "Flags:          " << Flags[0].shape() << std::endl;

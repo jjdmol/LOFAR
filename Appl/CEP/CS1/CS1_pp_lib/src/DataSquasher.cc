@@ -101,7 +101,8 @@ void DataSquasher::ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
                                    MsInfo& Info, RunDetails& Details)
 {
   //Data.Position is the last filled timeslot, the middle is 1/2 a window behind it
-  int pos = (InData.Position + (InData.WindowSize+1)/2) % InData.WindowSize;
+  int inpos  = (InData.Position + (InData.WindowSize+1)/2) % InData.WindowSize;
+  int outpos = (OutData.Position + 1) % OutData.WindowSize;
   Matrix<Complex> myOldData;
   Matrix<Complex> myNewData;
   Matrix<Bool>    myOldFlags;
@@ -116,15 +117,15 @@ void DataSquasher::ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
       {
         int index = i * Info.NumPairs + Info.BaselineIndex[baseline_t(j, k)];
 
-        myOldData.reference(InData.Data[index].xyPlane(pos));
-        myNewData.reference(OutData.Data[index].xyPlane(OutData.Position));
-        myOldFlags.reference(InData.Flags[index].xyPlane(pos));
-        myNewFlags.reference(OutData.Flags[index].xyPlane(OutData.Position));
-        NewWeights.reference(OutData.Weights[index].xyPlane(OutData.Position));
+        myOldData.reference(InData.Data[index].xyPlane(inpos));
+        myNewData.reference(OutData.Data[index].xyPlane(outpos));
+        myOldFlags.reference(InData.Flags[index].xyPlane(inpos));
+        myNewFlags.reference(OutData.Flags[index].xyPlane(outpos));
+        NewWeights.reference(OutData.Weights[index].xyPlane(outpos));
 
         Squash(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights,
                Info.NumPolarizations, Details.Start, Details.Step, Details.NChan);
-        if (Details.Columns)
+/*        if (Details.Columns)
         {
           myOldData.reference(InData.ModelData[index].xyPlane(pos));
           myNewData.reference(OutData.ModelData[index].xyPlane(pos));
@@ -135,7 +136,7 @@ void DataSquasher::ProcessTimeslot(DataBuffer& InData, DataBuffer& OutData,
           myNewData.reference(OutData.CorrectedData[index].xyPlane(pos));
           Squash(myOldData, myNewData, myOldFlags, myNewFlags, NewWeights,
                  Info.NumPolarizations, Details.Start, Details.Step, Details.NChan);
-        }
+        }*/
       }
     }
   }

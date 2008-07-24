@@ -19,6 +19,7 @@
  ***************************************************************************/
 #include <casa/BasicMath/Math.h>
 #include <casa/Arrays.h>
+#include <casa/Quanta/MVEpoch.h>
 
 #include <iostream>
 
@@ -228,7 +229,7 @@ TableIterator MsFile::WriteIterator()
 }
 
 //===============>>> MsFile::UpdateTimeslotData  <<<===============
-void MsFile::UpdateTimeslotData(casa::TableIterator Data_iter,
+void MsFile::UpdateTimeslotData(casa::TableIterator& Data_iter,
                                 MsInfo& Info,
                                 DataBuffer& Buffer)
 {
@@ -254,7 +255,6 @@ void MsFile::UpdateTimeslotData(casa::TableIterator Data_iter,
     int bi    = Info.BaselineIndex[baseline_t(antenna1(i), antenna2(i))];
     int band  = bandnr(i);
     int index = (band % Info.NumBands) * Info.NumPairs + bi;
-
     Buffer.Data[index].xyPlane(Buffer.Position)  = tempData.xyPlane(i);
     Buffer.Flags[index].xyPlane(Buffer.Position) = tempFlags.xyPlane(i);
   }
@@ -262,30 +262,36 @@ void MsFile::UpdateTimeslotData(casa::TableIterator Data_iter,
 
 //===============>>> MsFile::WriteFlags  <<<===============
 
-void MsFile::WriteData(casa::TableIterator Data_iter,
+void MsFile::WriteData(casa::TableIterator& Data_iter,
                        MsInfo& Info,
                        DataBuffer& Buffer)
 {
-  Table         DataTable = Data_iter.table();
-  int           rowcount  = DataTable.nrow();
-//  bool          columns   = Buffer.ModelData.size() > 0;
+  Table DataTable = Data_iter.table();
+  int   rowcount  = DataTable.nrow();
+  int   pos       = (Buffer.Position+1) % Buffer.WindowSize;
+//  bool  columns   = Buffer.ModelData.size() > 0;
   ROTableVector<Int>        antenna1     (DataTable, "ANTENNA1");
   ROTableVector<Int>        antenna2     (DataTable, "ANTENNA2");
   ROTableVector<Int>        bandnr       (DataTable, "DATA_DESC_ID");
+  //ROTableVector<Double>     temp        (DataTable, "TIME_CENTROID");
   ArrayColumn  <Complex>    data         (DataTable, "DATA");
 //  ArrayColumn  <Complex>    modeldata    (DataTable, "MODEL_DATA");
 //  ArrayColumn  <Complex>    correcteddata(DataTable, "CORRECTED_DATA");
   ArrayColumn  <Bool>       flags        (DataTable, "FLAG");
   ArrayColumn  <Float>      weights      (DataTable, "WEIGHT_SPECTRUM");
+  //cout << "Processing: " << MVTime(temp(0)/(24*3600)).string(MVTime::YMD) << endl; //for testing purposes
 
   for (int i = 0; i < rowcount; i++)
   {
     int bi    = Info.BaselineIndex[baseline_t(antenna1(i), antenna2(i))];
     int band  = bandnr(i);
     int index = (band % Info.NumBands) * Info.NumPairs + bi;
-    data.put(i, Buffer.Data[index].xyPlane(Buffer.Position));
-    flags.put(i, Buffer.Flags[index].xyPlane(Buffer.Position));
-    weights.put(i, Buffer.Weights[index].xyPlane(Buffer.Position));
+//    Buffer.Data[index] = Complex(1.0,1.0);
+//    Buffer.Flags[index] = true;
+//    Buffer.Weights[index] = 1.0;
+    data.put(i, Buffer.Data[index].xyPlane(pos));
+    flags.put(i, Buffer.Flags[index].xyPlane(pos));
+    weights.put(i, Buffer.Weights[index].xyPlane(pos));
 //    if (columns)
 //    {
 //      data.put(i, Buffer.Data[index].xyPlane(Buffer.Position));

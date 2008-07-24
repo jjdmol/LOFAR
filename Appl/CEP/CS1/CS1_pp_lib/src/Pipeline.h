@@ -54,7 +54,7 @@ namespace LOFAR
       DataBuffer*        FlaggerData;
       DataBuffer*        SquasherData;
       FlaggerStatistics* myStatistics;
-      void initBuffer(DataBuffer& buffer, MsInfo& info);
+      void MirrorBuffer(DataBuffer& buffer, MsInfo& info);
 
     }; // class Pipeline
   }; // CS1

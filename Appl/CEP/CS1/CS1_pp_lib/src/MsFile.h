@@ -44,10 +44,10 @@ namespace LOFAR
       casa::TableIterator WriteIterator();
       void Init(MsInfo& Info, RunDetails& Details);
       void PrintInfo(void);
-      void UpdateTimeslotData(casa::TableIterator Data_iter,
+      void UpdateTimeslotData(casa::TableIterator& Data_iter,
                               MsInfo& Info,
                               DataBuffer& Buffer);
-      void WriteData(casa::TableIterator Data_iter,
+      void WriteData(casa::TableIterator& Data_iter,
                      MsInfo& Info,
                      DataBuffer& Buffer);
 

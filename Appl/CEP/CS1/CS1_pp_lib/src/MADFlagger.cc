@@ -51,14 +51,14 @@ void MADFlagger::ComputeThreshold(Cube<Complex>& Values,
                                   int TimePos, int ChanPos, int PolPos,
                                   double& Z1, double& Z2)
 {
-  Matrix<double> Medians(TWindowSize, FWindowSize); //A copy of the right size, soe we can use medianInPlace
+  Matrix<Double> Medians(TWindowSize, FWindowSize); //A copy of the right size, so we can use medianInPlace
   int temp = 0;
-  for (int j = -FWindowSize/2; j >= FWindowSize/2; j++)
+  for (int j = -FWindowSize/2; j <= FWindowSize/2; j++)
   {
-    for (int i = -TWindowSize/2; j >= TWindowSize/2; i++)
+    for (int i = -TWindowSize/2; i <= TWindowSize/2; i++)
     {
       temp = ((ChanPos + j < 0 || ChanPos + j >= NumChannels) ? -j : j); //have the channels wrap back upon themselves.
-      Medians(i, j) = abs(Values(PolPos, ChanPos + temp, TimePos + i%TWindowSize)); //Fill the Matrix.
+      Medians(i+ TWindowSize/2, j+ FWindowSize/2) = abs(Values(PolPos, ChanPos + temp, TimePos + i%TWindowSize)); //Fill the Matrix.
     }
   }
   Z1 = medianInPlace(Medians);      // Median Vt = Z
@@ -92,7 +92,7 @@ int MADFlagger::FlagBaselineBand(Matrix<Bool>& Flags,
       if (!FlagAllPolarizations /*&& PolarizationsToCheck[j]*/)
       {
         ComputeThreshold(Data, TWindowSize, FWindowSize, Position, i, j, Z1, Z2);
-        FlagAllPolarizations |= Threshold * Z2 * MAD < abs(Data(j, i, Position)) - Z1;
+        FlagAllPolarizations |= (Threshold * Z2 * MAD) < abs(abs(Data(j, i, Position)) - Z1);
       }
     }
     for (int j = NumPolarizations-1; j >= 0; j--)
@@ -124,7 +124,6 @@ void MADFlagger::ProcessTimeslot(DataBuffer& data,
   NumPolarizations = info.NumPolarizations;
   int index        = 0;
   Matrix<Bool> flags;
-
   for (int i = 0; i < info.NumBands; i++)
   {
     for(int j = 0; j < info.NumAntennae; j++)
